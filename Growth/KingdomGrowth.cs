@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using XRL;
 using XRL.Messages;
 using XRL.Rules;
@@ -14,6 +14,12 @@ namespace ThousandAndFirst
 
 		public static bool ThirstEnabled => Options.GetOption("r_TAF_OptionThirst") != "No";
 
+		public static long Interval(KingdomSystem System, Zone Z)
+		{
+			System.ZoneDistricts.TryGetValue(Z.ZoneID, out var district);
+			return KingdomRules.ArrivalIntervalTicks(System.Population, district);
+		}
+
 		public static void OnZoneActivated(KingdomSystem System, Zone Z)
 		{
 			if (!Enabled || !System.Founded || Z == null || !System.ClaimedZones.Contains(Z.ZoneID))
@@ -23,7 +29,7 @@ namespace ThousandAndFirst
 			long timeTicks = The.Game.TimeTicks;
 			if (System.NextArrivalTick <= 0)
 			{
-				System.NextArrivalTick = timeTicks + KingdomRules.ArrivalIntervalTicks(System.Population);
+				System.NextArrivalTick = timeTicks + Interval(System, Z);
 				return;
 			}
 			FetchWater(System, Z);
@@ -36,7 +42,7 @@ namespace ThousandAndFirst
 				{
 					if (!ThirstEnabled)
 					{
-						System.NextArrivalTick = timeTicks + KingdomRules.ArrivalIntervalTicks(System.Population);
+						System.NextArrivalTick = timeTicks + Interval(System, Z);
 						break;
 					}
 					System.DryStreak++;
@@ -52,7 +58,7 @@ namespace ThousandAndFirst
 					{
 						System.DryStreak = 0;
 					}
-					System.NextArrivalTick = timeTicks + KingdomRules.ArrivalIntervalTicks(System.Population);
+					System.NextArrivalTick = timeTicks + Interval(System, Z);
 					break;
 				}
 				System.DryStreak = 0;
@@ -67,11 +73,11 @@ namespace ThousandAndFirst
 					break;
 				}
 				arrivals++;
-				System.NextArrivalTick += KingdomRules.ArrivalIntervalTicks(System.Population);
+				System.NextArrivalTick += Interval(System, Z);
 			}
 			if (timeTicks >= System.NextArrivalTick)
 			{
-				System.NextArrivalTick = timeTicks + KingdomRules.ArrivalIntervalTicks(System.Population);
+				System.NextArrivalTick = timeTicks + Interval(System, Z);
 			}
 			UpdateStage(System, Z);
 		}

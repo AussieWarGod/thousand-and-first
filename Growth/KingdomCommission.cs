@@ -1,0 +1,78 @@
+using System.Collections.Generic;
+using XRL;
+using XRL.Messages;
+using XRL.Rules;
+using XRL.World;
+
+namespace ThousandAndFirst
+{
+	public static class KingdomCommission
+	{
+		public static bool Commission(KingdomSystem System, string Key, out string Failure)
+		{
+			Failure = null;
+			Zone zone = The.Player?.CurrentZone;
+			if (!System.Founded || zone == null || !System.ClaimedZones.Contains(zone.ZoneID))
+			{
+				Failure = "Commissions are issued on the kingdom's own ground.";
+				return false;
+			}
+			if (!KingdomRules.TryGetBuildEntry(Key, out var entry))
+			{
+				Failure = "No such design.";
+				return false;
+			}
+			if (KingdomGrowth.CountStoredWater(zone) < entry.CostDrams)
+			{
+				Failure = "The work would cost {{C|" + entry.CostDrams + " drams}} from the stores, and the stores cannot bear it.";
+				return false;
+			}
+			Cell cell = FindBuildCell(zone);
+			if (cell == null)
+			{
+				Failure = "There is no clear ground for it here.";
+				return false;
+			}
+			KingdomGrowth.ConsumeStoredWater(zone, entry.CostDrams);
+			GameObject gameObject = GameObject.Create("r_KingdomScaffold");
+			if (gameObject == null)
+			{
+				Failure = "The scaffold could not be raised.";
+				return false;
+			}
+			r_KingdomScaffold part = gameObject.GetPart<r_KingdomScaffold>();
+			if (part != null)
+			{
+				part.TargetBlueprint = entry.Blueprint;
+				part.TargetDisplayName = entry.DisplayName;
+				part.CompleteTick = The.Game.TimeTicks + entry.BuildTicks;
+			}
+			cell.AddObject(gameObject);
+			KingdomChronicle.Record(System, "a " + entry.DisplayName + " was commissioned at " + System.KingdomDisplayName);
+			MessageQueue.AddPlayerMessage("{{G|The " + entry.DisplayName + " is commissioned. Scaffolding rises.}}");
+			return true;
+		}
+
+		public static Cell FindBuildCell(Zone Z)
+		{
+			Cell playerCell = The.Player?.CurrentCell;
+			if (playerCell != null)
+			{
+				List<Cell> adjacent = playerCell.GetLocalAdjacentCells();
+				for (int i = 0; i < adjacent.Count; i++)
+				{
+					if (adjacent[i].IsEmpty())
+					{
+						return adjacent[i];
+					}
+				}
+			}
+			List<Cell> emptyCells = Z.GetEmptyCells();
+			if (emptyCells != null && emptyCells.Count > 0)
+			{
+				return emptyCells[Stat.Random(0, emptyCells.Count - 1)];
+			}
+			return null;
+		}
+	}
+}

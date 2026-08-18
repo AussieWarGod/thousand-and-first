@@ -17,6 +17,19 @@ namespace ThousandAndFirst.Tests
 				object instance = Activator.CreateInstance(type);
 				foreach (MethodInfo method in type.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly))
 				{
+					if (method.GetCustomAttribute<TestAttribute>() != null && method.GetParameters().Length == 0)
+					{
+						try
+						{
+							method.Invoke(instance, null);
+							passed++;
+						}
+						catch (Exception ex)
+						{
+							failed++;
+							Console.WriteLine("FAIL " + type.Name + "." + method.Name + "\n     " + (ex.InnerException ?? ex).Message);
+						}
+					}
 					foreach (TestCaseAttribute testCase in method.GetCustomAttributes<TestCaseAttribute>())
 					{
 						string label = type.Name + "." + method.Name + "(" + string.Join(", ", testCase.Arguments.Select(a => a?.ToString() ?? "null")) + ")";

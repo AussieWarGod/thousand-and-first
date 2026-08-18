@@ -94,6 +94,109 @@ namespace ThousandAndFirst
 			return GrowthStage.Camp;
 		}
 
+		public static readonly string[] Districts = new string[6] { "agrarian", "market", "craft", "shrine", "garrison", "academy" };
+
+		public static bool IsValidDistrict(string District)
+		{
+			for (int i = 0; i < Districts.Length; i++)
+			{
+				if (Districts[i] == District)
+				{
+					return true;
+				}
+			}
+			return false;
+		}
+
+		public static long ArrivalIntervalTicks(int Population, string District)
+		{
+			long num = ArrivalIntervalTicks(Population);
+			if (District == "market")
+			{
+				num = num * 90 / 100;
+			}
+			return num;
+		}
+
+		public struct BuildEntry
+		{
+			public string Key;
+
+			public string DisplayName;
+
+			public string Blueprint;
+
+			public int CostDrams;
+
+			public long BuildTicks;
+
+			public BuildEntry(string Key, string DisplayName, string Blueprint, int CostDrams, long BuildTicks)
+			{
+				this.Key = Key;
+				this.DisplayName = DisplayName;
+				this.Blueprint = Blueprint;
+				this.CostDrams = CostDrams;
+				this.BuildTicks = BuildTicks;
+			}
+		}
+
+		public static readonly BuildEntry[] BuildCatalog = new BuildEntry[5]
+		{
+			new BuildEntry("caskrack", "cask rack (holds 64 drams)", "r_KingdomCaskRack", 4, 1200L),
+			new BuildEntry("cistern", "great cistern (holds 256 drams)", "r_KingdomGreatCistern", 16, 3600L),
+			new BuildEntry("bunk", "communal bunk", "r_KingdomBunk", 4, 1200L),
+			new BuildEntry("shrine", "shrine stone", "r_KingdomShrine", 8, 2400L),
+			new BuildEntry("fire", "communal fire", "Campfire", 2, 600L)
+		};
+
+		public static bool TryGetBuildEntry(string Key, out BuildEntry Entry)
+		{
+			for (int i = 0; i < BuildCatalog.Length; i++)
+			{
+				if (BuildCatalog[i].Key == Key)
+				{
+					Entry = BuildCatalog[i];
+					return true;
+				}
+			}
+			Entry = default(BuildEntry);
+			return false;
+		}
+
+		public const int RaidStandingThreshold = -250;
+
+		public const int RaidTributeDrams = 12;
+
+		public const long RaidCooldownTicks = 8400L;
+
+		public const long RaidWarningLeadTicks = 1200L;
+
+		public static int RaidSize(GrowthStage Stage)
+		{
+			switch (Stage)
+			{
+			case GrowthStage.Camp:
+				return 0;
+			case GrowthStage.Steading:
+				return 2;
+			case GrowthStage.Village:
+				return 3;
+			case GrowthStage.Town:
+				return 4;
+			default:
+				return 5;
+			}
+		}
+
+		public static string[] RaiderTableFor(string FactionName)
+		{
+			if (FactionName == "Snapjaws")
+			{
+				return new string[3] { "Snapjaw Scavenger", "Snapjaw Scavenger", "Snapjaw Hunter" };
+			}
+			return null;
+		}
+
 		public static readonly string[] OutsiderLeads = new string[6] { "It is said that ", "Travelers claim that ", "The dromads tell that ", "A rumor holds that ", "The cults mutter that ", "Some deny that " };
 
 		public static string ComposeOutsider(string Text, int Roll)

@@ -26,7 +26,17 @@ namespace ThousandAndFirst
 
 		public long NextArrivalTick;
 
+		public int RaidState;
+
+		public string RaidFactionName;
+
+		public long RaidDueTick;
+
+		public long LastRaidTick;
+
 		public List<string> ClaimedZones = new List<string>();
+
+		public Dictionary<string, string> ZoneDistricts = new Dictionary<string, string>();
 
 		public List<string> ChronicleEntries = new List<string>();
 
@@ -48,6 +58,7 @@ namespace ThousandAndFirst
 		public override bool HandleEvent(ZoneActivatedEvent E)
 		{
 			KingdomGrowth.OnZoneActivated(this, E.Zone);
+			KingdomRaids.OnZoneActivated(this, E.Zone);
 			return base.HandleEvent(E);
 		}
 

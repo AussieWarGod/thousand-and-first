@@ -2,4 +2,5 @@
 <options>
   <option ID="r_TAF_OptionGrowth" DisplayText="The Thousand and First: settlers arrive at claimed zones over time" Category="Mods" Type="Checkbox" Default="Yes" />
   <option ID="r_TAF_OptionThirst" DisplayText="The Thousand and First: settlements consume water and can wither without it" Category="Mods" Type="Checkbox" Default="Yes" />
+  <option ID="r_TAF_OptionRaids" DisplayText="The Thousand and First: provoked factions may raid your settlements" Category="Mods" Type="Checkbox" Default="Yes" />
 </options>

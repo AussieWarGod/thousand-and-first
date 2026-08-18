@@ -56,6 +56,31 @@ namespace ThousandAndFirst
 			}
 		}
 
+		[WishCommand("kingdom:raid", null)]
+		public static void RaidWish()
+		{
+			KingdomSystem system = The.Game.RequireSystem<KingdomSystem>();
+			Zone zone = The.Player?.CurrentZone;
+			if (!system.Founded || zone == null || !system.ClaimedZones.Contains(zone.ZoneID))
+			{
+				Popup.Show("Stand in a claimed zone first.");
+				return;
+			}
+			if (system.RaidState == 0)
+			{
+				system.RaidState = 1;
+				system.RaidFactionName = "Snapjaws";
+				system.RaidDueTick = The.Game.TimeTicks;
+				Popup.Show("Raid forced: snapjaw warning issued, due now. Trigger it with {{W|kingdom:raid}} again (or move a turn), or pay tribute via the Charter.");
+			}
+			else
+			{
+				system.RaidDueTick = The.Game.TimeTicks;
+				KingdomRaids.OnZoneActivated(system, zone);
+				Popup.Show("Raid executed. Population " + system.Population + ", check the field.");
+			}
+		}
+
 		[WishCommand("kingdom:reset", null)]
 		public static void ResetWish()
 		{

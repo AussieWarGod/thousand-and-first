@@ -1,0 +1,56 @@
+using System;
+using XRL;
+using XRL.Messages;
+using XRL.World;
+
+namespace ThousandAndFirst
+{
+	[Serializable]
+	public class r_KingdomScaffold : IPart
+	{
+		public string TargetBlueprint;
+
+		public string TargetDisplayName;
+
+		public long CompleteTick;
+
+		public override bool WantTurnTick()
+		{
+			return true;
+		}
+
+		public override void TurnTick(long TimeTick, int Amount)
+		{
+			if (TargetBlueprint != null && TimeTick >= CompleteTick)
+			{
+				Complete();
+			}
+			base.TurnTick(TimeTick, Amount);
+		}
+
+		public void Complete()
+		{
+			Cell cell = ParentObject.CurrentCell;
+			string blueprint = TargetBlueprint;
+			string displayName = TargetDisplayName ?? "structure";
+			TargetBlueprint = null;
+			if (cell == null)
+			{
+				return;
+			}
+			GameObject gameObject = GameObject.Create(blueprint);
+			if (gameObject == null)
+			{
+				return;
+			}
+			ParentObject.Destroy(null, Silent: true);
+			cell.AddObject(gameObject);
+			KingdomSystem system = The.Game.RequireSystem<KingdomSystem>();
+			if (system.Founded)
+			{
+				KingdomChronicle.Record(system, "the " + displayName + " was raised at " + system.KingdomDisplayName);
+			}
+			MessageQueue.AddPlayerMessage("{{G|The " + displayName + " is complete.}}");
+		}
+	}
+}

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <objects>
   <object Name="r_KingdomSettler" Inherits="BaseFarmer">
     <part Name="Render" DisplayName="settler" ColorString="&amp;w" />
@@ -7,6 +7,39 @@
     <tag Name="r_KingdomSettler" />
     <tag Name="AllowIdleBehavior" />
     <tag Name="SleepOnBed" />
+  </object>
+  <object Name="r_KingdomScaffold" Inherits="Furniture">
+    <part Name="Render" DisplayName="scaffolding" RenderString="&#9617;" ColorString="&amp;w" />
+    <part Name="Description" Short="Lashed poles and borrowed planks. Somebody's promise is being kept, plank by plank." />
+    <part Name="r_KingdomScaffold" />
+    <part Name="Physics" Solid="false" Takeable="false" />
+    <stat Name="Hitpoints" Value="50" />
+  </object>
+  <object Name="r_KingdomCaskRack" Inherits="Furniture">
+    <part Name="Render" DisplayName="cask rack" RenderString="&#8801;" ColorString="&amp;w" />
+    <part Name="Description" Short="Casks in a cradle of watervine rope. The whole settlement is counted here, dram by dram." />
+    <part Name="LiquidVolume" MaxVolume="64" Volume="0" />
+    <part Name="Physics" Takeable="false" Organic="true" />
+    <stat Name="Hitpoints" Value="80" />
+  </object>
+  <object Name="r_KingdomGreatCistern" Inherits="Furniture">
+    <part Name="Render" DisplayName="great cistern" RenderString="O" ColorString="&amp;B" />
+    <part Name="Description" Short="A tin-lined belly sunk to its rim in the earth. When it is full, the whole town sleeps easier; when it rings hollow, everyone hears it." />
+    <part Name="LiquidVolume" MaxVolume="256" Volume="0" />
+    <part Name="Physics" Takeable="false" Weight="2000" />
+    <stat Name="Hitpoints" Value="200" />
+  </object>
+  <object Name="r_KingdomBunk" Inherits="Bed">
+    <part Name="Render" DisplayName="communal bunk" ColorString="&amp;w" />
+    <part Name="Description" Short="Rope-sprung and blanket-soft by local standards. It smells of road dust and relief." />
+    <part Name="Physics" Takeable="false" />
+  </object>
+  <object Name="r_KingdomShrine" Inherits="Furniture">
+    <part Name="Render" DisplayName="shrine stone" RenderString="&#933;" ColorString="&amp;Y" />
+    <part Name="Description" Short="An uncut stone with a cup-shaped hollow worn into its crown. Whatever is poured there is gone by morning, and no one asks where." />
+    <part Name="Shrine" />
+    <part Name="Physics" Takeable="false" Weight="1000" />
+    <stat Name="Hitpoints" Value="150" />
   </object>
   <object Name="r_FounderBasin" Inherits="WaterContainer">
     <part Name="LiquidVolume" MaxVolume="16" Volume="0" />

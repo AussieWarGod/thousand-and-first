@@ -76,7 +76,7 @@ namespace ThousandAndFirst
 			}
 			while (true)
 			{
-				int num = Popup.PickOption(Title: system.KingdomDisplayName, Options: new string[4] { "Status", "The Chronicle", "As others tell it", "Standings" }, Hotkeys: "scan".ToCharArray(), AllowEscape: true);
+				int num = Popup.PickOption(Title: system.KingdomDisplayName, Options: new string[7] { "Status", "The Chronicle", "As others tell it", "Standings", "Designate district", "Commission a building", "Pay tribute" }, Hotkeys: "scandmt".ToCharArray(), AllowEscape: true);
 				switch (num)
 				{
 				case 0:
@@ -91,9 +91,63 @@ namespace ThousandAndFirst
 				case 3:
 					Popup.Show(KingdomReports.Standings(system));
 					break;
+				case 4:
+					DesignateDistrict(system);
+					break;
+				case 5:
+					CommissionBuilding(system);
+					break;
+				case 6:
+					PayTribute(system);
+					break;
 				default:
 					return;
 				}
+			}
+		}
+
+		public void DesignateDistrict(KingdomSystem System)
+		{
+			Zone zone = ParentObject.CurrentZone;
+			if (zone == null || !System.ClaimedZones.Contains(zone.ZoneID))
+			{
+				Popup.Show("Districts are declared on the kingdom's own ground.");
+				return;
+			}
+			int num = Popup.PickOption(Title: "Declare this ground", Options: KingdomRules.Districts, AllowEscape: true);
+			if (num >= 0)
+			{
+				string district = KingdomRules.Districts[num];
+				System.ZoneDistricts[zone.ZoneID] = district;
+				KingdomChronicle.Record(System, "the ground here was declared a " + district + " district of " + System.KingdomDisplayName);
+				Popup.Show("This ground is declared a {{C|" + district + "}} district.");
+			}
+		}
+
+		public void CommissionBuilding(KingdomSystem System)
+		{
+			Zone zone = ParentObject.CurrentZone;
+			int stored = (zone != null) ? KingdomGrowth.CountStoredWater(zone) : 0;
+			string[] options = new string[KingdomRules.BuildCatalog.Length];
+			for (int i = 0; i < KingdomRules.BuildCatalog.Length; i++)
+			{
+				options[i] = KingdomRules.BuildCatalog[i].DisplayName + " {{C|[" + KingdomRules.BuildCatalog[i].CostDrams + " drams]}}";
+			}
+			int num = Popup.PickOption(Title: "Commission ({{C|" + stored + " drams}} in the stores)", Options: options, AllowEscape: true);
+			if (num >= 0)
+			{
+				if (!KingdomCommission.Commission(System, KingdomRules.BuildCatalog[num].Key, out var failure))
+				{
+					Popup.Show(failure);
+				}
+			}
+		}
+
+		public void PayTribute(KingdomSystem System)
+		{
+			if (!KingdomRaids.TryTribute(System, ParentObject.CurrentZone, out var failure))
+			{
+				Popup.Show(failure);
 			}
 		}
 	}

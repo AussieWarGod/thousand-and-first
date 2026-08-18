@@ -46,6 +46,26 @@ Say when you're launching so the log watch can run alongside.
 | 16e | Let the settlement stay dry for 3+ growth passes at Steading | **Withered** flag in status + chronicle line; refill water and grow | Recovery message and chronicle entry |
 | 16f | `kingdom:reset` (confirm) | Kingdom dissolved; Charter ability gone; ready to re-test founding from scratch |
 
+## Pass 5 — Districts and commissions
+
+| Step | Action | Expect |
+|---|---|---|
+| 20 | Charter → **Designate district** in a claimed zone → market | Chronicle line; status unchanged otherwise |
+| 21 | `kingdom:status` | (Market district shortens arrival intervals by 10% — verify next arrival tick moved after next growth pass) |
+| 22 | Charter → **Commission a building** → cask rack (4 drams in stores needed) | Stores −4; scaffolding appears nearby; chronicle line |
+| 23 | Wait ~1200 ticks (or explore and return) | Scaffold becomes the cask rack; completion message + chronicle |
+| 24 | Commission the great cistern (16 drams) | Same cycle; stored capacity +256 when done |
+| 25 | Commission a communal bunk; watch settlers at night | A settler eventually sleeps in it (vanilla bed behavior) |
+
+## Pass 6 — Raids and tribute
+
+| Step | Action | Expect |
+|---|---|---|
+| 26 | Reach Steading; `kingdom:standing Snapjaws:-300`; leave and re-enter the claimed zone | Warning: snapjaw scouts seen; chronicle line (needs raid cooldown elapsed — or use `kingdom:raid` to force) |
+| 27 | Charter → **Pay tribute** (12 drams in stores) | Raid averted; snapjaw standing +50; chronicle line |
+| 28 | Force again via `kingdom:raid`, don't pay, wait out the lead (or `kingdom:raid` again) | 2+ snapjaws spawn at the zone edge and attack citizens; chronicle records the raid |
+| 29 | After the fight: `kingdom:status`, `kingdom:chronicle` | State coherent; raid recorded in both registers |
+
 ## Pass 4 — Attitudes and persistence
 
 | Step | Action | Expect |

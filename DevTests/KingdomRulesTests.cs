@@ -81,6 +81,60 @@ namespace ThousandAndFirst.Tests
 			Assert.AreEqual(expected, KingdomRules.FetchableDrams(population, openWater, storageSpace));
 		}
 
+		[TestCase("agrarian", true)]
+		[TestCase("market", true)]
+		[TestCase("academy", true)]
+		[TestCase("necropolis", false)]
+		[TestCase("", false)]
+		[TestCase(null, false)]
+		public void IsValidDistrict(string district, bool expected)
+		{
+			Assert.AreEqual(expected, KingdomRules.IsValidDistrict(district));
+		}
+
+		[TestCase(0, null, 3600L)]
+		[TestCase(0, "market", 3240L)]
+		[TestCase(10, "market", 8640L)]
+		[TestCase(10, "shrine", 9600L)]
+		public void ArrivalIntervalWithDistrict(int population, string district, long expected)
+		{
+			Assert.AreEqual(expected, KingdomRules.ArrivalIntervalTicks(population, district));
+		}
+
+		[Test]
+		public void BuildCatalogIntegrity()
+		{
+			var seen = new System.Collections.Generic.HashSet<string>();
+			foreach (KingdomRules.BuildEntry entry in KingdomRules.BuildCatalog)
+			{
+				Assert.IsTrue(seen.Add(entry.Key), "duplicate key " + entry.Key);
+				Assert.IsTrue(entry.CostDrams > 0, entry.Key + " cost");
+				Assert.IsTrue(entry.BuildTicks > 0, entry.Key + " ticks");
+				Assert.IsFalse(string.IsNullOrEmpty(entry.Blueprint), entry.Key + " blueprint");
+			}
+			Assert.IsTrue(KingdomRules.TryGetBuildEntry("cistern", out var cistern));
+			Assert.AreEqual("r_KingdomGreatCistern", cistern.Blueprint);
+			Assert.IsFalse(KingdomRules.TryGetBuildEntry("palace", out _));
+		}
+
+		[TestCase(GrowthStage.Camp, 0)]
+		[TestCase(GrowthStage.Steading, 2)]
+		[TestCase(GrowthStage.Village, 3)]
+		[TestCase(GrowthStage.Town, 4)]
+		[TestCase(GrowthStage.City, 5)]
+		public void RaidSize(GrowthStage stage, int expected)
+		{
+			Assert.AreEqual(expected, KingdomRules.RaidSize(stage));
+		}
+
+		[Test]
+		public void RaiderTables()
+		{
+			Assert.IsNotNull(KingdomRules.RaiderTableFor("Snapjaws"));
+			Assert.IsNull(KingdomRules.RaiderTableFor("Joppa"));
+			Assert.IsNull(KingdomRules.RaiderTableFor(null));
+		}
+
 		[TestCase("hello happened", 0, "It is said that hello happened.")]
 		[TestCase("hello happened", 5, "Some deny that hello happened.")]
 		[TestCase("hello happened", 6, "It is said that hello happened.")]
