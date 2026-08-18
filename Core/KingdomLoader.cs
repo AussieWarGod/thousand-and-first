@@ -9,7 +9,11 @@ namespace ThousandAndFirst
 		[CallAfterGameLoaded]
 		public static void RequireKingdomSystem()
 		{
-			The.Game?.RequireSystem<KingdomSystem>();
+			KingdomSystem kingdomSystem = The.Game?.RequireSystem<KingdomSystem>();
+			if (kingdomSystem != null && kingdomSystem.Founded && The.Player != null)
+			{
+				The.Player.RequirePart<KingdomCharterPart>().EnsureAbility();
+			}
 		}
 	}
 

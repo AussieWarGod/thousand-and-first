@@ -26,15 +26,85 @@ namespace ThousandAndFirst
 		[WishCommand("kingdom:claim", null)]
 		public static void ClaimWish()
 		{
+			KingdomSystem system = The.Game.RequireSystem<KingdomSystem>();
 			Zone zone = The.Player?.CurrentZone;
-			if (KingdomFounding.ClaimZone(zone))
+			if (!system.Founded)
+			{
+				Popup.Show("No kingdom founded yet. Wish {{W|kingdom:found NAME}} first.");
+			}
+			else if (KingdomFounding.ClaimZone(zone))
 			{
 				Popup.Show("This zone now belongs to the kingdom: {{C|" + zone.ZoneID + "}}\n\nFuture spawns here will enroll as citizens.");
 			}
 			else
 			{
+				Popup.Show("A claim must border the kingdom's existing ground. ({{W|kingdom:claimforce}} overrides for testing.)");
+			}
+		}
+
+		[WishCommand("kingdom:claimforce", null)]
+		public static void ClaimForceWish()
+		{
+			Zone zone = The.Player?.CurrentZone;
+			if (KingdomFounding.ClaimZone(zone, Force: true))
+			{
+				Popup.Show("Claimed by decree: {{C|" + zone.ZoneID + "}}");
+			}
+			else
+			{
 				Popup.Show("No kingdom founded yet. Wish {{W|kingdom:found NAME}} first.");
 			}
+		}
+
+		[WishCommand("kingdom:reset", null)]
+		public static void ResetWish()
+		{
+			KingdomSystem system = The.Game.RequireSystem<KingdomSystem>();
+			if (!system.Founded)
+			{
+				Popup.Show("Nothing to reset.");
+				return;
+			}
+			if (Popup.ShowYesNo("Dissolve {{C|" + system.KingdomDisplayName + "}} and wipe all kingdom state? (Debug only; claimed-zone properties in unvisited zones are left behind.)") != DialogResult.Yes)
+			{
+				return;
+			}
+			string name = system.KingdomFactionName;
+			Faction faction = Factions.Get(name);
+			if (faction != null)
+			{
+				faction.Visible = false;
+			}
+			foreach (Faction item in Factions.Loop())
+			{
+				item.FactionFeeling.Remove(name);
+			}
+			The.Game.PlayerReputation.ReputationValues.Remove(name);
+			Zone zone = The.Player?.CurrentZone;
+			if (zone != null && system.ClaimedZones.Contains(zone.ZoneID))
+			{
+				zone.SetZoneProperty("faction", null);
+			}
+			KingdomCharterPart part = The.Player?.GetPart<KingdomCharterPart>();
+			if (part != null)
+			{
+				part.RemoveAbility();
+				The.Player.RemovePart(part);
+			}
+			system.KingdomFactionName = null;
+			system.KingdomDisplayName = null;
+			system.FoundedTick = 0L;
+			system.Stage = GrowthStage.Camp;
+			system.Population = 0;
+			system.DryStreak = 0;
+			system.Withered = false;
+			system.NextArrivalTick = 0L;
+			system.ClaimedZones.Clear();
+			system.ChronicleEntries.Clear();
+			system.OutsiderEntries.Clear();
+			system.OriginCounts.Clear();
+			system.Standings.Clear();
+			Popup.Show("The kingdom is dissolved. The ground forgets; the chronicle does not survive it.");
 		}
 
 		[WishCommand("kingdom:citizen", null)]
@@ -77,52 +147,7 @@ namespace ThousandAndFirst
 				Popup.Show("No kingdom founded. Wish {{W|kingdom:found NAME}} to begin.");
 				return;
 			}
-			Zone currentZone = The.Player?.CurrentZone;
-			bool currentClaimed = currentZone != null && system.ClaimedZones.Contains(currentZone.ZoneID);
-			StringBuilder stringBuilder = new StringBuilder();
-			stringBuilder.Append("{{C|").Append(system.KingdomDisplayName).Append("}}, founded tick ").Append(system.FoundedTick)
-				.Append("\nStage: ")
-				.Append(system.Stage)
-				.Append("  Population: ")
-				.Append(system.Population)
-				.Append("\nClaimed zones: ")
-				.Append(system.ClaimedZones.Count)
-				.Append(currentClaimed ? ("  (here: " + KingdomGrowth.CountStoredWater(currentZone) + " drams stored, " + KingdomGrowth.CountOpenWater(currentZone) + " open, space for " + KingdomGrowth.CountStorageSpace(currentZone) + ")") : "")
-				.Append("\nUpkeep: ")
-				.Append(KingdomRules.UpkeepDrams(system.Population))
-				.Append(" drams per interval  Thirst streak: ")
-				.Append(system.DryStreak)
-				.Append("\nNext arrival due: tick ")
-				.Append(system.NextArrivalTick)
-				.Append(" (now ")
-				.Append(The.Game.TimeTicks)
-				.Append(")\nPlayer rep with kingdom: ")
-				.Append(The.Game.PlayerReputation.Get(system.KingdomFactionName))
-				.Append("\n");
-			int shown = 0;
-			foreach (Faction faction in Factions.Loop())
-			{
-				if (faction.Name == system.KingdomFactionName || faction.Name == "Player" || !faction.Visible)
-				{
-					continue;
-				}
-				int standing = system.GetStanding(faction.Name);
-				if (standing != 0)
-				{
-					faction.FactionFeeling.TryGetValue(system.KingdomFactionName, out var feeling);
-					stringBuilder.Append("\n").Append(faction.DisplayName).Append(": standing ")
-						.Append(standing)
-						.Append(", their feeling toward us ")
-						.Append(feeling);
-					shown++;
-					if (shown >= 18)
-					{
-						stringBuilder.Append("\n...");
-						break;
-					}
-				}
-			}
-			Popup.Show(stringBuilder.ToString());
+			Popup.Show(KingdomReports.Status(system) + "\n\n" + KingdomReports.Standings(system));
 		}
 
 		[WishCommand("kingdom:standing", null)]
@@ -165,19 +190,12 @@ namespace ThousandAndFirst
 		public static void ChronicleWish()
 		{
 			KingdomSystem system = The.Game.RequireSystem<KingdomSystem>();
-			if (!system.Founded || system.ChronicleEntries.Count == 0)
+			if (!system.Founded)
 			{
 				Popup.Show("The chronicle is empty.");
 				return;
 			}
-			StringBuilder stringBuilder = new StringBuilder();
-			stringBuilder.Append("{{C|The Chronicle of ").Append(system.KingdomDisplayName).Append("}}\n");
-			int start = (system.ChronicleEntries.Count > 25) ? (system.ChronicleEntries.Count - 25) : 0;
-			for (int i = start; i < system.ChronicleEntries.Count; i++)
-			{
-				stringBuilder.Append("\n").Append(system.ChronicleEntries[i]);
-			}
-			Popup.Show(stringBuilder.ToString());
+			Popup.Show(KingdomReports.Chronicle(system) + "\n\n" + KingdomReports.Chronicle(system, Outsider: true));
 		}
 
 		[WishCommand("kingdom:grow", null)]

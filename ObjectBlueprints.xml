@@ -5,6 +5,8 @@
     <part Name="Description" Short="Road-worn and rumor-led, they carry everything they own: a bedroll, an empty skin, and the name of a place where thirst is shared." />
     <part Name="Brain" Wanders="true" Hostile="false" />
     <tag Name="r_KingdomSettler" />
+    <tag Name="AllowIdleBehavior" />
+    <tag Name="SleepOnBed" />
   </object>
   <object Name="r_FounderBasin" Inherits="WaterContainer">
     <part Name="LiquidVolume" MaxVolume="16" Volume="0" />

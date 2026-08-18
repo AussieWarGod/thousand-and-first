@@ -42,15 +42,32 @@ namespace ThousandAndFirst
 				}
 			}
 			KingdomChronicle.Record(system, "you poured the first water, and " + faction.DisplayName + " was founded", Accomplishment: true);
+			The.Player?.RequirePart<KingdomCharterPart>().EnsureAbility();
 			return faction;
 		}
 
-		public static bool ClaimZone(Zone Z)
+		public static bool ClaimZone(Zone Z, bool Force = false)
 		{
 			KingdomSystem system = The.Game.RequireSystem<KingdomSystem>();
 			if (!system.Founded || Z == null)
 			{
 				return false;
+			}
+			if (!Force && system.ClaimedZones.Count > 0 && !system.ClaimedZones.Contains(Z.ZoneID))
+			{
+				bool adjacent = false;
+				foreach (string claimedZone in system.ClaimedZones)
+				{
+					if (KingdomRules.ZonesAdjacent(claimedZone, Z.ZoneID))
+					{
+						adjacent = true;
+						break;
+					}
+				}
+				if (!adjacent)
+				{
+					return false;
+				}
 			}
 			Z.SetZoneProperty("faction", system.KingdomFactionName);
 			Faction faction = Factions.Get(system.KingdomFactionName);

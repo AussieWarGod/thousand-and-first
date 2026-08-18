@@ -42,6 +42,12 @@ namespace ThousandAndFirst
 					System.DryStreak++;
 					KingdomChronicle.Record(System, "the stores ran low, and " + System.KingdomDisplayName + " thirsted");
 					MessageQueue.AddPlayerMessage("{{r|" + System.KingdomDisplayName + " thirsts. The stores are nearly dry.}}");
+					if (!System.Withered && System.DryStreak >= KingdomRules.DryIntervalsToEmigrate + 1 && System.Stage > GrowthStage.Camp)
+					{
+						System.Withered = true;
+						KingdomChronicle.Record(System, System.KingdomDisplayName + " withered in the long thirst");
+						MessageQueue.AddPlayerMessage("{{R|" + System.KingdomDisplayName + " is withering.}}");
+					}
 					if (System.DryStreak >= KingdomRules.DryIntervalsToEmigrate && Emigrate(System, Z))
 					{
 						System.DryStreak = 0;
@@ -50,6 +56,12 @@ namespace ThousandAndFirst
 					break;
 				}
 				System.DryStreak = 0;
+				if (System.Withered)
+				{
+					System.Withered = false;
+					KingdomChronicle.Record(System, "the water returned, and " + System.KingdomDisplayName + " drank deep and recovered");
+					MessageQueue.AddPlayerMessage("{{G|" + System.KingdomDisplayName + " has recovered from the long thirst.}}");
+				}
 				if (!SpawnSettler(System, Z))
 				{
 					break;
@@ -82,6 +94,7 @@ namespace ThousandAndFirst
 			KingdomFounding.EnrollCitizen(settler);
 			string origin = KingdomRules.Origins[Stat.Random(0, KingdomRules.Origins.Length - 1)];
 			settler.SetStringProperty("KingdomOrigin", origin);
+			Qud.API.ConversationsAPI.addSimpleConversationToObject(settler, "Live and drink, friend. We heard there was water here, and a place worth the walk.", "Live and drink.", Question: "Why did you come?", Answer: "The road from " + origin + " was long, and the wells there are bitter. Here the water is shared. That is the whole of it.");
 			System.OriginCounts.TryGetValue(origin, out var count);
 			System.OriginCounts[origin] = count + 1;
 			ConsumeStoredWater(Z, KingdomRules.DramsPerArrival);

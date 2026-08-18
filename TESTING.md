@@ -35,6 +35,17 @@ Say when you're launching so the log watch can run alongside.
 | 15 | (On a save with no kingdom) wish `r_FounderBasin`, fill it with 8+ drams of water | Inventory action **found a settlement** appears |
 | 16 | Use it, name the settlement | Ceremony popup; founded + zone claimed; basin drained by 8 |
 
+## Pass 3b — Charter, chronicle registers, and reset
+
+| Step | Action | Expect |
+|---|---|---|
+| 16a | After founding: check the abilities menu | A **Charter** ability exists (Kingdom class); activating it opens Status / The Chronicle / As others tell it / Standings |
+| 16b | Read "As others tell it" | Same events retold with rumor leads ("Travelers claim that...", "Some deny that...") |
+| 16c | Talk to an arrived settler | Greeting + "Why did you come?" answer naming their origin |
+| 16d | Walk one zone away (non-adjacent claim test: travel 2+ zones), `kingdom:claim` | Refused — claims must border existing ground (`kingdom:claimforce` overrides) |
+| 16e | Let the settlement stay dry for 3+ growth passes at Steading | **Withered** flag in status + chronicle line; refill water and grow | Recovery message and chronicle entry |
+| 16f | `kingdom:reset` (confirm) | Kingdom dissolved; Charter ability gone; ready to re-test founding from scratch |
+
 ## Pass 4 — Attitudes and persistence
 
 | Step | Action | Expect |

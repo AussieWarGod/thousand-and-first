@@ -1,4 +1,5 @@
 using Qud.API;
+using XRL.Rules;
 using XRL.World;
 
 namespace ThousandAndFirst
@@ -13,6 +14,11 @@ namespace ThousandAndFirst
 			if (System.ChronicleEntries.Count > MaxEntries)
 			{
 				System.ChronicleEntries.RemoveAt(0);
+			}
+			System.OutsiderEntries.Add(KingdomRules.ComposeOutsider(Text, Stat.Random(0, KingdomRules.OutsiderLeads.Length - 1)));
+			if (System.OutsiderEntries.Count > MaxEntries)
+			{
+				System.OutsiderEntries.RemoveAt(0);
 			}
 			if (Accomplishment)
 			{

@@ -81,6 +81,49 @@ namespace ThousandAndFirst.Tests
 			Assert.AreEqual(expected, KingdomRules.FetchableDrams(population, openWater, storageSpace));
 		}
 
+		[TestCase("hello happened", 0, "It is said that hello happened.")]
+		[TestCase("hello happened", 5, "Some deny that hello happened.")]
+		[TestCase("hello happened", 6, "It is said that hello happened.")]
+		[TestCase("hello happened", -1, "Some deny that hello happened.")]
+		public void ComposeOutsider(string text, int roll, string expected)
+		{
+			Assert.AreEqual(expected, KingdomRules.ComposeOutsider(text, roll));
+		}
+
+		[TestCase("JoppaWorld.11.22.1.1.10", true, "JoppaWorld", 34, 67, 10)]
+		[TestCase("JoppaWorld.0.0.0.0.10", true, "JoppaWorld", 0, 0, 10)]
+		[TestCase("JoppaWorld.5.3.2.1.15", true, "JoppaWorld", 17, 10, 15)]
+		[TestCase("NorthSheva.1.1.1.1", false, null, 0, 0, 0)]
+		[TestCase("garbage", false, null, 0, 0, 0)]
+		[TestCase("", false, null, 0, 0, 0)]
+		[TestCase(null, false, null, 0, 0, 0)]
+		[TestCase("JoppaWorld.a.22.1.1.10", false, null, 0, 0, 0)]
+		public void TryParseZoneID(string zoneID, bool expectedOk, string world, int gx, int gy, int z)
+		{
+			bool ok = KingdomRules.TryParseZoneID(zoneID, out var w, out var x, out var y, out var depth);
+			Assert.AreEqual(expectedOk, ok);
+			if (expectedOk)
+			{
+				Assert.AreEqual(world, w);
+				Assert.AreEqual(gx, x);
+				Assert.AreEqual(gy, y);
+				Assert.AreEqual(z, depth);
+			}
+		}
+
+		[TestCase("JoppaWorld.11.22.1.1.10", "JoppaWorld.11.22.1.2.10", true)]
+		[TestCase("JoppaWorld.11.22.1.1.10", "JoppaWorld.11.22.2.2.10", true)]
+		[TestCase("JoppaWorld.11.22.2.1.10", "JoppaWorld.12.22.0.1.10", true)]
+		[TestCase("JoppaWorld.11.22.1.1.10", "JoppaWorld.11.22.1.1.10", false)]
+		[TestCase("JoppaWorld.11.22.1.1.10", "JoppaWorld.11.22.1.1.11", false)]
+		[TestCase("JoppaWorld.11.22.1.1.10", "JoppaWorld.11.23.1.1.10", false)]
+		[TestCase("JoppaWorld.11.22.1.1.10", "OtherWorld.11.22.1.2.10", false)]
+		[TestCase("garbage", "JoppaWorld.11.22.1.2.10", false)]
+		public void ZonesAdjacent(string a, string b, bool expected)
+		{
+			Assert.AreEqual(expected, KingdomRules.ZonesAdjacent(a, b));
+		}
+
 		[TestCase("Joppa:100", true, "Joppa", 100)]
 		[TestCase("Gyre Wights:-50", true, "Gyre Wights", -50)]
 		[TestCase("Barathrumites: 250 ", true, "Barathrumites", 250)]

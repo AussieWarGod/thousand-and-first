@@ -22,11 +22,15 @@ namespace ThousandAndFirst
 
 		public int DryStreak;
 
+		public bool Withered;
+
 		public long NextArrivalTick;
 
 		public List<string> ClaimedZones = new List<string>();
 
 		public List<string> ChronicleEntries = new List<string>();
+
+		public List<string> OutsiderEntries = new List<string>();
 
 		public Dictionary<string, int> OriginCounts = new Dictionary<string, int>();
 
