@@ -1,0 +1,5 @@
+DevTests/bin/
+DevTests/obj/
+DevTests/out/
+DevTests/build-generated.rsp
+*.dll

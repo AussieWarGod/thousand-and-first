@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<objects>
+  <object Name="r_KingdomSettler" Inherits="BaseFarmer">
+    <part Name="Render" DisplayName="settler" ColorString="&amp;w" />
+    <part Name="Description" Short="Road-worn and rumor-led, they carry everything they own: a bedroll, an empty skin, and the name of a place where thirst is shared." />
+    <part Name="Brain" Wanders="true" Hostile="false" />
+    <tag Name="r_KingdomSettler" />
+  </object>
+  <object Name="r_FounderBasin" Inherits="WaterContainer">
+    <part Name="LiquidVolume" MaxVolume="16" Volume="0" />
+    <part Name="Render" DisplayName="founder's basin" RenderString="}" ColorString="&amp;B" />
+    <part Name="Description" Short="Hammered from tin and older promises, it holds just enough water to make strangers into kin. Whoever fills it and pours may found a place worth thirsting for." />
+    <part Name="r_FounderBasin" />
+    <part Name="Commerce" Value="25" />
+  </object>
+</objects>
