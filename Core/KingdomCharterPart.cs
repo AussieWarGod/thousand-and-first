@@ -76,7 +76,7 @@ namespace ThousandAndFirst
 			}
 			while (true)
 			{
-				int num = Popup.PickOption(Title: system.KingdomDisplayName, Options: new string[7] { "Status", "The Chronicle", "As others tell it", "Standings", "Designate district", "Commission a building", "Pay tribute" }, Hotkeys: "scandmt".ToCharArray(), AllowEscape: true);
+				int num = Popup.PickOption(Title: system.KingdomDisplayName, Options: new string[8] { "Status", "The Chronicle", "As others tell it", "Standings", "Designate district", "Commission a building", "Pay tribute", "Dedicate a vessel to the stores" }, Hotkeys: "scandmtv".ToCharArray(), AllowEscape: true);
 				switch (num)
 				{
 				case 0:
@@ -99,6 +99,9 @@ namespace ThousandAndFirst
 					break;
 				case 6:
 					PayTribute(system);
+					break;
+				case 7:
+					DedicateVessel(system);
 					break;
 				default:
 					return;
@@ -131,7 +134,7 @@ namespace ThousandAndFirst
 			System.Collections.Generic.List<KingdomRules.BuildEntry> available = new System.Collections.Generic.List<KingdomRules.BuildEntry>();
 			foreach (KingdomRules.BuildEntry entry in KingdomData.Buildings)
 			{
-				if (KingdomRules.StyleAllows(entry.Styles, System.Style))
+				if (KingdomRules.StyleAllows(entry.Styles, System.Style) && System.Stage >= entry.MinStage)
 				{
 					available.Add(entry);
 				}
@@ -161,6 +164,51 @@ namespace ThousandAndFirst
 			if (!KingdomRaids.TryTribute(System, ParentObject.CurrentZone, out var failure))
 			{
 				Popup.Show(failure);
+			}
+		}
+
+		public void DedicateVessel(KingdomSystem System)
+		{
+			Cell cell = ParentObject.CurrentCell;
+			if (cell == null)
+			{
+				return;
+			}
+			System.Collections.Generic.List<GameObject> vessels = new System.Collections.Generic.List<GameObject>();
+			foreach (Cell adjacentCell in cell.GetLocalAdjacentCells())
+			{
+				foreach (GameObject item in adjacentCell.GetObjectsWithPart("LiquidVolume"))
+				{
+					if (item.GetPart<XRL.World.Parts.LiquidVolume>().MaxVolume > 0)
+					{
+						vessels.Add(item);
+					}
+				}
+			}
+			if (vessels.Count == 0)
+			{
+				Popup.Show("Stand beside a vessel to dedicate it. What is dedicated feeds the settlement; what is not is yours alone, and no settler will touch it.");
+				return;
+			}
+			string[] options = new string[vessels.Count];
+			for (int i = 0; i < vessels.Count; i++)
+			{
+				options[i] = vessels[i].ShortDisplayName + ((vessels[i].GetIntProperty("KingdomStores") == 1) ? " {{G|[dedicated]}}" : " {{K|[personal]}}");
+			}
+			int num = Popup.PickOption(Title: "Dedicate or release", Options: options, AllowEscape: true);
+			if (num >= 0)
+			{
+				GameObject vessel = vessels[num];
+				if (vessel.GetIntProperty("KingdomStores") == 1)
+				{
+					vessel.SetIntProperty("KingdomStores", 0);
+					Popup.Show("The " + vessel.ShortDisplayName + " is yours alone again.");
+				}
+				else
+				{
+					vessel.SetIntProperty("KingdomStores", 1);
+					Popup.Show("The " + vessel.ShortDisplayName + " is dedicated to the stores of " + System.KingdomDisplayName + ".");
+				}
 			}
 		}
 	}

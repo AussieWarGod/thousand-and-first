@@ -101,22 +101,32 @@ namespace ThousandAndFirst.Tests
 			Assert.AreEqual(expected, KingdomRules.ArrivalIntervalTicks(population, district));
 		}
 
-		[TestCase("well", "the well", "Well", "4", "1200", "common", true)]
-		[TestCase("well", "the well", "Well", "4", "1200", "", true)]
-		[TestCase("well", "the well", "Well", "4", "1200", null, true)]
-		[TestCase(null, "the well", "Well", "4", "1200", "common", false)]
-		[TestCase("well", null, "Well", "4", "1200", "common", false)]
-		[TestCase("well", "the well", null, "4", "1200", "common", false)]
-		[TestCase("well", "the well", "Well", "abc", "1200", "common", false)]
-		[TestCase("well", "the well", "Well", "-1", "1200", "common", false)]
-		[TestCase("well", "the well", "Well", "4", "0", "common", false)]
-		public void TryParseBuildAttributes(string key, string display, string blueprint, string cost, string ticks, string styles, bool expectedOk)
+		[TestCase("well", "the well", "Well", "4", "1200", "common", null, null, true)]
+		[TestCase("well", "the well", "Well", "4", "1200", "", "storage", "Steading", true)]
+		[TestCase("well", "the well", "Well", "4", "1200", null, null, "village", true)]
+		[TestCase(null, "the well", "Well", "4", "1200", "common", null, null, false)]
+		[TestCase("well", null, "Well", "4", "1200", "common", null, null, false)]
+		[TestCase("well", "the well", null, "4", "1200", "common", null, null, false)]
+		[TestCase("well", "the well", "Well", "abc", "1200", "common", null, null, false)]
+		[TestCase("well", "the well", "Well", "-1", "1200", "common", null, null, false)]
+		[TestCase("well", "the well", "Well", "4", "0", "common", null, null, false)]
+		[TestCase("well", "the well", "Well", "4", "1200", "common", null, "metropolis", false)]
+		public void TryParseBuildAttributes(string key, string display, string blueprint, string cost, string ticks, string styles, string category, string minStage, bool expectedOk)
 		{
-			bool ok = KingdomRules.TryParseBuildAttributes(key, display, blueprint, cost, ticks, styles, out var entry, out var error);
+			bool ok = KingdomRules.TryParseBuildAttributes(key, display, blueprint, cost, ticks, styles, category, minStage, out var entry, out var error);
 			Assert.AreEqual(expectedOk, ok);
 			if (ok)
 			{
 				Assert.AreEqual(string.IsNullOrEmpty(styles) ? "common" : styles, entry.Styles);
+				Assert.AreEqual(string.IsNullOrEmpty(category) ? "civic" : category, entry.Category);
+				if (!string.IsNullOrEmpty(minStage))
+				{
+					Assert.AreEqual(minStage.ToLower(), entry.MinStage.ToString().ToLower());
+				}
+				else
+				{
+					Assert.AreEqual(GrowthStage.Camp, entry.MinStage);
+				}
 				Assert.IsNull(error);
 			}
 			else

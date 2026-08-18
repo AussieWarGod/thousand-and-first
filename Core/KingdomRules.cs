@@ -131,9 +131,13 @@ namespace ThousandAndFirst
 			public long BuildTicks;
 
 			public string Styles = "common";
+
+			public string Category = "civic";
+
+			public GrowthStage MinStage;
 		}
 
-		public static bool TryParseBuildAttributes(string Key, string DisplayName, string Blueprint, string Cost, string Ticks, string Styles, out BuildEntry Entry, out string Error)
+		public static bool TryParseBuildAttributes(string Key, string DisplayName, string Blueprint, string Cost, string Ticks, string Styles, string Category, string MinStage, out BuildEntry Entry, out string Error)
 		{
 			Entry = null;
 			Error = null;
@@ -152,6 +156,12 @@ namespace ThousandAndFirst
 				Error = "building " + Key + " has a bad Ticks";
 				return false;
 			}
+			GrowthStage minStage = GrowthStage.Camp;
+			if (!string.IsNullOrEmpty(MinStage) && !System.Enum.TryParse<GrowthStage>(MinStage, ignoreCase: true, out minStage))
+			{
+				Error = "building " + Key + " has a bad MinStage";
+				return false;
+			}
 			Entry = new BuildEntry
 			{
 				Key = Key,
@@ -159,7 +169,9 @@ namespace ThousandAndFirst
 				Blueprint = Blueprint,
 				CostDrams = costDrams,
 				BuildTicks = buildTicks,
-				Styles = (string.IsNullOrEmpty(Styles) ? "common" : Styles)
+				Styles = (string.IsNullOrEmpty(Styles) ? "common" : Styles),
+				Category = (string.IsNullOrEmpty(Category) ? "civic" : Category),
+				MinStage = minStage
 			};
 			return true;
 		}

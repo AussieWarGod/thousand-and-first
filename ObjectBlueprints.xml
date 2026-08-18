@@ -34,6 +34,13 @@
     <part Name="Description" Short="Rope-sprung and blanket-soft by local standards. It smells of road dust and relief." />
     <part Name="Physics" Takeable="false" />
   </object>
+  <object Name="r_KingdomBench" Inherits="Furniture">
+    <part Name="Render" DisplayName="gathering bench" RenderString="&#960;" ColorString="&amp;w" />
+    <part Name="Description" Short="Split logs worn smooth by sitting. The best arguments of the settlement happen here, and one or two of the marriages." />
+    <part Name="Chair" />
+    <part Name="Physics" Takeable="false" />
+    <stat Name="Hitpoints" Value="80" />
+  </object>
   <object Name="r_KingdomShrine" Inherits="Furniture">
     <part Name="Render" DisplayName="shrine stone" RenderString="&#933;" ColorString="&amp;Y" />
     <part Name="Description" Short="An uncut stone with a cup-shaped hollow worn into its crown. Whatever is poured there is gone by morning, and no one asks where." />

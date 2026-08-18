@@ -20,7 +20,9 @@ Say when you're launching so the log watch can run alongside.
 
 | Step | Action | Expect |
 |---|---|---|
-| 8 | Drop 1–2 filled waterskins / pour water into a container on the ground in the claimed zone | `kingdom:status` shows drams stored |
+| 8 | Drop 1–2 filled waterskins on the ground in the claimed zone | `kingdom:status` shows **0 stored** — undedicated vessels are personal and inviolate (the protection law) |
+| 8a | Charter → **Dedicate a vessel to the stores** beside the waterskins | Vessels flip to [dedicated]; `kingdom:status` now counts their drams |
+| 8b | Release one via the same menu | Its drams vanish from the stores; settlers will never drink it |
 | 9 | `kingdom:grow` | Settler arrives (with an origin), water −2 drams, chronicle line |
 | 10 | Repeat 9 to 5 settlers with 16+ drams stored | **Steading** stage-up popup + journal accomplishment |
 | 11 | Empty the stores (pick containers up), `kingdom:grow` | Thirst warning (red), chronicle "thirsted" line, streak 1 |

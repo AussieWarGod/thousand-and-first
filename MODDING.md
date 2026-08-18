@@ -28,7 +28,21 @@ Ship a `KingdomBuildings.xml` in your mod root:
 - `Cost` — drams of water drawn from the settlement's physical stores.
 - `Ticks` — build time (1200 = one day).
 - `Styles` — comma list of city styles this design belongs to, or `all`. The default
-  city style is `common`; future founding paths (devotion cities and friends) select others.
+  city style is `common`; declared styles so far: `common`, `verdant`, `fungal`, `gyre`,
+  `eater` (founding paths will select them — devotion cities, the fungal quarter, Eater
+  restoration).
+- `Category` — grouping for UI and future district logic: `storage`, `housing`, `civic`,
+  `faith`, `craft`, `defense`, `knowledge` (free-form; default `civic`).
+- `MinStage` — earliest growth stage the design appears at: `Camp` (default), `Steading`,
+  `Village`, `Town`, `City`.
+
+## The protection contract
+
+Kingdom systems never touch what players place. Containers join the city stores only when
+dedicated (`KingdomStores=1` — commissioned storage auto-dedicates; everything else is
+opt-in via the Charter). If your mod's structures should participate in the water economy,
+either set that property on your placed objects or leave it to the player's dedicate
+action. Never rely on the kingdom consuming undedicated liquids — it won't.
 
 ## Conventions
 

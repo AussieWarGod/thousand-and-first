@@ -45,6 +45,11 @@ namespace ThousandAndFirst
 			}
 			ParentObject.Destroy(null, Silent: true);
 			cell.AddObject(gameObject);
+			if (gameObject.GetPart<XRL.World.Parts.LiquidVolume>() != null)
+			{
+				gameObject.SetIntProperty("KingdomStores", 1);
+			}
+			gameObject.SetIntProperty("KingdomBuilt", 1);
 			KingdomSystem system = The.Game.RequireSystem<KingdomSystem>();
 			if (system.Founded)
 			{

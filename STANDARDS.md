@@ -81,7 +81,32 @@ thirst-ladder checklist:
 
 The design doc's depth matrix (§2) is the authoritative per-system specification.
 
-## 6. Release discipline
+## 6. The extensibility law
+
+Every content registry — buildings, styles, settler origins, raider tables, district
+effects, and anything future — loads through `DataManager.YieldXMLStreamsWithRoot` so
+third-party mods extend it by shipping a file with the matching root element. Key re-use
+overrides by load order (retheming is a supported use case). A hardcoded catalog is a
+defect. Registry schemas are documented in MODDING.md the same commit they change, and
+parse/validation logic is pure and tabled.
+
+## 7. The protection law
+
+Nothing the player placed, built, or installed is ever consumed, moved, destroyed, or
+overwritten by kingdom systems without explicit designation:
+
+- City stores are **opt-in**: only containers carrying `KingdomStores=1` (commissioned
+  storage auto-flags; anything else requires the Charter's dedicate action) are counted,
+  filled, or drunk from. A player's dropped waterskin is inviolate.
+- Automatic placement (scaffolds, settlers, raiders) targets **empty cells only**; growth
+  never replaces an existing object, whether vanilla, ours, player-placed, or another
+  mod's (Hearthpyre structures included — dedicating a Hearthpyre-built basin to the
+  stores is the integration, and it is the player's choice).
+- Kingdom systems may destroy only objects they created and marked (`KingdomCitizen`,
+  `KingdomBuilt`, `KingdomRaider`); wounds to anything else come only from ordinary
+  simulation (combat, fire), never from scripted deletion.
+
+## 8. Release discipline
 
 - Ship in named arc slices with a paste-ready changelog file per release
   (Feature-Friday voice), `workshop.json` kept in sync.

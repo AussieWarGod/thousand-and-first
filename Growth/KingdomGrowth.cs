@@ -143,7 +143,7 @@ namespace ThousandAndFirst
 			foreach (GameObject item in Z.GetObjects())
 			{
 				LiquidVolume part = item.GetPart<LiquidVolume>();
-				if (part != null && part.MaxVolume > 0 && part.Volume > 0 && part.GetPrimaryLiquidID() == "water")
+				if (part != null && part.MaxVolume > 0 && item.GetIntProperty("KingdomStores") == 1 && part.Volume > 0 && part.GetPrimaryLiquidID() == "water")
 				{
 					total += part.Volume;
 				}
@@ -171,7 +171,7 @@ namespace ThousandAndFirst
 			foreach (GameObject item in Z.GetObjects())
 			{
 				LiquidVolume part = item.GetPart<LiquidVolume>();
-				if (part != null && part.MaxVolume > 0 && part.Volume < part.MaxVolume && (part.Volume == 0 || part.GetPrimaryLiquidID() == "water"))
+				if (part != null && part.MaxVolume > 0 && item.GetIntProperty("KingdomStores") == 1 && part.Volume < part.MaxVolume && (part.Volume == 0 || part.GetPrimaryLiquidID() == "water"))
 				{
 					total += part.MaxVolume - part.Volume;
 				}
@@ -211,7 +211,7 @@ namespace ThousandAndFirst
 					break;
 				}
 				LiquidVolume part = item.GetPart<LiquidVolume>();
-				if (part != null && part.MaxVolume > 0 && part.Volume < part.MaxVolume && (part.Volume == 0 || part.GetPrimaryLiquidID() == "water"))
+				if (part != null && part.MaxVolume > 0 && item.GetIntProperty("KingdomStores") == 1 && part.Volume < part.MaxVolume && (part.Volume == 0 || part.GetPrimaryLiquidID() == "water"))
 				{
 					int drams = part.MaxVolume - part.Volume;
 					if (drams > drained - stored)
@@ -237,7 +237,7 @@ namespace ThousandAndFirst
 					break;
 				}
 				LiquidVolume part = item.GetPart<LiquidVolume>();
-				if (part != null && part.MaxVolume > 0 && part.Volume > 0 && part.GetPrimaryLiquidID() == "water")
+				if (part != null && part.MaxVolume > 0 && item.GetIntProperty("KingdomStores") == 1 && part.Volume > 0 && part.GetPrimaryLiquidID() == "water")
 				{
 					int drams = (part.Volume < remaining) ? part.Volume : remaining;
 					if (part.UseDrams(drams))
