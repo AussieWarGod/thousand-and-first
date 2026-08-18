@@ -57,6 +57,7 @@ Say when you're launching so the log watch can run alongside.
 | 24 | Commission the great cistern (16 drams) | Same cycle; stored capacity +256 when done |
 | 25 | Commission a communal bunk; watch settlers at night | A settler eventually sleeps in it (vanilla bed behavior) |
 | 25a | On first reaching Steading | "A settler has taken up the trade" — the first stall opens; trade with them shows tier-1 stock |
+| 25c | Charter → Commission | The design list is loaded from KingdomBuildings.xml (5 entries); third-party mods shipping their own `<kingdombuildings>` file extend it automatically |
 | 25b | Browse vanilla tier-1 merchants elsewhere | The founder's basin occasionally appears for sale (8% per restock) — the legitimate acquisition path |
 
 ## Pass 6 — Raids and tribute

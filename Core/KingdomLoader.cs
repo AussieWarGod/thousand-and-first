@@ -9,6 +9,7 @@ namespace ThousandAndFirst
 		[CallAfterGameLoaded]
 		public static void RequireKingdomSystem()
 		{
+			KingdomData.Reload();
 			KingdomSystem kingdomSystem = The.Game?.RequireSystem<KingdomSystem>();
 			if (kingdomSystem != null && kingdomSystem.Founded && The.Player != null)
 			{

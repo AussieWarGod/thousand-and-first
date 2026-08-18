@@ -128,15 +128,28 @@ namespace ThousandAndFirst
 		{
 			Zone zone = ParentObject.CurrentZone;
 			int stored = (zone != null) ? KingdomGrowth.CountStoredWater(zone) : 0;
-			string[] options = new string[KingdomRules.BuildCatalog.Length];
-			for (int i = 0; i < KingdomRules.BuildCatalog.Length; i++)
+			System.Collections.Generic.List<KingdomRules.BuildEntry> available = new System.Collections.Generic.List<KingdomRules.BuildEntry>();
+			foreach (KingdomRules.BuildEntry entry in KingdomData.Buildings)
 			{
-				options[i] = KingdomRules.BuildCatalog[i].DisplayName + " {{C|[" + KingdomRules.BuildCatalog[i].CostDrams + " drams]}}";
+				if (KingdomRules.StyleAllows(entry.Styles, System.Style))
+				{
+					available.Add(entry);
+				}
+			}
+			if (available.Count == 0)
+			{
+				Popup.Show("No designs are known here.");
+				return;
+			}
+			string[] options = new string[available.Count];
+			for (int i = 0; i < available.Count; i++)
+			{
+				options[i] = available[i].DisplayName + " {{C|[" + available[i].CostDrams + " drams]}}";
 			}
 			int num = Popup.PickOption(Title: "Commission ({{C|" + stored + " drams}} in the stores)", Options: options, AllowEscape: true);
 			if (num >= 0)
 			{
-				if (!KingdomCommission.Commission(System, KingdomRules.BuildCatalog[num].Key, out var failure))
+				if (!KingdomCommission.Commission(System, available[num].Key, out var failure))
 				{
 					Popup.Show(failure);
 				}

@@ -101,20 +101,41 @@ namespace ThousandAndFirst.Tests
 			Assert.AreEqual(expected, KingdomRules.ArrivalIntervalTicks(population, district));
 		}
 
-		[Test]
-		public void BuildCatalogIntegrity()
+		[TestCase("well", "the well", "Well", "4", "1200", "common", true)]
+		[TestCase("well", "the well", "Well", "4", "1200", "", true)]
+		[TestCase("well", "the well", "Well", "4", "1200", null, true)]
+		[TestCase(null, "the well", "Well", "4", "1200", "common", false)]
+		[TestCase("well", null, "Well", "4", "1200", "common", false)]
+		[TestCase("well", "the well", null, "4", "1200", "common", false)]
+		[TestCase("well", "the well", "Well", "abc", "1200", "common", false)]
+		[TestCase("well", "the well", "Well", "-1", "1200", "common", false)]
+		[TestCase("well", "the well", "Well", "4", "0", "common", false)]
+		public void TryParseBuildAttributes(string key, string display, string blueprint, string cost, string ticks, string styles, bool expectedOk)
 		{
-			var seen = new System.Collections.Generic.HashSet<string>();
-			foreach (KingdomRules.BuildEntry entry in KingdomRules.BuildCatalog)
+			bool ok = KingdomRules.TryParseBuildAttributes(key, display, blueprint, cost, ticks, styles, out var entry, out var error);
+			Assert.AreEqual(expectedOk, ok);
+			if (ok)
 			{
-				Assert.IsTrue(seen.Add(entry.Key), "duplicate key " + entry.Key);
-				Assert.IsTrue(entry.CostDrams > 0, entry.Key + " cost");
-				Assert.IsTrue(entry.BuildTicks > 0, entry.Key + " ticks");
-				Assert.IsFalse(string.IsNullOrEmpty(entry.Blueprint), entry.Key + " blueprint");
+				Assert.AreEqual(string.IsNullOrEmpty(styles) ? "common" : styles, entry.Styles);
+				Assert.IsNull(error);
 			}
-			Assert.IsTrue(KingdomRules.TryGetBuildEntry("cistern", out var cistern));
-			Assert.AreEqual("r_KingdomGreatCistern", cistern.Blueprint);
-			Assert.IsFalse(KingdomRules.TryGetBuildEntry("palace", out _));
+			else
+			{
+				Assert.IsNotNull(error);
+			}
+		}
+
+		[TestCase("common", "common", true)]
+		[TestCase("all", "anything", true)]
+		[TestCase(null, "anything", true)]
+		[TestCase("", "anything", true)]
+		[TestCase("common,fungal", "fungal", true)]
+		[TestCase("common, fungal", "fungal", true)]
+		[TestCase("common,fungal", "eater", false)]
+		[TestCase("fungal", "common", false)]
+		public void StyleAllows(string entryStyles, string cityStyle, bool expected)
+		{
+			Assert.AreEqual(expected, KingdomRules.StyleAllows(entryStyles, cityStyle));
 		}
 
 		[TestCase(GrowthStage.Camp, 0)]

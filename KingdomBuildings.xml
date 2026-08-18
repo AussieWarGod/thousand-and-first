@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<kingdombuildings>
+  <style Name="common" />
+  <building Key="caskrack" DisplayName="cask rack (holds 64 drams)" Blueprint="r_KingdomCaskRack" Cost="4" Ticks="1200" Styles="common" />
+  <building Key="cistern" DisplayName="great cistern (holds 256 drams)" Blueprint="r_KingdomGreatCistern" Cost="16" Ticks="3600" Styles="common" />
+  <building Key="bunk" DisplayName="communal bunk" Blueprint="r_KingdomBunk" Cost="4" Ticks="1200" Styles="common" />
+  <building Key="shrine" DisplayName="shrine stone" Blueprint="r_KingdomShrine" Cost="8" Ticks="2400" Styles="common" />
+  <building Key="fire" DisplayName="communal fire" Blueprint="Campfire" Cost="2" Ticks="600" Styles="all" />
+</kingdombuildings>

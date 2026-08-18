@@ -14,6 +14,8 @@ namespace ThousandAndFirst
 
 		public string KingdomDisplayName;
 
+		public string Style = "common";
+
 		public long FoundedTick;
 
 		public GrowthStage Stage = GrowthStage.Camp;

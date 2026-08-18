@@ -118,7 +118,7 @@ namespace ThousandAndFirst
 			return num;
 		}
 
-		public struct BuildEntry
+		public class BuildEntry
 		{
 			public string Key;
 
@@ -130,36 +130,55 @@ namespace ThousandAndFirst
 
 			public long BuildTicks;
 
-			public BuildEntry(string Key, string DisplayName, string Blueprint, int CostDrams, long BuildTicks)
-			{
-				this.Key = Key;
-				this.DisplayName = DisplayName;
-				this.Blueprint = Blueprint;
-				this.CostDrams = CostDrams;
-				this.BuildTicks = BuildTicks;
-			}
+			public string Styles = "common";
 		}
 
-		public static readonly BuildEntry[] BuildCatalog = new BuildEntry[5]
+		public static bool TryParseBuildAttributes(string Key, string DisplayName, string Blueprint, string Cost, string Ticks, string Styles, out BuildEntry Entry, out string Error)
 		{
-			new BuildEntry("caskrack", "cask rack (holds 64 drams)", "r_KingdomCaskRack", 4, 1200L),
-			new BuildEntry("cistern", "great cistern (holds 256 drams)", "r_KingdomGreatCistern", 16, 3600L),
-			new BuildEntry("bunk", "communal bunk", "r_KingdomBunk", 4, 1200L),
-			new BuildEntry("shrine", "shrine stone", "r_KingdomShrine", 8, 2400L),
-			new BuildEntry("fire", "communal fire", "Campfire", 2, 600L)
-		};
-
-		public static bool TryGetBuildEntry(string Key, out BuildEntry Entry)
-		{
-			for (int i = 0; i < BuildCatalog.Length; i++)
+			Entry = null;
+			Error = null;
+			if (string.IsNullOrEmpty(Key) || string.IsNullOrEmpty(DisplayName) || string.IsNullOrEmpty(Blueprint))
 			{
-				if (BuildCatalog[i].Key == Key)
+				Error = "building needs Key, DisplayName, and Blueprint";
+				return false;
+			}
+			if (!int.TryParse(Cost, out var costDrams) || costDrams < 0)
+			{
+				Error = "building " + Key + " has a bad Cost";
+				return false;
+			}
+			if (!long.TryParse(Ticks, out var buildTicks) || buildTicks <= 0)
+			{
+				Error = "building " + Key + " has a bad Ticks";
+				return false;
+			}
+			Entry = new BuildEntry
+			{
+				Key = Key,
+				DisplayName = DisplayName,
+				Blueprint = Blueprint,
+				CostDrams = costDrams,
+				BuildTicks = buildTicks,
+				Styles = (string.IsNullOrEmpty(Styles) ? "common" : Styles)
+			};
+			return true;
+		}
+
+		public static bool StyleAllows(string EntryStyles, string CityStyle)
+		{
+			if (string.IsNullOrEmpty(EntryStyles) || EntryStyles == "all")
+			{
+				return true;
+			}
+			string[] array = EntryStyles.Split(',');
+			for (int i = 0; i < array.Length; i++)
+			{
+				string text = array[i].Trim();
+				if (text == "all" || text == CityStyle)
 				{
-					Entry = BuildCatalog[i];
 					return true;
 				}
 			}
-			Entry = default(BuildEntry);
 			return false;
 		}
 
