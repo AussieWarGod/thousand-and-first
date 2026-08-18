@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<populations>
+  <population Name="Tier1Wares" Load="Merge">
+    <object Blueprint="r_FounderBasin" Number="1" Chance="8" />
+  </population>
+</populations>

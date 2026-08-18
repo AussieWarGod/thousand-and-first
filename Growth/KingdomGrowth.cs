@@ -259,6 +259,37 @@ namespace ThousandAndFirst
 				KingdomChronicle.Record(System, text, Accomplishment: true);
 				Popup.Show("{{C|" + text + ".}}");
 			}
+			if (System.Stage >= GrowthStage.Steading && !System.HasShopkeeper)
+			{
+				PromoteShopkeeper(System, Z);
+			}
+		}
+
+		public static void PromoteShopkeeper(KingdomSystem System, Zone Z)
+		{
+			GameObject citizen = null;
+			foreach (GameObject item in Z.GetObjects())
+			{
+				if (item.GetIntProperty("KingdomCitizen") == 1 && item.GetIntProperty("VillageMerchant") == 0 && !item.IsPlayer())
+				{
+					citizen = item;
+					break;
+				}
+			}
+			if (citizen == null)
+			{
+				return;
+			}
+			GenericInventoryRestocker restocker = citizen.RequirePart<GenericInventoryRestocker>();
+			restocker.Tables.Clear();
+			restocker.Tables.Add("Tier1Wares");
+			restocker.Chance = 100;
+			restocker.PerformRestock(Silent: true);
+			citizen.SetIntProperty("VillageMerchant", 1);
+			TakeOnRoleEvent.Send(citizen, "Merchant");
+			System.HasShopkeeper = true;
+			KingdomChronicle.Record(System, "a settler took up the trade, and the first stall opened at " + System.KingdomDisplayName);
+			MessageQueue.AddPlayerMessage("{{G|A settler has taken up the trade. The first stall of " + System.KingdomDisplayName + " is open.}}");
 		}
 	}
 }

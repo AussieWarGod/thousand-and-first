@@ -24,6 +24,8 @@ namespace ThousandAndFirst
 
 		public bool Withered;
 
+		public bool HasShopkeeper;
+
 		public long NextArrivalTick;
 
 		public int RaidState;
