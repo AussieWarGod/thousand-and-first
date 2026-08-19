@@ -1,13 +1,19 @@
 #!/usr/bin/env python3
 """Compile hand-authored sprite sources into Caves of Qud tiles.
 
-A Qud tile is a 16x24 PNG in two tones, recoloured at runtime. Which tone is
-which was established by measuring the shipped art rather than by assuming:
-across 6,741 cells of the game's own atlases, tiles are pure black and white,
-median coverage is 59% of the cell, and only ~15% of drawn pixels are white.
-Vanilla `ObjectBlueprints.xml` sets `DetailColor` exactly zero times, so the 85%
-black cannot be the optional channel - **black is the body and takes TileColor;
-white is the highlight and takes DetailColor.**
+A Qud tile is a 16x24 PNG in two tones, recoloured at runtime: **black is the body
+and takes TileColor; white is the highlight and takes DetailColor.**
+
+That mapping is settled by the renderer, which sends source pixels with red < 0.5
+to the foreground colour and > 0.5 to the detail colour. An earlier version of
+this file justified it instead by claiming vanilla sets `DetailColor` zero times
+- which came from reading `Base/ObjectBlueprints.xml`, a 67-byte empty stub. The
+real corpus is `Base/ObjectBlueprints/*.xml` and it uses `DetailColor` 2,311
+times. Right answer, worthless reasoning; the renderer is the proof.
+
+The proportions below *are* measured, from 6,741 cells of the game's atlases:
+tiles are pure black and white, median coverage 59% of the cell, and only ~15% of
+drawn pixels are white.
 
 The glyphs below are therefore named for what they mean, not for the colour they
 compile to. An earlier version of this pipeline used 'O' for white as the body
