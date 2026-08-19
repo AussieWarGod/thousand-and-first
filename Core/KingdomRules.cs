@@ -561,111 +561,187 @@
 		}
 
 		/// <summary>
-		/// What a settlement has become by the time someone finds it again. A settlement outlives
-		/// its founder, and this is the condition it is found in &mdash; by a later character, or
-		/// by the same one after a very long absence.
+		/// What a settlement has become by the time a later life finds it.
+		/// <para>
+		/// A settlement never languishes because the founder is away. A living save is never
+		/// decayed, visits reset no hidden clock, and wall-clock time carries no authority. What
+		/// happens instead is that the end of a run &mdash; death, or a deliberate retirement
+		/// &mdash; <b>seals</b> the settlement's condition as one immutable number, and a later
+		/// save applies exactly one fictional intergenerational transition to it.
+		/// </para>
+		/// <para>
+		/// So the question this answers is not "how long was it left" but "how well was it left,
+		/// and how did the years between treat it".
+		/// </para>
 		/// </summary>
 		public enum InheritedState
 		{
-			/// <summary>Populated and trading, carrying on without the founder.</summary>
+			/// <summary>An autonomous polity carrying on without you. Not automatically yours.</summary>
 			Held = 0,
 			/// <summary>Thinner, some works derelict, stores low, but still lived in.</summary>
 			Faded = 1,
-			/// <summary>Everything standing, nobody home.</summary>
+			/// <summary>Intact and derelict. Everything standing, nobody home.</summary>
 			Abandoned = 2,
-			/// <summary>Rubble in the shape of streets. Something else lives here now.</summary>
+			/// <summary>The street plan still legible under the collapse. Something else lives here.</summary>
 			Ruins = 3
 		}
 
 		public static readonly string[] InheritedStateNames = new string[4] { "held", "faded", "abandoned", "ruined" };
 
-		/// <summary>Floor on how long any settlement holds together. Nowhere falls down overnight.</summary>
-		public const int BaseResilienceDays = 14;
+		/// <summary>Ceiling on a sealed settlement's vigour, so the scale is readable as a percentage.</summary>
+		public const int MaxSealedVigour = 100;
 
-		public const int ResiliencePerSettler = 3;
+		public const int VigourPerStage = 10;
 
-		public const int ResiliencePerDefence = 4;
+		public const int VigourFromPopulationCap = 25;
 
-		/// <summary>Collapse factor applied to a settlement that was already withering.</summary>
-		public const int WitheredResilienceDivisor = 4;
+		public const int VigourFromDefenceCap = 20;
 
-		/// <summary>Days of neglect a settlement absorbs on account of its size alone.</summary>
-		public static int StageResilienceDays(GrowthStage Stage)
-		{
-			switch (Stage)
-			{
-			case GrowthStage.Camp:
-				return 0;
-			case GrowthStage.Steading:
-				return 30;
-			case GrowthStage.Village:
-				return 60;
-			case GrowthStage.Town:
-				return 120;
-			default:
-				return 200;
-			}
-		}
+		public const int VigourFromWaterCap = 15;
+
+		/// <summary>Drams of stored water per point of vigour; a full point cap is 120 drams.</summary>
+		public const int VigourWaterPerPoint = 8;
+
+		/// <summary>A settlement sealed while withering keeps a quarter of its vigour.</summary>
+		public const int WitheredVigourDivisor = 4;
 
 		/// <summary>
-		/// How long a settlement can be left before it starts to come apart, in days.
+		/// The one number that crosses runs: how well the settlement stood at the moment it was
+		/// sealed, from 0 to <see cref="MaxSealedVigour"/>.
 		/// <para>
-		/// The premise is that a settlement does not need its founder to run &mdash; it needs them
-		/// to hold it together against what comes. So the largest term is its people, and the rest
-		/// is what those people have to work with: the size they have grown to, the walls they can
-		/// hold, and the water in the ground. Water converts directly, since stores divided by
-		/// daily draw <i>is</i> a number of days.
+		/// This is deliberately a summary and not a save. It carries no items, no charge, no
+		/// water, no object state &mdash; only how much settlement there was to lose. Everything
+		/// it is built from is already bounded, and each term is capped again here, so no amount
+		/// of hoarding in a final run can buy a stronger inheritance than a well-run town.
 		/// </para>
 		/// <para>
-		/// A settlement that was already withering when it was left keeps a quarter of the total.
-		/// A dying place dies.
+		/// Each term only ever adds, so a founder can never improve the inheritance by tearing
+		/// something down before the end.
 		/// </para>
 		/// </summary>
-		public static int ResilienceDays(GrowthStage Stage, int Population, int Defence, int StoredWater, bool Withered)
+		public static int SealedVigour(GrowthStage Stage, int Population, int Defence, int StoredWater, bool Withered)
 		{
 			int population = (Population > 0) ? Population : 0;
 			int defence = (Defence > 0) ? Defence : 0;
 			int stored = (StoredWater > 0) ? StoredWater : 0;
-			int dailyDraw = UpkeepDrams(population);
-			if (dailyDraw < 1)
+
+			int fromStage = (int)Stage * VigourPerStage;
+			int fromPeople = (population < VigourFromPopulationCap) ? population : VigourFromPopulationCap;
+			int fromWalls = (defence < VigourFromDefenceCap / 2) ? (defence * 2) : VigourFromDefenceCap;
+
+			// Absolute stores, not days of supply. Measuring days divides water by population,
+			// which made the seal fall as settlers arrived - so a founder could have improved
+			// their own inheritance by letting people die before the end. Every term here must
+			// only ever add, and the monotonicity test exists to keep it that way.
+			int fromWater = stored / VigourWaterPerPoint;
+			if (fromWater > VigourFromWaterCap)
 			{
-				dailyDraw = 1;
+				fromWater = VigourFromWaterCap;
 			}
-			int days = BaseResilienceDays + StageResilienceDays(Stage) + population * ResiliencePerSettler + defence * ResiliencePerDefence + stored / dailyDraw;
+
+			int vigour = fromStage + fromPeople + fromWalls + fromWater;
 			if (Withered)
 			{
-				days /= WitheredResilienceDivisor;
+				vigour /= WitheredVigourDivisor;
 			}
-			return (days > 0) ? days : 1;
+			if (vigour > MaxSealedVigour)
+			{
+				vigour = MaxSealedVigour;
+			}
+			return (vigour > 0) ? vigour : 0;
 		}
 
 		/// <summary>
-		/// The state a settlement is found in, given how long it went unattended and what it had
-		/// to survive on. Each rung is another span of its own resilience: a place holds as long
-		/// as it can, fades over the same span again, empties over two more, and only then comes
-		/// down.
+		/// The one draw of fortune between one life and the next, from 0 to 99.
 		/// <para>
-		/// Two floors override the arithmetic, because some conditions are not a matter of time. A
-		/// settlement that was withering when it was left is never found
-		/// <see cref="InheritedState.Held"/>, however recently that was; and one with nobody in it
-		/// is never found inhabited at all.
+		/// Deterministic on purpose. The same legacy arriving in the same world must always
+		/// produce the same settlement, however many times generation is retried, or a player
+		/// could reroll their inheritance by regenerating. It is also why this is a hash rather
+		/// than the engine's random: it must not consume or depend on world-generation entropy.
+		/// </para>
+		/// <para>
+		/// Seed it from something stable and specific to this pairing &mdash; the legacy's own
+		/// identifier combined with the new world's seed &mdash; so one legacy fares differently
+		/// in different worlds, and identically in the same one.
 		/// </para>
 		/// </summary>
-		/// <param name="DaysUnattended">Days between the founder's last visit and the reckoning.</param>
-		public static InheritedState ResolveInheritedState(int DaysUnattended, GrowthStage Stage, int Population, int Defence, int StoredWater, bool Withered)
+		public static int InterregnumRoll(long Seed)
 		{
-			int pressure = (DaysUnattended > 0) ? DaysUnattended : 0;
-			int resilience = ResilienceDays(Stage, Population, Defence, StoredWater, Withered);
+			ulong state = (ulong)Seed + 0x9E3779B97F4A7C15UL;
+			state ^= state >> 30;
+			state *= 0xBF58476D1CE4E5B9UL;
+			state ^= state >> 27;
+			state *= 0x94D049BB133111EBUL;
+			state ^= state >> 31;
+			return (int)(state % 100UL);
+		}
+
+		/// <summary>
+		/// How much of the outcome the interregnum draw is allowed to move, in vigour points.
+		/// <para>
+		/// Bounded deliberately. The draw applied at full weight let one bad roll take a city
+		/// sealed at perfect vigour all the way down to <see cref="InheritedState.Abandoned"/>,
+		/// which makes the years between lives the author of the story and the founder's work
+		/// irrelevant. At forty it moves the outcome by a band or two &mdash; enough that the same
+		/// seal is a different story in a different world, not enough to overrule how the place
+		/// was left.
+		/// </para>
+		/// </summary>
+		public const int InterregnumSwing = 40;
+
+		public const int HoldsAt = 55;
+
+		public const int FadesAt = 35;
+
+		public const int EmptiesAt = 15;
+
+		/// <summary>
+		/// Resolves the sealed condition and the interregnum draw into the state the settlement is
+		/// found in.
+		/// <para>
+		/// Fortune shifts the outcome but never decides it alone: a City sealed at full vigour
+		/// survives the worst draw, and a dying camp survives none of them. Between those, the
+		/// same seal genuinely can become a different story in a different world, which is the
+		/// point of having a draw at all.
+		/// </para>
+		/// <para>
+		/// Two floors override the arithmetic, because some conditions are not a matter of luck. A
+		/// settlement sealed while withering is never found <see cref="InheritedState.Held"/>, and
+		/// one sealed with nobody in it is never found inhabited.
+		/// </para>
+		/// </summary>
+		/// <param name="Vigour">The sealed condition, from <see cref="SealedVigour"/>.</param>
+		/// <param name="Roll">The interregnum draw, from <see cref="InterregnumRoll"/>.</param>
+		/// <param name="Population">Population at sealing, for the empty-settlement floor.</param>
+		/// <param name="Withered">Whether it was withering at sealing.</param>
+		public static InheritedState ResolveInheritedState(int Vigour, int Roll, int Population, bool Withered)
+		{
+			int vigour = (Vigour > 0) ? Vigour : 0;
+			if (vigour > MaxSealedVigour)
+			{
+				vigour = MaxSealedVigour;
+			}
+			int roll = Roll;
+			if (roll < 0)
+			{
+				roll = 0;
+			}
+			if (roll > 99)
+			{
+				roll = 99;
+			}
+
+			int fate = vigour - roll * InterregnumSwing / 100;
 			InheritedState state;
-			if (pressure <= resilience)
+			if (fate >= HoldsAt)
 			{
 				state = InheritedState.Held;
 			}
-			else if (pressure <= resilience * 2)
+			else if (fate >= FadesAt)
 			{
 				state = InheritedState.Faded;
 			}
-			else if (pressure <= resilience * 4)
+			else if (fate >= EmptiesAt)
 			{
 				state = InheritedState.Abandoned;
 			}
@@ -673,6 +749,7 @@
 			{
 				state = InheritedState.Ruins;
 			}
+
 			if (Withered && state < InheritedState.Faded)
 			{
 				state = InheritedState.Faded;
@@ -685,9 +762,13 @@
 		}
 
 		/// <summary>
-		/// How many of the settlement's people are still there to be found. Nobody remains at
-		/// <see cref="InheritedState.Abandoned"/> or below it; a faded settlement keeps half, and
+		/// How many people are still there to be found. Nobody remains at
+		/// <see cref="InheritedState.Abandoned"/> or below; a faded settlement keeps half, and
 		/// never rounds its last inhabitant away.
+		/// <para>
+		/// These are successors, not the old roll walking around again. The named roll crosses as
+		/// history; the people who greet a later founder are their descendants.
+		/// </para>
 		/// </summary>
 		public static int InheritedPopulation(int Population, InheritedState State)
 		{
@@ -703,53 +784,42 @@
 		}
 
 		/// <summary>
-		/// Whether the settlement's works are still standing to be reoccupied. Only ruins take the
-		/// buildings down; an abandoned settlement is intact and empty, which is the whole point
-		/// of it.
+		/// Whether the settlement's works still stand to be reoccupied.
+		/// <para>
+		/// <see cref="InheritedState.Abandoned"/> is intact and derelict &mdash; empty is the
+		/// point of it, not damaged. Only <see cref="InheritedState.Ruins"/> takes the buildings
+		/// down, and even then the street plan stays legible, because being able to recognise
+		/// where you once lived is the entire payload of inheriting a ruin.
+		/// </para>
 		/// </summary>
 		public static bool WorksSurvive(InheritedState State)
 		{
 			return State < InheritedState.Ruins;
 		}
 
-		/// <summary>A settlement this far past its own resilience is not recently lost, but old.</summary>
-		public const int LongRuinedResilienceMultiple = 8;
-
-		public const int RuinLevelAbandoned = 10;
-
-		public const int RuinLevelRuined = 50;
-
-		public const int RuinLevelLongRuined = 100;
-
 		/// <summary>
-		/// Severity to hand to the engine's own <c>Ruiner</c> zone builder, on its scale where 10
-		/// is a few fallen roofs and 100 is thorough.
+		/// Fraction of a ruined settlement's structures left standing, as a percentage.
 		/// <para>
-		/// The game already ruins its abandoned villages this way, in four grades keyed to how
-		/// long ago they emptied, so a settlement of ours reads as part of the same world rather
-		/// than as something a mod bolted on. We do not draw our own rubble; we tell Freehold's
-		/// builder how far gone the place is.
+		/// Ruination is applied by a deterministic transform of our own onto a fresh
+		/// reconstruction canvas. It must never be delegated to the engine's <c>Ruiner</c>, which
+		/// detonates explosions across a live zone: that would damage whatever else the new world
+		/// had already put there, and would make <see cref="InheritedState.Abandoned"/> destructive
+		/// when the whole promise of that state is that everything is still standing.
 		/// </para>
 		/// <para>
-		/// Ruins spans two grades because "lost last year" and "lost long ago" should not look
-		/// alike, and the arithmetic already knows the difference.
+		/// The floor is what makes a ruin readable as a place rather than as rubble.
 		/// </para>
 		/// </summary>
-		public static int RuinLevelFor(InheritedState State, int DaysUnattended, int Resilience)
+		public const int RuinStandingFloorPercent = 25;
+
+		public static int StandingPercent(InheritedState State, int Roll)
 		{
-			if (State < InheritedState.Abandoned)
+			if (State < InheritedState.Ruins)
 			{
-				return 0;
+				return 100;
 			}
-			if (State == InheritedState.Abandoned)
-			{
-				return RuinLevelAbandoned;
-			}
-			if (Resilience > 0 && DaysUnattended > Resilience * LongRuinedResilienceMultiple)
-			{
-				return RuinLevelLongRuined;
-			}
-			return RuinLevelRuined;
+			int roll = (Roll > 0) ? (Roll % 100) : 0;
+			return RuinStandingFloorPercent + roll * (60 - RuinStandingFloorPercent) / 99;
 		}
 
 		public static readonly string[] Districts = new string[6] { "agrarian", "market", "craft", "shrine", "garrison", "academy" };
