@@ -16,6 +16,20 @@
     <Compile Include="KingdomRulesTests.cs" />
     <Compile Include="..\Core\KingdomRules.cs" />
     <Compile Include="..\Core\KingdomLedger.cs" />
+    <Compile Include="..\Simulation\Kernel\KernelContracts.cs" />
+    <Compile Include="..\Simulation\Kernel\CanonicalBytes.cs" />
+    <Compile Include="..\Simulation\Kernel\CounterRandom.cs" />
+    <Compile Include="..\Simulation\Kernel\TickMath.cs" />
+    <Compile Include="..\Simulation\Kernel\OptionLatch.cs" />
+    <Compile Include="..\Simulation\Kernel\JobTransitions.cs" />
+    <Compile Include="..\Simulation\Kernel\FixedPeriodToy.cs" />
+    <Compile Include="KernelCanonicalTests.cs" />
+    <Compile Include="CounterRandomTests.cs" />
+    <Compile Include="TickMathTests.cs" />
+    <Compile Include="OptionLatchTests.cs" />
+    <Compile Include="JobTransitionTests.cs" />
+    <Compile Include="FixedPeriodToyTests.cs" />
+    <Compile Include="KernelPropertyTests.cs" />
   </ItemGroup>
 
   <ItemGroup>
