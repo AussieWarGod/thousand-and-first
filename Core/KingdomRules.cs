@@ -640,19 +640,13 @@
 			int defence = (Defence > 0) ? Defence : 0;
 			int stored = (StoredWater > 0) ? StoredWater : 0;
 
-			// GrowthStage is an enum over an int, and nothing stops a caller casting an arbitrary
-			// value into it. Clamp before multiplying: int.MaxValue would both overflow and, cast
-			// blindly, hand a Camp the standing of a City.
+			// GrowthStage is an enum over an int and nothing stops a caller casting an arbitrary
+			// value into it. Out-of-domain contributes nothing rather than clamping: clamping high
+			// values to City hands garbage the best case in the table, which is precisely the
+			// outcome the guard exists to prevent. Unrecognised means unproven, and unproven earns
+			// a Camp's standing.
 			int stage = (int)Stage;
-			if (stage < (int)GrowthStage.Camp)
-			{
-				stage = (int)GrowthStage.Camp;
-			}
-			if (stage > (int)GrowthStage.City)
-			{
-				stage = (int)GrowthStage.City;
-			}
-			int fromStage = stage * VigourPerStage;
+			int fromStage = (stage >= (int)GrowthStage.Camp && stage <= (int)GrowthStage.City) ? (stage * VigourPerStage) : 0;
 			int fromPeople = (population < VigourFromPopulationCap) ? population : VigourFromPopulationCap;
 			int fromWalls = (defence < VigourFromDefenceCap / 2) ? (defence * 2) : VigourFromDefenceCap;
 
@@ -681,17 +675,17 @@
 		/// <summary>
 		/// The one draw of fortune between one life and the next, from 0 to 99.
 		/// <para>
-		/// Deterministic on purpose. The same legacy arriving in the same world must always
-		/// produce the same settlement, however many times generation is retried, or a player
-		/// could reroll their inheritance by regenerating. It is also why this is a hash rather
-		/// than the engine's random: it must not consume or depend on world-generation entropy.
+		/// Deterministic on purpose. A legacy draws its fate once, at promotion, and that fate is
+		/// then fixed for good: retrying generation any number of times must reproduce it. It is
+		/// also why this is a hash rather than the engine's random, which would both consume
+		/// world-generation entropy and give the player a stream to reroll.
 		/// </para>
 		/// <para>
 		/// Seed it <b>only</b> from immutable legacy data: lineage, origin, generation, revision.
-		/// Never the target world's seed, the calendar, system time, or any stream the player can
-		/// reroll. An earlier version of this comment said to combine the legacy with the new
-		/// world's seed, which would have handed back exactly the reroll it claimed to prevent
-		/// &mdash; regenerate the world, draw again.
+		/// Never a destination's seed, the calendar, system time, or any stream a player can turn
+		/// over again. An earlier version of this comment said to mix the legacy with the seed of
+		/// wherever it landed, which would have handed back precisely the reroll it claimed to
+		/// prevent.
 		/// </para>
 		/// <para>
 		/// The consequence is that a legacy's fate is fixed the moment it is promoted, not when
@@ -713,12 +707,17 @@
 		/// <summary>
 		/// How much of the outcome the interregnum draw is allowed to move, in vigour points.
 		/// <para>
-		/// Bounded deliberately. The draw applied at full weight let one bad roll take a city
-		/// sealed at perfect vigour all the way down to <see cref="InheritedState.Abandoned"/>,
-		/// which makes the years between lives the author of the story and the founder's work
-		/// irrelevant. At forty it moves the outcome by a band or two &mdash; enough that the same
-		/// seal is a different story in a different world, not enough to overrule how the place
-		/// was left.
+		/// Bounded deliberately. The draw applied at full weight let one bad roll take a
+		/// settlement sealed at perfect vigour all the way down to
+		/// <see cref="InheritedState.Abandoned"/>, which makes the interregnum the author of the
+		/// story and the founder's work irrelevant. At forty it moves the outcome by a band or
+		/// two &mdash; enough that a seal is not its whole fate, not enough to overrule how the
+		/// place was left.
+		/// </para>
+		/// <para>
+		/// The scale divides by 99, not 100, so the worst draw costs exactly this many points
+		/// rather than one short of it. A constant named forty that can only ever take
+		/// thirty-nine is a small lie that every later reader has to re-derive.
 		/// </para>
 		/// </summary>
 		public const int InterregnumSwing = 40;
@@ -733,22 +732,22 @@
 		/// Resolves the sealed condition and the interregnum draw into the state the settlement is
 		/// found in.
 		/// <para>
-		/// Fortune shifts the outcome but never decides it alone: a City sealed at full vigour
-		/// survives the worst draw, and a dying camp survives none of them. Between those, the
-		/// same seal genuinely can become a different story in a different world, which is the
-		/// point of having a draw at all.
+		/// Fortune shifts the outcome but never decides it alone: a settlement sealed at full
+		/// vigour survives the worst draw there is, and a dying camp survives none of them.
+		/// Between those two ends the draw is what makes the story.
 		/// </para>
 		/// <para>
-		/// Two floors override the arithmetic, because some conditions are not a matter of luck. A
-		/// settlement sealed while withering is never found <see cref="InheritedState.Held"/>, and
-		/// one sealed with nobody in it is never found inhabited.
+		/// One floor overrides the arithmetic: a settlement sealed with nobody in it is never
+		/// found inhabited. Withering needs no floor and takes no parameter here &mdash; it is
+		/// already sealed into the vigour, which is capped low enough that
+		/// <see cref="InheritedState.Held"/> is unreachable for a withered settlement as a
+		/// property of the arithmetic.
 		/// </para>
 		/// </summary>
 		/// <param name="Vigour">The sealed condition, from <see cref="SealedVigour"/>.</param>
 		/// <param name="Roll">The interregnum draw, from <see cref="InterregnumRoll"/>.</param>
 		/// <param name="Population">Population at sealing, for the empty-settlement floor.</param>
-		/// <param name="Withered">Whether it was withering at sealing.</param>
-		public static InheritedState ResolveInheritedState(int Vigour, int Roll, int Population, bool Withered)
+		public static InheritedState ResolveInheritedState(int Vigour, int Roll, int Population)
 		{
 			int vigour = (Vigour > 0) ? Vigour : 0;
 			if (vigour > MaxSealedVigour)
@@ -765,7 +764,7 @@
 				roll = 99;
 			}
 
-			int fate = vigour - roll * InterregnumSwing / 100;
+			int fate = vigour - roll * InterregnumSwing / 99;
 			InheritedState state;
 			if (fate >= HoldsAt)
 			{
@@ -831,15 +830,20 @@
 		}
 
 		/// <summary>
-		/// Whether the settlement's works still stand to be reoccupied.
+		/// Whether <b>every</b> work still stands, so the settlement can be reoccupied as it was.
 		/// <para>
-		/// <see cref="InheritedState.Abandoned"/> is intact and derelict &mdash; empty is the
-		/// point of it, not damaged. Only <see cref="InheritedState.Ruins"/> takes the buildings
-		/// down, and even then the street plan stays legible, because being able to recognise
-		/// where you once lived is the entire payload of inheriting a ruin.
+		/// Deliberately named for all rather than any. This was <c>WorksSurvive</c>, which read as
+		/// "anything survives" and flatly contradicted <see cref="StandingPercent"/> telling the
+		/// caller that a quarter to three-fifths of a ruin is still up. Ask this when deciding
+		/// whether to place the settlement intact; ask <see cref="StandingPercent"/> when deciding
+		/// how much of it to place.
+		/// </para>
+		/// <para>
+		/// <see cref="InheritedState.Abandoned"/> answers true: it is intact and derelict, empty
+		/// rather than damaged, which is the whole point of it.
 		/// </para>
 		/// </summary>
-		public static bool WorksSurvive(InheritedState State)
+		public static bool AllWorksSurvive(InheritedState State)
 		{
 			// Fails closed for the same reason as InheritedPopulation: a cast-garbage negative
 			// compares as less than Ruins and would otherwise promise intact structures.
