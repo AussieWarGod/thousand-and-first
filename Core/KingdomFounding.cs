@@ -51,7 +51,11 @@ namespace ThousandAndFirst
 					faction.SetFactionFeeling(other.Name, Reputation.GetFeeling((float)standing));
 				}
 			}
-			KingdomChronicle.Record(system, "you poured the first water, and " + faction.DisplayName + " was founded", Accomplishment: true);
+			// The one civic event that earns a mural. Mural space is capped at sixteen across a
+			// whole life and shared with the player's own history, so the settlement takes exactly
+			// one slot: the founding, which happens once per realm and is what everything else
+			// hangs off. Every other civic accomplishment files with no mural weight.
+			KingdomChronicle.Record(system, "you poured the first water, and " + faction.DisplayName + " was founded", Accomplishment: true, MuralText: "Poured the first water and founded " + faction.DisplayName + ".");
 			The.Player?.RequirePart<KingdomCharterPart>().EnsureAbility();
 			return faction;
 		}

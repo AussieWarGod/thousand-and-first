@@ -18,10 +18,26 @@ namespace ThousandAndFirst
 		/// <param name="Text">Lower-case clause with no trailing period, written from the
 		/// founder's perspective, e.g. "the well ran dry" or "you poured the first water".
 		/// Second-person phrasing is converted automatically for the outsider register.</param>
-		/// <param name="Accomplishment">True to also file a journal accomplishment, which
-		/// makes the event eligible for the player's chronicle and sultan murals. Reserve
-		/// this for milestones; ordinary events would spam the journal.</param>
-		public static void Record(KingdomSystem System, string Text, bool Accomplishment = false)
+		/// <param name="Accomplishment">True to also file a journal accomplishment. Reserve this
+		/// for milestones; ordinary events would spam the journal.</param>
+		/// <param name="MuralText">
+		/// Authored third-person line for the player's end-of-game murals, or null &mdash; which
+		/// is what almost everything should pass.
+		/// <para>
+		/// Mural space is scarce and shared with the player's own life.
+		/// <c>PlayerMuralController.initializeMurals</c> keeps at most sixteen accomplishments
+		/// with non-empty mural text, and vanilla's Coda then draws its gospel from the first ten
+		/// of those. A settlement that files a mural for every trade charter and repelled raid
+		/// would push the player's actual history out of their own murals.
+		/// </para>
+		/// <para>
+		/// Passing null is <b>not</b> enough on its own to stay out: `AddAccomplishment` derives
+		/// mural text from the accomplishment text whenever mural text is null and the weight is
+		/// not <c>Nil</c>, and silently overrides the category to <c>DoesSomethingRad</c> while
+		/// doing it. Staying out requires the weight, which is why the two travel together here.
+		/// </para>
+		/// </param>
+		public static void Record(KingdomSystem System, string Text, bool Accomplishment = false, string MuralText = null)
 		{
 			System.ChronicleEntries.Add("On the " + Calendar.GetDay() + " of " + Calendar.GetMonth() + ", " + Calendar.GetYear() + " AR, " + Text + ".");
 			if (System.ChronicleEntries.Count > MaxEntries)
@@ -36,7 +52,8 @@ namespace ThousandAndFirst
 			}
 			if (Accomplishment && XRL.UI.Options.GetOption("r_TAF_OptionChronicle") != "No")
 			{
-				JournalAPI.AddAccomplishment(Text.Capitalize() + ".", null, null, null, "general", MuralCategory.CreatesSomething, MuralWeight.Medium, null, -1L);
+				bool wantsMural = !string.IsNullOrEmpty(MuralText);
+				JournalAPI.AddAccomplishment(Text.Capitalize() + ".", wantsMural ? MuralText : null, null, null, "general", MuralCategory.CreatesSomething, wantsMural ? MuralWeight.Medium : MuralWeight.Nil, null, -1L);
 			}
 		}
 	}
