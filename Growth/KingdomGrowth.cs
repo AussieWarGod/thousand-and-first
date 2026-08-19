@@ -350,11 +350,7 @@ namespace ThousandAndFirst
 				LiquidVolume part = item.GetPart<LiquidVolume>();
 				if (part != null && part.MaxVolume < 0 && part.Volume > 0 && part.GetPrimaryLiquidID() == "water")
 				{
-					int drams = (part.Volume < fetchable - drained) ? part.Volume : (fetchable - drained);
-					if (part.UseDrams(drams))
-					{
-						drained += drams;
-					}
+					drained += KingdomLiquids.Drain(part, fetchable - drained);
 				}
 			}
 			int stored = 0;
@@ -393,11 +389,7 @@ namespace ThousandAndFirst
 				LiquidVolume part = item.GetPart<LiquidVolume>();
 				if (part != null && part.MaxVolume > 0 && item.GetIntProperty("KingdomStores") == 1 && part.Volume > 0 && part.GetPrimaryLiquidID() == "water")
 				{
-					int drams = (part.Volume < remaining) ? part.Volume : remaining;
-					if (part.UseDrams(drams))
-					{
-						remaining -= drams;
-					}
+					remaining -= KingdomLiquids.Drain(part, remaining);
 				}
 			}
 			return Drams - remaining;
