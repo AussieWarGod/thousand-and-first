@@ -75,6 +75,18 @@ namespace ThousandAndFirst.Tests
 			Assert.AreEqual(expected, KingdomRules.HeartbeatDays(elapsed));
 		}
 
+		[TestCase(0L, 5000L, 5000L)]
+		[TestCase(1000L, 1599L, 1000L)]
+		[TestCase(1000L, 2200L, 2200L)]
+		[TestCase(1000L, 2800L, 2200L)]
+		[TestCase(1000L, 4600L, 4600L)]
+		[TestCase(1000L, 5800L, 5800L)]
+		[TestCase(5000L, 4000L, 4000L)]
+		public void HeartbeatCheckpoint(long previous, long current, long expected)
+		{
+			Assert.AreEqual(expected, KingdomRules.HeartbeatCheckpoint(previous, current));
+		}
+
 		[TestCase(GrowthStage.Camp, 1)]
 		[TestCase(GrowthStage.Steading, 2)]
 		[TestCase(GrowthStage.Village, 3)]
@@ -150,6 +162,16 @@ namespace ThousandAndFirst.Tests
 		public void PolicyUpkeep(int baseUpkeep, KingdomRules.StoresPolicy stores, int expected)
 		{
 			Assert.AreEqual(expected, KingdomRules.PolicyUpkeep(baseUpkeep, stores));
+		}
+
+		[TestCase(4, 1200L, KingdomRules.StoresPolicy.Thrift, 0)]
+		[TestCase(4, 3600L, KingdomRules.StoresPolicy.Thrift, 0)]
+		[TestCase(8, 1200L, KingdomRules.StoresPolicy.Thrift, 1)]
+		[TestCase(8, 3600L, KingdomRules.StoresPolicy.Thrift, 3)]
+		[TestCase(8, 120000L, KingdomRules.StoresPolicy.Plenty, 6)]
+		public void PolicyUpkeepForElapsed(int population, long elapsed, KingdomRules.StoresPolicy stores, int expected)
+		{
+			Assert.AreEqual(expected, KingdomRules.PolicyUpkeepForElapsed(population, elapsed, stores));
 		}
 
 		[TestCase(6, 0, 6)]
@@ -247,6 +269,21 @@ namespace ThousandAndFirst.Tests
 			ledger.Reset();
 			Assert.IsFalse(ledger.Any, "reset clears the ledger between visits");
 			Assert.IsTrue(ledger.Digest("Kavvat", 1).Contains("nothing moved"));
+		}
+
+		[Test]
+		public void LedgerAccountingAloneIsReportable()
+		{
+			KingdomLedger ledger = new KingdomLedger();
+			Assert.IsFalse(ledger.Any);
+			ledger.Fetched = 4;
+			Assert.IsTrue(ledger.Any);
+			ledger.Reset();
+			ledger.UpkeepDrawn = 1;
+			Assert.IsTrue(ledger.Any);
+			ledger.Reset();
+			ledger.ArrivalCost = 2;
+			Assert.IsTrue(ledger.Any);
 		}
 
 		[TestCase("cask rack (holds 64 drams)", "cask rack")]

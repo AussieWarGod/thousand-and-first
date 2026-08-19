@@ -229,6 +229,7 @@ namespace ThousandAndFirst
 			{
 				return base.HandleEvent(E);
 			}
+			Ledger.Reset();
 			Guard("growth", delegate
 			{
 				KingdomGrowth.OnZoneActivated(this, E.Zone, survey);

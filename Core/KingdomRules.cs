@@ -86,6 +86,28 @@
 			return (int)days;
 		}
 
+		/// <summary>
+		/// Advances a heartbeat without losing a partial day. Time beyond the absence cap is
+		/// forgiven by starting a fresh checkpoint at the current tick.
+		/// </summary>
+		public static long HeartbeatCheckpoint(long PreviousTick, long CurrentTick)
+		{
+			if (PreviousTick <= 0 || CurrentTick <= PreviousTick)
+			{
+				return CurrentTick;
+			}
+			long days = (CurrentTick - PreviousTick) / TicksPerDay;
+			if (days <= 0)
+			{
+				return PreviousTick;
+			}
+			if (days > MaxUpkeepDaysCharged)
+			{
+				return CurrentTick;
+			}
+			return PreviousTick + days * TicksPerDay;
+		}
+
 		/// <summary>Stock tier a settlement's shops carry at a given growth stage.</summary>
 		public static int ShopTierForStage(GrowthStage Stage)
 		{
@@ -483,6 +505,15 @@
 				days = MaxUpkeepDaysCharged;
 			}
 			return (int)(days * (long)UpkeepDrams(Population));
+		}
+
+		/// <summary>
+		/// Whole-day upkeep after stores policy. Apply policy to the daily rate before
+		/// multiplying so cost does not change with activation cadence.
+		/// </summary>
+		public static int PolicyUpkeepForElapsed(int Population, long ElapsedTicks, StoresPolicy Stores)
+		{
+			return PolicyUpkeep(UpkeepDrams(Population), Stores) * HeartbeatDays(ElapsedTicks);
 		}
 
 		public static int FetchableDrams(int Population, int OpenWater, int StorageSpace)

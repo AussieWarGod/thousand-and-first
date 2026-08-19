@@ -35,61 +35,21 @@ namespace ThousandAndFirst
 			if (System.NextArrivalTick <= 0)
 			{
 				System.NextArrivalTick = timeTicks + Interval(System, Z);
-				return;
 			}
-			System.Ledger.Reset();
 			int fetched = survey.Store(survey.DrawFromPools(KingdomRules.FetchableDrams(System.Population, survey.OpenWater, survey.StorageSpace)));
 			System.Ledger.Fetched += fetched;
 			if (fetched > 0 && KingdomLog.Enabled)
 			{
 				KingdomLog.Log("growth: fetched " + fetched + " drams from open water into stores");
 			}
-			int heartbeatDays = KingdomRules.HeartbeatDays(timeTicks - System.LastHeartbeatTick);
-			if (heartbeatDays > 0)
-			{
-				System.LastHeartbeatTick = timeTicks;
-			}
+			bool heartbeatHealthy = ResolveHeartbeat(System, Z, survey, timeTicks);
 			int arrivals = 0;
-			while (timeTicks >= System.NextArrivalTick && arrivals < KingdomRules.MaxArrivalsPerVisit && System.Population < KingdomRules.MaxPopulation)
+			while (heartbeatHealthy && timeTicks >= System.NextArrivalTick && arrivals < KingdomRules.MaxArrivalsPerVisit && System.Population < KingdomRules.MaxPopulation)
 			{
-				int upkeep = ThirstEnabled ? (KingdomRules.PolicyUpkeep(KingdomRules.UpkeepDrams(System.Population), System.Stores) * ((heartbeatDays > 0) ? heartbeatDays : 1)) : 0;
-				int paid = survey.Consume(upkeep);
-				System.Ledger.UpkeepDrawn += paid;
-				if (paid < upkeep || survey.StoredWater < KingdomRules.DramsPerArrival)
+				if (survey.StoredWater < KingdomRules.DramsPerArrival)
 				{
-					if (!ThirstEnabled)
-					{
-						System.NextArrivalTick = timeTicks + Interval(System, Z);
-						break;
-					}
-					System.DryStreak++;
-					KingdomChronicle.Record(System, "the stores ran low, and " + System.KingdomDisplayName + " thirsted");
-					System.Ledger.Note("{{r|The cistern ran dry. Settlers will leave if the water does not return.}}");
-					KingdomRules.ThirstOutcome outcome = KingdomRules.ResolveThirst(System.DryStreak, System.Stage, System.Population);
-					if (KingdomLog.Enabled) KingdomLog.Log("thirst: streak=" + System.DryStreak + " outcome=" + outcome);
-					if (outcome == KingdomRules.ThirstOutcome.Emigration)
-					{
-						Emigrate(System, Z, survey);
-					}
-					else if (outcome == KingdomRules.ThirstOutcome.Withering)
-					{
-						Emigrate(System, Z, survey);
-						if (!System.Withered)
-						{
-							System.Withered = true;
-							KingdomChronicle.Record(System, System.KingdomDisplayName + " withered in the long thirst");
-							System.Ledger.Note("{{R|The settlement is withering in the long thirst.}}");
-						}
-					}
 					System.NextArrivalTick = timeTicks + Interval(System, Z);
 					break;
-				}
-				System.DryStreak = 0;
-				if (System.Withered)
-				{
-					System.Withered = false;
-					KingdomChronicle.Record(System, "the water returned, and " + System.KingdomDisplayName + " drank deep and recovered");
-					System.Ledger.Note("{{G|The water returned, and the settlement recovered.}}");
 				}
 				if (!KingdomRules.HasRoomToHouse(System.Population, survey.Beds))
 				{
@@ -125,6 +85,66 @@ namespace ThousandAndFirst
 			UpdateStage(System, Z, survey);
 			KingdomPetitions.OnSettlementPass(System, Z, survey);
 			if (KingdomLog.Enabled) KingdomLog.Log("growth pass done: pop=" + System.Population + " stage=" + System.Stage + " arrivals=" + arrivals + " dry=" + System.DryStreak + " next=" + System.NextArrivalTick);
+		}
+
+		private static bool ResolveHeartbeat(KingdomSystem System, Zone Z, KingdomSurvey Survey, long TimeTicks)
+		{
+			if (System.LastHeartbeatTick <= 0 || TimeTicks <= System.LastHeartbeatTick)
+			{
+				System.LastHeartbeatTick = TimeTicks;
+				return true;
+			}
+			long elapsed = TimeTicks - System.LastHeartbeatTick;
+			int days = KingdomRules.HeartbeatDays(elapsed);
+			if (days <= 0)
+			{
+				return true;
+			}
+			System.LastHeartbeatTick = KingdomRules.HeartbeatCheckpoint(System.LastHeartbeatTick, TimeTicks);
+			if (!ThirstEnabled)
+			{
+				RecoverFromThirst(System);
+				return true;
+			}
+			int upkeep = KingdomRules.PolicyUpkeepForElapsed(System.Population, elapsed, System.Stores);
+			int paid = Survey.Consume(upkeep);
+			System.Ledger.UpkeepDrawn += paid;
+			if (paid >= upkeep)
+			{
+				RecoverFromThirst(System);
+				return true;
+			}
+			System.DryStreak++;
+			KingdomChronicle.Record(System, "the stores ran low, and " + System.KingdomDisplayName + " thirsted");
+			System.Ledger.Note("{{r|The cistern ran dry. Settlers will leave if the water does not return.}}");
+			KingdomRules.ThirstOutcome outcome = KingdomRules.ResolveThirst(System.DryStreak, System.Stage, System.Population);
+			if (KingdomLog.Enabled) KingdomLog.Log("thirst: days=" + days + " upkeep=" + paid + "/" + upkeep + " streak=" + System.DryStreak + " outcome=" + outcome);
+			if (outcome == KingdomRules.ThirstOutcome.Emigration)
+			{
+				Emigrate(System, Z, Survey);
+			}
+			else if (outcome == KingdomRules.ThirstOutcome.Withering)
+			{
+				Emigrate(System, Z, Survey);
+				if (!System.Withered)
+				{
+					System.Withered = true;
+					KingdomChronicle.Record(System, System.KingdomDisplayName + " withered in the long thirst");
+					System.Ledger.Note("{{R|The settlement is withering in the long thirst.}}");
+				}
+			}
+			return false;
+		}
+
+		private static void RecoverFromThirst(KingdomSystem System)
+		{
+			System.DryStreak = 0;
+			if (System.Withered)
+			{
+				System.Withered = false;
+				KingdomChronicle.Record(System, "the water returned, and " + System.KingdomDisplayName + " drank deep and recovered");
+				System.Ledger.Note("{{G|The water returned, and the settlement recovered.}}");
+			}
 		}
 
 		public static bool SpawnSettler(KingdomSystem System, Zone Z, KingdomSurvey Survey = null)
