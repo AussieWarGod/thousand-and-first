@@ -39,15 +39,37 @@ namespace ThousandAndFirst
 
 		public const int DryIntervalsToEmigrate = 2;
 
+		public const int DryIntervalsToWither = 3;
+
+		public const int LoyalCoreSettlers = 2;
+
 		public const int FoundingCostDrams = 8;
 
 		public const int FetchDramsPerSettler = 2;
 
 		public static readonly string[] Origins = new string[6] { "the salt marshes", "the desert canyons", "the hills", "the flower fields", "the rust wells", "the banana grove" };
 
+		public const long TicksPerDay = 1200L;
+
+		public const int MaxUpkeepDaysCharged = 3;
+
 		public static int UpkeepDrams(int Population)
 		{
 			return Population / 4;
+		}
+
+		public static int UpkeepForElapsed(int Population, long ElapsedTicks)
+		{
+			if (Population <= 0 || ElapsedTicks <= 0)
+			{
+				return 0;
+			}
+			long days = ElapsedTicks / TicksPerDay;
+			if (days > MaxUpkeepDaysCharged)
+			{
+				days = MaxUpkeepDaysCharged;
+			}
+			return (int)(days * (long)UpkeepDrams(Population));
 		}
 
 		public static int FetchableDrams(int Population, int OpenWater, int StorageSpace)
@@ -73,21 +95,21 @@ namespace ThousandAndFirst
 			return 3600 + 600L * Population;
 		}
 
-		public static GrowthStage StageFor(int Population, int StoredDrams)
+		public static GrowthStage StageFor(int Population, int StorageCapacity)
 		{
-			if (Population >= 50 && StoredDrams >= 1024)
+			if (Population >= 50 && StorageCapacity >= 1024)
 			{
 				return GrowthStage.City;
 			}
-			if (Population >= 25 && StoredDrams >= 256)
+			if (Population >= 25 && StorageCapacity >= 256)
 			{
 				return GrowthStage.Town;
 			}
-			if (Population >= 12 && StoredDrams >= 64)
+			if (Population >= 12 && StorageCapacity >= 64)
 			{
 				return GrowthStage.Village;
 			}
-			if (Population >= 5 && StoredDrams >= 16)
+			if (Population >= 5 && StorageCapacity >= 16)
 			{
 				return GrowthStage.Steading;
 			}
@@ -135,6 +157,24 @@ namespace ThousandAndFirst
 			public string Category = "civic";
 
 			public GrowthStage MinStage;
+
+			public string ShortName;
+
+			public string Name => ShortName ?? DisplayName;
+		}
+
+		public static string StripParenthetical(string Text)
+		{
+			if (string.IsNullOrEmpty(Text))
+			{
+				return Text;
+			}
+			int num = Text.IndexOf(" (");
+			if (num <= 0)
+			{
+				return Text;
+			}
+			return Text.Substring(0, num);
 		}
 
 		public static bool TryParseBuildAttributes(string Key, string DisplayName, string Blueprint, string Cost, string Ticks, string Styles, string Category, string MinStage, out BuildEntry Entry, out string Error)
@@ -171,7 +211,8 @@ namespace ThousandAndFirst
 				BuildTicks = buildTicks,
 				Styles = (string.IsNullOrEmpty(Styles) ? "common" : Styles),
 				Category = (string.IsNullOrEmpty(Category) ? "civic" : Category),
-				MinStage = minStage
+				MinStage = minStage,
+				ShortName = StripParenthetical(DisplayName)
 			};
 			return true;
 		}
@@ -249,7 +290,9 @@ namespace ThousandAndFirst
 
 		public const int RaidStandingThreshold = -250;
 
-		public const int RaidTributeDrams = 12;
+		public const int RaidTributeDrams = 6;
+
+		public const int RaidPlunderDrams = 24;
 
 		public const long RaidCooldownTicks = 8400L;
 
@@ -283,14 +326,21 @@ namespace ThousandAndFirst
 
 		public static readonly string[] OutsiderLeads = new string[6] { "It is said that ", "Travelers claim that ", "The dromads tell that ", "A rumor holds that ", "The cults mutter that ", "Some deny that " };
 
+		public static readonly string[] OutsiderTails = new string[6] { ", though the tellers disagree on the year", ", and the water in the telling is always sweeter", ", or so the version sold at the Stilt goes", ", which is a lie, or was one", ", and no two who tell it agree who was there", "" };
+
 		public static string ComposeOutsider(string Text, int Roll)
 		{
-			int num = Roll % OutsiderLeads.Length;
-			if (num < 0)
+			int lead = Roll % OutsiderLeads.Length;
+			if (lead < 0)
 			{
-				num += OutsiderLeads.Length;
+				lead += OutsiderLeads.Length;
 			}
-			return OutsiderLeads[num] + Text + ".";
+			int tail = (Roll / OutsiderLeads.Length) % OutsiderTails.Length;
+			if (tail < 0)
+			{
+				tail += OutsiderTails.Length;
+			}
+			return OutsiderLeads[lead] + Text + OutsiderTails[tail] + ".";
 		}
 
 		public static bool TryParseZoneID(string ZoneID, out string World, out int GX, out int GY, out int Z)

@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using XRL;
 using XRL.Messages;
 using XRL.Rules;
@@ -33,7 +33,7 @@ namespace ThousandAndFirst
 				System.RaidFactionName = provoked;
 				System.RaidDueTick = timeTicks + KingdomRules.RaidWarningLeadTicks;
 				KingdomLog.Log("raid: warned faction=" + provoked + " due=" + System.RaidDueTick);
-				string displayName = Factions.Get(provoked)?.DisplayName ?? provoked;
+				string displayName = Faction.GetFormattedName(provoked);
 				KingdomChronicle.Record(System, "scouts of " + displayName + " were seen eyeing the stores of " + System.KingdomDisplayName);
 				MessageQueue.AddPlayerMessage("{{r|Scouts of " + displayName + " have been seen nearby. They will come for the stores. Tribute may yet turn them (" + KingdomRules.RaidTributeDrams + " drams).}}");
 			}
@@ -72,7 +72,7 @@ namespace ThousandAndFirst
 				return false;
 			}
 			KingdomGrowth.ConsumeStoredWater(Z, KingdomRules.RaidTributeDrams);
-			string displayName = Factions.Get(System.RaidFactionName)?.DisplayName ?? System.RaidFactionName;
+			string displayName = Faction.GetFormattedName(System.RaidFactionName);
 			System.AdjustStanding(System.RaidFactionName, 50);
 			System.RaidState = 0;
 			System.RaidFactionName = null;
@@ -85,7 +85,7 @@ namespace ThousandAndFirst
 		public static void ExecuteRaid(KingdomSystem System, Zone Z)
 		{
 			string[] table = KingdomRules.RaiderTableFor(System.RaidFactionName);
-			string displayName = Factions.Get(System.RaidFactionName)?.DisplayName ?? System.RaidFactionName;
+			string displayName = Faction.GetFormattedName(System.RaidFactionName);
 			System.RaidState = 0;
 			System.LastRaidTick = The.Game.TimeTicks;
 			if (table == null)
@@ -113,11 +113,16 @@ namespace ThousandAndFirst
 				spawned++;
 			}
 			System.RaidFactionName = null;
-			KingdomLog.Log("raid: executed faction=" + displayName + " spawned=" + spawned + " size=" + size);
+			int plundered = 0;
 			if (spawned > 0)
 			{
-				KingdomChronicle.Record(System, "raiders of " + displayName + " descended upon " + System.KingdomDisplayName);
-				MessageQueue.AddPlayerMessage("{{R|Raiders of " + displayName + " descend upon " + System.KingdomDisplayName + "!}}");
+				plundered = KingdomGrowth.ConsumeStoredWater(Z, KingdomRules.RaidPlunderDrams);
+			}
+			KingdomLog.Log("raid: executed faction=" + displayName + " spawned=" + spawned + " size=" + size + " plundered=" + plundered);
+			if (spawned > 0)
+			{
+				KingdomChronicle.Record(System, "raiders of " + displayName + " descended upon " + System.KingdomDisplayName + " and broke open the stores");
+				MessageQueue.AddPlayerMessage("{{R|Raiders of " + displayName + " descend upon " + System.KingdomDisplayName + "!" + ((plundered > 0) ? (" They stave in the casks: " + plundered + " drams lost.") : "") + "}}");
 			}
 		}
 	}

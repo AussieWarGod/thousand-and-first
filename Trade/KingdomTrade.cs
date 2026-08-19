@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using XRL;
 using XRL.Messages;
 using XRL.Rules;
@@ -44,8 +44,8 @@ namespace ThousandAndFirst
 			System.ActiveDealKeys.Add(DealKey);
 			System.ActiveDealFactions.Add(FactionName);
 			System.DealNextTicks.Add(The.Game.TimeTicks + deal.IntervalTicks);
-			KingdomChronicle.Record(System, System.KingdomDisplayName + " struck a " + deal.DisplayName + " with " + faction.DisplayName, Accomplishment: true);
-			MessageQueue.AddPlayerMessage("{{G|The charter is struck. Caravans of " + faction.DisplayName + " will come.}}");
+			KingdomChronicle.Record(System, System.KingdomDisplayName + " struck " + XRL.Language.Grammar.A(KingdomRules.StripParenthetical(deal.DisplayName)) + " with " + Faction.GetFormattedName(FactionName), Accomplishment: true);
+			MessageQueue.AddPlayerMessage("{{G|The charter is struck. Caravans of " + Faction.GetFormattedName(FactionName) + " will come.}}");
 			KingdomLog.Log("trade: struck " + DealKey + " with " + FactionName + " next=" + System.DealNextTicks[System.DealNextTicks.Count - 1]);
 			return true;
 		}
@@ -57,22 +57,17 @@ namespace ThousandAndFirst
 				return;
 			}
 			long timeTicks = The.Game.TimeTicks;
-			bool despawned = false;
+			DespawnCaravans(Z);
 			for (int i = 0; i < System.ActiveDealKeys.Count; i++)
 			{
 				if (timeTicks < System.DealNextTicks[i] || !KingdomData.TryGetDeal(System.ActiveDealKeys[i], out var deal))
 				{
 					continue;
 				}
-				if (!despawned)
-				{
-					DespawnCaravans(Z);
-					despawned = true;
-				}
 				int delivered = DeliverIncome(Z, deal.IncomeDrams);
 				SpawnCaravan(Z, deal.CaravanBlueprint);
 				System.AdjustStanding(System.ActiveDealFactions[i], KingdomRules.DealTrickleStanding);
-				string displayName = Factions.Get(System.ActiveDealFactions[i])?.DisplayName ?? System.ActiveDealFactions[i];
+				string displayName = Faction.GetFormattedName(System.ActiveDealFactions[i]);
 				KingdomChronicle.Record(System, "a caravan of " + displayName + " came to " + System.KingdomDisplayName + " and delivered " + delivered + " drams under charter");
 				MessageQueue.AddPlayerMessage("{{G|A caravan of " + displayName + " arrives under charter (" + delivered + " drams delivered" + ((delivered < deal.IncomeDrams) ? ", stores overflowing" : "") + ").}}");
 				KingdomLog.Log("trade: caravan deal=" + deal.Key + " faction=" + System.ActiveDealFactions[i] + " delivered=" + delivered + "/" + deal.IncomeDrams);

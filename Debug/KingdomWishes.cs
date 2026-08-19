@@ -166,13 +166,23 @@ namespace ThousandAndFirst
 			}
 			system.KingdomFactionName = null;
 			system.KingdomDisplayName = null;
+			system.Style = "common";
 			system.FoundedTick = 0L;
 			system.Stage = GrowthStage.Camp;
 			system.Population = 0;
 			system.DryStreak = 0;
 			system.Withered = false;
+			system.HasShopkeeper = false;
 			system.NextArrivalTick = 0L;
+			system.RaidState = 0;
+			system.RaidFactionName = null;
+			system.RaidDueTick = 0L;
+			system.LastRaidTick = 0L;
 			system.ClaimedZones.Clear();
+			system.ZoneDistricts.Clear();
+			system.ActiveDealKeys.Clear();
+			system.ActiveDealFactions.Clear();
+			system.DealNextTicks.Clear();
 			system.ChronicleEntries.Clear();
 			system.OutsiderEntries.Clear();
 			system.OriginCounts.Clear();

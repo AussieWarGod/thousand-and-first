@@ -1,4 +1,4 @@
-#if TAF_TESTS
+﻿#if TAF_TESTS
 using NUnit.Framework;
 using ThousandAndFirst;
 
@@ -51,6 +51,39 @@ namespace ThousandAndFirst.Tests
 			Assert.AreEqual(expected, KingdomRules.UpkeepDrams(population));
 		}
 
+		[TestCase(0, 1200L, 0)]
+		[TestCase(8, 1200L, 2)]
+		[TestCase(8, 600L, 0)]
+		[TestCase(8, 3600L, 6)]
+		[TestCase(8, 12000L, 6)]
+		[TestCase(20, 6000L, 15)]
+		[TestCase(20, 0L, 0)]
+		[TestCase(20, -100L, 0)]
+		public void UpkeepForElapsed(int population, long elapsed, int expected)
+		{
+			Assert.AreEqual(expected, KingdomRules.UpkeepForElapsed(population, elapsed));
+		}
+
+		[TestCase("cask rack (holds 64 drams)", "cask rack")]
+		[TestCase("great cistern (holds 256 drams)", "great cistern")]
+		[TestCase("communal bunk", "communal bunk")]
+		[TestCase("", "")]
+		[TestCase(null, null)]
+		public void StripParenthetical(string input, string expected)
+		{
+			Assert.AreEqual(expected, KingdomRules.StripParenthetical(input));
+		}
+
+		[Test]
+		public void OutsiderVariesBeyondPrefix()
+		{
+			string a = KingdomRules.ComposeOutsider("the well ran dry", 0);
+			string b = KingdomRules.ComposeOutsider("the well ran dry", 6);
+			Assert.AreNotEqual(a, b);
+			Assert.IsTrue(a.StartsWith("It is said that"));
+			Assert.IsTrue(b.StartsWith("It is said that"));
+		}
+
 		[TestCase(0, 0, GrowthStage.Camp)]
 		[TestCase(4, 1000, GrowthStage.Camp)]
 		[TestCase(5, 15, GrowthStage.Camp)]
@@ -64,9 +97,9 @@ namespace ThousandAndFirst.Tests
 		[TestCase(50, 1024, GrowthStage.City)]
 		[TestCase(100, 500, GrowthStage.Town)]
 		[TestCase(100, 0, GrowthStage.Camp)]
-		public void StageFor(int population, int drams, GrowthStage expected)
+		public void StageFor(int population, int capacity, GrowthStage expected)
 		{
-			Assert.AreEqual(expected, KingdomRules.StageFor(population, drams));
+			Assert.AreEqual(expected, KingdomRules.StageFor(population, capacity));
 		}
 
 		[TestCase(0, 100, 100, 0)]
@@ -189,10 +222,11 @@ namespace ThousandAndFirst.Tests
 			}
 		}
 
-		[TestCase("hello happened", 0, "It is said that hello happened.")]
-		[TestCase("hello happened", 5, "Some deny that hello happened.")]
-		[TestCase("hello happened", 6, "It is said that hello happened.")]
-		[TestCase("hello happened", -1, "Some deny that hello happened.")]
+		[TestCase("hello happened", 0, "It is said that hello happened, though the tellers disagree on the year.")]
+		[TestCase("hello happened", 5, "Some deny that hello happened, though the tellers disagree on the year.")]
+		[TestCase("hello happened", 6, "It is said that hello happened, and the water in the telling is always sweeter.")]
+		[TestCase("hello happened", -1, "Some deny that hello happened, though the tellers disagree on the year.")]
+		[TestCase("hello happened", 35, "Some deny that hello happened.")]
 		public void ComposeOutsider(string text, int roll, string expected)
 		{
 			Assert.AreEqual(expected, KingdomRules.ComposeOutsider(text, roll));

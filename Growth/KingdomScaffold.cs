@@ -8,6 +8,8 @@ namespace ThousandAndFirst
 	[Serializable]
 	public class r_KingdomScaffold : IPart
 	{
+		public int SerializationVersion = 1;
+
 		public string TargetBlueprint;
 
 		public string TargetDisplayName;

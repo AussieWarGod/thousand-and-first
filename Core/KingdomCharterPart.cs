@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using XRL;
 using XRL.UI;
 using XRL.World;
@@ -10,6 +10,8 @@ namespace ThousandAndFirst
 	public class KingdomCharterPart : IPart
 	{
 		public const string COMMAND = "r_KingdomCharterMenu";
+
+		public int SerializationVersion = 1;
 
 		public Guid ActivatedAbilityID = Guid.Empty;
 
@@ -125,7 +127,7 @@ namespace ThousandAndFirst
 			{
 				string district = KingdomRules.Districts[num];
 				System.ZoneDistricts[zone.ZoneID] = district;
-				KingdomChronicle.Record(System, "the ground here was declared a " + district + " district of " + System.KingdomDisplayName);
+				KingdomChronicle.Record(System, "the ground here was declared " + XRL.Language.Grammar.A(district) + " district of " + System.KingdomDisplayName);
 				Popup.Show("This ground is declared a {{C|" + district + "}} district.");
 			}
 		}

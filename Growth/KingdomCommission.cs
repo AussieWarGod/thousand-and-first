@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using XRL;
 using XRL.Messages;
 using XRL.Rules;
@@ -44,12 +44,12 @@ namespace ThousandAndFirst
 			if (part != null)
 			{
 				part.TargetBlueprint = entry.Blueprint;
-				part.TargetDisplayName = entry.DisplayName;
+				part.TargetDisplayName = entry.Name;
 				part.CompleteTick = The.Game.TimeTicks + entry.BuildTicks;
 			}
 			cell.AddObject(gameObject);
-			KingdomChronicle.Record(System, "a " + entry.DisplayName + " was commissioned at " + System.KingdomDisplayName);
-			MessageQueue.AddPlayerMessage("{{G|The " + entry.DisplayName + " is commissioned. Scaffolding rises.}}");
+			KingdomChronicle.Record(System, XRL.Language.Grammar.A(entry.Name) + " was commissioned at " + System.KingdomDisplayName);
+			MessageQueue.AddPlayerMessage("{{G|The " + entry.Name + " is commissioned. Scaffolding rises.}}");
 			return true;
 		}
 

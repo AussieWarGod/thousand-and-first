@@ -106,7 +106,27 @@ overwritten by kingdom systems without explicit designation:
   `KingdomBuilt`, `KingdomRaider`); wounds to anything else come only from ordinary
   simulation (combat, fire), never from scripted deletion.
 
-## 8. Release discipline
+## 8. Balance invariants
+
+Learned from comparables (Kenshi, Bannerlord, Banished, RimWorld, Terraria, Suikoden) and
+binding on every economic system:
+
+- **Threat must cost more than its remedy.** Tribute is always cheaper than the raid it
+  averts (raiders plunder stores, so paying is strategy, not extortion); protection that
+  changes nothing observable is annoyance.
+- **Consumption scales with time, not with event cadence.** Any per-interval cost must be
+  computed from elapsed ticks (with an absence cap), or it silently vanishes as the
+  interval grows.
+- **Ratchets gate on durable things.** Growth stages gate on capacity (infrastructure that
+  must be built) rather than current stock (which can be lent and withdrawn).
+- **Failure has a floor.** Decay stops at a loyal core; the settlement can always be clawed
+  back, and every loss names its cause in the departure message and the chronicle.
+- **Passive income stays sub-adventuring** and arrives as a lump event with a report, never
+  a silent trickle; caravans are events, not spreadsheets.
+- **One arrival per day, each attributable.** Growth events must name the player action
+  that caused them.
+
+## 9. Release discipline
 
 - Ship in named arc slices with a paste-ready changelog file per release
   (Feature-Friday voice), `workshop.json` kept in sync.
