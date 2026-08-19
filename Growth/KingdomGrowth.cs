@@ -147,6 +147,33 @@ namespace ThousandAndFirst
 			}
 		}
 
+		/// <summary>
+		/// Picks which of the settler blueprints is walking up the road. The roster lives in the
+		/// <c>r_KingdomSettlers</c> population table so other mods can put their own people on it
+		/// by merging a line, and so the mix can be retuned without touching code.
+		/// <para>
+		/// Falls back to the base blueprint if the table is missing or rolls nothing: a settlement
+		/// that stops growing because a table was overridden badly is a worse failure than a
+		/// settlement whose arrivals all look alike.
+		/// </para>
+		/// </summary>
+		public static string SettlerBlueprint()
+		{
+			try
+			{
+				PopulationResult result = PopulationManager.RollOneFrom("r_KingdomSettlers");
+				if (result != null && !string.IsNullOrEmpty(result.Blueprint) && GameObjectFactory.Factory.HasBlueprint(result.Blueprint))
+				{
+					return result.Blueprint;
+				}
+			}
+			catch (Exception error)
+			{
+				MetricsManager.LogError("ThousandAndFirst settler roll", error);
+			}
+			return "r_KingdomSettler";
+		}
+
 		public static bool SpawnSettler(KingdomSystem System, Zone Z, KingdomSurvey Survey = null)
 		{
 			List<Cell> emptyCells = Z.GetEmptyCells((Cell c) => c.IsPassable() && !c.HasObjectWithPart("LiquidVolume"));
@@ -159,7 +186,7 @@ namespace ThousandAndFirst
 				return false;
 			}
 			Cell cell = emptyCells.GetRandomElement();
-			GameObject settler = GameObject.Create("r_KingdomSettler");
+			GameObject settler = GameObject.Create(SettlerBlueprint());
 			if (settler == null)
 			{
 				return false;

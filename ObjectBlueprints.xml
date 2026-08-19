@@ -8,6 +8,28 @@
     <tag Name="AllowIdleBehavior" />
     <tag Name="SleepOnBed" />
   </object>
+  <!--
+    Settler variants. These inherit everything - tag, brain, idle behaviour - and
+    override appearance only, so the people who arrive look like a mixed road
+    rather than a uniform. All the tiles are the game's own; a settler needs no
+    art of its own when the world is already full of ordinary people.
+    Rolled from the r_KingdomSettlers population table, which other mods merge into.
+  -->
+  <object Name="r_KingdomSettlerHand" Inherits="r_KingdomSettler">
+    <part Name="Render" DisplayName="settler" Tile="Creatures/farmer_convert.bmp" ColorString="&amp;w" />
+  </object>
+  <object Name="r_KingdomSettlerDrifter" Inherits="r_KingdomSettler">
+    <part Name="Render" DisplayName="settler" Tile="creatures/caste_23.bmp" ColorString="&amp;w" />
+  </object>
+  <object Name="r_KingdomSettlerTinker" Inherits="r_KingdomSettler">
+    <part Name="Render" DisplayName="settler" Tile="creatures/caste_21.bmp" ColorString="&amp;w" />
+  </object>
+  <object Name="r_KingdomSettlerScribe" Inherits="r_KingdomSettler">
+    <part Name="Render" DisplayName="settler" Tile="creatures/caste_20.bmp" ColorString="&amp;w" />
+  </object>
+  <object Name="r_KingdomSettlerYoung" Inherits="r_KingdomSettler">
+    <part Name="Render" DisplayName="settler" Tile="Creatures/sw_appledaughter.bmp" ColorString="&amp;w" />
+  </object>
   <object Name="r_KingdomScaffold" Inherits="Furniture">
     <part Name="Render" DisplayName="scaffolding" RenderString="&#9617;" ColorString="&amp;w" />
     <part Name="Description" Short="Lashed poles and borrowed planks. Somebody's promise is being kept, plank by plank." />
@@ -94,7 +116,7 @@
   </object>
   <object Name="r_FounderBasin" Inherits="WaterContainer">
     <part Name="LiquidVolume" MaxVolume="16" Volume="0" />
-    <part Name="Render" DisplayName="founder's basin" RenderString="}" ColorString="&amp;B" />
+    <part Name="Render" DisplayName="founder's basin" RenderString="}" ColorString="&amp;B" Tile="Items/sw_catchbasin.bmp" TileColor="&amp;B" DetailColor="C" />
     <part Name="Description" Short="Hammered from tin and older promises, it holds just enough water to make strangers into kin. Whoever fills it and pours may found a place worth thirsting for." />
     <part Name="r_FounderBasin" />
     <part Name="Commerce" Value="25" />

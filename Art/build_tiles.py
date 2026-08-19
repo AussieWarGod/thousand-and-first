@@ -46,10 +46,21 @@ BODY = (0, 0, 0, 255)
 HIGHLIGHT = (255, 255, 255, 255)
 CLEAR = (0, 0, 0, 0)
 
-# Measured from the game's own atlases; sources that stray far from these are
-# reported, because "does it look like Qud" is mostly these two numbers.
-VANILLA_COVERAGE = 59
-VANILLA_HIGHLIGHT_SHARE = 15
+# Measured from the game's own atlases, per category, because the three draw
+# nothing alike. Walls and furniture fill the cell and lean on dither; creatures
+# are small solid silhouettes with a few bright accents; items are smaller still
+# but spend far more on highlight, because an item is usually two materials - a
+# pale blade on a dark haft, bright liquid in a dark flask.
+#
+# Getting this wrong is not a stylistic quibble. An item drawn at furniture
+# coverage is three times the size of everything around it on the ground.
+CATEGORY_TARGETS = {
+    "wall": (59, 15),
+    "furniture": (59, 15),
+    "creature": (21, 10),
+    "item": (16, 24),
+}
+DEFAULT_CATEGORY = "furniture"
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 SRC_DIR = os.path.join(HERE, "src")
@@ -108,10 +119,17 @@ def parse(path):
     because it still looks like a sprite.
     """
     rows = []
+    category = DEFAULT_CATEGORY
     with open(path, "r", encoding="utf-8") as handle:
         for line in handle:
             line = line.rstrip("\n").rstrip("\r")
             if line.startswith("#!"):
+                marker = line[2:].strip().lower()
+                if marker.startswith("category:"):
+                    named = marker.split(":", 1)[1].strip()
+                    if named not in CATEGORY_TARGETS:
+                        raise ValueError(f"{os.path.basename(path)}: unknown category {named!r}")
+                    category = named
                 continue
             if not line.strip() and not rows:
                 continue
@@ -132,15 +150,24 @@ def parse(path):
                 pixels.append(resolve(glyph, x, y))
             except KeyError:
                 raise ValueError(f"{os.path.basename(path)}: row {y + 1} col {x + 1}: unknown glyph {glyph!r}")
-    return pixels
+    return pixels, category
 
 
-def measure(pixels):
+def measure(pixels, category):
+    """Report coverage and highlight share, and how far they sit from the shipped
+    art for this kind of object. Bands are proportional rather than absolute: plus
+    or minus fifteen points means nothing to a wall and everything to an item."""
     opaque = sum(1 for p in pixels if p[3] > 0)
     highlight = sum(1 for p in pixels if p == HIGHLIGHT)
     coverage = 100 * opaque // (TILE_W * TILE_H)
     share = (100 * highlight // opaque) if opaque else 0
-    return coverage, share
+    want_cover, want_share = CATEGORY_TARGETS[category]
+    flags = []
+    if coverage < want_cover * 0.55 or coverage > want_cover * 1.6:
+        flags.append(f"cover {coverage}% vs ~{want_cover}%")
+    if share > want_share * 2.4:
+        flags.append(f"highlight {share}% vs ~{want_share}%")
+    return coverage, share, flags
 
 
 def preview(pixels, scale=8):
@@ -211,7 +238,7 @@ def main():
         if not name.endswith(".tile"):
             continue
         stem = name[:-5]
-        pixels = parse(os.path.join(SRC_DIR, name))
+        pixels, category = parse(os.path.join(SRC_DIR, name))
         write_png(os.path.join(OUT_DIR, stem + ".png"), TILE_W, TILE_H, pixels)
         if want_preview:
             os.makedirs(PREVIEW_DIR, exist_ok=True)
@@ -219,14 +246,9 @@ def main():
             write_png(os.path.join(PREVIEW_DIR, stem + ".png"), width, height, big)
         entries.append((stem, pixels))
 
-        coverage, share = measure(pixels)
-        flags = []
-        if abs(coverage - VANILLA_COVERAGE) > 25:
-            flags.append(f"coverage {coverage}% vs ~{VANILLA_COVERAGE}%")
-        if share > VANILLA_HIGHLIGHT_SHARE * 3:
-            flags.append(f"highlight {share}% vs ~{VANILLA_HIGHLIGHT_SHARE}%")
+        coverage, share, flags = measure(pixels, category)
         note = ("   << " + "; ".join(flags)) if flags else ""
-        print(f"  {stem:<26} cover {coverage:>3}%  highlight {share:>3}%{note}")
+        print(f"  {stem:<24} {category:<9} cover {coverage:>3}%  highlight {share:>3}%{note}")
 
     if want_sheet and entries:
         os.makedirs(PREVIEW_DIR, exist_ok=True)
@@ -234,7 +256,9 @@ def main():
         write_png(os.path.join(PREVIEW_DIR, "_sheet.png"), width, height, strip)
         print("  sheet order: " + ", ".join(stem for stem, _ in entries))
 
-    print(f"{len(entries)} tiles -> {OUT_DIR}   (vanilla: ~{VANILLA_COVERAGE}% cover, ~{VANILLA_HIGHLIGHT_SHARE}% highlight)")
+    targets = ", ".join(f"{k} {v[0]}/{v[1]}" for k, v in sorted(set(CATEGORY_TARGETS.items())))
+    print(f"{len(entries)} tiles -> {OUT_DIR}")
+    print(f"  vanilla cover/highlight targets: {targets}")
     return 0
 
 

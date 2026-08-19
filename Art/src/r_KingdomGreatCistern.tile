@@ -1,29 +1,31 @@
+#! category: furniture
 #! great cistern - a tin-lined belly sunk to its rim in the earth
-#! Sunk to the rim, so there is no vessel to draw: what shows is the mouth, the
-#! ring of stone holding it, and the water. The stone ring is stipple with one
-#! lit upper edge; the water is solid body with a single highlight glint, which
-#! is what stops the whole thing reading as a boulder.
-................
+#! Sunk to the rim, so there is no vessel to draw - only the mouth and the ring
+#! of stone holding it. The first attempt filled the mouth with solid body and
+#! read as a boulder; the water is stippled now, which gives it a surface instead
+#! of a mass. Two short highlight dashes are the light on it, and the bright inner
+#! ring is what makes the mouth read as an opening rather than a lid.
 ................
 ....ssssssss....
-..ssoooooooss...
-.ss##########ss.
-.s############s.
-s##############s
-s###oo#########s
-s##############s
-s##############s
-s###########o##s
-s##############s
-s##############s
-s##oo##########s
-s##############s
-s##############s
-.s############s.
-.ss##########ss.
-..ssoooooooss...
+..ss########ss..
+.s#oooooooooo#s.
+s#o##########o#s
+s#o#SsSsSsSs#o#s
+s#o#sSsSsSsS#o#s
+s#o#SsSsSsSs#o#s
+s#o#sSsSoosS#o#s
+s#o#SsSsSsSs#o#s
+s#o#sSsSsSsS#o#s
+s#o#SsSsSsSs#o#s
+s#o#sSsooSsS#o#s
+s#o#SsSsSsSs#o#s
+s#o#sSsSsSsS#o#s
+s#o##########o#s
+.s#oooooooooo#s.
+..ss########ss..
 ....ssssssss....
 ................
-..s..........s..
-.ss..........ss.
-.s............s.
+...ss......ss...
+..sss......sss..
+..ss........ss..
+................
