@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<kingdomdeals>
+  <deal Key="waterroute" DisplayName="water charter (6 drams per caravan)" MinStanding="250" Income="6" Interval="3600" Caravan="DromadTrader1" />
+  <deal Key="deepcharter" DisplayName="deep charter (12 drams per caravan)" MinStanding="600" Income="12" Interval="4800" Caravan="DromadTrader2" />
+</kingdomdeals>

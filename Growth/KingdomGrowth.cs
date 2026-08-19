@@ -27,12 +27,18 @@ namespace ThousandAndFirst
 				return;
 			}
 			long timeTicks = The.Game.TimeTicks;
+			KingdomLog.Log("growth pass " + Z.ZoneID + " tick=" + timeTicks + " next=" + System.NextArrivalTick + " pop=" + System.Population + " stage=" + System.Stage + " stored=" + CountStoredWater(Z) + " open=" + CountOpenWater(Z) + " space=" + CountStorageSpace(Z) + " dry=" + System.DryStreak + " withered=" + System.Withered);
 			if (System.NextArrivalTick <= 0)
 			{
 				System.NextArrivalTick = timeTicks + Interval(System, Z);
+				KingdomLog.Log("growth: first-visit schedule, next=" + System.NextArrivalTick);
 				return;
 			}
-			FetchWater(System, Z);
+			int fetched = FetchWater(System, Z);
+			if (fetched > 0)
+			{
+				KingdomLog.Log("growth: fetched " + fetched + " drams from open water into stores");
+			}
 			int arrivals = 0;
 			while (timeTicks >= System.NextArrivalTick && arrivals < KingdomRules.MaxArrivalsPerVisit)
 			{
@@ -80,6 +86,7 @@ namespace ThousandAndFirst
 				System.NextArrivalTick = timeTicks + Interval(System, Z);
 			}
 			UpdateStage(System, Z);
+			KingdomLog.Log("growth pass done: pop=" + System.Population + " stage=" + System.Stage + " arrivals=" + arrivals + " dry=" + System.DryStreak + " next=" + System.NextArrivalTick);
 		}
 
 		public static bool SpawnSettler(KingdomSystem System, Zone Z)

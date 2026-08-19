@@ -1,5 +1,9 @@
 # The Thousand and First — Test Session Protocol (v0.1.0)
 
+**Dev diagnostics are ON by default** in this build: every kingdom system writes `[TAF]`
+lines to Player.log (toggleable in Options). If anything looks wrong, wish `kingdom:dump`
+for the full state readout — it prints to screen and to the log for the log-watcher.
+
 Fresh game launch (never mid-session approval — ghost assembly generations). Approve
 **The Thousand and First** at the mod prompt, then load any save or start a new game.
 Say when you're launching so the log watch can run alongside.
@@ -70,6 +74,15 @@ Say when you're launching so the log watch can run alongside.
 | 27 | Charter → **Pay tribute** (12 drams in stores) | Raid averted; snapjaw standing +50; chronicle line |
 | 28 | Force again via `kingdom:raid`, don't pay, wait out the lead (or `kingdom:raid` again) | 2+ snapjaws spawn at the zone edge and attack citizens; chronicle records the raid |
 | 29 | After the fight: `kingdom:status`, `kingdom:chronicle` | State coherent; raid recorded in both registers |
+
+## Pass 7 — Trade charters and caravans
+
+| Step | Action | Expect |
+|---|---|---|
+| 30 | `kingdom:standing Joppa:300`, then Charter → **Strike a trade charter** → water charter → Joppa | Charter struck; chronicle + journal accomplishment |
+| 31 | Leave the claimed zone, wait ~3600 ticks (or explore), return | A dromad caravan stands at the zone edge; up to 6 drams delivered into **dedicated** stores (needs storage space — overflow is announced and wasted); Joppa standing +2 |
+| 32 | Trade with the caravan dromad | It's a real merchant with real stock |
+| 33 | `kingdom:dump` | Deal listed with its next tick; caravans-here count matches |
 
 ## Pass 4 — Attitudes and persistence
 

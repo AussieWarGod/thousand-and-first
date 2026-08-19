@@ -194,6 +194,59 @@ namespace ThousandAndFirst
 			return false;
 		}
 
+		public const int DealTrickleStanding = 2;
+
+		public class DealEntry
+		{
+			public string Key;
+
+			public string DisplayName;
+
+			public int MinStanding;
+
+			public int IncomeDrams;
+
+			public long IntervalTicks;
+
+			public string CaravanBlueprint;
+		}
+
+		public static bool TryParseDealAttributes(string Key, string DisplayName, string MinStanding, string Income, string Interval, string Caravan, out DealEntry Entry, out string Error)
+		{
+			Entry = null;
+			Error = null;
+			if (string.IsNullOrEmpty(Key) || string.IsNullOrEmpty(DisplayName))
+			{
+				Error = "deal needs Key and DisplayName";
+				return false;
+			}
+			if (!int.TryParse(MinStanding, out var minStanding))
+			{
+				Error = "deal " + Key + " has a bad MinStanding";
+				return false;
+			}
+			if (!int.TryParse(Income, out var income) || income < 0)
+			{
+				Error = "deal " + Key + " has a bad Income";
+				return false;
+			}
+			if (!long.TryParse(Interval, out var interval) || interval <= 0)
+			{
+				Error = "deal " + Key + " has a bad Interval";
+				return false;
+			}
+			Entry = new DealEntry
+			{
+				Key = Key,
+				DisplayName = DisplayName,
+				MinStanding = minStanding,
+				IncomeDrams = income,
+				IntervalTicks = interval,
+				CaravanBlueprint = (string.IsNullOrEmpty(Caravan) ? "DromadTrader1" : Caravan)
+			};
+			return true;
+		}
+
 		public const int RaidStandingThreshold = -250;
 
 		public const int RaidTributeDrams = 12;

@@ -56,6 +56,54 @@ namespace ThousandAndFirst
 			}
 		}
 
+		[WishCommand("kingdom:dump", null)]
+		public static void DumpWish()
+		{
+			KingdomSystem system = The.Game.RequireSystem<KingdomSystem>();
+			Zone zone = The.Player?.CurrentZone;
+			StringBuilder sb = new StringBuilder();
+			sb.Append("{{C|KINGDOM STATE DUMP}} tick ").Append(The.Game.TimeTicks);
+			sb.Append("\nFounded: ").Append(system.Founded ? (system.KingdomFactionName + " / " + system.KingdomDisplayName) : "no");
+			sb.Append("\nStyle: ").Append(system.Style).Append("  Stage: ").Append(system.Stage).Append("  Withered: ").Append(system.Withered);
+			sb.Append("\nPop: ").Append(system.Population).Append("  DryStreak: ").Append(system.DryStreak).Append("  HasShopkeeper: ").Append(system.HasShopkeeper);
+			sb.Append("\nNextArrival: ").Append(system.NextArrivalTick).Append("  Raid: state=").Append(system.RaidState).Append(" faction=").Append(system.RaidFactionName ?? "-").Append(" due=").Append(system.RaidDueTick).Append(" last=").Append(system.LastRaidTick);
+			sb.Append("\nClaims: ").Append(string.Join(", ", system.ClaimedZones));
+			sb.Append("\nDistricts: ");
+			foreach (System.Collections.Generic.KeyValuePair<string, string> d in system.ZoneDistricts)
+			{
+				sb.Append(d.Key).Append("=").Append(d.Value).Append(" ");
+			}
+			sb.Append("\nDeals: ").Append(system.ActiveDealKeys.Count);
+			for (int i = 0; i < system.ActiveDealKeys.Count; i++)
+			{
+				sb.Append("\n  ").Append(system.ActiveDealKeys[i]).Append(" with ").Append(system.ActiveDealFactions[i]).Append(" next=").Append(system.DealNextTicks[i]);
+			}
+			sb.Append("\nStandings: ").Append(system.Standings.Count).Append("  Chronicle: ").Append(system.ChronicleEntries.Count).Append("/").Append(system.OutsiderEntries.Count);
+			sb.Append("\nRegistry: ").Append(KingdomData.Buildings.Count).Append(" buildings, ").Append(KingdomData.Deals.Count).Append(" deals, ").Append(KingdomData.Styles.Count).Append(" styles");
+			if (zone != null)
+			{
+				sb.Append("\nHere (").Append(zone.ZoneID).Append("): claimed=").Append(system.ClaimedZones.Contains(zone.ZoneID));
+				sb.Append(" stored=").Append(KingdomGrowth.CountStoredWater(zone)).Append(" open=").Append(KingdomGrowth.CountOpenWater(zone)).Append(" space=").Append(KingdomGrowth.CountStorageSpace(zone));
+				int citizens = 0;
+				int caravans = 0;
+				foreach (GameObject obj in zone.GetObjects())
+				{
+					if (obj.GetIntProperty("KingdomCitizen") == 1)
+					{
+						citizens++;
+					}
+					if (obj.GetIntProperty("KingdomCaravan") == 1)
+					{
+						caravans++;
+					}
+				}
+				sb.Append(" citizens-here=").Append(citizens).Append(" caravans-here=").Append(caravans);
+			}
+			string text = sb.ToString();
+			KingdomLog.Log(ConsoleLib.Console.ColorUtility.StripFormatting(text));
+			Popup.Show(text);
+		}
+
 		[WishCommand("kingdom:raid", null)]
 		public static void RaidWish()
 		{
@@ -285,6 +333,7 @@ namespace ThousandAndFirst
 				The.Game.PlayerReputation.Modify(probe, -actualDelta, null, null, null, Silent: true);
 				system.SetStanding(probe.Name, standingBefore);
 			}
+			Check(report, ref passed, ref failed, "deal lists coherent (" + system.ActiveDealKeys.Count + " deals)", system.ActiveDealKeys.Count == system.ActiveDealFactions.Count && system.ActiveDealKeys.Count == system.DealNextTicks.Count);
 			bool claimsCoherent = true;
 			foreach (string zoneID in system.ClaimedZones)
 			{

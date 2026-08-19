@@ -11,6 +11,32 @@ namespace ThousandAndFirst
 
 		private static List<string> _styles;
 
+		private static List<KingdomRules.DealEntry> _deals;
+
+		public static List<KingdomRules.DealEntry> Deals
+		{
+			get
+			{
+				EnsureLoaded();
+				return _deals;
+			}
+		}
+
+		public static bool TryGetDeal(string Key, out KingdomRules.DealEntry Entry)
+		{
+			EnsureLoaded();
+			for (int i = 0; i < _deals.Count; i++)
+			{
+				if (_deals[i].Key == Key)
+				{
+					Entry = _deals[i];
+					return true;
+				}
+			}
+			Entry = null;
+			return false;
+		}
+
 		public static List<KingdomRules.BuildEntry> Buildings
 		{
 			get
@@ -33,6 +59,7 @@ namespace ThousandAndFirst
 		{
 			_buildings = null;
 			_styles = null;
+			_deals = null;
 			EnsureLoaded();
 		}
 
@@ -76,6 +103,48 @@ namespace ThousandAndFirst
 			{
 				item.HandleNodes(handlers);
 			}
+			_deals = new List<KingdomRules.DealEntry>();
+			Dictionary<string, Action<XmlDataHelper>> dealHandlers = null;
+			dealHandlers = new Dictionary<string, Action<XmlDataHelper>>
+			{
+				{
+					"kingdomdeals",
+					delegate(XmlDataHelper xml)
+					{
+						xml.HandleNodes(dealHandlers);
+					}
+				},
+				{ "deal", HandleDeal }
+			};
+			foreach (XmlDataHelper item in DataManager.YieldXMLStreamsWithRoot("KingdomDeals"))
+			{
+				item.HandleNodes(dealHandlers);
+			}
+		}
+
+		private static void HandleDeal(XmlDataHelper xml)
+		{
+			if (!KingdomRules.TryParseDealAttributes(xml.GetAttribute("Key"), xml.GetAttribute("DisplayName"), xml.GetAttribute("MinStanding"), xml.GetAttribute("Income"), xml.GetAttribute("Interval"), xml.GetAttribute("Caravan"), out var entry, out var error))
+			{
+				MetricsManager.LogError("ThousandAndFirst KingdomDeals: " + error);
+			}
+			else
+			{
+				for (int i = 0; i < _deals.Count; i++)
+				{
+					if (_deals[i].Key == entry.Key)
+					{
+						_deals[i] = entry;
+						entry = null;
+						break;
+					}
+				}
+				if (entry != null)
+				{
+					_deals.Add(entry);
+				}
+			}
+			xml.DoneWithElement();
 		}
 
 		private static void HandleBuilding(XmlDataHelper xml)

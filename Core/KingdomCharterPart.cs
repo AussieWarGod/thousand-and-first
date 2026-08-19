@@ -76,7 +76,7 @@ namespace ThousandAndFirst
 			}
 			while (true)
 			{
-				int num = Popup.PickOption(Title: system.KingdomDisplayName, Options: new string[8] { "Status", "The Chronicle", "As others tell it", "Standings", "Designate district", "Commission a building", "Pay tribute", "Dedicate a vessel to the stores" }, Hotkeys: "scandmtv".ToCharArray(), AllowEscape: true);
+				int num = Popup.PickOption(Title: system.KingdomDisplayName, Options: new string[9] { "Status", "The Chronicle", "As others tell it", "Standings", "Designate district", "Commission a building", "Pay tribute", "Dedicate a vessel to the stores", "Strike a trade charter" }, Hotkeys: "scandmtvr".ToCharArray(), AllowEscape: true);
 				switch (num)
 				{
 				case 0:
@@ -102,6 +102,9 @@ namespace ThousandAndFirst
 					break;
 				case 7:
 					DedicateVessel(system);
+					break;
+				case 8:
+					StrikeTradeCharter(system);
 					break;
 				default:
 					return;
@@ -164,6 +167,53 @@ namespace ThousandAndFirst
 			if (!KingdomRaids.TryTribute(System, ParentObject.CurrentZone, out var failure))
 			{
 				Popup.Show(failure);
+			}
+		}
+
+		public void StrikeTradeCharter(KingdomSystem System)
+		{
+			System.Collections.Generic.List<KingdomRules.DealEntry> deals = KingdomData.Deals;
+			if (deals.Count == 0)
+			{
+				Popup.Show("No charters are known.");
+				return;
+			}
+			string[] dealOptions = new string[deals.Count];
+			for (int i = 0; i < deals.Count; i++)
+			{
+				dealOptions[i] = deals[i].DisplayName + " {{C|[standing " + deals[i].MinStanding + "+]}}";
+			}
+			int dealPick = Popup.PickOption(Title: "Which charter?", Options: dealOptions, AllowEscape: true);
+			if (dealPick < 0)
+			{
+				return;
+			}
+			System.Collections.Generic.List<string> eligible = new System.Collections.Generic.List<string>();
+			System.Collections.Generic.List<string> labels = new System.Collections.Generic.List<string>();
+			foreach (Faction faction in Factions.Loop())
+			{
+				if (faction.Visible && faction.Name != System.KingdomFactionName && faction.Name != "Player" && System.GetStanding(faction.Name) >= deals[dealPick].MinStanding)
+				{
+					eligible.Add(faction.Name);
+					labels.Add(faction.DisplayName + " (standing " + System.GetStanding(faction.Name) + ")");
+					if (eligible.Count >= 20)
+					{
+						break;
+					}
+				}
+			}
+			if (eligible.Count == 0)
+			{
+				Popup.Show("No faction holds the kingdom in high enough regard for that charter.");
+				return;
+			}
+			int factionPick = Popup.PickOption(Title: "With whom?", Options: labels.ToArray(), AllowEscape: true);
+			if (factionPick >= 0)
+			{
+				if (!KingdomTrade.StrikeDeal(System, deals[dealPick].Key, eligible[factionPick], out var failure))
+				{
+					Popup.Show(failure);
+				}
 			}
 		}
 

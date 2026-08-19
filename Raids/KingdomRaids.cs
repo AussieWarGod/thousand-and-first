@@ -32,6 +32,7 @@ namespace ThousandAndFirst
 				System.RaidState = 1;
 				System.RaidFactionName = provoked;
 				System.RaidDueTick = timeTicks + KingdomRules.RaidWarningLeadTicks;
+				KingdomLog.Log("raid: warned faction=" + provoked + " due=" + System.RaidDueTick);
 				string displayName = Factions.Get(provoked)?.DisplayName ?? provoked;
 				KingdomChronicle.Record(System, "scouts of " + displayName + " were seen eyeing the stores of " + System.KingdomDisplayName);
 				MessageQueue.AddPlayerMessage("{{r|Scouts of " + displayName + " have been seen nearby. They will come for the stores. Tribute may yet turn them (" + KingdomRules.RaidTributeDrams + " drams).}}");
@@ -112,6 +113,7 @@ namespace ThousandAndFirst
 				spawned++;
 			}
 			System.RaidFactionName = null;
+			KingdomLog.Log("raid: executed faction=" + displayName + " spawned=" + spawned + " size=" + size);
 			if (spawned > 0)
 			{
 				KingdomChronicle.Record(System, "raiders of " + displayName + " descended upon " + System.KingdomDisplayName);

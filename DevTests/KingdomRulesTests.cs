@@ -166,6 +166,29 @@ namespace ThousandAndFirst.Tests
 			Assert.IsNull(KingdomRules.RaiderTableFor(null));
 		}
 
+		[TestCase("route", "water charter", "250", "6", "3600", "DromadTrader1", true)]
+		[TestCase("route", "water charter", "250", "6", "3600", "", true)]
+		[TestCase("route", "water charter", "250", "0", "3600", null, true)]
+		[TestCase(null, "water charter", "250", "6", "3600", null, false)]
+		[TestCase("route", null, "250", "6", "3600", null, false)]
+		[TestCase("route", "water charter", "abc", "6", "3600", null, false)]
+		[TestCase("route", "water charter", "250", "-1", "3600", null, false)]
+		[TestCase("route", "water charter", "250", "6", "0", null, false)]
+		public void TryParseDealAttributes(string key, string display, string minStanding, string income, string interval, string caravan, bool expectedOk)
+		{
+			bool ok = KingdomRules.TryParseDealAttributes(key, display, minStanding, income, interval, caravan, out var entry, out var error);
+			Assert.AreEqual(expectedOk, ok);
+			if (ok)
+			{
+				Assert.AreEqual(string.IsNullOrEmpty(caravan) ? "DromadTrader1" : caravan, entry.CaravanBlueprint);
+				Assert.IsNull(error);
+			}
+			else
+			{
+				Assert.IsNotNull(error);
+			}
+		}
+
 		[TestCase("hello happened", 0, "It is said that hello happened.")]
 		[TestCase("hello happened", 5, "Some deny that hello happened.")]
 		[TestCase("hello happened", 6, "It is said that hello happened.")]

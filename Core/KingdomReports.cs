@@ -37,6 +37,14 @@ namespace ThousandAndFirst
 				.Append(The.Game.TimeTicks)
 				.Append(")\nPlayer rep with kingdom: ")
 				.Append(The.Game.PlayerReputation.Get(System.KingdomFactionName));
+			if (System.ActiveDealKeys.Count > 0)
+			{
+				stringBuilder.Append("\nCharters: ");
+				for (int i = 0; i < System.ActiveDealKeys.Count; i++)
+				{
+					stringBuilder.Append(System.ActiveDealKeys[i]).Append(" with ").Append(System.ActiveDealFactions[i]).Append("; ");
+				}
+			}
 			return stringBuilder.ToString();
 		}
 

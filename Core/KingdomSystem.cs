@@ -42,6 +42,12 @@ namespace ThousandAndFirst
 
 		public Dictionary<string, string> ZoneDistricts = new Dictionary<string, string>();
 
+		public List<string> ActiveDealKeys = new List<string>();
+
+		public List<string> ActiveDealFactions = new List<string>();
+
+		public List<long> DealNextTicks = new List<long>();
+
 		public List<string> ChronicleEntries = new List<string>();
 
 		public List<string> OutsiderEntries = new List<string>();
@@ -62,6 +68,7 @@ namespace ThousandAndFirst
 		public override bool HandleEvent(ZoneActivatedEvent E)
 		{
 			KingdomGrowth.OnZoneActivated(this, E.Zone);
+			KingdomTrade.OnZoneActivated(this, E.Zone);
 			KingdomRaids.OnZoneActivated(this, E.Zone);
 			return base.HandleEvent(E);
 		}
@@ -70,7 +77,9 @@ namespace ThousandAndFirst
 		{
 			if (Founded && !E.Transient && E.Faction != null && E.Faction.Name != KingdomFactionName && E.Faction.Name != "Player")
 			{
-				AdjustStanding(E.Faction.Name, KingdomRules.SpilloverDelta(E.To - E.From, Stage));
+				int delta = KingdomRules.SpilloverDelta(E.To - E.From, Stage);
+				AdjustStanding(E.Faction.Name, delta);
+				KingdomLog.Log("mirror: " + E.Faction.Name + " rep " + E.From + "->" + E.To + " spillover=" + delta + " standing=" + GetStanding(E.Faction.Name));
 			}
 			return base.HandleEvent(E);
 		}

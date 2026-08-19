@@ -1,0 +1,150 @@
+using System.Collections.Generic;
+using XRL;
+using XRL.Messages;
+using XRL.Rules;
+using XRL.World;
+using XRL.World.Parts;
+
+namespace ThousandAndFirst
+{
+	public static class KingdomTrade
+	{
+		public static bool StrikeDeal(KingdomSystem System, string DealKey, string FactionName, out string Failure)
+		{
+			Failure = null;
+			if (!System.Founded)
+			{
+				Failure = "You rule nothing yet.";
+				return false;
+			}
+			if (!KingdomData.TryGetDeal(DealKey, out var deal))
+			{
+				Failure = "No such charter.";
+				return false;
+			}
+			Faction faction = Factions.Get(FactionName);
+			if (faction == null)
+			{
+				Failure = "No such faction.";
+				return false;
+			}
+			if (System.GetStanding(FactionName) < deal.MinStanding)
+			{
+				Failure = faction.DisplayName + " will not treat with the kingdom yet (standing " + System.GetStanding(FactionName) + " of " + deal.MinStanding + " needed).";
+				return false;
+			}
+			for (int i = 0; i < System.ActiveDealKeys.Count; i++)
+			{
+				if (System.ActiveDealKeys[i] == DealKey && System.ActiveDealFactions[i] == FactionName)
+				{
+					Failure = "That charter already stands.";
+					return false;
+				}
+			}
+			System.ActiveDealKeys.Add(DealKey);
+			System.ActiveDealFactions.Add(FactionName);
+			System.DealNextTicks.Add(The.Game.TimeTicks + deal.IntervalTicks);
+			KingdomChronicle.Record(System, System.KingdomDisplayName + " struck a " + deal.DisplayName + " with " + faction.DisplayName, Accomplishment: true);
+			MessageQueue.AddPlayerMessage("{{G|The charter is struck. Caravans of " + faction.DisplayName + " will come.}}");
+			KingdomLog.Log("trade: struck " + DealKey + " with " + FactionName + " next=" + System.DealNextTicks[System.DealNextTicks.Count - 1]);
+			return true;
+		}
+
+		public static void OnZoneActivated(KingdomSystem System, Zone Z)
+		{
+			if (!System.Founded || Z == null || !System.ClaimedZones.Contains(Z.ZoneID) || System.ActiveDealKeys.Count == 0)
+			{
+				return;
+			}
+			long timeTicks = The.Game.TimeTicks;
+			bool despawned = false;
+			for (int i = 0; i < System.ActiveDealKeys.Count; i++)
+			{
+				if (timeTicks < System.DealNextTicks[i] || !KingdomData.TryGetDeal(System.ActiveDealKeys[i], out var deal))
+				{
+					continue;
+				}
+				if (!despawned)
+				{
+					DespawnCaravans(Z);
+					despawned = true;
+				}
+				int delivered = DeliverIncome(Z, deal.IncomeDrams);
+				SpawnCaravan(Z, deal.CaravanBlueprint);
+				System.AdjustStanding(System.ActiveDealFactions[i], KingdomRules.DealTrickleStanding);
+				string displayName = Factions.Get(System.ActiveDealFactions[i])?.DisplayName ?? System.ActiveDealFactions[i];
+				KingdomChronicle.Record(System, "a caravan of " + displayName + " came to " + System.KingdomDisplayName + " and delivered " + delivered + " drams under charter");
+				MessageQueue.AddPlayerMessage("{{G|A caravan of " + displayName + " arrives under charter (" + delivered + " drams delivered" + ((delivered < deal.IncomeDrams) ? ", stores overflowing" : "") + ").}}");
+				KingdomLog.Log("trade: caravan deal=" + deal.Key + " faction=" + System.ActiveDealFactions[i] + " delivered=" + delivered + "/" + deal.IncomeDrams);
+				System.DealNextTicks[i] = timeTicks + deal.IntervalTicks;
+			}
+		}
+
+		public static int DeliverIncome(Zone Z, int Drams)
+		{
+			int remaining = Drams;
+			foreach (GameObject item in Z.GetObjects())
+			{
+				if (remaining <= 0)
+				{
+					break;
+				}
+				LiquidVolume part = item.GetPart<LiquidVolume>();
+				if (part != null && part.MaxVolume > 0 && item.GetIntProperty("KingdomStores") == 1 && part.Volume < part.MaxVolume && (part.Volume == 0 || part.GetPrimaryLiquidID() == "water"))
+				{
+					int drams = part.MaxVolume - part.Volume;
+					if (drams > remaining)
+					{
+						drams = remaining;
+					}
+					if (part.AddDrams("water", drams))
+					{
+						remaining -= drams;
+					}
+				}
+			}
+			return Drams - remaining;
+		}
+
+		public static void SpawnCaravan(Zone Z, string Blueprint)
+		{
+			List<Cell> emptyCells = Z.GetEmptyCells((Cell c) => c.X == 0 || c.X == Z.Width - 1 || c.Y == 0 || c.Y == Z.Height - 1);
+			if (emptyCells == null || emptyCells.Count == 0)
+			{
+				emptyCells = Z.GetEmptyCells();
+			}
+			if (emptyCells == null || emptyCells.Count == 0)
+			{
+				return;
+			}
+			Cell cell = emptyCells[Stat.Random(0, emptyCells.Count - 1)];
+			GameObject caravan = GameObject.Create(Blueprint);
+			if (caravan != null)
+			{
+				cell.AddObject(caravan);
+				caravan.MakeActive();
+				caravan.SetIntProperty("KingdomCaravan", 1);
+				if (caravan.Brain != null)
+				{
+					caravan.Brain.Allegiance.Calm = true;
+				}
+			}
+		}
+
+		public static void DespawnCaravans(Zone Z)
+		{
+			List<GameObject> list = new List<GameObject>();
+			foreach (GameObject item in Z.GetObjects())
+			{
+				if (item.GetIntProperty("KingdomCaravan") == 1)
+				{
+					list.Add(item);
+				}
+			}
+			foreach (GameObject item in list)
+			{
+				item.Obliterate();
+			}
+		}
+	}
+}
