@@ -116,12 +116,12 @@ namespace ThousandAndFirst
 				{
 					continue;
 				}
-				int drams = (store.Volume < remaining) ? store.Volume : remaining;
-				if (store.UseDrams(drams))
+				int removed = KingdomLiquids.Drain(store, remaining);
+				if (removed > 0)
 				{
-					remaining -= drams;
-					StoredWater -= drams;
-					StorageSpace += drams;
+					remaining -= removed;
+					StoredWater -= removed;
+					StorageSpace += removed;
 				}
 			}
 			return Drams - remaining;
@@ -168,11 +168,11 @@ namespace ThousandAndFirst
 				{
 					continue;
 				}
-				int drams = (pool.Volume < remaining) ? pool.Volume : remaining;
-				if (pool.UseDrams(drams))
+				int removed = KingdomLiquids.Drain(pool, remaining);
+				if (removed > 0)
 				{
-					remaining -= drams;
-					OpenWater -= drams;
+					remaining -= removed;
+					OpenWater -= removed;
 				}
 			}
 			return Drams - remaining;
