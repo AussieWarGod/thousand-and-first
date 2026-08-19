@@ -19,7 +19,9 @@ as polished as the game's flagship features. These rules are binding for every s
   block, and hands back the half-built instance. Nothing crashes and nothing else is lost —
   which is why a throwing `Read` costs the player their entire kingdom with no message on
   screen. Throwing is still the *only* way to reach that recovery, so an unreadable save must
-  throw; it must also set a `[NonSerialized]` flag first and report on `AfterGameLoadedEvent`.
+  throw; its entire custom read path must be wrapped so truncation, field assignment, and
+  normalization failures all set a `[NonSerialized]` flag before rethrowing, then report on
+  `AfterGameLoadedEvent`.
   And because named fields are self-describing — an unknown name is skipped, a missing one keeps
   its default — every schema version at or below the current one is readable and must be read.
   Refusing an older version turns a routine additive change into a save-wipe.
