@@ -21,5 +21,23 @@ namespace ThousandAndFirst
 			int removed = before - Source.Volume;
 			return (removed > 0) ? removed : 0;
 		}
+
+		/// <summary>
+		/// Adds up to <paramref name="Drams"/> and returns the amount actually added.
+		/// LiquidVolume.AddDrams silently clamps to the space available and returns true
+		/// regardless, so its boolean must not be used for accounting either. Measuring the
+		/// delta also survives the mixing path, which can accept a different amount again.
+		/// </summary>
+		public static int Fill(LiquidVolume Target, string Liquid, int Drams)
+		{
+			if (Target == null || Drams <= 0)
+			{
+				return 0;
+			}
+			int before = Target.Volume;
+			Target.AddDrams(Liquid, Drams);
+			int added = Target.Volume - before;
+			return (added > 0) ? added : 0;
+		}
 	}
 }

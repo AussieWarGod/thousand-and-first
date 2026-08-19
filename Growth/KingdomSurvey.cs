@@ -145,11 +145,12 @@ namespace ThousandAndFirst
 				{
 					drams = remaining;
 				}
-				if (store.AddDrams("water", drams))
+				int added = KingdomLiquids.Fill(store, "water", drams);
+				if (added > 0)
 				{
-					remaining -= drams;
-					StoredWater += drams;
-					StorageSpace -= drams;
+					remaining -= added;
+					StoredWater += added;
+					StorageSpace -= added;
 				}
 			}
 			return Drams - remaining;

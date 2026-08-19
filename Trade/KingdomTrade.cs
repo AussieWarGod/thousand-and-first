@@ -103,10 +103,7 @@ namespace ThousandAndFirst
 					{
 						drams = remaining;
 					}
-					if (part.AddDrams("water", drams))
-					{
-						remaining -= drams;
-					}
+					remaining -= KingdomLiquids.Fill(part, "water", drams);
 				}
 			}
 			return Drams - remaining;

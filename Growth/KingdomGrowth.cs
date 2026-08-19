@@ -368,10 +368,7 @@ namespace ThousandAndFirst
 					{
 						drams = drained - stored;
 					}
-					if (part.AddDrams("water", drams))
-					{
-						stored += drams;
-					}
+					stored += KingdomLiquids.Fill(part, "water", drams);
 				}
 			}
 			return stored;
