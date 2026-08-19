@@ -244,11 +244,7 @@ namespace ThousandAndFirst
 			for (int j = 0; j < Survey.Works.Count; j++)
 			{
 				GameObject work = Survey.Works[j];
-				if (work.Blueprint == "r_KingdomChargingPost")
-				{
-					work.RequirePart<Inventory>();
-					work.RequirePart<r_KingdomHandCrank>();
-				}
+				EnsureChargingPost(work);
 				int effectiveness = KingdomRules.CrewEffectiveness(crew[j], demands[j]);
 				work.SetIntProperty("KingdomStaffed", (effectiveness > 0) ? 1 : 0);
 				work.SetIntProperty("KingdomEffectiveness", effectiveness);
@@ -275,6 +271,22 @@ namespace ThousandAndFirst
 			{
 				System.IdleWorksAnnounced = false;
 			}
+		}
+
+		internal static void EnsureChargingPost(GameObject Work)
+		{
+			if (Work == null || Work.Blueprint != "r_KingdomChargingPost")
+			{
+				return;
+			}
+			Capacitor legacy = Work.GetPart<Capacitor>();
+			if (legacy != null)
+			{
+				legacy.Charge = 0;
+				Work.RemovePart(legacy);
+			}
+			Work.RequirePart<Inventory>();
+			Work.RequirePart<r_KingdomHandCrank>();
 		}
 
 		public static bool Emigrate(KingdomSystem System, Zone Z, KingdomSurvey Survey = null)

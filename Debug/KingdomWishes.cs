@@ -379,11 +379,18 @@ namespace ThousandAndFirst
 			{
 				post = GameObject.CreateUnmodified("r_KingdomChargingPost");
 				cell = GameObject.CreateUnmodified("Drained Chem Cell");
+				post.RemovePart<Inventory>();
+				post.RemovePart<r_KingdomHandCrank>();
+				Capacitor legacy = post.RequirePart<Capacitor>();
+				legacy.MaxCharge = 4000;
+				legacy.ChargeRate = 0;
+				legacy.Charge = 4000;
+				KingdomGrowth.EnsureChargingPost(post);
 				Inventory inventory = post?.GetPart<Inventory>();
 				r_KingdomHandCrank crank = post?.GetPart<r_KingdomHandCrank>();
 				EnergyCell battery = cell?.GetPart<EnergyCell>();
 				bool structure = inventory != null && crank != null && post.GetPart<UniversalCharger>() != null && post.GetPart<Capacitor>() == null && battery != null;
-				Check(Report, ref Passed, ref Failed, "charging post has inventory, charger, and hand crank", structure);
+				Check(Report, ref Passed, ref Failed, "legacy charging post is made safe and gains its working parts", structure && legacy.Charge == 0 && legacy.ParentObject == null);
 				if (!structure)
 				{
 					return;

@@ -39,4 +39,4 @@ playtest passes.
 - Charging posts now hold cells in a real inventory and emit bounded charge only while staffed.
   New posts no longer carry a capacitor: stored capacitor charge never powered the charger.
   Existing posts gain the inventory and stateless hand-crank part on their next staffing pass;
-  their legacy capacitor remains untouched but is no longer used.
+  their obsolete capacitor is discharged and removed rather than left as an explosion hazard.
