@@ -66,10 +66,6 @@ namespace ThousandAndFirst
 				{
 					gameObject.SetIntProperty("KingdomThresholdManning", 1);
 				}
-				if (gameObject.GetPart<XRL.World.Parts.Capacitor>() != null)
-				{
-					gameObject.SetIntProperty("KingdomHandCranked", 1);
-				}
 			}
 			gameObject.MakeActive();
 			KingdomLog.Log("scaffold complete: " + displayName + " (" + blueprint + ") at " + cell.X + "," + cell.Y);

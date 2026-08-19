@@ -357,6 +357,7 @@ namespace ThousandAndFirst
 			Check(report, ref passed, ref failed, "brine vessel cannot receive fresh water", !KingdomLiquids.CanReceiveFreshWater(brine));
 			Check(report, ref passed, ref failed, "empty vessel can receive fresh water", KingdomLiquids.CanReceiveFreshWater(empty));
 			Check(report, ref passed, ref failed, "unknown positive liquid cannot receive fresh water", !KingdomLiquids.CanReceiveFreshWater(unknown));
+			CheckChargingPost(report, ref passed, ref failed);
 			bool claimsCoherent = true;
 			foreach (string zoneID in system.ClaimedZones)
 			{
@@ -368,6 +369,51 @@ namespace ThousandAndFirst
 			}
 			Check(report, ref passed, ref failed, "claimed zones carry the faction property (" + system.ClaimedZones.Count + " claims)", claimsCoherent);
 			Popup.Show("{{C|Kingdom selftest}}: {{G|" + passed + " passed}}" + ((failed > 0) ? (", {{R|" + failed + " FAILED}}") : "") + "\n" + report.ToString());
+		}
+
+		private static void CheckChargingPost(StringBuilder Report, ref int Passed, ref int Failed)
+		{
+			GameObject post = null;
+			GameObject cell = null;
+			try
+			{
+				post = GameObject.CreateUnmodified("r_KingdomChargingPost");
+				cell = GameObject.CreateUnmodified("Drained Chem Cell");
+				Inventory inventory = post?.GetPart<Inventory>();
+				r_KingdomHandCrank crank = post?.GetPart<r_KingdomHandCrank>();
+				EnergyCell battery = cell?.GetPart<EnergyCell>();
+				bool structure = inventory != null && crank != null && post.GetPart<UniversalCharger>() != null && post.GetPart<Capacitor>() == null && battery != null;
+				Check(Report, ref Passed, ref Failed, "charging post has inventory, charger, and hand crank", structure);
+				if (!structure)
+				{
+					return;
+				}
+				inventory.AddObject(cell, Silent: true, NoStack: true);
+				post.SetIntProperty("KingdomEffectiveness", 100);
+				int before = battery.GetCharge();
+				crank.TurnTick(The.Game.TimeTicks, 1);
+				Check(Report, ref Passed, ref Failed, "staffed charging post charges an inventoried cell", battery.GetCharge() > before);
+				battery.Charge = 0;
+				post.SetIntProperty("KingdomEffectiveness", 0);
+				crank.TurnTick(The.Game.TimeTicks, 1);
+				Check(Report, ref Passed, ref Failed, "idle charging post emits no charge", battery.GetCharge() == 0);
+			}
+			catch (System.Exception ex)
+			{
+				Report.Append("\n    charging probe threw: ").Append(ex.Message);
+				Check(Report, ref Passed, ref Failed, "charging post live probe completed", Result: false);
+			}
+			finally
+			{
+				if (cell != null && cell.IsValid())
+				{
+					cell.Obliterate(null, Silent: true);
+				}
+				if (post != null && post.IsValid())
+				{
+					post.Obliterate(null, Silent: true);
+				}
+			}
 		}
 
 		private static void Check(StringBuilder Report, ref int Passed, ref int Failed, string Label, bool Result)

@@ -36,3 +36,7 @@ playtest passes.
   capacity-clamped fills.
 - Kingdom state now uses versioned, named-field serialization. Exact petition-era development
   saves migrate once; older pre-release layouts require a fresh kingdom state.
+- Charging posts now hold cells in a real inventory and emit bounded charge only while staffed.
+  New posts no longer carry a capacitor: stored capacitor charge never powered the charger.
+  Existing posts gain the inventory and stateless hand-crank part on their next staffing pass;
+  their legacy capacitor remains untouched but is no longer used.

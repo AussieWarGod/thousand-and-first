@@ -244,6 +244,11 @@ namespace ThousandAndFirst
 			for (int j = 0; j < Survey.Works.Count; j++)
 			{
 				GameObject work = Survey.Works[j];
+				if (work.Blueprint == "r_KingdomChargingPost")
+				{
+					work.RequirePart<Inventory>();
+					work.RequirePart<r_KingdomHandCrank>();
+				}
 				int effectiveness = KingdomRules.CrewEffectiveness(crew[j], demands[j]);
 				work.SetIntProperty("KingdomStaffed", (effectiveness > 0) ? 1 : 0);
 				work.SetIntProperty("KingdomEffectiveness", effectiveness);
@@ -256,18 +261,6 @@ namespace ThousandAndFirst
 					if (effectiveness < 100)
 					{
 						shorthanded++;
-					}
-					if (work.GetIntProperty("KingdomHandCranked") == 1)
-					{
-						Capacitor capacitor = work.GetPart<Capacitor>();
-						if (capacitor != null)
-						{
-							int target = capacitor.MaxCharge * effectiveness / 100;
-							if (capacitor.Charge < target)
-							{
-								capacitor.Charge = target;
-							}
-						}
 					}
 				}
 			}

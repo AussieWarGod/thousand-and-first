@@ -14,8 +14,10 @@
   <ItemGroup>
     <Compile Include="TestMain.cs" />
     <Compile Include="KingdomRulesTests.cs" />
+    <Compile Include="KingdomChargingRulesTests.cs" />
     <Compile Include="..\Core\KingdomRules.cs" />
     <Compile Include="..\Core\KingdomLedger.cs" />
+    <Compile Include="..\Growth\KingdomChargingRules.cs" />
   </ItemGroup>
 
   <ItemGroup>

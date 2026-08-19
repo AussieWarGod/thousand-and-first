@@ -8,6 +8,9 @@ Fresh game launch (never mid-session approval — ghost assembly generations). A
 **The Thousand and First** at the mod prompt, then load any save or start a new game.
 Say when you're launching so the log watch can run alongside.
 
+Before launch, run `DevTests/build.ps1`, `DevTests/test.ps1`, and
+`DevTests/validate.ps1`. All three must pass.
+
 ## Pass 1 — Foundation (wishes)
 
 | Step | Wish / action | Expect |
@@ -97,7 +100,7 @@ Say when you're launching so the log watch can run alongside.
 | 36 | Commission bunks until you have several, grow to 5+ settlers and 16+ dedicated capacity | Steading; "a settler has taken up the trade" |
 | 37 | Trade with the settlement's trader, note the stock; grow to Village | "The traders have better wares to show you" — stock tier rises with the settlement (1 → 2 → 3 → 5 → 7) |
 | 38 | Commission the **charging post** (12 drams, Steading+, needs 2 crew) with only 1 settler | Message: works "stand idle for want of hands" |
-| 39 | Grow past 2 settlers, revisit | The post is crewed; set a depleted energy cell on it and wait — it charges |
+| 39 | Grow past 2 settlers, revisit | The post is crewed; set a depleted energy cell on it and wait — it charges. Remove enough crew to idle it and verify the cell stops charging |
 | 40 | `kingdom:dump` | Heartbeat tick, idle works count, shop tier, and bed count all reported |
 
 ## Pass 9 — Coming home
