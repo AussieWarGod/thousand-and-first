@@ -34,10 +34,6 @@ namespace ThousandAndFirst.Tests
 		}
 
 		/// <summary>
-		/// A distinct object with identical field values — what a load produces, as opposed to the
-		/// same reference handed back. Every reload assertion is worthless without this.
-		/// </summary>
-		/// <summary>
 		/// The state-validity verdict as a caller can observe it. <c>IsCanonical</c> is private, so
 		/// every invariant is asserted through a named entry point instead; advance validates the
 		/// state before it looks at the tick, so the state fault is what surfaces.
@@ -54,6 +50,10 @@ namespace ThousandAndFirst.Tests
 			return fault != KernelFaultCode.InvalidToyState && fault != KernelFaultCode.InvalidOptionLatch;
 		}
 
+		/// <summary>
+		/// A distinct object with identical field values — what a load produces, as opposed to the
+		/// same reference handed back. Every reload assertion is worthless without this.
+		/// </summary>
 		private static FixedPeriodToyState Clone(FixedPeriodToyState source)
 		{
 			return new FixedPeriodToyState(
