@@ -17,7 +17,7 @@ namespace ThousandAndFirst
 		/// <summary>Whether an empty or already-pure vessel may receive fresh water.</summary>
 		public static bool CanReceiveFreshWater(LiquidVolume Target)
 		{
-			return Target != null && Target.IsFreshWater(AllowEmpty: true);
+			return Target != null && (Target.Volume == 0 || Target.IsFreshWater());
 		}
 
 		/// <summary>

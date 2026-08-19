@@ -351,10 +351,12 @@ namespace ThousandAndFirst
 			brine.ComponentLiquids.Add("water", 600);
 			brine.ComponentLiquids.Add("salt", 400);
 			LiquidVolume empty = new LiquidVolume { Volume = 0 };
+			LiquidVolume unknown = new LiquidVolume { Volume = 10, ComponentLiquids = null };
 			Check(report, ref passed, ref failed, "pure water is eligible", KingdomLiquids.HasFreshWater(fresh));
 			Check(report, ref passed, ref failed, "water-primary brine is not eligible", !KingdomLiquids.HasFreshWater(brine));
 			Check(report, ref passed, ref failed, "brine vessel cannot receive fresh water", !KingdomLiquids.CanReceiveFreshWater(brine));
 			Check(report, ref passed, ref failed, "empty vessel can receive fresh water", KingdomLiquids.CanReceiveFreshWater(empty));
+			Check(report, ref passed, ref failed, "unknown positive liquid cannot receive fresh water", !KingdomLiquids.CanReceiveFreshWater(unknown));
 			bool claimsCoherent = true;
 			foreach (string zoneID in system.ClaimedZones)
 			{

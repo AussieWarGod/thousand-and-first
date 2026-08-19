@@ -40,7 +40,7 @@ Say when you're launching so the log watch can run alongside.
 | Step | Action | Expect |
 |---|---|---|
 | 15 | (On a save with no kingdom) wish `r_FounderBasin`, fill it with 8+ drams of water | Inventory action **found a settlement** appears |
-| 15a | Fill the founder's basin with 8+ drams of brine instead | Founding is refused; no liquid is spent and no settlement is created |
+| 15a | Fill the founder's basin with 8+ drams of brine instead | Founding is refused as “not pure water”; no liquid is spent and no settlement is created |
 | 16 | Use it, name the settlement | Ceremony popup; founded + zone claimed; basin drained by 8 |
 
 ## Pass 3b — Charter, chronicle registers, and reset

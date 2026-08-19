@@ -45,7 +45,17 @@ namespace ThousandAndFirst
 			int drams = KingdomLiquids.HasFreshWater(liquidVolume) ? liquidVolume.Volume : 0;
 			if (drams < KingdomRules.FoundingCostDrams)
 			{
-				Popup.Show("The rite asks for {{C|" + KingdomRules.FoundingCostDrams + " drams}} of fresh water pooled in the basin. It holds " + drams + ".");
+				int volume = (liquidVolume != null && liquidVolume.Volume > 0) ? liquidVolume.Volume : 0;
+				string reason;
+				if (volume > 0 && drams == 0)
+				{
+					reason = " It holds " + volume + " drams, but the liquid is not pure water.";
+				}
+				else
+				{
+					reason = " It holds " + drams + ".";
+				}
+				Popup.Show("The rite asks for {{C|" + KingdomRules.FoundingCostDrams + " drams}} of fresh water pooled in the basin." + reason);
 				return;
 			}
 			string name = Popup.AskString("Name the settlement.", "", MaxLength: 30, ReturnNullForEscape: true);
