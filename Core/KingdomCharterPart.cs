@@ -78,40 +78,43 @@ namespace ThousandAndFirst
 			}
 			while (true)
 			{
-				int num = Popup.PickOption(Title: system.KingdomDisplayName, Options: new string[11] { "Status", "The Chronicle", "As others tell it", "Standings", "The roll of settlers", "Standing policy", "Designate district", "Commission a building", "Answer a threat", "Dedicate a vessel to the stores", "Strike a trade charter" }, Hotkeys: new char[11] { 's', 'c', 'a', 'n', 'l', 'p', 'd', 'm', 't', 'v', 'r' }, AllowEscape: true);
+				int num = Popup.PickOption(Title: system.KingdomDisplayName, Options: new string[12] { (system.PetitionKind != KingdomRules.PetitionKind.None) ? ("{{W|Hear " + system.PetitionPetitioner + "}}") : "{{K|No one is waiting to speak}}", "Status", "The Chronicle", "As others tell it", "Standings", "The roll of settlers", "Standing policy", "Designate district", "Commission a building", "Answer a threat", "Dedicate a vessel to the stores", "Strike a trade charter" }, Hotkeys: new char[12] { 'h', 's', 'c', 'a', 'n', 'l', 'p', 'd', 'm', 't', 'v', 'r' }, AllowEscape: true);
 				switch (num)
 				{
 				case 0:
-					Popup.Show(KingdomReports.Status(system));
+					HearPetition(system);
 					break;
 				case 1:
-					Popup.Show(KingdomReports.Chronicle(system));
+					Popup.Show(KingdomReports.Status(system));
 					break;
 				case 2:
-					Popup.Show(KingdomReports.Chronicle(system, Outsider: true));
+					Popup.Show(KingdomReports.Chronicle(system));
 					break;
 				case 3:
-					Popup.Show(KingdomReports.Standings(system));
+					Popup.Show(KingdomReports.Chronicle(system, Outsider: true));
 					break;
 				case 4:
-					Popup.Show(KingdomReports.Roll(system));
+					Popup.Show(KingdomReports.Standings(system));
 					break;
 				case 5:
-					SetPolicy(system);
+					Popup.Show(KingdomReports.Roll(system));
 					break;
 				case 6:
-					DesignateDistrict(system);
+					SetPolicy(system);
 					break;
 				case 7:
-					CommissionBuilding(system);
+					DesignateDistrict(system);
 					break;
 				case 8:
-					AnswerThreat(system);
+					CommissionBuilding(system);
 					break;
 				case 9:
-					DedicateVessel(system);
+					AnswerThreat(system);
 					break;
 				case 10:
+					DedicateVessel(system);
+					break;
+				case 11:
 					StrikeTradeCharter(system);
 					break;
 				default:
@@ -124,6 +127,23 @@ namespace ThousandAndFirst
 		/// Standing policy: the founder sets intent once and the settlement lives by it. Both
 		/// choices trade one good thing for another, so neither is correct.
 		/// </summary>
+		/// <summary>Hears the settler who is waiting, and lets the founder decline.</summary>
+		public void HearPetition(KingdomSystem System)
+		{
+			if (System.PetitionKind == KingdomRules.PetitionKind.None)
+			{
+				Popup.Show("No one is waiting. The settlement is content, or too busy to complain.");
+				return;
+			}
+			int num = Popup.PickOption(Title: System.PetitionPetitioner + " of " + System.KingdomDisplayName, Intro: KingdomPetitions.Speech(System), Options: new string[2] { "Say it will be seen to", "Tell them it must wait" }, AllowEscape: true);
+			if (num == 1)
+			{
+				KingdomChronicle.Record(System, System.PetitionPetitioner + " was told the matter must wait");
+				KingdomPetitions.Close(System);
+				Popup.Show("They nod, and go back to work. Nothing is held against you; the thing simply remains undone.");
+			}
+		}
+
 		public void SetPolicy(KingdomSystem System)
 		{
 			while (true)

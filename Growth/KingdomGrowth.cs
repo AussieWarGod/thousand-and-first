@@ -123,6 +123,7 @@ namespace ThousandAndFirst
 			}
 			AssignWork(System, survey);
 			UpdateStage(System, Z, survey);
+			KingdomPetitions.OnSettlementPass(System, Z, survey);
 			if (KingdomLog.Enabled) KingdomLog.Log("growth pass done: pop=" + System.Population + " stage=" + System.Stage + " arrivals=" + arrivals + " dry=" + System.DryStreak + " next=" + System.NextArrivalTick);
 		}
 

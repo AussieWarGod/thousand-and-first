@@ -270,6 +270,97 @@
 			return false;
 		}
 
+		/// <summary>
+		/// What a settler is asking the founder for. Every kind is generated from a condition
+		/// the settlement is actually in, and every kind is met by a thing the player can see
+		/// change &mdash; never a fetch quest invented from nothing.
+		/// </summary>
+		public enum PetitionKind
+		{
+			None,
+			Thirst,
+			Shelter,
+			Craft,
+			Peace,
+			Memorial
+		}
+
+		public const long PetitionCooldownTicks = 3600L;
+
+		public const long PetitionLifetimeTicks = 24000L;
+
+		/// <summary>
+		/// Chooses the petition the settlement would actually raise, in order of how badly it
+		/// wants it. Returns None when the settlement is content &mdash; silence is a valid
+		/// answer, and the reason there is no petition board.
+		/// </summary>
+		/// <param name="StoredWater">Drams in the dedicated stores.</param>
+		/// <param name="Population">Living settlers.</param>
+		/// <param name="Beds">Beds built.</param>
+		/// <param name="IdleWorks">Works standing unmanned.</param>
+		/// <param name="WorstStanding">Lowest standing with any faction that knows the kingdom.</param>
+		/// <param name="HasShrine">Whether a place of remembrance exists.</param>
+		/// <param name="Dead">Settlers lost since the settlement was founded.</param>
+		public static PetitionKind ChoosePetition(int StoredWater, int Population, int Beds, int IdleWorks, int WorstStanding, bool HasShrine, int Dead)
+		{
+			if (Population <= 0)
+			{
+				return PetitionKind.None;
+			}
+			if (StoredWater < UpkeepDrams(Population) * 3)
+			{
+				return PetitionKind.Thirst;
+			}
+			if (Beds <= Population)
+			{
+				return PetitionKind.Shelter;
+			}
+			if (Dead > 0 && !HasShrine)
+			{
+				return PetitionKind.Memorial;
+			}
+			if (WorstStanding <= -250)
+			{
+				return PetitionKind.Peace;
+			}
+			if (IdleWorks > 0)
+			{
+				return PetitionKind.Craft;
+			}
+			return PetitionKind.None;
+		}
+
+		/// <summary>The drams a thirst petition asks the stores to reach.</summary>
+		public static int ThirstPetitionTarget(int Population)
+		{
+			int num = UpkeepDrams(Population) * 8;
+			if (num < 16)
+			{
+				num = 16;
+			}
+			return num;
+		}
+
+		/// <summary>Whether an open petition has been answered by the settlement's own state.</summary>
+		public static bool IsPetitionMet(PetitionKind Kind, int Target, int StoredWater, int Population, int Beds, int IdleWorks, int Standing, bool HasShrine)
+		{
+			switch (Kind)
+			{
+			case PetitionKind.Thirst:
+				return StoredWater >= Target;
+			case PetitionKind.Shelter:
+				return Beds > Population;
+			case PetitionKind.Memorial:
+				return HasShrine;
+			case PetitionKind.Peace:
+				return Standing >= Target;
+			case PetitionKind.Craft:
+				return IdleWorks == 0;
+			default:
+				return false;
+			}
+		}
+
 		public const int MaxBankedCycles = 3;
 
 		/// <summary>

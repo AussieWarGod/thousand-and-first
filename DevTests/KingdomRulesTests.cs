@@ -173,6 +173,42 @@ namespace ThousandAndFirst.Tests
 			Assert.AreEqual(expected, KingdomRules.CanTalkDown(standing, deferred));
 		}
 
+		[TestCase(0, 0, 0, 0, 0, false, 0, KingdomRules.PetitionKind.None)]
+		[TestCase(2, 8, 10, 0, 0, true, 0, KingdomRules.PetitionKind.Thirst)]
+		[TestCase(100, 8, 8, 0, 0, true, 0, KingdomRules.PetitionKind.Shelter)]
+		[TestCase(100, 8, 20, 0, 0, false, 2, KingdomRules.PetitionKind.Memorial)]
+		[TestCase(100, 8, 20, 0, -400, true, 0, KingdomRules.PetitionKind.Peace)]
+		[TestCase(100, 8, 20, 2, 0, true, 0, KingdomRules.PetitionKind.Craft)]
+		[TestCase(100, 8, 20, 0, 0, true, 0, KingdomRules.PetitionKind.None)]
+		public void ChoosePetition(int stored, int pop, int beds, int idle, int worst, bool shrine, int dead, KingdomRules.PetitionKind expected)
+		{
+			Assert.AreEqual(expected, KingdomRules.ChoosePetition(stored, pop, beds, idle, worst, shrine, dead));
+		}
+
+		[TestCase(KingdomRules.PetitionKind.Thirst, 40, 40, 8, 20, 0, 0, true, true)]
+		[TestCase(KingdomRules.PetitionKind.Thirst, 40, 39, 8, 20, 0, 0, true, false)]
+		[TestCase(KingdomRules.PetitionKind.Shelter, 0, 0, 8, 9, 0, 0, true, true)]
+		[TestCase(KingdomRules.PetitionKind.Shelter, 0, 0, 8, 8, 0, 0, true, false)]
+		[TestCase(KingdomRules.PetitionKind.Memorial, 0, 0, 8, 20, 0, 0, true, true)]
+		[TestCase(KingdomRules.PetitionKind.Memorial, 0, 0, 8, 20, 0, 0, false, false)]
+		[TestCase(KingdomRules.PetitionKind.Peace, -100, 0, 8, 20, 0, -100, true, true)]
+		[TestCase(KingdomRules.PetitionKind.Peace, -100, 0, 8, 20, 0, -300, true, false)]
+		[TestCase(KingdomRules.PetitionKind.Craft, 0, 0, 8, 20, 0, 0, true, true)]
+		[TestCase(KingdomRules.PetitionKind.Craft, 0, 0, 8, 20, 3, 0, true, false)]
+		[TestCase(KingdomRules.PetitionKind.None, 0, 0, 8, 20, 0, 0, true, false)]
+		public void IsPetitionMet(KingdomRules.PetitionKind kind, int target, int stored, int pop, int beds, int idle, int standing, bool shrine, bool expected)
+		{
+			Assert.AreEqual(expected, KingdomRules.IsPetitionMet(kind, target, stored, pop, beds, idle, standing, shrine));
+		}
+
+		[TestCase(0, 16)]
+		[TestCase(4, 16)]
+		[TestCase(40, 80)]
+		public void ThirstPetitionTarget(int population, int expected)
+		{
+			Assert.AreEqual(expected, KingdomRules.ThirstPetitionTarget(population));
+		}
+
 		[TestCase(1000L, 2000L, 500L, 0)]
 		[TestCase(2000L, 2000L, 500L, 1)]
 		[TestCase(2600L, 2000L, 500L, 2)]

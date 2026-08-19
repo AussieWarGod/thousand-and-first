@@ -110,6 +110,10 @@ namespace ThousandAndFirst
 			if (System.Population > KingdomRules.LoyalCoreSettlers && Stat.Random(1, 100) <= 35)
 			{
 				tookSomeone = KingdomGrowth.Emigrate(System, Z, Shared);
+				if (tookSomeone)
+				{
+					System.Dead++;
+				}
 			}
 			KingdomChronicle.Record(System, "raiders of " + displayName + " came upon " + System.KingdomDisplayName + " in the founder's absence and broke open the stores");
 			System.Ledger.Plundered += plundered;

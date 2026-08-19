@@ -59,6 +59,22 @@ namespace ThousandAndFirst
 
 		public List<string> RosterArrived = new List<string>();
 
+		public KingdomRules.PetitionKind PetitionKind = KingdomRules.PetitionKind.None;
+
+		public string PetitionPetitioner;
+
+		public string PetitionFaction;
+
+		public int PetitionTarget;
+
+		public long PetitionIssuedTick;
+
+		public long LastPetitionTick;
+
+		public int PetitionsMet;
+
+		public int Dead;
+
 		public KingdomLedger Ledger = new KingdomLedger();
 
 		/// <summary>
