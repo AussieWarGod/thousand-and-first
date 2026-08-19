@@ -482,30 +482,48 @@ namespace ThousandAndFirst.Tests
 		}
 
 		/// <summary>
-		/// Sweeps the entire valid domain rather than sampling it. Monotonicity is the invariant
-		/// that stops a founder improving their own inheritance by destroying part of the
-		/// settlement before the end, so it is worth proving rather than spot-checking - a
-		/// sampled version of this test passed while the water term was still dividing stores by
-		/// population.
+		/// Checks that raising any single input never lowers the seal, over a grid covering all
+		/// four axes and both withering states.
+		/// <para>
+		/// Named for what it proves, not for what would sound stronger. This walks every stage,
+		/// both withering states, population in steps of one, defence in twos and stores in
+		/// twenty-fourths, and at each point confirms that a step along any axis is non-decreasing.
+		/// It is not every point in the continuous domain - stores alone would make that millions
+		/// of evaluations - so it is a dense grid rather than a proof, and the formula being
+		/// visibly additive is what makes the gap acceptable.
+		/// </para>
+		/// <para>
+		/// The invariant matters because it is what stops a founder improving their own
+		/// inheritance by destroying part of the settlement before the end. An earlier version of
+		/// this test swept only the population axis while claiming the whole domain, and an
+		/// earlier version still passed while the water term divided stores by population - the
+		/// exact defect the sweep exists to catch.
+		/// </para>
 		/// </summary>
 		[Test]
-		public void SealedVigourIsMonotonicAcrossTheWholeValidDomain()
+		public void SealedVigourNeverFallsWhenAnySingleInputRises()
 		{
-			for (GrowthStage stage = GrowthStage.Camp; stage <= GrowthStage.City; stage++)
+			foreach (bool withered in new bool[2] { false, true })
 			{
-				foreach (bool withered in new bool[2] { false, true })
+				for (GrowthStage stage = GrowthStage.Camp; stage <= GrowthStage.City; stage++)
 				{
-					for (int defence = 0; defence <= 40; defence++)
+					for (int defence = 0; defence <= 40; defence += 2)
 					{
-						for (int stored = 0; stored <= 1200; stored += 8)
+						for (int stored = 0; stored <= 1200; stored += 24)
 						{
-							int previous = -1;
 							for (int population = 0; population <= KingdomRules.MaxPopulation; population++)
 							{
-								int vigour = KingdomRules.SealedVigour(stage, population, defence, stored, withered);
-								Assert.IsTrue(vigour >= previous, "population " + population + " lowered the seal at stage " + stage + ", defence " + defence + ", stored " + stored + ", withered " + withered);
-								Assert.IsTrue(vigour >= 0 && vigour <= KingdomRules.MaxSealedVigour, "seal out of range at population " + population);
-								previous = vigour;
+								int here = KingdomRules.SealedVigour(stage, population, defence, stored, withered);
+								Assert.IsTrue(here >= 0 && here <= KingdomRules.MaxSealedVigour, "seal out of range at " + stage + "/" + population + "/" + defence + "/" + stored);
+
+								string where = " at " + stage + ", pop " + population + ", defence " + defence + ", stored " + stored + ", withered " + withered;
+								Assert.IsTrue(KingdomRules.SealedVigour(stage, population + 1, defence, stored, withered) >= here, "one more settler lowered the seal" + where);
+								Assert.IsTrue(KingdomRules.SealedVigour(stage, population, defence + 1, stored, withered) >= here, "one more point of defence lowered the seal" + where);
+								Assert.IsTrue(KingdomRules.SealedVigour(stage, population, defence, stored + 1, withered) >= here, "one more dram lowered the seal" + where);
+								if (stage < GrowthStage.City)
+								{
+									Assert.IsTrue(KingdomRules.SealedVigour(stage + 1, population, defence, stored, withered) >= here, "growing a stage lowered the seal" + where);
+								}
 							}
 						}
 					}
