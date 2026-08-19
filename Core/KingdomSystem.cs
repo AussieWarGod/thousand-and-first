@@ -41,6 +41,25 @@ namespace ThousandAndFirst
 
 		public int ShopTier;
 
+		public long LastVisitTick;
+
+		public string LastDeed;
+
+		public long LastDeedTick;
+
+		public KingdomLedger Ledger = new KingdomLedger();
+
+		/// <summary>
+		/// Records the kingdom's most recent notable act, which is what draws settlers and
+		/// what arrival messages name. Deeds are forgotten after a while; reputation is not.
+		/// </summary>
+		/// <param name="Deed">Lower-case noun phrase, e.g. "the cistern you raised".</param>
+		public void RecordDeed(string Deed)
+		{
+			LastDeed = Deed;
+			LastDeedTick = The.Game.TimeTicks;
+		}
+
 		public long NextArrivalTick;
 
 		public int RaidState;
@@ -104,6 +123,15 @@ namespace ThousandAndFirst
 			Guard("raids", delegate
 			{
 				KingdomRaids.OnZoneActivated(this, E.Zone, survey);
+			});
+			Guard("digest", delegate
+			{
+				long elapsed = The.Game.TimeTicks - LastVisitTick;
+				LastVisitTick = The.Game.TimeTicks;
+				if (Ledger.Any && elapsed >= KingdomRules.TicksPerDay)
+				{
+					XRL.UI.Popup.Show(Ledger.Digest(KingdomDisplayName, (int)(elapsed / KingdomRules.TicksPerDay)));
+				}
 			});
 			return base.HandleEvent(E);
 		}

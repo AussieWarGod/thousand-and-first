@@ -87,6 +87,17 @@ Say when you're launching so the log watch can run alongside.
 | 39 | Grow past 2 settlers, revisit | The post is crewed; set a depleted energy cell on it and wait — it charges |
 | 40 | `kingdom:dump` | Heartbeat tick, idle works count, shop tier, and bed count all reported |
 
+## Pass 9 — Coming home
+
+| Step | Action | Expect |
+|---|---|---|
+| 41 | Found, claim, dedicate water, commission a bunk. Leave the zone, travel a day or more, return | **One popup**: "while you were away", the events as past-tense lines, and a ledger of drams drawn, delivered, drunk and lost — not a scroll of separate messages |
+| 42 | Read an arrival line | It names the cause: "Word of the cask rack raised at Kavvat reached the hills — a settler has come." Founding, stage-ups, commissions, caravans and tribute all set the cause |
+| 43 | Strike a charter, then stay away for several caravan intervals | Missed deliveries **bank** (up to 3): "3 caravans of the villagers of Joppa came under charter: 18 drams." Absence accrues, never decays |
+| 44 | Return after a short walk (under a day) | No digest popup — the digest is for absences, not for stepping outside |
+| 45 | Charter → Dedicate a vessel → **Dedicate every vessel here** | All undedicated vessels join the stores in one action, up to the cap |
+| 46 | Charter → Status | The ledger's effects are visible: stores, shop tier, idle/shorthanded works, and the next-need line |
+
 ## Pass 7 — Trade charters and caravans
 
 | Step | Action | Expect |

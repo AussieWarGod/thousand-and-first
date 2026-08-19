@@ -37,7 +37,9 @@ namespace ThousandAndFirst
 				System.NextArrivalTick = timeTicks + Interval(System, Z);
 				return;
 			}
+			System.Ledger.Reset();
 			int fetched = survey.Store(survey.DrawFromPools(KingdomRules.FetchableDrams(System.Population, survey.OpenWater, survey.StorageSpace)));
+			System.Ledger.Fetched += fetched;
 			if (fetched > 0 && KingdomLog.Enabled)
 			{
 				KingdomLog.Log("growth: fetched " + fetched + " drams from open water into stores");
@@ -52,6 +54,7 @@ namespace ThousandAndFirst
 			{
 				int upkeep = ThirstEnabled ? (KingdomRules.UpkeepDrams(System.Population) * ((heartbeatDays > 0) ? heartbeatDays : 1)) : 0;
 				int paid = survey.Consume(upkeep);
+				System.Ledger.UpkeepDrawn += paid;
 				if (paid < upkeep || survey.StoredWater < KingdomRules.DramsPerArrival)
 				{
 					if (!ThirstEnabled)
@@ -61,7 +64,7 @@ namespace ThousandAndFirst
 					}
 					System.DryStreak++;
 					KingdomChronicle.Record(System, "the stores ran low, and " + System.KingdomDisplayName + " thirsted");
-					MessageQueue.AddPlayerMessage("{{r|" + System.KingdomDisplayName + " thirsts. The cistern is dry; settlers will leave if the water does not return.}}");
+					System.Ledger.Note("{{r|The cistern ran dry. Settlers will leave if the water does not return.}}");
 					KingdomRules.ThirstOutcome outcome = KingdomRules.ResolveThirst(System.DryStreak, System.Stage, System.Population);
 					if (KingdomLog.Enabled) KingdomLog.Log("thirst: streak=" + System.DryStreak + " outcome=" + outcome);
 					if (outcome == KingdomRules.ThirstOutcome.Emigration)
@@ -75,7 +78,7 @@ namespace ThousandAndFirst
 						{
 							System.Withered = true;
 							KingdomChronicle.Record(System, System.KingdomDisplayName + " withered in the long thirst");
-							MessageQueue.AddPlayerMessage("{{R|" + System.KingdomDisplayName + " is withering.}}");
+							System.Ledger.Note("{{R|The settlement is withering in the long thirst.}}");
 						}
 					}
 					System.NextArrivalTick = timeTicks + Interval(System, Z);
@@ -86,7 +89,7 @@ namespace ThousandAndFirst
 				{
 					System.Withered = false;
 					KingdomChronicle.Record(System, "the water returned, and " + System.KingdomDisplayName + " drank deep and recovered");
-					MessageQueue.AddPlayerMessage("{{G|" + System.KingdomDisplayName + " has recovered from the long thirst.}}");
+					System.Ledger.Note("{{G|The water returned, and the settlement recovered.}}");
 				}
 				if (!KingdomRules.HasRoomToHouse(System.Population, survey.Beds))
 				{
@@ -94,7 +97,7 @@ namespace ThousandAndFirst
 					{
 						System.NoRoomAnnounced = true;
 						KingdomChronicle.Record(System, "a settler reached " + System.KingdomDisplayName + " and found no bed to claim");
-						MessageQueue.AddPlayerMessage("{{r|A settler arrives at " + System.KingdomDisplayName + " and finds no bed. Commission housing and they will stay.}}");
+						System.Ledger.Note("{{r|A settler came and found no bed. Commission housing and they will stay.}}");
 					}
 					System.NextArrivalTick = timeTicks + Interval(System, Z);
 					break;
@@ -105,7 +108,7 @@ namespace ThousandAndFirst
 					{
 						System.NoRoomAnnounced = true;
 						KingdomChronicle.Record(System, "a settler reached " + System.KingdomDisplayName + " and found nowhere to stand");
-						MessageQueue.AddPlayerMessage("{{r|A settler arrives at " + System.KingdomDisplayName + " and finds nowhere to stand. There is no open ground left here.}}");
+						System.Ledger.Note("{{r|A settler came and found nowhere to stand. There is no open ground left here.}}");
 					}
 					System.NextArrivalTick = timeTicks + Interval(System, Z);
 					break;
@@ -151,8 +154,11 @@ namespace ThousandAndFirst
 			System.OriginCounts[origin] = count + 1;
 			if (Survey != null) { Survey.Consume(KingdomRules.DramsPerArrival); } else { ConsumeStoredWater(Z, KingdomRules.DramsPerArrival); }
 			System.Population++;
-			KingdomChronicle.Record(System, "a settler from " + origin + " arrived at " + System.KingdomDisplayName + " and drank of the shared water");
-			MessageQueue.AddPlayerMessage("{{G|A settler from " + origin + " has arrived at " + System.KingdomDisplayName + ".}}");
+			string reason = KingdomRules.ArrivalReason(System.LastDeed, The.Game.TimeTicks - System.LastDeedTick, origin);
+			KingdomChronicle.Record(System, reason + ", and a settler came to " + System.KingdomDisplayName + " and drank of the shared water");
+			System.Ledger.Arrivals++;
+			System.Ledger.Note("{{G|" + XRL.Language.Grammar.InitCap(reason) + " - a settler has come.}}");
+			System.Ledger.ArrivalCost += KingdomRules.DramsPerArrival;
 			return true;
 		}
 
@@ -252,7 +258,8 @@ namespace ThousandAndFirst
 			leaver.Obliterate();
 			System.Population--;
 			KingdomChronicle.Record(System, XRL.Language.Grammar.A(name) + " left " + System.KingdomDisplayName + " for wetter country, the cisterns having run dry");
-			MessageQueue.AddPlayerMessage("{{R|" + XRL.Language.Grammar.A(name, Capitalize: true) + " leaves " + System.KingdomDisplayName + ". \"There is no water here,\" " + (leaver.IsPlural ? "they say" : "the settler says") + ".}}");
+			System.Ledger.Departures++;
+			System.Ledger.Note("{{R|" + XRL.Language.Grammar.A(name, Capitalize: true) + " left for wetter country. \"There is no water here,\" " + (leaver.IsPlural ? "they said" : "the settler said") + ".}}");
 			if (KingdomLog.Enabled) KingdomLog.Log("emigrate: pop now " + System.Population + " origin=" + (origin ?? "-"));
 			return true;
 		}
@@ -418,6 +425,7 @@ namespace ThousandAndFirst
 			{
 				System.Stage = stage;
 				string text = System.KingdomDisplayName + " has grown into a " + stage.ToString().ToLower();
+				System.RecordDeed("the growth of " + System.KingdomDisplayName + "");
 				KingdomChronicle.Record(System, text, Accomplishment: true);
 				Popup.Show("{{C|" + text + ".}}");
 			}

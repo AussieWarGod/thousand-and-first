@@ -254,15 +254,36 @@ namespace ThousandAndFirst
 				Popup.Show("Stand beside a vessel to dedicate it. What is dedicated feeds the settlement; what is not is yours alone, and no settler will touch it.");
 				return;
 			}
-			string[] options = new string[vessels.Count];
+			string[] options = new string[vessels.Count + 1];
+			options[0] = "{{W|Dedicate every vessel here}}";
 			for (int i = 0; i < vessels.Count; i++)
 			{
-				options[i] = vessels[i].ShortDisplayName + ((vessels[i].GetIntProperty("KingdomStores") == 1) ? " {{G|[dedicated]}}" : " {{K|[personal]}}");
+				options[i + 1] = vessels[i].ShortDisplayName + ((vessels[i].GetIntProperty("KingdomStores") == 1) ? " {{G|[dedicated]}}" : " {{K|[personal]}}");
 			}
 			int num = Popup.PickOption(Title: "Dedicate or release", Options: options, AllowEscape: true);
-			if (num >= 0)
+			if (num == 0)
 			{
-				GameObject vessel = vessels[num];
+				int dedicated = 0;
+				int room = KingdomRules.MaxDedicatedVessels - KingdomGrowth.CountDedicatedVessels(zone);
+				foreach (GameObject candidate in vessels)
+				{
+					if (room <= 0)
+					{
+						break;
+					}
+					if (candidate.GetIntProperty("KingdomStores") != 1)
+					{
+						candidate.SetIntProperty("KingdomStores", 1);
+						dedicated++;
+						room--;
+					}
+				}
+				Popup.Show((dedicated > 0) ? (dedicated + " vessels are dedicated to the stores of " + System.KingdomDisplayName + ".") : "Everything here is already dedicated, or the water-keepers can account for no more.");
+				return;
+			}
+			if (num > 0)
+			{
+				GameObject vessel = vessels[num - 1];
 				if (vessel.GetIntProperty("KingdomStores") != 1 && KingdomGrowth.CountDedicatedVessels(zone) >= KingdomRules.MaxDedicatedVessels)
 				{
 					Popup.Show("The stores are already as many vessels as the water-keepers can account for.");

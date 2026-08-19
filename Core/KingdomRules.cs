@@ -170,6 +170,49 @@
 			return Manning == "threshold";
 		}
 
+		public const int MaxBankedCycles = 3;
+
+		/// <summary>
+		/// How many charter deliveries an absence earns. Missed cycles bank rather than
+		/// vanish &mdash; absence accrues gifts &mdash; but only up to a cap, so a year away is
+		/// not a windfall.
+		/// </summary>
+		/// <param name="Now">Current tick.</param>
+		/// <param name="DueTick">When the next delivery was due.</param>
+		/// <param name="IntervalTicks">Ticks between deliveries.</param>
+		/// <returns>Deliveries owed, 0 if none are due yet.</returns>
+		public static int BankedCycles(long Now, long DueTick, long IntervalTicks)
+		{
+			if (Now < DueTick || IntervalTicks <= 0)
+			{
+				return 0;
+			}
+			long cycles = (Now - DueTick) / IntervalTicks + 1;
+			if (cycles > MaxBankedCycles)
+			{
+				cycles = MaxBankedCycles;
+			}
+			return (int)cycles;
+		}
+
+		public const long DeedMemoryTicks = 12000L;
+
+		/// <summary>
+		/// Phrases why a settler came. Growth that names the deed that caused it reads as a
+		/// reward; growth that names nothing reads as a timer.
+		/// </summary>
+		/// <param name="Deed">The kingdom's most recent notable act, or null.</param>
+		/// <param name="DeedAge">Ticks since that act.</param>
+		/// <param name="Origin">Where the settler walked from.</param>
+		public static string ArrivalReason(string Deed, long DeedAge, string Origin)
+		{
+			if (!string.IsNullOrEmpty(Deed) && DeedAge <= DeedMemoryTicks)
+			{
+				return "word of " + Deed + " reached " + Origin;
+			}
+			return "word of shared water reached " + Origin;
+		}
+
 		public static int UpkeepForElapsed(int Population, long ElapsedTicks)
 		{
 			if (Population <= 0 || ElapsedTicks <= 0)

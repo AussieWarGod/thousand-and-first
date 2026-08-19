@@ -71,6 +71,7 @@ namespace ThousandAndFirst
 			KingdomSystem system = The.Game.RequireSystem<KingdomSystem>();
 			if (system.Founded)
 			{
+				system.RecordDeed("the " + displayName + " raised at " + system.KingdomDisplayName);
 				KingdomChronicle.Record(system, "the " + displayName + " was raised at " + system.KingdomDisplayName);
 			}
 			MessageQueue.AddPlayerMessage("{{G|The " + displayName + " is complete.}}");

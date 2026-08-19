@@ -78,6 +78,7 @@ namespace ThousandAndFirst
 			System.RaidFactionName = null;
 			System.LastRaidTick = The.Game.TimeTicks;
 			KingdomChronicle.Record(System, System.KingdomDisplayName + " paid tribute in water, and " + displayName + " turned away");
+			System.RecordDeed("the tribute " + System.KingdomDisplayName + " pays to keep the peace");
 			MessageQueue.AddPlayerMessage("{{G|The tribute is paid. " + displayName + " turn away, for now.}}");
 			return true;
 		}
@@ -122,6 +123,7 @@ namespace ThousandAndFirst
 			if (spawned > 0)
 			{
 				KingdomChronicle.Record(System, "raiders of " + displayName + " descended upon " + System.KingdomDisplayName + " and broke open the stores");
+				System.Ledger.Plundered += plundered;
 				MessageQueue.AddPlayerMessage("{{R|Raiders of " + displayName + " descend upon " + System.KingdomDisplayName + "!" + ((plundered > 0) ? (" They stave in the casks: " + plundered + " drams lost.") : "") + "}}");
 			}
 		}

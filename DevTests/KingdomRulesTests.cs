@@ -135,6 +135,46 @@ namespace ThousandAndFirst.Tests
 			Assert.AreEqual(expected, KingdomRules.IsThresholdManning(manning));
 		}
 
+		[TestCase(1000L, 2000L, 500L, 0)]
+		[TestCase(2000L, 2000L, 500L, 1)]
+		[TestCase(2600L, 2000L, 500L, 2)]
+		[TestCase(3100L, 2000L, 500L, 3)]
+		[TestCase(99000L, 2000L, 500L, 3)]
+		[TestCase(2000L, 2000L, 0L, 0)]
+		public void BankedCycles(long now, long due, long interval, int expected)
+		{
+			Assert.AreEqual(expected, KingdomRules.BankedCycles(now, due, interval));
+		}
+
+		[TestCase("the cistern you raised", 100L, "the hills", "word of the cistern you raised reached the hills")]
+		[TestCase("the cistern you raised", 99000L, "the hills", "word of shared water reached the hills")]
+		[TestCase(null, 0L, "the hills", "word of shared water reached the hills")]
+		[TestCase("", 0L, "the hills", "word of shared water reached the hills")]
+		public void ArrivalReason(string deed, long age, string origin, string expected)
+		{
+			Assert.AreEqual(expected, KingdomRules.ArrivalReason(deed, age, origin));
+		}
+
+		[Test]
+		public void LedgerDigestReportsWhatMoved()
+		{
+			KingdomLedger ledger = new KingdomLedger();
+			Assert.IsFalse(ledger.Any, "an empty ledger has nothing to report");
+			ledger.Arrivals = 2;
+			ledger.Delivered = 6;
+			ledger.UpkeepDrawn = 3;
+			ledger.Note("something happened");
+			Assert.IsTrue(ledger.Any);
+			string digest = ledger.Digest("Kavvat", 4);
+			Assert.IsTrue(digest.Contains("Kavvat"));
+			Assert.IsTrue(digest.Contains("4 days"));
+			Assert.IsTrue(digest.Contains("something happened"));
+			Assert.IsTrue(digest.Contains("6 delivered under charter"));
+			ledger.Reset();
+			Assert.IsFalse(ledger.Any, "reset clears the ledger between visits");
+			Assert.IsTrue(ledger.Digest("Kavvat", 1).Contains("nothing moved"));
+		}
+
 		[TestCase("cask rack (holds 64 drams)", "cask rack")]
 		[TestCase("great cistern (holds 256 drams)", "great cistern")]
 		[TestCase("communal bunk", "communal bunk")]

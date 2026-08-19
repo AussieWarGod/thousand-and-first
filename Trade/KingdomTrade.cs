@@ -72,14 +72,17 @@ namespace ThousandAndFirst
 				{
 					continue;
 				}
-				int delivered = survey.Store(deal.IncomeDrams);
+				int cycles = KingdomRules.BankedCycles(timeTicks, System.DealNextTicks[i], deal.IntervalTicks);
+				int delivered = survey.Store(deal.IncomeDrams * cycles);
 				SpawnCaravan(Z, deal.CaravanBlueprint);
 				System.AdjustStanding(System.ActiveDealFactions[i], KingdomRules.DealTrickleStanding);
 				string displayName = Faction.GetFormattedName(System.ActiveDealFactions[i]);
-				KingdomChronicle.Record(System, "a caravan of " + displayName + " came to " + System.KingdomDisplayName + " and delivered " + delivered + " drams under charter");
-				MessageQueue.AddPlayerMessage("{{G|A caravan of " + displayName + " arrives under charter (" + delivered + " drams delivered" + ((delivered < deal.IncomeDrams) ? ", stores overflowing" : "") + ").}}");
+				KingdomChronicle.Record(System, ((cycles > 1) ? (cycles + " caravans of ") : "a caravan of ") + displayName + " came to " + System.KingdomDisplayName + " and delivered " + delivered + " drams under charter");
+				System.Ledger.Delivered += delivered;
+				System.Ledger.Note("{{G|" + ((cycles > 1) ? (cycles + " caravans of ") : "A caravan of ") + displayName + " came under charter: " + delivered + " drams" + ((delivered < deal.IncomeDrams * cycles) ? ", and the stores overflowed" : "") + ".}}");
 				KingdomLog.Log("trade: caravan deal=" + deal.Key + " faction=" + System.ActiveDealFactions[i] + " delivered=" + delivered + "/" + deal.IncomeDrams);
 				System.DealNextTicks[i] = timeTicks + deal.IntervalTicks;
+				System.RecordDeed("the caravans that come to " + System.KingdomDisplayName);
 			}
 		}
 
