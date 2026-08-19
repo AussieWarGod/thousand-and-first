@@ -114,6 +114,38 @@ namespace ThousandAndFirst.Tests
 			Assert.AreEqual(expected, KingdomRules.FetchableDrams(population, openWater, storageSpace));
 		}
 
+		[TestCase(0, GrowthStage.Village, 10, KingdomRules.ThirstOutcome.Sustained)]
+		[TestCase(1, GrowthStage.Village, 10, KingdomRules.ThirstOutcome.Warned)]
+		[TestCase(2, GrowthStage.Village, 10, KingdomRules.ThirstOutcome.Emigration)]
+		[TestCase(3, GrowthStage.Village, 10, KingdomRules.ThirstOutcome.Withering)]
+		[TestCase(9, GrowthStage.Village, 10, KingdomRules.ThirstOutcome.Withering)]
+		[TestCase(3, GrowthStage.Camp, 10, KingdomRules.ThirstOutcome.Emigration)]
+		[TestCase(2, GrowthStage.Village, 2, KingdomRules.ThirstOutcome.Warned)]
+		[TestCase(2, GrowthStage.Village, 1, KingdomRules.ThirstOutcome.Warned)]
+		public void ResolveThirst(int dryStreak, GrowthStage stage, int population, KingdomRules.ThirstOutcome expected)
+		{
+			Assert.AreEqual(expected, KingdomRules.ResolveThirst(dryStreak, stage, population));
+		}
+
+		[TestCase("you poured the first water", "Reegan", "Reegan poured the first water")]
+		[TestCase("your cistern ran dry", "Reegan", "Reegan's cistern ran dry")]
+		[TestCase("the well ran dry", "Reegan", "the well ran dry")]
+		[TestCase("", "Reegan", "")]
+		[TestCase(null, "Reegan", null)]
+		public void ToThirdPerson(string text, string founder, string expected)
+		{
+			Assert.AreEqual(expected, KingdomRules.ToThirdPerson(text, founder));
+		}
+
+		[TestCase("agrarian", "vinelands")]
+		[TestCase("academy", "scriptorium")]
+		[TestCase("garrison", "watch")]
+		[TestCase("nonesuch", "nonesuch")]
+		public void DistrictName(string district, string expected)
+		{
+			Assert.AreEqual(expected, KingdomRules.DistrictName(district));
+		}
+
 		[TestCase("agrarian", true)]
 		[TestCase("market", true)]
 		[TestCase("academy", true)]

@@ -1,4 +1,5 @@
 using Qud.API;
+using XRL;
 using XRL.Rules;
 using XRL.World;
 
@@ -10,12 +11,13 @@ namespace ThousandAndFirst
 
 		public static void Record(KingdomSystem System, string Text, bool Accomplishment = false)
 		{
-			System.ChronicleEntries.Add("On the " + Calendar.GetDay() + " of " + Calendar.GetMonth() + ", " + Text + ".");
+			System.ChronicleEntries.Add("On the " + Calendar.GetDay() + " of " + Calendar.GetMonth() + ", " + Calendar.GetYear() + " AR, " + Text + ".");
 			if (System.ChronicleEntries.Count > MaxEntries)
 			{
 				System.ChronicleEntries.RemoveAt(0);
 			}
-			System.OutsiderEntries.Add(KingdomRules.ComposeOutsider(Text, Stat.Random(0, KingdomRules.OutsiderLeads.Length - 1)));
+			string founder = The.Player?.BaseDisplayNameStripped ?? "the founder";
+			System.OutsiderEntries.Add(KingdomRules.ComposeOutsider(KingdomRules.ToThirdPerson(Text, founder), Stat.Random(0, 35)));
 			if (System.OutsiderEntries.Count > MaxEntries)
 			{
 				System.OutsiderEntries.RemoveAt(0);

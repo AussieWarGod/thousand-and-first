@@ -118,6 +118,57 @@ namespace ThousandAndFirst
 
 		public static readonly string[] Districts = new string[6] { "agrarian", "market", "craft", "shrine", "garrison", "academy" };
 
+		public static readonly string[] DistrictNames = new string[6] { "vinelands", "bazaar", "forgeworks", "sacred ground", "watch", "scriptorium" };
+
+		public static string DistrictName(string District)
+		{
+			for (int i = 0; i < Districts.Length; i++)
+			{
+				if (Districts[i] == District)
+				{
+					return DistrictNames[i];
+				}
+			}
+			return District;
+		}
+
+		public enum ThirstOutcome
+		{
+			Sustained,
+			Warned,
+			Emigration,
+			Withering
+		}
+
+		public static ThirstOutcome ResolveThirst(int DryStreak, GrowthStage Stage, int Population)
+		{
+			if (DryStreak <= 0)
+			{
+				return ThirstOutcome.Sustained;
+			}
+			if (DryStreak >= DryIntervalsToWither && Stage > GrowthStage.Camp)
+			{
+				return ThirstOutcome.Withering;
+			}
+			if (DryStreak >= DryIntervalsToEmigrate && Population > LoyalCoreSettlers)
+			{
+				return ThirstOutcome.Emigration;
+			}
+			return ThirstOutcome.Warned;
+		}
+
+		public static string ToThirdPerson(string Text, string FounderName)
+		{
+			if (string.IsNullOrEmpty(Text))
+			{
+				return Text;
+			}
+			string text = Text.Replace("your ", FounderName + "'s ").Replace("Your ", FounderName + "'s ");
+			text = text.Replace("you poured", FounderName + " poured").Replace("You poured", FounderName + " poured");
+			text = text.Replace("you ", FounderName + " ").Replace("You ", FounderName + " ");
+			return text;
+		}
+
 		public static bool IsValidDistrict(string District)
 		{
 			for (int i = 0; i < Districts.Length; i++)

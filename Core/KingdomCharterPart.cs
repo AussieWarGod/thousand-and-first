@@ -122,13 +122,13 @@ namespace ThousandAndFirst
 				Popup.Show("Districts are declared on the kingdom's own ground.");
 				return;
 			}
-			int num = Popup.PickOption(Title: "Declare this ground", Options: KingdomRules.Districts, AllowEscape: true);
+			int num = Popup.PickOption(Title: "Declare this ground", Options: KingdomRules.DistrictNames, AllowEscape: true);
 			if (num >= 0)
 			{
 				string district = KingdomRules.Districts[num];
 				System.ZoneDistricts[zone.ZoneID] = district;
-				KingdomChronicle.Record(System, "the ground here was declared " + XRL.Language.Grammar.A(district) + " district of " + System.KingdomDisplayName);
-				Popup.Show("This ground is declared a {{C|" + district + "}} district.");
+				KingdomChronicle.Record(System, "the ground here was named the " + KingdomRules.DistrictName(district) + " of " + System.KingdomDisplayName);
+				Popup.Show("This ground is the {{C|" + KingdomRules.DistrictName(district) + "}} of " + System.KingdomDisplayName + ".");
 			}
 		}
 

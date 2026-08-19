@@ -54,15 +54,21 @@ namespace ThousandAndFirst
 					System.DryStreak++;
 					KingdomChronicle.Record(System, "the stores ran low, and " + System.KingdomDisplayName + " thirsted");
 					MessageQueue.AddPlayerMessage("{{r|" + System.KingdomDisplayName + " thirsts. The cistern is dry; settlers will leave if the water does not return.}}");
-					if (System.DryStreak >= KingdomRules.DryIntervalsToEmigrate)
+					KingdomRules.ThirstOutcome outcome = KingdomRules.ResolveThirst(System.DryStreak, System.Stage, System.Population);
+					KingdomLog.Log("thirst: streak=" + System.DryStreak + " outcome=" + outcome);
+					if (outcome == KingdomRules.ThirstOutcome.Emigration)
 					{
 						Emigrate(System, Z);
 					}
-					if (!System.Withered && System.DryStreak >= KingdomRules.DryIntervalsToWither && System.Stage > GrowthStage.Camp)
+					else if (outcome == KingdomRules.ThirstOutcome.Withering)
 					{
-						System.Withered = true;
-						KingdomChronicle.Record(System, System.KingdomDisplayName + " withered in the long thirst");
-						MessageQueue.AddPlayerMessage("{{R|" + System.KingdomDisplayName + " is withering.}}");
+						Emigrate(System, Z);
+						if (!System.Withered)
+						{
+							System.Withered = true;
+							KingdomChronicle.Record(System, System.KingdomDisplayName + " withered in the long thirst");
+							MessageQueue.AddPlayerMessage("{{R|" + System.KingdomDisplayName + " is withering.}}");
+						}
 					}
 					System.NextArrivalTick = timeTicks + Interval(System, Z);
 					break;
