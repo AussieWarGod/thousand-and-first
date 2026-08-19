@@ -1,5 +1,9 @@
 # Extending The Thousand and First
 
+> Adding content? Stay in this file — the XML registries need no code.
+> Writing code against the mod? See [docs/API.md](docs/API.md) for the supported API and its
+> stability guarantees.
+
 The mod is a platform: its content registries load through the game's own mergeable XML
 streams, so **any mod can add to them by shipping a file with the right root element** —
 no code, no dependency declaration, no patching.

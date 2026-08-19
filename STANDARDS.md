@@ -126,7 +126,50 @@ binding on every economic system:
 - **One arrival per day, each attributable.** Growth events must name the player action
   that caused them.
 
-## 9. Release discipline
+## 9. Public API, documentation, and robustness
+
+This mod is a platform: other people's mods and saves depend on it. That raises the bar
+above "works on my machine" to library discipline. Note the deliberate split with §1 —
+vanilla style governs *implementation*, library discipline governs *contracts*.
+
+**API surface is explicit.** Every public type and member is either part of the supported
+API or marked internal in intent. Supported API is listed in `docs/API.md`; anything absent
+from that file may change without notice. Anything present changes only under the
+versioning rule below.
+
+**Documented contracts.** Every supported public member carries an XML doc comment stating
+what it does, what its parameters mean, what it returns, and — critically — its
+*preconditions, side effects, and failure mode* (does it return false, log, or throw?).
+Implementation bodies stay comment-free in the vanilla style: document the contract at the
+boundary, never narrate the mechanics inside.
+
+**Errors never escape into the engine.** Our code runs inside the host game's event
+dispatch. A handler that throws can break a player's save or hang a turn — including for
+players who installed us as one of a hundred mods. Every entry point invoked by the engine
+(system event handlers, part events, wish commands, registry loading) wraps its work so a
+failure logs through `MetricsManager.LogError` and degrades to a no-op rather than
+propagating. Failures are loud in the log and silent in the world.
+
+**Hostile-input discipline at every boundary.** Third-party XML, third-party callers, and
+save data from older versions are all untrusted: validate, clamp, and reject with a logged
+reason. A malformed extension entry disables itself; it never crashes the kingdom, and it
+never silently half-registers.
+
+**Versioning and deprecation.** The mod version is semantic: patch for fixes, minor for
+additive API and content, major for breaking changes. Supported API is never removed in a
+minor release — it is marked `[Obsolete]` with the replacement named, kept working for at
+least one minor cycle, and its removal is recorded in `CHANGELOG.md`. Serialized field
+layouts follow §1 regardless of version.
+
+**Documentation is part of the change, not after it.** A commit that changes supported API
+updates `docs/API.md` and `CHANGELOG.md` in the same commit; a commit that changes a data
+schema updates `MODDING.md` in the same commit. Documentation drift is treated as breakage.
+
+**Test coverage of the contract.** Every supported public member with logic is covered by a
+`[TestCase]` table or an in-game selftest assertion. Bug fixes land with the test that
+would have caught them.
+
+## 10. Release discipline
 
 - Ship in named arc slices with a paste-ready changelog file per release
   (Feature-Friday voice), `workshop.json` kept in sync.

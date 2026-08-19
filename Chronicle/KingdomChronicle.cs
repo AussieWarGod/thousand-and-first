@@ -9,6 +9,18 @@ namespace ThousandAndFirst
 	{
 		public const int MaxEntries = 200;
 
+		/// <summary>
+		/// Writes an event into the kingdom's chronicle in both registers: the official
+		/// entry (dated in Qud's calendar) and an outsider retelling (third person, wrapped
+		/// in rumor grammar). Both lists are capped at <see cref="MaxEntries"/>.
+		/// </summary>
+		/// <param name="System">The kingdom system; must be founded for names to read correctly.</param>
+		/// <param name="Text">Lower-case clause with no trailing period, written from the
+		/// founder's perspective, e.g. "the well ran dry" or "you poured the first water".
+		/// Second-person phrasing is converted automatically for the outsider register.</param>
+		/// <param name="Accomplishment">True to also file a journal accomplishment, which
+		/// makes the event eligible for the player's chronicle and sultan murals. Reserve
+		/// this for milestones; ordinary events would spam the journal.</param>
 		public static void Record(KingdomSystem System, string Text, bool Accomplishment = false)
 		{
 			System.ChronicleEntries.Add("On the " + Calendar.GetDay() + " of " + Calendar.GetMonth() + ", " + Calendar.GetYear() + " AR, " + Text + ".");
