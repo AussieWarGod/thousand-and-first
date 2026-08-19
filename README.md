@@ -11,6 +11,7 @@ withering â†’ recovery), settler provenance, the dated two-register chronic
 Charter ability (Status / Chronicle / As others tell it / Standings).
 
 - Design document: published artifact "The Thousand and First" (DLC-scale design, research-grounded).
+- [VISION.md](VISION.md) — where this is going and the rules it holds itself to.
 - [STANDARDS.md](STANDARDS.md) â€” engineering charter (vanilla conformance, depth standard, three-layer testing).
 - [TESTING.md](TESTING.md) â€” the current playtest protocol.
 - `DevTests/` â€” compile gate + NUnit suite (hidden from the mod loader; `#if TAF_TESTS` guarded).
