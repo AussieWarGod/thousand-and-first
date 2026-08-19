@@ -114,31 +114,60 @@
 		}
 
 		/// <summary>
-		/// Allocates citizens to works in priority order (the order given). Works that cannot
-		/// be fully crewed are left unstaffed rather than half-crewed; a half-manned smithy is
-		/// no smithy.
+		/// Allocates citizens to works in priority order. Works declare how they respond to
+		/// short crew: a <b>scaled</b> work runs at whatever fraction it has hands for (one
+		/// person on a two-person crank still turns it, half as fast), while a
+		/// <b>threshold</b> work needs its full crew or nothing at all &mdash; there is no such
+		/// thing as half a shopkeeper.
 		/// </summary>
 		/// <param name="Citizens">Citizens available for work.</param>
 		/// <param name="Demands">Staff each work requires, in priority order.</param>
-		/// <returns>Parallel array: true where the work is crewed.</returns>
-		public static bool[] AssignStaff(int Citizens, int[] Demands)
+		/// <param name="Thresholds">True where a work is all-or-nothing. Null means all scaled.</param>
+		/// <returns>Parallel array of citizens actually assigned to each work.</returns>
+		public static int[] AssignCrew(int Citizens, int[] Demands, bool[] Thresholds = null)
 		{
-			bool[] result = new bool[(Demands != null) ? Demands.Length : 0];
+			int[] result = new int[(Demands != null) ? Demands.Length : 0];
 			if (Demands == null)
 			{
 				return result;
 			}
-			int remaining = Citizens;
+			int remaining = (Citizens > 0) ? Citizens : 0;
 			for (int i = 0; i < Demands.Length; i++)
 			{
 				int need = (Demands[i] > 0) ? Demands[i] : 0;
-				if (need <= remaining)
+				if (need == 0)
 				{
-					result[i] = true;
-					remaining -= need;
+					continue;
 				}
+				bool threshold = Thresholds != null && i < Thresholds.Length && Thresholds[i];
+				int give = (need <= remaining) ? need : (threshold ? 0 : remaining);
+				result[i] = give;
+				remaining -= give;
 			}
 			return result;
+		}
+
+		/// <summary>Fraction of full output a work produces with the crew it has, 0 to 100.</summary>
+		public static int CrewEffectiveness(int Assigned, int Needed)
+		{
+			if (Needed <= 0)
+			{
+				return 100;
+			}
+			if (Assigned <= 0)
+			{
+				return 0;
+			}
+			if (Assigned >= Needed)
+			{
+				return 100;
+			}
+			return Assigned * 100 / Needed;
+		}
+
+		public static bool IsThresholdManning(string Manning)
+		{
+			return Manning == "threshold";
 		}
 
 		public static int UpkeepForElapsed(int Population, long ElapsedTicks)
@@ -294,6 +323,8 @@
 
 			public int Staff;
 
+			public string Manning = "scaled";
+
 			public string ShortName;
 
 			public string Name => ShortName ?? DisplayName;
@@ -313,7 +344,7 @@
 			return Text.Substring(0, num);
 		}
 
-		public static bool TryParseBuildAttributes(string Key, string DisplayName, string Blueprint, string Cost, string Ticks, string Styles, string Category, string MinStage, string Staff, out BuildEntry Entry, out string Error)
+		public static bool TryParseBuildAttributes(string Key, string DisplayName, string Blueprint, string Cost, string Ticks, string Styles, string Category, string MinStage, string Staff, string Manning, out BuildEntry Entry, out string Error)
 		{
 			Entry = null;
 			Error = null;
@@ -355,6 +386,7 @@
 				Category = (string.IsNullOrEmpty(Category) ? "civic" : Category),
 				MinStage = minStage,
 				Staff = staff,
+				Manning = (string.IsNullOrEmpty(Manning) ? "scaled" : Manning),
 				ShortName = StripParenthetical(DisplayName)
 			};
 			return true;

@@ -38,6 +38,11 @@ namespace ThousandAndFirst
 				.Append(The.Game.TimeTicks)
 				.Append(")\nPlayer rep with kingdom: ")
 				.Append(The.Game.PlayerReputation.Get(System.KingdomFactionName));
+			string need = NextNeed(System, currentZone);
+			if (!string.IsNullOrEmpty(need))
+			{
+				stringBuilder.Append("\r\n\r\n{{W|").Append(need).Append("}}");
+			}
 			if (System.ActiveDealKeys.Count > 0)
 			{
 				stringBuilder.Append("\nCharters: ");
@@ -47,6 +52,47 @@ namespace ThousandAndFirst
 				}
 			}
 			return stringBuilder.ToString();
+		}
+
+		/// <summary>
+		/// One plain sentence naming the settlement's most pressing want, so a founder always
+		/// knows the next thing to do without reading a manual. Ordered by what actually
+		/// blocks growth: water, then beds, then hands, then storage.
+		/// </summary>
+		/// <returns>Advice line, or empty when nothing is wanting.</returns>
+		public static string NextNeed(KingdomSystem System, Zone Here)
+		{
+			if (Here == null || !System.ClaimedZones.Contains(Here.ZoneID))
+			{
+				return "Stand on the kingdom's own ground to see what it wants.";
+			}
+			int stored = KingdomGrowth.CountStoredWater(Here);
+			int capacity = KingdomGrowth.CountStorageCapacity(Here);
+			if (capacity <= 0)
+			{
+				return "Nothing here is dedicated to the stores. Dedicate a vessel, or commission a cask rack, and the settlement can begin to keep water.";
+			}
+			if (stored < KingdomRules.DramsPerArrival + KingdomRules.UpkeepDrams(System.Population))
+			{
+				return "The stores are nearly dry. Pour water into a dedicated vessel; nothing else can happen until there is water to share.";
+			}
+			if (!KingdomRules.HasRoomToHouse(System.Population, KingdomGrowth.CountBeds(Here)))
+			{
+				return "There is no bed free. Commission a communal bunk and the next settler will stay.";
+			}
+			if (System.IdleWorks > 0)
+			{
+				return System.IdleWorks + " of the works stand idle for want of hands. More settlers, or fewer works.";
+			}
+			if (System.ShorthandedWorks > 0)
+			{
+				return System.ShorthandedWorks + " of the works run shorthanded and produce less than they could.";
+			}
+			if (System.Stage < GrowthStage.Steading && capacity < 16)
+			{
+				return "Storage is thin. A great cistern would carry the settlement toward a steading.";
+			}
+			return "";
 		}
 
 		public static string Standings(KingdomSystem System, int Limit = 18)

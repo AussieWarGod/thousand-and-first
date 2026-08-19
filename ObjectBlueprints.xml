@@ -63,6 +63,12 @@
     <property Name="DontWarnOnOpen" Value="true" />
     <stat Name="Hitpoints" Value="150" />
   </object>
+  <object Name="r_FoundingBook" Inherits="Book">
+    <part Name="Render" DisplayName="{{W|On the Founding of Places}}" />
+    <part Name="Description" Short="A thin codex in a plain wrapper, copied and recopied by people who had reason to. The margins argue with the text." />
+    <part Name="Book" ID="r_OnTheFoundingOfPlaces" />
+    <part Name="Commerce" Value="45" />
+  </object>
   <object Name="r_FounderBasin" Inherits="WaterContainer">
     <part Name="LiquidVolume" MaxVolume="16" Volume="0" />
     <part Name="Render" DisplayName="founder's basin" RenderString="}" ColorString="&amp;B" />

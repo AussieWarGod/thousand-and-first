@@ -96,21 +96,43 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void AssignStaffCrewsInPriorityOrder()
+		public void AssignCrewFillsInPriorityOrder()
 		{
-			bool[] result = KingdomRules.AssignStaff(5, new int[3] { 2, 2, 2 });
-			Assert.IsTrue(result[0]);
-			Assert.IsTrue(result[1]);
-			Assert.IsFalse(result[2], "third work cannot be half-crewed");
+			int[] crew = KingdomRules.AssignCrew(5, new int[3] { 2, 2, 2 });
+			Assert.AreEqual(2, crew[0]);
+			Assert.AreEqual(2, crew[1]);
+			Assert.AreEqual(1, crew[2], "the last work runs shorthanded on what is left");
 
-			bool[] none = KingdomRules.AssignStaff(0, new int[2] { 1, 1 });
-			Assert.IsFalse(none[0]);
-			Assert.IsFalse(none[1]);
+			int[] threshold = KingdomRules.AssignCrew(5, new int[3] { 2, 2, 2 }, new bool[3] { false, false, true });
+			Assert.AreEqual(0, threshold[2], "an all-or-nothing work takes nobody rather than run short");
 
-			bool[] free = KingdomRules.AssignStaff(0, new int[1] { 0 });
-			Assert.IsTrue(free[0], "a work needing nobody is always crewed");
+			int[] spill = KingdomRules.AssignCrew(5, new int[3] { 2, 4, 1 }, new bool[3] { false, true, false });
+			Assert.AreEqual(2, spill[0]);
+			Assert.AreEqual(0, spill[1], "threshold work skipped");
+			Assert.AreEqual(1, spill[2], "hands it refused pass down the line");
 
-			Assert.AreEqual(0, KingdomRules.AssignStaff(5, null).Length);
+			Assert.AreEqual(0, KingdomRules.AssignCrew(5, null).Length);
+			Assert.AreEqual(0, KingdomRules.AssignCrew(-3, new int[1] { 1 })[0]);
+		}
+
+		[TestCase(0, 0, 100)]
+		[TestCase(0, 2, 0)]
+		[TestCase(1, 2, 50)]
+		[TestCase(2, 2, 100)]
+		[TestCase(3, 2, 100)]
+		[TestCase(1, 3, 33)]
+		[TestCase(2, 3, 66)]
+		public void CrewEffectiveness(int assigned, int needed, int expected)
+		{
+			Assert.AreEqual(expected, KingdomRules.CrewEffectiveness(assigned, needed));
+		}
+
+		[TestCase("threshold", true)]
+		[TestCase("scaled", false)]
+		[TestCase(null, false)]
+		public void IsThresholdManning(string manning, bool expected)
+		{
+			Assert.AreEqual(expected, KingdomRules.IsThresholdManning(manning));
 		}
 
 		[TestCase("cask rack (holds 64 drams)", "cask rack")]
@@ -227,7 +249,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase("well", "the well", "Well", "4", "1200", "common", null, "metropolis", false)]
 		public void TryParseBuildAttributes(string key, string display, string blueprint, string cost, string ticks, string styles, string category, string minStage, bool expectedOk)
 		{
-			bool ok = KingdomRules.TryParseBuildAttributes(key, display, blueprint, cost, ticks, styles, category, minStage, null, out var entry, out var error);
+			bool ok = KingdomRules.TryParseBuildAttributes(key, display, blueprint, cost, ticks, styles, category, minStage, null, null, out var entry, out var error);
 			Assert.AreEqual(expectedOk, ok);
 			if (ok)
 			{

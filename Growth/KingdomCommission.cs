@@ -60,6 +60,7 @@ namespace ThousandAndFirst
 				part.TargetDisplayName = entry.Name;
 				part.CompleteTick = The.Game.TimeTicks + entry.BuildTicks;
 				part.StaffNeeded = entry.Staff;
+				part.ThresholdManning = KingdomRules.IsThresholdManning(entry.Manning);
 			}
 			cell.AddObject(gameObject);
 			KingdomChronicle.Record(System, XRL.Language.Grammar.A(entry.Name) + " was commissioned at " + System.KingdomDisplayName);

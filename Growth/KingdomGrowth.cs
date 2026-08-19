@@ -168,29 +168,46 @@ namespace ThousandAndFirst
 				return;
 			}
 			int[] demands = new int[Survey.Works.Count];
+			bool[] thresholds = new bool[Survey.Works.Count];
 			for (int i = 0; i < Survey.Works.Count; i++)
 			{
 				demands[i] = Survey.Works[i].GetIntProperty("KingdomStaffNeeded");
+				thresholds[i] = Survey.Works[i].GetIntProperty("KingdomThresholdManning") == 1;
 			}
-			bool[] crewed = KingdomRules.AssignStaff(System.Population, demands);
+			int[] crew = KingdomRules.AssignCrew(System.Population, demands, thresholds);
 			int idle = 0;
+			int shorthanded = 0;
 			for (int j = 0; j < Survey.Works.Count; j++)
 			{
 				GameObject work = Survey.Works[j];
-				work.SetIntProperty("KingdomStaffed", crewed[j] ? 1 : 0);
-				if (!crewed[j])
+				int effectiveness = KingdomRules.CrewEffectiveness(crew[j], demands[j]);
+				work.SetIntProperty("KingdomStaffed", (effectiveness > 0) ? 1 : 0);
+				work.SetIntProperty("KingdomEffectiveness", effectiveness);
+				if (effectiveness <= 0)
 				{
 					idle++;
 				}
-				else if (work.GetIntProperty("KingdomHandCranked") == 1)
+				else
 				{
-					Capacitor capacitor = work.GetPart<Capacitor>();
-					if (capacitor != null && capacitor.Charge < capacitor.MaxCharge)
+					if (effectiveness < 100)
 					{
-						capacitor.Charge = capacitor.MaxCharge;
+						shorthanded++;
+					}
+					if (work.GetIntProperty("KingdomHandCranked") == 1)
+					{
+						Capacitor capacitor = work.GetPart<Capacitor>();
+						if (capacitor != null)
+						{
+							int target = capacitor.MaxCharge * effectiveness / 100;
+							if (capacitor.Charge < target)
+							{
+								capacitor.Charge = target;
+							}
+						}
 					}
 				}
 			}
+			System.ShorthandedWorks = shorthanded;
 			System.IdleWorks = idle;
 			if (idle > 0 && !System.IdleWorksAnnounced)
 			{
@@ -359,6 +376,20 @@ namespace ThousandAndFirst
 			foreach (GameObject item in Z.GetObjects())
 			{
 				if (item.GetIntProperty("KingdomStores") == 1)
+				{
+					total++;
+				}
+			}
+			return total;
+		}
+
+		/// <summary>Counts beds the settlement built. These are the population ceiling.</summary>
+		public static int CountBeds(Zone Z)
+		{
+			int total = 0;
+			foreach (GameObject item in Z.GetObjects())
+			{
+				if (item.GetIntProperty("KingdomBuilt") == 1 && item.HasPart("Bed"))
 				{
 					total++;
 				}

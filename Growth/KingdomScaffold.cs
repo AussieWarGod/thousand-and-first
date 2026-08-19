@@ -16,6 +16,8 @@ namespace ThousandAndFirst
 
 		public int StaffNeeded;
 
+		public bool ThresholdManning;
+
 		public override bool WantTurnTick()
 		{
 			return true;
@@ -55,6 +57,10 @@ namespace ThousandAndFirst
 			if (StaffNeeded > 0)
 			{
 				gameObject.SetIntProperty("KingdomStaffNeeded", StaffNeeded);
+				if (ThresholdManning)
+				{
+					gameObject.SetIntProperty("KingdomThresholdManning", 1);
+				}
 				if (gameObject.GetPart<XRL.World.Parts.Capacitor>() != null)
 				{
 					gameObject.SetIntProperty("KingdomHandCranked", 1);

@@ -35,6 +35,8 @@ namespace ThousandAndFirst
 
 		public int IdleWorks;
 
+		public int ShorthandedWorks;
+
 		public bool IdleWorksAnnounced;
 
 		public int ShopTier;
