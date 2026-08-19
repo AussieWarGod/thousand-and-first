@@ -59,6 +59,7 @@ namespace ThousandAndFirst
 				part.TargetBlueprint = entry.Blueprint;
 				part.TargetDisplayName = entry.Name;
 				part.CompleteTick = The.Game.TimeTicks + entry.BuildTicks;
+				part.StaffNeeded = entry.Staff;
 			}
 			cell.AddObject(gameObject);
 			KingdomChronicle.Record(System, XRL.Language.Grammar.A(entry.Name) + " was commissioned at " + System.KingdomDisplayName);

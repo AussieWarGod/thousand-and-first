@@ -52,6 +52,17 @@
     <part Name="Physics" Takeable="false" Weight="1000" />
     <stat Name="Hitpoints" Value="150" />
   </object>
+  <object Name="r_KingdomChargingPost" Inherits="Furniture">
+    <stag Name="Contemporary" />
+    <part Name="Render" DisplayName="charging post" RenderString="&#227;" ColorString="&amp;C" />
+    <part Name="Description" Short="A salvaged cradle of chrome and gut-wire, cranked by whoever has the shift. Set your cells on it and go eat; they will be full when you come back." />
+    <part Name="UniversalCharger" ChargeRate="150" />
+    <part Name="Capacitor" MaxCharge="4000" ChargeRate="0" />
+    <part Name="Container" Preposition="on" />
+    <part Name="Physics" Takeable="false" Weight="800" />
+    <property Name="DontWarnOnOpen" Value="true" />
+    <stat Name="Hitpoints" Value="150" />
+  </object>
   <object Name="r_FounderBasin" Inherits="WaterContainer">
     <part Name="LiquidVolume" MaxVolume="16" Volume="0" />
     <part Name="Render" DisplayName="founder's basin" RenderString="}" ColorString="&amp;B" />

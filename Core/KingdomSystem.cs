@@ -31,6 +31,14 @@ namespace ThousandAndFirst
 
 		public bool NoRoomAnnounced;
 
+		public long LastHeartbeatTick;
+
+		public int IdleWorks;
+
+		public bool IdleWorksAnnounced;
+
+		public int ShopTier;
+
 		public long NextArrivalTick;
 
 		public int RaidState;

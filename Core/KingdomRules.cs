@@ -1,4 +1,4 @@
-namespace ThousandAndFirst
+﻿namespace ThousandAndFirst
 {
 	public enum GrowthStage
 	{
@@ -64,6 +64,81 @@ namespace ThousandAndFirst
 		public static int UpkeepDrams(int Population)
 		{
 			return Population / 4;
+		}
+
+		/// <summary>
+		/// Days of settlement life to resolve on arrival. Absence is forgiven beyond the cap:
+		/// a season away costs the same as three days, so leaving is never punished.
+		/// </summary>
+		/// <param name="ElapsedTicks">Ticks since the last heartbeat.</param>
+		/// <returns>Whole days to run, 0 to <see cref="MaxUpkeepDaysCharged"/>.</returns>
+		public static int HeartbeatDays(long ElapsedTicks)
+		{
+			if (ElapsedTicks <= 0)
+			{
+				return 0;
+			}
+			long days = ElapsedTicks / TicksPerDay;
+			if (days > MaxUpkeepDaysCharged)
+			{
+				days = MaxUpkeepDaysCharged;
+			}
+			return (int)days;
+		}
+
+		/// <summary>Stock tier a settlement's shops carry at a given growth stage.</summary>
+		public static int ShopTierForStage(GrowthStage Stage)
+		{
+			switch (Stage)
+			{
+			case GrowthStage.Camp:
+				return 1;
+			case GrowthStage.Steading:
+				return 2;
+			case GrowthStage.Village:
+				return 3;
+			case GrowthStage.Town:
+				return 5;
+			default:
+				return 7;
+			}
+		}
+
+		/// <summary>
+		/// Whether the settlement has a bed free for one more settler. Nobody arrives to
+		/// sleep in the dirt; housing is the real ceiling on population.
+		/// </summary>
+		public static bool HasRoomToHouse(int Population, int Beds)
+		{
+			return Population < Beds;
+		}
+
+		/// <summary>
+		/// Allocates citizens to works in priority order (the order given). Works that cannot
+		/// be fully crewed are left unstaffed rather than half-crewed; a half-manned smithy is
+		/// no smithy.
+		/// </summary>
+		/// <param name="Citizens">Citizens available for work.</param>
+		/// <param name="Demands">Staff each work requires, in priority order.</param>
+		/// <returns>Parallel array: true where the work is crewed.</returns>
+		public static bool[] AssignStaff(int Citizens, int[] Demands)
+		{
+			bool[] result = new bool[(Demands != null) ? Demands.Length : 0];
+			if (Demands == null)
+			{
+				return result;
+			}
+			int remaining = Citizens;
+			for (int i = 0; i < Demands.Length; i++)
+			{
+				int need = (Demands[i] > 0) ? Demands[i] : 0;
+				if (need <= remaining)
+				{
+					result[i] = true;
+					remaining -= need;
+				}
+			}
+			return result;
 		}
 
 		public static int UpkeepForElapsed(int Population, long ElapsedTicks)
@@ -217,6 +292,8 @@ namespace ThousandAndFirst
 
 			public GrowthStage MinStage;
 
+			public int Staff;
+
 			public string ShortName;
 
 			public string Name => ShortName ?? DisplayName;
@@ -236,7 +313,7 @@ namespace ThousandAndFirst
 			return Text.Substring(0, num);
 		}
 
-		public static bool TryParseBuildAttributes(string Key, string DisplayName, string Blueprint, string Cost, string Ticks, string Styles, string Category, string MinStage, out BuildEntry Entry, out string Error)
+		public static bool TryParseBuildAttributes(string Key, string DisplayName, string Blueprint, string Cost, string Ticks, string Styles, string Category, string MinStage, string Staff, out BuildEntry Entry, out string Error)
 		{
 			Entry = null;
 			Error = null;
@@ -255,6 +332,12 @@ namespace ThousandAndFirst
 				Error = "building " + Key + " has a bad Ticks";
 				return false;
 			}
+			int staff = 0;
+			if (!string.IsNullOrEmpty(Staff) && (!int.TryParse(Staff, out staff) || staff < 0))
+			{
+				Error = "building " + Key + " has a bad Staff";
+				return false;
+			}
 			GrowthStage minStage = GrowthStage.Camp;
 			if (!string.IsNullOrEmpty(MinStage) && !System.Enum.TryParse<GrowthStage>(MinStage, ignoreCase: true, out minStage))
 			{
@@ -271,6 +354,7 @@ namespace ThousandAndFirst
 				Styles = (string.IsNullOrEmpty(Styles) ? "common" : Styles),
 				Category = (string.IsNullOrEmpty(Category) ? "civic" : Category),
 				MinStage = minStage,
+				Staff = staff,
 				ShortName = StripParenthetical(DisplayName)
 			};
 			return true;

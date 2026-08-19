@@ -32,6 +32,12 @@ namespace ThousandAndFirst
 
 		public readonly List<GameObject> Settlers = new List<GameObject>();
 
+		/// <summary>Beds the settlement built. Population cannot exceed these.</summary>
+		public int Beds;
+
+		/// <summary>Works the settlement built that require crew, in placement order.</summary>
+		public readonly List<GameObject> Works = new List<GameObject>();
+
 		/// <summary>Walks the zone once and classifies every object of interest.</summary>
 		/// <param name="Z">Zone to survey. Null yields an empty survey.</param>
 		public static KingdomSurvey Take(Zone Z)
@@ -53,6 +59,17 @@ namespace ThousandAndFirst
 					else if (item.GetIntProperty("KingdomBorn") == 1 && !item.IsPlayer() && !item.IsPlayerLed())
 					{
 						survey.Settlers.Add(item);
+					}
+				}
+				if (item.GetIntProperty("KingdomBuilt") == 1)
+				{
+					if (item.HasPart("Bed"))
+					{
+						survey.Beds++;
+					}
+					if (item.GetIntProperty("KingdomStaffNeeded") > 0)
+					{
+						survey.Works.Add(item);
 					}
 				}
 				LiquidVolume part = item.GetPart<LiquidVolume>();

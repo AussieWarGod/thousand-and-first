@@ -14,6 +14,8 @@ namespace ThousandAndFirst
 
 		public long CompleteTick;
 
+		public int StaffNeeded;
+
 		public override bool WantTurnTick()
 		{
 			return true;
@@ -50,6 +52,14 @@ namespace ThousandAndFirst
 				gameObject.SetIntProperty("KingdomStores", 1);
 			}
 			gameObject.SetIntProperty("KingdomBuilt", 1);
+			if (StaffNeeded > 0)
+			{
+				gameObject.SetIntProperty("KingdomStaffNeeded", StaffNeeded);
+				if (gameObject.GetPart<XRL.World.Parts.Capacitor>() != null)
+				{
+					gameObject.SetIntProperty("KingdomHandCranked", 1);
+				}
+			}
 			gameObject.MakeActive();
 			KingdomLog.Log("scaffold complete: " + displayName + " (" + blueprint + ") at " + cell.X + "," + cell.Y);
 			KingdomSystem system = The.Game.RequireSystem<KingdomSystem>();

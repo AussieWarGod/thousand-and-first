@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using XRL;
 using XRL.World;
@@ -149,7 +149,7 @@ namespace ThousandAndFirst
 
 		private static void HandleBuilding(XmlDataHelper xml)
 		{
-			if (!KingdomRules.TryParseBuildAttributes(xml.GetAttribute("Key"), xml.GetAttribute("DisplayName"), xml.GetAttribute("Blueprint"), xml.GetAttribute("Cost"), xml.GetAttribute("Ticks"), xml.GetAttribute("Styles"), xml.GetAttribute("Category"), xml.GetAttribute("MinStage"), out var entry, out var error))
+			if (!KingdomRules.TryParseBuildAttributes(xml.GetAttribute("Key"), xml.GetAttribute("DisplayName"), xml.GetAttribute("Blueprint"), xml.GetAttribute("Cost"), xml.GetAttribute("Ticks"), xml.GetAttribute("Styles"), xml.GetAttribute("Category"), xml.GetAttribute("MinStage"), xml.GetAttribute("Staff"), out var entry, out var error))
 			{
 				MetricsManager.LogError("ThousandAndFirst KingdomBuildings: " + error);
 			}

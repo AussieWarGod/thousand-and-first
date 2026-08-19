@@ -64,6 +64,55 @@ namespace ThousandAndFirst.Tests
 			Assert.AreEqual(expected, KingdomRules.UpkeepForElapsed(population, elapsed));
 		}
 
+		[TestCase(0L, 0)]
+		[TestCase(600L, 0)]
+		[TestCase(1200L, 1)]
+		[TestCase(3600L, 3)]
+		[TestCase(120000L, 3)]
+		[TestCase(-500L, 0)]
+		public void HeartbeatDays(long elapsed, int expected)
+		{
+			Assert.AreEqual(expected, KingdomRules.HeartbeatDays(elapsed));
+		}
+
+		[TestCase(GrowthStage.Camp, 1)]
+		[TestCase(GrowthStage.Steading, 2)]
+		[TestCase(GrowthStage.Village, 3)]
+		[TestCase(GrowthStage.Town, 5)]
+		[TestCase(GrowthStage.City, 7)]
+		public void ShopTierForStage(GrowthStage stage, int expected)
+		{
+			Assert.AreEqual(expected, KingdomRules.ShopTierForStage(stage));
+		}
+
+		[TestCase(0, 0, false)]
+		[TestCase(0, 1, true)]
+		[TestCase(3, 3, false)]
+		[TestCase(3, 4, true)]
+		[TestCase(10, 2, false)]
+		public void HasRoomToHouse(int population, int beds, bool expected)
+		{
+			Assert.AreEqual(expected, KingdomRules.HasRoomToHouse(population, beds));
+		}
+
+		[Test]
+		public void AssignStaffCrewsInPriorityOrder()
+		{
+			bool[] result = KingdomRules.AssignStaff(5, new int[3] { 2, 2, 2 });
+			Assert.IsTrue(result[0]);
+			Assert.IsTrue(result[1]);
+			Assert.IsFalse(result[2], "third work cannot be half-crewed");
+
+			bool[] none = KingdomRules.AssignStaff(0, new int[2] { 1, 1 });
+			Assert.IsFalse(none[0]);
+			Assert.IsFalse(none[1]);
+
+			bool[] free = KingdomRules.AssignStaff(0, new int[1] { 0 });
+			Assert.IsTrue(free[0], "a work needing nobody is always crewed");
+
+			Assert.AreEqual(0, KingdomRules.AssignStaff(5, null).Length);
+		}
+
 		[TestCase("cask rack (holds 64 drams)", "cask rack")]
 		[TestCase("great cistern (holds 256 drams)", "great cistern")]
 		[TestCase("communal bunk", "communal bunk")]
@@ -178,7 +227,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase("well", "the well", "Well", "4", "1200", "common", null, "metropolis", false)]
 		public void TryParseBuildAttributes(string key, string display, string blueprint, string cost, string ticks, string styles, string category, string minStage, bool expectedOk)
 		{
-			bool ok = KingdomRules.TryParseBuildAttributes(key, display, blueprint, cost, ticks, styles, category, minStage, out var entry, out var error);
+			bool ok = KingdomRules.TryParseBuildAttributes(key, display, blueprint, cost, ticks, styles, category, minStage, null, out var entry, out var error);
 			Assert.AreEqual(expectedOk, ok);
 			if (ok)
 			{

@@ -42,10 +42,15 @@ namespace ThousandAndFirst
 			{
 				KingdomLog.Log("growth: fetched " + fetched + " drams from open water into stores");
 			}
+			int heartbeatDays = KingdomRules.HeartbeatDays(timeTicks - System.LastHeartbeatTick);
+			if (heartbeatDays > 0)
+			{
+				System.LastHeartbeatTick = timeTicks;
+			}
 			int arrivals = 0;
 			while (timeTicks >= System.NextArrivalTick && arrivals < KingdomRules.MaxArrivalsPerVisit && System.Population < KingdomRules.MaxPopulation)
 			{
-				int upkeep = ThirstEnabled ? KingdomRules.UpkeepForElapsed(System.Population, Interval(System, Z)) : 0;
+				int upkeep = ThirstEnabled ? (KingdomRules.UpkeepDrams(System.Population) * ((heartbeatDays > 0) ? heartbeatDays : 1)) : 0;
 				int paid = survey.Consume(upkeep);
 				if (paid < upkeep || survey.StoredWater < KingdomRules.DramsPerArrival)
 				{
@@ -83,6 +88,17 @@ namespace ThousandAndFirst
 					KingdomChronicle.Record(System, "the water returned, and " + System.KingdomDisplayName + " drank deep and recovered");
 					MessageQueue.AddPlayerMessage("{{G|" + System.KingdomDisplayName + " has recovered from the long thirst.}}");
 				}
+				if (!KingdomRules.HasRoomToHouse(System.Population, survey.Beds))
+				{
+					if (!System.NoRoomAnnounced)
+					{
+						System.NoRoomAnnounced = true;
+						KingdomChronicle.Record(System, "a settler reached " + System.KingdomDisplayName + " and found no bed to claim");
+						MessageQueue.AddPlayerMessage("{{r|A settler arrives at " + System.KingdomDisplayName + " and finds no bed. Commission housing and they will stay.}}");
+					}
+					System.NextArrivalTick = timeTicks + Interval(System, Z);
+					break;
+				}
 				if (!SpawnSettler(System, Z, survey))
 				{
 					if (!System.NoRoomAnnounced)
@@ -102,6 +118,7 @@ namespace ThousandAndFirst
 			{
 				System.NextArrivalTick = timeTicks + Interval(System, Z);
 			}
+			AssignWork(System, survey);
 			UpdateStage(System, Z, survey);
 			if (KingdomLog.Enabled) KingdomLog.Log("growth pass done: pop=" + System.Population + " stage=" + System.Stage + " arrivals=" + arrivals + " dry=" + System.DryStreak + " next=" + System.NextArrivalTick);
 		}
@@ -137,6 +154,53 @@ namespace ThousandAndFirst
 			KingdomChronicle.Record(System, "a settler from " + origin + " arrived at " + System.KingdomDisplayName + " and drank of the shared water");
 			MessageQueue.AddPlayerMessage("{{G|A settler from " + origin + " has arrived at " + System.KingdomDisplayName + ".}}");
 			return true;
+		}
+
+		/// <summary>
+		/// Crews the settlement's works from its citizens, in placement order. A work without
+		/// its crew is idle, not broken: it keeps its charge and its contents and simply does
+		/// not run, and the settlement says which works want hands.
+		/// </summary>
+		public static void AssignWork(KingdomSystem System, KingdomSurvey Survey)
+		{
+			if (Survey.Works.Count == 0)
+			{
+				return;
+			}
+			int[] demands = new int[Survey.Works.Count];
+			for (int i = 0; i < Survey.Works.Count; i++)
+			{
+				demands[i] = Survey.Works[i].GetIntProperty("KingdomStaffNeeded");
+			}
+			bool[] crewed = KingdomRules.AssignStaff(System.Population, demands);
+			int idle = 0;
+			for (int j = 0; j < Survey.Works.Count; j++)
+			{
+				GameObject work = Survey.Works[j];
+				work.SetIntProperty("KingdomStaffed", crewed[j] ? 1 : 0);
+				if (!crewed[j])
+				{
+					idle++;
+				}
+				else if (work.GetIntProperty("KingdomHandCranked") == 1)
+				{
+					Capacitor capacitor = work.GetPart<Capacitor>();
+					if (capacitor != null && capacitor.Charge < capacitor.MaxCharge)
+					{
+						capacitor.Charge = capacitor.MaxCharge;
+					}
+				}
+			}
+			System.IdleWorks = idle;
+			if (idle > 0 && !System.IdleWorksAnnounced)
+			{
+				System.IdleWorksAnnounced = true;
+				MessageQueue.AddPlayerMessage("{{r|" + idle + " of the works of " + System.KingdomDisplayName + " stand idle for want of hands.}}");
+			}
+			else if (idle == 0)
+			{
+				System.IdleWorksAnnounced = false;
+			}
 		}
 
 		public static bool Emigrate(KingdomSystem System, Zone Z, KingdomSurvey Survey = null)
@@ -346,6 +410,46 @@ namespace ThousandAndFirst
 			if (System.Stage >= GrowthStage.Steading && !System.HasShopkeeper)
 			{
 				PromoteShopkeeper(System, Z);
+			}
+			int tier = KingdomRules.ShopTierForStage(System.Stage);
+			if (System.HasShopkeeper && tier > System.ShopTier)
+			{
+				RestockShops(System, Z, tier);
+			}
+		}
+
+		/// <summary>
+		/// Raises the settlement's shops to a new stock tier: the trader's stock table and the
+		/// per-creature InventoryTier both climb, and the shelves are restocked at once so the
+		/// change is visible the moment the player next trades.
+		/// </summary>
+		public static void RestockShops(KingdomSystem System, Zone Z, int Tier)
+		{
+			int raised = 0;
+			foreach (GameObject item in Z.GetObjects())
+			{
+				if (item.GetIntProperty("VillageMerchant") != 1 || item.GetIntProperty("KingdomCitizen") != 1)
+				{
+					continue;
+				}
+				GenericInventoryRestocker restocker = item.GetPart<GenericInventoryRestocker>();
+				if (restocker == null)
+				{
+					continue;
+				}
+				restocker.Clear();
+				restocker.AddTable("Tier" + Tier + "Wares");
+				restocker.Chance = 100;
+				item.SetIntProperty("InventoryTier", Tier);
+				restocker.PerformRestock(Silent: true);
+				raised++;
+			}
+			if (raised > 0)
+			{
+				System.ShopTier = Tier;
+				KingdomChronicle.Record(System, "the stalls of " + System.KingdomDisplayName + " began carrying finer goods");
+				MessageQueue.AddPlayerMessage("{{G|The traders of " + System.KingdomDisplayName + " have better wares to show you.}}");
+				if (KingdomLog.Enabled) KingdomLog.Log("shops raised to tier " + Tier + " (" + raised + " traders)");
 			}
 		}
 

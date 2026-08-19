@@ -27,6 +27,7 @@ namespace ThousandAndFirst
 			}
 			stringBuilder.Append("\nClaimed zones: ").Append(System.ClaimedZones.Count)
 				.Append(currentClaimed ? ("  (here: " + KingdomGrowth.CountStoredWater(currentZone) + " drams stored, " + KingdomGrowth.CountOpenWater(currentZone) + " open, space for " + KingdomGrowth.CountStorageSpace(currentZone) + ")") : "")
+				.Append("\nShops: tier ").Append(System.ShopTier).Append(System.IdleWorks > 0 ? ("  {{r|" + System.IdleWorks + " works idle for want of hands}}") : "")
 				.Append("\nUpkeep: ")
 				.Append(KingdomRules.UpkeepDrams(System.Population))
 				.Append(" drams per interval  Thirst streak: ")
