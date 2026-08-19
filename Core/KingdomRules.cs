@@ -49,6 +49,8 @@ namespace ThousandAndFirst
 
 		public const int MaxCharters = 8;
 
+		public const int MaxDedicatedVessels = 24;
+
 		public const int FoundingCostDrams = 8;
 
 		public const int FetchDramsPerSettler = 2;

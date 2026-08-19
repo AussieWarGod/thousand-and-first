@@ -34,7 +34,7 @@ namespace ThousandAndFirst
 			{
 				System.OutsiderEntries.RemoveAt(0);
 			}
-			if (Accomplishment)
+			if (Accomplishment && XRL.UI.Options.GetOption("r_TAF_OptionChronicle") != "No")
 			{
 				JournalAPI.AddAccomplishment(Text.Capitalize() + ".", null, null, null, "general", MuralCategory.CreatesSomething, MuralWeight.Medium, null, -1L);
 			}

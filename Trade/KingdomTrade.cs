@@ -9,6 +9,8 @@ namespace ThousandAndFirst
 {
 	public static class KingdomTrade
 	{
+		public static bool Enabled => XRL.UI.Options.GetOption("r_TAF_OptionTrade") != "No";
+
 		public static bool StrikeDeal(KingdomSystem System, string DealKey, string FactionName, out string Failure)
 		{
 			Failure = null;
@@ -55,12 +57,13 @@ namespace ThousandAndFirst
 			return true;
 		}
 
-		public static void OnZoneActivated(KingdomSystem System, Zone Z)
+		public static void OnZoneActivated(KingdomSystem System, Zone Z, KingdomSurvey Shared = null)
 		{
-			if (!System.Founded || Z == null || !System.ClaimedZones.Contains(Z.ZoneID) || System.ActiveDealKeys.Count == 0)
+			if (!Enabled || !System.Founded || Z == null || !System.ClaimedZones.Contains(Z.ZoneID) || System.ActiveDealKeys.Count == 0)
 			{
 				return;
 			}
+			KingdomSurvey survey = Shared ?? KingdomSurvey.Take(Z);
 			long timeTicks = The.Game.TimeTicks;
 			DespawnCaravans(Z);
 			for (int i = 0; i < System.ActiveDealKeys.Count; i++)
@@ -69,7 +72,7 @@ namespace ThousandAndFirst
 				{
 					continue;
 				}
-				int delivered = DeliverIncome(Z, deal.IncomeDrams);
+				int delivered = survey.Store(deal.IncomeDrams);
 				SpawnCaravan(Z, deal.CaravanBlueprint);
 				System.AdjustStanding(System.ActiveDealFactions[i], KingdomRules.DealTrickleStanding);
 				string displayName = Faction.GetFormattedName(System.ActiveDealFactions[i]);

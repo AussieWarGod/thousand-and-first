@@ -29,6 +29,8 @@ namespace ThousandAndFirst
 
 		public bool HasShopkeeper;
 
+		public bool NoRoomAnnounced;
+
 		public long NextArrivalTick;
 
 		public int RaidState;
@@ -68,17 +70,30 @@ namespace ThousandAndFirst
 
 		public override bool HandleEvent(ZoneActivatedEvent E)
 		{
+			if (!Founded || E.Zone == null || !ClaimedZones.Contains(E.Zone.ZoneID))
+			{
+				return base.HandleEvent(E);
+			}
+			KingdomSurvey survey = null;
+			Guard("survey", delegate
+			{
+				survey = KingdomSurvey.Take(E.Zone);
+			});
+			if (survey == null)
+			{
+				return base.HandleEvent(E);
+			}
 			Guard("growth", delegate
 			{
-				KingdomGrowth.OnZoneActivated(this, E.Zone);
+				KingdomGrowth.OnZoneActivated(this, E.Zone, survey);
 			});
 			Guard("trade", delegate
 			{
-				KingdomTrade.OnZoneActivated(this, E.Zone);
+				KingdomTrade.OnZoneActivated(this, E.Zone, survey);
 			});
 			Guard("raids", delegate
 			{
-				KingdomRaids.OnZoneActivated(this, E.Zone);
+				KingdomRaids.OnZoneActivated(this, E.Zone, survey);
 			});
 			return base.HandleEvent(E);
 		}

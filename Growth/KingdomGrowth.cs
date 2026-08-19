@@ -20,14 +20,14 @@ namespace ThousandAndFirst
 			return KingdomRules.ArrivalIntervalTicks(System.Population, district);
 		}
 
-		public static void OnZoneActivated(KingdomSystem System, Zone Z)
+		public static void OnZoneActivated(KingdomSystem System, Zone Z, KingdomSurvey Shared = null)
 		{
 			if (!Enabled || !System.Founded || Z == null || !System.ClaimedZones.Contains(Z.ZoneID))
 			{
 				return;
 			}
 			long timeTicks = The.Game.TimeTicks;
-			KingdomSurvey survey = KingdomSurvey.Take(Z);
+			KingdomSurvey survey = Shared ?? KingdomSurvey.Take(Z);
 			if (KingdomLog.Enabled)
 			{
 				KingdomLog.Log("growth pass " + Z.ZoneID + " tick=" + timeTicks + " next=" + System.NextArrivalTick + " pop=" + System.Population + " stage=" + System.Stage + " stored=" + survey.StoredWater + " open=" + survey.OpenWater + " space=" + survey.StorageSpace + " cap=" + survey.StorageCapacity + " dry=" + System.DryStreak + " withered=" + System.Withered);
@@ -85,8 +85,16 @@ namespace ThousandAndFirst
 				}
 				if (!SpawnSettler(System, Z, survey))
 				{
+					if (!System.NoRoomAnnounced)
+					{
+						System.NoRoomAnnounced = true;
+						KingdomChronicle.Record(System, "a settler reached " + System.KingdomDisplayName + " and found nowhere to stand");
+						MessageQueue.AddPlayerMessage("{{r|A settler arrives at " + System.KingdomDisplayName + " and finds nowhere to stand. There is no open ground left here.}}");
+					}
+					System.NextArrivalTick = timeTicks + Interval(System, Z);
 					break;
 				}
+				System.NoRoomAnnounced = false;
 				arrivals++;
 				System.NextArrivalTick += Interval(System, Z);
 			}
@@ -278,6 +286,20 @@ namespace ThousandAndFirst
 				}
 			}
 			return Drams - remaining;
+		}
+
+		/// <summary>Counts vessels currently dedicated to the settlement's stores in a zone.</summary>
+		public static int CountDedicatedVessels(Zone Z)
+		{
+			int total = 0;
+			foreach (GameObject item in Z.GetObjects())
+			{
+				if (item.GetIntProperty("KingdomStores") == 1)
+				{
+					total++;
+				}
+			}
+			return total;
 		}
 
 		public static int CountStorageCapacity(Zone Z)

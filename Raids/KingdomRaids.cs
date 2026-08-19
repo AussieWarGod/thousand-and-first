@@ -11,7 +11,7 @@ namespace ThousandAndFirst
 	{
 		public static bool Enabled => Options.GetOption("r_TAF_OptionRaids") != "No";
 
-		public static void OnZoneActivated(KingdomSystem System, Zone Z)
+		public static void OnZoneActivated(KingdomSystem System, Zone Z, KingdomSurvey Shared = null)
 		{
 			if (!Enabled || !System.Founded || Z == null || !System.ClaimedZones.Contains(Z.ZoneID) || System.Stage < GrowthStage.Steading)
 			{
@@ -39,7 +39,7 @@ namespace ThousandAndFirst
 			}
 			else if (System.RaidState == 1 && timeTicks >= System.RaidDueTick)
 			{
-				ExecuteRaid(System, Z);
+				ExecuteRaid(System, Z, Shared);
 			}
 		}
 
@@ -82,7 +82,7 @@ namespace ThousandAndFirst
 			return true;
 		}
 
-		public static void ExecuteRaid(KingdomSystem System, Zone Z)
+		public static void ExecuteRaid(KingdomSystem System, Zone Z, KingdomSurvey Shared = null)
 		{
 			string[] table = KingdomRules.RaiderTableFor(System.RaidFactionName);
 			string displayName = Faction.GetFormattedName(System.RaidFactionName);
@@ -116,7 +116,7 @@ namespace ThousandAndFirst
 			int plundered = 0;
 			if (spawned > 0)
 			{
-				plundered = KingdomGrowth.ConsumeStoredWater(Z, KingdomRules.RaidPlunderDrams);
+				plundered = (Shared != null) ? Shared.Consume(KingdomRules.RaidPlunderDrams) : KingdomGrowth.ConsumeStoredWater(Z, KingdomRules.RaidPlunderDrams);
 			}
 			KingdomLog.Log("raid: executed faction=" + displayName + " spawned=" + spawned + " size=" + size + " plundered=" + plundered);
 			if (spawned > 0)

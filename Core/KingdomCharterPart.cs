@@ -263,6 +263,11 @@ namespace ThousandAndFirst
 			if (num >= 0)
 			{
 				GameObject vessel = vessels[num];
+				if (vessel.GetIntProperty("KingdomStores") != 1 && KingdomGrowth.CountDedicatedVessels(zone) >= KingdomRules.MaxDedicatedVessels)
+				{
+					Popup.Show("The stores are already as many vessels as the water-keepers can account for.");
+					return;
+				}
 				if (vessel.GetIntProperty("KingdomStores") == 1)
 				{
 					vessel.SetIntProperty("KingdomStores", 0);
