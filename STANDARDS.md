@@ -14,6 +14,15 @@ as polished as the game's flagship features. These rules are binding for every s
   custom `Write`/`Read` consumes it.
   Player-critical parts get `[CallAfterGameLoaded]`
   `RequirePart` guarantees.
+- **A failed load is silent unless you break the silence.** The engine reads every composite
+  inside a length-framed block wrapped in `try`/`catch`: on exception it logs, seeks past the
+  block, and hands back the half-built instance. Nothing crashes and nothing else is lost —
+  which is why a throwing `Read` costs the player their entire kingdom with no message on
+  screen. Throwing is still the *only* way to reach that recovery, so an unreadable save must
+  throw; it must also set a `[NonSerialized]` flag first and report on `AfterGameLoadedEvent`.
+  And because named fields are self-describing — an unknown name is skipped, a missing one keeps
+  its default — every schema version at or below the current one is readable and must be read.
+  Refusing an older version turns a routine additive change into a save-wipe.
 - **Events the engine's way.** Systems subscribe in `Register(XRLGame, IEventRegistrar)` via
   `Registrar.Register(Event.ID)` and override the matching `HandleEvent`; always
   `return base.HandleEvent(E)` unless deliberately consuming. Prefer pooled/typed events over

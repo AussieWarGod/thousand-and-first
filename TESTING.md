@@ -75,6 +75,17 @@ Say when you're launching so the log watch can run alongside.
 | 28 | Force again via `kingdom:raid`, don't pay, wait out the lead (or `kingdom:raid` again) | 2+ snapjaws spawn at the zone edge and attack citizens; chronicle records the raid |
 | 29 | After the fight: `kingdom:status`, `kingdom:chronicle` | State coherent; raid recorded in both registers |
 
+## Pass 6b — Fortification
+
+| Step | Action | Expect |
+|---|---|---|
+| 29a | With no defences built, `kingdom:raid`, then leave the zone and come back | Homecoming digest reports drams carried off, possibly a casualty |
+| 29b | Charter → Commission → **thorn palisade**; wait out the build; `kingdom:status` | Status shows the settlement's defence at 3 |
+| 29c | `kingdom:raid`, leave and return | Fewer drams taken than in 29a — the wall reduced the loss, it did not stop it |
+| 29d | Commission a **watchtower** with nobody spare to man it; `kingdom:status` | Defence unchanged: an unmanned tower is a platform |
+| 29e | Grow the population until the watch is crewed; `kingdom:status` | Defence rises as the crew fills; a half crew gives half the tower's defence |
+| 29f | Reach defence 12+ (palisade + crewed watchtower + rampart at Village); `kingdom:raid`, leave and return | Digest: raiders turned back, nothing taken; chronicle records it as an accomplishment; the walls appear under deeds in `kingdom:status` |
+
 ## Pass 8 — Homes, work, and the first service
 
 | Step | Action | Expect |
