@@ -394,7 +394,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase("well", "the well", "Well", "4", "1200", "common", null, "metropolis", false)]
 		public void TryParseBuildAttributes(string key, string display, string blueprint, string cost, string ticks, string styles, string category, string minStage, bool expectedOk)
 		{
-			bool ok = KingdomRules.TryParseBuildAttributes(key, display, blueprint, cost, ticks, styles, category, minStage, null, null, out var entry, out var error);
+			bool ok = KingdomRules.TryParseBuildAttributes(key, display, blueprint, cost, ticks, styles, category, minStage, null, null, null, out var entry, out var error);
 			Assert.AreEqual(expectedOk, ok);
 			if (ok)
 			{
@@ -408,6 +408,26 @@ namespace ThousandAndFirst.Tests
 				{
 					Assert.AreEqual(GrowthStage.Camp, entry.MinStage);
 				}
+				Assert.IsNull(error);
+			}
+			else
+			{
+				Assert.IsNotNull(error);
+			}
+		}
+
+		[TestCase(null, 0, true)]
+		[TestCase("0", 0, true)]
+		[TestCase("6", 6, true)]
+		[TestCase("-1", 0, false)]
+		[TestCase("watch", 0, false)]
+		public void TryParseBuildDefence(string defence, int expectedDefence, bool expectedOk)
+		{
+			bool ok = KingdomRules.TryParseBuildAttributes("wall", "wall", "Wall", "4", "1200", "all", "defense", null, null, null, defence, out var entry, out var error);
+			Assert.AreEqual(expectedOk, ok);
+			if (ok)
+			{
+				Assert.AreEqual(expectedDefence, entry.Defence);
 				Assert.IsNull(error);
 			}
 			else

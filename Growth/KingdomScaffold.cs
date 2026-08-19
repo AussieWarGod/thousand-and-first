@@ -18,8 +18,6 @@ namespace ThousandAndFirst
 
 		public bool ThresholdManning;
 
-		public int Defence;
-
 		public override bool WantTurnTick()
 		{
 			return true;
@@ -39,6 +37,7 @@ namespace ThousandAndFirst
 			Cell cell = ParentObject.CurrentCell;
 			string blueprint = TargetBlueprint;
 			string displayName = TargetDisplayName ?? "structure";
+			int defence = ParentObject.GetIntProperty("KingdomDefencePending");
 			TargetBlueprint = null;
 			if (cell == null)
 			{
@@ -56,9 +55,9 @@ namespace ThousandAndFirst
 				gameObject.SetIntProperty("KingdomStores", 1);
 			}
 			gameObject.SetIntProperty("KingdomBuilt", 1);
-			if (Defence > 0)
+			if (defence > 0)
 			{
-				gameObject.SetIntProperty("KingdomDefence", Defence);
+				gameObject.SetIntProperty("KingdomDefence", defence);
 			}
 			if (StaffNeeded > 0)
 			{
