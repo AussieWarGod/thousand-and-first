@@ -1,0 +1,33 @@
+#! thorn palisade - cut thornbrush lashed between stakes, taller than a man
+#! Silhouette carries the read: three hand-cut stakes topping out at different
+#! heights, because a palisade nobody measured should not look measured.
+#! Thorns angle upward off the stakes in two-pixel spurs at irregular intervals -
+#! horizontal ticks at even spacing read as a trellis, which is a fence that
+#! invites climbing rather than one that argues against it.
+#! Density stays near half the cell. An earlier pass filled the gaps with thorn
+#! mass and the stakes inverted into holes; at 16x24 texture must never out-mass
+#! its subject.
+..OO........O...
+..OO...O....OO..
+..OO...OO...OO..
+..OO...OO.x.OO..
+x.OO...OOx..OO..
+.xOO...OO...OO.x
+..OO...OO...OOx.
+..OO.x.OO...OO..
+..OO.xxOO...OO..
+..OOx..OO.x.OO..
+..OO...OO..xOO..
+.xOOxxxOOxxxOOx.
+..OO...OO.x.OO..
+x.OO...OOx..OO..
+.xOO...OO...OO..
+..OO...OO...OO.x
+..OO.x.OO...OOx.
+..OO.xxOO...OO..
+..OOx..OO...OO..
+..OO...OO.x.OO..
+..OO...OO..xOO..
+..OO...OO...OO..
+..OO...OO...OO..
+.xOOx.xOOx.xOOx.

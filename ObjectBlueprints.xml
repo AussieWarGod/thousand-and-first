@@ -65,7 +65,7 @@
   </object>
   <object Name="r_KingdomPalisade" Inherits="Furniture">
     <stag Name="Contemporary" />
-    <part Name="Render" DisplayName="thorn palisade" RenderString="#" ColorString="&amp;y" Occluding="true" />
+    <part Name="Render" DisplayName="thorn palisade" RenderString="#" ColorString="&amp;y" Tile="ThousandAndFirst/r_KingdomPalisade.png" TileColor="&amp;y" DetailColor="K" Occluding="true" />
     <part Name="Description" Short="Cut thornbrush lashed between stakes, taller than a man and meaner. It will not stop anyone determined. It will slow them down where your people can see them." />
     <part Name="Physics" Solid="true" Takeable="false" Weight="900" />
     <stat Name="Hitpoints" Value="120" />
