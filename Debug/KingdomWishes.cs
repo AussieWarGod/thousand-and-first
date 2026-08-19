@@ -3,6 +3,7 @@ using XRL;
 using XRL.UI;
 using XRL.Wish;
 using XRL.World;
+using XRL.World.Parts;
 
 namespace ThousandAndFirst
 {
@@ -344,6 +345,16 @@ namespace ThousandAndFirst
 				system.SetStanding(probe.Name, standingBefore);
 			}
 			Check(report, ref passed, ref failed, "deal lists coherent (" + system.ActiveDealKeys.Count + " deals)", system.ActiveDealKeys.Count == system.ActiveDealFactions.Count && system.ActiveDealKeys.Count == system.DealNextTicks.Count);
+			LiquidVolume fresh = new LiquidVolume { Volume = 10 };
+			fresh.ComponentLiquids.Add("water", 1000);
+			LiquidVolume brine = new LiquidVolume { Volume = 10 };
+			brine.ComponentLiquids.Add("water", 600);
+			brine.ComponentLiquids.Add("salt", 400);
+			LiquidVolume empty = new LiquidVolume { Volume = 0 };
+			Check(report, ref passed, ref failed, "pure water is eligible", KingdomLiquids.HasFreshWater(fresh));
+			Check(report, ref passed, ref failed, "water-primary brine is not eligible", !KingdomLiquids.HasFreshWater(brine));
+			Check(report, ref passed, ref failed, "brine vessel cannot receive fresh water", !KingdomLiquids.CanReceiveFreshWater(brine));
+			Check(report, ref passed, ref failed, "empty vessel can receive fresh water", KingdomLiquids.CanReceiveFreshWater(empty));
 			bool claimsCoherent = true;
 			foreach (string zoneID in system.ClaimedZones)
 			{

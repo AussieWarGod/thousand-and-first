@@ -96,7 +96,7 @@ namespace ThousandAndFirst
 					break;
 				}
 				LiquidVolume part = item.GetPart<LiquidVolume>();
-				if (part != null && part.MaxVolume > 0 && item.GetIntProperty("KingdomStores") == 1 && part.Volume < part.MaxVolume && (part.Volume == 0 || part.GetPrimaryLiquidID() == "water"))
+				if (part != null && part.MaxVolume > 0 && item.GetIntProperty("KingdomStores") == 1 && part.Volume < part.MaxVolume && KingdomLiquids.CanReceiveFreshWater(part))
 				{
 					int drams = part.MaxVolume - part.Volume;
 					if (drams > remaining)

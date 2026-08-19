@@ -84,10 +84,10 @@ namespace ThousandAndFirst
 				{
 					continue;
 				}
-				bool isWater = part.Volume > 0 && part.GetPrimaryLiquidID() == "water";
+				bool isFreshWater = KingdomLiquids.HasFreshWater(part);
 				if (part.MaxVolume < 0)
 				{
-					if (isWater)
+					if (isFreshWater)
 					{
 						survey.Pools.Add(part);
 						survey.OpenWater += part.Volume;
@@ -97,11 +97,11 @@ namespace ThousandAndFirst
 				{
 					survey.Stores.Add(part);
 					survey.StorageCapacity += part.MaxVolume;
-					if (isWater)
+					if (isFreshWater)
 					{
 						survey.StoredWater += part.Volume;
 					}
-					if (part.Volume < part.MaxVolume && (part.Volume == 0 || isWater))
+					if (part.Volume < part.MaxVolume && KingdomLiquids.CanReceiveFreshWater(part))
 					{
 						survey.StorageSpace += part.MaxVolume - part.Volume;
 					}
@@ -136,7 +136,7 @@ namespace ThousandAndFirst
 			for (int i = 0; i < Stores.Count && remaining > 0; i++)
 			{
 				LiquidVolume store = Stores[i];
-				if (store.Volume <= 0 || store.GetPrimaryLiquidID() != "water")
+				if (!KingdomLiquids.HasFreshWater(store))
 				{
 					continue;
 				}
@@ -160,7 +160,7 @@ namespace ThousandAndFirst
 			for (int i = 0; i < Stores.Count && remaining > 0; i++)
 			{
 				LiquidVolume store = Stores[i];
-				if (store.Volume >= store.MaxVolume || (store.Volume > 0 && store.GetPrimaryLiquidID() != "water"))
+				if (store.Volume >= store.MaxVolume || !KingdomLiquids.CanReceiveFreshWater(store))
 				{
 					continue;
 				}

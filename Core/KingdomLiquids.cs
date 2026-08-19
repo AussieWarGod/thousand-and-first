@@ -6,6 +6,21 @@ namespace ThousandAndFirst
 	public static class KingdomLiquids
 	{
 		/// <summary>
+		/// True only for a positive volume of pure fresh water. Water being the primary
+		/// component is not sufficient: Qud's salt pools are water-primary mixtures.
+		/// </summary>
+		public static bool HasFreshWater(LiquidVolume Source)
+		{
+			return Source != null && Source.Volume > 0 && Source.IsFreshWater();
+		}
+
+		/// <summary>Whether an empty or already-pure vessel may receive fresh water.</summary>
+		public static bool CanReceiveFreshWater(LiquidVolume Target)
+		{
+			return Target != null && Target.IsFreshWater(AllowEmpty: true);
+		}
+
+		/// <summary>
 		/// Removes up to <paramref name="Drams"/> and returns the amount actually removed.
 		/// LiquidVolume.UseDrams returns whether liquid remains, not whether removal succeeded,
 		/// so its boolean result must never be used for accounting.

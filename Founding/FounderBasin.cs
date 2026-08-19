@@ -42,7 +42,7 @@ namespace ThousandAndFirst
 				return;
 			}
 			LiquidVolume liquidVolume = ParentObject.GetPart<LiquidVolume>();
-			int drams = (liquidVolume != null && liquidVolume.GetPrimaryLiquidID() == "water") ? liquidVolume.Volume : 0;
+			int drams = KingdomLiquids.HasFreshWater(liquidVolume) ? liquidVolume.Volume : 0;
 			if (drams < KingdomRules.FoundingCostDrams)
 			{
 				Popup.Show("The rite asks for {{C|" + KingdomRules.FoundingCostDrams + " drams}} of fresh water pooled in the basin. It holds " + drams + ".");
@@ -53,7 +53,7 @@ namespace ThousandAndFirst
 			{
 				return;
 			}
-			liquidVolume.UseDrams(KingdomRules.FoundingCostDrams);
+			KingdomLiquids.Drain(liquidVolume, KingdomRules.FoundingCostDrams);
 			KingdomFounding.Found(name);
 			KingdomFounding.ClaimZone(Actor.CurrentZone);
 			Popup.Show("You pour the first water, and those gathered drink.\n\n{{C|" + name + "}} is founded on this ground. Your thirst is theirs; their water is yours.\n\nLive and drink.");

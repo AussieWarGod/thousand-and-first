@@ -33,12 +33,14 @@ Say when you're launching so the log watch can run alongside.
 | 12 | `kingdom:grow` again, still dry | A settler **emigrates** ("left for wetter country"), pop −1 |
 | 13 | Refill water, `kingdom:grow` | Streak resets; arrivals resume |
 | 14 | If the zone has a fresh-water pool: `kingdom:status` before/after `kingdom:grow` | Settlers fetch pool water into containers (stored rises, open falls) |
+| 14a | Put an empty dedicated vessel beside a salty pool, then `kingdom:grow` | No brine is fetched or converted; both volumes remain unchanged, and `kingdom:selftest` reports the mixed-liquid checks PASS |
 
 ## Pass 3 — The rite (no wishes)
 
 | Step | Action | Expect |
 |---|---|---|
 | 15 | (On a save with no kingdom) wish `r_FounderBasin`, fill it with 8+ drams of water | Inventory action **found a settlement** appears |
+| 15a | Fill the founder's basin with 8+ drams of brine instead | Founding is refused; no liquid is spent and no settlement is created |
 | 16 | Use it, name the settlement | Ceremony popup; founded + zone claimed; basin drained by 8 |
 
 ## Pass 3b — Charter, chronicle registers, and reset

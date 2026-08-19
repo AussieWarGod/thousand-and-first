@@ -39,6 +39,11 @@ as polished as the game's flagship features. These rules are binding for every s
   the actual delta (`KingdomLiquids.Drain`/`Fill` are the pattern), and never let a raw call of
   that kind survive in a system. Pre-clamping to a limit you measured yourself is not a defence;
   it is the same bug waiting for the limit to be wrong.
+- **Fresh water means pure water, never water-primary liquid.** Qud's salt pools are
+  `water-600,salt-400`, so `GetPrimaryLiquidID() == "water"` admits brine. Civic founding,
+  storage, upkeep, fetching, tribute, and trade use `LiquidVolume.IsFreshWater()` through
+  `KingdomLiquids`; an empty receiver uses `IsFreshWater(AllowEmpty: true)`. Never turn a
+  mixture into pure water by draining it and refilling another vessel as `"water"`.
 - **Known engine traps, never re-learned:** `Brain.Factions` is write-only (read `Allegiance`);
   population-table edits are process-static (re-apply each load); `PinnedZones` hard cap 3
   (never pin — lazy catch-up); zone builders run once (visited zones get live mutation, the

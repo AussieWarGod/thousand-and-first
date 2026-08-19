@@ -345,7 +345,7 @@ namespace ThousandAndFirst
 			foreach (GameObject item in Z.GetObjects())
 			{
 				LiquidVolume part = item.GetPart<LiquidVolume>();
-				if (part != null && part.MaxVolume > 0 && item.GetIntProperty("KingdomStores") == 1 && part.Volume > 0 && part.GetPrimaryLiquidID() == "water")
+				if (part != null && part.MaxVolume > 0 && item.GetIntProperty("KingdomStores") == 1 && KingdomLiquids.HasFreshWater(part))
 				{
 					total += part.Volume;
 				}
@@ -359,7 +359,7 @@ namespace ThousandAndFirst
 			foreach (GameObject item in Z.GetObjects())
 			{
 				LiquidVolume part = item.GetPart<LiquidVolume>();
-				if (part != null && part.MaxVolume < 0 && part.Volume > 0 && part.GetPrimaryLiquidID() == "water")
+				if (part != null && part.MaxVolume < 0 && KingdomLiquids.HasFreshWater(part))
 				{
 					total += part.Volume;
 				}
@@ -373,7 +373,7 @@ namespace ThousandAndFirst
 			foreach (GameObject item in Z.GetObjects())
 			{
 				LiquidVolume part = item.GetPart<LiquidVolume>();
-				if (part != null && part.MaxVolume > 0 && item.GetIntProperty("KingdomStores") == 1 && part.Volume < part.MaxVolume && (part.Volume == 0 || part.GetPrimaryLiquidID() == "water"))
+				if (part != null && part.MaxVolume > 0 && item.GetIntProperty("KingdomStores") == 1 && part.Volume < part.MaxVolume && KingdomLiquids.CanReceiveFreshWater(part))
 				{
 					total += part.MaxVolume - part.Volume;
 				}
@@ -396,7 +396,7 @@ namespace ThousandAndFirst
 					break;
 				}
 				LiquidVolume part = item.GetPart<LiquidVolume>();
-				if (part != null && part.MaxVolume < 0 && part.Volume > 0 && part.GetPrimaryLiquidID() == "water")
+				if (part != null && part.MaxVolume < 0 && KingdomLiquids.HasFreshWater(part))
 				{
 					drained += KingdomLiquids.Drain(part, fetchable - drained);
 				}
@@ -409,7 +409,7 @@ namespace ThousandAndFirst
 					break;
 				}
 				LiquidVolume part = item.GetPart<LiquidVolume>();
-				if (part != null && part.MaxVolume > 0 && item.GetIntProperty("KingdomStores") == 1 && part.Volume < part.MaxVolume && (part.Volume == 0 || part.GetPrimaryLiquidID() == "water"))
+				if (part != null && part.MaxVolume > 0 && item.GetIntProperty("KingdomStores") == 1 && part.Volume < part.MaxVolume && KingdomLiquids.CanReceiveFreshWater(part))
 				{
 					int drams = part.MaxVolume - part.Volume;
 					if (drams > drained - stored)
@@ -432,7 +432,7 @@ namespace ThousandAndFirst
 					break;
 				}
 				LiquidVolume part = item.GetPart<LiquidVolume>();
-				if (part != null && part.MaxVolume > 0 && item.GetIntProperty("KingdomStores") == 1 && part.Volume > 0 && part.GetPrimaryLiquidID() == "water")
+				if (part != null && part.MaxVolume > 0 && item.GetIntProperty("KingdomStores") == 1 && KingdomLiquids.HasFreshWater(part))
 				{
 					remaining -= KingdomLiquids.Drain(part, remaining);
 				}
