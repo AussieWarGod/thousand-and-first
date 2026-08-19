@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+#if !TAF_TESTS
+using XRL.World;
+#endif
 
 namespace ThousandAndFirst
 {
@@ -11,6 +14,9 @@ namespace ThousandAndFirst
 	/// </summary>
 	[Serializable]
 	public class KingdomLedger
+#if !TAF_TESTS
+		: IComposite
+#endif
 	{
 		public int Fetched;
 
@@ -27,6 +33,29 @@ namespace ThousandAndFirst
 		public int Departures;
 
 		public List<string> Notes = new List<string>();
+
+#if !TAF_TESTS
+		public bool WantFieldReflection => false;
+
+		public void Write(SerializationWriter Writer)
+		{
+			Writer.WriteNamedFields(this, typeof(KingdomLedger));
+		}
+
+		public void Read(SerializationReader Reader)
+		{
+			Reader.ReadNamedFields(this, typeof(KingdomLedger));
+			Normalize();
+		}
+#endif
+
+		public void Normalize()
+		{
+			if (Notes == null)
+			{
+				Notes = new List<string>();
+			}
+		}
 
 		public bool Any
 		{

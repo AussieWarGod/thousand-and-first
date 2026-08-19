@@ -30,3 +30,9 @@ playtest passes.
 - The supported API is now documented in `docs/API.md`; anything absent from it is internal.
 - All engine entry points are exception-guarded: our failures log and degrade, never
   propagate into the host game.
+
+### Fixed
+- Water accounting now measures actual liquid deltas, including exact vessel depletion and
+  capacity-clamped fills.
+- Kingdom state now uses versioned, named-field serialization. Exact petition-era development
+  saves migrate once; older pre-release layouts require a fresh kingdom state.

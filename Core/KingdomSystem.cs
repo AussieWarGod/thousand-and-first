@@ -9,7 +9,13 @@ namespace ThousandAndFirst
 	[Serializable]
 	public class KingdomSystem : IGameSystem
 	{
-		public int SerializationVersion = 1;
+		private const int SerializationMagic = 1413563987;
+
+		private const int CurrentSerializationVersion = 2;
+
+		private const int LegacyReflectedSerializationVersion = 1;
+
+		public int SerializationVersion = CurrentSerializationVersion;
 
 		public string KingdomFactionName;
 
@@ -117,6 +123,45 @@ namespace ThousandAndFirst
 		public Dictionary<string, int> Standings = new Dictionary<string, int>();
 
 		public bool Founded => !string.IsNullOrEmpty(KingdomFactionName);
+
+		public override bool WantFieldReflection => false;
+
+		public override void Write(SerializationWriter Writer)
+		{
+			SerializationVersion = CurrentSerializationVersion;
+			Writer.Write(SerializationMagic);
+			Writer.Write(CurrentSerializationVersion);
+			Writer.WriteNamedFields(this, typeof(KingdomSystem));
+		}
+
+		public override void Read(SerializationReader Reader)
+		{
+			if (SerializationVersion == LegacyReflectedSerializationVersion)
+			{
+				SerializationVersion = CurrentSerializationVersion;
+				NormalizeState();
+				return;
+			}
+			int magic = Reader.ReadInt32();
+			if (magic != SerializationMagic)
+			{
+				throw new InvalidOperationException("Invalid ThousandAndFirst kingdom save marker.");
+			}
+			int version = Reader.ReadInt32();
+			if (version < CurrentSerializationVersion || version > CurrentSerializationVersion)
+			{
+				throw new InvalidOperationException("Unsupported ThousandAndFirst kingdom save version " + version + ".");
+			}
+			Reader.ReadNamedFields(this, typeof(KingdomSystem));
+			SerializationVersion = version;
+			NormalizeState();
+		}
+
+		public override void AfterLoad(XRLGame Game)
+		{
+			base.AfterLoad(Game);
+			NormalizeState();
+		}
 
 		public override void Register(XRLGame Game, IEventRegistrar Registrar)
 		{
@@ -285,6 +330,76 @@ namespace ThousandAndFirst
 				MirrorFeeling(standing.Key);
 			}
 			Factions.Get(KingdomFactionName)?.SetFactionFeeling("Player", 100);
+		}
+
+		private void NormalizeState()
+		{
+			if (RosterNames == null)
+			{
+				RosterNames = new List<string>();
+			}
+			if (RosterOrigins == null)
+			{
+				RosterOrigins = new List<string>();
+			}
+			if (RosterArrived == null)
+			{
+				RosterArrived = new List<string>();
+			}
+			if (Ledger == null)
+			{
+				Ledger = new KingdomLedger();
+			}
+			Ledger.Normalize();
+			if (ClaimedZones == null)
+			{
+				ClaimedZones = new List<string>();
+			}
+			if (ZoneDistricts == null)
+			{
+				ZoneDistricts = new Dictionary<string, string>();
+			}
+			if (ActiveDealKeys == null)
+			{
+				ActiveDealKeys = new List<string>();
+			}
+			if (ActiveDealFactions == null)
+			{
+				ActiveDealFactions = new List<string>();
+			}
+			if (DealNextTicks == null)
+			{
+				DealNextTicks = new List<long>();
+			}
+			int dealCount = Math.Min(ActiveDealKeys.Count, Math.Min(ActiveDealFactions.Count, DealNextTicks.Count));
+			if (ActiveDealKeys.Count > dealCount)
+			{
+				ActiveDealKeys.RemoveRange(dealCount, ActiveDealKeys.Count - dealCount);
+			}
+			if (ActiveDealFactions.Count > dealCount)
+			{
+				ActiveDealFactions.RemoveRange(dealCount, ActiveDealFactions.Count - dealCount);
+			}
+			if (DealNextTicks.Count > dealCount)
+			{
+				DealNextTicks.RemoveRange(dealCount, DealNextTicks.Count - dealCount);
+			}
+			if (ChronicleEntries == null)
+			{
+				ChronicleEntries = new List<string>();
+			}
+			if (OutsiderEntries == null)
+			{
+				OutsiderEntries = new List<string>();
+			}
+			if (OriginCounts == null)
+			{
+				OriginCounts = new Dictionary<string, int>();
+			}
+			if (Standings == null)
+			{
+				Standings = new Dictionary<string, int>();
+			}
 		}
 	}
 }

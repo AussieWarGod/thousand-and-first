@@ -5,12 +5,13 @@ as polished as the game's flagship features. These rules are binding for every s
 
 ## 1. Vanilla conformance
 
-- **Serialization is law.** Part fields serialize positionally: never reorder, retype, or remove
-  a serialized field on a shipped part. Systems use name-based field reflection: treat fields as
-  append-only anyway. For per-field save-version tolerance the engine's own mechanism is
-  `[FieldSaveVersion(N)]`, checked against `SerializationReader.FileVersion`; a bare
-  `SerializationVersion` field is inert unless custom `Write`/`Read` actually reads it, so carry one
-  only where custom serialization exists (the TrophicRepertoire pattern, with a magic marker).
+- **Serialization is law.** Parts and ordinary systems both use positional field reflection by
+  default: never reorder, retype, remove, or casually append a serialized field. Durable systems
+  opt out with `WantFieldReflection = false` and write a magic marker, schema version, and named
+  fields. Named fields may be added, but existing names and types stay stable unless an explicit
+  migration handles them. `[FieldSaveVersion(N)]` is checked against the engine's save-file
+  version, not this mod's schema version; a bare `SerializationVersion` field is inert unless
+  custom `Write`/`Read` consumes it.
   Player-critical parts get `[CallAfterGameLoaded]`
   `RequirePart` guarantees.
 - **Events the engine's way.** Systems subscribe in `Register(XRLGame, IEventRegistrar)` via
