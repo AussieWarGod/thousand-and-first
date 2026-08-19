@@ -31,7 +31,9 @@
     <part Name="Render" DisplayName="settler" Tile="Creatures/sw_appledaughter.bmp" ColorString="&amp;w" />
   </object>
   <object Name="r_KingdomScaffold" Inherits="Furniture">
-    <part Name="Render" DisplayName="scaffolding" RenderString="&#9617;" ColorString="&amp;w" />
+    <!-- No DetailColor: the scaffold grid is drawn in body pixels only, deliberately, so there is
+         nothing for a highlight colour to tint. Adding one would imply a second tone that is not there. -->
+    <part Name="Render" DisplayName="scaffolding" RenderString="&#9617;" ColorString="&amp;w" Tile="ThousandAndFirst/r_KingdomScaffold.png" TileColor="&amp;y" />
     <part Name="Description" Short="Lashed poles and borrowed planks. Somebody's promise is being kept, plank by plank." />
     <part Name="r_KingdomScaffold" />
     <part Name="Physics" Solid="false" Takeable="false" />
@@ -68,7 +70,7 @@
   </object>
   <object Name="r_KingdomShrine" Inherits="Furniture">
     <stag Name="Contemporary" />
-    <part Name="Render" DisplayName="shrine stone" RenderString="&#933;" ColorString="&amp;Y" />
+    <part Name="Render" DisplayName="shrine stone" RenderString="&#933;" ColorString="&amp;Y" Tile="ThousandAndFirst/r_KingdomShrine.png" TileColor="&amp;y" DetailColor="Y" />
     <part Name="Description" Short="An uncut stone with a cup-shaped hollow worn into its crown. Whatever is poured there is gone by morning, and no one asks where." />
     <part Name="Shrine" />
     <part Name="Physics" Takeable="false" Weight="1000" />
@@ -76,7 +78,7 @@
   </object>
   <object Name="r_KingdomChargingPost" Inherits="Furniture">
     <stag Name="Contemporary" />
-    <part Name="Render" DisplayName="charging post" RenderString="&#227;" ColorString="&amp;C" />
+    <part Name="Render" DisplayName="charging post" RenderString="&#227;" ColorString="&amp;C" Tile="ThousandAndFirst/r_KingdomChargingPost.png" TileColor="&amp;c" DetailColor="C" />
     <part Name="Description" Short="A salvaged cradle of chrome and gut-wire, cranked by whoever has the shift. Set your cells on it and go eat; they will be full when you come back." />
     <part Name="UniversalCharger" ChargeRate="150" />
     <part Name="Capacitor" MaxCharge="4000" ChargeRate="0" />
@@ -109,7 +111,7 @@
     <stat Name="AV" Value="10" />
   </object>
   <object Name="r_FoundingBook" Inherits="Book">
-    <part Name="Render" DisplayName="{{W|On the Founding of Places}}" />
+    <part Name="Render" DisplayName="{{W|On the Founding of Places}}" Tile="ThousandAndFirst/r_FoundingBook.png" TileColor="&amp;y" DetailColor="W" />
     <part Name="Description" Short="A thin codex in a plain wrapper, copied and recopied by people who had reason to. The margins argue with the text." />
     <part Name="Book" ID="r_OnTheFoundingOfPlaces" />
     <part Name="Commerce" Value="45" />

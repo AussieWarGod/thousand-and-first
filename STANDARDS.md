@@ -94,6 +94,19 @@ as polished as the game's flagship features. These rules are binding for every s
    save → quit → reload → `kingdom:status` pass whenever serialized state changed. Player.log
    is watched during test sessions; "Bad event bind" is a serialization regression, full stop.
 
+**An asset is not shipped until something proves it is reachable.** Four tiles once passed the
+whole art pipeline — source grid, PNG, coverage measurement, preview, contact sheet — with no
+`Tile=` attribute in any blueprint. Every check that existed was a check on the art, and the art
+was correct; it simply rendered nowhere. Qud falls back to the ASCII glyph without logging
+anything, so the failure is invisible in play and looks like a deliberate styling choice.
+
+The rule generalises past tiles: wherever the mod produces an asset that some other file must
+reference by name to reach — a texture, a blueprint, a population table entry, a conversation
+node, a book ID — a check walks the reference in **both** directions. Unreferenced asset and
+dangling reference are both errors, and neither is detectable by validating either file alone.
+`Art/check_wiring.py` is the instance of this for tiles, and it is verified the only way such a
+check can be: by confirming it fails against the commit that contained the defect.
+
 ## 5. The depth standard
 
 No system ships shallow. Before a slice is called done, each of its systems passes the
