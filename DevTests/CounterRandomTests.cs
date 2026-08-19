@@ -413,10 +413,125 @@ namespace ThousandAndFirst.Tests
 		}
 
 		/// <summary>
-		/// Identity is settled before arithmetic, so a request that names nothing reports that it
-		/// named nothing — even when its bound is also invalid. The reverse order would tell a
-		/// caller its bound was wrong when the real defect is that the event does not exist, and
-		/// it would disagree with <c>AdvanceThrough</c>, which resolves state before arithmetic.
+		/// The whole frozen precedence, end to end, with the provider made to fail on demand:
+		/// invalid key beats zero bound beats provider failure. Every one of these three is now
+		/// observable rather than argued for.
+		/// </summary>
+		[Test]
+		public void TheWholeDrawPrecedenceHoldsWithTheProviderFailing()
+		{
+			KernelFaultCode fault;
+			ulong value;
+
+			try
+			{
+				KernelDigest.InjectedFailure = KernelDigest.InjectedDigestFailure.Cryptographic;
+
+				// All three wrong at once: the key wins.
+				Assert.IsFalse(CounterRandom.TryDrawBelow(
+					KernelCanonicalTests.GoldenSeed(), default(SemanticEventKey), 0u, 0uL, out value, out fault));
+				Assert.AreEqual(KernelFaultCode.InvalidEventKey, fault, "the key outranks everything");
+				Assert.AreEqual(0uL, value);
+
+				// Key fine, bound and provider both bad: the bound wins. This is the case that was
+				// wrong before, and it is the reason the key cannot be validated by drawing.
+				Assert.IsFalse(CounterRandom.TryDrawBelow(
+					KernelCanonicalTests.GoldenSeed(), KernelCanonicalTests.GoldenKey(), 0u, 0uL, out value, out fault));
+				Assert.AreEqual(KernelFaultCode.InvalidRandomBound, fault, "a bound the caller can see is wrong outranks the provider");
+				Assert.AreEqual(0uL, value);
+
+				// Only the provider left to fail.
+				Assert.IsFalse(CounterRandom.TryDrawBelow(
+					KernelCanonicalTests.GoldenSeed(), KernelCanonicalTests.GoldenKey(), 0u, 100uL, out value, out fault));
+				Assert.AreEqual(KernelFaultCode.CryptographicFailure, fault);
+				Assert.AreEqual(0uL, value);
+
+				// The unbounded draw has no bound to compete, so key then provider.
+				Assert.IsFalse(CounterRandom.TryDrawUInt64(
+					KernelCanonicalTests.GoldenSeed(), default(SemanticEventKey), 0u, out value, out fault));
+				Assert.AreEqual(KernelFaultCode.InvalidEventKey, fault);
+				Assert.IsFalse(CounterRandom.TryDrawUInt64(
+					KernelCanonicalTests.GoldenSeed(), KernelCanonicalTests.GoldenKey(), 0u, out value, out fault));
+				Assert.AreEqual(KernelFaultCode.CryptographicFailure, fault);
+
+				// A missing provider is the same disposition by a different route.
+				KernelDigest.InjectedFailure = KernelDigest.InjectedDigestFailure.PlatformUnsupported;
+				byte[] digest;
+				Assert.IsFalse(KernelDigest.TryComputeSha256(new byte[] { 1 }, out digest, out fault));
+				Assert.AreEqual(KernelFaultCode.CryptographicFailure, fault);
+				Assert.IsNull(digest, "a failed digest publishes nothing");
+			}
+			finally
+			{
+				KernelDigest.InjectedFailure = KernelDigest.InjectedDigestFailure.None;
+			}
+
+			// And the seam leaves nothing behind: the published golden still reproduces exactly.
+			ulong after;
+			Assert.IsTrue(CounterRandom.TryDrawBelow(
+				KernelCanonicalTests.GoldenSeed(), KernelCanonicalTests.GoldenKey(), 7u, 100uL, out after, out fault));
+			Assert.AreEqual(58uL, after, "the golden must be unchanged once the provider works again");
+		}
+
+		/// <summary>
+		/// A process-fatal failure is not a fault code. Reporting one as
+		/// <c>CryptographicFailure</c> would let a dying process return a value the caller handles,
+		/// carries on from, and writes to a save.
+		/// </summary>
+		[Test]
+		public void AProcessFatalFailurePropagatesInsteadOfBecomingAFault()
+		{
+			try
+			{
+				KernelDigest.InjectedFailure = KernelDigest.InjectedDigestFailure.ProcessFatal;
+
+				byte[] digest;
+				KernelFaultCode fault;
+				Assert.Throws<OutOfMemoryException>(delegate
+				{
+					KernelDigest.TryComputeSha256(new byte[] { 1 }, out digest, out fault);
+				});
+
+				// It must travel through every layer above, not be absorbed by one of them.
+				ulong value;
+				KernelFaultCode drawFault;
+				Assert.Throws<OutOfMemoryException>(delegate
+				{
+					CounterRandom.TryDrawUInt64(
+						KernelCanonicalTests.GoldenSeed(), KernelCanonicalTests.GoldenKey(), 0u, out value, out drawFault);
+				});
+				Assert.Throws<OutOfMemoryException>(delegate
+				{
+					CounterRandom.TryDrawBelow(
+						KernelCanonicalTests.GoldenSeed(), KernelCanonicalTests.GoldenKey(), 0u, 100uL, out value, out drawFault);
+				});
+
+				string id;
+				KernelFaultCode idFault;
+				Assert.Throws<OutOfMemoryException>(delegate
+				{
+					SemanticEventIdentity.TryCreateId(
+						KernelCanonicalTests.GoldenSeed(), KernelCanonicalTests.GoldenKey(), out id, out idFault);
+				});
+
+				// But an invalid key still fails closed before anything can hash, so the earlier
+				// checks are genuinely earlier and not merely usually earlier.
+				Assert.IsFalse(CounterRandom.TryDrawBelow(
+					KernelCanonicalTests.GoldenSeed(), default(SemanticEventKey), 0u, 0uL, out value, out drawFault));
+				Assert.AreEqual(KernelFaultCode.InvalidEventKey, drawFault);
+				Assert.IsFalse(CounterRandom.TryDrawBelow(
+					KernelCanonicalTests.GoldenSeed(), KernelCanonicalTests.GoldenKey(), 0u, 0uL, out value, out drawFault));
+				Assert.AreEqual(KernelFaultCode.InvalidRandomBound, drawFault);
+			}
+			finally
+			{
+				KernelDigest.InjectedFailure = KernelDigest.InjectedDigestFailure.None;
+			}
+		}
+
+		/// <summary>
+		/// The key/bound half again without the seam, so the ordering is still asserted if the
+		/// injection point is ever removed.
 		/// </summary>
 		[Test]
 		public void AnInvalidKeyOutranksAnInvalidBound()
@@ -459,14 +574,30 @@ namespace ThousandAndFirst.Tests
 		{
 			KernelFaultCode fault;
 
-			// Identity creation: a bad rules version and two bad identifiers together.
-			SemanticEventKey key;
+			// Identity creation: a bad rules version and two bad identifiers together. The out
+			// parameter is seeded with a real key first, so "publishes the default" is a claim
+			// about what the rule wrote rather than about what happened to be in the variable.
+			SemanticEventKey key = KernelCanonicalTests.GoldenKey();
 			Assert.IsFalse(SemanticEventKey.TryCreate(0, "NOPE", "ALSO BAD", 0u, 0uL, out key, out fault));
 			Assert.AreEqual(KernelFaultCode.InvalidEventKey, fault);
+			Assert.AreEqual(default(SemanticEventKey), key, "a refused key must be the default, not the prior value");
+
+			// Each condition on its own, so no single check masks the others.
+			key = KernelCanonicalTests.GoldenKey();
+			Assert.IsFalse(SemanticEventKey.TryCreate(0, "taf:a", "taf:b", 1u, 0uL, out key, out fault), "rules version");
+			Assert.AreEqual(default(SemanticEventKey), key);
+			key = KernelCanonicalTests.GoldenKey();
+			Assert.IsFalse(SemanticEventKey.TryCreate(3, "NOPE", "taf:b", 1u, 0uL, out key, out fault), "settlement id");
+			Assert.AreEqual(default(SemanticEventKey), key);
+			key = KernelCanonicalTests.GoldenKey();
+			Assert.IsFalse(SemanticEventKey.TryCreate(3, "taf:a", "NOPE", 1u, 0uL, out key, out fault), "stream id");
+			Assert.AreEqual(default(SemanticEventKey), key);
 
 			// A zero event kind is invalid even when everything else is well formed.
+			key = KernelCanonicalTests.GoldenKey();
 			Assert.IsFalse(SemanticEventKey.TryCreate(3, "taf:a", "taf:b", 0u, 0uL, out key, out fault));
 			Assert.AreEqual(KernelFaultCode.InvalidEventKey, fault);
+			Assert.AreEqual(default(SemanticEventKey), key);
 
 			// Identity rendering from a default key.
 			string id;

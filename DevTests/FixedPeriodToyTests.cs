@@ -692,23 +692,45 @@ namespace ThousandAndFirst.Tests
 				return FixedPeriodToyRules.AdvanceThrough(deadlineEdge, long.MaxValue, true);
 			});
 
-			// Ordinal: the next ordinal is already at the top of the counter.
+			// Ordinal and range span, which are one site and not two.
+			//
+			// I first wrote these as separate fixtures and claimed four independent overflow
+			// sites. They are not independent, and cannot be made so. A canonical state with a
+			// range satisfies NextOrdinal == FirstOrdinal + Count, and FirstOrdinal is unsigned,
+			// so NextOrdinal >= Count always. Advancing adds the same due count to both, so
+			// NextOrdinal + due >= Count + due: the ordinal reaches the top first, or they reach it
+			// together. The count can never overflow while the ordinal still fits.
+			//
+			// So this is one invariant with one reachable guard, tested once and labelled honestly.
+			// The count guard in production is not therefore dead: it protects the same arithmetic
+			// against a non-canonical state that reached it another way, which is exactly the
+			// defence-in-depth a fail-closed kernel wants. It simply cannot be the *first* thing to
+			// fire from a valid source, and a test that claimed otherwise was claiming a
+			// distinction the type system already forbids.
 			FixedPeriodToyState ordinalEdge = new FixedPeriodToyState(
 				1, 3, seed, Settlement, 0L, true, 1L, ulong.MaxValue, 1L, enabled, true,
 				new ToyPulseRange(3, FixedPeriodToyRules.ToyPulseEventStreamId, FixedPeriodToyRules.ToyPulseEventKind, 0uL, ulong.MaxValue));
-			CheckOverflow(ordinalEdge, "ordinal", delegate
+			CheckOverflow(ordinalEdge, "ordinal and range span", delegate
 			{
 				return FixedPeriodToyRules.AdvanceThrough(ordinalEdge, 5L, true);
 			});
 
-			// Range span: the range would have to grow past the end of the ordinal space.
-			FixedPeriodToyState rangeEdge = new FixedPeriodToyState(
-				1, 3, seed, Settlement, 0L, true, 1L, ulong.MaxValue - 1uL, 1L, enabled, true,
-				new ToyPulseRange(3, FixedPeriodToyRules.ToyPulseEventStreamId, FixedPeriodToyRules.ToyPulseEventKind, 0uL, ulong.MaxValue - 1uL));
-			CheckOverflow(rangeEdge, "range span", delegate
+			// The inequality the paragraph above rests on, asserted rather than asserted-by-prose,
+			// across the whole reachable shape of a range.
+			foreach (ulong first in new ulong[] { 0uL, 1uL, 2uL, 1000uL, ulong.MaxValue / 2uL })
 			{
-				return FixedPeriodToyRules.AdvanceThrough(rangeEdge, 100L, true);
-			});
+				foreach (ulong count in new ulong[] { 1uL, 2uL, 1000uL, ulong.MaxValue / 2uL })
+				{
+					if (first > ulong.MaxValue - count)
+					{
+						continue;
+					}
+					ulong nextOrdinal = first + count;
+					Assert.IsTrue(nextOrdinal >= count,
+						"NextOrdinal must dominate Count, else the two guards could fire independently: first "
+							+ first + ", count " + count);
+				}
+			}
 		}
 
 		private static void CheckOverflow(FixedPeriodToyState source, string label, Func<ToyAdvanceResult> act)
@@ -723,6 +745,10 @@ namespace ThousandAndFirst.Tests
 
 			if (sourceWasValid)
 			{
+				// The exact code, not merely a failure: an overflow reported as a bad state would
+				// send a reader looking for corruption that is not there.
+				Assert.AreEqual(KernelFaultCode.ArithmeticOverflow, result.Fault, label + ": must report overflow exactly");
+				Assert.AreEqual(OptionTransitionKind.None, result.OptionTransition, label + ": a refusal transitions nothing");
 				Assert.AreEqual(before, Encode(source), label + ": the source bytes must be untouched");
 				Assert.AreEqual(before, Encode(result.State), label + ": the returned state is the untouched source");
 			}
@@ -828,6 +854,219 @@ namespace ThousandAndFirst.Tests
 				Assert.IsFalse(FixedPeriodToyRules.TryEncodeCanonical(bad, out bytes, out fault));
 				Assert.IsNull(bytes, "a refused encode publishes no buffer");
 			}
+		}
+
+		/// <summary>
+		/// Every structural invariant violated on its own, so each guard is shown to fire for its
+		/// own reason rather than being masked by a neighbouring one. For every refusal: the exact
+		/// fault, the caller's own object back by reference, every raw field unchanged, and — where
+		/// the fixture is encodable at all — identical canonical bytes.
+		/// </summary>
+		[Test]
+		public void EveryInvariantIsViolatedIndependentlyAndRefusedWithoutMutation()
+		{
+			KernelSeed128 seed = KernelCanonicalTests.GoldenSeed();
+			OptionLatchState enabled = new OptionLatchState(OptionLatchValue.Enabled, 0L);
+			OptionLatchState disabled = new OptionLatchState(OptionLatchValue.Disabled, 0L);
+			ToyPulseRange goodRange = new ToyPulseRange(
+				3, FixedPeriodToyRules.ToyPulseEventStreamId, FixedPeriodToyRules.ToyPulseEventKind, 0uL, 2uL);
+
+			// name, fixture, expected fault
+			object[][] cases =
+			{
+				new object[] { "schema version zero", new FixedPeriodToyState(
+					0, 3, seed, Settlement, 0L, false, 0L, 0uL, 10L, disabled, false, default(ToyPulseRange)),
+					KernelFaultCode.InvalidToyState },
+
+				new object[] { "state rules version zero", new FixedPeriodToyState(
+					1, 0, seed, Settlement, 0L, false, 0L, 0uL, 10L, disabled, false, default(ToyPulseRange)),
+					KernelFaultCode.InvalidToyState },
+
+				new object[] { "settlement id off grammar", new FixedPeriodToyState(
+					1, 3, seed, "NOPE", 0L, false, 0L, 0uL, 10L, disabled, false, default(ToyPulseRange)),
+					KernelFaultCode.InvalidToyState },
+
+				new object[] { "null settlement id", new FixedPeriodToyState(
+					1, 3, seed, null, 0L, false, 0L, 0uL, 10L, disabled, false, default(ToyPulseRange)),
+					KernelFaultCode.InvalidToyState },
+
+				new object[] { "negative processed tick", new FixedPeriodToyState(
+					1, 3, seed, Settlement, -1L, false, 0L, 0uL, 10L, disabled, false, default(ToyPulseRange)),
+					KernelFaultCode.InvalidToyState },
+
+				new object[] { "negative deadline while scheduled", new FixedPeriodToyState(
+					1, 3, seed, Settlement, 0L, true, -1L, 0uL, 10L, enabled, false, default(ToyPulseRange)),
+					KernelFaultCode.InvalidToyState },
+
+				new object[] { "zero interval", new FixedPeriodToyState(
+					1, 3, seed, Settlement, 0L, false, 0L, 0uL, 0L, disabled, false, default(ToyPulseRange)),
+					KernelFaultCode.InvalidToyState },
+
+				new object[] { "negative interval", new FixedPeriodToyState(
+					1, 3, seed, Settlement, 0L, false, 0L, 0uL, -5L, disabled, false, default(ToyPulseRange)),
+					KernelFaultCode.InvalidToyState },
+
+				new object[] { "latch tick negative", new FixedPeriodToyState(
+					1, 3, seed, Settlement, 0L, false, 0L, 0uL, 10L,
+					new OptionLatchState(OptionLatchValue.Disabled, -1L), false, default(ToyPulseRange)),
+					KernelFaultCode.InvalidOptionLatch },
+
+				new object[] { "latch byte unknown", new FixedPeriodToyState(
+					1, 3, seed, Settlement, 0L, false, 0L, 0uL, 10L,
+					new OptionLatchState((OptionLatchValue)200, 0L), false, default(ToyPulseRange)),
+					KernelFaultCode.InvalidOptionLatch },
+
+				new object[] { "latch unobserved on a live toy", new FixedPeriodToyState(
+					1, 3, seed, Settlement, 0L, false, 0L, 0uL, 10L,
+					new OptionLatchState(OptionLatchValue.Unobserved, 0L), false, default(ToyPulseRange)),
+					KernelFaultCode.InvalidOptionLatch },
+
+				new object[] { "disabled and unscheduled but carrying a deadline", new FixedPeriodToyState(
+					1, 3, seed, Settlement, 0L, false, 7L, 0uL, 10L, disabled, false, default(ToyPulseRange)),
+					KernelFaultCode.InvalidToyState },
+
+				new object[] { "enabled but unscheduled", new FixedPeriodToyState(
+					1, 3, seed, Settlement, 0L, false, 0L, 0uL, 10L, enabled, false, default(ToyPulseRange)),
+					KernelFaultCode.InvalidToyState },
+
+				new object[] { "deadline not after processed", new FixedPeriodToyState(
+					1, 3, seed, Settlement, 10L, true, 10L, 0uL, 10L, enabled, false, default(ToyPulseRange)),
+					KernelFaultCode.InvalidToyState },
+
+				new object[] { "nonzero first ordinal", new FixedPeriodToyState(
+					1, 3, seed, Settlement, 0L, false, 0L, 7uL, 10L, disabled, true,
+					new ToyPulseRange(3, FixedPeriodToyRules.ToyPulseEventStreamId, FixedPeriodToyRules.ToyPulseEventKind, 5uL, 2uL)),
+					KernelFaultCode.InvalidToyState },
+
+				new object[] { "range kind foreign", new FixedPeriodToyState(
+					1, 3, seed, Settlement, 0L, false, 0L, 2uL, 10L, disabled, true,
+					new ToyPulseRange(3, FixedPeriodToyRules.ToyPulseEventStreamId, 0x1234u, 0uL, 2uL)),
+					KernelFaultCode.InvalidToyState },
+
+				new object[] { "range rules version differs from state", new FixedPeriodToyState(
+					1, 3, seed, Settlement, 0L, false, 0L, 2uL, 10L, disabled, true,
+					new ToyPulseRange(4, FixedPeriodToyRules.ToyPulseEventStreamId, FixedPeriodToyRules.ToyPulseEventKind, 0uL, 2uL)),
+					KernelFaultCode.InvalidToyState },
+
+				new object[] { "range stream foreign", new FixedPeriodToyState(
+					1, 3, seed, Settlement, 0L, false, 0L, 2uL, 10L, disabled, true,
+					new ToyPulseRange(3, "taf:stream:somewhere-else", FixedPeriodToyRules.ToyPulseEventKind, 0uL, 2uL)),
+					KernelFaultCode.InvalidToyState },
+
+				new object[] { "range count zero", new FixedPeriodToyState(
+					1, 3, seed, Settlement, 0L, false, 0L, 0uL, 10L, disabled, true,
+					new ToyPulseRange(3, FixedPeriodToyRules.ToyPulseEventStreamId, FixedPeriodToyRules.ToyPulseEventKind, 0uL, 0uL)),
+					KernelFaultCode.InvalidToyState },
+
+				new object[] { "range span disagrees with next ordinal", new FixedPeriodToyState(
+					1, 3, seed, Settlement, 0L, false, 0L, 5uL, 10L, disabled, true, goodRange),
+					KernelFaultCode.InvalidToyState },
+
+				new object[] { "absent range with a nonzero ordinal", new FixedPeriodToyState(
+					1, 3, seed, Settlement, 0L, false, 0L, 3uL, 10L, disabled, false, default(ToyPulseRange)),
+					KernelFaultCode.InvalidToyState }
+			};
+
+			foreach (object[] entry in cases)
+			{
+				string label = (string)entry[0];
+				FixedPeriodToyState bad = (FixedPeriodToyState)entry[1];
+				KernelFaultCode expected = (KernelFaultCode)entry[2];
+
+				KernelFaultCode fault;
+				Assert.IsFalse(FixedPeriodToyRules.IsCanonical(bad, out fault), label + " must be refused");
+				Assert.AreEqual(expected, fault, label + ": exact fault");
+
+				AssertRefusedWithoutMutation(bad, label);
+			}
+
+			// A fixture with an absent range must reject each raw range field being set on its own,
+			// so "absent" cannot mean "absent except for the parts nobody looked at".
+			ToyPulseRange[] nonDefaultFields =
+			{
+				new ToyPulseRange(3, null, 0u, 0uL, 0uL),
+				new ToyPulseRange(0, FixedPeriodToyRules.ToyPulseEventStreamId, 0u, 0uL, 0uL),
+				new ToyPulseRange(0, null, FixedPeriodToyRules.ToyPulseEventKind, 0uL, 0uL),
+				new ToyPulseRange(0, null, 0u, 1uL, 0uL),
+				new ToyPulseRange(0, null, 0u, 0uL, 1uL)
+			};
+			for (int i = 0; i < nonDefaultFields.Length; i++)
+			{
+				FixedPeriodToyState absentButDirty = new FixedPeriodToyState(
+					1, 3, seed, Settlement, 0L, false, 0L, 0uL, 10L, disabled, false, nonDefaultFields[i]);
+				KernelFaultCode fault;
+				Assert.IsFalse(FixedPeriodToyRules.IsCanonical(absentButDirty, out fault),
+					"an absent range carrying raw field " + i + " must be refused");
+				Assert.AreEqual(KernelFaultCode.InvalidToyState, fault, "raw field " + i);
+				AssertRefusedWithoutMutation(absentButDirty, "absent range, raw field " + i);
+			}
+		}
+
+		/// <summary>
+		/// Snapshots every raw field of a malformed source, drives every entry point at it, and
+		/// asserts nothing moved. Canonical bytes are compared only where the fixture is encodable,
+		/// because the encoder is required to refuse an invalid source — so for the rest, the raw
+		/// fields and the reference are the whole guarantee.
+		/// </summary>
+		private static void AssertRefusedWithoutMutation(FixedPeriodToyState bad, string label)
+		{
+			int schema = bad.SchemaVersion;
+			int rules = bad.RulesVersion;
+			ulong seedHigh = bad.SimulationSeed.High;
+			ulong seedLow = bad.SimulationSeed.Low;
+			string settlement = bad.SettlementId;
+			long processed = bad.ProcessedThroughTick;
+			bool scheduled = bad.ClockScheduled;
+			long nextDue = bad.NextDueTick;
+			ulong nextOrdinal = bad.NextOrdinal;
+			long interval = bad.IntervalTicks;
+			OptionLatchValue latchValue = bad.OptionLatch.Value;
+			long latchTick = bad.OptionLatch.ChangedAtTick;
+			bool hasRange = bad.HasEmittedRange;
+			int rangeRules = bad.EmittedRange.RulesVersionAtCreation;
+			string rangeStream = bad.EmittedRange.EventStreamId;
+			uint rangeKind = bad.EmittedRange.EventKindCode;
+			ulong rangeFirst = bad.EmittedRange.FirstOrdinal;
+			ulong rangeCount = bad.EmittedRange.Count;
+
+			KernelFaultCode fault;
+
+			ToyAdvanceResult advanced = FixedPeriodToyRules.AdvanceThrough(bad, long.MaxValue / 2L, true);
+			Assert.IsFalse(advanced.Succeeded, label + ": advance must refuse");
+			Assert.IsTrue(ReferenceEquals(bad, advanced.State), label + ": advance returns the caller's object");
+			Assert.AreEqual(OptionTransitionKind.None, advanced.OptionTransition, label + ": advance transitions nothing");
+
+			ToyAdvanceResult observed = FixedPeriodToyRules.ObserveOptionOnLoad(bad, long.MaxValue / 2L, false);
+			Assert.IsFalse(observed.Succeeded, label + ": load observation must refuse");
+			Assert.IsTrue(ReferenceEquals(bad, observed.State), label + ": load returns the caller's object");
+			Assert.AreEqual(OptionTransitionKind.None, observed.OptionTransition, label + ": load transitions nothing");
+
+			SemanticEventKey key;
+			Assert.IsFalse(FixedPeriodToyRules.TryGetEventKey(bad, 0uL, out key, out fault), label + ": key expansion must refuse");
+			Assert.AreEqual(default(SemanticEventKey), key, label + ": a refused expansion publishes the default key");
+
+			byte[] bytes;
+			Assert.IsFalse(FixedPeriodToyRules.TryEncodeCanonical(bad, out bytes, out fault), label + ": encode must refuse");
+			Assert.IsNull(bytes, label + ": a refused encode publishes no buffer");
+
+			Assert.AreEqual(schema, bad.SchemaVersion, label);
+			Assert.AreEqual(rules, bad.RulesVersion, label);
+			Assert.AreEqual(seedHigh, bad.SimulationSeed.High, label);
+			Assert.AreEqual(seedLow, bad.SimulationSeed.Low, label);
+			Assert.AreEqual(settlement, bad.SettlementId, label);
+			Assert.AreEqual(processed, bad.ProcessedThroughTick, label);
+			Assert.AreEqual(scheduled, bad.ClockScheduled, label);
+			Assert.AreEqual(nextDue, bad.NextDueTick, label);
+			Assert.AreEqual(nextOrdinal, bad.NextOrdinal, label);
+			Assert.AreEqual(interval, bad.IntervalTicks, label);
+			Assert.AreEqual(latchValue, bad.OptionLatch.Value, label);
+			Assert.AreEqual(latchTick, bad.OptionLatch.ChangedAtTick, label);
+			Assert.AreEqual(hasRange, bad.HasEmittedRange, label);
+			Assert.AreEqual(rangeRules, bad.EmittedRange.RulesVersionAtCreation, label);
+			Assert.AreEqual(rangeStream, bad.EmittedRange.EventStreamId, label);
+			Assert.AreEqual(rangeKind, bad.EmittedRange.EventKindCode, label);
+			Assert.AreEqual(rangeFirst, bad.EmittedRange.FirstOrdinal, label);
+			Assert.AreEqual(rangeCount, bad.EmittedRange.Count, label);
 		}
 
 		[Test]

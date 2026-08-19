@@ -43,11 +43,16 @@ namespace ThousandAndFirst.Simulation.Kernel
 		}
 
 		/// <summary>
-		/// Value equality only. There is deliberately no <c>GetHashCode</c> and no
+		/// Value equality only. There is deliberately no runtime hash override and no
 		/// <c>Equals(object)</c> override: runtime hashing is not stable across processes, and a
 		/// hash on an identity-bearing kernel type is an invitation to key a collection by it and
 		/// then persist or compare that ordering. Identity in this kernel travels one way, through
 		/// the canonical encoder. Nothing here is used as a dictionary or set key.
+		/// <para>
+		/// The method name is deliberately not written out anywhere below this namespace: the
+		/// release gate greps for it, and a comment that names the thing it forbids fails the same
+		/// scan as the thing itself. Do not "clarify" this by spelling it.
+		/// </para>
 		/// </summary>
 		public bool Equals(KernelSeed128 other)
 		{
@@ -204,10 +209,10 @@ namespace ThousandAndFirst.Simulation.Kernel
 		}
 
 		/// <summary>
-		/// Value equality only, for the same reason as <see cref="KernelSeed128"/>: no
-		/// <c>GetHashCode</c> and no <c>Equals(object)</c>. An event key is an identity, and the
-		/// only identity this kernel recognises is the one the canonical encoder produces. A
-		/// runtime hash beside it is a second, unstable answer to the same question.
+		/// Value equality only, for the same reason as <see cref="KernelSeed128"/>: no runtime
+		/// hash override and no <c>Equals(object)</c>. An event key is an identity, and the only
+		/// identity this kernel recognises is the one the canonical encoder produces. A runtime
+		/// hash beside it is a second, unstable answer to the same question.
 		/// </summary>
 		public bool Equals(SemanticEventKey other)
 		{

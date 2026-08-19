@@ -78,13 +78,36 @@ namespace ThousandAndFirst.Simulation.Kernel
 		{
 			value = 0uL;
 
-			// Identity is settled before arithmetic, matching AdvanceThrough. A bound judged
-			// against a key that does not exist is not a meaningful answer, and a caller that
-			// branches on the code would see InvalidRandomBound for a request whose real defect
-			// is that it named nothing. The first block draw performs that validation through the
-			// same encoder every other path uses, so the ordering costs no extra surface and no
-			// work on the success path — only one wasted hash when the bound is also invalid.
-			bool boundValidated = false;
+			// Frozen precedence: invalid key, then zero bound, then any provider failure.
+			//
+			// Both earlier checks must therefore complete before anything hashes. Validating the
+			// key by attempting the first draw would satisfy the first rule and break the second,
+			// because drawing hashes: a caller passing a zero bound on a machine whose provider is
+			// refusing would be told the provider failed, and would go looking at the platform
+			// instead of at the bound it can see is wrong.
+			//
+			// The key is settled first and without hashing by re-running it through the same
+			// factory that admits one. That is the identical set of conditions rather than a
+			// second copy of them, and it adds no surface: the encoder's own predicate is private
+			// and exposing it would put two definitions of a usable key in reach of callers.
+			SemanticEventKey validated;
+			if (!SemanticEventKey.TryCreate(
+				key.RulesVersionAtCreation,
+				key.SettlementId,
+				key.EventStreamId,
+				key.EventKindCode,
+				key.EventOrdinal,
+				out validated,
+				out fault))
+			{
+				return false;
+			}
+
+			if (exclusiveUpperBound == 0uL)
+			{
+				fault = KernelFaultCode.InvalidRandomBound;
+				return false;
+			}
 
 			uint blockIndex = 0u;
 			while (true)
@@ -94,16 +117,6 @@ namespace ThousandAndFirst.Simulation.Kernel
 				{
 					value = 0uL;
 					return false;
-				}
-				if (!boundValidated)
-				{
-					if (exclusiveUpperBound == 0uL)
-					{
-						fault = KernelFaultCode.InvalidRandomBound;
-						value = 0uL;
-						return false;
-					}
-					boundValidated = true;
 				}
 				ulong accepted;
 				if (TryAcceptBoundedSample(sample, exclusiveUpperBound, out accepted))
@@ -215,6 +228,29 @@ namespace ThousandAndFirst.Simulation.Kernel
 	{
 		private const string HexDigits = "0123456789abcdef";
 
+#if TAF_TESTS
+		/// <summary>
+		/// What an injected provider failure should throw. Test-only in the strictest sense: the
+		/// game build compiles every <c>.cs</c> outside <c>DevTests</c> without defining
+		/// <c>TAF_TESTS</c>, so neither this field nor the switch below exists in the shipped
+		/// assembly — there is no flag to leave set and no branch to take in play.
+		/// <para>
+		/// It earns its place because the frozen fault precedence puts provider failure last, and
+		/// without a way to make the provider fail on demand the two orderings that end there are
+		/// unfalsifiable. A test that cannot fail is not evidence.
+		/// </para>
+		/// </summary>
+		internal enum InjectedDigestFailure : byte
+		{
+			None = 0,
+			Cryptographic = 1,
+			PlatformUnsupported = 2,
+			ProcessFatal = 3
+		}
+
+		internal static InjectedDigestFailure InjectedFailure = InjectedDigestFailure.None;
+#endif
+
 		internal static bool TryComputeSha256(byte[] input, out byte[] digest, out KernelFaultCode fault)
 		{
 			digest = null;
@@ -225,6 +261,19 @@ namespace ThousandAndFirst.Simulation.Kernel
 			}
 			try
 			{
+#if TAF_TESTS
+				// Inside the try on purpose: the first two must be caught and mapped, and the third
+				// must travel straight through, which is the distinction under test.
+				switch (InjectedFailure)
+				{
+				case InjectedDigestFailure.Cryptographic:
+					throw new CryptographicException("injected provider failure");
+				case InjectedDigestFailure.PlatformUnsupported:
+					throw new PlatformNotSupportedException("injected missing provider");
+				case InjectedDigestFailure.ProcessFatal:
+					throw new OutOfMemoryException("injected process-fatal failure");
+				}
+#endif
 				using (SHA256 provider = SHA256.Create())
 				{
 					if (provider == null)

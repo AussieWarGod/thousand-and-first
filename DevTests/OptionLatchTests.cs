@@ -117,6 +117,57 @@ namespace ThousandAndFirst.Tests
 		}
 
 		/// <summary>
+		/// On every failure the out-parameters carry the caller's own prior state and
+		/// <see cref="OptionTransitionKind.None"/> — and are written before any check can fail, so
+		/// a caller that ignores the return value still holds something true rather than whatever
+		/// was in the variable beforehand.
+		/// <para>
+		/// Each case seeds the out-parameters with a distinct sentinel that appears nowhere else.
+		/// The earlier version of this test reused one variable across calls, so a rule that never
+		/// wrote it would still have passed on the value left by the previous, successful call.
+		/// </para>
+		/// </summary>
+		[Test]
+		public void EveryFailureWritesThePriorStateAndNoTransitionOverASentinel()
+		{
+			object[][] cases =
+			{
+				new object[] { "negative now",
+					new OptionLatchState(OptionLatchValue.Enabled, 4L), true, -1L, KernelFaultCode.InvalidTick },
+				new object[] { "unobserved with a change tick",
+					new OptionLatchState(OptionLatchValue.Unobserved, 3L), true, 10L, KernelFaultCode.InvalidOptionLatch },
+				new object[] { "unknown byte",
+					new OptionLatchState((OptionLatchValue)99, 0L), false, 10L, KernelFaultCode.InvalidOptionLatch },
+				new object[] { "negative prior tick",
+					new OptionLatchState(OptionLatchValue.Disabled, -2L), true, 10L, KernelFaultCode.InvalidOptionLatch },
+				new object[] { "regression",
+					new OptionLatchState(OptionLatchValue.Enabled, 10L), true, 9L, KernelFaultCode.ClockRegression },
+				new object[] { "regression with a change",
+					new OptionLatchState(OptionLatchValue.Enabled, 10L), false, 9L, KernelFaultCode.ClockRegression }
+			};
+
+			for (int i = 0; i < cases.Length; i++)
+			{
+				string label = (string)cases[i][0];
+				OptionLatchState prior = (OptionLatchState)cases[i][1];
+				bool configured = (bool)cases[i][2];
+				long now = (long)cases[i][3];
+				KernelFaultCode expected = (KernelFaultCode)cases[i][4];
+
+				// Sentinels no rule can legitimately produce.
+				OptionLatchState next = new OptionLatchState((OptionLatchValue)(170 + i), 123456L + i);
+				OptionTransitionKind transition = (OptionTransitionKind)(190 + i);
+				KernelFaultCode fault = (KernelFaultCode)(210 + i);
+
+				Assert.IsFalse(OptionLatchRules.TryObserve(prior, configured, now, out next, out transition, out fault), label);
+				Assert.AreEqual(expected, fault, label + ": exact fault");
+				Assert.AreEqual(OptionTransitionKind.None, transition, label + ": no transition on failure");
+				Assert.AreEqual(prior.Value, next.Value, label + ": the caller's own value comes back");
+				Assert.AreEqual(prior.ChangedAtTick, next.ChangedAtTick, label + ": the caller's own tick comes back");
+			}
+		}
+
+		/// <summary>
 		/// Every representable latch byte against both configured values. The three known values
 		/// cover the ordinary first/unchanged/transition paths; the other 253 are what a corrupt or
 		/// forward-version save can hand us, and every one must fail closed rather than compare its
