@@ -7,9 +7,11 @@ as polished as the game's flagship features. These rules are binding for every s
 
 - **Serialization is law.** Part fields serialize positionally: never reorder, retype, or remove
   a serialized field on a shipped part. Systems use name-based field reflection: treat fields as
-  append-only anyway. Every stateful class carries `SerializationVersion` from its first commit;
-  when structure outgrows field reflection, switch to custom `Write`/`Read` with a magic marker
-  (the TrophicRepertoire pattern). Player-critical parts get `[CallAfterGameLoaded]`
+  append-only anyway. For per-field save-version tolerance the engine's own mechanism is
+  `[FieldSaveVersion(N)]`, checked against `SerializationReader.FileVersion`; a bare
+  `SerializationVersion` field is inert unless custom `Write`/`Read` actually reads it, so carry one
+  only where custom serialization exists (the TrophicRepertoire pattern, with a magic marker).
+  Player-critical parts get `[CallAfterGameLoaded]`
   `RequirePart` guarantees.
 - **Events the engine's way.** Systems subscribe in `Register(XRLGame, IEventRegistrar)` via
   `Registrar.Register(Event.ID)` and override the matching `HandleEvent`; always

@@ -43,6 +43,12 @@ namespace ThousandAndFirst
 
 		public const int LoyalCoreSettlers = 2;
 
+		public const int MaxPopulation = 60;
+
+		public const int MaxBuildings = 40;
+
+		public const int MaxCharters = 8;
+
 		public const int FoundingCostDrams = 8;
 
 		public const int FetchDramsPerSettler = 2;
@@ -417,6 +423,28 @@ namespace ThousandAndFirst
 			GX = wx * 3 + zx;
 			GY = wy * 3 + zy;
 			return true;
+		}
+
+		/// <summary>
+		/// Chebyshev adjacency between two zones in global zone coordinates. Engine-free so
+		/// it stays unit-testable; callers inside the game should obtain coordinates from
+		/// <c>XRL.World.ZoneID.Parse</c>, which also understands instanced zone IDs.
+		/// </summary>
+		/// <returns>True if the zones touch (including diagonally) on the same stratum, and
+		/// are not the same zone.</returns>
+		public static bool CoordsAdjacent(string WorldA, int GXA, int GYA, int ZA, string WorldB, int GXB, int GYB, int ZB)
+		{
+			if (WorldA != WorldB || ZA != ZB)
+			{
+				return false;
+			}
+			int dx = (GXA > GXB) ? (GXA - GXB) : (GXB - GXA);
+			int dy = (GYA > GYB) ? (GYA - GYB) : (GYB - GYA);
+			if (dx <= 1 && dy <= 1)
+			{
+				return dx + dy > 0;
+			}
+			return false;
 		}
 
 		public static bool ZonesAdjacent(string A, string B)

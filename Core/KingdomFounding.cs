@@ -75,7 +75,7 @@ namespace ThousandAndFirst
 				bool adjacent = false;
 				foreach (string claimedZone in system.ClaimedZones)
 				{
-					if (KingdomRules.ZonesAdjacent(claimedZone, Z.ZoneID))
+					if (ZonesAdjacent(claimedZone, Z.ZoneID))
 					{
 						adjacent = true;
 						break;
@@ -102,6 +102,23 @@ namespace ThousandAndFirst
 				system.NextArrivalTick = The.Game.TimeTicks + KingdomRules.ArrivalIntervalTicks(system.Population);
 			}
 			return true;
+		}
+
+		/// <summary>
+		/// Zone-level adjacency using the engine's own zone-ID parser, which understands
+		/// instanced and blueprint-form IDs that a naive split would reject.
+		/// </summary>
+		public static bool ZonesAdjacent(string A, string B)
+		{
+			if (!ZoneID.Parse(A, out var worldA, out var pxA, out var pyA, out var zxA, out var zyA, out var zA))
+			{
+				return false;
+			}
+			if (!ZoneID.Parse(B, out var worldB, out var pxB, out var pyB, out var zxB, out var zyB, out var zB))
+			{
+				return false;
+			}
+			return KingdomRules.CoordsAdjacent(worldA, pxA * 3 + zxA, pyA * 3 + zyA, zA, worldB, pxB * 3 + zxB, pyB * 3 + zyB, zB);
 		}
 
 		/// <summary>

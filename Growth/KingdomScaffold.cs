@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using XRL;
 using XRL.Messages;
 using XRL.World;
@@ -8,8 +8,6 @@ namespace ThousandAndFirst
 	[Serializable]
 	public class r_KingdomScaffold : IPart
 	{
-		public int SerializationVersion = 1;
-
 		public string TargetBlueprint;
 
 		public string TargetDisplayName;
@@ -52,6 +50,7 @@ namespace ThousandAndFirst
 				gameObject.SetIntProperty("KingdomStores", 1);
 			}
 			gameObject.SetIntProperty("KingdomBuilt", 1);
+			gameObject.MakeActive();
 			KingdomLog.Log("scaffold complete: " + displayName + " (" + blueprint + ") at " + cell.X + "," + cell.Y);
 			KingdomSystem system = The.Game.RequireSystem<KingdomSystem>();
 			if (system.Founded)

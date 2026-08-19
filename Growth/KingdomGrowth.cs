@@ -27,24 +27,27 @@ namespace ThousandAndFirst
 				return;
 			}
 			long timeTicks = The.Game.TimeTicks;
-			KingdomLog.Log("growth pass " + Z.ZoneID + " tick=" + timeTicks + " next=" + System.NextArrivalTick + " pop=" + System.Population + " stage=" + System.Stage + " stored=" + CountStoredWater(Z) + " open=" + CountOpenWater(Z) + " space=" + CountStorageSpace(Z) + " dry=" + System.DryStreak + " withered=" + System.Withered);
+			KingdomSurvey survey = KingdomSurvey.Take(Z);
+			if (KingdomLog.Enabled)
+			{
+				KingdomLog.Log("growth pass " + Z.ZoneID + " tick=" + timeTicks + " next=" + System.NextArrivalTick + " pop=" + System.Population + " stage=" + System.Stage + " stored=" + survey.StoredWater + " open=" + survey.OpenWater + " space=" + survey.StorageSpace + " cap=" + survey.StorageCapacity + " dry=" + System.DryStreak + " withered=" + System.Withered);
+			}
 			if (System.NextArrivalTick <= 0)
 			{
 				System.NextArrivalTick = timeTicks + Interval(System, Z);
-				KingdomLog.Log("growth: first-visit schedule, next=" + System.NextArrivalTick);
 				return;
 			}
-			int fetched = FetchWater(System, Z);
-			if (fetched > 0)
+			int fetched = survey.Store(survey.DrawFromPools(KingdomRules.FetchableDrams(System.Population, survey.OpenWater, survey.StorageSpace)));
+			if (fetched > 0 && KingdomLog.Enabled)
 			{
 				KingdomLog.Log("growth: fetched " + fetched + " drams from open water into stores");
 			}
 			int arrivals = 0;
-			while (timeTicks >= System.NextArrivalTick && arrivals < KingdomRules.MaxArrivalsPerVisit)
+			while (timeTicks >= System.NextArrivalTick && arrivals < KingdomRules.MaxArrivalsPerVisit && System.Population < KingdomRules.MaxPopulation)
 			{
 				int upkeep = ThirstEnabled ? KingdomRules.UpkeepForElapsed(System.Population, Interval(System, Z)) : 0;
-				int paid = ConsumeStoredWater(Z, upkeep);
-				if (paid < upkeep || CountStoredWater(Z) < KingdomRules.DramsPerArrival)
+				int paid = survey.Consume(upkeep);
+				if (paid < upkeep || survey.StoredWater < KingdomRules.DramsPerArrival)
 				{
 					if (!ThirstEnabled)
 					{
@@ -55,14 +58,14 @@ namespace ThousandAndFirst
 					KingdomChronicle.Record(System, "the stores ran low, and " + System.KingdomDisplayName + " thirsted");
 					MessageQueue.AddPlayerMessage("{{r|" + System.KingdomDisplayName + " thirsts. The cistern is dry; settlers will leave if the water does not return.}}");
 					KingdomRules.ThirstOutcome outcome = KingdomRules.ResolveThirst(System.DryStreak, System.Stage, System.Population);
-					KingdomLog.Log("thirst: streak=" + System.DryStreak + " outcome=" + outcome);
+					if (KingdomLog.Enabled) KingdomLog.Log("thirst: streak=" + System.DryStreak + " outcome=" + outcome);
 					if (outcome == KingdomRules.ThirstOutcome.Emigration)
 					{
-						Emigrate(System, Z);
+						Emigrate(System, Z, survey);
 					}
 					else if (outcome == KingdomRules.ThirstOutcome.Withering)
 					{
-						Emigrate(System, Z);
+						Emigrate(System, Z, survey);
 						if (!System.Withered)
 						{
 							System.Withered = true;
@@ -80,7 +83,7 @@ namespace ThousandAndFirst
 					KingdomChronicle.Record(System, "the water returned, and " + System.KingdomDisplayName + " drank deep and recovered");
 					MessageQueue.AddPlayerMessage("{{G|" + System.KingdomDisplayName + " has recovered from the long thirst.}}");
 				}
-				if (!SpawnSettler(System, Z))
+				if (!SpawnSettler(System, Z, survey))
 				{
 					break;
 				}
@@ -91,18 +94,22 @@ namespace ThousandAndFirst
 			{
 				System.NextArrivalTick = timeTicks + Interval(System, Z);
 			}
-			UpdateStage(System, Z);
-			KingdomLog.Log("growth pass done: pop=" + System.Population + " stage=" + System.Stage + " arrivals=" + arrivals + " dry=" + System.DryStreak + " next=" + System.NextArrivalTick);
+			UpdateStage(System, Z, survey);
+			if (KingdomLog.Enabled) KingdomLog.Log("growth pass done: pop=" + System.Population + " stage=" + System.Stage + " arrivals=" + arrivals + " dry=" + System.DryStreak + " next=" + System.NextArrivalTick);
 		}
 
-		public static bool SpawnSettler(KingdomSystem System, Zone Z)
+		public static bool SpawnSettler(KingdomSystem System, Zone Z, KingdomSurvey Survey = null)
 		{
-			List<Cell> emptyCells = Z.GetEmptyCells();
+			List<Cell> emptyCells = Z.GetEmptyCells((Cell c) => c.IsPassable() && !c.HasObjectWithPart("LiquidVolume"));
+			if (emptyCells == null || emptyCells.Count == 0)
+			{
+				emptyCells = Z.GetEmptyCells();
+			}
 			if (emptyCells == null || emptyCells.Count == 0)
 			{
 				return false;
 			}
-			Cell cell = emptyCells[Stat.Random(0, emptyCells.Count - 1)];
+			Cell cell = emptyCells.GetRandomElement();
 			GameObject settler = GameObject.Create("r_KingdomSettler");
 			if (settler == null)
 			{
@@ -117,14 +124,14 @@ namespace ThousandAndFirst
 			Qud.API.ConversationsAPI.addSimpleConversationToObject(settler, "Live and drink, friend. We heard there was water here, and a place worth the walk.", "Live and drink.", Question: "Why did you come?", Answer: "The road from " + origin + " was long, and the wells there are bitter. Here the water is shared. That is the whole of it.");
 			System.OriginCounts.TryGetValue(origin, out var count);
 			System.OriginCounts[origin] = count + 1;
-			ConsumeStoredWater(Z, KingdomRules.DramsPerArrival);
+			if (Survey != null) { Survey.Consume(KingdomRules.DramsPerArrival); } else { ConsumeStoredWater(Z, KingdomRules.DramsPerArrival); }
 			System.Population++;
 			KingdomChronicle.Record(System, "a settler from " + origin + " arrived at " + System.KingdomDisplayName + " and drank of the shared water");
 			MessageQueue.AddPlayerMessage("{{G|A settler from " + origin + " has arrived at " + System.KingdomDisplayName + ".}}");
 			return true;
 		}
 
-		public static bool Emigrate(KingdomSystem System, Zone Z)
+		public static bool Emigrate(KingdomSystem System, Zone Z, KingdomSurvey Survey = null)
 		{
 			if (System.Population <= KingdomRules.LoyalCoreSettlers)
 			{
@@ -157,7 +164,7 @@ namespace ThousandAndFirst
 			System.Population--;
 			KingdomChronicle.Record(System, XRL.Language.Grammar.A(name) + " left " + System.KingdomDisplayName + " for wetter country, the cisterns having run dry");
 			MessageQueue.AddPlayerMessage("{{R|" + XRL.Language.Grammar.A(name, Capitalize: true) + " leaves " + System.KingdomDisplayName + ". \"There is no water here,\" " + (leaver.IsPlural ? "they say" : "the settler says") + ".}}");
-			KingdomLog.Log("emigrate: pop now " + System.Population + " origin=" + (origin ?? "-"));
+			if (KingdomLog.Enabled) KingdomLog.Log("emigrate: pop now " + System.Population + " origin=" + (origin ?? "-"));
 			return true;
 		}
 
@@ -287,9 +294,9 @@ namespace ThousandAndFirst
 			return total;
 		}
 
-		public static void UpdateStage(KingdomSystem System, Zone Z)
+		public static void UpdateStage(KingdomSystem System, Zone Z, KingdomSurvey Survey = null)
 		{
-			GrowthStage stage = KingdomRules.StageFor(System.Population, CountStorageCapacity(Z));
+			GrowthStage stage = KingdomRules.StageFor(System.Population, (Survey != null) ? Survey.StorageCapacity : CountStorageCapacity(Z));
 			if (stage > System.Stage)
 			{
 				System.Stage = stage;
@@ -336,8 +343,8 @@ namespace ThousandAndFirst
 				return;
 			}
 			GenericInventoryRestocker restocker = citizen.RequirePart<GenericInventoryRestocker>();
-			restocker.Tables.Clear();
-			restocker.Tables.Add("Tier1Wares");
+			restocker.Clear();
+			restocker.AddTable("Tier1Wares");
 			restocker.Chance = 100;
 			restocker.PerformRestock(Silent: true);
 			citizen.SetIntProperty("VillageMerchant", 1);

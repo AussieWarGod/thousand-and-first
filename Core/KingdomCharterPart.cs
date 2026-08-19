@@ -11,10 +11,10 @@ namespace ThousandAndFirst
 	{
 		public const string COMMAND = "r_KingdomCharterMenu";
 
-		public int SerializationVersion = 1;
-
 		public Guid ActivatedAbilityID = Guid.Empty;
 
+		// Mid-session mod rebuilds mint a second assembly generation; the stale part shares
+		// this name but not this Type, so RequirePart cannot see it. Purge by name.
 		public override void Attach()
 		{
 			base.Attach();
@@ -51,7 +51,7 @@ namespace ThousandAndFirst
 					}
 				}
 			}
-			ActivatedAbilityID = AddMyActivatedAbility("Charter", COMMAND, "Kingdom");
+			ActivatedAbilityID = AddMyActivatedAbility("Charter", COMMAND, "Skills");
 		}
 
 		public void RemoveAbility()
@@ -78,7 +78,7 @@ namespace ThousandAndFirst
 			}
 			while (true)
 			{
-				int num = Popup.PickOption(Title: system.KingdomDisplayName, Options: new string[9] { "Status", "The Chronicle", "As others tell it", "Standings", "Designate district", "Commission a building", "Pay tribute", "Dedicate a vessel to the stores", "Strike a trade charter" }, Hotkeys: "scandmtvr".ToCharArray(), AllowEscape: true);
+				int num = Popup.PickOption(Title: system.KingdomDisplayName, Options: new string[9] { "Status", "The Chronicle", "As others tell it", "Standings", "Designate district", "Commission a building", "Pay tribute", "Dedicate a vessel to the stores", "Strike a trade charter" }, Hotkeys: new char[9] { 's', 'c', 'a', 'n', 'd', 'm', 't', 'v', 'r' }, AllowEscape: true);
 				switch (num)
 				{
 				case 0:
@@ -166,7 +166,13 @@ namespace ThousandAndFirst
 
 		public void PayTribute(KingdomSystem System)
 		{
-			if (!KingdomRaids.TryTribute(System, ParentObject.CurrentZone, out var failure))
+			Zone zone = ParentObject.CurrentZone;
+			if (zone == null || !System.ClaimedZones.Contains(zone.ZoneID))
+			{
+				Popup.Show("Tribute is paid from the settlement's own stores. Go there.");
+				return;
+			}
+			if (!KingdomRaids.TryTribute(System, zone, out var failure))
 			{
 				Popup.Show(failure);
 			}
@@ -224,6 +230,12 @@ namespace ThousandAndFirst
 			Cell cell = ParentObject.CurrentCell;
 			if (cell == null)
 			{
+				return;
+			}
+			Zone zone = ParentObject.CurrentZone;
+			if (zone == null || !System.ClaimedZones.Contains(zone.ZoneID))
+			{
+				Popup.Show("Vessels are dedicated on the kingdom's own ground, not in other people's houses.");
 				return;
 			}
 			System.Collections.Generic.List<GameObject> vessels = new System.Collections.Generic.List<GameObject>();

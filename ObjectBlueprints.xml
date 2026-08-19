@@ -16,6 +16,7 @@
     <stat Name="Hitpoints" Value="50" />
   </object>
   <object Name="r_KingdomCaskRack" Inherits="Furniture">
+    <stag Name="Contemporary" />
     <part Name="Render" DisplayName="cask rack" RenderString="&#8801;" ColorString="&amp;w" />
     <part Name="Description" Short="Casks in a cradle of watervine rope. The whole settlement is counted here, dram by dram." />
     <part Name="LiquidVolume" MaxVolume="64" Volume="0" />
@@ -23,6 +24,7 @@
     <stat Name="Hitpoints" Value="80" />
   </object>
   <object Name="r_KingdomGreatCistern" Inherits="Furniture">
+    <stag Name="Contemporary" />
     <part Name="Render" DisplayName="great cistern" RenderString="O" ColorString="&amp;B" />
     <part Name="Description" Short="A tin-lined belly sunk to its rim in the earth. When it is full, the whole town sleeps easier; when it rings hollow, everyone hears it." />
     <part Name="LiquidVolume" MaxVolume="256" Volume="0" />
@@ -30,18 +32,20 @@
     <stat Name="Hitpoints" Value="200" />
   </object>
   <object Name="r_KingdomBunk" Inherits="Bed">
+    <stag Name="Contemporary" />
     <part Name="Render" DisplayName="communal bunk" ColorString="&amp;w" />
     <part Name="Description" Short="Rope-sprung and blanket-soft by local standards. It smells of road dust and relief." />
     <part Name="Physics" Takeable="false" />
   </object>
-  <object Name="r_KingdomBench" Inherits="Furniture">
+  <object Name="r_KingdomBench" Inherits="BaseChair">
+    <stag Name="Contemporary" />
     <part Name="Render" DisplayName="gathering bench" RenderString="&#960;" ColorString="&amp;w" />
     <part Name="Description" Short="Split logs worn smooth by sitting. The best arguments of the settlement happen here, and one or two of the marriages." />
-    <part Name="Chair" />
     <part Name="Physics" Takeable="false" />
     <stat Name="Hitpoints" Value="80" />
   </object>
   <object Name="r_KingdomShrine" Inherits="Furniture">
+    <stag Name="Contemporary" />
     <part Name="Render" DisplayName="shrine stone" RenderString="&#933;" ColorString="&amp;Y" />
     <part Name="Description" Short="An uncut stone with a cup-shaped hollow worn into its crown. Whatever is poured there is gone by morning, and no one asks where." />
     <part Name="Shrine" />

@@ -101,7 +101,7 @@ namespace ThousandAndFirst
 			}
 			for (int i = 0; i < size && emptyCells != null && emptyCells.Count > 0; i++)
 			{
-				Cell cell = emptyCells[Stat.Random(0, emptyCells.Count - 1)];
+				Cell cell = emptyCells.GetRandomElement();
 				GameObject raider = GameObject.Create(table[Stat.Random(0, table.Length - 1)]);
 				if (raider == null)
 				{

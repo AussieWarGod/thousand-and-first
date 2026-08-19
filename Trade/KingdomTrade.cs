@@ -33,6 +33,11 @@ namespace ThousandAndFirst
 				Failure = faction.DisplayName + " will not treat with the kingdom yet (standing " + System.GetStanding(FactionName) + " of " + deal.MinStanding + " needed).";
 				return false;
 			}
+			if (System.ActiveDealKeys.Count >= KingdomRules.MaxCharters)
+			{
+				Failure = "The kingdom already keeps as many charters as it can honor.";
+				return false;
+			}
 			for (int i = 0; i < System.ActiveDealKeys.Count; i++)
 			{
 				if (System.ActiveDealKeys[i] == DealKey && System.ActiveDealFactions[i] == FactionName)
@@ -112,7 +117,7 @@ namespace ThousandAndFirst
 			{
 				return;
 			}
-			Cell cell = emptyCells[Stat.Random(0, emptyCells.Count - 1)];
+			Cell cell = emptyCells.GetRandomElement();
 			GameObject caravan = GameObject.Create(Blueprint);
 			if (caravan != null)
 			{

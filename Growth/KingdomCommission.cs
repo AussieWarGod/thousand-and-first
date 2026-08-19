@@ -22,6 +22,19 @@ namespace ThousandAndFirst
 				Failure = "No such design.";
 				return false;
 			}
+			int built = 0;
+			foreach (GameObject item in zone.GetObjects())
+			{
+				if (item.GetIntProperty("KingdomBuilt") == 1 || item.HasPart("r_KingdomScaffold"))
+				{
+					built++;
+				}
+			}
+			if (built >= KingdomRules.MaxBuildings)
+			{
+				Failure = "There is no more room in the plan. " + System.KingdomDisplayName + " is as built-up as this ground allows.";
+				return false;
+			}
 			if (KingdomGrowth.CountStoredWater(zone) < entry.CostDrams)
 			{
 				Failure = "The work would cost {{C|" + entry.CostDrams + " drams}} from the stores, and the stores cannot bear it.";
@@ -61,7 +74,7 @@ namespace ThousandAndFirst
 				List<Cell> adjacent = playerCell.GetLocalAdjacentCells();
 				for (int i = 0; i < adjacent.Count; i++)
 				{
-					if (adjacent[i].IsEmpty())
+					if (adjacent[i].IsEmpty() && adjacent[i].IsPassable() && !adjacent[i].HasObjectWithPart("LiquidVolume"))
 					{
 						return adjacent[i];
 					}
@@ -70,7 +83,7 @@ namespace ThousandAndFirst
 			List<Cell> emptyCells = Z.GetEmptyCells();
 			if (emptyCells != null && emptyCells.Count > 0)
 			{
-				return emptyCells[Stat.Random(0, emptyCells.Count - 1)];
+				return emptyCells.GetRandomElement();
 			}
 			return null;
 		}
