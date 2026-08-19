@@ -67,6 +67,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(20L, 10L, 10L, 2uL, 30L, "two deadlines passed")]
 		[TestCase(25L, 10L, 10L, 2uL, 30L, "the golden fixture case")]
 		[TestCase(9L, 10L, 10L, 0uL, 10L, "not yet due is a normal zero, not a regression")]
+		[TestCase(11L, 10L, 10L, 1uL, 20L, "one tick past the very first deadline still fires exactly once")]
 		[TestCase(0L, 0L, 1L, 1uL, 1L, "zero tick zero deadline")]
 		[TestCase(100L, 0L, 1L, 101uL, 101L, "unit interval from zero")]
 		public void CountFixedPeriodDue(long now, long nextDue, long interval, ulong expectedCount, long expectedFollowing, string why)

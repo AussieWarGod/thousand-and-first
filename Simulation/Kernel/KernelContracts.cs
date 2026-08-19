@@ -73,7 +73,12 @@ namespace ThousandAndFirst.Simulation.Kernel
 	{
 		internal const int MaxUtf8Bytes = 128;
 
-		internal const int MinUtf8Bytes = 5;
+		/// <summary>
+		/// Private: the card names the upper bound but not this one, and nothing outside this
+		/// class reads it. The grammar is enforced by <see cref="IsValid"/>, not by callers
+		/// comparing against the constant themselves.
+		/// </summary>
+		private const int MinUtf8Bytes = 5;
 
 		private const string RequiredPrefix = "taf:";
 

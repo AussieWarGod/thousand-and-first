@@ -511,15 +511,14 @@ namespace ThousandAndFirst.Simulation.Kernel
 		/// Full structural validation. Every rule runs this on entry, because a caller can hand in
 		/// any object and a malformed state must fail rather than propagate.
 		/// <para>
-		/// The card does not name this member, so its visibility is justified rather than assumed:
-		/// the invariant matrix requires constructing a source that violates each rule
-		/// independently and asserting the exact <c>InvalidToyState</c> / <c>InvalidOptionLatch</c>
-		/// split. That split is not observable through the advance entry points alone, because
-		/// several of those states also fail a later arithmetic check and the earlier fault is the
-		/// one under test.
+		/// Private. An earlier revision left this internal and justified it by claiming the
+		/// <c>InvalidToyState</c> / <c>InvalidOptionLatch</c> split was not observable through the
+		/// named entry points. That was simply false — every one of them validates the state first
+		/// and returns exactly this fault — so the justification did not survive being checked, and
+		/// the tests now go through the entry points a caller actually has.
 		/// </para>
 		/// </summary>
-		internal static bool IsCanonical(FixedPeriodToyState state, out KernelFaultCode fault)
+		private static bool IsCanonical(FixedPeriodToyState state, out KernelFaultCode fault)
 		{
 			if (state == null)
 			{
@@ -536,29 +535,8 @@ namespace ThousandAndFirst.Simulation.Kernel
 				fault = KernelFaultCode.InvalidToyState;
 				return false;
 			}
-			if (!OptionLatchRules.IsWellFormed(state.OptionLatch) || state.OptionLatch.Value == OptionLatchValue.Unobserved)
-			{
-				fault = KernelFaultCode.InvalidOptionLatch;
-				return false;
-			}
-
-			if (state.OptionLatch.Value == OptionLatchValue.Enabled)
-			{
-				// Compared pairwise rather than against max(a, b) + 1, which could overflow.
-				if (!state.ClockScheduled
-					|| state.NextDueTick <= state.ProcessedThroughTick
-					|| state.NextDueTick <= state.OptionLatch.ChangedAtTick)
-				{
-					fault = KernelFaultCode.InvalidToyState;
-					return false;
-				}
-			}
-			else if (state.ClockScheduled || state.NextDueTick != 0L)
-			{
-				fault = KernelFaultCode.InvalidToyState;
-				return false;
-			}
-
+			// Range invariants run before the latch because the frozen order puts any bad non-latch
+			// state ahead of a bad latch, and nothing here consults the latch.
 			if (!state.HasEmittedRange)
 			{
 				if (state.NextOrdinal != 0uL
@@ -593,6 +571,58 @@ namespace ThousandAndFirst.Simulation.Kernel
 					fault = KernelFaultCode.InvalidToyState;
 					return false;
 				}
+			}
+
+			// The latch is checked in two parts, because only one of them blocks the schedule rule.
+			//
+			// The schedule invariant is selected by the latch's enum value: which constraint
+			// applies depends on whether it reads enabled. But most of that invariant needs only
+			// the value, not the change tick. So a latch whose enum is known but whose tick is
+			// malformed still selects a rule, and the non-latch half of that rule must be judged
+			// first -- otherwise a state that is wrong about its schedule *and* its latch tick
+			// reports the latch, against the frozen order.
+			//
+			// An unknown or unobserved value is different in kind: it selects no rule at all, so
+			// there is nothing to evaluate ahead of it and the latch fault is the only honest
+			// answer.
+			bool valueIsKnown = state.OptionLatch.Value == OptionLatchValue.Enabled
+				|| state.OptionLatch.Value == OptionLatchValue.Disabled;
+			if (!valueIsKnown)
+			{
+				fault = KernelFaultCode.InvalidOptionLatch;
+				return false;
+			}
+
+			// Part one of the schedule rule: everything decidable from the value alone.
+			if (state.OptionLatch.Value == OptionLatchValue.Enabled)
+			{
+				if (!state.ClockScheduled || state.NextDueTick <= state.ProcessedThroughTick)
+				{
+					fault = KernelFaultCode.InvalidToyState;
+					return false;
+				}
+			}
+			else if (state.ClockScheduled || state.NextDueTick != 0L)
+			{
+				fault = KernelFaultCode.InvalidToyState;
+				return false;
+			}
+
+			// Now the rest of the latch, which the remaining comparison needs.
+			if (!OptionLatchRules.IsWellFormed(state.OptionLatch))
+			{
+				fault = KernelFaultCode.InvalidOptionLatch;
+				return false;
+			}
+
+			// Part two: the one comparison that reads the change tick, so it could not be made
+			// before the tick was known good. Compared pairwise rather than against max(a, b) + 1,
+			// which could overflow.
+			if (state.OptionLatch.Value == OptionLatchValue.Enabled
+				&& state.NextDueTick <= state.OptionLatch.ChangedAtTick)
+			{
+				fault = KernelFaultCode.InvalidToyState;
+				return false;
 			}
 
 			fault = KernelFaultCode.None;

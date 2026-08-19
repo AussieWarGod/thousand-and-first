@@ -275,6 +275,50 @@ namespace ThousandAndFirst.Tests
 		}
 
 		/// <summary>
+		/// Both seed halves varied independently in the <em>random-block</em> preimage. The
+		/// equivalent test on the event-identity preimage does not cover this: they are two
+		/// different encodings with two different tags, and a fold could exist in one and not the
+		/// other. This is the encoding a draw is actually taken from.
+		/// </summary>
+		[Test]
+		public void BothSeedHalvesReachTheRandomBlockWireIndependently()
+		{
+			KernelSeed128 baseline = KernelCanonicalTests.GoldenSeed();
+			KernelFaultCode fault;
+			byte[] bytes;
+
+			Assert.IsTrue(KernelCanonicalEncoding.TryEncodeRandomBlockPreimage(
+				baseline, KernelCanonicalTests.GoldenKey(), 3u, 1u, out bytes, out fault));
+			string baseHex = KernelDigest.ToLowercaseHex(bytes);
+
+			Assert.IsTrue(KernelCanonicalEncoding.TryEncodeRandomBlockPreimage(
+				new KernelSeed128(baseline.High ^ 1uL, baseline.Low), KernelCanonicalTests.GoldenKey(), 3u, 1u, out bytes, out fault));
+			string highHex = KernelDigest.ToLowercaseHex(bytes);
+			Assert.AreNotEqual(baseHex, highHex, "the high half must reach the random-block wire");
+
+			Assert.IsTrue(KernelCanonicalEncoding.TryEncodeRandomBlockPreimage(
+				new KernelSeed128(baseline.High, baseline.Low ^ 1uL), KernelCanonicalTests.GoldenKey(), 3u, 1u, out bytes, out fault));
+			string lowHex = KernelDigest.ToLowercaseHex(bytes);
+			Assert.AreNotEqual(baseHex, lowHex, "the low half must reach the random-block wire");
+			Assert.AreNotEqual(highHex, lowHex, "the halves must not be folded together");
+
+			Assert.IsTrue(KernelCanonicalEncoding.TryEncodeRandomBlockPreimage(
+				new KernelSeed128(baseline.Low, baseline.High), KernelCanonicalTests.GoldenKey(), 3u, 1u, out bytes, out fault));
+			Assert.AreNotEqual(baseHex, KernelDigest.ToLowercaseHex(bytes), "swapping the halves must not collapse");
+
+			// And the drawn values must separate too, not merely the preimages.
+			ulong a;
+			ulong b;
+			ulong c;
+			ulong d;
+			Assert.IsTrue(CounterRandom.TryDrawUInt64(baseline, KernelCanonicalTests.GoldenKey(), 3u, out a, out fault));
+			Assert.IsTrue(CounterRandom.TryDrawUInt64(new KernelSeed128(baseline.High ^ 1uL, baseline.Low), KernelCanonicalTests.GoldenKey(), 3u, out b, out fault));
+			Assert.IsTrue(CounterRandom.TryDrawUInt64(new KernelSeed128(baseline.High, baseline.Low ^ 1uL), KernelCanonicalTests.GoldenKey(), 3u, out c, out fault));
+			Assert.IsTrue(CounterRandom.TryDrawUInt64(new KernelSeed128(baseline.Low, baseline.High), KernelCanonicalTests.GoldenKey(), 3u, out d, out fault));
+			Assert.AreEqual(4, new HashSet<ulong> { a, b, c, d }.Count, "four seeds, four draws");
+		}
+
+		/// <summary>
 		/// The pinned bound list, including the three a naive implementation gets wrong:
 		/// <c>2^63</c> (half the space, worst-case rejection), <c>2^32-1</c> (where a 32-bit
 		/// intermediate would truncate), and <c>ulong.MaxValue</c> (where the threshold
