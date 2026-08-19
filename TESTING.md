@@ -98,6 +98,17 @@ Say when you're launching so the log watch can run alongside.
 | 45 | Charter → Dedicate a vessel → **Dedicate every vessel here** | All undedicated vessels join the stores in one action, up to the cap |
 | 46 | Charter → Status | The ledger's effects are visible: stores, shop tier, idle/shorthanded works, and the next-need line |
 
+## Pass 10 — Names, policy, and answering a threat
+
+| Step | Action | Expect |
+|---|---|---|
+| 47 | Let settlers arrive, then Charter → **The roll of settlers** | Real generated names, each with origin and the date they came. Look at a settler in the world — it carries that name |
+| 48 | Charter → **Standing policy** → toggle gates to guarded | Chronicle line; arrivals slow (~40%) and raids come less often. Toggle stores to thrift: upkeep drops a quarter, arrivals slow further |
+| 49 | Provoke a raid (`kingdom:standing Snapjaws:-300`, `kingdom:raid`), then Charter → **Answer a threat** | Three exits offered: pay (with the current demand), send word (only if their standing ≥250 and you haven't stalled), or let them come |
+| 50 | Choose "let them come", then face the next warning | The demand has grown by half. Stall again and it grows again, up to four times |
+| 51 | Raise Snapjaw standing to 250+, force a fresh warning, choose **send word** | Raid averted with no water paid, chronicled as an accomplishment — goodwill spent instead of drams |
+| 52 | Force a warning, then leave the area for more than a day and return | **No ambush at the gate.** The raid resolved in your absence: the digest reports drams carried off and whether anyone was lost |
+
 ## Pass 7 — Trade charters and caravans
 
 | Step | Action | Expect |

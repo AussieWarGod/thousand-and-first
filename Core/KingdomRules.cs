@@ -170,6 +170,106 @@
 			return Manning == "threshold";
 		}
 
+		/// <summary>
+		/// Standing policies: the founder sets intent once and the settlement acts on it.
+		/// Every policy trades one good thing for another, so there is no correct answer.
+		/// </summary>
+		public enum GatePolicy
+		{
+			Open,
+			Guarded
+		}
+
+		public enum StoresPolicy
+		{
+			Plenty,
+			Thrift
+		}
+
+		public static readonly string[] GatePolicyNames = new string[2] { "open gates", "guarded gates" };
+
+		public static readonly string[] GatePolicyBlurbs = new string[2]
+		{
+			"Word travels and strangers are welcome. Settlers come sooner; so does trouble.",
+			"The watch turns away what it does not know. Fewer settlers, fewer raids."
+		};
+
+		public static readonly string[] StoresPolicyNames = new string[2] { "open stores", "thrift" };
+
+		public static readonly string[] StoresPolicyBlurbs = new string[2]
+		{
+			"Everyone drinks their fill. The settlement grows as fast as the water allows.",
+			"The water-keepers ration. Upkeep falls by a quarter, and newcomers are made to wait."
+		};
+
+		/// <summary>Arrival interval after standing policy, in ticks.</summary>
+		public static long PolicyInterval(long BaseInterval, GatePolicy Gate, StoresPolicy Stores)
+		{
+			long num = BaseInterval;
+			if (Gate == GatePolicy.Guarded)
+			{
+				num = num * 140 / 100;
+			}
+			if (Stores == StoresPolicy.Thrift)
+			{
+				num = num * 130 / 100;
+			}
+			return num;
+		}
+
+		/// <summary>Daily upkeep after standing policy.</summary>
+		public static int PolicyUpkeep(int BaseUpkeep, StoresPolicy Stores)
+		{
+			if (Stores != StoresPolicy.Thrift)
+			{
+				return BaseUpkeep;
+			}
+			return BaseUpkeep * 75 / 100;
+		}
+
+		/// <summary>Raid cooldown after standing policy; guarded gates buy quiet.</summary>
+		public static long PolicyRaidCooldown(long BaseCooldown, GatePolicy Gate)
+		{
+			if (Gate != GatePolicy.Guarded)
+			{
+				return BaseCooldown;
+			}
+			return BaseCooldown * 160 / 100;
+		}
+
+		public const int TributeEscalationPercent = 50;
+
+		/// <summary>
+		/// What tribute costs now. A demand ignored once is a demand that has grown: deferring
+		/// is a real choice with a real price, not a free delay.
+		/// </summary>
+		/// <param name="BaseDrams">The opening demand.</param>
+		/// <param name="TimesDeferred">How many times this demand has been let pass.</param>
+		public static int TributeDemand(int BaseDrams, int TimesDeferred)
+		{
+			int num = BaseDrams;
+			for (int i = 0; i < TimesDeferred && i < 4; i++)
+			{
+				num = num * (100 + TributeEscalationPercent) / 100;
+			}
+			return num;
+		}
+
+		public const int DiplomacyStandingRequired = 250;
+
+		/// <summary>
+		/// Whether a standing offer of friendship can turn a raid aside without payment &mdash;
+		/// the third exit. Kenshi's lesson: tribute that ignores earned goodwill feels wrong.
+		/// </summary>
+		public static bool CanTalkDown(int Standing, int TimesDeferred)
+		{
+			if (Standing >= DiplomacyStandingRequired)
+			{
+				return TimesDeferred == 0;
+			}
+			return false;
+		}
+
 		public const int MaxBankedCycles = 3;
 
 		/// <summary>

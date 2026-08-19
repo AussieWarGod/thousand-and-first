@@ -95,6 +95,36 @@ namespace ThousandAndFirst
 			return "";
 		}
 
+		/// <summary>
+		/// The roll of settlers: who came, from where, and when. A settlement of numbers is a
+		/// spreadsheet; a settlement of names is a place you come back to.
+		/// </summary>
+		public static string Roll(KingdomSystem System, int Limit = 30)
+		{
+			StringBuilder stringBuilder = new StringBuilder();
+			stringBuilder.Append("{{C|The roll of ").Append(System.KingdomDisplayName).Append("}}\n");
+			if (System.RosterNames.Count == 0)
+			{
+				stringBuilder.Append("\nNo one has come yet. Water and a bed will change that.");
+				return stringBuilder.ToString();
+			}
+			int start = (System.RosterNames.Count > Limit) ? (System.RosterNames.Count - Limit) : 0;
+			for (int i = start; i < System.RosterNames.Count; i++)
+			{
+				stringBuilder.Append("\n").Append(System.RosterNames[i]);
+				if (i < System.RosterOrigins.Count)
+				{
+					stringBuilder.Append(", of ").Append(System.RosterOrigins[i]);
+				}
+				if (i < System.RosterArrived.Count)
+				{
+					stringBuilder.Append(" {{K|(came the ").Append(System.RosterArrived[i]).Append(")}}");
+				}
+			}
+			stringBuilder.Append("\n\n{{K|").Append(System.RosterNames.Count).Append(" named; ").Append(System.Population).Append(" living in the settlement.}}");
+			return stringBuilder.ToString();
+		}
+
 		public static string Standings(KingdomSystem System, int Limit = 18)
 		{
 			StringBuilder stringBuilder = new StringBuilder();

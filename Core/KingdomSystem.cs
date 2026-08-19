@@ -47,6 +47,18 @@ namespace ThousandAndFirst
 
 		public long LastDeedTick;
 
+		public KingdomRules.GatePolicy Gate = KingdomRules.GatePolicy.Open;
+
+		public KingdomRules.StoresPolicy Stores = KingdomRules.StoresPolicy.Plenty;
+
+		public int RaidTimesDeferred;
+
+		public List<string> RosterNames = new List<string>();
+
+		public List<string> RosterOrigins = new List<string>();
+
+		public List<string> RosterArrived = new List<string>();
+
 		public KingdomLedger Ledger = new KingdomLedger();
 
 		/// <summary>

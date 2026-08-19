@@ -135,6 +135,44 @@ namespace ThousandAndFirst.Tests
 			Assert.AreEqual(expected, KingdomRules.IsThresholdManning(manning));
 		}
 
+		[TestCase(10000L, KingdomRules.GatePolicy.Open, KingdomRules.StoresPolicy.Plenty, 10000L)]
+		[TestCase(10000L, KingdomRules.GatePolicy.Guarded, KingdomRules.StoresPolicy.Plenty, 14000L)]
+		[TestCase(10000L, KingdomRules.GatePolicy.Open, KingdomRules.StoresPolicy.Thrift, 13000L)]
+		[TestCase(10000L, KingdomRules.GatePolicy.Guarded, KingdomRules.StoresPolicy.Thrift, 18200L)]
+		public void PolicyInterval(long baseInterval, KingdomRules.GatePolicy gate, KingdomRules.StoresPolicy stores, long expected)
+		{
+			Assert.AreEqual(expected, KingdomRules.PolicyInterval(baseInterval, gate, stores));
+		}
+
+		[TestCase(12, KingdomRules.StoresPolicy.Plenty, 12)]
+		[TestCase(12, KingdomRules.StoresPolicy.Thrift, 9)]
+		[TestCase(0, KingdomRules.StoresPolicy.Thrift, 0)]
+		public void PolicyUpkeep(int baseUpkeep, KingdomRules.StoresPolicy stores, int expected)
+		{
+			Assert.AreEqual(expected, KingdomRules.PolicyUpkeep(baseUpkeep, stores));
+		}
+
+		[TestCase(6, 0, 6)]
+		[TestCase(6, 1, 9)]
+		[TestCase(6, 2, 13)]
+		[TestCase(6, 3, 19)]
+		[TestCase(6, 4, 28)]
+		[TestCase(6, 9, 28)]
+		public void TributeDemand(int baseDrams, int deferred, int expected)
+		{
+			Assert.AreEqual(expected, KingdomRules.TributeDemand(baseDrams, deferred));
+		}
+
+		[TestCase(250, 0, true)]
+		[TestCase(600, 0, true)]
+		[TestCase(249, 0, false)]
+		[TestCase(600, 1, false)]
+		[TestCase(-500, 0, false)]
+		public void CanTalkDown(int standing, int deferred, bool expected)
+		{
+			Assert.AreEqual(expected, KingdomRules.CanTalkDown(standing, deferred));
+		}
+
 		[TestCase(1000L, 2000L, 500L, 0)]
 		[TestCase(2000L, 2000L, 500L, 1)]
 		[TestCase(2600L, 2000L, 500L, 2)]

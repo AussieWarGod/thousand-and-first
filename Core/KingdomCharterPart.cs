@@ -78,7 +78,7 @@ namespace ThousandAndFirst
 			}
 			while (true)
 			{
-				int num = Popup.PickOption(Title: system.KingdomDisplayName, Options: new string[9] { "Status", "The Chronicle", "As others tell it", "Standings", "Designate district", "Commission a building", "Pay tribute", "Dedicate a vessel to the stores", "Strike a trade charter" }, Hotkeys: new char[9] { 's', 'c', 'a', 'n', 'd', 'm', 't', 'v', 'r' }, AllowEscape: true);
+				int num = Popup.PickOption(Title: system.KingdomDisplayName, Options: new string[11] { "Status", "The Chronicle", "As others tell it", "Standings", "The roll of settlers", "Standing policy", "Designate district", "Commission a building", "Answer a threat", "Dedicate a vessel to the stores", "Strike a trade charter" }, Hotkeys: new char[11] { 's', 'c', 'a', 'n', 'l', 'p', 'd', 'm', 't', 'v', 'r' }, AllowEscape: true);
 				switch (num)
 				{
 				case 0:
@@ -94,22 +94,58 @@ namespace ThousandAndFirst
 					Popup.Show(KingdomReports.Standings(system));
 					break;
 				case 4:
-					DesignateDistrict(system);
+					Popup.Show(KingdomReports.Roll(system));
 					break;
 				case 5:
-					CommissionBuilding(system);
+					SetPolicy(system);
 					break;
 				case 6:
-					PayTribute(system);
+					DesignateDistrict(system);
 					break;
 				case 7:
-					DedicateVessel(system);
+					CommissionBuilding(system);
 					break;
 				case 8:
+					AnswerThreat(system);
+					break;
+				case 9:
+					DedicateVessel(system);
+					break;
+				case 10:
 					StrikeTradeCharter(system);
 					break;
 				default:
 					return;
+				}
+			}
+		}
+
+		/// <summary>
+		/// Standing policy: the founder sets intent once and the settlement lives by it. Both
+		/// choices trade one good thing for another, so neither is correct.
+		/// </summary>
+		public void SetPolicy(KingdomSystem System)
+		{
+			while (true)
+			{
+				int num = Popup.PickOption(Title: "The standing policy of " + System.KingdomDisplayName, Options: new string[2]
+				{
+					"Gates: {{C|" + KingdomRules.GatePolicyNames[(int)System.Gate] + "}} — " + KingdomRules.GatePolicyBlurbs[(int)System.Gate],
+					"Stores: {{C|" + KingdomRules.StoresPolicyNames[(int)System.Stores] + "}} — " + KingdomRules.StoresPolicyBlurbs[(int)System.Stores]
+				}, AllowEscape: true);
+				if (num < 0)
+				{
+					return;
+				}
+				if (num == 0)
+				{
+					System.Gate = (System.Gate == KingdomRules.GatePolicy.Open) ? KingdomRules.GatePolicy.Guarded : KingdomRules.GatePolicy.Open;
+					KingdomChronicle.Record(System, System.KingdomDisplayName + " set its gates " + ((System.Gate == KingdomRules.GatePolicy.Open) ? "open to all comers" : "under the watch"));
+				}
+				else
+				{
+					System.Stores = (System.Stores == KingdomRules.StoresPolicy.Plenty) ? KingdomRules.StoresPolicy.Thrift : KingdomRules.StoresPolicy.Plenty;
+					KingdomChronicle.Record(System, "the water-keepers of " + System.KingdomDisplayName + " were told to " + ((System.Stores == KingdomRules.StoresPolicy.Thrift) ? "ration" : "pour freely"));
 				}
 			}
 		}
@@ -164,17 +200,46 @@ namespace ThousandAndFirst
 			}
 		}
 
-		public void PayTribute(KingdomSystem System)
+		/// <summary>The three exits from a threat: pay, talk, or meet it.</summary>
+		public void AnswerThreat(KingdomSystem System)
 		{
+			if (System.RaidState != 1)
+			{
+				Popup.Show("Nothing threatens the kingdom just now.");
+				return;
+			}
 			Zone zone = ParentObject.CurrentZone;
 			if (zone == null || !System.ClaimedZones.Contains(zone.ZoneID))
 			{
-				Popup.Show("Tribute is paid from the settlement's own stores. Go there.");
+				Popup.Show("Answer a threat from the ground it threatens. Go there.");
 				return;
 			}
-			if (!KingdomRaids.TryTribute(System, zone, out var failure))
+			int demand = KingdomRules.TributeDemand(KingdomRules.RaidTributeDrams, System.RaidTimesDeferred);
+			bool canTalk = KingdomRules.CanTalkDown(System.GetStanding(System.RaidFactionName), System.RaidTimesDeferred);
+			int num = Popup.PickOption(Title: "Scouts of " + Faction.GetFormattedName(System.RaidFactionName) + " are watching the stores", Options: new string[3]
 			{
-				Popup.Show(failure);
+				"Pay tribute in water {{C|[" + demand + " drams]}}",
+				canTalk ? "Send word and trade on our standing {{G|[free]}}" : "{{K|Send word (they hold us in too little regard)}}",
+				"Let them come, and meet them {{r|[the demand grows if they are not answered]}}"
+			}, AllowEscape: true);
+			switch (num)
+			{
+			case 0:
+				if (!KingdomRaids.TryTribute(System, zone, out var payFail))
+				{
+					Popup.Show(payFail);
+				}
+				break;
+			case 1:
+				if (!KingdomRaids.TryTalkDown(System, out var talkFail))
+				{
+					Popup.Show(talkFail);
+				}
+				break;
+			case 2:
+				System.RaidTimesDeferred++;
+				Popup.Show("You let the demand stand. They will come, and what they ask next time will be more.");
+				break;
 			}
 		}
 

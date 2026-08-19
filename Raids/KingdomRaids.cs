@@ -20,7 +20,7 @@ namespace ThousandAndFirst
 			long timeTicks = The.Game.TimeTicks;
 			if (System.RaidState == 0)
 			{
-				if (timeTicks < System.LastRaidTick + KingdomRules.RaidCooldownTicks)
+				if (timeTicks < System.LastRaidTick + KingdomRules.PolicyRaidCooldown(KingdomRules.RaidCooldownTicks, System.Gate))
 				{
 					return;
 				}
@@ -39,7 +39,14 @@ namespace ThousandAndFirst
 			}
 			else if (System.RaidState == 1 && timeTicks >= System.RaidDueTick)
 			{
-				ExecuteRaid(System, Z, Shared);
+				if (timeTicks - System.RaidDueTick > KingdomRules.TicksPerDay)
+				{
+					ResolveRaidInAbsence(System, Z, Shared);
+				}
+				else
+				{
+					ExecuteRaid(System, Z, Shared);
+				}
 			}
 		}
 
@@ -66,20 +73,74 @@ namespace ThousandAndFirst
 				Failure = "No raid threatens.";
 				return false;
 			}
-			if (Z == null || KingdomGrowth.CountStoredWater(Z) < KingdomRules.RaidTributeDrams)
+			int demand = KingdomRules.TributeDemand(KingdomRules.RaidTributeDrams, System.RaidTimesDeferred);
+			if (Z == null || KingdomGrowth.CountStoredWater(Z) < demand)
 			{
-				Failure = "Tribute costs {{C|" + KingdomRules.RaidTributeDrams + " drams}} from the stores here, and the stores cannot bear it.";
+				Failure = "Tribute costs {{C|" + demand + " drams}} from the stores here, and the stores cannot bear it.";
 				return false;
 			}
-			KingdomGrowth.ConsumeStoredWater(Z, KingdomRules.RaidTributeDrams);
+			KingdomGrowth.ConsumeStoredWater(Z, demand);
 			string displayName = Faction.GetFormattedName(System.RaidFactionName);
 			System.AdjustStanding(System.RaidFactionName, 50);
 			System.RaidState = 0;
 			System.RaidFactionName = null;
+			System.RaidTimesDeferred = 0;
 			System.LastRaidTick = The.Game.TimeTicks;
 			KingdomChronicle.Record(System, System.KingdomDisplayName + " paid tribute in water, and " + displayName + " turned away");
 			System.RecordDeed("the tribute " + System.KingdomDisplayName + " pays to keep the peace");
 			MessageQueue.AddPlayerMessage("{{G|The tribute is paid. " + displayName + " turn away, for now.}}");
+			return true;
+		}
+
+		/// <summary>
+		/// A raid that fell while the founder was away is resolved as an aftermath, not an
+		/// ambush at the gate. Raiders do not loiter at the border for a season waiting to be
+		/// fought: the settlement met them, lost water, and buried what it lost, and the
+		/// homecoming report says so.
+		/// </summary>
+		public static void ResolveRaidInAbsence(KingdomSystem System, Zone Z, KingdomSurvey Shared = null)
+		{
+			string displayName = Faction.GetFormattedName(System.RaidFactionName);
+			System.RaidState = 0;
+			System.RaidFactionName = null;
+			System.RaidTimesDeferred = 0;
+			System.LastRaidTick = The.Game.TimeTicks;
+			int plundered = (Shared != null) ? Shared.Consume(KingdomRules.RaidPlunderDrams) : KingdomGrowth.ConsumeStoredWater(Z, KingdomRules.RaidPlunderDrams);
+			bool tookSomeone = false;
+			if (System.Population > KingdomRules.LoyalCoreSettlers && Stat.Random(1, 100) <= 35)
+			{
+				tookSomeone = KingdomGrowth.Emigrate(System, Z, Shared);
+			}
+			KingdomChronicle.Record(System, "raiders of " + displayName + " came upon " + System.KingdomDisplayName + " in the founder's absence and broke open the stores");
+			System.Ledger.Plundered += plundered;
+			System.Ledger.Note("{{R|Raiders of " + displayName + " came while you were away. " + ((plundered > 0) ? (plundered + " drams were carried off.") : "The stores were already dry.") + (tookSomeone ? " One of the settlement did not survive it." : "") + "}}");
+			if (KingdomLog.Enabled) KingdomLog.Log("raid resolved in absence: plundered=" + plundered + " casualty=" + tookSomeone);
+		}
+
+		/// <summary>
+		/// The third exit: a faction that already holds the kingdom in regard can be talked
+		/// down once, without payment. Goodwill earned is goodwill spendable.
+		/// </summary>
+		public static bool TryTalkDown(KingdomSystem System, out string Failure)
+		{
+			Failure = null;
+			if (System.RaidState != 1)
+			{
+				Failure = "No raid threatens.";
+				return false;
+			}
+			if (!KingdomRules.CanTalkDown(System.GetStanding(System.RaidFactionName), System.RaidTimesDeferred))
+			{
+				Failure = "They will not hear us. Either the regard is not there, or the moment for words has passed.";
+				return false;
+			}
+			string displayName = Faction.GetFormattedName(System.RaidFactionName);
+			System.RaidState = 0;
+			System.RaidFactionName = null;
+			System.RaidTimesDeferred = 0;
+			System.LastRaidTick = The.Game.TimeTicks;
+			KingdomChronicle.Record(System, System.KingdomDisplayName + " sent word to " + displayName + ", and the scouts turned back without water changing hands", Accomplishment: true);
+			MessageQueue.AddPlayerMessage("{{G|Word is sent, and " + displayName + " turn back. Nothing is paid but the regard you had already earned.}}");
 			return true;
 		}
 

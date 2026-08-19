@@ -17,7 +17,7 @@ namespace ThousandAndFirst
 		public static long Interval(KingdomSystem System, Zone Z)
 		{
 			System.ZoneDistricts.TryGetValue(Z.ZoneID, out var district);
-			return KingdomRules.ArrivalIntervalTicks(System.Population, district);
+			return KingdomRules.PolicyInterval(KingdomRules.ArrivalIntervalTicks(System.Population, district), System.Gate, System.Stores);
 		}
 
 		public static void OnZoneActivated(KingdomSystem System, Zone Z, KingdomSurvey Shared = null)
@@ -52,7 +52,7 @@ namespace ThousandAndFirst
 			int arrivals = 0;
 			while (timeTicks >= System.NextArrivalTick && arrivals < KingdomRules.MaxArrivalsPerVisit && System.Population < KingdomRules.MaxPopulation)
 			{
-				int upkeep = ThirstEnabled ? (KingdomRules.UpkeepDrams(System.Population) * ((heartbeatDays > 0) ? heartbeatDays : 1)) : 0;
+				int upkeep = ThirstEnabled ? (KingdomRules.PolicyUpkeep(KingdomRules.UpkeepDrams(System.Population), System.Stores) * ((heartbeatDays > 0) ? heartbeatDays : 1)) : 0;
 				int paid = survey.Consume(upkeep);
 				System.Ledger.UpkeepDrawn += paid;
 				if (paid < upkeep || survey.StoredWater < KingdomRules.DramsPerArrival)
@@ -149,6 +149,15 @@ namespace ThousandAndFirst
 			settler.SetIntProperty("KingdomBorn", 1);
 			string origin = KingdomRules.Origins[Stat.Random(0, KingdomRules.Origins.Length - 1)];
 			settler.SetStringProperty("KingdomOrigin", origin);
+			string given = XRL.Names.NameMaker.MakeName(settler, null, null, "human", null, System.KingdomFactionName, null, null, null, null, null, null, null, FailureOkay: true);
+			if (!string.IsNullOrEmpty(given))
+			{
+				settler.DisplayName = given;
+				settler.SetStringProperty("KingdomName", given);
+				System.RosterNames.Add(given);
+				System.RosterOrigins.Add(origin);
+				System.RosterArrived.Add(XRL.World.Calendar.GetDay() + " of " + XRL.World.Calendar.GetMonth() + ", " + XRL.World.Calendar.GetYear() + " AR");
+			}
 			Qud.API.ConversationsAPI.addSimpleConversationToObject(settler, "Live and drink, friend. We heard there was water here, and a place worth the walk.", "Live and drink.", Question: "Why did you come?", Answer: "The road from " + origin + " was long, and the wells there are bitter. Here the water is shared. That is the whole of it.");
 			System.OriginCounts.TryGetValue(origin, out var count);
 			System.OriginCounts[origin] = count + 1;
@@ -253,6 +262,23 @@ namespace ThousandAndFirst
 				if (count > 0)
 				{
 					System.OriginCounts[origin] = count - 1;
+				}
+			}
+			string roll = leaver.GetStringProperty("KingdomName");
+			if (!string.IsNullOrEmpty(roll))
+			{
+				int at = System.RosterNames.IndexOf(roll);
+				if (at >= 0)
+				{
+					System.RosterNames.RemoveAt(at);
+					if (at < System.RosterOrigins.Count)
+					{
+						System.RosterOrigins.RemoveAt(at);
+					}
+					if (at < System.RosterArrived.Count)
+					{
+						System.RosterArrived.RemoveAt(at);
+					}
 				}
 			}
 			leaver.Obliterate();
