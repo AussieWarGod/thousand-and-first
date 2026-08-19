@@ -63,6 +63,29 @@
     <property Name="DontWarnOnOpen" Value="true" />
     <stat Name="Hitpoints" Value="150" />
   </object>
+  <object Name="r_KingdomPalisade" Inherits="Furniture">
+    <stag Name="Contemporary" />
+    <part Name="Render" DisplayName="thorn palisade" RenderString="#" ColorString="&amp;y" Occluding="true" />
+    <part Name="Description" Short="Cut thornbrush lashed between stakes, taller than a man and meaner. It will not stop anyone determined. It will slow them down where your people can see them." />
+    <part Name="Physics" Solid="true" Takeable="false" Weight="900" />
+    <stat Name="Hitpoints" Value="120" />
+    <stat Name="AV" Value="4" />
+  </object>
+  <object Name="r_KingdomWatchtower" Inherits="Furniture">
+    <stag Name="Contemporary" />
+    <part Name="Render" DisplayName="watchtower" RenderString="&#8593;" ColorString="&amp;W" />
+    <part Name="Description" Short="A platform on four legs with a bell and a good view of the road. The watch complains about the wind and never once about the posting." />
+    <part Name="Physics" Takeable="false" Weight="2000" />
+    <stat Name="Hitpoints" Value="220" />
+  </object>
+  <object Name="r_KingdomRampart" Inherits="Furniture">
+    <stag Name="Contemporary" />
+    <part Name="Render" DisplayName="stone rampart" RenderString="&#9619;" ColorString="&amp;w" Occluding="true" />
+    <part Name="Description" Short="Fieldstone laid without mortar, wide enough at the base to stand on. It took a season and everyone's back, and it will outlast everyone who built it." />
+    <part Name="Physics" Solid="true" Takeable="false" Weight="4000" />
+    <stat Name="Hitpoints" Value="400" />
+    <stat Name="AV" Value="10" />
+  </object>
   <object Name="r_FoundingBook" Inherits="Book">
     <part Name="Render" DisplayName="{{W|On the Founding of Places}}" />
     <part Name="Description" Short="A thin codex in a plain wrapper, copied and recopied by people who had reason to. The margins argue with the text." />

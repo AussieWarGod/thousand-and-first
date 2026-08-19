@@ -38,6 +38,9 @@ namespace ThousandAndFirst
 		/// <summary>Works the settlement built that require crew, in placement order.</summary>
 		public readonly List<GameObject> Works = new List<GameObject>();
 
+		/// <summary>Defensive works built here, crewed or not.</summary>
+		public readonly List<GameObject> Defences = new List<GameObject>();
+
 		/// <summary>Walks the zone once and classifies every object of interest.</summary>
 		/// <param name="Z">Zone to survey. Null yields an empty survey.</param>
 		public static KingdomSurvey Take(Zone Z)
@@ -71,6 +74,10 @@ namespace ThousandAndFirst
 					{
 						survey.Works.Add(item);
 					}
+					if (item.GetIntProperty("KingdomDefence") > 0)
+					{
+						survey.Defences.Add(item);
+					}
 				}
 				LiquidVolume part = item.GetPart<LiquidVolume>();
 				if (part == null || part.Volume < 0)
@@ -101,6 +108,23 @@ namespace ThousandAndFirst
 				}
 			}
 			return survey;
+		}
+
+		/// <summary>
+		/// The settlement's defence: the sum of its defensive works, counting only those with
+		/// the crew to man them. A watchtower with nobody in it defends nothing.
+		/// </summary>
+		public int Defence()
+		{
+			int total = 0;
+			for (int i = 0; i < Defences.Count; i++)
+			{
+				GameObject work = Defences[i];
+				int need = work.GetIntProperty("KingdomStaffNeeded");
+				int effectiveness = (need > 0) ? work.GetIntProperty("KingdomEffectiveness") : 100;
+				total += work.GetIntProperty("KingdomDefence") * effectiveness / 100;
+			}
+			return total;
 		}
 
 		/// <summary>Draws water from the dedicated stores, updating the survey's counters.</summary>

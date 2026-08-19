@@ -15,4 +15,7 @@
   <building Key="hookah" DisplayName="hookah" Blueprint="Hookah" Cost="6" Ticks="1200" Styles="common,verdant,fungal" Category="civic" MinStage="Steading" />
   <building Key="bookshelf" DisplayName="bookshelf" Blueprint="Bookshelf" Cost="10" Ticks="2400" Styles="all" Category="knowledge" MinStage="Village" />
   <building Key="chargingpost" DisplayName="charging post (recharges your cells)" Blueprint="r_KingdomChargingPost" Cost="12" Ticks="2400" Styles="all" Category="craft" MinStage="Steading" Staff="2" Manning="scaled" />
+  <building Key="palisade" DisplayName="thorn palisade" Blueprint="r_KingdomPalisade" Cost="6" Ticks="1800" Styles="all" Category="defense" Defence="3" />
+  <building Key="watchtower" DisplayName="watchtower (needs a watch)" Blueprint="r_KingdomWatchtower" Cost="10" Ticks="2400" Styles="all" Category="defense" MinStage="Steading" Staff="2" Manning="scaled" Defence="6" />
+  <building Key="rampart" DisplayName="stone rampart" Blueprint="r_KingdomRampart" Cost="14" Ticks="3600" Styles="all" Category="defense" MinStage="Village" Defence="6" />
 </kingdombuildings>

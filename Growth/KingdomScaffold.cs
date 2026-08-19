@@ -18,6 +18,8 @@ namespace ThousandAndFirst
 
 		public bool ThresholdManning;
 
+		public int Defence;
+
 		public override bool WantTurnTick()
 		{
 			return true;
@@ -54,6 +56,10 @@ namespace ThousandAndFirst
 				gameObject.SetIntProperty("KingdomStores", 1);
 			}
 			gameObject.SetIntProperty("KingdomBuilt", 1);
+			if (Defence > 0)
+			{
+				gameObject.SetIntProperty("KingdomDefence", Defence);
+			}
 			if (StaffNeeded > 0)
 			{
 				gameObject.SetIntProperty("KingdomStaffNeeded", StaffNeeded);

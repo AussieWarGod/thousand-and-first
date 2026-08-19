@@ -105,9 +105,20 @@ namespace ThousandAndFirst
 			System.RaidFactionName = null;
 			System.RaidTimesDeferred = 0;
 			System.LastRaidTick = The.Game.TimeTicks;
-			int plundered = (Shared != null) ? Shared.Consume(KingdomRules.RaidPlunderDrams) : KingdomGrowth.ConsumeStoredWater(Z, KingdomRules.RaidPlunderDrams);
+			int defence = (Shared != null) ? Shared.Defence() : 0;
+			KingdomRules.RaidOutcome outcome = KingdomRules.ResolveRaid(defence, KingdomRules.RaidSize(System.Stage));
+			if (outcome == KingdomRules.RaidOutcome.Repelled)
+			{
+				KingdomChronicle.Record(System, "raiders of " + displayName + " came upon " + System.KingdomDisplayName + " in the founder's absence and were turned back at the wall", Accomplishment: true);
+				System.RecordDeed("the walls of " + System.KingdomDisplayName + ", which have turned raiders back");
+				System.Ledger.Note("{{G|Raiders of " + displayName + " came while you were away, and the watch turned them back. Nothing was taken.}}");
+				if (KingdomLog.Enabled) KingdomLog.Log("raid repelled in absence: defence=" + defence);
+				return;
+			}
+			int asked = KingdomRules.RaidPlunder(KingdomRules.RaidPlunderDrams, defence, outcome);
+			int plundered = (Shared != null) ? Shared.Consume(asked) : KingdomGrowth.ConsumeStoredWater(Z, asked);
 			bool tookSomeone = false;
-			if (System.Population > KingdomRules.LoyalCoreSettlers && Stat.Random(1, 100) <= 35)
+			if (System.Population > KingdomRules.LoyalCoreSettlers && Stat.Random(1, 100) <= KingdomRules.RaidCasualtyChance(defence, outcome))
 			{
 				tookSomeone = KingdomGrowth.Emigrate(System, Z, Shared);
 				if (tookSomeone)
@@ -117,7 +128,7 @@ namespace ThousandAndFirst
 			}
 			KingdomChronicle.Record(System, "raiders of " + displayName + " came upon " + System.KingdomDisplayName + " in the founder's absence and broke open the stores");
 			System.Ledger.Plundered += plundered;
-			System.Ledger.Note("{{R|Raiders of " + displayName + " came while you were away. " + ((plundered > 0) ? (plundered + " drams were carried off.") : "The stores were already dry.") + (tookSomeone ? " One of the settlement did not survive it." : "") + "}}");
+			System.Ledger.Note("{{R|Raiders of " + displayName + " came while you were away. " + ((plundered > 0) ? (plundered + " drams were carried off.") : "The stores were already dry.") + ((defence > 0) ? " The watch made them pay for it." : "") + (tookSomeone ? " One of the settlement did not survive it." : "") + "}}");
 			if (KingdomLog.Enabled) KingdomLog.Log("raid resolved in absence: plundered=" + plundered + " casualty=" + tookSomeone);
 		}
 

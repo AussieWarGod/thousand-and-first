@@ -287,6 +287,37 @@ namespace ThousandAndFirst.Tests
 			Assert.AreEqual(expected, KingdomRules.StageFor(population, capacity));
 		}
 
+		[TestCase(0, 3, KingdomRules.RaidOutcome.Overrun)]
+		[TestCase(4, 3, KingdomRules.RaidOutcome.Plundered)]
+		[TestCase(12, 5, KingdomRules.RaidOutcome.Plundered)]
+		[TestCase(12, 4, KingdomRules.RaidOutcome.Repelled)]
+		[TestCase(20, 5, KingdomRules.RaidOutcome.Repelled)]
+		[TestCase(11, 2, KingdomRules.RaidOutcome.Plundered)]
+		public void ResolveRaid(int defence, int raidSize, KingdomRules.RaidOutcome expected)
+		{
+			Assert.AreEqual(expected, KingdomRules.ResolveRaid(defence, raidSize));
+		}
+
+		[TestCase(24, 0, KingdomRules.RaidOutcome.Overrun, 24)]
+		[TestCase(24, 3, KingdomRules.RaidOutcome.Plundered, 19)]
+		[TestCase(24, 6, KingdomRules.RaidOutcome.Plundered, 15)]
+		[TestCase(24, 20, KingdomRules.RaidOutcome.Plundered, 4)]
+		[TestCase(24, 12, KingdomRules.RaidOutcome.Repelled, 0)]
+		public void RaidPlunder(int baseDrams, int defence, KingdomRules.RaidOutcome outcome, int expected)
+		{
+			Assert.AreEqual(expected, KingdomRules.RaidPlunder(baseDrams, defence, outcome));
+		}
+
+		[TestCase(0, KingdomRules.RaidOutcome.Overrun, 35)]
+		[TestCase(5, KingdomRules.RaidOutcome.Plundered, 20)]
+		[TestCase(10, KingdomRules.RaidOutcome.Plundered, 5)]
+		[TestCase(99, KingdomRules.RaidOutcome.Plundered, 5)]
+		[TestCase(0, KingdomRules.RaidOutcome.Repelled, 0)]
+		public void RaidCasualtyChance(int defence, KingdomRules.RaidOutcome outcome, int expected)
+		{
+			Assert.AreEqual(expected, KingdomRules.RaidCasualtyChance(defence, outcome));
+		}
+
 		[TestCase(0, 100, 100, 0)]
 		[TestCase(5, 100, 100, 10)]
 		[TestCase(5, 3, 100, 3)]

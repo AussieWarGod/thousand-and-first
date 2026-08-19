@@ -330,6 +330,73 @@
 			return PetitionKind.None;
 		}
 
+		/// <summary>
+		/// How a raid resolves against what the settlement built. Fortification is the fourth
+		/// answer to a threat, beside paying, talking, and meeting it in the field &mdash; and
+		/// unlike the other three it works while the founder is elsewhere.
+		/// </summary>
+		public enum RaidOutcome
+		{
+			Overrun,
+			Plundered,
+			Repelled
+		}
+
+		public const int DefenceToRepel = 12;
+
+		/// <summary>
+		/// Resolves a raid against the settlement's defence. Works only count while crewed, so
+		/// a watchtower with nobody in it defends nothing.
+		/// </summary>
+		/// <param name="Defence">Sum of crewed defensive works.</param>
+		/// <param name="RaidSize">Number of raiders.</param>
+		public static RaidOutcome ResolveRaid(int Defence, int RaidSize)
+		{
+			int pressure = RaidSize * 3;
+			if (Defence >= DefenceToRepel && Defence >= pressure)
+			{
+				return RaidOutcome.Repelled;
+			}
+			if (Defence <= 0)
+			{
+				return RaidOutcome.Overrun;
+			}
+			return RaidOutcome.Plundered;
+		}
+
+		/// <summary>
+		/// Drams a raid carries off. Defence buys down the loss proportionally, and a repelled
+		/// raid takes nothing &mdash; but walls never make a settlement free, only expensive.
+		/// </summary>
+		public static int RaidPlunder(int BaseDrams, int Defence, RaidOutcome Outcome)
+		{
+			if (Outcome == RaidOutcome.Repelled)
+			{
+				return 0;
+			}
+			if (Defence <= 0)
+			{
+				return BaseDrams;
+			}
+			int reduction = Defence * 6;
+			if (reduction > 80)
+			{
+				reduction = 80;
+			}
+			return BaseDrams * (100 - reduction) / 100;
+		}
+
+		/// <summary>Percent chance a raid in the founder's absence costs a life.</summary>
+		public static int RaidCasualtyChance(int Defence, RaidOutcome Outcome)
+		{
+			if (Outcome == RaidOutcome.Repelled)
+			{
+				return 0;
+			}
+			int num = 35 - Defence * 3;
+			return (num > 5) ? num : 5;
+		}
+
 		/// <summary>The drams a thirst petition asks the stores to reach.</summary>
 		public static int ThirstPetitionTarget(int Population)
 		{
@@ -559,6 +626,8 @@
 
 			public string Manning = "scaled";
 
+			public int Defence;
+
 			public string ShortName;
 
 			public string Name => ShortName ?? DisplayName;
@@ -578,7 +647,7 @@
 			return Text.Substring(0, num);
 		}
 
-		public static bool TryParseBuildAttributes(string Key, string DisplayName, string Blueprint, string Cost, string Ticks, string Styles, string Category, string MinStage, string Staff, string Manning, out BuildEntry Entry, out string Error)
+		public static bool TryParseBuildAttributes(string Key, string DisplayName, string Blueprint, string Cost, string Ticks, string Styles, string Category, string MinStage, string Staff, string Manning, string Defence, out BuildEntry Entry, out string Error)
 		{
 			Entry = null;
 			Error = null;
@@ -595,6 +664,12 @@
 			if (!long.TryParse(Ticks, out var buildTicks) || buildTicks <= 0)
 			{
 				Error = "building " + Key + " has a bad Ticks";
+				return false;
+			}
+			int defence = 0;
+			if (!string.IsNullOrEmpty(Defence) && (!int.TryParse(Defence, out defence) || defence < 0))
+			{
+				Error = "building " + Key + " has a bad Defence";
 				return false;
 			}
 			int staff = 0;
@@ -620,6 +695,7 @@
 				Category = (string.IsNullOrEmpty(Category) ? "civic" : Category),
 				MinStage = minStage,
 				Staff = staff,
+				Defence = defence,
 				Manning = (string.IsNullOrEmpty(Manning) ? "scaled" : Manning),
 				ShortName = StripParenthetical(DisplayName)
 			};
