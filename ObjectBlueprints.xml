@@ -17,7 +17,7 @@
   </object>
   <object Name="r_KingdomCaskRack" Inherits="Furniture">
     <stag Name="Contemporary" />
-    <part Name="Render" DisplayName="cask rack" RenderString="&#8801;" ColorString="&amp;w" />
+    <part Name="Render" DisplayName="cask rack" RenderString="&#8801;" ColorString="&amp;w" Tile="ThousandAndFirst/r_KingdomCaskRack.png" TileColor="&amp;y" DetailColor="W" />
     <part Name="Description" Short="Casks in a cradle of watervine rope. The whole settlement is counted here, dram by dram." />
     <part Name="LiquidVolume" MaxVolume="64" Volume="0" />
     <part Name="Physics" Takeable="false" Organic="true" />
@@ -25,7 +25,7 @@
   </object>
   <object Name="r_KingdomGreatCistern" Inherits="Furniture">
     <stag Name="Contemporary" />
-    <part Name="Render" DisplayName="great cistern" RenderString="O" ColorString="&amp;B" />
+    <part Name="Render" DisplayName="great cistern" RenderString="O" ColorString="&amp;B" Tile="ThousandAndFirst/r_KingdomGreatCistern.png" TileColor="&amp;b" DetailColor="C" />
     <part Name="Description" Short="A tin-lined belly sunk to its rim in the earth. When it is full, the whole town sleeps easier; when it rings hollow, everyone hears it." />
     <part Name="LiquidVolume" MaxVolume="256" Volume="0" />
     <part Name="Physics" Takeable="false" Weight="2000" />
@@ -65,7 +65,7 @@
   </object>
   <object Name="r_KingdomPalisade" Inherits="Furniture">
     <stag Name="Contemporary" />
-    <part Name="Render" DisplayName="thorn palisade" RenderString="#" ColorString="&amp;y" Tile="ThousandAndFirst/r_KingdomPalisade.png" TileColor="&amp;y" DetailColor="K" Occluding="true" />
+    <part Name="Render" DisplayName="thorn palisade" RenderString="#" ColorString="&amp;y" Tile="ThousandAndFirst/r_KingdomPalisade.png" TileColor="&amp;y" DetailColor="w" Occluding="true" />
     <part Name="Description" Short="Cut thornbrush lashed between stakes, taller than a man and meaner. It will not stop anyone determined. It will slow them down where your people can see them." />
     <part Name="Physics" Solid="true" Takeable="false" Weight="900" />
     <stat Name="Hitpoints" Value="120" />
@@ -73,14 +73,14 @@
   </object>
   <object Name="r_KingdomWatchtower" Inherits="Furniture">
     <stag Name="Contemporary" />
-    <part Name="Render" DisplayName="watchtower" RenderString="&#8593;" ColorString="&amp;W" />
+    <part Name="Render" DisplayName="watchtower" RenderString="&#8593;" ColorString="&amp;W" Tile="ThousandAndFirst/r_KingdomWatchtower.png" TileColor="&amp;y" DetailColor="W" />
     <part Name="Description" Short="A platform on four legs with a bell and a good view of the road. The watch complains about the wind and never once about the posting." />
     <part Name="Physics" Takeable="false" Weight="2000" />
     <stat Name="Hitpoints" Value="220" />
   </object>
   <object Name="r_KingdomRampart" Inherits="Furniture">
     <stag Name="Contemporary" />
-    <part Name="Render" DisplayName="stone rampart" RenderString="&#9619;" ColorString="&amp;w" Occluding="true" />
+    <part Name="Render" DisplayName="stone rampart" RenderString="&#9619;" ColorString="&amp;w" Occluding="true" Tile="ThousandAndFirst/r_KingdomRampart.png" TileColor="&amp;w" DetailColor="W" />
     <part Name="Description" Short="Fieldstone laid without mortar, wide enough at the base to stand on. It took a season and everyone's back, and it will outlast everyone who built it." />
     <part Name="Physics" Solid="true" Takeable="false" Weight="4000" />
     <stat Name="Hitpoints" Value="400" />

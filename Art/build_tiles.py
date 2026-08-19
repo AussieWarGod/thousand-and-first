@@ -1,21 +1,37 @@
 #!/usr/bin/env python3
 """Compile hand-authored sprite sources into Caves of Qud tiles.
 
-Qud tiles are 16x24 RGBA PNGs drawn in two tones. The renderer recolours them at
-runtime: white pixels take the object's TileColor, black pixels take its DetailColor.
-A sprite is therefore not a picture but a mask - every cell is one of three choices -
-which is why the sources here are plain text grids that a person can read, diff, and
-argue with.
+A Qud tile is a 16x24 PNG in two tones, recoloured at runtime. Which tone is
+which was established by measuring the shipped art rather than by assuming:
+across 6,741 cells of the game's own atlases, tiles are pure black and white,
+median coverage is 59% of the cell, and only ~15% of drawn pixels are white.
+Vanilla `ObjectBlueprints.xml` sets `DetailColor` exactly zero times, so the 85%
+black cannot be the optional channel - **black is the body and takes TileColor;
+white is the highlight and takes DetailColor.**
 
-Source format (Art/src/<name>.tile):
-    lines beginning '#!' are metadata, everything else is 16 columns x 24 rows of
-        '.'  transparent
-        'O'  main tone   -> white  -> recoloured to TileColor
-        'x'  detail tone -> black  -> recoloured to DetailColor
+The glyphs below are therefore named for what they mean, not for the colour they
+compile to. An earlier version of this pipeline used 'O' for white as the body
+tone and produced five tiles that would all have rendered inside out.
+
+Source format (Art/src/<name>.tile), 24 rows of 16 columns:
+    '.'  transparent
+    '#'  body      -> black -> recoloured to TileColor
+    'o'  highlight -> white -> recoloured to DetailColor
+    'd'  checker   -> body/highlight, an opaque mid-tone
+    's'  stipple   -> body/transparent, a translucent half-tone
+    'D'  'S'       -> the same two, offset one cell so adjacent surfaces differ
+
+Both dithers were read out of the shipped atlases pixel by pixel. The checker is
+how a third value is got from two colours; the stipple is how a surface is made
+*lighter* without spending any highlight on it, and it is the one that matters -
+one sampled vanilla wall cell is 49% covered with no white pixels at all. Missing
+the stipple is what makes hand-made tiles read as flat and overbright.
+
+Highlight is spent only on structure: unbroken edges, course tops, lit rims.
+Never scattered, which reads as dirt.
 
 Usage:
-    python3 build_tiles.py            compile every source to Textures/
-    python3 build_tiles.py --preview  also write magnified previews to Art/preview/
+    python3 build_tiles.py [--preview] [--sheet]
 """
 
 import os
@@ -26,16 +42,25 @@ import zlib
 TILE_W = 16
 TILE_H = 24
 
-MAIN = (255, 255, 255, 255)
-DETAIL = (0, 0, 0, 255)
+BODY = (0, 0, 0, 255)
+HIGHLIGHT = (255, 255, 255, 255)
 CLEAR = (0, 0, 0, 0)
 
-GLYPHS = {".": CLEAR, " ": CLEAR, "O": MAIN, "x": DETAIL}
+# Measured from the game's own atlases; sources that stray far from these are
+# reported, because "does it look like Qud" is mostly these two numbers.
+VANILLA_COVERAGE = 59
+VANILLA_HIGHLIGHT_SHARE = 15
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 SRC_DIR = os.path.join(HERE, "src")
 OUT_DIR = os.path.join(os.path.dirname(HERE), "Textures", "ThousandAndFirst")
 PREVIEW_DIR = os.path.join(HERE, "preview")
+
+GROUND = (14, 14, 20, 255)
+SAMPLE_BODY = (150, 108, 62, 255)
+SAMPLE_HIGHLIGHT = (238, 232, 220, 255)
+SILHOUETTE = (235, 235, 235, 255)
+GUTTER = (40, 40, 48, 255)
 
 
 def write_png(path, width, height, pixels):
@@ -57,12 +82,30 @@ def write_png(path, width, height, pixels):
         handle.write(png)
 
 
+def resolve(glyph, x, y):
+    if glyph in (".", " "):
+        return CLEAR
+    if glyph == "#":
+        return BODY
+    if glyph == "o":
+        return HIGHLIGHT
+    if glyph == "d":
+        return BODY if (x + y) % 2 == 0 else HIGHLIGHT
+    if glyph == "D":
+        return HIGHLIGHT if (x + y) % 2 == 0 else BODY
+    if glyph == "s":
+        return BODY if (x + y) % 2 == 0 else CLEAR
+    if glyph == "S":
+        return CLEAR if (x + y) % 2 == 0 else BODY
+    raise KeyError(glyph)
+
+
 def parse(path):
     """Read a .tile source into a pixel list, rejecting anything off-grid.
 
-    Sloppy dimensions are a hard error rather than a silent pad: a tile that is
-    one row short renders shifted, which is the kind of defect that survives
-    review because it still looks like a sprite.
+    Sloppy dimensions are a hard error rather than a silent pad: a tile one row
+    short renders shifted, which is the kind of defect that survives review
+    because it still looks like a sprite.
     """
     rows = []
     with open(path, "r", encoding="utf-8") as handle:
@@ -85,28 +128,29 @@ def parse(path):
         if len(row) != TILE_W:
             raise ValueError(f"{os.path.basename(path)}: row {y + 1} is {len(row)} columns, expected {TILE_W}")
         for x, glyph in enumerate(row):
-            if glyph not in GLYPHS:
+            try:
+                pixels.append(resolve(glyph, x, y))
+            except KeyError:
                 raise ValueError(f"{os.path.basename(path)}: row {y + 1} col {x + 1}: unknown glyph {glyph!r}")
-            pixels.append(GLYPHS[glyph])
     return pixels
 
 
-GROUND = (12, 12, 16, 255)
-SAMPLE_MAIN = (200, 160, 80, 255)
-SAMPLE_DETAIL = (92, 64, 36, 255)
-SILHOUETTE = (235, 235, 235, 255)
-GUTTER = (40, 40, 48, 255)
+def measure(pixels):
+    opaque = sum(1 for p in pixels if p[3] > 0)
+    highlight = sum(1 for p in pixels if p == HIGHLIGHT)
+    coverage = 100 * opaque // (TILE_W * TILE_H)
+    share = (100 * highlight // opaque) if opaque else 0
+    return coverage, share
 
 
-def preview(pixels, scale=8, main=SAMPLE_MAIN, detail=SAMPLE_DETAIL):
+def preview(pixels, scale=8):
     """Magnify two views side by side: the tile as played, and its silhouette.
 
-    An earlier version of this drew detail pixels as mid grey on a grey
-    transparency checkerboard, which hid every detail pixel and made a broken
-    sprite look clean. A preview that flatters the work is worse than none, so
-    this renders on the game's near-black play field in representative colours.
-    The silhouette panel is beside it because shape is what reads at 16x24, and
-    shape is the thing colour will hide problems in.
+    An earlier version drew highlight pixels as mid grey on a grey transparency
+    checkerboard, which hid them and made a broken sprite look clean. A preview
+    that flatters the work is worse than none, so this renders on the game's
+    near-black field in representative colours. The silhouette panel sits beside
+    it because shape is what reads at 16x24, and colour hides problems in shape.
     """
     gutter = scale
     panel = TILE_W * scale
@@ -114,7 +158,7 @@ def preview(pixels, scale=8, main=SAMPLE_MAIN, detail=SAMPLE_DETAIL):
     out = []
     for y in range(height):
         for x in range(width):
-            if x >= panel and x < panel + gutter:
+            if panel <= x < panel + gutter:
                 out.append(GUTTER)
                 continue
             col = (x if x < panel else x - panel - gutter) // scale
@@ -122,23 +166,47 @@ def preview(pixels, scale=8, main=SAMPLE_MAIN, detail=SAMPLE_DETAIL):
             if px[3] == 0:
                 out.append(GROUND)
             elif x < panel:
-                out.append(detail if px == DETAIL else main)
+                out.append(SAMPLE_HIGHLIGHT if px == HIGHLIGHT else SAMPLE_BODY)
             else:
                 out.append(SILHOUETTE)
     return width, height, out
 
 
+def sheet(entries, scale=6, pad=2):
+    """Lay every tile out in one strip, coloured above, silhouette below.
+
+    Sprites are judged against each other, not alone: a set only looks like one
+    hand if stroke weight, ground line, and amount of detail agree across it.
+    Reviewing tiles one at a time hides exactly that.
+    """
+    cell_w = TILE_W * scale + pad * 2
+    cell_h = TILE_H * scale + pad * 2
+    width = cell_w * len(entries)
+    height = cell_h * 2
+    out = [GROUND] * (width * height)
+
+    for index, (_, pixels) in enumerate(entries):
+        for y in range(TILE_H * scale):
+            for x in range(TILE_W * scale):
+                px = pixels[(y // scale) * TILE_W + (x // scale)]
+                if px[3] == 0:
+                    continue
+                ox = index * cell_w + pad + x
+                out[(pad + y) * width + ox] = SAMPLE_HIGHLIGHT if px == HIGHLIGHT else SAMPLE_BODY
+                out[(cell_h + pad + y) * width + ox] = SILHOUETTE
+    return width, height, out
+
+
 def main():
     want_preview = "--preview" in sys.argv
+    want_sheet = "--sheet" in sys.argv
     os.makedirs(OUT_DIR, exist_ok=True)
-    if want_preview:
-        os.makedirs(PREVIEW_DIR, exist_ok=True)
 
     if not os.path.isdir(SRC_DIR):
         print(f"no sources at {SRC_DIR}")
         return 1
 
-    built = 0
+    entries = []
     for name in sorted(os.listdir(SRC_DIR)):
         if not name.endswith(".tile"):
             continue
@@ -146,13 +214,27 @@ def main():
         pixels = parse(os.path.join(SRC_DIR, name))
         write_png(os.path.join(OUT_DIR, stem + ".png"), TILE_W, TILE_H, pixels)
         if want_preview:
+            os.makedirs(PREVIEW_DIR, exist_ok=True)
             width, height, big = preview(pixels)
             write_png(os.path.join(PREVIEW_DIR, stem + ".png"), width, height, big)
-        opaque = sum(1 for p in pixels if p[3] > 0)
-        print(f"  {stem:<24} {opaque:>3}/{TILE_W * TILE_H} pixels")
-        built += 1
+        entries.append((stem, pixels))
 
-    print(f"{built} tiles -> {OUT_DIR}")
+        coverage, share = measure(pixels)
+        flags = []
+        if abs(coverage - VANILLA_COVERAGE) > 25:
+            flags.append(f"coverage {coverage}% vs ~{VANILLA_COVERAGE}%")
+        if share > VANILLA_HIGHLIGHT_SHARE * 3:
+            flags.append(f"highlight {share}% vs ~{VANILLA_HIGHLIGHT_SHARE}%")
+        note = ("   << " + "; ".join(flags)) if flags else ""
+        print(f"  {stem:<26} cover {coverage:>3}%  highlight {share:>3}%{note}")
+
+    if want_sheet and entries:
+        os.makedirs(PREVIEW_DIR, exist_ok=True)
+        width, height, strip = sheet(entries)
+        write_png(os.path.join(PREVIEW_DIR, "_sheet.png"), width, height, strip)
+        print("  sheet order: " + ", ".join(stem for stem, _ in entries))
+
+    print(f"{len(entries)} tiles -> {OUT_DIR}   (vanilla: ~{VANILLA_COVERAGE}% cover, ~{VANILLA_HIGHLIGHT_SHARE}% highlight)")
     return 0
 
 

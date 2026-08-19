@@ -1,0 +1,30 @@
+#! stone rampart - fieldstone laid without mortar, wide enough at the base to stand on
+#! Fills the cell and tiles vertically, the way every shipped wall does.
+#! Stone is stipple over solid body, so the face lightens without spending
+#! highlight on it. Course tops are broken rather than ruled edge to edge: an
+#! unbroken white line every fourth row reads as shelving, and dry-stone courses
+#! are not level anyway. Joints are solid body, staggered course to course.
+ooo..ooo..ooo..o
+###..###..###..#
+s#s..s#s..s#s..s
+oo#ooooo#ooooo#o
+################
+s#ss#ss#ss#ss#ss
+ss#ssss#sssss#ss
+#ooo#oooooo#oooo
+################
+ss#ssss#sssss#ss
+s#ss#ss#ss#ss#ss
+ooo#ooooo#ooo#oo
+################
+s#ss#ss#ss#ss#ss
+ss#ssss#sssss#ss
+o#oooo#ooooooo#o
+################
+ss#ssss#sssss#ss
+s#ss#ss#ss#ss#ss
+ooooo#ooo#ooooo#
+################
+s#ss#ss#ss#ss#ss
+ss#ssss#sssss#ss
+################
