@@ -107,6 +107,22 @@ dangling reference are both errors, and neither is detectable by validating eith
 `Art/check_wiring.py` is the instance of this for tiles, and it is verified the only way such a
 check can be: by confirming it fails against the commit that contained the defect.
 
+`Art/check_xml_refs.py` is the instance for names the game resolves at load or roll time. Writing
+it immediately found the population-table case the paragraph above predicted: an entry merging our
+book into `DynamicObjectsTable:Books` — a table declared nowhere, fabricated on demand from a
+blueprint tag that no blueprint in StreamingAssets carries, and rolled by no code in the game. It
+had shipped looking like content.
+
+That case carries a rule of its own, because the failure was not merely inert. A `Load="Merge"`
+whose target does not exist does not merge — it **creates** the table
+(`XRL/PopulationManager.cs:830-844`). For the fabricated `DynamicObjectsTable:` and
+`StaticObjectsTable:` families, merely holding the name then suppresses fabrication entirely,
+because `RequireTable` returns early once the key exists (`:189-192`). So a dead merge into a
+fabricated table is aimed at whichever future build first tags a blueprint for it: ours would win,
+silently, for the whole game. **Never declare a fabricated table name — tag the blueprint
+instead.** And if nothing rolls the table, say so in a comment rather than shipping a line that
+reads like it works.
+
 ## 5. The depth standard
 
 No system ships shallow. Before a slice is called done, each of its systems passes the

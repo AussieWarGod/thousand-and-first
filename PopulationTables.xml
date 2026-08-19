@@ -27,7 +27,18 @@
   <population Name="BookTent" Load="Merge">
     <object Blueprint="r_FoundingBook" Number="1" Chance="60" />
   </population>
-  <population Name="DynamicObjectsTable:Books" Load="Merge">
-    <object Blueprint="r_FoundingBook" Number="1" Chance="10" />
-  </population>
+  <!--
+    A fifth entry here merged the book into DynamicObjectsTable:Books. It did nothing, and it was
+    worse than nothing. That table is declared nowhere in the game: it is fabricated on demand from
+    blueprints carrying a matching tag (XRL/PopulationManager.cs:189-211), no blueprint anywhere in
+    StreamingAssets carries that tag, and no code rolls the table. Declaring the name in XML also
+    pre-empts fabrication outright, because RequireTable returns early once the key exists - so if
+    the tag ever did appear, this dead line would have suppressed the real table for the whole game.
+
+    Tagging r_FoundingBook would be the correct mechanism rather than declaring the table, but it
+    would still place the book nowhere, because nothing rolls that table in this build. The intent
+    - the book turning up wherever books turn up - has no working mechanism here yet, and saying so
+    is better than shipping a line that reads like it works. Art/check_xml_refs.py fails if it
+    comes back.
+  -->
 </populations>
