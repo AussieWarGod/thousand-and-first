@@ -328,7 +328,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(GrowthStage.Steading, 8, 3, 40, false, 29, "a steading behind a palisade")]
 		[TestCase(GrowthStage.Town, 30, 15, 200, false, 90, "a walled town with full cisterns")]
 		[TestCase(GrowthStage.City, 60, 40, 4000, false, 100, "a great city seals at the ceiling")]
-		[TestCase(GrowthStage.Camp, 3, 0, 10, true, 1, "withering quarters the seal")]
+		[TestCase(GrowthStage.Camp, 3, 0, 10, true, 2, "withering quarters the seal")]
 		[TestCase(GrowthStage.Camp, 0, 0, 0, false, 0, "nothing built and nobody in it seals at nothing")]
 		[TestCase(GrowthStage.Camp, -5, -2, -10, false, 0, "negative inputs cannot add vigour")]
 		public void SealedVigour(GrowthStage stage, int population, int defence, int stored, bool withered, int expected, string why)
@@ -410,12 +410,101 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void InheritedStateFloorsOverrideTheDraw()
+		public void TheEmptySettlementFloorOverridesTheDraw()
 		{
-			Assert.AreEqual(KingdomRules.InheritedState.Faded, KingdomRules.ResolveInheritedState(100, 0, 12, true), "a settlement sealed while withering is never found held, however kind the years were");
 			Assert.AreEqual(KingdomRules.InheritedState.Abandoned, KingdomRules.ResolveInheritedState(100, 0, 0, false), "a settlement sealed with nobody in it is never found inhabited");
 			Assert.AreEqual(KingdomRules.InheritedState.Held, KingdomRules.ResolveInheritedState(100, 99, 12, false), "a city sealed at full vigour survives the worst draw there is");
 			Assert.AreEqual(KingdomRules.InheritedState.Ruins, KingdomRules.ResolveInheritedState(0, 40, 0, false), "a settlement sealed at nothing survives no draw at all");
+		}
+
+		/// <summary>
+		/// There is no explicit "withered is never Held" branch, because the arithmetic already
+		/// guarantees it. This sweeps every seal a withered settlement can actually reach, rather
+		/// than asserting the rule on an input <see cref="KingdomRules.SealedVigour"/> can never
+		/// produce - which is how the previous version hid that its floor was dead code.
+		/// </summary>
+		[Test]
+		public void NoWitheredSealCanEverBeFoundHeld()
+		{
+			int highest = 0;
+			bool sawFaded = false;
+			for (int population = 0; population <= KingdomRules.MaxPopulation; population++)
+			{
+				for (int defence = 0; defence <= 40; defence += 4)
+				{
+					for (int stored = 0; stored <= 4000; stored += 250)
+					{
+						for (GrowthStage stage = GrowthStage.Camp; stage <= GrowthStage.City; stage++)
+						{
+							int vigour = KingdomRules.SealedVigour(stage, population, defence, stored, true);
+							if (vigour > highest)
+							{
+								highest = vigour;
+							}
+							for (int roll = 0; roll <= 99; roll += 11)
+							{
+								KingdomRules.InheritedState state = KingdomRules.ResolveInheritedState(vigour, roll, population, true);
+								Assert.AreNotEqual(KingdomRules.InheritedState.Held, state, "a withered seal resolved to Held at vigour " + vigour + ", roll " + roll);
+								if (state == KingdomRules.InheritedState.Faded)
+								{
+									sawFaded = true;
+								}
+							}
+						}
+					}
+				}
+			}
+			Assert.IsTrue(highest < KingdomRules.HoldsAt, "the withered ceiling (" + highest + ") must sit below the holding threshold (" + KingdomRules.HoldsAt + ") for the invariant to hold without a branch");
+			Assert.IsTrue(sawFaded, "a large withered settlement must still be able to be found thinned but lived in, or the ladder has lost a rung");
+		}
+
+		[Test]
+		public void SealBoundariesSitExactlyWhereTheConstantsSay()
+		{
+			Assert.AreEqual(KingdomRules.InheritedState.Held, KingdomRules.ResolveInheritedState(KingdomRules.HoldsAt, 0, 12, false));
+			Assert.AreEqual(KingdomRules.InheritedState.Faded, KingdomRules.ResolveInheritedState(KingdomRules.HoldsAt - 1, 0, 12, false));
+			Assert.AreEqual(KingdomRules.InheritedState.Faded, KingdomRules.ResolveInheritedState(KingdomRules.FadesAt, 0, 12, false));
+			Assert.AreEqual(KingdomRules.InheritedState.Abandoned, KingdomRules.ResolveInheritedState(KingdomRules.FadesAt - 1, 0, 12, false));
+			Assert.AreEqual(KingdomRules.InheritedState.Abandoned, KingdomRules.ResolveInheritedState(KingdomRules.EmptiesAt, 0, 12, false));
+			Assert.AreEqual(KingdomRules.InheritedState.Ruins, KingdomRules.ResolveInheritedState(KingdomRules.EmptiesAt - 1, 0, 12, false));
+		}
+
+		[Test]
+		public void WaterCapBoundarySitsExactlyWhereTheConstantsSay()
+		{
+			int atCap = KingdomRules.VigourFromWaterCap * KingdomRules.VigourWaterPerPoint;
+			int justUnder = KingdomRules.SealedVigour(GrowthStage.Camp, 0, 0, atCap - KingdomRules.VigourWaterPerPoint, false);
+			int exactly = KingdomRules.SealedVigour(GrowthStage.Camp, 0, 0, atCap, false);
+			int far = KingdomRules.SealedVigour(GrowthStage.Camp, 0, 0, atCap * 100, false);
+			Assert.AreEqual(KingdomRules.VigourFromWaterCap - 1, justUnder, "one point below the cap");
+			Assert.AreEqual(KingdomRules.VigourFromWaterCap, exactly, "the cap is reached exactly at " + atCap + " drams");
+			Assert.AreEqual(KingdomRules.VigourFromWaterCap, far, "and never exceeded, however much is hoarded");
+		}
+
+		[Test]
+		public void CastGarbageStateFailsClosedRatherThanGrantingASettlement()
+		{
+			KingdomRules.InheritedState[] garbage = new KingdomRules.InheritedState[3]
+			{
+				(KingdomRules.InheritedState)(-1),
+				(KingdomRules.InheritedState)int.MinValue,
+				(KingdomRules.InheritedState)int.MaxValue
+			};
+			foreach (KingdomRules.InheritedState state in garbage)
+			{
+				Assert.IsFalse(KingdomRules.IsKnownState(state), "unrecognised state " + (int)state);
+				Assert.AreEqual(0, KingdomRules.InheritedPopulation(40, state), "an unrecognised state must not hand back a population");
+				Assert.IsFalse(KingdomRules.WorksSurvive(state), "an unrecognised state must not promise intact works");
+				Assert.AreEqual(KingdomRules.RuinStandingFloorPercent, KingdomRules.StandingPercent(state, 0), "an unrecognised state must not promise intact structures");
+			}
+		}
+
+		[Test]
+		public void CastGarbageStageCannotOverflowOrEarnACitysStanding()
+		{
+			int city = KingdomRules.SealedVigour(GrowthStage.City, 0, 0, 0, false);
+			Assert.AreEqual(city, KingdomRules.SealedVigour((GrowthStage)int.MaxValue, 0, 0, 0, false), "a cast-garbage stage clamps to City rather than overflowing");
+			Assert.AreEqual(KingdomRules.SealedVigour(GrowthStage.Camp, 0, 0, 0, false), KingdomRules.SealedVigour((GrowthStage)int.MinValue, 0, 0, 0, false), "and clamps up to Camp rather than going negative");
 		}
 
 		[Test]
@@ -480,12 +569,21 @@ namespace ThousandAndFirst.Tests
 			Assert.AreEqual(100, KingdomRules.StandingPercent(KingdomRules.InheritedState.Faded, 50));
 			Assert.AreEqual(100, KingdomRules.StandingPercent(KingdomRules.InheritedState.Abandoned, 99), "abandoned is intact and derelict, never damaged - empty is the point of it");
 
+			Assert.AreEqual(KingdomRules.RuinStandingCeilingPercent, KingdomRules.StandingPercent(KingdomRules.InheritedState.Ruins, 0), "the kindest interregnum leaves the most standing");
+			Assert.AreEqual(KingdomRules.RuinStandingFloorPercent, KingdomRules.StandingPercent(KingdomRules.InheritedState.Ruins, 99), "the harshest leaves the least");
+
+			int previous = 101;
 			for (int roll = 0; roll <= 99; roll++)
 			{
 				int standing = KingdomRules.StandingPercent(KingdomRules.InheritedState.Ruins, roll);
+				Assert.IsTrue(standing <= previous, "standing must never rise as adversity rises, at roll " + roll);
 				Assert.IsTrue(standing >= KingdomRules.RuinStandingFloorPercent, "a ruin must stay legible as a place, at roll " + roll);
-				Assert.IsTrue(standing <= 60, "a ruin must still read as ruined, at roll " + roll);
+				Assert.IsTrue(standing <= KingdomRules.RuinStandingCeilingPercent, "a ruin must still read as ruined, at roll " + roll);
+				previous = standing;
 			}
+
+			Assert.AreEqual(KingdomRules.RuinStandingCeilingPercent, KingdomRules.StandingPercent(KingdomRules.InheritedState.Ruins, int.MinValue), "out-of-range rolls clamp");
+			Assert.AreEqual(KingdomRules.RuinStandingFloorPercent, KingdomRules.StandingPercent(KingdomRules.InheritedState.Ruins, int.MaxValue), "and clamp rather than wrap - a modulo would turn 150 into a mild 50");
 		}
 
 		[TestCase(0, 3, KingdomRules.RaidOutcome.Overrun)]

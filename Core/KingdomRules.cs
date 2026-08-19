@@ -602,8 +602,23 @@
 		/// <summary>Drams of stored water per point of vigour; a full point cap is 120 drams.</summary>
 		public const int VigourWaterPerPoint = 8;
 
-		/// <summary>A settlement sealed while withering keeps a quarter of its vigour.</summary>
-		public const int WitheredVigourDivisor = 4;
+		/// <summary>
+		/// A settlement sealed while withering keeps half its vigour.
+		/// <para>
+		/// It was a quarter, which made the arithmetic collapse: the ceiling on a withered seal
+		/// was 25, and no fate that low can reach <see cref="InheritedState.Faded"/>, so every
+		/// withered settlement that had ever existed resolved to Abandoned or Ruins and the
+		/// ladder lost a rung. Halving leaves a large withered city able to be found thinned but
+		/// still lived in, which is the honest outcome &mdash; a thirsting town whose water
+		/// returns after the founder is gone should be able to recover.
+		/// </para>
+		/// <para>
+		/// It still cannot be found <see cref="InheritedState.Held"/>: half of the ceiling is 50
+		/// and holding needs 55. That is an invariant of the arithmetic rather than a special
+		/// case, and it is tested as one.
+		/// </para>
+		/// </summary>
+		public const int WitheredVigourDivisor = 2;
 
 		/// <summary>
 		/// The one number that crosses runs: how well the settlement stood at the moment it was
@@ -625,7 +640,19 @@
 			int defence = (Defence > 0) ? Defence : 0;
 			int stored = (StoredWater > 0) ? StoredWater : 0;
 
-			int fromStage = (int)Stage * VigourPerStage;
+			// GrowthStage is an enum over an int, and nothing stops a caller casting an arbitrary
+			// value into it. Clamp before multiplying: int.MaxValue would both overflow and, cast
+			// blindly, hand a Camp the standing of a City.
+			int stage = (int)Stage;
+			if (stage < (int)GrowthStage.Camp)
+			{
+				stage = (int)GrowthStage.Camp;
+			}
+			if (stage > (int)GrowthStage.City)
+			{
+				stage = (int)GrowthStage.City;
+			}
+			int fromStage = stage * VigourPerStage;
 			int fromPeople = (population < VigourFromPopulationCap) ? population : VigourFromPopulationCap;
 			int fromWalls = (defence < VigourFromDefenceCap / 2) ? (defence * 2) : VigourFromDefenceCap;
 
@@ -660,9 +687,16 @@
 		/// than the engine's random: it must not consume or depend on world-generation entropy.
 		/// </para>
 		/// <para>
-		/// Seed it from something stable and specific to this pairing &mdash; the legacy's own
-		/// identifier combined with the new world's seed &mdash; so one legacy fares differently
-		/// in different worlds, and identically in the same one.
+		/// Seed it <b>only</b> from immutable legacy data: lineage, origin, generation, revision.
+		/// Never the target world's seed, the calendar, system time, or any stream the player can
+		/// reroll. An earlier version of this comment said to combine the legacy with the new
+		/// world's seed, which would have handed back exactly the reroll it claimed to prevent
+		/// &mdash; regenerate the world, draw again.
+		/// </para>
+		/// <para>
+		/// The consequence is that a legacy's fate is fixed the moment it is promoted, not when
+		/// it is placed. It arrives in every world the same way, and retrying generation must
+		/// reproduce it byte for byte.
 		/// </para>
 		/// </summary>
 		public static int InterregnumRoll(long Seed)
@@ -750,10 +784,10 @@
 				state = InheritedState.Ruins;
 			}
 
-			if (Withered && state < InheritedState.Faded)
-			{
-				state = InheritedState.Faded;
-			}
+			// No floor for withering. It reads like one is needed, but a withered seal is capped
+			// at half the ceiling and holding needs more than that, so the arithmetic already
+			// makes Held unreachable. An if-branch that can never fire is worse than no branch:
+			// it claims a guarantee nobody is checking. The invariant is proved by test instead.
 			if (Population <= 0 && state < InheritedState.Abandoned)
 			{
 				state = InheritedState.Abandoned;
@@ -772,6 +806,13 @@
 		/// </summary>
 		public static int InheritedPopulation(int Population, InheritedState State)
 		{
+			// An unrecognised state must fail closed. Read naively, a cast-garbage negative is
+			// neither >= Abandoned nor == Faded, and would fall through to handing back the whole
+			// population of a settlement nobody has established still exists.
+			if (!IsKnownState(State))
+			{
+				return 0;
+			}
 			if (Population <= 0 || State >= InheritedState.Abandoned)
 			{
 				return 0;
@@ -781,6 +822,12 @@
 				return (Population > 1) ? (Population / 2) : 1;
 			}
 			return Population;
+		}
+
+		/// <summary>Whether a state is one this build defines. Anything else fails closed.</summary>
+		public static bool IsKnownState(InheritedState State)
+		{
+			return State >= InheritedState.Held && State <= InheritedState.Ruins;
 		}
 
 		/// <summary>
@@ -794,7 +841,9 @@
 		/// </summary>
 		public static bool WorksSurvive(InheritedState State)
 		{
-			return State < InheritedState.Ruins;
+			// Fails closed for the same reason as InheritedPopulation: a cast-garbage negative
+			// compares as less than Ruins and would otherwise promise intact structures.
+			return IsKnownState(State) && State < InheritedState.Ruins;
 		}
 
 		/// <summary>
@@ -812,14 +861,33 @@
 		/// </summary>
 		public const int RuinStandingFloorPercent = 25;
 
+		public const int RuinStandingCeilingPercent = 60;
+
 		public static int StandingPercent(InheritedState State, int Roll)
 		{
+			if (!IsKnownState(State))
+			{
+				return RuinStandingFloorPercent;
+			}
 			if (State < InheritedState.Ruins)
 			{
 				return 100;
 			}
-			int roll = (Roll > 0) ? (Roll % 100) : 0;
-			return RuinStandingFloorPercent + roll * (60 - RuinStandingFloorPercent) / 99;
+
+			// Roll is adversity: a high draw is a hard interregnum. Standing must therefore fall
+			// as it rises. The first version ran the other way and left the worst-treated ruins
+			// the most intact, which is backwards on its face and was caught in review.
+			// Clamp rather than modulo - wrapping would turn an out-of-range 150 into a mild 50.
+			int roll = Roll;
+			if (roll < 0)
+			{
+				roll = 0;
+			}
+			if (roll > 99)
+			{
+				roll = 99;
+			}
+			return RuinStandingCeilingPercent - roll * (RuinStandingCeilingPercent - RuinStandingFloorPercent) / 99;
 		}
 
 		public static readonly string[] Districts = new string[6] { "agrarian", "market", "craft", "shrine", "garrison", "academy" };
