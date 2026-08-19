@@ -77,11 +77,14 @@ namespace ThousandAndFirst.Simulation.Kernel
 			out KernelFaultCode fault)
 		{
 			value = 0uL;
-			if (exclusiveUpperBound == 0uL)
-			{
-				fault = KernelFaultCode.InvalidRandomBound;
-				return false;
-			}
+
+			// Identity is settled before arithmetic, matching AdvanceThrough. A bound judged
+			// against a key that does not exist is not a meaningful answer, and a caller that
+			// branches on the code would see InvalidRandomBound for a request whose real defect
+			// is that it named nothing. The first block draw performs that validation through the
+			// same encoder every other path uses, so the ordering costs no extra surface and no
+			// work on the success path — only one wasted hash when the bound is also invalid.
+			bool boundValidated = false;
 
 			uint blockIndex = 0u;
 			while (true)
@@ -91,6 +94,16 @@ namespace ThousandAndFirst.Simulation.Kernel
 				{
 					value = 0uL;
 					return false;
+				}
+				if (!boundValidated)
+				{
+					if (exclusiveUpperBound == 0uL)
+					{
+						fault = KernelFaultCode.InvalidRandomBound;
+						value = 0uL;
+						return false;
+					}
+					boundValidated = true;
 				}
 				ulong accepted;
 				if (TryAcceptBoundedSample(sample, exclusiveUpperBound, out accepted))
@@ -115,8 +128,8 @@ namespace ThousandAndFirst.Simulation.Kernel
 		/// Maps one raw sample onto a bound, or reports that it must be rejected.
 		/// <para>
 		/// A zero bound returns false with value zero, which is indistinguishable from a
-		/// rejection — <see cref="TryDrawBelow"/> validates the bound first so that ambiguity
-		/// never reaches production control flow.
+		/// rejection — <see cref="TryDrawBelow"/> validates the bound before consulting this
+		/// result, so that ambiguity never reaches production control flow.
 		/// </para>
 		/// </summary>
 		internal static bool TryAcceptBoundedSample(ulong sample, ulong exclusiveUpperBound, out ulong value)
@@ -187,6 +200,16 @@ namespace ThousandAndFirst.Simulation.Kernel
 	/// <summary>
 	/// SHA-256 and hex, kept in one place so no caller can quietly substitute another algorithm
 	/// or a culture-shaped formatter.
+	/// <para>
+	/// The card does not name this type, so its internal visibility is a deliberate exception
+	/// rather than an oversight. The card's own goldens require it: the random-block digests, the
+	/// identity preimages, and the 183-byte fixture are all specified as hex strings, and no
+	/// production entry point returns either a raw digest or a rendered one — <c>TryDrawBlock</c>
+	/// is private and yields a <c>ulong</c>. A test cannot assert those goldens without computing
+	/// a digest and rendering it. The alternative is a second SHA-256 and a second hex formatter
+	/// living in the test assembly, which would make the goldens agree with the tests rather than
+	/// with the protocol.
+	/// </para>
 	/// </summary>
 	internal static class KernelDigest
 	{
@@ -212,14 +235,25 @@ namespace ThousandAndFirst.Simulation.Kernel
 					digest = provider.ComputeHash(input);
 				}
 			}
-			catch (Exception)
+			catch (CryptographicException)
 			{
-				// A missing or refusing provider is reported, never worked around: substituting
-				// a different algorithm would silently change every identity in the save.
+				// A refusing provider is reported, never worked around: substituting a different
+				// algorithm would silently change every identity in the save.
 				digest = null;
 				fault = KernelFaultCode.CryptographicFailure;
 				return false;
 			}
+			catch (PlatformNotSupportedException)
+			{
+				// Same disposition, different cause: the platform has no provider to refuse with.
+				digest = null;
+				fault = KernelFaultCode.CryptographicFailure;
+				return false;
+			}
+			// Deliberately no general catch. An OutOfMemoryException, a thread abort, or any other
+			// process-fatal condition is not a cryptographic failure, and reporting it as one would
+			// convert a dying process into a plausible-looking fault code that the caller handles,
+			// carries on from, and then writes to a save. Those propagate.
 			if (digest == null || digest.Length != 32)
 			{
 				digest = null;

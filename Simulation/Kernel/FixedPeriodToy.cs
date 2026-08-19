@@ -510,6 +510,14 @@ namespace ThousandAndFirst.Simulation.Kernel
 		/// <summary>
 		/// Full structural validation. Every rule runs this on entry, because a caller can hand in
 		/// any object and a malformed state must fail rather than propagate.
+		/// <para>
+		/// The card does not name this member, so its visibility is justified rather than assumed:
+		/// the invariant matrix requires constructing a source that violates each rule
+		/// independently and asserting the exact <c>InvalidToyState</c> / <c>InvalidOptionLatch</c>
+		/// split. That split is not observable through the advance entry points alone, because
+		/// several of those states also fail a later arithmetic check and the earlier fault is the
+		/// one under test.
+		/// </para>
 		/// </summary>
 		internal static bool IsCanonical(FixedPeriodToyState state, out KernelFaultCode fault)
 		{

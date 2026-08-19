@@ -412,6 +412,100 @@ namespace ThousandAndFirst.Tests
 			Assert.AreEqual(before, after, "an unrelated generator must not be able to move a kernel draw");
 		}
 
+		/// <summary>
+		/// Identity is settled before arithmetic, so a request that names nothing reports that it
+		/// named nothing — even when its bound is also invalid. The reverse order would tell a
+		/// caller its bound was wrong when the real defect is that the event does not exist, and
+		/// it would disagree with <c>AdvanceThrough</c>, which resolves state before arithmetic.
+		/// </summary>
+		[Test]
+		public void AnInvalidKeyOutranksAnInvalidBound()
+		{
+			KernelFaultCode fault;
+			ulong value;
+
+			// Both wrong at once: the key wins.
+			Assert.IsFalse(CounterRandom.TryDrawBelow(
+				KernelCanonicalTests.GoldenSeed(), default(SemanticEventKey), 0u, 0uL, out value, out fault));
+			Assert.AreEqual(KernelFaultCode.InvalidEventKey, fault, "the key is judged first");
+			Assert.AreEqual(0uL, value, "nothing partial is published");
+
+			// The key alone.
+			Assert.IsFalse(CounterRandom.TryDrawBelow(
+				KernelCanonicalTests.GoldenSeed(), default(SemanticEventKey), 0u, 100uL, out value, out fault));
+			Assert.AreEqual(KernelFaultCode.InvalidEventKey, fault);
+			Assert.AreEqual(0uL, value);
+
+			// The bound alone, with a key that is fine — this is the only way to see the bound fault.
+			Assert.IsFalse(CounterRandom.TryDrawBelow(
+				KernelCanonicalTests.GoldenSeed(), KernelCanonicalTests.GoldenKey(), 0u, 0uL, out value, out fault));
+			Assert.AreEqual(KernelFaultCode.InvalidRandomBound, fault);
+			Assert.AreEqual(0uL, value);
+
+			// The same ordering on the unbounded draw, which has no bound to compete with.
+			Assert.IsFalse(CounterRandom.TryDrawUInt64(
+				KernelCanonicalTests.GoldenSeed(), default(SemanticEventKey), 0u, out value, out fault));
+			Assert.AreEqual(KernelFaultCode.InvalidEventKey, fault);
+			Assert.AreEqual(0uL, value);
+		}
+
+		/// <summary>
+		/// Every remaining <c>Try*</c> given more than one invalid input at a time, with the
+		/// resolved code written out by hand. Fault selection is part of the reviewed API, so it is
+		/// asserted rather than left to whichever check happens to run first.
+		/// </summary>
+		[Test]
+		public void EveryTryApiResolvesCombinedInvalidInputsToOneFrozenCode()
+		{
+			KernelFaultCode fault;
+
+			// Identity creation: a bad rules version and two bad identifiers together.
+			SemanticEventKey key;
+			Assert.IsFalse(SemanticEventKey.TryCreate(0, "NOPE", "ALSO BAD", 0u, 0uL, out key, out fault));
+			Assert.AreEqual(KernelFaultCode.InvalidEventKey, fault);
+
+			// A zero event kind is invalid even when everything else is well formed.
+			Assert.IsFalse(SemanticEventKey.TryCreate(3, "taf:a", "taf:b", 0u, 0uL, out key, out fault));
+			Assert.AreEqual(KernelFaultCode.InvalidEventKey, fault);
+
+			// Identity rendering from a default key.
+			string id;
+			Assert.IsFalse(SemanticEventIdentity.TryCreateId(
+				KernelCanonicalTests.GoldenSeed(), default(SemanticEventKey), out id, out fault));
+			Assert.AreEqual(KernelFaultCode.InvalidEventKey, fault);
+			Assert.IsNull(id, "no partial identity");
+
+			// Both encoders refuse a default key rather than encoding nulls.
+			byte[] bytes;
+			Assert.IsFalse(KernelCanonicalEncoding.TryEncodeEventIdentityPreimage(
+				KernelCanonicalTests.GoldenSeed(), default(SemanticEventKey), out bytes, out fault));
+			Assert.AreEqual(KernelFaultCode.InvalidEventKey, fault);
+			Assert.IsNull(bytes);
+
+			Assert.IsFalse(KernelCanonicalEncoding.TryEncodeRandomBlockPreimage(
+				KernelCanonicalTests.GoldenSeed(), default(SemanticEventKey), 0u, 0u, out bytes, out fault));
+			Assert.AreEqual(KernelFaultCode.InvalidEventKey, fault);
+			Assert.IsNull(bytes);
+
+			// The digest refuses a null input rather than hashing the empty string, which would
+			// give absent data a real and reusable identity.
+			byte[] digest;
+			Assert.IsFalse(KernelDigest.TryComputeSha256(null, out digest, out fault));
+			Assert.AreEqual(KernelFaultCode.InvalidEventKey, fault);
+			Assert.IsNull(digest);
+
+			// Block-index exhaustion at the top of the counter, which cannot wrap.
+			uint next;
+			Assert.IsFalse(CounterRandom.TryNextRejectionBlockIndex(uint.MaxValue, out next, out fault));
+			Assert.AreEqual(KernelFaultCode.CounterExhausted, fault);
+			Assert.AreEqual(0u, next, "a refused advance publishes no index");
+
+			// The mapping helper has no fault channel, so its contract is the value it does not set.
+			ulong mapped;
+			Assert.IsFalse(CounterRandom.TryAcceptBoundedSample(0uL, 0uL, out mapped));
+			Assert.AreEqual(0uL, mapped);
+		}
+
 		private static string DigestOf(byte[] preimage)
 		{
 			byte[] digest;

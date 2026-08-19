@@ -111,7 +111,13 @@ namespace ThousandAndFirst.Simulation.Kernel
 			return IsKnown(state) && state == SemanticJobState.Archived;
 		}
 
-		internal static bool IsKnown(SemanticJobState state)
+		/// <summary>
+		/// Private on purpose. The observable contract is <see cref="Classify"/> and
+		/// <see cref="IsTerminal"/>; an unrecognised value is already rejected by the first and
+		/// reported non-terminal by the second, so exposing the predicate would add a second way
+		/// to ask the same question and a second thing a caller could branch on.
+		/// </summary>
+		private static bool IsKnown(SemanticJobState state)
 		{
 			switch (state)
 			{

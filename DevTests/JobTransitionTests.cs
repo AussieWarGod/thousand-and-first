@@ -98,9 +98,17 @@ namespace ThousandAndFirst.Tests
 			foreach (int value in garbage)
 			{
 				SemanticJobState state = (SemanticJobState)value;
-				Assert.IsFalse(JobTransitions.IsKnown(state), "known? " + value);
 				Assert.IsFalse(JobTransitions.IsTerminal(state), "an unrecognised value must not read as a finished job: " + value);
 				Assert.AreEqual(JobTransitionVerdict.Rejected, JobTransitions.Classify(state, state), "self edge on garbage " + value);
+
+				// Unknown on either side rejects, so no edge can be reached into or out of it.
+				for (int other = 0; other <= 10; other++)
+				{
+					Assert.AreEqual(JobTransitionVerdict.Rejected, JobTransitions.Classify(state, (SemanticJobState)other),
+						"garbage " + value + " -> " + other);
+					Assert.AreEqual(JobTransitionVerdict.Rejected, JobTransitions.Classify((SemanticJobState)other, state),
+						other + " -> garbage " + value);
+				}
 			}
 		}
 

@@ -271,6 +271,100 @@ namespace ThousandAndFirst.Tests
 				"the deadline-coincidence case must actually be exercised, not merely possible; saw " + deadlineCoincidences);
 		}
 
+		/// <summary>
+		/// Settings changes landing on the deadline that is <em>actually current at that moment</em>,
+		/// not on a multiple of the interval computed from tick zero. Once a pulse has fired the
+		/// live deadline has moved, so snapping to <c>k * interval</c> stops coinciding with
+		/// anything and the coincidence case silently stops being tested. This reads
+		/// <c>NextDueTick</c> off the state as it walks and puts each change exactly there.
+		/// </summary>
+		[Test]
+		public void ChangesLandingOnTheLiveDeadlineSurviveAnyPartition()
+		{
+			Lcg rng = new Lcg(0xDEADBEEFuL);
+			int cases = 0;
+			int coincidences = 0;
+
+			for (int seed = 0; seed < 4000; seed++)
+			{
+				long interval = 1L + rng.NextInt(9);
+				bool value = rng.NextBool();
+
+				ToyAdvanceResult created = FixedPeriodToyRules.Create(
+					KernelCanonicalTests.GoldenSeed(), 3, Settlement, 0L, interval, value);
+				Assert.IsTrue(created.Succeeded);
+
+				// Walk forward, and at each step put the change on whatever deadline the state is
+				// carrying right now. Record the ticks so the dense run can reproduce them exactly.
+				List<long> changeTicks = new List<long>();
+				List<bool> changeValues = new List<bool>();
+				FixedPeriodToyState sparse = created.State;
+				int steps = 1 + rng.NextInt(4);
+
+				for (int s = 0; s < steps; s++)
+				{
+					long deadline = sparse.ClockScheduled
+						? sparse.NextDueTick
+						: sparse.ProcessedThroughTick + 1L + rng.NextInt(10);
+					if (deadline <= sparse.ProcessedThroughTick)
+					{
+						deadline = sparse.ProcessedThroughTick + 1L;
+					}
+					if (sparse.ClockScheduled)
+					{
+						coincidences++;
+					}
+
+					value = !value;
+					ToyAdvanceResult step = FixedPeriodToyRules.AdvanceThrough(sparse, deadline, value);
+					Assert.IsTrue(step.Succeeded, "sparse step " + s);
+					sparse = step.State;
+					changeTicks.Add(deadline);
+					changeValues.Add(value);
+				}
+
+				long end = sparse.ProcessedThroughTick + 1L + rng.NextInt(25);
+				ToyAdvanceResult sparseEnd = FixedPeriodToyRules.AdvanceThrough(sparse, end, value);
+				Assert.IsTrue(sparseEnd.Succeeded);
+
+				// The same timestamped history, observed at every tick in between.
+				FixedPeriodToyState dense = created.State;
+				bool denseValue = created.State.OptionLatch.Value == OptionLatchValue.Enabled;
+				long cursor = 0L;
+				for (int s = 0; s < changeTicks.Count; s++)
+				{
+					for (long t = cursor + 1L; t < changeTicks[s]; t++)
+					{
+						ToyAdvanceResult between = FixedPeriodToyRules.AdvanceThrough(dense, t, denseValue);
+						Assert.IsTrue(between.Succeeded, "dense tick " + t);
+						dense = between.State;
+					}
+					denseValue = changeValues[s];
+					ToyAdvanceResult atChange = FixedPeriodToyRules.AdvanceThrough(dense, changeTicks[s], denseValue);
+					Assert.IsTrue(atChange.Succeeded, "dense change " + s);
+					dense = atChange.State;
+					cursor = changeTicks[s];
+				}
+				for (long t = cursor + 1L; t <= end; t++)
+				{
+					ToyAdvanceResult between = FixedPeriodToyRules.AdvanceThrough(dense, t, denseValue);
+					Assert.IsTrue(between.Succeeded, "dense tail " + t);
+					dense = between.State;
+				}
+
+				if (!string.Equals(Encode(sparseEnd.State), Encode(dense), StringComparison.Ordinal))
+				{
+					Assert.Fail("live-deadline coincidence mismatch at seed " + seed + ": interval " + interval
+						+ ", changes at [" + string.Join(",", changeTicks) + "], end " + end);
+				}
+				cases++;
+			}
+
+			Assert.AreEqual(4000, cases);
+			Assert.IsTrue(coincidences > 2000,
+				"most changes must actually land on a live deadline, or this tests nothing; saw " + coincidences);
+		}
+
 		[Test]
 		public void RepeatingAWakeAtTheSameTickIsIdempotent()
 		{

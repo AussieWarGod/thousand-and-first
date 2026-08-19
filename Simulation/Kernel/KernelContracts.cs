@@ -42,22 +42,16 @@ namespace ThousandAndFirst.Simulation.Kernel
 			Low = low;
 		}
 
+		/// <summary>
+		/// Value equality only. There is deliberately no <c>GetHashCode</c> and no
+		/// <c>Equals(object)</c> override: runtime hashing is not stable across processes, and a
+		/// hash on an identity-bearing kernel type is an invitation to key a collection by it and
+		/// then persist or compare that ordering. Identity in this kernel travels one way, through
+		/// the canonical encoder. Nothing here is used as a dictionary or set key.
+		/// </summary>
 		public bool Equals(KernelSeed128 other)
 		{
 			return High == other.High && Low == other.Low;
-		}
-
-		public override bool Equals(object obj)
-		{
-			return obj is KernelSeed128 other && Equals(other);
-		}
-
-		public override int GetHashCode()
-		{
-			// Never enters a preimage or any persisted form: runtime hashing is not stable
-			// across processes and the kernel's identity protocol deliberately excludes it.
-			ulong mixed = High ^ Low;
-			return (int)(mixed ^ (mixed >> 32));
 		}
 	}
 
@@ -209,6 +203,12 @@ namespace ThousandAndFirst.Simulation.Kernel
 			return true;
 		}
 
+		/// <summary>
+		/// Value equality only, for the same reason as <see cref="KernelSeed128"/>: no
+		/// <c>GetHashCode</c> and no <c>Equals(object)</c>. An event key is an identity, and the
+		/// only identity this kernel recognises is the one the canonical encoder produces. A
+		/// runtime hash beside it is a second, unstable answer to the same question.
+		/// </summary>
 		public bool Equals(SemanticEventKey other)
 		{
 			return RulesVersionAtCreation == other.RulesVersionAtCreation
@@ -216,22 +216,6 @@ namespace ThousandAndFirst.Simulation.Kernel
 				&& EventOrdinal == other.EventOrdinal
 				&& string.Equals(SettlementId, other.SettlementId, StringComparison.Ordinal)
 				&& string.Equals(EventStreamId, other.EventStreamId, StringComparison.Ordinal);
-		}
-
-		public override bool Equals(object obj)
-		{
-			return obj is SemanticEventKey other && Equals(other);
-		}
-
-		public override int GetHashCode()
-		{
-			// Runtime hashing only; never persisted and never part of a preimage.
-			int hash = RulesVersionAtCreation;
-			hash = (hash * 31) ^ (int)EventKindCode;
-			hash = (hash * 31) ^ (int)(EventOrdinal ^ (EventOrdinal >> 32));
-			hash = (hash * 31) ^ (SettlementId != null ? SettlementId.Length : 0);
-			hash = (hash * 31) ^ (EventStreamId != null ? EventStreamId.Length : 0);
-			return hash;
 		}
 	}
 }

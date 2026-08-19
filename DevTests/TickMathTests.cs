@@ -286,6 +286,54 @@ namespace ThousandAndFirst.Tests
 			Assert.AreEqual(0L, following);
 		}
 
+		/// <summary>
+		/// Each tick API given several invalid inputs at once, with the winning code written out.
+		/// Ordering is uniform here: an unrepresentable tick is judged before an unusable interval,
+		/// and both before any comparison between them, because a comparison against a nonsense
+		/// value is not a meaningful answer.
+		/// </summary>
+		[Test]
+		public void EveryTickApiResolvesCombinedInvalidInputsToOneFrozenCode()
+		{
+			KernelFaultCode fault;
+
+			// Advance validation: negative on both sides, and a regression on top.
+			Assert.IsFalse(TickMath.TryValidateAdvance(-5L, -10L, out fault));
+			Assert.AreEqual(KernelFaultCode.InvalidTick, fault, "negative before regression");
+
+			// Interval addition: negative origin and non-positive interval together.
+			long result;
+			Assert.IsFalse(TickMath.TryAddInterval(-1L, 0L, out result, out fault));
+			Assert.AreEqual(KernelFaultCode.InvalidTick, fault, "tick before interval");
+			Assert.AreEqual(0L, result);
+
+			Assert.IsFalse(TickMath.TryAddInterval(-1L, -1L, out result, out fault));
+			Assert.AreEqual(KernelFaultCode.InvalidTick, fault);
+			Assert.AreEqual(0L, result);
+
+			// A valid origin with a bad interval finally surfaces the interval fault.
+			Assert.IsFalse(TickMath.TryAddInterval(0L, 0L, out result, out fault));
+			Assert.AreEqual(KernelFaultCode.InvalidInterval, fault);
+
+			// Due counting: all three inputs invalid at once.
+			ulong count;
+			long following;
+			Assert.IsFalse(TickMath.TryCountFixedPeriodDue(-1L, -1L, 0L, out count, out following, out fault));
+			Assert.AreEqual(KernelFaultCode.InvalidTick, fault, "ticks before interval");
+			Assert.AreEqual(0uL, count);
+			Assert.AreEqual(0L, following);
+
+			// Ticks fine, interval not.
+			Assert.IsFalse(TickMath.TryCountFixedPeriodDue(10L, 0L, -1L, out count, out following, out fault));
+			Assert.AreEqual(KernelFaultCode.InvalidInterval, fault);
+			Assert.AreEqual(0uL, count);
+			Assert.AreEqual(0L, following);
+
+			// Everything valid but the result unrepresentable: overflow is last, not first.
+			Assert.IsFalse(TickMath.TryCountFixedPeriodDue(long.MaxValue, 0L, 1L, out count, out following, out fault));
+			Assert.AreEqual(KernelFaultCode.ArithmeticOverflow, fault, "overflow only once the inputs are sound");
+		}
+
 		[Test]
 		public void RegressionIsNeverSilentlyReanchored()
 		{

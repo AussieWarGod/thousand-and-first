@@ -111,6 +111,11 @@ namespace ThousandAndFirst.Simulation.Kernel
 		/// Canonical <see cref="OptionLatchValue.Unobserved"/> is exactly
 		/// <c>(Unobserved, 0)</c>. An unobserved latch carrying some other tick is corrupt, not
 		/// merely unusual: it claims a change time for a change that never happened.
+		/// <para>
+		/// Unnamed by the card but not narrowable: the toy's own canonical check calls it across
+		/// files, so it cannot be private, and duplicating the rule in both places would let the
+		/// two definitions of a well-formed latch drift apart.
+		/// </para>
 		/// </summary>
 		internal static bool IsWellFormed(OptionLatchState state)
 		{

@@ -33,6 +33,34 @@ namespace ThousandAndFirst.Tests
 			return advanced.State;
 		}
 
+		/// <summary>
+		/// A distinct object with identical field values — what a load produces, as opposed to the
+		/// same reference handed back. Every reload assertion is worthless without this.
+		/// </summary>
+		private static FixedPeriodToyState Clone(FixedPeriodToyState source)
+		{
+			return new FixedPeriodToyState(
+				source.SchemaVersion,
+				source.RulesVersion,
+				source.SimulationSeed,
+				source.SettlementId,
+				source.ProcessedThroughTick,
+				source.ClockScheduled,
+				source.NextDueTick,
+				source.NextOrdinal,
+				source.IntervalTicks,
+				new OptionLatchState(source.OptionLatch.Value, source.OptionLatch.ChangedAtTick),
+				source.HasEmittedRange,
+				source.HasEmittedRange
+					? new ToyPulseRange(
+						source.EmittedRange.RulesVersionAtCreation,
+						source.EmittedRange.EventStreamId,
+						source.EmittedRange.EventKindCode,
+						source.EmittedRange.FirstOrdinal,
+						source.EmittedRange.Count)
+					: default(ToyPulseRange));
+		}
+
 		private static string Encode(FixedPeriodToyState state)
 		{
 			byte[] bytes;
@@ -357,10 +385,14 @@ namespace ThousandAndFirst.Tests
 				ToyAdvanceResult upTo = FixedPeriodToyRules.AdvanceThrough(created.State, boundary, true);
 				Assert.IsTrue(upTo.Succeeded, "advance to " + boundary);
 
-				// The reload: same bytes back, then carry on.
+				// The reload: a genuinely distinct object carrying the same field values, which is
+				// what a load actually produces. Reusing the same reference here would have tested
+				// nothing at all — every assertion below would pass on an object that was never
+				// reconstructed.
 				string saved = Encode(upTo.State);
-				FixedPeriodToyState reloaded = upTo.State;
-				Assert.AreEqual(saved, Encode(reloaded), "a clone must be byte-identical at " + boundary);
+				FixedPeriodToyState reloaded = Clone(upTo.State);
+				Assert.IsFalse(ReferenceEquals(upTo.State, reloaded), "the reload fixture must be a distinct object");
+				Assert.AreEqual(saved, Encode(reloaded), "a reconstructed state must be byte-identical at " + boundary);
 
 				ToyAdvanceResult continued = FixedPeriodToyRules.AdvanceThrough(reloaded, boundary + 25L, true);
 				Assert.IsTrue(continued.Succeeded);
@@ -628,6 +660,174 @@ namespace ThousandAndFirst.Tests
 			Assert.IsFalse(FixedPeriodToyRules.TryEncodeCanonical(invalid, out bytes, out fault));
 			Assert.AreEqual(KernelFaultCode.InvalidToyState, fault);
 			Assert.IsNull(bytes, "a refused encode must not hand back a partial buffer");
+		}
+
+		/// <summary>
+		/// Every place the toy can overflow, each reached independently, each asserting the same
+		/// two things: the caller gets its own object back by reference, and that object's
+		/// canonical bytes are unchanged. Bytes rather than fields, because a partial write that
+		/// happened to restore the fields I chose to check would pass a field comparison.
+		/// </summary>
+		[Test]
+		public void EveryArithmeticOverflowLeavesTheSourceIdenticalByReferenceAndByBytes()
+		{
+			KernelSeed128 seed = KernelCanonicalTests.GoldenSeed();
+			OptionLatchState enabled = new OptionLatchState(OptionLatchValue.Enabled, 0L);
+
+			// Schedule: resuming from a load would have to add an interval past the end of time.
+			FixedPeriodToyState scheduleEdge = new FixedPeriodToyState(
+				1, 3, seed, Settlement, long.MaxValue, false, 0L, 0uL, long.MaxValue,
+				new OptionLatchState(OptionLatchValue.Disabled, 0L), false, default(ToyPulseRange));
+			CheckOverflow(scheduleEdge, "schedule", delegate
+			{
+				return FixedPeriodToyRules.ObserveOptionOnLoad(scheduleEdge, long.MaxValue, true);
+			});
+
+			// Following deadline: the pulse at long.MaxValue fires, but the next one cannot exist.
+			FixedPeriodToyState deadlineEdge = new FixedPeriodToyState(
+				1, 3, seed, Settlement, long.MaxValue - 1L, true, long.MaxValue, 0uL, long.MaxValue,
+				enabled, false, default(ToyPulseRange));
+			CheckOverflow(deadlineEdge, "following deadline", delegate
+			{
+				return FixedPeriodToyRules.AdvanceThrough(deadlineEdge, long.MaxValue, true);
+			});
+
+			// Ordinal: the next ordinal is already at the top of the counter.
+			FixedPeriodToyState ordinalEdge = new FixedPeriodToyState(
+				1, 3, seed, Settlement, 0L, true, 1L, ulong.MaxValue, 1L, enabled, true,
+				new ToyPulseRange(3, FixedPeriodToyRules.ToyPulseEventStreamId, FixedPeriodToyRules.ToyPulseEventKind, 0uL, ulong.MaxValue));
+			CheckOverflow(ordinalEdge, "ordinal", delegate
+			{
+				return FixedPeriodToyRules.AdvanceThrough(ordinalEdge, 5L, true);
+			});
+
+			// Range span: the range would have to grow past the end of the ordinal space.
+			FixedPeriodToyState rangeEdge = new FixedPeriodToyState(
+				1, 3, seed, Settlement, 0L, true, 1L, ulong.MaxValue - 1uL, 1L, enabled, true,
+				new ToyPulseRange(3, FixedPeriodToyRules.ToyPulseEventStreamId, FixedPeriodToyRules.ToyPulseEventKind, 0uL, ulong.MaxValue - 1uL));
+			CheckOverflow(rangeEdge, "range span", delegate
+			{
+				return FixedPeriodToyRules.AdvanceThrough(rangeEdge, 100L, true);
+			});
+		}
+
+		private static void CheckOverflow(FixedPeriodToyState source, string label, Func<ToyAdvanceResult> act)
+		{
+			KernelFaultCode canonicalFault;
+			bool sourceWasValid = FixedPeriodToyRules.IsCanonical(source, out canonicalFault);
+			string before = sourceWasValid ? Encode(source) : null;
+
+			ToyAdvanceResult result = act();
+			Assert.IsFalse(result.Succeeded, label + " must fail closed");
+			Assert.IsTrue(ReferenceEquals(source, result.State), label + ": the caller keeps its own object");
+
+			if (sourceWasValid)
+			{
+				Assert.AreEqual(before, Encode(source), label + ": the source bytes must be untouched");
+				Assert.AreEqual(before, Encode(result.State), label + ": the returned state is the untouched source");
+			}
+			else
+			{
+				// A source the encoder itself refuses cannot be compared by bytes, so the
+				// reference identity above is the whole guarantee, and the fault must say so.
+				Assert.AreEqual(KernelFaultCode.InvalidToyState, result.Fault, label + ": invalid source reports as such");
+			}
+		}
+
+		/// <summary>
+		/// The toggle matrix at a real deadline: for every combination of wake tick relative to the
+		/// deadline and option value on either side of it, the outcome must match what a wake at
+		/// every single tick would have produced. This is the boundary where a transition and a
+		/// pulse compete for the same instant.
+		/// </summary>
+		[Test]
+		public void TheFullToggleMatrixAroundADeadlineAgreesWithTickByTickObservation()
+		{
+			const long Interval = 10L;
+			int combinations = 0;
+
+			foreach (bool startEnabled in new bool[] { false, true })
+			{
+				foreach (long wake in new long[] { Interval - 1L, Interval, Interval + 1L })
+				{
+					foreach (bool thenEnabled in new bool[] { false, true })
+					{
+						ToyAdvanceResult created = FixedPeriodToyRules.Create(
+							KernelCanonicalTests.GoldenSeed(), 3, Settlement, 0L, Interval, startEnabled);
+						Assert.IsTrue(created.Succeeded);
+
+						ToyAdvanceResult direct = FixedPeriodToyRules.AdvanceThrough(created.State, wake, thenEnabled);
+						Assert.IsTrue(direct.Succeeded, "direct wake at " + wake);
+
+						// The same input history, observed at every tick instead of once.
+						FixedPeriodToyState walked = created.State;
+						for (long t = 1L; t <= wake; t++)
+						{
+							// The option takes its new value at the wake tick and not before,
+							// which is the whole point of the boundary.
+							bool valueNow = t < wake ? startEnabled : thenEnabled;
+							ToyAdvanceResult step = FixedPeriodToyRules.AdvanceThrough(walked, t, valueNow);
+							Assert.IsTrue(step.Succeeded, "tick " + t);
+							walked = step.State;
+						}
+
+						Assert.AreEqual(Encode(direct.State), Encode(walked),
+							"start " + startEnabled + ", wake " + wake + ", then " + thenEnabled);
+						combinations++;
+					}
+				}
+			}
+			Assert.AreEqual(2 * 3 * 2, combinations);
+		}
+
+		/// <summary>
+		/// A range that claims a different lane or a different rules version than the state it sits
+		/// in is not a smaller truth, it is two truths. Both must be refused, and refusing must not
+		/// disturb the object that carried them.
+		/// </summary>
+		[Test]
+		public void ARangeDisagreeingWithItsStateIsRefusedWithoutTouchingIt()
+		{
+			KernelSeed128 seed = KernelCanonicalTests.GoldenSeed();
+			OptionLatchState disabled = new OptionLatchState(OptionLatchValue.Disabled, 0L);
+			KernelFaultCode fault;
+
+			FixedPeriodToyState wrongKind = new FixedPeriodToyState(
+				1, 3, seed, Settlement, 0L, false, 0L, 2uL, 10L, disabled, true,
+				new ToyPulseRange(3, FixedPeriodToyRules.ToyPulseEventStreamId, 0x1234u, 0uL, 2uL));
+			Assert.IsFalse(FixedPeriodToyRules.IsCanonical(wrongKind, out fault), "a foreign event kind must be refused");
+			Assert.AreEqual(KernelFaultCode.InvalidToyState, fault);
+
+			FixedPeriodToyState wrongRules = new FixedPeriodToyState(
+				1, 3, seed, Settlement, 0L, false, 0L, 2uL, 10L, disabled, true,
+				new ToyPulseRange(4, FixedPeriodToyRules.ToyPulseEventStreamId, FixedPeriodToyRules.ToyPulseEventKind, 0uL, 2uL));
+			Assert.IsFalse(FixedPeriodToyRules.IsCanonical(wrongRules, out fault), "a range under another rules version must be refused");
+			Assert.AreEqual(KernelFaultCode.InvalidToyState, fault);
+
+			// Malformed states survive being refused, field for field, with the same reference back.
+			foreach (FixedPeriodToyState bad in new FixedPeriodToyState[] { wrongKind, wrongRules })
+			{
+				int rules = bad.RulesVersion;
+				ulong ordinal = bad.NextOrdinal;
+				uint kind = bad.EmittedRange.EventKindCode;
+				int rangeRules = bad.EmittedRange.RulesVersionAtCreation;
+				ulong count = bad.EmittedRange.Count;
+
+				ToyAdvanceResult refused = FixedPeriodToyRules.AdvanceThrough(bad, 500L, true);
+				Assert.IsFalse(refused.Succeeded);
+				Assert.AreEqual(KernelFaultCode.InvalidToyState, refused.Fault);
+				Assert.IsTrue(ReferenceEquals(bad, refused.State));
+
+				Assert.AreEqual(rules, bad.RulesVersion);
+				Assert.AreEqual(ordinal, bad.NextOrdinal);
+				Assert.AreEqual(kind, bad.EmittedRange.EventKindCode);
+				Assert.AreEqual(rangeRules, bad.EmittedRange.RulesVersionAtCreation);
+				Assert.AreEqual(count, bad.EmittedRange.Count);
+
+				byte[] bytes;
+				Assert.IsFalse(FixedPeriodToyRules.TryEncodeCanonical(bad, out bytes, out fault));
+				Assert.IsNull(bytes, "a refused encode publishes no buffer");
+			}
 		}
 
 		[Test]

@@ -1,5 +1,6 @@
 #if TAF_TESTS
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Threading;
 using NUnit.Framework;
@@ -276,6 +277,158 @@ namespace ThousandAndFirst.Tests
 				{
 					Assert.Fail("identity drifted at repetition " + i);
 				}
+			}
+		}
+
+		/// <summary>
+		/// Every enum value that can reach a wire or a fault report, pinned to its exact number.
+		/// These are not arbitrary: a fault code is compared by callers, a job state and a latch
+		/// value are encoded, and reordering any of these declarations would silently renumber
+		/// them. A reader who adds a member in the middle should fail here rather than in a save.
+		/// </summary>
+		[Test]
+		public void EveryWireEnumHoldsItsExactNumber()
+		{
+			// Fault codes. Callers branch on these and they appear in diagnostics.
+			Assert.AreEqual(0, (int)KernelFaultCode.None);
+			Assert.AreEqual(1, (int)KernelFaultCode.InvalidTick);
+			Assert.AreEqual(2, (int)KernelFaultCode.InvalidInterval);
+			Assert.AreEqual(3, (int)KernelFaultCode.ClockRegression);
+			Assert.AreEqual(4, (int)KernelFaultCode.ArithmeticOverflow);
+			Assert.AreEqual(5, (int)KernelFaultCode.InvalidOptionLatch);
+			Assert.AreEqual(6, (int)KernelFaultCode.InvalidEventKey);
+			Assert.AreEqual(7, (int)KernelFaultCode.InvalidToyState);
+			Assert.AreEqual(8, (int)KernelFaultCode.CounterExhausted);
+			Assert.AreEqual(9, (int)KernelFaultCode.InvalidRandomBound);
+			Assert.AreEqual(10, (int)KernelFaultCode.CryptographicFailure);
+			Assert.AreEqual(11, Enum.GetValues(typeof(KernelFaultCode)).Length, "a new fault code must be added at the end");
+
+			// Job lifecycle. Declaration order is deliberately not lifecycle order — Blocked,
+			// Cancelled, Recoverable and Compensated were appended after the happy path — so the
+			// numbers are the contract and the reading order is not.
+			Assert.AreEqual(0, (int)SemanticJobState.Scheduled);
+			Assert.AreEqual(1, (int)SemanticJobState.Due);
+			Assert.AreEqual(2, (int)SemanticJobState.Prepared);
+			Assert.AreEqual(3, (int)SemanticJobState.Committed);
+			Assert.AreEqual(4, (int)SemanticJobState.Materialized);
+			Assert.AreEqual(5, (int)SemanticJobState.Notified);
+			Assert.AreEqual(6, (int)SemanticJobState.Archived);
+			Assert.AreEqual(7, (int)SemanticJobState.Blocked);
+			Assert.AreEqual(8, (int)SemanticJobState.Cancelled);
+			Assert.AreEqual(9, (int)SemanticJobState.Recoverable);
+			Assert.AreEqual(10, (int)SemanticJobState.Compensated);
+			Assert.AreEqual(11, Enum.GetValues(typeof(SemanticJobState)).Length);
+
+			Assert.AreEqual(0, (int)JobTransitionVerdict.Rejected, "the default verdict must be refusal");
+			Assert.AreEqual(1, (int)JobTransitionVerdict.Idempotent);
+			Assert.AreEqual(2, (int)JobTransitionVerdict.Allowed);
+			Assert.AreEqual(3, Enum.GetValues(typeof(JobTransitionVerdict)).Length);
+
+			// Latch. Unobserved must be zero so a default-constructed latch is the unobserved one
+			// rather than a settlement that silently believes the option is off.
+			Assert.AreEqual(0, (int)OptionLatchValue.Unobserved, "default(OptionLatchValue) must be Unobserved");
+			Assert.AreEqual(1, (int)OptionLatchValue.Disabled);
+			Assert.AreEqual(2, (int)OptionLatchValue.Enabled);
+			Assert.AreEqual(3, Enum.GetValues(typeof(OptionLatchValue)).Length);
+
+			Assert.AreEqual(0, (int)OptionTransitionKind.None, "default must mean nothing happened");
+			Assert.AreEqual(1, (int)OptionTransitionKind.InitializedDisabled);
+			Assert.AreEqual(2, (int)OptionTransitionKind.InitializedEnabled);
+			Assert.AreEqual(3, (int)OptionTransitionKind.Disabled);
+			Assert.AreEqual(4, (int)OptionTransitionKind.Enabled);
+			Assert.AreEqual(5, Enum.GetValues(typeof(OptionTransitionKind)).Length);
+
+			// The underlying types are part of the wire too: widening any of these changes every
+			// encoded length that contains one.
+			Assert.AreEqual(typeof(byte), Enum.GetUnderlyingType(typeof(KernelFaultCode)));
+			Assert.AreEqual(typeof(byte), Enum.GetUnderlyingType(typeof(SemanticJobState)));
+			Assert.AreEqual(typeof(byte), Enum.GetUnderlyingType(typeof(JobTransitionVerdict)));
+			Assert.AreEqual(typeof(byte), Enum.GetUnderlyingType(typeof(OptionLatchValue)));
+			Assert.AreEqual(typeof(byte), Enum.GetUnderlyingType(typeof(OptionTransitionKind)));
+		}
+
+		/// <summary>
+		/// Each half of the seed varied on its own. A writer that folded the two halves together —
+		/// XOR, addition, or simply writing one twice — would still pass a test that only ever
+		/// changes both at once, and would collide every pair of seeds with the same fold.
+		/// </summary>
+		[Test]
+		public void BothSeedHalvesReachTheWireIndependently()
+		{
+			KernelSeed128 baseline = GoldenSeed();
+			KernelFaultCode fault;
+			byte[] bytes;
+
+			Assert.IsTrue(KernelCanonicalEncoding.TryEncodeEventIdentityPreimage(baseline, GoldenKey(), out bytes, out fault));
+			string baselineHex = Hex(bytes);
+
+			// High only.
+			Assert.IsTrue(KernelCanonicalEncoding.TryEncodeEventIdentityPreimage(
+				new KernelSeed128(baseline.High ^ 1uL, baseline.Low), GoldenKey(), out bytes, out fault));
+			string highChanged = Hex(bytes);
+			Assert.AreNotEqual(baselineHex, highChanged, "the high half must reach the wire");
+
+			// Low only.
+			Assert.IsTrue(KernelCanonicalEncoding.TryEncodeEventIdentityPreimage(
+				new KernelSeed128(baseline.High, baseline.Low ^ 1uL), GoldenKey(), out bytes, out fault));
+			string lowChanged = Hex(bytes);
+			Assert.AreNotEqual(baselineHex, lowChanged, "the low half must reach the wire");
+			Assert.AreNotEqual(highChanged, lowChanged, "the halves must not be folded into one value");
+
+			// The swap is the sharpest case: a symmetric fold gives these two the same bytes.
+			Assert.IsTrue(KernelCanonicalEncoding.TryEncodeEventIdentityPreimage(
+				new KernelSeed128(baseline.Low, baseline.High), GoldenKey(), out bytes, out fault));
+			Assert.AreNotEqual(baselineHex, Hex(bytes), "swapping the halves must not produce the same preimage");
+
+			// And the same four cases must separate the identities they produce, not merely the bytes.
+			string a;
+			string b;
+			string c;
+			string d;
+			Assert.IsTrue(SemanticEventIdentity.TryCreateId(baseline, GoldenKey(), out a, out fault));
+			Assert.IsTrue(SemanticEventIdentity.TryCreateId(new KernelSeed128(baseline.High ^ 1uL, baseline.Low), GoldenKey(), out b, out fault));
+			Assert.IsTrue(SemanticEventIdentity.TryCreateId(new KernelSeed128(baseline.High, baseline.Low ^ 1uL), GoldenKey(), out c, out fault));
+			Assert.IsTrue(SemanticEventIdentity.TryCreateId(new KernelSeed128(baseline.Low, baseline.High), GoldenKey(), out d, out fault));
+			Assert.AreEqual(4, new HashSet<string> { a, b, c, d }.Count, "four distinct seeds, four distinct identities");
+		}
+
+		/// <summary>
+		/// Byte, uint and ulong written at zero, one, and their maximum, in the exact widths the
+		/// protocol fixes. A width that silently narrowed would still round-trip small values.
+		/// </summary>
+		[Test]
+		public void EveryPrimitiveWidthIsExactAtItsBoundaries()
+		{
+			using (CanonicalByteWriter writer = new CanonicalByteWriter())
+			{
+				writer.WriteByte(0);
+				writer.WriteByte(1);
+				writer.WriteByte(255);
+				Assert.AreEqual("0001ff", Hex(writer.ToArray()));
+			}
+			using (CanonicalByteWriter writer = new CanonicalByteWriter())
+			{
+				writer.WriteUInt32(0u);
+				writer.WriteUInt32(1u);
+				writer.WriteUInt32(uint.MaxValue);
+				Assert.AreEqual("00000000" + "00000001" + "ffffffff", Hex(writer.ToArray()));
+			}
+			using (CanonicalByteWriter writer = new CanonicalByteWriter())
+			{
+				writer.WriteUInt64(0uL);
+				writer.WriteUInt64(1uL);
+				writer.WriteUInt64(ulong.MaxValue);
+				Assert.AreEqual(
+					"0000000000000000" + "0000000000000001" + "ffffffffffffffff",
+					Hex(writer.ToArray()));
+			}
+			// The sign boundary, where a naive implementation flips into a negative and writes
+			// something shorter or sign-extended.
+			using (CanonicalByteWriter writer = new CanonicalByteWriter())
+			{
+				writer.WriteUInt32(2147483648u);
+				writer.WriteUInt64(9223372036854775808uL);
+				Assert.AreEqual("80000000" + "8000000000000000", Hex(writer.ToArray()));
 			}
 		}
 
