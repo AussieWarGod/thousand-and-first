@@ -17,6 +17,16 @@ as polished as the game's flagship features. These rules are binding for every s
   `Registrar.Register(Event.ID)` and override the matching `HandleEvent`; always
   `return base.HandleEvent(E)` unless deliberately consuming. Prefer pooled/typed events over
   string events; use string events only where vanilla only offers those.
+- **Never trust a vanilla return value for accounting — measure the state change.** A boolean
+  from an engine method reports whatever that method found convenient, not whether your
+  operation succeeded, and the name is not a contract. `LiquidVolume.UseDrams` returns whether
+  liquid *remains* and empties the vessel on an exact request; `AddDrams` silently clamps to the
+  space available and returns `true` regardless. Code that read those booleans as success
+  double-drained the settlement's stores while reporting half the loss. Wrap any engine call
+  whose effect you need to count in an adapter that reads the before and after state and returns
+  the actual delta (`KingdomLiquids.Drain`/`Fill` are the pattern), and never let a raw call of
+  that kind survive in a system. Pre-clamping to a limit you measured yourself is not a defence;
+  it is the same bug waiting for the limit to be wrong.
 - **Known engine traps, never re-learned:** `Brain.Factions` is write-only (read `Allegiance`);
   population-table edits are process-static (re-apply each load); `PinnedZones` hard cap 3
   (never pin — lazy catch-up); zone builders run once (visited zones get live mutation, the
