@@ -560,6 +560,198 @@
 			return GrowthStage.Camp;
 		}
 
+		/// <summary>
+		/// What a settlement has become by the time someone finds it again. A settlement outlives
+		/// its founder, and this is the condition it is found in &mdash; by a later character, or
+		/// by the same one after a very long absence.
+		/// </summary>
+		public enum InheritedState
+		{
+			/// <summary>Populated and trading, carrying on without the founder.</summary>
+			Held = 0,
+			/// <summary>Thinner, some works derelict, stores low, but still lived in.</summary>
+			Faded = 1,
+			/// <summary>Everything standing, nobody home.</summary>
+			Abandoned = 2,
+			/// <summary>Rubble in the shape of streets. Something else lives here now.</summary>
+			Ruins = 3
+		}
+
+		public static readonly string[] InheritedStateNames = new string[4] { "held", "faded", "abandoned", "ruined" };
+
+		/// <summary>Floor on how long any settlement holds together. Nowhere falls down overnight.</summary>
+		public const int BaseResilienceDays = 14;
+
+		public const int ResiliencePerSettler = 3;
+
+		public const int ResiliencePerDefence = 4;
+
+		/// <summary>Collapse factor applied to a settlement that was already withering.</summary>
+		public const int WitheredResilienceDivisor = 4;
+
+		/// <summary>Days of neglect a settlement absorbs on account of its size alone.</summary>
+		public static int StageResilienceDays(GrowthStage Stage)
+		{
+			switch (Stage)
+			{
+			case GrowthStage.Camp:
+				return 0;
+			case GrowthStage.Steading:
+				return 30;
+			case GrowthStage.Village:
+				return 60;
+			case GrowthStage.Town:
+				return 120;
+			default:
+				return 200;
+			}
+		}
+
+		/// <summary>
+		/// How long a settlement can be left before it starts to come apart, in days.
+		/// <para>
+		/// The premise is that a settlement does not need its founder to run &mdash; it needs them
+		/// to hold it together against what comes. So the largest term is its people, and the rest
+		/// is what those people have to work with: the size they have grown to, the walls they can
+		/// hold, and the water in the ground. Water converts directly, since stores divided by
+		/// daily draw <i>is</i> a number of days.
+		/// </para>
+		/// <para>
+		/// A settlement that was already withering when it was left keeps a quarter of the total.
+		/// A dying place dies.
+		/// </para>
+		/// </summary>
+		public static int ResilienceDays(GrowthStage Stage, int Population, int Defence, int StoredWater, bool Withered)
+		{
+			int population = (Population > 0) ? Population : 0;
+			int defence = (Defence > 0) ? Defence : 0;
+			int stored = (StoredWater > 0) ? StoredWater : 0;
+			int dailyDraw = UpkeepDrams(population);
+			if (dailyDraw < 1)
+			{
+				dailyDraw = 1;
+			}
+			int days = BaseResilienceDays + StageResilienceDays(Stage) + population * ResiliencePerSettler + defence * ResiliencePerDefence + stored / dailyDraw;
+			if (Withered)
+			{
+				days /= WitheredResilienceDivisor;
+			}
+			return (days > 0) ? days : 1;
+		}
+
+		/// <summary>
+		/// The state a settlement is found in, given how long it went unattended and what it had
+		/// to survive on. Each rung is another span of its own resilience: a place holds as long
+		/// as it can, fades over the same span again, empties over two more, and only then comes
+		/// down.
+		/// <para>
+		/// Two floors override the arithmetic, because some conditions are not a matter of time. A
+		/// settlement that was withering when it was left is never found
+		/// <see cref="InheritedState.Held"/>, however recently that was; and one with nobody in it
+		/// is never found inhabited at all.
+		/// </para>
+		/// </summary>
+		/// <param name="DaysUnattended">Days between the founder's last visit and the reckoning.</param>
+		public static InheritedState ResolveInheritedState(int DaysUnattended, GrowthStage Stage, int Population, int Defence, int StoredWater, bool Withered)
+		{
+			int pressure = (DaysUnattended > 0) ? DaysUnattended : 0;
+			int resilience = ResilienceDays(Stage, Population, Defence, StoredWater, Withered);
+			InheritedState state;
+			if (pressure <= resilience)
+			{
+				state = InheritedState.Held;
+			}
+			else if (pressure <= resilience * 2)
+			{
+				state = InheritedState.Faded;
+			}
+			else if (pressure <= resilience * 4)
+			{
+				state = InheritedState.Abandoned;
+			}
+			else
+			{
+				state = InheritedState.Ruins;
+			}
+			if (Withered && state < InheritedState.Faded)
+			{
+				state = InheritedState.Faded;
+			}
+			if (Population <= 0 && state < InheritedState.Abandoned)
+			{
+				state = InheritedState.Abandoned;
+			}
+			return state;
+		}
+
+		/// <summary>
+		/// How many of the settlement's people are still there to be found. Nobody remains at
+		/// <see cref="InheritedState.Abandoned"/> or below it; a faded settlement keeps half, and
+		/// never rounds its last inhabitant away.
+		/// </summary>
+		public static int InheritedPopulation(int Population, InheritedState State)
+		{
+			if (Population <= 0 || State >= InheritedState.Abandoned)
+			{
+				return 0;
+			}
+			if (State == InheritedState.Faded)
+			{
+				return (Population > 1) ? (Population / 2) : 1;
+			}
+			return Population;
+		}
+
+		/// <summary>
+		/// Whether the settlement's works are still standing to be reoccupied. Only ruins take the
+		/// buildings down; an abandoned settlement is intact and empty, which is the whole point
+		/// of it.
+		/// </summary>
+		public static bool WorksSurvive(InheritedState State)
+		{
+			return State < InheritedState.Ruins;
+		}
+
+		/// <summary>A settlement this far past its own resilience is not recently lost, but old.</summary>
+		public const int LongRuinedResilienceMultiple = 8;
+
+		public const int RuinLevelAbandoned = 10;
+
+		public const int RuinLevelRuined = 50;
+
+		public const int RuinLevelLongRuined = 100;
+
+		/// <summary>
+		/// Severity to hand to the engine's own <c>Ruiner</c> zone builder, on its scale where 10
+		/// is a few fallen roofs and 100 is thorough.
+		/// <para>
+		/// The game already ruins its abandoned villages this way, in four grades keyed to how
+		/// long ago they emptied, so a settlement of ours reads as part of the same world rather
+		/// than as something a mod bolted on. We do not draw our own rubble; we tell Freehold's
+		/// builder how far gone the place is.
+		/// </para>
+		/// <para>
+		/// Ruins spans two grades because "lost last year" and "lost long ago" should not look
+		/// alike, and the arithmetic already knows the difference.
+		/// </para>
+		/// </summary>
+		public static int RuinLevelFor(InheritedState State, int DaysUnattended, int Resilience)
+		{
+			if (State < InheritedState.Abandoned)
+			{
+				return 0;
+			}
+			if (State == InheritedState.Abandoned)
+			{
+				return RuinLevelAbandoned;
+			}
+			if (Resilience > 0 && DaysUnattended > Resilience * LongRuinedResilienceMultiple)
+			{
+				return RuinLevelLongRuined;
+			}
+			return RuinLevelRuined;
+		}
+
 		public static readonly string[] Districts = new string[6] { "agrarian", "market", "craft", "shrine", "garrison", "academy" };
 
 		public static readonly string[] DistrictNames = new string[6] { "vinelands", "bazaar", "forgeworks", "sacred ground", "watch", "scriptorium" };

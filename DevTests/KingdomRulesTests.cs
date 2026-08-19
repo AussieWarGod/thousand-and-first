@@ -324,6 +324,73 @@ namespace ThousandAndFirst.Tests
 			Assert.AreEqual(expected, KingdomRules.StageFor(population, capacity));
 		}
 
+		[TestCase(GrowthStage.Camp, 3, 0, 10, false, 33, "a new camp with three people and a little water")]
+		[TestCase(GrowthStage.Steading, 8, 3, 40, false, 100, "a steading behind a palisade")]
+		[TestCase(GrowthStage.Town, 30, 15, 200, false, 312, "a walled town with full cisterns")]
+		[TestCase(GrowthStage.Camp, 3, 0, 10, true, 8, "withering quarters the total")]
+		[TestCase(GrowthStage.Camp, 0, 0, 0, false, 14, "nowhere falls down overnight")]
+		[TestCase(GrowthStage.Camp, 0, 0, 0, true, 3, "and even a dying place takes a few days")]
+		[TestCase(GrowthStage.Camp, -5, -2, -10, false, 14, "negative inputs cannot subtract resilience")]
+		public void ResilienceDays(GrowthStage stage, int population, int defence, int stored, bool withered, int expected, string why)
+		{
+			Assert.AreEqual(expected, KingdomRules.ResilienceDays(stage, population, defence, stored, withered), why);
+		}
+
+		[TestCase(7, GrowthStage.Camp, 3, 0, 10, false, KingdomRules.InheritedState.Held)]
+		[TestCase(33, GrowthStage.Camp, 3, 0, 10, false, KingdomRules.InheritedState.Held)]
+		[TestCase(34, GrowthStage.Camp, 3, 0, 10, false, KingdomRules.InheritedState.Faded)]
+		[TestCase(66, GrowthStage.Camp, 3, 0, 10, false, KingdomRules.InheritedState.Faded)]
+		[TestCase(67, GrowthStage.Camp, 3, 0, 10, false, KingdomRules.InheritedState.Abandoned)]
+		[TestCase(132, GrowthStage.Camp, 3, 0, 10, false, KingdomRules.InheritedState.Abandoned)]
+		[TestCase(133, GrowthStage.Camp, 3, 0, 10, false, KingdomRules.InheritedState.Ruins)]
+		[TestCase(-5, GrowthStage.Camp, 3, 0, 10, false, KingdomRules.InheritedState.Held)]
+		[TestCase(100, GrowthStage.Town, 30, 15, 200, false, KingdomRules.InheritedState.Held)]
+		[TestCase(1500, GrowthStage.Town, 30, 15, 200, false, KingdomRules.InheritedState.Ruins)]
+		public void ResolveInheritedState(int days, GrowthStage stage, int population, int defence, int stored, bool withered, KingdomRules.InheritedState expected)
+		{
+			Assert.AreEqual(expected, KingdomRules.ResolveInheritedState(days, stage, population, defence, stored, withered));
+		}
+
+		[Test]
+		public void InheritedStateFloorsOverrideTheArithmetic()
+		{
+			Assert.AreEqual(KingdomRules.InheritedState.Faded, KingdomRules.ResolveInheritedState(1, GrowthStage.Camp, 3, 0, 10, true), "a settlement withering when it was left is never found held, however recently that was");
+			Assert.AreEqual(KingdomRules.InheritedState.Abandoned, KingdomRules.ResolveInheritedState(1, GrowthStage.Camp, 0, 0, 100, false), "a settlement with nobody in it is never found inhabited");
+			Assert.AreEqual(KingdomRules.InheritedState.Ruins, KingdomRules.ResolveInheritedState(90000, GrowthStage.City, 60, 40, 4000, false), "no amount of building outlasts unbounded time");
+		}
+
+		[TestCase(10, KingdomRules.InheritedState.Held, 10)]
+		[TestCase(10, KingdomRules.InheritedState.Faded, 5)]
+		[TestCase(1, KingdomRules.InheritedState.Faded, 1)]
+		[TestCase(10, KingdomRules.InheritedState.Abandoned, 0)]
+		[TestCase(10, KingdomRules.InheritedState.Ruins, 0)]
+		[TestCase(0, KingdomRules.InheritedState.Held, 0)]
+		public void InheritedPopulation(int population, KingdomRules.InheritedState state, int expected)
+		{
+			Assert.AreEqual(expected, KingdomRules.InheritedPopulation(population, state));
+		}
+
+		[TestCase(KingdomRules.InheritedState.Held, true)]
+		[TestCase(KingdomRules.InheritedState.Faded, true)]
+		[TestCase(KingdomRules.InheritedState.Abandoned, true)]
+		[TestCase(KingdomRules.InheritedState.Ruins, false)]
+		public void WorksSurvive(KingdomRules.InheritedState state, bool expected)
+		{
+			Assert.AreEqual(expected, KingdomRules.WorksSurvive(state));
+		}
+
+		[TestCase(KingdomRules.InheritedState.Held, 10, 100, 0)]
+		[TestCase(KingdomRules.InheritedState.Faded, 150, 100, 0)]
+		[TestCase(KingdomRules.InheritedState.Abandoned, 300, 100, 10)]
+		[TestCase(KingdomRules.InheritedState.Ruins, 500, 100, 50)]
+		[TestCase(KingdomRules.InheritedState.Ruins, 800, 100, 50)]
+		[TestCase(KingdomRules.InheritedState.Ruins, 801, 100, 100)]
+		[TestCase(KingdomRules.InheritedState.Ruins, 500, 0, 50)]
+		public void RuinLevelFor(KingdomRules.InheritedState state, int days, int resilience, int expected)
+		{
+			Assert.AreEqual(expected, KingdomRules.RuinLevelFor(state, days, resilience));
+		}
+
 		[TestCase(0, 3, KingdomRules.RaidOutcome.Overrun)]
 		[TestCase(4, 3, KingdomRules.RaidOutcome.Plundered)]
 		[TestCase(12, 5, KingdomRules.RaidOutcome.Plundered)]
