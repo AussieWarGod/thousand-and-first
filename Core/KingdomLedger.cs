@@ -61,11 +61,7 @@ namespace ThousandAndFirst
 		{
 			get
 			{
-				if (Arrivals <= 0 && Departures <= 0 && Delivered <= 0 && Plundered <= 0)
-				{
-					return Notes.Count > 0;
-				}
-				return true;
+				return Fetched > 0 || UpkeepDrawn > 0 || ArrivalCost > 0 || Delivered > 0 || Plundered > 0 || Arrivals > 0 || Departures > 0 || Notes.Count > 0;
 			}
 		}
 

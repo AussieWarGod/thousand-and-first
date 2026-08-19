@@ -39,6 +39,8 @@ namespace ThousandAndFirst
 			system.KingdomFactionName = faction.Name;
 			system.KingdomDisplayName = faction.DisplayName;
 			system.FoundedTick = The.Game.TimeTicks;
+			system.LastHeartbeatTick = The.Game.TimeTicks;
+			system.LastVisitTick = The.Game.TimeTicks;
 			The.Game.PlayerReputation.Set(faction.Name, RuleSettings.REPUTATION_LOVED + 100);
 			foreach (Faction other in Factions.Loop())
 			{

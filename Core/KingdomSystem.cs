@@ -14,6 +14,8 @@ namespace ThousandAndFirst
 
 		private const int CurrentSerializationVersion = 2;
 
+		private const int FirstNamedSerializationVersion = 2;
+
 		private const int LegacyReflectedSerializationVersion = 1;
 
 		public int SerializationVersion = CurrentSerializationVersion;
@@ -152,9 +154,9 @@ namespace ThousandAndFirst
 		/// </para>
 		/// <para>
 		/// Named-field saves are self-describing: a reader may meet a field it does not know, and
-		/// may miss one it expects, without either being an error. Any version at or below ours is
-		/// therefore readable and is read. Only a save from a <i>newer</i> build is genuinely
-		/// beyond us.
+		/// may miss one it expects, without either being an error. Any named-field version from
+		/// the first through ours is therefore readable. Older positional versions and saves from
+		/// a <i>newer</i> build are genuinely beyond this path.
 		/// </para>
 		/// <para>
 		/// Throwing is the only way to reach the engine's block-skip recovery, so an unreadable
@@ -165,27 +167,33 @@ namespace ThousandAndFirst
 		/// </summary>
 		public override void Read(SerializationReader Reader)
 		{
-			if (SerializationVersion == LegacyReflectedSerializationVersion)
+			try
 			{
+				if (SerializationVersion == LegacyReflectedSerializationVersion)
+				{
+					SerializationVersion = CurrentSerializationVersion;
+					NormalizeState();
+					return;
+				}
+				int magic = Reader.ReadInt32();
+				if (magic != SerializationMagic)
+				{
+					throw new InvalidOperationException("Invalid ThousandAndFirst kingdom save marker.");
+				}
+				int version = Reader.ReadInt32();
+				if (version < FirstNamedSerializationVersion || version > CurrentSerializationVersion)
+				{
+					throw new InvalidOperationException("Unsupported ThousandAndFirst kingdom save version " + version + "; this build reads named versions " + FirstNamedSerializationVersion + " through " + CurrentSerializationVersion + ".");
+				}
+				Reader.ReadNamedFields(this, typeof(KingdomSystem));
 				SerializationVersion = CurrentSerializationVersion;
 				NormalizeState();
-				return;
 			}
-			int magic = Reader.ReadInt32();
-			if (magic != SerializationMagic)
+			catch
 			{
 				LoadFailed = true;
-				throw new InvalidOperationException("Invalid ThousandAndFirst kingdom save marker.");
+				throw;
 			}
-			int version = Reader.ReadInt32();
-			if (version > CurrentSerializationVersion)
-			{
-				LoadFailed = true;
-				throw new InvalidOperationException("ThousandAndFirst kingdom save version " + version + " was written by a newer build of the mod; this build reads up to " + CurrentSerializationVersion + ".");
-			}
-			Reader.ReadNamedFields(this, typeof(KingdomSystem));
-			SerializationVersion = CurrentSerializationVersion;
-			NormalizeState();
 		}
 
 		/// <summary>
@@ -229,6 +237,7 @@ namespace ThousandAndFirst
 			{
 				return base.HandleEvent(E);
 			}
+			Ledger.Reset();
 			Guard("growth", delegate
 			{
 				KingdomGrowth.OnZoneActivated(this, E.Zone, survey);
