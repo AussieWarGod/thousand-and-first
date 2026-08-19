@@ -5,11 +5,22 @@ A Qud tile is a 16x24 PNG in two tones, recoloured at runtime: **black is the bo
 and takes TileColor; white is the highlight and takes DetailColor.**
 
 That mapping is settled by the renderer, which sends source pixels with red < 0.5
-to the foreground colour and > 0.5 to the detail colour. An earlier version of
-this file justified it instead by claiming vanilla sets `DetailColor` zero times
-- which came from reading `Base/ObjectBlueprints.xml`, a 67-byte empty stub. The
-real corpus is `Base/ObjectBlueprints/*.xml` and it uses `DetailColor` 2,311
-times. Right answer, worthless reasoning; the renderer is the proof.
+to the foreground colour and > 0.5 to the detail colour. Two earlier versions of
+this comment argued it from blueprint counts instead, and both were wrong:
+
+    # first: "vanilla sets DetailColor zero times" - read from
+    # Base/ObjectBlueprints.xml, which is a 67-byte empty stub
+    # second: "2,311 times in Base/ObjectBlueprints/*.xml" - that figure is
+    # every XML under StreamingAssets, DLC included, wearing the wrong scope
+
+Counted exactly, from the StreamingAssets root:
+
+    grep -rho 'DetailColor="[^"]*"' Base/ObjectBlueprints/*.xml | wc -l   # 2166, 11 files
+    grep -rho 'DetailColor="[^"]*"' --include=*.xml Base/ | wc -l         # 2295
+    grep -rho 'DetailColor="[^"]*"' --include=*.xml .     | wc -l         # 2311 (DLC adds 16)
+
+The conclusion never depended on any of them. The renderer is the proof; the
+counts only ever disproved a rationale that should not have been offered.
 
 The proportions below *are* measured, from 6,741 cells of the game's atlases:
 tiles are pure black and white, median coverage 59% of the cell, and only ~15% of
