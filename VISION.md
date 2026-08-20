@@ -80,12 +80,13 @@ of it leaves a scar in the record and a thing to put right, and there is always 
 which the settlement cannot fall.
 
 **Hubris subsides.** A city stands on what actually feeds it. Build past your works and the
-excess was scaffolding: stop hauling, and the settlement settles back — orderly, witnessed,
-person by person and district into ruin — to the level its infrastructure honestly carries.
-Never on a timer, never behind your back: the reckoning waits for your return, states its
-arithmetic, and gives you the chance to answer it. What you invested in persists. What you
-propped up subsides. The standing questions of the mid-game are when to expand, why, and on
-whose water.
+excess was scaffolding: while you are away, the settlement moves toward what its
+infrastructure honestly carries — growing to it, or subsiding to it, person by person and
+district into ruin — and never past it in either direction. A camp carries itself; a great
+city is hungry. A hundred days and a thousand days write different chronicles, but both end
+at the same honest level. Come home to the report of which way it moved; a slide caught
+midway can still be arrested. What you invested in persists. What you propped up subsides.
+The standing questions of the mid-game are when to expand, why, and on whose water.
 
 **Buildings are people.** A shop is a settler who took up the trade. A working charging post
 is two settlers turning a crank. Nothing in the settlement produces anything without someone
