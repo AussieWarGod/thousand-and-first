@@ -79,6 +79,14 @@ Raids take water and sometimes people; drought drives settlers away; districts c
 of it leaves a scar in the record and a thing to put right, and there is always a floor below
 which the settlement cannot fall.
 
+**Hubris subsides.** A city stands on what actually feeds it. Build past your works and the
+excess was scaffolding: stop hauling, and the settlement settles back — orderly, witnessed,
+person by person and district into ruin — to the level its infrastructure honestly carries.
+Never on a timer, never behind your back: the reckoning waits for your return, states its
+arithmetic, and gives you the chance to answer it. What you invested in persists. What you
+propped up subsides. The standing questions of the mid-game are when to expand, why, and on
+whose water.
+
 **Buildings are people.** A shop is a settler who took up the trade. A working charging post
 is two settlers turning a crank. Nothing in the settlement produces anything without someone
 to do it.
@@ -116,7 +124,9 @@ ladder above — vessels, carts, pipes — so a grown city can carry its own wat
 conjuring a dram of it. There are no wells: new water comes only from great technology
 recovered and made trustworthy, from patient collection, from trade, or — early, slowly,
 effortfully — from a salt-pan that gives back a little fresh water and the salt it was
-hiding, because in Qud water is money and nothing mints money quietly.
+hiding, because in Qud water is money and nothing mints money quietly. Stages earned by
+demonstrated feed rather than a threshold crossed for an afternoon — and subsidence, district
+into ruin, when the feed fails and stays failed.
 
 ## For people who want to build on it
 
