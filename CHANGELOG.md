@@ -26,6 +26,31 @@ playtest passes.
   game's mergeable XML streams so any mod extends them without code.
 - Diagnostics: `[TAF]` log lines and the `kingdom:dump` state readout.
 
+### Added — a faction of more than one city
+- A realm can hold **two cities**. Pour the rite on unclaimed ground that does not border what you
+  already hold and the realm founds a second city: same faction, same standings, one shared
+  chronicle, its own name and its own vocation. A third is refused.
+- The city you are standing in is *seated* — its state lives in the fields every system already
+  reads — and the other waits in `KingdomSystem.Away` until you walk into its ground, when the two
+  exchange. Charter titles, the roll, petitions, policy and the homecoming report all name the city
+  you are in; the chronicle and standings stay the realm's, because the realm is the faction and
+  the cities are only where its history happened.
+- A dormant city needs no clock and gets none. It carries its own tick stamps, so it catches up the
+  moment it is seated — the same lazy tick-stamp idiom vanilla uses for zone repair — capped at
+  three days of upkeep and three arrivals however long you were away.
+- Ground the realm's other city holds cannot be claimed by this one, even forced.
+
+### Added — the larder and the shared meal
+- Containers can be dedicated as **larders**. A civic larder can also be commissioned. Food in a
+  dedicated larder is counted for the settlement; dedication is a mark, not a transfer, so nothing
+  is moved and an undedicated container is never read.
+- **Share a meal from the larder**, from the Charter, when the larder can feed one. Food is spent
+  from dedicated larders only, a settler from the roll speaks, and it becomes the settlement's
+  deed, so word travels the way it does for any deed.
+- An empty larder costs nothing: no hunger, no unhappiness, no decay. A player who never dedicates
+  food plays exactly as they did before. Every food effect is a bonus for engaging, never a penalty
+  for abstaining.
+
 ### Changed
 - Districts are no longer flavour. Each of the six now changes something a player can measure:
   garrison adds defence across every claimed zone, agrarian bills upkeep at 90%, market adds a
@@ -59,6 +84,11 @@ playtest passes.
   own crew fills its vanilla `Capacitor` past the engine's 1,000-charge explosion threshold, so a
   raid that destroyed a crewed post would have killed settlers and destroyed player-placed
   objects the mod is not allowed to touch.
+- `r_KingdomChargingPost` carried a `Container` part with no `Inventory`. The engine dereferences
+  the inventory after offering to store something, and `Furniture` carries none anywhere in its
+  chain — so using the post the way its own description invites would have thrown. Vanilla's own
+  Universal Charging Station pairs the two parts; it is also what `UniversalCharger` charges, so
+  without it the cradle could never have filled a cell.
 - Removed dead code that a player could never reach: `KingdomTrade.DeliverIncome`,
   `KingdomGrowth.FetchWater`, and `KingdomRules.RaidCasualtyChance`.
 

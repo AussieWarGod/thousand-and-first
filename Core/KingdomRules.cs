@@ -58,6 +58,149 @@
 		/// </summary>
 		public const int MaxDedicatedLarders = 8;
 
+		/// <summary>
+		/// A ladder, not a bar. The Status report reads a settlement's dedicated food this way,
+		/// and the shared meal (<see cref="MealCost"/>) spends against the same ladder, so what
+		/// the Charter offers to serve is never a different number than what the founder can
+		/// already see is stored.
+		/// </summary>
+		public enum PantryTier
+		{
+			Empty = 0,
+			Scant = 1,
+			Modest = 2,
+			Ample = 3
+		}
+
+		/// <summary>Lower-case display name for each <see cref="PantryTier"/>, Qud style.</summary>
+		public static readonly string[] PantryTierNames = new string[4] { "empty", "scant", "modest", "ample" };
+
+		/// <summary>Food count at or above which the pantry reads as merely Scant.</summary>
+		public const int PantryScantThreshold = 1;
+
+		/// <summary>Food count at or above which the pantry reads as Modest.</summary>
+		public const int PantryModestThreshold = 10;
+
+		/// <summary>Food count at or above which the pantry reads as Ample.</summary>
+		public const int PantryAmpleThreshold = 30;
+
+		/// <summary>Coarse abundance tier for a raw food count, as counted into
+		/// <c>KingdomSurvey.FoodStored</c>.</summary>
+		public static PantryTier ClassifyPantry(int FoodCount)
+		{
+			if (FoodCount >= PantryAmpleThreshold)
+			{
+				return PantryTier.Ample;
+			}
+			if (FoodCount >= PantryModestThreshold)
+			{
+				return PantryTier.Modest;
+			}
+			if (FoodCount >= PantryScantThreshold)
+			{
+				return PantryTier.Scant;
+			}
+			return PantryTier.Empty;
+		}
+
+		/// <summary>
+		/// Food a shared meal spends at the Scant tier: exactly <see cref="PantryScantThreshold"/>,
+		/// the least a Scant larder can hold, so this cost is affordable the instant the tier is
+		/// reached.
+		/// </summary>
+		public const int MealCostScant = 1;
+
+		/// <summary>Food a shared meal spends at the Modest tier. Stays under
+		/// <see cref="PantryModestThreshold"/>, for the same reason as <see cref="MealCostScant"/>.</summary>
+		public const int MealCostModest = 8;
+
+		/// <summary>Food a shared meal spends at the Ample tier. Stays under
+		/// <see cref="PantryAmpleThreshold"/>, for the same reason as <see cref="MealCostScant"/>.</summary>
+		public const int MealCostAmple = 20;
+
+		/// <summary>
+		/// What a shared meal costs from the dedicated larders at a given pantry reading. Zero at
+		/// <see cref="PantryTier.Empty"/>: there is nothing to spend, and the Charter must never
+		/// ask for it.
+		/// </summary>
+		public static int MealCost(PantryTier Tier)
+		{
+			switch (Tier)
+			{
+			case PantryTier.Scant:
+				return MealCostScant;
+			case PantryTier.Modest:
+				return MealCostModest;
+			case PantryTier.Ample:
+				return MealCostAmple;
+			default:
+				return 0;
+			}
+		}
+
+		/// <summary>
+		/// Whether the dedicated larders can feed a shared meal at all. This is the one gate the
+		/// Charter checks before offering the action: an empty larder must cost the founder
+		/// nothing, so declining here is silent and free, exactly like standing on ground with no
+		/// larder dedicated at all.
+		/// </summary>
+		/// <param name="FoodStored">Food counted in the dedicated larders this pass.</param>
+		/// <param name="Population">Living settlers &mdash; there is no one to sit at an empty
+		/// table.</param>
+		public static bool CanHoldSharedMeal(int FoodStored, int Population)
+		{
+			return Population > 0 && ClassifyPantry(FoodStored) != PantryTier.Empty;
+		}
+
+		/// <summary>
+		/// Food a shared meal actually spends against the given stock: the honest cost for the
+		/// tier that stock reads as, clamped so a survey that has gone stale by the time the
+		/// founder acts on it can never spend more than the larders hold.
+		/// </summary>
+		public static int MealServingsSpent(int FoodStored)
+		{
+			int cost = MealCost(ClassifyPantry(FoodStored));
+			return (cost < FoodStored) ? cost : FoodStored;
+		}
+
+		/// <summary>
+		/// What the founder calls the meal, graduated with the same tier the Status report shows.
+		/// "Choose the tier honestly" means this and the larder reading never disagree: the size
+		/// named here is always earned by the stock that paid for it.
+		/// </summary>
+		public static string MealSizeName(PantryTier Tier)
+		{
+			switch (Tier)
+			{
+			case PantryTier.Scant:
+				return "a plain meal";
+			case PantryTier.Modest:
+				return "a hearty meal";
+			case PantryTier.Ample:
+				return "a feast";
+			default:
+				return null;
+			}
+		}
+
+		/// <summary>What a settler says after eating, in their own mouth. Graduated with
+		/// <see cref="MealSizeName"/> so the words never oversell what was actually on the
+		/// table.</summary>
+		public static string MealSpeech(PantryTier Tier)
+		{
+			switch (Tier)
+			{
+			case PantryTier.Scant:
+				return "It wasn't much. But it was shared, and I noticed that.";
+			case PantryTier.Modest:
+				return "Nobody left hungry tonight. Some nights that is the whole victory.";
+			case PantryTier.Ample:
+				return "I don't remember the last time this table had too much on it. Thank you for that.";
+			default:
+				return null;
+			}
+		}
+
 		public const int FoundingCostDrams = 8;
 
 		public const int FetchDramsPerSettler = 2;

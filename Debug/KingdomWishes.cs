@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Text;
 using XRL;
 using XRL.UI;
@@ -17,11 +18,116 @@ namespace ThousandAndFirst
 			KingdomSystem system = The.Game.RequireSystem<KingdomSystem>();
 			if (system.Founded)
 			{
-				Popup.Show("The kingdom of {{C|" + system.KingdomDisplayName + "}} is already founded.");
+				Popup.Show("The kingdom of {{C|" + system.KingdomDisplayName + "}} is already founded. ({{W|kingdom:found2 NAME:VOCATION}} founds the second city here.)");
 				return;
 			}
 			Faction faction = KingdomFounding.Found(name);
 			Popup.Show("{{C|" + faction.DisplayName + "}} is founded on " + KingdomFounding.StyleGroundClause(system.Style) + ". The chronicle begins.\n\nStandings seeded from your reputation with " + system.Standings.Count + " factions.");
+		}
+
+		/// <summary>
+		/// Founds the realm's second city on the ground the tester is standing on, skipping the
+		/// walk the rite would otherwise require: adjacency to the realm is forced, everything
+		/// else &mdash; the two-city cap, the refusal to found on ground already held &mdash; is
+		/// the shipped rule, because those are the rules worth testing.
+		/// </summary>
+		/// <param name="Parameter">NAME, or NAME:VOCATION. Vocation defaults to the neutral one.</param>
+		[WishCommand("kingdom:found2", null)]
+		public static void FoundSecondWish(string Parameter)
+		{
+			KingdomSystem system = The.Game.RequireSystem<KingdomSystem>();
+			Zone zone = The.Player?.CurrentZone;
+			if (!system.Founded)
+			{
+				Popup.Show("No kingdom founded yet. Wish {{W|kingdom:found NAME}} first.");
+				return;
+			}
+			string name = "Sheol";
+			string vocation = KingdomSettlement.NeutralVocation;
+			if (!string.IsNullOrEmpty(Parameter))
+			{
+				string[] parts = Parameter.Trim().Split(':');
+				if (!string.IsNullOrEmpty(parts[0]))
+				{
+					name = parts[0].Trim();
+				}
+				if (parts.Length > 1 && KingdomSettlement.IsKnownVocation(parts[1].Trim().ToLowerInvariant()))
+				{
+					vocation = parts[1].Trim().ToLowerInvariant();
+				}
+			}
+			if (!KingdomFounding.FoundSecond(name, vocation, zone, Force: true))
+			{
+				Popup.Show(RefusalOrDefault(system, zone) + "\n\nKnown vocations: " + string.Join(", ", KingdomSettlement.Vocations) + ".");
+				return;
+			}
+			Popup.Show("{{C|" + name + "}} is founded here as " + KingdomSettlement.VocationClause(vocation) + ", the second city of {{C|" + system.KingdomDisplayName + "}}.\n\nSeated: " + system.Capture().Describe() + "\nAway: " + system.Away.Describe());
+		}
+
+		private static string RefusalOrDefault(KingdomSystem System, Zone Site)
+		{
+			string refusal = KingdomSettlement.SecondFoundingRefusal(KingdomFounding.JudgeSite(System, Site), System.KingdomDisplayName);
+			return string.IsNullOrEmpty(refusal) ? "The founding was refused; stand in a zone the realm does not already hold." : refusal;
+		}
+
+		/// <summary>
+		/// Shows which city is seated and what the dormant one holds, and &mdash; with
+		/// {{W|swap}} &mdash; exchanges them where you stand, so a tester can drive both cities
+		/// without the walk. The swap is a probe, not a move: walking into either city's own
+		/// ground re-seats it the ordinary way, through
+		/// <see cref="KingdomSystem.TrySeat"/>.
+		/// </summary>
+		[WishCommand("kingdom:seat", null)]
+		public static void SeatWish(string Parameter)
+		{
+			KingdomSystem system = The.Game.RequireSystem<KingdomSystem>();
+			if (!system.Founded)
+			{
+				Popup.Show("No kingdom founded yet. Wish {{W|kingdom:found NAME}} first.");
+				return;
+			}
+			if (!string.IsNullOrEmpty(Parameter) && Parameter.Trim().ToLowerInvariant() == "swap")
+			{
+				if (system.Away == null)
+				{
+					Popup.Show("There is only one city. Wish {{W|kingdom:found2 NAME:VOCATION}} to found the second here.");
+					return;
+				}
+				KingdomSettlement wasSeated = system.Capture();
+				system.Restore(system.Away);
+				system.Away = wasSeated;
+				Popup.Show("Seat forced to {{C|" + system.SeatName + "}}.\n\n" + SeatReport(system) + "\n\n{{K|Debug probe: the flat fields now describe a city you are not standing in. Walk into either city's ground and the ordinary swap corrects it.}}");
+				return;
+			}
+			Popup.Show(SeatReport(system));
+		}
+
+		/// <summary>One line naming the city the flat fields currently describe, and the one they
+		/// do not. Prefixed to reports that would otherwise read as if the realm had one city.</summary>
+		private static string SeatLine(KingdomSystem System)
+		{
+			return "{{C|" + System.SeatName + "}}" + KingdomSettlement.VocationSuffix(System.Vocation)
+				+ ((System.Away != null) ? ("  {{K|(away: " + (System.Away.SettlementName ?? "(unnamed)") + ")}}") : "");
+		}
+
+		private static string SeatReport(KingdomSystem System)
+		{
+			StringBuilder sb = new StringBuilder();
+			sb.Append("{{C|Realm}}: ").Append(System.KingdomFactionName ?? "-").Append(" / ").Append(System.KingdomDisplayName ?? "-")
+				.Append("  cities=").Append(System.SettlementCount).Append("/").Append(KingdomSettlement.MaxSettlements);
+			sb.Append("\n{{C|Seated}}: ").Append(System.Capture().Describe());
+			sb.Append("\n{{C|Away}}: ").Append((System.Away != null) ? System.Away.Describe() : "(none)");
+			List<string> mismatches = KingdomSettlement.SeatMismatches(typeof(KingdomSystem));
+			sb.Append("\nCarried fields: ").Append(KingdomSettlement.CarriedFields().Length)
+				.Append("  seat mismatches: ").Append((mismatches.Count == 0) ? "none" : string.Join("; ", mismatches.ToArray()));
+			Zone here = The.Player?.CurrentZone;
+			if (here != null)
+			{
+				sb.Append("\nHere (").Append(here.ZoneID).Append("): seat=").Append(System.ClaimedZones.Contains(here.ZoneID))
+					.Append(" away=").Append(System.Away != null && System.Away.ClaimedZones.Contains(here.ZoneID))
+					.Append(" rite=").Append(KingdomFounding.JudgeSite(System, here));
+			}
+			return sb.ToString();
 		}
 
 		/// <summary>
@@ -105,6 +211,13 @@ namespace ThousandAndFirst
 			StringBuilder sb = new StringBuilder();
 			sb.Append("{{C|KINGDOM STATE DUMP}} tick ").Append(The.Game.TimeTicks);
 			sb.Append("\nFounded: ").Append(system.Founded ? (system.KingdomFactionName + " / " + system.KingdomDisplayName) : "no");
+			if (system.Founded)
+			{
+				// The seat is the whole of the multi-city surface: which city the flat fields
+				// currently describe, what the other one holds, and whether every settlement
+				// field still has a flat field to be carried in.
+				sb.Append("\n").Append(SeatReport(system));
+			}
 			sb.Append("\nStyle: ").Append(system.Style).Append(" (").Append(KingdomFounding.StyleGroundClause(system.Style)).Append(")").Append("  Stage: ").Append(system.Stage).Append("  Withered: ").Append(system.Withered);
 			sb.Append("\nFounding terrain: blueprint=").Append(system.FoundingTerrainBlueprint ?? "(none)").Append(" region=").Append(system.FoundingRegionName ?? "(none)").Append(" z=").Append(system.FoundingZLevel);
 			Zone here = The.Player?.CurrentZone;
@@ -188,7 +301,7 @@ namespace ThousandAndFirst
 				Popup.Show("Nothing to reset.");
 				return;
 			}
-			if (Popup.ShowYesNo("Dissolve {{C|" + system.KingdomDisplayName + "}} and wipe all kingdom state? (Debug only; claimed-zone properties in unvisited zones are left behind.)") != DialogResult.Yes)
+			if (Popup.ShowYesNo("Dissolve {{C|" + system.KingdomDisplayName + "}}, all " + system.SettlementCount + " of its cities, and wipe all kingdom state? (Debug only; claimed-zone properties in unvisited zones are left behind.)") != DialogResult.Yes)
 			{
 				return;
 			}
@@ -204,7 +317,7 @@ namespace ThousandAndFirst
 			}
 			The.Game.PlayerReputation.ReputationValues.Remove(name);
 			Zone zone = The.Player?.CurrentZone;
-			if (zone != null && system.ClaimedZones.Contains(zone.ZoneID))
+			if (zone != null && (system.ClaimedZones.Contains(zone.ZoneID) || (system.Away != null && system.Away.ClaimedZones.Contains(zone.ZoneID))))
 			{
 				zone.SetZoneProperty("faction", null);
 			}
@@ -216,31 +329,17 @@ namespace ThousandAndFirst
 			}
 			system.KingdomFactionName = null;
 			system.KingdomDisplayName = null;
-			system.Style = "common";
-			system.FoundingTerrainBlueprint = null;
-			system.FoundingRegionName = null;
-			system.FoundingZLevel = 0;
-			system.FoundedTick = 0L;
-			system.Stage = GrowthStage.Camp;
-			system.Population = 0;
-			system.DryStreak = 0;
-			system.Withered = false;
-			system.HasShopkeeper = false;
-			system.NextArrivalTick = 0L;
-			system.RaidState = 0;
-			system.RaidFactionName = null;
-			system.RaidDueTick = 0L;
-			system.LastRaidTick = 0L;
-			system.ClaimedZones.Clear();
-			system.ZoneDistricts.Clear();
+			// Both cities at once: seating a blank settlement clears every per-settlement field
+			// there is, so a field added later cannot be forgotten here, and Away goes with it.
+			system.Restore(new KingdomSettlement());
+			system.Away = null;
 			system.ActiveDealKeys.Clear();
 			system.ActiveDealFactions.Clear();
 			system.DealNextTicks.Clear();
 			system.ChronicleEntries.Clear();
 			system.OutsiderEntries.Clear();
-			system.OriginCounts.Clear();
 			system.Standings.Clear();
-			Popup.Show("The kingdom is dissolved. The ground forgets; the chronicle does not survive it.");
+			Popup.Show("Both cities are dissolved. The ground forgets; the chronicle does not survive it.");
 		}
 
 		[WishCommand("kingdom:citizen", null)]
@@ -283,7 +382,7 @@ namespace ThousandAndFirst
 				Popup.Show("No kingdom founded. Wish {{W|kingdom:found NAME}} to begin.");
 				return;
 			}
-			Popup.Show(KingdomReports.Status(system) + "\n\n" + KingdomReports.Standings(system));
+			Popup.Show(SeatLine(system) + "\n" + KingdomReports.Status(system) + "\n\n" + KingdomReports.Standings(system));
 		}
 
 		[WishCommand("kingdom:standing", null)]
@@ -396,6 +495,24 @@ namespace ThousandAndFirst
 				The.Game.PlayerReputation.Modify(probe, -actualDelta, null, null, null, Silent: true);
 				system.SetStanding(probe.Name, standingBefore);
 			}
+			List<string> seatMismatches = KingdomSettlement.SeatMismatches(typeof(KingdomSystem));
+			// The one failure that loses a whole city silently: a settlement field with nowhere to
+			// live on the seat is dropped on every swap.
+			Check(report, ref passed, ref failed, "seat carries all " + KingdomSettlement.CarriedFields().Length + " settlement fields" + ((seatMismatches.Count > 0) ? (" (" + string.Join("; ", seatMismatches.ToArray()) + ")") : ""), seatMismatches.Count == 0);
+			bool claimsDisjoint = true;
+			if (system.Away != null)
+			{
+				foreach (string zoneID in system.Away.ClaimedZones)
+				{
+					if (system.ClaimedZones.Contains(zoneID))
+					{
+						claimsDisjoint = false;
+						report.Append("\n    both cities claim ").Append(zoneID);
+					}
+				}
+			}
+			Check(report, ref passed, ref failed, "the two cities claim no ground in common", claimsDisjoint);
+			Check(report, ref passed, ref failed, "the realm holds no more than " + KingdomSettlement.MaxSettlements + " cities", system.SettlementCount <= KingdomSettlement.MaxSettlements);
 			Check(report, ref passed, ref failed, "deal lists coherent (" + system.ActiveDealKeys.Count + " deals)", system.ActiveDealKeys.Count == system.ActiveDealFactions.Count && system.ActiveDealKeys.Count == system.DealNextTicks.Count);
 			LiquidVolume fresh = new LiquidVolume { Volume = 10 };
 			fresh.ComponentLiquids.Add("water", 1000);

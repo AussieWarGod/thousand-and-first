@@ -35,34 +35,22 @@ namespace ThousandAndFirst
 
 		/// <summary>
 		/// Servings of food seen in the settlement's dedicated containers this pass: items
-		/// carrying vanilla <c>Food</c> or <c>PreparedCookingIngredient</c>. A read-only count
-		/// - nothing consumes, moves, or reserves what it finds.
+		/// carrying vanilla <c>Food</c> or <c>PreparedCookingIngredient</c>. Consuming food
+		/// through <see cref="ConsumeFood"/> keeps this correct; a food item placed after the
+		/// survey was taken does not retroactively appear here.
 		/// </summary>
 		public int FoodStored;
 
-		/// <summary>Coarse abundance read on <see cref="FoodStored"/>. See <see cref="ClassifyPantry"/>.</summary>
-		public PantryTier FoodAbundance;
+		/// <summary>Coarse abundance read on <see cref="FoodStored"/>. See
+		/// <see cref="KingdomRules.ClassifyPantry"/>.</summary>
+		public KingdomRules.PantryTier FoodAbundance;
 
 		/// <summary>
-		/// A ladder, not a bar: nothing yet reacts to it. It exists so the next wave has a true
-		/// number to build a hunger or abundance loop on, instead of guessing at one.
+		/// Containers marked as larders this pass. <see cref="ConsumeFood"/> walks these, in the
+		/// order found, so a shared meal only ever draws from what the founder actually
+		/// dedicated.
 		/// </summary>
-		public enum PantryTier
-		{
-			Empty = 0,
-			Scant = 1,
-			Modest = 2,
-			Ample = 3
-		}
-
-		/// <summary>Food count at or above which the pantry reads as merely Scant.</summary>
-		public const int PantryScantThreshold = 1;
-
-		/// <summary>Food count at or above which the pantry reads as Modest.</summary>
-		public const int PantryModestThreshold = 10;
-
-		/// <summary>Food count at or above which the pantry reads as Ample.</summary>
-		public const int PantryAmpleThreshold = 30;
+		public readonly List<GameObject> Larders = new List<GameObject>();
 
 		public readonly List<LiquidVolume> Stores = new List<LiquidVolume>();
 
@@ -122,6 +110,7 @@ namespace ThousandAndFirst
 				// zero forever. Food lives in what the founder dedicated as a larder.
 				if (item.GetIntProperty("KingdomLarder") == 1 && item.Inventory != null)
 				{
+					survey.Larders.Add(item);
 					foreach (GameObject held in item.Inventory.Objects)
 					{
 						if (held.HasPart("Food") || held.HasPart("PreparedCookingIngredient"))
@@ -158,7 +147,7 @@ namespace ThousandAndFirst
 					}
 				}
 			}
-			survey.FoodAbundance = ClassifyPantry(survey.FoodStored);
+			survey.FoodAbundance = KingdomRules.ClassifyPantry(survey.FoodStored);
 			return survey;
 		}
 
@@ -177,24 +166,6 @@ namespace ThousandAndFirst
 				survey.DistrictDefenceBonus = KingdomRules.DistrictsDefenceBonus(System.ZoneDistricts.Values);
 			}
 			return survey;
-		}
-
-		/// <summary>Coarse abundance tier for a raw food count. See <see cref="PantryTier"/>.</summary>
-		private static PantryTier ClassifyPantry(int FoodCount)
-		{
-			if (FoodCount >= PantryAmpleThreshold)
-			{
-				return PantryTier.Ample;
-			}
-			if (FoodCount >= PantryModestThreshold)
-			{
-				return PantryTier.Modest;
-			}
-			if (FoodCount >= PantryScantThreshold)
-			{
-				return PantryTier.Scant;
-			}
-			return PantryTier.Empty;
 		}
 
 		/// <summary>
@@ -237,6 +208,56 @@ namespace ThousandAndFirst
 				}
 			}
 			return Drams - remaining;
+		}
+
+		/// <summary>
+		/// Spends food from the dedicated larders, updating <see cref="FoodStored"/> and
+		/// <see cref="FoodAbundance"/> to match. Draws whole food items, and partial stacks, from
+		/// <see cref="Larders"/> in the order found, until the amount is met or the larders run
+		/// out &mdash; never more than what is actually there, and never from anything the founder
+		/// has not dedicated.
+		/// </summary>
+		/// <param name="Amount">Food units requested.</param>
+		/// <returns>Amount actually spent, which may be less than requested.</returns>
+		public int ConsumeFood(int Amount)
+		{
+			int remaining = Amount;
+			for (int i = 0; i < Larders.Count && remaining > 0; i++)
+			{
+				GameObject container = Larders[i];
+				if (container.Inventory == null)
+				{
+					continue;
+				}
+				// Snapshot first: destroying a food item below removes it from this same
+				// Inventory list, and mutating a collection mid-foreach throws.
+				List<GameObject> held = new List<GameObject>(container.Inventory.Objects);
+				for (int j = 0; j < held.Count && remaining > 0; j++)
+				{
+					GameObject food = held[j];
+					if (!food.HasPart("Food") && !food.HasPart("PreparedCookingIngredient"))
+					{
+						continue;
+					}
+					// Destroy() on a stack of more than one decrements it by exactly one and
+					// leaves the object in place (see Stacker.HandleEvent(BeforeDestroyObjectEvent));
+					// only the last unit actually removes it. Validate stops the loop the moment
+					// that happens, rather than trusting a return value for it.
+					while (remaining > 0 && GameObject.Validate(food))
+					{
+						food.Destroy(null, Silent: true);
+						remaining--;
+					}
+				}
+			}
+			int spent = Amount - remaining;
+			FoodStored -= spent;
+			if (FoodStored < 0)
+			{
+				FoodStored = 0;
+			}
+			FoodAbundance = KingdomRules.ClassifyPantry(FoodStored);
+			return spent;
 		}
 
 		/// <summary>Pours water into the dedicated stores, updating the survey's counters.</summary>

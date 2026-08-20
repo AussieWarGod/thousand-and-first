@@ -55,6 +55,16 @@
     <part Name="Physics" Takeable="false" Weight="2000" />
     <stat Name="Hitpoints" Value="200" />
   </object>
+  <!-- Inherits the vanilla Chest wholesale (Container, Inventory, and its tile) rather than
+       declaring a Tile of our own: STANDARDS.md requires art for anything that carries one, and
+       reusing an existing, already-wired vanilla tile is the surest way to owe none. -->
+  <object Name="r_KingdomLarder" Inherits="Chest">
+    <stag Name="Contemporary" />
+    <part Name="Render" DisplayName="civic larder" />
+    <part Name="Description" Short="A communal chest with a slatted lid, cool air moving through the gaps. What is put in here feeds the settlement, not just whoever finds it first." />
+    <part Name="Physics" Takeable="false" Organic="true" />
+    <stat Name="Hitpoints" Value="80" />
+  </object>
   <object Name="r_KingdomBunk" Inherits="Bed">
     <stag Name="Contemporary" />
     <part Name="Render" DisplayName="communal bunk" ColorString="&amp;w" />
@@ -88,7 +98,14 @@
          to touch. Cranked civic furniture does not blow up: hold the charge, never arm it.
          ChargeRate stays 0 because the settlement fills it, not the grid. -->
     <part Name="Capacitor" MaxCharge="4000" ChargeRate="0" MinimumChargeToExplode="0" />
+    <!-- Container and Inventory are a pair. Vanilla's own "Universal Charging Station" carries
+         both, and Container.cs:129-141 dereferences ParentObject.Inventory after offering to
+         store something - so a Container with no Inventory throws on the exact action this
+         post's description invites. Inventory is also what UniversalCharger charges: its
+         constructor sets WorksOnInventory, so without this the cradle could never have filled
+         a cell. Furniture, which this inherits, carries no Inventory anywhere in its chain. -->
     <part Name="Container" Preposition="on" />
+    <part Name="Inventory" />
     <part Name="Physics" Takeable="false" Weight="800" />
     <property Name="DontWarnOnOpen" Value="true" />
     <stat Name="Hitpoints" Value="150" />

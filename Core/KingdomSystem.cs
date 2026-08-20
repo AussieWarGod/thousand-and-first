@@ -39,6 +39,21 @@ namespace ThousandAndFirst
 
 		public string KingdomDisplayName;
 
+		/// <summary>
+		/// The seated settlement's own name. Equal to <see cref="KingdomDisplayName"/> until a
+		/// second city is founded, after which the realm keeps its name and each city keeps
+		/// its own. Read through <see cref="SeatName"/>, which covers saves written before
+		/// cities had names apart from the realm's.
+		/// </summary>
+		public string SettlementName;
+
+		/// <summary>
+		/// What the seated city was founded for, from <see cref="KingdomSettlement.Vocations"/>,
+		/// or null for the realm's first city &mdash; which was founded before there was a second
+		/// one to tell it from, and is not retroactively given a purpose.
+		/// </summary>
+		public string Vocation;
+
 		public string Style = "common";
 
 		/// <summary>
@@ -155,7 +170,87 @@ namespace ThousandAndFirst
 
 		public Dictionary<string, int> Standings = new Dictionary<string, int>();
 
+		/// <summary>
+		/// The city the founder is not standing in, or null until a second is founded.
+		/// <para>
+		/// Everything above this line describes the seat &mdash; the settlement the founder is
+		/// currently in &mdash; and every consumer reads those fields directly. The other city
+		/// waits here, and the two are exchanged by <see cref="TrySeat"/> when the founder walks
+		/// into its ground.
+		/// </para>
+		/// <para>
+		/// A dormant city needs no clock. Its <c>LastHeartbeatTick</c> and <c>LastVisitTick</c>
+		/// travel with it, so the ordinary catch-up in <c>KingdomGrowth</c> resolves the whole
+		/// absence the moment it is seated &mdash; the lazy tick-stamp idiom vanilla uses for
+		/// zone repair. The catch-up is capped by <see cref="KingdomRules.HeartbeatDays"/> and
+		/// <see cref="KingdomRules.MaxArrivalsPerVisit"/>, so a city dormant for a season cannot
+		/// arrive with a season of settlers.
+		/// </para>
+		/// </summary>
+		public KingdomSettlement Away;
+
 		public bool Founded => !string.IsNullOrEmpty(KingdomFactionName);
+
+		/// <summary>
+		/// The seated settlement's name for prose. Falls back to the realm's display name for a
+		/// save written before a city could be named apart from its realm.
+		/// </summary>
+		public string SeatName => string.IsNullOrEmpty(SettlementName) ? KingdomDisplayName : SettlementName;
+
+		/// <summary>How many cities the realm holds, seat included.</summary>
+		public int SettlementCount => (!Founded ? 0 : ((Away != null) ? 2 : 1));
+
+		/// <summary>
+		/// Copies the seated settlement out of the flat fields into a record. The flat fields are
+		/// left as they are; the caller is expected to write another settlement over them
+		/// immediately, because the two now share their rosters, ledger and claim lists.
+		/// </summary>
+		/// <returns>The seated settlement, never null.</returns>
+		/// <exception cref="KingdomSeatMismatchException">A settlement field has no flat
+		/// counterpart here. Nothing is read when this is thrown.</exception>
+		public KingdomSettlement Capture()
+		{
+			KingdomSettlement settlement = new KingdomSettlement();
+			settlement.ReadFrom(this);
+			return settlement;
+		}
+
+		/// <summary>
+		/// Seats a settlement: writes it over the flat fields, so every consumer that reads
+		/// <c>Population</c>, <c>ClaimedZones</c> or <c>Ledger</c> is now reading this city.
+		/// </summary>
+		/// <param name="Settlement">The settlement to seat. Null is rejected.</param>
+		/// <exception cref="KingdomSeatMismatchException">A settlement field has no flat
+		/// counterpart here. Nothing is written when this is thrown.</exception>
+		public void Restore(KingdomSettlement Settlement)
+		{
+			if (Settlement == null)
+			{
+				throw new KingdomSeatMismatchException("There is no settlement to seat.");
+			}
+			Settlement.WriteTo(this);
+		}
+
+		/// <summary>
+		/// Exchanges the seat with <see cref="Away"/> when the activated zone is the other city's
+		/// ground. Called before the claim guard in <see cref="HandleEvent(ZoneActivatedEvent)"/>,
+		/// because until the exchange has happened the second city's ground is not in
+		/// <see cref="ClaimedZones"/> and reads as a stranger's zone.
+		/// </summary>
+		/// <param name="Z">The activated zone. Null is tolerated.</param>
+		/// <returns>True if the seat moved.</returns>
+		public bool TrySeat(Zone Z)
+		{
+			if (!Founded || Z == null || Away == null || ClaimedZones.Contains(Z.ZoneID) || !Away.ClaimedZones.Contains(Z.ZoneID))
+			{
+				return false;
+			}
+			KingdomSettlement wasSeated = Capture();
+			Restore(Away);
+			Away = wasSeated;
+			if (KingdomLog.Enabled) KingdomLog.Log("seat moved to " + SeatName + " (" + Z.ZoneID + "); away is now " + Away.Describe());
+			return true;
+		}
 
 		public override bool WantFieldReflection => false;
 
@@ -247,6 +342,16 @@ namespace ThousandAndFirst
 
 		public override bool HandleEvent(ZoneActivatedEvent E)
 		{
+			// The seat moves first. A second city's ground belongs to Away, not to ClaimedZones,
+			// so a swap tested after the guard below could never fire: walking into your own
+			// second city would read as walking into a stranger's zone.
+			Guard("seat", delegate
+			{
+				if (TrySeat(E.Zone))
+				{
+					XRL.Messages.MessageQueue.AddPlayerMessage("You are in {{C|" + SeatName + "}}" + KingdomSettlement.VocationSuffix(Vocation) + ".");
+				}
+			});
 			if (!Founded || E.Zone == null || !ClaimedZones.Contains(E.Zone.ZoneID))
 			{
 				return base.HandleEvent(E);
@@ -284,7 +389,7 @@ namespace ThousandAndFirst
 				{
 					// Nonmodal on purpose. You come home to a report, not an inspection: the
 					// settlement says it has news and waits to be asked, in the Charter.
-					XRL.Messages.MessageQueue.AddPlayerMessage("{{C|" + KingdomDisplayName + "}} has news of the "
+					XRL.Messages.MessageQueue.AddPlayerMessage("{{C|" + SeatName + "}} has news of the "
 						+ ((HomecomingDays == 1) ? "day" : HomecomingDays + " days") + " you were away. {{K|(Charter: what happened while you were away)}}");
 				}
 			});
@@ -420,6 +525,17 @@ namespace ThousandAndFirst
 
 		private void NormalizeState()
 		{
+			// A founded save written before cities had names of their own carries only the realm's.
+			// The seat is that first city, so it takes that name rather than arriving unnamed.
+			if (Founded && string.IsNullOrEmpty(SettlementName))
+			{
+				SettlementName = KingdomDisplayName;
+			}
+			if (!string.IsNullOrEmpty(Vocation) && !KingdomSettlement.IsKnownVocation(Vocation))
+			{
+				Vocation = KingdomSettlement.NeutralVocation;
+			}
+			Away?.Normalize();
 			if (RosterNames == null)
 			{
 				RosterNames = new List<string>();

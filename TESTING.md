@@ -64,6 +64,27 @@ Say when you're launching so the log watch can run alongside.
 | 16i | `kingdom:style verdant`, then Charter → Commission | The design list changes to that style's catalogue. The recorded founding terrain is unchanged — forcing a style is a probe, not a rewrite of history |
 | 16j | `kingdom:style nonsense` | Refused, and the known styles are listed. Nothing changes |
 
+## Pass 3d — The second city and the seat
+
+The realm is the faction; the cities are where its history happened. One city is *seated* at a
+time — the one you are standing in — and the other keeps itself until you walk back into it.
+
+| Step | Action | Expect |
+|---|---|---|
+| 16k | With a kingdom founded, refill the basin and use it in the founded zone | Refused: this ground is already the realm's. No liquid spent |
+| 16l | Walk to a zone bordering the claim and use the basin | Refused: bordering ground is claimed, not founded — that would be expanding a city, not founding one. No liquid spent |
+| 16m | Travel three or more zones away to unclaimed ground, use the basin, name the city, choose a vocation | A ceremony naming the city, the ground, and what it was founded for; the basin drained by 8; one founding line in each chronicle register naming the vocation |
+| 16n | `kingdom:dump` | `Seated:` is the new city with its vocation; `Away:` is the first city with its own stage, population, claims and ticks; `seat mismatches: none` |
+| 16o | Walk back into the first city's ground | The seat swaps on arrival. Charter Status, the roll of settlers, petitions and the ledger describe the first city again — not the second's |
+| 16p | Stay away from the second city three or more in-game days, then walk into it | It caught up on arrival from its own clock: at most three days of upkeep and at most three arrivals, however long you were gone |
+| 16q | Charter → Status, in either city | The title names the city you are standing in, not the realm, and the report says the realm also holds the other city, which keeps itself until you stand in it |
+| 16r | Charter → The Chronicle, in either city | One history for the realm. Both cities' events are in it — the chronicle belongs to the faction, not to the ground |
+| 16s | `kingdom:found2 NAME:refuge`, then `kingdom:seat swap` | A tester reaches either city without the walk |
+| 16t | Use the basin a third time on new unclaimed ground | Refused plainly: the realm holds two cities. No liquid spent |
+| 16u | Save → quit → reload → `kingdom:seat` | Both cities intact, same seat, `seat mismatches: none`. The dormant city keeps its roster, ledger, claims and districts |
+| 16v | `kingdom:selftest` | "seat carries all N settlement fields", "the two cities claim no ground in common", and "the realm holds no more than 2 cities" all pass |
+| 16w | `kingdom:reset` (confirm) | Both cities dissolved; the Charter is gone; `kingdom:dump` reports unfounded |
+
 ## Pass 5 — Districts and commissions
 
 | Step | Action | Expect |
@@ -138,6 +159,10 @@ step here is done standing in the settlement.
 | 45a | Stand beside a chest or footlocker with food in it and dedicate it as a larder | It is marked a larder of the settlement. Nothing moves and nothing is taken — dedication is a mark, not a transfer |
 | 45b | `kingdom:dump` | The pantry reads the food in dedicated larders only, as a count and a tier (Empty / Scant / Modest / Ample). Food in your own undedicated pack is never counted |
 | 45c | Release the larder | The count drops back. What was inside is untouched |
+| 45d | Commission a **civic larder** (Charter → Commission), then put food in it | It counts as a larder without needing a chest of your own |
+| 45e | With the larder Scant or better, Charter → **Share a meal from the larder** | The settlement eats: food is spent from the dedicated larders only, a settler from the roll speaks, and the chronicle records it. Word travels — the meal becomes the settlement's deed, so it draws settlers the way any deed does |
+| 45f | With an empty larder, Charter → Share a meal | Refused plainly, and nothing is lost. An empty larder costs the settlement nothing at all: no hunger, no unhappiness, no decay. A player who never dedicates food plays exactly as they do today |
+| 45g | Check your own pack and any undedicated container after a meal | Untouched. Only dedicated food is ever spent |
 | 46 | Charter → Status | The ledger's effects are visible: stores, shop tier, idle/shorthanded works, and the next-need line |
 
 ## Pass 10 — Names, policy, and answering a threat

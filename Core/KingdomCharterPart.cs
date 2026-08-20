@@ -78,7 +78,7 @@ namespace ThousandAndFirst
 			}
 			while (true)
 			{
-				int num = Popup.PickOption(Title: system.KingdomDisplayName, Options: new string[13] { (system.PetitionKind != KingdomRules.PetitionKind.None) ? ("{{W|Hear " + system.PetitionPetitioner + "}}") : "{{K|No one is waiting to speak}}", "Status", "What happened while you were away", "The Chronicle", "As others tell it", "Standings", "The roll of settlers", "Standing policy", "Designate district", "Commission a building", "Answer a threat", "Dedicate a vessel or larder", "Strike a trade charter" }, Hotkeys: new char[13] { 'h', 's', 'w', 'c', 'a', 'n', 'l', 'p', 'd', 'm', 't', 'v', 'r' }, AllowEscape: true);
+				int num = Popup.PickOption(Title: system.SeatName + KingdomSettlement.VocationSuffix(system.Vocation), Options: new string[14] { (system.PetitionKind != KingdomRules.PetitionKind.None) ? ("{{W|Hear " + system.PetitionPetitioner + "}}") : "{{K|No one is waiting to speak}}", "Status", "What happened while you were away", "The Chronicle", "As others tell it", "Standings", "The roll of settlers", "Standing policy", "Designate district", "Commission a building", "Answer a threat", "Dedicate a vessel or larder", "Strike a trade charter", "Share a meal from the larder" }, Hotkeys: new char[14] { 'h', 's', 'w', 'c', 'a', 'n', 'l', 'p', 'd', 'm', 't', 'v', 'r', 'f' }, AllowEscape: true);
 				switch (num)
 				{
 				case 0:
@@ -120,6 +120,9 @@ namespace ThousandAndFirst
 				case 12:
 					StrikeTradeCharter(system);
 					break;
+				case 13:
+					HoldSharedMeal(system);
+					break;
 				default:
 					return;
 				}
@@ -137,7 +140,7 @@ namespace ThousandAndFirst
 				Popup.Show("Nothing has happened here since you last stood on this ground.");
 				return;
 			}
-			Popup.Show(System.Ledger.Digest(System.KingdomDisplayName, System.HomecomingDays));
+			Popup.Show(System.Ledger.Digest(System.SeatName, System.HomecomingDays));
 		}
 
 		/// <summary>Hears the settler who is waiting, and lets the founder decline.</summary>
@@ -148,7 +151,7 @@ namespace ThousandAndFirst
 				Popup.Show("No one is waiting. The settlement is content, or too busy to complain.");
 				return;
 			}
-			int num = Popup.PickOption(Title: System.PetitionPetitioner + " of " + System.KingdomDisplayName, Intro: KingdomPetitions.Speech(System), Options: new string[2] { "Say it will be seen to", "Tell them it must wait" }, AllowEscape: true);
+			int num = Popup.PickOption(Title: System.PetitionPetitioner + " of " + System.SeatName, Intro: KingdomPetitions.Speech(System), Options: new string[2] { "Say it will be seen to", "Tell them it must wait" }, AllowEscape: true);
 			if (num == 1)
 			{
 				KingdomChronicle.Record(System, System.PetitionPetitioner + " was told the matter must wait");
@@ -165,7 +168,7 @@ namespace ThousandAndFirst
 		{
 			while (true)
 			{
-				int num = Popup.PickOption(Title: "The standing policy of " + System.KingdomDisplayName, Options: new string[2]
+				int num = Popup.PickOption(Title: "The standing policy of " + System.SeatName, Options: new string[2]
 				{
 					"Gates: {{C|" + KingdomRules.GatePolicyNames[(int)System.Gate] + "}} — " + KingdomRules.GatePolicyBlurbs[(int)System.Gate],
 					"Stores: {{C|" + KingdomRules.StoresPolicyNames[(int)System.Stores] + "}} — " + KingdomRules.StoresPolicyBlurbs[(int)System.Stores]
@@ -177,12 +180,12 @@ namespace ThousandAndFirst
 				if (num == 0)
 				{
 					System.Gate = (System.Gate == KingdomRules.GatePolicy.Open) ? KingdomRules.GatePolicy.Guarded : KingdomRules.GatePolicy.Open;
-					KingdomChronicle.Record(System, System.KingdomDisplayName + " set its gates " + ((System.Gate == KingdomRules.GatePolicy.Open) ? "open to all comers" : "under the watch"));
+					KingdomChronicle.Record(System, System.SeatName + " set its gates " + ((System.Gate == KingdomRules.GatePolicy.Open) ? "open to all comers" : "under the watch"));
 				}
 				else
 				{
 					System.Stores = (System.Stores == KingdomRules.StoresPolicy.Plenty) ? KingdomRules.StoresPolicy.Thrift : KingdomRules.StoresPolicy.Plenty;
-					KingdomChronicle.Record(System, "the water-keepers of " + System.KingdomDisplayName + " were told to " + ((System.Stores == KingdomRules.StoresPolicy.Thrift) ? "ration" : "pour freely"));
+					KingdomChronicle.Record(System, "the water-keepers of " + System.SeatName + " were told to " + ((System.Stores == KingdomRules.StoresPolicy.Thrift) ? "ration" : "pour freely"));
 				}
 			}
 		}
@@ -200,8 +203,8 @@ namespace ThousandAndFirst
 			{
 				string district = KingdomRules.Districts[num];
 				System.ZoneDistricts[zone.ZoneID] = district;
-				KingdomChronicle.Record(System, "the ground here was named the " + KingdomRules.DistrictName(district) + " of " + System.KingdomDisplayName);
-				Popup.Show("This ground is the {{C|" + KingdomRules.DistrictName(district) + "}} of " + System.KingdomDisplayName + ".");
+				KingdomChronicle.Record(System, "the ground here was named the " + KingdomRules.DistrictName(district) + " of " + System.SeatName);
+				Popup.Show("This ground is the {{C|" + KingdomRules.DistrictName(district) + "}} of " + System.SeatName + ".");
 			}
 		}
 
@@ -409,7 +412,7 @@ namespace ThousandAndFirst
 						larderRoom--;
 					}
 				}
-				Popup.Show((dedicated > 0) ? (dedicated + " are dedicated to the stores of " + System.KingdomDisplayName + ".") : "Everything here is already dedicated, or the keepers can account for no more.");
+				Popup.Show((dedicated > 0) ? (dedicated + " are dedicated to the stores of " + System.SeatName + ".") : "Everything here is already dedicated, or the keepers can account for no more.");
 				return;
 			}
 			if (num > 0 && num <= vessels.Count)
@@ -428,7 +431,7 @@ namespace ThousandAndFirst
 				else
 				{
 					vessel.SetIntProperty("KingdomStores", 1);
-					Popup.Show("The " + vessel.ShortDisplayName + " is dedicated to the stores of " + System.KingdomDisplayName + ".");
+					Popup.Show("The " + vessel.ShortDisplayName + " is dedicated to the stores of " + System.SeatName + ".");
 				}
 				return;
 			}
@@ -450,8 +453,22 @@ namespace ThousandAndFirst
 					// Dedication is a mark, not a transfer: what is inside stays where it is and
 					// stays the founder's. The settlement only counts it.
 					larder.SetIntProperty("KingdomLarder", 1);
-					Popup.Show("The " + larder.ShortDisplayName + " is a larder of " + System.KingdomDisplayName + " now. What is in it is counted, and still yours.");
+					Popup.Show("The " + larder.ShortDisplayName + " is a larder of " + System.SeatName + " now. What is in it is counted, and still yours.");
 				}
+			}
+		}
+
+		/// <summary>
+		/// Calls a shared meal from the ground's dedicated larders. The service does its own
+		/// eligibility check and success messaging; this only surfaces a decline, matching
+		/// every other action here.
+		/// </summary>
+		public void HoldSharedMeal(KingdomSystem System)
+		{
+			Zone zone = ParentObject.CurrentZone;
+			if (!KingdomLarder.HoldSharedMeal(System, zone, out var failure))
+			{
+				Popup.Show(failure);
 			}
 		}
 	}

@@ -14,9 +14,15 @@ namespace ThousandAndFirst
 		private static string DefenceAndPantryLine(KingdomSystem System, Zone Here)
 		{
 			KingdomSurvey survey = KingdomSurvey.Take(Here, System);
+			string pantryName = KingdomRules.PantryTierNames[(int)survey.FoodAbundance];
+			// Names the same size a shared meal would call right now, so the Status report
+			// doubles as the honest preview the Charter's meal action promises.
+			string pantryHint = (survey.FoodAbundance == KingdomRules.PantryTier.Empty)
+				? "nothing dedicated is stored yet"
+				: "enough for " + KingdomRules.MealSizeName(survey.FoodAbundance);
 			return "\nDefence: " + survey.Defence()
 				+ (survey.DistrictDefenceBonus > 0 ? ("  (garrison " + survey.DistrictDefenceBonus + ")") : "")
-				+ "  Larder: " + survey.FoodAbundance + " (" + survey.FoodStored + ")";
+				+ "  Larder: " + pantryName + " (" + survey.FoodStored + ") — " + pantryHint;
 		}
 
 		public static string Status(KingdomSystem System)
@@ -24,12 +30,19 @@ namespace ThousandAndFirst
 			Zone currentZone = The.Player?.CurrentZone;
 			bool currentClaimed = currentZone != null && System.ClaimedZones.Contains(currentZone.ZoneID);
 			StringBuilder stringBuilder = new StringBuilder();
-			stringBuilder.Append("{{C|").Append(System.KingdomDisplayName).Append("}}, founded tick ").Append(System.FoundedTick)
+			stringBuilder.Append("{{C|").Append(System.SeatName).Append("}}").Append(KingdomSettlement.VocationSuffix(System.Vocation)).Append(", founded tick ").Append(System.FoundedTick)
 				.Append("\nStage: ")
 				.Append(System.Stage)
 				.Append(System.Withered ? " {{r|(withered)}}" : "")
 				.Append("  Population: ")
 				.Append(System.Population);
+			// The realm is the faction; the cities are where its history happened. A founder
+			// standing in one should be told the other is still out there, keeping itself.
+			if (System.Away != null)
+			{
+				stringBuilder.Append("\n{{K|").Append(System.KingdomDisplayName).Append(" also holds ").Append(System.Away.SettlementName)
+					.Append(KingdomSettlement.VocationSuffix(System.Away.Vocation)).Append(", which keeps itself until you stand in it.}}");
+			}
 			if (System.OriginCounts.Count > 0)
 			{
 				stringBuilder.Append("\nPeoples:");
@@ -118,7 +131,7 @@ namespace ThousandAndFirst
 		public static string Roll(KingdomSystem System, int Limit = 30)
 		{
 			StringBuilder stringBuilder = new StringBuilder();
-			stringBuilder.Append("{{C|The roll of ").Append(System.KingdomDisplayName).Append("}}\n");
+			stringBuilder.Append("{{C|The roll of ").Append(System.SeatName).Append("}}\n");
 			if (System.RosterNames.Count == 0)
 			{
 				stringBuilder.Append("\nNo one has come yet. Water and a bed will change that.");
