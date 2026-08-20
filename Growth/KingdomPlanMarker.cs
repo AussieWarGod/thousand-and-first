@@ -186,6 +186,10 @@ namespace ThousandAndFirst
 			{
 				return;
 			}
+			// Read off the marker before it is taken down: the look the founder chose when they
+			// staked the plan rides on the marker exactly as it rides on a scaffold.
+			scaffold.SetStringProperty(KingdomUpgrade.BuildKeyProperty, Entry.Key);
+			KingdomDesign.StageSkin(scaffold, Entry, MarkerObject.GetStringProperty(KingdomDesign.PlannedSkinProperty));
 			MarkerObject.Destroy(null, Silent: true);
 			r_KingdomScaffold part = scaffold.GetPart<r_KingdomScaffold>();
 			if (part != null)

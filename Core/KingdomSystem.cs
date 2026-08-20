@@ -873,6 +873,14 @@ namespace ThousandAndFirst
 			{
 				KingdomGrowth.OnZoneActivated(this, E.Zone, survey);
 			});
+			// After growth, and the order is load-bearing for the same reason trade runs before it:
+			// growth is where this pass's arrivals, upkeep, and work assignment land, so the free
+			// hands and the stores an improvement is allowed to draw on are only true once growth
+			// has finished with them. An improvement is a luxury paid out of what is left.
+			Guard("improvement", delegate
+			{
+				KingdomUpgrade.OnZoneActivated(this, E.Zone, survey);
+			});
 			Guard("raids", delegate
 			{
 				KingdomRaids.OnZoneActivated(this, E.Zone, survey);

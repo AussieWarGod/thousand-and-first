@@ -8,6 +8,8 @@ references the game resolves by name at load or roll time, where a wrong name is
   blueprint reference   a Blueprint= naming something neither we nor the game defines
   population merge      a Load="Merge" into a table that does not exist and is not fabricable
   book reference        a Book ID= that no blueprint points at, or a pointer to no book
+  upgrade chain         an UpgradesTo= naming a design no <building> declares, or a ring of them
+  zoning district       a Districts= token naming ground the founder can never declare
 
 The population case is the one that motivated this. `DynamicObjectsTable:Books` looked like a
 vanilla table to merge into. It is not declared anywhere; it is *fabricated* on demand from
@@ -103,6 +105,80 @@ def rolled_by_our_code(table):
     return False
 
 
+def known_districts():
+    """The district keys a founder can actually declare, read off the rules rather than copied,
+    so this check cannot drift from the menu it is checking against."""
+    source = read(os.path.join("Core", "KingdomRules.cs"))
+    match = re.search(r"Districts = new string\[\d+\]\s*\{([^}]*)\}", source)
+    if not match:
+        return set()
+    return set(re.findall(r'"([^"]+)"', match.group(1)))
+
+
+def building_reference_problems():
+    """UpgradesTo resolution, chain cycles, and Districts tokens across our own catalogue."""
+    if not os.path.isfile("KingdomBuildings.xml"):
+        return []
+    problems = []
+    root = ET.parse("KingdomBuildings.xml").getroot()
+    keys = set()
+    chain = {}
+    for building in root.iter("building"):
+        key = building.get("Key")
+        if not key:
+            continue
+        keys.add(key)
+        successor = building.get("UpgradesTo")
+        if successor:
+            chain[key] = successor
+
+    for key, successor in sorted(chain.items()):
+        if successor not in keys:
+            problems.append(
+                "building %s upgrades into %s, which no <building> in this file declares"
+                % (key, successor))
+
+    # A ring improves each work into the next forever, spending the settlement's whole surplus
+    # on going in a circle. TryParseUpgradeAttributes catches the one-step case; only a pass over
+    # the whole catalogue can see a longer one.
+    for start in sorted(chain):
+        seen = [start]
+        at = chain[start]
+        while at in chain and at not in seen:
+            seen.append(at)
+            at = chain[at]
+        if at in seen:
+            problems.append("upgrade chain loops: %s -> %s" % (" -> ".join(seen), at))
+            break
+
+    districts = known_districts() | {"none", "all"}
+    if districts:
+        for building in root.iter("building"):
+            declared = building.get("Districts")
+            if not declared:
+                continue
+            for token in declared.split(","):
+                token = token.strip().lower()
+                if token and token not in districts:
+                    problems.append(
+                        "building %s wants the district %s, which is not one a founder can "
+                        "declare, so nothing can ever be raised on ground that carries it"
+                        % (building.get("Key"), token))
+
+    # A skin only ever names art that already exists. One of ours must exist on disk; a vanilla
+    # path cannot be checked here because vanilla tiles live inside the packed Unity assets.
+    for building in root.iter("building"):
+        for skin in building.iter("skin"):
+            tile = skin.get("Tile")
+            if not tile or not tile.startswith("ThousandAndFirst/"):
+                continue
+            if not os.path.isfile(os.path.join("Textures", tile)):
+                problems.append(
+                    "building %s skin %s names the tile %s, which is not in Textures/"
+                    % (building.get("Key"), skin.get("Key"), tile))
+    return problems
+
+
 def main():
     base = None
     if "--base" in sys.argv:
@@ -156,7 +232,13 @@ def main():
                     "no TAF code rolls; Merge into an absent name creates a table nothing reads"
                     % name)
 
-    # 3. Book IDs referenced by blueprints exist, and books are reachable.
+    # 3. KingdomBuildings cross-references: a design that grows into a name nothing declares,
+    #    a chain that loops back on itself, and ground no founder can ever name. All three are
+    #    silent-ish in play -- a refusal the player cannot act on, or an improvement that runs
+    #    forever -- and none is visible by validating either end alone.
+    problems.extend(building_reference_problems())
+
+    # 4. Book IDs referenced by blueprints exist, and books are reachable.
     if os.path.isfile("Books.xml"):
         book_ids = set(re.findall(r'<book\s+ID="([^"]+)"', read("Books.xml")))
         book_ids |= set(re.findall(r'ID="([^"]+)"', read("Books.xml")))

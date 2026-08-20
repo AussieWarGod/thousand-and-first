@@ -31,6 +31,9 @@
     <Compile Include="KingdomPlanRulesTests.cs" />
     <Compile Include="KingdomAdoptRulesTests.cs" />
     <Compile Include="KingdomCreedRulesTests.cs" />
+    <Compile Include="KingdomZoningRulesTests.cs" />
+    <Compile Include="KingdomUpgradeRulesTests.cs" />
+    <Compile Include="KingdomDesignRulesTests.cs" />
     <Compile Include="..\Core\KingdomRules.cs" />
     <Compile Include="..\Core\KingdomLedger.cs" />
     <Compile Include="..\Core\KingdomSettlement.cs" />
@@ -43,6 +46,9 @@
     <Compile Include="..\Growth\KingdomLayoutRules.cs" />
     <Compile Include="..\Growth\KingdomPlanRules.cs" />
     <Compile Include="..\Growth\KingdomAdoptRules.cs" />
+    <Compile Include="..\Growth\KingdomZoningRules.cs" />
+    <Compile Include="..\Growth\KingdomUpgradeRules.cs" />
+    <Compile Include="..\Growth\KingdomDesignRules.cs" />
     <Compile Include="..\Experience\KingdomVoiceRules.cs" />
     <Compile Include="..\Experience\KingdomOfficeRules.cs" />
     <Compile Include="..\Experience\KingdomLocusRules.cs" />

@@ -11,6 +11,21 @@ namespace ThousandAndFirst
 	{
 		public static bool Commission(KingdomSystem System, string Key, out string Failure)
 		{
+			return Commission(System, Key, null, out Failure);
+		}
+
+		/// <summary>
+		/// Issues one commission on the ground the founder is standing on.
+		/// </summary>
+		/// <param name="System">The realm; must be founded and must hold this ground.</param>
+		/// <param name="Key">Registry key of the design.</param>
+		/// <param name="SkinKey">Key of the design's own skin the founder chose, or null for the
+		/// design's unmodified look. A key the design does not carry is ignored.</param>
+		/// <param name="Failure">A founder-facing sentence when this returns false; null otherwise.
+		/// Every refusal names what would lift it.</param>
+		/// <returns>True once scaffolding is standing and the water is spent.</returns>
+		public static bool Commission(KingdomSystem System, string Key, string SkinKey, out string Failure)
+		{
 			Failure = null;
 			Zone zone = The.Player?.CurrentZone;
 			if (!System.Founded || zone == null || !System.ClaimedZones.Contains(zone.ZoneID))
@@ -21,6 +36,13 @@ namespace ThousandAndFirst
 			if (!KingdomData.TryGetBuilding(Key, out var entry) || !KingdomRules.StyleAllows(entry.Styles, System.Style))
 			{
 				Failure = "No such design.";
+				return false;
+			}
+			// Before the room and the stores are counted, so a founder is never told what a design
+			// would cost them on ground that was never going to take it.
+			if (!KingdomZoning.Permits(System, zone.ZoneID, entry, out string refusal))
+			{
+				Failure = refusal;
 				return false;
 			}
 			// Walls do not count against the plan. A palisade is a LINE, and charging a slot per
@@ -64,6 +86,8 @@ namespace ThousandAndFirst
 				return false;
 			}
 			KingdomGrowth.ConsumeStoredWater(zone, entry.CostDrams);
+			gameObject.SetStringProperty(KingdomUpgrade.BuildKeyProperty, entry.Key);
+			KingdomDesign.StageSkin(gameObject, entry, SkinKey);
 			r_KingdomScaffold part = gameObject.GetPart<r_KingdomScaffold>();
 			if (part != null)
 			{

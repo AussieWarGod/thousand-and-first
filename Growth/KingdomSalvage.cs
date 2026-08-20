@@ -132,6 +132,9 @@ namespace ThousandAndFirst
 			}
 			survey.Consume(waterCost);
 			Machine.SetIntProperty(CertifiedProperty, 1);
+			// Certifying teaches. Taking the machine back off the grid above does not unteach:
+			// the keepers took it apart once and the knowledge is theirs now.
+			KingdomZoning.RecordCertification(System, Machine);
 			string settler = (System.RosterNames.Count > 0) ? System.RosterNames.GetRandomElement() : "a settler";
 			MessageQueue.AddPlayerMessage("{{G|" + Machine.ShortDisplayName + " is certified fit for the grid of " + System.SeatName + ".}} " + settler + " signs off on it.");
 			KingdomChronicle.Record(System, Machine.ShortDisplayName + " was certified fit for the grid at " + System.KingdomDisplayName);

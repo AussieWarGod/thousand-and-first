@@ -424,9 +424,10 @@ namespace ThousandAndFirst
 				if (sink.GetIntProperty("KingdomPowered") != 1)
 				{
 					sink.SetIntProperty("KingdomPowered", 1);
-					System.RecordDeed("the " + sink.ShortDisplayName + " of " + System.KingdomDisplayName + " drawing its first charge");
-					KingdomChronicle.Record(System, "the works turned at " + System.KingdomDisplayName + ", and " + XRL.Language.Grammar.A(sink.ShortDisplayName) + " drew its first charge from hands and weather alone", Accomplishment: true);
-					MessageQueue.AddPlayerMessage("{{G|The works of " + System.KingdomDisplayName + " are turning. The " + sink.ShortDisplayName + " draws from them.}}");
+					string drawing = KingdomDesign.ReferenceFor(sink, sink.ShortDisplayName);
+					System.RecordDeed("the " + drawing + " of " + System.KingdomDisplayName + " drawing its first charge");
+					KingdomChronicle.Record(System, "the works turned at " + System.KingdomDisplayName + ", and " + XRL.Language.Grammar.A(drawing) + " drew its first charge from hands and weather alone", Accomplishment: true);
+					MessageQueue.AddPlayerMessage("{{G|The works of " + System.KingdomDisplayName + " are turning. The " + drawing + " draws from them.}}");
 				}
 			}
 			return Amount - remaining;

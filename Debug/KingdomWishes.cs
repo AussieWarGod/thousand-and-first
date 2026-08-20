@@ -725,8 +725,50 @@ namespace ThousandAndFirst
 				}
 			}
 			Check(report, ref passed, ref failed, "claimed zones carry the faction property (" + system.ClaimedZones.Count + " claims)", claimsCoherent);
+			ChainChecks(report, ref passed, ref failed);
 			ExileChecks(system, report, ref passed, ref failed);
 			Popup.Show("{{C|Kingdom selftest}}: {{G|" + passed + " passed}}" + ((failed > 0) ? (", {{R|" + failed + " FAILED}}") : "") + "\n" + report.ToString());
+		}
+
+		/// <summary>
+		/// Asserts the loaded upgrade chains hang together. <c>Art/check_xml_refs.py</c> walks our
+		/// own catalogue before it ships; this is the same walk over whatever is actually loaded,
+		/// which is the only place a third-party file's chain can be caught. A chain into a design
+		/// nobody declares refuses forever, and a ring improves the settlement in a circle until
+		/// the reserve stops it.
+		/// </summary>
+		private static void ChainChecks(StringBuilder Report, ref int Passed, ref int Failed)
+		{
+			bool resolves = true;
+			bool acyclic = true;
+			foreach (KeyValuePair<string, KingdomUpgradeRules.UpgradeChain> chain in KingdomUpgrade.Chains)
+			{
+				if (chain.Value == null || !chain.Value.Defined)
+				{
+					continue;
+				}
+				if (!KingdomData.TryGetBuilding(chain.Value.SuccessorKey, out var successor)
+					|| GameObjectFactory.Factory.GetBlueprintIfExists(successor.Blueprint) == null)
+				{
+					resolves = false;
+					Report.Append("\n    ").Append(chain.Key).Append(" upgrades into ").Append(chain.Value.SuccessorKey).Append(", which does not resolve");
+					continue;
+				}
+				List<string> walked = new List<string> { chain.Key };
+				string at = chain.Value.SuccessorKey;
+				while (KingdomUpgrade.TryGetChain(at, out var next) && !walked.Contains(at))
+				{
+					walked.Add(at);
+					at = next.SuccessorKey;
+				}
+				if (walked.Contains(at))
+				{
+					acyclic = false;
+					Report.Append("\n    upgrade chain loops: ").Append(string.Join(" -> ", walked.ToArray())).Append(" -> ").Append(at);
+				}
+			}
+			Check(Report, ref Passed, ref Failed, "every upgrade chain names a design that resolves", resolves);
+			Check(Report, ref Passed, ref Failed, "no upgrade chain loops back on itself", acyclic);
 		}
 
 		/// <summary>

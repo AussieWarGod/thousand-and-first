@@ -52,6 +52,16 @@ namespace XRL.World.Parts
 			string blueprint = TargetBlueprint;
 			string displayName = TargetDisplayName ?? "structure";
 			int defence = ParentObject.GetIntProperty("KingdomDefencePending");
+			// Read before the scaffold is taken down, not after: what the founder chose when they
+			// commissioned this rides on the scaffold object, and the scaffold is about to stop
+			// being a thing to read from.
+			string skinColorString = ParentObject.GetStringProperty(KingdomDesign.StagedColorStringProperty);
+			string skinDetailColor = ParentObject.GetStringProperty(KingdomDesign.StagedDetailColorProperty);
+			string skinRenderString = ParentObject.GetStringProperty(KingdomDesign.StagedRenderStringProperty);
+			string skinTile = ParentObject.GetStringProperty(KingdomDesign.StagedTileProperty);
+			// Which registry entry ordered this, so a work never has to be recognised by reading
+			// its blueprint back against a catalog two designs may share.
+			string buildKey = ParentObject.GetStringProperty(KingdomUpgrade.BuildKeyProperty);
 			TargetBlueprint = null;
 			if (cell == null)
 			{
@@ -64,6 +74,7 @@ namespace XRL.World.Parts
 			}
 			ParentObject.Destroy(null, Silent: true);
 			cell.AddObject(gameObject);
+			KingdomDesign.ApplyRenderOverrides(gameObject, skinColorString, skinDetailColor, skinRenderString, skinTile);
 			if (gameObject.GetPart<XRL.World.Parts.LiquidVolume>() != null)
 			{
 				gameObject.SetIntProperty("KingdomStores", 1);
@@ -77,6 +88,10 @@ namespace XRL.World.Parts
 				gameObject.SetIntProperty("KingdomLarder", 1);
 			}
 			gameObject.SetIntProperty("KingdomBuilt", 1);
+			if (!string.IsNullOrEmpty(buildKey))
+			{
+				gameObject.SetStringProperty(KingdomUpgrade.BuildKeyProperty, buildKey);
+			}
 			if (defence > 0)
 			{
 				gameObject.SetIntProperty("KingdomDefence", defence);

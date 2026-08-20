@@ -63,6 +63,17 @@ namespace ThousandAndFirst
 			EnsureLoaded();
 		}
 
+		/// <summary>
+		/// Reads the registries if they have not been read yet, and does nothing if they have.
+		/// The trigger for anything that lives beside the catalog rather than in it &mdash; zoning
+		/// gates, upgrade chains &mdash; which are filled during this same pass and would otherwise
+		/// answer from an empty table for whoever asked first.
+		/// </summary>
+		public static void EnsureBuildings()
+		{
+			EnsureLoaded();
+		}
+
 		public static bool TryGetBuilding(string Key, out KingdomRules.BuildEntry Entry)
 		{
 			EnsureLoaded();
@@ -86,6 +97,12 @@ namespace ThousandAndFirst
 			}
 			_buildings = new List<KingdomRules.BuildEntry>();
 			_styles = new List<string> { "common" };
+			// Everything keyed by a building Key but held outside the entry is emptied here and
+			// refilled by HandleBuilding, in this one pass. A second pass over the same streams
+			// would read the same file twice and make the engine's own unused-attribute check warn
+			// about every attribute that pass did not happen to want.
+			KingdomZoning.ClearGates();
+			KingdomUpgrade.ClearChains();
 			Dictionary<string, Action<XmlDataHelper>> handlers = null;
 			handlers = new Dictionary<string, Action<XmlDataHelper>>
 			{
@@ -149,25 +166,69 @@ namespace ThousandAndFirst
 
 		private static void HandleBuilding(XmlDataHelper xml)
 		{
-			if (!KingdomRules.TryParseBuildAttributes(xml.GetAttribute("Key"), xml.GetAttribute("DisplayName"), xml.GetAttribute("Blueprint"), xml.GetAttribute("Cost"), xml.GetAttribute("Ticks"), xml.GetAttribute("Styles"), xml.GetAttribute("Category"), xml.GetAttribute("MinStage"), xml.GetAttribute("Staff"), xml.GetAttribute("Manning"), xml.GetAttribute("Defence"), out var entry, out var error))
+			string key = xml.GetAttribute("Key");
+			if (!KingdomRules.TryParseBuildAttributes(key, xml.GetAttribute("DisplayName"), xml.GetAttribute("Blueprint"), xml.GetAttribute("Cost"), xml.GetAttribute("Ticks"), xml.GetAttribute("Styles"), xml.GetAttribute("Category"), xml.GetAttribute("MinStage"), xml.GetAttribute("Staff"), xml.GetAttribute("Manning"), xml.GetAttribute("Defence"), out var entry, out var error))
 			{
 				MetricsManager.LogError("ThousandAndFirst KingdomBuildings: " + error);
+				// Nothing is registered and nothing already registered is cleared: a malformed
+				// entry does not replace the design of the same key that is already loaded, so it
+				// must not replace that design's gate or chain either.
+				SkipChildren(xml);
+				return;
 			}
-			else
+			// Every optional gate and chain attribute is read whether or not it is present: the
+			// engine warns about attributes a parse pass never asked for, and an absent one is the
+			// ungated, unchanging default in both registries.
+			KingdomZoning.RegisterGate(entry.Key, xml.GetAttribute("Districts"), xml.GetAttribute("MinZones"), xml.GetAttribute("Knowledge"), xml.GetAttribute("MinTech"));
+			KingdomUpgrade.RegisterChain(entry.Key, xml.GetAttribute("UpgradesTo"), xml.GetAttribute("UpgradeCost"), xml.GetAttribute("UpgradeTicks"), xml.GetAttribute("UpgradeCrew"), xml.GetAttribute("UpgradeMinStage"));
+			KingdomRules.BuildEntry parsed = entry;
+			for (int i = 0; i < _buildings.Count; i++)
 			{
-				for (int i = 0; i < _buildings.Count; i++)
+				if (_buildings[i].Key == entry.Key)
 				{
-					if (_buildings[i].Key == entry.Key)
+					_buildings[i] = entry;
+					entry = null;
+					break;
+				}
+			}
+			if (entry != null)
+			{
+				_buildings.Add(entry);
+			}
+			// HandleNodes stands in for DoneWithElement: it returns at once on a self-closing
+			// <building/>, which is every entry that declares no skins, and otherwise dispatches
+			// the children.
+			xml.HandleNodes(new Dictionary<string, Action<XmlDataHelper>>
+			{
+				{
+					"skin",
+					delegate(XmlDataHelper skinXml)
 					{
-						_buildings[i] = entry;
-						entry = null;
-						break;
+						HandleSkin(skinXml, parsed);
 					}
 				}
-				if (entry != null)
-				{
-					_buildings.Add(entry);
-				}
+			});
+		}
+
+		// A malformed <building> is already reported; its children are walked past without a second
+		// round of warnings about nodes that were never going to be read.
+		private static void SkipChildren(XmlDataHelper xml)
+		{
+			xml.HandleNodes(new Dictionary<string, Action<XmlDataHelper>>(), delegate(XmlDataHelper child)
+			{
+				child.DoneWithElement();
+			});
+		}
+
+		private static void HandleSkin(XmlDataHelper xml, KingdomRules.BuildEntry Entry)
+		{
+			if (!KingdomDesignRules.TryParseSkinAttributes(xml.GetAttribute("Key"), xml.GetAttribute("Style"), xml.GetAttribute("ColorString"), xml.GetAttribute("DetailColor"), xml.GetAttribute("RenderString"), xml.GetAttribute("Tile"), out var skin, out var error))
+			{
+				MetricsManager.LogError("ThousandAndFirst KingdomBuildings: building " + Entry.Key + ": " + error);
+			}
+			else if (!KingdomRules.TryAddSkin(Entry, skin, out var clash))
+			{
+				MetricsManager.LogError("ThousandAndFirst KingdomBuildings: " + clash);
 			}
 			xml.DoneWithElement();
 		}

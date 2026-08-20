@@ -78,7 +78,7 @@ namespace ThousandAndFirst
 			}
 			while (true)
 			{
-				int num = Popup.PickOption(Title: system.SeatName + KingdomSettlement.VocationSuffix(system.Vocation), Options: new string[21] { (system.PetitionKind != KingdomRules.PetitionKind.None) ? ("{{W|Hear " + system.PetitionPetitioner + "}}") : "{{K|No one is waiting to speak}}", "Status", "What happened while you were away", "The Chronicle", "As others tell it", "Standings", "The roll of settlers", "Standing policy", "Designate district", "Commission a building", "Answer a threat", "Dedicate a vessel or larder", "Strike a trade charter", "Send a water manifest", "Share a meal from the larder", "Certify a machine", "Set the water detail", "Plans staked for later", "Adopt a building", "Release an adoption", (system.SettlementCount >= 2 || system.Seceded != null) ? "How your cities hold each other" : "{{K|One city cannot fall out with itself}}"}, Hotkeys: new char[21] { 'h', 's', 'w', 'c', 'a', 'n', 'l', 'p', 'd', 'm', 't', 'v', 'r', 'i', 'f', 'e', 'u', 'g', 'b', 'j', 'k'}, AllowEscape: true);
+				int num = Popup.PickOption(Title: system.SeatName + KingdomSettlement.VocationSuffix(system.Vocation), Options: new string[24] { (system.PetitionKind != KingdomRules.PetitionKind.None) ? ("{{W|Hear " + system.PetitionPetitioner + "}}") : "{{K|No one is waiting to speak}}", "Status", "What happened while you were away", "The Chronicle", "As others tell it", "Standings", "The roll of settlers", "Standing policy", "Designate district", "Commission a building", "Answer a threat", "Dedicate a vessel or larder", "Strike a trade charter", "Send a water manifest", "Share a meal from the larder", "Certify a machine", "Set the water detail", "Plans staked for later", "Adopt a building", "Release an adoption", (system.SettlementCount >= 2 || system.Seceded != null) ? "How your cities hold each other" : "{{K|One city cannot fall out with itself}}", "What the keepers know", "Your works, and what they become", "Name a building"}, Hotkeys: new char[24] { 'h', 's', 'w', 'c', 'a', 'n', 'l', 'p', 'd', 'm', 't', 'v', 'r', 'i', 'f', 'e', 'u', 'g', 'b', 'j', 'k', 'o', 'y', 'x'}, AllowEscape: true);
 				switch (num)
 				{
 				case 0:
@@ -143,6 +143,15 @@ namespace ThousandAndFirst
 					break;
 				case 20:
 					ManageCreed(system);
+					break;
+				case 21:
+					KingdomZoning.ShowKeepers(system);
+					break;
+				case 22:
+					KingdomUpgrade.ShowImprovements(system);
+					break;
+				case 23:
+					KingdomDesign.RenameBuilding(system, ParentObject);
 					break;
 				default:
 					return;
@@ -267,6 +276,13 @@ namespace ThousandAndFirst
 			if (num >= 0)
 			{
 				string district = KingdomRules.Districts[num];
+				// Zoning is a decision, and a decision whose price the founder cannot see is a
+				// trap: what this naming would put out of reach here is said before it does it.
+				string lockout = KingdomZoning.LockoutWarning(System, zone.ZoneID, district);
+				if (lockout != null && Popup.ShowYesNo(lockout + "\n\nName it the " + KingdomRules.DistrictName(district) + " anyway?") != DialogResult.Yes)
+				{
+					return;
+				}
 				System.ZoneDistricts[zone.ZoneID] = district;
 				KingdomChronicle.Record(System, "the ground here was named the " + KingdomRules.DistrictName(district) + " of " + System.SeatName);
 				Popup.Show("This ground is the {{C|" + KingdomRules.DistrictName(district) + "}} of " + System.SeatName + ".");
@@ -293,12 +309,20 @@ namespace ThousandAndFirst
 			string[] options = new string[available.Count];
 			for (int i = 0; i < available.Count; i++)
 			{
-				options[i] = available[i].DisplayName + " {{C|[" + available[i].CostDrams + " drams]}}";
+				// The whole catalogue is shown, blocked designs included, each carrying the one
+				// thing standing in its way. A list that silently shortens teaches nothing.
+				options[i] = available[i].DisplayName + " {{C|[" + available[i].CostDrams + " drams]}}"
+					+ (KingdomZoning.GateNote(System, zone?.ZoneID, available[i]) ?? "");
 			}
 			int num = Popup.PickOption(Title: "Commission ({{C|" + stored + " drams}} in the stores)", Options: options, AllowEscape: true);
 			if (num >= 0)
 			{
-				if (!KingdomCommission.Commission(System, available[num].Key, out var failure))
+				// Asked before the water moves, and only for a design that actually has a look to
+				// choose; escaping the skin prompt takes the design's own. Not asked at all off the
+				// kingdom's ground, where the commission below is going to be refused anyway.
+				bool onGround = zone != null && System.ClaimedZones.Contains(zone.ZoneID);
+				string skin = onGround ? KingdomDesign.ChooseSkin(available[num], System.Style)?.Key : null;
+				if (!KingdomCommission.Commission(System, available[num].Key, skin, out var failure))
 				{
 					Popup.Show(failure);
 				}
@@ -351,11 +375,19 @@ namespace ThousandAndFirst
 			string[] options = new string[available.Count];
 			for (int i = 0; i < available.Count; i++)
 			{
-				options[i] = available[i].DisplayName + " {{C|[" + available[i].CostDrams + " drams]}}";
+				options[i] = available[i].DisplayName + " {{C|[" + available[i].CostDrams + " drams]}}"
+					+ (KingdomZoning.GateNote(System, zone.ZoneID, available[i]) ?? "");
 			}
 			int num = Popup.PickOption(Title: "Stake a plan", Intro: "Nothing is spent now. " + System.SeatName + " raises this when the stores and the plan allow it.", Options: options, AllowEscape: true);
 			if (num < 0)
 			{
+				return;
+			}
+			// Judged where the plan is staked, not where it is realised, because this cell is the
+			// founder's decision and they are standing on it now.
+			if (!KingdomZoning.Permits(System, zone.ZoneID, available[num], out var refusal))
+			{
+				Popup.Show(refusal);
 				return;
 			}
 			GameObject marker = GameObject.Create("r_KingdomPlanMarker");
@@ -365,6 +397,11 @@ namespace ThousandAndFirst
 				return;
 			}
 			KingdomRules.BuildEntry chosen = available[num];
+			string plannedSkin = KingdomDesign.ChooseSkin(chosen, System.Style)?.Key;
+			if (!string.IsNullOrEmpty(plannedSkin))
+			{
+				marker.SetStringProperty(KingdomDesign.PlannedSkinProperty, plannedSkin);
+			}
 			r_KingdomPlanMarker part = marker.GetPart<r_KingdomPlanMarker>();
 			part?.ApplyDesign(chosen);
 			cell.AddObject(marker);

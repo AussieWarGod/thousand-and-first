@@ -69,6 +69,9 @@ namespace ThousandAndFirst
 				// founder is standing on, and neither is carried on the system.
 				.Append(currentClaimed ? DefenceAndPantryLine(System, currentZone) : "")
 				.Append(currentClaimed ? PowerLine(System, currentZone) : "")
+				// What the settlement can build at, and what the next level costs, so the craft
+				// level is never a number the founder has to reverse-engineer from refusals.
+				.Append(KingdomZoning.Readout(System))
 				.Append("\nUpkeep: ")
 				.Append(KingdomRules.PolicyUpkeep(KingdomRules.UpkeepDrams(System.Population, System.Stage), System.Stores))
 				.Append(" drams per interval  Thirst streak: ")

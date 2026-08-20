@@ -1613,7 +1613,64 @@
 
 			public string ShortName;
 
+			/// <summary>
+			/// Appearances this design was authored with, from its <c>&lt;skin&gt;</c> child
+			/// elements, in the order the file declares them. Null &mdash; never an empty list
+			/// &mdash; for a design that declares none, which is every design written before skins
+			/// existed and every one that simply does not want them.
+			/// <para>
+			/// Read through <see cref="KingdomDesignRules"/>; nothing here validates a skin, because
+			/// the same entry may be re-declared by a third-party file and the last declaration owns
+			/// its whole skin list.
+			/// </para>
+			/// </summary>
+			public System.Collections.Generic.List<KingdomDesignRules.SkinEntry> Skins;
+
 			public string Name => ShortName ?? DisplayName;
+		}
+
+		/// <summary>
+		/// Appends one parsed <c>&lt;skin&gt;</c> to a design, refusing a key the design already
+		/// carries rather than letting the later one shadow the earlier at pick time.
+		/// </summary>
+		/// <param name="Entry">The design being built up. Null is refused.</param>
+		/// <param name="Skin">A skin from <c>KingdomDesignRules.TryParseSkinAttributes</c>.</param>
+		/// <param name="Error">Null on success, else a log-facing reason. The skin is not added.
+		/// </param>
+		/// <returns>False when the skin was refused.</returns>
+		public static bool TryAddSkin(BuildEntry Entry, KingdomDesignRules.SkinEntry Skin, out string Error)
+		{
+			Error = null;
+			if (Entry == null || Skin == null || string.IsNullOrEmpty(Skin.Key))
+			{
+				Error = "skin has nothing to attach to";
+				return false;
+			}
+			if (KingdomDesignRules.FindSkin(Entry.Skins, Skin.Key) != null)
+			{
+				Error = "building " + Entry.Key + " declares the skin " + Skin.Key + " twice; the second was ignored";
+				return false;
+			}
+			if (Entry.Skins == null)
+			{
+				Entry.Skins = new System.Collections.Generic.List<KingdomDesignRules.SkinEntry>();
+			}
+			Entry.Skins.Add(Skin);
+			return true;
+		}
+
+		/// <summary>
+		/// Whether a value is one of the growth stages this file defines.
+		/// <para>
+		/// <c>Enum.TryParse</c> accepts any number the underlying type can hold, so
+		/// <c>MinStage="7"</c> parses happily into a stage no settlement can ever reach, and the
+		/// design it gates is out of the founder's reach forever with nothing anywhere saying so.
+		/// This is the guard that keeps such a value out of a registry entry.
+		/// </para>
+		/// </summary>
+		public static bool IsKnownStage(GrowthStage Stage)
+		{
+			return System.Enum.IsDefined(typeof(GrowthStage), Stage);
 		}
 
 		public static string StripParenthetical(string Text)
@@ -1662,7 +1719,7 @@
 				return false;
 			}
 			GrowthStage minStage = GrowthStage.Camp;
-			if (!string.IsNullOrEmpty(MinStage) && !System.Enum.TryParse<GrowthStage>(MinStage, ignoreCase: true, out minStage))
+			if (!string.IsNullOrEmpty(MinStage) && (!System.Enum.TryParse<GrowthStage>(MinStage, ignoreCase: true, out minStage) || !IsKnownStage(minStage)))
 			{
 				Error = "building " + Key + " has a bad MinStage";
 				return false;

@@ -52,6 +52,80 @@ Ship a `KingdomBuildings.xml` in your mod root:
 - `MinStage` — earliest growth stage the design appears at: `Camp` (default), `Steading`,
   `Village`, `Town`, `City`.
 
+### Gating a design (all optional)
+
+Four more attributes decide whether a design may be raised, on top of `Styles` and `MinStage`.
+**Every one is optional and an absent attribute gates nothing**, so an entry written before these
+existed — ours or yours — behaves exactly as it always did. A malformed one is logged and ignored
+rather than deleting the design: the worst case is a design that could have been harder to reach,
+never one that becomes unreachable with no way to find out why.
+
+| Attribute | What it wants |
+|---|---|
+| `Districts` | Comma list of district keys whose ground will take this design: `agrarian`, `market`, `craft`, `shrine`, `garrison`, `academy`, plus `none` for ground the founder has never named. `all` (or omitting it) accepts everywhere. A key we do not recognise is treated as somebody else's district, never as open ground. |
+| `MinZones` | Claimed zones the realm must hold. |
+| `Knowledge` | Comma list of things the settlement must know, **all** of them. A requirement written `kind:name` must match that kind exactly; one written as a bare name is satisfied by any kind. Kinds: `disk` (a design taught to the keepers from a data disk the founder carried home — the disk is read and handed back, never spent), `machine` (a machine hauled home and certified fit for the grid), `origin` (a trade the settlement holds because somebody from that country lives there, so it comes and goes with them). Invent your own kind freely; an unknown kind gates perfectly well and is worth no craft. |
+| `MinTech` | Craft the settlement must have reached: `hands` (the start, gates nothing), `salvage`, `workshop`, `foundry`, `arclight`. |
+
+Craft is **derived, never authored and never set**: a taught design is worth 1 and a certified
+machine is worth 2, an origin is worth 0, and the level is read off the total. There is no research
+tree and there will not be one.
+
+Gating is **hard for where a structure may stand and soft for how well it works**. `Districts`
+refuses placement; nothing anywhere gates the district *bonuses*, which stay realm-wide and
+unconditional, so a design raised off its natural ground simply misses a bonus. Housing, storage,
+and civic designs are additionally always accepted on undistricted ground, so a camp can never hit
+a wall before the founder has learned what a district is.
+
+### Designs that grow into other designs (all optional)
+
+A design may name what it becomes. When the settlement has earned it, it raises the successor
+itself through the same scaffold a commission uses, out of what the stores can spare, and carries
+everything the old work held and everything the founder had marked on it across.
+
+```xml
+<building Key="caskrack" DisplayName="cask rack (holds 64 drams)" Blueprint="r_KingdomCaskRack"
+          Cost="4" Ticks="1200" Styles="all" Category="storage" UpgradesTo="cistern" />
+```
+
+| Attribute | Default when absent |
+|---|---|
+| `UpgradesTo` | Nothing. The design never changes, which is where every design starts. |
+| `UpgradeCost` | The difference between the two designs' `Cost`, never free and never dearer than the successor's own price. |
+| `UpgradeTicks` | 75% of building the successor from nothing, never less than one tick. |
+| `UpgradeCrew` | The crew the successor needs to run, never fewer than one. |
+| `UpgradeMinStage` | The successor's own `MinStage`. An override may only raise the gate. |
+
+Pricing an improvement without naming one is an error, not a chain with a guessed successor.
+Re-declaring an entry **without** `UpgradesTo` clears whatever chain an earlier file gave that key.
+The settlement never improves a structure the player built or that was merely adopted, never
+starts one that would leave the old work's contents nowhere to go, never draws the stores below the
+reserve it lives on, and can be told to leave one work — or the whole ground — exactly as it is.
+
+### Skins: what a design looks like
+
+A `<building>` may carry `<skin>` children. Each is a `Render` override the founder is offered when
+they commission the design, with the one matching the city's own `Style` suggested; a skin naming no
+`Style` is offered everywhere and suggested nowhere. A blank field leaves the design's own value
+alone.
+
+```xml
+<building Key="bunk" DisplayName="communal bunk" Blueprint="r_KingdomBunk"
+          Cost="4" Ticks="1200" Styles="all" Category="housing">
+  <skin Key="verdant" Style="verdant" ColorString="&amp;g" />
+  <skin Key="bleached" ColorString="&amp;Y" />
+</building>
+```
+
+`Key` is required and unique within one design; a skin overriding none of `ColorString`,
+`DetailColor`, `RenderString`, or `Tile` is refused rather than accepted as a no-op. A skin only
+ever **names** art — point `Tile` at a tile that already exists, vanilla or one your own blueprint
+ships. Re-declaring an entry replaces its whole skin list along with the rest of it.
+
+Any building the settlement raised can also be given a name by the founder, from the Charter, and
+that name is what the chronicle, the ledger, and the settlement's own messages call it from then
+on — including after it grows into something else.
+
 ## The protection contract
 
 Kingdom systems never touch what players place. Containers join the city stores only when

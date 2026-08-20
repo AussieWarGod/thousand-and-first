@@ -27,6 +27,7 @@ import xml.etree.ElementTree as ET
 TEXTURE_DIR = os.path.join("Textures", "ThousandAndFirst")
 SOURCE_DIR = os.path.join("Art", "src")
 BLUEPRINTS = "ObjectBlueprints.xml"
+BUILDINGS = "KingdomBuildings.xml"
 PREFIX = "ThousandAndFirst/"
 
 
@@ -64,6 +65,20 @@ def main():
             referenced.setdefault(os.path.basename(tile), []).append(
                 (blueprint, part.get("DetailColor"))
             )
+
+    # A <skin> names a Render override for a design, so a tile reached only from one is reached.
+    # Without this the two checks disagree: the tile would be live in game and reported here as
+    # orphaned art, which is the same "correct art, wrong conclusion" failure this file exists for.
+    if os.path.isfile(BUILDINGS):
+        for building in ET.parse(BUILDINGS).getroot().iter("building"):
+            for skin in building.iter("skin"):
+                tile = skin.get("Tile")
+                if not tile or not tile.startswith(PREFIX):
+                    continue
+                referenced.setdefault(os.path.basename(tile), []).append(
+                    ("%s skin %s" % (building.get("Key", "<unkeyed>"), skin.get("Key", "<unkeyed>")),
+                     skin.get("DetailColor"))
+                )
 
     problems = []
 

@@ -866,6 +866,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase("well", "the well", "Well", "-1", "1200", "common", null, null, false)]
 		[TestCase("well", "the well", "Well", "4", "0", "common", null, null, false)]
 		[TestCase("well", "the well", "Well", "4", "1200", "common", null, "metropolis", false)]
+		[TestCase("well", "the well", "Well", "4", "1200", "common", null, "7", false)]
 		public void TryParseBuildAttributes(string key, string display, string blueprint, string cost, string ticks, string styles, string category, string minStage, bool expectedOk)
 		{
 			bool ok = KingdomRules.TryParseBuildAttributes(key, display, blueprint, cost, ticks, styles, category, minStage, null, null, null, out var entry, out var error);
