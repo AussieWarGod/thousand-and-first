@@ -53,6 +53,11 @@ or talk. Strike trade charters. Read the book, and argue with it. And when the p
 your own two hands, invest until it no longer needs them: that ladder — your hands, then other
 hands, then bigger vessels, then carts, then pipes — is the spine of progression here.
 Automation is bought, not assumed; its absence limits a settlement, and never cripples one.
+And that shape is the rule for everything the settlement will ever learn to do — water, word,
+warding, healing, anything: first an effortful, primitive rung; then settlers' hands; then
+great technology recovered and made trustworthy; and at the top, sometimes, a covenant —
+power at a price the system will not judge. Nothing skips rungs, and nothing at the top is
+free.
 
 A big city gives much and drinks deep. What feeds it is your choice: haul your adventuring
 fortune home, or build the settlement until it carries its own. Both are honest; the second
