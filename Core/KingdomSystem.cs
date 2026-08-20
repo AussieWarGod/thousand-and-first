@@ -411,6 +411,15 @@ namespace ThousandAndFirst
 			ExiledSeat = Capture();
 			ExiledAway = Away;
 			ExiledStandings = Standings;
+			// A manifest belongs to the realm that loaded it. Left alone it would outlive that
+			// realm on this singleton system, and the next realm's Charter would refuse to send
+			// water while quoting two cities that are no longer the founder's.
+			if (Manifest != null)
+			{
+				KingdomChronicle.Record(this, KingdomManifestRules.ManifestLapseDeed(Manifest.OriginName, Manifest.DestinationName, Manifest.Drams));
+				KingdomLog.Log("manifest: voided by exile, " + Manifest.Drams + " drams " + Manifest.OriginName + " -> " + Manifest.DestinationName);
+				Manifest = null;
+			}
 			KingdomFactionName = null;
 			KingdomDisplayName = null;
 			// Seating a blank settlement clears every per-settlement field there is, so a field
@@ -722,13 +731,19 @@ namespace ThousandAndFirst
 				return base.HandleEvent(E);
 			}
 			Ledger.Reset();
-			Guard("growth", delegate
-			{
-				KingdomGrowth.OnZoneActivated(this, E.Zone, survey);
-			});
+			// Trade runs BEFORE growth, and the order is load-bearing. Both draw on one shared
+			// survey, and growth is where upkeep is taken and the thirst ladder resolves. Water
+			// that arrived this pass - a caravan under charter, a manifest sent from the realm's
+			// other city - has to be in the stores before anything is drawn from them, or a
+			// delivery sent precisely to end a drought would arrive one step too late to stop the
+			// emigration it was sent to prevent.
 			Guard("trade", delegate
 			{
 				KingdomTrade.OnZoneActivated(this, E.Zone, survey);
+			});
+			Guard("growth", delegate
+			{
+				KingdomGrowth.OnZoneActivated(this, E.Zone, survey);
 			});
 			Guard("raids", delegate
 			{

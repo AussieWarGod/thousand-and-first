@@ -174,7 +174,7 @@ step here is done standing in the settlement.
 | 45b | `kingdom:dump` | The pantry reads the food in dedicated larders only, as a count and a tier (Empty / Scant / Modest / Ample). Food in your own undedicated pack is never counted |
 | 45c | Release the larder | The count drops back. What was inside is untouched |
 | 45d | Commission a **civic larder** (Charter → Commission), then put food in it | It counts as a larder without needing a chest of your own |
-| 45e | With the larder Scant or better, Charter → **Share a meal from the larder** | The settlement eats: food is spent from the dedicated larders only, a settler from the roll speaks, and the chronicle records it. Word travels — the meal becomes the settlement's deed, so it draws settlers the way any deed does |
+| 45e | With the larder Scant or better, Charter → **Share a meal from the larder** | It **asks first**, naming what the meal will take and what the larders hold. Answer yes and the settlement eats: food is spent from the dedicated larders only, a settler from the roll speaks, and the chronicle records it. Word travels — the meal becomes the settlement's deed, so it draws settlers the way any deed does |
 | 45f | With an empty larder, Charter → Share a meal | Refused plainly, and nothing is lost. An empty larder costs the settlement nothing at all: no hunger, no unhappiness, no decay. A player who never dedicates food plays exactly as they do today |
 | 45g | Check your own pack and any undedicated container after a meal | Untouched. Only dedicated food is ever spent |
 | 46 | Charter → Status | The ledger's effects are visible: stores, shop tier, idle/shorthanded works, and the next-need line |
@@ -206,11 +206,12 @@ The one thing a realm of two cities can do that a realm of one cannot.
 | Step | Action | Expect |
 |---|---|---|
 | 48 | With only one city, Charter → **Send a water manifest** | Refused: there is nowhere to send it |
-| 48a | With two cities, standing in one with water to spare, send a manifest | A stated number of drams — capped, and only ever above a three-day reserve — leaves **this city's** stores now. A ten-day window is named up front |
+| 48a | With two cities, standing in one with water to spare, send a manifest | It **asks first**, naming the drams and the window. Answer no and nothing moves. Answer yes and a capped amount, only ever above a three-day reserve, leaves **this city's** stores now |
 | 48b | Immediately try to send another | Refused, naming the one already on the road: origin, destination, drams, days left |
 | 48c | Walk to the destination city | The water arrives on entry, into that city's stores, with a chronicle line and a ledger note. It arrives when you get there, not on a background clock |
-| 48d | Send one and let the window lapse, then return | It is written off once, plainly, in the chronicle. The loss is capped, disclosed before you commit, and never silent |
-| 48e | Try to send a manifest standing outside either city | Refused: manifests are loaded on the kingdom's own ground |
+| 48d | Send one and let the window lapse | **The carters turn back.** The water is not destroyed for your having been elsewhere — the load starts home, and arrives at the origin the next time you stand there. It turns back only once |
+| 48e | Send to a city whose casks are already full | Only what fits is poured. The remainder stays on the cart, inside its window — arriving at a full cistern never destroys water |
+| 48f | Try to send a manifest standing outside either city | Refused: manifests are loaded on the kingdom's own ground |
 
 ## Pass 13 — The tended plot
 
@@ -218,6 +219,7 @@ The one thing a realm of two cities can do that a realm of one cannot.
 |---|---|---|
 | 49 | Charter → Commission → **tended plot**; wait out the build | A plot appears. What it can grow was decided by the ground the rite was poured on — the style your founding recorded, not a fresh look at the dirt |
 | 49a | Wait through the cycle | Dormant → Growing → Ripe on the settlement's own clock. Leave for days and come back: it resolves on arrival, like everything else here |
+| 49a1 | Commission a plot with **no larder dedicated** | It does not plant. Water is never spent on a crop with nowhere to land |
 | 49b | Watch the stores while it plants | It drinks, and the ledger says so — but only from what the day's upkeep and arrivals left behind. **A plot can never be the reason the thirst ladder fires** |
 | 49c | Let the stores run low with a plot planted | The plot goes dormant and waits. It never dies, and it never punishes |
 | 49d | Have a dedicated larder when it ripens | The harvest goes into the larder, and the chronicle records it. With no dedicated larder it waits — it will not put food anywhere you did not dedicate |

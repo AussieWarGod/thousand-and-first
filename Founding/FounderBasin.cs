@@ -2,9 +2,16 @@ using System;
 using XRL;
 using XRL.UI;
 using XRL.World;
+using ThousandAndFirst;
 using XRL.World.Parts;
 
-namespace ThousandAndFirst
+// The engine resolves an XML <part Name="X"/> as the single type "XRL.World.Parts.X":
+// GamePartBlueprint.Namespace defaults to that string (GamePartBlueprint.cs:178) and
+// T => ModManager.ResolveType(Namespace, Name) (:240) tries only that one name.
+// ModManager.ResolveType's doc comment promises a bare-TypeID fallback, but the code
+// (ModManager.cs:307-321) does not do it. So a part named in XML MUST live in this
+// namespace or the object is built without it, silently.
+namespace XRL.World.Parts
 {
 	[Serializable]
 	public class r_FounderBasin : IPart
@@ -48,7 +55,7 @@ namespace ThousandAndFirst
 			KingdomSystem system = The.Game.RequireSystem<KingdomSystem>();
 			Zone site = Actor?.CurrentZone;
 			string siteFaction = site?.GetZoneProperty("faction") ?? "";
-			bool siteFactionIsVillage = !string.IsNullOrEmpty(siteFaction) && Factions.Get(siteFaction)?.GetIntProperty("Village") == 1;
+			bool siteFactionIsVillage = !string.IsNullOrEmpty(siteFaction) && Factions.GetIfExists(siteFaction)?.GetIntProperty("Village") == 1;
 			KingdomRules.GroundClaimVerdict groundVerdict = KingdomRules.JudgeGroundFaction(siteFaction, system.KingdomFactionName, siteFactionIsVillage);
 			if (groundVerdict == KingdomRules.GroundClaimVerdict.ForeignVillage)
 			{
@@ -137,7 +144,10 @@ namespace ThousandAndFirst
 		/// zone property before this was called.</param>
 		private void AttemptVillageCharter(KingdomSystem System, string VillageFactionName)
 		{
-			Faction villageFaction = Factions.Get(VillageFactionName);
+			// GetIfExists, not Get: Factions.Get throws on an unknown name, and a zone's faction
+			// property can name anything at all - including a faction from a mod that is no
+			// longer installed. A stranger's zone must refuse the rite, not crash it.
+			Faction villageFaction = Factions.GetIfExists(VillageFactionName);
 			string villageName = villageFaction?.DisplayName ?? VillageFactionName;
 			int reputation = The.Game.PlayerReputation.Get(VillageFactionName);
 			bool alreadyChartered = System.GetStanding(VillageFactionName) >= KingdomRules.VillageCharterSealedStanding;

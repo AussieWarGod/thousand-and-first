@@ -370,6 +370,16 @@ namespace ThousandAndFirst
 				Popup.Show(KingdomManifestRules.ManifestRefusal(verdict, System.Away?.SettlementName));
 				return;
 			}
+			// The price is named before the water moves. Every other spending action in this
+			// menu tells the founder what it costs and lets them back out; a manifest sends the
+			// largest single amount of water in the mod, and must not be the exception.
+			if (Popup.ShowYesNo("Send {{C|" + amount + " drams}} from " + System.SeatName + " to " + System.Away.SettlementName
+				+ "?\n\nThe water leaves the stores here now. It arrives when you next stand in "
+				+ System.Away.SettlementName + ", and if you have not come within "
+				+ KingdomManifestRules.ManifestWindowDays + " days the carters turn back and bring it home.") != DialogResult.Yes)
+			{
+				return;
+			}
 			int drawn = KingdomGrowth.ConsumeStoredWater(zone, amount);
 			if (drawn <= 0)
 			{
@@ -528,6 +538,19 @@ namespace ThousandAndFirst
 		public void HoldSharedMeal(KingdomSystem System)
 		{
 			Zone zone = ParentObject.CurrentZone;
+			// Asked before anything is eaten. The food is the founder's - dedicating a larder is
+			// consent to it being counted, not consent to it being spent without a word.
+			KingdomSurvey survey = (zone != null) ? KingdomSurvey.Take(zone, System) : null;
+			if (survey != null && survey.FoodAbundance != KingdomRules.PantryTier.Empty)
+			{
+				int cost = KingdomRules.MealCost(survey.FoodAbundance);
+				if (Popup.ShowYesNo("Call " + KingdomRules.MealSizeName(survey.FoodAbundance) + " for " + System.SeatName
+					+ "?\n\nIt will take {{C|" + cost + "}} of the " + survey.FoodStored
+					+ " the larders hold.") != DialogResult.Yes)
+				{
+					return;
+				}
+			}
 			if (!KingdomLarder.HoldSharedMeal(System, zone, out var failure))
 			{
 				Popup.Show(failure);

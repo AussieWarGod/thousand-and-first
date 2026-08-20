@@ -491,6 +491,7 @@ namespace ThousandAndFirst
 			system.ChronicleEntries.Clear();
 			system.OutsiderEntries.Clear();
 			system.Standings.Clear();
+			system.Manifest = null;
 			Popup.Show("Both cities are dissolved. The ground forgets; the chronicle does not survive it.");
 		}
 

@@ -112,7 +112,18 @@ namespace ThousandAndFirst
 			}
 			KingdomManifest manifest = System.Manifest;
 			int delivered = Survey.Store(manifest.Drams);
-			System.Manifest = null;
+			// Store() pours only what the casks can hold and returns that. Whatever did not fit
+			// stays on the cart: this mod does not destroy water for arriving at a full cistern.
+			// It waits here, still inside its window, for room or for the founder to make some.
+			int remainder = manifest.Drams - delivered;
+			if (remainder > 0)
+			{
+				manifest.Drams = remainder;
+			}
+			else
+			{
+				System.Manifest = null;
+			}
 			System.Ledger.Delivered += delivered;
 			System.Ledger.Note(KingdomManifestRules.ManifestArrivalNote(manifest.OriginName, delivered, manifest.Drams));
 			KingdomChronicle.Record(System, KingdomManifestRules.ManifestArrivalDeed(manifest.OriginName, System.SeatName, delivered, manifest.Drams));
@@ -136,6 +147,24 @@ namespace ThousandAndFirst
 			KingdomManifest manifest = System.Manifest;
 			if (manifest == null || !KingdomManifestRules.ManifestExpired(Now, manifest.DeadlineTick))
 			{
+				return null;
+			}
+			if (!manifest.TurnedBack)
+			{
+				// The window closing is a fact about where the founder was, and absence must
+				// never produce a debt: the carters give up on the road and start for home
+				// rather than pouring sixty drams into the sand. The water is not lost, only
+				// the errand. It turns back exactly once, so a load cannot bounce forever.
+				string turned = KingdomManifestRules.ManifestTurnedBackDeed(manifest.OriginName, manifest.DestinationName, manifest.Drams);
+				string wasOrigin = manifest.OriginName;
+				manifest.OriginName = manifest.DestinationName;
+				manifest.DestinationName = wasOrigin;
+				manifest.TurnedBack = true;
+				manifest.LoadedTick = Now;
+				manifest.DeadlineTick = KingdomManifestRules.ManifestDeadline(Now);
+				System.Ledger.Note("{{y|" + turned + ".}}");
+				KingdomChronicle.Record(System, turned);
+				KingdomLog.Log("manifest: turned back " + manifest.Drams + " drams toward " + manifest.DestinationName);
 				return null;
 			}
 			System.Manifest = null;

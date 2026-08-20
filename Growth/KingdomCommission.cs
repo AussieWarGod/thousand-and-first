@@ -3,6 +3,7 @@ using XRL;
 using XRL.Messages;
 using XRL.Rules;
 using XRL.World;
+using XRL.World.Parts;
 
 namespace ThousandAndFirst
 {
@@ -46,13 +47,16 @@ namespace ThousandAndFirst
 				Failure = "There is no clear ground for it here.";
 				return false;
 			}
-			KingdomGrowth.ConsumeStoredWater(zone, entry.CostDrams);
+			// Raised before it is paid for, deliberately: if the scaffold cannot be created the
+			// settlement must not have already spent the water on nothing. There is no refund
+			// path, because there is nothing to refund.
 			GameObject gameObject = GameObject.Create("r_KingdomScaffold");
 			if (gameObject == null)
 			{
 				Failure = "The scaffold could not be raised.";
 				return false;
 			}
+			KingdomGrowth.ConsumeStoredWater(zone, entry.CostDrams);
 			r_KingdomScaffold part = gameObject.GetPart<r_KingdomScaffold>();
 			if (part != null)
 			{

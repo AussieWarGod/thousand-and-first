@@ -3,7 +3,16 @@ using XRL;
 using XRL.Messages;
 using XRL.World;
 
-namespace ThousandAndFirst
+using ThousandAndFirst;
+
+// The engine resolves an XML <part Name="X"/> as the single type "XRL.World.Parts.X":
+// GamePartBlueprint.Namespace defaults to that string (GamePartBlueprint.cs:178) and
+// T => ModManager.ResolveType(Namespace, Name) (:240) tries only that one name.
+// ModManager.ResolveType's doc comment promises a bare-TypeID fallback, but the code
+// (ModManager.cs:307-321) does not do it. So a part named in XML MUST live in this
+// namespace or the object is built without it, silently. Only the part moves; the
+// settlement-side resolver below stays where the rest of the mod's code lives.
+namespace XRL.World.Parts
 {
 	/// <summary>
 	/// A worked patch of ground the settlement commissioned: cycles
@@ -74,6 +83,12 @@ namespace ThousandAndFirst
 		}
 	}
 
+}
+
+namespace ThousandAndFirst
+{
+	using XRL.World.Parts;
+
 	/// <summary>
 	/// Resolves every commissioned plot in a zone on the settlement's own clock. Called from
 	/// <see cref="KingdomGrowth.OnZoneActivated"/> after every other water-consuming step in the
@@ -124,6 +139,14 @@ namespace ThousandAndFirst
 				case KingdomCropRules.PlotStage.Dormant:
 				{
 					if (!KingdomCropRules.CanAffordPlanting(Survey.StoredWater, System.Population))
+					{
+						return;
+					}
+					// Nowhere to put a harvest means nothing to plant for. Checked before the
+					// water is drawn rather than after: spending the settlement's water on a crop
+					// with no larder to receive it is a small penalty for not having engaged with
+					// the larder yet, and this mod does not levy those.
+					if (Survey.Larders.Count == 0)
 					{
 						return;
 					}

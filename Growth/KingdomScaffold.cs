@@ -2,8 +2,15 @@
 using XRL;
 using XRL.Messages;
 using XRL.World;
+using ThousandAndFirst;
 
-namespace ThousandAndFirst
+// The engine resolves an XML <part Name="X"/> as the single type "XRL.World.Parts.X":
+// GamePartBlueprint.Namespace defaults to that string (GamePartBlueprint.cs:178) and
+// T => ModManager.ResolveType(Namespace, Name) (:240) tries only that one name.
+// ModManager.ResolveType's doc comment promises a bare-TypeID fallback, but the code
+// (ModManager.cs:307-321) does not do it. So a part named in XML MUST live in this
+// namespace or the object is built without it, silently.
+namespace XRL.World.Parts
 {
 	[Serializable]
 	public class r_KingdomScaffold : IPart

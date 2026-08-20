@@ -40,6 +40,13 @@ namespace ThousandAndFirst
 		/// <summary>Absolute tick past which the manifest is void if undelivered.</summary>
 		public long DeadlineTick;
 
+		/// <summary>
+		/// True once the window closed and the load turned for home. A manifest turns back at
+		/// most once: the water is never destroyed for the founder having been elsewhere, but a
+		/// load cannot bounce between two cities forever either.
+		/// </summary>
+		public bool TurnedBack;
+
 #if !TAF_TESTS
 		public bool WantFieldReflection => false;
 
@@ -228,6 +235,16 @@ namespace ThousandAndFirst
 		}
 
 		/// <summary>The chronicle clause written when a manifest's window closes before it is delivered.</summary>
+		/// <summary>
+		/// The carters give up on the road and start for home. Written as a fact about the
+		/// errand, not about the founder: absence is never a fault here, and the water is not
+		/// lost &mdash; only the trip.
+		/// </summary>
+		public static string ManifestTurnedBackDeed(string OriginName, string DestinationName, int Drams)
+		{
+			return "the " + Drams + " drams bound for " + DestinationName + " waited on the road as long as carters will wait, and turned back toward " + OriginName;
+		}
+
 		public static string ManifestLapseDeed(string OriginName, string DestinationName, int Drams)
 		{
 			return Drams + " drams that " + OriginName + " sent toward " + DestinationName + " never arrived, and the water-keepers wrote it off as lost";
