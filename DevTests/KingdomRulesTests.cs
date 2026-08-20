@@ -769,6 +769,30 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void MaxBuildingsForStage_NeverShrinksAsASettlementGrows()
+		{
+			int previous = 0;
+			foreach (GrowthStage stage in System.Enum.GetValues(typeof(GrowthStage)))
+			{
+				int now = KingdomRules.MaxBuildingsForStage(stage);
+				Assert.GreaterOrEqual(now, previous, "the plan shrank on growing into " + stage);
+				previous = now;
+			}
+		}
+
+		[Test]
+		public void MaxBuildingsForStage_LeavesRoomForACityToActuallyBeBuilt()
+		{
+			// A City wants 50 settlers and 1024 storage: 13 bunks plus 4 great cisterns before a
+			// single civic building, a shop, a work or a wall. The old flat forty could not even
+			// house it.
+			int bunks = (50 + KingdomRules.BedsPerBunk - 1) / KingdomRules.BedsPerBunk;
+			int cisterns = 1024 / 256;
+			Assert.Greater(KingdomRules.MaxBuildingsForStage(GrowthStage.City), (bunks + cisterns) * 3,
+				"a City has no room left over for being a city");
+		}
+
+		[Test]
 		public void BedsPerBunk_MakesTheCityStageReachableAtAll()
 		{
 			// City wants 50 settlers and 1024 storage. At one bed per bunk that is 50 bunks plus

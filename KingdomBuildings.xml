@@ -6,6 +6,16 @@
   <style Name="gyre" />
   <style Name="eater" />
   <building Key="caskrack" DisplayName="cask rack (holds 64 drams)" Blueprint="r_KingdomCaskRack" Cost="4" Ticks="1200" Styles="all" Category="storage" />
+  <!--
+    The answer to dry ground. Vanilla's own solar condenser: a SolarArray charges it from
+    daylight and a LiquidProducer turns that charge into fresh water in its own 128-dram tank,
+    with no crew and no fuel - about a dram every hundred to four hundred turns. Because the
+    scaffold dedicates any finished building that holds liquid, it joins the stores by itself.
+    This is VISION's promise working as written: anything with vanilla parts is used by the
+    settlement for free. It costs water to raise, which is the point - on a dry site the founder
+    carries in the water that buys the thing that makes water.
+  -->
+  <building Key="condenser" DisplayName="solar condenser (makes water from daylight)" Blueprint="Solar Condenser" Cost="16" Ticks="2400" Styles="all" Category="storage" />
   <building Key="cistern" DisplayName="great cistern (holds 256 drams)" Blueprint="r_KingdomGreatCistern" Cost="16" Ticks="3600" Styles="all" Category="storage" MinStage="Steading" />
   <building Key="larder" DisplayName="civic larder (a chest for the settlement's food)" Blueprint="r_KingdomLarder" Cost="4" Ticks="1200" Styles="all" Category="storage" />
   <building Key="plot" DisplayName="tended plot (grows food for the larders)" Blueprint="r_KingdomPlot" Cost="3" Ticks="1200" Styles="all" Category="food" />

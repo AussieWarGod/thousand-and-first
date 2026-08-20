@@ -23,17 +23,24 @@ namespace ThousandAndFirst
 				Failure = "No such design.";
 				return false;
 			}
+			// Walls do not count against the plan. A palisade is a LINE, and charging a slot per
+			// segment is what made enclosing a settlement impossible - the ring would have eaten
+			// the whole allowance before anything civic was built.
 			int built = 0;
 			foreach (GameObject item in zone.GetObjects())
 			{
+				if (item.GetIntProperty("KingdomDefence") > 0)
+				{
+					continue;
+				}
 				if (item.GetIntProperty("KingdomBuilt") == 1 || item.HasPart("r_KingdomScaffold"))
 				{
 					built++;
 				}
 			}
-			if (built >= KingdomRules.MaxBuildings)
+			if (entry.Defence <= 0 && built >= KingdomRules.MaxBuildingsForStage(System.Stage))
 			{
-				Failure = "There is no more room in the plan. " + System.KingdomDisplayName + " is as built-up as this ground allows.";
+				Failure = "There is no more room in the plan. " + System.SeatName + " is as built-up as this ground allows, until it grows into something larger.";
 				return false;
 			}
 			if (KingdomGrowth.CountStoredWater(zone) < entry.CostDrams)

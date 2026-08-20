@@ -48,6 +48,39 @@
 		public const int MaxBuildings = 40;
 
 		/// <summary>
+		/// How much a settlement may build on one zone, by what it has become.
+		/// <para>
+		/// The old flat 40 was never chosen: the project's own fact-check records that the number
+		/// could not be justified, and it was quietly setting the game's ceiling. It measured the
+		/// wrong thing, too - a zone is 80 by 25, so forty objects is two per cent of the ground,
+		/// and a settlement that spans zones got the same allowance on each one regardless of
+		/// what it was.
+		/// </para>
+		/// <para>
+		/// The real limits are the ones already in play: what a building costs in water, whether
+		/// there are hands to man it, and whether there is empty ground to put it on. This is a
+		/// safety rail against pathological object counts, not a design constraint, so it is set
+		/// where a settlement stops being readable rather than where it stops being cheap.
+		/// </para>
+		/// </summary>
+		public static int MaxBuildingsForStage(GrowthStage Stage)
+		{
+			switch (Stage)
+			{
+			case GrowthStage.Camp:
+				return 40;
+			case GrowthStage.Steading:
+				return 70;
+			case GrowthStage.Village:
+				return 110;
+			case GrowthStage.Town:
+				return 160;
+			default:
+				return 220;
+			}
+		}
+
+		/// <summary>
 		/// Settlers to a commissioned bunk. One apiece made the City stage arithmetically
 		/// impossible: fifty settlers needed fifty bunks plus four cisterns, against a
 		/// forty-building cap, so the top of the ladder could never be reached at all.
