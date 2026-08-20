@@ -189,7 +189,87 @@ namespace ThousandAndFirst
 		/// </summary>
 		public KingdomSettlement Away;
 
+		/// <summary>
+		/// The realm's one in-flight water manifest, or null when none is en route. Realm-level
+		/// and never swapped: it addresses cities by settlement name rather than by seat/Away
+		/// role, because those roles exchange on <see cref="TrySeat"/> and a manifest is
+		/// addressed to a place, not a role. A save written before this field existed arrives
+		/// with it null, which is exactly "no manifest in flight".
+		/// </summary>
+		public KingdomManifest Manifest;
+
+		/// <summary>
+		/// The realm that put the founder out, kept whole: its faction name, its display name, and
+		/// both of its cities exactly as they stood on the day of the expulsion.
+		/// <para>
+		/// Exile is secession, realm-scoped. The realm and its cities are not deleted, not renamed
+		/// and not unmade &mdash; a runtime faction cannot be unmade anyway, and every one of them
+		/// is walked forever by the reputation screen, the endgame reputation pass, the
+		/// water-ritual curse and every <c>*allvisiblefactions</c> effect, so this mod mints one
+		/// per realm and no more. What ends is the founder's claim on it. Nothing physical is
+		/// touched: no citizen's allegiance key moves, no zone is unclaimed, no vessel loses its
+		/// dedication, and the ground still carries the old realm's faction property.
+		/// </para>
+		/// <para>
+		/// A dormant realm needs no clock, exactly as <see cref="Away"/> does not: both cities keep
+		/// their own <c>LastHeartbeatTick</c> and <c>LastVisitTick</c>, so a founder who is taken
+		/// back resolves the whole absence through the ordinary capped catch-up rather than
+		/// arriving to a season of settlers at once.
+		/// </para>
+		/// </summary>
+		public string ExiledFactionName;
+
+		/// <summary>The expelled-from realm's display name. See <see cref="ExiledFactionName"/>.</summary>
+		public string ExiledDisplayName;
+
+		/// <summary>When the expulsion happened, for the record and the dev log.</summary>
+		public long ExiledTick;
+
+		/// <summary>The clause naming what the realm counted against the founder, from
+		/// <see cref="KingdomExileRules.DeedClause"/>. Deeds, never elapsed time.</summary>
+		public string ExiledDeed;
+
+		/// <summary>The city the founder was seated in when the realm put them out.</summary>
+		public KingdomSettlement ExiledSeat;
+
+		/// <summary>The expelled-from realm's other city, or null if it held only one.</summary>
+		public KingdomSettlement ExiledAway;
+
+		/// <summary>
+		/// The expelled-from realm's own ledger of standings. Held apart from
+		/// <see cref="Standings"/> so a realm founded afterwards cannot inherit the grudges and
+		/// friendships of the one that disowned the founder &mdash; two realms sharing one
+		/// standings pool would receive identical feelings from every third party, which is the
+		/// exact opposite of the old realm keeping its own opinion.
+		/// </summary>
+		public Dictionary<string, int> ExiledStandings = new Dictionary<string, int>();
+
+		/// <summary>
+		/// The worst regard the realm has said out loud about the founder, as a
+		/// <see cref="RealmRegard"/>. The hysteresis lives here: see
+		/// <see cref="KingdomExileRules.RememberedRegard"/>. Stored as an int so the ladder can
+		/// gain a rung without retyping a serialized field.
+		/// </summary>
+		public int RegardSpoken;
+
+		/// <summary>
+		/// The regard at which the founder was last asked whether they wanted to be taken back,
+		/// or <c>int.MinValue</c> if they never have been. Refusing silences the question until
+		/// the founder has changed the realm's mind, so it can never nag.
+		/// </summary>
+		public int ReturnAskedRegard = int.MinValue;
+
+		/// <summary>Whether the founder has been told, once, that founding again shut the door on
+		/// the realm that expelled them.</summary>
+		public bool DoorClosedTold;
+
 		public bool Founded => !string.IsNullOrEmpty(KingdomFactionName);
+
+		/// <summary>Whether a realm has put the founder out and is remembered here.</summary>
+		public bool Exiled => !string.IsNullOrEmpty(ExiledFactionName);
+
+		/// <summary>How many cities the expelled-from realm holds, or 0 if there is none.</summary>
+		public int ExiledSettlementCount => (!Exiled ? 0 : ((ExiledAway != null) ? 2 : 1));
 
 		/// <summary>
 		/// The seated settlement's name for prose. Falls back to the realm's display name for a
@@ -250,6 +330,273 @@ namespace ThousandAndFirst
 			Away = wasSeated;
 			if (KingdomLog.Enabled) KingdomLog.Log("seat moved to " + SeatName + " (" + Z.ZoneID + "); away is now " + Away.Describe());
 			return true;
+		}
+
+		/// <summary>
+		/// The realm's regard for its founder, read from the founder's own reputation with the
+		/// realm's faction &mdash; the one number the world, the reputation screen and this system
+		/// already agree on. No second economy is kept for it.
+		/// </summary>
+		/// <returns>Raw reputation on the vanilla scale; 0 when nothing is founded.</returns>
+		public int FounderRegard()
+		{
+			return RegardWith(KingdomFactionName);
+		}
+
+		/// <summary>The expelled-from realm's regard for the founder, or 0 if there is none.</summary>
+		public int ExiledRealmRegard()
+		{
+			return RegardWith(ExiledFactionName);
+		}
+
+		/// <summary>Whether the expelled-from realm holds this ground.</summary>
+		/// <param name="ZoneID">A zone id. Null and empty read as false.</param>
+		public bool ExiledRealmHolds(string ZoneID)
+		{
+			if (!Exiled || string.IsNullOrEmpty(ZoneID))
+			{
+				return false;
+			}
+			return (ExiledSeat != null && ExiledSeat.ClaimedZones.Contains(ZoneID))
+				|| (ExiledAway != null && ExiledAway.ClaimedZones.Contains(ZoneID));
+		}
+
+		/// <summary>Whether the expelled-from realm kept ground the founder could walk back to.</summary>
+		public bool ExiledRealmKeptGround => Exiled
+			&& ((ExiledSeat != null && ExiledSeat.ClaimedZones.Count > 0)
+				|| (ExiledAway != null && ExiledAway.ClaimedZones.Count > 0));
+
+		/// <summary>
+		/// Puts the founder out of the realm they founded.
+		/// <para>
+		/// Preconditions: a realm is founded, and either the regard has reached
+		/// <see cref="RealmRegard.Repudiated"/> or <paramref name="Forced"/> is set. Side effects:
+		/// the realm's identity, both of its cities and its whole standings ledger move to the
+		/// exile slot, the Charter ability is taken from the founder, both chronicle registers
+		/// record the day in their own words, and a modal states what has changed. Failure mode:
+		/// returns false with a founder-facing refusal and changes nothing.
+		/// </para>
+		/// <para>
+		/// Deliberately does <b>not</b> write reputation. The realm's grudge is whatever the
+		/// founder's own deeds already put in the engine's reputation cell; manufacturing a worse
+		/// one here would turn every citizen hostile and wall off the return path, which is the one
+		/// thing this feature may not do.
+		/// </para>
+		/// </summary>
+		/// <param name="Deed">The clause naming what was counted against the founder, from
+		/// <see cref="KingdomExileRules.DeedClause"/>. Empty takes the unnamed-deed clause.</param>
+		/// <param name="Forced">True for the debug path, which skips the regard requirement and
+		/// nothing else.</param>
+		/// <param name="Refusal">Founder-facing reason, or empty on success.</param>
+		/// <returns>True if the founder was put out.</returns>
+		public bool Exile(string Deed, bool Forced, out string Refusal)
+		{
+			Refusal = "";
+			ExileVerdict verdict = KingdomExileRules.JudgeExile(Founded, Exiled, KingdomExileRules.ClassifyRegard(FounderRegard()), Forced);
+			if (verdict != ExileVerdict.Warranted)
+			{
+				Refusal = ExileRefusal(verdict);
+				return false;
+			}
+			string realmName = KingdomDisplayName;
+			string deed = string.IsNullOrEmpty(Deed) ? KingdomExileRules.DeedClause(null) : Deed;
+			int cities = SettlementCount;
+			// Written while the realm still stands, so the entry keys to it rather than to the
+			// founder's unfounded interval, and so the book reads in the order the day happened.
+			KingdomChronicle.RecordDisputed(this, KingdomExileRules.ExileTelling(realmName, deed), KingdomExileRules.ExileRumour(realmName, KingdomChronicle.FounderName()), Accomplishment: true);
+			ExiledFactionName = KingdomFactionName;
+			ExiledDisplayName = KingdomDisplayName;
+			ExiledTick = The.Game.TimeTicks;
+			ExiledDeed = deed;
+			ExiledSeat = Capture();
+			ExiledAway = Away;
+			ExiledStandings = Standings;
+			KingdomFactionName = null;
+			KingdomDisplayName = null;
+			// Seating a blank settlement clears every per-settlement field there is, so a field
+			// added later cannot be forgotten here.
+			Restore(new KingdomSettlement());
+			Away = null;
+			Standings = new Dictionary<string, int>();
+			RegardSpoken = (int)RealmRegard.Beloved;
+			ReturnAskedRegard = int.MinValue;
+			DoorClosedTold = false;
+			The.Player?.GetPart<KingdomCharterPart>()?.RemoveAbility();
+			KingdomLog.Log("exile: " + ExiledFactionName + " (" + cities + " cities, " + ExiledStandings.Count + " standings) put the founder out at regard " + ExiledRealmRegard() + "; deed=" + deed);
+			Popup.Show(KingdomExileRules.ExileNotice(realmName, deed, cities));
+			return true;
+		}
+
+		/// <summary>
+		/// Asks the realm that expelled the founder to take them back.
+		/// <para>
+		/// Preconditions: an expulsion is on the record, no realm has been founded since, the
+		/// founder is standing on the old realm's own ground, and its regard for them is no longer
+		/// <see cref="RealmRegard.Repudiated"/>. Side effects: the realm, both of its cities and
+		/// its standings ledger are restored exactly as they stood, regard is raised to the
+		/// indifference floor if it stands below it, the Charter comes back, and both registers
+		/// record the day. Failure mode: returns false with a founder-facing refusal and changes
+		/// nothing.
+		/// </para>
+		/// </summary>
+		/// <param name="Site">The zone the founder is standing in. Null reads as the wrong ground.</param>
+		/// <param name="Refusal">Founder-facing reason, or empty on success.</param>
+		/// <returns>True if the founder was taken back.</returns>
+		public bool TryReturn(Zone Site, out string Refusal)
+		{
+			Refusal = "";
+			int regard = ExiledRealmRegard();
+			ReturnVerdict verdict = KingdomExileRules.JudgeReturn(Exiled, Founded, ExiledRealmKeptGround, Site != null && ExiledRealmHolds(Site.ZoneID), regard);
+			if (verdict != ReturnVerdict.Allowed)
+			{
+				Refusal = KingdomExileRules.ReturnRefusal(verdict, ExiledDisplayName, KingdomDisplayName);
+				return false;
+			}
+			// A remembered realm with no seat cannot be restored into. Promoting its other city
+			// beats writing a null over the flat fields; only a save mangled elsewhere gets here.
+			if (ExiledSeat == null)
+			{
+				ExiledSeat = ExiledAway ?? new KingdomSettlement();
+				ExiledAway = null;
+			}
+			int restored = KingdomExileRules.RegardOnReturn(regard);
+			KingdomFactionName = ExiledFactionName;
+			KingdomDisplayName = ExiledDisplayName;
+			Restore(ExiledSeat);
+			Away = ExiledAway;
+			Standings = ExiledStandings;
+			ExiledFactionName = null;
+			ExiledDisplayName = null;
+			ExiledSeat = null;
+			ExiledAway = null;
+			ExiledStandings = new Dictionary<string, int>();
+			ExiledDeed = null;
+			ExiledTick = 0L;
+			ReturnAskedRegard = int.MinValue;
+			DoorClosedTold = false;
+			RegardSpoken = (int)KingdomExileRules.ClassifyRegard(restored);
+			Faction realm = Factions.GetIfExists(KingdomFactionName);
+			if (realm != null)
+			{
+				// Set, never Modify. Modify is an award pipeline: it fires pre- and post-change
+				// events, queues sounds, can pop up, and can file a journal accomplishment and a
+				// persistent BecameLoved property. Being let back through a gate is a civic act,
+				// and the mod says so in its own words rather than through that machinery.
+				The.Game.PlayerReputation.Set(realm, restored);
+			}
+			ReassertFeelings();
+			// The seat is whichever city was seated on the day of the expulsion; a founder who
+			// walked back into the other one is corrected here rather than on the next zone change.
+			TrySeat(Site);
+			The.Player?.RequirePart<KingdomCharterPart>().EnsureAbility();
+			KingdomChronicle.RecordDisputed(this, KingdomExileRules.ReturnTelling(KingdomDisplayName), KingdomExileRules.ReturnRumour(KingdomDisplayName, KingdomChronicle.FounderName()), Accomplishment: true);
+			KingdomLog.Log("return: " + KingdomFactionName + " took the founder back at regard " + regard + " -> " + restored + "; seated " + SeatName);
+			Popup.Show(KingdomExileRules.ReturnNotice(KingdomDisplayName, SeatName));
+			return true;
+		}
+
+		/// <summary>Founder-facing reason an expulsion did not proceed.</summary>
+		private string ExileRefusal(ExileVerdict Verdict)
+		{
+			switch (Verdict)
+			{
+			case ExileVerdict.NothingFounded:
+				return "You hold no realm. Nobody can put you out of ground that was never yours.";
+			case ExileVerdict.AlreadyCastOut:
+				return "{{C|" + (ExiledDisplayName ?? "The realm") + "}} has already put you out. It cannot do it twice.";
+			case ExileVerdict.RegardHolds:
+				return "{{C|" + (KingdomDisplayName ?? "The realm") + "}} holds you " + KingdomExileRules.RegardName(KingdomExileRules.ClassifyRegard(FounderRegard())) + ". Nobody there is calling for the gate to be shut behind you.";
+			default:
+				return "";
+			}
+		}
+
+		/// <summary>
+		/// Reads the realm's regard for the founder after it changed, and lets the realm answer:
+		/// a murmur, a warning read aloud, or the gate. Keyed entirely on the deed that moved the
+		/// reputation, never on how long the founder has been gone.
+		/// </summary>
+		/// <param name="ReputationType">The engine's own reason for the change, or null.</param>
+		private void OnRealmRegardChanged(string ReputationType)
+		{
+			RealmRegard current = KingdomExileRules.ClassifyRegard(FounderRegard());
+			RealmRegard spoken = (RealmRegard)RegardSpoken;
+			RegardStep step = KingdomExileRules.JudgeRegardStep(current, spoken, Exiled);
+			if (step == RegardStep.Expulsion)
+			{
+				Exile(KingdomExileRules.DeedClause(ReputationType), Forced: false, out var _);
+				return;
+			}
+			RegardSpoken = (int)KingdomExileRules.RememberedRegard(current, spoken);
+			if (step == RegardStep.Nothing)
+			{
+				return;
+			}
+			// Nonmodal on purpose: this is the city talking about you, not the city stopping you.
+			XRL.Messages.MessageQueue.AddPlayerMessage(KingdomExileRules.RegardSpeech(step, SeatName));
+			KingdomChronicle.Record(this, KingdomExileRules.RegardChronicle(step, SeatName));
+		}
+
+		/// <summary>
+		/// What the old realm's ground has to say to a founder standing on it after being put out:
+		/// the question, if it will hear it; why it will not, if it will not; and the closed door,
+		/// once, to a founder who has since poured somewhere else.
+		/// </summary>
+		/// <param name="Z">The activated zone. Null is tolerated.</param>
+		private void OnZoneActivatedWhileExiled(Zone Z)
+		{
+			if (!Exiled || Z == null || !ExiledRealmHolds(Z.ZoneID))
+			{
+				return;
+			}
+			if (Founded)
+			{
+				if (!DoorClosedTold)
+				{
+					DoorClosedTold = true;
+					XRL.Messages.MessageQueue.AddPlayerMessage(KingdomExileRules.DoorClosedLine(ExiledDisplayName, KingdomDisplayName));
+				}
+				return;
+			}
+			int regard = ExiledRealmRegard();
+			// Nothing is said again until the founder has actually changed the realm's mind about
+			// them. A founder who walks away from the question is never asked it twice for free,
+			// and a founder who ignores the whole feature is never spoken to at all.
+			if (regard <= ReturnAskedRegard)
+			{
+				return;
+			}
+			ReturnAskedRegard = regard;
+			ReturnVerdict verdict = KingdomExileRules.JudgeReturn(Exiled, Founded, ExiledRealmKeptGround, true, regard);
+			if (verdict != ReturnVerdict.Allowed)
+			{
+				XRL.Messages.MessageQueue.AddPlayerMessage(KingdomExileRules.ReturnRefusal(verdict, ExiledDisplayName, KingdomDisplayName));
+				return;
+			}
+			if (Popup.ShowYesNo("You are standing in {{C|" + ExiledDisplayName + "}}, which put you out.\n\nAsk to be taken back?") != DialogResult.Yes)
+			{
+				XRL.Messages.MessageQueue.AddPlayerMessage("You say nothing, and nobody asks you to.");
+				return;
+			}
+			if (!TryReturn(Z, out var refusal))
+			{
+				Popup.Show(refusal);
+			}
+		}
+
+		/// <summary>
+		/// The founder's reputation with a named faction, tolerating a name no faction answers to.
+		/// <c>Factions.Get</c> throws on an unknown name, which inside event dispatch would cost
+		/// the whole step; <c>GetIfExists</c> and the null-tolerant reputation overload degrade to
+		/// 0 instead.
+		/// </summary>
+		private static int RegardWith(string FactionName)
+		{
+			if (string.IsNullOrEmpty(FactionName))
+			{
+				return 0;
+			}
+			return The.Game.PlayerReputation.Get(Factions.GetIfExists(FactionName));
 		}
 
 		public override bool WantFieldReflection => false;
@@ -352,6 +699,13 @@ namespace ThousandAndFirst
 					XRL.Messages.MessageQueue.AddPlayerMessage("You are in {{C|" + SeatName + "}}" + KingdomSettlement.VocationSuffix(Vocation) + ".");
 				}
 			});
+			// Before the claim guard, for the same reason the seat is: a realm that put the
+			// founder out no longer owns anything in ClaimedZones, so its ground reads as a
+			// stranger's and this would never fire below.
+			Guard("exile", delegate
+			{
+				OnZoneActivatedWhileExiled(E.Zone);
+			});
 			if (!Founded || E.Zone == null || !ClaimedZones.Contains(E.Zone.ZoneID))
 			{
 				return base.HandleEvent(E);
@@ -418,6 +772,16 @@ namespace ThousandAndFirst
 
 		public override bool HandleEvent(AfterReputationChangeEvent E)
 		{
+			// The realm's own faction is excluded from the mirror below — a polity does not hold a
+			// standing with itself — but it is the one faction whose reputation cell says what the
+			// realm thinks of its founder, so it is read here instead of ignored.
+			Guard("realm regard", delegate
+			{
+				if (Founded && !E.Transient && E.Faction != null && E.Faction.Name == KingdomFactionName)
+				{
+					OnRealmRegardChanged(E.Type);
+				}
+			});
 			Guard("reputation mirror", delegate
 			{
 				if (Founded && !E.Transient && E.Faction != null && E.Faction.Name != KingdomFactionName && E.Faction.Name != "Player")
@@ -503,13 +867,21 @@ namespace ThousandAndFirst
 			{
 				return;
 			}
-			Faction faction = Factions.Get(FactionName);
+			// GetIfExists, never Get: Factions.Get throws on an unknown name, and a standings key
+			// can outlive the faction it names when a save moves between builds. A throw here
+			// would abort the whole re-assert loop, not just this one faction.
+			Faction faction = Factions.GetIfExists(FactionName);
 			if (faction != null)
 			{
 				faction.SetFactionFeeling(KingdomFactionName, Reputation.GetFeeling((float)GetStanding(FactionName)));
 			}
 		}
 
+		/// <summary>
+		/// Rewrites, from recorded state, every faction feeling the kingdom depends on. Called
+		/// after load because the engine rebuilds feelings from its own reputation table and knows
+		/// nothing about the kingdom's separate standings ledger.
+		/// </summary>
 		public void ReassertFeelings()
 		{
 			if (!Founded)
@@ -520,7 +892,17 @@ namespace ThousandAndFirst
 			{
 				MirrorFeeling(standing.Key);
 			}
-			Factions.Get(KingdomFactionName)?.SetFactionFeeling("Player", 100);
+			// Derived from the founder's actual reputation, never hardcoded to 100. A realm holds
+			// whatever opinion of its founder their deeds earned it: stamping love here on every
+			// load would silently undo a fall in regard the moment the save was reloaded, and the
+			// expulsion ladder reads no other surface. The context-free overload is deliberate —
+			// the engine's own rebuild uses the holy-place-sensitive one, which can materialise a
+			// neutral value as -50 depending on where the founder happens to be standing.
+			Faction realm = Factions.GetIfExists(KingdomFactionName);
+			if (realm != null)
+			{
+				realm.SetFactionFeeling("Player", Reputation.GetFeeling((float)FounderRegard()));
+			}
 		}
 
 		private void NormalizeState()
@@ -536,6 +918,34 @@ namespace ThousandAndFirst
 				Vocation = KingdomSettlement.NeutralVocation;
 			}
 			Away?.Normalize();
+			if (ExiledStandings == null)
+			{
+				ExiledStandings = new Dictionary<string, int>();
+			}
+			if (Exiled)
+			{
+				// A remembered realm must have a seat to be restored into. Promoting its other
+				// city beats refusing the return outright, and beats restoring a null.
+				if (ExiledSeat == null)
+				{
+					ExiledSeat = ExiledAway ?? new KingdomSettlement();
+					ExiledAway = null;
+				}
+			}
+			else
+			{
+				ExiledDisplayName = null;
+				ExiledDeed = null;
+				ExiledSeat = null;
+				ExiledAway = null;
+				ExiledStandings.Clear();
+			}
+			ExiledSeat?.Normalize();
+			ExiledAway?.Normalize();
+			if (RegardSpoken < (int)RealmRegard.Beloved || RegardSpoken > (int)RealmRegard.Repudiated)
+			{
+				RegardSpoken = (int)RealmRegard.Beloved;
+			}
 			if (RosterNames == null)
 			{
 				RosterNames = new List<string>();

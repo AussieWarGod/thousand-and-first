@@ -78,7 +78,7 @@ namespace ThousandAndFirst
 			}
 			while (true)
 			{
-				int num = Popup.PickOption(Title: system.SeatName + KingdomSettlement.VocationSuffix(system.Vocation), Options: new string[14] { (system.PetitionKind != KingdomRules.PetitionKind.None) ? ("{{W|Hear " + system.PetitionPetitioner + "}}") : "{{K|No one is waiting to speak}}", "Status", "What happened while you were away", "The Chronicle", "As others tell it", "Standings", "The roll of settlers", "Standing policy", "Designate district", "Commission a building", "Answer a threat", "Dedicate a vessel or larder", "Strike a trade charter", "Share a meal from the larder" }, Hotkeys: new char[14] { 'h', 's', 'w', 'c', 'a', 'n', 'l', 'p', 'd', 'm', 't', 'v', 'r', 'f' }, AllowEscape: true);
+				int num = Popup.PickOption(Title: system.SeatName + KingdomSettlement.VocationSuffix(system.Vocation), Options: new string[15] { (system.PetitionKind != KingdomRules.PetitionKind.None) ? ("{{W|Hear " + system.PetitionPetitioner + "}}") : "{{K|No one is waiting to speak}}", "Status", "What happened while you were away", "The Chronicle", "As others tell it", "Standings", "The roll of settlers", "Standing policy", "Designate district", "Commission a building", "Answer a threat", "Dedicate a vessel or larder", "Strike a trade charter", "Send a water manifest", "Share a meal from the larder" }, Hotkeys: new char[15] { 'h', 's', 'w', 'c', 'a', 'n', 'l', 'p', 'd', 'm', 't', 'v', 'r', 'i', 'f' }, AllowEscape: true);
 				switch (num)
 				{
 				case 0:
@@ -121,6 +121,9 @@ namespace ThousandAndFirst
 					StrikeTradeCharter(system);
 					break;
 				case 13:
+					LoadManifest(system);
+					break;
+				case 14:
 					HoldSharedMeal(system);
 					break;
 				default:
@@ -328,6 +331,65 @@ namespace ThousandAndFirst
 					Popup.Show(failure);
 				}
 			}
+		}
+
+		/// <summary>
+		/// Loads the realm's one in-flight water manifest, drawing drams from the stores of
+		/// whichever city the founder is standing in and addressing them to its sibling. The
+		/// draw is immediate and physical, through <see cref="KingdomGrowth.ConsumeStoredWater"/>
+		/// &mdash; the same measured-delta path every other charge on the stores uses &mdash; so
+		/// nothing is promised before it is actually taken.
+		/// </summary>
+		public void LoadManifest(KingdomSystem System)
+		{
+			Zone zone = ParentObject.CurrentZone;
+			bool onGround = zone != null && System.ClaimedZones.Contains(zone.ZoneID);
+			if (onGround)
+			{
+				// A load attempt is itself a witnessed moment: a manifest that already missed
+				// its window is cleared here rather than left blocking the one in-flight slot
+				// until the founder happens to visit whichever city it was bound for.
+				KingdomManifest lapsed = KingdomTrade.ExpireManifestIfStale(System, The.Game.TimeTicks);
+				if (lapsed != null)
+				{
+					Popup.Show(KingdomManifestRules.ManifestLapseNotice(lapsed.OriginName, lapsed.DestinationName, lapsed.Drams));
+					return;
+				}
+			}
+			bool hasSecondCity = System.Away != null;
+			int stored = onGround ? KingdomGrowth.CountStoredWater(zone) : 0;
+			int amount = KingdomManifestRules.ManifestAmount(stored, System.Population);
+			KingdomManifestRules.ManifestVerdict verdict = KingdomManifestRules.JudgeManifest(onGround, hasSecondCity, System.Manifest != null, amount);
+			if (verdict == KingdomManifestRules.ManifestVerdict.AlreadyInFlight)
+			{
+				Popup.Show(KingdomManifestRules.ManifestInFlightStatus(System.Manifest.OriginName, System.Manifest.DestinationName, System.Manifest.Drams, The.Game.TimeTicks, System.Manifest.DeadlineTick));
+				return;
+			}
+			if (verdict != KingdomManifestRules.ManifestVerdict.Allowed)
+			{
+				Popup.Show(KingdomManifestRules.ManifestRefusal(verdict, System.Away?.SettlementName));
+				return;
+			}
+			int drawn = KingdomGrowth.ConsumeStoredWater(zone, amount);
+			if (drawn <= 0)
+			{
+				Popup.Show(KingdomManifestRules.ManifestRefusal(KingdomManifestRules.ManifestVerdict.StoresCannotSpare, System.Away.SettlementName));
+				return;
+			}
+			long now = The.Game.TimeTicks;
+			string origin = System.SeatName;
+			string destination = System.Away.SettlementName;
+			System.Manifest = new KingdomManifest
+			{
+				OriginName = origin,
+				DestinationName = destination,
+				Drams = drawn,
+				LoadedTick = now,
+				DeadlineTick = KingdomManifestRules.ManifestDeadline(now)
+			};
+			KingdomChronicle.Record(System, "the water-keepers of " + origin + " sent " + drawn + " drams toward " + destination);
+			Popup.Show("{{G|" + drawn + " drams leave the stores of " + origin + ", bound for " + destination + ".}} The road is given " + KingdomManifestRules.ManifestWindowDays + " days; stand in " + destination + " within that time and the water will already be waiting in its stores.");
+			KingdomLog.Log("manifest: loaded " + drawn + " from " + origin + " to " + destination + " deadline=" + System.Manifest.DeadlineTick);
 		}
 
 		public void DedicateVessel(KingdomSystem System)

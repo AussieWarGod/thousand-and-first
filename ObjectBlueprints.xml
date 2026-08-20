@@ -65,6 +65,18 @@
     <part Name="Physics" Takeable="false" Organic="true" />
     <stat Name="Hitpoints" Value="80" />
   </object>
+  <!-- Declares no Tile of our own: the r_KingdomPlot part (Growth/KingdomPlot.cs) reuses the
+       exact tile string vanilla's own Watervine object renders with (ZoneTerrain.xml), and
+       recolors it in code the same way Watervine's own Harvestable declaration recolors ripe
+       and unripe, rather than shipping new art for a plot whose crop already varies by style. -->
+  <object Name="r_KingdomPlot" Inherits="Furniture">
+    <stag Name="Contemporary" />
+    <part Name="Render" DisplayName="tended plot" RenderString="244" ColorString="&amp;K" Tile="Assets_Content_Textures_Tiles_sw_watervine1.bmp" TileColor="&amp;w" DetailColor="K" />
+    <part Name="Description" Short="A patch of turned earth, staked and weeded by hands that have somewhere else to be. What comes up depends on what the ground already knew how to grow, long before anyone asked it to." />
+    <part Name="r_KingdomPlot" />
+    <part Name="Physics" Takeable="false" Organic="true" Weight="200" />
+    <stat Name="Hitpoints" Value="60" />
+  </object>
   <object Name="r_KingdomBunk" Inherits="Bed">
     <stag Name="Contemporary" />
     <part Name="Render" DisplayName="communal bunk" ColorString="&amp;w" />

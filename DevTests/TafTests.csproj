@@ -17,9 +17,16 @@
     <Compile Include="Wave1RulesTests.cs" />
     <Compile Include="SettlementSeatTests.cs" />
     <Compile Include="LarderRulesTests.cs" />
+    <Compile Include="ExileRulesTests.cs" />
+    <Compile Include="FoundingPathsRulesTests.cs" />
+    <Compile Include="ManifestRulesTests.cs" />
+    <Compile Include="KingdomCropRulesTests.cs" />
     <Compile Include="..\Core\KingdomRules.cs" />
     <Compile Include="..\Core\KingdomLedger.cs" />
     <Compile Include="..\Core\KingdomSettlement.cs" />
+    <Compile Include="..\Core\KingdomExileRules.cs" />
+    <Compile Include="..\Trade\KingdomManifest.cs" />
+    <Compile Include="..\Growth\KingdomCropRules.cs" />
     <Compile Include="..\Simulation\Kernel\KernelContracts.cs" />
     <Compile Include="..\Simulation\Kernel\CanonicalBytes.cs" />
     <Compile Include="..\Simulation\Kernel\CounterRandom.cs" />

@@ -58,12 +58,19 @@ namespace ThousandAndFirst
 
 		public static void OnZoneActivated(KingdomSystem System, Zone Z, KingdomSurvey Shared = null)
 		{
-			if (!Enabled || !System.Founded || Z == null || !System.ClaimedZones.Contains(Z.ZoneID) || System.ActiveDealKeys.Count == 0)
+			if (!Enabled || !System.Founded || Z == null || !System.ClaimedZones.Contains(Z.ZoneID))
 			{
 				return;
 			}
 			KingdomSurvey survey = Shared ?? KingdomSurvey.Take(Z);
 			long timeTicks = The.Game.TimeTicks;
+			// Independent of the foreign-charter loop below: a realm may hold a manifest with
+			// zero external deals struck, and the deal loop's own early return must not skip it.
+			ResolveManifest(System, survey, timeTicks);
+			if (System.ActiveDealKeys.Count == 0)
+			{
+				return;
+			}
 			DespawnCaravans(Z);
 			for (int i = 0; i < System.ActiveDealKeys.Count; i++)
 			{
@@ -83,6 +90,60 @@ namespace ThousandAndFirst
 				System.DealNextTicks[i] = timeTicks + deal.IntervalTicks;
 				System.RecordDeed("the caravans that come to " + System.KingdomDisplayName);
 			}
+		}
+
+		/// <summary>
+		/// Settles the realm's one in-flight water manifest against this attended pass, if it
+		/// has one. Delivery and lapse both fire only from here and from
+		/// <see cref="ExpireManifestIfStale"/> &mdash; the same witnessed-only idiom as every
+		/// other clock in this mod. A manifest addressed to a city that never activates simply
+		/// keeps waiting; nothing about it resolves on a background timer.
+		/// </summary>
+		/// <param name="System">The realm. <see cref="KingdomSystem.SeatName"/> names whichever
+		/// city just activated, since <c>TrySeat</c> already ran before this is called.</param>
+		/// <param name="Survey">The activated zone's survey, whose dedicated stores receive the
+		/// delivery through the ordinary <see cref="KingdomSurvey.Store"/> path.</param>
+		/// <param name="TimeTicks">Current tick.</param>
+		private static void ResolveManifest(KingdomSystem System, KingdomSurvey Survey, long TimeTicks)
+		{
+			if (System.Manifest == null || ExpireManifestIfStale(System, TimeTicks) != null || System.SeatName != System.Manifest.DestinationName)
+			{
+				return;
+			}
+			KingdomManifest manifest = System.Manifest;
+			int delivered = Survey.Store(manifest.Drams);
+			System.Manifest = null;
+			System.Ledger.Delivered += delivered;
+			System.Ledger.Note(KingdomManifestRules.ManifestArrivalNote(manifest.OriginName, delivered, manifest.Drams));
+			KingdomChronicle.Record(System, KingdomManifestRules.ManifestArrivalDeed(manifest.OriginName, System.SeatName, delivered, manifest.Drams));
+			KingdomLog.Log("manifest: delivered " + delivered + "/" + manifest.Drams + " from " + manifest.OriginName + " to " + System.SeatName);
+			System.RecordDeed("the water that reached " + System.SeatName + " from " + manifest.OriginName);
+		}
+
+		/// <summary>
+		/// Clears the realm's manifest if its arrival window has already closed, chronicling and
+		/// ledgering the loss. Called from every witnessed moment that might notice it &mdash; an
+		/// attended pass at either city via <see cref="ResolveManifest"/>, or the founder trying
+		/// to load a new one from the Charter &mdash; and never from a background clock. Safe to
+		/// call when there is no manifest, or when it has not lapsed.
+		/// </summary>
+		/// <param name="System">The realm.</param>
+		/// <param name="Now">Current tick.</param>
+		/// <returns>The manifest that lapsed, for a caller that wants to tell the founder
+		/// directly; null if there was nothing to clear.</returns>
+		public static KingdomManifest ExpireManifestIfStale(KingdomSystem System, long Now)
+		{
+			KingdomManifest manifest = System.Manifest;
+			if (manifest == null || !KingdomManifestRules.ManifestExpired(Now, manifest.DeadlineTick))
+			{
+				return null;
+			}
+			System.Manifest = null;
+			string deed = KingdomManifestRules.ManifestLapseDeed(manifest.OriginName, manifest.DestinationName, manifest.Drams);
+			System.Ledger.Note("{{r|" + deed + ".}}");
+			KingdomChronicle.Record(System, deed);
+			KingdomLog.Log("manifest: lapsed " + manifest.Drams + " from " + manifest.OriginName + " to " + manifest.DestinationName);
+			return manifest;
 		}
 
 		public static void SpawnCaravan(Zone Z, string Blueprint)

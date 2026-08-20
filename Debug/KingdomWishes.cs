@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Text;
 using XRL;
+using XRL.Rules;
 using XRL.UI;
 using XRL.Wish;
 using XRL.World;
@@ -21,7 +22,20 @@ namespace ThousandAndFirst
 				Popup.Show("The kingdom of {{C|" + system.KingdomDisplayName + "}} is already founded. ({{W|kingdom:found2 NAME:VOCATION}} founds the second city here.)");
 				return;
 			}
+			// Factions.AddNewFaction is a Dictionary.Add, and a runtime faction can never be
+			// removed or renamed — so after an expulsion the old realm's name is taken forever,
+			// and re-using it would throw part-way through the rite.
+			if (Factions.Exists(name))
+			{
+				Popup.Show("There is already a {{C|" + name + "}} in the world" + (system.Exiled && name == system.ExiledFactionName ? " — the one that put you out, which is still standing." : ".") + " Pick another name.");
+				return;
+			}
 			Faction faction = KingdomFounding.Found(name);
+			if (faction == null)
+			{
+				Popup.Show("The founding was refused. ({{W|kingdom:dump}} for state.)");
+				return;
+			}
 			Popup.Show("{{C|" + faction.DisplayName + "}} is founded on " + KingdomFounding.StyleGroundClause(system.Style) + ". The chronicle begins.\n\nStandings seeded from your reputation with " + system.Standings.Count + " factions.");
 		}
 
@@ -170,6 +184,117 @@ namespace ThousandAndFirst
 				+ "\nKnown styles: " + string.Join(", ", KingdomRules.Styles);
 		}
 
+		/// <summary>
+		/// Moves the realm's regard for its founder to an absolute value through the engine's own
+		/// reputation path, so the whole ladder &mdash; murmur, warning, the gate &mdash; runs the
+		/// way it runs in play rather than being simulated. This is the reachable trigger:
+		/// {{W|kingdom:regard -700}} gets a founder thrown out of their own realm by the shipped
+		/// code, not by a debug shortcut.
+		/// </summary>
+		/// <param name="Parameter">Target reputation, e.g. <c>-700</c>. Empty reports where it stands.</param>
+		[WishCommand("kingdom:regard", null)]
+		public static void RegardWish(string Parameter)
+		{
+			KingdomSystem system = The.Game.RequireSystem<KingdomSystem>();
+			// The realm the founder holds, or — once it has put them out — the one they are
+			// outside of. Mending an old realm's regard is the whole return path, so a tester
+			// with no realm must still be able to move this number.
+			string factionName = system.Founded ? system.KingdomFactionName : system.ExiledFactionName;
+			if (string.IsNullOrEmpty(factionName))
+			{
+				Popup.Show("No kingdom founded yet, and none has put you out. Wish {{W|kingdom:found NAME}} first.");
+				return;
+			}
+			if (string.IsNullOrEmpty(Parameter) || !int.TryParse(Parameter.Trim(), out var target))
+			{
+				Popup.Show(RegardReport(system) + "\n\nUsage: {{W|kingdom:regard AMOUNT}} (absolute, e.g. -700 to be repudiated, 0 to be heard out again).");
+				return;
+			}
+			Faction realm = Factions.GetIfExists(factionName);
+			if (realm == null)
+			{
+				Popup.Show("The realm's faction is not registered; nothing to move.");
+				return;
+			}
+			int before = The.Game.PlayerReputation.Get(realm);
+			// Modify rather than Set, precisely because Modify is what the world uses: it fires
+			// AfterReputationChangeEvent, which is the surface the expulsion ladder listens on.
+			The.Game.PlayerReputation.Modify(realm, target - before, "Wish", null, "Wish");
+			Popup.Show("Regard with {{C|" + realm.DisplayName + "}}: " + before + " -> " + The.Game.PlayerReputation.Get(realm) + ".\n\n" + RegardReport(system));
+		}
+
+		/// <summary>Where the founder stands with whichever realm currently has an opinion of them.</summary>
+		private static string RegardReport(KingdomSystem System)
+		{
+			bool held = System.Founded;
+			int regard = held ? System.FounderRegard() : System.ExiledRealmRegard();
+			string name = held ? System.KingdomDisplayName : System.ExiledDisplayName;
+			return "{{C|" + (name ?? "-") + "}}" + (held ? "" : " (which put you out)") + " holds you {{W|" + KingdomExileRules.RegardName(KingdomExileRules.ClassifyRegard(regard)) + "}} (" + regard + ")."
+				+ (held ? ("\nLast spoken of: " + KingdomExileRules.RegardName((RealmRegard)System.RegardSpoken)) : "\nThe gate opens above " + KingdomExileRules.RegardHated + ". Stand on its ground and it will put the question to you.")
+				+ "\nRungs: beloved " + KingdomExileRules.RegardLoved + "+, trusted " + KingdomExileRules.RegardLiked + "+, doubted >" + KingdomExileRules.RegardDisliked + ", resented >" + KingdomExileRules.RegardHated + ", repudiated at or below " + KingdomExileRules.RegardHated + " (the gate).";
+		}
+
+		/// <summary>
+		/// Puts the founder out of their own realm without waiting for the regard to fall there.
+		/// Everything else is the shipped path: the realm and both its cities are kept whole, the
+		/// Charter is taken, both registers record it, and nothing physical is touched.
+		/// </summary>
+		/// <param name="Parameter">A deed clause to record, or empty for the unnamed-deed line.</param>
+		[WishCommand("kingdom:exile", null)]
+		public static void ExileWish(string Parameter)
+		{
+			KingdomSystem system = The.Game.RequireSystem<KingdomSystem>();
+			string deed = string.IsNullOrEmpty(Parameter) ? KingdomExileRules.DeedClause("Wish") : Parameter.Trim();
+			if (!system.Exile(deed, Forced: true, out var refusal))
+			{
+				Popup.Show(refusal + "\n\n{{K|(kingdom:regard AMOUNT walks the ladder the ordinary way.)}}");
+				return;
+			}
+			Popup.Show(ExileReport(system) + "\n\n{{K|Walk back onto its ground and it will put the question to you, if its regard for you has risen since. kingdom:return forces the asking.}}");
+		}
+
+		/// <summary>
+		/// Asks the realm that expelled the founder to take them back. Skips nothing &mdash; every
+		/// requirement, the ground included, is the shipped one; it only saves a tester the walk
+		/// back out and in again to make the zone activate.
+		/// </summary>
+		[WishCommand("kingdom:return", null)]
+		public static void ReturnWish()
+		{
+			KingdomSystem system = The.Game.RequireSystem<KingdomSystem>();
+			Zone zone = The.Player?.CurrentZone;
+			if (!system.TryReturn(zone, out var refusal))
+			{
+				Popup.Show(refusal + "\n\n" + ExileReport(system));
+				return;
+			}
+			Popup.Show(SeatReport(system));
+		}
+
+		/// <summary>One block describing the realm the founder is outside of, if any.</summary>
+		private static string ExileReport(KingdomSystem System)
+		{
+			if (!System.Exiled)
+			{
+				return "{{C|Exile}}: none on the record.";
+			}
+			StringBuilder sb = new StringBuilder();
+			int regard = System.ExiledRealmRegard();
+			sb.Append("{{C|Exiled from}}: ").Append(System.ExiledFactionName).Append(" / ").Append(System.ExiledDisplayName)
+				.Append("  cities=").Append(System.ExiledSettlementCount)
+				.Append("  standings=").Append(System.ExiledStandings.Count)
+				.Append("  tick=").Append(System.ExiledTick);
+			sb.Append("\n{{C|Deed}}: ").Append(System.ExiledDeed ?? "-");
+			sb.Append("\n{{C|Its regard}}: ").Append(regard).Append(" (").Append(KingdomExileRules.RegardName(KingdomExileRules.ClassifyRegard(regard))).Append(")")
+				.Append("  asked-at=").Append((System.ReturnAskedRegard == int.MinValue) ? "never" : System.ReturnAskedRegard.ToString())
+				.Append("  door-closed-told=").Append(System.DoorClosedTold);
+			sb.Append("\n{{C|Its seat}}: ").Append((System.ExiledSeat != null) ? System.ExiledSeat.Describe() : "(none)");
+			sb.Append("\n{{C|Its other city}}: ").Append((System.ExiledAway != null) ? System.ExiledAway.Describe() : "(none)");
+			Zone here = The.Player?.CurrentZone;
+			sb.Append("\n{{C|Verdict here}}: ").Append(KingdomExileRules.JudgeReturn(System.Exiled, System.Founded, System.ExiledRealmKeptGround, here != null && System.ExiledRealmHolds(here.ZoneID), regard));
+			return sb.ToString();
+		}
+
 		[WishCommand("kingdom:claim", null)]
 		public static void ClaimWish()
 		{
@@ -217,6 +342,11 @@ namespace ThousandAndFirst
 				// currently describe, what the other one holds, and whether every settlement
 				// field still has a flat field to be carried in.
 				sb.Append("\n").Append(SeatReport(system));
+				sb.Append("\nRegard: ").Append(system.FounderRegard()).Append(" (").Append(KingdomExileRules.RegardName(KingdomExileRules.ClassifyRegard(system.FounderRegard()))).Append(", last spoken ").Append(KingdomExileRules.RegardName((RealmRegard)system.RegardSpoken)).Append(")");
+			}
+			if (system.Exiled)
+			{
+				sb.Append("\n").Append(ExileReport(system));
 			}
 			sb.Append("\nStyle: ").Append(system.Style).Append(" (").Append(KingdomFounding.StyleGroundClause(system.Style)).Append(")").Append("  Stage: ").Append(system.Stage).Append("  Withered: ").Append(system.Withered);
 			sb.Append("\nFounding terrain: blueprint=").Append(system.FoundingTerrainBlueprint ?? "(none)").Append(" region=").Append(system.FoundingRegionName ?? "(none)").Append(" z=").Append(system.FoundingZLevel);
@@ -296,26 +426,36 @@ namespace ThousandAndFirst
 		public static void ResetWish()
 		{
 			KingdomSystem system = The.Game.RequireSystem<KingdomSystem>();
-			if (!system.Founded)
+			if (!system.Founded && !system.Exiled)
 			{
 				Popup.Show("Nothing to reset.");
 				return;
 			}
-			if (Popup.ShowYesNo("Dissolve {{C|" + system.KingdomDisplayName + "}}, all " + system.SettlementCount + " of its cities, and wipe all kingdom state? (Debug only; claimed-zone properties in unvisited zones are left behind.)") != DialogResult.Yes)
+			string held = system.Founded ? ("{{C|" + system.KingdomDisplayName + "}}, all " + system.SettlementCount + " of its cities") : "the realm you hold (none)";
+			string remembered = system.Exiled ? (", and {{C|" + system.ExiledDisplayName + "}}, which put you out") : "";
+			if (Popup.ShowYesNo("Dissolve " + held + remembered + ", and wipe all kingdom state? (Debug only; claimed-zone properties in unvisited zones are left behind.)") != DialogResult.Yes)
 			{
 				return;
 			}
-			string name = system.KingdomFactionName;
-			Faction faction = Factions.Get(name);
-			if (faction != null)
+			foreach (string name in new string[2] { system.KingdomFactionName, system.ExiledFactionName })
 			{
-				faction.Visible = false;
+				if (string.IsNullOrEmpty(name))
+				{
+					continue;
+				}
+				// A faction cannot be unregistered at runtime; hiding it and dropping every edge
+				// to it is as close as a debug reset can honestly get.
+				Faction faction = Factions.GetIfExists(name);
+				if (faction != null)
+				{
+					faction.Visible = false;
+				}
+				foreach (Faction item in Factions.Loop())
+				{
+					item.FactionFeeling.Remove(name);
+				}
+				The.Game.PlayerReputation.ReputationValues.Remove(name);
 			}
-			foreach (Faction item in Factions.Loop())
-			{
-				item.FactionFeeling.Remove(name);
-			}
-			The.Game.PlayerReputation.ReputationValues.Remove(name);
 			Zone zone = The.Player?.CurrentZone;
 			if (zone != null && (system.ClaimedZones.Contains(zone.ZoneID) || (system.Away != null && system.Away.ClaimedZones.Contains(zone.ZoneID))))
 			{
@@ -333,6 +473,18 @@ namespace ThousandAndFirst
 			// there is, so a field added later cannot be forgotten here, and Away goes with it.
 			system.Restore(new KingdomSettlement());
 			system.Away = null;
+			// The exile slot is state too, and a reset that left a remembered realm behind would
+			// have the next founding start with a door already shut.
+			system.ExiledFactionName = null;
+			system.ExiledDisplayName = null;
+			system.ExiledSeat = null;
+			system.ExiledAway = null;
+			system.ExiledDeed = null;
+			system.ExiledTick = 0L;
+			system.ExiledStandings.Clear();
+			system.RegardSpoken = (int)RealmRegard.Beloved;
+			system.ReturnAskedRegard = int.MinValue;
+			system.DoorClosedTold = false;
 			system.ActiveDealKeys.Clear();
 			system.ActiveDealFactions.Clear();
 			system.DealNextTicks.Clear();
@@ -379,10 +531,13 @@ namespace ThousandAndFirst
 			KingdomSystem system = The.Game.RequireSystem<KingdomSystem>();
 			if (!system.Founded)
 			{
-				Popup.Show("No kingdom founded. Wish {{W|kingdom:found NAME}} to begin.");
+				Popup.Show(system.Exiled
+					? (ExileReport(system) + "\n\n{{K|You hold no realm. The basin still pours: kingdom:found NAME founds a new one, and shuts the door on this one for good.}}")
+					: "No kingdom founded. Wish {{W|kingdom:found NAME}} to begin.");
 				return;
 			}
-			Popup.Show(SeatLine(system) + "\n" + KingdomReports.Status(system) + "\n\n" + KingdomReports.Standings(system));
+			Popup.Show(SeatLine(system) + "\n" + RegardReport(system) + "\n" + KingdomReports.Status(system) + "\n\n" + KingdomReports.Standings(system)
+				+ (system.Exiled ? ("\n\n" + ExileReport(system)) : ""));
 		}
 
 		[WishCommand("kingdom:standing", null)]
@@ -455,16 +610,49 @@ namespace ThousandAndFirst
 			KingdomSystem system = The.Game.RequireSystem<KingdomSystem>();
 			if (!system.Founded)
 			{
-				Popup.Show("Selftest needs a founded kingdom. Wish {{W|kingdom:found NAME}} first.");
+				if (!system.Exiled)
+				{
+					Popup.Show("Selftest needs a founded kingdom. Wish {{W|kingdom:found NAME}} first.");
+					return;
+				}
+				// A founder standing outside every realm is a state worth asserting on, not a
+				// state to refuse to look at: it is the one where a whole realm is being held in
+				// a slot nothing else reads.
+				StringBuilder exileOnly = new StringBuilder();
+				int exilePassed = 0;
+				int exileFailed = 0;
+				ExileChecks(system, exileOnly, ref exilePassed, ref exileFailed);
+				Popup.Show("{{C|Kingdom selftest}} (exiled, no realm held): {{G|" + exilePassed + " passed}}" + ((exileFailed > 0) ? (", {{R|" + exileFailed + " FAILED}}") : "") + "\n" + exileOnly.ToString());
 				return;
 			}
 			StringBuilder report = new StringBuilder();
 			int passed = 0;
 			int failed = 0;
-			Check(report, ref passed, ref failed, "faction registered", Factions.Get(system.KingdomFactionName) != null);
-			Check(report, ref passed, ref failed, "founder is loved by the kingdom", The.Game.PlayerReputation.GetLevel(system.KingdomFactionName) == 2);
-			Faction kingdom = Factions.Get(system.KingdomFactionName);
-			Check(report, ref passed, ref failed, "kingdom feeling toward Player is 100", kingdom != null && kingdom.FactionFeeling.TryGetValue("Player", out var playerFeeling) && playerFeeling == 100);
+			Check(report, ref passed, ref failed, "faction registered", Factions.GetIfExists(system.KingdomFactionName) != null);
+			Faction kingdom = Factions.GetIfExists(system.KingdomFactionName);
+			// Derived, not absolute: a realm that has come to doubt its founder must be allowed to
+			// say so, and an assertion that it always loves them would forbid the whole ladder.
+			int regardFeeling = Reputation.GetFeeling((float)system.FounderRegard());
+			Check(report, ref passed, ref failed, "kingdom feeling toward Player mirrors its regard (" + system.FounderRegard() + " -> " + regardFeeling + ")", kingdom != null && kingdom.FactionFeeling.TryGetValue("Player", out var playerFeeling) && playerFeeling == regardFeeling);
+			// The pure ladder copies four vanilla reputation thresholds by value. Walking the
+			// reference in both directions is the only way a copied constant can be trusted: a
+			// vanilla rebalance that moved REPUTATION_HATED would otherwise change nothing here
+			// and everything in play.
+			bool ladderParity = KingdomExileRules.RegardLoved == RuleSettings.REPUTATION_LOVED
+				&& KingdomExileRules.RegardLiked == RuleSettings.REPUTATION_LIKED
+				&& KingdomExileRules.RegardDisliked == RuleSettings.REPUTATION_DISLIKED
+				&& KingdomExileRules.RegardHated == RuleSettings.REPUTATION_HATED;
+			foreach (int regardProbe in new int[10] { -1000, RuleSettings.REPUTATION_HATED, RuleSettings.REPUTATION_HATED + 1, -300, RuleSettings.REPUTATION_DISLIKED, 0, RuleSettings.REPUTATION_LIKED - 1, RuleSettings.REPUTATION_LIKED, RuleSettings.REPUTATION_LOVED, 1000 })
+			{
+				// ClassifyRegard is ordered best-first and GetAttitude best-last, so agreement is
+				// tier + attitude == 2 across the whole ladder.
+				if ((int)KingdomExileRules.ClassifyRegard(regardProbe) + Reputation.GetAttitude(regardProbe) != 2)
+				{
+					ladderParity = false;
+					report.Append("\n    regard ").Append(regardProbe).Append(" reads ").Append(KingdomExileRules.ClassifyRegard(regardProbe)).Append(" but vanilla attitude ").Append(Reputation.GetAttitude(regardProbe));
+				}
+			}
+			Check(report, ref passed, ref failed, "the regard ladder agrees with vanilla's own reputation thresholds", ladderParity);
 			bool mirrorConsistent = true;
 			int checkedCount = 0;
 			foreach (System.Collections.Generic.KeyValuePair<string, int> standing in system.Standings)
@@ -536,7 +724,73 @@ namespace ThousandAndFirst
 				}
 			}
 			Check(report, ref passed, ref failed, "claimed zones carry the faction property (" + system.ClaimedZones.Count + " claims)", claimsCoherent);
+			ExileChecks(system, report, ref passed, ref failed);
 			Popup.Show("{{C|Kingdom selftest}}: {{G|" + passed + " passed}}" + ((failed > 0) ? (", {{R|" + failed + " FAILED}}") : "") + "\n" + report.ToString());
+		}
+
+		/// <summary>
+		/// Asserts what an expulsion promised: that the realm it took the founder out of is still
+		/// there, still owns its own ground, and has not been quietly merged with anything the
+		/// founder holds now. Silent when no expulsion is on the record.
+		/// </summary>
+		private static void ExileChecks(KingdomSystem System, StringBuilder Report, ref int Passed, ref int Failed)
+		{
+			if (!System.Exiled)
+			{
+				return;
+			}
+			Faction old = Factions.GetIfExists(System.ExiledFactionName);
+			// The whole promise of realm-scoped secession: the faction survives, because a runtime
+			// faction cannot be unmade and the city has to go on without the founder.
+			Check(Report, ref Passed, ref Failed, "the realm that put you out is still registered (" + System.ExiledFactionName + ")", old != null);
+			Check(Report, ref Passed, ref Failed, "it is not the realm you hold now", System.ExiledFactionName != System.KingdomFactionName);
+			Check(Report, ref Passed, ref Failed, "it has a seat to be restored into", System.ExiledSeat != null);
+			bool exiledClaimsCoherent = true;
+			int exiledClaims = 0;
+			foreach (string zoneID in ExiledClaims(System))
+			{
+				exiledClaims++;
+				Zone zone = The.ZoneManager.GetZone(zoneID);
+				if (zone != null && zone.GetZoneProperty("faction", null) != System.ExiledFactionName)
+				{
+					exiledClaimsCoherent = false;
+					Report.Append("\n    ").Append(zoneID).Append(" reads faction ").Append(zone.GetZoneProperty("faction", null) ?? "(none)");
+				}
+			}
+			Check(Report, ref Passed, ref Failed, "its ground still carries its own faction property (" + exiledClaims + " claims)", exiledClaimsCoherent);
+			bool disjoint = true;
+			foreach (string zoneID in ExiledClaims(System))
+			{
+				if (System.ClaimedZones.Contains(zoneID) || (System.Away != null && System.Away.ClaimedZones.Contains(zoneID)))
+				{
+					disjoint = false;
+					Report.Append("\n    the realm you hold also claims ").Append(zoneID);
+				}
+			}
+			// Two realms claiming one zone would let a second founding hijack the city that
+			// disowned the founder, which is the one thing exile promised could not happen.
+			Check(Report, ref Passed, ref Failed, "no ground is claimed by both the old realm and the one you hold", disjoint);
+			Check(Report, ref Passed, ref Failed, "its standings ledger is held apart from yours (" + System.ExiledStandings.Count + " entries)", !ReferenceEquals(System.ExiledStandings, System.Standings));
+			Check(Report, ref Passed, ref Failed, "the return verdict here is reachable prose", !string.IsNullOrEmpty(KingdomExileRules.ReturnRefusal(ReturnVerdict.RegardTooLow, System.ExiledDisplayName, System.KingdomDisplayName)));
+		}
+
+		/// <summary>Every zone the expelled-from realm holds, across both of its cities.</summary>
+		private static IEnumerable<string> ExiledClaims(KingdomSystem System)
+		{
+			if (System.ExiledSeat != null)
+			{
+				foreach (string zoneID in System.ExiledSeat.ClaimedZones)
+				{
+					yield return zoneID;
+				}
+			}
+			if (System.ExiledAway != null)
+			{
+				foreach (string zoneID in System.ExiledAway.ClaimedZones)
+				{
+					yield return zoneID;
+				}
+			}
 		}
 
 		private static void Check(StringBuilder Report, ref int Passed, ref int Failed, string Label, bool Result)

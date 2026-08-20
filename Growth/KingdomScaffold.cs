@@ -32,6 +32,13 @@ namespace ThousandAndFirst
 			base.TurnTick(TimeTick, Amount);
 		}
 
+		/// <summary>
+		/// The one blueprint the settlement dedicates to its own food stores on completion.
+		/// Named here rather than inferred, so a future container-bearing building does not
+		/// quietly become a pantry.
+		/// </summary>
+		public const string LarderBlueprint = "r_KingdomLarder";
+
 		public void Complete()
 		{
 			Cell cell = ParentObject.CurrentCell;
@@ -53,6 +60,14 @@ namespace ThousandAndFirst
 			if (gameObject.GetPart<XRL.World.Parts.LiquidVolume>() != null)
 			{
 				gameObject.SetIntProperty("KingdomStores", 1);
+			}
+			else if (blueprint == LarderBlueprint)
+			{
+				// A civic larder the settlement paid for is the settlement's, the same way a
+				// commissioned cask rack is. Keyed on the blueprint rather than "has an
+				// Inventory and no LiquidVolume", because the charging post carries a
+				// Container/Inventory pair too and is not a pantry.
+				gameObject.SetIntProperty("KingdomLarder", 1);
 			}
 			gameObject.SetIntProperty("KingdomBuilt", 1);
 			if (defence > 0)

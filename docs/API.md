@@ -57,6 +57,36 @@ neutral values.
 | `static bool FoundSecond(string name, string vocation, Zone site, bool force = false)` | Founds the realm's second city. `force` waives only the not-adjacent requirement. |
 | `static string StyleGroundClause(string style)` | Lower-case founder-facing clause naming what the ground promises for a city style ("common ground", "ground green enough to root a verdant city"). Presentation only — `KingdomRules.StyleForSite` owns which style a site resolves to. |
 
+## `KingdomExileRules` — regard, expulsion, and return
+
+Pure and engine-free. The realm's regard for its founder is the vanilla reputation cell for its own
+faction, so there is no second economy: it falls from deeds and never from time.
+
+| Member | Contract |
+|---|---|
+| `enum RealmRegard` | Beloved, Trusted, Doubted, Resented, Repudiated. Ordered best-first, so a larger value is a worse standing. |
+| `ClassifyRegard(int)` / `RegardName` | Where a reputation value sits on the ladder, and its name. Agrees with vanilla's own thresholds — `kingdom:selftest` walks both directions to prove it. |
+| `JudgeRegardStep(...)` | Whether a change of regard should speak. Has hysteresis: jitter across one threshold says nothing. |
+| `JudgeExile(...)` / `JudgeReturn(...)` / `ShouldOfferReturn(...)` | Whether the realm puts the founder out, whether it would take them back, and whether to ask. Founding again shuts the door. |
+| `ExileTelling` / `ExileRumour` / `ReturnTelling` / `ReturnRumour` | The two registers' accounts, which deliberately disagree. |
+
+## `KingdomManifest` — one load of water between two cities
+
+| Member | Contract |
+|---|---|
+| `KingdomSystem.Manifest` | The realm's one in-flight manifest, or null. Realm-level and never swapped; it addresses cities by name, because seat and Away exchange roles. |
+
+Drams leave the origin's stores when it is loaded and arrive at the destination's **next attended
+pass** — never on a background clock. One may be in flight at a time; a lapsed window is written
+off once, in the chronicle.
+
+## `KingdomCropRules` / `KingdomPlot` — ground that grows food
+
+The plot cycles on the settlement's own tick stamps, resolved when the city is seated. What it can
+grow is read from the style the founding rite already recorded, not from a second look at the
+ground. It draws water only after the day's upkeep and arrivals, so it can never be the reason the
+thirst ladder fires, and it deposits only into a dedicated larder.
+
 ## `KingdomLarder` — dedicated food, and what the settlement does with it
 
 | Member | Contract |

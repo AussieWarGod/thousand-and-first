@@ -79,14 +79,39 @@ namespace ThousandAndFirst
 		/// </param>
 		public static void Record(KingdomSystem System, string Text, bool Accomplishment = false, string MuralText = null)
 		{
+			RecordDisputed(System, Text, null, Accomplishment, MuralText);
+		}
+
+		/// <summary>
+		/// Writes an event whose two registers do not agree about it.
+		/// <para>
+		/// <see cref="Record"/> derives the outsider line from the official one mechanically, which
+		/// is right for events the world has no reason to contest &mdash; a claim, a stage-up, a
+		/// charter. It is wrong for the events the two-register chronicle exists for. When a realm
+		/// puts its founder out, the founder's book and the roads are not telling the same story in
+		/// two voices; they are telling two stories, and only this overload can carry both.
+		/// </para>
+		/// </summary>
+		/// <param name="System">The kingdom system.</param>
+		/// <param name="Text">The official register's clause, as <see cref="Record"/> takes it.</param>
+		/// <param name="OutsiderText">The rumour register's own clause, already in third person
+		/// (see <see cref="FounderName"/>), or null to derive it from <paramref name="Text"/> the
+		/// ordinary way. Either way it is wrapped in the rumour grammar's hedges.</param>
+		/// <param name="Accomplishment">True to also file a journal accomplishment.</param>
+		/// <param name="MuralText">Authored mural line, or null. See <see cref="Record"/> for why
+		/// null is what almost everything should pass.</param>
+		public static void RecordDisputed(KingdomSystem System, string Text, string OutsiderText, bool Accomplishment = false, string MuralText = null)
+		{
 			System.ChronicleEntries.Add("On the " + Calendar.GetDay() + " of " + Calendar.GetMonth() + ", " + Calendar.GetYear() + " AR, " + Text + ".");
 			if (System.ChronicleEntries.Count > MaxEntries)
 			{
 				System.ChronicleEntries.RemoveAt(0);
 			}
-			string founder = The.Player?.BaseDisplayNameStripped ?? "the founder";
+			string founder = FounderName();
 			int roll = DrawOutsiderRoll(System);
-			System.OutsiderEntries.Add(KingdomRules.ComposeOutsider(KingdomRules.ToThirdPerson(Text, founder), roll));
+			// Converted even when authored: a stray "your" in a hand-written rumour would put the
+			// founder's own voice into the register that is supposed to be arguing with it.
+			System.OutsiderEntries.Add(KingdomRules.ComposeOutsider(KingdomRules.ToThirdPerson(OutsiderText ?? Text, founder), roll));
 			if (System.OutsiderEntries.Count > MaxEntries)
 			{
 				System.OutsiderEntries.RemoveAt(0);
@@ -96,6 +121,17 @@ namespace ThousandAndFirst
 				bool wantsMural = !string.IsNullOrEmpty(MuralText);
 				JournalAPI.AddAccomplishment(Text.Capitalize() + ".", wantsMural ? MuralText : null, null, null, "general", MuralCategory.CreatesSomething, wantsMural ? MuralWeight.Medium : MuralWeight.Nil, null, -1L);
 			}
+		}
+
+		/// <summary>
+		/// The founder as strangers would name them, for composing a rumour-register line that is
+		/// already in third person.
+		/// </summary>
+		/// <returns>The player's stripped display name, or "the founder" when there is no player
+		/// to ask &mdash; never null.</returns>
+		public static string FounderName()
+		{
+			return The.Player?.BaseDisplayNameStripped ?? "the founder";
 		}
 
 		/// <summary>

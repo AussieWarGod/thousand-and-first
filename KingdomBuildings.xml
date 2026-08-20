@@ -8,6 +8,7 @@
   <building Key="caskrack" DisplayName="cask rack (holds 64 drams)" Blueprint="r_KingdomCaskRack" Cost="4" Ticks="1200" Styles="all" Category="storage" />
   <building Key="cistern" DisplayName="great cistern (holds 256 drams)" Blueprint="r_KingdomGreatCistern" Cost="16" Ticks="3600" Styles="all" Category="storage" MinStage="Steading" />
   <building Key="larder" DisplayName="civic larder (a chest for the settlement's food)" Blueprint="r_KingdomLarder" Cost="4" Ticks="1200" Styles="all" Category="storage" />
+  <building Key="plot" DisplayName="tended plot (grows food for the larders)" Blueprint="r_KingdomPlot" Cost="3" Ticks="1200" Styles="all" Category="food" />
   <building Key="bunk" DisplayName="communal bunk" Blueprint="r_KingdomBunk" Cost="4" Ticks="1200" Styles="all" Category="housing" />
   <building Key="shrine" DisplayName="shrine stone" Blueprint="r_KingdomShrine" Cost="8" Ticks="2400" Styles="common,verdant,fungal" Category="faith" />
   <building Key="fire" DisplayName="communal fire" Blueprint="Campfire" Cost="2" Ticks="600" Styles="all" Category="civic" />

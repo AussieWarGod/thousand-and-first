@@ -48,6 +48,13 @@ opt-in via the Charter). If your mod's structures should participate in the wate
 either set that property on your placed objects or leave it to the player's dedicate
 action. Never rely on the kingdom consuming undedicated liquids — it won't.
 
+The same contract covers food. A container joins the settlement's pantry only when it carries
+`KingdomLarder=1`, which the Charter's dedicate action sets and a commissioned civic larder sets
+for itself. Food inside a dedicated larder is counted, and may be spent by a shared meal the
+founder calls; food anywhere else — including the player's own pack and any container they simply
+left lying about — is never read and never spent. Dedication is a mark, not a transfer: nothing is
+moved when a container joins the pantry.
+
 ## Conventions
 
 - Water stores are containers (`MaxVolume > 0`) holding `water`; open pools (`MaxVolume < 0`)

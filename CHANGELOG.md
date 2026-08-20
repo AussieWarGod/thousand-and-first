@@ -51,6 +51,38 @@ playtest passes.
   food plays exactly as they did before. Every food effect is a bonus for engaging, never a penalty
   for abstaining.
 
+### Added — leaving, and being taken back
+- A realm's **regard for its founder** is the vanilla reputation cell for its own faction, so there
+  is no second economy to learn. It falls from deeds and never from time, and speaks once per rung
+  with real hysteresis: crossing a threshold back and forth says nothing.
+- At the bottom rung the realm **puts you out**. Exile is secession, realm-scoped — one faction,
+  never one per city. The realm, both its cities and its whole standings ledger are kept intact,
+  the Charter is taken, and nothing physical is touched: no allegiance key, no claim, no dedicated
+  vessel. The city goes on without you, which is the entire point.
+- The unchanged rite then founds a **new realm with a new faction**, and the old one keeps its own
+  opinion of you.
+- While you have not founded again, walking onto the old realm's ground puts the question to you in
+  person. Refuse and it stays silent until you have actually changed their mind. Found again and the
+  door shuts — and says so, rather than going quiet.
+- Both registers record the day, and they **disagree**: your book says the realm put you out for a
+  named deed; the roads say the tyrant ran.
+
+### Added — founding paths, and ground under ground
+- **Founding by reclaiming a ruin.** Pour on ruined ground and the rite restores rather than
+  founds; structures already standing are credited to the settlement.
+- **Asking a living village.** Standing in a real village, the rite *asks* instead of taking, gated
+  on the village's own opinion of you. It never re-flags a villager, never overwrites a zone's
+  faction, and never annexes. This deliberately stops short of a full charter rather than shipping
+  something that quietly steals a village.
+- **Vertical claims.** A settlement can claim the ground directly below or above what it holds —
+  cellars and towers — without loosening horizontal adjacency.
+- **The water manifest.** Two cities can send water to each other: drams leave the origin's stores
+  when loaded and arrive at the destination's next attended pass, never on a background clock. One
+  in flight at a time; a lapsed window is written off once, in the chronicle.
+- **A tended plot.** Commissioned like any building, it cycles on the settlement's own clock and
+  deposits its harvest into a dedicated larder. It draws water only after upkeep and arrivals, so it
+  can never be the reason the thirst ladder fires, and with no water it simply waits.
+
 ### Changed
 - Districts are no longer flavour. Each of the six now changes something a player can measure:
   garrison adds defence across every claimed zone, agrarian bills upkeep at 90%, market adds a
@@ -92,6 +124,13 @@ playtest passes.
 - Removed dead code that a player could never reach: `KingdomTrade.DeliverIncome`,
   `KingdomGrowth.FetchWater`, and `KingdomRules.RaidCasualtyChance`.
 
+- **Claiming ground never overwrites another faction's zone again.** `ClaimZone` and the second
+  founding used to write the kingdom's faction over whatever a zone already answered to — the exact
+  hazard the ecosystem-compatibility audit flagged. Both now refuse rather than overwrite, and the
+  refusal cannot be forced away for foreign ground.
+- Founding under a name a faction already holds is refused before anything is spent. A runtime
+  faction can never be removed or renamed, and `Factions.AddNewFaction` is a dictionary add that
+  throws on a duplicate — so after an expulsion the old realm's name is taken forever.
 ### Tooling
 - `Tools/stage.sh` defines one canonical runtime set, and `Tools/gate.sh` compiles exactly that
   set — so the compile gate now asks the same question the game does. `DevTests/build.ps1`

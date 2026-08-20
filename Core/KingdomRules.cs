@@ -1627,6 +1627,69 @@
 			return false;
 		}
 
+		/// <summary>
+		/// Overland terrain blueprints that mark a world tile as an ordinary, unclaimed ruin
+		/// (StreamingAssets/Base/ObjectBlueprints/WorldTerrain.xml: <c>TerrainRuins</c> and
+		/// <c>TerrainBaroqueRuins</c>, the two objects the vanilla <c>Ruins</c> zone builder is
+		/// wired to in <c>Worlds.xml</c>). Exact match, not the substring test
+		/// <see cref="StyleForGround"/> uses: that match is deliberately loose because it is only
+		/// choosing a building theme, and it is why Grit Gate, Golgotha, and Bethesda Susa all
+		/// read as "eater" style even though none of them is a ruin to restore. This one gates an
+		/// actual founding path, so a site is a ruin only if the ground the engine reports is
+		/// exactly one of these two &mdash; <c>TerrainJoppaRuins</c>, despite its name, is a salt
+		/// marsh (<c>Terrain="Saltmarsh"</c>) and never matches.
+		/// </summary>
+		public static readonly string[] RuinTerrainBlueprints = new string[2] { "TerrainRuins", "TerrainBaroqueRuins" };
+
+		/// <summary>
+		/// Whether the founding site is ground the world already built, rather than merely empty:
+		/// a founding rite poured here restores instead of raising from nothing. See
+		/// <see cref="RuinTerrainBlueprints"/> for exactly what counts and why.
+		/// </summary>
+		/// <param name="TerrainBlueprint">The founding zone's terrain blueprint
+		/// (<c>Zone.GetTerrainObject()?.Blueprint</c>), or null if it could not be read.</param>
+		/// <returns>False for null, empty, or any ground not in <see cref="RuinTerrainBlueprints"/>
+		/// &mdash; an unresolvable site degrades to an ordinary founding, never a ruin one.</returns>
+		public static bool IsRuinSite(string TerrainBlueprint)
+		{
+			if (string.IsNullOrEmpty(TerrainBlueprint))
+			{
+				return false;
+			}
+			for (int i = 0; i < RuinTerrainBlueprints.Length; i++)
+			{
+				if (RuinTerrainBlueprints[i] == TerrainBlueprint)
+				{
+					return true;
+				}
+			}
+			return false;
+		}
+
+		/// <summary>
+		/// Founder-facing clause naming how many already-standing structures a ruin founding
+		/// credited to the settlement. Composes cleanly onto the end of the founding chronicle
+		/// line whether or not the ruin happened to have anything worth keeping standing &mdash;
+		/// most ruin decoration is rubble and puddles, not furniture, and that is not a failure of
+		/// the rite.
+		/// </summary>
+		/// <param name="StructuresRestored">Count from the restoration pass. Zero or negative
+		/// (defensive; a caller error, never produced by the pass itself) yields the empty
+		/// clause.</param>
+		/// <returns>A trailing clause starting with ", " or "" for nothing to report.</returns>
+		public static string RuinRestorationClause(int StructuresRestored)
+		{
+			if (StructuresRestored <= 0)
+			{
+				return "";
+			}
+			if (StructuresRestored == 1)
+			{
+				return ", and one of its standing works is the settlement's now";
+			}
+			return ", and " + StructuresRestored + " of its standing works are the settlement's now";
+		}
+
 		public const int DealTrickleStanding = 2;
 
 		public class DealEntry
@@ -1806,44 +1869,177 @@
 		}
 
 		/// <summary>
-		/// Chebyshev adjacency between two zones in global zone coordinates. Engine-free so
-		/// it stays unit-testable; callers inside the game should obtain coordinates from
-		/// <c>XRL.World.ZoneID.Parse</c>, which also understands instanced zone IDs.
+		/// Chebyshev adjacency between two zones in global zone coordinates, with an optional
+		/// vertical neighbour on top of it. Engine-free so it stays unit-testable; callers inside
+		/// the game should obtain coordinates from <c>XRL.World.ZoneID.Parse</c>, which also
+		/// understands instanced zone IDs.
+		/// <para>
+		/// <paramref name="IncludeVertical"/> defaults false so every existing caller of this
+		/// overload &mdash; and every existing test of it &mdash; keeps exactly the answer it
+		/// always got. Territorial claiming is the one caller that opts in
+		/// (<c>KingdomFounding.ZonesAdjacent</c>), because a cellar directly below a held zone or
+		/// a tower directly above it is the settlement's own ground, not a neighbour's.
+		/// </para>
 		/// </summary>
-		/// <returns>True if the zones touch (including diagonally) on the same stratum, and
-		/// are not the same zone.</returns>
-		public static bool CoordsAdjacent(string WorldA, int GXA, int GYA, int ZA, string WorldB, int GXB, int GYB, int ZB)
+		/// <returns>True if the zones touch (including diagonally) on the same stratum and are
+		/// not the same zone, or &mdash; only when <paramref name="IncludeVertical"/> is true and
+		/// only in the same column (no diagonal-and-different-stratum case counts) &mdash; are
+		/// exactly one stratum apart.</returns>
+		public static bool CoordsAdjacent(string WorldA, int GXA, int GYA, int ZA, string WorldB, int GXB, int GYB, int ZB, bool IncludeVertical = false)
 		{
-			if (WorldA != WorldB || ZA != ZB)
+			if (WorldA != WorldB)
 			{
 				return false;
 			}
 			int dx = (GXA > GXB) ? (GXA - GXB) : (GXB - GXA);
 			int dy = (GYA > GYB) ? (GYA - GYB) : (GYB - GYA);
-			if (dx <= 1 && dy <= 1)
+			if (ZA == ZB)
 			{
-				return dx + dy > 0;
+				if (dx <= 1 && dy <= 1)
+				{
+					return dx + dy > 0;
+				}
+				return false;
 			}
-			return false;
+			if (!IncludeVertical)
+			{
+				return false;
+			}
+			int dz = (ZA > ZB) ? (ZA - ZB) : (ZB - ZA);
+			return dx == 0 && dy == 0 && dz == 1;
 		}
 
 		public static bool ZonesAdjacent(string A, string B)
+		{
+			return ZonesAdjacent(A, B, IncludeVertical: false);
+		}
+
+		/// <summary>
+		/// As <see cref="ZonesAdjacent(string, string)"/>, but a zone directly above or below the
+		/// other &mdash; same world column, one stratum apart &mdash; counts as adjacent too when
+		/// <paramref name="IncludeVertical"/> is true. A malformed ID on either side refuses the
+		/// claim rather than guessing: see <see cref="TryParseZoneID"/>.
+		/// </summary>
+		public static bool ZonesAdjacent(string A, string B, bool IncludeVertical)
 		{
 			if (!TryParseZoneID(A, out var worldA, out var gxA, out var gyA, out var zA) || !TryParseZoneID(B, out var worldB, out var gxB, out var gyB, out var zB))
 			{
 				return false;
 			}
-			if (worldA != worldB || zA != zB)
+			return CoordsAdjacent(worldA, gxA, gyA, zA, worldB, gxB, gyB, zB, IncludeVertical);
+		}
+
+		/// <summary>True if <paramref name="ZoneFaction"/> names a faction other than the
+		/// kingdom's own and isn't empty &mdash; ground someone else already answers to. Null and
+		/// empty read as unclaimed, which is what an ordinary wilderness zone's faction property
+		/// actually is.</summary>
+		public static bool GroundIsForeignFaction(string ZoneFaction, string KingdomFactionName)
+		{
+			return !string.IsNullOrEmpty(ZoneFaction) && ZoneFaction != KingdomFactionName;
+		}
+
+		/// <summary>
+		/// What the founding rite should do about ground another faction already answers to,
+		/// before any water is measured. <see cref="Unclaimed"/> is the overwhelming common case
+		/// (empty wilderness, or the kingdom's own ground) and changes nothing about how founding
+		/// already worked. The other two verdicts exist because <c>ClaimZone</c> used to write the
+		/// kingdom's faction over whatever a zone already had unconditionally &mdash; a live
+		/// hazard the ecosystem-compat audit found &mdash; and a village is not a lair: it is
+		/// someone's home, asked into a covenant rather than annexed.
+		/// </summary>
+		public enum GroundClaimVerdict
+		{
+			Unclaimed,
+			ForeignVillage,
+			ForeignOther
+		}
+
+		/// <param name="ZoneFaction">The zone's <c>faction</c> property.</param>
+		/// <param name="KingdomFactionName">The realm's own faction name, or null/empty if
+		/// unfounded.</param>
+		/// <param name="ZoneFactionIsVillage">Whether <paramref name="ZoneFaction"/> names a
+		/// vanilla village faction (<c>Faction.GetIntProperty("Village") == 1</c>), read by the
+		/// caller so this stays engine-free.</param>
+		public static GroundClaimVerdict JudgeGroundFaction(string ZoneFaction, string KingdomFactionName, bool ZoneFactionIsVillage)
+		{
+			if (!GroundIsForeignFaction(ZoneFaction, KingdomFactionName))
 			{
-				return false;
+				return GroundClaimVerdict.Unclaimed;
 			}
-			int dx = (gxA > gxB) ? (gxA - gxB) : (gxB - gxA);
-			int dy = (gyA > gyB) ? (gyA - gyB) : (gyB - gyA);
-			if (dx <= 1 && dy <= 1)
+			return ZoneFactionIsVillage ? GroundClaimVerdict.ForeignVillage : GroundClaimVerdict.ForeignOther;
+		}
+
+		/// <summary>
+		/// The reputation floor a village must already hold the founder at before the charter
+		/// rite will ask it anything. 250 mirrors <c>XRL.Rules.RuleSettings.REPUTATION_LIKED</c>
+		/// &mdash; liked, not yet loved: a real bar, reachable through ordinary play, restated here
+		/// as a plain number so this file stays free of engine references.
+		/// </summary>
+		public const int VillageCharterReputationThreshold = 250;
+
+		/// <summary>
+		/// The standing a sealed charter raises a village to (see
+		/// <c>KingdomFounding.CharterVillage</c>), and the floor <see cref="JudgeVillageCharter"/>
+		/// reads as "already chartered" so asking again cannot spend water for nothing. 600
+		/// mirrors <c>XRL.Rules.RuleSettings.REPUTATION_LOVED</c>.
+		/// </summary>
+		public const int VillageCharterSealedStanding = 600;
+
+		/// <summary>Why the village charter rite may not proceed, or
+		/// <see cref="Allowed"/>.</summary>
+		public enum VillageCharterVerdict
+		{
+			Allowed,
+			RealmNotFounded,
+			AlreadyChartered,
+			OpinionTooLow
+		}
+
+		/// <summary>
+		/// Judges whether a village will hear the charter rite: it asks, so a realm has to exist
+		/// to ask in the name of; a village already standing at
+		/// <see cref="VillageCharterSealedStanding"/> has nothing left to ask for; and otherwise
+		/// the village has to already trust the founder personally
+		/// (<see cref="VillageCharterReputationThreshold"/>) &mdash; opinion of the founder, not of
+		/// the realm, because the founder is who is standing there with the basin.
+		/// </summary>
+		/// <param name="AlreadyChartered">Whether the realm's standing with this village is
+		/// already at or above <see cref="VillageCharterSealedStanding"/>.</param>
+		public static VillageCharterVerdict JudgeVillageCharter(bool Founded, bool AlreadyChartered, int PlayerReputation)
+		{
+			if (!Founded)
 			{
-				return dx + dy > 0;
+				return VillageCharterVerdict.RealmNotFounded;
 			}
-			return false;
+			if (AlreadyChartered)
+			{
+				return VillageCharterVerdict.AlreadyChartered;
+			}
+			if (PlayerReputation < VillageCharterReputationThreshold)
+			{
+				return VillageCharterVerdict.OpinionTooLow;
+			}
+			return VillageCharterVerdict.Allowed;
+		}
+
+		/// <summary>What the founder is told when the charter rite will not proceed. Written as
+		/// the water-keepers would say it, not as a rule; empty for <see cref="VillageCharterVerdict.Allowed"/>.</summary>
+		/// <param name="Verdict">The refusal.</param>
+		/// <param name="VillageDisplayName">The village faction's display name.</param>
+		public static string VillageCharterRefusal(VillageCharterVerdict Verdict, string VillageDisplayName)
+		{
+			string village = string.IsNullOrEmpty(VillageDisplayName) ? "this village" : ("{{C|" + VillageDisplayName + "}}");
+			switch (Verdict)
+			{
+			case VillageCharterVerdict.RealmNotFounded:
+				return "There is no realm yet to speak this covenant in the name of. Found your own ground first, then come back and ask.";
+			case VillageCharterVerdict.AlreadyChartered:
+				return "This covenant is already sealed between " + village + " and the realm. Nothing more is asked, or owed.";
+			case VillageCharterVerdict.OpinionTooLow:
+				return "The water-right with " + village + " is not yet strong enough for this to be asked. Earn it, and ask again.";
+			default:
+				return "";
+			}
 		}
 
 		public static bool TryParseFactionAmount(string Parameter, out string FactionName, out int Amount)

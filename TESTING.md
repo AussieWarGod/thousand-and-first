@@ -85,6 +85,20 @@ time — the one you are standing in — and the other keeps itself until you wa
 | 16v | `kingdom:selftest` | "seat carries all N settlement fields", "the two cities claim no ground in common", and "the realm holds no more than 2 cities" all pass |
 | 16w | `kingdom:reset` (confirm) | Both cities dissolved; the Charter is gone; `kingdom:dump` reports unfounded |
 
+## Pass 3e — Founding by ruin, asking a village, and claiming downward
+
+| Step | Action | Expect |
+|---|---|---|
+| 16x | Pour the rite on overland ground whose terrain is a vanilla ruin (`TerrainRuins` / `TerrainBaroqueRuins`) | The popup and chronicle say the place was **reclaimed**, not founded, and any bed or shrine already standing there is credited to the settlement |
+| 16y | Pour on ordinary ground | Unchanged "founded" wording. The ruin path never leaks into an ordinary founding |
+| 16z | Walk into a real, populated vanilla village and use the basin | It **asks** — "stand with us?" — instead of founding or claiming. Whatever you answer, the village keeps its own faction, its own people, and its own zone. Nothing is annexed |
+| 16aa | Try the same village while your reputation with it is below liked | Refused plainly, and **no water is spent**. The covenant is earned, not bought |
+| 16ab | Raise reputation to liked or better and accept | Water is drained only on yes; the covenant is chronicled and the realm's standing with the village rises |
+| 16ac | Charter the same village twice | Refused: the covenant is already sealed. No water spent |
+| 16ad | Stand on a hostile lair or any other faction's ground and pour | Refused. Ground that answers to someone else is never quietly taken — this is the hazard the ecosystem audit flagged, and it is now closed |
+| 16ae | From claimed ground, go one stratum directly down (a cellar) or up and claim it | Allowed. A settlement can hold the ground under and over itself |
+| 16af | Try to claim a zone two tiles away, neither bordering nor directly above or below | Still refused. Vertical adjacency did not loosen horizontal adjacency |
+
 ## Pass 5 — Districts and commissions
 
 | Step | Action | Expect |
@@ -184,6 +198,56 @@ step here is done standing in the settlement.
 | 31 | Leave the claimed zone, wait ~3600 ticks (or explore), return | A dromad caravan stands at the zone edge; up to 6 drams delivered into **dedicated** stores (needs storage space — overflow is announced and wasted); Joppa standing +2 |
 | 32 | Trade with the caravan dromad | It's a real merchant with real stock |
 | 33 | `kingdom:dump` | Deal listed with its next tick; caravans-here count matches |
+
+## Pass 12 — The water manifest
+
+The one thing a realm of two cities can do that a realm of one cannot.
+
+| Step | Action | Expect |
+|---|---|---|
+| 48 | With only one city, Charter → **Send a water manifest** | Refused: there is nowhere to send it |
+| 48a | With two cities, standing in one with water to spare, send a manifest | A stated number of drams — capped, and only ever above a three-day reserve — leaves **this city's** stores now. A ten-day window is named up front |
+| 48b | Immediately try to send another | Refused, naming the one already on the road: origin, destination, drams, days left |
+| 48c | Walk to the destination city | The water arrives on entry, into that city's stores, with a chronicle line and a ledger note. It arrives when you get there, not on a background clock |
+| 48d | Send one and let the window lapse, then return | It is written off once, plainly, in the chronicle. The loss is capped, disclosed before you commit, and never silent |
+| 48e | Try to send a manifest standing outside either city | Refused: manifests are loaded on the kingdom's own ground |
+
+## Pass 13 — The tended plot
+
+| Step | Action | Expect |
+|---|---|---|
+| 49 | Charter → Commission → **tended plot**; wait out the build | A plot appears. What it can grow was decided by the ground the rite was poured on — the style your founding recorded, not a fresh look at the dirt |
+| 49a | Wait through the cycle | Dormant → Growing → Ripe on the settlement's own clock. Leave for days and come back: it resolves on arrival, like everything else here |
+| 49b | Watch the stores while it plants | It drinks, and the ledger says so — but only from what the day's upkeep and arrivals left behind. **A plot can never be the reason the thirst ladder fires** |
+| 49c | Let the stores run low with a plot planted | The plot goes dormant and waits. It never dies, and it never punishes |
+| 49d | Have a dedicated larder when it ripens | The harvest goes into the larder, and the chronicle records it. With no dedicated larder it waits — it will not put food anywhere you did not dedicate |
+
+## Pass 14 — Exile, and being taken back
+
+The realm's regard for its founder falls only from deeds, never from time. Absence never expelled
+anyone.
+
+| Step | Action | Expect |
+|---|---|---|
+| 50 | Found, claim, grow; `kingdom:status` | Opens with a regard line: the realm holds you **beloved** |
+| 50a | `kingdom:regard 0` | One line, nonmodal, and one entry in each register. Regard reads **doubted** |
+| 50b | `kingdom:regard -100` | **Silence.** That rung has already spoken |
+| 50c | `kingdom:regard -300` | The charter is read aloud, and they stop a while at your name. Regard reads **resented** |
+| 50d | `kingdom:regard -100` then `-300` again | Silence both times — jitter across one threshold says nothing. This is the hysteresis |
+| 50e | `kingdom:regard 400`, then `0` | It speaks again. Only climbing back re-arms the ladder |
+| 50f | `kingdom:regard -700` | The realm puts you out, naming the deed. **The Charter is gone from your abilities** |
+| 50g | `kingdom:dump` | Founded: no — but the exiled realm is all there: its city, population, claims, clocks and standings intact. Nothing physical was touched |
+| 50h | Walk onto its ground while still repudiated | Once, nonmodal: it will not hear it. Walk out and back in — **nothing is said a second time** |
+| 50i | `kingdom:regard 0`, then walk out and back in | Now it puts the question to you in person. Answer **no** |
+| 50j | Walk out and back in without changing anything | The question is **not** asked again. If it is, the no-nag rule is broken |
+| 50k | `kingdom:regard 100`, walk back in, answer **yes** | The Charter returns and the realm is restored exactly as it was — population, claims, policy, standings |
+| 50l | Charter → The Chronicle, then → As others tell it | Both days are in both books and **they do not agree**. Your book says the realm put you out; the roads say the tyrant ran |
+| 50m | Get exiled again, then found a new realm somewhere far off | A new realm, a new faction. Walk back onto the old realm's ground: it says once that it has nothing to say to a founder who has somewhere to go back to. The door is shut, and says so |
+| 50n | With the new realm founded, try the basin and `kingdom:claim` on the old realm's ground | Both refuse. The city you were put out of goes on without you — it is not yours to pour on or claim |
+| 50o | `kingdom:found <the old realm's name>` | Refused by name, and **no water spent**. A faction name, once used, is used forever |
+| 50p | Reputation screen (`r`) | Exactly one extra faction per realm founded. Never one per city |
+| 50q | Save, reload, then fall a rung | Regard, tier and the last-spoken rung all survive. It speaks once, not again on the next load |
+| 50r | Get exiled, then leave the game alone for many in-game days | Nothing has happened. Absence never lowered regard and never closed the door |
 
 ## Pass 4 — Attitudes and persistence
 

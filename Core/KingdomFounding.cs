@@ -15,14 +15,23 @@ namespace ThousandAndFirst
 		/// reputation with every faction, grants the Charter ability, and opens the chronicle.
 		/// </summary>
 		/// <param name="Name">Settlement name, used as both faction name and display name.</param>
-		/// <returns>The new faction, or the existing one if a kingdom is already founded
-		/// (one kingdom per game; this is not an error).</returns>
+		/// <returns>The new faction; the existing one if a kingdom is already founded (not an
+		/// error); or null when a faction of that name is already registered, in which case
+		/// nothing has changed.</returns>
 		public static Faction Found(string Name)
 		{
 			KingdomSystem system = The.Game.RequireSystem<KingdomSystem>();
 			if (system.Founded)
 			{
 				return Factions.Get(system.KingdomFactionName);
+			}
+			// Factions.AddNewFaction is a Dictionary.Add (XRL/World/Factions.cs:270) and a runtime
+			// faction can never be removed or renamed - so after an expulsion the old realm's name
+			// is taken forever. Refuse before the rite commits anything rather than throwing part
+			// way through it.
+			if (Factions.Exists(Name))
+			{
+				return null;
 			}
 			Faction faction = new Faction();
 			faction.Old = false;
@@ -43,10 +52,17 @@ namespace ThousandAndFirst
 			system.FoundedTick = The.Game.TimeTicks;
 			system.LastHeartbeatTick = The.Game.TimeTicks;
 			system.LastVisitTick = The.Game.TimeTicks;
-			system.Style = ResolveFoundingStyle(The.Player?.CurrentZone, out string terrainBlueprint, out string regionName, out int zLevel);
+			Zone foundingZone = The.Player?.CurrentZone;
+			system.Style = ResolveFoundingStyle(foundingZone, out string terrainBlueprint, out string regionName, out int zLevel);
 			system.FoundingTerrainBlueprint = terrainBlueprint;
 			system.FoundingRegionName = regionName;
 			system.FoundingZLevel = zLevel;
+			// A ruin's ground already had its own history; the rite restores it rather than
+			// raising a settlement from nothing. See RestoreRuinStructures for what "restores"
+			// means in practice, and STANDARDS/VISION on why nothing here is moved or destroyed.
+			bool isRuin = KingdomRules.IsRuinSite(terrainBlueprint);
+			int structuresRestored = isRuin ? RestoreRuinStructures(foundingZone) : 0;
+			string verb = isRuin ? "reclaimed" : "founded";
 			The.Game.PlayerReputation.Set(faction.Name, RuleSettings.REPUTATION_LOVED + 100);
 			foreach (Faction other in Factions.Loop())
 			{
@@ -61,7 +77,7 @@ namespace ThousandAndFirst
 			// whole life and shared with the player's own history, so the settlement takes exactly
 			// one slot: the founding, which happens once per realm and is what everything else
 			// hangs off. Every other civic accomplishment files with no mural weight.
-			KingdomChronicle.Record(system, "you poured the first water, and " + faction.DisplayName + " was founded on " + StyleGroundClause(system.Style), Accomplishment: true, MuralText: "Poured the first water and founded " + faction.DisplayName + ".");
+			KingdomChronicle.Record(system, "you poured the first water, and " + faction.DisplayName + " was " + verb + " on " + StyleGroundClause(system.Style) + KingdomRules.RuinRestorationClause(structuresRestored), Accomplishment: true, MuralText: "Poured the first water and " + verb + " " + faction.DisplayName + ".");
 			The.Player?.RequirePart<KingdomCharterPart>().EnsureAbility();
 			return faction;
 		}
@@ -130,6 +146,15 @@ namespace ThousandAndFirst
 			{
 				return false;
 			}
+			// A second city is never forced onto ground another faction already answers to, even
+			// under Force &mdash; that parameter only ever meant "bypass the adjacency
+			// requirement" (see the doc comment on it above). A living village is asked into a
+			// covenant through the charter rite, never annexed by this one; anything else foreign
+			// simply is not this rite's to take.
+			if (KingdomRules.GroundIsForeignFaction(Site.GetZoneProperty("faction"), system.KingdomFactionName))
+			{
+				return false;
+			}
 			string vocation = KingdomSettlement.IsKnownVocation(Vocation) ? Vocation : KingdomSettlement.NeutralVocation;
 			KingdomSettlement founded = new KingdomSettlement();
 			founded.SettlementName = Name;
@@ -141,6 +166,9 @@ namespace ThousandAndFirst
 			founded.FoundedTick = The.Game.TimeTicks;
 			founded.LastHeartbeatTick = The.Game.TimeTicks;
 			founded.LastVisitTick = The.Game.TimeTicks;
+			bool isRuin = KingdomRules.IsRuinSite(terrainBlueprint);
+			int structuresRestored = isRuin ? RestoreRuinStructures(Site) : 0;
+			string verb = isRuin ? "reclaimed" : "founded";
 			// Captured before the new city is seated, so the old one keeps every clock it had:
 			// it is dormant, not paused, and catches up when the founder next stands in it.
 			KingdomSettlement wasSeated = system.Capture();
@@ -149,8 +177,9 @@ namespace ThousandAndFirst
 			// One entry per register, not a stream: the founding, the purpose, and the fact that
 			// the realm now holds two cities, said once. Written before the claim so the book
 			// reads in the order the day happened.
-			KingdomChronicle.Record(system, "you poured again on " + StyleGroundClause(system.Style) + ", and " + Name + " was founded as " + KingdomSettlement.VocationClause(vocation) + ", the second city of " + system.KingdomDisplayName, Accomplishment: true);
+			KingdomChronicle.Record(system, "you poured again on " + StyleGroundClause(system.Style) + ", and " + Name + " was " + verb + " as " + KingdomSettlement.VocationClause(vocation) + ", the second city of " + system.KingdomDisplayName + KingdomRules.RuinRestorationClause(structuresRestored), Accomplishment: true);
 			// Force, because the whole point of this ground is that it does not border the realm.
+			// The foreign-faction refusal above already stands regardless of this Force.
 			ClaimZone(Site, Force: true);
 			The.Player?.RequirePart<KingdomCharterPart>().EnsureAbility();
 			return true;
@@ -263,6 +292,22 @@ namespace ThousandAndFirst
 			{
 				return false;
 			}
+			// Ground the realm that put the founder out still holds is not claimable by the one
+			// they founded next: the claim would overwrite the zone's faction property and hijack
+			// a city that is supposed to be going on without them.
+			if (system.ExiledRealmHolds(Z.ZoneID))
+			{
+				return false;
+			}
+			// Ground another faction already answers to is not claimed by pouring water on it:
+			// writing the kingdom's faction over whatever a village (or another mod) already had
+			// there was a live hazard the ecosystem-compat audit found in this exact call. Force
+			// is for debug/scripted foundings only; FoundSecond judges this itself before it ever
+			// reaches here with Force set, so a real second founding cannot route around it.
+			if (!Force && KingdomRules.GroundIsForeignFaction(Z.GetZoneProperty("faction"), system.KingdomFactionName))
+			{
+				return false;
+			}
 			if (!Force && system.ClaimedZones.Count > 0 && !system.ClaimedZones.Contains(Z.ZoneID))
 			{
 				bool adjacent = false;
@@ -299,7 +344,10 @@ namespace ThousandAndFirst
 
 		/// <summary>
 		/// Zone-level adjacency using the engine's own zone-ID parser, which understands
-		/// instanced and blueprint-form IDs that a naive split would reject.
+		/// instanced and blueprint-form IDs that a naive split would reject. Includes the
+		/// vertical neighbour &mdash; a cellar directly below held ground, or a tower directly
+		/// above it &mdash; because that is what a settlement's own territory means once it is
+		/// building on more than one stratum: see <see cref="KingdomRules.CoordsAdjacent"/>.
 		/// </summary>
 		public static bool ZonesAdjacent(string A, string B)
 		{
@@ -311,7 +359,7 @@ namespace ThousandAndFirst
 			{
 				return false;
 			}
-			return KingdomRules.CoordsAdjacent(worldA, pxA * 3 + zxA, pyA * 3 + zyA, zA, worldB, pxB * 3 + zxB, pyB * 3 + zyB, zB);
+			return KingdomRules.CoordsAdjacent(worldA, pxA * 3 + zxA, pyA * 3 + zyA, zA, worldB, pxB * 3 + zxB, pyB * 3 + zyB, zB, IncludeVertical: true);
 		}
 
 		/// <summary>
@@ -335,6 +383,83 @@ namespace ThousandAndFirst
 			Citizen.Brain.Allegiance.Hostile = false;
 			Citizen.SetIntProperty("KingdomCitizen", 1);
 			return true;
+		}
+
+		/// <summary>
+		/// Credits a ruin founding with whatever of the ground's own history still stands. Every
+		/// object already in the zone that carries a part the settlement already knows how to use
+		/// for free &mdash; a bed for housing, a shrine for petitions &mdash; is stamped
+		/// <c>KingdomBuilt</c>, the exact marker <c>r_KingdomScaffold.Complete</c> stamps on
+		/// anything it finishes building, so <c>KingdomSurvey</c>, <c>KingdomCommission</c>, and
+		/// <c>KingdomPetitions</c> count it without any change to those files.
+		/// <para>
+		/// Nothing is moved, replaced, or destroyed here &mdash; only recognised. Binding a ruin's
+		/// standing furniture to the settlement's fate the moment the founder pours the rite over
+		/// it is the explicit designation the protection law (STANDARDS 7) asks for: the founder
+		/// chose this exact ground, once, deliberately, and the chronicle says so.
+		/// </para>
+		/// </summary>
+		/// <param name="Site">The founding zone. Null yields zero.</param>
+		/// <returns>How many structures were credited.</returns>
+		private static int RestoreRuinStructures(Zone Site)
+		{
+			int restored = 0;
+			if (Site == null)
+			{
+				return 0;
+			}
+			// A hostile part or a zone mid-teardown degrades to "nothing was already standing"
+			// rather than breaking the rite (STANDARDS 9): the founder still gets their city.
+			KingdomSystem.Guard("ruin restoration", delegate
+			{
+				foreach (GameObject item in Site.GetObjects())
+				{
+					if (item.GetIntProperty("KingdomBuilt") == 1)
+					{
+						continue;
+					}
+					if (item.HasPart("Bed") || item.HasPart("Shrine"))
+					{
+						item.SetIntProperty("KingdomBuilt", 1);
+						restored++;
+					}
+				}
+			});
+			return restored;
+		}
+
+		/// <summary>
+		/// Seals a charter with a living village: standing changes, nothing else does. The
+		/// village's own faction keeps every zone, every villager, and every vanilla behaviour it
+		/// already had &mdash; this never calls <see cref="ClaimZone"/>, never writes a zone
+		/// property, and never touches a villager's allegiance. Only the realm's ledger and the
+		/// village's feeling toward it move, through the same <see cref="KingdomSystem.SetStanding"/>
+		/// every other faction's standing already moves through, and only upward: a charter the
+		/// founder earned cannot make the village think worse of the realm than it already did.
+		/// <para>
+		/// This is deliberately not a second city. A full charter that lets a chartered village
+		/// grow the way a founded one does is a larger claim than this rite makes; see the
+		/// founding-paths summary for why that is out of scope this pass rather than shipped
+		/// half-safe.
+		/// </para>
+		/// </summary>
+		/// <param name="System">The kingdom system. Must already be founded; callers judge this
+		/// via <see cref="KingdomRules.JudgeVillageCharter"/> before reaching here.</param>
+		/// <param name="VillageFactionName">The village's own faction name (not display name).
+		/// Never reassigned to any creature or zone.</param>
+		/// <param name="VillageDisplayName">The village faction's display name, for the
+		/// chronicle.</param>
+		public static void CharterVillage(KingdomSystem System, string VillageFactionName, string VillageDisplayName)
+		{
+			if (System == null || !System.Founded || string.IsNullOrEmpty(VillageFactionName))
+			{
+				return;
+			}
+			if (System.GetStanding(VillageFactionName) < KingdomRules.VillageCharterSealedStanding)
+			{
+				System.SetStanding(VillageFactionName, KingdomRules.VillageCharterSealedStanding);
+			}
+			KingdomChronicle.Record(System, "you asked, and " + VillageDisplayName + " agreed: their ground stays theirs, and a covenant now stands between them and " + System.KingdomDisplayName, Accomplishment: true);
 		}
 	}
 }
