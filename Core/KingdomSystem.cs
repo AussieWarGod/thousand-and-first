@@ -98,6 +98,23 @@ namespace ThousandAndFirst
 		/// hands not carrying a bucket, which is what makes staffing a real choice.</summary>
 		public int AssignedCrew;
 
+		/// <summary>
+		/// Settlers the founder has put on the water detail: they walk to open water and carry it
+		/// back to the dedicated stores.
+		/// <para>
+		/// Zero by default, and deliberately. A settlement used to fetch for itself from the
+		/// moment it was founded, which handed the player free automation they never chose and
+		/// meant a site near a river watered itself forever. Until somebody is assigned, the
+		/// settlement drinks what the founder pours in and what arrives under charter - which is
+		/// the manual phase that teaches what a settlement costs before it can be automated away.
+		/// </para>
+		/// <para>
+		/// Every settler here is one not manning a mill, a shop, or a wall. That is the whole
+		/// point: hands are spent once.
+		/// </para>
+		/// </summary>
+		public int WaterCrew;
+
 		public int IdleWorks;
 
 		public int ShorthandedWorks;

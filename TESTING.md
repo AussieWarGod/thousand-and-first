@@ -105,6 +105,10 @@ time — the one you are standing in — and the other keeps itself until you wa
 |---|---|---|
 | 20 | Charter → **Designate district** in a claimed zone → market | Chronicle line; status unchanged otherwise |
 | 21 | `kingdom:status` | Market district shortens arrival intervals by 10% — verify the next arrival tick moved after the next growth pass |
+| 21w | Found beside open water and walk away without touching the Charter | **Nothing is fetched.** The settlement drinks only what you poured in. Status says nobody is carrying water and points at the Charter |
+| 21x | Charter → **Set the water detail** → 2 settlers | Two settlers walk to the water; status shows "2 of N carrying". The works now have N−2 to draw on, and a work that needed those hands reports itself shorthanded |
+| 21y | Put every settler on the water | Every work goes idle. Hands are spent once — this is the trade, made visible |
+| 21z | Stand the detail down | Buckets hung up, chronicled. The settlement is back to drinking what you bring it, and it does not die — it simply stops growing |
 | 21a | Designate a second claimed zone **garrison**; `kingdom:status` | Defence is +2 above the crewed works alone. A garrison trains the whole watch, so it counts from any claimed zone, not just the one you are standing on |
 | 21b | Designate **agrarian**; watch a full upkeep interval | Upkeep is billed at 90% of the population figure. Status shows the number actually charged |
 | 21c | Designate **market**, then reach the next stage | Shops carry one tier above the stage's own tier |

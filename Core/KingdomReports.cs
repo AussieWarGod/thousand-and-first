@@ -20,7 +20,8 @@ namespace ThousandAndFirst
 			string pantryHint = (survey.FoodAbundance == KingdomRules.PantryTier.Empty)
 				? "nothing dedicated is stored yet"
 				: "enough for " + KingdomRules.MealSizeName(survey.FoodAbundance);
-			return "\nDefence: " + survey.Defence()
+			return "\nWater detail: " + ((System.WaterCrew > 0) ? (System.WaterCrew + " of " + System.Population + " carrying") : "nobody carrying")
+				+ "\nDefence: " + survey.Defence()
 				+ (survey.DistrictDefenceBonus > 0 ? ("  (garrison " + survey.DistrictDefenceBonus + ")") : "")
 				+ "  Larder: " + pantryName + " (" + survey.FoodStored + ") — " + pantryHint;
 		}
@@ -69,7 +70,7 @@ namespace ThousandAndFirst
 				.Append(currentClaimed ? DefenceAndPantryLine(System, currentZone) : "")
 				.Append(currentClaimed ? PowerLine(System, currentZone) : "")
 				.Append("\nUpkeep: ")
-				.Append(KingdomRules.PolicyUpkeep(KingdomRules.UpkeepDrams(System.Population), System.Stores))
+				.Append(KingdomRules.PolicyUpkeep(KingdomRules.UpkeepDrams(System.Population, System.Stage), System.Stores))
 				.Append(" drams per interval  Thirst streak: ")
 				.Append(System.DryStreak)
 				.Append("\nNext arrival due: tick ")
@@ -112,7 +113,13 @@ namespace ThousandAndFirst
 			{
 				return "Nothing here is dedicated to the stores. Dedicate a vessel, or commission a cask rack, and the settlement can begin to keep water.";
 			}
-			if (stored < KingdomRules.DramsPerArrival + KingdomRules.PolicyUpkeep(KingdomRules.UpkeepDrams(System.Population), System.Stores))
+			// Named before the thirst line, because it is the answer to it: a settlement with
+			// nobody on the water is not failing, it is waiting to be told what to do.
+			if (System.WaterCrew <= 0 && System.Population > 0 && KingdomGrowth.CountOpenWater(Here) > 0)
+			{
+				return "Nobody is carrying water. There is open water on this ground - set a water detail from the Charter, or keep pouring it in yourself.";
+			}
+			if (stored < KingdomRules.DramsPerArrival + KingdomRules.PolicyUpkeep(KingdomRules.UpkeepDrams(System.Population, System.Stage), System.Stores))
 			{
 				return "The stores are nearly dry. Pour water into a dedicated vessel; nothing else can happen until there is water to share.";
 			}

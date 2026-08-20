@@ -78,7 +78,7 @@ namespace ThousandAndFirst
 			}
 			while (true)
 			{
-				int num = Popup.PickOption(Title: system.SeatName + KingdomSettlement.VocationSuffix(system.Vocation), Options: new string[16] { (system.PetitionKind != KingdomRules.PetitionKind.None) ? ("{{W|Hear " + system.PetitionPetitioner + "}}") : "{{K|No one is waiting to speak}}", "Status", "What happened while you were away", "The Chronicle", "As others tell it", "Standings", "The roll of settlers", "Standing policy", "Designate district", "Commission a building", "Answer a threat", "Dedicate a vessel or larder", "Strike a trade charter", "Send a water manifest", "Share a meal from the larder", "Certify a machine" }, Hotkeys: new char[16] { 'h', 's', 'w', 'c', 'a', 'n', 'l', 'p', 'd', 'm', 't', 'v', 'r', 'i', 'f', 'e' }, AllowEscape: true);
+				int num = Popup.PickOption(Title: system.SeatName + KingdomSettlement.VocationSuffix(system.Vocation), Options: new string[17] { (system.PetitionKind != KingdomRules.PetitionKind.None) ? ("{{W|Hear " + system.PetitionPetitioner + "}}") : "{{K|No one is waiting to speak}}", "Status", "What happened while you were away", "The Chronicle", "As others tell it", "Standings", "The roll of settlers", "Standing policy", "Designate district", "Commission a building", "Answer a threat", "Dedicate a vessel or larder", "Strike a trade charter", "Send a water manifest", "Share a meal from the larder", "Certify a machine", "Set the water detail"}, Hotkeys: new char[17] { 'h', 's', 'w', 'c', 'a', 'n', 'l', 'p', 'd', 'm', 't', 'v', 'r', 'i', 'f', 'e', 'u'}, AllowEscape: true);
 				switch (num)
 				{
 				case 0:
@@ -126,6 +126,9 @@ namespace ThousandAndFirst
 				case 14:
 					HoldSharedMeal(system);
 					break;
+				case 16:
+					SetWaterDetail(system);
+					break;
 				case 15:
 					CertifyMachine(system);
 					break;
@@ -133,6 +136,50 @@ namespace ThousandAndFirst
 					return;
 				}
 			}
+		}
+
+		/// <summary>
+		/// The water detail: who walks to the river, and how many of them.
+		/// <para>
+		/// A settlement fetches nothing until the founder says so. Before this, water arrived by
+		/// itself from the moment of founding, which was automation nobody chose and made a
+		/// riverside site self-sustaining forever. Now the founder either carries water in
+		/// themselves, or spends people on carrying it - and those people are not manning
+		/// anything else while they do.
+		/// </para>
+		/// </summary>
+		public void SetWaterDetail(KingdomSystem System)
+		{
+			int most = System.Population;
+			if (most <= 0)
+			{
+				Popup.Show("There is nobody here to send. Pour what the settlement needs yourself, or wait for settlers.");
+				return;
+			}
+			string[] options = new string[most + 1];
+			options[0] = "{{K|Nobody}} — the settlement drinks what you bring it";
+			for (int i = 1; i <= most; i++)
+			{
+				options[i] = i + ((i == 1) ? " settler" : " settlers")
+					+ " {{K|(" + (i * KingdomRules.FetchDramsPerSettler) + " drams a day, if there is open water here)}}"
+					+ ((i == System.WaterCrew) ? " {{G|[current]}}" : "");
+			}
+			int num = Popup.PickOption(
+				Title: "The water detail of " + System.SeatName,
+				Intro: "Everyone you put on the water is one you cannot put on a work. " + System.Population
+					+ ((System.Population == 1) ? " settler lives here." : " settlers live here."),
+				Options: options, AllowEscape: true);
+			if (num < 0 || num == System.WaterCrew)
+			{
+				return;
+			}
+			System.WaterCrew = num;
+			KingdomChronicle.Record(System, (num == 0)
+				? ("the water detail of " + System.SeatName + " was stood down")
+				: (num + ((num == 1) ? " settler was" : " settlers were") + " set to carrying water for " + System.SeatName));
+			Popup.Show((num == 0)
+				? "The buckets are hung up. " + System.SeatName + " will drink what you bring it."
+				: (num + ((num == 1) ? " settler walks" : " settlers walk") + " to the water now. The works have " + (System.Population - num) + " left to draw on."));
 		}
 
 		/// <summary>

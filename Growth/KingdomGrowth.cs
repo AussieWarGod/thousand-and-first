@@ -45,7 +45,13 @@ namespace ThousandAndFirst
 			{
 				System.LastFetchTick = timeTicks;
 			}
-			int hands = System.Population - System.AssignedCrew;
+			// Only the water detail fetches. Nobody assigned means nobody walks to the river, and
+			// the settlement lives on what the founder pours in - see KingdomSystem.WaterCrew.
+			int hands = System.WaterCrew;
+			if (hands > System.Population)
+			{
+				hands = System.Population;
+			}
 			int fetched = (fetchDays > 0)
 				? survey.Store(survey.DrawFromPools(KingdomRules.FetchableDrams(hands, survey.OpenWater, survey.StorageSpace, fetchDays)))
 				: 0;
@@ -263,7 +269,14 @@ namespace ThousandAndFirst
 				demands[i] = Survey.Works[i].GetIntProperty("KingdomStaffNeeded");
 				thresholds[i] = Survey.Works[i].GetIntProperty("KingdomThresholdManning") == 1;
 			}
-			int[] crew = KingdomRules.AssignCrew(System.Population, demands, thresholds);
+						// The water detail is spent before the works are: a settler carrying buckets is not
+			// also turning a mill.
+			int forWorks = System.Population - System.WaterCrew;
+			if (forWorks < 0)
+			{
+				forWorks = 0;
+			}
+			int[] crew = KingdomRules.AssignCrew(forWorks, demands, thresholds);
 			int idle = 0;
 			int shorthanded = 0;
 			for (int j = 0; j < Survey.Works.Count; j++)
@@ -306,7 +319,7 @@ namespace ThousandAndFirst
 			{
 				crewed += crew[i];
 			}
-			System.AssignedCrew = crewed;
+			System.AssignedCrew = crewed + System.WaterCrew;
 			if (idle > 0 && !System.IdleWorksAnnounced)
 			{
 				System.IdleWorksAnnounced = true;

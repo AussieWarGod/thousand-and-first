@@ -103,6 +103,10 @@ namespace ThousandAndFirst
 		/// <summary>Citizens of this city crewing works. Carried with the city.</summary>
 		public int AssignedCrew;
 
+		/// <summary>Settlers this city has on the water detail. Carried, so a city keeps its own
+		/// standing orders while the founder is away in the other one.</summary>
+		public int WaterCrew;
+
 		public int IdleWorks;
 
 		public int ShorthandedWorks;
