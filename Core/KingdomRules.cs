@@ -47,6 +47,13 @@
 
 		public const int MaxBuildings = 40;
 
+		/// <summary>
+		/// Settlers to a commissioned bunk. One apiece made the City stage arithmetically
+		/// impossible: fifty settlers needed fifty bunks plus four cisterns, against a
+		/// forty-building cap, so the top of the ladder could never be reached at all.
+		/// </summary>
+		public const int BedsPerBunk = 4;
+
 		public const int MaxCharters = 8;
 
 		public const int MaxDedicatedVessels = 24;
@@ -211,9 +218,31 @@
 
 		public const int MaxUpkeepDaysCharged = 3;
 
+		/// <summary>Daily draw per settler, per hundred, by stage. A camp lives thin; a city
+		/// drinks like a city. Prosperity-scaled COST is the loved half of the pattern - what
+		/// players resent is prosperity-scaled THREAT, which is a different rule and is keyed off
+		/// provocation elsewhere in this file.</summary>
+		public static readonly int[] StageUpkeepPercent = new int[5] { 100, 120, 150, 180, 220 };
+
+		/// <summary>
+		/// Water the settlement drinks in a day. Scales with population AND with what the
+		/// settlement has become: a City asks more of each settler than a Camp does, so growing
+		/// is a decision with a bill attached rather than a free ratchet.
+		/// </summary>
+		public static int UpkeepDrams(int Population, GrowthStage Stage)
+		{
+			if (Population <= 0)
+			{
+				return 0;
+			}
+			int percent = StageUpkeepPercent[(int)Stage];
+			return Population * percent / 100;
+		}
+
+		/// <summary>Camp-rate upkeep, for callers that have no stage to hand.</summary>
 		public static int UpkeepDrams(int Population)
 		{
-			return Population / 4;
+			return UpkeepDrams(Population, GrowthStage.Camp);
 		}
 
 		/// <summary>
@@ -808,12 +837,41 @@
 		/// </summary>
 		public static int PolicyUpkeepForElapsed(int Population, long ElapsedTicks, StoresPolicy Stores)
 		{
-			return PolicyUpkeep(UpkeepDrams(Population), Stores) * HeartbeatDays(ElapsedTicks);
+			return PolicyUpkeepForElapsed(Population, ElapsedTicks, Stores, GrowthStage.Camp);
 		}
 
-		public static int FetchableDrams(int Population, int OpenWater, int StorageSpace)
+		/// <summary>Whole-day upkeep after stores policy, at the settlement's own stage.</summary>
+		public static int PolicyUpkeepForElapsed(int Population, long ElapsedTicks, StoresPolicy Stores, GrowthStage Stage)
 		{
-			int num = Population * FetchDramsPerSettler;
+			return PolicyUpkeep(UpkeepDrams(Population, Stage), Stores) * HeartbeatDays(ElapsedTicks);
+		}
+
+		/// <summary>
+		/// Drams the settlement's own people carry in from open water.
+		/// <para>
+		/// This is a RATE, and it has to be. It used to be charged once per zone activation with
+		/// no clock at all, while upkeep was charged per elapsed day - so a founder could step out
+		/// of the zone and back in to fetch again, without limit, and the water economy could
+		/// never bind on any site near a pool. Fetch is now paid per day like everything else,
+		/// forgiven past the same absence cap so time away is still never a debt.
+		/// </para>
+		/// <para>
+		/// It is also drawn by HANDS, not by heads: only citizens not already crewing a work walk
+		/// to the water. That is what makes staffing a real choice - every settler put on a mill
+		/// is a settler not carrying a bucket.
+		/// </para>
+		/// </summary>
+		/// <param name="Hands">Citizens free to fetch: population minus assigned crew.</param>
+		/// <param name="OpenWater">Fresh water visible in pools.</param>
+		/// <param name="StorageSpace">Room left in dedicated stores.</param>
+		/// <param name="Days">Whole days since the last fetch, capped by the caller.</param>
+		public static int FetchableDrams(int Hands, int OpenWater, int StorageSpace, int Days)
+		{
+			if (Days <= 0)
+			{
+				return 0;
+			}
+			int num = Hands * FetchDramsPerSettler * Days;
 			if (OpenWater < num)
 			{
 				num = OpenWater;

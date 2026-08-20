@@ -37,7 +37,22 @@ namespace ThousandAndFirst
 			{
 				System.NextArrivalTick = timeTicks + Interval(System, Z);
 			}
-			int fetched = survey.Store(survey.DrawFromPools(KingdomRules.FetchableDrams(System.Population, survey.OpenWater, survey.StorageSpace)));
+			// Fetch is charged per day, from the same checkpoint idiom upkeep uses, and only by
+			// citizens who are not already crewing a work. Before this it ran once per zone
+			// activation with no clock, so stepping out and back in fetched again without limit.
+			int fetchDays = KingdomRules.HeartbeatDays(timeTicks - System.LastFetchTick);
+			if (System.LastFetchTick <= 0)
+			{
+				System.LastFetchTick = timeTicks;
+			}
+			int hands = System.Population - System.AssignedCrew;
+			int fetched = (fetchDays > 0)
+				? survey.Store(survey.DrawFromPools(KingdomRules.FetchableDrams(hands, survey.OpenWater, survey.StorageSpace, fetchDays)))
+				: 0;
+			if (fetchDays > 0)
+			{
+				System.LastFetchTick = KingdomRules.HeartbeatCheckpoint(System.LastFetchTick, timeTicks);
+			}
 			System.Ledger.Fetched += fetched;
 			if (fetched > 0 && KingdomLog.Enabled)
 			{
@@ -117,7 +132,7 @@ namespace ThousandAndFirst
 			}
 			// Agrarian ground feeds itself: it discounts the daily draw before the draw is made,
 			// not after, so a dry agrarian settlement runs its dry streak slower, never zero.
-			int upkeep = KingdomRules.PolicyUpkeepForElapsed(System.Population, elapsed, System.Stores) * KingdomRules.DistrictsUpkeepPercent(System.ZoneDistricts.Values) / 100;
+			int upkeep = KingdomRules.PolicyUpkeepForElapsed(System.Population, elapsed, System.Stores, System.Stage) * KingdomRules.DistrictsUpkeepPercent(System.ZoneDistricts.Values) / 100;
 			int paid = Survey.Consume(upkeep);
 			System.Ledger.UpkeepDrawn += paid;
 			if (paid >= upkeep)
@@ -283,6 +298,15 @@ namespace ThousandAndFirst
 			}
 			System.ShorthandedWorks = shorthanded;
 			System.IdleWorks = idle;
+			// Hands are spent once. Whatever is crewing a work this pass is not available to walk
+			// to the water next pass, which is what turns staffing into a real choice rather than
+			// a free bonus.
+			int crewed = 0;
+			for (int i = 0; i < crew.Length; i++)
+			{
+				crewed += crew[i];
+			}
+			System.AssignedCrew = crewed;
 			if (idle > 0 && !System.IdleWorksAnnounced)
 			{
 				System.IdleWorksAnnounced = true;
@@ -445,7 +469,7 @@ namespace ThousandAndFirst
 			{
 				if (item.GetIntProperty("KingdomBuilt") == 1 && item.HasPart("Bed"))
 				{
-					total++;
+					total += KingdomRules.BedsPerBunk;
 				}
 			}
 			return total;

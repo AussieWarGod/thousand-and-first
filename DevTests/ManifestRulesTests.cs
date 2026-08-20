@@ -8,27 +8,60 @@ namespace ThousandAndFirst.Tests
 	{
 		// --- ManifestReserve / ManifestAmount: the size arithmetic ---------------------------
 
-		[TestCase(0, 0)]
-		[TestCase(40, 30)] // UpkeepDrams(40) = 10, times ReserveUpkeepDays (3) = 30
-		[TestCase(100, 75)] // UpkeepDrams(100) = 25, times 3 = 75
-		public void ManifestReserve_IsThreeDaysUpkeep(int population, int expected)
+		[TestCase(0)]
+		[TestCase(40)]
+		[TestCase(100)]
+		public void ManifestReserve_IsThreeDaysUpkeep(int population)
 		{
+			int expected = KingdomRules.UpkeepDrams(population) * KingdomManifestRules.ReserveUpkeepDays;
 			Assert.AreEqual(expected, KingdomManifestRules.ManifestReserve(population));
 		}
 
-		// Population is fixed at 40 for the reserve-boundary rows (UpkeepDrams(40) = 10, so the
-		// reserve is 30), and storedWater is what varies around that line.
-		[TestCase(0, 0, 0)] // nothing stored, nothing spare
-		[TestCase(10, 0, 10)] // no reserve at zero population, all of it is spare
-		[TestCase(100, 0, KingdomManifestRules.MaximumManifestDrams)] // spare exceeds the cap
-		[TestCase(29, 40, 0)] // one short of the 30-dram reserve: nothing may leave
-		[TestCase(30, 40, 0)] // exactly the reserve: still nothing to spare
-		[TestCase(31, 40, 1)] // one over reserve: exactly that one dram travels
-		[TestCase(90, 40, KingdomManifestRules.MaximumManifestDrams)] // spare lands exactly on the cap
-		[TestCase(91, 40, KingdomManifestRules.MaximumManifestDrams)] // spare a dram past the cap: still capped
-		public void ManifestAmount_ReservesUpkeepThenCapsTheRest(int storedWater, int population, int expected)
+		// The boundaries are computed from the rule, not written as literals. These pinned a
+		// population-40 reserve of 30 drams, which silently became wrong the moment upkeep was
+		// retuned - a test whose expectations are hand-copied from a tuning constant fails on
+		// every retune and proves nothing about the law it claims to cover.
+
+		[Test]
+		public void ManifestAmount_NothingStoredSendsNothing()
 		{
-			Assert.AreEqual(expected, KingdomManifestRules.ManifestAmount(storedWater, population));
+			Assert.AreEqual(0, KingdomManifestRules.ManifestAmount(0, 0));
+		}
+
+		[Test]
+		public void ManifestAmount_NoMouthsMeansNoReserve()
+		{
+			Assert.AreEqual(10, KingdomManifestRules.ManifestAmount(10, 0));
+		}
+
+		[Test]
+		public void ManifestAmount_HoldsTheReserveBackToTheDram()
+		{
+			const int population = 40;
+			int reserve = KingdomManifestRules.ManifestReserve(population);
+			Assert.Greater(reserve, 0, "a settlement with mouths must reserve something");
+			Assert.AreEqual(0, KingdomManifestRules.ManifestAmount(reserve - 1, population), "sent water it needed");
+			Assert.AreEqual(0, KingdomManifestRules.ManifestAmount(reserve, population), "sent the reserve itself");
+			Assert.AreEqual(1, KingdomManifestRules.ManifestAmount(reserve + 1, population), "held back water it could spare");
+		}
+
+		[Test]
+		public void ManifestAmount_CapsWhateverIsSpare()
+		{
+			const int population = 40;
+			int reserve = KingdomManifestRules.ManifestReserve(population);
+			int cap = KingdomManifestRules.MaximumManifestDrams;
+			Assert.AreEqual(cap, KingdomManifestRules.ManifestAmount(reserve + cap, population));
+			Assert.AreEqual(cap, KingdomManifestRules.ManifestAmount(reserve + cap + 1, population));
+			Assert.AreEqual(cap, KingdomManifestRules.ManifestAmount(reserve + cap * 10, population));
+		}
+
+		[Test]
+		public void ManifestAmount_ReserveGrowsWithTheSettlement()
+		{
+			// A bigger settlement holds more back, because it drinks more. If this ever inverts,
+			// a large city would ship away water it needed to survive.
+			Assert.Greater(KingdomManifestRules.ManifestReserve(40), KingdomManifestRules.ManifestReserve(10));
 		}
 
 		// --- ManifestDeadline / ManifestExpired: the deadline arithmetic ---------------------

@@ -42,16 +42,35 @@ namespace ThousandAndFirst.Tests
 
 		// --- CanAffordPlanting: the plot may only spend what upkeep will never need -----------
 
-		[TestCase(3, 0, true)]
-		[TestCase(2, 0, false)]
-		[TestCase(9, 8, true)]
-		[TestCase(8, 8, false)]
-		[TestCase(33, 40, true)]
-		[TestCase(32, 40, false)]
-		[TestCase(0, 0, false)]
-		public void CanAffordPlanting_ReservesUpkeepBeforeSpending(int storedWater, int population, bool expected)
+		// Boundaries derived from the rule rather than copied from a tuning constant, so a
+		// retune of upkeep cannot silently invalidate what these claim to prove.
+
+		[Test]
+		public void CanAffordPlanting_PlantsWhenNothingIsOwedAndTheCostIsCovered()
 		{
-			Assert.AreEqual(expected, KingdomCropRules.CanAffordPlanting(storedWater, population));
+			Assert.IsTrue(KingdomCropRules.CanAffordPlanting(KingdomCropRules.PlantWaterCostDrams, 0));
+			Assert.IsFalse(KingdomCropRules.CanAffordPlanting(KingdomCropRules.PlantWaterCostDrams - 1, 0));
+		}
+
+		[Test]
+		public void CanAffordPlanting_WillNotDrinkTheSettlementsReserve()
+		{
+			foreach (int population in new int[3] { 8, 40, 60 })
+			{
+				int reserve = KingdomRules.UpkeepDrams(population) * KingdomRules.MaxUpkeepDaysCharged;
+				int enough = reserve + KingdomCropRules.PlantWaterCostDrams;
+				Assert.IsTrue(KingdomCropRules.CanAffordPlanting(enough, population),
+					"refused to plant with the reserve intact at population " + population);
+				Assert.IsFalse(KingdomCropRules.CanAffordPlanting(enough - 1, population),
+					"planted into the settlement's own reserve at population " + population);
+			}
+		}
+
+		[Test]
+		public void CanAffordPlanting_NothingStoredNeverPlants()
+		{
+			Assert.IsFalse(KingdomCropRules.CanAffordPlanting(0, 0));
+			Assert.IsFalse(KingdomCropRules.CanAffordPlanting(0, 40));
 		}
 
 		[Test]

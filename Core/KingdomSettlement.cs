@@ -96,6 +96,13 @@ namespace ThousandAndFirst
 
 		public long LastHeartbeatTick;
 
+		/// <summary>Tick this city's people last fetched water. Carried, so a dormant city does
+		/// not fetch a windfall the moment it is seated.</summary>
+		public long LastFetchTick;
+
+		/// <summary>Citizens of this city crewing works. Carried with the city.</summary>
+		public int AssignedCrew;
+
 		public int IdleWorks;
 
 		public int ShorthandedWorks;

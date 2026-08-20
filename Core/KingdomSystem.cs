@@ -87,6 +87,17 @@ namespace ThousandAndFirst
 
 		public long LastHeartbeatTick;
 
+		/// <summary>
+		/// Tick the settlement's people last carried water in from open water. Fetch is a rate
+		/// like upkeep, so it needs its own checkpoint; without one it was charged per zone
+		/// activation and could be farmed by walking out and back in.
+		/// </summary>
+		public long LastFetchTick;
+
+		/// <summary>Citizens crewing works as of the last assignment pass. Hands on a mill are
+		/// hands not carrying a bucket, which is what makes staffing a real choice.</summary>
+		public int AssignedCrew;
+
 		public int IdleWorks;
 
 		public int ShorthandedWorks;

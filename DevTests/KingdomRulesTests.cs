@@ -40,28 +40,41 @@ namespace ThousandAndFirst.Tests
 			Assert.AreEqual(expected, KingdomRules.ArrivalIntervalTicks(population));
 		}
 
+		// A camp drinks one dram per settler per day. It used to be a quarter of that, which is
+		// why the water economy could never bind against fetch.
 		[TestCase(0, 0)]
-		[TestCase(3, 0)]
-		[TestCase(4, 1)]
-		[TestCase(7, 1)]
-		[TestCase(8, 2)]
-		[TestCase(50, 12)]
+		[TestCase(3, 3)]
+		[TestCase(4, 4)]
+		[TestCase(7, 7)]
+		[TestCase(8, 8)]
+		[TestCase(50, 50)]
 		public void UpkeepDrams(int population, int expected)
 		{
 			Assert.AreEqual(expected, KingdomRules.UpkeepDrams(population));
 		}
 
-		[TestCase(0, 1200L, 0)]
-		[TestCase(8, 1200L, 2)]
-		[TestCase(8, 600L, 0)]
-		[TestCase(8, 3600L, 6)]
-		[TestCase(8, 12000L, 6)]
-		[TestCase(20, 6000L, 15)]
-		[TestCase(20, 0L, 0)]
-		[TestCase(20, -100L, 0)]
-		public void UpkeepForElapsed(int population, long elapsed, int expected)
+		[TestCase(0, 1200L)]
+		[TestCase(8, 1200L)]
+		[TestCase(8, 600L)]
+		[TestCase(8, 3600L)]
+		[TestCase(8, 12000L)]
+		[TestCase(20, 6000L)]
+		[TestCase(20, 0L)]
+		[TestCase(20, -100L)]
+		public void UpkeepForElapsed(int population, long elapsed)
 		{
+			// Whole days only, forgiven past the absence cap. Expressed against the daily rate
+			// so retuning upkeep cannot quietly invalidate what this claims to prove.
+			int expected = KingdomRules.UpkeepDrams(population) * KingdomRules.HeartbeatDays(elapsed);
 			Assert.AreEqual(expected, KingdomRules.UpkeepForElapsed(population, elapsed));
+		}
+
+		[Test]
+		public void UpkeepForElapsed_ForgivesTimeBeyondTheAbsenceCap()
+		{
+			int capped = KingdomRules.UpkeepForElapsed(20, KingdomRules.TicksPerDay * KingdomRules.MaxUpkeepDaysCharged);
+			Assert.AreEqual(capped, KingdomRules.UpkeepForElapsed(20, KingdomRules.TicksPerDay * 400),
+				"a season away cost more than the cap allows");
 		}
 
 		[TestCase(0L, 0)]
@@ -164,14 +177,26 @@ namespace ThousandAndFirst.Tests
 			Assert.AreEqual(expected, KingdomRules.PolicyUpkeep(baseUpkeep, stores));
 		}
 
-		[TestCase(4, 1200L, KingdomRules.StoresPolicy.Thrift, 0)]
-		[TestCase(4, 3600L, KingdomRules.StoresPolicy.Thrift, 0)]
-		[TestCase(8, 1200L, KingdomRules.StoresPolicy.Thrift, 1)]
-		[TestCase(8, 3600L, KingdomRules.StoresPolicy.Thrift, 3)]
-		[TestCase(8, 120000L, KingdomRules.StoresPolicy.Plenty, 6)]
-		public void PolicyUpkeepForElapsed(int population, long elapsed, KingdomRules.StoresPolicy stores, int expected)
+		[TestCase(4, 1200L, KingdomRules.StoresPolicy.Thrift)]
+		[TestCase(4, 3600L, KingdomRules.StoresPolicy.Thrift)]
+		[TestCase(8, 1200L, KingdomRules.StoresPolicy.Thrift)]
+		[TestCase(8, 3600L, KingdomRules.StoresPolicy.Thrift)]
+		[TestCase(8, 120000L, KingdomRules.StoresPolicy.Plenty)]
+		public void PolicyUpkeepForElapsed(int population, long elapsed, KingdomRules.StoresPolicy stores)
 		{
+			// Policy applies to the daily rate before the days multiply, so cost never changes
+			// with how often the founder walks in.
+			int expected = KingdomRules.PolicyUpkeep(KingdomRules.UpkeepDrams(population), stores) * KingdomRules.HeartbeatDays(elapsed);
 			Assert.AreEqual(expected, KingdomRules.PolicyUpkeepForElapsed(population, elapsed, stores));
+		}
+
+		[Test]
+		public void PolicyUpkeepForElapsed_ThriftAlwaysCostsLessOrTheSame()
+		{
+			long elapsed = KingdomRules.TicksPerDay * 3;
+			Assert.LessOrEqual(
+				KingdomRules.PolicyUpkeepForElapsed(40, elapsed, KingdomRules.StoresPolicy.Thrift),
+				KingdomRules.PolicyUpkeepForElapsed(40, elapsed, KingdomRules.StoresPolicy.Plenty));
 		}
 
 		[TestCase(6, 0, 6)]
@@ -223,11 +248,18 @@ namespace ThousandAndFirst.Tests
 			Assert.AreEqual(expected, KingdomRules.IsPetitionMet(kind, target, stored, pop, beds, idle, standing, shrine));
 		}
 
-		[TestCase(0, 16)]
-		[TestCase(4, 16)]
-		[TestCase(40, 80)]
-		public void ThirstPetitionTarget(int population, int expected)
+		[TestCase(0)]
+		[TestCase(4)]
+		[TestCase(40)]
+		public void ThirstPetitionTarget(int population)
 		{
+			// Eight days of drinking, with a floor so a tiny camp is still asked for something
+			// worth fetching. Derived, so retuning upkeep does not falsify the claim.
+			int expected = KingdomRules.UpkeepDrams(population) * 8;
+			if (expected < 16)
+			{
+				expected = 16;
+			}
 			Assert.AreEqual(expected, KingdomRules.ThirstPetitionTarget(population));
 		}
 
@@ -675,16 +707,77 @@ namespace ThousandAndFirst.Tests
 			Assert.AreEqual(expected, KingdomRules.RaidPlunder(baseDrams, defence, outcome));
 		}
 
-		[TestCase(0, 100, 100, 0)]
-		[TestCase(5, 100, 100, 10)]
-		[TestCase(5, 3, 100, 3)]
-		[TestCase(5, 100, 4, 4)]
-		[TestCase(5, 0, 100, 0)]
-		[TestCase(5, 100, 0, 0)]
-		[TestCase(50, 30, 200, 30)]
-		public void FetchableDrams(int population, int openWater, int storageSpace, int expected)
+		// Hands, not heads; and a rate, not a windfall. One day of five free hands is ten drams,
+		// bounded by the pool and by the room left to put it in.
+		[TestCase(0, 100, 100, 1, 0)]
+		[TestCase(5, 100, 100, 1, 10)]
+		[TestCase(5, 3, 100, 1, 3)]
+		[TestCase(5, 100, 4, 1, 4)]
+		[TestCase(5, 0, 100, 1, 0)]
+		[TestCase(5, 100, 0, 1, 0)]
+		[TestCase(50, 30, 200, 1, 30)]
+		[TestCase(5, 100, 100, 3, 30)]
+		[TestCase(5, 100, 100, 0, 0)]
+		[TestCase(5, 100, 100, -2, 0)]
+		public void FetchableDrams(int hands, int openWater, int storageSpace, int days, int expected)
 		{
-			Assert.AreEqual(expected, KingdomRules.FetchableDrams(population, openWater, storageSpace));
+			Assert.AreEqual(expected, KingdomRules.FetchableDrams(hands, openWater, storageSpace, days));
+		}
+
+		[Test]
+		public void FetchableDrams_IsARateSoWalkingInAndOutCannotPrintWater()
+		{
+			// The defect this signature exists to prevent: fetch used to be charged once per zone
+			// activation with no clock, so a founder could step out and back in to fetch again
+			// without limit. Zero elapsed days must fetch nothing, however many times it is asked.
+			for (int i = 0; i < 10; i++)
+			{
+				Assert.AreEqual(0, KingdomRules.FetchableDrams(20, 1000, 1000, 0));
+			}
+		}
+
+		[Test]
+		public void FetchableDrams_HandsOnWorksAreNotCarryingBuckets()
+		{
+			// Twenty citizens with fifteen crewing works fetch as five, not as twenty. Staffing a
+			// mill has to cost something or it is not a choice.
+			Assert.AreEqual(10, KingdomRules.FetchableDrams(5, 1000, 1000, 1));
+			Assert.Less(KingdomRules.FetchableDrams(5, 1000, 1000, 1), KingdomRules.FetchableDrams(20, 1000, 1000, 1));
+		}
+
+		[TestCase(20, GrowthStage.Camp, 20)]
+		[TestCase(20, GrowthStage.Steading, 24)]
+		[TestCase(20, GrowthStage.Village, 30)]
+		[TestCase(20, GrowthStage.Town, 36)]
+		[TestCase(20, GrowthStage.City, 44)]
+		[TestCase(0, GrowthStage.City, 0)]
+		public void UpkeepDrams_ScalesWithWhatTheSettlementHasBecome(int population, GrowthStage stage, int expected)
+		{
+			Assert.AreEqual(expected, KingdomRules.UpkeepDrams(population, stage));
+		}
+
+		[Test]
+		public void UpkeepDrams_NeverFallsAsASettlementGrows()
+		{
+			int previous = 0;
+			foreach (GrowthStage stage in System.Enum.GetValues(typeof(GrowthStage)))
+			{
+				int now = KingdomRules.UpkeepDrams(30, stage);
+				Assert.GreaterOrEqual(now, previous, "upkeep fell going up to " + stage);
+				previous = now;
+			}
+		}
+
+		[Test]
+		public void BedsPerBunk_MakesTheCityStageReachableAtAll()
+		{
+			// City wants 50 settlers and 1024 storage. At one bed per bunk that is 50 bunks plus
+			// four great cisterns - 54 buildings against a cap of 40, so the top of the ladder
+			// could never be reached. Four to a bunk brings it inside the cap.
+			int bunks = (50 + KingdomRules.BedsPerBunk - 1) / KingdomRules.BedsPerBunk;
+			int cisterns = 1024 / 256;
+			Assert.LessOrEqual(bunks + cisterns, KingdomRules.MaxBuildings,
+				"a City still cannot be built within the building cap");
 		}
 
 		[TestCase(0, GrowthStage.Village, 10, KingdomRules.ThirstOutcome.Sustained)]
