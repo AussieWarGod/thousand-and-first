@@ -54,18 +54,35 @@ Say when you're launching so the log watch can run alongside.
 | 16e | Let the settlement stay dry for 3+ growth passes at Steading | **Withered** flag in status + chronicle line; refill water and grow | Recovery message and chronicle entry |
 | 16f | `kingdom:reset` (confirm) | Kingdom dissolved; Charter ability gone; ready to re-test founding from scratch |
 
+## Pass 3c — City style and the ground it was read from
+
+| Step | Action | Expect |
+|---|---|---|
+| 16f | Found on an ordinary overworld site (rite or wish) | The founding popup and the chronicle line name the ground — "founded on common ground", or a style clause if the site earned one. Founding never throws, whatever the terrain |
+| 16g | `kingdom:dump` | `Style:` shows the style and its clause; `Founding terrain:` shows the blueprint, region, and z the style was read from — the evidence, not just the conclusion |
+| 16h | `kingdom:style` with no argument | Reports the current style, the recorded founding terrain, and every known style |
+| 16i | `kingdom:style verdant`, then Charter → Commission | The design list changes to that style's catalogue. The recorded founding terrain is unchanged — forcing a style is a probe, not a rewrite of history |
+| 16j | `kingdom:style nonsense` | Refused, and the known styles are listed. Nothing changes |
+
 ## Pass 5 — Districts and commissions
 
 | Step | Action | Expect |
 |---|---|---|
 | 20 | Charter → **Designate district** in a claimed zone → market | Chronicle line; status unchanged otherwise |
-| 21 | `kingdom:status` | (Market district shortens arrival intervals by 10% — verify next arrival tick moved after next growth pass) |
+| 21 | `kingdom:status` | Market district shortens arrival intervals by 10% — verify the next arrival tick moved after the next growth pass |
+| 21a | Designate a second claimed zone **garrison**; `kingdom:status` | Defence is +2 above the crewed works alone. A garrison trains the whole watch, so it counts from any claimed zone, not just the one you are standing on |
+| 21b | Designate **agrarian**; watch a full upkeep interval | Upkeep is billed at 90% of the population figure. Status shows the number actually charged |
+| 21c | Designate **market**, then reach the next stage | Shops carry one tier above the stage's own tier |
+| 21d | Designate **craft**, then commission anything | The scaffold completes in 80% of the design's build ticks |
+| 21e | Designate **shrine**, then wait for petitions | Petitions come at 75% of the usual interval |
+| 21f | Designate **academy**, then Charter → As others tell it | The outsider register embellishes less often than the true chronicle — most tellings now end plainly |
+| 21g | Designate two zones the same district | The percent effects do **not** stack: a second vinelands feeds the same city, not twice. Only garrison defence is additive |
 | 22 | Charter → **Commission a building** → cask rack (4 drams in stores needed) | Stores −4; scaffolding appears nearby; chronicle line |
 | 23 | Wait ~1200 ticks (or explore and return) | Scaffold becomes the cask rack; completion message + chronicle |
 | 24 | Commission the great cistern (16 drams) | Same cycle; stored capacity +256 when done |
 | 25 | Commission a communal bunk; watch settlers at night | A settler eventually sleeps in it (vanilla bed behavior) |
 | 25a | On first reaching Steading | "A settler has taken up the trade" — the first stall opens; trade with them shows tier-1 stock |
-| 25c | Charter → Commission | The design list is loaded from KingdomBuildings.xml (5 entries); third-party mods shipping their own `<kingdombuildings>` file extend it automatically |
+| 25c | Charter → Commission | The design list is loaded from KingdomBuildings.xml (13 entries); third-party mods shipping their own `<kingdombuildings>` file extend it automatically |
 | 25b | Browse vanilla tier-1 merchants elsewhere | The founder's basin occasionally appears for sale (8% per restock) — the legitimate acquisition path |
 
 ## Pass 6 — Raids and tribute
@@ -76,17 +93,25 @@ Say when you're launching so the log watch can run alongside.
 | 27 | Charter → **Pay tribute** (12 drams in stores) | Raid averted; snapjaw standing +50; chronicle line |
 | 28 | Force again via `kingdom:raid`, don't pay, wait out the lead (or `kingdom:raid` again) | 2+ snapjaws spawn at the zone edge and attack citizens; chronicle records the raid |
 | 29 | After the fight: `kingdom:status`, `kingdom:chronicle` | State coherent; raid recorded in both registers |
+| 29g | `kingdom:standing Baboons:-300` (also try Goatfolk, Cannibals, Issachari) | Any of the five provokable factions can raid you — the warning, tribute, parley and chronicle lines all name the faction that is actually angry, not Snapjaws |
+| 29h | Provoke two factions at once | The angriest one comes. The other stays provoked and waits its turn |
 
 ## Pass 6b — Fortification
 
+Defence is a perimeter, not a damage number: it decides how much of the band gets past the wall
+at all, and how much the ones who do carry off. Raids resolve where you can see them, so every
+step here is done standing in the settlement.
+
 | Step | Action | Expect |
 |---|---|---|
-| 29a | With no defences built, `kingdom:raid`, then leave the zone and come back | Homecoming digest reports drams carried off, possibly a casualty |
+| 29a | With no defences built, `kingdom:raid`, wait out the warning lead without leaving | The whole band spawns at the zone edge; drams are carried off |
 | 29b | Charter → Commission → **thorn palisade**; wait out the build; `kingdom:status` | Status shows the settlement's defence at 3 |
-| 29c | `kingdom:raid`, leave and return | Fewer drams taken than in 29a — the wall reduced the loss, it did not stop it |
+| 29c | `kingdom:raid` again, wait it out | The message says the watch turns back some of them at the wall; fewer raiders spawn than in 29a, and fewer drams are lost |
 | 29d | Commission a **watchtower** with nobody spare to man it; `kingdom:status` | Defence unchanged: an unmanned tower is a platform |
 | 29e | Grow the population until the watch is crewed; `kingdom:status` | Defence rises as the crew fills; a half crew gives half the tower's defence |
-| 29f | Reach defence 12+ (palisade + crewed watchtower + rampart at Village); `kingdom:raid`, leave and return | Digest: raiders turned back, nothing taken; chronicle records it as an accomplishment; the walls appear under deeds in `kingdom:status` |
+| 29f | Reach defence 12+ (palisade + crewed watchtower + rampart at Village); `kingdom:raid` | "They break on the walls. The watch holds." Nothing spawns, nothing is taken, the chronicle records it as an accomplishment, and the walls appear under deeds in `kingdom:status` |
+| 29i | At high defence, raid repeatedly | Even a very strong wall never turns back more than 60% of a band that is not fully repelled — someone always climbs over. Being well-walled is not being spared |
+| 29j | Provoke a raid, then leave for several days and return | **Nothing was resolved while you were gone.** The chronicle says raiders came and found no one to answer them; nothing was taken, nobody was lost, and the threat is still live with a fresh window to pay, parley, or fight |
 
 ## Pass 8 — Homes, work, and the first service
 
@@ -104,11 +129,15 @@ Say when you're launching so the log watch can run alongside.
 
 | Step | Action | Expect |
 |---|---|---|
-| 41 | Found, claim, dedicate water, commission a bunk. Leave the zone, travel a day or more, return | **One popup**: "while you were away", the events as past-tense lines, and a ledger of drams drawn, delivered, drunk and lost — not a scroll of separate messages |
+| 41 | Found, claim, dedicate water, commission a bunk. Leave the zone, travel a day or more, return | **One nonmodal message line**, not a popup: the settlement "has news of the N days you were away", pointing at the Charter. Nothing interrupts the walk home |
+| 41b | Charter → What happened while you were away | The report opens on request: the events as past-tense lines, and a ledger of drams drawn, delivered, drunk and lost — not a scroll of separate messages |
 | 42 | Read an arrival line | It names the cause: "Word of the cask rack raised at Kavvat reached the hills — a settler has come." Founding, stage-ups, commissions, caravans and tribute all set the cause |
 | 43 | Strike a charter, then stay away for several caravan intervals | Missed deliveries **bank** (up to 3): "3 caravans of the villagers of Joppa came under charter: 18 drams." Absence accrues, never decays |
-| 44 | Return after a short walk (under a day) | No digest popup — the digest is for absences, not for stepping outside |
-| 45 | Charter → Dedicate a vessel → **Dedicate every vessel here** | All undedicated vessels join the stores in one action, up to the cap |
+| 44 | Return after a short walk (under a day) | No news line — the homecoming is for absences, not for stepping outside. The Charter entry still opens and says nothing has happened |
+| 45 | Charter → Dedicate a vessel or larder → **Dedicate everything here** | All undedicated vessels join the stores in one action, up to the cap |
+| 45a | Stand beside a chest or footlocker with food in it and dedicate it as a larder | It is marked a larder of the settlement. Nothing moves and nothing is taken — dedication is a mark, not a transfer |
+| 45b | `kingdom:dump` | The pantry reads the food in dedicated larders only, as a count and a tier (Empty / Scant / Modest / Ample). Food in your own undedicated pack is never counted |
+| 45c | Release the larder | The count drops back. What was inside is untouched |
 | 46 | Charter → Status | The ledger's effects are visible: stores, shop tier, idle/shorthanded works, and the next-need line |
 
 ## Pass 10 — Names, policy, and answering a threat

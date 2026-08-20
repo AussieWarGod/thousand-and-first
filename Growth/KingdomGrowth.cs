@@ -28,7 +28,7 @@ namespace ThousandAndFirst
 				return;
 			}
 			long timeTicks = The.Game.TimeTicks;
-			KingdomSurvey survey = Shared ?? KingdomSurvey.Take(Z);
+			KingdomSurvey survey = Shared ?? KingdomSurvey.Take(Z, System);
 			if (KingdomLog.Enabled)
 			{
 				KingdomLog.Log("growth pass " + Z.ZoneID + " tick=" + timeTicks + " next=" + System.NextArrivalTick + " pop=" + System.Population + " stage=" + System.Stage + " stored=" + survey.StoredWater + " open=" + survey.OpenWater + " space=" + survey.StorageSpace + " cap=" + survey.StorageCapacity + " dry=" + System.DryStreak + " withered=" + System.Withered);
@@ -107,7 +107,9 @@ namespace ThousandAndFirst
 				RecoverFromThirst(System);
 				return true;
 			}
-			int upkeep = KingdomRules.PolicyUpkeepForElapsed(System.Population, elapsed, System.Stores);
+			// Agrarian ground feeds itself: it discounts the daily draw before the draw is made,
+			// not after, so a dry agrarian settlement runs its dry streak slower, never zero.
+			int upkeep = KingdomRules.PolicyUpkeepForElapsed(System.Population, elapsed, System.Stores) * KingdomRules.DistrictsUpkeepPercent(System.ZoneDistricts.Values) / 100;
 			int paid = Survey.Consume(upkeep);
 			System.Ledger.UpkeepDrawn += paid;
 			if (paid >= upkeep)
@@ -381,47 +383,6 @@ namespace ThousandAndFirst
 			return total;
 		}
 
-		public static int FetchWater(KingdomSystem System, Zone Z)
-		{
-			int fetchable = KingdomRules.FetchableDrams(System.Population, CountOpenWater(Z), CountStorageSpace(Z));
-			if (fetchable <= 0)
-			{
-				return 0;
-			}
-			int drained = 0;
-			foreach (GameObject item in Z.GetObjects())
-			{
-				if (drained >= fetchable)
-				{
-					break;
-				}
-				LiquidVolume part = item.GetPart<LiquidVolume>();
-				if (part != null && part.MaxVolume < 0 && KingdomLiquids.HasFreshWater(part))
-				{
-					drained += KingdomLiquids.Drain(part, fetchable - drained);
-				}
-			}
-			int stored = 0;
-			foreach (GameObject item in Z.GetObjects())
-			{
-				if (stored >= drained)
-				{
-					break;
-				}
-				LiquidVolume part = item.GetPart<LiquidVolume>();
-				if (part != null && part.MaxVolume > 0 && item.GetIntProperty("KingdomStores") == 1 && part.Volume < part.MaxVolume && KingdomLiquids.CanReceiveFreshWater(part))
-				{
-					int drams = part.MaxVolume - part.Volume;
-					if (drams > drained - stored)
-					{
-						drams = drained - stored;
-					}
-					stored += KingdomLiquids.Fill(part, "water", drams);
-				}
-			}
-			return stored;
-		}
-
 		public static int ConsumeStoredWater(Zone Z, int Drams)
 		{
 			int remaining = Drams;
@@ -447,6 +408,20 @@ namespace ThousandAndFirst
 			foreach (GameObject item in Z.GetObjects())
 			{
 				if (item.GetIntProperty("KingdomStores") == 1)
+				{
+					total++;
+				}
+			}
+			return total;
+		}
+
+		/// <summary>Counts larders currently dedicated to the settlement's food stores in a zone.</summary>
+		public static int CountDedicatedLarders(Zone Z)
+		{
+			int total = 0;
+			foreach (GameObject item in Z.GetObjects())
+			{
+				if (item.GetIntProperty("KingdomLarder") == 1)
 				{
 					total++;
 				}
@@ -495,15 +470,9 @@ namespace ThousandAndFirst
 			}
 			if (System.HasShopkeeper)
 			{
-				bool stillTrading = false;
-				foreach (GameObject item in Z.GetObjects())
-				{
-					if (item.GetIntProperty("VillageMerchant") == 1 && item.GetIntProperty("KingdomCitizen") == 1)
-					{
-						stillTrading = true;
-						break;
-					}
-				}
+				// The survey already answered this in its single pass; only a call site with
+				// no survey (a direct wish, say) needs the fallback scan.
+				bool stillTrading = (Survey != null) ? Survey.HasTradePost : StillHasTradePost(Z);
 				if (!stillTrading)
 				{
 					System.HasShopkeeper = false;
@@ -514,11 +483,25 @@ namespace ThousandAndFirst
 			{
 				PromoteShopkeeper(System, Z);
 			}
-			int tier = KingdomRules.ShopTierForStage(System.Stage);
+			// A market district stocks the stalls a rung above what the settlement's raw size
+			// would otherwise carry.
+			int tier = KingdomRules.ShopTierForStage(System.Stage) + KingdomRules.DistrictsShopTierBonus(System.ZoneDistricts.Values);
 			if (System.HasShopkeeper && tier > System.ShopTier)
 			{
 				RestockShops(System, Z, tier);
 			}
+		}
+
+		private static bool StillHasTradePost(Zone Z)
+		{
+			foreach (GameObject item in Z.GetObjects())
+			{
+				if (item.GetIntProperty("VillageMerchant") == 1 && item.GetIntProperty("KingdomCitizen") == 1)
+				{
+					return true;
+				}
+			}
+			return false;
 		}
 
 		/// <summary>

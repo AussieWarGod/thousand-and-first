@@ -21,7 +21,47 @@ namespace ThousandAndFirst
 				return;
 			}
 			Faction faction = KingdomFounding.Found(name);
-			Popup.Show("{{C|" + faction.DisplayName + "}} is founded. The chronicle begins.\n\nStandings seeded from your reputation with " + system.Standings.Count + " factions.");
+			Popup.Show("{{C|" + faction.DisplayName + "}} is founded on " + KingdomFounding.StyleGroundClause(system.Style) + ". The chronicle begins.\n\nStandings seeded from your reputation with " + system.Standings.Count + " factions.");
+		}
+
+		/// <summary>
+		/// Reports the founded city style plus the terrain evidence that produced it, and lets a
+		/// tester force a different style for testing <see cref="KingdomRules.StyleAllows"/>
+		/// filtering without re-founding on a different site. Forcing a style does not rewrite the
+		/// recorded founding terrain &mdash; it only overrides which building/district rules apply,
+		/// same as every other debug wish in this file (reversible probe, not a rewrite of history).
+		/// </summary>
+		[WishCommand("kingdom:style", null)]
+		public static void StyleWish(string Parameter)
+		{
+			KingdomSystem system = The.Game.RequireSystem<KingdomSystem>();
+			if (!system.Founded)
+			{
+				Popup.Show("No kingdom founded yet. Wish {{W|kingdom:found NAME}} first.");
+				return;
+			}
+			if (string.IsNullOrEmpty(Parameter))
+			{
+				Popup.Show(StyleReport(system));
+				return;
+			}
+			string style = Parameter.Trim().ToLowerInvariant();
+			if (!KingdomRules.IsKnownStyle(style))
+			{
+				Popup.Show("Unknown style {{W|" + style + "}}. Known styles: " + string.Join(", ", KingdomRules.Styles) + ".");
+				return;
+			}
+			system.Style = style;
+			Popup.Show("Style forced to {{C|" + style + "}} (" + KingdomFounding.StyleGroundClause(style) + ").\n\n" + StyleReport(system));
+		}
+
+		private static string StyleReport(KingdomSystem System)
+		{
+			return "Style: {{C|" + System.Style + "}} (" + KingdomFounding.StyleGroundClause(System.Style) + ")"
+				+ "\nFounding terrain: blueprint=" + (System.FoundingTerrainBlueprint ?? "(none)")
+				+ " region=" + (System.FoundingRegionName ?? "(none)")
+				+ " z=" + System.FoundingZLevel
+				+ "\nKnown styles: " + string.Join(", ", KingdomRules.Styles);
 		}
 
 		[WishCommand("kingdom:claim", null)]
@@ -65,7 +105,16 @@ namespace ThousandAndFirst
 			StringBuilder sb = new StringBuilder();
 			sb.Append("{{C|KINGDOM STATE DUMP}} tick ").Append(The.Game.TimeTicks);
 			sb.Append("\nFounded: ").Append(system.Founded ? (system.KingdomFactionName + " / " + system.KingdomDisplayName) : "no");
-			sb.Append("\nStyle: ").Append(system.Style).Append("  Stage: ").Append(system.Stage).Append("  Withered: ").Append(system.Withered);
+			sb.Append("\nStyle: ").Append(system.Style).Append(" (").Append(KingdomFounding.StyleGroundClause(system.Style)).Append(")").Append("  Stage: ").Append(system.Stage).Append("  Withered: ").Append(system.Withered);
+			sb.Append("\nFounding terrain: blueprint=").Append(system.FoundingTerrainBlueprint ?? "(none)").Append(" region=").Append(system.FoundingRegionName ?? "(none)").Append(" z=").Append(system.FoundingZLevel);
+			Zone here = The.Player?.CurrentZone;
+			if (here != null && system.ClaimedZones.Contains(here.ZoneID))
+			{
+				KingdomSurvey survey = KingdomSurvey.Take(here, system);
+				sb.Append("\nHere: defence=").Append(survey.Defence()).Append(" (garrison ").Append(survey.DistrictDefenceBonus).Append(")")
+					.Append(" larder=").Append(survey.FoodAbundance).Append("/").Append(survey.FoodStored)
+					.Append(" beds=").Append(survey.Beds).Append(" citizens=").Append(survey.Citizens);
+			}
 			sb.Append("\nPop: ").Append(system.Population).Append("  DryStreak: ").Append(system.DryStreak).Append("  HasShopkeeper: ").Append(system.HasShopkeeper);
 			sb.Append("\nNextArrival: ").Append(system.NextArrivalTick).Append("  Raid: state=").Append(system.RaidState).Append(" faction=").Append(system.RaidFactionName ?? "-").Append(" due=").Append(system.RaidDueTick).Append(" last=").Append(system.LastRaidTick);
 			sb.Append("\nClaims: ").Append(string.Join(", ", system.ClaimedZones));
@@ -168,6 +217,9 @@ namespace ThousandAndFirst
 			system.KingdomFactionName = null;
 			system.KingdomDisplayName = null;
 			system.Style = "common";
+			system.FoundingTerrainBlueprint = null;
+			system.FoundingRegionName = null;
+			system.FoundingZLevel = 0;
 			system.FoundedTick = 0L;
 			system.Stage = GrowthStage.Camp;
 			system.Population = 0;

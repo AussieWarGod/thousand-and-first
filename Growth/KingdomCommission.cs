@@ -58,7 +58,7 @@ namespace ThousandAndFirst
 			{
 				part.TargetBlueprint = entry.Blueprint;
 				part.TargetDisplayName = entry.Name;
-				part.CompleteTick = The.Game.TimeTicks + entry.BuildTicks;
+				part.CompleteTick = The.Game.TimeTicks + CraftBuildTicks(entry.BuildTicks, System.ZoneDistricts.Values);
 				part.StaffNeeded = entry.Staff;
 				part.ThresholdManning = KingdomRules.IsThresholdManning(entry.Manning);
 				if (entry.Defence > 0)
@@ -70,6 +70,22 @@ namespace ThousandAndFirst
 			KingdomChronicle.Record(System, XRL.Language.Grammar.A(entry.Name) + " was commissioned at " + System.KingdomDisplayName);
 			MessageQueue.AddPlayerMessage("{{G|The " + entry.Name + " is commissioned. Scaffolding rises.}}");
 			return true;
+		}
+
+		/// <summary>
+		/// Build ticks after a craft district's discount. Floors at one tick and falls back to
+		/// the undiscounted time on a hostile or missing percent rather than ever completing a
+		/// build instantly or in the past.
+		/// </summary>
+		public static long CraftBuildTicks(long BaseTicks, IEnumerable<string> Districts)
+		{
+			int percent = KingdomRules.DistrictsBuildPercent(Districts);
+			if (percent <= 0)
+			{
+				percent = 100;
+			}
+			long ticks = BaseTicks * percent / 100;
+			return (ticks < 1) ? 1 : ticks;
 		}
 
 		public static Cell FindBuildCell(Zone Z)

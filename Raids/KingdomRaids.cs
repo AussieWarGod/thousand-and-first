@@ -41,7 +41,7 @@ namespace ThousandAndFirst
 			{
 				if (timeTicks - System.RaidDueTick > KingdomRules.TicksPerDay)
 				{
-					ResolveRaidInAbsence(System, Z, Shared);
+					RewarnRaidOnReturn(System, timeTicks);
 				}
 				else
 				{
@@ -93,43 +93,25 @@ namespace ThousandAndFirst
 		}
 
 		/// <summary>
-		/// A raid that fell while the founder was away is resolved as an aftermath, not an
-		/// ambush at the gate. Raiders do not loiter at the border for a season waiting to be
-		/// fought: the settlement met them, lost water, and buried what it lost, and the
-		/// homecoming report says so.
+		/// A raid that came due while the founder was away is never resolved without them.
+		/// Raiders who find no one home do not loot in the dark and vanish into the record as a
+		/// debt already paid &mdash; they wait. The threat stays exactly as it was
+		/// (<see cref="KingdomSystem.RaidState"/> untouched, faction unchanged, no water taken, no
+		/// one lost), only the due tick is pushed out by the same lead the original warning used,
+		/// so the homecoming itself buys a fresh window to pay tribute, talk it down, or simply be
+		/// standing there the next time it comes due. What accrues in absence is the news that
+		/// they came and found the gate shut, never a loss no one witnessed
+		/// (VISION.md: "Absence accrues, never decays"; STANDARDS.md &sect;5.3: "witnessed-only
+		/// accounting").
 		/// </summary>
-		public static void ResolveRaidInAbsence(KingdomSystem System, Zone Z, KingdomSurvey Shared = null)
+		public static void RewarnRaidOnReturn(KingdomSystem System, long TimeTicks)
 		{
 			string displayName = Faction.GetFormattedName(System.RaidFactionName);
-			System.RaidState = 0;
-			System.RaidFactionName = null;
-			System.RaidTimesDeferred = 0;
-			System.LastRaidTick = The.Game.TimeTicks;
-			int defence = (Shared != null) ? Shared.Defence() : 0;
-			KingdomRules.RaidOutcome outcome = KingdomRules.ResolveRaid(defence, KingdomRules.RaidSize(System.Stage));
-			if (outcome == KingdomRules.RaidOutcome.Repelled)
-			{
-				KingdomChronicle.Record(System, "raiders of " + displayName + " came upon " + System.KingdomDisplayName + " in the founder's absence and were turned back at the wall", Accomplishment: true);
-				System.RecordDeed("the walls of " + System.KingdomDisplayName + ", which have turned raiders back");
-				System.Ledger.Note("{{G|Raiders of " + displayName + " came while you were away, and the watch turned them back. Nothing was taken.}}");
-				if (KingdomLog.Enabled) KingdomLog.Log("raid repelled in absence: defence=" + defence);
-				return;
-			}
-			int asked = KingdomRules.RaidPlunder(KingdomRules.RaidPlunderDrams, defence, outcome);
-			int plundered = (Shared != null) ? Shared.Consume(asked) : KingdomGrowth.ConsumeStoredWater(Z, asked);
-			bool tookSomeone = false;
-			if (System.Population > KingdomRules.LoyalCoreSettlers && Stat.Random(1, 100) <= KingdomRules.RaidCasualtyChance(defence, outcome))
-			{
-				tookSomeone = KingdomGrowth.Emigrate(System, Z, Shared);
-				if (tookSomeone)
-				{
-					System.Dead++;
-				}
-			}
-			KingdomChronicle.Record(System, "raiders of " + displayName + " came upon " + System.KingdomDisplayName + " in the founder's absence and broke open the stores");
-			System.Ledger.Plundered += plundered;
-			System.Ledger.Note("{{R|Raiders of " + displayName + " came while you were away. " + ((plundered > 0) ? (plundered + " drams were carried off.") : "The stores were already dry.") + ((defence > 0) ? " The watch made them pay for it." : "") + (tookSomeone ? " One of the settlement did not survive it." : "") + "}}");
-			if (KingdomLog.Enabled) KingdomLog.Log("raid resolved in absence: plundered=" + plundered + " casualty=" + tookSomeone);
+			System.RaidDueTick = TimeTicks + KingdomRules.RaidWarningLeadTicks;
+			int demand = KingdomRules.TributeDemand(KingdomRules.RaidTributeDrams, System.RaidTimesDeferred);
+			KingdomChronicle.Record(System, "raiders of " + displayName + " came looking for " + System.KingdomDisplayName + " while the founder was afield, and found no one to answer them");
+			System.Ledger.Note("{{r|Raiders of " + displayName + " came for the stores while you were away and found no one to meet them. Nothing was taken. They have not given up: tribute may yet turn them (" + demand + " drams), or stand and meet them yourself.}}");
+			if (KingdomLog.Enabled) KingdomLog.Log("raid re-warned on return: faction=" + System.RaidFactionName + " due=" + System.RaidDueTick);
 		}
 
 		/// <summary>
@@ -169,14 +151,31 @@ namespace ThousandAndFirst
 			{
 				return;
 			}
+			// The walls fight first. Crewed works and a garrison district decide how much of the
+			// band gets past the perimeter at all, and how much the ones who do can carry off.
+			// Without this, fortification would be decoration: nothing else in the mod reads
+			// KingdomSurvey.Defence(), and a settlement's palisades would change nothing a
+			// player could observe.
+			int defence = (Shared != null) ? Shared.Defence() : 0;
 			int size = KingdomRules.RaidSize(System.Stage);
+			KingdomRules.RaidOutcome outcome = KingdomRules.ResolveRaid(defence, size);
+			int party = KingdomRules.RaidingPartySize(size, defence, outcome);
+			if (party <= 0)
+			{
+				System.RaidFactionName = null;
+				KingdomChronicle.Record(System, "raiders of " + displayName + " came against " + System.KingdomDisplayName + " and were turned back at the wall", Accomplishment: true);
+				System.RecordDeed("the walls of " + System.KingdomDisplayName + ", which have turned raiders back");
+				MessageQueue.AddPlayerMessage("{{G|Raiders of " + displayName + " come against " + System.KingdomDisplayName + " and break on the walls. The watch holds.}}");
+				KingdomLog.Log("raid: repelled at the wall faction=" + displayName + " defence=" + defence + " size=" + size);
+				return;
+			}
 			int spawned = 0;
 			List<Cell> emptyCells = Z.GetEmptyCells((Cell c) => c.X == 0 || c.X == Z.Width - 1 || c.Y == 0 || c.Y == Z.Height - 1);
 			if (emptyCells == null || emptyCells.Count == 0)
 			{
 				emptyCells = Z.GetEmptyCells();
 			}
-			for (int i = 0; i < size && emptyCells != null && emptyCells.Count > 0; i++)
+			for (int i = 0; i < party && emptyCells != null && emptyCells.Count > 0; i++)
 			{
 				Cell cell = emptyCells.GetRandomElement();
 				GameObject raider = GameObject.Create(table[Stat.Random(0, table.Length - 1)]);
@@ -193,14 +192,17 @@ namespace ThousandAndFirst
 			int plundered = 0;
 			if (spawned > 0)
 			{
-				plundered = (Shared != null) ? Shared.Consume(KingdomRules.RaidPlunderDrams) : KingdomGrowth.ConsumeStoredWater(Z, KingdomRules.RaidPlunderDrams);
+				int asked = KingdomRules.RaidPlunder(KingdomRules.RaidPlunderDrams, defence, outcome);
+				plundered = (Shared != null) ? Shared.Consume(asked) : KingdomGrowth.ConsumeStoredWater(Z, asked);
 			}
-			KingdomLog.Log("raid: executed faction=" + displayName + " spawned=" + spawned + " size=" + size + " plundered=" + plundered);
+			KingdomLog.Log("raid: executed faction=" + displayName + " spawned=" + spawned + " party=" + party + " size=" + size + " defence=" + defence + " plundered=" + plundered);
 			if (spawned > 0)
 			{
 				KingdomChronicle.Record(System, "raiders of " + displayName + " descended upon " + System.KingdomDisplayName + " and broke open the stores");
 				System.Ledger.Plundered += plundered;
-				MessageQueue.AddPlayerMessage("{{R|Raiders of " + displayName + " descend upon " + System.KingdomDisplayName + "!" + ((plundered > 0) ? (" They stave in the casks: " + plundered + " drams lost.") : "") + "}}");
+				MessageQueue.AddPlayerMessage("{{R|Raiders of " + displayName + " descend upon " + System.KingdomDisplayName + "!"
+					+ ((party < size) ? (" The watch turns back " + (size - party) + " of them at the wall.") : "")
+					+ ((plundered > 0) ? (" They stave in the casks: " + plundered + " drams lost.") : "") + "}}");
 			}
 		}
 	}

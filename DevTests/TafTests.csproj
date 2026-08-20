@@ -14,6 +14,7 @@
   <ItemGroup>
     <Compile Include="TestMain.cs" />
     <Compile Include="KingdomRulesTests.cs" />
+    <Compile Include="Wave1RulesTests.cs" />
     <Compile Include="..\Core\KingdomRules.cs" />
     <Compile Include="..\Core\KingdomLedger.cs" />
     <Compile Include="..\Simulation\Kernel\KernelContracts.cs" />

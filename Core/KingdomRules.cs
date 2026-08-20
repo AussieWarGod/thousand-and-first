@@ -51,6 +51,13 @@
 
 		public const int MaxDedicatedVessels = 24;
 
+		/// <summary>
+		/// Larders &mdash; dedicated food stores &mdash; are capped separately from water vessels.
+		/// A shared cap would let a founder spend the settlement's water accounting on chests,
+		/// and the two are accounted by different people for different reasons.
+		/// </summary>
+		public const int MaxDedicatedLarders = 8;
+
 		public const int FoundingCostDrams = 8;
 
 		public const int FetchDramsPerSettler = 2;
@@ -386,6 +393,44 @@
 			return RaidOutcome.Plundered;
 		}
 
+		/// <summary>Percent of a raiding band turned back at the perimeter, per point of defence.</summary>
+		public const int RaidTurnedBackPercentPerDefence = 6;
+
+		/// <summary>
+		/// Ceiling on how much of a band the walls turn back. Walls are a perimeter, not an
+		/// answer: past this, someone still climbs over and has to be met.
+		/// </summary>
+		public const int MaxRaidersTurnedBackPercent = 60;
+
+		/// <summary>
+		/// How many raiders actually reach the settlement's ground. Defence is a perimeter
+		/// rather than a damage number: crewed works and a garrison district turn part of the
+		/// band back before any fighting starts, and a wall strong enough to
+		/// <see cref="RaidOutcome.Repelled"/> turns all of it back. A band that does get through
+		/// is never fewer than one &mdash; being well-walled is not the same as being spared.
+		/// </summary>
+		/// <param name="RaidSize">Raiders who set out.</param>
+		/// <param name="Defence">Sum of crewed defensive works plus district bonus.</param>
+		/// <param name="Outcome">Result of <see cref="ResolveRaid"/> for this defence and size.</param>
+		public static int RaidingPartySize(int RaidSize, int Defence, RaidOutcome Outcome)
+		{
+			if (RaidSize <= 0 || Outcome == RaidOutcome.Repelled)
+			{
+				return 0;
+			}
+			if (Defence <= 0)
+			{
+				return RaidSize;
+			}
+			int turned = Defence * RaidTurnedBackPercentPerDefence;
+			if (turned > MaxRaidersTurnedBackPercent)
+			{
+				turned = MaxRaidersTurnedBackPercent;
+			}
+			int through = RaidSize * (100 - turned) / 100;
+			return (through < 1) ? 1 : through;
+		}
+
 		/// <summary>
 		/// Drams a raid carries off. Defence buys down the loss proportionally, and a repelled
 		/// raid takes nothing &mdash; but walls never make a settlement free, only expensive.
@@ -406,17 +451,6 @@
 				reduction = 80;
 			}
 			return BaseDrams * (100 - reduction) / 100;
-		}
-
-		/// <summary>Percent chance a raid in the founder's absence costs a life.</summary>
-		public static int RaidCasualtyChance(int Defence, RaidOutcome Outcome)
-		{
-			if (Outcome == RaidOutcome.Repelled)
-			{
-				return 0;
-			}
-			int num = 35 - Defence * 3;
-			return (num > 5) ? num : 5;
 		}
 
 		/// <summary>The drams a thirst petition asks the stores to reach.</summary>
@@ -964,9 +998,241 @@
 			long num = ArrivalIntervalTicks(Population);
 			if (District == "market")
 			{
-				num = num * 90 / 100;
+				num = num * DistrictMarketArrivalPercent / 100;
 			}
 			return num;
+		}
+
+		/// <summary>
+		/// Defence a garrison district contributes for every claimed zone that declares it.
+		/// Deliberately small: a watch is a militia turning out, not a wall, and
+		/// <see cref="DefenceToRepel"/> still wants real works behind it.
+		/// </summary>
+		public const int DistrictGarrisonDefence = 2;
+
+		/// <summary>Upkeep under an agrarian district, as a percent of the ordinary bill.</summary>
+		public const int DistrictAgrarianUpkeepPercent = 90;
+
+		/// <summary>Stock tiers a market district adds to what the growth stage already carries.</summary>
+		public const int DistrictMarketShopTier = 1;
+
+		/// <summary>Arrival interval under a market district, as a percent of the ordinary wait.</summary>
+		public const int DistrictMarketArrivalPercent = 90;
+
+		/// <summary>Build time under a craft district, as a percent of the ordinary time.</summary>
+		public const int DistrictCraftBuildPercent = 80;
+
+		/// <summary>Wait between petitions under a shrine district, as a percent of the ordinary wait.</summary>
+		public const int DistrictShrinePetitionPercent = 75;
+
+		/// <summary>
+		/// Reachable outsider drift under an academy district, as a percent of the ordinary
+		/// range: the scriptorium keeps the record, so fewer retellings wander from it.
+		/// </summary>
+		public const int DistrictAcademyDriftPercent = 50;
+
+		/// <summary>A district with nothing to say about a quantity leaves that quantity whole.</summary>
+		public const int DistrictNeutralPercent = 100;
+
+		/// <summary>
+		/// Hard floor under every aggregated district percent. Districts are registry data that
+		/// third parties may extend (STANDARDS 6), so without a floor one careless entry could
+		/// drive an interval, a bill, or a drift range to zero. Nothing a district does may cut a
+		/// quantity by more than half.
+		/// </summary>
+		public const int DistrictPercentFloor = 50;
+
+		/// <summary>Defence the watch adds where a garrison district is declared.</summary>
+		/// <param name="District">A district key, or any unknown string. Null is tolerated.</param>
+		/// <returns><see cref="DistrictGarrisonDefence"/> for "garrison", otherwise 0. A district
+		/// never subtracts.</returns>
+		public static int DistrictDefenceBonus(string District)
+		{
+			if (District == "garrison")
+			{
+				return DistrictGarrisonDefence;
+			}
+			return 0;
+		}
+
+		/// <summary>Upkeep the vinelands charge, as a percent of the ordinary bill.</summary>
+		/// <param name="District">A district key, or any unknown string. Null is tolerated.</param>
+		/// <returns><see cref="DistrictAgrarianUpkeepPercent"/> for "agrarian", otherwise
+		/// <see cref="DistrictNeutralPercent"/>.</returns>
+		public static int DistrictUpkeepPercent(string District)
+		{
+			if (District == "agrarian")
+			{
+				return DistrictAgrarianUpkeepPercent;
+			}
+			return DistrictNeutralPercent;
+		}
+
+		/// <summary>Stock tiers the bazaar adds on top of the growth stage's own tier.</summary>
+		/// <param name="District">A district key, or any unknown string. Null is tolerated.</param>
+		/// <returns><see cref="DistrictMarketShopTier"/> for "market", otherwise 0.</returns>
+		public static int DistrictShopTierBonus(string District)
+		{
+			if (District == "market")
+			{
+				return DistrictMarketShopTier;
+			}
+			return 0;
+		}
+
+		/// <summary>Build time the forgeworks charge, as a percent of the ordinary time.</summary>
+		/// <param name="District">A district key, or any unknown string. Null is tolerated.</param>
+		/// <returns><see cref="DistrictCraftBuildPercent"/> for "craft", otherwise
+		/// <see cref="DistrictNeutralPercent"/>.</returns>
+		public static int DistrictBuildPercent(string District)
+		{
+			if (District == "craft")
+			{
+				return DistrictCraftBuildPercent;
+			}
+			return DistrictNeutralPercent;
+		}
+
+		/// <summary>Wait between petitions on sacred ground, as a percent of the ordinary wait.</summary>
+		/// <param name="District">A district key, or any unknown string. Null is tolerated.</param>
+		/// <returns><see cref="DistrictShrinePetitionPercent"/> for "shrine", otherwise
+		/// <see cref="DistrictNeutralPercent"/>.</returns>
+		public static int DistrictPetitionIntervalPercent(string District)
+		{
+			if (District == "shrine")
+			{
+				return DistrictShrinePetitionPercent;
+			}
+			return DistrictNeutralPercent;
+		}
+
+		/// <summary>Reachable outsider drift under the scriptorium, as a percent of the ordinary range.</summary>
+		/// <param name="District">A district key, or any unknown string. Null is tolerated.</param>
+		/// <returns><see cref="DistrictAcademyDriftPercent"/> for "academy", otherwise
+		/// <see cref="DistrictNeutralPercent"/>.</returns>
+		public static int DistrictDriftPercent(string District)
+		{
+			if (District == "academy")
+			{
+				return DistrictAcademyDriftPercent;
+			}
+			return DistrictNeutralPercent;
+		}
+
+		/// <summary>
+		/// The aggregation law for district percent effects: <b>best wins, and nothing stacks.</b>
+		/// The strongest single district of a kind sets the number for the whole settlement, so a
+		/// second vinelands feeds the same city rather than feeding it twice, and the result is
+		/// clamped into <see cref="DistrictPercentFloor"/>..<see cref="DistrictNeutralPercent"/>.
+		/// <para>
+		/// Stacking was rejected on both pillars. Multiplied percents make the sixth claimed zone
+		/// worth more than the first and converge on zero, which turns a flavour choice into a
+		/// mandatory one; and a settlement that declared its districts early would be punished for
+		/// not declaring more of them. Additive aggregation is kept only for defence, where the
+		/// fiction is bodies on a wall and more of them plainly is more.
+		/// </para>
+		/// </summary>
+		/// <param name="Districts">District key of every claimed zone. Nulls, blanks, unknown
+		/// keys, and duplicates are all tolerated and contribute nothing.</param>
+		/// <param name="Effect">Percent this district charges for the quantity being aggregated.</param>
+		/// <returns><see cref="DistrictNeutralPercent"/> for a null or empty sequence.</returns>
+		private static int BestDistrictPercent(System.Collections.Generic.IEnumerable<string> Districts, System.Func<string, int> Effect)
+		{
+			int best = DistrictNeutralPercent;
+			if (Districts != null)
+			{
+				foreach (string district in Districts)
+				{
+					int percent = Effect(district);
+					if (percent < best)
+					{
+						best = percent;
+					}
+				}
+			}
+			if (best < DistrictPercentFloor)
+			{
+				return DistrictPercentFloor;
+			}
+			if (best > DistrictNeutralPercent)
+			{
+				return DistrictNeutralPercent;
+			}
+			return best;
+		}
+
+		/// <summary>
+		/// Defence every garrison district in the realm musters. Additive by the law documented
+		/// on <see cref="BestDistrictPercent"/>, and uncapped: claiming and declaring six zones is
+		/// six zones of real investment, and the answer feeds <see cref="ResolveRaid"/> beside the
+		/// works that must still be crewed.
+		/// </summary>
+		/// <param name="Districts">District key of every claimed zone; nulls and unknowns ignored.</param>
+		/// <returns>0 for a null or empty sequence.</returns>
+		public static int DistrictsDefenceBonus(System.Collections.Generic.IEnumerable<string> Districts)
+		{
+			int total = 0;
+			if (Districts == null)
+			{
+				return total;
+			}
+			foreach (string district in Districts)
+			{
+				total += DistrictDefenceBonus(district);
+			}
+			return total;
+		}
+
+		/// <summary>Upkeep the realm's vinelands charge, by the law on <see cref="BestDistrictPercent"/>.</summary>
+		/// <param name="Districts">District key of every claimed zone; nulls and unknowns ignored.</param>
+		public static int DistrictsUpkeepPercent(System.Collections.Generic.IEnumerable<string> Districts)
+		{
+			return BestDistrictPercent(Districts, DistrictUpkeepPercent);
+		}
+
+		/// <summary>
+		/// Stock tiers the realm's bazaars add. Best-wins like the percent effects: a second
+		/// market is a second place to shop, not deeper stock in both.
+		/// </summary>
+		/// <param name="Districts">District key of every claimed zone; nulls and unknowns ignored.</param>
+		/// <returns>0 for a null or empty sequence.</returns>
+		public static int DistrictsShopTierBonus(System.Collections.Generic.IEnumerable<string> Districts)
+		{
+			int best = 0;
+			if (Districts == null)
+			{
+				return best;
+			}
+			foreach (string district in Districts)
+			{
+				int bonus = DistrictShopTierBonus(district);
+				if (bonus > best)
+				{
+					best = bonus;
+				}
+			}
+			return best;
+		}
+
+		/// <summary>Build time the realm's forgeworks charge, by the law on <see cref="BestDistrictPercent"/>.</summary>
+		/// <param name="Districts">District key of every claimed zone; nulls and unknowns ignored.</param>
+		public static int DistrictsBuildPercent(System.Collections.Generic.IEnumerable<string> Districts)
+		{
+			return BestDistrictPercent(Districts, DistrictBuildPercent);
+		}
+
+		/// <summary>Petition wait under the realm's sacred ground, by the law on <see cref="BestDistrictPercent"/>.</summary>
+		/// <param name="Districts">District key of every claimed zone; nulls and unknowns ignored.</param>
+		public static int DistrictsPetitionIntervalPercent(System.Collections.Generic.IEnumerable<string> Districts)
+		{
+			return BestDistrictPercent(Districts, DistrictPetitionIntervalPercent);
+		}
+
+		/// <summary>Outsider drift under the realm's scriptoria, by the law on <see cref="BestDistrictPercent"/>.</summary>
+		/// <param name="Districts">District key of every claimed zone; nulls and unknowns ignored.</param>
+		public static int DistrictsDriftPercent(System.Collections.Generic.IEnumerable<string> Districts)
+		{
+			return BestDistrictPercent(Districts, DistrictDriftPercent);
 		}
 
 		public class BuildEntry
@@ -1085,6 +1351,139 @@
 			return false;
 		}
 
+		/// <summary>
+		/// The city styles the rules themselves can resolve: a style themes what a settlement may
+		/// build (<see cref="StyleAllows"/>) and how its founding reads on the page. Third-party
+		/// building entries may name styles beyond these &mdash; <c>KingdomData.Styles</c> is the
+		/// registry's live union &mdash; but only a style in this array is ever chosen by
+		/// <see cref="StyleForSite"/>.
+		/// </summary>
+		public static readonly string[] Styles = new string[5] { "common", "verdant", "fungal", "gyre", "eater" };
+
+		/// <summary>Whether a string names a style these rules resolve. Case-sensitive: style keys
+		/// are data, not prose. Null and empty are not known styles.</summary>
+		public static bool IsKnownStyle(string Style)
+		{
+			for (int i = 0; i < Styles.Length; i++)
+			{
+				if (Styles[i] == Style)
+				{
+					return true;
+				}
+			}
+			return false;
+		}
+
+		/// <summary>
+		/// The surface stratum. This is the engine's own number, not ours:
+		/// <c>XRL.World.Zone.GetTerrainDisplayName</c> answers "the deep underground" for any
+		/// <c>Z &gt; 10</c>, so 10 is the surface and larger is deeper.
+		/// </summary>
+		public const int SurfaceZLevel = 10;
+
+		// Ground-to-style matching, against Caves of Qud 2.0.211.51,
+		// StreamingAssets/Base/ObjectBlueprints/WorldTerrain.xml. A zone reports its ground two
+		// ways: GetTerrainObject().Blueprint gives the exact blueprint ("TerrainSaltmarsh2",
+		// "TerrainFungalOuterGw", "TerrainBaroqueRuins"), and GetTerrainRegion() gives that
+		// blueprint's Terrain tag ("Saltmarsh", "Fungal", "Ruins", "Jungle"). Matching is by
+		// substring because the game splits one region across dozens of variants, and the tag is
+		// the variants' shared stem. A game update that renames these loses the match silently and
+		// every site falls back to "common", which is the designed failure rather than a defect.
+		private static readonly string[] FungalGround = new string[1] { "Fungal" };
+
+		// TerrainRuins, TerrainBaroqueRuins, TerrainJoppaRuins by blueprint; TerrainGritGate and
+		// TerrainRustWell carry Terrain="Ruins". "TheSpindle" and not "Spindle", or
+		// TerrainMountainsSpindleShadow - a mountain that merely stands in the Spindle's shadow -
+		// would read as the ancients' own chrome.
+		private static readonly string[] EaterGround = new string[4] { "Ruins", "BethesdaSusa", "GritGate", "TheSpindle" };
+
+		// The Moon Stair climbs to Brightsheol, where the Girsh are: chitin, bone, and sacrament.
+		private static readonly string[] GyreGround = new string[2] { "Brightsheol", "MoonStair" };
+
+		// TerrainWatervine and TerrainJoppaRuins both carry Terrain="Saltmarsh"; "Jungle" catches
+		// TerrainJungle, TerrainDeepJungle, and Kyakukya, which carries Terrain="Jungle".
+		private static readonly string[] VerdantGround = new string[5] { "Watervine", "Saltmarsh", "Flowerfields", "BananaGrove", "Jungle" };
+
+		/// <summary>
+		/// Resolves the ground a settlement stands on to a city style. The blueprint is read
+		/// first and the region only if the blueprint says nothing, so a ruin in the marshes
+		/// founds an "eater" city rather than a "verdant" one.
+		/// <para>
+		/// Below the surface only the two styles whose material is actually down there survive:
+		/// spore-lit caverns and the ancients' works. Nobody thatches a roof with watervine in a
+		/// cave, so a deep site of any other ground falls back to "common".
+		/// </para>
+		/// <para>
+		/// The fallback is total. Unmapped ground, a renamed blueprint, null, and empty all answer
+		/// "common", which is the one style every base building design allows.
+		/// </para>
+		/// </summary>
+		/// <param name="TerrainBlueprint">The zone's terrain blueprint
+		/// (<c>Zone.GetTerrainObject()?.Blueprint</c>), or null if it could not be read.</param>
+		/// <param name="RegionName">The zone's terrain region (<c>Zone.GetTerrainRegion()</c>),
+		/// or null if it could not be read.</param>
+		/// <param name="ZLevel">The zone's stratum; see <see cref="SurfaceZLevel"/>.</param>
+		/// <returns>A member of <see cref="Styles"/>. Never null.</returns>
+		public static string StyleForSite(string TerrainBlueprint, string RegionName, int ZLevel)
+		{
+			string style = StyleForGround(TerrainBlueprint);
+			if (style == null)
+			{
+				style = StyleForGround(RegionName);
+			}
+			if (style == null)
+			{
+				return "common";
+			}
+			if (ZLevel > SurfaceZLevel && style != "fungal" && style != "eater")
+			{
+				return "common";
+			}
+			return style;
+		}
+
+		/// <summary>
+		/// First match wins, in the declared order. No two shipped grounds match two lists, but
+		/// third-party terrain can: a "FungalRuins" is fungal, and that precedence is the contract.
+		/// </summary>
+		/// <returns>Null where the ground is unmapped, so the caller can try the other reading.</returns>
+		private static string StyleForGround(string Ground)
+		{
+			if (string.IsNullOrEmpty(Ground))
+			{
+				return null;
+			}
+			if (ContainsAny(Ground, FungalGround))
+			{
+				return "fungal";
+			}
+			if (ContainsAny(Ground, EaterGround))
+			{
+				return "eater";
+			}
+			if (ContainsAny(Ground, GyreGround))
+			{
+				return "gyre";
+			}
+			if (ContainsAny(Ground, VerdantGround))
+			{
+				return "verdant";
+			}
+			return null;
+		}
+
+		private static bool ContainsAny(string Text, string[] Needles)
+		{
+			for (int i = 0; i < Needles.Length; i++)
+			{
+				if (Text.IndexOf(Needles[i], System.StringComparison.OrdinalIgnoreCase) >= 0)
+				{
+					return true;
+				}
+			}
+			return false;
+		}
+
 		public const int DealTrickleStanding = 2;
 
 		public class DealEntry
@@ -1165,11 +1564,56 @@
 			}
 		}
 
+		/// <summary>
+		/// Every faction that will actually come for the stores. A faction is provokable only
+		/// because <see cref="RaiderTableFor"/> can field a war party for it, so this array and
+		/// those tables are one contract, indexed together: <c>KingdomRaids.FindProvokedFaction</c>
+		/// skips any standing whose faction has no table, and a name here with no table would be a
+		/// threat that never arrives.
+		/// </summary>
+		public static readonly string[] ProvokableFactions = new string[5] { "Snapjaws", "Baboons", "Goatfolk", "Cannibals", "Issachari" };
+
+		// Parallel to ProvokableFactions, and verified against Caves of Qud 2.0.211.51: creature
+		// names against StreamingAssets/Base/ObjectBlueprints/Creatures.xml, faction keys against
+		// Factions.xml (the key is "Issachari"; "Issachari tribe" is only its DisplayName). A
+		// misspelling on either side creates nothing and fails silently at raid time, so the two
+		// arrays are walked in both directions by the tests.
+		//
+		// Raiders are drawn one per body at random, so a doubled entry is weight: each party is
+		// two parts scavenger to one part fighter. Raids take drams and leave scars; they are not
+		// meant to field a faction's best.
+		private static readonly string[][] RaiderTables = new string[5][]
+		{
+			new string[3] { "Snapjaw Scavenger", "Snapjaw Scavenger", "Snapjaw Hunter" },
+			new string[3] { "Baboon", "Baboon", "Hulking Baboon" },
+			new string[3] { "Goatfolk Bully", "Goatfolk Bully", "Goatfolk Hornblower" },
+			new string[3] { "Cannibal", "Cannibal", "Juicing Cannibal" },
+			new string[3] { "Issachari Raider", "Issachari Raider", "Issachari Rifler" }
+		};
+
+		/// <summary>
+		/// The war party a provoked faction sends. Blueprint names, drawn one per raider.
+		/// </summary>
+		/// <param name="FactionName">A faction key as it appears in the settlement's standings
+		/// (Qud's <c>Factions.xml</c> Name, not its DisplayName). Null is tolerated.</param>
+		/// <returns>The faction's table, or null where the faction cannot raid &mdash; which is
+		/// how a standing is judged unprovokable. The returned array is shared: read it, never
+		/// write it.</returns>
 		public static string[] RaiderTableFor(string FactionName)
 		{
-			if (FactionName == "Snapjaws")
+			for (int i = 0; i < ProvokableFactions.Length; i++)
 			{
-				return new string[3] { "Snapjaw Scavenger", "Snapjaw Scavenger", "Snapjaw Hunter" };
+				if (ProvokableFactions[i] == FactionName)
+				{
+					// A faction listed with no table is a wiring error, and the tests fail loudly
+					// on it; inside a raid it degrades to "cannot raid" rather than throwing out
+					// of the engine's event dispatch.
+					if (i >= RaiderTables.Length)
+					{
+						return null;
+					}
+					return RaiderTables[i];
+				}
 			}
 			return null;
 		}

@@ -6,6 +6,19 @@ namespace ThousandAndFirst
 {
 	public static class KingdomReports
 	{
+		/// <summary>
+		/// The watch and the larder, as the founder would see them standing here: crewed defence
+		/// (including any garrison district) and what the dedicated larders hold. Both come from
+		/// a fresh survey because both are facts about this ground, not fields on the system.
+		/// </summary>
+		private static string DefenceAndPantryLine(KingdomSystem System, Zone Here)
+		{
+			KingdomSurvey survey = KingdomSurvey.Take(Here, System);
+			return "\nDefence: " + survey.Defence()
+				+ (survey.DistrictDefenceBonus > 0 ? ("  (garrison " + survey.DistrictDefenceBonus + ")") : "")
+				+ "  Larder: " + survey.FoodAbundance + " (" + survey.FoodStored + ")";
+		}
+
 		public static string Status(KingdomSystem System)
 		{
 			Zone currentZone = The.Player?.CurrentZone;
@@ -28,8 +41,11 @@ namespace ThousandAndFirst
 			stringBuilder.Append("\nClaimed zones: ").Append(System.ClaimedZones.Count)
 				.Append(currentClaimed ? ("  (here: " + KingdomGrowth.CountStoredWater(currentZone) + " drams stored, " + KingdomGrowth.CountOpenWater(currentZone) + " open, space for " + KingdomGrowth.CountStorageSpace(currentZone) + ")") : "")
 				.Append("\nShops: tier ").Append(System.ShopTier).Append(System.IdleWorks > 0 ? ("  {{r|" + System.IdleWorks + " works idle for want of hands}}") : "")
+				// Defence and the pantry are surveyed live: both are facts about the ground the
+				// founder is standing on, and neither is carried on the system.
+				.Append(currentClaimed ? DefenceAndPantryLine(System, currentZone) : "")
 				.Append("\nUpkeep: ")
-				.Append(KingdomRules.UpkeepDrams(System.Population))
+				.Append(KingdomRules.PolicyUpkeep(KingdomRules.UpkeepDrams(System.Population), System.Stores))
 				.Append(" drams per interval  Thirst streak: ")
 				.Append(System.DryStreak)
 				.Append("\nNext arrival due: tick ")
@@ -72,7 +88,7 @@ namespace ThousandAndFirst
 			{
 				return "Nothing here is dedicated to the stores. Dedicate a vessel, or commission a cask rack, and the settlement can begin to keep water.";
 			}
-			if (stored < KingdomRules.DramsPerArrival + KingdomRules.UpkeepDrams(System.Population))
+			if (stored < KingdomRules.DramsPerArrival + KingdomRules.PolicyUpkeep(KingdomRules.UpkeepDrams(System.Population), System.Stores))
 			{
 				return "The stores are nearly dry. Pour water into a dedicated vessel; nothing else can happen until there is water to share.";
 			}

@@ -41,6 +41,10 @@ namespace ThousandAndFirst
 			system.FoundedTick = The.Game.TimeTicks;
 			system.LastHeartbeatTick = The.Game.TimeTicks;
 			system.LastVisitTick = The.Game.TimeTicks;
+			system.Style = ResolveFoundingStyle(The.Player?.CurrentZone, out string terrainBlueprint, out string regionName, out int zLevel);
+			system.FoundingTerrainBlueprint = terrainBlueprint;
+			system.FoundingRegionName = regionName;
+			system.FoundingZLevel = zLevel;
 			The.Game.PlayerReputation.Set(faction.Name, RuleSettings.REPUTATION_LOVED + 100);
 			foreach (Faction other in Factions.Loop())
 			{
@@ -55,9 +59,74 @@ namespace ThousandAndFirst
 			// whole life and shared with the player's own history, so the settlement takes exactly
 			// one slot: the founding, which happens once per realm and is what everything else
 			// hangs off. Every other civic accomplishment files with no mural weight.
-			KingdomChronicle.Record(system, "you poured the first water, and " + faction.DisplayName + " was founded", Accomplishment: true, MuralText: "Poured the first water and founded " + faction.DisplayName + ".");
+			KingdomChronicle.Record(system, "you poured the first water, and " + faction.DisplayName + " was founded on " + StyleGroundClause(system.Style), Accomplishment: true, MuralText: "Poured the first water and founded " + faction.DisplayName + ".");
 			The.Player?.RequirePart<KingdomCharterPart>().EnsureAbility();
 			return faction;
+		}
+
+		/// <summary>
+		/// Reads the founding site's terrain evidence and resolves it to a city style via
+		/// <see cref="KingdomRules.StyleForSite"/>. The audit in
+		/// _notes/TERRAIN-FOOD-INDEPENDENT-AUDIT.md is what licenses this exact read: an explicit
+		/// founding/preflight action on the zone the player is already standing in, not a
+		/// background scan. Every step is wrapped by <see cref="KingdomSystem.Guard"/> so a bad
+		/// zone, an unmapped terrain, or an engine hiccup degrades to "common" rather than
+		/// breaking the founding rite (STANDARDS 9).
+		/// </summary>
+		/// <param name="FoundingZone">The zone the founder is standing in. Null is tolerated.</param>
+		/// <param name="TerrainBlueprint">The exact terrain blueprint read, or null if unavailable.</param>
+		/// <param name="RegionName">The canonical terrain region read, or null if unavailable.</param>
+		/// <param name="ZLevel">The founding zone's depth, captured alongside the terrain evidence.</param>
+		/// <returns>A style from <see cref="KingdomRules.Styles"/>; "common" on any failure.</returns>
+		private static string ResolveFoundingStyle(Zone FoundingZone, out string TerrainBlueprint, out string RegionName, out int ZLevel)
+		{
+			string terrainBlueprint = null;
+			string regionName = null;
+			int zLevel = 0;
+			string style = "common";
+			KingdomSystem.Guard("founding style lookup", delegate
+			{
+				if (FoundingZone == null)
+				{
+					return;
+				}
+				terrainBlueprint = FoundingZone.GetTerrainObject()?.Blueprint;
+				regionName = FoundingZone.GetTerrainRegion();
+				zLevel = FoundingZone.Z;
+				style = KingdomRules.StyleForSite(terrainBlueprint, regionName, zLevel);
+			});
+			if (!KingdomRules.IsKnownStyle(style))
+			{
+				style = "common";
+			}
+			TerrainBlueprint = terrainBlueprint;
+			RegionName = regionName;
+			ZLevel = zLevel;
+			return style;
+		}
+
+		/// <summary>
+		/// Founder-facing clause naming what the ground promises for a city style. Presentation
+		/// only: <see cref="KingdomRules.StyleForSite"/> owns which style a site resolves to, this
+		/// only supplies the sentence fragment that tells the founder (and later, the chronicle
+		/// and any tester reading <c>kingdom:dump</c>) what was read. Lower-case, no leading
+		/// article, fit to follow "founded on " or stand alone.
+		/// </summary>
+		public static string StyleGroundClause(string Style)
+		{
+			switch (Style)
+			{
+				case "verdant":
+					return "ground green enough to root a verdant city";
+				case "fungal":
+					return "air thick enough to bloom a fungal city";
+				case "gyre":
+					return "skies restless enough to turn a gyre city";
+				case "eater":
+					return "stone old enough to answer an Eater city";
+				default:
+					return "common ground";
+			}
 		}
 
 		/// <summary>

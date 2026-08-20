@@ -26,6 +26,44 @@ namespace ThousandAndFirst
 
 		public bool HasTradePost;
 
+		/// <summary>
+		/// Kingdom-wide defence bonus from garrison districts, folded in by
+		/// <see cref="Take(Zone, KingdomSystem)"/>. Zero on a survey taken with the plain
+		/// <see cref="Take(Zone)"/> overload, which knows nothing outside its own zone.
+		/// </summary>
+		public int DistrictDefenceBonus;
+
+		/// <summary>
+		/// Servings of food seen in the settlement's dedicated containers this pass: items
+		/// carrying vanilla <c>Food</c> or <c>PreparedCookingIngredient</c>. A read-only count
+		/// - nothing consumes, moves, or reserves what it finds.
+		/// </summary>
+		public int FoodStored;
+
+		/// <summary>Coarse abundance read on <see cref="FoodStored"/>. See <see cref="ClassifyPantry"/>.</summary>
+		public PantryTier FoodAbundance;
+
+		/// <summary>
+		/// A ladder, not a bar: nothing yet reacts to it. It exists so the next wave has a true
+		/// number to build a hunger or abundance loop on, instead of guessing at one.
+		/// </summary>
+		public enum PantryTier
+		{
+			Empty = 0,
+			Scant = 1,
+			Modest = 2,
+			Ample = 3
+		}
+
+		/// <summary>Food count at or above which the pantry reads as merely Scant.</summary>
+		public const int PantryScantThreshold = 1;
+
+		/// <summary>Food count at or above which the pantry reads as Modest.</summary>
+		public const int PantryModestThreshold = 10;
+
+		/// <summary>Food count at or above which the pantry reads as Ample.</summary>
+		public const int PantryAmpleThreshold = 30;
+
 		public readonly List<LiquidVolume> Stores = new List<LiquidVolume>();
 
 		public readonly List<LiquidVolume> Pools = new List<LiquidVolume>();
@@ -79,6 +117,19 @@ namespace ThousandAndFirst
 						survey.Defences.Add(item);
 					}
 				}
+				// Larders, not vessels. "KingdomStores" only ever marks liquid containers — the
+				// dedication flow filters on LiquidVolume — so counting food there would read
+				// zero forever. Food lives in what the founder dedicated as a larder.
+				if (item.GetIntProperty("KingdomLarder") == 1 && item.Inventory != null)
+				{
+					foreach (GameObject held in item.Inventory.Objects)
+					{
+						if (held.HasPart("Food") || held.HasPart("PreparedCookingIngredient"))
+						{
+							survey.FoodStored += held.Count;
+						}
+					}
+				}
 				LiquidVolume part = item.GetPart<LiquidVolume>();
 				if (part == null || part.Volume < 0)
 				{
@@ -107,12 +158,49 @@ namespace ThousandAndFirst
 					}
 				}
 			}
+			survey.FoodAbundance = ClassifyPantry(survey.FoodStored);
 			return survey;
 		}
 
 		/// <summary>
+		/// As <see cref="Take(Zone)"/>, but also folds in the settlement-wide defence bonus its
+		/// districts earn. A garrison trains the whole watch, not just the tower standing on it,
+		/// so the bonus is read from every claimed zone's district, not only this one.
+		/// </summary>
+		/// <param name="Z">Zone to survey. Null yields an empty survey.</param>
+		/// <param name="System">Kingdom whose claimed-zone districts contribute the bonus.</param>
+		public static KingdomSurvey Take(Zone Z, KingdomSystem System)
+		{
+			KingdomSurvey survey = Take(Z);
+			if (System != null)
+			{
+				survey.DistrictDefenceBonus = KingdomRules.DistrictsDefenceBonus(System.ZoneDistricts.Values);
+			}
+			return survey;
+		}
+
+		/// <summary>Coarse abundance tier for a raw food count. See <see cref="PantryTier"/>.</summary>
+		private static PantryTier ClassifyPantry(int FoodCount)
+		{
+			if (FoodCount >= PantryAmpleThreshold)
+			{
+				return PantryTier.Ample;
+			}
+			if (FoodCount >= PantryModestThreshold)
+			{
+				return PantryTier.Modest;
+			}
+			if (FoodCount >= PantryScantThreshold)
+			{
+				return PantryTier.Scant;
+			}
+			return PantryTier.Empty;
+		}
+
+		/// <summary>
 		/// The settlement's defence: the sum of its defensive works, counting only those with
-		/// the crew to man them. A watchtower with nobody in it defends nothing.
+		/// the crew to man them, plus any kingdom-wide bonus from garrison districts. A
+		/// watchtower with nobody in it defends nothing; a garrison district defends everywhere.
 		/// </summary>
 		public int Defence()
 		{
@@ -124,7 +212,7 @@ namespace ThousandAndFirst
 				int effectiveness = (need > 0) ? work.GetIntProperty("KingdomEffectiveness") : 100;
 				total += work.GetIntProperty("KingdomDefence") * effectiveness / 100;
 			}
-			return total;
+			return total + DistrictDefenceBonus;
 		}
 
 		/// <summary>Draws water from the dedicated stores, updating the survey's counters.</summary>

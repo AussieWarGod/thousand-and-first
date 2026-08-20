@@ -675,16 +675,6 @@ namespace ThousandAndFirst.Tests
 			Assert.AreEqual(expected, KingdomRules.RaidPlunder(baseDrams, defence, outcome));
 		}
 
-		[TestCase(0, KingdomRules.RaidOutcome.Overrun, 35)]
-		[TestCase(5, KingdomRules.RaidOutcome.Plundered, 20)]
-		[TestCase(10, KingdomRules.RaidOutcome.Plundered, 5)]
-		[TestCase(99, KingdomRules.RaidOutcome.Plundered, 5)]
-		[TestCase(0, KingdomRules.RaidOutcome.Repelled, 0)]
-		public void RaidCasualtyChance(int defence, KingdomRules.RaidOutcome outcome, int expected)
-		{
-			Assert.AreEqual(expected, KingdomRules.RaidCasualtyChance(defence, outcome));
-		}
-
 		[TestCase(0, 100, 100, 0)]
 		[TestCase(5, 100, 100, 10)]
 		[TestCase(5, 3, 100, 3)]

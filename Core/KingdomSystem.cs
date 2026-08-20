@@ -27,11 +27,34 @@ namespace ThousandAndFirst
 		[NonSerialized]
 		public bool LoadFailed;
 
+		/// <summary>
+		/// Days accounted for by the homecoming report now waiting in the Charter. Not
+		/// serialized: a homecoming is news about this visit, and a saved one would be told
+		/// twice on the next load.
+		/// </summary>
+		[NonSerialized]
+		public int HomecomingDays;
+
 		public string KingdomFactionName;
 
 		public string KingdomDisplayName;
 
 		public string Style = "common";
+
+		/// <summary>
+		/// The terrain blueprint read at the founding site, or null when the lookup was
+		/// unavailable. Kept because <see cref="Style"/> is a conclusion and this is the evidence
+		/// for it: a tester who disagrees with the style needs to see what the ground actually
+		/// said. Serialization is by named fields, so a save written before this field existed
+		/// simply arrives without it.
+		/// </summary>
+		public string FoundingTerrainBlueprint;
+
+		/// <summary>Canonical terrain region of the founding site, or null. Evidence, as above.</summary>
+		public string FoundingRegionName;
+
+		/// <summary>Depth of the founding zone. Surface and strata read differently.</summary>
+		public int FoundingZLevel;
 
 		public long FoundedTick;
 
@@ -231,7 +254,9 @@ namespace ThousandAndFirst
 			KingdomSurvey survey = null;
 			Guard("survey", delegate
 			{
-				survey = KingdomSurvey.Take(E.Zone);
+				// The district-aware overload: a garrison district trains the whole watch, so the
+				// bonus has to be on the shared survey Raids later reads defence from.
+				survey = KingdomSurvey.Take(E.Zone, this);
 			});
 			if (survey == null)
 			{
@@ -254,9 +279,13 @@ namespace ThousandAndFirst
 			{
 				long elapsed = The.Game.TimeTicks - LastVisitTick;
 				LastVisitTick = The.Game.TimeTicks;
+				HomecomingDays = (int)(elapsed / KingdomRules.TicksPerDay);
 				if (Ledger.Any && elapsed >= KingdomRules.TicksPerDay)
 				{
-					XRL.UI.Popup.Show(Ledger.Digest(KingdomDisplayName, (int)(elapsed / KingdomRules.TicksPerDay)));
+					// Nonmodal on purpose. You come home to a report, not an inspection: the
+					// settlement says it has news and waits to be asked, in the Charter.
+					XRL.Messages.MessageQueue.AddPlayerMessage("{{C|" + KingdomDisplayName + "}} has news of the "
+						+ ((HomecomingDays == 1) ? "day" : HomecomingDays + " days") + " you were away. {{K|(Charter: what happened while you were away)}}");
 				}
 			});
 			return base.HandleEvent(E);

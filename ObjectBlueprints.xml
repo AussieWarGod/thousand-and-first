@@ -81,7 +81,13 @@
     <part Name="Render" DisplayName="charging post" RenderString="&#227;" ColorString="&amp;C" Tile="ThousandAndFirst/r_KingdomChargingPost.png" TileColor="&amp;c" DetailColor="C" />
     <part Name="Description" Short="A salvaged cradle of chrome and gut-wire, cranked by whoever has the shift. Set your cells on it and go eat; they will be full when you come back." />
     <part Name="UniversalCharger" ChargeRate="150" />
-    <part Name="Capacitor" MaxCharge="4000" ChargeRate="0" />
+    <!-- The crew fills this cradle (KingdomGrowth staffs it), so Charge routinely sits
+         above the engine's 1000 default MinimumChargeToExplode. Vanilla Capacitor then
+         detonates for its whole Charge on BeforeDeathRemovalEvent, which a raid can
+         trigger - destroying settlers and player-placed objects the mod is not allowed
+         to touch. Cranked civic furniture does not blow up: hold the charge, never arm it.
+         ChargeRate stays 0 because the settlement fills it, not the grid. -->
+    <part Name="Capacitor" MaxCharge="4000" ChargeRate="0" MinimumChargeToExplode="0" />
     <part Name="Container" Preposition="on" />
     <part Name="Physics" Takeable="false" Weight="800" />
     <property Name="DontWarnOnOpen" Value="true" />

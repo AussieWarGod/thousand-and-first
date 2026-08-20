@@ -78,7 +78,7 @@ namespace ThousandAndFirst
 			}
 			while (true)
 			{
-				int num = Popup.PickOption(Title: system.KingdomDisplayName, Options: new string[12] { (system.PetitionKind != KingdomRules.PetitionKind.None) ? ("{{W|Hear " + system.PetitionPetitioner + "}}") : "{{K|No one is waiting to speak}}", "Status", "The Chronicle", "As others tell it", "Standings", "The roll of settlers", "Standing policy", "Designate district", "Commission a building", "Answer a threat", "Dedicate a vessel to the stores", "Strike a trade charter" }, Hotkeys: new char[12] { 'h', 's', 'c', 'a', 'n', 'l', 'p', 'd', 'm', 't', 'v', 'r' }, AllowEscape: true);
+				int num = Popup.PickOption(Title: system.KingdomDisplayName, Options: new string[13] { (system.PetitionKind != KingdomRules.PetitionKind.None) ? ("{{W|Hear " + system.PetitionPetitioner + "}}") : "{{K|No one is waiting to speak}}", "Status", "What happened while you were away", "The Chronicle", "As others tell it", "Standings", "The roll of settlers", "Standing policy", "Designate district", "Commission a building", "Answer a threat", "Dedicate a vessel or larder", "Strike a trade charter" }, Hotkeys: new char[13] { 'h', 's', 'w', 'c', 'a', 'n', 'l', 'p', 'd', 'm', 't', 'v', 'r' }, AllowEscape: true);
 				switch (num)
 				{
 				case 0:
@@ -88,33 +88,36 @@ namespace ThousandAndFirst
 					Popup.Show(KingdomReports.Status(system));
 					break;
 				case 2:
-					Popup.Show(KingdomReports.Chronicle(system));
+					ShowHomecoming(system);
 					break;
 				case 3:
-					Popup.Show(KingdomReports.Chronicle(system, Outsider: true));
+					Popup.Show(KingdomReports.Chronicle(system));
 					break;
 				case 4:
-					Popup.Show(KingdomReports.Standings(system));
+					Popup.Show(KingdomReports.Chronicle(system, Outsider: true));
 					break;
 				case 5:
-					Popup.Show(KingdomReports.Roll(system));
+					Popup.Show(KingdomReports.Standings(system));
 					break;
 				case 6:
-					SetPolicy(system);
+					Popup.Show(KingdomReports.Roll(system));
 					break;
 				case 7:
-					DesignateDistrict(system);
+					SetPolicy(system);
 					break;
 				case 8:
-					CommissionBuilding(system);
+					DesignateDistrict(system);
 					break;
 				case 9:
-					AnswerThreat(system);
+					CommissionBuilding(system);
 					break;
 				case 10:
-					DedicateVessel(system);
+					AnswerThreat(system);
 					break;
 				case 11:
+					DedicateVessel(system);
+					break;
+				case 12:
 					StrikeTradeCharter(system);
 					break;
 				default:
@@ -124,9 +127,19 @@ namespace ThousandAndFirst
 		}
 
 		/// <summary>
-		/// Standing policy: the founder sets intent once and the settlement lives by it. Both
-		/// choices trade one good thing for another, so neither is correct.
+		/// The homecoming report, asked for rather than pushed. The settlement says it has news
+		/// on the way in (nonmodal); this is where the founder reads it, if they want it.
 		/// </summary>
+		public void ShowHomecoming(KingdomSystem System)
+		{
+			if (!System.Ledger.Any)
+			{
+				Popup.Show("Nothing has happened here since you last stood on this ground.");
+				return;
+			}
+			Popup.Show(System.Ledger.Digest(System.KingdomDisplayName, System.HomecomingDays));
+		}
+
 		/// <summary>Hears the settler who is waiting, and lets the founder decline.</summary>
 		public void HearPetition(KingdomSystem System)
 		{
@@ -144,6 +157,10 @@ namespace ThousandAndFirst
 			}
 		}
 
+		/// <summary>
+		/// Standing policy: the founder sets intent once and the settlement lives by it. Both
+		/// choices trade one good thing for another, so neither is correct.
+		/// </summary>
 		public void SetPolicy(KingdomSystem System)
 		{
 			while (true)
@@ -324,6 +341,7 @@ namespace ThousandAndFirst
 				return;
 			}
 			System.Collections.Generic.List<GameObject> vessels = new System.Collections.Generic.List<GameObject>();
+			System.Collections.Generic.List<GameObject> larders = new System.Collections.Generic.List<GameObject>();
 			foreach (Cell adjacentCell in cell.GetLocalAdjacentCells())
 			{
 				foreach (GameObject item in adjacentCell.GetObjectsWithPart("LiquidVolume"))
@@ -333,17 +351,31 @@ namespace ThousandAndFirst
 						vessels.Add(item);
 					}
 				}
+				// A larder is anything that holds things rather than liquid: a chest, a
+				// footlocker, a shelf. Water and food are accounted separately, by different
+				// people, so they carry different marks and different caps.
+				foreach (GameObject item in adjacentCell.GetObjects())
+				{
+					if (item.Inventory != null && item.GetPart<XRL.World.Parts.LiquidVolume>() == null && !larders.Contains(item))
+					{
+						larders.Add(item);
+					}
+				}
 			}
-			if (vessels.Count == 0)
+			if (vessels.Count == 0 && larders.Count == 0)
 			{
-				Popup.Show("Stand beside a vessel to dedicate it. What is dedicated feeds the settlement; what is not is yours alone, and no settler will touch it.");
+				Popup.Show("Stand beside a vessel or a store to dedicate it. What is dedicated feeds the settlement; what is not is yours alone, and no settler will touch it.");
 				return;
 			}
-			string[] options = new string[vessels.Count + 1];
-			options[0] = "{{W|Dedicate every vessel here}}";
+			string[] options = new string[vessels.Count + larders.Count + 1];
+			options[0] = "{{W|Dedicate everything here}}";
 			for (int i = 0; i < vessels.Count; i++)
 			{
 				options[i + 1] = vessels[i].ShortDisplayName + ((vessels[i].GetIntProperty("KingdomStores") == 1) ? " {{G|[dedicated]}}" : " {{K|[personal]}}");
+			}
+			for (int i = 0; i < larders.Count; i++)
+			{
+				options[vessels.Count + i + 1] = larders[i].ShortDisplayName + " {{K|(larder)}}" + ((larders[i].GetIntProperty("KingdomLarder") == 1) ? " {{G|[dedicated]}}" : " {{K|[personal]}}");
 			}
 			int num = Popup.PickOption(Title: "Dedicate or release", Options: options, AllowEscape: true);
 			if (num == 0)
@@ -363,10 +395,24 @@ namespace ThousandAndFirst
 						room--;
 					}
 				}
-				Popup.Show((dedicated > 0) ? (dedicated + " vessels are dedicated to the stores of " + System.KingdomDisplayName + ".") : "Everything here is already dedicated, or the water-keepers can account for no more.");
+				int larderRoom = KingdomRules.MaxDedicatedLarders - KingdomGrowth.CountDedicatedLarders(zone);
+				foreach (GameObject candidate in larders)
+				{
+					if (larderRoom <= 0)
+					{
+						break;
+					}
+					if (candidate.GetIntProperty("KingdomLarder") != 1)
+					{
+						candidate.SetIntProperty("KingdomLarder", 1);
+						dedicated++;
+						larderRoom--;
+					}
+				}
+				Popup.Show((dedicated > 0) ? (dedicated + " are dedicated to the stores of " + System.KingdomDisplayName + ".") : "Everything here is already dedicated, or the keepers can account for no more.");
 				return;
 			}
-			if (num > 0)
+			if (num > 0 && num <= vessels.Count)
 			{
 				GameObject vessel = vessels[num - 1];
 				if (vessel.GetIntProperty("KingdomStores") != 1 && KingdomGrowth.CountDedicatedVessels(zone) >= KingdomRules.MaxDedicatedVessels)
@@ -383,6 +429,28 @@ namespace ThousandAndFirst
 				{
 					vessel.SetIntProperty("KingdomStores", 1);
 					Popup.Show("The " + vessel.ShortDisplayName + " is dedicated to the stores of " + System.KingdomDisplayName + ".");
+				}
+				return;
+			}
+			if (num > vessels.Count)
+			{
+				GameObject larder = larders[num - vessels.Count - 1];
+				if (larder.GetIntProperty("KingdomLarder") != 1 && KingdomGrowth.CountDedicatedLarders(zone) >= KingdomRules.MaxDedicatedLarders)
+				{
+					Popup.Show("The settlement keeps as many larders as anyone can keep an honest account of.");
+					return;
+				}
+				if (larder.GetIntProperty("KingdomLarder") == 1)
+				{
+					larder.SetIntProperty("KingdomLarder", 0);
+					Popup.Show("The " + larder.ShortDisplayName + " is yours alone again. Nothing in it will be counted.");
+				}
+				else
+				{
+					// Dedication is a mark, not a transfer: what is inside stays where it is and
+					// stays the founder's. The settlement only counts it.
+					larder.SetIntProperty("KingdomLarder", 1);
+					Popup.Show("The " + larder.ShortDisplayName + " is a larder of " + System.KingdomDisplayName + " now. What is in it is counted, and still yours.");
 				}
 			}
 		}

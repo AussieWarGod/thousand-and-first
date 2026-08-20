@@ -1,0 +1,173 @@
+#!/usr/bin/env bash
+# Canonical runtime staging for The Thousand and First.
+#
+# One source of truth for "what the game loads". Build gate, deploy, and Workshop
+# packaging all consume this set, so the gate stops asking a different question
+# from the one that matters (COORDINATION.md, open question answered 2026-08-20).
+#
+#   Tools/stage.sh manifest            print sorted relative-path + sha256 manifest
+#   Tools/stage.sh list                print sorted relative paths only
+#   Tools/stage.sh copy <dir>          materialise the runtime set into <dir>
+#   Tools/stage.sh diff                inventory diff: staged set vs the live mod folder
+#   Tools/stage.sh deploy              DRY RUN: what deploy would add/update/delete
+#   Tools/stage.sh deploy --apply      back up, mirror into the live folder, verify, receipt
+#
+# Nothing is written to the live folder without --apply, and --apply always
+# takes a full backup of the existing live folder first.
+
+set -euo pipefail
+
+REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+LIVE_DEFAULT="/mnt/c/Users/Reegan/AppData/LocalLow/Freehold Games/CavesOfQud/Mods/ThousandAndFirst"
+LIVE="${TAF_LIVE_MOD:-$LIVE_DEFAULT}"
+
+# The runtime set, stated positively. A file ships only if it is matched here.
+# Runtime code directories: every .cs beneath them is compiled by the game.
+CODE_DIRS=(Core Simulation Chronicle Founding Growth Trade Debug Quests Raids)
+# Data the game reads at load.
+ROOT_DATA=(manifest.json Books.xml KingdomBuildings.xml KingdomDeals.xml
+           ObjectBlueprints.xml Options.xml PopulationTables.xml)
+# Metadata that is harmless in a mod folder and wanted on the Workshop.
+ROOT_META=(README.md LICENSE CHANGELOG.md)
+# Asset trees copied whole.
+ASSET_DIRS=(Textures)
+
+# Never staged, for the record: .git _notes DevTests Art docs *.py *.ps1 *.rsp *.dll obj bin out
+
+stage_list() {
+	cd "$REPO"
+	for f in "${ROOT_DATA[@]}" "${ROOT_META[@]}"; do
+		[ -f "$f" ] && printf '%s\n' "$f"
+	done
+	for d in "${CODE_DIRS[@]}"; do
+		[ -d "$d" ] && find "$d" -type f -name '*.cs' -print
+	done
+	for d in "${ASSET_DIRS[@]}"; do
+		[ -d "$d" ] && find "$d" -type f -print
+	done
+	# Quests ships XML alongside its code.
+	[ -d Quests ] && find Quests -type f -name '*.xml' -print
+}
+
+sorted_list() { stage_list | sed 's|^\./||' | LC_ALL=C sort; }
+
+cmd_list() { sorted_list; }
+
+cmd_manifest() {
+	cd "$REPO"
+	sorted_list | while IFS= read -r f; do
+		printf '%s  %s\n' "$(sha256sum "$f" | cut -d' ' -f1)" "$f"
+	done
+}
+
+cmd_copy() {
+	local dest="$1"
+	[ -n "$dest" ] || { echo "copy needs a destination" >&2; exit 2; }
+	mkdir -p "$dest"
+	cd "$REPO"
+	sorted_list | while IFS= read -r f; do
+		mkdir -p "$dest/$(dirname "$f")"
+		cp -p "$f" "$dest/$f"
+	done
+}
+
+# Every relative path currently in the live folder, excluding the dev worktree
+# metadata that a git-based sync leaves behind.
+live_list() {
+	[ -d "$LIVE" ] || return 0
+	cd "$LIVE"
+	find . -type f -not -path './.git/*' -print | sed 's|^\./||' | LC_ALL=C sort
+}
+
+cmd_diff() {
+	local tmp; tmp="$(mktemp -d)"
+	trap 'rm -rf "$tmp"' RETURN
+	sorted_list > "$tmp/staged"
+	live_list > "$tmp/live"
+
+	echo "=== ADD (staged, absent live) ==="
+	comm -23 "$tmp/staged" "$tmp/live"
+	echo "=== UPDATE (present both, content differs) ==="
+	comm -12 "$tmp/staged" "$tmp/live" | while IFS= read -r f; do
+		cmp -s "$REPO/$f" "$LIVE/$f" || printf '%s\n' "$f"
+	done
+	echo "=== DELETE (live, not in runtime set) ==="
+	comm -13 "$tmp/staged" "$tmp/live"
+}
+
+cmd_deploy() {
+	local apply="${1:-}"
+	[ -d "$LIVE" ] || { echo "live mod folder not found: $LIVE" >&2; exit 2; }
+
+	echo "repo:   $REPO ($(git -C "$REPO" rev-parse --short HEAD), $(git -C "$REPO" status --porcelain | wc -l) dirty)"
+	echo "live:   $LIVE"
+	echo "staged: $(sorted_list | wc -l) files"
+	echo
+	cmd_diff
+
+	if [ "$apply" != "--apply" ]; then
+		echo
+		echo "DRY RUN. Nothing written. Re-run with --apply to back up and mirror."
+		return 0
+	fi
+
+	# Target identity: refuse to touch anything that is not recognisably this mod.
+	grep -q '"id": *"r_ThousandAndFirst"' "$LIVE/manifest.json" 2>/dev/null || {
+		echo "refusing: $LIVE/manifest.json does not declare r_ThousandAndFirst" >&2; exit 3; }
+
+	local stamp backup
+	stamp="$(date +%Y%m%d-%H%M%S)"
+	backup="${LIVE}.backup-${stamp}"
+	echo
+	echo "backup: $backup"
+	cp -a "$LIVE" "$backup"
+
+	# Mirror: copy the runtime set, then remove live files outside it.
+	cd "$REPO"
+	sorted_list | while IFS= read -r f; do
+		mkdir -p "$LIVE/$(dirname "$f")"
+		cp -p "$f" "$LIVE/$f"
+	done
+	local tmp; tmp="$(mktemp -d)"
+	sorted_list > "$tmp/staged"
+	live_list > "$tmp/live"
+	comm -13 "$tmp/staged" "$tmp/live" | while IFS= read -r f; do
+		rm -f "$LIVE/$f"
+	done
+	find "$LIVE" -mindepth 1 -type d -empty -not -path "$LIVE/.git/*" -delete 2>/dev/null || true
+	rm -rf "$tmp"
+
+	# Verify: the live tree must now equal the staged set, byte for byte.
+	local fail=0
+	while IFS= read -r f; do
+		cmp -s "$REPO/$f" "$LIVE/$f" || { echo "MISMATCH $f" >&2; fail=1; }
+	done < <(sorted_list)
+	local extra; extra="$(live_list | comm -13 <(sorted_list) -)"
+	[ -z "$extra" ] || { echo "EXTRA FILES REMAIN:" >&2; echo "$extra" >&2; fail=1; }
+	[ "$fail" -eq 0 ] || { echo "DEPLOY VERIFY FAILED — live folder restored from $backup" >&2
+		rm -rf "$LIVE"; cp -a "$backup" "$LIVE"; exit 4; }
+
+	# Receipt: what was deployed, from what, and the hash of every file.
+	{
+		echo "# Deploy receipt"
+		echo "date:   $(date -Iseconds)"
+		echo "repo:   $(git -C "$REPO" rev-parse HEAD)"
+		echo "dirty:  $(git -C "$REPO" status --porcelain | wc -l) tracked changes"
+		echo "live:   $LIVE"
+		echo "backup: $backup"
+		echo "files:  $(sorted_list | wc -l)"
+		echo
+		cmd_manifest
+	} > "$REPO/Tools/last-deploy-receipt.txt"
+
+	echo "DEPLOY OK — $(sorted_list | wc -l) files, receipt at Tools/last-deploy-receipt.txt"
+}
+
+case "${1:-}" in
+	manifest) cmd_manifest ;;
+	list)     cmd_list ;;
+	copy)     cmd_copy "${2:-}" ;;
+	diff)     cmd_diff ;;
+	deploy)   cmd_deploy "${2:-}" ;;
+	*) sed -n '2,20p' "${BASH_SOURCE[0]}"; exit 2 ;;
+esac

@@ -66,7 +66,7 @@ namespace ThousandAndFirst
 			KingdomLiquids.Drain(liquidVolume, KingdomRules.FoundingCostDrams);
 			KingdomFounding.Found(name);
 			KingdomFounding.ClaimZone(Actor.CurrentZone);
-			Popup.Show("You pour the first water, and those gathered drink.\n\n{{C|" + name + "}} is founded on this ground. Your thirst is theirs; their water is yours.\n\nLive and drink.");
+			Popup.Show("You pour the first water, and those gathered drink.\n\n{{C|" + name + "}} is founded on " + KingdomFounding.StyleGroundClause(system.Style) + ". Your thirst is theirs; their water is yours.\n\nLive and drink.");
 		}
 	}
 }

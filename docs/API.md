@@ -49,6 +49,7 @@ neutral values.
 | `static Faction Found(string name)` | Founds the kingdom (idempotent — returns the existing faction if already founded). |
 | `static bool ClaimZone(Zone z, bool force = false)` | Claims a zone; requires adjacency to existing ground unless forced. |
 | `static bool EnrollCitizen(GameObject citizen)` | Makes a creature a citizen. Enrolled creatures are protected from kingdom-driven removal. |
+| `static string StyleGroundClause(string style)` | Lower-case founder-facing clause naming what the ground promises for a city style ("common ground", "ground green enough to root a verdant city"). Presentation only — `KingdomRules.StyleForSite` owns which style a site resolves to. |
 
 ## `KingdomChronicle` — history
 
@@ -74,6 +75,13 @@ including your own tests. Notable members: `SpilloverDelta`, `UpkeepForElapsed`,
 `StageFor`, `FetchableDrams`, `ResolveThirst`, `RaidSize`, `StyleAllows`, `DistrictName`,
 `ZonesAdjacent`, `ComposeOutsider`, `ToThirdPerson`, plus the `BuildEntry` / `DealEntry`
 records and their `TryParse*` validators.
+
+District effects are `District*(string district)` for one district and `Districts*(IEnumerable<string> districts)`
+for a whole kingdom's claimed ground: `DefenceBonus`, `UpkeepPercent`, `ShopTierBonus`,
+`BuildPercent`, `PetitionIntervalPercent`, `DriftPercent`. City style is `Styles`,
+`IsKnownStyle`, and `StyleForSite(terrainBlueprint, regionName, zLevel)`, which is total —
+an unmapped site resolves to `common` rather than failing. `ProvokableFactions` lists every
+faction `RaiderTableFor` answers for.
 
 ## Object properties (stable contract)
 

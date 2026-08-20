@@ -3,7 +3,6 @@ using XRL;
 using XRL.Messages;
 using XRL.Rules;
 using XRL.World;
-using XRL.World.Parts;
 
 namespace ThousandAndFirst
 {
@@ -84,29 +83,6 @@ namespace ThousandAndFirst
 				System.DealNextTicks[i] = timeTicks + deal.IntervalTicks;
 				System.RecordDeed("the caravans that come to " + System.KingdomDisplayName);
 			}
-		}
-
-		public static int DeliverIncome(Zone Z, int Drams)
-		{
-			int remaining = Drams;
-			foreach (GameObject item in Z.GetObjects())
-			{
-				if (remaining <= 0)
-				{
-					break;
-				}
-				LiquidVolume part = item.GetPart<LiquidVolume>();
-				if (part != null && part.MaxVolume > 0 && item.GetIntProperty("KingdomStores") == 1 && part.Volume < part.MaxVolume && KingdomLiquids.CanReceiveFreshWater(part))
-				{
-					int drams = part.MaxVolume - part.Volume;
-					if (drams > remaining)
-					{
-						drams = remaining;
-					}
-					remaining -= KingdomLiquids.Fill(part, "water", drams);
-				}
-			}
-			return Drams - remaining;
 		}
 
 		public static void SpawnCaravan(Zone Z, string Blueprint)
