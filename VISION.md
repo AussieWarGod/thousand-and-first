@@ -113,7 +113,10 @@ you can quarry and what you know how to build. Power — mills, hydraulics, salv
 a molten-salt store, because the salt is right there. Machinery hauled home from ruins, and the
 work of certifying it fit to join your grid. Cities that outlive the founder. The haulage
 ladder above — vessels, carts, pipes — so a grown city can carry its own water without
-conjuring a dram of it; wells kept scarce and late, because in Qud water is money.
+conjuring a dram of it. There are no wells: new water comes only from great technology
+recovered and made trustworthy, from patient collection, from trade, or — early, slowly,
+effortfully — from a salt-pan that gives back a little fresh water and the salt it was
+hiding, because in Qud water is money and nothing mints money quietly.
 
 ## For people who want to build on it
 
