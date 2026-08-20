@@ -6,5 +6,8 @@
   <option ID="r_TAF_OptionTrade" DisplayText="The Thousand and First: trade charters bring caravans to your settlements" Category="Mods" Type="Checkbox" Default="Yes" />
   <option ID="r_TAF_OptionChronicle" DisplayText="The Thousand and First: record settlement history as journal accomplishments" Category="Mods" Type="Checkbox" Default="Yes" />
   <option ID="r_TAF_OptionPetitions" DisplayText="The Thousand and First: settlers petition you about the settlement's needs" Category="Mods" Type="Checkbox" Default="Yes" />
+  <option ID="r_TAF_OptionPower" DisplayText="The Thousand and First: settlements make and store power at the works you commission" Category="Mods" Type="Checkbox" Default="Yes" />
+  <option ID="r_TAF_OptionMemory" DisplayText="The Thousand and First: the settlement remembers its dead and names an elder among its settlers" Category="Mods" Type="Checkbox" Default="Yes" />
   <option ID="r_TAF_OptionDevLog" DisplayText="The Thousand and First: write diagnostic lines to Player.log (dev builds)" Category="Mods" Type="Checkbox" Default="Yes" />
+  <option ID="r_TAF_OptionLocus" DisplayText="The Thousand and First: the gathering bench gets a keeper, and travelers may pass through" Category="Mods" Type="Checkbox" Default="Yes" />
 </options>

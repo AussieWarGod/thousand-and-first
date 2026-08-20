@@ -52,11 +52,11 @@ namespace ThousandAndFirst
 			KingdomRules.PantryTier tier = survey.FoodAbundance;
 			int spent = survey.ConsumeFood(KingdomRules.MealServingsSpent(survey.FoodStored));
 			string sizeName = KingdomRules.MealSizeName(tier);
-			string settler = (System.RosterNames.Count > 0) ? System.RosterNames.GetRandomElement() : "a settler";
-			KingdomChronicle.Record(System, sizeName + " was shared at " + System.KingdomDisplayName + ", and " + settler + " spoke well of it");
+			KingdomVoiceRules.Speaker speaker = KingdomVoices.Draw(System, VoiceOccasion.MealShared);
+			KingdomChronicle.Record(System, sizeName + " was shared at " + System.KingdomDisplayName + ", and " + speaker.Attribution + " spoke well of it");
 			System.RecordDeed(sizeName + " shared at " + System.KingdomDisplayName);
-			MessageQueue.AddPlayerMessage("{{G|" + XRL.Language.Grammar.InitCap(sizeName) + " is shared, and the settlement eats together.}} " + settler + ": \"" + KingdomRules.MealSpeech(tier) + "\"");
-			KingdomLog.Log("shared meal: tier=" + tier + " spent=" + spent + " settler=" + settler);
+			MessageQueue.AddPlayerMessage(KingdomVoices.Say(speaker, VoiceOccasion.MealShared, "{{G|" + XRL.Language.Grammar.InitCap(sizeName) + " is shared, and the settlement eats together.}}", KingdomRules.MealSpeech(tier)));
+			KingdomLog.Log("shared meal: tier=" + tier + " spent=" + spent + " settler=" + speaker.Attribution);
 			return true;
 		}
 	}

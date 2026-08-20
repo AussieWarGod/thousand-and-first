@@ -129,6 +129,51 @@ namespace ThousandAndFirst
 
 		public int Dead;
 
+		/// <summary>
+		/// Every settler this settlement has lost, oldest first. Permanent: unlike
+		/// <see cref="RosterNames"/> this roll is never trimmed, because a memorial does not stop
+		/// being true once a cairn is finally raised for it. Written only by
+		/// <c>KingdomOffices.RecordDeath</c>, from the engine's own death event &mdash; never from
+		/// a census, which could not tell a dead settler from one who simply wandered to another
+		/// claimed zone.
+		/// </summary>
+		public List<string> DeadNames = new List<string>();
+
+		/// <summary>Parallel to <see cref="DeadNames"/>.</summary>
+		public List<string> DeadOrigins = new List<string>();
+
+		/// <summary>Parallel to <see cref="DeadNames"/>: the day each one arrived, carried over
+		/// from <see cref="RosterArrived"/> at the moment of death.</summary>
+		public List<string> DeadArrived = new List<string>();
+
+		/// <summary>Parallel to <see cref="DeadNames"/>: how each death is told, from
+		/// <c>KingdomOfficeRules.CauseClause</c> at the moment it happened.</summary>
+		public List<string> DeadCauses = new List<string>();
+
+		/// <summary>
+		/// How many of <see cref="DeadNames"/>, oldest-first, already have a cairn cut with their
+		/// name. Advances by one each time <c>KingdomOffices</c> links a newly built, unlinked
+		/// cairn to the next unhonoured death; never decreases.
+		/// </summary>
+		public int MemorialsRaised;
+
+		/// <summary>
+		/// The settler currently named for the settlement's one office (see
+		/// <c>KingdomOfficeRules</c>), or null when nobody is. The office itself is never chosen
+		/// and stored here &mdash; it is always whoever heads <see cref="RosterNames"/>, the
+		/// settler who has served longest. This field exists only so a change in who that is can
+		/// be noticed and announced once, rather than every time the settlement's ground is
+		/// walked onto.
+		/// </summary>
+		public string OfficeHolderName;
+
+		/// <summary>
+		/// Free space in the seated city's stores as of this pass. Carried with the settlement,
+		/// so the city the founder is not standing in still knows what it had room for when they
+		/// were last there. See <see cref="KingdomSettlement.LastKnownStorageSpace"/>.
+		/// </summary>
+		public int LastKnownStorageSpace;
+
 		public KingdomLedger Ledger = new KingdomLedger();
 
 		/// <summary>
@@ -151,6 +196,15 @@ namespace ThousandAndFirst
 		public long RaidDueTick;
 
 		public long LastRaidTick;
+
+		/// <summary>Tick the settlement may draw its next guest. See <see cref="ThousandAndFirst.KingdomLocus"/>.</summary>
+		public long NextGuestTick;
+
+		/// <summary>Tick the settlement's current guest gives up and leaves if never offered water. Zero when no guest is tracked.</summary>
+		public long GuestDepartTick;
+
+		/// <summary>True once this settlement has offered water to a guest at least once.</summary>
+		public bool FirstGuestGreeted;
 
 		public List<string> ClaimedZones = new List<string>();
 
@@ -731,6 +785,8 @@ namespace ThousandAndFirst
 				return base.HandleEvent(E);
 			}
 			Ledger.Reset();
+			// What this city has room for, remembered for as long as the founder is away from it.
+			LastKnownStorageSpace = survey.StorageSpace;
 			// Trade runs BEFORE growth, and the order is load-bearing. Both draw on one shared
 			// survey, and growth is where upkeep is taken and the thirst ladder resolves. Water
 			// that arrived this pass - a caravan under charter, a manifest sent from the realm's
@@ -748,6 +804,14 @@ namespace ThousandAndFirst
 			Guard("raids", delegate
 			{
 				KingdomRaids.OnZoneActivated(this, E.Zone, survey);
+			});
+			Guard("offices", delegate
+			{
+				KingdomOffices.OnZoneActivated(this, E.Zone);
+			});
+			Guard("locus", delegate
+			{
+				KingdomLocus.OnZoneActivated(this, E.Zone, survey);
 			});
 			Guard("digest", delegate
 			{
@@ -972,6 +1036,22 @@ namespace ThousandAndFirst
 			if (RosterArrived == null)
 			{
 				RosterArrived = new List<string>();
+			}
+			if (DeadNames == null)
+			{
+				DeadNames = new List<string>();
+			}
+			if (DeadOrigins == null)
+			{
+				DeadOrigins = new List<string>();
+			}
+			if (DeadArrived == null)
+			{
+				DeadArrived = new List<string>();
+			}
+			if (DeadCauses == null)
+			{
+				DeadCauses = new List<string>();
 			}
 			if (Ledger == null)
 			{

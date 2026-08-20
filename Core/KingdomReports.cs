@@ -25,6 +25,16 @@ namespace ThousandAndFirst
 				+ "  Larder: " + pantryName + " (" + survey.FoodStored + ") — " + pantryHint;
 		}
 
+		/// <summary>
+		/// The settlement's power on its own line, or nothing at all when this ground has neither
+		/// a work nor a store. A founder who has never commissioned a mill is never told about one.
+		/// </summary>
+		private static string PowerLine(KingdomSystem System, Zone Here)
+		{
+			string line = KingdomPower.StatusLine(System, Here);
+			return string.IsNullOrEmpty(line) ? "" : ("\n" + line);
+		}
+
 		public static string Status(KingdomSystem System)
 		{
 			Zone currentZone = The.Player?.CurrentZone;
@@ -57,6 +67,7 @@ namespace ThousandAndFirst
 				// Defence and the pantry are surveyed live: both are facts about the ground the
 				// founder is standing on, and neither is carried on the system.
 				.Append(currentClaimed ? DefenceAndPantryLine(System, currentZone) : "")
+				.Append(currentClaimed ? PowerLine(System, currentZone) : "")
 				.Append("\nUpkeep: ")
 				.Append(KingdomRules.PolicyUpkeep(KingdomRules.UpkeepDrams(System.Population), System.Stores))
 				.Append(" drams per interval  Thirst streak: ")

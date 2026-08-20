@@ -148,9 +148,42 @@ namespace ThousandAndFirst
 
 		public int Dead;
 
+		/// <summary>See <see cref="KingdomSystem.DeadNames"/>.</summary>
+		public List<string> DeadNames = new List<string>();
+
+		/// <summary>See <see cref="KingdomSystem.DeadOrigins"/>.</summary>
+		public List<string> DeadOrigins = new List<string>();
+
+		/// <summary>See <see cref="KingdomSystem.DeadArrived"/>.</summary>
+		public List<string> DeadArrived = new List<string>();
+
+		/// <summary>See <see cref="KingdomSystem.DeadCauses"/>.</summary>
+		public List<string> DeadCauses = new List<string>();
+
+		/// <summary>See <see cref="KingdomSystem.MemorialsRaised"/>.</summary>
+		public int MemorialsRaised;
+
+		/// <summary>See <see cref="KingdomSystem.OfficeHolderName"/>.</summary>
+		public string OfficeHolderName;
+
+		/// <summary>
+		/// Free space in this city's dedicated stores as of the last attended pass. Knowledge,
+		/// not truth: it is exactly as stale as the founder's last visit, which is the whole
+		/// point &mdash; a manifest is loaded against what the realm BELIEVES the other city can
+		/// take. When the belief turns out wrong, water arrives with nowhere to go, and that is a
+		/// story rather than a bug.
+		/// </summary>
+		public int LastKnownStorageSpace;
+
 		public KingdomLedger Ledger = new KingdomLedger();
 
 		public long NextArrivalTick;
+
+		public long NextGuestTick;
+
+		public long GuestDepartTick;
+
+		public bool FirstGuestGreeted;
 
 		public List<string> ClaimedZones = new List<string>();
 
@@ -191,6 +224,22 @@ namespace ThousandAndFirst
 			if (RosterArrived == null)
 			{
 				RosterArrived = new List<string>();
+			}
+			if (DeadNames == null)
+			{
+				DeadNames = new List<string>();
+			}
+			if (DeadOrigins == null)
+			{
+				DeadOrigins = new List<string>();
+			}
+			if (DeadArrived == null)
+			{
+				DeadArrived = new List<string>();
+			}
+			if (DeadCauses == null)
+			{
+				DeadCauses = new List<string>();
 			}
 			if (OriginCounts == null)
 			{

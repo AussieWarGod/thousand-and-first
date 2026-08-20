@@ -89,6 +89,10 @@ namespace ThousandAndFirst
 			// spends what the day's upkeep and arrivals left in the stores, so it can never be
 			// the reason the thirst ladder fires.
 			KingdomPlot.OnSettlementPass(System, Z, survey);
+			// After the plot, and last of all. Power spends no water and takes no hands the
+			// staffing pass has not already assigned, so it can only ever read a settlement that
+			// has finished feeding and watering itself.
+			KingdomPower.OnSettlementPass(System, Z, survey);
 			if (KingdomLog.Enabled) KingdomLog.Log("growth pass done: pop=" + System.Population + " stage=" + System.Stage + " arrivals=" + arrivals + " dry=" + System.DryStreak + " next=" + System.NextArrivalTick);
 		}
 
@@ -150,7 +154,7 @@ namespace ThousandAndFirst
 			{
 				System.Withered = false;
 				KingdomChronicle.Record(System, "the water returned, and " + System.KingdomDisplayName + " drank deep and recovered");
-				System.Ledger.Note("{{G|The water returned, and the settlement recovered.}}");
+				System.Ledger.Note(KingdomVoices.Say(System, VoiceOccasion.ThirstBroken, "{{G|The water returned, and the settlement recovered.}}"));
 			}
 		}
 
@@ -340,7 +344,7 @@ namespace ThousandAndFirst
 			System.Population--;
 			KingdomChronicle.Record(System, XRL.Language.Grammar.A(name) + " left " + System.KingdomDisplayName + " for wetter country, the cisterns having run dry");
 			System.Ledger.Departures++;
-			System.Ledger.Note("{{R|" + XRL.Language.Grammar.A(name, Capitalize: true) + " left for wetter country. \"There is no water here,\" " + (leaver.IsPlural ? "they said" : "the settler said") + ".}}");
+			System.Ledger.Note(KingdomVoices.Say(System, VoiceOccasion.CitizenLost, "{{R|" + XRL.Language.Grammar.A(name, Capitalize: true) + " left " + System.KingdomDisplayName + " for wetter country.}}"));
 			if (KingdomLog.Enabled) KingdomLog.Log("emigrate: pop now " + System.Population + " origin=" + (origin ?? "-"));
 			return true;
 		}
@@ -470,7 +474,7 @@ namespace ThousandAndFirst
 				string text = System.KingdomDisplayName + " has grown into a " + stage.ToString().ToLower();
 				System.RecordDeed("the growth of " + System.KingdomDisplayName + "");
 				KingdomChronicle.Record(System, text, Accomplishment: true);
-				Popup.Show("{{C|" + text + ".}}");
+				Popup.Show(KingdomVoices.Say(System, VoiceOccasion.StageUp, "{{C|" + text + ".}}"));
 			}
 			if (System.HasShopkeeper)
 			{

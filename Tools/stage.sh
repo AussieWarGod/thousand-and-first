@@ -21,32 +21,38 @@ REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 LIVE_DEFAULT="/mnt/c/Users/Reegan/AppData/LocalLow/Freehold Games/CavesOfQud/Mods/ThousandAndFirst"
 LIVE="${TAF_LIVE_MOD:-$LIVE_DEFAULT}"
 
-# The runtime set, stated positively. A file ships only if it is matched here.
-# Runtime code directories: every .cs beneath them is compiled by the game.
-CODE_DIRS=(Core Simulation Chronicle Founding Growth Trade Debug Quests Raids)
-# Data the game reads at load.
-ROOT_DATA=(manifest.json Books.xml KingdomBuildings.xml KingdomDeals.xml
-           ObjectBlueprints.xml Options.xml PopulationTables.xml)
+# The runtime set, stated as an EXCLUSION rather than a list of blessed directories.
+#
+# It used to name the code directories positively, and Experience/ was missing from that
+# list for a whole wave: three finished features compiled in the gate and then silently
+# never shipped to the game. A positive list fails in the worst direction - new work
+# disappears without a word. An exclusion list fails safe: something unwanted ships and is
+# obvious, instead of something wanted vanishing and being invisible.
+#
+# Everything is staged EXCEPT these, which are development-only and must never reach the
+# live folder or the Workshop.
+EXCLUDE_DIRS=(.git _notes DevTests Art docs Tools .ruff_cache __pycache__ .agent-handoff)
 # Metadata that is harmless in a mod folder and wanted on the Workshop.
-ROOT_META=(README.md LICENSE CHANGELOG.md)
+ROOT_META=(README.md LICENSE CHANGELOG.md manifest.json)
 # Asset trees copied whole.
 ASSET_DIRS=(Textures)
 
-# Never staged, for the record: .git _notes DevTests Art docs *.py *.ps1 *.rsp *.dll obj bin out
-
 stage_list() {
 	cd "$REPO"
-	for f in "${ROOT_DATA[@]}" "${ROOT_META[@]}"; do
+	for f in "${ROOT_META[@]}"; do
 		[ -f "$f" ] && printf '%s\n' "$f"
 	done
-	for d in "${CODE_DIRS[@]}"; do
-		[ -d "$d" ] && find "$d" -type f -name '*.cs' -print
+	# Every .cs and .xml the game could load, wherever it lives, minus the excluded trees.
+	local args=( . )
+	local d
+	for d in "${EXCLUDE_DIRS[@]}"; do
+		args+=( -path "./$d" -prune -o )
 	done
+	args+=( -type f '(' -name '*.cs' -o -name '*.xml' ')' -print )
+	find "${args[@]}"
 	for d in "${ASSET_DIRS[@]}"; do
 		[ -d "$d" ] && find "$d" -type f -print
 	done
-	# Quests ships XML alongside its code.
-	[ -d Quests ] && find Quests -type f -name '*.xml' -print
 }
 
 sorted_list() { stage_list | sed 's|^\./||' | LC_ALL=C sort; }

@@ -165,7 +165,7 @@ namespace ThousandAndFirst
 				System.RaidFactionName = null;
 				KingdomChronicle.Record(System, "raiders of " + displayName + " came against " + System.KingdomDisplayName + " and were turned back at the wall", Accomplishment: true);
 				System.RecordDeed("the walls of " + System.KingdomDisplayName + ", which have turned raiders back");
-				MessageQueue.AddPlayerMessage("{{G|Raiders of " + displayName + " come against " + System.KingdomDisplayName + " and break on the walls. The watch holds.}}");
+				MessageQueue.AddPlayerMessage(KingdomVoices.Say(System, VoiceOccasion.RaidRepelled, "{{G|Raiders of " + displayName + " come against " + System.KingdomDisplayName + " and break on the walls. The watch holds.}}"));
 				KingdomLog.Log("raid: repelled at the wall faction=" + displayName + " defence=" + defence + " size=" + size);
 				return;
 			}

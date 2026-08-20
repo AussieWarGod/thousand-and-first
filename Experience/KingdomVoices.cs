@@ -1,3 +1,4 @@
+using System;
 using XRL;
 
 namespace ThousandAndFirst
@@ -42,7 +43,7 @@ namespace ThousandAndFirst
 					Occasion,
 					CurrentOrdinal());
 			}
-			catch (System.Exception error)
+			catch (Exception error)
 			{
 				MetricsManager.LogError("ThousandAndFirst: choosing a voice for " + Occasion, error);
 				return KingdomVoiceRules.Speaker.None;

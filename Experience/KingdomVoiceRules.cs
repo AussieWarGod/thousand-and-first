@@ -140,6 +140,9 @@ namespace ThousandAndFirst
 			{
 				return Speaker.None;
 			}
+			// Zero is the standing answer, not a placeholder: if the key or the draw is refused
+			// the roll's eldest speaks, which is deterministic without the kernel and is still a
+			// real person on the roll.
 			int drawn = 0;
 			SemanticEventKey key;
 			KernelFaultCode fault;

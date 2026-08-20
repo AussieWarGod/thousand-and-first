@@ -36,7 +36,7 @@ Ship a `KingdomBuildings.xml` in your mod root:
   `eater` (founding paths will select them — devotion cities, the fungal quarter, Eater
   restoration).
 - `Category` — grouping for UI and future district logic: `storage`, `housing`, `civic`,
-  `faith`, `craft`, `defense`, `knowledge` (free-form; default `civic`).
+  `faith`, `craft`, `power`, `defense`, `knowledge` (free-form; default `civic`).
 - `MinStage` — earliest growth stage the design appears at: `Camp` (default), `Steading`,
   `Village`, `Town`, `City`.
 
@@ -54,6 +54,26 @@ for itself. Food inside a dedicated larder is counted, and may be spent by a sha
 founder calls; food anywhere else — including the player's own pack and any container they simply
 left lying about — is never read and never spent. Dedication is a mark, not a transfer: nothing is
 moved when a container joins the pantry.
+
+## Power
+
+The settlement's power is civic labour, not a wiring puzzle, and it extends by parts rather than
+by a registry. Two parts are the whole contract:
+
+- `<part Name="r_KingdomPowerWork" Source="Hands|Water|Wind" />` makes an object one of the
+  settlement's power works. `Hands` is worth whatever fraction of its `Staff` the settlement
+  crewed it with; `Water` also needs open water in or beside its cell (400 drams to turn at all,
+  4000 for full output) and never counts a dedicated cistern; `Wind` reads the zone's own wind.
+  An unknown `Source` disables the work rather than defaulting it.
+- `<part Name="r_KingdomPowerStore" />` on any object that also carries a vanilla `Capacitor`
+  makes it a store the settlement pours into and draws back from. Its `MaxCharge` is the capacity;
+  set `ChargeRate="0"` and `MinimumChargeToExplode="0"` unless you intend otherwise.
+
+What the works make is ordinary vanilla charge, delivered through vanilla's `ChargeAvailableEvent`.
+Anything the settlement built (`KingdomBuilt=1`) or that the founder dedicated (`KingdomGrid=1`)
+and that accepts charge is filled from it — a charging post, a kiln, your own machine. Nothing the
+player merely left standing about is ever charged or read. The settlement does **not** use
+vanilla's `IPowerTransmission` grid, so you do not need to run conduit to anything.
 
 ## Conventions
 

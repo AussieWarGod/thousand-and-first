@@ -130,7 +130,10 @@ namespace ThousandAndFirst
 			System.Ledger.Delivered += delivered;
 			if (spilled > 0)
 			{
-				System.Ledger.Note("{{y|" + spilled + " drams would not fit the casks and were poured out here. The settlement will fetch them back as it makes room.}}");
+				System.Ledger.Note("{{y|The carters came expecting room and found none: " + spilled
+					+ " drams stand in a pool on the ground until the settlement can make space for them. Nobody is pleased about it.}}");
+				KingdomChronicle.Record(System, "water sent from " + manifest.OriginName + " reached " + System.SeatName
+					+ " to find the casks already full, and " + spilled + " drams were set down in the open");
 			}
 			System.Ledger.Note(KingdomManifestRules.ManifestArrivalNote(manifest.OriginName, delivered, manifest.Drams));
 			KingdomChronicle.Record(System, KingdomManifestRules.ManifestArrivalDeed(manifest.OriginName, System.SeatName, delivered, manifest.Drams));

@@ -160,6 +160,70 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains(delivered.ToString(), note);
 			Assert.AreEqual(expectOverflowNote, note.Contains("overflowed"));
 		}
+
+		// --- Loading against belief, not truth --------------------------------------------
+
+		[TestCase(60, 200, 60)]
+		[TestCase(60, 20, 20)]
+		[TestCase(60, 0, 0)]
+		[TestCase(60, -5, 0)]
+		[TestCase(0, 100, 0)]
+		public void CapToDestination_NeverLoadsMoreThanTheOtherCityWasKnownToHold(int amount, int space, int expected)
+		{
+			Assert.AreEqual(expected, KingdomManifestRules.CapToDestination(amount, space));
+		}
+
+		[Test]
+		public void CapToDestination_NeverInventsWater()
+		{
+			// The cap only ever reduces. A destination with room to spare does not enlarge a load
+			// the origin could not spare in the first place.
+			for (int amount = 0; amount <= 80; amount += 7)
+			{
+				for (int space = 0; space <= 300; space += 37)
+				{
+					Assert.LessOrEqual(KingdomManifestRules.CapToDestination(amount, space), amount);
+				}
+			}
+		}
+
+		[Test]
+		public void JudgeManifest_RefusesWhenTheOtherCityWasKnownToHaveNoRoom()
+		{
+			Assert.AreEqual(KingdomManifestRules.ManifestVerdict.DestinationHasNoRoom,
+				KingdomManifestRules.JudgeManifest(true, true, false, 40, 0));
+		}
+
+		[Test]
+		public void JudgeManifest_KnownRoomAllowsTheLoad()
+		{
+			Assert.AreEqual(KingdomManifestRules.ManifestVerdict.Allowed,
+				KingdomManifestRules.JudgeManifest(true, true, false, 40, 40));
+		}
+
+		[Test]
+		public void JudgeManifest_CannotSpareOutranksNoRoom()
+		{
+			// A founder who cannot spare the water is told that, not told about the other city's
+			// casks: the nearer refusal is the useful one.
+			Assert.AreEqual(KingdomManifestRules.ManifestVerdict.StoresCannotSpare,
+				KingdomManifestRules.JudgeManifest(true, true, false, 0, 0));
+		}
+
+		[Test]
+		public void EveryRefusalSaysSomething()
+		{
+			foreach (KingdomManifestRules.ManifestVerdict verdict in System.Enum.GetValues(typeof(KingdomManifestRules.ManifestVerdict)))
+			{
+				if (verdict == KingdomManifestRules.ManifestVerdict.Allowed || verdict == KingdomManifestRules.ManifestVerdict.AlreadyInFlight)
+				{
+					continue;
+				}
+				Assert.IsNotEmpty(KingdomManifestRules.ManifestRefusal(verdict, "Kavvat"),
+					verdict + " refuses without telling the founder why");
+			}
+		}
+
 	}
 }
 #endif

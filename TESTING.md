@@ -206,11 +206,12 @@ The one thing a realm of two cities can do that a realm of one cannot.
 | Step | Action | Expect |
 |---|---|---|
 | 48 | With only one city, Charter → **Send a water manifest** | Refused: there is nowhere to send it |
-| 48a | With two cities, standing in one with water to spare, send a manifest | It **asks first**, naming the drams and the window. Answer no and nothing moves. Answer yes and a capped amount, only ever above a three-day reserve, leaves **this city's** stores now |
+| 48a | With two cities, standing in one with water to spare, send a manifest | The load is sized to what the **other city had room for when you last stood there** — never more. It **asks first**, naming the drams and the window. Answer no and nothing moves. Answer yes and a capped amount, only ever above a three-day reserve, leaves **this city's** stores now |
 | 48b | Immediately try to send another | Refused, naming the one already on the road: origin, destination, drams, days left |
 | 48c | Walk to the destination city | The water arrives on entry, into that city's stores, with a chronicle line and a ledger note. It arrives when you get there, not on a background clock |
 | 48d | Send one and let the window lapse | **The carters turn back**, once. The load starts home and arrives at the origin the next time you stand there. Being elsewhere never costs you the water |
-| 48e | Send to a city whose casks are already full | What fits is poured into the casks; **the rest is poured out on the ground as a pool** you can see. The settlement fetches it back as it makes room. Nothing is destroyed, and nothing rides the cart waiting for space |
+| 48e | Try to send when the other city had **no room** when you last stood in it | Refused, naming the city: water sent now would arrive with nowhere to go. Trade stops until you raise storage there or go and look for yourself |
+| 48e1 | Send a load, then fill the destination's casks before the water arrives | **This is the rare case**: the carters arrive expecting room and find none. What fits goes in the casks, the rest is set down as a pool on the ground, the chronicle records it, and nobody is pleased. Overflow happens because the water level changed under a run already on the road — not as routine spillage |
 | 48e2 | Ignore a turned-back load until its second window closes too | It is set down where you are standing, as a pool. A load is never carried forever and never evaporates — check the stores and the ground: the water is all still accounted for |
 | 48e3 | Count the realm's water before and after a full round trip to a full cistern | Conserved. Storage still decides how much a settlement can **keep**; the cart is not a cask |
 | 48f | Try to send a manifest standing outside either city | Refused: manifests are loaded on the kingdom's own ground |

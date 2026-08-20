@@ -78,7 +78,7 @@ namespace ThousandAndFirst
 			}
 			while (true)
 			{
-				int num = Popup.PickOption(Title: system.SeatName + KingdomSettlement.VocationSuffix(system.Vocation), Options: new string[15] { (system.PetitionKind != KingdomRules.PetitionKind.None) ? ("{{W|Hear " + system.PetitionPetitioner + "}}") : "{{K|No one is waiting to speak}}", "Status", "What happened while you were away", "The Chronicle", "As others tell it", "Standings", "The roll of settlers", "Standing policy", "Designate district", "Commission a building", "Answer a threat", "Dedicate a vessel or larder", "Strike a trade charter", "Send a water manifest", "Share a meal from the larder" }, Hotkeys: new char[15] { 'h', 's', 'w', 'c', 'a', 'n', 'l', 'p', 'd', 'm', 't', 'v', 'r', 'i', 'f' }, AllowEscape: true);
+				int num = Popup.PickOption(Title: system.SeatName + KingdomSettlement.VocationSuffix(system.Vocation), Options: new string[16] { (system.PetitionKind != KingdomRules.PetitionKind.None) ? ("{{W|Hear " + system.PetitionPetitioner + "}}") : "{{K|No one is waiting to speak}}", "Status", "What happened while you were away", "The Chronicle", "As others tell it", "Standings", "The roll of settlers", "Standing policy", "Designate district", "Commission a building", "Answer a threat", "Dedicate a vessel or larder", "Strike a trade charter", "Send a water manifest", "Share a meal from the larder", "Certify a machine" }, Hotkeys: new char[16] { 'h', 's', 'w', 'c', 'a', 'n', 'l', 'p', 'd', 'm', 't', 'v', 'r', 'i', 'f', 'e' }, AllowEscape: true);
 				switch (num)
 				{
 				case 0:
@@ -125,6 +125,9 @@ namespace ThousandAndFirst
 					break;
 				case 14:
 					HoldSharedMeal(system);
+					break;
+				case 15:
+					CertifyMachine(system);
 					break;
 				default:
 					return;
@@ -358,8 +361,12 @@ namespace ThousandAndFirst
 			}
 			bool hasSecondCity = System.Away != null;
 			int stored = onGround ? KingdomGrowth.CountStoredWater(zone) : 0;
-			int amount = KingdomManifestRules.ManifestAmount(stored, System.Population);
-			KingdomManifestRules.ManifestVerdict verdict = KingdomManifestRules.JudgeManifest(onGround, hasSecondCity, System.Manifest != null, amount);
+			// Sized against what the realm BELIEVES the other city can take - the figure it had
+			// when the founder last stood there. Loading to that belief is what makes arriving
+			// with nowhere to put it a rare, specific event rather than routine spillage.
+			int believedRoom = System.Away?.LastKnownStorageSpace ?? 0;
+			int amount = KingdomManifestRules.CapToDestination(KingdomManifestRules.ManifestAmount(stored, System.Population), believedRoom);
+			KingdomManifestRules.ManifestVerdict verdict = KingdomManifestRules.JudgeManifest(onGround, hasSecondCity, System.Manifest != null, KingdomManifestRules.ManifestAmount(stored, System.Population), believedRoom);
 			if (verdict == KingdomManifestRules.ManifestVerdict.AlreadyInFlight)
 			{
 				Popup.Show(KingdomManifestRules.ManifestInFlightStatus(System.Manifest.OriginName, System.Manifest.DestinationName, System.Manifest.Drams, The.Game.TimeTicks, System.Manifest.DeadlineTick));
@@ -552,6 +559,78 @@ namespace ThousandAndFirst
 				}
 			}
 			if (!KingdomLarder.HoldSharedMeal(System, zone, out var failure))
+			{
+				Popup.Show(failure);
+			}
+		}
+
+		/// <summary>
+		/// Certifies a machine hauled home from a ruin fit for the settlement's grid, or takes
+		/// an already-certified one back off it. The cost is disclosed here, before anything is
+		/// spent; KingdomSalvage does the actual eligibility check, the spend, and the messaging.
+		/// </summary>
+		public void CertifyMachine(KingdomSystem System)
+		{
+			Cell cell = ParentObject.CurrentCell;
+			if (cell == null)
+			{
+				return;
+			}
+			Zone zone = ParentObject.CurrentZone;
+			if (zone == null || !System.ClaimedZones.Contains(zone.ZoneID))
+			{
+				Popup.Show("A machine is certified on the kingdom's own ground, not in other people's houses.");
+				return;
+			}
+			System.Collections.Generic.List<GameObject> machines = new System.Collections.Generic.List<GameObject>();
+			foreach (Cell adjacentCell in cell.GetLocalAdjacentCells())
+			{
+				foreach (GameObject item in adjacentCell.GetObjects())
+				{
+					if (item.IsCreature || item.GetPart<XRL.World.Parts.LiquidVolume>() != null || machines.Contains(item))
+					{
+						continue;
+					}
+					// A "machine" here is anything the settlement's own Examiner/TinkerItem
+					// readings can actually inspect; plain scenery never shows up in this list.
+					if (item.GetPart<XRL.World.Parts.Examiner>()?.Complexity > 0 || item.GetPart<XRL.World.Parts.TinkerItem>() != null)
+					{
+						machines.Add(item);
+					}
+				}
+			}
+			if (machines.Count == 0)
+			{
+				Popup.Show("Stand beside a machine to certify it. Nothing here reads as one.");
+				return;
+			}
+			string[] options = new string[machines.Count];
+			for (int i = 0; i < machines.Count; i++)
+			{
+				options[i] = machines[i].ShortDisplayName + ((machines[i].GetIntProperty(KingdomSalvage.CertifiedProperty) == 1) ? " {{G|[certified]}}" : " {{K|[uncertified]}}");
+			}
+			int index = Popup.PickOption(Title: "Certify a machine", Options: options, AllowEscape: true);
+			if (index < 0)
+			{
+				return;
+			}
+			GameObject machine = machines[index];
+			KingdomSalvage.SalvageAssessment assessment = KingdomSalvage.Assess(System, zone, machine);
+			if (assessment.AlreadyCertified)
+			{
+				if (Popup.ShowYesNo("Take " + machine.ShortDisplayName + " off the grid of " + System.SeatName + "? It will stand exactly where it stands; the settlement will simply stop answering for it.") != DialogResult.Yes)
+				{
+					return;
+				}
+			}
+			else if (assessment.Verdict == KingdomSalvageRules.SalvageVerdict.Certified)
+			{
+				if (Popup.ShowYesNo("Certify " + machine.ShortDisplayName + " fit for the grid of " + System.SeatName + "?\n\nIt will cost {{C|" + assessment.WaterCost + "}} drams and " + assessment.HandsRequired + " hands free to test it.") != DialogResult.Yes)
+				{
+					return;
+				}
+			}
+			if (!KingdomSalvage.Certify(System, zone, machine, out var failure))
 			{
 				Popup.Show(failure);
 			}

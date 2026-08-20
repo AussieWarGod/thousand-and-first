@@ -151,7 +151,8 @@ namespace ThousandAndFirst
 			NotOnClaimedGround,
 			AlreadyInFlight,
 			OnlyOneCity,
-			StoresCannotSpare
+			StoresCannotSpare,
+			DestinationHasNoRoom
 		}
 
 		/// <summary>
@@ -165,7 +166,30 @@ namespace ThousandAndFirst
 		/// <param name="HasSecondCity">Whether the realm holds a second city to address one to.</param>
 		/// <param name="AlreadyInFlight">Whether the realm already holds an unresolved manifest.</param>
 		/// <param name="Amount">What <see cref="ManifestAmount"/> would actually offer.</param>
-		public static ManifestVerdict JudgeManifest(bool OnClaimedGround, bool HasSecondCity, bool AlreadyInFlight, int Amount)
+		/// <summary>
+		/// Caps a load by what the destination was last known to have room for.
+		/// <para>
+		/// A manifest is sized against BELIEF, not truth: the only figure the realm has for the
+		/// other city is what it had room for when the founder last stood in it
+		/// (<see cref="KingdomSettlement.LastKnownStorageSpace"/>). Loading to that figure makes
+		/// arriving-with-nowhere-to-put-it rare and specific &mdash; it happens when the water
+		/// level there changed while the load was on the road, which is a thing that happened
+		/// rather than a rule that fired.
+		/// </para>
+		/// </summary>
+		/// <param name="Amount">What the origin could spare.</param>
+		/// <param name="DestinationSpace">Destination's last known free space. Zero refuses.</param>
+		/// <returns>Drams to load; zero when there is no believed room.</returns>
+		public static int CapToDestination(int Amount, int DestinationSpace)
+		{
+			if (Amount <= 0 || DestinationSpace <= 0)
+			{
+				return 0;
+			}
+			return (DestinationSpace < Amount) ? DestinationSpace : Amount;
+		}
+
+		public static ManifestVerdict JudgeManifest(bool OnClaimedGround, bool HasSecondCity, bool AlreadyInFlight, int Amount, int DestinationSpace = int.MaxValue)
 		{
 			if (!OnClaimedGround)
 			{
@@ -182,6 +206,10 @@ namespace ThousandAndFirst
 			if (Amount <= 0)
 			{
 				return ManifestVerdict.StoresCannotSpare;
+			}
+			if (DestinationSpace <= 0)
+			{
+				return ManifestVerdict.DestinationHasNoRoom;
 			}
 			return ManifestVerdict.Allowed;
 		}
@@ -207,6 +235,10 @@ namespace ThousandAndFirst
 				return string.IsNullOrEmpty(DestinationName)
 					? "The stores cannot spare enough to send onward and still keep this city fed."
 					: ("The stores cannot spare enough to send toward " + DestinationName + " and still keep this city fed.");
+			case ManifestVerdict.DestinationHasNoRoom:
+				return string.IsNullOrEmpty(DestinationName)
+					? "There was no room in the other city's casks when anyone here last saw them. Water sent now would arrive with nowhere to go."
+					: ("There was no room in " + DestinationName + "'s casks when anyone here last stood in them. Water sent now would arrive with nowhere to go - raise storage there, or go and see for yourself.");
 			default:
 				return "";
 			}

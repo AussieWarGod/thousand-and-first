@@ -30,6 +30,26 @@
   <object Name="r_KingdomSettlerYoung" Inherits="r_KingdomSettler">
     <part Name="Render" DisplayName="settler" Tile="Creatures/sw_appledaughter.bmp" ColorString="&amp;w" />
   </object>
+  <!--
+    Guests: travellers who are not settling. They roll from r_KingdomGuests (mergeable by other
+    mods, same shape as r_KingdomSettlers), carry no SleepOnBed tag and are never enrolled, so
+    they are never counted as population and never claim a bed. r_KingdomGuest (the part) is
+    ThousandAndFirst's KingdomLocus.OfferGuestWater entry point.
+  -->
+  <object Name="r_KingdomGuest" Inherits="BaseFarmer">
+    <part Name="Render" DisplayName="traveller" ColorString="&amp;w" />
+    <part Name="Description" Short="Dust of a dozen roads on their boots, and no bedroll unpacked. They are only stopping." />
+    <part Name="Brain" Wanders="true" Hostile="false" />
+    <part Name="r_KingdomGuest" />
+    <tag Name="r_KingdomGuest" />
+    <tag Name="AllowIdleBehavior" />
+  </object>
+  <object Name="r_KingdomGuestPilgrim" Inherits="r_KingdomGuest">
+    <part Name="Render" DisplayName="traveller" Tile="creatures/caste-pilgrim.png" ColorString="&amp;w" />
+  </object>
+  <object Name="r_KingdomGuestNomad" Inherits="r_KingdomGuest">
+    <part Name="Render" DisplayName="traveller" Tile="creatures/caste_19.bmp" ColorString="&amp;w" />
+  </object>
   <object Name="r_KingdomScaffold" Inherits="Furniture">
     <!-- No DetailColor: the scaffold grid is drawn in body pixels only, deliberately, so there is
          nothing for a highlight colour to tint. Adding one would imply a second tone that is not there. -->
@@ -98,6 +118,13 @@
     <part Name="Physics" Takeable="false" Weight="1000" />
     <stat Name="Hitpoints" Value="150" />
   </object>
+  <object Name="r_KingdomCairn" Inherits="Furniture">
+    <stag Name="Contemporary" />
+    <part Name="Render" DisplayName="settler's cairn" RenderString="&#8224;" ColorString="&amp;w" DetailColor="w" />
+    <part Name="Description" Short="A cairn of fieldstone, raised for someone the settlement has not yet lost. It waits." />
+    <part Name="Physics" Takeable="false" Weight="1400" />
+    <stat Name="Hitpoints" Value="150" />
+  </object>
   <object Name="r_KingdomChargingPost" Inherits="Furniture">
     <stag Name="Contemporary" />
     <part Name="Render" DisplayName="charging post" RenderString="&#227;" ColorString="&amp;C" Tile="ThousandAndFirst/r_KingdomChargingPost.png" TileColor="&amp;c" DetailColor="C" />
@@ -157,5 +184,68 @@
     <part Name="Description" Short="Hammered from tin and older promises, it holds just enough water to make strangers into kin. Whoever fills it and pours may found a place worth thirsting for." />
     <part Name="r_FounderBasin" />
     <part Name="Commerce" Value="25" />
+  </object>
+  <!--
+    Power. Three works and a store. Every one of them is somebody's shift first and a machine
+    second, which is why none of them is wired to anything: KingdomPower reads their rating and
+    their crew and carries the charge across. The vanilla turbine parts are here for their own
+    sake - they drive the animated tiles, and a founder who ever does lay gearbox fence gets
+    vanilla's mechanical grid on top, for free. Tiles are vanilla's own, so none of this owes art.
+  -->
+  <object Name="r_KingdomMill" Inherits="Furniture">
+    <part Name="Render" DisplayName="crank mill" RenderString="15" ColorString="&amp;y" Tile="Items/sw_millstone_1.bmp" TileColor="&amp;y" DetailColor="w" />
+    <part Name="Description" Short="A millstone yoked to a walking-bar. Three settlers lean into it from first light and spell each other at noon, and the shaft they turn runs under the packed floor to wherever the settlement wants the charge." />
+    <part Name="r_KingdomPowerWork" Source="Hands" />
+    <!-- No MechanicalPowerTransmission: a producer with nothing behind it to produce from would
+         advertise a vanilla grid connection it could never honour. Hands power is civic only. -->
+    <part Name="Physics" Takeable="false" Weight="900" />
+    <stat Name="Hitpoints" Value="250" />
+    <stag Name="Contemporary" />
+  </object>
+  <object Name="r_KingdomWaterWheel" Inherits="Furniture">
+    <part Name="Render" DisplayName="settlement water wheel" RenderString="21" ColorString="&amp;w" Tile="Items/sw_waterwheel_1.bmp" TileColor="&amp;w" DetailColor="y" />
+    <part Name="Description" Short="Paddles the settlement cut and lashed itself, set where the water already runs. Somebody greases the shaft each morning and pulls the weed off the buckets. That is the whole of the work, and it is somebody's." />
+    <part Name="r_KingdomPowerWork" Source="Water" />
+    <!-- Vanilla's own numbers, matched on purpose: KingdomPowerRules.HydraulicMinimumDrams and
+         HydraulicRatedDrams are these two figures, so the wheel's operational state and the
+         settlement's report never disagree in front of the player. -->
+    <part Name="HydroTurbine" MinimumEffectiveVolume="400" MaximumEffectiveVolume="4000" MaximumChargeRate="10" IsTechScannable="false" />
+    <part Name="MechanicalPowerTransmission" ChargeRate="100" IsProducer="true" IsTechScannable="false" />
+    <part Name="Circuitry" MaxCharge="100" IsEMPSensitive="false" IsTechScannable="false" NameForStatus="Gearbox" />
+    <part Name="AnimatedMaterialGeneric" AnimationLength="300" TileAnimationFrames="0=default,100=Items/sw_waterwheel_2.bmp,200=Items/sw_waterwheel_3.bmp" RequiresOperationalActivePart="HydroTurbine" />
+    <part Name="Physics" Takeable="false" Weight="600" Organic="true" />
+    <stat Name="Hitpoints" Value="400" />
+    <stat Name="ColdResistance" Value="75" />
+    <stag Name="Contemporary" />
+  </object>
+  <object Name="r_KingdomSailvane" Inherits="Furniture">
+    <part Name="Render" DisplayName="sailvane" RenderString="21" ColorString="&amp;w" Tile="Items/sw_windmill_1.bmp" TileColor="&amp;w" DetailColor="y" />
+    <part Name="Description" Short="Four arms of brined wood and patched sailcloth on a post, trimmed by whoever draws the shift. On a still day it stands there being a landmark, and the settlement finds other work for the hands." />
+    <part Name="r_KingdomPowerWork" Source="Wind" />
+    <part Name="WindTurbine" ChargeRateFactor="0.2" IsTechScannable="false" />
+    <part Name="MechanicalPowerTransmission" ChargeRate="100" IsProducer="true" IsTechScannable="false" />
+    <part Name="Circuitry" MaxCharge="100" IsEMPSensitive="false" IsTechScannable="false" NameForStatus="Gearbox" />
+    <part Name="AnimatedMaterialGeneric" AnimationLength="300" TileAnimationFrames="0=default,100=Items/sw_windmill_2.bmp,200=Items/sw_windmill_3.bmp" RequiresOperationalActivePart="WindTurbine" />
+    <part Name="Physics" Takeable="false" Weight="1000" Organic="true" />
+    <stat Name="Hitpoints" Value="250" />
+    <stat Name="ColdResistance" Value="75" />
+    <stag Name="Contemporary" />
+  </object>
+  <object Name="r_KingdomSaltStore" Inherits="Furniture">
+    <part Name="Render" DisplayName="molten-salt store" RenderString="234" ColorString="&amp;W" Tile="Items/sw_kiln.bmp" TileColor="&amp;W" DetailColor="R" />
+    <part Name="Description" Short="A jacketed pit of salt kept molten by the day's work and tapped after dark. The salt was already here. It is the one thing this country has never been short of." />
+    <part Name="r_KingdomPowerStore" />
+    <!-- MinimumChargeToExplode="0" for exactly the reason the charging post carries it: a
+         Capacitor the settlement deliberately keeps full detonates for its whole Charge on
+         BeforeDeathRemovalEvent, which a raid can trigger, destroying settlers and player-placed
+         objects this mod is not allowed to touch. ChargeRate="0" because nothing fills this but
+         the settlement's own crew, through KingdomPower, which measures the capacitor before and
+         after rather than trusting an engine call. -->
+    <part Name="Capacitor" MaxCharge="24000" ChargeRate="0" MinimumChargeToExplode="0" Description="salt bed" />
+    <part Name="Physics" Takeable="false" Weight="4000" />
+    <property Name="DontWarnOnOpen" Value="true" />
+    <stat Name="Hitpoints" Value="200" />
+    <stat Name="AV" Value="6" />
+    <stag Name="Contemporary" />
   </object>
 </objects>
