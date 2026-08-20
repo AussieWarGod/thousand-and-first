@@ -143,6 +143,12 @@ namespace ThousandAndFirst
 
 		public Dictionary<string, int> OriginCounts = new Dictionary<string, int>();
 
+		/// <summary>This city's own tally of settler creeds. See <see cref="KingdomCreed"/>.
+		/// Per-city, so it is carried by the seat swap like <see cref="OriginCounts"/>; the realm's
+		/// dissent, declared creed, and secession state are not (see <c>KingdomSystem</c>, which
+		/// carries those only on itself).</summary>
+		public Dictionary<string, int> CreedCounts = new Dictionary<string, int>();
+
 		public KingdomRules.PetitionKind PetitionKind = KingdomRules.PetitionKind.None;
 
 		public string PetitionPetitioner;
@@ -255,6 +261,10 @@ namespace ThousandAndFirst
 			if (OriginCounts == null)
 			{
 				OriginCounts = new Dictionary<string, int>();
+			}
+			if (CreedCounts == null)
+			{
+				CreedCounts = new Dictionary<string, int>();
 			}
 			if (ClaimedZones == null)
 			{

@@ -48,7 +48,7 @@ namespace ThousandAndFirst
 				Failure = "The work would cost {{C|" + entry.CostDrams + " drams}} from the stores, and the stores cannot bear it.";
 				return false;
 			}
-			Cell cell = FindBuildCell(zone, System, entry.Defence > 0);
+			Cell cell = FindBuildCell(zone, System, entry, out var outcome);
 			if (cell == null)
 			{
 				Failure = "There is no clear ground for it here.";
@@ -85,7 +85,9 @@ namespace ThousandAndFirst
 			}
 			cell.AddObject(gameObject);
 			KingdomChronicle.Record(System, XRL.Language.Grammar.A(entry.Name) + " was commissioned at " + System.KingdomDisplayName);
-			MessageQueue.AddPlayerMessage("{{G|The " + entry.Name + " is commissioned. Scaffolding rises.}}");
+			string clause = KingdomLayoutRules.PlacementClause(KingdomLayout.PurposeOfEntry(entry), outcome);
+			MessageQueue.AddPlayerMessage("{{G|The " + entry.Name + " is commissioned. Scaffolding rises"
+				+ ((clause == null) ? "" : (" " + clause)) + ".}}");
 			return true;
 		}
 
@@ -106,7 +108,51 @@ namespace ThousandAndFirst
 		}
 
 		/// <summary>
-		/// Where a commissioned work is raised, by what it is for.
+		/// Where a commissioned work is raised, by what it is for, read against everything the
+		/// settlement already has standing here.
+		/// <para>
+		/// The settlement's own plan (<c>KingdomLayout</c>) is asked first: casks gather by the
+		/// water, houses gather by the houses and stand back from the wall, the civic ground
+		/// thickens where the settlement already lives, fields lie out past the last roof, and a
+		/// wall extends the wall. It grows with the city because every one of those answers is a
+		/// function of what is already built, so the same commission lands somewhere different
+		/// in a camp and in a town.
+		/// </para>
+		/// <para>
+		/// The plan is allowed to have nothing to say &mdash; on empty ground it always does,
+		/// because there are no neighbours to reason from &mdash; and it never fights the
+		/// founder over ground it does not care about. Either way the fallback below is the
+		/// placement this mod always had.
+		/// </para>
+		/// <para>
+		/// Failure here degrades to that fallback rather than escaping into the engine: a
+		/// commission the plan cannot site is still a commission.
+		/// </para>
+		/// </summary>
+		/// <param name="Z">Zone to build in.</param>
+		/// <param name="System">The realm, for its claim.</param>
+		/// <param name="Entry">The design being raised.</param>
+		/// <param name="Outcome">What the plan did, for the message the founder reads. Reports
+		/// <c>Defer</c> whenever the fallback placed the work, whatever the reason.</param>
+		public static Cell FindBuildCell(Zone Z, KingdomSystem System, KingdomRules.BuildEntry Entry, out KingdomLayoutRules.LayoutOutcome Outcome)
+		{
+			KingdomLayoutRules.LayoutOutcome planned = KingdomLayoutRules.LayoutOutcome.Defer;
+			Cell cell = null;
+			KingdomSystem.Guard("settlement layout", delegate
+			{
+				cell = KingdomLayout.ChooseCell(Z, System, Entry, out planned);
+			});
+			if (cell != null)
+			{
+				Outcome = planned;
+				return cell;
+			}
+			Outcome = KingdomLayoutRules.LayoutOutcome.Defer;
+			return FindBuildCell(Z, System, Entry != null && Entry.Defence > 0);
+		}
+
+		/// <summary>
+		/// Where a commissioned work is raised when the settlement's plan has no opinion.
 		/// <para>
 		/// Defensive works go on the frontier: the edges of this zone that face ground the realm
 		/// does not hold. That is what makes a wall a wall rather than a post in a field, and it

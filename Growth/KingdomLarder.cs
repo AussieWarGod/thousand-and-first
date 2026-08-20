@@ -57,6 +57,7 @@ namespace ThousandAndFirst
 			System.RecordDeed(sizeName + " shared at " + System.KingdomDisplayName);
 			MessageQueue.AddPlayerMessage(KingdomVoices.Say(speaker, VoiceOccasion.MealShared, "{{G|" + XRL.Language.Grammar.InitCap(sizeName) + " is shared, and the settlement eats together.}}", KingdomRules.MealSpeech(tier)));
 			KingdomLog.Log("shared meal: tier=" + tier + " spent=" + spent + " settler=" + speaker.Attribution);
+			KingdomCreed.EaseForMeal(System);
 			return true;
 		}
 	}

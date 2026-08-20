@@ -87,6 +87,42 @@ grow is read from the style the founding rite already recorded, not from a secon
 ground. It draws water only after the day's upkeep and arrivals, so it can never be the reason the
 thirst ladder fires, and it deposits only into a dedicated larder.
 
+## City plans — three ways a thing gets built
+
+A settlement is laid out by a grammar, not scattered. All three paths end at the same
+`r_KingdomScaffold` pipeline, so a building raised any of these ways is the same building.
+
+| Path | Member | Contract |
+|---|---|---|
+| Automatic | `KingdomLayout.ChooseCell(Zone, KingdomSystem, BuildEntry, out LayoutOutcome)` | Sites a commission by its `Category`: casks by the water, bunks clustered and off the wall line, craft and civic in the settled heart, plots in a ring past the last roof, walls closing gaps in the line. The founder's own ground wins ties — the plan picks the quarter, the founder picks the spot. |
+| Planned | `KingdomPlanMarker.OnSettlementPass(...)`, `r_KingdomPlanMarker` | Stake a plan on claimed ground; nothing is spent. The settlement realises staked plans oldest-first when it can afford the water and has room. A plan it can never afford waits forever, without nagging or expiring. |
+| Adopted | `KingdomAdopt.AdoptExisting / AdoptWork / Release` | Designate a structure **you** built as serving a civic role. Checks the space, never who made it, so Hearthpyre is never a dependency. A mark, never a transfer; reversible; a refusal names what is missing and touches nothing. |
+
+`KingdomLayoutRules` holds the pure grammar (`PurposeOf`, `ScoreCell`, `Choose`, `HasOpinion`);
+`KingdomPlanRules` the ordering and affordability; `KingdomAdoptRules` the role classification and a
+bounded flood-fill enclosure test.
+
+## `KingdomCreed` — what a city believes, and what that costs a realm
+
+A settler may carry a creed: a real Qud faction, drawn from factions the realm has dealt with and
+weighted by its standings. A city's creed is the one its residents share; a mixed city has none.
+
+Dissent between two cities of one realm is read from **the engine's own faction feeling**
+(`Faction.GetFeelingTowardsFaction`, which falls through to the faction's `"*"` wildcard) rather
+than any table of ours — so it is correct for modded factions for free, and the zealous factions
+that dislike strangers by default are exactly the ones that make a realm hard to hold together.
+
+| Member | Contract |
+|---|---|
+| `CreedOf` / `SeatCreed` / `AwayCreed` | The creed a city holds, or null. |
+| `Draw` / `Record` / `Forget` | Creed at arrival, and its removal on death or departure. |
+| `RiteAvailable` / `HoldRite` / `EaseForMeal` | The founder's levers against dissent. |
+| `DeclarableCreeds` / `Declare` | Name the realm's creed: decisive, and costly across the world. |
+| `SecededHolds` / `Secede` / `TryRejoin` | A city may leave, keeping its ground, people and buildings. It can be asked back once the cause is gone. |
+
+Dissent accrues only on attended passes, capped like every other absence in this mod, so a realm
+can never fall apart because nobody was playing.
+
 ## `KingdomLarder` — dedicated food, and what the settlement does with it
 
 | Member | Contract |

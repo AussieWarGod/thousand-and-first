@@ -110,9 +110,12 @@ namespace ThousandAndFirst
 			// spends what the day's upkeep and arrivals left in the stores, so it can never be
 			// the reason the thirst ladder fires.
 			KingdomPlot.OnSettlementPass(System, Z, survey);
-			// After the plot, and last of all. Power spends no water and takes no hands the
-			// staffing pass has not already assigned, so it can only ever read a settlement that
-			// has finished feeding and watering itself.
+			// After the plot, for the same reason: a staked plan only ever spends what the
+			// plot's own draw left behind.
+			KingdomPlanMarker.OnSettlementPass(System, Z, survey);
+			// After the plot and the plan, and last of all. Power spends no water and takes no
+			// hands the staffing pass has not already assigned, so it can only ever read a
+			// settlement that has finished feeding, watering, and building itself.
 			KingdomPower.OnSettlementPass(System, Z, survey);
 			if (KingdomLog.Enabled) KingdomLog.Log("growth pass done: pop=" + System.Population + " stage=" + System.Stage + " arrivals=" + arrivals + " dry=" + System.DryStreak + " next=" + System.NextArrivalTick);
 		}
@@ -229,6 +232,7 @@ namespace ThousandAndFirst
 			settler.SetIntProperty("KingdomBorn", 1);
 			string origin = KingdomRules.Origins[Stat.Random(0, KingdomRules.Origins.Length - 1)];
 			settler.SetStringProperty("KingdomOrigin", origin);
+			KingdomCreed.Record(System, settler, KingdomCreed.Draw(System));
 			string given = XRL.Names.NameMaker.MakeName(settler, null, null, "human", null, System.KingdomFactionName, null, null, null, null, null, null, null, FailureOkay: true);
 			if (!string.IsNullOrEmpty(given))
 			{
@@ -377,6 +381,7 @@ namespace ThousandAndFirst
 					}
 				}
 			}
+			KingdomCreed.Forget(System, leaver);
 			leaver.Obliterate();
 			System.Population--;
 			KingdomChronicle.Record(System, XRL.Language.Grammar.A(name) + " left " + System.KingdomDisplayName + " for wetter country, the cisterns having run dry");

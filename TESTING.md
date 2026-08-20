@@ -261,6 +261,35 @@ anyone.
 | 50q | Save, reload, then fall a rung | Regard, tier and the last-spoken rung all survive. It speaks once, not again on the next load |
 | 50r | Get exiled, then leave the game alone for many in-game days | Nothing has happened. Absence never lowered regard and never closed the door |
 
+## Pass 15 — How a city lays itself out
+
+| Step | Action | Expect |
+|---|---|---|
+| 51 | On empty ground, commission anything | It rises beside you, plainly. The plan has no opinion yet — your first building is the seed everything later is read against |
+| 51a | Walk well away from your dedicated vessels and commission a cask rack | It rises **by the water**, not where you stand. The message names the ground it chose |
+| 51b | Commission a bunk while standing on the wall line | The plan overrules you: people do not sleep on the wall |
+| 51c | Commission a bunk a few cells from other bunks | You win. Within about four cells of the plan's best, your spot is the spot |
+| 51d | Commission several walls along one edge | Each closes a gap in the line before extending an end. A wall grows into a wall |
+| 52 | Charter → stake a plan on a cell, then walk away | Nothing was spent. Come back and it has been built, if the stores could afford it |
+| 52a | Stake a plan you cannot afford, and leave it | It waits. Forever, without nagging, without expiring, and without taking water it cannot completely spend |
+| 52b | Cancel a staked plan | Free, because nothing was ever spent |
+| 53 | Build a room yourself — four walls and a door — and Charter → adopt it | Accepted if it qualifies. Nothing is moved, nothing is transferred: it is marked, exactly like dedicating a vessel |
+| 53a | Try to adopt a space that does not qualify | Refused, and it says **what is missing** — a bed, a door, a container. The structure is untouched |
+| 53b | Release an adoption | It stops serving. Nothing is lost |
+
+## Pass 16 — What your cities believe
+
+| Step | Action | Expect |
+|---|---|---|
+| 54 | Hold one city only | You never encounter any of this. Not a message, not a menu entry that does anything |
+| 54a | Hold two cities and let settlers arrive | Most believe nothing in particular. Once a third of a city shares a creed, the Charter names what that city is |
+| 54b | Settle a zealous creed in one city and its opposite in the other | Dissent begins — and only on days you were **there**. Four warnings arrive well before anything is lost |
+| 54c | Leave for a season with dissent running | It has not moved. A realm cannot fall apart because nobody was playing |
+| 54d | Pour a rite of shared water; call a shared meal | Dissent gives ground, slowly. These are levers, not decoration |
+| 54e | Charter → declare the realm's creed | **It asks first**, naming what it will cost: every later settler leans that way, and those who stand against them hold it against the whole realm, everywhere |
+| 54f | Let dissent run to the end | The unhappier city leaves — keeping its ground, its people, its buildings, its stores and its book. Nothing burns. Both registers record the day and **disagree about it** |
+| 54g | Walk onto the ground of a city that left, having removed the cause | You may ask them back. Try it without removing the cause and they say so to your face |
+
 ## Pass 4 — Attitudes and persistence
 
 | Step | Action | Expect |

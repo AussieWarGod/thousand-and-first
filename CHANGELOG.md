@@ -83,6 +83,38 @@ playtest passes.
   deposits its harvest into a dedicated larder. It draws water only after upkeep and arrivals, so it
   can never be the reason the thirst ladder fires, and with no water it simply waits.
 
+### Added — city plans, three ways
+- A settlement is now **laid out**, not scattered. A commissioned building is sited by what it is
+  for, read off what the settlement already has standing: casks gather by the water, bunks cluster
+  and keep off the wall line, craft and civic thicken the heart, plots ring the last roof, and each
+  new wall closes a gap in the line before extending an end. The founder still wins ties — the plan
+  picks the quarter, the founder picks the spot — and on empty ground the plan has no opinion at
+  all, so your first building is the seed everything later is read against.
+- **Stake a plan** on any claimed cell and the settlement builds it when it can afford to. Nothing
+  is spent when you stake it, plans are realised oldest-first, and one that can never be afforded
+  waits forever without nagging or expiring. Cancelling is free.
+- **Adopt what you built yourself.** Designate a structure as serving a civic role and the
+  settlement accepts it if the space qualifies — a bed for housing, containers for storage, four
+  walls and a door for a work. It checks the space, never who made it, so this works for a
+  Hearthpyre house, a cleared ruin, or walls you laid by hand, and Hearthpyre stays optional.
+  Adoption is a mark, never a transfer, always reversible, and a refusal names what is missing and
+  touches nothing.
+
+### Added — what a city believes
+- Settlers may carry a **creed**: a real Qud faction, drawn from factions the realm has actually
+  dealt with. Most believe nothing in particular. Once enough of a city shares one, that city holds
+  with them, and the Charter says so.
+- Two cities of one realm whose creeds clash fall into **dissent** — read from the engine's own
+  faction feelings rather than any table of ours, so it is right for modded factions for free, and
+  the factions that dislike strangers by default are exactly the zealous ones. Dissent accrues only
+  on days the founder was present, with four warnings well before anything is lost.
+- Three levers, none of them waiting: a rite of shared water, a shared meal, or **declaring the
+  realm's creed** — fast and decisive, and it now names its price before you pay it, because it
+  moves a faction's regard for the realm across the whole world.
+- If it runs to the end, the unhappier city **leaves**, keeping its ground, its people, its
+  buildings, its stores and its book. Nothing burns and nobody is driven out. Both chronicle
+  registers record the day and disagree about it. You can ask them back once the cause is gone.
+
 ### Changed
 - Districts are no longer flavour. Each of the six now changes something a player can measure:
   garrison adds defence across every claimed zone, agrarian bills upkeep at 90%, market adds a

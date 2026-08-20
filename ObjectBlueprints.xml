@@ -97,6 +97,18 @@
     <part Name="Physics" Takeable="false" Organic="true" Weight="200" />
     <stat Name="Hitpoints" Value="60" />
   </object>
+  <!-- Inherits vanilla "Sign" wholesale rather than declaring a Tile of our own: STANDARDS.md
+       requires art for anything that carries a Tile attribute, and a plain notice board owes
+       none. Its render color moves to the same ochre r_KingdomScaffold rises in, since a plan
+       is what a scaffold looks like before there is anything to scaffold yet. -->
+  <object Name="r_KingdomPlanMarker" Inherits="Sign">
+    <part Name="Render" DisplayName="staked plan" ColorString="&amp;y" />
+    <part Name="Description" Short="A stake driven into the ground, and a promise nailed to it: something is meant to rise here, as soon as the water and the hands can be spared." />
+    <part Name="Chat" Says="[a design, chalked hastily beneath the notice.]" ShowInShortDescription="true" />
+    <part Name="r_KingdomPlanMarker" />
+    <part Name="Physics" Solid="false" Takeable="false" />
+    <stat Name="Hitpoints" Value="20" />
+  </object>
   <object Name="r_KingdomBunk" Inherits="Bed">
     <stag Name="Contemporary" />
     <part Name="Render" DisplayName="communal bunk" ColorString="&amp;w" />
@@ -148,6 +160,13 @@
     <part Name="Physics" Takeable="false" Weight="800" />
     <property Name="DontWarnOnOpen" Value="true" />
     <stat Name="Hitpoints" Value="150" />
+  </object>
+  <object Name="r_KingdomAdoptionMarker" Inherits="Furniture">
+    <stag Name="Contemporary" />
+    <part Name="Render" DisplayName="settlement marker" RenderString="*" ColorString="&amp;W" DetailColor="w" />
+    <part Name="Description" Short="A small stone marker, plain and unlettered. It says nothing about what stands around it - only that the keepers looked, and it was satisfied." />
+    <part Name="Physics" Takeable="false" Weight="40" />
+    <stat Name="Hitpoints" Value="50" />
   </object>
   <object Name="r_KingdomPalisade" Inherits="Furniture">
     <stag Name="Contemporary" />

@@ -164,6 +164,29 @@ overwritten by kingdom systems without explicit designation:
   `KingdomBuilt`, `KingdomRaider`); wounds to anything else come only from ordinary
   simulation (combat, fire), never from scripted deletion.
 
+## 7b. Nothing stalls in silence
+
+Any settlement process that can stop short must be able to say why, once, where the founder will
+see it — the ledger, the status report, or a message line. A thing that will not progress and will
+not explain itself is the single most common complaint levelled at building systems of this shape;
+the comparables pass names it specifically against Sim Settlements, whose plots stall for reasons
+the player cannot see. It is also the cheapest possible bug to introduce, because a silent stall is
+usually a guard clause someone added for a good reason and returned from without a word.
+
+Concretely, every early return in a per-pass resolver falls into one of two kinds:
+
+- **Not applicable** — the module is off, the settlement is unfounded, this is not our ground.
+  These say nothing, correctly.
+- **Applicable but blocked** — no water, no hands, no room, nowhere to put the output. These must
+  announce, and must announce **once** rather than every visit. The established idiom is a
+  `bool ...Announced` flag on the object or the system, set when the reason is first given and
+  cleared the moment the block lifts. See `r_KingdomPlot.NoLarderAnnounced` and
+  `KingdomSystem.IdleWorksAnnounced`.
+
+The rule exists because this was violated the same day it was written: a guard stopping a plot from
+drinking water it had nowhere to spend was correct, and returned in silence, so the plot simply
+never grew and nothing anywhere said why.
+
 ## 8. Balance invariants
 
 Learned from comparables (Kenshi, Bannerlord, Banished, RimWorld, Terraria, Suikoden) and

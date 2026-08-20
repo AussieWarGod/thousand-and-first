@@ -250,6 +250,12 @@ namespace ThousandAndFirst
 
 		public Dictionary<string, int> OriginCounts = new Dictionary<string, int>();
 
+		/// <summary>The seated city's own tally of settler creeds. See <see cref="KingdomCreed"/>.
+		/// Per-city and swapped with the seat exactly like <see cref="OriginCounts"/> &mdash; the
+		/// counterpart <see cref="KingdomSettlement.CreedCounts"/> is what the reflected carry
+		/// checks this field against.</summary>
+		public Dictionary<string, int> CreedCounts = new Dictionary<string, int>();
+
 		public Dictionary<string, int> Standings = new Dictionary<string, int>();
 
 		/// <summary>
@@ -333,6 +339,34 @@ namespace ThousandAndFirst
 		/// gain a rung without retyping a serialized field.
 		/// </summary>
 		public int RegardSpoken;
+
+		/// <summary>How far apart the realm's two cities have grown over their creeds. Realm-level
+		/// and never swapped &mdash; unlike <see cref="CreedCounts"/>, this is a property of the
+		/// realm holding two cities, not of either city on its own. See <see cref="KingdomCreed"/>
+		/// and <see cref="KingdomCreedRules"/>.</summary>
+		public int Dissent;
+
+		/// <summary>The worst <see cref="CityTemper"/> already spoken and chronicled, so the
+		/// warning ladder only speaks once per tier. See <see cref="KingdomCreedRules.RememberedTemper"/>.</summary>
+		public int DissentSpoken;
+
+		/// <summary>Tick of the last attended creed pass. Zero means no checkpoint yet.</summary>
+		public long LastDissentTick;
+
+		/// <summary>The creed the founder declared the realm's own, or null. See
+		/// <see cref="KingdomCreed.Declare"/>.</summary>
+		public string DeclaredCreed;
+
+		/// <summary>Tick of the last rite of shared water. See <see cref="KingdomCreed.HoldRite"/>.</summary>
+		public long LastRiteTick;
+
+		/// <summary>The city that left the realm over its creed, kept whole, or null. See
+		/// <see cref="KingdomCreed.Secede"/>. Realm-level: a settlement does not carry its own
+		/// secession record, the realm does.</summary>
+		public KingdomSettlement Seceded;
+
+		/// <summary>When <see cref="Seceded"/> left, for the record and the dev log.</summary>
+		public long SecededTick;
 
 		/// <summary>
 		/// The regard at which the founder was last asked whether they wanted to be taken back,
@@ -797,6 +831,16 @@ namespace ThousandAndFirst
 			{
 				OnZoneActivatedWhileExiled(E.Zone);
 			});
+			// Before the claim guard, for the same reason exile is: ground a city seceded from
+			// stops being in ClaimedZones the moment it leaves (KingdomCreed.Secede), so a founder
+			// standing on it would never be told below.
+			Guard("seceded", delegate
+			{
+				if (E.Zone != null && KingdomCreed.SecededHolds(this, E.Zone.ZoneID))
+				{
+					XRL.Messages.MessageQueue.AddPlayerMessage("{{K|This ground isn't yours to keep anymore. (Charter: how your cities hold each other)}}");
+				}
+			});
 			if (!Founded || E.Zone == null || !ClaimedZones.Contains(E.Zone.ZoneID))
 			{
 				return base.HandleEvent(E);
@@ -840,6 +884,10 @@ namespace ThousandAndFirst
 			Guard("locus", delegate
 			{
 				KingdomLocus.OnZoneActivated(this, E.Zone, survey);
+			});
+			Guard("creed", delegate
+			{
+				KingdomCreed.OnZoneActivated(this, E.Zone);
 			});
 			Guard("digest", delegate
 			{
@@ -1025,6 +1073,15 @@ namespace ThousandAndFirst
 				Vocation = KingdomSettlement.NeutralVocation;
 			}
 			Away?.Normalize();
+			Seceded?.Normalize();
+			if (Dissent < 0 || Dissent > KingdomCreedRules.DissentBreaking)
+			{
+				Dissent = (Dissent < 0) ? 0 : KingdomCreedRules.DissentBreaking;
+			}
+			if (DissentSpoken < 0 || DissentSpoken > (int)CityTemper.Secession)
+			{
+				DissentSpoken = (DissentSpoken < 0) ? 0 : (int)CityTemper.Secession;
+			}
 			if (ExiledStandings == null)
 			{
 				ExiledStandings = new Dictionary<string, int>();
@@ -1130,6 +1187,10 @@ namespace ThousandAndFirst
 			if (OriginCounts == null)
 			{
 				OriginCounts = new Dictionary<string, int>();
+			}
+			if (CreedCounts == null)
+			{
+				CreedCounts = new Dictionary<string, int>();
 			}
 			if (Standings == null)
 			{

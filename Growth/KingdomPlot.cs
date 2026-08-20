@@ -183,10 +183,22 @@ namespace ThousandAndFirst
 					// water is drawn rather than after: spending the settlement's water on a crop
 					// with no larder to receive it is a small penalty for not having engaged with
 					// the larder yet, and this mod does not levy those.
+					//
+					// And it SAYS SO. A thing that will not progress and will not explain itself
+					// is the single most common complaint against building systems of this shape
+					// (the project's own comparables pass names it), and an earlier version of
+					// this guard returned in silence - a plot that simply never grew, for a
+					// reason the founder could not see anywhere.
 					if (Survey.Larders.Count == 0)
 					{
+						if (!Plot.NoLarderAnnounced)
+						{
+							Plot.NoLarderAnnounced = true;
+							System.Ledger.Note("{{r|The plot at " + System.SeatName + " is not sown: there is nowhere to put a harvest. Dedicate a larder, or commission one, and it will be worked.}}");
+						}
 						return;
 					}
+					Plot.NoLarderAnnounced = false;
 					// Measure the delta rather than trusting the request: Consume can draw less
 					// than asked if a container the aggregate StoredWater counted turns out
 					// unable to give it up. Half a planting cost spent for no crop is worse than

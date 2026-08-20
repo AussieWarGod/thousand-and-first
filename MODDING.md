@@ -35,8 +35,20 @@ Ship a `KingdomBuildings.xml` in your mod root:
   city style is `common`; declared styles so far: `common`, `verdant`, `fungal`, `gyre`,
   `eater` (founding paths will select them — devotion cities, the fungal quarter, Eater
   restoration).
-- `Category` — grouping for UI and future district logic: `storage`, `housing`, `civic`,
-  `faith`, `craft`, `power`, `defense`, `knowledge` (free-form; default `civic`).
+- `Category` — what the building is FOR, which is what the settlement's own plan sites it by
+  (default `civic`). Recognised values and where each is raised:
+  | Category | Where the settlement puts it |
+  |---|---|
+  | `storage` | Beside the water — the vessels already dedicated to the stores. |
+  | `housing` | Clustered with other housing, and back from the frontier band. |
+  | `civic`, `craft`, `faith`, `knowledge` | Toward the settled heart, with a lane kept around it. |
+  | `food` | A ring out past the built-up ground; rows abut. |
+  | `memorial` | Quieter ground further out still; rows abut. |
+  | `defense` | The frontier: the edges of the zone facing ground the realm does not hold. A new segment closes a gap in the line before it extends an end. |
+  | `power` | Nowhere in particular — a wheel wants moving water and a sailvane wants wind, neither of which the plan can see, so the founder's own ground is used. |
+  Any other value (including one your mod invents) is treated the same as `power`: the plan
+  declines to guess and builds where the founder is standing. A `Defence` rating overrides the
+  category — a thing with a defence value is sited as a wall whatever else it is filed under.
 - `MinStage` — earliest growth stage the design appears at: `Camp` (default), `Steading`,
   `Village`, `Town`, `City`.
 

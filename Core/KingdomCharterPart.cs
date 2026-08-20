@@ -78,7 +78,7 @@ namespace ThousandAndFirst
 			}
 			while (true)
 			{
-				int num = Popup.PickOption(Title: system.SeatName + KingdomSettlement.VocationSuffix(system.Vocation), Options: new string[17] { (system.PetitionKind != KingdomRules.PetitionKind.None) ? ("{{W|Hear " + system.PetitionPetitioner + "}}") : "{{K|No one is waiting to speak}}", "Status", "What happened while you were away", "The Chronicle", "As others tell it", "Standings", "The roll of settlers", "Standing policy", "Designate district", "Commission a building", "Answer a threat", "Dedicate a vessel or larder", "Strike a trade charter", "Send a water manifest", "Share a meal from the larder", "Certify a machine", "Set the water detail"}, Hotkeys: new char[17] { 'h', 's', 'w', 'c', 'a', 'n', 'l', 'p', 'd', 'm', 't', 'v', 'r', 'i', 'f', 'e', 'u'}, AllowEscape: true);
+				int num = Popup.PickOption(Title: system.SeatName + KingdomSettlement.VocationSuffix(system.Vocation), Options: new string[21] { (system.PetitionKind != KingdomRules.PetitionKind.None) ? ("{{W|Hear " + system.PetitionPetitioner + "}}") : "{{K|No one is waiting to speak}}", "Status", "What happened while you were away", "The Chronicle", "As others tell it", "Standings", "The roll of settlers", "Standing policy", "Designate district", "Commission a building", "Answer a threat", "Dedicate a vessel or larder", "Strike a trade charter", "Send a water manifest", "Share a meal from the larder", "Certify a machine", "Set the water detail", "Plans staked for later", "Adopt a building", "Release an adoption", (system.SettlementCount >= 2 || system.Seceded != null) ? "How your cities hold each other" : "{{K|One city cannot fall out with itself}}"}, Hotkeys: new char[21] { 'h', 's', 'w', 'c', 'a', 'n', 'l', 'p', 'd', 'm', 't', 'v', 'r', 'i', 'f', 'e', 'u', 'g', 'b', 'j', 'k'}, AllowEscape: true);
 				switch (num)
 				{
 				case 0:
@@ -131,6 +131,18 @@ namespace ThousandAndFirst
 					break;
 				case 15:
 					CertifyMachine(system);
+					break;
+				case 17:
+					ManagePlans(system);
+					break;
+				case 18:
+					AdoptBuilding(system);
+					break;
+				case 19:
+					ReleaseBuilding(system);
+					break;
+				case 20:
+					ManageCreed(system);
 					break;
 				default:
 					return;
@@ -289,6 +301,112 @@ namespace ThousandAndFirst
 				if (!KingdomCommission.Commission(System, available[num].Key, out var failure))
 				{
 					Popup.Show(failure);
+				}
+			}
+		}
+
+		/// <summary>
+		/// Stakes a plan on the ground the founder is standing on: names a design from the same
+		/// registry <see cref="CommissionBuilding"/> reads, and leaves a marker for the settlement
+		/// to raise later, on its own settlement pass, once the stores and the plan allow it.
+		/// Nothing is spent here -- see <c>ThousandAndFirst.KingdomPlanMarker.OnSettlementPass</c>
+		/// (Growth/KingdomPlanMarker.cs) for where the water actually leaves the stores, only once,
+		/// at the moment the scaffold goes up.
+		/// </summary>
+		public void PlaceBuildingPlan(KingdomSystem System)
+		{
+			Zone zone = ParentObject.CurrentZone;
+			if (zone == null || !System.ClaimedZones.Contains(zone.ZoneID))
+			{
+				Popup.Show("Plans are staked on the kingdom's own ground.");
+				return;
+			}
+			Cell cell = ParentObject.CurrentCell;
+			if (cell == null || !cell.IsPassable() || cell.HasObjectWithPart("LiquidVolume"))
+			{
+				Popup.Show("Stand on clear, dry ground to stake a plan.");
+				return;
+			}
+			foreach (GameObject occupant in cell.GetObjects())
+			{
+				if (occupant.HasPart("r_KingdomPlanMarker") || occupant.HasPart("r_KingdomScaffold") || occupant.GetIntProperty("KingdomBuilt") == 1)
+				{
+					Popup.Show("Something already stands here.");
+					return;
+				}
+			}
+			System.Collections.Generic.List<KingdomRules.BuildEntry> available = new System.Collections.Generic.List<KingdomRules.BuildEntry>();
+			foreach (KingdomRules.BuildEntry entry in KingdomData.Buildings)
+			{
+				if (KingdomRules.StyleAllows(entry.Styles, System.Style) && System.Stage >= entry.MinStage)
+				{
+					available.Add(entry);
+				}
+			}
+			if (available.Count == 0)
+			{
+				Popup.Show("No designs are known here.");
+				return;
+			}
+			string[] options = new string[available.Count];
+			for (int i = 0; i < available.Count; i++)
+			{
+				options[i] = available[i].DisplayName + " {{C|[" + available[i].CostDrams + " drams]}}";
+			}
+			int num = Popup.PickOption(Title: "Stake a plan", Intro: "Nothing is spent now. " + System.SeatName + " raises this when the stores and the plan allow it.", Options: options, AllowEscape: true);
+			if (num < 0)
+			{
+				return;
+			}
+			GameObject marker = GameObject.Create("r_KingdomPlanMarker");
+			if (marker == null)
+			{
+				Popup.Show("The plan could not be staked.");
+				return;
+			}
+			KingdomRules.BuildEntry chosen = available[num];
+			r_KingdomPlanMarker part = marker.GetPart<r_KingdomPlanMarker>();
+			part?.ApplyDesign(chosen);
+			cell.AddObject(marker);
+			KingdomChronicle.Record(System, "a plan for " + XRL.Language.Grammar.A(chosen.Name) + " was staked at " + System.KingdomDisplayName);
+			Popup.Show("{{G|The plan is staked.}} " + System.SeatName + " will raise it when the water and the room allow.");
+		}
+
+		/// <summary>
+		/// Where the founder sees what is staked and calls plans off. Cancelling costs nothing and
+		/// returns nothing, because a staked plan never spends anything until the moment it is
+		/// realised -- there is nothing to refund.
+		/// </summary>
+		public void ManagePlans(KingdomSystem System)
+		{
+			Zone zone = ParentObject.CurrentZone;
+			System.Collections.Generic.List<GameObject> markers = KingdomPlanMarker.FindPending(zone);
+			while (true)
+			{
+				string[] options = new string[markers.Count + 1];
+				options[0] = "{{W|Stake a new plan}}";
+				for (int i = 0; i < markers.Count; i++)
+				{
+					options[i + 1] = KingdomPlanMarker.Describe(markers[i]) + " {{K|[cancel]}}";
+				}
+				int num = Popup.PickOption(Title: "Plans staked at " + System.SeatName, Options: options, AllowEscape: true);
+				if (num < 0)
+				{
+					return;
+				}
+				if (num == 0)
+				{
+					PlaceBuildingPlan(System);
+					markers = KingdomPlanMarker.FindPending(zone);
+					continue;
+				}
+				GameObject target = markers[num - 1];
+				string name = KingdomPlanMarker.Describe(target);
+				if (Popup.ShowYesNo("Cancel the plan for " + name + "? Nothing was spent, and nothing is returned, because nothing was taken.") == DialogResult.Yes)
+				{
+					KingdomChronicle.Record(System, "the plan for " + name + " at " + System.KingdomDisplayName + " was called off");
+					KingdomPlanMarker.Cancel(target);
+					markers = KingdomPlanMarker.FindPending(zone);
 				}
 			}
 		}
@@ -678,6 +796,244 @@ namespace ThousandAndFirst
 				}
 			}
 			if (!KingdomSalvage.Certify(System, zone, machine, out var failure))
+			{
+				Popup.Show(failure);
+			}
+		}
+
+		public void AdoptBuilding(KingdomSystem System)
+		{
+			Cell cell = ParentObject.CurrentCell;
+			if (cell == null)
+			{
+				return;
+			}
+			Zone zone = ParentObject.CurrentZone;
+			if (zone == null || !System.ClaimedZones.Contains(zone.ZoneID))
+			{
+				Popup.Show("A building is adopted on the kingdom's own ground, not in other people's houses.");
+				return;
+			}
+			System.Collections.Generic.List<KingdomRules.BuildEntry> buildings = KingdomData.Buildings;
+			if (buildings.Count == 0)
+			{
+				Popup.Show("There is nothing in the plan to adopt a building as.");
+				return;
+			}
+			string[] designOptions = new string[buildings.Count];
+			for (int i = 0; i < buildings.Count; i++)
+			{
+				designOptions[i] = buildings[i].Name + " {{K|(" + buildings[i].Category + ")}}";
+			}
+			int designIndex = Popup.PickOption(Title: "Adopt a building as...", Intro: "Choose what kind of building this counts as. The settlement checks the space, not who built it.", Options: designOptions, AllowEscape: true);
+			if (designIndex < 0)
+			{
+				return;
+			}
+			KingdomRules.BuildEntry entry = buildings[designIndex];
+			KingdomAdoptRules.RoleKind role = KingdomAdoptRules.ClassifyRole(entry.Category);
+			if (role == KingdomAdoptRules.RoleKind.Work)
+			{
+				if (Popup.ShowYesNo("Adopt this room as " + XRL.Language.Grammar.A(entry.Name) + "? A small marker is set down where you stand; nothing you built is touched.") != DialogResult.Yes)
+				{
+					return;
+				}
+				if (!KingdomAdopt.AdoptWork(System, zone, cell, entry.Key, out var workFailure))
+				{
+					Popup.Show(workFailure);
+				}
+				return;
+			}
+			System.Collections.Generic.List<GameObject> candidates = new System.Collections.Generic.List<GameObject>();
+			foreach (Cell adjacentCell in cell.GetLocalAdjacentCells())
+			{
+				foreach (GameObject item in adjacentCell.GetObjects())
+				{
+					if (item.GetIntProperty("KingdomBuilt") == 1 || candidates.Contains(item))
+					{
+						continue;
+					}
+					if (role == KingdomAdoptRules.RoleKind.Housing && item.HasPart("Bed"))
+					{
+						candidates.Add(item);
+					}
+					else if (role == KingdomAdoptRules.RoleKind.Storage)
+					{
+						XRL.World.Parts.LiquidVolume lv = item.GetPart<XRL.World.Parts.LiquidVolume>();
+						bool isVessel = lv != null && lv.MaxVolume > 0;
+						bool isLarder = lv == null && item.Inventory != null;
+						if (isVessel || isLarder)
+						{
+							candidates.Add(item);
+						}
+					}
+				}
+			}
+			if (candidates.Count == 0)
+			{
+				Popup.Show((role == KingdomAdoptRules.RoleKind.Housing) ? "Stand beside a bed to adopt it. Nothing here is one." : "Stand beside a vessel or a store to adopt it. Nothing here is one.");
+				return;
+			}
+			string[] candidateOptions = new string[candidates.Count];
+			for (int i = 0; i < candidates.Count; i++)
+			{
+				candidateOptions[i] = candidates[i].ShortDisplayName + ((candidates[i].GetIntProperty("KingdomStores") == 1 || candidates[i].GetIntProperty("KingdomLarder") == 1) ? " {{G|[dedicated]}}" : "");
+			}
+			int candidateIndex = Popup.PickOption(Title: "Adopt which one?", Options: candidateOptions, AllowEscape: true);
+			if (candidateIndex < 0)
+			{
+				return;
+			}
+			GameObject candidate = candidates[candidateIndex];
+			if (Popup.ShowYesNo("Adopt " + candidate.ShortDisplayName + " as " + XRL.Language.Grammar.A(entry.Name) + "?") != DialogResult.Yes)
+			{
+				return;
+			}
+			if (!KingdomAdopt.AdoptExisting(System, zone, candidate, entry.Key, out var failure))
+			{
+				Popup.Show(failure);
+			}
+		}
+
+		public void ReleaseBuilding(KingdomSystem System)
+		{
+			Cell cell = ParentObject.CurrentCell;
+			if (cell == null)
+			{
+				return;
+			}
+			Zone zone = ParentObject.CurrentZone;
+			if (zone == null || !System.ClaimedZones.Contains(zone.ZoneID))
+			{
+				Popup.Show("A building is released on the kingdom's own ground, not in other people's houses.");
+				return;
+			}
+			System.Collections.Generic.List<GameObject> adopted = new System.Collections.Generic.List<GameObject>();
+			foreach (GameObject item in cell.GetObjects())
+			{
+				if (item.GetIntProperty(KingdomAdopt.AdoptedProperty) == 1)
+				{
+					adopted.Add(item);
+				}
+			}
+			foreach (Cell adjacentCell in cell.GetLocalAdjacentCells())
+			{
+				foreach (GameObject item in adjacentCell.GetObjects())
+				{
+					if (item.GetIntProperty(KingdomAdopt.AdoptedProperty) == 1 && !adopted.Contains(item))
+					{
+						adopted.Add(item);
+					}
+				}
+			}
+			if (adopted.Count == 0)
+			{
+				Popup.Show("Nothing here is adopted into the settlement.");
+				return;
+			}
+			string[] options = new string[adopted.Count];
+			for (int i = 0; i < adopted.Count; i++)
+			{
+				options[i] = adopted[i].ShortDisplayName + " {{K|(" + adopted[i].GetStringProperty(KingdomAdopt.AdoptedKeyProperty) + ")}}";
+			}
+			int index = Popup.PickOption(Title: "Release which adoption?", Options: options, AllowEscape: true);
+			if (index < 0)
+			{
+				return;
+			}
+			GameObject target = adopted[index];
+			if (Popup.ShowYesNo("Release " + target.ShortDisplayName + " from " + System.SeatName + "'s standing? It stands exactly where it stands; the settlement will simply stop answering for it.") != DialogResult.Yes)
+			{
+				return;
+			}
+			if (!KingdomAdopt.Release(System, zone, target, out var failure))
+			{
+				Popup.Show(failure);
+			}
+		}
+
+		/// <summary>
+		/// What the realm's two cities believe, and the founder's levers over it: read the
+		/// standing report, pour a rite of shared water, declare (or recant) the realm's own
+		/// creed, or ask a seceded city to come back. Every lever below is safe to call at any
+		/// temper &mdash; each one checks its own preconditions and declines in the settlement's
+		/// own voice rather than trusting this menu to gate anything. See <see cref="KingdomCreed"/>.
+		/// </summary>
+		public void ManageCreed(KingdomSystem System)
+		{
+			Zone zone = ParentObject.CurrentZone;
+			while (true)
+			{
+				bool riteAvailable = KingdomCreed.RiteAvailable(System);
+				System.Collections.Generic.List<string> declarable = KingdomCreed.DeclarableCreeds(System);
+				string[] options = new string[4]
+				{
+					"{{W|Read the report}}",
+					riteAvailable ? "Hold a rite of shared water" : "{{K|Hold a rite of shared water}}",
+					(declarable.Count > 0) ? "Declare the realm's creed" : "{{K|Declare the realm's creed}}",
+					(System.Seceded != null) ? "Ask them back" : "{{K|Ask them back}}"
+				};
+				int num = Popup.PickOption(Title: "How your cities hold each other", Options: options, AllowEscape: true);
+				if (num < 0)
+				{
+					return;
+				}
+				if (num == 0)
+				{
+					Popup.Show(KingdomCreed.Report(System));
+				}
+				else if (num == 1)
+				{
+					if (!KingdomCreed.HoldRite(System, zone, out var riteFailure))
+					{
+						Popup.Show(riteFailure);
+					}
+				}
+				else if (num == 2)
+				{
+					DeclareCreed(System, declarable);
+				}
+				else if (num == 3)
+				{
+					if (!KingdomCreed.TryRejoin(System, zone, out var rejoinFailure))
+					{
+						Popup.Show(rejoinFailure);
+					}
+				}
+			}
+		}
+
+		/// <summary>The declare/recant sub-menu <see cref="ManageCreed"/> opens. A separate method
+		/// only to keep that loop's body short; it owns no state of its own.</summary>
+		private void DeclareCreed(KingdomSystem System, System.Collections.Generic.List<string> Declarable)
+		{
+			if (Declarable.Count == 0)
+			{
+				Popup.Show("Neither city holds a creed strongly enough to declare it the realm's own.");
+				return;
+			}
+			string[] options = new string[Declarable.Count + 1];
+			for (int i = 0; i < Declarable.Count; i++)
+			{
+				options[i] = KingdomCreed.CreedName(Declarable[i]) + ((Declarable[i] == System.DeclaredCreed) ? " {{G|[declared]}}" : "");
+			}
+			options[Declarable.Count] = "{{K|Unsay it}}";
+			int num = Popup.PickOption(Title: "Declare the realm's creed", Options: options, AllowEscape: true);
+			if (num < 0)
+			{
+				return;
+			}
+			string chosen = (num == Declarable.Count) ? null : Declarable[num];
+			// The price is named before it is paid, the same as sending a manifest or calling a
+			// meal. This is the heaviest thing in the Charter - it moves a faction's regard for
+			// the realm across the whole world and bends every settler who comes afterwards - and
+			// it was the one spending action that committed without a word.
+			if (chosen != null && Popup.ShowYesNo("Declare " + System.KingdomDisplayName + " for " + KingdomCreed.CreedName(chosen)
+				+ "?\n\nEvery settler who comes after will lean toward them. Those who stand against them will hold it against the whole realm, wherever they are, and the cities will feel it before they feel the peace.") != DialogResult.Yes)
+			{
+				return;
+			}
+			if (!KingdomCreed.Declare(System, chosen, out var failure))
 			{
 				Popup.Show(failure);
 			}

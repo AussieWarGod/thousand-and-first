@@ -10,4 +10,5 @@
   <option ID="r_TAF_OptionMemory" DisplayText="The Thousand and First: the settlement remembers its dead and names an elder among its settlers" Category="Mods" Type="Checkbox" Default="Yes" />
   <option ID="r_TAF_OptionDevLog" DisplayText="The Thousand and First: write diagnostic lines to Player.log (dev builds)" Category="Mods" Type="Checkbox" Default="Yes" />
   <option ID="r_TAF_OptionLocus" DisplayText="The Thousand and First: the gathering bench gets a keeper, and travelers may pass through" Category="Mods" Type="Checkbox" Default="Yes" />
+  <option ID="r_TAF_OptionCreed" DisplayText="The Thousand and First: your cities take on the creeds of their settlers, and can fall out over them" Category="Mods" Type="Checkbox" Default="Yes" />
 </options>

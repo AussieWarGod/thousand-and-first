@@ -99,6 +99,7 @@ namespace ThousandAndFirst
 						system.OriginCounts[origin] = count - 1;
 					}
 				}
+				KingdomCreed.Forget(system, Citizen);
 				if (system.Population > 0)
 				{
 					system.Population--;
