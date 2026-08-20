@@ -32,12 +32,31 @@ abstaining, and every module can be switched off. A player who never founds anyt
 encounter one rumour and one ruin, and otherwise never notice this mod exists.
 
 **It is not a management screen.** You set intent — where the ground is claimed, what the
-policy is, what gets commissioned — and the settlement acts on it. There is no per-citizen job
-assignment and there never will be. You are the founder, not the foreman.
+policy is, what gets commissioned — and the settlement acts on it. You will never schedule a
+citizen's day. You say how many hands carry water and what gets built; the settlement decides
+who. You are the founder, not the foreman.
 
 **It is not a numbers panel.** The treasury is casks you can walk up to. The population is
 people with names who came from somewhere. The history is a book that can be read, argued
 with, and got wrong.
+
+None of these refusals is timidity. Everywhere these shapes exist in other settlement games
+they are the part players praise — the most loved way to play Fallout 4's settlements is a mod
+whose whole idea is taking the building out of your hands: a leader, not their mother. The
+refusals are the product. What fills them is below.
+
+## What you do
+
+Found. Claim ground. Commission works. Set the water detail — how many hands carry, never
+whose. Set policy for the gate and the stores. Answer petitions. Answer raids — pay, fight,
+or talk. Strike trade charters. Read the book, and argue with it. And when the place outgrows
+your own two hands, invest until it no longer needs them: that ladder — your hands, then other
+hands, then bigger vessels, then carts, then pipes — is the spine of progression here.
+Automation is bought, not assumed; its absence limits a settlement, and never cripples one.
+
+A big city gives much and drinks deep. What feeds it is your choice: haul your adventuring
+fortune home, or build the settlement until it carries its own. Both are honest; the second
+must be earned.
 
 ## The pillars
 
@@ -51,7 +70,9 @@ so it is the spine of the settlement: what founds it, what limits it, what threa
 what everything is ultimately paid in.
 
 **Absence accrues, never decays.** Time away should produce gifts and news to discover, never
-debts to answer for. You come home to a report of what happened, not an inspection.
+debts to answer for. The stores drink a little while you are gone — capped at a few days, then
+forgiven — and nothing that happened in your absence can push the settlement below its floor.
+You come home to a report of what happened, not an inspection.
 
 **Loss writes chronicles, not game-overs.** The settlement is woundable and never deletable.
 Raids take water and sometimes people; drought drives settlers away; districts can fail. All
@@ -61,6 +82,11 @@ which the settlement cannot fall.
 **Buildings are people.** A shop is a settler who took up the trade. A working charging post
 is two settlers turning a crank. Nothing in the settlement produces anything without someone
 to do it.
+
+**Your decisions walk around.** What you chose should be readable off the settlement itself —
+who arrived, what they carry, what they refuse, what got built, how a caravan greets you — not
+only off the page that records it. If the only way to know what kind of place this became is
+to read about it, the place is not expressing anything.
 
 **Everything is remembered, twice.** Every meaningful event is written into the settlement's
 own chronicle and into the version outsiders tell — which drifts, embellishes, and sometimes
@@ -85,7 +111,9 @@ the world; richer consequences when things go wrong.
 than one level, with cellars below and watchtowers above. Walls whose strength depends on what
 you can quarry and what you know how to build. Power — mills, hydraulics, salvaged arrays, and
 a molten-salt store, because the salt is right there. Machinery hauled home from ruins, and the
-work of certifying it fit to join your grid. Cities that outlive the founder.
+work of certifying it fit to join your grid. Cities that outlive the founder. The haulage
+ladder above — vessels, carts, pipes — so a grown city can carry its own water without
+conjuring a dram of it; wells kept scarce and late, because in Qud water is money.
 
 ## For people who want to build on it
 
