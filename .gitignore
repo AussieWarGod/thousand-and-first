@@ -5,3 +5,4 @@ DevTests/build-generated.rsp
 *.dll
 _notes/
 Art/preview/
+Tools/last-deploy-receipt.txt
