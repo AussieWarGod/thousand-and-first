@@ -156,7 +156,7 @@ namespace ThousandAndFirst
 			// events recorded on the same tick share a drift, which is a cosmetic tie and not
 			// the silent single-value collapse the count produced.
 			ulong ordinal = (ulong)The.Game.TimeTicks;
-			string settlementId = SanitizeSettlementId(System.KingdomFactionName);
+			string settlementId = SettlementId(System.KingdomFactionName);
 			SemanticEventKey key;
 			KernelFaultCode fault;
 			int roll;
@@ -242,8 +242,19 @@ namespace ThousandAndFirst
 		/// bytes. Anything else in the name becomes <c>-</c> so two differently-punctuated
 		/// spellings of the same name still draw independent settlement ids rather than colliding
 		/// on a stripped-down one.
+		/// <para>
+		/// The one definition of a settlement's kernel identity, shared rather than copied: every
+		/// kernel-backed draw a settlement makes &mdash; the outsider register here, the named
+		/// voices in <c>KingdomVoiceRules</c>, and whatever comes next &mdash; must key on the
+		/// same id, or two of them would disagree about which settlement they belong to. Not
+		/// supported API on purpose (STANDARDS.md &sect;9): the grammar it folds into is frozen,
+		/// but which string this mod hands the kernel is ours to change.
+		/// </para>
 		/// </summary>
-		private static string SanitizeSettlementId(string FactionName)
+		/// <param name="FactionName">The realm's runtime faction name, or null before founding
+		/// &mdash; which yields the id an unfounded settlement draws under.</param>
+		/// <returns>An id that always satisfies the <c>taf:</c> grammar. Never null.</returns>
+		internal static string SettlementId(string FactionName)
 		{
 			StringBuilder builder = new StringBuilder(SettlementIdPrefix);
 			if (!string.IsNullOrEmpty(FactionName))

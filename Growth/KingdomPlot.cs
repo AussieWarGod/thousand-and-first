@@ -49,6 +49,43 @@ namespace XRL.World.Parts
 		public bool NoLarderAnnounced;
 
 		/// <summary>
+		/// A crop also ripens while the founder is standing there watching it.
+		/// <para>
+		/// The settlement pass resolves absence, which is the hard half, but it only runs on zone
+		/// activation &mdash; so a founder who commissions a plot and then stays put would see
+		/// nothing happen for as long as they stayed. This is the cheap other half: the tick a
+		/// stage is actually due, ask the settlement to resolve. It is not the dead idiom vanilla
+		/// <c>Harvestable</c> falls into, because the comparison is against an absolute tick this
+		/// part stored, not a countdown that must be delivered every turn to stay correct &mdash;
+		/// missing ticks costs nothing here, and <c>r_KingdomScaffold</c> completes the same way.
+		/// </para>
+		/// </summary>
+		public override bool WantTurnTick()
+		{
+			return true;
+		}
+
+		public override void TurnTick(long TimeTick, int Amount)
+		{
+			if (Stage != KingdomCropRules.PlotStage.Growing || TimeTick < NextStageTick)
+			{
+				return;
+			}
+			Zone zone = ParentObject?.CurrentZone;
+			KingdomSystem system = The.Game?.RequireSystem<KingdomSystem>();
+			if (zone == null || system == null || !system.Founded || !system.ClaimedZones.Contains(zone.ZoneID))
+			{
+				return;
+			}
+			// Surveying is the expensive part, so it happens only on the tick a stage is due -
+			// once per cycle, not once per turn.
+			KingdomSystem.Guard("plot tick", delegate
+			{
+				KingdomPlot.OnSettlementPass(system, zone, KingdomSurvey.Take(zone, system));
+			});
+		}
+
+		/// <summary>
 		/// Recolors the plot for its new stage. Presentation only: the blueprint declares one
 		/// tile throughout (vanilla Watervine's own, already reachable), and only the accent
 		/// colors move &mdash; exactly the scheme Watervine's <c>Harvestable</c> declaration

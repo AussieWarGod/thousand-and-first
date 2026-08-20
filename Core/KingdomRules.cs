@@ -596,6 +596,124 @@
 			return BaseDrams * (100 - reduction) / 100;
 		}
 
+		/// <summary>
+		/// Defence a wall gains from ground already broken into worked stone: exactly
+		/// <see cref="RuinTerrainBlueprints"/>'s two blueprints, plus the wider "Ruins" region tag
+		/// shared by <c>TerrainGritGate</c>, <c>TerrainRustWell</c>, <c>TerrainGolgotha</c>, and
+		/// <c>TerrainRustedArchway</c> (StreamingAssets/Base/ObjectBlueprints/WorldTerrain.xml).
+		/// The region match is deliberately wider than <see cref="IsRuinSite"/>'s: that gate
+		/// decides whether the founding rite itself restores a ruin, and stays exact so an
+		/// ordinary founding never mistakenly reads as one; this one only asks whether there is
+		/// cut stone lying around to build with, which any of those sites offer.
+		/// </summary>
+		private static readonly string[] WorkedStoneGround = new string[1] { "Ruins" };
+
+		/// <summary>
+		/// Defence a wall gains from ground with rock underfoot that nobody has cut yet:
+		/// <c>TerrainMountains</c>/<c>TerrainBethesdaSusa</c> (region "Mountains") and
+		/// <c>TerrainHills</c>/<c>TerrainAsphaltMines</c>/<c>TerrainCraters</c> (region "Hills").
+		/// Worth less than <see cref="WorkedStoneGround"/>: the stone is there, but the
+		/// settlement's own masons have to quarry it first.
+		/// </summary>
+		private static readonly string[] QuarriableGround = new string[2] { "Mountains", "Hills" };
+
+		/// <summary>Defence a wall built on <see cref="WorkedStoneGround"/> gains.</summary>
+		public const int WorkedStoneWallBonus = 2;
+
+		/// <summary>Defence a wall built on <see cref="QuarriableGround"/> gains.</summary>
+		public const int QuarriableWallBonus = 1;
+
+		/// <summary>
+		/// Extra defence a wall draws from what the settlement's ground offers to build with.
+		/// Reads the exact blueprint first and the region tag only if the blueprint names
+		/// nothing recognised &mdash; the same order <see cref="StyleForSite"/> reads ground in,
+		/// for the same reason: a ruin sitting inside some other region is still a ruin. Ground
+		/// that offers nothing to quarry (a salt flat, a jungle floor, a spore mat) answers zero,
+		/// never a negative number &mdash; this is a bonus ladder, and its floor is the wall a
+		/// settlement builds today.
+		/// </summary>
+		/// <param name="TerrainBlueprint">Founding site's terrain blueprint
+		/// (<see cref="KingdomSystem.FoundingTerrainBlueprint"/>), or null.</param>
+		/// <param name="RegionName">Founding site's terrain region
+		/// (<see cref="KingdomSystem.FoundingRegionName"/>), or null.</param>
+		public static int GroundWallBonus(string TerrainBlueprint, string RegionName)
+		{
+			if (GroundMatches(TerrainBlueprint, WorkedStoneGround) || GroundMatches(RegionName, WorkedStoneGround))
+			{
+				return WorkedStoneWallBonus;
+			}
+			if (GroundMatches(TerrainBlueprint, QuarriableGround) || GroundMatches(RegionName, QuarriableGround))
+			{
+				return QuarriableWallBonus;
+			}
+			return 0;
+		}
+
+		/// <summary>As <see cref="ContainsAny"/>, but null- and empty-safe: <see cref="StyleForGround"/>
+		/// guards this at its one call site, and this ladder needs the same guard at two.</summary>
+		private static bool GroundMatches(string Ground, string[] Needles)
+		{
+			return !string.IsNullOrEmpty(Ground) && ContainsAny(Ground, Needles);
+		}
+
+		/// <summary>Defence a wall gains from a founder who knows the Tinkering skill at all
+		/// &mdash; enough to keep a joint sound, even without a schematic for it.</summary>
+		public const int TinkeringWallBonus = 1;
+
+		/// <summary>
+		/// Defence a wall gains, on top of <see cref="TinkeringWallBonus"/>, from a founder who
+		/// has gone on to Tinker I (<c>Tinkering_Tinker1</c>): the point the skill actually
+		/// teaches building from a schematic rather than only examining and repairing one.
+		/// </summary>
+		public const int AdvancedTinkeringWallBonus = 1;
+
+		/// <summary>
+		/// Extra defence a wall draws from what the founder standing at the commission actually
+		/// knows how to build. Purely additive over the two skill checks, and never negative: an
+		/// unskilled founder answers zero, the wall a settlement builds today.
+		/// </summary>
+		/// <param name="HasTinkering">Whether the founder holds the base Tinkering skill.</param>
+		/// <param name="HasAdvancedTinkering">Whether the founder holds Tinker I.</param>
+		public static int KnowledgeWallBonus(bool HasTinkering, bool HasAdvancedTinkering)
+		{
+			int bonus = 0;
+			if (HasTinkering)
+			{
+				bonus += TinkeringWallBonus;
+			}
+			if (HasAdvancedTinkering)
+			{
+				bonus += AdvancedTinkeringWallBonus;
+			}
+			return bonus;
+		}
+
+		/// <summary>
+		/// The defence a commissioned wall actually rises with: its design's own
+		/// <see cref="BuildEntry.Defence"/>, plus what the ground offers to quarry
+		/// (<see cref="GroundWallBonus"/>) and what the founder knows how to build
+		/// (<see cref="KnowledgeWallBonus"/>). Purely additive and gated on the design already
+		/// being defensive &mdash; a design with no <c>Defence</c> of its own (an ordinary
+		/// building) never gains any, because this ladder makes walls stronger, it does not make
+		/// anything into a wall.
+		/// </summary>
+		/// <param name="BaseDefence">The commissioned design's own <c>Defence</c> attribute.
+		/// Zero or negative for anything that is not a defensive work.</param>
+		/// <param name="TerrainBlueprint">Founding site's terrain blueprint, or null.</param>
+		/// <param name="RegionName">Founding site's terrain region, or null.</param>
+		/// <param name="HasTinkering">Whether the founder holds the base Tinkering skill.</param>
+		/// <param name="HasAdvancedTinkering">Whether the founder holds Tinker I.</param>
+		/// <returns><paramref name="BaseDefence"/> unchanged for a non-defensive design, poor
+		/// ground, and an unskilled founder alike &mdash; the bonus only ever adds.</returns>
+		public static int WallDefence(int BaseDefence, string TerrainBlueprint, string RegionName, bool HasTinkering, bool HasAdvancedTinkering)
+		{
+			if (BaseDefence <= 0)
+			{
+				return BaseDefence;
+			}
+			return BaseDefence + GroundWallBonus(TerrainBlueprint, RegionName) + KnowledgeWallBonus(HasTinkering, HasAdvancedTinkering);
+		}
+
 		/// <summary>The drams a thirst petition asks the stores to reach.</summary>
 		public static int ThirstPetitionTarget(int Population)
 		{

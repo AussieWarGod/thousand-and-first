@@ -349,7 +349,7 @@ namespace ThousandAndFirst
 				// A load attempt is itself a witnessed moment: a manifest that already missed
 				// its window is cleared here rather than left blocking the one in-flight slot
 				// until the founder happens to visit whichever city it was bound for.
-				KingdomManifest lapsed = KingdomTrade.ExpireManifestIfStale(System, The.Game.TimeTicks);
+				KingdomManifest lapsed = KingdomTrade.ExpireManifestIfStale(System, zone, The.Game.TimeTicks);
 				if (lapsed != null)
 				{
 					Popup.Show(KingdomManifestRules.ManifestLapseNotice(lapsed.OriginName, lapsed.DestinationName, lapsed.Drams));

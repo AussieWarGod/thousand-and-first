@@ -209,8 +209,10 @@ The one thing a realm of two cities can do that a realm of one cannot.
 | 48a | With two cities, standing in one with water to spare, send a manifest | It **asks first**, naming the drams and the window. Answer no and nothing moves. Answer yes and a capped amount, only ever above a three-day reserve, leaves **this city's** stores now |
 | 48b | Immediately try to send another | Refused, naming the one already on the road: origin, destination, drams, days left |
 | 48c | Walk to the destination city | The water arrives on entry, into that city's stores, with a chronicle line and a ledger note. It arrives when you get there, not on a background clock |
-| 48d | Send one and let the window lapse | **The carters turn back.** The water is not destroyed for your having been elsewhere — the load starts home, and arrives at the origin the next time you stand there. It turns back only once |
-| 48e | Send to a city whose casks are already full | Only what fits is poured. The remainder stays on the cart, inside its window — arriving at a full cistern never destroys water |
+| 48d | Send one and let the window lapse | **The carters turn back**, once. The load starts home and arrives at the origin the next time you stand there. Being elsewhere never costs you the water |
+| 48e | Send to a city whose casks are already full | What fits is poured into the casks; **the rest is poured out on the ground as a pool** you can see. The settlement fetches it back as it makes room. Nothing is destroyed, and nothing rides the cart waiting for space |
+| 48e2 | Ignore a turned-back load until its second window closes too | It is set down where you are standing, as a pool. A load is never carried forever and never evaporates — check the stores and the ground: the water is all still accounted for |
+| 48e3 | Count the realm's water before and after a full round trip to a full cistern | Conserved. Storage still decides how much a settlement can **keep**; the cart is not a cask |
 | 48f | Try to send a manifest standing outside either city | Refused: manifests are loaded on the kingdom's own ground |
 
 ## Pass 13 — The tended plot
@@ -218,7 +220,8 @@ The one thing a realm of two cities can do that a realm of one cannot.
 | Step | Action | Expect |
 |---|---|---|
 | 49 | Charter → Commission → **tended plot**; wait out the build | A plot appears. What it can grow was decided by the ground the rite was poured on — the style your founding recorded, not a fresh look at the dirt |
-| 49a | Wait through the cycle | Dormant → Growing → Ripe on the settlement's own clock. Leave for days and come back: it resolves on arrival, like everything else here |
+| 49a | Plant, then **stand there and wait** | It ripens while you watch. A founder who never leaves must still see their plot work |
+| 49a2 | Plant, leave for days, come back | It resolves on arrival too. Both halves of the clock work: the tick it is due, and the visit that finds it overdue |
 | 49a1 | Commission a plot with **no larder dedicated** | It does not plant. Water is never spent on a crop with nowhere to land |
 | 49b | Watch the stores while it plants | It drinks, and the ledger says so — but only from what the day's upkeep and arrivals left behind. **A plot can never be the reason the thirst ladder fires** |
 | 49c | Let the stores run low with a plot planted | The plot goes dormant and waits. It never dies, and it never punishes |

@@ -67,7 +67,13 @@ namespace ThousandAndFirst
 				part.ThresholdManning = KingdomRules.IsThresholdManning(entry.Manning);
 				if (entry.Defence > 0)
 				{
-					gameObject.SetIntProperty("KingdomDefencePending", entry.Defence);
+					// The founder standing at the commission is who the ground and the skill
+					// check both belong to; a wall is built by hands that are here, not by
+					// whoever last passed through.
+					bool hasTinkering = The.Player != null && The.Player.HasSkill("Tinkering");
+					bool hasAdvancedTinkering = The.Player != null && The.Player.HasSkill("Tinkering_Tinker1");
+					int defence = KingdomRules.WallDefence(entry.Defence, System.FoundingTerrainBlueprint, System.FoundingRegionName, hasTinkering, hasAdvancedTinkering);
+					gameObject.SetIntProperty("KingdomDefencePending", defence);
 				}
 			}
 			cell.AddObject(gameObject);

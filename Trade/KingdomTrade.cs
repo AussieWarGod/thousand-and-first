@@ -66,7 +66,7 @@ namespace ThousandAndFirst
 			long timeTicks = The.Game.TimeTicks;
 			// Independent of the foreign-charter loop below: a realm may hold a manifest with
 			// zero external deals struck, and the deal loop's own early return must not skip it.
-			ResolveManifest(System, survey, timeTicks);
+			ResolveManifest(System, Z, survey, timeTicks);
 			if (System.ActiveDealKeys.Count == 0)
 			{
 				return;
@@ -104,27 +104,34 @@ namespace ThousandAndFirst
 		/// <param name="Survey">The activated zone's survey, whose dedicated stores receive the
 		/// delivery through the ordinary <see cref="KingdomSurvey.Store"/> path.</param>
 		/// <param name="TimeTicks">Current tick.</param>
-		private static void ResolveManifest(KingdomSystem System, KingdomSurvey Survey, long TimeTicks)
+		private static void ResolveManifest(KingdomSystem System, Zone Z, KingdomSurvey Survey, long TimeTicks)
 		{
-			if (System.Manifest == null || ExpireManifestIfStale(System, TimeTicks) != null || System.SeatName != System.Manifest.DestinationName)
+			if (System.Manifest == null || ExpireManifestIfStale(System, Z, TimeTicks) != null || System.SeatName != System.Manifest.DestinationName)
 			{
 				return;
 			}
 			KingdomManifest manifest = System.Manifest;
 			int delivered = Survey.Store(manifest.Drams);
 			// Store() pours only what the casks can hold and returns that. Whatever did not fit
-			// stays on the cart: this mod does not destroy water for arriving at a full cistern.
-			// It waits here, still inside its window, for room or for the founder to make some.
+			// is poured out here, onto the ground, as a real pool the settlement can fetch back
+			// once there is room for it.
+			//
+			// Not kept on the cart. A load that waits indefinitely for space is storage the
+			// founder never had to build - uncapped, outside the dedicated-vessel limit, and
+			// invisible - which would make cask racks and cisterns pointless and put the
+			// settlement's water somewhere nobody can walk up to. The treasury is casks.
 			int remainder = manifest.Drams - delivered;
+			int spilled = 0;
 			if (remainder > 0)
 			{
-				manifest.Drams = remainder;
+				spilled = KingdomLiquids.PourOnGround(KingdomCommission.FindBuildCell(Z) ?? Z?.GetEmptyCells()?.GetRandomElement(), remainder);
 			}
-			else
-			{
-				System.Manifest = null;
-			}
+			System.Manifest = null;
 			System.Ledger.Delivered += delivered;
+			if (spilled > 0)
+			{
+				System.Ledger.Note("{{y|" + spilled + " drams would not fit the casks and were poured out here. The settlement will fetch them back as it makes room.}}");
+			}
 			System.Ledger.Note(KingdomManifestRules.ManifestArrivalNote(manifest.OriginName, delivered, manifest.Drams));
 			KingdomChronicle.Record(System, KingdomManifestRules.ManifestArrivalDeed(manifest.OriginName, System.SeatName, delivered, manifest.Drams));
 			KingdomLog.Log("manifest: delivered " + delivered + "/" + manifest.Drams + " from " + manifest.OriginName + " to " + System.SeatName);
@@ -142,7 +149,7 @@ namespace ThousandAndFirst
 		/// <param name="Now">Current tick.</param>
 		/// <returns>The manifest that lapsed, for a caller that wants to tell the founder
 		/// directly; null if there was nothing to clear.</returns>
-		public static KingdomManifest ExpireManifestIfStale(KingdomSystem System, long Now)
+		public static KingdomManifest ExpireManifestIfStale(KingdomSystem System, Zone Here, long Now)
 		{
 			KingdomManifest manifest = System.Manifest;
 			if (manifest == null || !KingdomManifestRules.ManifestExpired(Now, manifest.DeadlineTick))
@@ -167,11 +174,17 @@ namespace ThousandAndFirst
 				KingdomLog.Log("manifest: turned back " + manifest.Drams + " drams toward " + manifest.DestinationName);
 				return null;
 			}
+			// Second window closed: the errand is over. The water is set down here rather than
+			// destroyed - poured out on the ground the founder is standing on, where the
+			// settlement can fetch it back. A load is never carried forever (that would be free,
+			// invisible storage) and never evaporates (that would make being elsewhere a debt).
+			// It ends as a puddle somebody can walk up to.
 			System.Manifest = null;
+			int setDown = KingdomLiquids.PourOnGround(KingdomCommission.FindBuildCell(Here) ?? Here?.GetEmptyCells()?.GetRandomElement(), manifest.Drams);
 			string deed = KingdomManifestRules.ManifestLapseDeed(manifest.OriginName, manifest.DestinationName, manifest.Drams);
-			System.Ledger.Note("{{r|" + deed + ".}}");
+			System.Ledger.Note("{{y|" + deed + ((setDown > 0) ? (", and the " + setDown + " drams were set down here") : "") + ".}}");
 			KingdomChronicle.Record(System, deed);
-			KingdomLog.Log("manifest: lapsed " + manifest.Drams + " from " + manifest.OriginName + " to " + manifest.DestinationName);
+			KingdomLog.Log("manifest: lapsed " + manifest.Drams + " from " + manifest.OriginName + " to " + manifest.DestinationName + " set down=" + setDown);
 			return manifest;
 		}
 
