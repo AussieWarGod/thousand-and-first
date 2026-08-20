@@ -2094,6 +2094,90 @@
 		/// not the same zone, or &mdash; only when <paramref name="IncludeVertical"/> is true and
 		/// only in the same column (no diagonal-and-different-stratum case counts) &mdash; are
 		/// exactly one stratum apart.</returns>
+		/// <summary>
+		/// Which edges of a claimed zone face ground the settlement does not hold.
+		/// <para>
+		/// A camp becomes a city across several zones, so a wall is not a per-zone decoration -
+		/// it belongs on the frontier of the whole claim. Claim the neighbour and that edge stops
+		/// being frontier; the wall standing there becomes an inner wall rather than a mistake,
+		/// which is how real cities grow and means expansion never wastes what was already built.
+		/// </para>
+		/// </summary>
+		[System.Flags]
+		public enum Frontier
+		{
+			None = 0,
+			North = 1,
+			South = 2,
+			West = 4,
+			East = 8
+		}
+
+		/// <summary>
+		/// The edges of <paramref name="ZoneID"/> that border unclaimed ground.
+		/// </summary>
+		/// <param name="ZoneID">A zone the settlement holds. An unparseable id has no frontier.</param>
+		/// <param name="ClaimedZones">Every zone the realm holds, this one included.</param>
+		/// <returns>Every edge facing ground the realm does not hold; <see cref="Frontier.None"/>
+		/// when the zone is entirely surrounded by the settlement's own ground.</returns>
+		public static Frontier FrontierEdges(string ZoneID, System.Collections.Generic.IEnumerable<string> ClaimedZones)
+		{
+			if (!TryParseZoneID(ZoneID, out var world, out var gx, out var gy, out var z) || ClaimedZones == null)
+			{
+				return Frontier.None;
+			}
+			bool north = false;
+			bool south = false;
+			bool west = false;
+			bool east = false;
+			foreach (string other in ClaimedZones)
+			{
+				if (!TryParseZoneID(other, out var otherWorld, out var ox, out var oy, out var oz))
+				{
+					continue;
+				}
+				if (otherWorld != world || oz != z)
+				{
+					continue;
+				}
+				// North is decreasing GY: the world map counts southward.
+				if (ox == gx && oy == gy - 1) { north = true; }
+				if (ox == gx && oy == gy + 1) { south = true; }
+				if (oy == gy && ox == gx - 1) { west = true; }
+				if (oy == gy && ox == gx + 1) { east = true; }
+			}
+			Frontier edges = Frontier.None;
+			if (!north) { edges |= Frontier.North; }
+			if (!south) { edges |= Frontier.South; }
+			if (!west) { edges |= Frontier.West; }
+			if (!east) { edges |= Frontier.East; }
+			return edges;
+		}
+
+		/// <summary>How deep from a zone edge still counts as the wall line.</summary>
+		public const int FrontierBandCells = 2;
+
+		/// <summary>
+		/// Whether a cell sits on one of the given frontier edges, and so is wall ground.
+		/// </summary>
+		/// <param name="X">Cell x, 0 to Width-1.</param>
+		/// <param name="Y">Cell y, 0 to Height-1.</param>
+		/// <param name="Width">Zone width in cells.</param>
+		/// <param name="Height">Zone height in cells.</param>
+		/// <param name="Edges">Edges facing unclaimed ground, from <see cref="FrontierEdges"/>.</param>
+		public static bool IsOnFrontier(int X, int Y, int Width, int Height, Frontier Edges)
+		{
+			if (Edges == Frontier.None || Width <= 0 || Height <= 0)
+			{
+				return false;
+			}
+			if ((Edges & Frontier.North) != 0 && Y < FrontierBandCells) { return true; }
+			if ((Edges & Frontier.South) != 0 && Y >= Height - FrontierBandCells) { return true; }
+			if ((Edges & Frontier.West) != 0 && X < FrontierBandCells) { return true; }
+			if ((Edges & Frontier.East) != 0 && X >= Width - FrontierBandCells) { return true; }
+			return false;
+		}
+
 		public static bool CoordsAdjacent(string WorldA, int GXA, int GYA, int ZA, string WorldB, int GXB, int GYB, int ZB, bool IncludeVertical = false)
 		{
 			if (WorldA != WorldB)

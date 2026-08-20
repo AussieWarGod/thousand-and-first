@@ -87,6 +87,88 @@ namespace ThousandAndFirst.Tests
 			Assert.GreaterOrEqual(KingdomRules.WallDefence(baseDefence, "TerrainSaltdunes", "Saltdunes", true, true), baseDefence);
 			Assert.GreaterOrEqual(KingdomRules.WallDefence(baseDefence, "TerrainRuins", "Ruins", true, true), baseDefence);
 		}
+
+		// --- The frontier: where a wall belongs when a camp becomes a city ----------------
+
+		private const string Home = "JoppaWorld.5.5.1.1.10";
+		private const string North = "JoppaWorld.5.5.1.0.10";
+		private const string South = "JoppaWorld.5.5.1.2.10";
+		private const string West = "JoppaWorld.5.5.0.1.10";
+		private const string East = "JoppaWorld.5.5.2.1.10";
+
+		[Test]
+		public void FrontierEdges_ALoneZoneIsFrontierOnEverySide()
+		{
+			Assert.AreEqual(
+				KingdomRules.Frontier.North | KingdomRules.Frontier.South | KingdomRules.Frontier.West | KingdomRules.Frontier.East,
+				KingdomRules.FrontierEdges(Home, new string[1] { Home }));
+		}
+
+		[Test]
+		public void FrontierEdges_ClaimingTheNeighbourStopsThatEdgeBeingFrontier()
+		{
+			KingdomRules.Frontier edges = KingdomRules.FrontierEdges(Home, new string[2] { Home, North });
+			Assert.AreEqual(KingdomRules.Frontier.None, edges & KingdomRules.Frontier.North,
+				"the north edge is still frontier after claiming the ground north of it");
+			Assert.AreNotEqual(KingdomRules.Frontier.None, edges & KingdomRules.Frontier.South);
+		}
+
+		[Test]
+		public void FrontierEdges_SurroundedGroundHasNoFrontierAtAll()
+		{
+			Assert.AreEqual(KingdomRules.Frontier.None,
+				KingdomRules.FrontierEdges(Home, new string[5] { Home, North, South, West, East }));
+		}
+
+		[Test]
+		public void FrontierEdges_AnotherWorldOrAnotherDepthIsNotANeighbour()
+		{
+			Assert.AreNotEqual(KingdomRules.Frontier.None,
+				KingdomRules.FrontierEdges(Home, new string[2] { Home, "OtherWorld.5.5.1.0.10" }) & KingdomRules.Frontier.North,
+				"a zone in another world counted as bordering ground");
+			Assert.AreNotEqual(KingdomRules.Frontier.None,
+				KingdomRules.FrontierEdges(Home, new string[2] { Home, "JoppaWorld.5.5.1.0.11" }) & KingdomRules.Frontier.North,
+				"a zone one stratum down counted as bordering ground on the surface");
+		}
+
+		[Test]
+		public void FrontierEdges_RubbishInputHasNoFrontier()
+		{
+			Assert.AreEqual(KingdomRules.Frontier.None, KingdomRules.FrontierEdges(null, new string[0]));
+			Assert.AreEqual(KingdomRules.Frontier.None, KingdomRules.FrontierEdges("not.a.zone", new string[0]));
+			Assert.AreEqual(KingdomRules.Frontier.None, KingdomRules.FrontierEdges(Home, null));
+		}
+
+		[Test]
+		public void IsOnFrontier_OnlyTheEdgesThatFaceOutwardAreWallGround()
+		{
+			// An 80x25 zone whose only unclaimed neighbour lies north.
+			KingdomRules.Frontier north = KingdomRules.Frontier.North;
+			Assert.IsTrue(KingdomRules.IsOnFrontier(40, 0, 80, 25, north), "the north edge is not wall ground");
+			Assert.IsTrue(KingdomRules.IsOnFrontier(40, 1, 80, 25, north), "the band is thinner than it claims");
+			Assert.IsFalse(KingdomRules.IsOnFrontier(40, 12, 80, 25, north), "the middle of the zone is wall ground");
+			Assert.IsFalse(KingdomRules.IsOnFrontier(40, 24, 80, 25, north), "the south edge is wall ground for a north frontier");
+		}
+
+		[Test]
+		public void IsOnFrontier_NoFrontierMeansNoWallGroundAnywhere()
+		{
+			for (int x = 0; x < 80; x += 13)
+			{
+				for (int y = 0; y < 25; y += 6)
+				{
+					Assert.IsFalse(KingdomRules.IsOnFrontier(x, y, 80, 25, KingdomRules.Frontier.None));
+				}
+			}
+		}
+
+		[Test]
+		public void IsOnFrontier_ACornerBelongsToBothItsEdges()
+		{
+			Assert.IsTrue(KingdomRules.IsOnFrontier(0, 0, 80, 25, KingdomRules.Frontier.North));
+			Assert.IsTrue(KingdomRules.IsOnFrontier(0, 0, 80, 25, KingdomRules.Frontier.West));
+		}
+
 	}
 }
 #endif

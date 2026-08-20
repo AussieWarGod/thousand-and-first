@@ -48,7 +48,7 @@ namespace ThousandAndFirst
 				Failure = "The work would cost {{C|" + entry.CostDrams + " drams}} from the stores, and the stores cannot bear it.";
 				return false;
 			}
-			Cell cell = FindBuildCell(zone);
+			Cell cell = FindBuildCell(zone, System, entry.Defence > 0);
 			if (cell == null)
 			{
 				Failure = "There is no clear ground for it here.";
@@ -103,6 +103,53 @@ namespace ThousandAndFirst
 			}
 			long ticks = BaseTicks * percent / 100;
 			return (ticks < 1) ? 1 : ticks;
+		}
+
+		/// <summary>
+		/// Where a commissioned work is raised, by what it is for.
+		/// <para>
+		/// Defensive works go on the frontier: the edges of this zone that face ground the realm
+		/// does not hold. That is what makes a wall a wall rather than a post in a field, and it
+		/// is why walls must be sited against the WHOLE claim rather than one zone - a camp
+		/// becomes a city across several zones, and the edge that needed a wall yesterday is
+		/// interior once the neighbour is claimed. Nothing is moved or torn down when that
+		/// happens; the old line simply becomes an inner wall.
+		/// </para>
+		/// <para>
+		/// Everything else is raised where the founder is standing, which is the closest thing to
+		/// intent the mod can read without a placement UI.
+		/// </para>
+		/// </summary>
+		/// <param name="Z">Zone to build in.</param>
+		/// <param name="System">The realm, for its claim. Null falls back to founder-adjacent.</param>
+		/// <param name="Defensive">True to site this on the frontier.</param>
+		public static Cell FindBuildCell(Zone Z, KingdomSystem System, bool Defensive)
+		{
+			if (Z == null)
+			{
+				return null;
+			}
+			if (Defensive && System != null)
+			{
+				KingdomRules.Frontier edges = KingdomRules.FrontierEdges(Z.ZoneID, System.ClaimedZones);
+				if (edges != KingdomRules.Frontier.None)
+				{
+					List<Cell> line = new List<Cell>();
+					foreach (Cell candidate in Z.GetEmptyCells())
+					{
+						if (candidate.IsPassable() && !candidate.HasObjectWithPart("LiquidVolume")
+							&& KingdomRules.IsOnFrontier(candidate.X, candidate.Y, Z.Width, Z.Height, edges))
+						{
+							line.Add(candidate);
+						}
+					}
+					if (line.Count > 0)
+					{
+						return line.GetRandomElement();
+					}
+				}
+			}
+			return FindBuildCell(Z);
 		}
 
 		public static Cell FindBuildCell(Zone Z)
