@@ -745,3 +745,22 @@ GAMEPLAY (charter gates, rank, fiction), chosen for feel, never for viability. T
 structural limit is inherited, not simulative: the seat + single-Away record pair — generalises
 to a roster of settlement records after W1/W2 (the by-name carry already doesn't care how many
 records there are); scheduled as its own wave.
+
+
+## BACKLOG addition, 2026-08-22 — strata-filtered plots + the sky (author side thought, stored)
+
+"underground plots will likely need to be separate from above ground plots, or building tags
+should filter what the player can develop on plots above ground, below ground, or (new concept)
+in the sky (on top of another building?, inside a tall arcology?, ??)"
+
+- Rides the deferred WR-3 design: authored `Strata="surface|deep|sky|any"` attribute filtering
+  what each plot/design pair can develop — the judgment machinery (StratumAccepts,
+  RefusedStratum, depth from zone id) already ships; sky is a vocabulary extension (Qud zone ids
+  carry z-levels above surface).
+- NEW concept needing its own carrier rule: the HOSTED plot — a plot whose ground is another
+  building (rooftop, arcology floor). Interacts with: footprint law (host's roof = plot's
+  ground), protection law (host is player-placed), wear (host damage condemns the hosted plot?),
+  networks (12(g) — the host is the conduit), and the SS2 multi-level plot precedent.
+- Not scheduled; surfaces with WR-3 in a G/D-lane wave. Design questions to the author before
+  build: what earns sky access (tech tier? XL host?), and whether deep/sky get their own
+  building SETS (Addendum 2 type×size binding) or filtered subsets of the surface sets.
