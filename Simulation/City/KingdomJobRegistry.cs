@@ -198,6 +198,21 @@ namespace ThousandAndFirst.Simulation.City
 				WalkTicksPerCell, Status, OriginCode, DepositLegIndex, next, count);
 		}
 
+		/// <summary>
+		/// The same job carrying more.
+		/// <para>
+		/// W6, LIVING-CITY-ARCHITECTURE &sect;3.10(4): capacity-bound batching is not a second
+		/// planner bolted on beside the itinerary — it is a load added to a trip that is already
+		/// running to the same store. The legs are untouched, because the route did not change;
+		/// only what is on the carrier's back did.
+		/// </para>
+		/// </summary>
+		internal KingdomJobRow WithCargo(int cargoAmount)
+		{
+			return new KingdomJobRow(JobId, Kind, Cargo, cargoAmount, SourceZoneId, DestZoneId, StartTick,
+				WalkTicksPerCell, Status, OriginCode, DepositLegIndex, legs, LegCount);
+		}
+
 		/// <summary>The cargo has landed once the deposit leg has been finished. Copy-on-write, so
 		/// the amount on the row is what LEFT and this is what is still on the carrier's back.</summary>
 		internal KingdomJobRow WithCargoLanded()

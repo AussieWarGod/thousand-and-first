@@ -157,22 +157,35 @@ namespace ThousandAndFirst
 		public long LastFetchTick;
 
 		/// <summary>
-		/// Tick the settlement's water works last poured a day's making into the stores. Same
-		/// checkpoint discipline as <see cref="LastFetchTick"/>, and planted before the first
-		/// count for the same reason: unplanted, an uncapped read is the age of the world.
+		/// Tick the city model has paid the settlement's works through.
+		/// <para>
+		/// <b>W6 changed who writes this and left what it means alone.</b> It was the settlement
+		/// pass's own checkpoint for the water works' daily make; that arithmetic moved onto the
+		/// city model, per zone, off the model's single <c>ProcessedThroughTick</c>, because two
+		/// owners of one day is a day paid twice. <c>KingdomCity.Stamp</c> now writes this field
+		/// from that tick and nothing else writes it — it is the published mirror of the production
+		/// clock, not a second one beside it.
+		/// </para>
 		/// </summary>
 		public long LastWaterWorkTick;
 
 		/// <summary>
-		/// Tick the settlement's fields last brought a day's making into the larders. Its own
-		/// checkpoint rather than a share of <see cref="LastWaterWorkTick"/>, and planted before
-		/// the first count for the same reason that one is.
+		/// Tick the settlement's MILLS last ground through.
 		/// <para>
-		/// Separate because the two producers are separately blockable: a settlement can have
-		/// casks with room and no larder dedicated at all, and a shared stamp would let whichever
-		/// good was flowing spend the other's days. Each producer owning its own stamp is the
-		/// idiom this file already keeps &mdash; fetch, upkeep, subsidence and the water works
-		/// each have one.
+		/// <b>W6 narrowed this to the mills, and the model deliberately does not touch it.</b> The
+		/// fields' clocked make moved onto the city model with the water works' (see
+		/// <see cref="LastWaterWorkTick"/>); the mills did not, and could not. A mill makes nothing
+		/// out of the day &mdash; it takes real crops off real shelves and puts real staples back,
+		/// on the ground where the shelves are &mdash; which is why
+		/// <c>KingdomCrops.MilledFoodPerDay</c> has always been subtracted out of the model's own
+		/// rate, and why the mills keep their own elapsed here.
+		/// </para>
+		/// <para>
+		/// Advanced by the settlement pass with <c>KingdomRules.AdvanceCheckpoint</c> exactly as it
+		/// always was, and planted before the first count for the same reason
+		/// <see cref="LastFetchTick"/> is: unplanted, an uncapped read is the age of the world.
+		/// Written from the reckon it would read <i>now</i> on every check-in and no mill would ever
+		/// grind again.
 		/// </para>
 		/// </summary>
 		public long LastFoodWorkTick;

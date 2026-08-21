@@ -17,6 +17,10 @@ Constants read from source:
     CropDays                 = 6
     YieldPerRow              = 3
     SeedReturnChancePercent  = 20
+    PreserveMultiple         = 3
+    MillCropsPerDay          = 2
+    FavoredMealShade         = 1
+    FavoredMealPercent       = 50
     MaxCyclesPerVisit        = 120
     EffortPerHandPerDay      = 10
     RefineEffortPerUnit      = 15
@@ -185,6 +189,7 @@ refining chain, and it eats 2 raw per unit on top of the raw the design
 names outright. A two-hand yard shapes 1 unit(s) a day.
 
 design                drams  build d  raw named  refined  raw eaten  raw total  bit weight  yard-days
+heartcourt               96     10.0        108       32         64        172          11         32
 condensery              100     10.0        116       28         56        172          11         28
 waterworks               72     10.0        138       26         52        190          11         26
 homefarm                 92     10.0        124       24         48        172           0         24
@@ -195,20 +200,19 @@ grange                   40      6.0         46        8         16         62  
 temple                   44      6.0         48        8         16         64           0          8
 manor                    44      6.0         48        6         12         60           0          6
 bathhouse                46      6.0         60        6         12         72           0          6
-barracks                 40      6.0         40        6         12         52           0          6
-airwellcourt             32      4.0         30        4          8         38           0          4
+heartmoot                46      5.0         46        6         12         58           0          6
 
-    Bits, the third cost. 3 of 62 designs ask for vanilla tinkering bits at all,
-    and they are exactly the high-craft ones: chargingpost, condensery, waterworks.
+    Bits, the third cost. 4 of 67 designs ask for vanilla tinkering bits at all,
+    and they are exactly the high-craft ones: chargingpost, condensery, heartcourt, waterworks.
     Nobody in the settlement makes a bit; they come off salvage and out of caravans, so a
     design that names them is gated on the founder's own scavenging rather than on any yard.
     That is the intended shape (the catalogue's header says so) and it means the bit line is
     a GATE and not a rate - it never appears in the yard-days column, and no amount of crew
     shortens it.
 
-    Reading. The heaviest design in the catalogue (condensery) wants 28 refined
-    units: 28 days of a two-hand yard, and 56 raw loads eaten on top of the
-    116 it names outright. Against a build time of 10 days, the YARD is the schedule
+    Reading. The heaviest design in the catalogue (heartcourt) wants 32 refined
+    units: 32 days of a two-hand yard, and 64 raw loads eaten on top of the
+    108 it names outright. Against a build time of 10 days, the YARD is the schedule
     for anything grand - the scaffold is not what you wait for.
 
     The yard-days column is now TRUE rather than aspirational. It was not, for the whole of
@@ -631,11 +635,11 @@ one who put them out past the fields, where a quarter band reaches perhaps a thi
 roofs and a plot band reaches nobody who lives anywhere.
 
 rung      declared gathered scattered   cap   was gathered scattered
-Camp            12        0         0     2     6        4         4
-Steading        28       11         5     2     7        7         7
-Village         68       51        14     6    18       18        18
-Town           102       85        48    12    37       37        37
-City           109       92        55    25    75       75        75
+Camp            13        0         0     2     6        4         4
+Steading        32       14         6     2     7        7         7
+Village         74       54        15     6    18       18        18
+Town           115       95        56    12    37       37        37
+City           138      118        79    25    75       75        75
 
 Reading. Those columns say something worth saying plainly: with one of EVERY lifting design a
 rung can reach standing, the declared lift overruns the cap so far that scoping changes the
@@ -650,7 +654,7 @@ Camp     shrinegarth   plot             3        0         0
 Steading smithy        quarter          3        3         1
 Village  workshop      quarter          8        8         2
 Town     manor         zone             9        9         9
-City     manor         zone             9        9         9
+City     heartcourt    city            16       16        16
 
 That is the mechanic Addendum 6 asked for: the same shrine is worth its whole amount among the
 houses and a fraction of it out past the fields, and the founder can SEE which they built
@@ -956,6 +960,190 @@ G2  The food lane's invariants, re-derived from the XML
   Village  bill  12 servings/day; cheapest and grandest plans both clear it
   Town     bill  25 servings/day; cheapest and grandest plans both clear it
   City     bill  50 servings/day; cheapest and grandest plans both clear it
+
+======================================================================================
+G3  Meals and industry, re-derived from the source and the XML
+======================================================================================
+
+1. THE DISH IS DERIVED, NOT AUTHORED, AND IT IS TOTAL. Addendum 11(b) asks that residents eat
+   FAVOURED MEALS. Vanilla's own home for that is the faction: `<waterritual Recipe=... RecipeText=...
+   RecipeGenotype=.../>` parses onto `Faction.WaterRitualRecipe` and friends, which the Faction's
+   own serializer writes and reads - so the runtime faction this mod already mints carries its
+   favourite dish across save and load with no persistence of ours. Eight vanilla factions ship
+   one; the realm makes nine.
+
+   The derivation is two switches and a join: the CREED picks the form (borrowed from that
+   faction's own dish), the GROUND picks the body (the crop the style grows), and every form word
+   is one of `CookingRecipe.ingredientTileTypes` so vanilla's recipe-tile generator draws it.
+
+  creed dish          form        vanilla tile word?
+  AppleMatz           matz        yes
+  BoneBabka           pastry      yes
+  GoatAndSweetLeaf    roast       yes
+  HotandSpiny         goulash     yes
+  MahLahSoup          soup        yes
+  MushroomCider       compote     yes
+  ThePorridge         porridge    yes
+  TongueAndCheek      brisket     yes
+  (nobody / unknown)  stew        yes
+
+   And the body, per founding ground. Every style must reach a staple, or a settlement founded
+   on that ground would raise a mill that grinds nothing while carrying a food number for it.
+
+  style     crop              ingredient word   preserved staple          source
+  common    Starapple         starapple         Starapple Preserves       vanilla PreservableItem
+  verdant   Vinewafer         vinewafer         Vinewafer Sheaf           vanilla PreservableItem
+  fungal    Plump Mushroom    mushroom          Pickled Mushrooms         vanilla PreservableItem
+  gyre      Godshroom Cap     godshroom         r_KingdomGodshroomPickle  ours, inherits Pickled Mushrooms
+  eater     Dreadroot Tuber   dreadroot         r_KingdomDreadrootMash    ours, inherits Mashed Lag
+
+   Two worked examples, in the register the rest of the game writes recipes in:
+     - people who hold with Joppa (`AppleMatz`), founded in a marsh  ->  vinewafer matz
+     - people who hold with the Barathrumites (`ThePorridge`), on flower fields  ->  starapple porridge
+
+2. THE MEAL IS A RENDERING OF THE RATION, NOT A SECOND BILL. The daily draw spends the same
+   servings it always did; what changed is the ORDER it reaches in and what the day is worth
+   afterwards. The order, stated once and deterministic:
+
+     1. the settlement's own staple, larder by larder in survey order, item by item in inventory
+        order - the thing the fields grew and the mill bound, which is the dish's first component;
+     2. everything else that is food, same walk.
+
+   Nothing is random, so the same larders drained in the same sequence give the same answer on
+   every reload - Addendum 12(d)'s requirement of any draw that lands on real containers.
+
+   A day counts as the settlement having eaten its own dish when a kitchen stands and at least
+   50% of the bill came off that staple. "Kitchen" is asked of the OBJECT: any finished work
+   carrying vanilla's `Campfire`, which the communal fire has done since the day it shipped.
+
+
+3. WHAT A FAVOURED MEAL IS WORTH, AND WHY IT CANNOT RUN AWAY. One settler, for exactly one day,
+   re-earned every day - which is vanilla's own arithmetic, not a dial: a non-player eater's meal
+   effect expires at StartTick + 1200 ticks (`ProceduralCookingEffect`), and `KingdomRules.TicksPerDay`
+   is 1200. It rides the same lift term as a notable's shade and a shrine's spirit, so
+   `LiftCapPercent` = 50% binds it again on top of that.
+
+   Below: the level a settlement holds at each rung with its binding supports level-pegged and no
+   other lift standing, plain and then well fed. The delta is the whole of what this wave adds to
+   the level, and it is one settler wherever the cap has room for it.
+
+  rung       binding least   plain  well fed  delta   capped by
+  Camp                   4       4         5      1   nothing (room to spare)
+  Steading               5       5         6      1   nothing (room to spare)
+  Village               12      12        13      1   nothing (room to spare)
+  Town                  25      25        26      1   nothing (room to spare)
+  City                  50      50        51      1   nothing (room to spare)
+
+4. THE MILL CONSERVES. Addendum 11(b)'s other half is food "used by industry to produce things",
+   and per the survey the entire transformation surface in Qud is four parts. The one that fits a
+   harvest is `Mill`, whose blank-target path runs `Campfire.PerformPreserve` - which is what
+   vanilla's own `Millstone` does: a vinewafer becomes three vinewafer sheaves.
+
+   Our mill books that same ratio, flat across styles for the same reason `CropDaysForStyle` is
+   flat. The conservation law is one line and it is asserted here against the catalogue itself:
+   what comes back is what went in TIMES the multiple, and the GAIN is the difference.
+
+  in (crops/day)      multiple  out (staples)  net gain  declared food
+  2                         x3              6         4              4
+
+   x3 is the LEAST of the three vanilla numbers this mod's crops carry (starapple gives five,
+   plump mushroom ten), so the settlement never books more than the thinnest preserve in the game
+   actually gives. The physical machine is real either way: r_KingdomGrindMill carries `Mill`,
+   `Container`, `Inventory` and a mechanical-power consumer, which is `Millstone`'s own
+   configuration at `Millstone`'s own tier.
+
+
+5. AND THE MILL IS PAID EXACTLY ONCE, AFTER THE RESIDENTS HAVE EATEN. Two source facts, both
+   checked here rather than trusted:
+
+     - the mill's `Carries` is SUBTRACTED from the clocked daily make, exactly as a sown field's
+       is, because it now delivers its food physically instead of as a ledger credit. Without the
+       subtraction a settlement would be fed twice out of one millstone.
+     - the grinding runs AFTER the heartbeat has drawn the day's rations, and even then only on
+       what stands above one more day's bill (`MillableStock`). Industry never eats before the
+       residents do.
+
+  subtraction present: yes    grinding runs after the ration draw: yes
+  reserve kept back:  one day's rations for the whole population, on top of that
+
+======================================================================================
+W6  Production on the model, and logistics that never look stupid
+======================================================================================
+
+1. NO DAY IS BILLED TWICE, AND IT IS STRUCTURAL RATHER THAN CAREFUL. Two owners of one day is a
+   day paid twice, so W6 leaves exactly one owner. The settlement pass no longer credits the
+   water works or the fields at all; the model integrates every zone's carry off its own
+   `ProcessedThroughTick`; and `KingdomCity.Stamp` writes `LastWaterWorkTick` FROM that tick, so
+   the settlement's stamp is a published mirror of the model's clock rather than a second clock
+   beside it. `LastFoodWorkTick` is left alone on purpose - see 3.
+
+   settlement pass credits water works:  no
+   settlement pass credits fields:       no
+   model stamps LastWaterWorkTick:       yes  (KingdomCity.Stamp)
+   model stamps LastFoodWorkTick:        no   (it is the MILLS' stamp - see 3)
+
+2. AND IT IS THE SAME NUMBER. The model's per-zone rate is not a new figure invented for the
+   model: it is `KingdomSubsidence.Supports(Survey).Water` and `KingdomGrowth.FoodMadePerDay`,
+   the exact two the level and every rung above are derived from. If those ever became two
+   answers, a reservoir would be worth one thing to the ladder and another to the casks.
+
+   water rate  = KingdomSubsidence.Supports(Survey).Water    (the ladder's own tally)
+   food rate   = KingdomGrowth.FoodMadePerDay(Survey)        (fields and mills already out)
+
+3. THE MILL KEPT ITS OWN CLOCK, AND HAD TO. A mill does not make food out of the day - it takes
+   real crops off real shelves and puts real staples back, where the shelves are. It was never in
+   the model's rate (`MilledFoodPerDay` is subtracted out of `FoodMadePerDay`), so it keeps
+   `LastFoodWorkTick`'s elapsed for itself. One clock each; neither can spend the other's days.
+
+
+4. THE BACKLOG IS BOUNDED BY THE CONTAINERS, NEVER BY THE ABSENCE. A season away cannot grow an
+   unbounded claim, because production is clamped by the room the model believes the zone has and
+   the overflow is SPILLED - the same loss a harvest with a full larder has always taken. That is
+   what makes the amortised landing finite: the worst debt a quarter can present is its own
+   capacity, and §0.0(b) prices draining a full backlog at 29 turns.
+
+   reify budget:      8 units a turn
+   worst backlog:     232 units
+   turns to drain:    29   (§0.0(b) warns above 40)
+
+5. WHAT THE MOVE ACTUALLY CHANGED FOR A PLAYER, RE-DERIVED. Every column in Q1-Q11 above is a
+   ONE-QUARTER balance and none of them moves: the same works make the same drams on the same
+   day. What changes is that the city's OTHER quarters now make theirs too. Before W6 a work in a
+   zone the founder was not standing in produced nothing at all, whatever it was built to do; the
+   settlement's whole make was whatever the seated ground happened to carry. Below, one rung's
+   binding water bill against what one, two, three and four producing quarters bring in at that
+   rung's cheapest plan.
+
+  rung        bill/day   1 quarter       2       3       4   holds at
+  Camp               4           0       0       0       0   nothing (11(a) gates the lane)
+  Steading           6           8      16      24      32   1 quarter
+  Village           18          30      60      90     120   1 quarter
+  Town              45          50     100     150     200   1 quarter
+  City             110         150     300     450     600   1 quarter
+
+   Read it as the strictly-additive change it is: one quarter still holds every rung on its own,
+   exactly as Q1-Q11 derive, so nothing above needs re-tuning. A four-quarter City simply stops
+   throwing away three quarters of what it built. That is the whole balance consequence of W6,
+   and it is a ceiling being lifted rather than a floor being moved.
+
+
+6. THE PLANNER'S BOUNDS ARE CONSTANTS, AND THEY MATCH THE CONSTITUTION. §3.10(4) prices one
+   slice's routing at 16 jobs, 8 stops and 50 swap tests - about a thousand integer operations.
+   Those three numbers live in `KingdomBudgetRules` and the planner reads them from there, so a
+   tuning change cannot leave the budget table behind.
+
+   PlannerMaxJobs           16
+   PlannerMaxStops           8
+   PlannerMaxSwapTests      50
+   PlannerMaxDraws            0   (routing is arithmetic, never chance)
+
+7. AND THE CARRY GOES TO THE NEAREST GROUND. §3.10(1): a shortfall where the founder is standing
+   is met out of the closest quarter actually holding the resource, on the level-1 zone graph,
+   tie-broken on the lower row index. Inside a quarter the oldest dedication still pays first
+   (§3.9, I4) - the two rules answer different questions and both stay true.
+
+   carry order:  distance to the seat, then row index   (KingdomCityRules.TryPlanTransfer)
+   drain order:  dedication ordinal, then vessel id     (KingdomDrainRules.TryOrder, unmoved)
 
 ======================================================================================
 Where this model is too crude to decide anything

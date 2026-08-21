@@ -813,6 +813,38 @@ only pure water — so the fix mints not one dram.
   trip batching are a later wave's, because they only start to matter once many jobs compete over
   many stores.
 
+### Added — every quarter of the city works, and no carrier walks past a nearer store
+- **The works of a zone you are not standing in now make what they were built to make.** Until now
+  a reservoir in the next quarter produced nothing at all while you were elsewhere: the settlement
+  pass credited only the ground under your feet, on a settlement-wide stamp, and the city model was
+  deliberately shipped running at a rate of zero because two owners of one day is a day paid twice.
+  There is now **one owner**. Every quarter's daily make is measured onto its own row and the model
+  integrates all of them off its own single clock; the settlement pass credits nothing, and the
+  settlement's two work stamps are written **from** the model's tick rather than beside it. Come
+  back to a four-zone city and all four have been working.
+- **And it arrives in real vessels, a vessel at a time.** What the works made is a claim against
+  real containers, not a number in a ledger: walk into the quarter and the cistern fills over the
+  next turns, oldest dedication first, exactly as a deficit has always drained. Open it and it holds
+  precisely what the book says. What the containers had no room for is **left in the field** and
+  said so — the same loss a full larder has always taken — never banked and never silently forgiven.
+- **The audit says the whole truth now.** `city: check-in audit` prints `model=`, `debt=` and
+  `ground=` per stock kind, and the identity it asserts is `model − debt == ground`. `debt=` is what
+  the quarter's works have made that nobody has poured yet; it is not drift, and it is re-derived
+  from the ground on every check-in, so the equality holds by construction rather than by care.
+- **A shortfall is met from the nearest quarter that actually has it**, on the city's own zone
+  graph, and it is the same answer after a reload. The quarter that was claimed first no longer
+  gets drained first merely for being first in the book. Inside a quarter, the oldest dedicated
+  vessel still pays first — the two rules answer different questions and both stay true.
+- **Three small loads bound for the same larder become one porter, not three.** A load whose
+  destination a carrier is already walking to is put on that carrier's back instead of minting a
+  second one. The whole planner — nearest-neighbour, then 2-opt, inside hard caps of sixteen jobs,
+  eight stops and fifty swap tests — is arithmetic with **no draw anywhere in it**.
+- **Your city's history became something you can trade.** What the roads are saying about your
+  settlement is filed as a journal observation, tagged in the game's *own* interest vocabulary, so
+  the factions that already cared about settlements and gossip will buy it from you at any water
+  ritual — including from your own settlers. It can only be sold, never bought: you already know
+  your own city's history.
+
 ### Added — the city asks, and another mod can teach it what to ask for
 - **The book of the city** (Charter, `7`). Four waves of model — stocks, zone rows, works,
   residents, clocks, the told-log — and until now the only way to see any of it was a performance

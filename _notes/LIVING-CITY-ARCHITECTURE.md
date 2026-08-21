@@ -1904,8 +1904,8 @@ refuse-loudly path — after four waves have shaped them and before W6/W7 exerci
 first consumers. *Visible: the city asks you for things, and another mod can teach it a new thing
 to ask for.* ***New Pass 31 — "The city asks."***
 
-**W6 — Production depth, and logistics that never look stupid.** Extend the real machines in
-Addendum 11(c) order; the food chain end to end (seeds → crops → stores → meals/industry);
+**W6 — Production depth, and logistics that never look stupid. [SHIPPED]** Extend the real machines
+in Addendum 11(c) order; the food chain end to end (seeds → crops → stores → meals/industry);
 inter-zone haulage crews. **Constitution additions: nearest-holder sourcing and capacity-bound
 batching** (§3.10 items 1 and 4) land here rather than in W3, because both only bite once many jobs
 compete over many holders — which is precisely what the food chain and haulage crews create.
@@ -1913,6 +1913,47 @@ Shipping a 2-opt over a single open job would be optimising an empty room. The m
 — a season away, timed and written down — is no longer this wave's job either: it has been running
 since W1 as the receipt. *Visible: the economy is physical end to end, and no carrier ever walks
 past a nearer store.*
+
+> **What landed, and the one design decision worth naming.** W1 shipped the integration at a net
+> rate of zero and said exactly why: the settlement pass credited the seated zone's works for the
+> whole elapsed off `KingdomGrowth`'s **settlement-wide** `LastWaterWorkTick`, so a model that also
+> credited them would pay the same day twice. W6 did not add a second accounting beside that one —
+> it **moved** it, and left one owner:
+>
+> - **One clock.** Every zone's per-day make is measured onto its own row (`WaterCarry`/`FoodCarry`,
+>   from the *same* `Supports` tally the ladder is derived from) and integrated off the model's
+>   single `ProcessedThroughTick`. The settlement pass credits nothing. `KingdomCity.Stamp` writes
+>   `LastWaterWorkTick` **from** the model's tick, so two owners of one day is a state that cannot
+>   be reached rather than a bug to avoid. Days are counted as **world-day
+>   boundaries crossed**, which is additive across every split — a heartbeat slice cannot cost the
+>   city a day and cannot let the homecoming pay one twice.
+> - **One ledger, and I1 by construction.** Production raises a row's level *and* its signed debt by
+>   the same clamped amount, so `level − owed` — what the model claims the ground holds — never
+>   moves for anything the works did unwatched. `KingdomProductionRules.TryReconcile` **re-derives**
+>   the debt from the ground at every check-in, which makes `level − owed == ground` true by
+>   construction; the audit line prints that identity and MISMATCHes on it. (Before W6 the reconcile
+>   wrote the ground over the level and left the debt where it was — correct only while the debt was
+>   zero, which a producing rate ends.)
+> - **The mill kept its own clock, and had to.** A mill is not production: it takes real crops off
+>   real shelves and puts real staples back, where the shelves are, and `MilledFoodPerDay` is
+>   already subtracted out of the model's rate. It keeps `LastFoodWorkTick`'s elapsed. One clock
+>   each; neither can spend the other's days.
+> - **§3.10(1) and (4) live.** The carry draws on the nearest quarter actually holding the resource
+>   (level-1 zone graph, tie-broken on row index); inside a quarter the oldest dedication still pays
+>   first, so I4 and I6 are both true and answer different questions. A load bound for a larder a
+>   porter is already walking to is folded onto that porter — batching at the one moment it can
+>   prevent the pathology rather than detect it. Both "never looks stupid" checks are functions in
+>   `KingdomLogisticsRules`, so the tests and the runtime ask one implementation.
+> - **The receipt.** `KingdomWorstCaseReceiptTests` runs step 90's own city — 4 zones, 40 works, 60
+>   settlers, a season away, a standing backlog — and pins every count against its §0.0 lane. Measured:
+>   `R=104 steps=9 rows=1872/13312 planops=148 graphops=64 worstdrain=29turns model=13824B
+>   realm=53572B`, and a year and a decade cost the same reckoning as the season.
+> - **Deliberately not shipped, with the reason.** A second job *kind*. §7.4's own rule applies: the
+>   refined-materials lane has no cross-zone flow to carry yet (stockpiles are per zone and nothing
+>   moves between them), so minting a haulage kind for it would be the empty room this wave was told
+>   not to optimise. The level-**2** distance slices (work→edge, same-zone pairs) also remain
+>   unwired — they need the ground and W3 left them pure; the carry is sourced at the granularity
+>   the model has holders at, which is the quarter.
 
 **What the constitution changed about the plan itself.** Four things, worth naming so nobody
 re-derives them: (0) two things ship *before* anything uses them — the **executor seam** at W0

@@ -88,18 +88,17 @@ namespace ThousandAndFirst
 				KingdomLog.Log("growth: fetched " + fetched + " drams from open water into stores");
 			}
 			// The water works make what their Carries promise, on world-time like everything else
-			// (Addendum 8): a reservoir's day is a reservoir's day whether anyone watched it. This
-			// is what lets the level the subsidence pass measures actually arrive in the casks.
-			int madeDays = KingdomRules.ElapsedDays(timeTicks - System.LastWaterWorkTick);
-			if (System.LastWaterWorkTick <= 0)
-			{
-				System.LastWaterWorkTick = timeTicks;
-			}
-			else if (madeDays > 0)
-			{
-				System.Ledger.Fetched += survey.Store(KingdomSubsidence.Supports(survey).Water * madeDays);
-				System.LastWaterWorkTick = KingdomRules.AdvanceCheckpoint(System.LastWaterWorkTick, timeTicks);
-			}
+			// (Addendum 8): a reservoir's day is a reservoir's day whether anyone watched it.
+			//
+			// W6 MOVED THAT ARITHMETIC, it did not duplicate it. This block used to credit the
+			// SEATED zone's works for the settlement's whole elapsed, off a settlement-wide stamp,
+			// which is why W1 shipped the city model at a net rate of zero: two owners of one day
+			// is a day billed twice. There is now one owner. Every zone's per-day make is measured
+			// onto its own row at the pass that reads it, KingdomCity's reckon integrates all of
+			// them off the model's single ProcessedThroughTick, and what the works made lands in
+			// real vessels through §3.9's amortised reify - here, and in the next zone over, on the
+			// same terms. System.LastWaterWorkTick is now the published mirror of that one tick
+			// (KingdomCity.Stamp) and nothing reads it to bill from.
 			// STANDARDS 7's "commissioned storage auto-flags", the food half. A granary the
 			// settlement paid for is the settlement's pantry the same way a commissioned cask
 			// rack is its cistern; nothing the founder placed is touched, because only a
@@ -126,6 +125,13 @@ namespace ThousandAndFirst
 			// before the first count for the reason LastFetchTick's is - unplanted, an uncapped
 			// read is the whole age of the world, and the granaries would fill on the founding
 			// day.
+			// W6: the FIELDS' clocked make moved onto the model with the water works' (see above).
+			// What is left on this stamp is the MILLS, which are a different kind of thing: a mill
+			// does not make food out of the day, it takes real crops off real shelves and puts real
+			// staples back, on the seated ground, where the shelves are. That is why it was never
+			// in the model's rate to begin with - KingdomCrops.MilledFoodPerDay is subtracted out
+			// of FoodMadePerDay - and it is why it keeps a stamp of its own. One clock each, and
+			// neither can spend the other's days.
 			int grownDays = KingdomRules.ElapsedDays(timeTicks - System.LastFoodWorkTick);
 			if (System.LastFoodWorkTick <= 0)
 			{
@@ -138,7 +144,6 @@ namespace ThousandAndFirst
 			}
 			else if (grownDays > 0)
 			{
-				StoreHarvest(System, survey, FoodMadePerDay(survey) * grownDays);
 				System.LastFoodWorkTick = KingdomRules.AdvanceCheckpoint(System.LastFoodWorkTick, timeTicks);
 			}
 			bool heartbeatHealthy = ResolveHeartbeat(System, Z, survey, timeTicks);
@@ -519,11 +524,19 @@ namespace ThousandAndFirst
 		}
 
 		/// <summary>
-		/// Puts a day's making into the larders and is honest about whatever would not fit
+		/// Puts a making into the larders and is honest about whatever would not fit
 		/// (STANDARDS 7b). Loss, not a queue: a harvest with nowhere to go is left in the field,
 		/// the same way water the casks cannot take runs into the ground.
+		/// <para>
+		/// W6 moved its CALLER, not its rule. The clocked daily make is the city model's now
+		/// (&sect;7.4), and it reaches real shelves through &sect;3.5's amortised reify - so this is
+		/// what that landing calls, rather than a second implementation of "put food away and say
+		/// what was lost" growing beside it in <c>KingdomCity</c>. The once-per-block flag and the
+		/// harvest ledger stay exactly where they were.
+		/// </para>
 		/// </summary>
-		private static void StoreHarvest(KingdomSystem System, KingdomSurvey Survey, int Amount)
+		/// <returns>What actually reached a larder.</returns>
+		public static int StoreHarvest(KingdomSystem System, KingdomSurvey Survey, int Amount)
 		{
 			if (Amount <= 0)
 			{
@@ -535,7 +548,7 @@ namespace ThousandAndFirst
 				{
 					System.HarvestUnstoredAnnounced = false;
 				}
-				return;
+				return 0;
 			}
 			int stored = Survey.StoreFood(Amount, KingdomCropRules.CropBlueprintForStyle(System.Style));
 			System.Ledger.Harvested += stored;
@@ -545,12 +558,12 @@ namespace ThousandAndFirst
 				// The block lifted: room was found, so the sentence below is unsaid and may be
 				// said again the next time it is true.
 				System.HarvestUnstoredAnnounced = false;
-				return;
+				return stored;
 			}
 			System.Ledger.HarvestLost += lost;
 			if (System.HarvestUnstoredAnnounced)
 			{
-				return;
+				return stored;
 			}
 			System.HarvestUnstoredAnnounced = true;
 			// One flag for one block - "the harvest has nowhere to go" - with the sentence chosen
@@ -563,6 +576,7 @@ namespace ThousandAndFirst
 			System.Ledger.Note("{{r|" + line + "}}");
 			MessageQueue.AddPlayerMessage("{{r|" + line + "}}");
 			if (KingdomLog.Enabled) KingdomLog.Log("harvest: made=" + Amount + " stored=" + stored + " lost=" + lost + " cap=" + Survey.FoodCapacity);
+			return stored;
 		}
 
 		/// <summary>

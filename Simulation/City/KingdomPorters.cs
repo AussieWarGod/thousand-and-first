@@ -94,6 +94,17 @@ namespace ThousandAndFirst.Simulation.City
 				Refuse("read", fault);
 				return 0;
 			}
+			// W6, LIVING-CITY-ARCHITECTURE §3.10(4). Capacity-bound batching, at the one moment it
+			// can actually prevent the pathology: BEFORE a second carrier exists. A trip already
+			// running to this ground with room on its back takes the load, and no second porter is
+			// minted to walk the same road half empty. That is assertion 2 of §3.10 made true by
+			// construction rather than checked afterwards — KingdomLogisticsRules.TryNoTwoHalfEmptyTrips
+			// is the same rule written as a predicate, and the tests hold this path to it.
+			int folded = Fold(System, Z, table, Blueprint, Amount, TimeTicks);
+			if (folded > 0)
+			{
+				return folded;
+			}
 			if (table.Count >= KingdomJobRules.MaxOpenJobs)
 			{
 				// §3.8's cap, and a refusal rather than a queue: the load is not lost, it is simply
@@ -166,6 +177,92 @@ namespace ThousandAndFirst.Simulation.City
 			KingdomLog.Log("porter: job " + jobId + " carries " + carried + " into " + Z.ZoneID
 				+ " by the " + edge + " edge, " + legCount + " legs");
 			return carried;
+		}
+
+		/// <summary>
+		/// Adds a load to a trip that is already running to this ground, or returns zero.
+		/// <para>
+		/// LIVING-CITY-ARCHITECTURE &sect;3.10(4): <i>"group by carrier capacity and route
+		/// overlap"</i>. Route overlap is taken at the granularity the model has — two loads bound
+		/// for the same ground share the whole road — and capacity is <see cref="LoadPerTrip"/>,
+		/// the same reify-denominated figure a single trip already carried.
+		/// </para>
+		/// <para>
+		/// The candidate is the LOWEST open job id that fits, which is the seed order the whole
+		/// planner is written against (&sect;3.10(4)), so the fold is deterministic and has no draw
+		/// in it. The route is not re-planned: the carrier is already walking to the same larder,
+		/// so the legs are still true and only the back is heavier. A carrier that has already
+		/// deposited is passed over — its cargo is zero and it is on its way out.
+		/// </para>
+		/// </summary>
+		private static int Fold(KingdomSystem System, Zone Z, KingdomJobTable table, string Blueprint, int Amount, long TimeTicks)
+		{
+			// One walk of the ground, not one per candidate: the job cap is sixteen and a zone is
+			// hundreds of objects, so a lookup inside the loop would be the expensive part of a
+			// step that exists to make the pass cheaper.
+			List<GameObject> standing = null;
+			for (int i = 0; i < table.Count; i++)
+			{
+				KingdomJobRow row;
+				if (!table.TryAt(i, out row)
+					|| row.Status != KingdomJobStatus.Open
+					|| row.Cargo != KingdomStockKind.Food
+					|| row.CargoAmount <= 0
+					|| row.CargoAmount >= LoadPerTrip
+					|| !string.Equals(row.DestZoneId, Z.ZoneID, StringComparison.Ordinal)
+					|| KingdomJobRules.Deposited(row, TimeTicks))
+				{
+					continue;
+				}
+				if (standing == null)
+				{
+					standing = Z.GetObjects();
+				}
+				GameObject body = Carrier(standing, row.JobId);
+				if (body == null)
+				{
+					continue;
+				}
+				int room = LoadPerTrip - row.CargoAmount;
+				int added = Load(body, Blueprint, (Amount < room) ? Amount : room);
+				if (added <= 0)
+				{
+					continue;
+				}
+				KingdomJobTable next;
+				KingdomCityFault fault;
+				if (!table.TryReplace(row.WithCargo(row.CargoAmount + added), out next, out fault)
+					|| !System.Jobs.TryPublish(next, out fault))
+				{
+					Refuse("fold", fault);
+					return 0;
+				}
+				KingdomLog.Log("porter: job " + row.JobId + " takes " + added + " more, now carrying "
+					+ (row.CargoAmount + added) + " of " + LoadPerTrip + " into " + Z.ZoneID);
+				return added;
+			}
+			return 0;
+		}
+
+		/// <summary>The body walking one job in this ground, or null. The registry owns minting and
+		/// this only finds what it already minted, so there is still exactly one path to a
+		/// body.</summary>
+		private static GameObject Carrier(List<GameObject> found, int JobId)
+		{
+			for (int i = 0; found != null && i < found.Count; i++)
+			{
+				GameObject body = found[i];
+				if (!GameObject.Validate(body))
+				{
+					continue;
+				}
+				r_KingdomPorter part = body.GetPart<r_KingdomPorter>();
+				if (part != null && part.JobId == JobId)
+				{
+					return body;
+				}
+			}
+			return null;
 		}
 
 		// ==================================================================================

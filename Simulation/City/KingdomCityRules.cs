@@ -53,22 +53,32 @@ namespace ThousandAndFirst.Simulation.City
 	/// <summary>
 	/// The city book as something <c>KingdomAdvanceRules</c> can run forward.
 	/// <para>
-	/// <b>What W1 gives it, and what it deliberately does not.</b> The shape is the whole of
-	/// &sect;2.3 — one propose pass, one apply pass, a closed-form crossing rather than a search,
-	/// and an honest jump to the fixed point when the breakpoint budget runs out. The RATES are
-	/// another matter. A zone's works make what their carries promise, but the attended pass
-	/// already credits the seated zone's works for the settlement's whole elapsed
-	/// (<c>KingdomGrowth</c>'s <c>LastWaterWorkTick</c> is a settlement stamp, not a zone one), so
-	/// a model that also credited them here would pay the same day twice. W1 therefore ships the
-	/// integration with a net rate of zero and leaves the rates to the wave that owns the flows;
-	/// what W1 does move through the book is CONSERVED — water carried from one of the city's
-	/// zones to another (&sect;1.2(a)), never water invented.
+	/// <b>The shape</b> is the whole of &sect;2.3 — one propose pass, one apply pass, a closed-form
+	/// crossing rather than a search, and an honest jump to the fixed point when the breakpoint
+	/// budget runs out.
 	/// </para>
 	/// <para>
-	/// The consequence is worth stating rather than hiding: today a reckoning over any span spends
-	/// exactly one closing pass, so the 1-day and 90-day row-visit counts of &sect;0.0(a) are equal
-	/// by construction. The assertion still earns its place — it is what fails the moment a later
-	/// wave gives a lane a per-day term.
+	/// <b>The rates, and why they can only exist once (W6).</b> W1 shipped this with a net rate of
+	/// zero and said why: the attended pass already credited the seated zone's works for the
+	/// settlement's whole elapsed off <c>KingdomGrowth</c>'s settlement-wide <c>LastWaterWorkTick</c>,
+	/// so a model that also credited them here would pay the same day twice. W6 does not add a
+	/// second accounting beside that one — it <b>moves</b> it. Every zone's per-day make is
+	/// measured onto its own row at the pass that reads it
+	/// (<c>KingdomZoneRow.WaterCarry</c> / <c>FoodCarry</c>), the model integrates all of them off
+	/// its ONE clock, and the settlement pass credits nothing. One accounting; two renderings —
+	/// unattended ground fills its book, and attended ground has the same drams poured into real
+	/// vessels by &sect;3.5's amortised reify.
+	/// </para>
+	/// <para>
+	/// Days are counted as <b>world-day boundaries crossed</b>
+	/// (<c>KingdomProductionRules.TryDaysBetween</c>), never as elapsed divided by a day, so
+	/// splitting a span at a breakpoint reaches the same total as integrating it whole and a
+	/// horizon that lands mid-day loses nothing.
+	/// </para>
+	/// <para>
+	/// A rate is now a real per-day term, so a reckoning over ninety days spends more passes than
+	/// one over a day whenever a stock crosses — which is what finally gives &sect;0.0(a)'s
+	/// 1-day-vs-90-day assertion something to bite on.
 	/// </para>
 	/// </summary>
 	internal sealed class KingdomCityAdvanceable : IKingdomAdvanceable<KingdomCityState>
@@ -80,15 +90,29 @@ namespace ThousandAndFirst.Simulation.City
 		private readonly int[] foodRatePerDay;
 
 		/// <summary>
-		/// Rates are handed in per zone row, in row order, so a test can drive the integration over
-		/// a real crossing without production having to invent one. A null or short array reads as
-		/// a zero rate for that row: a rate nobody supplied is a rate that is not running.
+		/// Rates may be handed in per zone row, in row order, so a test can drive the integration
+		/// over a chosen crossing. A null or short array reads as <b>the row's own measured
+		/// carry</b>: the runtime supplies no override at all, because the rate a zone runs at is a
+		/// fact about that zone's works and belongs on that zone's row rather than in a parallel
+		/// array somebody has to keep in step with it.
 		/// </summary>
 		internal KingdomCityAdvanceable(long ticksPerDay, int[] waterRatePerDay, int[] foodRatePerDay)
 		{
 			this.ticksPerDay = ticksPerDay;
 			this.waterRatePerDay = waterRatePerDay;
 			this.foodRatePerDay = foodRatePerDay;
+		}
+
+		/// <summary>What this zone makes in a day, per stock kind: the override if one was handed
+		/// in for this row, and the row's own measured carry otherwise.</summary>
+		internal long WaterRateOf(KingdomZoneRow row, int index)
+		{
+			return RateOf(waterRatePerDay, index, row.WaterCarry);
+		}
+
+		internal long FoodRateOf(KingdomZoneRow row, int index)
+		{
+			return RateOf(foodRatePerDay, index, row.FoodCarry);
 		}
 
 		public int RowCount(KingdomCityState state)
@@ -120,11 +144,11 @@ namespace ThousandAndFirst.Simulation.City
 					fault = KingdomCityFault.InvalidIndex;
 					return false;
 				}
-				if (!TryCandidate(row.Stocks.Water, RateOf(waterRatePerDay, i), fromTick, i, candidates, ref count, out fault))
+				if (!TryCandidate(row.Stocks.Water, WaterRateOf(row, i), fromTick, i, candidates, ref count, out fault))
 				{
 					return false;
 				}
-				if (!TryCandidate(row.Stocks.Food, RateOf(foodRatePerDay, i), fromTick, i, candidates, ref count, out fault))
+				if (!TryCandidate(row.Stocks.Food, FoodRateOf(row, i), fromTick, i, candidates, ref count, out fault))
 				{
 					return false;
 				}
@@ -141,10 +165,9 @@ namespace ThousandAndFirst.Simulation.City
 				fault = KingdomCityFault.NullArgument;
 				return false;
 			}
-			long ticks = breakpoint.Tick - state.ProcessedThroughTick;
-			if (ticks < 0L)
+			long days;
+			if (!KingdomProductionRules.TryDaysBetween(state.ProcessedThroughTick, breakpoint.Tick, ticksPerDay, out days, out fault))
 			{
-				fault = KingdomCityFault.ClockRegression;
 				return false;
 			}
 			KingdomCityState current = state;
@@ -156,23 +179,31 @@ namespace ThousandAndFirst.Simulation.City
 					fault = KingdomCityFault.InvalidIndex;
 					return false;
 				}
-				long water;
-				long food;
-				if (!KingdomAdvanceRules.TryIntegrateSegment(row.Stocks.Water.Level, row.Stocks.Water.Capacity, RateOf(waterRatePerDay, i), ticks, ticksPerDay, out water, out fault)
-					|| !KingdomAdvanceRules.TryIntegrateSegment(row.Stocks.Food.Level, row.Stocks.Food.Capacity, RateOf(foodRatePerDay, i), ticks, ticksPerDay, out food, out fault))
+				KingdomProductionStep water;
+				KingdomProductionStep food;
+				if (!KingdomProductionRules.TryProduce(row.Stocks.Water.Level, row.Stocks.Water.Capacity, row.OwedWater, WaterRateOf(row, i), days, out water, out fault)
+					|| !KingdomProductionRules.TryProduce(row.Stocks.Food.Level, row.Stocks.Food.Capacity, row.OwedFood, FoodRateOf(row, i), days, out food, out fault))
 				{
 					return false;
 				}
-				if (water == row.Stocks.Water.Level && food == row.Stocks.Food.Level)
+				if (water.Landed == 0L && food.Landed == 0L)
 				{
 					continue;
 				}
 				KingdomStocks moved = new KingdomStocks(
-					new KingdomStockPair(water, row.Stocks.Water.Capacity),
-					new KingdomStockPair(food, row.Stocks.Food.Capacity),
+					new KingdomStockPair(water.NextLevel, row.Stocks.Water.Capacity),
+					new KingdomStockPair(food.NextLevel, row.Stocks.Food.Capacity),
 					row.Stocks.Materials);
+				// Level and debt move by the same amount, in one write. That is invariant I1 in a
+				// single statement: the ground has not changed, so `level - owed` has not changed,
+				// and what the works made is a claim on a vessel nobody has poured yet.
 				KingdomCityState written;
-				if (!current.TryWithZone(i, row.WithReading(row.LastReadTick, moved, row.Roofs, row.Defence, row.WaterCarry, row.FoodCarry), out written, out fault))
+				if (!current.TryWithZone(
+						i,
+						row.WithReading(row.LastReadTick, moved, row.Roofs, row.Defence, row.WaterCarry, row.FoodCarry)
+							.WithOwed(water.NextOwed, food.NextOwed, row.OwedMaterials),
+						out written,
+						out fault))
 				{
 					return false;
 				}
@@ -208,11 +239,11 @@ namespace ThousandAndFirst.Simulation.City
 			return true;
 		}
 
-		private static long RateOf(int[] rates, int index)
+		private static long RateOf(int[] rates, int index, int measured)
 		{
 			if (rates == null || index < 0 || index >= rates.Length)
 			{
-				return 0L;
+				return measured;
 			}
 			return rates[index];
 		}
@@ -394,16 +425,116 @@ namespace ThousandAndFirst.Simulation.City
 		}
 
 		/// <summary>
+		/// The city's level-1 zone graph, built from the book's own rows.
+		/// <para>
+		/// LIVING-CITY-ARCHITECTURE &sect;3.10(2): nodes are claimed zones, edges are adjacency,
+		/// all-pairs by Floyd&ndash;Warshall over &le; 9 nodes — 729 integer ops and an &le; 81-entry
+		/// table. This half of the metric is composed from ZONE IDS ALONE, which is exactly why it
+		/// may be built here: &sect;3.10(2) forbids recomputing the level-2 slices at reckon because
+		/// they need the ground, and this needs none.
+		/// </para>
+		/// </summary>
+		internal static bool TryZoneGraph(KingdomCityState state, out KingdomZoneGraph graph, out KingdomCityFault fault)
+		{
+			graph = null;
+			if (state == null)
+			{
+				fault = KingdomCityFault.NullArgument;
+				return false;
+			}
+			int zones = state.ZoneCount;
+			if (zones > KingdomDistanceRules.MaxNodes)
+			{
+				fault = KingdomCityFault.RowCapExceeded;
+				return false;
+			}
+			KingdomZoneNode[] nodes = new KingdomZoneNode[zones];
+			for (int i = 0; i < zones; i++)
+			{
+				KingdomZoneRow row;
+				if (!state.TryZone(i, out row))
+				{
+					fault = KingdomCityFault.InvalidIndex;
+					return false;
+				}
+				string world;
+				int gx;
+				int gy;
+				int stratum;
+				if (!KingdomRules.TryParseZoneID(row.ZoneId, out world, out gx, out gy, out stratum))
+				{
+					fault = KingdomCityFault.InvalidIndex;
+					return false;
+				}
+				nodes[i] = new KingdomZoneNode(row.ZoneId, gx, gy, stratum);
+			}
+			return KingdomZoneGraph.TryBuild(nodes, zones, KingdomDistanceRules.ZoneTransitCells, out graph, out fault);
+		}
+
+		/// <summary>
+		/// Each zone row's distance from the seated ground, for the logistics order.
+		/// <para>
+		/// A zone the graph cannot reach, and every zone when the graph itself cannot be built,
+		/// reads as <b>zero</b> rather than as unreachable. That is deliberate and it is the
+		/// never-worse fallback: at zero the distance key stops discriminating and the
+		/// apportionment falls back to row order, which is precisely what every wave before W6
+		/// did. A malformed zone id degrades the routing and never refuses the carry.
+		/// </para>
+		/// </summary>
+		internal static bool TryZoneDistances(KingdomCityState state, string seatedZoneId, int[] cells, out KingdomCityFault fault)
+		{
+			if (state == null || cells == null)
+			{
+				fault = KingdomCityFault.NullArgument;
+				return false;
+			}
+			int zones = state.ZoneCount;
+			if (cells.Length < zones)
+			{
+				fault = KingdomCityFault.InvalidIndex;
+				return false;
+			}
+			fault = KingdomCityFault.None;
+			for (int i = 0; i < zones; i++)
+			{
+				cells[i] = 0;
+			}
+			KingdomZoneGraph graph;
+			KingdomCityFault built;
+			if (!TryZoneGraph(state, out graph, out built))
+			{
+				return true;
+			}
+			int seat;
+			if (!graph.TryIndexOf(seatedZoneId, out seat))
+			{
+				return true;
+			}
+			for (int i = 0; i < zones; i++)
+			{
+				int measured;
+				cells[i] = graph.TryDistance(i, seat, out measured) ? measured : KingdomDistanceRules.NoRoute;
+			}
+			return true;
+		}
+
+		/// <summary>
 		/// How much of one kind is carried out of the city's OTHER zones to cover a shortfall where
 		/// the founder is standing, and out of which zones.
 		/// <para>
 		/// LIVING-CITY-ARCHITECTURE &sect;1.2(a) and &sect;3.9 together: consumption anywhere draws
-		/// on the same rows, but a dram is drunk out of a particular urn — so the demand is spread
-		/// oldest first, and every zone it reaches owes its own vessels the difference. The
-		/// apportionment is <c>KingdomDrainRules</c>'s own, with a zone standing in for a vessel:
-		/// one rule, one order, one home. "Oldest" here is row order, which is the order the city
-		/// first read each zone — a stored fact, for the same reason a vessel's dedication ordinal
-		/// is one, and stable under a reload because rows are never reordered.
+		/// on the same rows, but a dram is drunk out of a particular urn — so every zone the demand
+		/// reaches owes its own vessels the difference. The apportionment is
+		/// <c>KingdomDrainRules</c>'s own, with a zone standing in for a vessel: one rule, one
+		/// order, one home.
+		/// </para>
+		/// <para>
+		/// <b>W6 decides WHICH zone by distance</b> (&sect;3.10(1), invariant I6): the demand is
+		/// spread over the city's grounds <i>nearest first</i>, on the level-1 zone graph, tie-broken
+		/// on the lower row index — a stored fact, stable under a reload because rows are never
+		/// reordered. Before W6 it was spread in row order, which is how a carrier ends up crossing
+		/// the city past a nearer store. Inside a ground, the oldest dedication still pays first and
+		/// nothing about I4 moves: the two rules answer different questions.
 		/// </para>
 		/// <para>
 		/// Nothing is created. The total moved can never exceed what the rows say the other zones
@@ -450,6 +581,16 @@ namespace ThousandAndFirst.Simulation.City
 			{
 				return true;
 			}
+			// W6, LIVING-CITY-ARCHITECTURE §3.10(1). The order the city is drawn on is
+			// NEAREST-HOLDER, not zone-row order: an input job binds to the closest ground
+			// actually holding the resource. Dedication order is untouched and still decides which
+			// urn inside that ground pays (§3.9, I4) — the two rules are about different
+			// questions, and stacking them this way is what lets both be true at once.
+			int[] cells = new int[zones];
+			if (!TryZoneDistances(state, seatedZoneId, cells, out fault))
+			{
+				return false;
+			}
 			KingdomVesselRow[] sources = new KingdomVesselRow[zones];
 			for (int i = 0; i < zones; i++)
 			{
@@ -474,7 +615,11 @@ namespace ThousandAndFirst.Simulation.City
 						available = 0L;
 					}
 				}
-				sources[i] = new KingdomVesselRow(i, i, kind, available, available, true);
+				// The drain's own ordering keys, carrying the logistics order: the "dedication
+				// ordinal" it sorts on first is the distance to the seat, and the zone row index
+				// beneath it is the frozen tie-break. One sort, one implementation, and no second
+				// opinion about precedence.
+				sources[i] = new KingdomVesselRow(i, cells[i], kind, available, available, true);
 			}
 			long[] drawn = new long[zones];
 			long shortfall;
@@ -754,16 +899,28 @@ namespace ThousandAndFirst.Simulation.City
 
 		/// <summary>
 		/// The audit of LIVING-CITY-ARCHITECTURE &sect;3.9, as one greppable line: model total,
-		/// ground total, and what stands between them. I1 in its general form is
-		/// <c>model == ground + counter-owed</c>; with the counter at zero the two totals are
-		/// simply equal, and a mismatch is attributed rather than repaired.
+		/// what of it is still owed to real containers, ground total, and whether the three agree.
+		/// <para>
+		/// I1 in full is <c>model total == ground total + counter-owed</c>, per stock kind, at
+		/// every instant. Before W6 the two owed figures were always zero on the seated row by the
+		/// time this ran, so the line compared <c>model</c> to <c>ground</c> directly and was right
+		/// by accident. W6 gives the model a producing rate, which means a seated row can carry a
+		/// real claim that the containers have not taken yet — so the line now states the whole
+		/// identity and MISMATCHes on the whole identity.
+		/// </para>
+		/// <para>
+		/// <c>debt</c> is the signed per-kind claim (positive: made and not yet poured; negative:
+		/// drunk and not yet drawn). <c>owed=n/3</c> is the catch-up counter's weighted thirds and
+		/// is unchanged — it says how much of a turn's budget the backlog wants, not how many
+		/// drams it is.
+		/// </para>
 		/// </summary>
-		internal static string AuditNote(long modelWater, long groundWater, long modelFood, long groundFood, int owedThirds)
+		internal static string AuditNote(long modelWater, long debtWater, long groundWater, long modelFood, long debtFood, long groundFood, int owedThirds)
 		{
-			return "audit water model=" + modelWater + " ground=" + groundWater
-				+ " food model=" + modelFood + " ground=" + groundFood
+			return "audit water model=" + modelWater + " debt=" + debtWater + " ground=" + groundWater
+				+ " food model=" + modelFood + " debt=" + debtFood + " ground=" + groundFood
 				+ " owed=" + owedThirds + "/3"
-				+ ((modelWater == groundWater && modelFood == groundFood) ? "" : " MISMATCH");
+				+ ((modelWater - debtWater == groundWater && modelFood - debtFood == groundFood) ? "" : " MISMATCH");
 		}
 
 		/// <summary>

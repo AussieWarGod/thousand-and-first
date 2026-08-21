@@ -37,8 +37,8 @@ neutral values.
 | `int SupportedLevel` | Settlers the settlement's finished works honestly carry, from `KingdomSubsidenceRules.SupportedLevel`. **Knowledge, not truth**: it is as fresh as the last pass that measured it, and `0` means no pass ever has. Consumers that refuse something on it must check for that. |
 | `int NotableShade` | What the settlement's named notable is worth to that level (`KingdomCeremonyRules.NotableShade`: met tastes, the virtue net of the flaw, and met `Prefers`). Written when the office is filled or passes, so it is as stale as the last time it changed hands; `0` for a settlement that has named nobody. Never negative, and bound again by `KingdomCatalogueRules.LiftCapPercent` when the level reads it. |
 | `string SubsidenceBinding` | Which of `water` / `food` / `roof` is the least of the three and therefore what holds the level down, or null before a measurement. |
-| `long LastWaterWorkTick` | Checkpoint for water-works production. Planted on first read and advanced with `KingdomRules.AdvanceCheckpoint`; never a cap. This is what makes a catalogue `Carries="water:N"` a **flow** as well as a level, and therefore why only a design with a real producer part may declare one. |
-| `long LastFoodWorkTick` | The same, for the fields. Its own stamp rather than a share of the water one, because the two producers are separately blockable — a settlement can have casks with room and no larder dedicated at all. |
+| `long LastWaterWorkTick` | **W6: the published mirror of the city model's `ProcessedThroughTick`, written by `KingdomCity.Stamp` and by nothing else.** It used to be the settlement pass's own checkpoint for water-works production; that arithmetic moved onto the model, per zone, off one clock, so that no day can be billed by two owners. What it still records is what it always said — the tick through which the settlement's works have been paid — and it is still what makes a catalogue `Carries="water:N"` a **flow** as well as a level. |
+| `long LastFoodWorkTick` | **W6: this one is now the MILLS' stamp, and the model deliberately does not touch it.** The fields' clocked make moved onto the model with the water works'; the mills did not, because a mill makes nothing out of the day — it takes real crops off real shelves and puts real staples back, on the ground where the shelves are, and `KingdomCrops.MilledFoodPerDay` is subtracted out of the model's rate precisely so the two can never both be paid. Advanced by the settlement pass with `KingdomRules.AdvanceCheckpoint`, as it always was. Writing it from the reckon would read *now* on every check-in and no mill would ever grind again. |
 | `int Population` | Living settler count. |
 | `bool Withered` | True while a sustained thirst has suspended prosperity. Recoverable. |
 | `int DryStreak` / `int HungerStreak` | Heartbeat resolves in a row the water bill and the ration bill went unpaid. Separate counters: both ladders run at once and each keeps its own memory. What stops them costing double is `KingdomRules.ComposeScarcity`. |
@@ -559,6 +559,36 @@ them. A draw is spread across the zone's dedicated vessels **oldest dedication f
 city's), which is deterministic without a draw and stable across a reload. What the containers
 could not cover stays on the row and is told; it is never silently forgiven.
 
+**Every zone's works produce, and the day is billed once (W6).** A zone row's `WaterCarry` and
+`FoodCarry` are what its works make in a day, measured by the pass that read that ground —
+`KingdomSubsidence.Supports(Survey).Water` and `KingdomGrowth.FoodMadePerDay(Survey)`, the same two
+figures the level and the whole catalogue ladder are derived from. The model integrates them for
+every zone off its **one** `ProcessedThroughTick`, in world-day boundaries so that splitting a span
+at a breakpoint pays exactly the days running it whole would; the settlement pass credits nothing,
+and `KingdomCity.Stamp` writes `LastWaterWorkTick`/`LastFoodWorkTick` **from** the model's tick, so
+two owners of one day is not a bug to avoid but a state that cannot be reached.
+
+Production raises the row's **level and its signed debt by the same amount**, which is invariant
+I1 in one line: the ground has not changed, so `level − owed` — what the model says the ground
+holds — has not changed either. What the works made is a claim on a vessel nobody has poured, and
+§3.5's amortised reify is what pours it. `KingdomProductionRules.TryReconcile` re-derives the debt
+from the ground on every check-in, so `level − owed == ground` holds **by construction** rather
+than by care, and that equality is exactly what the audit line prints. A claim bigger than the room
+the containers have is **spilled**, named in the log, and not carried — the same loss a harvest
+with a full larder has always taken.
+
+**Logistics: nearest holder, and one trip where one will do (W6).** A shortfall where the founder
+is standing is met out of the city's **closest** quarter actually holding the resource, on the
+level-1 zone graph (`KingdomCityRules.TryZoneGraph` — Floyd–Warshall over ≤ 9 nodes, composed from
+zone ids alone and therefore safe to build at reckon), tie-broken on the lower row index. Inside a
+quarter the oldest dedication still pays first: the two rules answer different questions and both
+stay true. A crop load bound for a larder a porter is already walking to is **folded onto that
+porter** rather than minting a second one — capacity-bound batching at the one moment it can
+prevent the pathology. `KingdomLogisticsRules` holds both of §3.10's "never looks stupid" checks as
+functions (`TryNoNearerHolder`, `TryNoTwoHalfEmptyTrips`) so the tests and the runtime ask one
+implementation of them, and the nearest-neighbour + 2-opt trip planner with §3.10(4)'s hard caps
+(16 jobs, 8 stops, 50 swap tests, **zero draws**).
+
 | Member | Contract |
 |---|---|
 | `KingdomSettlement.City` / `KingdomSystem.City` | The settlement's book, and the flat field the seat swap carries it in. |
@@ -569,7 +599,9 @@ could not cover stays on the row and is told; it is never silently forgiven.
 | `KingdomCity.CheckOut(KingdomSystem, Zone, KingdomSurvey, long)` / `OnSuspending(KingdomSystem, Zone)` | The two readings. `OnSuspending` filters to zones the seated realm claims and takes its own survey. |
 | `KingdomCity.RecordSupports(...)` / `RecordLarder(...)` | Where `KingdomSubsidence.RecordZone` and `KingdomCrops.RecordLarders` now write. |
 | `KingdomCity.OtherZones(KingdomSystem, Zone)` / `LarderRoomElsewhere(KingdomSystem, Zone)` | Where `KingdomSubsidence.OtherZones` and `KingdomCrops.LarderRoomElsewhere` now read. `ZoneSighting` survives as the projection the rows hand the subsidence arithmetic, so that arithmetic did not change at all. |
-| `KingdomCity.AuditLine(KingdomSystem, Zone, KingdomSurvey)` / `OwedThirds(KingdomSystem)` | The §3.9 audit as one greppable line — model total, ground total, and what stands between them — and everything the city still owes, in weighted thirds. |
+| `KingdomCity.AuditLine(KingdomSystem, Zone, KingdomSurvey)` / `OwedThirds(KingdomSystem)` | The §3.9 audit as one greppable line — `model=`, `debt=`, `ground=` per stock kind, and `MISMATCH` when `model − debt != ground`, which is I1 in full — and everything the city still owes, in weighted thirds. |
+| `KingdomProductionRules` | The W6 arithmetic, pure: `TryDaysBetween` (world-day boundaries, additive across every split), `TryProduce` (level and debt move together, clamped, spill reported), `TryReconcile` (the ground wins, the claim survives, the debt is re-derived so the audit is exact by construction). |
+| `KingdomLogisticsRules` | §3.10 items 1 and 4, pure: `TryMeasure` / `TryNearestHolder` / `TryNoNearerHolder`, and `TryBatch` / `TryPlanTrip` / `TryNoTwoHalfEmptyTrips`. Every bound is a `KingdomBudgetRules.Planner*` constant and no path draws. |
 | `KingdomCity.DedicationOrderProperty` (`KingdomDedicationOrder`) | Dedication order as a stored fact. Minted the first pass that counts a container as the city's, and never moved afterwards; an unstamped container sorts **last**. |
 | `KingdomSystem.SimulationSeedHigh` / `SimulationSeedLow` / `MintSimulationSeed(int worldSeed, string realmName, long foundedTick)` | The realm's kernel seed, minted once at founding from the world seed, the realm's name and the tick the water was poured — deterministic across a reload, separated between realms, and refused rather than re-minted. |
 | `KingdomSystem.Bindings` / `ResidentCounter` | The realm's binding registry and its id counter. **Realm-scope, never carried by a city** — see below. |
@@ -1137,6 +1169,7 @@ belonged to the faction to hand over.
 | `KingdomCitizenRite.OnSettlementPass(system, zone)` | Every citizen on this ground, once per pass. Called from `KingdomWaterRite.OnSettlementPass`, above that channel's own gate. |
 | `KingdomCitizenRite.HostProperty` (`KingdomRiteHost`) | Int property marking a settler already made a host. |
 | `CitizenRiteVerdict` | `Host`, `Unfounded`, `NotCitizen`, `NoBody`, `UnknownFaction`, `UnknownLiquid`. The last two are the engine's two documented hard failures, refused before the conversation can open, and reported once. |
+| `KingdomCitizenRiteRules.TryTradableSecret(faction, outsiderLine, out id, out text)` / `SecretTags()` / `SecretCategory` | **W6: the chronicle becomes something you can trade.** One `JournalObservation` per settlement pass, carrying the **outsider register's** wording — what the roads say about your city, not what your own book says — tagged `gossip` and `settlement`, which are *vanilla's own* interest tags (seventeen shipped factions declare an interest in `settlement`, five in `gossip`). Everything after that is vanilla: `IWaterRitualSecretPart.ShuffleNotes` puts it in the ritual's bag, `Faction.GetInterestIn` decides who wants it, `WaterRitualSellSecret` pays for it. Filed **revealed**, so vanilla's own `CanSell`/`CanBuy` make it sellable and never buyable — you can tell the world about your city and nobody can sell it back to you. The id is derived from the realm and the words, so re-filing after a reload or a seat swap is a no-op. |
 
 A settler another mod gave a conversation to keeps it: an XML conversation already inherits
 `BaseConversation` and already carries the ritual choice, so replacing it would take away somebody

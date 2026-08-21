@@ -139,6 +139,76 @@ namespace ThousandAndFirst
 			return (SharedDays > 0) ? 1 : 0;
 		}
 
+		// ==================================================================================
+		// The chronicle as a tradable secret (W5's named remainder, landed in W6)
+		// ==================================================================================
+
+		/// <summary>
+		/// Which journal drawer a city's telling goes in.
+		/// <para>
+		/// <c>"Gossip"</c>, and the choice is load-bearing rather than decorative:
+		/// <c>WaterRitualSellSecret.GetWeight</c> reads the observation's category and hands a
+		/// <c>Category == "Gossip"</c> entry to the ritual's <i>share some gossip</i> element and a
+		/// non-gossip one to <i>share a secret</i>
+		/// (<c>D/XRL/World/Conversations/Parts/WaterRitualSellSecret.cs</c>). What a city's roads
+		/// are saying about it is gossip; it is not a location, a recipe, or a sultan's deed.
+		/// </para>
+		/// </summary>
+		internal const string SecretCategory = "Gossip";
+
+		/// <summary>
+		/// The tags that decide who wants to hear it &mdash; <b>vanilla's own interest vocabulary,
+		/// used unchanged</b>.
+		/// <para>
+		/// A faction buys a secret from the player when one of its <c>&lt;interest Tags="..."/&gt;</c>
+		/// entries matches the note's attributes (<c>Faction.GetInterestIn</c>, reached from
+		/// <c>Faction.GetBuySecretWeight</c>). In the shipped table <c>settlement</c> is declared by
+		/// seventeen factions and <c>gossip</c> by five &mdash; the two that a founded city's own
+		/// history honestly IS. Nothing here declares a new interest, adds a conversation part, or
+		/// touches anybody's faction: the city writes a line, and the people who already cared about
+		/// settlements already want to hear it.
+		/// </para>
+		/// </summary>
+		internal static string[] SecretTags()
+		{
+			return new string[2] { "gossip", "settlement" };
+		}
+
+		/// <summary>
+		/// One chronicle telling as a journal secret: a stable id and the text that travels.
+		/// <para>
+		/// <b>The text is the OUTSIDER register's line</b>, not the official one. The city's own
+		/// book is written in the founder's voice and dated in its own calendar; what a stranger
+		/// could be told over shared water is the version the roads carry, which this mod has been
+		/// composing beside every chronicle entry since it shipped. Trading the founder's own diary
+		/// would be a different thing, and a less true one.
+		/// </para>
+		/// <para>
+		/// <b>The id is derived from the text and the realm</b>, so filing it twice is a no-op:
+		/// <c>JournalAPI.AddObservation</c> refuses an id it already holds, which makes the pass
+		/// that files this idempotent without a cursor to keep in step with a register that is
+		/// trimmed at two hundred entries. Two identical tellings share an id and are filed once,
+		/// which is the honest answer &mdash; the roads are already saying that one.
+		/// </para>
+		/// <para>
+		/// Preconditions: none. Side effects: none. Failure mode: <c>false</c> with both outputs
+		/// empty, for a realm with no name or a telling with no words.
+		/// </para>
+		/// </summary>
+		internal static bool TryTradableSecret(string FactionName, string OutsiderLine, out string Id, out string Text)
+		{
+			Id = "";
+			Text = "";
+			if (string.IsNullOrEmpty(FactionName) || string.IsNullOrEmpty(OutsiderLine))
+			{
+				return false;
+			}
+			Text = OutsiderLine;
+			Id = "taf:chronicle:" + FactionName + ":"
+				+ Simulation.City.KingdomCityRules.StableId(FactionName + "\u001f" + OutsiderLine);
+			return true;
+		}
+
 		/// <summary>How a settler ends the conversation. Qud's own parting, because that is what
 		/// this whole act is borrowed from.</summary>
 		internal static string Farewell()

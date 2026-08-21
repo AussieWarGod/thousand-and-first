@@ -314,6 +314,16 @@ namespace ThousandAndFirst.Simulation.City
 		/// One segment of the integration: a constant rate over a stretch of ticks, clamped to the
 		/// stock's floor and ceiling. The clamp is the crossing, so a segment can never overshoot
 		/// a breakpoint that the propose pass should have found first.
+		/// <para>
+		/// <b>The driver's primitive, and not the city's.</b> Since W6 the city book integrates
+		/// through <c>KingdomProductionRules.TryProduce</c> instead, for two reasons this one
+		/// deliberately does not take on: production must move the row's DEBT by the same amount it
+		/// moves the level (invariant I1), and its days must be counted as world-day boundaries
+		/// crossed rather than as elapsed divided by a day, so that splitting a span at a breakpoint
+		/// reaches the same total as running it whole. This remains the general primitive an
+		/// <c>IKingdomAdvanceable</c> with no debt to keep can use, and it is what the toy model in
+		/// the tests integrates on.
+		/// </para>
 		/// </summary>
 		internal static bool TryIntegrateSegment(
 			long level,

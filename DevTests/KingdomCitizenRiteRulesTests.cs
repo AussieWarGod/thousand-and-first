@@ -1,4 +1,4 @@
-#if TAF_TESTS
+﻿#if TAF_TESTS
 using NUnit.Framework;
 using ThousandAndFirst;
 
@@ -125,6 +125,77 @@ namespace ThousandAndFirst.Tests
 		public void Farewell_IsQudsOwn()
 		{
 			Assert.AreEqual("Live and drink.", KingdomCitizenRiteRules.Farewell());
+		}
+
+		// ---- The chronicle as a tradable secret (W5's remainder, W6) --------------------------
+
+		/// <summary>
+		/// The id is derived from the realm and the words, which is what makes filing the same
+		/// telling twice a no-op without a cursor into a register that gets trimmed at two hundred
+		/// entries.
+		/// </summary>
+		[Test]
+		public void TheSameTellingAlwaysYieldsTheSameSecretId()
+		{
+			string id;
+			string text;
+			Assert.IsTrue(KingdomCitizenRiteRules.TryTradableSecret("taf_kingdom_kavvat", "Travelers claim that the well ran dry.", out id, out text));
+			string again;
+			string sameText;
+			Assert.IsTrue(KingdomCitizenRiteRules.TryTradableSecret("taf_kingdom_kavvat", "Travelers claim that the well ran dry.", out again, out sameText));
+			Assert.AreEqual(id, again);
+			Assert.AreEqual(text, sameText);
+		}
+
+		/// <summary>Two realms telling the same thing are two secrets, because they are about two
+		/// different cities.</summary>
+		[Test]
+		public void TwoRealmsTellingTheSameThingAreTwoSecrets()
+		{
+			string a;
+			string b;
+			string text;
+			Assert.IsTrue(KingdomCitizenRiteRules.TryTradableSecret("taf_kingdom_kavvat", "Travelers claim that the well ran dry.", out a, out text));
+			Assert.IsTrue(KingdomCitizenRiteRules.TryTradableSecret("taf_kingdom_yd", "Travelers claim that the well ran dry.", out b, out text));
+			Assert.AreNotEqual(a, b);
+		}
+
+		/// <summary>The text that travels is the OUTSIDER register's line, handed through unaltered:
+		/// this file composes no prose of its own for the roads to carry.</summary>
+		[Test]
+		public void TheSecretCarriesTheOutsiderLineWordForWord()
+		{
+			string id;
+			string text;
+			Assert.IsTrue(KingdomCitizenRiteRules.TryTradableSecret("taf_kingdom_kavvat", "Some deny that Kavvat took in a hundred settlers.", out id, out text));
+			Assert.AreEqual("Some deny that Kavvat took in a hundred settlers.", text);
+			StringAssert.StartsWith("taf:chronicle:taf_kingdom_kavvat:", id);
+		}
+
+		[Test]
+		public void ARealmWithNoNameOrATellingWithNoWordsFilesNothing()
+		{
+			string id;
+			string text;
+			Assert.IsFalse(KingdomCitizenRiteRules.TryTradableSecret("", "a line", out id, out text));
+			Assert.AreEqual("", id);
+			Assert.IsFalse(KingdomCitizenRiteRules.TryTradableSecret("taf_kingdom_kavvat", "", out id, out text));
+			Assert.IsFalse(KingdomCitizenRiteRules.TryTradableSecret(null, null, out id, out text));
+		}
+
+		/// <summary>
+		/// The tags are vanilla's, and they are the two a city's history honestly is. The category
+		/// decides which of the ritual's two elements offers it: "Gossip" is the gossip element's
+		/// own filter in WaterRitualSellSecret.GetWeight.
+		/// </summary>
+		[Test]
+		public void TheSecretIsTaggedInVanillasOwnInterestVocabulary()
+		{
+			string[] tags = KingdomCitizenRiteRules.SecretTags();
+			Assert.AreEqual(2, tags.Length);
+			CollectionAssert.Contains(tags, "gossip");
+			CollectionAssert.Contains(tags, "settlement");
+			Assert.AreEqual("Gossip", KingdomCitizenRiteRules.SecretCategory);
 		}
 	}
 }

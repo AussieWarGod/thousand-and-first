@@ -1798,6 +1798,206 @@ Reading. Three things, and the third is the one worth keeping.
     leak_table()
 
 
+def w6_production_and_logistics():
+    """Wave 6: the rates move onto the city model, and the logistics stop looking stupid.
+
+    THE ONE THING THIS SECTION EXISTS TO PROVE. Every rung above was derived on a daily balance
+    where the SEATED zone's works were credited for the settlement's whole elapsed, once per pass,
+    out of `KingdomGrowth`. W6 moved that arithmetic onto `Simulation/City` - per zone, off the
+    city model's single `ProcessedThroughTick`. A move is only safe if the number is the same
+    number, so the first four checks are source facts, asserted rather than trusted: the old
+    crediting is GONE from the settlement pass, the new one reads the SAME `Supports` tally the
+    ladder is derived from, and the settlement's two work stamps are now written by the model and
+    by nobody else.
+    """
+    rule("W6  Production on the model, and logistics that never look stupid")
+
+    growth = open(os.path.join(ROOT, "Growth", "KingdomGrowth.cs"), encoding="utf-8-sig").read()
+    city = open(
+        os.path.join(ROOT, "Simulation", "City", "KingdomCity.cs"), encoding="utf-8-sig"
+    ).read()
+    rules = open(
+        os.path.join(ROOT, "Simulation", "City", "KingdomCityRules.cs"), encoding="utf-8-sig"
+    ).read()
+    production = open(
+        os.path.join(ROOT, "Simulation", "City", "KingdomProductionRules.cs"),
+        encoding="utf-8-sig",
+    ).read()
+    budget = open(
+        os.path.join(ROOT, "Simulation", "City", "KingdomBudgetRules.cs"), encoding="utf-8-sig"
+    ).read()
+    logistics = open(
+        os.path.join(ROOT, "Simulation", "City", "KingdomLogisticsRules.cs"),
+        encoding="utf-8-sig",
+    ).read()
+
+    print("""
+1. NO DAY IS BILLED TWICE, AND IT IS STRUCTURAL RATHER THAN CAREFUL. Two owners of one day is a
+   day paid twice, so W6 leaves exactly one owner. The settlement pass no longer credits the
+   water works or the fields at all; the model integrates every zone's carry off its own
+   `ProcessedThroughTick`; and `KingdomCity.Stamp` writes `LastWaterWorkTick` FROM that tick, so
+   the settlement's stamp is a published mirror of the model's clock rather than a second clock
+   beside it. `LastFoodWorkTick` is left alone on purpose - see 3.
+""")
+    assert "survey.Store(KingdomSubsidence.Supports(survey).Water * madeDays)" not in growth, (
+        "BILLED TWICE: the settlement pass still credits the water works on its own clock."
+    )
+    assert "StoreHarvest(System, survey, FoodMadePerDay(survey) * grownDays)" not in growth, (
+        "BILLED TWICE: the settlement pass still credits the fields on its own clock."
+    )
+    assert "System.LastWaterWorkTick = state.ProcessedThroughTick" in city, (
+        "the water work stamp is no longer the model's published mirror"
+    )
+    assert "System.LastFoodWorkTick = state.ProcessedThroughTick" not in city, (
+        "THE MILLS WOULD STARVE: KingdomCity.Stamp must not write LastFoodWorkTick. The fields' "
+        "clocked make moved onto the model; the MILLS did not, and that stamp is theirs. Written "
+        "from the reckon it would read `now` on every check-in and no mill would ever grind."
+    )
+    print("   settlement pass credits water works:  no")
+    print("   settlement pass credits fields:       no")
+    print("   model stamps LastWaterWorkTick:       yes  (KingdomCity.Stamp)")
+    print("   model stamps LastFoodWorkTick:        no   (it is the MILLS' stamp - see 3)")
+
+    print("""
+2. AND IT IS THE SAME NUMBER. The model's per-zone rate is not a new figure invented for the
+   model: it is `KingdomSubsidence.Supports(Survey).Water` and `KingdomGrowth.FoodMadePerDay`,
+   the exact two the level and every rung above are derived from. If those ever became two
+   answers, a reservoir would be worth one thing to the ladder and another to the casks.
+""")
+    assert "KingdomSubsidence.Supports(Survey).Water" in city, (
+        "the model's water rate is no longer the ladder's own Supports tally"
+    )
+    assert "KingdomGrowth.FoodMadePerDay(Survey)" in city, (
+        "the model's food rate is no longer KingdomGrowth's own figure"
+    )
+    assert "KingdomCrops.MilledFoodPerDay(Survey)" in growth, (
+        "FED TWICE: FoodMadePerDay no longer subtracts what the mills deliver physically."
+    )
+    print("   water rate  = KingdomSubsidence.Supports(Survey).Water    (the ladder's own tally)")
+    print("   food rate   = KingdomGrowth.FoodMadePerDay(Survey)        (fields and mills already out)")
+
+    print("""
+3. THE MILL KEPT ITS OWN CLOCK, AND HAD TO. A mill does not make food out of the day - it takes
+   real crops off real shelves and puts real staples back, where the shelves are. It was never in
+   the model's rate (`MilledFoodPerDay` is subtracted out of `FoodMadePerDay`), so it keeps
+   `LastFoodWorkTick`'s elapsed for itself. One clock each; neither can spend the other's days.
+""")
+    assert "GrindHarvest(System, survey, grownDays)" in growth, "the mill no longer runs"
+    order_rations = growth.find("bool heartbeatHealthy = ResolveHeartbeat(")
+    order_mill = growth.find("GrindHarvest(System, survey, grownDays)")
+    assert order_rations > 0 and order_mill > order_rations, (
+        "INDUSTRY EATS FIRST: GrindHarvest must still run after the ration draw."
+    )
+
+    print("""
+4. THE BACKLOG IS BOUNDED BY THE CONTAINERS, NEVER BY THE ABSENCE. A season away cannot grow an
+   unbounded claim, because production is clamped by the room the model believes the zone has and
+   the overflow is SPILLED - the same loss a harvest with a full larder has always taken. That is
+   what makes the amortised landing finite: the worst debt a quarter can present is its own
+   capacity, and §0.0(b) prices draining a full backlog at 29 turns.
+""")
+    assert "long room = (wanted > 0L) ? (capacity - level) : level;" in production, (
+        "UNBOUNDED CLAIM: production is no longer clamped by the room the containers have."
+    )
+    assert "step = new KingdomProductionStep(nextLevel, (int)nextOwed, moved, wanted - moved);" in production, (
+        "the spill is no longer reported, so a lost harvest would be silently absorbed"
+    )
+    assert "long nextOwed = nextLevel - groundLevel;" in production, (
+        "I1 BROKEN: the reconcile no longer re-derives the debt, so `level - owed == ground` "
+        "stops being true by construction and the audit line stops being exact."
+    )
+    reify_units = read_const(
+        os.path.join(ROOT, "Simulation", "City", "KingdomBudgetRules.cs"), "ReifyUnitsPerTurn"
+    )
+    worst_units = read_const(
+        os.path.join(ROOT, "Simulation", "City", "KingdomCatchUpRules.cs"), "WorstBacklogUnits"
+    )
+    drain_turns = -(-worst_units // reify_units)
+    print(f"   reify budget:      {reify_units} units a turn")
+    print(f"   worst backlog:     {worst_units} units")
+    print(f"   turns to drain:    {drain_turns}   (§0.0(b) warns above 40)")
+    assert drain_turns <= 40, "the worst backlog no longer drains inside its own warn rung"
+
+    print("""
+5. WHAT THE MOVE ACTUALLY CHANGED FOR A PLAYER, RE-DERIVED. Every column in Q1-Q11 above is a
+   ONE-QUARTER balance and none of them moves: the same works make the same drams on the same
+   day. What changes is that the city's OTHER quarters now make theirs too. Before W6 a work in a
+   zone the founder was not standing in produced nothing at all, whatever it was built to do; the
+   settlement's whole make was whatever the seated ground happened to carry. Below, one rung's
+   binding water bill against what one, two, three and four producing quarters bring in at that
+   rung's cheapest plan.
+""")
+    print(f"  {'rung':<10}{'bill/day':>10}{'1 quarter':>12}{'2':>8}{'3':>8}{'4':>8}   holds at")
+    for i, (name, floor, _cap) in enumerate(STAGES):
+        if i == 0:
+            print(f"  {'Camp':<10}{upkeep_per_day(4):>10}{0:>12}{0:>8}{0:>8}{0:>8}   nothing (11(a) gates the lane)")
+            continue
+        need = math.ceil(floor * STAGE_PERCENT[i] / 100)
+        globals()["_KIND"] = "water"
+        got = _plan(
+            "water",
+            i,
+            need,
+            lambda d: (d.cost / max(d.carries.get("water", 1), 1), -d.carries.get("water", 0)),
+        )
+        assert got, f"RUNG IMPOSSIBLE: no water design is reachable at {name}"
+        design, count = got
+        made = design.carries["water"] * count
+        quarters = [made * q for q in (1, 2, 3, 4)]
+        holds = next((q for q in (1, 2, 3, 4) if quarters[q - 1] >= need), None)
+        assert holds is not None, (
+            f"RUNG IMPOSSIBLE AFTER W6: {name} cannot be held by four quarters of its own "
+            f"cheapest plan"
+        )
+        assert holds == 1, (
+            f"REGRESSION: {name} used to be holdable by the seated quarter alone and now needs "
+            f"{holds}. W6 may only ADD the other quarters' make."
+        )
+        print(
+            f"  {name:<10}{need:>10}{quarters[0]:>12}{quarters[1]:>8}{quarters[2]:>8}{quarters[3]:>8}"
+            f"   {holds} quarter"
+        )
+    print("""
+   Read it as the strictly-additive change it is: one quarter still holds every rung on its own,
+   exactly as Q1-Q11 derive, so nothing above needs re-tuning. A four-quarter City simply stops
+   throwing away three quarters of what it built. That is the whole balance consequence of W6,
+   and it is a ceiling being lifted rather than a floor being moved.
+""")
+
+    print("""
+6. THE PLANNER'S BOUNDS ARE CONSTANTS, AND THEY MATCH THE CONSTITUTION. §3.10(4) prices one
+   slice's routing at 16 jobs, 8 stops and 50 swap tests - about a thousand integer operations.
+   Those three numbers live in `KingdomBudgetRules` and the planner reads them from there, so a
+   tuning change cannot leave the budget table behind.
+""")
+    for name, want in (("PlannerMaxJobs", 16), ("PlannerMaxStops", 8), ("PlannerMaxSwapTests", 50)):
+        got = read_const(os.path.join(ROOT, "Simulation", "City", "KingdomBudgetRules.cs"), name)
+        assert got == want, f"{name} moved to {got}; §3.10(4) prices the slice at {want}"
+        print(f"   {name:<22}{got:>5}")
+    assert "PlannerMaxDraws = 0" in budget, (
+        "A DRAW IN THE PLANNER: routing is arithmetic, and §3.10(4) allows the lane no draws."
+    )
+    assert "KingdomBudgetRules.PlannerMaxJobs" in logistics, "the planner no longer reads its own budget"
+    assert "KingdomBudgetRules.PlannerMaxStops" in logistics, "the planner no longer reads its own budget"
+    assert "KingdomBudgetRules.PlannerMaxSwapTests" in logistics, "the planner no longer reads its own budget"
+    print("   PlannerMaxDraws            0   (routing is arithmetic, never chance)")
+
+    print("""
+7. AND THE CARRY GOES TO THE NEAREST GROUND. §3.10(1): a shortfall where the founder is standing
+   is met out of the closest quarter actually holding the resource, on the level-1 zone graph,
+   tie-broken on the lower row index. Inside a quarter the oldest dedication still pays first
+   (§3.9, I4) - the two rules answer different questions and both stay true.
+""")
+    assert "TryZoneDistances(state, seatedZoneId, cells, out fault)" in rules, (
+        "WALKS PAST A NEARER STORE: the carry is no longer ordered by distance."
+    )
+    assert "sources[i] = new KingdomVesselRow(i, cells[i], kind, available, available, true);" in rules, (
+        "the carry's ordering key is no longer the distance to the seat"
+    )
+    print("   carry order:  distance to the seat, then row index   (KingdomCityRules.TryPlanTransfer)")
+    print("   drain order:  dedication ordinal, then vessel id     (KingdomDrainRules.TryOrder, unmoved)")
+
+
 def caveats():
     rule("Where this model is too crude to decide anything")
     print(f"""
@@ -2833,4 +3033,5 @@ if __name__ == "__main__":
     water_invariants()
     food_invariants()
     meals_and_industry()
+    w6_production_and_logistics()
     caveats()

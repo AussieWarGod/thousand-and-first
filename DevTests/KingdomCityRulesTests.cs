@@ -1,4 +1,4 @@
-#if TAF_TESTS
+﻿#if TAF_TESTS
 using NUnit.Framework;
 using ThousandAndFirst;
 using ThousandAndFirst.Simulation.City;
@@ -382,9 +382,10 @@ namespace ThousandAndFirst.Tests
 
 		/// <summary>
 		/// LIVING-CITY-ARCHITECTURE §0.0(a), the identity the whole design turns on: not one term
-		/// in the reckoning contains the elapsed. At W1's own rates a day away and a season away
-		/// are the same arithmetic exactly; the assertion is here so that the moment a later wave
-		/// gives a lane a per-day term, this fails.
+		/// in the reckoning contains the elapsed. On a city whose works make nothing — no rate on
+		/// any row and no override handed in — a day away and a season away are the same arithmetic
+		/// exactly. W6 gave the rates a home on the rows; the sibling below is the same assertion
+		/// with one running.
 		/// </summary>
 		[Test]
 		public void ADayAwayAndASeasonAwayCostTheSameReckoning()
@@ -452,6 +453,210 @@ namespace ThousandAndFirst.Tests
 			Assert.IsFalse(KingdomAdvanceRules.TryRun(
 				new KingdomCityAdvanceable(KingdomRules.TicksPerDay, null, null), advanced, 5000L, 4000L, out outcome, out fault));
 			Assert.AreEqual(KingdomCityFault.ClockRegression, fault);
+		}
+
+		// ---- W6: the rates live on the rows, and one clock bills them (§7.4, I1) --------------
+
+		private static KingdomZoneRow Making(string id, long water, long waterCap, long food, long foodCap, int waterCarry, int foodCarry)
+		{
+			return new KingdomZoneRow(id, 0, 100L, Stocks(water, waterCap, food, foodCap), 0, 0, waterCarry, foodCarry, 0, 0, 0);
+		}
+
+		private static KingdomAdvanceOutcome<KingdomCityState> RunFrom(KingdomCityState state, long fromTick, long toTick)
+		{
+			KingdomAdvanceOutcome<KingdomCityState> outcome;
+			KingdomCityFault fault;
+			Assert.IsTrue(KingdomAdvanceRules.TryRun(
+				new KingdomCityAdvanceable(KingdomRules.TicksPerDay, null, null),
+				state, fromTick, toTick, out outcome, out fault), fault.ToString());
+			return outcome;
+		}
+
+		/// <summary>
+		/// W6's whole shape in one assertion: nobody hands the model a rate array, and the zones
+		/// still produce — because the rate is a fact about a zone's works and lives on that zone's
+		/// row, measured by the pass that read the ground.
+		/// </summary>
+		[Test]
+		public void AZoneProducesAtTheRateItsOwnRowCarriesWithNoArrayHandedIn()
+		{
+			KingdomCityState state = City(
+				Making("a", 0L, 1000L, 0L, 1000L, 12, 3),
+				Making("b", 0L, 1000L, 0L, 1000L, 0, 7));
+			KingdomAdvanceOutcome<KingdomCityState> outcome = RunFrom(state, 0L, 10L * KingdomRules.TicksPerDay);
+			KingdomZoneRow a;
+			KingdomZoneRow b;
+			Assert.IsTrue(outcome.State.TryZone(0, out a));
+			Assert.IsTrue(outcome.State.TryZone(1, out b));
+			Assert.AreEqual(120L, a.Stocks.Water.Level);
+			Assert.AreEqual(30L, a.Stocks.Food.Level);
+			Assert.AreEqual(0L, b.Stocks.Water.Level, "a zone with no water works makes no water");
+			Assert.AreEqual(70L, b.Stocks.Food.Level);
+		}
+
+		/// <summary>
+		/// <b>I1 across a season of production.</b> The ground did not change while the founder was
+		/// away, so <c>level - owed</c> may not either: what the works made is a claim on a vessel
+		/// nobody has poured, and §3.5's reify is what pours it.
+		/// </summary>
+		[Test]
+		public void ASeasonOfProductionLeavesTheGroundTotalExactlyWhereItWas()
+		{
+			KingdomCityState state = City(
+				Making("a", 40L, 1000L, 10L, 1000L, 12, 3),
+				Making("b", 5L, 1000L, 0L, 1000L, 2, 7));
+			long groundWater = Held(state, KingdomStockKind.Water) - Owed(state, KingdomStockKind.Water);
+			long groundFood = Held(state, KingdomStockKind.Food) - Owed(state, KingdomStockKind.Food);
+			KingdomAdvanceOutcome<KingdomCityState> outcome = RunFrom(state, 0L, 90L * KingdomRules.TicksPerDay);
+			// Zone a fills its thousand-dram capacity on day 80 and makes nothing after it; zone b
+			// is nowhere near its ceiling and runs the whole season. That is the breakpoint doing
+			// real work, which is what a rate finally gives §2.3 to bite on.
+			Assert.AreEqual(1185L, Held(outcome.State, KingdomStockKind.Water), "a full store stops making, and b runs on");
+			Assert.AreEqual(groundWater, Held(outcome.State, KingdomStockKind.Water) - Owed(outcome.State, KingdomStockKind.Water),
+				"model total == ground total + counter-owed must hold across production");
+			Assert.AreEqual(groundFood, Held(outcome.State, KingdomStockKind.Food) - Owed(outcome.State, KingdomStockKind.Food));
+		}
+
+		/// <summary>
+		/// <b>The anti-double-bill assertion.</b> Running the span in two halves reaches exactly the
+		/// state one whole pass reaches — so a heartbeat slice that consumed part of the span cannot
+		/// make the homecoming reckon pay it again, and cannot make it lose a day either. This is
+		/// what world-day boundaries buy over an elapsed count.
+		/// </summary>
+		[Test]
+		public void SplittingTheSpanBillsTheSameDaysAsRunningItWhole()
+		{
+			KingdomCityState state = City(Making("a", 0L, 5000L, 0L, 5000L, 13, 5));
+			long horizon = 30L * KingdomRules.TicksPerDay + 733L;
+			KingdomAdvanceOutcome<KingdomCityState> whole = RunFrom(state, 0L, horizon);
+			KingdomCityState split = state;
+			for (long cut = 517L; cut < horizon; cut += 517L)
+			{
+				split = RunFrom(split, split.ProcessedThroughTick, cut).State;
+			}
+			split = RunFrom(split, split.ProcessedThroughTick, horizon).State;
+			KingdomZoneRow one;
+			KingdomZoneRow many;
+			Assert.IsTrue(whole.State.TryZone(0, out one));
+			Assert.IsTrue(split.TryZone(0, out many));
+			Assert.AreEqual(390L, one.Stocks.Water.Level, "thirty whole days at thirteen");
+			Assert.AreEqual(one.Stocks.Water.Level, many.Stocks.Water.Level, "a slice may not cost or gain the city a day");
+			Assert.AreEqual(one.Stocks.Food.Level, many.Stocks.Food.Level);
+			Assert.AreEqual(one.OwedWater, many.OwedWater);
+			Assert.AreEqual(one.OwedFood, many.OwedFood);
+		}
+
+		/// <summary>Reckoning the same span twice produces nothing the second time, which is what
+		/// makes a missed check-out cost freshness and never correctness.</summary>
+		[Test]
+		public void ReckoningTheSameSpanTwiceProducesNothingTheSecondTime()
+		{
+			KingdomCityState state = City(Making("a", 0L, 5000L, 0L, 5000L, 13, 5));
+			KingdomCityState once = RunFrom(state, 0L, 9L * KingdomRules.TicksPerDay).State;
+			KingdomCityState twice = RunFrom(once, once.ProcessedThroughTick, 9L * KingdomRules.TicksPerDay).State;
+			KingdomZoneRow first;
+			KingdomZoneRow second;
+			Assert.IsTrue(once.TryZone(0, out first));
+			Assert.IsTrue(twice.TryZone(0, out second));
+			Assert.AreEqual(first.Stocks.Water.Level, second.Stocks.Water.Level);
+			Assert.AreEqual(first.OwedWater, second.OwedWater);
+		}
+
+		/// <summary>A full store is a real breakpoint now, so a producing city spends more than one
+		/// pass over a span that crosses a ceiling — and still bounded by the MODEL, never by the
+		/// elapsed (§0.0(a)).</summary>
+		[Test]
+		public void AProducingCityCrossesItsCeilingOnceHoweverLongTheSpan()
+		{
+			KingdomCityState state = City(Making("a", 0L, 100L, 0L, 100L, 25, 0));
+			KingdomAdvanceOutcome<KingdomCityState> season = RunFrom(state, 0L, 90L * KingdomRules.TicksPerDay);
+			KingdomAdvanceOutcome<KingdomCityState> forever = RunFrom(state, 0L, 900L * KingdomRules.TicksPerDay);
+			Assert.AreEqual(season.Steps, forever.Steps);
+			Assert.AreEqual(season.RowVisits, forever.RowVisits);
+			Assert.IsFalse(forever.Overflowed);
+			KingdomZoneRow row;
+			Assert.IsTrue(forever.State.TryZone(0, out row));
+			Assert.AreEqual(100L, row.Stocks.Water.Level);
+			Assert.AreEqual(100, row.OwedWater, "the claim stops where the room does");
+		}
+
+		// ---- W6: nearest-holder sourcing, live on the carry (§3.10(1), I6) --------------------
+
+		private const string Near = "JoppaWorld.10.10.1.1.10";
+
+		private const string Far = "JoppaWorld.10.10.1.2.10";
+
+		private const string Seat = "JoppaWorld.10.10.1.0.10";
+
+		/// <summary>
+		/// I6 on the flow the model actually runs: the demand is met out of the ground NEXT DOOR,
+		/// not out of the older row across the city. Before W6 the apportionment was row order, and
+		/// row order is exactly how a carrier ends up walking past a nearer store.
+		/// </summary>
+		[Test]
+		public void ACarryDrawsOnTheNearestGroundRatherThanTheFirstRow()
+		{
+			KingdomCityState state = City(
+				Zone(Seat, 100L, 0L, 100L, 0L, 0L),
+				Zone(Far, 100L, 60L, 100L, 0L, 0L),
+				Zone(Near, 100L, 60L, 100L, 0L, 0L));
+			long[] moved = new long[3];
+			long total;
+			KingdomCityFault fault;
+			Assert.IsTrue(KingdomCityRules.TryPlanTransfer(state, Seat, KingdomStockKind.Water, 20L, 100L, moved, out total, out fault), fault.ToString());
+			Assert.AreEqual(20L, total);
+			Assert.AreEqual(0L, moved[1], "the far quarter is not opened while the next ground has plenty");
+			Assert.AreEqual(20L, moved[2]);
+		}
+
+		/// <summary>And when the near ground cannot cover it, the far one is reached for — nearest
+		/// FIRST is an order, not a restriction.</summary>
+		[Test]
+		public void ACarryReachesPastTheNearGroundOnlyWhenItRunsOut()
+		{
+			KingdomCityState state = City(
+				Zone(Seat, 100L, 0L, 100L, 0L, 0L),
+				Zone(Far, 100L, 60L, 100L, 0L, 0L),
+				Zone(Near, 100L, 5L, 100L, 0L, 0L));
+			long[] moved = new long[3];
+			long total;
+			KingdomCityFault fault;
+			Assert.IsTrue(KingdomCityRules.TryPlanTransfer(state, Seat, KingdomStockKind.Water, 20L, 100L, moved, out total, out fault));
+			Assert.AreEqual(20L, total);
+			Assert.AreEqual(5L, moved[2]);
+			Assert.AreEqual(15L, moved[1]);
+		}
+
+		/// <summary>The zone graph is composed from zone ids alone, which is why it may be built at
+		/// reckon: §3.10(2) forbids recomputing the level-2 slices there because they need the
+		/// ground, and this needs none.</summary>
+		[Test]
+		public void TheZoneGraphMeasuresTheCityFromItsRowsAlone()
+		{
+			KingdomCityState state = City(Zone(Seat, 100L, 0L, 100L, 0L, 0L), Zone(Near, 100L, 0L, 100L, 0L, 0L), Zone(Far, 100L, 0L, 100L, 0L, 0L));
+			int[] cells = new int[3];
+			KingdomCityFault fault;
+			Assert.IsTrue(KingdomCityRules.TryZoneDistances(state, Seat, cells, out fault), fault.ToString());
+			Assert.AreEqual(0, cells[0], "the seat is no distance from itself");
+			Assert.Greater(cells[2], cells[1], "the diagonal quarter is further than the one next door");
+		}
+
+		/// <summary>A malformed zone id degrades the ROUTING and never refuses the carry: every
+		/// distance reads zero, the key stops discriminating, and the apportionment falls back to
+		/// the row order every wave before W6 used.</summary>
+		[Test]
+		public void AMalformedZoneIdCostsTheOrderingAndNeverTheCarry()
+		{
+			KingdomCityState state = City(Zone("seat", 100L, 0L, 100L, 0L, 0L), Zone("far", 100L, 60L, 100L, 0L, 0L));
+			int[] cells = new int[2];
+			KingdomCityFault fault;
+			Assert.IsTrue(KingdomCityRules.TryZoneDistances(state, "seat", cells, out fault), fault.ToString());
+			Assert.AreEqual(0, cells[0]);
+			Assert.AreEqual(0, cells[1]);
+			long[] moved = new long[2];
+			long total;
+			Assert.IsTrue(KingdomCityRules.TryPlanTransfer(state, "seat", KingdomStockKind.Water, 20L, 100L, moved, out total, out fault));
+			Assert.AreEqual(20L, total);
 		}
 
 		/// <summary>The reckon job is what actually crosses the executor, so its boundary is what
@@ -602,9 +807,29 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void TheAuditLineNamesAMismatchAndStaysQuietWhenThereIsNone()
 		{
-			StringAssert.DoesNotContain("MISMATCH", KingdomCityRules.AuditNote(40L, 40L, 6L, 6L, 0));
-			StringAssert.Contains("MISMATCH", KingdomCityRules.AuditNote(40L, 31L, 6L, 6L, 0));
-			StringAssert.Contains("owed=6/3", KingdomCityRules.AuditNote(40L, 40L, 6L, 6L, 6));
+			StringAssert.DoesNotContain("MISMATCH", KingdomCityRules.AuditNote(40L, 0L, 40L, 6L, 0L, 6L, 0));
+			StringAssert.Contains("MISMATCH", KingdomCityRules.AuditNote(40L, 0L, 31L, 6L, 0L, 6L, 0));
+			StringAssert.Contains("owed=6/3", KingdomCityRules.AuditNote(40L, 0L, 40L, 6L, 0L, 6L, 6));
+		}
+
+		/// <summary>
+		/// I1 in full, on the line itself (W6): a row that still owes real containers what its works
+		/// made is NOT a mismatch, and the same row with the debt dropped IS one. Before W6 the
+		/// line compared model to ground and was right only because a producing rate did not exist;
+		/// this is the assertion that fails if anybody puts it back that way.
+		/// </summary>
+		[Test]
+		public void TheAuditLineIsQuietWhenTheDebtExplainsTheGapAndLoudWhenItDoesNot()
+		{
+			StringAssert.DoesNotContain("MISMATCH", KingdomCityRules.AuditNote(52L, 12L, 40L, 9L, 3L, 6L, 4),
+				"model - debt == ground is the whole of I1, and an unpaid making is not a mismatch");
+			StringAssert.Contains("MISMATCH", KingdomCityRules.AuditNote(52L, 0L, 40L, 9L, 3L, 6L, 4),
+				"the same gap with no debt behind it is exactly the drift the audit exists to name");
+			StringAssert.Contains("MISMATCH", KingdomCityRules.AuditNote(52L, 12L, 40L, 9L, 0L, 6L, 4),
+				"each kind is audited on its own; a water debt may not cover a food gap");
+			StringAssert.Contains("debt=12", KingdomCityRules.AuditNote(52L, 12L, 40L, 9L, 3L, 6L, 4));
+			// A draw is the other sign, and the identity is the same one.
+			StringAssert.DoesNotContain("MISMATCH", KingdomCityRules.AuditNote(28L, -12L, 40L, 6L, 0L, 6L, 4));
 		}
 
 		[Test]

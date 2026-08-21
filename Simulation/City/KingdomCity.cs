@@ -191,8 +191,29 @@ namespace ThousandAndFirst.Simulation.City
 			}
 			KingdomZoneRow row;
 			state.TryZone(index, out row);
+			KingdomStocks ground = Ground(Survey, row);
+			KingdomProductionStep water;
+			KingdomProductionStep food;
+			if (!KingdomProductionRules.TryReconcile(ground.Water.Level, ground.Water.Capacity, row.OwedWater, out water, out fault)
+				|| !KingdomProductionRules.TryReconcile(ground.Food.Level, ground.Food.Capacity, row.OwedFood, out food, out fault))
+			{
+				Refuse("check-out", fault);
+				return;
+			}
+			KingdomStocks trued = new KingdomStocks(
+				new KingdomStockPair(water.NextLevel, ground.Water.Capacity),
+				new KingdomStockPair(food.NextLevel, ground.Food.Capacity),
+				ground.Materials);
 			KingdomCityState written;
-			if (!state.TryWithZone(index, row.WithReading(TimeTicks, Ground(Survey, row), row.Roofs, Survey.Defence(), row.WaterCarry, row.FoodCarry), out written, out fault))
+			// The last read is also the last measurement of what this ground MAKES: the founder is
+			// about to walk out, and the rate stamped here is the one the model will run this zone
+			// at for as long as they are away (§7.4, W6).
+			if (!state.TryWithZone(
+					index,
+					row.WithReading(TimeTicks, trued, row.Roofs, Survey.Defence(), WaterMadePerDay(Survey), FoodMadePerDay(Survey))
+						.WithOwed(water.NextOwed, food.NextOwed, row.OwedMaterials),
+					out written,
+					out fault))
 			{
 				Refuse("check-out", fault);
 				return;
@@ -284,12 +305,23 @@ namespace ThousandAndFirst.Simulation.City
 			{
 				return;
 			}
+			KingdomProductionStep food;
+			if (!KingdomProductionRules.TryReconcile(Floor(FoodStored), Floor(FoodCapacity), row.OwedFood, out food, out fault))
+			{
+				Refuse("record larder", fault);
+				return;
+			}
 			KingdomStocks stocks = new KingdomStocks(
 				row.Stocks.Water,
-				new KingdomStockPair(Floor(FoodStored), Floor(FoodCapacity)),
+				new KingdomStockPair(food.NextLevel, Floor(FoodCapacity)),
 				row.Stocks.Materials);
 			KingdomCityState written;
-			if (!state.TryWithZone(index, row.WithReading(TimeTicks, stocks, row.Roofs, row.Defence, row.WaterCarry, row.FoodCarry), out written, out fault))
+			if (!state.TryWithZone(
+					index,
+					row.WithReading(TimeTicks, stocks, row.Roofs, row.Defence, row.WaterCarry, row.FoodCarry)
+						.WithOwed(row.OwedWater, food.NextOwed, row.OwedMaterials),
+					out written,
+					out fault))
 			{
 				Refuse("record larder", fault);
 				return;
@@ -380,7 +412,40 @@ namespace ThousandAndFirst.Simulation.City
 				System.SeatName ?? state.SettlementId,
 				new KingdomCityAdvanceable(KingdomRules.TicksPerDay, null, null));
 			KingdomComputeResult<KingdomCityState> result = Executor.Submit(new KingdomReckonInput(state, TimeTicks), job);
-			return result.Published ? result.Value : state;
+			KingdomCityState advanced = result.Published ? result.Value : state;
+			Stamp(System, advanced);
+			return advanced;
+		}
+
+		/// <summary>
+		/// The one lock that makes double-billing unrepresentable rather than merely avoided.
+		/// <para>
+		/// W6, LIVING-CITY-ARCHITECTURE &sect;7.4. <c>LastWaterWorkTick</c> is no longer a clock
+		/// anybody advances; it is the PUBLISHED MIRROR of the model's own
+		/// <c>ProcessedThroughTick</c>, written here and nowhere else. Every day of making is
+		/// counted once, by the model, off that one tick — so <c>KingdomGrowth</c> cannot bill a day
+		/// the model has already billed, because it no longer owns a clock to bill it from, and a
+		/// reckon that REFUSES leaves the tick where it was so the day is billed on the next pass
+		/// instead of being lost.
+		/// </para>
+		/// <para>
+		/// <b><c>LastFoodWorkTick</c> is deliberately NOT touched here</b>, and the asymmetry is the
+		/// design rather than an oversight. The fields' clocked make moved onto the model with the
+		/// water works'; the MILLS did not, because a mill makes nothing out of the day — it takes
+		/// real crops off real shelves and puts real staples back, on the ground where the shelves
+		/// are, and <c>KingdomCrops.MilledFoodPerDay</c> is subtracted out of the model's own rate
+		/// precisely so the two can never both be paid. So the mill keeps that stamp and its
+		/// elapsed. Writing it from here would set it to <i>now</i> on every check-in and the mills
+		/// would never grind again.
+		/// </para>
+		/// </summary>
+		private static void Stamp(KingdomSystem System, KingdomCityState state)
+		{
+			if (System == null || state == null)
+			{
+				return;
+			}
+			System.LastWaterWorkTick = state.ProcessedThroughTick;
 		}
 
 		/// <summary>
@@ -524,6 +589,13 @@ namespace ThousandAndFirst.Simulation.City
 			if (waterSpent)
 			{
 				water = SettleWater(Survey, water);
+				// The city's own works, arriving in the founder's report where the settlement
+				// pass's clocked credit used to put them (W6). Only a LANDING is fetched water; a
+				// draw is upkeep and is counted by the step that drew it.
+				if (row.OwedWater > water)
+				{
+					System.Ledger.Fetched += row.OwedWater - water;
+				}
 			}
 			bool foodSpent = foodOwed && Spendable(foodSeen, ref seen, ref rest);
 			if (foodSpent)
@@ -704,7 +776,11 @@ namespace ThousandAndFirst.Simulation.City
 			{
 				int room = FirstFoodRoom(Survey);
 				int offer = (owed < room) ? owed : room;
-				return (offer <= 0) ? owed : (owed - Survey.StoreFood(offer, CropOf(System)));
+				// KingdomGrowth's own landing, called rather than re-implemented: it keeps the
+				// harvest ledger and the once-per-block "nowhere to put it" sentence, which the
+				// settlement pass used to reach through the clocked make and W6 moved onto the
+				// model. One rule for "put food away and say what was lost", one home for it.
+				return (offer <= 0) ? owed : (owed - KingdomGrowth.StoreHarvest(System, Survey, offer));
 			}
 			if (owed >= 0)
 			{
@@ -933,11 +1009,25 @@ namespace ThousandAndFirst.Simulation.City
 				return state;
 			}
 			KingdomStocks ground = Ground(Survey, row);
+			KingdomProductionStep water;
+			KingdomProductionStep food;
+			KingdomCityFault fault;
+			if (!KingdomProductionRules.TryReconcile(ground.Water.Level, ground.Water.Capacity, row.OwedWater, out water, out fault)
+				|| !KingdomProductionRules.TryReconcile(ground.Food.Level, ground.Food.Capacity, row.OwedFood, out food, out fault))
+			{
+				Refuse("reconcile", fault);
+				return state;
+			}
 			if (row.LastReadTick > 0L)
 			{
-				long water = ground.Water.Level - row.Stocks.Water.Level;
-				long food = ground.Food.Level - row.Stocks.Food.Level;
-				string note = KingdomCityRules.ReconcileNote(water, food);
+				// Drift is measured against what the model SAYS the ground holds, which is
+				// `level - owed` and not `level` (I1). Before W6 the two were the same number on a
+				// seated row and the distinction did not show; with a producing rate they are not,
+				// and measuring against the level would report the city's own unpoured making as
+				// though the founder had taken it.
+				long drank = ground.Water.Level - (row.Stocks.Water.Level - row.OwedWater);
+				long ate = ground.Food.Level - (row.Stocks.Food.Level - row.OwedFood);
+				string note = KingdomCityRules.ReconcileNote(drank, ate);
 				if (note != null)
 				{
 					// Both directions are recorded; only a SHORTFALL reaches the founder's own
@@ -945,21 +1035,63 @@ namespace ThousandAndFirst.Simulation.City
 					// on — they poured it, or something took it — and a cask holding more is the
 					// world working. STANDARDS 7b's other half: the ledger is for what the founder
 					// can still do something about, and the log is for everything.
-					if (water < 0L || food < 0L)
+					if (drank < 0L || ate < 0L)
 					{
 						System.Ledger.Note("{{K|" + note + "}}");
 					}
-					KingdomLog.Log("city: reconcile " + Z.ZoneID + " water=" + water + " food=" + food);
+					KingdomLog.Log("city: reconcile " + Z.ZoneID + " water=" + drank + " food=" + ate);
 				}
 			}
+			if (water.Spilled != 0L || food.Spilled != 0L)
+			{
+				// A claim the containers can no longer hold room for. Dropped rather than carried,
+				// for the same reason a harvest with nowhere to go is left in the field — and said,
+				// because §3.9 rules that nothing is silently forgiven.
+				KingdomLog.Log("city: reconcile " + Z.ZoneID + " spilled water=" + water.Spilled + " food=" + food.Spilled);
+			}
+			KingdomStocks trued = new KingdomStocks(
+				new KingdomStockPair(water.NextLevel, ground.Water.Capacity),
+				new KingdomStockPair(food.NextLevel, ground.Food.Capacity),
+				ground.Materials);
 			KingdomCityState written;
-			KingdomCityFault fault;
-			if (!state.TryWithZone(index, row.WithReading(TimeTicks, ground, row.Roofs, Survey.Defence(), row.WaterCarry, row.FoodCarry), out written, out fault))
+			if (!state.TryWithZone(
+					index,
+					row.WithReading(TimeTicks, trued, row.Roofs, Survey.Defence(), WaterMadePerDay(Survey), FoodMadePerDay(Survey))
+						.WithOwed(water.NextOwed, food.NextOwed, row.OwedMaterials),
+					out written,
+					out fault))
 			{
 				Refuse("reconcile", fault);
 				return state;
 			}
 			return written;
+		}
+
+		/// <summary>
+		/// What this ground's works make in a day, as the model's rate.
+		/// <para>
+		/// W6, LIVING-CITY-ARCHITECTURE &sect;7.4. The figure is <c>KingdomSubsidence.Supports</c>'s
+		/// own — the same tally the level is derived from and the same one the settlement pass used
+		/// to credit off its settlement-wide stamp — so the model and the ladder can never disagree
+		/// about what a reservoir is worth. Measured at the pass that reads the ground and stamped
+		/// on the row, because a rate is a fact about a zone's works and a zone's works are only
+		/// legible while somebody is standing on them.
+		/// </para>
+		/// </summary>
+		private static int WaterMadePerDay(KingdomSurvey Survey)
+		{
+			return (Survey == null) ? 0 : KingdomSubsidence.Supports(Survey).Water;
+		}
+
+		/// <summary>
+		/// The food half, and it is <c>KingdomGrowth.FoodMadePerDay</c> unchanged — which already
+		/// subtracts the sown fields and the mills, because those two deliver their food PHYSICALLY
+		/// (<c>KingdomPlot</c>, <c>GrindHarvest</c>) rather than as a credit. Reusing it rather
+		/// than restating it is what keeps one answer to "what does this ground grow".
+		/// </summary>
+		private static int FoodMadePerDay(KingdomSurvey Survey)
+		{
+			return (Survey == null) ? 0 : KingdomGrowth.FoodMadePerDay(Survey);
 		}
 
 		/// <summary>
@@ -1032,8 +1164,8 @@ namespace ThousandAndFirst.Simulation.City
 			}
 			KingdomCatchUpCounter counter = CityCounter(book);
 			return KingdomCityRules.AuditNote(
-				book.ZoneWaterLevels[index], Survey.StoredWater,
-				book.ZoneFoodLevels[index], Survey.FoodStored,
+				book.ZoneWaterLevels[index], book.ZoneOwedWater[index], Survey.StoredWater,
+				book.ZoneFoodLevels[index], book.ZoneOwedFood[index], Survey.FoodStored,
 				counter.OwedThirds);
 		}
 

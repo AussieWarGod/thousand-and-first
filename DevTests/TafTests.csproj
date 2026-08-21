@@ -58,6 +58,9 @@
     <Compile Include="KingdomBrinkRulesTests.cs" />
     <Compile Include="KingdomSubsidenceRulesTests.cs" />
     <Compile Include="KingdomHeartRulesTests.cs" />
+    <Compile Include="KingdomProductionRulesTests.cs" />
+    <Compile Include="KingdomLogisticsRulesTests.cs" />
+    <Compile Include="KingdomWorstCaseReceiptTests.cs" />
     <Compile Include="..\Core\KingdomRules.cs" />
     <Compile Include="..\Core\KingdomBrinkRules.cs" />
     <Compile Include="..\Core\KingdomLedger.cs" />
@@ -110,6 +113,8 @@
     <Compile Include="..\Simulation\City\KingdomItineraryRules.cs" />
     <Compile Include="..\Simulation\City\KingdomPlacementRules.cs" />
     <Compile Include="..\Simulation\City\KingdomDistanceRules.cs" />
+    <Compile Include="..\Simulation\City\KingdomProductionRules.cs" />
+    <Compile Include="..\Simulation\City\KingdomLogisticsRules.cs" />
     <Compile Include="..\Simulation\City\KingdomJobRegistry.cs" />
     <Compile Include="..\Simulation\City\KingdomExecutor.cs" />
     <Compile Include="..\Simulation\City\KingdomHappeningRules.cs" />
