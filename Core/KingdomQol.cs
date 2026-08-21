@@ -311,7 +311,9 @@ namespace ThousandAndFirst
 		}
 
 		/// <summary>
-		/// Whether two people share a roof. The ideological half comes from the engine's own
+		/// Whether two people share a roof, <b>on the superseded flat floor</b>: this wrapper is
+		/// the old path and <c>KingdomLodging</c> is the live one (the closeness ladder, Addendum
+		/// 4c, under the fault-line ceiling, 4d). The ideological half comes from the engine's own
 		/// faction feelings through <c>KingdomCreed</c> &mdash; no grudge table lives here either
 		/// &mdash; and everything else is the tag vocabulary, judged against what the household
 		/// already there keeps.

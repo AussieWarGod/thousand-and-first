@@ -340,14 +340,8 @@ namespace ThousandAndFirst
 		public const int RoomedRefusalHostility = 75;
 
 		/// <summary>
-		/// Hostility at which <see cref="Closeness.Private"/> quarters refuse: a hundred, the
-		/// game's own flat -100 fault lines and nothing milder. This is the value
-		/// <c>KingdomQolRules.CohabitHostility</c> shipped as the single floor for every roof in
-		/// the settlement; under Addendum 4c it is the top rung and applies only where everybody
-		/// has a door of their own.
-		/// </summary>
-		/// <summary>
-		/// Equal to Roomed's, by Addendum 4d: a fault line refuses any shared roof, and marble is
+		/// Hostility at which <see cref="Closeness.Private"/> quarters refuse. Equal to Roomed's,
+		/// by Addendum 4d: a fault line refuses any shared roof, and marble is
 		/// never a tool for housing enemies. Private's worth is quality and notables, not
 		/// tolerance. This was 100 — which let a pair refused a stone house share a fine one, the
 		/// exact gap the ruling closes; on vanilla's feeling table (−25/−50/−100) the difference
@@ -356,9 +350,11 @@ namespace ThousandAndFirst
 		public const int PrivateRefusalHostility = RoomedRefusalHostility;
 
 		/// <summary>
-		/// The ladder itself: the creed hostility at or above which these quarters refuse. Strictly
-		/// increasing from <see cref="Closeness.Packed"/> to <see cref="Closeness.Private"/>, which
-		/// is the whole of the ruling &mdash; better quarters hold worse feelings.
+		/// The ladder itself: the creed hostility at or above which these quarters refuse. Never
+		/// decreasing from <see cref="Closeness.Packed"/> to <see cref="Closeness.Private"/>, which
+		/// is the whole of the ruling &mdash; better quarters hold worse feelings. It stops rising
+		/// at the top: Addendum 4d ties Private's tolerance to Roomed's, so marble buys quality and
+		/// notables, never permission to house an enemy a stone house refused.
 		/// </summary>
 		/// <param name="Quarters">The rung, from the design's <c>Closeness</c> or from
 		/// <see cref="ClosenessFromDensity"/>.</param>

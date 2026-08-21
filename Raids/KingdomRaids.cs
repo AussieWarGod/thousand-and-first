@@ -101,7 +101,8 @@ namespace ThousandAndFirst
 		/// so the homecoming itself buys a fresh window to pay tribute, talk it down, or simply be
 		/// standing there the next time it comes due. What accrues in absence is the news that
 		/// they came and found the gate shut, never a loss no one witnessed
-		/// (VISION.md: "Absence accrues, never decays"; STANDARDS.md &sect;5.3: "witnessed-only
+		/// (VISION.md's absence pillar: absence never punishes, and what it moves is supply-carried
+		/// level, never a raid nobody witnessed; STANDARDS.md &sect;5.3: "witnessed-only
 		/// accounting").
 		/// </summary>
 		public static void RewarnRaidOnReturn(KingdomSystem System, long TimeTicks)
@@ -203,6 +204,11 @@ namespace ThousandAndFirst
 				MessageQueue.AddPlayerMessage("{{R|Raiders of " + displayName + " descend upon " + System.KingdomDisplayName + "!"
 					+ ((party < size) ? (" The watch turns back " + (size - party) + " of them at the wall.") : "")
 					+ ((plundered > 0) ? (" They stave in the casks: " + plundered + " drams lost.") : "") + "}}");
+				// Raiders who actually got past the wall may leave a work worse for it -- bounded,
+				// never a player-placed object (candidates come only from Shared.Works, the
+				// settlement's own crewed works), never total destruction (BUILDING-CATALOGUE-
+				// BRIEF.md Addendum 7: "a damaged work stands").
+				KingdomWear.OnRaidDamage(System, Z, Shared, spawned, System.LastRaidTick);
 			}
 		}
 	}

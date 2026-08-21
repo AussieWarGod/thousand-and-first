@@ -371,10 +371,12 @@ namespace ThousandAndFirst.Tests
 		{
 			BuildingDraft raised = Draft("hut",
 				KingdomMergeRules.AttrCost, "4", KingdomMergeRules.AttrTicks, "1200", KingdomMergeRules.AttrMaterials, "timber:3",
+				KingdomMergeRules.AttrBits, "00", KingdomMergeRules.AttrExotics, "ingot:1",
 				KingdomMergeRules.AttrBlueprint, "r_hut", KingdomMergeRules.AttrPlot, "S", KingdomMergeRules.AttrFootprint, "4x3",
 				KingdomMergeRules.AttrRoof, "Walled", KingdomMergeRules.AttrOpen, "No", KingdomMergeRules.AttrContents, "Hut_Contents");
 			BuildingDraft rewritten = Draft("hut",
 				KingdomMergeRules.AttrCost, "40", KingdomMergeRules.AttrTicks, "9999", KingdomMergeRules.AttrMaterials, "marble:9",
+				KingdomMergeRules.AttrBits, "0034", KingdomMergeRules.AttrExotics, "gold:2,gem:1",
 				KingdomMergeRules.AttrBlueprint, "r_palace", KingdomMergeRules.AttrPlot, "XL", KingdomMergeRules.AttrFootprint, "18x12",
 				KingdomMergeRules.AttrRoof, "Open", KingdomMergeRules.AttrOpen, "Yes", KingdomMergeRules.AttrContents, "Palace_Contents");
 			MergeOffer offer = KingdomMergeRules.Reconcile(new StandingWork("hut", raised), rewritten);

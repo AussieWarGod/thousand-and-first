@@ -362,13 +362,53 @@ namespace ThousandAndFirst
 		/// somebody asks whether they will live under it, and changing it moves nothing.</summary>
 		public const string AttrCloseness = "Closeness";
 
+		/// <summary>How far what a design gives actually carries (Addendum 6): <c>plot</c>,
+		/// <c>quarter</c>, <c>zone</c>, <c>city</c>, <c>realm</c>. An override for the derivation
+		/// from plot size and chain position, and absent from every design content to be derived.
+		/// Named here so the merge and the loader agree on the spelling. Deliberately absent from
+		/// <see cref="SpentAttributes"/> and <see cref="StampedAttributes"/> for exactly
+		/// <see cref="AttrProvides"/>'s reason: how far a work carries is re-read every time
+		/// somebody asks, and changing it moves nothing.</summary>
+		public const string AttrReach = "Reach";
+
+		/// <summary>What a design's crew needs to be capable of to raise it at full pace
+		/// (Addendum 7): a <c>kind:amount</c> list in the same language as
+		/// <see cref="AttrCarries"/>, e.g. <c>strength:16</c>. Named here so the merge and the
+		/// loader agree on the spelling. Deliberately absent from <see cref="SpentAttributes"/> and
+		/// <see cref="StampedAttributes"/> for exactly <see cref="AttrProvides"/>'s reason: what a
+		/// work demands of its crew is re-read every time it is crewed, and a rebalance reaches a
+		/// work already standing rather than the crew it happened to draw the day it was raised.
+		/// </summary>
+		public const string AttrCrewNeeds = "CrewNeeds";
+
+		/// <summary>What a high-craft design costs in vanilla's own tinkering bits (Addendum 7),
+		/// written in the game's own bit tiers: <c>Bits="0034"</c>. Named here so the merge and the
+		/// loader agree on the spelling. Belongs to <see cref="SpentAttributes"/> for exactly
+		/// <see cref="AttrCost"/>'s reason: bits are paid out the day the work goes up, so a later
+		/// file that re-prices the design neither charges nor refunds a work that already stands.
+		/// </summary>
+		public const string AttrBits = "Bits";
+
+		/// <summary>The rare finds a great work is finished in (Addendum 7):
+		/// <c>Exotics="gold:2,gem:1"</c>. Spent at commission, so it joins
+		/// <see cref="SpentAttributes"/> beside <see cref="AttrBits"/> and
+		/// <see cref="AttrMaterials"/>.</summary>
+		public const string AttrExotics = "Exotics";
+
+		/// <summary>What a processing work turns raw stock into: <c>Refines="shapedstone"</c>, or
+		/// the yard's own key. Deliberately absent from <see cref="SpentAttributes"/> and
+		/// <see cref="StampedAttributes"/>: what a standing yard makes is asked again every pass, so
+		/// a mod that re-purposes a yard changes what comes off it tomorrow and moves nothing today.
+		/// </summary>
+		public const string AttrRefines = "Refines";
+
 		/// <summary>What <c>KingdomRules.TryParseBuildAttributes</c> refuses an entry for the want
 		/// of. A later file may omit every one of them &mdash; that is a merge &mdash; but the
 		/// design as a whole must end up with all four.</summary>
 		public static readonly string[] RequiredAttributes = new string[4] { AttrDisplayName, AttrBlueprint, AttrCost, AttrTicks };
 
 		/// <summary>Attributes whose value was paid out when the work went up.</summary>
-		public static readonly string[] SpentAttributes = new string[3] { AttrCost, AttrTicks, AttrMaterials };
+		public static readonly string[] SpentAttributes = new string[5] { AttrCost, AttrTicks, AttrMaterials, AttrBits, AttrExotics };
 
 		/// <summary>Attributes whose value is cut into the ground the work stands on.</summary>
 		public static readonly string[] StampedAttributes = new string[6] { AttrBlueprint, AttrPlot, AttrFootprint, AttrRoof, AttrOpen, AttrContents };

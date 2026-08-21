@@ -1458,8 +1458,9 @@ namespace ThousandAndFirst
 		}
 
 		/// <summary>
-		/// The stage a plot has reached. A long absence lands on the stage the elapsed time
-		/// honestly bought and no further, so coming home after a hundred days finds the thing
+		/// The stage a plot has reached. A long absence lands on the stage the crew's own labour
+		/// honestly bought and no further &mdash; the elapsed ticks are the measure of that labour,
+		/// never a cause in themselves &mdash; so coming home after a hundred days finds the thing
 		/// finished and coming home after one finds it framed.
 		/// </summary>
 		/// <param name="Elapsed">Ticks since the plot was staked. Negative reads as zero.</param>
@@ -1557,7 +1558,10 @@ namespace ThousandAndFirst
 		/// villages (<c>Village_StructureWall_*Default</c>). Material is the theme: a settlement
 		/// keeps one, and it is readable off the buildings without opening a menu.
 		/// </summary>
-		public static readonly string[] WallMaterials = new string[6] { "Limestone", "BrinestalkWall", "Fulcrete", "Marble", "Verdigris", "Foamcrete" };
+		// Every blueprint WallBlueprint can actually return, so the guard test that walks this
+		// list covers what the code does rather than what it did when the list was written.
+		// MetalWall and WoodWall joined when the material chain gave them paving and a price.
+		public static readonly string[] WallMaterials = new string[8] { "Limestone", "BrinestalkWall", "Fulcrete", "Marble", "Verdigris", "Foamcrete", "MetalWall", "WoodWall" };
 
 		/// <summary>
 		/// The wall a settlement builds in: its style's own material, unless it was founded in

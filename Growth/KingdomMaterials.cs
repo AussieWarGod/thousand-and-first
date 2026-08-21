@@ -92,6 +92,23 @@ namespace ThousandAndFirst
 		/// </summary>
 		public const string MaterialTag = "r_KingdomMaterial";
 
+		/// <summary>
+		/// Blueprint tag by which a third-party item declares itself one of the settlement's rare
+		/// finds: <c>&lt;tag Name="r_KingdomExotic" Value="gem" /&gt;</c>. The same extension point
+		/// <see cref="MaterialTag"/> is, for the same reason: another mod's uncut star-sapphire
+		/// counts the moment it carries the tag, with no code here changing.
+		/// </summary>
+		public const string ExoticTag = "r_KingdomExotic";
+
+		/// <summary>
+		/// Blueprint tag by which an item declares what bits it is worth to the settlement, when
+		/// vanilla's own <c>TinkerItem</c> does not say: <c>&lt;tag Name="r_KingdomBit" Value="34"
+		/// /&gt;</c>, written in the same tiers a <c>Bits</c> cost is. Read SECOND, after the
+		/// game's own answer, because deriving before authoring is the rule and vanilla already
+		/// knows what a fractured microchip disassembles into.
+		/// </summary>
+		public const string BitTag = "r_KingdomBit";
+
 		/// <summary>Effort still owed on a building the founder ordered struck. Absent or zero on
 		/// every building nobody has condemned.</summary>
 		public const string StrikeEffortProperty = "KingdomStrikeEffort";
@@ -116,8 +133,9 @@ namespace ThousandAndFirst
 		/// <summary>
 		/// Item blueprints the settlement stores each material as, indexed by
 		/// <see cref="KingdomMaterial"/>. Scrap is vanilla's own <c>Scrap Metal</c>, because scrap
-		/// metal is already a real item in this game and a second one would be a lie; the other
-		/// five are ours, because vanilla has no timber, no cut stone, and no bundle of brush.
+		/// metal is already a real item in this game and a second one would be a lie; the rest are
+		/// ours, because vanilla has no timber, no cut stone, no bundle of brush, and nothing at
+		/// all for what comes off a saw-pit.
 		/// </summary>
 		public static readonly string[] MaterialBlueprints = new string[KingdomMaterialRules.MaterialCount]
 		{
@@ -126,7 +144,25 @@ namespace ThousandAndFirst
 			"r_KingdomTimber",
 			"r_KingdomCutStone",
 			"r_KingdomMarbleBlock",
-			"Scrap Metal"
+			"Scrap Metal",
+			"r_KingdomShapedTimber",
+			"r_KingdomShapedStone",
+			"r_KingdomWorkedMetal"
+		};
+
+		/// <summary>
+		/// Item blueprints one exotic may be held as, indexed by <see cref="KingdomExotic"/>.
+		/// Every one of them is vanilla's own: the settlement never makes a rare find, and a
+		/// blueprint of ours standing in for one would be a lie about where it came from. The
+		/// gemstone row lists the rough gems the game scatters; anything else a mod wants counted
+		/// says so with <see cref="ExoticTag"/>.
+		/// </summary>
+		public static readonly string[][] ExoticBlueprints = new string[KingdomMaterialRules.ExoticCount][]
+		{
+			new string[1] { "Bronze Ingot" },
+			new string[1] { "Silver Nugget" },
+			new string[1] { "Gold Nugget" },
+			new string[8] { "Gemstone", "Rough Agate", "Rough Topaz", "Rough Jasper", "Rough Amethyst", "Rough Sapphire", "Rough Emerald", "Rough Peridot" }
 		};
 
 		/// <summary>Stockpiles one settlement's keepers can account for on one ground. Mirrors
@@ -148,6 +184,16 @@ namespace ThousandAndFirst
 
 		private static readonly KingdomMaterialTally _empty = new KingdomMaterialTally();
 
+		private static readonly Dictionary<string, KingdomBitTally> _bitCosts = new Dictionary<string, KingdomBitTally>();
+
+		private static readonly Dictionary<string, KingdomExoticTally> _exoticCosts = new Dictionary<string, KingdomExoticTally>();
+
+		private static readonly Dictionary<string, KingdomYard> _refineries = new Dictionary<string, KingdomYard>();
+
+		private static readonly KingdomBitTally _emptyBits = new KingdomBitTally();
+
+		private static readonly KingdomExoticTally _emptyExotics = new KingdomExoticTally();
+
 		/// <summary>
 		/// Empties every material cost keyed by a registry key. Called from
 		/// <c>KingdomData.EnsureLoaded</c> beside <c>KingdomZoning.ClearGates</c> and
@@ -160,6 +206,9 @@ namespace ThousandAndFirst
 			_costs.Clear();
 			_upgradeCosts.Clear();
 			_dealMaterials.Clear();
+			_bitCosts.Clear();
+			_exoticCosts.Clear();
+			_refineries.Clear();
 		}
 
 		/// <summary>
@@ -193,6 +242,103 @@ namespace ThousandAndFirst
 			{
 				_upgradeCosts[Key] = upgrade;
 			}
+		}
+
+		/// <summary>
+		/// Records what one catalogue entry costs in the high-craft stock: vanilla's own tinkering
+		/// bits, and the rare finds only a great work asks for. Registered beside the material cost
+		/// and read out of the same merged draft, so a later file that re-prices a design in bits
+		/// layers exactly the way one that re-prices it in timber does.
+		/// <para>
+		/// Both attributes are optional and both are read whether or not they are present, for the
+		/// reason <see cref="RegisterCost"/> gives. A malformed value disables itself with a logged
+		/// reason and leaves the design costing what it already cost; it never half-registers.
+		/// </para>
+		/// </summary>
+		/// <param name="Key">The design's registry key. Null and empty are ignored.</param>
+		/// <param name="Bits">The <c>Bits</c> attribute, or null for a design that wants none.
+		/// </param>
+		/// <param name="Exotics">The <c>Exotics</c> attribute, or null.</param>
+		public static void RegisterHighCraft(string Key, string Bits, string Exotics)
+		{
+			if (string.IsNullOrEmpty(Key))
+			{
+				return;
+			}
+			if (!KingdomMaterialRules.TryParseBitCost(Bits, out var bits, out var bitError))
+			{
+				MetricsManager.LogError("ThousandAndFirst KingdomBuildings: building " + Key + " has a bad Bits: " + bitError);
+			}
+			else if (!bits.IsEmpty())
+			{
+				_bitCosts[Key] = bits;
+			}
+			if (!KingdomMaterialRules.TryParseExoticCost(Exotics, out var exotics, out var exoticError))
+			{
+				MetricsManager.LogError("ThousandAndFirst KingdomBuildings: building " + Key + " has a bad Exotics: " + exoticError);
+			}
+			else if (!exotics.IsEmpty())
+			{
+				_exoticCosts[Key] = exotics;
+			}
+		}
+
+		/// <summary>
+		/// Records that one catalogue entry is a processing work: a design that turns raw stock
+		/// into the refined material named by its <c>Refines</c> attribute. Optional everywhere;
+		/// a design that declares nothing is not a yard and never was.
+		/// <para>
+		/// This is the whole of what makes a yard a yard. A third party's own sawmill is a
+		/// sawyer's yard the moment it writes <c>Refines="shapedtimber"</c>, and the infrastructure
+		/// gate counts it exactly like ours, because the gate asks the registry what stands and
+		/// never asks for a blueprint by name.
+		/// </para>
+		/// </summary>
+		public static void RegisterRefinery(string Key, string Refines)
+		{
+			if (string.IsNullOrEmpty(Key) || string.IsNullOrEmpty(Refines) || Refines.Trim().Length == 0)
+			{
+				return;
+			}
+			if (!KingdomMaterialRules.TryParseYard(Refines, out var yard))
+			{
+				MetricsManager.LogError("ThousandAndFirst KingdomBuildings: building " + Key + " refines \"" + Refines
+					+ "\", which is neither a yard (" + string.Join(", ", KingdomMaterialRules.YardKeys) + ") nor a refined material");
+				return;
+			}
+			_refineries[Key] = yard;
+		}
+
+		/// <summary>What a design costs in bits. Never null; empty for everything that wants
+		/// none, which is nearly the whole catalogue.</summary>
+		public static KingdomBitTally BitCostFor(string Key)
+		{
+			KingdomData.EnsureBuildings();
+			if (!string.IsNullOrEmpty(Key) && _bitCosts.TryGetValue(Key, out var cost))
+			{
+				return cost;
+			}
+			return _emptyBits;
+		}
+
+		/// <summary>What a design costs in rare finds. Never null; empty for everything but the
+		/// great works.</summary>
+		public static KingdomExoticTally ExoticCostFor(string Key)
+		{
+			KingdomData.EnsureBuildings();
+			if (!string.IsNullOrEmpty(Key) && _exoticCosts.TryGetValue(Key, out var cost))
+			{
+				return cost;
+			}
+			return _emptyExotics;
+		}
+
+		/// <summary>Which yard a design is, if it is one at all.</summary>
+		public static bool TryRefineryOf(string Key, out KingdomYard Yard)
+		{
+			KingdomData.EnsureBuildings();
+			Yard = KingdomYard.Sawyer;
+			return !string.IsNullOrEmpty(Key) && _refineries.TryGetValue(Key, out Yard);
 		}
 
 		/// <summary>
@@ -316,6 +462,134 @@ namespace ThousandAndFirst
 		}
 
 		/// <summary>
+		/// Which rare find an item counts as. Read the way <see cref="TryMaterialOf"/> reads a
+		/// material: a third party's own tag first, then the vanilla blueprints the base game
+		/// scatters. Anything else is somebody's jewellery and is never counted or spent.
+		/// </summary>
+		public static bool TryExoticOf(GameObject Object, out KingdomExotic Exotic)
+		{
+			Exotic = KingdomExotic.Ingot;
+			if (Object == null)
+			{
+				return false;
+			}
+			string tagged = Object.GetTag(ExoticTag);
+			if (!string.IsNullOrEmpty(tagged) && KingdomMaterialRules.TryParseExotic(tagged, out Exotic))
+			{
+				return true;
+			}
+			for (int i = 0; i < ExoticBlueprints.Length; i++)
+			{
+				string[] blueprints = ExoticBlueprints[i];
+				for (int j = 0; j < blueprints.Length; j++)
+				{
+					if (Object.Blueprint == blueprints[j])
+					{
+						Exotic = (KingdomExotic)i;
+						return true;
+					}
+				}
+			}
+			return false;
+		}
+
+		/// <summary>
+		/// What one item is worth to the settlement in bits, added into a tally.
+		/// <para>
+		/// Derived before authored, per Addendum 4's creed principle applied to things rather than
+		/// people: vanilla's own <c>TinkerItem</c> already knows what every piece of scrap in the
+		/// game disassembles into, and <c>BitType</c> already knows which tier each of those bits
+		/// belongs to. A corroded circuit board is two tier-zero bits because the base game says so
+		/// and not because we wrote a table. Our own <see cref="BitTag"/> is read only for items
+		/// that carry no <c>TinkerItem</c> at all &mdash; a mod's raw ingot of pure alloy, say.
+		/// </para>
+		/// </summary>
+		/// <param name="Object">The item to read.</param>
+		/// <param name="Into">Tally to add to. Null is a no-op.</param>
+		/// <returns>True when the item was worth any bits at all.</returns>
+		public static bool TryBitsOf(GameObject Object, KingdomBitTally Into)
+		{
+			if (Object == null || Into == null)
+			{
+				return false;
+			}
+			KingdomBitTally unit = UnitBits(Object);
+			if (unit.IsEmpty())
+			{
+				return false;
+			}
+			int count = (Object.Count > 0) ? Object.Count : 1;
+			for (int i = 0; i < KingdomMaterialRules.BitTierCount; i++)
+			{
+				Into.Add(i, unit.Get(i) * count);
+			}
+			return true;
+		}
+
+		/// <summary>
+		/// What ONE of a thing is worth in bits, ignoring how many of it are stacked there. The
+		/// unit the spending path works in: a stack of four bent metal sheets is four separate
+		/// answers to a price, and only as many of them are broken up as the price actually wants.
+		/// </summary>
+		/// <returns>An empty tally for anything that is worth no bits, which is most things.
+		/// </returns>
+		public static KingdomBitTally UnitBits(GameObject Object)
+		{
+			KingdomBitTally worth = new KingdomBitTally();
+			if (Object == null)
+			{
+				return worth;
+			}
+			TinkerItem tinker = Object.GetPart<TinkerItem>();
+			if (tinker != null && tinker.CanDisassemble)
+			{
+				// GetBitCostFor rather than the instance property on purpose. The property answers
+				// out of BitCostMap and returns a bare "0" for a blueprint nothing has primed yet
+				// (TinkerItem.cs:56-62), while the static fills the map from the blueprint and
+				// hands back real bit colours (TinkerItem.cs:133-157). It also leaves the item's
+				// own modifications out of the count, which is right here: the settlement is
+				// reading a heap of scrap, not pricing somebody's modded rifle.
+				string bits = TinkerItem.GetBitCostFor(tinker.ActiveBlueprint);
+				if (!string.IsNullOrEmpty(bits))
+				{
+					for (int i = 0; i < bits.Length; i++)
+					{
+						if (KingdomMaterialRules.TryBitTier(bits[i], out var tier))
+						{
+							worth.Add(tier, 1);
+						}
+					}
+				}
+				if (!worth.IsEmpty())
+				{
+					return worth;
+				}
+			}
+			string tagged = Object.GetTag(BitTag);
+			if (!string.IsNullOrEmpty(tagged) && KingdomMaterialRules.TryParseBitCost(tagged, out var declared, out _))
+			{
+				return declared;
+			}
+			return worth;
+		}
+
+		/// <summary>
+		/// How dear a thing is to break up, for the order the keepers reach along a shelf: the sum
+		/// of its bits weighted by tier, so a corroded circuit board sorts below a metamorphic
+		/// core. Zero for anything worth no bits, which sorts first and is skipped anyway.
+		/// </summary>
+		private static int BitWorth(GameObject Object)
+		{
+			KingdomBitTally worth = UnitBits(Object);
+			int total = 0;
+			for (int i = 0; i < KingdomMaterialRules.BitTierCount; i++)
+			{
+				total += worth.Get(i) * (i + 1);
+			}
+			return total;
+		}
+
+		/// <summary>
 		/// What the dedicated stockpiles on one ground hold, and the means to spend it and fill
 		/// it. A snapshot: spending and delivering through this object keep its tally correct,
 		/// but an item placed after it was taken does not retroactively appear in it &mdash; the
@@ -325,6 +599,14 @@ namespace ThousandAndFirst
 		{
 			/// <summary>Units of each material the dedicated stockpiles hold.</summary>
 			public readonly KingdomMaterialTally Tally = new KingdomMaterialTally();
+
+			/// <summary>Bits the dedicated stockpiles are worth, by tier. Not a separate store and
+			/// never was: bits are whatever tinkering stock the founder put in with everything
+			/// else, counted the way the workshop would count it.</summary>
+			public readonly KingdomBitTally Bits = new KingdomBitTally();
+
+			/// <summary>Rare finds the dedicated stockpiles hold.</summary>
+			public readonly KingdomExoticTally Exotics = new KingdomExoticTally();
 
 			/// <summary>The dedicated containers, in the order found. Spending walks these, so
 			/// nothing is ever drawn from something the founder did not dedicate.</summary>
@@ -411,6 +693,152 @@ namespace ThousandAndFirst
 					}
 				}
 				return true;
+			}
+
+			/// <summary>
+			/// Spends a whole bit cost by taking apart the stock that carries it, or spends
+			/// nothing. Bits are not held loose &mdash; the settlement holds SCRAP, and the
+			/// keepers break up whatever answers the price, exactly as a tinker would.
+			/// <para>
+			/// A piece broken up for one bit gives up whatever else was in it, and that surplus is
+			/// gone. That is honest and it is the reason a design is priced in cheap tiers wherever
+			/// it can be: nobody breaks an AI master unit for the tier-zero bit in it if there is a
+			/// bent metal sheet on the shelf, and this walks the shelf cheapest-first so it does not
+			/// either.
+			/// </para>
+			/// </summary>
+			/// <returns>False when the stockpiles do not cover the cost; nothing was taken.</returns>
+			public bool SpendBits(KingdomBitTally Cost)
+			{
+				if (Cost == null || Cost.IsEmpty())
+				{
+					return true;
+				}
+				if (!KingdomMaterialRules.CoversBits(Bits, Cost))
+				{
+					return false;
+				}
+				KingdomBitTally owed = Cost.Copy();
+				for (int i = 0; i < Stockpiles.Count && owed.Total() > 0; i++)
+				{
+					GameObject container = Stockpiles[i];
+					if (container.Inventory == null)
+					{
+						continue;
+					}
+					// Snapshot first: destroying an item below removes it from this same Inventory
+					// list, and mutating a collection mid-foreach throws. Sorted cheapest-first so
+					// the keepers reach for the bent metal sheet before the AI master unit.
+					List<GameObject> held = new List<GameObject>(container.Inventory.Objects);
+					held.Sort(delegate(GameObject A, GameObject B)
+					{
+						return BitWorth(A).CompareTo(BitWorth(B));
+					});
+					for (int j = 0; j < held.Count && owed.Total() > 0; j++)
+					{
+						GameObject item = held[j];
+						// Same exclusion the counting pass makes, and it has to be the same or the
+						// settlement would break up the walls' own scrap for a bit it never counted.
+						if (TryMaterialOf(item, out _) || TryExoticOf(item, out _))
+						{
+							continue;
+						}
+						KingdomBitTally worth = UnitBits(item);
+						if (worth.IsEmpty())
+						{
+							continue;
+						}
+						while (owed.Total() > 0 && Wanted(owed, worth) && GameObject.Validate(item))
+						{
+							int before = item.Count;
+							item.Destroy(null, Silent: true);
+							if (GameObject.Validate(item) && item.Count >= before)
+							{
+								break;
+							}
+							for (int tier = 0; tier < KingdomMaterialRules.BitTierCount; tier++)
+							{
+								int taken = worth.Get(tier);
+								if (taken > 0)
+								{
+									owed.Add(tier, -taken);
+									Bits.Add(tier, -taken);
+								}
+							}
+						}
+					}
+				}
+				return owed.Total() == 0;
+			}
+
+			/// <summary>
+			/// Spends a whole cost in rare finds, or spends nothing. A gemstone is a gemstone: the
+			/// keepers take the first one that answers, because nothing here is worth more to a
+			/// wall than any other of its kind.
+			/// </summary>
+			/// <returns>False when the stockpiles do not cover the cost; nothing was taken.</returns>
+			public bool SpendExotics(KingdomExoticTally Cost)
+			{
+				if (Cost == null || Cost.IsEmpty())
+				{
+					return true;
+				}
+				if (!KingdomMaterialRules.CoversExotics(Exotics, Cost))
+				{
+					return false;
+				}
+				for (int i = 0; i < KingdomMaterialRules.ExoticCount; i++)
+				{
+					KingdomExotic exotic = (KingdomExotic)i;
+					int remaining = Cost.Get(exotic);
+					for (int j = 0; j < Stockpiles.Count && remaining > 0; j++)
+					{
+						GameObject container = Stockpiles[j];
+						if (container.Inventory == null)
+						{
+							continue;
+						}
+						List<GameObject> held = new List<GameObject>(container.Inventory.Objects);
+						for (int k = 0; k < held.Count && remaining > 0; k++)
+						{
+							GameObject item = held[k];
+							if (!TryExoticOf(item, out var kind) || kind != exotic)
+							{
+								continue;
+							}
+							while (remaining > 0 && GameObject.Validate(item))
+							{
+								int before = item.Count;
+								item.Destroy(null, Silent: true);
+								if (GameObject.Validate(item) && item.Count >= before)
+								{
+									break;
+								}
+								remaining--;
+								Exotics.Add(exotic, -1);
+							}
+						}
+					}
+					if (remaining > 0)
+					{
+						return false;
+					}
+				}
+				return true;
+			}
+
+			/// <summary>Whether breaking up a thing worth <paramref name="Worth"/> would answer any
+			/// part of what is still owed.</summary>
+			private static bool Wanted(KingdomBitTally Owed, KingdomBitTally Worth)
+			{
+				for (int i = 0; i < KingdomMaterialRules.BitTierCount; i++)
+				{
+					if (Owed.Get(i) > 0 && Worth.Get(i) > 0)
+					{
+						return true;
+					}
+				}
+				return false;
 			}
 
 			/// <summary>
@@ -517,10 +945,24 @@ namespace ThousandAndFirst
 				stock.Stockpiles.Add(item);
 				foreach (GameObject held in item.Inventory.Objects)
 				{
+					// The material vocabulary claims a thing first and exclusively. Vanilla's own
+					// Scrap Metal is how this settlement STORES scrap, and it is also a tinkering
+					// bit; counted as both, a wall's worth of it could be spent twice - once on the
+					// wall and once on a machine - which is minting. So the shelf's scrap answers
+					// for the walls, and the settlement's bits come from the other things a founder
+					// donates: fried processing cores, cracked robotics housings, and whatever else
+					// came home from a ruin.
 					if (TryMaterialOf(held, out var material))
 					{
 						stock.Tally.Add(material, held.Count);
+						continue;
 					}
+					if (TryExoticOf(held, out var exotic))
+					{
+						stock.Exotics.Add(exotic, held.Count);
+						continue;
+					}
+					TryBitsOf(held, stock.Bits);
 				}
 			}
 			return stock;
@@ -595,11 +1037,19 @@ namespace ThousandAndFirst
 				return "Nothing here is dedicated as a stockpile. Materials cleared from the ground will lie where they fall.";
 			}
 			string held = stock.Tally.Describe();
-			if (held == null)
+			string bits = stock.Bits.Describe();
+			string exotics = stock.Exotics.Describe();
+			if (held == null && bits == null && exotics == null)
 			{
 				return "The stockpiles stand empty.";
 			}
-			return "The stockpiles hold {{C|" + held + "}}.";
+			// The rare finds and the tinkering stock are counted separately because they are spent
+			// separately: neither one is ever drawn on for a wall, and a founder reading one line
+			// for all three would not know which of them the next work is short of.
+			return ((held == null) ? "The stockpiles hold nothing the walls are made of" : ("The stockpiles hold {{C|" + held + "}}"))
+				+ ((bits == null) ? "" : (", and stock enough for bits: {{C|" + bits + "}}"))
+				+ ((exotics == null) ? "" : (", and {{C|" + exotics + "}} laid aside"))
+				+ ".";
 		}
 
 		// --- Paying for a building in material ------------------------------------------------
@@ -616,42 +1066,179 @@ namespace ThousandAndFirst
 		public static bool CanPay(Zone Z, string Key, out string Failure)
 		{
 			Failure = null;
+			// The yards first, and before a single unit is counted. A founder standing at a design
+			// the settlement has no mason for should be told THAT, not handed a shopping list they
+			// could fill and still be refused (STANDARDS 7b).
+			if (!AllowsInfrastructure(Z, Key, out Failure))
+			{
+				return false;
+			}
 			KingdomMaterialTally cost = CostFor(Key);
-			if (cost.IsEmpty())
+			MaterialStock stock = null;
+			if (!cost.IsEmpty())
+			{
+				stock = Stock(Z);
+				if (!KingdomMaterialRules.Covers(stock.Tally, cost))
+				{
+					string missing = KingdomMaterialRules.Missing(stock.Tally, cost).Describe();
+					Failure = "The work wants {{C|" + cost.Describe() + "}}, and the stockpiles are short "
+						+ ((missing == null) ? "of it" : ("{{C|" + missing + "}}"))
+						+ ". Clear ground for it, trade for it, or strike something that was built of it."
+						+ (stock.None ? " Nothing here is dedicated as a stockpile yet." : "");
+					return false;
+				}
+			}
+			KingdomBitTally bits = BitCostFor(Key);
+			KingdomExoticTally exotics = ExoticCostFor(Key);
+			if (bits.IsEmpty() && exotics.IsEmpty())
 			{
 				return true;
 			}
-			MaterialStock stock = Stock(Z);
-			if (KingdomMaterialRules.Covers(stock.Tally, cost))
+			if (stock == null)
 			{
-				return true;
+				stock = Stock(Z);
 			}
-			string missing = KingdomMaterialRules.Missing(stock.Tally, cost).Describe();
-			Failure = "The work wants {{C|" + cost.Describe() + "}}, and the stockpiles are short "
-				+ ((missing == null) ? "of it" : ("{{C|" + missing + "}}"))
-				+ ". Clear ground for it, trade for it, or strike something that was built of it."
-				+ (stock.None ? " Nothing here is dedicated as a stockpile yet." : "");
-			return false;
+			if (!KingdomMaterialRules.CoversBits(stock.Bits, bits))
+			{
+				string missing = KingdomMaterialRules.MissingBits(stock.Bits, bits).Describe();
+				Failure = "This is high-craft work. It wants {{C|" + bits.Describe()
+					+ "}} out of the stockpiles, and the keepers are short " + ((missing == null) ? "of it" : ("{{C|" + missing + "}}"))
+					+ ". Bring scrap home and put it in a stockpile; whatever comes apart into the right stock will do.";
+				return false;
+			}
+			if (!KingdomMaterialRules.CoversExotics(stock.Exotics, exotics))
+			{
+				string missing = KingdomMaterialRules.MissingExotics(stock.Exotics, exotics).Describe();
+				Failure = "A work like this is finished in something rarer than stone. It wants {{C|" + exotics.Describe()
+					+ "}}, and the stockpiles hold no " + ((missing == null) ? "such thing" : ("{{C|" + missing + "}}"))
+					+ ". Nobody here can make one. Somebody has to find one and carry it home.";
+				return false;
+			}
+			return true;
 		}
 
 		/// <summary>
-		/// Spends a design's material cost from this ground's stockpiles. Spends the whole cost
-		/// or none of it.
+		/// Whether the settlement's own infrastructure will carry a design of this size, and why
+		/// not when it will not. The engine-coupled half of Addendum 7's gate: this reads what
+		/// stands on the ground and hands the verdict to <c>KingdomMaterialRules.AllowsBuild</c>,
+		/// which owns the law and the wording.
+		/// </summary>
+		/// <param name="Z">Ground the commission would be issued on.</param>
+		/// <param name="Key">The design's registry key.</param>
+		/// <param name="Failure">A founder-facing reason when this returns false, naming the yard.
+		/// </param>
+		public static bool AllowsInfrastructure(Zone Z, string Key, out string Failure)
+		{
+			Failure = null;
+			if (!KingdomPlots.TryGetSpec(Key, out var spec) || spec == null || !KingdomMaterialRules.RequiresYard(spec.Size))
+			{
+				return true;
+			}
+			KingdomMaterialTally cost = CostFor(Key);
+			if (KingdomMaterialRules.YardsFor(spec.Size, cost).Count == 0)
+			{
+				return true;
+			}
+			string name = KingdomData.TryGetBuilding(Key, out var entry) ? entry.Name : null;
+			return KingdomMaterialRules.AllowsBuild(spec.Size, cost, YardsStanding(Z), name, out Failure);
+		}
+
+		/// <summary>
+		/// What every yard on this ground is doing: standing, staffed this pass, and headed by a
+		/// notable. One walk of the zone, and a yard is whatever a design declared itself to be
+		/// with <c>Refines</c> &mdash; a third party's sawmill counts exactly like ours.
+		/// </summary>
+		public static List<KingdomMaterialRules.KingdomYardStanding> YardsStanding(Zone Z)
+		{
+			List<KingdomMaterialRules.KingdomYardStanding> yards = new List<KingdomMaterialRules.KingdomYardStanding>();
+			if (Z == null)
+			{
+				return yards;
+			}
+			bool[] standing = new bool[KingdomMaterialRules.YardCount];
+			bool[] staffed = new bool[KingdomMaterialRules.YardCount];
+			bool[] headed = new bool[KingdomMaterialRules.YardCount];
+			foreach (GameObject item in Z.GetObjects())
+			{
+				if (item.GetIntProperty("KingdomBuilt") != 1)
+				{
+					continue;
+				}
+				if (!TryRefineryOf(item.GetStringProperty(KingdomUpgrade.BuildKeyProperty), out var yard))
+				{
+					continue;
+				}
+				int index = (int)yard;
+				standing[index] = true;
+				// KingdomStaffed is set by the staffing pass earlier in this same visit
+				// (KingdomGrowth.AssignWork), so this reads the crew that is actually in the yard
+				// today rather than the crew the design asked for.
+				staffed[index] |= item.GetIntProperty("KingdomStaffed") == 1;
+				headed[index] |= IsHeaded(item);
+			}
+			for (int i = 0; i < KingdomMaterialRules.YardCount; i++)
+			{
+				if (standing[i])
+				{
+					yards.Add(new KingdomMaterialRules.KingdomYardStanding((KingdomYard)i, standing[i], staffed[i], headed[i]));
+				}
+			}
+			return yards;
+		}
+
+		/// <summary>
+		/// The office layer's answer to "does a named notable head this work?", installed by
+		/// whoever owns the office seats (Addendum 6). Left null here on purpose: this file must
+		/// not decide who holds an office, and a mod that ships without the office layer must not
+		/// find its grand works refused by a question nobody is answering.
+		/// <para>
+		/// Null therefore reads as "not enforced" rather than "not headed", the same compatibility
+		/// rule an absent attribute follows everywhere else in this economy. Once the probe is
+		/// installed, an unheaded yard refuses a grand work by name.
+		/// </para>
+		/// </summary>
+		public static System.Func<GameObject, bool> HeadedProbe;
+
+		/// <summary>Whether a work is headed, or true when no office layer has installed a probe.
+		/// </summary>
+		public static bool IsHeaded(GameObject Work)
+		{
+			return HeadedProbe == null || (Work != null && HeadedProbe(Work));
+		}
+
+		/// <summary>
+		/// Spends a design's material cost from this ground's stockpiles, and its bits and rare
+		/// finds with it. Spends the whole cost or none of it.
 		/// </summary>
 		/// <returns>False when the stockpiles did not cover it; nothing was taken.</returns>
 		public static bool Pay(Zone Z, string Key)
 		{
 			KingdomMaterialTally cost = CostFor(Key);
-			if (cost.IsEmpty())
+			KingdomBitTally bits = BitCostFor(Key);
+			KingdomExoticTally exotics = ExoticCostFor(Key);
+			if (cost.IsEmpty() && bits.IsEmpty() && exotics.IsEmpty())
 			{
 				return true;
 			}
 			MaterialStock stock = Stock(Z);
+			// Every price is checked before any of them is taken, so a design short of one gemstone
+			// never costs the settlement the forty stone it was going to be built of.
+			if (!KingdomMaterialRules.Covers(stock.Tally, cost)
+				|| !KingdomMaterialRules.CoversBits(stock.Bits, bits)
+				|| !KingdomMaterialRules.CoversExotics(stock.Exotics, exotics))
+			{
+				return false;
+			}
 			if (!stock.Spend(cost))
 			{
 				return false;
 			}
-			KingdomLog.Log("materials: spent " + cost.Describe() + " on " + Key);
+			stock.SpendBits(bits);
+			stock.SpendExotics(exotics);
+			KingdomLog.Log("materials: spent " + (cost.Describe() ?? "nothing")
+				+ ((bits.IsEmpty()) ? "" : (" and bits " + bits.Describe()))
+				+ ((exotics.IsEmpty()) ? "" : (" and " + exotics.Describe()))
+				+ " on " + Key);
 			return true;
 		}
 
@@ -1018,6 +1605,9 @@ namespace ThousandAndFirst
 			GameObject strike = null;
 			GameObject stakeObject = null;
 			r_KingdomClearance stake = null;
+			List<GameObject> yards = new List<GameObject>();
+			List<int> strength = new List<int>();
+			List<int> intelligence = new List<int>();
 			foreach (GameObject item in Z.GetObjects())
 			{
 				if (strike == null && item.GetIntProperty(StrikeEffortProperty) > 0)
@@ -1033,6 +1623,25 @@ namespace ThousandAndFirst
 						stakeObject = item;
 					}
 				}
+				if (item.GetIntProperty("KingdomBuilt") == 1 && TryRefineryOf(item.GetStringProperty(KingdomUpgrade.BuildKeyProperty), out _))
+				{
+					yards.Add(item);
+				}
+				else if (item.GetIntProperty("KingdomBorn") == 1 && !item.IsPlayer())
+				{
+					// Who the settlement's people actually are. Read, never assigned: the founder
+					// does not pick who stands in the yard, and a city of strong backs dresses
+					// stone faster than a city of scribes whether anybody planned it that way.
+					strength.Add(StatOf(item, "Strength"));
+					intelligence.Add(StatOf(item, "Intelligence"));
+				}
+			}
+			// The yards first and unconditionally: they are staffed works, and the staffing pass
+			// spent their crews before this ran. Refining takes no hand the clearing gang was ever
+			// going to have, so it neither waits on a strike order nor competes with one.
+			for (int i = 0; i < yards.Count; i++)
+			{
+				WorkYard(System, Z, yards[i], KingdomMaterialRules.AverageStat(strength), KingdomMaterialRules.AverageStat(intelligence), timeTicks);
 			}
 			if (strike != null)
 			{
@@ -1043,6 +1652,132 @@ namespace ThousandAndFirst
 			{
 				WorkClearance(System, Z, stakeObject, stake, hands, timeTicks);
 			}
+		}
+
+		/// <summary>Tick a yard last turned raw stock into refined, written as a string for the
+		/// reason <see cref="StrikeWorkedProperty"/> is: the engine's object properties are ints
+		/// and a tick is not, and a serialized field added to a shipped part would move every field
+		/// after it and cost players their saves.</summary>
+		public const string RefineWorkedProperty = "KingdomRefineWorked";
+
+		/// <summary>Set once a yard has been chronicled for its first run, so the settlement
+		/// remembers the day the saws started and never says it twice.</summary>
+		public const string RefineOpenedProperty = "KingdomRefineOpened";
+
+		/// <summary>Set once the founder has been told a yard has nothing to work. Cleared the
+		/// moment there is stock again, so the reason is given once per stall (STANDARDS 7b).
+		/// </summary>
+		public const string RefineIdleProperty = "KingdomRefineIdleSaid";
+
+		/// <summary>
+		/// Works one processing yard for the days since it last ran: raw stock out of the
+		/// stockpiles, refined material back into them, and the first run of a yard written into
+		/// the chronicle.
+		/// <para>
+		/// Nothing here reads a calendar for anything but "how many days of labour is this crew
+		/// owed". A yard nobody staffs makes nothing however long the founder is away, a yard with
+		/// no stock makes nothing and says so, and neither of them wears out, because time is
+		/// labour and never decay.
+		/// </para>
+		/// </summary>
+		private static void WorkYard(KingdomSystem System, Zone Z, GameObject Yard, int Strength, int Intelligence, long TimeTicks)
+		{
+			if (!TryRefineryOf(Yard.GetStringProperty(KingdomUpgrade.BuildKeyProperty), out var kind))
+			{
+				return;
+			}
+			long worked = ReadTick(Yard, RefineWorkedProperty);
+			if (worked <= 0)
+			{
+				WriteTick(Yard, RefineWorkedProperty, TimeTicks);
+				return;
+			}
+			int days = KingdomRules.HeartbeatDays(TimeTicks - worked);
+			if (days <= 0)
+			{
+				return;
+			}
+			WriteTick(Yard, RefineWorkedProperty, KingdomRules.HeartbeatCheckpoint(worked, TimeTicks));
+			int crew = Yard.GetIntProperty("KingdomStaffNeeded") * Yard.GetIntProperty("KingdomEffectiveness") / 100;
+			if (Yard.GetIntProperty("KingdomStaffed") != 1 || crew <= 0)
+			{
+				// The idle-works line already names this one out loud once a pass
+				// (KingdomGrowth.AssignWork), so a second announcement here would be the same news
+				// told twice. The yard simply makes nothing.
+				return;
+			}
+			MaterialStock stock = Stock(Z);
+			int refinable = KingdomMaterialRules.RefinableFrom(kind, stock.Tally, out var raw);
+			if (refinable <= 0)
+			{
+				if (Yard.GetIntProperty(RefineIdleProperty) != 1)
+				{
+					Yard.SetIntProperty(RefineIdleProperty, 1);
+					System.Ledger.Note("{{r|The " + KingdomMaterialRules.YardName(kind) + " of " + System.SeatName
+						+ " stands over an empty bench. There is nothing in the stockpiles for it to work.}}");
+				}
+				return;
+			}
+			Yard.SetIntProperty(RefineIdleProperty, 0);
+			int capability = KingdomMaterialRules.CrewCapability(kind, Strength, Intelligence);
+			int made = KingdomMaterialRules.RefinedThisPass(crew, days, capability, refinable);
+			if (made <= 0)
+			{
+				return;
+			}
+			KingdomMaterial refined = KingdomMaterialRules.MadeAt(kind);
+			// Take first and count what actually came off the shelf, rather than trusting the
+			// reading: something may have emptied it since the survey, and a load that does not
+			// make a whole unit goes straight back where it was instead of vanishing.
+			int taken = stock.Take(raw, KingdomMaterialRules.RawSpentFor(made));
+			made = taken / KingdomMaterialRules.RawPerRefined;
+			int returned = taken - KingdomMaterialRules.RawSpentFor(made);
+			if (returned > 0)
+			{
+				stock.Put(raw, returned, Yard.CurrentCell);
+			}
+			if (made <= 0)
+			{
+				return;
+			}
+			int before = stock.Tally.Get(refined);
+			int spilled = stock.Put(refined, made, Yard.CurrentCell);
+			if (stock.Tally.Get(refined) <= before)
+			{
+				// Loud rather than quiet: the raw stock is already gone, so an item blueprint that
+				// does not exist has eaten it. This is a wiring fault in the mod's own files and
+				// nobody's fault in the game, and it must not read as a yard having a slow day.
+				MetricsManager.LogError("ThousandAndFirst KingdomMaterials: the " + KingdomMaterialRules.YardName(kind)
+					+ " made " + made + " " + KingdomMaterialRules.MaterialName(refined) + " and nothing could be created for it; is "
+					+ (BlueprintFor(refined) ?? "its blueprint") + " declared?");
+				return;
+			}
+			string madeLine = made + " " + KingdomMaterialRules.MaterialName(refined);
+			if (Yard.GetIntProperty(RefineOpenedProperty) != 1)
+			{
+				Yard.SetIntProperty(RefineOpenedProperty, 1);
+				KingdomChronicle.Record(System, "the " + KingdomMaterialRules.YardName(kind) + " of " + System.KingdomDisplayName
+					+ " ran for the first time, and " + madeLine + " came off it");
+				System.RecordDeed("the first work off the " + KingdomMaterialRules.YardName(kind) + " at " + System.KingdomDisplayName);
+				MessageQueue.AddPlayerMessage("{{G|The " + KingdomMaterialRules.YardName(kind) + " is working.}} The first "
+					+ madeLine + " is stacked where anyone walking past can see it, and the crew is "
+					+ KingdomMaterialRules.CapabilityWord(capability) + " at the work.");
+			}
+			if (spilled > 0)
+			{
+				System.Ledger.Note("{{r|" + spilled + " off the " + KingdomMaterialRules.YardName(kind)
+					+ " was set down on the ground for want of a stockpile to hold it.}}");
+			}
+			KingdomLog.Log("materials: " + KingdomMaterialRules.YardKey(kind) + " made=" + made + " from=" + KingdomMaterialRules.MaterialKey(raw)
+				+ " crew=" + crew + " days=" + days + " capability=" + capability + " spilled=" + spilled);
+		}
+
+		/// <summary>One settler's stat, or <c>KingdomMaterialRules.BaselineStat</c> when the engine
+		/// has none to give. Nobody is punished for being unreadable.</summary>
+		private static int StatOf(GameObject Citizen, string Stat)
+		{
+			Statistic statistic = (Citizen == null) ? null : Citizen.GetStat(Stat);
+			return (statistic == null) ? KingdomMaterialRules.BaselineStat : statistic.Value;
 		}
 
 		private static void WorkStrike(KingdomSystem System, Zone Z, GameObject Building, int Hands, long TimeTicks)
@@ -1406,6 +2141,16 @@ namespace ThousandAndFirst
 			{
 			case KingdomMaterial.Marble:
 				return "Marble";
+			case KingdomMaterial.ShapedStone:
+				// Vanilla's own dressed-stone wall, and one of the six the game's village
+				// generator already picks from (Village_StructureWall_*Default).
+				return "Fulcrete";
+			case KingdomMaterial.WorkedMetal:
+				return "MetalWall";
+			case KingdomMaterial.ShapedTimber:
+				// Planks rather than stalks: a settlement with its own saw-pit builds in boards,
+				// whatever grows nearby, so this one takes no style variant.
+				return "WoodWall";
 			case KingdomMaterial.Stone:
 				return "Limestone";
 			case KingdomMaterial.Scrap:

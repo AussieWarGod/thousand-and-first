@@ -20,6 +20,14 @@
                marble / scrap. Materials are never minted: they come off a cleared plot, out of
                a caravan, or off the back of something salvaged. The marble house needs marble,
                and marble comes from a seam somebody found.
+    Refines    What a processing work makes: shapedtimber / shapedstone / workedmetal (or the
+               yard's own key: sawyer / mason / smelter). Declaring it is the whole of what makes
+               a building a yard.
+    Bits       What a high-craft design costs in the game's own tinkering bits, written in bit
+               tiers - Bits="0034" is two of the commonest and one each of tier three and four.
+               Drawn from the same dedicated stockpiles as everything else.
+    Exotics    Rare finds a great work is finished in: ingot / silver / gold / gem, as
+               exotic:units. Nobody here can make one; somebody has to carry it home.
     Staff      Settlers who stand in it and work it. Buildings are people.
     Contents   Population table the finished interior is furnished from, the way a vanilla hut
                is populated. This is where the cask rack, the bunk, the torchpost, and the
@@ -130,7 +138,7 @@
   <building Key="terrace" DisplayName="housing terrace (a whole street, raised at once)" Blueprint="r_KingdomTerrace"
             Cost="40" Ticks="7200" Styles="all" Category="housing" Plot="L" MinStage="Town"
             Closeness="Roomed"
-            Materials="stone:44,timber:16" Carries="roof:26" Contents="r_KingdomFurnishings_Dwelling" />
+            Materials="stone:36,shapedtimber:8,timber:8" Carries="roof:26" Contents="r_KingdomFurnishings_Dwelling" />
 
   <!--
     The luxury lane. A fine house carries fewer people than a stone one of the same size and
@@ -149,14 +157,14 @@
   </building>
   <building Key="manor" DisplayName="manor (a courtyard, a gate, and a name over it)" Blueprint="r_KingdomManor"
             Cost="44" Ticks="7200" Styles="all" Category="housing" Plot="L" MinStage="Town"
-            Materials="marble:20,stone:24,timber:10" Carries="roof:6,luxury:9" Contents="r_KingdomFurnishings_Dwelling">
+            Materials="marble:20,stone:18,shapedstone:6,timber:10" Carries="roof:6,luxury:9" Contents="r_KingdomFurnishings_Dwelling">
     <skin Key="marble" ColorString="&amp;Y" DetailColor="W" />
     <skin Key="verdigris" ColorString="&amp;G" DetailColor="C" />
   </building>
 
   <building Key="court" DisplayName="housing court (a quarter of the city, roofed in one go)" Blueprint="r_KingdomCourt"
             Cost="96" Ticks="12000" Styles="all" Category="housing" Plot="XL" MinStage="City"
-            Materials="stone:90,timber:36,scrap:12" Carries="roof:40,luxury:2" Contents="r_KingdomFurnishings_Dwelling" />
+            Materials="stone:78,shapedstone:12,timber:36,scrap:12" Carries="roof:40,luxury:2" Contents="r_KingdomFurnishings_Dwelling" />
 
   <!-- ======================================================================== WATER ==
     There are no wells. New water comes from patient collection, from the salt-pan, from
@@ -210,7 +218,7 @@
   <building Key="waterworks" DisplayName="the waterworks (cistern, court, and channel, all one thing)" Blueprint="r_KingdomWaterworks"
             Cost="100" Ticks="12000" Styles="all" Category="storage" Plot="XL" MinStage="City"
             Districts="market,craft" MinZones="4" MinTech="workshop"
-            Materials="stone:120,scrap:40,marble:8" Carries="water:52,luxury:2" Contents="r_KingdomFurnishings_Water" />
+            Materials="stone:100,shapedstone:16,scrap:30,workedmetal:10,marble:8" Bits="0034" Exotics="ingot:1" Carries="water:52,luxury:2" Contents="r_KingdomFurnishings_Water" />
 
   <!-- ========================================================================= FOOD ==
     Food binds as hard as water and is quieter about it. The garden is one household's
@@ -266,7 +274,7 @@
   <building Key="chargingpost" DisplayName="charging post (recharges your cells)" Blueprint="r_KingdomChargingPost"
             Cost="12" Ticks="2400" Styles="all" Category="craft" Plot="S" MinStage="Steading"
             Staff="2" Manning="scaled" MinTech="salvage" Provides="taf:charge"
-            Materials="scrap:8" Carries="craft:1" />
+            Materials="scrap:8" Bits="00" Carries="craft:1" />
   <building Key="smithy" DisplayName="smithy (a hearth, a hammer, and someone who came for the work)" Blueprint="r_KingdomSmithy"
             Cost="20" Ticks="3600" Styles="all" Category="craft" Plot="M" MinStage="Steading"
             Districts="craft,none"
@@ -284,6 +292,33 @@
             Cost="26" Ticks="4200" Styles="all" Category="craft" Plot="M" MinStage="Village"
             Districts="craft,none" MinTech="salvage"
             Materials="timber:16,stone:10,scrap:10" Staff="3" Manning="scaled" Carries="craft:7,learning:1" />
+
+  <!-- ========================================================================= YARDS ==
+    The chain's middle link. Clearance and salvage give the settlement raw stock; a yard turns
+    two loads of it into one of something better, and nothing else in the game does. Refines is
+    the whole of what makes a building a yard, so a third party's own sawmill counts the moment
+    it declares one.
+
+    They are also what a big work is raised BEHIND: a large design wants the yard its material
+    implies standing and staffed, and a grand one wants it headed by a notable. That is why they
+    are Steading work and cheap - a town that has not built them is a town that cannot start its
+    temple, and it should never be a surprise.
+  -->
+  <building Key="sawyeryard" DisplayName="sawyer's yard (a pit, trestles, and timber stacked to season)" Blueprint="r_KingdomSawyerYard"
+            Cost="12" Ticks="2400" Styles="all" Category="craft" Plot="M" Open="yes" MinStage="Steading"
+            Districts="craft,none"
+            Materials="timber:8,stone:4" Staff="2" Manning="scaled" Carries="craft:2"
+            Refines="shapedtimber" />
+  <building Key="masonyard" DisplayName="mason's yard (bankers, chisels, and a spoil heap growing all summer)" Blueprint="r_KingdomMasonYard"
+            Cost="16" Ticks="3000" Styles="all" Category="craft" Plot="M" Open="yes" MinStage="Steading"
+            Districts="craft,none"
+            Materials="stone:14,timber:6" Staff="2" Manning="scaled" Carries="craft:2"
+            Refines="shapedstone" />
+  <building Key="smelter" DisplayName="smelter (a furnace somebody has to understand)" Blueprint="r_KingdomSmelter"
+            Cost="22" Ticks="3600" Styles="all" Category="craft" Plot="M" MinStage="Village"
+            Districts="craft,none" MinTech="salvage"
+            Materials="stone:16,scrap:12" Staff="2" Manning="scaled" Carries="craft:3"
+            Refines="workedmetal" />
 
   <!-- ======================================================================== CIVIC ==
     The fire is the first civic building anybody has ever raised anywhere, and it is two
@@ -318,7 +353,7 @@
   <building Key="bathhouse" DisplayName="bathhouse (the extravagance that makes a town famous)" Blueprint="r_KingdomBathhouse"
             Cost="46" Ticks="7200" Styles="all" Category="civic" Plot="L" MinStage="Town"
             Districts="market" MinZones="3"
-            Materials="stone:50,marble:8,scrap:10" Staff="3" Manning="scaled" Carries="luxury:6,spirit:2"
+            Materials="stone:42,shapedstone:6,marble:8,scrap:10" Staff="3" Manning="scaled" Carries="luxury:6,spirit:2"
             Contents="r_KingdomFurnishings_Comfort" />
 
   <!-- ======================================================================== FAITH ==
@@ -342,7 +377,7 @@
   <building Key="temple" DisplayName="temple (built to be seen from the road)" Blueprint="r_KingdomTemple"
             Cost="44" Ticks="7200" Styles="all" Category="faith" Plot="L" MinStage="Town"
             Districts="shrine" MinZones="3"
-            Materials="stone:48,marble:12" Staff="1" Manning="scaled" Carries="spirit:8,learning:1"
+            Materials="stone:36,shapedstone:8,marble:12" Staff="1" Manning="scaled" Carries="spirit:8,learning:1"
             Contents="r_KingdomFurnishings_Learning">
     <skin Key="verdant" Style="verdant" ColorString="&amp;G" DetailColor="g" />
     <skin Key="fungal" Style="fungal" ColorString="&amp;M" DetailColor="m" />
@@ -360,7 +395,7 @@
             Materials="timber:8" Carries="learning:1" Contents="r_KingdomFurnishings_Learning" />
   <building Key="scriptorium" DisplayName="scriptorium (two registers of the same year, kept side by side)" Blueprint="r_KingdomScriptorium"
             Cost="26" Ticks="4200" Styles="all" Category="knowledge" Plot="M" MinStage="Village"
-            Districts="academy,none" MinZones="2"
+            Districts="academy,none" MinZones="2" Reach="zone"
             Materials="stone:16,timber:12" Staff="2" Manning="scaled" Carries="learning:6"
             Contents="r_KingdomFurnishings_Learning" />
 
@@ -397,7 +432,7 @@
   <building Key="barracks" DisplayName="barracks (the watch sleeps in shifts and eats together)" Blueprint="r_KingdomBarracks"
             Cost="40" Ticks="7200" Styles="all" Category="defense" Plot="L" MinStage="Town"
             Districts="garrison"
-            Materials="stone:40,timber:16" Staff="3" Manning="scaled" Carries="order:6"
+            Materials="stone:32,shapedtimber:6,timber:8" Staff="3" Manning="scaled" Carries="order:6"
             Contents="r_KingdomFurnishings_Dwelling" />
 
   <!-- ===================================================================== MEMORIAL ==

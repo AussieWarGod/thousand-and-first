@@ -138,6 +138,14 @@ namespace ThousandAndFirst
 				{
 					continue;
 				}
+				// Addendum 6: a shrine draws whoever is IN ITS REACH, which for an S or M plot is
+				// its own quarter -- the cluster of built ground it stands in, measured, not the
+				// whole zone. Before the claim, so a settler this shrine cannot reach is still
+				// there for the shrine in their own quarter.
+				if (!KingdomReach.Reaches(System, Z, Shrine, settler))
+				{
+					continue;
+				}
 				Claimed.Add(settler);
 				string residentCreed = settler.GetStringProperty(KingdomCreed.CreedProperty);
 				int hostility = KingdomCreed.HostilityBetween(residentCreed, shrineCreed);
@@ -270,14 +278,24 @@ namespace ThousandAndFirst
 
 		/// <summary>
 		/// Convenience for a caller that already has the resident's own closeness rung and just
-		/// wants education's own softening folded in: one band gentler when this zone has a
-		/// staffed knowledge building, the rung unchanged otherwise. See
-		/// <c>KingdomFaithRules.SoftenedCloseness</c> for the arithmetic and this wave's
-		/// wiring_requests for the exact call site in <c>Growth/KingdomLodging.cs</c>.
+		/// wants education's own softening folded in: one band gentler when a knowledge building
+		/// actually reaches this roof, the rung unchanged otherwise. See
+		/// <c>KingdomFaithRules.SoftenedCloseness</c> for the arithmetic, and
+		/// <c>Growth/KingdomLodging.cs</c> for the two call sites.
 		/// </summary>
-		public static KingdomLodgingRules.Closeness EducatedCloseness(Zone Z, KingdomLodgingRules.Closeness Quarters)
+		/// <param name="Z">The zone the roof stands in.</param>
+		/// <param name="Quarters">The resident's own closeness rung.</param>
+		/// <param name="Home">The roof being judged. Naming it asks the re-based question
+		/// (Addendum 6: education softens the grudge of whoever the knowledge work REACHES); a
+		/// caller that cannot name one gets the zone-wide answer this file has always given.
+		/// </param>
+		public static KingdomLodgingRules.Closeness EducatedCloseness(Zone Z, KingdomLodgingRules.Closeness Quarters, GameObject Home = null)
 		{
-			return ZoneEducated(Z) ? KingdomFaithRules.SoftenedCloseness(Quarters) : Quarters;
+			KingdomSystem system = The.Game?.RequireSystem<KingdomSystem>();
+			bool educated = (Home != null && system != null)
+				? KingdomReach.EducatedAt(system, Z, Home)
+				: ZoneEducated(Z);
+			return educated ? KingdomFaithRules.SoftenedCloseness(Quarters) : Quarters;
 		}
 
 		// ==================================================================================

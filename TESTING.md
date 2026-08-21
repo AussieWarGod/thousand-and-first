@@ -366,6 +366,21 @@ anyone.
 | 71b | Ask a fourth time | They answer by counting the askings out loud, and the question is shut from that night |
 | 71c | Convert someone whose old creed ran hot against the new | Both registers carry it and **disagree**: your book says they took the rite; the roads say they were bought |
 
+## Pass 22 — The full arc of a great work
+
+| Step | Action | Expect |
+|---|---|---|
+| 72 | Charter → Status, standing in different parts of a built-up zone | It names **which quarter you are in and what shades it** — the ground around a temple reads differently from the ground around a workshop. Water, food and roofs stay citywide |
+| 72a | Raise a small shrine, then a middling one, then a temple | Reach grows with the ground: plot, quarter, zone. The great work takes the city — once it is headed |
+| 73 | Commission an L design with no mason's yard | Refused: "there is no mason's yard." Build one and leave it unstaffed: **"the mason's yard stands idle"** — the two refusals read differently |
+| 73a | Run a yard | Two loads of raw become one of shaped, worked by whoever the staffing pass left, chronicled the first day the saws run. Crew speed reads off who they are — Strength at the saw-pit, a mind at the furnace |
+| 73b | Check a high-craft design's price | Denominated partly in **vanilla tinkering bits**, drawn from the stockpiles — donate by putting scrap in. Great works may also want a rare find, and say so |
+| 74 | Crew a demanding work with weak hands | It builds **slower and says so once** — floors at a quarter pace, never stalls. The ablest available hands go to demanding works first, deterministically |
+| 75 | Let raiders past the wall | A work may stand damaged — bounded, named once, running reduced, never destroyed. Player-placed objects untouched, ever |
+| 75a | Run a mill at full stretch for many consecutive visits | Hard running may wear it. The mill left alone never wears — **absence wears nothing** |
+| 75b | Watch a damaged work | Mending auto-queues like an improvement — visible on the work, holdable, one mending at a time — and costs shaped stone or worked metal and bits from the chain |
+| 76 | Head a great work | The office machinery names whoever among your settlers is actually suited — you appoint nobody. Unheaded, it keeps its zone and says so once; headed, **it takes the city back that day** |
+
 ## Pass 4 — Attitudes and persistence
 
 | Step | Action | Expect |

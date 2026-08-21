@@ -37,6 +37,17 @@ namespace ThousandAndFirst
 			return string.IsNullOrEmpty(line) ? "" : ("\n" + line);
 		}
 
+		/// <summary>
+		/// What shades the ground the founder is standing on (Addendum 6), or nothing at all when
+		/// they are not standing in the settlement's own zone. A quarter's character is a thing the
+		/// founder reads, not an invisible modifier.
+		/// </summary>
+		private static string QuarterLine(KingdomSystem System, Zone Here)
+		{
+			string line = KingdomReach.QuarterLine(System, Here);
+			return string.IsNullOrEmpty(line) ? "" : ("\n" + line);
+		}
+
 		public static string Status(KingdomSystem System)
 		{
 			Zone currentZone = The.Player?.CurrentZone;
@@ -65,7 +76,7 @@ namespace ThousandAndFirst
 			}
 			stringBuilder.Append("\nClaimed zones: ").Append(System.ClaimedZones.Count)
 				.Append(currentClaimed ? ("  (here: " + KingdomGrowth.CountStoredWater(currentZone) + " drams stored, " + KingdomGrowth.CountOpenWater(currentZone) + " open, space for " + KingdomGrowth.CountStorageSpace(currentZone) + ")") : "")
-				.Append("\nShops: tier ").Append(System.ShopTier).Append(System.IdleWorks > 0 ? ("  {{r|" + System.IdleWorks + " works idle for want of hands}}") : "")
+				.Append("\nShops: tier ").Append(System.ShopTier).Append(System.IdleWorks > 0 ? ("  {{r|" + System.IdleWorks + " works idle for want of hands}}") : "").Append(KingdomWearRules.StatusSuffix(System.DamagedWorks))
 				// Defence and the pantry are surveyed live: both are facts about the ground the
 				// founder is standing on, and neither is carried on the system.
 				.Append(currentClaimed ? DefenceAndPantryLine(System, currentZone) : "")
@@ -76,6 +87,9 @@ namespace ThousandAndFirst
 				// The ways the settlement wore for itself, on the same terms as the stockpiles: a
 				// fact about the ground the founder is standing on, not a field on the system.
 				.Append(currentClaimed ? ("\n" + KingdomRoads.WornLine(currentZone)) : "")
+				// What reaches this ground, named: the temple quarter is different ground from the
+				// workers', and the founder should be able to see which one they are standing in.
+				.Append(currentClaimed ? QuarterLine(System, currentZone) : "")
 				// What the settlement can build at, and what the next level costs, so the craft
 				// level is never a number the founder has to reverse-engineer from refusals.
 				.Append(KingdomZoning.Readout(System))
@@ -135,7 +149,7 @@ namespace ThousandAndFirst
 			}
 			if (!KingdomRules.HasRoomToHouse(System.Population, KingdomGrowth.CountBeds(Here)))
 			{
-				return "There is no bed free. Commission a communal bunk and the next settler will stay.";
+				return "There is no bed free. Commission a communal bunk — and if the beds that exist are ones nobody arriving will take, the roll says whose needs they fail.";
 			}
 			if (System.IdleWorks > 0)
 			{
@@ -144,6 +158,10 @@ namespace ThousandAndFirst
 			if (System.ShorthandedWorks > 0)
 			{
 				return System.ShorthandedWorks + " of the works run shorthanded and produce less than they could.";
+			}
+			if (System.DamagedWorks > 0)
+			{
+				return KingdomWearRules.NextNeedLine(System.DamagedWorks);
 			}
 			if (System.Stage < GrowthStage.Steading && capacity < 16)
 			{

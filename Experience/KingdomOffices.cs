@@ -37,6 +37,13 @@ namespace ThousandAndFirst
 
 		public static void OnZoneActivated(KingdomSystem System, Zone Z)
 		{
+			// Addendum 7: a grand work wants its yard headed by a named notable. KingdomMaterials
+			// owns that build gate and must not decide who holds an office, so it asks us instead;
+			// null there means "no office layer installed, do not enforce", and this assignment is
+			// what turns the XL heading rule on. Installed before the option gate on purpose: the
+			// memory option decides whether the settlement keeps a roll of its dead, not whether a
+			// great work is judged by who heads it.
+			KingdomMaterials.HeadedProbe = KingdomReach.IsHeaded;
 			if (!Enabled || !System.Founded || Z == null || !System.ClaimedZones.Contains(Z.ZoneID))
 			{
 				return;

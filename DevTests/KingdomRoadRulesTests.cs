@@ -567,6 +567,8 @@ namespace ThousandAndFirst.Tests
 		[TestCase("Verdigris", "GreenTile")]
 		[TestCase("Fulcrete", "FoamcreteFloor")]
 		[TestCase("Foamcrete", "FoamcreteFloor")]
+		[TestCase("MetalWall", "SmallHexFloor")]
+		[TestCase("WoodWall", "WoodFloor")]
 		[TestCase("SomeoneElsesWall", "DirtPath")]
 		[TestCase(null, "DirtPath")]
 		public void PavingIsLaidInTheWallTheSettlementBuildsIn(string wall, string expected)
@@ -589,8 +591,12 @@ namespace ThousandAndFirst.Tests
 
 		[TestCase("Marble", KingdomMaterial.Marble)]
 		[TestCase("Limestone", KingdomMaterial.Stone)]
-		[TestCase("Fulcrete", KingdomMaterial.Stone)]
+		// Fulcrete is what KingdomMaterials.WallBlueprint raises out of ShapedStone and nothing
+		// else, so paving beside a Fulcrete wall is priced in dressed stone, not raw (Addendum 7).
+		[TestCase("Fulcrete", KingdomMaterial.ShapedStone)]
 		[TestCase("Foamcrete", KingdomMaterial.Stone)]
+		[TestCase("MetalWall", KingdomMaterial.WorkedMetal)]
+		[TestCase("WoodWall", KingdomMaterial.ShapedTimber)]
 		[TestCase("Verdigris", KingdomMaterial.Scrap)]
 		[TestCase("BrinestalkWall", KingdomMaterial.Timber)]
 		[TestCase("SomeoneElsesWall", KingdomMaterial.Mud)]

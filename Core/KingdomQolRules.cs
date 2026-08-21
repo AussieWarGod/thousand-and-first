@@ -382,8 +382,10 @@ namespace ThousandAndFirst
 		/// <para>
 		/// Nothing here derives a <c>Refuses</c>. A refusal is a person's own line and is either
 		/// authored on the blueprint or, for the ideological cases, read off the engine's faction
-		/// feelings (<see cref="JudgeCohabitation"/>) &mdash; it is not something a body plan
-		/// implies.
+		/// feelings (<c>KingdomLodgingRules.Conflicts</c> against
+		/// <c>KingdomLodgingRules.RefusalHostility</c> &mdash; the ladder, not the superseded flat
+		/// floor <see cref="JudgeCohabitation"/> still applies) &mdash; it is not something a body
+		/// plan implies.
 		/// </para>
 		/// </summary>
 		/// <param name="Truth">What <c>KingdomQol</c> read off the creature.</param>
@@ -619,19 +621,28 @@ namespace ThousandAndFirst
 		// --- Cohabitation ---------------------------------------------------------------------
 
 		/// <summary>
+		/// <b>Superseded</b> by <c>KingdomLodgingRules.RefusalHostility</c> (the closeness ladder,
+		/// brief Addendum 4c) under the fault-line ceiling (4d), and kept only until its last
+		/// caller is moved. Do not write new callers against it. What the hundred means is still
+		/// exactly this:
+		/// <para>
 		/// Hostility at which two creeds will not share a roof, on the 0..100 scale
 		/// <c>KingdomCreedRules.Hostility</c> returns. A hundred: only the game's own flat -100
 		/// fault lines &mdash; the Templar and the Girsh, the Barathrumites and the Templar &mdash;
 		/// and never the standing -50 several factions hold toward everyone they have not troubled
 		/// to name, which would otherwise stop half a mixed settlement from sharing a wall.
 		/// Everything milder is texture, and texture is what <c>Refuses</c> tags are for.
+		/// </para>
 		/// </summary>
 		public const int CohabitHostility = 100;
 
 		/// <summary>
-		/// Whether two people share a roof. One rule, two sources: the engine's faction feelings
-		/// for the ideological case, and the tag vocabulary for everything else &mdash; the
-		/// neighbour's household is judged by exactly the <see cref="Judge"/> a building is.
+		/// Whether two people share a roof <b>under the superseded flat floor</b>. The live answer
+		/// is <c>KingdomLodgingRules</c>, which scales the same two sources by the quarters
+		/// (Addendum 4c) under the fault-line ceiling (4d); this remains only until its last caller
+		/// is moved. One rule, two sources: the engine's faction feelings for the ideological case,
+		/// and the tag vocabulary for everything else &mdash; the neighbour's household is judged
+		/// by exactly the <see cref="Judge"/> a building is.
 		/// </summary>
 		/// <param name="Profile">The person being moved in. Null refuses nobody.</param>
 		/// <param name="TheirHousehold">What the household already there provides, from

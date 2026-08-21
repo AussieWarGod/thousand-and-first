@@ -220,6 +220,23 @@ playtest passes.
   drunk, never administered.
 - Contested conversions are told twice, and the registers disagree.
 
+### Added — reach, the material chain, capable crews, and honest wear
+- **What a building gives carries as far as its ground earns**: a small plot shades where it
+  stands, a middling one its quarter, a large one its zone, a great work the city — quarters are
+  measured from what is built, never drawn, and the status report names the one you stand in.
+  Water, food and roofs stay citywide pools.
+- **A great work is an office.** Its citywide effect is live only while a named notable heads it —
+  and you appoint nobody. Unheaded, it keeps its zone and says so once.
+- **The chain gains its middle link**: sawyer's yard, mason's yard and smelter turn raw into
+  shaped, worked by real crews at speeds read off who they are. Large works need the yard
+  standing and staffed; grand ones need it headed. High-craft designs are priced partly in
+  vanilla's own tinkering bits; great works may want a rare find.
+- **Crews have capability**, derived from settler stats. A shortfall builds slower and names
+  itself — never a silent stall.
+- **Wear is event-driven, never calendar**: raid damage, hard running, temperamental salvage —
+  bounded, named, running reduced, never destroyed. Mending is a visible, holdable job costed
+  from the chain. Absence wears nothing.
+
 ### Changed
 - Districts are no longer flavour. Each of the six now changes something a player can measure:
   garrison adds defence across every claimed zone, agrarian bills upkeep at 90%, market adds a

@@ -4,11 +4,21 @@ using System.Text;
 namespace ThousandAndFirst
 {
 	/// <summary>
-	/// The settlement's material vocabulary. Six kinds, and no seventh: every one of them is
-	/// something that already stands in a Qud zone and can be carried away from it &mdash; mud
-	/// from turned ground, brush cut and retted into canvas and cord, timber from trees, stone
-	/// from rock walls and boulders, marble from a seam, scrap from a ruin. Nothing here is minted;
-	/// clearance, salvage, and trade are the only three doors materials come through.
+	/// The settlement's material vocabulary, in two halves.
+	/// <para>
+	/// <b>Raw</b> &mdash; mud from turned ground, brush cut and retted into canvas and cord, timber
+	/// from trees, stone from rock walls and boulders, marble from a seam, scrap from a ruin. Every
+	/// one of them already stands in a Qud zone and can be carried away from it. Nothing here is
+	/// minted; clearance, salvage, and trade are the only three doors raw material comes through.
+	/// </para>
+	/// <para>
+	/// <b>Refined</b> &mdash; shaped timber off a sawyer's yard, shaped stone off a mason's yard,
+	/// worked metal out of a smelter. These come through a fourth door and only that one: a staffed
+	/// yard, standing on the settlement's own ground, working raw stock the settlement already
+	/// earned (<see cref="KingdomMaterialRules.RawPerRefined"/>). No clearance yields them, no seam
+	/// holds them, and no amount of waiting makes them: they are labour, which is the only thing in
+	/// this economy that ever turns one good into a better one.
+	/// </para>
 	/// </summary>
 	public enum KingdomMaterial
 	{
@@ -17,7 +27,54 @@ namespace ThousandAndFirst
 		Timber = 2,
 		Stone = 3,
 		Marble = 4,
-		Scrap = 5
+		Scrap = 5,
+		ShapedTimber = 6,
+		ShapedStone = 7,
+		WorkedMetal = 8
+	}
+
+	/// <summary>
+	/// The three processing works, one per refined material. A yard is an ordinary catalogue
+	/// design that happens to declare what it refines; this enum only names the three the base
+	/// catalogue ships, so the rules can talk about them without reading the registry.
+	/// </summary>
+	public enum KingdomYard
+	{
+		/// <summary>Saw-pit and trestles. Timber in, shaped timber out.</summary>
+		Sawyer = 0,
+
+		/// <summary>Banker, chisels, and a heap of spoil. Stone (or marble) in, shaped stone out.
+		/// </summary>
+		Mason = 1,
+
+		/// <summary>Furnace and crucible. Scrap in, worked metal out.</summary>
+		Smelter = 2
+	}
+
+	/// <summary>
+	/// Which of a settler's own numbers a kind of work is done with. Read off who the people are
+	/// (<c>Strength</c>, <c>Intelligence</c>) rather than assigned by the founder, per Addendum 7:
+	/// stonework and haulage are muscle, a furnace and a certified machine are mind.
+	/// </summary>
+	public enum KingdomCapability
+	{
+		Muscle = 0,
+		Mind = 1
+	}
+
+	/// <summary>
+	/// The rare finds a great work is short of. Every one of them is an item the game already
+	/// ships and scatters &mdash; a bronze ingot, a silver or gold nugget, a rough gemstone off the
+	/// same ground &mdash; so an exotic is never crafted, never minted, and never something the
+	/// settlement can decide to make. Somebody walks it home, and until somebody does, the
+	/// cathedral's dome waits and says so.
+	/// </summary>
+	public enum KingdomExotic
+	{
+		Ingot = 0,
+		Silver = 1,
+		Gold = 2,
+		Gem = 3
 	}
 
 	/// <summary>
@@ -158,20 +215,217 @@ namespace ThousandAndFirst
 					parts.Add(Amounts[i] + " " + KingdomMaterialRules.MaterialName((KingdomMaterial)i));
 				}
 			}
-			if (parts.Count == 0)
+			return KingdomMaterialRules.JoinPhrases(parts);
+		}
+
+		/// <summary>Units of every REFINED material held together &mdash; what the yards have
+		/// made, as against what the ground gave up.</summary>
+		public int RefinedTotal()
+		{
+			int total = 0;
+			for (int i = 0; i < Amounts.Length; i++)
 			{
-				return null;
-			}
-			StringBuilder text = new StringBuilder();
-			for (int i = 0; i < parts.Count; i++)
-			{
-				if (i > 0)
+				if (KingdomMaterialRules.IsRefined((KingdomMaterial)i))
 				{
-					text.Append((i == parts.Count - 1) ? " and " : ", ");
+					total += Amounts[i];
 				}
-				text.Append(parts[i]);
 			}
-			return text.ToString();
+			return total;
+		}
+	}
+
+	/// <summary>
+	/// A count of bits by tier: what a design costs in tinkering stock, and what the stockpiles
+	/// hold of it. Never serialized, for the same reason <see cref="KingdomMaterialTally"/> is not
+	/// &mdash; the settlement's bits are real items in a real container, and this is only ever the
+	/// reading taken of them. A founder donates bits by putting the scrap in the stockpile.
+	/// </summary>
+	public sealed class KingdomBitTally
+	{
+		private readonly int[] Amounts = new int[KingdomMaterialRules.BitTierCount];
+
+		/// <summary>Bits of one tier held. Never negative; a tier outside the ladder is zero.
+		/// </summary>
+		public int Get(int Tier)
+		{
+			return (Tier < 0 || Tier >= Amounts.Length) ? 0 : Amounts[Tier];
+		}
+
+		/// <summary>Adds bits of one tier, clamping at zero rather than going negative.</summary>
+		public void Add(int Tier, int Count)
+		{
+			if (Tier < 0 || Tier >= Amounts.Length)
+			{
+				return;
+			}
+			int total = Amounts[Tier] + Count;
+			Amounts[Tier] = (total > 0) ? total : 0;
+		}
+
+		/// <summary>Sets bits of one tier outright, clamping negatives to zero.</summary>
+		public void Set(int Tier, int Count)
+		{
+			if (Tier < 0 || Tier >= Amounts.Length)
+			{
+				return;
+			}
+			Amounts[Tier] = (Count > 0) ? Count : 0;
+		}
+
+		/// <summary>Adds every tier of Other into this tally. Null is a no-op.</summary>
+		public void AddAll(KingdomBitTally Other)
+		{
+			if (Other == null)
+			{
+				return;
+			}
+			for (int i = 0; i < Amounts.Length; i++)
+			{
+				Add(i, Other.Amounts[i]);
+			}
+		}
+
+		/// <summary>Bits of every tier added together.</summary>
+		public int Total()
+		{
+			int total = 0;
+			for (int i = 0; i < Amounts.Length; i++)
+			{
+				total += Amounts[i];
+			}
+			return total;
+		}
+
+		/// <summary>True when no bits at all are held. An absent bit cost is empty, and an empty
+		/// cost is what every design written before bits existed goes on costing.</summary>
+		public bool IsEmpty()
+		{
+			return Total() == 0;
+		}
+
+		/// <summary>An independent copy; mutating the copy never touches this tally.</summary>
+		public KingdomBitTally Copy()
+		{
+			KingdomBitTally copy = new KingdomBitTally();
+			for (int i = 0; i < Amounts.Length; i++)
+			{
+				copy.Amounts[i] = Amounts[i];
+			}
+			return copy;
+		}
+
+		/// <summary>This tally with every tier multiplied by Percent and rounded down. Used for
+		/// the share of a design's bits a repair puts back.</summary>
+		public KingdomBitTally Scaled(int Percent)
+		{
+			KingdomBitTally scaled = new KingdomBitTally();
+			if (Percent <= 0)
+			{
+				return scaled;
+			}
+			for (int i = 0; i < Amounts.Length; i++)
+			{
+				scaled.Amounts[i] = Amounts[i] * Percent / 100;
+			}
+			return scaled;
+		}
+
+		/// <summary>Player-facing prose: "2 of scrap and 1 of pure alloy", or null when empty.
+		/// </summary>
+		public string Describe()
+		{
+			List<string> parts = new List<string>();
+			for (int i = 0; i < Amounts.Length; i++)
+			{
+				if (Amounts[i] > 0)
+				{
+					parts.Add(Amounts[i] + " of " + KingdomMaterialRules.BitTierName(i));
+				}
+			}
+			return KingdomMaterialRules.JoinPhrases(parts);
+		}
+	}
+
+	/// <summary>
+	/// A count of rare finds: what a great work is short of, and what the stockpiles hold. Never
+	/// serialized, for <see cref="KingdomMaterialTally"/>'s own reason.
+	/// </summary>
+	public sealed class KingdomExoticTally
+	{
+		private readonly int[] Amounts = new int[KingdomMaterialRules.ExoticCount];
+
+		/// <summary>Units of one exotic held. Never negative.</summary>
+		public int Get(KingdomExotic Exotic)
+		{
+			int index = (int)Exotic;
+			return (index < 0 || index >= Amounts.Length) ? 0 : Amounts[index];
+		}
+
+		/// <summary>Adds units of one exotic, clamping at zero rather than going negative.
+		/// </summary>
+		public void Add(KingdomExotic Exotic, int Units)
+		{
+			int index = (int)Exotic;
+			if (index < 0 || index >= Amounts.Length)
+			{
+				return;
+			}
+			int total = Amounts[index] + Units;
+			Amounts[index] = (total > 0) ? total : 0;
+		}
+
+		/// <summary>Sets units of one exotic outright, clamping negatives to zero.</summary>
+		public void Set(KingdomExotic Exotic, int Units)
+		{
+			int index = (int)Exotic;
+			if (index < 0 || index >= Amounts.Length)
+			{
+				return;
+			}
+			Amounts[index] = (Units > 0) ? Units : 0;
+		}
+
+		/// <summary>Units of every exotic added together.</summary>
+		public int Total()
+		{
+			int total = 0;
+			for (int i = 0; i < Amounts.Length; i++)
+			{
+				total += Amounts[i];
+			}
+			return total;
+		}
+
+		/// <summary>True when nothing rare is held or wanted.</summary>
+		public bool IsEmpty()
+		{
+			return Total() == 0;
+		}
+
+		/// <summary>An independent copy; mutating the copy never touches this tally.</summary>
+		public KingdomExoticTally Copy()
+		{
+			KingdomExoticTally copy = new KingdomExoticTally();
+			for (int i = 0; i < Amounts.Length; i++)
+			{
+				copy.Amounts[i] = Amounts[i];
+			}
+			return copy;
+		}
+
+		/// <summary>Player-facing prose: "2 gold nuggets and 1 rough gemstone", or null when
+		/// empty.</summary>
+		public string Describe()
+		{
+			List<string> parts = new List<string>();
+			for (int i = 0; i < Amounts.Length; i++)
+			{
+				if (Amounts[i] > 0)
+				{
+					parts.Add(Amounts[i] + " " + KingdomMaterialRules.ExoticName((KingdomExotic)i, Amounts[i]));
+				}
+			}
+			return KingdomMaterialRules.JoinPhrases(parts);
 		}
 	}
 
@@ -186,21 +440,25 @@ namespace ThousandAndFirst
 	public static class KingdomMaterialRules
 	{
 		/// <summary>Number of values in <see cref="KingdomMaterial"/>. Sized against the enum by
-		/// <c>KingdomMaterialRulesTests</c> so a seventh material cannot be added without the
+		/// <c>KingdomMaterialRulesTests</c> so a tenth material cannot be added without the
 		/// tallies growing with it.</summary>
-		public const int MaterialCount = 6;
+		public const int MaterialCount = 9;
 
 		/// <summary>Number of values in <see cref="KingdomStanding"/>.</summary>
 		public const int StandingCount = 7;
+
+		/// <summary>Number of values in <see cref="KingdomYard"/>, which is also the number of
+		/// refined materials: one yard refines one thing, always.</summary>
+		public const int YardCount = 3;
 
 		/// <summary>
 		/// Registry keys, in enum order: what third-party XML writes in a <c>Materials</c>
 		/// attribute and what <see cref="TryParseMaterial"/> accepts.
 		/// </summary>
-		public static readonly string[] MaterialKeys = new string[MaterialCount] { "mud", "brush", "timber", "stone", "marble", "scrap" };
+		public static readonly string[] MaterialKeys = new string[MaterialCount] { "mud", "brush", "timber", "stone", "marble", "scrap", "shapedtimber", "shapedstone", "workedmetal" };
 
 		/// <summary>Player-facing names, in enum order. Lowercase, in the game's register.</summary>
-		public static readonly string[] MaterialNames = new string[MaterialCount] { "mud", "brush", "timber", "cut stone", "marble", "scrap metal" };
+		public static readonly string[] MaterialNames = new string[MaterialCount] { "mud", "brush", "timber", "cut stone", "marble", "scrap metal", "shaped timber", "shaped stone", "worked metal" };
 
 		/// <summary>The registry key for a material. Empty for a value outside the enum.</summary>
 		public static string MaterialKey(KingdomMaterial Material)
@@ -226,9 +484,11 @@ namespace ThousandAndFirst
 
 		/// <summary>
 		/// Reads a registry key. Case-insensitive and whitespace-tolerant, because the keys come
-		/// out of hand-written XML, and it accepts the two aliases the prose uses for keys that do
-		/// not read the same way in a sentence: "scrap metal" for <c>scrap</c>, and "canvas" for
-		/// <c>brush</c>, which is what brush becomes once it has been cut and retted.
+		/// out of hand-written XML, and it accepts the aliases the prose uses for keys that do
+		/// not read the same way in a sentence: "scrap metal" for <c>scrap</c>, "canvas" for
+		/// <c>brush</c>, which is what brush becomes once it has been cut and retted, and the
+		/// spaced spellings of the three refined materials, which are two words everywhere except
+		/// in an attribute.
 		/// </summary>
 		/// <param name="Key">Text to read. Null, empty, and unknown all fail.</param>
 		/// <param name="Material">Set on success; <see cref="KingdomMaterial.Mud"/> otherwise,
@@ -250,6 +510,21 @@ namespace ThousandAndFirst
 			if (trimmed == "canvas")
 			{
 				Material = KingdomMaterial.Brush;
+				return true;
+			}
+			if (trimmed == "shaped timber" || trimmed == "sawn timber")
+			{
+				Material = KingdomMaterial.ShapedTimber;
+				return true;
+			}
+			if (trimmed == "shaped stone" || trimmed == "dressed stone")
+			{
+				Material = KingdomMaterial.ShapedStone;
+				return true;
+			}
+			if (trimmed == "worked metal")
+			{
+				Material = KingdomMaterial.WorkedMetal;
 				return true;
 			}
 			for (int i = 0; i < MaterialKeys.Length; i++)
@@ -579,15 +854,21 @@ namespace ThousandAndFirst
 		/// <summary>
 		/// Units of a material a settlement must hold before its walls can be said to be made of
 		/// it. Indexed by <see cref="KingdomMaterial"/>; mud is zero, because mud is the ground
-		/// and the ground is always there.
+		/// and the ground is always there. The refined three sit LOWER than the raw stock they
+		/// came from, on purpose: a yard turns two loads into one, so holding six shaped timbers
+		/// is holding twelve trees' worth of work, and a settlement that has done that much
+		/// dressing is a settlement whose walls look it.
 		/// </summary>
-		public static readonly int[] WallMaterialThreshold = new int[MaterialCount] { 0, 4, 8, 10, 14, 10 };
+		public static readonly int[] WallMaterialThreshold = new int[MaterialCount] { 0, 4, 8, 10, 14, 10, 6, 8, 8 };
 
 		/// <summary>Materials in the order a settlement would rather build in, richest first.
 		/// Mud is last and is the floor nothing ever falls through.</summary>
 		public static readonly KingdomMaterial[] WallMaterialPreference = new KingdomMaterial[MaterialCount]
 		{
 			KingdomMaterial.Marble,
+			KingdomMaterial.ShapedStone,
+			KingdomMaterial.WorkedMetal,
+			KingdomMaterial.ShapedTimber,
 			KingdomMaterial.Stone,
 			KingdomMaterial.Scrap,
 			KingdomMaterial.Timber,
@@ -662,6 +943,958 @@ namespace ThousandAndFirst
 			}
 			int held = (Stock == null) ? 0 : Stock.Get(Material);
 			return held >= WallMaterialThreshold[index];
+		}
+
+		// --- The refined half: what a yard makes, and out of what ------------------------------
+
+		/// <summary>Registry keys for the three yards, in enum order: what a <c>Refines</c>
+		/// attribute may write instead of the refined material's own key.</summary>
+		public static readonly string[] YardKeys = new string[YardCount] { "sawyer", "mason", "smelter" };
+
+		/// <summary>Player-facing names for the three yards, in enum order.</summary>
+		public static readonly string[] YardNames = new string[YardCount] { "sawyer's yard", "mason's yard", "smelter" };
+
+		/// <summary>What each yard turns raw stock INTO, in yard order.</summary>
+		public static readonly KingdomMaterial[] YardMakes = new KingdomMaterial[YardCount]
+		{
+			KingdomMaterial.ShapedTimber,
+			KingdomMaterial.ShapedStone,
+			KingdomMaterial.WorkedMetal
+		};
+
+		/// <summary>
+		/// What each yard EATS, richest acceptable stock first. A mason's yard will dress marble
+		/// as readily as shale and the settlement would rather it did not, so the plain stock is
+		/// listed first everywhere and the rarer alternative last &mdash; a yard reaches for the
+		/// marble only when there is no ordinary stone to work.
+		/// </summary>
+		public static readonly KingdomMaterial[][] YardEats = new KingdomMaterial[YardCount][]
+		{
+			new KingdomMaterial[1] { KingdomMaterial.Timber },
+			new KingdomMaterial[2] { KingdomMaterial.Stone, KingdomMaterial.Marble },
+			new KingdomMaterial[1] { KingdomMaterial.Scrap }
+		};
+
+		/// <summary>Raw loads one refined unit is made of. Two: a yard is a place where half of
+		/// what comes in leaves as spoil, sawdust, and slag, and the other half leaves better than
+		/// it arrived.</summary>
+		public const int RawPerRefined = 2;
+
+		/// <summary>Effort one refined unit costs a crew. Dearer per unit than clearing a cell
+		/// (<see cref="StandingEffort"/>) because the work is finer, and denominated in the same
+		/// effort points so one day of one pair of hands means the same thing everywhere.</summary>
+		public const int RefineEffortPerUnit = 15;
+
+		/// <summary>
+		/// Refined units one yard can finish in one visit however long the founder was away. The
+		/// same bounded-consequence rule <see cref="MaxClearingHands"/> keeps on the clearing gang:
+		/// a settlement makes more than it did, never a stockpile out of an absence.
+		/// </summary>
+		public const int MaxRefinedPerPass = 8;
+
+		/// <summary>Whether a material is one a yard makes rather than one the ground gives up.
+		/// </summary>
+		public static bool IsRefined(KingdomMaterial Material)
+		{
+			return Material == KingdomMaterial.ShapedTimber || Material == KingdomMaterial.ShapedStone || Material == KingdomMaterial.WorkedMetal;
+		}
+
+		/// <summary>The yard that makes a refined material. False for anything raw.</summary>
+		public static bool TryYardFor(KingdomMaterial Refined, out KingdomYard Yard)
+		{
+			Yard = KingdomYard.Sawyer;
+			for (int i = 0; i < YardCount; i++)
+			{
+				if (YardMakes[i] == Refined)
+				{
+					Yard = (KingdomYard)i;
+					return true;
+				}
+			}
+			return false;
+		}
+
+		/// <summary>What a yard makes. <see cref="KingdomMaterial.ShapedTimber"/> for a value
+		/// outside the enum, which no caller reads, because they all check the bool first.</summary>
+		public static KingdomMaterial MadeAt(KingdomYard Yard)
+		{
+			int index = (int)Yard;
+			return (index < 0 || index >= YardCount) ? KingdomMaterial.ShapedTimber : YardMakes[index];
+		}
+
+		/// <summary>The registry key of a yard, or empty for a value outside the enum.</summary>
+		public static string YardKey(KingdomYard Yard)
+		{
+			int index = (int)Yard;
+			return (index < 0 || index >= YardCount) ? "" : YardKeys[index];
+		}
+
+		/// <summary>The player-facing name of a yard, or empty for a value outside the enum.
+		/// </summary>
+		public static string YardName(KingdomYard Yard)
+		{
+			int index = (int)Yard;
+			return (index < 0 || index >= YardCount) ? "" : YardNames[index];
+		}
+
+		/// <summary>
+		/// Reads a <c>Refines</c> attribute. Accepts the yard's own key (<c>mason</c>) and the
+		/// refined material's key (<c>shapedstone</c>, and its spaced spelling), because an author
+		/// writing "what this building makes" and an author writing "what kind of yard this is"
+		/// are both saying the same thing and neither should have to look up which spelling we
+		/// wanted.
+		/// </summary>
+		/// <param name="Key">Text to read. Null, empty, a raw material, and an unknown word all
+		/// fail.</param>
+		/// <param name="Yard">Set on success.</param>
+		public static bool TryParseYard(string Key, out KingdomYard Yard)
+		{
+			Yard = KingdomYard.Sawyer;
+			if (string.IsNullOrEmpty(Key))
+			{
+				return false;
+			}
+			string trimmed = Key.Trim().ToLowerInvariant();
+			for (int i = 0; i < YardCount; i++)
+			{
+				if (YardKeys[i] == trimmed)
+				{
+					Yard = (KingdomYard)i;
+					return true;
+				}
+			}
+			if (TryParseMaterial(trimmed, out var material) && IsRefined(material))
+			{
+				return TryYardFor(material, out Yard);
+			}
+			return false;
+		}
+
+		/// <summary>
+		/// Which raw material a yard would reach for out of the stock it can see, and how many
+		/// refined units that stock could yield. A yard with less than <see cref="RawPerRefined"/>
+		/// of everything it eats has nothing to work on, which is a thing it says out loud rather
+		/// than a pass that quietly does nothing (STANDARDS 7b).
+		/// </summary>
+		/// <param name="Yard">Which yard.</param>
+		/// <param name="Stock">What the stockpiles hold. Null reads as empty.</param>
+		/// <param name="Raw">Set on success to the stock it would eat.</param>
+		/// <returns>Refined units that stock covers, or zero when there is nothing to work.</returns>
+		public static int RefinableFrom(KingdomYard Yard, KingdomMaterialTally Stock, out KingdomMaterial Raw)
+		{
+			Raw = KingdomMaterial.Timber;
+			int index = (int)Yard;
+			if (index < 0 || index >= YardCount || Stock == null)
+			{
+				return 0;
+			}
+			KingdomMaterial[] eats = YardEats[index];
+			for (int i = 0; i < eats.Length; i++)
+			{
+				int units = Stock.Get(eats[i]) / RawPerRefined;
+				if (units > 0)
+				{
+					Raw = eats[i];
+					return units;
+				}
+			}
+			return 0;
+		}
+
+		/// <summary>
+		/// Refined units a crew finishes in the days since it last worked: the effort those hands
+		/// put in, divided by what one unit costs, capped at <see cref="MaxRefinedPerPass"/> and at
+		/// what the raw stock covers. Zero hands make nothing, which is the idle case and is said
+		/// once by the caller rather than being a silent nothing.
+		/// </summary>
+		/// <param name="Crew">Settlers actually standing in the yard this pass.</param>
+		/// <param name="Days">Days since the yard last worked, already capped by the absence rule.
+		/// </param>
+		/// <param name="Capability">Who those settlers are, as a percentage
+		/// (<see cref="CrewCapability"/>). 100 is an ordinary pair of hands.</param>
+		/// <param name="RefinableUnits">What the raw stock covers, from
+		/// <see cref="RefinableFrom"/>.</param>
+		public static int RefinedThisPass(int Crew, int Days, int Capability, int RefinableUnits)
+		{
+			if (Crew <= 0 || Days <= 0 || RefinableUnits <= 0)
+			{
+				return 0;
+			}
+			int capability = (Capability > 0) ? Capability : 0;
+			int effort = Crew * Days * EffortPerHandPerDay * capability / 100;
+			int units = effort / RefineEffortPerUnit;
+			if (units > MaxRefinedPerPass)
+			{
+				units = MaxRefinedPerPass;
+			}
+			return (units > RefinableUnits) ? RefinableUnits : units;
+		}
+
+		/// <summary>Raw loads a run of refining eats. Always exactly what it made, times
+		/// <see cref="RawPerRefined"/>: nothing is refined out of nothing.</summary>
+		public static int RawSpentFor(int RefinedUnits)
+		{
+			return (RefinedUnits > 0) ? (RefinedUnits * RawPerRefined) : 0;
+		}
+
+		// --- Crews have capability, and it is read off who they are ---------------------------
+
+		/// <summary>Which of a settler's numbers a yard's work is done with. Sawing and dressing
+		/// stone are muscle; a furnace is a machine somebody has to understand.</summary>
+		public static KingdomCapability CapabilityFor(KingdomYard Yard)
+		{
+			return (Yard == KingdomYard.Smelter) ? KingdomCapability.Mind : KingdomCapability.Muscle;
+		}
+
+		/// <summary>
+		/// The stat an ordinary person has. Vanilla's own humanoid rolls <c>14,1d3</c> on every
+		/// attribute (<c>BaseHumanoid</c> in the game's own Creatures.xml), so sixteen is the
+		/// middle of what walks up the road, and a crew of ordinary people works at exactly 100.
+		/// </summary>
+		public const int BaselineStat = 16;
+
+		/// <summary>Percentage points one point of the relevant stat is worth.</summary>
+		public const int CapabilityPerPoint = 5;
+
+		/// <summary>Floor on capability. Nobody is useless, and a settlement that has only weak
+		/// hands still gets its beams cut, slowly.</summary>
+		public const int MinCapabilityPercent = 50;
+
+		/// <summary>Ceiling on capability. The strong settler is worth having and is never worth
+		/// three ordinary ones, because the yard is the bottleneck and not the arm.</summary>
+		public const int MaxCapabilityPercent = 150;
+
+		/// <summary>What one stat value is worth, as a percentage of an ordinary pair of hands.
+		/// </summary>
+		public static int CapabilityPercent(int Stat)
+		{
+			int percent = 100 + (Stat - BaselineStat) * CapabilityPerPoint;
+			if (percent < MinCapabilityPercent)
+			{
+				return MinCapabilityPercent;
+			}
+			return (percent > MaxCapabilityPercent) ? MaxCapabilityPercent : percent;
+		}
+
+		/// <summary>
+		/// What a crew is worth at one yard's work, read off the people themselves. The founder
+		/// assigns nobody: the settlement's own hands are what they are, and a city of scribes
+		/// smelts better than it saws.
+		/// </summary>
+		/// <param name="Yard">The work being done.</param>
+		/// <param name="Strength">The crew's Strength, averaged. Zero and negative read as
+		/// <see cref="BaselineStat"/>, so a caller that could not read the people gets an ordinary
+		/// crew rather than a punished one.</param>
+		/// <param name="Intelligence">The crew's Intelligence, averaged. Same rule.</param>
+		public static int CrewCapability(KingdomYard Yard, int Strength, int Intelligence)
+		{
+			int stat = (CapabilityFor(Yard) == KingdomCapability.Mind) ? Intelligence : Strength;
+			return CapabilityPercent((stat > 0) ? stat : BaselineStat);
+		}
+
+		/// <summary>
+		/// The average of a set of stat readings, or <see cref="BaselineStat"/> when there is
+		/// nothing to read. Rounded down, because a crew is only as quick as its slowest half.
+		/// </summary>
+		public static int AverageStat(IList<int> Values)
+		{
+			if (Values == null || Values.Count == 0)
+			{
+				return BaselineStat;
+			}
+			int total = 0;
+			for (int i = 0; i < Values.Count; i++)
+			{
+				total += Values[i];
+			}
+			return total / Values.Count;
+		}
+
+		/// <summary>One word for a crew's quality, for the line the founder reads. Never null.
+		/// </summary>
+		public static string CapabilityWord(int Percent)
+		{
+			if (Percent >= 120)
+			{
+				return "deft";
+			}
+			if (Percent <= 80)
+			{
+				return "slow";
+			}
+			return "steady";
+		}
+
+		// --- Bits: vanilla's own tinkering stock, priced into high-craft designs ---------------
+
+		/// <summary>
+		/// Bit tiers, which are the game's own and not ours: <c>BitType.Init</c> files twelve bit
+		/// colours under nine levels, and <c>BitType.GetBitTier</c> is the map from colour to
+		/// level. A cost is written in those levels &mdash; <c>Bits="0034"</c> is two of the
+		/// commonest and one each of tier three and four &mdash; which is exactly how vanilla's own
+		/// <c>TinkerItem Bits</c> attribute is written.
+		/// </summary>
+		public const int BitTierCount = 9;
+
+		/// <summary>
+		/// What each tier is called, in tier order, taken from the descriptions
+		/// <c>BitType.Init</c> gives them. Tier zero holds four colours at once (scrap power
+		/// systems, crystal, metal, electronics), so it is named for the thing they have in
+		/// common: it is scrap, and the settlement does not care which.
+		/// </summary>
+		public static readonly string[] BitTierNames = new string[BitTierCount]
+		{
+			"scrap",
+			"phasic power systems",
+			"flawless crystal",
+			"pure alloy",
+			"pristine electronics",
+			"nanomaterials",
+			"photonics",
+			"AI microcontrollers",
+			"metacrystal"
+		};
+
+		/// <summary>
+		/// The twelve bit colours in vanilla's own order (<c>BitType.Init</c>), used to read a cost
+		/// written in colours rather than tiers. Kept here rather than reached for through the
+		/// engine so these rules stay engine-free and testable; the tiers are asserted against
+		/// <c>BitType.GetBitTier</c>'s own table by the tests.
+		/// </summary>
+		public const string BitColours = "RGBCrgbcKWYM";
+
+		/// <summary>The tier of each colour in <see cref="BitColours"/>, same order.</summary>
+		public static readonly int[] BitColourTiers = new int[12] { 0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8 };
+
+		/// <summary>The name of one bit tier, or empty for a tier outside the ladder.</summary>
+		public static string BitTierName(int Tier)
+		{
+			return (Tier < 0 || Tier >= BitTierCount) ? "" : BitTierNames[Tier];
+		}
+
+		/// <summary>
+		/// The tier one bit colour belongs to, mirroring <c>BitType.GetBitTier</c>. False for any
+		/// character that is not one of the game's twelve.
+		/// </summary>
+		public static bool TryBitTier(char Colour, out int Tier)
+		{
+			Tier = 0;
+			int at = BitColours.IndexOf(Colour);
+			if (at < 0)
+			{
+				return false;
+			}
+			Tier = BitColourTiers[at];
+			return true;
+		}
+
+		/// <summary>
+		/// Reads a bit cost: <c>"0034"</c>, or the same thing written in the game's own colours,
+		/// <c>"BBbc"</c>. Whitespace and commas anywhere are ignored, so <c>"00, 3, 4"</c> reads
+		/// the same as <c>"0034"</c>.
+		/// <para>
+		/// An absent or empty attribute is not an error: it parses to an empty cost, which is what
+		/// every design in the catalogue costs in bits today and what every third-party design that
+		/// never heard of bits goes on costing.
+		/// </para>
+		/// </summary>
+		/// <param name="Text">The attribute's value, or null.</param>
+		/// <param name="Cost">Always set to a tally, empty when this returns false.</param>
+		/// <param name="Error">Null on success, else a log-facing reason naming the offending
+		/// character. The whole attribute is rejected; nothing is half-parsed.</param>
+		public static bool TryParseBitCost(string Text, out KingdomBitTally Cost, out string Error)
+		{
+			Cost = new KingdomBitTally();
+			Error = null;
+			if (string.IsNullOrEmpty(Text) || Text.Trim().Length == 0)
+			{
+				return true;
+			}
+			for (int i = 0; i < Text.Length; i++)
+			{
+				char c = Text[i];
+				if (c == ' ' || c == '\t' || c == ',' || c == '\r' || c == '\n')
+				{
+					continue;
+				}
+				if (c >= '0' && c <= '8')
+				{
+					Cost.Add(c - '0', 1);
+					continue;
+				}
+				if (TryBitTier(c, out var tier))
+				{
+					Cost.Add(tier, 1);
+					continue;
+				}
+				Error = "\"" + c + "\" is not a bit tier (0-8) or one of the game's own bit colours (" + BitColours + ")";
+				Cost = new KingdomBitTally();
+				return false;
+			}
+			return true;
+		}
+
+		/// <summary>Whether a bit stock holds at least every bit a cost asks for. A null or empty
+		/// cost is always covered, including by an empty locker.</summary>
+		public static bool CoversBits(KingdomBitTally Stock, KingdomBitTally Cost)
+		{
+			if (Cost == null || Cost.IsEmpty())
+			{
+				return true;
+			}
+			for (int i = 0; i < BitTierCount; i++)
+			{
+				int held = (Stock == null) ? 0 : Stock.Get(i);
+				if (held < Cost.Get(i))
+				{
+					return false;
+				}
+			}
+			return true;
+		}
+
+		/// <summary>What a bit stock is short of a cost, per tier. Empty when
+		/// <see cref="CoversBits"/> is true.</summary>
+		public static KingdomBitTally MissingBits(KingdomBitTally Stock, KingdomBitTally Cost)
+		{
+			KingdomBitTally missing = new KingdomBitTally();
+			if (Cost == null)
+			{
+				return missing;
+			}
+			for (int i = 0; i < BitTierCount; i++)
+			{
+				int held = (Stock == null) ? 0 : Stock.Get(i);
+				int shortfall = Cost.Get(i) - held;
+				if (shortfall > 0)
+				{
+					missing.Set(i, shortfall);
+				}
+			}
+			return missing;
+		}
+
+		// --- Exotic materials: rare finds, and the only things an XL special is short of -------
+
+		/// <summary>Number of values in <see cref="KingdomExotic"/>.</summary>
+		public const int ExoticCount = 4;
+
+		/// <summary>Registry keys, in enum order: what an <c>Exotics</c> attribute writes.
+		/// </summary>
+		public static readonly string[] ExoticKeys = new string[ExoticCount] { "ingot", "silver", "gold", "gem" };
+
+		/// <summary>Player-facing names, singular, in enum order. Every one of them is a real
+		/// vanilla item somebody carried home: bronze ingots, silver and gold nuggets, and the
+		/// rough gemstones that come out of the same ground.</summary>
+		public static readonly string[] ExoticNames = new string[ExoticCount] { "bronze ingot", "silver nugget", "gold nugget", "rough gemstone" };
+
+		/// <summary>The same names in the plural, for a cost of more than one.</summary>
+		public static readonly string[] ExoticPlurals = new string[ExoticCount] { "bronze ingots", "silver nuggets", "gold nuggets", "rough gemstones" };
+
+		/// <summary>The registry key of an exotic, or empty for a value outside the enum.
+		/// </summary>
+		public static string ExoticKey(KingdomExotic Exotic)
+		{
+			int index = (int)Exotic;
+			return (index < 0 || index >= ExoticCount) ? "" : ExoticKeys[index];
+		}
+
+		/// <summary>The name of an exotic, pluralised for a count of more than one.</summary>
+		public static string ExoticName(KingdomExotic Exotic, int Units = 1)
+		{
+			int index = (int)Exotic;
+			if (index < 0 || index >= ExoticCount)
+			{
+				return "";
+			}
+			return (Units == 1) ? ExoticNames[index] : ExoticPlurals[index];
+		}
+
+		/// <summary>
+		/// Reads an exotic key. Case-insensitive, whitespace-tolerant, and it accepts the item's
+		/// own name as the game writes it, because an author reading "gold nugget" off the ground
+		/// should be able to write that.
+		/// </summary>
+		public static bool TryParseExotic(string Key, out KingdomExotic Exotic)
+		{
+			Exotic = KingdomExotic.Ingot;
+			if (string.IsNullOrEmpty(Key))
+			{
+				return false;
+			}
+			string trimmed = Key.Trim().ToLowerInvariant();
+			for (int i = 0; i < ExoticCount; i++)
+			{
+				if (ExoticKeys[i] == trimmed || ExoticNames[i] == trimmed || ExoticPlurals[i] == trimmed)
+				{
+					Exotic = (KingdomExotic)i;
+					return true;
+				}
+			}
+			switch (trimmed)
+			{
+			case "bronze":
+			case "bronzeingot":
+				Exotic = KingdomExotic.Ingot;
+				return true;
+			case "silvernugget":
+				Exotic = KingdomExotic.Silver;
+				return true;
+			case "goldnugget":
+				Exotic = KingdomExotic.Gold;
+				return true;
+			case "gemstone":
+			case "gems":
+				Exotic = KingdomExotic.Gem;
+				return true;
+			default:
+				return false;
+			}
+		}
+
+		/// <summary>
+		/// Reads an exotic cost: <c>"gold:2, gem:1"</c>. Same grammar and same forgiveness as
+		/// <see cref="TryParseMaterialCost"/>, for the same reason: an absent attribute is a design
+		/// that wants no rare find, which is nearly all of them.
+		/// </summary>
+		public static bool TryParseExoticCost(string Text, out KingdomExoticTally Cost, out string Error)
+		{
+			Cost = new KingdomExoticTally();
+			Error = null;
+			if (string.IsNullOrEmpty(Text) || Text.Trim().Length == 0)
+			{
+				return true;
+			}
+			string[] terms = Text.Split(',');
+			bool[] seen = new bool[ExoticCount];
+			for (int i = 0; i < terms.Length; i++)
+			{
+				string term = terms[i].Trim();
+				if (term.Length == 0)
+				{
+					Error = "empty term in exotic cost \"" + Text + "\"";
+					Cost = new KingdomExoticTally();
+					return false;
+				}
+				int split = term.LastIndexOf(':');
+				if (split <= 0 || split == term.Length - 1)
+				{
+					Error = "exotic term \"" + term + "\" is not of the form exotic:units";
+					Cost = new KingdomExoticTally();
+					return false;
+				}
+				if (!TryParseExotic(term.Substring(0, split), out var exotic))
+				{
+					Error = "unknown exotic \"" + term.Substring(0, split).Trim() + "\"";
+					Cost = new KingdomExoticTally();
+					return false;
+				}
+				if (!int.TryParse(term.Substring(split + 1).Trim(), out var units) || units <= 0)
+				{
+					Error = "exotic \"" + ExoticKey(exotic) + "\" needs a positive whole number of units";
+					Cost = new KingdomExoticTally();
+					return false;
+				}
+				if (seen[(int)exotic])
+				{
+					Error = "exotic \"" + ExoticKey(exotic) + "\" is named twice";
+					Cost = new KingdomExoticTally();
+					return false;
+				}
+				seen[(int)exotic] = true;
+				Cost.Set(exotic, units);
+			}
+			return true;
+		}
+
+		/// <summary>Whether a stock of rare finds covers a cost. A null or empty cost always is.
+		/// </summary>
+		public static bool CoversExotics(KingdomExoticTally Stock, KingdomExoticTally Cost)
+		{
+			if (Cost == null || Cost.IsEmpty())
+			{
+				return true;
+			}
+			for (int i = 0; i < ExoticCount; i++)
+			{
+				KingdomExotic exotic = (KingdomExotic)i;
+				int held = (Stock == null) ? 0 : Stock.Get(exotic);
+				if (held < Cost.Get(exotic))
+				{
+					return false;
+				}
+			}
+			return true;
+		}
+
+		/// <summary>What a stock of rare finds is short of a cost. Empty when
+		/// <see cref="CoversExotics"/> is true.</summary>
+		public static KingdomExoticTally MissingExotics(KingdomExoticTally Stock, KingdomExoticTally Cost)
+		{
+			KingdomExoticTally missing = new KingdomExoticTally();
+			if (Cost == null)
+			{
+				return missing;
+			}
+			for (int i = 0; i < ExoticCount; i++)
+			{
+				KingdomExotic exotic = (KingdomExotic)i;
+				int held = (Stock == null) ? 0 : Stock.Get(exotic);
+				int shortfall = Cost.Get(exotic) - held;
+				if (shortfall > 0)
+				{
+					missing.Set(exotic, shortfall);
+				}
+			}
+			return missing;
+		}
+
+		// --- Infrastructure gates construction ------------------------------------------------
+
+		/// <summary>
+		/// One yard as the gate needs to see it. Standing is the building; staffed is whether
+		/// anybody is in it this pass; headed is whether the office layer has seated a notable over
+		/// it. All three are read, never assigned.
+		/// </summary>
+		public struct KingdomYardStanding
+		{
+			public KingdomYard Yard;
+
+			/// <summary>A finished building of this kind stands on the settlement's ground.
+			/// </summary>
+			public bool Standing;
+
+			/// <summary>Somebody is working it this pass.</summary>
+			public bool Staffed;
+
+			/// <summary>A named notable heads it (Addendum 6's office rule).</summary>
+			public bool Headed;
+
+			public KingdomYardStanding(KingdomYard Yard, bool Standing, bool Staffed, bool Headed)
+			{
+				this.Yard = Yard;
+				this.Standing = Standing;
+				this.Staffed = Staffed;
+				this.Headed = Headed;
+			}
+		}
+
+		/// <summary>Whether a design of this size needs a yard standing behind it at all. Small and
+		/// middling works are raised by whoever is free; the big ones are not.</summary>
+		public static bool RequiresYard(KingdomPlotRules.PlotSize Size)
+		{
+			return Size == KingdomPlotRules.PlotSize.Large || Size == KingdomPlotRules.PlotSize.Huge;
+		}
+
+		/// <summary>Whether a design of this size needs its yard HEADED as well as staffed. Only
+		/// the grand ones: a great work is led by somebody with a name (Addendum 6).</summary>
+		public static bool RequiresHeadedYard(KingdomPlotRules.PlotSize Size)
+		{
+			return Size == KingdomPlotRules.PlotSize.Huge;
+		}
+
+		/// <summary>
+		/// Which yards a design's material cost implies, in yard order.
+		/// <para>
+		/// Every refined material a design names says its own yard outright: shaped stone is a
+		/// mason's yard, and there is no other way to have any. A design that names none is judged
+		/// by what it is mostly made OF &mdash; a temple of forty stone wants a mason's yard behind
+		/// it whether or not the stone was dressed &mdash; which is what makes the gate reach
+		/// designs written before yards existed without a single attribute being added to them.
+		/// A design made of mud and brush alone implies no yard at all, and is raised by hands.
+		/// </para>
+		/// </summary>
+		/// <param name="Size">The design's plot tier. Anything under Large implies nothing.</param>
+		/// <param name="Cost">The design's material cost. Null and empty imply nothing.</param>
+		public static List<KingdomYard> YardsFor(KingdomPlotRules.PlotSize Size, KingdomMaterialTally Cost)
+		{
+			List<KingdomYard> yards = new List<KingdomYard>();
+			if (!RequiresYard(Size) || Cost == null || Cost.IsEmpty())
+			{
+				return yards;
+			}
+			for (int i = 0; i < YardCount; i++)
+			{
+				if (Cost.Get(YardMakes[i]) > 0)
+				{
+					yards.Add((KingdomYard)i);
+				}
+			}
+			if (yards.Count == 0 && TryDominantYard(Cost, out var dominant))
+			{
+				yards.Add(dominant);
+			}
+			return yards;
+		}
+
+		/// <summary>
+		/// The yard whose stock a cost is mostly made of: timber to the sawyer, stone and marble to
+		/// the mason, scrap to the smelter, with each yard's own refined output counted alongside
+		/// the raw it came from. Ties go to the earlier yard in
+		/// <see cref="KingdomYard"/> order, which is a rule rather than an accident so the same
+		/// cost always names the same yard.
+		/// </summary>
+		/// <returns>False for a cost of nothing but mud and brush, which no yard touches.</returns>
+		public static bool TryDominantYard(KingdomMaterialTally Cost, out KingdomYard Yard)
+		{
+			Yard = KingdomYard.Sawyer;
+			if (Cost == null)
+			{
+				return false;
+			}
+			int best = 0;
+			bool found = false;
+			for (int i = 0; i < YardCount; i++)
+			{
+				int units = Cost.Get(YardMakes[i]);
+				KingdomMaterial[] eats = YardEats[i];
+				for (int j = 0; j < eats.Length; j++)
+				{
+					units += Cost.Get(eats[j]);
+				}
+				if (units > best)
+				{
+					best = units;
+					Yard = (KingdomYard)i;
+					found = true;
+				}
+			}
+			return found;
+		}
+
+		/// <summary>What one yard's standing is in a list of them, or a yard that stands nowhere.
+		/// </summary>
+		public static KingdomYardStanding StandingOf(IList<KingdomYardStanding> Yards, KingdomYard Yard)
+		{
+			if (Yards != null)
+			{
+				for (int i = 0; i < Yards.Count; i++)
+				{
+					if (Yards[i].Yard == Yard)
+					{
+						return Yards[i];
+					}
+				}
+			}
+			return new KingdomYardStanding(Yard, Standing: false, Staffed: false, Headed: false);
+		}
+
+		/// <summary>
+		/// Whether the settlement's infrastructure will carry this design, and what is missing when
+		/// it will not.
+		/// <para>
+		/// The law of Addendum 7 in one method: a large work wants the relevant yard standing and
+		/// staffed, and a grand one wants it headed as well. Every refusal names the yard and the
+		/// state it is in, once, where the founder is standing (STANDARDS 7b) &mdash; "there is no
+		/// mason's yard" and "the mason's yard stands idle" are different problems with different
+		/// answers, and a founder told only "you cannot build this" has been told nothing.
+		/// </para>
+		/// </summary>
+		/// <param name="Size">The design's plot tier.</param>
+		/// <param name="Cost">The design's material cost.</param>
+		/// <param name="Yards">What the settlement's yards are doing. Null reads as none standing.
+		/// </param>
+		/// <param name="DesignName">What the founder calls the design, for the sentence. Null is
+		/// accepted and reads as "the work".</param>
+		/// <param name="Refusal">Null when this returns true, else the founder-facing reason.
+		/// </param>
+		public static bool AllowsBuild(KingdomPlotRules.PlotSize Size, KingdomMaterialTally Cost, IList<KingdomYardStanding> Yards, string DesignName, out string Refusal)
+		{
+			Refusal = null;
+			List<KingdomYard> wanted = YardsFor(Size, Cost);
+			if (wanted.Count == 0)
+			{
+				return true;
+			}
+			string name = string.IsNullOrEmpty(DesignName) ? "the work" : ("the " + DesignName);
+			bool headed = RequiresHeadedYard(Size);
+			for (int i = 0; i < wanted.Count; i++)
+			{
+				KingdomYardStanding standing = StandingOf(Yards, wanted[i]);
+				string yard = YardName(wanted[i]);
+				if (!standing.Standing)
+				{
+					Refusal = "A work of this size is not raised by willing hands alone. " + Capitalise(name)
+						+ " wants {{C|a " + yard + "}} standing in the settlement, and there is none. Raise one first.";
+					return false;
+				}
+				if (!standing.Staffed)
+				{
+					Refusal = Capitalise(name) + " wants the {{C|" + yard
+						+ "}}, and it stands idle. Stand a settler down off the water or another work and it will be worked again.";
+					return false;
+				}
+				if (headed && !standing.Headed)
+				{
+					Refusal = Capitalise(name) + " is a great work, and a great work is led. The {{C|" + yard
+						+ "}} wants somebody named over it before the settlement will attempt this.";
+					return false;
+				}
+			}
+			return true;
+		}
+
+		/// <summary>One line for the founder about what a design's size will ask of the yards,
+		/// before they order it. Null when the design asks nothing.</summary>
+		public static string YardRequirementLine(KingdomPlotRules.PlotSize Size, KingdomMaterialTally Cost)
+		{
+			List<KingdomYard> wanted = YardsFor(Size, Cost);
+			if (wanted.Count == 0)
+			{
+				return null;
+			}
+			List<string> names = new List<string>();
+			for (int i = 0; i < wanted.Count; i++)
+			{
+				names.Add("a " + YardName(wanted[i]));
+			}
+			string list = JoinPhrases(names);
+			return RequiresHeadedYard(Size)
+				? ("A work this size wants " + list + ", worked and headed.")
+				: ("A work this size wants " + list + ", worked.");
+		}
+
+		// --- Wear, and what mending it costs ---------------------------------------------------
+
+		/// <summary>
+		/// The most wear a work ever carries. Damage runs a work down and never stops it: a
+		/// settlement that comes home to a burnt mill finds it turning slowly, not gone. Nothing
+		/// here is ever reached by the calendar &mdash; wear comes from events (a raid, hard
+		/// running, temperamental certified tech) and from nothing else. Time is labour, never
+		/// decay.
+		/// </summary>
+		public const int MaxWearPercent = 60;
+
+		/// <summary>Wear a work carries after an event adds to what it already had, clamped both
+		/// ways. Nothing ever wears past <see cref="MaxWearPercent"/>.</summary>
+		public static int AddWear(int Wear, int Added)
+		{
+			int total = ((Wear > 0) ? Wear : 0) + ((Added > 0) ? Added : 0);
+			return (total > MaxWearPercent) ? MaxWearPercent : total;
+		}
+
+		/// <summary>How well a worn work runs, as a percentage of what it does whole. Never zero:
+		/// the floor is <c>100 - </c><see cref="MaxWearPercent"/>.</summary>
+		public static int ConditionPercent(int Wear)
+		{
+			int wear = (Wear > 0) ? Wear : 0;
+			if (wear > MaxWearPercent)
+			{
+				wear = MaxWearPercent;
+			}
+			return 100 - wear;
+		}
+
+		/// <summary>One word for the state of a work, for the line the founder reads. Never null.
+		/// </summary>
+		public static string ConditionWord(int Wear)
+		{
+			if (Wear <= 0)
+			{
+				return "sound";
+			}
+			if (Wear < 20)
+			{
+				return "knocked about";
+			}
+			return (Wear < 40) ? "badly used" : "half-wrecked";
+		}
+
+		/// <summary>
+		/// What mending a work costs in material: the share of what it was built from that the wear
+		/// stands for, and never the whole building again. A design built for nothing is mended for
+		/// nothing, which is honest &mdash; there is nothing in a mud wall to replace.
+		/// </summary>
+		/// <param name="BuildCost">What the design cost to raise.</param>
+		/// <param name="Wear">How worn it is, as a percentage.</param>
+		public static KingdomMaterialTally RepairCost(KingdomMaterialTally BuildCost, int Wear)
+		{
+			if (BuildCost == null || Wear <= 0)
+			{
+				return new KingdomMaterialTally();
+			}
+			int wear = (Wear > MaxWearPercent) ? MaxWearPercent : Wear;
+			return BuildCost.Scaled(wear);
+		}
+
+		/// <summary>
+		/// What mending a work costs in bits: the same share of what its design was priced in.
+		/// This is the certified-tech half of Addendum 7 &mdash; a temperamental machine is mended
+		/// with the same stock it was built from, and a settlement that has no bits has a machine
+		/// running at reduced effect and a reason it can read.
+		/// </summary>
+		public static KingdomBitTally RepairBits(KingdomBitTally BuildBits, int Wear)
+		{
+			if (BuildBits == null || Wear <= 0)
+			{
+				return new KingdomBitTally();
+			}
+			int wear = (Wear > MaxWearPercent) ? MaxWearPercent : Wear;
+			return BuildBits.Scaled(wear);
+		}
+
+		/// <summary>Effort mending a work costs, from what has to be put back into it. Always at
+		/// least one for any wear at all: nothing is mended for free.</summary>
+		public static int RepairEffort(int MaterialUnits, int Wear)
+		{
+			if (Wear <= 0)
+			{
+				return 0;
+			}
+			int units = (MaterialUnits > 0) ? MaterialUnits : 0;
+			int effort = StrikeBaseEffort / 2 + units * StrikeEffortPerUnit;
+			return (effort < 1) ? 1 : effort;
+		}
+
+		/// <summary>
+		/// The one line a damaged work gets, said once when the damage happens and not again
+		/// (STANDARDS 7b). Null for a work that is sound, so a caller never announces nothing.
+		/// </summary>
+		public static string DamageLine(string Name, int Wear)
+		{
+			if (Wear <= 0)
+			{
+				return null;
+			}
+			string name = string.IsNullOrEmpty(Name) ? "a work" : ("the " + Name);
+			return "{{r|" + Capitalise(name) + " is " + ConditionWord(Wear) + ", and runs at " + ConditionPercent(Wear)
+				+ " parts in a hundred until somebody mends it. It will not fail, and it will not mend itself.}}";
+		}
+
+		// --- Small shared helpers --------------------------------------------------------------
+
+		/// <summary>
+		/// Joins phrases the way a person would: "a", "a and b", "a, b and c". Null for an empty
+		/// list, so every caller has one thing to test rather than two, and so a tally with nothing
+		/// in it never produces a sentence about nothing.
+		/// </summary>
+		public static string JoinPhrases(List<string> Parts)
+		{
+			if (Parts == null || Parts.Count == 0)
+			{
+				return null;
+			}
+			StringBuilder text = new StringBuilder();
+			for (int i = 0; i < Parts.Count; i++)
+			{
+				if (i > 0)
+				{
+					text.Append((i == Parts.Count - 1) ? " and " : ", ");
+				}
+				text.Append(Parts[i]);
+			}
+			return text.ToString();
+		}
+
+		/// <summary>The same sentence with its first letter raised. Left alone when it already is,
+		/// and when there is nothing to raise.</summary>
+		private static string Capitalise(string Text)
+		{
+			if (string.IsNullOrEmpty(Text))
+			{
+				return Text;
+			}
+			return char.ToUpperInvariant(Text[0]) + Text.Substring(1);
 		}
 	}
 }

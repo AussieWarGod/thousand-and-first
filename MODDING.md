@@ -86,9 +86,11 @@ check on third-party content can honestly take.
   yours, changes behaviour by doing nothing.
 - `UpgradeMaterials` — the same, for improving *into* this design. Absent means the improvement
   costs water alone.
-- The vocabulary is six keys: `mud`, `brush`, `timber`, `stone`, `marble`, `scrap`. `canvas` is
-  accepted as an alias for `brush` and `scrap metal` for `scrap`. Anything else is a logged
-  error and the whole attribute is rejected — never half-applied.
+- The vocabulary is nine keys in two halves. **Raw**: `mud`, `brush`, `timber`, `stone`, `marble`,
+  `scrap`. **Refined**: `shapedtimber`, `shapedstone`, `workedmetal` — what a yard makes and the
+  only way to have any. `canvas` is accepted as an alias for `brush`, `scrap metal` for `scrap`,
+  and the spaced spellings (`shaped timber`, `dressed stone`, `worked metal`) for the refined
+  three. Anything else is a logged error and the whole attribute is rejected — never half-applied.
 - A malformed value disables itself with a logged reason and leaves the design costing water
   alone. It never crashes the registry and never half-registers.
 
@@ -97,7 +99,7 @@ struck (half of what it was made of), or out of a caravan. A settlement holds th
 in a container the founder dedicated as a **stockpile** — a mark, not a transfer, exactly like a
 larder: what is inside stays where it is and stays the player's, and the settlement only counts it.
 
-To make your own item count as one of the six, tag its blueprint:
+To make your own item count as one of the nine, tag its blueprint:
 
 ```xml
 <object Name="MyMod_IronwoodBeam" Inherits="Item">
@@ -112,6 +114,52 @@ A charter may carry material as well as water, per caravan:
       MinStanding="400" Income="4" Interval="3600" Caravan="DromadTrader1"
       Materials="timber:4" />
 ```
+
+### Yards, bits, and rare finds (all optional)
+
+```xml
+<building Key="masonyard" DisplayName="mason's yard" Blueprint="r_KingdomMasonYard"
+          Cost="16" Ticks="3000" Plot="M" MinStage="Steading" Open="yes"
+          Materials="stone:14,timber:6" Staff="2" Refines="shapedstone" />
+
+<building Key="waterworks" DisplayName="the waterworks" Blueprint="r_KingdomWaterworks"
+          Cost="100" Ticks="12000" Plot="XL" MinStage="City"
+          Materials="stone:100,shapedstone:16,workedmetal:10"
+          Bits="0034" Exotics="ingot:1" />
+```
+
+| Attribute | What it wants |
+| --- | --- |
+| `Refines` | The refined material this design makes: `shapedtimber`, `shapedstone`, `workedmetal`, or the yard's own key (`sawyer`, `mason`, `smelter`). Declaring it is the whole of what makes a building a yard — your own sawmill counts exactly like ours. A raw material here is an error: a yard that made timber would mint it. |
+| `Bits` | What a high-craft design costs in **the game's own tinkering bits**, written in bit tiers: `Bits="0034"` is two tier-zero bits and one each of tiers three and four. The game's bit colours (`BBbc`) are accepted too. Whitespace and commas are ignored. |
+| `Exotics` | Rare finds, as `exotic:units`: `ingot` (bronze ingot), `silver`, `gold`, `gem` (any rough gemstone). Item names work too (`gold nugget:2`). |
+
+**How a yard works.** A staffed yard converts `RawPerRefined` (two) loads of raw stock into one
+refined unit on every attended pass, out of the crew the staffing pass gave it and at a rate scaled
+by who those settlers are — Strength for the saw-pit and the banker, Intelligence for the furnace.
+A yard with nothing to work says so once. Nothing here runs while the founder is away, and nothing
+wears out with the calendar.
+
+**Where bits and rare finds come from.** Both are ordinary items in a container the founder
+dedicated as a **stockpile**. Bits are read off vanilla's own `TinkerItem` — a fried processing core
+is worth what the game says it disassembles into — and spending them breaks the cheapest thing on
+the shelf that answers the price. An item already counted as one of the nine materials is never
+also counted as bits (`Scrap Metal` builds walls, not machines), so donate ruin-scrap for bits. To
+declare bits for an item vanilla knows nothing about, tag it `<tag Name="r_KingdomBit" Value="34" />`;
+for a rare find, `<tag Name="r_KingdomExotic" Value="gem" />`.
+
+**Infrastructure gates the big designs.** A design on an **L** plot needs the yard its material
+implies standing and staffed; an **XL** one needs that yard headed by a named notable as well.
+Which yard is *derived*: every refined material a design names points at its own yard, and a design
+that names none is judged by what it is mostly made of — timber to the sawyer, stone and marble to
+the mason, scrap to the smelter. A design of mud and brush, or one costing water alone, is never
+gated, so an entry written before yards existed behaves as it always did unless it is L or XL. The
+gate is asked when a work is **raised**, not when it is improved: an improvement climbs within a
+plot the settlement already proved it could build on. Every refusal names the yard and its state.
+
+**Wear is never the calendar.** Works are damaged by events — a raid, hard running, temperamental
+certified tech — run at reduced effect, say so once, and never die. Mending one costs a share of
+what it was built from (materials and bits both) plus hands, through the ordinary pass.
 
 ### Gating a design (all optional)
 
@@ -290,6 +338,8 @@ never heard of is never an error, and a tag nothing yet consumes simply waits fo
 |---|---|
 | `Provides` | Nothing declared. A comma list of namespaced tags. Case and whitespace are folded; repeats collapse. Merges by key like every other attribute, and reaches buildings that already stand — a mod that adds a tag today changes who will live in a house raised a year ago, and moves nothing. |
 | `Closeness` | **Measured.** `Packed`, `Close`, `Roomed`, or `Private` — how much of a quarrel these quarters will hold (see [below](#how-close-the-quarters-are)). Case and surrounding whitespace are folded; any other word is logged and the design is measured instead. Merges and re-reads exactly like `Provides`. |
+| `Reach` | **Derived.** `plot`, `quarter`, `zone`, `city`, or `realm` — how far what this design gives actually carries (see [below](#how-far-a-building-carries)). Case and surrounding whitespace are folded; any other word is logged and the design is derived instead. Merges and re-reads exactly like `Provides`. |
+| `CrewNeeds` | Nothing demanded. A `kind:amount` list in `Carries`' own language (`strength:16`) naming what a crew must be capable of to raise and run this design at full pace. A crew that falls short never stalls the work — it runs slower, floored, and says so once. |
 
 A plot also provides what its **roof** gives, whether its author thought about it or not: `Open` and
 `Soft` tiers provide `taf:sky`, `Walled` and `Carved` tiers provide `taf:dark`. That is read from the
@@ -326,7 +376,7 @@ the whole `Plot` for a tier that declares none).
 | `Packed` | under 4 cells a bed | **1** — any filed dislike at all | tent, staked tent-row |
 | `Close` | under 6 cells a bed | **50** — the ambient grudge most factions hold toward strangers | timber hut, hut and yard |
 | `Roomed` | under 10 cells a bed | **75** — open hostility, filed on purpose | stone house, housing court |
-| `Private` | 10 cells a bed or more | **100** — the game's flat fault lines, and nothing milder | fine house, manor |
+| `Private` | 10 cells a bed or more | **75** — the same as `Roomed`: walls between beds are the last tolerance architecture buys | fine house, manor |
 
 Hostility is 0–100, read off the engine's own faction table both ways (the worse direction wins), and
 same-creed always reads 0 — believers of one creed share anything, including a bunk row. An authored
@@ -340,6 +390,29 @@ Declare `Closeness` only when the measurement reads your design's ground wrong. 
 declares it twice, both for the same shape — a design that raises *several dwellings at once* inside
 one plot (`housecourt`, `terrace`) puts many beds on little ground and measures as one packed room
 when what is really there is the stone house's own walls repeated.
+
+#### How far a building carries
+
+Reach is derived, so a design that says nothing is on the ladder correctly the day it is written:
+an `S` plot shades the ground it stands on, `M` its own quarter, `L` its whole zone, and `XL` the
+city — or the whole realm, if it is the last link of its own `UpgradesTo` chain. Tier also moves
+the edge inside the band: each step along a chain carries two cells further into its quarter, to a
+cap.
+
+Only **lifts** are scoped. `water`, `food` and `roof` are drawn and carried, so they stay citywide
+pools whatever supplies them; `craft`, `spirit`, `learning`, `order`, `luxury` and any good another
+mod invents shade only what their work reaches.
+
+A **quarter** is measured, never declared: built ground within six cells of built ground is one
+quarter, transitively, and a work's quarter is the cluster it stands in. Nothing is stored, so a
+quarter that grows, splits, or is struck is simply measured differently next time.
+
+An `XL`'s citywide effect is live only while a **named notable heads it** — the temple's keeper of
+rites, the great scriptorium's archivist. Nobody is appointed: the office machinery names whichever
+settler present is actually suited to the work, read off the attributes the game already gives
+them. A great work nobody heads is not broken — it keeps its own zone and says so once.
+
+Declare `Reach` only when the derivation reads your design wrong.
 
 Note that this reads the same faction feelings that city **dissent** does, and answers differently on
 purpose: *polity is not proximity.* Dissent asks whether two cities a day's walk apart can be one

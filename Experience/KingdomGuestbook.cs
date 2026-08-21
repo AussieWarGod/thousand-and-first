@@ -590,8 +590,8 @@ namespace ThousandAndFirst
 		public long PlantedTick;
 
 		/// <summary>Absolute tick the haul is ready to resolve. No expiry beyond this — absence
-		/// accrues, never decays; a haul left unresolved simply waits for the next attended pass
-		/// of its destination, exactly as a raid warning waits out an absent founder.</summary>
+		/// never punishes; a haul left unresolved simply waits for the next attended pass of its
+		/// destination, exactly as a raid warning waits out an absent founder.</summary>
 		public long DueTick;
 
 		public int Mud;

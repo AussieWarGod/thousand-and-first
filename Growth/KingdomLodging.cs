@@ -183,7 +183,7 @@ namespace ThousandAndFirst
 					new List<string>(KingdomQol.OfferOf(entry.Key)),
 					capacity,
 					(occupants == null) ? 0 : occupants.Count,
-					occupants != null && AnyOccupantConflicts(refuses, selfTags, creed, occupants, KingdomFaith.EducatedCloseness(Z, QuartersOf(entry)))));
+					occupants != null && AnyOccupantConflicts(refuses, selfTags, creed, occupants, KingdomFaith.EducatedCloseness(Z, QuartersOf(entry), homes[i]))));
 			}
 			return KingdomLodgingRules.AnyWouldTake(offers, needs, out Reason);
 		}
@@ -332,7 +332,7 @@ namespace ThousandAndFirst
 					continue;
 				}
 				anyHasCapacity = true;
-				KingdomLodgingRules.Closeness quarters = KingdomFaith.EducatedCloseness(Z, QuartersOf(entry));
+				KingdomLodgingRules.Closeness quarters = KingdomFaith.EducatedCloseness(Z, QuartersOf(entry), home);
 				if (occupants != null && AnyOccupantConflicts(refuses, selfTags, creed, occupants, quarters))
 				{
 					roomiestRefused = KingdomLodgingRules.Roomier(roomiestRefused, quarters);

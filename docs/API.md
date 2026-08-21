@@ -95,6 +95,19 @@ thirst ladder fires, and it deposits only into a dedicated larder.
 `KingdomGuestbook` (notable guests with hooks that decay into rumors, and the carry-sign's
 distance-scaled hauls, one in flight, mirroring the water manifest's honesty rules).
 
+## Reach, the chain, crews, and wear
+
+`KingdomReach` / `KingdomReachRules`: reach derives from plot size × chain position
+(plot/quarter/zone/city/realm, `Reach` attribute overriding); lifts shade residents in reach;
+quarters are measured (ground within six cells of ground); an XL's city effect is live only while
+the office machinery has named a head. `KingdomMaterials` gains the refined tier (shaped timber /
+shaped stone / worked metal via staffed yards), vanilla bits (`Bits=`) and exotic finds
+(`Exotics=`) as high-craft prices, and the yard gates on L/XL construction. `KingdomCrews` /
+`KingdomCrewRules`: capability from settler stats (`CrewNeeds="strength:16"`), ablest-first
+deterministic assignment, shortfalls slow and named. `KingdomWear` / `KingdomWearRules`:
+event-only damage (raids, hard running, temperamental tech), bounded, mending auto-queued and
+holdable, costed from the chain. Stage subsidence remains unbuilt (see the brief's BACKLOG).
+
 ## How belief moves
 
 `KingdomConversion` / `KingdomConversionRules`: osmosis (shared living under one roof, scaled by

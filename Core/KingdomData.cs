@@ -109,6 +109,8 @@ namespace ThousandAndFirst
 			KingdomMergeRules.ClearDrafts();
 			KingdomQol.ClearProvides();
 			KingdomLodging.ClearCloseness();
+			KingdomReach.ClearReach();
+			KingdomCrews.ClearCrewNeeds();
 			Dictionary<string, Action<XmlDataHelper>> handlers = null;
 			handlers = new Dictionary<string, Action<XmlDataHelper>>
 			{
@@ -237,6 +239,11 @@ namespace ThousandAndFirst
 			declared.Set(KingdomMergeRules.AttrRoof, xml.GetAttribute("Roof"));
 			declared.Set(KingdomMergeRules.AttrProvides, xml.GetAttribute("Provides"));
 			declared.Set(KingdomMergeRules.AttrCloseness, xml.GetAttribute("Closeness"));
+			declared.Set(KingdomMergeRules.AttrReach, xml.GetAttribute("Reach"));
+			declared.Set(KingdomMergeRules.AttrCrewNeeds, xml.GetAttribute("CrewNeeds"));
+			declared.Set(KingdomMergeRules.AttrBits, xml.GetAttribute("Bits"));
+			declared.Set(KingdomMergeRules.AttrExotics, xml.GetAttribute("Exotics"));
+			declared.Set(KingdomMergeRules.AttrRefines, xml.GetAttribute("Refines"));
 			BuildingDraft design = KingdomMergeRules.Absorb(declared);
 			if (!KingdomRules.TryParseBuildAttributes(design.Key, design.Get(KingdomMergeRules.AttrDisplayName), design.Get(KingdomMergeRules.AttrBlueprint), design.Get(KingdomMergeRules.AttrCost), design.Get(KingdomMergeRules.AttrTicks), design.Get(KingdomMergeRules.AttrStyles), design.Get(KingdomMergeRules.AttrCategory), design.Get(KingdomMergeRules.AttrMinStage), design.Get(KingdomMergeRules.AttrStaff), design.Get(KingdomMergeRules.AttrManning), design.Get(KingdomMergeRules.AttrDefence), out var entry, out var error))
 			{
@@ -254,6 +261,12 @@ namespace ThousandAndFirst
 			KingdomZoning.RegisterGate(entry.Key, design.Get(KingdomMergeRules.AttrDistricts), design.Get(KingdomMergeRules.AttrMinZones), design.Get(KingdomMergeRules.AttrKnowledge), design.Get(KingdomMergeRules.AttrMinTech));
 			KingdomUpgrade.RegisterChain(entry.Key, design.Get(KingdomMergeRules.AttrUpgradesTo), design.Get(KingdomMergeRules.AttrUpgradeCost), design.Get(KingdomMergeRules.AttrUpgradeTicks), design.Get(KingdomMergeRules.AttrUpgradeCrew), design.Get(KingdomMergeRules.AttrUpgradeMinStage));
 			KingdomMaterials.RegisterCost(entry.Key, design.Get(KingdomMergeRules.AttrMaterials), design.Get(KingdomMergeRules.AttrUpgradeMaterials));
+			// Beside the material cost and out of the same merged draft, so a later file that
+			// re-prices a design in bits layers exactly the way one that re-prices it in timber does.
+			KingdomMaterials.RegisterHighCraft(entry.Key, design.Get(KingdomMergeRules.AttrBits), design.Get(KingdomMergeRules.AttrExotics));
+			// What makes a building a yard, and the whole of it: a third party's own sawmill is a
+			// sawyer's yard the moment it declares Refines, and the build gate counts it like ours.
+			KingdomMaterials.RegisterRefinery(entry.Key, design.Get(KingdomMergeRules.AttrRefines));
 			// The footprint and roof are registered post-merge like everything else: a file that
 			// shrinks the plot and a file that declares the footprint are two files, and only the
 			// merged pair is the design the validator can check.
@@ -267,6 +280,11 @@ namespace ThousandAndFirst
 			// merged Carries over the footprint the merged plot spec just registered. Registering it
 			// before either would measure a design nobody had finished declaring.
 			KingdomLodging.RegisterCloseness(entry.Key, design.Get(KingdomMergeRules.AttrCloseness));
+			// After the plot spec and the chain, both of which the derivation reads: a design that
+			// declares no Reach is placed on the ladder by the ground it stands on and its place in
+			// its own chain, and only a design that overrides it registers anything here.
+			KingdomReach.RegisterReach(entry.Key, design.Get(KingdomMergeRules.AttrReach));
+			KingdomCrews.RegisterCrewNeeds(entry.Key, design.Get(KingdomMergeRules.AttrCrewNeeds));
 			KingdomRules.BuildEntry parsed = entry;
 			for (int i = 0; i < _buildings.Count; i++)
 			{

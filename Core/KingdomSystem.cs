@@ -119,6 +119,12 @@ namespace ThousandAndFirst
 
 		public int ShorthandedWorks;
 
+		/// <summary>How many of the settlement's works stand damaged and run reduced
+		/// (Addendum 7). Counted fresh by <c>KingdomWear</c> on every attended pass; carried
+		/// between seats beside <see cref="IdleWorks"/> and <see cref="ShorthandedWorks"/>.
+		/// </summary>
+		public int DamagedWorks;
+
 		public bool IdleWorksAnnounced;
 
 		public int ShopTier;
@@ -966,9 +972,28 @@ namespace ThousandAndFirst
 			{
 				KingdomRaids.OnZoneActivated(this, E.Zone, survey);
 			});
+			// After raids, and the order is load-bearing in both directions. After growth, because
+			// wear folds a work's own condition into the crew stretch KingdomGrowth.AssignWork
+			// stamps on KingdomEffectiveness, and hard running is read off that same stretch. After
+			// bounties and raids, because both move a work this pass and wear must see the result:
+			// a work manned by a posted price still runs reduced if it is damaged, and a work the
+			// raiders just broke is counted, folded and queued for mending now rather than a whole
+			// pass later. Raid damage itself is a separate hook inside KingdomRaids.ExecuteRaid,
+			// invoked from the "raids" step above -- it does not run from here. Before reach, so a
+			// damaged great work shades its ground by what it is actually managing.
+			Guard("wear", delegate
+			{
+				KingdomWear.OnZoneActivated(this, E.Zone, survey);
+			});
 			Guard("offices", delegate
 			{
 				KingdomOffices.OnZoneActivated(this, E.Zone);
+			});
+			// A great work is an office SEAT (Addendum 6), so the settlement's own office settles
+			// first and the faith pass below can already ask what reaches whom.
+			Guard("reach", delegate
+			{
+				KingdomReach.OnZoneActivated(this, E.Zone, survey);
 			});
 			Guard("locus", delegate
 			{

@@ -111,6 +111,12 @@ namespace ThousandAndFirst
 
 		public int ShorthandedWorks;
 
+		/// <summary>How many of the settlement's works stand damaged and run reduced
+		/// (Addendum 7). Counted fresh by <c>KingdomWear</c> on every attended pass; carried
+		/// between seats beside <see cref="IdleWorks"/> and <see cref="ShorthandedWorks"/>.
+		/// </summary>
+		public int DamagedWorks;
+
 		public bool IdleWorksAnnounced;
 
 		public int ShopTier;

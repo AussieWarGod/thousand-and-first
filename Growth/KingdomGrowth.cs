@@ -333,26 +333,33 @@ namespace ThousandAndFirst
 				return;
 			}
 			int[] demands = new int[Survey.Works.Count];
-			bool[] thresholds = new bool[Survey.Works.Count];
 			for (int i = 0; i < Survey.Works.Count; i++)
 			{
 				demands[i] = Survey.Works[i].GetIntProperty("KingdomStaffNeeded");
-				thresholds[i] = Survey.Works[i].GetIntProperty("KingdomThresholdManning") == 1;
 			}
-						// The water detail is spent before the works are: a settler carrying buckets is not
+			// The water detail is spent before the works are: a settler carrying buckets is not
 			// also turning a mill.
 			int forWorks = System.Population - System.WaterCrew;
 			if (forWorks < 0)
 			{
 				forWorks = 0;
 			}
-			int[] crew = KingdomRules.AssignCrew(forWorks, demands, thresholds);
+			// Addendum 7: capability-aware, ablest-first, deterministic (KingdomCrewRules /
+			// KingdomCrews). The pool is exactly the forWorks-many settlers hands-spent-once has
+			// left for these works; who is capable of what is read off them, never assigned by the
+			// founder. Threshold manning is read per work inside AssignWorks, off the same
+			// KingdomThresholdManning property the old int[] path passed along beside it.
+			KingdomCrewRules.SettlerCapability[] pool = KingdomCrews.CapabilitiesOf(Survey.Settlers, forWorks);
+			KingdomCrewRules.CrewOutcome[] outcomes = KingdomCrews.AssignWorks(Survey.Works, pool);
 			int idle = 0;
 			int shorthanded = 0;
 			for (int j = 0; j < Survey.Works.Count; j++)
 			{
 				GameObject work = Survey.Works[j];
-				int effectiveness = KingdomRules.CrewEffectiveness(crew[j], demands[j]);
+				KingdomCrewRules.CrewOutcome outcome = outcomes[j];
+				int headcountEffectiveness = KingdomRules.CrewEffectiveness(outcome.Assigned, demands[j]);
+				int capabilityEffectiveness = KingdomCrewRules.CapabilityEffectiveness(outcome.BestCapability, outcome.CapabilityThreshold);
+				int effectiveness = KingdomCrewRules.CombinedEffectiveness(headcountEffectiveness, capabilityEffectiveness);
 				work.SetIntProperty("KingdomStaffed", (effectiveness > 0) ? 1 : 0);
 				work.SetIntProperty("KingdomEffectiveness", effectiveness);
 				if (effectiveness <= 0)
@@ -364,6 +371,16 @@ namespace ThousandAndFirst
 					if (effectiveness < 100)
 					{
 						shorthanded++;
+					}
+					// STANDARDS 7b: a capability shortfall is named once, and unsaid the moment a
+					// later pass draws a crew that meets it.
+					if (outcome.CapabilityThreshold > 0 && capabilityEffectiveness < 100)
+					{
+						KingdomCrews.AnnounceShortfall(work, work.ShortDisplayName, outcome.CapabilityKind, outcome.BestCapability, outcome.CapabilityThreshold);
+					}
+					else
+					{
+						KingdomCrews.ClearShortfall(work);
 					}
 					if (work.GetIntProperty("KingdomHandCranked") == 1)
 					{
@@ -385,9 +402,9 @@ namespace ThousandAndFirst
 			// to the water next pass, which is what turns staffing into a real choice rather than
 			// a free bonus.
 			int crewed = 0;
-			for (int i = 0; i < crew.Length; i++)
+			for (int i = 0; i < outcomes.Length; i++)
 			{
-				crewed += crew[i];
+				crewed += outcomes[i].Assigned;
 			}
 			System.AssignedCrew = crewed + System.WaterCrew;
 			if (idle > 0 && !System.IdleWorksAnnounced)

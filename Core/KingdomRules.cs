@@ -45,6 +45,9 @@
 
 		public const int MaxPopulation = 60;
 
+		/// <summary>The superseded flat cap. Kept only as the Camp rung's value and as the figure
+		/// the stage table is asserted against; every runtime call goes through
+		/// <see cref="MaxBuildingsForStage"/>. Retire it when the test moves.</summary>
 		public const int MaxBuildings = 40;
 
 		/// <summary>
@@ -61,6 +64,11 @@
 		/// there are hands to man it, and whether there is empty ground to put it on. This is a
 		/// safety rail against pathological object counts, not a design constraint, so it is set
 		/// where a settlement stops being readable rather than where it stops being cheap.
+		/// </para>
+		/// <para>
+		/// It counts plots, never furniture: contents of a plot (a cask rack, a bunk, a bench) are
+		/// populated the way vanilla populates a hut and are not separately capped &mdash;
+		/// <c>KingdomPlot2.CountBuilt</c> skips them.
 		/// </para>
 		/// </summary>
 		public static int MaxBuildingsForStage(GrowthStage Stage)
@@ -339,8 +347,11 @@
 		}
 
 		/// <summary>
-		/// Whether the settlement has a bed free for one more settler. Nobody arrives to
-		/// sleep in the dirt; housing is the real ceiling on population.
+		/// Whether the settlement has a bed free for one more settler &mdash; a raw tally, and no
+		/// longer the arrival gate. Addendum 4b made joining assignment-level (a settler joins only
+		/// if a home <em>they</em> would accept exists &mdash; <c>KingdomLodging</c>), so this
+		/// survives for the two places a plain count is the right question: whether a guest can be
+		/// lodged, and the founder-facing next-need line.
 		/// </summary>
 		public static bool HasRoomToHouse(int Population, int Beds)
 		{
@@ -889,12 +900,15 @@
 		/// forgiven past the same absence cap so time away is still never a debt.
 		/// </para>
 		/// <para>
-		/// It is also drawn by HANDS, not by heads: only citizens not already crewing a work walk
-		/// to the water. That is what makes staffing a real choice - every settler put on a mill
-		/// is a settler not carrying a bucket.
+		/// It is also drawn by HANDS, not by heads, and the hands are named: only settlers the
+		/// founder put on the water detail walk to the water. That is what makes staffing a real
+		/// choice - every settler on the detail is a settler not on a mill, and a settlement with
+		/// an empty detail drinks only what the founder pours in.
 		/// </para>
 		/// </summary>
-		/// <param name="Hands">Citizens free to fetch: population minus assigned crew.</param>
+		/// <param name="Hands">Settlers the founder put on the water detail
+		/// (<c>KingdomSystem.WaterCrew</c>), clamped to population by the caller. Zero means
+		/// nobody walks to the river.</param>
 		/// <param name="OpenWater">Fresh water visible in pools.</param>
 		/// <param name="StorageSpace">Room left in dedicated stores.</param>
 		/// <param name="Days">Whole days since the last fetch, capped by the caller.</param>

@@ -329,6 +329,29 @@
     <part Name="Physics" Weight="7000" />
     <stat Name="Hitpoints" Value="400" />
   </object>
+  <!-- The three processing works. Glyph-only, like r_KingdomSmithy and r_KingdomForge: STANDARDS 4
+       requires shipped art for anything carrying a Tile, and a saw-pit owes none. -->
+  <object Name="r_KingdomSawyerYard" Inherits="Furniture">
+    <stag Name="Contemporary" />
+    <part Name="Render" DisplayName="sawyer's yard" RenderString="=" ColorString="&amp;w" DetailColor="y" />
+    <part Name="Description" Short="A pit, two trestles, and timber stacked in ranks to season. One of them stands in the hole all day and gets the worse half of it." />
+    <part Name="Physics" Takeable="false" Weight="4000" />
+    <stat Name="Hitpoints" Value="240" />
+  </object>
+  <object Name="r_KingdomMasonYard" Inherits="Furniture">
+    <stag Name="Contemporary" />
+    <part Name="Render" DisplayName="mason's yard" RenderString="*" ColorString="&amp;y" DetailColor="K" />
+    <part Name="Description" Short="Bankers, chisels, and a spoil heap that grows all summer. The heap is half of every block the settlement builds with." />
+    <part Name="Physics" Takeable="false" Weight="6000" />
+    <stat Name="Hitpoints" Value="300" />
+  </object>
+  <object Name="r_KingdomSmelter" Inherits="Furniture">
+    <stag Name="Contemporary" />
+    <part Name="Render" DisplayName="smelter" RenderString="&#8745;" ColorString="&amp;R" DetailColor="W" />
+    <part Name="Description" Short="A furnace, a crucible, and somebody who can read the colour of the melt. Getting scrap back to liquid is the easy half." />
+    <part Name="Physics" Takeable="false" Weight="7000" />
+    <stat Name="Hitpoints" Value="320" />
+  </object>
   <object Name="r_KingdomGrindMill" Inherits="Furniture">
     <stag Name="Contemporary" />
     <part Name="Render" DisplayName="grinding mill" RenderString="&#8745;" ColorString="&amp;w" DetailColor="W" />
@@ -648,6 +671,42 @@
     <part Name="Physics" Weight="25" />
     <part Name="Commerce" Value="20" />
     <tag Name="r_KingdomMaterial" Value="marble" />
+    <tag Name="DynamicObjectsTable:Items" Value="*delete" />
+    <tag Name="ExcludeFromDynamicEncounters" />
+    <stag Name="Contemporary" />
+  </object>
+
+  <!-- The refined three. Nothing in the world drops these and no seam holds them: they exist
+       only because a staffed yard turned two loads of raw stock into one of them
+       (KingdomMaterialRules.RawPerRefined). Tiles are the same vanilla ones the raw materials
+       already reuse, recoloured - a dressed beam owes no art of its own. -->
+  <object Name="r_KingdomShapedTimber" Inherits="Item">
+    <part Name="Render" DisplayName="dressed beam" RenderString="/" ColorString="&amp;y" Tile="Items/sw_torch.png" TileColor="&amp;y" DetailColor="w" />
+    <part Name="Description" Short="Squared, planed, and true on every face. Half the trunk it came from went out of the saw-pit as dust." />
+    <part Name="Physics" Weight="10" Organic="true" />
+    <part Name="Commerce" Value="8" />
+    <tag Name="r_KingdomMaterial" Value="shapedtimber" />
+    <tag Name="DynamicObjectsTable:Items" Value="*delete" />
+    <tag Name="ExcludeFromDynamicEncounters" />
+    <stag Name="Contemporary" />
+  </object>
+  <object Name="r_KingdomShapedStone" Inherits="Item">
+    <part Name="Render" DisplayName="dressed block" RenderString="*" ColorString="&amp;W" Tile="Items/sw_stone_large.bmp" TileColor="&amp;W" DetailColor="w" />
+    <part Name="Description" Short="Squared on the banker until every face meets every other at a right angle. It will sit where it is put for a thousand years." />
+    <part Name="Physics" Weight="22" />
+    <part Name="Commerce" Value="10" />
+    <tag Name="r_KingdomMaterial" Value="shapedstone" />
+    <tag Name="DynamicObjectsTable:Items" Value="*delete" />
+    <tag Name="ExcludeFromDynamicEncounters" />
+    <stag Name="Contemporary" />
+  </object>
+  <object Name="r_KingdomWorkedMetal" Inherits="Item">
+    <part Name="Render" DisplayName="billet of worked metal" RenderString="=" ColorString="&amp;c" Tile="Items/sw_ingot.bmp" TileColor="&amp;c" DetailColor="w" />
+    <part Name="Description" Short="Ruin-scrap taken back to liquid and poured into a mould. Somebody read the colour of the melt and knew when to tap it." />
+    <part Name="Physics" Weight="14" />
+    <part Name="Commerce" Value="12" />
+    <part Name="Metal" />
+    <tag Name="r_KingdomMaterial" Value="workedmetal" />
     <tag Name="DynamicObjectsTable:Items" Value="*delete" />
     <tag Name="ExcludeFromDynamicEncounters" />
     <stag Name="Contemporary" />

@@ -192,6 +192,14 @@ namespace ThousandAndFirst
 		private static int ApplyScriptorium(KingdomSystem System, int Roll, SemanticEventKey Key)
 		{
 			int driftPercent = KingdomRules.DistrictsDriftPercent(System.ZoneDistricts.Values);
+			// Addendum 6: a great scriptorium with an archivist at its head reaches the whole city,
+			// so it checks the telling wherever the academy district would have. Best wins and
+			// nothing stacks, the same law the districts themselves aggregate under.
+			if (KingdomReach.CityShaded(System, KingdomReach.LearningSupport)
+				&& KingdomRules.DistrictAcademyDriftPercent < driftPercent)
+			{
+				driftPercent = KingdomRules.DistrictAcademyDriftPercent;
+			}
 			if (driftPercent >= 100)
 			{
 				return Roll;

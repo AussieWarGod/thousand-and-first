@@ -18,9 +18,10 @@ namespace ThousandAndFirst
 	/// paving, and paving is only ever offered for ground that is already a path.
 	/// </para>
 	/// <para>
-	/// Wear only ever climbs. That is not an oversight: absence accrues and never decays, so a
-	/// settlement left alone for a season is found with exactly the ways it had, and a founder is
-	/// never punished for having been elsewhere. The bound that keeps this from turning a zone
+	/// Wear only ever climbs. That is not an oversight: absence never punishes, and worn ground is
+	/// not supply-carried level &mdash; nothing here subsides, so a settlement left alone for a
+	/// season is found with exactly the ways it had, and a founder is never punished for having
+	/// been elsewhere. The bound that keeps this from turning a zone
 	/// into one flat road is not decay but reach &mdash; only cells on a real route between two
 	/// real things ever accrue at all, and only <see cref="MaxRoutesPerPass"/> routes are walked
 	/// on any one pass.
@@ -245,7 +246,7 @@ namespace ThousandAndFirst
 		/// <summary>
 		/// Traffic one route lays on each of its cells over a stretch of days. Days come from
 		/// <c>KingdomRules.HeartbeatDays</c>, so a season away lays exactly what three days lay:
-		/// absence accrues, and it accrues capped.
+		/// absence never punishes, and what it earns is capped.
 		/// </summary>
 		/// <param name="Walkers">People on the errand; clamped to
 		/// <see cref="MaxWalkersPerRoute"/>. Zero or less lays nothing.</param>
@@ -803,6 +804,13 @@ namespace ThousandAndFirst
 				case "Fulcrete":
 				case "Foamcrete":
 					return "FoamcreteFloor";
+				// The two walls the material chain added (Addendum 7): a settlement that learned
+				// to work metal or dress timber walks on what it makes, the same as every rung
+				// above. Without these a settlement that built better paved in dirt.
+				case "MetalWall":
+					return "SmallHexFloor";
+				case "WoodWall":
+					return "WoodFloor";
 				default:
 					return "DirtPath";
 			}
@@ -824,9 +832,21 @@ namespace ThousandAndFirst
 				case "Marble":
 					return KingdomMaterial.Marble;
 				case "Limestone":
-				case "Fulcrete":
 				case "Foamcrete":
 					return KingdomMaterial.Stone;
+				// The refined three, and the exact inverse of KingdomMaterials.WallBlueprint: a
+				// settlement raises Fulcrete only out of dressed stone, MetalWall only out of
+				// worked metal, WoodWall only out of dressed timber, so paving is priced in the
+				// same material the wall beside it was. Before the chain existed Fulcrete was
+				// priced as raw stone, which is what this pair corrects; MetalWall and WoodWall
+				// were not priced at all and fell to Mud, which CanPaveIn refuses outright --
+				// a settlement punished for having built better.
+				case "Fulcrete":
+					return KingdomMaterial.ShapedStone;
+				case "MetalWall":
+					return KingdomMaterial.WorkedMetal;
+				case "WoodWall":
+					return KingdomMaterial.ShapedTimber;
 				case "Verdigris":
 					return KingdomMaterial.Scrap;
 				case "BrinestalkWall":
