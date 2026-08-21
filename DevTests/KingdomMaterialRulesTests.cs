@@ -1,4 +1,4 @@
-#if TAF_TESTS
+﻿#if TAF_TESTS
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
@@ -1280,6 +1280,64 @@ namespace ThousandAndFirst.Tests
 			Assert.AreEqual("one", KingdomMaterialRules.JoinPhrases(new List<string> { "one" }));
 			Assert.AreEqual("one and two", KingdomMaterialRules.JoinPhrases(new List<string> { "one", "two" }));
 			Assert.AreEqual("one, two and three", KingdomMaterialRules.JoinPhrases(new List<string> { "one", "two", "three" }));
+		}
+
+		// --- AssessYard / YardStallLine: an idle yard makes nothing and says so once ------------
+
+		[TestCase(false, 0, 5, KingdomMaterialRules.YardStall.Unstaffed)]
+		[TestCase(false, 4, 5, KingdomMaterialRules.YardStall.Unstaffed)]
+		[TestCase(true, 0, 5, KingdomMaterialRules.YardStall.Unstaffed)]
+		[TestCase(true, -2, 5, KingdomMaterialRules.YardStall.Unstaffed)]
+		[TestCase(true, 4, 0, KingdomMaterialRules.YardStall.NoStock)]
+		[TestCase(true, 4, -1, KingdomMaterialRules.YardStall.NoStock)]
+		[TestCase(true, 1, 1, KingdomMaterialRules.YardStall.Working)]
+		public void AssessYard(bool staffed, int crew, int refinable, KingdomMaterialRules.YardStall expected)
+		{
+			Assert.AreEqual(expected, KingdomMaterialRules.AssessYard(staffed, crew, refinable));
+		}
+
+		[Test]
+		public void AssessYard_NobodyHereOutranksNothingToWork()
+		{
+			// Both true at once is the ordinary case for a yard the settlement has given up on.
+			// The founder can only act on one reason at a time, and hands are the one they can do
+			// something about tonight, so staffing is asked first.
+			Assert.AreEqual(KingdomMaterialRules.YardStall.Unstaffed,
+				KingdomMaterialRules.AssessYard(false, 0, 0));
+		}
+
+		[Test]
+		public void AnUnstaffedYardProducesNothingForItsIdleDays()
+		{
+			// The doctrine's clause 2 at the bench: an unstaffed yard shapes nothing, however
+			// many days it was handed. Not "less" -- nothing.
+			foreach (int days in new int[4] { 1, 3, 90, 400 })
+			{
+				Assert.AreEqual(0, KingdomMaterialRules.RefinedThisPass(0, days, 100, 999),
+					"an empty bench shaped something over " + days + " days");
+			}
+			// And the same stretch with a crew standing at it is not nothing, so the assertion
+			// above is about the crew and not about some other zero.
+			Assert.Greater(KingdomMaterialRules.RefinedThisPass(2, 3, 100, 999), 0);
+		}
+
+		[Test]
+		public void AStalledYardNamesItselfAndTheReason()
+		{
+			string unstaffed = KingdomMaterialRules.YardStallLine(KingdomMaterialRules.YardStall.Unstaffed, KingdomYard.Mason, "Ekuemekiyye");
+			StringAssert.Contains(KingdomMaterialRules.YardName(KingdomYard.Mason), unstaffed);
+			StringAssert.Contains("Ekuemekiyye", unstaffed);
+			string noStock = KingdomMaterialRules.YardStallLine(KingdomMaterialRules.YardStall.NoStock, KingdomYard.Mason, "Ekuemekiyye");
+			StringAssert.Contains("stockpiles", noStock);
+			Assert.AreNotEqual(unstaffed, noStock, "both stalls give the founder the same sentence");
+		}
+
+		[Test]
+		public void AWorkingYardSaysNothingWhichIsHowTheAnnouncementIsUnsaid()
+		{
+			// Null is the caller's signal to clear its announce flag, which is what makes the
+			// reason given once per STALL rather than once per yard forever (STANDARDS 7b).
+			Assert.IsNull(KingdomMaterialRules.YardStallLine(KingdomMaterialRules.YardStall.Working, KingdomYard.Sawyer, "Ekuemekiyye"));
 		}
 
 	}

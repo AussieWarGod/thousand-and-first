@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using XRL;
 using XRL.Messages;
@@ -104,6 +104,17 @@ namespace ThousandAndFirst
 	/// <c>KingdomRules.HeartbeatDays</c> for how long it takes, so a long absence resolves a few
 	/// honest days of mending and never the whole job in one step. Nothing here spends water, and
 	/// nothing here ever fails a work past <see cref="KingdomMaterialRules.MaxWearPercent"/>.
+	/// </para>
+	/// <para>
+	/// <b>Two clock notes, both deliberate.</b> First, <see cref="AdvanceRepair"/> is the
+	/// reference for checkpoint ordering in this mod: it reads the gate, names the block once
+	/// (STANDARDS 7b), and only then advances the stamp &mdash; so a mending nobody has hands for
+	/// loses those days rather than banking them for a crew that was never there.
+	/// <c>KingdomMaterials.WorkYard</c> now keeps the same order for the same reason. Second, the
+	/// day count itself is still <c>KingdomRules.HeartbeatDays</c>, which is capped: mending is
+	/// an unmigrated row (<c>KingdomRules.LegacyAbsenceCap</c>), waiting on the package that owns
+	/// the rest of the worked-property family. Uncapping it is a denominator swap with nothing
+	/// else attached &mdash; the labour term it needs is already here.
 	/// </para>
 	/// </summary>
 	public static class KingdomWear

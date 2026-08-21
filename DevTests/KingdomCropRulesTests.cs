@@ -1,4 +1,4 @@
-#if TAF_TESTS
+﻿#if TAF_TESTS
 using NUnit.Framework;
 using ThousandAndFirst;
 
@@ -57,7 +57,7 @@ namespace ThousandAndFirst.Tests
 		{
 			foreach (int population in new int[3] { 8, 40, 60 })
 			{
-				int reserve = KingdomRules.UpkeepDrams(population) * KingdomRules.MaxUpkeepDaysCharged;
+				int reserve = KingdomRules.UpkeepDrams(population) * KingdomRules.ReserveDays;
 				int enough = reserve + KingdomCropRules.PlantWaterCostDrams;
 				Assert.IsTrue(KingdomCropRules.CanAffordPlanting(enough, population),
 					"refused to plant with the reserve intact at population " + population);
@@ -84,13 +84,14 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void CanAffordPlanting_ReserveIsExactlyThreeDaysOfCurrentUpkeep()
+		public void CanAffordPlanting_ReserveIsExactlyReserveDaysOfCurrentUpkeep()
 		{
 			// Pins the reserve to KingdomRules' own constants rather than a private guess, so a
 			// change to either constant is caught here instead of silently loosening the guard
-			// that keeps the plot from ever starting a dry streak.
+			// that keeps the plot from ever starting a dry streak. The basis is ReserveDays -- a
+			// cushion depth -- and no longer the retired absence cap it used to borrow.
 			int population = 20;
-			int reserve = KingdomRules.UpkeepDrams(population) * KingdomRules.MaxUpkeepDaysCharged;
+			int reserve = KingdomRules.UpkeepDrams(population) * KingdomRules.ReserveDays;
 			int exactBoundary = reserve + KingdomCropRules.PlantWaterCostDrams;
 			Assert.IsTrue(KingdomCropRules.CanAffordPlanting(exactBoundary, population));
 			Assert.IsFalse(KingdomCropRules.CanAffordPlanting(exactBoundary - 1, population));

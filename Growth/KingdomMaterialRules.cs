@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Text;
 
 namespace ThousandAndFirst
@@ -1128,6 +1128,72 @@ namespace ThousandAndFirst
 				units = MaxRefinedPerPass;
 			}
 			return (units > RefinableUnits) ? RefinableUnits : units;
+		}
+
+		/// <summary>Why a yard is or is not shaping anything for the days it was just handed.
+		/// <see cref="YardStall.Working"/> is the only verdict that produces.</summary>
+		public enum YardStall
+		{
+			/// <summary>A crew is standing there and there is stock to work.</summary>
+			Working,
+
+			/// <summary>Nobody is at the bench. The days are still spent -- an empty yard does not
+			/// owe its labour to whoever staffs it next -- and they buy nothing.</summary>
+			Unstaffed,
+
+			/// <summary>A crew is there and the stockpiles are empty.</summary>
+			NoStock
+		}
+
+		/// <summary>
+		/// Which of the two ways a yard can stand idle this is, if either.
+		/// <para>
+		/// Split out from the caller so the ORDER of the two gates is a thing a test can hold:
+		/// staffing is asked first, because "nobody is here" is the truer answer than "there is
+		/// nothing to work" when both are true, and the founder can only act on one of them at a
+		/// time.
+		/// </para>
+		/// </summary>
+		/// <param name="Staffed">Whether the staffing pass drew any crew for it.</param>
+		/// <param name="Crew">Hands the pass actually put there, after effectiveness.</param>
+		/// <param name="RefinableUnits">What the raw stock covers
+		/// (<see cref="RefinableFrom"/>).</param>
+		public static YardStall AssessYard(bool Staffed, int Crew, int RefinableUnits)
+		{
+			if (!Staffed || Crew <= 0)
+			{
+				return YardStall.Unstaffed;
+			}
+			if (RefinableUnits <= 0)
+			{
+				return YardStall.NoStock;
+			}
+			return YardStall.Working;
+		}
+
+		/// <summary>
+		/// What a stalled yard says, once, where the founder will see it (STANDARDS 7b). Null for
+		/// <see cref="YardStall.Working"/>, which is the caller's signal to unsay whatever it
+		/// said last.
+		/// <para>
+		/// Both stalls name the yard and the city, because the settlement-wide idle-works line
+		/// reports a COUNT and never says which bench it was &mdash; and "three works stand idle"
+		/// is not a thing a founder can act on.
+		/// </para>
+		/// </summary>
+		public static string YardStallLine(YardStall Stall, KingdomYard Yard, string SeatName)
+		{
+			string yard = YardName(Yard);
+			string place = string.IsNullOrEmpty(SeatName) ? "the settlement" : SeatName;
+			switch (Stall)
+			{
+			case YardStall.Unstaffed:
+				return "The " + yard + " of " + place + " stands with nobody at the bench. Nothing is being shaped there.";
+			case YardStall.NoStock:
+				return "The " + yard + " of " + place + " stands over an empty bench. There is nothing in the stockpiles for it to work.";
+			default:
+				return null;
+			}
 		}
 
 		/// <summary>Raw loads a run of refining eats. Always exactly what it made, times

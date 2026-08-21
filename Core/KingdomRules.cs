@@ -257,7 +257,59 @@
 
 		public const long TicksPerDay = 1200L;
 
-		public const int MaxUpkeepDaysCharged = 3;
+		// --- Where MaxUpkeepDaysCharged lived ---------------------------------------------------
+		//
+		// It was 3, and it did two unrelated jobs under one name: it CAPPED the elapsed days any
+		// clock would charge (forgiving the rest by re-anchoring the checkpoint to now), and it
+		// was borrowed as a QUANTITY - "three days of upkeep" - by the crop, upgrade and manifest
+		// reserves. Addendum 8 clause 1 retires the first job: the settlement lives whether the
+		// founder is there or not, so elapsed time is charged in full against what the
+		// settlement's own supply carried through it, and what bounds the loss is subsidence
+		// toward the supported equilibrium, never forgiveness. The second job survives under its
+		// own honest name, <see cref="ReserveDays"/>.
+		//
+		// RELEASE-ERA HARNESS, READ THIS SEAM (CLOCK-REWORK-CHANGE-MAP.md 4.1). No save has ever
+		// been written by a shipped build, so this wave ships NO migration machinery (Addendum 9)
+		// and simply refuses pre-rework layouts at the version gate in KingdomSystem.Read. When
+		// the first release makes migration real, the job here is: on reading a layout older than
+		// the uncapping, re-anchor every clock stamp to The.Game.TimeTicks exactly once -
+		// LastHeartbeatTick, LastFetchTick, LastVisitTick, LastDissentTick, NextArrivalTick, and
+		// the per-object stamps KingdomRefineWorked, KingdomStrikeWorked, KingdomRepairWorked,
+		// r_KingdomClearance.LastWorkedTick, r_KingdomPowerWork.LastResolvedTick,
+		// r_KingdomPowerStore.LastResolvedTick, r_TAF_RoadsWalked. Without that, the first load
+		// resolves a season of real elapsed against a stamp the old cap left hundreds of days
+		// stale and bills it in one pass, which is the exact unchosen debt clause 4 forbids.
+		//
+		// DO NOT re-anchor r_KingdomNotice.PostedTick, KingdomCarryHaul.PlantedTick, or
+		// r_KingdomNotice.TakenTick. Those three are not clocks: each is fed to
+		// SemanticEventKey.TryCreate as a draw ordinal, and moving one silently re-rolls every
+		// determinism question already answered against it.
+
+		/// <summary>
+		/// Days of upkeep a settlement keeps in hand before it spends water on anything
+		/// discretionary - a planting, an upgrade, a manifest's outbound load. A QUANTITY, and
+		/// only ever that: it says how deep the cushion is, never how much elapsed time a clock
+		/// is willing to look at. It inherits the retired cap's value because three days of
+		/// drinking was always the size of the cushion the reserves wanted; it no longer inherits
+		/// its meaning.
+		/// </summary>
+		public const int ReserveDays = 3;
+
+		/// <summary>
+		/// The retired absence cap, kept alive ONLY for the counters this wave has not reached
+		/// yet, and named so that no reader mistakes it for a rule anybody still believes in.
+		/// <para>
+		/// Its remaining consumers are <see cref="HeartbeatDays"/> and
+		/// <see cref="HeartbeatCheckpoint"/>, and through them: road traffic
+		/// (<c>KingdomRoads</c>), power works and stores (<c>KingdomPower</c>,
+		/// <c>KingdomPowerRules.MaxDaysCredited</c>), the three <c>KingdomMaterials</c> workers,
+		/// mending (<c>KingdomWear</c>), and dissent (<c>KingdomCreed</c>). Dissent is the one
+		/// that must NOT be uncapped on its own: secession fires the pass dissent reaches its
+		/// threshold, so uncapping accrual before the arrestable window exists would make an
+		/// absence lose a city FASTER than presence does, which is clause 3 exactly inverted.
+		/// </para>
+		/// </summary>
+		public const int LegacyAbsenceCap = 3;
 
 		/// <summary>Daily draw per settler, per hundred, by stage. A camp lives thin; a city
 		/// drinks like a city. Prosperity-scaled COST is the loved half of the pattern - what
@@ -286,29 +338,177 @@
 			return UpkeepDrams(Population, GrowthStage.Camp);
 		}
 
+		// --- The clock substrate -----------------------------------------------------------------
+		//
+		// Two primitives, and everything with a clock in it should end up reading them.
+		// ElapsedDays says how much world time went by; AdvanceCheckpoint spends exactly the
+		// whole days that were just charged and keeps the remainder, so a founder cannot buy a
+		// free day by stepping in and out of the zone. Neither of them forgives anything, and
+		// neither of them is a rate on its own: ActivityDays and LabouredTicks are how a caller
+		// turns elapsed time into work done, which is Addendum 8 clause 2 - time x labour x
+		// infrastructure, never time alone.
+		//
+		// The arithmetic is the kernel's (Simulation/Kernel/TickMath), which is checked,
+		// overflow-safe, and pinned by a BigInteger oracle. Four subsystems hand-rolled it; this
+		// is the first production caller.
+
 		/// <summary>
-		/// Days of settlement life to resolve on arrival. Absence is forgiven beyond the cap:
-		/// a season away costs the same as three days, so leaving is never punished.
+		/// Whole days of world time in a stretch of elapsed ticks. Uncapped: a season away is a
+		/// season, and what bounds its cost is what the settlement's own supply carried through
+		/// it, never a forgiveness ceiling.
+		/// <para>
+		/// Fails closed at zero on anything that is not a real forward stretch - a negative
+		/// elapsed, or a value so large the kernel's checked arithmetic refuses it. Zero is the
+		/// safe answer in both cases because zero days mints no debt.
+		/// </para>
 		/// </summary>
-		/// <param name="ElapsedTicks">Ticks since the last heartbeat.</param>
-		/// <returns>Whole days to run, 0 to <see cref="MaxUpkeepDaysCharged"/>.</returns>
-		public static int HeartbeatDays(long ElapsedTicks)
+		/// <param name="ElapsedTicks">Ticks since the stamp being resolved.</param>
+		/// <returns>Whole days, 0 or more.</returns>
+		public static int ElapsedDays(long ElapsedTicks)
 		{
-			if (ElapsedTicks <= 0)
+			if (ElapsedTicks < TicksPerDay)
 			{
 				return 0;
 			}
-			long days = ElapsedTicks / TicksPerDay;
-			if (days > MaxUpkeepDaysCharged)
+			if (!Simulation.Kernel.TickMath.TryCountFixedPeriodDue(ElapsedTicks, TicksPerDay, TicksPerDay, out var count, out var _, out var _))
 			{
-				days = MaxUpkeepDaysCharged;
+				return 0;
 			}
-			return (int)days;
+			return (count > int.MaxValue) ? int.MaxValue : (int)count;
 		}
 
 		/// <summary>
-		/// Advances a heartbeat without losing a partial day. Time beyond the absence cap is
-		/// forgiven by starting a fresh checkpoint at the current tick.
+		/// Moves a "last resolved" stamp forward by exactly the whole days a caller just charged,
+		/// keeping the part-day remainder so it counts toward the next one.
+		/// <para>
+		/// The retired <c>HeartbeatCheckpoint</c> re-anchored to <paramref name="CurrentTick"/>
+		/// once the elapsed passed the absence cap, which is what "forgiveness" physically was.
+		/// Nothing is re-anchored here. A stamp at or ahead of now is treated as a fresh start
+		/// rather than repaired, matching the shipped shape: a clock that ran backwards is a
+		/// corrupt reading, and re-billing from it would be worse than beginning again.
+		/// </para>
+		/// </summary>
+		public static long AdvanceCheckpoint(long PreviousTick, long CurrentTick)
+		{
+			if (PreviousTick <= 0 || CurrentTick <= PreviousTick)
+			{
+				return CurrentTick;
+			}
+			int days = ElapsedDays(CurrentTick - PreviousTick);
+			if (days <= 0)
+			{
+				return PreviousTick;
+			}
+			return PreviousTick + days * TicksPerDay;
+		}
+
+		/// <summary>
+		/// Days out of a stretch that a work was actually running: elapsed days scaled by the
+		/// effectiveness its crew brought (<see cref="CrewEffectiveness"/> for headcount,
+		/// <c>KingdomCrewRules.CombinedEffectiveness</c> once capability is folded in). An
+		/// unstaffed work gets none of them however long the stretch was; a fully-crewed one gets
+		/// all of them.
+		/// <para>
+		/// This is the denominator every "how long has this been going" counter should be in
+		/// once the doctrine reaches it - idleness accrues nothing, running accrues honestly.
+		/// </para>
+		/// </summary>
+		public static int ActivityDays(int Days, int EffectivenessPercent)
+		{
+			if (Days <= 0 || EffectivenessPercent <= 0)
+			{
+				return 0;
+			}
+			if (EffectivenessPercent >= 100)
+			{
+				return Days;
+			}
+			return Days * EffectivenessPercent / 100;
+		}
+
+		/// <summary>
+		/// The same rule at tick resolution, for work measured in labour ticks rather than days
+		/// (a raising, whose authored duration is in ticks). Exact and overflow-free: the whole
+		/// hundreds and the remainder are scaled separately rather than multiplying first.
+		/// </summary>
+		public static long LabouredTicks(long ElapsedTicks, int EffectivenessPercent)
+		{
+			if (ElapsedTicks <= 0 || EffectivenessPercent <= 0)
+			{
+				return 0;
+			}
+			if (EffectivenessPercent >= 100)
+			{
+				return ElapsedTicks;
+			}
+			return ElapsedTicks / 100L * EffectivenessPercent + ElapsedTicks % 100L * EffectivenessPercent / 100L;
+		}
+
+		/// <summary>
+		/// Hands a raising wants standing at it to go at its authored pace. Two: a design's
+		/// <c>BuildTicks</c> is the duration a properly-crewed settlement takes, so a pair of
+		/// free hands is "properly crewed" and anything less is honestly slower. Small on
+		/// purpose - the point of the labour term is that an EMPTY settlement raises nothing,
+		/// not that raising becomes a staffing puzzle.
+		/// </summary>
+		public const int RaisingHandsWanted = 2;
+
+		/// <summary>
+		/// How fast a scaffold rises, 0 to 100, from the hands the water detail and the works
+		/// left over (<c>KingdomMaterialRules.FreeHands</c>). Zero hands is zero: a settlement
+		/// with nobody in it raises nothing, however long the founder is away - Addendum 8
+		/// clause 2, and the author's ruling that a scaffold nobody works on does not rise.
+		/// </summary>
+		public static int RaisingEffectiveness(int FreeHands)
+		{
+			return CrewEffectiveness(FreeHands, RaisingHandsWanted);
+		}
+
+		/// <summary>
+		/// Why a raising is standing still or crawling, said once (STANDARDS 7b). Null when the
+		/// crew is whole, which is the caller's signal to unsay whatever it said last.
+		/// </summary>
+		/// <param name="DisplayName">What is being raised.</param>
+		/// <param name="FreeHands">Hands left over for it this pass.</param>
+		public static string RaisingShortfallLine(string DisplayName, int FreeHands)
+		{
+			string name = string.IsNullOrEmpty(DisplayName) ? "structure" : DisplayName;
+			if (FreeHands <= 0)
+			{
+				return "The " + name + " stands half-raised. There is nobody free to work on it, and a frame does not lift itself.";
+			}
+			if (FreeHands >= RaisingHandsWanted)
+			{
+				return null;
+			}
+			return "The " + name + " rises slowly: " + FreeHands + " pair of hands on it where " + RaisingHandsWanted + " are wanted.";
+		}
+
+		/// <summary>
+		/// Days of settlement life to resolve on arrival, capped at
+		/// <see cref="LegacyAbsenceCap"/>.
+		/// <para>
+		/// SUPERSEDED by <see cref="ElapsedDays"/> (Addendum 8 clause 1). Kept only for the
+		/// counters this wave has not reached - see <see cref="LegacyAbsenceCap"/> for the list
+		/// and for why dissent in particular must not be uncapped without secession's arrestable
+		/// window landing beside it. New callers take <see cref="ElapsedDays"/>.
+		/// </para>
+		/// </summary>
+		/// <param name="ElapsedTicks">Ticks since the last resolve.</param>
+		/// <returns>Whole days to run, 0 to <see cref="LegacyAbsenceCap"/>.</returns>
+		public static int HeartbeatDays(long ElapsedTicks)
+		{
+			int days = ElapsedDays(ElapsedTicks);
+			return (days > LegacyAbsenceCap) ? LegacyAbsenceCap : days;
+		}
+
+		/// <summary>
+		/// Advances a capped checkpoint, forgiving time beyond
+		/// <see cref="LegacyAbsenceCap"/> by starting fresh at the current tick.
+		/// <para>
+		/// SUPERSEDED by <see cref="AdvanceCheckpoint"/>, which forgives nothing. Same remaining
+		/// callers, same reason.
+		/// </para>
 		/// </summary>
 		public static long HeartbeatCheckpoint(long PreviousTick, long CurrentTick)
 		{
@@ -316,12 +516,12 @@
 			{
 				return CurrentTick;
 			}
-			long days = (CurrentTick - PreviousTick) / TicksPerDay;
+			int days = ElapsedDays(CurrentTick - PreviousTick);
 			if (days <= 0)
 			{
 				return PreviousTick;
 			}
-			if (days > MaxUpkeepDaysCharged)
+			if (days > LegacyAbsenceCap)
 			{
 				return CurrentTick;
 			}
@@ -861,18 +1061,35 @@
 			return "word of shared water reached " + Origin;
 		}
 
+		/// <summary>
+		/// What the settlement drank over a stretch of elapsed time, uncapped (Addendum 8
+		/// clause 1): people go on drinking whether or not anyone is watching.
+		/// <para>
+		/// This is a BILL, not a debt. Nothing here can go negative and nothing carries over -
+		/// the caller draws it against real stores, which floor at zero, and what a settlement
+		/// could not pay it simply did not drink. Saturates rather than wrapping, so a corrupt
+		/// stamp asks for "more than everything" instead of quietly asking for a negative amount.
+		/// </para>
+		/// </summary>
 		public static int UpkeepForElapsed(int Population, long ElapsedTicks)
 		{
 			if (Population <= 0 || ElapsedTicks <= 0)
 			{
 				return 0;
 			}
-			long days = ElapsedTicks / TicksPerDay;
-			if (days > MaxUpkeepDaysCharged)
+			return SaturateToInt(ElapsedDays(ElapsedTicks) * (long)UpkeepDrams(Population));
+		}
+
+		/// <summary>Clamps a whole-day total to what an int can hold. A settlement's stores are
+		/// int-denominated, so a bill past that ceiling and a bill at it draw exactly the same
+		/// thing: everything there is.</summary>
+		private static int SaturateToInt(long Value)
+		{
+			if (Value <= 0L)
 			{
-				days = MaxUpkeepDaysCharged;
+				return 0;
 			}
-			return (int)(days * (long)UpkeepDrams(Population));
+			return (Value > int.MaxValue) ? int.MaxValue : (int)Value;
 		}
 
 		/// <summary>
@@ -884,10 +1101,11 @@
 			return PolicyUpkeepForElapsed(Population, ElapsedTicks, Stores, GrowthStage.Camp);
 		}
 
-		/// <summary>Whole-day upkeep after stores policy, at the settlement's own stage.</summary>
+		/// <summary>Whole-day upkeep after stores policy, at the settlement's own stage.
+		/// Uncapped, for the reason <see cref="UpkeepForElapsed"/> is.</summary>
 		public static int PolicyUpkeepForElapsed(int Population, long ElapsedTicks, StoresPolicy Stores, GrowthStage Stage)
 		{
-			return PolicyUpkeep(UpkeepDrams(Population, Stage), Stores) * HeartbeatDays(ElapsedTicks);
+			return SaturateToInt(PolicyUpkeep(UpkeepDrams(Population, Stage), Stores) * (long)ElapsedDays(ElapsedTicks));
 		}
 
 		/// <summary>
@@ -897,7 +1115,10 @@
 		/// no clock at all, while upkeep was charged per elapsed day - so a founder could step out
 		/// of the zone and back in to fetch again, without limit, and the water economy could
 		/// never bind on any site near a pool. Fetch is now paid per day like everything else,
-		/// forgiven past the same absence cap so time away is still never a debt.
+		/// over the same uncapped elapsed the upkeep bill is drawn against - the detail keeps
+		/// walking to the river through an absence exactly as the settlement keeps drinking
+		/// through it, so the two net honestly against each other instead of both stopping at
+		/// three days.
 		/// </para>
 		/// <para>
 		/// It is also drawn by HANDS, not by heads, and the hands are named: only settlers the
@@ -911,14 +1132,17 @@
 		/// nobody walks to the river.</param>
 		/// <param name="OpenWater">Fresh water visible in pools.</param>
 		/// <param name="StorageSpace">Room left in dedicated stores.</param>
-		/// <param name="Days">Whole days since the last fetch, capped by the caller.</param>
+		/// <param name="Days">Whole days since the last fetch. Uncapped now that upkeep is: the
+		/// detail walked to the river every one of those days, and what actually bounds the haul
+		/// is the two real things beside it - how much open water is standing there and how much
+		/// room is left in the stores.</param>
 		public static int FetchableDrams(int Hands, int OpenWater, int StorageSpace, int Days)
 		{
-			if (Days <= 0)
+			if (Days <= 0 || Hands <= 0)
 			{
 				return 0;
 			}
-			int num = Hands * FetchDramsPerSettler * Days;
+			long num = (long)Hands * FetchDramsPerSettler * Days;
 			if (OpenWater < num)
 			{
 				num = OpenWater;
@@ -927,11 +1151,7 @@
 			{
 				num = StorageSpace;
 			}
-			if (num >= 0)
-			{
-				return num;
-			}
-			return 0;
+			return (num > 0L) ? (int)num : 0;
 		}
 
 		public static long ArrivalIntervalTicks(int Population)

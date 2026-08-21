@@ -1,4 +1,4 @@
-namespace ThousandAndFirst
+﻿namespace ThousandAndFirst
 {
 	/// <summary>
 	/// Engine-free rules for the settlement's power. Power here is civic labour, not wiring:
@@ -94,8 +94,16 @@ namespace ThousandAndFirst
 		public const int PostDailyNeedCharge = 4000;
 
 		/// <summary>Days of settlement life one visit may credit. Absence beyond this is
-		/// forgiven, exactly as it is for water.</summary>
-		public const int MaxDaysCredited = KingdomRules.MaxUpkeepDaysCharged;
+		/// forgiven.
+		/// <para>
+		/// UNMIGRATED. Water no longer keeps this bargain - upkeep and fetch both run the full
+		/// elapsed now (Addendum 8 clause 1) - and power is already fully labour- and
+		/// effectiveness-gated, so uncapping it is a denominator swap with nothing else attached.
+		/// It waits only because <c>KingdomPower</c> is not this package's ground. See
+		/// <see cref="KingdomRules.LegacyAbsenceCap"/>.
+		/// </para>
+		/// </summary>
+		public const int MaxDaysCredited = KingdomRules.LegacyAbsenceCap;
 
 		public const string IdleNoWorks = "Nothing here makes power yet. A crank mill would give the post something to draw on.";
 
@@ -238,9 +246,14 @@ namespace ThousandAndFirst
 
 		/// <summary>
 		/// What a day's output comes to across an absence. Days beyond
-		/// <see cref="MaxDaysCredited"/> are forgiven rather than paid, the same bargain water
-		/// keeps: a season away is worth the same as three days, so leaving is never rewarded
-		/// and never punished.
+		/// <see cref="MaxDaysCredited"/> are forgiven rather than paid: a season away is worth the
+		/// same as three days, so leaving is never rewarded and never punished.
+		/// <para>
+		/// Water used to keep the same bargain and no longer does &mdash; upkeep and fetch both
+		/// run the full elapsed (Addendum 8 clause 1). This is an unmigrated row, not a
+		/// disagreement: power is already staffing- and effectiveness-gated end to end, so
+		/// uncapping it is a denominator swap with nothing else attached.
+		/// </para>
 		/// </summary>
 		/// <param name="DailyCharge">One day's output, from <see cref="DailyOutput"/>.</param>
 		/// <param name="Days">Days elapsed; anything at or below zero yields nothing.</param>

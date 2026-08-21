@@ -1,4 +1,4 @@
-#if TAF_TESTS
+﻿#if TAF_TESTS
 using System.Collections.Generic;
 using NUnit.Framework;
 using ThousandAndFirst;
@@ -126,11 +126,13 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void AbsenceIsCappedNotBanked()
+		public void AbsenceIsStillCappedHereBecauseRoadsAreAnUnmigratedRow()
 		{
-			// Days come from KingdomRules.HeartbeatDays, so a season away is worth the same as
-			// the cap. If that ever stops being true here, wear stops being witnessed-only.
-			int capped = KingdomRoadRules.TrafficFor(2, KingdomRules.MaxUpkeepDaysCharged, KingdomRoadRules.RouteKind.HomeToWork);
+			// Traffic is already walkers x days -- the doctrine's own formula -- so uncapping it
+			// is a denominator swap with nothing else attached. It waits only because KingdomRoads
+			// is not the uncapping package's ground. Until then the days it is handed still come
+			// from the capped HeartbeatDays, and this pins that rather than the retired constant.
+			int capped = KingdomRoadRules.TrafficFor(2, KingdomRules.LegacyAbsenceCap, KingdomRoadRules.RouteKind.HomeToWork);
 			Assert.AreEqual(capped, KingdomRoadRules.TrafficFor(2, KingdomRules.HeartbeatDays(KingdomRules.TicksPerDay * 400L), KingdomRoadRules.RouteKind.HomeToWork));
 		}
 

@@ -1,4 +1,4 @@
-#if TAF_TESTS
+﻿#if TAF_TESTS
 using System.Collections.Generic;
 using NUnit.Framework;
 using ThousandAndFirst;
@@ -259,12 +259,16 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void AbsenceCannotOutrunPresence()
 		{
-			// The guarantee stated in the pillars, held where it is actually enforced: whatever
-			// HeartbeatDays is handed, it is capped, so a season away costs three days.
+			// Dissent is the ONE counter the uncapping deliberately leaves alone, and this is why:
+			// secession fires on the same pass dissent reaches its threshold, with no arrestable
+			// window in front of it. Uncapping accrual before that window exists would make an
+			// absence lose a city faster than presence does -- Addendum 8 clause 3 exactly
+			// inverted. So KingdomCreed still reads the capped HeartbeatDays, and this test holds
+			// the line until the package that builds the brink can move both together.
 			int aSeason = KingdomRules.HeartbeatDays(KingdomRules.TicksPerDay * 90);
-			int threeDays = KingdomRules.HeartbeatDays(KingdomRules.TicksPerDay * KingdomRules.MaxUpkeepDaysCharged);
-			Assert.AreEqual(threeDays, aSeason);
-			Assert.AreEqual(KingdomCreedRules.AccrueDissent(0, 100, threeDays), KingdomCreedRules.AccrueDissent(0, 100, aSeason));
+			int atTheCap = KingdomRules.HeartbeatDays(KingdomRules.TicksPerDay * KingdomRules.LegacyAbsenceCap);
+			Assert.AreEqual(atTheCap, aSeason);
+			Assert.AreEqual(KingdomCreedRules.AccrueDissent(0, 100, atTheCap), KingdomCreedRules.AccrueDissent(0, 100, aSeason));
 		}
 
 		[TestCase(50, -20, 30)]

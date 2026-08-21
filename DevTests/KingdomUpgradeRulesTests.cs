@@ -1,4 +1,4 @@
-#if TAF_TESTS
+﻿#if TAF_TESTS
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
@@ -127,9 +127,13 @@ namespace ThousandAndFirst.Tests
 		[TestCase(10, GrowthStage.City)]
 		[TestCase(0, GrowthStage.Village)]
 		[TestCase(37, GrowthStage.Town)]
-		public void ReserveDrams_IsTheWholeAbsenceTheSettlementIsEverChargedFor(int population, GrowthStage stage)
+		public void ReserveDrams_IsTheNamedReserveDepthAtThisSettlementsOwnRate(int population, GrowthStage stage)
 		{
-			Assert.AreEqual(KingdomRules.UpkeepDrams(population, stage) * KingdomRules.MaxUpkeepDaysCharged,
+			// It used to be described as "the whole absence the settlement is ever charged for".
+			// There is no such length any more -- absence is charged in full -- so the reserve is
+			// what it always physically was: a named cushion, ReserveDays deep, at this
+			// settlement's own per-head rate.
+			Assert.AreEqual(KingdomRules.UpkeepDrams(population, stage) * KingdomRules.ReserveDays,
 				KingdomUpgradeRules.ReserveDrams(population, stage));
 		}
 

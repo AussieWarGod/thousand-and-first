@@ -1,4 +1,4 @@
-#if TAF_TESTS
+﻿#if TAF_TESTS
 using NUnit.Framework;
 using ThousandAndFirst;
 
@@ -82,12 +82,15 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void MaxDaysCredited_IsTheSameBargainWaterKeeps()
+		public void MaxDaysCredited_IsAnUnmigratedRowAndSaysSo()
 		{
-			// Power must not credit a longer absence than upkeep charges for, or a founder
-			// would profit from staying away. Pinned to the shared constant rather than a
-			// private guess so a change to one is caught here instead of drifting apart.
-			Assert.AreEqual(KingdomRules.MaxUpkeepDaysCharged, KingdomPowerRules.MaxDaysCredited);
+			// Water no longer keeps this bargain: upkeep and fetch both run the full elapsed
+			// (Addendum 8 clause 1). Power's credit cap therefore stands alone, pinned to the
+			// legacy constant that names itself as the thing the rework has not reached yet, so
+			// that when KingdomPower is uncapped this test is the one that says "and this too".
+			Assert.AreEqual(KingdomRules.LegacyAbsenceCap, KingdomPowerRules.MaxDaysCredited);
+			Assert.Greater(KingdomRules.ElapsedDays(KingdomRules.TicksPerDay * 90), KingdomPowerRules.MaxDaysCredited,
+				"the uncapped clock stopped being longer than power's credit window");
 		}
 
 		// --- WaterAvailabilityPercent: the hydraulics, and what happens with no water ----------

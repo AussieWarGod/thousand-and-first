@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using XRL;
 using XRL.Messages;
@@ -1669,6 +1669,11 @@ namespace ThousandAndFirst
 		/// </summary>
 		public const string RefineIdleProperty = "KingdomRefineIdleSaid";
 
+		/// <summary>Set once the founder has been told a yard has nobody standing at it. Cleared
+		/// the moment a crew is drawn for it, so an unstaffed yard names itself once per stall
+		/// and not once per pass (STANDARDS 7b).</summary>
+		public const string RefineUnstaffedProperty = "KingdomRefineUnstaffedSaid";
+
 		/// <summary>
 		/// Works one processing yard for the days since it last ran: raw stock out of the
 		/// stockpiles, refined material back into them, and the first run of a yard written into
@@ -1676,8 +1681,17 @@ namespace ThousandAndFirst
 		/// <para>
 		/// Nothing here reads a calendar for anything but "how many days of labour is this crew
 		/// owed". A yard nobody staffs makes nothing however long the founder is away, a yard with
-		/// no stock makes nothing and says so, and neither of them wears out, because time is
-		/// labour and never decay.
+		/// no stock makes nothing, both of them say which it was, and neither wears out, because
+		/// time is labour and never decay.
+		/// </para>
+		/// <para>
+		/// <b>Idle days are spent, not banked.</b> The day budget advances whether or not anyone
+		/// stood at the bench, so an empty yard does not accumulate a debt of labour that a later
+		/// crew discharges in one burst. That was already what the code did; what it did not do
+		/// was admit it. The gate is now read before the budget is spent, so the two decisions
+		/// are made in the order they are explained, and the unstaffed case names itself once
+		/// (STANDARDS 7b) instead of leaning on the settlement-wide idle-works tally, which
+		/// reports a COUNT and never says which bench it was.
 		/// </para>
 		/// </summary>
 		private static void WorkYard(KingdomSystem System, Zone Z, GameObject Yard, int Strength, int Intelligence, long TimeTicks)
@@ -1697,27 +1711,41 @@ namespace ThousandAndFirst
 			{
 				return;
 			}
-			WriteTick(Yard, RefineWorkedProperty, KingdomRules.HeartbeatCheckpoint(worked, TimeTicks));
+			// The gates are read BEFORE the day budget is spent, so the two decisions are made in
+			// the order they are explained -- and the budget is spent either way, because idle
+			// days are gone rather than banked: an empty bench does not owe its labour to whoever
+			// staffs it next. KingdomMaterialRules.AssessYard holds the ordering ("nobody is
+			// here" outranks "there is nothing to work"), so the reason the founder is given is
+			// the one they can act on.
 			int crew = Yard.GetIntProperty("KingdomStaffNeeded") * Yard.GetIntProperty("KingdomEffectiveness") / 100;
-			if (Yard.GetIntProperty("KingdomStaffed") != 1 || crew <= 0)
+			bool staffed = Yard.GetIntProperty("KingdomStaffed") == 1 && crew > 0;
+			MaterialStock stock = null;
+			KingdomMaterial raw = default(KingdomMaterial);
+			int refinable = 0;
+			if (staffed)
 			{
-				// The idle-works line already names this one out loud once a pass
-				// (KingdomGrowth.AssignWork), so a second announcement here would be the same news
-				// told twice. The yard simply makes nothing.
-				return;
+				// Reading the whole zone's stockpiles is not free, and there is nobody here to
+				// spend them, so an unstaffed yard does not pay for the look.
+				stock = Stock(Z);
+				refinable = KingdomMaterialRules.RefinableFrom(kind, stock.Tally, out raw);
 			}
-			MaterialStock stock = Stock(Z);
-			int refinable = KingdomMaterialRules.RefinableFrom(kind, stock.Tally, out var raw);
-			if (refinable <= 0)
+			KingdomMaterialRules.YardStall stall = KingdomMaterialRules.AssessYard(staffed, crew, refinable);
+			WriteTick(Yard, RefineWorkedProperty, KingdomRules.HeartbeatCheckpoint(worked, TimeTicks));
+			if (stall != KingdomMaterialRules.YardStall.Working)
 			{
-				if (Yard.GetIntProperty(RefineIdleProperty) != 1)
+				bool unstaffed = stall == KingdomMaterialRules.YardStall.Unstaffed;
+				string said = unstaffed ? RefineUnstaffedProperty : RefineIdleProperty;
+				// Only one stall at a time is true, so the other reason is unsaid: a yard that was
+				// short of stock and is now short of hands gets the new sentence, not silence.
+				Yard.SetIntProperty(unstaffed ? RefineIdleProperty : RefineUnstaffedProperty, 0);
+				if (Yard.GetIntProperty(said) != 1)
 				{
-					Yard.SetIntProperty(RefineIdleProperty, 1);
-					System.Ledger.Note("{{r|The " + KingdomMaterialRules.YardName(kind) + " of " + System.SeatName
-						+ " stands over an empty bench. There is nothing in the stockpiles for it to work.}}");
+					Yard.SetIntProperty(said, 1);
+					System.Ledger.Note("{{r|" + KingdomMaterialRules.YardStallLine(stall, kind, System.SeatName) + "}}");
 				}
 				return;
 			}
+			Yard.SetIntProperty(RefineUnstaffedProperty, 0);
 			Yard.SetIntProperty(RefineIdleProperty, 0);
 			int capability = KingdomMaterialRules.CrewCapability(kind, Strength, Intelligence);
 			int made = KingdomMaterialRules.RefinedThisPass(crew, days, capability, refinable);

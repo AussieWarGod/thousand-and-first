@@ -40,11 +40,19 @@ namespace ThousandAndFirst
 			// Fetch is charged per day, from the same checkpoint idiom upkeep uses, and only by
 			// citizens who are not already crewing a work. Before this it ran once per zone
 			// activation with no clock, so stepping out and back in fetched again without limit.
-			int fetchDays = KingdomRules.HeartbeatDays(timeTicks - System.LastFetchTick);
+			// Uncapped, and it has to be: the bill below runs the full elapsed, so a fetch that
+			// stopped at three days would turn every absence into a guaranteed loss. The detail
+			// walks to the river for as long as the settlement drinks, and the two net.
+			// The stamp is planted BEFORE the days are counted, and that order is load-bearing now
+			// that the count is uncapped: LastFetchTick is zero on a settlement's first pass and
+			// on a second city's first seating, and "ticks since tick zero" is the whole age of
+			// the world. Under the retired cap that read three days and nobody noticed; uncapped
+			// it would fill the cisterns out of the pool the moment the settlement was founded.
 			if (System.LastFetchTick <= 0)
 			{
 				System.LastFetchTick = timeTicks;
 			}
+			int fetchDays = KingdomRules.ElapsedDays(timeTicks - System.LastFetchTick);
 			// Only the water detail fetches. Nobody assigned means nobody walks to the river, and
 			// the settlement lives on what the founder pours in - see KingdomSystem.WaterCrew.
 			int hands = System.WaterCrew;
@@ -57,7 +65,7 @@ namespace ThousandAndFirst
 				: 0;
 			if (fetchDays > 0)
 			{
-				System.LastFetchTick = KingdomRules.HeartbeatCheckpoint(System.LastFetchTick, timeTicks);
+				System.LastFetchTick = KingdomRules.AdvanceCheckpoint(System.LastFetchTick, timeTicks);
 			}
 			System.Ledger.Fetched += fetched;
 			if (fetched > 0 && KingdomLog.Enabled)
@@ -146,6 +154,24 @@ namespace ThousandAndFirst
 			if (KingdomLog.Enabled) KingdomLog.Log("growth pass done: pop=" + System.Population + " stage=" + System.Stage + " arrivals=" + arrivals + " dry=" + System.DryStreak + " next=" + System.NextArrivalTick);
 		}
 
+		/// <summary>
+		/// Draws the settlement's drinking for every day that actually passed, and runs the
+		/// thirst ladder when the stores could not cover it.
+		/// <para>
+		/// The days are uncapped (Addendum 8 clause 1) and the bill is still not a debt: it is
+		/// drawn through <c>KingdomSurvey.Consume</c>, which takes what is there and no more, so
+		/// what a settlement could not pay it simply did not drink. Nothing carries forward,
+		/// nothing goes negative, and the checkpoint advances by the whole days charged either
+		/// way &mdash; a season away costs a season of water, never a season of owing.
+		/// </para>
+		/// <para>
+		/// What bounds the loss is deliberately NOT the length of the absence. The ladder below
+		/// steps once per failed resolve, so one homecoming can cost at most one rung however
+		/// long the founder was gone, and <c>Emigrate</c> floors at
+		/// <c>KingdomRules.LoyalCoreSettlers</c>. That is the interim bound; the doctrine's real
+		/// one is subsidence toward the supported equilibrium, which the next package builds.
+		/// </para>
+		/// </summary>
 		private static bool ResolveHeartbeat(KingdomSystem System, Zone Z, KingdomSurvey Survey, long TimeTicks)
 		{
 			if (System.LastHeartbeatTick <= 0 || TimeTicks <= System.LastHeartbeatTick)
@@ -154,12 +180,12 @@ namespace ThousandAndFirst
 				return true;
 			}
 			long elapsed = TimeTicks - System.LastHeartbeatTick;
-			int days = KingdomRules.HeartbeatDays(elapsed);
+			int days = KingdomRules.ElapsedDays(elapsed);
 			if (days <= 0)
 			{
 				return true;
 			}
-			System.LastHeartbeatTick = KingdomRules.HeartbeatCheckpoint(System.LastHeartbeatTick, TimeTicks);
+			System.LastHeartbeatTick = KingdomRules.AdvanceCheckpoint(System.LastHeartbeatTick, TimeTicks);
 			if (!ThirstEnabled)
 			{
 				RecoverFromThirst(System);

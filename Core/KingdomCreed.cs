@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using XRL;
 using XRL.Messages;
 using XRL.Rules;
@@ -15,7 +15,7 @@ namespace ThousandAndFirst
 	/// its residents hold; most cities are mixed and have none. When a realm's two cities hold
 	/// creeds the engine's own <c>Factions.xml</c> says are at odds, dissent accrues — only on
 	/// passes the founder is present for, capped by
-	/// <see cref="KingdomRules.HeartbeatDays"/> exactly as upkeep is — and the founder is told
+	/// <see cref="KingdomRules.HeartbeatDays"/> — and the founder is told
 	/// about it four tiers before it can cost them anything. If it runs to the top, the unhappier
 	/// city leaves, keeping its ground, its people and its buildings; nothing is destroyed and
 	/// nobody is driven out.
@@ -267,8 +267,17 @@ namespace ThousandAndFirst
 		/// The whole absence guarantee lives in the two lines that call
 		/// <see cref="KingdomRules.HeartbeatDays"/> and
 		/// <see cref="KingdomRules.HeartbeatCheckpoint"/>: days are capped at
-		/// <c>MaxUpkeepDaysCharged</c> and anything past the cap is forgiven by re-checkpointing to
-		/// now. A founder away for a season accrues what a founder away three days accrues.
+		/// <see cref="KingdomRules.LegacyAbsenceCap"/> and anything past the cap is forgiven by
+		/// re-checkpointing to now. A founder away for a season accrues what a founder away three
+		/// days accrues.
+		/// </para>
+		/// <para>
+		/// Water no longer keeps that bargain &mdash; upkeep and fetch both run the full elapsed
+		/// (Addendum 8 clause 1) &mdash; and dissent is deliberately NOT following it yet.
+		/// Secession fires on the same pass dissent reaches its threshold, with no arrestable
+		/// window in front of it, so uncapping accrual first would make an absence lose a city
+		/// faster than presence does: clause 3 exactly inverted. The two move together, in the
+		/// package that builds the window.
 		/// </para>
 		/// </summary>
 		public static void OnZoneActivated(KingdomSystem System, Zone Z)

@@ -12,6 +12,27 @@ using ThousandAndFirst;
 // namespace or the object is built without it, silently.
 namespace XRL.World.Parts
 {
+	/// <summary>
+	/// A commissioned building part-way up: the frame that stands on the ground between the
+	/// order and the raising.
+	/// <para>
+	/// <b>It rises on labour, not on the calendar</b> (BUILDING-CATALOGUE-BRIEF.md Addendum 8
+	/// clause 2, and the author's ruling that a scaffold nobody works on does not rise). The
+	/// duration a design authors in <c>BuildTicks</c> is what a properly-crewed settlement takes
+	/// &mdash; <see cref="KingdomRules.RaisingHandsWanted"/> free pairs of hands &mdash; and it
+	/// is banked once into <see cref="RemainingTicks"/> the first time this frame is looked at.
+	/// After that, every stretch of elapsed time buys labour ticks at the pace the settlement's
+	/// spare hands can actually manage (<see cref="KingdomRules.RaisingEffectiveness"/>), and a
+	/// settlement with nobody free raises nothing at all, however long the founder is away.
+	/// </para>
+	/// <para>
+	/// Idle time is SPENT, never banked: <see cref="LastWorkedTick"/> advances whether or not
+	/// anyone stood here, exactly as an unstaffed yard's day budget does. A settlement that
+	/// emptied out and refilled does not get the empty months back as a burst of building. And
+	/// because a shortfall is a thing the founder can act on, it says so once and unsays itself
+	/// the moment the crew is whole again (STANDARDS 7b).
+	/// </para>
+	/// </summary>
 	[Serializable]
 	public class r_KingdomScaffold : IPart
 	{
@@ -19,7 +40,30 @@ namespace XRL.World.Parts
 
 		public string TargetDisplayName;
 
+		/// <summary>
+		/// Stamped by every commissioning path as the tick this would be finished at if it were
+		/// fully crewed from the moment it was ordered, and read once at that value to bank the
+		/// authored labour into <see cref="RemainingTicks"/>. Restamped, when the work actually
+		/// runs out, to the tick it ACTUALLY ran out at &mdash; which is what the raising
+		/// ceremony needs to know whether the founder was standing there for it
+		/// (<c>KingdomCeremonyRules.IsAttended</c>). A frame that finished halfway through an
+		/// absence is told in the homecoming, exactly as before; one that finishes under the
+		/// founder's eye gathers the crew.
+		/// </summary>
 		public long CompleteTick;
+
+		/// <summary>Labour ticks left to raise this. Zero before the frame has been looked at
+		/// once; derived then from <see cref="CompleteTick"/>, so no commissioning path has to
+		/// know that raising takes hands.</summary>
+		public long RemainingTicks;
+
+		/// <summary>Tick labour was last charged against this frame, or 0 before the first
+		/// look.</summary>
+		public long LastWorkedTick;
+
+		/// <summary>Whether the founder has already been told this raising is short-handed, so
+		/// the reason is given once per stall rather than every turn (STANDARDS 7b).</summary>
+		public bool ShortfallSaid;
 
 		public int StaffNeeded;
 
@@ -32,11 +76,102 @@ namespace XRL.World.Parts
 
 		public override void TurnTick(long TimeTick, int Amount)
 		{
-			if (TargetBlueprint != null && TimeTick >= CompleteTick)
+			if (TargetBlueprint != null)
 			{
-				Complete();
+				Raise(TimeTick);
 			}
 			base.TurnTick(TimeTick, Amount);
+		}
+
+		/// <summary>
+		/// Charges the labour the settlement's spare hands did on this frame since it was last
+		/// looked at, and finishes it when the work runs out.
+		/// <para>
+		/// A turn tick only fires in an active zone, so an absence arrives here as one long
+		/// stretch resolved at the moment of awareness &mdash; the lazy catch-up the whole mod
+		/// keeps. The crew is sampled once, now, because now is the only honest reading there
+		/// is: nobody recorded who was standing in an unwatched city.
+		/// </para>
+		/// </summary>
+		private void Raise(long TimeTick)
+		{
+			if (RemainingTicks <= 0 && LastWorkedTick <= 0)
+			{
+				long authored = CompleteTick - TimeTick;
+				RemainingTicks = (authored > 0) ? authored : 1L;
+				LastWorkedTick = TimeTick;
+				return;
+			}
+			long previous = LastWorkedTick;
+			long elapsed = TimeTick - previous;
+			if (elapsed <= 0)
+			{
+				return;
+			}
+			LastWorkedTick = TimeTick;
+			int effectiveness = EffectivenessOf(out var freeHands, out var system);
+			Say(system, freeHands);
+			long worked = KingdomRules.LabouredTicks(elapsed, effectiveness);
+			if (worked <= 0 || RemainingTicks <= 0)
+			{
+				return;
+			}
+			if (worked < RemainingTicks)
+			{
+				RemainingTicks -= worked;
+				return;
+			}
+			// The work ran out somewhere inside this stretch, and WHERE matters: it decides
+			// whether this was a raising the founder attended or one the homecoming reports.
+			// Ticks needed at the pace just measured, rounded up, laid back down from the last
+			// stamp.
+			long spent = (effectiveness >= 100) ? RemainingTicks : (RemainingTicks * 100L + effectiveness - 1L) / effectiveness;
+			long finished = previous + spent;
+			CompleteTick = (finished > TimeTick || finished < previous) ? TimeTick : finished;
+			RemainingTicks = 0;
+			Complete();
+		}
+
+		/// <summary>
+		/// How fast this frame is rising right now, 0 to 100.
+		/// <para>
+		/// Founding is the one exemption: a frame raised before there is a settlement is raised
+		/// by the founder's own hands, and there is no roster to read. Everything after that is
+		/// read off the settlement &mdash; whoever the water detail and the works left over.
+		/// </para>
+		/// </summary>
+		private int EffectivenessOf(out int FreeHands, out KingdomSystem System)
+		{
+			FreeHands = 0;
+			System = The.Game.RequireSystem<KingdomSystem>();
+			if (System == null || !System.Founded)
+			{
+				return 100;
+			}
+			FreeHands = KingdomMaterialRules.FreeHands(System.Population, System.AssignedCrew);
+			return KingdomRules.RaisingEffectiveness(FreeHands);
+		}
+
+		/// <summary>Names a short-handed raising once, and unsays it the moment the crew is
+		/// whole (STANDARDS 7b).</summary>
+		private void Say(KingdomSystem System, int FreeHands)
+		{
+			if (System == null || !System.Founded)
+			{
+				return;
+			}
+			string line = KingdomRules.RaisingShortfallLine(TargetDisplayName ?? "structure", FreeHands);
+			if (line == null)
+			{
+				ShortfallSaid = false;
+				return;
+			}
+			if (ShortfallSaid)
+			{
+				return;
+			}
+			ShortfallSaid = true;
+			System.Ledger.Note("{{r|" + line + "}}");
 		}
 
 		/// <summary>

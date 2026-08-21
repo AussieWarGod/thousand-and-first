@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace ThousandAndFirst
 {
@@ -245,15 +245,17 @@ namespace ThousandAndFirst
 		}
 
 		/// <summary>
-		/// Water an improvement must leave standing in the stores: what the settlement drinks
-		/// over the whole absence it is ever charged for. Improving is a luxury paid out of
-		/// surplus, so it can never be the reason a settlement goes thirsty.
+		/// Water an improvement must leave standing in the stores: <see cref="KingdomRules.ReserveDays"/>
+		/// days of drinking at this settlement's own rate. Improving is a luxury paid out of
+		/// surplus, so it can never be the reason a settlement goes thirsty. (The cushion used to
+		/// be described as "the whole absence it is ever charged for"; there is no such thing any
+		/// more - absence is charged in full - so it is now simply a named reserve depth.)
 		/// </summary>
 		/// <param name="Population">Settlers the stores must keep.</param>
 		/// <param name="Stage">Growth stage, which sets the per-head rate.</param>
 		public static int ReserveDrams(int Population, GrowthStage Stage)
 		{
-			return KingdomRules.UpkeepDrams(Population, Stage) * KingdomRules.MaxUpkeepDaysCharged;
+			return KingdomRules.UpkeepDrams(Population, Stage) * KingdomRules.ReserveDays;
 		}
 
 		/// <summary>

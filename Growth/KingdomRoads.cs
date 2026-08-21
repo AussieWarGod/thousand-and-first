@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using XRL;
 using XRL.Messages;
 using XRL.UI;
@@ -17,8 +17,14 @@ namespace ThousandAndFirst
 	/// road; all this does is notice which gaps people cross. Everything resolves on the attended
 	/// <c>ZoneActivatedEvent</c> pass out of a stored tick stamp, so a settlement wears its ways
 	/// at exactly the rate it was lived in, and a founder who was away for a season finds three
-	/// days' worth of walking &mdash; the same absence cap as everything else
-	/// (<c>KingdomRules.HeartbeatDays</c>).
+	/// days' worth of walking (<c>KingdomRules.HeartbeatDays</c>, which is still capped at
+	/// <c>KingdomRules.LegacyAbsenceCap</c>).
+	/// <para>
+	/// That cap is now this file's own and not "the same as everything else": water is charged
+	/// and fetched over the full elapsed (Addendum 8 clause 1). Traffic is already walkers x days
+	/// &mdash; the doctrine's own formula &mdash; so uncapping it is a denominator swap with
+	/// nothing else attached, and it waits only on the package that owns this file.
+	/// </para>
 	/// </para>
 	/// <para>
 	/// The protection law (STANDARDS 7) is the shape of this file, not a check inside it. Wear

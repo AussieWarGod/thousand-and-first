@@ -1,4 +1,4 @@
-namespace ThousandAndFirst
+﻿namespace ThousandAndFirst
 {
 	/// <summary>
 	/// Engine-free rules for the settlement's growing plot: what state it cycles through, what
@@ -53,7 +53,7 @@ namespace ThousandAndFirst
 		/// Whether the settlement can spare <see cref="PlantWaterCostDrams"/> for a planting
 		/// without touching the water the heaviest possible single upkeep charge could still
 		/// need this same visit. The plot is never the reason a dry streak starts: it may only
-		/// spend what is left over once <see cref="KingdomRules.MaxUpkeepDaysCharged"/> days of
+		/// spend what is left over once <see cref="KingdomRules.ReserveDays"/> days of
 		/// upkeep, at the settlement's current population, are set aside untouched.
 		/// </summary>
 		/// <param name="StoredWater">Drams currently in the dedicated stores, read after the
@@ -61,7 +61,7 @@ namespace ThousandAndFirst
 		/// <param name="Population">Living settlers, for the upkeep reserve.</param>
 		public static bool CanAffordPlanting(int StoredWater, int Population)
 		{
-			int reserve = KingdomRules.UpkeepDrams(Population) * KingdomRules.MaxUpkeepDaysCharged;
+			int reserve = KingdomRules.UpkeepDrams(Population) * KingdomRules.ReserveDays;
 			return StoredWater - PlantWaterCostDrams >= reserve;
 		}
 

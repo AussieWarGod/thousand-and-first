@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 #if !TAF_TESTS
 using XRL.World;
 #endif
@@ -77,7 +77,7 @@ namespace ThousandAndFirst
 		/// a city crosses into that state &mdash; interlocking with the thirst ladder rather than
 		/// ignoring it.
 		/// </summary>
-		public const int ReserveUpkeepDays = 3;
+		public const int ReserveUpkeepDays = KingdomRules.ReserveDays;
 
 		/// <summary>Most a single manifest may carry, regardless of how much the origin has spare.</summary>
 		public const int MaximumManifestDrams = 60;

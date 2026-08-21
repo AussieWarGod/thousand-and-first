@@ -12,9 +12,25 @@ namespace ThousandAndFirst
 	{
 		private const int SerializationMagic = 1413563987;
 
-		private const int CurrentSerializationVersion = 2;
+		/// <summary>
+		/// Version 3 is the clock rework. Every stored clock stamp still has the same NAME and
+		/// the same type, but not the same meaning: a version-2 stamp was written under the
+		/// three-day forgiveness cap, so it could be arbitrarily stale and cost nothing, and
+		/// resolving one under the uncapped rules would bill a season of upkeep in a single pass
+		/// -- the exact unchosen debt Addendum 8 clause 4 forbids.
+		/// <para>
+		/// No migration machinery ships for it. The mod has never run; there are no version-2
+		/// saves in the world (Addendum 9: "save compatibility is waived pre-release... version
+		/// bumps stay clean and deliberate"), so <see cref="FirstNamedSerializationVersion"/>
+		/// moves up with it and a pre-rework layout is refused at the gate by name rather than
+		/// silently mis-resolved. The re-anchoring a real migration would have to do is written
+		/// down where the retired cap lived, in <c>KingdomRules</c>, for the release-era harness
+		/// to pick up.
+		/// </para>
+		/// </summary>
+		private const int CurrentSerializationVersion = 3;
 
-		private const int FirstNamedSerializationVersion = 2;
+		private const int FirstNamedSerializationVersion = 3;
 
 		private const int LegacyReflectedSerializationVersion = 1;
 
@@ -334,9 +350,12 @@ namespace ThousandAndFirst
 		/// A dormant city needs no clock. Its <c>LastHeartbeatTick</c> and <c>LastVisitTick</c>
 		/// travel with it, so the ordinary catch-up in <c>KingdomGrowth</c> resolves the whole
 		/// absence the moment it is seated &mdash; the lazy tick-stamp idiom vanilla uses for
-		/// zone repair. The catch-up is capped by <see cref="KingdomRules.HeartbeatDays"/> and
-		/// <see cref="KingdomRules.MaxArrivalsPerVisit"/>, so a city dormant for a season cannot
-		/// arrive with a season of settlers.
+		/// zone repair. The water half of that catch-up is now honest rather than capped
+		/// (<see cref="KingdomRules.ElapsedDays"/>): a city dormant for a season drinks a season
+		/// and fetches a season, and the two net. What is still bounded per visit is arrivals
+		/// (<see cref="KingdomRules.MaxArrivalsPerVisit"/>), so a dormant city cannot arrive with
+		/// a season of settlers, and the thirst ladder, which steps once per resolve however long
+		/// the absence.
 		/// </para>
 		/// </summary>
 		public KingdomSettlement Away;
@@ -1015,7 +1034,7 @@ namespace ThousandAndFirst
 			{
 				long elapsed = The.Game.TimeTicks - LastVisitTick;
 				LastVisitTick = The.Game.TimeTicks;
-				HomecomingDays = (int)(elapsed / KingdomRules.TicksPerDay);
+				HomecomingDays = KingdomRules.ElapsedDays(elapsed);
 				if (Ledger.Any && elapsed >= KingdomRules.TicksPerDay)
 				{
 					// Nonmodal on purpose. You come home to a report, not an inspection: the

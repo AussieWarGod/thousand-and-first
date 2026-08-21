@@ -63,18 +63,121 @@ namespace ThousandAndFirst.Tests
 		[TestCase(20, -100L)]
 		public void UpkeepForElapsed(int population, long elapsed)
 		{
-			// Whole days only, forgiven past the absence cap. Expressed against the daily rate
-			// so retuning upkeep cannot quietly invalidate what this claims to prove.
-			int expected = KingdomRules.UpkeepDrams(population) * KingdomRules.HeartbeatDays(elapsed);
+			// Whole days, all of them. Expressed against the daily rate so retuning upkeep cannot
+			// quietly invalidate what this claims to prove.
+			int expected = KingdomRules.UpkeepDrams(population) * KingdomRules.ElapsedDays(elapsed);
 			Assert.AreEqual(expected, KingdomRules.UpkeepForElapsed(population, elapsed));
 		}
 
+		// --- The uncapping (Addendum 8 clause 1) ------------------------------------------------
+
 		[Test]
-		public void UpkeepForElapsed_ForgivesTimeBeyondTheAbsenceCap()
+		public void UpkeepForElapsed_ChargesTheWholeAbsence()
 		{
-			int capped = KingdomRules.UpkeepForElapsed(20, KingdomRules.TicksPerDay * KingdomRules.MaxUpkeepDaysCharged);
-			Assert.AreEqual(capped, KingdomRules.UpkeepForElapsed(20, KingdomRules.TicksPerDay * 400),
-				"a season away cost more than the cap allows");
+			// Derived from the doctrine, not from a table: a settlement drinks every day it
+			// exists, so the bill for N days is N times the bill for one, at any N.
+			int oneDay = KingdomRules.UpkeepForElapsed(20, KingdomRules.TicksPerDay);
+			Assert.Greater(oneDay, 0, "the fixture has to cost something for this to mean anything");
+			foreach (int days in new int[5] { 3, 4, 30, 90, 400 })
+			{
+				Assert.AreEqual(oneDay * days, KingdomRules.UpkeepForElapsed(20, KingdomRules.TicksPerDay * days),
+					days + " days away cost something other than " + days + " days of drinking");
+			}
+		}
+
+		[Test]
+		public void UpkeepForElapsed_HasNoStepAtTheOldForgivenessBoundary()
+		{
+			// The cap sat at three days. The exact place a forgiveness ceiling would show up is
+			// the step from the last charged day to the first forgiven one, so pin the boundary
+			// itself rather than trusting a distant value.
+			int daily = KingdomRules.UpkeepDrams(20);
+			for (int days = 1; days <= 6; days++)
+			{
+				Assert.AreEqual(daily * days, KingdomRules.UpkeepForElapsed(20, KingdomRules.TicksPerDay * days),
+					"day " + days + " of the absence was not charged like the ones before it");
+			}
+		}
+
+		[Test]
+		public void UpkeepForElapsed_SaturatesRatherThanWrapping()
+		{
+			// A bill is never a debt. An elapsed too long to bill in an int asks for "everything
+			// there is" -- which the stores answer by handing over everything there is -- instead
+			// of wrapping into a negative amount they would silently GAIN.
+			long enormous = KingdomRules.TicksPerDay * 3000000000L;
+			Assert.AreEqual(int.MaxValue, KingdomRules.UpkeepForElapsed(60, enormous));
+			Assert.Greater(KingdomRules.UpkeepForElapsed(60, enormous), KingdomRules.UpkeepForElapsed(60, KingdomRules.TicksPerDay * 400));
+		}
+
+		[Test]
+		public void UpkeepForElapsed_FailsClosedOnAnElapsedThatCannotBeReal()
+		{
+			// Past what the kernel's checked arithmetic can fold, the answer is zero days rather
+			// than a guess: a corrupt stamp must not mint a debt, and zero mints nothing.
+			Assert.AreEqual(0, KingdomRules.UpkeepForElapsed(60, long.MaxValue));
+			Assert.AreEqual(0, KingdomRules.UpkeepForElapsed(60, -1L));
+		}
+
+		[TestCase(0L, 0)]
+		[TestCase(600L, 0)]
+		[TestCase(1200L, 1)]
+		[TestCase(3600L, 3)]
+		[TestCase(4800L, 4)]
+		[TestCase(120000L, 100)]
+		[TestCase(-500L, 0)]
+		public void ElapsedDays(long elapsed, int expected)
+		{
+			Assert.AreEqual(expected, KingdomRules.ElapsedDays(elapsed));
+		}
+
+		[Test]
+		public void ElapsedDays_FailsClosedRatherThanWrapping()
+		{
+			// The kernel's checked arithmetic refuses an elapsed it cannot fold. Zero is the safe
+			// answer, because zero days mints no debt.
+			Assert.AreEqual(0, KingdomRules.ElapsedDays(long.MinValue));
+			Assert.GreaterOrEqual(KingdomRules.ElapsedDays(long.MaxValue), 0);
+		}
+
+		[TestCase(0L, 5000L, 5000L)]
+		[TestCase(1000L, 1599L, 1000L)]
+		[TestCase(1000L, 2200L, 2200L)]
+		[TestCase(1000L, 2800L, 2200L)]
+		[TestCase(1000L, 4600L, 4600L)]
+		[TestCase(1000L, 5800L, 5800L)]
+		[TestCase(5000L, 4000L, 4000L)]
+		public void AdvanceCheckpoint(long previous, long current, long expected)
+		{
+			Assert.AreEqual(expected, KingdomRules.AdvanceCheckpoint(previous, current));
+		}
+
+		[Test]
+		public void AdvanceCheckpoint_KeepsThePartDayInsteadOfReanchoring()
+		{
+			// The forgiveness the retired cap performed was physically this: past three days the
+			// checkpoint jumped to now, so the unbilled remainder vanished. Now it advances by
+			// exactly the days charged, and the leftover survives to be charged later.
+			long start = 1000L;
+			long now = start + KingdomRules.TicksPerDay * 90 + 500L;
+			long advanced = KingdomRules.AdvanceCheckpoint(start, now);
+			Assert.AreEqual(start + KingdomRules.TicksPerDay * 90, advanced);
+			Assert.AreEqual(500L, now - advanced, "the part-day was thrown away instead of carried");
+		}
+
+		[Test]
+		public void AdvanceCheckpoint_AndElapsedDaysAgreeAtEveryLength()
+		{
+			// The pair has one contract: whatever ElapsedDays charged, AdvanceCheckpoint spends,
+			// and nothing else moves. If these two ever disagree, time is either free or billed
+			// twice.
+			long start = 4000L;
+			foreach (int days in new int[6] { 0, 1, 3, 4, 30, 365 })
+			{
+				long now = start + KingdomRules.TicksPerDay * days + 700L;
+				Assert.AreEqual(days, KingdomRules.ElapsedDays(now - start));
+				Assert.AreEqual(start + KingdomRules.TicksPerDay * days, KingdomRules.AdvanceCheckpoint(start, now));
+			}
 		}
 
 		[TestCase(0L, 0)]
@@ -83,9 +186,13 @@ namespace ThousandAndFirst.Tests
 		[TestCase(3600L, 3)]
 		[TestCase(120000L, 3)]
 		[TestCase(-500L, 0)]
-		public void HeartbeatDays(long elapsed, int expected)
+		public void HeartbeatDays_StillCapsForTheRowsTheReworkHasNotReached(long elapsed, int expected)
 		{
+			// Superseded, not deleted. Roads, power, the material workers, mending and dissent
+			// still read it, and dissent in particular must not uncap until secession has an
+			// arrestable window -- see KingdomRules.LegacyAbsenceCap.
 			Assert.AreEqual(expected, KingdomRules.HeartbeatDays(elapsed));
+			Assert.AreEqual(3, KingdomRules.LegacyAbsenceCap);
 		}
 
 		[TestCase(0L, 5000L, 5000L)]
@@ -98,6 +205,136 @@ namespace ThousandAndFirst.Tests
 		public void HeartbeatCheckpoint(long previous, long current, long expected)
 		{
 			Assert.AreEqual(expected, KingdomRules.HeartbeatCheckpoint(previous, current));
+		}
+
+		[Test]
+		public void ElapsedDays_DoesNotSpecialCaseAnUnplantedStampAndCallersMust()
+		{
+			// The trap the uncapping sets. A "last resolved" stamp is zero until something plants
+			// it, and now - 0 is the whole age of the world, not "no time passed". The substrate
+			// answers the question it was asked, honestly and enormously; every caller has to
+			// plant its stamp before it counts. KingdomGrowth's fetch does exactly that, and had
+			// to be reordered to do it -- under the retired cap this read three days and nobody
+			// could see the bug.
+			long anOldWorld = KingdomRules.TicksPerDay * 250;
+			Assert.AreEqual(250, KingdomRules.ElapsedDays(anOldWorld - 0L));
+			Assert.AreEqual(0, KingdomRules.ElapsedDays(anOldWorld - anOldWorld));
+		}
+
+		[Test]
+		public void ReserveDays_IsAQuantityAndNotAClock()
+		{
+			// The retired constant did two jobs under one name. This is the surviving one: how
+			// deep a cushion the discretionary spenders leave behind. It says nothing about how
+			// much elapsed time anything is willing to look at, and the proof is that the upkeep
+			// bill ignores it entirely.
+			Assert.AreEqual(3, KingdomRules.ReserveDays);
+			Assert.AreEqual(KingdomRules.UpkeepDrams(20) * 10,
+				KingdomRules.UpkeepForElapsed(20, KingdomRules.TicksPerDay * 10),
+				"the reserve depth leaked into the bill");
+		}
+
+		// --- Time x labour (Addendum 8 clause 2) -------------------------------------------------
+
+		[TestCase(0, 100, 0)]
+		[TestCase(10, 0, 0)]
+		[TestCase(10, -5, 0)]
+		[TestCase(10, 100, 10)]
+		[TestCase(10, 150, 10)]
+		[TestCase(10, 50, 5)]
+		[TestCase(10, 25, 2)]
+		[TestCase(3, 25, 0)]
+		[TestCase(-4, 100, 0)]
+		public void ActivityDays(int days, int effectiveness, int expected)
+		{
+			Assert.AreEqual(expected, KingdomRules.ActivityDays(days, effectiveness));
+		}
+
+		[Test]
+		public void ActivityDays_AreNeverMoreThanTheDaysThatPassed()
+		{
+			// Labour cannot mint time. Whatever the effectiveness, a stretch never yields more
+			// working days than there were days.
+			for (int effectiveness = 0; effectiveness <= 200; effectiveness += 25)
+			{
+				Assert.LessOrEqual(KingdomRules.ActivityDays(40, effectiveness), 40);
+			}
+		}
+
+		[TestCase(0L, 100, 0L)]
+		[TestCase(1000L, 0, 0L)]
+		[TestCase(1000L, 100, 1000L)]
+		[TestCase(1000L, 50, 500L)]
+		[TestCase(999L, 50, 499L)]
+		[TestCase(1000L, 25, 250L)]
+		[TestCase(-20L, 100, 0L)]
+		public void LabouredTicks(long elapsed, int effectiveness, long expected)
+		{
+			Assert.AreEqual(expected, KingdomRules.LabouredTicks(elapsed, effectiveness));
+		}
+
+		[Test]
+		public void LabouredTicks_IsExactAndDoesNotOverflow()
+		{
+			// Scaled by halves and quarters rather than multiplied first, so a very long stretch
+			// gives an answer instead of a wrapped one.
+			Assert.AreEqual(long.MaxValue / 2, KingdomRules.LabouredTicks(long.MaxValue, 50), 1L);
+			Assert.GreaterOrEqual(KingdomRules.LabouredTicks(long.MaxValue, 99), 0L);
+		}
+
+		[TestCase(0, 0)]
+		[TestCase(1, 50)]
+		[TestCase(2, 100)]
+		[TestCase(5, 100)]
+		[TestCase(-3, 0)]
+		public void RaisingEffectiveness(int freeHands, int expected)
+		{
+			Assert.AreEqual(expected, KingdomRules.RaisingEffectiveness(freeHands));
+		}
+
+		[Test]
+		public void RaisingEffectiveness_IsZeroWithNobodyFreeSoAnEmptySettlementRaisesNothing()
+		{
+			// The author's ruling: a scaffold nobody works on does not rise. Stated here as the
+			// arithmetic the scaffold reads -- no hands, no labour ticks, at any elapsed.
+			Assert.AreEqual(0, KingdomRules.RaisingEffectiveness(0));
+			Assert.AreEqual(0L, KingdomRules.LabouredTicks(KingdomRules.TicksPerDay * 400, KingdomRules.RaisingEffectiveness(0)));
+		}
+
+		[Test]
+		public void ARaisingTakesItsAuthoredDurationWhenCrewedAndNeverFinishesWhenNobodyIsThere()
+		{
+			// The scaffold banks its design's BuildTicks and spends elapsed time against it at the
+			// pace its crew manages. Stated here as the arithmetic, since the part itself is
+			// engine-coupled: a whole crew recovers the authored duration exactly (so this wave
+			// does not quietly slow every build in the game), half a crew takes twice as long,
+			// and an empty settlement never gets there at any length of absence.
+			long authored = 3600L;
+			Assert.AreEqual(authored, KingdomRules.LabouredTicks(authored, KingdomRules.RaisingEffectiveness(KingdomRules.RaisingHandsWanted)));
+			Assert.AreEqual(authored, KingdomRules.LabouredTicks(authored * 2, KingdomRules.RaisingEffectiveness(1)));
+			foreach (long elapsed in new long[4] { authored, authored * 10, KingdomRules.TicksPerDay * 400, KingdomRules.TicksPerDay * 4000 })
+			{
+				Assert.AreEqual(0L, KingdomRules.LabouredTicks(elapsed, KingdomRules.RaisingEffectiveness(0)),
+					"an empty settlement raised something over " + elapsed + " ticks");
+			}
+		}
+
+		[Test]
+		public void RaisingShortfallLine_SaysNothingWhenTheCrewIsWhole()
+		{
+			Assert.IsNull(KingdomRules.RaisingShortfallLine("stone house", KingdomRules.RaisingHandsWanted));
+			Assert.IsNull(KingdomRules.RaisingShortfallLine("stone house", KingdomRules.RaisingHandsWanted + 3));
+		}
+
+		[Test]
+		public void RaisingShortfallLine_NamesTheWorkAndTheReason()
+		{
+			string none = KingdomRules.RaisingShortfallLine("stone house", 0);
+			StringAssert.Contains("stone house", none);
+			StringAssert.Contains("nobody", none);
+			string few = KingdomRules.RaisingShortfallLine("stone house", 1);
+			StringAssert.Contains("stone house", few);
+			Assert.AreNotEqual(none, few, "an empty crew and a short one give the founder the same sentence");
 		}
 
 		[TestCase(GrowthStage.Camp, 1)]
@@ -186,7 +423,7 @@ namespace ThousandAndFirst.Tests
 		{
 			// Policy applies to the daily rate before the days multiply, so cost never changes
 			// with how often the founder walks in.
-			int expected = KingdomRules.PolicyUpkeep(KingdomRules.UpkeepDrams(population), stores) * KingdomRules.HeartbeatDays(elapsed);
+			int expected = KingdomRules.PolicyUpkeep(KingdomRules.UpkeepDrams(population), stores) * KingdomRules.ElapsedDays(elapsed);
 			Assert.AreEqual(expected, KingdomRules.PolicyUpkeepForElapsed(population, elapsed, stores));
 		}
 
@@ -743,6 +980,47 @@ namespace ThousandAndFirst.Tests
 			// mill has to cost something or it is not a choice.
 			Assert.AreEqual(10, KingdomRules.FetchableDrams(5, 1000, 1000, 1));
 			Assert.Less(KingdomRules.FetchableDrams(5, 1000, 1000, 1), KingdomRules.FetchableDrams(20, 1000, 1000, 1));
+		}
+
+		[Test]
+		public void FetchableDrams_RunsTheWholeAbsenceSoSupplyCanMeetAnUncappedBill()
+		{
+			// Both halves of the water economy read the same uncapped elapsed now. If fetch
+			// stopped at the retired three-day cap while upkeep did not, every absence would be
+			// a guaranteed loss no staffing could answer -- which is the failure mode the
+			// uncapping is most likely to introduce.
+			Assert.AreEqual(2 * KingdomRules.FetchDramsPerSettler * 90,
+				KingdomRules.FetchableDrams(2, 100000, 100000, 90));
+			for (int days = 1; days <= 6; days++)
+			{
+				Assert.AreEqual(days * KingdomRules.FetchDramsPerSettler * 2,
+					KingdomRules.FetchableDrams(2, 100000, 100000, days),
+					"day " + days + " of the absence fetched nothing");
+			}
+		}
+
+		[Test]
+		public void FetchableDrams_IsStillBoundedByRealWaterAndRealRoom()
+		{
+			// Uncapping the clock must not uncap the haul: what is actually there and what will
+			// actually fit are the only ceilings, and they still bite at any length.
+			Assert.AreEqual(40, KingdomRules.FetchableDrams(20, 40, 100000, 400), "drank a pool that was not there");
+			Assert.AreEqual(15, KingdomRules.FetchableDrams(20, 100000, 15, 400), "stored more than the cisterns hold");
+			Assert.AreEqual(0, KingdomRules.FetchableDrams(20, 0, 100000, 400), "a dry site fetched something");
+		}
+
+		[Test]
+		public void FetchableDrams_CampFeedsItselfOverAnyAbsenceOnWateredGround()
+		{
+			// The doctrine's floor: Camp is self-sustaining. A five-person camp with three on the
+			// water detail must out-fetch its own uncapped drinking at every absence length, or
+			// the smallest settlement in the game is not viable and nothing above it is either.
+			foreach (int days in new int[5] { 1, 3, 10, 90, 400 })
+			{
+				int fetched = KingdomRules.FetchableDrams(3, 100000, 100000, days);
+				int drunk = KingdomRules.UpkeepForElapsed(5, KingdomRules.TicksPerDay * days);
+				Assert.GreaterOrEqual(fetched, drunk, "a camp went backwards over " + days + " days");
+			}
 		}
 
 		[TestCase(20, GrowthStage.Camp, 20)]
