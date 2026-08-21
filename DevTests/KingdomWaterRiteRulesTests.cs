@@ -1,0 +1,652 @@
+#if TAF_TESTS
+using NUnit.Framework;
+using ThousandAndFirst;
+
+namespace ThousandAndFirst.Tests
+{
+	public class KingdomWaterRiteRulesTests
+	{
+		private const string Realm = "Barathrumites";
+
+		private static WaterRiteFacts Facts(int Hostility = 0, int SharedPasses = 0, bool HoldsACreed = true, bool RivalShrine = false, bool Devout = false, bool Steadfast = false, string RealmCreed = Realm)
+		{
+			return new WaterRiteFacts(Hostility, SharedPasses, HoldsACreed, RivalShrine, Devout, Steadfast, RealmCreed);
+		}
+
+		private static WaterRiteStamp StampAt(WaterRiteFacts F)
+		{
+			return KingdomWaterRiteRules.StampFor(F, KingdomWaterRiteRules.Answer(F));
+		}
+
+		// --- The distance: every term is its own named constant, and together they are the whole
+		// --- of what stands between one settler and the realm's creed.
+
+		[Test]
+		public void Distance_ASettlerWhoHoldsNothingCostsTheBareCovenantAndNothingElse()
+		{
+			Assert.AreEqual(KingdomWaterRiteRules.CovenantDistance, KingdomWaterRiteRules.Distance(Facts(HoldsACreed: false)));
+		}
+
+		[Test]
+		public void Distance_HoldingACreedOfTheirOwnIsFurtherThanHoldingNone()
+		{
+			int none = KingdomWaterRiteRules.Distance(Facts(HoldsACreed: false));
+			Assert.AreEqual(none + KingdomWaterRiteRules.CreedHeldDistance, KingdomWaterRiteRules.Distance(Facts(HoldsACreed: true)));
+		}
+
+		[Test]
+		public void Distance_HostilityIsAddedInTheFactionTablesOwnUnits()
+		{
+			int calm = KingdomWaterRiteRules.Distance(Facts(Hostility: 0));
+			Assert.AreEqual(calm + 50, KingdomWaterRiteRules.Distance(Facts(Hostility: 50)));
+			Assert.AreEqual(calm + 100, KingdomWaterRiteRules.Distance(Facts(Hostility: 100)));
+		}
+
+		[TestCase(-500, 0)]
+		[TestCase(-1, 0)]
+		[TestCase(0, 0)]
+		[TestCase(100, 100)]
+		[TestCase(400, 100)]
+		public void Distance_HostilityFromThirdPartyDataIsClampedRatherThanTrusted(int given, int counted)
+		{
+			int expected = KingdomWaterRiteRules.CovenantDistance + KingdomWaterRiteRules.CreedHeldDistance + counted;
+			Assert.AreEqual(expected, KingdomWaterRiteRules.Distance(Facts(Hostility: given)));
+		}
+
+		[Test]
+		public void Distance_ARivalShrineInTheirQuarterAddsItsOwnConstant()
+		{
+			int without = KingdomWaterRiteRules.Distance(Facts());
+			Assert.AreEqual(without + KingdomWaterRiteRules.RivalShrineDistance, KingdomWaterRiteRules.Distance(Facts(RivalShrine: true)));
+		}
+
+		[Test]
+		public void Distance_DevotionIsAlwaysACostAndNeverADiscount()
+		{
+			int plain = KingdomWaterRiteRules.Distance(Facts());
+			int devout = KingdomWaterRiteRules.Distance(Facts(Devout: true));
+			Assert.Greater(devout, plain);
+			Assert.AreEqual(plain + KingdomWaterRiteRules.DevotionDistance, devout);
+		}
+
+		// --- The reach: shared living, capped, with the fault line sitting exactly at the cap.
+
+		[TestCase(-3, 0)]
+		[TestCase(0, 0)]
+		[TestCase(1, KingdomWaterRiteRules.ReachPerSharedPass)]
+		[TestCase(10, 10 * KingdomWaterRiteRules.ReachPerSharedPass)]
+		public void Reach_GrowsOnePassAtATime(int passes, int expected)
+		{
+			Assert.AreEqual(expected, KingdomWaterRiteRules.Reach(passes));
+		}
+
+		[Test]
+		public void Reach_StopsAtTheCapAndStaysThere()
+		{
+			Assert.AreEqual(KingdomWaterRiteRules.ReachCap, KingdomWaterRiteRules.Reach(KingdomWaterRiteRules.MaxCountedPasses));
+			Assert.AreEqual(KingdomWaterRiteRules.ReachCap, KingdomWaterRiteRules.Reach(KingdomWaterRiteRules.MaxCountedPasses + 500));
+		}
+
+		[Test]
+		public void Reach_TheCapIsExactlyTheDistanceToAFaultLine_WhichIsTheWholeArc()
+		{
+			// Addendum 4d makes the flat -100 fault lines refuse every shared roof at every tier,
+			// which puts osmosis and the shared table out of reach of them by construction.
+			// Addendum 5 makes conversion the healing arc that ceiling requires, so SOMETHING has
+			// to be able to cross one, and this rite is it: at the very end of a whole shared life
+			// and not one pass sooner. Break this identity and either the fault line becomes
+			// uncrossable by any channel in the mod, or it becomes cheap.
+			Assert.AreEqual(KingdomWaterRiteRules.ReachCap, KingdomWaterRiteRules.Distance(Facts(Hostility: 100)));
+			Assert.AreEqual(WaterRiteAnswer.Accepted, KingdomWaterRiteRules.Answer(Facts(Hostility: 100, SharedPasses: KingdomWaterRiteRules.MaxCountedPasses)));
+			Assert.AreNotEqual(WaterRiteAnswer.Accepted, KingdomWaterRiteRules.Answer(Facts(Hostility: 100, SharedPasses: KingdomWaterRiteRules.MaxCountedPasses - 1)));
+		}
+
+		// --- The answer: one branch per obstacle, ordered by what the founder can do about it.
+
+		[Test]
+		public void Answer_AcceptsOnceTheSharedLifeCoversTheDistance()
+		{
+			Assert.AreEqual(WaterRiteAnswer.Accepted, KingdomWaterRiteRules.Answer(Facts(Hostility: 0, SharedPasses: 10)));
+		}
+
+		[Test]
+		public void Answer_ARefusesTagBeatsEverything_EvenAWholeSharedLife()
+		{
+			Assert.AreEqual(WaterRiteAnswer.Accepted, KingdomWaterRiteRules.Answer(Facts(Hostility: 0, SharedPasses: KingdomWaterRiteRules.MaxCountedPasses)));
+			Assert.AreEqual(WaterRiteAnswer.Steadfast, KingdomWaterRiteRules.Answer(Facts(Hostility: 0, SharedPasses: KingdomWaterRiteRules.MaxCountedPasses, Steadfast: true)));
+		}
+
+		[Test]
+		public void Answer_NamesTheShrineWhenTakingItDownWouldByItselfHaveChangedTheAnswer()
+		{
+			// Ten passes reaches 40, which is the distance without the shrine; with it, 70.
+			Assert.AreEqual(WaterRiteAnswer.RivalShrine, KingdomWaterRiteRules.Answer(Facts(Hostility: 0, SharedPasses: 10, RivalShrine: true)));
+			Assert.AreEqual(WaterRiteAnswer.Accepted, KingdomWaterRiteRules.Answer(Facts(Hostility: 0, SharedPasses: 10)));
+		}
+
+		[Test]
+		public void Answer_DoesNotNameTheShrineWhenRemovingItAloneWouldNotHaveHelped()
+		{
+			// One pass reaches 4 against a distance of 70, so the shrine is not what is standing in
+			// the way and naming it would be a lie the founder would act on (7b).
+			Assert.AreEqual(WaterRiteAnswer.TooNew, KingdomWaterRiteRules.Answer(Facts(Hostility: 0, SharedPasses: 1, RivalShrine: true)));
+		}
+
+		[Test]
+		public void Answer_NamesDevotionWhenThatAloneIsWhatIsInTheWay()
+		{
+			// Ten passes reaches 40, the distance without the devotion; with it, 60.
+			Assert.AreEqual(WaterRiteAnswer.Devout, KingdomWaterRiteRules.Answer(Facts(Hostility: 0, SharedPasses: 10, Devout: true)));
+		}
+
+		[Test]
+		public void Answer_TheShrineIsNamedBeforeTheDevotion_BecauseOneCanBeActedOnToday()
+		{
+			// Distance 90 against a reach of 80: taking down the shrine or setting aside the
+			// devotion would each have closed it, and only one of the two is the founder's to do.
+			Assert.AreEqual(WaterRiteAnswer.RivalShrine, KingdomWaterRiteRules.Answer(Facts(Hostility: 0, SharedPasses: 20, RivalShrine: true, Devout: true)));
+		}
+
+		[Test]
+		public void Answer_TooNewWhenALongerSharedLifeWouldEventuallyDoIt()
+		{
+			Assert.AreEqual(WaterRiteAnswer.TooNew, KingdomWaterRiteRules.Answer(Facts(Hostility: 50, SharedPasses: 1)));
+		}
+
+		[Test]
+		public void Answer_TooBitterWhenNoSharedLifeCouldEverCoverIt()
+		{
+			// A fault line with a rival shrine on top of it is past the cap: no number of passes
+			// reaches it, and the honest answer is that one of the two creeds has to move.
+			Assert.AreEqual(WaterRiteAnswer.TooBitter, KingdomWaterRiteRules.Answer(Facts(Hostility: 100, SharedPasses: 1, RivalShrine: true)));
+		}
+
+		[Test]
+		public void Answer_IsAPureFunctionOfTheFacts_AskedTwiceItSaysTheSameThing()
+		{
+			WaterRiteFacts facts = Facts(Hostility: 50, SharedPasses: 7, RivalShrine: true, Devout: true);
+			Assert.AreEqual(KingdomWaterRiteRules.Answer(facts), KingdomWaterRiteRules.Answer(facts));
+		}
+
+		[Test]
+		public void Converted_IsTrueForAcceptanceAndForNothingElse()
+		{
+			Assert.IsTrue(KingdomWaterRiteRules.Converted(WaterRiteAnswer.Accepted));
+			Assert.IsFalse(KingdomWaterRiteRules.Converted(WaterRiteAnswer.TooNew));
+			Assert.IsFalse(KingdomWaterRiteRules.Converted(WaterRiteAnswer.RivalShrine));
+			Assert.IsFalse(KingdomWaterRiteRules.Converted(WaterRiteAnswer.Devout));
+			Assert.IsFalse(KingdomWaterRiteRules.Converted(WaterRiteAnswer.TooBitter));
+			Assert.IsFalse(KingdomWaterRiteRules.Converted(WaterRiteAnswer.Steadfast));
+		}
+
+		// --- Needed passes: the door a "not yet" leaves open, and it really does open.
+
+		[TestCase(4, 1)]
+		[TestCase(5, 2)]
+		[TestCase(8, 2)]
+		[TestCase(40, 10)]
+		public void NeededPasses_RoundsUp_SoTheNamedPassActuallyCoversTheDistance(int distance, int expected)
+		{
+			Assert.AreEqual(expected, KingdomWaterRiteRules.NeededPasses(distance));
+		}
+
+		[Test]
+		public void NeededPasses_IsZeroWhenNoSharedLifeWouldEverCoverIt()
+		{
+			Assert.AreEqual(0, KingdomWaterRiteRules.NeededPasses(KingdomWaterRiteRules.ReachCap + 1));
+			Assert.AreNotEqual(0, KingdomWaterRiteRules.NeededPasses(KingdomWaterRiteRules.ReachCap));
+		}
+
+		[TestCase(0, false, false)]
+		[TestCase(25, false, false)]
+		[TestCase(50, true, false)]
+		[TestCase(0, false, true)]
+		[TestCase(50, false, true)]
+		[TestCase(0, true, true)]
+		public void NeededPasses_LivingExactlyThatManyPassesIsAcceptedAndOneFewerIsNot(int hostility, bool shrine, bool devout)
+		{
+			WaterRiteFacts atZero = Facts(Hostility: hostility, SharedPasses: 0, RivalShrine: shrine, Devout: devout);
+			int needed = KingdomWaterRiteRules.NeededPasses(KingdomWaterRiteRules.Distance(atZero));
+			Assert.Greater(needed, 0);
+			Assert.AreEqual(WaterRiteAnswer.Accepted, KingdomWaterRiteRules.Answer(Facts(Hostility: hostility, SharedPasses: needed, RivalShrine: shrine, Devout: devout)));
+			Assert.AreNotEqual(WaterRiteAnswer.Accepted, KingdomWaterRiteRules.Answer(Facts(Hostility: hostility, SharedPasses: needed - 1, RivalShrine: shrine, Devout: devout)));
+		}
+
+		// --- The price: the founding basin, held again, for one person.
+
+		[Test]
+		public void Cost_IsTheFoundingBasinPlusAMeasureForWhatIsInTheWay()
+		{
+			Assert.AreEqual(KingdomRules.FoundingCostDrams, KingdomWaterRiteRules.Cost(0));
+			Assert.AreEqual(KingdomRules.FoundingCostDrams + 1, KingdomWaterRiteRules.Cost(KingdomWaterRiteRules.DistancePerDram));
+		}
+
+		[Test]
+		public void Cost_NeverFallsBelowTheBasin_EvenOnNonsenseInput()
+		{
+			Assert.AreEqual(KingdomRules.FoundingCostDrams, KingdomWaterRiteRules.Cost(-100));
+		}
+
+		[Test]
+		public void Cost_RisesWithWhatStandsInTheWay()
+		{
+			Assert.Greater(
+				KingdomWaterRiteRules.Cost(KingdomWaterRiteRules.Distance(Facts(Hostility: 100))),
+				KingdomWaterRiteRules.Cost(KingdomWaterRiteRules.Distance(Facts(Hostility: 0))));
+		}
+
+		// --- Asked once, and not again until something is different.
+
+		[Test]
+		public void SomethingChanged_IsFalseWhenTheFounderSimplyAsksTheSameQuestionAgain()
+		{
+			WaterRiteFacts facts = Facts(Hostility: 50, SharedPasses: 3);
+			Assert.IsFalse(KingdomWaterRiteRules.SomethingChanged(StampAt(facts), facts));
+		}
+
+		[Test]
+		public void SomethingChanged_IsFalseWhenTheyLivedOneMorePassButNotEnoughOfThem()
+		{
+			WaterRiteFacts then = Facts(Hostility: 50, SharedPasses: 3);
+			Assert.IsFalse(KingdomWaterRiteRules.SomethingChanged(StampAt(then), Facts(Hostility: 50, SharedPasses: 4)));
+		}
+
+		[Test]
+		public void SomethingChanged_OpensWhenTheSharedLifeHasGrownLongEnoughToCoverTheDistance()
+		{
+			WaterRiteFacts then = Facts(Hostility: 50, SharedPasses: 3);
+			WaterRiteStamp stamp = StampAt(then);
+			Assert.IsTrue(KingdomWaterRiteRules.SomethingChanged(stamp, Facts(Hostility: 50, SharedPasses: stamp.NeededPasses)));
+		}
+
+		[Test]
+		public void SomethingChanged_OpensWhenTheQuarrelHasEased()
+		{
+			WaterRiteFacts then = Facts(Hostility: 100, SharedPasses: 3);
+			Assert.IsTrue(KingdomWaterRiteRules.SomethingChanged(StampAt(then), Facts(Hostility: 50, SharedPasses: 3)));
+		}
+
+		[Test]
+		public void SomethingChanged_DoesNotOpenWhenTheQuarrelGotWorse()
+		{
+			WaterRiteFacts then = Facts(Hostility: 50, SharedPasses: 3);
+			Assert.IsFalse(KingdomWaterRiteRules.SomethingChanged(StampAt(then), Facts(Hostility: 100, SharedPasses: 3)));
+		}
+
+		[Test]
+		public void SomethingChanged_OpensWhenTheRivalShrineIsGone()
+		{
+			WaterRiteFacts then = Facts(Hostility: 50, SharedPasses: 3, RivalShrine: true);
+			Assert.IsTrue(KingdomWaterRiteRules.SomethingChanged(StampAt(then), Facts(Hostility: 50, SharedPasses: 3)));
+		}
+
+		[Test]
+		public void SomethingChanged_DoesNotOpenWhenAShrineAppearsWhereThereWasNone()
+		{
+			WaterRiteFacts then = Facts(Hostility: 50, SharedPasses: 3);
+			Assert.IsFalse(KingdomWaterRiteRules.SomethingChanged(StampAt(then), Facts(Hostility: 50, SharedPasses: 3, RivalShrine: true)));
+		}
+
+		[Test]
+		public void SomethingChanged_OpensWheneverTheRealmBelievesSomethingElse()
+		{
+			WaterRiteFacts then = Facts(Hostility: 50, SharedPasses: 3);
+			Assert.IsTrue(KingdomWaterRiteRules.SomethingChanged(StampAt(then), Facts(Hostility: 50, SharedPasses: 3, RealmCreed: "Joppa")));
+		}
+
+		[Test]
+		public void SomethingChanged_ASteadfastRefusalIsReopenedOnlyByTheRealmBelievingSomethingElse()
+		{
+			WaterRiteStamp stamp = StampAt(Facts(Hostility: 100, SharedPasses: 1, RivalShrine: true, Steadfast: true));
+			Assert.IsTrue(stamp.Absolute);
+			Assert.IsFalse(KingdomWaterRiteRules.SomethingChanged(stamp, Facts(Hostility: 0, SharedPasses: KingdomWaterRiteRules.MaxCountedPasses, Steadfast: true)));
+			Assert.IsTrue(KingdomWaterRiteRules.SomethingChanged(stamp, Facts(Hostility: 100, SharedPasses: 1, RivalShrine: true, Steadfast: true, RealmCreed: "Joppa")));
+		}
+
+		[Test]
+		public void StampFor_MarksOnlyASteadfastRefusalAbsolute()
+		{
+			Assert.IsFalse(KingdomWaterRiteRules.StampFor(Facts(Hostility: 100), WaterRiteAnswer.TooBitter).Absolute);
+			Assert.IsFalse(KingdomWaterRiteRules.StampFor(Facts(), WaterRiteAnswer.TooNew).Absolute);
+			Assert.IsTrue(KingdomWaterRiteRules.StampFor(Facts(Steadfast: true), WaterRiteAnswer.Steadfast).Absolute);
+		}
+
+		// --- Creed names: null and empty are one belief, which is none.
+
+		[TestCase(null, null, true)]
+		[TestCase(null, "", true)]
+		[TestCase("", "", true)]
+		[TestCase("Joppa", "Joppa", true)]
+		[TestCase("Joppa", "joppa", false)]
+		[TestCase("Joppa", null, false)]
+		[TestCase("Joppa", "Barathrumites", false)]
+		public void SameCreed_TreatsNullAndEmptyAsHoldingNothingInParticular(string a, string b, bool same)
+		{
+			Assert.AreEqual(same, KingdomWaterRiteRules.SameCreed(a, b));
+			Assert.AreEqual(same, KingdomWaterRiteRules.SameCreed(b, a));
+		}
+
+		// --- Shared living: attended passes, counted once, and never a clock.
+
+		[Test]
+		public void ShouldCountPass_CountsASettlerNobodyHasCountedYet()
+		{
+			Assert.IsTrue(KingdomWaterRiteRules.ShouldCountPass(0L, 0L));
+			Assert.IsTrue(KingdomWaterRiteRules.ShouldCountPass(-5L, 40L));
+		}
+
+		[Test]
+		public void ShouldCountPass_CountsAtMostOneDayOfSharedLivingPerDay()
+		{
+			// The pacing guard: walking out of the zone and back in is a second pass, and it must
+			// not be a second day lived. A day apart is required; a day apart is never sufficient
+			// on its own, because only the attended pass calls this at all.
+			Assert.IsFalse(KingdomWaterRiteRules.ShouldCountPass(KingdomRules.TicksPerDay, KingdomRules.TicksPerDay));
+			Assert.IsFalse(KingdomWaterRiteRules.ShouldCountPass(KingdomRules.TicksPerDay, KingdomRules.TicksPerDay + 1L));
+			Assert.IsFalse(KingdomWaterRiteRules.ShouldCountPass(KingdomRules.TicksPerDay, (KingdomRules.TicksPerDay * 2L) - 1L));
+			Assert.IsTrue(KingdomWaterRiteRules.ShouldCountPass(KingdomRules.TicksPerDay, KingdomRules.TicksPerDay * 2L));
+		}
+
+		[Test]
+		public void ShouldCountPass_AClockThatWentBackwardsAwardsNothing()
+		{
+			Assert.IsFalse(KingdomWaterRiteRules.ShouldCountPass(KingdomRules.TicksPerDay * 9L, KingdomRules.TicksPerDay));
+		}
+
+		[TestCase(-1, 1)]
+		[TestCase(0, 1)]
+		[TestCase(5, 6)]
+		public void PassesAfter_AdvancesByExactlyOnePass(int before, int after)
+		{
+			Assert.AreEqual(after, KingdomWaterRiteRules.PassesAfter(before));
+		}
+
+		[Test]
+		public void PassesAfter_StopsWhereTheReachStopsMeaningAnything()
+		{
+			Assert.AreEqual(KingdomWaterRiteRules.MaxCountedPasses, KingdomWaterRiteRules.PassesAfter(KingdomWaterRiteRules.MaxCountedPasses));
+			Assert.AreEqual(KingdomWaterRiteRules.MaxCountedPasses, KingdomWaterRiteRules.PassesAfter(KingdomWaterRiteRules.MaxCountedPasses + 9));
+			Assert.AreEqual(KingdomWaterRiteRules.ReachCap, KingdomWaterRiteRules.Reach(KingdomWaterRiteRules.MaxCountedPasses));
+		}
+
+		// --- The exit. A settler may always emigrate rather than convert.
+
+		[Test]
+		public void TheRiteItselfIsNotAnImposedChannel_WhichIsWhyRepetitionHasToBeReportedSeparately()
+		{
+			// One invitation is not pressure, and KingdomConversionRules says so about this
+			// channel by name. The shell therefore reports REPEATED asking to that file's own
+			// pressure surface rather than growing an exit of its own; if this ever flipped, the
+			// shell would be registering pressure a settler was already resenting twice over.
+			Assert.IsFalse(KingdomConversionRules.IsImposed(ConversionChannel.Diplomacy));
+			Assert.IsTrue(KingdomConversionRules.IsImposed(ConversionChannel.Shrine));
+		}
+
+		[TestCase(0, false)]
+		[TestCase(1, false)]
+		[TestCase(2, false)]
+		[TestCase(3, true)]
+		[TestCase(9, true)]
+		public void AskedTooOften_FiresOnlyOnceTheyHaveRefusedTheNamedNumberOfTimes(int refusals, bool closed)
+		{
+			Assert.AreEqual(refusals >= KingdomWaterRiteRules.RefusalsBeforeAskingCloses, closed);
+			Assert.AreEqual(closed, KingdomWaterRiteRules.AskedTooOften(refusals));
+		}
+
+		[TestCase(-4, 1)]
+		[TestCase(0, 1)]
+		[TestCase(1, 2)]
+		public void RefusalsAfter_CountsOneMore(int before, int after)
+		{
+			Assert.AreEqual(after, KingdomWaterRiteRules.RefusalsAfter(before));
+		}
+
+		[Test]
+		public void RefusalsAfter_ClampsAtTheThreshold_BecausePastItTheCountStopsMeaningAnything()
+		{
+			Assert.AreEqual(KingdomWaterRiteRules.RefusalsBeforeAskingCloses, KingdomWaterRiteRules.RefusalsAfter(KingdomWaterRiteRules.RefusalsBeforeAskingCloses));
+			Assert.AreEqual(KingdomWaterRiteRules.RefusalsBeforeAskingCloses, KingdomWaterRiteRules.RefusalsAfter(KingdomWaterRiteRules.RefusalsBeforeAskingCloses + 20));
+		}
+
+		[Test]
+		public void ARefusalCountedThreeTimesIsExactlyWhatClosesTheAsking()
+		{
+			int refusals = 0;
+			for (int i = 0; i < KingdomWaterRiteRules.RefusalsBeforeAskingCloses; i++)
+			{
+				Assert.IsFalse(KingdomWaterRiteRules.AskedTooOften(refusals));
+				refusals = KingdomWaterRiteRules.RefusalsAfter(refusals);
+			}
+			Assert.IsTrue(KingdomWaterRiteRules.AskedTooOften(refusals));
+		}
+
+		// --- The quarter: the ground within sight of their own door.
+
+		[TestCase(0, 0, true)]
+		[TestCase(KingdomWaterRiteRules.QuarterRadiusCells, 0, true)]
+		[TestCase(0, -KingdomWaterRiteRules.QuarterRadiusCells, true)]
+		[TestCase(KingdomWaterRiteRules.QuarterRadiusCells, KingdomWaterRiteRules.QuarterRadiusCells, true)]
+		[TestCase(KingdomWaterRiteRules.QuarterRadiusCells + 1, 0, false)]
+		[TestCase(0, KingdomWaterRiteRules.QuarterRadiusCells + 1, false)]
+		[TestCase(-40, 3, false)]
+		public void WithinQuarter_IsChebyshevAndSymmetricInBothSigns(int dx, int dy, bool inside)
+		{
+			Assert.AreEqual(inside, KingdomWaterRiteRules.WithinQuarter(dx, dy));
+			Assert.AreEqual(inside, KingdomWaterRiteRules.WithinQuarter(-dx, -dy));
+		}
+
+		// --- Prose. Nothing stalls in silence, and a refusal is worth reading.
+
+		[TestCase(WaterRiteBar.NotOnOurGround)]
+		[TestCase(WaterRiteBar.RealmBelievesNothing)]
+		[TestCase(WaterRiteBar.NothingBetweenYou)]
+		[TestCase(WaterRiteBar.TheirOffice)]
+		[TestCase(WaterRiteBar.NoRoadOut)]
+		[TestCase(WaterRiteBar.AskedTooOften)]
+		[TestCase(WaterRiteBar.AlreadyAnswered)]
+		[TestCase(WaterRiteBar.PouredTooRecently)]
+		[TestCase(WaterRiteBar.StoresCannotBear)]
+		public void BarLine_EveryBarSaysWhy(WaterRiteBar bar)
+		{
+			Assert.IsNotEmpty(KingdomWaterRiteRules.BarLine(bar, "Vashti", "the Barathrumites", 14, 3));
+		}
+
+		[Test]
+		public void BarLine_ReadyHasNothingToSay()
+		{
+			Assert.AreEqual("", KingdomWaterRiteRules.BarLine(WaterRiteBar.Ready, "Vashti", "the Barathrumites", 14, 3));
+		}
+
+		[Test]
+		public void BarLine_TheStoresRefusalNamesBothTheCostAndWhatIsThere()
+		{
+			string line = KingdomWaterRiteRules.BarLine(WaterRiteBar.StoresCannotBear, "Vashti", "the Barathrumites", 14, 3);
+			Assert.IsTrue(line.Contains("14"));
+			Assert.IsTrue(line.Contains("3"));
+		}
+
+		[TestCase(WaterRiteBar.NothingBetweenYou)]
+		[TestCase(WaterRiteBar.TheirOffice)]
+		[TestCase(WaterRiteBar.NoRoadOut)]
+		[TestCase(WaterRiteBar.AskedTooOften)]
+		[TestCase(WaterRiteBar.AlreadyAnswered)]
+		public void BarLine_EveryBarAboutAPersonNamesThePerson(WaterRiteBar bar)
+		{
+			Assert.IsTrue(KingdomWaterRiteRules.BarLine(bar, "Vashti", "the Barathrumites", 14, 3).Contains("Vashti"));
+		}
+
+		[TestCase(WaterRiteAnswer.TooNew)]
+		[TestCase(WaterRiteAnswer.RivalShrine)]
+		[TestCase(WaterRiteAnswer.Devout)]
+		[TestCase(WaterRiteAnswer.TooBitter)]
+		[TestCase(WaterRiteAnswer.Steadfast)]
+		public void RefusalNotice_EveryRefusalNamesThePersonAndIsWorthReading(WaterRiteAnswer answer)
+		{
+			string text = KingdomWaterRiteRules.RefusalNotice(answer, "Vashti", "the Putus Templar", "the Barathrumites", "the Mechanimists");
+			Assert.IsTrue(text.Contains("Vashti"));
+			Assert.Greater(text.Length, 160);
+		}
+
+		[Test]
+		public void RefusalNotice_NoTwoRefusalsReadAlike()
+		{
+			string tooNew = KingdomWaterRiteRules.RefusalNotice(WaterRiteAnswer.TooNew, "Vashti", "a", "b", "c");
+			string shrine = KingdomWaterRiteRules.RefusalNotice(WaterRiteAnswer.RivalShrine, "Vashti", "a", "b", "c");
+			string devout = KingdomWaterRiteRules.RefusalNotice(WaterRiteAnswer.Devout, "Vashti", "a", "b", "c");
+			string bitter = KingdomWaterRiteRules.RefusalNotice(WaterRiteAnswer.TooBitter, "Vashti", "a", "b", "c");
+			string steadfast = KingdomWaterRiteRules.RefusalNotice(WaterRiteAnswer.Steadfast, "Vashti", "a", "b", "c");
+			Assert.AreNotEqual(tooNew, shrine);
+			Assert.AreNotEqual(shrine, devout);
+			Assert.AreNotEqual(devout, bitter);
+			Assert.AreNotEqual(bitter, steadfast);
+			Assert.AreNotEqual(tooNew, steadfast);
+		}
+
+		[Test]
+		public void RefusalNotice_TheShrineRefusalNamesWhatTheShrineIsConsecratedTo()
+		{
+			Assert.IsTrue(KingdomWaterRiteRules.RefusalNotice(WaterRiteAnswer.RivalShrine, "Vashti", "the Putus Templar", "the Barathrumites", "the Mechanimists").Contains("the Mechanimists"));
+		}
+
+		[Test]
+		public void RefusalNotice_AnAcceptanceIsNotARefusal()
+		{
+			Assert.AreEqual("", KingdomWaterRiteRules.RefusalNotice(WaterRiteAnswer.Accepted, "Vashti", "a", "b", "c"));
+		}
+
+		[TestCase(WaterRiteAnswer.TooNew)]
+		[TestCase(WaterRiteAnswer.RivalShrine)]
+		[TestCase(WaterRiteAnswer.Devout)]
+		[TestCase(WaterRiteAnswer.TooBitter)]
+		[TestCase(WaterRiteAnswer.Steadfast)]
+		public void RefusalTelling_EveryRefusalIsChronicledByNameAndWithoutAClosingPeriod(WaterRiteAnswer answer)
+		{
+			string telling = KingdomWaterRiteRules.RefusalTelling(answer, "Vashti", "Kavvat");
+			Assert.IsTrue(telling.Contains("Vashti"));
+			Assert.IsTrue(telling.Contains("Kavvat"));
+			Assert.IsFalse(telling.EndsWith("."));
+		}
+
+		[Test]
+		public void RefusalTelling_AnAcceptanceIsNotARefusal()
+		{
+			// An acceptance is chronicled by KingdomConversion.Convert, which is the one path every
+			// conversion in the mod takes; a second telling written here would put two accounts of
+			// one night into the book.
+			Assert.AreEqual("", KingdomWaterRiteRules.RefusalTelling(WaterRiteAnswer.Accepted, "Vashti", "Kavvat"));
+		}
+
+		[Test]
+		public void BothRegistersDisagree_AndNeitherIsTheOtherWithTheColourStrippedOut()
+		{
+			string official = KingdomWaterRiteRules.RefusalTelling(WaterRiteAnswer.TooBitter, "Vashti", "Kavvat");
+			string road = KingdomWaterRiteRules.RefusalRumour("Vashti", "Kavvat", "Ptoh");
+			Assert.AreNotEqual(official, road);
+			Assert.IsTrue(road.Contains("Ptoh"));
+			Assert.AreNotEqual(KingdomWaterRiteRules.ClosedTelling("Vashti", "Kavvat"), KingdomWaterRiteRules.ClosedRumour("Vashti", "Kavvat", "Ptoh"));
+		}
+
+		[TestCase("Vashti", "Kavvat", "Ptoh")]
+		public void RumourLines_NeverSpeakToTheFounderInTheSecondPerson(string name, string city, string founder)
+		{
+			// The rumour register is rewritten by KingdomRules.ToThirdPerson, which turns the word
+			// "you" into the founder's name wherever it finds it. An authored rumour containing one
+			// would put the founder's own voice into the register that exists to argue with it.
+			string[] rumours = new string[2]
+			{
+				KingdomWaterRiteRules.RefusalRumour(name, city, founder),
+				KingdomWaterRiteRules.ClosedRumour(name, city, founder)
+			};
+			for (int i = 0; i < rumours.Length; i++)
+			{
+				Assert.IsFalse(rumours[i].Contains("you "), rumours[i]);
+				Assert.IsFalse(rumours[i].Contains("your "), rumours[i]);
+				Assert.IsFalse(rumours[i].Contains("You "), rumours[i]);
+				Assert.IsFalse(rumours[i].Contains("Your "), rumours[i]);
+			}
+		}
+
+		[Test]
+		public void OfferPrompt_NamesThePriceAndSaysPlainlyThatItIsSpentEitherWay()
+		{
+			string prompt = KingdomWaterRiteRules.OfferPrompt("Vashti", "the Putus Templar", "the Barathrumites", "Kavvat", 14);
+			Assert.IsTrue(prompt.Contains("14 drams"));
+			Assert.IsTrue(prompt.Contains("Vashti"));
+			Assert.IsTrue(prompt.Contains("Kavvat"));
+			Assert.IsTrue(prompt.Contains("either way"));
+		}
+
+		[Test]
+		public void PressedWarning_StatesTheConsequenceBeforeItIsBought_AndDoesNotPromiseALeavingThatIsNotComing()
+		{
+			string road = KingdomWaterRiteRules.PressedWarning("Vashti", WillTakeTheRoad: true);
+			string stays = KingdomWaterRiteRules.PressedWarning("Vashti", WillTakeTheRoad: false);
+			Assert.IsTrue(road.Contains("Vashti"));
+			Assert.IsTrue(stays.Contains("Vashti"));
+			Assert.AreNotEqual(road, stays);
+			Assert.IsTrue(road.Contains("road"));
+			Assert.IsFalse(stays.Contains("road"));
+		}
+
+		[Test]
+		public void ClosedNotice_TellsTheTruthAboutWhichOfTheTwoThingsIsAboutToHappen()
+		{
+			string road = KingdomWaterRiteRules.ClosedNotice("Vashti", "Kavvat", WillTakeTheRoad: true);
+			string stays = KingdomWaterRiteRules.ClosedNotice("Vashti", "Kavvat", WillTakeTheRoad: false);
+			Assert.AreNotEqual(road, stays);
+			Assert.IsTrue(road.Contains("Vashti"));
+			Assert.IsTrue(stays.Contains("Vashti"));
+			Assert.IsTrue(stays.Contains("last time"));
+		}
+
+		[Test]
+		public void ClosedLines_NameThePersonAndTheCityAndWhatCanStillBeDone()
+		{
+			Assert.IsTrue(KingdomWaterRiteRules.ClosedTelling("Vashti", "Kavvat").Contains("Vashti"));
+			Assert.IsTrue(KingdomWaterRiteRules.ClosedTelling("Vashti", "Kavvat").Contains("Kavvat"));
+			Assert.IsFalse(KingdomWaterRiteRules.ClosedTelling("Vashti", "Kavvat").EndsWith("."));
+			string note = KingdomWaterRiteRules.ClosedNote("Vashti", "the Barathrumites");
+			Assert.IsTrue(note.Contains("Vashti"));
+			Assert.IsTrue(note.Contains("the Barathrumites"));
+		}
+
+		[Test]
+		public void RowLabel_AShutRowIsGreyedAndAnOpenRowNamesThePrice()
+		{
+			string open = KingdomWaterRiteRules.RowLabel("Vashti", "the Putus Templar", 14, WaterRiteBar.Ready, Pressed: false);
+			string shut = KingdomWaterRiteRules.RowLabel("Vashti", "the Putus Templar", 14, WaterRiteBar.AlreadyAnswered, Pressed: false);
+			Assert.IsTrue(open.Contains("14 drams"));
+			Assert.IsFalse(shut.Contains("14 drams"));
+			Assert.IsTrue(shut.StartsWith("{{K|"));
+			Assert.IsTrue(open.Contains("Vashti"));
+			Assert.IsTrue(shut.Contains("Vashti"));
+		}
+
+		[Test]
+		public void RowLabel_ASettlerOneAskingFromTheEndIsMarkedBeforeTheFounderClicksThem()
+		{
+			string pressed = KingdomWaterRiteRules.RowLabel("Vashti", "the Putus Templar", 14, WaterRiteBar.Ready, Pressed: true);
+			string plain = KingdomWaterRiteRules.RowLabel("Vashti", "the Putus Templar", 14, WaterRiteBar.Ready, Pressed: false);
+			Assert.AreNotEqual(pressed, plain);
+			Assert.IsTrue(pressed.Contains("{{r|"));
+		}
+
+		[Test]
+		public void RowLabel_ASettlerWhoHoldsNothingIsSaidToHoldNothing()
+		{
+			Assert.IsTrue(KingdomWaterRiteRules.RowLabel("Vashti", null, 14, WaterRiteBar.Ready, Pressed: false).Contains("nothing in particular"));
+		}
+
+		[Test]
+		public void EveryLine_FallsBackToAPersonRatherThanToBlankWhenTheRollCarriesNoName()
+		{
+			Assert.IsTrue(KingdomWaterRiteRules.AcceptNotice(null, null).Contains("a settler"));
+			Assert.IsTrue(KingdomWaterRiteRules.RefusalNotice(WaterRiteAnswer.TooNew, "", null, null, null).Contains("a settler"));
+			Assert.IsTrue(KingdomWaterRiteRules.RefusalTelling(WaterRiteAnswer.TooNew, null, null).Contains("a settler"));
+			Assert.IsTrue(KingdomWaterRiteRules.ClosedTelling(null, null).Contains("a settler"));
+			Assert.IsTrue(KingdomWaterRiteRules.ClosedNote(null, null).Contains("a settler"));
+			Assert.IsTrue(KingdomWaterRiteRules.RowLabel(null, null, 8, WaterRiteBar.Ready, Pressed: false).Contains("a settler"));
+		}
+	}
+}
+#endif

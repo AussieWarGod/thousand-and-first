@@ -678,7 +678,7 @@ namespace ThousandAndFirst
 		/// standings ledger, plus whatever its cities already hold and whatever it declared, minus
 		/// the realm's own faction and anything <see cref="CanBeCreed"/> rejects.
 		/// </summary>
-		private static List<string> Candidates(KingdomSystem System)
+		public static List<string> Candidates(KingdomSystem System)
 		{
 			List<string> candidates = new List<string>();
 			foreach (KeyValuePair<string, int> standing in System.Standings)

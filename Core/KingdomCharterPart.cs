@@ -78,7 +78,7 @@ namespace ThousandAndFirst
 			}
 			while (true)
 			{
-				int num = Popup.PickOption(Title: system.SeatName + KingdomSettlement.VocationSuffix(system.Vocation), Options: new string[29] { (system.PetitionKind != KingdomRules.PetitionKind.None) ? ("{{W|Hear " + system.PetitionPetitioner + "}}") : "{{K|No one is waiting to speak}}", "Status", "What happened while you were away", "The Chronicle", "As others tell it", "Standings", "The roll of settlers", "Standing policy", "Designate district", "Commission a building", "Answer a threat", "Dedicate a vessel, larder, or stockpile", "Strike a trade charter", "Send a water manifest", "Share a meal from the larder", "Certify a machine", "Set the water detail", "Plans staked for later", "Adopt a building", "Release an adoption", (system.SettlementCount >= 2 || system.Seceded != null) ? "How your cities hold each other" : "{{K|One city cannot fall out with itself}}", "What the keepers know", "Your works, and what they become", "Name a building", "Set the crew on the ground", "Take down a building", "Post a price at the heart", "Change what a plot is", "Give a building a new look"}, Hotkeys: new char[29] { 'h', 's', 'w', 'c', 'a', 'n', 'l', 'p', 'd', 'm', 't', 'v', 'r', 'i', 'f', 'e', 'u', 'g', 'b', 'j', 'k', 'o', 'y', 'x', 'q', 'z', '1', '2', '3'}, AllowEscape: true);
+				int num = Popup.PickOption(Title: system.SeatName + KingdomSettlement.VocationSuffix(system.Vocation), Options: new string[31] { (system.PetitionKind != KingdomRules.PetitionKind.None) ? ("{{W|Hear " + system.PetitionPetitioner + "}}") : "{{K|No one is waiting to speak}}", "Status", "What happened while you were away", "The Chronicle", "As others tell it", "Standings", "The roll of settlers", "Standing policy", "Designate district", "Commission a building", "Answer a threat", "Dedicate a vessel, larder, or stockpile", "Strike a trade charter", "Send a water manifest", "Share a meal from the larder", "Certify a machine", "Set the water detail", "Plans staked for later", "Adopt a building", "Release an adoption", (system.SettlementCount >= 2 || system.Seceded != null) ? "How your cities hold each other" : "{{K|One city cannot fall out with itself}}", "What the keepers know", "Your works, and what they become", "Name a building", "Set the crew on the ground", "Take down a building", "Post a price at the heart", "Change what a plot is", "Give a building a new look", "Consecrate a shrine", "Share water with a settler"}, Hotkeys: new char[31] { 'h', 's', 'w', 'c', 'a', 'n', 'l', 'p', 'd', 'm', 't', 'v', 'r', 'i', 'f', 'e', 'u', 'g', 'b', 'j', 'k', 'o', 'y', 'x', 'q', 'z', '1', '2', '3', '4', '5'}, AllowEscape: true);
 				switch (num)
 				{
 				case 0:
@@ -167,6 +167,12 @@ namespace ThousandAndFirst
 					break;
 				case 28:
 					KingdomSocket.OpenRedress(system, ParentObject);
+					break;
+				case 29:
+					KingdomFaith.OpenConsecration(system, ParentObject);
+					break;
+				case 30:
+					KingdomWaterRite.OpenRite(system, ParentObject);
 					break;
 				default:
 					return;

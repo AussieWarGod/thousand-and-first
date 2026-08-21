@@ -116,6 +116,17 @@ namespace ThousandAndFirst
 			// candidate: who sleeps where, spending neither water nor hands. This is the ONE
 			// attended pass Addendum 4b's grace is counted in.
 			KingdomLodging.OnSettlementPass(System, Z);
+			// Immediately after lodging, and never before it: who shares a roof this pass is the
+			// whole input to osmosis (Addendum 5). Spends no water and no hands -- shared living is
+			// the only thing it counts, and it counts it in attended passes, so a founder who is
+			// away converts nobody and walks nobody out of town.
+			KingdomConversion.OnSettlementPass(System, Z);
+			// Shared living WITH THE SETTLEMENT, counted in attended passes and at most one day
+			// apiece: the input the water rite reads for how much of this place a settler has
+			// actually lived. Not the same quantity as KingdomConversion's shared living TOWARD ONE
+			// CREED, which is household-scoped and closeness-scaled; both are attended-pass
+			// denominated, and neither reads a clock that could advance while nobody is here.
+			KingdomWaterRite.OnSettlementPass(System, Z);
 			// After the plot, for the same reason: a staked plan only ever spends what the
 			// plot's own draw left behind.
 			KingdomPlanMarker.OnSettlementPass(System, Z, survey);

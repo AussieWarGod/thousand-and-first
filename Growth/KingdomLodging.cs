@@ -183,7 +183,7 @@ namespace ThousandAndFirst
 					new List<string>(KingdomQol.OfferOf(entry.Key)),
 					capacity,
 					(occupants == null) ? 0 : occupants.Count,
-					occupants != null && AnyOccupantConflicts(refuses, selfTags, creed, occupants, QuartersOf(entry))));
+					occupants != null && AnyOccupantConflicts(refuses, selfTags, creed, occupants, KingdomFaith.EducatedCloseness(Z, QuartersOf(entry)))));
 			}
 			return KingdomLodgingRules.AnyWouldTake(offers, needs, out Reason);
 		}
@@ -197,6 +197,26 @@ namespace ThousandAndFirst
 			GameObject home = HomeOf(Z, Resident);
 			KingdomRules.BuildEntry entry;
 			return (home != null && TryGetBuiltEntry(home, out entry)) ? entry.Key : null;
+		}
+
+		/// <summary>
+		/// The closeness rung of the home this resident sleeps in &mdash; the design's declared
+		/// <c>Closeness</c>, or the arithmetic on its beds against the ground its tier stands on.
+		/// For a caller that needs to know how much of a difference a roof will hold: Addendum 5's
+		/// osmosis scales on exactly this ladder, and it is the same ladder the cohabitation gate
+		/// already reads, so the roof that will house a grudge and the roof that will cross one can
+		/// never disagree.
+		/// </summary>
+		/// <param name="Z">The zone. Null reads as no home.</param>
+		/// <param name="Resident">The resident. Null, and a resident with no assigned home, both
+		/// read as <see cref="KingdomLodgingRules.Closeness.Packed"/> &mdash; the tightest rung,
+		/// which is also the rung that converts nobody, so a missing answer can never accelerate
+		/// anything.</param>
+		public static KingdomLodgingRules.Closeness QuartersOf(Zone Z, GameObject Resident)
+		{
+			GameObject home = HomeOf(Z, Resident);
+			KingdomRules.BuildEntry entry;
+			return (home != null && TryGetBuiltEntry(home, out entry)) ? QuartersOf(entry) : KingdomLodgingRules.Closeness.Packed;
 		}
 
 		// --- The pass itself -------------------------------------------------------------
@@ -312,7 +332,7 @@ namespace ThousandAndFirst
 					continue;
 				}
 				anyHasCapacity = true;
-				KingdomLodgingRules.Closeness quarters = QuartersOf(entry);
+				KingdomLodgingRules.Closeness quarters = KingdomFaith.EducatedCloseness(Z, QuartersOf(entry));
 				if (occupants != null && AnyOccupantConflicts(refuses, selfTags, creed, occupants, quarters))
 				{
 					roomiestRefused = KingdomLodgingRules.Roomier(roomiestRefused, quarters);

@@ -286,6 +286,34 @@ namespace ThousandAndFirst
 		/// </summary>
 		public Dictionary<string, int> LodgingGrace = new Dictionary<string, int>();
 
+		/// <summary>
+		/// Addendum 5: shared living each settler has accumulated toward somebody else's creed,
+		/// keyed by the name they are carried on the roll under. Counted in ATTENDED passes and in
+		/// witnessed meals, never in ticks &mdash; that is what makes conversion unspendable while
+		/// the founder is away. Empty for nearly every settler in nearly every city.
+		/// <para>
+		/// Per-city, and swapped with the seat exactly like <see cref="LodgingGrace"/>: which
+		/// household is pulling at whom is a fact about one city. Paired with
+		/// <see cref="ConversionToward"/>, which names the creed those points are toward.
+		/// </para>
+		/// </summary>
+		public Dictionary<string, int> ConversionShared = new Dictionary<string, int>();
+
+		/// <summary>The creed each entry of <see cref="ConversionShared"/> is accumulating toward.
+		/// A settler is only ever pulled one way at a time; a second pull takes points off the first
+		/// rather than opening a second tally (<c>KingdomConversionRules.Advance</c>).</summary>
+		public Dictionary<string, string> ConversionToward = new Dictionary<string, string>();
+
+		/// <summary>
+		/// Addendum 5's exit: how many ATTENDED passes each settler standing under a creed they
+		/// resent has spent of their grace. Zero is the pass it was announced on;
+		/// <c>KingdomConversionRules.ResentedPasses</c> is the pass they leave on. The entry is also
+		/// the once-only announce flag (STANDARDS 7b), and it is removed the moment the pressure
+		/// lifts, so a founder who takes the shrine back out of somebody's quarter has genuinely
+		/// taken it back out.
+		/// </summary>
+		public Dictionary<string, int> ConversionResented = new Dictionary<string, int>();
+
 		public Dictionary<string, int> Standings = new Dictionary<string, int>();
 
 		/// <summary>
@@ -395,6 +423,15 @@ namespace ThousandAndFirst
 
 		/// <summary>Tick of the last rite of shared water. See <see cref="KingdomCreed.HoldRite"/>.</summary>
 		public long LastRiteTick;
+
+		/// <summary>
+		/// Tick of the last rite of shared water held with one of the realm's OWN settlers
+		/// (Addendum 5's diplomacy channel). Realm-level and never swapped, exactly like
+		/// <see cref="LastRiteTick"/> and for the same reason: the founder is one person, and
+		/// pouring twice in one evening is a round of drinks whichever city they are standing in.
+		/// Zero means never. See <see cref="KingdomWaterRite.OpenRite"/>.
+		/// </summary>
+		public long LastSoulRiteTick;
 
 		/// <summary>The city that left the realm over its creed, kept whole, or null. See
 		/// <see cref="KingdomCreed.Secede"/>. Realm-level: a settlement does not carry its own
@@ -945,6 +982,10 @@ namespace ThousandAndFirst
 			{
 				KingdomCreed.OnZoneActivated(this, E.Zone);
 			});
+			Guard("faith", delegate
+			{
+				KingdomFaith.OnZoneActivated(this, E.Zone, survey);
+			});
 			Guard("digest", delegate
 			{
 				long elapsed = The.Game.TimeTicks - LastVisitTick;
@@ -1141,6 +1182,18 @@ namespace ThousandAndFirst
 			if (LodgingGrace == null)
 			{
 				LodgingGrace = new Dictionary<string, int>();
+			}
+			if (ConversionShared == null)
+			{
+				ConversionShared = new Dictionary<string, int>();
+			}
+			if (ConversionToward == null)
+			{
+				ConversionToward = new Dictionary<string, string>();
+			}
+			if (ConversionResented == null)
+			{
+				ConversionResented = new Dictionary<string, int>();
 			}
 			if (ExiledStandings == null)
 			{

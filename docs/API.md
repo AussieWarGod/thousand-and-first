@@ -95,6 +95,17 @@ thirst ladder fires, and it deposits only into a dedicated larder.
 `KingdomGuestbook` (notable guests with hooks that decay into rumors, and the carry-sign's
 distance-scaled hauls, one in flight, mirroring the water manifest's honesty rules).
 
+## How belief moves
+
+`KingdomConversion` / `KingdomConversionRules`: osmosis (shared living under one roof, scaled by
+closeness), culture (shared meals, capped), and the resented-pressure exit (named once, graced in
+attended passes, emigrating through the ordinary machinery). **`KingdomConversion.Convert` is the
+one path a conversion may take** — it alone keeps the creed tallies, pressure entries, and the
+two-register dispute honest. `KingdomFaith` (consecration; staffed shrines converting the neutral
+of their zone; staffed scriptoria softening the grudge one band) and `KingdomWaterRite` (the rite
+turned inward: consented, priced, refusal-with-reasons, the fourth asking shutting the question)
+both route through it.
+
 ## The quality-of-life vocabulary, and lodging
 
 `KingdomQolRules` / `KingdomQol`: one namespaced tag vocabulary — buildings declare `Provides`

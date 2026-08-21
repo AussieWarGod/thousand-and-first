@@ -58,6 +58,11 @@ namespace ThousandAndFirst
 			MessageQueue.AddPlayerMessage(KingdomVoices.Say(speaker, VoiceOccasion.MealShared, "{{G|" + XRL.Language.Grammar.InitCap(sizeName) + " is shared, and the settlement eats together.}}", KingdomRules.MealSpeech(tier)));
 			KingdomLog.Log("shared meal: tier=" + tier + " spent=" + spent + " settler=" + speaker.Attribution);
 			KingdomCreed.EaseForMeal(System);
+			// Addendum 5's culture channel, riding the meal rather than being a lever of its own: the
+			// founder already paid for the food, and this is the evening being worth more than its
+			// calories to the people who sat down at it. Small, capped, and nobody converts on supper
+			// alone.
+			KingdomConversion.OnSharedMeal(System, Z);
 			return true;
 		}
 	}

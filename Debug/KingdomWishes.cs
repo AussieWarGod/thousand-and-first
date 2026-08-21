@@ -359,6 +359,8 @@ namespace ThousandAndFirst
 					.Append(" beds=").Append(survey.Beds).Append(" citizens=").Append(survey.Citizens);
 			}
 			sb.Append(KingdomLodging.DumpLine(system, here));
+			sb.Append(KingdomConversion.DumpLine(system, here));
+			sb.Append(KingdomWaterRite.DumpLine(system, here));
 			sb.Append("\nPop: ").Append(system.Population).Append("  DryStreak: ").Append(system.DryStreak).Append("  HasShopkeeper: ").Append(system.HasShopkeeper);
 			sb.Append("\nNextArrival: ").Append(system.NextArrivalTick).Append("  Raid: state=").Append(system.RaidState).Append(" faction=").Append(system.RaidFactionName ?? "-").Append(" due=").Append(system.RaidDueTick).Append(" last=").Append(system.LastRaidTick);
 			sb.Append("\nClaims: ").Append(string.Join(", ", system.ClaimedZones));

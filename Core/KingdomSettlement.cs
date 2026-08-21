@@ -153,6 +153,16 @@ namespace ThousandAndFirst
 		/// walks to the other city does not carry this one's housing troubles with them.</summary>
 		public Dictionary<string, int> LodgingGrace = new Dictionary<string, int>();
 
+		/// <summary>See <see cref="KingdomSystem.ConversionShared"/>. Per-city, so a founder who
+		/// walks to the other city does not carry this one's half-turned believers with them.</summary>
+		public Dictionary<string, int> ConversionShared = new Dictionary<string, int>();
+
+		/// <summary>See <see cref="KingdomSystem.ConversionToward"/>.</summary>
+		public Dictionary<string, string> ConversionToward = new Dictionary<string, string>();
+
+		/// <summary>See <see cref="KingdomSystem.ConversionResented"/>.</summary>
+		public Dictionary<string, int> ConversionResented = new Dictionary<string, int>();
+
 		public KingdomRules.PetitionKind PetitionKind = KingdomRules.PetitionKind.None;
 
 		public string PetitionPetitioner;
@@ -281,6 +291,18 @@ namespace ThousandAndFirst
 			if (LodgingGrace == null)
 			{
 				LodgingGrace = new Dictionary<string, int>();
+			}
+			if (ConversionShared == null)
+			{
+				ConversionShared = new Dictionary<string, int>();
+			}
+			if (ConversionToward == null)
+			{
+				ConversionToward = new Dictionary<string, string>();
+			}
+			if (ConversionResented == null)
+			{
+				ConversionResented = new Dictionary<string, int>();
 			}
 			if (ClaimedZones == null)
 			{

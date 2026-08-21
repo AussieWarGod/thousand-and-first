@@ -203,6 +203,23 @@ playtest passes.
   physically partitions into quarters through the layout grammar — no code knows the word
   "quarter." Architecture manages difference; only the covenant heals it.
 
+### Added — how belief moves
+- **Osmosis**: a household's majority slowly pulls the minority under its roof — counted in
+  attended passes and scaled by the closeness of the quarters, a season not a week, deterministic
+  on reload. Pulled two ways, a citizen converts to neither.
+- **Culture**: every shared meal nudges the table toward its own majority, small and capped — a
+  settlement cannot eat its way to a conversion.
+- **Consecration**: a founder may consecrate a shrine to a creed; staffed, it draws the neutral of
+  its zone — never the opposed, who resent it instead, and may take the road: named once, six
+  attended passes of grace, then the ordinary emigration. Remove the shrine and the pressure lifts.
+- **Education softens**: a staffed scriptorium reads the ambient grudge one band gentler. It
+  converts nobody.
+- **The water rite turned inward**: share water with one named settler of another creed. They
+  decide, from what actually stands between you; refusal costs the water anyway and names what
+  would have to change; a fourth asking shuts the question. One rite, one soul. The covenant is
+  drunk, never administered.
+- Contested conversions are told twice, and the registers disagree.
+
 ### Changed
 - Districts are no longer flavour. Each of the six now changes something a player can measure:
   garrison adds defence across every claimed zone, agrarian bills upkeep at 90%, market adds a

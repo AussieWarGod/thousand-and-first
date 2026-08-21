@@ -351,6 +351,21 @@ anyone.
 | 68b | Try to house a true fault-line pair (−100: esper and templar) in the marble fine house | **Refused at every tier.** Walls answer prejudice, not a creed war — they need separate buildings, and the city partitions into quarters by itself |
 | 68c | Watch where housing rises in a two-creed city | Quarters emerge — the layout grammar clusters housing with housing, and no building can hold both creeds. No code knows the word "quarter" |
 
+## Pass 21 — How belief moves
+
+| Step | Action | Expect |
+|---|---|---|
+| 69 | House a creed-minority settler in a stone house with a majority household, and keep visiting | A **season of shared living**, then perhaps a conversion — chronicled by name, deterministic on reload. One open room converts nobody; quarters of one's own are slowest |
+| 69a | Feed a citizen at a table of another creed while they sleep in a house of a third | Pulled two ways, they convert to **neither** — a second pull takes points off the first |
+| 70 | Charter → **Consecrate a shrine** (`4`) to a creed the realm has dealt with | A chronicled ceremony. Staffed, the shrine slowly draws the *neutral* of its zone toward its creed — never the opposed, who instead begin to resent it |
+| 70a | Let a rival shrine stand over a settler's quarter | Named once; six attended passes to take it back off; then they leave through the ordinary emigration, by name and cause. **Remove the shrine and the pressure genuinely lifts** |
+| 70b | Unstaff the shrine or scriptorium | An unstaffed shrine is a stone; an unstaffed scriptorium is a room of vellum — each says so once |
+| 70c | Staff a scriptorium in a mixed zone | The ambient grudge reads one band gentler for lodging and osmosis. It converts nobody |
+| 71 | Charter → **Share water with a settler** (`5`) of another creed | The founding rite's own eight drams plus a measure for what stands between you — disclosed first, spent whichever way they answer |
+| 71a | Be refused | Prose worth reading, naming what would have to be different. Not retryable until something real changes |
+| 71b | Ask a fourth time | They answer by counting the askings out loud, and the question is shut from that night |
+| 71c | Convert someone whose old creed ran hot against the new | Both registers carry it and **disagree**: your book says they took the rite; the roads say they were bought |
+
 ## Pass 4 — Attitudes and persistence
 
 | Step | Action | Expect |
