@@ -797,3 +797,24 @@ functions wither on the standing equilibrium law (time × labour × infrastructu
 abandoned arcology is Qud's own fiction: an intact colossus, dark inside, waiting for people
 worth its size. Nothing new mechanically — the existing carries/wear/subsidence/reach machinery
 applied at the largest scale; the only novel rule remains the indestructible shell.
+
+**Ideation, orchestrator with author freedom (2026-08-22) — arcology internals + liquid law:**
+
+- **Freight-shaft shared inventory**: one inventory NAMESPACE across interior zones, honest
+  under 12(d) — items in real containers on real floors; the shell contributes shaft edges to
+  the distance matrix (cheaper than street legs), so nearest-holder sourcing + vertical
+  itineraries make the whole building one pantry with no new storage rule.
+- **Shell as backbone**: riser taps on every floor — interior network segments join the spine's
+  12(g) graph edges for free. Infrastructure is inherited, not built; that is the engineering
+  benefit of the colossus.
+- **Arcology-only sets** (Addendum 2 extension): sealed hydroponics, vertical lodging at
+  surface-impossible densities offset by unique amenities (never exempt from the closeness
+  ladder), gallery commons, scrubbers, funicular market.
+- **LIQUID LAW** (author: no accidental mixing; passing without merging; mixtures future):
+  connection is DECLARED, never inferred. (1) Typed lines — one liquid per network; a
+  cross-liquid join REFUSES by name, never merges. (2) Explicit topology — segments join by
+  declaration, not tile adjacency, so lines cross in one tile via crossover pieces without
+  merging (we own the liquid carrier; electrical stays vanilla adjacency where mixing is not a
+  concept). (3) Mixtures arrive as a MIXING WORK consuming typed lines and emitting a
+  mixture-typed line (vanilla LiquidVolume natively holds proportioned mixtures); the
+  no-silent-merge rule never bends.
