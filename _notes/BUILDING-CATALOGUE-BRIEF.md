@@ -962,3 +962,18 @@ learning idioms: "similar feel to the way blueprints/data disks/psychometry work
   keys until then, re-pointed later).
 - Refusals name the missing gate per 7b; the visibility law (Addendum 14) applies to
   creed-buildings a city cannot see its way to.
+
+
+## Addendum 17, 2026-08-22 — the identity doctrine (author answer to ideation Q4)
+
+- **Both accessors, following vanilla's own split**: `GetCulture()` (33 peoples, story-shaped)
+  for tech/creed/building divergence — what a people KNOWS; `GetSpecies()` (98, granular) for
+  body-shaped things — QoL, the lab's anatomy gates. Two knowledge kinds. Extended, not
+  replaced; API-friendly.
+- **The full identity tuple feeds capability and knowledge**: culture, creed, and species
+  influence what a citizen can do and what the city can learn ALONGSIDE the attributes and
+  skills they carry — reaching the tech tree (Addendum 14), job capability (crew/worker lanes),
+  and "anywhere else it would make sense" — applied where a lane already reads identity,
+  never as a new parallel system (mesh condition).
+- Modder-extensible at every point a vanilla mod can already extend the underlying vocabulary
+  (new cultures, species, creeds compose without our code changing).
