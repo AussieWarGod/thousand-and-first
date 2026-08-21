@@ -78,14 +78,18 @@ namespace ThousandAndFirst
 			}
 			while (true)
 			{
-				int num = Popup.PickOption(Title: system.SeatName + KingdomSettlement.VocationSuffix(system.Vocation), Options: new string[31] { (system.PetitionKind != KingdomRules.PetitionKind.None) ? ("{{W|Hear " + system.PetitionPetitioner + "}}") : "{{K|No one is waiting to speak}}", "Status", "What happened while you were away", "The Chronicle", "As others tell it", "Standings", "The roll of settlers", "Standing policy", "Designate district", "Commission a building", "Answer a threat", "Dedicate a vessel, larder, or stockpile", "Strike a trade charter", "Send a water manifest", "Share a meal from the larder", "Certify a machine", "Set the water detail", "Plans staked for later", "Adopt a building", "Release an adoption", (system.SettlementCount >= 2 || system.Seceded != null) ? "How your cities hold each other" : "{{K|One city cannot fall out with itself}}", "What the keepers know", "Your works, and what they become", "Name a building", "Set the crew on the ground", "Take down a building", "Post a price at the heart", "Change what a plot is", "Give a building a new look", "Consecrate a shrine", "Share water with a settler"}, Hotkeys: new char[31] { 'h', 's', 'w', 'c', 'a', 'n', 'l', 'p', 'd', 'm', 't', 'v', 'r', 'i', 'f', 'e', 'u', 'g', 'b', 'j', 'k', 'o', 'y', 'x', 'q', 'z', '1', '2', '3', '4', '5'}, AllowEscape: true);
+				// Taken hotkeys, all thirty-two of them: every letter a-z is spoken for, so a new
+				// entry takes the next digit. Used so far: h s w c a n l p d m t v r i f e u g b
+				// j k o y x q z and the digits 1 2 3 4 5 6. Check this list before adding an
+				// entry - a duplicated hotkey silently picks whichever option comes first.
+				int num = Popup.PickOption(Title: system.SeatName + KingdomSettlement.VocationSuffix(system.Vocation), Options: new string[32] { (system.PetitionKind != KingdomRules.PetitionKind.None) ? ("{{W|Hear " + system.PetitionPetitioner + "}}") : "{{K|No one is waiting to speak}}", "Status", "What happened while you were away", "The Chronicle", "As others tell it", "Standings", "The roll of settlers", "Standing policy", "Designate district", "Commission a building", "Answer a threat", "Dedicate a vessel, larder, or stockpile", "Strike a trade charter", "Send a water manifest", "Share a meal from the larder", "Certify a machine", "Set the water detail", "Plans staked for later", "Adopt a building", "Release an adoption", (system.SettlementCount >= 2 || system.Seceded != null) ? "How your cities hold each other" : "{{K|One city cannot fall out with itself}}", "What the keepers know", "Your works, and what they become", "Name a building", "Set the crew on the ground", "Take down a building", "Post a price at the heart", "Change what a plot is", "Give a building a new look", "Consecrate a shrine", "Share water with a settler", "Claim this ground"}, Hotkeys: new char[32] { 'h', 's', 'w', 'c', 'a', 'n', 'l', 'p', 'd', 'm', 't', 'v', 'r', 'i', 'f', 'e', 'u', 'g', 'b', 'j', 'k', 'o', 'y', 'x', 'q', 'z', '1', '2', '3', '4', '5', '6'}, AllowEscape: true);
 				switch (num)
 				{
 				case 0:
 					HearPetition(system);
 					break;
 				case 1:
-					Popup.Show(KingdomReports.Status(system));
+					Popup.Show(KingdomReports.Status(system, ParentObject?.CurrentZone));
 					break;
 				case 2:
 					ShowHomecoming(system);
@@ -174,10 +178,87 @@ namespace ThousandAndFirst
 				case 30:
 					KingdomWaterRite.OpenRite(system, ParentObject);
 					break;
+				case 31:
+					ClaimGround(system);
+					break;
 				default:
 					return;
 				}
 			}
+		}
+
+		/// <summary>
+		/// Takes the ground the founder is standing on into the seated city.
+		/// <para>
+		/// The one verb the whole multi-zone half of the design was waiting on. Everything behind
+		/// it was already built and already tested and had nothing to exercise it: growth,
+		/// commission, plots, yards, sockets, faith and the locus all gate on
+		/// <c>ClaimedZones.Contains</c>, districts are a real per-zone map, eight designs gate on
+		/// <c>MinZones</c>, and the wall line is recomputed against the whole claim on every
+		/// placement. In normal play a city held exactly one parasang forever, because
+		/// <c>KingdomFounding.ClaimZone</c>'s only callers were the founding rite and two debug
+		/// wishes. This is the founder's own claim.
+		/// </para>
+		/// <para>
+		/// <b>It costs nothing, and that is a decision.</b> The brief prices the founding rite (a
+		/// basin of fresh water) and prices every building, and names no price at all for a
+		/// claim: expansion direction is "entirely the founder's". What a claim actually costs is
+		/// paid afterwards and in kind &mdash; a new parasang is a new wall line to raise, a new
+		/// budget of ground to lay, and a stage that must have been earned first. Inventing a
+		/// dram price here would be inventing a ruling nobody made.
+		/// </para>
+		/// <para>
+		/// Every refusal names what would lift it, and a claim that goes through says what it did
+		/// to the wall line &mdash; including when the answer is "nothing", which is the honest
+		/// answer for ground taken diagonally across a corner or straight down into the rock.
+		/// </para>
+		/// </summary>
+		public void ClaimGround(KingdomSystem System)
+		{
+			Zone zone = ParentObject.CurrentZone;
+			KingdomZoningRules.ClaimVerdict verdict = KingdomFounding.JudgeClaim(System, zone);
+			if (verdict != KingdomZoningRules.ClaimVerdict.Allowed)
+			{
+				Popup.Show(KingdomZoningRules.ClaimRefusal(verdict, System.SeatName, System.Stage));
+				return;
+			}
+			// The wall line is measured on the ground the city ALREADY holds, before and after,
+			// with the same zones asked both times: what changes is which neighbours exist, and
+			// an edge that stops facing the world is an edge that stops being wall ground.
+			// Measuring the new zone's own edges instead would answer nothing - a zone is not its
+			// own neighbour, so its frontier reads the same either side of the claim.
+			System.Collections.Generic.List<string> held = new System.Collections.Generic.List<string>(System.ClaimedZones);
+			int before = WorldFacingEdges(held, System.ClaimedZones);
+			if (Popup.ShowYesNo("Take " + XRL.Language.Grammar.GetProsaicZoneName(zone) + " into {{C|" + System.SeatName
+				+ "}}? Nothing is spent. This ground becomes the city's: its plots, its wall line, its district to name.") != DialogResult.Yes)
+			{
+				return;
+			}
+			if (!KingdomFounding.ClaimZone(zone))
+			{
+				// The primitive judges the same ground a second time and is entitled to disagree
+				// - it is the one that actually writes the zone property. Refused rather than
+				// reported as done.
+				Popup.Show("The claim did not hold. This ground is not the city's.");
+				return;
+			}
+			int after = WorldFacingEdges(held, System.ClaimedZones);
+			Popup.Show("{{G|" + System.SeatName + " holds " + XRL.Language.Grammar.GetProsaicZoneName(zone) + ".}}\n\n"
+				+ KingdomZoningRules.ClaimedWallClause(before, after, System.SeatName)
+				+ "\n\n" + KingdomZoningRules.ClaimHoldingLine(System.ClaimedZones.Count, KingdomZoningRules.ZonesForStage(System.Stage)));
+		}
+
+		/// <summary>How many zone edges the named ground turns to the world, summed, judged
+		/// against a claim. Asked either side of a claim with the same ground and a widened claim,
+		/// which is the difference the founder is told about.</summary>
+		private static int WorldFacingEdges(System.Collections.Generic.IList<string> Held, System.Collections.Generic.List<string> Claim)
+		{
+			int edges = 0;
+			for (int i = 0; (Held != null) && i < Held.Count; i++)
+			{
+				edges += KingdomZoningRules.EdgeCount(KingdomRules.FrontierEdges(Held[i], Claim));
+			}
+			return edges;
 		}
 
 		/// <summary>

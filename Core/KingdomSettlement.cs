@@ -90,6 +90,14 @@ namespace ThousandAndFirst
 
 		public bool Withered;
 
+		/// <summary>Resolves in a row this city's ration bill went unpaid. Carried, so a city
+		/// left hungry is still hungry when the founder walks back into it.</summary>
+		public int HungerStreak;
+
+		/// <summary>Whether this city stands marked by a long hunger. Carried beside
+		/// <see cref="Withered"/>; both can be true at once.</summary>
+		public bool Famished;
+
 		public bool HasShopkeeper;
 
 		public bool NoRoomAnnounced;
@@ -103,6 +111,11 @@ namespace ThousandAndFirst
 		/// <summary>Tick this city's water works last produced. Carried, so a dormant city's
 		/// works do not pour a windfall the moment it is seated.</summary>
 		public long LastWaterWorkTick;
+
+		/// <summary>Tick this city's fields last brought a harvest in. Carried for the reason
+		/// <see cref="LastWaterWorkTick"/> is: a dormant city's fields do not fill a granary the
+		/// moment it is seated.</summary>
+		public long LastFoodWorkTick;
 
 		/// <summary>Citizens of this city crewing works. Carried with the city.</summary>
 		public int AssignedCrew;
@@ -122,6 +135,10 @@ namespace ThousandAndFirst
 		public int DamagedWorks;
 
 		public bool IdleWorksAnnounced;
+
+		/// <summary>Whether this city has already been told its harvest has nowhere to go
+		/// (STANDARDS 7b). Carried, so walking away and back does not re-say it.</summary>
+		public bool HarvestUnstoredAnnounced;
 
 		/// <summary>
 		/// Tick this settlement's level was last reckoned against its people
@@ -395,6 +412,20 @@ namespace ThousandAndFirst
 			{
 				NotableShade = 0;
 			}
+			// The two scarcity streaks fail closed the same way, and for the same reason: a
+			// negative streak is a corrupt reading, and a ladder cannot owe a settlement rungs.
+			if (DryStreak < 0)
+			{
+				DryStreak = 0;
+			}
+			if (HungerStreak < 0)
+			{
+				HungerStreak = 0;
+			}
+			if (LastFoodWorkTick < 0L)
+			{
+				LastFoodWorkTick = 0L;
+			}
 		}
 
 		/// <summary>
@@ -643,9 +674,10 @@ namespace ThousandAndFirst
 			{
 				sb.Append(" [").Append(Vocation).Append("]");
 			}
-			sb.Append(" ").Append(Style).Append(" ").Append(Stage).Append(Withered ? " (withered)" : "")
+			sb.Append(" ").Append(Style).Append(" ").Append(Stage).Append(Withered ? " (withered)" : "").Append(Famished ? " (famished)" : "")
 				.Append(" pop=").Append(Population)
 				.Append(" dry=").Append(DryStreak)
+				.Append(" hunger=").Append(HungerStreak)
 				.Append(" claims=").Append(ClaimedZones.Count)
 				.Append(" founded=").Append(FoundedTick)
 				.Append(" visit=").Append(LastVisitTick)

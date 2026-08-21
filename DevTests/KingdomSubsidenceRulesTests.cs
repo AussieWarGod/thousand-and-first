@@ -32,6 +32,180 @@ namespace ThousandAndFirst.Tests
 		}
 
 		// ==================================================================================
+		// A city is every zone it holds, as each was last seen.
+		// ==================================================================================
+
+		private static KingdomSubsidenceRules.ZoneSighting Seen(int Water, int Food, int Roof, int Storage, long Tick)
+		{
+			return new KingdomSubsidenceRules.ZoneSighting(Water, Food, Roof, Storage, Tick);
+		}
+
+		[Test]
+		public void ACityIsMeasuredFromEveryZoneItHoldsNotTheOneYouWalkedInThrough()
+		{
+			// The defect: SupportedLevel was written from the visited zone's survey alone, so a
+			// two-zone city entered through the mine forgot the granary zone entirely.
+			KingdomCatalogueRules.SupportTally mine = Tally(Water: 6, Food: 0, Roof: 4);
+			List<KingdomSubsidenceRules.ZoneSighting> granary = new List<KingdomSubsidenceRules.ZoneSighting>
+			{
+				Seen(20, 26, 12, 400, 5000L)
+			};
+			KingdomCatalogueRules.SupportTally city = KingdomSubsidenceRules.CityTally(mine, granary);
+			Assert.AreEqual(26, city.Water);
+			Assert.AreEqual(26, city.Food);
+			Assert.AreEqual(16, city.Roof);
+		}
+
+		[Test]
+		public void TheCityLevelDoesNotSwingWithWhichZoneTheFounderStandsIn()
+		{
+			// The property the fix is for, stated directly: the same two zones, entered either
+			// way, answer the same level.
+			KingdomCatalogueRules.SupportTally mine = Tally(Water: 6, Food: 2, Roof: 4);
+			KingdomCatalogueRules.SupportTally granary = Tally(Water: 20, Food: 26, Roof: 12);
+			int fromMine = KingdomSubsidenceRules.SupportedLevel(
+				KingdomSubsidenceRules.CityTally(mine, new List<KingdomSubsidenceRules.ZoneSighting> { Seen(20, 26, 12, 0, 5000L) }),
+				GrowthStage.Town);
+			int fromGranary = KingdomSubsidenceRules.SupportedLevel(
+				KingdomSubsidenceRules.CityTally(granary, new List<KingdomSubsidenceRules.ZoneSighting> { Seen(6, 2, 4, 0, 5000L) }),
+				GrowthStage.Town);
+			Assert.AreEqual(fromMine, fromGranary);
+			Assert.IsTrue(fromMine > KingdomSubsidenceRules.SupportedLevel(mine, GrowthStage.Town),
+				"the city carries more than the zone the founder happened to walk in through");
+		}
+
+		[Test]
+		public void TheLiftingHalfIsCarriedAcrossUntouchedRatherThanSummedTwice()
+		{
+			// ScopedSupports has ALREADY summed the city's lifts through
+			// KingdomReach.CityShadeExcept (Addendum 6). Adding the other zones' lifts here would
+			// count every shrine in the realm twice.
+			KingdomCatalogueRules.SupportTally here = Tally(Water: 10, Food: 10, Roof: 10, Lift: 7);
+			KingdomCatalogueRules.SupportTally city = KingdomSubsidenceRules.CityTally(here,
+				new List<KingdomSubsidenceRules.ZoneSighting> { Seen(5, 5, 5, 0, 900L) });
+			Assert.AreEqual(7, city.Lift);
+			Assert.AreEqual(here.Works, city.Works, "the works count belongs to the ground that was walked");
+		}
+
+		[Test]
+		public void AZoneNobodyHasEverStoodInContributesNothing()
+		{
+			// Knowledge, not truth. An unvisited claim has no sighting, and inventing one would
+			// credit the city with works nobody has seen raised.
+			KingdomCatalogueRules.SupportTally here = Tally(Water: 10, Food: 10, Roof: 10);
+			KingdomCatalogueRules.SupportTally city = KingdomSubsidenceRules.CityTally(here,
+				new List<KingdomSubsidenceRules.ZoneSighting> { Seen(99, 99, 99, 999, 0L) });
+			Assert.AreEqual(here.Water, city.Water);
+			Assert.AreEqual(here.Food, city.Food);
+			Assert.AreEqual(here.Roof, city.Roof);
+			Assert.AreEqual(0, KingdomSubsidenceRules.SightedZones(new List<KingdomSubsidenceRules.ZoneSighting> { Seen(99, 99, 99, 999, 0L) }));
+		}
+
+		[Test]
+		public void AOneZoneCityIsMeasuredExactlyAsItAlwaysWas()
+		{
+			KingdomCatalogueRules.SupportTally here = Tally(Water: 30, Food: 20, Roof: 25, Lift: 3);
+			Assert.AreEqual(KingdomSubsidenceRules.SupportedLevel(here, GrowthStage.Town),
+				KingdomSubsidenceRules.SupportedLevel(KingdomSubsidenceRules.CityTally(here, null), GrowthStage.Town));
+			Assert.AreEqual(KingdomSubsidenceRules.SupportedLevel(here, GrowthStage.Town),
+				KingdomSubsidenceRules.SupportedLevel(
+					KingdomSubsidenceRules.CityTally(here, new List<KingdomSubsidenceRules.ZoneSighting>()), GrowthStage.Town));
+		}
+
+		[Test]
+		public void TwoZonesSeenAtDifferentTicksBothCountAndTheOlderDatesTheReading()
+		{
+			List<KingdomSubsidenceRules.ZoneSighting> others = new List<KingdomSubsidenceRules.ZoneSighting>
+			{
+				Seen(10, 0, 0, 100, 9000L),
+				Seen(0, 12, 0, 50, 3000L)
+			};
+			KingdomCatalogueRules.SupportTally city = KingdomSubsidenceRules.CityTally(Tally(4, 4, 4), others);
+			Assert.AreEqual(14, city.Water, "both sightings count however old either is");
+			Assert.AreEqual(16, city.Food);
+			Assert.AreEqual(3000L, KingdomSubsidenceRules.OldestSighting(others), "the reading is only as fresh as its oldest part");
+			Assert.AreEqual(2, KingdomSubsidenceRules.SightedZones(others));
+		}
+
+		[Test]
+		public void AnOldSightingNeverAgesIntoSomethingElse()
+		{
+			// The staleness doctrine: nothing is simulated forward. The same sighting summed
+			// twice, however much time has passed between, gives the same number.
+			List<KingdomSubsidenceRules.ZoneSighting> others = new List<KingdomSubsidenceRules.ZoneSighting> { Seen(26, 0, 8, 300, 12L) };
+			KingdomCatalogueRules.SupportTally first = KingdomSubsidenceRules.CityTally(Tally(2, 2, 2), others);
+			KingdomCatalogueRules.SupportTally second = KingdomSubsidenceRules.CityTally(Tally(2, 2, 2), others);
+			Assert.AreEqual(first.Water, second.Water);
+			Assert.AreEqual(first.Roof, second.Roof);
+			Assert.AreEqual(28, first.Water);
+		}
+
+		[Test]
+		public void TheCityTallyIsOrderIndependentAndDeterministic()
+		{
+			List<KingdomSubsidenceRules.ZoneSighting> forward = new List<KingdomSubsidenceRules.ZoneSighting>
+			{
+				Seen(3, 1, 2, 10, 100L), Seen(7, 5, 4, 20, 200L), Seen(1, 9, 6, 30, 300L)
+			};
+			List<KingdomSubsidenceRules.ZoneSighting> backward = new List<KingdomSubsidenceRules.ZoneSighting>
+			{
+				Seen(1, 9, 6, 30, 300L), Seen(7, 5, 4, 20, 200L), Seen(3, 1, 2, 10, 100L)
+			};
+			KingdomCatalogueRules.SupportTally a = KingdomSubsidenceRules.CityTally(Tally(1, 1, 1), forward);
+			KingdomCatalogueRules.SupportTally b = KingdomSubsidenceRules.CityTally(Tally(1, 1, 1), backward);
+			Assert.AreEqual(a.Water, b.Water);
+			Assert.AreEqual(a.Food, b.Food);
+			Assert.AreEqual(a.Roof, b.Roof);
+			Assert.AreEqual(KingdomSubsidenceRules.OldestSighting(forward), KingdomSubsidenceRules.OldestSighting(backward));
+			Assert.AreEqual(KingdomSubsidenceRules.CityStorage(5, forward), KingdomSubsidenceRules.CityStorage(5, backward));
+		}
+
+		[Test]
+		public void ANegativeOrHostileSightingCannotDragTheCityDown()
+		{
+			// A corrupted or third-party-written game-state slot must never be able to invent a
+			// shortfall out of nothing.
+			KingdomCatalogueRules.SupportTally here = Tally(20, 20, 20);
+			KingdomCatalogueRules.SupportTally city = KingdomSubsidenceRules.CityTally(here,
+				new List<KingdomSubsidenceRules.ZoneSighting> { Seen(-500, -500, -500, -500, 400L) });
+			Assert.AreEqual(20, city.Water);
+			Assert.AreEqual(20, city.Food);
+			Assert.AreEqual(20, city.Roof);
+			Assert.AreEqual(20, KingdomSubsidenceRules.CityStorage(20, new List<KingdomSubsidenceRules.ZoneSighting> { Seen(0, 0, 0, -900, 400L) }));
+		}
+
+		[Test]
+		public void TheStageLadderReadsTheCitysCasksNotOneZonesCasks()
+		{
+			// StageWithHysteresis reads storage, so a city whose casks stand in the zone next
+			// door must be measured against all of them or it demotes itself the moment the
+			// founder walks in through the wrong side.
+			List<KingdomSubsidenceRules.ZoneSighting> others = new List<KingdomSubsidenceRules.ZoneSighting> { Seen(0, 0, 0, 900, 700L) };
+			Assert.AreEqual(1100, KingdomSubsidenceRules.CityStorage(200, others));
+			Assert.AreEqual(200, KingdomSubsidenceRules.CityStorage(200, null));
+			Assert.IsTrue(KingdomSubsidenceRules.StageWithHysteresis(GrowthStage.Camp, 40, KingdomSubsidenceRules.CityStorage(200, others))
+				>= KingdomSubsidenceRules.StageWithHysteresis(GrowthStage.Camp, 40, 200),
+				"the whole city's stores never read as less than one zone's");
+		}
+
+		[Test]
+		public void AReadingWhollyOfThisPassIsNotDated()
+		{
+			Assert.IsNull(KingdomSubsidenceRules.SightingClause(0, 0), "a one-zone city has nothing to date");
+			Assert.IsNull(KingdomSubsidenceRules.SightingClause(0, 40));
+		}
+
+		[Test]
+		public void AReadingPartlyOutOfMemorySaysHowOldTheMemoryIs()
+		{
+			Assert.IsTrue(KingdomSubsidenceRules.SightingClause(1, 0).Contains("walked today"));
+			Assert.IsTrue(KingdomSubsidenceRules.SightingClause(1, 1).Contains("a day ago"));
+			string old = KingdomSubsidenceRules.SightingClause(2, 40);
+			Assert.IsTrue(old.Contains("2 parasangs"), "how much of the reading is memory");
+			Assert.IsTrue(old.Contains("40 days ago"), "and how old the memory is");
+		}
+
+		// ==================================================================================
 		// The summation: the piece that was missing between the arithmetic and a consumer.
 		// ==================================================================================
 

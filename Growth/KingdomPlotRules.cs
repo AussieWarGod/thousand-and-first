@@ -441,13 +441,30 @@ namespace ThousandAndFirst
 		}
 
 		/// <summary>
-		/// The roof a design actually gets on the ground it is raised on. Underground everything
-		/// is carved whatever the design declared: there is no weather to keep off, no wall worth
-		/// raising, and the rock is already all four sides.
+		/// The roof a design actually gets on the ground it is raised on. Underground, everything
+		/// the settlement would otherwise have enclosed is carved instead: there is no weather to
+		/// keep off, no wall worth raising, and the rock is already all four sides.
+		/// <para>
+		/// <b>An open plot is the exception, and it is not a special case.</b> Carving replaces
+		/// the enclosure a design would have raised; it does not roof ground the design
+		/// deliberately left unroofed. A field, a salt-pan, a market square or a reservoir taken
+		/// underground is a field, a salt-pan, a market square or a reservoir cut into the rock
+		/// &mdash; open ground with stone around it, not a sealed chamber. Forcing those to
+		/// <see cref="RoofState.Carved"/> quietly made them shelter
+		/// (<see cref="HoldsBeds"/> is true of carved and false of open), floored their whole rect
+		/// and cut a door into ground that has no inside, and contradicted the measured half of
+		/// the same rule &mdash; <see cref="RoofFromEnclosure"/> has always read unbounded ground
+		/// underground as open. The two now agree, which is the invariant worth having: what the
+		/// settlement declares and what the walls prove answer the same question the same way.
+		/// </para>
 		/// </summary>
 		public static RoofState RoofOnGround(RoofState Declared, bool Underground)
 		{
-			return Underground ? RoofState.Carved : Declared;
+			if (!Underground || Declared == RoofState.Open)
+			{
+				return Declared;
+			}
+			return RoofState.Carved;
 		}
 
 		/// <summary>The roof state a tier that declares none reads as: an open plot is open and

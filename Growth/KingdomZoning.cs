@@ -221,7 +221,22 @@ namespace ThousandAndFirst
 		/// <param name="Entry">The design. Null permits.</param>
 		public static ZoningJudgement Judge(KingdomSystem System, string ZoneID, KingdomRules.BuildEntry Entry)
 		{
-			return JudgeAt(System, DistrictOf(System, ZoneID), Entry);
+			return JudgeAt(System, DistrictOf(System, ZoneID), Entry, StratumOf(ZoneID));
+		}
+
+		/// <summary>
+		/// Whether a zone id names ground below the surface, read off the id itself rather than
+		/// off a loaded zone: the stratum is in the id, so the offer can be narrowed for ground
+		/// the founder is standing on and for ground they are only planning on. An id this build
+		/// cannot parse reads as the surface, which gates nothing.
+		/// </summary>
+		public static bool StratumOf(string ZoneID)
+		{
+			if (string.IsNullOrEmpty(ZoneID) || !KingdomRules.TryParseZoneID(ZoneID, out _, out _, out _, out int z))
+			{
+				return false;
+			}
+			return KingdomPlotRules.IsUnderground(z);
 		}
 
 		/// <summary>
@@ -298,7 +313,10 @@ namespace ThousandAndFirst
 					{
 						continue;
 					}
-					if (JudgeAt(System, current, entry).Permitted && !JudgeAt(System, District, entry).Permitted && !lost.Contains(entry.Name))
+					// Judged on this ground's own stratum on both sides, so the warning names what
+					// the DISTRICT would cost and never what the rock already forbids.
+					bool underground = StratumOf(ZoneID);
+					if (JudgeAt(System, current, entry, underground).Permitted && !JudgeAt(System, District, entry, underground).Permitted && !lost.Contains(entry.Name))
 					{
 						lost.Add(entry.Name);
 					}
@@ -363,14 +381,19 @@ namespace ThousandAndFirst
 			return System.ZoneDistricts.TryGetValue(ZoneID, out string district) ? district : null;
 		}
 
-		private static ZoningJudgement JudgeAt(KingdomSystem System, string District, KingdomRules.BuildEntry Entry)
+		private static ZoningJudgement JudgeAt(KingdomSystem System, string District, KingdomRules.BuildEntry Entry, bool Underground)
 		{
 			if (!Enabled || System == null || !System.Founded || Entry == null)
 			{
 				return ZoningJudgement.Allowed;
 			}
 			int claimed = (System.ClaimedZones != null) ? System.ClaimedZones.Count : 0;
-			return KingdomZoningRules.Judge(GateFor(Entry.Key), District, Entry.Category, claimed, Roster(System));
+			// The stratum half of the gate is the design's own Sky flag, which lives on the plot
+			// spec rather than on the build entry. A design the plot registry never registered
+			// wants no weather by definition, so it is never refused by depth.
+			KingdomPlotRules.PlotSpec spec;
+			bool sky = KingdomPlots.TryGetSpec(Entry.Key, out spec) && spec != null && spec.RequiresSky;
+			return KingdomZoningRules.Judge(GateFor(Entry.Key), District, Entry.Category, claimed, Roster(System), Underground, sky);
 		}
 
 		/// <summary>
@@ -394,6 +417,9 @@ namespace ThousandAndFirst
 			case ZoningVerdict.RefusedTerritory:
 				return XRL.Language.Grammar.A(name) + " wants a realm of at least {{C|" + Judgement.Detail + "}}, and " + seat
 					+ " holds {{C|" + ((System != null && System.ClaimedZones != null) ? System.ClaimedZones.Count : 0) + "}}. Claim more ground and ask again.";
+			case ZoningVerdict.RefusedStratum:
+				return XRL.Language.Grammar.A(name) + " wants weather — sun, wind, or rain — and there is none under the rock. Raise it on ground under {{C|"
+					+ Judgement.Detail + "}}.";
 			case ZoningVerdict.RefusedDistrict:
 			{
 				string here = DistrictOf(System, ZoneID);

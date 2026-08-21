@@ -38,8 +38,11 @@ neutral values.
 | `int NotableShade` | What the settlement's named notable is worth to that level (`KingdomCeremonyRules.NotableShade`: met tastes, the virtue net of the flaw, and met `Prefers`). Written when the office is filled or passes, so it is as stale as the last time it changed hands; `0` for a settlement that has named nobody. Never negative, and bound again by `KingdomCatalogueRules.LiftCapPercent` when the level reads it. |
 | `string SubsidenceBinding` | Which of `water` / `food` / `roof` is the least of the three and therefore what holds the level down, or null before a measurement. |
 | `long LastWaterWorkTick` | Checkpoint for water-works production. Planted on first read and advanced with `KingdomRules.AdvanceCheckpoint`; never a cap. |
+| `long LastFoodWorkTick` | The same, for the fields. Its own stamp rather than a share of the water one, because the two producers are separately blockable — a settlement can have casks with room and no larder dedicated at all. |
 | `int Population` | Living settler count. |
 | `bool Withered` | True while a sustained thirst has suspended prosperity. Recoverable. |
+| `int DryStreak` / `int HungerStreak` | Heartbeat resolves in a row the water bill and the ration bill went unpaid. Separate counters: both ladders run at once and each keeps its own memory. What stops them costing double is `KingdomRules.ComposeScarcity`. |
+| `bool Famished` | The food mirror of `Withered`. **Both marks may stand at once** — a mark is a state, not a cost, and only the cost is capped. |
 | `List<string> ClaimedZones` | Zone IDs the kingdom holds. |
 | `Dictionary<string,string> ZoneDistricts` | Zone ID → district key. |
 | `List<string> ChronicleEntries` / `OutsiderEntries` | The two registers, oldest first, capped. |
@@ -55,10 +58,11 @@ neutral values.
 | Member | Contract |
 |---|---|
 | `static Faction Found(string name)` | Founds the kingdom (idempotent — returns the existing faction if already founded). |
-| `static bool ClaimZone(Zone z, bool force = false)` | Claims a zone; requires adjacency to existing ground unless forced. |
+| `static bool ClaimZone(Zone z, bool force = false)` | Claims a zone; requires adjacency to existing ground unless forced. Adjacency includes the stratum directly above or below (`ZonesAdjacent`), so a cellar or a tower is a claim now, not only a founding-day accident. |
 | `static bool EnrollCitizen(GameObject citizen)` | Makes a creature a citizen. Enrolled creatures are protected from kingdom-driven removal. |
 | `static SecondFoundingVerdict JudgeSite(KingdomSystem, Zone)` | What the rite would do on this ground. |
 | `static bool FoundSecond(string name, string vocation, Zone site, bool force = false)` | Founds the realm's second city. `force` waives only the not-adjacent requirement. |
+| `static KingdomZoningRules.ClaimVerdict JudgeClaim(KingdomSystem, Zone)` | What the founder's own claim on this ground would do — gathers the facts off the world (ours, the other city's, an exiled realm's, foreign, adjacent) and hands them to the pure verdict below. The engine-coupled half of `KingdomZoningRules` § *The claim*, below. |
 | `static string StyleGroundClause(string style)` | Lower-case founder-facing clause naming what the ground promises for a city style ("common ground", "ground green enough to root a verdant city"). Presentation only — `KingdomRules.StyleForSite` owns which style a site resolves to. |
 
 ## `KingdomExileRules` — regard, expulsion, and return
@@ -91,6 +95,69 @@ The plot cycles on the settlement's own tick stamps, resolved when the city is s
 grow is read from the style the founding rite already recorded, not from a second look at the
 ground. It draws water only after the day's upkeep and arrivals, so it can never be the reason the
 thirst ladder fires, and it deposits only into a dedicated larder.
+
+The garden is the one design in the catalogue that **buys food with water**: it delivers its
+`Carries` through the ordinary flow like every other field, *and* a ripening on top, and pays
+`PlantWaterCostDrams` a cycle for the privilege. What bounds the extra is larder room — everything
+the cycle puts in a larder is room the day's making then cannot use.
+
+## Food as a flow — what the fields make and the people eat
+
+Food is physical, opt-in, and denominated in people, exactly as water is physical, opt-in and
+denominated in drams. The two lanes are mirrors, and the three places they deliberately part
+company are the interesting part.
+
+| Member | Contract |
+|---|---|
+| `KingdomRules.RationsPerDay(int population)` | What the settlement eats in a day: **one ration a settler, at every rung**. No stage term — see the divergences below. |
+| `KingdomRules.RationsForElapsed(int population, long elapsedTicks)` | The same over whole elapsed days. Uncapped and saturating, exactly like `PolicyUpkeepForElapsed`. A bill, never a debt. |
+| `KingdomRules.ForagedRations(int hands, int days)` / `ForageRationsPerHand` / `MaxForagedRationsPerDay` | What free hands bring in off the land. Two a hand a day under a flat daily ceiling of four; the ceiling is applied to the **rate**, before the days multiply out. |
+| `KingdomRules.ResolveHunger(int streak, GrowthStage, int population)` → `HungerOutcome` | The hunger ladder: `Fed` / `Warned` / `Emigration` / `Famine`. Rung for rung the same shape as `ResolveThirst`, with the same two floors — a Camp is never marked, and `LoyalCoreSettlers` never leave. |
+| `KingdomRules.ComposeScarcity(ThirstOutcome, HungerOutcome)` → `ScarcityVerdict` | **The composition rule.** See below. |
+| `KingdomRules.ScarcityDepartureClause(bool, bool)` / `ScarcityDepartureNote(bool, bool)` | The chronicle's and the ledger's words for a departure, naming whichever scarcities are actually true. |
+| `KingdomRules.LarderCapacityTag` / `DefaultLarderCapacity` / `LarderCapacity(int declared)` | How much a dedicated container holds. Declared on the **blueprint**, never in the catalogue. |
+| `KingdomRules.CivicLarderBlueprints` / `IsCivicLarderBlueprint(string)` | Which commissioned designs auto-dedicate as pantries (STANDARDS §7's "commissioned storage auto-flags"). |
+| `KingdomSurvey.FoodStored` / `FoodCapacity` / `FoodSpace` | The food side of `StoredWater` / `StorageCapacity` / `StorageSpace`. `FoodSpace` is **derived** from the other two, so a caller that puts food in by another road cannot leave it stale. |
+| `KingdomSurvey.StoreFood(int, string blueprint)` / `ConsumeFood(int)` / `SpoilFrom(GameObject, int)` / `AdoptLarder(GameObject)` | The food mirrors of `Store` / `Consume` / `LeakFrom`, plus the dedication of a commissioned pantry. All keep the survey's counters in step; all return what actually moved rather than what was asked for. |
+| `KingdomGrowth.FoodMadePerDay(KingdomSurvey)` | What the settlement's works bring in in a day — exactly `KingdomSubsidence.Supports(survey).Food`, at exactly the effectiveness the level is summed at. |
+| `KingdomGrowth.ScarcityEnabled` / `ThirstEnabled` / `HungerEnabled` | One switch (`r_TAF_OptionThirst`) for both binding goods. A founder who turned scarcity off did not ask to keep half of it. |
+
+**The identity the lane is built on.** One point of `food` is one settler fed for one day, and
+`RationsPerDay` charges one ration a settler a day, so *a settlement standing at its own supported
+level makes exactly the rations it eats*. That only holds because **every** food work is counted
+in the flow at exactly the effectiveness it is counted at for the level — a design counted for
+one and not the other would be a level a settlement could reach and then starve at.
+
+**Where food is not water's mirror, and why.**
+
+1. **No stage rate.** Water is billed 100/120/150/180/220 per hundred by stage and its `Carries`
+   are divided back out by the same percentage (`KingdomSubsidenceRules.LevelFromWater`). Food is
+   billed flat and handed to `Equilibrium` undivided, because a dinner is counted in people. This
+   is what makes the identity above true; a stage term here would invalidate every food figure in
+   `KingdomBuildings.xml`.
+2. **No stores policy, no district discount.** Thrift's own blurb says what it is ("the
+   water-keepers ration"), and the agrarian district's upkeep discount is already spent on the
+   water side. Neither is applied twice.
+3. **Foraging is a ceiling, not a pool.** The water detail's haul is bounded by how much open
+   water is actually standing there; foraging is bounded by a flat four a day whoever walks the
+   ground. And foraged food is eaten hand to mouth rather than stored, so a settlement that has
+   dedicated no larder still eats — which is why a Camp self-sustains with nothing commissioned,
+   the same promise the water lane makes when half a camp is on the detail.
+
+**The composition rule — no death spirals.** Both ladders run; each keeps its own streak, says its
+own sentence, sets its own mark. What a failed resolve *costs* is
+`ComposeScarcity`'s **maximum of the two, never their sum**: at most one departure per resolve
+however many things are wrong, so a settlement that is dry *and* starving empties no faster than
+the worse of the two alone would. A city may be `Withered` and `Famished` at once and still lose
+exactly one settler for it. Subsidence is untouched underneath both — it is the *structural*
+consequence of standing above what the works carry, and these are the *immediate* one.
+
+**Spoilage.** `KingdomWearRules.LeakKind.Food` is Addendum 10(b)'s explicitly deferred third kind
+("food spoilage waits until food is a flow"), now spent: a damaged larder loses servings on world
+days exactly as a damaged cistern loses drams, through the same `Leaked` arithmetic, announced
+once by name and unsaid when it is mended. Spoilage runs *after* the ration draw in the pass, so
+it can never be the reason a settlement goes hungry — only the reason it has no cushion when
+something else is.
 
 ## Acting on its own judgment
 
@@ -203,6 +270,45 @@ level) with every refusal naming its fix; designs improve through `KingdomUpgrad
 carry every civic mark. `KingdomCatalogueRules` validates the building XML schema; all of it —
 plots, materials, gates, chains, skins, contents — is authorable from mergeable third-party XML.
 
+## `KingdomZoningRules` — the four gates, the stratum, and the claim
+
+Pure and engine-free (`KingdomZoning`, same folder, is the engine-coupled half: reading a real
+zone's district, the founder's data disks, the certified machines, and the settlement's own
+roster of peoples). Checks run in `ZoningVerdict` order, most fundamental lack first, district
+last, and stop at the first refusal — the founder is told one thing to fix, not four.
+
+| Member | Contract |
+|---|---|
+| `enum ZoningVerdict` | `Permitted`, `RefusedUnlearned`, `RefusedTechLevel`, `RefusedTerritory`, `RefusedStratum`, `RefusedDistrict`. |
+| `readonly struct ZoneGate` | The four OPTIONAL gates parsed off one `<building>` entry: `Districts`, `MinZones`, `Knowledge`, `MinTech`. `ZoneGate.Open` gates nothing, which is what an entry written before these gates existed parses to. |
+| `readonly struct ZoningJudgement` | `Verdict` plus `Detail`/`Note` — what's missing, in the settlement's own words, and the menu's short tag. `Allowed` for a design with nothing to prove. |
+| `static ZoningJudgement Judge(ZoneGate, string tileDistrict, string category, int claimedZones, IEnumerable<string> roster)` | The four-gate verdict, stratum untested (equivalent to `Underground: false, RequiresSky: false`). |
+| `static ZoningJudgement Judge(ZoneGate, string tileDistrict, string category, int claimedZones, IEnumerable<string> roster, bool underground, bool requiresSky)` | The same, with the stratum folded in. A design whose plot spec declares `Sky` is refused **`RefusedStratum`** (`Note: "wants open sky"`) on ground below `KingdomRules.SurfaceZLevel` — checked before the district, so the menu itself carries the tag at the moment the founder is choosing, rather than only once they've picked the design and `KingdomPlotRules.RefuseSky` turns them away at the plot. Only the surface-only half of a per-stratum catalogue is expressible from what a design declares today — nothing yet says "this design belongs to the deep". |
+| `static bool StratumAccepts(bool underground, bool requiresSky)` | The one depth rule the catalogue can state today: `!(underground && requiresSky)` — weather does not reach under the rock. |
+| `static string StratumName(bool underground)` | `"under the rock"` / `"open sky"`, for the sentence that names it. |
+| `static int ZonesForStage(GrowthStage)` | How many zones a city of this stage may hold at most: Camp/Steading 1, Village 2, Town 3, City 4. Read off the catalogue's own `MinZones` pairs, not chosen separately — the two-zone designs are `MinStage="Village"`, the three-zone `Town`, the four-zone `City` — so a settlement reaches the ground a design wants at the same moment it reaches the stage that design wants. |
+
+### The claim
+
+What widens the ground every gate above is measured against.
+
+| Member | Contract |
+|---|---|
+| `enum ClaimVerdict` | `Allowed`, `NothingFoundedYet`, `GroundIsAlreadyOurs`, `GroundIsAnotherCitys`, `GroundIsAnotherRealms`, `GroundIsForeign`, `GroundIsNotAdjacent`, `CityHoldsAllItCan` — ordered from the fact nothing can change to the one the founder can answer today. |
+| `static ClaimVerdict JudgeClaim(bool founded, GrowthStage stage, int zonesHeld, bool groundIsOurs, bool groundIsAnotherCitys, bool groundIsAnotherRealms, bool groundIsForeign, bool groundIsAdjacent)` | Pure verdict on whether the seated city may take this ground. `KingdomFounding.JudgeClaim` gathers the booleans off the world and calls this. |
+| `static string ClaimRefusal(ClaimVerdict, string seatName, GrowthStage stage)` | Founder-facing refusal; every branch names the lack and what lifts it (STANDARDS 7b). Empty for `Allowed`. |
+| `static string ClaimedWallClause(int before, int after, string seatName)` | What the claim did to the wall line, in prose. Nothing standing is ever moved: an edge simply stops facing the world, so a wall raised from here afterward goes on the new outer line and the old line becomes an inner wall. Ground taken diagonally across a corner, or straight down into the rock, frees no edge — the clause says so, and that is the honest answer, not a bug. |
+| `static int EdgeCount(KingdomRules.Frontier)` | How many of the four edges are set. |
+| `static string ClaimHoldingLine(int held, int ceiling)` | "N held; room for M more at this rung" or "N held, which is all this rung answers for." |
+
+The founder's own claim action is `KingdomCharterPart.ClaimGround` (Charter → **Claim this
+ground**, hotkey `6`) — the first caller `KingdomFounding.ClaimZone` has ever had outside the
+founding rite and two debug wishes. **It costs nothing**, which is a decision: the brief prices
+founding and every building and names no price for a claim, because what a claim actually costs
+is paid afterward and in kind — a new wall line to raise, a new budget of ground to lay, and a
+stage that has to have been earned first. A claim that goes through reports the wall clause and
+the holding line together, so the founder always knows how much more the rung allows.
+
 ## City plans — three ways a thing gets built
 
 A settlement is laid out by a grammar, not scattered. All three paths end at the same building:
@@ -224,6 +330,17 @@ measures its rect out of the marker's own cell.
 `KingdomLayoutRules` holds the pure grammar (`PurposeOf`, `ScoreCell`, `Choose`, `HasOpinion`);
 `KingdomPlanRules` the ordering and affordability; `KingdomAdoptRules` the role classification and a
 bounded flood-fill enclosure test.
+
+**One design is sited by a rule instead, ahead of all three paths.** A `<building>` keyed
+`KingdomRoadRules.GatehouseKey` (`"gatehouse"`) belongs on the frontier wall, astride the road,
+and nowhere else — `KingdomCommission.FindGateCell(Zone, KingdomSystem, BuildEntry)` is asked
+before the automatic plan and puts it on the buildable frontier cell nearest the way out, the
+same cell `KingdomRoadRules.TryGate` already names as where the settlement's own `HeartToGate`
+road errand walks to. `KingdomRoadRules.SitesAtGate(string key)` is the case-folded check;
+`NearestToGate(IList<int> xs, IList<int> ys, int gateX, int gateY)` picks the nearest candidate,
+ties broken north then west, so the same settlement puts its gatehouse in the same place every
+time it's asked, reload included. Null (and the ordinary plan) for every other design, for a
+zone with no frontier left, and for a settlement with no heart yet to aim from.
 
 ## `KingdomCreed` — what a city believes, and what that costs a realm
 
@@ -256,10 +373,14 @@ from that warning, whether or not they come back. Mending the cause lifts it at 
 | `static bool HoldSharedMeal(KingdomSystem, Zone, out string failure)` | Spends food from dedicated larders only and records the meal. Returns false with a reason when the larder cannot feed one; nothing is spent on failure. |
 
 Food is counted from containers carrying the `KingdomLarder` int property, which the Charter's
-dedication flow sets. Dedication is a mark, not a transfer: nothing is moved, and an undedicated
-container — including the player's own pack — is never read or spent. An empty larder costs the
-settlement nothing, by design: every food effect is a bonus for engaging, never a penalty for
-abstaining.
+dedication flow sets and which commissioned pantries set for themselves. Dedication is a mark, not
+a transfer: nothing is moved, and an undedicated container — including the player's own pack — is
+never read or spent.
+
+The shared meal is no longer the only thing that empties a larder: since food became a flow the
+settlement eats from it every day (see *Food as a flow*). What remains true is that an empty
+larder is never itself a punishment — a settlement with no larder at all forages and lives, and
+what the larders buy is a cushion rather than a licence.
 
 `KingdomRules` carries the arithmetic: `PantryTier`, `PantryTierNames`, `ClassifyPantry(int)`,
 `MealCost(PantryTier)`, and the `Pantry*Threshold` / `MealCost*` constants.
@@ -339,6 +460,35 @@ whole out of `KingdomReach.CityShadeExcept`, and the binding three are untouched
 `Supports` remains the right call for a caller asking what the works make rather than what the
 settlement holds — the water-works production pass is one.
 
+**A city, not a zone.** `KingdomSubsidence.Reckon` writes down what THIS zone is holding —
+`RecordZone`, keyed `ZoneStatePrefix + zoneID`, dated in whole days (`SeenStamp`) — and then folds
+in every OTHER zone the seated city claims **as it was last seen** (`OtherZones`), never simulated
+forward: a granary zone the founder hasn't walked into since spring goes on reporting spring's
+granary until they walk back in. `CityTally` sums the three BINDING goods this way (`Lift` passes
+through unchanged — `ScopedSupports` has already summed it across the city through
+`KingdomReach.CityShadeExcept`, Addendum 6); `CityStorage`/`CityStorageCapacity` does the same for
+dedicated storage, which is what the stage ladder reads, so a city whose casks stand in the zone
+next door is measured against all of them rather than demoting itself the moment the founder walks
+in through the wrong side. `KingdomGrowth.UpdateStage` reads city storage **after** `Reckon` plants
+this zone's own sighting, so this zone is never counted twice and never counted out. A reading that
+folds in another zone's memory is dated for the founder — `SightingClause` — and
+`KingdomReports.Status(KingdomSystem, Zone Z = null)` now takes the zone the pass is standing in and
+appends it, shaded, right after the level: "carries 26  {{K|counting one parasang as you last saw
+it 6 days ago}}".
+
+| Member | Contract |
+|---|---|
+| `struct ZoneSighting` | One claimed zone's last-seen binding carries and storage: `Water`, `Food`, `Roof`, `StorageCapacity`, `SeenTick`. `Seen` is false — and never folded in — for a zone nobody has ever stood in. |
+| `static SupportTally CityTally(SupportTally here, IList<ZoneSighting> others)` | This zone's tally plus every OTHER claimed zone's water/food/roof as last seen. |
+| `static int CityStorage(int here, IList<ZoneSighting> others)` | The same, for dedicated storage. |
+| `static long OldestSighting(IList<ZoneSighting> others)` / `static int SightedZones(IList<ZoneSighting> others)` | The oldest folded-in sighting's tick (zero if every claimed zone was counted today), and how many zones were folded in out of a sighting at all rather than counted from the ground. |
+| `static string SightingClause(int zones, int days)` | The clause that dates a city reading, or null when there is nothing to date — a one-zone city, or one whose every zone was walked today. |
+| `KingdomSubsidence.ZoneStatePrefix` / `static void RecordZone(Zone, SupportTally, int storageCapacity, long timeTicks)` | The game-state key prefix a claimed zone's record lives under, and the writer — rewritten from the ground every pass the zone is stood in, including down to zero. |
+| `static int SeenStamp(long timeTicks)` (on `KingdomSubsidence`) | The tick a sighting is stored as, floored to whole days and clamped into the int game-state slot. |
+| `static List<ZoneSighting> OtherZones(KingdomSystem, Zone)` (on `KingdomSubsidence`) | Every claimed zone of the seated city EXCEPT the one the pass is in, as each was last seen. |
+| `static int CityStorageCapacity(KingdomSystem, Zone, int here)` (on `KingdomSubsidence`) | `CityStorage` fed from `OtherZones`. |
+| `static string SightingClause(KingdomSystem, Zone, long timeTicks)` (on `KingdomSubsidence`) | The dated clause for THIS reading, ready for the status report. |
+
 | Member | Contract |
 |---|---|
 | `static int Equilibrium(int water, int food, int roof, int lift, int shade)` (on `KingdomCatalogueRules`) | The frozen arithmetic. The level is the least of the three binding goods, lifted by `lift + shade` up to `LiftCapPercent` of that least, floored at `FloorLevel`. Each of `lift` and `shade` is floored at zero on its own, so neither can eat the other and an unmet taste is never a penalty. |
@@ -408,7 +558,8 @@ Five rules — Addendum 8 clause 3 as moderated by Addendum 10(a), *awareness is
 Deterministic, side-effect-free, and fully unit-tested; safe to call from anywhere,
 including your own tests. Notable members: `SpilloverDelta`, `UpkeepForElapsed`,
 `ElapsedDays`, `AdvanceCheckpoint`, `ActivityDays`, `LabouredTicks`,
-`StageFor`, `FetchableDrams`, `ResolveThirst`, `RaidSize`, `StyleAllows`, `DistrictName`,
+`StageFor`, `FetchableDrams`, `ResolveThirst`, `RationsPerDay`, `RationsForElapsed`,
+`ForagedRations`, `ResolveHunger`, `ComposeScarcity`, `RaidSize`, `StyleAllows`, `DistrictName`,
 `ZonesAdjacent`, `ComposeOutsider`, `ToThirdPerson`, plus the `BuildEntry` / `DealEntry`
 records and their `TryParse*` validators.
 
@@ -428,6 +579,7 @@ These are read and written across the mod and are part of the API:
 | `KingdomCitizen` (int) | Creature belongs to the kingdom. |
 | `KingdomBorn` (int) | Settler created by the growth engine; only these may emigrate. |
 | `KingdomStores` (int) | Container is dedicated to the settlement's water stores. **Nothing without this flag is ever consumed.** |
+| `KingdomLarder` (int) | Container is dedicated to the settlement's food stores. The same law: nothing without this flag is ever counted, filled, or eaten. Commissioned pantries (`KingdomRules.CivicLarderBlueprints`) set it themselves; anything else needs the Charter. |
 | `KingdomBuilt` (int) | Object was raised by a commission. |
 | `KingdomRaider` (int) | Hostile spawned by a raid. |
 | `KingdomCaravan` (int) | Merchant spawned by a trade charter; despawned on later visits. |

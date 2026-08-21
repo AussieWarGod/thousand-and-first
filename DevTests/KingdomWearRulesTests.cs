@@ -259,26 +259,59 @@ namespace ThousandAndFirst.Tests
 			Assert.AreEqual(1024, KingdomWearRules.Leaked(1024, 1024, KingdomMaterialRules.MaxWearPercent, int.MaxValue));
 		}
 
+		/// <summary>Every kind this build knows, so a kind added later is covered by the prose
+		/// tests below without anyone remembering to widen an array.</summary>
+		private static readonly KingdomWearRules.LeakKind[] EveryLeakKind = (KingdomWearRules.LeakKind[])
+			System.Enum.GetValues(typeof(KingdomWearRules.LeakKind));
+
 		[Test]
 		public void LeakBegunLine_NamesTheWorkAndReadsDifferentlyPerKind()
 		{
-			string water = KingdomWearRules.LeakBegunLine("the reservoir", KingdomWearRules.LeakKind.Water);
-			string charge = KingdomWearRules.LeakBegunLine("the salt store", KingdomWearRules.LeakKind.Charge);
-			StringAssert.Contains("the reservoir", water);
-			StringAssert.Contains("the salt store", charge);
-			Assert.AreNotEqual(water, charge, "a cistern and a bed of salt fail in different sentences");
+			System.Collections.Generic.List<string> said = new System.Collections.Generic.List<string>();
+			foreach (KingdomWearRules.LeakKind kind in EveryLeakKind)
+			{
+				string line = KingdomWearRules.LeakBegunLine("the reservoir", kind);
+				StringAssert.Contains("the reservoir", line);
+				CollectionAssert.DoesNotContain(said, line,
+					"a cistern, a bed of salt and a granary fail in different sentences (" + kind + ")");
+				said.Add(line);
+			}
 		}
 
 		[Test]
 		public void LeakStoppedLine_IsTheUnsayingAndNeverReadsLikeTheBeginning()
 		{
-			foreach (KingdomWearRules.LeakKind kind in new[] { KingdomWearRules.LeakKind.Water, KingdomWearRules.LeakKind.Charge })
+			foreach (KingdomWearRules.LeakKind kind in EveryLeakKind)
 			{
 				string begun = KingdomWearRules.LeakBegunLine("the reservoir", kind);
 				string stopped = KingdomWearRules.LeakStoppedLine("the reservoir", kind);
 				StringAssert.Contains("the reservoir", stopped);
 				Assert.AreNotEqual(begun, stopped);
 			}
+		}
+
+		[Test]
+		public void LeakKind_CarriesFoodNowThatFoodIsAFlow()
+		{
+			// Addendum 10(b) deferred food spoilage on one condition - "food spoilage waits until
+			// food is a flow" - and Wave B made it one. The values are frozen: a renumbering
+			// would repoint every saved leak at the wrong kind of sentence.
+			Assert.AreEqual(1, (int)KingdomWearRules.LeakKind.Water);
+			Assert.AreEqual(2, (int)KingdomWearRules.LeakKind.Charge);
+			Assert.AreEqual(3, (int)KingdomWearRules.LeakKind.Food);
+		}
+
+		[Test]
+		public void Leaked_PricesASpoilingGranaryAgainstTheRungItFeeds()
+		{
+			// The granary's own declared capacity (ObjectBlueprints.xml, r_KingdomLarderCapacity
+			// = 288) at the wear ceiling, against the Village rung it opens at, which eats twelve
+			// a day. Spoilage must thin the cushion and never outrun the fields: a ruined granary
+			// losing more in a day than the settlement eats would make one bad roll fatal.
+			int lostInADay = KingdomWearRules.Leaked(288, 288, KingdomMaterialRules.MaxWearPercent, 1);
+			Assert.Greater(lostInADay, 0, "a granary at the ceiling must actually be losing something");
+			Assert.Less(lostInADay, KingdomRules.RationsPerDay(12),
+				"spoilage thins the cushion; it never outruns what the fields make");
 		}
 
 		// --- Hard-running: a streak, re-eligible once per whole further streak ----------------

@@ -201,6 +201,10 @@ namespace ThousandAndFirst
 		/// carrying it is a work whose CONTENTS can run out of a hole in it.</summary>
 		private const string StoresProperty = "KingdomStores";
 
+		/// <summary>The food side of <see cref="StoresProperty"/>: what marks a container the
+		/// settlement keeps its food in, and therefore what can spoil.</summary>
+		private const string LarderProperty = "KingdomLarder";
+
 		/// <summary>
 		/// One work's own wear, 0 when it carries no record at all. The single reader every
 		/// consumer of <see cref="KingdomWearRules.WorkEffectiveness"/> goes through, so "absent
@@ -469,6 +473,18 @@ namespace ThousandAndFirst
 				}
 				return;
 			}
+			// The third kind, and the one Addendum 10(b) deferred until food was a flow: a
+			// holed granary lets the damp in and the harvest goes over. Same clock, same
+			// day-banking, same announce-once, and the same loss-not-transfer reading - this
+			// food rots where it stands and is not a pile somebody can walk up to.
+			if (Work.GetIntProperty(LarderProperty) == 1)
+			{
+				if (Work.Inventory != null)
+				{
+					SpoilFood(System, Survey, Work, Wear, TimeTicks);
+				}
+				return;
+			}
 			if (Work.GetPart<r_KingdomPowerStore>() != null)
 			{
 				Capacitor bed = Work.GetPart<Capacitor>();
@@ -476,6 +492,34 @@ namespace ThousandAndFirst
 				{
 					LeakCharge(System, Work, Wear, bed, TimeTicks);
 				}
+			}
+		}
+
+		private static void SpoilFood(KingdomSystem System, KingdomSurvey Survey, GameObject Work, r_KingdomWear Wear, long TimeTicks)
+		{
+			int days = DueDays(Wear, TimeTicks);
+			if (days <= 0)
+			{
+				return;
+			}
+			int held = KingdomSurvey.HeldIn(Work);
+			int wanted = KingdomWearRules.Leaked(KingdomSurvey.CapacityOf(Work), held, Wear.Wear, days);
+			if (wanted <= 0)
+			{
+				// An empty larder has nothing to lose, so its days are spent rather than banked -
+				// exactly the bargain LeakWater strikes with a dry cistern. A larder that HAS
+				// something and merely rounded to nothing keeps its days.
+				if (held <= 0)
+				{
+					Wear.LastLeakTick = KingdomRules.AdvanceCheckpoint(Wear.LastLeakTick, TimeTicks);
+				}
+				return;
+			}
+			int lost = Survey.SpoilFrom(Work, wanted);
+			Wear.LastLeakTick = KingdomRules.AdvanceCheckpoint(Wear.LastLeakTick, TimeTicks);
+			if (lost > 0)
+			{
+				SayLeak(System, Work, Wear, KingdomWearRules.LeakKind.Food, lost, days);
 			}
 		}
 
@@ -680,7 +724,15 @@ namespace ThousandAndFirst
 		/// nothing never reaches either line.</summary>
 		private static KingdomWearRules.LeakKind LeakKindOf(GameObject Work)
 		{
-			return (Work.GetIntProperty(StoresProperty) != 1 && Work.GetPart<r_KingdomPowerStore>() != null)
+			if (Work.GetIntProperty(StoresProperty) == 1)
+			{
+				return KingdomWearRules.LeakKind.Water;
+			}
+			if (Work.GetIntProperty(LarderProperty) == 1)
+			{
+				return KingdomWearRules.LeakKind.Food;
+			}
+			return (Work.GetPart<r_KingdomPowerStore>() != null)
 				? KingdomWearRules.LeakKind.Charge
 				: KingdomWearRules.LeakKind.Water;
 		}

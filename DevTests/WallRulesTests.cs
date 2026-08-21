@@ -169,6 +169,58 @@ namespace ThousandAndFirst.Tests
 			Assert.IsTrue(KingdomRules.IsOnFrontier(0, 0, 80, 25, KingdomRules.Frontier.West));
 		}
 
+		// --- what a founder's claim does to the wall line ---------------------------------
+
+		private const string Below = "JoppaWorld.5.5.1.1.11";
+		private const string Corner = "JoppaWorld.5.5.2.0.10";
+
+		[Test]
+		public void AClaimOnTheNeighbourFreesExactlyOneEdgeOfTheGroundAlreadyHeld()
+		{
+			// The end-to-end shape of the claim action's wall sentence: the same held ground,
+			// asked against the old claim and the new one.
+			string[] before = new string[1] { Home };
+			string[] after = new string[2] { Home, North };
+			int wasFacing = KingdomZoningRules.EdgeCount(KingdomRules.FrontierEdges(Home, before));
+			int nowFacing = KingdomZoningRules.EdgeCount(KingdomRules.FrontierEdges(Home, after));
+			Assert.AreEqual(4, wasFacing);
+			Assert.AreEqual(3, nowFacing);
+			Assert.IsTrue(KingdomZoningRules.ClaimedWallClause(wasFacing, nowFacing, "Kavvat").Contains("moves outward"));
+		}
+
+		[Test]
+		public void AVerticalClaimIsLegalGroundThatMovesNoWall()
+		{
+			// A cellar is a real claim - ClaimZone's adjacency includes the stratum directly
+			// below - and FrontierEdges clears an edge only for an orthogonal neighbour in the
+			// same stratum, so the wall line honestly does not move. The founder is told that
+			// rather than told the wall moved.
+			int wasFacing = KingdomZoningRules.EdgeCount(KingdomRules.FrontierEdges(Home, new string[1] { Home }));
+			int nowFacing = KingdomZoningRules.EdgeCount(KingdomRules.FrontierEdges(Home, new string[2] { Home, Below }));
+			Assert.AreEqual(wasFacing, nowFacing);
+			Assert.IsTrue(KingdomZoningRules.ClaimedWallClause(wasFacing, nowFacing, "Kavvat").Contains("does not move"));
+		}
+
+		[Test]
+		public void ADiagonalClaimIsLegalGroundThatMovesNoWallEither()
+		{
+			int wasFacing = KingdomZoningRules.EdgeCount(KingdomRules.FrontierEdges(Home, new string[1] { Home }));
+			int nowFacing = KingdomZoningRules.EdgeCount(KingdomRules.FrontierEdges(Home, new string[2] { Home, Corner }));
+			Assert.AreEqual(wasFacing, nowFacing);
+			Assert.IsTrue(KingdomZoningRules.ClaimedWallClause(wasFacing, nowFacing, "Kavvat").Contains("does not move"));
+		}
+
+		[Test]
+		public void AClaimNeverPutsAnEdgeBackOntoTheWallLine()
+		{
+			// Growing outward can only ever free wall ground, never create it: the claim widens
+			// the set FrontierEdges tests against, so no edge that was interior becomes frontier.
+			string[] before = new string[2] { Home, North };
+			string[] after = new string[3] { Home, North, West };
+			Assert.IsTrue(KingdomZoningRules.EdgeCount(KingdomRules.FrontierEdges(Home, after))
+				<= KingdomZoningRules.EdgeCount(KingdomRules.FrontierEdges(Home, before)));
+		}
+
 	}
 }
 #endif

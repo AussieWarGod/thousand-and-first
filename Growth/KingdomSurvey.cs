@@ -10,8 +10,8 @@ namespace ThousandAndFirst
 	/// and pass it down; the alternative is a full-zone scan per question, and there are
 	/// twenty questions.
 	/// </summary>
-	/// <remarks>A survey is a snapshot. Consuming or adding water through the survey keeps
-	/// its counters correct; spawning or destroying objects invalidates its lists.</remarks>
+	/// <remarks>A survey is a snapshot. Consuming or adding water and food through the survey
+	/// keeps its counters correct; spawning or destroying objects invalidates its lists.</remarks>
 	public class KingdomSurvey
 	{
 		public int StoredWater;
@@ -40,6 +40,24 @@ namespace ThousandAndFirst
 		/// survey was taken does not retroactively appear here.
 		/// </summary>
 		public int FoodStored;
+
+		/// <summary>
+		/// Servings the settlement's dedicated larders could hold between them, from each
+		/// container's own declared capacity (<see cref="KingdomRules.LarderCapacityTag"/>,
+		/// defaulting to <see cref="KingdomRules.DefaultLarderCapacity"/>). The food side of
+		/// <see cref="StorageCapacity"/>, and physical in exactly the same way: a vessel says how
+		/// much it holds, and the catalogue never does.
+		/// </summary>
+		public int FoodCapacity;
+
+		/// <summary>
+		/// Room left in the larders. DERIVED rather than counted, unlike its water counterpart
+		/// <see cref="StorageSpace"/>, so that a caller which puts food in by another road
+		/// &mdash; the kitchen garden's own harvest, which spawns crops straight into
+		/// <see cref="Larders"/> and adjusts <see cref="FoodStored"/> &mdash; cannot leave this
+		/// figure stale behind it.
+		/// </summary>
+		public int FoodSpace => (FoodCapacity > FoodStored) ? (FoodCapacity - FoodStored) : 0;
 
 		/// <summary>Coarse abundance read on <see cref="FoodStored"/>. See
 		/// <see cref="KingdomRules.ClassifyPantry"/>.</summary>
@@ -128,13 +146,8 @@ namespace ThousandAndFirst
 				if (item.GetIntProperty("KingdomLarder") == 1 && item.Inventory != null)
 				{
 					survey.Larders.Add(item);
-					foreach (GameObject held in item.Inventory.Objects)
-					{
-						if (held.HasPart("Food") || held.HasPart("PreparedCookingIngredient"))
-						{
-							survey.FoodStored += held.Count;
-						}
-					}
+					survey.FoodCapacity += CapacityOf(item);
+					survey.FoodStored += HeldIn(item);
 				}
 				LiquidVolume part = item.GetPart<LiquidVolume>();
 				if (part == null || part.Volume < 0)
@@ -275,6 +288,190 @@ namespace ThousandAndFirst
 			}
 			FoodAbundance = KingdomRules.ClassifyPantry(FoodStored);
 			return spent;
+		}
+
+
+		/// <summary>
+		/// Servings one container holds right now: vanilla <c>Food</c> or
+		/// <c>PreparedCookingIngredient</c> items, counted by stack rather than by object so a
+		/// stack of twenty apples reads as twenty.
+		/// </summary>
+		/// <param name="Container">Any object. Null, or one with no inventory, holds nothing.</param>
+		public static int HeldIn(GameObject Container)
+		{
+			if (Container == null || Container.Inventory == null)
+			{
+				return 0;
+			}
+			int held = 0;
+			foreach (GameObject item in Container.Inventory.Objects)
+			{
+				if (item.HasPart("Food") || item.HasPart("PreparedCookingIngredient"))
+				{
+					held += item.Count;
+				}
+			}
+			return held;
+		}
+
+		/// <summary>
+		/// Servings one container was built to hold, off its blueprint's own
+		/// <see cref="KingdomRules.LarderCapacityTag"/> &mdash; the food side of a vessel's
+		/// <c>MaxVolume</c>. A container that declares nothing gets
+		/// <see cref="KingdomRules.DefaultLarderCapacity"/>, which is the chest a founder walked
+		/// up to and dedicated by hand.
+		/// </summary>
+		public static int CapacityOf(GameObject Container)
+		{
+			if (Container == null)
+			{
+				return 0;
+			}
+			int declared;
+			// GetTag reads the blueprint's own dictionary, so a modded pantry declares its size
+			// in XML exactly the way a modded cistern declares MaxVolume.
+			if (!int.TryParse(Container.GetTag(KingdomRules.LarderCapacityTag, ""), out declared))
+			{
+				declared = 0;
+			}
+			return KingdomRules.LarderCapacity(declared);
+		}
+
+		/// <summary>
+		/// Takes a finished work into the settlement's food stores and keeps this survey's
+		/// counters in step, so a granary raised before this pass is a pantry from the moment the
+		/// pass notices it rather than from the pass after.
+		/// <para>
+		/// STANDARDS 7 &mdash; "commissioned storage auto-flags" &mdash; is the whole warrant.
+		/// Nothing the founder placed is swept up: the caller is expected to have checked
+		/// <c>KingdomBuilt</c> and <see cref="KingdomRules.IsCivicLarderBlueprint"/>, which
+		/// between them mean the settlement paid for this and the catalogue calls it a pantry.
+		/// </para>
+		/// </summary>
+		/// <param name="Work">The finished container. Null, one with no inventory, or one already
+		/// dedicated is left alone.</param>
+		/// <returns>True when this call is what dedicated it.</returns>
+		public bool AdoptLarder(GameObject Work)
+		{
+			if (Work == null || Work.Inventory == null || Work.GetIntProperty("KingdomLarder") == 1)
+			{
+				return false;
+			}
+			Work.SetIntProperty("KingdomLarder", 1);
+			Larders.Add(Work);
+			FoodCapacity += CapacityOf(Work);
+			FoodStored += HeldIn(Work);
+			FoodAbundance = KingdomRules.ClassifyPantry(FoodStored);
+			return true;
+		}
+
+		/// <summary>
+		/// Puts food into the dedicated larders, updating the survey's counters. The food mirror
+		/// of <see cref="Store"/>, and bounded the same way: each container takes what it has room
+		/// for and no more, and whatever did not fit is handed back to the caller to be honest
+		/// about.
+		/// <para>
+		/// Room is measured off each container as it is reached rather than read from a figure
+		/// cached at <see cref="Take(Zone)"/> time, because the harvest path spawns crops into
+		/// these same containers by another road within the same pass.
+		/// </para>
+		/// </summary>
+		/// <param name="Amount">Servings offered.</param>
+		/// <param name="Blueprint">What the food physically is &mdash; the settlement's own crop,
+		/// from <c>KingdomCropRules.CropBlueprintForStyle</c>, so a fungal city's granary fills
+		/// with mushrooms. An unknown blueprint stores nothing rather than minting a null.</param>
+		/// <returns>Servings actually stored; the remainder had nowhere to go.</returns>
+		public int StoreFood(int Amount, string Blueprint)
+		{
+			if (Amount <= 0 || string.IsNullOrEmpty(Blueprint))
+			{
+				return 0;
+			}
+			int remaining = Amount;
+			for (int i = 0; i < Larders.Count && remaining > 0; i++)
+			{
+				GameObject container = Larders[i];
+				if (container == null || container.Inventory == null)
+				{
+					continue;
+				}
+				int room = CapacityOf(container) - HeldIn(container);
+				if (room <= 0)
+				{
+					continue;
+				}
+				int put = (room < remaining) ? room : remaining;
+				for (int j = 0; j < put; j++)
+				{
+					GameObject food = GameObject.Create(Blueprint);
+					if (food == null)
+					{
+						// The blueprint does not resolve. Nothing further is stored and nothing is
+						// lost: the caller gets the rest of its offer back and can say so.
+						return Amount - remaining;
+					}
+					// A crop this settlement's own style names but that is not actually food would
+					// otherwise be an unbounded spawn: HeldIn would never count it, so the room
+					// would never fill and every pass would put more of it in the chest forever.
+					// Refuse the whole errand instead, and take the one object back out with us.
+					if (!food.HasPart("Food") && !food.HasPart("PreparedCookingIngredient"))
+					{
+						food.Obliterate();
+						return Amount - remaining;
+					}
+					container.Inventory.AddObject(food, Silent: true);
+					remaining--;
+				}
+			}
+			int stored = Amount - remaining;
+			FoodStored += stored;
+			FoodAbundance = KingdomRules.ClassifyPantry(FoodStored);
+			return stored;
+		}
+
+		/// <summary>
+		/// Food lost out of one damaged larder, keeping the survey's counters correct the same way
+		/// <see cref="ConsumeFood"/> does. The food mirror of <see cref="LeakFrom"/>, and loss
+		/// rather than transfer for the same reason: this is a harvest gone bad in a holed
+		/// granary, not a harvest moved somewhere the founder can walk up to (Addendum 10(b)).
+		/// </summary>
+		/// <param name="Container">The damaged pantry. Must be one of <see cref="Larders"/>.</param>
+		/// <param name="Amount">Servings the spoilage is owed.</param>
+		/// <returns>Servings actually lost, measured from the container rather than assumed.</returns>
+		public int SpoilFrom(GameObject Container, int Amount)
+		{
+			if (Container == null || Container.Inventory == null || Amount <= 0)
+			{
+				return 0;
+			}
+			int remaining = Amount;
+			// Snapshot first, for the reason ConsumeFood snapshots: destroying an item removes it
+			// from the same Inventory list, and mutating a collection mid-foreach throws.
+			List<GameObject> held = new List<GameObject>(Container.Inventory.Objects);
+			for (int i = 0; i < held.Count && remaining > 0; i++)
+			{
+				GameObject food = held[i];
+				if (!food.HasPart("Food") && !food.HasPart("PreparedCookingIngredient"))
+				{
+					continue;
+				}
+				// Destroy() decrements a stack of more than one and leaves the object in place;
+				// only the last unit removes it. Validate stops the loop the moment that happens,
+				// exactly as ConsumeFood does.
+				while (remaining > 0 && GameObject.Validate(food))
+				{
+					food.Destroy(null, Silent: true);
+					remaining--;
+				}
+			}
+			int lost = Amount - remaining;
+			FoodStored -= lost;
+			if (FoodStored < 0)
+			{
+				FoodStored = 0;
+			}
+			FoodAbundance = KingdomRules.ClassifyPantry(FoodStored);
+			return lost;
 		}
 
 		/// <summary>

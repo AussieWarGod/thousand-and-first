@@ -113,14 +113,55 @@ namespace ThousandAndFirst.Tests
 			Assert.AreEqual(Roof.Open, KingdomPlotRules.DefaultRoof(true));
 		}
 
-		[TestCase(Roof.Open)]
 		[TestCase(Roof.Soft)]
 		[TestCase(Roof.Walled)]
 		[TestCase(Roof.Carved)]
-		public void UndergroundEverythingIsCarved(Roof Declared)
+		public void UndergroundEverythingTheSettlementWouldEncloseIsCarved(Roof Declared)
 		{
 			Assert.AreEqual(Roof.Carved, KingdomPlotRules.RoofOnGround(Declared, Underground: true));
 			Assert.AreEqual(Declared, KingdomPlotRules.RoofOnGround(Declared, Underground: false));
+		}
+
+		[Test]
+		public void AnOpenPlotStaysOpenUnderTheRock()
+		{
+			// Carving replaces the enclosure a design would have raised; it does not roof ground
+			// the design deliberately left unroofed. A field, salt-pan, market square or
+			// reservoir cut into the rock is open ground with stone around it.
+			Assert.AreEqual(Roof.Open, KingdomPlotRules.RoofOnGround(Roof.Open, Underground: true));
+			Assert.AreEqual(Roof.Open, KingdomPlotRules.RoofOnGround(Roof.Open, Underground: false));
+		}
+
+		[Test]
+		public void TheDeclaredRoofAndTheMeasuredRoofAgreeUnderTheRock()
+		{
+			// The invariant the Open fix is really about: what a design declares and what walls
+			// prove must answer the same question the same way. RoofFromEnclosure has always read
+			// unbounded ground underground as open; RoofOnGround used to contradict it.
+			KingdomAdoptRules.EnclosureMeasurement field = KingdomAdoptRules.MeasureEnclosure(12, 12, delegate(int x, int y)
+			{
+				return CellKind.Open;
+			});
+			Assert.AreEqual(KingdomPlotRules.RoofFromEnclosure(field, Underground: true),
+				KingdomPlotRules.RoofOnGround(KingdomPlotRules.DefaultRoof(Open: true), Underground: true));
+
+			KingdomAdoptRules.EnclosureMeasurement room = KingdomAdoptRules.MeasureEnclosure(12, 12, Room(10, 10, 15, 14, 12, 10));
+			Assert.AreEqual(KingdomPlotRules.RoofFromEnclosure(room, Underground: true),
+				KingdomPlotRules.RoofOnGround(KingdomPlotRules.DefaultRoof(Open: false), Underground: true));
+		}
+
+		[Test]
+		public void AnUndergroundFieldIsNotShelterAndRaisesNoWall()
+		{
+			// What the bug actually cost: a carved roof holds beds and encloses, so an
+			// underground field became a sealed rock chamber people could be housed in, floored
+			// across its whole rect with a door cut into it.
+			Roof underground = KingdomPlotRules.RoofOnGround(KingdomPlotRules.DefaultRoof(Open: true), Underground: true);
+			Assert.IsFalse(KingdomPlotRules.HoldsBeds(underground), "nobody sleeps in a field, above the rock or under it");
+			Assert.IsFalse(KingdomPlotRules.Encloses(underground), "an open plot has no enclosure to be carved out of");
+			Assert.IsFalse(KingdomPlotRules.RaisesWalls(underground), "the settlement raises nothing round an open plot");
+			Assert.AreEqual(0L, KingdomPlotRules.EnclosureTicks(new KingdomPlotRules.PlotRect(0, 0, 5, 5), underground),
+				"an open plot costs no enclosure on any stratum");
 		}
 
 		// --- The roofed test IS the adoption enclosure test ---------------------------------

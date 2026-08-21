@@ -382,14 +382,19 @@ namespace ThousandAndFirst
 		// somewhere a founder can walk up to; this water was lost).
 		// ==================================================================================
 
-		/// <summary>What a leaking store is losing. Two kinds because two things in this
-		/// settlement are physically STORED: drams in a vessel and charge in a bed of salt. Food
-		/// is deliberately absent &mdash; it is not a flow yet, and spoilage waits until it is
-		/// (Addendum 10(b)). Values are frozen: never zero, never renumbered.</summary>
+		/// <summary>
+		/// What a leaking store is losing. THREE kinds because three things in this settlement
+		/// are physically stored: drams in a vessel, charge in a bed of salt, and servings in a
+		/// larder. Food was deliberately absent here until food became a flow, which is exactly
+		/// the condition Addendum 10(b) deferred it on ("the pattern extends per kind as kinds
+		/// become physical (food spoilage waits until food is a flow)"); Wave B made it one, so
+		/// the deferral is spent. Values are frozen: never zero, never renumbered.
+		/// </summary>
 		public enum LeakKind
 		{
 			Water = 1,
 			Charge = 2,
+			Food = 3,
 		}
 
 		/// <summary>
@@ -485,18 +490,30 @@ namespace ThousandAndFirst
 		/// </summary>
 		public static string LeakBegunLine(string WorkName, LeakKind Kind)
 		{
-			return (Kind == LeakKind.Charge)
-				? (WorkName + " has gone cold at the seams, and the night's charge bleeds out of it.")
-				: (WorkName + " weeps down its east face, and what it holds runs away into the ground.");
+			switch (Kind)
+			{
+			case LeakKind.Charge:
+				return WorkName + " has gone cold at the seams, and the night's charge bleeds out of it.";
+			case LeakKind.Food:
+				return WorkName + " has let the damp in, and what is stored there is going over.";
+			default:
+				return WorkName + " weeps down its east face, and what it holds runs away into the ground.";
+			}
 		}
 
 		/// <summary>The unsaying: mending restores function, so the leak is over the moment the
 		/// work is whole. The consequence is of damage, not of history (Addendum 10(b)).</summary>
 		public static string LeakStoppedLine(string WorkName, LeakKind Kind)
 		{
-			return (Kind == LeakKind.Charge)
-				? (WorkName + " is sealed again, and keeps its heat overnight.")
-				: (WorkName + " is sealed again, and holds every dram it is given.");
+			switch (Kind)
+			{
+			case LeakKind.Charge:
+				return WorkName + " is sealed again, and keeps its heat overnight.";
+			case LeakKind.Food:
+				return WorkName + " is dry and tight again, and what is stored there keeps.";
+			default:
+				return WorkName + " is sealed again, and holds every dram it is given.";
+			}
 		}
 
 		/// <summary>The Status report's own line for how many works stand damaged, or empty when

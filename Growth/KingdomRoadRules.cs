@@ -534,6 +534,83 @@ namespace ThousandAndFirst
 		}
 
 		/// <summary>
+		/// The one design in the catalogue that is sited by a rule rather than by a size: the
+		/// gatehouse belongs on the frontier wall, astride the road, and nowhere else.
+		/// <para>
+		/// The catalogue's own note beside the entry said it would be "sited as an ordinary
+		/// length of wall" only "until roads exist to meet". Roads exist: <see cref="TryGate"/>
+		/// already names the cell where the settlement's ground meets the world, and
+		/// <c>KingdomRoads</c> already walks a <c>HeartToGate</c> errand at it, so the way out is
+		/// a real, worn route rather than a compass direction. This joins the design to that
+		/// cell.
+		/// </para>
+		/// <para>
+		/// A key, not a blueprint and not a footprint. Naming it here is the one hardcoded thing
+		/// in the rule and it is deliberately the smallest one: an author who re-keys the design
+		/// keeps every other property and loses only the siting, and swapping this for an
+		/// authored <c>Sited="gate"</c> attribute is a one-line change to
+		/// <see cref="SitesAtGate"/> when the schema grows one.
+		/// </para>
+		/// </summary>
+		public const string GatehouseKey = "gatehouse";
+
+		/// <summary>Whether a design is sited at the gate rather than anywhere along the wall.
+		/// Case-folded, so a third-party file spelling the key differently still lands.</summary>
+		public static bool SitesAtGate(string Key)
+		{
+			return !string.IsNullOrEmpty(Key) && Key.Trim().ToLowerInvariant() == GatehouseKey;
+		}
+
+		/// <summary>
+		/// Which of the offered cells the gate design takes: the one nearest the gate cell, ties
+		/// broken northmost then westmost, so the same settlement puts its gatehouse in the same
+		/// place every time it is asked.
+		/// <para>
+		/// Nearest rather than exactly-the-gate deliberately. The gate cell may be occupied, and
+		/// the protection law forbids taking ground that holds anything (STANDARDS 7) &mdash; so
+		/// the rule aims at the way out and settles for the nearest ground beside it, which is
+		/// still the wall astride the road. Handed an empty list it answers -1 and the caller
+		/// falls back to its own placement, exactly as it does when the plan has no opinion.
+		/// </para>
+		/// </summary>
+		/// <param name="Xs">Candidate cell xs, already filtered to buildable frontier ground.</param>
+		/// <param name="Ys">Candidate cell ys, index-matched to <paramref name="Xs"/>.</param>
+		/// <param name="GateX">The gate cell's x, from <see cref="TryGate"/>.</param>
+		/// <param name="GateY">The gate cell's y.</param>
+		/// <returns>An index into the candidate lists, or -1 when there is nothing to choose.</returns>
+		public static int NearestToGate(IList<int> Xs, IList<int> Ys, int GateX, int GateY)
+		{
+			if (Xs == null || Ys == null)
+			{
+				return -1;
+			}
+			int count = (Xs.Count < Ys.Count) ? Xs.Count : Ys.Count;
+			int best = -1;
+			int bestDistance = 0;
+			for (int i = 0; i < count; i++)
+			{
+				int distance = KingdomLayoutRules.Chebyshev(Xs[i], Ys[i], GateX, GateY);
+				if (best < 0 || distance < bestDistance)
+				{
+					best = i;
+					bestDistance = distance;
+					continue;
+				}
+				if (distance != bestDistance)
+				{
+					continue;
+				}
+				// Ties are broken by the ground itself rather than by the order the engine
+				// happened to enumerate cells in, so a reload sites the same gatehouse.
+				if (Ys[i] < Ys[best] || (Ys[i] == Ys[best] && Xs[i] < Xs[best]))
+				{
+					best = i;
+				}
+			}
+			return best;
+		}
+
+		/// <summary>
 		/// The lane a plot's door opens onto: two cells straight out from the doorway, which
 		/// clears the plot's own reserved margin (<see cref="KingdomPlotRules.RoadMargin"/>) and
 		/// lands in the gap the plot grammar keeps between buildings.

@@ -97,6 +97,24 @@ namespace ThousandAndFirst
 
 		public bool Withered;
 
+		/// <summary>
+		/// Heartbeat resolves in a row the settlement's ration bill went unpaid. The food mirror
+		/// of <see cref="DryStreak"/>, and a SEPARATE counter on purpose: the two ladders run at
+		/// once and each keeps its own memory, so a settlement that fixes its water and not its
+		/// fields is not quietly forgiven the second thing.
+		/// <para>
+		/// What stops the two costing double is <c>KingdomRules.ComposeScarcity</c>, which takes
+		/// the WORSE of the two ladders and never their sum: one departure per resolve however
+		/// many things are wrong.
+		/// </para>
+		/// </summary>
+		public int HungerStreak;
+
+		/// <summary>The food mirror of <see cref="Withered"/>: the settlement has been hungry
+		/// long enough to be marked for it. Both marks can stand at once &mdash; they are states
+		/// and not costs.</summary>
+		public bool Famished;
+
 		public bool HasShopkeeper;
 
 		public bool NoRoomAnnounced;
@@ -116,6 +134,20 @@ namespace ThousandAndFirst
 		/// count for the same reason: unplanted, an uncapped read is the age of the world.
 		/// </summary>
 		public long LastWaterWorkTick;
+
+		/// <summary>
+		/// Tick the settlement's fields last brought a day's making into the larders. Its own
+		/// checkpoint rather than a share of <see cref="LastWaterWorkTick"/>, and planted before
+		/// the first count for the same reason that one is.
+		/// <para>
+		/// Separate because the two producers are separately blockable: a settlement can have
+		/// casks with room and no larder dedicated at all, and a shared stamp would let whichever
+		/// good was flowing spend the other's days. Each producer owning its own stamp is the
+		/// idiom this file already keeps &mdash; fetch, upkeep, subsidence and the water works
+		/// each have one.
+		/// </para>
+		/// </summary>
+		public long LastFoodWorkTick;
 
 		/// <summary>Citizens crewing works as of the last assignment pass. Hands on a mill are
 		/// hands not carrying a bucket, which is what makes staffing a real choice.</summary>
@@ -149,6 +181,13 @@ namespace ThousandAndFirst
 		public int DamagedWorks;
 
 		public bool IdleWorksAnnounced;
+
+		/// <summary>
+		/// STANDARDS 7b's once-flag for a harvest with nowhere to go: the fields made food and
+		/// the settlement had no larder dedicated, or the larders it has are full. Set when the
+		/// founder is first told, cleared the moment there is room again.
+		/// </summary>
+		public bool HarvestUnstoredAnnounced;
 
 		/// <summary>
 		/// Tick this settlement's level was last reckoned against its people

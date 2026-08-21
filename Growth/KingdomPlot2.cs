@@ -1853,7 +1853,7 @@ namespace ThousandAndFirst
 			{
 				building.SetIntProperty("KingdomStores", 1);
 			}
-			else if (entry.Blueprint == r_KingdomScaffold.LarderBlueprint)
+			else if (KingdomRules.IsCivicLarderBlueprint(entry.Blueprint))
 			{
 				building.SetIntProperty("KingdomLarder", 1);
 			}

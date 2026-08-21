@@ -577,6 +577,239 @@ namespace ThousandAndFirst.Tests
 			Assert.IsFalse(KingdomZoningRules.IsOpenCategory(""));
 		}
 
+		// --- the stratum gate: depth narrows the offer at commission time -------------------
+
+		[Test]
+		public void ADesignThatWantsWeatherIsRefusedUnderTheRockByName()
+		{
+			ZoningJudgement judgement = KingdomZoningRules.Judge(ZoneGate.Open, null, "power", 1, null,
+				Underground: true, RequiresSky: true);
+			Assert.AreEqual(ZoningVerdict.RefusedStratum, judgement.Verdict);
+			Assert.AreEqual("wants open sky", judgement.Note);
+			Assert.AreEqual("open sky", judgement.Detail, "the refusal names the stratum that would take it");
+		}
+
+		[TestCase(false, false)]
+		[TestCase(false, true)]
+		[TestCase(true, false)]
+		public void EveryOtherCombinationOfDepthAndWeatherIsPermitted(bool underground, bool requiresSky)
+		{
+			Assert.IsTrue(KingdomZoningRules.Judge(ZoneGate.Open, null, "power", 1, null, underground, requiresSky).Permitted);
+		}
+
+		[TestCase(true, true, false)]
+		[TestCase(true, false, true)]
+		[TestCase(false, true, true)]
+		[TestCase(false, false, true)]
+		public void StratumAcceptsOnlyWhatTheGroundCanCarry(bool underground, bool requiresSky, bool expected)
+		{
+			Assert.AreEqual(expected, KingdomZoningRules.StratumAccepts(underground, requiresSky));
+		}
+
+		[Test]
+		public void TheOldJudgeOverloadStillGatesNothingByDepth()
+		{
+			// Every caller written before the stratum existed asks the surface question, so a
+			// design that wants weather is judged exactly as it always was.
+			Assert.IsTrue(KingdomZoningRules.Judge(ZoneGate.Open, null, "power", 1, null).Permitted);
+		}
+
+		[Test]
+		public void StratumIsAskedAfterTerritoryAndBeforeGround()
+		{
+			// The order the founder is taught in: the realm being too small outranks the rock,
+			// and the rock outranks the district - because a district can be renamed tomorrow and
+			// no naming puts weather under a mountain.
+			ZoneGate gate = new ZoneGate("agrarian", 3, null, TechLevel.Hands);
+			Assert.AreEqual(ZoningVerdict.RefusedTerritory,
+				KingdomZoningRules.Judge(gate, "shrine", "power", 1, null, Underground: true, RequiresSky: true).Verdict);
+			Assert.AreEqual(ZoningVerdict.RefusedStratum,
+				KingdomZoningRules.Judge(gate, "shrine", "power", 3, null, Underground: true, RequiresSky: true).Verdict);
+			Assert.AreEqual(ZoningVerdict.RefusedDistrict,
+				KingdomZoningRules.Judge(gate, "shrine", "power", 3, null, Underground: false, RequiresSky: true).Verdict);
+		}
+
+		// --- the claim: how much ground a city of each rung answers for ---------------------
+
+		[TestCase(GrowthStage.Camp, 1)]
+		[TestCase(GrowthStage.Steading, 1)]
+		[TestCase(GrowthStage.Village, 2)]
+		[TestCase(GrowthStage.Town, 3)]
+		[TestCase(GrowthStage.City, 4)]
+		public void ARungHoldsTheGroundItsOwnDesignsAskFor(GrowthStage stage, int expected)
+		{
+			Assert.AreEqual(expected, KingdomZoningRules.ZonesForStage(stage));
+		}
+
+		[Test]
+		public void EveryMinZonesDesignBecomesReachableAtTheStageItWasAuthoredFor()
+		{
+			// The whole reason the ladder is 1/1/2/3/4 rather than a number somebody chose: the
+			// catalogue's eight MinZones designs pair MinZones=2 with Village, 3 with Town and 4
+			// with City, so reaching the rung and reaching the ground happen together.
+			Assert.IsTrue(KingdomZoningRules.ZonesForStage(GrowthStage.Village) >= 2);
+			Assert.IsTrue(KingdomZoningRules.ZonesForStage(GrowthStage.Town) >= 3);
+			Assert.IsTrue(KingdomZoningRules.ZonesForStage(GrowthStage.City) >= 4);
+			Assert.IsTrue(KingdomZoningRules.ZonesForStage(GrowthStage.Steading) < 2,
+				"a steading must not be able to reach a two-zone design");
+		}
+
+		[Test]
+		public void AStageThisBuildDoesNotDefineHoldsOneParasang()
+		{
+			Assert.AreEqual(1, KingdomZoningRules.ZonesForStage((GrowthStage)99));
+			Assert.AreEqual(1, KingdomZoningRules.ZonesForStage((GrowthStage)(-3)));
+		}
+
+		[Test]
+		public void AClaimOnBorderingUnheldGroundIsAllowed()
+		{
+			Assert.AreEqual(KingdomZoningRules.ClaimVerdict.Allowed,
+				KingdomZoningRules.JudgeClaim(true, GrowthStage.Village, 1, false, false, false, false, true));
+		}
+
+		[Test]
+		public void AnUnfoundedRealmClaimsNothing()
+		{
+			Assert.AreEqual(KingdomZoningRules.ClaimVerdict.NothingFoundedYet,
+				KingdomZoningRules.JudgeClaim(false, GrowthStage.City, 0, false, false, false, false, true));
+		}
+
+		[Test]
+		public void GroundTheCityAlreadyHoldsIsNotClaimedTwice()
+		{
+			Assert.AreEqual(KingdomZoningRules.ClaimVerdict.GroundIsAlreadyOurs,
+				KingdomZoningRules.JudgeClaim(true, GrowthStage.Village, 1, true, false, false, false, true));
+		}
+
+		[Test]
+		public void OneParasangAnswersToOneCity()
+		{
+			Assert.AreEqual(KingdomZoningRules.ClaimVerdict.GroundIsAnotherCitys,
+				KingdomZoningRules.JudgeClaim(true, GrowthStage.Village, 1, false, true, false, false, true));
+		}
+
+		[Test]
+		public void TheRealmThatPutYouOutKeepsItsGround()
+		{
+			Assert.AreEqual(KingdomZoningRules.ClaimVerdict.GroundIsAnotherRealms,
+				KingdomZoningRules.JudgeClaim(true, GrowthStage.Village, 1, false, false, true, false, true));
+		}
+
+		[Test]
+		public void AForeignFactionsGroundIsAskedForNeverTaken()
+		{
+			Assert.AreEqual(KingdomZoningRules.ClaimVerdict.GroundIsForeign,
+				KingdomZoningRules.JudgeClaim(true, GrowthStage.Village, 1, false, false, false, true, true));
+		}
+
+		[Test]
+		public void ACityGrowsOutwardFromWhatItAlreadyHolds()
+		{
+			Assert.AreEqual(KingdomZoningRules.ClaimVerdict.GroundIsNotAdjacent,
+				KingdomZoningRules.JudgeClaim(true, GrowthStage.City, 1, false, false, false, false, false));
+		}
+
+		[TestCase(GrowthStage.Camp, 1)]
+		[TestCase(GrowthStage.Steading, 1)]
+		[TestCase(GrowthStage.Village, 2)]
+		[TestCase(GrowthStage.Town, 3)]
+		[TestCase(GrowthStage.City, 4)]
+		public void ACityAtItsRungsCeilingClaimsNoMore(GrowthStage stage, int held)
+		{
+			Assert.AreEqual(KingdomZoningRules.ClaimVerdict.CityHoldsAllItCan,
+				KingdomZoningRules.JudgeClaim(true, stage, held, false, false, false, false, true));
+			Assert.AreEqual(KingdomZoningRules.ClaimVerdict.Allowed,
+				KingdomZoningRules.JudgeClaim(true, stage, held - 1, false, false, false, false, true),
+				"one parasang short of the ceiling still claims");
+		}
+
+		[Test]
+		public void TheStageGateIsAskedLastSoTheGroundFactsAreHeardFirst()
+		{
+			// A founder standing on a foreign village's ground at their rung's ceiling is told
+			// about the village, which is the fact they can do something about today.
+			Assert.AreEqual(KingdomZoningRules.ClaimVerdict.GroundIsForeign,
+				KingdomZoningRules.JudgeClaim(true, GrowthStage.Camp, 1, false, false, false, true, true));
+		}
+
+		[Test]
+		public void EveryClaimRefusalNamesWhatWouldLiftIt()
+		{
+			foreach (KingdomZoningRules.ClaimVerdict verdict in System.Enum.GetValues(typeof(KingdomZoningRules.ClaimVerdict)))
+			{
+				string refusal = KingdomZoningRules.ClaimRefusal(verdict, "Kavvat", GrowthStage.Town);
+				if (verdict == KingdomZoningRules.ClaimVerdict.Allowed)
+				{
+					Assert.AreEqual("", refusal, "an allowed claim refuses nothing");
+					continue;
+				}
+				Assert.IsTrue(refusal.Length > 0, verdict + " must tell the founder why");
+				Assert.IsTrue(refusal.EndsWith("."), verdict + " must be a sentence");
+			}
+		}
+
+		[Test]
+		public void TheCeilingRefusalNamesTheRungThatWouldLiftIt()
+		{
+			string town = KingdomZoningRules.ClaimRefusal(KingdomZoningRules.ClaimVerdict.CityHoldsAllItCan, "Kavvat", GrowthStage.Town);
+			Assert.IsTrue(town.Contains("a town"), "the refusal names the rung the city is at");
+			Assert.IsTrue(town.Contains("3 parasangs"), "and how much ground that rung answers for");
+			Assert.IsTrue(town.Contains("a city"), "and the rung that would lift it");
+
+			string city = KingdomZoningRules.ClaimRefusal(KingdomZoningRules.ClaimVerdict.CityHoldsAllItCan, "Kavvat", GrowthStage.City);
+			Assert.IsFalse(city.Contains("Grow into"), "a city is told to found again, not to grow into itself");
+			Assert.IsTrue(city.Contains("4 parasangs"));
+		}
+
+		// --- the wall line, said out loud ---------------------------------------------------
+
+		[TestCase(KingdomRules.Frontier.None, 0)]
+		[TestCase(KingdomRules.Frontier.North, 1)]
+		[TestCase(KingdomRules.Frontier.North | KingdomRules.Frontier.South, 2)]
+		[TestCase(KingdomRules.Frontier.North | KingdomRules.Frontier.South | KingdomRules.Frontier.West, 3)]
+		[TestCase(KingdomRules.Frontier.North | KingdomRules.Frontier.South | KingdomRules.Frontier.West | KingdomRules.Frontier.East, 4)]
+		public void EdgeCountCountsTheSidesFacingTheWorld(KingdomRules.Frontier edges, int expected)
+		{
+			Assert.AreEqual(expected, KingdomZoningRules.EdgeCount(edges));
+		}
+
+		[Test]
+		public void AClaimThatFreesAnEdgeSaysTheWallLineMoved()
+		{
+			string moved = KingdomZoningRules.ClaimedWallClause(4, 3, "Kavvat");
+			Assert.IsTrue(moved.Contains("moves outward"));
+			Assert.IsTrue(moved.Contains("inner wall"), "the old line is named as what it becomes");
+			Assert.IsTrue(moved.Contains("nothing already built is moved"), "the protection law is said, not implied");
+		}
+
+		[Test]
+		public void AClaimThatFreesTwoEdgesCountsThem()
+		{
+			Assert.IsTrue(KingdomZoningRules.ClaimedWallClause(7, 5, "Kavvat").Contains("2 sides"));
+		}
+
+		[Test]
+		public void AClaimThatMovesNoEdgeSaysSoRatherThanClaimingItDid()
+		{
+			// The honest answer for ground taken diagonally across a corner, or straight down
+			// into the rock: FrontierEdges clears an edge only for an orthogonal neighbour in the
+			// same stratum, so those claims are legal ground that moves no wall.
+			string still = KingdomZoningRules.ClaimedWallClause(4, 4, "Kavvat");
+			Assert.IsTrue(still.Contains("does not move"));
+			Assert.IsFalse(still.Contains("inner wall"));
+		}
+
+		[Test]
+		public void TheHoldingLineNamesWhatIsHeldAndWhatIsLeft()
+		{
+			Assert.IsTrue(KingdomZoningRules.ClaimHoldingLine(2, 3).Contains("2 parasangs"));
+			Assert.IsTrue(KingdomZoningRules.ClaimHoldingLine(2, 3).Contains("one more"));
+			Assert.IsTrue(KingdomZoningRules.ClaimHoldingLine(1, 4).Contains("3 more"));
+			Assert.IsTrue(KingdomZoningRules.ClaimHoldingLine(3, 3).Contains("all this rung answers for"));
+			Assert.IsTrue(KingdomZoningRules.ClaimHoldingLine(1, 1).Contains("one parasang"));
+		}
+
 		private static string SampleCategory(int Index)
 		{
 			string[] categories = new string[20]

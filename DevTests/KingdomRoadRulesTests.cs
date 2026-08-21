@@ -370,6 +370,101 @@ namespace ThousandAndFirst.Tests
 			Assert.IsFalse(KingdomRoadRules.TryGate(10, 0, KingdomRules.Frontier.North, 0, 0, out _, out _));
 		}
 
+		// --- The gatehouse: a placement rule, not a size ---------------------------------
+
+		[TestCase("gatehouse", true)]
+		[TestCase("GATEHOUSE", true)]
+		[TestCase("  gatehouse ", true)]
+		[TestCase("palisade", false)]
+		[TestCase("rampart", false)]
+		[TestCase("watchtower", false)]
+		[TestCase("barracks", false)]
+		[TestCase(null, false)]
+		[TestCase("", false)]
+		public void OnlyTheGatehouseIsSitedAtTheGate(string key, bool expected)
+		{
+			Assert.AreEqual(expected, KingdomRoadRules.SitesAtGate(key));
+		}
+
+		[Test]
+		public void TheGatehouseTakesTheFrontierCellNearestTheWayOut()
+		{
+			// The whole rule: on the frontier wall, astride the road. TryGate names the cell the
+			// settlement's own HeartToGate route is walked to, and the gatehouse goes there.
+			Assert.IsTrue(KingdomRoadRules.TryGate(20, 20, KingdomRules.Frontier.North, 10, 10, out var gateX, out var gateY));
+			int[] xs = new int[4] { 2, 10, 18, 6 };
+			int[] ys = new int[4] { 0, 1, 0, 1 };
+			int index = KingdomRoadRules.NearestToGate(xs, ys, gateX, gateY);
+			Assert.AreEqual(1, index);
+			Assert.AreEqual(gateX, xs[index]);
+			Assert.AreEqual(gateY, ys[index]);
+		}
+
+		[Test]
+		public void AnOccupiedGateCellSettlesForTheGroundBesideIt()
+		{
+			// The protection law forbids taking ground that holds anything, so the rule aims at
+			// the way out and settles for the nearest offered cell - which is still the wall
+			// astride the road.
+			Assert.IsTrue(KingdomRoadRules.TryGate(20, 20, KingdomRules.Frontier.North, 10, 10, out var gateX, out var gateY));
+			int[] xs = new int[3] { 2, 12, 18 };
+			int[] ys = new int[3] { 1, 1, 1 };
+			int index = KingdomRoadRules.NearestToGate(xs, ys, gateX, gateY);
+			Assert.AreEqual(1, index, "the nearest offered cell, not the first one enumerated");
+			Assert.IsTrue(KingdomLayoutRules.Chebyshev(xs[index], ys[index], gateX, gateY) <= 2);
+		}
+
+		[Test]
+		public void TheGatehouseIsSitedTheSameWayEveryTimeItIsAsked()
+		{
+			// Ties are broken by the ground rather than by the order the engine enumerated cells,
+			// so a reload puts the gatehouse back where it was.
+			int[] xs = new int[4] { 12, 8, 10, 10 };
+			int[] ys = new int[4] { 1, 1, 0, 2 };
+			int[] shuffled = new int[4] { 10, 10, 8, 12 };
+			int[] shuffledYs = new int[4] { 2, 0, 1, 1 };
+			int first = KingdomRoadRules.NearestToGate(xs, ys, 10, 1);
+			int second = KingdomRoadRules.NearestToGate(shuffled, shuffledYs, 10, 1);
+			Assert.AreEqual(xs[first], shuffled[second]);
+			Assert.AreEqual(ys[first], shuffledYs[second]);
+		}
+
+		[Test]
+		public void ATieAtEqualDistanceGoesNorthmostThenWestmost()
+		{
+			int[] xs = new int[3] { 11, 9, 10 };
+			int[] ys = new int[3] { 0, 0, 1 };
+			int index = KingdomRoadRules.NearestToGate(xs, ys, 10, 0);
+			Assert.AreEqual(1, index, "same distance, so the northmost then westmost cell wins");
+		}
+
+		[Test]
+		public void NoGroundOfferedMeansNoGateSiting()
+		{
+			Assert.AreEqual(-1, KingdomRoadRules.NearestToGate(new int[0], new int[0], 5, 5));
+			Assert.AreEqual(-1, KingdomRoadRules.NearestToGate(null, null, 5, 5));
+		}
+
+		[Test]
+		public void ClaimingTheNeighbourMovesTheGateWithTheWall()
+		{
+			// The brief's "walls move outward as the city spans zones", read at the gate: a zone
+			// whose north edge stops being frontier stops having its way out through the north.
+			Assert.IsTrue(KingdomRoadRules.TryGate(20, 20, KingdomRules.Frontier.North | KingdomRules.Frontier.South, 10, 5,
+				out var beforeX, out var beforeY));
+			Assert.AreEqual(1, beforeY, "the heart sits near the north edge, so the way out is north");
+			Assert.IsTrue(KingdomRoadRules.TryGate(20, 20, KingdomRules.Frontier.South, 10, 5, out var afterX, out var afterY));
+			Assert.AreNotEqual(beforeY, afterY, "the way out moved to the edge that still faces the world");
+			Assert.IsTrue(KingdomRules.IsOnFrontier(afterX, afterY, 20, 20, KingdomRules.Frontier.South));
+			Assert.IsFalse(KingdomRules.IsOnFrontier(afterX, afterY, 20, 20, KingdomRules.Frontier.North));
+		}
+
+		[Test]
+		public void AZoneTheRealmSurroundsHasNoGateToSiteAGatehouseAt()
+		{
+			Assert.IsFalse(KingdomRoadRules.TryGate(20, 20, KingdomRules.Frontier.None, 10, 10, out _, out _));
+		}
+
 		// --- The lane --------------------------------------------------------------------
 
 		[TestCase(11, 10, 11, 8)]

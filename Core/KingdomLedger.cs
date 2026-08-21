@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 #if !TAF_TESTS
@@ -25,6 +25,23 @@ namespace ThousandAndFirst
 		public int ArrivalCost;
 
 		public int Delivered;
+
+		/// <summary>Servings the settlement's own fields brought into the larders this pass. The
+		/// food mirror of <see cref="Fetched"/>.</summary>
+		public int Harvested;
+
+		/// <summary>Servings the settlement's free hands brought in off the land, eaten hand to
+		/// mouth rather than stored. The food mirror of the hauling half of
+		/// <see cref="Fetched"/>.</summary>
+		public int Foraged;
+
+		/// <summary>Servings drawn out of the larders to feed the settlement. The food mirror of
+		/// <see cref="UpkeepDrawn"/>.</summary>
+		public int RationsDrawn;
+
+		/// <summary>Servings the fields made with nowhere to keep them. Loss and not transfer:
+		/// there was no larder, or the larders were full, and it was left in the field.</summary>
+		public int HarvestLost;
 
 		public int Plundered;
 
@@ -80,7 +97,9 @@ namespace ThousandAndFirst
 		{
 			get
 			{
-				return Fetched > 0 || UpkeepDrawn > 0 || ArrivalCost > 0 || Delivered > 0 || Plundered > 0 || Arrivals > 0 || Departures > 0 || Notes.Count > 0 || BrinkLines.Count > 0;
+				return Fetched > 0 || UpkeepDrawn > 0 || ArrivalCost > 0 || Delivered > 0 || Plundered > 0 || Arrivals > 0 || Departures > 0
+					|| Harvested > 0 || Foraged > 0 || RationsDrawn > 0 || HarvestLost > 0
+					|| Notes.Count > 0 || BrinkLines.Count > 0;
 			}
 		}
 
@@ -90,6 +109,10 @@ namespace ThousandAndFirst
 			UpkeepDrawn = 0;
 			ArrivalCost = 0;
 			Delivered = 0;
+			Harvested = 0;
+			Foraged = 0;
+			RationsDrawn = 0;
+			HarvestLost = 0;
 			Plundered = 0;
 			Arrivals = 0;
 			Departures = 0;
@@ -187,6 +210,28 @@ namespace ThousandAndFirst
 			if (Plundered > 0)
 			{
 				sb.Append(wrote ? ", " : "").Append(Plundered).Append(" lost to raiders");
+				wrote = true;
+			}
+			// The food half, in servings rather than drams and said so, because a founder
+			// reading one running total in two units would read it wrong.
+			if (Harvested > 0)
+			{
+				sb.Append(wrote ? ", " : "").Append(Harvested).Append(" gathered into the larders");
+				wrote = true;
+			}
+			if (Foraged > 0)
+			{
+				sb.Append(wrote ? ", " : "").Append(Foraged).Append(" foraged off the land");
+				wrote = true;
+			}
+			if (RationsDrawn > 0)
+			{
+				sb.Append(wrote ? ", " : "").Append(RationsDrawn).Append(" eaten out of the larders");
+				wrote = true;
+			}
+			if (HarvestLost > 0)
+			{
+				sb.Append(wrote ? ", " : "").Append(HarvestLost).Append(" left in the field for want of a larder");
 				wrote = true;
 			}
 			if (!wrote)

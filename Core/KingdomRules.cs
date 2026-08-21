@@ -249,6 +249,193 @@
 			}
 		}
 
+		// --- Where the settlement keeps its food -------------------------------------------
+		//
+		// Water's capacity is physical and lives on the blueprint (LiquidVolume MaxVolume), never
+		// in the catalogue: a design's Carries says what it adds to the sustainable LEVEL, and
+		// how much the vessel holds is a fact about the vessel. Food is given exactly the same
+		// shape - a tag on the blueprint, read by KingdomSurvey - so that a third party's own
+		// pantry declares its size the same way a third party's own cistern does.
+
+		/// <summary>
+		/// Blueprint tag naming how much food a dedicated container holds, mirroring
+		/// <c>LiquidVolume MaxVolume</c> on the water side. Absent reads as
+		/// <see cref="DefaultLarderCapacity"/>, which is what an ordinary chest the founder
+		/// dedicated by hand gets.
+		/// </summary>
+		public const string LarderCapacityTag = "r_KingdomLarderCapacity";
+
+		/// <summary>What a container with no declared capacity holds. A chest the founder walked
+		/// up to and dedicated, sized like a small vessel rather than like a granary.</summary>
+		public const int DefaultLarderCapacity = 32;
+
+		/// <summary>
+		/// A declared larder capacity, read back safely. Zero, absent, or negative is a container
+		/// that never said, and gets <see cref="DefaultLarderCapacity"/> &mdash; never zero,
+		/// because a dedicated larder that can hold nothing is a silent black hole for a harvest
+		/// and there is no way for the founder to see it.
+		/// </summary>
+		public static int LarderCapacity(int Declared)
+		{
+			return (Declared > 0) ? Declared : DefaultLarderCapacity;
+		}
+
+		/// <summary>
+		/// The blueprints a finished, commissioned work dedicates itself to the settlement's food
+		/// stores on completion &mdash; STANDARDS 7's "commissioned storage auto-flags", which is
+		/// the food half of the same clause that auto-flags a commissioned cask rack.
+		/// <para>
+		/// Named rather than inferred, exactly as <c>r_KingdomScaffold.LarderBlueprint</c> named
+		/// the first of them: "has an Inventory and no LiquidVolume" would sweep up the charging
+		/// post, which carries a Container/Inventory pair and is not a pantry.
+		/// </para>
+		/// </summary>
+		public static readonly string[] CivicLarderBlueprints = new string[2] { "r_KingdomLarder", "r_KingdomGranary" };
+
+		/// <summary>Whether a finished work's blueprint is one the settlement keeps its food in.</summary>
+		public static bool IsCivicLarderBlueprint(string Blueprint)
+		{
+			if (string.IsNullOrEmpty(Blueprint))
+			{
+				return false;
+			}
+			for (int i = 0; i < CivicLarderBlueprints.Length; i++)
+			{
+				if (CivicLarderBlueprints[i] == Blueprint)
+				{
+					return true;
+				}
+			}
+			return false;
+		}
+
+		// ==================================================================================
+		// FOOD AS A FLOW (Wave B). The water lane's mirror, function for function, and where it
+		// deliberately parts company said out loud rather than left to be inferred.
+		//
+		//   water                                  food
+		//   -----                                  ----
+		//   UpkeepDrams(pop, stage)                RationsPerDay(pop)          -- NO stage term
+		//   PolicyUpkeepForElapsed(...)            RationsForElapsed(...)      -- no policy term
+		//   FetchableDrams(hands, pool, room, d)   ForagedRations(hands, days) -- ceiling, not a pool
+		//   ResolveThirst(streak, stage, pop)      ResolveHunger(streak, stage, pop)
+		//   DryIntervalsToEmigrate / ToWither      HungryIntervalsToEmigrate / ToFamine
+		//
+		// THE TWO DIVERGENCES, AND WHY.
+		//
+		// (1) NO STAGE RATE. Water is billed 100/120/150/180/220 per hundred by stage and the
+		//     catalogue's `water` Carries are divided back out by that same percentage
+		//     (KingdomSubsidenceRules.LevelFromWater), so a cistern carrying eight settlers at
+		//     camp carries three in a city. Food is not, and the catalogue says so in its own
+		//     voice: "a dinner and a bed are both counted in people, and neither is divided by
+		//     the settlement's own thirst the way a dram is" (KingdomBuildings.xml, the big-plot
+		//     note). So one point of `food` is one settler fed for one day, flat, at every rung.
+		//     That is what makes the whole lane check out on its face: a settlement standing at
+		//     its own equilibrium eats exactly what its fields make, because the food arm of
+		//     KingdomCatalogueRules.Equilibrium IS the daily ration bill.
+		//
+		//     Putting a stage rate on food would not be a tuning knob, it would be a rewrite of
+		//     every food figure in the catalogue and of the level arithmetic that reads them.
+		//
+		// (2) NO STORES POLICY. Thrift discounts the daily draw by a quarter and its own blurb
+		//     names what it is doing - "the water-keepers ration". It is a water lever, tuned
+		//     against the water economy, and letting it silently halve the food bill as well
+		//     would make one menu choice strictly better than the other for a reason nobody
+		//     wrote. The agrarian district's upkeep discount is left on the water side for the
+		//     same reason: it is already spent there, and spending it twice is a double count.
+		// ==================================================================================
+
+		/// <summary>
+		/// Food the settlement eats in a day: one ration per settler, at every rung.
+		/// <para>
+		/// Deliberately NOT the mirror of <see cref="UpkeepDrams(int, GrowthStage)"/>'s stage
+		/// scaling &mdash; see the divergence note above. The flatness is load-bearing rather
+		/// than lazy: it is what makes a settlement standing at its own supported level exactly
+		/// food-neutral, because <c>KingdomCatalogueRules.Equilibrium</c>'s food arm is
+		/// denominated in settlers fed and is handed through undivided.
+		/// </para>
+		/// </summary>
+		/// <param name="Population">Living settlers. Zero or fewer eats nothing.</param>
+		public static int RationsPerDay(int Population)
+		{
+			return (Population > 0) ? Population : 0;
+		}
+
+		/// <summary>
+		/// What the settlement ate over a stretch of elapsed time, uncapped (Addendum 8 clause 1)
+		/// exactly as <see cref="PolicyUpkeepForElapsed"/> is: people go on eating whether or not
+		/// anyone is watching.
+		/// <para>
+		/// A BILL and not a debt, for the same reason the water one is: the caller draws it
+		/// against what is actually foraged and stored, both of which floor at zero, and what a
+		/// settlement could not pay it simply did not eat. Saturates rather than wrapping.
+		/// </para>
+		/// </summary>
+		public static int RationsForElapsed(int Population, long ElapsedTicks)
+		{
+			if (Population <= 0 || ElapsedTicks <= 0)
+			{
+				return 0;
+			}
+			return SaturateToInt(ElapsedDays(ElapsedTicks) * (long)RationsPerDay(Population));
+		}
+
+		/// <summary>
+		/// Rations one pair of free hands brings in off the land in a day, before the ceiling.
+		/// The same figure as <see cref="FetchDramsPerSettler"/>, and for the same reason: a
+		/// settler spending a day on the settlement's own supply brings back a day's worth for
+		/// two.
+		/// </summary>
+		public const int ForageRationsPerHand = 2;
+
+		/// <summary>
+		/// The most the ground around a settlement will give up in a day, however many people
+		/// walk it. This is foraging's <c>OpenWater</c> &mdash; the real thing that bounds the
+		/// haul &mdash; except that the wild does not care how many baskets you bring, so the
+		/// bound is a flat ceiling rather than a pool that drains.
+		/// <para>
+		/// Four, deliberately: the same figure as <c>KingdomCatalogueRules.FloorLevel</c> and the
+		/// same figure as the population ceiling of the Camp rung (<see cref="StageFor"/> opens
+		/// Steading at five). So a Camp feeds itself off the parasang and nothing above a Camp
+		/// does &mdash; which is exactly the shape the water lane already has, where a camp's
+		/// bill is covered by putting half its people on the detail and a Town's is not. Pinned
+		/// against both figures by test rather than by a code dependency, because
+		/// <c>KingdomCatalogueRules</c> reads this file and not the other way round.
+		/// </para>
+		/// </summary>
+		public const int MaxForagedRationsPerDay = 4;
+
+		/// <summary>
+		/// Rations the settlement's free hands bring in off the land over a stretch of days.
+		/// Foraging is hand-to-mouth: the caller pays the day's ration bill from this FIRST and
+		/// only then draws the shortfall out of the larders, which is why a camp with no larder
+		/// dedicated is not a camp that starves.
+		/// <para>
+		/// The rate is clamped BEFORE the days are multiplied, exactly as
+		/// <c>PolicyUpkeep</c> is applied to the daily rate before
+		/// <see cref="PolicyUpkeepForElapsed"/> multiplies it out: what the ground gives is a
+		/// daily fact, and a long absence is more days of it and never a bigger day.
+		/// </para>
+		/// </summary>
+		/// <param name="Hands">Settlers on neither the water detail nor a work
+		/// (<c>KingdomMaterialRules.FreeHands</c>). Hands are spent once here as everywhere:
+		/// a settler turning a mill is not also out on the ridge with a basket.</param>
+		/// <param name="Days">Whole world days since the last reckoning. Uncapped, for the reason
+		/// fetch is.</param>
+		public static int ForagedRations(int Hands, int Days)
+		{
+			if (Hands <= 0 || Days <= 0)
+			{
+				return 0;
+			}
+			long rate = (long)Hands * ForageRationsPerHand;
+			if (rate > MaxForagedRationsPerDay)
+			{
+				rate = MaxForagedRationsPerDay;
+			}
+			return SaturateToInt(rate * Days);
+		}
+
 		public const int FoundingCostDrams = 8;
 
 		public const int FetchDramsPerSettler = 2;
@@ -1656,6 +1843,212 @@
 			}
 			return ThirstOutcome.Warned;
 		}
+
+		/// <summary>Failed resolves before the hungry begin to leave. The mirror of
+		/// <see cref="DryIntervalsToEmigrate"/>, and the same number: a settlement gets exactly
+		/// one warned resolve of either kind before anybody walks.</summary>
+		public const int HungryIntervalsToEmigrate = 2;
+
+		/// <summary>Failed resolves before the settlement itself is marked. The mirror of
+		/// <see cref="DryIntervalsToWither"/>.</summary>
+		public const int HungryIntervalsToFamine = 3;
+
+		/// <summary>
+		/// The food ladder's rungs, in food's own voice. Shaped exactly like
+		/// <see cref="ThirstOutcome"/> because the two are composed against each other
+		/// (<see cref="ComposeScarcity"/>) and a ladder with a different number of rungs could
+		/// not be.
+		/// </summary>
+		public enum HungerOutcome
+		{
+			Fed,
+			Warned,
+			Emigration,
+			Famine
+		}
+
+		/// <summary>
+		/// What a failed feeding costs, by how many resolves in a row the larders have come up
+		/// short. Identical in shape to <see cref="ResolveThirst"/>, including the two floors: a
+		/// settlement at or below <see cref="LoyalCoreSettlers"/> never loses anybody, and a Camp
+		/// is never marked &mdash; there is no rung under it to fall to and nothing to be the
+		/// ruin of.
+		/// </summary>
+		public static HungerOutcome ResolveHunger(int HungerStreak, GrowthStage Stage, int Population)
+		{
+			if (HungerStreak <= 0)
+			{
+				return HungerOutcome.Fed;
+			}
+			if (HungerStreak >= HungryIntervalsToFamine && Stage > GrowthStage.Camp)
+			{
+				return HungerOutcome.Famine;
+			}
+			if (HungerStreak >= HungryIntervalsToEmigrate && Population > LoyalCoreSettlers)
+			{
+				return HungerOutcome.Emigration;
+			}
+			return HungerOutcome.Warned;
+		}
+
+		// ==================================================================================
+		// COMPOSING THE TWO LADDERS. A settlement can be dry and starving at once, and both
+		// ladders run: each keeps its own streak, each says its own sentence, each sets its own
+		// mark. What they must NOT do is bite twice.
+		//
+		// THE RULE: one departure per resolve, whatever is wrong. The bite of a resolve is the
+		// WORSE of the two ladders and never their sum, so a settlement that is both dry and
+		// starving loses people at exactly the rate the worse of the two alone would - never
+		// faster. This is the same bound the thirst ladder already promised on its own ("the
+		// ladder steps once per failed resolve, so one homecoming can cost at most one rung
+		// however long the founder was gone"); all this does is keep that promise true when
+		// there are two ladders to step.
+		//
+		// WHAT IS NOT BOUNDED, on purpose: the MARKS. Withered and Famished are states, not
+		// costs, and a settlement that is genuinely both should read as both. And subsidence is
+		// left entirely alone - it is the STRUCTURAL consequence of standing above what the
+		// works carry, on its own clock and its own step size, while this is the IMMEDIATE one.
+		// A settlement whose fields have failed is losing people to hunger now and settling back
+		// toward a lower level over the season, and those are two different sentences about the
+		// same bad year rather than one counted twice.
+		// ==================================================================================
+
+		/// <summary>How hard one heartbeat resolve bites, once both scarcity ladders have been
+		/// heard. Ordered, so composing is a maximum.</summary>
+		public enum ScarcityBite
+		{
+			/// <summary>Both ladders paid. Nothing happens and both streaks clear.</summary>
+			None = 0,
+
+			/// <summary>At least one came up short, and nobody leaves for it yet.</summary>
+			Warned = 1,
+
+			/// <summary>Exactly one settler leaves, whatever the number of things wrong.</summary>
+			Departure = 2,
+
+			/// <summary>One settler leaves, and the settlement wears the mark of whichever
+			/// ladder(s) reached the end.</summary>
+			Terminal = 3
+		}
+
+		/// <summary>The whole of what a resolve owes, so a caller applies it once rather than
+		/// running two ladders past two copies of the same consequence.</summary>
+		public struct ScarcityVerdict
+		{
+			/// <summary>The worse of the two ladders. Never their sum.</summary>
+			public ScarcityBite Bite;
+
+			/// <summary>The water ladder came up short this resolve.</summary>
+			public bool Thirsting;
+
+			/// <summary>The food ladder came up short this resolve.</summary>
+			public bool Starving;
+
+			/// <summary>The thirst ladder reached its end and the settlement should be marked
+			/// withered.</summary>
+			public bool Withering;
+
+			/// <summary>The hunger ladder reached its end and the settlement should be marked
+			/// famished.</summary>
+			public bool Famishing;
+
+			/// <summary>Whether the settlement is healthy enough this resolve to take an
+			/// arrival. A settler does not walk into a place that cannot water or feed the
+			/// people already in it.</summary>
+			public bool Healthy => !Thirsting && !Starving;
+		}
+
+		/// <summary>
+		/// Resolves the two scarcity ladders into the one thing that actually happens. See the
+		/// block comment above for the rule and why it is the rule.
+		/// </summary>
+		/// <param name="Thirst">The water ladder's own answer, from <see cref="ResolveThirst"/>.
+		/// Pass <see cref="ThirstOutcome.Sustained"/> when the settlement drank its fill (or when
+		/// thirst is switched off), which is what makes this safe to call unconditionally.</param>
+		/// <param name="Hunger">The food ladder's own answer, from <see cref="ResolveHunger"/>.
+		/// Pass <see cref="HungerOutcome.Fed"/> when the settlement ate.</param>
+		public static ScarcityVerdict ComposeScarcity(ThirstOutcome Thirst, HungerOutcome Hunger)
+		{
+			ScarcityVerdict verdict = default(ScarcityVerdict);
+			verdict.Thirsting = (Thirst != ThirstOutcome.Sustained);
+			verdict.Starving = (Hunger != HungerOutcome.Fed);
+			verdict.Withering = (Thirst == ThirstOutcome.Withering);
+			verdict.Famishing = (Hunger == HungerOutcome.Famine);
+			ScarcityBite fromThirst = BiteOfThirst(Thirst);
+			ScarcityBite fromHunger = BiteOfHunger(Hunger);
+			verdict.Bite = (fromThirst > fromHunger) ? fromThirst : fromHunger;
+			return verdict;
+		}
+
+		/// <summary>One thirst rung's own bite, for <see cref="ComposeScarcity"/>'s maximum.</summary>
+		public static ScarcityBite BiteOfThirst(ThirstOutcome Outcome)
+		{
+			switch (Outcome)
+			{
+			case ThirstOutcome.Withering:
+				return ScarcityBite.Terminal;
+			case ThirstOutcome.Emigration:
+				return ScarcityBite.Departure;
+			case ThirstOutcome.Warned:
+				return ScarcityBite.Warned;
+			default:
+				return ScarcityBite.None;
+			}
+		}
+
+		/// <summary>One hunger rung's own bite, for <see cref="ComposeScarcity"/>'s maximum.</summary>
+		public static ScarcityBite BiteOfHunger(HungerOutcome Outcome)
+		{
+			switch (Outcome)
+			{
+			case HungerOutcome.Famine:
+				return ScarcityBite.Terminal;
+			case HungerOutcome.Emigration:
+				return ScarcityBite.Departure;
+			case HungerOutcome.Warned:
+				return ScarcityBite.Warned;
+			default:
+				return ScarcityBite.None;
+			}
+		}
+
+		/// <summary>
+		/// The clause both registers name a scarcity departure by, in the chronicle's voice.
+		/// One sentence for both causes when both are true, because the person leaving had one
+		/// reason and it was that this place had neither.
+		/// </summary>
+		/// <param name="Thirsting">The water ladder was short this resolve.</param>
+		/// <param name="Starving">The food ladder was short this resolve.</param>
+		/// <returns>Null when neither is true &mdash; there is no departure to name.</returns>
+		public static string ScarcityDepartureClause(bool Thirsting, bool Starving)
+		{
+			if (Thirsting && Starving)
+			{
+				return "for water and bread both, and this place had neither";
+			}
+			if (Starving)
+			{
+				return "for a fuller table, the larders having emptied";
+			}
+			return Thirsting ? "for wetter country, the cisterns having run dry" : null;
+		}
+
+		/// <summary>The same departure in the ledger's shorter voice, kept beside the chronicle's
+		/// so the two registers can never disagree about why somebody left.</summary>
+		/// <returns>Null when neither is true.</returns>
+		public static string ScarcityDepartureNote(bool Thirsting, bool Starving)
+		{
+			if (Thirsting && Starving)
+			{
+				return "for water and bread both";
+			}
+			if (Starving)
+			{
+				return "for a fuller table";
+			}
+			return Thirsting ? "for wetter country" : null;
+		}
+
 
 		public static string ToThirdPerson(string Text, string FounderName)
 		{

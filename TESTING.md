@@ -179,10 +179,16 @@ step here is done standing in the settlement.
 | 45a | Stand beside a chest or footlocker with food in it and dedicate it as a larder | It is marked a larder of the settlement. Nothing moves and nothing is taken — dedication is a mark, not a transfer |
 | 45b | `kingdom:dump` | The pantry reads the food in dedicated larders only, as a count and a tier (Empty / Scant / Modest / Ample). Food in your own undedicated pack is never counted |
 | 45c | Release the larder | The count drops back. What was inside is untouched |
-| 45d | Commission a **civic larder** (Charter → Commission), then put food in it | It counts as a larder without needing a chest of your own |
+| 45d | Commission a **civic larder** (Charter → Commission), then put food in it | It counts as a larder without needing a chest of your own, and holds 64 servings |
 | 45e | With the larder Scant or better, Charter → **Share a meal from the larder** | It **asks first**, naming what the meal will take and what the larders hold. Answer yes and the settlement eats: food is spent from the dedicated larders only, a settler from the roll speaks, and the chronicle records it. Word travels — the meal becomes the settlement's deed, so it draws settlers the way any deed does |
-| 45f | With an empty larder, Charter → Share a meal | Refused plainly, and nothing is lost. An empty larder costs the settlement nothing at all: no hunger, no unhappiness, no decay. A player who never dedicates food plays exactly as they do today |
+| 45f | With an empty larder, Charter → Share a meal | Refused plainly, and nothing is lost. The meal itself is still a bonus for engaging and never a penalty for abstaining |
 | 45g | Check your own pack and any undedicated container after a meal | Untouched. Only dedicated food is ever spent |
+| 45h | Found a camp, dedicate nothing, commission nothing, and let days pass | It **does not starve**. Free hands forage up to four rations a day off the ground and eat them hand to mouth, which is exactly a camp of four — the food mirror of "half a camp on the water detail covers a camp's drinking". Put a third hand on the water detail and it still forages four: the wild has a ceiling, not a pool |
+| 45i | Grow past a camp with no field standing | Foraging stays at four a day however many people there are, so the shortfall is real and the ledger says so: "The larders are empty. Settlers will leave if the fields do not feed them." Commission a kitchen garden or a field and it stops |
+| 45j | Commission a **granary**, then `kingdom:status` | It dedicates itself — the same law that auto-flags a commissioned cask rack. `Larder:` reads its capacity (288) in the denominator, and the `Fields:` line names what the works make against what the people eat |
+| 45k | Let the fields make more than the larders can hold | Said once, by name, and never again until there is room: "The larders of X are full, and N of the harvest was left in the field." The homecoming ledger carries the same figure |
+| 45l | Let a settlement be dry **and** hungry across the same homecoming | **One** settler leaves, not two, and the line names both reasons: "left X for water and bread both, and this place had neither." Both `(withered)` and `(famished)` may show on the Status stage line — a mark is a state, a departure is a cost, and only the cost is capped |
+| 45m | Damage a granary (a raid, or a lost rung) and leave it unmended | It spoils what it holds on world days, exactly as a holed cistern leaks drams: announced once by name, unsaid when it is mended. It can never be the reason the settlement goes hungry — spoilage is drawn after the day's eating, never before |
 | 46 | Charter → Status | The ledger's effects are visible: stores, shop tier, idle/shorthanded works, and the next-need line |
 
 ## Pass 10 — Names, policy, and answering a threat
@@ -437,6 +443,34 @@ anyone.
 | 79i | Mend that same cistern | The leak is unsaid ("is sealed again, and holds every dram it is given"), and it holds whatever is poured into it again — the same pass it is mended, not a season later |
 | 79j | Let a slide ruin a staffless work — a cistern or a home — and check the mending queue | It stands in the queue the same as any crewed work: mending now walks every finished work (`Survey.Built`), not only the ones that ask for a crew, so a holed cistern is never damaged forever for want of ever being asked |
 
+## Pass 26 — Claiming ground: gate refusals, the wall line, and a second zone's memory
+
+The founder's own claim, at last. Everything behind it was already built and tested with nothing
+to exercise it — this is the verb that reaches it.
+
+| Step | Action | Expect |
+|---|---|---|
+| 80 | Grow to **Village** (two-zone ceiling; Camp and Steading both hold one), stand on ground that does **not** border the claim, Charter → **Claim this ground** | Refused by name: "A city grows outward from what it already holds. Stand on ground that borders X — beside it, or the stratum directly above or below it — and claim there." Nothing spent |
+| 80a | Walk to ground that borders the claim and try again | Asked first — "Nothing is spent" — then claimed on yes: the message names the ground, states the wall clause, and states the holding line ("2 held, which is all this rung answers for") |
+| 80b | Raise a wall on the original claim's outer edge **before** doing 80a, then raise another wall on the newly claimed zone afterward | The first wall stands exactly where it was — untouched, and now an inner wall. The second stands on the zone's new outer edge. Nothing already built is moved |
+| 80c | Try to claim a third zone at Village | Refused by name: "X is a village, and a village holds 2 parasangs. Grow into a town and this ground is yours to take." |
+| 80d | Claim ground that touches the held claim only diagonally, or straight down into the rock | Allowed, and the claim message says the wall line does **not** move — only an orthogonal neighbour in the same stratum frees an edge, and that is the honest answer, not a bug |
+| 81 | With two zones held, raise water/food/roof works in **both**, stand in one, Charter → Status | "carries N" sums both zones — the one you're standing in counted live, the other **as it was last seen** |
+| 81a | Leave the settlement for several days without visiting the second zone, return to the first, read Status | The level carries a dated clause: "counting one parasang as you last saw it N days ago" |
+| 81b | On the same visit, read Status standing in the first zone, then walk into the second and read it again | The same "carries N" figure either way. Before this fix the level swung with whichever zone the founder walked in through — entering through the mine overwrote the granary |
+| 81c | Build enough dedicated storage across both zones to cross a stage threshold, then walk in through the zone that alone would **not** cross it | The stage still reads correctly off the city's whole storage, not the one zone's — `UpdateStage` reads city storage after the pass records this zone's own sighting |
+
+## Pass 27 — Underground honesty, and the gatehouse
+
+| Step | Action | Expect |
+|---|---|---|
+| 82 | Claim ground a stratum down, Charter → Commission | A sky-wanting design (dew catchment, catchment bank, sailvane) carries **[wants open sky]** in the list — the same tag every other blocked gate wears, so the catalogue never silently shortens |
+| 82a | Try to commission one of them anyway | Refused by name: "...wants weather — sun, wind, or rain — and there is none under the rock. Raise it on ground under open sky." |
+| 82b | Commission an **Open**-declared design underground instead (a tended plot, a salt-pan terrace) | It stays open: no walls, no door, no floor — a field cut into the rock, not a sealed chamber. It does not count as housing |
+| 82c | Commission a design that declares no `Roof` (defaults Walled) underground | Still carved, exactly as before: the rock is the wall, no wall is raised, clearing costs double, paid back in stone |
+| 83 | Reach **Town**, Charter → Commission → **gatehouse** | It rises astride the road: the buildable frontier cell nearest the settlement's own way out — the same cell `KingdomRoads` already walks a `HeartToGate` errand at — not a random gap in the wall line the way an ordinary wall segment sites |
+| 83a | Strike it and commission another | It returns to the same cell, reload after reload — ties break north-then-west, so the same settlement always puts its gatehouse in the same place |
+
 ## Pass 4 — Attitudes and persistence
 
 | Step | Action | Expect |
@@ -463,8 +497,12 @@ anyone.
   back (Addendum 10(a)). A pass asserting "nothing irreversible can happen while I am away" is
   wrong now; a pass asserting "nothing irreversible happens that I was not warned about" is the
   one that holds.
-- **Food is not a flow.** `food` in the catalogue binds the sustainable level, and nothing fills
-  a larder from a field or empties one except a shared meal you call for. The water half of that
-  pair was wired this wave; the food half was not. A settlement that never starves on an empty
-  larder is a known gap, not a bug to file.
+- **Food is a flow now, and the two scarcity ladders share one bite.** Fields make their
+  `Carries` into the larders on world time, the settlement eats one ration a settler a day, and
+  a settlement that cannot pay climbs a hunger ladder shaped exactly like the thirst one. Both
+  ladders run at once and each says its own sentence, but a failed resolve costs the **worse of
+  the two, never their sum** — so a city that is dry *and* starving loses one settler for it, not
+  two, and may wear both marks. A pass reporting "it lost two people in one homecoming for one
+  bad year" is a bug worth filing. Trade still carries no food: the only ways into a larder are
+  the fields, the garden, and your own hands.
 - Founder's basin is wish-obtainable only; its acquisition quest is slice 0.2 content.

@@ -199,6 +199,22 @@ namespace ThousandAndFirst
 		{
 			KingdomLayoutRules.LayoutOutcome planned = KingdomLayoutRules.LayoutOutcome.Defer;
 			Cell cell = null;
+			// Asked before the plan, because the gatehouse is the one design whose ground is a
+			// rule rather than a preference: it belongs where the wall meets the road, and the
+			// plan has no way to know that. Everything else, the plan answers for.
+			KingdomSystem.Guard("gatehouse siting", delegate
+			{
+				cell = FindGateCell(Z, System, Entry);
+			});
+			if (cell != null)
+			{
+				// Grammar, not Founder: the settlement's own shape chose this ground, and the
+				// founder's standing on it had nothing to do with it. The clause the founder
+				// reads for a defensive work chosen by the plan is "on the line", which is
+				// exactly where a gatehouse went.
+				Outcome = KingdomLayoutRules.LayoutOutcome.Grammar;
+				return cell;
+			}
 			KingdomSystem.Guard("settlement layout", delegate
 			{
 				cell = KingdomLayout.ChooseCell(Z, System, Entry, out planned);
@@ -257,6 +273,61 @@ namespace ThousandAndFirst
 				}
 			}
 			return FindBuildCell(Z);
+		}
+
+		/// <summary>
+		/// The gatehouse's own ground: the buildable frontier cell nearest the way out
+		/// (<c>KingdomRoadRules.TryGate</c>), which is the cell the settlement's own
+		/// <c>HeartToGate</c> route is already walked to. The brief's whole ruling on it &mdash;
+		/// "a placement rule, not a size: on the frontier wall, astride a road".
+		/// <para>
+		/// Null for every other design, for a zone with no frontier left to have a way out of,
+		/// and for a settlement with no heart yet to aim from. Every one of those falls through
+		/// to the ordinary plan, which is what sited a gatehouse before this existed.
+		/// </para>
+		/// </summary>
+		public static Cell FindGateCell(Zone Z, KingdomSystem System, KingdomRules.BuildEntry Entry)
+		{
+			if (Z == null || System == null || Entry == null || !KingdomRoadRules.SitesAtGate(Entry.Key))
+			{
+				return null;
+			}
+			KingdomRules.Frontier edges = KingdomRules.FrontierEdges(Z.ZoneID, System.ClaimedZones);
+			if (edges == KingdomRules.Frontier.None)
+			{
+				return null;
+			}
+			bool hasRite = KingdomPlots.TryRiteGround(Z, out var riteX, out var riteY);
+			if (!KingdomPlotRules.TryHeart(KingdomLayout.ReadMarks(Z), hasRite, riteX, riteY, out var heartX, out var heartY))
+			{
+				return null;
+			}
+			if (!KingdomRoadRules.TryGate(Z.Width, Z.Height, edges, heartX, heartY, out var gateX, out var gateY))
+			{
+				return null;
+			}
+			List<Cell> candidates = new List<Cell>();
+			List<int> xs = new List<int>();
+			List<int> ys = new List<int>();
+			foreach (Cell candidate in Z.GetEmptyCells())
+			{
+				if (!candidate.IsPassable() || candidate.HasObjectWithPart("LiquidVolume")
+					|| !KingdomRules.IsOnFrontier(candidate.X, candidate.Y, Z.Width, Z.Height, edges))
+				{
+					continue;
+				}
+				candidates.Add(candidate);
+				xs.Add(candidate.X);
+				ys.Add(candidate.Y);
+			}
+			int index = KingdomRoadRules.NearestToGate(xs, ys, gateX, gateY);
+			if (index < 0 || index >= candidates.Count)
+			{
+				return null;
+			}
+			KingdomLog.Log("gatehouse: gate=" + gateX + "," + gateY + " sited=" + candidates[index].X + "," + candidates[index].Y
+				+ " from " + candidates.Count + " frontier cells");
+			return candidates[index];
 		}
 
 		public static Cell FindBuildCell(Zone Z)

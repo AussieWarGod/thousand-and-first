@@ -24,7 +24,13 @@ namespace ThousandAndFirst
 			return "\nWater detail: " + ((System.WaterCrew > 0) ? (System.WaterCrew + " of " + System.Population + " carrying") : "nobody carrying")
 				+ "\nDefence: " + survey.Defence()
 				+ (survey.DistrictDefenceBonus > 0 ? ("  (garrison " + survey.DistrictDefenceBonus + ")") : "")
-				+ "  Larder: " + pantryName + " (" + survey.FoodStored + ") — " + pantryHint;
+				+ "  Larder: " + pantryName + " (" + survey.FoodStored + " of " + survey.FoodCapacity + ") — " + pantryHint
+				// The food economy in one line beside the pantry it fills and empties, on the same
+				// terms the water line above states its own: what the fields make against what the
+				// people eat, so a founder never has to reverse-engineer a hunger streak.
+				+ "\nFields: " + KingdomGrowth.FoodMadePerDay(survey) + " a day made against "
+				+ KingdomRules.RationsPerDay(System.Population) + " eaten"
+				+ "  {{K|(" + KingdomRules.ForagedRations(KingdomMaterialRules.FreeHands(System.Population, System.AssignedCrew), 1) + " of it foraged)}}";
 		}
 
 		/// <summary>
@@ -48,7 +54,14 @@ namespace ThousandAndFirst
 			return string.IsNullOrEmpty(line) ? "" : ("\n" + line);
 		}
 
-		public static string Status(KingdomSystem System)
+		/// <summary>A memory clause, shaded and spaced, or nothing when there is nothing to date.
+		/// A two-zone city's level is partly a memory, and the founder is told how old it is.</summary>
+		private static string Dated(string Clause)
+		{
+			return string.IsNullOrEmpty(Clause) ? "" : ("  {{K|" + Clause + "}}");
+		}
+
+		public static string Status(KingdomSystem System, Zone Z = null)
 		{
 			Zone currentZone = The.Player?.CurrentZone;
 			bool currentClaimed = currentZone != null && System.ClaimedZones.Contains(currentZone.ZoneID);
@@ -57,13 +70,15 @@ namespace ThousandAndFirst
 				.Append("\nStage: ")
 				.Append(System.Stage)
 				.Append(System.Withered ? " {{r|(withered)}}" : "")
+				.Append(System.Famished ? " {{r|(famished)}}" : "")
 				.Append("  Population: ")
 				.Append(System.Population)
 				.Append(System.SupportedLevel > 0 ? ("  {{K|carries " + System.SupportedLevel + "}}") : "")
 				// What the settlement's own notable is worth to that number, named rather than
 				// left as an invisible modifier (the brief's tastes and leader traits, Addendum 4's
 				// Prefers, all through the one shade).
-				.Append(System.SupportedLevel > 0 ? KingdomCeremonyRules.ShadeClause(System.NotableShade) : "");
+				.Append(System.SupportedLevel > 0 ? KingdomCeremonyRules.ShadeClause(System.NotableShade) : "")
+				.Append((System.SupportedLevel > 0 && Z != null) ? Dated(KingdomSubsidence.SightingClause(System, Z, (The.Game != null) ? The.Game.TimeTicks : 0L)) : "");
 			// The realm is the faction; the cities are where its history happened. A founder
 			// standing in one should be told the other is still out there, keeping itself.
 			if (System.Away != null)
@@ -102,6 +117,8 @@ namespace ThousandAndFirst
 				.Append(KingdomRules.PolicyUpkeep(KingdomRules.UpkeepDrams(System.Population, System.Stage), System.Stores))
 				.Append(" drams per interval  Thirst streak: ")
 				.Append(System.DryStreak)
+				.Append("  Hunger streak: ")
+				.Append(System.HungerStreak)
 				.Append("\nNext arrival due: tick ")
 				.Append(System.NextArrivalTick)
 				.Append(" (now ")
@@ -151,6 +168,18 @@ namespace ThousandAndFirst
 			if (stored < KingdomRules.DramsPerArrival + KingdomRules.PolicyUpkeep(KingdomRules.UpkeepDrams(System.Population, System.Stage), System.Stores))
 			{
 				return "The stores are nearly dry. Pour water into a dedicated vessel; nothing else can happen until there is water to share.";
+			}
+			// The food half of the two lines above, in the same order and for the same reason: a
+			// settlement with nowhere to keep food is not failing, it is waiting to be told what
+			// to do, and one that is short of a harvest is failing and must be able to say so.
+			KingdomSurvey pantry = KingdomSurvey.Take(Here, System);
+			if (pantry.FoodCapacity <= 0 && KingdomGrowth.FoodMadePerDay(pantry) > 0)
+			{
+				return "The fields have nowhere to send a harvest. Dedicate a larder, or commission one, and what they grow will be kept.";
+			}
+			if (System.HungerStreak > 0)
+			{
+				return "The larders came up short and the settlement went hungry. More fields, or fewer mouths — a field feeds four settlers to the hand.";
 			}
 			if (!KingdomRules.HasRoomToHouse(System.Population, KingdomGrowth.CountBeds(Here)))
 			{

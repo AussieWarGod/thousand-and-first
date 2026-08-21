@@ -354,6 +354,121 @@ playtest passes.
 - Guests arrive at the gate and leave again through an absence, and the homecoming says who came,
   who waited, and how long ago.
 
+### Added — food becomes physical
+
+The water lane had a producer, a consumer, a store and a ladder; the food lane had a catalogue
+figure that bound the level and nothing that ever moved a ration. It is a mirror now, function
+for function, and the three places it deliberately diverges are written down rather than left to
+be inferred.
+
+- **The fields make what they promise.** `KingdomGrowth` stores `Supports(survey).Food * days`
+  into the larders on world time, off its own `LastFoodWorkTick`, planted before the first count
+  exactly as the water works' stamp is. Its own checkpoint and not a share of the water one,
+  because the two producers are separately blockable: a settlement can have casks with room and
+  no larder dedicated at all, and a shared stamp would let whichever good was flowing spend the
+  other's days.
+- **The settlement eats.** One ration a settler a day, drawn in the heartbeat beside the water
+  bill and before anything else can spend it. Uncapped over an absence and never a debt, like
+  every other bill in the mod: what a settlement could not pay it simply did not eat.
+- **No stage rate on food, deliberately.** Water is billed 100/120/150/180/220 per hundred by
+  stage and its `Carries` are divided back out by the same percentage; food is billed flat and
+  handed to `Equilibrium` undivided, because a dinner is counted in people. That flatness buys
+  the lane its whole property: *a settlement standing at its own supported level makes exactly
+  the rations it eats*. Thrift and the agrarian district are likewise left on the water side
+  rather than spent twice.
+- **Foraging, which is why a camp never starves.** Free hands bring in two rations a day each
+  under a flat ceiling of four — the same figure as `FloorLevel` and as the Camp rung's own
+  population ceiling — and it is eaten hand to mouth rather than stored, so a settlement that has
+  dedicated no larder still eats. A camp of four with half its people on the water detail feeds
+  itself off the ground with nothing commissioned, which is the food half of the promise the
+  water lane already made at that rung. Nothing above a Camp can live on it.
+- **The hunger ladder**, rung for rung the thirst ladder in food's own voice: a streak, a warning
+  said every failed resolve, departures from the second, and a `famished` mark from the third,
+  with the same two floors — a Camp is never marked and the loyal core never leaves.
+- **One bite between the two ladders.** Both run, each keeps its own streak and says its own
+  sentence, and what a failed resolve *costs* is `KingdomRules.ComposeScarcity`'s **maximum of
+  the two, never their sum**. A city that is dry and starving loses one settler for it, not two,
+  and may wear both marks: a mark is a state and a departure is a cost, and only the cost is
+  capped. Subsidence is untouched underneath both — the structural consequence and the immediate
+  one are two sentences about the same bad year, not one counted twice.
+- **Larders hold a declared amount**, declared on the blueprint (`r_KingdomLarderCapacity`) and
+  never in the catalogue, for the same reason a cistern's `MaxVolume` is: what a design adds to
+  the level is a catalogue fact and how much its vessel holds is a fact about the vessel. The
+  larder shed holds 64 and the granary 288 — about thirty-two days of what each carries, the
+  cistern's own ratio. A container the founder dedicated by hand holds 32.
+- **A commissioned granary dedicates itself**, which STANDARDS §7 already promised ("commissioned
+  storage auto-flags") and only the larder shed was delivering. It is also a repair: a granary
+  raised by an earlier build becomes a pantry the next time its city is walked into.
+- **A harvest with nowhere to go is said once, by name** (7b), and unsaid the moment there is
+  room — with different words for "no larder at all" and "the larders are full", and the figure
+  in the homecoming ledger either way.
+- **Food spoils in a damaged larder.** `LeakKind.Food` is Addendum 10(b)'s explicitly deferred
+  third kind — "food spoilage waits until food is a flow" — and the deferral is spent: same
+  `Leaked` arithmetic, same day-banking, same announce-once and unsay-on-mending. It is drawn
+  after the day's eating, so it can never be the reason a settlement goes hungry, only the reason
+  it has no cushion when something else is.
+- The homecoming ledger carries the food side beside the water side in servings rather than
+  drams, and says so; the Status report names the larder against its capacity, what the fields
+  make against what the people eat, and the hunger streak beside the thirst streak.
+- `r_TAF_OptionThirst` now switches **both** binding goods. The ID is unchanged so no save or
+  settings file notices; only its display text moved. A founder who turned scarcity off did not
+  ask to keep half of it.
+
+**Not in this change, and named rather than assumed:** no charter carries food, so the only ways
+into a larder remain the fields, the garden and your own hands. `_notes/balance-sim.py` Q11 models
+the lane end to end — supply against consumption per rung, how deep the larders are against how
+deep the casks are, and all sixteen pairings of the two ladders with the no-double-collapse
+property asserted rather than argued.
+
+### Added — the city spans ground
+
+A realm could hold two cities from the start, but one city could still only ever hold the single
+parasang the founding rite poured on. Everything downstream of a second zone — districts, walls,
+the eight `MinZones` designs, vertical claims below or above the seat — was already built and
+tested and had nothing to exercise it. This is the verb that reaches it, plus the two real fixes
+it exposed.
+
+- **Claim the ground you're standing on.** Charter → **Claim this ground** (hotkey `6`) takes
+  bordering ground into the seated city, including the stratum directly above or below what you
+  already hold — a cellar or a tower is a claim now, not only a founding-day accident. It costs
+  nothing, and that is a decision: the brief prices founding and every building and names no price
+  for a claim, because what a claim actually costs is paid afterward and in kind — a new wall line
+  to raise, a new budget of ground to lay, and a stage that has to have been earned first. Every
+  refusal names the lack and what would lift it — no realm yet, ground already the seat's or the
+  other city's or an exiled realm's or a stranger's, not bordering, or the rung's ceiling already
+  reached — and a claim that goes through says what it did to the wall line, including when the
+  honest answer is "nothing moved," which is the case for ground taken diagonally across a corner
+  or straight down into the rock.
+- **How much ground a rung answers for is read off the catalogue, not invented.** The eight
+  `MinZones` designs already line up with stage — the two-zone designs are `Village`, three-zone
+  `Town`, four-zone `City` — so the claim's own ceiling reads that pairing back
+  (`KingdomZoningRules.ZonesForStage`): a settlement reaches the ground a design wants at the same
+  moment it reaches the stage that design wants.
+- **A multi-zone city's level was a memory of only whichever zone you last stood in.** Walk in
+  through the mine and the granary vanished from the sum; the stage ladder read the same way. Now
+  every claimed zone's binding carries and dedicated storage are recorded, dated, the moment the
+  founder stands in it, and a reading folds in every OTHER claimed zone **as it was last seen**,
+  never simulated forward. The Status report says how old that memory is — "counting one parasang
+  as you last saw it 6 days ago" — and the stage ladder now reads the city's whole storage rather
+  than one zone's, closing a real bug: a multi-zone city could demote itself on the settling pass
+  for no reason but which of its two treasuries the founder happened to be standing beside.
+- **Underground stopped lying about the sky.** The commission menu now gates by stratum at the
+  moment the founder is choosing, not only once they've picked a design and the plot registry turns
+  them away later: a sky-wanting design (the dew catchment, the catchment bank, the sailvane)
+  carries **[wants open sky]** in the list, the same tag every other blocked gate wears, and refuses
+  by name — "there is none under the rock" — instead of the catalogue silently shortening.
+- **And underground stopped turning fields into sealed rooms.** A design declaring `Open="yes"` now
+  stays open when it's carved into the rock: a salt-pan, a market square, a tended plot cut into a
+  cellar is open ground with stone around it, not a chamber with a floor, a door and room for a bed.
+  Carving still replaces the enclosure a design would otherwise have raised on the surface; it never
+  roofs ground the design deliberately left unroofed.
+- **The gatehouse finally sites itself where its own name says it stands.** It was the one design in
+  the catalogue meant to be sited by a rule rather than by size, and the rule was never wired — it
+  went wherever an ordinary wall segment happened to land. It now sites at the buildable frontier
+  cell nearest the settlement's own worn way out, the same cell its road errand already walks to,
+  ties broken north-then-west, so the same settlement puts its gatehouse in the same place every
+  time it's asked, reload included.
+
 ### Added — the ceremonies everybody attends, and the numbers that were being thrown away
 - **Every building is raised with a ceremony now, not four of fifty-seven.** A house, a field, a
   larder or a temple finishing while you stand there gathers whoever is nearby, shares a measure

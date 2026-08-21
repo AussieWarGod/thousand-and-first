@@ -17,6 +17,7 @@
     <Compile Include="Wave1RulesTests.cs" />
     <Compile Include="SettlementSeatTests.cs" />
     <Compile Include="LarderRulesTests.cs" />
+    <Compile Include="KingdomHungerRulesTests.cs" />
     <Compile Include="ExileRulesTests.cs" />
     <Compile Include="FoundingPathsRulesTests.cs" />
     <Compile Include="ManifestRulesTests.cs" />

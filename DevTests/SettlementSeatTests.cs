@@ -123,6 +123,55 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void AMultiZoneClaimSurvivesTheSeatSwapWhole()
+		{
+			// The claim action is the first thing in the mod that puts more than one zone on a
+			// city, so the swap has never actually had to carry one. Every parasang travels, in
+			// order, and the swap hands the list over rather than copying it.
+			KingdomSettlement seat = new KingdomSettlement();
+			seat.SettlementName = "Kavvat";
+			seat.Stage = GrowthStage.Town;
+			seat.ClaimedZones.Add("JoppaWorld.11.22.1.1.10");
+			seat.ClaimedZones.Add("JoppaWorld.11.22.2.1.10");
+			seat.ClaimedZones.Add("JoppaWorld.11.22.1.1.11");
+
+			KingdomSettlement captured = new KingdomSettlement();
+			captured.ReadFrom(seat);
+			KingdomSettlement restored = new KingdomSettlement();
+			captured.WriteTo(restored);
+
+			Assert.AreEqual(3, restored.ClaimedZones.Count, "a claim the founder made must not be lost by walking between cities");
+			Assert.AreEqual("JoppaWorld.11.22.1.1.10", restored.ClaimedZones[0]);
+			Assert.AreEqual("JoppaWorld.11.22.2.1.10", restored.ClaimedZones[1]);
+			Assert.AreEqual("JoppaWorld.11.22.1.1.11", restored.ClaimedZones[2], "the vertical claim travels like any other");
+			Assert.AreEqual(GrowthStage.Town, restored.Stage, "the rung the ceiling is read against travels with the ground");
+			Assert.AreSame(seat.ClaimedZones, restored.ClaimedZones);
+		}
+
+		[Test]
+		public void TwoCitiesKeepTheirOwnGroundAcrossASwap()
+		{
+			// One parasang answers to one city: the seat and the record must never end up
+			// sharing a claim list, or a swap would make each city answer for the other's ground.
+			KingdomSettlement seat = new KingdomSettlement();
+			seat.SettlementName = "Kavvat";
+			seat.ClaimedZones.Add("JoppaWorld.11.22.1.1.10");
+			KingdomSettlement away = new KingdomSettlement();
+			away.SettlementName = "Ezra";
+			away.ClaimedZones.Add("JoppaWorld.30.30.1.1.10");
+
+			KingdomSettlement capturedSeat = new KingdomSettlement();
+			capturedSeat.ReadFrom(seat);
+			KingdomSettlement nowSeated = new KingdomSettlement();
+			away.WriteTo(nowSeated);
+
+			Assert.AreEqual(1, nowSeated.ClaimedZones.Count);
+			Assert.AreEqual("JoppaWorld.30.30.1.1.10", nowSeated.ClaimedZones[0]);
+			Assert.AreEqual("JoppaWorld.11.22.1.1.10", capturedSeat.ClaimedZones[0]);
+			Assert.AreNotSame(capturedSeat.ClaimedZones, nowSeated.ClaimedZones);
+		}
+
+		[Test]
 		public void NoRealmStateIsCarriedByACity()
 		{
 			List<string> carried = CarriedFieldNames();

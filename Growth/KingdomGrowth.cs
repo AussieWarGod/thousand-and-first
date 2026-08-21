@@ -13,7 +13,22 @@ namespace ThousandAndFirst
 	{
 		public static bool Enabled => Options.GetOption("r_TAF_OptionGrowth") != "No";
 
-		public static bool ThirstEnabled => Options.GetOption("r_TAF_OptionThirst") != "No";
+		/// <summary>
+		/// Whether the settlement's people consume what they need and can suffer for the want of
+		/// it. ONE switch for both binding goods, deliberately: water and food are the same
+		/// promise to the player ("this place has needs and can fail them"), and a founder who
+		/// turned scarcity off did not ask to keep half of it. The option ID is unchanged so no
+		/// save or settings file notices; only its display text moved.
+		/// </summary>
+		public static bool ScarcityEnabled => Options.GetOption("r_TAF_OptionThirst") != "No";
+
+		/// <summary>The water half of <see cref="ScarcityEnabled"/>, under the name every caller
+		/// written before food was a flow reads.</summary>
+		public static bool ThirstEnabled => ScarcityEnabled;
+
+		/// <summary>The food half of <see cref="ScarcityEnabled"/>, named so a reader of the
+		/// hunger path is not left wondering whether it has a switch of its own.</summary>
+		public static bool HungerEnabled => ScarcityEnabled;
 
 		public static long Interval(KingdomSystem System, Zone Z)
 		{
@@ -31,7 +46,7 @@ namespace ThousandAndFirst
 			KingdomSurvey survey = Shared ?? KingdomSurvey.Take(Z, System);
 			if (KingdomLog.Enabled)
 			{
-				KingdomLog.Log("growth pass " + Z.ZoneID + " tick=" + timeTicks + " next=" + System.NextArrivalTick + " pop=" + System.Population + " stage=" + System.Stage + " stored=" + survey.StoredWater + " open=" + survey.OpenWater + " space=" + survey.StorageSpace + " cap=" + survey.StorageCapacity + " dry=" + System.DryStreak + " withered=" + System.Withered);
+				KingdomLog.Log("growth pass " + Z.ZoneID + " tick=" + timeTicks + " next=" + System.NextArrivalTick + " pop=" + System.Population + " stage=" + System.Stage + " stored=" + survey.StoredWater + " open=" + survey.OpenWater + " space=" + survey.StorageSpace + " cap=" + survey.StorageCapacity + " dry=" + System.DryStreak + " withered=" + System.Withered + " food=" + survey.FoodStored + "/" + survey.FoodCapacity + " hunger=" + System.HungerStreak + " famished=" + System.Famished);
 			}
 			if (System.NextArrivalTick <= 0)
 			{
@@ -84,6 +99,27 @@ namespace ThousandAndFirst
 			{
 				System.Ledger.Fetched += survey.Store(KingdomSubsidence.Supports(survey).Water * madeDays);
 				System.LastWaterWorkTick = KingdomRules.AdvanceCheckpoint(System.LastWaterWorkTick, timeTicks);
+			}
+			// STANDARDS 7's "commissioned storage auto-flags", the food half. A granary the
+			// settlement paid for is the settlement's pantry the same way a commissioned cask
+			// rack is its cistern; nothing the founder placed is touched, because only a
+			// KingdomBuilt work whose blueprint the catalogue calls a pantry is taken.
+			AdoptCivicLarders(survey);
+			// The fields bring in what their Carries promise, on world-time exactly as the water
+			// works do (Addendum 8): a field's day is a field's day whether anyone watched it.
+			// This is the one missing line the coverage map named, and its checkpoint is planted
+			// before the first count for the reason LastFetchTick's is - unplanted, an uncapped
+			// read is the whole age of the world, and the granaries would fill on the founding
+			// day.
+			int grownDays = KingdomRules.ElapsedDays(timeTicks - System.LastFoodWorkTick);
+			if (System.LastFoodWorkTick <= 0)
+			{
+				System.LastFoodWorkTick = timeTicks;
+			}
+			else if (grownDays > 0)
+			{
+				StoreHarvest(System, survey, FoodMadePerDay(survey) * grownDays);
+				System.LastFoodWorkTick = KingdomRules.AdvanceCheckpoint(System.LastFoodWorkTick, timeTicks);
 			}
 			bool heartbeatHealthy = ResolveHeartbeat(System, Z, survey, timeTicks);
 			int arrivals = 0;
@@ -169,25 +205,29 @@ namespace ThousandAndFirst
 			// after the plot and the plan so that a building raised this pass is already somewhere
 			// the settlement has a reason to go.
 			KingdomRoads.OnSettlementPass(System, Z);
-			if (KingdomLog.Enabled) KingdomLog.Log("growth pass done: pop=" + System.Population + " stage=" + System.Stage + " arrivals=" + arrivals + " dry=" + System.DryStreak + " next=" + System.NextArrivalTick);
+			if (KingdomLog.Enabled) KingdomLog.Log("growth pass done: pop=" + System.Population + " stage=" + System.Stage + " arrivals=" + arrivals + " dry=" + System.DryStreak + " hunger=" + System.HungerStreak + " food=" + survey.FoodStored + "/" + survey.FoodCapacity + " next=" + System.NextArrivalTick);
 		}
 
 		/// <summary>
-		/// Draws the settlement's drinking for every day that actually passed, and runs the
-		/// thirst ladder when the stores could not cover it.
+		/// Draws the settlement's drinking AND its eating for every day that actually passed, and
+		/// runs whichever scarcity ladder the stores could not cover.
 		/// <para>
-		/// The days are uncapped (Addendum 8 clause 1) and the bill is still not a debt: it is
-		/// drawn through <c>KingdomSurvey.Consume</c>, which takes what is there and no more, so
-		/// what a settlement could not pay it simply did not drink. Nothing carries forward,
+		/// The days are uncapped (Addendum 8 clause 1) and neither bill is a debt: each is drawn
+		/// through a <c>KingdomSurvey</c> draw that takes what is there and no more, so what a
+		/// settlement could not pay it simply did not drink or eat. Nothing carries forward,
 		/// nothing goes negative, and the checkpoint advances by the whole days charged either
-		/// way &mdash; a season away costs a season of water, never a season of owing.
+		/// way &mdash; a season away costs a season of water and a season of bread, never a
+		/// season of owing.
 		/// </para>
 		/// <para>
-		/// What bounds the loss is deliberately NOT the length of the absence. The ladder below
-		/// steps once per failed resolve, so one homecoming can cost at most one rung however
-		/// long the founder was gone, and <c>Emigrate</c> floors at
-		/// <c>KingdomRules.LoyalCoreSettlers</c>. That is the interim bound; the doctrine's real
-		/// one is subsidence toward the supported equilibrium, which the next package builds.
+		/// <b>The two ladders bite once between them.</b> Each keeps its own streak and says its
+		/// own sentence, but the cost of the resolve is <c>KingdomRules.ComposeScarcity</c>'s
+		/// maximum and never their sum: one departure per resolve however many things are wrong,
+		/// so a settlement that is dry AND starving empties no faster than the worse of the two
+		/// alone would. What bounds the loss is still deliberately NOT the length of the absence,
+		/// and <see cref="Emigrate"/> still floors at <c>KingdomRules.LoyalCoreSettlers</c>.
+		/// Subsidence is left entirely alone underneath both of them: it is the structural
+		/// consequence of standing above what the works carry, and this is the immediate one.
 		/// </para>
 		/// </summary>
 		private static bool ResolveHeartbeat(KingdomSystem System, Zone Z, KingdomSurvey Survey, long TimeTicks)
@@ -204,41 +244,109 @@ namespace ThousandAndFirst
 				return true;
 			}
 			System.LastHeartbeatTick = KingdomRules.AdvanceCheckpoint(System.LastHeartbeatTick, TimeTicks);
-			if (!ThirstEnabled)
+			if (!ScarcityEnabled)
 			{
 				RecoverFromThirst(System);
+				RecoverFromHunger(System);
 				return true;
 			}
+			KingdomRules.ThirstOutcome thirst = DrawWater(System, Survey, elapsed, days);
+			KingdomRules.HungerOutcome hunger = DrawRations(System, Survey, elapsed, days);
+			KingdomRules.ScarcityVerdict verdict = KingdomRules.ComposeScarcity(thirst, hunger);
+			if (KingdomLog.Enabled)
+			{
+				KingdomLog.Log("scarcity: days=" + days + " thirst=" + thirst + " hunger=" + hunger
+					+ " bite=" + verdict.Bite + " dry=" + System.DryStreak + " hungry=" + System.HungerStreak);
+			}
+			if (verdict.Bite >= KingdomRules.ScarcityBite.Departure)
+			{
+				// ONE departure, named for everything that is actually wrong. Both registers get
+				// the same fact in their own length, which is what the two clauses are for.
+				Emigrate(System, Z, Survey,
+					Cause: KingdomRules.ScarcityDepartureClause(verdict.Thirsting, verdict.Starving),
+					Note: KingdomRules.ScarcityDepartureNote(verdict.Thirsting, verdict.Starving));
+			}
+			// The marks are states rather than costs, so both may stand at once on a settlement
+			// that has genuinely earned both. Each is said once and unsaid by its own recovery.
+			if (verdict.Withering && !System.Withered)
+			{
+				System.Withered = true;
+				KingdomChronicle.Record(System, System.KingdomDisplayName + " withered in the long thirst");
+				System.Ledger.Note("{{R|The settlement is withering in the long thirst.}}");
+			}
+			if (verdict.Famishing && !System.Famished)
+			{
+				System.Famished = true;
+				KingdomChronicle.Record(System, System.KingdomDisplayName + " famished in the long hunger");
+				System.Ledger.Note("{{R|The settlement is famishing. The fields are not feeding it.}}");
+			}
+			return verdict.Healthy;
+		}
+
+		/// <summary>
+		/// The water half of a resolve: bills the elapsed days against the dedicated stores and
+		/// steps the dry streak when they could not cover it. Says its own sentence; applies no
+		/// consequence, which belongs to <see cref="ResolveHeartbeat"/>'s one composed verdict.
+		/// </summary>
+		private static KingdomRules.ThirstOutcome DrawWater(KingdomSystem System, KingdomSurvey Survey, long Elapsed, int Days)
+		{
 			// Agrarian ground feeds itself: it discounts the daily draw before the draw is made,
 			// not after, so a dry agrarian settlement runs its dry streak slower, never zero.
-			int upkeep = KingdomRules.PolicyUpkeepForElapsed(System.Population, elapsed, System.Stores, System.Stage) * KingdomRules.DistrictsUpkeepPercent(System.ZoneDistricts.Values) / 100;
+			int upkeep = KingdomRules.PolicyUpkeepForElapsed(System.Population, Elapsed, System.Stores, System.Stage) * KingdomRules.DistrictsUpkeepPercent(System.ZoneDistricts.Values) / 100;
 			int paid = Survey.Consume(upkeep);
 			System.Ledger.UpkeepDrawn += paid;
 			if (paid >= upkeep)
 			{
 				RecoverFromThirst(System);
-				return true;
+				return KingdomRules.ThirstOutcome.Sustained;
 			}
 			System.DryStreak++;
 			KingdomChronicle.Record(System, "the stores ran low, and " + System.KingdomDisplayName + " thirsted");
 			System.Ledger.Note("{{r|The cistern ran dry. Settlers will leave if the water does not return.}}");
-			KingdomRules.ThirstOutcome outcome = KingdomRules.ResolveThirst(System.DryStreak, System.Stage, System.Population);
-			if (KingdomLog.Enabled) KingdomLog.Log("thirst: days=" + days + " upkeep=" + paid + "/" + upkeep + " streak=" + System.DryStreak + " outcome=" + outcome);
-			if (outcome == KingdomRules.ThirstOutcome.Emigration)
+			if (KingdomLog.Enabled) KingdomLog.Log("thirst: days=" + Days + " upkeep=" + paid + "/" + upkeep + " streak=" + System.DryStreak);
+			return KingdomRules.ResolveThirst(System.DryStreak, System.Stage, System.Population);
+		}
+
+		/// <summary>
+		/// The food half of a resolve, and the water half's mirror with one deliberate difference:
+		/// the ration bill is paid off the day's FORAGING first and only then out of the larders.
+		/// <para>
+		/// That is not a discount, it is where a camp's food comes from. The water lane's
+		/// equivalent is the detail walking to the river (<c>KingdomRules.FetchableDrams</c>),
+		/// except that hauled water goes into a cask and foraged food goes straight into a mouth
+		/// &mdash; so the settlement that has dedicated no larder at all still eats, exactly as
+		/// the settlement that has dedicated no cask still drinks what the founder pours in.
+		/// <c>KingdomRules.MaxForagedRationsPerDay</c> is what stops that being an answer above a
+		/// Camp: the ground gives four a day whoever walks it.
+		/// </para>
+		/// </summary>
+		private static KingdomRules.HungerOutcome DrawRations(KingdomSystem System, KingdomSurvey Survey, long Elapsed, int Days)
+		{
+			int owed = KingdomRules.RationsForElapsed(System.Population, Elapsed);
+			if (owed <= 0)
 			{
-				Emigrate(System, Z, Survey);
+				RecoverFromHunger(System);
+				return KingdomRules.HungerOutcome.Fed;
 			}
-			else if (outcome == KingdomRules.ThirstOutcome.Withering)
+			// Hands are spent once here as everywhere: whoever is on the water detail or crewing a
+			// work is not also out on the ridge with a basket. AssignedCrew is last pass's
+			// reading, which is the same staleness KingdomWear's own free-hands read accepts.
+			int foraged = KingdomRules.ForagedRations(KingdomMaterialRules.FreeHands(System.Population, System.AssignedCrew), Days);
+			int fromWild = (foraged < owed) ? foraged : owed;
+			System.Ledger.Foraged += fromWild;
+			int shortfall = owed - fromWild;
+			int eaten = (shortfall > 0) ? Survey.ConsumeFood(shortfall) : 0;
+			System.Ledger.RationsDrawn += eaten;
+			if (fromWild + eaten >= owed)
 			{
-				Emigrate(System, Z, Survey);
-				if (!System.Withered)
-				{
-					System.Withered = true;
-					KingdomChronicle.Record(System, System.KingdomDisplayName + " withered in the long thirst");
-					System.Ledger.Note("{{R|The settlement is withering in the long thirst.}}");
-				}
+				RecoverFromHunger(System);
+				return KingdomRules.HungerOutcome.Fed;
 			}
-			return false;
+			System.HungerStreak++;
+			KingdomChronicle.Record(System, "the larders ran empty, and " + System.KingdomDisplayName + " went hungry");
+			System.Ledger.Note("{{r|The larders are empty. Settlers will leave if the fields do not feed them.}}");
+			if (KingdomLog.Enabled) KingdomLog.Log("hunger: days=" + Days + " rations=" + (fromWild + eaten) + "/" + owed + " foraged=" + fromWild + " streak=" + System.HungerStreak);
+			return KingdomRules.ResolveHunger(System.HungerStreak, System.Stage, System.Population);
 		}
 
 		private static void RecoverFromThirst(KingdomSystem System)
@@ -249,6 +357,137 @@ namespace ThousandAndFirst
 				System.Withered = false;
 				KingdomChronicle.Record(System, "the water returned, and " + System.KingdomDisplayName + " drank deep and recovered");
 				System.Ledger.Note(KingdomVoices.Say(System, VoiceOccasion.ThirstBroken, "{{G|The water returned, and the settlement recovered.}}"));
+			}
+		}
+
+		/// <summary>The food mirror of <see cref="RecoverFromThirst"/>: the streak clears the
+		/// moment a resolve is paid, and the mark is unsaid the moment the settlement eats
+		/// again.</summary>
+		private static void RecoverFromHunger(KingdomSystem System)
+		{
+			System.HungerStreak = 0;
+			if (System.Famished)
+			{
+				System.Famished = false;
+				KingdomChronicle.Record(System, "the harvest came in, and " + System.KingdomDisplayName + " ate its fill again");
+				System.Ledger.Note("{{G|The harvest came in, and the settlement ate its fill again.}}");
+			}
+		}
+
+		// ==================================================================================
+		// What the fields make, and where it goes. The mirror of the water works' own daily
+		// make (the KingdomSubsidence.Supports(survey).Water line at the top of the pass), with
+		// the one subtraction that keeps it honest.
+		// ==================================================================================
+
+		/// <summary>
+		/// Servings the settlement's works bring in in a day: exactly the <c>food</c> Carries
+		/// <c>KingdomSubsidence</c> sums for the level, at exactly the effectiveness it sums them
+		/// at. The mirror of the water works' own daily make, one line above the call site.
+		/// <para>
+		/// <b>The invariant this exists to keep.</b> One point of <c>food</c> is one settler fed
+		/// for one day and <c>KingdomRules.RationsPerDay</c> charges one ration a settler a day,
+		/// so a settlement standing at its own supported level makes precisely the bill it is
+		/// charged. That only holds if EVERY food work is counted here, which is why nothing is
+		/// excluded &mdash; a design counted for the level and not for the flow would be a level
+		/// the settlement could reach and then starve at.
+		/// </para>
+		/// <para>
+		/// <b>The kitchen garden, which also gathers itself.</b> <c>plot</c> and <c>plotrows</c>
+		/// carry <c>r_KingdomPlot</c> and spawn a real crop into a real larder when they ripen
+		/// (<c>KingdomPlot.Deposit</c>), so those two designs deliver their carries here AND a
+		/// ripening on top. That is not a double count of the same food, it is the one food
+		/// design in the catalogue that BUYS food with water: a planting costs
+		/// <c>KingdomCropRules.PlantWaterCostDrams</c> out of the dedicated stores every cycle and
+		/// no other field pays a dram. The surplus it buys is bounded twice over &mdash; the
+		/// garden is an S-plot design, and everything it puts in a larder is larder room the
+		/// clocked make above then cannot use, because <see cref="KingdomSurvey.FoodSpace"/> is
+		/// derived from what is actually in there.
+		/// </para>
+		/// </summary>
+		/// <param name="Survey">The pass's survey. Null makes nothing.</param>
+		public static int FoodMadePerDay(KingdomSurvey Survey)
+		{
+			if (Survey == null)
+			{
+				return 0;
+			}
+			int made = KingdomSubsidence.Supports(Survey).Food;
+			return (made > 0) ? made : 0;
+		}
+
+		/// <summary>
+		/// Puts a day's making into the larders and is honest about whatever would not fit
+		/// (STANDARDS 7b). Loss, not a queue: a harvest with nowhere to go is left in the field,
+		/// the same way water the casks cannot take runs into the ground.
+		/// </summary>
+		private static void StoreHarvest(KingdomSystem System, KingdomSurvey Survey, int Amount)
+		{
+			if (Amount <= 0)
+			{
+				// Nothing made, so nothing was lost. If there is room now the block is over
+				// anyway, and 7b's "once" has to be able to become "once more" the next time the
+				// sentence is actually true - otherwise a settlement whose fields were struck
+				// while its larders were full would never be told again.
+				if (Survey.FoodSpace > 0)
+				{
+					System.HarvestUnstoredAnnounced = false;
+				}
+				return;
+			}
+			int stored = Survey.StoreFood(Amount, KingdomCropRules.CropBlueprintForStyle(System.Style));
+			System.Ledger.Harvested += stored;
+			int lost = Amount - stored;
+			if (lost <= 0)
+			{
+				// The block lifted: room was found, so the sentence below is unsaid and may be
+				// said again the next time it is true.
+				System.HarvestUnstoredAnnounced = false;
+				return;
+			}
+			System.Ledger.HarvestLost += lost;
+			if (System.HarvestUnstoredAnnounced)
+			{
+				return;
+			}
+			System.HarvestUnstoredAnnounced = true;
+			// One flag for one block - "the harvest has nowhere to go" - with the sentence chosen
+			// for which shape the block currently has. A founder who fixes the first by
+			// dedicating a chest and then fills it hears the line once more only after the room
+			// they made ran out and was found again.
+			string line = (Survey.FoodCapacity <= 0)
+				? ("The fields of " + System.KingdomDisplayName + " brought in a harvest and there was nowhere to put it. Dedicate a larder, or commission one, and it will be kept.")
+				: ("The larders of " + System.KingdomDisplayName + " are full, and " + lost + " of the harvest was left in the field. A granary is what makes a good year last into a bad one.");
+			System.Ledger.Note("{{r|" + line + "}}");
+			MessageQueue.AddPlayerMessage("{{r|" + line + "}}");
+			if (KingdomLog.Enabled) KingdomLog.Log("harvest: made=" + Amount + " stored=" + stored + " lost=" + lost + " cap=" + Survey.FoodCapacity);
+		}
+
+		/// <summary>
+		/// Dedicates every finished work the catalogue calls a pantry that is not dedicated
+		/// already, and folds it into this pass's survey so a granary raised before today is a
+		/// pantry from the moment the pass notices it.
+		/// <para>
+		/// STANDARDS 7 is the warrant and also the whole limit: only a <c>KingdomBuilt</c> work
+		/// whose blueprint is one of <c>KingdomRules.CivicLarderBlueprints</c> is taken, so a
+		/// chest the player carried in and set down is never swept up. Idempotent, and a repair
+		/// as much as a rule &mdash; a granary raised by a build that only knew how to auto-flag
+		/// the larder shed becomes a pantry the next time its city is walked into.
+		/// </para>
+		/// </summary>
+		private static void AdoptCivicLarders(KingdomSurvey Survey)
+		{
+			for (int i = 0; i < Survey.Built.Count; i++)
+			{
+				GameObject work = Survey.Built[i];
+				if (!GameObject.Validate(work) || work.Inventory == null || work.GetIntProperty("KingdomLarder") == 1)
+				{
+					continue;
+				}
+				if (KingdomRules.IsCivicLarderBlueprint(work.Blueprint) && Survey.AdoptLarder(work))
+				{
+					KingdomLog.Log("larder: dedicated commissioned " + work.Blueprint);
+				}
 			}
 		}
 
@@ -478,7 +717,10 @@ namespace ThousandAndFirst
 		/// departure COUNT still rises, and the log still records it &mdash; what is saved is a
 		/// chronicle entry, because a City falling to Camp would otherwise spend a quarter of the
 		/// two-hundred-entry register on one event.</param>
-		public static bool Emigrate(KingdomSystem System, Zone Z, KingdomSurvey Survey = null, GameObject Leaver = null, string Cause = null, bool Chronicled = true)
+		/// <param name="Note">The same departure in the ledger's shorter voice. Null falls back to
+		/// <paramref name="Cause"/>, which is what a caller with only one phrasing wants, and
+		/// what every caller written before the two registers wanted different lengths passed.</param>
+		public static bool Emigrate(KingdomSystem System, Zone Z, KingdomSurvey Survey = null, GameObject Leaver = null, string Cause = null, bool Chronicled = true, string Note = null)
 		{
 			if (System.Population <= KingdomRules.LoyalCoreSettlers)
 			{
@@ -545,7 +787,7 @@ namespace ThousandAndFirst
 			// places at once, so the chronicle and the ledger can never disagree about why
 			// somebody left.
 			string chronicled = string.IsNullOrEmpty(Cause) ? "for wetter country, the cisterns having run dry" : Cause;
-			string noted = string.IsNullOrEmpty(Cause) ? "for wetter country" : Cause;
+			string noted = string.IsNullOrEmpty(Note) ? (string.IsNullOrEmpty(Cause) ? "for wetter country" : Cause) : Note;
 			// The count is never sampled, only the telling: a founder who reads the ledger's
 			// departure tally gets the true number however the story of it was told.
 			System.Ledger.Departures++;
@@ -704,8 +946,11 @@ namespace ThousandAndFirst
 		/// </summary>
 		public static void UpdateStage(KingdomSystem System, Zone Z, KingdomSurvey Survey = null)
 		{
-			int capacity = (Survey != null) ? Survey.StorageCapacity : CountStorageCapacity(Z);
+			int zoneCapacity = (Survey != null) ? Survey.StorageCapacity : CountStorageCapacity(Z);
 			KingdomSubsidence.Reckon(System, Z, Survey, The.Game.TimeTicks);
+			// Read AFTER Reckon, which writes this zone's own sighting. The ladder measures the
+			// city's casks, not the casks of whichever zone the founder walked in through.
+			int capacity = KingdomSubsidence.CityStorageCapacity(System, Z, zoneCapacity);
 			GrowthStage stage = KingdomSubsidenceRules.StageWithHysteresis(System.Stage, System.Population, capacity);
 			if (stage > System.Stage)
 			{

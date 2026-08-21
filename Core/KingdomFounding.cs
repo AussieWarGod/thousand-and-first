@@ -282,6 +282,48 @@ namespace ThousandAndFirst
 		}
 
 		/// <summary>
+		/// Judges what the founder's claim would do on the ground they are standing on: the
+		/// facts gathered off the world, the verdict decided by
+		/// <see cref="KingdomZoningRules.JudgeClaim"/>, which knows nothing about zones or
+		/// factions and can therefore be tabled.
+		/// <para>
+		/// Every fact here is one <see cref="ClaimZone"/> already enforces, plus the one it does
+		/// not: how much ground a city of this stage answers for. The primitive deliberately
+		/// keeps no stage gate &mdash; the founding rite claims its first parasang at Camp, and a
+		/// scripted second founding claims across the horizon &mdash; so the gate belongs to the
+		/// founder's own action, which is the only claim anybody chooses.
+		/// </para>
+		/// </summary>
+		/// <param name="System">The kingdom system.</param>
+		/// <param name="Site">The zone the founder is standing in. Null reads as ground that
+		/// borders nothing, which refuses by name rather than by silence.</param>
+		public static KingdomZoningRules.ClaimVerdict JudgeClaim(KingdomSystem System, Zone Site)
+		{
+			if (System == null)
+			{
+				return KingdomZoningRules.ClaimVerdict.NothingFoundedYet;
+			}
+			bool ours = Site != null && System.ClaimedZones.Contains(Site.ZoneID);
+			bool otherCitys = Site != null && System.Away != null && System.Away.ClaimedZones.Contains(Site.ZoneID);
+			bool otherRealms = Site != null && System.ExiledRealmHolds(Site.ZoneID);
+			bool foreign = Site != null && KingdomRules.GroundIsForeignFaction(Site.GetZoneProperty("faction"), System.KingdomFactionName);
+			bool adjacent = false;
+			if (Site != null)
+			{
+				foreach (string zoneID in System.ClaimedZones)
+				{
+					if (ZonesAdjacent(zoneID, Site.ZoneID))
+					{
+						adjacent = true;
+						break;
+					}
+				}
+			}
+			return KingdomZoningRules.JudgeClaim(System.Founded, System.Stage, System.ClaimedZones.Count,
+				ours, otherCitys, otherRealms, foreign, adjacent);
+		}
+
+		/// <summary>
 		/// Claims a zone for the kingdom: stamps the zone faction property (so future spawns
 		/// enrol as citizens), adds it to the faction's holy places, and starts the growth
 		/// clock on first claim.

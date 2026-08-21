@@ -44,10 +44,13 @@ namespace ThousandAndFirst
 	/// equilibrium and nobody subsides out of existence.
 	/// </para>
 	/// <para>
-	/// <b>One zone, not a realm.</b> The tally is taken from the pass's own survey, which is the
-	/// zone the founder is standing in &mdash; the same ground every other per-pass resolver
-	/// measures. A settlement spanning claimed zones is therefore measured by the one it is
-	/// entered through, exactly as its beds, its crew and its stores already are.
+	/// <b>A city, not a zone.</b> The ground under the pass's feet is counted from the survey,
+	/// which is the zone the founder is standing in &mdash; and then every OTHER zone the city
+	/// claims is folded in as it was last seen (<see cref="OtherZones"/>). Before that, a
+	/// two-zone city's level swung with which way the founder walked in: entering through the
+	/// mine overwrote the city's supported level with the mine's cisterns and the granary
+	/// vanished. Nothing here simulates an unvisited zone forward &mdash; a sighting is dated,
+	/// stays exactly as old as it is, and a zone nobody has ever stood in contributes nothing.
 	/// </para>
 	/// </summary>
 	public static class KingdomSubsidence
@@ -261,6 +264,131 @@ namespace ThousandAndFirst
 			return tally;
 		}
 
+		// --- The city's own record, one zone at a time --------------------------------------
+
+		/// <summary>Game-state key prefix a claimed zone's last-seen binding carries are recorded
+		/// under. A generic, already-serialized slot on the game rather than a new field on
+		/// <c>KingdomSettlement</c> &mdash; exactly as <c>KingdomReach.CityStatePrefix</c> and
+		/// <c>KingdomPlots.MaterialStatePrefix</c> are &mdash; so a city's other zones can be read
+		/// without them being loaded and without touching any positionally-reflected field
+		/// layout. Keyed by zone id alone, so a seat swap reads the seated city's own zones with
+		/// no bookkeeping at all: the ids move with <c>ClaimedZones</c>.</summary>
+		public const string ZoneStatePrefix = "r_TAF_Supports_";
+
+		private const string WaterSlot = "_water";
+		private const string FoodSlot = "_food";
+		private const string RoofSlot = "_roof";
+		private const string StorageSlot = "_storage";
+		private const string SeenSlot = "_seen";
+
+		/// <summary>
+		/// Writes down what this zone was holding, on the pass that stood in it. Rewritten from
+		/// the ground every time, including down to zero: a reservoir that was struck stops
+		/// counting toward the city the pass the founder sees the empty plot, and never before.
+		/// </summary>
+		/// <param name="Z">The zone the pass is in.</param>
+		/// <param name="Supports">What was counted here, lifts ignored &mdash; only the binding
+		/// half is a citywide pool.</param>
+		/// <param name="StorageCapacity">Dedicated storage counted here.</param>
+		/// <param name="TimeTicks">Now, which is what dates the sighting.</param>
+		public static void RecordZone(Zone Z, KingdomCatalogueRules.SupportTally Supports, int StorageCapacity, long TimeTicks)
+		{
+			if (The.Game == null || Z == null)
+			{
+				return;
+			}
+			string key = ZoneStatePrefix + Z.ZoneID;
+			The.Game.SetIntGameState(key + WaterSlot, (Supports.Water > 0) ? Supports.Water : 0);
+			The.Game.SetIntGameState(key + FoodSlot, (Supports.Food > 0) ? Supports.Food : 0);
+			The.Game.SetIntGameState(key + RoofSlot, (Supports.Roof > 0) ? Supports.Roof : 0);
+			The.Game.SetIntGameState(key + StorageSlot, (StorageCapacity > 0) ? StorageCapacity : 0);
+			// Dated in DAYS, not ticks: the game state's slots are ints and a tick count outgrows
+			// one, while a day is the granularity everything downstream reads anyway
+			// (KingdomRules.ElapsedDays). Keeping the whole record in one already-serialized
+			// dictionary is what saves a second store for a single long.
+			The.Game.SetIntGameState(key + SeenSlot, SeenStamp(TimeTicks));
+		}
+
+		/// <summary>The stamp a sighting tick is stored as. Clamped into the int slot: a game that
+		/// somehow outruns it stops ageing rather than wrapping negative and reading as the
+		/// future.</summary>
+		public static int SeenStamp(long TimeTicks)
+		{
+			if (TimeTicks <= 0L)
+			{
+				return 0;
+			}
+			long days = TimeTicks / KingdomRules.TicksPerDay;
+			return (days >= int.MaxValue) ? int.MaxValue : ((days < 1L) ? 1 : (int)days);
+		}
+
+		/// <summary>Every claimed zone of the seated city EXCEPT the one the pass is in, as each
+		/// was last seen. The exclusion is the whole point: this zone has just been counted from
+		/// the ground, and counting it twice would double its cisterns.</summary>
+		public static List<KingdomSubsidenceRules.ZoneSighting> OtherZones(KingdomSystem System, Zone Z)
+		{
+			List<KingdomSubsidenceRules.ZoneSighting> others = new List<KingdomSubsidenceRules.ZoneSighting>();
+			if (System == null || System.ClaimedZones == null || The.Game == null)
+			{
+				return others;
+			}
+			string here = (Z == null) ? null : Z.ZoneID;
+			for (int i = 0; i < System.ClaimedZones.Count; i++)
+			{
+				string zoneID = System.ClaimedZones[i];
+				if (string.IsNullOrEmpty(zoneID) || zoneID == here)
+				{
+					continue;
+				}
+				string key = ZoneStatePrefix + zoneID;
+				int seen = The.Game.GetIntGameState(key + SeenSlot);
+				if (seen <= 0)
+				{
+					// Never stood in. Nothing is invented for it.
+					continue;
+				}
+				others.Add(new KingdomSubsidenceRules.ZoneSighting(
+					The.Game.GetIntGameState(key + WaterSlot),
+					The.Game.GetIntGameState(key + FoodSlot),
+					The.Game.GetIntGameState(key + RoofSlot),
+					The.Game.GetIntGameState(key + StorageSlot),
+					(long)seen * KingdomRules.TicksPerDay));
+			}
+			return others;
+		}
+
+		/// <summary>
+		/// The whole city's dedicated storage: this zone's, counted now, plus every other claimed
+		/// zone's as last seen. The stage ladder is read against storage
+		/// (<c>KingdomRules.StageFor</c>), so a city whose casks stand in the zone next door must
+		/// be measured against all of them or it demotes itself the moment the founder walks in
+		/// through the wrong side.
+		/// </summary>
+		/// <param name="System">The seated city.</param>
+		/// <param name="Z">The zone the pass is in.</param>
+		/// <param name="Here">Storage counted in this zone this pass
+		/// (<c>KingdomSurvey.StorageCapacity</c>).</param>
+		public static int CityStorageCapacity(KingdomSystem System, Zone Z, int Here)
+		{
+			return KingdomSubsidenceRules.CityStorage(Here, OtherZones(System, Z));
+		}
+
+		/// <summary>
+		/// The clause that dates a city reading for the founder, or null when the reading is
+		/// wholly this pass's own. The staleness doctrine said out loud: a two-zone city's level
+		/// is partly a memory, and the founder is told how old the memory is.
+		/// </summary>
+		/// <param name="System">The seated city.</param>
+		/// <param name="Z">The zone the pass is in.</param>
+		/// <param name="TimeTicks">Now.</param>
+		public static string SightingClause(KingdomSystem System, Zone Z, long TimeTicks)
+		{
+			List<KingdomSubsidenceRules.ZoneSighting> others = OtherZones(System, Z);
+			long oldest = KingdomSubsidenceRules.OldestSighting(others);
+			int days = (oldest > 0L) ? KingdomRules.ElapsedDays(TimeTicks - oldest) : 0;
+			return KingdomSubsidenceRules.SightingClause(KingdomSubsidenceRules.SightedZones(others), days);
+		}
+
 		/// <summary>
 		/// The whole reckoning. Records the level and what holds it, runs the slide, ruins what
 		/// the fall took, and speaks once each way (STANDARDS 7b).
@@ -275,7 +403,13 @@ namespace ThousandAndFirst
 			{
 				return;
 			}
-			KingdomCatalogueRules.SupportTally supports = ScopedSupports(System, Z, Survey);
+			KingdomCatalogueRules.SupportTally here = ScopedSupports(System, Z, Survey);
+			// Written down before it is used, so this zone's own sighting is today's on every
+			// pass and the fold below never counts this ground out of a memory of it.
+			RecordZone(Z, here, Survey.StorageCapacity, TimeTicks);
+			List<KingdomSubsidenceRules.ZoneSighting> others = OtherZones(System, Z);
+			KingdomCatalogueRules.SupportTally supports = KingdomSubsidenceRules.CityTally(here, others);
+			int storage = CityStorageCapacity(System, Z, Survey.StorageCapacity);
 			string binding = KingdomSubsidenceRules.BindingSupportFor(supports, System.Stage);
 			int level = KingdomSubsidenceRules.SupportedLevel(supports, System.Stage, System.NotableShade);
 			// Recorded whether or not the slide is allowed to run: the level is knowledge, and a
@@ -313,7 +447,7 @@ namespace ThousandAndFirst
 				return;
 			}
 			KingdomSubsidenceRules.Trajectory trajectory = KingdomSubsidenceRules.Slide(
-				System.Population, System.Stage, Survey.StorageCapacity, supports, elapsedDays, System.SubsidenceAnnounced,
+				System.Population, System.Stage, storage, supports, elapsedDays, System.SubsidenceAnnounced,
 				System.NotableShade);
 			Say(System, binding, level);
 			if (trajectory.Departed <= 0)
@@ -359,7 +493,7 @@ namespace ThousandAndFirst
 			{
 				return;
 			}
-			System.Stage = KingdomSubsidenceRules.SettledStage(from, System.Population, Survey.StorageCapacity);
+			System.Stage = KingdomSubsidenceRules.SettledStage(from, System.Population, storage);
 			// Re-recorded against the rung the slide left, not the one it started from: the water
 			// bill per head fell with the stage, so the level the founder is now looking at is a
 			// different (higher) number from the one the announcement quoted.
@@ -370,7 +504,8 @@ namespace ThousandAndFirst
 			{
 				KingdomLog.Log("subsidence: level=" + level + "->" + System.SupportedLevel + " binding=" + binding
 					+ " days=" + elapsedDays + " wanted=" + trajectory.Departed + " left=" + departed
-					+ " pop=" + System.Population + " stage=" + System.Stage);
+					+ " pop=" + System.Population + " stage=" + System.Stage
+					+ " city=" + (SightingClause(System, Z, TimeTicks) ?? "this zone alone"));
 			}
 			if (KingdomSubsidenceRules.HasArrived(System.Population, System.SupportedLevel))
 			{

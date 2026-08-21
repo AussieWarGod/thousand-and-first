@@ -183,7 +183,7 @@ never one that becomes unreachable with no way to find out why.
 | Attribute | What it wants |
 |---|---|
 | `Districts` | Comma list of district keys whose ground will take this design: `agrarian`, `market`, `craft`, `shrine`, `garrison`, `academy`, plus `none` for ground the founder has never named. `all` (or omitting it) accepts everywhere. A key we do not recognise is treated as somebody else's district, never as open ground. |
-| `MinZones` | Claimed zones the realm must hold. |
+| `MinZones` | Claimed zones the realm must hold. The eight designs that declare 2/3/4 line up with `MinStage` `Village`/`Town`/`City` — see `KingdomZoningRules.ZonesForStage`, which is also the ceiling the founder's own claim is checked against, so a settlement reaches the ground a design wants at the same moment it reaches the stage that wants it. Reachable now: the founder claims bordering ground (including a stratum directly above or below) from the Charter's **Claim this ground**. |
 | `Knowledge` | Comma list of things the settlement must know, **all** of them. A requirement written `kind:name` must match that kind exactly; one written as a bare name is satisfied by any kind. Kinds: `disk` (a design taught to the keepers from a data disk the founder carried home — the disk is read and handed back, never spent), `machine` (a machine hauled home and certified fit for the grid), `origin` (a trade the settlement holds because somebody from that country lives there, so it comes and goes with them). Invent your own kind freely; an unknown kind gates perfectly well and is worth no craft. |
 | `MinTech` | Craft the settlement must have reached: `hands` (the start, gates nothing), `salvage`, `workshop`, `foundry`, `arclight`. |
 
@@ -268,7 +268,7 @@ is raised exactly as it always was.
 | `Footprint` | Fills the plot. `WxH` — the ground this **tier** stands on inside the plot, as in `Footprint="3x2"`. The plot is only the envelope; the footprint is the building. Larger than the plot is an error. |
 | `Roof` | `Walled`, or `Open` when `Open="yes"`. `Open` (no roof, no walls), `Soft` (canvas: shelter enough to sleep under, raised as the design's own object, and the sky still reaches under it), `Walled` (the settlement's own material, a floor, a door), `Carved` (underground; the rock is the enclosure). `Open` and `Roof` must agree if both are given. |
 | `Open` | `No`. `Yes` makes an unroofed plot — a field, a yard, a salt-pan, a reservoir: same rect discipline, no walls, no door. |
-| `Sky` | `No`. `Yes` means the design needs weather, and it is refused underground by name rather than sited somewhere useless. |
+| `Sky` | `No`. `Yes` means the design needs weather, and it is refused underground by name rather than sited somewhere useless — tagged **[wants open sky]** right in the commission list, the same tag every other blocked gate wears, before the founder has even picked it. |
 | `Contents` | Nothing. A population table the finished interior is furnished from, rolled once per S plot, twice per M, four times per L, six per XL. |
 
 Plot size is gated by stage: a Camp lays S, a Steading and a Village M, a Town L, a City XL.
@@ -291,9 +291,16 @@ claimed nothing to contradict and is raised exactly as it always was.
 Clearing the ground is how a settlement without a mine gets material: brush and trees yield timber,
 shale and granite yield stone, a marble seam yields marble, somebody else's fallen walls yield
 scrap. Effort scales with hardness, and it is part of how long the plot takes to raise. Underground
-(any zone below the surface stratum) a plot is **carved** instead: the clearing costs twice as much,
-it pays in stone, the plot's edge is left standing because that rock **is** the enclosure, and no
-wall is ever raised.
+(any zone below the surface stratum) a plot that would otherwise be enclosed is **carved** instead:
+the clearing costs twice as much, it pays in stone, the plot's edge is left standing because that
+rock **is** the enclosure, and no wall is ever raised.
+
+**An `Open` plot is the exception, and it stays open underground.** Carving replaces the enclosure
+a design would otherwise have raised; it does not roof ground the design deliberately left
+unroofed. A field, a salt-pan, a market square or a reservoir taken underground is a field, a
+salt-pan, a market square or a reservoir cut into the rock — open ground with stone around it, not
+a sealed chamber — and it does not count as shelter. A design declaring `Walled` (or nothing,
+which defaults to `Walled`) is carved exactly as before.
 
 Ground the settlement may not take refuses the plot outright and says which cell and what is
 standing in it — anything you placed, anything owned, any loose item, any of the settlement's own
@@ -590,11 +597,35 @@ either set that property on your placed objects or leave it to the player's dedi
 action. Never rely on the kingdom consuming undedicated liquids — it won't.
 
 The same contract covers food. A container joins the settlement's pantry only when it carries
-`KingdomLarder=1`, which the Charter's dedicate action sets and a commissioned civic larder sets
-for itself. Food inside a dedicated larder is counted, and may be spent by a shared meal the
-founder calls; food anywhere else — including the player's own pack and any container they simply
-left lying about — is never read and never spent. Dedication is a mark, not a transfer: nothing is
-moved when a container joins the pantry.
+`KingdomLarder=1`, which the Charter's dedicate action sets and a commissioned pantry sets for
+itself. Food inside a dedicated larder is counted, is filled by the settlement's own fields, and
+is eaten by its people day by day; food anywhere else — including the player's own pack and any
+container they simply left lying about — is never read and never spent. Dedication is a mark, not
+a transfer: nothing is moved when a container joins the pantry.
+
+**How much a pantry holds is declared on the blueprint**, not in `KingdomBuildings.xml`, for the
+same reason a cistern's capacity is its `LiquidVolume MaxVolume` rather than a catalogue
+attribute: `Carries` says what a design adds to the settlement's sustainable *level*, and how much
+its vessel holds is a fact about the vessel.
+
+```xml
+<object Name="MyMod_ColdCellar" Inherits="Chest">
+  <tag Name="r_KingdomLarderCapacity" Value="120" />
+</object>
+```
+
+A dedicated container that declares nothing gets `KingdomRules.DefaultLarderCapacity` (32) — never
+zero, because a pantry that can hold nothing is a silent black hole for a harvest with no surface
+anywhere to explain it. Which *commissioned* designs dedicate themselves is the named list
+`KingdomRules.CivicLarderBlueprints`; anything else waits for the player's own dedicate action,
+which is the protection law working exactly as intended.
+
+Food is denominated in **people**, not in a per-day flow: one point of `food` in `Carries` is one
+settler fed for one day, and the settlement eats one ration a settler a day at every rung. Unlike
+`water`, food is **not** divided by the stage rate — a dinner is counted in people the way a bed
+is. That is what makes the arithmetic check out on its face: a settlement standing at its own
+supported level makes exactly what it eats, so a `food` figure you author is a promise about how
+many more people the place feeds, not a number that means different things at different rungs.
 
 ## Power
 

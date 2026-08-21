@@ -265,8 +265,12 @@ namespace ThousandAndFirst
 			{
 				return;
 			}
+			// The pantry's declared room binds here too: a garden that ripens more than the
+			// larders hold delivers what fits, like every other producer (the rest never grows).
+			int room = Survey.FoodSpace;
+			int amount = (Amount > room) ? room : Amount;
 			int delivered = 0;
-			for (int i = 0; i < Amount; i++)
+			for (int i = 0; i < amount; i++)
 			{
 				GameObject crop = GameObject.Create(CropBlueprint);
 				if (crop == null)
