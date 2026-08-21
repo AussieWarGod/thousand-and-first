@@ -3,6 +3,16 @@ DevTests/obj/
 DevTests/out/
 DevTests/build-generated.rsp
 *.dll
-_notes/
+# _notes/ is scratch by default, but the research corpus and the ruling record are
+# load-bearing engineering artifacts and stay tracked (author, 2026-08-21).
+_notes/*
+!_notes/BUILDING-CATALOGUE-BRIEF.md
+!_notes/VANILLA-PRODUCTION-TRUTH.md
+!_notes/LIVING-CITY-ARCHITECTURE.md
+!_notes/CLOCK-REWORK-CHANGE-MAP.md
+!_notes/COVERAGE-GAP-MAP.md
+!_notes/CODEX-ENGINE-TRUTH-BATCH-1.md
+!_notes/balance-sim.py
+!_notes/balance-sim-output.txt
 Art/preview/
 Tools/last-deploy-receipt.txt
