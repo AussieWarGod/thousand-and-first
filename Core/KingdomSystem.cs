@@ -354,12 +354,12 @@ namespace ThousandAndFirst
 		public Dictionary<string, string> ConversionToward = new Dictionary<string, string>();
 
 		/// <summary>
-		/// Addendum 5's exit: how many ATTENDED passes each settler standing under a creed they
-		/// resent has spent of their grace. Zero is the pass it was announced on;
-		/// <c>KingdomConversionRules.ResentedPasses</c> is the pass they leave on. The entry is also
+		/// Addendum 5's exit, moderated by Addendum 10(a): the world-day each settler standing
+		/// under a creed they resent was WARNED on. The warning starts the window
+		/// (<c>KingdomConversionRules.ResentmentRunOut</c> says when it spends), the entry is also
 		/// the once-only announce flag (STANDARDS 7b), and it is removed the moment the pressure
-		/// lifts, so a founder who takes the shrine back out of somebody's quarter has genuinely
-		/// taken it back out.
+		/// lifts &mdash; unsaying what was said &mdash; so a founder who takes the shrine back out
+		/// of somebody's quarter has genuinely taken it back out.
 		/// </summary>
 		public Dictionary<string, int> ConversionResented = new Dictionary<string, int>();
 
@@ -1019,12 +1019,12 @@ namespace ThousandAndFirst
 				KingdomRaids.OnZoneActivated(this, E.Zone, survey);
 			});
 			// After raids, and the order is load-bearing in both directions. After growth, because
-			// wear folds a work's own condition into the crew stretch KingdomGrowth.AssignWork
-			// stamps on KingdomEffectiveness, and hard running is read off that same stretch. After
-			// bounties and raids, because both move a work this pass and wear must see the result:
-			// a work manned by a posted price still runs reduced if it is damaged, and a work the
-			// raiders just broke is counted, folded and queued for mending now rather than a whole
-			// pass later. Raid damage itself is a separate hook inside KingdomRaids.ExecuteRaid,
+			// hard running is read off the crew stretch KingdomGrowth.AssignWork stamps on
+			// KingdomEffectiveness. After bounties and raids, because both move a work this pass
+			// and wear must see the result: a work the raiders just broke is counted and queued
+			// for mending now rather than a whole pass later. Condition is no longer folded back
+			// into KingdomEffectiveness -- each consumer applies KingdomWearRules.WorkEffectiveness
+			// itself (Addendum 10(b)), so the ordering no longer decides that arithmetic. Raid damage itself is a separate hook inside KingdomRaids.ExecuteRaid,
 			// invoked from the "raids" step above -- it does not run from here. Before reach, so a
 			// damaged great work shades its ground by what it is actually managing.
 			Guard("wear", delegate

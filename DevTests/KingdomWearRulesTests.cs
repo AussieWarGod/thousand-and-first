@@ -1,4 +1,4 @@
-#if TAF_TESTS
+﻿#if TAF_TESTS
 using NUnit.Framework;
 using ThousandAndFirst;
 using ThousandAndFirst.Simulation.Kernel;
@@ -94,6 +94,191 @@ namespace ThousandAndFirst.Tests
 			int both = KingdomWearRules.CombinedEffectiveness(50, KingdomMaterialRules.MaxWearPercent / 2);
 			Assert.Less(both, halfCrew);
 			Assert.Less(both, halfWear);
+		}
+
+		// --- Addendum 10(b): the ruling. Wear reduces EVERY work, staffed or not --------------
+
+		[Test]
+		public void WorkEffectiveness_ASoundWorkIsWholeWhetherItAsksForCrewOrNot()
+		{
+			Assert.AreEqual(100, KingdomWearRules.WorkEffectiveness(0, 0, 0), "a staffless work asks for nobody and is whole");
+			Assert.AreEqual(100, KingdomWearRules.WorkEffectiveness(3, 100, 0), "a fully crewed sound work is whole");
+		}
+
+		[Test]
+		public void WorkEffectiveness_AStafflessWorkRunsAtItsOwnCondition()
+		{
+			// The ruling: the staffed-only ternary handed this arm a flat 100, so wear reached the
+			// level exclusively through crewed designs.
+			for (int wear = 0; wear <= KingdomMaterialRules.MaxWearPercent; wear += 5)
+			{
+				Assert.AreEqual(KingdomMaterialRules.ConditionPercent(wear),
+					KingdomWearRules.WorkEffectiveness(0, 0, wear));
+			}
+		}
+
+		[Test]
+		public void WorkEffectiveness_AStafflessWorkIgnoresWhateverCrewStretchIsStampedOnIt()
+		{
+			// A design that asks for nobody never carries a meaningful stretch. Reading one would
+			// make the answer depend on whichever pass last stamped the property.
+			Assert.AreEqual(KingdomWearRules.WorkEffectiveness(0, 0, 20), KingdomWearRules.WorkEffectiveness(0, 100, 20));
+			Assert.AreEqual(KingdomWearRules.WorkEffectiveness(0, 37, 20), KingdomWearRules.WorkEffectiveness(0, 0, 20));
+		}
+
+		[Test]
+		public void WorkEffectiveness_ARuinedStafflessWorkCarriesLessThanASoundOne()
+		{
+			int sound = KingdomWearRules.WorkEffectiveness(0, 0, 0);
+			int ruined = KingdomWearRules.WorkEffectiveness(0, 0, KingdomMaterialRules.MaxWearPercent);
+			Assert.Less(ruined, sound, "a ruined reservoir does not carry its full drams");
+			Assert.Greater(ruined, 0, "and it is not gone either: a damaged work stands");
+		}
+
+		[Test]
+		public void WorkEffectiveness_TheReservoirCase()
+		{
+			// KingdomBuildings.xml, Key="reservoir": Carries="water:26", no Staff attribute. The
+			// named case the ruling overturned - the grand water design automates to staffless, so
+			// under the old ternary it was the one work a collapse could never touch.
+			const int ReservoirDrams = 26;
+			int sound = KingdomCatalogueRules.Carried(ReservoirDrams, KingdomWearRules.WorkEffectiveness(0, 0, 0));
+			int wrecked = KingdomCatalogueRules.Carried(ReservoirDrams, KingdomWearRules.WorkEffectiveness(0, 0, KingdomMaterialRules.MaxWearPercent));
+			Assert.AreEqual(ReservoirDrams, sound, "a sound reservoir carries every dram it declares");
+			Assert.Less(wrecked, ReservoirDrams, "a half-wrecked reservoir carries fewer");
+			Assert.AreEqual(ReservoirDrams * KingdomMaterialRules.ConditionPercent(KingdomMaterialRules.MaxWearPercent) / 100, wrecked);
+		}
+
+		[Test]
+		public void WorkEffectiveness_ACrewedWorkStillCombinesBothShortfalls()
+		{
+			Assert.AreEqual(KingdomWearRules.CombinedEffectiveness(50, 30), KingdomWearRules.WorkEffectiveness(2, 50, 30));
+		}
+
+		[Test]
+		public void WorkEffectiveness_MendingRestoresTheWholeFigureForEitherKind()
+		{
+			// The consequences are of damage, not of history: zero wear reads exactly as a work
+			// that was never damaged at all.
+			Assert.AreEqual(KingdomWearRules.WorkEffectiveness(0, 0, 0), KingdomWearRules.WorkEffectiveness(0, 0, 0));
+			Assert.AreEqual(100, KingdomWearRules.WorkEffectiveness(0, 0, 0));
+			Assert.AreEqual(80, KingdomWearRules.WorkEffectiveness(2, 80, 0));
+		}
+
+		// --- Addendum 10(b): storage leaks -----------------------------------------------------
+
+		[Test]
+		public void Leaked_ASoundStoreLosesNothingHoweverLongTheStretch()
+		{
+			Assert.AreEqual(0, KingdomWearRules.Leaked(1024, 1024, 0, 1));
+			Assert.AreEqual(0, KingdomWearRules.Leaked(1024, 1024, 0, 100000));
+			Assert.AreEqual(0, KingdomWearRules.Leaked(1024, 1024, -5, 100000));
+		}
+
+		[Test]
+		public void Leaked_NoDaysMeansNoLossSoAnUnplantedStampCostsNothing()
+		{
+			// The stamp is planted before the first count (r_KingdomWear.LastLeakTick). A caller
+			// that has just planted it hands in zero days and must be told zero.
+			Assert.AreEqual(0, KingdomWearRules.Leaked(1024, 1024, KingdomMaterialRules.MaxWearPercent, 0));
+			Assert.AreEqual(0, KingdomWearRules.Leaked(1024, 1024, KingdomMaterialRules.MaxWearPercent, -3));
+		}
+
+		[Test]
+		public void Leaked_AnEmptyStoreLosesNothing()
+		{
+			Assert.AreEqual(0, KingdomWearRules.Leaked(1024, 0, KingdomMaterialRules.MaxWearPercent, 90));
+			Assert.AreEqual(0, KingdomWearRules.Leaked(0, 100, KingdomMaterialRules.MaxWearPercent, 90));
+		}
+
+		[Test]
+		public void Leaked_NeverTakesMoreThanIsActuallyInThere()
+		{
+			Assert.AreEqual(7, KingdomWearRules.Leaked(1024, 7, KingdomMaterialRules.MaxWearPercent, 100000));
+			Assert.AreEqual(1, KingdomWearRules.Leaked(1024, 1, KingdomMaterialRules.MaxWearPercent, 100000));
+		}
+
+		[Test]
+		public void Leaked_AWholeCapacityIsGoneAtTheCeilingInTheStatedNumberOfDays()
+		{
+			int capacity = 1024;
+			int days = KingdomWearRules.LeakDaysToEmptyAtCeiling;
+			Assert.AreEqual(capacity,
+				KingdomWearRules.Leaked(capacity, capacity, KingdomMaterialRules.MaxWearPercent, days),
+				"the tuning constant has to mean what it says");
+			Assert.Less(KingdomWearRules.Leaked(capacity, capacity, KingdomMaterialRules.MaxWearPercent, days - 1), capacity);
+		}
+
+		[Test]
+		public void Leaked_HalfTheWearIsHalfTheRate()
+		{
+			int capacity = 1200;
+			int full = KingdomWearRules.Leaked(capacity, capacity, KingdomMaterialRules.MaxWearPercent, 10);
+			int half = KingdomWearRules.Leaked(capacity, capacity, KingdomMaterialRules.MaxWearPercent / 2, 10);
+			Assert.AreEqual(full / 2, half);
+			Assert.Greater(full, half, "leak rate scales with wear or it is not a consequence of damage");
+		}
+
+		[Test]
+		public void Leaked_GrowsWithTheDaysSoALongAbsenceIsAnHonestLoss()
+		{
+			int capacity = 640;
+			int wear = 30;
+			int shortStretch = KingdomWearRules.Leaked(capacity, capacity, wear, 3);
+			int longStretch = KingdomWearRules.Leaked(capacity, capacity, wear, 60);
+			Assert.Greater(longStretch, shortStretch);
+			Assert.Greater(longStretch, 0, "a season with a hole in the cistern costs the settlement something");
+		}
+
+		[Test]
+		public void Leaked_ASmallStoreLosesNothingInADayAndSomethingOverASeason()
+		{
+			// Why a caller BANKS days that produced no loss instead of spending them: the division
+			// is done last, so a small store's share only becomes a whole dram once enough days
+			// have accumulated. Spending those days would make a leak the founder could defeat by
+			// walking in and out of the zone.
+			Assert.AreEqual(0, KingdomWearRules.Leaked(16, 16, 15, 1));
+			Assert.Greater(KingdomWearRules.Leaked(16, 16, 15, 90), 0);
+		}
+
+		[Test]
+		public void Leaked_IsTheSameAnswerEveryTimeItIsAsked()
+		{
+			for (int wear = 1; wear <= KingdomMaterialRules.MaxWearPercent; wear++)
+			{
+				int first = KingdomWearRules.Leaked(256, 200, wear, 17);
+				int second = KingdomWearRules.Leaked(256, 200, wear, 17);
+				Assert.AreEqual(first, second, "the leak is arithmetic, not a draw: no reload ever changes it");
+			}
+		}
+
+		[Test]
+		public void Leaked_DoesNotOverflowOnAnAbsenceOfAnyLength()
+		{
+			// The days are uncapped (Addendum 8 clause 1), so the arithmetic has to survive one.
+			Assert.AreEqual(1024, KingdomWearRules.Leaked(1024, 1024, KingdomMaterialRules.MaxWearPercent, int.MaxValue));
+		}
+
+		[Test]
+		public void LeakBegunLine_NamesTheWorkAndReadsDifferentlyPerKind()
+		{
+			string water = KingdomWearRules.LeakBegunLine("the reservoir", KingdomWearRules.LeakKind.Water);
+			string charge = KingdomWearRules.LeakBegunLine("the salt store", KingdomWearRules.LeakKind.Charge);
+			StringAssert.Contains("the reservoir", water);
+			StringAssert.Contains("the salt store", charge);
+			Assert.AreNotEqual(water, charge, "a cistern and a bed of salt fail in different sentences");
+		}
+
+		[Test]
+		public void LeakStoppedLine_IsTheUnsayingAndNeverReadsLikeTheBeginning()
+		{
+			foreach (KingdomWearRules.LeakKind kind in new[] { KingdomWearRules.LeakKind.Water, KingdomWearRules.LeakKind.Charge })
+			{
+				string begun = KingdomWearRules.LeakBegunLine("the reservoir", kind);
+				string stopped = KingdomWearRules.LeakStoppedLine("the reservoir", kind);
+				StringAssert.Contains("the reservoir", stopped);
+				Assert.AreNotEqual(begun, stopped);
+			}
 		}
 
 		// --- Hard-running: a streak, re-eligible once per whole further streak ----------------

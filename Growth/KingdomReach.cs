@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using XRL;
 using XRL.Messages;
 using XRL.World;
@@ -775,9 +775,11 @@ namespace ThousandAndFirst
 			// parsed before the bad pair still counts, so the verdict is deliberately unread.
 			List<KindAmount> carries;
 			KingdomCatalogueRules.TryParseTally(Entry.Carries, out carries, out _);
-			int percent = (Work.GetIntProperty(StaffNeededProperty) > 0)
-				? Work.GetIntProperty(EffectivenessProperty)
-				: 100;
+			// Crewed or not, a work shades its ground by what it is actually managing (Addendum
+			// 10(b)). KingdomWear no longer folds condition back into KingdomEffectiveness - that
+			// property is the staffing pass's crew stretch and nothing else - so this asks for the
+			// combined figure directly, the way KingdomSubsidence and KingdomPower do.
+			int percent = KingdomWear.EffectivenessOf(Work);
 			for (int i = 0; i < carries.Count; i++)
 			{
 				if (!KingdomReachRules.ScopedByReach(carries[i].Kind))

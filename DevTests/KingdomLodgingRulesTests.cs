@@ -414,62 +414,52 @@ namespace ThousandAndFirst.Tests
 			Assert.IsTrue(KingdomLodgingRules.ArrivalRefusedChronicle("   ", Reason.NeedsUnmet).Contains("the settlement"));
 		}
 
-		// --- The grace: attended passes, and nothing else -------------------------------
+		// --- The grace: world-days from the warning, and nothing else -------------------
 
 		[Test]
-		public void GracePasses_IsTwo()
+		public void GraceDays_IsSixWorldDaysAndIsTheOldTwoPassesRestated()
 		{
-			Assert.AreEqual(2, KingdomLodgingRules.GracePasses, "the ruling says a grace of two attended passes");
+			// Addendum 10(a): the rope did not change length, the unit did. Two attended passes at
+			// the cadence a present founder was always assumed to keep is six days of world time,
+			// so somebody who comes home every third day sees exactly what they always saw.
+			Assert.AreEqual(6, KingdomLodgingRules.GraceDays, "the ruling says six world-days from the warning");
+			Assert.AreEqual(KingdomBrinkRules.InCohabitationDays(KingdomBrinkRules.RoofBrinkWindowPasses),
+				KingdomLodgingRules.GraceDays, "the roof window stopped being a restatement of its old self");
 		}
 
 		[Test]
-		public void GraceAfterPass_TheFirstPassAnnouncesAndSpendsNothing()
+		public void TheDayTheWordGoesOutIsNeverTheDayTheyGo()
 		{
-			Assert.AreEqual(0, KingdomLodgingRules.GraceAfterPass(KingdomLodgingRules.NoGrace));
-			Assert.IsFalse(KingdomLodgingRules.GraceRunOut(0), "the pass a loss is announced on is not the pass they leave on");
+			long warned = 40L * KingdomRules.TicksPerDay;
+			Assert.IsFalse(KingdomBrinkRules.WindowSpent(BrinkKind.Roof, warned, warned),
+				"the day a loss is announced on is not the day they leave on");
+			Assert.AreEqual(KingdomLodgingRules.GraceDays, KingdomBrinkRules.DaysLeft(BrinkKind.Roof, warned, warned),
+				"the whole grace is in front of the founder on the day they are told");
 		}
 
 		[TestCase(0, false)]
-		[TestCase(1, false)]
-		[TestCase(2, true)]
-		[TestCase(3, true)]
-		public void GraceRunOut_LeavesAtExactlyTwoAttendedPassesAndNotBefore(int grace, bool expected)
+		[TestCase(5, false)]
+		[TestCase(6, true)]
+		[TestCase(400, true)]
+		public void TheGraceRunsOutAtExactlySixWorldDaysAndNotBefore(int daysAway, bool expected)
 		{
-			Assert.AreEqual(expected, KingdomLodgingRules.GraceRunOut(grace));
+			long warned = 40L * KingdomRules.TicksPerDay;
+			Assert.AreEqual(expected,
+				KingdomBrinkRules.WindowSpent(BrinkKind.Roof, warned, warned + daysAway * KingdomRules.TicksPerDay));
 		}
 
 		[Test]
-		public void TheGraceIsExactlyTwoAttendedPassesAfterTheOneThatAnnouncedIt()
+		public void AbsenceRunsTheGraceNowBecauseTheWindowIsTheWorldsAndNotTheFoundersAttendance()
 		{
-			// Driven as the pass drives it, so a mutation to either half -- the advance or the
-			// threshold -- moves the departure and fails here.
-			int grace = KingdomLodgingRules.NoGrace;
-			grace = KingdomLodgingRules.GraceAfterPass(grace);
-			Assert.IsFalse(KingdomLodgingRules.GraceRunOut(grace), "pass 1: announced, and nobody leaves");
-			grace = KingdomLodgingRules.GraceAfterPass(grace);
-			Assert.IsFalse(KingdomLodgingRules.GraceRunOut(grace), "pass 2: the first of the two");
-			grace = KingdomLodgingRules.GraceAfterPass(grace);
-			Assert.IsTrue(KingdomLodgingRules.GraceRunOut(grace), "pass 3: the second of the two is spent, and they go");
-		}
-
-		[Test]
-		public void AbsenceNeverRunsTheGraceBecauseNothingButAPassAdvancesIt()
-		{
-			// The founder is away: no attended pass runs, so GraceAfterPass is never called, and
-			// the settler's grace is exactly where they left it however long the founder is gone.
-			// Nothing in this file reads a clock, an age, or a tick -- there is no other input a
-			// passing day could reach.
-			int grace = KingdomLodgingRules.GraceAfterPass(KingdomLodgingRules.NoGrace);
-			Assert.AreEqual(0, grace);
-			Assert.IsFalse(KingdomLodgingRules.GraceRunOut(grace), "still held after any amount of absence");
-			Assert.AreEqual(1, KingdomLodgingRules.GraceAfterPass(grace), "and one attended pass advances it by exactly one");
-		}
-
-		[Test]
-		public void GraceAfterPass_AnyNegativeSentinelEntersAtZeroRatherThanCountingUpFromIt()
-		{
-			Assert.AreEqual(0, KingdomLodgingRules.GraceAfterPass(-1));
-			Assert.AreEqual(0, KingdomLodgingRules.GraceAfterPass(-7));
+			// The rule this test used to pin, inverted by the author's ruling. The founder is told
+			// on the road and never comes back: six days later the settler goes anyway. What
+			// absence still cannot do is take somebody the founder was never told about.
+			long warned = 40L * KingdomRules.TicksPerDay;
+			long sixDaysAway = warned + KingdomLodgingRules.GraceDays * KingdomRules.TicksPerDay;
+			Assert.IsTrue(KingdomBrinkRules.WindowSpent(BrinkKind.Roof, warned, sixDaysAway),
+				"staying away must not hold a warned settler at the door forever");
+			Assert.IsFalse(KingdomBrinkRules.WindowSpent(BrinkKind.Roof, KingdomBrinkRules.Unwarned, sixDaysAway + 9000L * KingdomRules.TicksPerDay),
+				"and a settler nobody was warned about must never leave, however long the absence");
 		}
 
 		// --- The leaving ----------------------------------------------------------------
@@ -1009,22 +999,25 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void TheRoofWindowIsTheSameLengthHoweverLongTheBrinkStood()
 		{
-			// Clause 3, and what stops the pre-record being a punishment: nothing accrues past
-			// the brink, so a settler stranded sixty days ago and one stranded tonight both get
-			// the whole of GracePasses attended passes once somebody is there to spend them.
-			Assert.AreEqual(KingdomLodgingRules.GracePasses,
-				KingdomBrinkRules.WindowFor(BrinkKind.Roof),
+			// Clause 3, and what stops the pre-record being a punishment: nothing accrues past the
+			// brink, and the window runs from the WARNING rather than from the crossing, so a
+			// settler stranded sixty days ago and one stranded tonight both get the whole of
+			// GraceDays once the founder has actually been told.
+			Assert.AreEqual(KingdomLodgingRules.GraceDays,
+				KingdomBrinkRules.WindowDays(BrinkKind.Roof),
 				"the roof window stopped being the lodging window");
-			Assert.IsFalse(KingdomLodgingRules.GraceRunOut(KingdomBrinkRules.Unannounced));
-			// The announcing pass takes it from Unannounced to zero and spends none of the
-			// window; GracePasses attended passes after that, it is spent.
-			int spent = KingdomBrinkRules.AfterAttendedPass(KingdomBrinkRules.Unannounced);
-			for (int i = 0; i < KingdomLodgingRules.GracePasses; i++)
+			long breakpoint = 100L * KingdomRules.TicksPerDay;
+			long toldSixtyDaysLater = breakpoint + 60L * KingdomRules.TicksPerDay;
+			Assert.AreEqual(KingdomLodgingRules.GraceDays,
+				KingdomBrinkRules.DaysLeft(BrinkKind.Roof, toldSixtyDaysLater, toldSixtyDaysLater),
+				"the sixty days nobody was watching must not have eaten any of the grace");
+			for (int i = 0; i < KingdomLodgingRules.GraceDays; i++)
 			{
-				Assert.IsFalse(KingdomLodgingRules.GraceRunOut(spent), "the window ran out early");
-				spent = KingdomLodgingRules.GraceAfterPass(spent);
+				Assert.IsFalse(KingdomBrinkRules.WindowSpent(BrinkKind.Roof, toldSixtyDaysLater, toldSixtyDaysLater + i * KingdomRules.TicksPerDay),
+					"the window ran out early");
 			}
-			Assert.IsTrue(KingdomLodgingRules.GraceRunOut(spent), "the window never ran out");
+			Assert.IsTrue(KingdomBrinkRules.WindowSpent(BrinkKind.Roof, toldSixtyDaysLater,
+				toldSixtyDaysLater + KingdomLodgingRules.GraceDays * KingdomRules.TicksPerDay), "the window never ran out");
 		}
 
 		[Test]

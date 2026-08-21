@@ -58,8 +58,9 @@ namespace ThousandAndFirst
 	/// season of quarrelling is a season (Addendum 8 clause 1). What stops a realm coming apart
 	/// because nobody was playing is not a ceiling on the calendar but the brink &mdash; dissent
 	/// stops accruing at the breaking point and the founder still gets
-	/// <see cref="SecessionWindowPasses"/> attended passes, so an absence of ninety days and one
-	/// of a thousand arrive at exactly the same realm.
+	/// <see cref="SecessionWindowDays"/> world-days from the day the word reaches them, so an
+	/// absence of ninety days and one of a thousand arrive at exactly the same realm, warned in
+	/// exactly the same words.
 	/// Engine-free, so the whole ladder is tabled rather than discovered in the field.
 	/// </para>
 	/// </summary>
@@ -146,17 +147,19 @@ namespace ThousandAndFirst
 		public const int RiteCooldownDays = KingdomBrinkRules.CohabitationDaysPerAttendedPass;
 
 		/// <summary>
-		/// Attended passes the realm has between reaching the breaking point and the unhappier
-		/// city walking. Three, from <see cref="KingdomBrinkRules.CityBrinkWindow"/>.
+		/// World-days the realm has between the founder being told it stands at the breaking point
+		/// and the unhappier city walking. Nine, from
+		/// <see cref="KingdomBrinkRules.CityBrinkWindowDays"/>.
 		/// <para>
 		/// This window did not exist. Secession fired on the same pass dissent reached
 		/// <see cref="DissentBreaking"/>, which was survivable only because dissent could not
-		/// accrue faster than the absence cap allowed. Now that it accrues in real time, the
-		/// window is what keeps Addendum 8 clause 3 true: however long the absence, the moment of
-		/// realisation carries the last arrestable window the design promised.
+		/// accrue faster than the absence cap allowed. It now stops at the brink, the word is
+		/// pushed to the founder wherever they are, and nine days of world time later the city
+		/// goes &mdash; whether or not they came back to watch (Addendum 10(a)). What still cannot
+		/// happen is a realm losing a city it was never warned about.
 		/// </para>
 		/// </summary>
-		public const int SecessionWindowPasses = KingdomBrinkRules.CityBrinkWindow;
+		public const int SecessionWindowDays = KingdomBrinkRules.CityBrinkWindowDays;
 
 		/// <summary>Dissent eased by holding a shared meal while the cities are at odds. Smaller
 		/// than a rite because the meal is not asked to be a policy — it is a good evening.</summary>
@@ -381,7 +384,7 @@ namespace ThousandAndFirst
 		/// stand each other go on not standing each other whether or not the founder is watching.
 		/// What bounds the outcome is no longer a forgiveness ceiling on the clock but
 		/// <see cref="DissentBreaking"/> itself &mdash; the value clamps there, records a brink,
-		/// and the unhappier city then waits <see cref="SecessionWindowPasses"/> ATTENDED passes
+		/// and the unhappier city then waits <see cref="SecessionWindowDays"/> WORLD-DAYS
 		/// for the founder to do something about it. Uncapping this without that window would have
 		/// made an absence lose a city faster than presence does, which is clause 3 exactly
 		/// inverted; the two moved together, in one package, which is why this doc no longer
@@ -727,20 +730,24 @@ namespace ThousandAndFirst
 		/// <param name="KeptName">The city the realm would keep.</param>
 		/// <param name="Days">Whole days the realm has stood at the breaking point, from
 		/// <c>KingdomBrinkRules.DaysStood</c>.</param>
-		/// <param name="PassesLeft">Attended passes left, from
-		/// <c>KingdomBrinkRules.PassesLeft</c>.</param>
-		public static string SecessionBrinkSpeech(string LeaverName, string KeptName, int Days, int PassesLeft)
+		/// <param name="DaysLeft">World-days left before the city goes, from
+		/// <c>KingdomBrinkRules.DaysLeft</c>. Days rather than visits: the window runs on the
+		/// world's clock now, so staying away does not hold it open.</param>
+		public static string SecessionBrinkSpeech(string LeaverName, string KeptName, int Days, int DaysLeft)
 		{
 			string leaver = string.IsNullOrEmpty(LeaverName) ? "the other city" : ("{{C|" + LeaverName + "}}");
 			string kept = string.IsNullOrEmpty(KeptName) ? "this one" : ("{{C|" + KeptName + "}}");
 			string stood = (Days <= 0)
 				? "tonight"
 				: ((Days == 1) ? "since yesterday" : ("for " + Days + " days"));
-			string window = (PassesLeft <= 1)
-				? "One more visit and it is done."
-				: (PassesLeft + " more visits and it is done.");
+			string window = (DaysLeft <= 0)
+				? "There is no more time in it."
+				: ((DaysLeft == 1)
+					? "One day, and it is done."
+					: (DaysLeft + " days, and it is done."));
 			return "{{R|" + leaver + " has been drawing up its own charter " + stood + ", and it does not name "
-				+ kept + ". " + window + "}} {{K|(Charter: how your cities hold each other)}}";
+				+ kept + ". Pour the rite, or settle what the two of them believe, and it holds. " + window
+				+ "}} {{K|(Charter: how your cities hold each other)}}";
 		}
 
 		/// <summary>

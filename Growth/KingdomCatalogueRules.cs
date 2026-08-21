@@ -490,8 +490,10 @@ namespace ThousandAndFirst
 		/// <param name="Carries">One design's parsed list, from <see cref="TryParseTally"/>. Null
 		/// or empty folds in nothing but still counts as a work &mdash; a palisade carries no
 		/// support and is still something standing.</param>
-		/// <param name="EffectivenessPercent">What this work is running at. A design that asks for
-		/// no crew is handed 100 by its caller, because a cistern holds water whoever is home.</param>
+		/// <param name="EffectivenessPercent">What this work is running at, from its caller's own
+		/// reading of crew and condition (<c>KingdomWearRules.WorkEffectiveness</c>). A design that
+		/// asks for no crew is handed its CONDITION rather than a flat 100 &mdash; a cistern holds
+		/// water whoever is home, and a holed cistern holds less of it (Addendum 10(b)).</param>
 		public static SupportTally FoldWork(SupportTally Running, List<KindAmount> Carries, int EffectivenessPercent)
 		{
 			SupportTally folded = Running;

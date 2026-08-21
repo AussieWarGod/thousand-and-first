@@ -1421,6 +1421,104 @@ namespace ThousandAndFirst.Tests
 			Assert.IsNull(KingdomMaterialRules.YardStallLine(KingdomMaterialRules.YardStall.Working, KingdomYard.Sawyer, "Ekuemekiyye"));
 		}
 
+		// ==================================================================================
+		// The stages of ruin (Addendum 10(c)): a worn work must READ as a ruin, in its name and
+		// in its description, and a mending must walk both back down the same ladder.
+		// ==================================================================================
+
+		[Test]
+		public void ConditionWordAndAdjectiveAndLookAllTurnOnExactlyTheSameThresholds()
+		{
+			// Three surfaces, one ladder. The report's word, the adjective the work wears in its
+			// own name, and the sentence somebody reads when they stop and look at it must never
+			// be able to describe different buildings.
+			for (int wear = 0; wear <= KingdomMaterialRules.MaxWearPercent; wear++)
+			{
+				bool sound = wear <= 0;
+				Assert.AreEqual(sound, KingdomMaterialRules.ConditionAdjective(wear) == null,
+					"the name and the word disagreed about whether wear " + wear + " is sound");
+				Assert.AreEqual(sound, KingdomMaterialRules.ConditionLook(wear) == null,
+					"the look and the word disagreed about whether wear " + wear + " is sound");
+				if (sound)
+				{
+					continue;
+				}
+				bool deepest = wear >= KingdomMaterialRules.HalfWreckedWearPercent;
+				Assert.AreEqual(deepest, KingdomMaterialRules.ConditionWord(wear) == "half-wrecked");
+				Assert.AreEqual(deepest, KingdomMaterialRules.ConditionAdjective(wear) == "ruined",
+					"the deepest stage of the name and of the word parted company at wear " + wear);
+			}
+		}
+
+		[TestCase(0, null)]
+		[TestCase(1, "battered")]
+		[TestCase(KingdomMaterialRules.BadlyUsedWearPercent - 1, "battered")]
+		[TestCase(KingdomMaterialRules.BadlyUsedWearPercent, "half-ruined")]
+		[TestCase(KingdomMaterialRules.HalfWreckedWearPercent - 1, "half-ruined")]
+		[TestCase(KingdomMaterialRules.HalfWreckedWearPercent, "ruined")]
+		[TestCase(KingdomMaterialRules.MaxWearPercent, "ruined")]
+		public void ConditionAdjective_PutsTheStageOfRuinIntoTheWorksOwnName(int wear, string expected)
+		{
+			Assert.AreEqual(expected, KingdomMaterialRules.ConditionAdjective(wear));
+		}
+
+		[Test]
+		public void ConditionAdjective_ReadsAsARuinAndNotAsAStatLineAtTheDeepestStage()
+		{
+			// The ruling's presentation half: a collapsed settlement's plots must read as ruins,
+			// not as pristine buildings with quiet arithmetic against them. At the wear ceiling
+			// the work is called what it is.
+			Assert.AreEqual("ruined", KingdomMaterialRules.ConditionAdjective(KingdomMaterialRules.MaxWearPercent));
+			Assert.AreEqual("ruined", KingdomMaterialRules.ConditionAdjective(KingdomMaterialRules.MaxWearPercent + 500));
+			Assert.IsNull(KingdomMaterialRules.ConditionAdjective(-20), "a sound work wore an adjective");
+		}
+
+		[Test]
+		public void ConditionLook_DescribesEachStageDifferentlyAndSaysNothingAboutASoundWork()
+		{
+			string battered = KingdomMaterialRules.ConditionLook(1);
+			string half = KingdomMaterialRules.ConditionLook(KingdomMaterialRules.BadlyUsedWearPercent);
+			string ruined = KingdomMaterialRules.ConditionLook(KingdomMaterialRules.HalfWreckedWearPercent);
+			Assert.IsNull(KingdomMaterialRules.ConditionLook(0));
+			Assert.AreNotEqual(battered, half);
+			Assert.AreNotEqual(half, ruined);
+			Assert.IsNotEmpty(ruined);
+		}
+
+		[Test]
+		public void MendingWalksTheNameAndTheLookBackDownExactlyTheStagesTheRuinWalkedThemUp()
+		{
+			// The stage is a function of the wear and of NOTHING else -- no history, no memory of
+			// having been worse. So the ladder read going up and read coming down is the same
+			// ladder, and a work mended to nothing carries no adjective and no ruin sentence at
+			// all: it is simply itself again.
+			List<string> up = new List<string>();
+			for (int wear = 0; wear <= KingdomMaterialRules.MaxWearPercent; wear++)
+			{
+				up.Add(KingdomMaterialRules.ConditionAdjective(wear) + "|" + KingdomMaterialRules.ConditionLook(wear));
+			}
+			for (int wear = KingdomMaterialRules.MaxWearPercent; wear >= 0; wear--)
+			{
+				Assert.AreEqual(up[wear],
+					KingdomMaterialRules.ConditionAdjective(wear) + "|" + KingdomMaterialRules.ConditionLook(wear),
+					"the ladder read differently coming down than it did going up at wear " + wear);
+			}
+			Assert.IsNull(KingdomMaterialRules.ConditionAdjective(0), "a mended work kept its ruin in its name");
+			Assert.IsNull(KingdomMaterialRules.ConditionLook(0), "a mended work kept its ruin in its description");
+		}
+
+		[Test]
+		public void EveryStageOfRuinIsStillAStandingMendableWork()
+		{
+			// The protection law, read off the presentation: the deepest thing a work can be
+			// called is still running, still costs a finite mending, and is never gone.
+			Assert.AreEqual("ruined", KingdomMaterialRules.ConditionAdjective(KingdomMaterialRules.MaxWearPercent));
+			Assert.Greater(KingdomMaterialRules.ConditionPercent(KingdomMaterialRules.MaxWearPercent), 0);
+			Assert.Less(KingdomMaterialRules.BadlyUsedWearPercent, KingdomMaterialRules.HalfWreckedWearPercent);
+			Assert.Less(KingdomMaterialRules.HalfWreckedWearPercent, KingdomMaterialRules.MaxWearPercent,
+				"the deepest stage of ruin is the ceiling itself, so there is nothing above it to read");
+		}
+
 	}
 }
 #endif

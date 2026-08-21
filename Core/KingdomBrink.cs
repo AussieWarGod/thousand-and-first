@@ -4,9 +4,9 @@ using XRL.World;
 namespace ThousandAndFirst
 {
 	/// <summary>
-	/// One brink as it stands right now: whether there is one at all, when it was reached, how
-	/// much of its window has been spent, and what the founder would have to act on. Immutable,
-	/// because a half-read brink two callers can disagree about is a settler who leaves twice.
+	/// One brink as it stands right now: whether there is one at all, when it was reached, when
+	/// the founder was warned of it, and what they would have to act on. Immutable, because a
+	/// half-read brink two callers can disagree about is a settler who leaves twice.
 	/// </summary>
 	public readonly struct BrinkRecord
 	{
@@ -18,9 +18,13 @@ namespace ThousandAndFirst
 		/// founder noticed it. Zero for a brink recorded before it could be dated.</summary>
 		public readonly long ReachedTick;
 
-		/// <summary>Attended passes of the window already spent, or
-		/// <see cref="KingdomBrinkRules.Unannounced"/> when nobody has been told yet.</summary>
-		public readonly int PassesSpent;
+		/// <summary>
+		/// The tick the word went out. <see cref="KingdomBrinkRules.Unwarned"/> until it has, and
+		/// the anchor of the whole window once it has: the founder's time runs from being told,
+		/// never from the crossing, so a brink reached deep inside an absence still hands them the
+		/// entire window on the day they hear about it.
+		/// </summary>
+		public readonly long WarnedTick;
 
 		/// <summary>What the founder would act on: the creed pulling at them, the other city.
 		/// Null when the kind carries no cause of its own.</summary>
@@ -31,25 +35,32 @@ namespace ThousandAndFirst
 		/// picked on the day. Zero for the kinds that have no channel.</summary>
 		public readonly int Channel;
 
-		public BrinkRecord(bool Stands, long ReachedTick, int PassesSpent, string Cause, int Channel)
+		public BrinkRecord(bool Stands, long ReachedTick, long WarnedTick, string Cause, int Channel)
 		{
 			this.Stands = Stands;
 			this.ReachedTick = Stands ? ReachedTick : 0L;
-			this.PassesSpent = Stands ? PassesSpent : 0;
+			this.WarnedTick = Stands ? WarnedTick : 0L;
 			this.Cause = Stands ? (string.IsNullOrEmpty(Cause) ? null : Cause) : null;
 			this.Channel = Stands ? Channel : 0;
+		}
+
+		/// <summary>Whether the founder has been told. A brink nobody has been told about can
+		/// never fire, however old it is.</summary>
+		public bool Warned
+		{
+			get { return Stands && KingdomBrinkRules.Warned(WarnedTick); }
 		}
 
 		/// <summary>No brink. What every settler and every realm carries nearly always.</summary>
 		public static BrinkRecord None
 		{
-			get { return new BrinkRecord(Stands: false, 0L, 0, null, 0); }
+			get { return new BrinkRecord(Stands: false, 0L, 0L, null, 0); }
 		}
 	}
 
 	/// <summary>
 	/// The engine-coupled shell for <see cref="KingdomBrinkRules"/>: where brinks are kept, how
-	/// they are announced, and how they are unsaid.
+	/// the word about them goes out, and how they are unsaid.
 	/// <para>
 	/// <b>Where the record lives.</b> A settler's brink lives on the settler, in the same
 	/// serialized property bag <c>KingdomShrinePull</c>, <c>KingdomSharedDays</c> and
@@ -59,36 +70,45 @@ namespace ThousandAndFirst
 	/// remember to carry them (<c>CLOCK-REWORK-CHANGE-MAP.md</c> &sect;4.3, the seat-swap trap).
 	/// The realm's own brink &mdash; the one about a city leaving &mdash; is realm state and must
 	/// stay off <c>KingdomSettlement</c>, so it lives in the game's generic already-serialized
-	/// counter store, exactly as <c>KingdomPlanMarker.PlanOrderCounterKey</c> and
+	/// state store, exactly as <c>KingdomPlanMarker.PlanOrderCounterKey</c> and
 	/// <c>KingdomReach</c>'s per-zone character do.
 	/// </para>
 	/// <para>
-	/// <b>Announce once, never nag, unsay on arrest.</b> The record IS the announce flag: a brink
-	/// whose window is <see cref="KingdomBrinkRules.Unannounced"/> speaks on the next attended
-	/// pass and never again, and a brink whose cause lifted is removed, which both unsays it and
+	/// <b>Warn once, never nag, unsay on arrest.</b> The warned tick IS the announce flag: a brink
+	/// at <see cref="KingdomBrinkRules.Unwarned"/> speaks on the next resolve of its owning pass
+	/// and never again, and a brink whose cause lifted is removed, which both unsays it and
 	/// re-arms it should the cause return.
+	/// </para>
+	/// <para>
+	/// <b>And then it runs on the world's clock.</b> Nothing here spends a pass. The window is
+	/// <c>WarnedTick</c> plus <c>KingdomBrinkRules.WindowDays</c> of world time, so it spends
+	/// whether the founder comes back to watch it or not &mdash; Addendum 10(a). What absence
+	/// cannot do is start one: an unwarned brink has no deadline, and every consumer checks
+	/// <see cref="KingdomBrinkRules.WindowSpent"/>, which refuses to fire on one.
 	/// </para>
 	/// </summary>
 	public static class KingdomBrink
 	{
-		// Stored window = spent + StoredWindowOffset, so that the property bag's own "absent reads
-		// as zero" means NO BRINK rather than "announced, and no pass has run since". One is the
-		// unannounced sentinel, two is announced-and-nothing-spent, and so on up. Without the
-		// offset a settler who had just been announced about and a settler nothing had ever
-		// happened to would be the same integer.
-		private const int StoredWindowOffset = 2;
-
 		/// <summary>Tick a settler's roof brink was reached at.</summary>
 		public const string RoofTickProperty = "KingdomBrinkRoofTick";
 
-		/// <summary>A settler's roof-brink window, offset (see the note on the offset).</summary>
-		public const string RoofWindowProperty = "KingdomBrinkRoofWindow";
+		/// <summary>Tick the founder was warned of a settler's roof brink, and the anchor of its
+		/// window. Zero until the word goes out.</summary>
+		public const string RoofWarnedProperty = "KingdomBrinkRoofWarned";
+
+		/// <summary>One when a roof brink stands over this settler at all. Kept apart from the
+		/// warned tick so that "recorded, and the word has not gone out yet" and "no brink" are
+		/// different states rather than the same zero.</summary>
+		public const string RoofStandingProperty = "KingdomBrinkRoofStanding";
 
 		/// <summary>Tick a settler's creed brink was reached at.</summary>
 		public const string CreedTickProperty = "KingdomBrinkCreedTick";
 
-		/// <summary>A settler's creed-brink window, offset.</summary>
-		public const string CreedWindowProperty = "KingdomBrinkCreedWindow";
+		/// <summary>Tick the founder was warned of a settler's creed brink.</summary>
+		public const string CreedWarnedProperty = "KingdomBrinkCreedWarned";
+
+		/// <summary>One when a creed brink stands over this settler at all.</summary>
+		public const string CreedStandingProperty = "KingdomBrinkCreedStanding";
 
 		/// <summary>The creed a settler's creed brink is toward.</summary>
 		public const string CreedTowardProperty = "KingdomBrinkCreedToward";
@@ -98,12 +118,17 @@ namespace ThousandAndFirst
 		public const string CreedChannelProperty = "KingdomBrinkCreedChannel";
 
 		/// <summary>
-		/// Key under which the realm's secession window lives in <c>XRLGame.IntGameState</c>. A
-		/// generic, already-serialized slot rather than a new field on <c>KingdomSystem</c>, for
-		/// the reason <c>KingdomPlanMarker</c> gives at its own: realm state that must not be
-		/// carried by a city has no business on the seat's reflected field layout.
+		/// Key under which the fact that the realm stands at the breaking point lives in
+		/// <c>XRLGame.IntGameState</c>. A generic, already-serialized slot rather than a new field
+		/// on <c>KingdomSystem</c>, for the reason <c>KingdomPlanMarker</c> gives at its own: realm
+		/// state that must not be carried by a city has no business on the seat's reflected field
+		/// layout.
 		/// </summary>
-		public const string CityWindowStateKey = "r_TAF_CityBrinkWindow";
+		public const string CityStandingStateKey = "r_TAF_CityBrinkStanding";
+
+		/// <summary>Key under which the tick the founder was warned of the secession lives, as a
+		/// string because a tick is a <c>long</c> and the int store is not.</summary>
+		public const string CityWarnedStateKey = "r_TAF_CityBrinkWarned";
 
 		// --- A settler's brink -------------------------------------------------------------
 
@@ -111,19 +136,14 @@ namespace ThousandAndFirst
 		/// settler and one nothing has ever happened to both read as no brink.</summary>
 		public static BrinkRecord Of(GameObject Subject, BrinkKind Kind)
 		{
-			if (Subject == null)
-			{
-				return BrinkRecord.None;
-			}
-			int stored = Subject.GetIntProperty(WindowPropertyFor(Kind));
-			if (stored == 0)
+			if (Subject == null || Subject.GetIntProperty(StandingPropertyFor(Kind)) == 0)
 			{
 				return BrinkRecord.None;
 			}
 			return new BrinkRecord(
 				Stands: true,
 				Subject.GetLongProperty(TickPropertyFor(Kind)),
-				stored - StoredWindowOffset,
+				Subject.GetLongProperty(WarnedPropertyFor(Kind)),
 				(Kind == BrinkKind.Creed) ? Subject.GetStringProperty(CreedTowardProperty) : null,
 				(Kind == BrinkKind.Creed) ? Subject.GetIntProperty(CreedChannelProperty) : 0);
 		}
@@ -131,7 +151,7 @@ namespace ThousandAndFirst
 		/// <summary>Whether anything of this kind is standing over this settler.</summary>
 		public static bool Stands(GameObject Subject, BrinkKind Kind)
 		{
-			return Subject != null && Subject.GetIntProperty(WindowPropertyFor(Kind)) != 0;
+			return Subject != null && Subject.GetIntProperty(StandingPropertyFor(Kind)) != 0;
 		}
 
 		/// <summary>
@@ -152,13 +172,31 @@ namespace ThousandAndFirst
 			{
 				return false;
 			}
+			Subject.SetIntProperty(StandingPropertyFor(Kind), 1);
 			Subject.SetLongProperty(TickPropertyFor(Kind), (ReachedTick > 0L) ? ReachedTick : 0L);
-			Subject.SetIntProperty(WindowPropertyFor(Kind), KingdomBrinkRules.Unannounced + StoredWindowOffset);
+			Subject.SetLongProperty(WarnedPropertyFor(Kind), KingdomBrinkRules.Unwarned);
 			if (Kind == BrinkKind.Creed)
 			{
 				Subject.SetStringProperty(CreedTowardProperty, string.IsNullOrEmpty(Cause) ? null : Cause);
 				Subject.SetIntProperty(CreedChannelProperty, Channel);
 			}
+			return true;
+		}
+
+		/// <summary>
+		/// Stamps the tick the word went out, which starts the window. Idempotent: a brink already
+		/// warned keeps its original anchor, so a second pass cannot buy the founder more time by
+		/// re-warning them and cannot take any away either.
+		/// </summary>
+		/// <returns>True when this call is the one that warned, which is the caller's signal to
+		/// actually say it.</returns>
+		public static bool MarkWarned(GameObject Subject, BrinkKind Kind, long NowTick)
+		{
+			if (!Stands(Subject, Kind) || KingdomBrinkRules.Warned(Subject.GetLongProperty(WarnedPropertyFor(Kind))))
+			{
+				return false;
+			}
+			Subject.SetLongProperty(WarnedPropertyFor(Kind), (NowTick > 0L) ? NowTick : 1L);
 			return true;
 		}
 
@@ -176,8 +214,9 @@ namespace ThousandAndFirst
 			{
 				return false;
 			}
-			Subject.SetIntProperty(WindowPropertyFor(Kind), 0);
+			Subject.SetIntProperty(StandingPropertyFor(Kind), 0);
 			Subject.SetLongProperty(TickPropertyFor(Kind), 0L);
+			Subject.SetLongProperty(WarnedPropertyFor(Kind), KingdomBrinkRules.Unwarned);
 			if (Kind == BrinkKind.Creed)
 			{
 				Subject.SetStringProperty(CreedTowardProperty, null);
@@ -186,23 +225,13 @@ namespace ThousandAndFirst
 			return true;
 		}
 
-		/// <summary>
-		/// Spends one attended pass of this settler's window and reports where it now stands.
-		/// Called from the owning consumer's attended pass and from nowhere else, which is the
-		/// whole of "absence never spends a window".
-		/// </summary>
-		/// <returns>The record after the pass. <c>Stands</c> is false when there was no brink to
-		/// spend, and the caller should do nothing.</returns>
-		public static BrinkRecord SpendPass(GameObject Subject, BrinkKind Kind)
+		/// <summary>Whether this settler's window has run out with the cause still standing, at
+		/// the world's clock rather than at anybody's attendance. False for a brink the founder
+		/// was never warned of.</summary>
+		public static bool WindowSpent(GameObject Subject, BrinkKind Kind, long NowTick)
 		{
-			BrinkRecord before = Of(Subject, Kind);
-			if (!before.Stands)
-			{
-				return BrinkRecord.None;
-			}
-			int spent = KingdomBrinkRules.AfterAttendedPass(before.PassesSpent);
-			Subject.SetIntProperty(WindowPropertyFor(Kind), spent + StoredWindowOffset);
-			return new BrinkRecord(Stands: true, before.ReachedTick, spent, before.Cause, before.Channel);
+			BrinkRecord brink = Of(Subject, Kind);
+			return brink.Stands && KingdomBrinkRules.WindowSpent(Kind, brink.WarnedTick, NowTick);
 		}
 
 		// --- The realm's brink -------------------------------------------------------------
@@ -215,29 +244,24 @@ namespace ThousandAndFirst
 		/// </summary>
 		public static BrinkRecord OfCity(KingdomSystem System)
 		{
-			if (System == null || The.Game == null)
+			if (System == null || The.Game == null || The.Game.GetIntGameState(CityStandingStateKey) == 0)
 			{
 				return BrinkRecord.None;
 			}
-			int stored = The.Game.GetIntGameState(CityWindowStateKey);
-			if (stored == 0)
-			{
-				return BrinkRecord.None;
-			}
-			return new BrinkRecord(Stands: true, System.LastDissentTick, stored - StoredWindowOffset, null, 0);
+			return new BrinkRecord(Stands: true, System.LastDissentTick, CityWarnedTick(), null, 0);
 		}
 
 		/// <summary>Whether the realm stands at the breaking point with its window still
 		/// running.</summary>
 		public static bool CityStands()
 		{
-			return The.Game != null && The.Game.GetIntGameState(CityWindowStateKey) != 0;
+			return The.Game != null && The.Game.GetIntGameState(CityStandingStateKey) != 0;
 		}
 
 		/// <summary>
 		/// Records that the realm has reached the breaking point, freezing
 		/// <c>KingdomSystem.LastDissentTick</c> at the day the crossing actually happened so the
-		/// announcement can quote it. Idempotent, for the reason the settler form is.
+		/// warning can quote it. Idempotent, for the reason the settler form is.
 		/// </summary>
 		public static bool RecordCity(KingdomSystem System, long ReachedTick)
 		{
@@ -249,7 +273,20 @@ namespace ThousandAndFirst
 			{
 				System.LastDissentTick = ReachedTick;
 			}
-			The.Game.SetIntGameState(CityWindowStateKey, KingdomBrinkRules.Unannounced + StoredWindowOffset);
+			The.Game.SetIntGameState(CityStandingStateKey, 1);
+			The.Game.SetStringGameState(CityWarnedStateKey, "");
+			return true;
+		}
+
+		/// <summary>Stamps the tick the realm's warning went out. Idempotent, for the reason
+		/// <see cref="MarkWarned"/> is.</summary>
+		public static bool MarkCityWarned(long NowTick)
+		{
+			if (!CityStands() || KingdomBrinkRules.Warned(CityWarnedTick()))
+			{
+				return false;
+			}
+			The.Game.SetStringGameState(CityWarnedStateKey, ((NowTick > 0L) ? NowTick : 1L).ToString());
 			return true;
 		}
 
@@ -265,7 +302,8 @@ namespace ThousandAndFirst
 			{
 				return false;
 			}
-			The.Game.SetIntGameState(CityWindowStateKey, 0);
+			The.Game.SetIntGameState(CityStandingStateKey, 0);
+			The.Game.SetStringGameState(CityWarnedStateKey, "");
 			if (System != null)
 			{
 				System.LastDissentTick = NowTick;
@@ -273,67 +311,77 @@ namespace ThousandAndFirst
 			return true;
 		}
 
-		/// <summary>Spends one attended pass of the realm's window.</summary>
-		public static BrinkRecord SpendCityPass(KingdomSystem System)
+		/// <summary>Whether the realm's window has run out with the quarrel still standing.</summary>
+		public static bool CityWindowSpent(long NowTick)
 		{
-			BrinkRecord before = OfCity(System);
-			if (!before.Stands)
-			{
-				return BrinkRecord.None;
-			}
-			int spent = KingdomBrinkRules.AfterAttendedPass(before.PassesSpent);
-			The.Game.SetIntGameState(CityWindowStateKey, spent + StoredWindowOffset);
-			return new BrinkRecord(Stands: true, before.ReachedTick, spent, before.Cause, before.Channel);
+			return CityStands() && KingdomBrinkRules.WindowSpent(BrinkKind.City, CityWarnedTick(), NowTick);
 		}
 
 		// --- Saying it, and unsaying it ----------------------------------------------------
 
 		/// <summary>
-		/// The announcement, said once and in both places the founder looks: the ledger, where it
-		/// is waiting when they come home, and the chronicle, which dates it. Rule 3.
+		/// The warning, pushed once through <see cref="KingdomWord"/>: to the founder wherever
+		/// they stand, into the ledger's brink lane for the report they read at the seat, and into
+		/// the chronicle which dates it. Rule 3, coaching clause and all.
 		/// </summary>
 		/// <param name="System">The realm.</param>
 		/// <param name="Kind">Which brink.</param>
 		/// <param name="Subject">The settler by name, or the city by name.</param>
 		/// <param name="Cause">What the founder would act on.</param>
-		/// <param name="Record">The brink as it now stands, for its reached tick and window.</param>
+		/// <param name="Record">The brink as it now stands, for its reached and warned ticks.</param>
 		/// <param name="NowTick">Now, for the honest elapsed.</param>
-		public static void Announce(KingdomSystem System, BrinkKind Kind, string Subject, string Cause, BrinkRecord Record, long NowTick)
+		/// <param name="Here">Whether the founder is standing in the ground this is about.</param>
+		/// <param name="From">The city the word comes out of, when they are not.</param>
+		/// <param name="Spoken">A consumer's own louder wording for the pushed line, or null to
+		/// push the ledger note itself.</param>
+		public static void Announce(KingdomSystem System, BrinkKind Kind, string Subject, string Cause, BrinkRecord Record, long NowTick, bool Here, string From, string Spoken)
 		{
 			if (System == null)
 			{
 				return;
 			}
 			int days = KingdomBrinkRules.DaysStood(Record.ReachedTick, NowTick);
-			System.Ledger.NoteBrink(KingdomBrinkRules.AnnounceNote(Kind, Subject, Cause, days, KingdomBrinkRules.PassesLeft(Kind, Record.PassesSpent)));
-			KingdomChronicle.Record(System, KingdomBrinkRules.AnnounceTelling(Kind, Subject, Cause, days));
-			KingdomLog.Log("brink: " + Kind + " " + (Subject ?? "-") + " cause=" + (Cause ?? "-") + " days=" + days);
+			int left = KingdomBrinkRules.DaysLeft(Kind, Record.WarnedTick, NowTick);
+			KingdomWord.Warn(System, From, Here,
+				KingdomBrinkRules.AnnounceNote(Kind, Subject, Cause, days, left),
+				KingdomBrinkRules.AnnounceTelling(Kind, Subject, Cause, days),
+				Spoken);
+			KingdomLog.Log("brink: " + Kind + " " + (Subject ?? "-") + " cause=" + (Cause ?? "-")
+				+ " days=" + days + " left=" + left);
 		}
 
 		/// <summary>
-		/// The unsaying, when the cause went before the window did. Ledger only: the chronicle
-		/// records what happened, and a thing that stopped happening is news for the homecoming
-		/// report rather than an entry in the book.
+		/// The unsaying, when the cause went before the window did. Pushed the same way the
+		/// warning was, and out of the chronicle: the book records what happened, and a thing that
+		/// stopped happening is news for the report rather than an entry in it.
 		/// </summary>
-		public static void Unsay(KingdomSystem System, BrinkKind Kind, string Subject)
+		public static void Unsay(KingdomSystem System, BrinkKind Kind, string Subject, bool Here, string From)
 		{
-			if (System == null)
-			{
-				return;
-			}
-			System.Ledger.NoteBrinkLifted(KingdomBrinkRules.LiftedNote(Kind, Subject));
+			KingdomWord.Unsay(System, From, Here, KingdomBrinkRules.LiftedNote(Kind, Subject));
 		}
 
 		// --- Which property ----------------------------------------------------------------
+
+		private static long CityWarnedTick()
+		{
+			string stored = (The.Game == null) ? null : The.Game.GetStringGameState(CityWarnedStateKey, "");
+			long tick;
+			return (!string.IsNullOrEmpty(stored) && long.TryParse(stored, out tick)) ? tick : KingdomBrinkRules.Unwarned;
+		}
 
 		private static string TickPropertyFor(BrinkKind Kind)
 		{
 			return (Kind == BrinkKind.Creed) ? CreedTickProperty : RoofTickProperty;
 		}
 
-		private static string WindowPropertyFor(BrinkKind Kind)
+		private static string WarnedPropertyFor(BrinkKind Kind)
 		{
-			return (Kind == BrinkKind.Creed) ? CreedWindowProperty : RoofWindowProperty;
+			return (Kind == BrinkKind.Creed) ? CreedWarnedProperty : RoofWarnedProperty;
+		}
+
+		private static string StandingPropertyFor(BrinkKind Kind)
+		{
+			return (Kind == BrinkKind.Creed) ? CreedStandingProperty : RoofStandingProperty;
 		}
 	}
 }

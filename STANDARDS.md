@@ -138,19 +138,26 @@ thirst-ladder checklist:
    absence was the wrong cut. Nothing anywhere is forgiven on a clock: there is no absence cap
    in this codebase, because what bounds an absence is subsidence toward the level the works
    honestly carry, floored at Camp's own equilibrium. A counter that must not run while nobody
-   is home says so with a labour term or with a window only attended passes spend, never by
-   refusing to look at the calendar. Wear itself is not one clock: `KingdomRoads` wears the
+   is home says so with a labour term, never by refusing to look at the calendar. A brink window
+   is neither kind: it is anchored at the founder's warning and spent by the world's own clock.
+   Wear itself is not one clock: `KingdomRoads` wears the
    ground on the full elapsed day (`KingdomRules.ElapsedDays`, uncapped) because a settlement's
    own errands are walked whether or not the founder is there to watch them, gated by
    population rather than presence, while `KingdomWearRules` damage to a built work answers
    only to an event already in hand — a raid, a hard-run milestone, a temperamental tick — and
-   never reads a clock at all. Grace clocks stay the one kind that is genuinely attended-only.
-4. A **bounded consequence per awareness**, with an **instant and total recovery path** — and
-   an irreversible one waits at the **brink**: it records its subject, cause and crossing tick,
-   stops accruing there, is announced once with honest elapsed time, and spends its arrestable
-   window only in attended passes. Ten days away and a thousand arrive at the same place, and
-   both hand the founder the same width of door. Removing the cause lifts the brink and unsays
-   it.
+   never reads a clock at all.
+4. A **bounded consequence**, with an **instant and total recovery path** — and an irreversible
+   one waits at the **brink**: it records its subject, cause and crossing tick, stops accruing
+   there, and **pushes** the word to the founder wherever they are — once, honestly dated, and
+   naming the ARREST rather than only the doom (`KingdomWord`). From that delivery its window
+   runs in **world-days** (`KingdomBrinkRules.WindowDays`; roof 6, creed 18, city 9, each its old
+   attended-pass rope times `CohabitationDaysPerAttendedPass`), and when the window is spent with
+   the cause still standing the consequence **fires whether or not the founder was there** —
+   dated to the tick it happened, not to the homecoming that found it (Addendum 10(a)). Ten days
+   away and a thousand still arrive at the same place, because nothing accrues past a brink, and
+   both hand the founder the same width of door. Removing the cause lifts the brink and unsays it
+   at any point. **Presence is not a shield; ignorance is** — an unwarned brink has no deadline
+   at all, so nothing irreversible ever fires unwarned.
 5. **Permanent story residue** — state changes can leave chronicle lines, scars, artifacts.
 6. **Pure-testable rules** — the math lives in engine-free classes with `[TestCase]` tables.
 7. **Interlock** — the system consumes or feeds at least one other system's resource.
@@ -226,7 +233,9 @@ binding on every economic system:
   standings). The two sanctioned exceptions are named rather than implied: **crops ripen on
   elapsed ticks**, because nature is a worker and waiting is what a field does, and **wear
   comes from events and from hard running**, never from the calendar — a work standing idle is
-  as sound in a year as it is today.
+  as sound in a year as it is today. What an already-damaged work goes on LOSING is the one
+  rider on that: a holed store's contents run out on world days regardless. The damage is still
+  an event; only its consequence is a clock, and mending ends the consequence outright.
 - **Ratchets gate on durable things.** Growth stages gate on capacity (infrastructure that
   must be built) rather than current stock (which can be lent and withdrawn).
 - **Failure has a floor.** Decay stops at a loyal core and subsidence stops at Camp; the

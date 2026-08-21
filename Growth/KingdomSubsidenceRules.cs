@@ -442,14 +442,51 @@ namespace ThousandAndFirst
 		// 5. Ruin. Damage, never deletion (STANDARDS 7).
 		// ==================================================================================
 
-		/// <summary>How many standing works one lost rung may leave the worse for it. Two, the
-		/// same figure a raid that got past the wall is allowed
-		/// (<c>KingdomWearRules.MaxWorksDamagedPerRaid</c>): a settlement settling back is not a
-		/// bombardment, and the works that go are the ones nobody was left to keep.</summary>
-		public const int RuinedWorksPerBreakpoint = 2;
+		/// <summary>
+		/// Chance one standing work is among those the WIDEST rung there is ruins &mdash; a City
+		/// ceasing to be a city. Every shallower rung reaches proportionally less of the
+		/// settlement (<see cref="RuinChanceFor"/>).
+		/// <para>
+		/// This replaced a flat allowance of two works a rung, which was the whole of Addendum
+		/// 10(c)'s first complaint: a City falling all the way to Camp left eight works scuffed
+		/// out of however many dozen were standing, and the rest pristine. "A place that has gone
+		/// from city back to a few tents should have ruins on the plots that were previously
+		/// buildings" is a statement about MOST of the plots, so the allowance had to stop being
+		/// a count at all.
+		/// </para>
+		/// </summary>
+		public const int RuinChancePercent = 50;
 
-		/// <summary>Chance one candidate work is among the ones a lost rung ruins.</summary>
-		public const int RuinChancePercent = 40;
+		/// <summary>
+		/// Chance one standing work is among those THIS lost rung ruins: the rung's own scale,
+		/// out of the scales there are. A City rung reaches half the settlement, a Steading rung
+		/// a fifth of it, and the ladder in between is the same "the rung's ordinal plus one"
+		/// shape <see cref="SettlersPerStep"/> already sheds people by.
+		/// <para>
+		/// <b>This is the reach rule</b> (Addendum 10(c)): each lost rung reaches the works that
+		/// rung's scale supported, so a one-rung slide scuffs a corner of the settlement and a
+		/// City falling all the way asks every standing work four separate times, at four
+		/// narrowing chances. Nothing here bounds how MANY works a rung takes &mdash; the reach
+		/// is a chance asked of every work independently, not a quota filled in survey order, so
+		/// the field of ruins is a pure function of the draws and does not depend on which work
+		/// happened to be raised first.
+		/// </para>
+		/// </summary>
+		/// <param name="From">The rung being lost &mdash; what the settlement WAS. Out-of-range
+		/// values clamp to the ladder rather than faulting.</param>
+		public static int RuinChanceFor(GrowthStage From)
+		{
+			int index = (int)From;
+			if (index < 0)
+			{
+				index = 0;
+			}
+			if (index > (int)GrowthStage.City)
+			{
+				index = (int)GrowthStage.City;
+			}
+			return RuinChancePercent * (index + 1) / ((int)GrowthStage.City + 1);
+		}
 
 		/// <summary>
 		/// Wear one lost rung adds to a work it takes: the complement of what
@@ -569,16 +606,26 @@ namespace ThousandAndFirst
 			return true;
 		}
 
-		/// <summary>Whether one candidate work is among those this lost rung ruins. False (never
-		/// faulting) for a malformed settlement id, which ruins nothing and is the safe answer.
+		/// <summary>
+		/// Whether one standing work is among those this lost rung ruins. False (never faulting)
+		/// for a malformed settlement id, which ruins nothing and is the safe answer.
+		/// <para>
+		/// <b>The draw did not move when the reach did.</b> The key is the same settlement, work,
+		/// channel and breakpoint ordinal it always was &mdash; what changed in Addendum 10(c) is
+		/// only how much of the ladder answers yes (<see cref="RuinChanceFor"/>). So a wider rung
+		/// ruins a strict SUPERSET of what a narrower rung would have ruined out of the same
+		/// works, and a save whose collapse has already been chronicled draws exactly the numbers
+		/// it drew before.
+		/// </para>
 		/// </summary>
 		/// <param name="SettlementId">The settlement's kernel id.</param>
 		/// <param name="WorkId">The work's persistent object id.</param>
 		/// <param name="Ordinal">The breakpoint's own ordinal, so every rung asks fresh.</param>
-		public static bool RollRuin(string SettlementId, string WorkId, ulong Ordinal)
+		/// <param name="From">The rung being lost, which sets how far it reaches.</param>
+		public static bool RollRuin(string SettlementId, string WorkId, ulong Ordinal, GrowthStage From)
 		{
 			int value;
-			return TryDraw(SettlementId, WorkId, SubsidenceChannel.Ruin, Ordinal, out value) && value < RuinChancePercent;
+			return TryDraw(SettlementId, WorkId, SubsidenceChannel.Ruin, Ordinal, out value) && value < RuinChanceFor(From);
 		}
 
 		/// <summary>How hard this rung's fall was for one work, as the wear it adds. Zero when the
@@ -733,11 +780,69 @@ namespace ThousandAndFirst
 			return who + " went from " + Name + " over the same days, " + Cause;
 		}
 
+		// --- The ruins of one rung, told the same way --------------------------------------
+		//
+		// Addendum 10(c) broadened the DAMAGE and must not broaden the TELLING with it: a rung
+		// that leaves eleven works the worse for it is eleven real ruins and two chronicle
+		// entries. So the ruins of a rung are sampled exactly as its departures are - a couple
+		// named, everybody else carried by one line that counts them and names how bad the worst
+		// of them got. Nobody vanishes from the count; what they lose is an entry each.
+
+		/// <summary>Ruined works of one rung that get a chronicle entry to themselves. One: a
+		/// rung already spends an entry on itself, and the sentence that matters after it is how
+		/// many went and how far, not which shed was third.</summary>
+		public const int NamedRuinsPerBreakpoint = 1;
+
+		/// <summary>Whether the <paramref name="Index"/>-th work this rung ruined is chronicled
+		/// by name. The first ones, in the order the pass found them.</summary>
+		/// <param name="Index">Which ruined work, from zero.</param>
+		public static bool TellsRuin(int Index)
+		{
+			return Index >= 0 && Index < NamedRuinsPerBreakpoint;
+		}
+
+		/// <summary>The line one named ruined work gets, in the ledger and the register alike.
+		/// </summary>
+		/// <param name="WorkName">The work, as the founder refers to it.</param>
+		/// <param name="Name">The settlement's display name.</param>
+		public static string RuinedWorkLine(string WorkName, string Name)
+		{
+			string work = string.IsNullOrEmpty(WorkName) ? "a work" : WorkName;
+			return work + " fell into disrepair as " + Name + " settled back, with nobody left who kept it";
+		}
+
+		/// <summary>
+		/// The one line carrying every work of this rung the sample did not name. Null when the
+		/// sample named them all, which is the caller's signal to say nothing.
+		/// </summary>
+		/// <param name="Name">The settlement's display name.</param>
+		/// <param name="Ruined">Works this rung actually left the worse for it.</param>
+		/// <param name="Named">How many of those were chronicled by name.</param>
+		/// <param name="DeepestWear">The worst wear any of them was left standing at, for
+		/// <c>KingdomMaterialRules.ConditionWord</c> to put a stage on.</param>
+		public static string RuinSummary(string Name, int Ruined, int Named, int DeepestWear)
+		{
+			int unnamed = Ruined - ((Named > 0) ? Named : 0);
+			if (unnamed <= 0)
+			{
+				return null;
+			}
+			string how = (unnamed == 1) ? "one more work" : (unnamed + " more works");
+			return how + " at " + Name + " went the same way over those days, the worst of them "
+				+ KingdomMaterialRules.ConditionWord(DeepestWear);
+		}
+
 		/// <summary>
 		/// How many chronicle entries one slide writes, so a test can hold the budget rather than
 		/// trusting the arithmetic to stay small. Named departures, the summary line if there is
-		/// one, one entry per rung, and up to
-		/// <see cref="RuinedWorksPerBreakpoint"/> ruined works a rung.
+		/// one, one entry per rung, and per rung its
+		/// <see cref="NamedRuinsPerBreakpoint"/> named ruins plus the one line that carries the
+		/// rest of them.
+		/// <para>
+		/// Note what is NOT in here: how many works a rung actually ruined. That is the point of
+		/// the coarsening &mdash; Addendum 10(c) let a rung reach the whole settlement, and the
+		/// register's share of a collapse did not move a line for it.
+		/// </para>
 		/// </summary>
 		/// <param name="Departed">People the slide took.</param>
 		/// <param name="Rungs">Rungs it fell, which is what <c>Trajectory.Breakpoints</c>
@@ -747,7 +852,7 @@ namespace ThousandAndFirst
 			int named = NamedDepartures(Departed);
 			int summary = (Departed > named) ? 1 : 0;
 			int rungs = (Rungs > 0) ? Rungs : 0;
-			return named + summary + rungs + rungs * RuinedWorksPerBreakpoint;
+			return named + summary + rungs + rungs * (NamedRuinsPerBreakpoint + 1);
 		}
 
 		/// <summary>

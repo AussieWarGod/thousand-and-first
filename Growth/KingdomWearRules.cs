@@ -1,15 +1,22 @@
-using System.Text;
+﻿using System.Text;
 using ThousandAndFirst.Simulation.Kernel;
 
 namespace ThousandAndFirst
 {
 	/// <summary>
-	/// Engine-free rules for WHETHER a work wears, and what a repair job is waiting on
-	/// (BUILDING-CATALOGUE-BRIEF.md Addendum 7: "maintenance/wear translation"). Time is labour,
-	/// never decay: nothing here reads a clock. Every function that decides whether a work takes
-	/// damage is a pure function of an EVENT already in hand &mdash; a raid tick, a streak of
-	/// consecutive full-stretch attended passes, a tick a certified machine was running &mdash;
-	/// never of how long the save has existed.
+	/// Engine-free rules for WHETHER a work wears, what that damage costs it, and what a repair
+	/// job is waiting on (BUILDING-CATALOGUE-BRIEF.md Addendum 7: "maintenance/wear translation",
+	/// Addendum 10(b): "damage degrades function &mdash; for every work, in its own kind").
+	/// <para>
+	/// <b>Time is labour, never decay.</b> Nothing here ever DECIDES that a work wore from a
+	/// clock: every function that answers "did this take damage" is a pure function of an EVENT
+	/// already in hand &mdash; a raid tick, a streak of consecutive full-stretch attended passes,
+	/// a tick a certified machine was running &mdash; never of how long the save has existed.
+	/// What a work that is ALREADY damaged goes on losing is a different question, and that one
+	/// does run on world days (<see cref="Leaked"/>): a hole in a cistern empties it whether
+	/// anybody is watching. The damage is still an event; only its consequence is a clock, and
+	/// mending ends the consequence outright.
+	/// </para>
 	/// <para>
 	/// What a work's wear COSTS to mend, how it runs while worn, and the one line a founder reads
 	/// when a work takes damage all belong to the chain the wear was built from, and already live
@@ -17,8 +24,11 @@ namespace ThousandAndFirst
 	/// <c>ConditionPercent</c>/<c>ConditionWord</c>, <c>RepairCost</c>/<c>RepairBits</c>/
 	/// <c>RepairEffort</c>, <c>DamageLine</c>) &mdash; this file calls those rather than keeping a
 	/// second, divergent copy of them. What is uniquely this file's own: whether an event wears a
-	/// work at all (the three causes and their kernel draws), and whether a repair job already
-	/// under way is READY, or waiting on hands, materials, or the founder's own standing wish.
+	/// work at all (the three causes and their kernel draws), what a damaged work of any kind is
+	/// worth to the settlement afterwards (<see cref="WorkEffectiveness"/>), what a damaged STORE
+	/// goes on losing while it stands unmended (<see cref="Leaked"/>), and whether a repair job
+	/// already under way is READY, or waiting on hands, materials, or the founder's own standing
+	/// wish.
 	/// </para>
 	/// <para>
 	/// The three causes draw on <see cref="ThousandAndFirst.Simulation.Kernel.CounterRandom"/> the
@@ -110,6 +120,36 @@ namespace ThousandAndFirst
 		{
 			int stretch = (CrewStretch < 0) ? 0 : ((CrewStretch > 100) ? 100 : CrewStretch);
 			return stretch * KingdomMaterialRules.ConditionPercent(Wear) / 100;
+		}
+
+		/// <summary>
+		/// What ANY finished work is worth this pass, crewed or not (Addendum 10(b): "wear reduces
+		/// every work's level contribution, staffed or not"). One rule with two arms, and the
+		/// second arm is the ruling:
+		/// <list type="bullet">
+		/// <item>a work that asks for crew runs at <see cref="CombinedEffectiveness"/> &mdash; the
+		/// staffing pass's stretch, reduced again by its own condition;</item>
+		/// <item>a work that asks for nobody runs at its CONDITION alone. A cistern holds water
+		/// whoever is home, and a holed cistern holds less of it.</item>
+		/// </list>
+		/// <para>
+		/// The arm that was wrong was the second: a staffless work was handed a flat 100, so a
+		/// ruined reservoir carried its full twenty-six drams and only crewed works ever felt
+		/// damage. Both arms return 100 for a sound work, which is what makes this a strict
+		/// refinement of the ternary it replaces rather than a new tax.
+		/// </para>
+		/// </summary>
+		/// <param name="StaffNeeded">The design's <c>KingdomStaffNeeded</c>. Zero or less means
+		/// the work asks for nobody.</param>
+		/// <param name="CrewStretch">The staffing pass's own 0-100 stamp, read BEFORE any wear is
+		/// folded into it. Ignored entirely for a staffless work, which never carries one.</param>
+		/// <param name="Wear">The work's own wear, 0 to
+		/// <see cref="KingdomMaterialRules.MaxWearPercent"/>.</param>
+		public static int WorkEffectiveness(int StaffNeeded, int CrewStretch, int Wear)
+		{
+			return (StaffNeeded > 0)
+				? CombinedEffectiveness(CrewStretch, Wear)
+				: KingdomMaterialRules.ConditionPercent(Wear);
 		}
 
 		// ==================================================================================
@@ -333,6 +373,71 @@ namespace ThousandAndFirst
 		}
 
 		// ==================================================================================
+		// Storage leaks (Addendum 10(b): "storage works leak their stored contents as wear
+		// climbs"). The kind-appropriate consequence sitting on top of the general effectiveness
+		// scale, and nothing here reads a clock either: the DAYS are handed in by the caller, the
+		// same way every other day-taking rule in this mod takes them. Loss, not transfer - water
+		// that runs out of a holed cistern goes into the ground and is gone, which is the honest
+		// reading and deliberately NOT the manifest's pour-on-ground pools (that water was moved
+		// somewhere a founder can walk up to; this water was lost).
+		// ==================================================================================
+
+		/// <summary>What a leaking store is losing. Two kinds because two things in this
+		/// settlement are physically STORED: drams in a vessel and charge in a bed of salt. Food
+		/// is deliberately absent &mdash; it is not a flow yet, and spoilage waits until it is
+		/// (Addendum 10(b)). Values are frozen: never zero, never renumbered.</summary>
+		public enum LeakKind
+		{
+			Water = 1,
+			Charge = 2,
+		}
+
+		/// <summary>
+		/// World days a store at the wear ceiling takes to lose its WHOLE capacity to the ground.
+		/// The one number the leak is tuned on, and a season is what it is tuned to: the same
+		/// length the doctrine's own prose keeps reaching for, and the length a whole slide from
+		/// City to Camp runs in. Measured against the daily water bill of the rung each store
+		/// belongs to (_notes/balance-sim.py, Q9's leak table), a store at the CEILING loses less
+		/// than a day's drinking in a day, and one at the wear a single lost rung actually leaves
+		/// loses about a fifth of it &mdash; so a leak thins the cushion the settlement keeps and
+		/// can never outrun what the settlement makes.
+		/// </summary>
+		public const int LeakDaysToEmptyAtCeiling = 50;
+
+		/// <summary>
+		/// What a damaged store loses over a stretch of world days. Linear in the wear, linear in
+		/// the days, denominated against the store's own CAPACITY (the size of the hole is set by
+		/// the damage, not by how full the vessel happens to be), and never more than is actually
+		/// in there.
+		/// <para>
+		/// Zero wear is zero leak, exactly: a sound store is not a slow one. The division is done
+		/// last, so a small store over a long absence still loses something rather than rounding
+		/// to nothing every single day &mdash; and a caller that gets zero back is expected to
+		/// BANK its days rather than spend them, which is what makes the accrual honest at any
+		/// granularity of visit.
+		/// </para>
+		/// </summary>
+		/// <param name="Capacity">The store's own capacity, in whatever unit it holds.</param>
+		/// <param name="Held">What it holds right now. The answer never exceeds this.</param>
+		/// <param name="Wear">The store's wear, 0 to
+		/// <see cref="KingdomMaterialRules.MaxWearPercent"/>; anything higher reads as the
+		/// ceiling.</param>
+		/// <param name="Days">World days elapsed since this store was last leaked.</param>
+		public static int Leaked(int Capacity, int Held, int Wear, int Days)
+		{
+			if (Capacity <= 0 || Held <= 0 || Wear <= 0 || Days <= 0)
+			{
+				return 0;
+			}
+			int wear = (Wear > KingdomMaterialRules.MaxWearPercent) ? KingdomMaterialRules.MaxWearPercent : Wear;
+			// Long throughout: a city's capacity times the ceiling times a hundred-thousand-day
+			// absence leaves int behind long before any of the three individually would.
+			long lost = (long)Capacity * wear * Days
+				/ ((long)KingdomMaterialRules.MaxWearPercent * LeakDaysToEmptyAtCeiling);
+			return (lost >= Held) ? Held : (int)lost;
+		}
+
+		// ==================================================================================
 		// Prose. Every line unique to this file (a damage event naming its cause, a completed
 		// mending, a queued-behind-another-job wait, the Status/NextNeed summaries) is composed
 		// once here and asserted directly. The condition wording itself
@@ -370,6 +475,28 @@ namespace ThousandAndFirst
 		public static string RepairCompleteLine(string WorkName)
 		{
 			return WorkName + " is mended, and runs at its full measure again.";
+		}
+
+		/// <summary>
+		/// The one line a store gets when the founder is first told it is losing what it holds
+		/// (STANDARDS 7b), named by kind because a cistern and a bed of salt fail in different
+		/// sentences. Said once per work and unsaid by <see cref="LeakStoppedLine"/> when it is
+		/// mended.
+		/// </summary>
+		public static string LeakBegunLine(string WorkName, LeakKind Kind)
+		{
+			return (Kind == LeakKind.Charge)
+				? (WorkName + " has gone cold at the seams, and the night's charge bleeds out of it.")
+				: (WorkName + " weeps down its east face, and what it holds runs away into the ground.");
+		}
+
+		/// <summary>The unsaying: mending restores function, so the leak is over the moment the
+		/// work is whole. The consequence is of damage, not of history (Addendum 10(b)).</summary>
+		public static string LeakStoppedLine(string WorkName, LeakKind Kind)
+		{
+			return (Kind == LeakKind.Charge)
+				? (WorkName + " is sealed again, and keeps its heat overnight.")
+				: (WorkName + " is sealed again, and holds every dram it is given.");
 		}
 
 		/// <summary>The Status report's own line for how many works stand damaged, or empty when

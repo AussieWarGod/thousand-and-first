@@ -44,17 +44,30 @@ namespace ThousandAndFirst
 	{
 		public static bool Enabled => Options.GetOption("r_TAF_OptionSubsidence") != "No";
 
-		private const string StaffNeededProperty = "KingdomStaffNeeded";
-
-		private const string EffectivenessProperty = "KingdomEffectiveness";
-
 		/// <summary>
 		/// What this settlement's finished works carry between them.
 		/// <para>
-		/// A work that asks for no crew carries in full &mdash; a cistern holds water whoever is
-		/// home. A work that asks for crew carries at what the staffing pass gave it, wear already
-		/// folded in by <c>KingdomWear</c>, so an unmanned field feeds nobody. That is Addendum 8
-		/// clause 2 applied to the level: infrastructure times labour, never infrastructure alone.
+		/// A work that asks for crew carries at what the staffing pass gave it, reduced again by
+		/// its own condition, so an unmanned field feeds nobody. That is Addendum 8 clause 2
+		/// applied to the level: infrastructure times labour, never infrastructure alone.
+		/// </para>
+		/// <para>
+		/// <b>And a work that asks for nobody carries at its CONDITION</b> (Addendum 10(b)). This
+		/// used to be a flat 100 &mdash; wear reached the level only through the
+		/// <c>KingdomStaffNeeded</c> gate, so a half-wrecked reservoir carried its full
+		/// twenty-six drams and only the food lane, which never automates, could be hurt by ruin
+		/// at all. The ruling overturned it: a ruined reservoir does not carry its full drams.
+		/// Both arms are <see cref="KingdomWearRules.WorkEffectiveness"/>, which is also what
+		/// <c>KingdomPower</c> asks, so the rule lives in exactly one place.
+		/// </para>
+		/// <para>
+		/// <b>Why the condition is read off the work rather than off the stamp.</b>
+		/// <c>KingdomEffectiveness</c> is the staffing pass's own crew stretch and nothing else;
+		/// nobody folds wear into it any more. This function is called twice per pass from two
+		/// different points in <c>KingdomGrowth</c> (the water works' daily make, at the top, and
+		/// the level, after <c>AssignWork</c>), and reading condition from the part rather than
+		/// from a property somebody else may or may not have already folded is what makes both
+		/// answers the same arithmetic.
 		/// </para>
 		/// </summary>
 		/// <param name="Survey">The pass's survey. Null carries nothing.</param>
@@ -82,10 +95,7 @@ namespace ThousandAndFirst
 				// parsed before the bad pair still counts, so the verdict is deliberately unread.
 				List<KindAmount> carries;
 				KingdomCatalogueRules.TryParseTally(entry.Carries, out carries, out _);
-				int percent = (work.GetIntProperty(StaffNeededProperty) > 0)
-					? work.GetIntProperty(EffectivenessProperty)
-					: 100;
-				tally = KingdomCatalogueRules.FoldWork(tally, carries, percent);
+				tally = KingdomCatalogueRules.FoldWork(tally, carries, KingdomWear.EffectivenessOf(work));
 			}
 			return tally;
 		}
@@ -275,7 +285,7 @@ namespace ThousandAndFirst
 				int daysAgo = KingdomRules.ElapsedDays(TimeTicks - at);
 				KingdomChronicle.Record(System, KingdomSubsidenceRules.BreakpointChronicle(
 					System.KingdomDisplayName, breakpoint.From, breakpoint.To, daysAgo));
-				Ruin(System, Survey, settlementId, (ulong)((at > 0L) ? at : 0L), at);
+				Ruin(System, Survey, settlementId, (ulong)((at > 0L) ? at : 0L), at, breakpoint.From);
 			}
 		}
 
@@ -284,19 +294,40 @@ namespace ThousandAndFirst
 		/// is the mending system's own, the ceiling is its own, and a mending puts every point of
 		/// it back. Only <c>KingdomBuilt</c> works are candidates, which is the protection law's
 		/// own list of what a kingdom system may touch at all.
+		/// <para>
+		/// <b>The reach</b> (Addendum 10(c)). Every standing work is asked, every rung, and how
+		/// far the rung reaches is the rung's own scale
+		/// (<see cref="KingdomSubsidenceRules.RuinChanceFor"/>). There is no quota: the flat
+		/// two-works-a-rung allowance this replaced meant a City falling all the way to Camp left
+		/// eight works scuffed however many dozen were standing, and every other plot pristine.
+		/// Because the loop no longer stops at a count, it also cannot stop before a home that
+		/// crossed the condemnation line &mdash; every crossing reaches the people under it,
+		/// which is a correctness property of having no early exit rather than a check somewhere.
+		/// </para>
+		/// <para>
+		/// <b>The telling is coarsened, the damage is not</b>: a rung that leaves eleven works the
+		/// worse for it writes one named line and one that counts the rest
+		/// (<see cref="KingdomSubsidenceRules.TellsRuin"/>,
+		/// <see cref="KingdomSubsidenceRules.RuinSummary"/>), so the register's share of a whole
+		/// collapse did not move when the reach did.
+		/// </para>
 		/// </summary>
 		/// <param name="Ordinal">The breakpoint's own due tick, used as a draw ordinal. It sits on
 		/// a fixed lattice from the reckoning's anchor and is never re-anchored, so a reload asks
 		/// each work the same question and gets the same answer.</param>
 		/// <param name="AtTick">The same tick as a clock rather than an ordinal, for the roof
 		/// brink a condemned home owes the people who were living in it.</param>
-		private static void Ruin(KingdomSystem System, KingdomSurvey Survey, string SettlementId, ulong Ordinal, long AtTick)
+		/// <param name="From">The rung being lost, which is how far this one reaches.</param>
+		private static void Ruin(KingdomSystem System, KingdomSurvey Survey, string SettlementId, ulong Ordinal,
+			long AtTick, GrowthStage From)
 		{
 			int ruined = 0;
-			for (int i = 0; i < Survey.Built.Count && ruined < KingdomSubsidenceRules.RuinedWorksPerBreakpoint; i++)
+			int named = 0;
+			int deepest = 0;
+			for (int i = 0; i < Survey.Built.Count; i++)
 			{
 				GameObject work = Survey.Built[i];
-				if (!GameObject.Validate(work) || !KingdomSubsidenceRules.RollRuin(SettlementId, work.id, Ordinal))
+				if (!GameObject.Validate(work) || !KingdomSubsidenceRules.RollRuin(SettlementId, work.id, Ordinal, From))
 				{
 					continue;
 				}
@@ -305,6 +336,11 @@ namespace ThousandAndFirst
 				{
 					continue;
 				}
+				// Read before the damage lands, so the sentence names the building that stood
+				// here rather than the ruin it is about to become: "the granary fell into
+				// disrepair", not "the ruined granary fell into disrepair". The adjective the
+				// work wears from here on is r_KingdomWear's own.
+				string name = KingdomDesign.ReferenceFor(work, work.ShortDisplayName);
 				r_KingdomWear wear = work.RequirePart<r_KingdomWear>();
 				int before = wear.Wear;
 				wear.Wear = KingdomMaterialRules.AddWear(wear.Wear, increment);
@@ -315,13 +351,19 @@ namespace ThousandAndFirst
 					continue;
 				}
 				ruined++;
+				if (wear.Wear > deepest)
+				{
+					deepest = wear.Wear;
+				}
 				// A home the fall took past KingdomLodgingRules.CondemnedWearPercent stopped
 				// being a roof on THIS day, not on the day somebody finally walked in and looked
 				// at it. So the people who were living under it reach their brink here, dated
 				// here, and the lodging pass that finds them later announces the honest elapsed.
 				// Nothing is announced and no window is spent from inside an absence; a home that
 				// was already condemned, one below the line, and one nobody sleeps in all record
-				// nothing (KingdomBrink.Record is idempotent, and this only fires on the crossing).
+				// nothing (KingdomBrink.Record is idempotent, and this only fires on the
+				// crossing). It fires for EVERY home that crosses, not for the first couple: the
+				// loop above has no count to stop at.
 				if (KingdomLodgingRules.IsCondemned(wear.Wear) && !KingdomLodgingRules.IsCondemned(before))
 				{
 					int stranded = KingdomLodging.RecordCondemnedRoofBrink(work.CurrentZone, work, AtTick);
@@ -330,14 +372,28 @@ namespace ThousandAndFirst
 						KingdomLog.Log("subsidence: condemned " + work.Blueprint + " wear=" + wear.Wear + " stranded=" + stranded);
 					}
 				}
-				string name = KingdomDesign.ReferenceFor(work, work.ShortDisplayName);
-				string line = name + " fell into disrepair as " + System.KingdomDisplayName + " settled back, with nobody left who kept it";
-				System.Ledger.Note("{{r|" + XRL.Language.Grammar.InitCap(line) + ".}}");
-				KingdomChronicle.Record(System, line);
+				if (KingdomSubsidenceRules.TellsRuin(ruined - 1))
+				{
+					named++;
+					string line = KingdomSubsidenceRules.RuinedWorkLine(name, System.KingdomDisplayName);
+					System.Ledger.Note("{{r|" + XRL.Language.Grammar.InitCap(line) + ".}}");
+					KingdomChronicle.Record(System, line);
+				}
 				if (KingdomLog.Enabled)
 				{
-					KingdomLog.Log("subsidence: ruined " + work.Blueprint + " wear=" + wear.Wear);
+					KingdomLog.Log("subsidence: ruined " + work.Blueprint + " wear=" + wear.Wear + " rung=" + From);
 				}
+			}
+			string summary = KingdomSubsidenceRules.RuinSummary(System.KingdomDisplayName, ruined, named, deepest);
+			if (summary != null)
+			{
+				System.Ledger.Note("{{r|" + XRL.Language.Grammar.InitCap(summary) + ".}}");
+				KingdomChronicle.Record(System, summary);
+			}
+			if (KingdomLog.Enabled)
+			{
+				KingdomLog.Log("subsidence: rung=" + From + " reach=" + KingdomSubsidenceRules.RuinChanceFor(From)
+					+ "% ruined=" + ruined + " deepest=" + deepest);
 			}
 		}
 	}

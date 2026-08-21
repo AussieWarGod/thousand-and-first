@@ -368,11 +368,12 @@ namespace ThousandAndFirst.Tests
 				}
 			}
 			Assert.AreEqual(city, atTheRoadsEnd, "a thousand days under one roof really does walk the whole road");
-			// And that is a brink, not a conversion: the founder has to stand there for the whole
-			// window before a single draw is asked.
-			Assert.Greater(KingdomBrinkRules.CreedBrinkWindow, 0);
-			Assert.IsFalse(KingdomBrinkRules.WindowSpent(BrinkKind.Creed, 0),
-				"the pass the city is told is not the pass the city turns");
+			// And that is a brink, not a conversion: the whole window has to run out after the
+			// warning before a single draw is asked.
+			Assert.Greater(KingdomBrinkRules.CreedBrinkWindowDays, 0);
+			long told = 500L * KingdomRules.TicksPerDay;
+			Assert.IsFalse(KingdomBrinkRules.WindowSpent(BrinkKind.Creed, told, told),
+				"the day the city is told is not the day the city turns");
 		}
 
 		// --- The road ordinal: counted, because progress no longer divides ------------------------
@@ -590,38 +591,61 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void ResentmentAfterPass_AnnouncesOnZeroThenCountsUpOnePassAtATime()
+		public void ResentmentRunOut_FiresExactlyOnTheStatedDayAndNotOneEarlier()
 		{
-			Assert.AreEqual(0, KingdomConversionRules.ResentmentAfterPass(KingdomConversionRules.NoResentment));
-			Assert.AreEqual(1, KingdomConversionRules.ResentmentAfterPass(0));
-			Assert.AreEqual(4, KingdomConversionRules.ResentmentAfterPass(3));
+			const int told = 400;
+			Assert.IsFalse(KingdomConversionRules.ResentmentRunOut(told, told), "the day the word goes out is not the day they go");
+			Assert.IsFalse(KingdomConversionRules.ResentmentRunOut(told, told + KingdomConversionRules.ResentedWindowDays - 1));
+			Assert.IsTrue(KingdomConversionRules.ResentmentRunOut(told, told + KingdomConversionRules.ResentedWindowDays));
+			Assert.IsTrue(KingdomConversionRules.ResentmentRunOut(told, told + 900), "and it stays spent");
 		}
 
 		[Test]
-		public void ResentmentRunOut_FiresExactlyOnTheStatedPassAndNotOneEarlier()
+		public void ResentmentNeverRunsOutForSomebodyTheFounderWasNeverWarnedAbout()
 		{
-			Assert.IsFalse(KingdomConversionRules.ResentmentRunOut(KingdomConversionRules.ResentedPasses - 1));
-			Assert.IsTrue(KingdomConversionRules.ResentmentRunOut(KingdomConversionRules.ResentedPasses));
+			// Addendum 10(a): presence stopped being the shield and ignorance became it. An entry
+			// that has never carried a warning day has no deadline at all.
+			Assert.IsFalse(KingdomConversionRules.ResentmentRunOut(KingdomConversionRules.NotWarned, 9000));
+			Assert.AreEqual(KingdomConversionRules.ResentedWindowDays,
+				KingdomConversionRules.ResentmentDaysLeft(KingdomConversionRules.NotWarned, 9000),
+				"and the whole window is still in front of the founder on the day they are told");
 		}
 
 		[Test]
-		public void TheGraceIsLongerThanTheHousingGraceBecauseACreedIsNotARoof()
+		public void ResentmentDaysLeft_CountsDownToZeroAndStops()
 		{
-			Assert.Greater(KingdomConversionRules.ResentedPasses, KingdomLodgingRules.GracePasses);
+			const int told = 400;
+			Assert.AreEqual(KingdomConversionRules.ResentedWindowDays, KingdomConversionRules.ResentmentDaysLeft(told, told));
+			Assert.AreEqual(1, KingdomConversionRules.ResentmentDaysLeft(told, told + KingdomConversionRules.ResentedWindowDays - 1));
+			Assert.AreEqual(0, KingdomConversionRules.ResentmentDaysLeft(told, told + KingdomConversionRules.ResentedWindowDays));
+			Assert.AreEqual(0, KingdomConversionRules.ResentmentDaysLeft(told, told + 900), "never negative");
 		}
 
 		[Test]
-		public void TheGraceCountsUpFromTheAnnouncementSoTheFounderAlwaysGetsWholePassesToAct()
+		public void TheWindowIsLongerThanTheHousingWindowBecauseACreedIsNotARoof()
 		{
-			int count = KingdomConversionRules.NoResentment;
+			Assert.Greater(KingdomConversionRules.ResentedWindowDays, KingdomLodgingRules.GraceDays);
+			Assert.AreEqual(KingdomBrinkRules.CreedBrinkWindowDays, KingdomConversionRules.ResentedWindowDays,
+				"the two ways a settler can be one window from losing their creed must not drift apart");
+		}
+
+		[Test]
+		public void AbsenceSpendsTheResentedWindowBecauseTheWordWasPushedNotLeftAtTheSeat()
+		{
+			// The founder is told on the road that a creed is being forced on somebody, and never
+			// comes back. Eighteen days later that settler takes the road, exactly as the warning
+			// said they would.
+			const int told = 400;
 			int passes = 0;
-			while (!KingdomConversionRules.ResentmentRunOut(count))
+			int day = told;
+			while (!KingdomConversionRules.ResentmentRunOut(told, day))
 			{
-				count = KingdomConversionRules.ResentmentAfterPass(count);
+				day++;
 				passes++;
+				Assert.Less(passes, 500, "the window must terminate");
 			}
-			Assert.AreEqual(KingdomConversionRules.ResentedPasses + 1, passes,
-				"the announcing pass plus a whole grace of attended passes after it");
+			Assert.AreEqual(KingdomConversionRules.ResentedWindowDays, passes,
+				"a whole window of world-days after the day the word went out");
 		}
 
 		// --- Prose: two registers that disagree where the day is contested -------------------------

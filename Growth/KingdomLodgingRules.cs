@@ -718,57 +718,30 @@ namespace ThousandAndFirst
 		}
 
 		// ==================================================================================
-		// Addendum 4b -- housing binds. A settler joins only if a home exists THEY would take,
-		// and a settler who loses every acceptable home is at a BRINK (KingdomBrinkRules): the
-		// loss is recorded with the tick it happened, they are named once, the founder gets a
-		// short window of ATTENDED passes to act, and then they leave through the emigration
-		// machinery the settlement already has. Every figure below is a count of attended passes
-		// -- never a clock, never a tick, never an age. Absence cannot advance any of it, because
-		// nothing here advances except when a pass calls it.
+		// Addendum 4b -- housing binds; Addendum 10(a) -- the brink moderates. A settler joins
+		// only if a home exists THEY would take, and a settler who loses every acceptable home is
+		// at a BRINK (KingdomBrinkRules): the loss is recorded with the tick it happened, word is
+		// PUSHED to the founder once wherever they are, naming what would arrest it, and from that
+		// delivery they have GraceDays of WORLD TIME. Spend it and they leave through the
+		// emigration machinery the settlement already has -- attended or not.
 		//
-		// The shape moved and the behaviour did not. What used to be this file's own private
-		// grace is now the roof instance of the one window every irreversible consequence in the
-		// mod shares, so a design that lengthens the rope moves KingdomBrinkRules.RoofBrinkWindow
-		// and every consumer of these three members follows it.
+		// The unit changed and the rope did not. What used to be two attended passes is the same
+		// two attended passes restated at the cadence a present founder was always assumed to keep
+		// (KingdomBrinkRules.CohabitationDaysPerAttendedPass), so a founder who comes home every
+		// third day walks exactly the road they always walked. Only one who leaves sees any
+		// difference -- and that difference is the ruling: with warning, coaching and fair time,
+		// it is fair for things to happen while they are away.
 		// ==================================================================================
 
 		/// <summary>
-		/// Attended passes a settler who has lost every acceptable home is given before they
-		/// leave. Two: long enough for a founder standing there to raise a bunk or stake a plan,
-		/// short enough that the answer to "why is nobody moving out" is never "wait longer".
-		/// Derived from <see cref="KingdomBrinkRules.RoofBrinkWindow"/>, which is where the
-		/// number now lives.
+		/// World-days a settler who has lost every acceptable home is given, counted from the day
+		/// the word reached the founder rather than from the day the roof went. Six:
+		/// <see cref="KingdomBrinkRules.RoofBrinkWindowDays"/>, which is
+		/// <c>RoofBrinkWindowPasses</c> restated in world time. Long enough for a founder who
+		/// hears the news on the road to come back and raise a bunk or stake a plan, short enough
+		/// that the answer to "why is nobody moving out" is never "wait longer".
 		/// </summary>
-		public const int GracePasses = KingdomBrinkRules.RoofBrinkWindow;
-
-		/// <summary>The grace of a settler nobody has warned the founder about yet. Negative so
-		/// it can never be confused with "warned, and no pass has run since", which is zero.
-		/// <see cref="KingdomBrinkRules.Unannounced"/>, shared with every other brink.
-		/// </summary>
-		public const int NoGrace = KingdomBrinkRules.Unannounced;
-
-		/// <summary>
-		/// The grace after one more attended pass has found this settler still unhoused. A
-		/// settler at <see cref="NoGrace"/> becomes zero, which is the pass their loss is
-		/// announced on; every later attended pass adds one.
-		/// <para>
-		/// This is the ONLY thing that advances the grace, and it is called only from the
-		/// attended lodging pass. An absent founder therefore cannot spend anybody's grace: no
-		/// clock is read here, and nothing elapses on its own.
-		/// </para>
-		/// </summary>
-		public static int GraceAfterPass(int Grace)
-		{
-			return KingdomBrinkRules.AfterAttendedPass(Grace);
-		}
-
-		/// <summary>Whether a settler's grace is spent and they leave now: exactly
-		/// <see cref="GracePasses"/> attended passes after the one their loss was announced on.
-		/// </summary>
-		public static bool GraceRunOut(int Grace)
-		{
-			return KingdomBrinkRules.WindowSpent(BrinkKind.Roof, Grace);
-		}
+		public const int GraceDays = KingdomBrinkRules.RoofBrinkWindowDays;
 
 		/// <summary>The cause a housing departure is chronicled and noted under, in both
 		/// registers. Named here rather than written at the call site so the chronicle and the

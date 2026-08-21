@@ -275,15 +275,18 @@ namespace ThousandAndFirst.Tests
 			// What replaced the cap. Uncapping accrual on its own would have made an absence lose
 			// a city FASTER than presence does -- clause 3 exactly inverted -- so the bound moved
 			// from the clock to the outcome: dissent clamps at the breaking point, records a
-			// brink, and the founder still gets SecessionWindowPasses attended passes. A founder
-			// away ninety days and one away a thousand come home to exactly the same realm.
+			// brink, and nothing happens until the founder has been WARNED and a whole
+			// SecessionWindowDays has run from that warning. A founder away ninety days and one
+			// away a thousand come home to exactly the same realm, told in the same words.
 			int ninety = KingdomCreedRules.AccrueDissent(0, 100, 90);
 			int aThousand = KingdomCreedRules.AccrueDissent(0, 100, 1000);
 			Assert.AreEqual(KingdomCreedRules.DissentBreaking, ninety);
 			Assert.AreEqual(ninety, aThousand, "nothing accrues past the breaking point");
 			Assert.AreEqual(CityTemper.Secession, KingdomCreedRules.ClassifyTemper(aThousand));
-			Assert.Greater(KingdomCreedRules.SecessionWindowPasses, 0,
-				"and reaching it costs the founder nothing until they have spent the window");
+			Assert.Greater(KingdomCreedRules.SecessionWindowDays, 0,
+				"and reaching it costs the founder nothing until the window has run from their warning");
+			Assert.IsFalse(KingdomBrinkRules.WindowSpent(BrinkKind.City, KingdomBrinkRules.Unwarned, 9000L * KingdomRules.TicksPerDay),
+				"a realm nobody was warned about must never lose a city, however long the absence");
 		}
 
 		[Test]
@@ -362,29 +365,44 @@ namespace ThousandAndFirst.Tests
 				Assert.Less(days, 100, "the ladder must terminate");
 			}
 			Assert.GreaterOrEqual(days, 7);
-			// And the window sits one rung under that span, so the loudest warning always stands
-			// for longer than the last chance that follows it. This is the relation the window's
-			// length was chosen for; if either number moves independently, it breaks here.
-			Assert.Less(KingdomCreedRules.SecessionWindowPasses, days,
-				"the window must be shorter than the warning that precedes it");
+			// Addendum 10(a) put the window into the same unit as this span, and the derivation it
+			// ordered (three attended passes x the cadence) makes it NINE days against this span's
+			// eight. The old "one rung under" relation was between two different units and does
+			// not survive the change of unit; what is pinned instead is the relation that actually
+			// matters and is still true -- the ladder the founder can watch is longer than the
+			// last chance at the end of it, counting from the first muttering.
+			int fromTheFirstMuttering = 0;
+			int dissentFromMuttering = KingdomCreedRules.DissentMuttering;
+			while (KingdomCreedRules.ClassifyTemper(dissentFromMuttering) != CityTemper.Secession)
+			{
+				dissentFromMuttering = KingdomCreedRules.AccrueDissent(dissentFromMuttering, 100, 1);
+				fromTheFirstMuttering++;
+				Assert.Less(fromTheFirstMuttering, 200, "the ladder must terminate");
+			}
+			Assert.Greater(fromTheFirstMuttering, KingdomCreedRules.SecessionWindowDays,
+				"the warning ladder must be longer than the window it ends in");
+			Assert.GreaterOrEqual(days + KingdomCreedRules.SecessionWindowDays, 14,
+				"a fortnight of visible warning between the loudest tier and losing the city");
 		}
 
 		[Test]
-		public void SecessionHasAWindowAndItIsSpentInAttendedPassesLikeEveryOtherBrink()
+		public void SecessionHasAWindowAndItIsSpentInWorldDaysLikeEveryOtherBrink()
 		{
-			// The gap the whole package existed to close: reaching the breaking point used to
-			// BE the secession. Now it is a brink, and the brink's own arithmetic decides when
-			// the city actually walks.
-			Assert.AreEqual(KingdomBrinkRules.CityBrinkWindow, KingdomCreedRules.SecessionWindowPasses);
-			int spent = KingdomBrinkRules.Unannounced;
-			int passes = 0;
-			while (!KingdomBrinkRules.WindowSpent(BrinkKind.City, spent))
+			// The gap the whole package existed to close: reaching the breaking point used to BE
+			// the secession. Now it is a brink, and the brink's own arithmetic -- world time from
+			// the day the word reaches the founder -- decides when the city actually walks.
+			Assert.AreEqual(KingdomBrinkRules.CityBrinkWindowDays, KingdomCreedRules.SecessionWindowDays);
+			Assert.AreEqual(KingdomBrinkRules.InCohabitationDays(KingdomBrinkRules.CityBrinkWindowPasses),
+				KingdomCreedRules.SecessionWindowDays, "the window stopped being its old rope restated");
+			long told = 300L * KingdomRules.TicksPerDay;
+			int days = 0;
+			while (!KingdomBrinkRules.WindowSpent(BrinkKind.City, told, told + days * KingdomRules.TicksPerDay))
 			{
-				spent = KingdomBrinkRules.AfterAttendedPass(spent);
-				passes++;
+				days++;
+				Assert.Less(days, 200, "the window must terminate");
 			}
-			Assert.AreEqual(KingdomCreedRules.SecessionWindowPasses + 1, passes,
-				"the pass it is announced on, and then a whole window of attended passes");
+			Assert.AreEqual(KingdomCreedRules.SecessionWindowDays, days,
+				"a whole window of world-days after the day the word went out, and not one fewer");
 		}
 
 		[Test]
@@ -394,17 +412,29 @@ namespace ThousandAndFirst.Tests
 			// was nothing to say at that tier, because the city was already gone. This is the
 			// sentence that fills it, and it must carry all three facts a founder can act on.
 			Assert.AreEqual("", KingdomCreedRules.TemperSpeech(CityTemper.Secession, "Nesh", "Basra"));
-			string line = KingdomCreedRules.SecessionBrinkSpeech("Basra", "Nesh", 31, 3);
+			string line = KingdomCreedRules.SecessionBrinkSpeech("Basra", "Nesh", 31, 9);
 			StringAssert.Contains("Basra", line);
 			StringAssert.Contains("Nesh", line);
 			StringAssert.Contains("31 days", line);
-			StringAssert.Contains("3 more visits", line);
+			StringAssert.Contains("9 days", line);
+			StringAssert.DoesNotContain("visit", line, "the window is the world's now, not a count of homecomings");
 		}
 
 		[Test]
-		public void SecessionBrinkSpeech_IsSingularOnTheLastVisitAndSaysSomethingWithNoNamesAtAll()
+		public void SecessionBrinkSpeech_AlwaysNamesTheArrestBecauseItMayFireWhileTheFounderIsAway()
 		{
-			StringAssert.Contains("One more visit", KingdomCreedRules.SecessionBrinkSpeech("Basra", "Nesh", 2, 1));
+			// Addendum 10(a)'s coaching clause, for the loudest line the realm ever says. The city
+			// can now go while nobody is watching, so the sentence that warns of it must say what
+			// would have stopped it -- with names and without them.
+			StringAssert.Contains("rite", KingdomCreedRules.SecessionBrinkSpeech("Basra", "Nesh", 31, 9));
+			StringAssert.Contains("rite", KingdomCreedRules.SecessionBrinkSpeech(null, null, 0, 2));
+		}
+
+		[Test]
+		public void SecessionBrinkSpeech_IsSingularOnTheLastDayAndSaysSomethingWithNoNamesAtAll()
+		{
+			StringAssert.Contains("One day", KingdomCreedRules.SecessionBrinkSpeech("Basra", "Nesh", 2, 1));
+			StringAssert.Contains("no more time", KingdomCreedRules.SecessionBrinkSpeech("Basra", "Nesh", 2, 0));
 			Assert.IsFalse(string.IsNullOrEmpty(KingdomCreedRules.SecessionBrinkSpeech(null, null, 0, 2)));
 		}
 

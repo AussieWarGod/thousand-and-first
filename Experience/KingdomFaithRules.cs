@@ -17,7 +17,7 @@ namespace ThousandAndFirst
 	/// osmosis, culture, and diplomacy) converts it; investment heals it. Conversions are RARE,
 	/// chronicled by name, counted in the days a shrine actually stood staffed over somebody
 	/// (Addendum 8 clause 1 — a consecrated building argues every day, not every visit) and
-	/// resolved at a BRINK the founder gets a window of attended passes to arrest, and never
+	/// resolved at a BRINK the founder is warned of and gets world-days to arrest, and never
 	/// shown to the player as a meter or a percentage. The counting happens; the watching of it
 	/// does not.
 	/// </para>
@@ -141,10 +141,11 @@ namespace ThousandAndFirst
 		/// sooner or later changes one constant.
 		/// <para>
 		/// A consecrated shrine argues every day, not every visit (Addendum 8 clause 1), so the
-		/// days pass whether or not the founder is there. What does NOT happen while they are away
-		/// is the conversion: the road ends in a brink, the founder is named the settler and the
-		/// creed and the honest elapsed, and the shrine's window is spent in attended passes like
-		/// every other (<see cref="KingdomBrinkRules.CreedBrinkWindow"/>).
+		/// days pass whether or not the founder is there. What does NOT happen unwarned is the
+		/// conversion: the road ends in a brink, the word is pushed to the founder naming the
+		/// settler, the creed, the honest elapsed and what would stop it, and only then does the
+		/// shrine's window run &mdash; <see cref="KingdomBrinkRules.CreedBrinkWindowDays"/> of
+		/// world time, spent whether or not anybody comes back to watch it (Addendum 10(a)).
 		/// </para>
 		/// </summary>
 		public const int ConversionPullThreshold = ConversionPullInPasses * KingdomBrinkRules.CohabitationDaysPerAttendedPass;

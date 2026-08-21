@@ -216,6 +216,52 @@ namespace ThousandAndFirst.Tests
 			Assert.AreEqual(expected, KingdomPowerRules.DailyOutput(KingdomPowerRules.PowerSource.Hands, crew, available));
 		}
 
+		// --- Addendum 10(b): damage dims a power work, staffed or not --------------------------
+
+		[Test]
+		public void DailyOutput_AStafflessPowerWorkDimsWithItsOwnWear()
+		{
+			// "Solar panels reduce power output." A design that asks for nobody used to be handed a
+			// flat 100 by KingdomPower.DailyOutput's own staffed-only ternary, so a half-wrecked
+			// one made a whole one's charge. The crew figure it is handed now is
+			// KingdomWearRules.WorkEffectiveness, which for a staffless work IS its condition.
+			int sound = KingdomPowerRules.DailyOutput(
+				KingdomPowerRules.PowerSource.Wind, KingdomWearRules.WorkEffectiveness(0, 0, 0), 100);
+			int wrecked = KingdomPowerRules.DailyOutput(
+				KingdomPowerRules.PowerSource.Wind,
+				KingdomWearRules.WorkEffectiveness(0, 0, KingdomMaterialRules.MaxWearPercent), 100);
+			Assert.AreEqual(KingdomPowerRules.SailvaneChargePerDay, sound);
+			Assert.Less(wrecked, sound, "a damaged vane makes less");
+			Assert.Greater(wrecked, 0, "and it still turns: a damaged work stands");
+			Assert.AreEqual(
+				KingdomPowerRules.SailvaneChargePerDay * KingdomMaterialRules.ConditionPercent(KingdomMaterialRules.MaxWearPercent) / 100,
+				wrecked, "output falls in exact proportion to condition");
+		}
+
+		[Test]
+		public void DailyOutput_AStaffedPowerWorkDimsForBothReasonsAtOnce()
+		{
+			int wear = KingdomMaterialRules.MaxWearPercent / 2;
+			int halfCrewSound = KingdomPowerRules.DailyOutput(
+				KingdomPowerRules.PowerSource.Hands, KingdomWearRules.WorkEffectiveness(3, 50, 0), 100);
+			int fullCrewWorn = KingdomPowerRules.DailyOutput(
+				KingdomPowerRules.PowerSource.Hands, KingdomWearRules.WorkEffectiveness(3, 100, wear), 100);
+			int both = KingdomPowerRules.DailyOutput(
+				KingdomPowerRules.PowerSource.Hands, KingdomWearRules.WorkEffectiveness(3, 50, wear), 100);
+			Assert.Less(both, halfCrewSound);
+			Assert.Less(both, fullCrewWorn);
+		}
+
+		[Test]
+		public void DailyOutput_MendingRestoresAWorksWholeOutput()
+		{
+			// Consequences are of damage, not of history: wear back at zero reads exactly as a
+			// work that was never damaged.
+			Assert.AreEqual(
+				KingdomPowerRules.DailyOutput(KingdomPowerRules.PowerSource.Water, KingdomWearRules.WorkEffectiveness(0, 0, 0), 100),
+				KingdomPowerRules.DailyOutput(KingdomPowerRules.PowerSource.Water, 100, 100));
+		}
+
 		[Test]
 		public void DailyOutput_AHalfCrewedMillMakesHalfAMill()
 		{

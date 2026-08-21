@@ -344,9 +344,9 @@ anyone.
 | 65a | Settle a robot (or any inorganic wanderer) | It needs charge, not food — derived from the engine's own parts, not authored. It lodges by the charging post and the larder never counts it |
 | 65b | Settle two creeds the engine holds at open hostility | They are never assigned the same building. The standing −50 grudges of zealots toward strangers do **not** break households — only real hostility does |
 | 66 | Fill every home, then let a settler arrive | **They do not join.** The announcement names the real reason: no home they would take — not "no bed", if the beds that exist fail their needs |
-| 66a | Burn or condemn a settler's only acceptable home | Named once, with **how long they have actually stood there**. They are at the roof brink: it stops there and waits. Two **attended passes** in which you could have acted — raise a bunk, stake a plan — and then they leave through the ordinary emigration, chronicled by name and cause in both registers |
-| 66b | Trigger the brink, then stay away a season. Then trigger it again and stay away ten days | **The same place both times.** The window is spent in attended passes, so the two absences arrive identically; the announcement's elapsed figure differs and is honest about it. They leave because you did not act, never because you were gone |
-| 66c | Re-house them inside the window | The brink **lifts** and the announcement is unsaid. Nothing is remembered against them, and the next loss starts the count from nothing |
+| 66a | Burn or condemn a settler's only acceptable home | Warned once, with **how long they have actually stood there** and what would keep them (raise a bunk, stake a plan). They are at the roof brink: the accrual stops there. Six **world-days** later, if nothing changed, they leave through the ordinary emigration, chronicled by name and cause in both registers |
+| 66b | Trigger the brink, then stay away a season. Then trigger it again and stay away ten days | **The same brink both times** — nothing accrues past it, and the elapsed figure in the warning differs and is honest about it. Both times they are gone when you get back, and the report dates the leaving to the day the window ran out, not to your homecoming |
+| 66c | Re-house them inside the window | The brink **lifts** and the warning is unsaid. Nothing is remembered against them, and the next loss starts the count from nothing |
 | 67 | Ship a mod creature with `r_TAF_Needs` tags, or none at all | With none, its needs derive from its own parts correctly. A `-tag` removes a derived need. Unknown tags are inert, waiting for a consumer |
 | 68 | House five settlers of mixed creeds and only a bunkhouse | **They do not all move in.** Packed quarters share only without quarrel; the announcement names the roomiest quarters that still refused |
 | 68a | Raise a stone house (Roomed) for the same five | The ambient grudge tolerates walls between beds. The −50 zealot-toward-stranger pairs now share |
@@ -360,7 +360,7 @@ anyone.
 | 69 | House a creed-minority settler in a stone house with a majority household, and keep visiting | A **season of shared living**, then perhaps a conversion — chronicled by name, deterministic on reload. One open room converts nobody; quarters of one's own are slowest |
 | 69a | Feed a citizen at a table of another creed while they sleep in a house of a third | Pulled two ways, they convert to **neither** — a second pull takes points off the first |
 | 70 | Charter → **Consecrate a shrine** (`4`) to a creed the realm has dealt with | A chronicled ceremony. Staffed, the shrine slowly draws the *neutral* of its zone toward its creed — never the opposed, who instead begin to resent it |
-| 70a | Let a rival shrine stand over a settler's quarter | Named once; six attended passes to take it back off; then they leave through the ordinary emigration, by name and cause. **Remove the shrine and the pressure genuinely lifts** |
+| 70a | Let a rival shrine stand over a settler's quarter | Warned once, wherever you are, naming what to take back off them; eighteen world-days to do it; then they leave through the ordinary emigration, by name and cause, dated to the day the window ran out. **Remove the shrine at any point and the pressure genuinely lifts** |
 | 70b | Unstaff the shrine or scriptorium | An unstaffed shrine is a stone; an unstaffed scriptorium is a room of vellum — each says so once |
 | 70c | Staff a scriptorium in a mixed zone | The ambient grudge reads one band gentler for lodging and osmosis. It converts nobody |
 | 71 | Charter → **Share water with a settler** (`5`) of another creed | The founding rite's own eight drams plus a measure for what stands between you — disclosed first, spent whichever way they answer |
@@ -391,25 +391,28 @@ anyone.
 | 77a | Stay put and let four world days pass | The slide begins and says so **once**, naming the binding good and the level it is heading for. It does not repeat, and it does not nag |
 | 77b | Watch it step | One step every four days, shedding (rung + 1) settlers a step — a City sheds five, a Steading two. Every departure names its cause |
 | 77c | Let it cross a rung | The stage falls **one rung per reckoning**, and only on a clear shortfall (20% benefit of the doubt on both of the stage's readings). Each lost rung gets a dated chronicle line — dated to the day it actually happened, not to the day you read it |
-| 77d | Look at the works after a rung is lost | Up to two stand the worse for it, named once each, running reduced. **Damage, never deletion**: nothing passes the wear ceiling, nothing is unbuilt, and nothing player-placed is touched, ever |
+| 77d | Look at the works after a rung is lost | Every standing work was asked, independently, at that rung's own reach (a City rung half the settlement, a Steading rung a fifth) — not a fixed two. Named ones read by line, the rest in one summary. **Damage, never deletion**: nothing passes the wear ceiling, nothing is unbuilt, and nothing player-placed is touched, ever |
 | 77e | Raise the works back up midway | The slide **arrests**, says so, and unsays its warning. A settlement inside its 20% band never moves at all |
 | 77f | Instead, leave for a hundred days. Then try it again and leave for a thousand | Both come home to the same honest level. The slide **converges and stops**: a City whose works carry a Town becomes that Town, not a Camp, because the bill per head falls with the rung as fast as the people do |
 | 77g | Let a City with nothing standing run all the way down | It stops at **Camp** — floored, derelict, legible, and still yours. There is no rung below it |
 | 77h | Save and reload mid-slide | The same works are the worse for it. A reload never re-rolls a collapse the chronicle has already described |
 | 77i | Turn off *a settlement standing above what its works carry settles back* in options and repeat 77a | Nothing subsides. The level is still measured and still reported |
+| 77j | Let a City collapse all the way to Camp, then walk its former plots | Most read as battered, half-ruined or ruined **in name and in look** — the adjective is on the building itself and its description matches — with a few sound survivors among them, not a uniform coat of scuffing. Mend one and the name walks back down the same ladder it climbed |
 
 ## Pass 24 — The brink: the last arrestable window
 
 | Step | Action | Expect |
 |---|---|---|
-| 78 | Take away a settler's last acceptable home and read the announcement | It names them, the cause, **how long they have actually stood there**, and how many attended passes are left. Once |
-| 78a | Reach the same brink and stay away ten days. Reach it again and stay away a thousand | **The same place both times.** The accrual stopped at the line — there is nowhere past a brink to arrive at — and only the elapsed figure in the announcement differs, which is the honest part |
-| 78b | Re-house them inside the window | The brink lifts, the announcement is unsaid, and the next one starts from nothing. Arrest by **acting**; waiting is not a strategy and never was |
-| 78c | Let the roof window run out over two attended passes | They leave through the ordinary emigration, by name and cause, in both registers |
-| 78d | House a creed-minority settler with a majority household and let real days of shared living pass | Conversion accrues in **cohabitation-days** — days they actually shared a roof, scaled by the quarters' closeness — never in visits. At the line it stops, announces, and gives six attended passes |
-| 78e | Break the household up, or pour the water rite | The creed brink lifts. Let it run instead and the conversion lands, chronicled in two registers that **disagree** |
-| 78f | Drive two cities' quarrel to the breaking point | The realm stands at a **city brink** with three attended passes — deliberately shorter than the road from Rupture to Breaking, so the window can never outlast the quarrel that opened it. Mend the cause and it lifts; let it run and the city secedes with its ground, people and buildings |
-| 78g | Save, reload, and read all three again | Causes, crossing ticks and spent passes all survive. A per-settler brink rides **the settler**, so swapping seats never carries one to the wrong city |
+| 78 | Take away a settler's last acceptable home and read the warning | It names them, the cause, **how long they have actually stood there**, **what would stop it**, and how many days are left. Once |
+| 78a | Reach the same brink and stay away ten days. Reach it again and stay away a thousand | **The same brink both times.** The accrual stopped at the line — there is nowhere past a brink to arrive at — and only the elapsed figure in the warning differs, which is the honest part |
+| 78b | Re-house them inside the window | The brink lifts, the warning is unsaid, and the next one starts from nothing. Arrest by **acting**, at any point up to the day it fires; waiting is not a strategy and never was |
+| 78c | Take the warning, then walk out of the settlement and stay away six days | You come back to a settler who is **already gone**, and a report that dates the leaving to the day the window ran out — not to your homecoming. Warned, coached, given fair time, and it happened anyway |
+| 78d | House a creed-minority settler with a majority household and let real days of shared living pass | Conversion accrues in **cohabitation-days** — days they actually shared a roof, scaled by the quarters' closeness — never in visits. At the line it stops, the word finds you, and eighteen world-days start running |
+| 78e | Break the household up, or pour the water rite | The creed brink lifts. Let the eighteen days run instead — home or away — and the conversion lands, chronicled in two registers that **disagree**, dated to the day it landed |
+| 78f | Drive two cities' quarrel to the breaking point | The realm stands at a **city brink** with nine world-days, and the loudest tier of the warning ladder has already stood for eight days before it. Mend the cause and it lifts; let it run and the city secedes with its ground, people and buildings, whether or not you were there |
+| 78g | Save, reload, and read all three again | Causes, crossing ticks and **warning ticks** all survive. A per-settler brink rides **the settler**, so swapping seats never carries one to the wrong city |
+| 78k | Reach a brink you were never told about — a save from before the word went out — then come back after a year | Nothing has fired. You are warned on the pass that finds it, and the **whole** window starts from that day. Presence is not a shield; ignorance is |
+| 78l | Take a warning while standing somewhere else entirely | It reaches you where you are, framed as word out of the named city, and it is **not** repeated at the seat. Standing in the settlement, you get the plain line and no second telling |
 | 78h | Let a home wear past condemnation with people living in it | It stops counting as a roof — it is not cleared, unbuilt, or moved — and everyone under it is recorded at a roof brink dated to the day the roof went, not to the day you noticed |
 | 78i | Let a subsidence slide half-wreck an OCCUPIED home, to wear ≥ 40 (`KingdomLodgingRules.CondemnedWearPercent`) | Its residents show unhoused on the roll, each by name: "sleeps in the open: every roof here has fallen in past living under. Mend one and [name] has a home again." The building itself still stands, untouched |
 | 78j | Mend the wear back below 40 | The home counts as a roof again, and the next pass re-houses them |
@@ -423,9 +426,12 @@ anyone.
 | 79b | Raise a reservoir at a Town — it wants no crew — and leave for a season | It **made water while you were gone**: what it carries arrives in the casks day by day, on the same checkpoint discipline fetch uses. The `carries` figure in the status report and the drams actually stored agree |
 | 79c | Compare the water detail against the bill at each rung | A camp wants half its people hauling and a Town over nine tenths, which is where hauling stops being a strategy. Two reservoirs cover a Town's whole bill **for no hands at all**. That is the handover |
 | 79d | Hold a City on grand works and read who is standing where | Water and roofs want nobody. **Food still wants hands** — a grange takes three, the home farm four — and it is the only binding good whose big works do. Eight settlers of fifty feed the city, and that is the design rather than a gap |
-| 79e | Let a bad season ruin the home farm, then read `kingdom:status` | The level falls with it: a crewed work carries what it is actually running at. A ruined reservoir carries its full figure — deliberate, for the level — and the roof half is answered separately, by condemnation (78h) |
+| 79e | Let a slide ruin a reservoir, then read `kingdom:status` | The Charter's level falls with it: every work now carries at its own condition, crewed or not (Addendum 10(b)), so the reservoir's `carries` figure reads under its catalogue number, not the full one. The roof half is answered separately, by condemnation (78h) |
 | 79f | Leave a staffed sawyer's yard to run for thirty days | Thirty days of shaping, held to the bench's own daily width — **not** eight units per homecoming. Leave the same yard **unstaffed** for thirty days and it shapes nothing, and says so once |
 | 79g | Leave a scaffold with nobody free to work on it | It does not rise. The shortfall is named once and clears itself the moment hands are free; the raising ceremony still tells attended from absent, because completion is stamped to when the work actually finished |
+| 79h | Leave a holed cistern (wear > 0) alone for a season | It is named **once** when the leak begins ("weeps down its east face, and what it holds runs away into the ground"). What it holds runs out on world days regardless of who is watching, proportional to the days away — lost to the ground, not pooled anywhere a founder can fetch it back |
+| 79i | Mend that same cistern | The leak is unsaid ("is sealed again, and holds every dram it is given"), and it holds whatever is poured into it again — the same pass it is mended, not a season later |
+| 79j | Let a slide ruin a staffless work — a cistern or a home — and check the mending queue | It stands in the queue the same as any crewed work: mending now walks every finished work (`Survey.Built`), not only the ones that ask for a crew, so a holed cistern is never damaged forever for want of ever being asked |
 
 ## Pass 4 — Attitudes and persistence
 
@@ -448,8 +454,11 @@ anyone.
   toward the supported level. Every one of them is gated on **labour**, so a pass asserting
   "untouched on return" is right only where nobody was working, and a pass asserting "at most
   three days were charged" is wrong everywhere: no clock in this mod caps elapsed time any
-  more. Irreversible consequences stop at a brink and wait to be told, and their windows are
-  still spent in attended passes only — that part did not change and is not meant to.
+  more. Irreversible consequences stop at a brink and push the word to you wherever you are;
+  their windows then run in **world-days** from that warning and spend whether or not you come
+  back (Addendum 10(a)). A pass asserting "nothing irreversible can happen while I am away" is
+  wrong now; a pass asserting "nothing irreversible happens that I was not warned about" is the
+  one that holds.
 - **Food is not a flow.** `food` in the catalogue binds the sustainable level, and nothing fills
   a larder from a field or empties one except a shared meal you call for. The water half of that
   pair was wired this wave; the food half was not. A settlement that never starves on an empty

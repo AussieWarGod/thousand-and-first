@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using XRL;
 using XRL.Messages;
@@ -323,7 +323,7 @@ namespace ThousandAndFirst
 
 		/// <summary>
 		/// What one work makes in a day right now: its rating, cut by the crew the settlement
-		/// gave it and by what the ground or the sky is giving it.
+		/// gave it, by how worn it is, and by what the ground or the sky is giving it.
 		/// </summary>
 		private static int DailyOutput(GameObject Work, Zone Z, int Days, out KingdomPowerRules.PowerSource Source)
 		{
@@ -333,10 +333,13 @@ namespace ThousandAndFirst
 			{
 				return 0;
 			}
-			// A work that asked for nobody is always fully crewed; one that asked for hands is
-			// worth exactly the fraction of them it got, which is what the staffing pass wrote.
-			int needed = Work.GetIntProperty("KingdomStaffNeeded");
-			int crew = (needed > 0) ? Work.GetIntProperty("KingdomEffectiveness") : 100;
+			// What the work is actually managing: the fraction of the hands it asked for that it
+			// got, or - for a work that asked for nobody - its own condition. Damage dims a power
+			// work in proportion, staffed or not (Addendum 10(b): "solar panels reduce power
+			// output"), and it reaches the staffed ones too. It did not before: this file runs
+			// inside the growth pass and KingdomEffectiveness is the staffing pass's crew stretch
+			// at that point, so a half-wrecked mill made a whole mill's charge.
+			int crew = KingdomWear.EffectivenessOf(Work);
 			int available;
 			switch (Source)
 			{

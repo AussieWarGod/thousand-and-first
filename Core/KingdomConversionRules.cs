@@ -97,19 +97,21 @@ namespace ThousandAndFirst
 	/// to agree with them, and Addendum 5 wants exactly the Roomed household across an ambient
 	/// grudge to blend. What generates pressure is an IMPOSED creed &mdash; a realm declaration
 	/// against theirs, a rival shrine consecrated in their quarter &mdash; and a settler who
-	/// resents one takes the road instead of the creed: named once (STANDARDS 7b), given
-	/// <see cref="ResentedPasses"/> attended passes for the founder to take the pressure off, and
-	/// then gone through the settlement's ordinary emigration, chronicled by name and cause in
-	/// both registers. The covenant is drunk, never administered.
+	/// resents one takes the road instead of the creed: warned once and pushed to the founder
+	/// wherever they are (STANDARDS 7b, Addendum 10(a)), given <see cref="ResentedWindowDays"/> of
+	/// WORLD TIME for the founder to take the pressure off, and then gone through the settlement's
+	/// ordinary emigration, chronicled by name and cause in both registers. The covenant is drunk,
+	/// never administered.
 	/// </para>
 	/// <para>
 	/// <b>The end of the road is a BRINK, not a conversion.</b> Reaching
 	/// <see cref="SharedLivingForConversion"/> records a creed brink
 	/// (<see cref="KingdomBrinkRules"/>) and shared living STOPS ACCRUING there, so a thousand-day
-	/// absence and a two-hundred-day one arrive at the same place. The founder is named once with
-	/// the honest elapsed and gets <see cref="ResentedPasses"/> attended passes to break the
-	/// household up, rehouse them, or bring another creed's pull to bear &mdash; and only when the
-	/// window is spent with the household still pulling is the draw asked at all.
+	/// absence and a two-hundred-day one arrive at the same place. The founder is warned once with
+	/// the honest elapsed and gets <see cref="KingdomBrinkRules.CreedBrinkWindowDays"/> of world
+	/// time to break the household up, rehouse them, or bring another creed's pull to bear &mdash;
+	/// and only when that window is spent with the household still pulling is the draw asked at
+	/// all. Spent, now, whether or not the founder came back to watch it spend.
 	/// </para>
 	/// <para>
 	/// <b>Rare, and never re-rolled.</b> The draw is <see cref="ConversionChancePercent"/>, taken
@@ -586,10 +588,12 @@ namespace ThousandAndFirst
 		// ==================================================================================
 		// The exit: a settler may always emigrate rather than convert.
 		//
-		// Shaped exactly like Addendum 4b's housing grace, and for the same reason -- announced
-		// once by name, counted in ATTENDED passes and in nothing else, ended by the founder
-		// acting or by the settler walking out through the emigration the settlement already
-		// has. Absence cannot spend a pass of it, because nothing advances it except a pass.
+		// Shaped exactly like Addendum 4b's housing brink, and for the same reason -- warned once
+		// by name and PUSHED to wherever the founder is, counted in WORLD-DAYS from that warning
+		// and in nothing else, ended by the founder acting or by the settler walking out through
+		// the emigration the settlement already has. Absence spends this window like any other
+		// (Addendum 10(a)); what absence cannot do is start one, because an entry that carries no
+		// warning day has no deadline.
 		//
 		// What generates pressure is deliberately narrow. Osmosis and the shared table are
 		// chosen proximity: Addendum 5 wants the Roomed household across an ambient grudge to
@@ -625,20 +629,24 @@ namespace ThousandAndFirst
 		public const int ResentmentHostility = 50;
 
 		/// <summary>
-		/// Attended passes a settler under a creed they resent is given before they go. Six: three
-		/// times <c>KingdomLodgingRules.GracePasses</c>, because a roof is tonight's problem and a
-		/// creed is a life's, and the founder's answer here is a thing they must unsay or
-		/// deconsecrate rather than a bunk they can raise on the spot. Derived from
-		/// <see cref="KingdomBrinkRules.CreedBrinkWindow"/>, which is where that ruling now lives
-		/// and which the end-of-the-road brink shares, so the two ways a settler can be one window
-		/// from losing their creed cannot drift apart.
+		/// World-days a settler under a creed they resent is given before they go, counted from
+		/// the day the word reached the founder. Eighteen: three times
+		/// <c>KingdomLodgingRules.GraceDays</c>, because a roof is tonight's problem and a creed is
+		/// a life's, and the founder's answer here is a thing they must unsay or deconsecrate
+		/// rather than a bunk they can raise on the spot. Derived from
+		/// <see cref="KingdomBrinkRules.CreedBrinkWindowDays"/>, which is where that ruling now
+		/// lives and which the end-of-the-road brink shares, so the two ways a settler can be one
+		/// window from losing their creed cannot drift apart.
 		/// </summary>
-		public const int ResentedPasses = KingdomBrinkRules.CreedBrinkWindow;
+		public const int ResentedWindowDays = KingdomBrinkRules.CreedBrinkWindowDays;
 
-		/// <summary>The count of a settler nobody has warned the founder about yet. Negative so
-		/// it can never be confused with "warned, and no pass has run since", which is zero.
-		/// <see cref="KingdomBrinkRules.Unannounced"/>, shared with every other brink.</summary>
-		public const int NoResentment = KingdomBrinkRules.Unannounced;
+		/// <summary>
+		/// The stored day of a settler nobody has warned the founder about yet. Zero, which is
+		/// what an absent map entry already reads as, so "not being pressed" and "pressed and
+		/// never warned" cannot be told apart by accident &mdash; the entry's PRESENCE is the
+		/// pressure and its VALUE is the warning.
+		/// </summary>
+		public const int NotWarned = 0;
 
 		/// <summary>Whether an imposed creed is one this settler resents.</summary>
 		/// <param name="Hostility">0-100 between the settler's own creed and the creed being
@@ -650,26 +658,34 @@ namespace ThousandAndFirst
 		}
 
 		/// <summary>
-		/// The count after one more attended pass has found this settler still under a creed they
-		/// resent. A settler at <see cref="NoResentment"/> becomes zero, which is the pass it is
-		/// announced on; every later attended pass adds one.
+		/// Whether a settler's window under a resented creed is spent and they leave now: a whole
+		/// <see cref="ResentedWindowDays"/> of world time since the day the founder was warned.
 		/// <para>
-		/// This is the ONLY thing that advances it, and it is called only from the attended pass.
-		/// An absent founder therefore cannot walk anybody out of the settlement: no clock is read
-		/// here, and nothing elapses on its own.
+		/// Days rather than passes, and false for anybody at <see cref="NotWarned"/> however long
+		/// the pressure has stood. That refusal is the load-bearing half: the founder's clock
+		/// starts when they are TOLD, so a settler pressed all through an absence is warned on the
+		/// pass that finds them and still gets the whole window from there.
 		/// </para>
 		/// </summary>
-		public static int ResentmentAfterPass(int Resented)
+		/// <param name="WarnedDay">The world day the word went out, from
+		/// <c>KingdomBrinkRules.DayNumber</c>. <see cref="NotWarned"/> means it has not.</param>
+		/// <param name="NowDay">Today, from the same helper.</param>
+		public static bool ResentmentRunOut(int WarnedDay, int NowDay)
 		{
-			return KingdomBrinkRules.AfterAttendedPass(Resented);
+			return WarnedDay > NotWarned && NowDay - WarnedDay >= ResentedWindowDays;
 		}
 
-		/// <summary>Whether a settler's grace is spent and they leave now: exactly
-		/// <see cref="ResentedPasses"/> attended passes after the one it was announced on.
-		/// </summary>
-		public static bool ResentmentRunOut(int Resented)
+		/// <summary>World-days the founder has left to take a resented creed off somebody. The
+		/// whole window for a settler nobody has been warned about, because their window has not
+		/// started.</summary>
+		public static int ResentmentDaysLeft(int WarnedDay, int NowDay)
 		{
-			return KingdomBrinkRules.WindowSpent(BrinkKind.Creed, Resented);
+			if (WarnedDay <= NotWarned)
+			{
+				return ResentedWindowDays;
+			}
+			int left = ResentedWindowDays - (NowDay - WarnedDay);
+			return (left > 0) ? left : 0;
 		}
 
 		/// <summary>The cause a conversion-pressure departure is chronicled and noted under, in

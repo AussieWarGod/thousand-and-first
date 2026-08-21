@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using XRL.World;
 using XRL.World.Parts;
 
@@ -275,6 +275,42 @@ namespace ThousandAndFirst
 			}
 			FoodAbundance = KingdomRules.ClassifyPantry(FoodStored);
 			return spent;
+		}
+
+		/// <summary>
+		/// Water lost out of one damaged store, keeping the survey's counters correct the same way
+		/// <see cref="Consume"/> does. Loss and not transfer: this water runs into the ground and
+		/// is gone (Addendum 10(b)), which is why it does not go through
+		/// <c>KingdomLiquids.PourOnGround</c> the way a manifest's surplus does &mdash; that
+		/// surplus is water a founder can still walk up to, and this is not.
+		/// </summary>
+		/// <param name="Store">The damaged vessel. Must be one of <see cref="Stores"/>.</param>
+		/// <param name="Drams">Amount the leak is owed.</param>
+		/// <returns>Drams actually lost, measured from the vessel rather than assumed.</returns>
+		public int LeakFrom(LiquidVolume Store, int Drams)
+		{
+			if (Store == null || Drams <= 0)
+			{
+				return 0;
+			}
+			bool fresh = KingdomLiquids.HasFreshWater(Store);
+			int removed = KingdomLiquids.Drain(Store, Drams);
+			if (removed <= 0)
+			{
+				return 0;
+			}
+			if (fresh)
+			{
+				StoredWater -= removed;
+				StorageSpace += removed;
+			}
+			else if (Store.Volume <= 0)
+			{
+				// A vessel of something else that the leak has just emptied is room for fresh
+				// water where there was none, exactly as Take would have counted it.
+				StorageSpace += Store.MaxVolume;
+			}
+			return removed;
 		}
 
 		/// <summary>Pours water into the dedicated stores, updating the survey's counters.</summary>

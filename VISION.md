@@ -82,10 +82,13 @@ works carry settles back toward them. What none of that is, is a clock running o
 Every rate is time × **labour** × infrastructure, so an unstaffed yard shapes nothing over a
 season, a scaffold nobody works on does not rise, and a mill left alone wears not at all —
 idleness is what costs nothing, and it always was. Consequences are realised when you are made
-aware of them, and the irreversible ones — a settler leaving, a city seceding — wait at the
-brink for that moment rather than firing silently in the past: a thousand days away and ten
-days away arrive at the same place, and both hand you the last window the design promised to
-arrest it. Nothing anywhere is forgiven on a timer, because nothing needs to be: what bounds
+aware of them, and awareness is **pushed**: when something irreversible reaches its brink — a
+settler with nowhere to live, a creed at the end of its road, a city drawing up its own charter
+— word finds you wherever you are, once, dated, and it names what would stop it. From that
+moment you have a fair span of world days — six, eighteen, nine — and if you spend them
+elsewhere the thing happens anyway, told to you afterward with the day it happened on. A
+thousand days away and ten days away still arrive at the same place, because nothing accrues
+past a brink; what you cannot be dealt is a loss nobody ever warned you about. Nothing anywhere is forgiven on a timer, because nothing needs to be: what bounds
 the worst of an absence is the level the works honestly carry, and the floor below that is a
 camp. You come home to a report of what happened, not an inspection.
 

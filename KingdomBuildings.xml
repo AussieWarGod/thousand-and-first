@@ -298,11 +298,11 @@
     and a city keeps nobody on the water and eight. That is the handover the catalogue
     promises, stated honestly: hands never leave food; they stop being all of it.
 
-    These are also the only large binding works a bad season can reach. KingdomSubsidence
-    scales a crewed work by what it is actually running at and a staffless one not at all,
-    so a slide that ruins a reservoir costs the city no level and a slide that ruins the
-    home farm costs it dinners - and a city short-handed for any other reason is short of
-    food first. Food is the good that notices. It is meant to be.
+    A bad season reaches every large binding work now. KingdomSubsidence scales every
+    work by what it is actually running at (Addendum 10(b)), so a slide that ruins a
+    reservoir costs the city water and one that ruins the home farm costs it dinners -
+    and a city short-handed for any other reason is still short of food first, because
+    only food keeps hands. Food is the good that notices staffing. It is meant to be.
   -->
   <building Key="grange" DisplayName="grange (fields, a threshing floor, and the barn at the end of them)" Blueprint="r_KingdomGrange"
             Cost="40" Ticks="7200" Styles="all" Category="food" Plot="L" Open="yes" MinStage="Town"

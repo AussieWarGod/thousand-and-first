@@ -189,9 +189,9 @@ playtest passes.
   upgrades. Two residents who refuse each other never share a building; only real hostility breaks
   households, not the zealots' standing grudge toward strangers.
 - **Housing binds** (author ruling): nobody joins without a home *they* would accept, and a settler
-  whose acceptable housing is lost is named once and stops at a brink; two attended passes for
-  the founder to act, then the ordinary emigration — chronicled by name and cause. The window is
-  spent in attended passes, so an absence of any length arrives at the same place.
+  whose acceptable housing is lost stops at a brink and is warned about once, wherever the founder
+  is; six world-days for them to act, then the ordinary emigration — chronicled by name and cause.
+  Nothing accrues past the brink, so an absence of any length arrives at the same place.
 - Tastes and the upgrade trigger's displacement tolerance now speak this same vocabulary — three
   private systems became one, moddable end to end.
 
@@ -214,8 +214,8 @@ playtest passes.
 - **Culture**: every shared meal nudges the table toward its own majority, small and capped — a
   settlement cannot eat its way to a conversion.
 - **Consecration**: a founder may consecrate a shrine to a creed; staffed, it draws the neutral of
-  its zone — never the opposed, who resent it instead, and may take the road: named once, six
-  attended passes at the brink, then the ordinary emigration. Remove the shrine and it lifts.
+  its zone — never the opposed, who resent it instead, and may take the road: warned once,
+  eighteen world-days at the brink, then the ordinary emigration. Remove the shrine and it lifts.
 - **Education softens**: a staffed scriptorium reads the ambient grudge one band gentler. It
   converts nobody.
 - **The water rite turned inward**: share water with one named settler of another creed. They
@@ -279,9 +279,13 @@ playtest passes.
   city whose works carry a town becomes that town, not a ruin. Rung changes land in the chronicle
   as dated entries, dated to when they happened rather than to when you read them. A hundred days
   and a thousand days write different chronicles and end at the same honest level.
-- Each lost rung leaves up to two standing works the worse for it: **damage, bounded by the wear
-  ceiling, never deletion**, drawn through the kernel's counter-random so a reload never re-rolls
-  a collapse the chronicle already described. Nothing player-placed is touched.
+- **Each lost rung reaches the whole settlement, not a fixed quota** (Addendum 10(c)). Every
+  standing work is asked once, independently, at that rung's own scale — a City rung half the
+  settlement, a Steading rung a fifth — so a deep collapse leaves most of the plots battered,
+  half-ruined or ruined in name and in look, not a handful scuffed and the rest pristine; mending
+  walks the name back down as it heals. Still **damage, bounded by the wear ceiling, never
+  deletion**, drawn through the kernel's counter-random so a reload never re-rolls a collapse the
+  chronicle already described. Nothing player-placed is touched.
 - **Water works make water.** What a cistern or reservoir carries now arrives in the casks, day
   by day, on the same checkpoint discipline as fetching — including over an absence.
 - Arrivals stop at the edge of the measured band rather than walking into a settlement that
@@ -295,19 +299,32 @@ playtest passes.
   brink: it records who, what caused it, and the tick it was reached, and then **stops accruing**.
   A thousand-day absence and a ten-day absence arrive at the same place, because there is nowhere
   past a brink to arrive at.
-- It is announced **once, at awareness, with the honest elapsed time** — how long they have really
-  stood there, not a number the clock was capped down to — and its window is spent in attended
-  passes only: two for a roof, six for a creed, three for a city.
-- **Arrest it by acting.** Re-house the settler, break up the household, take the shrine off their
-  quarter, mend the quarrel — the brink lifts, the announcement is unsaid, and the accrual starts
-  again from nothing. Waiting was never a strategy and now is not a mechanic either.
+- **The word is pushed, once, dated, and it coaches.** When something reaches its brink the warning
+  finds the founder wherever they are — framed as word out of the named city when they are standing
+  somewhere else, and as the ordinary announcement when they are standing there, never both. It
+  says how long it has really stood, and it names the ARREST rather than only the doom.
+- **The window then runs in world-days from that delivery** — six for a roof, eighteen for a creed,
+  nine for a city, each its old attended-pass rope times the three-day cadence a present founder
+  was always assumed to keep. Spend those days elsewhere and the thing happens: the settler goes,
+  the creed changes hands, the city walks, and the report dates it to the day the window ran out
+  rather than to the homecoming that found it.
+- **Nothing irreversible ever fires unwarned.** A brink nobody has been told about has no deadline
+  at all, however old it is; the pass that discovers one can only warn about it, and the whole
+  window starts there. Presence stopped being a shield; ignorance became one.
+- **Arrest it by acting**, at any point up to the day it fires. Re-house the settler, break up the
+  household, take the shrine off their quarter, mend the quarrel — the brink lifts, the warning is
+  unsaid, and the accrual starts again from nothing. Waiting was never a strategy and now is not a
+  mechanic either.
 - Shared living, shrine pull and the water rite are counted in **cohabitation-days** of real
   shared life rather than in visits, through one exchange rate (three days to the pass) applied
   to every threshold, so an attentive founder's road is exactly as long as it was.
-- Dissent runs on world time, uncapped — safely, because secession now waits at a window strictly
-  shorter than the road to it.
+- Dissent runs on world time, uncapped — safely, because secession now waits at a named window,
+  behind a warning ladder that has already been shouting for eight days before it opens.
 - The old re-housing grace counter is gone from both seats. A settler's brink rides **the
-  settler**, so swapping between cities can never carry one to the wrong place.
+  settler**, so swapping between cities can never carry one to the wrong place; the per-city
+  resented-creed entry now carries the day the founder was warned rather than a count of visits.
+- One push channel, `KingdomWord`, carries every brink's warning, unsaying and dated aftermath.
+  Nothing builds a second one.
 
 ### Added — the food ladder reaches its big plots
 - **`grange`** (large plot, from Town) and **`the home farm`** (grand plot, from City) fill the
@@ -321,11 +338,13 @@ playtest passes.
   fields; a city keeps nobody hauling and eight.
 - Which also makes them the only large binding works a bad season can reach, since a crewed work
   carries what it is actually running at and a staffless one carries its figure whatever happens
-  to it. That is the price of the lane, and it is meant to be paid.
+  to it. That is the price of the lane, and it is meant to be paid — until Addendum 10(b) closed
+  it: every work now carries at its own condition, crewed or not, so ruin reaches the water and
+  roof lanes too.
 - **A home worn past condemnation stops being a roof.** It is not cleared, unbuilt or moved — the
   protection law is untouched — and putting the roof back on ends the condemnation. This is what
   gives a subsidence's ruin a real housing consequence, and everyone under a newly condemned home
-  is recorded at a roof brink dated to the day the roof went.
+  is recorded at a roof brink dated to the day the roof went, and warned about from there.
 - A yard's throughput ceiling is denominated **per day** rather than per resolve, so a yard that
   ran for thirty days finishes thirty days of work and a yard walked past thirty times in one
   afternoon still finishes none.

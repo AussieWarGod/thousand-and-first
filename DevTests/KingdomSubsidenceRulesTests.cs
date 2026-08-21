@@ -631,10 +631,61 @@ namespace ThousandAndFirst.Tests
 			Assert.Greater(KingdomMaterialRules.ConditionPercent(after), 0, "a damaged work stands");
 		}
 
-		[Test]
-		public void RuinedWorksPerBreakpoint_IsNoWorseThanARaidThatGotPastTheWall()
+		[TestCase(GrowthStage.Camp, 10)]
+		[TestCase(GrowthStage.Steading, 20)]
+		[TestCase(GrowthStage.Village, 30)]
+		[TestCase(GrowthStage.Town, 40)]
+		[TestCase(GrowthStage.City, 50)]
+		public void RuinChanceFor_ReachesFurtherTheGranderTheRungThatWent(GrowthStage from, int expected)
 		{
-			Assert.AreEqual(KingdomWearRules.MaxWorksDamagedPerRaid, KingdomSubsidenceRules.RuinedWorksPerBreakpoint);
+			Assert.AreEqual(expected, KingdomSubsidenceRules.RuinChanceFor(from));
+		}
+
+		[Test]
+		public void RuinChanceFor_RisesWithEveryRungAndNeverPastTheWidest()
+		{
+			// The reach rule (Addendum 10(c)): each lost rung reaches the works that rung's scale
+			// supported. Monotone with no plateau, so no two rungs of the ladder are the same
+			// event, and the widest of them is the constant the file names.
+			for (int index = 0; index < (int)GrowthStage.City; index++)
+			{
+				Assert.Less(KingdomSubsidenceRules.RuinChanceFor((GrowthStage)index),
+					KingdomSubsidenceRules.RuinChanceFor((GrowthStage)(index + 1)),
+					"a grander rung did not reach further than the one below it");
+			}
+			Assert.AreEqual(KingdomSubsidenceRules.RuinChancePercent,
+				KingdomSubsidenceRules.RuinChanceFor(GrowthStage.City));
+			Assert.Greater(KingdomSubsidenceRules.RuinChanceFor(GrowthStage.Camp), 0,
+				"a rung that reaches nothing is not a rung");
+		}
+
+		[TestCase(-4)]
+		[TestCase(99)]
+		public void RuinChanceFor_ClampsAStageOffTheLadderRatherThanFaulting(int index)
+		{
+			int chance = KingdomSubsidenceRules.RuinChanceFor((GrowthStage)index);
+			Assert.GreaterOrEqual(chance, KingdomSubsidenceRules.RuinChanceFor(GrowthStage.Camp));
+			Assert.LessOrEqual(chance, KingdomSubsidenceRules.RuinChanceFor(GrowthStage.City));
+		}
+
+		[Test]
+		public void ARungReachesFurtherThanASingleRaidEverDid()
+		{
+			// What the ruling overturned. The reach used to be a flat allowance of two works a
+			// rung -- the same figure a raid that got past the wall is allowed -- so a City
+			// falling all the way to Camp left eight works scuffed however many dozen were
+			// standing. A collapse is not a raid, and now it does not read like four of them.
+			int standing = 40;
+			int reached = 0;
+			for (int i = 0; i < standing; i++)
+			{
+				if (KingdomSubsidenceRules.RollRuin("taf:settlement:ashmarch", "work-" + i, 4800uL, GrowthStage.City))
+				{
+					reached++;
+				}
+			}
+			Assert.Greater(reached, KingdomWearRules.MaxWorksDamagedPerRaid,
+				"one lost rung of a city still reached no more works than a raid");
 		}
 
 		[Test]
@@ -643,8 +694,8 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < 8; i++)
 			{
 				Assert.AreEqual(
-					KingdomSubsidenceRules.RollRuin("taf:settlement:ashmarch", "work-" + i, 4800uL),
-					KingdomSubsidenceRules.RollRuin("taf:settlement:ashmarch", "work-" + i, 4800uL),
+					KingdomSubsidenceRules.RollRuin("taf:settlement:ashmarch", "work-" + i, 4800uL, GrowthStage.Town),
+					KingdomSubsidenceRules.RollRuin("taf:settlement:ashmarch", "work-" + i, 4800uL, GrowthStage.Town),
 					"a reload must not re-roll a collapse the chronicle already described");
 			}
 		}
@@ -656,7 +707,7 @@ namespace ThousandAndFirst.Tests
 			bool sawFalse = false;
 			for (int i = 0; i < 60; i++)
 			{
-				if (KingdomSubsidenceRules.RollRuin("taf:settlement:ashmarch", "work-" + i, 4800uL))
+				if (KingdomSubsidenceRules.RollRuin("taf:settlement:ashmarch", "work-" + i, 4800uL, GrowthStage.Town))
 				{
 					sawTrue = true;
 				}
@@ -674,8 +725,8 @@ namespace ThousandAndFirst.Tests
 			bool differed = false;
 			for (int i = 0; i < 60; i++)
 			{
-				if (KingdomSubsidenceRules.RollRuin("taf:settlement:ashmarch", "work-" + i, 4800uL)
-					!= KingdomSubsidenceRules.RollRuin("taf:settlement:ashmarch", "work-" + i, 9600uL))
+				if (KingdomSubsidenceRules.RollRuin("taf:settlement:ashmarch", "work-" + i, 4800uL, GrowthStage.Town)
+					!= KingdomSubsidenceRules.RollRuin("taf:settlement:ashmarch", "work-" + i, 9600uL, GrowthStage.Town))
 				{
 					differed = true;
 				}
@@ -686,8 +737,8 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void RollRuin_FailsClosedOnASettlementIdTheKernelWillNotTake()
 		{
-			Assert.IsFalse(KingdomSubsidenceRules.RollRuin(null, "work-1", 4800uL));
-			Assert.IsFalse(KingdomSubsidenceRules.RollRuin("", "work-1", 4800uL));
+			Assert.IsFalse(KingdomSubsidenceRules.RollRuin(null, "work-1", 4800uL, GrowthStage.City));
+			Assert.IsFalse(KingdomSubsidenceRules.RollRuin("", "work-1", 4800uL, GrowthStage.City));
 			Assert.AreEqual(0, KingdomSubsidenceRules.RolledRuinIncrement("", "work-1", 4800uL));
 		}
 
@@ -1142,6 +1193,296 @@ namespace ThousandAndFirst.Tests
 				Assert.LessOrEqual(KingdomMaterialRules.AddWear(0, KingdomSubsidenceRules.RuinIncrement(roll)),
 					KingdomMaterialRules.MaxWearPercent);
 			}
+		}
+
+		// ==================================================================================
+		// The field of ruins (Addendum 10(c)): how far a fall reaches, how deep, and what it
+		// costs the register to say so.
+		//
+		// KingdomSubsidence.Ruin is engine-coupled, so what is reproduced here is its SELECTION
+		// rule -- the same four rules functions in the same order over a synthetic settlement of
+		// numbered works. Everything these tests assert is therefore a property of the rules the
+		// engine calls, not of a re-implementation: change the ladder and these move.
+		// ==================================================================================
+
+		private sealed class FieldOfRuins
+		{
+			/// <summary>Wear each work was left standing at.</summary>
+			public int[] Wear;
+
+			/// <summary>Works the fall left the worse for it at all.</summary>
+			public int Ruined;
+
+			/// <summary>Homes that crossed the condemnation line, counted at the crossing.</summary>
+			public int Crossings;
+
+			/// <summary>Chronicle entries the RUIN half of the telling spent.</summary>
+			public int Entries;
+		}
+
+		/// <summary>Walks the rungs of a fall exactly as <c>KingdomSubsidence.Ruin</c> does: every
+		/// standing work asked once a rung, at that rung's own reach, damaged through the wear
+		/// ceiling, with the crossing counted and the telling sampled.</summary>
+		private static FieldOfRuins Collapse(string SettlementId, int Works, GrowthStage From, GrowthStage To)
+		{
+			FieldOfRuins field = new FieldOfRuins();
+			field.Wear = new int[Works];
+			ulong ordinal = 4800uL;
+			for (GrowthStage rung = From; rung > To; rung = (GrowthStage)((int)rung - 1))
+			{
+				int ruinedThisRung = 0;
+				int named = 0;
+				int deepest = 0;
+				for (int i = 0; i < Works; i++)
+				{
+					string id = "work-" + i;
+					if (!KingdomSubsidenceRules.RollRuin(SettlementId, id, ordinal, rung))
+					{
+						continue;
+					}
+					int increment = KingdomSubsidenceRules.RolledRuinIncrement(SettlementId, id, ordinal);
+					if (increment <= 0)
+					{
+						continue;
+					}
+					int before = field.Wear[i];
+					int after = KingdomMaterialRules.AddWear(before, increment);
+					if (after == before)
+					{
+						continue;
+					}
+					field.Wear[i] = after;
+					ruinedThisRung++;
+					if (after > deepest)
+					{
+						deepest = after;
+					}
+					if (KingdomLodgingRules.IsCondemned(after) && !KingdomLodgingRules.IsCondemned(before))
+					{
+						field.Crossings++;
+					}
+					if (KingdomSubsidenceRules.TellsRuin(ruinedThisRung - 1))
+					{
+						named++;
+						field.Entries++;
+					}
+				}
+				if (KingdomSubsidenceRules.RuinSummary("Ashmarch", ruinedThisRung, named, deepest) != null)
+				{
+					field.Entries++;
+				}
+				ordinal += 4800uL;
+			}
+			for (int i = 0; i < Works; i++)
+			{
+				if (field.Wear[i] > 0)
+				{
+					field.Ruined++;
+				}
+			}
+			return field;
+		}
+
+		[Test]
+		public void AFullCollapseLeavesMostOfTheFormerBuildingPlotsInRuins()
+		{
+			// The ruling itself: "a place that has gone from city back to a few tents should have
+			// ruins on the plots that were previously buildings". Under the retired flat
+			// allowance this was two works a rung, eight in the whole fall, and every other plot
+			// pristine however many dozen were standing.
+			const int works = 40;
+			FieldOfRuins field = Collapse("taf:settlement:ashmarch", works, GrowthStage.City, GrowthStage.Camp);
+			Assert.Greater(field.Ruined, works / 2, "a city fell all the way back and most of it was untouched");
+			Assert.Greater(field.Ruined, (int)GrowthStage.City * KingdomWearRules.MaxWorksDamagedPerRaid,
+				"the fall reached no more works than the retired flat allowance would have");
+			Assert.LessOrEqual(field.Ruined, works, "more works were ruined than were standing");
+			// The protection law, across the whole field: every plot still has its work on it,
+			// every one of them is still running, and every point of the damage is mendable.
+			// A collapse ruins; it never clears.
+			for (int i = 0; i < field.Wear.Length; i++)
+			{
+				Assert.LessOrEqual(field.Wear[i], KingdomMaterialRules.MaxWearPercent,
+					"work " + i + " was run past the ceiling a mending has to undo");
+				Assert.Greater(KingdomMaterialRules.ConditionPercent(field.Wear[i]), 0,
+					"work " + i + " stopped standing");
+			}
+		}
+
+		[Test]
+		public void AFullCollapseLeavesRuinsInEveryStageThereIs()
+		{
+			// "In appropriate stages of ruin" -- the varied half. Works are asked once a rung at
+			// four narrowing chances, so a work taken by one rung is knocked about and one taken
+			// by three is a shell, and a founder walking back in reads the difference.
+			FieldOfRuins field = Collapse("taf:settlement:ashmarch", 40, GrowthStage.City, GrowthStage.Camp);
+			List<string> stages = new List<string>();
+			for (int i = 0; i < field.Wear.Length; i++)
+			{
+				string word = KingdomMaterialRules.ConditionWord(field.Wear[i]);
+				if (!stages.Contains(word))
+				{
+					stages.Add(word);
+				}
+			}
+			Assert.IsTrue(stages.Contains("knocked about"), "nothing was merely knocked about");
+			Assert.IsTrue(stages.Contains("badly used"), "nothing was badly used");
+			Assert.IsTrue(stages.Contains("half-wrecked"), "nothing was left a ruin");
+			Assert.IsTrue(stages.Contains("sound"), "a fall that spared nothing at all is not a field of ruins");
+		}
+
+		[Test]
+		public void AShallowSlideScuffsACornerAndAFullCollapseTakesTheSettlement()
+		{
+			// The reach rule's whole point: depth of fall decides breadth of ruin. One rung and
+			// four rungs of the same settlement are not the same event.
+			FieldOfRuins shallow = Collapse("taf:settlement:ashmarch", 40, GrowthStage.Town, GrowthStage.Village);
+			FieldOfRuins full = Collapse("taf:settlement:ashmarch", 40, GrowthStage.City, GrowthStage.Camp);
+			Assert.Greater(shallow.Ruined, 0, "a lost rung scuffed nothing at all");
+			Assert.Less(shallow.Ruined, full.Ruined, "a one-rung slide cost as much as a whole collapse");
+			Assert.AreEqual(0, shallow.Crossings, "one rung emptied a house");
+		}
+
+		[Test]
+		public void TheSameFallLeavesTheSameFieldOfRuinsEveryTimeItIsAsked()
+		{
+			// The determinism the chronicle depends on: a reload re-reads a collapse, it does not
+			// re-roll one. Same settlement, same works, same rungs, same lattice of ordinals.
+			FieldOfRuins first = Collapse("taf:settlement:ashmarch", 40, GrowthStage.City, GrowthStage.Camp);
+			FieldOfRuins second = Collapse("taf:settlement:ashmarch", 40, GrowthStage.City, GrowthStage.Camp);
+			Assert.AreEqual(first.Ruined, second.Ruined);
+			Assert.AreEqual(first.Crossings, second.Crossings);
+			for (int i = 0; i < first.Wear.Length; i++)
+			{
+				Assert.AreEqual(first.Wear[i], second.Wear[i], "work " + i + " was ruined differently the second time");
+			}
+		}
+
+		[Test]
+		public void TwoSettlementsFallingTheSameWayFallDifferently()
+		{
+			FieldOfRuins here = Collapse("taf:settlement:ashmarch", 40, GrowthStage.City, GrowthStage.Camp);
+			FieldOfRuins there = Collapse("taf:settlement:tamsketh", 40, GrowthStage.City, GrowthStage.Camp);
+			bool differed = false;
+			for (int i = 0; i < here.Wear.Length; i++)
+			{
+				if (here.Wear[i] != there.Wear[i])
+				{
+					differed = true;
+				}
+			}
+			Assert.IsTrue(differed, "two settlements were handed one collapse between them");
+		}
+
+		[Test]
+		public void EveryHomeThatCrossesTheCondemnationLineIsCountedAtItsCrossing()
+		{
+			// The hook lives inside the damage loop and the damage loop has no count to stop at,
+			// so a home that crossed is a home that was recorded -- not just the first couple.
+			// Told-by-name is a separate, much smaller number, which is the proof the two are not
+			// the same gate.
+			FieldOfRuins field = Collapse("taf:settlement:ashmarch", 40, GrowthStage.City, GrowthStage.Camp);
+			int condemned = 0;
+			for (int i = 0; i < field.Wear.Length; i++)
+			{
+				if (KingdomLodgingRules.IsCondemned(field.Wear[i]))
+				{
+					condemned++;
+				}
+			}
+			Assert.Greater(condemned, 0, "a whole collapse condemned nothing");
+			Assert.AreEqual(condemned, field.Crossings, "a condemned home crossed the line more or less than once");
+			Assert.Greater(field.Crossings, (int)GrowthStage.City * KingdomSubsidenceRules.NamedRuinsPerBreakpoint,
+				"no more homes reached their brink than the chronicle happened to name");
+		}
+
+		[Test]
+		public void TheTellingIsCoarsenedAndTheDamageIsNot()
+		{
+			// Addendum 10(c) let a rung reach the whole settlement; the register's share of a
+			// collapse did not move a line for it. Three times the works, three times the ruins,
+			// the same number of entries.
+			FieldOfRuins small = Collapse("taf:settlement:ashmarch", 40, GrowthStage.City, GrowthStage.Camp);
+			FieldOfRuins large = Collapse("taf:settlement:ashmarch", 120, GrowthStage.City, GrowthStage.Camp);
+			Assert.Greater(large.Ruined, small.Ruined, "a bigger settlement lost no more works than a smaller one");
+			Assert.AreEqual(small.Entries, large.Entries, "the register still paid by the ruined work");
+			Assert.LessOrEqual(large.Entries, (int)GrowthStage.City * (KingdomSubsidenceRules.NamedRuinsPerBreakpoint + 1),
+				"a rung spent more entries than its named ruins plus one summary");
+		}
+
+		[Test]
+		public void AWholeCollapseOfADozensStrongCityStaysInsideTheChronicleBudget()
+		{
+			// The end-to-end budget, ruins included: forty-six people, four rungs, and a hundred
+			// and twenty works standing when it began.
+			FieldOfRuins field = Collapse("taf:settlement:ashmarch", 120, GrowthStage.City, GrowthStage.Camp);
+			int rungs = (int)GrowthStage.City;
+			int departures = KingdomSubsidenceRules.NamedDepartures(46) + 1;
+			Assert.LessOrEqual(departures + rungs + field.Entries, KingdomSubsidenceRules.ChronicleBudgetPerSlide,
+				"a real full collapse with a real field of ruins went over the budget");
+			Assert.AreEqual(departures + rungs + field.Entries, KingdomSubsidenceRules.ChronicleEntriesFor(46, rungs),
+				"the promised arithmetic and what a real fall actually writes disagree");
+		}
+
+		[Test]
+		public void RollRuin_AWiderRungRuinsASupersetOfWhatANarrowerOneWould()
+		{
+			// The draw did not move when the reach did: same key, same number, only more of the
+			// ladder answering yes. This is what makes an existing save's collapse reproducible
+			// and what makes "each lost rung reaches the works that rung's scale supported" a
+			// statement about one question rather than five.
+			bool sawGrowth = false;
+			for (int i = 0; i < 60; i++)
+			{
+				if (KingdomSubsidenceRules.RollRuin("taf:settlement:ashmarch", "work-" + i, 4800uL, GrowthStage.Steading))
+				{
+					Assert.IsTrue(KingdomSubsidenceRules.RollRuin("taf:settlement:ashmarch", "work-" + i, 4800uL, GrowthStage.City),
+						"a work a narrow rung took was spared by a wider one");
+				}
+				else if (KingdomSubsidenceRules.RollRuin("taf:settlement:ashmarch", "work-" + i, 4800uL, GrowthStage.City))
+				{
+					sawGrowth = true;
+				}
+			}
+			Assert.IsTrue(sawGrowth, "the widest rung reached nothing the narrowest did not");
+		}
+
+		// --- What a rung's ruins say ------------------------------------------------------
+
+		[TestCase(-1, false)]
+		[TestCase(0, true)]
+		[TestCase(KingdomSubsidenceRules.NamedRuinsPerBreakpoint, false)]
+		public void TellsRuin_NamesTheFirstFewAndNoMore(int index, bool expected)
+		{
+			Assert.AreEqual(expected, KingdomSubsidenceRules.TellsRuin(index));
+		}
+
+		[Test]
+		public void RuinedWorkLine_NamesTheWorkThePlaceAndWhyNobodyKeptIt()
+		{
+			string line = KingdomSubsidenceRules.RuinedWorkLine("the tannery", "Ashmarch");
+			StringAssert.Contains("the tannery", line);
+			StringAssert.Contains("Ashmarch", line);
+			StringAssert.Contains("nobody left who kept it", line);
+			StringAssert.Contains("a work", KingdomSubsidenceRules.RuinedWorkLine(null, "Ashmarch"));
+		}
+
+		[Test]
+		public void RuinSummary_CarriesEveryRuinTheSampleDidNotNameAndSaysHowBadTheWorstGot()
+		{
+			string line = KingdomSubsidenceRules.RuinSummary("Ashmarch", 9, 1, KingdomMaterialRules.MaxWearPercent);
+			StringAssert.Contains("8 more works", line);
+			StringAssert.Contains("Ashmarch", line);
+			StringAssert.Contains(KingdomMaterialRules.ConditionWord(KingdomMaterialRules.MaxWearPercent), line);
+			StringAssert.Contains("one more work", KingdomSubsidenceRules.RuinSummary("Ashmarch", 2, 1, 30));
+			StringAssert.Contains(KingdomMaterialRules.ConditionWord(30), KingdomSubsidenceRules.RuinSummary("Ashmarch", 2, 1, 30));
+		}
+
+		[Test]
+		public void RuinSummary_SaysNothingWhenTheSampleNamedThemAll()
+		{
+			Assert.IsNull(KingdomSubsidenceRules.RuinSummary("Ashmarch", 1, 1, 20));
+			Assert.IsNull(KingdomSubsidenceRules.RuinSummary("Ashmarch", 0, 0, 0));
+			Assert.IsNull(KingdomSubsidenceRules.RuinSummary("Ashmarch", -3, -1, 0));
 		}
 	}
 }

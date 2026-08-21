@@ -9,7 +9,7 @@ namespace ThousandAndFirst
 	/// consecrated over a quarter, or anything a later wave builds that works the same way.
 	/// <para>
 	/// A <c>Protocol</c>-shaped contract rather than a call the source makes once, and
-	/// deliberately: pressure is a FACT re-derived on every attended pass, not an event that
+	/// deliberately: pressure is a FACT re-derived on every resolve, not an event that
 	/// happened. A source that fired once and left a counter running would keep pushing a settler
 	/// toward the road after the founder had already deconsecrated the shrine, and the founder
 	/// would have no way to tell. Asked fresh every pass, taking the pressure off takes it off.
@@ -58,21 +58,23 @@ namespace ThousandAndFirst
 	/// <b>The exit.</b> A settler may always emigrate rather than convert. Living beside somebody
 	/// generates no pressure &mdash; that is the arc working &mdash; but a creed IMPOSED on a
 	/// settler who resents it (a realm declaration against theirs, a rival shrine consecrated in
-	/// their quarter) starts them toward the road instead: named once, given
-	/// <see cref="KingdomConversionRules.ResentedPasses"/> attended passes for the founder to take
+	/// their quarter) starts them toward the road instead: warned once wherever the founder is,
+	/// given <see cref="KingdomConversionRules.ResentedWindowDays"/> of world time for them to take
 	/// it off, then gone through the settlement's ordinary emigration, chronicled by name and
 	/// cause in both registers. <see cref="NotePressure"/> and
 	/// <see cref="AddPressureSource"/> are the surface every other channel uses; nothing may build
 	/// its own.
 	/// </para>
 	/// <para>
-	/// <b>Counted in cohabitation time, resolved at awareness.</b> People go on living together
-	/// whether or not anyone is watching (Addendum 8 clause 1, which names osmosis), so shared
-	/// living accrues for every day two settlers actually spent under one roof and the founder's
-	/// presence has nothing to do with it. What the founder's presence still governs is the
-	/// WINDOW: the road ends in a brink rather than in a conversion, and its
-	/// <see cref="KingdomConversionRules.ResentedPasses"/> attended passes are spent here and
-	/// nowhere else, so nobody comes home to find their city has quietly changed its mind.
+	/// <b>Counted in cohabitation time, warned at the crossing, spent by the world.</b> People go
+	/// on living together whether or not anyone is watching (Addendum 8 clause 1, which names
+	/// osmosis), so shared living accrues for every day two settlers actually spent under one roof
+	/// and the founder's presence has nothing to do with it. The road ends in a brink rather than
+	/// in a conversion, and under Addendum 10(a) the founder's presence does not govern the window
+	/// either: the word is pushed to them the moment the road ends, and
+	/// <see cref="KingdomBrinkRules.CreedBrinkWindowDays"/> of world time later the creed changes
+	/// hands whether they came back or not. What their presence still governs is everything that
+	/// can STOP it &mdash; and nothing changes hands unwarned.
 	/// </para>
 	/// <para>
 	/// <b>What the absence is allowed to assume.</b> Who sleeps where is written only by
@@ -95,7 +97,7 @@ namespace ThousandAndFirst
 			get { return KingdomCreed.Enabled && KingdomLodging.Enabled; }
 		}
 
-		// Standing pressure sources, asked fresh on every attended pass. A list rather than a
+		// Standing pressure sources, asked fresh on every resolve. A list rather than a
 		// single hook because two shrines in two quarters are two sources, and the first one that
 		// names a creed this settler resents is the one they leave over -- a second grievance does
 		// not make anybody leave twice.
@@ -165,9 +167,11 @@ namespace ThousandAndFirst
 			}
 			long now = (The.Game != null) ? The.Game.TimeTicks : 0L;
 			Dictionary<string, List<GameObject>> households = Households(residents);
-			// The window first, and osmosis after it, and the order is load-bearing: a brink
-			// recorded THIS pass is announced with nothing spent, and spending it again in the
-			// same pass would cost the founder a visit they never had.
+			// The window first, and osmosis after it. The order no longer decides anything -- the
+			// window is anchored at the warning tick, so a brink recorded and warned in this
+			// resolve has zero days spent whichever loop looks at it next -- but it is kept,
+			// because reading the standing brinks before creating new ones is the order the
+			// re-derive-every-pass contract is easiest to check in.
 			for (int i = 0; i < residents.Count; i++)
 			{
 				CreedWindow(System, Z, residents[i], now);
@@ -178,7 +182,7 @@ namespace ThousandAndFirst
 			}
 			for (int i = 0; i < residents.Count; i++)
 			{
-				Pressure(System, Z, residents[i]);
+				Pressure(System, Z, residents[i], now);
 			}
 			ForgetDeparted(System);
 		}
@@ -236,7 +240,7 @@ namespace ThousandAndFirst
 				// so this is here for the settler the meal took points OFF: if a counter-pull has
 				// dropped them back below the end of a road they were standing at, their brink is
 				// lifted and unsaid on the spot.
-				LiftIfArrested(System, attendee, roll);
+				LiftIfArrested(System, Z, attendee, roll);
 			}
 		}
 
@@ -281,7 +285,7 @@ namespace ThousandAndFirst
 			{
 				return false;
 			}
-			BeginResentment(System, roll, PressingCreed);
+			BeginResentment(System, Z, roll, PressingCreed);
 			return true;
 		}
 
@@ -379,13 +383,18 @@ namespace ThousandAndFirst
 				}
 				atTheEnd.Add(RollNameOf(residents[i]) + "->" + (brink.Cause ?? "-")
 					+ " (" + (ConversionChannel)brink.Channel
-					+ " " + brink.PassesSpent + "/" + KingdomConversionRules.ResentedPasses
-					+ ", " + KingdomBrinkRules.DaysStood(brink.ReachedTick, now) + "d)");
+					+ " " + KingdomBrinkRules.DaysLeft(BrinkKind.Creed, brink.WarnedTick, now)
+					+ "/" + KingdomBrinkRules.CreedBrinkWindowDays + "d left"
+					+ (brink.Warned ? "" : ", unwarned")
+					+ ", stood " + KingdomBrinkRules.DaysStood(brink.ReachedTick, now) + "d)");
 			}
 			List<string> leaving = new List<string>();
+			int today = KingdomBrinkRules.DayNumber(now);
 			foreach (KeyValuePair<string, int> entry in System.ConversionResented)
 			{
-				leaving.Add(entry.Key + " (" + entry.Value + "/" + KingdomConversionRules.ResentedPasses + ")");
+				leaving.Add(entry.Key + " (" + KingdomConversionRules.ResentmentDaysLeft(entry.Value, today)
+					+ "/" + KingdomConversionRules.ResentedWindowDays + "d left"
+					+ ((entry.Value > KingdomConversionRules.NotWarned) ? "" : ", unwarned") + ")");
 			}
 			if (pulled.Count == 0 && leaving.Count == 0 && atTheEnd.Count == 0)
 			{
@@ -484,31 +493,34 @@ namespace ThousandAndFirst
 				Now - (long)days * KingdomRules.TicksPerDay, Now,
 				before.Creed == majority ? before.Shared : 0,
 				KingdomConversionRules.SharedLivingForConversion, perDay);
-			NoteRoadsEnd(System, Resident, roll, majority, ConversionChannel.Osmosis, reached, Now);
+			NoteRoadsEnd(System, Z, Resident, roll, majority, ConversionChannel.Osmosis, reached, Now);
 		}
 
 		/// <summary>
-		/// Records that a settler has reached the end of a creed's road, and says so once. The
-		/// immediate form, for the channel that noticed it &mdash; <c>KingdomFaith</c>'s shrine
-		/// calls it too &mdash; so the founder is told on the pass it is seen rather than a pass
-		/// later.
+		/// Records that a settler has reached the end of a creed's road, and pushes the word once.
+		/// The immediate form, for the channel that noticed it &mdash; <c>KingdomFaith</c>'s shrine
+		/// calls it too &mdash; so the founder hears about it on the resolve it is seen rather than
+		/// one later.
 		/// <para>
 		/// Side effects: a brink is recorded against the settler with the tick the road actually
-		/// ended on, one pass of its window is spent (the pass it is announced on, exactly as
-		/// Addendum 4b's housing window does), and both registers carry the announcement. Failure
-		/// mode: returns false and changes nothing, which is what a settler already at a brink
-		/// gets &mdash; nobody is told twice.
+		/// ended on; the warning is stamped, which is what STARTS the window (Addendum 10(a) &mdash;
+		/// the founder's time runs from being told, never from the crossing); and the word goes out
+		/// through <c>KingdomWord</c> to wherever they are, into the ledger and into the chronicle.
+		/// Failure mode: returns false and changes nothing, which is what a settler already at a
+		/// brink gets &mdash; nobody is told twice.
 		/// </para>
 		/// </summary>
 		/// <param name="System">The realm.</param>
+		/// <param name="Z">The ground this is happening on, for whether the founder is standing
+		/// on it. Null reads as elsewhere, which only changes the framing.</param>
 		/// <param name="Resident">The settler.</param>
 		/// <param name="Roll">The name the roll carries them under.</param>
 		/// <param name="TowardCreed">The creed at the end of the road.</param>
 		/// <param name="Channel">Which channel walked them down it.</param>
 		/// <param name="ReachedTick">The tick the road ended, from
 		/// <c>KingdomBrinkRules.CrossingTick</c> or from the pass that found it.</param>
-		/// <param name="NowTick">Now, for the honest elapsed.</param>
-		public static bool NoteRoadsEnd(KingdomSystem System, GameObject Resident, string Roll, string TowardCreed, ConversionChannel Channel, long ReachedTick, long NowTick)
+		/// <param name="NowTick">Now, for the honest elapsed and for the window's anchor.</param>
+		public static bool NoteRoadsEnd(KingdomSystem System, Zone Z, GameObject Resident, string Roll, string TowardCreed, ConversionChannel Channel, long ReachedTick, long NowTick)
 		{
 			if (!Enabled || System == null || !System.Founded || Resident == null || string.IsNullOrEmpty(Roll) || string.IsNullOrEmpty(TowardCreed))
 			{
@@ -518,16 +530,22 @@ namespace ThousandAndFirst
 			{
 				return false;
 			}
-			BrinkRecord brink = KingdomBrink.SpendPass(Resident, BrinkKind.Creed);
-			KingdomBrink.Announce(System, BrinkKind.Creed, Roll, KingdomCreed.CreedName(TowardCreed), brink, NowTick);
+			KingdomBrink.MarkWarned(Resident, BrinkKind.Creed, NowTick);
+			KingdomBrink.Announce(System, BrinkKind.Creed, Roll, KingdomCreed.CreedName(TowardCreed),
+				KingdomBrink.Of(Resident, BrinkKind.Creed), NowTick, KingdomWord.StandsIn(Z), System.SeatName, null);
 			return true;
 		}
 
-		// One attended pass of every standing creed brink, and the arrest that ends one. Runs from
-		// the settlement pass and from nowhere else, which is the whole of "absence never spends a
-		// window". The shrine's own brinks are skipped here and spent in KingdomFaith's pass,
-		// because what would arrest one of those is a fact about a building rather than about a
-		// household, and only that file can see it.
+		// Every standing creed brink, judged against the world's clock. The arrest is asked FIRST
+		// and every time, which is Rule 2 -- a founder who broke the household up has ended it,
+		// whenever they did it -- and only then is the window's expiry read. The shrine's own
+		// brinks are skipped here and judged in KingdomFaith's pass, because what would arrest one
+		// of those is a fact about a building rather than about a household, and only that file
+		// can see it.
+		//
+		// Absence no longer holds the window open. What it cannot do is start one: a brink the
+		// founder has never been warned of has no deadline, so this can only ever warn on the
+		// resolve that discovers one, and the whole window runs from there.
 		private static void CreedWindow(KingdomSystem System, Zone Z, GameObject Resident, long Now)
 		{
 			string roll = RollNameOf(Resident);
@@ -540,16 +558,23 @@ namespace ThousandAndFirst
 			{
 				return;
 			}
-			if (LiftIfArrested(System, Resident, roll))
+			if (LiftIfArrested(System, Z, Resident, roll))
 			{
 				return;
 			}
-			brink = KingdomBrink.SpendPass(Resident, BrinkKind.Creed);
-			if (!KingdomBrinkRules.WindowSpent(BrinkKind.Creed, brink.PassesSpent))
+			if (KingdomBrink.MarkWarned(Resident, BrinkKind.Creed, Now))
+			{
+				// Recorded by some path that could not speak, or carried across a save from
+				// before there was a warning to give. Told now, and the window starts now.
+				KingdomBrink.Announce(System, BrinkKind.Creed, roll, KingdomCreed.CreedName(brink.Cause),
+					KingdomBrink.Of(Resident, BrinkKind.Creed), Now, KingdomWord.StandsIn(Z), System.SeatName, null);
+				return;
+			}
+			if (!KingdomBrinkRules.WindowSpent(BrinkKind.Creed, brink.WarnedTick, Now))
 			{
 				return;
 			}
-			EndOfTheRoad(System, Z, Resident, roll, brink);
+			EndOfTheRoad(System, Z, Resident, roll, brink, Now);
 		}
 
 		/// <summary>
@@ -559,7 +584,7 @@ namespace ThousandAndFirst
 		/// and is said to be no longer at one.
 		/// </summary>
 		/// <returns>True when a brink was lifted, which is the caller's signal to stop.</returns>
-		private static bool LiftIfArrested(KingdomSystem System, GameObject Resident, string Roll)
+		private static bool LiftIfArrested(KingdomSystem System, Zone Z, GameObject Resident, string Roll)
 		{
 			BrinkRecord brink = KingdomBrink.Of(Resident, BrinkKind.Creed);
 			if (!brink.Stands || brink.Channel == (int)ConversionChannel.Shrine)
@@ -574,8 +599,13 @@ namespace ThousandAndFirst
 			{
 				return false;
 			}
+			bool wasWarned = brink.Warned;
 			KingdomBrink.Lift(Resident, BrinkKind.Creed);
-			KingdomBrink.Unsay(System, BrinkKind.Creed, Roll);
+			if (wasWarned)
+			{
+				// Only what was actually said is unsaid.
+				KingdomBrink.Unsay(System, BrinkKind.Creed, Roll, KingdomWord.StandsIn(Z), System.SeatName);
+			}
 			return true;
 		}
 
@@ -585,18 +615,29 @@ namespace ThousandAndFirst
 		/// a key that names the settlement, the channel, the person and which road this is. A road
 		/// that answers no is walked from nothing again, and the next one is a new question rather
 		/// than the same one re-asked.
+		/// <para>
+		/// The window is spent by the world, so this may be the first resolve after a long absence
+		/// and the turning may have happened days ago. It is dated to the day it happened: the
+		/// draw is the same draw whenever it is asked (<c>CounterRandom</c> on a key with no clock
+		/// in it), so the founder who was away is told what the settlement already knows rather
+		/// than watching it decided in front of them.
+		/// </para>
 		/// </summary>
-		private static void EndOfTheRoad(KingdomSystem System, Zone Z, GameObject Resident, string Roll, BrinkRecord Brink)
+		private static void EndOfTheRoad(KingdomSystem System, Zone Z, GameObject Resident, string Roll, BrinkRecord Brink, long Now)
 		{
 			ConversionChannel channel = (ConversionChannel)Brink.Channel;
 			int roads = Resident.GetIntProperty(RoadsWalkedProperty);
 			bool turns = KingdomConversionRules.Converts(
 				KingdomChronicle.SettlementId(System.KingdomFactionName), channel, Roll, KingdomConversionRules.RoadEnd(roads));
 			Resident.SetIntProperty(RoadsWalkedProperty, roads + 1);
+			bool here = KingdomWord.StandsIn(Z);
+			int ago = KingdomBrinkRules.DaysStood(KingdomBrinkRules.ExpiryTick(BrinkKind.Creed, Brink.WarnedTick), Now);
 			if (turns && Convert(System, Z, Resident, Brink.Cause, channel))
 			{
-				// Convert clears the brink and both maps. Nothing left to unsay: the founder was
-				// told this was coming and it came.
+				// Convert clears the brink and both maps and writes its own two registers. All
+				// that is owed here is the date: the founder was told this was coming, and this is
+				// the day it came.
+				KingdomWord.Aftermath(System, System.SeatName, here, KingdomBrinkRules.FiredNote(BrinkKind.Creed, Roll, ago));
 				return;
 			}
 			// It did not take. The brink is lifted rather than left standing, and the road starts
@@ -604,7 +645,7 @@ namespace ThousandAndFirst
 			// turn is not one point away from turning tomorrow.
 			KingdomBrink.Lift(Resident, BrinkKind.Creed);
 			SetProgress(System, Roll, ConversionProgress.None);
-			KingdomBrink.Unsay(System, BrinkKind.Creed, Roll);
+			KingdomBrink.Unsay(System, BrinkKind.Creed, Roll, here, System.SeatName);
 		}
 
 		// Whole days this settler has lived under their present roof since the last time anything
@@ -631,10 +672,16 @@ namespace ThousandAndFirst
 
 		// --- The exit ---------------------------------------------------------------------
 
-		// One attended pass of grace, and never anything else: this runs from the settlement pass
-		// and from nowhere else, so a founder who is away cannot spend it. Pressure is re-derived
-		// here every pass rather than remembered, so taking the pressure off takes it off.
-		private static void Pressure(KingdomSystem System, Zone Z, GameObject Resident)
+		// The resented-creed instance of the brink, judged against the world's clock. Pressure is
+		// re-derived here every pass rather than remembered, so taking the pressure off takes it
+		// off; the map entry's PRESENCE is the pressure and its VALUE is the world day the founder
+		// was warned, which is what the window runs from.
+		//
+		// It shares the creed brink's window (KingdomConversionRules.ResentedWindowDays) and its
+		// doctrine: warned once, pushed to the founder wherever they are, and then spent by the
+		// world whether or not they came back -- but never spent by a clock nobody started, so the
+		// resolve that discovers a pressure can only ever warn about it.
+		private static void Pressure(KingdomSystem System, Zone Z, GameObject Resident, long Now)
 		{
 			string roll = RollNameOf(Resident);
 			if (roll == null)
@@ -644,40 +691,48 @@ namespace ThousandAndFirst
 			string pressing = ResentedPressure(System, Z, Resident);
 			if (pressing == null)
 			{
-				// Nothing is being imposed on them, or nothing they mind. Forgetting the count
+				// Nothing is being imposed on them, or nothing they mind. Forgetting the entry
 				// rather than banking it is the same ruling housing makes: the founder is being
-				// asked to act on THIS pressure, and if it comes back they get the whole grace
-				// again.
+				// asked to act on THIS pressure, and if it comes back they get the whole window
+				// again. And the arrest is SAID, wherever the founder is -- a warning that is
+				// never withdrawn is a warning they stop believing -- but only when there was one:
+				// an entry that never carried a warning day has nothing to unsay.
+				int wasWarnedOn;
+				bool had = System.ConversionResented.TryGetValue(roll, out wasWarnedOn);
 				System.ConversionResented.Remove(roll);
+				if (had && wasWarnedOn > KingdomConversionRules.NotWarned)
+				{
+					KingdomWord.Unsay(System, System.SeatName, KingdomWord.StandsIn(Z),
+						KingdomBrinkRules.LiftedNote(BrinkKind.Creed, roll));
+				}
 				return;
 			}
-			int resented;
-			if (!System.ConversionResented.TryGetValue(roll, out resented))
+			int today = KingdomBrinkRules.DayNumber(Now);
+			int warned;
+			if (!System.ConversionResented.TryGetValue(roll, out warned) || warned <= KingdomConversionRules.NotWarned)
 			{
-				resented = KingdomConversionRules.NoResentment;
+				System.ConversionResented[roll] = today;
+				Announce(System, Z, roll, pressing, KingdomConversionRules.ResentedWindowDays);
+				// The day the word goes out is never the day they go.
+				return;
 			}
-			bool announce = resented < 0;
-			resented = KingdomConversionRules.ResentmentAfterPass(resented);
-			System.ConversionResented[roll] = resented;
-			if (announce)
-			{
-				Announce(System, roll, pressing);
-			}
-			if (!KingdomConversionRules.ResentmentRunOut(resented))
+			if (!KingdomConversionRules.ResentmentRunOut(warned, today))
 			{
 				return;
 			}
-			string leaving = KingdomConversionRules.LeavingLine(roll);
-			System.Ledger.Note("{{r|" + leaving + "}}");
+			long went = (long)(warned + KingdomConversionRules.ResentedWindowDays) * KingdomRules.TicksPerDay;
+			string leaving = KingdomConversionRules.LeavingLine(roll)
+				+ KingdomBrinkRules.FiredClause(KingdomBrinkRules.DaysStood(went, Now));
 			if (KingdomGrowth.Emigrate(System, Z, null, Resident, KingdomConversionRules.DepartureCause))
 			{
+				KingdomWord.Aftermath(System, System.SeatName, KingdomWord.StandsIn(Z), leaving);
 				System.ConversionResented.Remove(roll);
 				return;
 			}
 			// The settlement would not let them go -- they are the last of the loyal core, or the
-			// emigration machinery could not take them. The grace stays spent and is tried again
-			// on the next attended pass rather than being reset, so nothing is lost and nobody is
-			// told twice that they are going.
+			// emigration machinery could not take them. The window stays spent and is tried again
+			// on the next resolve rather than being reset, so nothing is lost and nobody is told
+			// they are going by a settlement that then kept them.
 		}
 
 		// The first source naming a creed this settler resents, or null. First rather than worst
@@ -713,24 +768,27 @@ namespace ThousandAndFirst
 				&& KingdomConversionRules.Resents(KingdomCreed.HostilityBetween(Creed, Pressing));
 		}
 
-		private static void BeginResentment(KingdomSystem System, string Roll, string Pressing)
+		private static void BeginResentment(KingdomSystem System, Zone Z, string Roll, string Pressing)
 		{
 			if (System.ConversionResented.ContainsKey(Roll))
 			{
 				return;
 			}
-			System.ConversionResented[Roll] = KingdomConversionRules.ResentmentAfterPass(KingdomConversionRules.NoResentment);
-			Announce(System, Roll, Pressing);
+			System.ConversionResented[Roll] = KingdomBrinkRules.DayNumber((The.Game != null) ? The.Game.TimeTicks : 0L);
+			Announce(System, Z, Roll, Pressing, KingdomConversionRules.ResentedWindowDays);
 		}
 
-		// STANDARDS 7b, said once and where the founder will see it: the map entry IS the
-		// announce flag, so a settler already counting cannot be announced a second time, and one
-		// whose pressure lifted and returned is announced afresh.
-		private static void Announce(KingdomSystem System, string Roll, string Pressing)
+		// STANDARDS 7b and Addendum 10(a): said once, and PUSHED to wherever the founder is
+		// standing rather than left in a report they read at the seat. The map entry IS the
+		// announce flag, so a settler whose window is already running cannot be warned about a
+		// second time, and one whose pressure lifted and returned is warned afresh.
+		private static void Announce(KingdomSystem System, Zone Z, string Roll, string Pressing, int DaysLeft)
 		{
 			string creedName = KingdomCreed.CreedName(Pressing);
-			KingdomChronicle.Record(System, KingdomConversionRules.PressureTelling(Roll, creedName));
-			System.Ledger.Note("{{r|" + KingdomConversionRules.PressureNote(Roll, creedName) + "}}");
+			KingdomWord.Warn(System, System.SeatName, KingdomWord.StandsIn(Z),
+				KingdomConversionRules.PressureNote(Roll, creedName) + " " + KingdomBrinkRules.WindowPhrase(DaysLeft),
+				KingdomConversionRules.PressureTelling(Roll, creedName),
+				null);
 		}
 
 		// Names that have left the roll are names nothing will ever pull at again. Pruned so a

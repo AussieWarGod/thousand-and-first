@@ -142,7 +142,9 @@ not the founder watched, held to `MaxRefinedPerDay` (eight) for each of those da
 the saw-pit, not a rule about homecomings. A yard that ran for thirty days with **nobody standing
 in it** finishes nothing, and says so once: the rate is time × labour, and labour is the half that
 was missing. Nothing wears out with the calendar; wear comes from raids, from hard running, and
-from temperamental certified tech.
+from temperamental certified tech. The one rider: what an already-damaged work goes on LOSING
+does run on world days — a holed cistern or battery empties whether or not the founder is
+watching. The damage is still an event; only its consequence is a clock, and mending ends it.
 
 **Where bits and rare finds come from.** Both are ordinary items in a container the founder
 dedicated as a **stockpile**. Bits are read off vanilla's own `TinkerItem` — a fried processing core
@@ -479,13 +481,15 @@ tags for everything else, where a refusal is absolute at any closeness.
 Housing does **bind**, though. A settler joins the settlement only if a home is already standing that
 they would take — needs met, a bed free, and nobody in it they refuse — and the refusal names the
 real reason rather than a bed count. A settler who *loses* every acceptable home does not start a
-countdown. They are recorded at a **brink** — nowhere to live, the tick they reached it, and there
-the matter rests — and they leave only after two **attended passes** in which the founder could
-have acted (raise a bunk, stake a plan, re-house them) and did not. The window is spent in attended
-passes and never in time, so an absence of ten days and one of a thousand arrive at exactly the
-same place: no city is ever found emptied over a house that burned the day its founder left. Give
-them a roof and the brink lifts, the announcement is unsaid, and nothing is remembered against
-them. Turn the whole of it off with
+countdown. They are recorded at a **brink** — nowhere to live, the tick they reached it, and the
+accrual stops there — and word is *pushed* to the founder wherever they happen to be, once, saying
+how long it has really been and naming what would keep them (raise a bunk, stake a plan, re-house
+them). From that warning they have six **world-days**, and if those days go by with the settler
+still unroofed they leave, whether or not anybody was there to watch — reported afterward with the
+day it happened on. Nothing accrues past the brink, so an absence of ten days and one of a thousand
+still arrive at exactly the same brink; what cannot happen is losing somebody you were never told
+about. Give them a roof at any point before the window runs out and the brink lifts, the warning is
+unsaid, and nothing is remembered against them. Turn the whole of it off with
 the **settlers are assigned to specific homes** option.
 
 ### Skins: what a design looks like

@@ -112,7 +112,7 @@ namespace ThousandAndFirst
 					RunEducationLapse(work, entry);
 				}
 			}
-			ForgetUnreached(System, Survey, claimed);
+			ForgetUnreached(System, Z, Survey, claimed);
 		}
 
 		// Rule 2 of the brink, for the settlers no shrine spoke to at all this pass: the building
@@ -120,7 +120,7 @@ namespace ThousandAndFirst
 		// longer reaches where they stand, so the pressure is gone and the brink goes with it.
 		// Without this sweep a shrine brink would outlive its shrine, which is the exact failure
 		// IConversionPressure's re-derive-every-pass contract exists to forbid.
-		private static void ForgetUnreached(KingdomSystem System, KingdomSurvey Survey, HashSet<GameObject> Claimed)
+		private static void ForgetUnreached(KingdomSystem System, Zone Z, KingdomSurvey Survey, HashSet<GameObject> Claimed)
 		{
 			for (int i = 0; i < Survey.Settlers.Count; i++)
 			{
@@ -129,7 +129,7 @@ namespace ThousandAndFirst
 				{
 					continue;
 				}
-				LiftShrineBrink(System, settler);
+				LiftShrineBrink(System, Z, settler);
 				if (settler.GetIntProperty(ShrinePullProperty) != 0)
 				{
 					settler.SetIntProperty(ShrinePullProperty, 0);
@@ -140,15 +140,20 @@ namespace ThousandAndFirst
 
 		// Lifts a standing shrine brink and unsays it. A creed brink reached through any other
 		// channel is not this file's to touch -- KingdomConversion spends and arrests those.
-		private static bool LiftShrineBrink(KingdomSystem System, GameObject Settler)
+		private static bool LiftShrineBrink(KingdomSystem System, Zone Z, GameObject Settler)
 		{
 			BrinkRecord brink = KingdomBrink.Of(Settler, BrinkKind.Creed);
 			if (!brink.Stands || brink.Channel != (int)ConversionChannel.Shrine)
 			{
 				return false;
 			}
+			bool wasWarned = brink.Warned;
 			KingdomBrink.Lift(Settler, BrinkKind.Creed);
-			KingdomBrink.Unsay(System, BrinkKind.Creed, NameOf(Settler));
+			if (wasWarned)
+			{
+				// Only what was actually said is unsaid.
+				KingdomBrink.Unsay(System, BrinkKind.Creed, NameOf(Settler), KingdomWord.StandsIn(Z), System.SeatName);
+			}
 			return true;
 		}
 
@@ -197,11 +202,11 @@ namespace ThousandAndFirst
 					AdvancePull(System, Z, settler, shrineCreed, Entry.Name);
 					break;
 				case KingdomFaithRules.ShrineStance.Opposed:
-					ForgetPull(System, settler);
+					ForgetPull(System, Z, settler);
 					HandOffOpposedPressure(System, Z, settler, shrineCreed);
 					break;
 				default:
-					ForgetPull(System, settler);
+					ForgetPull(System, Z, settler);
 					break;
 				}
 			}
@@ -209,9 +214,9 @@ namespace ThousandAndFirst
 
 		// Clears a settler's pull and any shrine brink standing over them, because the shrine has
 		// stopped arguing at them -- they took a creed, or they came to oppose it.
-		private static void ForgetPull(KingdomSystem System, GameObject Settler)
+		private static void ForgetPull(KingdomSystem System, Zone Z, GameObject Settler)
 		{
-			LiftShrineBrink(System, Settler);
+			LiftShrineBrink(System, Z, Settler);
 			if (Settler.GetIntProperty(ShrinePullProperty) != 0)
 			{
 				Settler.SetIntProperty(ShrinePullProperty, 0);
@@ -237,9 +242,11 @@ namespace ThousandAndFirst
 		/// consequence in the mod without one. It now records a brink through
 		/// <c>KingdomConversion.NoteRoadsEnd</c>, which names the settler and the shrine's creed
 		/// and the honest elapsed in both registers (STANDARDS 7b), and the conversion itself
-		/// waits out <c>KingdomBrinkRules.CreedBrinkWindow</c> attended passes in which
+		/// waits out <c>KingdomBrinkRules.CreedBrinkWindowDays</c> of WORLD TIME in which
 		/// deconsecrating the shrine, taking its staff off it, or moving the settler out of its
-		/// reach all stop it.
+		/// reach all stop it. Addendum 10(a): that window spends whether or not the founder comes
+		/// back to watch it, and the conversion is dated to the day it ran out &mdash; but it only
+		/// ever starts on the day the word reaches them.
 		/// </para>
 		/// </summary>
 		private static void AdvancePull(KingdomSystem System, Zone Z, GameObject Settler, string ShrineCreed, string BuildingName)
@@ -280,26 +287,35 @@ namespace ThousandAndFirst
 			long reached = KingdomBrinkRules.CrossingTick(
 				now - (long)days * KingdomRules.TicksPerDay, now, was,
 				KingdomFaithRules.ConversionPullThreshold, 1);
-			KingdomConversion.NoteRoadsEnd(System, Settler, NameOf(Settler), ShrineCreed, ConversionChannel.Shrine, reached, now);
+			KingdomConversion.NoteRoadsEnd(System, Z, Settler, NameOf(Settler), ShrineCreed, ConversionChannel.Shrine, reached, now);
 		}
 
-		// One attended pass of a standing shrine brink. The cause is re-derived by the caller --
-		// this only runs for a settler a staffed, consecrated shrine still reaches and still finds
-		// neutral -- so reaching here at all is the pressure still standing.
+		// A standing shrine brink, judged against the world's clock. The cause is re-derived by
+		// the caller -- this only runs for a settler a staffed, consecrated shrine still reaches
+		// and still finds neutral -- so reaching here at all is the pressure still standing.
 		private static void SpendShrineWindow(KingdomSystem System, Zone Z, GameObject Settler, string ShrineCreed, BrinkRecord Brink)
 		{
 			if (Brink.Cause != ShrineCreed)
 			{
 				// A different shrine has claimed them, or this one was reconsecrated. The creed at
 				// the end of their road is not the creed being pressed any more.
-				LiftShrineBrink(System, Settler);
+				LiftShrineBrink(System, Z, Settler);
 				return;
 			}
-			BrinkRecord spent = KingdomBrink.SpendPass(Settler, BrinkKind.Creed);
-			if (!KingdomBrinkRules.WindowSpent(BrinkKind.Creed, spent.PassesSpent))
+			long now = (The.Game != null) ? The.Game.TimeTicks : 0L;
+			if (KingdomBrink.MarkWarned(Settler, BrinkKind.Creed, now))
+			{
+				// Recorded by a path that could not speak, or carried across a save from before
+				// the word went out. Told now, and the whole window runs from now.
+				KingdomBrink.Announce(System, BrinkKind.Creed, NameOf(Settler), KingdomCreed.CreedName(ShrineCreed),
+					KingdomBrink.Of(Settler, BrinkKind.Creed), now, KingdomWord.StandsIn(Z), System.SeatName, null);
+				return;
+			}
+			if (!KingdomBrinkRules.WindowSpent(BrinkKind.Creed, Brink.WarnedTick, now))
 			{
 				return;
 			}
+			int ago = KingdomBrinkRules.DaysStood(KingdomBrinkRules.ExpiryTick(BrinkKind.Creed, Brink.WarnedTick), now);
 			string residentName = NameOf(Settler);
 			int roads = Settler.GetIntProperty(KingdomConversion.RoadsWalkedProperty);
 			bool turns = KingdomConversionRules.Converts(
@@ -313,7 +329,7 @@ namespace ThousandAndFirst
 			{
 				// The shrine argued a whole season and it did not take. Said, because the founder
 				// was told it was coming.
-				KingdomBrink.Unsay(System, BrinkKind.Creed, residentName);
+				KingdomBrink.Unsay(System, BrinkKind.Creed, residentName, KingdomWord.StandsIn(Z), System.SeatName);
 				return;
 			}
 			// The one path a conversion may take. Calling KingdomCreed.Record directly here
@@ -326,7 +342,8 @@ namespace ThousandAndFirst
 				return;
 			}
 			string creedName = KingdomCreed.CreedName(ShrineCreed);
-			MessageQueue.AddPlayerMessage(KingdomFaithRules.ConversionMessage(residentName, creedName));
+			MessageQueue.AddPlayerMessage(KingdomFaithRules.ConversionMessage(residentName, creedName)
+				+ KingdomBrinkRules.FiredClause(ago));
 			KingdomLog.Log("faith: conversion " + residentName + " -> " + ShrineCreed + " at " + (Z?.ZoneID ?? "-"));
 		}
 
@@ -338,8 +355,8 @@ namespace ThousandAndFirst
 		/// <para>
 		/// Hands off to <see cref="KingdomConversion.NotePressure"/> &mdash; the surface every
 		/// channel shares &mdash; rather than reimplementing the grace here: the named, chronicled,
-		/// attended-pass grace ending in the existing emigration machinery is that file's own state
-		/// to own, not a second copy of <c>KingdomLodgingRules.GracePasses</c> kept here. This is
+		/// warned, world-day window ending in the existing emigration machinery is that file's own
+		/// state to own, not a second copy of <c>KingdomLodgingRules.GraceDays</c> kept here. This is
 		/// deliberately the only place in this file that reaches outside
 		/// <c>KingdomFaith</c>/<c>KingdomFaithRules</c> and the already-shipped
 		/// <c>KingdomCreed</c>/<c>KingdomChronicle</c>/<c>KingdomLog</c> surfaces.

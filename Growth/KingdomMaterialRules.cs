@@ -1877,6 +1877,18 @@ namespace ThousandAndFirst
 			return 100 - wear;
 		}
 
+		/// <summary>Wear at which a work stops being merely knocked about and starts being badly
+		/// used. Named because three things read the same ladder &mdash; the word, the adjective
+		/// the work wears in its own name, and the sentence its description carries &mdash; and
+		/// they must not be able to disagree about where a stage begins.</summary>
+		public const int BadlyUsedWearPercent = 20;
+
+		/// <summary>Wear at which a work is half-wrecked: the deepest stage there is, and the
+		/// same line <c>KingdomLodgingRules.CondemnedWearPercent</c> stops calling a house a roof
+		/// at. A work here reads as a ruin, in its name and in its description
+		/// (<see cref="ConditionAdjective"/>, <see cref="ConditionLook"/>).</summary>
+		public const int HalfWreckedWearPercent = 40;
+
 		/// <summary>One word for the state of a work, for the line the founder reads. Never null.
 		/// </summary>
 		public static string ConditionWord(int Wear)
@@ -1885,11 +1897,68 @@ namespace ThousandAndFirst
 			{
 				return "sound";
 			}
-			if (Wear < 20)
+			if (Wear < BadlyUsedWearPercent)
 			{
 				return "knocked about";
 			}
-			return (Wear < 40) ? "badly used" : "half-wrecked";
+			return (Wear < HalfWreckedWearPercent) ? "badly used" : "half-wrecked";
+		}
+
+		/// <summary>
+		/// The adjective a worn work wears in its own NAME, so a settlement that fell reads as a
+		/// field of ruins rather than as pristine buildings with quiet arithmetic against them
+		/// (Addendum 10(c): "a collapsed settlement's former building plots read as RUINS, not as
+		/// pristine-but-nerfed works").
+		/// <para>
+		/// One ladder, three stages, on exactly the thresholds <see cref="ConditionWord"/> uses,
+		/// so the name on the plot and the word in the report can never describe different
+		/// buildings. Null for a sound work &mdash; which is the whole of how a mending walks the
+		/// name back: the stage is a function of the wear and of nothing else, so putting the
+		/// wear back down the ladder puts the name back down it, and a work mended to nothing
+		/// carries no adjective at all.
+		/// </para>
+		/// </summary>
+		/// <param name="Wear">The work's own wear, 0 to <see cref="MaxWearPercent"/>.</param>
+		/// <returns>Null for a sound work, so a caller adds nothing rather than adding
+		/// "sound".</returns>
+		public static string ConditionAdjective(int Wear)
+		{
+			if (Wear <= 0)
+			{
+				return null;
+			}
+			if (Wear < BadlyUsedWearPercent)
+			{
+				return "battered";
+			}
+			return (Wear < HalfWreckedWearPercent) ? "half-ruined" : "ruined";
+		}
+
+		/// <summary>
+		/// What a worn work LOOKS like, for the description somebody reads when they stop and
+		/// look at it. The other half of Addendum 10(c)'s presentation: the name says which stage
+		/// of ruin it is in, and this says what that stage looks like standing there.
+		/// <para>
+		/// Same three stages, same thresholds. Null for a sound work, which needs no sentence
+		/// about its condition at all &mdash; and which is again what makes mending walk it back:
+		/// nothing here remembers that a work was ever worse than it is.
+		/// </para>
+		/// </summary>
+		/// <param name="Wear">The work's own wear, 0 to <see cref="MaxWearPercent"/>.</param>
+		/// <returns>Null for a sound work.</returns>
+		public static string ConditionLook(int Wear)
+		{
+			if (Wear <= 0)
+			{
+				return null;
+			}
+			if (Wear < BadlyUsedWearPercent)
+			{
+				return "Boards have sprung and the weather is getting into it.";
+			}
+			return (Wear < HalfWreckedWearPercent)
+				? "Half of it is propped and the other half leans; it is still doing its work, badly."
+				: "It is more ruin than building now - a shell with its work still going on somewhere inside it.";
 		}
 
 		/// <summary>

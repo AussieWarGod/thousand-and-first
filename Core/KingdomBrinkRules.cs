@@ -25,11 +25,20 @@ namespace ThousandAndFirst
 	/// The brink: one shape for every irreversible consequence in the mod, and the arithmetic of
 	/// the last arrestable window in front of it.
 	/// <para>
+	/// <b>Addendum 10(a) moved the doctrine.</b> It used to be <em>consequences wait for
+	/// awareness</em>: the brink stood still until the founder came home, and its window was spent
+	/// in attended passes, so a settlement left alone could never actually lose anybody. The
+	/// author's ruling replaced that with <em>awareness is PUSHED</em> &mdash; "with enough
+	/// warning, coaching, and fair time to resolve something, it would be fair if things happened
+	/// while they are away". The five rules below are what that ruling costs and buys.
+	/// </para>
+	/// <para>
 	/// <b>Rule 1 &mdash; reaching the threshold does not fire it.</b> A process whose accrual
 	/// crosses an irreversible line records a brink &mdash; who, what caused it, and the tick it
-	/// was reached &mdash; and then <b>stops accruing</b>. That halt is the whole of Addendum 8
-	/// clause 3: a thousand-day absence and a ten-day absence arrive at the same place, because
-	/// there is nowhere past the brink to arrive at.
+	/// was reached &mdash; and then <b>stops accruing</b>. A thousand-day absence and a ten-day
+	/// absence arrive at the same place, because there is nowhere past the brink to arrive at.
+	/// This survives the change of doctrine unaltered: it is what keeps an absence from minting a
+	/// debt no founder chose.
 	/// </para>
 	/// <para>
 	/// <b>Rule 2 &mdash; the pressure is a fact, re-derived every pass.</b> A brink whose cause
@@ -39,70 +48,47 @@ namespace ThousandAndFirst
 	/// and the founder who stands still has not.
 	/// </para>
 	/// <para>
-	/// <b>Rule 3 &mdash; it announces once, at awareness, with the honest elapsed.</b> The line
-	/// names the subject and the cause and says how long the brink has actually stood, however
-	/// long that is. Once, per spell: the brink record IS the announce flag (STANDARDS 7b's
-	/// idiom), so a settler already at the brink is never told about twice and one whose cause
-	/// lifted and returned is told afresh.
+	/// <b>Rule 3 &mdash; word is pushed at the crossing, once, dated, and it COACHES.</b> The
+	/// warning reaches the founder wherever they stand (<c>KingdomWord</c>), names the subject and
+	/// the cause, says how long the brink has actually stood, and &mdash; the part that matters
+	/// &mdash; names the ARREST (<see cref="ArrestNote"/>). A line that only reports the doom is a
+	/// line the founder cannot act on, and a consequence that may fire in absence has no business
+	/// being announced by one.
 	/// </para>
 	/// <para>
-	/// <b>Rule 4 &mdash; the window is spent in ATTENDED PASSES only</b>, at the length the owning
-	/// design names: <see cref="RoofBrinkWindow"/> for a roof, <see cref="CreedBrinkWindow"/> for
-	/// a creed, <see cref="CityBrinkWindow"/> for a city. Absence never spends one. The window is
-	/// the founder's, and it exists only in their presence.
+	/// <b>Rule 4 &mdash; the window runs in WORLD-DAYS from the warning's delivery</b>, at
+	/// <see cref="RoofBrinkWindowDays"/>, <see cref="CreedBrinkWindowDays"/> and
+	/// <see cref="CityBrinkWindowDays"/>. Not in attended passes: the window used to be the
+	/// founder's and to exist only in their presence, which meant a warned settler could stand at
+	/// the edge forever. Every one of the three is its old attended-pass rope multiplied by
+	/// <see cref="CohabitationDaysPerAttendedPass"/>, so a founder who comes home at the cadence
+	/// the design always assumed walks the same road they always walked, and only one who leaves
+	/// sees the difference.
 	/// </para>
 	/// <para>
-	/// <b>Rule 5 &mdash; if the window runs out, the consequence fires exactly as it did before.</b>
-	/// No new outcomes live here; only a new gate in front of the old ones, and every consequence
-	/// keeps its own prose.
+	/// <b>Rule 5 &mdash; the window spent with the cause standing fires the consequence, attended
+	/// or not.</b> No new outcomes live here; only a new gate in front of the old ones, and every
+	/// consequence keeps its own prose. The passes run on zone activation, so "fires in absence"
+	/// means concretely: on the founder's return the consequence is found to have HAPPENED at
+	/// <see cref="ExpiryTick"/>, and its aftermath is dated to that tick rather than to the
+	/// homecoming (<see cref="FiredClause"/>). Nothing irreversible ever fires UNWARNED &mdash;
+	/// <see cref="WindowSpent"/> is false for a brink nobody has been told about, whatever the
+	/// clock says.
 	/// </para>
 	/// <para>
 	/// Engine-free, so the whole of it is tabled. <see cref="KingdomBrink"/> is the shell that
-	/// holds the records against real settlers and the real realm.
+	/// holds the records against real settlers and the real realm, and <c>KingdomWord</c> is the
+	/// one channel every warning is pushed through.
 	/// </para>
 	/// </summary>
 	public static class KingdomBrinkRules
 	{
 		// ==================================================================================
-		// The three windows. Named here and derived at every consumer, so a design that wants a
-		// longer rope for one of them moves one constant and the consumer's own tests move with
-		// it. Every one of them is counted in ATTENDED PASSES.
+		// The exchange rate, and the three windows derived through it. The old attended-pass
+		// ropes are kept as the INPUT to the derivation rather than deleted, so each window
+		// shows its own working and a design that wants a longer rope for one of them still
+		// moves exactly one number.
 		// ==================================================================================
-
-		/// <summary>
-		/// Attended passes a settler with nowhere to live is given before they go. Two: long
-		/// enough for a founder standing there to raise a bunk or stake a plan, short enough that
-		/// the answer to "why is nobody moving out" is never "wait longer". Addendum 4b's own
-		/// number, moved here rather than restated.
-		/// </summary>
-		public const int RoofBrinkWindow = 2;
-
-		/// <summary>
-		/// Attended passes a settler at the end of a creed's road is given before they take it.
-		/// Six: three times <see cref="RoofBrinkWindow"/>, because a roof is tonight's problem and
-		/// a creed is a life's, and the founder's answer here is a household to break up or a
-		/// shrine to deconsecrate rather than a bunk they can raise on the spot.
-		/// </summary>
-		public const int CreedBrinkWindow = 6;
-
-		/// <summary>
-		/// Attended passes a realm at the breaking point is given before the unhappier city walks.
-		/// Three, and this is the window the four-tier warning ladder never had: secession used to
-		/// fire on the same pass dissent reached its threshold, so uncapping accrual without this
-		/// would have made an absence lose a city faster than presence does &mdash; Addendum 8
-		/// clause 3 exactly inverted. One rung under the seven attended days the Rupture-to-
-		/// Breaking span is tested at, so the loudest warning still stands for longer than the
-		/// window that follows it.
-		/// </summary>
-		public const int CityBrinkWindow = 3;
-
-		/// <summary>
-		/// The window of a brink nobody has been told about yet. Negative so it can never be
-		/// confused with "announced, and no pass has run since", which is zero. The value the
-		/// retired <c>KingdomLodgingRules.NoGrace</c> and <c>KingdomConversionRules.NoResentment</c>
-		/// both carried, kept because both maps still store it.
-		/// </summary>
-		public const int Unannounced = -1;
 
 		/// <summary>
 		/// Days of world time one attended pass stood for under the old counters, and therefore
@@ -119,26 +105,92 @@ namespace ThousandAndFirst
 		/// <para>
 		/// It exists so the migration from passes to time is a MULTIPLICATION with an argument
 		/// rather than a re-guess. Every consumer that moved &mdash; osmosis, the shared meal, the
-		/// shrine's pull, the water rite's shared living &mdash; derives its new threshold from its
-		/// old one through <see cref="InCohabitationDays"/>, so an attentive founder walks exactly
-		/// the same road they walked before and only an absent one sees any difference.
+		/// shrine's pull, the water rite's shared living, and now all three brink windows &mdash;
+		/// derives its new threshold from its old one through <see cref="InCohabitationDays"/>, so
+		/// an attentive founder walks exactly the same road they walked before.
 		/// </para>
 		/// </summary>
 		public const int CohabitationDaysPerAttendedPass = 3;
 
-		/// <summary>Attended passes the window of one kind of brink runs for.</summary>
-		public static int WindowFor(BrinkKind Kind)
+		/// <summary>
+		/// The roof window as it was denominated before Addendum 10(a): two attended passes. Kept
+		/// as the INPUT to <see cref="RoofBrinkWindowDays"/> rather than deleted, so the number
+		/// shows its working. Two: long enough for a founder standing there to raise a bunk or
+		/// stake a plan, short enough that the answer to "why is nobody moving out" is never
+		/// "wait longer". Addendum 4b's own number.
+		/// </summary>
+		public const int RoofBrinkWindowPasses = 2;
+
+		/// <summary>
+		/// The creed window as it was denominated before Addendum 10(a): six attended passes,
+		/// three times <see cref="RoofBrinkWindowPasses"/>, because a roof is tonight's problem
+		/// and a creed is a life's, and the founder's answer here is a household to break up or a
+		/// shrine to deconsecrate rather than a bunk they can raise on the spot.
+		/// </summary>
+		public const int CreedBrinkWindowPasses = 6;
+
+		/// <summary>
+		/// The city window as it was denominated before Addendum 10(a): three attended passes.
+		/// This is the window the four-tier warning ladder never had &mdash; secession used to
+		/// fire on the same pass dissent reached its threshold. One rung under the seven attended
+		/// days the Rupture-to-Breaking span is tested at, so the loudest warning still stands for
+		/// longer than the window that follows it.
+		/// </summary>
+		public const int CityBrinkWindowPasses = 3;
+
+		/// <summary>
+		/// World-days a settler with nowhere to live has from the moment the word reaches the
+		/// founder. Six: <see cref="RoofBrinkWindowPasses"/> through the exchange rate.
+		/// </summary>
+		public const int RoofBrinkWindowDays = RoofBrinkWindowPasses * CohabitationDaysPerAttendedPass;
+
+		/// <summary>
+		/// World-days a settler at the end of a creed's road has from the moment the word reaches
+		/// the founder. Eighteen: <see cref="CreedBrinkWindowPasses"/> through the exchange rate.
+		/// </summary>
+		public const int CreedBrinkWindowDays = CreedBrinkWindowPasses * CohabitationDaysPerAttendedPass;
+
+		/// <summary>
+		/// World-days a realm at the breaking point has from the moment the word reaches the
+		/// founder. Nine: <see cref="CityBrinkWindowPasses"/> through the exchange rate.
+		/// </summary>
+		public const int CityBrinkWindowDays = CityBrinkWindowPasses * CohabitationDaysPerAttendedPass;
+
+		/// <summary>The tick of a brink nobody has been told about yet. Zero, and it is the ONLY
+		/// unwarned marker: <see cref="WindowSpent"/> refuses to fire on it, which is the whole of
+		/// "nothing irreversible ever fires unwarned".</summary>
+		public const long Unwarned = 0L;
+
+		/// <summary>World-days the window of one kind of brink runs for, from the warning.</summary>
+		public static int WindowDays(BrinkKind Kind)
 		{
 			switch (Kind)
 			{
 			case BrinkKind.Roof:
-				return RoofBrinkWindow;
+				return RoofBrinkWindowDays;
 			case BrinkKind.Creed:
-				return CreedBrinkWindow;
+				return CreedBrinkWindowDays;
 			case BrinkKind.City:
-				return CityBrinkWindow;
+				return CityBrinkWindowDays;
 			default:
-				return RoofBrinkWindow;
+				return RoofBrinkWindowDays;
+			}
+		}
+
+		/// <summary>The attended-pass rope the same window was cut from, so the derivation is
+		/// pinnable end to end rather than restated in two places.</summary>
+		public static int WindowPasses(BrinkKind Kind)
+		{
+			switch (Kind)
+			{
+			case BrinkKind.Roof:
+				return RoofBrinkWindowPasses;
+			case BrinkKind.Creed:
+				return CreedBrinkWindowPasses;
+			case BrinkKind.City:
+				return CityBrinkWindowPasses;
+			default:
+				return RoofBrinkWindowPasses;
 			}
 		}
 
@@ -157,44 +209,86 @@ namespace ThousandAndFirst
 		}
 
 		// ==================================================================================
-		// The window: advanced by attended passes and by nothing else.
+		// The window: anchored at the warning, spent by the world's own clock. Nothing in here
+		// counts passes, and nothing in here needs the founder to be standing anywhere.
 		// ==================================================================================
 
+		/// <summary>Whether the founder has actually been told about this brink. A brink that has
+		/// not been warned has no window running and can never fire.</summary>
+		public static bool Warned(long WarnedTick)
+		{
+			return WarnedTick > Unwarned;
+		}
+
+		/// <summary>Whole world-days since the word was delivered. Zero for a brink nobody has
+		/// been warned about, and for one warned tonight.</summary>
+		public static int DaysSinceWarning(long WarnedTick, long NowTick)
+		{
+			if (!Warned(WarnedTick) || NowTick <= WarnedTick)
+			{
+				return 0;
+			}
+			return KingdomRules.ElapsedDays(NowTick - WarnedTick);
+		}
+
 		/// <summary>
-		/// The window after one more attended pass has found the cause still standing. A brink at
-		/// <see cref="Unannounced"/> becomes zero, which is the pass it is announced on; every
-		/// later attended pass adds one.
+		/// The tick the window runs out on &mdash; the moment the consequence actually happens,
+		/// whether or not anybody is there to watch it. This is what the aftermath is dated to on
+		/// the founder's return, so the settlement's account of itself matches the world's.
+		/// </summary>
+		/// <returns>Zero for an unwarned brink: an unwarned brink has no deadline at all.</returns>
+		public static long ExpiryTick(BrinkKind Kind, long WarnedTick)
+		{
+			if (!Warned(WarnedTick))
+			{
+				return 0L;
+			}
+			return WarnedTick + (long)WindowDays(Kind) * KingdomRules.TicksPerDay;
+		}
+
+		/// <summary>
+		/// Whether the window is spent and the consequence has happened: a whole
+		/// <see cref="WindowDays"/> of world time since the warning was delivered.
 		/// <para>
-		/// This is the ONLY thing that advances a window, and every consumer calls it from its own
-		/// attended pass. An absent founder therefore cannot spend a single pass of anybody's
-		/// window: no clock is read here, and nothing elapses on its own.
+		/// False for an unwarned brink however old it is. That is not a nicety &mdash; it is the
+		/// clause that keeps ignorance a shield now that presence has stopped being one. A brink
+		/// reached deep inside an absence is warned about on the pass that discovers it and gets
+		/// its whole window from there.
 		/// </para>
 		/// </summary>
-		public static int AfterAttendedPass(int Spent)
+		public static bool WindowSpent(BrinkKind Kind, long WarnedTick, long NowTick)
 		{
-			return (Spent < 0) ? 0 : (Spent + 1);
+			return Warned(WarnedTick) && DaysSinceWarning(WarnedTick, NowTick) >= WindowDays(Kind);
 		}
 
-		/// <summary>Whether this is the pass the brink speaks on: true exactly once, for the
-		/// window as it stood BEFORE <see cref="AfterAttendedPass"/> was applied.</summary>
-		public static bool ShouldAnnounce(int SpentBefore)
+		/// <summary>World-days the founder has left. Zero once the window is spent; never
+		/// negative; the whole window for a brink nobody has been warned about, because their
+		/// window has not started.</summary>
+		public static int DaysLeft(BrinkKind Kind, long WarnedTick, long NowTick)
 		{
-			return SpentBefore < 0;
-		}
-
-		/// <summary>Whether the window is spent and the consequence fires now: exactly
-		/// <see cref="WindowFor"/> attended passes after the one it was announced on.</summary>
-		public static bool WindowSpent(BrinkKind Kind, int Spent)
-		{
-			return Spent >= WindowFor(Kind);
-		}
-
-		/// <summary>Attended passes the founder has left. Zero once the window is spent; never
-		/// negative.</summary>
-		public static int PassesLeft(BrinkKind Kind, int Spent)
-		{
-			int left = WindowFor(Kind) - ((Spent < 0) ? 0 : Spent);
+			int window = WindowDays(Kind);
+			if (!Warned(WarnedTick))
+			{
+				return window;
+			}
+			int left = window - DaysSinceWarning(WarnedTick, NowTick);
 			return (left > 0) ? left : 0;
+		}
+
+		/// <summary>
+		/// The world's day number at a tick, for the one counter that must live inside an
+		/// already-serialized <c>int</c> store rather than a tick field of its own
+		/// (<c>KingdomSystem.ConversionResented</c>). Whole days, floored, and zero for an
+		/// unplanted stamp.
+		/// </summary>
+		public static int DayNumber(long Tick)
+		{
+			if (Tick <= 0L)
+			{
+				return 0;
+			}
+			long days = Tick / KingdomRules.TicksPerDay;
+			return (days > int.MaxValue) ? int.MaxValue : (int)days;
 		}
 
 		/// <summary>
@@ -224,7 +318,7 @@ namespace ThousandAndFirst
 
 		// ==================================================================================
 		// When it was reached, and how long ago that was. The honest elapsed is the whole point
-		// of announcing at awareness rather than at the moment: the founder is told what really
+		// of dating the crossing rather than the noticing: the founder is told what really
 		// happened and when, not a number the clock was capped down to.
 		// ==================================================================================
 
@@ -300,70 +394,156 @@ namespace ThousandAndFirst
 			return "for " + Days + " days now";
 		}
 
-		/// <summary>Attended passes left, said the way a person would say it.</summary>
-		public static string WindowPhrase(int PassesLeft)
+		/// <summary>World-days left, said the way a person would say it. Days rather than visits:
+		/// the window is the world's now, and it runs whether or not the founder comes back to
+		/// watch it.</summary>
+		public static string WindowPhrase(int DaysLeft)
 		{
-			if (PassesLeft <= 0)
+			if (DaysLeft <= 0)
 			{
 				return "There is no more time in it.";
 			}
-			if (PassesLeft == 1)
+			if (DaysLeft == 1)
 			{
-				return "You have one more visit.";
+				return "You have one day.";
 			}
-			return "You have " + PassesLeft + " more visits.";
+			return "You have " + DaysLeft + " days.";
+		}
+
+		/// <summary>
+		/// How long ago the consequence actually happened, said plainly. The window is spent by
+		/// the world's clock, so the founder who was elsewhere is told a date rather than being
+		/// left to assume it happened as they walked in.
+		/// </summary>
+		public static string FiredPhrase(int DaysAgo)
+		{
+			if (DaysAgo <= 0)
+			{
+				return "today";
+			}
+			if (DaysAgo == 1)
+			{
+				return "yesterday";
+			}
+			return DaysAgo + " days ago";
+		}
+
+		/// <summary>
+		/// The dating clause every consequence that may fire in absence appends to its own prose.
+		/// Empty for something that happened today, because a line in the present tense is already
+		/// dated correctly and a redundant "today" reads as an apology.
+		/// </summary>
+		/// <param name="DaysAgo">Whole days between <see cref="ExpiryTick"/> and the pass that
+		/// found it, from <see cref="DaysStood"/>.</param>
+		public static string FiredClause(int DaysAgo)
+		{
+			if (DaysAgo <= 0)
+			{
+				return "";
+			}
+			return " It happened " + FiredPhrase(DaysAgo) + ", when the window you were warned of ran out.";
+		}
+
+		/// <summary>
+		/// The standalone dating line for a consequence whose own prose is already written
+		/// elsewhere &mdash; the conversion the chronicle recorded in two registers, the secession
+		/// that announced itself. Empty when it happened today, because the consequence's own
+		/// sentence is then correctly in the present tense and a second line would be a second
+		/// telling of one thing.
+		/// </summary>
+		/// <param name="Kind">Which brink ran out.</param>
+		/// <param name="Subject">The settler, or the city that walked.</param>
+		/// <param name="DaysAgo">Whole days between <see cref="ExpiryTick"/> and the resolve that
+		/// found it.</param>
+		public static string FiredNote(BrinkKind Kind, string Subject, int DaysAgo)
+		{
+			if (DaysAgo <= 0)
+			{
+				return "";
+			}
+			string when = FiredPhrase(DaysAgo) + ", when the window you were warned of ran out.";
+			switch (Kind)
+			{
+			case BrinkKind.Creed:
+				return (string.IsNullOrEmpty(Subject) ? "A settler" : Subject) + " took the creed " + when;
+			case BrinkKind.City:
+				return (string.IsNullOrEmpty(Subject) ? "The other city" : Subject) + " drew up its own charter " + when;
+			default:
+				return (string.IsNullOrEmpty(Subject) ? "A settler" : Subject) + " left " + when;
+			}
 		}
 
 		// ==================================================================================
-		// Prose. One announce and one unsaying per kind, so the ledger cannot drift from the
-		// chronicle and a test can pin both. Each consumer supplies the subject and the cause;
-		// none of them writes its own sentence.
+		// Prose. One announce, one coaching clause and one unsaying per kind, so the ledger
+		// cannot drift from the chronicle and a test can pin all three. Each consumer supplies
+		// the subject and the cause; none of them writes its own sentence.
 		// ==================================================================================
 
 		/// <summary>
-		/// The founder-facing announcement, said once, where the founder will see it (STANDARDS
-		/// 7b): who, what is doing it, how long it has really been going on, and what is left of
-		/// the window. Says what would stop it, because a line that only reports is a line that
-		/// stalls in silence.
+		/// What the founder would have to DO, named. Rule 3's coaching clause, pulled out of
+		/// <see cref="AnnounceNote"/> so it is a surface a test can hold every kind to: a warning
+		/// that says only what will be lost is a warning the founder cannot act on, and under
+		/// Addendum 10(a) &mdash; where the loss lands whether they are watching or not &mdash;
+		/// that is the difference between a fair consequence and an ambush.
+		/// </summary>
+		/// <param name="Kind">Which irreversible thing is one window away.</param>
+		/// <param name="Cause">The creed pulling at them, or the other city. Blank is tolerated.</param>
+		public static string ArrestNote(BrinkKind Kind, string Cause)
+		{
+			switch (Kind)
+			{
+			case BrinkKind.Creed:
+				return "Break the household up or take the shrine out of their quarter and they hold what they held.";
+			case BrinkKind.City:
+				return "Pour the rite, or settle what the two of them believe, and it holds.";
+			default:
+				return "Raise something they would take and they stay.";
+			}
+		}
+
+		/// <summary>
+		/// The founder-facing warning, said once, pushed to wherever they are standing
+		/// (<c>KingdomWord</c>): who, what is doing it, how long it has really been going on, what
+		/// would stop it (<see cref="ArrestNote"/>), and how many days of world time are left.
 		/// </summary>
 		/// <param name="Kind">Which irreversible thing is one window away.</param>
 		/// <param name="Subject">The settler by name, or the city by name.</param>
 		/// <param name="Cause">The creed pulling at them, or the other city &mdash; whatever the
 		/// founder would have to act on. Blank is tolerated and named vaguely.</param>
 		/// <param name="Days">Whole days the brink has stood, from <see cref="DaysStood"/>.</param>
-		/// <param name="PassesLeft">Attended passes left, from <see cref="PassesLeft"/>.</param>
-		public static string AnnounceNote(BrinkKind Kind, string Subject, string Cause, int Days, int PassesLeft)
+		/// <param name="DaysLeft">World-days left, from <see cref="DaysLeft"/>.</param>
+		public static string AnnounceNote(BrinkKind Kind, string Subject, string Cause, int Days, int DaysLeft)
 		{
 			string who = string.IsNullOrEmpty(Subject) ? "A settler" : Subject;
 			string elapsed = ElapsedPhrase(Days);
-			string window = WindowPhrase(PassesLeft);
+			string window = WindowPhrase(DaysLeft);
+			string arrest = ArrestNote(Kind, Cause);
 			switch (Kind)
 			{
 			case BrinkKind.Creed:
 			{
 				string creed = string.IsNullOrEmpty(Cause) ? "the creed of the house they sleep in" : Cause;
 				return who + " has come to the end of the road toward " + creed + ", " + elapsed
-					+ ". Break the household up or take the shrine out of their quarter and they hold what they held. "
-					+ window;
+					+ ". " + arrest + " " + window;
 			}
 			case BrinkKind.City:
 			{
 				string here = string.IsNullOrEmpty(Subject) ? "the other city" : Subject;
 				string kept = string.IsNullOrEmpty(Cause) ? "this one" : Cause;
 				return here + " has been at the breaking point with " + kept + " " + elapsed
-					+ ". Pour the rite, or settle what the two of them believe, and it holds. " + window;
+					+ ". " + arrest + " " + window;
 			}
 			default:
 				return who + " has had no roof in this settlement they would live under, " + elapsed
-					+ ". Raise something they would take and they stay. " + window;
+					+ ". " + arrest + " " + window;
 			}
 		}
 
 		/// <summary>
 		/// The same day as the founder's own book records it: lower-case clause, no trailing
 		/// period, because <c>KingdomChronicle.Record</c> dates it and closes it. Written on the
-		/// pass the brink is first noticed rather than on the pass it fires, so the book holds the
-		/// warning as well as the loss.
+		/// day the word goes out rather than on the day it fires, so the book holds the warning as
+		/// well as the loss.
 		/// </summary>
 		public static string AnnounceTelling(BrinkKind Kind, string Subject, string Cause, int Days)
 		{
@@ -389,8 +569,8 @@ namespace ThousandAndFirst
 
 		/// <summary>
 		/// The unsaying, when the cause is gone before the window is. Said in the same place the
-		/// announcement was, because a warning that is never withdrawn is a warning the founder
-		/// stops believing.
+		/// warning was, because a warning that is never withdrawn is a warning the founder stops
+		/// believing.
 		/// </summary>
 		public static string LiftedNote(BrinkKind Kind, string Subject)
 		{
@@ -407,6 +587,27 @@ namespace ThousandAndFirst
 			default:
 				return who + " has a roof again, and is staying.";
 			}
+		}
+
+		/// <summary>
+		/// The push framing: how word out of a settlement the founder is not standing in reads
+		/// when it catches up with them. Qud-honest &mdash; somebody walked, or somebody talked,
+		/// and the news found them wherever they were.
+		/// <para>
+		/// Only the FRAMING is conditional. The warning itself is pushed either way, because a
+		/// consequence that fires in absence cannot be announced by a note that is only read at
+		/// the seat. Standing in the settlement the founder gets the plain line and nothing else,
+		/// so nobody is ever told the same thing twice in two voices.
+		/// </para>
+		/// </summary>
+		public static string WordFrom(string CityName, string Line)
+		{
+			if (string.IsNullOrEmpty(Line))
+			{
+				return "";
+			}
+			string from = string.IsNullOrEmpty(CityName) ? "your settlement" : ("{{C|" + CityName + "}}");
+			return "Word from " + from + " finds you: " + Line;
 		}
 	}
 }
