@@ -977,3 +977,14 @@ learning idioms: "similar feel to the way blueprints/data disks/psychometry work
   never as a new parallel system (mesh condition).
 - Modder-extensible at every point a vanilla mod can already extend the underlying vocabulary
   (new cultures, species, creeds compose without our code changing).
+
+
+## Addendum 18, 2026-08-22 — rite-knowledge, ruled (author answer to ideation Q5)
+
+`rite:` is LEGITIMATE — the founder's own water-ritual history (secrets and techniques vanilla
+factions granted them) mints city knowledge; the founding myth made mechanical. But it is
+**SEED, NOT CEILING**: rite-knowledge STARTS branches the city's own people must still complete
+— the founder opens the door; the city walks through. A rite key alone never finishes a node;
+it reveals and begins (composing with Addendum 14's visibility law: rite-knowledge is a
+discovery source), and the completing work is the city's — its researchers, its people, its
+time.
