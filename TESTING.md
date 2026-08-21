@@ -573,7 +573,11 @@ every wave; these are the steps the city book's own wave can be read against.
 ```
 
 `steps` is breakpoint passes, `rows` is row-visits (`steps × 2R`, where `R` is the live row count —
-zones + works + settlers + clocks), `ms` is wall time. **A count is a contract and a timing is
+zones + works + settlers + clocks), `ms` is wall time. Four lanes write lines: `reckon` (one city,
+one pass), `slice` (one micro-reckon, about one an in-game hour), `reify` (one turn's amortised
+spend — there `rows` counts the units that were visible-cells-first, `thirds` is the weighted spend,
+`units` is the figure judged against the budget of 8, and `owed=` rides in the label), and `thaw`
+(one prefetch, timed and budgeted nowhere). **A count is a contract and a timing is
 hardware**: on a slow machine `ms` will be larger and `steps`/`rows` will not. A figure that crossed
 a budget is prefixed `BUDGET` and names the budget it broke — `[TAF] perf BUDGET reckon … over=8`.
 **A `BUDGET` line in a playtest log is a bug report, not a note.**
@@ -585,6 +589,38 @@ a budget is prefixed `BUDGET` and names the budget it broke — `[TAF] perf BUDG
 | 90b | Cross between your two zones several times in one session | One `perf reckon` line per crossing, each the same size. Nothing accumulates |
 | 90g | Open the cistern and the larder in a zone the city drew from while you were elsewhere | The cistern holds **exactly** the book's remainder — not a full vessel and a ledger note. Reload and repeat: the **same** vessel drained first |
 | 90m | Grep the log for `city: check-in audit` | `model=` and `ground=` agree for both water and food after an attended pass, and no line says `MISMATCH`. A mismatch is not a crash and is not repaired — it is named, and it is what you report |
+| 90b | Watch the turns after a homecoming that owed something | `perf reify` lines, at most one a turn per zone, `units` never above 8, and the `owed=` figure in the label falling **monotonically** to zero. What you can **see** fills in first; the rest arrives behind you as you walk |
+| 90c | Walk out while `owed=` is still above zero, wander a week, come back | `owed=` resumes at the number it left at. Nothing lost, nothing landed twice, no harvest counted twice (**I1**) |
+| 90d | **The porter.** Stand in a zone of your city that has a larder with room, while a farm in another of its zones finishes harvesting and the load goes on the road | A porter walks in **at the edge nearest that farm**, crosses to the larder beside you, puts the **real crop items** in it, says so once, and leaves by the edge they came in by. The homecoming report does **not** tell you about it afterwards (**I2**) |
+| 90d2 | **Follow the porter.** Do 90d, then walk out of the zone *behind* them, following | You come out beside them, and they are just inside the entry edge, **a cell or two along** — not at the far wall and not standing on the boundary. Cross faster and you catch them at the edge; dawdle and they are further on. No pop, no teleport (**I5**) |
+| 90d3 | Stand in the porter's way and keep them from the larder | They keep trying. Block them long enough — past twice the journey's projected length — and the job **fails**, is named in the register, and the crop is real items lying where they stood. Nothing is silently restored |
+| 90e | Do 90d, then walk out mid-carry, wander until the model closes the job, and come back | The goods are in the city's books **once**. The porter is gone. No second load anywhere, and the ledger says the load you left on the road reached the store by another hand (**I3**) |
+| 90h | Cross repeatedly between two zones of your own city | No reckoning at all inside vanilla's grace window. With `r_TAF_OptionPrefetch` off (its default, and there is no checkbox for it yet) there are **no** `perf thaw` lines at all; nothing is held, and a crossing costs the plain vanilla thaw it always did |
+| 90n | Grep the log for `perf slice` | One line about every fifty ticks while you are in a city, with `steps` at 1 or 2 and never above 4. It appears whether you are walking, resting or standing still, and **not** during world-map travel — a founder on the world map is standing in no city zone and is owed no reification |
+| 90p | Grep the log for `binding:` and `porter:` after a session with deliveries | Every `porter: job N carries` has exactly one closing line for the same N. No job id appears twice as open, and `city: check-in bindings` never appears at all |
+
+## Pass 34 — A day in the city
+
+The living city's placement half. `_notes/LIVING-CITY-ARCHITECTURE.md` §3.2(b): **vanilla ships no
+NPC scheduler**, and this adds none. The model decides where a person belongs at this hour, the
+anchor moves, and vanilla's own `Bored` goal does the walking — so what you should see is people
+*walking*, one at a time, and never anybody teleporting or standing in a doorway.
+
+The day is read in the game's own register. `Calendar.GetTime` names the hours and these are its
+own cuts: **The Shallows / Harvest Dawn** (rising, 151–450), **Salt Sun** (at post, 451–750),
+**Hindsun** (winding down, 751–900), **Jeweled Dusk** (homeward, 901–1050), **Beetle Moon**
+(1051–150). `kingdom:dump` and the status line both name the band you are standing in.
+
+| Step | Action | Expect |
+|---|---|---|
+| 100 | Found a city, raise two or three works that want crew, and let enough settlers arrive to man them. Wait for **Salt Sun** | Crewed settlers stand at the works they were assigned to, not scattered. Nobody is standing on a wall or inside a building |
+| 100a | Watch one settler across the boundary into **Hindsun** and then **Jeweled Dusk** | The field hands and the yard hands leave their posts and walk home, one at a time, on their own feet. The market and the shrine keep theirs through Hindsun and go home at dusk. A watch keeps its post all night |
+| 100b | Stand in the market at dusk and just watch for a few dozen turns | The market empties itself and the hearths fill. Nobody sprints, nobody freezes, and no settler stands still for more than a few turns at a time |
+| 100c | Read a settler in the wish debugger's object inspector | They carry `KingdomPostWorkId` and `KingdomPostWorkKind`. A settler the works have no room for carries **neither** — an unposted settler genuinely spends their day at home, and is never dragged to a workplace |
+| 100d | Take a settler off a work (unstaff it, or strike the work) and come back next pass | The stamp is gone and they stop walking to it. A stale post would be a settler walking to a mill they were taken off |
+| 100e | Charm or recruit a settler and walk them around the city | They follow you. The city never re-anchors somebody the founder is leading, and never claims their turn |
+| 100f | At night, with beds standing, watch the settlers tagged `SleepOnBed` | Vanilla's own `Bed` sends them to sleep and nothing of ours fights it for the same turn. If somebody is being tugged back and forth between a bed and a workplace, that is the bug this step exists to catch |
+| 100g | Grep the log for `perf reify` while you watch a band change | At most eight units a turn, at most four of them body moves. If a band change re-anchored forty settlers in one turn the budget line would say so |
 
 ## Pass 4 — Attitudes and persistence
 
@@ -597,7 +633,12 @@ a budget is prefixed `BUDGET` and names the budget it broke — `[TAF] perf BUDG
 ## Known v0 limits (not bugs)
 
 - No ownership stamping on claims (can't rob your own city — membership design pending).
-- Settlers use vanilla farmer behavior; ambient roles come with the amenity work.
+- Settlers use vanilla farmer behavior between posts; the city moves their anchor by the hour and
+  vanilla walks them, so a settler with no post keeps the hearth and looks exactly as they did.
+- Prefetch (`r_TAF_OptionPrefetch`) has no checkbox in the options menu yet and reads its own
+  default, which is off. Crossings cost the plain vanilla thaw they always did.
+- The model's per-zone production rates are not wired to the heartbeat: the slice runs on its
+  cadence and keeps the clock, but the numbers it advances still come from the attended pass.
 - Stage moves in **both directions** now. It climbs on the reading and falls only on a clear
   shortfall, one rung per reckoning, with Camp an absolute floor. A city that subsides is the
   system working; a city that subsides while it is inside its 20% band is a bug worth filing.

@@ -693,6 +693,66 @@ namespace ThousandAndFirst.Simulation.City
 		}
 
 		/// <summary>
+		/// What the founder is told when a porter puts a load down beside them. Addendum 12(c)'s
+		/// canonical image, in the register the ledger already uses.
+		/// </summary>
+		internal static string PorterNote(int servings, string store)
+		{
+			if (servings <= 0)
+			{
+				return null;
+			}
+			string where = string.IsNullOrEmpty(store) ? "the store" : ("the " + store);
+			return "A porter set " + servings + ((servings == 1) ? " serving" : " servings")
+				+ " down in " + where + ", nodded, and went back the way they came.";
+		}
+
+		/// <summary>
+		/// What the founder is told when a carrier could not finish. LIVING-CITY-ARCHITECTURE
+		/// &sect;3.7: a job whose elapsed exceeds twice its projected duration <b>fails and is
+		/// told</b>, and the cargo is real items that stay where they fell &mdash; so a founder who
+		/// blocks a doorway forever produces a story rather than an unbounded job set.
+		/// </summary>
+		internal static string PorterFailedNote(int servings)
+		{
+			if (servings <= 0)
+			{
+				return "A carrier gave up on the road and turned back.";
+			}
+			return "A carrier could not get through, and set " + servings
+				+ ((servings == 1) ? " serving" : " servings") + " down where they stood.";
+		}
+
+		/// <summary>
+		/// The one ledger line the stale-transient sweep owes when it fires
+		/// (LIVING-CITY-ARCHITECTURE &sect;3.8). <b>Deduplication, not destruction of property</b>,
+		/// and the register says exactly that: the load reached the store by another hand.
+		/// </summary>
+		internal static string SweptNote(int carriers)
+		{
+			if (carriers <= 0)
+			{
+				return null;
+			}
+			return ((carriers == 1) ? "The load" : "The loads") + " you left on the road reached the store by another hand.";
+		}
+
+		/// <summary>
+		/// The heartbeat's one line an hour. LIVING-CITY-ARCHITECTURE &sect;3.6 caps a slice at one
+		/// told line city-wide, so a shortfall that has just begun says itself once and then lives
+		/// in the status report.
+		/// </summary>
+		internal static string SliceNote(string cityName, int thirds)
+		{
+			if (thirds <= 0)
+			{
+				return null;
+			}
+			string city = string.IsNullOrEmpty(cityName) ? "the city" : cityName;
+			return "Word from " + city + ": its stores are being drawn down faster than they are filling.";
+		}
+
+		/// <summary>
 		/// The audit of LIVING-CITY-ARCHITECTURE &sect;3.9, as one greppable line: model total,
 		/// ground total, and what stands between them. I1 in its general form is
 		/// <c>model == ground + counter-owed</c>; with the counter at zero the two totals are

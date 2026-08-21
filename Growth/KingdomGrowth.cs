@@ -115,8 +115,11 @@ namespace ThousandAndFirst
 			// rations are drawn: a load that arrived is a load the settlement can eat, and this is
 			// the crystallise-at-awareness half of Addendum 11(b-ii)'s cross-zone delivery. The
 			// record of what room this zone has is written straight after, so the next harvest
-			// anywhere in the city knows where it can be sent.
-			KingdomCrops.DeliverPending(System, survey);
+			// anywhere in the city knows where it can be sent. With the ground in hand it may
+			// arrive EMBODIED, carried in by a porter the founder watches (LIVING-CITY-ARCHITECTURE
+			// §3.7) — one effect, two renderings, and the rendering is chosen by attendance rather
+			// than drawn for.
+			KingdomCrops.DeliverPending(System, Z, survey);
 			// The fields bring in what their Carries promise, on world-time exactly as the water
 			// works do (Addendum 8): a field's day is a field's day whether anyone watched it.
 			// This is the one missing line the coverage map named, and its checkpoint is planted
@@ -818,10 +821,31 @@ namespace ThousandAndFirst
 			KingdomCrewRules.CrewOutcome[] outcomes = KingdomCrews.AssignWorks(Survey.Works, pool);
 			int idle = 0;
 			int shorthanded = 0;
+			// LIVING-CITY-ARCHITECTURE §3.2(b) needs a settler's day to be a fact about the PERSON,
+			// and until this wave crewing was only ever a fact about the work: every resident row
+			// read JobWorkId = 0 and every day shape derived honestly, and uselessly, to the hearth.
+			// The stamp is cleared for everybody first so that a settler taken off a mill this pass
+			// does not keep walking to it.
+			for (int i = 0; i < Survey.Settlers.Count; i++)
+			{
+				Simulation.City.KingdomStations.Post(Survey.Settlers[i], 0, Simulation.City.KingdomWorkKind.Other);
+			}
 			for (int j = 0; j < Survey.Works.Count; j++)
 			{
 				GameObject work = Survey.Works[j];
 				KingdomCrewRules.CrewOutcome outcome = outcomes[j];
+				// The pool is CapabilitiesOf(Survey.Settlers, forWorks), built index-for-index off
+				// the survey's own list, so an outcome's SettlerIndices name settlers directly.
+				int postId = Simulation.City.KingdomCityRules.StableId(work.ID);
+				Simulation.City.KingdomWorkKind postKind = Simulation.City.KingdomStations.KindOf(work);
+				for (int k = 0; outcome.SettlerIndices != null && k < outcome.SettlerIndices.Length; k++)
+				{
+					int at = outcome.SettlerIndices[k];
+					if (at >= 0 && at < Survey.Settlers.Count)
+					{
+						Simulation.City.KingdomStations.Post(Survey.Settlers[at], postId, postKind);
+					}
+				}
 				int headcountEffectiveness = KingdomRules.CrewEffectiveness(outcome.Assigned, demands[j]);
 				int capabilityEffectiveness = KingdomCrewRules.CapabilityEffectiveness(outcome.BestCapability, outcome.CapabilityThreshold);
 				int effectiveness = KingdomCrewRules.CombinedEffectiveness(headcountEffectiveness, capabilityEffectiveness);

@@ -716,6 +716,23 @@ namespace ThousandAndFirst
 		/// </summary>
 		public static void DeliverPending(KingdomSystem System, KingdomSurvey Survey)
 		{
+			DeliverPending(System, null, Survey);
+		}
+
+		/// <summary>
+		/// As above, and with the ground in hand it can arrive <b>embodied</b>.
+		/// <para>
+		/// LIVING-CITY-ARCHITECTURE &sect;3.7, Addendum 12(c)'s canonical image: <i>"walking around
+		/// in my house in 1 zone, a farm finishes harvesting in another zone, a porter should come
+		/// and put the harvested goods in the storage that is in the zone i am walking around."</i>
+		/// The load was already the city's the moment the harvest came due; what the porter changes
+		/// is the RENDERING and never the effect, which is invariant I2. A load that walks in on a
+		/// back is not delivered twice by the plain path below, because it left
+		/// <see cref="KingdomSystem.PendingCrop"/> when it went onto that back.
+		/// </para>
+		/// </summary>
+		public static void DeliverPending(KingdomSystem System, Zone Z, KingdomSurvey Survey)
+		{
 			if (System == null || Survey == null || System.PendingCrop <= 0 || Survey.Larders.Count == 0)
 			{
 				return;
@@ -724,6 +741,30 @@ namespace ThousandAndFirst
 			if (string.IsNullOrEmpty(blueprint))
 			{
 				blueprint = KingdomCropRules.CropBlueprintForStyle(System.Style);
+			}
+			if (Z != null)
+			{
+				string from = System.PendingCropZoneId;
+				if (!string.IsNullOrEmpty(from) && !System.ClaimedZones.Contains(from))
+				{
+					// Ground this city does not hold cannot be walked out of. The carrier still
+					// comes in by a wall, it is simply no longer a wall that faces anything.
+					from = null;
+				}
+				int carried = Simulation.City.KingdomPorters.Embody(System, Z, Survey, from, blueprint,
+					System.PendingCrop, (The.Game != null) ? The.Game.TimeTicks : 0L);
+				if (carried > 0)
+				{
+					System.PendingCrop -= carried;
+					if (System.PendingCrop <= 0)
+					{
+						System.PendingCrop = 0;
+						System.PendingCropBlueprint = null;
+						System.PendingCropZoneId = null;
+					}
+					if (KingdomLog.Enabled) KingdomLog.Log("crop: " + carried + " went onto a porter's back, pending=" + System.PendingCrop);
+					return;
+				}
 			}
 			int delivered = Survey.StoreFood(System.PendingCrop, blueprint);
 			if (delivered <= 0)
@@ -735,6 +776,7 @@ namespace ThousandAndFirst
 			{
 				System.PendingCrop = 0;
 				System.PendingCropBlueprint = null;
+				System.PendingCropZoneId = null;
 			}
 			System.Ledger.Note("{{G|" + KingdomCropRules.DeliveryNote(delivered, System.KingdomDisplayName) + "}}");
 			MessageQueue.AddPlayerMessage("{{G|" + KingdomCropRules.DeliveryNote(delivered, System.KingdomDisplayName) + "}}");
@@ -770,6 +812,9 @@ namespace ThousandAndFirst
 				if (System.PendingCrop <= 0 || string.IsNullOrEmpty(System.PendingCropBlueprint))
 				{
 					System.PendingCropBlueprint = CropBlueprint;
+					// Where it left from, so the carrier who renders it walks in by the edge that
+					// faces the field rather than by whichever wall is nearest the code (§3.7).
+					System.PendingCropZoneId = (Z != null) ? Z.ZoneID : null;
 				}
 				System.PendingCrop += Pending;
 				left -= Pending;

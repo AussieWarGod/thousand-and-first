@@ -269,15 +269,35 @@ namespace ThousandAndFirst.Simulation.City
 		/// </summary>
 		internal static bool TryPlanTurn(KingdomReifyDemand demand, out KingdomReifySpend spend, out KingdomCityFault fault)
 		{
+			return TryPlanTurn(demand, BudgetThirdsPerTurn, KingdomBudgetRules.ReifyHeavyMintsPerTurn, out spend, out fault);
+		}
+
+		/// <summary>
+		/// The same plan against an allowance that is already partly spent.
+		/// <para>
+		/// The budget is <b>per turn</b>, not per call site (&sect;0.0): the homecoming pass, the
+		/// pump and the prefetch all reify on the same turn, and three call sites each taking a full
+		/// eight units would be twenty-four. So the turn's remainder is handed in, and what is left
+		/// after this spend is the caller's to carry to the next zone.
+		/// </para>
+		/// </summary>
+		internal static bool TryPlanTurn(KingdomReifyDemand demand, int thirdsAvailable, int heavyAvailable, out KingdomReifySpend spend, out KingdomCityFault fault)
+		{
 			spend = default(KingdomReifySpend);
+			if (thirdsAvailable < 0 || heavyAvailable < 0 || thirdsAvailable > BudgetThirdsPerTurn
+				|| heavyAvailable > KingdomBudgetRules.ReifyHeavyMintsPerTurn)
+			{
+				fault = KingdomCityFault.InvalidIndex;
+				return false;
+			}
 			if (demand.VisibleHeavy < 0 || demand.VisibleMedium < 0 || demand.VisibleLight < 0
 				|| demand.RestHeavy < 0 || demand.RestMedium < 0 || demand.RestLight < 0)
 			{
 				fault = KingdomCityFault.InvalidIndex;
 				return false;
 			}
-			int thirds = BudgetThirdsPerTurn;
-			int heavyLeft = KingdomBudgetRules.ReifyHeavyMintsPerTurn;
+			int thirds = thirdsAvailable;
+			int heavyLeft = heavyAvailable;
 			int heavy = 0;
 			int medium = 0;
 			int light = 0;
@@ -312,7 +332,7 @@ namespace ThousandAndFirst.Simulation.City
 			light += take;
 			thirds -= take;
 
-			spend = new KingdomReifySpend(heavy, medium, light, visible, BudgetThirdsPerTurn - thirds);
+			spend = new KingdomReifySpend(heavy, medium, light, visible, thirdsAvailable - thirds);
 			fault = KingdomCityFault.None;
 			return true;
 		}

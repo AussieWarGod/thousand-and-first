@@ -650,6 +650,135 @@ eviction must name its cause or it is refused.
 | `KingdomResidents.AuditLine(KingdomSystem)` | Invariant I3 over the whole realm — no binding key ever resolves to two living bodies. Runs beside the §3.9 stock audit on every check-in. |
 | `enum KingdomBindingKind` / `KingdomBindingVerdict` / `KingdomBodyPresence` / `KingdomUnbindCause` / `KingdomSweepVerdict` | The registry's vocabulary. |
 
+## The city renders — the hour, the porter, and the pump
+
+> Design: `_notes/LIVING-CITY-ARCHITECTURE.md` §3.2(b) (people, by role and by the hour), §3.5
+> (amortised materialisation), §3.6 (the heartbeat), §3.7 (embodied arrivals and the itinerary),
+> §3.10(2)(3) (the distance matrix and the roads discount), §6.4 (prefetch), §6.5 (the receipt).
+
+**Everything the city owes the ground is paid on a per-turn budget, and never in one activation.**
+`ZoneRepair` keeps a counter and applies its whole backlog in one loop
+(`D/XRL/World/ZoneParts/ZoneRepair.cs:87-97`); we keep the counter and spend it eight weighted
+units at a time, **visible cells first**. That single change is Addendum 12(b)'s *reification is
+AMORTISED*. Entry costs O(budget) and never O(elapsed): a day away and a season away differ in an
+integer, never in shape.
+
+**The budget is per turn, not per call site.** The homecoming pass, the pump and the prefetch all
+reify on the same turn, so the realm carries one allowance (`KingdomSystem.ReifyTick` /
+`ReifyThirdsSpent` / `ReifyHeavySpent`, none of them serialized) and each call site takes what is
+left. A unit leaves the debt at the instant it **lands**, so re-entering, reloading or
+re-activating cannot pay the same debt twice — and a debt bigger than one container is still owed
+afterwards, which is what the founder reads when a granary has more in its books than on its
+shelves.
+
+| Member | Contract |
+|---|---|
+| `KingdomCity.SpendTurn(KingdomSystem, Zone, long)` | One turn's amortised spend against one zone's standing debt. Returns whether the turn's allowance is now exhausted. Surveys only when something is actually owed, so a caught-up zone costs nothing. |
+| `KingdomCatchUpRules.TryPlanTurn(demand, out spend, out fault)` | The whole turn's budget: 8 weighted units, at most 4 heavy, visible cells before the rest. |
+| `KingdomCatchUpRules.TryPlanTurn(demand, thirdsAvailable, heavyAvailable, …)` | The same plan against an allowance already partly spent. An allowance larger than the constitution's own is refused, never granted. |
+| `KingdomHeartbeat.OnEndTurn(KingdomSystem)` | **The pump.** One `EndTurnEvent` handler on the game system — a single dispatch immediately before `ProcessSingleTurn` (`D/XRL/Core/ActionManager.cs:1644-1650`), not the 2,000-cell broadcast a live zone pays. Runs the slice, retires finished jobs, spends the turn's reify budget, and considers the prefetch. Returns immediately with no seated claimed zone and no debt. |
+| `KingdomHeartbeat.OnThawed(KingdomSystem, Zone, long ticksFrozen)` | A zone off disk: the stale-transient sweep runs here, before anything looks at the ground. `TicksFrozen` is a cross-check, never a clock. |
+
+**Placement by the hour rides vanilla's only daily-life surface.** There is no NPC scheduler in Qud
+— no `GoToPartyLocation`, no `Schedule` class — and this adds none. A settler with
+`Brain.Wanders = false` self-anchors to where it first stands (`D/XRL/World/Parts/Brain.cs:2056`),
+`Brain.Stay(Cell)` moves that anchor (`:2507-2521`), and the `Bored` goal walks them back to it
+forever (`D/XRL/World/AI/GoalHandlers/Bored.cs:126-140, 262-266`). The model therefore does not
+*place* people so much as **move the anchor**, and vanilla's own AI does the walking. `Bored` does
+nothing when the actor is not in the player's zone, so all of this is attended-only and costs
+nothing per turn anywhere else.
+
+`r_KingdomStation` rides `IdleQueryEvent` exactly as vanilla's `Bed` does
+(`D/XRL/World/Parts/Bed.cs:187-224`): it is offered the idle actor, and **returning `false` claims
+that actor's turn**. So it is selective — it claims only a settler posted to *this* work, only when
+the hour actually wants them somewhere else, and at most once every 50 ticks, which is the same
+cooldown and the same figure `Bed` keeps.
+
+| Member | Contract |
+|---|---|
+| `KingdomPlacementRules.BandFor(long)` → `KingdomDayBand` | Which of five bands a tick falls in. The bands are unions of `Calendar.GetTime`'s own eight stretches, cut where the calendar already cuts (`D/XRL/World/Calendar.cs:296-352`). Total over every representable tick. |
+| `KingdomPlacementRules.PostFor(KingdomDayShape, KingdomDayBand)` → `KingdomPost` | Where a day shape stands in a band. §3.2(b)'s table, and the only copy of it. The watch keeps its post in every band; market and shrine keep theirs through Hindsun; everybody else goes home. |
+| `KingdomPlacementRules.MayClaim(long lastClaim, long now)` / `ClaimCooldownTicks` | One claim per station per in-game hour. |
+| `KingdomStations.PostWorkProperty` (`KingdomPostWorkId`) / `PostKindProperty` (`KingdomPostWorkKind`) | The work a settler is posted to, stamped by `KingdomGrowth.AssignWork` from `KingdomCrewRules.CrewOutcome.SettlerIndices`. Until W3 crewing was a fact about a *work* only, so every resident row read `JobWorkId = 0`; now the row carries the post and the day shape derives from it. |
+| `KingdomStations.Attend(KingdomSystem, Zone, KingdomSurvey)` | Gives every crewed work an `r_KingdomStation`. Added at render rather than in a blueprint, and picked up by `Bored`'s own zone-scoped `WantEvent` scan — no registration list to maintain. |
+| `KingdomStations.Misplaced(...)` / `Place(...)` | Whether a settler's anchor disagrees with the hour, and the one heavy reify unit that fixes it. Asymmetric on purpose: wanting a post is *the anchor is not the post*; wanting a hearth is *the anchor is still the post*. |
+
+**The porter: one effect, at most one rendering.** A load already in flight
+(`KingdomSystem.PendingCrop`) is rendered **embodied** when the founder is standing in a claimed
+zone with a larder that can take it, and by the plain path otherwise. Both consume the same load
+from the same counter, so nothing is delivered twice — the rendering is chosen by attendance and is
+deliberately **not a draw**, which is what keeps a reload from re-rolling a person.
+
+The carrier is minted at the zone edge facing the source, walks by `Brain.PushGoal(new MoveTo(...))`,
+deposits **real items** into a real `Inventory`, and leaves by the edge they came in by. The goods
+carry vanilla's `_stock` mark — *"the simulation created this; the simulation may remove it"*
+(`D/XRL/World/Parts/GenericInventoryRestocker.cs:229, 257`) — and anything that is not `_stock`, or
+that answers `IsImportant()`, is dropped to the cell and never destroyed.
+
+**A job is a timed itinerary, computed once, at creation**, and one pure function answers where the
+carrier is and what is on them at any tick. Every zone renders that same answer, which is invariant
+I5 and why the body never has to literally traverse anything. Leg endpoints are model truth; the
+in-between is a redrawing. Path length at creation is `Chebyshev × Sinuosity × RoadDiscount` with
+**zero zone access** — the estimate is a prior that reality corrects, never a pathfind at reckon.
+
+| Member | Contract |
+|---|---|
+| `KingdomSystem.Jobs` (`KingdomJobRegistry`) | The realm's open itineraries. **Realm-scope, beside `Bindings`**, because a carrier's legs can cross into the other city's ground and every job row is paired one-to-one with a transient binding that already lives there. §0.0(c) prices job rows realm-wide and §3.8 caps them per realm, so this is where the constitution already put them. `MintJobId()` mints in order and never reuses; `Normalize()` drops a job whose declared legs are not all present, whole. |
+| `KingdomJobRules.TryBuildLegs(plans, count, startTick, walkTicksPerCell, …)` | Waypoints to a dated itinerary. A journey wanting more than six legs is **refused at planning**, never truncated. No leg is instantaneous. |
+| `KingdomJobRules.CargoAt(job, fix)` / `Deposited(job, tick)` | What is still on the carrier's back, and whether the deposit leg is finished. |
+| `KingdomJobRules.Mirror(x, y, edge, w, h, …)` / `EdgeToward(here, source)` | The engine's own zone connection, and which wall faces the ground the load came from. **Facts, not draws**, so a handoff cannot disagree with where the founder comes out. |
+| `KingdomJobRules.TryDrawEntryCell(...)` / `TryDrawOrigin(...)` | The only two draws a delivery gets, on `taf:stream:delivery` with the job id as the occurrence ordinal. Same seed, same journey. **Routing contains no draw at all** (`KingdomBudgetRules.PlannerMaxDraws` is zero). |
+| `KingdomPorters.Embody(KingdomSystem, Zone, KingdomSurvey, source, blueprint, amount, tick)` | Puts a load in flight onto a real back in the attended zone. Returns what left the road; zero means the plain rendering keeps it, which is I2 and not a failure. |
+| `KingdomPorters.Render(KingdomSystem, Zone, long)` | Places every open job's carrier at `At(job, now)` in the zone that has just become attended. Mint-or-move through the registry only. |
+| `KingdomPorters.Sweep(KingdomSystem, Zone)` | **The stale-transient despawn.** W2 shipped the verdict; this lands it. Runs at `ZoneThawedEvent` *and* on the entry path, because a suspended-but-resident zone is entered with no thaw at all. |
+| `KingdomPorters.Retire(KingdomSystem, long)` | Closes a job the model has outlived and puts what the carrier was holding back on the road (§3.8 t2). Never closes a job whose carrier is on resident ground — that carrier is walking, not outlived. |
+| `KingdomPorters.LoadPerTrip` | One trip's load. A named stand-in for W6's capacity-bound batching, and a **reify** figure rather than a fiction about how much a person can lift. |
+| `KingdomItineraryRules.TryReproject(...)` / `TryHasOverrun(...)` | **Only the unstarted remainder may move.** A leg already begun keeps its `DepartTick`; the current leg's `ArriveTick` and everything after shift by the same signed delta. Applied at check-in, where the ground already wins, and at most **once per leg** (`r_KingdomPorter.ReprojectedLeg`). A job whose elapsed exceeds twice its projected duration fails instead — so a founder who blocks a doorway forever produces a story, not an unbounded job set. On failure the load is **set down where it fell** and its `_stock` mark taken off it, which hands it to the founder for good. |
+| `KingdomWord.Ambient(KingdomSystem, from, here, note)` | News that is neither a brink nor its aftermath — the heartbeat's one line an hour, a carrier who could not get through. The ordinary note lane plus the same one-line push, because the founder is by definition not standing where the news is. |
+
+**The distance matrix is two-level, and never stores `works²`.** Level 1 is the zone graph — at most
+nine nodes, all-pairs by Floyd–Warshall at exactly 9³ = 729 integer operations, a table of at most 81
+entries. Level 2 is work-to-edge and same-zone pairs. Any cross-zone distance composes in O(1).
+**Invalidation is by structure, never by time or by stock**: a dirty flag per zone, set only on work
+placement, work removal or a road change, and a dirty slice **refuses to answer** rather than
+answering stale.
+
+| Member | Contract |
+|---|---|
+| `KingdomZoneGraph.TryBuild(nodes, count, hopCells, …)` | The level-1 all-pairs table plus the next-hop matrix the itinerary reads its zone path off. Reports its own operation count. Orthogonal edges only — deliberately narrower than `KingdomRules.CoordsAdjacent`, because a carrier cannot walk through a corner. |
+| `KingdomDistanceMatrix.TryCreate/TryWriteZone/TryCompose/MarkDirty` | The two level-2 slices and their flags. Refuses to allocate past §0.0(c)'s entry budget. |
+| `KingdomItineraryRules.RoadDiscountPercent` (**60**) | A paved leg costs 0.6 of the same distance unpaved, **applied identically to the estimate and to any measured length** so a road cannot make the two disagree. Laying a road visibly shortens every itinerary that uses it. |
+| `KingdomDistanceRules.ZoneTransitCells` / `TryDiscount(...)` | What one hop costs the metric, and the discount applied to it. |
+
+**Prefetch is a spike, not a promise.** `KingdomHeartbeat.PrefetchOption`
+(`r_TAF_OptionPrefetch`) gates it; with no line for it in `Options.xml` the gate reads
+`PrefetchDefault` = **No**. The mechanism ships complete: at most one neighbour held, two
+considered, only while a debt stands, skipped when the seated zone has saturated the turn's reify
+budget, and released the moment the counter drains. *A prefetched zone the founder never enters is
+indistinguishable from one that was never prefetched* — prefetch may change **when** work is done,
+never **whether** or **how much**.
+
+**The receipt grows.** `reify` and `thaw` join `reckon`, and the heartbeat writes `slice`:
+
+```
+[TAF] perf reckon label=Kavvat steps=1 rows=232 ms=0.14
+[TAF] perf slice  label=Kavvat steps=1 rows=232 ms=0.09
+[TAF] perf reify  label=JoppaWorld.11.22.1.0.10 owed=6 rows=3 thirds=12 units=4 ms=0.31
+[TAF] perf thaw   label=JoppaWorld.11.22.1.1.10 reason=prefetch ms=31.2
+[TAF] perf BUDGET reify label=... units=9 ms=2.4 over=2
+```
+
+On a `reify` line `rows` is how many of the units were visible-cells-first and `thirds` is the
+weighted spend; `owed` rides in the label so a tester can watch it fall monotonically to zero. A
+figure that crosses a §0.0 budget is prefixed `BUDGET` and names the budget it broke.
+
+**What W3 deliberately does not ship.** Job minting for anything but the delivery flow, nearest-holder
+sourcing and capacity-bound batching are W6's by §7.4, *"because both only bite once many jobs
+compete over many holders"*. And the model's per-zone production **rates** stay unwired: growth
+already charges upkeep at the pass, so a rate the slice also integrated would bill the same day
+twice and break I1. The heartbeat ships as the mechanism, on the cadence, through the executor,
+with its receipt and its one told line an hour.
+
 ## `KingdomChronicle` — history
 
 | Member | Contract |

@@ -42,15 +42,23 @@ namespace ThousandAndFirst
 		/// city whose warnings have quietly lost their deadlines.
 		/// </para>
 		/// <para>
-		/// No migration machinery ships for either, and Addendum 9 is why: the mod has never run,
-		/// so there are no version-4 saves in the world, and "version bumps stay clean and
+		/// Version 6 is the city that renders. The realm gains <see cref="Jobs"/> &mdash; the open
+		/// itineraries LIVING-CITY-ARCHITECTURE &sect;3.7 puts a carrier on &mdash; and
+		/// <see cref="LastSliceTick"/>, the heartbeat's own checkpoint. A version-5 save has
+		/// bindings that could name a transient with no itinerary behind it, which is a carrier the
+		/// model cannot say where is; so it is refused by name rather than loaded as a city with a
+		/// porter nobody can place.
+		/// </para>
+		/// <para>
+		/// No migration machinery ships for any of them, and Addendum 9 is why: the mod has never
+		/// run, so there are no older saves in the world, and "version bumps stay clean and
 		/// deliberate" means the gate refuses an older layout by name rather than silently reading
 		/// a city that has lost something.
 		/// </para>
 		/// </summary>
-		private const int CurrentSerializationVersion = 5;
+		private const int CurrentSerializationVersion = 6;
 
-		private const int FirstNamedSerializationVersion = 5;
+		private const int FirstNamedSerializationVersion = 6;
 
 		private const int LegacyReflectedSerializationVersion = 1;
 
@@ -394,6 +402,14 @@ namespace ThousandAndFirst
 		/// city's own crop rather than as nothing.</summary>
 		public string PendingCropBlueprint;
 
+		/// <summary>
+		/// Which of the city's zones the load in flight came out of, so the carrier who renders it
+		/// walks in by the edge that faces it. LIVING-CITY-ARCHITECTURE &sect;3.7 step 1: <i>mint
+		/// the carrier at the edge &mdash; the zone edge nearest the source zone</i>. A fact and not
+		/// a draw, which is what lets the estimate and the founder's own crossing agree.
+		/// </summary>
+		public string PendingCropZoneId;
+
 		public KingdomLedger Ledger = new KingdomLedger();
 
 		/// <summary>
@@ -488,6 +504,83 @@ namespace ThousandAndFirst
 		/// </para>
 		/// </summary>
 		public int ResidentCounter;
+
+		/// <summary>
+		/// The realm's open itineraries. LIVING-CITY-ARCHITECTURE &sect;3.7: a job is a timed
+		/// itinerary computed once at creation, and one pure function over it answers where the
+		/// carrier is and what is on them at any tick &mdash; which is invariant I5, and why the
+		/// body never has to literally traverse anything.
+		/// <para>
+		/// <b>Realm-scope, beside <see cref="Bindings"/>, and for the same reason.</b> A carrier's
+		/// legs can cross into the other city's ground or off the map, and every job row is paired
+		/// one-to-one with a transient binding that already lives here. &sect;0.0(c) prices the job
+		/// rows realm-wide and &sect;3.8 caps them per realm, so this is where the constitution
+		/// already put them.
+		/// </para>
+		/// </summary>
+		public Simulation.City.KingdomJobRegistry Jobs = new Simulation.City.KingdomJobRegistry();
+
+		/// <summary>
+		/// When the heartbeat last advanced the realm's cities. LIVING-CITY-ARCHITECTURE &sect;3.6:
+		/// the cadence is fifty ticks &mdash; one in-game hour, <c>Calendar.TurnsPerHour</c> &mdash;
+		/// and a slice advances by <b>whatever elapsed</b>, so several boundaries crossed at once
+		/// (a world-map step, a long rest) is one slightly larger slice rather than a special case.
+		/// <c>N</c> decides how often we bother, never how much we advance.
+		/// </summary>
+		public long LastSliceTick;
+
+		/// <summary>
+		/// The one neighbouring zone the prefetch is holding resident, or null.
+		/// <para>
+		/// <b>Not serialized, and that is the honest shape.</b> A hold is a decision about this
+		/// session's memory, not a fact about the realm: LIVING-CITY-ARCHITECTURE &sect;6.4's own
+		/// invariant is that <i>a prefetched zone the founder never enters is indistinguishable
+		/// from one that was never prefetched</i>, so a hold that lapses over a save is exactly as
+		/// correct as one that does not.
+		/// </para>
+		/// </summary>
+		[NonSerialized]
+		public string PrefetchedZoneId;
+
+		/// <summary>
+		/// Which turn the realm's reify allowance is being counted against, and how much of it is
+		/// gone.
+		/// <para>
+		/// LIVING-CITY-ARCHITECTURE &sect;0.0: the budget is <b>eight units a turn</b>, of which at
+		/// most four are body mints &mdash; per TURN, and not per call site. The homecoming pass,
+		/// the pump and the prefetch all reify on the same turn, so three call sites each taking a
+		/// full eight would be twenty-four and the receipt would be reporting a budget nobody was
+		/// keeping. Not serialized: an allowance is a fact about this turn, and a saved one would
+		/// arrive spent.
+		/// </para>
+		/// </summary>
+		[NonSerialized]
+		public long ReifyTick;
+
+		/// <summary>See <see cref="ReifyTick"/>. Weighted thirds spent so far this turn.</summary>
+		[NonSerialized]
+		public int ReifyThirdsSpent;
+
+		/// <summary>See <see cref="ReifyTick"/>. Body mints and moves spent so far this turn, which
+		/// carries its own ceiling because it is a frame-cost rather than an ordering
+		/// preference.</summary>
+		[NonSerialized]
+		public int ReifyHeavySpent;
+
+		/// <summary>
+		/// Until when the pump will not survey a zone for reify again.
+		/// <para>
+		/// A debt the ground cannot serve &mdash; a draw against an empty cistern, a landing with no
+		/// larder standing &mdash; is still a debt, and it stays on the row until the founder does
+		/// something about it. Retrying it every turn would pay a full zone survey for an answer
+		/// that has not changed, so a spend that moved nothing buys an in-game hour of quiet. A new
+		/// debt therefore waits at most one hour, which is nothing against the twenty-nine turns
+		/// &sect;0.0(b) allows a full backlog. Not serialized: it is a fact about this session's
+		/// turns.
+		/// </para>
+		/// </summary>
+		[NonSerialized]
+		public long ReifyQuietUntilTick;
 
 		/// <summary>
 		/// How many containers the realm has ever counted as its own. The next dedication ordinal
@@ -1188,6 +1281,43 @@ namespace ThousandAndFirst
 			// taken there would be wrong by whatever happened in the grace window. This fires from
 			// SuspendZone BEFORE Suspended is set, for any zone, while its objects are still in RAM.
 			Registrar.Register(SuspendingEvent.ID);
+			// The pump, and the ONE per-turn cost this design adds anywhere (§0.0(e)). Game-level
+			// EndTurnEvent.Send(game) is a single dispatch immediately before ProcessSingleTurn
+			// (D/XRL/Core/ActionManager.cs:1644-1650), not the 2,000-cell broadcast a live zone
+			// pays. It does not fire during world-map travel, which is exactly why §2.1 bans it as
+			// the city's CLOCK -- but a founder on the world map is standing in no city zone and is
+			// owed no reification, so the same blind spot is harmless in a pump.
+			Registrar.Register(EndTurnEvent.ID);
+			// The second reify hook (§3.5), and the one instant the stale-transient sweep may run
+			// (§3.8 t3): any zone coming off disk, before intake and before anything looks at it.
+			Registrar.Register(ZoneThawedEvent.ID);
+		}
+
+		/// <summary>
+		/// One turn of the city. Everything inside returns immediately when there is no seated
+		/// claimed zone and no debt, which is what makes this affordable at all (&sect;0.0(e)).
+		/// </summary>
+		public override bool HandleEvent(EndTurnEvent E)
+		{
+			Guard("pump", delegate
+			{
+				Simulation.City.KingdomHeartbeat.OnEndTurn(this);
+			});
+			return base.HandleEvent(E);
+		}
+
+		/// <summary>
+		/// A zone off disk. LIVING-CITY-ARCHITECTURE &sect;3.5 binds debt intake here and &sect;3.8
+		/// binds the stale-transient sweep here; <c>TicksFrozen</c> is a cross-check on the counter
+		/// and never its source, because it measures frozen time only (&sect;3.4).
+		/// </summary>
+		public override bool HandleEvent(ZoneThawedEvent E)
+		{
+			Guard("thaw", delegate
+			{
+				Simulation.City.KingdomHeartbeat.OnThawed(this, E.Zone, E.TicksFrozen);
+			});
+			return base.HandleEvent(E);
 		}
 
 		public override bool HandleEvent(SuspendingEvent E)
@@ -1513,6 +1643,15 @@ namespace ThousandAndFirst
 				City = new Simulation.City.KingdomCityBook();
 			}
 			City.Normalize();
+			if (Jobs == null)
+			{
+				Jobs = new Simulation.City.KingdomJobRegistry();
+			}
+			Jobs.Normalize();
+			if (LastSliceTick < 0L)
+			{
+				LastSliceTick = 0L;
+			}
 			if (Bindings == null)
 			{
 				Bindings = new Simulation.City.KingdomBindingRegistry();

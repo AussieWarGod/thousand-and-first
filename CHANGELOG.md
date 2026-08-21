@@ -759,6 +759,60 @@ only pure water — so the fix mints not one dram.
   name and the tick the water was poured: deterministic across a reload, separated between
   realms, and refused rather than re-minted.
 
+### Added — the city renders: the hour, the porter, and the pump
+- **A settler's day has a shape and their body follows it.** The hours of the game's own calendar —
+  The Shallows and Harvest Dawn, the Salt Sun, Hindsun, Jeweled Dusk, the Beetle Moon — decide where
+  each crewed settler belongs, and their anchor moves to it. **Vanilla does the walking.** Stand in
+  the market at dusk and it empties itself, one settler at a time, on their own feet; the watch keeps
+  its post all night, and a settler the works have no room for genuinely spends the day at home.
+  There is no scheduler here and there is none in Qud: this rides the one idle hook the engine has,
+  the same one vanilla beds use to send villagers to sleep, and it costs nothing per turn in any
+  zone you are not standing in.
+- **`KingdomGrowth.AssignWork` writes down who it crewed.** Ablest-first assignment always knew which
+  settlers it put on which work; until now it threw that away and only stamped the work. A settler
+  now carries their post, and a settler taken off one stops walking to it.
+- **A porter brings the harvest to you.** A load already on the road arrives **embodied** when you
+  are standing where it is going: somebody walks in at the edge nearest the field it came from,
+  crosses to the larder beside you, puts **real crops** in it, and goes back the way they came. If
+  you are somewhere else it lands the way it always did. One effect, at most one rendering, and the
+  rendering is chosen by where you are standing rather than rolled for — so a reload never re-rolls
+  a person and nothing is ever delivered twice.
+- **You can follow one.** A job is a timed itinerary computed once, so the model has one answer for
+  where a carrier is at any tick and every zone draws that same answer. Walk out of a zone behind a
+  porter and you come out beside them, a cell or two inside the edge — cross faster and you catch
+  them at the boundary, dawdle and they are further on. Block one long enough and the job **fails**,
+  is named, and the crop is real items lying where they stood.
+- **The stale-transient sweep lands.** A carrier who froze into a zone with goods on their back while
+  the model finished the job without them is removed when that ground is next opened, and what they
+  were holding went back into the city's books before the pack could be looked in. It removes only
+  what the simulation itself made; anything you put on them, or anything the game calls important,
+  is set down on the ground and never destroyed.
+- **Materialisation is amortised, from the first commit.** What a zone owes the ground is paid on a
+  per-turn budget — eight weighted units, at most four of them bodies, **what you can see first** —
+  and never in one activation. Walking home after a season no longer asks the game to do a season's
+  work on one frame; you watch the granary fill as you walk. Walk out mid-catch-up and the debt
+  resumes at exactly the figure it left at.
+- **The city keeps time while you stand in it.** Every in-game hour the realm advances all its
+  cities' models by the elapsed and says at most one line about it. It is the same advancement the
+  homecoming reckoning runs, split — never a second clock — and it costs about four row-visits a
+  turn per city.
+- **Roads are logistics now.** A leg that follows a laid road costs 0.6 of the same distance
+  unpaved, applied identically to the estimate and to any later measurement, so laying a road
+  visibly shortens every itinerary that uses it. The two-level distance matrix behind that is
+  all-pairs over the claimed zones in 729 integer operations and composes any cross-zone distance in
+  constant time, at four zones exactly as at nine.
+- **The receipt grows.** `perf reify`, `perf slice` and `perf thaw` join `perf reckon` in the
+  `[TAF]` log, each with counts as well as milliseconds — because a timing is hardware and a count
+  is a contract. A figure that crosses a budget is still prefixed `BUDGET` and names the budget it
+  broke. New **Pass 34 — a day in the city**, and Pass 32 gains the porter, the follow, the
+  amortised drain and the slice.
+- Prefetching a neighbouring zone ahead of you ships complete and **switched off**: it buys
+  smoothness rather than correctness, it is the one part of this design that is safe to cut, and it
+  has no options checkbox yet.
+- Job minting stays to this one flow; the city's other errands, nearest-holder sourcing and
+  trip batching are a later wave's, because they only start to matter once many jobs compete over
+  many stores.
+
 ### Added — residents become rows, and one identity gets at most one body
 - **A settler is a row now, and their body is a view of it.** Every settler carries a stable
   `KingdomResidentId` and nothing else; their name, origin, creed, home, standing and both brink

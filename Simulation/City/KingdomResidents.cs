@@ -103,6 +103,43 @@ namespace ThousandAndFirst.Simulation.City
 		}
 
 		/// <summary>
+		/// What the ground says about one bound key, unnarrowed by a verdict.
+		/// <para>
+		/// <see cref="Judge"/> collapses "live in another resident zone" and "on disk" to the same
+		/// refusal, which is exactly right when the question is <i>may I mint</i> and exactly wrong
+		/// when it is <i>has the model outlived this body</i>. LIVING-CITY-ARCHITECTURE &sect;3.8's
+		/// t2 closes a job whose carrier is frozen; it must never close one whose carrier is still
+		/// walking somewhere the founder could go and watch.
+		/// </para>
+		/// </summary>
+		public static KingdomBodyPresence PresenceOfKey(KingdomSystem System, int bindingKey, KingdomBindingKind kind, string zoneId)
+		{
+			KingdomBindingTable table;
+			KingdomBinding binding;
+			if (!TryTable(System, out table) || !table.TryGet(bindingKey, kind, out binding))
+			{
+				return KingdomBodyPresence.None;
+			}
+			return PresenceOf(binding, zoneId);
+		}
+
+		/// <summary>The ground a binding names, or null when there is no binding for the key. What a
+		/// caller needs to tell "the body is on disk" from "the body was destroyed": both fail to
+		/// resolve, and only one of them can be swept later.</summary>
+		public static bool TryBoundZone(KingdomSystem System, int bindingKey, KingdomBindingKind kind, out string zoneId)
+		{
+			zoneId = null;
+			KingdomBindingTable table;
+			KingdomBinding binding;
+			if (!TryTable(System, out table) || !table.TryGet(bindingKey, kind, out binding))
+			{
+				return false;
+			}
+			zoneId = binding.ZoneId;
+			return !string.IsNullOrEmpty(zoneId);
+		}
+
+		/// <summary>
 		/// Binds this body to this ground, or moves an existing binding onto it. One call, because
 		/// the caller's question is always "this key is here now" and splitting it would make
 		/// "bind" and "rebind" two chances to get the same fact wrong.
@@ -400,22 +437,25 @@ namespace ThousandAndFirst.Simulation.City
 			}
 			int originCode = KingdomResidentRules.OriginCode(settler.GetStringProperty("KingdomOrigin"));
 			int creedCode = KingdomCityRules.StableId(settler.GetStringProperty(KingdomCreed.CreedProperty));
-			// No settler is posted to a particular work today: KingdomGrowth.AssignWork crews a
-			// WORK from a pool and never stamps the person, so a job id read off the body would be
-			// invented. The column is honestly empty, and the day shape derives to the hearth,
-			// which is what an unposted settler's day actually is.
-			KingdomDayShape dayShape = KingdomResidentRules.DayShapeFor(0, KingdomWorkKind.Other);
+			// W3 stamps the post on the person: KingdomGrowth.AssignWork already knew which
+			// settlers it crewed which work with (KingdomCrewRules.CrewOutcome.SettlerIndices) and
+			// now writes it down, so the column is a fact rather than a placeholder. A settler the
+			// works have no room for still reads zero, and their day shape still derives to the
+			// hearth — which is what an unposted settler's day actually is, not a stand-in for one.
+			int jobWorkId = KingdomStations.PostOf(settler);
+			KingdomWorkKind jobKind = (KingdomWorkKind)settler.GetIntProperty(KingdomStations.PostKindProperty);
+			KingdomDayShape dayShape = KingdomResidentRules.DayShapeFor(jobWorkId, jobKind);
 			int index;
 			KingdomResidentRow existing;
 			if (state.TryResidentIndex(id, out index) && state.TryResident(index, out existing))
 			{
 				return existing
-					.WithReading(NameOf(settler, existing.Name), originCode, creedCode, homeWorkId, 0, 0, dayShape)
+					.WithReading(NameOf(settler, existing.Name), originCode, creedCode, homeWorkId, jobWorkId, 0, dayShape)
 					.WithBoundZone(zoneId)
 					.WithStanding(KingdomResidentStanding.Resident, KingdomStandingCause.None);
 			}
 			return new KingdomResidentRow(id, NameOf(settler, null), originCode, creedCode,
-				(TimeTicks > 0L) ? TimeTicks : 0L, homeWorkId, 0, 0, dayShape,
+				(TimeTicks > 0L) ? TimeTicks : 0L, homeWorkId, jobWorkId, 0, dayShape,
 				KingdomResidentStanding.Resident, KingdomStandingCause.None, zoneId,
 				KingdomBrinkWindow.None, KingdomBrinkWindow.None, null, 0);
 		}

@@ -245,6 +245,112 @@ namespace ThousandAndFirst.Tests
 			Assert.AreEqual(24, counter.OwedThirds);
 			Assert.IsFalse(counter.IsSettled, "a netted-out counter reported itself drained");
 		}
+
+		/// <summary>
+		/// The budget is per TURN and not per call site. The homecoming pass, the pump and the
+		/// prefetch all reify on the same turn, so a plan that ignored what was already spent would
+		/// let three call sites take twenty-four units and still report eight.
+		/// </summary>
+		[Test]
+		public void TheTurnsAllowanceIsSharedAcrossEveryCallSite()
+		{
+			KingdomReifyDemand demand = new KingdomReifyDemand(0, 8, 0, 0, 8, 0);
+			KingdomReifySpend first;
+			KingdomReifySpend second;
+			KingdomCityFault fault;
+			Assert.IsTrue(KingdomCatchUpRules.TryPlanTurn(demand, out first, out fault));
+			Assert.AreEqual(KingdomBudgetRules.ReifyUnitsPerTurn, first.Units);
+			Assert.AreEqual(KingdomCatchUpRules.BudgetThirdsPerTurn, first.ThirdsSpent);
+
+			int left = KingdomCatchUpRules.BudgetThirdsPerTurn - first.ThirdsSpent;
+			Assert.IsTrue(KingdomCatchUpRules.TryPlanTurn(demand, left, 0, out second, out fault));
+			Assert.AreEqual(0, second.Units, "a second call site on the same turn gets what is left, which is nothing");
+
+			KingdomReifySpend partial;
+			Assert.IsTrue(KingdomCatchUpRules.TryPlanTurn(new KingdomReifyDemand(0, 3, 0, 0, 0, 0), out partial, out fault));
+			Assert.AreEqual(3, partial.Units);
+			KingdomReifySpend remainder;
+			Assert.IsTrue(KingdomCatchUpRules.TryPlanTurn(demand,
+				KingdomCatchUpRules.BudgetThirdsPerTurn - partial.ThirdsSpent,
+				KingdomBudgetRules.ReifyHeavyMintsPerTurn - partial.Heavy,
+				out remainder, out fault));
+			Assert.AreEqual(KingdomBudgetRules.ReifyUnitsPerTurn, partial.Units + remainder.Units,
+				"the two spends together are exactly one turn's budget");
+		}
+
+		/// <summary>The body-mint ceiling is carried across call sites too, because four mints is a
+		/// frame cost rather than an ordering preference (§0.0(b)).</summary>
+		[Test]
+		public void TheHeavyCeilingIsCarriedAcrossCallSitesToo()
+		{
+			KingdomReifySpend spend;
+			KingdomCityFault fault;
+			Assert.IsTrue(KingdomCatchUpRules.TryPlanTurn(new KingdomReifyDemand(9, 0, 0, 0, 0, 0),
+				KingdomCatchUpRules.BudgetThirdsPerTurn, 1, out spend, out fault));
+			Assert.AreEqual(1, spend.Heavy);
+			Assert.IsTrue(KingdomCatchUpRules.TryPlanTurn(new KingdomReifyDemand(9, 0, 0, 0, 0, 0),
+				KingdomCatchUpRules.BudgetThirdsPerTurn, 0, out spend, out fault));
+			Assert.AreEqual(0, spend.Heavy);
+		}
+
+		/// <summary>An allowance bigger than the turn's own budget is a refusal, not a bonus: the
+		/// constitution's number is a ceiling and a caller cannot raise it by asking.</summary>
+		[Test]
+		public void AnAllowanceOverTheBudgetIsRefused()
+		{
+			KingdomReifySpend spend;
+			KingdomCityFault fault;
+			Assert.IsFalse(KingdomCatchUpRules.TryPlanTurn(new KingdomReifyDemand(0, 8, 0, 0, 0, 0),
+				KingdomCatchUpRules.BudgetThirdsPerTurn + 1, KingdomBudgetRules.ReifyHeavyMintsPerTurn, out spend, out fault));
+			Assert.AreEqual(KingdomCityFault.InvalidIndex, fault);
+			Assert.IsFalse(KingdomCatchUpRules.TryPlanTurn(new KingdomReifyDemand(0, 8, 0, 0, 0, 0),
+				KingdomCatchUpRules.BudgetThirdsPerTurn, KingdomBudgetRules.ReifyHeavyMintsPerTurn + 1, out spend, out fault));
+			Assert.IsFalse(KingdomCatchUpRules.TryPlanTurn(new KingdomReifyDemand(0, 8, 0, 0, 0, 0), -1, 0, out spend, out fault));
+		}
+
+		/// <summary>
+		/// §3.5's catch-up invariant, in the half W3 makes true: <i>the model is authoritative for
+		/// exactly the part of the debt that has not been reified, the ground is authoritative for
+		/// exactly the part that has, and the counter is the boundary between them.</i>
+		/// <para>
+		/// One turn's spend lands one container's worth, so a debt bigger than one container is
+		/// still owed afterwards and the row still says so. A founder who walks out at unit 40 of
+		/// 132 walks back in owing 92 — because the row was never told the debt was paid.
+		/// </para>
+		/// </summary>
+		[Test]
+		public void APartiallyPaidDebtIsStillOwedAndTheRowSaysSo()
+		{
+			KingdomZoneRow row = new KingdomZoneRow("z", 0, 5000L, default(KingdomStocks), 0, 0, 0, 0, 400, 0, 0);
+			Assert.AreEqual(KingdomCatchUpRules.ThirdsPerUnit, KingdomCityRules.CounterFor(row).LandThirds);
+			Assert.IsFalse(KingdomCityRules.CounterFor(row).IsSettled);
+
+			// One container's worth landed; the rest is still the model's.
+			KingdomZoneRow after = row.WithOwed(300, 0, 0);
+			Assert.AreEqual(KingdomCatchUpRules.ThirdsPerUnit, KingdomCityRules.CounterFor(after).LandThirds,
+				"a debt is owed until it is nothing, not until it is smaller");
+			Assert.IsFalse(KingdomCityRules.CounterFor(after).IsSettled);
+
+			KingdomZoneRow paid = after.WithOwed(0, 0, 0);
+			Assert.IsTrue(KingdomCityRules.CounterFor(paid).IsSettled, "and a caught-up zone costs nothing");
+		}
+
+		/// <summary>
+		/// A landing and a draw stand on one row at once — the ordinary case for a granary zone the
+		/// city has been drinking out of — and the counter reports both without netting them, which
+		/// is exactly why §0.0(c) rejected one net figure.
+		/// </summary>
+		[Test]
+		public void ALandingAndADrawStandAtOnceAndAreNeverNetted()
+		{
+			KingdomZoneRow row = new KingdomZoneRow("z", 0, 5000L, default(KingdomStocks), 0, 0, 0, 0, -60, 40, 0);
+			KingdomCatchUpCounter counter = KingdomCityRules.CounterFor(row);
+			Assert.AreEqual(KingdomCatchUpRules.ThirdsPerUnit, counter.DrawThirds);
+			Assert.AreEqual(KingdomCatchUpRules.ThirdsPerUnit, counter.LandThirds);
+			Assert.AreEqual(2 * KingdomCatchUpRules.ThirdsPerUnit, counter.OwedThirds);
+			Assert.AreEqual(0, counter.Net, "the net is zero and the zone still owes two units of work");
+			Assert.IsFalse(counter.IsSettled);
+		}
 	}
 }
 #endif

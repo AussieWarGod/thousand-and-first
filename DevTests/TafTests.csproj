@@ -106,6 +106,9 @@
     <Compile Include="..\Simulation\City\KingdomCatchUpRules.cs" />
     <Compile Include="..\Simulation\City\KingdomDrainRules.cs" />
     <Compile Include="..\Simulation\City\KingdomItineraryRules.cs" />
+    <Compile Include="..\Simulation\City\KingdomPlacementRules.cs" />
+    <Compile Include="..\Simulation\City\KingdomDistanceRules.cs" />
+    <Compile Include="..\Simulation\City\KingdomJobRegistry.cs" />
     <Compile Include="..\Simulation\City\KingdomExecutor.cs" />
     <Compile Include="..\Simulation\City\KingdomComputeSeam.cs" />
     <Compile Include="..\Simulation\Kernel\KernelContracts.cs" />
@@ -134,6 +137,9 @@
     <Compile Include="KingdomCityRulesTests.cs" />
     <Compile Include="KingdomBindingRegistryTests.cs" />
     <Compile Include="KingdomResidentRulesTests.cs" />
+    <Compile Include="KingdomPlacementRulesTests.cs" />
+    <Compile Include="KingdomDistanceRulesTests.cs" />
+    <Compile Include="KingdomJobRulesTests.cs" />
   </ItemGroup>
 
   <ItemGroup>

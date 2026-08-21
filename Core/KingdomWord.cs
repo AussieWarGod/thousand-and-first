@@ -122,6 +122,27 @@ namespace ThousandAndFirst
 			Push(System, From, Here, Note);
 		}
 
+		/// <summary>
+		/// News that is neither a brink nor its aftermath: something the city noticed while the
+		/// founder was standing somewhere else, said once.
+		/// <para>
+		/// LIVING-CITY-ARCHITECTURE &sect;3.6 gives the heartbeat one told line an in-game hour, and
+		/// &sect;3.7 gives a failed carrier one line. Neither is an irreversible window, so neither
+		/// belongs in the brink lane the report renders in red at the top &mdash; but both are still
+		/// a PUSH, because the founder is by definition not standing where the news is. The ordinary
+		/// note lane plus the same one-line push: the caller has already made sure of the "once".
+		/// </para>
+		/// </summary>
+		public static void Ambient(KingdomSystem System, string From, bool Here, string Note)
+		{
+			if (System == null || string.IsNullOrEmpty(Note))
+			{
+				return;
+			}
+			System.Ledger.Note("{{K|" + Note + "}}");
+			Push(System, From, Here, Note);
+		}
+
 		private static void Push(KingdomSystem System, string From, bool Here, string Line)
 		{
 			if (string.IsNullOrEmpty(Line))
