@@ -50,6 +50,10 @@ namespace ThousandAndFirst
 			system.KingdomDisplayName = faction.DisplayName;
 			system.SettlementName = faction.DisplayName;
 			system.FoundedTick = The.Game.TimeTicks;
+			// The realm's simulation seed, minted here and never again. Deferred out of W0 because
+			// there was nothing to seed yet; the founding is the one moment that has a realm name,
+			// a founding tick and a world to domain-separate against all at once.
+			system.MintSimulationSeed(The.Game.GetWorldSeed(), faction.Name, system.FoundedTick);
 			system.LastHeartbeatTick = The.Game.TimeTicks;
 			system.LastVisitTick = The.Game.TimeTicks;
 			Zone foundingZone = The.Player?.CurrentZone;

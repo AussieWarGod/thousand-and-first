@@ -22,8 +22,13 @@ namespace ThousandAndFirst.Simulation.City
 		// ---- LIVING-CITY-ARCHITECTURE §0.0(c), the table, row by row. -------------------------
 
 		/// <summary>id ref 8 + district 4 + LastReadTick 8 + six stock/capacity longs 48 + roofs 4
-		/// + defence 4 + pad 4. LIVING-CITY-ARCHITECTURE §0.0(c).</summary>
-		internal const int ZoneRowBytes = 80;
+		/// + defence 4 + water carry 4 + food carry 4 + three signed owed figures 12 = 96.
+		/// LIVING-CITY-ARCHITECTURE §0.0(c), as W1 widened it: the two carries because the
+		/// <c>ZoneSighting</c> projection reads carries rather than levels, and the owed figures
+		/// per stock kind because one net counter cannot say that a zone owes a food landing and a
+		/// water draw at once. Sixteen bytes over the eighty §0.0(c) first budgeted, and the table
+		/// carries the same edit.</summary>
+		internal const int ZoneRowBytes = 96;
 
 		/// <summary>id 4 + zone ref 8 + anchor 4 + design ref 8 + condition 4 + crew 4 +
 		/// RanThroughTick 8 + run-state 16 + pad 8. LIVING-CITY-ARCHITECTURE §0.0(c).</summary>

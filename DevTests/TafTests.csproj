@@ -97,6 +97,8 @@
     <Compile Include="..\Experience\KingdomWaterRiteRules.cs" />
     <Compile Include="..\Simulation\City\KingdomBudgetRules.cs" />
     <Compile Include="..\Simulation\City\KingdomCityState.cs" />
+    <Compile Include="..\Simulation\City\KingdomCityRules.cs" />
+    <Compile Include="..\Simulation\City\KingdomCityBook.cs" />
     <Compile Include="..\Simulation\City\KingdomCityMemoryRules.cs" />
     <Compile Include="..\Simulation\City\KingdomAdvanceRules.cs" />
     <Compile Include="..\Simulation\City\KingdomCatchUpRules.cs" />
@@ -126,6 +128,8 @@
     <Compile Include="KingdomDrainRulesTests.cs" />
     <Compile Include="KingdomItineraryRulesTests.cs" />
     <Compile Include="KingdomComputeSeamTests.cs" />
+    <Compile Include="KingdomCityBookTests.cs" />
+    <Compile Include="KingdomCityRulesTests.cs" />
   </ItemGroup>
 
   <ItemGroup>

@@ -753,6 +753,14 @@ is eaten by its people day by day; food anywhere else — including the player's
 container they simply left lying about — is never read and never spent. Dedication is a mark, not
 a transfer: nothing is moved when a container joins the pantry.
 
+**Dedication order is a stored fact, and the city draws in it.** The first settlement pass that
+counts a container as the city's stamps `KingdomDedicationOrder` on it — an increasing realm-wide
+number that never moves afterwards. When the city has to take drams or servings out of stores the
+founder is not standing over, it takes them **oldest dedication first**, so the newest thing the
+player dedicated is the reserve that outlives everything else. Do not set that property yourself:
+an unstamped container sorts last, which is the right answer for something the city has not yet
+counted, and a hand-written ordinal only lies about when the city learned of it.
+
 **How much a pantry holds is declared on the blueprint**, not in `KingdomBuildings.xml`, for the
 same reason a cistern's capacity is its `LiquidVolume MaxVolume` rather than a catalogue
 attribute: `Carries` says what a design adds to the settlement's sustainable *level*, and how much

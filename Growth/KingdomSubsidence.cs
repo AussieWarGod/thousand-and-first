@@ -274,52 +274,33 @@ namespace ThousandAndFirst
 
 		// --- The city's own record, one zone at a time --------------------------------------
 
-		/// <summary>Game-state key prefix a claimed zone's last-seen binding carries are recorded
-		/// under. A generic, already-serialized slot on the game rather than a new field on
-		/// <c>KingdomSettlement</c> &mdash; exactly as <c>KingdomReach.CityStatePrefix</c> and
-		/// <c>KingdomPlots.MaterialStatePrefix</c> are &mdash; so a city's other zones can be read
-		/// without them being loaded and without touching any positionally-reflected field
-		/// layout. Keyed by zone id alone, so a seat swap reads the seated city's own zones with
-		/// no bookkeeping at all: the ids move with <c>ClaimedZones</c>.</summary>
-		public const string ZoneStatePrefix = "r_TAF_Supports_";
-
-		private const string WaterSlot = "_water";
-		private const string FoodSlot = "_food";
-		private const string RoofSlot = "_roof";
-		private const string StorageSlot = "_storage";
-		private const string SeenSlot = "_seen";
-
 		/// <summary>
 		/// Writes down what this zone was holding, on the pass that stood in it. Rewritten from
 		/// the ground every time, including down to zero: a reservoir that was struck stops
 		/// counting toward the city the pass the founder sees the empty plot, and never before.
+		/// <para>
+		/// The discipline is unchanged; where it is written is not. This used to be five
+		/// <c>r_TAF_Supports_&lt;zoneID&gt;_*</c> game-state ints, which were the right answer for
+		/// five ints that had to be readable without loading a zone and the wrong answer for a
+		/// hundred typed rows (LIVING-CITY-ARCHITECTURE &sect;1.3). It is now one row of the
+		/// settlement's own city book, and every number downstream is the same number.
+		/// </para>
 		/// </summary>
+		/// <param name="System">The seated settlement, whose book holds the row.</param>
 		/// <param name="Z">The zone the pass is in.</param>
 		/// <param name="Supports">What was counted here, lifts ignored &mdash; only the binding
 		/// half is a citywide pool.</param>
 		/// <param name="StorageCapacity">Dedicated storage counted here.</param>
 		/// <param name="TimeTicks">Now, which is what dates the sighting.</param>
-		public static void RecordZone(Zone Z, KingdomCatalogueRules.SupportTally Supports, int StorageCapacity, long TimeTicks)
+		public static void RecordZone(KingdomSystem System, Zone Z, KingdomCatalogueRules.SupportTally Supports, int StorageCapacity, long TimeTicks)
 		{
-			if (The.Game == null || Z == null)
-			{
-				return;
-			}
-			string key = ZoneStatePrefix + Z.ZoneID;
-			The.Game.SetIntGameState(key + WaterSlot, (Supports.Water > 0) ? Supports.Water : 0);
-			The.Game.SetIntGameState(key + FoodSlot, (Supports.Food > 0) ? Supports.Food : 0);
-			The.Game.SetIntGameState(key + RoofSlot, (Supports.Roof > 0) ? Supports.Roof : 0);
-			The.Game.SetIntGameState(key + StorageSlot, (StorageCapacity > 0) ? StorageCapacity : 0);
-			// Dated in DAYS, not ticks: the game state's slots are ints and a tick count outgrows
-			// one, while a day is the granularity everything downstream reads anyway
-			// (KingdomRules.ElapsedDays). Keeping the whole record in one already-serialized
-			// dictionary is what saves a second store for a single long.
-			The.Game.SetIntGameState(key + SeenSlot, SeenStamp(TimeTicks));
+			Simulation.City.KingdomCity.RecordSupports(System, Z, Supports.Water, Supports.Food, Supports.Roof, StorageCapacity, TimeTicks);
 		}
 
-		/// <summary>The stamp a sighting tick is stored as. Clamped into the int slot: a game that
-		/// somehow outruns it stops ageing rather than wrapping negative and reading as the
-		/// future.</summary>
+		/// <summary>The stamp a sighting tick is dated in: whole DAYS, not ticks, because a day is
+		/// the granularity everything downstream reads (<c>KingdomRules.ElapsedDays</c>) and the
+		/// staleness clause is written in days. Clamped: a game that somehow outruns it stops
+		/// ageing rather than wrapping negative and reading as the future.</summary>
 		public static int SeenStamp(long TimeTicks)
 		{
 			if (TimeTicks <= 0L)
@@ -335,34 +316,7 @@ namespace ThousandAndFirst
 		/// the ground, and counting it twice would double its cisterns.</summary>
 		public static List<KingdomSubsidenceRules.ZoneSighting> OtherZones(KingdomSystem System, Zone Z)
 		{
-			List<KingdomSubsidenceRules.ZoneSighting> others = new List<KingdomSubsidenceRules.ZoneSighting>();
-			if (System == null || System.ClaimedZones == null || The.Game == null)
-			{
-				return others;
-			}
-			string here = (Z == null) ? null : Z.ZoneID;
-			for (int i = 0; i < System.ClaimedZones.Count; i++)
-			{
-				string zoneID = System.ClaimedZones[i];
-				if (string.IsNullOrEmpty(zoneID) || zoneID == here)
-				{
-					continue;
-				}
-				string key = ZoneStatePrefix + zoneID;
-				int seen = The.Game.GetIntGameState(key + SeenSlot);
-				if (seen <= 0)
-				{
-					// Never stood in. Nothing is invented for it.
-					continue;
-				}
-				others.Add(new KingdomSubsidenceRules.ZoneSighting(
-					The.Game.GetIntGameState(key + WaterSlot),
-					The.Game.GetIntGameState(key + FoodSlot),
-					The.Game.GetIntGameState(key + RoofSlot),
-					The.Game.GetIntGameState(key + StorageSlot),
-					(long)seen * KingdomRules.TicksPerDay));
-			}
-			return others;
+			return Simulation.City.KingdomCity.OtherZones(System, Z);
 		}
 
 		/// <summary>
@@ -414,7 +368,7 @@ namespace ThousandAndFirst
 			KingdomCatalogueRules.SupportTally here = ScopedSupports(System, Z, Survey);
 			// Written down before it is used, so this zone's own sighting is today's on every
 			// pass and the fold below never counts this ground out of a memory of it.
-			RecordZone(Z, here, Survey.StorageCapacity, TimeTicks);
+			RecordZone(System, Z, here, Survey.StorageCapacity, TimeTicks);
 			List<KingdomSubsidenceRules.ZoneSighting> others = OtherZones(System, Z);
 			KingdomCatalogueRules.SupportTally supports = KingdomSubsidenceRules.CityTally(here, others);
 			int storage = CityStorageCapacity(System, Z, Survey.StorageCapacity);

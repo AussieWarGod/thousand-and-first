@@ -329,6 +329,20 @@ namespace ThousandAndFirst
 
 		public Dictionary<string, string> ZoneDistricts = new Dictionary<string, string>();
 
+		/// <summary>
+		/// This city's whole model: stocks, zone rows, work rows, and what each zone still owes its
+		/// own containers. LIVING-CITY-ARCHITECTURE &sect;1.3 &mdash; one book per settlement, on
+		/// the settlement, as a named-field composite.
+		/// <para>
+		/// Carried by the seat swap like <see cref="Ledger"/> is, and by exactly the same
+		/// mechanism: a same-named field of the same type on <c>KingdomSystem</c>. This is what
+		/// retired the <c>r_TAF_Supports_*</c> and <c>r_TAF_Larders_*</c> game-state key families
+		/// &mdash; five ints per zone that had to be readable without loading a zone were the right
+		/// answer for five ints, and the wrong answer for a hundred typed rows.
+		/// </para>
+		/// </summary>
+		public Simulation.City.KingdomCityBook City = new Simulation.City.KingdomCityBook();
+
 #if !TAF_TESTS
 		public bool WantFieldReflection => false;
 
@@ -418,6 +432,11 @@ namespace ThousandAndFirst
 				Ledger = new KingdomLedger();
 			}
 			Ledger.Normalize();
+			if (City == null)
+			{
+				City = new Simulation.City.KingdomCityBook();
+			}
+			City.Normalize();
 			if (string.IsNullOrEmpty(Style))
 			{
 				Style = "common";

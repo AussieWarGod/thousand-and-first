@@ -28,9 +28,22 @@ namespace ThousandAndFirst
 		/// to pick up.
 		/// </para>
 		/// </summary>
-		private const int CurrentSerializationVersion = 3;
+		/// <summary>
+		/// Version 4 is the city book. <see cref="City"/> arrives on the system and on every
+		/// settlement, the <c>r_TAF_Supports_*</c> and <c>r_TAF_Larders_*</c> game-state key
+		/// families retire, and the realm gains a minted simulation seed. A version-3 save has no
+		/// book at all and its zone sightings live in a dictionary this build no longer reads, so
+		/// a settlement read out of one would be a city with no memory of its own other zones.
+		/// <para>
+		/// No migration machinery ships for it, and Addendum 9 is why: the mod has never run, so
+		/// there are no version-3 saves in the world, and "version bumps stay clean and
+		/// deliberate" means the gate refuses a pre-book layout by name rather than silently
+		/// reading a city that has lost half its ground.
+		/// </para>
+		/// </summary>
+		private const int CurrentSerializationVersion = 4;
 
-		private const int FirstNamedSerializationVersion = 3;
+		private const int FirstNamedSerializationVersion = 4;
 
 		private const int LegacyReflectedSerializationVersion = 1;
 
@@ -425,6 +438,33 @@ namespace ThousandAndFirst
 
 		public Dictionary<string, string> ZoneDistricts = new Dictionary<string, string>();
 
+		/// <summary>The seated city's model. See <see cref="KingdomSettlement.City"/>; this is the
+		/// flat field the seat swap carries it in.</summary>
+		public Simulation.City.KingdomCityBook City = new Simulation.City.KingdomCityBook();
+
+		/// <summary>
+		/// The realm's simulation seed, minted once at founding and never re-minted.
+		/// <para>
+		/// Two <c>ulong</c> halves rather than a <c>KernelSeed128</c> field, because the kernel's
+		/// seed type is an internal value type of the simulation slice and this is the engine's own
+		/// serialized surface: the halves go out as plain numbers and
+		/// <see cref="SimulationSeed"/> composes them back. Realm-scope, not per-city &mdash; the
+		/// realm is the incarnation the kernel domain-separates on.
+		/// </para>
+		/// </summary>
+		public ulong SimulationSeedHigh;
+
+		/// <summary>See <see cref="SimulationSeedHigh"/>.</summary>
+		public ulong SimulationSeedLow;
+
+		/// <summary>
+		/// How many containers the realm has ever counted as its own. The next dedication ordinal
+		/// (<c>KingdomCity.DedicationOrderProperty</c>), which is what makes the drain order of
+		/// LIVING-CITY-ARCHITECTURE &sect;3.9 a stored fact rather than a ranking recomputed from
+		/// contents. Realm-scope: ordinals only ever have to be comparable, never contiguous.
+		/// </summary>
+		public int DedicationCounter;
+
 		public List<string> ActiveDealKeys = new List<string>();
 
 		public List<string> ActiveDealFactions = new List<string>();
@@ -653,6 +693,46 @@ namespace ThousandAndFirst
 		/// save written before a city could be named apart from its realm.
 		/// </summary>
 		public string SeatName => string.IsNullOrEmpty(SettlementName) ? KingdomDisplayName : SettlementName;
+
+		/// <summary>
+		/// The realm's simulation seed, composed from its two stored halves.
+		/// <para>
+		/// Internal rather than public because <c>KernelSeed128</c> is the simulation slice's own
+		/// value type and the kernel is deliberate about it: identity travels one way, through the
+		/// canonical encoder, and a seed handed out on a public surface is a seed somebody keys a
+		/// collection by. The two halves are the public, serialized surface.
+		/// </para>
+		/// </summary>
+		internal Simulation.Kernel.KernelSeed128 SimulationSeed => new Simulation.Kernel.KernelSeed128(SimulationSeedHigh, SimulationSeedLow);
+
+		/// <summary>
+		/// Mints the realm's simulation seed, once, at founding.
+		/// <para>
+		/// LIVING-CITY-ARCHITECTURE W0 deferred this to W1 and the kernel says what it has to be:
+		/// "whatever mints it must domain-separate on realm incarnation". So it is a pure function
+		/// of the world seed, the realm's name and the tick the water was poured &mdash; two realms
+		/// in one world differ, and the same realm across a reload does not. Re-minting is refused
+		/// rather than performed: a seed that moves is a history that did not happen.
+		/// </para>
+		/// </summary>
+		internal bool MintSimulationSeed(int WorldSeed, string RealmName, long FoundedTick)
+		{
+			if (SimulationSeedHigh != 0UL || SimulationSeedLow != 0UL)
+			{
+				return false;
+			}
+			Simulation.Kernel.KernelSeed128 seed;
+			Simulation.City.KingdomCityFault fault;
+			if (!Simulation.City.KingdomCityRules.TryMintSeed(WorldSeed, RealmName, FoundedTick, out seed, out fault))
+			{
+				KingdomLog.Log("seed: refused (" + fault + "); the realm runs unseeded until it is founded again");
+				return false;
+			}
+			SimulationSeedHigh = seed.High;
+			SimulationSeedLow = seed.Low;
+			KingdomLog.Log("seed: minted for " + RealmName + " at tick " + FoundedTick);
+			return true;
+		}
 
 		/// <summary>How many cities the realm holds, seat included.</summary>
 		public int SettlementCount => (!Founded ? 0 : ((Away != null) ? 2 : 1));
@@ -1071,6 +1151,20 @@ namespace ThousandAndFirst
 			Registrar.Register(AfterReputationChangeEvent.ID);
 			Registrar.Register(AfterGameLoadedEvent.ID);
 			Registrar.Register(ZoneActivatedEvent.ID);
+			// The true last read (LIVING-CITY-ARCHITECTURE §3.4). ZoneDeactivatedEvent is only a
+			// hint: a deactivated zone goes on simulating for up to forty more turns, so a reading
+			// taken there would be wrong by whatever happened in the grace window. This fires from
+			// SuspendZone BEFORE Suspended is set, for any zone, while its objects are still in RAM.
+			Registrar.Register(SuspendingEvent.ID);
+		}
+
+		public override bool HandleEvent(SuspendingEvent E)
+		{
+			Guard("check-out", delegate
+			{
+				Simulation.City.KingdomCity.OnSuspending(this, E.Zone);
+			});
+			return base.HandleEvent(E);
 		}
 
 		public override bool HandleEvent(ZoneActivatedEvent E)
@@ -1118,6 +1212,15 @@ namespace ThousandAndFirst
 				return base.HandleEvent(E);
 			}
 			Ledger.Reset();
+			// After survey and before trade, and the order is the whole of LIVING-CITY-ARCHITECTURE
+			// §3.1: the model is advanced to now, this zone's standing debt is paid onto its real
+			// containers in dedication order, the city's own stock is carried to where the founder
+			// is standing, and then the ground overwrites the row. Everything below reads a ground
+			// the book has already made true.
+			Guard("check-in", delegate
+			{
+				Simulation.City.KingdomCity.CheckIn(this, E.Zone, survey, The.Game.TimeTicks);
+			});
 			// What this city has room for, remembered for as long as the founder is away from it.
 			LastKnownStorageSpace = survey.StorageSpace;
 			// Trade runs BEFORE growth, and the order is load-bearing. Both draw on one shared
@@ -1192,6 +1295,13 @@ namespace ThousandAndFirst
 			Guard("faith", delegate
 			{
 				KingdomFaith.OnZoneActivated(this, E.Zone, survey);
+			});
+			// The cheaper last read, and the one that usually beats SuspendingEvent there: what
+			// this zone actually holds once the day has been drawn and the works have run. A
+			// missed check-out costs freshness, never correctness (§3.4).
+			Guard("check-out", delegate
+			{
+				Simulation.City.KingdomCity.CheckOut(this, E.Zone, survey, The.Game.TimeTicks);
 			});
 			Guard("digest", delegate
 			{
@@ -1366,6 +1476,11 @@ namespace ThousandAndFirst
 
 		private void NormalizeState()
 		{
+			if (City == null)
+			{
+				City = new Simulation.City.KingdomCityBook();
+			}
+			City.Normalize();
 			// A founded save written before cities had names of their own carries only the realm's.
 			// The seat is that first city, so it takes that name rather than arriving unnamed.
 			if (Founded && string.IsNullOrEmpty(SettlementName))

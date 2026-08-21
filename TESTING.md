@@ -479,6 +479,10 @@ to exercise it — this is the verb that reaches it.
 | 81a | Leave the settlement for several days without visiting the second zone, return to the first, read Status | The level carries a dated clause: "counting one parasang as you last saw it N days ago" |
 | 81b | On the same visit, read Status standing in the first zone, then walk into the second and read it again | The same "carries N" figure either way. Before this fix the level swung with whichever zone the founder walked in through — entering through the mine overwrote the granary |
 | 81c | Build enough dedicated storage across both zones to cross a stage threshold, then walk in through the zone that alone would **not** cross it | The stage still reads correctly off the city's whole storage, not the one zone's — `UpdateStage` reads city storage after the pass records this zone's own sighting |
+| 81d | **The other zone's stores moved while you were in this one.** With two zones held, fill the cistern in zone B, then live in zone A until A's own casks run dry and the day's bill cannot be paid out of them | The ledger says water came in from the city's other quarters, out of the oldest casks first — and A's casks now hold it. The city stopped going thirsty next to a full cistern in its own second parasang |
+| 81e | Walk to zone B and open the cistern you drew from | It holds **exactly** what the book said was left: the drams that were carried to A are gone from B's vessel, taken from the oldest dedication first. Reload before walking over and repeat — the **same** vessel drained first |
+| 81f | Between 81d and 81e, wish `kingdom:dump` and read the `[TAF] perf` lines in Player.log | `perf reckon` on every settlement pass. No line is prefixed `BUDGET`. See Pass 32 for how to read one |
+| 81g | Pour a few drams out of a dedicated cask **by hand**, then leave the zone and come back | The ledger says the stores hold fewer drams than the books had and that the stores are right. Attributed and told — never silently repaired, and never a fault |
 
 ## Pass 27 — Underground honesty, and the gatehouse
 
@@ -536,6 +540,32 @@ water lane, the point is that what you can watch and what the ledger counts are 
 | 92b | Now leave the mill alone, keep crops in the **larders**, and leave for a week | Different stock, different clock: the settlement pass grinds two crops a day out of the larders into six staples, a net of four servings. `kingdom:status` reports it — *"N more won out of the millstone"* |
 | 92c | Run the larders down to about one day's food and leave again | The mill grinds **nothing**. Industry never eats before the residents do: the day's rations are drawn first, and the mill may only touch what stands above one more day's bill |
 | 92d | Compare the settlement's level with and without the mill standing | The mill's `food:4` is counted **once**. It is subtracted from the clocked daily make because it now delivers physically — a mill that fed the settlement twice would be the bug this step exists to catch |
+
+## Pass 32 — What the city costs (the receipt)
+
+The performance constitution (`_notes/LIVING-CITY-ARCHITECTURE.md` §0.0) is a table of budgets,
+and this is how a tester falsifies it instead of taking the author's word for it. It grows with
+every wave; these are the steps the city book's own wave can be read against.
+
+**How to read a receipt.** Every line is one measurement of one lane:
+
+```
+[TAF] perf reckon label=Kavvat steps=1 rows=232 ms=0.14
+```
+
+`steps` is breakpoint passes, `rows` is row-visits (`steps × 2R`, where `R` is the live row count —
+zones + works + settlers + clocks), `ms` is wall time. **A count is a contract and a timing is
+hardware**: on a slow machine `ms` will be larger and `steps`/`rows` will not. A figure that crossed
+a budget is prefixed `BUDGET` and names the budget it broke — `[TAF] perf BUDGET reckon … over=8`.
+**A `BUDGET` line in a playtest log is a bug report, not a note.**
+
+| Step | Action | Expect |
+|---|---|---|
+| 90 | Found a city, hold two zones, raise works in both. Leave for a season. Come home and read the log | One `perf reckon` line for the pass. `ms` under 2. Nothing stutters as you walk in |
+| 90a | Do the same, but leave for **one day** | `steps` and `rows` are **identical to 90's**. Only the wall time differs. If they scale with the absence, a lane is charging per day and it is the lane that is wrong |
+| 90b | Cross between your two zones several times in one session | One `perf reckon` line per crossing, each the same size. Nothing accumulates |
+| 90g | Open the cistern and the larder in a zone the city drew from while you were elsewhere | The cistern holds **exactly** the book's remainder — not a full vessel and a ledger note. Reload and repeat: the **same** vessel drained first |
+| 90m | Grep the log for `city: check-in audit` | `model=` and `ground=` agree for both water and food after an attended pass, and no line says `MISMATCH`. A mismatch is not a crash and is not repaired — it is named, and it is what you report |
 
 ## Pass 4 — Attitudes and persistence
 

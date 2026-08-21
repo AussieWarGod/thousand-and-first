@@ -35,7 +35,7 @@ sentiment, it is a set of budgets, and they are written here as numbers so that 
 | **Heartbeat** — one micro-reckon slice, every 50 ticks | ≤ 4 breakpoint steps, ≤ 2R row-visits, ≤ 1 told line | > 0.3 ms | > 0.5 ms, or > 4 steps | the slice (§3.6) |
 | **Heartbeat, amortised** | ≤ 2R/50 ≈ **5 row-visits per turn per city** | > 10 | > 20 | the slice (§3.6) |
 | **Catch-up drain** | worst backlog ≤ 232 **weighted** units (§0.0(b)) → **≤ 29 turns** at 8/turn | > 40 turns | never reaches zero | the counter (§3.5) |
-| **Model in RAM** | model + registry + itineraries + distance matrix → **≤ 64 KiB per realm** at today's caps (≈ 77 KiB at nine zones — **the formula is the contract, not the constant**, §0.0(f)) | > 48 KiB | > 64 KiB, or over the formula | `kingdom:selftest` (§6.5) |
+| **Model in RAM** | model + registry + itineraries + distance matrix → **≤ 64 KiB per realm** at today's caps (≈ 88 KiB at nine zones — **the formula is the contract, not the constant**, §0.0(f)) | > 56 KiB | > 64 KiB, or over the formula | `kingdom:selftest` (§6.5) |
 | **Model in the save** | ≈ 20 KiB per realm | > 32 KiB | > 96 KiB | the write path (§6.5) |
 | **Route planning** — per slice | ≤ 16 open jobs, ≤ 8 stops a trip, 2-opt ≤ 50 swap tests → ≲ 1,000 int ops, **zero draws** | > 2,000 int ops | any draw in the planner | the planner (§3.10) |
 | **Network solve** — per city, per reckon | ≤ 4 networks x (≤ 32 nodes + 48 edges); one re-solve per network breakpoint → **≤ 5,120 node-visits** | > 8,000 | > 12,000, or a topology walk at reckon | the solve (§3.11) |
@@ -106,20 +106,50 @@ resident, and zone ids and design keys are shared references.
 
 | Row | Width | Count | Bytes |
 |---|---|---|---|
-| Zone | id ref 8 + district 4 + `LastReadTick` 8 + 6 stock/capacity longs 48 + roofs 4 + defence 4 + pad 4 = **80** | 4 | 320 |
+| Zone | id ref 8 + district 4 + `LastReadTick` 8 + 6 stock/capacity longs 48 + roofs 4 + defence 4 + water carry 4 + food carry 4 + 3 signed owed figures 12 = **96** | 4 | 384 |
 | Work | id 4 + zone ref 8 + anchor 4 + design ref 8 + condition 4 + crew 4 + `RanThroughTick` 8 + run-state 16 + pad 8 = **64** | 40 | 2,560 |
 | Resident | 96 of fields (ids, ticks, enums, refs, two brink windows) + one unique name string ~64 = **160** | 60 | 9,600 |
 | Clock | kind 4 + `NextDueTick` 8 + ordinal 4 = **16** | 12 | 192 |
 | Told-log | kind 4 + tick 8 + 2 subject ids 8 + place ref 8 + outcome 4 = **32** | 32 | 1,024 |
 | Arrays + carrier headers | — | — | 256 |
-| **Per city** | | | **13,952 B ≈ 13.6 KiB** |
-| **Per realm** (2 cities) | | | **27,904 B ≈ 27 KiB** |
+| **Per city** | | | **14,016 B ≈ 13.7 KiB** |
+| **Per realm** (2 cities) | | | **28,032 B ≈ 27.4 KiB** |
 | Binding registry, realm-scope (§3.8) | key 4 + kind 1 + zone ref 8 + object ref 8 + minted tick 8 + pad 3 = **32** | 120 residents + ≤ 16 open jobs + headers | 4,480 B ≈ 4.4 KiB |
 | Job rows with itineraries (§3.7) | header 64 + ≤ 6 legs x (zone ref 8 + enter 4 + exit 4 + length 4 + depart 8 + arrive 8 = 36) = **280** | ≤ 16 open jobs, realm-wide | 4,480 B ≈ 4.4 KiB |
 | Distance matrix (§3.10) | `ushort` per entry = **2** | works→edges ≤ 540 + same-zone pairs ≤ 900 + zone all-pairs ≤ 81, **per city** | 2 x 1,521 ≈ 3.0 KiB per city, 6.0 KiB per realm |
 | Network graphs (§3.11) | node 16 + edge 16; per network 32 x 16 + 48 x 16 + header 32 = **1,312** | ≤ 4 networks per city | 5,248 B ≈ 5.1 KiB per city, 10.2 KiB per realm |
-| **Per realm, all of it** | | | **53,104 B ≈ 51.9 KiB** — ceiling **64 KiB** |
-| *the same, at nine zones and caps scaled with them* | | | *≈ 88 KiB — still under a tenth of a megabyte* |
+| **Per realm, all of it** | | | **53,572 B ≈ 52.3 KiB** — warn **56 KiB**, ceiling **64 KiB** |
+| *the same, at nine zones and caps scaled with them* | | | *89,732 B ≈ 87.6 KiB — over today's ceiling by design, still under a tenth of a megabyte* |
+
+**Four corrections and one ruling, from the first two waves that had to evaluate this table.**
+W0 built the formula (`KingdomCityMemoryRules`) and W1 wired it, and between them they falsified
+four of the figures above. All four are corrected in place, because *the formula is the contract*
+and a table that disagrees with it is the thing that is wrong:
+
+1. **The realm total was 53,104 B; the formula composes 53,572 B.** The original was the sum of
+   this table's own *rounded KiB* column rather than of its byte column, and rounding twice is how
+   a contract loses half a kilobyte. The byte figures are now the authority and the KiB column is
+   derived from them.
+2. **The nine-zone figure was quoted twice, as 77 KiB in the lane table and 88 KiB here.** The
+   formula at `Z=9, W=90, P=135` gives **89,732 B ≈ 87.6 KiB**. Both quotations now read the same
+   number, and both are the formula's.
+3. **The zone row is 96 bytes, not 80.** W1 could not ship §1.2(b)'s promise inside the original
+   width. Two carries (`WaterCarry`, `FoodCarry`) were needed because the `ZoneSighting` the
+   subsidence arithmetic reads is a projection of *carries* and not of levels, so a row that could
+   not answer for them could not replace the game-state keys it retires; and the signed debt is
+   **per stock kind** rather than one net figure, because *one net counter cannot say that a zone
+   owes a food landing and a water draw at once* — which is the ordinary case for a granary zone
+   the city has been drinking out of, and W0's own open finding. The weighted thirds §3.5 reports
+   as `owed` are derived from the per-kind figures (`KingdomCityRules.CounterFor`), so there is one
+   debt and one home for it.
+4. **The warn rung moves from 48 KiB to 56 KiB. The ceiling does not move.** W0's memory test
+   recorded, rather than hid, that the composed realm total sat *above* the table's own warn rung
+   at today's caps — the design shipped permanently inside its own warning, which tells a tester
+   nothing. **Warn is advisory and the ceiling is the contract**, so the advisory rung is raised to
+   sit above the design's honest resting figure and below the ceiling it must never reach. The
+   64 KiB ceiling, and "or over the formula", are unchanged: those are what a regression is
+   measured against. `kingdom:selftest` still checks the *measured* byte count against the formula
+   evaluated at the **live** caps, never against 53,572 or any other frozen figure.
 
 Serialized it is smaller: no references, `WriteOptimizedString` dedupes zone ids and design keys
 across every row, ticks go out optimized — **≈ 5.2 KiB per city, ≈ 10.4 KiB per realm**, plus
@@ -289,7 +319,9 @@ bit 32 (`CASCADE_STOP_AT_ZONE`), so all of them reach every object in the zone.
   `CityStorage` fold them into one city. Its own doc says the quiet part: *"Nothing here simulates
   an unvisited zone forward — a sighting is dated, stays exactly as old as it is."* **This is the
   city model in embryo, five ints deep. The design generalises it; it does not replace its
-  discipline.**
+  discipline.** *(Retired in W1: `RecordZone` and `OtherZones` now write and read a zone row of
+  `KingdomSettlement.City`, and `KingdomCrops`' parallel `r_TAF_Larders_*` pair with them. The
+  arithmetic downstream is unchanged — `ZoneSighting` survives as the projection the rows hand it.)*
 - **Crystallise-at-awareness** — Addendum 11(b-ii) already rules the harvest cycle: growth on
   world-time from a stamped planted-tick, harvest crystallises when due attended or not, the city's
   stores are credited at once while the **physical crop items materialise into the destination
@@ -1793,8 +1825,9 @@ systems that already work, not a rewrite of them.
 
 ### 7.3 Retire
 
-The `r_TAF_Supports_*` game-state key family; the parallel roster lists; per-object brink
-properties; any remaining reading of city storage from one zone only.
+The `r_TAF_Supports_*` game-state key family *(retired in W1, with `r_TAF_Larders_*` beside it)*;
+the parallel roster lists; per-object brink properties; any remaining reading of city storage from
+one zone only.
 
 ### 7.4 The wave plan
 

@@ -146,7 +146,7 @@ reckoning, and a season of harvests tells **once, with a count** (`HarvestChroni
 | `KingdomCrops.RowsTag` (`r_KingdomCropRows`) | How many rows a design stands, declared on the **blueprint** for the reason a pantry's capacity is. |
 | `KingdomCrops.WithoutUnsownFood` / `CycledFoodPerDay` | The gate, and the subtraction that keeps a sown field from being paid twice. |
 | `KingdomCrops.AttemptSow` / `Withdraw` / `TakeWildSeed` / `LayRows` / `ClearRows` / `RowsOf` / `SetRipe` | The engine-coupled half. Only rows this file created and marked are ever destroyed. |
-| `KingdomCrops.LarderStatePrefix` / `RecordLarders` / `LarderRoomElsewhere` / `DeliverPending` / `Deposit` | Cross-zone delivery, on `KingdomSubsidence.RecordZone`'s own sighting idiom with its own prefix. |
+| `KingdomCrops.RecordLarders(KingdomSystem, Zone, KingdomSurvey, long)` / `LarderRoomElsewhere` / `DeliverPending` / `Deposit` | Cross-zone delivery. Both records now read and write the seated settlement's city book (`KingdomSettlement.City`) rather than the retired `r_TAF_Larders_*` game-state pair; the numbers are the same, the home is one. |
 | `KingdomSystem.PendingCrop` / `PendingCropBlueprint` | One city's harvest still on the road, carried by the seat swap on its own name. |
 
 ## Food as a flow — what the fields make and the people eat
@@ -515,6 +515,74 @@ waits in `KingdomSystem.Away` until the founder walks into its ground.
 | `void ReadFrom(object seat)` / `void WriteTo(object seat)` | Carry a city into or out of a seat by field name. Throws `KingdomSeatMismatchException` **before writing anything** if the seat cannot carry a field. |
 | `static FieldInfo[] CarriedFields()` / `static List<string> SeatMismatches(Type)` | What a city holds, and what a seat cannot hold. |
 
+## The city book — check-in, check-out, and one page per zone
+
+> Design: `_notes/LIVING-CITY-ARCHITECTURE.md` §1 (the model), §3.1 (check-in), §3.4 (check-out),
+> §3.9 (deficits drain real containers), §6.5 (the receipt).
+
+**The city is a book, and a zone is a page of it that happens to be open.** One
+`KingdomCityBook` hangs on every `KingdomSettlement` as `City`, carried by the seat swap on its own
+name exactly as `Ledger` is. It replaced two families of `The.Game` game-state keys —
+`r_TAF_Supports_<zoneID>_*` and `r_TAF_Larders_<zoneID>_*` — which were the right answer for five
+ints that had to be readable without loading a zone, and the wrong answer for a hundred typed rows.
+Every number the retired keys used to answer is answered by the book, and answered the same.
+
+**Authority alternates, explicitly, and never overlaps.**
+
+- While a zone is **attended**, the ground is authoritative and the book is a mirror. Pour water
+  out of a cask by hand and the book agrees with the cask.
+- While a zone is **suspended**, the book is authoritative and carries that zone's last-read
+  numbers plus everything credited or drawn since.
+- The handoff is a **check-out** (ground → book) and a **check-in** (reconcile, then reify).
+
+**Check-in** runs at the settlement pass's `check-in` step, after `survey` and before `trade`, so
+every step below it reads a ground the book has already made true. In order: advance the model to
+now through the executor (§2.5 — one choke point, one `[TAF] perf reckon` receipt); pay this zone's
+standing signed debt onto its real containers in **dedication order**; carry the city's own stock
+to where the founder is standing if the seated zone cannot cover the day it is about to be billed
+for; then let the ground overwrite the row, attributing and telling any difference rather than
+silently repairing it.
+
+**Check-out** runs twice, and only the second is load-bearing. The pass's own `check-out` step is
+the cheap one that usually gets there first. `SuspendingEvent` is the true last read: it fires from
+`SuspendZone` *before* `Suspended` is set, for any zone, while its objects are still in RAM —
+unlike `ZoneDeactivatedEvent`, which fires while the zone still has up to forty turns of live
+simulation ahead of it. **A missed check-out costs freshness, never correctness**, because check-in
+reconciles against the ground either way.
+
+**The signed counter, and what makes a deficit real.** Each zone row carries what it owes its own
+containers, *per stock kind and signed*: positive lands, negative draws. One net figure is not
+enough — a granary zone the city has been drinking out of owes a food landing and a water draw at
+once — so the row carries three signed figures and the weighted `owed` §3.5 reports is derived from
+them. A draw is spread across the zone's dedicated vessels **oldest dedication first**
+(`KingdomCity.DedicationOrderProperty`, minted the first pass that counts a container as the
+city's), which is deterministic without a draw and stable across a reload. What the containers
+could not cover stays on the row and is told; it is never silently forgiven.
+
+| Member | Contract |
+|---|---|
+| `KingdomSettlement.City` / `KingdomSystem.City` | The settlement's book, and the flat field the seat swap carries it in. |
+| `KingdomCityBook` | The serialized carrier: named-field `IComposite`, flat primitive columns, one row family per group of columns. `Normalize()` repairs a book read from a save — a null column becomes empty, **ragged columns are truncated to the shortest** (a row half of whose fields are missing is not a row), rows past their cap are dropped, and an overlong told-log keeps its newest lines. |
+| `KingdomCityBook.ZoneCount` / `WorkCount` / `ResidentCount` / `ToldCount` / `TryZoneRow(string, out int)` | What the book holds, and the one lookup every re-plumbed sighting reader goes through. |
+| `KingdomCity.CheckIn(KingdomSystem, Zone, KingdomSurvey, long)` | The pass's first word with the book. See above for the order, which is load-bearing. |
+| `KingdomCity.CheckOut(KingdomSystem, Zone, KingdomSurvey, long)` / `OnSuspending(KingdomSystem, Zone)` | The two readings. `OnSuspending` filters to zones the seated realm claims and takes its own survey. |
+| `KingdomCity.RecordSupports(...)` / `RecordLarder(...)` | Where `KingdomSubsidence.RecordZone` and `KingdomCrops.RecordLarders` now write. |
+| `KingdomCity.OtherZones(KingdomSystem, Zone)` / `LarderRoomElsewhere(KingdomSystem, Zone)` | Where `KingdomSubsidence.OtherZones` and `KingdomCrops.LarderRoomElsewhere` now read. `ZoneSighting` survives as the projection the rows hand the subsidence arithmetic, so that arithmetic did not change at all. |
+| `KingdomCity.AuditLine(KingdomSystem, Zone, KingdomSurvey)` / `OwedThirds(KingdomSystem)` | The §3.9 audit as one greppable line — model total, ground total, and what stands between them — and everything the city still owes, in weighted thirds. |
+| `KingdomCity.DedicationOrderProperty` (`KingdomDedicationOrder`) | Dedication order as a stored fact. Minted the first pass that counts a container as the city's, and never moved afterwards; an unstamped container sorts **last**. |
+| `KingdomSystem.SimulationSeedHigh` / `SimulationSeedLow` / `MintSimulationSeed(int worldSeed, string realmName, long foundedTick)` | The realm's kernel seed, minted once at founding from the world seed, the realm's name and the tick the water was poured — deterministic across a reload, separated between realms, and refused rather than re-minted. |
+
+**The receipt.** Every reckoning goes through the executor seam and leaves one line in Player.log
+behind the dev-log option, in the shape the log-watcher reads:
+
+```
+[TAF] perf reckon label=Kavvat steps=1 rows=232 ms=0.14
+[TAF] perf BUDGET reckon label=Kavvat steps=64 rows=14848 ms=9.2 over=8
+```
+
+A figure that crosses a budget is prefixed `BUDGET` and names the budget it broke. The lanes and
+their rungs live in `KingdomBudgetRules` and nowhere else.
+
 ## `KingdomChronicle` — history
 
 | Member | Contract |
@@ -574,7 +642,7 @@ whole out of `KingdomReach.CityShadeExcept`, and the binding three are untouched
 settlement holds — the water-works production pass is one.
 
 **A city, not a zone.** `KingdomSubsidence.Reckon` writes down what THIS zone is holding —
-`RecordZone`, keyed `ZoneStatePrefix + zoneID`, dated in whole days (`SeenStamp`) — and then folds
+`RecordZone`, into the seated settlement's city book, dated in whole days (`SeenStamp`) — and then folds
 in every OTHER zone the seated city claims **as it was last seen** (`OtherZones`), never simulated
 forward: a granary zone the founder hasn't walked into since spring goes on reporting spring's
 granary until they walk back in. `CityTally` sums the three BINDING goods this way (`Lift` passes
@@ -596,8 +664,8 @@ it 6 days ago}}".
 | `static int CityStorage(int here, IList<ZoneSighting> others)` | The same, for dedicated storage. |
 | `static long OldestSighting(IList<ZoneSighting> others)` / `static int SightedZones(IList<ZoneSighting> others)` | The oldest folded-in sighting's tick (zero if every claimed zone was counted today), and how many zones were folded in out of a sighting at all rather than counted from the ground. |
 | `static string SightingClause(int zones, int days)` | The clause that dates a city reading, or null when there is nothing to date — a one-zone city, or one whose every zone was walked today. |
-| `KingdomSubsidence.ZoneStatePrefix` / `static void RecordZone(Zone, SupportTally, int storageCapacity, long timeTicks)` | The game-state key prefix a claimed zone's record lives under, and the writer — rewritten from the ground every pass the zone is stood in, including down to zero. |
-| `static int SeenStamp(long timeTicks)` (on `KingdomSubsidence`) | The tick a sighting is stored as, floored to whole days and clamped into the int game-state slot. |
+| `static void RecordZone(KingdomSystem, Zone, SupportTally, int storageCapacity, long timeTicks)` (on `KingdomSubsidence`) | The writer — rewritten from the ground every pass the zone is stood in, including down to zero. Since the city book landed it writes a zone row of `KingdomSettlement.City`; the `r_TAF_Supports_*` game-state key family it used to write is retired. |
+| `static int SeenStamp(long timeTicks)` (on `KingdomSubsidence`) | The tick a sighting is dated in: whole days, clamped, because a day is the granularity everything downstream reads. |
 | `static List<ZoneSighting> OtherZones(KingdomSystem, Zone)` (on `KingdomSubsidence`) | Every claimed zone of the seated city EXCEPT the one the pass is in, as each was last seen. |
 | `static int CityStorageCapacity(KingdomSystem, Zone, int here)` (on `KingdomSubsidence`) | `CityStorage` fed from `OtherZones`. |
 | `static string SightingClause(KingdomSystem, Zone, long timeTicks)` (on `KingdomSubsidence`) | The dated clause for THIS reading, ready for the status report. |

@@ -393,6 +393,13 @@ namespace ThousandAndFirst.Tests
 				labels[Field.Name] = "value-" + Index;
 				return labels;
 			}
+			if (type == typeof(ThousandAndFirst.Simulation.City.KingdomCityBook))
+			{
+				ThousandAndFirst.Simulation.City.KingdomCityBook book = new ThousandAndFirst.Simulation.City.KingdomCityBook();
+				book.SettlementId = Field.Name + "-" + Index;
+				book.ProcessedThroughTick = 500L + Index;
+				return book;
+			}
 			if (type == typeof(KingdomLedger))
 			{
 				KingdomLedger ledger = new KingdomLedger();

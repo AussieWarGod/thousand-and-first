@@ -722,6 +722,54 @@ only pure water — so the fix mints not one dram.
 - Founding under a name a faction already holds is refused before anything is spent. A runtime
   faction can never be removed or renamed, and `Factions.AddNewFaction` is a dictionary add that
   throws on a duplicate — so after an expulsion the old realm's name is taken forever.
+### Added — the city book: one home for what every zone holds
+- **A settlement now carries its whole model.** `KingdomSettlement.City` is a named-field
+  composite holding stocks, one row per claimed zone, one row per standing work, and what each
+  zone still owes its own containers. It is carried by the seat swap on its own name, exactly as
+  the ledger is.
+- **Two families of game-state keys retired.** `r_TAF_Supports_<zoneID>_*` and
+  `r_TAF_Larders_<zoneID>_*` are gone. `KingdomSubsidence.RecordZone` / `OtherZones`,
+  `CityTally` / `CityStorage`, and `KingdomCrops.RecordLarders` / `LarderRoomElsewhere` all read
+  and write zone rows instead. Same answers, one home; `ZoneSighting` survives as the projection
+  the rows hand the subsidence arithmetic, so that arithmetic did not change at all.
+- **Check-in and check-out.** The settlement pass gained a `check-in` step (after `survey`,
+  before `trade`) and a `check-out` step at its end, and the system now listens for
+  `SuspendingEvent` — the true last read, which fires before a zone suspends and while its
+  objects are still in RAM. A missed check-out costs freshness, never correctness: check-in
+  reconciles against the ground either way.
+- **The city drinks from its own second parasang.** When the seated zone cannot cover the day the
+  settlement is about to be billed for, the city's water and food are carried in from the zones
+  that hold them, oldest dedication first. Nothing is created: what leaves one zone's row arrives
+  as a debt against that zone's real vessels, paid the next time anybody opens them. A one-zone
+  city, and a city whose seated zone can pay its own bill, are untouched.
+- **Deficits drain real containers, in a stated order.** A zone's standing debt is applied to its
+  dedicated vessels and larders in **dedication order** — oldest first — through
+  `KingdomLiquids.Drain`'s measured delta, never a trusted return value. The order is a stored
+  fact (`KingdomDedicationOrder`, minted the first pass that counts a container as the city's),
+  so it is deterministic without a draw and the same vessel drains first after a reload. What the
+  containers could not cover is named in the ledger, never silently forgiven.
+- **The ground wins, and the difference is told.** A cask with less in it than the book expected
+  means the founder poured some. Check-in attributes the difference and says so; it never
+  silently repairs it.
+- **The perf receipt.** Every reckoning goes through the executor seam and writes one
+  `[TAF] perf reckon` line — breakpoint steps, row-visits, draws, milliseconds — judged against
+  the lane's own budget, with a `BUDGET` prefix and the figure it broke when it crosses one.
+  TESTING.md gains Pass 32 for reading them.
+- **The realm's simulation seed** is minted once at founding, from the world seed, the realm's
+  name and the tick the water was poured: deterministic across a reload, separated between
+  realms, and refused rather than re-minted.
+
+### Changed — the constitution's own numbers
+- The model-in-RAM **warn** rung rises from 48 KiB to 56 KiB; the 64 KiB **ceiling** does not
+  move. The design's honest resting total at today's caps is 52.3 KiB, which sat above the old
+  advisory rung — a warning a design is permanently inside tells a tester nothing. Warn is
+  advice; the ceiling is the contract.
+- The zone row widens from 80 to 96 bytes: two carries, because the sighting projection reads
+  carries rather than levels, and a **signed debt per stock kind** rather than one net figure,
+  because one net counter cannot say that a zone owes a food landing and a water draw at once.
+- Serialization version 4. Pre-release, so there is no migration: a version-3 save has no book
+  and is refused by name rather than read as a city that has lost half its ground.
+
 ### Tooling
 - `Tools/stage.sh` defines one canonical runtime set, and `Tools/gate.sh` compiles exactly that
   set — so the compile gate now asks the same question the game does. `DevTests/build.ps1`

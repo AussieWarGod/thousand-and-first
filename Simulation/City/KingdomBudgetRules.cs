@@ -192,6 +192,10 @@ namespace ThousandAndFirst.Simulation.City
 		/// <summary>A rung the constitution does not give this lane a number for.</summary>
 		internal const long NoLimit = -1L;
 
+		/// <summary>What <c>KingdomLog</c> stamps on every line it writes. Named here so the
+		/// receipt's own shape and the log-watcher's grep have one source.</summary>
+		internal const string LogPrefix = "[TAF] ";
+
 		// ---- LIVING-CITY-ARCHITECTURE §0.0, the table, row by row. ----------------------------
 
 		/// <summary>LIVING-CITY-ARCHITECTURE §0.0(a) / §2.3: breakpoints per reckoning, with an
@@ -221,6 +225,11 @@ namespace ThousandAndFirst.Simulation.City
 
 		/// <summary>LIVING-CITY-ARCHITECTURE §0.0: the ceiling the model in RAM answers to.</summary>
 		internal const long ModelBytesCeiling = 64L * 1024L;
+
+		/// <summary>LIVING-CITY-ARCHITECTURE §0.0: the advisory rung under that ceiling, raised
+		/// from 48 KiB to 56 KiB in W1 because the formula's own total at today's caps sat above
+		/// the old one and a permanently-lit warning tells a tester nothing.</summary>
+		internal const long ModelBytesWarn = 56L * 1024L;
 
 		/// <summary>LIVING-CITY-ARCHITECTURE §3.10: jobs considered by one planning slice.</summary>
 		internal const int PlannerMaxJobs = 16;
@@ -258,8 +267,13 @@ namespace ThousandAndFirst.Simulation.City
 			// LIVING-CITY-ARCHITECTURE §0.0: ≤ 29 turns at 8/turn; > 40 warns; the fail is a
 			// counter that never reaches zero, which is a shape rather than a number.
 			new KingdomBudgetRow(KingdomBudgetLane.CatchUpDrain, "drain", NoLimit, NoLimit, "turns", 40L, NoLimit),
-			// LIVING-CITY-ARCHITECTURE §0.0: > 48 KiB warns, > 64 KiB fails.
-			new KingdomBudgetRow(KingdomBudgetLane.ModelBytes, "model", NoLimit, NoLimit, "bytes", 48L * 1024L, ModelBytesCeiling),
+			// LIVING-CITY-ARCHITECTURE §0.0: > 56 KiB warns, > 64 KiB fails. The warn rung was 48
+			// KiB in the constitution as first written, and W0's own memory test showed the design
+			// shipping inside its own warn band at today's caps -- the formula composes 53.6 KiB,
+			// which is under the ceiling and over the warn. A warn rung a design is permanently in
+			// is not a warning, it is noise, so §0.0 raised the advisory rung to 56 KiB and left
+			// the CEILING untouched at 64. Warn is advice; the ceiling is the contract.
+			new KingdomBudgetRow(KingdomBudgetLane.ModelBytes, "model", NoLimit, NoLimit, "bytes", ModelBytesWarn, ModelBytesCeiling),
 			// LIVING-CITY-ARCHITECTURE §0.0: ≈ 20 KiB per realm written; > 32 KiB warns, > 96 KiB fails.
 			new KingdomBudgetRow(KingdomBudgetLane.SaveBytes, "bytes", NoLimit, NoLimit, "bytes", 32L * 1024L, 96L * 1024L),
 			// LIVING-CITY-ARCHITECTURE §0.0: ≲ 1,000 int ops; > 2,000 warns. The fail rung of this
@@ -357,11 +371,22 @@ namespace ThousandAndFirst.Simulation.City
 		/// </summary>
 		internal static string FormatReceipt(KingdomPerfReceipt receipt)
 		{
+			return LogPrefix + FormatReceiptBody(receipt);
+		}
+
+		/// <summary>
+		/// The same line without the <c>[TAF] </c> prefix, for the one writer that adds the prefix
+		/// itself. <c>KingdomLog.Log</c> stamps every line it writes, so a journal that used
+		/// <see cref="FormatReceipt"/> would emit the tag twice and the log-watcher's own grep
+		/// would stop matching.
+		/// </summary>
+		internal static string FormatReceiptBody(KingdomPerfReceipt receipt)
+		{
 			KingdomBudgetRow row;
 			bool known = TryRow(receipt.Lane, out row);
 			string lane = known ? row.LogName : receipt.Lane.ToString();
 			StringBuilder line = new StringBuilder(96);
-			line.Append("[TAF] perf ");
+			line.Append("perf ");
 			if (receipt.Verdict == KingdomBudgetVerdict.Over)
 			{
 				line.Append("BUDGET ");

@@ -29,7 +29,7 @@ namespace ThousandAndFirst.Tests
 		}
 
 		/// <summary>LIVING-CITY-ARCHITECTURE §0.0(c), the widths, by value.</summary>
-		[TestCase(80, KingdomCityMemoryRules.ZoneRowBytes)]
+		[TestCase(96, KingdomCityMemoryRules.ZoneRowBytes)]
 		[TestCase(64, KingdomCityMemoryRules.WorkRowBytes)]
 		[TestCase(96, KingdomCityMemoryRules.ResidentRowStructBytes)]
 		[TestCase(160, KingdomCityMemoryRules.ResidentRowBytes)]
@@ -78,14 +78,15 @@ namespace ThousandAndFirst.Tests
 			Assert.LessOrEqual(bytes, budget, row.Name + " declares " + bytes + " bytes against a budget of " + budget);
 		}
 
-		/// <summary>13,952 bytes ≈ 13.6 KiB, exactly as §0.0(c) computes it row by row.</summary>
+		/// <summary>14,016 bytes ≈ 13.7 KiB, exactly as §0.0(c) computes it row by row with the
+		/// zone row at the ninety-six bytes W1 widened it to.</summary>
 		[Test]
 		public void OneCityAtTodaysCapsIsTheTablesOwnFigure()
 		{
 			long bytes;
 			Assert.IsTrue(KingdomCityMemoryRules.TryCityModelBytes(
 				KingdomCityState.MaxZones, KingdomCityState.MaxWorks, KingdomCityState.MaxResidents, KingdomCityState.MaxClocks, out bytes));
-			Assert.AreEqual(13952L, bytes);
+			Assert.AreEqual(14016L, bytes);
 		}
 
 		[Test]
@@ -117,22 +118,23 @@ namespace ThousandAndFirst.Tests
 		{
 			long bytes;
 			Assert.IsTrue(KingdomCityMemoryRules.TryRealmBytesAtTodaysCaps(out bytes));
-			Assert.AreEqual(53444L, bytes, "the composed realm total moved");
+			Assert.AreEqual(53572L, bytes, "the composed realm total moved");
 			Assert.Less(bytes, KingdomBudgetRules.ModelBytesCeiling, "the realm broke the 64 KiB ceiling");
-			Assert.AreNotEqual(KingdomBudgetVerdict.Over, KingdomBudgetRules.JudgeCount(KingdomBudgetLane.ModelBytes, bytes));
-			// Recorded rather than asserted away: §0.0(c)'s own byte-by-byte total (≈ 51.9 KiB,
-			// composed here as 52.2 KiB -- the table's figure is the sum of its rounded KiB
-			// column) sits ABOVE the same table's 48 KiB warn rung. The design ships in its own
-			// warn band at today's caps. That is the constitution's business to settle, not this
-			// test's to hide, so the verdict is pinned as Warn and named.
-			Assert.AreEqual(KingdomBudgetVerdict.Warn, KingdomBudgetRules.JudgeCount(KingdomBudgetLane.ModelBytes, bytes),
-				"the realm total left the warn band -- if the widths changed, §0.0(c) needs the same edit");
+			// W0 recorded this rather than asserting it away: the composed total (52.3 KiB) sat
+			// ABOVE §0.0's own 48 KiB warn rung, so the design shipped permanently inside its own
+			// warning. §0.0 settled it in W1 by raising the ADVISORY rung to 56 KiB and leaving the
+			// ceiling untouched at 64 -- warn is advice, the ceiling is the contract. The verdict
+			// is pinned at Within so that a width change which genuinely eats the new headroom
+			// fails here rather than being read as the old permanent warning.
+			Assert.AreEqual(KingdomBudgetVerdict.Within, KingdomBudgetRules.JudgeCount(KingdomBudgetLane.ModelBytes, bytes),
+				"the realm total crossed the 56 KiB advisory rung -- if the widths changed, §0.0(c) needs the same edit");
+			Assert.Less(bytes, KingdomBudgetRules.ModelBytesWarn, "the advisory rung is only advice if the total is under it");
 		}
 
 		/// <summary>
 		/// The same formula at one whole parasang, caps scaled with it. §0.0(f)'s claim is that
 		/// nothing here changes when the city grows — only R does — and this is the figure that
-		/// claim is worth: about 87 KiB, over today's ceiling and still under a tenth of a megabyte,
+		/// claim is worth: about 88 KiB, over today's ceiling and still under a tenth of a megabyte,
 		/// which is why the ceiling is checked against the formula at the live caps rather than
 		/// against a frozen number.
 		/// </summary>
@@ -141,7 +143,7 @@ namespace ThousandAndFirst.Tests
 		{
 			long bytes;
 			Assert.IsTrue(KingdomCityMemoryRules.TryRealmBytesAtFullParasang(out bytes));
-			Assert.AreEqual(89444L, bytes);
+			Assert.AreEqual(89732L, bytes);
 			Assert.Greater(bytes, KingdomBudgetRules.ModelBytesCeiling, "a nine-zone realm is over TODAY's ceiling by design");
 			Assert.Less(bytes, 100L * KiB, "still under a tenth of a megabyte");
 		}

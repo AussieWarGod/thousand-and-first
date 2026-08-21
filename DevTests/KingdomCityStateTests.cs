@@ -23,7 +23,7 @@ namespace ThousandAndFirst.Tests
 
 		private static KingdomZoneRow Zone(string id, long lastRead)
 		{
-			return new KingdomZoneRow(id, 0, lastRead, Stocks(10L, 20L), 2, 1, 0);
+			return new KingdomZoneRow(id, 0, lastRead, Stocks(10L, 20L), 2, 1, 3, 4, 0, 0, 0);
 		}
 
 		private static KingdomCityState Build(int zones, int works, int residents, int clocks)
@@ -127,13 +127,15 @@ namespace ThousandAndFirst.Tests
 			Assert.IsTrue(before.TryZone(1, out row));
 			KingdomCityState after;
 			KingdomCityFault fault;
-			Assert.IsTrue(before.TryWithZone(1, row.WithCatchUpThirds(42), out after, out fault));
+			Assert.IsTrue(before.TryWithZone(1, row.WithOwed(42, -7, 0), out after, out fault));
 			KingdomZoneRow originalRow;
 			KingdomZoneRow newRow;
 			Assert.IsTrue(before.TryZone(1, out originalRow));
 			Assert.IsTrue(after.TryZone(1, out newRow));
-			Assert.AreEqual(0, originalRow.CatchUpThirds, "copy-on-write mutated the original");
-			Assert.AreEqual(42, newRow.CatchUpThirds);
+			Assert.AreEqual(0, originalRow.OwedWater, "copy-on-write mutated the original");
+			Assert.AreEqual(0, originalRow.OwedFood, "copy-on-write mutated the original");
+			Assert.AreEqual(42, newRow.OwedWater);
+			Assert.AreEqual(-7, newRow.OwedFood, "one net figure cannot hold a landing and a draw at once; three signed ones can");
 			Assert.AreNotSame(before, after);
 		}
 

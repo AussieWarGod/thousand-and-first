@@ -55,7 +55,11 @@ namespace ThousandAndFirst.Tests
 		[TestCase((int)KingdomBudgetLane.Heartbeat, -1L, 4L)]
 		[TestCase((int)KingdomBudgetLane.HeartbeatAmortised, 10L, 20L)]
 		[TestCase((int)KingdomBudgetLane.CatchUpDrain, 40L, -1L)]
-		[TestCase((int)KingdomBudgetLane.ModelBytes, 49152L, 65536L)]
+		// 56 KiB, not 48: §0.0 raised the ADVISORY rung in W1 because the formula's own total at
+		// today's caps sat above the old one, and a warning a design is permanently inside tells a
+		// tester nothing. The ceiling is untouched at 64 KiB -- warn is advice, the ceiling is the
+		// contract.
+		[TestCase((int)KingdomBudgetLane.ModelBytes, 57344L, 65536L)]
 		[TestCase((int)KingdomBudgetLane.SaveBytes, 32768L, 98304L)]
 		[TestCase((int)KingdomBudgetLane.RoutePlan, 2000L, -1L)]
 		[TestCase((int)KingdomBudgetLane.NetworkSolve, 8000L, 12000L)]

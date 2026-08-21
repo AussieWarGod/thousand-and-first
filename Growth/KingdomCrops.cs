@@ -69,17 +69,6 @@ namespace ThousandAndFirst
 		/// block speaks.</summary>
 		public const string SaidProperty = "KingdomCropSaid";
 
-		/// <summary>Game-state key prefix a claimed zone's last-seen pantry room is recorded
-		/// under. The same generic, already-serialized slot idiom
-		/// <c>KingdomSubsidence.ZoneStatePrefix</c> uses, with its own prefix so the two records
-		/// cannot tread on each other: a city's other zones can be asked whether they have room
-		/// for a harvest without being loaded, and without a new field on any settlement.</summary>
-		public const string LarderStatePrefix = "r_TAF_Larders_";
-
-		private const string RoomSlot = "_room";
-
-		private const string SeenSlot = "_seen";
-
 		// ==================================================================================
 		// Reading a field
 		// ==================================================================================
@@ -680,20 +669,23 @@ namespace ThousandAndFirst
 		// ==================================================================================
 
 		/// <summary>
-		/// Writes down what room this zone's dedicated pantries had, on the pass that stood in it.
-		/// Rewritten from the ground every time, including down to zero &mdash; a larder that was
-		/// struck stops being somewhere a harvest can be sent on the pass the founder sees the
-		/// empty plot, and never before.
+		/// Writes down what this zone's dedicated pantries hold and can hold, on the pass that
+		/// stood in it. Rewritten from the ground every time, including down to zero &mdash; a
+		/// larder that was struck stops being somewhere a harvest can be sent on the pass the
+		/// founder sees the empty plot, and never before.
+		/// <para>
+		/// The <c>r_TAF_Larders_&lt;zoneID&gt;_*</c> game-state pair this replaced held ROOM, one
+		/// int; the zone row holds the level and the capacity it is the difference of, which is the
+		/// same answer and one the drain can also read (LIVING-CITY-ARCHITECTURE &sect;1.2(b)).
+		/// </para>
 		/// </summary>
-		public static void RecordLarders(Zone Z, KingdomSurvey Survey, long TimeTicks)
+		public static void RecordLarders(KingdomSystem System, Zone Z, KingdomSurvey Survey, long TimeTicks)
 		{
-			if (The.Game == null || Z == null || Survey == null)
+			if (Survey == null)
 			{
 				return;
 			}
-			string key = LarderStatePrefix + Z.ZoneID;
-			The.Game.SetIntGameState(key + RoomSlot, (Survey.FoodSpace > 0) ? Survey.FoodSpace : 0);
-			The.Game.SetIntGameState(key + SeenSlot, KingdomSubsidence.SeenStamp(TimeTicks));
+			Simulation.City.KingdomCity.RecordLarder(System, Z, Survey.FoodStored, Survey.FoodCapacity, TimeTicks);
 		}
 
 		/// <summary>
@@ -708,27 +700,7 @@ namespace ThousandAndFirst
 		/// </summary>
 		public static int LarderRoomElsewhere(KingdomSystem System, Zone Z)
 		{
-			if (System == null || System.ClaimedZones == null || The.Game == null)
-			{
-				return 0;
-			}
-			string here = (Z == null) ? null : Z.ZoneID;
-			int room = 0;
-			for (int i = 0; i < System.ClaimedZones.Count; i++)
-			{
-				string zoneID = System.ClaimedZones[i];
-				if (string.IsNullOrEmpty(zoneID) || zoneID == here)
-				{
-					continue;
-				}
-				string key = LarderStatePrefix + zoneID;
-				if (The.Game.GetIntGameState(key + SeenSlot) <= 0)
-				{
-					continue;
-				}
-				room += The.Game.GetIntGameState(key + RoomSlot);
-			}
-			return room;
+			return Simulation.City.KingdomCity.LarderRoomElsewhere(System, Z);
 		}
 
 		/// <summary>

@@ -202,7 +202,7 @@ namespace ThousandAndFirst
 			// for. This is the sighting machinery KingdomSubsidence.RecordZone established, with
 			// its own prefix and one slot: a harvest anywhere in the city can ask whether another
 			// zone can take it without that zone being loaded.
-			KingdomCrops.RecordLarders(Z, survey, timeTicks);
+			KingdomCrops.RecordLarders(System, Z, survey, timeTicks);
 			// Right after the plot, so a house finished raising this very pass is already a
 			// candidate: who sleeps where, spending neither water nor hands. This is the ONE
 			// attended pass Addendum 4b's grace is counted in.
