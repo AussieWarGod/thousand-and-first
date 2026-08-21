@@ -649,20 +649,22 @@ namespace ThousandAndFirst.Tests
 		[TestCase(Quarters.Packed, 1)]
 		[TestCase(Quarters.Close, 50)]
 		[TestCase(Quarters.Roomed, 75)]
-		[TestCase(Quarters.Private, 100)]
+		[TestCase(Quarters.Private, 75)] // = Roomed, Addendum 4d: marble never houses enemies a stone house refused
 		public void RefusalHostility_IsTheRulingsOwnFourThresholds(Quarters quarters, int expected)
 		{
 			Assert.AreEqual(expected, KingdomLodgingRules.RefusalHostility(quarters));
 		}
 
 		[Test]
-		public void RefusalHostility_RisesStrictlyWithTheRoomSoBetterQuartersAlwaysHoldWorseFeelings()
+		public void RefusalHostility_NeverFallsWithTheRoom_AndPrivateEqualsRoomedByRuling()
 		{
 			// The whole of Addendum 4c in one assertion: no rung ever tolerates less than a
 			// tighter one. A mutation that swaps two rungs fails here.
 			Assert.Less(KingdomLodgingRules.RefusalHostility(Quarters.Packed), KingdomLodgingRules.RefusalHostility(Quarters.Close));
 			Assert.Less(KingdomLodgingRules.RefusalHostility(Quarters.Close), KingdomLodgingRules.RefusalHostility(Quarters.Roomed));
-			Assert.Less(KingdomLodgingRules.RefusalHostility(Quarters.Roomed), KingdomLodgingRules.RefusalHostility(Quarters.Private));
+			// Addendum 4d: Private EQUALS Roomed — walls between beds are the last tolerance
+			// architecture buys; marble adds quality, never permission.
+			Assert.AreEqual(KingdomLodgingRules.RefusalHostility(Quarters.Roomed), KingdomLodgingRules.RefusalHostility(Quarters.Private));
 		}
 
 		[Test]
@@ -673,7 +675,10 @@ namespace ThousandAndFirst.Tests
 			// CohabitHostility the vocabulary shipped with, which used to be applied to every roof
 			// in the settlement and now applies only where everybody has a door of their own.
 			Assert.AreEqual(KingdomLodgingRules.CreedRefusalHostilityFloor + 1, KingdomLodgingRules.PackedRefusalHostility);
-			Assert.AreEqual(KingdomQolRules.CohabitHostility, KingdomLodgingRules.PrivateRefusalHostility);
+			// Addendum 4d: Private equals Roomed — marble never houses enemies a stone house
+			// refused. The old assertion pinned Private to the superseded flat floor (100), which
+			// is exactly the gap the ruling closed.
+			Assert.AreEqual(KingdomLodgingRules.RoomedRefusalHostility, KingdomLodgingRules.PrivateRefusalHostility);
 		}
 
 		[TestCase(Quarters.Packed, 0, false)]
@@ -682,8 +687,8 @@ namespace ThousandAndFirst.Tests
 		[TestCase(Quarters.Close, 50, true)]
 		[TestCase(Quarters.Roomed, 74, false)]
 		[TestCase(Quarters.Roomed, 75, true)]
-		[TestCase(Quarters.Private, 99, false)]
-		[TestCase(Quarters.Private, 100, true)]
+		[TestCase(Quarters.Private, 74, false)]
+		[TestCase(Quarters.Private, 75, true)] // Addendum 4d: Private refuses exactly where Roomed does
 		public void Conflicts_EachRungRefusesAtItsOwnThresholdAndCarriesOneShortOfIt(Quarters quarters, int hostility, bool expected)
 		{
 			Assert.AreEqual(expected, KingdomLodgingRules.Conflicts(Tags(), Tags(), Tags(), Tags(), hostility, quarters));

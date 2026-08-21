@@ -1,21 +1,30 @@
 ﻿# The Thousand and First
 
 A kingdom-founding expansion for Caves of Qud. Found a faction with a water rite, claim
-ground, and let a settlement grow through arrivals, thirst, and chronicle â€” the first
+ground, and let a settlement grow through arrivals, thirst, and chronicle — the first
 polity of the post-injunction age.
 
-**Status: slice 0.1â€“0.2 (pre-release).** Founding (wish or the founder's basin item),
-territorial claims with adjacency, citizen enrollment, the two-ledger reputation mirror,
-water-gated growth with fetching and upkeep, the thirst ladder (warnings â†’ emigration â†’
-withering â†’ recovery), settler provenance, the dated two-register chronicle, and the
-Charter ability (Status / Chronicle / As others tell it / Standings).
+**Status: pre-release, and not once run in the live game.** It compiles, the pure-logic suite
+is green, and every runtime claim is still inference from decompiled source — the playtest
+protocol in [TESTING.md](TESTING.md) is the outstanding gate.
+
+Built so far: founding by rite (wish or the founder's basin), territorial claims with adjacency
+including downward, citizen enrollment, the two-ledger reputation mirror, water-gated growth
+with a founder-set water detail and upkeep, the thirst ladder (warnings → emigration →
+withering → recovery), settlers with names, origins, homes and work, districts, city style read
+from the ground, commissioned construction on staked or automatic plots, clearance-as-extraction
+materials and a merge-by-key building catalogue with footprints and skins, lodging that asks who
+will live beside whom, creeds and the five channels belief moves through, provoked raids with
+three answers, trade charters and caravans, a second city and the water manifest between them,
+exile and return, the dated two-register chronicle, a homecoming report, and the Charter ability
+that fronts all of it.
 
 - Design document: published artifact "The Thousand and First" (DLC-scale design, research-grounded).
 - [VISION.md](VISION.md) — where this is going and the rules it holds itself to. The rules are
   the product, not guardrails: where these shapes exist in other games, they are the loved part.
-- [STANDARDS.md](STANDARDS.md) â€” engineering charter (vanilla conformance, depth standard, three-layer testing).
-- [TESTING.md](TESTING.md) â€” the current playtest protocol.
-- `DevTests/` â€” compile gate + NUnit suite (hidden from the mod loader; `#if TAF_TESTS` guarded).
+- [STANDARDS.md](STANDARDS.md) — engineering charter (vanilla conformance, depth standard, three-layer testing).
+- [TESTING.md](TESTING.md) — the current playtest protocol.
+- `DevTests/` — compile gate + NUnit suite (hidden from the mod loader; `#if TAF_TESTS` guarded).
   Run `DevTests/build.ps1` and `DevTests/test.ps1`.
 
 Requires Caves of Qud v1.0.5+ (build 2.0.211.51 verified). No dependencies; Hearthpyre

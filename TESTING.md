@@ -32,7 +32,7 @@ Say when you're launching so the log watch can run alongside.
 | 11 | Empty the stores (pick containers up), `kingdom:grow` | Thirst warning (red), chronicle "thirsted" line, streak 1 |
 | 12 | `kingdom:grow` again, still dry | A settler **emigrates** ("left for wetter country"), pop −1 |
 | 13 | Refill water, `kingdom:grow` | Streak resets; arrivals resume |
-| 14 | If the zone has a fresh-water pool: `kingdom:status` before/after `kingdom:grow` | Settlers fetch pool water into containers (stored rises, open falls) |
+| 14 | If the zone has a fresh-water pool: set a water detail (Charter → **The water detail**), then `kingdom:status` before/after `kingdom:grow` | The detail fetches pool water into dedicated containers (stored rises, open falls). With nobody on the detail, nothing is fetched — see 21w |
 | 14a | Put an empty dedicated vessel beside a salty pool, then `kingdom:grow` | No brine is fetched or converted; both volumes remain unchanged, and `kingdom:selftest` reports the mixed-liquid checks PASS |
 
 ## Pass 3 — The rite (no wishes)
@@ -51,7 +51,7 @@ Say when you're launching so the log watch can run alongside.
 | 16b | Read "As others tell it" | Same events retold with rumor leads ("Travelers claim that...", "Some deny that...") |
 | 16c | Talk to an arrived settler | Greeting + "Why did you come?" answer naming their origin |
 | 16d | Walk one zone away (non-adjacent claim test: travel 2+ zones), `kingdom:claim` | Refused — claims must border existing ground (`kingdom:claimforce` overrides) |
-| 16e | Let the settlement stay dry for 3+ growth passes at Steading | **Withered** flag in status + chronicle line; refill water and grow | Recovery message and chronicle entry |
+| 16e | Let the settlement stay dry for 3+ growth passes at Steading, then refill water and grow | **Withered** flag in status + a chronicle line while dry; on refill, a recovery message and its own chronicle entry |
 | 16f | `kingdom:reset` (confirm) | Kingdom dissolved; Charter ability gone; ready to re-test founding from scratch |
 
 ## Pass 3c — City style and the ground it was read from
@@ -173,7 +173,7 @@ step here is done standing in the settlement.
 | 41 | Found, claim, dedicate water, commission a bunk. Leave the zone, travel a day or more, return | **One nonmodal message line**, not a popup: the settlement "has news of the N days you were away", pointing at the Charter. Nothing interrupts the walk home |
 | 41b | Charter → What happened while you were away | The report opens on request: the events as past-tense lines, and a ledger of drams drawn, delivered, drunk and lost — not a scroll of separate messages |
 | 42 | Read an arrival line | It names the cause: "Word of the cask rack raised at Kavvat reached the hills — a settler has come." Founding, stage-ups, commissions, caravans and tribute all set the cause |
-| 43 | Strike a charter, then stay away for several caravan intervals | Missed deliveries **bank** (up to 3): "3 caravans of the villagers of Joppa came under charter: 18 drams." Absence accrues, never decays |
+| 43 | Strike a charter, then stay away for several caravan intervals | Missed deliveries **bank** (up to 3): "3 caravans of the villagers of Joppa came under charter: 18 drams." Absence never punishes — what it earns banks, capped |
 | 44 | Return after a short walk (under a day) | No news line — the homecoming is for absences, not for stepping outside. The Charter entry still opens and says nothing has happened |
 | 45 | Charter → Dedicate a vessel or larder → **Dedicate everything here** | All undedicated vessels join the stores in one action, up to the cap |
 | 45a | Stand beside a chest or footlocker with food in it and dedicate it as a larder | It is marked a larder of the settlement. Nothing moves and nothing is taken — dedication is a mark, not a transfer |
@@ -378,5 +378,14 @@ anyone.
 
 - No ownership stamping on claims (can't rob your own city — membership design pending).
 - Settlers use vanilla farmer behavior; ambient roles come with the amenity work.
-- Stage never regresses; the withered overlay is designed but not yet built.
+- Stage never regresses **yet**. The ruling is that supply-carried level subsides in absence
+  toward what the infrastructure honestly carries (VISION's *hubris subsides*; down to Camp if
+  that is all that stands, bounded, chronicled, arrestable). None of that is built: today the
+  stage ratchet only climbs. A city that does not subside is a known gap, not a bug to file.
+  The withered overlay is designed but not yet built either.
+- **What absence does and does not move.** Everything social or event-driven — dissent,
+  conversion, wear, the re-housing grace, raids waiting at the gate — is attended-only by
+  design, and a pass asserting "untouched on return" for those is correct as written. The
+  supply-carried *level* is the only thing that is meant to move while you are away, and it
+  does not move yet (above).
 - Founder's basin is wish-obtainable only; its acquisition quest is slice 0.2 content.

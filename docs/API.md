@@ -33,7 +33,7 @@ neutral values.
 | `KingdomSettlement Capture()` / `void Restore(KingdomSettlement)` / `bool TrySeat(Zone)` | Move the seat. `TrySeat` runs from `ZoneActivatedEvent`; the others are for tools and tests. |
 | `string KingdomFactionName` / `KingdomDisplayName` | The runtime faction's name and display name; null when unfounded. |
 | `string Style` | City style key (`common`, `verdant`, `fungal`, `gyre`, `eater`, or one your mod declares). Drives which building designs are offered. |
-| `GrowthStage Stage` | `Camp`, `Steading`, `Village`, `Town`, `City`. Monotonic — never regresses. |
+| `GrowthStage Stage` | `Camp`, `Steading`, `Village`, `Town`, `City`. Only ever advances **today**; do not build on that as a permanent contract. VISION's *hubris subsides* pillar has supply-carried level subsiding in absence toward what the infrastructure carries, down to `Camp`, and the ratchet is where that will land. Read it, never assume it. |
 | `int Population` | Living settler count. |
 | `bool Withered` | True while a sustained thirst has suspended prosperity. Recoverable. |
 | `List<string> ClaimedZones` | Zone IDs the kingdom holds. |
@@ -116,9 +116,12 @@ derived entry. Unknown tags are inert. `KingdomLodging` / `KingdomLodgingRules` 
 settler an address: Needs gate the home; housemates are gated by the closeness ladder — Packed shares only without
 quarrel, Close refuses the ambient grudge, Roomed tolerates it, and open hostility (≥100, the
 named fault lines) refuses any shared roof at every tier. `Refuses` tags are absolute. Closeness
-derives from beds-per-footprint density, `Closeness` attribute overriding. (`CohabitHostility` /
-`JudgeCohabitation` are the superseded flat floor, kept only until retired), arrivals join only if a home they would accept exists, and a settler whose
-acceptable housing is lost leaves after a two-attended-pass grace through the ordinary emigration.
+derives from beds-per-footprint density, `Closeness` attribute overriding. Arrivals join only if a
+home they would accept exists, and a settler whose acceptable housing is lost leaves after a
+two-attended-pass grace, counted in attended passes only, through the ordinary emigration.
+`KingdomQolRules.CohabitHostility` / `JudgeCohabitation` are the flat single floor the vocabulary
+shipped with; the ladder above **supersedes** them and they are kept only until they are retired —
+do not write new callers against them.
 Tastes and displacement tolerance query this same vocabulary.
 
 ## Layering, footprints, sockets, and the trigger law
@@ -265,7 +268,11 @@ These are read and written across the mod and are part of the API:
 - **The protection law**: kingdom systems never consume, move, or destroy an object the
   player or another mod placed, unless the player explicitly dedicated it. Automatic
   placement only ever targets empty cells.
-- **Absence is safe**: growth, thirst, trade, and raids only resolve while the player is
-  present, and consequences are bounded per visit.
+- **Absence never punishes**: growth, thirst, trade, and raids only resolve while the player
+  is present, and consequences are bounded per visit. Every social and event process —
+  dissent, conversion, wear, the re-housing grace — moves on attended passes only. The one
+  thing ruled to move while away is supply-carried *level*, which subsides toward what the
+  infrastructure carries (bounded, chronicled, arrestable); that is not implemented yet, so
+  nothing in this file promises it either way.
 - **Failures degrade**: an exception in our code is logged and skipped, never propagated
   into the host game.

@@ -346,7 +346,14 @@ namespace ThousandAndFirst
 		/// the settlement; under Addendum 4c it is the top rung and applies only where everybody
 		/// has a door of their own.
 		/// </summary>
-		public const int PrivateRefusalHostility = 100;
+		/// <summary>
+		/// Equal to Roomed's, by Addendum 4d: a fault line refuses any shared roof, and marble is
+		/// never a tool for housing enemies. Private's worth is quality and notables, not
+		/// tolerance. This was 100 — which let a pair refused a stone house share a fine one, the
+		/// exact gap the ruling closes; on vanilla's feeling table (−25/−50/−100) the difference
+		/// was unobservable, but a modded feeling between 75 and 99 would have found it.
+		/// </summary>
+		public const int PrivateRefusalHostility = RoomedRefusalHostility;
 
 		/// <summary>
 		/// The ladder itself: the creed hostility at or above which these quarters refuse. Strictly

@@ -130,7 +130,11 @@ thirst-ladder checklist:
 
 1. A **physical resource** under genuine tension — never an abstract bar.
 2. **Graduated states with hysteresis** — streaks and ladders, not single thresholds.
-3. **Witnessed-only accounting** — absence can never stack consequences.
+3. **Witnessed-only accounting** — absence can never stack punishments. Two things move in
+   absence and nothing else does: supply-carried *level*, which subsides toward what the
+   infrastructure honestly carries (bounded, chronicled, arrestable on return — down to Camp if
+   that is all that stands), and the gifts and news an absence earns, both capped. Social and
+   event processes — dissent, conversion, wear, grace clocks — move only while attended.
 4. A **bounded consequence** per visit, with an **instant and total recovery path**.
 5. **Permanent story residue** — state changes can leave chronicle lines, scars, artifacts.
 6. **Pure-testable rules** — the math lives in engine-free classes with `[TestCase]` tables.
@@ -198,10 +202,17 @@ binding on every economic system:
 - **Consumption scales with time, not with event cadence.** Any per-interval cost must be
   computed from elapsed ticks (with an absence cap), or it silently vanishes as the
   interval grows.
+- **Time is labour, never maturation or decay.** Running costs are the only thing elapsed
+  ticks meter. Nothing improves, ripens, or wears because the calendar moved: a build costs a
+  duration because the work takes hands and days, wear comes from events (raids, hard running,
+  temperamental salvage) and never from the clock, and no upgrade threshold anywhere is a
+  timer. Every gate is keyed to something with meaning in Qud — drams spared, materials
+  quarried, hands free, stage, standings.
 - **Ratchets gate on durable things.** Growth stages gate on capacity (infrastructure that
   must be built) rather than current stock (which can be lent and withdrawn).
-- **Failure has a floor.** Decay stops at a loyal core; the settlement can always be clawed
-  back, and every loss names its cause in the departure message and the chronicle.
+- **Failure has a floor.** Decay stops at a loyal core and subsidence stops at Camp; the
+  settlement can always be clawed back, and every loss names its cause in the departure
+  message and the chronicle.
 - **Passive income stays sub-adventuring** and arrives as a lump event with a report, never
   a silent trickle; caravans are events, not spreadsheets.
 - **One arrival per day, each attributable.** Growth events must name the player action

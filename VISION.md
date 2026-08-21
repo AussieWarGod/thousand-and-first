@@ -74,10 +74,15 @@ opinions and a chronicle that records what you did in two competing tellings.
 so it is the spine of the settlement: what founds it, what limits it, what threatens it, and
 what everything is ultimately paid in.
 
-**Absence accrues, never decays.** Time away should produce gifts and news to discover, never
-debts to answer for. The stores drink a little while you are gone — capped at a few days, then
-forgiven — and nothing that happened in your absence can push the settlement below its floor.
-You come home to a report of what happened, not an inspection.
+**Absence never punishes.** Time away should produce gifts and news to discover, never debts to
+answer for. The stores drink a little while you are gone — capped at a few days, then forgiven
+— and nothing that happened in your absence can push the settlement below its floor. What
+absence *does* move is the level: a city held up by your own hauling rather than by its works
+settles back toward what those works honestly carry — the pillar below, and bounded,
+chronicled, and arrestable the day you walk back in. What absence never moves is anything
+between people — dissent, conversion, damage to the works, the grace a settler is given while
+you find them a roof. Those wait for a witness. You come home to a report of what happened, not
+an inspection.
 
 **Loss writes chronicles, not game-overs.** The settlement is woundable and never deletable.
 Raids take water and sometimes people; drought drives settlers away; districts can fail. All
