@@ -821,6 +821,58 @@ and that accepts charge is filled from it — a charging post, a kiln, your own 
 player merely left standing about is ever charged or read. The settlement does **not** use
 vanilla's `IPowerTransmission` grid, so you do not need to run conduit to anything.
 
+## Happenings, ambience, and what a creed thinks of the founder
+
+The city's happenings are **renderings of its own rows** and there is no happenings registry to
+extend. What you extend instead are the surfaces they read from — which means a faction, a
+mutation, or a design your mod ships is already part of the city's life without your mod knowing
+this one exists.
+
+**A creed's opinion of the founder's body is vanilla's, not ours.** If your faction can be a city's
+creed, give it the same two things Qud gives its own:
+
+```xml
+<faction Name="YourCreed" ...>
+  <!-- The game's own table: which bodies this faction admires or fears. -->
+  <partreputation About="Wings" Value="200" />
+  <partreputation About="MassMind" Value="-200" />
+  <interests>
+    <!-- Plain: they revere chrome. Inverse="true": they define themselves against it. -->
+    <interest Tags="cybernetics" />
+  </interests>
+</faction>
+```
+
+`About` is a **part class name** — mutations are parts, so `Wings`, `Horns`, `PhotosyntheticSkin`
+and anything your own mod adds all work. The **sign** of `Value` is the whole judgement; this mod
+has no opinion of its own about any mutation. The reaction is always a line and never a mechanic:
+nothing about it moves standing, refuses a settler, or changes what the settlement produces.
+
+**Breakdowns and ambience read work rows, so a design you ship participates for free.** A work is
+"stopped" when it is worn past the condemned line (the same line the housing machinery condemns a
+roof at) or when its kind needs hands and has none — producers, refiners and power works do; stores
+and growing grounds do not, because a larder with nobody in it is still a larder.
+
+**Festivals are anchored to Qud's calendar and there is no third anchor.** The engine ships no
+holiday machinery at all, so the mod uses the only two named days that exist: the **Ides**
+(`Calendar.GetDay` returns the literal string for the fifteenth) and the **festival of Ut yara Ux**
+(the five-day intercalary month). The feast serves `Faction.WaterRitualRecipeText` — the realm's
+own dish — so declaring a recipe on your creed faction changes what the city eats.
+
+**Office-holder names come from `Naming.xml`.** The settlement's office holder is named through
+`NameMaker` under vanilla's `Special="Mayor"` scope, so a `<namestyle>` you add for `Mayor` is a
+name the founder's water-keeper can be given. None of `HeroMaker`'s statistics are applied — an
+office holder is a person with a name, not a legendary combatant.
+
+**Option gate.** All of it reads `r_TAF_OptionHappenings`, default `Yes`.
+
+| Surface | What extending it does |
+|---|---|
+| `<partreputation About="X" Value="N"/>` on a creed faction | That creed admires (positive) or fears (negative) a founder carrying part `X` |
+| `<interest Tags="cybernetics"/>`, with or without `Inverse` | That creed reveres or refuses chrome |
+| `WaterRitualRecipe` / `WaterRitualRecipeText` on a creed faction | What the city serves at its feasts |
+| `<namestyle Type="Epithet" Special="Mayor">` in `Naming.xml` | Epithets the settlement's office holder can be given |
+
 ## Conventions
 
 - Water stores are containers (`MaxVolume > 0`) holding `water`; open pools (`MaxVolume < 0`)

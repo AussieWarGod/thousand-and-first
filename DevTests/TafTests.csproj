@@ -112,6 +112,9 @@
     <Compile Include="..\Simulation\City\KingdomDistanceRules.cs" />
     <Compile Include="..\Simulation\City\KingdomJobRegistry.cs" />
     <Compile Include="..\Simulation\City\KingdomExecutor.cs" />
+    <Compile Include="..\Simulation\City\KingdomHappeningRules.cs" />
+    <Compile Include="..\Simulation\City\KingdomAmbientRules.cs" />
+    <Compile Include="..\Simulation\City\KingdomNatureRules.cs" />
     <Compile Include="..\Simulation\City\KingdomComputeSeam.cs" />
     <Compile Include="..\Simulation\Kernel\KernelContracts.cs" />
     <Compile Include="..\Simulation\Kernel\CanonicalBytes.cs" />
@@ -142,6 +145,9 @@
     <Compile Include="KingdomPlacementRulesTests.cs" />
     <Compile Include="KingdomDistanceRulesTests.cs" />
     <Compile Include="KingdomJobRulesTests.cs" />
+    <Compile Include="KingdomHappeningRulesTests.cs" />
+    <Compile Include="KingdomAmbientRulesTests.cs" />
+    <Compile Include="KingdomNatureRulesTests.cs" />
   </ItemGroup>
 
   <ItemGroup>

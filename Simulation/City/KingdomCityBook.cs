@@ -195,6 +195,50 @@ namespace ThousandAndFirst.Simulation.City
 
 		public List<int> ToldOutcomes = new List<int>();
 
+		// ==================================================================================
+		// W4 memos — what the city has already said, so it does not say it again
+		// ==================================================================================
+
+		/// <summary>
+		/// The last ambient line this city said, as <c>KingdomAmbientRules</c> keys them.
+		/// <para>
+		/// Not part of the frozen model and deliberately so: it is not a fact about the city, it
+		/// is a fact about the TELLING, and LIVING-CITY-ARCHITECTURE &sect;1.2 keeps those apart.
+		/// It lives on the carrier because that is the thing that survives a zone going to disk,
+		/// which is exactly the span over which "do not say it twice" has to hold.
+		/// </para>
+		/// </summary>
+		public int AmbientKey;
+
+		/// <summary>The world-day the ambient line was said on. A line repeats across a day
+		/// boundary and never inside one &mdash; BUILDING-CATALOGUE-BRIEF Addendum 13 lane 3's
+		/// "a line per state-change or per day, never per slice".</summary>
+		public long AmbientDayOrdinal = -1L;
+
+		/// <summary>What this city's creed last said about the founder's own body, as
+		/// <c>KingdomNatureRules.RegardKey</c> folds it. Said once per state-change (Addendum 13
+		/// lane 2), and a change is a different creed, part, sign, or chrome.</summary>
+		public int RegardKey;
+
+		/// <summary>
+		/// The feast this city has already kept. Everything at or before it is behind us, so a
+		/// season away replays no feasts and a fresh book keeps none it slept through.
+		/// <para>
+		/// Zero means "never looked", which the happenings layer answers by stamping the current
+		/// tick rather than by firing a backlog: a city founded in Tebet Ux did not miss the Ides
+		/// of Nivvun Ut, it did not exist for them.
+		/// </para>
+		/// </summary>
+		public long LastFestivalTick;
+
+		/// <summary>
+		/// The epithet the city knows its office holder by, minted through vanilla's own
+		/// <c>NameMaker</c> (<c>KingdomNotables</c>). Remembered here rather than only on the
+		/// body, so a happening told while that body is two zones away and on disk can still name
+		/// them properly.
+		/// </summary>
+		public string OfficeEpithet = "";
+
 #if !TAF_TESTS
 		public bool WantFieldReflection => false;
 

@@ -813,6 +813,43 @@ only pure water — so the fix mints not one dram.
   trip batching are a later wave's, because they only start to matter once many jobs compete over
   many stores.
 
+### Added — the city has a history: weddings, feasts, funerals, and the sound of the place
+- **Come home to a city that things happened in.** Two settlers who have shared a roof long enough
+  get married, and somebody who lives there says so. A work that wears out or loses its hands
+  **stops**, and you are told once, from wherever you are standing — and when you come home and mend
+  it, the city takes it back in the same breath it uses to withdraw a brink warning. Every one of
+  these is read off rows the city already kept; none of them is a new system running beside the
+  city, and none of them opens a message channel of its own.
+- **The feasts are Qud's, not ours.** The city keeps **the Ides** — the one day of the month the
+  game declines to number — and **the festival of Ut yara Ux**, the five-day intercalary month
+  Joppa's own apple matz is remembered from. Those are the only two named days the engine has, and
+  the mod invents no third. The feast serves the realm's own favoured dish, so a city eats what its
+  creed already eats. A city founded in Tebet Ux does not owe a backlog of feasts it was not alive
+  for, and a founder gone a decade costs exactly what one gone a season costs.
+- **A death is told once, and now the telling has a funeral in it.** The line that already named how
+  a settler was lost now names who spoke the water over them — the settlement's own office holder,
+  by the epithet the city knows them by. It is the same line, not a second one: there is exactly one
+  place in the mod that learns of a death, and that is the place this was composed into.
+- **The office holder gets a name worth remembering.** Whoever has served longest is given an
+  epithet and an honorific out of the game's own naming grammar, under the same scope Qud names
+  village mayors with — and **none** of the hero machinery's combat statistics. Your water-keeper
+  does not quietly acquire double hit points, four random mutations, and grudges with factions you
+  have never met.
+- **The place makes a noise.** Stand in your city and it breathes: the mill takes up its clatter at
+  rising, bread-smell gets over the wall after the ovens have run, somebody sings the hour at the
+  shrine badly and all the way through, the hearths take one after another at dusk. At most one line
+  an in-game hour, never the same line twice in a day, and a wheel that has stopped outranks every
+  one of them — because silence where there was noise is the only ambient line that is also news.
+- **The city has an opinion about what you ARE.** Creeds read the founder's own body off the game's
+  own tables: the mutation scores factions already keep (the Seekers really do mind a mass mind; the
+  birds really do admire wings) and the interests a faction is defined for and against. A fault-line
+  creed mutters, a chrome-revering one asks twice whether it may look at the implant, and both name
+  the thing they mean. It is a line and never a mechanic — nothing here moves standing, refuses a
+  settler, or changes what the settlement makes — and it is said once per thing about you that
+  changes.
+- **The homecoming report counts what you missed** in one line, out of the told-log ring and nowhere
+  else, so it can never push the settlement's own arithmetic off the end of the report.
+
 ### Added — residents become rows, and one identity gets at most one body
 - **A settler is a row now, and their body is a view of it.** Every settler carries a stable
   `KingdomResidentId` and nothing else; their name, origin, creed, home, standing and both brink

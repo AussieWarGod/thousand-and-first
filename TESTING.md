@@ -622,6 +622,46 @@ own cuts: **The Shallows / Harvest Dawn** (rising, 151–450), **Salt Sun** (at 
 | 100f | At night, with beds standing, watch the settlers tagged `SleepOnBed` | Vanilla's own `Bed` sends them to sleep and nothing of ours fights it for the same turn. If somebody is being tugged back and forth between a bed and a workplace, that is the bug this step exists to catch |
 | 100g | Grep the log for `perf reify` while you watch a band change | At most eight units a turn, at most four of them body moves. If a band change re-anchored forty settlers in one turn the budget line would say so |
 
+## Pass 30 — What happened while you were gone
+
+The happenings layer. `_notes/LIVING-CITY-ARCHITECTURE.md` §7.4 W4 and
+`_notes/BUILDING-CATALOGUE-BRIEF.md` Addendum 13. Four things happen in a city and every one of
+them is a **rendering of a row** — nothing here has a table of its own, and nothing here opens a
+message channel of its own.
+
+**Read the calendar off the status bar, not off this file.** Festivals are anchored to Qud's own
+days: the **Ides** (the fifteenth of any numbered month — the one day the game declines to number,
+so the status bar prints "Ides of Kisu Ux") and **the festival of Ut yara Ux** (the five-day
+intercalary month between Uulu Ut and Tishru i Ux). A feast that lands on a day the status bar
+calls the 14th or the 16th is the bug this pass exists to catch. A new character starts on a
+*random* day of the year, so `kingdom:dump` the tick and wish `advanceticks` rather than waiting.
+
+| Step | Action | Expect |
+|---|---|---|
+| 110 | Found a city, house two settlers **in the same building**, and let ~18 world-days pass with both of them on the roll | Some pass, a wedding: one message in a named settler's mouth, one chronicle line naming both, and an outsider-register line. It never repeats for the same pair |
+| 110a | Read `kingdom:chronicle` and then the outsider register | Both carry the wedding. The outsider version is third person and hedged — the founder's voice is never in it (**lane 6**) |
+| 110b | House two settlers of **different declared creeds** together and wait | No wedding. A creed code is one-way, so the model can prove agreement and never disagreement, and it declines rather than guessing. Not a stall: nothing was blocked, there was simply nothing to say |
+| 111 | `advanceticks` until the status bar reads **Ides** of any month | The city keeps the feast: one line naming the day and the realm's dish, one chronicle entry, one outsider line. **Once** — the same Ides never fires twice |
+| 111a | Advance past **Ut yara Ux** | The greater feast, named as such. Vanilla's only canonical festival, and the only two anchors that exist |
+| 111b | Found a city in Tebet Ux and immediately `kingdom:dump` | **No backlog of feasts.** A city stamps the current tick the first time it looks: it did not miss the Ides of Nivvun Ut, it did not exist for them |
+| 111c | Leave for a full in-game year and come home | The feasts are in the chronicle, feast by feast, and the homecoming note counts them. Grep the log for `happening: feast` — there is one line per feast and never one per day |
+| 111d | Leave for **several** in-game years | The same shape and no worse: past sixteen feasts the catch-up jumps closed-form instead of walking. If the return took visibly longer than a one-season return, that is the §0.0(a) regression this step is for |
+| 112 | Let a manned mill wear past 60% condition, or unstaff it, and stand somewhere else | One line, once: "The mill has stopped", with the condition. Not a line an hour — grep for `happening: breakdown` and count |
+| 112a | Come home and mend it | The **unsaying**, in green, in the same lane the brink withdrawals use: "The mill turns again, at N parts in a hundred" |
+| 112b | Leave it broken and cross zones for a while | Silence. The city said it once and does not nag |
+| 113 | Kill one of your own settlers | **One** telling, not two: the mourning line as before, now carrying the rite — who spoke the water over them. No separate "funeral" message anywhere |
+| 113a | Read the chronicle for that death | One entry. If there are two entries for one death, that is the bug this step exists to catch |
+| 114 | Stand in the city through a whole day and watch the message log | At most one ambient line an in-game hour, and never the same line twice in one day. The mill's clatter at rising, bread-smell after something cooked, the shrine at Hindsun, the hearths at dusk |
+| 114a | Stop every work in the zone and wait | The silence line outranks all of them — "Something has stopped turning. You can hear the water going past it." A texture line that beat it would bury the one thing you can act on |
+| 114b | Drain the cisterns dry | "The cisterns knock hollow when somebody walks past them", before any hour-texture line |
+| 115 | Play a founder with a mutation the city's creed has a number for (an esper founder under a fault-line creed; wings under a bird creed) and stand in the city | One line, once, in a settler's mouth, naming the creed **and** the thing they mind or admire. Then never again unless something about you changes |
+| 115a | Have chrome installed and found a city whose creed lists `cybernetics` | The chrome line instead. A creed that lists it *inverted* mutters; one that lists it plainly admires |
+| 115b | Play an unremarkable founder under an unremarkable creed | Nothing. Silence is the ordinary answer and is never a failure |
+| 116 | Let the office pass to a settler and read them in the object inspector | They carry an epithet out of vanilla's own `Naming.xml`, and their stats are **unchanged** — no doubled hit points, no free mutations, no `GivesRep`. The chronicle line names them by it |
+| 116a | Kill the office holder's neighbour while the holder is on the roll | The rite clause names the holder **by their epithet** |
+| 117 | Come home after a long absence and open the Charter | One line under the ledger counting what you missed: feasts kept, weddings, burials, works stopped. One line, not four — it must not push the settlement's own arithmetic off the end of the report |
+| 118 | Grep the log for `perf slice` through a season of happenings | `steps` still at 1 or 2, never above 4. Happenings are generated inside the same slice and add no second pass |
+
 ## Pass 4 — Attitudes and persistence
 
 | Step | Action | Expect |

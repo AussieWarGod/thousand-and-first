@@ -1458,6 +1458,14 @@ namespace ThousandAndFirst
 			{
 				KingdomFaith.OnZoneActivated(this, E.Zone, survey);
 			});
+			// W4. After faith, and last of the resolvers, because a happening is a RENDERING of
+			// what the pass has already settled: the creed the city holds with, the works that are
+			// still turning, and who is left on the roll. Running it earlier would tell the founder
+			// about a city one step out of date.
+			Guard("happenings", delegate
+			{
+				Simulation.City.KingdomHappenings.OnZoneActivated(this, E.Zone);
+			});
 			// The cheaper last read, and the one that usually beats SuspendingEvent there: what
 			// this zone actually holds once the day has been drawn and the works have run. A
 			// missed check-out costs freshness, never correctness (§3.4).
@@ -1468,6 +1476,10 @@ namespace ThousandAndFirst
 			Guard("digest", delegate
 			{
 				long elapsed = The.Game.TimeTicks - LastVisitTick;
+				// W4. What the told-log ring holds since the founder last stood here, counted into
+				// the ordinary note lane before the report announces itself. Read from the ring
+				// and nowhere else, so a happening is remembered once and reported once.
+				Simulation.City.KingdomHappenings.Digest(this, City, LastVisitTick);
 				LastVisitTick = The.Game.TimeTicks;
 				HomecomingDays = KingdomRules.ElapsedDays(elapsed);
 				if (Ledger.Any && elapsed >= KingdomRules.TicksPerDay)

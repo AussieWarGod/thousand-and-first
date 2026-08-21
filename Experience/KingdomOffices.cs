@@ -120,8 +120,16 @@ namespace ThousandAndFirst
 				system.DeadOrigins.Add(origin);
 				system.DeadArrived.Add(arrived);
 				system.DeadCauses.Add(KingdomOfficeRules.CauseClause(cause));
-				KingdomChronicle.Record(system, KingdomOfficeRules.MourningChronicle(name, origin, system.SeatName, cause));
-				MessageQueue.AddPlayerMessage("{{r|" + KingdomOfficeRules.MourningMessage(name, cause) + "}}");
+				// W4, the funeral. NOT a second announcement: this is the ONE telling a death
+				// gets, and the rite is a clause inside it. RecordDeath is already the single
+				// place a settler leaves the living roll and the single place the chronicle and
+				// the message queue hear about it, so composing here rather than beside here is
+				// what makes "one telling per death, never double" structural instead of guarded.
+				// The call also writes the told-log row the homecoming report counts.
+				string rite = Simulation.City.KingdomHappenings.FuneralClause(system, name, cause, Citizen.CurrentZone);
+				KingdomChronicle.Record(system, KingdomOfficeRules.MourningChronicle(name, origin, system.SeatName, cause) + rite);
+				MessageQueue.AddPlayerMessage(KingdomVoices.Say(system, VoiceOccasion.CitizenLost,
+					"{{r|" + KingdomOfficeRules.MourningMessage(name, cause) + "}}"));
 				KingdomLog.Log("death: " + name + " of " + (string.IsNullOrEmpty(origin) ? "-" : origin) + " cause=" + cause + " pop now " + system.Population);
 			});
 		}
@@ -210,9 +218,14 @@ namespace ThousandAndFirst
 					return;
 				}
 				holder.RequirePart<SocialRoles>().RequireRole(title + " of " + System.SeatName);
+				// W4 lane 5. The engine's own naming grammar, and only that: an epithet out of
+				// Naming.xml under vanilla's Mayor scope, with none of HeroMaker's combat
+				// statistics. See KingdomNotables for the survey and the ruling.
+				KingdomNotables.Mint(System, holder);
 			}
 			System.OfficeHolderName = head;
-			string chronicle = KingdomOfficeRules.TransitionChronicle(transition, title, head, System.SeatName);
+			string chronicle = KingdomOfficeRules.TransitionChronicle(transition, title,
+				(head == null) ? null : KingdomNotables.HolderName(System), System.SeatName);
 			if (string.IsNullOrEmpty(chronicle))
 			{
 				return;

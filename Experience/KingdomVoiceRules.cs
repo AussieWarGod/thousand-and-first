@@ -20,7 +20,19 @@ namespace ThousandAndFirst
 		RaidRepelled = 2,
 		ThirstBroken = 3,
 		MealShared = 4,
-		CitizenLost = 5
+		CitizenLost = 5,
+
+		/// <summary>W4. Two settlers who already shared a roof were married.</summary>
+		Wedding = 6,
+
+		/// <summary>W4. A feast kept on a day of Qud's own calendar.</summary>
+		Feast = 7,
+
+		/// <summary>W4. What the city's creed makes of the founder's own body. The one occasion
+		/// with no per-origin register: what a creed thinks of a mutation is a matter of belief,
+		/// not of the country somebody walked out of, so every speaker answers in the plain
+		/// one.</summary>
+		FounderRegarded = 8
 	}
 
 	/// <summary>
@@ -265,6 +277,10 @@ namespace ThousandAndFirst
 				return "In the marshes you ate alone, standing, whatever you had found. I am still learning how to sit down with people.";
 			case VoiceOccasion.CitizenLost:
 				return "The wells they are walking to are worse. I have drunk from them. I am not going to be the one who says so.";
+			case VoiceOccasion.Wedding:
+				return "In the marshes two people move in together and that is the whole of it. Here they stand up and say it in front of everybody. I cried, and I am not sorry.";
+			case VoiceOccasion.Feast:
+				return "We kept the days in the marshes too. Different names, same idea: eat while there is something to eat.";
 			default:
 				return PlainLine(Occasion);
 			}
@@ -284,6 +300,10 @@ namespace ThousandAndFirst
 				return "We ate after dark in the canyons, so the food did not have to compete with the heat. I still catch myself waiting for the dark.";
 			case VoiceOccasion.CitizenLost:
 				return "You do not stop somebody walking out into the dry. You give them water, and you watch until they are small.";
+			case VoiceOccasion.Wedding:
+				return "In the canyons a marriage is two households agreeing to share one well. I notice nobody here asked about the well.";
+			case VoiceOccasion.Feast:
+				return "A feast day in the canyons meant the caravan had come. Nothing has come. We are the thing that came.";
 			default:
 				return PlainLine(Occasion);
 			}
@@ -303,6 +323,10 @@ namespace ThousandAndFirst
 				return "In the hills a shared table meant something had died and the herd had to be eaten before it spoiled. This is a better use for one.";
 			case VoiceOccasion.CitizenLost:
 				return "I carried their pack as far as the ridge. Then I came back, and that is the only difference between us.";
+			case VoiceOccasion.Wedding:
+				return "Up on the ridge you could always tell which house was a new couple's. It was the one with the fire lit too late.";
+			case VoiceOccasion.Feast:
+				return "From the ridge tonight you would count more fires than roofs. That is what the day is for.";
 			default:
 				return PlainLine(Occasion);
 			}
@@ -322,6 +346,10 @@ namespace ThousandAndFirst
 				return "The fields were beautiful and they fed nobody. I would trade every acre of them for this table.";
 			case VoiceOccasion.CitizenLost:
 				return "They asked me to come with them. I said the ground here has been honest with me. So has the thirst, I suppose.";
+			case VoiceOccasion.Wedding:
+				return "In the fields we threw petals, which was pretty and fed nobody. Here they got bread. I think they preferred the bread.";
+			case VoiceOccasion.Feast:
+				return "The fields had a day for everything and food for none of them. This one has both, and I am still adjusting.";
 			default:
 				return PlainLine(Occasion);
 			}
@@ -341,6 +369,10 @@ namespace ThousandAndFirst
 				return "At the wells we ate what the machines left us. Nothing on this table had a serial on it. That is worth saying out loud.";
 			case VoiceOccasion.CitizenLost:
 				return "People left the wells the same way. One, and then one. Then you look up and it is you and the rust.";
+			case VoiceOccasion.Wedding:
+				return "Nobody married at the wells. There was no point promising anybody a future there. Watch me stand here and promise one.";
+			case VoiceOccasion.Feast:
+				return "At the wells the calendar was whatever the machines said. It is a strange freedom, keeping a day because it is the day.";
 			default:
 				return PlainLine(Occasion);
 			}
@@ -360,6 +392,10 @@ namespace ThousandAndFirst
 				return "The grove fed a whole village and asked nothing back. I never understood what that was worth until I had to leave it.";
 			case VoiceOccasion.CitizenLost:
 				return "Everyone who leaves is walking back to somewhere green they remember. I remember mine too. It is gone.";
+			case VoiceOccasion.Wedding:
+				return "In the grove the whole village walked the couple to their door and then stood outside singing until they gave up and joined in. We should bring that back.";
+			case VoiceOccasion.Feast:
+				return "The grove kept every feast it could afford and two it could not. I have never been able to decide which ones I remember.";
 			default:
 				return PlainLine(Occasion);
 			}
@@ -384,6 +420,12 @@ namespace ThousandAndFirst
 				return "Food is better with company. That is not wisdom. It is only true.";
 			case VoiceOccasion.CitizenLost:
 				return "One less at the table. We noticed. That is what I want written down: we noticed.";
+			case VoiceOccasion.Wedding:
+				return "They were already under the one roof. Now the rest of us have said so out loud, which is the part that costs.";
+			case VoiceOccasion.Feast:
+				return "It is the day. We did not decide that. We only decided to eat on it.";
+			case VoiceOccasion.FounderRegarded:
+				return "People talk. It is not always unkind and it is never quiet. You will hear it either way, so you may as well hear it from me.";
 			default:
 				return "";
 			}

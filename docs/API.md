@@ -779,6 +779,125 @@ already charges upkeep at the pass, so a rate the slice also integrated would bi
 twice and break I1. The heartbeat ships as the mechanism, on the cadence, through the executor,
 with its receipt and its one told line an hour.
 
+## The city has a history — happenings, ambience, and what the creeds make of you
+
+> Design: `_notes/LIVING-CITY-ARCHITECTURE.md` §7.4 W4 (happenings, the shared telling budget, the
+> told-log ring), `_notes/BUILDING-CATALOGUE-BRIEF.md` Addendum 13 — **the mesh condition**: every
+> lane is a *rendering* of model state through surfaces that already exist, and no lane builds
+> parallel machinery.
+
+**Nothing here is a new channel.** A happening reaches the founder through `KingdomWord`, reaches
+the book through `KingdomChronicle` (which writes the outsider register too, so a feast entering
+the world's rumour costs nothing but recording the feast), and is remembered in the told-log ring
+`KingdomCityState` has carried since W0. Announce-once is the ring's job; there is no second
+ledger. **Recording is unbudgeted and telling is not** — a wedding that happens while the founder
+is being told about something else still happens, still reaches the chronicle, and is still counted
+in the homecoming report.
+
+**Four kinds, and each one is a row the model already keeps.**
+
+| Kind | Trigger, in rows | Telling |
+|---|---|---|
+| **Wedding** | Two `Resident` rows sharing one `HomeWorkId`, both settled ≥ `CourtshipDays`, creed codes that agree; one draw per pair per reckoning | Chronicle + one push in a named settler's mouth (`VoiceOccasion.Wedding`) |
+| **Funeral** | A row that went `Dead` with a cause the memory machinery can name | **The clause inside the death's own telling** — see below |
+| **Festival** | Qud's own calendar crossed an anchor | Chronicle (with its own outsider clause) + one push naming the realm's dish |
+| **Breakdown** | A work row worn past the condemned line, or a hands-needing work with nobody on it | Chronicle + one push; **unsaid** through `KingdomWord.Unsay` when it turns again |
+
+**The funeral is not a second announcement.** `KingdomOffices.RecordDeath` is already the single
+place a settler leaves the living roll and the single place the chronicle and the message queue
+hear about it; W4 composes the rite *into* that line rather than beside it, and writes the ring row
+in the same call. One telling per death is therefore structural, not guarded. A safety net in the
+reckon catches the one case `RecordDeath` cannot see — a settler killed before the mod ever tagged
+them — and it is gated on both the ring and `KingdomSystem.DeadNames`, so it cannot double.
+
+**Festivals are anchored to vanilla's calendar and to nothing else.** A survey of
+`D/XRL/World/Calendar.cs` found **no holiday machinery in the engine at all**: no `Holiday` type,
+no `HolyDay`, no date-pinned event, and not one place in the game that branches on `GetMonth()` or
+`GetDay()`. What Qud does have is two named days, and those are the only two anchors:
+
+- **The festival of Ut yara Ux** — the five-day intercalary month at year-ticks 216001–222000
+  (`Calendar.cs:87-89`, `:136`), and Qud's one canonical named festival:
+  `D/Qud/API/JournalAPI.cs:467`, `D/XRL/World/Parts/GenerateFriendOrFoe.cs:54`,
+  `B/Books.xml:499, 1323, 1368, 1631`.
+- **The Ides** — the one day of the month Qud declines to number (`Calendar.cs:223` returns the
+  literal `"Ides"` for the fifteenth). Twelve a year, and the six months after the intercalary are
+  shifted 6,000 ticks because `Calendar.GetDay` subtracts Ut yara Ux's length back out
+  (`Calendar.cs:160-163`).
+
+The feast serves the realm's own dish — `Faction.WaterRitualRecipeText` as `KingdomDish` stamped
+it — so the city eats what its creed already eats. The arithmetic is closed-form in both
+directions, so a founder gone a season and one gone a decade cost the same O(13).
+
+| Member | Contract |
+|---|---|
+| `KingdomHappenings.OnZoneActivated(KingdomSystem, Zone)` | The settlement pass's happenings step. Runs last of the resolvers, pushes at most two lines, then the regard, then the ambience only if neither spoke. |
+| `KingdomHappenings.FuneralClause(KingdomSystem, string name, KingdomOfficeRules.DeathCause, Zone)` | The rite clause the death's own telling carries, and the ring row. Called from `RecordDeath` and nowhere else. |
+| `KingdomHappenings.Digest(KingdomSystem, KingdomCityBook, long sinceTick)` | What the ring holds since the founder last stood here, as **one** ledger note. |
+| `KingdomHappenings.Enabled` / `HappeningsOption` | Gate `r_TAF_OptionHappenings`, default **Yes**. Live the moment a checkbox for it lands in `Options.xml`. |
+| `KingdomHappeningRules.TryNextFestival(from, out due, out anchor)` | The next feast strictly after a tick. O(13), no term contains the elapsed. |
+| `KingdomHappeningRules.TryLastFestival(at, out due, out anchor)` | The most recent feast at or before a tick — the jump a long absence takes instead of a walk. |
+| `KingdomHappeningRules.AnchorAt(yearTick)` | Which feast a position in the year is. The **one** definition; both searches label their answer with it. |
+| `KingdomHappeningRules.Judge(KingdomWorkRow, bool believedBroken, long)` | What a work is worth saying, given what the city last told the founder about it. |
+| `KingdomToldKind.Wedding` / `.Funeral` / `.Festival` | Appended to the ring's vocabulary at 11, 12, 13. Values are never reordered — the ring serializes as plain ints. |
+
+**Ambience (lane 3): the attended zone breathes, once.** `KingdomAmbient.Speak` reads counts off
+the work and resident rows — what is turning, what has stopped, whether anything cooked today, who
+is at the shrine, whether the cisterns are empty — and picks **one** line for the hour's band
+(`KingdomPlacementRules.BandFor`, the same bands the placement layer anchors people by). There is
+no draw: the same city in the same state at the same hour says the same thing. Each line carries a
+key, and a line repeats **across a day boundary and never inside one**. A stopped wheel outranks
+every texture line, because silence where there was noise is the only ambient line that is also
+news.
+
+| Member | Contract |
+|---|---|
+| `KingdomAmbientRules.TryLine(reading, band, out line, out key)` | The city's one line for this hour, chosen and never rolled. |
+| `KingdomAmbientRules.Speakable(key, lastKey, day, lastDay)` | Whether it may be said: a different line, or a different day. |
+| `KingdomCityBook.AmbientKey` / `AmbientDayOrdinal` | What the city last said and when. On the carrier, not in the frozen model: it is a fact about the telling, not about the city. |
+
+**The city reacts to what you ARE (lane 2), out of vanilla's own tables.** `KingdomAmbient.Regard`
+reads the founder the same derived way `KingdomQol.TruthOf` reads a settler, and judges from two
+surfaces the game already fills in:
+
+- **`Faction.PartReputation`** (`D/XRL/World/Faction.cs:150`, loaded at
+  `D/XRL/World/Factions.cs:664-670`, folded into every reputation read at
+  `D/XRL/World/Reputation.cs:142-150`) — the game's own record of which factions admire or fear
+  which bodies. Vanilla scores `MassMind` at **-200** for the Seekers of the Sightless Way
+  (`B/Factions.xml:1397`) and `Wings` at **+300** for the birds (`:362`). **The sign is the whole
+  judgement; this mod has no opinion of its own about any mutation.**
+- **`Faction.Interests`** with the tag `cybernetics`, and vanilla's `Inverse` flag for a faction
+  that defines itself *against* a thing — the Putus Templar list it both ways
+  (`B/Factions.xml:1271-1272`), so the inverted reading wins.
+
+A reaction is a **line**: a push in a named settler's mouth (`VoiceOccasion.FounderRegarded`) and a
+clause in the chronicle. It never changes standing, refuses a settler, or alters production. Said
+once per state-change, where a change is a different creed, part, sign, or chrome. A creed another
+mod ships is answered correctly the day it loads, because that mod already filled those fields in
+for its own reasons.
+
+**Legendary notables (lane 5) — the narrowest viable slice of the hero machinery.** The engine's
+hero machinery is `XRL.World.HeroMaker` (`D/XRL/World/HeroMaker.cs:8`), and `MakeHero` is cheap to
+call — no zone, no cell, no `Render`, no worldgen. **It is not free.** Unconditionally it adds +1 to
+all six stats, doubles hit points, multiplies level by 1.5, rolls **zero to four random mutations**,
+and replaces `GivesRep`, which then rolls `1d3` random loved and hated factions
+(`D/XRL/World/Parts/GivesRep.cs:271-299`). Those exist to make a village mayor something an
+adventurer might have to fight; the founder's water-keeper is not that, and turning a settler the
+player housed into a doubled-hit-point mutant with faction grudges the realm never chose would be a
+mechanic where Addendum 13 asked for a name.
+
+So `KingdomNotables` calls exactly `HeroMaker`'s own naming block
+(`D/XRL/World/HeroMaker.cs:182-230`): `NameMaker.MakeHonorific` / `MakeEpithet`
+(`D/XRL/Names/NameMaker.cs:24, 29`) under vanilla's `Special="Mayor"` scope
+(`B/Naming.xml:4207-4420`), attached through the `Honorifics` and `Epithets` parts. `NameMaker` is
+a pure static over `Naming.xml`: it mutates nothing, needs no game, and is mod-extensible by the
+same key vanilla threads through every one of its own offices.
+
+| Member | Contract |
+|---|---|
+| `KingdomNotables.Mint(KingdomSystem, GameObject)` | Gives the office holder an epithet and an honorific, once. Idempotent by `KingdomEpithet`. Returns empty when `Naming.xml` has no style that fits, which is not a failure. |
+| `KingdomNotables.HolderName(KingdomSystem)` | The office holder as a happening should name them, read off `KingdomCityBook.OfficeEpithet` so it works while the body is on disk. |
+| `KingdomNotables.OfficeNameScope` | `"Mayor"` — vanilla's own scope, borrowed rather than declared, so a mod extending `Mayor` extends ours. |
+
 ## `KingdomChronicle` — history
 
 | Member | Contract |

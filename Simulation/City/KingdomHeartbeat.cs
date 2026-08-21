@@ -222,6 +222,36 @@ namespace ThousandAndFirst.Simulation.City
 			}
 		}
 
+		/// <summary>
+		/// One city's happenings and its ambience, out of the same &le; 1 told line the slice is
+		/// budgeted (&sect;3.6).
+		/// <para>
+		/// <b>Recording is unbudgeted and telling is not.</b> A wedding that happens while the
+		/// budget is spent still happens, still reaches the chronicle, and is still in the ring for
+		/// the homecoming report to count &mdash; what the budget rations is how often the founder
+		/// is interrupted, never what the city does. The ambience speaks last of the three,
+		/// because a line about the hour must never crowd out a line about a work that stopped.
+		/// </para>
+		/// </summary>
+		private static int Happen(KingdomSystem System, KingdomCityBook book, string label, long nowTick, int alreadyTold)
+		{
+			int budget = KingdomBudgetRules.HeartbeatToldLinesPerSlice - alreadyTold;
+			if (book == null || budget <= 0)
+			{
+				return 0;
+			}
+			// Framed as word from a named city, unconditionally, exactly as the slice's own
+			// shortfall note already is: the heartbeat speaks for every city at once and has no
+			// business claiming the founder is standing in whichever one it is currently reckoning.
+			// The settlement pass, which knows, says "here".
+			int told = KingdomHappenings.Reckon(System, book, label, false, nowTick, budget);
+			if (told < budget)
+			{
+				told += KingdomAmbient.Speak(System, book, label, false, nowTick);
+			}
+			return told;
+		}
+
 		/// <summary>One city's slice, and its share of the &le; 1 told line per slice
 		/// (&sect;3.6).</summary>
 		private static int Advance(KingdomSystem System, KingdomCityBook book, string label, long nowTick, int alreadyTold)
@@ -251,16 +281,26 @@ namespace ThousandAndFirst.Simulation.City
 				return 0;
 			}
 			KingdomCatchUpCounter after = KingdomCityRules.CityCounter(result.Value);
-			if (alreadyTold >= KingdomBudgetRules.HeartbeatToldLinesPerSlice || after.DrawThirds <= before.DrawThirds)
+			int told = 0;
+			if (alreadyTold < KingdomBudgetRules.HeartbeatToldLinesPerSlice && after.DrawThirds > before.DrawThirds)
 			{
-				return 0;
+				// At most one ambient message an in-game hour, city-wide. A shortfall that has just
+				// begun says itself once and then lives in the status report, which is what
+				// KingdomWord's send-not-outbox contract already requires (§3.6). It speaks BEFORE
+				// the happenings for the reason §8.1(3) gives: a shortfall is the thing the founder
+				// can still act on, and it is never the line that gets summarised away.
+				string note = KingdomCityRules.SliceNote(label, after.DrawThirds - before.DrawThirds);
+				KingdomWord.Ambient(System, label, false, note);
+				told = 1;
 			}
-			// At most one ambient message an in-game hour, city-wide. A shortfall that has just
-			// begun says itself once and then lives in the status report, which is what
-			// KingdomWord's send-not-outbox contract already requires (§3.6).
-			string note = KingdomCityRules.SliceNote(label, after.DrawThirds - before.DrawThirds);
-			KingdomWord.Ambient(System, label, false, note);
-			return 1;
+			// W4. The same slice, and the same budget: the city's happenings are generated at the
+			// tick the model was just advanced to, so a founder standing in one city hears about a
+			// wedding in the other (§3.6, "all cities, not just the seated one").
+			KingdomSystem.Guard("happenings", delegate
+			{
+				told += Happen(System, book, label, nowTick, alreadyTold + told);
+			});
+			return told;
 		}
 
 		// ==================================================================================
