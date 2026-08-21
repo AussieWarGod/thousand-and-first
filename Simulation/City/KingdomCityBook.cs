@@ -239,6 +239,27 @@ namespace ThousandAndFirst.Simulation.City
 		/// </summary>
 		public string OfficeEpithet = "";
 
+		/// <summary>
+		/// The tick the published extension lane was last asked what happened
+		/// (<c>KingdomExtensions.Happenings</c>). Not a column of the model &mdash; nothing in
+		/// <c>KingdomCityState</c> reads it &mdash; and carried here for the reason
+		/// <see cref="LastFestivalTick"/> is: it is a fact about this city's book, and a fact about
+		/// a city belongs in the city's book.
+		/// <para>
+		/// Zero means "never asked", which the lane answers by stamping the current tick and
+		/// keeping nothing: an extension installed today did not miss last year.
+		/// </para>
+		/// </summary>
+		public long LastExtensionTick;
+
+		/// <summary>
+		/// The blocking verdict the citizen rite last reported, plus one, so that zero &mdash; what
+		/// an absent field reads as &mdash; means "nothing was blocked". STANDARDS &sect;7b's
+		/// announce-once flag for lane 1, kept on the book rather than on the body because the
+		/// block is a fact about the realm's own faction and not about any one settler.
+		/// </summary>
+		public int RiteBlocked;
+
 #if !TAF_TESTS
 		public bool WantFieldReflection => false;
 

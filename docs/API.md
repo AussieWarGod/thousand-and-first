@@ -1066,6 +1066,89 @@ for a whole kingdom's claimed ground: `DefenceBonus`, `UpkeepPercent`, `ShopTier
 an unmapped site resolves to `common` rather than failing. `ProvokableFactions` lists every
 faction `RaiderTableFor` answers for.
 
+## `ThousandAndFirst.Api` — the published extension contract (API version 1)
+
+The behaviour lane. Opened at W5, after four waves shaped it, and dogfooded from the first commit:
+the city's own asks go through `IKingdomAskSource` exactly as a third party's do. Worked examples,
+the registration recipe, and the invariants are in [MODDING.md](../MODDING.md) — this section is
+the surface list.
+
+Option gate: `r_TAF_OptionExtensions`, default `Yes`. Off disables third-party C# only; the XML
+data lane is unaffected.
+
+| Member | Contract |
+|---|---|
+| `KingdomApiRules.Version` | The published version. `1`. Checked at registration; drift is refused by mod name. |
+| `KingdomApiRules.MinSupportedVersion` | The oldest version still admitted. `1`. Moving it is a breaking change, and it is what makes STANDARDS §9's one-minor-cycle promise keepable. |
+| `[KingdomExtension]` | Marker attribute. The class needs a public parameterless constructor. |
+| `IKingdomExtension.ApiVersion` | What the extension was built against. Return the constant, never a literal. |
+| `IKingdomAskSource.Ask(city, draws)` | Returns asks for the Charter's asks board. Null for none; at most `KingdomApiRules.MaxAsksPerSource` kept. |
+| `IKingdomHappeningSource.Happen(city, sinceTick, draws)` | Returns dated notices for the chronicle and the word surface. At most `KingdomApiRules.MaxNoticesPerSource` kept. |
+| `IKingdomDraws.TryBetween(lane, ordinal, low, high, out value)` | The kernel, keyed on `taf:ext:<mod>:<lane>`. Deterministic across reloads. Returns false rather than substituting a different stream. |
+| `KingdomCityReading` | Frozen projection of one city's book: stocks, and `TryZone` / `TryWork` / `TryResident` over copied rows. No setters, no route to the ground. |
+| `KingdomZoneReading` / `KingdomWorkReading` / `KingdomResidentReading` / `KingdomStockReading` | The row projections. |
+| `KingdomWorkClass` / `KingdomDayPlace` / `KingdomRollStanding` | Published vocabularies, MAPPED from the model's own rather than cast, so a model-side insertion cannot renumber them. |
+| `KingdomAsk` / `KingdomAskWeight` | One thing the city wants: kind, title, what would settle it, where, how badly. Kind/title/want are stripped and clamped; a `ZoneId` the city does not hold is read as none; an undefined weight is read as `Passing`, never `Grave`. |
+| `KingdomNotice` | One dated thing that happened: kind, tick, chronicle telling, optional spoken line. **No place field** — neither surface a notice reaches takes a zone, so one would be a published input that went nowhere. |
+| `KingdomExtensionVerdict` / `KingdomApiRules.Judge` / `.RefusalLine` / `.TryStream` / `.Slug` / `.Trim` / `.Kind` | The registration judgment and the clamps, pure and testable. |
+| `KingdomExtensions.Version` / `.Enabled` / `.Admitted()` / `.Refusals()` | The registry, from outside. |
+
+**Deliberately not published**, and why: resource kinds (the stock row is a fixed three-pair
+struct), job and carrier kinds (a job's cargo is one of those three and its kind is a closed enum),
+network kinds (the graph is not built), and work behaviours (the run-state slot is one 16-byte
+discriminated field, and publishing it would freeze that shape). A contract nothing honours is
+worse than none. They open when the substrate does.
+
+**Isolation.** Every extension call crosses `KingdomExecutor.Submit`: frozen reading in, frozen
+result out, timed against the reckon lane. A source that throws or overruns its lane's budget
+stalls its own job — no city state is published, the turn is unaffected, the failure is logged by
+mod name and named on the asks board, and every other extension still runs. **The budget is a
+verdict, not a timeout**: the seam is synchronous, so it can refuse to publish a result that
+overran but cannot interrupt one — an infinite loop in a third-party source still hangs the game,
+exactly as one in ours would. Discovery uses the engine's cached attribute scan
+(`ModManager.GetTypesWithAttribute`); construction is per-type and guarded, because the engine's
+combined `GetInstancesWithAttribute` would let one class with no default constructor take down
+every mod's extension at once.
+
+## Reading surfaces — the Charter's three W5 entries
+
+All three are **readings**. Nothing on any of them can be pressed; the verbs that answer them are
+the Charter's own.
+
+| Entry | Hotkey | Member |
+|---|---|---|
+| The book of the city | `7` | `ThousandAndFirst.Simulation.City.KingdomBookReport.Open(system)` — six chapters: the stores and what holds them, the works and what they wait on, the people and where their day puts them, the turn of the year, what has happened here, and who else writes in this book. |
+| Where the keepers' craft could go | `8` | `ThousandAndFirst.KingdomTechMap.Draw(system)` — what each thing the keepers know opened, the nearest locked designs and what is in the way of each, and the ways of learning this city has never walked. A map, never a spend: gated on `r_TAF_OptionZoning`. |
+| What the city is asking for | `9` | `ThousandAndFirst.KingdomAsks.Board(system)` — the standing petition, the city's own model-derived asks, and every extension's, worst first. Gated on `r_TAF_OptionPetitions`. |
+
+## `KingdomCitizenRite` — your own settlers will share water with you
+
+Lane 1 of the feel lanes. A citizen of the realm standing on claimed ground is made a host of
+**vanilla's own water ritual**: `GivesRep` (which is the whole of what `WaterRitualChoice` tests),
+and a greeting for a settler who had no conversation at all. Everything the rite then gives comes
+off the runtime faction the founding mints — its reputation, and its `WaterRitualRecipe`, which
+`KingdomDish` has been stamping since the food lane and which, until now, no living creature in Qud
+belonged to the faction to hand over.
+
+| Member | Contract |
+|---|---|
+| `KingdomCitizenRite.Enabled` | Reads `r_TAF_OptionCitizenRite`, default `Yes`. Its own gate, not the inward rite's. |
+| `KingdomCitizenRite.Host(system, citizen)` | Makes one citizen a host; returns the `CitizenRiteVerdict` that stopped it. Idempotent, and repairs itself — the condition asked is the object's actual state, not a remembered flag. |
+| `KingdomCitizenRite.OnSettlementPass(system, zone)` | Every citizen on this ground, once per pass. Called from `KingdomWaterRite.OnSettlementPass`, above that channel's own gate. |
+| `KingdomCitizenRite.HostProperty` (`KingdomRiteHost`) | Int property marking a settler already made a host. |
+| `CitizenRiteVerdict` | `Host`, `Unfounded`, `NotCitizen`, `NoBody`, `UnknownFaction`, `UnknownLiquid`. The last two are the engine's two documented hard failures, refused before the conversation can open, and reported once. |
+
+A settler another mod gave a conversation to keeps it: an XML conversation already inherits
+`BaseConversation` and already carries the ritual choice, so replacing it would take away somebody
+else's content to add something already there.
+
+**Consequence, stated because it is new.** `GivesRep` is what opens the ritual and also what makes
+killing a citizen cost reputation: vanilla's legendary-kill arithmetic against the creature's base
+allegiance (the realm) plus one to three related factions, and the full water-ritual curse if the
+founder had shared water with them first. Bounded to the realm and its related factions; not a
+world-wide penalty. Turn `r_TAF_OptionCitizenRite` off and no *new* settler becomes a host — nothing
+already added to a creature is taken back off it.
+
 ## Object properties (stable contract)
 
 These are read and written across the mod and are part of the API:

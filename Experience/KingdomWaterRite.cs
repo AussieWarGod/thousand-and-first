@@ -266,11 +266,27 @@ namespace ThousandAndFirst
 		/// </summary>
 		public static void OnSettlementPass(KingdomSystem System, Zone Z)
 		{
-			if (!Enabled || System == null || !System.Founded || Z == null || !System.ClaimedZones.Contains(Z.ZoneID))
+			if (System == null || !System.Founded || Z == null || System.ClaimedZones == null
+				|| !System.ClaimedZones.Contains(Z.ZoneID))
 			{
 				return;
 			}
-			Register();
+			// Two jobs, two gates, ONE enumeration of the ground. Lane 1 of Addendum 13 (the water
+			// ritual with citizens) stands on its own option -- whether the founder's settlers will
+			// share water with them on Qud's terms has nothing to do with whether this mod's
+			// inward rite of belief is switched on -- but it walks the same citizens under the same
+			// filter this counter already walks, and a second Z.GetObjects() a pass for a step that
+			// is a no-op after the first pass is a cost with nothing behind it.
+			bool shared = Enabled;
+			KingdomCitizenRite.RiteTally rite = KingdomCitizenRite.Begin(System, Z);
+			if (!shared && rite == null)
+			{
+				return;
+			}
+			if (shared)
+			{
+				Register();
+			}
 			long now = (The.Game != null) ? The.Game.TimeTicks : 0L;
 			foreach (GameObject item in Z.GetObjects())
 			{
@@ -278,25 +294,40 @@ namespace ThousandAndFirst
 				{
 					continue;
 				}
-				long last = item.GetLongProperty(SharedDayTickProperty);
-				if (last <= 0L || now <= 0L)
+				if (shared)
 				{
-					// Planted before the first count, never read as elapsed: an unplanted stamp
-					// resolved against an uncapped clock is the age of the world, and a newcomer
-					// would arrive having already lived here a lifetime.
-					item.SetLongProperty(SharedDayTickProperty, now);
-					continue;
+					// Counted BEFORE the rite observes them, so a settler who crossed into a
+					// different greeting this pass is greeted with the one they have earned.
+					AdvanceSharedDays(item, now);
 				}
-				int days = KingdomRules.ElapsedDays(now - last);
-				if (days <= 0)
-				{
-					continue;
-				}
-				// Advanced by exactly the days credited, so the part-day counts toward the next one
-				// and a founder who steps out of the zone and back in buys nobody a free day.
-				item.SetLongProperty(SharedDayTickProperty, KingdomRules.AdvanceCheckpoint(last, now));
-				item.SetIntProperty(SharedDaysProperty, KingdomWaterRiteRules.SharedDaysAfter(item.GetIntProperty(SharedDaysProperty), days));
+				KingdomCitizenRite.Observe(rite, System, item);
 			}
+			KingdomCitizenRite.Close(System, rite);
+		}
+
+		/// <summary>One settler's share of this pass's shared living. Side effects: advances
+		/// <see cref="SharedDayTickProperty"/> and <see cref="SharedDaysProperty"/> by the whole
+		/// days since they were last counted. Failure mode: returns having done nothing.</summary>
+		private static void AdvanceSharedDays(GameObject citizen, long now)
+		{
+			long last = citizen.GetLongProperty(SharedDayTickProperty);
+			if (last <= 0L || now <= 0L)
+			{
+				// Planted before the first count, never read as elapsed: an unplanted stamp
+				// resolved against an uncapped clock is the age of the world, and a newcomer
+				// would arrive having already lived here a lifetime.
+				citizen.SetLongProperty(SharedDayTickProperty, now);
+				return;
+			}
+			int days = KingdomRules.ElapsedDays(now - last);
+			if (days <= 0)
+			{
+				return;
+			}
+			// Advanced by exactly the days credited, so the part-day counts toward the next one
+			// and a founder who steps out of the zone and back in buys nobody a free day.
+			citizen.SetLongProperty(SharedDayTickProperty, KingdomRules.AdvanceCheckpoint(last, now));
+			citizen.SetIntProperty(SharedDaysProperty, KingdomWaterRiteRules.SharedDaysAfter(citizen.GetIntProperty(SharedDaysProperty), days));
 		}
 
 		/// <summary>Cohabited days this settler has lived here. Zero for anybody the pass has not

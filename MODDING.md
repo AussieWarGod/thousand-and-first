@@ -873,6 +873,165 @@ office holder is a person with a name, not a legendary combatant.
 | `WaterRitualRecipe` / `WaterRitualRecipeText` on a creed faction | What the city serves at its feasts |
 | `<namestyle Type="Epithet" Special="Mayor">` in `Naming.xml` | Epithets the settlement's office holder can be given |
 
+## The behaviour lane: extending the model in C#
+
+> Everything above this line is the **data lane** — XML merged by key, no code, no dependency. It
+> is the lane most extensions want, and nothing here replaces it. This chapter is for the other
+> case: a mod that wants the city to *do* something new.
+
+Published at **API version 1**. The contracts live in the `ThousandAndFirst.Api` namespace, and a
+third-party mod needs **no hard reference beyond that namespace** — not to our systems, not to our
+carrier, not to our version of anything else.
+
+Option gate: `r_TAF_OptionExtensions`, default `Yes`. With it off, the data lane is unaffected and
+no third-party code runs against the city.
+
+### What is published, and what is not
+
+| Contract | What it extends | State |
+|---|---|---|
+| `IKingdomAskSource` | what the city asks its founder for | **published** |
+| `IKingdomHappeningSource` | what happens in the city, told through our surfaces | **published** |
+| resource kinds | the three civic stocks (water, food, materials) | **not published** — the model's stock row is a fixed three-pair struct; a contract for a fourth would be a contract nothing honours |
+| job and carrier kinds | the transient/itinerary lane | **not published** — a job's cargo is one of the same three stock kinds and its kind is a closed enum |
+| network kinds | pipes, conduits, electricals | **not published** — the graph itself is not built yet |
+| work behaviours | a work row's run-state advance | **not published** — the run-state slot is one discriminated 16-byte field, and opening it would freeze that shape as API |
+
+The four unpublished rows are named rather than omitted on purpose: **a contract nothing honours is
+worse than none**, because a modder writes against it and gets silence. They open when the
+substrate underneath them does.
+
+### How registration works
+
+Discovery is the engine's own idiom: a cached attribute scan over every active assembly
+(`ModManager.GetTypesWithAttribute`), the same mechanism the game uses for `IWorldBuilderExtension`,
+wishes and debug commands. Mark the class, implement a contract, declare the version:
+
+```csharp
+using ThousandAndFirst.Api;
+
+[KingdomExtension]
+public sealed class SaltCultAsks : IKingdomAskSource
+{
+    public int ApiVersion => KingdomApiRules.Version;
+
+    public KingdomAsk[] Ask(KingdomCityReading City, IKingdomDraws Draws)
+    {
+        // Read the frozen city. Nothing here may write to the world.
+        for (int i = 0; i < City.WorkCount; i++)
+        {
+            KingdomWorkReading work;
+            if (!City.TryWork(i, out work) || work.Class != KingdomWorkClass.Power)
+            {
+                continue;
+            }
+            if (work.Progress > 0)
+            {
+                continue;
+            }
+            // A deterministic draw, on this mod's own stream. Never System.Random.
+            int flavour;
+            Draws.TryBetween("flat-cell", (uint)work.WorkId, 0, 1, out flavour);
+            return new KingdomAsk[1]
+            {
+                new KingdomAsk(
+                    Kind: "flat-cell",
+                    Title: (flavour == 0)
+                        ? "The salt-cult's array is flat."
+                        : "The array has nothing left in it.",
+                    Want: "Charge it, or set a crew on a still that can.",
+                    ZoneId: work.ZoneId,
+                    Weight: KingdomAskWeight.Pressing)
+            };
+        }
+        return null;
+    }
+}
+```
+
+The class needs a **public parameterless constructor** — the scan builds it with
+`Activator.CreateInstance`. Your asks appear on the Charter's *What the city is asking for* board,
+filed under `<your-mod-slug>:<your-kind>`, after the city's own.
+
+A happening source is the same shape:
+
+```csharp
+[KingdomExtension]
+public sealed class SaltCultRites : IKingdomHappeningSource
+{
+    public int ApiVersion => KingdomApiRules.Version;
+
+    public KingdomNotice[] Happen(KingdomCityReading City, long SinceTick, IKingdomDraws Draws)
+    {
+        if (SinceTick <= 0L || City.LivingCount < 4)
+        {
+            return null;
+        }
+        return new KingdomNotice[1]
+        {
+            new KingdomNotice(
+                Kind: "salt-vigil",
+                Tick: City.ProcessedThroughTick,
+                Telling: "the salt-cult of " + City.CityName + " kept a vigil, and nobody slept",
+                Notice: "Nobody slept last night.")
+        };
+    }
+}
+```
+
+`Telling` goes to the chronicle (both registers). `Notice` is the line a settler says out loud, and
+it is spoken **only if the settlement pass has a line to spare** — the city's own news outranks it.
+
+Date a notice inside the window you were given: anything after the pass's own tick, or before
+`SinceTick` on a pass that has one, is dropped rather than filed with a wrong date. The city does
+not report the future and does not re-report what it has already told. `City.ProcessedThroughTick`
+is always inside the window and is the safe default.
+
+### The invariants you inherit, enforced rather than trusted
+
+1. **Kernel draws only.** `IKingdomDraws` is the counter-based kernel wearing a published face,
+   keyed on `taf:ext:<your-mod>:<your-lane>`. Same city, same lane, same ordinal, same answer —
+   across reloads. `System.Random` in an extension is a contract violation and makes the city
+   unreplayable.
+2. **Frozen in, frozen out.** `KingdomCityReading` is a projection with no setters and no route to
+   the ground, the clock, or another extension's rows. Your method returns an array; we copy it.
+3. **Budget and error isolation.** Every call crosses `KingdomExecutor.Submit`. A source that
+   throws or runs past its lane's budget **stalls its own job and nothing else** — no city state is
+   published, the turn is unaffected, the failure is logged **by your mod's name**, and the asks
+   board says out loud that something stalled. **The budget is a verdict, not a timeout**: the seam
+   is synchronous, so it can refuse to publish a result that overran but cannot interrupt one. An
+   infinite loop in your `Ask` hangs the game, exactly as one in ours would. Return.
+4. **Telling through our surfaces.** Ledger, chronicle and `KingdomWord`, under the shared telling
+   budget. An extension cannot flood the register any more than we can.
+5. **Clamped, and holding no rows.** At most 4 asks and 2 notices per source per call, and the
+   whole board is trimmed to 8 lines after sorting, so ten installed mods cannot turn it into a
+   spreadsheet. Every string is stripped of colour markup and control characters and cut to 200
+   characters on a word boundary. A `ZoneId` naming ground the city does not hold is read as none,
+   and a weight outside the three rungs is read as `Passing` — the mildest — because a malformed
+   weight is not a claim of urgency. Clamping is never a refusal: the ask behind an over-long line
+   is still real. The
+   architecture's fifth clause ("an extension's rows count against the model's memory ceiling, and
+   the receipt reports them by mod name") has nothing to enforce **at version 1**, because no
+   row-owning contract is published: an extension reads the model and returns prose, and owns no
+   part of the book. That clause arrives with the first contract that lets one keep state.
+
+### Versioning, and being refused out loud
+
+`KingdomApiRules.Version` is checked at registration against the window
+`[KingdomApiRules.MinSupportedVersion, KingdomApiRules.Version]`. Outside it the extension is
+**refused by mod name**, in the log and in the message queue, naming the version it wanted and the
+version we publish — never silently skipped, because a player attributes missing behaviour to *us*.
+The same refusal fires for a marked class that implements no contract, for one whose constructor or
+`ApiVersion` getter throws, and for one whose owning mod cannot be named. The window is what makes
+STANDARDS §9's promise keepable: a version bump does not refuse every extension in the world on the
+same day.
+
+The founder can see the whole registry: **Charter → The book of the city → Who else writes in this
+book** lists what is admitted and what was refused, with the reason.
+
+Return `KingdomApiRules.Version`, not a literal. Recompiling against a newer copy of the mod is what
+re-admits your extension.
+
 ## Conventions
 
 - Water stores are containers (`MaxVolume > 0`) holding `water`; open pools (`MaxVolume < 0`)

@@ -24,4 +24,6 @@
   <option ID="r_TAF_OptionFaith" DisplayText="The Thousand and First: consecrated shrines slowly draw neutral settlers toward their creed, and staffed scriptoria soften the ambient grudge" Category="Mods" Type="Checkbox" Default="Yes" />
   <option ID="r_TAF_OptionSubsidence" DisplayText="The Thousand and First: a settlement standing above what its works carry settles back toward them, and its works fall into disrepair" Category="Mods" Type="Checkbox" Default="Yes" />
   <option ID="r_TAF_OptionWear" DisplayText="The Thousand and First: raids, hard running, and temperamental salvage can wear your works, which mend on their own out of what the stores can spare" Category="Mods" Type="Checkbox" Default="Yes" />
+  <option ID="r_TAF_OptionExtensions" DisplayText="The Thousand and First: let other mods extend your city's model through the published contract (data merges are unaffected)" Category="Mods" Type="Checkbox" Default="Yes" />
+  <option ID="r_TAF_OptionCitizenRite" DisplayText="The Thousand and First: your own settlers will share water with you, on Qud's own terms" Category="Mods" Type="Checkbox" Default="Yes" />
 </options>

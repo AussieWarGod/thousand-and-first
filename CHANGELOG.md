@@ -813,6 +813,54 @@ only pure water — so the fix mints not one dram.
   trip batching are a later wave's, because they only start to matter once many jobs compete over
   many stores.
 
+### Added — the city asks, and another mod can teach it what to ask for
+- **The book of the city** (Charter, `7`). Four waves of model — stocks, zone rows, works,
+  residents, clocks, the told-log — and until now the only way to see any of it was a performance
+  receipt. Six chapters: what the city holds and where, every work in the **city** and what each is
+  waiting on, who lives here and where their day puts them, the turn of the year with the next feast
+  and the heart's rung, what has happened here, and who else is writing in the book. The far zone's
+  granary is a number you can read without walking to it, and a city that has dedicated no vessels
+  says "nothing dedicated" rather than "0 of 0", because those are different sentences.
+- **Where the keepers' craft could go** (Charter, `8`). The catalogue has always contained a
+  dependency graph — six kinds of gate, refused in a fixed order, every refusal already carrying
+  prose — and nobody has ever seen it. Now it is drawn: what each thing your keepers know **opened**,
+  the nearest locked designs with what is in the way of each, and the ways of learning this city has
+  never walked. **It is a map and never a spend.** Nothing on it can be pressed, there is no queue,
+  no budget, no percentage and no timer; every acquisition still happens out in the world, at a ruin
+  or a merchant or somebody else's fire.
+- **What the city is asking for** (Charter, `9`). Petitions used to be decorative. Against a model
+  they are the city talking: a dry cistern, more people than roofs, a mill worn past mending itself,
+  a larder full to the lid while the next zone has room. Worst first, and **every line names what
+  would settle it**. No new balance number was invented for any of them — each fires on a structural
+  fact, because a reading surface with an economy of its own would start by disagreeing with the
+  ledger.
+- **Your own settlers will share water with you.** Qud's founding social act, turned inward. A
+  citizen of your realm becomes a host of **vanilla's own water ritual** — nothing here builds a
+  ritual — so sharing water with one of your people pays in your realm's own standing and teaches
+  your settlement's own favoured dish. That recipe has been stamped on the realm's faction since the
+  food lane and **no living creature in Qud belonged to that faction to hand it over**. The basin's
+  fiction, finished. A settler another mod gave a conversation to keeps it, untouched.
+- **And killing one of your own now costs you something.** The part that opens the ritual is the
+  same part that makes a death matter: murder a citizen and your standing with your own realm
+  falls, by the game's own arithmetic, bounded to the realm and the one to three factions it has
+  feelings about. Share water with them first and then kill them, and it is the covenant violation
+  — which the exile lane has had prose for since before there was anybody to violate it with.
+- **The model is a published API, at version 1.** Another mod can now teach the city a new thing to
+  ask for, and a new thing to happen in it, with no fork and no hard reference beyond the contract
+  namespace — registered by the same cached attribute scan the game uses for its own extension
+  points. Extensions live under the invariants ours do, **enforced rather than trusted**: kernel
+  draws only, so an extension's chance is as replayable as the city's; frozen reading in and frozen
+  result out; and every call across the executor seam, so an extension that throws or overruns its
+  budget **stalls its own job and nothing else** — no city state published, the turn unaffected,
+  the failure logged by mod name, and the asks board saying out loud that something stalled. Version drift is **refused out loud, by mod name**, naming the version it wanted and the
+  version we publish, because a silently inactive extension is worse than a refused one: the player
+  blames us. The founder can read the whole registry, admitted and refused, in the book's last
+  chapter.
+- **Only what the substrate honours is published.** Two contracts, not five: asks and happenings.
+  Resource kinds, job and carrier kinds, network kinds and work behaviours are named in MODDING.md
+  as *not published*, with the reason for each, and they open when the model underneath them does. A
+  contract nothing honours is worse than none.
+
 ### Added — the city has a history: weddings, feasts, funerals, and the sound of the place
 - **Come home to a city that things happened in.** Two settlers who have shared a roof long enough
   get married, and somebody who lives there says so. A work that wears out or loses its hands

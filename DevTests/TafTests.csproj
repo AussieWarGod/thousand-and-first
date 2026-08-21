@@ -123,6 +123,14 @@
     <Compile Include="..\Simulation\Kernel\OptionLatch.cs" />
     <Compile Include="..\Simulation\Kernel\JobTransitions.cs" />
     <Compile Include="..\Simulation\Kernel\FixedPeriodToy.cs" />
+    <Compile Include="..\Api\KingdomApiRules.cs" />
+    <Compile Include="..\Api\KingdomApiContracts.cs" />
+    <Compile Include="..\Api\KingdomCityReading.cs" />
+    <Compile Include="..\Simulation\City\KingdomReadingRules.cs" />
+    <Compile Include="..\Simulation\City\KingdomBookRules.cs" />
+    <Compile Include="..\Quests\KingdomAskRules.cs" />
+    <Compile Include="..\Core\KingdomTechMapRules.cs" />
+    <Compile Include="..\Experience\KingdomCitizenRiteRules.cs" />
     <Compile Include="KernelCanonicalTests.cs" />
     <Compile Include="CounterRandomTests.cs" />
     <Compile Include="TickMathTests.cs" />
@@ -148,6 +156,12 @@
     <Compile Include="KingdomHappeningRulesTests.cs" />
     <Compile Include="KingdomAmbientRulesTests.cs" />
     <Compile Include="KingdomNatureRulesTests.cs" />
+    <Compile Include="KingdomApiRulesTests.cs" />
+    <Compile Include="KingdomReadingRulesTests.cs" />
+    <Compile Include="KingdomAskRulesTests.cs" />
+    <Compile Include="KingdomBookRulesTests.cs" />
+    <Compile Include="KingdomTechMapRulesTests.cs" />
+    <Compile Include="KingdomCitizenRiteRulesTests.cs" />
   </ItemGroup>
 
   <ItemGroup>

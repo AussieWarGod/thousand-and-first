@@ -657,10 +657,72 @@ calls the 14th or the 16th is the bug this pass exists to catch. A new character
 | 115 | Play a founder with a mutation the city's creed has a number for (an esper founder under a fault-line creed; wings under a bird creed) and stand in the city | One line, once, in a settler's mouth, naming the creed **and** the thing they mind or admire. Then never again unless something about you changes |
 | 115a | Have chrome installed and found a city whose creed lists `cybernetics` | The chrome line instead. A creed that lists it *inverted* mutters; one that lists it plainly admires |
 | 115b | Play an unremarkable founder under an unremarkable creed | Nothing. Silence is the ordinary answer and is never a failure |
-| 116 | Let the office pass to a settler and read them in the object inspector | They carry an epithet out of vanilla's own `Naming.xml`, and their stats are **unchanged** — no doubled hit points, no free mutations, no `GivesRep`. The chronicle line names them by it |
+| 116 | Let the office pass to a settler and read them in the object inspector | They carry an epithet out of vanilla's own `Naming.xml`, and their stats are **unchanged** — no doubled hit points, no free mutations. The chronicle line names them by it. (**W5 amends this step:** every citizen now carries `GivesRep`, from lane 1's water ritual — that is a conversation gate, not a hero template, and the statistics are still untouched) |
 | 116a | Kill the office holder's neighbour while the holder is on the roll | The rite clause names the holder **by their epithet** |
 | 117 | Come home after a long absence and open the Charter | One line under the ledger counting what you missed: feasts kept, weddings, burials, works stopped. One line, not four — it must not push the settlement's own arithmetic off the end of the report |
 | 118 | Grep the log for `perf slice` through a season of happenings | `steps` still at 1 or 2, never above 4. Happenings are generated inside the same slice and add no second pass |
+
+## Pass 31 — The city asks
+
+W5. `_notes/LIVING-CITY-ARCHITECTURE.md` §5 and §7.4 (engagement, and the API opens), §6.6 (the
+published contract), `_notes/BUILDING-CATALOGUE-BRIEF.md` Addendum 12(i) and Addendum 13 lanes 1
+and 8, and `_notes/DIVERSITY-AND-TECH-TREES.md` §2.8 (the tech map).
+
+**Three new Charter entries, on the last three digits: `7` the book of the city, `8` where the
+keepers' craft could go, `9` what the city is asking for.** All three are READINGS. The single
+thing this pass is most for: *find anything on any of them that can be pressed.* If you can, that
+is the failure — the no-research-tree ruling and VISION's "not a second job" pillar both turn on
+it.
+
+**Hotkeys.** Thirty-five entries; `0` is the only key left. A duplicated hotkey silently picks
+whichever option comes first, and it has bitten this file before — step 119 exists solely to catch
+it.
+
+| Step | Action | Expect |
+|---|---|---|
+| 119 | Open the Charter and press every key from `a` to `z` and `1` to `9` in turn, closing each screen | Thirty-five distinct screens. No key opens the wrong one, and no key opens nothing |
+| 120 | Press `7` — the book of the city | Six chapters, and a headline naming the tick the model is carried through and how many days behind now that is. A city that has just been reckoned reads `(current)` |
+| 120a | Read *the stores, and what holds them* with two zones claimed and a granary in the far one | The far zone's food is a real number, without walking there. A city that has dedicated no vessels reads **"nothing dedicated"**, never `0 of 0` — those are different sentences |
+| 120b | Leave for a season, come home, and open the same chapter **before** walking to the far zone | A "the count and the vessels have not been squared here" clause with a signed figure. Walk there, come back, and it is gone. That is Addendum 12(d)'s debt, told rather than silently repaired |
+| 120c | Read *the works, and what they are waiting on* | Every work in the **city**, not the zone. The count of "waiting on you" matches the works that actually are: a worn-past-the-line one, and a producer/refiner/power work with no hands. A larder or a field with nobody on it is **not** waiting |
+| 120d | Unstaff a mill and read both this chapter and the breakdown message from Pass 30 step 112 | They agree. The board and the news share one definition of stopped; if one calls it stopped and the other does not, that is the bug this step exists for |
+| 120e | Read *the people, and where their day puts them* | Living, away-with-you, and buried counted apart; the day-shape spread; the office holder named **with their epithet**; and a closing line counting how many citizens here will share water |
+| 120f | Read *the turn of the year* | Today's date as the status bar gives it, the next feast and how many days off, the realm's dish, and the heart's rung when you are standing on the rite ground |
+| 120g | Open the book standing **outside** the city | It still reads. The rung line says nothing stands on the rite ground — a report must never load a parasang to write a heading, so the heart is only read where you stand |
+| 121 | Press `8` — where the keepers' craft could go | The craft level and what the next rung costs, the same numbers the keepers' screen (`o`) gives. If the two disagree, one of them is lying |
+| 121a | Certify a solar still and re-read | Under *what they know, and what it opened*, the still now names the condensing hall. Before certifying it, the hall was in *what is nearly in reach* with "the keepers have never been taught solar condenser" against it |
+| 121b | Read *what is nearly in reach* | Sorted nearest first, each with what is in the way in the gates' own refusal order: knowledge, then craft, then ground, then stage, then the district. A design gated **only** by a district counts as within reach — you answer it by standing somewhere else |
+| 121c | Read *roads not taken* on a fresh city | All three named: no disk read, no machine certified, nobody arrived with a trade. Take in a settler with an origin and the third disappears |
+| 121d | Turn `r_TAF_OptionZoning` off and re-open | One honest sentence saying every design is open and there is no map to draw. Not an empty screen |
+| 122 | Press `9` — what the city is asking for | Worst first. A dry cistern is `!!`, more people than roofs is `!`, an idle mill is `·`. **Every** line names what would settle it |
+| 122a | Empty the cisterns to exactly zero, then put one dram back | The thirst ask appears and then goes. One dram is not an ask — the board fires on empty, never on "low", because it is forbidden a balance number of its own |
+| 122b | Dedicate no vessels at all | **No** thirst ask. The city has no cisterns, which is a different thing, and the book's stores chapter says so on its own line |
+| 122c | Fill one zone's larder to the lid while another zone has room | A haulage ask naming the full one. Empty the other larder's ceiling too (or claim only one zone) and it goes: a city with nowhere to put anything is asking for a larder, not for haulage |
+| 122d | Have a settler waiting to speak (Pass 10) and open the board | The petition is the **first** line, and it points at the Charter to hear them. The board does not hear it — it is a reading |
+| 122e | Post notices at the heart and re-open | A closing count of your own notices. Nothing on the board takes them up |
+| 122e2 | Install several ask sources and open the board | Never more than eight lines, worst first. The cap is a promise about the **screen**; ten installed mods must not turn it into a spreadsheet |
+| 122f | Bring the city to full health — stores held, roofs enough, every work crewed | "Nothing else. The stores hold, the roofs are enough, and every work that wants hands has them" |
+| 123 | Talk to one of your own settlers | A conversation, and **"share your water"** in it. Before W5 a settler could not be talked to at all |
+| 123a | Share water with them | Vanilla's own ritual, for **your realm's faction**: the reputation, and the settlement's own favoured dish taught as a cooking recipe. That recipe has existed since the food lane and until now no creature in Qud belonged to the faction to hand it over |
+| 123b | Cook the dish afterwards | It is the one the Charter's status names. If the ritual taught a different recipe, the faction stamp and the report disagree |
+| 123c | Look for secret or gossip trading in the ritual | **There is none, and that is correct for now.** The realm faction declares no interests, so vanilla weighs every note at zero and hides those choices. The city trades no secret it does not have — the chronicle-as-tradable-secret half is named as remainder, not shipped |
+| 123d | Talk to a settler another mod gave a conversation to | Their own conversation, unreplaced, with the water ritual choice in it (an XML conversation inherits it already). Taking away somebody else's content to add something already there would be the failure |
+| 123e | Turn `r_TAF_OptionCitizenRite` off, then on, and let a pass run | Off, no new settler becomes a host; on, the next pass makes them one. Existing hosts are not stripped — nothing this mod added to a creature is taken back off it |
+| 123f2 | Talk to a settler on the day they arrive, then again after a month of world-time in the city | The greeting **changes** — newcomer, then settling in, then settled. A conversation is a fixed string on the object, so a settler stamped once on arrival and never re-read would greet you as a stranger forever and two of the three lines would be dead. Only conversations this mod built are ever rebuilt |
+| 123f | Save, reload, and talk to the same settler again | Still a host. If the conversation was lost to the round-trip, the next settlement pass repairs it, because the check asks the object's actual state rather than a remembered flag |
+| 123g | Kill one of your own settlers **after** W5 has made them a host | Your standing with **your own realm** drops, by vanilla's own legendary-kill arithmetic, and one to three factions the realm has feelings about move with it. This is new in W5 and it is deliberate: `GivesRep` is what opens the ritual, and it is also what makes murdering your own citizen cost something. Bounded to the realm and its related factions — it is **not** a world-wide penalty |
+| 123h | Share water with a settler and then kill them | The **water-ritual curse**: vanilla's own covenant violation, rep with every visible non-hostile faction. The exile lane already has prose for this deed (`WaterRitualCurse`), which is how you can tell it was expected rather than stumbled into |
+| 124 | With no other mod installed, read *who else writes in this book* (the book's sixth chapter) | "Nothing is extending it. The city is entirely its own", and the API version |
+| 124a | Install a mod with a `[KingdomExtension]` class built against **the wrong version** | It is **refused by mod name**, on screen and in the log, naming the version it wanted and the version we publish. It is never silently skipped. The refusal is listed in this chapter |
+| 124b | Install one whose extension class **throws** in its constructor or in `Ask` | Only that one is lost. Every other extension still runs, the board still opens, the turn is unaffected, and the log names the mod. A constructor that throws is refused as **"threw"**, never as "declares no API version" — the two send a modder to different lines |
+| 124b2 | With that mod installed, open the asks board | It says out loud that something stalled this reading, and names it. A log line is not a surface, and a board quietly showing fewer entries would read as a healthier city |
+| 124c | Install a working ask source and open the board | Its asks are filed `<mod-slug>:<kind>`, at most four of them, with colour markup stripped. They are ranked **by weight beside the city's own** — a mod's grave ask outranks our passing one — and sort after ours only among equals |
+| 124d | Install a happening source and let a settlement pass run | Its chronicle line lands; its spoken line is heard **only** if the city had nothing more pressing to say. Grep for `extension happening:` — the count matches |
+| 124e | With the same happening source, note a spoken line, reload the save, and repeat the pass | The same draw and the same result. An extension's chance is as replayable as ours or the city is unfalsifiable |
+| 124f | Enable two extension mods, then reorder them in the mod list | The same behaviour and the same draws. Registration is sorted by mod name, never left in scan order |
+| 124g | Turn `r_TAF_OptionExtensions` off | No third-party C# runs, and the chapter says so. Buildings, deals and settlers those mods merged by XML are **unaffected** |
+| 124h | Corrupt or clear the city book (or catch a real fault) and open both the book and the asks board | Both say the book could not be read, in as many words. Neither shows a page of zeroes, and the asks board does **not** print "the stores hold, the roofs are enough" — reporting an unreadable book as a contented city is the report telling you the opposite of the truth |
+| 125 | Grep the log for `perf` through a season with extensions installed | Extension jobs appear on the reckon lane with a `ext:` label. Nothing else moved: the receipt is the regression test |
 
 ## Pass 4 — Attitudes and persistence
 

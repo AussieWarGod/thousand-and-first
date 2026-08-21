@@ -78,11 +78,14 @@ namespace ThousandAndFirst
 			}
 			while (true)
 			{
-				// Taken hotkeys, all thirty-two of them: every letter a-z is spoken for, so a new
-				// entry takes the next digit. Used so far: h s w c a n l p d m t v r i f e u g b
-				// j k o y x q z and the digits 1 2 3 4 5 6. Check this list before adding an
-				// entry - a duplicated hotkey silently picks whichever option comes first.
-				int num = Popup.PickOption(Title: system.SeatName + KingdomSettlement.VocationSuffix(system.Vocation), Options: new string[32] { (system.PetitionKind != KingdomRules.PetitionKind.None) ? ("{{W|Hear " + system.PetitionPetitioner + "}}") : "{{K|No one is waiting to speak}}", "Status", "What happened while you were away", "The Chronicle", "As others tell it", "Standings", "The roll of settlers", "Standing policy", "Designate district", "Commission a building", "Answer a threat", "Dedicate a vessel, larder, or stockpile", "Strike a trade charter", "Send a water manifest", "Share a meal from the larder", "Certify a machine", "Set the water detail", "Plans staked for later", "Adopt a building", "Release an adoption", (system.SettlementCount >= 2 || system.Seceded != null) ? "How your cities hold each other" : "{{K|One city cannot fall out with itself}}", "What the keepers know", "Your works, and what they become", "Name a building", "Set the crew on the ground", "Take down a building", "Post a price at the heart", "Change what a plot is", "Give a building a new look", "Consecrate a shrine", "Share water with a settler", "Claim this ground"}, Hotkeys: new char[32] { 'h', 's', 'w', 'c', 'a', 'n', 'l', 'p', 'd', 'm', 't', 'v', 'r', 'i', 'f', 'e', 'u', 'g', 'b', 'j', 'k', 'o', 'y', 'x', 'q', 'z', '1', '2', '3', '4', '5', '6'}, AllowEscape: true);
+				// Taken hotkeys, all thirty-five of them: every letter a-z is spoken for, so a
+				// new entry takes the next digit. Used so far: h s w c a n l p d m t v r i f e u
+				// g b j k o y x q z and the digits 1 2 3 4 5 6 7 8 9. Check this list before
+				// adding an entry - a duplicated hotkey silently picks whichever option comes
+				// first, and that has bitten this file before. ONE digit is left. When it goes,
+				// the next entry is a chapter inside an existing one, the way the city book
+				// (W5, '7') holds six readings behind one letter - not a second Charter.
+				int num = Popup.PickOption(Title: system.SeatName + KingdomSettlement.VocationSuffix(system.Vocation), Options: new string[35] { (system.PetitionKind != KingdomRules.PetitionKind.None) ? ("{{W|Hear " + system.PetitionPetitioner + "}}") : "{{K|No one is waiting to speak}}", "Status", "What happened while you were away", "The Chronicle", "As others tell it", "Standings", "The roll of settlers", "Standing policy", "Designate district", "Commission a building", "Answer a threat", "Dedicate a vessel, larder, or stockpile", "Strike a trade charter", "Send a water manifest", "Share a meal from the larder", "Certify a machine", "Set the water detail", "Plans staked for later", "Adopt a building", "Release an adoption", (system.SettlementCount >= 2 || system.Seceded != null) ? "How your cities hold each other" : "{{K|One city cannot fall out with itself}}", "What the keepers know", "Your works, and what they become", "Name a building", "Set the crew on the ground", "Take down a building", "Post a price at the heart", "Change what a plot is", "Give a building a new look", "Consecrate a shrine", "Share water with a settler", "Claim this ground", "The book of the city", "Where the keepers' craft could go", "What the city is asking for"}, Hotkeys: new char[35] { 'h', 's', 'w', 'c', 'a', 'n', 'l', 'p', 'd', 'm', 't', 'v', 'r', 'i', 'f', 'e', 'u', 'g', 'b', 'j', 'k', 'o', 'y', 'x', 'q', 'z', '1', '2', '3', '4', '5', '6', '7', '8', '9'}, AllowEscape: true);
 				switch (num)
 				{
 				case 0:
@@ -180,6 +183,19 @@ namespace ThousandAndFirst
 					break;
 				case 31:
 					ClaimGround(system);
+					break;
+				// W5. Three readings, and nothing on any of them can be pressed: the city book
+				// (LIVING-CITY-ARCHITECTURE §5's works board and everything beside it), the
+				// keepers' map (DIVERSITY-AND-TECH-TREES §2.8 - a MAP, never a spend), and what
+				// the city is asking for (§5's petitions and bounties, issued from model state).
+				case 32:
+					Simulation.City.KingdomBookReport.Open(system);
+					break;
+				case 33:
+					Popup.Show(KingdomTechMap.Draw(system));
+					break;
+				case 34:
+					Popup.Show(KingdomAsks.Board(system));
 					break;
 				default:
 					return;

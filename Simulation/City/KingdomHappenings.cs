@@ -173,10 +173,56 @@ namespace ThousandAndFirst.Simulation.City
 			// time it is true and nothing at all afterwards, and the hour's texture is always there
 			// to be said tomorrow.
 			told += KingdomAmbient.Regard(System, System.City, KingdomCreed.SeatCreed(System), System.SeatName, true);
+			// The published lane last, and out of the SAME budget: LIVING-CITY-ARCHITECTURE §6.6
+			// clause 4 says an extension cannot flood the register any more than we can, and the
+			// only way to mean that is to spend from one purse. What the city itself has to say
+			// outranks what a mod taught it, on a pass where only one line fits.
+			told += Extensions(System, System.City, System.SeatName, true, The.Game.TimeTicks, SeatedPushBudget - told);
 			if (told <= 0)
 			{
 				KingdomAmbient.Speak(System, System.City, System.SeatName, true, The.Game.TimeTicks);
 			}
+		}
+
+		/// <summary>
+		/// Asks every registered happening source what has happened since it was last asked, and
+		/// surfaces the answers through the city's own surfaces.
+		/// <para>
+		/// Preconditions: a founded realm with a book. Side effects: advances
+		/// <c>KingdomCityBook.LastExtensionTick</c>, records to the chronicle, and pushes at most
+		/// <paramref name="spare"/> spoken lines. Failure mode: a source that throws or runs long
+		/// stalls itself; the cursor still advances, because a source that cannot answer for a
+		/// window is not owed that window forever.
+		/// </para>
+		/// </summary>
+		private static int Extensions(KingdomSystem System, KingdomCityBook book, string label, bool here, long nowTick, int spare)
+		{
+			if (book == null || nowTick <= 0L || !Api.KingdomExtensions.AnyHappeningSource())
+			{
+				return 0;
+			}
+			if (book.LastExtensionTick <= 0L)
+			{
+				// Never asked. Stamp and keep nothing, exactly as the festival cursor does: an
+				// extension installed today did not miss last year.
+				book.LastExtensionTick = nowTick;
+				return 0;
+			}
+			KingdomCityState state;
+			KingdomCityFault fault;
+			if (!book.TryRead(out state, out fault))
+			{
+				// Logged rather than announced, and deliberately on the same terms as
+				// KingdomHappenings.Reckon's own unreadable-book return above: one unreadable book
+				// is one fault, and it belongs in one place. The founder meets it where they would
+				// look for it - the city book and the asks board both say so out loud.
+				KingdomLog.Log("city: the extension lane found the book unreadable (" + fault + ")");
+				return 0;
+			}
+			long since = book.LastExtensionTick;
+			book.LastExtensionTick = nowTick;
+			return Api.KingdomExtensions.Happenings(System,
+				KingdomReadingRules.Project(label, state), label, here, since, nowTick, (spare > 0) ? spare : 0);
 		}
 
 		/// <summary>Told lines the settlement pass may push about happenings. Two, and the
