@@ -988,3 +988,18 @@ factions granted them) mints city knowledge; the founding myth made mechanical. 
 it reveals and begins (composing with Addendum 14's visibility law: rite-knowledge is a
 discovery source), and the completing work is the city's — its researchers, its people, its
 time.
+
+
+## Addendum 19, 2026-08-22 — chrome ruled in; the end-state question opened (Q6+Q7)
+
+- **Q7 RULED: chrome-for-mutants exists.** "We definitely want this" — a becoming-annexe-class
+  building granting cybernetic eligibility to mutants. It gets its own fiction (a reason in the
+  world, never a checkbox) and its mechanics come back as a design ruling before build.
+- **Q6 + the interaction OPEN, research-first**: if the chimeric theatre (flesh) and the
+  becoming annexe (chrome) are specialised end-state megastructures under one-per-city
+  cardinality, "do we need a separate city to support both ways?" — the endgame may be a
+  KINGDOM OF SPECIALISED CITIES (flesh-city, chrome-city, shell-city/arcology), which the
+  N-city roster (12(j)) makes architecturally cheap. Research dispatched: player appetite for
+  endgame body-modification content, Qud community sentiment on the chrome/genotype boundary
+  (a live lore identity question — tread with evidence), and city-destiny specialisation
+  precedents. Options + recommendation return for the final ruling.
