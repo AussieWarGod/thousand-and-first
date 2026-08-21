@@ -119,7 +119,14 @@ namespace ThousandAndFirst.Tests
 			Assert.IsTrue(KingdomCityMemoryRules.TryRealmBytesAtTodaysCaps(out bytes));
 			Assert.AreEqual(53444L, bytes, "the composed realm total moved");
 			Assert.Less(bytes, KingdomBudgetRules.ModelBytesCeiling, "the realm broke the 64 KiB ceiling");
-			Assert.AreEqual(KingdomBudgetVerdict.Within, KingdomBudgetRules.JudgeCount(KingdomBudgetLane.ModelBytes, bytes));
+			Assert.AreNotEqual(KingdomBudgetVerdict.Over, KingdomBudgetRules.JudgeCount(KingdomBudgetLane.ModelBytes, bytes));
+			// Recorded rather than asserted away: §0.0(c)'s own byte-by-byte total (≈ 51.9 KiB,
+			// composed here as 52.2 KiB -- the table's figure is the sum of its rounded KiB
+			// column) sits ABOVE the same table's 48 KiB warn rung. The design ships in its own
+			// warn band at today's caps. That is the constitution's business to settle, not this
+			// test's to hide, so the verdict is pinned as Warn and named.
+			Assert.AreEqual(KingdomBudgetVerdict.Warn, KingdomBudgetRules.JudgeCount(KingdomBudgetLane.ModelBytes, bytes),
+				"the realm total left the warn band -- if the widths changed, §0.0(c) needs the same edit");
 		}
 
 		/// <summary>

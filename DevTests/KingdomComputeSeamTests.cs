@@ -46,11 +46,16 @@ namespace ThousandAndFirst.Tests
 	internal struct SeamMutableCargo
 	{
 		internal long Amount;
+
+		internal SeamMutableCargo(long amount)
+		{
+			Amount = amount;
+		}
 	}
 
 	internal readonly struct SeamStaticCargo
 	{
-		internal static long Tally;
+		internal static long Tally = 0L;
 
 		internal readonly long Amount;
 

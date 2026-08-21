@@ -63,19 +63,19 @@ namespace ThousandAndFirst.Tests
 		/// <summary>LIVING-CITY-ARCHITECTURE §0.0(b): a light unit is a third, and everything else
 		/// is whole. A light tier that weighed a whole unit would put a farm's eighty plants at
 		/// ten turns instead of four.</summary>
-		[TestCase(KingdomUnitWeight.Heavy, 3)]
-		[TestCase(KingdomUnitWeight.Medium, 3)]
-		[TestCase(KingdomUnitWeight.Light, 1)]
-		public void TheWeightsAreTheConstitutionsOwn(KingdomUnitWeight weight, int expected)
+		[TestCase((int)KingdomUnitWeight.Heavy, 3)]
+		[TestCase((int)KingdomUnitWeight.Medium, 3)]
+		[TestCase((int)KingdomUnitWeight.Light, 1)]
+		public void TheWeightsAreTheConstitutionsOwn(int weight, int expected)
 		{
-			Assert.AreEqual(expected, KingdomCatchUpRules.WeightThirds(weight));
+			Assert.AreEqual(expected, KingdomCatchUpRules.WeightThirds((KingdomUnitWeight)weight));
 		}
 
-		[TestCase(KingdomUnitDirection.Land, 1)]
-		[TestCase(KingdomUnitDirection.Draw, -1)]
-		public void TheCounterIsSigned(KingdomUnitDirection direction, int expected)
+		[TestCase((int)KingdomUnitDirection.Land, 1)]
+		[TestCase((int)KingdomUnitDirection.Draw, -1)]
+		public void TheCounterIsSigned(int direction, int expected)
 		{
-			Assert.AreEqual(expected, KingdomCatchUpRules.Sign(direction));
+			Assert.AreEqual(expected, KingdomCatchUpRules.Sign((KingdomUnitDirection)direction));
 		}
 
 		/// <summary>

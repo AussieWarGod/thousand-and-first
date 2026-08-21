@@ -1,0 +1,853 @@
+using System;
+using ThousandAndFirst.Simulation.Kernel;
+
+namespace ThousandAndFirst.Simulation.City
+{
+	/// <summary>
+	/// Why a city rule refused.
+	/// <para>
+	/// The kernel's <c>KernelFaultCode</c> names the arithmetic refusals and this names the model's
+	/// own; <see cref="KingdomCityFaults.FromKernel"/> is the one translation between them, so a
+	/// tick fault raised in <c>TickMath</c> reaches a caller here without a second arithmetic
+	/// implementation being written to avoid the conversion.
+	/// </para>
+	/// </summary>
+	internal enum KingdomCityFault : byte
+	{
+		None = 0,
+		NullArgument = 1,
+		RowCapExceeded = 2,
+		InvalidIndex = 3,
+		InvalidTick = 4,
+		ClockRegression = 5,
+		ArithmeticOverflow = 6,
+		InvalidInterval = 7,
+		InvalidRate = 8,
+		InvalidCapacity = 9,
+		InvalidLegOrder = 10,
+		OutsideItinerary = 11,
+		StepBudgetExhausted = 12
+	}
+
+	internal static class KingdomCityFaults
+	{
+		/// <summary>
+		/// A kernel refusal in the city's vocabulary. Anything the kernel can raise that the city
+		/// has no narrower word for arrives as <see cref="KingdomCityFault.ArithmeticOverflow"/>
+		/// rather than as <see cref="KingdomCityFault.None"/>: a fault must never translate into a
+		/// success.
+		/// </summary>
+		internal static KingdomCityFault FromKernel(KernelFaultCode fault)
+		{
+			switch (fault)
+			{
+			case KernelFaultCode.None:
+				return KingdomCityFault.None;
+			case KernelFaultCode.InvalidTick:
+				return KingdomCityFault.InvalidTick;
+			case KernelFaultCode.InvalidInterval:
+				return KingdomCityFault.InvalidInterval;
+			case KernelFaultCode.ClockRegression:
+				return KingdomCityFault.ClockRegression;
+			default:
+				return KingdomCityFault.ArithmeticOverflow;
+			}
+		}
+	}
+
+	/// <summary>Which civic stock a figure speaks for. LIVING-CITY-ARCHITECTURE &sect;1.2(a).</summary>
+	internal enum KingdomStockKind : byte
+	{
+		Water = 0,
+		Food = 1,
+		Materials = 2
+	}
+
+	/// <summary>One stock and the ceiling it fills toward. Two longs, sixteen bytes.</summary>
+	internal readonly struct KingdomStockPair
+	{
+		internal readonly long Level;
+
+		internal readonly long Capacity;
+
+		internal KingdomStockPair(long level, long capacity)
+		{
+			Level = level;
+			Capacity = capacity;
+		}
+	}
+
+	/// <summary>
+	/// The civic share, and nothing else. Player-carried and undedicated stock stays purely
+	/// physical and outside the model (LIVING-CITY-ARCHITECTURE &sect;1.2(a)), which is what keeps
+	/// the protection law simple: the model only ever speaks for what the founder designated.
+	/// <para>
+	/// Six longs, forty-eight bytes — the width LIVING-CITY-ARCHITECTURE &sect;0.0(c) budgets on
+	/// both the city and the zone row.
+	/// </para>
+	/// </summary>
+	internal readonly struct KingdomStocks
+	{
+		internal readonly KingdomStockPair Water;
+
+		internal readonly KingdomStockPair Food;
+
+		internal readonly KingdomStockPair Materials;
+
+		internal KingdomStocks(KingdomStockPair water, KingdomStockPair food, KingdomStockPair materials)
+		{
+			Water = water;
+			Food = food;
+			Materials = materials;
+		}
+
+		internal bool TryGet(KingdomStockKind kind, out KingdomStockPair pair)
+		{
+			switch (kind)
+			{
+			case KingdomStockKind.Water:
+				pair = Water;
+				return true;
+			case KingdomStockKind.Food:
+				pair = Food;
+				return true;
+			case KingdomStockKind.Materials:
+				pair = Materials;
+				return true;
+			default:
+				pair = default(KingdomStockPair);
+				return false;
+			}
+		}
+
+		internal bool TryWith(KingdomStockKind kind, KingdomStockPair pair, out KingdomStocks next)
+		{
+			switch (kind)
+			{
+			case KingdomStockKind.Water:
+				next = new KingdomStocks(pair, Food, Materials);
+				return true;
+			case KingdomStockKind.Food:
+				next = new KingdomStocks(Water, pair, Materials);
+				return true;
+			case KingdomStockKind.Materials:
+				next = new KingdomStocks(Water, Food, pair);
+				return true;
+			default:
+				next = this;
+				return false;
+			}
+		}
+	}
+
+	/// <summary>What a work is, for the one small discriminated slot of run-state it carries.
+	/// LIVING-CITY-ARCHITECTURE &sect;1.2(c).</summary>
+	internal enum KingdomWorkKind : byte
+	{
+		Other = 0,
+		Growing = 1,
+		Store = 2,
+		Producer = 3,
+		Refiner = 4,
+		Power = 5
+	}
+
+	/// <summary>
+	/// The state the engine cannot carry for a work, and nothing else. A growing ground's stage and
+	/// next-stage tick, a producer's progress, a power work's charge — one slot, read by kind.
+	/// <para>
+	/// LIVING-CITY-ARCHITECTURE &sect;1.2(c): "a work's row carries state the engine cannot carry
+	/// for it, and nothing else." Appearance, name, tile and contents stay on the object; the crop
+	/// blueprint travels on the row's shared <c>DesignKey</c> reference rather than as a second
+	/// string here, which is what holds this slot to the sixteen bytes &sect;0.0(c) budgets.
+	/// </para>
+	/// </summary>
+	internal readonly struct KingdomWorkRunState
+	{
+		internal readonly KingdomWorkKind Kind;
+
+		/// <summary>Growth stage for a growing ground; unread for every other kind.</summary>
+		internal readonly byte Stage;
+
+		/// <summary>Progress ticks for a producer or refiner, charge for a power work.</summary>
+		internal readonly int Progress;
+
+		/// <summary>Next stage tick for a growing ground; a breakpoint, never a countdown.</summary>
+		internal readonly long NextTick;
+
+		internal KingdomWorkRunState(KingdomWorkKind kind, byte stage, int progress, long nextTick)
+		{
+			Kind = kind;
+			Stage = stage;
+			Progress = progress;
+			NextTick = nextTick;
+		}
+	}
+
+	/// <summary>Where a person's day puts them. Derived from job and standing policy, never
+	/// authored per settler, and holding no times. LIVING-CITY-ARCHITECTURE &sect;1.2(d).</summary>
+	internal enum KingdomDayShape : byte
+	{
+		Hearth = 0,
+		Field = 1,
+		Yard = 2,
+		Market = 3,
+		Craft = 4,
+		Watch = 5,
+		Shrine = 6
+	}
+
+	internal enum KingdomResidentStanding : byte
+	{
+		Resident = 0,
+		Abroad = 1,
+		Dead = 2
+	}
+
+	/// <summary>The named clocks, consolidated off the settlement's loose longs and given an
+	/// ordinal, which is what makes their draws reproducible. LIVING-CITY-ARCHITECTURE &sect;1.2(e).</summary>
+	internal enum KingdomClockKind : byte
+	{
+		Harvest = 0,
+		Arrival = 1,
+		Guest = 2,
+		NotableGuest = 3,
+		Festival = 4,
+		MarketDay = 5,
+		Delivery = 6,
+		Raid = 7
+	}
+
+	/// <summary>What a told-log line is a line about. LIVING-CITY-ARCHITECTURE &sect;1.2(f).</summary>
+	internal enum KingdomToldKind : byte
+	{
+		None = 0,
+		Harvest = 1,
+		Delivery = 2,
+		Arrival = 3,
+		Departure = 4,
+		Breakdown = 5,
+		Mending = 6,
+		Raising = 7,
+		Shortfall = 8,
+		Raid = 9,
+		Ceremony = 10
+	}
+
+	/// <summary>
+	/// One claimed zone as the model last read it, plus what it owes the ground.
+	/// <para>
+	/// LIVING-CITY-ARCHITECTURE &sect;0.0(c) budgets eighty bytes: id ref 8 + district 4 +
+	/// LastReadTick 8 + six stock/capacity longs 48 + roofs 4 + defence 4 + pad 4. The catch-up
+	/// counter (&sect;3.5) takes that pad: it is a field on the zone row rather than a transient,
+	/// because a founder who walks out at unit 40 of 132 walks back in owing 92.
+	/// </para>
+	/// </summary>
+	internal readonly struct KingdomZoneRow
+	{
+		internal readonly string ZoneId;
+
+		/// <summary>The district's stable code. The name lives in the district registry, which is
+		/// data-driven under the extensibility law, so the row carries a code and not a string.</summary>
+		internal readonly int DistrictCode;
+
+		internal readonly long LastReadTick;
+
+		internal readonly KingdomStocks Stocks;
+
+		internal readonly int Roofs;
+
+		internal readonly int Defence;
+
+		/// <summary>Signed catch-up debt, weighted in thirds (LIVING-CITY-ARCHITECTURE &sect;3.5,
+		/// &sect;3.9). Positive lands, negative draws.</summary>
+		internal readonly int CatchUpThirds;
+
+		internal KingdomZoneRow(
+			string zoneId,
+			int districtCode,
+			long lastReadTick,
+			KingdomStocks stocks,
+			int roofs,
+			int defence,
+			int catchUpThirds)
+		{
+			ZoneId = zoneId;
+			DistrictCode = districtCode;
+			LastReadTick = lastReadTick;
+			Stocks = stocks;
+			Roofs = roofs;
+			Defence = defence;
+			CatchUpThirds = catchUpThirds;
+		}
+
+		internal KingdomZoneRow WithCatchUpThirds(int catchUpThirds)
+		{
+			return new KingdomZoneRow(ZoneId, DistrictCode, LastReadTick, Stocks, Roofs, Defence, catchUpThirds);
+		}
+	}
+
+	/// <summary>One standing work. LIVING-CITY-ARCHITECTURE &sect;1.2(c); sixty-four bytes at
+	/// &sect;0.0(c).</summary>
+	internal readonly struct KingdomWorkRow
+	{
+		internal readonly int WorkId;
+
+		internal readonly string ZoneId;
+
+		internal readonly short AnchorX;
+
+		internal readonly short AnchorY;
+
+		internal readonly string DesignKey;
+
+		/// <summary>The wear percent KingdomWear already owns.</summary>
+		internal readonly int ConditionPercent;
+
+		internal readonly int CrewAssigned;
+
+		internal readonly long RanThroughTick;
+
+		internal readonly KingdomWorkRunState RunState;
+
+		internal KingdomWorkRow(
+			int workId,
+			string zoneId,
+			short anchorX,
+			short anchorY,
+			string designKey,
+			int conditionPercent,
+			int crewAssigned,
+			long ranThroughTick,
+			KingdomWorkRunState runState)
+		{
+			WorkId = workId;
+			ZoneId = zoneId;
+			AnchorX = anchorX;
+			AnchorY = anchorY;
+			DesignKey = designKey;
+			ConditionPercent = conditionPercent;
+			CrewAssigned = crewAssigned;
+			RanThroughTick = ranThroughTick;
+			RunState = runState;
+		}
+
+		internal KingdomWorkRow WithRunState(KingdomWorkRunState runState, long ranThroughTick)
+		{
+			return new KingdomWorkRow(WorkId, ZoneId, AnchorX, AnchorY, DesignKey, ConditionPercent, CrewAssigned, ranThroughTick, runState);
+		}
+	}
+
+	/// <summary>
+	/// One settler. The brink windows that today live as object properties live here instead
+	/// (LIVING-CITY-ARCHITECTURE &sect;1.2(d)), because a row is what survives a zone going to disk.
+	/// </summary>
+	internal readonly struct KingdomResidentRow
+	{
+		internal readonly int ResidentId;
+
+		/// <summary>The one unique heap string per resident that &sect;0.0(c) budgets at ~64 bytes.</summary>
+		internal readonly string Name;
+
+		internal readonly int OriginCode;
+
+		internal readonly int CreedCode;
+
+		internal readonly long ArrivedTick;
+
+		internal readonly int HomeWorkId;
+
+		internal readonly int JobWorkId;
+
+		internal readonly byte JobRole;
+
+		internal readonly KingdomDayShape DayShape;
+
+		internal readonly KingdomResidentStanding Standing;
+
+		internal readonly string BoundZoneId;
+
+		/// <summary>Roof brink: the tick the founder was warned, and whether they were.</summary>
+		internal readonly long RoofTick;
+
+		internal readonly bool RoofWarned;
+
+		/// <summary>Creed brink: warned tick, whether warned, which way, and by which channel.</summary>
+		internal readonly long CreedTick;
+
+		internal readonly bool CreedWarned;
+
+		internal readonly byte CreedToward;
+
+		internal readonly byte CreedChannel;
+
+		internal KingdomResidentRow(
+			int residentId,
+			string name,
+			int originCode,
+			int creedCode,
+			long arrivedTick,
+			int homeWorkId,
+			int jobWorkId,
+			byte jobRole,
+			KingdomDayShape dayShape,
+			KingdomResidentStanding standing,
+			string boundZoneId,
+			long roofTick,
+			bool roofWarned,
+			long creedTick,
+			bool creedWarned,
+			byte creedToward,
+			byte creedChannel)
+		{
+			ResidentId = residentId;
+			Name = name;
+			OriginCode = originCode;
+			CreedCode = creedCode;
+			ArrivedTick = arrivedTick;
+			HomeWorkId = homeWorkId;
+			JobWorkId = jobWorkId;
+			JobRole = jobRole;
+			DayShape = dayShape;
+			Standing = standing;
+			BoundZoneId = boundZoneId;
+			RoofTick = roofTick;
+			RoofWarned = roofWarned;
+			CreedTick = creedTick;
+			CreedWarned = creedWarned;
+			CreedToward = creedToward;
+			CreedChannel = creedChannel;
+		}
+
+		internal KingdomResidentRow WithStanding(KingdomResidentStanding standing)
+		{
+			return new KingdomResidentRow(ResidentId, Name, OriginCode, CreedCode, ArrivedTick, HomeWorkId, JobWorkId,
+				JobRole, DayShape, standing, BoundZoneId, RoofTick, RoofWarned, CreedTick, CreedWarned, CreedToward, CreedChannel);
+		}
+	}
+
+	/// <summary>One named clock: kind, when it next falls, and where in its lane it sits.
+	/// Sixteen bytes at &sect;0.0(c).</summary>
+	internal readonly struct KingdomClockRow
+	{
+		internal readonly KingdomClockKind Kind;
+
+		internal readonly long NextDueTick;
+
+		/// <summary>The occurrence index within this clock's stream. The whole trick of
+		/// LIVING-CITY-ARCHITECTURE &sect;2.4: the seventh harvest of field 3 draws the same numbers
+		/// whether it is resolved on the day it fell or six cycles later inside one reckoning.</summary>
+		internal readonly int Ordinal;
+
+		internal KingdomClockRow(KingdomClockKind kind, long nextDueTick, int ordinal)
+		{
+			Kind = kind;
+			NextDueTick = nextDueTick;
+			Ordinal = ordinal;
+		}
+
+		internal KingdomClockRow WithNext(long nextDueTick, int ordinal)
+		{
+			return new KingdomClockRow(Kind, nextDueTick, ordinal);
+		}
+	}
+
+	/// <summary>
+	/// One line of the told-log ring. Everything in it has already happened — it is historical
+	/// identity proof, not a due-job queue, which is the kernel's own distinction stated in
+	/// <c>FixedPeriodToy</c> and repeated at LIVING-CITY-ARCHITECTURE &sect;1.2(f).
+	/// </summary>
+	internal readonly struct KingdomToldRow
+	{
+		internal readonly KingdomToldKind Kind;
+
+		internal readonly long Tick;
+
+		internal readonly int SubjectA;
+
+		internal readonly int SubjectB;
+
+		internal readonly string PlaceZoneId;
+
+		internal readonly int Outcome;
+
+		internal KingdomToldRow(KingdomToldKind kind, long tick, int subjectA, int subjectB, string placeZoneId, int outcome)
+		{
+			Kind = kind;
+			Tick = tick;
+			SubjectA = subjectA;
+			SubjectB = subjectB;
+			PlaceZoneId = placeZoneId;
+			Outcome = outcome;
+		}
+	}
+
+	/// <summary>
+	/// One city's whole book: stocks, zone rows, work rows, resident rows, clocks, and the
+	/// told-log ring. LIVING-CITY-ARCHITECTURE &sect;1.2.
+	/// <para>
+	/// Frozen by the &sect;1.3 doctrine, in the shape this codebase already uses for
+	/// <c>FixedPeriodToyState</c>: sealed, <c>readonly struct</c> rows, every array copied in and
+	/// never handed back, every transition copy-on-write. Nothing here is ever partially
+	/// incremented, so a fault leaves the caller's state byte-identical.
+	/// </para>
+	/// <para>
+	/// This is the pure model, engine-free by construction. The serialized carrier that will hold
+	/// it on <c>KingdomSettlement</c> is a W1 deliverable and lives outside this type: an
+	/// <c>IComposite</c> must assign fields, and the rules layer must not.
+	/// </para>
+	/// </summary>
+	internal sealed class KingdomCityState
+	{
+		/// <summary>LIVING-CITY-ARCHITECTURE &sect;1.4: at most four claimed zones today, from
+		/// <c>KingdomZoningRules.ZonesForStage</c> at City. A stage-gate constant, never an
+		/// architectural limit — raising it raises R linearly and changes nothing else.</summary>
+		internal const int MaxZones = 4;
+
+		/// <summary>LIVING-CITY-ARCHITECTURE &sect;1.4, from <c>KingdomRules.MaxBuildings</c>.</summary>
+		internal const int MaxWorks = 40;
+
+		/// <summary>LIVING-CITY-ARCHITECTURE &sect;1.4, from <c>KingdomRules.MaxPopulation</c>.</summary>
+		internal const int MaxResidents = 60;
+
+		/// <summary>LIVING-CITY-ARCHITECTURE &sect;1.4: a fixed, named set.</summary>
+		internal const int MaxClocks = 12;
+
+		/// <summary>LIVING-CITY-ARCHITECTURE &sect;1.2(f) / &sect;1.4: K is 32, and it is a ring.</summary>
+		internal const int MaxToldEntries = 32;
+
+		internal readonly int SchemaVersion;
+
+		internal readonly int RulesVersion;
+
+		internal readonly string SettlementId;
+
+		/// <summary>
+		/// How far the model has been advanced. Advanced by whole units consumed with the
+		/// remainder kept, never re-anchored to now (LIVING-CITY-ARCHITECTURE &sect;2.2), which is
+		/// what makes <c>TryAdvance</c> idempotent at a repeated tick and a mid-pass reload safe.
+		/// </summary>
+		internal readonly long ProcessedThroughTick;
+
+		internal readonly KingdomStocks Stocks;
+
+		private readonly KingdomZoneRow[] zones;
+
+		private readonly KingdomWorkRow[] works;
+
+		private readonly KingdomResidentRow[] residents;
+
+		private readonly KingdomClockRow[] clocks;
+
+		private readonly KingdomToldRow[] told;
+
+		private readonly int toldCount;
+
+		private readonly int toldNext;
+
+		private KingdomCityState(
+			int schemaVersion,
+			int rulesVersion,
+			string settlementId,
+			long processedThroughTick,
+			KingdomStocks stocks,
+			KingdomZoneRow[] zones,
+			KingdomWorkRow[] works,
+			KingdomResidentRow[] residents,
+			KingdomClockRow[] clocks,
+			KingdomToldRow[] told,
+			int toldCount,
+			int toldNext)
+		{
+			SchemaVersion = schemaVersion;
+			RulesVersion = rulesVersion;
+			SettlementId = settlementId;
+			ProcessedThroughTick = processedThroughTick;
+			Stocks = stocks;
+			this.zones = zones;
+			this.works = works;
+			this.residents = residents;
+			this.clocks = clocks;
+			this.told = told;
+			this.toldCount = toldCount;
+			this.toldNext = toldNext;
+		}
+
+		/// <summary>
+		/// Builds a city book, or refuses and publishes nothing.
+		/// <para>
+		/// Every array is copied, so a caller that keeps its own reference and mutates it later
+		/// cannot reach inside a published model. A null array reads as an empty one — a city with
+		/// no works yet is an ordinary state, not a fault — but a null settlement id is not.
+		/// </para>
+		/// </summary>
+		internal static bool TryCreate(
+			int schemaVersion,
+			int rulesVersion,
+			string settlementId,
+			long processedThroughTick,
+			KingdomStocks stocks,
+			KingdomZoneRow[] zones,
+			KingdomWorkRow[] works,
+			KingdomResidentRow[] residents,
+			KingdomClockRow[] clocks,
+			out KingdomCityState state,
+			out KingdomCityFault fault)
+		{
+			state = null;
+			if (settlementId == null)
+			{
+				fault = KingdomCityFault.NullArgument;
+				return false;
+			}
+			if (processedThroughTick < 0L)
+			{
+				fault = KingdomCityFault.InvalidTick;
+				return false;
+			}
+			if (Length(zones) > MaxZones || Length(works) > MaxWorks
+				|| Length(residents) > MaxResidents || Length(clocks) > MaxClocks)
+			{
+				fault = KingdomCityFault.RowCapExceeded;
+				return false;
+			}
+			state = new KingdomCityState(
+				schemaVersion,
+				rulesVersion,
+				settlementId,
+				processedThroughTick,
+				stocks,
+				Copy(zones),
+				Copy(works),
+				Copy(residents),
+				Copy(clocks),
+				new KingdomToldRow[MaxToldEntries],
+				0,
+				0);
+			fault = KingdomCityFault.None;
+			return true;
+		}
+
+		internal int ZoneCount
+		{
+			get { return zones.Length; }
+		}
+
+		internal int WorkCount
+		{
+			get { return works.Length; }
+		}
+
+		internal int ResidentCount
+		{
+			get { return residents.Length; }
+		}
+
+		internal int ClockCount
+		{
+			get { return clocks.Length; }
+		}
+
+		internal int ToldCount
+		{
+			get { return toldCount; }
+		}
+
+		/// <summary>
+		/// The live <c>R</c> of LIVING-CITY-ARCHITECTURE &sect;0.0(f): zone rows + work rows +
+		/// resident rows + clocks. The told-log is not in it, because a told line is never
+		/// proposed against or integrated — it is what an integration left behind.
+		/// </summary>
+		internal int RowCount
+		{
+			get { return zones.Length + works.Length + residents.Length + clocks.Length; }
+		}
+
+		internal bool TryZone(int index, out KingdomZoneRow row)
+		{
+			return TryRow(zones, index, out row);
+		}
+
+		internal bool TryWork(int index, out KingdomWorkRow row)
+		{
+			return TryRow(works, index, out row);
+		}
+
+		internal bool TryResident(int index, out KingdomResidentRow row)
+		{
+			return TryRow(residents, index, out row);
+		}
+
+		internal bool TryClock(int index, out KingdomClockRow row)
+		{
+			return TryRow(clocks, index, out row);
+		}
+
+		/// <summary>The told-log, oldest first. Index 0 is the oldest line still held, not the
+		/// oldest line ever written: the ring forgets, and says so by counting.</summary>
+		internal bool TryTold(int ordinalFromOldest, out KingdomToldRow row)
+		{
+			row = default(KingdomToldRow);
+			if (ordinalFromOldest < 0 || ordinalFromOldest >= toldCount)
+			{
+				return false;
+			}
+			int oldest = (toldCount < MaxToldEntries) ? 0 : toldNext;
+			return TryRow(told, (oldest + ordinalFromOldest) % MaxToldEntries, out row);
+		}
+
+		internal bool TryWithStocks(KingdomStocks stocks, out KingdomCityState next, out KingdomCityFault fault)
+		{
+			next = new KingdomCityState(SchemaVersion, RulesVersion, SettlementId, ProcessedThroughTick, stocks,
+				zones, works, residents, clocks, told, toldCount, toldNext);
+			fault = KingdomCityFault.None;
+			return true;
+		}
+
+		internal bool TryWithZone(int index, KingdomZoneRow row, out KingdomCityState next, out KingdomCityFault fault)
+		{
+			next = null;
+			KingdomZoneRow[] replaced;
+			if (!TryReplace(zones, index, row, out replaced))
+			{
+				fault = KingdomCityFault.InvalidIndex;
+				return false;
+			}
+			next = new KingdomCityState(SchemaVersion, RulesVersion, SettlementId, ProcessedThroughTick, Stocks,
+				replaced, works, residents, clocks, told, toldCount, toldNext);
+			fault = KingdomCityFault.None;
+			return true;
+		}
+
+		internal bool TryWithWork(int index, KingdomWorkRow row, out KingdomCityState next, out KingdomCityFault fault)
+		{
+			next = null;
+			KingdomWorkRow[] replaced;
+			if (!TryReplace(works, index, row, out replaced))
+			{
+				fault = KingdomCityFault.InvalidIndex;
+				return false;
+			}
+			next = new KingdomCityState(SchemaVersion, RulesVersion, SettlementId, ProcessedThroughTick, Stocks,
+				zones, replaced, residents, clocks, told, toldCount, toldNext);
+			fault = KingdomCityFault.None;
+			return true;
+		}
+
+		internal bool TryWithResident(int index, KingdomResidentRow row, out KingdomCityState next, out KingdomCityFault fault)
+		{
+			next = null;
+			KingdomResidentRow[] replaced;
+			if (!TryReplace(residents, index, row, out replaced))
+			{
+				fault = KingdomCityFault.InvalidIndex;
+				return false;
+			}
+			next = new KingdomCityState(SchemaVersion, RulesVersion, SettlementId, ProcessedThroughTick, Stocks,
+				zones, works, replaced, clocks, told, toldCount, toldNext);
+			fault = KingdomCityFault.None;
+			return true;
+		}
+
+		internal bool TryWithClock(int index, KingdomClockRow row, out KingdomCityState next, out KingdomCityFault fault)
+		{
+			next = null;
+			KingdomClockRow[] replaced;
+			if (!TryReplace(clocks, index, row, out replaced))
+			{
+				fault = KingdomCityFault.InvalidIndex;
+				return false;
+			}
+			next = new KingdomCityState(SchemaVersion, RulesVersion, SettlementId, ProcessedThroughTick, Stocks,
+				zones, works, residents, replaced, told, toldCount, toldNext);
+			fault = KingdomCityFault.None;
+			return true;
+		}
+
+		/// <summary>
+		/// Advances the processed-through mark. Refuses a regression rather than repairing it:
+		/// silently accepting a backward clock would let a corrupted save look healthy, which is
+		/// the kernel's own ruling in <c>TickMath.TryValidateAdvance</c>.
+		/// </summary>
+		internal bool TryWithProcessedThroughTick(long processedThroughTick, out KingdomCityState next, out KingdomCityFault fault)
+		{
+			next = null;
+			KernelFaultCode kernelFault;
+			if (!TickMath.TryValidateAdvance(ProcessedThroughTick, processedThroughTick, out kernelFault))
+			{
+				fault = KingdomCityFaults.FromKernel(kernelFault);
+				return false;
+			}
+			next = new KingdomCityState(SchemaVersion, RulesVersion, SettlementId, processedThroughTick, Stocks,
+				zones, works, residents, clocks, told, toldCount, toldNext);
+			fault = KingdomCityFault.None;
+			return true;
+		}
+
+		/// <summary>
+		/// Writes one line into the told-log ring. The ring is bounded at
+		/// <see cref="MaxToldEntries"/> and overwrites its oldest line rather than growing, so a
+		/// season of happenings and a day of them differ in what is remembered and never in what
+		/// is held.
+		/// </summary>
+		internal bool TryTell(KingdomToldRow row, out KingdomCityState next, out KingdomCityFault fault)
+		{
+			next = null;
+			if (row.Tick < 0L)
+			{
+				fault = KingdomCityFault.InvalidTick;
+				return false;
+			}
+			KingdomToldRow[] ring = new KingdomToldRow[MaxToldEntries];
+			Array.Copy(told, ring, MaxToldEntries);
+			ring[toldNext] = row;
+			int count = (toldCount < MaxToldEntries) ? (toldCount + 1) : MaxToldEntries;
+			int cursor = (toldNext + 1) % MaxToldEntries;
+			next = new KingdomCityState(SchemaVersion, RulesVersion, SettlementId, ProcessedThroughTick, Stocks,
+				zones, works, residents, clocks, ring, count, cursor);
+			fault = KingdomCityFault.None;
+			return true;
+		}
+
+		private static bool TryRow<T>(T[] rows, int index, out T row)
+		{
+			if (index < 0 || index >= rows.Length)
+			{
+				row = default(T);
+				return false;
+			}
+			row = rows[index];
+			return true;
+		}
+
+		private static bool TryReplace<T>(T[] rows, int index, T row, out T[] replaced)
+		{
+			replaced = null;
+			if (index < 0 || index >= rows.Length)
+			{
+				return false;
+			}
+			T[] copy = new T[rows.Length];
+			Array.Copy(rows, copy, rows.Length);
+			copy[index] = row;
+			replaced = copy;
+			return true;
+		}
+
+		private static int Length<T>(T[] rows)
+		{
+			return (rows == null) ? 0 : rows.Length;
+		}
+
+		private static T[] Copy<T>(T[] rows)
+		{
+			if (rows == null)
+			{
+				return new T[0];
+			}
+			T[] copy = new T[rows.Length];
+			Array.Copy(rows, copy, rows.Length);
+			return copy;
+		}
+	}
+}

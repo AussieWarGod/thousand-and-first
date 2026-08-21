@@ -38,32 +38,32 @@ namespace ThousandAndFirst.Tests
 		}
 
 		/// <summary>LIVING-CITY-ARCHITECTURE §0.0, the time rungs, in microseconds.</summary>
-		[TestCase(KingdomBudgetLane.Reckon, 2000L, 8000L)]
-		[TestCase(KingdomBudgetLane.Reify, 1000L, 2000L)]
-		[TestCase(KingdomBudgetLane.Heartbeat, 300L, 500L)]
-		public void TheTimeRungsAreTheConstitutionsOwn(KingdomBudgetLane lane, long warn, long fail)
+		[TestCase((int)KingdomBudgetLane.Reckon, 2000L, 8000L)]
+		[TestCase((int)KingdomBudgetLane.Reify, 1000L, 2000L)]
+		[TestCase((int)KingdomBudgetLane.Heartbeat, 300L, 500L)]
+		public void TheTimeRungsAreTheConstitutionsOwn(int laneCode, long warn, long fail)
 		{
 			KingdomBudgetRow row;
-			Assert.IsTrue(KingdomBudgetRules.TryRow(lane, out row));
+			Assert.IsTrue(KingdomBudgetRules.TryRow((KingdomBudgetLane)laneCode, out row));
 			Assert.AreEqual(warn, row.WarnMicroseconds);
 			Assert.AreEqual(fail, row.FailMicroseconds);
 		}
 
 		/// <summary>LIVING-CITY-ARCHITECTURE §0.0, the count rungs.</summary>
-		[TestCase(KingdomBudgetLane.Reckon, -1L, 512L)]
-		[TestCase(KingdomBudgetLane.Reify, -1L, 8L)]
-		[TestCase(KingdomBudgetLane.Heartbeat, -1L, 4L)]
-		[TestCase(KingdomBudgetLane.HeartbeatAmortised, 10L, 20L)]
-		[TestCase(KingdomBudgetLane.CatchUpDrain, 40L, -1L)]
-		[TestCase(KingdomBudgetLane.ModelBytes, 49152L, 65536L)]
-		[TestCase(KingdomBudgetLane.SaveBytes, 32768L, 98304L)]
-		[TestCase(KingdomBudgetLane.RoutePlan, 2000L, -1L)]
-		[TestCase(KingdomBudgetLane.NetworkSolve, 8000L, 12000L)]
-		[TestCase(KingdomBudgetLane.ResidentZones, 1L, 2L)]
-		public void TheCountRungsAreTheConstitutionsOwn(KingdomBudgetLane lane, long warn, long fail)
+		[TestCase((int)KingdomBudgetLane.Reckon, -1L, 512L)]
+		[TestCase((int)KingdomBudgetLane.Reify, -1L, 8L)]
+		[TestCase((int)KingdomBudgetLane.Heartbeat, -1L, 4L)]
+		[TestCase((int)KingdomBudgetLane.HeartbeatAmortised, 10L, 20L)]
+		[TestCase((int)KingdomBudgetLane.CatchUpDrain, 40L, -1L)]
+		[TestCase((int)KingdomBudgetLane.ModelBytes, 49152L, 65536L)]
+		[TestCase((int)KingdomBudgetLane.SaveBytes, 32768L, 98304L)]
+		[TestCase((int)KingdomBudgetLane.RoutePlan, 2000L, -1L)]
+		[TestCase((int)KingdomBudgetLane.NetworkSolve, 8000L, 12000L)]
+		[TestCase((int)KingdomBudgetLane.ResidentZones, 1L, 2L)]
+		public void TheCountRungsAreTheConstitutionsOwn(int laneCode, long warn, long fail)
 		{
 			KingdomBudgetRow row;
-			Assert.IsTrue(KingdomBudgetRules.TryRow(lane, out row));
+			Assert.IsTrue(KingdomBudgetRules.TryRow((KingdomBudgetLane)laneCode, out row));
 			Assert.AreEqual(warn, row.WarnCount);
 			Assert.AreEqual(fail, row.FailCount);
 		}
@@ -103,23 +103,23 @@ namespace ThousandAndFirst.Tests
 
 		/// <summary>A budget of eight passes at eight and fails at nine: strictly greater, never
 		/// "at or above", or every budget would be one short of what the table says.</summary>
-		[TestCase(0L, KingdomBudgetVerdict.Within)]
-		[TestCase(2000L, KingdomBudgetVerdict.Within)]
-		[TestCase(2001L, KingdomBudgetVerdict.Warn)]
-		[TestCase(8000L, KingdomBudgetVerdict.Warn)]
-		[TestCase(8001L, KingdomBudgetVerdict.Over)]
-		public void AVerdictIsReachedByStrictComparison(long microseconds, KingdomBudgetVerdict expected)
+		[TestCase(0L, (int)KingdomBudgetVerdict.Within)]
+		[TestCase(2000L, (int)KingdomBudgetVerdict.Within)]
+		[TestCase(2001L, (int)KingdomBudgetVerdict.Warn)]
+		[TestCase(8000L, (int)KingdomBudgetVerdict.Warn)]
+		[TestCase(8001L, (int)KingdomBudgetVerdict.Over)]
+		public void AVerdictIsReachedByStrictComparison(long microseconds, int expected)
 		{
-			Assert.AreEqual(expected, KingdomBudgetRules.JudgeMicroseconds(KingdomBudgetLane.Reckon, microseconds));
+			Assert.AreEqual((KingdomBudgetVerdict)expected, KingdomBudgetRules.JudgeMicroseconds(KingdomBudgetLane.Reckon, microseconds));
 		}
 
 		/// <summary>A rung the table gives no number for never fires. The catch-up lane's failure is
 		/// a counter that never reaches zero, which is a shape and not a threshold.</summary>
-		[TestCase(41L, KingdomBudgetVerdict.Warn)]
-		[TestCase(100000L, KingdomBudgetVerdict.Warn)]
-		public void ALaneWithNoNumericFailNeverReadsOver(long turns, KingdomBudgetVerdict expected)
+		[TestCase(41L, (int)KingdomBudgetVerdict.Warn)]
+		[TestCase(100000L, (int)KingdomBudgetVerdict.Warn)]
+		public void ALaneWithNoNumericFailNeverReadsOver(long turns, int expected)
 		{
-			Assert.AreEqual(expected, KingdomBudgetRules.JudgeCount(KingdomBudgetLane.CatchUpDrain, turns));
+			Assert.AreEqual((KingdomBudgetVerdict)expected, KingdomBudgetRules.JudgeCount(KingdomBudgetLane.CatchUpDrain, turns));
 		}
 
 		[Test]
@@ -129,13 +129,13 @@ namespace ThousandAndFirst.Tests
 			Assert.AreEqual(KingdomBudgetVerdict.Within, KingdomBudgetRules.JudgeMicroseconds(KingdomBudgetLane.ModelBytes, 60000L));
 		}
 
-		[TestCase(KingdomBudgetVerdict.Within, KingdomBudgetVerdict.Over, KingdomBudgetVerdict.Over)]
-		[TestCase(KingdomBudgetVerdict.Warn, KingdomBudgetVerdict.Within, KingdomBudgetVerdict.Warn)]
-		[TestCase(KingdomBudgetVerdict.Warn, KingdomBudgetVerdict.Warn, KingdomBudgetVerdict.Warn)]
-		[TestCase(KingdomBudgetVerdict.Within, KingdomBudgetVerdict.Within, KingdomBudgetVerdict.Within)]
-		public void TheWorseOfTwoRungsIsWhatALogLineReports(KingdomBudgetVerdict left, KingdomBudgetVerdict right, KingdomBudgetVerdict expected)
+		[TestCase((int)KingdomBudgetVerdict.Within, (int)KingdomBudgetVerdict.Over, (int)KingdomBudgetVerdict.Over)]
+		[TestCase((int)KingdomBudgetVerdict.Warn, (int)KingdomBudgetVerdict.Within, (int)KingdomBudgetVerdict.Warn)]
+		[TestCase((int)KingdomBudgetVerdict.Warn, (int)KingdomBudgetVerdict.Warn, (int)KingdomBudgetVerdict.Warn)]
+		[TestCase((int)KingdomBudgetVerdict.Within, (int)KingdomBudgetVerdict.Within, (int)KingdomBudgetVerdict.Within)]
+		public void TheWorseOfTwoRungsIsWhatALogLineReports(int left, int right, int expected)
 		{
-			Assert.AreEqual(expected, KingdomBudgetRules.Worse(left, right));
+			Assert.AreEqual((KingdomBudgetVerdict)expected, KingdomBudgetRules.Worse((KingdomBudgetVerdict)left, (KingdomBudgetVerdict)right));
 		}
 
 		/// <summary>The row-visit ceiling is B x 2R over the live R, not the 14,848 the table quotes

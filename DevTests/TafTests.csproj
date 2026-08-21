@@ -95,6 +95,15 @@
     <Compile Include="..\Experience\KingdomFaithRules.cs" />
     <Compile Include="..\Experience\KingdomGuestRules.cs" />
     <Compile Include="..\Experience\KingdomWaterRiteRules.cs" />
+    <Compile Include="..\Simulation\City\KingdomBudgetRules.cs" />
+    <Compile Include="..\Simulation\City\KingdomCityState.cs" />
+    <Compile Include="..\Simulation\City\KingdomCityMemoryRules.cs" />
+    <Compile Include="..\Simulation\City\KingdomAdvanceRules.cs" />
+    <Compile Include="..\Simulation\City\KingdomCatchUpRules.cs" />
+    <Compile Include="..\Simulation\City\KingdomDrainRules.cs" />
+    <Compile Include="..\Simulation\City\KingdomItineraryRules.cs" />
+    <Compile Include="..\Simulation\City\KingdomExecutor.cs" />
+    <Compile Include="..\Simulation\City\KingdomComputeSeam.cs" />
     <Compile Include="..\Simulation\Kernel\KernelContracts.cs" />
     <Compile Include="..\Simulation\Kernel\CanonicalBytes.cs" />
     <Compile Include="..\Simulation\Kernel\CounterRandom.cs" />
@@ -109,6 +118,14 @@
     <Compile Include="JobTransitionTests.cs" />
     <Compile Include="FixedPeriodToyTests.cs" />
     <Compile Include="KernelPropertyTests.cs" />
+    <Compile Include="KingdomBudgetRulesTests.cs" />
+    <Compile Include="KingdomCityStateTests.cs" />
+    <Compile Include="KingdomCityMemoryTests.cs" />
+    <Compile Include="KingdomAdvanceRulesTests.cs" />
+    <Compile Include="KingdomCatchUpRulesTests.cs" />
+    <Compile Include="KingdomDrainRulesTests.cs" />
+    <Compile Include="KingdomItineraryRulesTests.cs" />
+    <Compile Include="KingdomComputeSeamTests.cs" />
   </ItemGroup>
 
   <ItemGroup>
