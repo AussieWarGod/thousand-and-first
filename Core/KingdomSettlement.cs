@@ -149,6 +149,10 @@ namespace ThousandAndFirst
 		/// carries those only on itself).</summary>
 		public Dictionary<string, int> CreedCounts = new Dictionary<string, int>();
 
+		/// <summary>See <see cref="KingdomSystem.LodgingGrace"/>. Per-city, so a founder who
+		/// walks to the other city does not carry this one's housing troubles with them.</summary>
+		public Dictionary<string, int> LodgingGrace = new Dictionary<string, int>();
+
 		public KingdomRules.PetitionKind PetitionKind = KingdomRules.PetitionKind.None;
 
 		public string PetitionPetitioner;
@@ -273,6 +277,10 @@ namespace ThousandAndFirst
 			if (CreedCounts == null)
 			{
 				CreedCounts = new Dictionary<string, int>();
+			}
+			if (LodgingGrace == null)
+			{
+				LodgingGrace = new Dictionary<string, int>();
 			}
 			if (ClaimedZones == null)
 			{

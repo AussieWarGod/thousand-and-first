@@ -236,11 +236,11 @@ namespace ThousandAndFirst
 			KingdomGuestRules.HookKind kind = (KingdomGuestRules.HookKind)Guest.GetIntProperty(HookKindProperty);
 			string hookText = Guest.GetStringProperty(HookTextProperty) ?? "";
 			KingdomPlotRules.PlotSize bestTier = BestHousingTier(zone);
-			// The whole mod judges "room to house" per zone, off a raw bed count against
-			// population (KingdomGrowth.SpawnSettler's own gate) — no bed is ever assigned to a
-			// specific settler anywhere in this mod (VISION: "not a management screen"). A
-			// notable's lodging is judged the identical way, on the same live survey every
-			// ordinary arrival already reads, so this never invents a second notion of "room".
+			// A guest is judged by the raw bed count against population, on the same live survey,
+			// and deliberately NOT by the settlers' own assignment-level gate: brief Addendum 4b
+			// binds housing for people who JOIN the settlement, and says guests are unchanged
+			// because they never stay without lodging anyway. A visitor is not assigned a home,
+			// spends nobody's grace, and never leaves for want of one.
 			KingdomSurvey survey = KingdomSurvey.Take(zone);
 			bool hasRoom = KingdomRules.HasRoomToHouse(system.Population, survey.Beds);
 			bool hasTier = bestTier != KingdomPlotRules.PlotSize.None && bestTier >= KingdomGuestRules.RequiredTier(kind);

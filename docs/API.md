@@ -95,6 +95,18 @@ thirst ladder fires, and it deposits only into a dedicated larder.
 `KingdomGuestbook` (notable guests with hooks that decay into rumors, and the carry-sign's
 distance-scaled hauls, one in flight, mirroring the water manifest's honesty rules).
 
+## The quality-of-life vocabulary, and lodging
+
+`KingdomQolRules` / `KingdomQol`: one namespaced tag vocabulary — buildings declare `Provides`
+(catalogue attribute, merged like every other; roofs contribute their own), residents carry
+Needs / Prefers / Refuses, derived first from vanilla parts (Robot, aquatic brains, LiveFungus,
+PhotosyntheticSkin, Inorganic) and refined by `r_TAF_*` blueprint tags, with `-tag` removing a
+derived entry. Unknown tags are inert. `KingdomLodging` / `KingdomLodgingRules` assign every
+settler an address: Needs gate the home, Refuses and creed hostility (≥ `CohabitHostility`) gate
+the housemates, arrivals join only if a home they would accept exists, and a settler whose
+acceptable housing is lost leaves after a two-attended-pass grace through the ordinary emigration.
+Tastes and displacement tolerance query this same vocabulary.
+
 ## Layering, footprints, sockets, and the trigger law
 
 Catalogue files **layer** (`KingdomMergeRules`): merge-by-key on raw attributes inside the single

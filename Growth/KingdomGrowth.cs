@@ -73,24 +73,26 @@ namespace ThousandAndFirst
 					System.NextArrivalTick = timeTicks + Interval(System, Z);
 					break;
 				}
-				if (!KingdomRules.HasRoomToHouse(System.Population, survey.Beds))
+				// Addendum 4b: the arrival gate is assignment-level, not a bed tally. A settler
+				// joins only if a home exists that THEY would take, and the refusal names the real
+				// reason -- a city with ten empty beds and no charging post has no room for a
+				// robot, and a bed count could never say so.
+				ArrivalRefusal refusal;
+				if (!SpawnSettler(System, Z, survey, out refusal))
 				{
 					if (!System.NoRoomAnnounced)
 					{
 						System.NoRoomAnnounced = true;
-						KingdomChronicle.Record(System, "a settler reached " + System.KingdomDisplayName + " and found no bed to claim");
-						System.Ledger.Note("{{r|A settler came and found no bed. Commission housing and they will stay.}}");
-					}
-					System.NextArrivalTick = timeTicks + Interval(System, Z);
-					break;
-				}
-				if (!SpawnSettler(System, Z, survey))
-				{
-					if (!System.NoRoomAnnounced)
-					{
-						System.NoRoomAnnounced = true;
-						KingdomChronicle.Record(System, "a settler reached " + System.KingdomDisplayName + " and found nowhere to stand");
-						System.Ledger.Note("{{r|A settler came and found nowhere to stand. There is no open ground left here.}}");
+						if (refusal.NoAcceptableHome)
+						{
+							KingdomChronicle.Record(System, KingdomLodgingRules.ArrivalRefusedChronicle(System.KingdomDisplayName, refusal.Reason));
+							System.Ledger.Note("{{r|" + KingdomLodgingRules.ArrivalRefusedNote(refusal.Reason) + "}}");
+						}
+						else
+						{
+							KingdomChronicle.Record(System, "a settler reached " + System.KingdomDisplayName + " and found nowhere to stand");
+							System.Ledger.Note("{{r|A settler came and found nowhere to stand. There is no open ground left here.}}");
+						}
 					}
 					System.NextArrivalTick = timeTicks + Interval(System, Z);
 					break;
@@ -110,6 +112,10 @@ namespace ThousandAndFirst
 			// spends what the day's upkeep and arrivals left in the stores, so it can never be
 			// the reason the thirst ladder fires.
 			KingdomPlot.OnSettlementPass(System, Z, survey);
+			// Right after the plot, so a house finished raising this very pass is already a
+			// candidate: who sleeps where, spending neither water nor hands. This is the ONE
+			// attended pass Addendum 4b's grace is counted in.
+			KingdomLodging.OnSettlementPass(System, Z);
 			// After the plot, for the same reason: a staked plan only ever spends what the
 			// plot's own draw left behind.
 			KingdomPlanMarker.OnSettlementPass(System, Z, survey);
@@ -218,8 +224,37 @@ namespace ThousandAndFirst
 			return "r_KingdomSettler";
 		}
 
+		/// <summary>
+		/// Why an arrival did not join, when one did not. Addendum 4b splits the one old "no
+		/// room" into the two honest answers: there was nowhere to stand, or there was no home
+		/// this settler would take.
+		/// </summary>
+		public struct ArrivalRefusal
+		{
+			/// <summary>True when the settlement has housing but none of it would take this
+			/// person, from <c>KingdomLodging.WouldTakeArrival</c>. False means there was simply
+			/// no ground to put them on.</summary>
+			public bool NoAcceptableHome;
+
+			/// <summary>Which of the lodging reasons decided it, for the founder's line.</summary>
+			public KingdomLodgingRules.UnhousedReason Reason;
+		}
+
 		public static bool SpawnSettler(KingdomSystem System, Zone Z, KingdomSurvey Survey = null)
 		{
+			ArrivalRefusal refusal;
+			return SpawnSettler(System, Z, Survey, out refusal);
+		}
+
+		/// <summary>
+		/// Brings one settler in, or says why not. The lodging gate is asked of the settler
+		/// themselves &mdash; created, judged, and let go again if the settlement has no home they
+		/// would take &mdash; because what a person needs of a roof is a fact about that person
+		/// and not about the blueprint they were rolled from.
+		/// </summary>
+		public static bool SpawnSettler(KingdomSystem System, Zone Z, KingdomSurvey Survey, out ArrivalRefusal Refusal)
+		{
+			Refusal = default(ArrivalRefusal);
 			List<Cell> emptyCells = Z.GetEmptyCells((Cell c) => c.IsPassable() && !c.HasObjectWithPart("LiquidVolume"));
 			if (emptyCells == null || emptyCells.Count == 0)
 			{
@@ -233,6 +268,17 @@ namespace ThousandAndFirst
 			GameObject settler = GameObject.Create(SettlerBlueprint());
 			if (settler == null)
 			{
+				return false;
+			}
+			// Addendum 4b, and before the settler is placed, enrolled, named or counted: a home
+			// they would take must already be standing. Nobody is moved and nothing is destroyed
+			// by the refusal -- the person simply never arrived.
+			KingdomLodgingRules.UnhousedReason lodgingReason;
+			if (!KingdomLodging.WouldTakeArrival(System, Z, settler, out lodgingReason))
+			{
+				settler.Obliterate();
+				Refusal.NoAcceptableHome = true;
+				Refusal.Reason = lodgingReason;
 				return false;
 			}
 			cell.AddObject(settler);
@@ -344,19 +390,41 @@ namespace ThousandAndFirst
 			}
 		}
 
-		public static bool Emigrate(KingdomSystem System, Zone Z, KingdomSurvey Survey = null)
+		/// <param name="System">The realm.</param>
+		/// <param name="Z">The zone they walk out of.</param>
+		/// <param name="Survey">The pass's survey, or null.</param>
+		/// <param name="Leaver">A particular settler, for a departure that is about THEM &mdash;
+		/// Addendum 4b's settler who has no home they would live in. Null takes whoever the zone
+		/// offers first, which is the drought's own indifference and is right for it.</param>
+		/// <param name="Cause">The clause both registers name the departure by. Null is the
+		/// drought, which is what this machinery was built for and reads exactly as it always
+		/// did.</param>
+		public static bool Emigrate(KingdomSystem System, Zone Z, KingdomSurvey Survey = null, GameObject Leaver = null, string Cause = null)
 		{
 			if (System.Population <= KingdomRules.LoyalCoreSettlers)
 			{
 				return false;
 			}
 			GameObject leaver = null;
-			foreach (GameObject item in Z.GetObjects())
+			if (Leaver != null)
 			{
-				if (item.GetIntProperty("KingdomBorn") == 1 && item.GetIntProperty("VillageMerchant") == 0 && !item.IsPlayer() && !item.IsPlayerLed())
+				// A named departure still answers to the same law as any other: the settlement
+				// never empties itself, and a settler the machinery would not take is one who
+				// stays and is asked again next pass.
+				if (Leaver.GetIntProperty("KingdomBorn") == 1 && Leaver.GetIntProperty("VillageMerchant") == 0 && !Leaver.IsPlayer() && !Leaver.IsPlayerLed())
 				{
-					leaver = item;
-					break;
+					leaver = Leaver;
+				}
+			}
+			else
+			{
+				foreach (GameObject item in Z.GetObjects())
+				{
+					if (item.GetIntProperty("KingdomBorn") == 1 && item.GetIntProperty("VillageMerchant") == 0 && !item.IsPlayer() && !item.IsPlayerLed())
+					{
+						leaver = item;
+						break;
+					}
 				}
 			}
 			if (leaver == null)
@@ -393,10 +461,16 @@ namespace ThousandAndFirst
 			KingdomCreed.Forget(System, leaver);
 			leaver.Obliterate();
 			System.Population--;
-			KingdomChronicle.Record(System, XRL.Language.Grammar.A(name) + " left " + System.KingdomDisplayName + " for wetter country, the cisterns having run dry");
+			// Both registers name the person and the cause. The default clause is the drought's,
+			// word for word as it always read; a caller that hands one in replaces it in both
+			// places at once, so the chronicle and the ledger can never disagree about why
+			// somebody left.
+			string chronicled = string.IsNullOrEmpty(Cause) ? "for wetter country, the cisterns having run dry" : Cause;
+			string noted = string.IsNullOrEmpty(Cause) ? "for wetter country" : Cause;
+			KingdomChronicle.Record(System, XRL.Language.Grammar.A(name) + " left " + System.KingdomDisplayName + " " + chronicled);
 			System.Ledger.Departures++;
-			System.Ledger.Note(KingdomVoices.Say(System, VoiceOccasion.CitizenLost, "{{R|" + XRL.Language.Grammar.A(name, Capitalize: true) + " left " + System.KingdomDisplayName + " for wetter country.}}"));
-			if (KingdomLog.Enabled) KingdomLog.Log("emigrate: pop now " + System.Population + " origin=" + (origin ?? "-"));
+			System.Ledger.Note(KingdomVoices.Say(System, VoiceOccasion.CitizenLost, "{{R|" + XRL.Language.Grammar.A(name, Capitalize: true) + " left " + System.KingdomDisplayName + " " + noted + ".}}"));
+			if (KingdomLog.Enabled) KingdomLog.Log("emigrate: pop now " + System.Population + " origin=" + (origin ?? "-") + " cause=" + (Cause ?? "drought"));
 			return true;
 		}
 

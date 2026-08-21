@@ -194,9 +194,10 @@ namespace ThousandAndFirst
 				return;
 			}
 			string title = KingdomOfficeRules.ChooseTitle(System.SeatName);
+			GameObject holder = null;
 			if (head != null)
 			{
-				GameObject holder = FindCitizen(Z, head);
+				holder = FindCitizen(Z, head);
 				if (holder == null)
 				{
 					return;
@@ -214,7 +215,10 @@ namespace ThousandAndFirst
 			KingdomLog.Log("office: " + transition + " title=" + title + " holder=" + (head ?? "-"));
 			if (head != null)
 			{
-				KingdomCeremony.OnOfficeHolderNamed(System, Z, title, head);
+				// The holder and where they sleep go with the name: Addendum 4 shades the
+				// settlement's equilibrium by the Prefers their own quarters happen to meet, and
+				// that half is nothing at all for a notable nobody has housed yet.
+				KingdomCeremony.OnOfficeHolderNamed(System, Z, title, head, holder, KingdomLodging.HomeDesignKeyOf(Z, holder));
 			}
 		}
 

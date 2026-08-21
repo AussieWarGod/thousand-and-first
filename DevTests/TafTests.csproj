@@ -45,11 +45,14 @@
     <Compile Include="KingdomGuestRulesTests.cs" />
     <Compile Include="KingdomMergeRulesTests.cs" />
     <Compile Include="KingdomSocketRulesTests.cs" />
+    <Compile Include="KingdomQolRulesTests.cs" />
+    <Compile Include="KingdomLodgingRulesTests.cs" />
     <Compile Include="..\Core\KingdomRules.cs" />
     <Compile Include="..\Core\KingdomLedger.cs" />
     <Compile Include="..\Core\KingdomSettlement.cs" />
     <Compile Include="..\Core\KingdomExileRules.cs" />
     <Compile Include="..\Core\KingdomCreedRules.cs" />
+    <Compile Include="..\Core\KingdomQolRules.cs" />
     <Compile Include="..\Trade\KingdomManifest.cs" />
     <Compile Include="..\Growth\KingdomCropRules.cs" />
     <Compile Include="..\Growth\KingdomPowerRules.cs" />
@@ -67,6 +70,7 @@
     <Compile Include="..\Growth\KingdomYardRules.cs" />
     <Compile Include="..\Growth\KingdomMergeRules.cs" />
     <Compile Include="..\Growth\KingdomSocketRules.cs" />
+    <Compile Include="..\Growth\KingdomLodgingRules.cs" />
     <Compile Include="..\Quests\KingdomBountyRules.cs" />
     <Compile Include="..\Experience\KingdomVoiceRules.cs" />
     <Compile Include="..\Experience\KingdomOfficeRules.cs" />

@@ -165,6 +165,8 @@ namespace ThousandAndFirst
 				stringBuilder.Append("\nNo one has come yet. Water and a bed will change that.");
 				return stringBuilder.ToString();
 			}
+			Zone currentZone = The.Player?.CurrentZone;
+			bool hereIsOurs = currentZone != null && System.ClaimedZones.Contains(currentZone.ZoneID);
 			int start = (System.RosterNames.Count > Limit) ? (System.RosterNames.Count - Limit) : 0;
 			for (int i = start; i < System.RosterNames.Count; i++)
 			{
@@ -177,9 +179,12 @@ namespace ThousandAndFirst
 				{
 					stringBuilder.Append(" {{K|(came the ").Append(System.RosterArrived[i]).Append(")}}");
 				}
+				if (hereIsOurs)
+				{
+					stringBuilder.Append(KingdomLodging.RollLine(currentZone, System.RosterNames[i]));
+				}
 			}
-			Zone currentZone = The.Player?.CurrentZone;
-			if (currentZone != null && System.ClaimedZones.Contains(currentZone.ZoneID))
+			if (hereIsOurs)
 			{
 				List<string> yardLines = KingdomYards.RollLines(currentZone);
 				if (yardLines.Count > 0)

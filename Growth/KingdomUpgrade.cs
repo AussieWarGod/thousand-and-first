@@ -598,6 +598,7 @@ namespace ThousandAndFirst
 			demand.CurrentShelter = ShelterOf(Predecessor.Key);
 			int lodgingElsewhere = 0;
 			int bestShelter = 0;
+			string bestKey = null;
 			if (Z != null)
 			{
 				foreach (GameObject item in Z.GetObjects())
@@ -621,18 +622,48 @@ namespace ThousandAndFirst
 					}
 					lodgingElsewhere += roof;
 					int shelter = ShelterOf(key);
-					if (shelter > bestShelter)
+					if (shelter > bestShelter || bestKey == null)
 					{
-						bestShelter = shelter;
+						bestShelter = (shelter > bestShelter) ? shelter : bestShelter;
+						bestKey = key;
 					}
 				}
 			}
 			int spare = lodgingElsewhere - ((System == null) ? 0 : System.Population);
 			demand.SpareLodging = (spare > 0) ? spare : 0;
 			demand.OfferedShelter = bestShelter;
+			// Addendum 4: the best roof on offer must also be somewhere these people would actually
+			// live. One citizen with nowhere to charge holds the rebuild exactly as a missing roof
+			// does -- and holds it only: nobody is moved, and the refusal is named by the verdict.
+			demand.QuartersRefused = demand.IsHousing
+				&& KingdomUpgradeRules.QuartersRefused(KingdomQol.OfferOf(bestKey), ResidentProfilesIn(Z), out _);
 			demand.MaterialsInHand = Z == null || KingdomMaterials.CanPayUpgrade(Z, SuccessorKey, out _);
 			demand.CraftMet = CraftReaches(System, Z, SuccessorKey);
 			return demand;
+		}
+
+		/// <summary>
+		/// The quality-of-life profiles of the citizens standing on this ground, for the Needs
+		/// check Addendum 4 re-bases displacement tolerance onto. Read fresh every time, because
+		/// nothing in that vocabulary is stored anywhere.
+		/// </summary>
+		/// <returns>Never null; empty for a null zone or a zone with nobody in it, which refuses
+		/// nothing.</returns>
+		private static List<QolProfile> ResidentProfilesIn(Zone Z)
+		{
+			List<QolProfile> profiles = new List<QolProfile>();
+			if (Z == null)
+			{
+				return profiles;
+			}
+			foreach (GameObject item in Z.GetObjects())
+			{
+				if (item.GetIntProperty("KingdomCitizen") == 1)
+				{
+					profiles.Add(KingdomQol.ProfileOf(item));
+				}
+			}
+			return profiles;
 		}
 
 		/// <summary>The catalogue category housing is filed under, which the absorption law judges

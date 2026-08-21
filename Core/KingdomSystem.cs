@@ -271,6 +271,21 @@ namespace ThousandAndFirst
 		/// checks this field against.</summary>
 		public Dictionary<string, int> CreedCounts = new Dictionary<string, int>();
 
+		/// <summary>
+		/// Addendum 4b: how many ATTENDED passes each settler who has lost every acceptable home
+		/// has spent of their grace, keyed by the name they are carried on the roll under. Zero is
+		/// the pass their loss was announced on; <c>KingdomLodgingRules.GracePasses</c> is the pass
+		/// they leave on. A settler who is housed is removed from the map at once, so it is empty
+		/// in every city that is housing its people, which is nearly all of them.
+		/// <para>
+		/// Per-city, and swapped with the seat exactly like <see cref="OriginCounts"/>: whose
+		/// housing failed is a fact about one city, and a founder walking to the other one must
+		/// not carry it there. Counted in passes and never in ticks &mdash; that is what makes the
+		/// grace unspendable while the founder is away.
+		/// </para>
+		/// </summary>
+		public Dictionary<string, int> LodgingGrace = new Dictionary<string, int>();
+
 		public Dictionary<string, int> Standings = new Dictionary<string, int>();
 
 		/// <summary>
@@ -1122,6 +1137,10 @@ namespace ThousandAndFirst
 			if (DissentSpoken < 0 || DissentSpoken > (int)CityTemper.Secession)
 			{
 				DissentSpoken = (DissentSpoken < 0) ? 0 : (int)CityTemper.Secession;
+			}
+			if (LodgingGrace == null)
+			{
+				LodgingGrace = new Dictionary<string, int>();
 			}
 			if (ExiledStandings == null)
 			{

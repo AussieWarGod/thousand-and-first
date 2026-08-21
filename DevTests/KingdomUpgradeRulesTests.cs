@@ -749,6 +749,110 @@ namespace ThousandAndFirst.Tests
 				OfferedShelter: 0, Standard: KingdomUpgradeRules.LodgingStandard.Settler, CurrentShelter: 0));
 		}
 
+		// --- Addendum 4 re-basing: tolerance is also the Needs check against the quarters ------
+
+		private static QolProfile Resident(params string[] Needs)
+		{
+			return new QolProfile
+			{
+				Needs = Needs,
+				Prefers = KingdomQolRules.NoTags,
+				Refuses = KingdomQolRules.NoTags,
+				EatsFood = true,
+				DrinksWater = true
+			};
+		}
+
+		[Test]
+		public void QuartersRefused_NobodyMeasuredRefusesNothing()
+		{
+			string tag;
+			Assert.IsFalse(KingdomUpgradeRules.QuartersRefused(null, null, out tag));
+			Assert.AreEqual("", tag);
+			Assert.IsFalse(KingdomUpgradeRules.QuartersRefused(new string[0], new List<QolProfile>(), out tag));
+		}
+
+		[Test]
+		public void QuartersRefused_AResidentWhoAsksNothingTakesQuartersThatOfferNothing()
+		{
+			// Every settler in an unauthored catalogue, which is why this re-basing changes nothing
+			// for a city that has not written a single Provides.
+			string tag;
+			Assert.IsFalse(KingdomUpgradeRules.QuartersRefused(new string[0],
+				new List<QolProfile> { Resident() }, out tag));
+		}
+
+		[Test]
+		public void QuartersRefused_AResidentWhoseNeedTheQuartersDoNotMeetRefusesAndIsNamed()
+		{
+			string tag;
+			Assert.IsTrue(KingdomUpgradeRules.QuartersRefused(new string[0],
+				new List<QolProfile> { Resident(KingdomQolRules.TagCharge) }, out tag));
+			Assert.AreEqual(KingdomQolRules.TagCharge, tag, "the founder is owed the tag that would lift it");
+		}
+
+		[Test]
+		public void QuartersRefused_QuartersThatMeetTheNeedAreAccepted()
+		{
+			string tag;
+			Assert.IsFalse(KingdomUpgradeRules.QuartersRefused(new string[1] { KingdomQolRules.TagCharge },
+				new List<QolProfile> { Resident(KingdomQolRules.TagCharge) }, out tag));
+			Assert.AreEqual("", tag);
+		}
+
+		[Test]
+		public void QuartersRefused_OneRefusingResidentAmongManyIsEnough()
+		{
+			string tag;
+			Assert.IsTrue(KingdomUpgradeRules.QuartersRefused(new string[1] { KingdomQolRules.TagCharge },
+				new List<QolProfile> { Resident(), Resident(KingdomQolRules.TagCharge), Resident(KingdomQolRules.TagDamp) }, out tag));
+			Assert.AreEqual(KingdomQolRules.TagDamp, tag);
+		}
+
+		[Test]
+		public void Assess_ARefusedQuartersHoldsTheRebuildExactlyAsAMissingRoofDoes()
+		{
+			// A tent is tolerable lodging for a settler and no lodging whatever for the robot who
+			// needs a cradle: the rank ladder passes and the vocabulary still refuses.
+			KingdomUpgradeRules.AbsorptionDemand house = LeanedOn(IsHousing: true, Residents: 2, SpareLodging: 4,
+				OfferedShelter: KingdomUpgradeRules.RoomShelter, SupportPerDay: 0);
+			Assert.AreEqual(KingdomUpgradeRules.UpgradeVerdict.Ready, AssessAbsorbing(house));
+			house.QuartersRefused = true;
+			Assert.AreEqual(KingdomUpgradeRules.UpgradeVerdict.NoTolerableLodging, AssessAbsorbing(house));
+		}
+
+		[Test]
+		public void Assess_TheVocabularyRefusalOnlyEverAppliesToHousing()
+		{
+			// A workshop's residents are not being moved out of it, so the Needs check has nothing
+			// to say about rebuilding one. A mutation dropping the IsHousing guard fails here.
+			KingdomUpgradeRules.AbsorptionDemand work = LeanedOn(SupportPerDay: 0);
+			work.QuartersRefused = true;
+			Assert.AreEqual(KingdomUpgradeRules.UpgradeVerdict.Ready, AssessAbsorbing(work));
+		}
+
+		[Test]
+		public void Assess_NothingMeasuredStillMeansNobodyRefused()
+		{
+			// The default of an unset struct and of None is "no refusal", so every caller that has
+			// not measured behaves exactly as it did before this half of tolerance existed.
+			Assert.IsFalse(KingdomUpgradeRules.AbsorptionDemand.None.QuartersRefused);
+			Assert.IsFalse(default(KingdomUpgradeRules.AbsorptionDemand).QuartersRefused);
+			Assert.AreEqual(KingdomUpgradeRules.UpgradeVerdict.Ready, AssessAbsorbing(
+				LeanedOn(IsHousing: true, Residents: 2, SpareLodging: 2, OfferedShelter: KingdomUpgradeRules.BunkShelter)));
+		}
+
+		[Test]
+		public void Assess_TheShelterLadderStillRefusesOnItsOwnWithNobodyRefusingTheQuarters()
+		{
+			// Both halves stand: the rank ladder is untouched and still decides how GOOD the
+			// lodging must be, independently of whether anybody would live in it at all.
+			KingdomUpgradeRules.AbsorptionDemand notable = LeanedOn(IsHousing: true, Residents: 1, SpareLodging: 2,
+				OfferedShelter: KingdomUpgradeRules.BunkShelter, LuxuryCarried: KingdomUpgradeRules.NotableLuxury, SupportPerDay: 0);
+			Assert.IsFalse(notable.QuartersRefused);
+			Assert.AreEqual(KingdomUpgradeRules.UpgradeVerdict.NoTolerableLodging, AssessAbsorbing(notable));
+		}
+
 		// --- Margin arithmetic, at the boundary -----------------------------------------------
 
 		[TestCase(0L, 0)]

@@ -335,6 +335,18 @@ anyone.
 | 64a | Earn an upgrade on a water work the city leans on | **Held, not taken**: "ready to improve, and held — the city leans on it." Nothing acts. Force it from the works screen and the dip is disclosed before your consent |
 | 64b | Read the held offer, walk away for a season, return | Still held, unchanged. No trigger anywhere reads elapsed time as a cause |
 
+## Pass 20 — Who lives where, and what they will accept
+
+| Step | Action | Expect |
+|---|---|---|
+| 65 | Read the roll of settlers | Each named settler shows **where they sleep**, stable across visits. An in-place upgrade keeps everyone's address |
+| 65a | Settle a robot (or any inorganic wanderer) | It needs charge, not food — derived from the engine's own parts, not authored. It lodges by the charging post and the larder never counts it |
+| 65b | Settle two creeds the engine holds at open hostility | They are never assigned the same building. The standing −50 grudges of zealots toward strangers do **not** break households — only real hostility does |
+| 66 | Fill every home, then let a settler arrive | **They do not join.** The announcement names the real reason: no home they would take — not "no bed", if the beds that exist fail their needs |
+| 66a | Burn or condemn a settler's only acceptable home | Named once. They stay **two attended passes** while you act — raise a bunk, stake a plan — then leave through the ordinary emigration, chronicled by name and cause in both registers |
+| 66b | Trigger the grace, then stay away a season | Untouched on return. Absence never runs the clock — they leave because you did not act, never because you were gone |
+| 67 | Ship a mod creature with `r_TAF_Needs` tags, or none at all | With none, its needs derive from its own parts correctly. A `-tag` removes a derived need. Unknown tags are inert, waiting for a consumer |
+
 ## Pass 4 — Attitudes and persistence
 
 | Step | Action | Expect |

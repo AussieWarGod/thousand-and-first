@@ -253,6 +253,106 @@ namespace ThousandAndFirst.Tests
 			Assert.AreEqual(0, KingdomCeremonyRules.TasteShade(null));
 		}
 
+		// --- Addendum 4 re-basing: a taste is a tag in the shared vocabulary -------------------
+
+		[Test]
+		public void TasteTag_IsTheCategoryInTheSharedNamespace()
+		{
+			Assert.AreEqual(KingdomQolRules.Namespace + "food", KingdomCeremonyRules.TasteTag(0));
+		}
+
+		[Test]
+		public void TasteTag_OutOfRangeFallsBackToIndexZeroLikeEveryOtherTasteAccessor()
+		{
+			Assert.AreEqual(KingdomCeremonyRules.TasteTag(0), KingdomCeremonyRules.TasteTag(-1));
+			Assert.AreEqual(KingdomCeremonyRules.TasteTag(0), KingdomCeremonyRules.TasteTag(999));
+		}
+
+		[Test]
+		public void CategoryTag_AndTasteTag_ProduceTheSameStringForTheSameCategory()
+		{
+			// The whole point of one vocabulary rather than two: what a notable wants and what a
+			// building offers are the SAME token, so the shared match engine can compare them.
+			for (int i = 0; i < KingdomCeremonyRules.TasteCategories.Length; i++)
+			{
+				Assert.AreEqual(KingdomCeremonyRules.TasteTag(i),
+					KingdomCeremonyRules.CategoryTag(KingdomCeremonyRules.TasteCategories[i]),
+					"taste " + KingdomCeremonyRules.TasteCategories[i] + " and its category do not name the same tag");
+			}
+		}
+
+		[Test]
+		public void CategoryTag_FoldsCaseAndWhitespace()
+		{
+			Assert.AreEqual(KingdomCeremonyRules.CategoryTag("food"), KingdomCeremonyRules.CategoryTag("  FOOD  "));
+		}
+
+		[Test]
+		public void CategoryTag_NoCategoryAtAllOffersNothing()
+		{
+			Assert.IsNull(KingdomCeremonyRules.CategoryTag(null));
+			Assert.IsNull(KingdomCeremonyRules.CategoryTag(""));
+			Assert.IsNull(KingdomCeremonyRules.CategoryTag("   "));
+		}
+
+		[TestCase(0)]
+		[TestCase(1)]
+		[TestCase(7)]
+		[TestCase(9)]
+		public void TastesMet_EveryTasteIsMetByItsOwnCategoryStandingThere(int tasteIndex)
+		{
+			string[] offer = new string[1] { KingdomCeremonyRules.CategoryTag(KingdomCeremonyRules.TasteCategories[tasteIndex]) };
+			List<bool> met = KingdomCeremonyRules.TastesMet(new List<int> { tasteIndex }, offer);
+			Assert.AreEqual(1, met.Count);
+			Assert.IsTrue(met[0], "taste " + KingdomCeremonyRules.TasteCategories[tasteIndex] + " was not met by its own category");
+		}
+
+		[Test]
+		public void TastesMet_ADifferentCategoryStandingThereMeetsNothing()
+		{
+			string[] offer = new string[1] { KingdomCeremonyRules.CategoryTag("storage") };
+			Assert.IsFalse(KingdomCeremonyRules.TastesMet(new List<int> { 0 }, offer)[0], "a granary is not a table");
+		}
+
+		[Test]
+		public void TastesMet_ASettlementWithNothingStandingMeetsNothing()
+		{
+			Assert.IsFalse(KingdomCeremonyRules.TastesMet(new List<int> { 0 }, null)[0]);
+			Assert.IsFalse(KingdomCeremonyRules.TastesMet(new List<int> { 0 }, new string[0])[0]);
+		}
+
+		[Test]
+		public void TastesMet_KeepsTheOrderStatedSoTheChronicleAndTheShadeReadTheSameList()
+		{
+			string[] offer = new string[1] { KingdomCeremonyRules.CategoryTag("housing") };
+			List<bool> met = KingdomCeremonyRules.TastesMet(new List<int> { 0, 7 }, offer);
+			Assert.AreEqual(2, met.Count);
+			Assert.IsFalse(met[0], "food is not met");
+			Assert.IsTrue(met[1], "housing is");
+		}
+
+		[Test]
+		public void TastesMet_NoTastesStatedIsAnEmptyListAndNeverNull()
+		{
+			Assert.AreEqual(0, KingdomCeremonyRules.TastesMet(null, new string[0]).Count);
+			Assert.AreEqual(0, KingdomCeremonyRules.TastesMet(new List<int>(), new string[0]).Count);
+		}
+
+		[Test]
+		public void TheRebasingLeavesTheShadeExactlyWhereItWas()
+		{
+			// The re-basing renames how "is this met" is asked and nothing else: a met taste is
+			// still worth TasteShadeAmount, and two of them still worth two.
+			string[] offer = new string[2]
+			{
+				KingdomCeremonyRules.CategoryTag("food"),
+				KingdomCeremonyRules.CategoryTag("housing")
+			};
+			Assert.AreEqual(2 * KingdomCeremonyRules.TasteShadeAmount,
+				KingdomCeremonyRules.TasteShade(KingdomCeremonyRules.TastesMet(new List<int> { 0, 7 }, offer)));
+			Assert.AreEqual(0, KingdomCeremonyRules.TasteShade(KingdomCeremonyRules.TastesMet(new List<int> { 0, 7 }, new string[0])));
+		}
+
 		[Test]
 		public void ChooseTastes_IsDeterministicForTheSameSettlementAndOrdinal()
 		{

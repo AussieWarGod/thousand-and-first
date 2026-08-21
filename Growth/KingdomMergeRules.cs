@@ -345,6 +345,14 @@ namespace ThousandAndFirst
 		/// </summary>
 		public const string AttrRoof = "Roof";
 
+		/// <summary>The quality-of-life tags a design offers whoever lives or works in it
+		/// (Addendum 4). Named here so the merge and the loader agree on the spelling. Deliberately
+		/// absent from <see cref="SpentAttributes"/> and <see cref="StampedAttributes"/>: what a
+		/// building provides is read again every time somebody asks whether they will live there,
+		/// which is what <see cref="MergeReach.Read"/> already means for everything this file does
+		/// not name, and it moves nothing when a mod changes it.</summary>
+		public const string AttrProvides = "Provides";
+
 		/// <summary>What <c>KingdomRules.TryParseBuildAttributes</c> refuses an entry for the want
 		/// of. A later file may omit every one of them &mdash; that is a merge &mdash; but the
 		/// design as a whole must end up with all four.</summary>

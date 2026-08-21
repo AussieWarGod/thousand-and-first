@@ -236,6 +236,63 @@ namespace ThousandAndFirst
 		/// not optimization.</summary>
 		public const int TasteShadeAmount = 1;
 
+		// --- Re-based onto the quality-of-life vocabulary (brief, Addendum 4) ------------------
+		//
+		// A notable's taste WAS a private system: a category string compared against
+		// BuildEntry.Category. Addendum 4 replaces the three private systems with one open
+		// vocabulary, so a taste is now a Prefers tag in that vocabulary's own namespace and a
+		// building of that category offers the same tag. The comparison is
+		// KingdomQolRules.Has -- the shared match engine -- rather than a string equality of this
+		// file's own. Prose and shading are untouched: TasteLine, TasteChronicle and TasteShade
+		// read exactly as they did, and a taste met is still worth TasteShadeAmount and no more.
+
+		/// <summary>
+		/// The tag a taste index states, in the shared vocabulary's own namespace: taste
+		/// <c>food</c> is <c>taf:food</c>. Out of range falls back to index zero, matching every
+		/// other taste accessor's fallback.
+		/// </summary>
+		public static string TasteTag(int TasteIndex)
+		{
+			string category = (TasteIndex >= 0 && TasteIndex < TasteCategories.Length) ? TasteCategories[TasteIndex] : TasteCategories[0];
+			return KingdomQolRules.Fold(KingdomQolRules.Namespace + category);
+		}
+
+		/// <summary>
+		/// The same tag from the building's side: what a design of this <c>Category</c> offers a
+		/// notable who states a taste for it. Null for a design with no category at all, which
+		/// offers nothing and is never a match.
+		/// </summary>
+		public static string CategoryTag(string Category)
+		{
+			string category = KingdomQolRules.Fold(Category);
+			return (category.Length == 0) ? null : (KingdomQolRules.Namespace + category);
+		}
+
+		/// <summary>
+		/// Which of a notable's stated tastes the settlement already meets, as the met flags
+		/// <see cref="TasteShade"/> and <see cref="TasteChronicle"/> already take. One membership
+		/// test in the shared vocabulary per taste, so a taste and a building meet by exactly the
+		/// rule a Need and a <c>Provides</c> meet by.
+		/// </summary>
+		/// <param name="TasteIndices">From <see cref="ChooseTastes"/>. Null is no tastes.</param>
+		/// <param name="Offer">The category tags of everything standing, from
+		/// <see cref="CategoryTag"/>. Null or empty means nothing is met, which is correct for a
+		/// settlement with nothing built.</param>
+		/// <returns>Never null; one flag per stated taste, in the order stated.</returns>
+		public static List<bool> TastesMet(IList<int> TasteIndices, string[] Offer)
+		{
+			List<bool> met = new List<bool>();
+			if (TasteIndices == null)
+			{
+				return met;
+			}
+			for (int i = 0; i < TasteIndices.Count; i++)
+			{
+				met.Add(KingdomQolRules.Has(Offer, TasteTag(TasteIndices[i])));
+			}
+			return met;
+		}
+
 		/// <summary>
 		/// Draws which one or two of the ten families a settling notable states a taste for.
 		/// Deterministic in <paramref name="SettlementId"/> and <paramref name="Ordinal"/>

@@ -129,7 +129,7 @@
   -->
   <building Key="finehouse" DisplayName="fine house (marble-faced; somebody of consequence lives here)" Blueprint="r_KingdomFineHouse"
             Cost="22" Ticks="4800" Styles="all" Category="housing" Plot="M" MinStage="Village"
-            Materials="marble:8,stone:12,timber:6" Carries="roof:4,luxury:4" Contents="r_KingdomFurnishings_Dwelling">
+            Materials="marble:8,stone:12,timber:6" Carries="roof:4,luxury:4" Contents="r_KingdomFurnishings_Dwelling" Provides="taf:quiet">
     <skin Key="marble" ColorString="&amp;Y" DetailColor="W" />
     <skin Key="verdant" Style="verdant" ColorString="&amp;G" DetailColor="W" />
     <skin Key="fungal" Style="fungal" ColorString="&amp;M" DetailColor="W" />
@@ -181,7 +181,7 @@
 
   <building Key="cistern" DisplayName="cistern court (holds 256 drams, and everyone can hear when it rings hollow)" Blueprint="r_KingdomGreatCistern"
             Cost="20" Ticks="3600" Styles="all" Category="storage" Plot="M" MinStage="Steading"
-            Materials="stone:20,scrap:6" Carries="water:8" Contents="r_KingdomFurnishings_Water"
+            Materials="stone:20,scrap:6" Carries="water:8" Contents="r_KingdomFurnishings_Water" Provides="taf:damp"
             UpgradesTo="cisternvault">
     <skin Key="tin" ColorString="&amp;B" DetailColor="C" />
     <skin Key="fulcrete" ColorString="&amp;w" DetailColor="W" />
@@ -189,12 +189,12 @@
   </building>
   <building Key="cisternvault" DisplayName="vaulted cistern court (holds 640 drams under a stone lid)" Blueprint="r_KingdomCisternVault"
             Cost="34" Ticks="4800" Styles="all" Category="storage" Plot="M" MinStage="Village"
-            Materials="stone:38,scrap:10" Carries="water:18" Contents="r_KingdomFurnishings_Water" />
+            Materials="stone:38,scrap:10" Carries="water:18" Contents="r_KingdomFurnishings_Water" Provides="taf:damp" />
 
   <building Key="reservoir" DisplayName="reservoir (open water inside your own wall)" Blueprint="r_KingdomReservoir"
             Cost="48" Ticks="7200" Styles="all" Category="storage" Plot="L" Open="yes" MinStage="Town"
             Districts="agrarian,market" MinZones="3"
-            Materials="stone:60" Carries="water:26" />
+            Materials="stone:60" Carries="water:26" Provides="taf:openwater,taf:damp" />
 
   <building Key="waterworks" DisplayName="the waterworks (cistern, court, and channel, all one thing)" Blueprint="r_KingdomWaterworks"
             Cost="100" Ticks="12000" Styles="all" Category="storage" Plot="XL" MinStage="City"
@@ -254,7 +254,7 @@
             Materials="timber:5" Carries="craft:1" />
   <building Key="chargingpost" DisplayName="charging post (recharges your cells)" Blueprint="r_KingdomChargingPost"
             Cost="12" Ticks="2400" Styles="all" Category="craft" Plot="S" MinStage="Steading"
-            Staff="2" Manning="scaled" MinTech="salvage"
+            Staff="2" Manning="scaled" MinTech="salvage" Provides="taf:charge"
             Materials="scrap:8" Carries="craft:1" />
   <building Key="smithy" DisplayName="smithy (a hearth, a hammer, and someone who came for the work)" Blueprint="r_KingdomSmithy"
             Cost="20" Ticks="3600" Styles="all" Category="craft" Plot="M" MinStage="Steading"

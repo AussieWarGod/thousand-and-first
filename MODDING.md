@@ -274,6 +274,103 @@ Entries live in their own file with root `<kingdomyardworks>` (`KingdomYardWorks
 first-pass set: vine lattice, hide rack, dye vat, vellum press) and are keyed by `Key` the same
 way every other registry is: a later file re-using a Key owns that trade's whole spec.
 
+### Quality of life: what a place provides, and who will live in it (all optional)
+
+One open vocabulary joins the two halves of a settlement. **Buildings provide** tags; **residents**
+need them, prefer them, or refuse them. Both sides are open namespaced strings — a tag this mod has
+never heard of is never an error, and a tag nothing yet consumes simply waits for its consumer.
+
+```xml
+<building Key="chargingpost" DisplayName="charging post" Blueprint="r_KingdomChargingPost"
+          Cost="12" Ticks="2400" Styles="all" Category="craft" Plot="S"
+          Provides="taf:charge" />
+```
+
+| Attribute | Default when absent |
+|---|---|
+| `Provides` | Nothing declared. A comma list of namespaced tags. Case and whitespace are folded; repeats collapse. Merges by key like every other attribute, and reaches buildings that already stand — a mod that adds a tag today changes who will live in a house raised a year ago, and moves nothing. |
+
+A plot also provides what its **roof** gives, whether its author thought about it or not: `Open` and
+`Soft` tiers provide `taf:sky`, `Walled` and `Carved` tiers provide `taf:dark`. That is read from the
+same `AdmitsSky` the rest of the plot code uses, so the two can never disagree.
+
+The tags this mod ships and promises to keep meaning the same thing:
+
+| Tag | Means |
+|---|---|
+| `taf:charge` | Somewhere to draw charge. |
+| `taf:openwater` | Open water at the door. |
+| `taf:damp` | Damp: a cellar, a cistern room, a fungal bed. |
+| `taf:dark` | Out of the sun. Derived from the roof. |
+| `taf:sky` | Open sky overhead. Derived from the roof. |
+| `taf:quiet` | A room away from the noise of the day. |
+
+A settling notable's stated taste uses the same namespace, one tag per building category —
+`taf:food`, `taf:housing`, `taf:knowledge` and the rest of `BuildEntry.Category`'s ten names — so a
+design of that category meets that taste by exactly the rule a `Provides` meets a `Needs` by.
+
+Ship your own under your own namespace (`mymod:hearthfire`). Nothing is restricted to the list above.
+
+#### The resident side is DERIVED first
+
+Before any tag of ours is read, a creature's requirements are derived from what the game already
+knows about it. **A creature from any mod is a correct resident before its author writes a single
+tag.**
+
+| Vanilla truth read | Derived |
+|---|---|
+| `Robot` part, or the `Robot` tag/property | needs `taf:charge`; eats and drinks nothing |
+| no `Stomach` part | eats and drinks nothing |
+| `Inorganic` part, or `Physics Organic="false"` | eats and drinks nothing |
+| `Aquatic` part, or `Brain Aquatic="true"` — and not flying | needs `taf:openwater` |
+| `LiveFungus` tag | needs `taf:damp`; prefers `taf:dark` |
+| `PhotosyntheticSkin` mutation | needs `taf:sky` |
+
+So a robot inheriting vanilla's `BaseRobot` needs a charging post and never touches the larder; a
+fungal creature inheriting `BaseFungus` wants a damp cellar; a photosynthetic settler can live under
+canvas (`Soft` admits sky) and not in a sealed stone house. Nothing derives a *refusal* — that is a
+person's own line, and it is either authored or read from faction feelings.
+
+#### Refining it on a creature blueprint
+
+Four tags refine the derivation, using vanilla's own mergeable blueprint-tag mechanism:
+
+```xml
+<object Name="MyMod_Sporeling" Inherits="BaseFungus">
+  <tag Name="r_TAF_Prefers" Value="taf:quiet" />
+  <tag Name="r_TAF_Refuses" Value="taf:charge" />
+</object>
+```
+
+| Tag | Means |
+|---|---|
+| `r_TAF_Needs` | **Hard.** A place that does not provide all of these is not a place they move into, and no job there is theirs. |
+| `r_TAF_Prefers` | **Soft.** Met ones shade the settlement's equilibrium up by a small capped amount. An unmet one is never a penalty — it just means their default. |
+| `r_TAF_Refuses` | **Hard and negative.** A place that provides any of these is refused however well it meets the needs. |
+| `r_TAF_Provides` | What sharing a roof with them does to the room. Defaults to whatever they need — the fungal settler's cellar is damp — so you rarely write it. |
+
+Authoring **adds** to the derivation. To argue with a derived tag, name it with a leading `-`:
+`r_TAF_Needs="-taf:sky"` on a photosynthetic people who live indoors quite happily. Blueprint tags are
+a dictionary, so a child blueprint that re-declares one of these overrides its parent's whole string
+rather than appending to it; that is the game's own mechanism, and the `-` prefix is what makes it
+workable.
+
+#### What a mismatch does
+
+The match does not happen, and it is **said out loud** — *"Vashti will not sleep beside the fungal
+cellar."* Nobody is evicted, nothing is destroyed, no meter moves and nothing decays. Cohabitation
+reads the engine's own faction feelings for the ideological cases (only the flat -100 fault lines
+break a household) and these tags for everything else.
+
+Housing does **bind**, though. A settler joins the settlement only if a home is already standing that
+they would take — needs met, a bed free, and nobody in it they refuse — and the refusal names the
+real reason rather than a bed count. A settler who *loses* every acceptable home is named once, given
+two **attended passes** for the founder to act (raise a bunk, stake a plan, re-house them), and then
+leaves through the ordinary emigration machinery, chronicled by name and cause. The grace is counted
+in attended passes and never in time: a founder who is away spends nobody's grace, and no city is
+ever found emptied over a house that burned the day its founder left. Turn the whole of it off with
+the **settlers are assigned to specific homes** option.
+
 ### Skins: what a design looks like
 
 A `<building>` may carry `<skin>` children. Each is a `Render` override the founder is offered when

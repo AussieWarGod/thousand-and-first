@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace ThousandAndFirst
 {
 	/// <summary>
@@ -412,6 +414,47 @@ namespace ThousandAndFirst
 		}
 
 		/// <summary>
+		/// The other half of tolerance, and the half Addendum 4 re-bases onto the shared
+		/// quality-of-life vocabulary: whether the quarters on offer are somewhere these
+		/// particular residents will live AT ALL. <see cref="CanDisplace"/> goes on answering how
+		/// GOOD the lodging must be &mdash; that ladder is unchanged and its boundaries are
+		/// unmoved &mdash; and this answers whether it is lodging for these people. A tent is
+		/// tolerable lodging for a settler and no lodging whatever for the robot who needs a
+		/// cradle, and no shelter rank can say so.
+		/// <para>
+		/// Exactly <c>KingdomQolRules.Judge</c>, asked once per resident: tolerance IS the Needs
+		/// check against the temporary quarters, which is the sentence Addendum 4 writes. Nobody
+		/// is moved and nobody is evicted by a refusal here &mdash; the rebuild is held, and the
+		/// existing <see cref="UpgradeVerdict.NoTolerableLodging"/> line says so.
+		/// </para>
+		/// </summary>
+		/// <param name="QuartersOffer">What the temporary quarters provide, from
+		/// <c>KingdomQol.OfferOf</c>. Null provides nothing, which residents who need nothing
+		/// still accept.</param>
+		/// <param name="Residents">Profiles of the people who would be moved. Null or empty
+		/// measures nobody and refuses nothing.</param>
+		/// <param name="Tag">The tag of the first resident who refuses, for the founder's line.
+		/// Empty when nobody does.</param>
+		public static bool QuartersRefused(string[] QuartersOffer, IList<QolProfile> Residents, out string Tag)
+		{
+			Tag = "";
+			if (Residents == null)
+			{
+				return false;
+			}
+			for (int i = 0; i < Residents.Count; i++)
+			{
+				string tag;
+				if (KingdomQolRules.IsBlocked(KingdomQolRules.Judge(QuartersOffer, Residents[i], out tag)))
+				{
+					Tag = tag;
+					return true;
+				}
+			}
+			return false;
+		}
+
+		/// <summary>
 		/// Days of labour a build is, rounded UP: a build that runs into a day costs that day's
 		/// output. This is the build's own duration &mdash; a property of the design, authored in
 		/// <c>Ticks</c> &mdash; and never the clock. Nothing improves because time passed.
@@ -504,6 +547,21 @@ namespace ThousandAndFirst
 
 			/// <summary>Whether the settlement's craft and learning reach the successor.</summary>
 			public bool CraftMet;
+
+			/// <summary>
+			/// Whether one of the residents would refuse the quarters on offer outright, judged by
+			/// the quality-of-life vocabulary (<see cref="QuartersRefused"/>) rather than by
+			/// shelter rank. Addendum 4 re-bases "tolerable" onto that vocabulary; the rank ladder
+			/// goes on deciding how GOOD the lodging must be, and this decides whether it is
+			/// lodging for these people at all.
+			/// <para>
+			/// Phrased as a refusal rather than as an acceptance so that <c>false</c> &mdash; the
+			/// value of an unset struct and of <see cref="None"/> &mdash; means "nothing was
+			/// measured, so nobody refused", which is what every caller that has not measured
+			/// needs it to mean.
+			/// </para>
+			/// </summary>
+			public bool QuartersRefused;
 
 			/// <summary>A work nothing has been measured for: material and craft granted, no
 			/// residents to move, and no output to go without. Every check below passes, so a
@@ -662,8 +720,13 @@ namespace ThousandAndFirst
 			}
 			// Housing is judged by displacement: the roof it carries IS its output, and the
 			// question the law asks about a roof is who sleeps under it meanwhile.
+			// Tolerance is two questions, not one (Addendum 4): is the lodging good enough -- the
+			// rank ladder -- and is it somewhere these particular residents will live at all -- the
+			// vocabulary's own Needs check. A tent is tolerable for a settler and is nothing at all
+			// for the robot who needs a cradle.
 			if (demand.IsHousing
-				&& !CanDisplace(demand.Residents, demand.SpareLodging, demand.OfferedShelter, StandardFor(demand.LuxuryCarried), demand.CurrentShelter))
+				&& (!CanDisplace(demand.Residents, demand.SpareLodging, demand.OfferedShelter, StandardFor(demand.LuxuryCarried), demand.CurrentShelter)
+					|| demand.QuartersRefused))
 			{
 				return UpgradeVerdict.NoTolerableLodging;
 			}

@@ -107,6 +107,7 @@ namespace ThousandAndFirst
 			KingdomPlots.ClearSpecs();
 			KingdomYards.ClearSpecs();
 			KingdomMergeRules.ClearDrafts();
+			KingdomQol.ClearProvides();
 			Dictionary<string, Action<XmlDataHelper>> handlers = null;
 			handlers = new Dictionary<string, Action<XmlDataHelper>>
 			{
@@ -233,6 +234,7 @@ namespace ThousandAndFirst
 			declared.Set(KingdomMergeRules.AttrContents, xml.GetAttribute("Contents"));
 			declared.Set(KingdomMergeRules.AttrFootprint, xml.GetAttribute("Footprint"));
 			declared.Set(KingdomMergeRules.AttrRoof, xml.GetAttribute("Roof"));
+			declared.Set(KingdomMergeRules.AttrProvides, xml.GetAttribute("Provides"));
 			BuildingDraft design = KingdomMergeRules.Absorb(declared);
 			if (!KingdomRules.TryParseBuildAttributes(design.Key, design.Get(KingdomMergeRules.AttrDisplayName), design.Get(KingdomMergeRules.AttrBlueprint), design.Get(KingdomMergeRules.AttrCost), design.Get(KingdomMergeRules.AttrTicks), design.Get(KingdomMergeRules.AttrStyles), design.Get(KingdomMergeRules.AttrCategory), design.Get(KingdomMergeRules.AttrMinStage), design.Get(KingdomMergeRules.AttrStaff), design.Get(KingdomMergeRules.AttrManning), design.Get(KingdomMergeRules.AttrDefence), out var entry, out var error))
 			{
@@ -254,6 +256,10 @@ namespace ThousandAndFirst
 			// shrinks the plot and a file that declares the footprint are two files, and only the
 			// merged pair is the design the validator can check.
 			KingdomPlots.RegisterSpec(entry.Key, design.Get(KingdomMergeRules.AttrPlot), design.Get(KingdomMergeRules.AttrOpen), design.Get(KingdomMergeRules.AttrSky), design.Get(KingdomMergeRules.AttrContents), design.Get(KingdomMergeRules.AttrFootprint), design.Get(KingdomMergeRules.AttrRoof));
+			// After the plot spec, and for the same reason it is registered post-merge: what a design
+			// offers a resident is the tags its author declared plus the ones its roof gives, and the
+			// roof is only settled once the merged spec is in.
+			KingdomQol.RegisterProvides(entry.Key, design.Get(KingdomMergeRules.AttrProvides));
 			KingdomRules.BuildEntry parsed = entry;
 			for (int i = 0; i < _buildings.Count; i++)
 			{

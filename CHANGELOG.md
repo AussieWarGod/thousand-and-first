@@ -175,6 +175,23 @@ playtest passes.
   the upgrade is a held offer, forceable with the dip disclosed first. No trigger anywhere reads
   elapsed time as a cause — time is labour, never maturation.
 
+### Added — what a resident needs, prefers, and refuses
+- **One open tag vocabulary** joins buildings to the people in them: buildings declare `Provides`,
+  residents carry Needs (hard), Prefers (soft, never a penalty unmet), Refuses (no cohabitation).
+  Derived from vanilla truth before anything is authored — a robot needs charge and eats nothing
+  because the engine's own Robot removes the stomach; the water-bound, the fungal, and the
+  photosynthetic likewise. A creature from any mod is a correct resident before its author writes
+  one tag; roofs give their tags free.
+- **Lodging is assignment, not a tally.** Every settler has an address, stable across visits and
+  upgrades. Two residents who refuse each other never share a building; only real hostility breaks
+  households, not the zealots' standing grudge toward strangers.
+- **Housing binds** (author ruling): nobody joins without a home *they* would accept, and a settler
+  whose acceptable housing is lost is named once, waits two attended passes for the founder to
+  act, then leaves through the ordinary emigration — chronicled by name and cause. Absence never
+  runs the clock.
+- Tastes and the upgrade trigger's displacement tolerance now speak this same vocabulary — three
+  private systems became one, moddable end to end.
+
 ### Changed
 - Districts are no longer flavour. Each of the six now changes something a player can measure:
   garrison adds defence across every claimed zone, agrarian bills upkeep at 90%, market adds a

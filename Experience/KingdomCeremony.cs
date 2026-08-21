@@ -175,7 +175,11 @@ namespace ThousandAndFirst
 		/// building categories already stand there. May be null; every taste then reads unmet.</param>
 		/// <param name="Title">The office's own title, for the leader-trait line.</param>
 		/// <param name="HolderName">The settler now holding office.</param>
-		public static void OnOfficeHolderNamed(KingdomSystem System, Zone Z, string Title, string HolderName)
+		/// <param name="Holder">The settler themselves, for the quality-of-life vocabulary's own
+		/// Prefers (Addendum 4). Null skips that half and changes nothing else.</param>
+		/// <param name="QuartersKey">Design key of what they were housed in. Null is a notable
+		/// nobody has housed yet, whose Prefers are simply their default.</param>
+		public static void OnOfficeHolderNamed(KingdomSystem System, Zone Z, string Title, string HolderName, GameObject Holder = null, string QuartersKey = null)
 		{
 			if (!Enabled || System == null || !System.Founded || string.IsNullOrEmpty(HolderName))
 			{
@@ -193,28 +197,35 @@ namespace ThousandAndFirst
 				KingdomLog.Log("ceremony: leader traits " + HolderName + " virtue=" + virtueIndex + " flaw=" + flawIndex + " shade=" + KingdomCeremonyRules.LeaderShade());
 
 				List<int> tastes = KingdomCeremonyRules.ChooseTastes(settlementId, ordinal);
-				List<bool> met = new List<bool>();
-				foreach (int tasteIndex in tastes)
-				{
-					met.Add(TasteMetInZone(Z, tasteIndex));
-				}
+				List<bool> met = KingdomCeremonyRules.TastesMet(tastes, TasteOfferIn(Z));
 				string tasteLine = KingdomCeremonyRules.TasteChronicle(HolderName, tastes, met);
 				KingdomChronicle.Record(System, tasteLine);
 				MessageQueue.AddPlayerMessage("{{W|" + XRL.Language.Grammar.InitCap(tasteLine) + ".}}");
-				KingdomLog.Log("ceremony: tastes " + HolderName + " shade=" + KingdomCeremonyRules.TasteShade(met));
+				// Addendum 4 routes a resident's met Prefers through this same machinery rather than
+				// opening a second road to equilibrium: one shade, and one balance to keep. The two
+				// halves are shaded separately so each keeps its own cap, and the chronicle's own
+				// met-list is left exactly as it was.
+				int shade = KingdomCeremonyRules.TasteShade(met) + KingdomQol.PreferShade(Holder, QuartersKey);
+				KingdomLog.Log("ceremony: tastes " + HolderName + " shade=" + shade);
 			});
 		}
 
-		/// <summary>Whether Z already carries a built structure of the given taste category,
-		/// read off the same <c>KingdomBuildKey</c>/<c>KingdomData</c> lookup the rest of the mod
-		/// uses to recognise a completed work.</summary>
-		private static bool TasteMetInZone(Zone Z, int TasteIndex)
+		/// <summary>
+		/// What this settlement offers a notable's stated tastes: one tag per built structure's
+		/// category, read off the same <c>KingdomBuildKey</c>/<c>KingdomData</c> lookup the rest
+		/// of the mod uses to recognise a completed work. Addendum 4's re-basing &mdash; the taste
+		/// and the building meet in the shared vocabulary (<c>KingdomCeremonyRules.TastesMet</c>)
+		/// rather than by a category-string comparison private to this file.
+		/// </summary>
+		/// <returns>Never null; empty for a zone with nothing standing, which meets no taste.
+		/// </returns>
+		private static string[] TasteOfferIn(Zone Z)
 		{
-			if (Z == null || TasteIndex < 0 || TasteIndex >= KingdomCeremonyRules.TasteCategories.Length)
+			if (Z == null)
 			{
-				return false;
+				return KingdomQolRules.NoTags;
 			}
-			string category = KingdomCeremonyRules.TasteCategories[TasteIndex];
+			List<string> offer = new List<string>();
 			foreach (GameObject item in Z.GetObjects())
 			{
 				if (item.GetIntProperty("KingdomBuilt") != 1)
@@ -227,12 +238,17 @@ namespace ThousandAndFirst
 					continue;
 				}
 				KingdomRules.BuildEntry entry;
-				if (KingdomData.TryGetBuilding(buildKey, out entry) && string.Equals(entry.Category, category, System.StringComparison.OrdinalIgnoreCase))
+				if (!KingdomData.TryGetBuilding(buildKey, out entry))
 				{
-					return true;
+					continue;
+				}
+				string tag = KingdomCeremonyRules.CategoryTag(entry.Category);
+				if (!string.IsNullOrEmpty(tag) && !offer.Contains(tag))
+				{
+					offer.Add(tag);
 				}
 			}
-			return false;
+			return (offer.Count == 0) ? KingdomQolRules.NoTags : offer.ToArray();
 		}
 
 		// ==================================================================================
