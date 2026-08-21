@@ -818,3 +818,14 @@ applied at the largest scale; the only novel rule remains the indestructible she
   concept). (3) Mixtures arrive as a MIXING WORK consuming typed lines and emitting a
   mixture-typed line (vanilla LiquidVolume natively holds proportioned mixtures); the
   no-silent-merge rule never bends.
+
+**Engine correction (author question, 2026-08-22 — "i thought the hydraulic system could move
+liquids?"):** verified in source: `HydraulicPowerTransmission` moves POWER through liquid, not
+liquid through pipes — each segment holds a real LiquidVolume as working fluid
+(`DependsOnLiquid="water"`, `WrongLiquidFactor=0.2` — wrong liquid degrades transmission to
+20%), pipes collect liquid into themselves, but no dram travels segment-to-segment and endpoints
+never fill/drain through it. Dram movement is LiquidPump's job (no live blueprint — our
+fill-in). CONSEQUENCE for the liquid law: our carrier extends the hydraulic family's own idiom —
+segment volumes with typed contents — adding only the missing verb (transfer along declared
+topology); wrong-liquid-in-the-line already has vanilla vocabulary and consequence, reinforcing
+typed lines for free.
