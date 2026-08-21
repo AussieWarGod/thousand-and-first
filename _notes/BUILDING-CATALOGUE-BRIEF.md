@@ -701,3 +701,36 @@ mods can extend the model if they don't want to contribute directly to the mod")
 - Architectural basis: the model is rows + pure rules + one executor; an extension is more rows
   and more pure functions under the same contract — the model does not distinguish ours from
   theirs.
+
+
+## Addendum 13, 2026-08-22 — the eight feel lanes (author: "all of those 8 are great, as long as
+they mesh well with all our systems and incoming ideas")
+
+THE MESH CONDITION (structural, binding): each lane is a RENDERING of model state through
+surfaces that already exist — the city book, happenings, KingdomWord, ledger/chronicle, the
+faction, the QoL/creed vocabulary, the itinerary/logistics planner. No lane builds parallel
+machinery. A lane that cannot be built as a rendering returns as a design question before code.
+
+1. **Water ritual with citizens** — Qud's founding social act on our runtime faction: standing,
+   secrets, gifts; the basin's fiction completed. (Rides: faction, standings, creeds. W5.)
+2. **The city reacts to what you ARE** — creeds/QoL tags reading the PLAYER's genotype, parts,
+   mutations, chrome; wonder and fear by belief. (Rides: derived QoL/creed vocabulary. W4/W5.)
+3. **Ambient prose texture** — the message log breathes from model state: the mill's clatter,
+   bread-smell, the shrine's hour, silence where the wheel stopped. (Rides: heartbeat +
+   happenings, bounded per turn. W4.)
+4. **Qud's own calendar** — festivals and rites anchored to vanilla months and holy days, never
+   invented holidays. (Rides: happenings scheduling off Calendar. W4.)
+5. **Legendary notables** — office holders minted through the engine's village-hero machinery:
+   names, epithets, fame. (Rides: offices/notables; hero-gen surveyed before use. W4/W5.)
+6. **The city enters the world's story** — generated founding mythos in the history-gen idiom;
+   rumor presence; pilgrims of the told story (the built-but-unread outsider register finally
+   read); traders routing by reputation. (Rides: chronicle, outsider rumors, trade. W4/W5.)
+7. **Desire paths** — roads wear in where the planner's itineraries actually walk; growth you
+   didn't order from growth you did. (Rides: distance matrix traffic counts + road machinery.
+   W6.)
+8. **The adventurer loop closes** — citizens as companions, tinker services, a market in real
+   goods, trophies/relics displayed, petitions as quests. (Rides: petitions, bounties, sockets,
+   lodging roles; largest lane, staged across W5+.)
+
+Favoured-dish meals (G3, in flight) are lane 1/3 groundwork. Lane-to-wave mapping is advisory;
+the mesh condition is not.
