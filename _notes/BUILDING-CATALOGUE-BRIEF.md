@@ -846,3 +846,13 @@ materials conserved, building keeps IDENTITY (tier, dedication position, wear, r
 roof brink on a planned move; the household walks over with their house). Scheduled world-time
 work, announced, arrestable; destination pre-picked by the existing layout/frontier logic. Ring
 calls gated by the heart tier's own stage/tech gates. Research to validate/refine before ruling.
+
+**Scale intent ruling (author, 2026-08-22):** vocabulary confirmed — a claimable "tile"/zone is
+one of the 9 sections (3x3) of a parasang's surface, 80x25 cells. The author's target: "a city
+might easily take up that space [a full parasang], and an arcology would potentially sit over a
+whole parasang and then some." So the stage ladder EXTENDS: City 4 zones today (rules constant);
+mature-city stages reach the full parasang (9); the arcology tier spans a parasang AND SOME —
+neighbouring parasangs and strata. Architecture already priced 9 zones (~88 KiB, within
+formula); 12(j) rules the sim free to scale. Named checks for the expansion wave: claim
+adjacency and frontier-edge logic across PARASANG BORDERS (continuous zone grid, but built and
+tested inside 4 zones) and at STRATUM SEAMS.
