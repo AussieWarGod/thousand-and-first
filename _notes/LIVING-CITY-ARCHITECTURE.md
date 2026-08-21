@@ -1,8 +1,13 @@
 # The living city — simulation architecture
 
-Date: 2026-08-21. Mandate: `BUILDING-CATALOGUE-BRIEF.md` **Addendum 12**, composing with
-Addenda 8 (the time doctrine), 10 (brink moderation, typed wear consequences, ruins), and 11
-(grounded production, the harvest cycle, extend-the-real-machines). Head at writing: `4b128cb`.
+Date: 2026-08-21. Mandate: `BUILDING-CATALOGUE-BRIEF.md` **Addendum 12 (a)–(h)** — the living
+city, the performance constitution, scale and cross-zone life, the two hard invariants, journey
+continuity, logistics locality, networks, and the executor seam — composing with Addenda 8 (the
+time doctrine), 10 (brink moderation, typed wear consequences, ruins), and 11 (grounded production,
+the harvest cycle, extend-the-real-machines). Head at writing: `4b128cb`.
+
+**Performance is not an appendix to this design; it is §0.0, and every later section is answerable
+to its table.**
 
 Status: **design, not a build card.** Nothing here is implemented. The wave plan in §7 is the
 order the build cards should be cut in. No code was edited to write this.
@@ -14,7 +19,193 @@ order the build cards should be cut in. No code was edited to write this.
 
 ---
 
-## 0. Ground truth — what stands, and what the engine will not do
+## 0. Ground truth — the budgets, what stands, and what the engine will not do
+
+### 0.0 The performance constitution — the numbers this design is held to
+
+Addendum 12(b) rules that the living city must not run out of memory, must not lag the game, must
+keep latency down, and must *map out changes to a zone in almost real time*. That is not a
+sentiment, it is a set of budgets, and they are written here as numbers so that a later wave can be
+**shown** to have broken one. **A regression against this table is a failure, not a trade-off.**
+
+| Lane | Budget | Warn | Fail | Where measured |
+|---|---|---|---|---|
+| **Reckon** — one city, one pass | ≤ 14,848 row-visits, ≤ 512 draws, **no term in the elapsed** | > 2 ms | > 8 ms per realm pass | the `reckon` step (§2.1) |
+| **Reify** — per turn, while a debt stands | **8 units**, of which **≤ 4 body mints**, visible cells first | > 1 ms | > 2 ms, or over budget at all | the per-turn spend (§3.5) |
+| **Heartbeat** — one micro-reckon slice, every 50 ticks | ≤ 4 breakpoint steps, ≤ 2R row-visits, ≤ 1 told line | > 0.3 ms | > 0.5 ms, or > 4 steps | the slice (§3.6) |
+| **Heartbeat, amortised** | ≤ 2R/50 ≈ **5 row-visits per turn per city** | > 10 | > 20 | the slice (§3.6) |
+| **Catch-up drain** | worst backlog ≤ 232 **weighted** units (§0.0(b)) → **≤ 29 turns** at 8/turn | > 40 turns | never reaches zero | the counter (§3.5) |
+| **Model in RAM** | model + registry + itineraries + distance matrix → **≤ 64 KiB per realm** at today's caps (≈ 77 KiB at nine zones — **the formula is the contract, not the constant**, §0.0(f)) | > 48 KiB | > 64 KiB, or over the formula | `kingdom:selftest` (§6.5) |
+| **Model in the save** | ≈ 20 KiB per realm | > 32 KiB | > 96 KiB | the write path (§6.5) |
+| **Route planning** — per slice | ≤ 16 open jobs, ≤ 8 stops a trip, 2-opt ≤ 50 swap tests → ≲ 1,000 int ops, **zero draws** | > 2,000 int ops | any draw in the planner | the planner (§3.10) |
+| **Network solve** — per city, per reckon | ≤ 4 networks x (≤ 32 nodes + 48 edges); one re-solve per network breakpoint → **≤ 5,120 node-visits** | > 8,000 | > 12,000, or a topology walk at reckon | the solve (§3.11) |
+| **Zones we hold resident** | ≤ 1 beyond the seated zone, self-releasing | 2 | > 2, or held with no debt | §6.4 |
+| **Executor** — any submitted computation | budget and timeout owned by the seam; an abandoned job publishes nothing | — | a job that publishes on fault, or **any engine type across the boundary** | the reflection test (§2.5) |
+
+**(a) Reckon — the arithmetic, counted rather than asserted.** The worst case in the mandate is a
+4-zone City, 40 works, 60 residents, one season (90 days) away:
+
+```
+rows  R  = 4 zone rows + 40 work rows + 60 resident rows + 12 clocks    =    116
+breakpoints B                                                  (§2.3 cap) =     64
+per step = one propose pass (every row emits its next candidate tick)
+         + one apply   pass (every row integrates to the chosen tick)   = 2R = 232
+row-visits                                              = B x 2R        = 14,848
+each row-visit                                    <= 20 integer operations
+worst case                                                        ~ 297,000 int ops
+fixed-period lanes         12 x O(1)   (TickMath.TryCountFixedPeriodDue)
+draws       <= 4 per happening x 128 happenings per reckoning     <= 512 per city
+```
+
+**The identity that matters: not one term on that page contains the elapsed.** `R` is capped by
+§1.4, `B` is capped at 64 with an honest overflow to the fixed point (§2.3), and draws are per
+*happening*, never per day. A day away and a season away have the same worst case — which is what
+turns risk §8.1(4) from a convention into a test: **assert that a 1-day and a 90-day reckoning of
+the same model perform the same row-visit count and the same draw count.** Two cities double every
+figure and nothing else.
+
+Why 8 ms is the right ceiling rather than a cautious one: reckon runs **once, on entry**, on the
+same frame the engine has already spent a SQLite read, a Brotli decompress and a forced full GC
+(§6.4), behind its own "Thawing zone…" task. Eight milliseconds is half a 60 Hz frame in a
+turn-based game, at a moment that is already the most expensive in the loop.
+
+**(b) Reify — eight units a turn, visible cells first.** A *unit* is one of: mint or move one
+resident body; land one item stack into one container; reconcile one work row against its object.
+Eight per turn, of which at most four may be body mints — `GameObject.Create` plus a population
+table plus a name is the heaviest unit by an order of magnitude. Two things make 8 a number rather
+than a guess:
+
+- **It is well under what the engine already does in a frame.** `ZoneRepair` applies its *entire*
+  accumulated backlog in one activation — `num = Math.Max(1L, BuildCounter / TurnsPerObject)`, then
+  a loop of `num` `Cell.AddObject` calls (`D/XRL/World/ZoneParts/ZoneRepair.cs:57, 87-97`). We are
+  deliberately slower than vanilla's own catch-up, because our unit is heavier than a cell add.
+- **It drains inside the grace window.** Units are weighted, because they are not the same size:
+
+| Weight | Unit | Per-turn effect |
+|---|---|---|
+| **1**, and ≤ 4 a turn | **heavy** — mint or move a body (`GameObject.Create` + population table + name) | ≤ 4 |
+| **1** | **medium** — one item stack into one container; one work row reconciled | ≤ 8 |
+| **⅓** | **light** — one plant or prop object into a cell: exactly `ZoneRepair`'s own unit | ≤ 24 |
+
+  The light tier is not a convenience, it is forced by what G2 landed: **a home farm stands 80
+  plant objects**, and a large city could reach a few hundred per zone — Joppa itself ships 153.
+  Growing those plants costs nothing (stage advance is `r_KingdomPlot`'s cheap due-tick nudge on an
+  object vanilla is already activating, §3.3 tier 2, and a harvest owes the larder *item stacks*,
+  not eighty separate units). But **raising** a farm owes its eighty plants as light units, and a
+  city's worth of props is a few hundred. At ⅓ each, twenty-four a turn: a farm materialises in
+  ⌈80/24⌉ = **4 turns**, a Joppa-scale 300-object backlog in **13**.
+
+  So the largest backlog one zone can owe is works + residents + a capped item tail + ≤ 300 light
+  objects ≈ **232 weighted units**, and ⌈232/8⌉ = **29 turns** — still inside the 40 turns vanilla
+  keeps a departed zone live (§0.1). A founder who walks in and stands still watches the city
+  finish catching up before the engine would even have suspended the zone they came from.
+
+**(c) Memory — `KingdomCityState`, byte by byte.** Every row is a `readonly struct` in a flat
+array (§1.3), so there is no per-row object header; the only heap strings are one name per
+resident, and zone ids and design keys are shared references.
+
+| Row | Width | Count | Bytes |
+|---|---|---|---|
+| Zone | id ref 8 + district 4 + `LastReadTick` 8 + 6 stock/capacity longs 48 + roofs 4 + defence 4 + pad 4 = **80** | 4 | 320 |
+| Work | id 4 + zone ref 8 + anchor 4 + design ref 8 + condition 4 + crew 4 + `RanThroughTick` 8 + run-state 16 + pad 8 = **64** | 40 | 2,560 |
+| Resident | 96 of fields (ids, ticks, enums, refs, two brink windows) + one unique name string ~64 = **160** | 60 | 9,600 |
+| Clock | kind 4 + `NextDueTick` 8 + ordinal 4 = **16** | 12 | 192 |
+| Told-log | kind 4 + tick 8 + 2 subject ids 8 + place ref 8 + outcome 4 = **32** | 32 | 1,024 |
+| Arrays + carrier headers | — | — | 256 |
+| **Per city** | | | **13,952 B ≈ 13.6 KiB** |
+| **Per realm** (2 cities) | | | **27,904 B ≈ 27 KiB** |
+| Binding registry, realm-scope (§3.8) | key 4 + kind 1 + zone ref 8 + object ref 8 + minted tick 8 + pad 3 = **32** | 120 residents + ≤ 16 open jobs + headers | 4,480 B ≈ 4.4 KiB |
+| Job rows with itineraries (§3.7) | header 64 + ≤ 6 legs x (zone ref 8 + enter 4 + exit 4 + length 4 + depart 8 + arrive 8 = 36) = **280** | ≤ 16 open jobs, realm-wide | 4,480 B ≈ 4.4 KiB |
+| Distance matrix (§3.10) | `ushort` per entry = **2** | works→edges ≤ 540 + same-zone pairs ≤ 900 + zone all-pairs ≤ 81, **per city** | 2 x 1,521 ≈ 3.0 KiB per city, 6.0 KiB per realm |
+| Network graphs (§3.11) | node 16 + edge 16; per network 32 x 16 + 48 x 16 + header 32 = **1,312** | ≤ 4 networks per city | 5,248 B ≈ 5.1 KiB per city, 10.2 KiB per realm |
+| **Per realm, all of it** | | | **53,104 B ≈ 51.9 KiB** — ceiling **64 KiB** |
+| *the same, at nine zones and caps scaled with them* | | | *≈ 88 KiB — still under a tenth of a megabyte* |
+
+Serialized it is smaller: no references, `WriteOptimizedString` dedupes zone ids and design keys
+across every row, ticks go out optimized — **≈ 5.2 KiB per city, ≈ 10.4 KiB per realm**, plus
+≈ 2.7 KiB of registry: **≈ 13 KiB per realm**, inside blocks `KingdomSettlement` and
+`KingdomSystem` already write. Contrast the rejected alternative: `ZoneManager.Save`
+writes every resident zone into the save **in full and uncompressed**
+(`D/XRL/World/ZoneManager.cs:468-475`), on every save, so three extra held zones is three zones of
+save bytes. The model is cheaper than the engine's own answer by orders of magnitude — and §6.5
+*measures* the byte count on the write path rather than trusting this table.
+
+**(d) The non-goals, stated so they cannot be re-proposed.**
+
+- **No pinning.** `PinnedZones` caps at `> 3` and clears the whole list on overflow (§0.1).
+- **No turn counting as a clock**, ever. `The.Game.TimeTicks` only (§2.1).
+- **No per-cell city state.** The model's dimensions are rows, and none of them is a cell.
+- **No suspendability veto and no holding a city zone *live*** — §6.4 answers that question
+  directly, with the numbers, because it is the obvious idea and deserves a real refutation.
+- **No per-day loop and no per-day draw** anywhere in the reckoning (§2.3, §2.4).
+- **No second turn loop, no timer, no queue drained on a schedule.**
+
+**(e) One distinction the whole design turns on: a clock is not a pump.** Game-level
+`EndTurnEvent.Send(game)` fires once per ten segments, immediately before `ProcessSingleTurn`
+(`D/XRL/Core/ActionManager.cs:1644-1650`) — **one** dispatch, not the 2,000-cell broadcast a live
+zone pays. It does not fire during world-map travel, which is exactly why §2.1 bans it as the
+city's *clock*. But a founder on the world map is standing in no city zone and is owed no
+reification, so the same blind spot is harmless in a *pump*: how much work is owed is always
+derived from `The.Game.TimeTicks` deltas; the pump only decides **when a slice of it is spent**.
+One handler, one virtual call a turn, returning immediately when there is no seated claimed zone
+and no debt. That is the only per-turn cost this design adds anywhere.
+
+**(f) City size is bounded by the rules, never by the architecture.** Addendum 12(c): *"a city
+might end up being 9 zones or more, especially with verticality."* Nothing above changes when it
+does, and that is a property to state rather than to hope for.
+
+- **The model is O(rows).** A zone is one row keyed by its `ZoneID`, and `ZoneID` already carries
+  the stratum — `Assemble(...).Append(ZoneZ)` (`D/XRL/World/ZoneID.cs:12-24`). A city three
+  parasangs wide and three strata deep is the same arithmetic as a flat one. **Verticality is
+  free**, and the claim verb already allows claiming straight up or down (§7.4 W1, TESTING 80d).
+- **The 4-zone figure is a stage-gate rules constant** (`KingdomZoningRules.ZonesForStage`), not an
+  architectural limit. Raising it raises `R` linearly and changes nothing else in this section.
+- **The reckon budget is a formula, not a number:**
+
+```
+R          = Z zone rows + W work rows + P resident rows + C clocks
+row-visits = B x 2R,   B <= 64
+
+Z=4, W=40, P=60,  C=12  ->  R = 116  ->  14,848      the City as the rules cap it today
+Z=9, W=90, P=135, C=12  ->  R = 246  ->  31,488      a full 3x3 parasang, caps scaled with it
+```
+
+  Nine zones is one whole parasang (`D/XRL/World/ZoneManager.cs:3268`) — the author's own figure.
+  It costs **2.1x** the reckon of a 4-zone city and is still a fraction of a millisecond of integer
+  arithmetic. The receipt (§6.5) checks the row-visit count against the **live** `R`, not against
+  14,848, so the assertion survives the cap moving.
+- **Nothing else scales with city size at all.** Reify is a fixed per-turn budget, independent of
+  how much is owed. The heartbeat is one slice on a cadence, independent of `Z` except through `R`.
+  Prefetch is bounded by **the neighbours of the zone the founder is standing in** — at most six in
+  the engine's own topology (four orthogonal, plus the stratum above and below), of which we
+  consider two and hold one (§6.4) — never by the size of the city. A founder in a thirty-zone city
+  pays exactly what a founder in a two-zone city pays.
+
+**(g) The four invariants this design is answerable for.** Each has exactly one home, one test,
+and no second statement anywhere else in this document:
+
+| # | Invariant | Home | Proved by |
+|---|---|---|---|
+| **I1** | **Catch-up.** model total == ground total + counter-owed, per stock kind, at every instant | §3.5 | `kingdom:selftest`; Pass 32 step 90c |
+| **I2** | **One event, two renderings.** One *effect*, applied once at its dated tick; at most one *rendering*, chosen by attendance and never drawn for | §3.7 | Pass 32 step 90d |
+| **I3** | **One identity, at most one body**, in any zone at any time — residents by `ResidentId`, transients by `JobId`, one registry answering both | §3.8 | `kingdom:selftest`, asserted directly |
+| **I4** | **Deficits drain real containers**, in a stated deterministic order; every mismatch attributed and told, never silently repaired | §3.9 | Pass 32 step 90g; §8.2 |
+| **I5** | **Journey continuity.** For any `TimeTicks`, the model gives **one** answer to *where is this carrier and what is on them*, and every zone renders that same answer | §3.7 | Pass 32 steps 90d, 90d2 |
+| **I6** | **Locality.** No carrier is ever routed past a nearer holder, and no two under-capacity trips run where one would do | §3.10 | `kingdom:selftest`; Pass 32 step 90j |
+
+I1 is the general form of §8.2's conservation invariant; I3 is §8.3's, widened from residents to
+everything we mint. **Nothing else in this design may claim an invariant without adding a row
+here.**
+
+**§3.7 to §3.11 are one contract, not five features.** Addendum 12(c) gives the city's flows their
+*embodiment*, 12(d) their *uniqueness and their effect on real containers*, 12(e) their
+*continuity*, 12(f) their *routing*, and 12(g) their *infrastructure*. They compose into one
+sentence, and every invariant above is a clause of it: **the model commits to a plan once — a job,
+a route, a flow — and a body, a container or a live vanilla part is how a zone draws that plan
+while somebody is watching.** Carriers and conduits are the same idea at two speeds: a carrier is
+a flow that walks, a conduit is a flow that does not.
+
+The measurement plan that makes this table falsifiable in play is §6.5.
 
 ### 0.1 The engine constraint that decides the whole design
 
@@ -28,7 +219,7 @@ because everything below is a consequence of them:
 | **Past that, it suspends — and everything in it stops.** `SuspendZone` fires `SuspendingEvent`, strips that zone's actors out of the `ActionQueue`, and flips `Suspended = true`. Nothing is serialized and nothing is dropped: **the whole object graph stays in RAM.** But `ProcessSingleTurn` skips suspended zones, and `ShouldRemove` drops any live object whose `CurrentZone.Suspended`. Every vanilla producer (`LiquidProducer`, `Harvestable`, `Mill`, `ItemConvertor`, `FoodProcessor`, `SolarArray`) runs off `TurnTick`/`EndTurnEvent` and therefore stops dead. | `D/XRL/World/ZoneManager.cs:1682-1712`; `D/XRL/Core/ActionManager.cs:430-467`; `VANILLA-PRODUCTION-TRUTH.md` §0 |
 | **On the very next turn it is frozen to disk and released.** `Zone.GetFreezabilityTurns()` returns **`0`**, and `GetPendingZoneFreezeThreshold()` returns **`1`** on ordinary hardware — so one suspendable zone triggers an immediate Brotli-compressed SQLite write, `Zone.Release()` (every cell cleared, every object pooled) and a forced GC. | `D/XRL/World/Zone.cs:7467-7470`; `D/XRL/World/ZoneManager.cs:883-966, 976-1040` |
 | **Keeping zones live is possible and expensive.** `zone.MarkActive()` each turn, or returning non-`Suspendable` from `GetZoneSuspendabilityEvent`, or `SetCachedZone(zone)`, will hold a zone resident and simulating. The price: full per-turn CPU (its `TurnTick` plus an `EndTurnEvent` broadcast across 2,000 cells), full RAM, its actors back in the `ActionQueue`, **and every live zone written inline into the save file** (`ZoneManager.Save` writes `CachedZones` in full; frozen zones are ids only). | `D/XRL/World/Zone.cs:2304`; `D/XRL/World/ZoneManager.cs:1726-1780, 468-520` |
-| **Pinning is not an escape.** `PinnedZones` has a hard cap of 3, and *exceeding it logs an exception and clears the entire set* — a silent, total loss of whatever the pins were protecting. STANDARDS §1 already forbids it ("never pin — lazy catch-up"). | `D/XRL/World/Zone.cs:7440-7449`; `STANDARDS.md` §1 |
+| **Pinning is not an escape.** The cap is `PinnedZones.Count > 3`, and it is not checked when you pin — it is checked lazily, inside `GetSuspendability`, and on overflow it logs a `ZonePins` exception and calls **`PinnedZones.Clear()`**: a silent, total loss of every pin, at an arbitrary later moment, not just the offending one. A 4-zone City is exactly one over. STANDARDS §1 already forbids it ("never pin — lazy catch-up"). | `D/XRL/World/Zone.cs:7441-7448`; `STANDARDS.md` §1 |
 
 **The consequence, stated once:** a four-zone City gets 40 turns of grace and then has at most one
 zone alive. Holding the other three resident is *technically* available and costs three extra
@@ -50,12 +241,12 @@ bit 32 (`CASCADE_STOP_AT_ZONE`), so all of them reach every object in the zone.
 | `ZoneActivatedEvent` | Fires from `Zone.Activated()` for the **one** zone becoming active — on transition, and again on game load. Wrapped in the engine's own try/catch. `PrimePowerSystemsEvent` follows immediately. `KingdomSystem` already registers it. | `D/XRL/World/ZoneActivatedEvent.cs`; `D/XRL/World/Zone.cs:7775-7791`; `D/XRL/XRLGame.cs:1959` |
 | `ZoneDeactivatedEvent` | Fires for the **outgoing** active zone, immediately before the incoming one activates. Free, unused by this mod today. | `D/XRL/World/ZoneDeactivatedEvent.cs`; `D/XRL/World/ZoneManager.cs:1904-1905` |
 | **`SuspendingEvent`** | Fires from `SuspendZone` **before** `Suspended = true`, for **any** zone as it suspends — not only the outgoing active one. **This, not deactivation, is the true last-read moment**, because a deactivated zone goes on simulating for up to 40 more turns (§0.1). | `D/XRL/World/SuspendingEvent.cs`; `D/XRL/World/ZoneManager.cs:1682-1712` |
-| `ZoneThawedEvent` | Carries `TicksFrozen`, the engine's own measure of time on disk. **Fires only on thaw from SQLite, never on wake-from-suspend** — so it is a useful cross-check and never a sufficient clock. | `D/XRL/World/ZoneManager.cs:863-878`; `D/XRL/World/Zone.cs:7772-7774` |
+| `ZoneThawedEvent` | Carries `TicksFrozen` (`TimeTicks − FrozenTick`), the engine's own measure of time on disk. Sent from `Zone.Thawed` at the end of `TryThawZone`, for **any** zone coming off disk — active or not — after `Zone.Load`, `AddCachedZone` and `ForceCollect()`. **Fires only on thaw from SQLite, never on wake-from-suspend**: a useful cross-check, never a sufficient clock. **The second reify hook** — it binds debt intake where `ZoneActivatedEvent` binds the pass (§3.5). | `D/XRL/World/ZoneManager.cs:864-865`; `D/XRL/World/Zone.cs:7772-7774`; `D/XRL/World/ZoneThawedEvent.cs:39-46` |
 | `Before/ZoneBuilt/AfterZoneBuiltEvent` | Fire at generation for **any** zone, including ones the player never enters. Relevant to claiming and founding. | `D/XRL/World/ZoneManager.cs:3202-3206, 3283-3286, 3584-3588` |
 | `Calendar` | `TurnsPerDay = 1200`, `TurnsPerHour = 50`; `CurrentDaySegment = (TimeTicks % 1200) * 10`; `IsDay()` is segment 2500–9123; `GetTime(int)` names eight bands. **The day-shape vocabulary already exists, in the game's own register.** | `D/XRL/World/Calendar.cs:11-35, 296-352` |
 | **`IdleQueryEvent`** | **Vanilla's entire daily-life surface.** The `Bored` goal collects every object in the zone that wants the event, shuffles, and offers each the idle actor; **returning `false` claims that actor's turn** (the caller then spends 1000 energy and stops). Gate tag `AllowIdleBehavior`, veto tag `PreventIdleBehavior`. `Bored` bails out entirely when the actor is not in the player's zone. | `D/XRL/World/AI/GoalHandlers/Bored.cs:262-330` |
 | `Brain.Stay(Cell)` / `Brain.StartingCell` | With `Wanders = false`, `WandersRandomly = false` and no `NoStay` tag, an NPC **self-anchors** to where it first stands, and `Bored` walks it back forever. Zero code, zero per-turn cost of ours. | `D/XRL/World/Parts/Brain.cs:2056, 2507` |
-| `ZoneRepair` (`IZonePart`) | **The engine's own accumulate-and-apply-N-units catch-up**, and a better precedent than `Temporary` for production: `BuildCounter += TimeTicks - LastTurn; LastTurn = TimeTicks; num = Max(1, BuildCounter / TurnsPerObject)`, then apply `num` units and self-remove when done. Driven off `ZoneActivatedEvent`. | `D/XRL/World/ZoneParts/ZoneRepair.cs` |
+| `ZoneRepair` (`IZonePart`) | **The engine's own accumulate-and-apply-N-units catch-up**, and a better precedent than `Temporary` for production: `BuildCounter += TimeTicks - LastTurn; LastTurn = TimeTicks; num = Math.Max(1L, BuildCounter / TurnsPerObject)`, then apply `num` units and `RemovePart(this)` when the backlog empties. Note what it does **not** do: it applies the whole batch in one activation, and it binds `ZoneActivatedEvent` only, so the engine's own catch-up misses thaw entirely. §3.5 keeps the counter and amortises the spend. | `D/XRL/World/ZoneParts/ZoneRepair.cs:30-43, 51-58, 87-97, 99-102` |
 | `GenericInventoryRestocker` | Vanilla's canonical "things changed while you were away": `long num = TimeTick - LastRestockTick`, one roll amplified by the number of whole missed periods, plus the **item-protection protocol** — `_stock` ("I made this, I may destroy it"), `norestock` ("never touch"), `IsImportant()` (never destroy). | `D/XRL/World/Parts/GenericInventoryRestocker.cs:12-146` |
 | `IGameSystem` | `Register(XRLGame, IEventRegistrar)` is the only live registration hook, re-run on load via `ApplyRegistrar` (so it must be idempotent). Dispatch is O(handlers for that ID). | `D/XRL/IGameSystem.cs:2877-2941`; `D/XRL/XRLGame.cs:357-384, 1944-1962` |
 
@@ -177,6 +368,14 @@ because it is simulation substrate rather than a feature.
 | `Food` | Servings in **dedicated** larders, city-wide, with the `PantryTier` classification the survey already computes. |
 | `Materials` | The refined tiers `KingdomMaterials` already names (shaped timber / shaped stone / worked metal), plus raw. |
 | `Capacity` | Per-kind ceiling, summed from the zone rows. |
+
+**Stocks are city-level, not zone-level, and that is the point.** Water raised by an air-well in
+the mine, food grown on the terrace above it, and power made in the yard are all one set of rows;
+consumption anywhere draws on the same rows. So a generator wearing out in a zone the founder has
+not seen for a week **moves the city's numbers at the very next slice** (§3.6), and the founder
+standing in their house reads a lower level, hears the shortfall, and can act on it without
+walking anywhere. Cross-zone flow is not a feature bolted onto the model — it is what having one
+book instead of four sightings *means*.
 
 Player-carried and player-placed-but-undedicated stock stays purely physical and **outside the
 model**, exactly as the survey already classifies it. This is what keeps the protection law simple:
@@ -399,6 +598,60 @@ day per resident would be the only thing here that scales with absence).
 
 ---
 
+### 2.5 The executor seam — build it now, thread it later
+
+The author's question: *"should we use our own thread for this? future proofing, would that make
+things materially harder or more fragile?"* The answer that survives both futures is **build the
+seam now, run the thread later.**
+
+**One choke point.** Every piece of model computation in this design — `TryAdvance` (§2.2), the
+micro-reckon slice (§3.6), the route plan (§3.10), the network solve (§3.11) — goes through one
+call, and there is never a second path:
+
+```
+KingdomExecutor.Submit<TIn, TOut>(TIn snapshot, IComputation<TIn, TOut> job) -> Result<TOut>
+```
+
+**Synchronous today.** It invokes the job inline and returns. That is the whole implementation, and
+it earns its place immediately regardless of threading: it is where the timers (§6.5), the budget
+checks (§0.0) and `Guard`'s fault handling stop being copied to four call sites.
+
+**The contract is the actual deliverable:**
+
+1. **Immutable in, immutable out.** The input is a frozen model value; the output is a new frozen
+   value. Nothing is mutated across the boundary.
+2. **No engine type crosses it.** No `GameObject`, no `Zone`, no `Cell`, no `The.Game`. The
+   `*Rules.cs` engine-free discipline already guarantees this for every rules module this design
+   names — the seam is where it becomes **checkable** instead of merely conventional.
+3. **Budget and timeout belong to the seam, not the job.** A computation that exceeds its budget is
+   abandoned and logged, and the caller's state is byte-identical because nothing was published
+   (§1.3).
+4. **A job may not read the clock.** `nowTick` is an input, never an ambient read — which is also
+   what makes a job replayable in a test.
+
+**Enforcement is a reflection test, not a review habit.** One unit test walks the type closure of
+every `IComputation`'s input and output and fails the build on: a type from a Qud assembly, a
+mutable public field on a rules type, or a non-`readonly` static. That is the idiom this codebase
+already uses to keep `*Rules.cs` pure, promoted from a convention into a build failure — one test,
+and it is the only thing standing between this design and a second computation path growing
+quietly beside the first.
+
+**The swap path, and why it is genuinely cheap.** A threaded executor replaces `Submit`'s body with
+a queue and a worker. The input is already immutable, so there is nothing to lock; the result is
+already published in one assignment on the caller's side (§1.3), so publication stays on the main
+thread where Qud's serialization expects it; and **no call site changes.** If the workload never
+justifies a thread — which §0.0's numbers strongly suggest it will not — the seam has still paid
+for itself in timers, budgets and fault isolation.
+
+**Third-party computations inherit all of it.** A mod that wants the city to run a lane of its own
+submits through the same seam and gets the same budget, timeout and isolation: **a misbehaving job
+stalls itself, never the city and never the turn.** That is a property no amount of documentation
+could give a direct call.
+
+**Threading eagerly, with no workload, is rejected as the fragile option** — a worker thread over a
+sub-millisecond job buys latency it did not have and a class of bug it did not have either. The
+seam costs nothing and is the opposite of fragile.
+
 ## 3. Materialisation
 
 ### 3.1 Check-in — reconcile before rendering
@@ -420,17 +673,20 @@ fully-visited city**, and a hand-moved dram neither mints nor destroys a dram.
 
 ### 3.2 Render this zone's share
 
-After the whole pass has settled, `materialise` renders the seated zone. Three kinds of output,
-each capped per activation.
+After the whole pass has settled, `materialise` renders the seated zone. Three kinds of output —
+and **none of them is rendered all at once.** What follows is *what* a zone owes; §3.5 is *how much
+of it is paid per turn*. Read the two together: the figures below are debts, not spikes.
 
 **(a) Items into containers.** The harvest that fell while the founder was away credited the city's
 stores at the moment it was due (Addendum 11(b-ii)); the *physical* crop items are created into the
 destination larder's real `Inventory` now, on the pass that opens that larder's zone. Same for
 refined materials into stockpiles and for water into dedicated `LiquidVolume`s via
 `KingdomLiquids.Fill` — which measures the delta rather than trusting `AddDrams`, per STANDARDS §1.
-Capped per activation; the remainder stays credited in the model and materialises next time, and
-the overflow line the ledger already has (*"left in the field for want of a larder"*) is the shape
-for anything that genuinely cannot land.
+Landed out of the per-turn budget (§3.5), never in one activation; the remainder stays credited
+in the model and lands on later turns, and the overflow line the ledger already has (*"left in the
+field for want of a larder"*) is the shape for anything that genuinely cannot land at all. Where
+the delivery's destination is the zone the founder is standing in, it may arrive **embodied** —
+carried in by a porter the founder watches (§3.7).
 
 **Adopt vanilla's item-protection protocol verbatim.** `GenericInventoryRestocker.PerformRestock`
 is the engine's own answer to *which items may I destroy*, and it is exactly the discipline the
@@ -487,7 +743,7 @@ Three constraints the hook carries, and all three are fine:
    attended-only, which is exactly the division of labour this architecture wants.
 2. Returning `false` costs the actor its turn, so a station must be selective (vanilla's own
    handlers gate on `1.in100()` / `1.in10000()` plus a per-object cooldown) or the settlement
-   stands around doing one thing.
+   stands around doing one thing. §3.6 gives that constraint a number.
 3. The `IdleObjects` cache is zone-scoped and rebuilt on `IdleDirty`; a station added mid-play is
    picked up by `WantEvent`, so no registration list to maintain.
 
@@ -542,6 +798,569 @@ Bodies and items stay in the zone and are frozen to disk with it (`FreezeZone` �
 `Zone.Release()`). `ZoneThawedEvent.TicksFrozen` is available as a cross-check on how long they were
 gone, and is deliberately **not** used as a clock: it measures frozen time only, and says nothing
 about suspended-but-resident time.
+
+### 3.5 Amortised materialisation — the counter, the budget, and the invariant
+
+§3.2 says *what* a zone renders. This says *how much of it, when* — and it is the difference
+between a design that satisfies Addendum 12(b) and one that merely claims to. **Entry must cost
+O(budget), never O(elapsed).**
+
+**The idiom is the engine's own, generalised.** `ZoneRepair` keeps a counter, adds the elapsed to
+it at every activation, and converts it to a unit count by integer division:
+
+```
+BuildCounter += The.Game.TimeTicks - LastTurn;              // ZoneRepair.cs:51-52
+LastTurn      = The.Game.TimeTicks;
+if (BuildCounter < TurnsPerObject) return;                  // :53   nothing owed yet
+long num = Math.Max(1L, BuildCounter / TurnsPerObject);     // :57   units owed, floor of 1
+BuildCounter = 0L;                                          // :58   debt cleared on read
+... apply num units ...                                     // :87-97
+if (ToBuild.Count == 0) ParentZone.RemovePart(this);        // :99-102  self-remove when drained
+```
+
+Three properties are worth taking outright, and one is worth refusing:
+
+- **Take:** the counter is a *quantity of owed work*, never a queue of dated jobs — so a season of
+  absence and a day of absence differ in an integer, never in shape.
+- **Take:** `Math.Max(1, …)` guarantees forward progress; a debt cannot stall on a rounding edge.
+- **Take:** the part removes itself the instant its backlog empties, so a caught-up zone costs
+  literally nothing.
+- **Refuse:** `ZoneRepair` applies the whole `num` in one loop inside the activation (`:87-97`).
+  Its unit is a `Cell.AddObject` and its backlog is one map file, so the spike is invisible. Ours
+  is body mints and container fills against a sixty-resident roster. **We keep the counter and
+  spend it on a per-turn budget instead** — and that single change is the whole of Addendum 12(b)'s
+  *reification is AMORTISED*.
+
+**Two hooks, two different jobs.** Both are reify hooks. They bind different steps because
+different state is available at each.
+
+| Hook | Fires | State available there | Our step |
+|---|---|---|---|
+| `ZoneThawedEvent` | from `Zone.Thawed(FrozenTicks)` at the end of `TryThawZone`, after `Zone.Load`, `AddCachedZone`, `ForceCollect()` and `PaintWalls`/`PaintWater` — for **any** zone coming off disk, active or not | the full object graph, in RAM; `TicksFrozen = TimeTicks − FrozenTick`; the zone is **not** active, its objects are **not** live, and `Suspended` is still whatever was saved (it is a serialized field) | **debt intake only.** Compute this zone's catch-up counter from the model's `ProcessedThroughTick` against the zone row's `LastReadTick`. Render nothing. `TicksFrozen` is a cross-check on the counter, never its source (§3.4). |
+| `ZoneActivatedEvent` | from `Zone.Activated()` inside `SetActiveZone` — **after** `MarkActive()` and the outgoing `Deactivated()`, but **before** `ActivateObjects()` and `Suspended = false`; and again on game load, with no thaw at all | the zone is `ActiveZone`; its objects are **not yet live or active**; `Suspended` is still `true` | **the pass** (seat → survey → check-in → reckon → … → materialise) and the **first budget spend**. Mutating the ground here is correct and cheap: we place, and the engine makes live what we placed one line later — the same order zone generation already uses. |
+
+`ZoneActivatedEvent` is the only one of the two guaranteed on the entry path: a suspended-but-
+resident zone is entered with no thaw, and a game load activates with no thaw. So intake is
+**recomputed idempotently at activation** too — which costs nothing, because the counter is
+*derived from two stamps* rather than accumulated from events.
+
+**The spend.** Each turn, while a claimed zone is seated and its counter is non-zero, the pump
+(§0.0(e)) spends up to the budget:
+
+1. **Visible cells first.** Units whose anchor cell is in the player's current field of view go
+   first. This is what makes the guarantee *perceptual* rather than merely amortised — what the
+   founder is looking at catches up first, and the rest fills in behind them as they walk.
+2. **Then the rest,** in stable row order (works by `WorkId`, residents by `ResidentId`) — stable
+   so a save and reload mid-catch-up resumes in exactly the same place.
+3. **Stop at the budget.** Not at the debt.
+
+**What happens if the founder leaves before catch-up finishes.** Nothing special, and that is the
+whole point.
+
+> **The catch-up invariant.** *For every zone, at every instant: the model is authoritative for
+> exactly the part of the debt that has not been reified, the ground is authoritative for exactly
+> the part that has, and the counter is the boundary between them.*
+
+Three consequences fall straight out of it:
+
+- **No loss.** The counter is a field on the zone row, serialized with the model — not a transient.
+  It survives suspend, freeze, save and reload. A founder who walks out at unit 40 of 132 walks
+  back in owing 92, whenever that is and wherever they went.
+- **No double-apply.** A unit leaves the debt at the instant it *lands*, not the instant it is
+  scheduled — `ZoneRepair`'s own "debt cleared on read" (`:58`), applied per unit instead of per
+  batch. Re-entering, reloading or re-activating cannot re-land a unit, because the model no longer
+  owes it.
+- **No wrong answer, only a stale view.** The un-reified remainder is still in the model, still
+  counted by `KingdomReports`, still spendable by upkeep and trade. It is invisible on the ground
+  and nowhere else. That is the staleness voice the mod already uses about a sighting, and the
+  ledger says it in the founder's register when a zone walks in owing: *the granary has more in its
+  books than on its shelves, and the hands are still carrying it in.*
+
+Testable in one line: **model total == ground total + counter-owed, per stock kind, at every
+instant.** That strengthens §8.2's first invariant rather than replacing it — the old one is this
+one with the counter at zero.
+
+### 3.6 The heartbeat — a bounded micro-reckon while the founder stands in the city
+
+Addendum 12(c) rules what "almost real time" actually has to mean, and it is more than
+presentation: *"if in one zone a generator, building, etc wears down enough to stop producing, or
+meaningfully impact what you would find in the zone you are actively in, that needs to be simulated
+and felt."* A city whose model only advances at the door is not living; it is merely reconciled.
+
+**So the heartbeat is a micro-reckon, not a display.** Every `N` ticks while a claimed zone is
+seated, the realm advances its cities' models by the elapsed delta and surfaces what changed.
+Three distances are covered by three different mechanisms, and only the middle one is new:
+
+| Distance | Mechanism | Cost to us |
+|---|---|---|
+| **The zone the founder stands in** | vanilla, live. Its producers tick, its actors act, its `EndTurnEvent` fires. The engine doing its job, already paid for | **zero** |
+| **A zone just left** | vanilla's 40-turn grace: still cached, not suspended, still ticked (`D/XRL/Core/ActionManager.cs:443-449`). Stepping one zone over and back needs no reckoning at all (§6.3) | **zero** |
+| **The rest of the city, however large** | the micro-reckon, below | **≈ 5 row-visits a turn** |
+
+**The cadence: `N` = 50 ticks — one in-game hour, `Calendar.TurnsPerHour`.** Chosen, not guessed:
+
+- **It is the game's own unit.** The day-shape bands the founder actually perceives are hour-scale
+  (§3.2b); nothing finer than an hour is legible to a player, so nothing finer is worth computing.
+- **It is far below the model's breakpoint density.** Crops advance in days, wear in days, clocks
+  in hours to days. A 50-tick slice therefore resolves in **one or two** breakpoint steps, and the
+  budget caps it at four; a slice that wants more has a pathological model and says so in the log.
+- **It amortises to nothing.** One slice is one propose pass plus one or two apply passes ≈ `2R`
+  row-visits, once per 50 turns: **≈ 5 row-visits per turn per city, ≈ 10 for the realm.** That is
+  cheaper than the cursor the presentation-only version of this idea would have needed.
+- **It has no special case for travel.** A slice advances by *whatever elapsed*, so several `N`
+  boundaries crossed at once (a world-map step, a long rest) is one slightly larger slice — still
+  closed-form, still one propose pass. `N` decides how often we bother, never how much we advance.
+
+**It is the same `TryAdvance`, not a second code path.** A micro-reckon calls
+`KingdomCityRules.TryAdvance(snapshot, nowTick, …)` exactly as the homecoming reckon does, and
+advances `ProcessedThroughTick` by the same `AdvanceCheckpoint` discipline (§2.2). So a run of
+micro-reckons followed by a homecoming reckon **is one advancement, split** — remainder kept, never
+re-anchored, idempotent at a repeated tick. There is no path by which a slice and a pass can both
+apply the same day. If the micro-reckon were a second implementation of the clock, this whole
+section would be a bug factory; it is one call site more on a total function.
+
+**All cities, not just the seated one.** Two cities is 10 row-visits a turn, and it is what makes
+the second city's generator failure reach a founder who is standing in the first (§2.1 already
+rules that the realm reckons all its cities at any pass — this simply makes it continuous).
+
+**Surfacing, and its budget.** A slice's happenings are dispatched by destination:
+
+- **Destination is the attended zone** → the happening becomes reify debt and arrives **embodied**
+  (§3.7), out of the ordinary 8-unit budget. A porter is two units.
+- **Destination is anywhere else** → the happening takes its model credit and is told, or held for
+  the digest, under §4.2's existing telling budget.
+- **≤ 1 told line per slice** — at most one ambient message an in-game hour, city-wide. A shortfall
+  that has just begun says itself once and then lives in the status report, which is what
+  `KingdomWord`'s send-not-outbox contract already requires.
+
+**What it may not do.** It may not decide anything the reckoning would not have decided, it may not
+draw outside the lanes §2.4 names, and it may not touch a zone that is not resident. It is the
+clock running while somebody is watching — nothing more, and nothing less.
+
+### 3.7 Embodied arrivals and journey continuity — the porter, and the itinerary
+
+Addendum 12(c)'s canonical image: *"walking around in my house in 1 zone, a farm finishes
+harvesting in another zone, a porter should come and put the harvested goods in the storage that is
+in the zone i am walking around."* This is the moment the whole architecture exists to produce, and
+it is nearly free, because every piece of it already stands.
+
+**The shape.** A happening carries a destination (`DeliverTo(WorkId)`, `MendAt(WorkId)`,
+`WordFor(ResidentId)`). When the destination's zone is the attended one at the moment the unit is
+reified:
+
+1. **Mint the carrier at the edge** — the zone edge nearest the source zone, or the gatehouse if
+   one stands there. One reify unit, one body mint.
+2. **Let vanilla walk them.** `Brain.PushGoal(MoveTo(cell))` to the destination work, then a
+   `DelegateGoal` that does the thing on arrival — the identical construction `Bed` uses to send a
+   villager to sleep (§3.2b). We write no pathfinding, no stepping, no animation.
+3. **Deposit the real goods** into the real `Inventory` or `LiquidVolume`, under the
+   `_stock`/`norestock`/`IsImportant()` protocol (§3.2a). One reify unit.
+4. **Leave.** `MoveTo(edge)`, then despawn — the carrier is a visitor, not a resident, and never
+   joins the roster or the population count.
+
+Repair crews and messengers are the same four steps with a different `DelegateGoal`. Total cost:
+**two reify units and a walk vanilla was going to do anyway.**
+
+> **The one-event-two-renderings invariant.** *A happening has exactly one **effect** — applied
+> once, at its dated tick, by `TryAdvance` — and at most one **rendering**: embodied if its
+> destination is attended at the moment the unit is reified, credited-and-materialised-later
+> otherwise. A rendering never re-applies the effect. It only moves goods the model already owes
+> from the debt onto the ground.*
+
+Which means, precisely:
+
+- **No divergence.** Both renderings consume the same units from the same counter (§3.5). The
+  stores were credited at the dated tick, as Addendum 11(b-ii) already rules; the porter is
+  carrying goods that are *already the city's*.
+- **No double-apply.** Choosing a rendering is a function of attendance, not a decision about what
+  happened. A save reloaded with the founder standing somewhere else renders differently and
+  **rolls nothing again**.
+- **An interrupted porter is a story, not a fault.** If the carrier is killed or robbed en route,
+  the goods are real items lying in a real zone under the protection law, the debt is already
+  spent, and the next check-in (§3.1) finds the ground short of the model and attributes it —
+  exactly the machinery §3.1(4) was written for.
+
+**Where the porter's determinism draws anchor.** The `taf:stream:delivery` lane, with `ordinal` =
+the delivery clock's occurrence index and `rulesVersion` frozen at creation (§2.4). So the same
+delivery yields the same carrier — name, origin, which edge they enter by — whether the founder
+watches it or reads about it afterwards. **The rendering choice is deliberately not a draw**, which
+is what keeps a reload from re-rolling a person.
+
+**A job is a timed itinerary, computed once, at creation.** Addendum 12(e): a carrier *"needs to
+path to the correct zone … in the correct amount of time. If they come into my zone, fetch water,
+i should be able to follow them back."* That is a stronger requirement than arrival, and it is met
+by making the **model** answer the question — never the body.
+
+**Where the state lives: on the job row**, in `KingdomCityState`, bounded by the same ≤ 16 open
+jobs the registry caps (§3.8):
+
+```
+Job = (JobId, Kind, Cargo, SourceWorkId, DestWorkId, StartTick, WalkTicksPerCell, Status,
+       Legs[<= 6])
+Leg = (ZoneId, EnterCell, ExitCell, PathLength, DepartTick, ArriveTick)
+```
+
+Six legs is the cap: a nine-zone city's diameter is four or five zone steps, and a job that wants
+more than six is refused at planning and told. From these rows one pure function answers
+everything:
+
+```
+KingdomItinerary.At(job, tick) -> (ZoneId, Cell, CargoRemaining, Phase)
+```
+
+A linear scan of ≤ 6 legs for the one containing `tick`, then interpolation along it. **One answer,
+and every zone renders that same answer** — which is I5, and which is why the body never has to
+literally traverse anything. Consistent re-rendering is *indistinguishable from* following, and
+costs a fraction of what following would.
+
+**What is stored, and what is re-derived.** Storing a full cell path would be up to eighty entries
+a leg. So the leg stores its **endpoints and its length**, and the in-between is re-derived at
+render time by walking the *live* zone's real pathfinder from `EnterCell` toward `ExitCell` for
+`floor(progress × PathLength)` steps. **The endpoints are model truth; the in-between is a
+redrawing that may differ by a cell or two if the ground changed** — a wall raised across the route
+moves the carrier's drawn position and not their arrival. That is the right trade, and it is
+self-correcting because the endpoint is the thing that is stored.
+
+**Path length at creation: estimated, never pathfound.** Creation happens at *reckon*, over a
+frozen model — most route zones are on disk, and **reckon may not touch a zone** (§0.0(d)). So:
+
+- **At creation**, `PathLength = Chebyshev(EnterCell, ExitCell) × Sinuosity`, where `Sinuosity` is a
+  named rules constant per district (open ground ≈ 1.25, built-up ≈ 1.6) in `KingdomCityRules`.
+  Cost: O(legs) integer ops, and **zero zone access**. That is the cost bound, and it is absolute.
+- **At render**, the first time a leg's zone is resident, the real path length is measured once and
+  the leg re-projects (below). The estimate is a prior; reality corrects it, and only for legs the
+  founder actually witnesses.
+
+**The re-projection rule, after a live delay or a corrected length:**
+
+> **Only the unstarted remainder of an itinerary may move.** A leg already begun keeps its
+> `DepartTick`; the current leg's `ArriveTick` and every later leg shift by the same signed delta;
+> `StartTick` and completed legs are immutable.
+
+So a porter the founder body-blocks for ten turns arrives ten turns later and everything downstream
+shifts by ten — no rubber-banding, no catch-up sprint, no time travel. It is computed at check-in
+(§3.1), where the ground already wins: read the body's actual cell, compare against `At(job, now)`,
+convert the difference to a tick delta on the current leg. One subtraction. Bounded: **at most one
+re-projection per leg**, and a job whose elapsed exceeds twice its projected duration **fails** and
+is told — so a founder who blocks a doorway forever produces a story, not an unbounded job set.
+
+**Interference while attended: the ground wins, and failure is honest.** Death or robbery **fails
+the job** — the binding is evicted (§3.8), the cargo stays **where it fell** as real items under
+the protection law, and the city's stores are **debited back** by the lost amount, because
+Addendum 11(b-ii) credited them at the dated tick. That is the one place a credit is ever reversed,
+and it is therefore the one place that must always be told. **Never double-delivered, never
+silently restored.**
+
+**The edge handoff, and the timing that stops it popping.** At Speed 100 an actor is granted 100
+energy per segment (`D/XRL/Core/ActionManager.cs:740`) and acts at 1,000
+(`:741, 755`); a move costs 1,000 by default (`D/XRL/World/Parts/Physics.cs:3801`); ten segments
+make one turn and one `TimeTicks` (`D/XRL/Core/ActionManager.cs:1644-1655`). **So at Speed 100 an
+actor covers exactly one cell per tick** — carrier and founder alike. Transients are minted at
+Speed 100 and `WalkTicksPerCell = 1`, so `PathLength` cells is `PathLength` ticks and a founder
+walking beside a porter neither outpaces them nor falls behind. Where a carrier's blueprint has a
+different speed, `WalkTicksPerCell` must equal its real per-cell tick cost — and if it does not,
+check-in's re-projection corrects it every leg, so the constant being wrong costs accuracy, never
+consistency.
+
+Following one across an edge, step by step:
+
+1. Leg `k` ends at `ExitCell` on zone `Z_k`'s edge at `ArriveTick`.
+2. Leg `k+1` begins at the `EnterCell` **the engine's own zone connection maps that exit cell to**.
+   It is not a choice, so it needs no draw and cannot disagree with where the founder comes out.
+3. The founder crosses and activates `Z_{k+1}`. Materialisation places the carrier at
+   `At(job, now)` — and because `now ≈ ArriveTick` with the leg just begun, that is **just inside
+   the entry edge, a cell or two along.** They are where the founder expects them.
+4. Cross slower and the porter is further along; cross faster and they are right at the edge. Both
+   are correct renderings of the same one answer, which is the whole point of I5.
+
+**Two acceptance tests, not one.** *Deliver-to-my-zone* (§6.5, Pass 32 step 90d) is the author's
+canonical scenario. *Follow-the-porter* (step 90d2) is its continuity twin, and the harder of the
+two: a handoff that pops is a visible failure of I5 even when every number is right.
+
+### 3.8 One identity, at most one body — the binding registry
+
+Addendum 12(d): *"we need to make sure those NPC's don't accidentally get duplicated across
+zones."* §8.3 answers this for residents — model row primary, body a durable view bound by
+`ResidentId`. It must now be answered the same way for everything else we mint, because §3.7 mints
+porters, and a porter can freeze into a zone with the goods still on their back.
+
+**One registry, realm-scope, answering both.** `KingdomBindingRegistry` lives on `KingdomSystem`
+beside the realm seed — not on a settlement, because a bound body can be in another city's zone or
+walked off the map entirely. One row per binding:
+
+```
+(BindingKey, Kind, ZoneId, ObjectRef, MintedTick)
+     Kind = Resident   ->  BindingKey is a ResidentId
+     Kind = Transient  ->  BindingKey is a JobId       (delivery, mend, message)
+```
+
+Bounded like everything else: ≤ 60 residents x 2 cities, plus **≤ 16 open jobs per realm**.
+**A closed job is evicted at once, so absence from the registry *is* proof of closure** — there is
+no second "closed" list to keep in step with the first.
+
+**Check-before-mint, and it is the only path to a body:**
+
+```
+TryBind(key, kind, zone):
+  registry.TryGet(key):
+    hit, ObjectRef resolves live in THIS zone     ->  MOVE it. Do not mint.
+    hit, resolves live in another RESIDENT zone   ->  resident: move across.  transient: refuse.
+    hit, does not resolve (its zone is on disk)   ->  REFUSE THE MINT. The debt stays owed.
+    miss                                          ->  mint, and write the binding in the SAME
+                                                      copy-on-write publish as the debt decrement
+```
+
+The rule with the teeth: **an unresolvable binding is a refusal to mint, never a licence to mint.**
+A frozen body is invisible; its binding is not, and the binding is what we consult. That single
+line is the whole anti-duplication argument, and it holds across suspend, freeze, save, reload and
+crash — because the registry is serialized with the system, and the mint and the binding are
+published together or not at all (§1.3).
+
+**The nasty case, walked through.** *The founder leaves mid-walk; the porter freezes into the zone
+holding the goods; the model completes the job while they are away; the founder returns and thaws.*
+
+| | What happens | Why it is safe |
+|---|---|---|
+| **t0** | Job `J` opens; body `B` is minted at the edge; binding `(J → B, Z)` written; the mint spends one reify unit; the **deposit** unit is still owed | one job, one body, one binding |
+| **t1** | The founder leaves. `Z` suspends, then freezes; `B` goes to disk with the goods. The binding persists — it lives on the system, not in the zone | the registry outlives the ground it describes |
+| **t2** | The model reaches `J`'s completion tick. `TryAdvance` closes `J`, **evicts the binding**, and re-attributes the outstanding deposit unit from the porter to the ordinary materialisation path (§3.2a) | the stores were credited at the dated tick either way (Addendum 11(b-ii)) — only the *rendering* changed, which is exactly what I2 permits |
+| **t3** | The founder returns; `Z` thaws. At `ZoneThawedEvent`, **before intake and before any reify**, the **stale-transient sweep** runs: any object carrying a `KingdomJobId` with no open binding is despawned | this is the one instant the goods could exist twice — in the larder and in a frozen pack — and it is closed before anything can look |
+
+**The sweep's licence, and its limits.** What it removes is `_stock` — items the simulation made
+and may remove, vanilla's own protocol (§3.2a) — and numerically the same drams and servings the
+model already delivered. That is **deduplication, not destruction of property.** Strictly:
+
+- Anything on the body that is **not** `_stock`, or that answers `IsImportant()`, is **dropped to
+  the cell first and never destroyed.** The protection law is not bent for our convenience.
+- The sweep is licensed for **transients only.** A transient is a *rendering of a job*, and jobs
+  close; a resident is a *person*, and §8.3's *materialisation may never remove a body* stands
+  untouched — a resident whose row went `Dead` or `Abroad` keeps their body and everything the
+  player did to it, and reads back at check-in.
+- One ledger line when it fires, in register: *the load you left on the road reached the store by
+  another hand.*
+
+**Asserted directly in `kingdom:selftest`, not inferred:** *no `BindingKey` ever resolves to two
+living bodies, in any zone, at any time* (I3).
+
+### 3.9 Deficits drain real containers — reconciliation runs both ways
+
+Addendum 12(d): *"where water is deficit, the storage it's taken from is updated accordingly, not
+just in a ledger."* This is the half of reconciliation §3.1 did not cover, and stating it plainly
+closes a real gap:
+
+- **Check-in is ground → model** (§3.1). The ground wins for anything physical; differences are
+  attributed and told.
+- **Reify is model → ground** (§3.5). The model's *consumption* is applied to real containers, at
+  container level, out of the same per-turn budget.
+
+**So the counter is signed.** A catch-up unit is either `+land` — crops into the larder, water into
+the cistern — or `−draw`: a season's drinking taken out of the vessels it was actually drunk from.
+Same budget, same visible-first ordering, same invariant; §3.5 needs no amendment beyond the sign.
+The founder who opens the cistern after a season finds **exactly the model's remainder**, and the
+larder holds **exactly the crops nobody ate**.
+
+**Cross-zone draws land where the vessel is.** Upkeep is a city-level draw against city-level
+stocks (§1.2a), but a dram is drunk out of a particular urn. A draw apportioned to a zone the
+founder is not standing in becomes a **negative unit on that zone's counter**, landing on that
+zone's real containers the next time it renders — the cross-zone harvest delivery, run backwards.
+Nothing new, and no unloaded zone is ever touched.
+
+**The drain order, chosen and justified: oldest dedication first.** The city drinks from the vessel
+it was given first; the founder's newest dedication is the reserve that outlives everything else.
+
+- **Deterministic without a draw, and stable under reload**, because dedication order is a *stored
+  fact* rather than a ranking recomputed from contents. "Smallest first" is *not* stable — the
+  smallest *remaining* vessel changes as the drain proceeds, so a reload resuming from a slightly
+  different intermediate state can pick a different urn. Ranking by *capacity* is stable but ties
+  constantly (ten identical urns), and its tiebreak would have to be dedication order anyway. So
+  dedication order is the primitive, and the only one needed.
+- **Legible.** A player can plan around *the oldest cask goes first*; nobody can plan around an
+  order that depends on the arithmetic of the last upkeep.
+- **It makes the camp bootstrap behave.** Addendum 12(a-ii)'s pour-and-leave buffer drains the
+  camp's own kit before it touches a waterskin the player dedicated afterwards.
+
+Every drain goes through `KingdomLiquids.Drain` — measure the delta, never trust the return value
+(STANDARDS §1) — and respects `IsFreshWater`, so a drain can never launder brine into the books.
+
+**The audit invariant, in both directions.** After any attended pass of a fully-visited city with
+the counter at zero, **model total == ground total, per stock kind**; mid-catch-up, the general
+form is I1. A mismatch is attributed to a cause and told (§3.1 step 4) — **never silently
+repaired**, and never treated as a fault. That is `RecordZone`'s shipped discipline, now running in
+both directions instead of one.
+
+### 3.10 Logistics — central batch planning, not agent AI
+
+Addendum 12(f): *"a building should try to fetch stored resources from whatever building is holding
+it closest to them, and citizens should path 'optimally' for pick up and delivery, something i know
+rimworld struggles with."*
+
+**The structural answer, stated first, because it is the whole reason this works.** RimWorld's
+hauling pathologies — the pawn that walks the length of the map past a nearer stack, the two
+half-empty trips, the zigzag — are not tuning failures. They are the *consequence of the
+architecture*: each pawn decides, per tick, with local knowledge, in a world that is changing while
+it decides. **We have the opposite architecture and get the opposite property for free.** Jobs are
+planned **at reckon, over a frozen snapshot, with global knowledge**, and committed as itineraries
+(§3.7). No carrier ever decides anything. **The pathologies are not mitigated here; they are
+unrepresentable**, because there is no per-pawn decision to make them in.
+
+**(1) Nearest-holder sourcing.** An input job binds to the closest container **actually holding**
+the resource — not the nearest container of the right kind — by real path distance over the
+claimed-zone graph. The model knows which container holds what, because §3.9's dedication-ordered
+container index is exactly that fact. Ties break on **lower `WorkId`**: stored, stable, no draw.
+
+**(2) The two-level distance matrix, and what we deliberately do not store.**
+
+```
+Dist(a, b) = IntraZone(a -> exitEdge) + Σ EdgeCrossing + IntraZone(entryEdge -> b)
+```
+
+- **Level 1 — the zone graph.** Nodes are claimed zones, edges are adjacency (orthogonal in the
+  same stratum, plus the stratum above and below). ≤ 9 nodes. All-pairs by Floyd–Warshall is
+  9³ = **729 integer ops**, and the table is ≤ 81 entries.
+- **Level 2 — within a zone.** Work→edge lengths (≤ 6 edges), and same-zone work pairs.
+
+**We never store `works²`.** We store work→edge (≤ 540 entries) plus same-zone pairs (≤ 900) plus
+the ≤ 81-entry zone all-pairs table, and **compose any cross-zone distance in O(1)** from them.
+That is what "two-level" buys: the `O(works²) ≤ ~1600` figure the addendum quotes is the bound we
+stay *under*, and this decomposition is how — ≈ 1,521 `ushort` entries, **≈ 3.0 KiB per city**
+(§0.0(c)), at nine zones as at four.
+
+**Invalidation is by structure, never by time or by stock.** A dirty flag per zone, set only on
+work placement, work removal, or a road change; the zone's slice (≤ 100 entries) is recomputed the
+next time that zone renders. **Never at reckon** — recomputing needs the ground, and reckon may not
+touch it (§0.0(d)).
+
+**(3) Roads discount the metric.** A leg following a laid road is scaled by
+`KingdomCityRules.RoadDiscountPercent` — a named rules constant, proposed at **60** (a paved leg
+costs 0.6 of the same distance unpaved) — applied identically to the estimate and to the measured
+length, so a road cannot make the two disagree. The consequence the player actually sees is the
+point: **laying a road visibly shortens every itinerary that uses it.** Porters arrive sooner, more
+jobs fit into one trip, and the works board's *waiting on* figures fall. `KingdomRoads` stops being
+decoration and becomes logistics infrastructure, which is what the addendum asks for.
+
+**(4) Capacity-bound batching.** Per slice (§3.6), over the open jobs:
+
+- group by carrier capacity and route overlap;
+- construct by **nearest-neighbour** seeded from the lowest `JobId`;
+- improve by **2-opt**, in a fixed scan order, to a hard iteration cap.
+
+Bounds, all of them constants: **≤ 16 jobs considered, ≤ 8 stops a trip, ≤ 50 swap tests** —
+≲ 1,000 integer ops a slice, inside the slice budget (§0.0). **Deterministic, with no draw
+anywhere in the planner**: routing is arithmetic, not chance. Draws remain only for flavour — which
+settler carries, and what they are called — on `taf:stream:delivery` (§2.4).
+
+**The bar is "never looks stupid", and it is asserted rather than hoped for.** Two checks, both in
+`kingdom:selftest` and both in Pass 32 step 90j:
+
+1. **No carrier crosses the city past a nearer holder.** For every completed fetch, no container
+   holding that resource had a strictly smaller `Dist` at plan time.
+2. **No two half-empty trips where one would do.** No two trips planned in the same slice share a
+   route prefix while both run under capacity.
+
+### 3.11 Networks — pipes, conduits, and the flow solve
+
+Addendum 12(g): *"can we simulate networks of water, electricity, other liquids to enable buildings
+to work over multiple tiles and have containers have actual proper numbers for the water or
+resource they are holding?"* Yes — and it is the same two-layer pattern as everything else in §3,
+which is the reason it is affordable at all.
+
+**Attended: ride the vanilla transmission family, unchanged.** The engine ships an abstract
+`IPowerTransmission : IPoweredPart` with five concrete families —
+`ElectricalPowerTransmission`, `HydraulicPowerTransmission`, `MechanicalPowerTransmission`,
+`BiomechanicalPowerTransmission`, `GenericPowerTransmission`
+(`D/XRL/World/Parts/IPowerTransmission.cs:12` and siblings). It already does the hard part:
+
+- **Network discovery is a cardinal-only BFS over cells**, collecting `Producers`, `Consumers` and
+  a `GridCapacity` as it goes (`:1121-1195`, `Cell.DirectionListCardinalOnly` at `:1190-1193`).
+- **Charge walks the network by event**: `ChargeAvailableEvent` and `FinishChargeAvailableEvent`
+  dispatch into `Process(E)` (`:383-393`); demand is gathered by `QueryChargeEvent` /
+  `TestChargeEvent`, each carrying a `GridMask` that is OR-ed with the part's `GridBit` before
+  recursing (`:322-341`) — the engine's own re-entrancy guard, which is what makes a **cyclic**
+  network terminate. We do not need to reinvent any of that, and per Addendum 11(c) we must not.
+
+**The one engine fact that decides the model layer.** The flood-fill walks with
+`GetLocalCellFromDirection`, which is `GetCellFromDirectionGlobal(..., bLocalOnly: true, ...)`
+(`D/XRL/World/Cell.cs:8051-8054`). **A vanilla network cannot cross a zone boundary.** So for a
+city that spans zones, the model graph is not an optimisation of vanilla's network — it is the only
+way a multi-zone network exists at all. Vanilla renders the part of the network the founder is
+standing in; the model owns the whole of it.
+
+**Liquid piping is fill-in, and this is on the record.** `HydraulicPowerTransmission` pipes carry
+**joules, not supply**; their only liquid motion is `MingleLiquids` → `MingleAdjacent`, which
+equalises with *directly adjacent* volumes and routes nothing. `LiquidPump` exists as a class but
+**every carrier blueprint that would use it is commented out of `Furniture.xml`** — it ships with
+no live user, and its directional fields are untested by any shipped content
+(`VANILLA-PRODUCTION-TRUTH.md` §0, §8). So liquid piping is tier 3 of Addendum 11(c) — *fill in, in
+vanilla's idiom* — and `LiquidPump` is a **wrap with a warning**, not a free hook.
+
+**Model: one graph row per network.**
+
+```
+Network = (NetworkId, Kind, TopologyStamp, Nodes[<= 32], Edges[<= 48])
+Node    = (WorkId, Role: Source | Sink | Store, Capacity, Rate)          16 B
+Edge    = (NodeA, NodeB, ConduitCapacity, Condition)                     16 B
+Kind    = Electrical | Hydraulic | Mechanical | Biomechanical | Liquid(liquidId)
+```
+
+**Stocks key by `(NetworkId, LiquidId)`** — 12(g)'s explicit ask, and it is forced by the engine:
+`LiquidVolume` is liquid-agnostic, so a cistern on the fresh main and a cistern on a brine main are
+different stock rows despite being the same part. Keying by network alone would let brine into the
+city's water figure, which STANDARDS §1 already forbids by another route.
+
+**Topology changes only on placement**, never on time and never on stock — the identical cache
+discipline the distance matrix keeps (§3.10). `TopologyStamp` is bumped on a conduit or node being
+placed, removed or destroyed; the graph is rebuilt from the ground the next time that zone renders.
+**Never at reckon**, because rebuilding needs the ground and reckon may not touch it (§0.0(d)).
+
+**The solve: closed-form flow conservation, netted per network.** Between two breakpoints every
+rate is constant (§2.3), so a network's behaviour over an interval is arithmetic:
+
+```
+surplus = Σ source rates (each scaled by its own condition, Addendum 10(b))
+        − Σ sink demands
+surplus >= 0 -> stores charge, capped by headroom over the interval
+surplus <  0 -> stores discharge; when they empty, BROWNOUT
+```
+
+**Throughput uses the bottleneck relaxation, deliberately not max-flow.** For each source we take
+the minimum edge capacity along the BFS tree to each sink — O(nodes + edges) ≤ 80 per network.
+Player-laid conduit is essentially a tree; a true max-flow is O(V·E²), buys nothing a player can
+perceive, and the relaxation is **conservative** — it can understate throughput, never overstate
+it, so it can never manufacture supply. That is the right direction for an error to point.
+
+**Cost, bounded by the same argument §2.3 uses.** A network is re-solved only when one of *its*
+breakpoints falls — a source crossing a wear threshold, a store filling or emptying, a topology
+stamp changing — and every breakpoint consumes at least one structural change. So across a whole
+reckoning the re-solves are bounded by `B`, not by `B × networks`: **≤ 64 × 80 = 5,120 node-visits
+per city**, on top of §0.0(a)'s row-visits. Trivial, and it does not scale with the elapsed.
+
+**Deficit is a brownout *event*, not a silent zero.** It is a happening (§4.1): dated, told once,
+and surfaceable by the heartbeat within the in-game hour (§3.6), so *"the mill went quiet on the
+sixth of Ut"* reaches a founder standing three zones away. Works stop in a **stated deterministic
+priority order**, lowest first:
+
+> **industry → refining → amenity → food → water → defence and watch**
+
+with ties broken by **higher `WorkId` stopping first** — the newest-built work goes quiet before
+the oldest. That order is not invented here: it is the mod's existing *stop at the loyal core*
+discipline (the thirst ladder's "empty casks and one rung of the ladder, never an empty town"),
+applied to charge instead of drams. Newest-first within a tier is stable, stored, needs no draw,
+and reads right — a city protects what it has had longest.
+
+**Containers hold true numbers, both directions.** This is §3.9 applied to networks, and the
+handoff is stated in both directions because both are needed:
+
+- **Ground → model, at check-in** (§3.1): read each node's live part — `LiquidVolume` volume *per
+  liquid*, `Capacitor` charge — and seed the network's stock rows. The ground wins.
+- **Model → ground, at reify** (§3.5, §3.9): the model's allocation lands on the real parts as
+  ordinary signed counter units, through delta-measuring adapters — `KingdomLiquids.Fill`/`Drain`
+  for liquids and its equivalent for charge. **Never a raw vanilla call whose return value is
+  trusted** (STANDARDS §1).
+
+The shipped precedent for the charge half is already in the mod: `KingdomPowerRules` measures
+everything in the charging post's cradle unit (4,000), and `KingdomPower`'s own comment about
+needing *"a fence between a windmill and a charging post to get anywhere — a wiring puzzle"* is
+exactly the problem a network graph dissolves.
 
 ## 4. Events with meaning
 
@@ -634,7 +1453,10 @@ None of that is possible today.
 |---|---|
 | System lifecycle | `IGameSystem`, `Register(XRLGame, IEventRegistrar)`, named-field `IComposite` serialization |
 | Pass trigger | `ZoneActivatedEvent` (already), `SuspendingEvent` (new — the true last read), `ZoneDeactivatedEvent` (hint), `ZoneThawedEvent.TicksFrozen` (cross-check) |
-| Absence catch-up | `ZoneRepair`'s accumulate-and-apply-N-units (`BuildCounter / TurnsPerObject`) and `GenericInventoryRestocker`'s stamp-and-compare — both engine-authored |
+| Absence catch-up | `ZoneRepair`'s accumulate-and-apply-N-units (`BuildCounter / TurnsPerObject`) and `GenericInventoryRestocker`'s stamp-and-compare — both engine-authored. §3.5 keeps the counter and amortises the spend |
+| Per-turn **pump** (never a clock) | game-level `EndTurnEvent.Send(game)` — one dispatch a turn, no zone broadcast (§0.0(e)) |
+| Holding a zone **resident but not ticked** | `GetZone` (thaw) + `Zone.Suspended` as saved + `MarkActive()` each turn — all vanilla API, bounded to one zone and self-releasing (§6.4) |
+| Carrier movement | `Brain.PushGoal(MoveTo)` + `DelegateGoal`, the construction `Bed` already uses; Speed 100 = one cell per tick (§3.7) |
 | Item ownership | `_stock` / `norestock` / `IsImportant()`, vanilla's own protection protocol |
 | Daily life | `IdleQueryEvent` + `Brain.Stay` / `StartingCell` + the `Bored` goal — the entire vanilla surface, and the same one `Bed` uses |
 | Absence idiom | `Temporary`'s tick-stamp catch-up — the engine's own answer, ratified |
@@ -664,15 +1486,16 @@ arithmetic and bookkeeping, none of them fighting the engine.
 | survey | one zone walk — **already paid today**, unchanged |
 | check-in reconcile | O(objects surveyed) on the *same* walk's results — no second walk |
 | reckon | see below |
-| materialise | O(residents bound to this zone + items minted), both capped |
+| materialise | **O(budget) — 8 units, flat**, whatever is owed (§3.5). This row used to be the design's worst spike; it is now its flattest line |
 
 **Per reckoning — O(model), independent of days.**
 
 For the worst case in the mandate — a 4-zone City, 60 residents, 40 works, one season (90 days)
 away:
 
-- breakpoint loop: ≤ 64 steps, each O(works + residents) ≈ 100 → **≤ ~6,400 row-visits**, plain
-  integer arithmetic;
+- breakpoint loop: ≤ 64 steps over `R` = 116 rows, propose and apply → **≤ 14,848 row-visits** of
+  plain integer arithmetic. §0.0(a) counts it out in full and §0.0(f) gives the formula for a city
+  of any size;
 - fixed-period lanes: O(1) each via `TryCountFixedPeriodDue`, ~12 of them;
 - draws: one per *happening*, not per day — a season of a busy city is tens, not thousands, of
   SHA-256 blocks;
@@ -697,11 +1520,249 @@ a local. It is a linear scan over `XRLGame.Systems` with a `GetType()` call per 
 (`D/XRL/XRLGame.cs:286-300`); called per row over 100 rows it is the only hot spot this design
 has.
 
-**What we do not do**: pin zones (cap 3, clears on overflow); veto suspension; keep a zone cache
-warm; walk an unloaded zone's objects; run any per-turn clock over city state. All four are either
-forbidden by STANDARDS or refuted in §0.1.
+**What we do not do**: pin zones (cap `> 3`, clears the whole list on overflow); veto suspension;
+hold any zone **live** (ticked); walk an unloaded zone's objects; run any per-turn *clock* over city
+state. All five are forbidden by STANDARDS or refuted in §0.1. There is exactly one bounded
+exception, and §6.4 prices it: holding **one** neighbour *resident and suspended* while it still
+owes catch-up — which costs nothing per turn, because a suspended zone is not ticked.
 
 ---
+
+### 6.4 Why not keep the city's zones live — and what we do instead
+
+The author's question, asked directly and owed a numeric answer rather than a doctrinal one:
+*would it be worth it, and possible computationally, to activate the zones that need
+repair/catch-up for a whole city while you are inside the bounds of that city?*
+
+**It is possible.** `SetCachedZone(Zone)` does exactly that in three lines — `MarkActive()`,
+`ActivateObjects()`, `Suspended = false` (`D/XRL/World/ZoneManager.cs:1771-1776`) — and calling
+`MarkActive()` every turn holds a zone against both suspension and freezing (`GetSuspendability`:
+`currentTurn - LastActive <= 40`; `GetFreezability`: `<= 0` —
+`D/XRL/World/Zone.cs:7451-7453, 7472-7483`).
+
+**It is wrong, for four reasons, and the fourth is decisive:**
+
+1. **Four times the per-turn cost.** `ProcessSingleTurn` ticks and broadcasts `EndTurnEvent` into
+   every cached zone that is not suspended (`D/XRL/Core/ActionManager.cs:443-449`). A 4-zone City
+   held live is four zone ticks and four broadcasts across 8,000 cells **every turn**, plus every
+   settler back in the `ActionQueue` taking a real turn. At nine zones (§0.0(f)) it is nine.
+2. **Every held zone inline in every save.** `ZoneManager.Save` writes all of `CachedZones` in full
+   and uncompressed, suspended or not (`:468-475`); only *frozen* zones are ids. And a zone held by
+   per-turn `MarkActive()` is not freezable, so even the force-freeze that save-and-quit runs
+   before `SaveGame` (`D/XRL/Core/XRLCore.cs:1138-1139, 1740-1741`) cannot clear it.
+3. **Pinning is not the way and never was** — cap `> 3`, checked lazily inside `GetSuspendability`,
+   clearing the entire list on overflow (§0.1). A 4-zone City is exactly one over.
+4. **A live-but-unattended zone does not run our machinery at all.** Every step of the settlement
+   pass binds `ZoneActivatedEvent` — *activation*, not ticking. A zone held live by `SetCachedZone`
+   is never activated, so it never reckons, never checks in, never materialises. It pays the full
+   vanilla cost of being awake and advances **nothing** of the simulation the author is asking for.
+   It buys idling NPCs in an empty room, at four times the price.
+
+**What we do instead — three mechanisms, and only the middle one is new.**
+
+**(1) Ride the 40-turn grace.** Free, and already true (§6.3): a founder moving between the zones of
+their own city re-enters ground that never went to sleep.
+
+**(2) Prefetch-thaw the neighbour, and spend its counter before the founder crosses.** The insight
+that makes this cheap: **we never needed a zone to be *live*; we need it to be *resident*.** A
+suspended-but-resident zone has its whole object graph in RAM — suspend serializes nothing and
+drops nothing (§0.1) — so `KingdomSurvey` can read it and materialisation can write into it,
+exactly as zone generation writes into a zone that has never been activated. And a suspended zone
+is skipped outright by `ProcessSingleTurn` (the `!zone2.Suspended` guard, `:445`), so it costs
+**zero per turn**.
+
+All of the mechanism is vanilla API:
+
+- `The.ZoneManager.GetZone(id)` thaws a frozen zone (`:2062-2097`). `Zone.Suspended` is a plain
+  **serialized** field (`D/XRL/World/Zone.cs:199-204`), so a zone suspended before freezing comes
+  back **suspended** — resident, and not ticked.
+- `CheckCached` calls `SuspendZone` only on zones that are *not already* suspended (`:998-1009`),
+  so nothing re-wakes it.
+- `MarkActive()` each turn keeps `GetFreezability(0)` at `TooRecentlyActive`, so it is not written
+  straight back to disk. One long assignment a turn (`D/XRL/World/Zone.cs:2304-2307`).
+- The stale-transient sweep (§3.8) runs at its `ZoneThawedEvent` like any other thaw. **A prefetch
+  is not a special path through the invariants, and may not become one.**
+
+**Bounds, and they are strict:**
+
+- **At most one prefetched zone**, beyond the seated one. Two resident city zones, never more.
+- **Only a zone the founder could reach next**: an orthogonal neighbour in the same stratum, or the
+  stratum directly above or below. The engine's topology gives at most six; we **consider two**
+  (ranked by debt) and **hold one**. **This is O(neighbours), never O(city)** — a founder in a
+  thirty-zone city pays exactly what a founder in a two-zone city pays (§0.0(f)).
+- **Only while a debt stands.** *The hold lives exactly as long as the debt.* When the counter
+  drains we stop calling `MarkActive()` and the zone freezes itself at the next `CheckCached`. A
+  caught-up zone is never held — so a founder who settles in for a long stay ends up holding
+  nothing, and the save-size exposure of reason 2 above is bounded to one zone for at most the ~29
+  turns a full backlog takes to drain (§0.0(b)).
+- **Skipped under load, never queued:** none on the turn a zone was thawed or activated (the engine
+  has just run `ForceCollect()` → `MemoryHelper.GCCollectMax()`, `:829, 728-731`); none while
+  `ProcessingZones` is non-empty; none when the seated zone has already saturated the reify budget;
+  none at all after a thaw that blew its timing budget. A skipped prefetch costs the founder a
+  normal vanilla thaw at the boundary — what they would have paid anyway.
+- **One thaw is not free, and must be counted**: a SQLite read, a Brotli decompress, a `Zone.Load`
+  and a forced full GC. Prefetch pays that cost *early*, on a turn the founder is walking, instead
+  of *at* the crossing. It does not avoid it. That is the entire benefit and it should not be
+  oversold.
+
+> **The prefetch invariant.** *A prefetched zone the founder never enters is indistinguishable from
+> one that was never prefetched* — the model stayed authoritative for the un-reified remainder, the
+> counter persisted with it, and the zone froze back to disk carrying whatever landed. Prefetch may
+> change **when** work is done, never **whether** or **how much**. Anything that would not also be
+> true after a plain cold entry may not be done inside a prefetch.
+
+**(3) The heartbeat** (§3.6) — which is what actually answers the want *underneath* the question.
+The reason to activate a whole city was *so that what happens elsewhere is felt here*; the
+micro-reckon delivers that **without loading a single extra zone.** The model advances every 50
+ticks whether its zones are on disk or not, and the consequence arrives as a falling number in the
+status report, a line in the register, or a porter at the door (§3.7).
+
+**Status: prefetch is a spike, not a promise.** Every link above is verified in the decompile, but
+the *combination* — write into a suspended-resident zone, hold it with `MarkActive`, let it freeze
+on drain — is untested in play. W3 ships it behind the option gate with the receipt attached, and
+it is the one thing in this design that is safe to cut: without it, a boundary crossing costs a
+plain vanilla thaw and an entry that is already amortised to O(budget). The feature is
+**smoothness, not correctness.**
+
+### 6.5 The perf receipt — what is timed, where it lands, how it is read in play
+
+Addendum 12(b)'s last clause: *measured, not assumed.* The receipt is the smallest thing that makes
+§0.0's table falsifiable by a tester instead of by an author.
+
+**What is timed.** Five timers, each started and stopped inside the existing `Guard(label, action)`
+wrapper, so no call site changes and nothing is timed twice:
+
+| Timer | Scope | Recorded |
+|---|---|---|
+| `reckon` | one city, one pass | ms, row-visits, breakpoint steps, draws, elapsed days, live `R` |
+| `slice` | one micro-reckon (§3.6) | ms, steps, row-visits, whether anything surfaced |
+| `reify` | one turn's budget spend | ms, units spent, split `+land`/`−draw`, units still owed, how many were visible-first |
+| `thaw` | one prefetch | ms, zone id, or the reason it was skipped |
+| `bytes` | model + registry, on the write path | bytes serialized, per city and per realm |
+
+**Counters, not only milliseconds — a timing is hardware and a count is a contract.** A tester on a
+slow machine can still prove that a 90-day reckoning did the same row-visits as a 1-day one, which
+is the assertion §0.0(a) actually makes. And every count is checked against the **live** `R`, not
+against a constant, so the assertions survive the zone cap moving (§0.0(f)).
+
+**Where it lands.** `KingdomLog.Log` (`Core/KingdomLog.cs`), which already writes `[TAF]` lines to
+Player.log behind the `r_TAF_OptionDevLog` option TESTING.md says is on by default in this build.
+One greppable line per event, in the shape the log-watcher already reads:
+
+```
+[TAF] perf reckon city=Kavvat days=90 R=116 steps=41 rows=4756 draws=118 ms=1.4
+[TAF] perf slice  city=Kavvat steps=1 rows=232 surfaced=delivery ms=0.09
+[TAF] perf reify  zone=JoppaWorld.11.22.1.0.10 land=5 draw=3 visible=3 owed=92 ms=0.6
+[TAF] perf thaw   zone=... ms=31.2 reason=prefetch
+[TAF] perf BUDGET reify ms=2.4 over=2.0          <- a FAIL line, and it says so
+```
+
+A figure that crosses a §0.0 budget is prefixed `BUDGET` and names the budget it broke, so a
+failure is legible without the tester holding the table in their head. Session worsts (worst
+reckon, worst reify turn, peak owed, model bytes) append to `kingdom:dump`; `kingdom:selftest`
+asserts the memory ceiling against the **measured** byte count rather than §0.0(c)'s estimate, and
+asserts I3 directly.
+
+**How it is read in play.** One new pass, in TESTING.md's own shape. **Step 90d is the canonical
+acceptance test for the living city** — the author's porter scenario, named as such:
+
+> **Pass 32 — What the city costs, and what it delivers**
+>
+> | Step | Action | Expect |
+> |---|---|---|
+> | 90 | Found a City, hold 4 zones, 40 works, 60 settlers. Leave for a season. Come home | One `perf reckon` line: `ms` under 2, `rows` under `64 x 2R`. Nothing stutters as you walk in |
+> | 90a | Do the same, but leave for **one day** | `rows` and `draws` are **identical to 90's**. Only `days` differs. If they scale with the absence, a lane is drawing per day and it is the lane that is wrong |
+> | 90b | Watch the turns after the homecoming | `perf reify` lines, one a turn, `land+draw` never above 8, `owed` falling monotonically to zero. What you can **see** fills in first; the rest arrives behind you as you walk |
+> | 90c | Walk out while `owed` is still above zero, wander a week, come back | `owed` resumes at the number it left at. Nothing lost, nothing landed twice, no harvest counted twice (**I1**) |
+> | 90d | **The porter.** Stand in your house in zone A while a farm in zone B finishes harvesting | A porter walks in at the edge, crosses to the larder beside you, puts the real crop items in it, and leaves. The homecoming report does **not** tell you about it afterwards (**I2**) |
+> | 90d2 | **Follow the porter.** Do 90d, then walk out of the zone *behind* them, following | They exit by the correct edge cell; you come out beside them, and they are just inside the entry edge, a cell or two along — not at the far wall and not standing on the boundary. Walk faster and you catch them at the edge; dawdle and they are further on. No pop, no teleport (**I5**) |
+> | 90d3 | Stand in the porter's way for ten turns, then let them past | They arrive ten turns late and everything after shifts by ten. No sprint to catch up. Block them indefinitely and the job **fails**, is named, and the cargo is where it fell |
+> | 90e | Do 90d, then walk out mid-carry, wander until the model completes the delivery, and come back | The goods are in the larder **once**. The porter is gone. No second load anywhere, and the ledger says the load reached the store by another hand (**I3**) |
+> | 90f | Stand in zone A and let a generator in zone B wear out | Within an in-game hour the status report's figure falls and the shortfall says itself once — **without you moving** |
+> | 90g | Open the cistern and the larder after a season away | The cistern holds **exactly** the model's remainder and the larder **exactly** the uneaten crops — not a full vessel and a ledger note. Reload and repeat: the **same** vessel drained first (**I4**) |
+> | 90h | Cross repeatedly between two zones of your own city | No reckoning at all inside the grace window; at most one `perf thaw reason=prefetch` line per crossing; never two zones held at once |
+> | 90i | `kingdom:selftest` | Measured model bytes under the ceiling **and under the formula for the live `R`**, and no `BindingKey` with two living bodies. Each check names its figure rather than asserting a bare pass |
+> | 90j | Hold the same resource in two stores, one near a workshop and one across the city, and let the workshop pull | The carrier goes to the **near** one. Every time, and after a reload. Then queue three small jobs along one route: **one** trip serves them, not three (**I6**) |
+> | 90k | Lay a road along a carrier's route | The itinerary visibly shortens — the same delivery arrives sooner, and the works board's *waiting on* figures fall. Pull the road up and it lengthens again |
+
+**What constitutes failure.** A `BUDGET` line in a playtest log is a bug report, not a note. Any
+reckon over 8 ms per realm pass; any turn's reify over 2 ms or over budget; a slice over 0.5 ms or
+4 steps; measured bytes over 40 KiB in RAM or 64 KiB written; a counter that never reaches zero; or
+a `rows`/`draws` figure that differs between a 1-day and a 90-day reckoning of the same model. Each
+is a row in §0.0's table, and each is **counted, not judged**.
+
+### 6.6 The model as a public extension API
+
+The author: *"we should also try to API this so other mods can extend the model if they don't want
+to contribute directly to the mod."* The architecture makes this nearly free, and it is worth
+saying why before saying how: **the model is rows plus pure rules plus one executor. An extension
+is more rows and more pure functions under the same contract.** There is no place in §2 or §3 where
+the model asks whether a row is ours.
+
+**The data lane already stands and is the precedent.** Buildings, deals, yard works and population
+tables are XML merged by key — a mod can add a building today without a line of C# and without a
+fork. §6.6 extends that lane to *behaviour*, in the same spirit: additive, keyed, and never
+requiring the extender to touch our source.
+
+**The contract set — five extension points, one per model dimension:**
+
+| Contract | Extends | Shape |
+|---|---|---|
+| `IResourceKind` | stocks (§1.2a) | a new civic good: unit, container predicate, `(network, liquid)` key if it flows |
+| `IJobKind` / `ICarrierKind` | transients (§3.7) | a job's legs, cargo and completion; a carrier's blueprint and `WalkTicksPerCell` |
+| `INetworkKind` | networks (§3.11) | node roles, edge capacity semantics, the brownout priority tier |
+| `IHappeningGenerator` | happenings (§4.1) | reads a frozen snapshot, returns dated happenings; may not own state (§4.1's own rule) |
+| `IWorkBehaviour` | work rows (§1.2c) | run-state advance between breakpoints, and what the work owes materialisation |
+
+**Discovery rides the engine's own idiom, not an invention of ours.** `ModManager` ships a cached
+attribute scan over every active assembly — `GetTypesWithAttribute`, `GetMethodsWithAttribute`,
+`GetInstancesWithAttribute<T>` (`D/XRL/ModManager.cs:1186-1216`) — and the engine's *own* public
+extension points use exactly the marker-attribute-plus-interface pattern we want:
+`ModManager.GetInstancesWithAttribute<IWorldBuilderExtension>(typeof(WorldBuilderExtension))`
+(`D/XRL/World/WorldFactory.cs:108`; the Joppa builder does the same at
+`D/XRL/World/WorldBuilders/JoppaWorldBuilder.cs:3655`), as do wishes
+(`D/XRL/Wish/WishManager.cs:43`), debug commands and conversation delegates. So:
+
+```
+[KingdomExtension]                     // marker attribute, in the contract namespace
+public sealed class MyHappenings : IHappeningGenerator { ... }
+```
+
+and one call at registration collects every one of them. **A third-party mod needs no hard
+reference beyond the contract namespace** — no dependency on our systems, our carrier, or our
+version of anything else. The registration cache is marked `[ModSensitiveStaticCache]` so a mod
+list change resets it the way `ModManager.ResetModSensitiveStaticCaches` already resets the
+engine's own (`D/XRL/ModManager.cs:340-355`).
+
+**Extensions live under the same invariants, enforced rather than trusted.** This is the part that
+makes the API safe to publish at all, and every clause of it already exists for our own code:
+
+1. **Kernel draws through our API only** — `CounterRandom` with a `SemanticEventKey` on the
+   extension's own stream (§2.4). `System.Random` in an extension is a contract violation, caught
+   by the same reflection test as §2.5's purity check.
+2. **Frozen snapshot in, frozen result out**, through `KingdomExecutor.Submit` (§2.5). An extension
+   cannot reach the ground, the clock, or another extension's rows.
+3. **Budget, timeout and error isolation per job** — the seam's, not the extension's. **A broken
+   extension stalls its own job and nothing else**: no city state is published on fault, the turn
+   is unaffected, and the failure is logged by mod name.
+4. **Telling goes through our surfaces** — ledger, `KingdomWord`, chronicle, guestbook — under
+   §4.2's shared budget. An extension cannot flood the register any more than we can.
+5. **Rows are capped like ours.** An extension's rows count against §0.0(c)'s ceiling, and the
+   receipt reports them by mod name, so a memory regression has an owner.
+
+**Versioned, and refusing loudly.** `KingdomApiVersion` is checked at registration. On drift the
+extension is **refused by mod name, on screen and in the log**, with the version it wanted and the
+version we are — never silently skipped and never half-loaded. A silently-inactive extension is
+worse than a refused one, because the player attributes the missing behaviour to us.
+
+**When it opens: the contracts are authored from W1 and published at W5, not before.** They firm up
+as the dimensions land — resources and works at W1, jobs and carriers at W3, happenings at W4 — but
+they stay internal until W5. The reason is specific rather than cautious: **a contract with exactly
+one implementation is indistinguishable from that implementation's accidents.** W6 (production
+depth, and the logistics planner) and W7 (networks) are the second implementations that tell the
+two apart, and they should be written *against the published contract*, as its first
+external-shaped consumers. Opening at W1 would freeze the first draft of five interfaces; opening
+at W5 and dogfooding through W6–W7 publishes contracts that have already survived a second author.
 
 ## 7. Migration path
 
@@ -740,51 +1801,113 @@ properties; any remaining reading of city storage from one zone only.
 Disjoint ownership. Each wave ships. Each makes the city more alive. No wave edits an existing
 TESTING.md pass except to *add* assertions; new behaviour arrives as new passes.
 
-**W0 — Foundations and the seed.** Mint and persist the realm `KernelSeed128` at founding. Create
-`Simulation/City/` with `KingdomCityRules` (pure) and `KingdomCityState` (carrier), fully
-unit-tested, **wired to nothing**. Write the check-in/check-out contract and the model schema into
+**W0 — Foundations, the seed, and the executor seam.** Mint and persist the realm `KernelSeed128`
+at founding. Create `Simulation/City/` with `KingdomCityRules` (pure) and `KingdomCityState`
+(carrier), fully unit-tested, **wired to nothing**. **Constitution addition: `KingdomExecutor` and
+its reflection test ship here** (§2.5) — synchronous, no threading, but the choke point exists from
+the first commit so that no wave after it can grow a second computation path. A seam retrofitted
+across six waves is a rewrite; a seam laid first is one call. Write the check-in/check-out contract and the model schema into
 `docs/API.md`. Serialization version bump, clean and deliberate (Addendum 9 waives migration
 pre-release). *Playtest baseline: byte-identical. Nothing visible ships.*
 
 **W1 — The city book: stocks, zones, works.** `KingdomCityState` on `KingdomSettlement`; zone rows
 replace the game-state keys; check-in reconcile at the survey step; `SuspendingEvent`
-check-out (with the lazy reconcile as the correctness guarantee); closed-form breakpoint integration for stocks, reusing `Slide`'s shape. Subsidence,
-city storage, and the stage ladder read the model. *Visible: a two-zone city's numbers stop being
-five stale ints; a granary in the next zone actually fills and empties. Pass 26 gains "the other
-zone's stores moved while you were in this one."*
+check-out (with the lazy reconcile as the correctness guarantee); closed-form breakpoint
+integration for stocks, reusing `Slide`'s shape. Subsidence, city storage, and the stage ladder
+read the model. **The constitution adds three things to this wave, none of them optional:** the
+**signed** catch-up counter and **container-level drains in dedication order** (§3.9 — W1 is the
+first wave that depletes a store the founder is not standing in, so it is the wave that must do it
+on real vessels rather than in a ledger); the **`reckon` timer and its counters** (§6.5 — the
+receipt begins where reckon begins); and the 1-day-vs-90-day equality assertion (§0.0(a)).
+*Visible: a two-zone city's numbers stop being five stale ints; a granary in the next zone actually
+fills and empties, and the cistern you open holds exactly what the model says. Pass 26 gains "the
+other zone's stores moved while you were in this one."*
 
 **W2 — Residents become rows.** Roster → typed resident records; brink windows move off
 `GameObject` properties; `AssignWork` reads the roster; bodies bound by `ResidentId`; check-in
-rebinds, reads back deaths and departures. *Visible: a settler in the zone next door can lose their
+rebinds, reads back deaths and departures. **Constitution addition: the `KingdomBindingRegistry`
+ships here in full** (§3.8) — residents *and* the transient-by-`JobId` contract, plus
+check-before-mint and the stale-transient sweep, even though the first transient does not appear
+until W3. Identity is a substrate, and shipping half of it is how a settler ends up in two places. *Visible: a settler in the zone next door can lose their
 roof, be warned, and leave. Highest-risk wave — see §8, hard problem 2. Pass 24 (the brink) gains
 a cross-zone case.*
 
-**W3 — Materialisation by the hour.** Anchors set by `DayShape` against `Calendar`'s bands;
-`r_KingdomStation` riding `IdleQueryEvent` so settlers *walk* to their post the way vanilla sends
-them to bed; items minted into real containers under the `_stock`/`norestock` protocol, including
-the cross-zone harvest delivery Addendum 11(b-ii) already ruled; told-once dating. *Visible: walk in at Jeweled Dusk and the market is shut and the hearths
-are full. **New Pass 29 — "A day in the city."***
+**W3 — Materialisation by the hour, amortised from the first commit.** Anchors set by `DayShape`
+against `Calendar`'s bands; `r_KingdomStation` riding `IdleQueryEvent` so settlers *walk* to their
+post the way vanilla sends them to bed; items minted into real containers under the
+`_stock`/`norestock` protocol, including the cross-zone harvest delivery Addendum 11(b-ii) already
+ruled; told-once dating.
+
+**The constitution changes this wave's shape more than any other, and all of it is day one, not a
+follow-up:**
+
+- **Amortised from the first commit** (§3.5) — the counter, the 8-unit per-turn budget, visible-
+  cells-first ordering, the two hooks. *There is no interim wave in which materialisation spikes.*
+  A batch-at-activation version is not a smaller first step; it is a different design that would
+  have to be removed.
+- **The heartbeat** (§3.6) — the 50-tick micro-reckon, all cities, and its surfacing budget.
+- **Embodied arrivals and the itinerary** (§3.7) — porters, legs, `At(job, tick)`, re-projection at
+  check-in, the edge handoff. Plus the **distance matrix** and the **roads discount** (§3.10 items
+  2 and 3), because an itinerary *is* a route and cannot ship without a metric.
+- **The `reify`, `slice` and `thaw` timers and Pass 32** (§6.5). The receipt is not a W6 deliverable
+  any more; it ships with the behaviour it measures.
+- **Prefetch-thaw** (§6.4), behind the option gate, explicitly cuttable — it buys smoothness, not
+  correctness.
+
+*Visible: walk in at Jeweled Dusk and the market is shut and the hearths are full; stand in your
+house while a farm two zones away finishes, and a porter walks in with the crop.* ***New Pass 29 —
+"A day in the city." New Pass 32 — "What the city costs, and what it delivers."***
 
 **W4 — Happenings.** The generator, the shared `KingdomTellingBudget`, the told-log ring. Weddings,
 funerals, feasts, festivals (creed dish), quarrels, breakdowns, deliveries, raisings. Surfaced
 through ledger / `KingdomWord` / chronicle / guestbook. *Visible: come home to a city that has a
 history. **New Pass 30 — "What happened while you were gone."***
 
-**W5 — Engagement.** Works board, city-wide crew dial, day-shape policy, petitions from model
-state, city-posted bounties, ceremonies from happenings, guests drawn by events — all inside
-existing Charter entries. *Visible: the city asks you for things. **New Pass 31 — "The city asks."***
+**W5 — Engagement, and the API opens.** Works board, city-wide crew dial, day-shape policy,
+petitions from model state, city-posted bounties, ceremonies from happenings, guests drawn by
+events — all inside existing Charter entries. **Constitution addition: the extension contracts are
+published here** (§6.6) — five interfaces, the marker attribute, `KingdomApiVersion` and the
+refuse-loudly path — after four waves have shaped them and before W6/W7 exercise them as their
+first consumers. *Visible: the city asks you for things, and another mod can teach it a new thing
+to ask for.* ***New Pass 31 — "The city asks."***
 
-**W6 — Production depth and the optimisation receipt.** Extend the real machines in Addendum 11(c)
-order; the food chain end to end (seeds → crops → stores → meals/industry); inter-zone haulage
-crews; and the measured worst-case reckoning — a season away, 4 zones, 60 residents, timed and
-written down, not asserted. *Visible: the economy is physical end to end.*
+**W6 — Production depth, and logistics that never look stupid.** Extend the real machines in
+Addendum 11(c) order; the food chain end to end (seeds → crops → stores → meals/industry);
+inter-zone haulage crews. **Constitution additions: nearest-holder sourcing and capacity-bound
+batching** (§3.10 items 1 and 4) land here rather than in W3, because both only bite once many jobs
+compete over many holders — which is precisely what the food chain and haulage crews create.
+Shipping a 2-opt over a single open job would be optimising an empty room. The measured worst case
+— a season away, timed and written down — is no longer this wave's job either: it has been running
+since W1 as the receipt. *Visible: the economy is physical end to end, and no carrier ever walks
+past a nearer store.*
+
+**What the constitution changed about the plan itself.** Four things, worth naming so nobody
+re-derives them: (0) two things ship *before* anything uses them — the **executor seam** at W0
+(§2.5) and the **binding registry** at W2 (§3.8) — because both are substrate, and substrate
+retrofitted across six waves is a rewrite; (1) performance work is **not a wave** — the receipt ships with W1 and grows with
+every wave after, because a perf wave at the end can only discover that six waves need reworking;
+(2) W3 has no un-amortised interim, because the amortised design is not an optimisation of the
+batch design but a replacement for it; (3) W6 lost the receipt and gained the planner, W7 (networks) was added, and the extension API
+opens at W5 so that W6 and W7 can be its first consumers — leaving W6 and W7 as the two waves that
+can be cut if the playtest says stop.
+
+**W7 — Networks.** Graph rows per network, the closed-form flow solve, brownouts in the stated
+priority order, the seeding handoff both directions (§3.11). **Its own wave rather than part of
+W6**, for three reasons: it is the only remaining piece that adds a *new model dimension* — a graph
+— rather than deepening an existing one, and folding it into W6 would make W6 both the depth wave
+and a substrate wave; it depends on W6's producers actually producing something worth carrying,
+since a power network with one solar array and one charging post is the wiring puzzle
+`KingdomPower`'s own comment already complains about, not a network; and it is the most cuttable
+thing left after prefetch, which putting it last keeps true. *Visible: a cistern in the mine fills
+from a pump three zones away, and when the array wears out the mill goes quiet — and you hear about
+it standing in your house.*
 
 **Ordering rationale.** W1 before W2 because stocks reconcile against objects that already exist,
 while residents reconcile against objects whose identity we are changing — do the easy handoff
 first and learn the protocol on it. W3 after W2 because you cannot place people you do not have.
 W4 after W3 because a happening the founder cannot see happen is only a log line. W5 after W4
-because engagement needs something to engage with. W6 last because it is the only wave that is
-pure depth rather than substrate, and it is the one that can be cut if the playtest says stop.
+because engagement needs something to engage with. W6 and W7 last because they are the only waves that are pure depth rather than substrate, and they
+are the two that can be cut if the playtest says stop — in that order, W7 first.
 
 ---
 
@@ -800,13 +1923,20 @@ pure depth rather than substrate, and it is the one that can be cut if the playt
    name a cause.
 3. **Telling-budget starvation** — a season away in which the one line that mattered is the one
    that got summarised. Mitigate by ranking: brinks and irreversibles are never summarised, ever.
-4. **A lane that draws per day.** The only thing here that can scale with absence. Enforce it as a
-   test, not a convention: assert draw counts are identical for a 1-day and a 90-day reckoning of
-   the same model.
+4. **A lane that draws per day.** The only thing here that can scale with absence. Enforced as a
+   test rather than a convention, and now also as a *receipt*: §6.5's `perf reckon` line carries
+   `rows` and `draws`, and Pass 32 step 90a asserts they are identical for a 1-day and a 90-day
+   reckoning of the same model.
 5. **Collision with the water lane in flight.** `KingdomSurvey` is the shared seam. W0 touches
    nothing; W1 must rebase on the water lane's landed state, not race it.
-6. **Serialization churn across six waves.** Waived pre-release, but each bump stays clean,
+6. **Serialization churn across the waves.** Waived pre-release, but each bump stays clean,
    deliberate, and named (`FirstNamedSerializationVersion` moves with it), per Addendum 9.
+7. **Scope, honestly.** Addendum 12 grew from (a) to (h) while this document was being written, and
+   §3 now carries five sections that did not exist in the first draft. The mitigations are
+   structural rather than hopeful: every new dimension is a **row** with a **cap** in §0.0(c), every
+   new claim is an **invariant with a home and a test** in §0.0(g), and everything computed goes
+   through **one seam** (§2.5). If a later wave cannot state its cost in §0.0's table, that is the
+   signal to stop, not to add a footnote.
 
 ### 8.2 Hard problem 1 — dual books: who owns a dram
 
@@ -831,7 +1961,8 @@ discipline — *rewritten from the ground every time, including down to zero* �
 codebase already contains the precedent, the reviewers already accept the shape, and the failure
 mode is one the mod already has a voice for.
 
-**The invariants to test** (both are cheap and both are mutation-resistant):
+**The invariants to test** (both are cheap and both are mutation-resistant; §0.0(g) I1 is the
+general form, and §3.9 is the direction this section originally left out):
 1. After any attended pass of a fully-visited city, model total == ground total, per stock kind.
 2. Over any sequence of hand moves and passes, total drams in the world is conserved: a
    reconciliation may reclassify a dram between civic and personal, but may never mint or destroy
@@ -861,7 +1992,7 @@ built, and can duplicate a settler the player charmed, recruited, carried off, o
 - Sequencing: **W2 ships the rows and the binding but not the placement.** Placement is W3. Doing
   identity and movement in one wave is how a settler ends up in two places.
 
-**The invariants to test:**
+**The invariants to test** (§0.0(g) I3 is the general form, widened in §3.8 to everything we mint):
 1. No `ResidentId` ever has two living bound bodies.
 2. Materialisation obliterates nothing, ever — asserted directly, in the live selftest.
 3. `Population` == count of `Resident` rows == live bindings + `Abroad`; `Dead` rows reconcile with
@@ -891,15 +2022,32 @@ it. But it wants a Pass-31 step of its own, because it is the shape a tester wil
 | `IdleQueryEvent` is vanilla's entire daily-life surface; returning `false` claims the actor's turn | `D/XRL/World/AI/GoalHandlers/Bored.cs:262-330` |
 | `Bed` is the **only** time-of-day NPC behaviour vanilla ships | `D/XRL/World/Parts/Bed.cs:187-224` |
 | An NPC with `Wanders=false` self-anchors to its first cell and `Bored` returns it | `D/XRL/World/Parts/Brain.cs:2056, 2507` |
-| `ZoneRepair` is the engine's own accumulate-and-apply-N-units catch-up | `D/XRL/World/ZoneParts/ZoneRepair.cs` |
 | `_stock` / `norestock` / `IsImportant()` is vanilla's item-protection protocol | `D/XRL/World/Parts/GenericInventoryRestocker.cs:148-200` |
 | One parasang = 3×3 zones, 50 Z-layers, surface Z=10, each zone 80×25 cells | `D/Definitions.cs`; `D/XRL/World/ZoneID.cs:12-27`; `D/XRL/World/ZoneManager.cs:3268` |
 | Freezability turns = 0; freeze threshold = 1 | `D/XRL/World/Zone.cs:7467-7470`; `D/XRL/World/ZoneManager.cs:1036-1041` |
 | `CheckCached` suspends then freezes, driven from `ZoneManager.Tick` | `D/XRL/World/ZoneManager.cs:976-1060` |
-| `PinnedZones` cap 3, **clears the set** on overflow | `D/XRL/World/Zone.cs:7440-7449` |
+| `PinnedZones` cap is `> 3`, checked **lazily inside `GetSuspendability`**; overflow logs `ZonePins` and calls `PinnedZones.Clear()` — losing every pin, not just the offending one | `D/XRL/World/Zone.cs:7441-7448` |
+| `ZoneRepair` = `BuildCounter += TimeTicks - LastTurn` → `Math.Max(1L, BuildCounter / TurnsPerObject)` → apply the batch → `RemovePart(this)` when drained; debt cleared on read | `D/XRL/World/ZoneParts/ZoneRepair.cs:51-58, 87-97, 99-102` |
+| `ZoneRepair` binds `ZoneActivatedEvent` **only** — the engine's own catch-up misses thaw entirely | `D/XRL/World/ZoneParts/ZoneRepair.cs:30-43` |
+| `ZoneThawedEvent` is sent from `Zone.Thawed` at the end of `TryThawZone`, after `Zone.Load`, `AddCachedZone` and `ForceCollect()`; `TicksFrozen = TimeTicks − FrozenTick` | `D/XRL/World/ZoneManager.cs:864-865`; `D/XRL/World/ZoneThawedEvent.cs:39-46` |
+| `ZoneActivatedEvent` fires **before** `ActivateObjects()` and `Suspended = false` — our reify runs on objects that are not yet live, the same order zone generation uses | `D/XRL/World/ZoneManager.cs:1904-1907`; `D/XRL/World/Zone.cs:7776-7791` |
+| `Zone.Suspended` is a plain **serialized** field (`Stale` is `[NonSerialized]`) — a thawed zone comes back suspended, i.e. resident and not ticked | `D/XRL/World/Zone.cs:199-204` |
+| `ProcessSingleTurn` ticks and broadcasts only into cached zones with `!Suspended && !Stale` | `D/XRL/Core/ActionManager.cs:443-449` |
+| `CheckCached` suspends only zones that are **not already** suspended, then freezes whatever `GetFreezability` allows | `D/XRL/World/ZoneManager.cs:998-1011` |
+| `GetFreezability(0)` is `TooRecentlyActive` while `currentTurn - LastActive <= 0` — per-turn `MarkActive()` holds a zone resident, and omitting it releases the hold next turn | `D/XRL/World/Zone.cs:7472-7483`; `:2304-2307` |
+| Thawing runs `ForceCollect()` → `MemoryHelper.GCCollectMax()` — one forced full GC per thaw | `D/XRL/World/ZoneManager.cs:829, 728-731` |
+| Save-and-quit runs `CheckCached(AllowFreeze: true, ForceFreeze: true)` **before** `SaveGame` — but `ForceFreeze` bypasses the threshold, not the freezability test | `D/XRL/Core/XRLCore.cs:1138-1139, 1740-1741` |
+| `SetCachedZone` = `MarkActive` + `ActivateObjects` + `Suspended = false` — the "keep it live" API, priced and refused in §6.4 | `D/XRL/World/ZoneManager.cs:1771-1776` |
+| Game-level `EndTurnEvent.Send(game)` fires once per 10 segments, immediately before `ProcessSingleTurn` — a valid **pump**, never a valid clock | `D/XRL/Core/ActionManager.cs:1644-1655` |
+| An actor is granted `Speed` energy per segment and acts at 1,000; a move costs 1,000 — **Speed 100 = one cell per tick** | `D/XRL/Core/ActionManager.cs:740, 741, 755`; `D/XRL/World/Parts/Physics.cs:3801` |
+| `ZoneID` carries the stratum (`Assemble(...).Append(ZoneZ)`) — verticality costs the model nothing | `D/XRL/World/ZoneID.cs:12-24` |
+| `IPowerTransmission` is abstract with five concrete families (electrical, hydraulic, mechanical, biomechanical, generic) | `D/XRL/World/Parts/IPowerTransmission.cs:12` and siblings |
+| Network discovery is a **cardinal-only** BFS over cells collecting `Producers`/`Consumers`/`GridCapacity` | `D/XRL/World/Parts/IPowerTransmission.cs:1121-1195` |
+| Charge walks by `ChargeAvailableEvent`/`FinishChargeAvailableEvent` → `Process(E)`; `QueryChargeEvent`/`TestChargeEvent` carry a `GridMask` OR-ed with `GridBit`, which is what makes a cyclic network terminate | `D/XRL/World/Parts/IPowerTransmission.cs:322-341, 383-393` |
+| The flood-fill walks `GetLocalCellFromDirection` = `GetCellFromDirectionGlobal(..., bLocalOnly: true, ...)` — **a vanilla network cannot cross a zone boundary** | `D/XRL/World/Cell.cs:8051-8054` |
+| `LiquidPump` ships with **no live carrier** (every carrier blueprint commented out); hydraulic pipes carry joules, not supply | `D/XRL/World/Parts/LiquidPump.cs`; `VANILLA-PRODUCTION-TRUTH.md` §0, §8 |
 | Suspended zones are not ticked; live objects in them are dropped | `D/XRL/Core/ActionManager.cs:430-447` |
 | `ZoneDeactivatedEvent` fires on the outgoing zone, to `The.Game` | `D/XRL/World/ZoneDeactivatedEvent.cs`; `D/XRL/World/ZoneManager.cs:1904-1905` |
-| `ZoneThawedEvent` carries `TicksFrozen` | `D/XRL/World/ZoneManager.cs:863-865` |
 | `Zone.Activated()` wraps the event in try/catch; `ePrimePowerSystems` fires right after | `D/XRL/World/Zone.cs:7775-7791` |
 | Game systems receive game-level events via `RegisteredEvents.Dispatch` | `D/XRL/XRLGame.cs:357-384` |
 | `TurnsPerDay = 1200`; `IsDay()` = segment 2500–9123; eight named bands | `D/XRL/World/Calendar.cs:13, 296-352` |

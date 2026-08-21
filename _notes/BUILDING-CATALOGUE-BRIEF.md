@@ -684,3 +684,20 @@ guarantees purity). A threaded executor swaps in later without touching callers,
 mod computations inherit budget/timeout/error isolation from the same contract — a misbehaving
 job stalls itself, never the city or the turn. Threading eagerly with no workload is where
 fragility lives; the seam costs nothing and is the opposite of fragile.
+
+**(i) The model is a public API** (author, 2026-08-21: "we should also try to API this so other
+mods can extend the model if they don't want to contribute directly to the mod"):
+
+- Data lane stands (XML merge-by-key). The behaviour lane: model extension contracts — new
+  resource kinds, job/carrier kinds, network kinds, happening generators, work behaviours —
+  registered by ATTRIBUTE DISCOVERY (the engine's own idiom), no fork, no hard reference beyond
+  the contract namespace.
+- Extensions live under the same invariants as our systems, enforced not trusted: kernel draws
+  through our API (no Random), frozen snapshots in / results out (the 12(h) executor contract),
+  budget/timeout/error isolation (a broken extension stalls its own job, never the city), 7b
+  telling through our surfaces.
+- Contract VERSIONED: API version checked at registration, refusing loudly by mod name on
+  drift — never silent misbehaviour.
+- Architectural basis: the model is rows + pure rules + one executor; an extension is more rows
+  and more pure functions under the same contract — the model does not distinguish ours from
+  theirs.
