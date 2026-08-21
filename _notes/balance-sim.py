@@ -1998,6 +1998,229 @@ def w6_production_and_logistics():
     print("   drain order:  dedication ordinal, then vessel id     (KingdomDrainRules.TryOrder, unmoved)")
 
 
+def w7_networks_and_power():
+    """Wave 7: the networks, and the power lane's move onto one accounting.
+
+    THE ONE THING THIS SECTION EXISTS TO PROVE. W6 proved production is billed once by leaving
+    exactly one owner of a day. W7 does the same thing to CHARGE, and the shape of the proof is
+    identical: the old owner is gone from the source, the new one is the model's own counter, and
+    the arithmetic that used to be duplicated is now asserted equal rather than separately
+    computed. Every check here is a source fact or a closed-form identity - nothing is trusted.
+    """
+    rule("W7  Networks, the flow solve, and power on one accounting")
+
+    power = open(os.path.join(ROOT, "Growth", "KingdomPower.cs"), encoding="utf-8-sig").read()
+    power_rules = open(
+        os.path.join(ROOT, "Growth", "KingdomPowerRules.cs"), encoding="utf-8-sig"
+    ).read()
+    flow = open(
+        os.path.join(ROOT, "Simulation", "City", "KingdomFlowRules.cs"), encoding="utf-8-sig"
+    ).read()
+    net = open(
+        os.path.join(ROOT, "Simulation", "City", "KingdomNetworkRules.cs"), encoding="utf-8-sig"
+    ).read()
+    memory = open(
+        os.path.join(ROOT, "Simulation", "City", "KingdomCityMemoryRules.cs"), encoding="utf-8-sig"
+    ).read()
+    blueprints = open(os.path.join(ROOT, "ObjectBlueprints.xml"), encoding="utf-8-sig").read()
+
+    print("""
+1. THE POWER LANE HAS ONE CLOCK, AND IT IS THE MODEL'S. Power used to count its own days, per
+   work, off `KingdomRules.ElapsedDays` and a remainder-keeping checkpoint, and then do its own
+   summing, its own store clamp and its own delivery. That was a second accounting standing
+   beside the model's - exactly what W6 made unrepresentable for production. Days are now
+   WORLD-DAY BOUNDARIES through the one counter every other lane uses.
+""")
+    assert "KingdomProductionRules.TryDaysBetween(through, timeTicks, KingdomRules.TicksPerDay" in power, (
+        "BILLED TWICE: the power pass no longer counts days off the model's own boundary counter."
+    )
+    assert "int days = CreditDays(part.LastResolvedTick, TimeTicks, out var next);" not in power, (
+        "BILLED TWICE: the per-work credit loop is still in KingdomPower."
+    )
+    assert "KingdomRules.AdvanceCheckpoint" not in power, (
+        "the power lane still keeps a remainder-carrying checkpoint of its own"
+    )
+    print("   power counts days off:  KingdomProductionRules.TryDaysBetween   (world-day boundaries)")
+    print("   per-work credit loop:   gone")
+    print("   remainder checkpoint:   gone")
+
+    print("""
+2. AND ONE NETTING. The summing, the store clamp, the deficit and the stop list all happen in
+   `KingdomFlowRules.TrySolve`. `KingdomPowerRules` keeps the RATES - which is what it was always
+   for - and its span arithmetic is now the NAMED FORM of what the solve produces. The two are
+   asserted equal in test rather than separately computed, which is what stops them drifting.
+""")
+    assert "KingdomFlowRules.TrySolve(" in power, "the power pass does not go through the flow solve"
+    assert "KingdomPowerRules.ThroughputForDays(capacity, 1)" in power, (
+        "the store's throughput is no longer the power rules' own constant"
+    )
+    for named in ("ChargeForDays", "Absorbable", "Releasable"):
+        assert f"public static int {named}(" in power_rules, (
+            f"KingdomPowerRules.{named} was deleted rather than kept as the named form of the solve"
+        )
+    print("   netting:                KingdomFlowRules.TrySolve")
+    print("   store throughput:       KingdomPowerRules.ThroughputForDays  (one constant, one caller)")
+    print("   ChargeForDays / Absorbable / Releasable:  kept, asserted equal to the solve in test")
+
+    print("""
+3. FLOW CONSERVATION IS AN IDENTITY, NOT A PROMISE. Generated + Discharged == Delivered +
+   Charged + Spilled, in every branch. There is no fourth destination for a charge and nothing
+   arrives from a fifth source, so a solve that invented or lost one would fail arithmetic rather
+   than fail a review. Re-derived here from the source's own branch structure.
+""")
+    assert "solution = new KingdomFlowSolution(generated, demanded, delivered, charged, discharged, spilled, shortfall, stopped);" in flow
+    for branch in ("charged = (net < chargeCap) ? net : chargeCap;", "spilled = net - charged;", "discharged = -net;"):
+        assert branch in flow, f"the solve's conservation branch moved: {branch}"
+    # The identity, evaluated over a grid rather than asserted about.
+    def solve(supply_per_day, demands, level, capacity, throughput_per_day, days):
+        demanded = sum(demands) * days
+        generated = supply_per_day * days
+        throughput = throughput_per_day * days
+        charge_cap = min(capacity - level, throughput)
+        discharge_cap = min(level, throughput)
+        shortfall = max(0, demanded - generated - discharge_cap)
+        relieved, stopped = 0, 0
+        order = sorted(range(len(demands)), key=lambda i: -demands[i])
+        while stopped < len(demands) and relieved < shortfall:
+            relieved += demands[order[stopped]] * days
+            stopped += 1
+        delivered = max(0, demanded - relieved)
+        net = generated - delivered
+        charged = min(net, charge_cap) if net >= 0 else 0
+        spilled = (net - charged) if net >= 0 else 0
+        discharged = 0 if net >= 0 else -net
+        return generated, delivered, charged, discharged, spilled, stopped
+    checked = 0
+    for supply in (0, 1200, 2400, 4800, 50000):
+        for level in (0, 6000, 12000, 24000):
+            for days in (1, 7, 90, 365):
+                for demands in ([], [4000], [4000, 4000], [100] * 6):
+                    g, d, c, dis, sp, st = solve(supply, demands, level, 24000, 12000, days)
+                    assert g + dis == d + c + sp, (
+                        f"FLOW CONSERVATION BROKE at supply={supply} level={level} days={days} "
+                        f"demands={demands}: {g}+{dis} != {d}+{c}+{sp}"
+                    )
+                    checked += 1
+    print(f"   conservation checked over {checked} (supply x store x span x demand) combinations: holds")
+
+    print("""
+4. NO TERM IN THE ELAPSED. A one-day span and a ninety-day span are the same arithmetic: days
+   multiply the rates once and appear nowhere else. §0.0(a)'s identity, for this lane.
+""")
+    one = solve(2400, [1000], 0, 240000, 120000, 1)
+    season = solve(2400, [1000], 0, 240000, 120000, 90)
+    assert season[0] == one[0] * 90 and season[1] == one[1] * 90 and season[2] == one[2] * 90, (
+        "the solve is not linear in the span; something in it counts days twice"
+    )
+    assert season[5] == one[5], "a longer span changed the stop set at constant rates"
+    print(f"   one day:     generated={one[0]:>7}  delivered={one[1]:>7}  charged={one[2]:>7}  stopped={one[5]}")
+    print(f"   ninety days: generated={season[0]:>7}  delivered={season[1]:>7}  charged={season[2]:>7}  stopped={season[5]}")
+
+    print("""
+5. THE SOLVE'S OP BOUND, COMPOSED. §0.0 prices one network solve at O(nodes + edges) and the
+   caps at 32 nodes and 48 edges, so 80 node-visits; re-solves across a whole reckoning are
+   bounded by B = 64 breakpoints, not by B x networks. That ceiling is only affordable because
+   the traversal ORDER is precomputed when the topology is laid - a walk that had to find
+   neighbours by scanning the edge array is nodes x edges, nineteen times over.
+""")
+    nodes, edges, breakpoints = 32, 48, 64
+    per_solve = nodes + edges
+    naive = nodes * edges
+    assert per_solve == 80
+    assert breakpoints * per_solve == 5120
+    assert "internal const int NetworkTraversalBytesPerNode = 2;" in memory, (
+        "the traversal order is no longer stored, so the solve cannot honour its own op bound"
+    )
+    print(f"   one solve, precomputed order:  {per_solve:>6} node-visits")
+    print(f"   one solve, scanning edges:     {naive:>6} node-visits   ({naive // per_solve}x the ceiling)")
+    print(f"   whole reckoning (B={breakpoints}):          {breakpoints * per_solve:>6} node-visits   (§0.0 budget: 5,120)")
+
+    print("""
+6. THE MEMORY THE ORDER COSTS, AND WHAT IT BUYS. Two bytes a node against 162 for a full
+   adjacency index. §0.0(c) takes the edit; the ceiling does not move.
+""")
+    per_network = nodes * 16 + edges * 16 + nodes * 2 + 64
+    assert per_network == 1408
+    realm = 2 * 4 * per_network
+    csr = (nodes + 1) * 2 + edges * 2
+    print(f"   per network:      {per_network:>6} B   (nodes {nodes * 16} + edges {edges * 16} + order {nodes * 2} + header 64)")
+    print(f"   per realm:        {realm:>6} B")
+    print(f"   order bytes:      {nodes * 2:>6} B   vs a full adjacency index at {csr} B")
+
+    print("""
+7. THE LIQUID LAW HAS FOUR PIECES AND ONE REFUSAL, AND THEY ARE IN THE XML. Connection is
+   DECLARED: a main says what runs in it and which faces it offers, a crossing types NOTHING so
+   it can never be the place two liquids met, and a cross-liquid join refuses by name.
+""")
+    for blueprint, needle in (
+        ("r_KingdomWaterMain", 'Liquid="water" Joins="NSEW"'),
+        ("r_KingdomBrineMain", 'Liquid="salt" Joins="NSEW"'),
+        ("r_KingdomLiquidCrossing", 'Pairs="NSEW"'),
+        ("r_KingdomWaterTap", 'Liquid="water" Joins="NSEW"'),
+        ("r_KingdomBrineTap", 'Liquid="salt" Joins="NSEW"'),
+    ):
+        assert f'<object Name="{blueprint}"' in blueprints, f"{blueprint} is not in ObjectBlueprints.xml"
+        assert needle in blueprints, f"{blueprint} does not carry its declaration: {needle}"
+    crossing = blueprints[blueprints.index('<object Name="r_KingdomLiquidCrossing"'):]
+    crossing = crossing[: crossing.index("</object>")]
+    # Comments are prose about the piece and not part of it; the DECLARATIONS are what the engine
+    # reads and what this section is answerable for.
+    crossing_parts = re.sub(r"<!--.*?-->", "", crossing, flags=re.S)
+    assert 'Liquid="' not in crossing_parts, (
+        "A CROSSING THAT TYPES SOMETHING CAN MERGE SOMETHING: the crossover must hold no liquid "
+        "declaration at all, or it is a place two lines could meet."
+    )
+    assert '<part Name="LiquidVolume"' not in crossing_parts, (
+        "the crossing is a route, not a length of main; it must hold nothing of its own"
+    )
+    assert 'return LiquidsMatch(liquidA, liquidB) ? KingdomJoinVerdict.Joined : KingdomJoinVerdict.RefusedLiquid;' in net, (
+        "the typed-line refusal moved out of KingdomNetworkRules.JudgeJoin"
+    )
+    # The hydraulic family's own segment-volume idiom, extended by one verb and nothing else.
+    assert 'MaxVolume="8"' in blueprints, "the mains no longer carry BaseHydraulicPipe's segment volume"
+    print("   water main / brine main:  typed, four faces declared")
+    print("   crossing piece:           no Liquid, no LiquidVolume  (it cannot merge anything)")
+    print("   water tap / brine tap:    typed; a tap is the act of tapping, not proximity")
+    print("   cross-liquid join:        RefusedLiquid, told by name, never merged")
+
+    print("""
+8. A LINE RUNS DOWNHILL AND STOPS LEVEL, IN CLOSED FORM. Moving m from a vessel at Lf/Cf into one
+   at Lt/Ct levels them when m = (Ct*Lf - Cf*Lt) / (Cf + Ct). One expression, no loop, no draw,
+   and it cannot overshoot into an inverted pair.
+""")
+    assert "long uphill = lowCap * fullLevel - fullCap * lowLevel;" in flow
+    assert "long level = uphill / (fullCap + lowCap);" in flow
+    rows = []
+    for lf, cf, lt, ct in ((1000, 1000, 0, 1000), (300, 300, 0, 900), (500, 1000, 500, 1000), (900, 1000, 100, 200)):
+        m = max(0, (ct * lf - cf * lt) // (cf + ct))
+        after_f = (lf - m) / cf
+        after_t = (lt + m) / ct
+        assert after_f + 1e-9 >= after_t, "the line ran uphill"
+        assert m <= lf, "the line gave away more than the vessel held"
+        rows.append((lf, cf, lt, ct, m, after_f, after_t))
+    print("      from       to      runs    fill after")
+    for lf, cf, lt, ct, m, af, at in rows:
+        print(f"   {lf:>5}/{cf:<5} {lt:>5}/{ct:<5} {m:>6}    {af:.3f} / {at:.3f}")
+
+    print("""
+9. THE BROWNOUT LADDER IS STATED, AND LODGING IS THE MIDDLE RUNG. industry -> refining ->
+   amenity -> food -> water -> watch, lowest first, ties on the higher work id. It is the mod's
+   own "stop at the loyal core" discipline (the thirst ladder's empty casks and one rung, never
+   an empty town) applied to charge: a city gives up what it is DOING before what it IS. Lodging
+   sits at amenity because a roof needs no charge to keep the rain off - whether a household
+   keeps its home is the roof brink's question, and a brownout must not be able to answer it.
+""")
+    ladder = ["Industry", "Refining", "Amenity", "Food", "Water", "Watch"]
+    for i, rung in enumerate(ladder):
+        assert f"{rung} = {i}" in net, f"the brownout ladder moved: {rung} is no longer rung {i}"
+    assert 'case "housing":' in flow, "lodging is no longer mapped onto a rung at all"
+    housing_block = flow[flow.index('case "housing":'):]
+    housing_block = housing_block[: housing_block.index("return")]
+    assert "civic" in housing_block, "lodging drifted off the amenity rung"
+    for i, rung in enumerate(ladder):
+        print(f"   {i}  {rung:<9} {'<- lodging, comfort, civic, faith, memorial' if rung == 'Amenity' else ''}")
+
+
 def caveats():
     rule("Where this model is too crude to decide anything")
     print(f"""
@@ -3034,4 +3257,5 @@ if __name__ == "__main__":
     food_invariants()
     meals_and_industry()
     w6_production_and_logistics()
+    w7_networks_and_power()
     caveats()

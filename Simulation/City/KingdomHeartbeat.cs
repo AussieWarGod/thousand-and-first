@@ -214,6 +214,20 @@ namespace ThousandAndFirst.Simulation.City
 				return;
 			}
 			System.LastSliceTick = nowTick;
+			// The visible half of §3.11, and it is rendering rather than accounting: a few drams
+			// crossing between two real vessels on one line, in the zone the founder is standing
+			// in. Both vessels are in that zone, so the zone's level and the zone's ground move by
+			// exactly zero and no row is touched -- it is the same water in a different cask. What
+			// it buys is a founder SEEING a main run instead of reading that it did. Bounded to
+			// KingdomNetworks.HeartbeatTransferDrams and one move a slice.
+			Zone seated = SeatedClaimedZone(System);
+			if (seated != null)
+			{
+				KingdomSystem.Guard("network slice", delegate
+				{
+					KingdomNetworks.Attend(System, seated, nowTick);
+				});
+			}
 			int told = 0;
 			told += Advance(System, System.City, System.SeatName, nowTick, told);
 			if (System.Away != null)
@@ -279,6 +293,16 @@ namespace ThousandAndFirst.Simulation.City
 			{
 				Refuse("slice", fault);
 				return 0;
+			}
+			// W7 repair. The seat's water clock is a MIRROR of the model's processed-through tick
+			// (W6: the stamp is written FROM the model, so two owners of one day is unreachable),
+			// and a slice that advanced the model without moving the mirror left the growth pass
+			// reading a clock older than the book it mirrors -- which is a day the next pass would
+			// bill twice. Only the seated book owns that mirror; the away city's stamp travels with
+			// its own settlement.
+			if (ReferenceEquals(book, System.City))
+			{
+				KingdomCity.StampSeat(System, result.Value);
 			}
 			KingdomCatchUpCounter after = KingdomCityRules.CityCounter(result.Value);
 			int told = 0;

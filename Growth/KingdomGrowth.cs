@@ -132,7 +132,15 @@ namespace ThousandAndFirst
 			// in the model's rate to begin with - KingdomCrops.MilledFoodPerDay is subtracted out
 			// of FoodMadePerDay - and it is why it keeps a stamp of its own. One clock each, and
 			// neither can spend the other's days.
-			int grownDays = KingdomRules.ElapsedDays(timeTicks - System.LastFoodWorkTick);
+			// W7 repair, the second leg of the same defect. This stamp is SETTLEMENT-wide and the
+			// mills it pays for stand in a ZONE, so a founder walking through a mill-less quarter
+			// used to advance it and spend the mill quarter's days on nothing: the crops were
+			// never ground and the days were gone. Gated on the seat actually holding a millstone.
+			// Nothing accrues without bound - GrindHarvest is capped by KingdomRules.MillableStock,
+			// the larders' own spare above a day's rations - so a long absence buys milling only as
+			// far as there are crops to grind, which is the bound Addendum 8 clause 2 asks for.
+			int milling = KingdomCrops.MilledFoodPerDay(survey);
+			int grownDays = (milling > 0) ? KingdomRules.ElapsedDays(timeTicks - System.LastFoodWorkTick) : 0;
 			if (System.LastFoodWorkTick <= 0)
 			{
 				System.LastFoodWorkTick = timeTicks;

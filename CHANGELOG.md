@@ -813,6 +813,35 @@ only pure water — so the fix mints not one dram.
   trip batching are a later wave's, because they only start to matter once many jobs compete over
   many stores.
 
+### Added — the city gets plumbing, and the works share one accounting
+
+- **Lay a main and your quarters share their water.** Water mains, brine mains, a crossing piece and
+  taps are in the pattern book. A line laid between two quarters runs **downhill and stops level** —
+  the fuller cistern gives to the emptier until both stand at the same fraction, no further, bounded
+  by how much the narrowest length of it will pass in a day. It works while you are three zones
+  away, which is the one thing the game's own hydraulics cannot do: a vanilla network cannot cross a
+  zone boundary at all.
+- **A line carries one liquid and says which.** Lay a brine main against a fresh main and they do
+  not quietly become brine — the join is **refused, by name**, and the message tells you what to lay
+  instead. That is the whole rule: *connection is declared, never inferred*. A crossing piece takes
+  one line under another through a single tile without either touching the other, and it holds no
+  liquid of its own, so it can never be the place two of them met. Mixtures are a later thing; this
+  wave will not invent one behind your back.
+- **A tap is an act, not a proximity.** Standing a cistern beside a main joins nothing to it. You
+  tap it, and that is what puts it on the line.
+- **And you can watch a main run.** Stand in the quarter and drams actually cross between real
+  casks, a few at a time, on the game's own clock.
+- **Power went onto one accounting.** The works, the salt store and everything that draws charge are
+  now solved as a network — supply against demand, the salt spent before anything stops — off the
+  city model's own clock instead of a second one of their own. Nothing about what a mill or a wheel
+  or a vane makes has changed; what changed is that a day can no longer be counted twice by two
+  systems that each thought they owned it.
+- **When there is not enough to go round, the lights go down in a stated order.** Forges and
+  workshops first, then the refining yards, then comfort and lodging, then the food works, then the
+  water works, and the watch last of all — newest built before oldest within a rung. It is said
+  once, by name, where you will see it, and when supply comes back it simply comes back: a city that
+  announced every recovery would be a city that never stops talking about itself.
+
 ### Added — every quarter of the city works, and no carrier walks past a nearer store
 - **The works of a zone you are not standing in now make what they were built to make.** Until now
   a reservoir in the next quarter produced nothing at all while you were elsewhere: the settlement

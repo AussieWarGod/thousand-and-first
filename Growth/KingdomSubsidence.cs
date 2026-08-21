@@ -292,9 +292,15 @@ namespace ThousandAndFirst
 		/// half is a citywide pool.</param>
 		/// <param name="StorageCapacity">Dedicated storage counted here.</param>
 		/// <param name="TimeTicks">Now, which is what dates the sighting.</param>
-		public static void RecordZone(KingdomSystem System, Zone Z, KingdomCatalogueRules.SupportTally Supports, int StorageCapacity, long TimeTicks)
+		public static void RecordZone(KingdomSystem System, Zone Z, KingdomSurvey Survey, KingdomCatalogueRules.SupportTally Supports, int StorageCapacity, long TimeTicks)
 		{
-			Simulation.City.KingdomCity.RecordSupports(System, Z, Supports.Water, Supports.Food, Supports.Roof, StorageCapacity, TimeTicks);
+			// W7 repair: the RATES are no longer handed over. `Supports.Food` is the raw tally and
+			// the model's food carry is KingdomGrowth.FoodMadePerDay, which subtracts the sown
+			// fields and the mills because those two deliver physically; passing the raw figure
+			// here was the one writer that disagreed with the other two. The survey goes across
+			// instead and KingdomCity reads both rates off it through the same expressions every
+			// other writer uses.
+			Simulation.City.KingdomCity.RecordSupports(System, Z, Survey, Supports.Roof, StorageCapacity, TimeTicks);
 		}
 
 		/// <summary>The stamp a sighting tick is dated in: whole DAYS, not ticks, because a day is
@@ -368,7 +374,7 @@ namespace ThousandAndFirst
 			KingdomCatalogueRules.SupportTally here = ScopedSupports(System, Z, Survey);
 			// Written down before it is used, so this zone's own sighting is today's on every
 			// pass and the fold below never counts this ground out of a memory of it.
-			RecordZone(System, Z, here, Survey.StorageCapacity, TimeTicks);
+			RecordZone(System, Z, Survey, here, Survey.StorageCapacity, TimeTicks);
 			List<KingdomSubsidenceRules.ZoneSighting> others = OtherZones(System, Z);
 			KingdomCatalogueRules.SupportTally supports = KingdomSubsidenceRules.CityTally(here, others);
 			int storage = CityStorageCapacity(System, Z, Survey.StorageCapacity);

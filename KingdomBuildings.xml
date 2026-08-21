@@ -713,6 +713,39 @@
             Districts="craft,none" MinTech="workshop"
             Materials="stone:16,scrap:12" Carries="craft:2" />
 
+  <!-- ===================================================================== PLUMBING ==
+    The mains, the crossing, and the taps. A line moves water between the city's quarters
+    on world-time, which is the one thing vanilla's own hydraulics cannot do: their
+    flood-fill walks GetLocalCellFromDirection, so a vanilla network cannot cross a zone
+    boundary at all (D/XRL/World/Cell.cs:8051-8054). The model owns the whole of a line;
+    vanilla renders the part the founder is standing in.
+
+    Everything here is DECLARED. A main says what runs in it and which faces it offers; two
+    mains meet only when both offer toward each other AND agree on the liquid; a
+    cross-liquid join refuses by name and never merges. Lines that are only meant to pass
+    get a crossing piece, which pairs opposite faces and types nothing, so it cannot be the
+    place two liquids met. Mixtures are a future mixing work and the no-silent-merge rule
+    never bends.
+
+    Priced as what they are made of (Addendum 7): a bored log, a salvaged collar, and the
+    labour to trench them. Cheap per length, because a line is many lengths.
+  -->
+  <building Key="watermain" DisplayName="water main (a length of the fresh line)" Blueprint="r_KingdomWaterMain"
+            Cost="2" Ticks="300" Styles="all" Category="storage" Open="yes" MinStage="Steading"
+            Materials="timber:2,scrap:1" />
+  <building Key="brinemain" DisplayName="brine main (a length of the salt line; it will not join the fresh one)" Blueprint="r_KingdomBrineMain"
+            Cost="2" Ticks="300" Styles="all" Category="storage" Open="yes" MinStage="Village"
+            Materials="timber:2,scrap:1" />
+  <building Key="liquidcrossing" DisplayName="crossing piece (two lines through one tile, and they never meet)" Blueprint="r_KingdomLiquidCrossing"
+            Cost="3" Ticks="450" Styles="all" Category="storage" Open="yes" MinStage="Village"
+            Materials="timber:2,stone:2" />
+  <building Key="watertap" DisplayName="water tap (puts a vessel on the fresh line)" Blueprint="r_KingdomWaterTap"
+            Cost="4" Ticks="600" Styles="all" Category="storage" MinStage="Steading"
+            Materials="timber:2,scrap:2" />
+  <building Key="brinetap" DisplayName="brine tap (puts a vessel on the salt line)" Blueprint="r_KingdomBrineTap"
+            Cost="4" Ticks="600" Styles="all" Category="storage" MinStage="Village"
+            Materials="timber:2,scrap:2" />
+
   <!-- ==================================================================== PATTERN-BOOK ==
     Foreign designs reachable only through a chartered caravan's occasional pattern-book offer
     (Experience/KingdomCeremony.cs -> KingdomCeremonyRules.ForeignDesigns). The

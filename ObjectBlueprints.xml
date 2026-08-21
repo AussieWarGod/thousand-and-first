@@ -944,6 +944,71 @@
     <stat Name="AV" Value="6" />
     <stag Name="Contemporary" />
   </object>
+
+  <!-- ===================================================================== PLUMBING ==
+    Typed liquid lines, and the whole of the LIQUID LAW is in what these pieces DECLARE.
+
+    Vanilla's hydraulic family does not move liquid: HydraulicPowerTransmission carries
+    joules THROUGH liquid (Substance="power", Unit="joule", DependsOnLiquid="water",
+    WrongLiquidFactor=0.2 - D/XRL/World/Parts/HydraulicPowerTransmission.cs:13-20), each
+    segment holding a real LiquidVolume as working fluid, and its only liquid motion is
+    MingleAdjacent, which equalises with a DIRECTLY adjacent volume and routes nothing
+    (IPowerTransmission.cs:1605). Dram movement is LiquidPump's job, and LiquidPump has no
+    live carrier: all three references in shipped content are inside XML comments
+    (B/ObjectBlueprints/Furniture.xml:1380, :2134, :2217). So this is tier 3 of Addendum
+    11(c) - fill in, in vanilla's idiom - and the idiom is BaseHydraulicPipe's own segment
+    volume (Furniture.xml:858-870, MaxVolume="8" Sealed="true"), extended by exactly one
+    verb: transfer along declared topology.
+
+    No Tile on any of these, deliberately and in the file's convention: a length of main is
+    a glyph, and an asset is not shipped until something proves it is reachable
+    (STANDARDS §4). The mains are drawn as vanilla draws its own conduits, in CP437 box
+    rule, so a founder reads them the way they read a power line.
+  -->
+  <object Name="r_KingdomWaterMain" Inherits="Furniture">
+    <stag Name="Contemporary" />
+    <part Name="Render" DisplayName="water main" RenderString="205" ColorString="&amp;b" DetailColor="c" Occluding="false" />
+    <part Name="Description" Short="A bored log collared in salvaged tubing, laid in a shallow trench and packed over. It says what runs in it, and it will join nothing that says otherwise." />
+    <part Name="r_KingdomLiquidConduit" Liquid="water" Joins="NSEW" />
+    <!-- The segment volume is BaseHydraulicPipe's, not an invention: a sealed few drams that
+         are the working fluid of the run. StartVolume="0" because ours is filled by the
+         settlement rather than shipped full, and Sealed so nobody drinks the main. -->
+    <part Name="LiquidVolume" MaxVolume="8" StartVolume="0" Sealed="true" />
+    <part Name="Physics" Solid="false" Takeable="false" Weight="30" />
+    <stat Name="Hitpoints" Value="40" />
+  </object>
+  <object Name="r_KingdomBrineMain" Inherits="r_KingdomWaterMain">
+    <part Name="Render" DisplayName="brine main" RenderString="205" ColorString="&amp;W" DetailColor="y" />
+    <part Name="Description" Short="The same trench and the same collar, carrying the other thing this country has never been short of. It will not join the fresh main, and it will say so by name rather than quietly making both of them brine." />
+    <part Name="r_KingdomLiquidConduit" Liquid="salt" Joins="NSEW" />
+  </object>
+  <object Name="r_KingdomLiquidCrossing" Inherits="Furniture">
+    <stag Name="Contemporary" />
+    <part Name="Render" DisplayName="crossing piece" RenderString="206" ColorString="&amp;K" DetailColor="w" Occluding="false" />
+    <part Name="Description" Short="One trench crossing another with a hand's breadth of packed clay between them. North carries to south and east to west, and the two never meet." />
+    <!-- No Liquid attribute anywhere on this piece, and that is the point: a crossing that
+         typed something could be the place two liquids met, and this one cannot be, because
+         it holds no declaration to disagree with. It also carries no LiquidVolume - it is a
+         route, not a length of main, and it holds nothing of its own. -->
+    <part Name="r_KingdomLiquidCrossover" Pairs="NSEW" />
+    <part Name="Physics" Solid="false" Takeable="false" Weight="40" />
+    <stat Name="Hitpoints" Value="60" />
+  </object>
+  <object Name="r_KingdomWaterTap" Inherits="Furniture">
+    <stag Name="Contemporary" />
+    <part Name="Render" DisplayName="water tap" RenderString="209" ColorString="&amp;b" DetailColor="w" Occluding="false" />
+    <part Name="Description" Short="Where the main meets a vessel. Standing near a cistern joins nothing to it; this is the act of tapping one, and the difference is the whole of the law." />
+    <part Name="r_KingdomLiquidTap" Liquid="water" Joins="NSEW" />
+    <part Name="LiquidVolume" MaxVolume="8" StartVolume="0" Sealed="true" />
+    <part Name="Physics" Solid="false" Takeable="false" Weight="30" />
+    <stat Name="Hitpoints" Value="40" />
+  </object>
+  <object Name="r_KingdomBrineTap" Inherits="r_KingdomWaterTap">
+    <part Name="Render" DisplayName="brine tap" RenderString="209" ColorString="&amp;W" DetailColor="y" />
+    <part Name="Description" Short="The same fitting on the other line. Put it on a fresh cistern and it refuses by name; that refusal is the mod telling you the truth rather than making you brine." />
+    <part Name="r_KingdomLiquidTap" Liquid="salt" Joins="NSEW" />
+  </object>
+
 <!-- ==================================================================== MATERIALS ==
     What clearing ground gives back, as real items in a real container. Nothing here is
     minted: KingdomMaterials only ever creates one of these when something actually came

@@ -347,7 +347,14 @@ namespace ThousandAndFirst.Simulation.City
 
 		/// <summary>W4. A feast kept on a day of Qud's own calendar &mdash; the Ides, or the
 		/// festival of Ut yara Ux. Never an invented holiday.</summary>
-		Festival = 13
+		Festival = 13,
+
+		/// <summary>W7. A work stopped because its network could not feed it. The subject is the
+		/// work id, and the outcome is the tier it stopped on
+		/// (<c>KingdomWorkTier</c>) &mdash; so the ring remembers not only that the lights went
+		/// down but how far down the ladder the city had to go. LIVING-CITY-ARCHITECTURE
+		/// &sect;3.11.</summary>
+		Brownout = 14
 	}
 
 	/// <summary>

@@ -28,7 +28,18 @@ namespace ThousandAndFirst.Simulation.City
 		Festival = 3,
 
 		/// <summary>A work row stopped running, or fell under the condemned line.</summary>
-		Breakdown = 4
+		Breakdown = 4,
+
+		/// <summary>
+		/// W7. A work went quiet because its network ran short &mdash; a deficit, not a fault.
+		/// <para>
+		/// Deliberately NOT <see cref="Breakdown"/>: a broken work is a thing to mend and a
+		/// browned-out work is a thing to feed, the founder's next move is different in each case,
+		/// and STANDARDS 7b's whole complaint is about a settlement that says "stopped" without
+		/// saying which. LIVING-CITY-ARCHITECTURE &sect;3.11.
+		/// </para>
+		/// </summary>
+		Brownout = 5
 	}
 
 	/// <summary>
@@ -601,6 +612,8 @@ namespace ThousandAndFirst.Simulation.City
 				return KingdomToldKind.Festival;
 			case KingdomHappeningKind.Breakdown:
 				return KingdomToldKind.Breakdown;
+			case KingdomHappeningKind.Brownout:
+				return KingdomToldKind.Brownout;
 			default:
 				return KingdomToldKind.None;
 			}
@@ -619,6 +632,8 @@ namespace ThousandAndFirst.Simulation.City
 				return KingdomHappeningKind.Festival;
 			case KingdomToldKind.Breakdown:
 				return KingdomHappeningKind.Breakdown;
+			case KingdomToldKind.Brownout:
+				return KingdomHappeningKind.Brownout;
 			default:
 				return KingdomHappeningKind.None;
 			}

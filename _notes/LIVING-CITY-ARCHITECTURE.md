@@ -117,14 +117,15 @@ resident, and zone ids and design keys are shared references.
 | Binding registry, realm-scope (§3.8) | key 4 + kind 1 + zone ref 8 + object ref 8 + minted tick 8 + pad 3 = **32** | 120 residents + ≤ 16 open jobs + headers | 4,480 B ≈ 4.4 KiB |
 | Job rows with itineraries (§3.7) | header 64 + ≤ 6 legs x (zone ref 8 + enter 4 + exit 4 + length 4 + depart 8 + arrive 8 = 36) = **280** | ≤ 16 open jobs, realm-wide | 4,480 B ≈ 4.4 KiB |
 | Distance matrix (§3.10) | `ushort` per entry = **2** | works→edges ≤ 540 + same-zone pairs ≤ 900 + zone all-pairs ≤ 81, **per city** | 2 x 1,521 ≈ 3.0 KiB per city, 6.0 KiB per realm |
-| Network graphs (§3.11) | node 16 + edge 16; per network 32 x 16 + 48 x 16 + header 32 = **1,312** | ≤ 4 networks per city | 5,248 B ≈ 5.1 KiB per city, 10.2 KiB per realm |
-| **Per realm, all of it** | | | **53,572 B ≈ 52.3 KiB** — warn **56 KiB**, ceiling **64 KiB** |
-| *the same, at nine zones and caps scaled with them* | | | *89,732 B ≈ 87.6 KiB — over today's ceiling by design, still under a tenth of a megabyte* |
+| Network graphs (§3.11) | node 16 + edge 16 + **traversal 2/node**; per network 32 x 16 + 48 x 16 + 32 x 2 + header **64** = **1,408** | ≤ 4 networks per city | 5,632 B ≈ 5.5 KiB per city, 11.0 KiB per realm |
+| **Per realm, all of it** | | | **54,340 B ≈ 53.1 KiB** — warn **56 KiB**, ceiling **64 KiB** |
+| *the same, at nine zones and caps scaled with them* | | | *90,500 B ≈ 88.4 KiB — over today's ceiling by design, still under a tenth of a megabyte* |
 
-**Four corrections and one ruling, from the first two waves that had to evaluate this table.**
-W0 built the formula (`KingdomCityMemoryRules`) and W1 wired it, and between them they falsified
-four of the figures above. All four are corrected in place, because *the formula is the contract*
-and a table that disagrees with it is the thing that is wrong:
+**Six corrections and one ruling, from the three waves that had to evaluate this table.**
+W0 built the formula (`KingdomCityMemoryRules`), W1 wired it, and W7 built the network rows the
+table had been pricing sight-unseen; between them they falsified six of the figures above. All six
+are corrected in place, because *the formula is the contract* and a table that disagrees with it is
+the thing that is wrong:
 
 1. **The realm total was 53,104 B; the formula composes 53,572 B.** The original was the sum of
    this table's own *rounded KiB* column rather than of its byte column, and rounding twice is how
@@ -149,7 +150,19 @@ and a table that disagrees with it is the thing that is wrong:
    sit above the design's honest resting figure and below the ceiling it must never reach. The
    64 KiB ceiling, and "or over the formula", are unchanged: those are what a regression is
    measured against. `kingdom:selftest` still checks the *measured* byte count against the formula
-   evaluated at the **live** caps, never against 53,572 or any other frozen figure.
+   evaluated at the **live** caps, never against 54,340 or any other frozen figure.
+5. **The network header was 32 bytes and is 64.** It was priced before anything had been built to
+   sit in it, and the row that shipped holds four array references (nodes, edges, order, parent
+   edges) plus an id, a kind, a liquid reference, a topology stamp and the stock pair the
+   `(network, liquid)` key carries. Four references alone are 32 bytes.
+6. **Each network stores a traversal order: two bytes a node, and it buys the budget it costs.**
+   §3.11 prices the solve at `O(nodes + edges) ≤ 80`, which a walk that has to find each node's
+   neighbours by scanning the edge array *cannot honour* — that is `nodes × edges` = 1,536,
+   nineteen times the ceiling. So the traversal order is computed once when the topology is laid,
+   off the ground and never at reckon (`O(nodes × edges)` paid on a placement), and the solve is
+   then one linear pass over it. Two bytes a node — a node index is at most 31, an edge index at
+   most 47, and 255 is free as the no-parent sentinel — against 162 for a full adjacency index.
+   **The realm total moves 768 bytes and stays under the advisory rung; the ceiling has not moved.**
 
 Serialized it is smaller: no references, `WriteOptimizedString` dedupes zone ids and design keys
 across every row, ticks go out optimized — **≈ 5.2 KiB per city, ≈ 10.4 KiB per realm**, plus
@@ -1317,6 +1330,50 @@ city that spans zones, the model graph is not an optimisation of vanilla's netwo
 way a multi-zone network exists at all. Vanilla renders the part of the network the founder is
 standing in; the model owns the whole of it.
 
+**The liquid carrier, as W7 shipped it — the LIQUID LAW made of parts.** Connection is DECLARED,
+never inferred, and that law is four pieces and one refusal:
+
+- **Typed mains.** `r_KingdomLiquidConduit` carries a `Liquid` (a vanilla liquid id) and a `Joins`
+  face mask. Two segments meet only when **both** declare toward each other *and* agree on the
+  liquid; an untyped line joins nothing, including another untyped line, because a blank
+  declaration is not a declaration. A misspelt mask joins **nothing** rather than everything — the
+  dangerous default is the permissive one, and a silent merge is the single thing the law forbids
+  outright.
+- **The crossing piece.** `r_KingdomLiquidCrossover` pairs opposite faces — north to south, east to
+  west — and pairs nothing else. It carries **no liquid of its own**, deliberately: a piece that
+  typed anything could be the place two liquids met, and this one holds no declaration to disagree
+  with. Half a crossing is a dead end, not a corner.
+- **The tap.** `r_KingdomLiquidTap` is the declared join between a main and a vessel, so the
+  founder's act of *tapping* a cistern is what puts it on the line and standing near one is not.
+- **The refusal.** A cross-liquid join returns `RefusedLiquid` and is told **by name** — *"the water
+  line will not join the salt line… lay a crossover if they are meant to pass"* — once per piece,
+  and once per composition on the founder's own register (7b: a sentence they will see, not twenty
+  identical ones). Mixtures remain a future **mixing work** consuming typed lines and emitting a
+  mixture-typed line; nothing here mixes anything.
+
+**The one verb, and it runs downhill.** `KingdomFlowRules.TryChooseDownhill` moves the amount that
+levels the two ends' *fill fractions*, solved rather than stepped —
+`m = (C_t·L_f − C_f·L_t) / (C_f + C_t)` — bounded by the line's own bottleneck over the span, ends
+chosen by cross-multiplication so no division rounds a choice. A founder watching a main run
+between two cisterns sees them come level and stop, which is what a main does; it cannot overshoot
+into an inverted pair, and it has no draw in it anywhere.
+
+**And it is a carry, so I1 holds by construction.** `KingdomNetworkRules.TryPostTransfer` lowers the
+giving row's level *and* its debt by the same amount and raises the taking row's by the same, so
+`level − owed` — the ground — is untouched on both, the city's totals of both are unchanged, and
+§3.5's amortised reify is what later opens the real vessels in `KingdomDrainRules`' dedication
+order. Nothing is poured at reckon.
+
+**The arcology decision, and it is a schema shape rather than machinery.** An edge names its two
+endpoints and **nothing about who provided it** — no conduit id, no cell, no object. That is
+deliberate: the backlog's arcology spine (*"riser taps on every floor — interior network segments
+join the spine's 12(g) graph edges for free"*) needs a network whose edges a **building** declares,
+and because provenance is absent from the row a shell can declare edges between its floors' nodes
+with no schema change and no second edge kind. Removal needs no provenance either — it bumps the
+topology stamp and the graph is rebuilt from the ground. **No hosted plots are built here**, and
+nothing in this wave should be read as having started them; the fact recorded is the negative one,
+pinned by a test that an edge carries no reference field.
+
 **Liquid piping is fill-in, and this is on the record.** `HydraulicPowerTransmission` pipes carry
 **joules, not supply**; their only liquid motion is `MingleLiquids` → `MingleAdjacent`, which
 equalises with *directly adjacent* volumes and routes nothing. `LiquidPump` exists as a class but
@@ -1354,11 +1411,24 @@ surplus >= 0 -> stores charge, capped by headroom over the interval
 surplus <  0 -> stores discharge; when they empty, BROWNOUT
 ```
 
-**Throughput uses the bottleneck relaxation, deliberately not max-flow.** For each source we take
-the minimum edge capacity along the BFS tree to each sink — O(nodes + edges) ≤ 80 per network.
-Player-laid conduit is essentially a tree; a true max-flow is O(V·E²), buys nothing a player can
-perceive, and the relaxation is **conservative** — it can understate throughput, never overstate
-it, so it can never manufacture supply. That is the right direction for an error to point.
+**Throughput uses the bottleneck relaxation, deliberately not max-flow.** We take the minimum edge
+capacity along the traversal tree to each node — O(nodes + edges) ≤ 80 per network. Player-laid
+conduit is essentially a tree; a true max-flow is O(V·E²), buys nothing a player can perceive, and
+the relaxation is **conservative** — it can understate throughput, never overstate it, so it can
+never manufacture supply. That is the right direction for an error to point. It is also *vanilla's
+own* answer: `FindGrid` reduces `GridCapacity` to the weakest link on the grid
+(`D/XRL/World/Parts/IPowerTransmission.cs:1172-1175`) and hands that one figure to every member
+(`:1201-1210`). We are narrower than vanilla — per path rather than per grid — and never wider.
+
+**W7 correction: one traversal, not one per source, and it is precomputed.** The line above used to
+read *"for each source"*, which is not `O(nodes + edges)` at all — it is that per source, and it
+also needs an adjacency index the table did not budget. What ships instead: the traversal is seeded
+from **every source *and every store*** at once (a store that holds something feeds the line exactly
+as a wheel does, which is the whole point of a bed of molten salt on a night with no wind), its
+**order is computed when the topology is laid** — off the ground, `O(nodes × edges)` on a placement
+and never at reckon — and the solve is one linear pass over that stored order. Non-tree edges never
+contribute, which is conservative in the same direction. The order and the parent edge cost two
+bytes a node and §0.0(c) carries that edit as its sixth correction.
 
 **Cost, bounded by the same argument §2.3 uses.** A network is re-solved only when one of *its*
 breakpoints falls — a source crossing a wear threshold, a store filling or emptying, a topology
@@ -1373,11 +1443,29 @@ priority order**, lowest first:
 
 > **industry → refining → amenity → food → water → defence and watch**
 
-with ties broken by **higher `WorkId` stopping first** — the newest-built work goes quiet before
-the oldest. That order is not invented here: it is the mod's existing *stop at the loyal core*
-discipline (the thirst ladder's "empty casks and one rung of the ladder, never an empty town"),
-applied to charge instead of drams. Newest-first within a tier is stable, stored, needs no draw,
-and reads right — a city protects what it has had longest.
+with ties broken by **higher `WorkId` stopping first**. That order is not invented here: it is the
+mod's existing *stop at the loyal core* discipline (the thirst ladder's "empty casks and one rung of
+the ladder, never an empty town", DECISIONS' *"failure has a floor"*), applied to charge instead of
+drams. A city gives up what it is *doing* before it gives up what it *is*.
+
+**Where lodging sits, stated because it is the question the order is judged on.** Lodging is
+**amenity** — the middle rung, not the top and not the bottom. A roof needs no charge to keep the
+rain off; what a dwelling draws power for is comfort, and whether a household keeps its home is the
+roof brink's question (`KingdomBrinkRules`, `KingdomLodgingRules`) and not the grid's. Putting
+lodging *last* would let a brownout condemn a home, which belongs to one system and would then
+belong to two; putting it *first* would say a settlement stops housing people before it stops
+smelting, which is the opposite of everything else the mod says about a city. Food, water and the
+watch are last, in that order, because a dark hungry city recovers and a city whose watch went dark
+on the night raiders came does not.
+
+**W7 correction to the tie-break's *justification*, not to the tie-break.** The rule stands —
+higher `WorkId` first — but the claim that it means *"the newest-built work goes quiet before the
+oldest"* does not: a `WorkId` is `KingdomCityRules.StableId(work.ID)`, a written-out hash of the
+engine's object id, chosen so that an id survives a restart. It is stable, stored, reload-proof and
+needs no draw, and among two works of the same tier it is **arbitrary** — which is honest, because a
+tie means the city has no principled reason to prefer either. When a work row later carries a raised
+tick (the heart/relocation lane will want one), the tie-break becomes literal build order with no
+change to the ladder and no change to any caller.
 
 **Containers hold true numbers, both directions.** This is §3.9 applied to networks, and the
 handoff is stated in both directions because both are needed:
@@ -1393,6 +1481,31 @@ The shipped precedent for the charge half is already in the mod: `KingdomPowerRu
 everything in the charging post's cradle unit (4,000), and `KingdomPower`'s own comment about
 needing *"a fence between a windmill and a charging post to get anywhere — a wiring puzzle"* is
 exactly the problem a network graph dissolves.
+
+**W7: the power lane migrated onto the solve, and the migration is what "one accounting" means.**
+Before it, `KingdomPower` counted its own days per work off `ElapsedDays` and a remainder-keeping
+checkpoint, summed its own charge, applied its own store clamp and ran its own delivery — a second
+accounting standing beside the model's, which is the thing W6 made *unrepresentable* for production.
+Three things changed and nothing else did:
+
+1. **One clock.** Days are world-day boundaries through `KingdomProductionRules.TryDaysBetween`, so
+   `Days(a,b) + Days(b,c) == Days(a,c)`: a founder who walks in twice in one day is not paid twice
+   and a horizon falling mid-day does not drop the remainder. *This is a legitimate ladder change*
+   — the old count was `elapsed / TicksPerDay` with the remainder carried on the part — and it is
+   the reason the power lane can now be split by a breakpoint at all.
+2. **One span.** The network's resolved-through tick is the oldest planted stamp among its nodes;
+   a node with no stamp is planted at now and credited nothing, so a work still never pays out for
+   the day it was raised, and every stamp leaves the pass equal so the span cannot fray.
+3. **One netting.** `KingdomFlowRules.TrySolve` does the summing, the store clamp, the deficit and
+   the stop list. `KingdomPowerRules` keeps the *rates* — `RatedChargePerDay`, `DailyOutput`, the
+   two availability curves — and its `ChargeForDays` / `Absorbable` / `Releasable` are now the
+   **named forms of what the solve produces**, asserted equal in test rather than separately
+   computed. No power-rules test needed re-pinning: the arithmetic did not move, only its one
+   caller did.
+
+The proof is an identity rather than a promise: `Generated + Discharged == Delivered + Charged +
+Spilled`, asserted in every branch, so there is no fourth destination for a charge and nothing
+arrives from a fifth source.
 
 ## 4. Events with meaning
 

@@ -96,12 +96,44 @@ namespace ThousandAndFirst.Simulation.City
 		/// LIVING-CITY-ARCHITECTURE §0.0(c) / §3.10.</summary>
 		internal const int DistanceZonePairEntries = 81;
 
-		/// <summary>LIVING-CITY-ARCHITECTURE §0.0(c) / §3.11.</summary>
+		/// <summary>WorkId 4 + role 1 + tier 1 + capacity 4 + rate 4 = 14 declared, in the sixteen
+		/// LIVING-CITY-ARCHITECTURE §0.0(c) budgets. The two spare bytes are padding and are left
+		/// as headroom rather than spent: a node deliberately carries no LEVEL, because a store's
+		/// contents are the ground's and the model keeps one aggregate per network instead of a
+		/// second copy per container (§3.9).</summary>
 		internal const int NetworkNodeBytes = 16;
 
+		/// <summary>NodeA 4 + NodeB 4 + capacity 4 + condition 4 = 16 declared, exactly the
+		/// §0.0(c) budget. LIVING-CITY-ARCHITECTURE §3.11.</summary>
 		internal const int NetworkEdgeBytes = 16;
 
-		internal const int NetworkHeaderBytes = 32;
+		/// <summary>
+		/// Per network: id 4 + kind 1 + liquid ref 8 + topology stamp 8 + four array refs 32 +
+		/// the stock pair the (network, liquid) key holds 16 = 69, rounded to a 64-byte line plus
+		/// its object header.
+		/// <para>
+		/// <b>§0.0(c) correction, W7 — the fifth, in the same spirit as W0's and W1's four.</b>
+		/// The header was budgeted at 32 bytes before anything had been built to sit in it, and a
+		/// row that holds four array references cannot be 32 bytes. The formula is the contract,
+		/// so the table takes the edit rather than the row taking a squeeze.
+		/// </para>
+		/// </summary>
+		internal const int NetworkHeaderBytes = 64;
+
+		/// <summary>
+		/// Per node of a network: one byte of traversal order, one byte of parent edge.
+		/// <para>
+		/// <b>§0.0(c) correction, W7 — and this one buys the budget it costs.</b> §3.11 prices the
+		/// solve at <c>O(nodes + edges) &le; 80</c>, which a walk that has to find each node's
+		/// neighbours by scanning the edge array cannot honour: that is <c>nodes &times; edges</c>,
+		/// 1,536, nineteen times the ceiling. So the traversal ORDER is computed once when the
+		/// topology is laid — off the ground, never at reckon — and stored, and the solve is then
+		/// one linear pass. Two bytes a node (a node index is at most 31 and an edge index at most
+		/// 47, with 255 free as the no-parent sentinel) is what the ceiling costs, and the
+		/// alternative, a full adjacency index, costs 162.
+		/// </para>
+		/// </summary>
+		internal const int NetworkTraversalBytesPerNode = 2;
 
 		/// <summary>The nine-zone reading of LIVING-CITY-ARCHITECTURE §0.0(f): one whole parasang,
 		/// caps scaled with it. Named so the formula can be evaluated at a size the rules do not
@@ -186,6 +218,7 @@ namespace ThousandAndFirst.Simulation.City
 			}
 			long perNetwork = (long)KingdomBudgetRules.NetworkMaxNodes * NetworkNodeBytes
 				+ (long)KingdomBudgetRules.NetworkMaxEdges * NetworkEdgeBytes
+				+ (long)KingdomBudgetRules.NetworkMaxNodes * NetworkTraversalBytesPerNode
 				+ NetworkHeaderBytes;
 			bytes = (long)cities * KingdomBudgetRules.NetworksPerCity * perNetwork;
 			return true;

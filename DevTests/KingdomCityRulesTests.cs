@@ -832,6 +832,53 @@ namespace ThousandAndFirst.Tests
 			StringAssert.DoesNotContain("MISMATCH", KingdomCityRules.AuditNote(28L, -12L, 40L, 6L, 0L, 6L, 4));
 		}
 
+		/// <summary>
+		/// W7 repair. The debt is an <c>int</c> because a dram is counted in <c>int</c> everywhere
+		/// the ground counts one, and <c>take</c> is a <c>long</c>; the subtraction was done in
+		/// <c>int</c> after an unchecked cast and could wrap a row's debt from a draw into a
+		/// landing &mdash; a sign flip, which is the worst possible corruption of a signed counter,
+		/// because every downstream reader would then pour water instead of drawing it.
+		/// <para>
+		/// Widened and range-checked, matching <c>TryProduce</c> and <c>TryReconcile</c>: an
+		/// impossible carry refuses and publishes nothing.
+		/// </para>
+		/// </summary>
+		[Test]
+		public void ACarryThatWouldWrapAnIntDebtRefusesRatherThanFlippingItsSign()
+		{
+			KingdomCityState state = City(
+				Zone("seat", 100L, 0L, 100L, 0L, 0L),
+				Zone("far", 100L, long.MaxValue / 4L, long.MaxValue / 2L, 0L, 0L, int.MinValue + 5));
+			long[] moved = new long[2] { 0L, 4000000000L };
+			KingdomCityState after;
+			long applied;
+			KingdomCityFault fault;
+			Assert.IsFalse(KingdomCityRules.TryApplyTransfer(state, KingdomStockKind.Water, moved, 4000000000L, out after, out applied, out fault));
+			Assert.AreEqual(KingdomCityFault.ArithmeticOverflow, fault);
+			Assert.AreSame(state, after, "a refused carry must leave the book byte-identical");
+			Assert.AreEqual(0L, applied);
+		}
+
+		/// <summary>The boundary the check is written at: a carry that lands the debt exactly on
+		/// <c>int.MinValue</c> is representable and must go through, so the guard is not one short
+		/// of what an <c>int</c> can actually hold.</summary>
+		[Test]
+		public void ACarryThatLandsTheDebtExactlyOnTheBoundStillGoesThrough()
+		{
+			KingdomCityState state = City(
+				Zone("seat", 100L, 0L, 100L, 0L, 0L),
+				Zone("far", 100L, 10L, 100L, 0L, 0L, int.MinValue + 5));
+			long[] moved = new long[2] { 0L, 5L };
+			KingdomCityState after;
+			long applied;
+			KingdomCityFault fault;
+			Assert.IsTrue(KingdomCityRules.TryApplyTransfer(state, KingdomStockKind.Water, moved, 5L, out after, out applied, out fault), fault.ToString());
+			Assert.AreEqual(5L, applied);
+			KingdomZoneRow far;
+			Assert.IsTrue(after.TryZone(1, out far));
+			Assert.AreEqual(int.MinValue, far.OwedWater);
+		}
+
 		[Test]
 		public void ACarryIsAnnouncedInTheRegisterTheLedgerUses()
 		{

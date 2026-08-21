@@ -123,7 +123,12 @@ namespace ThousandAndFirst.Simulation.City
 				Refuse("check-in", fault);
 				return;
 			}
+			// The span the model is about to be advanced over, read BEFORE it is: the lines run for
+			// the same days the works produced over, off the same processed-through tick, so a
+			// network can neither be paid a day production was not nor miss one it was.
+			long lastThrough = state.ProcessedThroughTick;
 			state = Reckon(System, state, TimeTicks);
+			state = Networks(System, Z, state, lastThrough, TimeTicks);
 			int index;
 			if (!IndexOf(state, Z.ZoneID, out index))
 			{
@@ -132,6 +137,18 @@ namespace ThousandAndFirst.Simulation.City
 			KingdomReifySpend spend;
 			state = Reify(System, Z, Survey, state, index, TimeTicks, true, out spend);
 			state = Carry(System, Z, Survey, state, TimeTicks);
+			// W7 repair: the audit that CAN be false. The one at the foot of this method reports an
+			// identity the reconcile it follows has just constructed by re-deriving the debt -- it
+			// proves the reconcile ran and is evidence about nothing else. This one asks the same
+			// question BEFORE the ground is imposed, against the model as the reckoning left it, so
+			// a cistern the founder emptied by hand or a container something else drank shows up as
+			// a number instead of as silence. §3.1 step 4: attributed and told, never silently
+			// repaired -- and a line that cannot disagree is not a telling.
+			string drift = AuditLine(state, Z, Survey);
+			if (drift != null)
+			{
+				KingdomLog.Log("city: check-in read " + drift);
+			}
 			state = Reconcile(System, Z, Survey, state, index, TimeTicks);
 			state = ReadWorks(state, Z, Survey);
 			// After the works, because a resident row's home is named by the work row that stands
@@ -194,15 +211,36 @@ namespace ThousandAndFirst.Simulation.City
 			KingdomStocks ground = Ground(Survey, row);
 			KingdomProductionStep water;
 			KingdomProductionStep food;
-			if (!KingdomProductionRules.TryReconcile(ground.Water.Level, ground.Water.Capacity, row.OwedWater, out water, out fault)
-				|| !KingdomProductionRules.TryReconcile(ground.Food.Level, ground.Food.Capacity, row.OwedFood, out food, out fault))
+			// W7 repair. Each kind is reconciled ON ITS OWN. These two used to be joined by `||`,
+			// so one refusal abandoned the other kind's reconcile AND the rate stamp below -- a
+			// larder the founder had over-stuffed could suppress the water half and strand a stale
+			// carry on the row. A fault in one stock is now a fault about one stock: it is told,
+			// the other half still lands, and the row still learns what this ground makes.
+			bool wet = KingdomProductionRules.TryReconcile(ground.Water.Level, ground.Water.Capacity, row.OwedWater, out water, out fault);
+			if (!wet)
 			{
-				Refuse("check-out", fault);
+				Refuse("check-out water", fault);
+			}
+			bool fed = KingdomProductionRules.TryReconcile(ground.Food.Level, ground.Food.Capacity, row.OwedFood, out food, out fault);
+			if (!fed)
+			{
+				Refuse("check-out food", fault);
+			}
+			if (!wet && !fed)
+			{
 				return;
 			}
+			if (!wet)
+			{
+				water = new KingdomProductionStep(row.Stocks.Water.Level, row.OwedWater, 0L, 0L);
+			}
+			if (!fed)
+			{
+				food = new KingdomProductionStep(row.Stocks.Food.Level, row.OwedFood, 0L, 0L);
+			}
 			KingdomStocks trued = new KingdomStocks(
-				new KingdomStockPair(water.NextLevel, ground.Water.Capacity),
-				new KingdomStockPair(food.NextLevel, ground.Food.Capacity),
+				new KingdomStockPair(water.NextLevel, wet ? ground.Water.Capacity : row.Stocks.Water.Capacity),
+				new KingdomStockPair(food.NextLevel, fed ? ground.Food.Capacity : row.Stocks.Food.Capacity),
 				ground.Materials);
 			KingdomCityState written;
 			// The last read is also the last measurement of what this ground MAKES: the founder is
@@ -250,9 +288,9 @@ namespace ThousandAndFirst.Simulation.City
 		/// downstream reads the same numbers.
 		/// </para>
 		/// </summary>
-		public static void RecordSupports(KingdomSystem System, Zone Z, int Water, int Food, int Roof, int StorageCapacity, long TimeTicks)
+		public static void RecordSupports(KingdomSystem System, Zone Z, KingdomSurvey Survey, int Roof, int StorageCapacity, long TimeTicks)
 		{
-			if (System == null || Z == null || System.City == null)
+			if (System == null || Z == null || Survey == null || System.City == null)
 			{
 				return;
 			}
@@ -274,7 +312,19 @@ namespace ThousandAndFirst.Simulation.City
 				row.Stocks.Food,
 				row.Stocks.Materials);
 			KingdomCityState written;
-			if (!state.TryWithZone(index, row.WithReading(TimeTicks, stocks, Floor(Roof), row.Defence, Floor(Water), Floor(Food)), out written, out fault))
+			// W7 repair. This used to be handed the RAW tally: `Supports.Water` and
+			// `Supports.Food` as KingdomSubsidence counted them. The water half agreed with every
+			// other writer by luck -- ScopedSupports only rewrites `Lift` -- but the FOOD half did
+			// not, because KingdomGrowth.FoodMadePerDay subtracts the sown fields and the mills,
+			// which deliver PHYSICALLY rather than as a credit, and the raw tally does not.
+			// Normally CheckOut wrote over it before the model ever ran on it; a reconcile that
+			// refused (an over-stuffed larder used to fault the whole pass) left the unsubtracted
+			// rate standing, and the model then booked field and mill output every day while the
+			// physical path delivered the same food -- fed twice, and the audit had nothing to say
+			// about it because both halves of ITS identity moved together. So the rate is no
+			// longer passed in at all: all three writers now read the same two expressions off the
+			// same survey, and disagreeing is unrepresentable rather than merely unlikely.
+			if (!state.TryWithZone(index, row.WithReading(TimeTicks, stocks, Floor(Roof), row.Defence, Floor(WaterMadePerDay(Survey)), Floor(FoodMadePerDay(Survey))), out written, out fault))
 			{
 				Refuse("record supports", fault);
 				return;
@@ -305,15 +355,19 @@ namespace ThousandAndFirst.Simulation.City
 			{
 				return;
 			}
+			// W7 repair, and the same one Ground() carries: a pantry holding more than it was
+			// counted able to hold is the count being wrong, never the shelves. Reading it through
+			// Measured raises the ceiling to the reading rather than refusing the whole write.
+			KingdomStockPair larder = Measured(FoodStored, FoodCapacity);
 			KingdomProductionStep food;
-			if (!KingdomProductionRules.TryReconcile(Floor(FoodStored), Floor(FoodCapacity), row.OwedFood, out food, out fault))
+			if (!KingdomProductionRules.TryReconcile(larder.Level, larder.Capacity, row.OwedFood, out food, out fault))
 			{
 				Refuse("record larder", fault);
 				return;
 			}
 			KingdomStocks stocks = new KingdomStocks(
 				row.Stocks.Water,
-				new KingdomStockPair(food.NextLevel, Floor(FoodCapacity)),
+				new KingdomStockPair(food.NextLevel, larder.Capacity),
 				row.Stocks.Materials);
 			KingdomCityState written;
 			if (!state.TryWithZone(
@@ -439,6 +493,23 @@ namespace ThousandAndFirst.Simulation.City
 		/// would never grind again.
 		/// </para>
 		/// </summary>
+		/// <summary>
+		/// The seat's mirror of the model's processed-through tick, advanced from the model and
+		/// never independently.
+		/// <para>
+		/// W7 repair: the heartbeat needs this too. <c>KingdomHeartbeat.Advance</c> publishes an
+		/// advanced book every slice and used not to move the mirror with it, so between two
+		/// check-ins the growth pass's water clock read older than the model it mirrors &mdash; and
+		/// the next pass would then bill days the model had already run. W6's whole ruling is that
+		/// there is ONE clock and the seat's stamp is written FROM the model; a second writer that
+		/// only sometimes writes is the same defect wearing a smaller hat.
+		/// </para>
+		/// </summary>
+		internal static void StampSeat(KingdomSystem System, KingdomCityState state)
+		{
+			Stamp(System, state);
+		}
+
 		private static void Stamp(KingdomSystem System, KingdomCityState state)
 		{
 			if (System == null || state == null)
@@ -912,6 +983,49 @@ namespace ThousandAndFirst.Simulation.City
 			System.ReifyHeavySpent += spend.Heavy;
 		}
 
+		/// <summary>
+		/// The city's networks, run for the same span the reckoning just ran (&sect;3.11).
+		/// <para>
+		/// Composition reads the ground and therefore happens HERE, on a zone render, and never at
+		/// reckon (&sect;0.0(d)). The solve is arithmetic over rows composition already wrote, and
+		/// its node-visit count is reported against &sect;0.0's network lane rather than assumed to
+		/// be inside it.
+		/// </para>
+		/// </summary>
+		private static KingdomCityState Networks(KingdomSystem System, Zone Z, KingdomCityState state, long fromTick, long TimeTicks)
+		{
+			if (state == null || Z == null)
+			{
+				return state;
+			}
+			Stopwatch watch = Stopwatch.StartNew();
+			KingdomNetworks.Lines(System, Z);
+			long days;
+			KingdomCityFault fault;
+			if (!KingdomProductionRules.TryDaysBetween(fromTick, TimeTicks, KingdomRules.TicksPerDay, out days, out fault) || days <= 0L)
+			{
+				watch.Stop();
+				return state;
+			}
+			int visits;
+			KingdomCityState next = KingdomNetworks.Run(System, Z, state, days, out visits);
+			watch.Stop();
+			if (visits <= 0)
+			{
+				return next;
+			}
+			long microseconds = (watch.ElapsedTicks * 1000000L) / Stopwatch.Frequency;
+			Record(new KingdomPerfReceipt(
+				KingdomBudgetLane.NetworkSolve,
+				Z.ZoneID + " days=" + days,
+				microseconds,
+				KingdomComputeCounters.None,
+				visits,
+				KingdomBudgetRules.JudgeMicroseconds(KingdomBudgetLane.NetworkSolve, microseconds),
+				KingdomBudgetRules.JudgeCount(KingdomBudgetLane.NetworkSolve, visits)));
+			return next;
+		}
+
 		/// <summary>The per-turn reify line of &sect;6.5's receipt, in the shape the log-watcher
 		/// already reads.</summary>
 		private static void Receipt(string zoneId, KingdomReifySpend spend, Stopwatch watch, int owed)
@@ -1012,11 +1126,29 @@ namespace ThousandAndFirst.Simulation.City
 			KingdomProductionStep water;
 			KingdomProductionStep food;
 			KingdomCityFault fault;
-			if (!KingdomProductionRules.TryReconcile(ground.Water.Level, ground.Water.Capacity, row.OwedWater, out water, out fault)
-				|| !KingdomProductionRules.TryReconcile(ground.Food.Level, ground.Food.Capacity, row.OwedFood, out food, out fault))
+			// W7 repair, and the same one CheckOut carries: one kind's refusal is not the other
+			// kind's, and neither is the rate stamp's.
+			bool wet = KingdomProductionRules.TryReconcile(ground.Water.Level, ground.Water.Capacity, row.OwedWater, out water, out fault);
+			if (!wet)
 			{
-				Refuse("reconcile", fault);
+				Refuse("reconcile water", fault);
+			}
+			bool fed = KingdomProductionRules.TryReconcile(ground.Food.Level, ground.Food.Capacity, row.OwedFood, out food, out fault);
+			if (!fed)
+			{
+				Refuse("reconcile food", fault);
+			}
+			if (!wet && !fed)
+			{
 				return state;
+			}
+			if (!wet)
+			{
+				water = new KingdomProductionStep(row.Stocks.Water.Level, row.OwedWater, 0L, 0L);
+			}
+			if (!fed)
+			{
+				food = new KingdomProductionStep(row.Stocks.Food.Level, row.OwedFood, 0L, 0L);
 			}
 			if (row.LastReadTick > 0L)
 			{
@@ -1050,8 +1182,8 @@ namespace ThousandAndFirst.Simulation.City
 				KingdomLog.Log("city: reconcile " + Z.ZoneID + " spilled water=" + water.Spilled + " food=" + food.Spilled);
 			}
 			KingdomStocks trued = new KingdomStocks(
-				new KingdomStockPair(water.NextLevel, ground.Water.Capacity),
-				new KingdomStockPair(food.NextLevel, ground.Food.Capacity),
+				new KingdomStockPair(water.NextLevel, wet ? ground.Water.Capacity : row.Stocks.Water.Capacity),
+				new KingdomStockPair(food.NextLevel, fed ? ground.Food.Capacity : row.Stocks.Food.Capacity),
 				ground.Materials);
 			KingdomCityState written;
 			if (!state.TryWithZone(
@@ -1167,6 +1299,30 @@ namespace ThousandAndFirst.Simulation.City
 				book.ZoneWaterLevels[index], book.ZoneOwedWater[index], Survey.StoredWater,
 				book.ZoneFoodLevels[index], book.ZoneOwedFood[index], Survey.FoodStored,
 				counter.OwedThirds);
+		}
+
+		/// <summary>
+		/// The same audit asked of a model that has NOT been trued against this ground yet.
+		/// <para>
+		/// The published-book reader above is used at the foot of a pass, where the reconcile has
+		/// already re-derived the debt from the reading and <c>level - owed == ground</c> holds by
+		/// construction. That is a proof the reconcile ran. This one is the proof the ground and
+		/// the book agreed in the first place, which is the only version of the line a founder or a
+		/// tester learns anything from.
+		/// </para>
+		/// </summary>
+		private static string AuditLine(KingdomCityState state, Zone Z, KingdomSurvey Survey)
+		{
+			int index;
+			KingdomZoneRow row;
+			if (state == null || Z == null || Survey == null || !IndexOf(state, Z.ZoneID, out index) || !state.TryZone(index, out row))
+			{
+				return null;
+			}
+			return KingdomCityRules.AuditNote(
+				row.Stocks.Water.Level, row.OwedWater, Survey.StoredWater,
+				row.Stocks.Food.Level, row.OwedFood, Survey.FoodStored,
+				KingdomCityRules.CityCounter(state).OwedThirds);
 		}
 
 		private static void Audit(KingdomSystem System, Zone Z, KingdomSurvey Survey, string step)
@@ -1331,9 +1487,34 @@ namespace ThousandAndFirst.Simulation.City
 		private static KingdomStocks Ground(KingdomSurvey Survey, KingdomZoneRow row)
 		{
 			return new KingdomStocks(
-				new KingdomStockPair(Floor(Survey.StoredWater), Floor(Survey.StorageCapacity)),
-				new KingdomStockPair(Floor(Survey.FoodStored), Floor(Survey.FoodCapacity)),
+				Measured(Survey.StoredWater, Survey.StorageCapacity),
+				Measured(Survey.FoodStored, Survey.FoodCapacity),
 				row.Stocks.Materials);
+		}
+
+		/// <summary>
+		/// One ground reading, with the ceiling raised to whatever is actually standing in it.
+		/// <para>
+		/// W7 repair. <c>KingdomProductionRules.TryReconcile</c> refuses <c>InvalidCapacity</c>
+		/// when the ground holds more than the ground can hold, which is a perfectly reachable
+		/// state: a founder who hand-stuffs a dedicated larder past its counted capacity, or a
+		/// design whose capacity was retuned downward under a full vessel. That refusal used to
+		/// abandon the WHOLE reconcile -- both stock kinds, because the two were joined by
+		/// <c>||</c> -- and leave a stale rate stamped on the row.
+		/// </para>
+		/// <para>
+		/// &sect;3.1's ruling settles it: <b>the ground wins for anything physical.</b> A vessel
+		/// holding more than the books said it could is the books being wrong about the ceiling,
+		/// not the vessel being wrong about its contents. So the ceiling is raised to the reading
+		/// and nothing is clamped away -- the alternative, clamping the level, would silently
+		/// destroy real drams the founder can walk up to and see.
+		/// </para>
+		/// </summary>
+		private static KingdomStockPair Measured(int level, int capacity)
+		{
+			long held = Floor(level);
+			long ceiling = Floor(capacity);
+			return new KingdomStockPair(held, (ceiling < held) ? held : ceiling);
 		}
 
 		private static bool IndexOf(KingdomCityState state, string zoneId, out int index)

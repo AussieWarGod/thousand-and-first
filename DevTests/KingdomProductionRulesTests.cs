@@ -219,6 +219,87 @@ namespace ThousandAndFirst.Tests
 			Assert.IsFalse(KingdomProductionRules.TryReconcile(101L, 100L, 0, out step, out fault));
 			Assert.AreEqual(KingdomCityFault.InvalidCapacity, fault);
 		}
+
+		/// <summary>
+		/// W7 repair, the caller's half of the rule above.
+		/// <para>
+		/// A vessel holding more than the books said it could hold is REACHABLE &mdash; a founder
+		/// who hand-stuffs a dedicated larder past its counted capacity, or a design retuned
+		/// downward under a full one. The refusal above is correct (the rules layer must not
+		/// quietly correct a reading it was handed), and it used to abandon the whole pass:
+		/// water and food were joined by <c>||</c>, so an over-stuffed larder suppressed the water
+		/// reconcile AND stranded a stale rate on the row.
+		/// </para>
+		/// <para>
+		/// &sect;3.1 settles which way it must be normalised: <b>the ground wins for anything
+		/// physical.</b> The CEILING is raised to the reading, never the level clamped to the
+		/// ceiling &mdash; clamping would destroy real drams a founder can walk up to. This pins
+		/// that the normalisation always produces a reading the reconcile accepts, and that it
+		/// leaves the ground exactly where it was.
+		/// </para>
+		/// </summary>
+		[TestCase(101L, 100L)]
+		[TestCase(5000L, 0L)]
+		[TestCase(1L, 1L)]
+		[TestCase(0L, 100L)]
+		public void RaisingTheCeilingToTheReadingAlwaysGivesAReconcileItAccepts(long ground, long capacity)
+		{
+			long ceiling = (capacity < ground) ? ground : capacity;
+			KingdomProductionStep step;
+			KingdomCityFault fault;
+			Assert.IsTrue(KingdomProductionRules.TryReconcile(ground, ceiling, 0, out step, out fault), fault.ToString());
+			Assert.AreEqual(ground, step.NextLevel, "the ground moved, and the ground is what wins");
+			Assert.AreEqual(0, step.NextOwed);
+			Assert.AreEqual(0L, step.Spilled, "nothing was destroyed to make the reading fit");
+		}
+
+		/// <summary>
+		/// One state, one span, and both things that can happen to it: a zone makes water and then
+		/// a main carries some of it to a drier quarter. Invariant I1 has to survive the pair, not
+		/// only each of them &mdash; which is the case the reader named as untested.
+		/// </summary>
+		[Test]
+		public void ProductionAndACarryOverOneStateBothKeepTheLedgerIdentity()
+		{
+			KingdomZoneRow[] zones = new KingdomZoneRow[2]
+			{
+				new KingdomZoneRow("A", 0, 100L, new KingdomStocks(new KingdomStockPair(200L, 1000L), new KingdomStockPair(0L, 0L), new KingdomStockPair(0L, 0L)), 0, 0, 0, 0, 0, 0, 0),
+				new KingdomZoneRow("B", 0, 100L, new KingdomStocks(new KingdomStockPair(0L, 1000L), new KingdomStockPair(0L, 0L), new KingdomStockPair(0L, 0L)), 0, 0, 0, 0, 0, 0, 0)
+			};
+			KingdomCityState state;
+			KingdomCityFault fault;
+			Assert.IsTrue(KingdomCityState.TryCreate(1, 1, "seat", 0L, default(KingdomStocks), zones,
+				new KingdomWorkRow[0], new KingdomResidentRow[0], new KingdomClockRow[0], out state, out fault), fault.ToString());
+			// Zone A's works make sixty drams a day for five days. The ground has not moved: the
+			// level and the debt rise together.
+			KingdomProductionStep made = Produce(200L, 1000L, 0, 60L, 5L);
+			Assert.AreEqual(500L, made.NextLevel);
+			Assert.AreEqual(300, made.NextOwed);
+			KingdomZoneRow rowA;
+			Assert.IsTrue(state.TryZone(0, out rowA));
+			KingdomCityState produced;
+			Assert.IsTrue(state.TryWithZone(0,
+				rowA.WithReading(rowA.LastReadTick,
+					new KingdomStocks(new KingdomStockPair(made.NextLevel, 1000L), rowA.Stocks.Food, rowA.Stocks.Materials),
+					0, 0, 60, 0).WithOwed(made.NextOwed, 0, 0),
+				out produced, out fault), fault.ToString());
+			// Then a main runs a hundred of it to B. A transfer is a carry: level and debt again.
+			KingdomCityState carried;
+			long moved;
+			Assert.IsTrue(KingdomNetworkRules.TryPostTransfer(produced, KingdomStockKind.Water, 0, 1, 100L, out carried, out moved, out fault), fault.ToString());
+			Assert.AreEqual(100L, moved);
+			KingdomZoneRow a;
+			KingdomZoneRow b;
+			Assert.IsTrue(carried.TryZone(0, out a));
+			Assert.IsTrue(carried.TryZone(1, out b));
+			// I1, per row: level - owed is the GROUND, and no ground has been touched by either
+			// step, so both rows still read what they physically held at the start.
+			Assert.AreEqual(200L, a.Stocks.Water.Level - a.OwedWater);
+			Assert.AreEqual(0L, b.Stocks.Water.Level - b.OwedWater);
+			// And in total: three hundred made, none of it poured yet, none of it lost in transit.
+			Assert.AreEqual(500L, a.Stocks.Water.Level + b.Stocks.Water.Level);
+			Assert.AreEqual(300, a.OwedWater + b.OwedWater);
+		}
 	}
 }
 #endif

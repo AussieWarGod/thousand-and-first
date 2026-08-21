@@ -202,7 +202,7 @@ manor                    44      6.0         48        6         12         60  
 bathhouse                46      6.0         60        6         12         72           0          6
 heartmoot                46      5.0         46        6         12         58           0          6
 
-    Bits, the third cost. 4 of 67 designs ask for vanilla tinkering bits at all,
+    Bits, the third cost. 4 of 72 designs ask for vanilla tinkering bits at all,
     and they are exactly the high-craft ones: chargingpost, condensery, heartcourt, waterworks.
     Nobody in the settlement makes a bit; they come off salvage and out of caravans, so a
     design that names them is gated on the founder's own scavenging rather than on any yard.
@@ -547,6 +547,8 @@ are a lower level AND a thinner cushion, arrived at down two separate paths.
 
   store          rung         cap bill/day   drams/day, and as a share of the bill
                                              wear 17   wear 34   wear 60
+  watermain      Steading       8        6    0.0  0%    0.1  1%    0.2  2%
+  watertap       Steading       8        6    0.0  0%    0.1  1%    0.2  2%
   saltpan        Steading      32        6    0.2  3%    0.4  6%    0.6 10%
   saltterrace    Steading      64        6    0.4  6%    0.7 12%    1.3 21%
   catchment      Steading      64        6    0.4  6%    0.7 12%    1.3 21%
@@ -860,6 +862,8 @@ G1  The water lane's invariants, re-derived from the XML
    "storage stores; producers produce", and it is enforceable exactly because `Carries` is
    read as a FLOW as well as a level.
 
+  watermain       r_KingdomWaterMain                 8 drams, carries no water
+  watertap        r_KingdomWaterTap                  8 drams, carries no water
   cistern         r_KingdomGreatCistern            256 drams, carries no water
   cisternvault    r_KingdomCisternVault            768 drams, carries no water
   reservoir       r_KingdomReservoir              1920 drams, carries no water
@@ -1144,6 +1148,92 @@ W6  Production on the model, and logistics that never look stupid
 
    carry order:  distance to the seat, then row index   (KingdomCityRules.TryPlanTransfer)
    drain order:  dedication ordinal, then vessel id     (KingdomDrainRules.TryOrder, unmoved)
+
+======================================================================================
+W7  Networks, the flow solve, and power on one accounting
+======================================================================================
+
+1. THE POWER LANE HAS ONE CLOCK, AND IT IS THE MODEL'S. Power used to count its own days, per
+   work, off `KingdomRules.ElapsedDays` and a remainder-keeping checkpoint, and then do its own
+   summing, its own store clamp and its own delivery. That was a second accounting standing
+   beside the model's - exactly what W6 made unrepresentable for production. Days are now
+   WORLD-DAY BOUNDARIES through the one counter every other lane uses.
+
+   power counts days off:  KingdomProductionRules.TryDaysBetween   (world-day boundaries)
+   per-work credit loop:   gone
+   remainder checkpoint:   gone
+
+2. AND ONE NETTING. The summing, the store clamp, the deficit and the stop list all happen in
+   `KingdomFlowRules.TrySolve`. `KingdomPowerRules` keeps the RATES - which is what it was always
+   for - and its span arithmetic is now the NAMED FORM of what the solve produces. The two are
+   asserted equal in test rather than separately computed, which is what stops them drifting.
+
+   netting:                KingdomFlowRules.TrySolve
+   store throughput:       KingdomPowerRules.ThroughputForDays  (one constant, one caller)
+   ChargeForDays / Absorbable / Releasable:  kept, asserted equal to the solve in test
+
+3. FLOW CONSERVATION IS AN IDENTITY, NOT A PROMISE. Generated + Discharged == Delivered +
+   Charged + Spilled, in every branch. There is no fourth destination for a charge and nothing
+   arrives from a fifth source, so a solve that invented or lost one would fail arithmetic rather
+   than fail a review. Re-derived here from the source's own branch structure.
+
+   conservation checked over 320 (supply x store x span x demand) combinations: holds
+
+4. NO TERM IN THE ELAPSED. A one-day span and a ninety-day span are the same arithmetic: days
+   multiply the rates once and appear nowhere else. §0.0(a)'s identity, for this lane.
+
+   one day:     generated=   2400  delivered=   1000  charged=   1400  stopped=0
+   ninety days: generated= 216000  delivered=  90000  charged= 126000  stopped=0
+
+5. THE SOLVE'S OP BOUND, COMPOSED. §0.0 prices one network solve at O(nodes + edges) and the
+   caps at 32 nodes and 48 edges, so 80 node-visits; re-solves across a whole reckoning are
+   bounded by B = 64 breakpoints, not by B x networks. That ceiling is only affordable because
+   the traversal ORDER is precomputed when the topology is laid - a walk that had to find
+   neighbours by scanning the edge array is nodes x edges, nineteen times over.
+
+   one solve, precomputed order:      80 node-visits
+   one solve, scanning edges:       1536 node-visits   (19x the ceiling)
+   whole reckoning (B=64):            5120 node-visits   (§0.0 budget: 5,120)
+
+6. THE MEMORY THE ORDER COSTS, AND WHAT IT BUYS. Two bytes a node against 162 for a full
+   adjacency index. §0.0(c) takes the edit; the ceiling does not move.
+
+   per network:        1408 B   (nodes 512 + edges 768 + order 64 + header 64)
+   per realm:         11264 B
+   order bytes:          64 B   vs a full adjacency index at 162 B
+
+7. THE LIQUID LAW HAS FOUR PIECES AND ONE REFUSAL, AND THEY ARE IN THE XML. Connection is
+   DECLARED: a main says what runs in it and which faces it offers, a crossing types NOTHING so
+   it can never be the place two liquids met, and a cross-liquid join refuses by name.
+
+   water main / brine main:  typed, four faces declared
+   crossing piece:           no Liquid, no LiquidVolume  (it cannot merge anything)
+   water tap / brine tap:    typed; a tap is the act of tapping, not proximity
+   cross-liquid join:        RefusedLiquid, told by name, never merged
+
+8. A LINE RUNS DOWNHILL AND STOPS LEVEL, IN CLOSED FORM. Moving m from a vessel at Lf/Cf into one
+   at Lt/Ct levels them when m = (Ct*Lf - Cf*Lt) / (Cf + Ct). One expression, no loop, no draw,
+   and it cannot overshoot into an inverted pair.
+
+      from       to      runs    fill after
+    1000/1000      0/1000     500    0.500 / 0.500
+     300/300       0/900      225    0.250 / 0.250
+     500/1000    500/1000       0    0.500 / 0.500
+     900/1000    100/200       66    0.834 / 0.830
+
+9. THE BROWNOUT LADDER IS STATED, AND LODGING IS THE MIDDLE RUNG. industry -> refining ->
+   amenity -> food -> water -> watch, lowest first, ties on the higher work id. It is the mod's
+   own "stop at the loyal core" discipline (the thirst ladder's empty casks and one rung, never
+   an empty town) applied to charge: a city gives up what it is DOING before what it IS. Lodging
+   sits at amenity because a roof needs no charge to keep the rain off - whether a household
+   keeps its home is the roof brink's question, and a brownout must not be able to answer it.
+
+   0  Industry  
+   1  Refining  
+   2  Amenity   <- lodging, comfort, civic, faith, memorial
+   3  Food      
+   4  Water     
+   5  Watch     
 
 ======================================================================================
 Where this model is too crude to decide anything

@@ -127,7 +127,14 @@ namespace ThousandAndFirst.Tests
 
 			long networks;
 			Assert.IsTrue(KingdomCityMemoryRules.TryNetworkBytes(1, out networks));
-			Assert.AreEqual(5248L, networks, "network graphs, per city");
+			// W7 re-pin, justified in KingdomCityMemoryRules: 5,248 was four networks of
+			// 32x16 + 48x16 + a 32-byte header, priced before anything had been built to sit in
+			// the header. The header is 64 (four array references do not fit in 32) and each
+			// network now also stores its traversal order, two bytes a node, which is what holds
+			// the SOLVE inside §3.11's O(nodes + edges) ceiling instead of nodes x edges. The
+			// realm total moves 768 bytes and stays under the advisory rung; the ceiling has not
+			// moved and is what a regression is measured against.
+			Assert.AreEqual(5632L, networks, "network graphs, per city");
 		}
 
 		/// <summary>
@@ -139,7 +146,7 @@ namespace ThousandAndFirst.Tests
 		{
 			long bytes;
 			Assert.IsTrue(KingdomCityMemoryRules.TryRealmBytesAtTodaysCaps(out bytes));
-			Assert.AreEqual(53572L, bytes, "the composed realm total moved");
+			Assert.AreEqual(54340L, bytes, "the composed realm total moved");
 			Assert.Less(bytes, KingdomBudgetRules.ModelBytesCeiling, "the realm broke the 64 KiB ceiling");
 			// W0 recorded this rather than asserting it away: the composed total (52.3 KiB) sat
 			// ABOVE §0.0's own 48 KiB warn rung, so the design shipped permanently inside its own
@@ -164,7 +171,7 @@ namespace ThousandAndFirst.Tests
 		{
 			long bytes;
 			Assert.IsTrue(KingdomCityMemoryRules.TryRealmBytesAtFullParasang(out bytes));
-			Assert.AreEqual(89732L, bytes);
+			Assert.AreEqual(90500L, bytes);
 			Assert.Greater(bytes, KingdomBudgetRules.ModelBytesCeiling, "a nine-zone realm is over TODAY's ceiling by design");
 			Assert.Less(bytes, 100L * KiB, "still under a tenth of a megabyte");
 		}

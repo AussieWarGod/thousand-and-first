@@ -537,9 +537,18 @@ namespace ThousandAndFirst.Simulation.City
 		/// nothing about I4 moves: the two rules answer different questions.
 		/// </para>
 		/// <para>
-		/// Nothing is created. The total moved can never exceed what the rows say the other zones
-		/// hold, nor the room the near vessels have, so I1 holds across the transfer by
-		/// construction: what leaves one row arrives on another as a debt against real containers.
+		/// Nothing is created, and the exact sense of that is worth stating because the loose
+		/// reading of it is false. A row's LEVEL includes what its works have made and nobody has
+		/// poured yet -- that is what a positive <c>owed</c> means -- so a carry can and should be
+		/// able to deliver a harvest that is still a claim. What it moves is the CLAIM: the giving
+		/// row loses level and debt together, the taking ground receives real goods that the model
+		/// had already booked as made, and the city's total of both is unchanged. What
+		/// <c>spokenFor</c> reserves is the other sign only -- a row already owing a DRAW has that
+		/// much of its level promised to a vessel nobody has opened, and it may not be given away
+		/// twice. So: no dram is invented, but a dram may land in a vessel other than the one it
+		/// was booked against, which is exactly what a porter is for. I1 holds across the transfer
+		/// by construction: what leaves one row arrives on another as a debt against real
+		/// containers.
 		/// </para>
 		/// </summary>
 		/// <param name="state">The book.</param>
@@ -695,11 +704,23 @@ namespace ThousandAndFirst.Simulation.City
 					fault = KingdomCityFault.InvalidRate;
 					return false;
 				}
+				// W7 repair. The debt is an `int` on purpose -- a dram and a serving are counted in
+				// `int` everywhere the ground counts them -- and `take` is a `long`, so the
+				// subtraction was done in `int` after an unchecked cast and could wrap a row's debt
+				// from a draw into a landing. Widened and range-checked, the same way TryProduce
+				// and TryReconcile already check theirs, so an impossible carry refuses instead of
+				// publishing a debt with the wrong sign.
+				long nextOwed = (long)row.OwedOf(kind) - take;
+				if (nextOwed > int.MaxValue || nextOwed < int.MinValue)
+				{
+					fault = KingdomCityFault.ArithmeticOverflow;
+					return false;
+				}
 				KingdomCityState written;
 				if (!current.TryWithZone(
 					i,
 					row.WithReading(row.LastReadTick, lowered, row.Roofs, row.Defence, row.WaterCarry, row.FoodCarry)
-						.WithOwedOf(kind, row.OwedOf(kind) - (int)take),
+						.WithOwedOf(kind, (int)nextOwed),
 					out written,
 					out fault))
 				{

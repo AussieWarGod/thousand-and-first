@@ -651,6 +651,44 @@ namespace ThousandAndFirst.Simulation.City
 		// Shared plumbing
 		// ==================================================================================
 
+		/// <summary>
+		/// Writes a brownout into the city's ring.
+		/// <para>
+		/// W7. The ANNOUNCE-ONCE latch is not here and must not be: it lives on the object that
+		/// went quiet, so that recovery can unsay it (Addendum 12(c)) and the next failure can be
+		/// told again. What the ring is for is the other half &mdash; the dated line a founder
+		/// three zones away reads at the homecoming, and the digest reads afterwards. The ring
+		/// forgets by age, which is right for history and wrong for a latch, and this is the
+		/// history.
+		/// </para>
+		/// </summary>
+		/// <param name="WorkId">The work that stopped.</param>
+		/// <param name="Tier">The brownout ladder rung it stopped on, so the ring remembers how far
+		/// down the city had to go and not only that the lights went out.</param>
+		internal static void TellBrownout(KingdomSystem System, int WorkId, int Tier, string ZoneId, long TimeTicks)
+		{
+			if (!Enabled || System == null || !System.Founded || System.City == null || TimeTicks <= 0L)
+			{
+				return;
+			}
+			KingdomCityState state;
+			KingdomCityFault fault;
+			if (!System.City.TryRead(out state, out fault))
+			{
+				return;
+			}
+			KingdomCityState next;
+			if (!state.TryTell(new KingdomToldRow(KingdomToldKind.Brownout, TimeTicks, WorkId, 0, ZoneId, Tier), out next, out fault))
+			{
+				KingdomLog.Log("city: brownout refused (" + fault + "); the ring is unchanged");
+				return;
+			}
+			if (!System.City.TryPublish(next, out fault))
+			{
+				KingdomLog.Log("city: brownout refused (" + fault + "); the book is unchanged");
+			}
+		}
+
 		private static KingdomCityState Tell(KingdomCityState state, KingdomHappening happening)
 		{
 			KingdomCityState next;

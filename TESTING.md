@@ -778,4 +778,18 @@ it.
   two, and may wear both marks. A pass reporting "it lost two people in one homecoming for one
   bad year" is a bug worth filing. Trade still carries no food: the only ways into a larder are
   the fields, the garden, and your own hands.
+- **Plumbing is declared, and a refusal is the system working.** Two mains carrying different
+  liquids that end up beside each other will say so, once, by name — that is the LIQUID LAW, not a
+  bug. Lay a crossing piece where two lines are only meant to pass. A tap is what puts a vessel on a
+  line; standing a cistern next to a main joins nothing. A pass reporting "my brine main merged into
+  my fresh main" is the one bug worth filing loudly. A line moves water only between quarters that
+  are both on it, only downhill, and only until the two ends stand at the same **fraction** of their
+  capacity — a small cistern and a great one come level at the same fill, not the same drams.
+- **A brownout is not a breakdown.** A work that went quiet because its network ran short says
+  "there is not enough to go round"; a work that broke says something else, and the remedy is
+  different. The stated order is forges and workshops → refining yards → comfort and lodging → food
+  works → water works → the watch, newest built first within a rung. A pass reporting "the watch
+  went dark while the forge was still lit" is a bug. Recovery says **nothing** — a settlement that
+  announced every recovery would be a settlement that never stops talking about itself — so a pass
+  reporting "it never told me the power came back" is correct behaviour.
 - Founder's basin is wish-obtainable only; its acquisition quest is slice 0.2 content.
