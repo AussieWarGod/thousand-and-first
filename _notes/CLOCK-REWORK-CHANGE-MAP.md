@@ -555,3 +555,19 @@ breakpoint's own tick. → P4.
   one-mending-settlement-wide gate; unmodelled.
 - `MaxRefinedPerDay = 8` untuned against grand-build costs; refined chain still unmodellable in
   balance-sim (map §7).
+
+
+## Heart wave follow-ups (orchestrator, 2026-08-22)
+
+- `Growth/KingdomRoads.cs:422` + `KingdomCommission.cs:301` still call `TryHeart` at weight 1 —
+  roads/single-cell siting keep the drifting centre while plots use the tier-scaled one.
+- `KingdomSocket` re-build list can offer heart-rung keys and re-type the heart plot — needs the
+  same second-heart refusal the commission/plan paths have.
+- A rite poured over open water refuses rung 1 and leaves the survey with no heart plot — needs
+  a re-attempt hook.
+- Author-facing WR: a `Heart="yes"` catalogue attribute (KingdomData + KingdomMergeRules) so
+  third parties can author new rungs; today the ladder is a fixed key list mirrored in the
+  checker.
+- W4 doc requests from the heart agent: MODDING (mergeable heart keys, new blueprints/props),
+  API (heart surface on PlotRules/Plots/CeremonyHeart), CHANGELOG, TESTING step; book status
+  line "the heart: <rung>, N plots marked to yield".

@@ -606,6 +606,62 @@
     <part Name="Physics" Takeable="false" Weight="8000" />
     <stat Name="Hitpoints" Value="420" />
   </object>
+  <!-- ==================================================================== THE HEART ==
+       Four rungs of one thing, on one piece of ground, each raised over the last. Nothing here
+       ships a Tile: STANDARDS section 4 requires shipped art for anything carrying one, and
+       these are glyphs the mod already draws with.
+
+       The basin and the survey stakes below are the two objects the plot machinery reads as
+       BARE ground (KingdomPlots.ReadObject) - a stake is a mark and never a claim, and the
+       basin is what the first water was poured from. Neither refuses a plot and neither is ever
+       cleared, which is what lets every rung be raised AROUND the basin rather than refused by
+       it. -->
+  <object Name="r_KingdomRiteGround" Inherits="Furniture">
+    <stag Name="Contemporary" />
+    <part Name="Render" DisplayName="rite ground" RenderString="&#9617;" ColorString="&amp;y" DetailColor="w" />
+    <part Name="Description" Short="Earth trodden into a ring by everyone who has come here to drink, and the basin standing in the middle of it. This is the ground the first water was poured on, and nothing raised here afterwards will move it." />
+    <part Name="Physics" Solid="false" Takeable="false" Weight="600" />
+    <stat Name="Hitpoints" Value="120" />
+  </object>
+  <object Name="r_KingdomWaterstone" Inherits="Furniture">
+    <stag Name="Contemporary" />
+    <part Name="Render" DisplayName="waterstone" RenderString="&#8801;" ColorString="&amp;w" DetailColor="W" />
+    <part Name="Description" Short="A kerb of dressed stone laid in courses around the rite ground, wide enough to sit on and worn smooth where people do. The basin stands on the stone now. There is a queue at dusk." />
+    <part Name="Physics" Solid="false" Takeable="false" Weight="9000" />
+    <stat Name="Hitpoints" Value="400" />
+  </object>
+  <object Name="r_KingdomMootYard" Inherits="Furniture">
+    <stag Name="Contemporary" />
+    <part Name="Render" DisplayName="moot yard" RenderString="&#8745;" ColorString="&amp;W" DetailColor="y" />
+    <part Name="Description" Short="Beams raised over the waterstone, so the kerb became the floor and the queue got a roof. The charter is read out loud in here; the arguing is done in the yard, under the awnings, where it can be heard." />
+    <part Name="Physics" Takeable="false" Weight="14000" />
+    <stat Name="Hitpoints" Value="600" />
+  </object>
+  <object Name="r_KingdomGreatCourt" Inherits="Furniture">
+    <stag Name="Contemporary" />
+    <part Name="Render" DisplayName="great court" RenderString="&#9633;" ColorString="&amp;Y" DetailColor="W" />
+    <part Name="Description" Short="A colonnade of shaped stone closed around the moot hall, which stands inside it yet, beams and all. The cairns line the walk where they already stood, the kerb is underfoot, and the basin is in the middle of everything, exactly where it was set down." />
+    <part Name="Physics" Takeable="false" Weight="60000" />
+    <stat Name="Hitpoints" Value="1200" />
+  </object>
+  <object Name="r_KingdomFirstBasin" Inherits="Furniture">
+    <stag Name="Contemporary" />
+    <part Name="Render" DisplayName="the first basin" RenderString="&#9675;" ColorString="&amp;B" DetailColor="C" />
+    <part Name="Description" Short="The basin the first water was poured from, set down where it was emptied and never taken up again. Whatever the settlement raises here is raised around it." />
+    <part Name="Physics" Solid="false" Takeable="false" Weight="400" />
+    <stat Name="Hitpoints" Value="60" />
+  </object>
+  <!-- A survey stake. Inherits Sign and owes no Tile, for the same reason r_KingdomPlanMarker
+       and r_KingdomClearanceStake do not carry one. Solid="false" and Takeable="false" matter:
+       the stakes stand at the corners of ground the settlement may build straight over, because
+       the survey is a preference and never a claim. -->
+  <object Name="r_KingdomHeartStake" Inherits="Sign">
+    <part Name="Render" DisplayName="survey stake" ColorString="&amp;y" />
+    <part Name="Description" Short="A stake driven at the corner of a rectangle nobody has drawn yet. The founder paced this out on the day the first water was poured: it is the whole ground the heart of this place may one day take. Building inside it is allowed, and what you build there is marked to yield." />
+    <part Name="Chat" Says="[a corner, and a pace-count cut into the wood.]" ShowInShortDescription="true" />
+    <part Name="Physics" Solid="false" Takeable="false" />
+    <stat Name="Hitpoints" Value="20" />
+  </object>
   <object Name="r_KingdomBazaar" Inherits="Furniture">
     <stag Name="Contemporary" />
     <part Name="Render" DisplayName="bazaar" RenderString="&#960;" ColorString="&amp;M" DetailColor="Y" />

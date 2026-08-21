@@ -526,6 +526,76 @@
             Materials="stone:42,shapedstone:6,marble:8,scrap:10" Staff="3" Manning="scaled" Carries="luxury:6,spirit:2"
             Contents="r_KingdomFurnishings_Comfort" />
 
+  <!-- ======================================================================== HEART ==
+    THE HEART IS ONE PLOT, AND IT GROWS WITH ITS RUNG.
+
+    Four designs, one after another on one piece of ground: the basin on the earth the first
+    water was poured on, a kerb of stone laid AROUND it, a roof raised OVER the kerb, and a
+    colonnade closed AROUND the roof. Each rung is built over the last rather than in place of
+    it. Nothing is struck, the basin is never taken up, and the kerb ends up as the hall's floor
+    - so a founder can walk the middle of their own city and read its whole history off the
+    ground. Qud's own register: the Yd Freehold built over hundreds of years, Ezra grown as an
+    "archaeological and cultural outgrowth" of the Tomb of the Eaters.
+
+    THE PLOT ITSELF GROWS, which nothing else in this file does. Every other design climbs
+    inside the envelope the founder staked (see the note on the housing ladder above); the heart
+    was surveyed for its whole extent at the founding rite and takes the next ring of that
+    surveyed ground each time it rises. That is why these four keys are the one chain in the
+    catalogue whose Plot changes from link to link, and Art/check_xml_refs.py knows them by name
+    for exactly that reason.
+
+    THE GATES ARE THE ORDINARY GATES. No heart-only gate exists and none is wanted: the plot
+    tier's own stage gate (Camp lays S, Steading M, Town L, City XL) is the ladder, and
+    MinTech is derived craft - disks taught and machines certified - never a research screen.
+    A settlement that cannot lay a great plot cannot close the great court either, and is told
+    so in words it already knows.
+
+    CARRIES ARE HONEST. Not one of these makes anything. A moot yard is where the charter is
+    read out loud and the argument is held; what it adds is civic lift, and it is capped with
+    every other lift at half the binding level. In particular NOTHING HERE STORES WATER: the
+    cistern court is its own design, storage stores and producers produce (Addendum 11(a)), and
+    a rung that held drams could never grow into a hall without spilling them.
+
+    The arcology - rung five, one per city, the end of this one thing rather than the first
+    entry in a menu of colossi - waits on the strata and hosted-plot work and is not in here.
+  -->
+  <building Key="heartbasin" DisplayName="the rite ground (a ring of trodden earth, and the basin in the middle of it)" Blueprint="r_KingdomRiteGround"
+            Cost="0" Ticks="600" Styles="all" Category="civic" Plot="S" Open="yes"
+            Footprint="3x3" Roof="Open"
+            Carries="spirit:1"
+            UpgradesTo="heartwaterstone" />
+  <building Key="heartwaterstone" DisplayName="the waterstone (a kerb laid around the rite ground, and the queue at dusk)" Blueprint="r_KingdomWaterstone"
+            Cost="18" Ticks="3000" Styles="all" Category="civic" Plot="M" Open="yes" MinStage="Steading"
+            Footprint="6x4" Roof="Open"
+            Materials="stone:24" Carries="spirit:2,order:1"
+            UpgradesTo="heartmoot">
+    <skin Key="verdant" Style="verdant" ColorString="&amp;g" DetailColor="G" />
+    <skin Key="fungal" Style="fungal" ColorString="&amp;m" DetailColor="M" />
+    <skin Key="gyre" Style="gyre" ColorString="&amp;c" DetailColor="C" />
+    <skin Key="eater" Style="eater" ColorString="&amp;r" DetailColor="R" />
+  </building>
+  <building Key="heartmoot" DisplayName="the moot yard (a roof over the waterstone; the kerb is its floor)" Blueprint="r_KingdomMootYard"
+            Cost="46" Ticks="6000" Styles="all" Category="civic" Plot="L" MinStage="Town" MinTech="workshop"
+            Footprint="8x6" Roof="Walled"
+            Materials="timber:20,stone:26,shapedtimber:6" Staff="2" Manning="scaled" Carries="spirit:4,order:3"
+            Contents="r_KingdomFurnishings_Civic"
+            UpgradesTo="heartcourt">
+    <skin Key="verdant" Style="verdant" ColorString="&amp;g" DetailColor="G" />
+    <skin Key="eater" Style="eater" ColorString="&amp;r" DetailColor="K" />
+    <skin Key="bleached" ColorString="&amp;Y" DetailColor="W" />
+  </building>
+  <building Key="heartcourt" DisplayName="the great court (shaped stone closed around the moot hall, which stands inside it yet)" Blueprint="r_KingdomGreatCourt"
+            Cost="96" Ticks="12000" Styles="all" Category="civic" Plot="XL" MinStage="City" MinTech="foundry"
+            Footprint="16x11" Roof="Walled"
+            Materials="stone:90,shapedstone:24,marble:18,workedmetal:8" Bits="0034"
+            Staff="3" Manning="scaled" Carries="spirit:8,order:6,learning:2"
+            Contents="r_KingdomFurnishings_Civic">
+    <skin Key="verdant" Style="verdant" ColorString="&amp;G" DetailColor="g" />
+    <skin Key="fungal" Style="fungal" ColorString="&amp;M" DetailColor="m" />
+    <skin Key="gyre" Style="gyre" ColorString="&amp;C" DetailColor="c" />
+    <skin Key="eater" Style="eater" ColorString="&amp;R" DetailColor="r" />
+  </building>
+
   <!-- ======================================================================== FAITH ==
     Whatever is poured on the shrine stone is gone by morning and no one asks where. The
     stone itself is offered to every city style, because a hollow worn into rock is not a

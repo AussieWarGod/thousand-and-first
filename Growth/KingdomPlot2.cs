@@ -30,6 +30,35 @@ namespace XRL.World.Parts
 	/// finished; come home after one and it is framed. Presence grants nothing and costs nothing.
 	/// </para>
 	/// </summary>
+	/// <summary>
+	/// The yielding mark, carried by a plot the founder deliberately staked in the ground the
+	/// heart was surveyed for. It does nothing at all on its own &mdash; it is the sentence, kept
+	/// where the founder can read it back.
+	/// <para>
+	/// Consent before cost, the carry-sign idiom: the ground is legal to build on and building
+	/// there is never refused, but the promise made at the moment the ground was spoken for is
+	/// readable on the thing forever, rather than living in a message that scrolled away.
+	/// </para>
+	/// <para>
+	/// A brand-new part, so its serialized field layout is free (STANDARDS 1). It carries no
+	/// fields at all, and no turn tick.
+	/// </para>
+	/// </summary>
+	[Serializable]
+	public class r_KingdomYielding : IPart
+	{
+		public override bool WantEvent(int ID, int cascade)
+		{
+			return base.WantEvent(ID, cascade) || ID == GetShortDescriptionEvent.ID;
+		}
+
+		public override bool HandleEvent(GetShortDescriptionEvent E)
+		{
+			E.Postfix.Append("\n{{rules|").Append(ThousandAndFirst.KingdomPlotRules.YieldingMark).Append("}}");
+			return base.HandleEvent(E);
+		}
+	}
+
 	[Serializable]
 	public class r_KingdomPlotWorks : IPart
 	{
@@ -295,6 +324,52 @@ namespace ThousandAndFirst
 		/// <summary>Zone property carrying the rite ground's y. See <see cref="RiteXProperty"/>.</summary>
 		public const string RiteYProperty = "r_TAF_RiteY";
 
+		// --- The heart -------------------------------------------------------------------
+
+		/// <summary>Zone property carrying the low corner x of the ground the heart was surveyed
+		/// for at the founding rite. Absent means this zone has no surveyed heart, and every plot
+		/// in it is sited exactly as it was before the survey existed.</summary>
+		public const string SurveyX1Property = "r_TAF_HeartSurveyX1";
+
+		/// <summary>Low corner y of the surveyed heart. See <see cref="SurveyX1Property"/>.</summary>
+		public const string SurveyY1Property = "r_TAF_HeartSurveyY1";
+
+		/// <summary>High corner x of the surveyed heart, inclusive.</summary>
+		public const string SurveyX2Property = "r_TAF_HeartSurveyX2";
+
+		/// <summary>High corner y of the surveyed heart, inclusive.</summary>
+		public const string SurveyY2Property = "r_TAF_HeartSurveyY2";
+
+		/// <summary>Zone property carrying which rung of the heart currently stands on the rite
+		/// ground, one-based. Absent or zero means nothing has been raised there yet, and the rite
+		/// ground counts for exactly one vote as it always did.</summary>
+		public const string HeartRungProperty = "r_TAF_HeartRung";
+
+		/// <summary>Marks the works and the building of the heart's own plot, so the one plot
+		/// that grows with its rung is told apart from the forty that do not.</summary>
+		public const string HeartPlotProperty = "r_TAF_HeartPlot";
+
+		/// <summary>Marks a survey stake. Read as bare ground by <see cref="ReadObject"/>: a
+		/// stake is a mark, never a claim, and an ordinary plot may be built straight over
+		/// it.</summary>
+		public const string HeartStakeProperty = "r_TAF_HeartStake";
+
+		/// <summary>Marks the founder's own basin, set down where the first water was poured and
+		/// never taken up again. Read as bare ground for the same reason a stake is, so every rung
+		/// of the heart is raised around it rather than refused by it.</summary>
+		public const string HeartRelicProperty = "r_TAF_HeartRelic";
+
+		/// <summary>Marks a plot staked in surveyed heart ground: told at placement, carried in
+		/// the plot's own description forever, and read by the ring call when the great work is
+		/// finally called for that ground.</summary>
+		public const string YieldingProperty = "r_TAF_Yielding";
+
+		/// <summary>The stake driven at the corners of the surveyed ground.</summary>
+		public const string SurveyStakeBlueprint = "r_KingdomHeartStake";
+
+		/// <summary>The founder's basin, kept at the middle of every rung.</summary>
+		public const string HeartRelicBlueprint = "r_KingdomFirstBasin";
+
 		/// <summary>Game-state key prefix the realm's material stock is counted under. A generic,
 		/// already-serialized slot on the game rather than a new field on <c>KingdomSystem</c>,
 		/// exactly as <c>r_KingdomPlanMarker</c>'s ordering counter is &mdash; so clearance can
@@ -384,6 +459,15 @@ namespace ThousandAndFirst
 				// The settlement's own works are not obstructions to be cleared; they are the
 				// settlement. A plot never lands on one, and never takes one down to fit.
 				return KingdomPlotRules.GroundKind.Held;
+			}
+			if (Object.GetIntProperty(HeartStakeProperty) == 1 || Object.GetIntProperty(HeartRelicProperty) == 1)
+			{
+				// A survey stake is the founder's ambition paced out, and the basin is what the
+				// first water was poured from. Neither is an obstruction and neither is ever
+				// cleared: reading them as bare ground is what lets ordinary plots be built over
+				// surveyed ground (the mark is a preference, not a claim) and what lets every rung
+				// of the heart be raised AROUND the basin rather than refused by it.
+				return KingdomPlotRules.GroundKind.Bare;
 			}
 			if (Object.HasPart("LiquidVolume"))
 			{
@@ -683,7 +767,10 @@ namespace ThousandAndFirst
 		public static void HeartFor(Zone Z, KingdomPlotRules.PlotRect Plot, out int X, out int Y)
 		{
 			bool hasRite = TryRiteGround(Z, out var riteX, out var riteY);
-			if (KingdomPlotRules.TryHeart(KingdomLayout.ReadMarks(Z), hasRite, riteX, riteY, out var heartX, out var heartY))
+			// The rite ground's own weight rises with the rung standing on it, so the settled
+			// centre is drawn back onto the great work as it rises rather than walking away from
+			// it (KingdomPlotRules.HeartWeightForRung).
+			if (KingdomPlotRules.TryHeart(KingdomLayout.ReadMarks(Z), hasRite, riteX, riteY, out var heartX, out var heartY, RiteWeight(Z)))
 			{
 				X = heartX;
 				Y = heartY;
@@ -706,6 +793,28 @@ namespace ThousandAndFirst
 				return footprint;
 			}
 			return Plot;
+		}
+
+		/// <summary>
+		/// The ground one rung of the heart stands on inside its plot: the tier's own footprint,
+		/// centred on the RITE GROUND rather than sited against the heart-facing side.
+		/// <para>
+		/// This is what makes the rungs accrete. The ordinary rule puts a building on the side of
+		/// its plot nearest the settled centre, which is right for a house and wrong for the one
+		/// building the settled centre is measured from: a rung sited off-centre would not enclose
+		/// the rung below it, and the kerb would end up outside the hall instead of under its
+		/// floor. Centred on the rite ground, every rung contains the one before it, and the basin
+		/// stays in the middle of all of them.
+		/// </para>
+		/// </summary>
+		public static KingdomPlotRules.PlotRect HeartFootprintFor(Zone Z, KingdomPlotRules.PlotRect Plot, KingdomPlotRules.PlotSpec Spec)
+		{
+			if (Spec != null && !Spec.FillsPlot && TryRiteGround(Z, out var riteX, out var riteY)
+				&& KingdomPlotRules.TryCentred(Plot, riteX, riteY, Spec.FootprintWidth, Spec.FootprintHeight, out var footprint))
+			{
+				return footprint;
+			}
+			return FootprintFor(Plot, Spec, Plot.CenterX, Plot.CenterY);
 		}
 
 		/// <summary>
@@ -741,6 +850,152 @@ namespace ThousandAndFirst
 			}
 			return int.TryParse(Z.GetZoneProperty(RiteXProperty, null), out X)
 				&& int.TryParse(Z.GetZoneProperty(RiteYProperty, null), out Y);
+		}
+
+		// --- The heart's own ground -------------------------------------------------------
+
+		/// <summary>The ground this zone's heart was surveyed for at the founding rite.</summary>
+		/// <returns>False for a zone with no survey, which is every zone but the one the rite was
+		/// poured in and every settlement founded before the survey shipped.</returns>
+		public static bool TrySurveyedHeart(Zone Z, out KingdomPlotRules.PlotRect Survey)
+		{
+			Survey = default(KingdomPlotRules.PlotRect);
+			if (Z == null)
+			{
+				return false;
+			}
+			if (!int.TryParse(Z.GetZoneProperty(SurveyX1Property, null), out var x1)
+				|| !int.TryParse(Z.GetZoneProperty(SurveyY1Property, null), out var y1)
+				|| !int.TryParse(Z.GetZoneProperty(SurveyX2Property, null), out var x2)
+				|| !int.TryParse(Z.GetZoneProperty(SurveyY2Property, null), out var y2))
+			{
+				return false;
+			}
+			Survey = new KingdomPlotRules.PlotRect(x1, y1, x2, y2);
+			return true;
+		}
+
+		/// <summary>Which rung of the heart stands on this zone's rite ground, one-based; zero
+		/// when nothing has been raised there yet.</summary>
+		public static int HeartRung(Zone Z)
+		{
+			if (Z == null || !int.TryParse(Z.GetZoneProperty(HeartRungProperty, null), out var rung))
+			{
+				return 0;
+			}
+			return (rung < 0) ? 0 : rung;
+		}
+
+		/// <summary>How many votes this zone's rite ground gets when the heart is reckoned: one
+		/// on bare ground, and the standing rung's own weight once the great work is on it.</summary>
+		public static int RiteWeight(Zone Z)
+		{
+			return KingdomPlotRules.HeartWeightForRung(HeartRung(Z));
+		}
+
+		/// <summary>
+		/// Paces out the heart's whole future extent at the founding rite and stakes its first
+		/// rung on the ground the water was poured on.
+		/// <para>
+		/// The survey COSTS NOTHING and CLAIMS NOTHING. It stamps four corner stakes a founder can
+		/// walk up to and read, and a rect the layout grammar reads as a preference
+		/// (<c>KingdomPlotRules.SurveyPenalty</c>) &mdash; the settlement will not volunteer to
+		/// build in the heart's ground, and it never refuses to. A plot staked there anyway is
+		/// marked yielding at placement and says so forever.
+		/// </para>
+		/// </summary>
+		/// <param name="System">The realm, freshly founded.</param>
+		/// <param name="Z">The zone the rite was poured in.</param>
+		/// <param name="RiteX">Rite ground x.</param>
+		/// <param name="RiteY">Rite ground y.</param>
+		/// <returns>False when the zone has no interior wide enough to survey a great plot in, in
+		/// which case nothing is stamped and the settlement simply has no surveyed heart.</returns>
+		public static bool SurveyHeart(KingdomSystem System, Zone Z, int RiteX, int RiteY)
+		{
+			if (Z == null || !KingdomPlotRules.TrySurveyedHeart(RiteX, RiteY, Z.Width, Z.Height, out var survey))
+			{
+				return false;
+			}
+			Z.SetZoneProperty(SurveyX1Property, survey.X1.ToString());
+			Z.SetZoneProperty(SurveyY1Property, survey.Y1.ToString());
+			Z.SetZoneProperty(SurveyX2Property, survey.X2.ToString());
+			Z.SetZoneProperty(SurveyY2Property, survey.Y2.ToString());
+			PlaceHeartMark(Z, RiteX, RiteY, HeartRelicBlueprint, HeartRelicProperty);
+			PlaceHeartMark(Z, survey.X1, survey.Y1, SurveyStakeBlueprint, HeartStakeProperty);
+			PlaceHeartMark(Z, survey.X2, survey.Y1, SurveyStakeBlueprint, HeartStakeProperty);
+			PlaceHeartMark(Z, survey.X1, survey.Y2, SurveyStakeBlueprint, HeartStakeProperty);
+			PlaceHeartMark(Z, survey.X2, survey.Y2, SurveyStakeBlueprint, HeartStakeProperty);
+			KingdomLog.Log("heart surveyed: " + survey.X1 + "," + survey.Y1 + " to " + survey.X2 + "," + survey.Y2
+				+ " around rite " + RiteX + "," + RiteY);
+			MessageQueue.AddPlayerMessage("{{W|" + KingdomPlotRules.SurveyLine(survey) + "}}");
+			StakeHeartRung(System, Z, 1, survey, RiteX, RiteY);
+			return true;
+		}
+
+		/// <summary>Sets one stake or the basin down on ground, marked so the plot machinery reads
+		/// it as bare. Silently does nothing where the engine will not take the object, which is
+		/// the honest answer for a mark nobody can see.</summary>
+		private static void PlaceHeartMark(Zone Z, int X, int Y, string Blueprint, string Mark)
+		{
+			Cell cell = Z?.GetCell(X, Y);
+			if (cell == null)
+			{
+				return;
+			}
+			GameObject placed = GameObject.Create(Blueprint);
+			if (placed == null)
+			{
+				return;
+			}
+			placed.SetIntProperty(Mark, 1);
+			cell.AddObject(placed);
+		}
+
+		/// <summary>
+		/// Stakes one rung of the heart on the surveyed ground. Used once at the founding, for the
+		/// basin; every rung above it climbs through the ordinary improvement machinery instead,
+		/// which is what makes the heart's gates the same gates every other design answers to.
+		/// </summary>
+		/// <returns>The works object, or null when the rung's design is missing, its ground will
+		/// not take it, or the engine refuses the object.</returns>
+		public static GameObject StakeHeartRung(KingdomSystem System, Zone Z, int Rung, KingdomPlotRules.PlotRect Survey, int RiteX, int RiteY)
+		{
+			string key = KingdomPlotRules.HeartKeyForRung(Rung);
+			if (key == null || Z == null || !KingdomData.TryGetBuilding(key, out var entry) || !TryGetSpec(key, out var spec))
+			{
+				return null;
+			}
+			if (!KingdomPlotRules.TryHeartRect(Survey, RiteX, RiteY, KingdomPlotRules.HeartSizeForRung(Rung), out var rect))
+			{
+				return null;
+			}
+			GroundGrid grid = new GroundGrid(Z);
+			// The rite ground is not chosen by the plan; it is chosen by where the water was
+			// poured, and the heart is laid on it whatever else is standing there. That is safe
+			// because clearing a plot never takes down what the settlement may not take down --
+			// ClearGround leaves every Held cell exactly as it found it -- and because the first
+			// rung raises no wall at all. Anything inviolate simply stands inside the ring, and
+			// the founder is told about it by name at the rung where it actually blocks something
+			// (HeartGrowRefused).
+			// Open water is the one exception, and it is fatal rather than awkward: a plot is
+			// never laid over liquid and liquid is never filled in.
+			for (int y = rect.Y1; y <= rect.Y2; y++)
+			{
+				for (int x = rect.X1; x <= rect.X2; x++)
+				{
+					if (grid.KindAt(x, y) == KingdomPlotRules.GroundKind.Liquid)
+					{
+						MessageQueue.AddPlayerMessage("{{K|" + KingdomPlotRules.RefuseLiquid(x, y) + " The basin is set down all the same, and the heart is laid when the ground is.}}");
+						return null;
+					}
+				}
+			}
+			GameObject works = Stake(System, Z, rect, entry, spec, grid, null, KingdomPlotRules.IsUnderground(Z.Z));
+			if (works != null)
+			{
+				works.SetIntProperty(HeartPlotProperty, 1);
+			}
+			return works;
 		}
 
 		// --- Siting -----------------------------------------------------------------------
@@ -851,8 +1106,9 @@ namespace ThousandAndFirst
 			KingdomRules.Frontier edges = (System != null)
 				? KingdomRules.FrontierEdges(Z.ZoneID, System.ClaimedZones)
 				: KingdomRules.Frontier.None;
+			bool hasSurvey = TrySurveyedHeart(Z, out var survey) && KingdomPlotRules.HeartRungOf(Entry.Key) == 0;
 			Outcome = KingdomPlotRules.ChooseRect(purpose, staked, Z.Width, Z.Height, edges, marks, candidates,
-				hasFounder, founderX, founderY, hasRite, riteX, riteY, out var index);
+				hasFounder, founderX, founderY, hasRite, riteX, riteY, out var index, hasSurvey, survey, RiteWeight(Z));
 			if (index < 0)
 			{
 				// The plan has nothing to say - empty ground, or a purpose it does not file. The
@@ -919,6 +1175,15 @@ namespace ThousandAndFirst
 				Failure = "No such design.";
 				return false;
 			}
+			if (KingdomPlotRules.HeartRungOf(Entry.Key) > 0)
+			{
+				// The heart is founded, not commissioned. Its first rung is staked by the rite and
+				// every rung above it climbs through the ordinary improvement machinery on the same
+				// ground; a second one ordered across the zone would be a second heart, which is
+				// the one thing this ladder is not.
+				Failure = KingdomPlotRules.RefuseSecondHeart(System.SeatName);
+				return false;
+			}
 			KingdomPlotRules.PlotSize staked = StakedSize(spec, Stake);
 			if (!KingdomPlotRules.Allows(System.Stage, staked))
 			{
@@ -975,6 +1240,7 @@ namespace ThousandAndFirst
 			string clause = KingdomLayoutRules.PlacementClause(KingdomLayout.PurposeOfEntry(Entry), outcome);
 			MessageQueue.AddPlayerMessage("{{G|A " + KingdomPlotRules.SizeName(staked) + " plot is staked for the " + Entry.Name
 				+ ((clause == null) ? "" : (" " + clause)) + ".}}");
+			SayYielding(System, works.GetIntProperty(YieldingProperty) == 1, Entry.Name);
 			return true;
 		}
 
@@ -1009,7 +1275,10 @@ namespace ThousandAndFirst
 			part.Y2 = Rect.Y2;
 			HeartFor(Z, Rect, out var heartX, out var heartY);
 			KingdomPlotRules.RoofState roof = KingdomPlotRules.RoofOnGround(Spec.Roof, Carved);
-			KingdomPlotRules.PlotRect footprint = FootprintFor(Rect, Spec, heartX, heartY);
+			bool heartRung = KingdomPlotRules.HeartRungOf(Entry.Key) > 0;
+			KingdomPlotRules.PlotRect footprint = heartRung
+				? HeartFootprintFor(Z, Rect, Spec)
+				: FootprintFor(Rect, Spec, heartX, heartY);
 			part.StartTick = The.Game.TimeTicks;
 			// The whole PLOT is cleared and the FOOTPRINT is walled: staking wide is paid for in
 			// clearing, earned back in material and yard, and never in a longer wall than the
@@ -1035,6 +1304,18 @@ namespace ThousandAndFirst
 			part.DoorX = doorX;
 			part.DoorY = doorY;
 			works.DisplayName = "plot: " + Entry.Name;
+			// Consent before cost, at the moment the ground is spoken for: a plot the founder puts
+			// down inside the ground the heart was surveyed for is marked yielding here, says so in
+			// its own description from this moment on, and says so out loud in the sentence the
+			// commission or the plan prints. The heart's own rungs are never marked -- the ground
+			// is theirs.
+			if (KingdomPlotRules.HeartRungOf(Entry.Key) == 0
+				&& TrySurveyedHeart(Z, out var survey)
+				&& KingdomPlotRules.OverlapArea(Rect, survey) > 0)
+			{
+				works.SetIntProperty(YieldingProperty, 1);
+				works.RequirePart<r_KingdomYielding>();
+			}
 			works.SetStringProperty(PlotIdProperty, Entry.Key + "@" + Rect.X1 + "." + Rect.Y1 + "." + The.Game.TimeTicks);
 			StampRect(works, Rect);
 			StampFootprint(works, footprint, roof);
@@ -1102,6 +1383,11 @@ namespace ThousandAndFirst
 			string refusal = null;
 			KingdomSystem.Guard("plot plan", delegate
 			{
+				if (KingdomPlotRules.HeartRungOf(Entry.Key) > 0)
+				{
+					refusal = KingdomPlotRules.RefuseSecondHeart(System.SeatName);
+					return;
+				}
 				if (!KingdomPlotRules.Allows(System.Stage, spec.Size))
 				{
 					refusal = KingdomPlotRules.RefuseStage(spec.Size, System.SeatName, System.Stage);
@@ -1156,6 +1442,7 @@ namespace ThousandAndFirst
 				return false;
 			}
 			bool staked = false;
+			bool yielding = false;
 			KingdomSystem.Guard("plot from plan", delegate
 			{
 				GroundGrid grid = new GroundGrid(zone);
@@ -1174,12 +1461,14 @@ namespace ThousandAndFirst
 				GameObject works = Stake(System, zone, rect, Entry, spec, grid, skinKey, KingdomPlotRules.IsUnderground(zone.Z));
 				KingdomCeremony.CarryPlanQuote(planQuote, works);
 				staked = works != null;
+				yielding = works != null && works.GetIntProperty(YieldingProperty) == 1;
 			});
 			if (staked)
 			{
 				KingdomChronicle.Record(System, "the ground staked at " + System.KingdomDisplayName + " was measured out for " + XRL.Language.Grammar.A(Entry.Name));
 				System.Ledger.Note("{{G|The plan staked at " + System.KingdomDisplayName + " is under way: the ground for the " + Entry.Name + " is measured out.}}");
 				MessageQueue.AddPlayerMessage("{{G|The plan staked at " + System.KingdomDisplayName + " is under way. The ground for the " + Entry.Name + " is measured out.}}");
+				SayYielding(System, yielding, Entry.Name);
 			}
 			return staked;
 		}
@@ -1327,6 +1616,14 @@ namespace ThousandAndFirst
 			{
 				return false;
 			}
+			// The heart is the one plot whose GROUND grows with its rung. Every other design
+			// climbs inside the envelope the founder staked; this one was surveyed for its whole
+			// extent at the founding rite and takes the next ring of it each time it rises, so the
+			// question is not "does the tier fit the plot" but "is the surveyed ground clear".
+			if (IsHeartPlot(Work) && KingdomPlotRules.HeartRungOf(SuccessorKey) > 0)
+			{
+				return HeartGrowRefused(Work, zone, SuccessorKey, successorName, out Refusal);
+			}
 			HeartFor(zone, plot, out var heartX, out var heartY);
 			if (!KingdomPlotRules.TryFootprintWithin(plot, width, height, heartX, heartY, out var grown))
 			{
@@ -1364,6 +1661,137 @@ namespace ThousandAndFirst
 			return false;
 		}
 
+		/// <summary>Whether one object is the heart's own plot &mdash; the works while it is being
+		/// raised, or the building once it stands.</summary>
+		public static bool IsHeartPlot(GameObject Object)
+		{
+			return Object != null && Object.GetIntProperty(HeartPlotProperty) == 1;
+		}
+
+		/// <summary>
+		/// Whether one plot was staked in ground the heart was surveyed for, and told so at the
+		/// time. The mark is a stored fact: this wave informs and steers with it, and the ring
+		/// call that moves a yielding plot whole reads exactly this.
+		/// </summary>
+		public static bool IsYielding(GameObject Object)
+		{
+			return Object != null && Object.GetIntProperty(YieldingProperty) == 1;
+		}
+
+		/// <summary>
+		/// Every plot in a zone carrying the yielding mark, works and finished buildings alike, in
+		/// the engine's own object order so two reads of an unchanged zone agree.
+		/// </summary>
+		public static List<GameObject> FindYielding(Zone Z)
+		{
+			List<GameObject> found = new List<GameObject>();
+			if (Z == null)
+			{
+				return found;
+			}
+			foreach (GameObject item in Z.GetObjects())
+			{
+				if (IsYielding(item) && TryReadRect(item, out _))
+				{
+					found.Add(item);
+				}
+			}
+			return found;
+		}
+
+		/// <summary>
+		/// The ground one rung of the heart would stand on: that rung's tier, centred on the rite
+		/// ground and slid whole until it lies inside the ground surveyed at the founding.
+		/// </summary>
+		/// <returns>False when this zone has no survey, no rite ground, or no room for the
+		/// rung.</returns>
+		public static bool TryHeartRectFor(Zone Z, int Rung, out KingdomPlotRules.PlotRect Rect)
+		{
+			Rect = default(KingdomPlotRules.PlotRect);
+			if (!TrySurveyedHeart(Z, out var survey) || !TryRiteGround(Z, out var riteX, out var riteY))
+			{
+				return false;
+			}
+			return KingdomPlotRules.TryHeartRect(survey, riteX, riteY, KingdomPlotRules.HeartSizeForRung(Rung), out Rect);
+		}
+
+		/// <summary>
+		/// Whether the heart's next rung has ground to climb into, and the sentence the founder is
+		/// owed when it does not. Two things can stand in the way, and both are named: another
+		/// plot laid inside the surveyed ground, and anything the settlement may not take down.
+		/// <para>
+		/// A plot marked YIELDING is exactly the first case, and this is where the mark's promise
+		/// comes due &mdash; this wave says so by name and stops. Moving it whole is the ring call,
+		/// which waits on the relocation verb.
+		/// </para>
+		/// </summary>
+		private static bool HeartGrowRefused(GameObject Work, Zone Z, string SuccessorKey, string SuccessorName, out string Refusal)
+		{
+			Refusal = null;
+			int rung = KingdomPlotRules.HeartRungOf(SuccessorKey);
+			if (!TryHeartRectFor(Z, rung, out var grown))
+			{
+				Refusal = KingdomPlotRules.RefuseHeartRoom(SuccessorName);
+				return true;
+			}
+			string id = Work.GetStringProperty(PlotIdProperty);
+			foreach (GameObject item in Z.GetObjects())
+			{
+				if (item == null || item == Work || !TryReadRect(item, out var laid))
+				{
+					continue;
+				}
+				// The heart's own earlier rungs are the ground it is growing out of, never an
+				// obstruction in it.
+				if (!string.IsNullOrEmpty(id) && item.GetStringProperty(PlotIdProperty) == id)
+				{
+					continue;
+				}
+				if (KingdomPlotRules.Overlaps(grown, KingdomPlotRules.Reserved(laid)))
+				{
+					string what = KingdomDesign.ReferenceFor(item, item.ShortDisplayNameStripped);
+					Refusal = IsYielding(item)
+						? KingdomPlotRules.RefuseHeartYielding(SuccessorName, what)
+						: KingdomPlotRules.RefuseHeartGround(SuccessorName, what);
+					return true;
+				}
+			}
+			// Walked by hand rather than through GroundGrid, because the grid reads the heart's
+			// own standing rung -- its building, its walls, its floor -- as ground that refuses a
+			// plot, which is correct for every other plot and exactly wrong for the one growing
+			// out of it.
+			for (int y = grown.Y1; y <= grown.Y2; y++)
+			{
+				for (int x = grown.X1; x <= grown.X2; x++)
+				{
+					Cell cell = Z.GetCell(x, y);
+					if (cell == null)
+					{
+						Refusal = KingdomPlotRules.RefuseHeartRoom(SuccessorName);
+						return true;
+					}
+					foreach (GameObject item in cell.GetObjects())
+					{
+						if (item == null || item == Work || item.IsCreature || item.IsPlayer())
+						{
+							continue;
+						}
+						if (!string.IsNullOrEmpty(id) && item.GetStringProperty(PlotIdProperty) == id)
+						{
+							continue;
+						}
+						if (!KingdomPlotRules.Refuses(ReadObject(item)))
+						{
+							continue;
+						}
+						Refusal = KingdomPlotRules.RefuseHeartGround(SuccessorName, KingdomDesign.ReferenceFor(item, item.ShortDisplayNameStripped));
+						return true;
+					}
+				}
+			}
+			return false;
+		}
+
 		/// <summary>
 		/// Carries a plot across an improvement and stamps the new tier's footprint inside it. The
 		/// plot itself never moves: the ground the founder staked is the ground the building keeps,
@@ -1384,10 +1812,30 @@ namespace ThousandAndFirst
 			{
 				Successor.SetStringProperty(PlotIdProperty, id);
 			}
+			if (Predecessor.GetIntProperty(YieldingProperty) == 1)
+			{
+				// The mark is a fact about the ground, not about the building standing on it, so
+				// it survives every improvement raised there. Told once, readable forever.
+				Successor.SetIntProperty(YieldingProperty, 1);
+				Successor.RequirePart<r_KingdomYielding>();
+			}
+			Zone zone = Predecessor.CurrentZone ?? Successor.CurrentZone;
+			// The heart's plot GROWS with its rung: the next rung takes the next ring of the
+			// ground surveyed at the founding rite, and the rung below it stays underfoot -- the
+			// kerb becomes the hall's floor, and the basin stands in the middle of all of it.
+			// Every other plot keeps exactly the envelope the founder staked.
+			bool heart = IsHeartPlot(Predecessor) && KingdomPlotRules.HeartRungOf(SuccessorKey) > 0;
+			if (heart)
+			{
+				Successor.SetIntProperty(HeartPlotProperty, 1);
+				if (TryHeartRectFor(zone, KingdomPlotRules.HeartRungOf(SuccessorKey), out var climbed))
+				{
+					plot = climbed;
+				}
+			}
 			StampRect(Successor, plot);
 			KingdomPlotRules.PlotRect old = TryReadFootprint(Predecessor, out var read) ? read : plot;
 			KingdomPlotRules.RoofState roof = RoofOf(Predecessor);
-			Zone zone = Predecessor.CurrentZone ?? Successor.CurrentZone;
 			if (zone == null || !TryGetSpec(SuccessorKey, out var spec))
 			{
 				// Nothing known about what it became: carry forward only what was actually
@@ -1401,14 +1849,20 @@ namespace ThousandAndFirst
 			}
 			HeartFor(zone, plot, out var heartX, out var heartY);
 			KingdomPlotRules.RoofState grownRoof = KingdomPlotRules.RoofOnGround(spec.Roof, KingdomPlotRules.IsUnderground(zone.Z));
-			KingdomPlotRules.PlotRect grown = FootprintFor(plot, spec, heartX, heartY);
+			KingdomPlotRules.PlotRect grown = heart
+				? HeartFootprintFor(zone, plot, spec)
+				: FootprintFor(plot, spec, heartX, heartY);
 			StampFootprint(Successor, grown, grownRoof);
 			KingdomSystem system = The.Game?.RequireSystem<KingdomSystem>();
 			// The settlement's wall material is derived and not stored, exactly as it is when a
 			// plot is first raised, so a grown building is walled in the same stone as its
 			// neighbours whether or not anybody wrote that stone down.
 			string wall = (system == null) ? null : KingdomPlotRules.WallBlueprintFor(system.Style, system.FoundingRegionName);
-			Restamp(zone, id, wall, old, grown, grownRoof, heartX, heartY);
+			// The heart alone keeps the rung below it standing. Every other improvement takes down
+			// the walls that end up inside the bigger building, because one building has one
+			// enclosure; the heart is not one building growing but four layers accreting, and the
+			// moot hall is meant to stand inside the great court, beams, door and all.
+			Restamp(zone, id, wall, old, grown, grownRoof, heartX, heartY, heart);
 		}
 
 		/// <summary>
@@ -1418,10 +1872,15 @@ namespace ThousandAndFirst
 		/// wall the settlement raised on the settlement's own plot, now in the middle of a bigger
 		/// building. Anything else standing on the ground the building grew onto stops the cell
 		/// being built on rather than being cleared out of the way.
+		/// <para>
+		/// <paramref name="KeepInner"/> is the heart's exception and nothing else's: its rungs
+		/// ACCRETE, so the rung below is left standing inside the rung above rather than taken
+		/// down to make one room of it.
+		/// </para>
 		/// </summary>
-		private static void Restamp(Zone Z, string Id, string Wall, KingdomPlotRules.PlotRect Old, KingdomPlotRules.PlotRect Grown, KingdomPlotRules.RoofState Roof, int HeartX, int HeartY)
+		private static void Restamp(Zone Z, string Id, string Wall, KingdomPlotRules.PlotRect Old, KingdomPlotRules.PlotRect Grown, KingdomPlotRules.RoofState Roof, int HeartX, int HeartY, bool KeepInner = false)
 		{
-			for (int y = Old.Y1; y <= Old.Y2; y++)
+			for (int y = Old.Y1; y <= Old.Y2 && !KeepInner; y++)
 			{
 				for (int x = Old.X1; x <= Old.X2; x++)
 				{
@@ -1821,6 +2280,8 @@ namespace ThousandAndFirst
 			string skinRenderString = parent.GetStringProperty(KingdomDesign.StagedRenderStringProperty);
 			string skinTile = parent.GetStringProperty(KingdomDesign.StagedTileProperty);
 			int defence = Works.DefencePending;
+			bool heart = parent.GetIntProperty(HeartPlotProperty) == 1;
+			bool yielding = parent.GetIntProperty(YieldingProperty) == 1;
 			int staff = Works.StaffNeeded;
 			bool threshold = Works.ThresholdManning;
 			string contents = Works.ContentsTable;
@@ -1843,6 +2304,15 @@ namespace ThousandAndFirst
 			KingdomDesign.ApplyRenderOverrides(building, skinColorString, skinDetailColor, skinRenderString, skinTile);
 			building.SetIntProperty("KingdomBuilt", 1);
 			building.SetStringProperty(KingdomUpgrade.BuildKeyProperty, entry.Key);
+			if (heart)
+			{
+				building.SetIntProperty(HeartPlotProperty, 1);
+			}
+			if (yielding)
+			{
+				building.SetIntProperty(YieldingProperty, 1);
+				building.RequirePart<r_KingdomYielding>();
+			}
 			if (!string.IsNullOrEmpty(id))
 			{
 				building.SetStringProperty(PlotIdProperty, id);
@@ -1883,6 +2353,9 @@ namespace ThousandAndFirst
 				// attended, the crew gathers and a measure of water is shared; unattended, the
 				// homecoming tells it. A house is not a lesser thing to raise than a palisade.
 				KingdomCeremony.OnBuildingRaised(system, cell, displayName, completeTick, planQuote);
+				// And the heart's own rung gets the chronicle's own voice on top of it: the same
+				// crew, the same shared water, one more sentence about what the ground has become.
+				KingdomCeremonyHeart.OnRungRaised(system, Z, entry.Key, heart);
 			}
 			else
 			{
@@ -1948,6 +2421,23 @@ namespace ThousandAndFirst
 		}
 
 		// --- Saying so --------------------------------------------------------------------
+
+		/// <summary>
+		/// Says the yielding mark out loud at the moment the ground is spoken for, and files it in
+		/// the ledger so a founder who was elsewhere reads it too. Told UP FRONT and once: the plot
+		/// carries the same sentence in its own description from here on, so consent is given
+		/// knowing what was promised and can be read back at any time.
+		/// </summary>
+		private static void SayYielding(KingdomSystem System, bool Yielding, string Name)
+		{
+			if (!Yielding || string.IsNullOrEmpty(Name))
+			{
+				return;
+			}
+			string line = KingdomPlotRules.YieldingLine(Name);
+			MessageQueue.AddPlayerMessage("{{W|" + line + "}}");
+			System?.Ledger.Note("{{W|" + line + "}}");
+		}
 
 		private static void AnnounceOnce(KingdomSystem System, GameObject Marker, string Message)
 		{

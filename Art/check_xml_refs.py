@@ -171,6 +171,16 @@ def merged_buildings():
     return order, merged
 
 
+# The one chain in the catalogue whose plot tier is MEANT to climb from link to link, mirrored
+# from KingdomPlotRules.HeartRungKeys. The heart is a single plot that grows with its rung: its
+# whole extent is surveyed at the founding rite and each rung takes the next ring of that surveyed
+# ground, so basin -> waterstone -> moot yard -> great court is S -> M -> L -> XL by design.
+# Everything else in the file climbs inside the envelope the founder staked, and the check below
+# still holds it to that. Kept here by name rather than by an authored attribute because the
+# catalogue loader hands the plot registry a fixed set of attributes; if a `Heart="yes"` attribute
+# ever lands, this list reads it instead.
+HEART_RUNG_KEYS = ("heartbasin", "heartwaterstone", "heartmoot", "heartcourt")
+
 # The tokens KingdomPlotRules.TryParseSize accepts, mapped to the tier they name.
 PLOT_TIERS = {
     "s": "Small",
@@ -258,6 +268,8 @@ def building_reference_problems():
     # later file re-tier a single link, and neither element is wrong where it stands.
     for key, successor in sorted(chain.items()):
         if successor not in keys or plot_of(key) == plot_of(successor):
+            continue
+        if key in HEART_RUNG_KEYS and successor in HEART_RUNG_KEYS:
             continue
         problems.append(
             "building %s stands on plot %s and improves into %s, which wants plot %s; an "

@@ -97,6 +97,20 @@ namespace ThousandAndFirst
 			// one slot: the founding, which happens once per realm and is what everything else
 			// hangs off. Every other civic accomplishment files with no mural weight.
 			KingdomChronicle.Record(system, "you poured the first water, and " + faction.DisplayName + " was " + verb + " on " + StyleGroundClause(system.Style) + KingdomRules.RuinRestorationClause(structuresRestored), Accomplishment: true, MuralText: "Poured the first water and " + verb + " " + faction.DisplayName + ".");
+			// Paced out while the water soaks in, and AFTER the ruin's own structures are back on
+			// their ground, so the heart is surveyed around what is standing rather than through
+			// it: the whole extent the heart may one day take, stood about with stakes anybody can
+			// walk up to and read. It costs nothing, claims nothing, and refuses nothing -- the
+			// layout grammar reads it as a preference, and a plot staked inside it is told so and
+			// marked to yield. The first rung is staked here too: the basin, on the ground the
+			// water was poured on, which is the settlement's whole heart until it grows one.
+			if (foundingZone != null && riteCell != null && riteCell.ParentZone == foundingZone)
+			{
+				KingdomSystem.Guard("founding: the heart surveyed", delegate
+				{
+					KingdomPlots.SurveyHeart(system, foundingZone, riteCell.X, riteCell.Y);
+				});
+			}
 			The.Player?.RequirePart<KingdomCharterPart>().EnsureAbility();
 			return faction;
 		}
@@ -205,6 +219,14 @@ namespace ThousandAndFirst
 			{
 				Site.SetZoneProperty(KingdomPlots.RiteXProperty, secondRiteCell.X.ToString());
 				Site.SetZoneProperty(KingdomPlots.RiteYProperty, secondRiteCell.Y.ToString());
+				// A second city is a city: it pours its own water, holds its own rite ground, and
+				// is surveyed for its own heart. The one-per-city ruling caps colossi INSIDE a
+				// city, not across the realm, and the top rung of this ladder is not built here
+				// anyway.
+				KingdomSystem.Guard("second founding: the heart surveyed", delegate
+				{
+					KingdomPlots.SurveyHeart(system, Site, secondRiteCell.X, secondRiteCell.Y);
+				});
 			}
 			The.Player?.RequirePart<KingdomCharterPart>().EnsureAbility();
 			return true;

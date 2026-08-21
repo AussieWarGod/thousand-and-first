@@ -992,11 +992,302 @@ namespace ThousandAndFirst
 		// --- The heart -------------------------------------------------------------------
 
 		/// <summary>
-		/// How heavily the rite ground counts against the works when the heart is reckoned. One:
-		/// the rite ground is where the settlement started and never stops mattering, but a city
-		/// of forty buildings has moved, and the heart moves with it.
+		/// How heavily the rite ground counts against the works when the heart is reckoned with
+		/// nothing standing on it. One: the rite ground is where the settlement started and never
+		/// stops mattering, but a city of forty buildings has moved, and the heart moves with it.
+		/// <para>
+		/// This is the floor of the ladder, not the whole of it. Once the heart's own great work
+		/// stands on that ground, <see cref="HeartWeightForRung"/> is what the rite ground counts
+		/// for, and the settled centre is drawn back onto the monument as it rises.
+		/// </para>
 		/// </summary>
 		public const int RiteHeartWeight = 1;
+
+		// --- The heart's own ladder -------------------------------------------------------
+
+		/// <summary>
+		/// The four rungs of the heart, in order, by design key. The heart is ONE plot that grows
+		/// with its rung &mdash; basin, then the waterstone laid around it, then the moot yard
+		/// raised over that, then the great court raised around the yard &mdash; and each rung is
+		/// built OVER the last rather than in place of it, so the ground reads as history.
+		/// <para>
+		/// Keys rather than an authored attribute, deliberately and for this wave only: the
+		/// catalogue loader hands <c>KingdomPlots.RegisterSpec</c> a fixed set of attributes, and
+		/// a fifth one is a change to the shared loader rather than to the heart. A third-party
+		/// file re-declaring one of these keys owns that rung entirely (merge-by-key), which is
+		/// how the ladder is retheme-able today; authoring a NEW rung wants the
+		/// <c>Heart="yes"</c> attribute noted in the wave report.
+		/// </para>
+		/// </summary>
+		public static readonly string[] HeartRungKeys = new string[4]
+		{
+			"heartbasin",
+			"heartwaterstone",
+			"heartmoot",
+			"heartcourt"
+		};
+
+		/// <summary>Which rung of the heart a design key is, one-based.</summary>
+		/// <returns>Zero for every design that is not the heart, which is all but four of
+		/// them.</returns>
+		public static int HeartRungOf(string Key)
+		{
+			if (string.IsNullOrEmpty(Key))
+			{
+				return 0;
+			}
+			for (int i = 0; i < HeartRungKeys.Length; i++)
+			{
+				if (HeartRungKeys[i] == Key)
+				{
+					return i + 1;
+				}
+			}
+			return 0;
+		}
+
+		/// <summary>The design key of one rung, one-based; null outside the ladder.</summary>
+		public static string HeartKeyForRung(int Rung)
+		{
+			if (Rung < 1 || Rung > HeartRungKeys.Length)
+			{
+				return null;
+			}
+			return HeartRungKeys[Rung - 1];
+		}
+
+		/// <summary>
+		/// The plot tier each rung stands on: S at the founding, then M, L, and XL. The same
+		/// ladder the stage gate already climbs (<see cref="MaxSizeForStage"/>), which is why the
+		/// heart needs no gate of its own &mdash; a settlement that cannot lay a great plot cannot
+		/// raise the great court either, and is told so in the words it already knows.
+		/// </summary>
+		public static PlotSize HeartSizeForRung(int Rung)
+		{
+			switch (Rung)
+			{
+				case 1:
+					return PlotSize.Small;
+				case 2:
+					return PlotSize.Medium;
+				case 3:
+					return PlotSize.Large;
+				case 4:
+					return PlotSize.Huge;
+				default:
+					return PlotSize.None;
+			}
+		}
+
+		/// <summary>
+		/// What the rite ground counts for when the heart is reckoned, by the rung standing on it.
+		/// One at the basin &mdash; a tin bowl on bare ground is not a monument, and the heart
+		/// still walks after the city, which is correct. Four, twelve, and forty as the great work
+		/// rises, until the settled centre is drawn back onto it and the city visibly re-centres
+		/// on the thing it built.
+		/// <para>
+		/// Qud's own shape: Ezra is described as an "archaeological and cultural outgrowth" of the
+		/// Tomb of the Eaters &mdash; the village grew around the great work, not beside it.
+		/// </para>
+		/// </summary>
+		public static int HeartWeightForRung(int Rung)
+		{
+			switch (Rung)
+			{
+				case 2:
+					return 4;
+				case 3:
+					return 12;
+				case 4:
+					return 40;
+				default:
+					return RiteHeartWeight;
+			}
+		}
+
+		/// <summary>
+		/// The whole ground the heart is surveyed for at the founding rite: the final rung's plot,
+		/// centred on the rite ground and slid whole until it lies inside the zone's interior.
+		/// Nothing is claimed, spent, or reserved by this &mdash; it is the founder's ambition
+		/// paced out, and every later rung is staked inside it.
+		/// </summary>
+		/// <returns>False for a zone with no interior to survey, in which case the settlement
+		/// simply has no surveyed heart and every plot is sited exactly as it was before.</returns>
+		public static bool TrySurveyedHeart(int RiteX, int RiteY, int Width, int Height, out PlotRect Survey)
+		{
+			Survey = default(PlotRect);
+			if (!TryInterior(Width, Height, out var interior)
+				|| !TryDimensions(HeartSizeForRung(HeartRungKeys.Length), out var surveyWidth, out var surveyHeight))
+			{
+				return false;
+			}
+			return TryCentred(interior, RiteX, RiteY, surveyWidth, surveyHeight, out Survey);
+		}
+
+		/// <summary>
+		/// One rung's plot: a rect of that rung's tier, centred on the rite ground and slid whole
+		/// until it lies inside the surveyed ground. The basin's own ground therefore stays inside
+		/// every rung above it, which is what makes the rungs accrete rather than replace.
+		/// </summary>
+		/// <returns>False when the tier does not fit the surveyed ground at all.</returns>
+		public static bool TryHeartRect(PlotRect Survey, int RiteX, int RiteY, PlotSize Size, out PlotRect Rect)
+		{
+			Rect = default(PlotRect);
+			if (!TryDimensions(Size, out var width, out var height))
+			{
+				return false;
+			}
+			return TryCentred(Survey, RiteX, RiteY, width, height, out Rect);
+		}
+
+		/// <summary>
+		/// A rect of the given span centred on a point and then slid &mdash; never shrunk &mdash;
+		/// until it lies wholly inside Bounds. Deterministic: the same point and bounds always
+		/// give the same rect.
+		/// </summary>
+		/// <returns>False when the span does not fit inside Bounds at all.</returns>
+		public static bool TryCentred(PlotRect Bounds, int X, int Y, int Width, int Height, out PlotRect Rect)
+		{
+			Rect = default(PlotRect);
+			if (Width < 1 || Height < 1 || Bounds.Width < Width || Bounds.Height < Height)
+			{
+				return false;
+			}
+			int x1 = X - (Width - 1) / 2;
+			int y1 = Y - (Height - 1) / 2;
+			if (x1 < Bounds.X1)
+			{
+				x1 = Bounds.X1;
+			}
+			if (y1 < Bounds.Y1)
+			{
+				y1 = Bounds.Y1;
+			}
+			if (x1 + Width - 1 > Bounds.X2)
+			{
+				x1 = Bounds.X2 - Width + 1;
+			}
+			if (y1 + Height - 1 > Bounds.Y2)
+			{
+				y1 = Bounds.Y2 - Height + 1;
+			}
+			Rect = new PlotRect(x1, y1, x1 + Width - 1, y1 + Height - 1);
+			return true;
+		}
+
+		/// <summary>Cells two rects share; zero when they do not meet.</summary>
+		public static int OverlapArea(PlotRect A, PlotRect B)
+		{
+			int x1 = (A.X1 > B.X1) ? A.X1 : B.X1;
+			int y1 = (A.Y1 > B.Y1) ? A.Y1 : B.Y1;
+			int x2 = (A.X2 < B.X2) ? A.X2 : B.X2;
+			int y2 = (A.Y2 < B.Y2) ? A.Y2 : B.Y2;
+			if (x1 > x2 || y1 > y2)
+			{
+				return 0;
+			}
+			return (x2 - x1 + 1) * (y2 - y1 + 1);
+		}
+
+		/// <summary>
+		/// What the plan takes off a rect for standing in ground the heart is surveyed for. A
+		/// PREFERENCE and never a refusal: the settlement will not volunteer to build there while
+		/// clear ground is going, and the founder's own stake still beats the grammar anywhere,
+		/// which is why this sits below <c>KingdomLayoutRules.FounderTolerance</c> (16) rather
+		/// than above it &mdash; ground the founder is standing on still wins outright.
+		/// </summary>
+		public const int SurveyRepulsion = 12;
+
+		/// <summary>
+		/// The repulsion term itself, scaled by how much of the rect actually stands in surveyed
+		/// ground, so a plot clipping one corner of the survey pays almost nothing and a plot
+		/// squarely inside it pays the whole of <see cref="SurveyRepulsion"/>. Independent of
+		/// tier on purpose: a hut in the heart's ground is as much in the way as a hall is.
+		/// </summary>
+		public static int SurveyPenalty(PlotRect Rect, PlotRect Survey)
+		{
+			int area = Rect.Area;
+			if (area <= 0)
+			{
+				return 0;
+			}
+			int overlap = OverlapArea(Rect, Survey);
+			if (overlap <= 0)
+			{
+				return 0;
+			}
+			return SurveyRepulsion * overlap / area;
+		}
+
+		/// <summary>
+		/// The sentence a plot staked in surveyed heart ground carries from the moment it is
+		/// staked, and forever after in its own description. Consent before cost, told up front:
+		/// the ground is legal to build on, and the mark is the promise being made about it.
+		/// </summary>
+		public static string YieldingLine(string Name)
+		{
+			return "The " + Name + " is staked in the ground the heart was surveyed for, and is marked to yield: when the great work is called for this ground, this is what moves. Nothing is taken from it, and nothing is refused you for it.";
+		}
+
+		/// <summary>
+		/// The same promise, read off the thing itself rather than heard once. Carried by
+		/// <c>r_KingdomYielding</c> into the plot's own description, so consent given at placement
+		/// is still legible a hundred days later.
+		/// </summary>
+		public const string YieldingMark = "Staked in the ground the heart was surveyed for. Marked to yield: when the great work is called for this ground, this is what moves.";
+
+		/// <summary>
+		/// The heart's next rung wants ground that something already laid is standing in. Named
+		/// rather than quietly worked around, and named as a thing the founder can act on: the
+		/// mark said this day would come.
+		/// </summary>
+		public static string RefuseHeartGround(string SuccessorName, string What)
+		{
+			return "The " + SuccessorName + " wants the surveyed ground, and the {{C|" + What
+				+ "}} is standing in it. Nothing the settlement raised comes down on its own: clear it, and the heart can climb.";
+		}
+
+		/// <summary>
+		/// What the founder is told at the rite, once, when the ground is paced out. Says the
+		/// three things the mark is: how much ground, that it costs nothing, and that building
+		/// inside it is allowed and marked.
+		/// </summary>
+		public static string SurveyLine(PlotRect Survey)
+		{
+			return "You pace out the ground while the water soaks in: {{C|" + Survey.Width + " by " + Survey.Height
+				+ "}} cells around the basin, stakes at the corners. Nothing is claimed and nothing is spent: the settlement will simply build elsewhere while it can, and anything staked inside is marked to yield.";
+		}
+
+		/// <summary>
+		/// A founder asking the settlement to raise one of the heart's own rungs somewhere else.
+		/// There is one heart, standing where the water was poured, and it climbs by improvement
+		/// rather than by being ordered a second time.
+		/// </summary>
+		public static string RefuseSecondHeart(string Name)
+		{
+			return "There is one heart at " + (string.IsNullOrEmpty(Name) ? "this settlement" : Name)
+				+ ", and it stands on the ground the first water was poured on. It is not raised twice; it grows where it is.";
+		}
+
+		/// <summary>
+		/// The blocker is a plot the founder was warned about at the moment they staked it. Said
+		/// differently from the general case on purpose: the mark promised this day, and the
+		/// founder is owed the promise being kept out loud &mdash; along with the honest truth
+		/// about what the settlement can do about it TODAY, which is strike it and rebuild. Moving
+		/// a plot whole is the ring call, and the ring call waits on the relocation verb.
+		/// </summary>
+		public static string RefuseHeartYielding(string SuccessorName, string What)
+		{
+			return "The {{C|" + What + "}} was marked to yield when it was staked, and the day it was marked for is here: the "
+				+ SuccessorName + " wants that ground. Nothing carries a building whole yet, so it comes down and goes up again, or the heart waits. Neither happens on its own.";
+		}
+
+		/// <summary>The heart's next rung has no room inside the ground surveyed for it &mdash;
+		/// a zone too small, or a rite poured against the edge of one.</summary>
+		public static string RefuseHeartRoom(string SuccessorName)
+		{
+			return "The " + SuccessorName + " will not fit the ground surveyed at the rite. There is no room here for the heart to grow into.";
+		}
 
 		/// <summary>
 		/// The settled heart, seeded at the rite ground and drifting toward the built centre.
@@ -1016,9 +1307,12 @@ namespace ThousandAndFirst
 		/// to <c>KingdomLayoutRules.TryHeart</c> unchanged.</param>
 		/// <param name="RiteX">Rite ground x; ignored when HasRite is false.</param>
 		/// <param name="RiteY">Rite ground y; ignored when HasRite is false.</param>
+		/// <param name="RiteWeight">How many votes the rite ground gets, from
+		/// <see cref="HeartWeightForRung"/> once the heart's own great work stands on it. Clamped
+		/// up to <see cref="RiteHeartWeight"/>, so no caller can vote the rite ground away.</param>
 		/// <returns>False when there is neither a rite ground nor any shape to read, in which case
 		/// both outputs are zero and mean nothing.</returns>
-		public static bool TryHeart(IList<KingdomLayoutRules.LayoutMark> Marks, bool HasRite, int RiteX, int RiteY, out int X, out int Y)
+		public static bool TryHeart(IList<KingdomLayoutRules.LayoutMark> Marks, bool HasRite, int RiteX, int RiteY, out int X, out int Y, int RiteWeight = RiteHeartWeight)
 		{
 			X = 0;
 			Y = 0;
@@ -1026,9 +1320,10 @@ namespace ThousandAndFirst
 			{
 				return KingdomLayoutRules.TryHeart(Marks, out X, out Y);
 			}
-			int sumX = RiteX * RiteHeartWeight;
-			int sumY = RiteY * RiteHeartWeight;
-			int count = RiteHeartWeight;
+			int weight = (RiteWeight < RiteHeartWeight) ? RiteHeartWeight : RiteWeight;
+			int sumX = RiteX * weight;
+			int sumY = RiteY * weight;
+			int count = weight;
 			if (Marks != null)
 			{
 				for (int i = 0; i < Marks.Count; i++)
@@ -1098,7 +1393,10 @@ namespace ThousandAndFirst
 		/// when its centre is clear of it, because a house on the wall is a house on the wall
 		/// whichever cell you measure;</item>
 		/// <item>a big plot is pulled toward the heart by <see cref="HeartPull"/>, because the
-		/// great works want the settled centre and the huts do not.</item>
+		/// great works want the settled centre and the huts do not;</item>
+		/// <item>a rect standing in ground the heart was surveyed for at the rite pays
+		/// <see cref="SurveyPenalty"/> &mdash; a preference away from the great work's ground, and
+		/// never a refusal of it.</item>
 		/// </list>
 		/// Higher is better, and a rect the plan has no complaint about scores zero.
 		/// <para>
@@ -1108,7 +1406,7 @@ namespace ThousandAndFirst
 		/// care where the settlement started.
 		/// </para>
 		/// </summary>
-		public static int ScoreRect(KingdomLayoutRules.LayoutPurpose Purpose, PlotSize Size, PlotRect Rect, int Width, int Height, KingdomRules.Frontier Edges, IList<KingdomLayoutRules.LayoutMark> Marks, bool HasRite, int RiteX, int RiteY)
+		public static int ScoreRect(KingdomLayoutRules.LayoutPurpose Purpose, PlotSize Size, PlotRect Rect, int Width, int Height, KingdomRules.Frontier Edges, IList<KingdomLayoutRules.LayoutMark> Marks, bool HasRite, int RiteX, int RiteY, bool HasSurvey = false, PlotRect Survey = default(PlotRect), int RiteWeight = RiteHeartWeight)
 		{
 			int centerX = Rect.CenterX;
 			int centerY = Rect.CenterY;
@@ -1120,9 +1418,17 @@ namespace ThousandAndFirst
 				score -= KingdomLayoutRules.FrontierPenalty;
 			}
 			int pull = HeartPull(Size);
-			if (pull > 0 && TryHeart(Marks, HasRite, RiteX, RiteY, out var heartX, out var heartY))
+			if (pull > 0 && TryHeart(Marks, HasRite, RiteX, RiteY, out var heartX, out var heartY, RiteWeight))
 			{
 				score -= KingdomLayoutRules.Chebyshev(centerX, centerY, heartX, heartY) * pull;
+			}
+			if (HasSurvey)
+			{
+				// The founder's ambition, paced out at the rite and standing in the ground as
+				// stakes. The settlement reads it as a preference and nothing more: it will not
+				// VOLUNTEER to build in the heart's ground while there is clear ground going, and
+				// it never refuses to.
+				score -= SurveyPenalty(Rect, Survey);
 			}
 			return score;
 		}
@@ -1192,7 +1498,7 @@ namespace ThousandAndFirst
 		/// <param name="RiteY">Rite ground y; ignored when HasRite is false.</param>
 		/// <param name="Index">Index into <paramref name="Candidates"/> of the chosen rect, or -1
 		/// when the result is <c>Defer</c> or <c>None</c>.</param>
-		public static KingdomLayoutRules.LayoutOutcome ChooseRect(KingdomLayoutRules.LayoutPurpose Purpose, PlotSize Size, int Width, int Height, KingdomRules.Frontier Edges, IList<KingdomLayoutRules.LayoutMark> Marks, IList<PlotRect> Candidates, bool HasFounder, int FounderX, int FounderY, bool HasRite, int RiteX, int RiteY, out int Index)
+		public static KingdomLayoutRules.LayoutOutcome ChooseRect(KingdomLayoutRules.LayoutPurpose Purpose, PlotSize Size, int Width, int Height, KingdomRules.Frontier Edges, IList<KingdomLayoutRules.LayoutMark> Marks, IList<PlotRect> Candidates, bool HasFounder, int FounderX, int FounderY, bool HasRite, int RiteX, int RiteY, out int Index, bool HasSurvey = false, PlotRect Survey = default(PlotRect), int RiteWeight = RiteHeartWeight)
 		{
 			Index = -1;
 			if (Candidates == null || Candidates.Count == 0)
@@ -1212,7 +1518,7 @@ namespace ThousandAndFirst
 			for (int i = 0; i < Candidates.Count; i++)
 			{
 				PlotRect rect = Candidates[i];
-				int score = ScoreRect(Purpose, Size, rect, Width, Height, Edges, Marks, HasRite, RiteX, RiteY);
+				int score = ScoreRect(Purpose, Size, rect, Width, Height, Edges, Marks, HasRite, RiteX, RiteY, HasSurvey, Survey, RiteWeight);
 				int reach = HasFounder ? Reach(rect, FounderX, FounderY) : 0;
 				if (best < 0 || Beats(score, reach, rect, bestScore, bestReach, Candidates[best]))
 				{
