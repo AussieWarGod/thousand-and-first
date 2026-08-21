@@ -946,3 +946,19 @@ learning idioms: "similar feel to the way blueprints/data disks/psychometry work
   touched).
 - Unblocks: the WR-3 strata wave sizing; the deep-delve exotic (ideation Q9's first build).
   Arcology set waits on Q6's answer (theatre-vs-arcology cardinality).
+
+
+## Addendum 16, 2026-08-22 — styles and creed-gated building, ruled (author answer to Q3)
+
+- **Exercise Styles first, agreed** — the data pass proceeds: real restrictions per style,
+  style-exclusive designs landing in the same pass so nothing reads as pure removal.
+- **Styles are building TAGS** (not a parallel enum lane) — tagged, extensible, API-friendly.
+- **Each creed gets unique buildings.**
+- **The creed-gate stack** for such buildings, all tags, all modder-extensible: (1) correct
+  builder prerequisites; (2) AMOUNT of creed — enough of the city holding it; (3) knowledge;
+  (4) built by builders who ALIGN — or have PREVIOUSLY ALIGNED — with that creed (a settler's
+  creed HISTORY is a recorded fact from now on, not just their present creed); (5) the
+  technology requirement (Addendum 14's keys when the research system lands; today's Knowledge
+  keys until then, re-pointed later).
+- Refusals name the missing gate per 7b; the visibility law (Addendum 14) applies to
+  creed-buildings a city cannot see its way to.
