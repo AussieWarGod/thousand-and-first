@@ -829,3 +829,20 @@ fill-in). CONSEQUENCE for the liquid law: our carrier extends the hydraulic fami
 segment volumes with typed contents — adding only the missing verb (transfer along declared
 topology); wrong-liquid-in-the-line already has vanilla vocabulary and consequence, reinforcing
 typed lines for free.
+
+
+## Open design, 2026-08-22 — the evolving heart (author: research-first)
+
+"how do we handle the 'heart' of the city evolving since the bowl will become something else,
+then something else, and eventually an arcology … a smooth way … without too much striking,
+building, moving to make room … maybe plots can be 'relocated' for a 'knock down, move over'
+cost that's just labour and time? … it should probably be supported by research"
+
+ORCHESTRATOR SKETCH to test against research (not yet ruled): the RESERVED RING + the YIELDING
+PLOT. Heart ladder known at founding → rite ground carries a graded easement (future rings
+pre-surveyed). Building inside future rings is allowed early but marked YIELDING at placement
+(consent-before-cost, told up front). A ring call relocates yielding plots: labour + time only,
+materials conserved, building keeps IDENTITY (tier, dedication position, wear, residents — no
+roof brink on a planned move; the household walks over with their house). Scheduled world-time
+work, announced, arrestable; destination pre-picked by the existing layout/frontier logic. Ring
+calls gated by the heart tier's own stage/tech gates. Research to validate/refine before ruling.
