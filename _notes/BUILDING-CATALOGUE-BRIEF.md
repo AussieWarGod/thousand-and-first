@@ -904,3 +904,27 @@ by creed, genotype, race, and Qud-native traits (ideation dispatched, proposal d
 (golem-system precedent, anatomy-slot gating, preservation chain costs, creed friction as
 feature) — endorsed in principle, lands with the tech-tree design; (c) exotic buildings that
 introduce new mechanics and endgame content — per the XL-unlocks-functions ruling.
+
+
+## Addendum 14, 2026-08-22 — research, ruled (author answer to ideation Q1)
+
+The tech system is a REAL TIERED RESEARCH SYSTEM, not a read-only map — but in vanilla's own
+learning idioms: "similar feel to the way blueprints/data disks/psychometry work."
+
+- **Shape**: a few paths, specific nodes, tiers. QUDlike throughout.
+- **Visibility law**: you SEE what you have unlocked; you do NOT see what you haven't; you
+  ESPECIALLY cannot see what you CAN'T unlock. Discovery reveals the tree (psychometry-like),
+  never a spoiler screen.
+- **Sources**: data disks, found books, a research lab that PRODUCES research; different
+  blueprints/books/disks come from different creeds/genotypes/races; some things locked behind
+  QUESTS.
+- **The gate**: research tiers are limited by the INTELLIGENCE of your researchers (vanilla's
+  own tinker-tier idiom).
+- **Reach — "deeply ingrained, touches everything"**: what buildings you know how to build;
+  how efficient your workers are; what your citizens' stats can be levelled up to.
+- **High-stat citizens are findable in the wild** — recruitable, but with high expectations:
+  living standards, jobs they want to do (composes with QoL/lodging/creed law).
+- **API**: research features AND research requirements are extensible by other modders
+  (the 12(i) contract discipline).
+- Author asks for "thought and research on how to make this a deep, nuanced, elegant system
+  that aligns with vanilla QUD" — design research dispatched before build.
