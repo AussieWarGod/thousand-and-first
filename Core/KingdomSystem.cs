@@ -234,6 +234,21 @@ namespace ThousandAndFirst
 		/// <summary>True once this settlement has offered water to a guest at least once.</summary>
 		public bool FirstGuestGreeted;
 
+		/// <summary>Tick the settlement may draw its next notable guest. See
+		/// <see cref="ThousandAndFirst.KingdomGuestbook"/>.</summary>
+		public long NextNotableGuestTick;
+
+		/// <summary>Tick the settlement's current notable guest gives up and leaves if never
+		/// lodged. Zero when no notable guest is tracked.</summary>
+		public long NotableGuestDepartTick;
+
+		/// <summary>True once this settlement has lodged a notable guest at least once.</summary>
+		public bool FirstNotableGuestLodged;
+
+		/// <summary>The seated city's own guestbook: one line per notable guest who resolved,
+		/// lodged or departed. See <see cref="ThousandAndFirst.KingdomGuestbook"/>.</summary>
+		public List<string> GuestbookLines = new List<string>();
+
 		public List<string> ClaimedZones = new List<string>();
 
 		public Dictionary<string, string> ZoneDistricts = new Dictionary<string, string>();
@@ -285,6 +300,12 @@ namespace ThousandAndFirst
 		/// with it null, which is exactly "no manifest in flight".
 		/// </summary>
 		public KingdomManifest Manifest;
+
+		/// <summary>The realm's one carry-sign haul in flight, or null when none is en route.
+		/// Realm-level and never swapped, for the same reason <see cref="Manifest"/> is: it
+		/// addresses a settlement by name rather than by seat/Away role. See
+		/// <see cref="ThousandAndFirst.KingdomGuestbook"/> and <see cref="ThousandAndFirst.KingdomCarryHaul"/>.</summary>
+		public KingdomCarryHaul Haul;
 
 		/// <summary>
 		/// The realm that put the founder out, kept whole: its faction name, its display name, and
@@ -881,6 +902,14 @@ namespace ThousandAndFirst
 			{
 				KingdomUpgrade.OnZoneActivated(this, E.Zone, survey);
 			});
+			// After improvement, and the order is load-bearing for the same reason improvement runs
+			// after growth: a posted price is paid out of what the stores still hold once the
+			// settlement's own upkeep and arrivals are done with them, and a manning notice can only
+			// fill an idleness AssignWork has already finished measuring.
+			Guard("bounties", delegate
+			{
+				KingdomBounty.OnSettlementPass(this, E.Zone, survey);
+			});
 			Guard("raids", delegate
 			{
 				KingdomRaids.OnZoneActivated(this, E.Zone, survey);
@@ -892,6 +921,10 @@ namespace ThousandAndFirst
 			Guard("locus", delegate
 			{
 				KingdomLocus.OnZoneActivated(this, E.Zone, survey);
+			});
+			Guard("guestbook", delegate
+			{
+				KingdomGuestbook.OnZoneActivated(this, E.Zone, survey);
 			});
 			Guard("creed", delegate
 			{

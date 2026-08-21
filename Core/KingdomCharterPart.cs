@@ -78,7 +78,7 @@ namespace ThousandAndFirst
 			}
 			while (true)
 			{
-				int num = Popup.PickOption(Title: system.SeatName + KingdomSettlement.VocationSuffix(system.Vocation), Options: new string[26] { (system.PetitionKind != KingdomRules.PetitionKind.None) ? ("{{W|Hear " + system.PetitionPetitioner + "}}") : "{{K|No one is waiting to speak}}", "Status", "What happened while you were away", "The Chronicle", "As others tell it", "Standings", "The roll of settlers", "Standing policy", "Designate district", "Commission a building", "Answer a threat", "Dedicate a vessel, larder, or stockpile", "Strike a trade charter", "Send a water manifest", "Share a meal from the larder", "Certify a machine", "Set the water detail", "Plans staked for later", "Adopt a building", "Release an adoption", (system.SettlementCount >= 2 || system.Seceded != null) ? "How your cities hold each other" : "{{K|One city cannot fall out with itself}}", "What the keepers know", "Your works, and what they become", "Name a building", "Order ground cleared", "Take down a building"}, Hotkeys: new char[26] { 'h', 's', 'w', 'c', 'a', 'n', 'l', 'p', 'd', 'm', 't', 'v', 'r', 'i', 'f', 'e', 'u', 'g', 'b', 'j', 'k', 'o', 'y', 'x', 'q', 'z'}, AllowEscape: true);
+				int num = Popup.PickOption(Title: system.SeatName + KingdomSettlement.VocationSuffix(system.Vocation), Options: new string[27] { (system.PetitionKind != KingdomRules.PetitionKind.None) ? ("{{W|Hear " + system.PetitionPetitioner + "}}") : "{{K|No one is waiting to speak}}", "Status", "What happened while you were away", "The Chronicle", "As others tell it", "Standings", "The roll of settlers", "Standing policy", "Designate district", "Commission a building", "Answer a threat", "Dedicate a vessel, larder, or stockpile", "Strike a trade charter", "Send a water manifest", "Share a meal from the larder", "Certify a machine", "Set the water detail", "Plans staked for later", "Adopt a building", "Release an adoption", (system.SettlementCount >= 2 || system.Seceded != null) ? "How your cities hold each other" : "{{K|One city cannot fall out with itself}}", "What the keepers know", "Your works, and what they become", "Name a building", "Set the crew on the ground", "Take down a building", "Post a price at the heart"}, Hotkeys: new char[27] { 'h', 's', 'w', 'c', 'a', 'n', 'l', 'p', 'd', 'm', 't', 'v', 'r', 'i', 'f', 'e', 'u', 'g', 'b', 'j', 'k', 'o', 'y', 'x', 'q', 'z', '1'}, AllowEscape: true);
 				switch (num)
 				{
 				case 0:
@@ -148,16 +148,19 @@ namespace ThousandAndFirst
 					KingdomZoning.ShowKeepers(system);
 					break;
 				case 22:
-					KingdomUpgrade.ShowImprovements(system);
+					KingdomYards.ShowWorksAndTrades(system);
 					break;
 				case 23:
 					KingdomDesign.RenameBuilding(system, ParentObject);
 					break;
 				case 24:
-					ClearGround(system);
+					GroundWork(system);
 					break;
 				case 25:
 					StrikeBuilding(system);
+					break;
+				case 26:
+					KingdomBounty.OpenNotices(system, ParentObject);
 					break;
 				default:
 					return;
@@ -207,6 +210,32 @@ namespace ThousandAndFirst
 			Popup.Show((num == 0)
 				? "The buckets are hung up. " + System.SeatName + " will drink what you bring it."
 				: (num + ((num == 1) ? " settler walks" : " settlers walk") + " to the water now. The works have " + (System.Population - num) + " left to draw on."));
+		}
+
+		/// <summary>
+		/// The two things a crew does to bare ground: take down what stands on it, or lay what the
+		/// settlement's own feet have already decided. The report of what is worn is the intro,
+		/// because the founder should be able to see whether there is anything to pave in the same
+		/// breath they are asked.
+		/// </summary>
+		public void GroundWork(KingdomSystem System)
+		{
+			Zone zone = ParentObject.CurrentZone;
+			int num = Popup.PickOption(
+				Title: "The ground at " + System.SeatName,
+				Intro: KingdomRoads.WornLine(zone),
+				Options: new string[2] { "Order ground cleared", "Pave a worn path" },
+				Hotkeys: new char[2] { 'c', 'p' },
+				AllowEscape: true);
+			if (num == 0)
+			{
+				ClearGround(System);
+				return;
+			}
+			if (num == 1 && !KingdomRoads.Pave(System, zone, ParentObject.CurrentCell, out var failure) && failure != null)
+			{
+				Popup.Show(failure);
+			}
 		}
 
 		/// <summary>

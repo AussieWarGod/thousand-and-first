@@ -138,6 +138,25 @@ playtest passes.
 - **Ceremony**: the surveyor's plan, the raising ceremony, notable tastes, leader traits (one
   virtue, one flaw, no reroll), and the caravan pattern-book.
 
+### Added — the settlement acts on its own judgment
+- **The posted price.** Stake a notice at the heart offering drams for a named job — clearing
+  ground, hauling a marked pile, manning an idle work, scouting the frontier. Nothing is escrowed;
+  the price is paid the day the work is done, a price the stores cannot cover stands with the debt
+  written down, and who takes a notice is theirs to decide — attempts and refusals chronicled by
+  name, refusals citing the refuser's own flaw.
+- **Worn ground.** Roads are never drawn: the routes people actually walk wear from grass to
+  trodden earth to true path, and the founder may pave a worn path in the settlement's own wall
+  material, asked first and paid in stone. A season away lays exactly what three days lay.
+- **Yard trades.** A small or middling house can take up one trade in its yard — vine lattice,
+  hide rack, dye vat, vellum press — and the household takes it up, visibly, in the roll and in
+  the house's own description.
+- **Guests at the gate.** Notable travellers arrive between visits, each carrying one hook. Lodged,
+  they settle with a trade; ignored, they leave a letter and the hook becomes a standing rumor —
+  never lost, only relocated.
+- **The carry-sign.** A cheap marker planted on a pile you own, anywhere: porters haul it home over
+  distance-scaled days. The sign is the designation, one haul rides at a time, and a road cut by a
+  raid costs the load in the chronicle, never in silence.
+
 ### Changed
 - Districts are no longer flavour. Each of the six now changes something a player can measure:
   garrison adds defence across every claimed zone, agrarian bills upkeep at 90%, market adds a

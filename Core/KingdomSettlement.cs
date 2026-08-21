@@ -202,6 +202,14 @@ namespace ThousandAndFirst
 
 		public bool FirstGuestGreeted;
 
+		public long NextNotableGuestTick;
+
+		public long NotableGuestDepartTick;
+
+		public bool FirstNotableGuestLodged;
+
+		public List<string> GuestbookLines = new List<string>();
+
 		public List<string> ClaimedZones = new List<string>();
 
 		public Dictionary<string, string> ZoneDistricts = new Dictionary<string, string>();
@@ -273,6 +281,10 @@ namespace ThousandAndFirst
 			if (ZoneDistricts == null)
 			{
 				ZoneDistricts = new Dictionary<string, string>();
+			}
+			if (GuestbookLines == null)
+			{
+				GuestbookLines = new List<string>();
 			}
 			if (Ledger == null)
 			{

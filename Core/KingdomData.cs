@@ -105,6 +105,7 @@ namespace ThousandAndFirst
 			KingdomUpgrade.ClearChains();
 			KingdomMaterials.ClearCosts();
 			KingdomPlots.ClearSpecs();
+			KingdomYards.ClearSpecs();
 			Dictionary<string, Action<XmlDataHelper>> handlers = null;
 			handlers = new Dictionary<string, Action<XmlDataHelper>>
 			{
@@ -140,6 +141,28 @@ namespace ThousandAndFirst
 			{
 				item.HandleNodes(dealHandlers);
 			}
+			Dictionary<string, Action<XmlDataHelper>> yardWorkHandlers = null;
+			yardWorkHandlers = new Dictionary<string, Action<XmlDataHelper>>
+			{
+				{
+					"kingdomyardworks",
+					delegate(XmlDataHelper xml)
+					{
+						xml.HandleNodes(yardWorkHandlers);
+					}
+				},
+				{ "yardwork", HandleYardWork }
+			};
+			foreach (XmlDataHelper item in DataManager.YieldXMLStreamsWithRoot("KingdomYardWorks"))
+			{
+				item.HandleNodes(yardWorkHandlers);
+			}
+		}
+
+		private static void HandleYardWork(XmlDataHelper xml)
+		{
+			KingdomYards.RegisterSpec(xml.GetAttribute("Key"), xml.GetAttribute("DisplayName"), xml.GetAttribute("Blueprint"), xml.GetAttribute("Trade"), xml.GetAttribute("Shades"), xml.GetAttribute("Goods"));
+			xml.DoneWithElement();
 		}
 
 		private static void HandleDeal(XmlDataHelper xml)

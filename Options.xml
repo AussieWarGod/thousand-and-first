@@ -14,4 +14,8 @@
   <option ID="r_TAF_OptionImprovement" DisplayText="The Thousand and First: the settlement betters its own works out of what the stores can spare" Category="Mods" Type="Checkbox" Default="Yes" />
   <option ID="r_TAF_OptionCreed" DisplayText="The Thousand and First: your cities take on the creeds of their settlers, and can fall out over them" Category="Mods" Type="Checkbox" Default="Yes" />
   <option ID="r_TAF_OptionCeremony" DisplayText="The Thousand and First: staked plans are described in prose, raisings are a small ceremony, and settling notables carry a taste and a trait" Category="Mods" Type="Checkbox" Default="Yes" />
+  <option ID="r_TAF_OptionBounty" DisplayText="The Thousand and First: you can post a price at the heart, and settlers decide for themselves whether to take it" Category="Mods" Type="Checkbox" Default="Yes" />
+  <option ID="r_TAF_OptionRoads" DisplayText="The Thousand and First: the ground your settlers walk wears into paths, which you may pave" Category="Mods" Type="Checkbox" Default="Yes" />
+  <option ID="r_TAF_OptionGuestbook" DisplayText="The Thousand and First: notable travellers arrive with a hook to chase, and may be lodged into the settlement" Category="Mods" Type="Checkbox" Default="Yes" />
+  <option ID="r_TAF_OptionCarrySign" DisplayText="The Thousand and First: a planted carry-sign hauls a marked pile or container home over distance and days" Category="Mods" Type="Checkbox" Default="Yes" />
 </options>

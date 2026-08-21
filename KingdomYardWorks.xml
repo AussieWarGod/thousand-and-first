@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  YARD TRADES
+
+  What a small or middling house's own yard can take up, once it has a free cell inside its
+  rect and outside its walls. First-pass set of four. Each entry is registered by Key exactly
+  the way KingdomBuildings.xml entries are: a later file re-using a Key owns that trade's whole
+  spec, including retheming its blueprint, its prose, or what it shades.
+
+    DisplayName  How the founder reads it in a list.
+    Blueprint    The object placed in the yard. Never a vanilla blueprint here, because vanilla
+                 ships none of these; see ObjectBlueprints.xml for the four raised alongside
+                 this file.
+    Trade        The trade itself, as a household is said to take it up. Optional; falls back
+                 to DisplayName.
+    Shades       support:amount, KingdomCatalogueRules' own language. Capped small on purpose
+                 (KingdomYardRules.MaxShadePerWork) — a household's sideline never competes
+                 with a purpose-built work.
+    Goods        Yes for a trade whose output is a caravan good rather than anything the
+                 settlement's own equilibrium reads. The dye vat's own case.
+-->
+<kingdomyardworks>
+  <yardwork Key="vinelattice" DisplayName="vine lattice" Blueprint="r_KingdomVineLattice"
+            Trade="tending the vine" Shades="food:1" />
+  <yardwork Key="hiderack" DisplayName="hide rack" Blueprint="r_KingdomHideRack"
+            Trade="tanning" Shades="craft:1" />
+  <yardwork Key="dyevat" DisplayName="dye vat" Blueprint="r_KingdomDyeVat"
+            Trade="dyeing" Goods="Yes" />
+  <yardwork Key="vellumpress" DisplayName="vellum press" Blueprint="r_KingdomVellumPress"
+            Trade="scrivening" Shades="learning:1" />
+</kingdomyardworks>

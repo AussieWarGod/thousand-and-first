@@ -21,6 +21,11 @@
     <object Blueprint="r_KingdomGuestPilgrim" Number="1" Weight="25" />
     <object Blueprint="r_KingdomGuestNomad" Number="1" Weight="25" />
   </population>
+  <population Name="r_KingdomNotableGuests" Load="Merge">
+    <object Blueprint="r_KingdomNotableGuest" Number="1" Weight="50" />
+    <object Blueprint="r_KingdomNotableGuestScribe" Number="1" Weight="25" />
+    <object Blueprint="r_KingdomNotableGuestTinker" Number="1" Weight="25" />
+  </population>
   <population Name="Tier1Wares" Load="Merge">
     <object Blueprint="r_FounderBasin" Number="1" Chance="25" />
     <object Blueprint="r_FoundingBook" Number="1" Chance="15" />
@@ -28,6 +33,12 @@
   <population Name="Tier2Wares" Load="Merge">
     <object Blueprint="r_FounderBasin" Number="1" Chance="25" />
     <object Blueprint="r_FoundingBook" Number="1" Chance="15" />
+  </population>
+  <population Name="Tier1Wares" Load="Merge">
+    <object Blueprint="r_KingdomCarrySign" Number="1" Chance="20" />
+  </population>
+  <population Name="Tier2Wares" Load="Merge">
+    <object Blueprint="r_KingdomCarrySign" Number="1" Chance="20" />
   </population>
   <population Name="BookTent" Load="Merge">
     <object Blueprint="r_FoundingBook" Number="1" Chance="60" />

@@ -121,6 +121,11 @@ namespace ThousandAndFirst
 			// building spend hands, and only the hands the water detail and the staffing pass have
 			// already finished with (KingdomSystem.AssignedCrew, set by AssignWork above).
 			KingdomMaterials.OnSettlementPass(System, Z);
+			// Last of all, and it spends neither water nor hands: a path is only what is left
+			// behind by people walking to the work the staffing pass already put them on. It runs
+			// after the plot and the plan so that a building raised this pass is already somewhere
+			// the settlement has a reason to go.
+			KingdomRoads.OnSettlementPass(System, Z);
 			if (KingdomLog.Enabled) KingdomLog.Log("growth pass done: pop=" + System.Population + " stage=" + System.Stage + " arrivals=" + arrivals + " dry=" + System.DryStreak + " next=" + System.NextArrivalTick);
 		}
 

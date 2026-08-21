@@ -38,6 +38,10 @@
     <Compile Include="KingdomMaterialRulesTests.cs" />
     <Compile Include="KingdomCatalogueRulesTests.cs" />
     <Compile Include="KingdomCeremonyRulesTests.cs" />
+    <Compile Include="KingdomBountyRulesTests.cs" />
+    <Compile Include="KingdomRoadRulesTests.cs" />
+    <Compile Include="KingdomYardRulesTests.cs" />
+    <Compile Include="KingdomGuestRulesTests.cs" />
     <Compile Include="..\Core\KingdomRules.cs" />
     <Compile Include="..\Core\KingdomLedger.cs" />
     <Compile Include="..\Core\KingdomSettlement.cs" />
@@ -56,10 +60,14 @@
     <Compile Include="..\Growth\KingdomPlotRules.cs" />
     <Compile Include="..\Growth\KingdomMaterialRules.cs" />
     <Compile Include="..\Growth\KingdomCatalogueRules.cs" />
+    <Compile Include="..\Growth\KingdomRoadRules.cs" />
+    <Compile Include="..\Growth\KingdomYardRules.cs" />
+    <Compile Include="..\Quests\KingdomBountyRules.cs" />
     <Compile Include="..\Experience\KingdomVoiceRules.cs" />
     <Compile Include="..\Experience\KingdomOfficeRules.cs" />
     <Compile Include="..\Experience\KingdomLocusRules.cs" />
     <Compile Include="..\Experience\KingdomCeremonyRules.cs" />
+    <Compile Include="..\Experience\KingdomGuestRules.cs" />
     <Compile Include="..\Simulation\Kernel\KernelContracts.cs" />
     <Compile Include="..\Simulation\Kernel\CanonicalBytes.cs" />
     <Compile Include="..\Simulation\Kernel\CounterRandom.cs" />

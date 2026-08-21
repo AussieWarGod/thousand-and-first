@@ -307,6 +307,19 @@ anyone.
 | 55j | Check a chartered caravan after several visits | Occasionally it carries a **pattern-book**: one foreign design chosen from three, merged into what the keepers know. The base catalogue is never gated on the draw |
 | 55k | Appoint an office holder; read their description | One virtue, one flaw, and one or two stated **tastes**. Met tastes shade the settlement up; unmet means their default, never a penalty |
 
+## Pass 18 — The posted price, worn ground, yard trades, and guests
+
+| Step | Action | Expect |
+|---|---|---|
+| 56 | Charter → posted notices (`1`) → post a price to clear a rect | A notice stands at the heart. Nothing is escrowed. Someone takes it on their own judgment on a later pass — attempts, successes and refusals are chronicled **by name**, refusals citing the refuser's own flaw |
+| 56a | Post a price the stores cannot cover | It stands, with the debt written down and named. Paid the day the work finishes, not before. No expiry, no nag; take it down free |
+| 57 | Walk your settlement for several visits | Routes people actually walk wear in: grass → trodden earth → true path. A season away lays exactly what three days lay |
+| 57a | Charter → ground work (`q`) → pave a worn path | Asked first, priced per cell, paid in stone from the stockpiles. Refused by name with no stone, no worn ground, or nobody free |
+| 57b | Check cells under your dropped gear | Never worn, never paved. Wearing only touches open ground |
+| 58 | Charter → your works (`y`) → give a small house a yard trade | Vine lattice, hide rack, dye vat, or vellum press. The house's description and the roll of settlers say the household took up the trade. Letting it go is free |
+| 59 | Return after days away and read the roll | **Guests**: notable travellers logged with one hook each — a ruin, a machine, a debt in a named village. Lodge one in a bed of the right tier and they settle with a trade; ignored, they leave a letter and the hook becomes a rumor — never lost |
+| 60 | Buy a carry-sign from a merchant; plant it on a pile you own out in the world | Confirms exactly what it will take, then porters haul it home over distance-scaled days, one haul in flight. It lands in the stockpiles, chronicled — or a raid threatening the settlement costs the load, chronicled, never silent |
+
 ## Pass 4 — Attitudes and persistence
 
 | Step | Action | Expect |

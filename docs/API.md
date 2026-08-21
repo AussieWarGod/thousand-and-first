@@ -87,6 +87,14 @@ grow is read from the style the founding rite already recorded, not from a secon
 ground. It draws water only after the day's upkeep and arrivals, so it can never be the reason the
 thirst ladder fires, and it deposits only into a dedicated larder.
 
+## Acting on its own judgment
+
+`KingdomBounty` (posted prices: no escrow, completion-paid, deterministic taker draws),
+`KingdomRoads` (worn ground: traffic accrual from stored tick stamps, founder paving),
+`KingdomYards` (one yard trade per small house, registry in `KingdomYardWorks.xml` — mergeable),
+`KingdomGuestbook` (notable guests with hooks that decay into rumors, and the carry-sign's
+distance-scaled hauls, one in flight, mirroring the water manifest's honesty rules).
+
 ## Plots, materials, and gates
 
 The unit of building is the **plot** (`KingdomPlots` / `KingdomPlotRules`): S/M/L/XL rects,

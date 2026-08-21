@@ -132,8 +132,10 @@ namespace ThousandAndFirst
 			return cells;
 		}
 
-		/// <summary>Writes a tally back to the zone, dropping the property entirely when there is
-		/// nothing left to remember.</summary>
+		/// <summary>Writes a tally back to the zone. An empty tally writes the empty string, so a
+		/// settlement nobody walks costs one short property and no bookkeeping.</summary>
+		/// <param name="Z">The zone. Null does nothing.</param>
+		/// <param name="Cells">The tally. Null writes the empty string.</param>
 		public static void WriteTally(Zone Z, IList<KingdomRoadRules.WornCell> Cells)
 		{
 			if (Z == null)
@@ -694,6 +696,11 @@ namespace ThousandAndFirst
 				Failure = "You rule nothing yet.";
 				return false;
 			}
+			if (!Enabled)
+			{
+				Failure = "Ground here does not wear, so there is nothing worn to lay. (Options: the settlement's ways)";
+				return false;
+			}
 			if (Z == null || !System.ClaimedZones.Contains(Z.ZoneID))
 			{
 				Failure = KingdomRoadRules.RefuseNotOurGround();
@@ -733,15 +740,6 @@ namespace ThousandAndFirst
 			{
 				return false;
 			}
-			KingdomMaterialTally price = new KingdomMaterialTally();
-			price.Add(material, cost);
-			if (!stock.Spend(price))
-			{
-				// Measured against the stockpiles rather than trusted from the reading above: the
-				// tally is a snapshot, and a snapshot is exactly as old as the moment it was taken.
-				Failure = KingdomRoadRules.RefuseMaterial(material, cost, stock.Tally.Get(material));
-				return false;
-			}
 			string blueprint = KingdomRoadRules.PavedFloorFor(wall);
 			List<KingdomRoadRules.WornCell> tally = ReadTally(Z);
 			int laid = 0;
@@ -753,13 +751,24 @@ namespace ThousandAndFirst
 					laid++;
 				}
 			}
-			WriteTally(Z, tally);
-			if (laid > 0)
+			if (laid <= 0)
 			{
-				// Paving retires cells from the tally, so the ground the settlement is wearing
-				// now has room to be recorded again, and the reason it stalled is over.
-				Z.SetZoneProperty(FullSaidProperty, "0");
+				// Nothing went down, so nothing is charged. The stockpiles are counted against
+				// what was actually laid rather than what was asked for, because a price quoted
+				// is not a price paid (STANDARDS 1: measure the state change).
+				Failure = "The ground would not take the paving. Nothing was spent.";
+				return false;
 			}
+			WriteTally(Z, tally);
+			KingdomMaterialTally price = new KingdomMaterialTally();
+			price.Add(material, KingdomRoadRules.PaveCost(laid));
+			if (!stock.Spend(price))
+			{
+				KingdomLog.Log("roads: paving was laid at " + System.SeatName + " and the stockpiles could not be charged for it");
+			}
+			// Paving retires cells from the tally, so the ground the settlement is wearing now
+			// has room to be recorded again, and the reason it stalled is over.
+			Z.SetZoneProperty(FullSaidProperty, "0");
 			MessageQueue.AddPlayerMessage(KingdomRoadRules.PavedLine(laid, material, System.SeatName));
 			KingdomChronicle.Record(System, KingdomRoadRules.PavedRecord(laid, material, System.KingdomDisplayName));
 			System.RecordDeed("the paving of the ways at " + System.SeatName);

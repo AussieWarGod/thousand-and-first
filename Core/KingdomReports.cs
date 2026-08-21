@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Collections.Generic;
+using System.Text;
 using XRL;
 using XRL.World;
 
@@ -72,6 +73,9 @@ namespace ThousandAndFirst
 				// Surveyed live for the same reason the pantry is: what the stockpiles hold is a fact
 				// about the ground the founder is standing on, not a field carried on the system.
 				.Append(currentClaimed ? ("\n" + KingdomMaterials.StockLine(currentZone)) : "")
+				// The ways the settlement wore for itself, on the same terms as the stockpiles: a
+				// fact about the ground the founder is standing on, not a field on the system.
+				.Append(currentClaimed ? ("\n" + KingdomRoads.WornLine(currentZone)) : "")
 				// What the settlement can build at, and what the next level costs, so the craft
 				// level is never a number the founder has to reverse-engineer from refusals.
 				.Append(KingdomZoning.Readout(System))
@@ -174,7 +178,21 @@ namespace ThousandAndFirst
 					stringBuilder.Append(" {{K|(came the ").Append(System.RosterArrived[i]).Append(")}}");
 				}
 			}
+			Zone currentZone = The.Player?.CurrentZone;
+			if (currentZone != null && System.ClaimedZones.Contains(currentZone.ZoneID))
+			{
+				List<string> yardLines = KingdomYards.RollLines(currentZone);
+				if (yardLines.Count > 0)
+				{
+					stringBuilder.Append("\n\nTrades taken up:");
+					for (int i = 0; i < yardLines.Count; i++)
+					{
+						stringBuilder.Append("\n").Append(yardLines[i]);
+					}
+				}
+			}
 			stringBuilder.Append("\n\n{{K|").Append(System.RosterNames.Count).Append(" named; ").Append(System.Population).Append(" living in the settlement.}}");
+			stringBuilder.Append(KingdomGuestbook.RollAppendix(System));
 			return stringBuilder.ToString();
 		}
 

@@ -211,6 +211,30 @@ Nothing already standing converts. A settlement raised before plots existed is a
 single-cell works and stays exactly that, working exactly as it did; plots begin with the next thing
 built.
 
+### Yard trades: a house's own sideline (all optional)
+
+A small or middling roofed house (`Plot="S"` or `"M"`, `Category="housing"`, not `Open`) with a
+free cell inside its rect and outside its walls can take up ONE yard trade. The household living
+there takes it up; letting one go is free and returns nothing.
+
+```xml
+<yardwork Key="hiderack" DisplayName="hide rack" Blueprint="r_KingdomHideRack"
+          Trade="tanning" Shades="craft:1" />
+```
+
+| Attribute | Default when absent |
+|---|---|
+| `Key` | Required. |
+| `DisplayName` | Required. |
+| `Blueprint` | Required. The object placed in the yard. |
+| `Trade` | The trade a household is said to take up. Falls back to `DisplayName`. |
+| `Shades` | Nothing. A `support:amount` list in the same language `Carries` uses on a `<building>`, summed and capped small (`KingdomYardRules.MaxShadePerWork`) so a household sideline never competes with a purpose-built work. |
+| `Goods` | `No`. `Yes` marks a trade whose output is a caravan good rather than anything the settlement's own equilibrium reads. |
+
+Entries live in their own file with root `<kingdomyardworks>` (`KingdomYardWorks.xml` ships the
+first-pass set: vine lattice, hide rack, dye vat, vellum press) and are keyed by `Key` the same
+way every other registry is: a later file re-using a Key owns that trade's whole spec.
+
 ### Skins: what a design looks like
 
 A `<building>` may carry `<skin>` children. Each is a `Render` override the founder is offered when

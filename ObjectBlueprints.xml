@@ -50,6 +50,27 @@
   <object Name="r_KingdomGuestNomad" Inherits="r_KingdomGuest">
     <part Name="Render" DisplayName="traveller" Tile="creatures/caste_19.bmp" ColorString="&amp;w" />
   </object>
+
+  <!--
+    Notable guests: rarer than the plain KingdomLocus travellers above, and structurally
+    different — one can be lodged into the settlement. Rolled from r_KingdomNotableGuests
+    (mergeable by other mods, same shape as r_KingdomGuests). r_KingdomNotableGuest (the part)
+    is ThousandAndFirst.KingdomGuestbook.TryLodge's entry point.
+  -->
+  <object Name="r_KingdomNotableGuest" Inherits="BaseFarmer">
+    <part Name="Render" DisplayName="notable traveller" ColorString="&amp;W" />
+    <part Name="Description" Short="Carries themselves like someone with somewhere better to be, and one good reason not to be there yet." />
+    <part Name="Brain" Wanders="true" Hostile="false" />
+    <part Name="r_KingdomNotableGuest" />
+    <tag Name="r_KingdomNotableGuest" />
+    <tag Name="AllowIdleBehavior" />
+  </object>
+  <object Name="r_KingdomNotableGuestScribe" Inherits="r_KingdomNotableGuest">
+    <part Name="Render" DisplayName="notable traveller" Tile="creatures/caste_20.bmp" ColorString="&amp;W" />
+  </object>
+  <object Name="r_KingdomNotableGuestTinker" Inherits="r_KingdomNotableGuest">
+    <part Name="Render" DisplayName="notable traveller" Tile="creatures/caste_21.bmp" ColorString="&amp;W" />
+  </object>
   <object Name="r_KingdomScaffold" Inherits="Furniture">
     <!-- No DetailColor: the scaffold grid is drawn in body pixels only, deliberately, so there is
          nothing for a highlight colour to tint. Adding one would imply a second tone that is not there. -->
@@ -66,6 +87,34 @@
     <part Name="LiquidVolume" MaxVolume="64" Volume="0" />
     <part Name="Physics" Takeable="false" Organic="true" />
     <stat Name="Hitpoints" Value="80" />
+  </object>
+  <object Name="r_KingdomVineLattice" Inherits="Furniture">
+    <stag Name="Contemporary" />
+    <part Name="Render" DisplayName="vine lattice" RenderString="&#8776;" ColorString="&amp;g" DetailColor="G" />
+    <part Name="Description" Short="Watervine trained up a frame of lashed poles, tended for its own sake now rather than the settlement's. Whoever lives here eats a little better for the bother." />
+    <part Name="Physics" Takeable="false" Organic="true" Weight="40" />
+    <stat Name="Hitpoints" Value="30" />
+  </object>
+  <object Name="r_KingdomHideRack" Inherits="Furniture">
+    <stag Name="Contemporary" />
+    <part Name="Render" DisplayName="hide rack" RenderString="&#9633;" ColorString="&amp;w" DetailColor="y" />
+    <part Name="Description" Short="Stretched hides scraped and staked to cure in the sun. The household has taken up tanning, and the smell has followed them home." />
+    <part Name="Physics" Takeable="false" Organic="true" Weight="30" />
+    <stat Name="Hitpoints" Value="30" />
+  </object>
+  <object Name="r_KingdomDyeVat" Inherits="Furniture">
+    <stag Name="Contemporary" />
+    <part Name="Render" DisplayName="dye vat" RenderString="&#9675;" ColorString="&amp;m" DetailColor="C" />
+    <part Name="Description" Short="A cask of dreadroot and iron-salt liquor, stirred with a paddle gone the colour of the dye. What comes out of it rides with the caravans." />
+    <part Name="Physics" Takeable="false" Organic="true" Weight="50" />
+    <stat Name="Hitpoints" Value="40" />
+  </object>
+  <object Name="r_KingdomVellumPress" Inherits="Furniture">
+    <stag Name="Contemporary" />
+    <part Name="Render" DisplayName="vellum press" RenderString="&#9632;" ColorString="&amp;W" DetailColor="w" />
+    <part Name="Description" Short="Scraped skins pinned flat under a weighted board until they lie true enough to write on. Somebody here reads, and somebody here teaches it." />
+    <part Name="Physics" Takeable="false" Organic="true" Weight="35" />
+    <stat Name="Hitpoints" Value="30" />
   </object>
   <object Name="r_KingdomGreatCistern" Inherits="Furniture">
     <stag Name="Contemporary" />
@@ -616,5 +665,35 @@
     <part Name="r_KingdomClearance" />
     <part Name="Physics" Solid="false" Takeable="false" />
     <stat Name="Hitpoints" Value="20" />
+  </object>
+
+  <!-- A posted price. Inherits vanilla "Sign" wholesale rather than declaring a Tile of our
+       own, for the same reason r_KingdomClearanceStake does: STANDARDS.md requires shipped art
+       for anything carrying a Tile attribute, and a notice on a stake owes none.
+       Solid="false" and Takeable="false" matter — the notice stands at the heart where people
+       walk past it, and only the founder takes it off the stake. -->
+  <object Name="r_KingdomNotice" Inherits="Sign">
+    <part Name="Render" DisplayName="a posted notice" ColorString="&amp;W" />
+    <part Name="Description" Short="A notice on a stake, promising fresh water to whoever does what it asks." />
+    <part Name="Chat" Says="[the price, and what it is for.]" ShowInShortDescription="true" />
+    <part Name="r_KingdomNotice" />
+    <part Name="Physics" Solid="false" Takeable="false" />
+    <stat Name="Hitpoints" Value="20" />
+  </object>
+
+  <!-- A cheap crafted marker, planted anywhere in the world on a container or pile the founder
+       owns. Inherits vanilla "Sign" wholesale rather than declaring a Tile of our own, for the
+       same reason r_KingdomPlanMarker and r_KingdomClearanceStake do: STANDARDS.md requires
+       shipped art for anything carrying a Tile attribute, and a plain marker owes none.
+       Takeable="true" because this one is carried and planted, not left standing — it is
+       consumed the instant it is planted (ThousandAndFirst.KingdomGuestbook.AttemptPlantCarrySign
+       obliterates it; there is never a lingering world object to place art on). -->
+  <object Name="r_KingdomCarrySign" Inherits="Sign">
+    <part Name="Render" DisplayName="carry-sign" ColorString="&amp;y" />
+    <part Name="Description" Short="A short stake and a strip of cloth, the kind porters are trained to look for. Plant it on what you mean to have carried home, and walk on." />
+    <part Name="r_KingdomCarrySign" />
+    <part Name="Physics" Solid="false" Takeable="true" Weight="2" />
+    <part Name="Commerce" Value="5" />
+    <stat Name="Hitpoints" Value="10" />
   </object>
 </objects>
