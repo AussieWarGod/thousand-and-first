@@ -439,7 +439,9 @@ anyone.
 | 78d | House a creed-minority settler with a majority household and let real days of shared living pass | Conversion accrues in **cohabitation-days** — days they actually shared a roof, scaled by the quarters' closeness — never in visits. At the line it stops, the word finds you, and eighteen world-days start running |
 | 78e | Break the household up, or pour the water rite | The creed brink lifts. Let the eighteen days run instead — home or away — and the conversion lands, chronicled in two registers that **disagree**, dated to the day it landed |
 | 78f | Drive two cities' quarrel to the breaking point | The realm stands at a **city brink** with nine world-days, and the loudest tier of the warning ladder has already stood for eight days before it. Mend the cause and it lifts; let it run and the city secedes with its ground, people and buildings, whether or not you were there |
-| 78g | Save, reload, and read all three again | Causes, crossing ticks and **warning ticks** all survive. A per-settler brink rides **the settler**, so swapping seats never carries one to the wrong city |
+| 78g | Save, reload, and read all three again | Causes, crossing ticks and **warning ticks** all survive. A per-settler brink is kept under the settler's own `KingdomResidentId`, in their city's book, so swapping seats never carries one to the wrong city |
+| 78m | Warn a settler in one zone, then walk to a **second zone of the same city** and back | The same brink, the same anchor, the same days left. The window lives on the roll now, not on an object, so the zone the person is standing in has nothing to do with it |
+| 78n | Warn a settler, then walk to your **other city** and stay away past the window | It fires on the day it ran out, dated to that day, exactly as 78c does. A city keeps its own roll and reckons it whether you are standing in it or not |
 | 78k | Reach a brink you were never told about — a save from before the word went out — then come back after a year | Nothing has fired. You are warned on the pass that finds it, and the **whole** window starts from that day. Presence is not a shield; ignorance is |
 | 78l | Take a warning while standing somewhere else entirely | It reaches you where you are, framed as word out of the named city, and it is **not** repeated at the seat. Standing in the settlement, you get the plain line and no second telling |
 | 78h | Let a home wear past condemnation with people living in it | It stops counting as a roof — it is not cleared, unbuilt, or moved — and everyone under it is recorded at a roof brink dated to the day the roof went, not to the day you noticed |
@@ -540,6 +542,23 @@ water lane, the point is that what you can watch and what the ledger counts are 
 | 92b | Now leave the mill alone, keep crops in the **larders**, and leave for a week | Different stock, different clock: the settlement pass grinds two crops a day out of the larders into six staples, a net of four servings. `kingdom:status` reports it — *"N more won out of the millstone"* |
 | 92c | Run the larders down to about one day's food and leave again | The mill grinds **nothing**. Industry never eats before the residents do: the day's rations are drawn first, and the mill may only touch what stands above one more day's bill |
 | 92d | Compare the settlement's level with and without the mill standing | The mill's `food:4` is counted **once**. It is subtracted from the clocked daily make because it now delivers physically — a mill that fed the settlement twice would be the bug this step exists to catch |
+
+## Pass 33 — One identity, at most one body
+
+The anti-duplication substrate (`_notes/LIVING-CITY-ARCHITECTURE.md` §3.8, §8.3). W2 ships the
+identity and the registry; **placement is W3**, so what a tester can falsify today is that the
+book's account of who lives here matches the ground and never doubles anybody.
+
+| Step | Action | Expect |
+|---|---|---|
+| 95 | Found a city, let several settlers arrive, then look at any settler in the wish debugger's object inspector | Each carries a `KingdomResidentId`, each one different, and the numbers only ever go up. Reload and they are the same numbers |
+| 95a | Walk between the two zones of one city several times | Nobody is enrolled twice. The roll does not grow when you cross a line, and no log line reports a binding refusal |
+| 95b | Grep the log for `city: check-in bindings` | **Nothing.** The line only appears when the registry has started answering one key with two bodies, and a line here is a bug report |
+| 95c | Charm or recruit a settler and walk them out of the city. Come back and read the roll | They read **Abroad**: still on the roll, and the log says so by name. The person and everything you did to them is untouched — the model says where they are, it does not take them back |
+| 95d | Walk them home again | They read **Resident** again, and the reason for having been away is gone rather than remembered |
+| 95e | Found a second city and walk between the two several times | Ids never collide across cities: the counter is the realm's. One city's roll never appears on the other's |
+| 95f | Save while standing in one city, reload, and read both rolls | Both survive with their bindings. A binding is realm state and is not carried by the seat swap — it is simply still there |
+| 95g | Kill a settler yourself, then leave and come back | The row leaves the roll with the cause the city already tells it by, and the funeral reads exactly as it always did. Nothing about a death changed this wave except where the fact is kept |
 
 ## Pass 32 — What the city costs (the receipt)
 

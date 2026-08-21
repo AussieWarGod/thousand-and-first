@@ -26,7 +26,11 @@ namespace ThousandAndFirst.Simulation.City
 		InvalidCapacity = 9,
 		InvalidLegOrder = 10,
 		OutsideItinerary = 11,
-		StepBudgetExhausted = 12
+		StepBudgetExhausted = 12,
+		DuplicateBinding = 13,
+		UnknownBinding = 14,
+		CauseRequired = 15,
+		TerminalStanding = 16
 	}
 
 	internal static class KingdomCityFaults
@@ -197,11 +201,104 @@ namespace ThousandAndFirst.Simulation.City
 		Shrine = 6
 	}
 
+	/// <summary>
+	/// What the roll says about one settler. LIVING-CITY-ARCHITECTURE &sect;1.2(d) and &sect;8.3.
+	/// <para>
+	/// Three states and no fourth, because these are the three things that can be true of a person
+	/// the model speaks for: they live here; the founder walked them off the map and they are
+	/// somewhere else, on the roll and doing no work; or they are dead and off it. &sect;8.3's whole
+	/// answer to "object or row" is that a body is a view and this is the fact.
+	/// </para>
+	/// </summary>
 	internal enum KingdomResidentStanding : byte
 	{
 		Resident = 0,
 		Abroad = 1,
 		Dead = 2
+	}
+
+	/// <summary>
+	/// Why a row left <see cref="KingdomResidentStanding.Resident"/>.
+	/// <para>
+	/// A small named vocabulary rather than a stored sentence, for the reason the district code is
+	/// a code: the prose belongs in one place and the row carries what the prose is derived from.
+	/// The four death causes are <c>KingdomOfficeRules.DeathCause</c>'s own, in its own order, so
+	/// the funeral the city already tells is the ONE telling &mdash; see
+	/// <c>KingdomResidentRules.TryDeathCauseOrdinal</c>, which is the only bridge between them and
+	/// exists so no second cause vocabulary is ever written.
+	/// </para>
+	/// </summary>
+	internal enum KingdomStandingCause : byte
+	{
+		/// <summary>Nothing has happened. The only cause a <c>Resident</c> row may carry.</summary>
+		None = 0,
+
+		/// <summary>Dead, and no killer was reported. <c>DeathCause.Unknown</c>.</summary>
+		Unwitnessed = 1,
+
+		/// <summary>Dead by a hand the settlement cannot name. <c>DeathCause.Violence</c>.</summary>
+		Violence = 2,
+
+		/// <summary>Dead defending the stores when raiders came. <c>DeathCause.Raid</c>.</summary>
+		Raid = 3,
+
+		/// <summary>Dead by the founder's own hand. <c>DeathCause.Player</c>.</summary>
+		Founder = 4,
+
+		/// <summary>Abroad: walked out following the founder.</summary>
+		Followed = 5,
+
+		/// <summary>Abroad: taken by somebody else's hand &mdash; charmed, recruited, carried
+		/// off.</summary>
+		Taken = 6,
+
+		/// <summary>Abroad: the body is not in the ground the row was bound to, and the realm
+		/// cannot say where it went. Honestly unknown rather than guessed at.</summary>
+		Astray = 7
+	}
+
+	/// <summary>
+	/// One brink window as a row carries it: whether one stands, the tick the line was crossed,
+	/// and the tick the word went out.
+	/// <para>
+	/// LIVING-CITY-ARCHITECTURE &sect;1.2(d) moves these off the settler's property bag, because a
+	/// row is what survives a zone going to disk and a property bag is not. The three fields are
+	/// exactly what <c>BrinkRecord</c> is built from, and the reason <b>stands</b> is kept apart
+	/// from the warned tick is <c>KingdomBrink</c>'s own: "recorded, and the word has not gone out
+	/// yet" and "no brink" are different states rather than the same zero.
+	/// </para>
+	/// <para>
+	/// Seventeen declared bytes; two of them plus a creed reference and a channel are the brink
+	/// half of the ninety-six &sect;0.0(c) budgets the resident row.
+	/// </para>
+	/// </summary>
+	internal readonly struct KingdomBrinkWindow
+	{
+		internal readonly bool Stands;
+
+		internal readonly long ReachedTick;
+
+		/// <summary>The anchor of the window. <c>KingdomBrinkRules.Unwarned</c> until the word
+		/// goes out; a brink at that value has no deadline, however old it is.</summary>
+		internal readonly long WarnedTick;
+
+		internal KingdomBrinkWindow(bool stands, long reachedTick, long warnedTick)
+		{
+			Stands = stands;
+			ReachedTick = stands ? reachedTick : 0L;
+			WarnedTick = stands ? warnedTick : 0L;
+		}
+
+		/// <summary>No brink. What every row carries nearly always.</summary>
+		internal static KingdomBrinkWindow None
+		{
+			get { return new KingdomBrinkWindow(false, 0L, 0L); }
+		}
+
+		internal KingdomBrinkWindow WithWarned(long warnedTick)
+		{
+			return new KingdomBrinkWindow(Stands, ReachedTick, warnedTick);
+		}
 	}
 
 	/// <summary>The named clocks, consolidated off the settlement's loose longs and given an
@@ -428,6 +525,19 @@ namespace ThousandAndFirst.Simulation.City
 	/// <summary>
 	/// One settler. The brink windows that today live as object properties live here instead
 	/// (LIVING-CITY-ARCHITECTURE &sect;1.2(d)), because a row is what survives a zone going to disk.
+	/// <para>
+	/// Ninety-one declared bytes against the ninety-six &sect;0.0(c) budgets, plus the one unique
+	/// heap string per resident. Nothing else here allocates: the bound zone id and the creed a
+	/// brink pulls toward are shared references, exactly as the zone row's id and the work row's
+	/// design key are.
+	/// </para>
+	/// <para>
+	/// <b>What W2 corrected in W1's draft.</b> The warned tick is the anchor the whole window runs
+	/// from (<c>KingdomBrinkRules.WindowSpent</c>), and W1 modelled it as a <c>bool</c>, which
+	/// cannot carry an anchor; and "a brink stands and the word has not gone out yet" was not
+	/// representable apart from "no brink". Both are now what <c>KingdomBrink</c> always kept on
+	/// the property bag, which is what let the storage swap be invisible.
+	/// </para>
 	/// </summary>
 	internal readonly struct KingdomResidentRow
 	{
@@ -452,20 +562,29 @@ namespace ThousandAndFirst.Simulation.City
 
 		internal readonly KingdomResidentStanding Standing;
 
+		/// <summary>Why the row left <see cref="KingdomResidentStanding.Resident"/>.
+		/// <see cref="KingdomStandingCause.None"/> while it has not.</summary>
+		internal readonly KingdomStandingCause Cause;
+
+		/// <summary>The zone the body was last bound in. The registry (&sect;3.8) is what answers
+		/// whether a body is actually there; this is what the row remembers about where to look.</summary>
 		internal readonly string BoundZoneId;
 
-		/// <summary>Roof brink: the tick the founder was warned, and whether they were.</summary>
-		internal readonly long RoofTick;
+		/// <summary>Roof brink: <c>KingdomBrinkRoofStanding</c>, <c>RoofTick</c> and
+		/// <c>RoofWarned</c>, in a row rather than in a property bag.</summary>
+		internal readonly KingdomBrinkWindow RoofBrink;
 
-		internal readonly bool RoofWarned;
+		/// <summary>Creed brink, on the same terms.</summary>
+		internal readonly KingdomBrinkWindow CreedBrink;
 
-		/// <summary>Creed brink: warned tick, whether warned, which way, and by which channel.</summary>
-		internal readonly long CreedTick;
+		/// <summary>The creed a creed brink pulls toward, by faction name. A shared reference:
+		/// creeds are open-ended faction names and there is no code to fold one into that could be
+		/// read back out again.</summary>
+		internal readonly string CreedToward;
 
-		internal readonly bool CreedWarned;
-
-		internal readonly byte CreedToward;
-
+		/// <summary>The <c>ConversionChannel</c> a creed brink was reached through, so the
+		/// conversion that fires at the end of the window picks the same words it would have picked
+		/// on the day.</summary>
 		internal readonly byte CreedChannel;
 
 		internal KingdomResidentRow(
@@ -479,12 +598,11 @@ namespace ThousandAndFirst.Simulation.City
 			byte jobRole,
 			KingdomDayShape dayShape,
 			KingdomResidentStanding standing,
+			KingdomStandingCause cause,
 			string boundZoneId,
-			long roofTick,
-			bool roofWarned,
-			long creedTick,
-			bool creedWarned,
-			byte creedToward,
+			KingdomBrinkWindow roofBrink,
+			KingdomBrinkWindow creedBrink,
+			string creedToward,
 			byte creedChannel)
 		{
 			ResidentId = residentId;
@@ -497,19 +615,73 @@ namespace ThousandAndFirst.Simulation.City
 			JobRole = jobRole;
 			DayShape = dayShape;
 			Standing = standing;
+			Cause = cause;
 			BoundZoneId = boundZoneId;
-			RoofTick = roofTick;
-			RoofWarned = roofWarned;
-			CreedTick = creedTick;
-			CreedWarned = creedWarned;
-			CreedToward = creedToward;
-			CreedChannel = creedChannel;
+			RoofBrink = roofBrink;
+			CreedBrink = creedBrink;
+			// A creed a brink no longer stands toward is not remembered: the row would otherwise
+			// keep naming a pull that has been arrested, and KingdomBrink.Lift's whole contract is
+			// that a lifted brink is forgotten rather than banked.
+			CreedToward = creedBrink.Stands ? (string.IsNullOrEmpty(creedToward) ? null : creedToward) : null;
+			CreedChannel = creedBrink.Stands ? creedChannel : (byte)0;
 		}
 
-		internal KingdomResidentRow WithStanding(KingdomResidentStanding standing)
+		/// <summary>The brink of this kind as the row holds it. Total over the enum: a kind the row
+		/// has no window for reads as no brink rather than as the roof's.</summary>
+		internal KingdomBrinkWindow BrinkOf(BrinkKind kind)
+		{
+			switch (kind)
+			{
+			case BrinkKind.Roof:
+				return RoofBrink;
+			case BrinkKind.Creed:
+				return CreedBrink;
+			default:
+				return KingdomBrinkWindow.None;
+			}
+		}
+
+		/// <summary>This row with one brink window replaced. The creed reference and channel travel
+		/// with the creed window and are ignored for any other kind, which is what stops a roof
+		/// brink from ever acquiring a creed.</summary>
+		internal KingdomResidentRow WithBrink(BrinkKind kind, KingdomBrinkWindow window, string creedToward, byte creedChannel)
+		{
+			switch (kind)
+			{
+			case BrinkKind.Roof:
+				return new KingdomResidentRow(ResidentId, Name, OriginCode, CreedCode, ArrivedTick, HomeWorkId, JobWorkId,
+					JobRole, DayShape, Standing, Cause, BoundZoneId, window, CreedBrink, CreedToward, CreedChannel);
+			case BrinkKind.Creed:
+				return new KingdomResidentRow(ResidentId, Name, OriginCode, CreedCode, ArrivedTick, HomeWorkId, JobWorkId,
+					JobRole, DayShape, Standing, Cause, BoundZoneId, RoofBrink, window, creedToward, creedChannel);
+			default:
+				return this;
+			}
+		}
+
+		/// <summary>This row standing somewhere else, with the reason. The transition RULES live in
+		/// <c>KingdomResidentRules</c>; this is only how a row is rewritten once they have
+		/// allowed it.</summary>
+		internal KingdomResidentRow WithStanding(KingdomResidentStanding standing, KingdomStandingCause cause)
 		{
 			return new KingdomResidentRow(ResidentId, Name, OriginCode, CreedCode, ArrivedTick, HomeWorkId, JobWorkId,
-				JobRole, DayShape, standing, BoundZoneId, RoofTick, RoofWarned, CreedTick, CreedWarned, CreedToward, CreedChannel);
+				JobRole, DayShape, standing, cause, BoundZoneId, RoofBrink, CreedBrink, CreedToward, CreedChannel);
+		}
+
+		/// <summary>This row bound to other ground. Placement is W3; what W2 ships is the fact that
+		/// the row knows where its body was last seen.</summary>
+		internal KingdomResidentRow WithBoundZone(string boundZoneId)
+		{
+			return new KingdomResidentRow(ResidentId, Name, OriginCode, CreedCode, ArrivedTick, HomeWorkId, JobWorkId,
+				JobRole, DayShape, Standing, Cause, boundZoneId, RoofBrink, CreedBrink, CreedToward, CreedChannel);
+		}
+
+		/// <summary>This row with what the ground says about the person: their name, where they came
+		/// from, what they hold with, and the work they are posted to.</summary>
+		internal KingdomResidentRow WithReading(string name, int originCode, int creedCode, int homeWorkId, int jobWorkId, byte jobRole, KingdomDayShape dayShape)
+		{
+			return new KingdomResidentRow(ResidentId, name, originCode, creedCode, ArrivedTick, homeWorkId, jobWorkId,
+				jobRole, dayShape, Standing, Cause, BoundZoneId, RoofBrink, CreedBrink, CreedToward, CreedChannel);
 		}
 	}
 
@@ -763,6 +935,59 @@ namespace ThousandAndFirst.Simulation.City
 		internal bool TryResident(int index, out KingdomResidentRow row)
 		{
 			return TryRow(residents, index, out row);
+		}
+
+		/// <summary>
+		/// Where the row for this resident id sits, or false.
+		/// <para>
+		/// LIVING-CITY-ARCHITECTURE &sect;8.3: the id is the identity and the body is a view, so
+		/// every reader that starts from a settler starts here. A linear walk over at most sixty
+		/// rows and no dictionary, for the reason &sect;0.0(c) gives about per-row object headers:
+		/// a map keyed on sixty ints would cost more to hold than the rows it indexes.
+		/// </para>
+		/// </summary>
+		internal bool TryResidentIndex(int residentId, out int index)
+		{
+			for (index = 0; index < residents.Length; index++)
+			{
+				if (residents[index].ResidentId == residentId)
+				{
+					return true;
+				}
+			}
+			index = -1;
+			return false;
+		}
+
+		/// <summary>
+		/// This book with a whole new roster, in one copy-on-write publish. Refuses over the cap
+		/// and refuses a duplicated id rather than seating a settler twice &mdash; the row-level
+		/// half of invariant I3, checked where the roster is written rather than where it is read.
+		/// </summary>
+		internal bool TryWithResidents(KingdomResidentRow[] rows, out KingdomCityState next, out KingdomCityFault fault)
+		{
+			next = null;
+			int count = Length(rows);
+			if (count > MaxResidents)
+			{
+				fault = KingdomCityFault.RowCapExceeded;
+				return false;
+			}
+			for (int i = 0; i < count; i++)
+			{
+				for (int j = i + 1; j < count; j++)
+				{
+					if (rows[i].ResidentId == rows[j].ResidentId)
+					{
+						fault = KingdomCityFault.DuplicateBinding;
+						return false;
+					}
+				}
+			}
+			next = new KingdomCityState(SchemaVersion, RulesVersion, SettlementId, ProcessedThroughTick, Stocks,
+				zones, works, Copy(rows), clocks, told, toldCount, toldNext);
+			fault = KingdomCityFault.None;
+			return true;
 		}
 
 		internal bool TryClock(int index, out KingdomClockRow row)

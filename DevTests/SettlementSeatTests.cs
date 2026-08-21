@@ -17,11 +17,17 @@ namespace ThousandAndFirst.Tests
 	{
 		/// <summary>Realm state: one faction, one history. None of this may live on a city, or
 		/// walking between cities would rewrite the realm.</summary>
-		private static readonly string[] RealmOnlyFields = new string[12]
+		private static readonly string[] RealmOnlyFields = new string[15]
 		{
 			"KingdomFactionName", "KingdomDisplayName", "Standings", "ChronicleEntries", "OutsiderEntries",
 			"SerializationVersion", "LoadFailed", "HomecomingDays", "ActiveDealKeys", "ActiveDealFactions",
-			"DealNextTicks", "Away"
+			"DealNextTicks", "Away",
+			// LIVING-CITY-ARCHITECTURE §3.8: the binding registry and the id counter under it are
+			// realm-scope, because a bound body can be standing in the other city's ground or walked
+			// off the map entirely. A registry a seat swap carried would answer for half the realm
+			// and lose the other half every time the founder crossed a zone line, and two per-city id
+			// counters would hand the same number to two people.
+			"Bindings", "ResidentCounter", "DedicationCounter"
 		};
 
 		/// <summary>Fields that must be on a city, named here only so the reflective tests cannot
@@ -409,6 +415,90 @@ namespace ThousandAndFirst.Tests
 			}
 			Assert.Fail("SettlementSeatTests cannot fill " + Field.Name + " of type " + type.Name + ". Teach SampleValue that type, or the carry test is not covering the field.");
 			return null;
+		}
+
+		/// <summary>
+		/// The seat swap carries the registry intact, which for realm state means it carries it by
+		/// NOT TOUCHING IT. LIVING-CITY-ARCHITECTURE §3.8, and the reason the registry does not live
+		/// on a settlement: a body bound in the city the founder just walked out of is still bound
+		/// after they walk into the other one.
+		/// </summary>
+		[Test]
+		public void ASeatSwapLeavesTheBindingRegistryExactlyAsItFoundIt()
+		{
+			ThousandAndFirst.Simulation.City.KingdomBindingRegistry registry = new ThousandAndFirst.Simulation.City.KingdomBindingRegistry();
+			ThousandAndFirst.Simulation.City.KingdomBindingTable table;
+			ThousandAndFirst.Simulation.City.KingdomCityFault fault;
+			Assert.IsTrue(ThousandAndFirst.Simulation.City.KingdomBindingTable.Empty.TryBind(
+				7, ThousandAndFirst.Simulation.City.KingdomBindingKind.Resident, "JoppaWorld.11.22.1.1.10", "obj-7", 700L,
+				out table, out fault), fault.ToString());
+			Assert.IsTrue(registry.TryPublish(table, out fault), fault.ToString());
+
+			// The whole swap, both directions, over a realm holding two cities.
+			KingdomSettlement seat = new KingdomSettlement();
+			seat.SettlementName = "Kavvat";
+			seat.ClaimedZones.Add("JoppaWorld.11.22.1.1.10");
+			KingdomSettlement away = new KingdomSettlement();
+			away.SettlementName = "Ezra";
+			away.ClaimedZones.Add("JoppaWorld.30.30.1.1.10");
+			KingdomSettlement capturedSeat = new KingdomSettlement();
+			capturedSeat.ReadFrom(seat);
+			KingdomSettlement nowSeated = new KingdomSettlement();
+			away.WriteTo(nowSeated);
+
+			// Nothing in the swap can reach the registry: it is not among the fields a city carries.
+			Assert.IsFalse(CarriedFieldNames().Contains("Bindings"));
+			ThousandAndFirst.Simulation.City.KingdomBindingTable after;
+			Assert.IsTrue(registry.TryRead(out after, out fault), fault.ToString());
+			ThousandAndFirst.Simulation.City.KingdomBinding binding;
+			Assert.IsTrue(after.TryGet(7, ThousandAndFirst.Simulation.City.KingdomBindingKind.Resident, out binding),
+				"a body bound in the city the founder walked out of is still bound after they walk into the other");
+			Assert.AreEqual("JoppaWorld.11.22.1.1.10", binding.ZoneId);
+			Assert.AreEqual(700L, binding.MintedTick);
+		}
+
+		/// <summary>Every city carries its own book, and the two books are never the same object:
+		/// a resident row written in one city must not appear on the other's roll.</summary>
+		[Test]
+		public void EachCityCarriesItsOwnBookOfResidents()
+		{
+			KingdomSettlement seat = new KingdomSettlement();
+			Enrol(seat, 7);
+			KingdomSettlement away = new KingdomSettlement();
+			Enrol(away, 9);
+			KingdomSettlement capturedSeat = new KingdomSettlement();
+			capturedSeat.ReadFrom(seat);
+			KingdomSettlement nowSeated = new KingdomSettlement();
+			away.WriteTo(nowSeated);
+			Assert.AreNotSame(capturedSeat.City, nowSeated.City);
+			Assert.AreEqual(1, capturedSeat.City.ResidentCount);
+			Assert.AreEqual(1, nowSeated.City.ResidentCount);
+			int index;
+			Assert.IsTrue(capturedSeat.City.TryResidentRow(7, out index));
+			Assert.IsFalse(capturedSeat.City.TryResidentRow(9, out index), "one city's roll must never appear on the other's");
+			Assert.IsTrue(nowSeated.City.TryResidentRow(9, out index));
+			Assert.IsFalse(nowSeated.City.TryResidentRow(7, out index));
+		}
+
+		/// <summary>Writes one settler onto a city's book through its only publisher, so the
+		/// columns stay square — a book filled a column at a time is a book Normalize truncates,
+		/// which is the repair working rather than a test fixture.</summary>
+		private static void Enrol(KingdomSettlement city, int residentId)
+		{
+			ThousandAndFirst.Simulation.City.KingdomCityState state;
+			ThousandAndFirst.Simulation.City.KingdomCityFault fault;
+			Assert.IsTrue(city.City.TryRead(out state, out fault), fault.ToString());
+			ThousandAndFirst.Simulation.City.KingdomCityState peopled;
+			Assert.IsTrue(state.TryWithResidents(new ThousandAndFirst.Simulation.City.KingdomResidentRow[1]
+			{
+				new ThousandAndFirst.Simulation.City.KingdomResidentRow(residentId, "Ptoh", 0, 0, 400L, 0, 0, 0,
+					ThousandAndFirst.Simulation.City.KingdomDayShape.Hearth,
+					ThousandAndFirst.Simulation.City.KingdomResidentStanding.Resident,
+					ThousandAndFirst.Simulation.City.KingdomStandingCause.None, "JoppaWorld.11.22.1.1.10",
+					ThousandAndFirst.Simulation.City.KingdomBrinkWindow.None,
+					ThousandAndFirst.Simulation.City.KingdomBrinkWindow.None, null, 0)
+			}, out peopled, out fault), fault.ToString());
+			Assert.IsTrue(city.City.TryPublish(peopled, out fault), fault.ToString());
 		}
 
 		/// <summary>A seat that has room for two of a city's fields and no more. Stands in for the

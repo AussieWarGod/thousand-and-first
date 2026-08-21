@@ -140,17 +140,36 @@ namespace ThousandAndFirst.Simulation.City
 
 		public List<int> ResidentStandings = new List<int>();
 
+		/// <summary>Why a row left <c>Resident</c>. LIVING-CITY-ARCHITECTURE &sect;8.3: a body the
+		/// player killed reads back as Dead <b>with a cause</b>, and a cause nobody wrote down is
+		/// the half of that sentence that would have gone missing.</summary>
+		public List<int> ResidentCauses = new List<int>();
+
 		public List<string> ResidentBoundZoneIds = new List<string>();
+
+		/// <summary>One when a roof brink stands over this settler at all. Kept apart from the
+		/// warned tick so that "recorded, and the word has not gone out yet" and "no brink" are
+		/// different states rather than the same zero &mdash; <c>KingdomBrink</c>'s own rule, and
+		/// the reason the property it replaced existed.</summary>
+		public List<int> ResidentRoofStanding = new List<int>();
 
 		public List<long> ResidentRoofTicks = new List<long>();
 
-		public List<int> ResidentRoofWarned = new List<int>();
+		/// <summary>The tick the founder was warned, and the anchor the whole window runs from.
+		/// A <c>long</c>, not a flag: <c>KingdomBrinkRules.WindowSpent</c> counts world-days from
+		/// this number.</summary>
+		public List<long> ResidentRoofWarnedTicks = new List<long>();
+
+		public List<int> ResidentCreedStanding = new List<int>();
 
 		public List<long> ResidentCreedTicks = new List<long>();
 
-		public List<int> ResidentCreedWarned = new List<int>();
+		public List<long> ResidentCreedWarnedTicks = new List<long>();
 
-		public List<int> ResidentCreedToward = new List<int>();
+		/// <summary>The creed a brink pulls toward, by faction name. A name and not a code: creeds
+		/// are open-ended faction names, and the conversion that fires at the end of the window
+		/// needs the one it was recorded with.</summary>
+		public List<string> ResidentCreedToward = new List<string>();
 
 		public List<int> ResidentCreedChannels = new List<int>();
 
@@ -303,20 +322,24 @@ namespace ThousandAndFirst.Simulation.City
 			ResidentJobRoles = Repair(ResidentJobRoles);
 			ResidentDayShapes = Repair(ResidentDayShapes);
 			ResidentStandings = Repair(ResidentStandings);
+			ResidentCauses = Repair(ResidentCauses);
 			ResidentBoundZoneIds = Repair(ResidentBoundZoneIds);
+			ResidentRoofStanding = Repair(ResidentRoofStanding);
 			ResidentRoofTicks = Repair(ResidentRoofTicks);
-			ResidentRoofWarned = Repair(ResidentRoofWarned);
+			ResidentRoofWarnedTicks = Repair(ResidentRoofWarnedTicks);
+			ResidentCreedStanding = Repair(ResidentCreedStanding);
 			ResidentCreedTicks = Repair(ResidentCreedTicks);
-			ResidentCreedWarned = Repair(ResidentCreedWarned);
+			ResidentCreedWarnedTicks = Repair(ResidentCreedWarnedTicks);
 			ResidentCreedToward = Repair(ResidentCreedToward);
 			ResidentCreedChannels = Repair(ResidentCreedChannels);
-			int residents = Shortest(new int[17]
+			int residents = Shortest(new int[20]
 			{
 				ResidentIds.Count, ResidentNames.Count, ResidentOriginCodes.Count,
 				ResidentCreedCodes.Count, ResidentArrivedTicks.Count, ResidentHomeWorkIds.Count,
 				ResidentJobWorkIds.Count, ResidentJobRoles.Count, ResidentDayShapes.Count,
-				ResidentStandings.Count, ResidentBoundZoneIds.Count, ResidentRoofTicks.Count,
-				ResidentRoofWarned.Count, ResidentCreedTicks.Count, ResidentCreedWarned.Count,
+				ResidentStandings.Count, ResidentCauses.Count, ResidentBoundZoneIds.Count,
+				ResidentRoofStanding.Count, ResidentRoofTicks.Count, ResidentRoofWarnedTicks.Count,
+				ResidentCreedStanding.Count, ResidentCreedTicks.Count, ResidentCreedWarnedTicks.Count,
 				ResidentCreedToward.Count, ResidentCreedChannels.Count
 			});
 			if (residents > KingdomCityState.MaxResidents)
@@ -333,13 +356,34 @@ namespace ThousandAndFirst.Simulation.City
 			Trim(ResidentJobRoles, residents);
 			Trim(ResidentDayShapes, residents);
 			Trim(ResidentStandings, residents);
+			Trim(ResidentCauses, residents);
 			Trim(ResidentBoundZoneIds, residents);
+			Trim(ResidentRoofStanding, residents);
 			Trim(ResidentRoofTicks, residents);
-			Trim(ResidentRoofWarned, residents);
+			Trim(ResidentRoofWarnedTicks, residents);
+			Trim(ResidentCreedStanding, residents);
 			Trim(ResidentCreedTicks, residents);
-			Trim(ResidentCreedWarned, residents);
+			Trim(ResidentCreedWarnedTicks, residents);
 			Trim(ResidentCreedToward, residents);
 			Trim(ResidentCreedChannels, residents);
+			for (int i = 0; i < residents; i++)
+			{
+				if (ResidentNames[i] == null)
+				{
+					ResidentNames[i] = "";
+				}
+				if (ResidentBoundZoneIds[i] == null)
+				{
+					ResidentBoundZoneIds[i] = "";
+				}
+				// A row whose standing and cause disagree is repaired toward the STANDING, because
+				// the standing is what every consumer branches on and a mismatched cause would let
+				// a living settler carry a death clause into a memorial.
+				if (!KingdomResidentRules.CauseFits((KingdomResidentStanding)ResidentStandings[i], (KingdomStandingCause)ResidentCauses[i]))
+				{
+					ResidentCauses[i] = (int)DefaultCauseFor((KingdomResidentStanding)ResidentStandings[i]);
+				}
+			}
 
 			ClockKinds = Repair(ClockKinds);
 			ClockNextDueTicks = Repair(ClockNextDueTicks);
@@ -404,6 +448,158 @@ namespace ThousandAndFirst.Simulation.City
 					ZoneLastReadTicks[i] = 0L;
 				}
 			}
+		}
+
+		/// <summary>Repairs the resident columns only if they are ragged. Square columns are the
+		/// ordinary case and cost one length comparison per column to confirm.</summary>
+		private void EnsureResidentColumnsSquare()
+		{
+			// A null column is an absent named field, which is ragged in the strongest sense; Rows
+			// answers -1 for one so the comparison below can never be true.
+			int count = Rows(ResidentIds);
+			if (count >= 0
+				&& Rows(ResidentNames) == count && Rows(ResidentOriginCodes) == count && Rows(ResidentCreedCodes) == count
+				&& Rows(ResidentArrivedTicks) == count && Rows(ResidentHomeWorkIds) == count
+				&& Rows(ResidentJobWorkIds) == count && Rows(ResidentJobRoles) == count
+				&& Rows(ResidentDayShapes) == count && Rows(ResidentStandings) == count
+				&& Rows(ResidentCauses) == count && Rows(ResidentBoundZoneIds) == count
+				&& Rows(ResidentRoofStanding) == count && Rows(ResidentRoofTicks) == count
+				&& Rows(ResidentRoofWarnedTicks) == count && Rows(ResidentCreedStanding) == count
+				&& Rows(ResidentCreedTicks) == count && Rows(ResidentCreedWarnedTicks) == count
+				&& Rows(ResidentCreedToward) == count && Rows(ResidentCreedChannels) == count)
+			{
+				return;
+			}
+			Normalize();
+		}
+
+		private static int Rows<T>(List<T> column)
+		{
+			return (column == null) ? -1 : column.Count;
+		}
+
+		/// <summary>
+		/// The cause a standing carries when the stored one did not fit it. <c>Resident</c> carries
+		/// none; a <c>Dead</c> or <c>Abroad</c> row falls back to the honestly-unknown member of its
+		/// own family rather than to a story nobody witnessed.
+		/// </summary>
+		private static KingdomStandingCause DefaultCauseFor(KingdomResidentStanding standing)
+		{
+			switch (standing)
+			{
+			case KingdomResidentStanding.Dead:
+				return KingdomStandingCause.Unwitnessed;
+			case KingdomResidentStanding.Abroad:
+				return KingdomStandingCause.Astray;
+			default:
+				return KingdomStandingCause.None;
+			}
+		}
+
+		/// <summary>
+		/// The resident row for this id, or false. The lookup every reader that starts from a
+		/// settler's body goes through &mdash; <c>KingdomBrink</c> above all, whose whole storage
+		/// layer is now this index plus a column read.
+		/// </summary>
+		public bool TryResidentRow(int residentId, out int index)
+		{
+			index = -1;
+			// Zero is not an identity, and a null column is a book nothing has ever been written
+			// to: both are "no row here" rather than a reason to fault.
+			if (residentId == 0 || ResidentIds == null)
+			{
+				return false;
+			}
+			for (int i = 0; i < ResidentIds.Count; i++)
+			{
+				if (ResidentIds[i] == residentId)
+				{
+					index = i;
+					return true;
+				}
+			}
+			return false;
+		}
+
+		/// <summary>
+		/// One settler's brink of one kind, straight off the columns.
+		/// <para>
+		/// Reads the columns rather than materialising the whole model, exactly as
+		/// <c>KingdomCity.OtherZones</c> does and for the same reason: this is called once per
+		/// settler per pass by three separate consumers, and a full <see cref="TryRead"/> per call
+		/// would allocate a city to answer a question about one person.
+		/// </para>
+		/// <para>
+		/// <see cref="Normalize"/> runs only when the resident columns are NOT square, which is a
+		/// state only a save written by another build can produce &mdash; every load path and the
+		/// one publisher leave them square. A repair on every read would be O(rows) over thirty
+		/// columns, several hundred times a pass, to fix something that is already fixed.
+		/// </para>
+		/// </summary>
+		/// <returns>False when this book holds no row for that id, which is the caller's signal
+		/// that the settler belongs to some other city or to none.</returns>
+		public bool TryReadBrink(int residentId, BrinkKind kind, out bool stands, out long reachedTick, out long warnedTick, out string toward, out int channel)
+		{
+			stands = false;
+			reachedTick = 0L;
+			warnedTick = 0L;
+			toward = null;
+			channel = 0;
+			EnsureResidentColumnsSquare();
+			int index;
+			if (!TryResidentRow(residentId, out index) || (kind != BrinkKind.Roof && kind != BrinkKind.Creed))
+			{
+				return false;
+			}
+			bool creed = kind == BrinkKind.Creed;
+			stands = (creed ? ResidentCreedStanding[index] : ResidentRoofStanding[index]) != 0;
+			if (!stands)
+			{
+				return true;
+			}
+			reachedTick = creed ? ResidentCreedTicks[index] : ResidentRoofTicks[index];
+			warnedTick = creed ? ResidentCreedWarnedTicks[index] : ResidentRoofWarnedTicks[index];
+			if (creed)
+			{
+				toward = string.IsNullOrEmpty(ResidentCreedToward[index]) ? null : ResidentCreedToward[index];
+				channel = ResidentCreedChannels[index];
+			}
+			return true;
+		}
+
+		/// <summary>
+		/// Writes one settler's brink of one kind back into the columns.
+		/// <para>
+		/// A single-row write and not a republish, because that is what this actually is: the brink
+		/// consumers change one person's window and nothing else, and rebuilding the whole book
+		/// around each of those would make a fault in an unrelated row able to swallow a warning.
+		/// A lifted brink clears its own fields, so a forgotten brink leaves nothing behind for a
+		/// later read to half-believe.
+		/// </para>
+		/// </summary>
+		public bool TryWriteBrink(int residentId, BrinkKind kind, bool stands, long reachedTick, long warnedTick, string toward, int channel)
+		{
+			EnsureResidentColumnsSquare();
+			int index;
+			if (!TryResidentRow(residentId, out index) || (kind != BrinkKind.Roof && kind != BrinkKind.Creed))
+			{
+				return false;
+			}
+			long reached = stands ? ((reachedTick > 0L) ? reachedTick : 0L) : 0L;
+			long warned = stands ? ((warnedTick > 0L) ? warnedTick : 0L) : 0L;
+			if (kind == BrinkKind.Creed)
+			{
+				ResidentCreedStanding[index] = stands ? 1 : 0;
+				ResidentCreedTicks[index] = reached;
+				ResidentCreedWarnedTicks[index] = warned;
+				ResidentCreedToward[index] = (stands && !string.IsNullOrEmpty(toward)) ? toward : "";
+				ResidentCreedChannels[index] = stands ? channel : 0;
+				return true;
+			}
+			ResidentRoofStanding[index] = stands ? 1 : 0;
+			ResidentRoofTicks[index] = reached;
+			ResidentRoofWarnedTicks[index] = warned;
+			return true;
 		}
 
 		/// <summary>The zone row for this id, or false. The one lookup every re-plumbed sighting
@@ -481,12 +677,11 @@ namespace ThousandAndFirst.Simulation.City
 					(byte)ResidentJobRoles[i],
 					(KingdomDayShape)ResidentDayShapes[i],
 					(KingdomResidentStanding)ResidentStandings[i],
+					(KingdomStandingCause)ResidentCauses[i],
 					ResidentBoundZoneIds[i],
-					ResidentRoofTicks[i],
-					ResidentRoofWarned[i] != 0,
-					ResidentCreedTicks[i],
-					ResidentCreedWarned[i] != 0,
-					(byte)ResidentCreedToward[i],
+					new KingdomBrinkWindow(ResidentRoofStanding[i] != 0, ResidentRoofTicks[i], ResidentRoofWarnedTicks[i]),
+					new KingdomBrinkWindow(ResidentCreedStanding[i] != 0, ResidentCreedTicks[i], ResidentCreedWarnedTicks[i]),
+					ResidentCreedToward[i],
 					(byte)ResidentCreedChannels[i]);
 			}
 			KingdomClockRow[] clocks = new KingdomClockRow[ClockKinds.Count];
@@ -617,12 +812,15 @@ namespace ThousandAndFirst.Simulation.City
 				ResidentJobRoles.Add(row.JobRole);
 				ResidentDayShapes.Add((int)row.DayShape);
 				ResidentStandings.Add((int)row.Standing);
+				ResidentCauses.Add((int)row.Cause);
 				ResidentBoundZoneIds.Add(row.BoundZoneId ?? "");
-				ResidentRoofTicks.Add(row.RoofTick);
-				ResidentRoofWarned.Add(row.RoofWarned ? 1 : 0);
-				ResidentCreedTicks.Add(row.CreedTick);
-				ResidentCreedWarned.Add(row.CreedWarned ? 1 : 0);
-				ResidentCreedToward.Add(row.CreedToward);
+				ResidentRoofStanding.Add(row.RoofBrink.Stands ? 1 : 0);
+				ResidentRoofTicks.Add(row.RoofBrink.ReachedTick);
+				ResidentRoofWarnedTicks.Add(row.RoofBrink.WarnedTick);
+				ResidentCreedStanding.Add(row.CreedBrink.Stands ? 1 : 0);
+				ResidentCreedTicks.Add(row.CreedBrink.ReachedTick);
+				ResidentCreedWarnedTicks.Add(row.CreedBrink.WarnedTick);
+				ResidentCreedToward.Add(row.CreedToward ?? "");
 				ResidentCreedChannels.Add(row.CreedChannel);
 			}
 			for (int i = 0; i < state.ClockCount; i++)
@@ -696,11 +894,14 @@ namespace ThousandAndFirst.Simulation.City
 			ResidentJobRoles.Clear();
 			ResidentDayShapes.Clear();
 			ResidentStandings.Clear();
+			ResidentCauses.Clear();
 			ResidentBoundZoneIds.Clear();
+			ResidentRoofStanding.Clear();
 			ResidentRoofTicks.Clear();
-			ResidentRoofWarned.Clear();
+			ResidentRoofWarnedTicks.Clear();
+			ResidentCreedStanding.Clear();
 			ResidentCreedTicks.Clear();
-			ResidentCreedWarned.Clear();
+			ResidentCreedWarnedTicks.Clear();
 			ResidentCreedToward.Clear();
 			ResidentCreedChannels.Clear();
 			ClockKinds.Clear();

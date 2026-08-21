@@ -563,7 +563,8 @@ could not cover stays on the row and is told; it is never silently forgiven.
 |---|---|
 | `KingdomSettlement.City` / `KingdomSystem.City` | The settlement's book, and the flat field the seat swap carries it in. |
 | `KingdomCityBook` | The serialized carrier: named-field `IComposite`, flat primitive columns, one row family per group of columns. `Normalize()` repairs a book read from a save — a null column becomes empty, **ragged columns are truncated to the shortest** (a row half of whose fields are missing is not a row), rows past their cap are dropped, and an overlong told-log keeps its newest lines. |
-| `KingdomCityBook.ZoneCount` / `WorkCount` / `ResidentCount` / `ToldCount` / `TryZoneRow(string, out int)` | What the book holds, and the one lookup every re-plumbed sighting reader goes through. |
+| `KingdomCityBook.ZoneCount` / `WorkCount` / `ResidentCount` / `ToldCount` / `TryZoneRow(string, out int)` / `TryResidentRow(int, out int)` | What the book holds, and the two lookups every re-plumbed reader goes through — by zone id for a sighting, by `KingdomResidentId` for a person. |
+| `KingdomCityBook.TryReadBrink(int, BrinkKind, …)` / `TryWriteBrink(int, BrinkKind, …)` | Where a settler's brink windows live since W2. Column reads keyed on the resident id, not a whole-model read: three consumers ask this once per settler per pass. |
 | `KingdomCity.CheckIn(KingdomSystem, Zone, KingdomSurvey, long)` | The pass's first word with the book. See above for the order, which is load-bearing. |
 | `KingdomCity.CheckOut(KingdomSystem, Zone, KingdomSurvey, long)` / `OnSuspending(KingdomSystem, Zone)` | The two readings. `OnSuspending` filters to zones the seated realm claims and takes its own survey. |
 | `KingdomCity.RecordSupports(...)` / `RecordLarder(...)` | Where `KingdomSubsidence.RecordZone` and `KingdomCrops.RecordLarders` now write. |
@@ -571,6 +572,7 @@ could not cover stays on the row and is told; it is never silently forgiven.
 | `KingdomCity.AuditLine(KingdomSystem, Zone, KingdomSurvey)` / `OwedThirds(KingdomSystem)` | The §3.9 audit as one greppable line — model total, ground total, and what stands between them — and everything the city still owes, in weighted thirds. |
 | `KingdomCity.DedicationOrderProperty` (`KingdomDedicationOrder`) | Dedication order as a stored fact. Minted the first pass that counts a container as the city's, and never moved afterwards; an unstamped container sorts **last**. |
 | `KingdomSystem.SimulationSeedHigh` / `SimulationSeedLow` / `MintSimulationSeed(int worldSeed, string realmName, long foundedTick)` | The realm's kernel seed, minted once at founding from the world seed, the realm's name and the tick the water was poured — deterministic across a reload, separated between realms, and refused rather than re-minted. |
+| `KingdomSystem.Bindings` / `ResidentCounter` | The realm's binding registry and its id counter. **Realm-scope, never carried by a city** — see below. |
 
 **The receipt.** Every reckoning goes through the executor seam and leaves one line in Player.log
 behind the dev-log option, in the shape the log-watcher reads:
@@ -582,6 +584,71 @@ behind the dev-log option, in the shape the log-watcher reads:
 
 A figure that crosses a budget is prefixed `BUDGET` and names the budget it broke. The lanes and
 their rungs live in `KingdomBudgetRules` and nowhere else.
+
+## Residents as rows, and the binding registry
+
+> Design: `_notes/LIVING-CITY-ARCHITECTURE.md` §1.2(d) (the resident row), §3.8 (one identity, at
+> most one body), §8.3 (hard problem 2 — where a person lives, object or row).
+
+**The row is primary and the body is a durable view bound by a stable id.** A settler's
+`GameObject` carries `KingdomResidentId` and nothing else about them; their name, origin, creed,
+home, standing and both brink windows are a **resident row** in their city's book, because a row
+is what survives their zone going to disk and a property bag is not. The id is minted once per
+settler off a realm-scope counter, in order, never reused and **never drawn** — identity is a
+substrate, and a seeded id would make who-is-who depend on how many other things had been rolled
+first.
+
+Check-in reads the roster off the ground under the founder's feet: every settler standing here gets
+an id, a row and a binding. Every row already bound to *this* zone whose body is **not** here is
+witnessed and moved.
+
+**The standing vocabulary** — three states and no fourth:
+
+| Standing | Means | On the roll? | Labours? | Bound? |
+|---|---|---|---|---|
+| `Resident` | Lives here | yes | yes | yes, exactly one body |
+| `Abroad` | The founder charmed, recruited or led them away | yes | **no** | no |
+| `Dead` | Killed, with a cause | no | no | no |
+
+Every non-`Resident` row carries a **cause** from its own family — the four death causes are
+`KingdomOfficeRules.DeathCause`'s own, so the funeral the city already tells stays the *one*
+telling. `Dead` is terminal: a dead row never transitions again, whatever the ground says next.
+**W2 ships the vocabulary, the transitions and the reconciliation; placement and enforcement are
+W3**, so no labour or population figure changed this wave.
+
+**The binding registry** (`KingdomSystem.Bindings`) answers *one identity, at most one body* for
+everything this mod mints — residents by `ResidentId` now, and the carriers W3 mints by `JobId`,
+with the same rules and the same tests shipped today. It is **realm-scope and never carried by a
+seat swap**: a bound body can be standing in the other city's ground or walked off the map
+entirely, so a registry a city carried would answer for half the realm and lose the other half
+every time the founder crossed a zone line.
+
+**Check-before-mint is the only path to a body:**
+
+| Registry says | Body resolves | Verdict |
+|---|---|---|
+| miss | — | **Mint**, and write the binding in the same publish |
+| hit | live in *this* zone | **Move** it. Do not mint |
+| hit | live in another resident zone | resident: **MoveAcross**. transient: **Refuse** |
+| hit | does not resolve (its zone is on disk) | **Refuse**. The debt stays owed |
+
+**An unresolvable binding is a refusal to mint, never a licence to mint.** A frozen body is
+invisible; its binding is not, and the binding is what we consult — which is what makes this hold
+across suspend, freeze, save, reload and crash. **A closed binding is evicted at once, so absence
+from the registry *is* proof of closure**; there is no second list to keep in step, and the
+eviction must name its cause or it is refused.
+
+| Member | Contract |
+|---|---|
+| `KingdomResidents.ResidentIdProperty` (`KingdomResidentId`) | The settler's identity, and the only thing about a person their body carries. |
+| `KingdomResidents.JobIdProperty` (`KingdomJobId`) | The job a transient body renders. Nothing mints one until W3; the sweep is keyed on it. |
+| `KingdomResidents.IdOf(GameObject)` / `EnsureId(KingdomSystem, GameObject)` | Read an id; mint one if the body has none. |
+| `KingdomResidents.TryLocate(...)` / `TryEnsureRow(...)` | Which book holds a body's row; and the same, enrolling a settler the roster has not reached yet. |
+| `KingdomResidents.Judge(KingdomSystem, int, KingdomBindingKind, string zoneId)` | Check-before-mint at the edge, answered by the table above. |
+| `KingdomResidents.Bind(...)` / `Unbind(..., KingdomUnbindCause)` | Write or move a binding; evict one, naming why. |
+| `KingdomResidents.SweepVerdict(KingdomSystem, GameObject)` | Whether an object in a thawed zone is a stale transient. **The verdict ships in W2; the despawn is W3.** |
+| `KingdomResidents.AuditLine(KingdomSystem)` | Invariant I3 over the whole realm — no binding key ever resolves to two living bodies. Runs beside the §3.9 stock audit on every check-in. |
+| `enum KingdomBindingKind` / `KingdomBindingVerdict` / `KingdomBodyPresence` / `KingdomUnbindCause` / `KingdomSweepVerdict` | The registry's vocabulary. |
 
 ## `KingdomChronicle` — history
 
@@ -731,7 +798,7 @@ Five rules — Addendum 8 clause 3 as moderated by Addendum 10(a), *awareness is
 | `static long CrossingTick(long startTick, long nowTick, int standing, int threshold, int perDay)` | When a steady per-day accrual actually crossed, on the day boundary rather than on the pass somebody noticed. Clamped to now. |
 | `static int DaysStood(long reachedTick, long nowTick)` / `int DayNumber(long tick)` | The honest elapsed, uncapped; and the floored world-day, for the one counter that must live in an `int` store. |
 | `static string ElapsedPhrase / WindowPhrase / ArrestNote / AnnounceNote / AnnounceTelling / LiftedNote / FiredPhrase / FiredClause / FiredNote / WordFrom` | The prose, all three surfaces. |
-| `KingdomBrink.Of / Stands / Record / MarkWarned / Lift / WindowSpent` (per-settler) and `OfCity / CityStands / RecordCity / MarkCityWarned / LiftCity / CityWindowSpent` | The engine side. Per-settler brinks ride the **settler's own property bag** (`KingdomBrinkRoofTick` and friends), never a seat field, so a seat swap can never carry one to the wrong city. The realm's brink lives in `IntGameState` / `StringGameState`. |
+| `KingdomBrink.Of / Stands / Record / MarkWarned / Lift / WindowSpent` (per-settler) and `OfCity / CityStands / RecordCity / MarkCityWarned / LiftCity / CityWindowSpent` | The engine side. Per-settler brinks live in the settler's **resident row**, under their own `KingdomResidentId` (W2 — a frozen object's properties are unreachable, so a window kept there could not run while a zone was on disk). Still a fact about one person, still impossible for a seat swap to carry to the wrong city: the row travels with the book of the city whose roll they are on. The realm's brink lives in `IntGameState` / `StringGameState`. |
 | `KingdomWord.StandsIn(Zone)` / `Warn(...)` / `Unsay(...)` / `Aftermath(...)` | The one push channel. Every brink speaks through it; nothing builds a second one. |
 
 ## `KingdomRules` — pure rules (no engine dependencies)
@@ -765,8 +832,8 @@ These are read and written across the mod and are part of the API:
 | `KingdomRaider` (int) | Hostile spawned by a raid. |
 | `KingdomCaravan` (int) | Merchant spawned by a trade charter; despawned on later visits. |
 | `KingdomOrigin` (string) | Settler's region of origin. |
-| `KingdomBrinkRoofStanding` (int) / `KingdomBrinkRoofTick` / `KingdomBrinkRoofWarned` (long) | A settler standing at the roof brink: that one stands at all, the tick they reached it, and the tick the founder was warned — which is what the window runs from. On the SETTLER, never on a seat. |
-| `KingdomBrinkCreedStanding` / `KingdomBrinkCreedTick` / `KingdomBrinkCreedWarned` / `KingdomBrinkCreedToward` / `KingdomBrinkCreedChannel` (int/long/string) | The same for a conversion about to happen, plus which creed and which pull got them there. |
+| `KingdomResidentId` (int) | The settler's identity, minted once off the realm's counter and never reused. The **only** thing about a person their body carries; everything else is a resident row. Retired the `KingdomBrinkRoof*` / `KingdomBrinkCreed*` property family in W2. |
+| `KingdomJobId` (int) | The job a transient body renders. Reserved by W2 for the stale-transient sweep; W3 mints them. |
 | `KingdomCropSownTick` (int) / `KingdomCropRows` (int) / `KingdomCropCycles` (int) / `KingdomCropSeed` (string) / `KingdomCropSaid` (int) | One sown field's commitment: when the founder sowed it, how many rows went in, how many gatherings it has resolved (the kernel ordinal the seed-return draw is keyed on), which seed is in it, and the last want it announced. On the FIELD. Properties rather than part fields on purpose — `r_KingdomPlot` serializes positionally, and appending to it would put every already-built field's layout at risk. |
 | `KingdomCropRow` (int) / `KingdomCropField` (string) | A standing crop plant this mod laid, and the field that laid it. The protection law's whole warrant for taking one up. |
 | `KingdomWildSeedTaken` (int) | A wild plant already stripped of its seed. One plant is one seed, forever. |

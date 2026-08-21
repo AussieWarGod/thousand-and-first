@@ -36,7 +36,9 @@ namespace ThousandAndFirst.Tests
 			KingdomResidentRow[] residents = new KingdomResidentRow[1]
 			{
 				new KingdomResidentRow(9, "Ptoh", 2, 3, 400L, 4242, 4242, 1, KingdomDayShape.Field,
-					KingdomResidentStanding.Abroad, "taf:zone:b", 410L, true, 420L, false, 2, 1)
+					KingdomResidentStanding.Abroad, KingdomStandingCause.Followed, "taf:zone:b",
+					new KingdomBrinkWindow(true, 410L, 415L),
+					new KingdomBrinkWindow(true, 420L, KingdomBrinkRules.Unwarned), "Mechanimists", 1)
 			};
 			KingdomClockRow[] clocks = new KingdomClockRow[1]
 			{
@@ -107,10 +109,20 @@ namespace ThousandAndFirst.Tests
 			Assert.IsTrue(after.TryResident(0, out personAfter));
 			Assert.AreEqual(personBefore.Name, personAfter.Name);
 			Assert.AreEqual(personBefore.Standing, personAfter.Standing);
+			Assert.AreEqual(personBefore.Cause, personAfter.Cause);
 			Assert.AreEqual(personBefore.DayShape, personAfter.DayShape);
-			Assert.AreEqual(personBefore.RoofWarned, personAfter.RoofWarned);
-			Assert.AreEqual(personBefore.CreedWarned, personAfter.CreedWarned);
 			Assert.AreEqual(personBefore.BoundZoneId, personAfter.BoundZoneId);
+			// Both brink windows, in full. A carrier that round-tripped "a brink stands" but lost
+			// the tick the window is anchored on would hand every warned settler a fresh deadline
+			// on every save, which is the failure the columns were retyped to make impossible.
+			Assert.AreEqual(personBefore.RoofBrink.Stands, personAfter.RoofBrink.Stands);
+			Assert.AreEqual(personBefore.RoofBrink.ReachedTick, personAfter.RoofBrink.ReachedTick);
+			Assert.AreEqual(personBefore.RoofBrink.WarnedTick, personAfter.RoofBrink.WarnedTick);
+			Assert.AreEqual(personBefore.CreedBrink.Stands, personAfter.CreedBrink.Stands);
+			Assert.AreEqual(personBefore.CreedBrink.ReachedTick, personAfter.CreedBrink.ReachedTick);
+			Assert.AreEqual(personBefore.CreedBrink.WarnedTick, personAfter.CreedBrink.WarnedTick);
+			Assert.AreEqual(personBefore.CreedToward, personAfter.CreedToward);
+			Assert.AreEqual(personBefore.CreedChannel, personAfter.CreedChannel);
 
 			KingdomToldRow toldBefore;
 			KingdomToldRow toldAfter;
@@ -119,6 +131,162 @@ namespace ThousandAndFirst.Tests
 			Assert.AreEqual(toldBefore.Kind, toldAfter.Kind);
 			Assert.AreEqual(toldBefore.Tick, toldAfter.Tick);
 			Assert.AreEqual(toldBefore.PlaceZoneId, toldAfter.PlaceZoneId);
+		}
+
+		// ---- The brink storage layer (W2) -----------------------------------------------------
+
+		/// <summary>
+		/// The swap, at the column. <c>KingdomBrink</c>'s whole storage layer is now this pair of
+		/// calls, so what the property bag used to hold has to round-trip through them exactly:
+		/// three distinguishable states, both windows apart, and the creed the conversion at the
+		/// end of the window will be picked from.
+		/// </summary>
+		[Test]
+		public void ABrinkWrittenByIdReadsBackAsItWasWritten()
+		{
+			KingdomCityBook book = new KingdomCityBook();
+			KingdomCityFault fault;
+			Assert.IsTrue(book.TryPublish(Peopled(), out fault), fault.ToString());
+
+			bool stands;
+			long reached;
+			long warned;
+			string toward;
+			int channel;
+			Assert.IsTrue(book.TryReadBrink(9, BrinkKind.Roof, out stands, out reached, out warned, out toward, out channel));
+			Assert.IsTrue(stands);
+			Assert.AreEqual(410L, reached);
+			Assert.AreEqual(415L, warned);
+			Assert.IsNull(toward, "a roof brink has no creed");
+
+			Assert.IsTrue(book.TryReadBrink(9, BrinkKind.Creed, out stands, out reached, out warned, out toward, out channel));
+			Assert.IsTrue(stands);
+			Assert.AreEqual(420L, reached);
+			Assert.AreEqual(KingdomBrinkRules.Unwarned, warned, "a recorded brink nobody has been told about has no deadline");
+			Assert.AreEqual("Mechanimists", toward);
+			Assert.AreEqual(1, channel);
+		}
+
+		/// <summary>Warning somebody stamps the anchor and never redates their loss, and it reaches
+		/// only the brink it was aimed at.</summary>
+		[Test]
+		public void WarningOneBrinkLeavesTheOtherWhereItWas()
+		{
+			KingdomCityBook book = new KingdomCityBook();
+			KingdomCityFault fault;
+			Assert.IsTrue(book.TryPublish(Peopled(), out fault), fault.ToString());
+			Assert.IsTrue(book.TryWriteBrink(9, BrinkKind.Creed, stands: true, 420L, 1000L, "Mechanimists", 1));
+
+			bool stands;
+			long reached;
+			long warned;
+			string toward;
+			int channel;
+			Assert.IsTrue(book.TryReadBrink(9, BrinkKind.Creed, out stands, out reached, out warned, out toward, out channel));
+			Assert.AreEqual(420L, reached);
+			Assert.AreEqual(1000L, warned);
+			Assert.IsTrue(book.TryReadBrink(9, BrinkKind.Roof, out stands, out reached, out warned, out toward, out channel));
+			Assert.AreEqual(415L, warned, "warning a creed brink must not touch a roof brink");
+		}
+
+		/// <summary>A lifted brink leaves nothing behind for a later read to half-believe. Rule 2:
+		/// if the cause returns the founder gets the whole window again.</summary>
+		[Test]
+		public void ALiftedBrinkClearsItsOwnFields()
+		{
+			KingdomCityBook book = new KingdomCityBook();
+			KingdomCityFault fault;
+			Assert.IsTrue(book.TryPublish(Peopled(), out fault), fault.ToString());
+			Assert.IsTrue(book.TryWriteBrink(9, BrinkKind.Creed, stands: false, 0L, KingdomBrinkRules.Unwarned, null, 0));
+
+			bool stands;
+			long reached;
+			long warned;
+			string toward;
+			int channel;
+			Assert.IsTrue(book.TryReadBrink(9, BrinkKind.Creed, out stands, out reached, out warned, out toward, out channel));
+			Assert.IsFalse(stands);
+			Assert.AreEqual(0L, reached);
+			Assert.AreEqual(KingdomBrinkRules.Unwarned, warned);
+			Assert.IsNull(toward);
+			Assert.AreEqual(0, channel);
+		}
+
+		/// <summary>A settler this book has no row for is not this book's to answer about — which is
+		/// how the realm's other city gets asked next.</summary>
+		[TestCase(0)]
+		[TestCase(404)]
+		public void ABookAnswersOnlyForItsOwnResidents(int residentId)
+		{
+			KingdomCityBook book = new KingdomCityBook();
+			KingdomCityFault fault;
+			Assert.IsTrue(book.TryPublish(Peopled(), out fault), fault.ToString());
+			bool stands;
+			long reached;
+			long warned;
+			string toward;
+			int channel;
+			Assert.IsFalse(book.TryReadBrink(residentId, BrinkKind.Roof, out stands, out reached, out warned, out toward, out channel));
+			Assert.IsFalse(book.TryWriteBrink(residentId, BrinkKind.Roof, stands: true, 1L, 2L, null, 0));
+		}
+
+		/// <summary>The realm's own brink is not a settler's, and asking a row for one is refused
+		/// rather than answered with the roof's.</summary>
+		[Test]
+		public void ARowIsNotAskedForTheRealmsBrink()
+		{
+			KingdomCityBook book = new KingdomCityBook();
+			KingdomCityFault fault;
+			Assert.IsTrue(book.TryPublish(Peopled(), out fault), fault.ToString());
+			bool stands;
+			long reached;
+			long warned;
+			string toward;
+			int channel;
+			Assert.IsFalse(book.TryReadBrink(9, BrinkKind.City, out stands, out reached, out warned, out toward, out channel));
+			Assert.IsFalse(book.TryWriteBrink(9, BrinkKind.City, stands: true, 1L, 2L, null, 0));
+		}
+
+		/// <summary>Ragged resident columns out of an older save are truncated to the shortest, and
+		/// the brink accessors repair before they index rather than reading off the end of a
+		/// column.</summary>
+		[Test]
+		public void RaggedResidentColumnsAreRepairedBeforeABrinkIsRead()
+		{
+			KingdomCityBook book = new KingdomCityBook();
+			KingdomCityFault fault;
+			Assert.IsTrue(book.TryPublish(Peopled(), out fault), fault.ToString());
+			book.ResidentIds.Add(11);
+			book.ResidentNames.Add("Nobody");
+			bool stands;
+			long reached;
+			long warned;
+			string toward;
+			int channel;
+			Assert.IsFalse(book.TryReadBrink(11, BrinkKind.Roof, out stands, out reached, out warned, out toward, out channel),
+				"a row half of whose fields are missing is not a row");
+			Assert.AreEqual(1, book.ResidentCount);
+			Assert.IsTrue(book.TryReadBrink(9, BrinkKind.Roof, out stands, out reached, out warned, out toward, out channel));
+			Assert.IsTrue(stands);
+		}
+
+		/// <summary>A standing and a cause that disagree are repaired toward the STANDING, because
+		/// the standing is what every consumer branches on: a living settler must never carry a
+		/// death clause into a memorial.</summary>
+		[Test]
+		public void AStandingAndACauseThatDisagreeAreRepairedTowardTheStanding()
+		{
+			KingdomCityBook book = new KingdomCityBook();
+			KingdomCityFault fault;
+			Assert.IsTrue(book.TryPublish(Peopled(), out fault), fault.ToString());
+			book.ResidentStandings[0] = (int)KingdomResidentStanding.Resident;
+			book.Normalize();
+			Assert.AreEqual((int)KingdomStandingCause.None, book.ResidentCauses[0]);
+
+			book.ResidentStandings[0] = (int)KingdomResidentStanding.Dead;
+			book.Normalize();
+			Assert.AreEqual((int)KingdomStandingCause.Unwitnessed, book.ResidentCauses[0],
+				"a death nobody witnessed is told as exactly that, never invented");
 		}
 
 		/// <summary>A book nobody has written to is an empty city, not a fault.</summary>

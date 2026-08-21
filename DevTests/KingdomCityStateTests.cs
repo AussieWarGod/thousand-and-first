@@ -42,8 +42,9 @@ namespace ThousandAndFirst.Tests
 			KingdomResidentRow[] residentRows = new KingdomResidentRow[residents];
 			for (int i = 0; i < residents; i++)
 			{
-				residentRows[i] = new KingdomResidentRow(i, "settler " + i, 0, 0, 0L, -1, -1, 0,
-					KingdomDayShape.Hearth, KingdomResidentStanding.Resident, "taf:zone:0", 0L, false, 0L, false, 0, 0);
+				residentRows[i] = new KingdomResidentRow(i + 1, "settler " + i, 0, 0, 0L, -1, -1, 0,
+					KingdomDayShape.Hearth, KingdomResidentStanding.Resident, KingdomStandingCause.None, "taf:zone:0",
+					KingdomBrinkWindow.None, KingdomBrinkWindow.None, null, 0);
 			}
 			KingdomClockRow[] clockRows = new KingdomClockRow[clocks];
 			for (int i = 0; i < clocks; i++)

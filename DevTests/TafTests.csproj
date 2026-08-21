@@ -99,6 +99,8 @@
     <Compile Include="..\Simulation\City\KingdomCityState.cs" />
     <Compile Include="..\Simulation\City\KingdomCityRules.cs" />
     <Compile Include="..\Simulation\City\KingdomCityBook.cs" />
+    <Compile Include="..\Simulation\City\KingdomBindingRegistry.cs" />
+    <Compile Include="..\Simulation\City\KingdomResidentRules.cs" />
     <Compile Include="..\Simulation\City\KingdomCityMemoryRules.cs" />
     <Compile Include="..\Simulation\City\KingdomAdvanceRules.cs" />
     <Compile Include="..\Simulation\City\KingdomCatchUpRules.cs" />
@@ -130,6 +132,8 @@
     <Compile Include="KingdomComputeSeamTests.cs" />
     <Compile Include="KingdomCityBookTests.cs" />
     <Compile Include="KingdomCityRulesTests.cs" />
+    <Compile Include="KingdomBindingRegistryTests.cs" />
+    <Compile Include="KingdomResidentRulesTests.cs" />
   </ItemGroup>
 
   <ItemGroup>

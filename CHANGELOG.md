@@ -759,6 +759,51 @@ only pure water — so the fix mints not one dram.
   name and the tick the water was poured: deterministic across a reload, separated between
   realms, and refused rather than re-minted.
 
+### Added — residents become rows, and one identity gets at most one body
+- **A settler is a row now, and their body is a view of it.** Every settler carries a stable
+  `KingdomResidentId` and nothing else; their name, origin, creed, home, standing and both brink
+  windows live in a **resident row** in their city's book. Check-in reads the roster off the ground
+  and writes it down. The id is minted off the realm's own counter, in order, never reused and
+  **never drawn** — identity is a substrate, not a happening.
+- **`Abroad` and `Dead` are real states with real words.** A settler you charmed, recruited or led
+  out of the city reads **Abroad**: still on the roll, contributing no labour, and honestly
+  reported as such. One who died reads **Dead**, with a cause — and the cause is
+  `KingdomOfficeRules.DeathCause`'s own, so the funeral the city already tells stays the one
+  telling. `Dead` is terminal. Placement and enforcement are the next wave's; nothing about
+  population or labour arithmetic moved.
+- **The binding registry ships whole.** `KingdomSystem.Bindings` answers *one identity, at most one
+  body* for everything this mod mints — residents by `ResidentId` today, and the carriers the next
+  wave mints by `JobId`, with the same rules and the same tests shipped now rather than retrofitted
+  later. Check-before-mint is the only path to a body: a body already here is **moved**, a body live
+  in another resident zone is moved across (a person) or refused (a porter), and a body whose zone
+  is on disk **refuses the mint** — the debt stays owed. An unresolvable binding is never a licence
+  to mint, which is what makes this hold across suspend, freeze, save, reload and crash.
+- **A closed binding is evicted at once**, so absence from the registry *is* proof of closure. There
+  is no second list to keep in step with the first, and an eviction that will not name its cause is
+  refused.
+- **The stale-transient verdict.** A body found in a thawed zone carrying a job id whose binding the
+  model already closed is named stale — the one instant its load could exist twice, in the larder
+  and in a frozen pack. The verdict ships now; the sweep that acts on it lands with the carriers.
+- **The registry is realm state and no city carries it.** A bound body can be standing in your other
+  city's ground or walked off the map entirely, so a registry a seat swap carried would answer for
+  half the realm and lose the other half every time you crossed a zone line.
+- Invariant I3 — *no binding key ever resolves to two living bodies, in any zone, at any time* — is
+  asserted directly, beside the stock audit, on every check-in.
+
+### Changed — a settler's brink moved off their property bag
+- **Brink windows are resident-row fields.** `KingdomBrinkRoofTick`, `KingdomBrinkCreedToward` and
+  their siblings are gone. A frozen object's properties are unreachable, so a window kept there
+  could not run while a zone was on disk — which is the whole thing the living city is for. It is
+  still a fact about one person, kept under their own id, and a seat swap still cannot carry one to
+  the wrong city. **Every rule, window and announcement is unchanged**; what swapped is the storage
+  under six accessors, and the brink suite's expectations did not move.
+- The city book's schema is version 2: the resident standing gains a cause, each brink window gains
+  its own standing flag, and both warned columns are retyped from a flag to the **tick** the window
+  is anchored on — which a flag could not carry and every consumer of a brink reads.
+- Serialization version 5. Pre-release, so there is no migration: a version-4 save's settlers carry
+  brinks nothing in this build reads, and it is refused by name rather than loaded as a city whose
+  warnings have quietly lost their deadlines.
+
 ### Changed — the constitution's own numbers
 - The model-in-RAM **warn** rung rises from 48 KiB to 56 KiB; the 64 KiB **ceiling** does not
   move. The design's honest resting total at today's caps is 52.3 KiB, which sat above the old

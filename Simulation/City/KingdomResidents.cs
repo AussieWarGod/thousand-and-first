@@ -1,0 +1,627 @@
+using System;
+using System.Collections.Generic;
+
+using XRL;
+using XRL.World;
+
+namespace ThousandAndFirst.Simulation.City
+{
+	/// <summary>
+	/// Identity at the engine's edge: who a body is, which book holds their row, and what the
+	/// binding registry says about whether they may be minted at all.
+	/// <para>
+	/// LIVING-CITY-ARCHITECTURE &sect;8.3's answer to <i>where a person lives — object or row</i>:
+	/// <b>the row is primary and the body is a durable view bound by a stable id.</b> The body
+	/// carries <see cref="ResidentIdProperty"/> and nothing else; everything else about the person
+	/// that has to survive their zone going to disk lives in a resident row.
+	/// </para>
+	/// <para>
+	/// <b>The id is not a draw.</b> It is the next number off a realm-scope counter, in mint order,
+	/// exactly as <c>KingdomCity.DedicationOrderProperty</c> is. Identity is a substrate: a seeded
+	/// draw would make who-is-who depend on how many other things had been rolled first, and the
+	/// kernel's whole discipline is that draws belong to happenings.
+	/// </para>
+	/// <para>
+	/// Engine-coupled by design and paired with <c>KingdomResidentRules</c> exactly as
+	/// <c>KingdomCity</c> is paired with <c>KingdomCityRules</c>: nothing here decides anything, it
+	/// reads the ground, asks the rules, and applies the answer.
+	/// </para>
+	/// </summary>
+	public static class KingdomResidents
+	{
+		/// <summary>
+		/// The settler's identity, and the only thing about a person the body itself carries.
+		/// Minted once, never re-minted, and never reused: the realm's counter only goes up.
+		/// </summary>
+		public const string ResidentIdProperty = "KingdomResidentId";
+
+		/// <summary>
+		/// The job a transient body is the rendering of. Nothing mints one until W3; the property
+		/// is named here because the stale-transient sweep is keyed on it and a sweep that learned
+		/// its key a wave later would be a sweep with a wave of bodies it could not judge.
+		/// </summary>
+		public const string JobIdProperty = "KingdomJobId";
+
+		// ==================================================================================
+		// The id
+		// ==================================================================================
+
+		/// <summary>This body's resident id, or zero for a body that has never been enrolled.</summary>
+		public static int IdOf(GameObject Body)
+		{
+			return GameObject.Validate(Body) ? Body.GetIntProperty(ResidentIdProperty) : 0;
+		}
+
+		/// <summary>
+		/// This body's resident id, minting one if it has none. Zero when there is no realm to mint
+		/// against — an id from a counter nobody is keeping is not an id.
+		/// </summary>
+		public static int EnsureId(KingdomSystem System, GameObject Body)
+		{
+			int existing = IdOf(Body);
+			if (existing != 0 || System == null || !GameObject.Validate(Body))
+			{
+				return existing;
+			}
+			System.ResidentCounter++;
+			Body.SetIntProperty(ResidentIdProperty, System.ResidentCounter);
+			return System.ResidentCounter;
+		}
+
+		// ==================================================================================
+		// The registry
+		// ==================================================================================
+
+		/// <summary>
+		/// Check-before-mint (&sect;3.8), asked at the edge and answered by the rules.
+		/// <para>
+		/// The presence is resolved here because only the engine knows whether an object id still
+		/// names something live and where; the VERDICT is <c>KingdomBindingRules</c>'s, because a
+		/// second opinion about duplication is how a settler ends up in two places.
+		/// </para>
+		/// <para>
+		/// <b>W2 ships the verdict. W3 obeys it.</b> Nothing in this wave mints or moves a body, so
+		/// this has exactly one production caller today — the roster read below, which only ever
+		/// asks about bodies that are already standing in front of it.
+		/// </para>
+		/// </summary>
+		public static KingdomBindingVerdict Judge(KingdomSystem System, int bindingKey, KingdomBindingKind kind, string zoneId)
+		{
+			KingdomBindingTable table;
+			if (!TryTable(System, out table))
+			{
+				// No registry is not a miss. A miss is a licence to mint, and a realm whose registry
+				// could not be read has no way of knowing what it would be minting a second copy of.
+				return KingdomBindingVerdict.Refuse;
+			}
+			KingdomBinding binding;
+			if (!table.TryGet(bindingKey, kind, out binding))
+			{
+				return KingdomBindingRules.Judge(kind, KingdomBodyPresence.None);
+			}
+			return KingdomBindingRules.Judge(kind, PresenceOf(binding, zoneId));
+		}
+
+		/// <summary>
+		/// Binds this body to this ground, or moves an existing binding onto it. One call, because
+		/// the caller's question is always "this key is here now" and splitting it would make
+		/// "bind" and "rebind" two chances to get the same fact wrong.
+		/// </summary>
+		/// <returns>True when the registry was written.</returns>
+		public static bool Bind(KingdomSystem System, int bindingKey, KingdomBindingKind kind, string zoneId, GameObject Body, long TimeTicks)
+		{
+			KingdomBindingTable table;
+			if (!TryTable(System, out table) || bindingKey == 0)
+			{
+				return false;
+			}
+			string objectId = GameObject.Validate(Body) ? Body.ID : null;
+			KingdomBinding standing;
+			bool held = table.TryGet(bindingKey, kind, out standing);
+			// A settler who has not moved since the last pass costs nothing. Without this, every
+			// check-in would republish the whole registry once per person on the ground, to write
+			// down where each of them already was.
+			if (held
+				&& string.Equals(standing.ZoneId ?? "", zoneId ?? "", StringComparison.Ordinal)
+				&& string.Equals(standing.ObjectId ?? "", objectId ?? "", StringComparison.Ordinal))
+			{
+				return true;
+			}
+			KingdomBindingTable next;
+			KingdomCityFault fault;
+			bool written = held
+				? table.TryRebind(bindingKey, kind, zoneId, objectId, out next, out fault)
+				: table.TryBind(bindingKey, kind, zoneId, objectId, (TimeTicks > 0L) ? TimeTicks : 0L, out next, out fault);
+			if (!written)
+			{
+				Refuse("bind", fault);
+				return false;
+			}
+			return Publish(System, next, "bind");
+		}
+
+		/// <summary>
+		/// Evicts a binding and says why. The cause reaches the log line; the row it belongs to
+		/// carries it durably, which is the division &sect;3.8 sets up by keeping no second list of
+		/// closed bindings.
+		/// </summary>
+		public static bool Unbind(KingdomSystem System, int bindingKey, KingdomBindingKind kind, KingdomUnbindCause cause)
+		{
+			KingdomBindingTable table;
+			if (!TryTable(System, out table))
+			{
+				return false;
+			}
+			KingdomBindingTable next;
+			KingdomBinding evicted;
+			KingdomCityFault fault;
+			if (!table.TryUnbind(bindingKey, kind, cause, out next, out evicted, out fault))
+			{
+				// An unknown key is not an error worth a line: a body unbound twice in one pass is
+				// the ordinary shape of a death that two consumers both noticed.
+				if (fault != KingdomCityFault.UnknownBinding)
+				{
+					Refuse("unbind", fault);
+				}
+				return false;
+			}
+			if (!Publish(System, next, "unbind"))
+			{
+				return false;
+			}
+			KingdomLog.Log("binding: released " + kind + " " + bindingKey + " from "
+				+ (string.IsNullOrEmpty(evicted.ZoneId) ? "-" : evicted.ZoneId) + " (" + cause + ")");
+			return true;
+		}
+
+		/// <summary>
+		/// What the stale-transient sweep would say about one object in a thawed zone.
+		/// <para>
+		/// &sect;3.8's t3, and the whole of it that W2 owns: <b>the detection verdict ships now, the
+		/// despawn is W3.</b> A body carrying a job id whose binding the model already evicted is
+		/// holding goods the stores were credited for at the dated tick — the one instant they
+		/// could exist twice.
+		/// </para>
+		/// </summary>
+		public static KingdomSweepVerdict SweepVerdict(KingdomSystem System, GameObject Body)
+		{
+			if (!GameObject.Validate(Body))
+			{
+				return KingdomSweepVerdict.NotTransient;
+			}
+			int jobId = Body.GetIntProperty(JobIdProperty);
+			KingdomBindingTable table;
+			if (jobId == 0 || !TryTable(System, out table))
+			{
+				// A registry that would not read cannot prove a body stale, and the sweep's licence
+				// is deduplication rather than destruction: without the proof, nothing is touched.
+				return KingdomBindingRules.JudgeStale(jobId, true);
+			}
+			return KingdomBindingRules.JudgeStale(jobId, table.Holds(jobId, KingdomBindingKind.Transient));
+		}
+
+		/// <summary>
+		/// Invariant I3 over the whole realm, asserted rather than inferred: no binding key ever
+		/// resolves to two living bodies. Returns null when the registry is clean, and the fault's
+		/// own name when it is not.
+		/// </summary>
+		public static string AuditLine(KingdomSystem System)
+		{
+			KingdomBindingTable table;
+			if (!TryTable(System, out table))
+			{
+				return "bindings unreadable";
+			}
+			KingdomCityFault fault;
+			if (!table.TryAudit(out fault))
+			{
+				return "bindings " + fault;
+			}
+			return null;
+		}
+
+		// ==================================================================================
+		// The rows
+		// ==================================================================================
+
+		/// <summary>
+		/// The roster, rebuilt from the ground under the founder's feet, and the bindings that go
+		/// with it.
+		/// <para>
+		/// Every settler standing in this zone gets an id and a row; every row the book already had
+		/// bound to this zone and NOT found on the ground is witnessed and transitioned. Rows bound
+		/// to the city's other zones are carried untouched, because this pass has no honest word
+		/// about ground it is not standing in — that is the sighting doctrine, unchanged.
+		/// </para>
+		/// <para>
+		/// <b>The roll, lodging and creed consumers are not re-plumbed by this.</b> They keep their
+		/// own reads, and the book is a second honest record beside them until a later wave makes it
+		/// primary. What W2 changes for them is only where a BRINK is stored — see
+		/// <c>KingdomBrink</c>.
+		/// </para>
+		/// </summary>
+		internal static KingdomCityState ReadRoster(KingdomSystem System, Zone Z, KingdomSurvey Survey, KingdomCityState state, long TimeTicks)
+		{
+			if (System == null || Z == null || Survey == null || state == null)
+			{
+				return state;
+			}
+			Dictionary<string, int> homes = HomeWorkIds(Z);
+			List<KingdomResidentRow> rows = new List<KingdomResidentRow>();
+			HashSet<int> onTheGround = new HashSet<int>();
+			for (int i = 0; i < Survey.Settlers.Count; i++)
+			{
+				GameObject settler = Survey.Settlers[i];
+				int id = EnsureId(System, settler);
+				if (id == 0 || !onTheGround.Add(id))
+				{
+					continue;
+				}
+				rows.Add(RowFor(state, id, settler, Z.ZoneID, homes, TimeTicks));
+				Bind(System, id, KingdomBindingKind.Resident, Z.ZoneID, settler, TimeTicks);
+			}
+			for (int i = 0; i < state.ResidentCount; i++)
+			{
+				KingdomResidentRow row;
+				if (!state.TryResident(i, out row) || onTheGround.Contains(row.ResidentId))
+				{
+					continue;
+				}
+				if (!string.Equals(row.BoundZoneId, Z.ZoneID, StringComparison.Ordinal))
+				{
+					rows.Add(row);
+					continue;
+				}
+				rows.Add(Witnessed(System, Z, row, TimeTicks));
+			}
+			if (rows.Count > KingdomCityState.MaxResidents)
+			{
+				// The cap is KingdomRules.MaxPopulation and the ground cannot hold more people than
+				// the settlement is allowed; a book that came back over it is trimmed by Normalize
+				// rather than by inventing a rule here about who is dropped.
+				rows.RemoveRange(KingdomCityState.MaxResidents, rows.Count - KingdomCityState.MaxResidents);
+			}
+			KingdomCityState written;
+			KingdomCityFault fault;
+			if (!state.TryWithResidents(rows.ToArray(), out written, out fault))
+			{
+				Refuse("roster", fault);
+				return state;
+			}
+			return written;
+		}
+
+		/// <summary>
+		/// The book that holds this body's row, and where in it. The realm is walked seat first,
+		/// because the founder is standing in the seated city and that is where nearly every
+		/// question about a settler is asked from.
+		/// </summary>
+		public static bool TryLocate(KingdomSystem System, GameObject Body, out KingdomCityBook book, out int residentId)
+		{
+			book = null;
+			residentId = IdOf(Body);
+			if (System == null || residentId == 0)
+			{
+				return false;
+			}
+			foreach (KingdomCityBook candidate in Books(System))
+			{
+				int index;
+				if (candidate.TryResidentRow(residentId, out index))
+				{
+					book = candidate;
+					return true;
+				}
+			}
+			return false;
+		}
+
+		/// <summary>
+		/// The book that holds this body's row, minting the id and the row if it has none.
+		/// <para>
+		/// The lazy half of the roster read, and it earns its place: a settler who arrives during
+		/// the growth step is enrolled, housed and can reach a brink several steps before the next
+		/// check-in would have given them a row. Without this their first warning would have
+		/// nowhere to live, and the brink storage swap would have silently changed behaviour on the
+		/// one settler most likely to have a brink.
+		/// </para>
+		/// </summary>
+		public static bool TryEnsureRow(KingdomSystem System, GameObject Body, out KingdomCityBook book, out int residentId)
+		{
+			if (TryLocate(System, Body, out book, out residentId))
+			{
+				return true;
+			}
+			book = null;
+			residentId = 0;
+			if (System == null || System.City == null || !Enrollable(Body))
+			{
+				return false;
+			}
+			int id = EnsureId(System, Body);
+			if (id == 0)
+			{
+				return false;
+			}
+			Zone zone = Body.CurrentZone;
+			string zoneId = (zone != null) ? zone.ZoneID : null;
+			KingdomCityBook seated = BookFor(System, zoneId) ?? System.City;
+			KingdomCityState state;
+			KingdomCityFault fault;
+			if (!seated.TryRead(out state, out fault))
+			{
+				Refuse("enrol", fault);
+				return false;
+			}
+			List<KingdomResidentRow> rows = new List<KingdomResidentRow>();
+			for (int i = 0; i < state.ResidentCount; i++)
+			{
+				KingdomResidentRow existing;
+				if (state.TryResident(i, out existing))
+				{
+					rows.Add(existing);
+				}
+			}
+			if (rows.Count >= KingdomCityState.MaxResidents)
+			{
+				Refuse("enrol", KingdomCityFault.RowCapExceeded);
+				return false;
+			}
+			long tick = (The.Game != null) ? The.Game.TimeTicks : 0L;
+			rows.Add(RowFor(state, id, Body, zoneId, HomeWorkIds(zone), tick));
+			KingdomCityState written;
+			if (!state.TryWithResidents(rows.ToArray(), out written, out fault) || !seated.TryPublish(written, out fault))
+			{
+				Refuse("enrol", fault);
+				return false;
+			}
+			Bind(System, id, KingdomBindingKind.Resident, zoneId, Body, tick);
+			book = seated;
+			residentId = id;
+			return true;
+		}
+
+		// ==================================================================================
+		// Small shared helpers
+		// ==================================================================================
+
+		/// <summary>
+		/// One settler's row as the ground reads them: their name, where they walked in from, what
+		/// they hold with, and the roof over them. An existing row keeps its arrival tick and its
+		/// brink windows — those are facts about a person and not readings off a zone.
+		/// </summary>
+		private static KingdomResidentRow RowFor(KingdomCityState state, int id, GameObject settler, string zoneId, Dictionary<string, int> homes, long TimeTicks)
+		{
+			int homeWorkId = 0;
+			string plotId = settler.GetStringProperty(KingdomLodging.HomePlotIdProperty);
+			if (!string.IsNullOrEmpty(plotId) && homes != null)
+			{
+				homes.TryGetValue(plotId, out homeWorkId);
+			}
+			int originCode = KingdomResidentRules.OriginCode(settler.GetStringProperty("KingdomOrigin"));
+			int creedCode = KingdomCityRules.StableId(settler.GetStringProperty(KingdomCreed.CreedProperty));
+			// No settler is posted to a particular work today: KingdomGrowth.AssignWork crews a
+			// WORK from a pool and never stamps the person, so a job id read off the body would be
+			// invented. The column is honestly empty, and the day shape derives to the hearth,
+			// which is what an unposted settler's day actually is.
+			KingdomDayShape dayShape = KingdomResidentRules.DayShapeFor(0, KingdomWorkKind.Other);
+			int index;
+			KingdomResidentRow existing;
+			if (state.TryResidentIndex(id, out index) && state.TryResident(index, out existing))
+			{
+				return existing
+					.WithReading(NameOf(settler, existing.Name), originCode, creedCode, homeWorkId, 0, 0, dayShape)
+					.WithBoundZone(zoneId)
+					.WithStanding(KingdomResidentStanding.Resident, KingdomStandingCause.None);
+			}
+			return new KingdomResidentRow(id, NameOf(settler, null), originCode, creedCode,
+				(TimeTicks > 0L) ? TimeTicks : 0L, homeWorkId, 0, 0, dayShape,
+				KingdomResidentStanding.Resident, KingdomStandingCause.None, zoneId,
+				KingdomBrinkWindow.None, KingdomBrinkWindow.None, null, 0);
+		}
+
+		/// <summary>
+		/// What the pass can honestly say about a row bound to this zone whose body is not among
+		/// its settlers.
+		/// <para>
+		/// The survey excludes a settler the founder has charmed or recruited (<c>IsPlayerLed</c>),
+		/// so a body still standing here is exactly &sect;8.3's <c>Abroad</c>: on the roll, doing no
+		/// work, and honestly reported. A body that is not in the zone at all has gone somewhere
+		/// this pass cannot see, and the honest word for that is also <c>Abroad</c> — never Dead,
+		/// which nobody witnessed.
+		/// </para>
+		/// <para>
+		/// <b>The binding goes with the standing.</b> A row that stops being <c>Resident</c> stops
+		/// having a bound body in this city's ground, which is the equation &sect;8.3 invariant 3
+		/// states and <c>KingdomResidentRules.TryReconcile</c> checks.
+		/// </para>
+		/// </summary>
+		private static KingdomResidentRow Witnessed(KingdomSystem System, Zone Z, KingdomResidentRow row, long TimeTicks)
+		{
+			KingdomBodyWitness witness = Standing(Z, row.ResidentId);
+			KingdomResidentRow next;
+			KingdomCityFault fault;
+			if (!KingdomResidentRules.TryTransition(row, witness, KingdomStandingCause.Unwitnessed, out next, out fault))
+			{
+				// A dead row is terminal and refusing to move it is the rule working, not a fault
+				// worth a line in the founder's log.
+				return row;
+			}
+			if (next.Standing != row.Standing && !KingdomResidentRules.Bindable(next.Standing))
+			{
+				Unbind(System, row.ResidentId, KingdomBindingKind.Resident, KingdomResidentRules.UnbindFor(next.Standing));
+				KingdomLog.Log("resident: " + (row.Name ?? "-") + " (" + row.ResidentId + ") reads " + next.Standing
+					+ " (" + next.Cause + ") in " + Z.ZoneID);
+			}
+			return next;
+		}
+
+		/// <summary>What the ground says about one id, in a zone the founder is standing in.</summary>
+		private static KingdomBodyWitness Standing(Zone Z, int residentId)
+		{
+			foreach (GameObject item in Z.GetObjects())
+			{
+				if (item.GetIntProperty(ResidentIdProperty) != residentId)
+				{
+					continue;
+				}
+				if (item.IsPlayerLed() || item.IsPlayer())
+				{
+					return KingdomBodyWitness.Led;
+				}
+				return item.IsAlive ? KingdomBodyWitness.Present : KingdomBodyWitness.Killed;
+			}
+			return KingdomBodyWitness.Missing;
+		}
+
+		/// <summary>Every home plot standing in this zone, by the work row id of the object that
+		/// carries it — so a row's home is the same id a work row is keyed on rather than a second
+		/// identifier for the same building.</summary>
+		private static Dictionary<string, int> HomeWorkIds(Zone Z)
+		{
+			Dictionary<string, int> homes = new Dictionary<string, int>();
+			if (Z == null)
+			{
+				return homes;
+			}
+			foreach (GameObject item in Z.GetObjects())
+			{
+				string plotId = item.GetStringProperty(KingdomPlots.PlotIdProperty);
+				if (!string.IsNullOrEmpty(plotId) && !homes.ContainsKey(plotId))
+				{
+					homes[plotId] = KingdomCityRules.StableId(item.ID);
+				}
+			}
+			return homes;
+		}
+
+		/// <summary>
+		/// Whether this body is one the city would count as its own settler.
+		/// <para>
+		/// Exactly <c>KingdomSurvey</c>'s own filter, and that is the point: the lazy enrolment
+		/// above and the roster read at check-in must agree about who is on the roll, or a
+		/// merchant or a founding citizen would take one of the sixty rows the settlement is
+		/// allowed. Both brink paths that can reach the lazy enrolment are already gated on the
+		/// settler's roll name, which only an arrival carries, so nothing that used to record a
+		/// brink stops being able to.
+		/// </para>
+		/// </summary>
+		private static bool Enrollable(GameObject Body)
+		{
+			return GameObject.Validate(Body)
+				&& Body.GetIntProperty("KingdomCitizen") == 1
+				&& Body.GetIntProperty("KingdomBorn") == 1
+				&& !Body.IsPlayer()
+				&& !Body.IsPlayerLed();
+		}
+
+		private static string NameOf(GameObject settler, string fallback)
+		{
+			string named = settler.GetStringProperty("KingdomName");
+			if (!string.IsNullOrEmpty(named))
+			{
+				return named;
+			}
+			return string.IsNullOrEmpty(fallback) ? (settler.BaseDisplayName ?? "") : fallback;
+		}
+
+		/// <summary>Where the bound object is, relative to the ground being asked about. A zone the
+		/// manager cannot hand back is a zone on disk, and a body in one is frozen.</summary>
+		private static KingdomBodyPresence PresenceOf(KingdomBinding binding, string zoneId)
+		{
+			if (string.IsNullOrEmpty(binding.ObjectId) || string.IsNullOrEmpty(binding.ZoneId))
+			{
+				return KingdomBodyPresence.Frozen;
+			}
+			// CachedZones and never GetZone: asking the manager for a zone THAWS it, and a rule
+			// whose job is to notice that a body is on disk must not be the thing that takes it off
+			// disk. A zone absent from the cache is a zone on disk, which is the whole case §3.8
+			// was written for.
+			Zone zone = null;
+			if (The.ZoneManager == null || The.ZoneManager.CachedZones == null
+				|| !The.ZoneManager.CachedZones.TryGetValue(binding.ZoneId, out zone) || zone == null)
+			{
+				return KingdomBodyPresence.Frozen;
+			}
+			bool live = false;
+			foreach (GameObject item in zone.GetObjects())
+			{
+				if (string.Equals(item.ID, binding.ObjectId, StringComparison.Ordinal))
+				{
+					live = true;
+					break;
+				}
+			}
+			if (!live)
+			{
+				return KingdomBodyPresence.Frozen;
+			}
+			return string.Equals(binding.ZoneId, zoneId, StringComparison.Ordinal)
+				? KingdomBodyPresence.Here
+				: KingdomBodyPresence.Elsewhere;
+		}
+
+		/// <summary>Every book the realm holds, seat first. The registry is realm-scope precisely
+		/// because a bound body can be in the other city's ground.</summary>
+		private static IEnumerable<KingdomCityBook> Books(KingdomSystem System)
+		{
+			if (System.City != null)
+			{
+				yield return System.City;
+			}
+			if (System.Away != null && System.Away.City != null)
+			{
+				yield return System.Away.City;
+			}
+		}
+
+		private static KingdomCityBook BookFor(KingdomSystem System, string zoneId)
+		{
+			if (string.IsNullOrEmpty(zoneId))
+			{
+				return null;
+			}
+			if (System.ClaimedZones != null && System.ClaimedZones.Contains(zoneId))
+			{
+				return System.City;
+			}
+			if (System.Away != null && System.Away.ClaimedZones != null && System.Away.ClaimedZones.Contains(zoneId))
+			{
+				return System.Away.City;
+			}
+			return null;
+		}
+
+		private static bool TryTable(KingdomSystem System, out KingdomBindingTable table)
+		{
+			table = null;
+			if (System == null || System.Bindings == null)
+			{
+				return false;
+			}
+			KingdomCityFault fault;
+			if (!System.Bindings.TryRead(out table, out fault))
+			{
+				Refuse("registry", fault);
+				return false;
+			}
+			return true;
+		}
+
+		private static bool Publish(KingdomSystem System, KingdomBindingTable table, string step)
+		{
+			KingdomCityFault fault;
+			if (!System.Bindings.TryPublish(table, out fault))
+			{
+				Refuse(step, fault);
+				return false;
+			}
+			return true;
+		}
+
+		private static void Refuse(string step, KingdomCityFault fault)
+		{
+			KingdomLog.Log("binding: " + step + " refused (" + fault + "); the registry is unchanged");
+		}
+	}
+}

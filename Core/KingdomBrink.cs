@@ -1,6 +1,8 @@
 using XRL;
 using XRL.World;
 
+using ThousandAndFirst.Simulation.City;
+
 namespace ThousandAndFirst
 {
 	/// <summary>
@@ -62,14 +64,22 @@ namespace ThousandAndFirst
 	/// The engine-coupled shell for <see cref="KingdomBrinkRules"/>: where brinks are kept, how
 	/// the word about them goes out, and how they are unsaid.
 	/// <para>
-	/// <b>Where the record lives.</b> A settler's brink lives on the settler, in the same
-	/// serialized property bag <c>KingdomShrinePull</c>, <c>KingdomSharedDays</c> and
-	/// <c>KingdomLodgingUnhousedAnnounced</c> already use. That is not a shortcut: whose roof
-	/// failed and whose creed turned are facts about ONE PERSON, and a person carries their own
-	/// facts through a seat swap, a secession and a save without any per-city map having to
-	/// remember to carry them (<c>CLOCK-REWORK-CHANGE-MAP.md</c> &sect;4.3, the seat-swap trap).
+	/// <b>Where the record lives, and why it moved.</b> A settler's brink is a fact about ONE
+	/// PERSON, and it used to live on the person &mdash; in the same serialized property bag
+	/// <c>KingdomShrinePull</c> and <c>KingdomLodgingUnhousedAnnounced</c> still use. That was
+	/// right while a settler WAS a <c>GameObject</c>. It stopped being right the moment the design
+	/// asked sixty people to keep losing roofs and turning creed while their zone is on disk: a
+	/// frozen object's properties are unreachable, so a window that lived there could not run, and
+	/// LIVING-CITY-ARCHITECTURE &sect;1.2(d) moved the window into the settler's <b>resident
+	/// row</b>. It is still a fact about one person, kept under their own stable
+	/// <c>KingdomResidentId</c>, and it still cannot be carried to the wrong city by a seat swap
+	/// &mdash; the row travels with the book of the city whose roll they are on.
+	/// <b>Nothing above this line changed.</b> Every rule, every window, every announcement is
+	/// where it was; what swapped is the storage under six accessors.
+	/// </para>
+	/// <para>
 	/// The realm's own brink &mdash; the one about a city leaving &mdash; is realm state and must
-	/// stay off <c>KingdomSettlement</c>, so it lives in the game's generic already-serialized
+	/// stay off <c>KingdomSettlement</c>, so it stays in the game's generic already-serialized
 	/// state store, exactly as <c>KingdomPlanMarker.PlanOrderCounterKey</c> and
 	/// <c>KingdomReach</c>'s per-zone character do.
 	/// </para>
@@ -89,34 +99,6 @@ namespace ThousandAndFirst
 	/// </summary>
 	public static class KingdomBrink
 	{
-		/// <summary>Tick a settler's roof brink was reached at.</summary>
-		public const string RoofTickProperty = "KingdomBrinkRoofTick";
-
-		/// <summary>Tick the founder was warned of a settler's roof brink, and the anchor of its
-		/// window. Zero until the word goes out.</summary>
-		public const string RoofWarnedProperty = "KingdomBrinkRoofWarned";
-
-		/// <summary>One when a roof brink stands over this settler at all. Kept apart from the
-		/// warned tick so that "recorded, and the word has not gone out yet" and "no brink" are
-		/// different states rather than the same zero.</summary>
-		public const string RoofStandingProperty = "KingdomBrinkRoofStanding";
-
-		/// <summary>Tick a settler's creed brink was reached at.</summary>
-		public const string CreedTickProperty = "KingdomBrinkCreedTick";
-
-		/// <summary>Tick the founder was warned of a settler's creed brink.</summary>
-		public const string CreedWarnedProperty = "KingdomBrinkCreedWarned";
-
-		/// <summary>One when a creed brink stands over this settler at all.</summary>
-		public const string CreedStandingProperty = "KingdomBrinkCreedStanding";
-
-		/// <summary>The creed a settler's creed brink is toward.</summary>
-		public const string CreedTowardProperty = "KingdomBrinkCreedToward";
-
-		/// <summary>The <see cref="ConversionChannel"/> a settler's creed brink was reached
-		/// through.</summary>
-		public const string CreedChannelProperty = "KingdomBrinkCreedChannel";
-
 		/// <summary>
 		/// Key under which the fact that the realm stands at the breaking point lives in
 		/// <c>XRLGame.IntGameState</c>. A generic, already-serialized slot rather than a new field
@@ -133,31 +115,44 @@ namespace ThousandAndFirst
 		// --- A settler's brink -------------------------------------------------------------
 
 		/// <summary>What is standing over this settler, of this kind. Never throws; a null
-		/// settler and one nothing has ever happened to both read as no brink.</summary>
+		/// settler, one nothing has ever happened to, and one no city has a row for all read as no
+		/// brink.</summary>
 		public static BrinkRecord Of(GameObject Subject, BrinkKind Kind)
 		{
-			if (Subject == null || Subject.GetIntProperty(StandingPropertyFor(Kind)) == 0)
+			KingdomCityBook book;
+			int id;
+			if (!KingdomResidents.TryLocate(Realm(), Subject, out book, out id))
 			{
 				return BrinkRecord.None;
 			}
-			return new BrinkRecord(
-				Stands: true,
-				Subject.GetLongProperty(TickPropertyFor(Kind)),
-				Subject.GetLongProperty(WarnedPropertyFor(Kind)),
-				(Kind == BrinkKind.Creed) ? Subject.GetStringProperty(CreedTowardProperty) : null,
-				(Kind == BrinkKind.Creed) ? Subject.GetIntProperty(CreedChannelProperty) : 0);
+			bool stands;
+			long reached;
+			long warned;
+			string toward;
+			int channel;
+			if (!book.TryReadBrink(id, Kind, out stands, out reached, out warned, out toward, out channel) || !stands)
+			{
+				return BrinkRecord.None;
+			}
+			return new BrinkRecord(Stands: true, reached, warned, toward, channel);
 		}
 
 		/// <summary>Whether anything of this kind is standing over this settler.</summary>
 		public static bool Stands(GameObject Subject, BrinkKind Kind)
 		{
-			return Subject != null && Subject.GetIntProperty(StandingPropertyFor(Kind)) != 0;
+			return Of(Subject, Kind).Stands;
 		}
 
 		/// <summary>
 		/// Records that this settler has reached an irreversible line, at the tick they actually
 		/// reached it. Idempotent: a settler already at this brink keeps the record they have, so
 		/// a second caller in the same pass cannot restart their window or redate their loss.
+		/// <para>
+		/// Enrols the settler if the roll has not reached them yet. That is the one thing this
+		/// does which reading does not: a settler who arrived during the growth step can be housed,
+		/// refused and warned several steps before the next check-in would have written their row,
+		/// and a warning with nowhere to live is a warning that never fires.
+		/// </para>
 		/// </summary>
 		/// <param name="Subject">The settler.</param>
 		/// <param name="Kind">Which line.</param>
@@ -168,19 +163,15 @@ namespace ThousandAndFirst
 		/// <returns>True when this call is the one that recorded it.</returns>
 		public static bool Record(GameObject Subject, BrinkKind Kind, long ReachedTick, string Cause, int Channel)
 		{
-			if (Subject == null || Stands(Subject, Kind))
+			KingdomCityBook book;
+			int id;
+			if (!KingdomResidents.TryEnsureRow(Realm(), Subject, out book, out id) || Stands(Subject, Kind))
 			{
 				return false;
 			}
-			Subject.SetIntProperty(StandingPropertyFor(Kind), 1);
-			Subject.SetLongProperty(TickPropertyFor(Kind), (ReachedTick > 0L) ? ReachedTick : 0L);
-			Subject.SetLongProperty(WarnedPropertyFor(Kind), KingdomBrinkRules.Unwarned);
-			if (Kind == BrinkKind.Creed)
-			{
-				Subject.SetStringProperty(CreedTowardProperty, string.IsNullOrEmpty(Cause) ? null : Cause);
-				Subject.SetIntProperty(CreedChannelProperty, Channel);
-			}
-			return true;
+			return book.TryWriteBrink(id, Kind, stands: true, (ReachedTick > 0L) ? ReachedTick : 0L,
+				KingdomBrinkRules.Unwarned, (Kind == BrinkKind.Creed) ? Cause : null,
+				(Kind == BrinkKind.Creed) ? Channel : 0);
 		}
 
 		/// <summary>
@@ -192,12 +183,19 @@ namespace ThousandAndFirst
 		/// actually say it.</returns>
 		public static bool MarkWarned(GameObject Subject, BrinkKind Kind, long NowTick)
 		{
-			if (!Stands(Subject, Kind) || KingdomBrinkRules.Warned(Subject.GetLongProperty(WarnedPropertyFor(Kind))))
+			BrinkRecord brink = Of(Subject, Kind);
+			if (!brink.Stands || brink.Warned)
 			{
 				return false;
 			}
-			Subject.SetLongProperty(WarnedPropertyFor(Kind), (NowTick > 0L) ? NowTick : 1L);
-			return true;
+			KingdomCityBook book;
+			int id;
+			if (!KingdomResidents.TryLocate(Realm(), Subject, out book, out id))
+			{
+				return false;
+			}
+			return book.TryWriteBrink(id, Kind, stands: true, brink.ReachedTick,
+				(NowTick > 0L) ? NowTick : 1L, brink.Cause, brink.Channel);
 		}
 
 		/// <summary>
@@ -214,15 +212,13 @@ namespace ThousandAndFirst
 			{
 				return false;
 			}
-			Subject.SetIntProperty(StandingPropertyFor(Kind), 0);
-			Subject.SetLongProperty(TickPropertyFor(Kind), 0L);
-			Subject.SetLongProperty(WarnedPropertyFor(Kind), KingdomBrinkRules.Unwarned);
-			if (Kind == BrinkKind.Creed)
+			KingdomCityBook book;
+			int id;
+			if (!KingdomResidents.TryLocate(Realm(), Subject, out book, out id))
 			{
-				Subject.SetStringProperty(CreedTowardProperty, null);
-				Subject.SetIntProperty(CreedChannelProperty, 0);
+				return false;
 			}
-			return true;
+			return book.TryWriteBrink(id, Kind, stands: false, 0L, KingdomBrinkRules.Unwarned, null, 0);
 		}
 
 		/// <summary>Whether this settler's window has run out with the cause still standing, at
@@ -360,7 +356,7 @@ namespace ThousandAndFirst
 			KingdomWord.Unsay(System, From, Here, KingdomBrinkRules.LiftedNote(Kind, Subject));
 		}
 
-		// --- Which property ----------------------------------------------------------------
+		// --- Where the record is kept --------------------------------------------------------
 
 		private static long CityWarnedTick()
 		{
@@ -369,19 +365,15 @@ namespace ThousandAndFirst
 			return (!string.IsNullOrEmpty(stored) && long.TryParse(stored, out tick)) ? tick : KingdomBrinkRules.Unwarned;
 		}
 
-		private static string TickPropertyFor(BrinkKind Kind)
+		/// <summary>
+		/// The realm, or null. <c>GetSystem</c> and not <c>RequireSystem</c>: these accessors are
+		/// called from passes that can run before a realm exists, and a settler with no realm has
+		/// no roll to stand on and therefore no brink &mdash; which is the same answer the property
+		/// bag gave, arrived at honestly.
+		/// </summary>
+		private static KingdomSystem Realm()
 		{
-			return (Kind == BrinkKind.Creed) ? CreedTickProperty : RoofTickProperty;
-		}
-
-		private static string WarnedPropertyFor(BrinkKind Kind)
-		{
-			return (Kind == BrinkKind.Creed) ? CreedWarnedProperty : RoofWarnedProperty;
-		}
-
-		private static string StandingPropertyFor(BrinkKind Kind)
-		{
-			return (Kind == BrinkKind.Creed) ? CreedStandingProperty : RoofStandingProperty;
+			return (The.Game == null) ? null : The.Game.GetSystem<KingdomSystem>();
 		}
 	}
 }

@@ -29,21 +29,28 @@ namespace ThousandAndFirst
 		/// </para>
 		/// </summary>
 		/// <summary>
-		/// Version 4 is the city book. <see cref="City"/> arrives on the system and on every
+		/// Version 4 was the city book. <see cref="City"/> arrived on the system and on every
 		/// settlement, the <c>r_TAF_Supports_*</c> and <c>r_TAF_Larders_*</c> game-state key
-		/// families retire, and the realm gains a minted simulation seed. A version-3 save has no
-		/// book at all and its zone sightings live in a dictionary this build no longer reads, so
-		/// a settlement read out of one would be a city with no memory of its own other zones.
+		/// families retired, and the realm gained a minted simulation seed.
 		/// <para>
-		/// No migration machinery ships for it, and Addendum 9 is why: the mod has never run, so
-		/// there are no version-3 saves in the world, and "version bumps stay clean and
-		/// deliberate" means the gate refuses a pre-book layout by name rather than silently
-		/// reading a city that has lost half its ground.
+		/// Version 5 is residents as rows. The realm gains <see cref="Bindings"/> and
+		/// <see cref="ResidentCounter"/>; the book's resident columns gain a cause, a standing flag
+		/// per brink, and a warned TICK where a version-4 book carried only a flag; and the
+		/// <c>KingdomBrinkRoof*</c> / <c>KingdomBrinkCreed*</c> settler properties retire into those
+		/// columns. A version-4 save's settlers carry brinks nothing in this build reads and rows
+		/// that cannot say when a window started, so it is refused by name rather than loaded as a
+		/// city whose warnings have quietly lost their deadlines.
+		/// </para>
+		/// <para>
+		/// No migration machinery ships for either, and Addendum 9 is why: the mod has never run,
+		/// so there are no version-4 saves in the world, and "version bumps stay clean and
+		/// deliberate" means the gate refuses an older layout by name rather than silently reading
+		/// a city that has lost something.
 		/// </para>
 		/// </summary>
-		private const int CurrentSerializationVersion = 4;
+		private const int CurrentSerializationVersion = 5;
 
-		private const int FirstNamedSerializationVersion = 4;
+		private const int FirstNamedSerializationVersion = 5;
 
 		private const int LegacyReflectedSerializationVersion = 1;
 
@@ -456,6 +463,31 @@ namespace ThousandAndFirst
 
 		/// <summary>See <see cref="SimulationSeedHigh"/>.</summary>
 		public ulong SimulationSeedLow;
+
+		/// <summary>
+		/// One identity, at most one body. LIVING-CITY-ARCHITECTURE &sect;3.8's binding registry,
+		/// keyed by <c>ResidentId</c> for people and by <c>JobId</c> for the carriers W3 mints.
+		/// <para>
+		/// <b>Realm-scope, and deliberately not on a settlement.</b> A bound body can be standing in
+		/// the other city's ground or walked off the map entirely, so a registry a seat swap carried
+		/// would answer for half the realm and lose the other half every time the founder crossed a
+		/// zone line. It is therefore realm state, like the standings and the chronicle, and
+		/// <c>SettlementSeatTests</c> asserts that no city carries it.
+		/// </para>
+		/// </summary>
+		public Simulation.City.KingdomBindingRegistry Bindings = new Simulation.City.KingdomBindingRegistry();
+
+		/// <summary>
+		/// How many people the realm has ever enrolled. The next <c>KingdomResidentId</c>
+		/// (<c>KingdomResidents.ResidentIdProperty</c>), minted in order and never reused.
+		/// <para>
+		/// Realm-scope for the reason the registry is: one identity must be unique across both
+		/// cities, and two per-city counters would hand the same number to two people. A counter and
+		/// not a draw &mdash; identity is a substrate, and a seeded id would make who-is-who depend
+		/// on how many other things had been rolled first.
+		/// </para>
+		/// </summary>
+		public int ResidentCounter;
 
 		/// <summary>
 		/// How many containers the realm has ever counted as its own. The next dedication ordinal
@@ -1481,6 +1513,19 @@ namespace ThousandAndFirst
 				City = new Simulation.City.KingdomCityBook();
 			}
 			City.Normalize();
+			if (Bindings == null)
+			{
+				Bindings = new Simulation.City.KingdomBindingRegistry();
+			}
+			Bindings.Normalize();
+			// A counter below zero would hand out an id a body may already carry, and an id that is
+			// not unique is not an identity. Fails closed to "nothing enrolled yet"; the ids already
+			// on bodies keep working, and the next mint starts over rather than colliding with one
+			// this realm has definitely issued.
+			if (ResidentCounter < 0)
+			{
+				ResidentCounter = 0;
+			}
 			// A founded save written before cities had names of their own carries only the realm's.
 			// The seat is that first city, so it takes that name rather than arriving unnamed.
 			if (Founded && string.IsNullOrEmpty(SettlementName))

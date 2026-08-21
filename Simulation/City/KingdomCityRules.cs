@@ -279,8 +279,15 @@ namespace ThousandAndFirst.Simulation.City
 	{
 		/// <summary>The schema the book is written under. Bumped whenever a column is added,
 		/// removed or retyped; Addendum 9 waives migration pre-release, so a bump is clean and
-		/// deliberate rather than a migration.</summary>
-		internal const int SchemaVersion = 1;
+		/// deliberate rather than a migration.
+		/// <para>
+		/// Version 2 is W2's resident rows: the standing gains a cause, each brink window gains its
+		/// own standing flag, and both warned columns are retyped from a flag to the tick the
+		/// window is anchored on. A version-1 book's brink columns cannot answer when a window
+		/// started, which is the one number every consumer of a brink reads.
+		/// </para>
+		/// </summary>
+		internal const int SchemaVersion = 2;
 
 		/// <summary>The rules revision the book was last advanced by. Separate from the schema:
 		/// a rules change that does not move a column still wants saying.</summary>

@@ -109,6 +109,13 @@ namespace ThousandAndFirst.Simulation.City
 			state = Carry(System, Z, Survey, state, TimeTicks);
 			state = Reconcile(System, Z, Survey, state, index, TimeTicks);
 			state = ReadWorks(state, Z, Survey);
+			// After the works, because a resident row's home is named by the work row that stands
+			// over it, and a home read before the works were rebuilt would name last pass's id.
+			// This is where the roster becomes rows and where the binding registry learns who is
+			// standing in this ground (LIVING-CITY-ARCHITECTURE §8.3, §3.8): every settler here gets
+			// a stable id and a row, and every row bound HERE whose body is not here reads back as
+			// Abroad or Dead, with the cause.
+			state = KingdomResidents.ReadRoster(System, Z, Survey, state, TimeTicks);
 			Publish(System, state);
 			Audit(System, Z, Survey, "check-in");
 		}
@@ -610,6 +617,14 @@ namespace ThousandAndFirst.Simulation.City
 			if (line != null)
 			{
 				KingdomLog.Log("city: " + step + " " + line);
+			}
+			// Invariant I3 beside invariant I1, and asserted rather than inferred: a registry that
+			// has started answering one key with two bodies says so on the pass it happens rather
+			// than on the pass a settler is finally seen twice.
+			string bindings = KingdomResidents.AuditLine(System);
+			if (bindings != null)
+			{
+				KingdomLog.Log("city: " + step + " " + bindings);
 			}
 		}
 

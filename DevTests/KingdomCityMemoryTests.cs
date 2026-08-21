@@ -59,6 +59,27 @@ namespace ThousandAndFirst.Tests
 			AssertRowFits(typeof(KingdomToldRow), KingdomCityMemoryRules.ToldRowBytes);
 			AssertRowFits(typeof(KingdomLeg), KingdomCityMemoryRules.LegBytes);
 			AssertRowFits(typeof(KingdomWorkRunState), 16);
+			// The registry's own row, budgeted at §0.0(c) and shipped in W2: key 4 + kind 1 +
+			// zone ref 8 + object ref 8 + minted tick 8, against the thirty-two the table bought it.
+			AssertRowFits(typeof(KingdomBinding), KingdomCityMemoryRules.BindingRowBytes);
+		}
+
+		/// <summary>
+		/// The brink half of the resident row, by value. W2 moved two windows off the settler's
+		/// property bag and into the row, and the row had to stay inside the ninety-six §0.0(c)
+		/// budgets it — which it does, at ninety-one, with the two windows costing seventeen bytes
+		/// each. This pins the window itself so that widening it fails here rather than silently
+		/// eating the row's remaining headroom.
+		/// </summary>
+		[Test]
+		public void ABrinkWindowIsAStandingFlagAndTwoTicks()
+		{
+			int bytes;
+			Assert.IsTrue(KingdomCityMemoryRules.TryMeasureDeclaredRowBytes(typeof(KingdomBrinkWindow), out bytes));
+			Assert.AreEqual(17, bytes);
+			int row;
+			Assert.IsTrue(KingdomCityMemoryRules.TryMeasureDeclaredRowBytes(typeof(KingdomResidentRow), out row));
+			Assert.AreEqual(91, row, "the resident row moved; if it grew past 96, §0.0(c) needs the same edit");
 		}
 
 		/// <summary>Six stock/capacity longs, forty-eight bytes, on the city and on every zone row.
