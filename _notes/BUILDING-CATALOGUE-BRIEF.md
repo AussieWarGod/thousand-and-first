@@ -786,3 +786,14 @@ destroyed?"
 - Interacts: stage/reach (an arcology is its own district? its own reach ceiling?), networks
   (the shell as backbone conduit), equilibrium (floors carry like works), the roster wave
   (a city IN a building).
+
+**Refinement (author, 2026-08-22):** "megastructures can give benefits if they are properly
+manned and resources available … the shell persists, while everything else withers when not
+properly manned/maintained." The class in one line: SHELL IS HISTORY, FUNCTION IS LABOUR. Fully
+manned and supplied, a megastructure grants its great benefits (the XL-and-beyond end of the
+reach/office doctrine — citywide or realm-wide functions); understaffed or under-supplied, its
+functions wither on the standing equilibrium law (time × labour × infrastructure — Addenda 8,
+10(b)) floor by floor, exactly like the city, while the shell stands through everything. An
+abandoned arcology is Qud's own fiction: an intact colossus, dark inside, waiting for people
+worth its size. Nothing new mechanically — the existing carries/wear/subsidence/reach machinery
+applied at the largest scale; the only novel rule remains the indestructible shell.
