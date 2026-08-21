@@ -113,12 +113,23 @@
     <skin Key="gyre" Style="gyre" ColorString="&amp;c" DetailColor="W" />
     <skin Key="eater" Style="eater" ColorString="&amp;r" DetailColor="K" />
   </building>
+  <!--
+    The two Closeness overrides in this file, and the only two. Closeness is normally MEASURED -
+    beds against the ground the tier stands on - and the measurement is right for every other
+    design here. It is wrong for exactly one shape: a design that raises SEVERAL DWELLINGS AT
+    ONCE inside one plot. Three households around a square, or a whole terraced street, put a lot
+    of beds on a little ground and read as one packed room, when what is actually there is the
+    stone house's own walls repeated. So both declare the stone house's rung. Note that the XL
+    housing court needs no override: at seven cells a bed it already measures Roomed.
+  -->
   <building Key="housecourt" DisplayName="house and court (three households around one well-swept square)" Blueprint="r_KingdomHouseCourt"
             Cost="26" Ticks="4800" Styles="all" Category="housing" Plot="M" MinStage="Village"
+            Closeness="Roomed"
             Materials="stone:26,timber:10" Carries="roof:18" Contents="r_KingdomFurnishings_Dwelling" />
 
   <building Key="terrace" DisplayName="housing terrace (a whole street, raised at once)" Blueprint="r_KingdomTerrace"
             Cost="40" Ticks="7200" Styles="all" Category="housing" Plot="L" MinStage="Town"
+            Closeness="Roomed"
             Materials="stone:44,timber:16" Carries="roof:26" Contents="r_KingdomFurnishings_Dwelling" />
 
   <!--

@@ -102,8 +102,11 @@ distance-scaled hauls, one in flight, mirroring the water manifest's honesty rul
 Needs / Prefers / Refuses, derived first from vanilla parts (Robot, aquatic brains, LiveFungus,
 PhotosyntheticSkin, Inorganic) and refined by `r_TAF_*` blueprint tags, with `-tag` removing a
 derived entry. Unknown tags are inert. `KingdomLodging` / `KingdomLodgingRules` assign every
-settler an address: Needs gate the home, Refuses and creed hostility (≥ `CohabitHostility`) gate
-the housemates, arrivals join only if a home they would accept exists, and a settler whose
+settler an address: Needs gate the home; housemates are gated by the closeness ladder — Packed shares only without
+quarrel, Close refuses the ambient grudge, Roomed tolerates it, and open hostility (≥100, the
+named fault lines) refuses any shared roof at every tier. `Refuses` tags are absolute. Closeness
+derives from beds-per-footprint density, `Closeness` attribute overriding. (`CohabitHostility` /
+`JudgeCohabitation` are the superseded flat floor, kept only until retired), arrivals join only if a home they would accept exists, and a settler whose
 acceptable housing is lost leaves after a two-attended-pass grace through the ordinary emigration.
 Tastes and displacement tolerance query this same vocabulary.
 

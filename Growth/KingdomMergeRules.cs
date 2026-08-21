@@ -353,6 +353,15 @@ namespace ThousandAndFirst
 		/// not name, and it moves nothing when a mod changes it.</summary>
 		public const string AttrProvides = "Provides";
 
+		/// <summary>How close the quarters a design's residents keep are (Addendum 4c):
+		/// <c>Packed</c>, <c>Close</c>, <c>Roomed</c>, <c>Private</c>. An override for the
+		/// beds-per-footprint derivation, and absent from every design content to be measured.
+		/// Named here so the merge and the loader agree on the spelling. Deliberately absent from
+		/// <see cref="SpentAttributes"/> and <see cref="StampedAttributes"/> for exactly
+		/// <see cref="AttrProvides"/>'s reason: how close a roof holds people is re-read every time
+		/// somebody asks whether they will live under it, and changing it moves nothing.</summary>
+		public const string AttrCloseness = "Closeness";
+
 		/// <summary>What <c>KingdomRules.TryParseBuildAttributes</c> refuses an entry for the want
 		/// of. A later file may omit every one of them &mdash; that is a merge &mdash; but the
 		/// design as a whole must end up with all four.</summary>

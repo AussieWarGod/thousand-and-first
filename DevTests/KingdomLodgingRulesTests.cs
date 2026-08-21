@@ -4,6 +4,7 @@ using NUnit.Framework;
 using ThousandAndFirst;
 using Candidate = ThousandAndFirst.KingdomLodgingRules.LodgingCandidate;
 using Reason = ThousandAndFirst.KingdomLodgingRules.UnhousedReason;
+using Quarters = ThousandAndFirst.KingdomLodgingRules.Closeness;
 
 namespace ThousandAndFirst.Tests
 {
@@ -511,6 +512,374 @@ namespace ThousandAndFirst.Tests
 				KingdomLodgingRules.HomeSuffix("reservoir yard", KingdomQolRules.TagOpenWater));
 			Assert.AreEqual("sleeps in the cellar, in the damp dark",
 				KingdomLodgingRules.HomeSuffix("cellar", KingdomQolRules.TagDamp));
+		}
+
+		// ==================================================================================
+		// Addendum 4c -- feelings scale with closeness. The single CohabitHostility floor is a
+		// four-rung ladder: what a tent refuses, a stone house carries. Every rung's boundary is
+		// pinned here, both sides, so moving a threshold or flipping a comparison fails a test
+		// rather than quietly changing who may live where.
+		// ==================================================================================
+
+		// --- The derivation: beds against the ground the tier stands on -----------------------
+
+		[TestCase(1, 3, Quarters.Packed)]
+		[TestCase(1, 4, Quarters.Close)]
+		[TestCase(1, 5, Quarters.Close)]
+		[TestCase(1, 6, Quarters.Roomed)]
+		[TestCase(1, 9, Quarters.Roomed)]
+		[TestCase(1, 10, Quarters.Private)]
+		[TestCase(1, 1000, Quarters.Private)]
+		public void ClosenessFromDensity_EachRungBoundaryIsExact(int beds, int cells, Quarters expected)
+		{
+			Assert.AreEqual(expected, KingdomLodgingRules.ClosenessFromDensity(cells, beds));
+		}
+
+		[TestCase(3, 11, Quarters.Packed)]
+		[TestCase(3, 12, Quarters.Close)]
+		[TestCase(3, 17, Quarters.Close)]
+		[TestCase(3, 18, Quarters.Roomed)]
+		[TestCase(3, 29, Quarters.Roomed)]
+		[TestCase(3, 30, Quarters.Private)]
+		public void ClosenessFromDensity_TheBoundariesScaleWithTheBedCountAndNeverRound(int beds, int cells, Quarters expected)
+		{
+			// The thresholds are multiplied out rather than the density divided down, so a rung
+			// boundary never lands on a rounding direction. Three beds move every boundary to
+			// exactly three times where one bed put it.
+			Assert.AreEqual(expected, KingdomLodgingRules.ClosenessFromDensity(cells, beds));
+		}
+
+		[TestCase(0, 0)]
+		[TestCase(0, 4)]
+		[TestCase(12, 0)]
+		[TestCase(-8, 2)]
+		[TestCase(12, -2)]
+		public void ClosenessFromDensity_ADegenerateReadingIsTheTightestRungAndNotTheRoomiest(int cells, int beds)
+		{
+			// A roof the registry cannot measure is one cell with a bunk in it, not a manor. The
+			// safe answer to a gate with no arithmetic behind it is the strict one.
+			Assert.AreEqual(Quarters.Packed, KingdomLodgingRules.ClosenessFromDensity(cells, beds));
+		}
+
+		// --- The shipped catalogue, design by design ------------------------------------------
+
+		// Footprint cells and beds exactly as KingdomBuildings.xml declares them: a tier's own
+		// Footprint where it has one, and the whole plot (S 5x4, M 8x6, L 12x9, XL 20x14) where it
+		// fills its plot. If a design's Carries or Footprint is rebalanced, this table is where the
+		// rung it lands on has to be re-agreed.
+		[TestCase("tent", 6, 2, Quarters.Packed)]
+		[TestCase("tentrow", 10, 3, Quarters.Packed)]
+		[TestCase("hut", 12, 3, Quarters.Close)]
+		[TestCase("hutyard", 20, 5, Quarters.Close)]
+		[TestCase("house", 48, 8, Quarters.Roomed)]
+		[TestCase("court", 280, 40, Quarters.Roomed)]
+		[TestCase("finehouse", 48, 4, Quarters.Private)]
+		[TestCase("manor", 108, 6, Quarters.Private)]
+		public void ClosenessFromDensity_TheShippedDesignsLandOnTheRungsTheRulingNames(string design, int cells, int beds, Quarters expected)
+		{
+			// Addendum 4c's own examples: tent and bunk row Packed, hut Close, stone house Roomed,
+			// fine house and manor Private -- all four derived from the arithmetic and none of them
+			// declared.
+			Assert.AreEqual(expected, KingdomLodgingRules.ClosenessFromDensity(cells, beds), design);
+		}
+
+		[TestCase("housecourt", 48, 18, Quarters.Packed)]
+		[TestCase("terrace", 108, 26, Quarters.Close)]
+		public void ClosenessFromDensity_TheTwoMultiDwellingDesignsAreExactlyWhereTheDerivationReadsWrong(string design, int cells, int beds, Quarters derived)
+		{
+			// Three households around a square and a whole terraced street put many beds on little
+			// ground and measure tighter than the single stone house whose walls they repeat. This
+			// is why they are the only two entries in the catalogue carrying a Closeness override,
+			// and this test is the evidence that the override is needed rather than decorative.
+			Assert.AreEqual(derived, KingdomLodgingRules.ClosenessFromDensity(cells, beds), design);
+			Assert.AreNotEqual(Quarters.Roomed, derived, design + " would not need an override if the arithmetic already agreed");
+		}
+
+		[Test]
+		public void TheDeclaredClosenessIsWhatTheCatalogueOverridesWith()
+		{
+			// What KingdomLodging does with the attribute, in the order it does it: parse the
+			// declaration, and only measure when there is none. The override wins over an
+			// arithmetic that says Packed.
+			Quarters declared;
+			Assert.IsTrue(KingdomLodgingRules.TryParseCloseness("Roomed", out declared));
+			Assert.AreEqual(Quarters.Roomed, declared);
+			Assert.AreEqual(Quarters.Packed, KingdomLodgingRules.ClosenessFromDensity(48, 18), "the housecourt's own arithmetic");
+			Assert.AreNotEqual(KingdomLodgingRules.ClosenessFromDensity(48, 18), declared, "and the declaration is what the design gets");
+		}
+
+		// --- Parsing the attribute -------------------------------------------------------------
+
+		[TestCase("Packed", Quarters.Packed)]
+		[TestCase("close", Quarters.Close)]
+		[TestCase("ROOMED", Quarters.Roomed)]
+		[TestCase("  Private  ", Quarters.Private)]
+		public void TryParseCloseness_FoldsCaseAndSurroundingWhitespace(string raw, Quarters expected)
+		{
+			Quarters parsed;
+			Assert.IsTrue(KingdomLodgingRules.TryParseCloseness(raw, out parsed), raw);
+			Assert.AreEqual(expected, parsed);
+		}
+
+		[TestCase(null)]
+		[TestCase("")]
+		[TestCase("   ")]
+		[TestCase("cosy")]
+		[TestCase("Packed,Close")]
+		public void TryParseCloseness_AnythingElseIsRefusedSoTheCallerFallsBackToMeasuring(string raw)
+		{
+			Quarters parsed;
+			Assert.IsFalse(KingdomLodgingRules.TryParseCloseness(raw, out parsed), raw ?? "null");
+		}
+
+		[Test]
+		public void ClosenessNames_AreTheEnumInRungOrderSoTheParseAndTheEnumCannotDrift()
+		{
+			Assert.AreEqual(4, KingdomLodgingRules.ClosenessNames.Length);
+			for (int i = 0; i < KingdomLodgingRules.ClosenessNames.Length; i++)
+			{
+				Quarters parsed;
+				Assert.IsTrue(KingdomLodgingRules.TryParseCloseness(KingdomLodgingRules.ClosenessNames[i], out parsed));
+				Assert.AreEqual((Quarters)i, parsed, KingdomLodgingRules.ClosenessNames[i]);
+			}
+		}
+
+		// --- The ladder itself -------------------------------------------------------------
+
+		[TestCase(Quarters.Packed, 1)]
+		[TestCase(Quarters.Close, 50)]
+		[TestCase(Quarters.Roomed, 75)]
+		[TestCase(Quarters.Private, 100)]
+		public void RefusalHostility_IsTheRulingsOwnFourThresholds(Quarters quarters, int expected)
+		{
+			Assert.AreEqual(expected, KingdomLodgingRules.RefusalHostility(quarters));
+		}
+
+		[Test]
+		public void RefusalHostility_RisesStrictlyWithTheRoomSoBetterQuartersAlwaysHoldWorseFeelings()
+		{
+			// The whole of Addendum 4c in one assertion: no rung ever tolerates less than a
+			// tighter one. A mutation that swaps two rungs fails here.
+			Assert.Less(KingdomLodgingRules.RefusalHostility(Quarters.Packed), KingdomLodgingRules.RefusalHostility(Quarters.Close));
+			Assert.Less(KingdomLodgingRules.RefusalHostility(Quarters.Close), KingdomLodgingRules.RefusalHostility(Quarters.Roomed));
+			Assert.Less(KingdomLodgingRules.RefusalHostility(Quarters.Roomed), KingdomLodgingRules.RefusalHostility(Quarters.Private));
+		}
+
+		[Test]
+		public void ThePackedRungIsExactlyTheOldFloorAndThePrivateRungIsExactlyTheOldCohabitCeiling()
+		{
+			// Nothing was thrown away. The tightest rung restates KingdomLodgingRules' own creed
+			// floor -- any enmity at all refuses -- and the roomiest restates the single
+			// CohabitHostility the vocabulary shipped with, which used to be applied to every roof
+			// in the settlement and now applies only where everybody has a door of their own.
+			Assert.AreEqual(KingdomLodgingRules.CreedRefusalHostilityFloor + 1, KingdomLodgingRules.PackedRefusalHostility);
+			Assert.AreEqual(KingdomQolRules.CohabitHostility, KingdomLodgingRules.PrivateRefusalHostility);
+		}
+
+		[TestCase(Quarters.Packed, 0, false)]
+		[TestCase(Quarters.Packed, 1, true)]
+		[TestCase(Quarters.Close, 49, false)]
+		[TestCase(Quarters.Close, 50, true)]
+		[TestCase(Quarters.Roomed, 74, false)]
+		[TestCase(Quarters.Roomed, 75, true)]
+		[TestCase(Quarters.Private, 99, false)]
+		[TestCase(Quarters.Private, 100, true)]
+		public void Conflicts_EachRungRefusesAtItsOwnThresholdAndCarriesOneShortOfIt(Quarters quarters, int hostility, bool expected)
+		{
+			Assert.AreEqual(expected, KingdomLodgingRules.Conflicts(Tags(), Tags(), Tags(), Tags(), hostility, quarters));
+		}
+
+		[TestCase(Quarters.Packed, true)]
+		[TestCase(Quarters.Close, true)]
+		[TestCase(Quarters.Roomed, false)]
+		[TestCase(Quarters.Private, false)]
+		public void Conflicts_TheAmbientFiftyGrudgeBreaksATentAndAHutAndIsCarriedByAHouse(Quarters quarters, bool expected)
+		{
+			// The standing -50 fifty-three faction pairs hold toward everyone they have not
+			// troubled to name. This is the case the ruling is about: a mixed city cannot bunk
+			// together and can live in stone.
+			Assert.AreEqual(expected, KingdomLodgingRules.Conflicts(Tags(), Tags(), Tags(), Tags(), 50, quarters));
+		}
+
+		[TestCase(Quarters.Packed)]
+		[TestCase(Quarters.Close)]
+		[TestCase(Quarters.Roomed)]
+		[TestCase(Quarters.Private)]
+		public void Conflicts_TheFlatHundredFaultLineRefusesAtEveryRungIncludingTheRoomiest(Quarters quarters)
+		{
+			// The Templar and the Girsh do not share a manor either.
+			Assert.IsTrue(KingdomLodgingRules.Conflicts(Tags(), Tags(), Tags(), Tags(), 100, quarters));
+		}
+
+		[TestCase(Quarters.Packed)]
+		[TestCase(Quarters.Close)]
+		[TestCase(Quarters.Roomed)]
+		[TestCase(Quarters.Private)]
+		public void Conflicts_OneCreedSharesAnythingAtEveryRung(Quarters quarters)
+		{
+			// Same creed reads as zero hostility (KingdomCreedRules.Hostility short-circuits it),
+			// and zero clears every rung of the ladder. Believers of one creed are never kept apart
+			// by these quarters or any other.
+			Assert.IsFalse(KingdomLodgingRules.Conflicts(Tags(), Tags(), Tags(), Tags(), 0, quarters));
+		}
+
+		[TestCase(Quarters.Packed)]
+		[TestCase(Quarters.Close)]
+		[TestCase(Quarters.Roomed)]
+		[TestCase(Quarters.Private)]
+		public void Conflicts_ARefusesTagIsAbsoluteAtEveryClosenessAndNoAmountOfRoomSoftensIt(Quarters quarters)
+		{
+			// The ladder scales the creed half and nothing else. A Refuses names a thing about the
+			// other person that a wall does not fix -- so it fires with zero hostility, in a manor,
+			// and in both directions.
+			Assert.IsTrue(KingdomLodgingRules.Conflicts(Tags("taf:damp"), Tags(), Tags(), Tags("taf:damp"), 0, quarters), "A refuses B");
+			Assert.IsTrue(KingdomLodgingRules.Conflicts(Tags(), Tags("taf:damp"), Tags("taf:damp"), Tags(), 0, quarters), "B refuses A");
+		}
+
+		[TestCase(0)]
+		[TestCase(1)]
+		[TestCase(50)]
+		[TestCase(100)]
+		public void Conflicts_TheClosenessFreeOverloadJudgesTheTightestQuartersThereAre(int hostility)
+		{
+			// A caller that has not said what the quarters were gets Packed, which is the only safe
+			// reading and is also exactly the rule the five-argument form has always applied.
+			Assert.AreEqual(
+				KingdomLodgingRules.Conflicts(Tags(), Tags(), Tags(), Tags(), hostility, Quarters.Packed),
+				KingdomLodgingRules.Conflicts(Tags(), Tags(), Tags(), Tags(), hostility));
+		}
+
+		// --- Five mixed believers, and one bunkhouse -----------------------------------------
+
+		// One home filling up, exactly as the pass fills it: each arrival is judged against
+		// everybody already seated, and somebody refused simply never moves in (Addendum 4b -- the
+		// refused never join). Returns how many of them ended up under the one roof.
+		private static int SeatedInOneHome(Quarters quarters, int[][] Hostility)
+		{
+			List<int> seated = new List<int>();
+			for (int i = 0; i < Hostility.Length; i++)
+			{
+				bool refused = false;
+				for (int j = 0; j < seated.Count; j++)
+				{
+					if (KingdomLodgingRules.Conflicts(Tags(), Tags(), Tags(), Tags(), Hostility[i][seated[j]], quarters))
+					{
+						refused = true;
+						break;
+					}
+				}
+				if (!refused)
+				{
+					seated.Add(i);
+				}
+			}
+			return seated.Count;
+		}
+
+		// Five people of five different creeds, every pair holding the ambient grudge toward every
+		// other, nobody holding anything against themselves.
+		private static int[][] FiveMixedBelievers(int Between)
+		{
+			int[][] matrix = new int[5][];
+			for (int i = 0; i < 5; i++)
+			{
+				matrix[i] = new int[5];
+				for (int j = 0; j < 5; j++)
+				{
+					matrix[i][j] = (i == j) ? 0 : Between;
+				}
+			}
+			return matrix;
+		}
+
+		[Test]
+		public void FiveMixedBelieversWillNotShareOneBunkhouseAndWillShareOneRoomedHouse()
+		{
+			// The ruling's own sentence: "You cannot jam five different believers into one
+			// bunkhouse and have it be fine." One of the five gets the bunk row and the other four
+			// never join; the same five fill a stone house. This is the consequence the addendum
+			// calls intended -- a diverse city must build better housing to exist.
+			int[][] mixed = FiveMixedBelievers(50);
+			Assert.AreEqual(1, SeatedInOneHome(Quarters.Packed, mixed), "the bunk row seats one of the five");
+			Assert.AreEqual(1, SeatedInOneHome(Quarters.Close, mixed), "and so does the hut");
+			Assert.AreEqual(5, SeatedInOneHome(Quarters.Roomed, mixed), "the stone house takes all five");
+			Assert.AreEqual(5, SeatedInOneHome(Quarters.Private, mixed), "and so does the fine house");
+		}
+
+		[TestCase(Quarters.Packed)]
+		[TestCase(Quarters.Close)]
+		[TestCase(Quarters.Roomed)]
+		[TestCase(Quarters.Private)]
+		public void FiveBelieversOfOneCreedShareAnythingIncludingTheBunkhouse(Quarters quarters)
+		{
+			Assert.AreEqual(5, SeatedInOneHome(quarters, FiveMixedBelievers(0)));
+		}
+
+		[Test]
+		public void FiveMixedBelieversStillWillNotShareAManorAcrossAFaultLine()
+		{
+			// Roomier housing answers the ambient grudge and does not answer hatred. Nothing the
+			// founder builds puts the Templar and the Girsh in one household.
+			Assert.AreEqual(1, SeatedInOneHome(Quarters.Private, FiveMixedBelievers(100)));
+		}
+
+		// --- Composition with Addendum 4b: the refused never join ---------------------------
+
+		[Test]
+		public void AnyWouldTake_TheBunkRowRefusesTheMixedArrivalAndTheStoneHouseTakesThem()
+		{
+			// The arrival gate reads the same pair through the same ladder: OccupantsRefuse is
+			// exactly Conflicts at the home's own rung, so raising better housing is what turns a
+			// refused arrival into a settler.
+			bool refusedInABunkRow = KingdomLodgingRules.Conflicts(Tags(), Tags(), Tags(), Tags(), 50, Quarters.Packed);
+			bool refusedInAHouse = KingdomLodgingRules.Conflicts(Tags(), Tags(), Tags(), Tags(), 50, Quarters.Roomed);
+			Reason reason;
+			Assert.IsFalse(KingdomLodgingRules.AnyWouldTake(Homes(Home(3, 1, refusedInABunkRow)), Tags(), out reason));
+			Assert.AreEqual(Reason.Refused, reason, "and it is named as a refusal, never as a bed count");
+			Assert.IsTrue(KingdomLodgingRules.AnyWouldTake(Homes(Home(3, 1, refusedInAHouse)), Tags(), out reason));
+			Assert.AreEqual(Reason.Housed, reason);
+		}
+
+		// --- Naming the quarters (STANDARDS 7b) ---------------------------------------------
+
+		[TestCase(Quarters.Packed, "one open room")]
+		[TestCase(Quarters.Close, "a hut's close quarters")]
+		[TestCase(Quarters.Roomed, "a house with walls between the beds")]
+		[TestCase(Quarters.Private, "a house of their own")]
+		public void QuartersPhrase_NamesTheArchitectureRatherThanTheRung(Quarters quarters, string expected)
+		{
+			// A founder acts on walls, not on a word this mod invented. The rung names never reach
+			// the player.
+			Assert.AreEqual(expected, KingdomLodgingRules.QuartersPhrase(quarters));
+		}
+
+		[Test]
+		public void UnhousedLine_ARefusalNamesTheRoomiestQuartersThatStillWouldNotTakeThem()
+		{
+			string line = KingdomLodgingRules.UnhousedLine("Vashti", Reason.Refused, Quarters.Close);
+			StringAssert.StartsWith("Vashti sleeps in the open", line);
+			StringAssert.Contains("will not live beside", line);
+			StringAssert.Contains("The roomiest of them is a hut's close quarters.", line);
+		}
+
+		[TestCase(Reason.NoRoofAtAll)]
+		[TestCase(Reason.NeedsUnmet)]
+		[TestCase(Reason.Full)]
+		public void UnhousedLine_EveryOtherReasonReadsWordForWordAsItDidBeforeTheQuartersExisted(Reason reason)
+		{
+			// Naming the quarters says nothing at all about a settlement with no roof standing, or
+			// one whose every bed is taken. Only a refusal is about the room.
+			Assert.AreEqual(
+				KingdomLodgingRules.UnhousedLine("Vashti", reason),
+				KingdomLodgingRules.UnhousedLine("Vashti", reason, Quarters.Roomed));
+		}
+
+		[Test]
+		public void Roomier_KeepsTheBestQuartersThatStillRefusedSoTheFounderKnowsWhatToBeat()
+		{
+			Assert.AreEqual(Quarters.Roomed, KingdomLodgingRules.Roomier(Quarters.Packed, Quarters.Roomed));
+			Assert.AreEqual(Quarters.Roomed, KingdomLodgingRules.Roomier(Quarters.Roomed, Quarters.Close));
+			Assert.AreEqual(Quarters.Private, KingdomLodgingRules.Roomier(Quarters.Private, Quarters.Private));
 		}
 	}
 }

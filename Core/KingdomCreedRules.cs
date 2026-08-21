@@ -101,6 +101,21 @@ namespace ThousandAndFirst
 		/// own fault line — the flat -100 the Templar hold and are held at — that is four points a
 		/// day; a mere dislike of twenty buys none at all, which is the floor that keeps ordinary
 		/// friction from ever breaking a realm.
+		/// <para>
+		/// <b>Polity is not proximity.</b> This constant and
+		/// <c>KingdomLodgingRules.RefusalHostility</c>'s ladder read the same faction feelings and
+		/// are deliberately different lenses on them, and neither may be collapsed into the other.
+		/// Dissent asks whether two CITIES can be one realm: the parties are a day's walk apart and
+		/// never in the same room, so distance is the whole of the relationship, the feeling is
+		/// spent slowly as points a day the founder can watch accumulating, ordinary dislike buys
+		/// none at all, and the answer arrives with a long fuse that a rite of shared water can
+		/// still put out. Cohabitation (Addendum 4c) asks whether two PEOPLE sleep in one room
+		/// tonight: no accrual, no countdown, nothing to put out — a placement constraint answered
+		/// yes or no at the door, scaled not by time but by ARCHITECTURE, because a wall between
+		/// two beds is a real object the founder can pay stone for and a border between two cities
+		/// is not. The same -50 that buys a realm two points of dissent a day is refused outright
+		/// by a hut and carried without comment by a stone house.
+		/// </para>
 		/// </summary>
 		public const int HostilityPerDissentPoint = 25;
 

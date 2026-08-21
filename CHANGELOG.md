@@ -192,6 +192,17 @@ playtest passes.
 - Tastes and the upgrade trigger's displacement tolerance now speak this same vocabulary — three
   private systems became one, moddable end to end.
 
+### Added — closeness, and the fault-line ceiling
+- **How citizens feel about each other decides who shares a roof, scaled by the quarters.**
+  Packed (tent, bunk row) shares only without quarrel; Close (hut) refuses the ambient grudge;
+  Roomed (stone house) tolerates it — walls between beds answer prejudice; and a true fault line
+  (the −100 creeds) refuses **any** shared roof, marble included. Closeness derives from
+  beds-per-footprint density, with an authored override where a design raises several dwellings
+  at once.
+- Consequences, intended: a diverse city must build in stone to exist, and a two-creed city
+  physically partitions into quarters through the layout grammar — no code knows the word
+  "quarter." Architecture manages difference; only the covenant heals it.
+
 ### Changed
 - Districts are no longer flavour. Each of the six now changes something a player can measure:
   garrison adds defence across every claimed zone, agrarian bills upkeep at 90%, market adds a

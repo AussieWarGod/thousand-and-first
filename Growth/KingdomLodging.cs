@@ -30,6 +30,15 @@ namespace ThousandAndFirst
 	/// silently kept pointing at nothing.
 	/// </para>
 	/// <para>
+	/// <b>Feelings scale with closeness (Addendum 4c).</b> How much of a quarrel a roof will hold
+	/// is a property of the roof. This file derives every home's closeness rung from what the
+	/// registry already declares &mdash; the beds in its <c>Carries</c> against the ground its tier
+	/// stands on, from <c>KingdomPlots</c> &mdash; and lets a design's own <c>Closeness</c>
+	/// attribute override that arithmetic where it reads the ground wrong. Nothing about closeness
+	/// is serialized: it is registry data, recomputed from the merged catalogue every load, so a
+	/// rebalance moves it for a house raised a year ago and a save carries none of it.
+	/// </para>
+	/// <para>
 	/// <b>Housing binds (Addendum 4b).</b> A settler joins only if a home exists they would take
 	/// (<see cref="WouldTakeArrival"/>, called by the arrival loop). A settler who loses every
 	/// acceptable home is named once, given <c>KingdomLodgingRules.GracePasses</c> ATTENDED
@@ -53,6 +62,55 @@ namespace ThousandAndFirst
 		/// pass a settler has no acceptable home, cleared the pass they are finally housed, so the
 		/// chronicle says it once per spell of going without rather than once per visit.</summary>
 		public const string UnhousedAnnouncedProperty = "KingdomLodgingUnhousedAnnounced";
+
+		// --- Addendum 4c: the closeness registry ------------------------------------------
+
+		// A design's declared Closeness override, keyed by building Key exactly as the plot spec,
+		// the zoning gate and the upgrade chain are (STANDARDS 6): a later file re-using a key owns
+		// that design's rung, and re-declaring it WITHOUT the attribute correctly returns the design
+		// to the derivation. Nothing here is serialized -- closeness is registry data, recomputed
+		// from the merged catalogue on every load, so a save carries none of it and a rebalance
+		// moves it for a house raised a year ago.
+		private static readonly Dictionary<string, KingdomLodgingRules.Closeness> Declared = new Dictionary<string, KingdomLodgingRules.Closeness>();
+
+		/// <summary>Forgets every declared <c>Closeness</c>. Called by the registry loader before it
+		/// re-reads the XML streams.</summary>
+		public static void ClearCloseness()
+		{
+			Declared.Clear();
+		}
+
+		/// <summary>
+		/// Registers one entry's <c>Closeness</c> override as the registry parses it. Call once per
+		/// <c>&lt;building&gt;</c> element that parsed successfully, with the merged raw attribute;
+		/// null or blank registers "measure me", which is every design content to be derived.
+		/// </summary>
+		/// <param name="Key">The entry's <c>Key</c>. Blank keys are ignored.</param>
+		/// <param name="Closeness">Raw <c>Closeness</c> attribute: <c>Packed</c>, <c>Close</c>,
+		/// <c>Roomed</c> or <c>Private</c>. A word this build does not know is logged and the design
+		/// falls back to the derivation &mdash; hostile-input discipline, STANDARDS 9: a malformed
+		/// attribute disables itself and never takes a design out of the catalogue.</param>
+		public static void RegisterCloseness(string Key, string Closeness)
+		{
+			if (string.IsNullOrEmpty(Key))
+			{
+				return;
+			}
+			Declared.Remove(Key);
+			if (string.IsNullOrEmpty(Closeness) || Closeness.Trim().Length == 0)
+			{
+				return;
+			}
+			KingdomLodgingRules.Closeness quarters;
+			if (!KingdomLodgingRules.TryParseCloseness(Closeness, out quarters))
+			{
+				KingdomLog.Log("KingdomBuildings: building " + Key + " declares Closeness=\"" + Closeness
+					+ "\", which is none of " + string.Join(", ", KingdomLodgingRules.ClosenessNames)
+					+ ". Measuring its beds against its footprint instead.");
+				return;
+			}
+			Declared[Key] = quarters;
+		}
 
 		/// <summary>
 		/// The kingdom's one attended pass over one claimed zone's lodging: keeps every valid
@@ -125,7 +183,7 @@ namespace ThousandAndFirst
 					new List<string>(KingdomQol.OfferOf(entry.Key)),
 					capacity,
 					(occupants == null) ? 0 : occupants.Count,
-					occupants != null && AnyOccupantConflicts(refuses, selfTags, creed, occupants)));
+					occupants != null && AnyOccupantConflicts(refuses, selfTags, creed, occupants, QuartersOf(entry))));
 			}
 			return KingdomLodgingRules.AnyWouldTake(offers, needs, out Reason);
 		}
@@ -215,6 +273,10 @@ namespace ThousandAndFirst
 			bool anyMeetsNeeds = false;
 			bool anyHasCapacity = false;
 			bool anyWithoutRefusal = false;
+			// Addendum 4c: the roomiest quarters that had a bed free and still would not take them.
+			// This is what the founder can act on -- whatever they build next has to beat it -- and
+			// it is what the refusal line names.
+			KingdomLodgingRules.Closeness roomiestRefused = KingdomLodgingRules.Closeness.Packed;
 			List<KingdomLodgingRules.LodgingCandidate> eligible = new List<KingdomLodgingRules.LodgingCandidate>();
 			List<GameObject> eligibleHomes = new List<GameObject>();
 
@@ -250,8 +312,10 @@ namespace ThousandAndFirst
 					continue;
 				}
 				anyHasCapacity = true;
-				if (occupants != null && AnyOccupantConflicts(refuses, selfTags, creed, occupants))
+				KingdomLodgingRules.Closeness quarters = QuartersOf(entry);
+				if (occupants != null && AnyOccupantConflicts(refuses, selfTags, creed, occupants, quarters))
 				{
+					roomiestRefused = KingdomLodgingRules.Roomier(roomiestRefused, quarters);
 					continue;
 				}
 				anyWithoutRefusal = true;
@@ -264,7 +328,7 @@ namespace ThousandAndFirst
 			if (chosen < 0)
 			{
 				KingdomLodgingRules.UnhousedReason reason = KingdomLodgingRules.Diagnose(anyRoofAtAll, anyMeetsNeeds, anyHasCapacity, anyWithoutRefusal);
-				AnnounceUnhoused(System, Resident, residentName, reason);
+				AnnounceUnhoused(System, Resident, residentName, reason, roomiestRefused);
 				if (SpendGrace)
 				{
 					SpendOnePassOfGrace(System, Z, Resident, RollNameOf(Resident));
@@ -382,25 +446,23 @@ namespace ThousandAndFirst
 			return tags;
 		}
 
-		private static bool AnyOccupantConflicts(List<string> Refuses, List<string> SelfTags, string Creed, List<GameObject> Occupants)
+		private static bool AnyOccupantConflicts(List<string> Refuses, List<string> SelfTags, string Creed, List<GameObject> Occupants, KingdomLodgingRules.Closeness Quarters)
 		{
 			for (int i = 0; i < Occupants.Count; i++)
 			{
 				GameObject occupant = Occupants[i];
 				string occupantCreed = occupant.GetStringProperty(KingdomCreed.CreedProperty);
-				// Which creed feelings actually break a household is the vocabulary's own ruling
-				// (KingdomQolRules.CohabitHostility): the game's flat -100 fault lines do, and the
-				// standing -50 several factions hold toward everyone they have not troubled to name
-				// does not, or half a mixed settlement could never share a wall. Everything milder
-				// is texture, and texture is what Refuses tags are for. Anything below the
-				// threshold is handed on as no hostility at all, so the pure rule goes on asking
-				// its own question -- "is there enmity here" -- and one answer decides it.
-				int felt = KingdomCreed.HostilityBetween(Creed, occupantCreed);
-				int hostility = (felt >= KingdomQolRules.CohabitHostility) ? felt : 0;
+				// Addendum 4c: which creed feelings break a household is a question about the
+				// household's own quarters, so the raw engine feeling is handed straight down and
+				// the ladder in KingdomLodgingRules decides. The single floor that used to be
+				// applied here -- only the flat -100 fault lines, never the standing -50 -- is
+				// still exactly what a home at Closeness.Private asks, and is now the top rung of
+				// four rather than the rule for every roof in the settlement.
+				int hostility = KingdomCreed.HostilityBetween(Creed, occupantCreed);
 				QolProfile theirs = KingdomQol.ProfileOf(occupant);
 				List<string> occupantSelfTags = SelfTagsOf(theirs);
 				List<string> occupantRefuses = new List<string>(theirs.Refuses);
-				if (KingdomLodgingRules.Conflicts(Refuses, SelfTags, occupantRefuses, occupantSelfTags, hostility))
+				if (KingdomLodgingRules.Conflicts(Refuses, SelfTags, occupantRefuses, occupantSelfTags, hostility, Quarters))
 				{
 					return true;
 				}
@@ -408,14 +470,16 @@ namespace ThousandAndFirst
 			return false;
 		}
 
-		private static void AnnounceUnhoused(KingdomSystem System, GameObject Resident, string ResidentName, KingdomLodgingRules.UnhousedReason Reason)
+		private static void AnnounceUnhoused(KingdomSystem System, GameObject Resident, string ResidentName, KingdomLodgingRules.UnhousedReason Reason, KingdomLodgingRules.Closeness RoomiestRefused)
 		{
 			if (Resident.GetIntProperty(UnhousedAnnouncedProperty) == 1)
 			{
 				return;
 			}
 			Resident.SetIntProperty(UnhousedAnnouncedProperty, 1);
-			string line = KingdomLodgingRules.UnhousedLine(ResidentName, Reason);
+			// Addendum 4c names the quarters, so a founder hearing this once (7b) hears what to
+			// build rather than only that somebody is outside.
+			string line = KingdomLodgingRules.UnhousedLine(ResidentName, Reason, RoomiestRefused);
 			KingdomChronicle.Record(System, line);
 			System.Ledger.Note("{{r|" + line + "}}");
 		}
@@ -495,6 +559,31 @@ namespace ThousandAndFirst
 				return false;
 			}
 			return KingdomData.TryGetBuilding(key, out Entry);
+		}
+
+		// The rung this design's own arithmetic puts it on, or the one its author declared. The
+		// footprint is the ground the TIER stands on -- KingdomPlotRules.TryFootprint answers with
+		// the whole plot for a tier that declares no footprint of its own, which is exactly right:
+		// the stone house fills its plot and the tent does not. A design with no plot spec at all is
+		// a single-cell work with a bunk in it, and reads Packed, which is what one cell is.
+		private static KingdomLodgingRules.Closeness QuartersOf(KingdomRules.BuildEntry Entry)
+		{
+			if (Entry == null)
+			{
+				return KingdomLodgingRules.Closeness.Packed;
+			}
+			KingdomLodgingRules.Closeness declared;
+			if (Declared.TryGetValue(Entry.Key, out declared))
+			{
+				return declared;
+			}
+			KingdomPlotRules.PlotSpec spec;
+			int width;
+			int height;
+			int cells = (KingdomPlots.TryGetSpec(Entry.Key, out spec) && KingdomPlotRules.TryFootprint(spec, out width, out height))
+				? (width * height)
+				: 0;
+			return KingdomLodgingRules.ClosenessFromDensity(cells, RoofCapacity(Entry));
 		}
 
 		private static int RoofCapacity(KingdomRules.BuildEntry Entry)

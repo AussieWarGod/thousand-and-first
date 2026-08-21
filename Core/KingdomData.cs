@@ -108,6 +108,7 @@ namespace ThousandAndFirst
 			KingdomYards.ClearSpecs();
 			KingdomMergeRules.ClearDrafts();
 			KingdomQol.ClearProvides();
+			KingdomLodging.ClearCloseness();
 			Dictionary<string, Action<XmlDataHelper>> handlers = null;
 			handlers = new Dictionary<string, Action<XmlDataHelper>>
 			{
@@ -235,6 +236,7 @@ namespace ThousandAndFirst
 			declared.Set(KingdomMergeRules.AttrFootprint, xml.GetAttribute("Footprint"));
 			declared.Set(KingdomMergeRules.AttrRoof, xml.GetAttribute("Roof"));
 			declared.Set(KingdomMergeRules.AttrProvides, xml.GetAttribute("Provides"));
+			declared.Set(KingdomMergeRules.AttrCloseness, xml.GetAttribute("Closeness"));
 			BuildingDraft design = KingdomMergeRules.Absorb(declared);
 			if (!KingdomRules.TryParseBuildAttributes(design.Key, design.Get(KingdomMergeRules.AttrDisplayName), design.Get(KingdomMergeRules.AttrBlueprint), design.Get(KingdomMergeRules.AttrCost), design.Get(KingdomMergeRules.AttrTicks), design.Get(KingdomMergeRules.AttrStyles), design.Get(KingdomMergeRules.AttrCategory), design.Get(KingdomMergeRules.AttrMinStage), design.Get(KingdomMergeRules.AttrStaff), design.Get(KingdomMergeRules.AttrManning), design.Get(KingdomMergeRules.AttrDefence), out var entry, out var error))
 			{
@@ -260,6 +262,11 @@ namespace ThousandAndFirst
 			// offers a resident is the tags its author declared plus the ones its roof gives, and the
 			// roof is only settled once the merged spec is in.
 			KingdomQol.RegisterProvides(entry.Key, design.Get(KingdomMergeRules.AttrProvides));
+			// Last of the post-merge registrations, and after the plot spec on purpose: a design that
+			// declares no Closeness is measured, and what it is measured against is the beds in its
+			// merged Carries over the footprint the merged plot spec just registered. Registering it
+			// before either would measure a design nobody had finished declaring.
+			KingdomLodging.RegisterCloseness(entry.Key, design.Get(KingdomMergeRules.AttrCloseness));
 			KingdomRules.BuildEntry parsed = entry;
 			for (int i = 0; i < _buildings.Count; i++)
 			{

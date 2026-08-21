@@ -289,6 +289,7 @@ never heard of is never an error, and a tag nothing yet consumes simply waits fo
 | Attribute | Default when absent |
 |---|---|
 | `Provides` | Nothing declared. A comma list of namespaced tags. Case and whitespace are folded; repeats collapse. Merges by key like every other attribute, and reaches buildings that already stand — a mod that adds a tag today changes who will live in a house raised a year ago, and moves nothing. |
+| `Closeness` | **Measured.** `Packed`, `Close`, `Roomed`, or `Private` — how much of a quarrel these quarters will hold (see [below](#how-close-the-quarters-are)). Case and surrounding whitespace are folded; any other word is logged and the design is measured instead. Merges and re-reads exactly like `Provides`. |
 
 A plot also provides what its **roof** gives, whether its author thought about it or not: `Open` and
 `Soft` tiers provide `taf:sky`, `Walled` and `Carved` tiers provide `taf:dark`. That is read from the
@@ -310,6 +311,41 @@ A settling notable's stated taste uses the same namespace, one tag per building 
 design of that category meets that taste by exactly the rule a `Provides` meets a `Needs` by.
 
 Ship your own under your own namespace (`mymod:hearthfire`). Nothing is restricted to the list above.
+
+#### How close the quarters are
+
+How two people feel about each other always bears on whether they can live together; **how much it
+bears is the quarters**. You cannot jam five different believers into one bunkhouse and have it be
+fine, and the same five in a street of stone houses are neighbours who nod. So cohabitation is not
+one threshold but a ladder of four rungs, and a design's rung is normally **measured** rather than
+declared: the beds in its `Carries` against the ground its **tier** stands on (its `Footprint`, or
+the whole `Plot` for a tier that declares none).
+
+| Rung | Measured at | Refuses a creed hostility of | Shipped designs |
+|---|---|---|---|
+| `Packed` | under 4 cells a bed | **1** — any filed dislike at all | tent, staked tent-row |
+| `Close` | under 6 cells a bed | **50** — the ambient grudge most factions hold toward strangers | timber hut, hut and yard |
+| `Roomed` | under 10 cells a bed | **75** — open hostility, filed on purpose | stone house, housing court |
+| `Private` | 10 cells a bed or more | **100** — the game's flat fault lines, and nothing milder | fine house, manor |
+
+Hostility is 0–100, read off the engine's own faction table both ways (the worse direction wins), and
+same-creed always reads 0 — believers of one creed share anything, including a bunk row. An authored
+`Refuses` tag is **not** on the ladder: it is an absolute refusal at every closeness, because it names
+something about the other person that a wall does not fix.
+
+The consequence is intended: **a diverse city has to build better housing to exist at all.** Belief
+diversity is a thing you build for, in stone.
+
+Declare `Closeness` only when the measurement reads your design's ground wrong. The base catalogue
+declares it twice, both for the same shape — a design that raises *several dwellings at once* inside
+one plot (`housecourt`, `terrace`) puts many beds on little ground and measures as one packed room
+when what is really there is the stone house's own walls repeated.
+
+Note that this reads the same faction feelings that city **dissent** does, and answers differently on
+purpose: *polity is not proximity.* Dissent asks whether two cities a day's walk apart can be one
+realm, so it accrues slowly and a rite of shared water can still put it out. Cohabitation asks whether
+two people sleep in one room tonight — no accrual, no countdown, just yes or no at the door — and what
+it scales on is architecture, because a wall between two beds is a thing you can pay stone for.
 
 #### The resident side is DERIVED first
 
@@ -359,8 +395,9 @@ workable.
 
 The match does not happen, and it is **said out loud** — *"Vashti will not sleep beside the fungal
 cellar."* Nobody is evicted, nothing is destroyed, no meter moves and nothing decays. Cohabitation
-reads the engine's own faction feelings for the ideological cases (only the flat -100 fault lines
-break a household) and these tags for everything else.
+reads the engine's own faction feelings for the ideological cases — scaled by the home's own
+[closeness](#how-close-the-quarters-are), so a tent refuses what a stone house carries — and these
+tags for everything else, where a refusal is absolute at any closeness.
 
 Housing does **bind**, though. A settler joins the settlement only if a home is already standing that
 they would take — needs met, a bed free, and nobody in it they refuse — and the refusal names the

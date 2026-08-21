@@ -346,6 +346,10 @@ anyone.
 | 66a | Burn or condemn a settler's only acceptable home | Named once. They stay **two attended passes** while you act — raise a bunk, stake a plan — then leave through the ordinary emigration, chronicled by name and cause in both registers |
 | 66b | Trigger the grace, then stay away a season | Untouched on return. Absence never runs the clock — they leave because you did not act, never because you were gone |
 | 67 | Ship a mod creature with `r_TAF_Needs` tags, or none at all | With none, its needs derive from its own parts correctly. A `-tag` removes a derived need. Unknown tags are inert, waiting for a consumer |
+| 68 | House five settlers of mixed creeds and only a bunkhouse | **They do not all move in.** Packed quarters share only without quarrel; the announcement names the roomiest quarters that still refused |
+| 68a | Raise a stone house (Roomed) for the same five | The ambient grudge tolerates walls between beds. The −50 zealot-toward-stranger pairs now share |
+| 68b | Try to house a true fault-line pair (−100: esper and templar) in the marble fine house | **Refused at every tier.** Walls answer prejudice, not a creed war — they need separate buildings, and the city partitions into quarters by itself |
+| 68c | Watch where housing rises in a two-creed city | Quarters emerge — the layout grammar clusters housing with housing, and no building can hold both creeds. No code knows the word "quarter" |
 
 ## Pass 4 — Attitudes and persistence
 
