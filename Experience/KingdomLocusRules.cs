@@ -187,10 +187,19 @@ namespace ThousandAndFirst
 		public const long GuestIntervalTicks = KingdomRules.TicksPerDay * 3;
 
 		/// <summary>
-		/// How long a guest waits, once arrived, before giving up and moving on unmet. Checked
-		/// only on the settlement's own zone-activation pass (never a per-turn clock), so this
-		/// counts down real elapsed game time but is only ever <i>observed</i> while the founder
-		/// is actually there to take turns &mdash; a guest never expires "in absence".
+		/// How long a guest waits, once arrived, before giving up and moving on unmet. Real
+		/// elapsed game time, and it runs whether or not anybody is there to watch it run
+		/// (Addendum 8 clause 1): travellers walk the road on their own business, and a gate
+		/// nobody answers is answered by nobody for exactly as long as that lasts. What the
+		/// founder gets at awareness is the dated news of who came and went
+		/// (<see cref="PassagesLedgerNote"/>), never a stranger who has been standing in the
+		/// square since spring.
+		/// <para>
+		/// Shorter than <see cref="GuestIntervalTicks"/>, and that is load-bearing: it is what
+		/// makes "at most one is still standing" true of
+		/// <c>KingdomRules.PassagesThrough</c>'s answer, and it is what made an existing guest
+		/// blocking the next one a bound rather than a coincidence.
+		/// </para>
 		/// </summary>
 		public const long GuestPatienceTicks = KingdomRules.TicksPerDay / 3;
 
@@ -248,7 +257,79 @@ namespace ThousandAndFirst
 		/// was elsewhere &mdash; news to discover, not a debt to answer for.</summary>
 		public static string GuestLedgerNote(string GuestName)
 		{
-			return "{{K|" + GuestName + " passed through while you were away, waited a while, and moved on. Nothing was lost.}}";
+			return GuestLedgerNote(GuestName, 0);
+		}
+
+		/// <summary>
+		/// The same note, dated against the day their patience actually ran out. They gave up
+		/// when they gave up, which may be well before the pass that noticed &mdash; the same
+		/// honest elapsed a brink quotes, for a piece of news that costs nothing.
+		/// </summary>
+		/// <param name="GuestName">Who it was.</param>
+		/// <param name="DaysAgo">Whole days since they left. Zero and below drop the clause.</param>
+		public static string GuestLedgerNote(string GuestName, int DaysAgo)
+		{
+			string when = (DaysAgo <= 0)
+				? ""
+				: ((DaysAgo == 1) ? " a day before you saw it" : (" " + DaysAgo + " days before you saw it"));
+			return "{{K|" + GuestName + " passed through while you were away, waited a while, and moved on"
+				+ when + ". Nothing was lost.}}";
+		}
+
+		/// <summary>
+		/// How a run of unwitnessed passages is dated: against the day the founder is being told
+		/// about it, exactly as a subsidence rung is. Nobody's name is in it, because nobody
+		/// wrote their name down &mdash; there was no one at the gate to ask.
+		/// </summary>
+		/// <param name="DaysAgo">Whole days since the last of them stood at the gate. Zero and
+		/// below read as today.</param>
+		public static string PassageWhen(int DaysAgo)
+		{
+			if (DaysAgo <= 0)
+			{
+				return "the last of them today";
+			}
+			return (DaysAgo == 1)
+				? "the last of them a day before you saw it"
+				: ("the last of them " + DaysAgo + " days before you saw it");
+		}
+
+		/// <summary>
+		/// The homecoming ledger's note for the travellers who came, waited out their patience at
+		/// an unanswered gate, and went on again while the founder was elsewhere. One line for
+		/// the whole run however long it was: the chronicle keeps two hundred entries and a
+		/// season of ambient traffic is not what they are for.
+		/// </summary>
+		/// <param name="Passed">How many came and went. Zero or less has no news in it and
+		/// answers null, which is the caller's signal to say nothing.</param>
+		/// <param name="DaysAgo">Days since the last of them, for <see cref="PassageWhen"/>.</param>
+		public static string PassagesLedgerNote(int Passed, int DaysAgo)
+		{
+			if (Passed <= 0)
+			{
+				return null;
+			}
+			if (Passed == 1)
+			{
+				return "{{K|A traveller came through while you were away, waited at the gate, and moved on — "
+					+ PassageWhen(DaysAgo) + ". Nothing was lost.}}";
+			}
+			return "{{K|" + Passed + " travellers came through while you were away, waited at the gate, and moved on — "
+				+ PassageWhen(DaysAgo) + ". Nothing was lost.}}";
+		}
+
+		/// <summary>The chronicle's own telling of the same run, in the founder's-perspective
+		/// voice <c>KingdomChronicle.Record</c> expects. Never blame: an unanswered gate is a
+		/// missed pleasantry and not a fault logged against anybody.</summary>
+		public static string PassagesChronicleLine(int Passed, string SettlementName, int DaysAgo)
+		{
+			if (Passed <= 0)
+			{
+				return null;
+			}
+			string who = (Passed == 1) ? "a traveller" : (Passed + " travellers");
+			return who + " passed through " + SettlementName + " while you were away and went on again, "
+				+ PassageWhen(DaysAgo);
 		}
 	}
 }

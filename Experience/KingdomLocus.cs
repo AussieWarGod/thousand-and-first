@@ -174,9 +174,20 @@ namespace ThousandAndFirst
 		}
 
 		/// <summary>
-		/// Brings the occasional traveller through, on the same cadence the pure rules define,
-		/// and resolves an unattended departure the moment the founder is back to notice it
-		/// happened.
+		/// Brings travellers through on the cadence the pure rules define, whether or not anybody
+		/// was here to see them, and resolves what became of them at the moment the founder is
+		/// back to be told.
+		/// <para>
+		/// Addendum 8 clause 1: the road does not wait for the founder. A season away is a season
+		/// of people arriving, waiting out their patience at a gate nobody answered, and going on
+		/// &mdash; and clause 3 says what awareness gets is the dated news of it. So the backlog
+		/// is resolved rather than collapsed: everyone whose patience ran out during the absence
+		/// leaves one honest dated trace between them, and the only person still standing there
+		/// is the one who arrived recently enough to still be waiting. That is at most one, and
+		/// it is one because <c>GuestPatienceTicks</c> is shorter than
+		/// <c>GuestIntervalTicks</c> rather than because a live object happened to be blocking
+		/// the spawn.
+		/// </para>
 		/// </summary>
 		private static void RunGuestPass(KingdomSystem System, Zone Z, long TimeTicks)
 		{
@@ -198,11 +209,46 @@ namespace ThousandAndFirst
 				System.NextGuestTick = KingdomLocusRules.NextGuestDueTick(TimeTicks);
 				return;
 			}
-			if (!KingdomLocusRules.GuestShouldArrive(TimeTicks, System.NextGuestTick))
+			KingdomRules.Passages passages = KingdomRules.PassagesThrough(
+				System.NextGuestTick, TimeTicks, KingdomLocusRules.GuestIntervalTicks, KingdomLocusRules.GuestPatienceTicks);
+			// Advanced BEFORE the telling and before the spawn, so a run of passages can never be
+			// told twice however the spawn goes.
+			System.NextGuestTick = passages.NextDueTick;
+			TellPassages(System, passages, TimeTicks);
+			if (passages.StandingSince <= 0L)
 			{
 				return;
 			}
-			SpawnGuest(System, Z, TimeTicks);
+			// Spawned at the tick they actually walked up, not at the tick the founder walked in,
+			// so their patience is already partly spent and they leave when they were always
+			// going to leave.
+			if (!SpawnGuest(System, Z, passages.StandingSince))
+			{
+				// No open ground for them this pass. Their arrival stands rather than being
+				// spent, so the next pass tries again -- and if their patience has run out by
+				// then, they are told about as somebody who came and went, which is what
+				// happened.
+				System.NextGuestTick = passages.StandingSince;
+			}
+		}
+
+		/// <summary>One dated line each way for a run of travellers who came and went unmet, and
+		/// nothing at all when nobody did (STANDARDS 7b's "not applicable" case: an absence with
+		/// no traffic in it is not news).</summary>
+		private static void TellPassages(KingdomSystem System, KingdomRules.Passages Passages, long TimeTicks)
+		{
+			if (Passages.Departed <= 0)
+			{
+				return;
+			}
+			int daysAgo = KingdomRules.ElapsedDays(TimeTicks - Passages.LastDepartedTick);
+			System.Ledger.Note(KingdomLocusRules.PassagesLedgerNote(Passages.Departed, daysAgo));
+			KingdomChronicle.Record(System, KingdomLocusRules.PassagesChronicleLine(
+				Passages.Departed, System.KingdomDisplayName, daysAgo));
+			if (KingdomLog.Enabled)
+			{
+				KingdomLog.Log("guest: " + Passages.Departed + " passed unmet, last " + daysAgo + "d ago, standing=" + Passages.StandingSince);
+			}
 		}
 
 		private static GameObject FindGuest(Zone Z)
@@ -239,7 +285,10 @@ namespace ThousandAndFirst
 			return "r_KingdomGuest";
 		}
 
-		private static void SpawnGuest(KingdomSystem System, Zone Z, long TimeTicks)
+		/// <summary>Puts one traveller on the ground at the tick they walked up. False when there
+		/// was nowhere to stand them, which is the caller's signal to leave their arrival unspent
+		/// rather than losing them.</summary>
+		private static bool SpawnGuest(KingdomSystem System, Zone Z, long ArrivalTick)
 		{
 			List<Cell> emptyCells = Z.GetEmptyCells((Cell c) => c.IsPassable() && !c.HasObjectWithPart("LiquidVolume"));
 			if (emptyCells == null || emptyCells.Count == 0)
@@ -250,13 +299,13 @@ namespace ThousandAndFirst
 			{
 				// No open ground this pass. Try again on the next: a missed guest for want of
 				// room is exactly the "no penalty" case, not a failure worth announcing.
-				return;
+				return false;
 			}
 			Cell cell = emptyCells.GetRandomElement();
 			GameObject guest = GameObject.Create(GuestBlueprint());
 			if (guest == null)
 			{
-				return;
+				return false;
 			}
 			cell.AddObject(guest);
 			guest.MakeActive();
@@ -275,11 +324,12 @@ namespace ThousandAndFirst
 				"Live and drink.",
 				Question: "Where are you bound?",
 				Answer: "Wherever the road goes next. I heard there was water shared here, and wanted to see it for myself.");
-			System.GuestDepartTick = KingdomLocusRules.GuestDepartTickFor(TimeTicks);
+			System.GuestDepartTick = KingdomLocusRules.GuestDepartTickFor(ArrivalTick);
 			if (KingdomLog.Enabled)
 			{
-				KingdomLog.Log("guest: arrived origin=" + origin + " depart=" + System.GuestDepartTick);
+				KingdomLog.Log("guest: arrived origin=" + origin + " at=" + ArrivalTick + " depart=" + System.GuestDepartTick);
 			}
+			return true;
 		}
 
 		/// <summary>
@@ -327,7 +377,11 @@ namespace ThousandAndFirst
 			}
 			if (!Greeted)
 			{
-				System.Ledger.Note(KingdomLocusRules.GuestLedgerNote(name));
+				// Dated against the day their patience actually ran out, which may be well before
+				// the pass that noticed: they gave up when they gave up, not when somebody
+				// finally walked in.
+				System.Ledger.Note(KingdomLocusRules.GuestLedgerNote(
+					name, KingdomRules.ElapsedDays(The.Game.TimeTicks - System.GuestDepartTick)));
 			}
 			System.NextGuestTick = KingdomLocusRules.NextGuestDueTick(The.Game.TimeTicks);
 			System.GuestDepartTick = 0L;

@@ -339,6 +339,107 @@ namespace ThousandAndFirst.Tests
 		{
 			StringAssert.Contains("6 marble", KingdomGuestRules.DeliveredLedgerNote("6 marble"));
 		}
+
+		// ---- Notables who came and went through an absence ----
+
+		[Test]
+		public void NotablePatienceIsShorterThanTheIntervalSoOnlyOneIsEverStanding()
+		{
+			// The same relation the plain traveller's clock keeps, and for the same reason: it is
+			// what makes KingdomRules.PassagesThrough answer "at most one at the gate".
+			Assert.Less(KingdomGuestRules.NotableGuestPatienceTicks, KingdomGuestRules.NotableGuestIntervalTicks);
+			Assert.Greater(KingdomGuestRules.NotableGuestPatienceTicks, 0L);
+		}
+
+		[Test]
+		public void ASeasonAwayIsNotablesWhoCameAndLeftLetters()
+		{
+			// The co-opt's own promise kept through an absence: ignored, they leave a letter and
+			// the hook becomes a rumor. Never lost, only relocated -- and never a queue of
+			// strangers standing in the square when the founder finally walks in.
+			long due = KingdomGuestRules.NotableGuestIntervalTicks;
+			long now = due + KingdomRules.TicksPerDay * 200;
+			KingdomRules.Passages passages = KingdomRules.PassagesThrough(
+				due, now, KingdomGuestRules.NotableGuestIntervalTicks, KingdomGuestRules.NotableGuestPatienceTicks);
+			Assert.Greater(passages.Departed, 25, "two hundred days at a seven-day cadence is not one notable");
+			Assert.AreEqual(0L, passages.StandingSince);
+		}
+
+		[Test]
+		public void ANotableWhoJustArrivedKeepsTheirOwnPatienceAndIsStillThere()
+		{
+			long due = KingdomGuestRules.NotableGuestIntervalTicks;
+			KingdomRules.Passages passages = KingdomRules.PassagesThrough(
+				due, due + KingdomRules.TicksPerDay, KingdomGuestRules.NotableGuestIntervalTicks, KingdomGuestRules.NotableGuestPatienceTicks);
+			Assert.AreEqual(due, passages.StandingSince);
+			Assert.AreEqual(0, passages.Departed);
+			Assert.AreEqual(due + KingdomGuestRules.NotableGuestPatienceTicks, KingdomGuestRules.DepartTickFor(passages.StandingSince));
+		}
+
+		[TestCase(0, "the last of them today")]
+		[TestCase(-3, "the last of them today")]
+		[TestCase(1, "the last of them a day before you saw it")]
+		[TestCase(12, "the last of them 12 days before you saw it")]
+		public void WhenPhrase_DatesAgainstTheDayTheFounderIsBeingTold(int daysAgo, string expected)
+		{
+			Assert.AreEqual(expected, KingdomGuestRules.WhenPhrase(daysAgo));
+		}
+
+		[Test]
+		public void PassedLinesCarryTheCountAndTheHonestDate()
+		{
+			string chronicle = KingdomGuestRules.PassedChronicleLine(9, "Tamsketh", 5);
+			StringAssert.Contains("9 notables", chronicle);
+			StringAssert.Contains("Tamsketh", chronicle);
+			StringAssert.Contains("5 days before you saw it", chronicle);
+			string ledger = KingdomGuestRules.PassedLedgerNote(9, 5);
+			StringAssert.Contains("9 notables", ledger);
+			StringAssert.Contains("nothing is lost", ledger);
+			string book = KingdomGuestRules.PassedGuestbookLine(9, 5);
+			StringAssert.Contains("9 notables", book);
+			StringAssert.Contains("departed", book);
+		}
+
+		[Test]
+		public void PassedOutsiderRumor_RelocatesTheHooksRatherThanLosingThem()
+		{
+			// The two registers do not agree about this: the official book records that the gate
+			// went unanswered, and the road records that there is something out there now.
+			string rumor = KingdomGuestRules.PassedOutsiderRumor(3, "Tamsketh", 4);
+			StringAssert.Contains("Tamsketh", rumor);
+			StringAssert.Contains("talk", rumor);
+			Assert.AreNotEqual(KingdomGuestRules.PassedChronicleLine(3, "Tamsketh", 4), rumor);
+		}
+
+		[Test]
+		public void PassedLinesSayNothingWhenNobodyCame()
+		{
+			Assert.IsNull(KingdomGuestRules.PassedChronicleLine(0, "Tamsketh", 4));
+			Assert.IsNull(KingdomGuestRules.PassedOutsiderRumor(0, "Tamsketh", 4));
+			Assert.IsNull(KingdomGuestRules.PassedLedgerNote(0, 4));
+			Assert.IsNull(KingdomGuestRules.PassedGuestbookLine(-1, 4));
+		}
+
+		[Test]
+		public void PassedLinesReadSingularForOne()
+		{
+			string one = KingdomGuestRules.PassedLedgerNote(1, 0);
+			StringAssert.Contains("One notable", one);
+			Assert.IsFalse(one.Contains("1 notables"), "the singular case read as a plural");
+		}
+
+		[Test]
+		public void DepartedLedgerNote_DatesTheDepartureAgainstTheDayItActuallyHappened()
+		{
+			string dated = KingdomGuestRules.DepartedLedgerNote("Aeru", 9);
+			StringAssert.Contains("Aeru", dated);
+			StringAssert.Contains("9 days before you saw it", dated);
+			StringAssert.Contains("nothing is lost", dated);
+			// A departure noticed the day it happened drops the clause rather than reading "0
+			// days before you saw it".
+			Assert.IsFalse(KingdomGuestRules.DepartedLedgerNote("Aeru", 0).Contains("before you saw it"));
+			StringAssert.Contains("a day before you saw it", KingdomGuestRules.DepartedLedgerNote("Aeru", 1));
+		}
 	}
 }
 #endif

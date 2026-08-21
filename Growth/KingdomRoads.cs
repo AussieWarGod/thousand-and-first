@@ -16,14 +16,16 @@ namespace ThousandAndFirst
 	/// (<see cref="KingdomPlotRules.RoadMargin"/>) and the gap between two reserved rects IS the
 	/// road; all this does is notice which gaps people cross. Everything resolves on the attended
 	/// <c>ZoneActivatedEvent</c> pass out of a stored tick stamp, so a settlement wears its ways
-	/// at exactly the rate it was lived in, and a founder who was away for a season finds three
-	/// days' worth of walking (<c>KingdomRules.HeartbeatDays</c>, which is still capped at
-	/// <c>KingdomRules.LegacyAbsenceCap</c>).
+	/// at exactly the rate it was lived in &mdash; the full elapsed, uncapped
+	/// (<c>KingdomRules.ElapsedDays</c>), because errands are walked whether or not the founder
+	/// is there to watch them being walked (Addendum 8 clause 1).
 	/// <para>
-	/// That cap is now this file's own and not "the same as everything else": water is charged
-	/// and fetched over the full elapsed (Addendum 8 clause 1). Traffic is already walkers x days
-	/// &mdash; the doctrine's own formula &mdash; so uncapping it is a denominator swap with
-	/// nothing else attached, and it waits only on the package that owns this file.
+	/// What keeps a season away from wearing a canyon is not a ceiling on the calendar but the
+	/// labour term the formula already had: traffic is WALKERS x days, walkers come from the
+	/// settlement's own population and its own errands, and a settlement with nobody in it walks
+	/// nowhere however long the stretch (Addendum 8 clause 2). The per-pass bounds
+	/// (<c>KingdomRoadRules.MaxRoutesPerPass</c>, <c>MaxFloorChangesPerPass</c>) stay exactly
+	/// what they always were: loop guards on one visit's work, never forgiveness.
 	/// </para>
 	/// </para>
 	/// <para>
@@ -301,12 +303,12 @@ namespace ThousandAndFirst
 				WriteTick(Z, WalkedProperty, timeTicks);
 				return;
 			}
-			int days = KingdomRules.HeartbeatDays(timeTicks - walked);
+			int days = KingdomRules.ElapsedDays(timeTicks - walked);
 			if (days <= 0)
 			{
 				return;
 			}
-			WriteTick(Z, WalkedProperty, KingdomRules.HeartbeatCheckpoint(walked, timeTicks));
+			WriteTick(Z, WalkedProperty, KingdomRules.AdvanceCheckpoint(walked, timeTicks));
 			// Nobody living here is NOT a stall: an empty settlement has no errands, and an
 			// announcement about it would be a complaint about a thing that is not wrong.
 			if (System.Population <= 0)

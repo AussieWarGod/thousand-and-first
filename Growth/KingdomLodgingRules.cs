@@ -513,16 +513,40 @@ namespace ThousandAndFirst
 			NoRoofAtAll = 1,
 			NeedsUnmet = 2,
 			Full = 3,
-			Refused = 4
+			Refused = 4,
+
+			/// <summary>Roofs are standing, and every one of them is too far gone to be a roof
+			/// (<see cref="IsCondemned"/>).</summary>
+			Condemned = 5
 		}
 
-		/// <summary>Reads the four coarse facts a pass over the candidate list already has in
-		/// hand and names the single reason nobody was eligible.</summary>
-		public static UnhousedReason Diagnose(bool AnyRoofAtAll, bool AnyMeetsNeeds, bool AnyHasCapacity, bool AnyWithoutRefusal)
+		/// <summary>
+		/// Reads the coarse facts a pass over the candidate list already has in hand and names
+		/// the single reason nobody was eligible.
+		/// <para>
+		/// The ladder is worst-first, and condemnation sits second because it is the truest
+		/// answer whenever it holds: a half-wrecked house answers nobody's needs and has no beds
+		/// worth counting, so "the roofs here have fallen in" outranks both, and it is the one
+		/// the founder can act on with a mending rather than a new commission.
+		/// </para>
+		/// </summary>
+		/// <param name="AnyRoofAtAll">Any home of any condition stands here.</param>
+		/// <param name="AnyMeetsNeeds">Some standing, un-condemned home answers their Needs.</param>
+		/// <param name="AnyHasCapacity">Some such home also had a bed free.</param>
+		/// <param name="AnyWithoutRefusal">Some such home also held nobody either of them
+		/// refuses.</param>
+		/// <param name="AnyStanding">Some home here is still sound enough to be a roof. Defaults
+		/// to true for a caller that does not judge wear, which is every caller that predates
+		/// condemnation.</param>
+		public static UnhousedReason Diagnose(bool AnyRoofAtAll, bool AnyMeetsNeeds, bool AnyHasCapacity, bool AnyWithoutRefusal, bool AnyStanding = true)
 		{
 			if (!AnyRoofAtAll)
 			{
 				return UnhousedReason.NoRoofAtAll;
+			}
+			if (!AnyStanding)
+			{
+				return UnhousedReason.Condemned;
 			}
 			if (!AnyMeetsNeeds)
 			{
@@ -537,6 +561,39 @@ namespace ThousandAndFirst
 				return UnhousedReason.Refused;
 			}
 			return UnhousedReason.Housed;
+		}
+
+		// --- Condemnation: when a house stops being a roof ---------------------------------
+
+		/// <summary>
+		/// Wear at which a home stops counting as a roof for anybody. Derived, not chosen:
+		/// <c>KingdomMaterialRules.ConditionPercent</c> says a work at wear W has <c>100 - W</c>
+		/// of itself left, and <c>KingdomRules.RuinStandingCeilingPercent</c> is the MOST of an
+		/// abandoned settlement that is ever still standing after a generation of nobody. So the
+		/// line is the wear at which a house somebody lives in has no more of itself left than
+		/// the best-preserved ruin &mdash; 40, which is also, and not by accident, exactly where
+		/// <c>KingdomMaterialRules.ConditionWord</c> starts calling a work half-wrecked.
+		/// <para>
+		/// Strictly below <c>KingdomMaterialRules.MaxWearPercent</c>, so condemnation is a state
+		/// a house can be in rather than a synonym for the wear ceiling: a home can be badly used
+		/// and still keep the rain off, and every point of the damage is mendable, so a
+		/// condemnation is arrested by putting the roof back on and never by waiting.
+		/// </para>
+		/// <para>
+		/// This is a LODGING rule and not a wear rule on purpose. Nothing about a condemned house
+		/// stops it working as whatever else it is; what it stops doing is housing people. The
+		/// protection law is untouched &mdash; nothing is cleared, nothing is destroyed, and the
+		/// building stands exactly where it stood.
+		/// </para>
+		/// </summary>
+		public const int CondemnedWearPercent = 100 - KingdomRules.RuinStandingCeilingPercent;
+
+		/// <summary>Whether a home this worn has stopped being a roof. At the threshold exactly,
+		/// it has: the constant names the first wear that is too much, not the last that is
+		/// tolerable.</summary>
+		public static bool IsCondemned(int Wear)
+		{
+			return Wear >= CondemnedWearPercent;
 		}
 
 		/// <summary>
@@ -561,6 +618,8 @@ namespace ThousandAndFirst
 				return name + " sleeps in the open: every home that would take " + name + " is full.";
 			case UnhousedReason.Refused:
 				return name + " sleeps in the open: every home that would take " + name + " already holds someone " + name + " will not live beside.";
+			case UnhousedReason.Condemned:
+				return name + " sleeps in the open: every roof here has fallen in past living under. Mend one and " + name + " has a home again.";
 			default:
 				return name + " sleeps in the open.";
 			}
@@ -787,13 +846,21 @@ namespace ThousandAndFirst
 		/// </param>
 		/// <param name="Reason">Why nobody would take them, in the order a founder should hear
 		/// the reasons. <see cref="UnhousedReason.Housed"/> when one would.</param>
-		public static bool AnyWouldTake(IReadOnlyList<ArrivalHome> Homes, IReadOnlyList<string> Needs, out UnhousedReason Reason)
+		/// <param name="Homes">Standing, un-condemned homes the caller gathered.</param>
+		/// <param name="Needs">What the newcomer needs.</param>
+		/// <param name="Reason">Why nobody would take them.</param>
+		/// <param name="AnyCondemnedRoof">Whether the caller filtered any home out for being worn
+		/// past <see cref="CondemnedWearPercent"/>. Without this a settlement whose every roof has
+		/// fallen in would be told it had never built one, which is both untrue and the wrong
+		/// remedy: mend, do not commission.</param>
+		public static bool AnyWouldTake(IReadOnlyList<ArrivalHome> Homes, IReadOnlyList<string> Needs, out UnhousedReason Reason, bool AnyCondemnedRoof = false)
 		{
-			bool anyRoofAtAll = Homes != null && Homes.Count > 0;
+			bool anyStanding = Homes != null && Homes.Count > 0;
+			bool anyRoofAtAll = anyStanding || AnyCondemnedRoof;
 			bool anyMeetsNeeds = false;
 			bool anyHasCapacity = false;
 			bool anyWithoutRefusal = false;
-			if (anyRoofAtAll)
+			if (anyStanding)
 			{
 				for (int i = 0; i < Homes.Count; i++)
 				{
@@ -814,7 +881,7 @@ namespace ThousandAndFirst
 					anyWithoutRefusal = true;
 				}
 			}
-			Reason = Diagnose(anyRoofAtAll, anyMeetsNeeds, anyHasCapacity, anyWithoutRefusal);
+			Reason = Diagnose(anyRoofAtAll, anyMeetsNeeds, anyHasCapacity, anyWithoutRefusal, anyStanding);
 			return Reason == UnhousedReason.Housed;
 		}
 
@@ -833,6 +900,8 @@ namespace ThousandAndFirst
 				return "a settler reached " + where + " and found every home already full";
 			case UnhousedReason.Refused:
 				return "a settler reached " + where + " and found no home they would take, for who was already in it";
+			case UnhousedReason.Condemned:
+				return "a settler reached " + where + " and found every roof in it fallen in";
 			default:
 				return "a settler reached " + where + " and found nowhere to live";
 			}
@@ -852,6 +921,8 @@ namespace ThousandAndFirst
 				return "A settler came and found every home full. Commission more housing and they will stay.";
 			case UnhousedReason.Refused:
 				return "A settler came and found no home they would take, for who was already living in it. Another roof would give them somewhere of their own.";
+			case UnhousedReason.Condemned:
+				return "A settler came and found every roof here fallen in. Mend one and they will stay.";
 			default:
 				return "A settler came and found nowhere to live.";
 			}

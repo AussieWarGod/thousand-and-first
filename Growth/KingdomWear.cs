@@ -101,20 +101,18 @@ namespace ThousandAndFirst
 	/// <c>KingdomMaterials.OnSettlementPass</c> already keeps for striking and clearing, costed
 	/// and timed the same way a strike is &mdash; <c>KingdomMaterialRules.RepairCost</c>/
 	/// <c>RepairBits</c> for what it costs, <c>RepairEffort</c> and
-	/// <c>KingdomRules.HeartbeatDays</c> for how long it takes, so a long absence resolves a few
-	/// honest days of mending and never the whole job in one step. Nothing here spends water, and
+	/// <c>KingdomRules.ElapsedDays</c> for how long it takes. Nothing here spends water, and
 	/// nothing here ever fails a work past <see cref="KingdomMaterialRules.MaxWearPercent"/>.
 	/// </para>
 	/// <para>
-	/// <b>Two clock notes, both deliberate.</b> First, <see cref="AdvanceRepair"/> is the
-	/// reference for checkpoint ordering in this mod: it reads the gate, names the block once
-	/// (STANDARDS 7b), and only then advances the stamp &mdash; so a mending nobody has hands for
-	/// loses those days rather than banking them for a crew that was never there.
-	/// <c>KingdomMaterials.WorkYard</c> now keeps the same order for the same reason. Second, the
-	/// day count itself is still <c>KingdomRules.HeartbeatDays</c>, which is capped: mending is
-	/// an unmigrated row (<c>KingdomRules.LegacyAbsenceCap</c>), waiting on the package that owns
-	/// the rest of the worked-property family. Uncapping it is a denominator swap with nothing
-	/// else attached &mdash; the labour term it needs is already here.
+	/// <b>The clock.</b> <see cref="AdvanceRepair"/> is the reference for checkpoint ordering in
+	/// this mod: it reads the gate, names the block once (STANDARDS 7b), and only then advances
+	/// the stamp &mdash; so a mending nobody has hands for loses those days rather than banking
+	/// them for a crew that was never there. <c>KingdomMaterials.WorkYard</c> keeps the same
+	/// order for the same reason. The day count is the full elapsed, uncapped (Addendum 8
+	/// clause 1): a crew mends through an absence exactly as it mends through a fortnight of
+	/// visits, and what stops a season away from mending everything is that ordering &mdash;
+	/// hands first, and one mending settlement-wide at a time. Idle hands put nothing back.
 	/// </para>
 	/// </summary>
 	public static class KingdomWear
@@ -394,7 +392,7 @@ namespace ThousandAndFirst
 				KingdomMaterials.WriteTick(Work, RepairWorkedProperty, TimeTicks);
 				return;
 			}
-			int days = KingdomRules.HeartbeatDays(TimeTicks - worked);
+			int days = KingdomRules.ElapsedDays(TimeTicks - worked);
 			if (days <= 0)
 			{
 				return;
@@ -410,11 +408,11 @@ namespace ThousandAndFirst
 						System.Ledger.Note("{{r|" + blockLine + "}}");
 					}
 				}
-				KingdomMaterials.WriteTick(Work, RepairWorkedProperty, KingdomRules.HeartbeatCheckpoint(worked, TimeTicks));
+				KingdomMaterials.WriteTick(Work, RepairWorkedProperty, KingdomRules.AdvanceCheckpoint(worked, TimeTicks));
 				return;
 			}
 			WearPart.AnnouncedBlock = 0;
-			KingdomMaterials.WriteTick(Work, RepairWorkedProperty, KingdomRules.HeartbeatCheckpoint(worked, TimeTicks));
+			KingdomMaterials.WriteTick(Work, RepairWorkedProperty, KingdomRules.AdvanceCheckpoint(worked, TimeTicks));
 			int left = WearPart.RepairEffortLeft - KingdomMaterialRules.EffortWorked(Hands, days);
 			if (left > 0)
 			{

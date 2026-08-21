@@ -14,7 +14,10 @@ with a founder-set water detail and upkeep, the thirst ladder (warnings → emig
 withering → recovery), settlers with names, origins, homes and work, districts, city style read
 from the ground, commissioned construction on staked or automatic plots, clearance-as-extraction
 materials and a merge-by-key building catalogue with footprints and skins, lodging that asks who
-will live beside whom, creeds and the five channels belief moves through, provoked raids with
+will live beside whom, creeds and the five channels belief moves through, a world that keeps
+time whether you are in it or not — works that run on days and labour rather than on visits, a
+settlement that settles back toward the level its own works honestly carry, and the brink that
+holds every irreversible consequence open until you are told about it — provoked raids with
 three answers, trade charters and caravans, a second city and the water manifest between them,
 exile and return, the dated two-register chronicle, a homecoming report, and the Charter ability
 that fronts all of it.

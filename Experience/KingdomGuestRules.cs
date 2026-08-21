@@ -136,7 +136,15 @@ namespace ThousandAndFirst
 
 		/// <summary>How long a notable guest waits to be lodged before giving up. Longer than a
 		/// plain traveller's patience (<c>KingdomLocusRules.GuestPatienceTicks</c>): finding a
-		/// bed of the right tier is a real ask, and a notable who came this far waits for it.</summary>
+		/// bed of the right tier is a real ask, and a notable who came this far waits for it.
+		/// <para>
+		/// Real elapsed time, running whether or not anybody is here to watch it run (Addendum 8
+		/// clause 1). Still shorter than <see cref="NotableGuestIntervalTicks"/>, which is what
+		/// makes at most one of them ever still be standing when the founder walks back in
+		/// (<c>KingdomRules.PassagesThrough</c>); the rest left letters, and the letters are the
+		/// dated trace an absence gets.
+		/// </para>
+		/// </summary>
 		public const long NotableGuestPatienceTicks = KingdomRules.TicksPerDay * 2;
 
 		public static bool ShouldArrive(long TimeTicks, long NextDueTick)
@@ -269,6 +277,98 @@ namespace ThousandAndFirst
 			return GuestName + ", who left word of " + HookText + " {{K|(departed; a rumor now)}}";
 		}
 
+		/// <summary>
+		/// The chronicle's telling of a run of notables who came, waited out their patience at an
+		/// unanswered gate, and went on again while the founder was elsewhere. One entry for the
+		/// whole run, dated against the day it is being told about &mdash; the register keeps two
+		/// hundred lines and a season of notables is not what they are for.
+		/// </summary>
+		/// <param name="Passed">How many came and went. Zero or less answers null.</param>
+		/// <param name="SettlementName">The seat they came to.</param>
+		/// <param name="DaysAgo">Days since the last of them stood at the gate.</param>
+		public static string PassedChronicleLine(int Passed, string SettlementName, int DaysAgo)
+		{
+			if (Passed <= 0)
+			{
+				return null;
+			}
+			string who = (Passed == 1) ? "a notable" : (Passed + " notables");
+			return who + " came to the gate of " + SettlementName + " while you were away, waited, and went on "
+				+ "leaving letters behind them, " + WhenPhrase(DaysAgo);
+		}
+
+		/// <summary>
+		/// The same run in the outsider register: the hooks they were carrying did not die with
+		/// the visit, they became what the road says. Never lost, only relocated &mdash; the
+		/// co-opt's own promise, kept for the ones nobody was home to meet.
+		/// </summary>
+		public static string PassedOutsiderRumor(int Passed, string SettlementName, int DaysAgo)
+		{
+			if (Passed <= 0)
+			{
+				return null;
+			}
+			string who = (Passed == 1) ? "a notable" : (Passed + " notables");
+			return who + " walked to " + SettlementName + " and found nobody to offer a bed, and whatever they were "
+				+ "each bound for is out on the roads now as talk, " + WhenPhrase(DaysAgo);
+		}
+
+		/// <summary>The homecoming ledger's note for the same run. News to discover, never a debt
+		/// to answer for: an unanswered gate costs the settlement a chance and nothing else.
+		/// </summary>
+		public static string PassedLedgerNote(int Passed, int DaysAgo)
+		{
+			if (Passed <= 0)
+			{
+				return null;
+			}
+			string who = (Passed == 1) ? "One notable" : (Passed + " notables");
+			return "{{K|" + who + " came to the gate while you were away and found no bed offered — " + WhenPhrase(DaysAgo)
+				+ ". What they were chasing is rumor on the road now; nothing is lost.}}";
+		}
+
+		/// <summary>One guestbook line for the whole run, so the appendix records that the gate
+		/// went unanswered without spending a line per stranger nobody met.</summary>
+		public static string PassedGuestbookLine(int Passed, int DaysAgo)
+		{
+			if (Passed <= 0)
+			{
+				return null;
+			}
+			string who = (Passed == 1) ? "One notable" : (Passed + " notables");
+			return who + " who came to a gate nobody answered, " + WhenPhrase(DaysAgo) + " {{K|(departed; rumors now)}}";
+		}
+
+		/// <summary>
+		/// The ledger note for one notable who waited at the gate and gave up while the founder
+		/// was elsewhere, dated against the day their patience actually ran out rather than the
+		/// pass that noticed it.
+		/// </summary>
+		/// <param name="GuestName">Who it was.</param>
+		/// <param name="DaysAgo">Whole days since they gave up. Zero and below drop the clause.</param>
+		public static string DepartedLedgerNote(string GuestName, int DaysAgo)
+		{
+			string when = (DaysAgo <= 0)
+				? ""
+				: ((DaysAgo == 1) ? " a day before you saw it" : (" " + DaysAgo + " days before you saw it"));
+			return "{{K|" + GuestName + " waited a while at the gate, found no bed offered, and moved on" + when
+				+ ". What " + GuestName + " was chasing is a rumor on the road now \u2014 nothing is lost.}}";
+		}
+
+		/// <summary>How a run of unwitnessed passages is dated: against the day the founder is
+		/// being told, the same phrasing a subsidence rung and a plain traveller's passage
+		/// both use.</summary>
+		public static string WhenPhrase(int DaysAgo)
+		{
+			if (DaysAgo <= 0)
+			{
+				return "the last of them today";
+			}
+			return (DaysAgo == 1)
+				? "the last of them a day before you saw it"
+				: ("the last of them " + DaysAgo + " days before you saw it");
+		}
+
 		/// <summary>Guestbook entries kept per city before the oldest is trimmed. Smaller than
 		/// <c>KingdomChronicle.MaxEntries</c> because the guestbook is a side reading, not the
 		/// settlement's primary record &mdash; every guestbook event is also written into the
@@ -363,8 +463,10 @@ namespace ThousandAndFirst
 
 		/// <summary>
 		/// Whether a haul is lost, judged only from state live at the moment of resolution
-		/// (STANDARDS 5.3, witnessed-only accounting) &mdash; never from a raid that came and
-		/// went while nobody was there to see this haul through it.
+		/// &mdash; never from a raid that came and went while nobody was there to see this haul
+		/// through it. Addendum 8 clause 3: the consequence is decided at awareness, against
+		/// what is true then, rather than reconstructed out of a threat that has already
+		/// passed.
 		/// </summary>
 		/// <param name="RaidActive">The destination settlement currently has a raid warned
 		/// against it (<c>KingdomSystem.RaidState == 1</c>).</param>

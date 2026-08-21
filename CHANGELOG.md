@@ -36,8 +36,9 @@ playtest passes.
   you are in; the chronicle and standings stay the realm's, because the realm is the faction and
   the cities are only where its history happened.
 - A dormant city needs no clock and gets none. It carries its own tick stamps, so it catches up the
-  moment it is seated — the same lazy tick-stamp idiom vanilla uses for zone repair — capped at
-  three days of upkeep and three arrivals however long you were away.
+  moment it is seated — the same lazy tick-stamp idiom vanilla uses for zone repair — and it
+  catches up in full: every day of upkeep, and at most three arrivals in the one pass, which is
+  a rule about the gate rather than about the calendar.
 - Ground the realm's other city holds cannot be claimed by this one, even forced.
 
 ### Added — the larder and the shared meal
@@ -77,7 +78,8 @@ playtest passes.
 - **Vertical claims.** A settlement can claim the ground directly below or above what it holds —
   cellars and towers — without loosening horizontal adjacency.
 - **The water manifest.** Two cities can send water to each other: drams leave the origin's stores
-  when loaded and arrive at the destination's next attended pass, never on a background clock. One
+  when loaded and arrive at the destination's next attended pass, because somebody has to be
+  there to take a physical load; the window it must land inside is real elapsed time. One
   in flight at a time; a lapsed window is written off once, in the chronicle.
 - **A tended plot.** Commissioned like any building, it cycles on the settlement's own clock and
   deposits its harvest into a dedicated larder. It draws water only after upkeep and arrivals, so it
@@ -146,7 +148,8 @@ playtest passes.
   name, refusals citing the refuser's own flaw.
 - **Worn ground.** Roads are never drawn: the routes people actually walk wear from grass to
   trodden earth to true path, and the founder may pave a worn path in the settlement's own wall
-  material, asked first and paid in stone. A season away lays exactly what three days lay.
+  material, asked first and paid in stone. A season of settlers walking lays a season's worth;
+  ground nobody walks on stays grass.
 - **Yard trades.** A small or middling house can take up one trade in its yard — vine lattice,
   hide rack, dye vat, vellum press — and the household takes it up, visibly, in the roll and in
   the house's own description.
@@ -186,9 +189,9 @@ playtest passes.
   upgrades. Two residents who refuse each other never share a building; only real hostility breaks
   households, not the zealots' standing grudge toward strangers.
 - **Housing binds** (author ruling): nobody joins without a home *they* would accept, and a settler
-  whose acceptable housing is lost is named once, waits two attended passes for the founder to
-  act, then leaves through the ordinary emigration — chronicled by name and cause. Absence never
-  runs the clock.
+  whose acceptable housing is lost is named once and stops at a brink; two attended passes for
+  the founder to act, then the ordinary emigration — chronicled by name and cause. The window is
+  spent in attended passes, so an absence of any length arrives at the same place.
 - Tastes and the upgrade trigger's displacement tolerance now speak this same vocabulary — three
   private systems became one, moddable end to end.
 
@@ -205,13 +208,14 @@ playtest passes.
 
 ### Added — how belief moves
 - **Osmosis**: a household's majority slowly pulls the minority under its roof — counted in
-  attended passes and scaled by the closeness of the quarters, a season not a week, deterministic
+  cohabitation-days of real shared living and scaled by the closeness of the quarters, a season
+  not a week, deterministic
   on reload. Pulled two ways, a citizen converts to neither.
 - **Culture**: every shared meal nudges the table toward its own majority, small and capped — a
   settlement cannot eat its way to a conversion.
 - **Consecration**: a founder may consecrate a shrine to a creed; staffed, it draws the neutral of
   its zone — never the opposed, who resent it instead, and may take the road: named once, six
-  attended passes of grace, then the ordinary emigration. Remove the shrine and the pressure lifts.
+  attended passes at the brink, then the ordinary emigration. Remove the shrine and it lifts.
 - **Education softens**: a staffed scriptorium reads the ambient grudge one band gentler. It
   converts nobody.
 - **The water rite turned inward**: share water with one named settler of another creed. They
@@ -235,7 +239,101 @@ playtest passes.
   itself — never a silent stall.
 - **Wear is event-driven, never calendar**: raid damage, hard running, temperamental salvage —
   bounded, named, running reduced, never destroyed. Mending is a visible, holdable job costed
-  from the chain. Absence wears nothing.
+  from the chain. Idleness wears nothing — a work standing unused is as sound in a year as it is
+  today — and a work that ran hard through an absence wore for it, counted in activity-days.
+
+### Added — the world keeps time
+- **The three-day forgiveness cap is retired.** Upkeep, policy upkeep and water fetching all run
+  the **full elapsed time** now, however long you were away, drawn from the settlement's own
+  stores. What bounds an absence is no longer a clock that stops counting; it is the level the
+  settlement's works honestly carry, and the floor under that is a camp.
+- The cap's two jobs are separated. `ReserveDays` is what it always really was — a cushion three
+  days deep, kept in hand before the settlement spends water on a planting, an upgrade or an
+  outbound manifest — and it is a quantity rather than a clock. Nothing anywhere caps elapsed
+  time any more.
+- **A scaffold nobody works on does not rise.** Build ticks are spent at the pace the free hands
+  actually justify; a shortfall is named once and unsays itself the moment hands are free; and a
+  finished work is stamped to the day the work really finished, so the raising ceremony still
+  tells attended from absent. A settlement with nobody in it raises nothing.
+- Yards, clearing gangs and mending all read the same two gates before spending a day's budget —
+  is there anyone there, and is there anything to work — and an idle yard says which, once.
+- Every periodic system now shares one substrate: `ElapsedDays` and `AdvanceCheckpoint` over the
+  frozen `Simulation/Kernel` tick maths, plus `ActivityDays` / `LabouredTicks` for the labour
+  term. A checkpoint is planted before its first count, because an unplanted stamp reads as the
+  age of the world.
+- Serialization version 3. Pre-rework layouts are refused by name rather than migrated: no save
+  has ever been written by a shipped build, and a silent migration here would have billed a
+  season of upkeep in one pass on the first load.
+
+### Added — subsidence, and a level something finally reads
+- **The catalogue's `Carries` have a consumer.** Every finished work's contribution is summed
+  into water, food, roof and lift — a crewed work scaled by how well it is actually running — and
+  handed to the equilibrium arithmetic, which converts the water half out of drams into settlers
+  at the settlement's own stage rate. The status report says what the city carries and which of
+  the three is holding it down.
+- **The stage ratchet moves both ways.** It climbs on the reading and falls only on a clear
+  shortfall — a 20% benefit of the doubt on both readings, one rung per reckoning, Camp an
+  absolute floor.
+- **A settlement standing above what it carries settles back toward it, on world time.** One step
+  every four days, shedding settlers by the rung, converging on the level and stopping there — a
+  city whose works carry a town becomes that town, not a ruin. Rung changes land in the chronicle
+  as dated entries, dated to when they happened rather than to when you read them. A hundred days
+  and a thousand days write different chronicles and end at the same honest level.
+- Each lost rung leaves up to two standing works the worse for it: **damage, bounded by the wear
+  ceiling, never deletion**, drawn through the kernel's counter-random so a reload never re-rolls
+  a collapse the chronicle already described. Nothing player-placed is touched.
+- **Water works make water.** What a cistern or reservoir carries now arrives in the casks, day
+  by day, on the same checkpoint discipline as fetching — including over an absence.
+- Arrivals stop at the edge of the measured band rather than walking into a settlement that
+  cannot hold them. A settlement no pass has ever measured may not refuse anyone on knowledge it
+  does not have.
+- New option: *a settlement standing above what its works carry settles back toward them*.
+
+### Added — the brink
+- **One shape for every irreversible consequence.** A settler with nowhere to live, a settler one
+  window short of another creed, and a realm quarrelled to the breaking point all now stop at a
+  brink: it records who, what caused it, and the tick it was reached, and then **stops accruing**.
+  A thousand-day absence and a ten-day absence arrive at the same place, because there is nowhere
+  past a brink to arrive at.
+- It is announced **once, at awareness, with the honest elapsed time** — how long they have really
+  stood there, not a number the clock was capped down to — and its window is spent in attended
+  passes only: two for a roof, six for a creed, three for a city.
+- **Arrest it by acting.** Re-house the settler, break up the household, take the shrine off their
+  quarter, mend the quarrel — the brink lifts, the announcement is unsaid, and the accrual starts
+  again from nothing. Waiting was never a strategy and now is not a mechanic either.
+- Shared living, shrine pull and the water rite are counted in **cohabitation-days** of real
+  shared life rather than in visits, through one exchange rate (three days to the pass) applied
+  to every threshold, so an attentive founder's road is exactly as long as it was.
+- Dissent runs on world time, uncapped — safely, because secession now waits at a window strictly
+  shorter than the road to it.
+- The old re-housing grace counter is gone from both seats. A settler's brink rides **the
+  settler**, so swapping between cities can never carry one to the wrong place.
+
+### Added — the food ladder reaches its big plots
+- **`grange`** (large plot, from Town) and **`the home farm`** (grand plot, from City) fill the
+  two rungs the food lane never had. They climb the same figures the housing lane climbs —
+  twenty-six and forty — because a dinner and a bed are both counted in people, where a dram is
+  divided by the settlement's own thirst.
+- Food is deliberately the one binding good that **never automates**. Water and roof reach designs
+  that want no crew at all; food reaches better rates for hands and stops there — four settlers
+  fed to the hand at a field, six at ploughed fields, nearly nine at a grange, ten at the home
+  farm. A town that has raised its reservoir keeps nobody hauling water and three people in its
+  fields; a city keeps nobody hauling and eight.
+- Which also makes them the only large binding works a bad season can reach, since a crewed work
+  carries what it is actually running at and a staffless one carries its figure whatever happens
+  to it. That is the price of the lane, and it is meant to be paid.
+- **A home worn past condemnation stops being a roof.** It is not cleared, unbuilt or moved — the
+  protection law is untouched — and putting the roof back on ends the condemnation. This is what
+  gives a subsidence's ruin a real housing consequence, and everyone under a newly condemned home
+  is recorded at a roof brink dated to the day the roof went.
+- A yard's throughput ceiling is denominated **per day** rather than per resolve, so a yard that
+  ran for thirty days finishes thirty days of work and a yard walked past thirty times in one
+  afternoon still finishes none.
+- The three separate "the founder was not there when it came due" implementations — the manifest
+  turn-back, the raid re-warning and the arrival catch-up — are one shared helper, so the fresh
+  window a homecoming buys is computed the same way everywhere.
+- Guests arrive at the gate and leave again through an absence, and the homecoming says who came,
+  who waited, and how long ago.
 
 ### Changed
 - Districts are no longer flavour. Each of the six now changes something a player can measure:

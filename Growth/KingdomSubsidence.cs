@@ -154,9 +154,29 @@ namespace ThousandAndFirst
 			GrowthStage from = System.Stage;
 			string cause = KingdomSubsidenceRules.DepartureCause(binding);
 			int departed = 0;
-			while (departed < trajectory.Departed && KingdomGrowth.Emigrate(System, Z, Survey, null, cause))
+			int named = 0;
+			// Told in rungs, sampled in names: the first few and the last of a long slide are
+			// chronicled by name and everybody between them rides the summary line below, so a
+			// City falling to Camp spends a modest share of the two-hundred-entry register
+			// instead of a quarter of it (KingdomSubsidenceRules.ChronicleEntriesFor).
+			while (departed < trajectory.Departed)
 			{
+				bool tell = KingdomSubsidenceRules.TellsDeparture(departed, trajectory.Departed);
+				if (!KingdomGrowth.Emigrate(System, Z, Survey, null, cause, tell))
+				{
+					break;
+				}
 				departed++;
+				if (tell)
+				{
+					named++;
+				}
+			}
+			string summary = KingdomSubsidenceRules.SlideDepartureSummary(System.KingdomDisplayName, departed, named, cause);
+			if (summary != null)
+			{
+				System.Ledger.Note("{{r|" + XRL.Language.Grammar.InitCap(summary) + ".}}");
+				KingdomChronicle.Record(System, summary);
 			}
 			// Charged for exactly what was cashed. A settlement whose people are standing in
 			// another claimed zone loses fewer than the trajectory called for, and keeps the rest
@@ -255,7 +275,7 @@ namespace ThousandAndFirst
 				int daysAgo = KingdomRules.ElapsedDays(TimeTicks - at);
 				KingdomChronicle.Record(System, KingdomSubsidenceRules.BreakpointChronicle(
 					System.KingdomDisplayName, breakpoint.From, breakpoint.To, daysAgo));
-				Ruin(System, Survey, settlementId, (ulong)((at > 0L) ? at : 0L));
+				Ruin(System, Survey, settlementId, (ulong)((at > 0L) ? at : 0L), at);
 			}
 		}
 
@@ -268,7 +288,9 @@ namespace ThousandAndFirst
 		/// <param name="Ordinal">The breakpoint's own due tick, used as a draw ordinal. It sits on
 		/// a fixed lattice from the reckoning's anchor and is never re-anchored, so a reload asks
 		/// each work the same question and gets the same answer.</param>
-		private static void Ruin(KingdomSystem System, KingdomSurvey Survey, string SettlementId, ulong Ordinal)
+		/// <param name="AtTick">The same tick as a clock rather than an ordinal, for the roof
+		/// brink a condemned home owes the people who were living in it.</param>
+		private static void Ruin(KingdomSystem System, KingdomSurvey Survey, string SettlementId, ulong Ordinal, long AtTick)
 		{
 			int ruined = 0;
 			for (int i = 0; i < Survey.Built.Count && ruined < KingdomSubsidenceRules.RuinedWorksPerBreakpoint; i++)
@@ -293,6 +315,21 @@ namespace ThousandAndFirst
 					continue;
 				}
 				ruined++;
+				// A home the fall took past KingdomLodgingRules.CondemnedWearPercent stopped
+				// being a roof on THIS day, not on the day somebody finally walked in and looked
+				// at it. So the people who were living under it reach their brink here, dated
+				// here, and the lodging pass that finds them later announces the honest elapsed.
+				// Nothing is announced and no window is spent from inside an absence; a home that
+				// was already condemned, one below the line, and one nobody sleeps in all record
+				// nothing (KingdomBrink.Record is idempotent, and this only fires on the crossing).
+				if (KingdomLodgingRules.IsCondemned(wear.Wear) && !KingdomLodgingRules.IsCondemned(before))
+				{
+					int stranded = KingdomLodging.RecordCondemnedRoofBrink(work.CurrentZone, work, AtTick);
+					if (stranded > 0 && KingdomLog.Enabled)
+					{
+						KingdomLog.Log("subsidence: condemned " + work.Blueprint + " wear=" + wear.Wear + " stranded=" + stranded);
+					}
+				}
 				string name = KingdomDesign.ReferenceFor(work, work.ShortDisplayName);
 				string line = name + " fell into disrepair as " + System.KingdomDisplayName + " settled back, with nobody left who kept it";
 				System.Ledger.Note("{{r|" + XRL.Language.Grammar.InitCap(line) + ".}}");

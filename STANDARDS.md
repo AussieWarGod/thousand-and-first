@@ -130,12 +130,27 @@ thirst-ladder checklist:
 
 1. A **physical resource** under genuine tension — never an abstract bar.
 2. **Graduated states with hysteresis** — streaks and ladders, not single thresholds.
-3. **Witnessed-only accounting** — absence can never stack punishments. Two things move in
-   absence and nothing else does: supply-carried *level*, which subsides toward what the
-   infrastructure honestly carries (bounded, chronicled, arrestable on return — down to Camp if
-   that is all that stands), and the gifts and news an absence earns, both capped. Social and
-   event processes — dissent, conversion, wear, grace clocks — move only while attended.
-4. A **bounded consequence** per visit, with an **instant and total recovery path**.
+3. **World-time accounting, realised at awareness** — the settlement lives whether the founder
+   is there or not, so a process runs on elapsed time and its consequences are realised the
+   moment the founder is made aware of them. Every rate is time × **labour** × infrastructure
+   and never time alone: an unstaffed yard shapes nothing over a season, a scaffold nobody
+   works on does not rise, a mill nobody runs never wears. IDLENESS is what costs nothing —
+   absence was the wrong cut. Nothing anywhere is forgiven on a clock: there is no absence cap
+   in this codebase, because what bounds an absence is subsidence toward the level the works
+   honestly carry, floored at Camp's own equilibrium. A counter that must not run while nobody
+   is home says so with a labour term or with a window only attended passes spend, never by
+   refusing to look at the calendar. Wear itself is not one clock: `KingdomRoads` wears the
+   ground on the full elapsed day (`KingdomRules.ElapsedDays`, uncapped) because a settlement's
+   own errands are walked whether or not the founder is there to watch them, gated by
+   population rather than presence, while `KingdomWearRules` damage to a built work answers
+   only to an event already in hand — a raid, a hard-run milestone, a temperamental tick — and
+   never reads a clock at all. Grace clocks stay the one kind that is genuinely attended-only.
+4. A **bounded consequence per awareness**, with an **instant and total recovery path** — and
+   an irreversible one waits at the **brink**: it records its subject, cause and crossing tick,
+   stops accruing there, is announced once with honest elapsed time, and spends its arrestable
+   window only in attended passes. Ten days away and a thousand arrive at the same place, and
+   both hand the founder the same width of door. Removing the cause lifts the brink and unsays
+   it.
 5. **Permanent story residue** — state changes can leave chronicle lines, scars, artifacts.
 6. **Pure-testable rules** — the math lives in engine-free classes with `[TestCase]` tables.
 7. **Interlock** — the system consumes or feeds at least one other system's resource.
@@ -199,15 +214,19 @@ binding on every economic system:
 - **Threat must cost more than its remedy.** Tribute is always cheaper than the raid it
   averts (raiders plunder stores, so paying is strategy, not extortion); protection that
   changes nothing observable is annoyance.
-- **Consumption scales with time, not with event cadence.** Any per-interval cost must be
-  computed from elapsed ticks (with an absence cap), or it silently vanishes as the
-  interval grows.
-- **Time is labour, never maturation or decay.** Running costs are the only thing elapsed
-  ticks meter. Nothing improves, ripens, or wears because the calendar moved: a build costs a
-  duration because the work takes hands and days, wear comes from events (raids, hard running,
-  temperamental salvage) and never from the clock, and no upgrade threshold anywhere is a
-  timer. Every gate is keyed to something with meaning in Qud — drams spared, materials
-  quarried, hands free, stage, standings.
+- **Consumption scales with time, not with event cadence.** Any per-interval cost is computed
+  from the full elapsed ticks, or it silently vanishes as the interval grows. It is never
+  capped and never re-anchored to forgive the difference: a cap is a cost that quietly stops
+  scaling, which is the same defect wearing the other hat.
+- **Time is labour, never idle maturation.** What elapsed ticks meter is running costs and
+  work actually done: a build costs a duration because the work takes hands and days, and the
+  days only buy anything if hands were there to spend them. Nothing improves *because* the
+  calendar moved — no upgrade threshold anywhere is a timer, and every gate is keyed to
+  something with meaning in Qud (drams spared, materials quarried, hands free, stage,
+  standings). The two sanctioned exceptions are named rather than implied: **crops ripen on
+  elapsed ticks**, because nature is a worker and waiting is what a field does, and **wear
+  comes from events and from hard running**, never from the calendar — a work standing idle is
+  as sound in a year as it is today.
 - **Ratchets gate on durable things.** Growth stages gate on capacity (infrastructure that
   must be built) rather than current stock (which can be lent and withdrawn).
 - **Failure has a floor.** Decay stops at a loyal core and subsidence stops at Camp; the

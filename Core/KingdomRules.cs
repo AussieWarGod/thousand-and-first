@@ -295,21 +295,25 @@
 		/// </summary>
 		public const int ReserveDays = 3;
 
-		/// <summary>
-		/// The retired absence cap, kept alive ONLY for the counters this wave has not reached
-		/// yet, and named so that no reader mistakes it for a rule anybody still believes in.
-		/// <para>
-		/// Its remaining consumers are <see cref="HeartbeatDays"/> and
-		/// <see cref="HeartbeatCheckpoint"/>, and through them: road traffic
-		/// (<c>KingdomRoads</c>), power works and stores (<c>KingdomPower</c>,
-		/// <c>KingdomPowerRules.MaxDaysCredited</c>), the three <c>KingdomMaterials</c> workers,
-		/// mending (<c>KingdomWear</c>), and dissent (<c>KingdomCreed</c>). Dissent is the one
-		/// that must NOT be uncapped on its own: secession fires the pass dissent reaches its
-		/// threshold, so uncapping accrual before the arrestable window exists would make an
-		/// absence lose a city FASTER than presence does, which is clause 3 exactly inverted.
-		/// </para>
-		/// </summary>
-		public const int LegacyAbsenceCap = 3;
+		// --- Where LegacyAbsenceCap lived -------------------------------------------------
+		//
+		// The forgiveness cap's last stand. It survived P1 as a named holding pen for the
+		// counters that pass had not reached - road traffic, power works and stores, the three
+		// KingdomMaterials workers, mending, and dissent - together with the HeartbeatDays and
+		// HeartbeatCheckpoint pair that read it. Every one of those is now on ElapsedDays and
+		// AdvanceCheckpoint, so the constant, the pair, and the pen are all gone.
+		//
+		// The list mattered for one reason and it is worth keeping: dissent could not be
+		// uncapped alone, because secession fired on the pass dissent reached its threshold, and
+		// uncapping accrual before the arrestable window existed would have made an absence lose
+		// a city FASTER than presence does - clause 3 exactly inverted. P3 landed secession's
+		// named window first and uncapped dissent behind it, which is the order every one of
+		// these swaps was held to: the labour gate, or the window, before the clock.
+		//
+		// Nothing in this file caps elapsed time any more. A counter that must not run in
+		// absence says so with a LABOUR term (ActivityDays, LabouredTicks, a crew gate) or with
+		// a window that only attended passes spend (KingdomBrinkRules) - never by refusing to
+		// look at the calendar.
 
 		/// <summary>Daily draw per settler, per hundred, by stage. A camp lives thin; a city
 		/// drinks like a city. Prosperity-scaled COST is the loved half of the pattern - what
@@ -484,48 +488,146 @@
 			return "The " + name + " rises slowly: " + FreeHands + " pair of hands on it where " + RaisingHandsWanted + " are wanted.";
 		}
 
+		// --- Deadlines the founder was not there to see come due ---------------------------
+		//
+		// Three systems had their own copy of the same three lines: a due tick has passed, the
+		// founder has only now walked in, so push a fresh full window out from the moment of
+		// witnessing rather than firing something nobody saw. The manifest turned its load back
+		// and re-stamped a new window; the raid re-warned with a fresh lead; the arrival loop
+		// burned whatever overshoot it could not seat this pass. Each of the three keeps its own
+		// prose - a turned-back load, a re-warned faction and a queued settler are not the same
+		// news - and none of them keeps its own arithmetic any more.
+		//
+		// This is Addendum 8 clause 3 in its cheapest form: the deadline is real and elapsed
+		// while nobody watched, and what waits for awareness is the CONSEQUENCE. Nothing is
+		// forgiven (the raid still comes, the load still turns back) and nothing is banked (an
+		// overshoot buys no extra arrivals) - only the moment it lands moves.
+
 		/// <summary>
-		/// Days of settlement life to resolve on arrival, capped at
-		/// <see cref="LegacyAbsenceCap"/>.
+		/// Where a repeating or one-shot deadline stands the moment a founder walks in on it.
 		/// <para>
-		/// SUPERSEDED by <see cref="ElapsedDays"/> (Addendum 8 clause 1). Kept only for the
-		/// counters this wave has not reached - see <see cref="LegacyAbsenceCap"/> for the list
-		/// and for why dissent in particular must not be uncapped without secession's arrestable
-		/// window landing beside it. New callers take <see cref="ElapsedDays"/>.
+		/// Returns <paramref name="DeadlineTick"/> unchanged when it has not been overrun, or
+		/// when the overrun is still inside the witness band - the founder is close enough to
+		/// the moment to count as having been there, so the caller fires it as it stands.
+		/// Otherwise the deadline moves to a fresh full window measured from now.
+		/// </para>
+		/// <para>
+		/// A band of zero days means the deadline is spent the instant it comes due, which is
+		/// what an arrival slot and a caravan's window both are. A band of one day means a
+		/// founder who walks in within the day of it coming due still meets it, which is the
+		/// grace the raid warning has always kept: raiders who came a day early wait for the
+		/// fight, and raiders who came a season early do not resolve it in the dark.
 		/// </para>
 		/// </summary>
-		/// <param name="ElapsedTicks">Ticks since the last resolve.</param>
-		/// <returns>Whole days to run, 0 to <see cref="LegacyAbsenceCap"/>.</returns>
-		public static int HeartbeatDays(long ElapsedTicks)
+		/// <param name="DeadlineTick">The due tick as it stands.</param>
+		/// <param name="NowTick">The witnessing moment.</param>
+		/// <param name="LeadTicks">The fresh window's full length. Zero or less puts the
+		/// deadline at now, which is a caller asking for it to be due immediately.</param>
+		/// <param name="WitnessGraceDays">Whole days past the deadline in which the founder
+		/// still counts as a witness. Zero, the common case, is no band at all.</param>
+		/// <returns>The deadline the caller should now carry.</returns>
+		public static long RestampDeadline(long DeadlineTick, long NowTick, long LeadTicks, int WitnessGraceDays)
 		{
-			int days = ElapsedDays(ElapsedTicks);
-			return (days > LegacyAbsenceCap) ? LegacyAbsenceCap : days;
+			if (NowTick < DeadlineTick)
+			{
+				return DeadlineTick;
+			}
+			if (WitnessGraceDays > 0 && NowTick - DeadlineTick <= (long)WitnessGraceDays * TicksPerDay)
+			{
+				return DeadlineTick;
+			}
+			if (LeadTicks <= 0L)
+			{
+				return NowTick;
+			}
+			// Fails closed at the far end rather than wrapping into the past: a deadline that
+			// overflowed into a negative would read as long overdue and fire on the spot, which
+			// is the one outcome this whole helper exists to prevent.
+			return (NowTick > long.MaxValue - LeadTicks) ? long.MaxValue : (NowTick + LeadTicks);
 		}
 
 		/// <summary>
-		/// Advances a capped checkpoint, forgiving time beyond
-		/// <see cref="LegacyAbsenceCap"/> by starting fresh at the current tick.
+		/// What a repeating visitor's clock did while nobody was watching it: how many turns of
+		/// it came and went, and whether the most recent one is still standing there.
+		/// </summary>
+		public readonly struct Passages
+		{
+			/// <summary>Turns of the clock that came due AND ran out of patience unwitnessed.
+			/// These are the ones that leave a dated trace and nothing else.</summary>
+			public readonly int Departed;
+
+			/// <summary>The tick the one still standing arrived on, or zero when nobody is.
+			/// At most one, because an existing visitor blocks the next.</summary>
+			public readonly long StandingSince;
+
+			/// <summary>When the next turn falls due, given everything above already happened.
+			/// </summary>
+			public readonly long NextDueTick;
+
+			/// <summary>The tick the most recent DEPARTED turn arrived on, for a caller dating
+			/// the news. Zero when none departed.</summary>
+			public readonly long LastDepartedTick;
+
+			public Passages(int Departed, long StandingSince, long NextDueTick, long LastDepartedTick)
+			{
+				this.Departed = Departed;
+				this.StandingSince = StandingSince;
+				this.NextDueTick = NextDueTick;
+				this.LastDepartedTick = (Departed > 0) ? LastDepartedTick : 0L;
+			}
+		}
+
+		/// <summary>
+		/// Runs a repeating arrival clock forward over however long nobody was looking at it.
 		/// <para>
-		/// SUPERSEDED by <see cref="AdvanceCheckpoint"/>, which forgives nothing. Same remaining
-		/// callers, same reason.
+		/// Addendum 8 clause 1 for visitors: travellers walk the road whether the founder is
+		/// home or not, so a season away is a season of people arriving, waiting out their
+		/// patience at a gate nobody answered, and going on again. What awareness gets is the
+		/// dated news of it (clause 3), never a queue of strangers who have been standing in the
+		/// square since spring.
+		/// </para>
+		/// <para>
+		/// At most one visitor is left standing, and only when the LAST turn of the clock fell
+		/// inside its own patience of now - which is the same rule the shipped code kept by
+		/// accident, because an existing visitor blocks the next one. Everything before that
+		/// counts as departed.
 		/// </para>
 		/// </summary>
-		public static long HeartbeatCheckpoint(long PreviousTick, long CurrentTick)
+		/// <param name="DueTick">When the next one was due. Zero or less means the clock has
+		/// never been planted, and nothing has happened yet.</param>
+		/// <param name="NowTick">Now.</param>
+		/// <param name="IntervalTicks">Ticks between one arrival and the next. Zero or less
+		/// answers nothing rather than dividing by it.</param>
+		/// <param name="PatienceTicks">How long one visitor waits before giving up.</param>
+		public static Passages PassagesThrough(long DueTick, long NowTick, long IntervalTicks, long PatienceTicks)
 		{
-			if (PreviousTick <= 0 || CurrentTick <= PreviousTick)
+			if (DueTick <= 0L || IntervalTicks <= 0L || NowTick < DueTick)
 			{
-				return CurrentTick;
+				return new Passages(0, 0L, DueTick, 0L);
 			}
-			int days = ElapsedDays(CurrentTick - PreviousTick);
-			if (days <= 0)
+			long overshoot = NowTick - DueTick;
+			long arrivals = overshoot / IntervalTicks + 1L;
+			long last = DueTick + (arrivals - 1L) * IntervalTicks;
+			// The last one is still at the gate only if its own patience has not run out. With
+			// every shipped interval longer than its patience that is the newest arrival or
+			// nobody, which is why one is all this ever reports.
+			if (PatienceTicks > 0L && NowTick - last < PatienceTicks)
 			{
-				return PreviousTick;
+				return new Passages(Whole(arrivals - 1L), last, RestampDeadline(last, last, IntervalTicks, 0), last - IntervalTicks);
 			}
-			if (days > LegacyAbsenceCap)
+			return new Passages(Whole(arrivals), 0L, RestampDeadline(last, NowTick, IntervalTicks, 0), last);
+		}
+
+		/// <summary>Narrows a non-negative long count into an int without wrapping. A count past
+		/// <c>int.MaxValue</c> is a clock nobody has looked at since the world was made, and
+		/// saturating is the honest answer.</summary>
+		private static int Whole(long Count)
+		{
+			if (Count <= 0L)
 			{
-				return CurrentTick;
+				return 0;
 			}
-			return PreviousTick + days * TicksPerDay;
+			return (Count > int.MaxValue) ? int.MaxValue : (int)Count;
 		}
 
 		/// <summary>Stock tier a settlement's shops carry at a given growth stage.</summary>
@@ -2265,6 +2367,21 @@
 		public const long RaidCooldownTicks = 8400L;
 
 		public const long RaidWarningLeadTicks = 1200L;
+
+		/// <summary>
+		/// How far past a raid's due tick the founder still counts as having been there to meet
+		/// it, in whole days. One: raiders who arrive within the day of the warning running out
+		/// find somebody home and the raid resolves, and raiders who arrive on ground nobody has
+		/// walked for longer than that wait rather than looting in the dark
+		/// (<see cref="RestampDeadline"/>, and <c>KingdomRaids.RewarnRaidOnReturn</c> for what
+		/// the founder is told about it).
+		/// <para>
+		/// This was a bare <c>&gt; TicksPerDay</c> written inline at the comparison - the only
+		/// raw-tick grace band in the mod that never went through a named rule. Same width,
+		/// named, and now the same helper the manifest and the arrival queue read.
+		/// </para>
+		/// </summary>
+		public const int RaidWitnessGraceDays = 1;
 
 		public static int RaidSize(GrowthStage Stage)
 		{

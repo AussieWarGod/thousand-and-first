@@ -39,9 +39,15 @@ namespace ThousandAndFirst
 			}
 			else if (System.RaidState == 1 && timeTicks >= System.RaidDueTick)
 			{
-				if (timeTicks - System.RaidDueTick > KingdomRules.TicksPerDay)
+				// The grace band that decides "they came while you were here" from "they came
+				// while you were afield" is KingdomRules.RestampDeadline's, shared with the
+				// manifest's turn-back and the arrival queue. What is this file's own is the
+				// band's width (RaidWitnessGraceDays) and every word said about it.
+				long rewarned = KingdomRules.RestampDeadline(
+					System.RaidDueTick, timeTicks, KingdomRules.RaidWarningLeadTicks, KingdomRules.RaidWitnessGraceDays);
+				if (rewarned != System.RaidDueTick)
 				{
-					RewarnRaidOnReturn(System, timeTicks);
+					RewarnRaidOnReturn(System, rewarned);
 				}
 				else
 				{
@@ -99,16 +105,23 @@ namespace ThousandAndFirst
 		/// (<see cref="KingdomSystem.RaidState"/> untouched, faction unchanged, no water taken, no
 		/// one lost), only the due tick is pushed out by the same lead the original warning used,
 		/// so the homecoming itself buys a fresh window to pay tribute, talk it down, or simply be
-		/// standing there the next time it comes due. What accrues in absence is the news that
-		/// they came and found the gate shut, never a loss no one witnessed
-		/// (VISION.md's absence pillar: absence never punishes, and what it moves is supply-carried
-		/// level, never a raid nobody witnessed; STANDARDS.md &sect;5.3: "witnessed-only
-		/// accounting").
+		/// standing there the next time it comes due. The fresh window is
+		/// <c>KingdomRules.RestampDeadline</c>'s, the one helper all three of the mod's
+		/// "the founder was not there to see it come due" sites now share; the sentences below
+		/// are this file's alone. What accrues in absence is the news that
+		/// they came and found the gate shut, never a loss no one witnessed. That is Addendum 8
+		/// clause 3 in its plainest form: the raid is real and its due tick elapsed while nobody
+		/// watched, and what waits for awareness is the CONSEQUENCE, carrying the same arrestable
+		/// window the design always promised.
 		/// </summary>
-		public static void RewarnRaidOnReturn(KingdomSystem System, long TimeTicks)
+		/// <param name="System">The realm.</param>
+		/// <param name="DueTick">The fresh due tick, already computed by
+		/// <c>KingdomRules.RestampDeadline</c>. Passed in rather than recomputed here so the
+		/// caller's decision to re-warn and the tick it re-warns to can never disagree.</param>
+		public static void RewarnRaidOnReturn(KingdomSystem System, long DueTick)
 		{
 			string displayName = Faction.GetFormattedName(System.RaidFactionName);
-			System.RaidDueTick = TimeTicks + KingdomRules.RaidWarningLeadTicks;
+			System.RaidDueTick = DueTick;
 			int demand = KingdomRules.TributeDemand(KingdomRules.RaidTributeDrams, System.RaidTimesDeferred);
 			KingdomChronicle.Record(System, "raiders of " + displayName + " came looking for " + System.KingdomDisplayName + " while the founder was afield, and found no one to answer them");
 			System.Ledger.Note("{{r|Raiders of " + displayName + " came for the stores while you were away and found no one to meet them. Nothing was taken. They have not given up: tribute may yet turn them (" + demand + " drams), or stand and meet them yourself.}}");

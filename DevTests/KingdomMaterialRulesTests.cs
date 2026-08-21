@@ -345,12 +345,42 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void EffortWorked_IsCappedSoOneVisitNeverClearsEverything()
+		public void EffortWorked_IsCappedInHandsAndNotInDays()
 		{
+			// The gang is bounded, the calendar is not. A thousand settlers dig at the rate of
+			// MaxClearingHands, and a stretch of days digs for every one of them.
 			int capped = KingdomMaterialRules.EffortWorked(KingdomMaterialRules.MaxClearingHands, 1);
 			Assert.AreEqual(capped, KingdomMaterialRules.EffortWorked(KingdomMaterialRules.MaxClearingHands + 1, 1));
 			Assert.AreEqual(capped, KingdomMaterialRules.EffortWorked(1000, 1));
 			Assert.Greater(capped, KingdomMaterialRules.EffortWorked(KingdomMaterialRules.MaxClearingHands - 1, 1));
+		}
+
+		[Test]
+		public void EffortWorked_RunsTheWholeAbsenceBecauseTheGangDugThroughIt()
+		{
+			// The uncapping. A staked plot is dug through an absence exactly as it is dug through
+			// a fortnight of visits, and linearly: there is no ceiling on days in here.
+			int aFortnight = KingdomMaterialRules.EffortWorked(3, 14);
+			Assert.AreEqual(KingdomMaterialRules.EffortWorked(3, 1) * 14, aFortnight);
+			Assert.Greater(KingdomMaterialRules.EffortWorked(3, 400), aFortnight);
+		}
+
+		[Test]
+		public void EffortWorked_IdleHandsRemoveNothingHoweverLongTheStretch()
+		{
+			// Clause 2, and what makes uncapping safe here: zero free hands is zero effort over
+			// four hundred days. Every caller reads its hands gate before it spends its days.
+			Assert.AreEqual(0, KingdomMaterialRules.EffortWorked(0, 400));
+			Assert.AreEqual(0, KingdomMaterialRules.EffortWorked(-4, 400));
+		}
+
+		[Test]
+		public void EffortWorked_SaturatesRatherThanWrappingOnANonsenseStretch()
+		{
+			// A wrapped negative would ADD to the work left rather than take from it, which is a
+			// staked plot that gets harder the longer nobody looks at it.
+			Assert.AreEqual(int.MaxValue, KingdomMaterialRules.EffortWorked(KingdomMaterialRules.MaxClearingHands, int.MaxValue));
+			Assert.Greater(KingdomMaterialRules.EffortWorked(2, int.MaxValue), 0);
 		}
 
 		[TestCase(0, 0)]
@@ -689,14 +719,50 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void RefinedThisPass_IsCappedPerVisitHoweverLongTheFounderWasAway()
+		public void RefinedThisPass_CeilingIsARateAndNotAVisitBudget()
 		{
-			// The whole absence rule in one assertion: a long absence is more work than a short
-			// one and is never a stockpile conjured out of being away.
-			int short_ = KingdomMaterialRules.RefinedThisPass(4, 2, 100, 999);
-			int long_ = KingdomMaterialRules.RefinedThisPass(4, 900, 100, 999);
-			Assert.IsTrue(long_ >= short_);
-			Assert.AreEqual(KingdomMaterialRules.MaxRefinedPerPass, long_);
+			// MaxRefinedPerPass became MaxRefinedPerDay, and this is what that buys: a grand
+			// build waits on the yard RUNNING, never on the founder arriving. Thirty days of a
+			// crew big enough to beat the bench's throughput finishes thirty days of it.
+			int aDay = KingdomMaterialRules.RefinedThisPass(999, 1, 100, 99999);
+			Assert.AreEqual(KingdomMaterialRules.MaxRefinedPerDay, aDay, "the day's throughput is the day's throughput");
+			int thirtyDays = KingdomMaterialRules.RefinedThisPass(999, 30, 100, 99999);
+			Assert.AreEqual(KingdomMaterialRules.MaxRefinedPerDay * 30, thirtyDays,
+				"thirty days of running made one pass of work");
+		}
+
+		[Test]
+		public void RefinedThisPass_RunsTheWholeAbsenceButNeverBeatsTheBench()
+		{
+			// Both halves of the rate. A long stretch is more work than a short one (clause 1),
+			// and no crew however large beats the day's throughput on any single day.
+			int short_ = KingdomMaterialRules.RefinedThisPass(4, 2, 100, 99999);
+			int long_ = KingdomMaterialRules.RefinedThisPass(4, 900, 100, 99999);
+			Assert.Greater(long_, short_, "a long stretch was not more work than a short one");
+			for (int days = 1; days <= 40; days++)
+			{
+				Assert.LessOrEqual(
+					KingdomMaterialRules.RefinedThisPass(999, days, KingdomMaterialRules.MaxCapabilityPercent, 99999),
+					KingdomMaterialRules.MaxRefinedPerDay * days,
+					"a crew beat the bench's own throughput");
+			}
+		}
+
+		[Test]
+		public void RefinedThisPass_AnUnstaffedYardShapesNothingHoweverLongTheStretch()
+		{
+			// Clause 2. The whole reason uncapping the yards changed only how much TIME can be
+			// worked and never whether unstaffed work happens.
+			Assert.AreEqual(0, KingdomMaterialRules.RefinedThisPass(0, 900, 100, 99999));
+			Assert.AreEqual(0, KingdomMaterialRules.RefinedThisPass(-2, 900, 100, 99999));
+		}
+
+		[Test]
+		public void RefinedThisPass_DoesNotOverflowOnANonsenseStretch()
+		{
+			int made = KingdomMaterialRules.RefinedThisPass(999, int.MaxValue, KingdomMaterialRules.MaxCapabilityPercent, 99999);
+			Assert.AreEqual(99999, made, "the raw stock stopped binding");
+			Assert.GreaterOrEqual(made, 0);
 		}
 
 		[Test]
@@ -1294,6 +1360,21 @@ namespace ThousandAndFirst.Tests
 		public void AssessYard(bool staffed, int crew, int refinable, KingdomMaterialRules.YardStall expected)
 		{
 			Assert.AreEqual(expected, KingdomMaterialRules.AssessYard(staffed, crew, refinable));
+		}
+
+		[Test]
+		public void AnUnstaffedYardStallsAndShapesNothingHoweverLongTheStretch()
+		{
+			// The two halves of the uncapping's safety, tied together where they are decided:
+			// the gate names the stall (once, per STANDARDS 7b, by the caller's flag), and the
+			// rate multiplies the whole stretch by a crew of nobody. Uncapping the yards changed
+			// how much TIME can be worked and not whether unstaffed work happens.
+			Assert.AreEqual(KingdomMaterialRules.YardStall.Unstaffed, KingdomMaterialRules.AssessYard(false, 0, 999));
+			Assert.IsNotNull(KingdomMaterialRules.YardStallLine(KingdomMaterialRules.YardStall.Unstaffed, KingdomYard.Sawyer, "Ekuemekiyye"));
+			Assert.AreEqual(0, KingdomMaterialRules.RefinedThisPass(0, 400, 100, 999));
+			// And a crewed bench with nothing on it is a DIFFERENT sentence, still zero.
+			Assert.AreEqual(KingdomMaterialRules.YardStall.NoStock, KingdomMaterialRules.AssessYard(true, 3, 0));
+			Assert.AreEqual(0, KingdomMaterialRules.RefinedThisPass(3, 400, 100, 0));
 		}
 
 		[Test]

@@ -54,9 +54,12 @@ namespace ThousandAndFirst
 	/// come through.
 	/// </para>
 	/// <para>
-	/// Nothing here keys off elapsed time except through
-	/// <see cref="KingdomRules.HeartbeatDays"/>, which is capped: a season away accrues exactly
-	/// what three days present accrue, so no realm can come apart because nobody was playing.
+	/// Elapsed time enters here through <see cref="KingdomRules.ElapsedDays"/>, uncapped: a
+	/// season of quarrelling is a season (Addendum 8 clause 1). What stops a realm coming apart
+	/// because nobody was playing is not a ceiling on the calendar but the brink &mdash; dissent
+	/// stops accruing at the breaking point and the founder still gets
+	/// <see cref="SecessionWindowPasses"/> attended passes, so an absence of ninety days and one
+	/// of a thousand arrive at exactly the same realm.
 	/// Engine-free, so the whole ladder is tabled rather than discovered in the field.
 	/// </para>
 	/// </summary>

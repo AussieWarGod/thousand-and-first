@@ -33,7 +33,10 @@ neutral values.
 | `KingdomSettlement Capture()` / `void Restore(KingdomSettlement)` / `bool TrySeat(Zone)` | Move the seat. `TrySeat` runs from `ZoneActivatedEvent`; the others are for tools and tests. |
 | `string KingdomFactionName` / `KingdomDisplayName` | The runtime faction's name and display name; null when unfounded. |
 | `string Style` | City style key (`common`, `verdant`, `fungal`, `gyre`, `eater`, or one your mod declares). Drives which building designs are offered. |
-| `GrowthStage Stage` | `Camp`, `Steading`, `Village`, `Town`, `City`. Only ever advances **today**; do not build on that as a permanent contract. VISION's *hubris subsides* pillar has supply-carried level subsiding in absence toward what the infrastructure carries, down to `Camp`, and the ratchet is where that will land. Read it, never assume it. |
+| `GrowthStage Stage` | `Camp`, `Steading`, `Village`, `Town`, `City`. **Moves in both directions.** `KingdomSubsidenceRules.StageWithHysteresis` is the only writer: it climbs on the reading and falls only on a clear shortfall (20% benefit of the doubt on both of `StageFor`'s inputs), one rung per reckoning, with `Camp` an absolute floor. Read it, never assume it — and never assume a rung already reached is kept. |
+| `int SupportedLevel` | Settlers the settlement's finished works honestly carry, from `KingdomSubsidenceRules.SupportedLevel`. **Knowledge, not truth**: it is as fresh as the last pass that measured it, and `0` means no pass ever has. Consumers that refuse something on it must check for that. |
+| `string SubsidenceBinding` | Which of `water` / `food` / `roof` is the least of the three and therefore what holds the level down, or null before a measurement. |
+| `long LastWaterWorkTick` | Checkpoint for water-works production. Planted on first read and advanced with `KingdomRules.AdvanceCheckpoint`; never a cap. |
 | `int Population` | Living settler count. |
 | `bool Withered` | True while a sustained thirst has suspended prosperity. Recoverable. |
 | `List<string> ClaimedZones` | Zone IDs the kingdom holds. |
@@ -77,8 +80,9 @@ faction, so there is no second economy: it falls from deeds and never from time.
 | `KingdomSystem.Manifest` | The realm's one in-flight manifest, or null. Realm-level and never swapped; it addresses cities by name, because seat and Away exchange roles. |
 
 Drams leave the origin's stores when it is loaded and arrive at the destination's **next attended
-pass** — never on a background clock. One may be in flight at a time; a lapsed window is written
-off once, in the chronicle.
+pass**: the load is physical and somebody has to be there to take delivery, which is a haulage
+fact rather than a clock policy. The window it must arrive inside is real elapsed time. One
+manifest may be in flight at a time; a lapsed window is written off once, in the chronicle.
 
 ## `KingdomCropRules` / `KingdomPlot` — ground that grows food
 
@@ -95,6 +99,17 @@ thirst ladder fires, and it deposits only into a dedicated larder.
 `KingdomGuestbook` (notable guests with hooks that decay into rumors, and the carry-sign's
 distance-scaled hauls, one in flight, mirroring the water manifest's honesty rules).
 
+Both guest tracks run their arrival clock on real elapsed time (`KingdomRules.PassagesThrough`)
+and report a run that came and went unwitnessed as one dated line rather than a queue standing
+since spring. For plain travellers: `KingdomLocusRules.PassageWhen` phrases how long ago the last
+of a run stood at the gate, `PassagesLedgerNote` / `PassagesChronicleLine` are the homecoming
+ledger and chronicle tellings of the whole run, and `GuestLedgerNote` covers the one guest still
+standing when the founder returns. For notables: `KingdomGuestRules.WhenPhrase` is the same dating
+phrase, `PassedChronicleLine` / `PassedOutsiderRumor` / `PassedLedgerNote` / `PassedGuestbookLine`
+tell a departed run across the chronicle, the outsider rumor register, the ledger and the
+guestbook in turn, and `DepartedLedgerNote` is the single-notable case — in every one of these, a
+notable's hook is never lost, only relocated into rumor.
+
 ## Reach, the chain, crews, and wear
 
 `KingdomReach` / `KingdomReachRules`: reach derives from plot size × chain position
@@ -105,14 +120,18 @@ shaped stone / worked metal via staffed yards), vanilla bits (`Bits=`) and exoti
 (`Exotics=`) as high-craft prices, and the yard gates on L/XL construction. `KingdomCrews` /
 `KingdomCrewRules`: capability from settler stats (`CrewNeeds="strength:16"`), ablest-first
 deterministic assignment, shortfalls slow and named. `KingdomWear` / `KingdomWearRules`:
-event-only damage (raids, hard running, temperamental tech), bounded, mending auto-queued and
-holdable, costed from the chain. Stage subsidence remains unbuilt (see the brief's BACKLOG).
+damage from raids, hard running and temperamental tech — never from the calendar — bounded,
+mending auto-queued and holdable, costed from the chain. Hard running is counted in
+**activity-days** (`KingdomRules.ActivityDays`), so a work that ran hard through an absence wore
+for it and a work standing idle did not.
 
 ## How belief moves
 
 `KingdomConversion` / `KingdomConversionRules`: osmosis (shared living under one roof, scaled by
-closeness), culture (shared meals, capped), and the resented-pressure exit (named once, graced in
-attended passes, emigrating through the ordinary machinery). **`KingdomConversion.Convert` is the
+closeness, accrued in **cohabitation-days** of real shared living rather than in visits), culture
+(shared meals, capped), and the resented-pressure exit (named once, its window spent in attended
+passes, emigrating through the ordinary machinery). A conversion about to happen stops at a
+**brink** and waits to be told; see below. **`KingdomConversion.Convert` is the
 one path a conversion may take** — it alone keeps the creed tallies, pressure entries, and the
 two-register dispute honest. `KingdomFaith` (consecration; staffed shrines converting the neutral
 of their zone; staffed scriptoria softening the grudge one band) and `KingdomWaterRite` (the rite
@@ -130,8 +149,17 @@ settler an address: Needs gate the home; housemates are gated by the closeness l
 quarrel, Close refuses the ambient grudge, Roomed tolerates it, and open hostility (≥100, the
 named fault lines) refuses any shared roof at every tier. `Refuses` tags are absolute. Closeness
 derives from beds-per-footprint density, `Closeness` attribute overriding. Arrivals join only if a
-home they would accept exists, and a settler whose acceptable housing is lost leaves after a
-two-attended-pass grace, counted in attended passes only, through the ordinary emigration.
+home they would accept exists. A settler whose acceptable housing is lost does not start a
+countdown: they are recorded at a **roof brink** the moment they have nowhere, and leave only
+after the brink's two-attended-pass window is spent — so an absence of any length arrives at the
+same place, and re-housing them lifts the brink and unsays it. A home stops counting as a roof at
+all once wear crosses `KingdomLodgingRules.CondemnedWearPercent` (40 — derived from
+`KingdomRules.RuinStandingCeilingPercent`, not chosen), judged by `KingdomLodgingRules.IsCondemned`
+/ `KingdomLodging.IsCondemned`; the building itself is never touched, only stops housing anyone
+until mended. `KingdomLodging.ResidentsOf` reads who a condemned home held, and
+`RecordCondemnedRoofBrink` backdates their roof brink to the tick the condemnation actually
+happened — a subsidence breakpoint days back, not the pass that notices — so the announcement
+quotes the honest elapsed.
 `KingdomQolRules.CohabitHostility` / `JudgeCohabitation` are the flat single floor the vocabulary
 shipped with; the ladder above **supersedes** them and they are kept only until they are retired —
 do not write new callers against them.
@@ -195,8 +223,10 @@ that dislike strangers by default are exactly the ones that make a realm hard to
 | `DeclarableCreeds` / `Declare` | Name the realm's creed: decisive, and costly across the world. |
 | `SecededHolds` / `Secede` / `TryRejoin` | A city may leave, keeping its ground, people and buildings. It can be asked back once the cause is gone. |
 
-Dissent accrues only on attended passes, capped like every other absence in this mod, so a realm
-can never fall apart because nobody was playing.
+Dissent accrues on world time like everything else, uncapped. A realm does not fall apart while
+nobody is playing for a different and better reason: the breaking point is a **city brink**, so
+crossing it records the quarrel and stops, and secession itself waits for the founder to be told
+and for its three-pass window to be spent in attended passes. Mending the cause lifts it.
 
 ## `KingdomLarder` — dedicated food, and what the settlement does with it
 
@@ -247,10 +277,85 @@ waits in `KingdomSystem.Away` until the founder walks into its ground.
 | `static List<string> Styles` | Declared city styles. |
 | `static void Reload()` | Re-read every registry. Called on game load; call it if you inject entries at runtime. |
 
+## How time is charged — the clock substrate
+
+Every periodic system in this mod reads the same two calls, and none of them caps elapsed time.
+`MaxUpkeepDaysCharged` and its successor holding pen `LegacyAbsenceCap` are both **retired**: an
+absence of any length is charged in full, and what bounds the loss is subsidence toward the level
+the works carry, never forgiveness. Serialization version 3 is the first version written under
+this rule, and `KingdomSystem.Read` refuses an older layout by name rather than migrating it.
+
+| Member | Contract |
+|---|---|
+| `static int ElapsedDays(long elapsedTicks)` | Whole days in a stretch, over `Simulation.Kernel.TickMath`. Saturating, never negative, never capped. |
+| `static long AdvanceCheckpoint(long previousTick, long currentTick)` | The new checkpoint after charging: the previous one plus the whole days consumed, so the remainder is kept and never rounded away. Never re-anchors to now — that would forgive the remainder. |
+| `static int ActivityDays(int days, int effectivenessPercent)` | Days scaled by how hard a thing was actually run. The labour term of Addendum 8 clause 2: idle days are not activity days. |
+| `static long LabouredTicks(long elapsedTicks, int effectivenessPercent)` | The same idea in ticks, for callers spending a tick budget. |
+| `const int ReserveDays` | 3. A cushion **depth** in days of upkeep, kept in hand before the settlement spends water on a planting, an upgrade or a manifest. A quantity, never a clock — it does not and must not bound elapsed time. |
+| `static long RestampDeadline(long deadlineTick, long nowTick, long leadTicks, int witnessGraceDays)` | Where a repeating or one-shot deadline stands the moment the founder walks in on it: unchanged if not yet overrun or the overrun is still inside the witness grace band, otherwise pushed out to a fresh full window from now. Nothing is forgiven and nothing is banked — only the moment it lands moves. The one helper the manifest, the raid warning and the arrival queue all read instead of keeping their own copy. |
+| `readonly struct Passages` / `static Passages PassagesThrough(long dueTick, long nowTick, long intervalTicks, long patienceTicks)` | Runs a repeating arrival clock forward over however long nobody was looking. `Departed` is how many turns came due and ran out of patience unwitnessed; `StandingSince` is the tick of the one still at the gate, at most one because an existing visitor blocks the next; `LastDepartedTick` dates the most recent departure for a caller telling the news. |
+| `const int RaidWitnessGraceDays` | 1. Whole days past a raid's due tick the founder still counts as having been there to meet it, fed into `RestampDeadline` — raiders who arrive within the day still find somebody home; raiders who arrive a season early do not resolve in the dark. |
+
+**Writing a periodic system against this**: read the elapsed with `ElapsedDays`, plant the
+checkpoint before the first count if it is unset (an unplanted stamp reads as the age of the
+world), gate the work on a labour term, spend the budget, and advance with `AdvanceCheckpoint`.
+`KingdomWear.AdvanceRepair` is the reference shape.
+
+## `KingdomSubsidenceRules` / `KingdomSubsidence` — the level, and settling back to it
+
+Pure rules plus one engine-facing caller. `KingdomSubsidence.Supports(survey)` sums the
+catalogue's `Carries` over every `KingdomBuilt` work in the zone — scaling a work that wants a
+crew by its `KingdomEffectiveness`, and a staffless one not at all — and
+`SupportedLevel(tally, stage)` hands that to the frozen `KingdomCatalogueRules.Equilibrium`.
+
+| Member | Contract |
+|---|---|
+| `static int LevelFromWater(int water, GrowthStage stage)` | Declared `water` is denominated at **camp rates**; this divides by `StageUpkeepPercent` before the equilibrium sees it. A cistern carrying eight in a camp carries three in a city. |
+| `static int SupportedLevel(SupportTally, GrowthStage)` / `BindingSupportFor(...)` | The level, and which of `water` / `food` / `roof` is holding it down. |
+| `const int StartMarginPercent` / `static int SlideBeginsAbove(int level)` / `IsSubsiding` / `HasArrived` | The 20% band. A settlement inside it never moves; the slide stops the moment it arrives. |
+| `const int StageFallMarginPercent` / `static GrowthStage StageWithHysteresis(...)` / `SettledStage(...)` | The ratchet, both ways. One rung per reckoning down, on a clear shortfall only, `Camp` an absolute floor. |
+| `const int StepDays` / `SettlersPerStep(GrowthStage)` / `const int MaxSteps` / `struct Breakpoint` / `struct Trajectory` / `static Trajectory Slide(...)` | Closed-form convergence: the whole slide is computed at once from the elapsed, and its rung changes come back as dated breakpoints for the chronicle. |
+| `const int RuinedWorksPerBreakpoint` / `RuinChancePercent` / `static int RuinIncrement(int roll)` / `RollRuin(...)` / `RolledRuinIncrement(...)` | What a lost rung does to standing works: **damage, never deletion**, bounded by `KingdomMaterialRules.MaxWearPercent`, drawn through the kernel's counter-random so a reload never re-rolls a collapse the chronicle already described. Player-placed objects are never touched. |
+| `static string BeganNote / BeganChronicle / ArrestedNote / ArrestedChronicle / BreakpointChronicle / DepartureCause` | The prose. A slide announces once at awareness and unsays itself when arrested (STANDARDS 7b). |
+| `const int NamedDeparturesPerSlide` / `TellsDeparture(int index, int departed)` / `NamedDepartures(int)` / `SlideDepartureSummary(...)` / `ChronicleEntriesFor(int departed, int rungs)` / `const int ChronicleBudgetPerSlide` | The chronicle's own budget. A long slide is a hundred small departures; the record keeps the first few by name, the last by name, and one line for everybody in between, so a City→Camp collapse cannot eat the register. Hold `ChronicleEntriesFor` against the budget in your own tests if you extend this. |
+
+The slide runs on **world time** and would run identically under the founder's nose. What a
+homecoming changes is that somebody is told. Turn the whole of it off with
+`r_TAF_OptionSubsidence`.
+
+## `KingdomBrinkRules` / `KingdomBrink` — the last arrestable window
+
+One shape for every irreversible consequence in the mod: a settler with nowhere to live
+(`BrinkKind.Roof`), a settler one window short of another creed (`Creed`), and a realm whose two
+cities have quarrelled to the breaking point (`City`).
+
+Three rules, and they are the whole of Addendum 8 clause 3:
+
+1. **Reaching the threshold does not fire it.** The accrual records who, what caused it, and the
+   tick it was reached, and then **stops** (`HoldAtBrink`). A thousand-day absence and a ten-day
+   absence arrive at the same place, because there is nowhere past the brink to arrive at.
+2. **The pressure is a fact, re-derived every pass.** A brink whose cause has lifted is removed
+   and its accrual restarts from nothing — so the window is arrested by *acting*, never by
+   waiting.
+3. **The window is spent in attended passes only.** Announced once at awareness with the honest
+   elapsed time, never with a number the clock was capped down to.
+
+| Member | Contract |
+|---|---|
+| `enum BrinkKind` | `Roof = 1`, `Creed = 2`, `City = 3`. |
+| `const int RoofBrinkWindow` / `CreedBrinkWindow` / `CityBrinkWindow` / `static int WindowFor(BrinkKind)` | 2 / 6 / 3 attended passes. The city window is deliberately shorter than the Rupture-to-Breaking span. |
+| `const int CohabitationDaysPerAttendedPass` / `static int InCohabitationDays(int passes)` | 3. The one exchange rate every migrated counter uses — the retired forgiveness cap's honest successor. Thresholds calibrated in visits were scaled by exactly this, so an attentive founder's road is unchanged. |
+| `static int HoldAtBrink(int value, int threshold)` | Rule 1 as arithmetic. Overflow past the line is discarded, never banked: a banked overflow is a debt the founder cannot see and cannot pay. |
+| `static long CrossingTick(long startTick, long nowTick, int standing, int threshold, int perDay)` | When a steady per-day accrual actually crossed, on the day boundary rather than on the pass somebody noticed. Clamped to now. |
+| `static int DaysStood(...)` / `AfterAttendedPass` / `ShouldAnnounce` / `WindowSpent` / `PassesLeft` | Window bookkeeping. |
+| `static string ElapsedPhrase / WindowPhrase / AnnounceNote / AnnounceTelling / LiftedNote` | The prose, both registers. |
+| `KingdomBrink.Of / Stands / Record / Lift / SpendPass` (per-settler) and `OfCity / CityStands / RecordCity / LiftCity / SpendCityPass` | The engine side. Per-settler brinks ride the **settler's own property bag** (`KingdomBrinkRoofTick` and friends), never a seat field, so a seat swap can never carry one to the wrong city. |
+
 ## `KingdomRules` — pure rules (no engine dependencies)
 
 Deterministic, side-effect-free, and fully unit-tested; safe to call from anywhere,
 including your own tests. Notable members: `SpilloverDelta`, `UpkeepForElapsed`,
+`ElapsedDays`, `AdvanceCheckpoint`, `ActivityDays`, `LabouredTicks`,
 `StageFor`, `FetchableDrams`, `ResolveThirst`, `RaidSize`, `StyleAllows`, `DistrictName`,
 `ZonesAdjacent`, `ComposeOutsider`, `ToThirdPerson`, plus the `BuildEntry` / `DealEntry`
 records and their `TryParse*` validators.
@@ -275,17 +380,24 @@ These are read and written across the mod and are part of the API:
 | `KingdomRaider` (int) | Hostile spawned by a raid. |
 | `KingdomCaravan` (int) | Merchant spawned by a trade charter; despawned on later visits. |
 | `KingdomOrigin` (string) | Settler's region of origin. |
+| `KingdomBrinkRoofTick` / `KingdomBrinkRoofWindow` (int) | A settler standing at the roof brink: the tick they reached it, and attended passes of the window already spent. On the SETTLER, never on a seat. |
+| `KingdomBrinkCreedTick` / `KingdomBrinkCreedWindow` / `KingdomBrinkCreedToward` / `KingdomBrinkCreedChannel` (int/string) | The same for a conversion about to happen, plus which creed and which pull got them there. |
 
 ## Guarantees
 
 - **The protection law**: kingdom systems never consume, move, or destroy an object the
   player or another mod placed, unless the player explicitly dedicated it. Automatic
   placement only ever targets empty cells.
-- **Absence never punishes**: growth, thirst, trade, and raids only resolve while the player
-  is present, and consequences are bounded per visit. Every social and event process —
-  dissent, conversion, wear, the re-housing grace — moves on attended passes only. The one
-  thing ruled to move while away is supply-carried *level*, which subsides toward what the
-  infrastructure carries (bounded, chronicled, arrestable); that is not implemented yet, so
-  nothing in this file promises it either way.
+- **The world keeps time; consequences are realised at awareness.** Processes run on elapsed
+  time — crops, refining, construction, wear from hard running, osmosis, dissent, subsidence
+  toward the supported level — and every rate is time × **labour** × infrastructure, never time
+  alone, so idleness costs nothing and an unstaffed work produces nothing. **No clock in this
+  mod caps or forgives elapsed time.** Consequences are told when the founder is made aware of
+  them, and the irreversible ones stop at a `KingdomBrinkRules` brink and wait there with their
+  window intact, so an absence of any length arrives at the same place.
+- **Time never mints an unchosen debt.** What bounds an absence is subsidence toward the level
+  the works honestly carry, floored at Camp's own equilibrium — not a forgiveness cap, and never
+  a bill that grew while nobody could act on it. Anything a founder can still put right, they
+  are given the chance to.
 - **Failures degrade**: an exception in our code is logged and skipped, never propagated
   into the host game.

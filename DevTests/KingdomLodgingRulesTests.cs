@@ -886,6 +886,175 @@ namespace ThousandAndFirst.Tests
 			Assert.AreEqual(Quarters.Roomed, KingdomLodgingRules.Roomier(Quarters.Roomed, Quarters.Close));
 			Assert.AreEqual(Quarters.Private, KingdomLodgingRules.Roomier(Quarters.Private, Quarters.Private));
 		}
+
+		// --- Condemnation: the wear past which a house stops being a roof ----------------------
+
+		[Test]
+		public void CondemnedWearPercent_IsDerivedFromTheBestPreservedRuin()
+		{
+			// Derived, not chosen. ConditionPercent says a work at wear W has 100 - W of itself
+			// left, and RuinStandingCeilingPercent is the MOST of an abandoned settlement ever
+			// still up after a generation of nobody. The line is where a lived-in house has no
+			// more of itself left than that.
+			Assert.AreEqual(100 - KingdomRules.RuinStandingCeilingPercent, KingdomLodgingRules.CondemnedWearPercent);
+			Assert.AreEqual(KingdomRules.RuinStandingCeilingPercent,
+				KingdomMaterialRules.ConditionPercent(KingdomLodgingRules.CondemnedWearPercent),
+				"the threshold stopped meaning what the ruin ceiling means");
+		}
+
+		[Test]
+		public void CondemnedWearPercent_IsReachableAndIsNotTheWearCeiling()
+		{
+			// It has to be strictly under MaxWearPercent, or condemnation would be a synonym for
+			// "as damaged as anything ever gets" and no house could ever be badly used and still
+			// keep the rain off. It also has to be above zero, or a scratch would empty a city.
+			Assert.Less(KingdomLodgingRules.CondemnedWearPercent, KingdomMaterialRules.MaxWearPercent);
+			Assert.Greater(KingdomLodgingRules.CondemnedWearPercent, 0);
+			Assert.AreEqual("half-wrecked", KingdomMaterialRules.ConditionWord(KingdomLodgingRules.CondemnedWearPercent),
+				"the settlement's own vocabulary stopped agreeing with the threshold");
+		}
+
+		[TestCase(0, false)]
+		[TestCase(-10, false)]
+		[TestCase(19, false)]
+		[TestCase(KingdomLodgingRules.CondemnedWearPercent - 1, false)]
+		[TestCase(KingdomLodgingRules.CondemnedWearPercent, true)]
+		[TestCase(KingdomLodgingRules.CondemnedWearPercent + 1, true)]
+		[TestCase(KingdomMaterialRules.MaxWearPercent, true)]
+		public void IsCondemned_BothSidesOfTheThreshold(int wear, bool expected)
+		{
+			// The constant names the FIRST wear that is too much, not the last that is tolerable,
+			// so the threshold itself condemns.
+			Assert.AreEqual(expected, KingdomLodgingRules.IsCondemned(wear));
+		}
+
+		[Test]
+		public void AWornButLivableHouseIsStillARoof()
+		{
+			// The half of the rule that does nothing, and has to: a knocked-about hut houses its
+			// people exactly as it did, so a subsidence that scuffs a home records no brink.
+			Assert.IsFalse(KingdomLodgingRules.IsCondemned(1));
+			Assert.IsFalse(KingdomLodgingRules.IsCondemned(KingdomLodgingRules.CondemnedWearPercent - 1));
+			Assert.AreEqual("badly used", KingdomMaterialRules.ConditionWord(KingdomLodgingRules.CondemnedWearPercent - 1));
+		}
+
+		[Test]
+		public void ACondemnedHouseIsAlwaysMendableBackIntoARoof()
+		{
+			// The arrest. Every point of the damage is mendable and the ceiling is above the
+			// threshold, so a condemnation is lifted by putting the roof back on and never by
+			// waiting -- which is what makes the roof brink an arrestable window rather than a
+			// countdown.
+			Assert.IsFalse(KingdomLodgingRules.IsCondemned(0), "a mended house was still condemned");
+			Assert.Greater(KingdomMaterialRules.RepairEffort(100, KingdomLodgingRules.CondemnedWearPercent), 0,
+				"mending a condemned house costs nothing");
+		}
+
+		[Test]
+		public void Diagnose_CondemnedOutranksEveryReasonButHavingNoRoofAtAll()
+		{
+			// A half-wrecked house answers nobody's needs and has no beds worth counting, so
+			// "the roofs here have fallen in" is the truest of the reasons whenever it holds --
+			// and the only one the founder answers with a mending rather than a commission.
+			Assert.AreEqual(Reason.Condemned, KingdomLodgingRules.Diagnose(true, false, false, false, false));
+			Assert.AreEqual(Reason.Condemned, KingdomLodgingRules.Diagnose(true, true, true, true, false));
+			Assert.AreEqual(Reason.NoRoofAtAll, KingdomLodgingRules.Diagnose(false, true, true, true, false),
+				"a settlement with nothing built was told its roofs had fallen in");
+		}
+
+		[Test]
+		public void Diagnose_DefaultsToStandingForCallersThatDoNotJudgeWear()
+		{
+			// The four-argument form is every caller that predates condemnation. It must answer
+			// exactly what it always answered.
+			Assert.AreEqual(Reason.NeedsUnmet, KingdomLodgingRules.Diagnose(true, false, false, false));
+			Assert.AreEqual(Reason.Full, KingdomLodgingRules.Diagnose(true, true, false, false));
+			Assert.AreEqual(Reason.Refused, KingdomLodgingRules.Diagnose(true, true, true, false));
+			Assert.AreEqual(Reason.Housed, KingdomLodgingRules.Diagnose(true, true, true, true));
+		}
+
+		[Test]
+		public void UnhousedLine_ForCondemnedNamesTheRemedy()
+		{
+			// STANDARDS 7b: the line has to be something the founder can act on. "Mend one" is
+			// the act, and it is a different act from "build one", which is why this reason could
+			// not borrow NoRoofAtAll's sentence.
+			string line = KingdomLodgingRules.UnhousedLine("Aeru", Reason.Condemned);
+			StringAssert.Contains("Aeru", line);
+			StringAssert.Contains("Mend", line);
+			Assert.AreNotEqual(KingdomLodgingRules.UnhousedLine("Aeru", Reason.NoRoofAtAll), line);
+		}
+
+		// --- The honest roof brink a condemning ruin pre-records --------------------------------
+
+		[Test]
+		public void ARoofLostAtABreakpointReadsTheHonestElapsedAndNotTheNoticingPass()
+		{
+			// The whole point of pre-recording at the ruin. A subsidence condemns an occupied
+			// home at a breakpoint sixty days back, and the settler has been sleeping in the open
+			// ever since. Recording at the pass that finds them would date the loss to tonight
+			// and the founder would be told a comfortable lie.
+			long breakpoint = KingdomRules.TicksPerDay * 40;
+			long noticed = breakpoint + KingdomRules.TicksPerDay * 60;
+			Assert.AreEqual(60, KingdomBrinkRules.DaysStood(breakpoint, noticed),
+				"the brink stopped carrying the honest elapsed");
+			Assert.AreEqual(0, KingdomBrinkRules.DaysStood(noticed, noticed),
+				"a loss found at the pass it happened on read as older than it was");
+			string honest = KingdomLodgingRules.LeavingLine("Aeru", KingdomBrinkRules.DaysStood(breakpoint, noticed));
+			StringAssert.Contains("60 days", honest);
+			Assert.AreNotEqual(KingdomLodgingRules.LeavingLine("Aeru", 0), honest,
+				"the dated line read the same as the undated one");
+		}
+
+		[Test]
+		public void TheRoofWindowIsTheSameLengthHoweverLongTheBrinkStood()
+		{
+			// Clause 3, and what stops the pre-record being a punishment: nothing accrues past
+			// the brink, so a settler stranded sixty days ago and one stranded tonight both get
+			// the whole of GracePasses attended passes once somebody is there to spend them.
+			Assert.AreEqual(KingdomLodgingRules.GracePasses,
+				KingdomBrinkRules.WindowFor(BrinkKind.Roof),
+				"the roof window stopped being the lodging window");
+			Assert.IsFalse(KingdomLodgingRules.GraceRunOut(KingdomBrinkRules.Unannounced));
+			// The announcing pass takes it from Unannounced to zero and spends none of the
+			// window; GracePasses attended passes after that, it is spent.
+			int spent = KingdomBrinkRules.AfterAttendedPass(KingdomBrinkRules.Unannounced);
+			for (int i = 0; i < KingdomLodgingRules.GracePasses; i++)
+			{
+				Assert.IsFalse(KingdomLodgingRules.GraceRunOut(spent), "the window ran out early");
+				spent = KingdomLodgingRules.GraceAfterPass(spent);
+			}
+			Assert.IsTrue(KingdomLodgingRules.GraceRunOut(spent), "the window never ran out");
+		}
+
+		[Test]
+		public void AnyWouldTake_ACityOfFallenRoofsIsToldToMendAndNotToBuild()
+		{
+			// 7b: the reason has to be true AND actionable, and those are different acts. A
+			// settlement that filtered every home out for condemnation used to read as one that
+			// had never built anything, which is the wrong remedy told as a lie.
+			List<KingdomLodgingRules.ArrivalHome> none = new List<KingdomLodgingRules.ArrivalHome>();
+			Reason reason;
+			Assert.IsFalse(KingdomLodgingRules.AnyWouldTake(none, new List<string>(), out reason, AnyCondemnedRoof: true));
+			Assert.AreEqual(Reason.Condemned, reason);
+			StringAssert.Contains("Mend", KingdomLodgingRules.ArrivalRefusedNote(reason));
+			Assert.IsFalse(KingdomLodgingRules.AnyWouldTake(none, new List<string>(), out reason));
+			Assert.AreEqual(Reason.NoRoofAtAll, reason, "a settlement with nothing built stopped reading as one");
+		}
+
+		[Test]
+		public void AnyWouldTake_AStandingRoofOutranksACondemnedOne()
+		{
+			// Condemnation is only ever the reason when there is nothing else to say: one sound
+			// home with a bed free takes the newcomer, whatever else has fallen in.
+			List<KingdomLodgingRules.ArrivalHome> one = new List<KingdomLodgingRules.ArrivalHome>
+			{
+				new KingdomLodgingRules.ArrivalHome(new List<string>(), 2, 0, false)
+			};
+			Reason reason;
+			Assert.IsTrue(KingdomLodgingRules.AnyWouldTake(one, new List<string>(), out reason, AnyCondemnedRoof: true));
+			Assert.AreEqual(Reason.Housed, reason);
+		}
 	}
 }
 #endif

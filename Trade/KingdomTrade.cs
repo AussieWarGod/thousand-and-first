@@ -105,9 +105,10 @@ namespace ThousandAndFirst
 		/// <summary>
 		/// Settles the realm's one in-flight water manifest against this attended pass, if it
 		/// has one. Delivery and lapse both fire only from here and from
-		/// <see cref="ExpireManifestIfStale"/> &mdash; the same witnessed-only idiom as every
-		/// other clock in this mod. A manifest addressed to a city that never activates simply
-		/// keeps waiting; nothing about it resolves on a background timer.
+		/// <see cref="ExpireManifestIfStale"/> &mdash; Addendum 8 clause 3's crystallise-at-
+		/// awareness, which is the shape every deadline in this mod keeps. A manifest addressed to
+		/// a city that never activates simply keeps waiting; nothing about it resolves on a
+		/// background timer, and nothing about it is forgiven for having waited.
 		/// </summary>
 		/// <param name="System">The realm. <see cref="KingdomSystem.SeatName"/> names whichever
 		/// city just activated, since <c>TrySeat</c> already ran before this is called.</param>
@@ -175,13 +176,20 @@ namespace ThousandAndFirst
 				// never produce a debt: the carters give up on the road and start for home
 				// rather than pouring sixty drams into the sand. The water is not lost, only
 				// the errand. It turns back exactly once, so a load cannot bounce forever.
+				//
+				// The fresh window comes from KingdomRules.RestampDeadline, the one helper the
+				// raid re-warn and the arrival queue also read: a full window from the moment of
+				// witnessing, with no witness band at all, because a caravan's deadline is spent
+				// the instant it passes and there is no version of "close enough" for a load that
+				// is already standing in the sand. The sentences below stay this file's own.
 				string turned = KingdomManifestRules.ManifestTurnedBackDeed(manifest.OriginName, manifest.DestinationName, manifest.Drams);
 				string wasOrigin = manifest.OriginName;
 				manifest.OriginName = manifest.DestinationName;
 				manifest.DestinationName = wasOrigin;
 				manifest.TurnedBack = true;
 				manifest.LoadedTick = Now;
-				manifest.DeadlineTick = KingdomManifestRules.ManifestDeadline(Now);
+				manifest.DeadlineTick = KingdomRules.RestampDeadline(
+					manifest.DeadlineTick, Now, KingdomManifestRules.ManifestWindowTicks, 0);
 				System.Ledger.Note("{{y|" + turned + ".}}");
 				KingdomChronicle.Record(System, turned);
 				KingdomLog.Log("manifest: turned back " + manifest.Drams + " drams toward " + manifest.DestinationName);

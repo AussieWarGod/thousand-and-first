@@ -918,6 +918,231 @@ namespace ThousandAndFirst.Tests
 			Assert.AreEqual(0, trajectory.Departed);
 			Assert.IsTrue(trajectory.Arrived);
 		}
+
+		// ==================================================================================
+		// The chronicle budget: a collapse is told in rungs, not in fifty departures.
+		// ==================================================================================
+
+		[Test]
+		public void TellsDeparture_ShortSlidesNameEverybody()
+		{
+			// A handful of people leaving IS the story at that size, so nothing is sampled away.
+			for (int departed = 1; departed <= KingdomSubsidenceRules.NamedDeparturesPerSlide; departed++)
+			{
+				for (int i = 0; i < departed; i++)
+				{
+					Assert.IsTrue(KingdomSubsidenceRules.TellsDeparture(i, departed),
+						"a short slide stopped naming everybody");
+				}
+			}
+		}
+
+		[Test]
+		public void TellsDeparture_KeepsTheFirstAndTheLastAlways()
+		{
+			// The first is when it started going and the last is who turned the lights off. A
+			// sample that dropped either would be a worse record than a shorter one.
+			for (int departed = KingdomSubsidenceRules.NamedDeparturesPerSlide + 1; departed <= 60; departed++)
+			{
+				Assert.IsTrue(KingdomSubsidenceRules.TellsDeparture(0, departed), "the first departure went untold");
+				Assert.IsTrue(KingdomSubsidenceRules.TellsDeparture(departed - 1, departed), "the last departure went untold");
+			}
+		}
+
+		[Test]
+		public void TellsDeparture_NamesExactlyTheBudgetHoweverLongTheSlide()
+		{
+			// The bound. A City emptying to Camp names three and no more, whatever the length.
+			for (int departed = 1; departed <= 60; departed++)
+			{
+				int named = 0;
+				for (int i = 0; i < departed; i++)
+				{
+					if (KingdomSubsidenceRules.TellsDeparture(i, departed))
+					{
+						named++;
+					}
+				}
+				Assert.AreEqual(KingdomSubsidenceRules.NamedDepartures(departed), named,
+					"the sample size drifted from what NamedDepartures promises");
+				Assert.LessOrEqual(named, KingdomSubsidenceRules.NamedDeparturesPerSlide);
+			}
+		}
+
+		[Test]
+		public void TellsDeparture_RefusesIndicesOutsideTheSlide()
+		{
+			Assert.IsFalse(KingdomSubsidenceRules.TellsDeparture(-1, 10));
+			Assert.IsFalse(KingdomSubsidenceRules.TellsDeparture(10, 10));
+			Assert.IsFalse(KingdomSubsidenceRules.TellsDeparture(0, 0));
+		}
+
+		[Test]
+		public void SlideDepartureSummary_CarriesEverybodyTheSampleDidNotName()
+		{
+			// Nobody vanishes from the count. Named plus summarised is exactly what went, which
+			// is what lets the ledger's departure tally and the register agree.
+			string cause = KingdomSubsidenceRules.DepartureCause(KingdomCatalogueRules.SupportWater);
+			string summary = KingdomSubsidenceRules.SlideDepartureSummary("Tamsketh", 46, 3, cause);
+			StringAssert.Contains("43 more", summary);
+			StringAssert.Contains("Tamsketh", summary);
+			StringAssert.Contains(cause, summary);
+			StringAssert.Contains("one more", KingdomSubsidenceRules.SlideDepartureSummary("Tamsketh", 4, 3, cause));
+		}
+
+		[Test]
+		public void SlideDepartureSummary_SaysNothingWhenTheSampleNamedThemAll()
+		{
+			string cause = KingdomSubsidenceRules.DepartureCause(KingdomCatalogueRules.SupportFood);
+			Assert.IsNull(KingdomSubsidenceRules.SlideDepartureSummary("Tamsketh", 3, 3, cause));
+			Assert.IsNull(KingdomSubsidenceRules.SlideDepartureSummary("Tamsketh", 0, 0, cause));
+			Assert.IsNull(KingdomSubsidenceRules.SlideDepartureSummary("Tamsketh", 2, 5, cause));
+		}
+
+		[Test]
+		public void SlideDepartureSummary_CountsWhatActuallyWentWhenASlideIsCutShort()
+		{
+			// A slide loses fewer than the trajectory called for when its people are standing in
+			// another claimed zone, and may name fewer than the sample planned. The summary takes
+			// both real numbers, so the two always add back up to the departures recorded.
+			string cause = KingdomSubsidenceRules.DepartureCause(KingdomCatalogueRules.SupportRoof);
+			StringAssert.Contains("3 more", KingdomSubsidenceRules.SlideDepartureSummary("Tamsketh", 5, 2, cause));
+		}
+
+		[Test]
+		public void ChronicleEntriesFor_AFullCityToCampCollapseSpendsAModestShare()
+		{
+			// The row. Fifty people falling to Camp's own floor of four, through every rung there
+			// is, with every rung ruining its full allowance of works: fifty-eight entries before
+			// the coarsening, better than a quarter of the two-hundred-entry register for one
+			// event. Now it is the rungs, their ruins, and four lines about the people.
+			int rungs = (int)GrowthStage.City;
+			int spent = KingdomSubsidenceRules.ChronicleEntriesFor(46, rungs);
+			Assert.LessOrEqual(spent, KingdomSubsidenceRules.ChronicleBudgetPerSlide,
+				"a full collapse went over the budget this file promises");
+			Assert.Less(spent, 58 / 2, "the coarsening did not even halve the old spend");
+			Assert.Greater(spent, rungs, "the rungs themselves stopped being told");
+		}
+
+		[Test]
+		public void ChronicleEntriesFor_GrowsWithTheRungsAndNotWithTheDepartures()
+		{
+			// What the coarsening actually bought: length stops mattering. Once past the sample,
+			// twice as many people leaving costs no more entries at all -- only a longer fall
+			// does, because a rung is a real change in what the place is.
+			int shortSlide = KingdomSubsidenceRules.ChronicleEntriesFor(10, 1);
+			int longSlide = KingdomSubsidenceRules.ChronicleEntriesFor(46, 1);
+			Assert.AreEqual(shortSlide, longSlide, "the register still paid by the settler");
+			Assert.Greater(KingdomSubsidenceRules.ChronicleEntriesFor(46, 4), longSlide,
+				"a four-rung fall cost the same as a one-rung fall");
+		}
+
+		[Test]
+		public void ChronicleEntriesFor_ASlideThatTookNobodyWritesNothingButItsRungs()
+		{
+			Assert.AreEqual(0, KingdomSubsidenceRules.ChronicleEntriesFor(0, 0));
+			Assert.AreEqual(0, KingdomSubsidenceRules.ChronicleEntriesFor(-4, -1));
+		}
+
+		[Test]
+		public void ChronicleBudgetPerSlide_IsAModestShareOfTheRegister()
+		{
+			// KingdomChronicle.MaxEntries is 200 and is the chronicle's own constant; this file
+			// folds to fit it rather than reaching into it. One collapse may not spend more than
+			// a tenth of the record a settlement keeps of itself.
+			Assert.LessOrEqual(KingdomSubsidenceRules.ChronicleBudgetPerSlide, 200 / 10);
+			Assert.Greater(KingdomSubsidenceRules.ChronicleBudgetPerSlide, 0);
+		}
+
+		[Test]
+		public void EveryRungOfARealCollapseIsStillToldFirstAndLast()
+		{
+			// The rungs are the sample, so they are never thinned: a City sliding to Camp
+			// chronicles City-to-Town and Steading-to-Camp and everything between. There are at
+			// most four of them, which is why they can all be kept.
+			KingdomCatalogueRules.SupportTally supports = Tally(0, 0, 0);
+			KingdomSubsidenceRules.Trajectory trajectory = KingdomSubsidenceRules.Slide(
+				50, GrowthStage.City, 2048, supports, KingdomSubsidenceRules.StepDays * 200, AlreadySliding: false);
+			Assert.Greater(trajectory.Breakpoints.Count, 0, "a City with nothing standing did not fall");
+			Assert.AreEqual(GrowthStage.City, trajectory.Breakpoints[0].From, "the first rung was not the one it started on");
+			Assert.AreEqual(GrowthStage.Camp, trajectory.Breakpoints[trajectory.Breakpoints.Count - 1].To,
+				"the last rung was not the floor it arrived at");
+			Assert.LessOrEqual(trajectory.Breakpoints.Count, (int)GrowthStage.City,
+				"more rungs were told than the ladder has");
+			Assert.LessOrEqual(
+				KingdomSubsidenceRules.ChronicleEntriesFor(trajectory.Departed, trajectory.Breakpoints.Count),
+				KingdomSubsidenceRules.ChronicleBudgetPerSlide,
+				"a real full collapse went over the budget");
+		}
+
+		// ==================================================================================
+		// Condemnation: which ruined homes strand the people living in them.
+		// ==================================================================================
+
+		[Test]
+		public void OneRungOfRuinDoesNotCondemnASoundHome()
+		{
+			// The half of the rule that must do nothing. A single lost rung leaves a home badly
+			// used, and a badly used home still keeps the rain off -- so an occupied house that
+			// took one rung records no brink and strands nobody.
+			for (int roll = 0; roll < 100; roll++)
+			{
+				int afterOneRung = KingdomMaterialRules.AddWear(0, KingdomSubsidenceRules.RuinIncrement(roll));
+				Assert.IsFalse(KingdomLodgingRules.IsCondemned(afterOneRung),
+					"one rung of a slide emptied a house");
+			}
+		}
+
+		[Test]
+		public void EnoughRungsOfRuinDoCondemnAHomeAndTheCrossingHappensExactlyOnce()
+		{
+			// The other half. Two or three rungs bring a work to the wear ceiling, which is past
+			// the condemnation line, so a City falling all the way really does leave people
+			// without a roof -- and the crossing is a single event, which is what makes
+			// "pre-record at the ruin that condemned it" a well-defined moment rather than a
+			// thing that fires again on every later rung.
+			int wear = 0;
+			int crossings = 0;
+			for (int rung = 0; rung < (int)GrowthStage.City; rung++)
+			{
+				int before = wear;
+				wear = KingdomMaterialRules.AddWear(wear, KingdomSubsidenceRules.RuinIncrement(50));
+				if (KingdomLodgingRules.IsCondemned(wear) && !KingdomLodgingRules.IsCondemned(before))
+				{
+					crossings++;
+				}
+			}
+			Assert.IsTrue(KingdomLodgingRules.IsCondemned(wear), "a full collapse never condemned anything");
+			Assert.AreEqual(1, crossings, "the condemning crossing fired more than once");
+		}
+
+		[Test]
+		public void AWorkAlreadyAtTheCeilingCrossesNothingAndStrandsNobodyTwice()
+		{
+			// KingdomBrink.Record is idempotent, and the crossing test in front of it is the
+			// other guard: a work already at MaxWearPercent takes no more wear, so it reports no
+			// crossing and the people under it keep the honest tick they already had.
+			int ceiling = KingdomMaterialRules.MaxWearPercent;
+			int after = KingdomMaterialRules.AddWear(ceiling, KingdomSubsidenceRules.RuinIncrement(99));
+			Assert.AreEqual(ceiling, after, "the ceiling stopped being a ceiling");
+			Assert.IsTrue(KingdomLodgingRules.IsCondemned(ceiling) && KingdomLodgingRules.IsCondemned(after),
+				"a work at the ceiling was not condemned");
+		}
+
+		[Test]
+		public void RuinIsDamageAndACondemnedHomeIsAlwaysMendable()
+		{
+			// The protection law and the arrest, together: nothing is cleared, the ceiling is
+			// above the condemnation line, and every point of the damage goes back through the
+			// ordinary mending. A condemnation is answered by acting, never by waiting.
+			Assert.Less(KingdomLodgingRules.CondemnedWearPercent, KingdomMaterialRules.MaxWearPercent);
+			for (int roll = 0; roll < 100; roll++)
+			{
+				Assert.Greater(KingdomSubsidenceRules.RuinIncrement(roll), 0, "a ruin was a no-op that read like one");
+				Assert.LessOrEqual(KingdomMaterialRules.AddWear(0, KingdomSubsidenceRules.RuinIncrement(roll)),
+					KingdomMaterialRules.MaxWearPercent);
+			}
+		}
 	}
 }
 #endif

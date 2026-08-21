@@ -239,6 +239,12 @@
     patch; the field is the settlement deciding to eat on purpose; the granary is what
     makes a good harvest last until the next one, which is why a store raises the
     sustainable level and a bumper crop does not.
+
+    This is the one lane in the catalogue that never automates. Water and roof each end in
+    a grand design that runs itself - a reservoir holds what falls into it, a court houses
+    whoever walks in - and food does not, because nothing grows itself. Every rung here
+    past the kitchen garden wants somebody standing in it, and the big ones want somebody
+    still. What scale buys is a better rate for the hands, never their discharge.
   -->
   <!--
     Key "larder" and Key "plot" are historical spellings kept exactly as they are: a save in
@@ -276,6 +282,37 @@
             Cost="22" Ticks="4200" Styles="all" Category="food" Plot="M" MinStage="Village"
             Districts="agrarian,market,none"
             Materials="timber:16,stone:10" Staff="1" Manning="scaled" Carries="food:9" />
+
+  <!--
+    The big plots. The grange and the home farm climb exactly the rungs the ROOF lane
+    climbs - twenty-six on a large plot, forty on a grand one - because a dinner and a bed
+    are both counted in people, and neither is divided by the settlement's own thirst the
+    way a dram is. The water lane climbs twice as steeply for exactly that reason and ends
+    with nobody working it; this lane ends with four people and a mill.
+
+    What the climb actually buys, in hands: a field feeds four settlers to the hand,
+    ploughed fields six, a grange nearly nine, the home farm ten. (The granary is off that
+    ladder at nine on a single keeper, because it grows nothing - it only refuses to waste
+    what came in, which is a cheaper trade than growing and always was.) So a town that has
+    raised its reservoir keeps nobody on the water detail and three people in its fields,
+    and a city keeps nobody on the water and eight. That is the handover the catalogue
+    promises, stated honestly: hands never leave food; they stop being all of it.
+
+    These are also the only large binding works a bad season can reach. KingdomSubsidence
+    scales a crewed work by what it is actually running at and a staffless one not at all,
+    so a slide that ruins a reservoir costs the city no level and a slide that ruins the
+    home farm costs it dinners - and a city short-handed for any other reason is short of
+    food first. Food is the good that notices. It is meant to be.
+  -->
+  <building Key="grange" DisplayName="grange (fields, a threshing floor, and the barn at the end of them)" Blueprint="r_KingdomGrange"
+            Cost="40" Ticks="7200" Styles="all" Category="food" Plot="L" Open="yes" MinStage="Town"
+            Districts="agrarian" MinZones="3"
+            Materials="timber:30,shapedtimber:8,stone:16" Staff="3" Manning="scaled" Carries="food:26" />
+
+  <building Key="homefarm" DisplayName="the home farm (the quarter the rest of the city eats from)" Blueprint="r_KingdomHomeFarm"
+            Cost="92" Ticks="12000" Styles="all" Category="food" Plot="XL" Open="yes" MinStage="City"
+            Districts="agrarian" MinZones="4"
+            Materials="timber:68,shapedtimber:16,stone:46,workedmetal:8,scrap:10" Staff="4" Manning="scaled" Carries="food:40,craft:2" />
 
   <!-- ===================================================================== INDUSTRY ==
     Craft lifts rather than binds: a forge does not feed anybody, it makes the place worth

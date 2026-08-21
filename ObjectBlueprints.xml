@@ -309,6 +309,21 @@
     <part Name="Physics" Takeable="false" Organic="true" Weight="3000" />
     <stat Name="Hitpoints" Value="260" />
   </object>
+  <!-- The food lane's large and grand rungs. Both inherit r_KingdomField for its already-wired
+       glyph, walkable physics and organic flag, exactly as r_KingdomFieldRows does: a grange is
+       a field with a barn on the end of it, and no new art is needed to say so. -->
+  <object Name="r_KingdomGrange" Inherits="r_KingdomField">
+    <part Name="Render" DisplayName="grange" ColorString="&amp;y" DetailColor="W" />
+    <part Name="Description" Short="Fields to the fence line, a threshing floor swept between harvests, and a barn at the end of them with the year's account chalked on the door. Three people work it and a whole town eats out of it." />
+    <part Name="Physics" Solid="false" Takeable="false" Organic="true" Weight="9000" />
+    <stat Name="Hitpoints" Value="420" />
+  </object>
+  <object Name="r_KingdomHomeFarm" Inherits="r_KingdomField">
+    <part Name="Render" DisplayName="the home farm" RenderString="&#8801;" ColorString="&amp;G" DetailColor="Y" />
+    <part Name="Description" Short="The quarter the rest of the city eats out of: rows past the eye's patience, a mill with metal in its gearing, and granaries standing in a line with their own road to the doors. It is the only paved way in the city that goes nowhere but a barn." />
+    <part Name="Physics" Solid="false" Takeable="false" Organic="true" Weight="30000" />
+    <stat Name="Hitpoints" Value="900" />
+  </object>
   <object Name="r_KingdomToolShed" Inherits="Furniture">
     <stag Name="Contemporary" />
     <part Name="Render" DisplayName="tool shed" RenderString="&#8745;" ColorString="&amp;w" DetailColor="y" />

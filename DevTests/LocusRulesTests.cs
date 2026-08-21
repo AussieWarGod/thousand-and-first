@@ -142,6 +142,108 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("Tamsketh", greeted);
 			StringAssert.Contains("Tamsketh", ignored);
 		}
+
+		// ---- Travellers who came and went through an absence ----
+
+		[Test]
+		public void GuestPatienceIsShorterThanTheIntervalSoOnlyOneIsEverStanding()
+		{
+			// Load-bearing, not a coincidence. It is what makes KingdomRules.PassagesThrough's
+			// "at most one still at the gate" true of this clock, and it is what an existing
+			// guest blocking the next one used to buy by accident.
+			Assert.Less(KingdomLocusRules.GuestPatienceTicks, KingdomLocusRules.GuestIntervalTicks);
+			Assert.Greater(KingdomLocusRules.GuestPatienceTicks, 0L);
+		}
+
+		[Test]
+		public void ASeasonAwayIsAWholeSeasonOfTravellersAndNobodyAtTheGate()
+		{
+			// The row. A two-hundred-day absence and a three-day one used to produce the same
+			// single guest, standing in the square as though they had just walked up. Now the
+			// road runs through the absence: everybody's patience ran out, so what the founder
+			// finds is the news and not a stranger.
+			long due = KingdomLocusRules.GuestIntervalTicks;
+			long now = due + KingdomRules.TicksPerDay * 200;
+			KingdomRules.Passages passages = KingdomRules.PassagesThrough(
+				due, now, KingdomLocusRules.GuestIntervalTicks, KingdomLocusRules.GuestPatienceTicks);
+			Assert.Greater(passages.Departed, 60, "two hundred days at a three-day cadence is not one traveller");
+			Assert.AreEqual(0L, passages.StandingSince, "somebody was left waiting at the gate for a season");
+		}
+
+		[Test]
+		public void AGuestWhoJustWalkedUpIsStillThereAndKeepsTheirOwnArrivalTick()
+		{
+			// The other side of it: the founder who comes home minutes after a traveller arrived
+			// still meets them, and that traveller's patience is already partly spent because it
+			// started when they actually arrived.
+			long due = KingdomLocusRules.GuestIntervalTicks;
+			KingdomRules.Passages passages = KingdomRules.PassagesThrough(
+				due, due + 60L, KingdomLocusRules.GuestIntervalTicks, KingdomLocusRules.GuestPatienceTicks);
+			Assert.AreEqual(due, passages.StandingSince);
+			Assert.AreEqual(0, passages.Departed);
+			Assert.AreEqual(due + KingdomLocusRules.GuestPatienceTicks, KingdomLocusRules.GuestDepartTickFor(passages.StandingSince),
+				"their patience was restarted at the homecoming instead of at their arrival");
+		}
+
+		[TestCase(0, "the last of them today")]
+		[TestCase(-4, "the last of them today")]
+		[TestCase(1, "the last of them a day before you saw it")]
+		[TestCase(9, "the last of them 9 days before you saw it")]
+		public void PassageWhen_DatesAgainstTheDayTheFounderIsBeingTold(int daysAgo, string expected)
+		{
+			Assert.AreEqual(expected, KingdomLocusRules.PassageWhen(daysAgo));
+		}
+
+		[Test]
+		public void PassagesLedgerNote_IsOneDatedLineForTheWholeRun()
+		{
+			// Honest dating, and a chronicle budget: a season of ambient traffic is one line, and
+			// the line carries a real number of days rather than "recently".
+			string many = KingdomLocusRules.PassagesLedgerNote(31, 2);
+			StringAssert.Contains("31", many);
+			StringAssert.Contains("2 days before you saw it", many);
+			StringAssert.Contains("Nothing was lost", many);
+			string one = KingdomLocusRules.PassagesLedgerNote(1, 2);
+			StringAssert.Contains("A traveller", one);
+			Assert.IsFalse(one.Contains("1 travellers"), "the singular case read as a plural");
+		}
+
+		[Test]
+		public void PassagesLedgerNote_SaysNothingWhenNobodyCame()
+		{
+			// STANDARDS 7b's "not applicable" case: an absence with no traffic in it is not news,
+			// and the null is the caller's signal to stay quiet rather than say "0 travellers".
+			Assert.IsNull(KingdomLocusRules.PassagesLedgerNote(0, 4));
+			Assert.IsNull(KingdomLocusRules.PassagesLedgerNote(-2, 4));
+			Assert.IsNull(KingdomLocusRules.PassagesChronicleLine(0, "Tamsketh", 4));
+		}
+
+		[Test]
+		public void PassagesChronicleLine_NamesThePlaceAndBlamesNobody()
+		{
+			string line = KingdomLocusRules.PassagesChronicleLine(4, "Tamsketh", 6);
+			StringAssert.Contains("Tamsketh", line);
+			StringAssert.Contains("4 travellers", line);
+			StringAssert.Contains("6 days before you saw it", line);
+			// An unanswered gate is a missed pleasantry, never a fault logged against the founder.
+			Assert.IsFalse(line.Contains("failed"), "the register started blaming somebody");
+			Assert.IsFalse(line.Contains("lost"), "the register started counting a loss");
+		}
+
+		[Test]
+		public void GuestLedgerNote_DatesTheDepartureAgainstTheDayItActuallyHappened()
+		{
+			// A guest standing at the gate when the founder left gave up when their patience ran
+			// out, not when somebody finally walked back in. The undated overload is the same
+			// sentence for a departure noticed the day it happened.
+			string dated = KingdomLocusRules.GuestLedgerNote("Aeru", 12);
+			StringAssert.Contains("Aeru", dated);
+			StringAssert.Contains("12 days before you saw it", dated);
+			StringAssert.Contains("Nothing was lost", dated);
+			Assert.AreEqual(KingdomLocusRules.GuestLedgerNote("Aeru"), KingdomLocusRules.GuestLedgerNote("Aeru", 0));
+			Assert.AreEqual(KingdomLocusRules.GuestLedgerNote("Aeru"), KingdomLocusRules.GuestLedgerNote("Aeru", -5));
+			StringAssert.Contains("a day before you saw it", KingdomLocusRules.GuestLedgerNote("Aeru", 1));
+		}
 	}
 }
 #endif

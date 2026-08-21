@@ -93,17 +93,18 @@
 		/// </summary>
 		public const int PostDailyNeedCharge = 4000;
 
-		/// <summary>Days of settlement life one visit may credit. Absence beyond this is
-		/// forgiven.
-		/// <para>
-		/// UNMIGRATED. Water no longer keeps this bargain - upkeep and fetch both run the full
-		/// elapsed now (Addendum 8 clause 1) - and power is already fully labour- and
-		/// effectiveness-gated, so uncapping it is a denominator swap with nothing else attached.
-		/// It waits only because <c>KingdomPower</c> is not this package's ground. See
-		/// <see cref="KingdomRules.LegacyAbsenceCap"/>.
-		/// </para>
-		/// </summary>
-		public const int MaxDaysCredited = KingdomRules.LegacyAbsenceCap;
+		// MaxDaysCredited is RETIRED. It was KingdomRules' absence cap under a local name, and it
+		// forgave every day of an absence past the third. Power runs the full elapsed now
+		// (Addendum 8 clause 1): a wheel in a river turns while nobody is watching it.
+		//
+		// Nothing was added to bound it, because everything that bounds it was already here. A
+		// work makes RatedChargePerDay times its CREW EFFECTIVENESS times what the ground or the
+		// sky is giving it (DailyOutput), so an unstaffed work over a season makes exactly what
+		// it makes over an afternoon: nothing. What is made past that has to fit in the stores -
+		// Absorbable against a real capacity - and charge that will not fit is not made into a
+		// debt, it is simply not stored. Storage capacity is the anti-away-farming bound the
+		// design always named, and it is a thing the founder built rather than a number that
+		// forgives them.
 
 		public const string IdleNoWorks = "Nothing here makes power yet. A crank mill would give the post something to draw on.";
 
@@ -171,14 +172,18 @@
 			return (Percent > 100) ? 100 : Percent;
 		}
 
-		/// <summary>Clamps a day count into the span one visit may credit.</summary>
+		/// <summary>
+		/// Normalises a day count: nothing below zero, and everything above it as given.
+		/// <para>
+		/// This used to clamp to a three-day ceiling and was the whole of power's forgiveness.
+		/// It now only fails closed on a nonsense reading, and is kept as a named funnel so
+		/// every one of this file's day-taking rules refuses a negative in one place rather than
+		/// four.
+		/// </para>
+		/// </summary>
 		public static int ClampDays(int Days)
 		{
-			if (Days <= 0)
-			{
-				return 0;
-			}
-			return (Days > MaxDaysCredited) ? MaxDaysCredited : Days;
+			return (Days > 0) ? Days : 0;
 		}
 
 		/// <summary>
@@ -225,7 +230,11 @@
 			{
 				return sampled;
 			}
-			return (sampled + TypicalWindAvailabilityPercent * (days - 1)) / days;
+			// Widened for the same reason every uncapped day count in this file is: days is now
+			// whatever the calendar says, and a hundred-thousand-day stretch would overflow the
+			// weighted sum. The answer converges on the typical value, which is the honest one -
+			// one witnessed gust says less and less about a longer and longer absence.
+			return (int)(((long)sampled + (long)TypicalWindAvailabilityPercent * (days - 1)) / days);
 		}
 
 		/// <summary>
@@ -245,14 +254,14 @@
 		}
 
 		/// <summary>
-		/// What a day's output comes to across an absence. Days beyond
-		/// <see cref="MaxDaysCredited"/> are forgiven rather than paid: a season away is worth the
-		/// same as three days, so leaving is never rewarded and never punished.
+		/// What a day's output comes to across a stretch of world time. The full elapsed, in
+		/// full: a wheel in a river turns while the founder is elsewhere (Addendum 8 clause 1).
 		/// <para>
-		/// Water used to keep the same bargain and no longer does &mdash; upkeep and fetch both
-		/// run the full elapsed (Addendum 8 clause 1). This is an unmigrated row, not a
-		/// disagreement: power is already staffing- and effectiveness-gated end to end, so
-		/// uncapping it is a denominator swap with nothing else attached.
+		/// A day's output is already crew effectiveness times availability
+		/// (<see cref="DailyOutput"/>), so an unstaffed work multiplies a season by zero and gets
+		/// zero &mdash; clause 2, and the reason this needed no ceiling of its own. What the
+		/// settlement can KEEP of the answer is the stores' business
+		/// (<see cref="Absorbable"/>), and a store the founder never built holds nothing.
 		/// </para>
 		/// </summary>
 		/// <param name="DailyCharge">One day's output, from <see cref="DailyOutput"/>.</param>
@@ -263,7 +272,8 @@
 			{
 				return 0;
 			}
-			return DailyCharge * ClampDays(Days);
+			long charge = (long)DailyCharge * ClampDays(Days);
+			return (charge > int.MaxValue) ? int.MaxValue : (int)charge;
 		}
 
 		/// <summary>Charge the stores may take in, or give back, across a span.</summary>
@@ -275,7 +285,8 @@
 			{
 				return 0;
 			}
-			return Capacity / SaltStoreThroughputDivisor * ClampDays(Days);
+			long throughput = (long)(Capacity / SaltStoreThroughputDivisor) * ClampDays(Days);
+			return (throughput > int.MaxValue) ? int.MaxValue : (int)throughput;
 		}
 
 		/// <summary>

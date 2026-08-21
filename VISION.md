@@ -74,15 +74,20 @@ opinions and a chronicle that records what you did in two competing tellings.
 so it is the spine of the settlement: what founds it, what limits it, what threatens it, and
 what everything is ultimately paid in.
 
-**Absence never punishes.** Time away should produce gifts and news to discover, never debts to
-answer for. The stores drink a little while you are gone — capped at a few days, then forgiven
-— and nothing that happened in your absence can push the settlement below its floor. What
-absence *does* move is the level: a city held up by your own hauling rather than by its works
-settles back toward what those works honestly carry — the pillar below, and bounded,
-chronicled, and arrestable the day you walk back in. What absence never moves is anything
-between people — dissent, conversion, damage to the works, the grace a settler is given while
-you find them a roof. Those wait for a witness. You come home to a report of what happened, not
-an inspection.
+**The world keeps time; you are told at the door.** Time away produces news to come home to,
+never a debt you did not choose. But it is not a pause. The settlement lives while you are
+gone: crops ripen, yards shape stock, scaffolds rise, works wear from being *run*, belief
+moves between people who share a roof, dissent gathers, and a city standing above what its
+works carry settles back toward them. What none of that is, is a clock running on its own.
+Every rate is time × **labour** × infrastructure, so an unstaffed yard shapes nothing over a
+season, a scaffold nobody works on does not rise, and a mill left alone wears not at all —
+idleness is what costs nothing, and it always was. Consequences are realised when you are made
+aware of them, and the irreversible ones — a settler leaving, a city seceding — wait at the
+brink for that moment rather than firing silently in the past: a thousand days away and ten
+days away arrive at the same place, and both hand you the last window the design promised to
+arrest it. Nothing anywhere is forgiven on a timer, because nothing needs to be: what bounds
+the worst of an absence is the level the works honestly carry, and the floor below that is a
+camp. You come home to a report of what happened, not an inspection.
 
 **Loss writes chronicles, not game-overs.** The settlement is woundable and never deletable.
 Raids take water and sometimes people; drought drives settlers away; districts can fail. All

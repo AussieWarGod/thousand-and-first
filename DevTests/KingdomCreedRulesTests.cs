@@ -265,7 +265,7 @@ namespace ThousandAndFirst.Tests
 			int aSeason = KingdomRules.ElapsedDays(KingdomRules.TicksPerDay * 90);
 			Assert.AreEqual(90, aSeason, "the clock is uncapped");
 			Assert.Greater(KingdomCreedRules.AccrueDissent(0, 100, aSeason),
-				KingdomCreedRules.AccrueDissent(0, 100, KingdomRules.LegacyAbsenceCap),
+				KingdomCreedRules.AccrueDissent(0, 100, 3),
 				"absence is no longer forgiven here");
 		}
 

@@ -74,23 +74,28 @@ namespace ThousandAndFirst.Tests
 		[TestCase(-1, 0)]
 		[TestCase(0, 0)]
 		[TestCase(1, 1)]
-		[TestCase(KingdomPowerRules.MaxDaysCredited, KingdomPowerRules.MaxDaysCredited)]
-		[TestCase(90, KingdomPowerRules.MaxDaysCredited)]
-		public void ClampDays_ForgivesAbsenceBeyondTheCap(int input, int expected)
+		[TestCase(3, 3)]
+		[TestCase(90, 90)]
+		[TestCase(int.MaxValue, int.MaxValue)]
+		public void ClampDays_OnlyFailsClosedAndNoLongerForgives(int input, int expected)
 		{
+			// It clamped to a three-day ceiling and that WAS power's forgiveness. It now refuses
+			// a nonsense negative in one place for four rules and otherwise hands back the
+			// calendar it was given.
 			Assert.AreEqual(expected, KingdomPowerRules.ClampDays(input));
 		}
 
 		[Test]
-		public void MaxDaysCredited_IsAnUnmigratedRowAndSaysSo()
+		public void MaxDaysCreditedIsRetiredAndNothingHereCapsAnAbsence()
 		{
-			// Water no longer keeps this bargain: upkeep and fetch both run the full elapsed
-			// (Addendum 8 clause 1). Power's credit cap therefore stands alone, pinned to the
-			// legacy constant that names itself as the thing the rework has not reached yet, so
-			// that when KingdomPower is uncapped this test is the one that says "and this too".
-			Assert.AreEqual(KingdomRules.LegacyAbsenceCap, KingdomPowerRules.MaxDaysCredited);
-			Assert.Greater(KingdomRules.ElapsedDays(KingdomRules.TicksPerDay * 90), KingdomPowerRules.MaxDaysCredited,
-				"the uncapped clock stopped being longer than power's credit window");
+			// The constant is gone, and the point is what replaced it: nothing. Power was already
+			// crew- and availability-gated end to end, so the uncapping needed no new bound --
+			// what stops a season away from minting a season of charge is that an unstaffed work
+			// makes nothing per day and the stores can only hold what was built for them.
+			Assert.IsNull(typeof(KingdomPowerRules).GetField("MaxDaysCredited"), "power's local absence cap came back");
+			int daily = KingdomPowerRules.DailyOutput(KingdomPowerRules.PowerSource.Hands, 100, 100);
+			Assert.AreEqual(daily * 90, KingdomPowerRules.ChargeForDays(daily, 90),
+				"ninety days of a fully crewed mill was not ninety days of milling");
 		}
 
 		// --- WaterAvailabilityPercent: the hydraulics, and what happens with no water ----------
@@ -172,11 +177,27 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void WindAvailabilityPercent_ForgivesAbsenceBeyondTheCap()
+		public void WindAvailabilityPercent_ConvergesOnTheTypicalWindOverALongAbsence()
 		{
-			Assert.AreEqual(
-				KingdomPowerRules.WindAvailabilityPercent(20, KingdomPowerRules.MaxDaysCredited),
-				KingdomPowerRules.WindAvailabilityPercent(20, 400));
+			// The doctrine's exemplar, uncapped. One witnessed gust says less and less about a
+			// longer and longer stretch, so a dead calm read on the day the founder walked in
+			// stops being evidence about the season and the answer settles at the typical wind.
+			int calmOverASeason = KingdomPowerRules.WindAvailabilityPercent(0, 400);
+			int calmOverThreeDays = KingdomPowerRules.WindAvailabilityPercent(0, 3);
+			Assert.Greater(calmOverASeason, calmOverThreeDays, "the unwitnessed days were not credited");
+			Assert.AreEqual(KingdomPowerRules.TypicalWindAvailabilityPercent, calmOverASeason, 1,
+				"a long stretch did not converge on the typical wind");
+			int galeOverASeason = KingdomPowerRules.WindAvailabilityPercent(KingdomPowerRules.RatedWindSpeedKph, 400);
+			Assert.AreEqual(KingdomPowerRules.TypicalWindAvailabilityPercent, galeOverASeason, 1,
+				"one gale paid for a season");
+		}
+
+		[Test]
+		public void WindAvailabilityPercent_DoesNotOverflowOnANonsenseStretch()
+		{
+			int answer = KingdomPowerRules.WindAvailabilityPercent(60, int.MaxValue);
+			Assert.GreaterOrEqual(answer, 0);
+			Assert.LessOrEqual(answer, 100);
 		}
 
 		// --- DailyOutput / ChargeForDays: crew and weather both cut it -------------------------
@@ -210,37 +231,73 @@ namespace ThousandAndFirst.Tests
 		[TestCase(2400, 1, 2400)]
 		[TestCase(2400, 2, 4800)]
 		[TestCase(2400, 3, 7200)]
-		[TestCase(2400, 31, 7200)]
+		[TestCase(2400, 31, 74400)]
 		[TestCase(2400, -6, 0)]
 		[TestCase(0, 3, 0)]
 		[TestCase(-100, 3, 0)]
-		public void ChargeForDays_IsOneDaysWorkTimesTheDaysCredited(int daily, int days, int expected)
+		public void ChargeForDays_IsOneDaysWorkTimesEveryDayThatPassed(int daily, int days, int expected)
 		{
 			Assert.AreEqual(expected, KingdomPowerRules.ChargeForDays(daily, days));
 		}
 
 		[Test]
-		public void ChargeForDays_ASeasonAwayIsWorthTheSameAsThreeDays()
+		public void ChargeForDays_ASeasonAwayIsAWholeSeasonOfMilling()
 		{
+			// The uncapping, in the one place a founder feels it: the wheel turned while they
+			// were gone.
 			int daily = KingdomPowerRules.DailyOutput(KingdomPowerRules.PowerSource.Hands, 100, 100);
-			Assert.AreEqual(
-				KingdomPowerRules.ChargeForDays(daily, KingdomPowerRules.MaxDaysCredited),
-				KingdomPowerRules.ChargeForDays(daily, 200));
-			// And staying away is never better than coming home: three days credited is three
-			// days' work, not more.
-			Assert.AreEqual(daily * KingdomPowerRules.MaxDaysCredited, KingdomPowerRules.ChargeForDays(daily, 200));
+			Assert.AreEqual(daily * 200, KingdomPowerRules.ChargeForDays(daily, 200));
+			Assert.Greater(KingdomPowerRules.ChargeForDays(daily, 200), KingdomPowerRules.ChargeForDays(daily, 3));
+		}
+
+		[Test]
+		public void ChargeForDays_AnUnstaffedWorkMakesNothingHoweverLongTheStretch()
+		{
+			// Clause 2, and the reason uncapping power needed no ceiling of its own: a day's
+			// output is already crew effectiveness times availability, so an unstaffed work
+			// multiplies two hundred days by zero.
+			int unstaffed = KingdomPowerRules.DailyOutput(KingdomPowerRules.PowerSource.Hands, 0, 100);
+			Assert.AreEqual(0, KingdomPowerRules.ChargeForDays(unstaffed, 200));
+			int becalmed = KingdomPowerRules.DailyOutput(KingdomPowerRules.PowerSource.Wind, 100, 0);
+			Assert.AreEqual(0, KingdomPowerRules.ChargeForDays(becalmed, 200));
+		}
+
+		[Test]
+		public void ChargeForDays_SaturatesRatherThanWrappingOnANonsenseStretch()
+		{
+			Assert.AreEqual(int.MaxValue, KingdomPowerRules.ChargeForDays(2400, int.MaxValue));
 		}
 
 		// --- The molten-salt store: throughput, room, and never a debt --------------------------
 
 		[TestCase(24000, 1, 12000)]
 		[TestCase(24000, 3, 36000)]
+		[TestCase(24000, 90, 1080000)]
 		[TestCase(24000, 0, 0)]
 		[TestCase(0, 3, 0)]
 		[TestCase(-1000, 3, 0)]
-		public void ThroughputForDays_IsHalfTheStoreADay(int capacity, int days, int expected)
+		public void ThroughputForDays_IsHalfTheStoreADayForEveryDayThatPassed(int capacity, int days, int expected)
 		{
 			Assert.AreEqual(expected, KingdomPowerRules.ThroughputForDays(capacity, days));
+		}
+
+		[Test]
+		public void ThroughputForDays_SaturatesRatherThanWrappingOnANonsenseStretch()
+		{
+			Assert.AreEqual(int.MaxValue, KingdomPowerRules.ThroughputForDays(24000, int.MaxValue));
+		}
+
+		[Test]
+		public void StorageCapacityIsWhatBoundsAnAbsenceNowAndNotTheClock()
+		{
+			// 022b's own answer to away-farming, and the reason retiring MaxDaysCredited took no
+			// replacement: throughput rises with the days, and what may actually be KEPT does
+			// not. A store the founder never enlarged holds exactly what it holds, however long
+			// the wheel turned.
+			int room = KingdomPowerRules.Absorbable(int.MaxValue / 2, 0, 24000, 400);
+			Assert.AreEqual(24000, room, "a long absence filled more than the store could hold");
+			Assert.AreEqual(0, KingdomPowerRules.Absorbable(int.MaxValue / 2, 0, 0, 400),
+				"a settlement with no stores kept charge anyway");
 		}
 
 		[TestCase(5000, 0, 24000, 1, 5000)]
@@ -289,7 +346,8 @@ namespace ThousandAndFirst.Tests
 			// actually held, so a store can reach empty and stop, never go past it.
 			for (int stored = 0; stored <= 24000; stored += 1000)
 			{
-				Assert.LessOrEqual(KingdomPowerRules.Releasable(stored, 24000, KingdomPowerRules.MaxDaysCredited), stored);
+				Assert.LessOrEqual(KingdomPowerRules.Releasable(stored, 24000, 3), stored);
+				Assert.LessOrEqual(KingdomPowerRules.Releasable(stored, 24000, 400), stored);
 			}
 		}
 
@@ -300,7 +358,7 @@ namespace ThousandAndFirst.Tests
 			// can only add to it or hand back what it already had. There is no rule here that
 			// removes charge nobody drew.
 			int stored = 8000;
-			for (int days = 1; days <= KingdomPowerRules.MaxDaysCredited; days++)
+			for (int days = 1; days <= 40; days++)
 			{
 				int added = KingdomPowerRules.Absorbable(3000, stored, 24000, days);
 				Assert.GreaterOrEqual(added, 0);
@@ -436,7 +494,6 @@ namespace ThousandAndFirst.Tests
 			Assert.Greater(KingdomPowerRules.RatedWindSpeedKph, 0);
 			Assert.Greater(KingdomPowerRules.SaltStoreThroughputDivisor, 0);
 			Assert.Greater(KingdomPowerRules.PostDailyNeedCharge, 0);
-			Assert.Greater(KingdomPowerRules.MaxDaysCredited, 0);
 			Assert.Greater(KingdomPowerRules.TypicalWindAvailabilityPercent, 0);
 			Assert.LessOrEqual(KingdomPowerRules.TypicalWindAvailabilityPercent, 100);
 		}

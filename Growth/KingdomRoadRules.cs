@@ -18,13 +18,15 @@ namespace ThousandAndFirst
 	/// paving, and paving is only ever offered for ground that is already a path.
 	/// </para>
 	/// <para>
-	/// Wear only ever climbs. That is not an oversight: absence never punishes, and worn ground is
-	/// not supply-carried level &mdash; nothing here subsides, so a settlement left alone for a
-	/// season is found with exactly the ways it had, and a founder is never punished for having
-	/// been elsewhere. The bound that keeps this from turning a zone
-	/// into one flat road is not decay but reach &mdash; only cells on a real route between two
-	/// real things ever accrue at all, and only <see cref="MaxRoutesPerPass"/> routes are walked
-	/// on any one pass.
+	/// Wear only ever climbs, and ground never un-wears: nothing in this file subsides, because a
+	/// path is not supply-carried level and a founder is never punished for having been elsewhere.
+	/// What the doctrine did change is the denominator underneath it &mdash; errands are walked on
+	/// the full elapsed now, not on a capped three days (Addendum 8 clause 1), so a settlement
+	/// lived in for a season is found with a season's ways rather than three days' worth. The
+	/// bounds that keep this from turning a zone into one flat road are reach and labour, never
+	/// decay: only cells on a real route between two real things accrue at all, only
+	/// <see cref="MaxRoutesPerPass"/> routes are walked on any one pass, the walkers on a route
+	/// come out of a real population, and the tally saturates at <see cref="MaxTraffic"/>.
 	/// </para>
 	/// <para>
 	/// Nothing here touches <c>XRL</c>. It never reads a cell, never places an object, and never
@@ -245,8 +247,15 @@ namespace ThousandAndFirst
 
 		/// <summary>
 		/// Traffic one route lays on each of its cells over a stretch of days. Days come from
-		/// <c>KingdomRules.HeartbeatDays</c>, so a season away lays exactly what three days lay:
-		/// absence never punishes, and what it earns is capped.
+		/// <c>KingdomRules.ElapsedDays</c>, uncapped: people walk to work whether or not the
+		/// founder is standing there to see them do it (Addendum 8 clause 1).
+		/// <para>
+		/// The bound is the labour term, not a ceiling on the calendar. Traffic is WALKERS times
+		/// days, walkers are drawn from the settlement's own population, and a settlement with
+		/// nobody in it lays nothing however long the stretch (clause 2). Past that, the tally
+		/// itself saturates at <see cref="MaxTraffic"/>, which is what stops a decade of honest
+		/// walking from reading any differently from a year of it.
+		/// </para>
 		/// </summary>
 		/// <param name="Walkers">People on the errand; clamped to
 		/// <see cref="MaxWalkersPerRoute"/>. Zero or less lays nothing.</param>
@@ -258,8 +267,12 @@ namespace ThousandAndFirst
 			{
 				return 0;
 			}
-			int walkers = (Walkers > MaxWalkersPerRoute) ? MaxWalkersPerRoute : Walkers;
-			return walkers * Days * TrafficPerWalkerDay * RouteWeightPercent(Kind) / 100;
+			long walkers = (Walkers > MaxWalkersPerRoute) ? MaxWalkersPerRoute : Walkers;
+			// Widened before the multiply and saturated after it: an uncapped day count reaches
+			// int.MaxValue on a stamp nobody has resolved since the world was made, and a wrapped
+			// negative would read as ground that had been UNwalked.
+			long traffic = walkers * Days * TrafficPerWalkerDay * RouteWeightPercent(Kind) / 100L;
+			return (traffic > MaxTraffic) ? MaxTraffic : (int)traffic;
 		}
 
 		// --- Bounds ----------------------------------------------------------------------

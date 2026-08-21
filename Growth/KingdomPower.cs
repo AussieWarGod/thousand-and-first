@@ -303,8 +303,11 @@ namespace ThousandAndFirst
 		/// <summary>
 		/// Whole days elapsed on one part's own stamp, and the stamp it should carry away.
 		/// A part with no stamp yet takes the current tick and is credited nothing, so a work
-		/// never pays out for the day it was raised; time beyond the absence cap is forgiven by
-		/// starting a fresh checkpoint, exactly as the water heartbeat does.
+		/// never pays out for the day it was raised. Uncapped: the full elapsed is credited and
+		/// the checkpoint spends exactly what was credited, keeping the part-day, exactly as the
+		/// water heartbeat does since Addendum 8 clause 1. Nothing is forgiven, and what stops a
+		/// season away from minting a season of charge is that a work with no crew makes nothing
+		/// per day and a settlement with no stores keeps nothing of what it does make.
 		/// </summary>
 		private static int CreditDays(long PreviousTick, long TimeTicks, out long NextTick)
 		{
@@ -313,8 +316,8 @@ namespace ThousandAndFirst
 				NextTick = TimeTicks;
 				return 0;
 			}
-			int days = KingdomRules.HeartbeatDays(TimeTicks - PreviousTick);
-			NextTick = (days <= 0) ? PreviousTick : KingdomRules.HeartbeatCheckpoint(PreviousTick, TimeTicks);
+			int days = KingdomRules.ElapsedDays(TimeTicks - PreviousTick);
+			NextTick = (days <= 0) ? PreviousTick : KingdomRules.AdvanceCheckpoint(PreviousTick, TimeTicks);
 			return days;
 		}
 

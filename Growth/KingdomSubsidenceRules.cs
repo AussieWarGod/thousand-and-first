@@ -650,6 +650,115 @@ namespace ThousandAndFirst
 			return Name + " stopped settling back, and stood at the " + Level + " its works honestly carry";
 		}
 
+		// --- The chronicle budget ----------------------------------------------------------
+		//
+		// The register keeps two hundred entries and trims the oldest. A City standing at fifty
+		// people sliding to Camp's own floor of four is forty-six departures, four rungs, and up
+		// to two ruined works a rung: fifty-eight lines, better than a quarter of the whole
+		// record, for one event. A founder who came home to that would find the settlement's
+		// entire memory replaced by the story of losing it.
+		//
+		// So a long slide is TOLD IN RUNGS, which is what BreakpointChronicle's own doc comment
+		// already claimed it was: the rungs are always all told, first and last included, because
+		// there are at most four of them and each is the place becoming a different place. What
+		// is sampled is the departures underneath them - the first few by name, the last by name
+		// because the last one out is the one the founder remembers, and everybody in between
+		// counted in one line. Nobody vanishes from the count; what they lose is a chronicle
+		// entry each, and what they were owed was the truth about the slide, which the rungs and
+		// the summary tell between them.
+
+		/// <summary>
+		/// Departures of one slide that get a chronicle entry to themselves. Three: enough that a
+		/// short slide reads exactly as it always did (a handful of people leaving IS the story
+		/// at that size), few enough that a collapse spends three lines and not fifty.
+		/// </summary>
+		public const int NamedDeparturesPerSlide = 3;
+
+		/// <summary>
+		/// Whether the <paramref name="Index"/>-th departure of a slide is chronicled by name.
+		/// Keeps the FIRST and the LAST always: the first is when it started going, the last is
+		/// who turned the lights off, and a sample that dropped either would be a worse record
+		/// than a shorter one.
+		/// </summary>
+		/// <param name="Index">Which departure, from zero.</param>
+		/// <param name="Departed">How many are going in this slide.</param>
+		public static bool TellsDeparture(int Index, int Departed)
+		{
+			if (Index < 0 || Departed <= 0 || Index >= Departed)
+			{
+				return false;
+			}
+			if (Departed <= NamedDeparturesPerSlide)
+			{
+				return true;
+			}
+			return Index < NamedDeparturesPerSlide - 1 || Index == Departed - 1;
+		}
+
+		/// <summary>How many of a slide's departures are chronicled by name. Never more than
+		/// <see cref="NamedDeparturesPerSlide"/>, and never more than went.</summary>
+		public static int NamedDepartures(int Departed)
+		{
+			if (Departed <= 0)
+			{
+				return 0;
+			}
+			return (Departed < NamedDeparturesPerSlide) ? Departed : NamedDeparturesPerSlide;
+		}
+
+		/// <summary>
+		/// The one line that carries everybody the sample did not name. Null when the sample
+		/// named them all, which is the caller's signal to say nothing.
+		/// <para>
+		/// Takes the named count rather than deriving it, because a slide the settlement cut
+		/// short &mdash; people standing in another claimed zone, the loyal core refusing to go
+		/// &mdash; loses fewer than the trajectory called for and may name fewer than the sample
+		/// planned. The summary counts what actually happened, so the two numbers always add up
+		/// to the departures the ledger recorded.
+		/// </para>
+		/// </summary>
+		/// <param name="Name">The settlement's display name.</param>
+		/// <param name="Departed">How many actually went.</param>
+		/// <param name="Named">How many of those were chronicled by name.</param>
+		/// <param name="Cause">The departure cause, from <see cref="DepartureCause"/>, so the
+		/// summary blames exactly what the named departures blamed.</param>
+		public static string SlideDepartureSummary(string Name, int Departed, int Named, string Cause)
+		{
+			int unnamed = Departed - ((Named > 0) ? Named : 0);
+			if (unnamed <= 0)
+			{
+				return null;
+			}
+			string who = (unnamed == 1) ? "one more" : (unnamed + " more");
+			return who + " went from " + Name + " over the same days, " + Cause;
+		}
+
+		/// <summary>
+		/// How many chronicle entries one slide writes, so a test can hold the budget rather than
+		/// trusting the arithmetic to stay small. Named departures, the summary line if there is
+		/// one, one entry per rung, and up to
+		/// <see cref="RuinedWorksPerBreakpoint"/> ruined works a rung.
+		/// </summary>
+		/// <param name="Departed">People the slide took.</param>
+		/// <param name="Rungs">Rungs it fell, which is what <c>Trajectory.Breakpoints</c>
+		/// holds.</param>
+		public static int ChronicleEntriesFor(int Departed, int Rungs)
+		{
+			int named = NamedDepartures(Departed);
+			int summary = (Departed > named) ? 1 : 0;
+			int rungs = (Rungs > 0) ? Rungs : 0;
+			return named + summary + rungs + rungs * RuinedWorksPerBreakpoint;
+		}
+
+		/// <summary>
+		/// The ceiling <see cref="ChronicleEntriesFor"/> promises for any slide this build can
+		/// produce, including a City falling all the way to Camp. Stated as a number rather than
+		/// read off <c>KingdomChronicle.MaxEntries</c> because that constant is the chronicle's
+		/// own and this file must fold to fit it, not reach into it: the register keeps two
+		/// hundred, and one collapse may not spend more than a tenth of them.
+		/// </summary>
+		public const int ChronicleBudgetPerSlide = 20;
+
 		/// <summary>One rung, dated against the day the founder is being told about it. This is
 		/// the sample the chronicle keeps: the slide itself is a hundred small departures, and
 		/// what is worth writing down is the four times the place stopped being one thing.

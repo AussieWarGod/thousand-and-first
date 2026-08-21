@@ -1706,7 +1706,7 @@ namespace ThousandAndFirst
 				WriteTick(Yard, RefineWorkedProperty, TimeTicks);
 				return;
 			}
-			int days = KingdomRules.HeartbeatDays(TimeTicks - worked);
+			int days = KingdomRules.ElapsedDays(TimeTicks - worked);
 			if (days <= 0)
 			{
 				return;
@@ -1730,7 +1730,7 @@ namespace ThousandAndFirst
 				refinable = KingdomMaterialRules.RefinableFrom(kind, stock.Tally, out raw);
 			}
 			KingdomMaterialRules.YardStall stall = KingdomMaterialRules.AssessYard(staffed, crew, refinable);
-			WriteTick(Yard, RefineWorkedProperty, KingdomRules.HeartbeatCheckpoint(worked, TimeTicks));
+			WriteTick(Yard, RefineWorkedProperty, KingdomRules.AdvanceCheckpoint(worked, TimeTicks));
 			if (stall != KingdomMaterialRules.YardStall.Working)
 			{
 				bool unstaffed = stall == KingdomMaterialRules.YardStall.Unstaffed;
@@ -1819,7 +1819,7 @@ namespace ThousandAndFirst
 				WriteTick(Building, StrikeWorkedProperty, TimeTicks);
 				return;
 			}
-			int days = KingdomRules.HeartbeatDays(TimeTicks - worked);
+			int days = KingdomRules.ElapsedDays(TimeTicks - worked);
 			if (days <= 0)
 			{
 				return;
@@ -1831,11 +1831,11 @@ namespace ThousandAndFirst
 					Building.SetIntProperty(StrikeAnnouncedProperty, 1);
 					System.Ledger.Note("{{r|The " + Building.ShortDisplayName + " is condemned, and there is nobody free to take it down. Stand a settler down off the water or a work.}}");
 				}
-				WriteTick(Building, StrikeWorkedProperty, KingdomRules.HeartbeatCheckpoint(worked, TimeTicks));
+				WriteTick(Building, StrikeWorkedProperty, KingdomRules.AdvanceCheckpoint(worked, TimeTicks));
 				return;
 			}
 			Building.SetIntProperty(StrikeAnnouncedProperty, 0);
-			WriteTick(Building, StrikeWorkedProperty, KingdomRules.HeartbeatCheckpoint(worked, TimeTicks));
+			WriteTick(Building, StrikeWorkedProperty, KingdomRules.AdvanceCheckpoint(worked, TimeTicks));
 			int left = Building.GetIntProperty(StrikeEffortProperty) - KingdomMaterialRules.EffortWorked(Hands, days);
 			if (left > 0)
 			{
@@ -1874,7 +1874,7 @@ namespace ThousandAndFirst
 				Order.LastWorkedTick = TimeTicks;
 				return;
 			}
-			int days = KingdomRules.HeartbeatDays(TimeTicks - Order.LastWorkedTick);
+			int days = KingdomRules.ElapsedDays(TimeTicks - Order.LastWorkedTick);
 			if (days <= 0)
 			{
 				return;
@@ -1886,11 +1886,11 @@ namespace ThousandAndFirst
 					Order.NoHandsAnnounced = true;
 					System.Ledger.Note("{{r|Ground stands staked for clearing at " + System.SeatName + ", and there is nobody free to swing at it. Stand a settler down off the water or a work.}}");
 				}
-				Order.LastWorkedTick = KingdomRules.HeartbeatCheckpoint(Order.LastWorkedTick, TimeTicks);
+				Order.LastWorkedTick = KingdomRules.AdvanceCheckpoint(Order.LastWorkedTick, TimeTicks);
 				return;
 			}
 			Order.NoHandsAnnounced = false;
-			Order.LastWorkedTick = KingdomRules.HeartbeatCheckpoint(Order.LastWorkedTick, TimeTicks);
+			Order.LastWorkedTick = KingdomRules.AdvanceCheckpoint(Order.LastWorkedTick, TimeTicks);
 			if (Order.EffortLeft > 0)
 			{
 				Order.EffortLeft -= KingdomMaterialRules.EffortWorked(Hands, days);

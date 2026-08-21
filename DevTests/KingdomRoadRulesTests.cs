@@ -126,14 +126,37 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void AbsenceIsStillCappedHereBecauseRoadsAreAnUnmigratedRow()
+		public void TrafficRunsTheWholeAbsenceBecausePeopleWalkedItWhileNobodyLooked()
 		{
-			// Traffic is already walkers x days -- the doctrine's own formula -- so uncapping it
-			// is a denominator swap with nothing else attached. It waits only because KingdomRoads
-			// is not the uncapping package's ground. Until then the days it is handed still come
-			// from the capped HeartbeatDays, and this pins that rather than the retired constant.
-			int capped = KingdomRoadRules.TrafficFor(2, KingdomRules.LegacyAbsenceCap, KingdomRoadRules.RouteKind.HomeToWork);
-			Assert.AreEqual(capped, KingdomRoadRules.TrafficFor(2, KingdomRules.HeartbeatDays(KingdomRules.TicksPerDay * 400L), KingdomRoadRules.RouteKind.HomeToWork));
+			// The uncapping. A stamp four hundred days stale used to be handed three days of
+			// walking; it is handed four hundred, because the errands were walked. Linear in the
+			// days, which is the whole of the claim -- there is no ceiling in here, only the
+			// walkers term and the tally's own saturation.
+			int oneDay = KingdomRoadRules.TrafficFor(2, 1, KingdomRoadRules.RouteKind.HomeToWork);
+			int tenDays = KingdomRoadRules.TrafficFor(2, 10, KingdomRoadRules.RouteKind.HomeToWork);
+			Assert.AreEqual(oneDay * 10, tenDays, "ten days did not lay ten days of walking");
+			Assert.Greater(KingdomRoadRules.TrafficFor(2, KingdomRules.ElapsedDays(KingdomRules.TicksPerDay * 400L), KingdomRoadRules.RouteKind.HomeToWork),
+				tenDays, "a four-hundred-day stretch laid no more than ten days");
+		}
+
+		[Test]
+		public void NobodyWalkingLaysNothingHoweverLongTheStretch()
+		{
+			// Clause 2, and the reason uncapping needed nothing else attached: traffic is
+			// WALKERS times days, so an empty settlement over four hundred days lays exactly what
+			// it lays over an afternoon. Idleness wears nothing.
+			Assert.AreEqual(0, KingdomRoadRules.TrafficFor(0, 400, KingdomRoadRules.RouteKind.HomeToWork));
+			Assert.AreEqual(0, KingdomRoadRules.TrafficFor(-3, 400, KingdomRoadRules.RouteKind.HomeToWork));
+		}
+
+		[Test]
+		public void TrafficSaturatesRatherThanWrappingOnANonsenseStretch()
+		{
+			// An unplanted stamp reads as the age of the world (KingdomRules.ElapsedDays does not
+			// special-case it and callers must). A wrapped negative would read as ground that had
+			// been UNwalked, so the widened multiply saturates at the tally's own ceiling.
+			int enormous = KingdomRoadRules.TrafficFor(KingdomRoadRules.MaxWalkersPerRoute, int.MaxValue, KingdomRoadRules.RouteKind.HomeToWork);
+			Assert.AreEqual(KingdomRoadRules.MaxTraffic, enormous);
 		}
 
 		[Test]

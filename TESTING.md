@@ -76,7 +76,7 @@ time — the one you are standing in — and the other keeps itself until you wa
 | 16m | Travel three or more zones away to unclaimed ground, use the basin, name the city, choose a vocation | A ceremony naming the city, the ground, and what it was founded for; the basin drained by 8; one founding line in each chronicle register naming the vocation |
 | 16n | `kingdom:dump` | `Seated:` is the new city with its vocation; `Away:` is the first city with its own stage, population, claims and ticks; `seat mismatches: none` |
 | 16o | Walk back into the first city's ground | The seat swaps on arrival. Charter Status, the roll of settlers, petitions and the ledger describe the first city again — not the second's |
-| 16p | Stay away from the second city three or more in-game days, then walk into it | It caught up on arrival from its own clock: at most three days of upkeep and at most three arrivals, however long you were gone |
+| 16p | Stay away from the second city a season or more, then walk into it | It caught up on arrival from its own clock, in full: **every** day you were away is billed against its own stores, not three. Arrivals are still at most three in the one pass — that is a pacing rule about the gate, not forgiveness about the calendar. Nothing is doubled and nothing is written off |
 | 16q | Charter → Status, in either city | The title names the city you are standing in, not the realm, and the report says the realm also holds the other city, which keeps itself until you stand in it |
 | 16r | Charter → The Chronicle, in either city | One history for the realm. Both cities' events are in it — the chronicle belongs to the faction, not to the ground |
 | 16s | `kingdom:found2 NAME:refuge`, then `kingdom:seat swap` | A tester reaches either city without the walk |
@@ -173,7 +173,7 @@ step here is done standing in the settlement.
 | 41 | Found, claim, dedicate water, commission a bunk. Leave the zone, travel a day or more, return | **One nonmodal message line**, not a popup: the settlement "has news of the N days you were away", pointing at the Charter. Nothing interrupts the walk home |
 | 41b | Charter → What happened while you were away | The report opens on request: the events as past-tense lines, and a ledger of drams drawn, delivered, drunk and lost — not a scroll of separate messages |
 | 42 | Read an arrival line | It names the cause: "Word of the cask rack raised at Kavvat reached the hills — a settler has come." Founding, stage-ups, commissions, caravans and tribute all set the cause |
-| 43 | Strike a charter, then stay away for several caravan intervals | Missed deliveries **bank** (up to 3): "3 caravans of the villagers of Joppa came under charter: 18 drams." Absence never punishes — what it earns banks, capped |
+| 43 | Strike a charter, then stay away for several caravan intervals | Missed deliveries **bank**: "3 caravans of the villagers of Joppa came under charter: 18 drams." A caravan that came while the gate was shut is news, not a loss — and the banking cap is a cap on how much one homecoming can hand over at once, never a clock that forgives the rest |
 | 44 | Return after a short walk (under a day) | No news line — the homecoming is for absences, not for stepping outside. The Charter entry still opens and says nothing has happened |
 | 45 | Charter → Dedicate a vessel or larder → **Dedicate everything here** | All undedicated vessels join the stores in one action, up to the cap |
 | 45a | Stand beside a chest or footlocker with food in it and dedicate it as a larder | It is marked a larder of the settlement. Nothing moves and nothing is taken — dedication is a mark, not a transfer |
@@ -194,7 +194,7 @@ step here is done standing in the settlement.
 | 49 | Provoke a raid (`kingdom:standing Snapjaws:-300`, `kingdom:raid`), then Charter → **Answer a threat** | Three exits offered: pay (with the current demand), send word (only if their standing ≥250 and you haven't stalled), or let them come |
 | 50 | Choose "let them come", then face the next warning | The demand has grown by half. Stall again and it grows again, up to four times |
 | 51 | Raise Snapjaw standing to 250+, force a fresh warning, choose **send word** | Raid averted with no water paid, chronicled as an accomplishment — goodwill spent instead of drams |
-| 52 | Force a warning, then leave the area for more than a day and return | **No ambush at the gate.** The raid resolved in your absence: the digest reports drams carried off and whether anyone was lost |
+| 52 | Force a warning, then leave the area past the due tick and return | **No ambush at the gate, and no loss in the dark.** The raiders came, found no one to answer them, and waited: nothing taken, nobody lost, the threat unchanged. The homecoming re-stamps the deadline by the same lead the first warning used, so you get a fresh window to pay, parley, or stand there. The chronicle records that they came |
 
 ## Pass 7 — Trade charters and caravans
 
@@ -313,11 +313,12 @@ anyone.
 |---|---|---|
 | 56 | Charter → posted notices (`1`) → post a price to clear a rect | A notice stands at the heart. Nothing is escrowed. Someone takes it on their own judgment on a later pass — attempts, successes and refusals are chronicled **by name**, refusals citing the refuser's own flaw |
 | 56a | Post a price the stores cannot cover | It stands, with the debt written down and named. Paid the day the work finishes, not before. No expiry, no nag; take it down free |
-| 57 | Walk your settlement for several visits | Routes people actually walk wear in: grass → trodden earth → true path. A season away lays exactly what three days lay |
+| 57 | Walk your settlement for several visits, then leave it to its people for a season | Routes people actually walk wear in: grass → trodden earth → true path. A season of settlers walking lays a season's worth — the ground does not wait for you. Ground **nobody walks on** stays grass however long you are gone, because what wears a path is feet and not the calendar |
 | 57a | Charter → ground work (`q`) → pave a worn path | Asked first, priced per cell, paid in stone from the stockpiles. Refused by name with no stone, no worn ground, or nobody free |
 | 57b | Check cells under your dropped gear | Never worn, never paved. Wearing only touches open ground |
 | 58 | Charter → your works (`y`) → give a small house a yard trade | Vine lattice, hide rack, dye vat, or vellum press. The house's description and the roll of settlers say the household took up the trade. Letting it go is free |
-| 59 | Return after days away and read the roll | **Guests**: notable travellers logged with one hook each — a ruin, a machine, a debt in a named village. Lodge one in a bed of the right tier and they settle with a trade; ignored, they leave a letter and the hook becomes a rumor — never lost |
+| 59 | Return within a notable's 2-day patience of their arrival, and read the roll | **Guests**: the notable is still standing at the gate, logged with one hook — a ruin, a machine, a debt in a named village. Lodge them in a bed of the right tier and they settle with a trade; ignore them and they leave a letter and the hook becomes a rumor — never lost |
+| 59a | Leave long enough that a notable's 2 days of patience (a third of a day, for an ordinary traveller) has run out before you return | Nobody is standing at the gate — the roll instead reads one dated ledger note, "N notables came to the gate while you were away and found no bed offered", naming how many and how long ago the last of them stood there. Their hooks are rumor now, same as an ignored one, never lost |
 | 60 | Buy a carry-sign from a merchant; plant it on a pile you own out in the world | Confirms exactly what it will take, then porters haul it home over distance-scaled days, one haul in flight. It lands in the stockpiles, chronicled — or a raid threatening the settlement costs the load, chronicled, never silent |
 
 ## Pass 19 — Layered catalogues, footprints, sockets, and the trigger law
@@ -343,8 +344,9 @@ anyone.
 | 65a | Settle a robot (or any inorganic wanderer) | It needs charge, not food — derived from the engine's own parts, not authored. It lodges by the charging post and the larder never counts it |
 | 65b | Settle two creeds the engine holds at open hostility | They are never assigned the same building. The standing −50 grudges of zealots toward strangers do **not** break households — only real hostility does |
 | 66 | Fill every home, then let a settler arrive | **They do not join.** The announcement names the real reason: no home they would take — not "no bed", if the beds that exist fail their needs |
-| 66a | Burn or condemn a settler's only acceptable home | Named once. They stay **two attended passes** while you act — raise a bunk, stake a plan — then leave through the ordinary emigration, chronicled by name and cause in both registers |
-| 66b | Trigger the grace, then stay away a season | Untouched on return. Absence never runs the clock — they leave because you did not act, never because you were gone |
+| 66a | Burn or condemn a settler's only acceptable home | Named once, with **how long they have actually stood there**. They are at the roof brink: it stops there and waits. Two **attended passes** in which you could have acted — raise a bunk, stake a plan — and then they leave through the ordinary emigration, chronicled by name and cause in both registers |
+| 66b | Trigger the brink, then stay away a season. Then trigger it again and stay away ten days | **The same place both times.** The window is spent in attended passes, so the two absences arrive identically; the announcement's elapsed figure differs and is honest about it. They leave because you did not act, never because you were gone |
+| 66c | Re-house them inside the window | The brink **lifts** and the announcement is unsaid. Nothing is remembered against them, and the next loss starts the count from nothing |
 | 67 | Ship a mod creature with `r_TAF_Needs` tags, or none at all | With none, its needs derive from its own parts correctly. A `-tag` removes a derived need. Unknown tags are inert, waiting for a consumer |
 | 68 | House five settlers of mixed creeds and only a bunkhouse | **They do not all move in.** Packed quarters share only without quarrel; the announcement names the roomiest quarters that still refused |
 | 68a | Raise a stone house (Roomed) for the same five | The ambient grudge tolerates walls between beds. The −50 zealot-toward-stranger pairs now share |
@@ -377,9 +379,53 @@ anyone.
 | 73b | Check a high-craft design's price | Denominated partly in **vanilla tinkering bits**, drawn from the stockpiles — donate by putting scrap in. Great works may also want a rare find, and say so |
 | 74 | Crew a demanding work with weak hands | It builds **slower and says so once** — floors at a quarter pace, never stalls. The ablest available hands go to demanding works first, deterministically |
 | 75 | Let raiders past the wall | A work may stand damaged — bounded, named once, running reduced, never destroyed. Player-placed objects untouched, ever |
-| 75a | Run a mill at full stretch for many consecutive visits | Hard running may wear it. The mill left alone never wears — **absence wears nothing** |
+| 75a | Run a mill at full stretch for many days, including days you are not there | Hard running may wear it, and a mill that ran hard through an absence wore for it — the streak is counted in **activity-days**, not in visits. A mill standing idle never wears, however long the calendar runs: **idleness wears nothing** |
 | 75b | Watch a damaged work | Mending auto-queues like an improvement — visible on the work, holdable, one mending at a time — and costs shaped stone or worked metal and bits from the chain |
 | 76 | Head a great work | The office machinery names whoever among your settlers is actually suited — you appoint nobody. Unheaded, it keeps its zone and says so once; headed, **it takes the city back that day** |
+
+## Pass 23 — Subsidence: the city settles back to what it carries
+
+| Step | Action | Expect |
+|---|---|---|
+| 77 | Grow a Town, raise its reservoir and its terrace, then strike the works that carry it (or let a raid take them). `kingdom:status` | The report names the level and **what binds it**: "carries 26 — water" becomes "carries 9 — food". Nothing has happened yet; the settlement is simply standing above what it carries |
+| 77a | Stay put and let four world days pass | The slide begins and says so **once**, naming the binding good and the level it is heading for. It does not repeat, and it does not nag |
+| 77b | Watch it step | One step every four days, shedding (rung + 1) settlers a step — a City sheds five, a Steading two. Every departure names its cause |
+| 77c | Let it cross a rung | The stage falls **one rung per reckoning**, and only on a clear shortfall (20% benefit of the doubt on both of the stage's readings). Each lost rung gets a dated chronicle line — dated to the day it actually happened, not to the day you read it |
+| 77d | Look at the works after a rung is lost | Up to two stand the worse for it, named once each, running reduced. **Damage, never deletion**: nothing passes the wear ceiling, nothing is unbuilt, and nothing player-placed is touched, ever |
+| 77e | Raise the works back up midway | The slide **arrests**, says so, and unsays its warning. A settlement inside its 20% band never moves at all |
+| 77f | Instead, leave for a hundred days. Then try it again and leave for a thousand | Both come home to the same honest level. The slide **converges and stops**: a City whose works carry a Town becomes that Town, not a Camp, because the bill per head falls with the rung as fast as the people do |
+| 77g | Let a City with nothing standing run all the way down | It stops at **Camp** — floored, derelict, legible, and still yours. There is no rung below it |
+| 77h | Save and reload mid-slide | The same works are the worse for it. A reload never re-rolls a collapse the chronicle has already described |
+| 77i | Turn off *a settlement standing above what its works carry settles back* in options and repeat 77a | Nothing subsides. The level is still measured and still reported |
+
+## Pass 24 — The brink: the last arrestable window
+
+| Step | Action | Expect |
+|---|---|---|
+| 78 | Take away a settler's last acceptable home and read the announcement | It names them, the cause, **how long they have actually stood there**, and how many attended passes are left. Once |
+| 78a | Reach the same brink and stay away ten days. Reach it again and stay away a thousand | **The same place both times.** The accrual stopped at the line — there is nowhere past a brink to arrive at — and only the elapsed figure in the announcement differs, which is the honest part |
+| 78b | Re-house them inside the window | The brink lifts, the announcement is unsaid, and the next one starts from nothing. Arrest by **acting**; waiting is not a strategy and never was |
+| 78c | Let the roof window run out over two attended passes | They leave through the ordinary emigration, by name and cause, in both registers |
+| 78d | House a creed-minority settler with a majority household and let real days of shared living pass | Conversion accrues in **cohabitation-days** — days they actually shared a roof, scaled by the quarters' closeness — never in visits. At the line it stops, announces, and gives six attended passes |
+| 78e | Break the household up, or pour the water rite | The creed brink lifts. Let it run instead and the conversion lands, chronicled in two registers that **disagree** |
+| 78f | Drive two cities' quarrel to the breaking point | The realm stands at a **city brink** with three attended passes — deliberately shorter than the road from Rupture to Breaking, so the window can never outlast the quarrel that opened it. Mend the cause and it lifts; let it run and the city secedes with its ground, people and buildings |
+| 78g | Save, reload, and read all three again | Causes, crossing ticks and spent passes all survive. A per-settler brink rides **the settler**, so swapping seats never carries one to the wrong city |
+| 78h | Let a home wear past condemnation with people living in it | It stops counting as a roof — it is not cleared, unbuilt, or moved — and everyone under it is recorded at a roof brink dated to the day the roof went, not to the day you noticed |
+| 78i | Let a subsidence slide half-wreck an OCCUPIED home, to wear ≥ 40 (`KingdomLodgingRules.CondemnedWearPercent`) | Its residents show unhoused on the roll, each by name: "sleeps in the open: every roof here has fallen in past living under. Mend one and [name] has a home again." The building itself still stands, untouched |
+| 78j | Mend the wear back below 40 | The home counts as a roof again, and the next pass re-houses them |
+
+## Pass 25 — What a season away actually costs
+
+| Step | Action | Expect |
+|---|---|---|
+| 79 | Found, dedicate water, leave for a season, come home | **Every day** you were gone is billed, out of the settlement's own stores. Nothing was forgiven and nothing was doubled. The report says what was drunk, delivered and lost |
+| 79a | Do the same with a nearly empty cistern | The thirst ladder runs off the same honest elapsed, and still stops at the loyal core: empty casks and one rung of the ladder, never an empty town |
+| 79b | Raise a reservoir at a Town — it wants no crew — and leave for a season | It **made water while you were gone**: what it carries arrives in the casks day by day, on the same checkpoint discipline fetch uses. The `carries` figure in the status report and the drams actually stored agree |
+| 79c | Compare the water detail against the bill at each rung | A camp wants half its people hauling and a Town over nine tenths, which is where hauling stops being a strategy. Two reservoirs cover a Town's whole bill **for no hands at all**. That is the handover |
+| 79d | Hold a City on grand works and read who is standing where | Water and roofs want nobody. **Food still wants hands** — a grange takes three, the home farm four — and it is the only binding good whose big works do. Eight settlers of fifty feed the city, and that is the design rather than a gap |
+| 79e | Let a bad season ruin the home farm, then read `kingdom:status` | The level falls with it: a crewed work carries what it is actually running at. A ruined reservoir carries its full figure — deliberate, for the level — and the roof half is answered separately, by condemnation (78h) |
+| 79f | Leave a staffed sawyer's yard to run for thirty days | Thirty days of shaping, held to the bench's own daily width — **not** eight units per homecoming. Leave the same yard **unstaffed** for thirty days and it shapes nothing, and says so once |
+| 79g | Leave a scaffold with nobody free to work on it | It does not rise. The shortfall is named once and clears itself the moment hands are free; the raising ceremony still tells attended from absent, because completion is stamped to when the work actually finished |
 
 ## Pass 4 — Attitudes and persistence
 
@@ -393,14 +439,19 @@ anyone.
 
 - No ownership stamping on claims (can't rob your own city — membership design pending).
 - Settlers use vanilla farmer behavior; ambient roles come with the amenity work.
-- Stage never regresses **yet**. The ruling is that supply-carried level subsides in absence
-  toward what the infrastructure honestly carries (VISION's *hubris subsides*; down to Camp if
-  that is all that stands, bounded, chronicled, arrestable). None of that is built: today the
-  stage ratchet only climbs. A city that does not subside is a known gap, not a bug to file.
-  The withered overlay is designed but not yet built either.
-- **What absence does and does not move.** Everything social or event-driven — dissent,
-  conversion, wear, the re-housing grace, raids waiting at the gate — is attended-only by
-  design, and a pass asserting "untouched on return" for those is correct as written. The
-  supply-carried *level* is the only thing that is meant to move while you are away, and it
-  does not move yet (above).
+- Stage moves in **both directions** now. It climbs on the reading and falls only on a clear
+  shortfall, one rung per reckoning, with Camp an absolute floor. A city that subsides is the
+  system working; a city that subsides while it is inside its 20% band is a bug worth filing.
+  The withered overlay is still designed and not yet built.
+- **What time does and does not move.** Everything on the world clock moves whether you are
+  there or not — crops, yards, scaffolds, wear from hard *running*, osmosis, dissent, the slide
+  toward the supported level. Every one of them is gated on **labour**, so a pass asserting
+  "untouched on return" is right only where nobody was working, and a pass asserting "at most
+  three days were charged" is wrong everywhere: no clock in this mod caps elapsed time any
+  more. Irreversible consequences stop at a brink and wait to be told, and their windows are
+  still spent in attended passes only — that part did not change and is not meant to.
+- **Food is not a flow.** `food` in the catalogue binds the sustainable level, and nothing fills
+  a larder from a field or empties one except a shared meal you call for. The water half of that
+  pair was wired this wave; the food half was not. A settlement that never starves on an empty
+  larder is a known gap, not a bug to file.
 - Founder's basin is wish-obtainable only; its acquisition quest is slice 0.2 content.

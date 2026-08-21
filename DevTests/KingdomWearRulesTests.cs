@@ -410,6 +410,20 @@ namespace ThousandAndFirst.Tests
 		{
 			StringAssert.Contains("2", KingdomWearRules.NextNeedLine(2));
 		}
+
+		[Test]
+		public void AMendingWithNoHandsSaysSoAndPutsNothingBackHoweverLongTheStretch()
+		{
+			// Mending runs the full elapsed now (Addendum 8 clause 1), and this is why that is
+			// safe: the labour term is hands, so four hundred days of nobody puts back exactly
+			// nothing -- and AdvanceRepair reads the gate, names the block once (STANDARDS 7b),
+			// and only then spends the days, so the idle stretch is gone rather than banked for
+			// a crew that was never there.
+			Assert.AreEqual(0, KingdomMaterialRules.EffortWorked(0, 400));
+			Assert.IsNotNull(KingdomWearRules.ReasonLine(Verdict.NoHands, "the mill"));
+			// A real crew over the same stretch does real work, linearly in the days.
+			Assert.AreEqual(KingdomMaterialRules.EffortWorked(2, 1) * 400, KingdomMaterialRules.EffortWorked(2, 400));
+		}
 	}
 }
 #endif

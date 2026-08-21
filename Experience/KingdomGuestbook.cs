@@ -69,6 +69,19 @@ namespace ThousandAndFirst
 		// Guests at the gate
 		// ==================================================================================
 
+		/// <summary>
+		/// Brings notables up the road on their own cadence, whether or not anybody is home, and
+		/// tells the founder at awareness what became of the ones nobody met.
+		/// <para>
+		/// Addendum 8 clause 1 and 3, the same shape <c>KingdomLocus.RunGuestPass</c> keeps for
+		/// ambient travellers: everyone whose patience ran out during the absence left a letter,
+		/// and the letters are one dated entry between them rather than a queue of strangers in
+		/// the square. At most one is still standing, and only when they arrived recently enough
+		/// to still be waiting &mdash; which is guaranteed by
+		/// <c>NotableGuestPatienceTicks</c> being shorter than
+		/// <c>NotableGuestIntervalTicks</c>, not by a live object blocking the spawn.
+		/// </para>
+		/// </summary>
 		private static void RunNotableGuestPass(KingdomSystem System, Zone Z, long TimeTicks)
 		{
 			GameObject guest = FindNotableGuest(Z);
@@ -88,11 +101,45 @@ namespace ThousandAndFirst
 				System.NextNotableGuestTick = KingdomGuestRules.NextDueTick(TimeTicks);
 				return;
 			}
-			if (!KingdomGuestRules.ShouldArrive(TimeTicks, System.NextNotableGuestTick))
+			KingdomRules.Passages passages = KingdomRules.PassagesThrough(
+				System.NextNotableGuestTick, TimeTicks, KingdomGuestRules.NotableGuestIntervalTicks, KingdomGuestRules.NotableGuestPatienceTicks);
+			// Advanced BEFORE the telling and before the spawn, so a run of passages can never be
+			// told twice however the spawn goes.
+			System.NextNotableGuestTick = passages.NextDueTick;
+			TellPassed(System, passages, TimeTicks);
+			if (passages.StandingSince <= 0L)
 			{
 				return;
 			}
-			SpawnNotableGuest(System, Z, TimeTicks);
+			// Spawned at the tick they actually walked up: their patience is already partly spent,
+			// their hook is drawn on their own arrival ordinal, and they leave when they were
+			// always going to leave.
+			if (!SpawnNotableGuest(System, Z, passages.StandingSince))
+			{
+				// Nowhere to stand them this pass. Their arrival stands rather than being spent,
+				// so the next pass tries again -- and if their patience has run out by then, they
+				// are told about as somebody who came and went.
+				System.NextNotableGuestTick = passages.StandingSince;
+			}
+		}
+
+		/// <summary>The dated trace a run of unmet notables leaves: one chronicle entry in both
+		/// registers, one ledger note, one guestbook line. Nothing at all when nobody came, which
+		/// is 7b's "not applicable" case rather than a stall.</summary>
+		private static void TellPassed(KingdomSystem System, KingdomRules.Passages Passages, long TimeTicks)
+		{
+			if (Passages.Departed <= 0)
+			{
+				return;
+			}
+			int daysAgo = KingdomRules.ElapsedDays(TimeTicks - Passages.LastDepartedTick);
+			KingdomChronicle.RecordDisputed(
+				System,
+				KingdomGuestRules.PassedChronicleLine(Passages.Departed, System.SeatName, daysAgo),
+				KingdomGuestRules.PassedOutsiderRumor(Passages.Departed, System.SeatName, daysAgo));
+			System.Ledger.Note(KingdomGuestRules.PassedLedgerNote(Passages.Departed, daysAgo));
+			AppendGuestbookLine(System, KingdomGuestRules.PassedGuestbookLine(Passages.Departed, daysAgo));
+			KingdomLog.Log("guestbook: " + Passages.Departed + " notables passed unmet, last " + daysAgo + "d ago");
 		}
 
 		private static GameObject FindNotableGuest(Zone Z)
@@ -129,7 +176,10 @@ namespace ThousandAndFirst
 			return "r_KingdomNotableGuest";
 		}
 
-		private static void SpawnNotableGuest(KingdomSystem System, Zone Z, long TimeTicks)
+		/// <summary>Puts one notable on the ground at the tick they walked up. False when there
+		/// was nowhere to stand them, which is the caller's signal to leave their arrival unspent
+		/// rather than losing them.</summary>
+		private static bool SpawnNotableGuest(KingdomSystem System, Zone Z, long ArrivalTick)
 		{
 			List<Cell> emptyCells = Z.GetEmptyCells((Cell c) => c.IsPassable() && !c.HasObjectWithPart("LiquidVolume"));
 			if (emptyCells == null || emptyCells.Count == 0)
@@ -141,20 +191,23 @@ namespace ThousandAndFirst
 				// No open ground this pass. Try again next pass — a missed notable for want of
 				// room is the same "no penalty" case KingdomLocus already accepts for its own
 				// travellers.
-				return;
+				return false;
 			}
 			Cell cell = emptyCells.GetRandomElement();
 			GameObject guest = GameObject.Create(NotableGuestBlueprint());
 			if (guest == null)
 			{
-				return;
+				return false;
 			}
 			cell.AddObject(guest);
 			guest.MakeActive();
 			guest.SetIntProperty(NotableGuestProperty, 1);
 			KingdomGuestRules.HookKind kind;
 			string hookText;
-			DrawHook(System, TimeTicks, out kind, out hookText);
+			// Drawn on the tick they arrived on, not the tick the founder walked in: the hook is
+			// this guest's own fact, and keying it to the arrival ordinal means a reload asks the
+			// same question and gets the same answer.
+			DrawHook(System, ArrivalTick, out kind, out hookText);
 			guest.SetIntProperty(HookKindProperty, (int)kind);
 			guest.SetStringProperty(HookTextProperty, hookText);
 			string origin = KingdomRules.Origins[Stat.Random(0, KingdomRules.Origins.Length - 1)];
@@ -170,9 +223,10 @@ namespace ThousandAndFirst
 				"Live and drink.",
 				Question: "What are you really here for?",
 				Answer: "There's " + hookText + ", if I ever get around to it. For now I'm only walking.");
-			System.NotableGuestDepartTick = KingdomGuestRules.DepartTickFor(TimeTicks);
+			System.NotableGuestDepartTick = KingdomGuestRules.DepartTickFor(ArrivalTick);
 			KingdomChronicle.Record(System, KingdomGuestRules.ArrivalChronicleLine(guest.ShortDisplayName, System.SeatName));
 			KingdomLog.Log("guestbook: notable arrived kind=" + kind + " depart=" + System.NotableGuestDepartTick);
+			return true;
 		}
 
 		private static void DrawHook(KingdomSystem System, long TimeTicks, out KingdomGuestRules.HookKind Kind, out string HookText)
@@ -207,8 +261,10 @@ namespace ThousandAndFirst
 				System,
 				KingdomGuestRules.DepartedChronicleLine(name, System.SeatName),
 				KingdomGuestRules.DepartedOutsiderRumor(name, kind, hookText));
-			System.Ledger.Note("{{K|" + name + " waited a while at the gate, found no bed offered, and moved on. What "
-				+ name + " was chasing is a rumor on the road now — nothing is lost.}}");
+			// Dated against the day their patience actually ran out, which may be well before the
+			// pass that noticed it.
+			System.Ledger.Note(KingdomGuestRules.DepartedLedgerNote(
+				name, KingdomRules.ElapsedDays(The.Game.TimeTicks - System.NotableGuestDepartTick)));
 			AppendGuestbookLine(System, KingdomGuestRules.GuestbookLine(name, kind, hookText, Lodged: false));
 			System.NextNotableGuestTick = KingdomGuestRules.NextDueTick(The.Game.TimeTicks);
 			System.NotableGuestDepartTick = 0L;

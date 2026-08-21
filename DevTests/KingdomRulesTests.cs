@@ -180,31 +180,39 @@ namespace ThousandAndFirst.Tests
 			}
 		}
 
+		[Test]
+		public void TheAbsenceCapIsGoneFromTheSubstrateEntirely()
+		{
+			// The last of the forgiveness. LegacyAbsenceCap, HeartbeatDays and
+			// HeartbeatCheckpoint were the holding pen for the rows P1 could not reach; every one
+			// of them (roads, power, the three material workers, mending, dissent) now reads
+			// ElapsedDays and AdvanceCheckpoint, so the pen is empty and removed.
+			//
+			// Reflection rather than a compile error, because a compile error is what you get for
+			// FIVE MINUTES and this is a rule about what may come back. Nothing in KingdomRules
+			// may ever again offer a caller a day count that forgives time; a counter that must
+			// not run in absence says so with a labour term or an attended-pass window.
+			System.Reflection.MethodInfo[] methods = typeof(KingdomRules).GetMethods(
+				System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
+			foreach (System.Reflection.MethodInfo method in methods)
+			{
+				Assert.AreNotEqual("HeartbeatDays", method.Name, "the capped day count came back");
+				Assert.AreNotEqual("HeartbeatCheckpoint", method.Name, "the forgiving checkpoint came back");
+			}
+			Assert.IsNull(typeof(KingdomRules).GetField("LegacyAbsenceCap"), "the absence cap came back");
+		}
+
 		[TestCase(0L, 0)]
 		[TestCase(600L, 0)]
 		[TestCase(1200L, 1)]
 		[TestCase(3600L, 3)]
-		[TestCase(120000L, 3)]
+		[TestCase(120000L, 100)]
 		[TestCase(-500L, 0)]
-		public void HeartbeatDays_StillCapsForTheRowsTheReworkHasNotReached(long elapsed, int expected)
+		public void ElapsedDays_ChargesTheWholeStretchWhereTheCapChargedThree(long elapsed, int expected)
 		{
-			// Superseded, not deleted. Roads, power, the material workers, mending and dissent
-			// still read it, and dissent in particular must not uncap until secession has an
-			// arrestable window -- see KingdomRules.LegacyAbsenceCap.
-			Assert.AreEqual(expected, KingdomRules.HeartbeatDays(elapsed));
-			Assert.AreEqual(3, KingdomRules.LegacyAbsenceCap);
-		}
-
-		[TestCase(0L, 5000L, 5000L)]
-		[TestCase(1000L, 1599L, 1000L)]
-		[TestCase(1000L, 2200L, 2200L)]
-		[TestCase(1000L, 2800L, 2200L)]
-		[TestCase(1000L, 4600L, 4600L)]
-		[TestCase(1000L, 5800L, 5800L)]
-		[TestCase(5000L, 4000L, 4000L)]
-		public void HeartbeatCheckpoint(long previous, long current, long expected)
-		{
-			Assert.AreEqual(expected, KingdomRules.HeartbeatCheckpoint(previous, current));
+			// The same table the capped pair was pinned at, with the one row that used to read 3
+			// now reading 100. That row IS the rework: a hundred days away is a hundred days.
+			Assert.AreEqual(expected, KingdomRules.ElapsedDays(elapsed));
 		}
 
 		[Test]
@@ -1307,6 +1315,229 @@ namespace ThousandAndFirst.Tests
 				Assert.AreEqual(expectedFaction, faction);
 				Assert.AreEqual(expectedAmount, amount);
 			}
+		}
+
+		// ==================================================================================
+		// The one deadline helper, and the three callers folded onto it.
+		// ==================================================================================
+
+		[Test]
+		public void RestampDeadline_LeavesADeadlineThatHasNotComeDueAlone()
+		{
+			long due = KingdomRules.TicksPerDay * 10;
+			Assert.AreEqual(due, KingdomRules.RestampDeadline(due, due - 1L, 600L, 0));
+			Assert.AreEqual(due, KingdomRules.RestampDeadline(due, 0L, 600L, 1));
+		}
+
+		[Test]
+		public void RestampDeadline_WithNoBandSpendsTheDeadlineTheInstantItComesDue()
+		{
+			// The manifest's window and the arrival queue both read a zero band: there is no
+			// version of "close enough" for a load already standing in the sand, or for a slot
+			// that has come and gone.
+			long due = KingdomRules.TicksPerDay * 10;
+			Assert.AreEqual(due + 600L, KingdomRules.RestampDeadline(due, due, 600L, 0));
+			Assert.AreEqual(due + 1L + 600L, KingdomRules.RestampDeadline(due, due + 1L, 600L, 0));
+		}
+
+		[Test]
+		public void RestampDeadline_ABandHoldsTheDeadlineForExactlyThatManyDays()
+		{
+			// A founder inside the band was there to see it and the caller fires it as it
+			// stands; one outside gets a fresh full window from the moment of witnessing. The
+			// boundary is inclusive, which is the shipped raid behaviour to the tick.
+			long due = KingdomRules.TicksPerDay * 10;
+			long onTheEdge = due + KingdomRules.TicksPerDay;
+			Assert.AreEqual(due, KingdomRules.RestampDeadline(due, onTheEdge, 600L, 1),
+				"a day past the deadline stopped counting as witnessed");
+			Assert.AreEqual(onTheEdge + 1L + 600L, KingdomRules.RestampDeadline(due, onTheEdge + 1L, 600L, 1),
+				"a tick past the band did not re-stamp");
+		}
+
+		[Test]
+		public void RestampDeadline_NeverWrapsIntoThePast()
+		{
+			// A wrapped deadline would read as long overdue and fire on the spot, which is the
+			// one outcome the whole helper exists to prevent.
+			Assert.AreEqual(long.MaxValue, KingdomRules.RestampDeadline(0L, long.MaxValue - 5L, 600L, 0));
+			Assert.GreaterOrEqual(KingdomRules.RestampDeadline(0L, long.MaxValue - 5L, 600L, 0), long.MaxValue - 5L);
+		}
+
+		[Test]
+		public void RestampDeadline_ANonPositiveLeadPutsItAtNowRatherThanBehindIt()
+		{
+			Assert.AreEqual(5000L, KingdomRules.RestampDeadline(1000L, 5000L, 0L, 0));
+			Assert.AreEqual(5000L, KingdomRules.RestampDeadline(1000L, 5000L, -600L, 0));
+		}
+
+		[Test]
+		public void TheRaidCallerKeepsItsOwnDayOfGraceAndItsOwnLead()
+		{
+			// Caller 1 of 3. The band was a bare "> TicksPerDay" written inline at the
+			// comparison; it is the same width, named, and now shared. Raiders who came within
+			// the day of the warning running out find somebody home; raiders who came a season
+			// early wait rather than looting in the dark.
+			long due = KingdomRules.TicksPerDay * 20;
+			Assert.AreEqual(due, KingdomRules.RestampDeadline(due, due + KingdomRules.TicksPerDay, KingdomRules.RaidWarningLeadTicks, KingdomRules.RaidWitnessGraceDays),
+				"a raid a day overdue stopped resolving");
+			long season = due + KingdomRules.TicksPerDay * 90;
+			Assert.AreEqual(season + KingdomRules.RaidWarningLeadTicks,
+				KingdomRules.RestampDeadline(due, season, KingdomRules.RaidWarningLeadTicks, KingdomRules.RaidWitnessGraceDays),
+				"a raid ninety days overdue did not buy a fresh window from the homecoming");
+			Assert.AreEqual(1, KingdomRules.RaidWitnessGraceDays, "the raid's band changed width");
+		}
+
+		[Test]
+		public void TheManifestCallerTurnsBackWithNoBandAtAll()
+		{
+			// Caller 2 of 3. ManifestExpired is strictly past the deadline, so any overshoot at
+			// all turns the load back and re-stamps a full window from the witnessing.
+			long due = KingdomRules.TicksPerDay * 10;
+			long now = due + 1L;
+			Assert.AreEqual(now + KingdomManifestRules.ManifestWindowTicks,
+				KingdomRules.RestampDeadline(due, now, KingdomManifestRules.ManifestWindowTicks, 0));
+			Assert.AreEqual(KingdomManifestRules.ManifestWindowTicks,
+				KingdomRules.RestampDeadline(due, now, KingdomManifestRules.ManifestWindowTicks, 0) - now,
+				"the second window was not a full window");
+		}
+
+		[Test]
+		public void TheArrivalCallerBurnsTheOvershootRatherThanBankingIt()
+		{
+			// Caller 3 of 3. A hundred days of unseated arrival slots is a settler at the gate,
+			// never a hundred of them: the queue re-stamps a whole fresh interval from now and
+			// the overshoot is gone.
+			long interval = KingdomRules.ArrivalIntervalTicks(12);
+			long due = KingdomRules.TicksPerDay * 5;
+			long longAway = due + KingdomRules.TicksPerDay * 100;
+			Assert.AreEqual(longAway + interval, KingdomRules.RestampDeadline(due, longAway, interval, 0));
+			Assert.AreEqual(due + interval, KingdomRules.RestampDeadline(due, due, interval, 0),
+				"a slot due exactly now was not spent");
+		}
+
+		// ==================================================================================
+		// Visitors through an absence.
+		// ==================================================================================
+
+		[Test]
+		public void PassagesThrough_ReportsNothingBeforeTheFirstIsDue()
+		{
+			KingdomRules.Passages none = KingdomRules.PassagesThrough(5000L, 4999L, 1200L, 400L);
+			Assert.AreEqual(0, none.Departed);
+			Assert.AreEqual(0L, none.StandingSince);
+			Assert.AreEqual(5000L, none.NextDueTick);
+			Assert.AreEqual(0L, none.LastDepartedTick);
+		}
+
+		[Test]
+		public void PassagesThrough_AnUnplantedClockHasNotStartedAndNothingHasHappened()
+		{
+			// The same trap ElapsedDays sets: a zero stamp is not "no time passed", it is the age
+			// of the world. Every visitor clock plants its stamp before it counts, and this
+			// answers nothing rather than a thousand arrivals if one ever forgets.
+			KingdomRules.Passages none = KingdomRules.PassagesThrough(0L, KingdomRules.TicksPerDay * 400, 1200L, 400L);
+			Assert.AreEqual(0, none.Departed);
+			Assert.AreEqual(0L, none.StandingSince);
+		}
+
+		[Test]
+		public void PassagesThrough_OneStandingAtTheGateWhenTheirPatienceHasNotRunOut()
+		{
+			// The arrival landed inside its own patience of now, so it is still waiting -- and
+			// nobody before it is, because the interval is longer than the patience.
+			long due = 10000L;
+			long interval = KingdomRules.TicksPerDay * 3;
+			long patience = KingdomRules.TicksPerDay / 3;
+			KingdomRules.Passages passages = KingdomRules.PassagesThrough(due, due + 100L, interval, patience);
+			Assert.AreEqual(0, passages.Departed);
+			Assert.AreEqual(due, passages.StandingSince);
+			Assert.AreEqual(due + interval, passages.NextDueTick);
+		}
+
+		[Test]
+		public void PassagesThrough_ASeasonAwayIsASeasonOfPeopleComingAndGoing()
+		{
+			// Addendum 8 clause 1 for visitors. Ninety days at a three-day cadence is thirty
+			// arrivals, every one of whom waited out a third of a day at a gate nobody answered.
+			long interval = KingdomRules.TicksPerDay * 3;
+			long patience = KingdomRules.TicksPerDay / 3;
+			long due = interval;
+			// Half a day past the last arrival, which is past a third-of-a-day patience: nobody
+			// is left standing, so the whole run is departures.
+			long now = due + KingdomRules.TicksPerDay * 90 + KingdomRules.TicksPerDay / 2;
+			KingdomRules.Passages passages = KingdomRules.PassagesThrough(due, now, interval, patience);
+			Assert.AreEqual(31, passages.Departed, "the road stopped running while nobody watched");
+			Assert.AreEqual(0L, passages.StandingSince, "somebody was left standing at the gate for a season");
+			Assert.Greater(passages.NextDueTick, now, "the next one was already overdue on arrival");
+		}
+
+		[Test]
+		public void PassagesThrough_DatesTheLastDepartureHonestly()
+		{
+			// The honest trace. The last one who came and went did so on a real day, and that day
+			// is what the homecoming quotes -- not the day the founder walked in.
+			long interval = KingdomRules.TicksPerDay * 3;
+			long patience = KingdomRules.TicksPerDay / 3;
+			long due = interval;
+			long now = due + KingdomRules.TicksPerDay * 30;
+			KingdomRules.Passages passages = KingdomRules.PassagesThrough(due, now, interval, patience);
+			Assert.Greater(passages.Departed, 0);
+			int daysAgo = KingdomRules.ElapsedDays(now - passages.LastDepartedTick);
+			Assert.GreaterOrEqual(daysAgo, 0);
+			Assert.LessOrEqual(daysAgo, 3, "the last passage was dated further back than one interval");
+			Assert.AreEqual(0, KingdomRules.PassagesThrough(due, due - 1L, interval, patience).LastDepartedTick,
+				"a run with nobody in it still dated somebody");
+		}
+
+		[Test]
+		public void PassagesThrough_NeverLeavesMoreThanOneStanding()
+		{
+			// The bound, and where it comes from: patience shorter than the interval. Both
+			// shipped visitor clocks keep that relation, and this is what it buys.
+			long interval = KingdomRules.TicksPerDay * 7;
+			long patience = KingdomRules.TicksPerDay * 2;
+			for (long away = 0; away <= KingdomRules.TicksPerDay * 120; away += KingdomRules.TicksPerDay / 4)
+			{
+				KingdomRules.Passages passages = KingdomRules.PassagesThrough(interval, interval + away, interval, patience);
+				Assert.GreaterOrEqual(passages.Departed, 0);
+				if (passages.StandingSince > 0L)
+				{
+					Assert.Less(interval + away - passages.StandingSince, patience, "somebody stood past their own patience");
+				}
+			}
+		}
+
+		[Test]
+		public void PassagesThrough_EveryArrivalIsEitherDepartedOrStanding()
+		{
+			// Nobody is invented and nobody is lost: the count of departures plus the one still
+			// there is exactly the number of times the clock came due.
+			long interval = KingdomRules.TicksPerDay * 3;
+			long patience = KingdomRules.TicksPerDay / 3;
+			for (long away = 0; away <= KingdomRules.TicksPerDay * 60; away += KingdomRules.TicksPerDay / 5)
+			{
+				long now = interval + away;
+				KingdomRules.Passages passages = KingdomRules.PassagesThrough(interval, now, interval, patience);
+				long expected = (now - interval) / interval + 1L;
+				Assert.AreEqual(expected, passages.Departed + ((passages.StandingSince > 0L) ? 1 : 0));
+			}
+		}
+
+		[Test]
+		public void PassagesThrough_RefusesANonsenseIntervalRatherThanDividingByIt()
+		{
+			Assert.AreEqual(0, KingdomRules.PassagesThrough(1000L, 90000L, 0L, 400L).Departed);
+			Assert.AreEqual(0, KingdomRules.PassagesThrough(1000L, 90000L, -3L, 400L).Departed);
+		}
+
+		[Test]
+		public void PassagesThrough_WithNoPatienceNobodyEverWaits()
+		{
+			// A visitor kind that does not wait at all departs the instant they arrive, and the
+			// answer is all-departed rather than a null-patience visitor standing forever.
+			KingdomRules.Passages passages = KingdomRules.PassagesThrough(1200L, 1200L, 1200L, 0L);
+			Assert.AreEqual(1, passages.Departed);
+			Assert.AreEqual(0L, passages.StandingSince);
 		}
 	}
 }

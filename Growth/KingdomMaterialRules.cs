@@ -790,10 +790,16 @@ namespace ThousandAndFirst
 		}
 
 		/// <summary>
-		/// Effort a clearing detail removes over the days since it was last worked. Clamped at
-		/// <see cref="MaxClearingHands"/>; a caller supplies Days from
-		/// <c>KingdomRules.HeartbeatDays</c>, which caps absence in its own right, so no length
-		/// of absence resolves more than a few days of digging in one visit.
+		/// Effort a gang removes over the days since it was last worked: hands times days times
+		/// <see cref="EffortPerHandPerDay"/>, with the gang clamped at
+		/// <see cref="MaxClearingHands"/>.
+		/// <para>
+		/// Days come from <c>KingdomRules.ElapsedDays</c>, uncapped (Addendum 8 clause 1): a
+		/// staked plot is dug through an absence exactly as it is dug through a fortnight of
+		/// visits. The bound is HANDS, not the calendar &mdash; zero free hands is zero effort
+		/// however long the stretch, which is clause 2, and is why every caller reads its hands
+		/// gate before it spends its days.
+		/// </para>
 		/// </summary>
 		public static int EffortWorked(int FreeHands, int Days)
 		{
@@ -801,8 +807,12 @@ namespace ThousandAndFirst
 			{
 				return 0;
 			}
-			int hands = (FreeHands > MaxClearingHands) ? MaxClearingHands : FreeHands;
-			return hands * Days * EffortPerHandPerDay;
+			long hands = (FreeHands > MaxClearingHands) ? MaxClearingHands : FreeHands;
+			// Saturating rather than wrapping: an uncapped day count on a stamp nobody has
+			// resolved since the world was made would otherwise come back negative, and negative
+			// effort would ADD to the work left rather than take from it.
+			long effort = hands * Days * EffortPerHandPerDay;
+			return (effort > int.MaxValue) ? int.MaxValue : (int)effort;
 		}
 
 		// --- Striking: what comes down, and what comes back ----------------------------------
@@ -986,11 +996,17 @@ namespace ThousandAndFirst
 		public const int RefineEffortPerUnit = 15;
 
 		/// <summary>
-		/// Refined units one yard can finish in one visit however long the founder was away. The
-		/// same bounded-consequence rule <see cref="MaxClearingHands"/> keeps on the clearing gang:
-		/// a settlement makes more than it did, never a stockpile out of an absence.
+		/// Refined units one yard can finish in a DAY, however many hands are standing at it: the
+		/// bench's own throughput, the width of the saw-pit rather than a rule about visits.
+		/// <para>
+		/// This was <c>MaxRefinedPerPass</c> and was per-resolve, which meant a grand build was
+		/// gated on how many times the founder walked through the gate rather than on how long
+		/// the yard ran. Under Addendum 8 clause 1 the yard runs through an absence, so the
+		/// ceiling has to be denominated in the same unit the work is: a rate. A crew big enough
+		/// to beat it is a real answer to a big commission; the day is still the day.
+		/// </para>
 		/// </summary>
-		public const int MaxRefinedPerPass = 8;
+		public const int MaxRefinedPerDay = 8;
 
 		/// <summary>Whether a material is one a yard makes rather than one the ground gives up.
 		/// </summary>
@@ -1103,13 +1119,20 @@ namespace ThousandAndFirst
 
 		/// <summary>
 		/// Refined units a crew finishes in the days since it last worked: the effort those hands
-		/// put in, divided by what one unit costs, capped at <see cref="MaxRefinedPerPass"/> and at
-		/// what the raw stock covers. Zero hands make nothing, which is the idle case and is said
-		/// once by the caller rather than being a silent nothing.
+		/// put in, divided by what one unit costs, held to <see cref="MaxRefinedPerDay"/> for
+		/// every day of the stretch and to what the raw stock covers. Zero hands make nothing,
+		/// which is the idle case and is said once by the caller rather than being a silent
+		/// nothing.
+		/// <para>
+		/// The throughput ceiling is a RATE now, so a yard that ran for thirty days may finish
+		/// thirty days of work and a yard the founder walked past thirty times in one afternoon
+		/// still finishes none. That is the whole of the change: what a grand build waits on is
+		/// the yard running, never the founder arriving.
+		/// </para>
 		/// </summary>
 		/// <param name="Crew">Settlers actually standing in the yard this pass.</param>
-		/// <param name="Days">Days since the yard last worked, already capped by the absence rule.
-		/// </param>
+		/// <param name="Days">Days since the yard last worked, from
+		/// <c>KingdomRules.ElapsedDays</c>, uncapped.</param>
 		/// <param name="Capability">Who those settlers are, as a percentage
 		/// (<see cref="CrewCapability"/>). 100 is an ordinary pair of hands.</param>
 		/// <param name="RefinableUnits">What the raw stock covers, from
@@ -1120,14 +1143,17 @@ namespace ThousandAndFirst
 			{
 				return 0;
 			}
-			int capability = (Capability > 0) ? Capability : 0;
-			int effort = Crew * Days * EffortPerHandPerDay * capability / 100;
-			int units = effort / RefineEffortPerUnit;
-			if (units > MaxRefinedPerPass)
+			long capability = (Capability > 0) ? Capability : 0;
+			// Widened all the way through: Days is the raw calendar now, and the effort of a big
+			// crew over a long stretch leaves int behind long before the stock or the rate do.
+			long effort = (long)Crew * Days * EffortPerHandPerDay * capability / 100L;
+			long units = effort / RefineEffortPerUnit;
+			long ceiling = (long)MaxRefinedPerDay * Days;
+			if (units > ceiling)
 			{
-				units = MaxRefinedPerPass;
+				units = ceiling;
 			}
-			return (units > RefinableUnits) ? RefinableUnits : units;
+			return (units > RefinableUnits) ? RefinableUnits : (int)units;
 		}
 
 		/// <summary>Why a yard is or is not shaping anything for the days it was just handed.

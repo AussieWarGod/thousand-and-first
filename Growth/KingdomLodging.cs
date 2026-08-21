@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using XRL;
 using XRL.UI;
 using XRL.World;
+using XRL.World.Parts;
 
 namespace ThousandAndFirst
 {
@@ -49,6 +50,17 @@ namespace ThousandAndFirst
 	/// counted in attended passes and in nothing else, so a founder who is away spends nobody's.
 	/// Nothing is a meter and nothing decays; the record lives on the settler themselves and is
 	/// lifted &mdash; and unsaid &mdash; the moment somebody is housed.
+	/// </para>
+	/// <para>
+	/// <b>Condemnation.</b> A house worn past
+	/// <c>KingdomLodgingRules.CondemnedWearPercent</c> stops counting as a roof
+	/// (<see cref="IsCondemned"/>). It is not cleared, unbuilt or moved &mdash; the protection
+	/// law &mdash; and every point of the damage is mendable, so the founder arrests a
+	/// condemnation by putting the roof back on. This is what gives a subsidence's ruin a real
+	/// housing consequence, and it is why <see cref="RecordCondemnedRoofBrink"/> exists: when a
+	/// slide wrecks an OCCUPIED home at a breakpoint days back, the people under it lost their
+	/// roof on that day, and the brink is recorded with that day's tick so the announcement
+	/// quotes the honest elapsed rather than the moment somebody finally walked in.
 	/// </para>
 	/// </summary>
 	public static class KingdomLodging
@@ -166,6 +178,7 @@ namespace ThousandAndFirst
 			string creed = (Newcomer == null) ? null : Newcomer.GetStringProperty(KingdomCreed.CreedProperty);
 			List<GameObject> homes = HousingIn(Z);
 			List<KingdomLodgingRules.ArrivalHome> offers = new List<KingdomLodgingRules.ArrivalHome>();
+			bool anyCondemned = false;
 			for (int i = 0; i < homes.Count; i++)
 			{
 				string plotId = homes[i].GetStringProperty(KingdomPlots.PlotIdProperty);
@@ -179,6 +192,13 @@ namespace ThousandAndFirst
 				{
 					continue;
 				}
+				// Counted rather than merely skipped: a settlement whose every roof has fallen in
+				// must be told to MEND, not to commission housing it already built.
+				if (IsCondemned(homes[i]))
+				{
+					anyCondemned = true;
+					continue;
+				}
 				List<GameObject> occupants;
 				occupancy.TryGetValue(plotId, out occupants);
 				offers.Add(new KingdomLodgingRules.ArrivalHome(
@@ -187,7 +207,7 @@ namespace ThousandAndFirst
 					(occupants == null) ? 0 : occupants.Count,
 					occupants != null && AnyOccupantConflicts(refuses, selfTags, creed, occupants, KingdomFaith.EducatedCloseness(Z, QuartersOf(entry), homes[i]))));
 			}
-			return KingdomLodgingRules.AnyWouldTake(offers, needs, out Reason);
+			return KingdomLodgingRules.AnyWouldTake(offers, needs, out Reason, anyCondemned);
 		}
 
 		/// <summary>The design key of the home this resident sleeps in, for a caller that wants to
@@ -292,6 +312,7 @@ namespace ThousandAndFirst
 			string creed = Resident.GetStringProperty(KingdomCreed.CreedProperty);
 
 			bool anyRoofAtAll = Homes.Count > 0;
+			bool anyStanding = false;
 			bool anyMeetsNeeds = false;
 			bool anyHasCapacity = false;
 			bool anyWithoutRefusal = false;
@@ -320,6 +341,16 @@ namespace ThousandAndFirst
 				{
 					continue;
 				}
+				// A house worn past KingdomLodgingRules.CondemnedWearPercent is not a roof. It is
+				// still standing, still the settlement's, still mendable, and nobody sleeps in it
+				// -- so it is rejected here rather than filtered out of Homes, which keeps
+				// "there are roofs, and they have all fallen in" tellable apart from "nothing is
+				// built here yet".
+				if (IsCondemned(home))
+				{
+					continue;
+				}
+				anyStanding = true;
 				List<string> provides = new List<string>(KingdomQol.OfferOf(entry.Key));
 				if (!KingdomLodgingRules.MeetsNeeds(needs, provides))
 				{
@@ -349,7 +380,7 @@ namespace ThousandAndFirst
 			string residentName = NameOf(Resident);
 			if (chosen < 0)
 			{
-				KingdomLodgingRules.UnhousedReason reason = KingdomLodgingRules.Diagnose(anyRoofAtAll, anyMeetsNeeds, anyHasCapacity, anyWithoutRefusal);
+				KingdomLodgingRules.UnhousedReason reason = KingdomLodgingRules.Diagnose(anyRoofAtAll, anyMeetsNeeds, anyHasCapacity, anyWithoutRefusal, anyStanding);
 				AnnounceUnhoused(System, Resident, residentName, reason, roomiestRefused);
 				if (SpendGrace)
 				{
@@ -536,6 +567,99 @@ namespace ThousandAndFirst
 				}
 			}
 			return list;
+		}
+
+		/// <summary>
+		/// Whether this standing home has been worn past the point of being a roof
+		/// (<see cref="KingdomLodgingRules.CondemnedWearPercent"/>). A home with no wear part
+		/// has never been damaged and is sound.
+		/// <para>
+		/// The building is not touched, moved or unbuilt &mdash; the protection law forbids it
+		/// and there is nothing to forbid here anyway. It simply stops being counted as somewhere
+		/// to live until somebody mends it, which is a thing the founder can do with materials
+		/// and hands on any pass.
+		/// </para>
+		/// </summary>
+		public static bool IsCondemned(GameObject Home)
+		{
+			if (!GameObject.Validate(Home))
+			{
+				return false;
+			}
+			r_KingdomWear wear = Home.GetPart<r_KingdomWear>();
+			return wear != null && KingdomLodgingRules.IsCondemned(wear.Wear);
+		}
+
+		/// <summary>
+		/// The residents this home currently holds, by their stored assignment. For the caller
+		/// that has just condemned a roof and owes the people under it a dated record of losing
+		/// it &mdash; <c>KingdomSubsidence</c>'s ruin is the one that does.
+		/// </summary>
+		/// <param name="Z">The zone. Null holds nobody.</param>
+		/// <param name="Home">The home. One with no plot id holds nobody, because an assignment
+		/// is stored as a plot id and nothing else.</param>
+		public static List<GameObject> ResidentsOf(Zone Z, GameObject Home)
+		{
+			List<GameObject> list = new List<GameObject>();
+			string plotId = GameObject.Validate(Home) ? Home.GetStringProperty(KingdomPlots.PlotIdProperty) : null;
+			if (Z == null || string.IsNullOrEmpty(plotId))
+			{
+				return list;
+			}
+			foreach (GameObject item in Z.GetObjects())
+			{
+				if (item.GetIntProperty("KingdomCitizen") == 1 && item.GetStringProperty(HomePlotIdProperty) == plotId)
+				{
+					list.Add(item);
+				}
+			}
+			return list;
+		}
+
+		/// <summary>
+		/// Records the roof brink for everyone living under a home that has just been condemned,
+		/// at the tick it actually happened rather than the pass that notices.
+		/// <para>
+		/// This is the honest-elapsed half of the brink, and the reason it is worth the call:
+		/// <see cref="SpendOnePassOfGrace"/> records at the pass that finds the loss, which is
+		/// right when the loss happened at that pass. A subsidence ruins a home at a breakpoint
+		/// days or seasons back, and the settler has been sleeping in the open ever since. Record
+		/// is idempotent, so the earliest honest tick is the one that stands and a second caller
+		/// cannot redate it; nothing is announced and nothing is spent here, because a window is
+		/// spent only by attended passes.
+		/// </para>
+		/// <para>
+		/// Recorded only for an OCCUPIED home that actually crossed the line. A ruined shed
+		/// nobody sleeps in, and a home worn but still livable, both record nothing.
+		/// </para>
+		/// </summary>
+		/// <param name="Z">The zone the home stands in.</param>
+		/// <param name="Home">The home that has just crossed into condemnation.</param>
+		/// <param name="AtTick">The tick it crossed &mdash; the ruining breakpoint's own tick.</param>
+		/// <returns>How many residents this recorded for.</returns>
+		public static int RecordCondemnedRoofBrink(Zone Z, GameObject Home, long AtTick)
+		{
+			if (!Enabled || !IsCondemned(Home))
+			{
+				return 0;
+			}
+			List<GameObject> residents = ResidentsOf(Z, Home);
+			int recorded = 0;
+			for (int i = 0; i < residents.Count; i++)
+			{
+				// Unnamed residents never enter the brink, exactly as SpendOnePassOfGrace has it:
+				// the brink names its subject, and staying is the safe answer to a question the
+				// registers cannot record.
+				if (string.IsNullOrEmpty(RollNameOf(residents[i])))
+				{
+					continue;
+				}
+				if (KingdomBrink.Record(residents[i], BrinkKind.Roof, AtTick, null, 0))
+				{
+					recorded++;
+				}
+			}
+			return recorded;
 		}
 
 		private static List<GameObject> HousingIn(Zone Z)

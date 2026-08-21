@@ -135,10 +135,14 @@ A charter may carry material as well as water, per caravan:
 | `Exotics` | Rare finds, as `exotic:units`: `ingot` (bronze ingot), `silver`, `gold`, `gem` (any rough gemstone). Item names work too (`gold nugget:2`). |
 
 **How a yard works.** A staffed yard converts `RawPerRefined` (two) loads of raw stock into one
-refined unit on every attended pass, out of the crew the staffing pass gave it and at a rate scaled
-by who those settlers are — Strength for the saw-pit and the banker, Intelligence for the furnace.
-A yard with nothing to work says so once. Nothing here runs while the founder is away, and nothing
-wears out with the calendar.
+refined unit at a time, out of the crew the staffing pass gave it and at a rate scaled by who those
+settlers are — Strength for the saw-pit and the banker, Intelligence for the furnace. It runs on
+**days, not on visits**: a yard that ran for thirty days finishes thirty days of work whether or
+not the founder watched, held to `MaxRefinedPerDay` (eight) for each of those days — the width of
+the saw-pit, not a rule about homecomings. A yard that ran for thirty days with **nobody standing
+in it** finishes nothing, and says so once: the rate is time × labour, and labour is the half that
+was missing. Nothing wears out with the calendar; wear comes from raids, from hard running, and
+from temperamental certified tech.
 
 **Where bits and rare finds come from.** Both are ordinary items in a container the founder
 dedicated as a **stockpile**. Bits are read off vanilla's own `TinkerItem` — a fried processing core
@@ -474,11 +478,14 @@ tags for everything else, where a refusal is absolute at any closeness.
 
 Housing does **bind**, though. A settler joins the settlement only if a home is already standing that
 they would take — needs met, a bed free, and nobody in it they refuse — and the refusal names the
-real reason rather than a bed count. A settler who *loses* every acceptable home is named once, given
-two **attended passes** for the founder to act (raise a bunk, stake a plan, re-house them), and then
-leaves through the ordinary emigration machinery, chronicled by name and cause. The grace is counted
-in attended passes and never in time: a founder who is away spends nobody's grace, and no city is
-ever found emptied over a house that burned the day its founder left. Turn the whole of it off with
+real reason rather than a bed count. A settler who *loses* every acceptable home does not start a
+countdown. They are recorded at a **brink** — nowhere to live, the tick they reached it, and there
+the matter rests — and they leave only after two **attended passes** in which the founder could
+have acted (raise a bunk, stake a plan, re-house them) and did not. The window is spent in attended
+passes and never in time, so an absence of ten days and one of a thousand arrive at exactly the
+same place: no city is ever found emptied over a house that burned the day its founder left. Give
+them a roof and the brink lifts, the announcement is unsaid, and nothing is remembered against
+them. Turn the whole of it off with
 the **settlers are assigned to specific homes** option.
 
 ### Skins: what a design looks like

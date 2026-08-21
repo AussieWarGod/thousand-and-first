@@ -123,10 +123,14 @@ namespace ThousandAndFirst
 				arrivals++;
 				System.NextArrivalTick += Interval(System, Z);
 			}
-			if (timeTicks >= System.NextArrivalTick)
-			{
-				System.NextArrivalTick = timeTicks + Interval(System, Z);
-			}
+			// The queue still stands due and this pass could seat nobody else - the visit budget
+			// is spent, the population is capped, or the band's edge is reached. The overshoot
+			// is burned rather than banked, through the same KingdomRules.RestampDeadline the
+			// manifest turn-back and the raid re-warn read: a fresh full interval from now, with
+			// no witness band, because an arrival slot is spent the instant it comes due. A
+			// hundred days away is a settler at the gate, never a hundred of them.
+			System.NextArrivalTick = KingdomRules.RestampDeadline(
+				System.NextArrivalTick, timeTicks, Interval(System, Z), 0);
 			AssignWork(System, survey);
 			UpdateStage(System, Z, survey);
 			KingdomPetitions.OnSettlementPass(System, Z, survey);
@@ -467,7 +471,14 @@ namespace ThousandAndFirst
 		/// <param name="Cause">The clause both registers name the departure by. Null is the
 		/// drought, which is what this machinery was built for and reads exactly as it always
 		/// did.</param>
-		public static bool Emigrate(KingdomSystem System, Zone Z, KingdomSurvey Survey = null, GameObject Leaver = null, string Cause = null)
+		/// <param name="Chronicled">Whether this departure gets its own line in both registers and
+		/// the ledger. True for every ordinary departure, and for the sampled ones of a long
+		/// subsidence slide; false for the ones a slide is carrying in its summary line instead
+		/// (<c>KingdomSubsidenceRules.TellsDeparture</c>). The person still leaves, the ledger's
+		/// departure COUNT still rises, and the log still records it &mdash; what is saved is a
+		/// chronicle entry, because a City falling to Camp would otherwise spend a quarter of the
+		/// two-hundred-entry register on one event.</param>
+		public static bool Emigrate(KingdomSystem System, Zone Z, KingdomSurvey Survey = null, GameObject Leaver = null, string Cause = null, bool Chronicled = true)
 		{
 			if (System.Population <= KingdomRules.LoyalCoreSettlers)
 			{
@@ -535,9 +546,14 @@ namespace ThousandAndFirst
 			// somebody left.
 			string chronicled = string.IsNullOrEmpty(Cause) ? "for wetter country, the cisterns having run dry" : Cause;
 			string noted = string.IsNullOrEmpty(Cause) ? "for wetter country" : Cause;
-			KingdomChronicle.Record(System, XRL.Language.Grammar.A(name) + " left " + System.KingdomDisplayName + " " + chronicled);
+			// The count is never sampled, only the telling: a founder who reads the ledger's
+			// departure tally gets the true number however the story of it was told.
 			System.Ledger.Departures++;
-			System.Ledger.Note(KingdomVoices.Say(System, VoiceOccasion.CitizenLost, "{{R|" + XRL.Language.Grammar.A(name, Capitalize: true) + " left " + System.KingdomDisplayName + " " + noted + ".}}"));
+			if (Chronicled)
+			{
+				KingdomChronicle.Record(System, XRL.Language.Grammar.A(name) + " left " + System.KingdomDisplayName + " " + chronicled);
+				System.Ledger.Note(KingdomVoices.Say(System, VoiceOccasion.CitizenLost, "{{R|" + XRL.Language.Grammar.A(name, Capitalize: true) + " left " + System.KingdomDisplayName + " " + noted + ".}}"));
+			}
 			if (KingdomLog.Enabled) KingdomLog.Log("emigrate: pop now " + System.Population + " origin=" + (origin ?? "-") + " cause=" + (Cause ?? "drought"));
 			return true;
 		}
