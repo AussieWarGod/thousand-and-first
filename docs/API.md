@@ -89,17 +89,65 @@ pass**: the load is physical and somebody has to be there to take delivery, whic
 fact rather than a clock policy. The window it must arrive inside is real elapsed time. One
 manifest may be in flight at a time; a lapsed window is written off once, in the chronicle.
 
-## `KingdomCropRules` / `KingdomPlot` — ground that grows food
+## `KingdomCropRules` / `KingdomCrops` / `KingdomPlot` — seeds, rows, and the harvest cycle
 
-The plot cycles on the settlement's own tick stamps, resolved when the city is seated. What it can
-grow is read from the style the founding rite already recorded, not from a second look at the
-ground. It draws water only after the day's upkeep and arrivals, so it can never be the reason the
-thirst ladder fires, and it deposits only into a dedicated larder.
+A field starts as bare ground and produces nothing until the founder puts seed in it. That is
+Addendum 11(b)'s gate, and it is one rule read in one place: an unsown field carries **no `food`
+at all** — not to the level, not to the day — because `KingdomCrops.WithoutUnsownFood` strips the
+`food` entry out of its parsed `Carries` inside `KingdomSubsidence.Supports`. Everything else the
+design carries is untouched; a home farm's mill is built whether or not a row is in the ground.
+An unsown field also drops out of `KingdomSurvey.Works`, so the staffing pass never sends anybody
+to stand in it.
 
-The garden is the one design in the catalogue that **buys food with water**: it delivers its
-`Carries` through the ordinary flow like every other field, *and* a ripening on top, and pays
-`PlantWaterCostDrams` a cycle for the privilege. What bounds the extra is larder room — everything
-the cycle puts in a larder is room the day's making then cannot use.
+**The seed items.** Five, one per style's crop family, in `ObjectBlueprints.xml`. They are
+ordinary items rather than `Food` — a seed the ration draw can eat is a seed corn that quietly
+disappears. Three honest sources: the tier-1/tier-2 wares tables (`PopulationTables.xml`), a
+harvest returning its own on a counter-based draw (`KingdomCropRules.RollSeedReturn`), and
+stripping a wild plant of the same species, once per plant, where vanilla ships one
+(`r_KingdomWildSeed`, merged onto `Watervine`, `Starapple Tree`, `Godshroom` and `Dreadroot` with
+`Load="MergeIfExists"`).
+
+**The designation.** `r_KingdomSeed` offers a `Sow` inventory action. Standing anywhere in a
+finished field's footprint, the founder is shown the crop, the rows, the wait and the water
+(`SowConfirm`, the carry-sign's consent-before-cost shape) and confirms; one seed is spent,
+`PlantWaterCostDrams` is drawn once, real crop plants are laid across the footprint, and the
+planting is dated in both registers. `AssessSow` is the whole gate as one tabled decision, and
+`SowRefusal` names the want for every way it can fail. The field itself offers `Withdraw Seed`,
+which is the protection law made operable: a committed seed is the founder's designation, the
+rows come up when they take it back, and nothing else can.
+
+**The rows are real.** `r_KingdomRow*` blueprints inherit vanilla `Plant` (so `PlantProperties`
+roots them) and carry vanilla `Harvestable` with the crop as `OnSuccess`. They go in green
+(`StartRipeChance="0:1"`); what ripens them is the stamped cycle. A ripe row can be gathered by
+hand for a real crop item, and the settlement's own gathering counts rows still standing **ripe**,
+so what the founder took is not also credited to the city.
+
+**The cycle** (Addendum 11(b-ii)). Planted tick → ripe after `CropDays`; the founder gets
+`GatherDelayTicks` (one day) alone with it; then the settlement gathers, attended or not. The
+harvest credits the ledger at once and the physical crop goes into a pantry in this zone if there
+is one, onto the road to another of the city's zones if the sighting record says there is room
+there (`KingdomCrops.LarderRoomElsewhere` / `KingdomSystem.PendingCrop`), and on the ground if
+neither. The stamp restamps **from the harvest**, never from now, so the part-cycle already grown
+is kept. `CyclesDue` is closed form: a season away resolves every completed cycle in one
+reckoning, and a season of harvests tells **once, with a count** (`HarvestChronicle`).
+
+| Member | Contract |
+|---|---|
+| `KingdomCropRules.CropDays` / `YieldPerRow` / `GrowTicks` / `GatherDelayTicks` | The whole denomination. A design standing R rows makes `R × YieldPerRow / CropDays` servings a day. |
+| `KingdomCropRules.FoodPerDayForRows(int)` / `RowsForFoodPerDay(int)` | That derivation, both ways. `_notes/balance-sim.py` §G2 asserts it against the real catalogue and the real blueprints. |
+| `KingdomCropRules.CropDaysForStyle(string)` | Every style answers `CropDays`, and the test table says so out loud: `Carries` is one number per design, so a per-style cycle would make the same field carry differently on different ground. |
+| `KingdomCropRules.CyclesDue` / `LastRipeTick` / `RestampedRipeTick` / `MayGather` | The cycle, closed form and uncapped in time (bounded only by `MaxCyclesPerVisit` arithmetic). |
+| `KingdomCropRules.HarvestYield(int rows, int effectivenessPercent)` | Rows × yield × what the field is running at — the same effectiveness `Supports` folds `Carries` by. |
+| `KingdomCropRules.GatherableCycles(long, long, out bool holdsLast)` / `GatheredYield(int standing, int ripe, int cycles, bool countsRipeLast, int effectivenessPercent)` | The founder's-day rule and the credit that follows from it, both pure. Every cycle but the one the founder was actually looking at is credited at what **stands**; that one is credited at what stands **ripe**. |
+| `KingdomCropRules.IrrigationTicksPerPulse` / `IrrigatedRipeTick(long, long)` | Vanilla's `AccelerateRipening` answered on our clock. `Hydraulic Irrigator` fires it on its own radius off its own charge; each pulse pulls the field's stamp ten ticks earlier, bounded at now, so an irrigated crop ripens in half its days. It does nothing to any plant the game ships, because none of them arms `RegenTime`. |
+| `KingdomCropRules.SeedForCrop` / `CropForSeed` / `SeedForStyle` / `RowForCrop` / `SeedBlueprints` | The seed↔crop↔row maps. `Art/check_xml_refs.py` walks all of them against `ObjectBlueprints.xml` in both directions. |
+| `KingdomCropRules.AssessSow` / `SowRefusal` / `SowConfirm` / `WantNote` / `FieldWant` | The gate and everything it says. STANDARDS §7b: no field stalls in silence. |
+| `KingdomCropRules.RollSeedReturn` / `SeedReturned` | Whether a gathering hands back sowable seed. Counter-based on settlement, field and that cycle's own ordinal, so a reload never re-rolls it. |
+| `KingdomCrops.RowsTag` (`r_KingdomCropRows`) | How many rows a design stands, declared on the **blueprint** for the reason a pantry's capacity is. |
+| `KingdomCrops.WithoutUnsownFood` / `CycledFoodPerDay` | The gate, and the subtraction that keeps a sown field from being paid twice. |
+| `KingdomCrops.AttemptSow` / `Withdraw` / `TakeWildSeed` / `LayRows` / `ClearRows` / `RowsOf` / `SetRipe` | The engine-coupled half. Only rows this file created and marked are ever destroyed. |
+| `KingdomCrops.LarderStatePrefix` / `RecordLarders` / `LarderRoomElsewhere` / `DeliverPending` / `Deposit` | Cross-zone delivery, on `KingdomSubsidence.RecordZone`'s own sighting idiom with its own prefix. |
+| `KingdomSystem.PendingCrop` / `PendingCropBlueprint` | One city's harvest still on the road, carried by the seat swap on its own name. |
 
 ## Food as a flow — what the fields make and the people eat
 
@@ -119,14 +167,17 @@ company are the interesting part.
 | `KingdomRules.CivicLarderBlueprints` / `IsCivicLarderBlueprint(string)` | Which commissioned designs auto-dedicate as pantries (STANDARDS §7's "commissioned storage auto-flags"). |
 | `KingdomSurvey.FoodStored` / `FoodCapacity` / `FoodSpace` | The food side of `StoredWater` / `StorageCapacity` / `StorageSpace`. `FoodSpace` is **derived** from the other two, so a caller that puts food in by another road cannot leave it stale. |
 | `KingdomSurvey.StoreFood(int, string blueprint)` / `ConsumeFood(int)` / `SpoilFrom(GameObject, int)` / `AdoptLarder(GameObject)` | The food mirrors of `Store` / `Consume` / `LeakFrom`, plus the dedication of a commissioned pantry. All keep the survey's counters in step; all return what actually moved rather than what was asked for. |
-| `KingdomGrowth.FoodMadePerDay(KingdomSurvey)` | What the settlement's works bring in in a day — exactly `KingdomSubsidence.Supports(survey).Food`, at exactly the effectiveness the level is summed at. |
+| `KingdomGrowth.FoodMadePerDay(KingdomSurvey)` | What the settlement's works bring in in a day *without growing it* — `KingdomSubsidence.Supports(survey).Food` less `KingdomCrops.CycledFoodPerDay(survey)`, at exactly the effectiveness the level is summed at. A sown field's food is delivered physically by its own cycle instead, so one field feeds the settlement exactly once; an unsown one is already zero here, and not by subtraction. |
 | `KingdomGrowth.ScarcityEnabled` / `ThirstEnabled` / `HungerEnabled` | One switch (`r_TAF_OptionThirst`) for both binding goods. A founder who turned scarcity off did not ask to keep half of it. |
 
 **The identity the lane is built on.** One point of `food` is one settler fed for one day, and
 `RationsPerDay` charges one ration a settler a day, so *a settlement standing at its own supported
 level makes exactly the rations it eats*. That only holds because **every** food work is counted
 in the flow at exactly the effectiveness it is counted at for the level — a design counted for
-one and not the other would be a level a settlement could reach and then starve at.
+one and not the other would be a level a settlement could reach and then starve at. Since Wave G2
+the growing designs are counted through their **cycle** rather than through the day, and the
+identity survives because the cycle pays exactly what the `Carries` promised over one crop's days:
+`rows × YieldPerRow == food × CropDays`, asserted per design in `_notes/balance-sim.py` §G2.
 
 **Where food is not water's mirror, and why.**
 
@@ -586,6 +637,9 @@ These are read and written across the mod and are part of the API:
 | `KingdomOrigin` (string) | Settler's region of origin. |
 | `KingdomBrinkRoofStanding` (int) / `KingdomBrinkRoofTick` / `KingdomBrinkRoofWarned` (long) | A settler standing at the roof brink: that one stands at all, the tick they reached it, and the tick the founder was warned — which is what the window runs from. On the SETTLER, never on a seat. |
 | `KingdomBrinkCreedStanding` / `KingdomBrinkCreedTick` / `KingdomBrinkCreedWarned` / `KingdomBrinkCreedToward` / `KingdomBrinkCreedChannel` (int/long/string) | The same for a conversion about to happen, plus which creed and which pull got them there. |
+| `KingdomCropSownTick` (int) / `KingdomCropRows` (int) / `KingdomCropCycles` (int) / `KingdomCropSeed` (string) / `KingdomCropSaid` (int) | One sown field's commitment: when the founder sowed it, how many rows went in, how many gatherings it has resolved (the kernel ordinal the seed-return draw is keyed on), which seed is in it, and the last want it announced. On the FIELD. Properties rather than part fields on purpose — `r_KingdomPlot` serializes positionally, and appending to it would put every already-built field's layout at risk. |
+| `KingdomCropRow` (int) / `KingdomCropField` (string) | A standing crop plant this mod laid, and the field that laid it. The protection law's whole warrant for taking one up. |
+| `KingdomWildSeedTaken` (int) | A wild plant already stripped of its seed. One plant is one seed, forever. |
 
 ## Guarantees
 

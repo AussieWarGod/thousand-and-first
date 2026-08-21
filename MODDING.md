@@ -340,6 +340,72 @@ Nothing already standing converts. A settlement raised before plots existed is a
 single-cell works and stays exactly that, working exactly as it did; plots begin with the next thing
 built.
 
+### Fields that grow: seeds, rows, and the harvest cycle (all optional)
+
+A design that GROWS food is not a `Carries="food:N"` number on an object with no parts. It is a
+field that stands rows, and the number comes off the rows. Two things make one:
+
+```xml
+<!-- ObjectBlueprints.xml -->
+<object Name="MyMod_Orchard" Inherits="Furniture">
+  <part Name="r_KingdomPlot" />
+  <tag Name="r_KingdomCropRows" Value="16" />
+  ...
+</object>
+```
+
+```xml
+<!-- your buildings file -->
+<building Key="orchard" DisplayName="orchard" Blueprint="MyMod_Orchard"
+          Cost="14" Ticks="3600" Styles="all" Category="food" Plot="M" Open="yes"
+          Staff="2" Manning="scaled" Carries="food:8" />
+```
+
+| Piece | What it does |
+|---|---|
+| `<part Name="r_KingdomPlot" />` | Makes the object a field: it takes seed, keeps the cycle, offers **Withdraw Seed**, and carries no `food` at all until the founder sows it. |
+| `<tag Name="r_KingdomCropRows" Value="N" />` | How many crop plants physically stand in it. Declared on the **blueprint**, never in the catalogue — the same split a pantry's `r_KingdomLarderCapacity` keeps. |
+
+**`Carries="food:N"` is derived, not chosen.** `N` must equal
+`Rows × KingdomCropRules.YieldPerRow / KingdomCropRules.CropDays` — with the shipped 3-per-row and
+6-day cycle, `N = Rows / 2`. `_notes/balance-sim.py` §G2 re-derives every food design's carry from
+its own blueprint's tag and fails the run if one has drifted, exactly as it re-derives every water
+design's from its `LiquidProducer`. `Art/check_xml_refs.py` fails if a design carries
+`r_KingdomPlot` and forgets the tag, or carries the tag on an object with no field part. The rows
+must also fit inside the plot tier's own dimensions.
+
+**A design may carry `food` without growing it**, and there are exactly two other honest reasons,
+both checkable off the blueprint: it **keeps** (an `r_KingdomLarderCapacity` tag — a granary makes
+a good year last), or it **makes** something that keeps out of what came in (it carries `craft`
+beside its `food` — a mill). A `food` number with none of the three fails the sim by name.
+
+**Seeds and crops.** The five shipped crop families come from the settlement's founding style
+(`KingdomCropRules.CropBlueprintForStyle`), and each has a seed item and a standing-row blueprint
+mapped beside it. A mod adding a style adds a crop, a row and a seed together; the row is an
+ordinary object inheriting vanilla `Plant` with a vanilla `Harvestable` on it, and
+`Art/check_xml_refs.py` walks every one of those names in both directions. A seed item is any
+object carrying `<part Name="r_KingdomSeed" />` whose blueprint the crop map names; it should
+**not** be `Food`, because the settlement's ration draw eats anything that is.
+
+**A wild plant can carry seed.** Merge one part onto a vanilla blueprint and it gives up its seed
+once, to anybody who does not have to steal it:
+
+```xml
+<object Name="Watervine" Load="MergeIfExists">
+  <part Name="r_KingdomWildSeed" Seed="r_KingdomSeedVinewafer" />
+</object>
+```
+
+**Irrigation is vanilla's.** A powered `Hydraulic Irrigator` within its own radius pulls a growing
+field's stamp forward each pulse, halving the wait. Nothing is declared for it: the field answers
+the `AccelerateRipening` event the machine already fires.
+
+**The cycle**, once sown: ripe after `CropDays`, one day alone with the founder (a ripe row carries
+real `Harvestable`, so gathering it by hand takes it out of the settlement's share), then the
+settlement gathers — attended or not, dated, and restamped from the harvest so multiple cycles
+resolve in one reckoning. The harvest lands in a dedicated larder here, or travels to one in
+another of the city's zones, or is lost for want of room, and says which.
+
 ### Yard trades: a house's own sideline (all optional)
 
 A small or middling roofed house (`Plot="S"` or `"M"`, `Category="housing"`, not `Open`) with a
@@ -637,6 +703,16 @@ its vessel holds is a fact about the vessel.
   <tag Name="r_KingdomLarderCapacity" Value="120" />
 </object>
 ```
+
+**Seed is the founder's designation, and the contract runs both ways.** A field grows nothing until
+the player puts seed in it, the seed is theirs until they take it back out (**Withdraw Seed** on
+the field returns it and lifts the rows), and a harvest never gathers anything they did not
+dedicate — the crop goes into a `KingdomLarder=1` container or nowhere. The standing crop plants a
+field lays are objects this mod created and marked (`KingdomCropRow=1`), which is the only class of
+object a kingdom system may destroy; a plant you placed in a field's footprint is never taken up
+and never counted. A wild plant carrying `r_KingdomWildSeed` gives its seed once and refuses
+outright if it has a `Physics Owner` — a farmer's crop is a farmer's, and the mod will not help the
+founder rob one.
 
 A dedicated container that declares nothing gets `KingdomRules.DefaultLarderCapacity` (32) — never
 zero, because a pantry that can hold nothing is a silent black hole for a harvest with no surface

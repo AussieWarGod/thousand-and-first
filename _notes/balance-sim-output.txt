@@ -1,0 +1,1032 @@
+Constants read from source:
+    DramsPerArrival          = 2
+    MaxArrivalsPerVisit      = 3
+    DryIntervalsToEmigrate   = 2
+    DryIntervalsToWither     = 3
+    LoyalCoreSettlers        = 2
+    MaxPopulation            = 60
+    MaxBuildings             = 40
+    FoundingCostDrams        = 8
+    FetchDramsPerSettler     = 2
+    TicksPerDay              = 1200
+    ReserveDays              = 3
+    RaisingHandsWanted       = 2
+    RaidTributeDrams         = 6
+    RaidPlunderDrams         = 24
+    PlantWaterCostDrams      = 3
+    CropDays                 = 6
+    YieldPerRow              = 3
+    SeedReturnChancePercent  = 20
+    MaxCyclesPerVisit        = 120
+    EffortPerHandPerDay      = 10
+    RefineEffortPerUnit      = 15
+    RawPerRefined            = 2
+    MaxRefinedPerDay         = 8
+    MaxClearingHands         = 6
+    LiftCapPercent           = 50
+    TasteShadeAmount         = 1
+    MaxTastesStated          = 2
+    VirtueShadeAmount        = 2
+    FlawShadeAmount          = 1
+    MaxPrefersCounted        = 2
+    MaxShadePerWork          = 2
+    FloorLevel               = 4
+    StartMarginPercent       = 20
+    StageFallMarginPercent   = 20
+    StepDays                 = 4
+    RuinChancePercent        = 50
+    MaxWearPercent           = 60
+    LeakDaysToEmptyAtCeiling = 50
+    RuinStandingFloorPercent = 25
+    RuinStandingCeilingPercent = 60
+    ForageRationsPerHand     = 2
+    MaxForagedRationsPerDay  = 4
+    HungryIntervalsToEmigrate = 2
+    HungryIntervalsToFamine  = 3
+    DefaultLarderCapacity    = 32
+    StageUpkeepPercent       = (100, 120, 150, 180, 220)
+    charters (drams, ticks)  = [(6, 3600), (12, 4800)]
+
+======================================================================================
+Q1  The uncapped water balance: pop 5 / 20 / 40, watered and dry
+======================================================================================
+
+Watered = pure open water standing in the zone, more than the detail can carry. Dry = none.
+Absence length does not appear in this table on purpose: with both halves uncapped, the
+per-day rate is the same at V=1 and V=400, which is the whole point of the change. Crew
+columns are System.WaterCrew - hands the founder put on the detail.
+
+ pop stage     ground    upkeep/d    crew=0   crew=half   crew=all  break-even crew
+   5 Steading  watered          6     -6.36       -2.36      +3.64           3 of 5
+   5 Steading  DRY              6     -6.36       -6.36      -6.36                -
+  20 Village   watered         30    -30.15      -10.15      +9.85         15 of 20
+  20 Village   DRY             30    -30.15      -30.15     -30.15                -
+  40 Town      watered         72    -72.09      -32.09      +7.91         36 of 40
+  40 Town      DRY             72    -72.09      -72.09     -72.09                -
+
+Surplus/day by visit cadence, watered, half the settlement on the detail.
+CAPPED rows are the pre-rework rules; UNCAPPED are the doctrine's.
+
+ pop rules                         V=1        V=3        V=7       V=30      V=400
+   5 capped (pre-rework)         -2.36      -2.36      -1.22      -0.56      -0.38
+   5 uncapped (doctrine)         -2.36      -2.36      -2.36      -2.36      -2.36
+  20 capped (pre-rework)        -10.15     -10.15      -4.44      -1.15      -0.23
+  20 uncapped (doctrine)        -10.15     -10.15     -10.15     -10.15     -10.15
+  40 capped (pre-rework)        -32.09     -32.09     -13.80      -3.29      -0.33
+  40 uncapped (doctrine)        -32.09     -32.09     -32.09     -32.09     -32.09
+
+Read: under the cap, a long absence flattened BOTH halves toward zero, so the rate drifted
+to nothing and the settlement neither gained nor lost - absence was inert, which is what
+the doctrine calls forgiveness. Uncapped, the rate a settlement runs at while you are away
+is the same rate it runs at while you watch, which is clause 1 in one number.
+
+======================================================================================
+Q2  The floor: is Camp self-sustaining with the cap gone?
+======================================================================================
+
+The doctrine's floor is Camp's own equilibrium: whatever else subsides, the smallest
+settlement carries itself. At Camp the stage multiplier is 100%, so a settler drinks one
+dram a day and a hand on the detail carries two - the ratio is 2:1 and half the camp on
+water is exactly break-even.
+
+ pop stage      drinks/d  crew needed   of pop  verdict
+   2 Camp              2            1      50%  carries itself
+   3 Camp              3            2      67%  carries itself
+   4 Camp              4            2      50%  carries itself
+   5 Steading          6            3      60%  carries itself
+   6 Steading          7            4      67%  carries itself
+   7 Steading          8            4      57%  carries itself
+   8 Steading          9            5      62%  carries itself
+   9 Steading         10            5      56%  carries itself
+  10 Steading         12            6      60%  carries itself
+  11 Steading         13            7      64%  carries itself
+  12 Village          18            9      75%  carries itself
+
+And at every size, watered ground, the share of the settlement the detail wants:
+ pop stage      drinks/d  crew needed   share
+   5 Steading          6            3     60%
+  12 Village          18            9     75%
+  25 Town             45           23     92%
+  40 Town             72           36     90%
+  50 City            110           55    110%
+  60 City            132           66    110%
+
+The stage ramp is the whole difficulty curve: Camp wants half its people on water, a City
+wants 110% of them and therefore cannot be held by hauling at all. That is intended - the
+city is meant to need infrastructure - but note what it means with the cap gone: an
+un-infrastructured City now bleeds continuously instead of bleeding for three days and
+stopping. The bound on that bleed is subsidence toward the supported level, which is not
+built yet; until it is, the interim bound is the thirst ladder, which steps ONCE per
+resolve however long the absence (see Q3).
+
+======================================================================================
+Q3  What a long absence actually costs, with no subsidence built yet
+======================================================================================
+
+The uncapping's real risk is not the arithmetic, it is the ladder in front of it: charge a
+season of upkeep in one pass and a settlement could empty in one homecoming. It cannot,
+and the reason is structural rather than tuned - `KingdomGrowth.ResolveHeartbeat` steps
+`DryStreak` once per FAILED RESOLVE, not once per dry day, and `Emigrate` walks out one
+settler and floors at LoyalCoreSettlers.
+
+ absence (days)   drams owed (pop 20)  streak steps  settlers lost
+              1                    30             1              0
+              3                    90             1              0
+             10                   300             1              0
+             30                   900             1              0
+             90                  2700             1              0
+            400                 12000             1              0
+
+    DryIntervalsToEmigrate = 2, DryIntervalsToWither = 3,
+    LoyalCoreSettlers = 2. So a founder who leaves a dry settlement for a
+    year comes home to empty cisterns and ONE rung of the ladder, not to an empty town.
+    Repeated neglect still empties it, one visit at a time, down to the loyal core.
+
+    This is the interim bound and it should be named as one. When subsidence lands, the
+    honest bound becomes "the level the works actually carry", and the ladder stops being
+    load-bearing.
+
+======================================================================================
+Q4  The refined-material chain, priced
+======================================================================================
+
+The chain: raw (timber / stone / scrap, off cleared ground) -> refined (shaped timber,
+shaped stone, worked metal, through a staffed yard) -> spent on building costs.
+
+    EffortPerHandPerDay  = 10      one hand, one day
+    RefineEffortPerUnit  = 15      effort one refined unit costs
+    RawPerRefined        = 2      raw loads eaten per refined unit
+    MaxRefinedPerDay     = 8      throughput ceiling, per DAY of running
+    MaxClearingHands     = 6      most hands one clearing gang uses
+
+Refined units a yard turns out, by crew and days (capability 100%):
+
+ crew      d=1     d=2     d=3     d=5    d=10    d=30
+    1        0       1       2       3       6      20
+    2        1       2       4       6      13      40
+    3        2       4       6      10      20      60
+    4        2       5       8      13      26      80
+    6        4       8      12      20      40     120
+
+    THIS TABLE IS THE UNCAPPING, VISIBLE. It used to be flat across the day columns, because
+    the ceiling was 8 units PER RESOLVE: a yard's best possible output was eight units per
+    homecoming however long the absence, so a grand build was gated on how often the founder
+    walked through the gate. It now climbs with the days, because the ceiling is
+    MaxRefinedPerDay = 8 - the width of the saw-pit rather than a rule about visits.
+
+    What still binds is the crew. A hand puts in 10 effort a day and a unit costs
+    15, so one pair of hands makes 1 a day and it takes 12 hands to reach the
+    bench's own width. A yard nobody stands in still makes nothing for thirty days, which is
+    clause 2 exactly: time times LABOUR, never time alone.
+
+What the catalogue asks for. Materials split into what CLEARING gives back (timber, stone,
+scrap, marble, mud, canvas) and what a YARD has to shape - only the second half is on the
+refining chain, and it eats 2 raw per unit on top of the raw the design
+names outright. A two-hand yard shapes 1 unit(s) a day.
+
+design                drams  build d  raw named  refined  raw eaten  raw total  bit weight  yard-days
+condensery              100     10.0        116       28         56        172          11         28
+waterworks               72     10.0        138       26         52        190          11         26
+homefarm                 92     10.0        124       24         48        172           0         24
+court                    96     10.0        126       12         24        150           0         12
+airwellfield             52      6.0         68       10         20         88           0         10
+terrace                  40      6.0         44        8         16         60           0          8
+grange                   40      6.0         46        8         16         62           0          8
+temple                   44      6.0         48        8         16         64           0          8
+manor                    44      6.0         48        6         12         60           0          6
+bathhouse                46      6.0         60        6         12         72           0          6
+barracks                 40      6.0         40        6         12         52           0          6
+airwellcourt             32      4.0         30        4          8         38           0          4
+
+    Bits, the third cost. 3 of 62 designs ask for vanilla tinkering bits at all,
+    and they are exactly the high-craft ones: chargingpost, condensery, waterworks.
+    Nobody in the settlement makes a bit; they come off salvage and out of caravans, so a
+    design that names them is gated on the founder's own scavenging rather than on any yard.
+    That is the intended shape (the catalogue's header says so) and it means the bit line is
+    a GATE and not a rate - it never appears in the yard-days column, and no amount of crew
+    shortens it.
+
+    Reading. The heaviest design in the catalogue (condensery) wants 28 refined
+    units: 28 days of a two-hand yard, and 56 raw loads eaten on top of the
+    116 it names outright. Against a build time of 10 days, the YARD is the schedule
+    for anything grand - the scaffold is not what you wait for.
+
+    The yard-days column is now TRUE rather than aspirational. It was not, for the whole of
+    this wave until the material workers came off the visit clock: the ceiling was per
+    resolve, so a grand design was gated on homecomings and the column was a floor nobody
+    could reach. A yard that runs for thirty days now finishes thirty days of work, and a
+    yard the founder walked past thirty times in one afternoon still finishes none.
+
+    Refining is not water-priced twice. Building costs are drams AND materials, and the
+    drams side is untouched by this wave.
+
+======================================================================================
+Q5  Sensitivity: the two numbers the water economy stands on
+======================================================================================
+
+A settler drinks `drink` drams a day at Camp rate; a hand on the detail carries `carry`.
+The table is the share of the settlement the water detail must be, at Camp, for the
+settlement to hold itself. Anything at or under 50% leaves half the people free for works.
+
+  drink      carry 1     carry 2     carry 3     carry 4
+   0.50         50%         25%         17%         12% 
+   0.75         75%         38%         25%         19% 
+   1.00        100%         50%         33%         25% 
+   1.25        125%         62%         42%         31% 
+   1.50        150%         75%         50%         38% 
+   2.00        200%        100%         67%         50% 
+
+Shipped is drink=1.0, carry=2 -> 50% at Camp. That is the knife edge the design wants:
+half your people on water is a real cost and a survivable one. carry=3 makes water free
+(33%); drink=1.5 makes a camp unable to spare anyone (75%). The tuning is not sensitive
+inside drink 0.75-1.25 at carry 2, which is where it sits.
+
+NOTHING WAS RETUNED IN THIS PASS. The uncapping does not move any of these constants; it
+removes a ceiling that was hiding whether they bound. They bind.
+
+======================================================================================
+Q6  Level: what it takes to HOLD each rung, now that something reads Carries
+======================================================================================
+
+The denomination, restated because everything below turns on it: one point of `water` is one
+dram a day sustained, which is one settler's thirst AT CAMP RATES.
+`KingdomRules.UpkeepDrams` then bills (100, 120, 150, 180, 220) per hundred by stage, so
+`KingdomSubsidenceRules.LevelFromWater` divides the declared water by that percentage before
+the frozen `Equilibrium` sees it. Food and roof are already denominated in people and are not
+converted: a roof is a roof at any rung.
+
+The cross-check, first: the drams a rung's own population drinks, converted back, must carry
+that population. If these two columns disagree the catalogue and the upkeep table are
+describing different games.
+
+rung       people  drinks/d  carries   verdict
+Camp            4         -        4   the floor: Camp carries itself with nothing standing
+Steading        5         6        5   exact
+Village        12        18       12   exact
+Town           25        45       25   exact
+City           50       110       50   exact
+
+Now the two ways a founder actually builds it. CHEAPEST is drams-per-point greedy (many small
+plots); GRANDEST is the fewest works that will do it (the biggest design on the rung). Both
+must be plausible, because both are things players do.
+
+  --- cheapest ---
+  rung       works   drams  staff  level   plan
+  Steading       7      35      2      6   saltterracex2 | plotx2 | tentx3  holds
+  Village        7     102      0     12   airwellcourtx2 | plotx4 | housecourtx1  holds
+  Town          13     183      0     27   airwellfieldx2 | plotx9 | housecourtx2  holds
+  City          23     429      0     51   condenseryx3 | plotx17 | housecourtx3  holds
+
+  --- grandest ---
+  rung       works   drams  staff  level   plan
+  Steading       4      58      2      8   catchmentbankx2 | fieldx1 | housex1  holds
+  Village        4     114      3     18   airwellcourtx2 | fieldrowsx1 | housecourtx1  holds
+  Town           4     184      3     26   airwellfieldx2 | grangex1 | terracex1  holds
+  City           7     676      8     68   condenseryx3 | homefarmx2 | courtx2  holds
+
+
+Reading. Every rung is holdable both ways. That is now a stronger statement than it was,
+because the whole water column changed hands underneath it.
+
+WHAT MOVED (Addendum 11(a), "storage stores; producers produce"). Every store in the water
+lane - `cistern`, `cisternvault`, `reservoir`, `waterworks` - stopped declaring `water`. It
+was the largest unearned claim in the catalogue: `Carries="water:N"` is read BOTH as N
+settlers carried and as N drams a day arriving in the casks, so a vessel declaring it was
+conjuring the water it claimed only to be holding, and nothing in Qud falls from the sky to
+fill it. The whole column is carried by producers now, and every producer's figure is derived
+from the LiquidProducer on its own blueprint at 1200 / mean(VariableRate) - the check at the
+bottom of this file re-derives all nine of them from the XML and fails if one drifts.
+
+WHAT THAT COST, rung by rung. Nothing, and two rungs gained. The CHEAPEST column is unmoved at
+every rung (6, 12, 27, 51). The GRANDEST column RISES at Steading (6 -> 8: `catchmentbank` at 5
+replaces `cistern` at 8 on a rung whose bill is only 6, so two of them overshoot it) and at
+Village (12 -> 18: `airwellcourt` at 15 against `cisternvault`'s 18, twice over). Town is
+unchanged at 26 - `airwellfield` at 25 is one point off the old `reservoir`'s 26 and two of them
+still clear the 45-dram bill. Only City slips, 70 -> 68: `condensery` at 50 against the old
+`waterworks`' 52, three of them, 150 drams against a City's 110. Every plan is still Staff=0
+from Village up, and the assertion in section 7 refuses any future tuning that makes a rung
+unreachable.
+
+WHAT IT BOUGHT is the rung below the table. Nothing in the water lane opens at Camp any more -
+no `saltpan`, no `catchment` - so a camp drinks the founder's stock, what the detail hauls out
+of the site's own finite pools, and what a charter pays. Q7 is that curve.
+
+The food asymmetry this table used to expose stays closed. `grange` (L, Town) and `homefarm`
+(XL, City) fill the two rungs that used to be missing at 26 and 40, the same two figures the
+ROOF lane climbs, because a dinner and a bed are both counted in people and neither is divided
+by the stage rate the way a dram is.
+
+What did NOT change, deliberately: food still wants hands at every rung above the kitchen
+garden, and it is the only binding good that does. Water and roof automate to Staff=0 at
+their large and grand designs; food never automates, it only improves its rate - four
+settlers fed per hand at a field, six at ploughed fields, nearly nine at a grange, ten at
+the home farm. What automation buys is a discharge from the LABOUR term, and (since Addendum
+10(b)) never a discharge from the CONDITION term: an air-well field still needs nobody and
+still runs down when it is ruined. Q9 is what that costs when a season goes badly.
+
+Comfort is not in these tables. `LiftCapPercent` = 50 lets craft, spirit, learning, order and
+luxury add up to half the binding level on top, and a settlement that has built its civic
+works among its houses still reaches that cap easily - so a real City holds about 1.5x what
+the table above says. That is authored (the frozen arithmetic's own doc) and it is why these
+numbers are the FLOOR of what a rung costs rather than the expectation. What is new is that
+reaching the cap is no longer automatic: a lift now lands in proportion to the roofs its work
+covers, and a notable's own shade rides the same cap. Q10 is that whole reckoning.
+
+======================================================================================
+Q7  Where automation has to take over: hands against the water bill
+======================================================================================
+
+P1 flagged that a Town cannot be held by hauling alone. This is that flag, finished, with the
+works' own contribution beside it. `FetchDramsPerSettler` = 2, so a hand on the detail
+carries two drams a day whatever the rung; the bill per head climbs with the rung.
+
+"hauled" is the share of the settlement that must be on the water detail to cover the bill
+with nobody's works helping. "works" is the same bill covered by the cheapest passive
+(Staff=0) water designs the rung can raise - that is the automation the catalogue offers.
+
+Read the Camp row first. It says "-", and that is the ruling rather than a gap: Addendum 11(a)
+puts every water producer up the tree, behind resources and effort, so a camp has NOTHING it
+can raise that makes a dram. Half its people on the detail is not the cheap option at Camp; it
+is the only option, alongside the founder's own stock and what a charter pays in.
+
+rung       people  drinks/d  haulers   share   passive works      their drams
+Camp            4         4        2     50%   -                            0
+Steading        5         6        3     60%   catchmentbankx2             10
+Village        12        18        9     75%   airwellcourtx2              30
+Town           25        45       23     92%   airwellfieldx2              50
+City           50       110       55    110%   condenseryx3               150
+
+THE CURVE HAS TWO ENDS NOW, and they are different problems.
+
+THE EARLY END IS A FLOOR, NOT A HANDOVER. Camp raises nothing that produces, so its four
+settlers drink four drams a day out of three channels and no fourth exists: the stock the
+founder arrived with, the detail hauling out of the site's own pools, and charter income. Two
+of four on the detail covers the bill exactly. Two things keep that honest rather than cruel.
+Fetch MINTS NOTHING - `FetchableDrams` moves water that was already standing in the zone, and
+`KingdomSurvey` counts only PURE water as a pool, so a camp pitched by a salt puddle has
+hauled nothing at all. And fetch is clamped by the room left in dedicated stores, which is why
+a cask rack and a cistern court are the two most useful things a young settlement owns. The
+site's pools are a dowry, they do not refill, and the first producer has to be standing before
+they run out. That is the whole early game and it is meant to be a clock.
+
+THE FIRST PRODUCER IS AT STEADING, which wants five settlers and sixteen drams of dedicated
+capacity before it opens at all. `catchmentbank` x2 covers a Steading's six for no hands.
+
+THE HANDOVER IS STILL AT TOWN. Steading wants three-fifths of its people hauling if it does
+not build, Village three quarters - survivable and unpleasant - Town over nine tenths, which
+leaves nobody to crew anything, and City more hands than it has, which is arithmetically
+impossible. So the rung where hauling stops being a strategy and becomes a stall is TOWN, and
+the catalogue must have an answer by then. It does, and the answer is a producer rather than a
+vessel: `airwellfield` condenses 25 drams a day for zero hands and two of them cover a Town's
+45. `condensery` makes 50 and three cover a City's 110 - behind the foundry level and a
+certified Solar Still, which is the point at which the settlement stops counting.
+
+THE WIRING IS THERE, and it is why the flip mattered. A water work's `Carries` is read BOTH
+ways: `KingdomGrowth` stores `KingdomSubsidence.Supports(survey).Water * madeDays` off its own
+uncapped checkpoint, on the same discipline as fetch, so every declared point is a dram that
+actually arrives in the casks - over an absence too. That is exactly why a store could not go
+on declaring one. One point of `water` is one dram a day and one dram a day is one settler at
+camp rates, so `airwellfield` x2 both raises a Town's level to 26 and puts 50 drams a day in
+its casks against a bill of 45 - and it does it out of a LiquidProducer whose mean rate is 48
+turns a dram, which is 1200/48 = 25, which is the number in the catalogue.
+
+FOOD IS NO LONGER THE HALF NOT WIRED. It was, for exactly one wave: `food` bound the
+sustainable level without anything ever producing or eating a ration. `KingdomGrowth` now
+stores `KingdomSubsidence.Supports(survey).Food * grownDays` off its own `LastFoodWorkTick`,
+and `ResolveHeartbeat` bills `KingdomRules.RationsForElapsed` against it, so both binding
+goods are wired the same way off the same catalogue. Q11 is the food half of this table, and
+its handover reads differently on purpose: water hands over from hauling to works and food
+never does.
+
+======================================================================================
+Q8  What a slide actually costs, in days and in people
+======================================================================================
+
+`KingdomSubsidenceRules`: a settlement standing more than 20% above its level begins to settle
+back, one step every 4 world days, shedding (rung + 1) settlers a step, until it reaches the
+level exactly. The stage falls one rung per step and only on a clear shortfall
+(20% benefit of the doubt on both of StageFor's readings). Every lost rung asks every
+standing work once, at that rung's own reach (10% losing a Camp rung, up to 50%
+losing a City one) - damage on the mending system's own part, capped, and never a deletion.
+
+case                                    days  lost   ends          rungs lost (day: rung)
+City 50, nothing standing                 52    46   Camp 4        12: Town, 28: Village, 44: Steading, 52: Camp
+City 50, works for a Town                 20    22   Town 28       12: Town
+City 50, works for a City                  0     0   City 50       none
+Town 25, works for a Village              12    11   Village 14    8: Village
+Village 20, works for twelve              12     8   Village 12    none
+Steading 8, one hut and a garden           8     4   Camp 4        8: Camp
+Camp 4, nothing standing                   0     0   Camp 4        none
+
+Reading. A City with nothing standing is a Camp of 4 in fifty-two days - a season, which is
+the length the doctrine's own prose keeps reaching for ("a hundred days and a thousand days
+write different chronicles, but both end at the same honest level"). A City whose works carry
+a Town settles to the Town and stops, because the water bill per head falls with the rung and
+the level RISES as the place shrinks: that is what makes this a convergence and not a
+countdown to the floor. A settlement inside its band is untouched, and Camp never moves at
+all.
+
+Note what does NOT appear in this table: absence. The slide runs on world time and would run
+identically under the founder's nose. What a homecoming changes is that somebody is told.
+
+Nor does RUIN appear in it. This table holds the works' contribution fixed while the slide
+runs, and the real thing does not: every lost rung damages works, and damage lowers what a
+crewed one carries. So these rows are the FLOOR of a slide rather than the whole of it. Q9
+closes that loop and measures what it adds.
+
+======================================================================================
+Q9  The loop: ruin -> effectiveness -> level -> more ruin, and why it stops
+======================================================================================
+
+One lost rung asks EVERY standing work once, at that rung's own reach (10% Camp,
+20% Steading, 30% Village, 40% Town, 50% City) rather than filling a
+quota, adding `RuinIncrement(roll)` wear to whichever it catches -
+12 on the kindest draw, 17 at the median, 22 on the worst. Wear stops at
+`MaxWearPercent` = 60, so a work is as run down as it will ever be after 4 median rungs
+or 3 hard ones, and a city that falls all the way to Camp is derelict rather than gone.
+
+What that costs the LEVEL runs through two multiplications and one gate:
+
+    wear  condition  crewed x100  staffless   what the founder sees
+       0        100          100        100   sound
+      17         83           83         83   knocked about
+      34         66           66         66   badly used
+      51         49           49         49   half-wrecked
+      60         40           40         40   half-wrecked
+
+THE STAFFLESS COLUMN IS THE RULING (Addendum 10(b)). It used to read a flat 100 down its whole
+length: `KingdomSubsidence.Supports` read `KingdomEffectiveness` only when the design wanted a
+crew, so wear reached the level exclusively through CREWED works and a half-wrecked `condensery`
+carried its full 50 drams. It now reads the work's own CONDITION, so the same work carries
+20. Both columns are 100 for a sound work, which is why this is a refinement of the
+old ternary rather than a new tax on standing still. Note what the work now IS: since G1 the
+grandest staffless water design is a PRODUCER rather than a vessel, so what a lost rung takes
+is condensing capacity, and the settlement feels it as drams that stop arriving rather than as
+a level that quietly re-reads lower.
+
+Which means the loop no longer bottoms out in the food lane alone. Water and roof automate to
+Staff=0 at their large and grand rungs and USED to be immune for exactly that reason; they are
+not now. Here is each rung's grandest plan with every work run to the ceiling - the worst the
+loop can do, by construction:
+
+  rung      staff  sound  wrecked  floor   binds when wrecked
+  Steading      2      8        4      4   water
+  Village       3     18        7      4   food
+  Town          3     26       10      4   food
+  City          8     79       27      4   water
+
+And the cheapest plan - the many-small-plots build, which at every rung above Steading is
+entirely staffless. Under the old ternary its wrecked column EQUALLED its sound one, which was
+the seam: a city built out of staffless designs took no level damage from ruin at all.
+
+  rung      staff  sound  wrecked   plan
+  Steading      2      6        4   saltterracex2 | plotx2 | tentx3
+  Village       0     12        4   airwellcourtx2 | plotx4 | housecourtx1
+  Town          0     27        9   airwellfieldx2 | plotx9 | housecourtx2
+  City          0     54       17   condenseryx3 | plotx17 | housecourtx3
+
+Now the slide itself, run with the loop closed. Same shape as Q8, but the level is
+recomputed from the works' actual condition every step, and every lost rung asks every
+standing work independently at that rung's own reach - there is no cursor and no order left to
+be adversarial about (the reach "does not depend on which work happened to be raised first").
+`fair` runs the median draw, `worst` the hardest; `static` is Q8's answer, with the loop cut,
+for the difference.
+
+case                           static  fair  worst   static ends  worst ends    hits
+City 50, a Town's grand works      24    24     24   Town 26      Town 23        2.0
+City 50, a Town's small works      20    32     32   Town 27      Village 18     9.1
+City 50, a Village's works         32    36     36   Village 18   Village 14     2.8
+Town 25, a Steading's works        20    24     24   Steading 8   Steading 6     2.3
+Town 25, nothing but gardens       24    28     28   Steading 6   Camp 4         4.6
+
+Reading. Three things, and the third is the one worth keeping.
+
+1. A settlement INSIDE its band never starts, so the loop never opens. It is a consequence of
+   overbuilding, not a tax on standing still - the ruin only ever begins after the settlement
+   has already lost a rung it could not hold.
+
+2. The loop is real, bounded, and STILL worth about ONE RUNG after Addendum 10(b) widened
+   what it reaches. Every adversarial row above lands one rung and a handful of days below its
+   own loop-cut column, and not two. It cannot do much better than that, because it cannot
+   outrun its two bounds: wear stops at 60, so no work ever carries less than 40% of its
+   figure, and the level stops at `FloorLevel` = 4. Every case terminates, and the extra days
+   the loop adds are days the settlement spends losing people it was never carrying. Nothing
+   here needs tuning; it needed measuring, and then re-measuring when the ruling moved it.
+
+3. THE DOOR OUT OF THE LEVEL IS CLOSED. Under the old ternary a city built entirely out of
+   staffless designs took NO level damage from ruin - its wrecked column equalled its sound
+   one - and the whole of the loop's surface was the food lane, which never automates. Addendum
+   10(b) shut that door: the cheapest plan's wrecked column above is now well under its sound
+   one at every rung, and the automation lanes pay for their ruin like everything else. That is
+   the delta this pass was for, and it costs the adversarial cases roughly one further rung.
+
+   It does not become a death spiral, for the reasons in (2): wear stops at 60 so nothing
+   ever carries less than 40% of its figure, the level stops at `FloorLevel` = 4, and
+   Camp - which is where a floored settlement stands - never subsides and therefore never
+   ruins anything.
+
+   The staffless build was never untouched even before this. `KingdomLodgingRules.CondemnedWearPercent`
+   = 40 is a consequence on a DIFFERENT reckoning: a home worn that far stops counting as a
+   roof for lodging - whoever built it, crewed or not - which blocks arrivals and records a roof
+   brink for everyone under it. 3 median rungs reach it. Condemnation and the level are
+   separate ladders and stay separate; this pass did not merge them.
+
+THE LEAK. A damaged STORE also loses what it is holding, on world time, until it is mended
+(Addendum 10(b): "reservoirs leak"). `LeakDaysToEmptyAtCeiling` = 50: at the wear ceiling a
+store loses its whole capacity to the ground in 50 days, and proportionally less below it.
+Loss, not transfer - this water is gone, not poured into a pool somebody can fetch back.
+
+It is deliberately NOT a level term. The level reads a store's declared `Carries`, which is
+what the vessel HOLDS; the leak takes what is IN it. So the leak lands on the water economy
+(Q1-Q3) and never on the equilibrium (Q6-Q9), and the two consequences of one ruined cistern
+are a lower level AND a thinner cushion, arrived at down two separate paths.
+
+  store          rung         cap bill/day   drams/day, and as a share of the bill
+                                             wear 17   wear 34   wear 60
+  saltpan        Steading      32        6    0.2  3%    0.4  6%    0.6 10%
+  saltterrace    Steading      64        6    0.4  6%    0.7 12%    1.3 21%
+  catchment      Steading      64        6    0.4  6%    0.7 12%    1.3 21%
+  weeptap        Steading      96        6    0.5  9%    1.1 18%    1.9 32%
+  catchmentbank  Steading     160        6    0.9 15%    1.8 30%    3.2 53%
+  cistern        Steading     256        6    1.4 24%    2.9 48%    5.1 85%
+  weepgallery    Village      288       18    1.6  9%    3.3 18%    5.8 32%
+  airwellcourt   Village      320       18    1.8 10%    3.6 20%    6.4 35%
+  airwellfield   Town         768       45    4.3  9%    8.7 19%   15.4 34%
+  cisternvault   Village      768       18    4.3 24%    8.7 48%   15.4 85%
+  condensery     City        1600      110    9.1  8%   18.1 16%   32.0 29%
+  reservoir      Town        1920       45   10.9 24%   21.8 48%   38.4 85%
+  waterworks     City        4608      110   26.1 23%   52.2 47%   92.2 83%
+
+Reading.
+
+1. CAMP CANNOT LEAK, and now it has nothing to leak either. A store asks for no crew, and the
+   only thing in the game that damages a staffless work is a lost rung
+   (`KingdomSubsidence.Ruin` walks `Survey.Built`; raid damage walks `Survey.Works`, which is
+   crewed works only). Camp is the floor and never subsides. Since G1 no water design opens at
+   Camp at all, so the first row above is a Steading's, and every row is a state a settlement
+   can only reach by first overreaching and losing a rung.
+
+2. THE BITE IS PROPORTIONATE BECAUSE THE RATE IS. A leak is denominated against the store's OWN
+   capacity, so the 64-dram catchment a steading keeps loses about 1.3 drams a day at
+   its worst and the 1920-dram reservoir a town keeps loses 38. Big cushions leak big, small
+   cushions leak small, both in the same proportion to what they were built to hold, and
+   neither can lose more than is actually in there. This is also the law the vessels are SIZED
+   to: `cistern` is the worst row above at 85% of its own rung's bill, the
+   assertion above this text refuses anything at 100 or over, and it is why the cistern court
+   holds 256 rather than 512.
+
+3. IT CANNOT DRINK A SETTLEMENT DRY BY ITSELF, and the rate is deliberately tuned so that it
+   never could. Two reasons, and both matter.
+
+   The first is ORDER. The day's upkeep is drawn during the growth pass and the leak is taken
+   afterwards (`KingdomSystem` runs "growth", then "wear"), so a leak only ever takes what the
+   settlement did not need that day. It cannot be the reason the thirst ladder fires; what it
+   costs is the CUSHION (`ReserveDays` = 3 days of it), which is exactly the thing a founder
+   is meant to notice and mend.
+
+   The second is the RATE. Every row above sits under its own rung's daily bill even at the
+   absolute ceiling - around six-sevenths of it for the cisterns a real settlement keeps, a
+   third or less for every producer - and at the wear ONE lost rung actually leaves, around a
+   quarter. So a settlement that is making its water still banks some of it with a hole in the
+   cistern, and a settlement that is not was already in trouble before the leak. `LeakDaysToEmptyAtCeiling` is the only constant this
+   pass tuned, and that band is what it was tuned to: visible, mendable, and never the whole of
+   a day's drinking.
+
+4. AND IT IS BOUNDED BY THE MENDING, not by a timer. Mending restores function outright - the
+   leak is a function of current wear and nothing else, so a mended store leaks zero the same
+   day. Nothing here accumulates a debt, and nothing here remembers.
+
+======================================================================================
+Q10 Comfort, now that it has consumers: the notable's shade and the reach
+======================================================================================
+
+Three numbers that were computed and thrown away now reach the level, and one of them reaches
+it less than it used to. All three ride the SAME lift term and are capped by the same
+`LiftCapPercent` = 50, so none of them can outrun the water.
+
+  the notable's shade  `KingdomCeremonyRules.NotableShade`: 2 tastes met at 1 each, a virtue
+                       (2) net of a flaw (1), and 2 met Prefers at 1 each = 5 at the very most,
+                       and 1 for a notable who found nothing here at all.
+  a yard trade         `Shades` on a <yardwork>, capped at 2 per house. The shipped four
+                       declare 3 points between them, and one house takes ONE trade.
+  the reach            a work's lift now lands in proportion to the settlement's roofs it
+                       covers (`KingdomReachRules.Landed`). Binding goods are untouched.
+
+THE SHADE, against the cap it rides under. A notable cannot lift a rung that has no water to
+spare, which is the whole reason the shade was put inside the cap rather than beside it.
+
+rung       people  lift cap   shade   lands   verdict
+Camp            4         2       5       2   the cap bites first
+Steading        5         2       5       2   the cap bites first
+Village        12         6       5       5   the notable is worth all of it
+Town           25        12       5       5   the notable is worth all of it
+City           50        25       5       5   the notable is worth all of it
+
+THE REACH, which is the half that TAKES. Before this wave every lifting work counted citywide
+off its Carries; now it counts for the share of the settlement's roofs it covers, which is
+what makes the temple quarter different ground from the tanners'. Bands come from the plot
+tier (`KingdomReachRules.BandForSize`): S shades its own plot, M its quarter, L its zone, XL
+the city. "gathered" is a founder who built the civic works among the houses; "scattered" is
+one who put them out past the fields, where a quarter band reaches perhaps a third of the
+roofs and a plot band reaches nobody who lives anywhere.
+
+rung      declared gathered scattered   cap   was gathered scattered
+Camp            12        0         0     2     6        4         4
+Steading        28       11         5     2     7        7         7
+Village         68       51        14     6    18       18        18
+Town           102       85        48    12    37       37        37
+City           109       92        55    25    75       75        75
+
+Reading. Those columns say something worth saying plainly: with one of EVERY lifting design a
+rung can reach standing, the declared lift overruns the cap so far that scoping changes the
+level at no rung above Camp. The cap was always the binding constraint for a fully built
+settlement, and it still is. So this change does not tax the founder who builds everything.
+
+Where it bites is the settlement that has built ONE civic work, which is every settlement on
+its way up. Same arithmetic, one design at a time - the biggest lift each rung can reach:
+
+rung     design        band      declared gathered scattered
+Camp     shrinegarth   plot             3        0         0
+Steading smithy        quarter          3        3         1
+Village  workshop      quarter          8        8         2
+Town     manor         zone             9        9         9
+City     manor         zone             9        9         9
+
+That is the mechanic Addendum 6 asked for: the same shrine is worth its whole amount among the
+houses and a fraction of it out past the fields, and the founder can SEE which they built
+(`KingdomReach.QuarterLine` names the ground in the status report).
+
+Camp is the rung to watch. Every lift design a camp can reach is an S plot (fire, bench,
+shrine, shrine garth, bookshelf, cairn, mill, toolshed), so a camp's lift is now ZERO however
+many of them stand, and its level is its binding goods alone. That is the addendum read
+literally - a wayside statue shades the ground it stands on, not the settlement - and it costs
+a camp the whole 2 settlers of headroom it used to get for free. It is not a stall: Camp is
+floored at `FloorLevel` = 4 regardless, every rung stays holdable on its binding goods, and
+one notable's shade (1 even for a notable who found nothing) puts a camp's headroom
+back the moment an office is filled. Flagged rather than tuned: if it wants softening, the
+lever is a `Reach` attribute on the design, not this arithmetic.
+
+
+======================================================================================
+Q11 Food, now that it is a flow: what a rung grows against what it eats
+======================================================================================
+
+THE DENOMINATION, and the one place it deliberately does not mirror water. One point of
+`food` is ONE SETTLER FED FOR ONE DAY, at every rung. Water is billed (100, 120, 150, 180, 220) per
+hundred by stage and its Carries are divided back out by the same percentage; food is billed
+flat and its Carries are handed to `Equilibrium` undivided, because (the catalogue's own
+words) "a dinner and a bed are both counted in people, and neither is divided by the
+settlement's own thirst the way a dram is".
+
+That flatness buys the whole lane its central property, and it is worth stating as an
+identity rather than a table:
+
+    a settlement standing at its own supported level makes exactly the rations it eats.
+
+`Supports.Food` is what the fields make in a day; `RationsPerDay(pop)` is what the people eat
+in a day; the food arm of `Equilibrium` is `Supports.Food`. So food binds at exactly the
+population it feeds, with nothing left over and nothing owed - and every column below is a
+measure of the CUSHION around that identity, not of whether it holds.
+
+THE CUSHION HAS TWO PARTS. Foraging (2 a hand a day, ceiling
+4 a day whoever walks the ground) and the larders. Foraging is
+food's answer to the water detail, with one difference that matters: hauled water goes into a
+cask and foraged food goes straight into a mouth, so a settlement that has dedicated NO larder
+still eats. What stops that being an answer above a Camp is the ceiling, and the ceiling is
+chosen: 4 is `FloorLevel`, and it is also the population ceiling
+of the Camp rung (Steading opens at 5). The wild feeds a camp and nothing
+larger.
+
+rung       people  eats/d  hauling  free  forage   verdict
+Camp            4       4        2     2       4   FEEDS ITSELF off the land, with no field standing
+Steading        5       5        3     2       4   the wild covers 80%; the rest must be grown
+Village        12      12        9     3       4   the wild covers 33%; the rest must be grown
+Town           25      25       23     2       4   the wild covers 16%; the rest must be grown
+City           50      50       50     0       0   every hand is on the water; nothing is foraged and everything must be grown
+
+CAMP SELF-SUSTAINS, which is the floor this lane had to clear. A camp of four with two of them
+on the water detail has two hands left, and two hands forage exactly the four rations four
+people eat. That is the same promise the water lane makes at the same rung - Q7's "Camp wants
+half its people on water" - said in food's voice, and it is why a founder who has commissioned
+nothing is never starved by this system.
+
+Now the two ways a founder actually feeds a rung, on Q6's own terms. `staff` is what the food
+plan takes off the free hands, which is why the forage column shrinks as the plan grows: hands
+are spent once, and a settler in a field is not also out on the ridge.
+
+  --- cheapest ---
+  rung       people  eats/d  made/d  forage  spare   plan
+  Camp            4       4       6       4      6   plotx2 (0 hands)
+  Steading        5       5       6       4      5   plotx2 (0 hands)
+  Village        12      12      12       4      4   plotx4 (0 hands)
+  Town           25      25      27       4      6   plotx9 (0 hands)
+  City           50      50      51       4      5   plotx17 (0 hands)
+
+  --- grandest ---
+  rung       people  eats/d  made/d  forage  spare   plan
+  Camp            4       4       5       4      5   plotrowsx1 (0 hands)
+  Steading        5       5       8       4      7   fieldx1 (2 hands)
+  Village        12      12      18       4     10   fieldrowsx1 (3 hands)
+  Town           25      25      26       4      5   grangex1 (3 hands)
+  City           50      50      80       4     34   homefarmx2 (8 hands)
+
+
+Every rung feeds itself both ways, with spare on top of the identity - the plans overshoot
+because a whole number of fields rarely lands exactly on the bill, and the overshoot is where
+the larders fill from. What did NOT change from Q6's reading: food never automates. Every rung
+above the kitchen garden wants hands and the grand ones want them still; what scale buys is a
+better rate, never a discharge.
+
+
+======================================================================================
+Q11b How deep the larders are, and what a bad year costs before the founder sees it
+======================================================================================
+
+Food storage is declared on the blueprint (`r_KingdomLarderCapacity`) and never in the
+catalogue, for the same reason a cistern's `MaxVolume` is: what a design adds to the LEVEL is a
+catalogue fact and how much its vessel holds is a fact about the vessel. The ratio is the
+cistern's own - a store holds about 32 days of what it carries - so the larder shed holds
+64 against `food:2` and the granary
+288 against `food:9`. A container the
+founder dedicated by hand and that declares nothing gets 32.
+
+"blackout" below is the honest question: the fields stop entirely (ruined, unstaffed, a bad
+season), foraging is all that is left, and this is how long the larders cover the difference.
+
+rung       people  pantry plan        held   blackout   against water
+Camp            4  larderx1             64     no gap   0 d of water
+Steading        5  larderx2            128      128 d   53 d of water
+Village        12  granaryx1           288       36 d   35 d of water
+Town           25  granaryx2           576       27 d   34 d of water
+City           50  granaryx3           864       18 d   43 d of water
+
+READING. The two cushions CROSS, and they cross at Town. Below it food is the safer of the two
+- a camp cannot have a food blackout at all, because the wild already covers it, and a village
+holds about as many days of bread as of water. Above it the lines part hard: a Town holds 27
+days of food against 71 of water, and a City 18 against 109. So the food lane gets steadily
+LESS forgiving as the settlement grows, which is exactly the shape the catalogue asks for -
+"Food is the good that notices staffing. It is meant to be." A ruined reservoir costs a city
+its cushion; a ruined home farm costs it dinners inside the month.
+
+That crossing is not an accident of the numbers, it is the two bounds meeting. Foraging is
+flat (4 a day forever) so it is everything at a Camp and
+nothing at a City, while water storage climbs faster than the water bill does because the
+grand water designs are stores as much as makers. Food has no grand STORE - the granary is a
+middling plot and the ladder stops there - so a city keeps its bread in several of the same
+building rather than in one big one.
+
+What bounds that from becoming a death spiral is the RESOLVE, not the day. The hunger ladder
+steps once per heartbeat resolve exactly as the thirst ladder does, so an absence of any length
+costs at most one rung of it, and `Emigrate` floors at 2.
+
+
+======================================================================================
+Q11c The two ladders together: the composition rule, exhaustively
+======================================================================================
+
+Both ladders run. Each keeps its own streak (2 failed resolves to
+a departure, 3 to a mark, and the food ladder is the same shape at
+2 and 3), each says its own
+sentence, each sets its own mark. `KingdomRules.ComposeScarcity` decides what the resolve
+actually costs, and the rule is:
+
+    THE BITE IS THE WORSE OF THE TWO LADDERS, NEVER THEIR SUM.
+
+Below is every pairing, with the departures each ladder would cost alone and what the pair
+actually costs. The property that must hold in every row is `both <= max(alone, alone)`, which
+is the "no death spiral" requirement: a dry AND starving city must never empty faster than the
+worse of the two alone would.
+
+  thirst      hunger        alone  alone  together   marks
+  Sustained   Fed               0      0         0   -
+  Sustained   Warned            0      0         0   -
+  Sustained   Emigration        0      1         1   -
+  Sustained   Famine            0      1         1   famished
+  Warned      Fed               0      0         0   -
+  Warned      Warned            0      0         0   -
+  Warned      Emigration        0      1         1   -
+  Warned      Famine            0      1         1   famished
+  Emigration  Fed               1      0         1   -
+  Emigration  Warned            1      0         1   -
+  Emigration  Emigration        1      1         1   -
+  Emigration  Famine            1      1         1   famished
+  Withering   Fed               1      0         1   withered
+  Withering   Warned            1      0         1   withered
+  Withering   Emigration        1      1         1   withered
+  Withering   Famine            1      1         1   withered + famished
+
+Sixteen rows, and the most any single resolve costs is 1 settler. The bottom-right row is
+the one the rule exists for: a city that is Withering AND Famishing loses ONE person and wears
+BOTH marks - because a mark is a state and a departure is a cost, and only the cost is capped.
+
+WHAT IS DELIBERATELY NOT COMPOSED. Subsidence runs underneath both of these and is not touched
+by either. It is the STRUCTURAL consequence - a settlement standing above what its works carry
+settles back toward them, on its own 4-day step - and this is the IMMEDIATE
+one. A bad year is both sentences about the same year rather than one sentence counted twice:
+the fields fail, people go hungry NOW and leave one at a time, and over the season the place
+settles to the size the surviving fields honestly carry. The two are already composed in the
+only way that matters, which is that the hunger ladder can never remove a settler the slide
+was going to remove anyway - both go through `Emigrate`, both floor at
+2, and neither mints a departure the population cannot pay for.
+
+
+======================================================================================
+G1  The water lane's invariants, re-derived from the XML
+======================================================================================
+
+1. EVERY DECLARED DRAM IS A PART'S DRAM. `LiquidProducer.Rate` is turns per dram and
+   `KingdomRules.TicksPerDay` is 1200, so a producer's honest daily output is
+   1200 / mean(VariableRate). Addendum 11(a) asks that the economy number be defensible
+   against what the part visibly does; this is that check, and it re-derives every water
+   design's `Carries` from the blueprint rather than trusting the catalogue's own comment.
+
+  design          blueprint                  mean rate  derived  declared
+  saltpan         r_KingdomSaltPan                 600        2         2
+  catchment       r_KingdomCatchment               400        3         3
+  saltterrace     r_KingdomSaltTerrace             300        4         4
+  weeptap         r_KingdomWeepTap                 300        4         4
+  catchmentbank   r_KingdomCatchmentBank           240        5         5
+  weepgallery     r_KingdomWeepGallery             100       12        12
+  airwellcourt    r_KingdomAirWellCourt             80       15        15
+  airwellfield    r_KingdomAirWellField             48       25        25
+  condensery      r_KingdomCondensery               24       50        50
+
+2. NO STORE CONJURES. A design whose blueprint has a LiquidVolume and no LiquidProducer is a
+   vessel, and a vessel may not declare `water` - that is the whole of Addendum 11(a)'s
+   "storage stores; producers produce", and it is enforceable exactly because `Carries` is
+   read as a FLOW as well as a level.
+
+  cistern         r_KingdomGreatCistern            256 drams, carries no water
+  cisternvault    r_KingdomCisternVault            768 drams, carries no water
+  reservoir       r_KingdomReservoir              1920 drams, carries no water
+  waterworks      r_KingdomWaterworks             4608 drams, carries no water
+
+3. THE CAMP COSTS WATER, AND EVERY RUNG ABOVE IT IS STILL HOLDABLE. Addendum 11(a) puts
+   production up the tree, so nothing in the water lane may be reachable at Camp; and the
+   price of that ruling is that every rung from Steading up must still be holdable by both a
+   cheap plan and a grand one, or the lane has simply been made impossible.
+
+  Camp     water designs reachable: 0 - the founder's stock, the detail, and a charter
+  Steading bill   6 drams/day; cheapest and grandest plans both clear the floor of 5
+  Village  bill  18 drams/day; cheapest and grandest plans both clear the floor of 12
+  Town     bill  45 drams/day; cheapest and grandest plans both clear the floor of 25
+  City     bill 110 drams/day; cheapest and grandest plans both clear the floor of 50
+
+4. AND THE FLOOR IS STILL A FLOOR. `KingdomCatalogueRules.Equilibrium` returns at least
+   `FloorLevel` = 4 whatever it is handed, so a settlement that raises nothing, loses
+   everything, and produces not one dram still settles to a camp of 4 rather than to zero.
+   Removing production from Camp changes what a camp must DO; it cannot change what a camp IS.
+
+  equilibrium(0, 0, 0) at every stage = 4  (checked)
+
+======================================================================================
+G2  The food lane's invariants, re-derived from the XML
+======================================================================================
+
+1. EVERY DECLARED SERVING IS A ROW'S SERVING. A crop stands 6 days
+   (`KingdomCropRules.CropDays`) and one row yields 3 servings when it is
+   gathered (`YieldPerRow`), so a design standing R rows honestly makes
+   R x 3 / 6 servings a day. Addendum 11(b) asks that the farm
+   BE the thing it is counted for; this re-derives every growing design's `Carries="food:N"` from
+   the `r_KingdomCropRows` tag on its own blueprint rather than trusting the catalogue's comment.
+
+  design      blueprint                 rows  derived  declared   plot cells
+  plot        r_KingdomPlot                6        3         3   6/20 (30%)
+  plotrows    r_KingdomPlotRows           10        5         5   10/20 (50%)
+  field       r_KingdomField              16        8         8   16/48 (33%)
+  fieldrows   r_KingdomFieldRows          36       18        18   36/48 (75%)
+  grange      r_KingdomGrange             52       26        26   52/108 (48%)
+  homefarm    r_KingdomHomeFarm           80       40        40   80/280 (29%)
+
+2. NOTHING CARRIES FOOD IT NEITHER GROWS NOR KEEPS. The food half of "storage stores, producers
+   produce". A design may declare `food` for exactly three reasons, and each is checkable off its
+   own blueprint: it GROWS (a rows tag), it KEEPS (a larder-capacity tag - a granary makes a good
+   year last, which is a real contribution and a cheaper one than growing), or it MAKES something
+   that keeps out of what came in (it carries `craft` beside its `food`, which is the mill). A
+   fourth reason would be a number nobody can derive.
+
+  larder      food:2   keeps (64 servings)
+  plot        food:3   grows (6 rows)
+  grindmill   food:4   makes (a mill, and it carries craft to say so)
+  plotrows    food:5   grows (10 rows)
+  field       food:8   grows (16 rows)
+  granary     food:9   keeps (288 servings)
+  fieldrows   food:18  grows (36 rows)
+  grange      food:26  grows (52 rows)
+  homefarm    food:40  grows (80 rows)
+
+3. THE SEED GATE DOES NOT WALL THE EARLY RUNGS. Addendum 11(b) makes a farm produce nothing
+   until seed is committed, so an unsown field carries no food to the level and makes none in a
+   day (`KingdomCrops.WithoutUnsownFood`, folded inside `KingdomSubsidence.Supports`). The price
+   of that ruling would be unacceptable if a founder could be starved while hunting for seed - so
+   the check is that the two rungs a founder reaches BEFORE they can plausibly have traded for any
+   are held by the wild PLUS the designs that need no seed at all. Nothing that grows counts here;
+   only foraging (unchanged by this wave) and the keepers, which make a good year last rather than
+   making a year.
+
+  Camp     4 people eat 4/d; 2 hands forage 4/d; the wild alone
+  Steading 5 people eat 5/d; 2 hands forage 4/d; larderx1 (needs no seed) for 2
+
+  Foraging is UNCHANGED by this wave: 2 a hand a day, ceiling
+  4, and the ceiling is still `FloorLevel`. The gate binds where it
+  should - a Village and up must actually farm - and nowhere a founder cannot answer it.
+
+4. THE CYCLE PAYS WHAT THE CARRIES PROMISED, OVER A WHOLE CYCLE. The runtime does not add the
+   two: a SOWN field's `food` is subtracted from the clocked daily make
+   (`KingdomGrowth.FoodMadePerDay` less `KingdomCrops.CycledFoodPerDay`) and delivered physically
+   by the gathering instead, so one field feeds the settlement exactly once. Below is that
+   identity for every growing design: what the ledger would have credited over one crop's days
+   against what the rows actually put in the larder.
+
+  design        rows  carries/d   over 6d  one gathering
+  plot             6          3        18             18
+  plotrows        10          5        30             30
+  field           16          8        48             48
+  fieldrows       36         18       108            108
+  grange          52         26       156            156
+  homefarm        80         40       240            240
+
+5. AND EVERY RUNG IS STILL FOOD-HOLDABLE, WITH THE GATE ON. Section 7's water sibling asks
+   whether a cheap plan and a grand one both clear the floor; this asks the same of food, with
+   every field counted only if it is sown - which is what it is, because a founder who has
+   committed seed is the only founder whose fields are in this plan at all.
+
+  Camp     bill   4 servings/day; cheapest and grandest plans both clear it
+  Steading bill   5 servings/day; cheapest and grandest plans both clear it
+  Village  bill  12 servings/day; cheapest and grandest plans both clear it
+  Town     bill  25 servings/day; cheapest and grandest plans both clear it
+  City     bill  50 servings/day; cheapest and grandest plans both clear it
+
+======================================================================================
+Where this model is too crude to decide anything
+======================================================================================
+
+1. OPEN WATER VOLUME IS STILL UNKNOWN, and it matters more with every pass. The uncapping made
+   an absence ask the pool for the whole absence at once; Addendum 11(a) then took production
+   away from Camp entirely, so the site's own pools are now the ONLY thing standing between a
+   young settlement and the thirst ladder, and how much is standing there is a worldgen roll
+   this model cannot see. The survey behind G1 confirms the pools do not refill: nothing in
+   vanilla replenishes a plain `LiquidVolume`, and the only indefinite sources are producer
+   carriers and the `LiquidFont` weeps. A camp's water is therefore a strictly finite dowry
+   with a clock on it, and whether that clock is generous enough to reach Steading is the
+   single most important thing a live playtest has to answer about this wave.
+
+1b. THE ORIGINAL FORM OF THE SAME CAVEAT, kept because the arithmetic has not changed.
+   `KingdomSurvey` counts only PURE fresh open water; vanilla Pond / SaltyWaterPuddle /
+   brackish pools are mixtures and do not count. Under the cap, a site with a small pool
+   behaved like a watered site because fetch never asked for more than 3 days' worth.
+   Uncapped, a 90-day absence asks the pool for 90 days of hauling in one go, and
+   FetchableDrams clamps to whatever is actually standing there. So the "watered" column
+   in Q1 is an UPPER BOUND that a real site may not reach. What HAS been settled since this
+   was written is the refill question in 1 above: they do not. Measure the starting volume in
+   a live game; do not wait for it to come back.
+
+2. THE LEVEL'S INPUTS ARE STATIC IN Q6 TO Q8 AND CLOSED IN Q9. Those three sections assume
+   every work runs at full, which is the level a settlement gets when everything is manned
+   and sound. Q9 runs the same arithmetic with wear folded in and the ruin loop closed, and
+   its answer is that the loop costs about one rung at worst - to every build now, staffless
+   ones included, which is Addendum 10(b)'s doing. What is STILL not modelled is crew stretch
+   from any cause other than ruin: `AssignCrew` fills works in placement order out of
+   whatever the water detail left, so a settlement that is merely short-handed runs its
+   crewed works below 100 for reasons this model never varies (see 3).
+
+   Nor is the leak modelled INSIDE a slide. Q9's leak table prices one damaged store against
+   one rung's daily bill, which is the decision the tuning needed; what it does not do is run
+   a whole slide with the water economy of Q1 wired to the ruin of Q5, because the two
+   sections keep time differently (Q1 is a daily balance, Q5 is a four-day step). The bound
+   that makes that safe to defer is the ORDER inside the pass: upkeep is drawn before the leak
+   is taken, so the leak can never be the reason a settlement goes dry - only the reason it
+   has no cushion when something else is.
+
+3. CREW ALLOCATION FOR WORKS IS NOT A PLAYER CHOICE - `AssignCrew` fills works in
+   placement order. `System.WaterCrew` IS a real choice, which is why this model varies
+   that and not the rest.
+
+4. NO RAIDS, TRIBUTE, COMMISSIONS OR SALVAGE. Tribute 6, plunder 24 and salvage are real
+   sinks omitted here; they are lumpy events, and averaging them per day would flatter the
+   model.
+
+5. FOOD IS A CYCLE NOW (Q11, G2), AND THREE THINGS ABOUT IT ARE STILL UNMODELLED HERE. The
+   ripening cycle is no longer one of them: G2 proves the cycle pays exactly what the Carries
+   promised over one crop's 6 days and the runtime subtracts a sown field from the
+   clocked make so it is paid once, which is why Q11's Carries-denominated columns are now the
+   whole truth for a sown settlement rather than a lower bound. What is NOT modelled:
+     - THE SEED GATE'S TIMING. G2's check 3 proves Camp and Steading are held without any seed at
+       all, and Q11 proves every rung is holdable once seed is in the ground. What neither answers
+       is how long a founder actually spends between the two - that is a play question about how
+       often a trader carries seed and how near the nearest watervine is, and it is a playtest
+       reading rather than an arithmetic one.
+     - THE FOUNDER'S OWN HAND-HARVEST. A ripe row carries vanilla `Harvestable` for one day before
+       the settlement's hands gather it, so a founder standing in a field can take up to
+       `Rows x OnSuccessAmount` crop items into their own pack instead. That is a TRANSFER out of
+       the settlement's yield and not an addition to it (the gathering counts rows still standing
+       RIPE), so it cannot inflate any column here; what it can do is make a founder personally
+       rich in vinewafers, which is not an economy this file models.
+     - TRADE. No charter carries food, so the only ways into a larder are the fields, the wild,
+       and the founder's own hands. Seed now moves on the wares tables; food still does not. That
+       is a real gap and it is named as a follow-up rather than modelled.
+
+6. THE ARRIVAL TIMER, NOT WATER, IS STILL THE GROWTH GATE above about eight settlers:
+   3 + pop/2 days per arrival means pop 50 waits 28 days for one. No water tuning touches
+   that, and this model does not answer it.
+

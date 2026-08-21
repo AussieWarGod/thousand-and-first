@@ -231,17 +231,33 @@ The one thing a realm of two cities can do that a realm of one cannot.
 | 48e3 | Count the realm's water before and after a full round trip to a full cistern | Conserved. Storage still decides how much a settlement can **keep**; the cart is not a cask |
 | 48f | Try to send a manifest standing outside either city | Refused: manifests are loaded on the kingdom's own ground |
 
-## Pass 13 — The tended plot
+## Pass 13 — Seeds, rows, and the harvest cycle
+
+Nothing in the food lane grows until you put seed in the ground. Every rung of it — the kitchen
+garden, the garden rows, the field, the ploughed fields, the grange, the home farm — carries the
+same part, takes the same seed, and stands real plants you can walk into.
 
 | Step | Action | Expect |
 |---|---|---|
-| 49 | Charter → Commission → **tended plot**; wait out the build | A plot appears. What it can grow was decided by the ground the rite was poured on — the style your founding recorded, not a fresh look at the dirt |
-| 49a | Plant, then **stand there and wait** | It ripens while you watch. A founder who never leaves must still see their plot work |
-| 49a2 | Plant, leave for days, come back | It resolves on arrival too. Both halves of the clock work: the tick it is due, and the visit that finds it overdue |
-| 49a1 | Commission a plot with **no larder dedicated** | It does not plant. Water is never spent on a crop with nowhere to land |
-| 49b | Watch the stores while it plants | It drinks, and the ledger says so — but only from what the day's upkeep and arrivals left behind. **A plot can never be the reason the thirst ladder fires** |
-| 49c | Let the stores run low with a plot planted | The plot goes dormant and waits. It never dies, and it never punishes |
-| 49d | Have a dedicated larder when it ripens | The harvest goes into the larder, and the chronicle records it. With no dedicated larder it waits — it will not put food anywhere you did not dedicate |
+| 49 | Charter → Commission → **kitchen garden**; wait out the build, then read `kingdom:status` | A plot appears and its `food` contribution is **zero**. Bare ground carries nothing. The ledger says so once, by name: "is bare ground: nothing has been sown in it" |
+| 49a | Get a seed — buy one off a trader, or walk up to a **watervine / starapple tree / godshroom / dreadroot** and **gather seed** | One seed, once per plant. A plant somebody owns refuses; a plant already stripped says so. Which seed a wild plant carries is its own species — you cannot get mushroom spawn off a vine |
+| 49b | Stand in the garden and **Sow** the seed | You are shown the crop, the rows, the wait and the water before anything is spent. Confirm: the seed is gone, drams are drawn once, and **real plants appear across the plot**. Both registers date the sowing |
+| 49b1 | Try to sow with the stores nearly dry | Refused by name, and nothing is spent. **A sowing can never be the reason the thirst ladder fires** — it may only spend what three days of upkeep does not need |
+| 49b2 | Try to sow a field that is already sown, or ground the realm has not claimed, or a field worn past working | Each refuses with its own sentence. Nothing half-happens |
+| 49c | Read `kingdom:status` again | The garden now carries its `food` figure. Sowing is the gate, and it is the same gate for the level and for the day |
+| 49d | **Stand there and wait** six days | The rows go ripe — you can see the colour change on the plants themselves. A founder who never leaves must still see their field work |
+| 49d1 | Gather a ripe row **by hand** before the settlement does (needs Harvestry — vanilla's own `AttemptHarvest` gate, not ours) | You get a real crop item in your pack, and that row is not in the settlement's harvest. You have a full day between ripening and the settlement's own hands arriving; what you take is genuinely taken |
+| 49e | Wait out that day | The settlement gathers. The larder fills with the actual crop, and the ledger accounts for every serving: what went in, what is on the road, what was left in the field |
+| 49f | Leave for a season and come back | Every cycle that came due resolves at once, dated — and the chronicle carries **one line with a count**, not one line per harvest. A farm does not get to eat the register |
+| 49g | Sow a field in one zone and dedicate the only larder in **another** zone of the same city | The harvest credits the city at once, and the crop **materialises in that larder the next time you walk into its zone**. Nothing is touched in a zone nobody is standing in |
+| 49h | Sow with no larder dedicated anywhere | It grows, and the harvest is lost for want of room — said once, by name. It will not put food anywhere you did not dedicate |
+| 49i | Let the larders fill and keep farming | The overflow is lost, not queued, and the line says how much. A granary is what makes a good year last into a bad one |
+| 49j | Farm for several cycles and watch the larder | Seed comes back out of the harvest sometimes. Save, reload, and resolve the same cycle again: **the same answer**. The draw is keyed to the field and that cycle, never re-rolled |
+| 49k | **Withdraw Seed** from a sown field | The rows come up, the seed is handed back, and the field carries no food again. The seed was yours the whole time |
+| 49l | Take the hands off a field that wants them (raise something else that eats the crew) | It stops gathering and says it wants hands — and the crop is still standing when you put somebody back on it. **Idleness costs a harvest's delay, never the harvest** |
+| 49m | Raise a **field**, **grange** or **home farm** and count the plants it lays | 16, 52, 80 — the rows a design stands are its `Carries="food:N"` doubled, and `_notes/balance-sim.py` §G2 proves the two agree for every design in the catalogue |
+| 49n | Drag a powered **Hydraulic Irrigator** next to a sown field and leave it running | The crop comes ripe in about **half** the time. Vanilla's own machine, on its own radius, off its own charge — it does nothing to any plant the game ships (none of them arms `RegenTime`), and it does something real to ours |
+| 49o | Switch the irrigator off, or let it run out of charge | The cycle goes back to its own six days. Nothing is lost and nothing is owed; a machine shortens a wait and never conjures a harvest |
 
 ## Pass 14 — Exile, and being taken back
 

@@ -275,6 +275,15 @@ namespace ThousandAndFirst
 		/// </summary>
 		public int LastKnownStorageSpace;
 
+		/// <summary>Servings of this city's own harvest still on the road to one of its pantries.
+		/// See <see cref="KingdomSystem.PendingCrop"/>. Carried, so a load gathered in the city
+		/// the founder walked out of is still waiting there when they walk back in.</summary>
+		public int PendingCrop;
+
+		/// <summary>What that load physically is. See
+		/// <see cref="KingdomSystem.PendingCropBlueprint"/>.</summary>
+		public string PendingCropBlueprint;
+
 		public KingdomLedger Ledger = new KingdomLedger();
 
 		public long NextArrivalTick;
@@ -425,6 +434,14 @@ namespace ThousandAndFirst
 			if (LastFoodWorkTick < 0L)
 			{
 				LastFoodWorkTick = 0L;
+			}
+			// A load in flight fails closed the same way: a negative count is a corrupt reading,
+			// and a delivery cannot owe a city servings. A count with no crop name still arrives -
+			// KingdomCrops.DeliverPending falls back to the city's own crop - so only the count is
+			// repaired here.
+			if (PendingCrop < 0)
+			{
+				PendingCrop = 0;
 			}
 		}
 

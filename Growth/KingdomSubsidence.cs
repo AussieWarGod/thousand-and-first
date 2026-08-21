@@ -116,6 +116,12 @@ namespace ThousandAndFirst
 				// parsed before the bad pair still counts, so the verdict is deliberately unread.
 				List<KindAmount> carries;
 				KingdomCatalogueRules.TryParseTally(entry.Carries, out carries, out _);
+				// Addendum 11(b): a farm starts producing only once seeds are committed, so a field
+				// nobody has sown carries no food - to the level or to the day. Everything else the
+				// design carries is untouched, because a home farm's mill and its yard are built and
+				// real whether or not a row is in the ground. The rule lives in KingdomCrops so the
+				// level and KingdomGrowth.FoodMadePerDay cannot disagree about which fields count.
+				carries = KingdomCrops.WithoutUnsownFood(work, carries);
 				int effectiveness = KingdomWear.EffectivenessOf(work);
 				tally = KingdomCatalogueRules.FoldWork(tally, carries, effectiveness);
 				tally = KingdomCatalogueRules.FoldShade(tally, YardShadesOf(work), effectiveness);

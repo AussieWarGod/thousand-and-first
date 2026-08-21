@@ -436,6 +436,146 @@ def raising_ceremony_problems():
     return problems
 
 
+def crop_chain_problems(vanilla):
+    """The seed chain, walked in both directions.
+
+    The failure this exists for is the one STANDARDS section 4 describes exactly: every name in
+    `KingdomCropRules`' seed and row maps is resolved at RUNTIME by `GameObject.Create`, which
+    returns null for a name nothing defines and logs nothing anybody sees. A typo there produces a
+    field that refuses to sow for a reason no message can name, and validating either the C# or the
+    XML alone cannot see it.
+
+    Four directions:
+
+      seed named, seed missing   `SeedForCrop` names a blueprint ObjectBlueprints.xml lacks
+      seed shipped, seed unnamed a blueprint carrying r_KingdomSeed that no crop maps to
+      row named, row missing     `RowForCrop` names a blueprint that is not there
+      crop named, crop unknown   a crop blueprint neither we nor the game defines
+
+    Plus the two structural facts the sim depends on: every design carrying `food` that is meant to
+    GROW declares `r_KingdomCropRows`, and every blueprint carrying that tag also carries the
+    `r_KingdomPlot` part that reads it. A rows tag on an object with no field part is a number
+    nothing will ever look at.
+    """
+    problems = []
+    rules = read(os.path.join("Growth", "KingdomCropRules.cs"))
+    ours = taf_blueprints()
+
+    def pairs(method):
+        body = re.search(
+            r"public static string " + method + r"\(string [A-Za-z]+\)\s*\{(.*?)\n\t\t\}",
+            rules,
+            re.S,
+        )
+        if not body:
+            problems.append(
+                "KingdomCropRules.%s is gone or reshaped; this check no longer walks anything"
+                % method
+            )
+            return []
+        return re.findall(r'case "([^"]+)":\s*\n\s*return "([^"]+)";', body.group(1))
+
+    seed_map = pairs("SeedForCrop")
+    row_map = pairs("RowForCrop")
+    crop_map = pairs("CropForSeed")
+
+    for crop, seed in seed_map:
+        if seed not in ours:
+            problems.append(
+                "KingdomCropRules.SeedForCrop grows %s from %s, which ObjectBlueprints.xml does "
+                "not define; sowing it would create nothing and say nothing" % (crop, seed)
+            )
+        if crop not in ours and vanilla is not None and crop not in vanilla:
+            problems.append(
+                "KingdomCropRules.SeedForCrop names crop %s, which neither we nor the game "
+                "defines" % crop
+            )
+    for crop, row in row_map:
+        if row not in ours:
+            problems.append(
+                "KingdomCropRules.RowForCrop stands %s as %s, which ObjectBlueprints.xml does not "
+                "define; a sown field would lay no rows at all" % (crop, row)
+            )
+    # The two maps must agree, or a seed sows a crop that cannot be sown again from its own harvest.
+    for seed, crop in crop_map:
+        if (crop, seed) not in seed_map:
+            problems.append(
+                "KingdomCropRules.CropForSeed says %s grows %s, and SeedForCrop does not agree"
+                % (seed, crop)
+            )
+
+    named_seeds = {seed for _crop, seed in seed_map}
+    named_rows = {row for _crop, row in row_map}
+    tree = ET.parse("ObjectBlueprints.xml")
+    for obj in tree.getroot().iter("object"):
+        name = obj.get("Name", "")
+        parts = {part.get("Name") for part in obj.iter("part")}
+        tags = {tag.get("Name"): tag.get("Value") for tag in obj.iter("tag")}
+        if "r_KingdomSeed" in parts and name not in named_seeds:
+            problems.append(
+                "%s carries r_KingdomSeed but no crop in KingdomCropRules is sown from it, so it "
+                "is a seed that grows nothing" % name
+            )
+        if "Harvestable" in parts and name.startswith("r_KingdomRow") and name not in named_rows:
+            problems.append(
+                "%s looks like a crop row but no crop in KingdomCropRules stands as it" % name
+            )
+        if "r_KingdomCropRows" in tags and "r_KingdomPlot" not in inherited_parts(tree, name):
+            problems.append(
+                "%s declares r_KingdomCropRows but carries no r_KingdomPlot part, so nothing "
+                "will ever read the rows it promises" % name
+            )
+
+    # And the catalogue side: a design that grows must say how much it grows.
+    for building in ET.parse("KingdomBuildings.xml").getroot().iter("building"):
+        blueprint = building.get("Blueprint")
+        if not blueprint:
+            continue
+        parts = inherited_parts(tree, blueprint)
+        if "r_KingdomPlot" not in parts:
+            continue
+        if not inherited_tag(tree, blueprint, "r_KingdomCropRows"):
+            problems.append(
+                "%s is a growing design (%s carries r_KingdomPlot) and declares no "
+                "r_KingdomCropRows, so it would sow no rows and carry food it never grows"
+                % (building.get("Key", "<unkeyed>"), blueprint)
+            )
+    return problems
+
+
+def _blueprint_index(tree):
+    index = {}
+    for obj in tree.getroot().iter("object"):
+        index[obj.get("Name", "")] = obj
+    return index
+
+
+def inherited_parts(tree, name):
+    """Every part a blueprint carries, walking Inherits the way the engine's loader does."""
+    index = _blueprint_index(tree)
+    parts, seen, walk = set(), set(), name
+    while walk and walk in index and walk not in seen:
+        seen.add(walk)
+        obj = index[walk]
+        parts |= {part.get("Name") for part in obj.iter("part")}
+        walk = obj.get("Inherits")
+    return parts
+
+
+def inherited_tag(tree, name, tag_name):
+    """A tag's value off a blueprint or the nearest ancestor that declares it, or None."""
+    index = _blueprint_index(tree)
+    seen, walk = set(), name
+    while walk and walk in index and walk not in seen:
+        seen.add(walk)
+        obj = index[walk]
+        for tag in obj.iter("tag"):
+            if tag.get("Name") == tag_name:
+                return tag.get("Value")
+        walk = obj.get("Inherits")
+    return None
+
+
 def main():
     base = None
     if "--base" in sys.argv:
@@ -505,7 +645,10 @@ def main():
     #    path carries the surveyor's words to it.
     problems.extend(raising_ceremony_problems())
 
-    # 5. Book IDs referenced by blueprints exist, and books are reachable.
+    # 5. The seed chain resolves in both directions, and a design that grows says how much.
+    problems.extend(crop_chain_problems(theirs if base else None))
+
+    # 6. Book IDs referenced by blueprints exist, and books are reachable.
     if os.path.isfile("Books.xml"):
         book_ids = set(re.findall(r'<book\s+ID="([^"]+)"', read("Books.xml")))
         book_ids |= set(re.findall(r'ID="([^"]+)"', read("Books.xml")))

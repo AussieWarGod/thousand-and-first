@@ -105,6 +105,12 @@ namespace ThousandAndFirst
 			// rack is its cistern; nothing the founder placed is touched, because only a
 			// KingdomBuilt work whose blueprint the catalogue calls a pantry is taken.
 			AdoptCivicLarders(survey);
+			// Whatever of the city's harvest was still on the road lands NOW, before the day's
+			// rations are drawn: a load that arrived is a load the settlement can eat, and this is
+			// the crystallise-at-awareness half of Addendum 11(b-ii)'s cross-zone delivery. The
+			// record of what room this zone has is written straight after, so the next harvest
+			// anywhere in the city knows where it can be sent.
+			KingdomCrops.DeliverPending(System, survey);
 			// The fields bring in what their Carries promise, on world-time exactly as the water
 			// works do (Addendum 8): a field's day is a field's day whether anyone watched it.
 			// This is the one missing line the coverage map named, and its checkpoint is planted
@@ -174,6 +180,12 @@ namespace ThousandAndFirst
 			// spends what the day's upkeep and arrivals left in the stores, so it can never be
 			// the reason the thirst ladder fires.
 			KingdomPlot.OnSettlementPass(System, Z, survey);
+			// Written down straight after the fields have been gathered and the day has been
+			// eaten, so what this zone is recorded as having room for is what it actually has room
+			// for. This is the sighting machinery KingdomSubsidence.RecordZone established, with
+			// its own prefix and one slot: a harvest anywhere in the city can ask whether another
+			// zone can take it without that zone being loaded.
+			KingdomCrops.RecordLarders(Z, survey, timeTicks);
 			// Right after the plot, so a house finished raising this very pass is already a
 			// candidate: who sleeps where, spending neither water nor hands. This is the ONE
 			// attended pass Addendum 4b's grace is counted in.
@@ -393,16 +405,23 @@ namespace ThousandAndFirst
 		/// the settlement could reach and then starve at.
 		/// </para>
 		/// <para>
-		/// <b>The kitchen garden, which also gathers itself.</b> <c>plot</c> and <c>plotrows</c>
-		/// carry <c>r_KingdomPlot</c> and spawn a real crop into a real larder when they ripen
-		/// (<c>KingdomPlot.Deposit</c>), so those two designs deliver their carries here AND a
-		/// ripening on top. That is not a double count of the same food, it is the one food
-		/// design in the catalogue that BUYS food with water: a planting costs
-		/// <c>KingdomCropRules.PlantWaterCostDrams</c> out of the dedicated stores every cycle and
-		/// no other field pays a dram. The surplus it buys is bounded twice over &mdash; the
-		/// garden is an S-plot design, and everything it puts in a larder is larder room the
-		/// clocked make above then cannot use, because <see cref="KingdomSurvey.FoodSpace"/> is
-		/// derived from what is actually in there.
+		/// <b>And the fields that gather themselves are subtracted here, exactly once</b>
+		/// (Addendum 11(b-ii)). Every design that GROWS &mdash; the kitchen garden, the garden
+		/// rows, the field, the ploughed fields, the grange, the home farm &mdash; carries
+		/// <c>r_KingdomPlot</c>, stands real rows, and delivers its food physically on the crop's
+		/// own six-day cycle (<c>KingdomPlot.OnSettlementPass</c>). A sown one is therefore
+		/// removed from the clocked daily make by <c>KingdomCrops.CycledFoodPerDay</c>, folded at
+		/// the same effectiveness and through the same <c>KingdomCatalogueRules.Carried</c>, so
+		/// the subtraction cancels the addition to the unit. What is left in this figure is the
+		/// food a settlement makes without growing it: the larder and the granary, which refuse to
+		/// waste what came in, and the grinding mill, which turns a harvest into something that
+		/// keeps.
+		/// </para>
+		/// <para>
+		/// An UNSOWN field is already zero here, and not by subtraction: it carries no food at all
+		/// (<c>KingdomCrops.WithoutUnsownFood</c>, folded inside <c>KingdomSubsidence.Supports</c>),
+		/// so bare ground is worth nothing to the level and nothing to the day. That is Addendum
+		/// 11(b)'s gate, kept in one place so the level and the flow cannot disagree about it.
 		/// </para>
 		/// </summary>
 		/// <param name="Survey">The pass's survey. Null makes nothing.</param>
@@ -412,7 +431,7 @@ namespace ThousandAndFirst
 			{
 				return 0;
 			}
-			int made = KingdomSubsidence.Supports(Survey).Food;
+			int made = KingdomSubsidence.Supports(Survey).Food - KingdomCrops.CycledFoodPerDay(Survey);
 			return (made > 0) ? made : 0;
 		}
 

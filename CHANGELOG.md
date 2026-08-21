@@ -354,6 +354,59 @@ playtest passes.
 - Guests arrive at the gate and leave again through an absence, and the homecoming says who came,
   who waited, and how long ago.
 
+### Added — seeds, real rows, and a harvest that runs without you
+
+Addendum 11(b) and 11(b-ii). Food was a flow with no beginning: a field was a `Carries` number on
+an object with no parts, and a settlement that raised one started eating out of nowhere. It starts
+from seed now, it stands plants you can walk into, and it goes on feeding the city while you are a
+hundred days away.
+
+- **Nothing grows until you sow it.** A field carries **no `food` at all** — not to the level, not
+  to the day — until the founder puts a seed in it, and the refusal names the want the first time
+  and once. An unsown field also drops out of the staffing pass, so bare ground never takes the
+  four hands a home farm's crew wants and turns them into nothing.
+- **Five seed items, three honest ways to get one.** One per crop family, in Qud's own idiom
+  (weight, value, a description that is about a seed and not about a system). Traders carry them;
+  a working harvest returns its own on a deterministic draw; and where vanilla ships a wild plant
+  of the species — watervine, starapple, godshroom, dreadroot — that plant gives up its seed once,
+  to anybody who does not have to steal it. Seeds are deliberately **not** `Food`: a seed the
+  ration draw can eat is seed corn that quietly disappears.
+- **Sowing is a designation, and withdrawing it is yours.** Stand in a field, **Sow**, and you are
+  shown the crop, the rows, the wait and the water before one dram or one seed is spent. The field
+  offers **Withdraw Seed** for as long as it is sown: the rows come up, the seed comes back, and
+  nothing else can take it.
+- **The rows are real.** A sown field lays actual crop plants across its footprint — vanilla
+  `Plant` for the rootedness, vanilla `Harvestable` for the ripe/unripe swap and the harvest verb.
+  They go in green and ripen on the cycle. You get a full day alone with a ripe field before the
+  settlement's own hands arrive, and every row you gather by hand is a row the settlement does not
+  also get. The harvest that crystallises **is** those plants' yield.
+- **The cycle runs in absence, and tells it once.** Planted tick → ripe after the crop's six days →
+  gathered, attended or not, dated to the tick it was due → restamped **from the harvest** so the
+  part-cycle already grown is kept → repeat. A season away resolves every completed cycle in one
+  closed-form reckoning, and the chronicle carries **one line with a count** rather than one line
+  per harvest. It stops when the seed is withdrawn, when the field is condemned, or when nobody is
+  working what the design says needs working — and idleness costs the delay, never the crop.
+- **A harvest can cross zones.** The city's stores are credited the moment it comes due; the
+  physical crop goes into a pantry in this zone if there is one, and otherwise takes to the road
+  and **materialises in a larder in another of the city's zones the next time you walk in there**.
+  Which zones have room is read off a dated sighting record — the same crystallise-at-awareness
+  idiom the rest of the mod runs on. Nothing is ever touched in a zone nobody is standing in.
+- **The food figures are derived now, not authored.** A design's `Carries="food:N"` is
+  `Rows × YieldPerRow / CropDays` off the `r_KingdomCropRows` tag on its own blueprint, exactly as
+  a water design's is `1200 / mean(VariableRate)` off its `LiquidProducer`. `_notes/balance-sim.py`
+  re-derives all six and fails the run if one drifts; it also proves the cycle pays exactly what
+  the carry promised over one crop's days, so a sown field feeds the settlement once and not twice,
+  and that nothing carries `food` it neither grows, keeps, nor mills.
+- **The irrigator finally does something.** `Hydraulic Irrigator` ships a real
+  `RadiusEventSender Event="AccelerateRipening"`, and vanilla `Harvestable` answers that event by
+  calling `Ripen()` — which returns immediately on every blueprint in the game, because not one of
+  them arms `RegenTime`. A powered irrigator standing beside one of our fields pulls its stamp
+  forward each pulse, so an irrigated crop comes ripe in half its days: the machine's own radius,
+  the machine's own charge, our clock.
+- **The gate does not wall the early game.** Foraging is untouched, and the sim asserts that Camp
+  and Steading are both held by the wild plus the designs that need no seed at all. A founder
+  hunting for their first seed is never starved for it.
+
 ### Added — food becomes physical
 
 The water lane had a producer, a consumer, a store and a ladder; the food lane had a catalogue

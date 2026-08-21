@@ -40,6 +40,32 @@
   <population Name="Tier2Wares" Load="Merge">
     <object Blueprint="r_KingdomCarrySign" Number="1" Chance="20" />
   </population>
+  <!--
+    Seed, on the road. Addendum 11(b) asks that a farm start from real items the player obtains, so
+    there has to be somewhere to obtain them that is not the farm itself. Merging into the tier
+    wares tables is the honest answer: a trader who stocks small goods may be carrying seed, and
+    which seed is the roll's business rather than the founder's. Chance rather than Weight, so
+    these do not displace a merchant's own stock - each is asked independently and most rolls carry
+    none of them.
+
+    The low-tier crops are on the tier-1 table and the strange ones are not: elcatl spore-cake and
+    dreadroot crowns turn up only where the wares are already tier 2, because a cake of spore that
+    Qud has no colour word for is not something the first tinker on the road has in a sack. The
+    other two ways to get seed - a harvest returning its own, and stripping a wild plant of the
+    species - are in code and in ObjectBlueprints.xml respectively, and neither needs a table.
+  -->
+  <population Name="Tier1Wares" Load="Merge">
+    <object Blueprint="r_KingdomSeedStarapple" Number="1" Chance="14" />
+    <object Blueprint="r_KingdomSeedVinewafer" Number="1" Chance="14" />
+    <object Blueprint="r_KingdomSeedMushroom" Number="1" Chance="10" />
+  </population>
+  <population Name="Tier2Wares" Load="Merge">
+    <object Blueprint="r_KingdomSeedStarapple" Number="1" Chance="14" />
+    <object Blueprint="r_KingdomSeedVinewafer" Number="1" Chance="14" />
+    <object Blueprint="r_KingdomSeedMushroom" Number="1" Chance="12" />
+    <object Blueprint="r_KingdomSeedGodshroom" Number="1" Chance="8" />
+    <object Blueprint="r_KingdomSeedDreadroot" Number="1" Chance="8" />
+  </population>
   <population Name="BookTent" Load="Merge">
     <object Blueprint="r_FoundingBook" Number="1" Chance="60" />
   </population>

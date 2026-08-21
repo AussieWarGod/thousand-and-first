@@ -131,7 +131,14 @@ namespace ThousandAndFirst
 					{
 						survey.Beds++;
 					}
-					if (item.GetIntProperty("KingdomStaffNeeded") > 0)
+					// A field with no seed in it asks for nobody (Addendum 11(b)). It stays in
+					// Built, so it is still measured, still worn, still mended and still struck -
+					// what it stops being is somewhere the staffing pass sends people. Without
+					// this, bare ground took the four hands the home farm's crew wants and turned
+					// them into nothing, and those are exactly the hands that would otherwise be
+					// out foraging: the seed gate would have quietly cost a settlement its meal
+					// as well as its harvest.
+					if (item.GetIntProperty("KingdomStaffNeeded") > 0 && (KingdomCrops.FieldOf(item) == null || KingdomCrops.IsSown(item)))
 					{
 						survey.Works.Add(item);
 					}

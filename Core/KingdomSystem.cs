@@ -316,6 +316,27 @@ namespace ThousandAndFirst
 		/// </summary>
 		public int LastKnownStorageSpace;
 
+		/// <summary>
+		/// Servings of harvest this realm's cities owe their own pantries: gathered in one zone,
+		/// credited to the city at once, and waiting to become real crop items in a larder whose
+		/// zone nobody has walked into yet (Addendum 11(b-ii)).
+		/// <para>
+		/// PER-CITY, and carried by the seat swap on its own name
+		/// (<see cref="KingdomSettlement.PendingCrop"/>): a harvest gathered in one city's outfield
+		/// belongs in that city's pantries and never follows the founder to the other one. Nothing
+		/// is touched in an unloaded zone, because nothing in an unloaded zone can be touched
+		/// &mdash; the load simply waits for somebody to walk into a zone of its own city that has
+		/// a dedicated larder in it.
+		/// </para>
+		/// </summary>
+		public int PendingCrop;
+
+		/// <summary>What the load on the road physically is, so it arrives as the crop that was
+		/// actually grown rather than as whatever the receiving ground happens to favour. Null
+		/// when nothing is in flight; a load that somehow lost its name arrives as the seated
+		/// city's own crop rather than as nothing.</summary>
+		public string PendingCropBlueprint;
+
 		public KingdomLedger Ledger = new KingdomLedger();
 
 		/// <summary>

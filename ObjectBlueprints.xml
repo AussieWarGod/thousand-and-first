@@ -166,6 +166,16 @@
     <part Name="Description" Short="A patch of turned earth, staked and weeded by hands that have somewhere else to be. What comes up depends on what the ground already knew how to grow, long before anyone asked it to." />
     <part Name="r_KingdomPlot" />
     <part Name="Physics" Takeable="false" Organic="true" Weight="200" />
+    <!-- How many rows physically stand in this design when it is sown, and the ONLY place the
+         number is declared. A design's Carries="food:N" is not an authored opinion any more than a
+         water design's is: it is Rows x KingdomCropRules.YieldPerRow / KingdomCropRules.CropDays,
+         which for the shipped 3-per-row-per-6-days is food = Rows / 2. _notes/balance-sim.py
+         re-derives every food design's carry from this tag and fails the run if one has drifted,
+         exactly as it re-derives every water design's from its own LiquidProducer. Declared on the
+         BLUEPRINT rather than in the catalogue for the reason a pantry's capacity is: what a design
+         adds to the settlement's level is a catalogue fact, and what stands in the ground is a fact
+         about the object. -->
+    <tag Name="r_KingdomCropRows" Value="6" />
     <stat Name="Hitpoints" Value="60" />
   </object>
 <!-- ===================================================================== THE PLOT CATALOGUE ==
@@ -449,18 +459,27 @@
   <object Name="r_KingdomPlotRows" Inherits="r_KingdomPlot">
     <part Name="Render" DisplayName="garden rows" ColorString="&amp;K" DetailColor="w" />
     <part Name="Description" Short="Staked rows, weeded on a rota, watered by whoever drew the short straw. It is somebody's whole day and it feeds nine." />
+    <tag Name="r_KingdomCropRows" Value="10" />
     <stat Name="Hitpoints" Value="90" />
   </object>
+  <!-- The field and everything above it carry the same r_KingdomPlot part the kitchen garden does,
+       so the seed gate, the six-day cycle and the standing rows are ONE mechanism across the whole
+       food lane rather than one per rung. Before Wave G2 these four were objects with a Carries
+       number and no parts at all - the exact defect VANILLA-PRODUCTION-TRUTH names for them: they
+       stayed producers, and they had to become producers in the OBJECT and not only in the ledger. -->
   <object Name="r_KingdomField" Inherits="Furniture">
     <stag Name="Contemporary" />
     <part Name="Render" DisplayName="field" RenderString="&quot;" ColorString="&amp;w" DetailColor="g" />
     <part Name="Description" Short="Turned earth to the fence line, sown by everyone who could be spared and harvested the same way. For two weeks of the year the settlement does nothing else." />
+    <part Name="r_KingdomPlot" />
     <part Name="Physics" Solid="false" Takeable="false" Organic="true" Weight="400" />
+    <tag Name="r_KingdomCropRows" Value="16" />
     <stat Name="Hitpoints" Value="80" />
   </object>
   <object Name="r_KingdomFieldRows" Inherits="r_KingdomField">
     <part Name="Render" DisplayName="ploughed fields" ColorString="&amp;W" DetailColor="G" />
     <part Name="Description" Short="Rows to the edge of the claim, and a plough that took a season's salvage to put together. The chronicle dates the good years from here." />
+    <tag Name="r_KingdomCropRows" Value="36" />
     <stat Name="Hitpoints" Value="120" />
   </object>
   <!-- Inherits vanilla Chest for its Container, Inventory, and already-wired tile, the same way
@@ -480,12 +499,14 @@
     <part Name="Render" DisplayName="grange" ColorString="&amp;y" DetailColor="W" />
     <part Name="Description" Short="Fields to the fence line, a threshing floor swept between harvests, and a barn at the end of them with the year's account chalked on the door. Three people work it and a whole town eats out of it." />
     <part Name="Physics" Solid="false" Takeable="false" Organic="true" Weight="9000" />
+    <tag Name="r_KingdomCropRows" Value="52" />
     <stat Name="Hitpoints" Value="420" />
   </object>
   <object Name="r_KingdomHomeFarm" Inherits="r_KingdomField">
     <part Name="Render" DisplayName="the home farm" RenderString="&#8801;" ColorString="&amp;G" DetailColor="Y" />
     <part Name="Description" Short="The quarter the rest of the city eats out of: rows past the eye's patience, a mill with metal in its gearing, and granaries standing in a line with their own road to the doors. It is the only paved way in the city that goes nowhere but a barn." />
     <part Name="Physics" Solid="false" Takeable="false" Organic="true" Weight="30000" />
+    <tag Name="r_KingdomCropRows" Value="80" />
     <stat Name="Hitpoints" Value="900" />
   </object>
   <object Name="r_KingdomToolShed" Inherits="Furniture">
@@ -968,5 +989,163 @@
     <part Name="Physics" Solid="false" Takeable="true" Weight="2" />
     <part Name="Commerce" Value="5" />
     <stat Name="Hitpoints" Value="10" />
+  </object>
+<!-- ============================================================================ SEEDS ==
+       Addendum 11(b): a farm starts from seeds or plantable crops - real items the player obtains
+       and commits. The survey of the shipped game (_notes/VANILLA-PRODUCTION-TRUTH.md 2.1) settles
+       what could be borrowed and what could not: twenty-eight blueprints read as seed, spore, tuber
+       or cutting, and NOT ONE of them is plantable. Zero blueprints carry a planting part, zero
+       grow into another object, there is no AddAction("Plant"...) anywhere in the engine, and there
+       is specifically no watervine seed and no watervine cutting. So the item is ours, and it is
+       built the way vanilla builds its two real seed items (Arsplice Seed, Rubber Tree Seed): an
+       ordinary Item with a weight, a Commerce value, a description in register, and one part that
+       does the one thing a seed does.
+
+       They are deliberately NOT Food. A seed you can eat is a seed the ration draw eats: KingdomSurvey
+       counts anything carrying Food or PreparedCookingIngredient as servings, so a larder of seed
+       corn would quietly feed the settlement and then be gone. Arsplice Seed is Food in vanilla and
+       that is exactly why it is a curio rather than a crop.
+
+       Three honest ways to get one, none of them a gift:
+         - TRADE. Merged into the tier-1 and tier-2 wares tables in PopulationTables.xml, so any
+           trader who stocks small goods may be carrying seed.
+         - THE HARVEST ITSELF. A gathering returns sowable seed on a counter-based draw
+           (KingdomCropRules.RollSeedReturn), so a working farm eventually feeds its own next sowing.
+         - THE WILD. Where vanilla ships a wild plant of the species, that plant carries
+           r_KingdomWildSeed and gives up its seed once, to whoever does not have to steal it. Two
+           of the five have one; the other three are honest about not having one.
+
+       The tile is vanilla's own sw_seeds.bmp, already wired and already drawn, which is the surest
+       way to owe no art (STANDARDS 4). Colour carries the difference between them, exactly as it
+       does across the rest of the plot catalogue. -->
+  <object Name="r_KingdomSeedStarapple" Inherits="Item">
+    <part Name="Render" DisplayName="starapple pips" Tile="Items/sw_seeds.bmp" ColorString="&amp;R" DetailColor="g" RenderString="'" RenderLayer="5" />
+    <part Name="Description" Short="Pressed out of a windfall and dried on a cloth, still faintly sweet where the juice caught. Every one of them is a tree that has not happened yet." />
+    <part Name="Physics" Weight="1" Category="Food" />
+    <part Name="Commerce" Value="12" />
+    <part Name="r_KingdomSeed" />
+    <tag Name="Tier" Value="1" />
+  </object>
+  <object Name="r_KingdomSeedVinewafer" Inherits="Item">
+    <part Name="Render" DisplayName="watervine seedheads" Tile="Items/sw_seeds.bmp" ColorString="&amp;g" DetailColor="w" RenderString="'" RenderLayer="5" />
+    <part Name="Description" Short="Salt-crusted heads cut off a vine that had finished with them. They rattle. Put them in wet ground and stand back a week." />
+    <part Name="Physics" Weight="1" Category="Food" />
+    <part Name="Commerce" Value="10" />
+    <part Name="r_KingdomSeed" />
+    <tag Name="Tier" Value="1" />
+  </object>
+  <object Name="r_KingdomSeedMushroom" Inherits="Item">
+    <part Name="Render" DisplayName="mushroom spawn" Tile="Items/sw_seeds.bmp" ColorString="&amp;M" DetailColor="y" RenderString="'" RenderLayer="5" />
+    <part Name="Description" Short="Damp grain run through with white thread, packed in a twist of bark. Not a seed at all, strictly; the people who sell it have never cared about the distinction." />
+    <part Name="Physics" Weight="2" Category="Food" />
+    <part Name="Commerce" Value="18" />
+    <part Name="r_KingdomSeed" />
+    <tag Name="Tier" Value="2" />
+  </object>
+  <object Name="r_KingdomSeedGodshroom" Inherits="Item">
+    <part Name="Render" DisplayName="{{o|elcatl}} spore-cake" Tile="Items/sw_seeds.bmp" ColorString="&amp;O" DetailColor="o" RenderString="'" RenderLayer="5" />
+    <part Name="Description" Short="A pressed disc of spore and ash the colour of something Qud has no word for. It is warm, and it should not be." />
+    <part Name="Physics" Weight="2" Category="Food" />
+    <part Name="Commerce" Value="45" />
+    <part Name="r_KingdomSeed" />
+    <tag Name="Tier" Value="4" />
+  </object>
+  <object Name="r_KingdomSeedDreadroot" Inherits="Item">
+    <part Name="Render" DisplayName="dreadroot crowns" Tile="Items/sw_seeds.bmp" ColorString="&amp;K" DetailColor="w" RenderString="'" RenderLayer="5" />
+    <part Name="Description" Short="Cut tops of tubers, each with a bud on it and a low note under it you feel in the jaw. Whoever cut them wore gloves and did not linger." />
+    <part Name="Physics" Weight="3" Category="Food" />
+    <part Name="Commerce" Value="30" />
+    <part Name="r_KingdomSeed" />
+    <tag Name="Tier" Value="3" />
+  </object>
+
+<!-- ============================================================================= ROWS ==
+       What actually stands in a sown field. Real plants on real ground, inheriting vanilla Plant
+       for its PlantProperties (rooted, resistant, immune to the indignities a plant should be
+       immune to) and carrying vanilla Harvestable for the one thing Harvestable is genuinely good
+       at: two honest states with a real ripe/unripe tile-and-colour swap and a real harvest verb.
+
+       StartRipeChance="0:1" is never, deliberately: a row goes into the ground green. What ripens
+       it is r_KingdomPlot's stamped six-day cycle, which is the only clock in the mod that can
+       survive a suspended zone - vanilla's own Harvestable.RegenTimer is dead code in every shipped
+       blueprint precisely because its clock is turn-delivered.
+
+       DestroyOnHarvest is left false, so a founder who gathers a ripe row by hand takes the crop and
+       leaves the plant. That is not a loophole: the settlement's own gathering counts rows that are
+       standing RIPE, so a row the founder took is a row the settlement does not also get. The day
+       between ripening and the settlement's hands arriving (KingdomCropRules.GatherDelayTicks) is
+       there to make that a real choice.
+
+       No Tile of our own: each row wears the exact tile string its wild counterpart already renders
+       with, which is the same trick r_KingdomPlot has always used with the watervine tile. -->
+  <object Name="r_KingdomRowStarapple" Inherits="Plant">
+    <part Name="Render" DisplayName="starapple row" RenderString="157" Tile="Terrain/sw_starappletree.bmp" ColorString="&amp;g" TileColor="&amp;g" DetailColor="K" Occluding="false" />
+    <part Name="Description" Short="A young tree in a line of young trees, staked against a wind that has opinions. In a week there will be light in the branches." />
+    <part Name="Harvestable" OnSuccess="Starapple" OnSuccessAmount="1" StartRipeChance="0:1" HarvestVerb="pick" RipeColor="&amp;R" RipeTileColor="&amp;g" RipeDetailColor="R" UnripeColor="&amp;g" UnripeTileColor="&amp;g" UnripeDetailColor="K" />
+    <part Name="Physics" Solid="false" Takeable="false" Weight="200" />
+    <stat Name="Hitpoints" Value="20" />
+    <tag Name="ExcludeFromDynamicEncounters" Value="*noinherit" />
+  </object>
+  <object Name="r_KingdomRowVinewafer" Inherits="Plant">
+    <part Name="Render" DisplayName="watervine row" RenderString="244" Tile="Assets_Content_Textures_Tiles_sw_watervine1.bmp" ColorString="&amp;K" TileColor="&amp;w" DetailColor="K" Occluding="false" />
+    <part Name="Description" Short="Vine trained along a stake, its furrows still empty of salt. Somebody walks this row every morning with a bucket." />
+    <part Name="Harvestable" OnSuccess="Vinewafer" OnSuccessAmount="1" StartRipeChance="0:1" HarvestVerb="gather" RipeColor="&amp;g" RipeTileColor="&amp;w" RipeDetailColor="g" UnripeColor="&amp;K" UnripeTileColor="&amp;w" UnripeDetailColor="K" />
+    <part Name="Physics" Solid="false" Takeable="false" Weight="200" />
+    <stat Name="Hitpoints" Value="20" />
+    <tag Name="LiquidNative" Value="water" />
+    <tag Name="ExcludeFromDynamicEncounters" Value="*noinherit" />
+  </object>
+  <object Name="r_KingdomRowMushroom" Inherits="Plant">
+    <part Name="Render" DisplayName="mushroom bed" RenderString="231" Tile="Items/sw_mushroom.bmp" ColorString="&amp;K" TileColor="&amp;w" DetailColor="K" Occluding="false" />
+    <part Name="Description" Short="A raised bed of spent grain and shade, threaded white where the spawn took. It smells like rain in a cellar." />
+    <part Name="Harvestable" OnSuccess="Plump Mushroom" OnSuccessAmount="1" StartRipeChance="0:1" HarvestVerb="gather" RipeColor="&amp;Y" RipeTileColor="&amp;w" RipeDetailColor="y" UnripeColor="&amp;K" UnripeTileColor="&amp;w" UnripeDetailColor="K" />
+    <part Name="Physics" Solid="false" Takeable="false" Weight="200" />
+    <stat Name="Hitpoints" Value="20" />
+    <tag Name="ExcludeFromDynamicEncounters" Value="*noinherit" />
+  </object>
+  <object Name="r_KingdomRowGodshroom" Inherits="Plant">
+    <part Name="Render" DisplayName="{{o|elcatl}} bed" RenderString="*" Tile="Items/sw_mushroom.bmp" ColorString="&amp;K" TileColor="&amp;w" DetailColor="K" Occluding="false" />
+    <part Name="Description" Short="Spore-cake worked into cool soil and left alone. The keepers will not say what colour it comes up; the ones who have seen it do not have the word." />
+    <part Name="Harvestable" OnSuccess="Godshroom Cap" OnSuccessAmount="1" StartRipeChance="0:1" HarvestVerb="gather" RipeColor="&amp;O" RipeTileColor="&amp;w" RipeDetailColor="o" UnripeColor="&amp;K" UnripeTileColor="&amp;w" UnripeDetailColor="K" />
+    <part Name="Physics" Solid="false" Takeable="false" Weight="200" />
+    <stat Name="Hitpoints" Value="20" />
+    <tag Name="ExcludeFromDynamicEncounters" Value="*noinherit" />
+  </object>
+  <object Name="r_KingdomRowDreadroot" Inherits="Plant">
+    <part Name="Render" DisplayName="dreadroot row" RenderString="231" Tile="Creatures/sw_dreadroot.bmp" ColorString="&amp;K" TileColor="&amp;y" DetailColor="K" Occluding="false" />
+    <part Name="Description" Short="Shoots in a line, and under each one a swelling belly of tuber. Nobody sings while they weed this row." />
+    <part Name="Harvestable" OnSuccess="Dreadroot Tuber" OnSuccessAmount="1" StartRipeChance="0:1" HarvestVerb="lift" RipeColor="&amp;w" RipeTileColor="&amp;y" RipeDetailColor="w" UnripeColor="&amp;K" UnripeTileColor="&amp;y" UnripeDetailColor="K" />
+    <part Name="Physics" Solid="false" Takeable="false" Weight="200" />
+    <stat Name="Hitpoints" Value="20" />
+    <tag Name="ExcludeFromDynamicEncounters" Value="*noinherit" />
+  </object>
+
+<!-- ================================================================== SEED IN THE WILD ==
+       The third honest source. Load="MergeIfExists" adds one part to a vanilla blueprint without
+       overwriting it (ObjectBlueprintLoader.cs:820-841 merges child nodes by name into the existing
+       object; MergeIfExists is the arm that stays silent rather than logging an error if a future
+       build renames the blueprint). Nothing vanilla is replaced, nothing is removed, and the part
+       adds exactly one menu entry which disappears the moment it has been used.
+
+       Bounded three ways, on purpose: one plant gives one seed EVER (KingdomCrops.WildSeedTakenProperty),
+       a plant with a Physics Owner gives none at all - a farmer's trees are a farmer's, and the mod
+       does not help the founder rob one - and only species the catalogue actually grows carry it.
+
+       Two of the five crops have a wild counterpart that is an inert plant, and both are here.
+       Plump Mushroom has none: vanilla's only source is the Mushroom Case, which is somebody's
+       furniture. Godshroom and Dreadroot ARE inert enough to strip (Fungus inherits PhysicalObject;
+       Dreadroot's brain is Hostile=false Mobile=false), so both are here too. Saying which crop has
+       no wild source is better than inventing one for it. -->
+  <object Name="Watervine" Load="MergeIfExists">
+    <part Name="r_KingdomWildSeed" Seed="r_KingdomSeedVinewafer" />
+  </object>
+  <object Name="Starapple Tree" Load="MergeIfExists">
+    <part Name="r_KingdomWildSeed" Seed="r_KingdomSeedStarapple" />
+  </object>
+  <object Name="Godshroom" Load="MergeIfExists">
+    <part Name="r_KingdomWildSeed" Seed="r_KingdomSeedGodshroom" />
+  </object>
+  <object Name="Dreadroot" Load="MergeIfExists">
+    <part Name="r_KingdomWildSeed" Seed="r_KingdomSeedDreadroot" />
   </object>
 </objects>

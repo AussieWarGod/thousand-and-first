@@ -563,3 +563,124 @@ container ladder (canteen, waterskin, the ~128-dram urns) — sensible multiples
 stated in the catalogue comments. OPEN AUDIT (post-G2): camp kit container count for a
 pour-and-leave buffer; the player-placed-container dedication path end to end; vessel-size
 sanity pass against the vanilla ladder.
+
+**(b) The performance constitution** (author, 2026-08-21 — "we need to make sure we don't run
+out of memory, or lag the game, but we need a system that keeps latency down … map out changes
+to a zone in almost real time for players … elegant and clever, but grounded in computer
+science, mathematics, and vanilla engine/code"):
+
+- **Model over pinning**: the city model is authoritative for suspended ground; we do NOT hold
+  city zones live (`MarkActive`/suspendability veto) as a design basis — vanilla's `PinnedZones`
+  caps at 3 and log-and-clears above it, and every live zone costs its full turn tick, its
+  2000-cell EndTurnEvent broadcast, its RAM, and inline save bytes. The vanilla 40-turn grace on
+  recently-left zones is ridden, never extended.
+- **One clock**: `The.Game.TimeTicks` only. Turn counting under-counts world-map travel
+  (300-900 ticks per parasang step, zero EndTurnEvents) — banned as a clock.
+- **Reckon is O(model)**: closed-form between breakpoints, never O(days), never O(cells).
+- **Reification is AMORTISED**: zone catch-up spreads over turns on a budget counter — the
+  engine's own ZoneRepair idiom (`num = max(1, counter / TurnsPerObject)`) — visible-first, so
+  entry never spikes and nearby change appears in almost-real-time. `ZoneActivatedEvent` AND
+  `ZoneThawedEvent` are both reify hooks.
+- **Memory bounded**: no per-cell city state; rows and logs capped; save-size respected — the
+  model serializes as named fields on the settlement, zones stay evictable.
+- **Measured, not assumed**: a perf receipt (timings logged in-game at reckon/reify) ships with
+  the first living-city wave and every wave after; budgets stated in the architecture doc and
+  regressions treated as failures.
+
+**(c) Cities scale; cross-zone life is felt where you stand** (author, 2026-08-21): "a city
+might end up being 9 zones or more, especially with verticality … if in one zone a generator,
+building, etc wears down enough to stop producing, or meaningfully impact what you would find in
+the zone you are actively in, that needs to be simulated and felt (ie, walking around in my
+house in 1 zone, a farm finishes harvesting in another zone, a porter should come and put the
+harvested goods in the storage that is in the zone i am walking around)."
+
+- City size is unbounded by the ARCHITECTURE (O(rows), zone rows keyed by zone id incl.
+  stratum); the current 4-zone cap is a stage-gate rules constant, not a limit.
+- The heartbeat is a bounded periodic MICRO-RECKON while attended: every N ticks the city model
+  advances by the elapsed delta and surfaces what changed — a producer failing in another zone
+  is known and felt without moving.
+- Flows whose destination is the attended zone arrive EMBODIED: porters walking real goods to
+  real storage, repair crews, messengers — vanilla Brain goals, spawn at the edge, deposit,
+  leave. Unattended destinations take the model credit and materialise later. One event, two
+  renderings, no divergence.
+- **The porter scenario is the canonical acceptance test** for the living city and becomes a
+  named TESTING pass when the wave ships.
+
+**(d) Two hard invariants** (author, 2026-08-21): "we need to make sure those NPC's don't
+accidentally get duplicated across zones, and where water is deficit, the storage it's taken
+from is updated accordingly, not just in a ledger."
+
+- **One identity, at most one body.** Residents bind bodies by KingdomResidentId (mint-or-move,
+  never duplicate). Transients (porters, messengers, crews) bind by JOB id: one job, at most one
+  body, ever; the model is the single source of job completion; a thawed zone despawns any body
+  whose job the model already closed (goods never doubled). One registry answers both, checked
+  before any mint, across all zones.
+- **Deficits drain real containers.** Model consumption applies to ground at reify,
+  container-level: the cistern opened after a season holds exactly what the model says remains;
+  the larder holds exactly the crops uneaten; cross-zone draws land on the remote zone's real
+  containers when that zone next renders. Drain order is stated and deterministic (reloads
+  deplete the same vessel first). The audit: model total == ground total after any attended
+  pass; mismatches are attributed and told, never silently repaired.
+
+**(e) Journey continuity** (author, 2026-08-21): a carrier fetching from storage to a producer
+"needs to path to the *correct* zone … in the *correct* amount of time. If they come into my
+zone, fetch water, i should be able to follow them back … or run into them taking it … they
+should not only walk in the correct direction, but appear appropriately in other zones if i
+enter them later, with the water on them, or in the place they were taking it to appropriately."
+
+- **A job is a timed itinerary**: legs computed at creation (zones, entry/exit edge cells,
+  in-zone path lengths, walk speed) with kernel draws, so for any TimeTicks the model answers
+  "where is this carrier and what is on them" — one answer, every zone renders it.
+- Rendering: attended zone → live actor with real cargo walking the true path; any zone entered
+  mid-route at the right tick → the body at the interpolated position; after delivery → cargo in
+  the destination container (12(d)), carrier on the return leg or at post. The body never
+  literally traverses zones; consistent re-rendering is indistinguishable from following.
+- Interference while attended: ground wins — delays update the job's real progress at check-in
+  and the itinerary re-projects; death/robbery fails the job, attributed and told, cargo where
+  it fell, never double-delivered, never silently restored.
+- Composes with 12(d): one job, one body; container drains land where and when the itinerary
+  says.
+
+**(f) Logistics locality and optimal-enough routing** (author, 2026-08-21): "a building should
+try to fetch stored resources from whatever building is holding it closest to them, and citizens
+should path 'optimally' for pick up and delivery, something i know rimworld struggles with."
+
+- **Nearest-holder sourcing**: input jobs bind to the closest container actually holding the
+  resource, by real path distance through the claimed-zone graph; deterministic tie-break.
+- **Central batch planning, not agent AI** — the structural answer to RimWorld: jobs are planned
+  at reckon over a frozen snapshot and rendered as 12(e) itineraries; no pawn ever decides
+  per-tick with local knowledge, so the distant-stack pickup and the zigzag cannot happen.
+- **Precomputed distance matrix**: two-level (intra-zone path length + inter-zone crossings),
+  O(works²) ≤ ~1600 entries, invalidated only on placement/removal/road change.
+- **Roads discount the metric** — laying a road visibly shortens every itinerary using it;
+  the road machinery becomes logistics infrastructure.
+- **Capacity-bound batching**: route-overlapping jobs share a trip (nearest-neighbour + 2-opt
+  over the few open jobs per slice); bounded, deterministic, never-looks-stupid is the bar.
+
+**(g) Networks: pipes, conduits, electricals** (author, 2026-08-21): "can we simulate networks
+of water, electricity, other liquids to enable buildings to work over multiple tiles and have
+containers have actual proper numbers for the water or resource they are holding?" — YES, same
+two-layer authority pattern:
+
+- **Attended zone = vanilla transmission parts** (11(c) extend-first): the engine's
+  IPowerTransmission family (electrical/hydraulic/mechanical) carries real charge/force along
+  real conduits with real events; buildings span tiles natively. LiquidPump has no live vanilla
+  carrier — liquid piping is fill-in, in vanilla's idiom.
+- **Model = graph rows + closed-form flow solve at reckon**: nodes are works/containers, edges
+  are player-placed conduit segments; topology changes only on placement (distance-matrix cache
+  discipline); flow conservation netted per network, deterministic; zone boundaries invisible to
+  the graph. Deficit = brownout EVENT — works stop in a stated priority order, felt and
+  announced per 12(c).
+- **Containers hold true numbers** — 12(d) applied: model allocations land on actual
+  LiquidVolume drams / Capacitor charge at reify; check-in reads live parts back as ground
+  truth. LiquidVolume is liquid-agnostic: stocks key by (network, liquid).
+
+**(h) The executor seam** (author, 2026-08-21 — "should we use our own thread for this? future
+proofing, would that make things materially harder or more fragile?"): build the SEAM now, run
+the THREAD later. All model computation flows through one executor choke point —
+submit(frozen snapshot) → result — synchronous today, contract enforced by test (immutable in,
+immutable out, no engine types across the boundary; the *Rules.cs engine-free discipline already
+guarantees purity). A threaded executor swaps in later without touching callers, and third-party
+mod computations inherit budget/timeout/error isolation from the same contract — a misbehaving
+job stalls itself, never the city or the turn. Threading eagerly with no workload is where
+fragility lives; the seam costs nothing and is the opposite of fragile.
