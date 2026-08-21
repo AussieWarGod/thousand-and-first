@@ -26,6 +26,18 @@ namespace ThousandAndFirst
 		/// <returns>True once scaffolding is standing and the water is spent.</returns>
 		public static bool Commission(KingdomSystem System, string Key, string SkinKey, out string Failure)
 		{
+			return Commission(System, Key, SkinKey, KingdomPlotRules.PlotSize.None, out Failure);
+		}
+
+		/// <summary>
+		/// Issues one commission on the ground the founder is standing on, staking the tier of plot
+		/// they chose. Identical in every check to the overload above: the tier only ever widens the
+		/// envelope, never the building, and a design that is not a plot ignores it entirely.
+		/// </summary>
+		/// <param name="Stake">The tier to lay, from <c>KingdomPlots.StakeableSizes</c>.
+		/// <c>PlotSize.None</c> stakes the design's own.</param>
+		public static bool Commission(KingdomSystem System, string Key, string SkinKey, KingdomPlotRules.PlotSize Stake, out string Failure)
+		{
 			Failure = null;
 			Zone zone = The.Player?.CurrentZone;
 			if (!System.Founded || zone == null || !System.ClaimedZones.Contains(zone.ZoneID))
@@ -50,7 +62,7 @@ namespace ThousandAndFirst
 			// through to the single-cell path below, untouched.
 			if (KingdomPlots.IsPlotDesign(entry.Key))
 			{
-				return KingdomPlots.Commission(System, zone, entry, SkinKey, out Failure);
+				return KingdomPlots.Commission(System, zone, entry, SkinKey, Stake, out Failure);
 			}
 			// Walls do not count against the plan. A palisade is a LINE, and charging a slot per
 			// segment is what made enclosing a settlement impossible - the ring would have eaten

@@ -426,6 +426,24 @@ namespace ThousandAndFirst
 
 			public long BuildTicks;
 
+			/// <summary>Sustained output this work contributes, in drams a day &mdash; the
+			/// <c>water</c> it carries. Zero for a work the settlement does not drink from.
+			/// </summary>
+			public int SupportPerDay;
+
+			/// <summary>Drams the settlement goes without while this work is rebuilt, from
+			/// <c>KingdomUpgradeRules.OutputLost</c>.</summary>
+			public int OutputLost;
+
+			/// <summary>Drams the stores would still hold above the reserve once the improvement
+			/// is paid for and the outage borne. Negative is the dip a forced improvement takes.
+			/// </summary>
+			public int Margin;
+
+			/// <summary>What the absorption law was told about this work, kept so the Charter can
+			/// disclose the dip without measuring it a second time.</summary>
+			public KingdomUpgradeRules.AbsorptionDemand Demand;
+
 			/// <summary>The sentence the founder is owed, or null when the verdict correctly
 			/// says nothing.</summary>
 			public string Reason;
@@ -472,6 +490,11 @@ namespace ThousandAndFirst
 			assessment.StageNeeded = KingdomUpgradeRules.StageRequired(known ? successor.MinStage : GrowthStage.Camp, chain.HasMinStageOverride, chain.MinStageOverride);
 			assessment.Reserve = KingdomUpgradeRules.ReserveDrams(System.Population, System.Stage);
 			assessment.Shortfall = KingdomUpgradeRules.Shortfall(Survey.StoredWater, assessment.CostDrams, assessment.Reserve);
+			// The absorption law (brief, Addendum 3). Measured here, judged in the rules half.
+			assessment.Demand = MeasureAbsorption(System, Z, Work, predecessor, assessment.SuccessorKey, assessment.BuildTicks);
+			assessment.SupportPerDay = assessment.Demand.SupportPerDay;
+			assessment.OutputLost = KingdomUpgradeRules.OutputLost(assessment.Demand.SupportPerDay, assessment.BuildTicks);
+			assessment.Margin = KingdomUpgradeRules.AbsorptionMargin(Survey.StoredWater, assessment.CostDrams, assessment.Reserve, assessment.OutputLost);
 			r_KingdomImprovement improvement = Work.GetPart<r_KingdomImprovement>();
 			assessment.Verdict = KingdomUpgradeRules.Assess(
 				HasSuccessor: true,
@@ -489,8 +512,18 @@ namespace ThousandAndFirst
 				StoredWater: Survey.StoredWater,
 				Cost: assessment.CostDrams,
 				Reserve: assessment.Reserve,
-				OtherWorkUnderway: OtherWorkUnderway);
+				OtherWorkUnderway: OtherWorkUnderway,
+				Absorption: assessment.Demand);
 			assessment.Reason = KingdomUpgradeRules.ReasonLine(assessment.Verdict, KingdomDesign.ReferenceFor(Work, Work.ShortDisplayName), known ? successor.Name : null, assessment.StageNeeded, assessment.CrewNeeded, assessment.Shortfall);
+			// An improvement climbs within the ground it was staked on. When the next tier wants more
+			// of the plot than the founder staked, or the ground it would grow onto is where a
+			// household's yard trade stands, the founder is told by name and chooses.
+			if (KingdomUpgradeRules.IsReady(assessment.Verdict)
+				&& KingdomPlots.GrowRefused(Work, assessment.SuccessorKey, out string groundRefusal))
+			{
+				assessment.Verdict = KingdomUpgradeRules.UpgradeVerdict.NoGroundToGrow;
+				assessment.Reason = groundRefusal;
+			}
 			return assessment;
 		}
 
@@ -528,6 +561,120 @@ namespace ThousandAndFirst
 					: KingdomUpgradeRules.UnknownCapacity;
 			}
 			return KingdomUpgradeRules.ContentsWouldFit(storedLiquid, capacity, heldItems, blueprint.HasPart("Inventory"));
+		}
+
+		/// <summary>
+		/// Measures everything the absorption law (brief, Addendum 3) judges, off real ground.
+		/// Nothing here reads the clock, the age of the work, or how long anything has stood: the
+		/// figures are what the settlement holds right now and what the designs declare. The only
+		/// duration involved is the improvement's own build time, which sizes the outage and never
+		/// causes the trigger.
+		/// </summary>
+		/// <param name="System">The kingdom, for its population.</param>
+		/// <param name="Z">Zone the work stands in, walked once for the lodging elsewhere.</param>
+		/// <param name="Work">The standing work.</param>
+		/// <param name="Predecessor">Its registry entry, or null when it did not resolve.</param>
+		/// <param name="SuccessorKey">Registry key of the design it would become.</param>
+		/// <param name="BuildTicks">The improvement's build time, from
+		/// <c>KingdomUpgradeRules.BuildTicks</c>.</param>
+		public static KingdomUpgradeRules.AbsorptionDemand MeasureAbsorption(KingdomSystem System, Zone Z, GameObject Work, KingdomRules.BuildEntry Predecessor, string SuccessorKey, long BuildTicks)
+		{
+			KingdomUpgradeRules.AbsorptionDemand demand = KingdomUpgradeRules.AbsorptionDemand.None;
+			demand.BuildTicks = BuildTicks;
+			if (Predecessor == null)
+			{
+				return demand;
+			}
+			List<KindAmount> carries;
+			if (!KingdomCatalogueRules.TryParseTally(Predecessor.Carries, out carries, out _))
+			{
+				// A malformed Carries is already reported by the catalogue validator. Everything it
+				// managed to parse still counts, which is what TryParseTally hands back.
+			}
+			demand.IsHousing = string.Equals(Predecessor.Category, HousingCategory, StringComparison.OrdinalIgnoreCase);
+			demand.Residents = KingdomCatalogueRules.AmountOf(carries, KingdomCatalogueRules.SupportRoof);
+			demand.LuxuryCarried = KingdomCatalogueRules.AmountOf(carries, LuxurySupport);
+			demand.SupportPerDay = KingdomCatalogueRules.AmountOf(carries, KingdomCatalogueRules.SupportWater);
+			demand.CurrentShelter = ShelterOf(Predecessor.Key);
+			int lodgingElsewhere = 0;
+			int bestShelter = 0;
+			if (Z != null)
+			{
+				foreach (GameObject item in Z.GetObjects())
+				{
+					if (item == Work || item.GetIntProperty(BuiltProperty) != 1)
+					{
+						continue;
+					}
+					string key = DesignKeyOf(item);
+					KingdomRules.BuildEntry entry;
+					if (string.IsNullOrEmpty(key) || !KingdomData.TryGetBuilding(key, out entry))
+					{
+						continue;
+					}
+					List<KindAmount> theirs;
+					KingdomCatalogueRules.TryParseTally(entry.Carries, out theirs, out _);
+					int roof = KingdomCatalogueRules.AmountOf(theirs, KingdomCatalogueRules.SupportRoof);
+					if (roof <= 0)
+					{
+						continue;
+					}
+					lodgingElsewhere += roof;
+					int shelter = ShelterOf(key);
+					if (shelter > bestShelter)
+					{
+						bestShelter = shelter;
+					}
+				}
+			}
+			int spare = lodgingElsewhere - ((System == null) ? 0 : System.Population);
+			demand.SpareLodging = (spare > 0) ? spare : 0;
+			demand.OfferedShelter = bestShelter;
+			demand.MaterialsInHand = Z == null || KingdomMaterials.CanPayUpgrade(Z, SuccessorKey, out _);
+			demand.CraftMet = CraftReaches(System, Z, SuccessorKey);
+			return demand;
+		}
+
+		/// <summary>The catalogue category housing is filed under, which the absorption law judges
+		/// by displacement rather than by the output margin.</summary>
+		public const string HousingCategory = "housing";
+
+		/// <summary>The lifting support the luxury lane is denominated in. A design that lifts it
+		/// houses somebody with a standard; one that does not houses settlers.</summary>
+		public const string LuxurySupport = "luxury";
+
+		/// <summary>
+		/// Shelter rank of a design's own tier. A design that is not a plot has no roof state of
+		/// its own and is read as a walled room, because a single-cell work the settlement raised
+		/// stands as an object with its own walls rather than as open ground.
+		/// </summary>
+		/// <param name="Key">Registry key of the design.</param>
+		public static int ShelterOf(string Key)
+		{
+			KingdomPlotRules.PlotSpec spec;
+			if (string.IsNullOrEmpty(Key) || !KingdomPlots.TryGetSpec(Key, out spec) || spec == null)
+			{
+				return KingdomUpgradeRules.RoomShelter;
+			}
+			return KingdomPlotRules.ShelterRank(spec.Roof);
+		}
+
+		/// <summary>
+		/// Whether the settlement's craft and learning reach a design. The district and territory
+		/// gates are deliberately NOT applied: the predecessor is already standing on this ground,
+		/// so re-asking where it may stand would refuse improvements the founder sited legitimately
+		/// and could no longer do anything about.
+		/// </summary>
+		public static bool CraftReaches(KingdomSystem System, Zone Z, string Key)
+		{
+			KingdomRules.BuildEntry entry;
+			if (System == null || string.IsNullOrEmpty(Key) || !KingdomData.TryGetBuilding(Key, out entry))
+			{
+				return true;
+			}
+			ZoningJudgement judgement = KingdomZoning.Judge(System, Z?.ZoneID, entry);
+			return judgement.Verdict != ZoningVerdict.RefusedUnlearned
+				&& judgement.Verdict != ZoningVerdict.RefusedTechLevel;
 		}
 
 		/// <summary>
@@ -758,6 +905,66 @@ namespace ThousandAndFirst
 		}
 
 		/// <summary>
+		/// Begins an improvement the settlement offered and would not start on its own: a working
+		/// building the city leans on (<c>HeldOffer</c>). The dip must already have been disclosed
+		/// to the founder and consented to &mdash; <see cref="OpenHeldOffer"/> is the only caller,
+		/// and it shows <c>KingdomUpgradeRules.DipLine</c> before it asks.
+		/// <para>
+		/// The verdict is copied to <c>Ready</c> before <see cref="Begin"/> is called, because the
+		/// founder's word is exactly what makes it ready: every other condition the law checks has
+		/// already passed, and the offer is the ONE verdict a founder may overrule. Nothing else
+		/// is relaxed &mdash; <see cref="Begin"/> still refuses if the water or the material is
+		/// not actually there when it reaches for it.
+		/// </para>
+		/// </summary>
+		/// <returns>True once scaffolding is standing and the water is spent.</returns>
+		public static bool Force(KingdomSystem System, Zone Z, GameObject Work, Assessment A, KingdomSurvey Survey)
+		{
+			if (!A.Valid || !KingdomUpgradeRules.IsOffer(A.Verdict) || A.Successor == null)
+			{
+				return false;
+			}
+			Assessment consented = A;
+			consented.Verdict = KingdomUpgradeRules.UpgradeVerdict.Ready;
+			if (!Begin(System, Z, Work, consented, Survey))
+			{
+				return false;
+			}
+			string standing = KingdomDesign.ReferenceFor(Work, Work.ShortDisplayName);
+			string forced = KingdomUpgradeRules.ForcedLine(standing, A.Successor.Name, A.Margin);
+			MessageQueue.AddPlayerMessage("{{W|" + forced + "}}");
+			System.Ledger.Note("{{W|" + forced + "}}");
+			KingdomChronicle.Record(System, "the " + standing + " at " + System.KingdomDisplayName + " was set to be raised on the founder's word, and the settlement went into its reserve to do it");
+			KingdomLog.Log("improvement forced: " + A.Key + " -> " + A.SuccessorKey + " outage=" + A.OutputLost + " margin=" + A.Margin);
+			return true;
+		}
+
+		/// <summary>
+		/// Puts one held offer to the founder with the dip disclosed BEFORE consent, and forces it
+		/// only if they say so. Answers whether the work was started, so the caller knows the
+		/// listing behind it is stale.
+		/// </summary>
+		public static bool OpenHeldOffer(KingdomSystem System, Zone Z, GameObject Work, Assessment A, KingdomSurvey Survey)
+		{
+			if (!KingdomUpgradeRules.IsOffer(A.Verdict))
+			{
+				return false;
+			}
+			string standing = KingdomDesign.ReferenceFor(Work, Work.ShortDisplayName);
+			string successor = (A.Successor != null) ? A.Successor.Name : DisplayNameOf(A.SuccessorKey);
+			int picked = Popup.PickOption(
+				Title: standing,
+				Intro: KingdomUpgradeRules.DipLine(standing, successor, A.SupportPerDay, A.BuildTicks, A.Margin),
+				Options: new string[2] { "Raise it anyway, and go into the reserve", "Leave it as it is for now" },
+				AllowEscape: true);
+			if (picked != 0)
+			{
+				return false;
+			}
+			return Force(System, Z, Work, A, Survey);
+		}
+
+		/// <summary>
 		/// Moves everything from the old work into the new one and takes the old work down.
 		/// <para>
 		/// Carries the contents first &mdash; liquid by its actual mixture, then every held
@@ -787,6 +994,11 @@ namespace ThousandAndFirst
 			int carriedLiquid = CarryLiquid(Predecessor, Successor);
 			int carriedItems = CarryInventory(Predecessor, Successor, cell);
 			CarryMarks(Predecessor, Successor, SuccessorKey);
+			// A plot grows in place: the successor keeps the ground the predecessor was staked on and
+			// the next tier's footprint is stamped inside it, walls and all. Read while the
+			// predecessor still stands, because everything the ground was recorded as rides on it. A
+			// single-cell design carries nothing and this is a no-op.
+			KingdomPlots.GrowInPlace(Predecessor, Successor, SuccessorKey);
 			string predecessorName = KingdomDesign.ReferenceFor(Predecessor, Predecessor.ShortDisplayName);
 			LiquidVolume remaining = Predecessor.GetPart<LiquidVolume>();
 			if (remaining != null && remaining.Volume > 0 && cell != null)
@@ -983,6 +1195,7 @@ namespace ThousandAndFirst
 					freeHands = 0;
 				}
 				List<GameObject> works = new List<GameObject>();
+				List<Assessment> assessments = new List<Assessment>();
 				List<string> lines = new List<string>();
 				bool otherWorkUnderway = false;
 				foreach (GameObject item in zone.GetObjects())
@@ -1005,6 +1218,7 @@ namespace ThousandAndFirst
 						continue;
 					}
 					works.Add(item);
+					assessments.Add(assessment);
 					lines.Add(EntryLine(item, assessment));
 				}
 				bool groundHeld = IsGroundHeld(zone);
@@ -1026,6 +1240,14 @@ namespace ThousandAndFirst
 					SetGroundHeld(zone, !groundHeld);
 					continue;
 				}
+				// A held offer is the one verdict the founder may overrule, so picking it asks
+				// rather than toggling: the dip is disclosed and consented to before anything moves.
+				// Everything else in this screen still only ever decides what to leave alone.
+				Assessment picking = assessments[picked];
+				if (KingdomUpgradeRules.IsOffer(picking.Verdict) && OpenHeldOffer(System, zone, works[picked], picking, survey))
+				{
+					continue;
+				}
 				r_KingdomImprovement held = works[picked].RequirePart<r_KingdomImprovement>();
 				held.Held = !held.Held;
 				held.AnnouncedReason = 0;
@@ -1044,6 +1266,8 @@ namespace ThousandAndFirst
 				return "{{G|" + name + "}} - being raised into " + successor;
 			case KingdomUpgradeRules.UpgradeVerdict.Ready:
 				return "{{G|" + name + "}} - ready to be raised into " + successor + " for {{C|" + A.CostDrams + " drams}}";
+			case KingdomUpgradeRules.UpgradeVerdict.HeldOffer:
+				return "{{W|" + name + "}} - ready to improve, and held: the city leans on it. Pick it to raise it anyway.";
 			case KingdomUpgradeRules.UpgradeVerdict.NotOurWork:
 				return "{{K|" + name + "}} - yours, not the settlement's. It is left exactly as you made it.";
 			case KingdomUpgradeRules.UpgradeVerdict.StyleForbids:

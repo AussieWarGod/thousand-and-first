@@ -177,11 +177,30 @@ namespace ThousandAndFirst
 		/// <param name="Contents">Raw <c>Contents</c> attribute.</param>
 		public static void RegisterSpec(string Key, string Plot, string Open, string Sky, string Contents)
 		{
+			RegisterSpec(Key, Plot, Open, Sky, Contents, null, null);
+		}
+
+		/// <summary>
+		/// Registers one entry's plot attributes, the tier's own footprint and roof included. Call
+		/// once per <c>&lt;building&gt;</c> element that parsed successfully, with the raw
+		/// attribute strings; all of them may be null, which registers "not a plot".
+		/// </summary>
+		/// <param name="Key">The entry's <c>Key</c>. Blank keys are ignored.</param>
+		/// <param name="Plot">Raw <c>Plot</c> attribute: the envelope of ground.</param>
+		/// <param name="Open">Raw <c>Open</c> attribute.</param>
+		/// <param name="Sky">Raw <c>Sky</c> attribute.</param>
+		/// <param name="Contents">Raw <c>Contents</c> attribute.</param>
+		/// <param name="Footprint">Raw <c>Footprint</c> attribute: the ground THIS TIER stands on
+		/// inside the plot. Absent fills the plot, which is what every entry written before
+		/// footprints existed does.</param>
+		/// <param name="Roof">Raw <c>Roof</c> attribute.</param>
+		public static void RegisterSpec(string Key, string Plot, string Open, string Sky, string Contents, string Footprint, string Roof)
+		{
 			if (string.IsNullOrEmpty(Key))
 			{
 				return;
 			}
-			if (!KingdomPlotRules.TryParsePlotAttributes(Key, Plot, Open, Sky, Contents, out var spec, out var error))
+			if (!KingdomPlotRules.TryParsePlotAttributes(Key, Plot, Open, Sky, Contents, Footprint, Roof, out var spec, out var error))
 			{
 				MetricsManager.LogError("ThousandAndFirst KingdomBuildings: " + error);
 				Specs.Remove(Key);
@@ -234,6 +253,35 @@ namespace ThousandAndFirst
 
 		/// <summary>High corner y of a plot, stamped on the object that represents it.</summary>
 		public const string PlotY2Property = "KingdomPlotY2";
+
+		/// <summary>
+		/// Low corner x of the FOOTPRINT: the ground the building itself stands on, inside the
+		/// plot. Stamped separately from the plot rect because the two are different questions
+		/// &mdash; the plot is the envelope the founder staked and never changes, the footprint is
+		/// the current tier's own ground and grows when the work does.
+		/// <para>
+		/// Absent on anything raised before tiers declared footprints, which is exactly why
+		/// <see cref="TryReadFootprint"/> falls back to the plot rect: a building that already
+		/// stands filled its plot, and still does.
+		/// </para>
+		/// </summary>
+		public const string FootX1Property = "KingdomFootX1";
+
+		/// <summary>Low corner y of the footprint. See <see cref="FootX1Property"/>.</summary>
+		public const string FootY1Property = "KingdomFootY1";
+
+		/// <summary>High corner x of the footprint, inclusive. See <see cref="FootX1Property"/>.</summary>
+		public const string FootX2Property = "KingdomFootX2";
+
+		/// <summary>High corner y of the footprint, inclusive. See <see cref="FootX1Property"/>.</summary>
+		public const string FootY2Property = "KingdomFootY2";
+
+		/// <summary>
+		/// The tier's roof state as an int, so the stamped value never depends on an enum's
+		/// backing type. Absent is read through <see cref="RoofOf"/>, which derives the same three
+		/// states the open and carved flags always meant.
+		/// </summary>
+		public const string PlotRoofProperty = "KingdomPlotRoof";
 
 		/// <summary>Set once on a staked plan whose ground is blocked, so the reason is given
 		/// once rather than every settlement pass (STANDARDS 7b).</summary>
@@ -563,6 +611,125 @@ namespace ThousandAndFirst
 			Object.SetIntProperty(PlotY2Property, Rect.Y2);
 		}
 
+		/// <summary>Stamps the current tier's own ground, and what stands over it, on the object
+		/// that represents a plot. Read back by <see cref="TryReadFootprint"/> and
+		/// <see cref="RoofOf"/>.</summary>
+		public static void StampFootprint(GameObject Object, KingdomPlotRules.PlotRect Footprint, KingdomPlotRules.RoofState Roof)
+		{
+			if (Object == null)
+			{
+				return;
+			}
+			Object.SetIntProperty(FootX1Property, Footprint.X1);
+			Object.SetIntProperty(FootY1Property, Footprint.Y1);
+			Object.SetIntProperty(FootX2Property, Footprint.X2);
+			Object.SetIntProperty(FootY2Property, Footprint.Y2);
+			Object.SetIntProperty(PlotRoofProperty, (int)Roof);
+		}
+
+		/// <summary>
+		/// The ground the building itself stands on. Falls back to the plot rect for anything
+		/// raised before tiers declared footprints, which is the honest answer: it filled its
+		/// plot, and it still does.
+		/// </summary>
+		/// <returns>False for an object that is not a plot at all.</returns>
+		public static bool TryReadFootprint(GameObject Object, out KingdomPlotRules.PlotRect Footprint)
+		{
+			Footprint = default(KingdomPlotRules.PlotRect);
+			if (Object == null)
+			{
+				return false;
+			}
+			if (Object.HasIntProperty(FootX2Property))
+			{
+				Footprint = new KingdomPlotRules.PlotRect(
+					Object.GetIntProperty(FootX1Property),
+					Object.GetIntProperty(FootY1Property),
+					Object.GetIntProperty(FootX2Property),
+					Object.GetIntProperty(FootY2Property));
+				return true;
+			}
+			return TryReadRect(Object, out Footprint);
+		}
+
+		/// <summary>
+		/// What stands over a plot. Derived rather than defaulted when nothing was stamped: the
+		/// open and carved flags a works part already carries are the same three states roofs
+		/// name, so a plot staked before roofs existed reads as exactly what it was staked as.
+		/// </summary>
+		public static KingdomPlotRules.RoofState RoofOf(GameObject Object)
+		{
+			if (Object == null)
+			{
+				return KingdomPlotRules.RoofState.Walled;
+			}
+			if (Object.HasIntProperty(PlotRoofProperty))
+			{
+				return (KingdomPlotRules.RoofState)Object.GetIntProperty(PlotRoofProperty);
+			}
+			r_KingdomPlotWorks works = Object.GetPart<r_KingdomPlotWorks>();
+			if (works == null)
+			{
+				return KingdomPlotRules.RoofState.Walled;
+			}
+			return KingdomPlotRules.RoofOnGround(KingdomPlotRules.DefaultRoof(works.Open), works.Carved);
+		}
+
+		/// <summary>
+		/// The heart this plot faces, which decides where its door is cut and which side of the
+		/// plot the building fronts. A zone with no heart yet faces its own centre, so a first
+		/// building is never sited by an answer nobody gave.
+		/// </summary>
+		public static void HeartFor(Zone Z, KingdomPlotRules.PlotRect Plot, out int X, out int Y)
+		{
+			bool hasRite = TryRiteGround(Z, out var riteX, out var riteY);
+			if (KingdomPlotRules.TryHeart(KingdomLayout.ReadMarks(Z), hasRite, riteX, riteY, out var heartX, out var heartY))
+			{
+				X = heartX;
+				Y = heartY;
+				return;
+			}
+			X = Plot.CenterX;
+			Y = Plot.CenterY;
+		}
+
+		/// <summary>
+		/// The ground one tier stands on inside a staked plot: the design's own footprint, sited
+		/// against the heart-facing side so the yard lies behind the building. A tier that
+		/// declares none fills the plot, exactly as every design did before footprints existed.
+		/// </summary>
+		public static KingdomPlotRules.PlotRect FootprintFor(KingdomPlotRules.PlotRect Plot, KingdomPlotRules.PlotSpec Spec, int HeartX, int HeartY)
+		{
+			if (Spec != null && !Spec.FillsPlot
+				&& KingdomPlotRules.TryFootprintWithin(Plot, Spec.FootprintWidth, Spec.FootprintHeight, HeartX, HeartY, out var footprint))
+			{
+				return footprint;
+			}
+			return Plot;
+		}
+
+		/// <summary>
+		/// The yard of a standing plot: everything inside the plot the building does not stand on,
+		/// recomputed from the current tier every time it is asked rather than stored anywhere.
+		/// A tier that fills its plot has no yard OUTSIDE it, so the answer falls back to the
+		/// building's own interior &mdash; which is the ground yard trades have always used, and
+		/// is why nothing already standing changes.
+		/// </summary>
+		public static List<KingdomPlotRules.PlotRect> YardRects(GameObject Building)
+		{
+			List<KingdomPlotRules.PlotRect> bands = new List<KingdomPlotRules.PlotRect>();
+			if (Building == null || !TryReadRect(Building, out var plot) || !TryReadFootprint(Building, out var footprint))
+			{
+				return bands;
+			}
+			bands = KingdomPlotRules.YardBands(plot, footprint);
+			if (bands.Count == 0 && KingdomYardRules.TryYardInterior(footprint, out var interior))
+			{
+				bands.Add(interior);
+			}
+			return bands;
+		}
+
 		/// <summary>The rite ground of this zone, if it was recorded when the rite was poured.</summary>
 		public static bool TryRiteGround(Zone Z, out int X, out int Y)
 		{
@@ -602,6 +769,19 @@ namespace ThousandAndFirst
 		/// <param name="Refusal">Null on success; a founder-facing sentence otherwise.</param>
 		public static bool TryFindRect(Zone Z, KingdomSystem System, KingdomRules.BuildEntry Entry, KingdomPlotRules.PlotSpec Spec, GroundGrid Grid, Cell Prefer, out KingdomPlotRules.PlotRect Rect, out KingdomLayoutRules.LayoutOutcome Outcome, out string Refusal)
 		{
+			return TryFindRect(Z, System, Entry, Spec, (Spec == null) ? KingdomPlotRules.PlotSize.None : Spec.Size, Grid, Prefer, out Rect, out Outcome, out Refusal);
+		}
+
+		/// <summary>
+		/// Finds the ground for one plot at a tier the founder chose, which is never smaller than
+		/// the design's own but may be larger: staking wide is how a founder buys a building room
+		/// to grow into and a yard to work in meanwhile. Otherwise identical to the overload above,
+		/// which stakes exactly the ground the design asks for.
+		/// </summary>
+		/// <param name="Stake">The tier of plot to lay. <see cref="KingdomPlotRules.PlotSize.None"/>
+		/// falls back to the design's own.</param>
+		public static bool TryFindRect(Zone Z, KingdomSystem System, KingdomRules.BuildEntry Entry, KingdomPlotRules.PlotSpec Spec, KingdomPlotRules.PlotSize Stake, GroundGrid Grid, Cell Prefer, out KingdomPlotRules.PlotRect Rect, out KingdomLayoutRules.LayoutOutcome Outcome, out string Refusal)
+		{
 			Rect = default(KingdomPlotRules.PlotRect);
 			Outcome = KingdomLayoutRules.LayoutOutcome.None;
 			Refusal = null;
@@ -610,10 +790,11 @@ namespace ThousandAndFirst
 				Refusal = KingdomPlotRules.RefuseRoom((Spec == null) ? KingdomPlotRules.PlotSize.Small : Spec.Size);
 				return false;
 			}
+			KingdomPlotRules.PlotSize staked = StakedSize(Spec, Stake);
 			if (!KingdomPlotRules.TryInterior(Z.Width, Z.Height, out var interior)
-				|| !KingdomPlotRules.TryDimensions(Spec.Size, out var plotWidth, out var plotHeight))
+				|| !KingdomPlotRules.TryDimensions(staked, out var plotWidth, out var plotHeight))
 			{
-				Refusal = KingdomPlotRules.RefuseRoom(Spec.Size);
+				Refusal = KingdomPlotRules.RefuseRoom(staked);
 				return false;
 			}
 			List<KingdomPlotRules.PlotRect> laid = ReadPlots(Z);
@@ -662,7 +843,7 @@ namespace ThousandAndFirst
 				}
 				else
 				{
-					Refusal = KingdomPlotRules.RefuseRoom(Spec.Size);
+					Refusal = KingdomPlotRules.RefuseRoom(staked);
 				}
 				return false;
 			}
@@ -670,7 +851,7 @@ namespace ThousandAndFirst
 			KingdomRules.Frontier edges = (System != null)
 				? KingdomRules.FrontierEdges(Z.ZoneID, System.ClaimedZones)
 				: KingdomRules.Frontier.None;
-			Outcome = KingdomPlotRules.ChooseRect(purpose, Spec.Size, Z.Width, Z.Height, edges, marks, candidates,
+			Outcome = KingdomPlotRules.ChooseRect(purpose, staked, Z.Width, Z.Height, edges, marks, candidates,
 				hasFounder, founderX, founderY, hasRite, riteX, riteY, out var index);
 			if (index < 0)
 			{
@@ -717,15 +898,31 @@ namespace ThousandAndFirst
 		/// <returns>True once the ground is staked and the water is spent.</returns>
 		public static bool Commission(KingdomSystem System, Zone Z, KingdomRules.BuildEntry Entry, string SkinKey, out string Failure)
 		{
+			return Commission(System, Z, Entry, SkinKey, KingdomPlotRules.PlotSize.None, out Failure);
+		}
+
+		/// <summary>
+		/// Issues one plot-sized commission on ground of the founder's own choosing. Identical to
+		/// the overload above in every check it runs, with one decision added: how much ground is
+		/// staked. Never less than the design asks for, never more than the settlement has grown
+		/// into, and the ceiling that choice sets is refused BY NAME later rather than quietly
+		/// worked around (<see cref="GrowRefused"/>).
+		/// </summary>
+		/// <param name="Stake">The tier of plot to lay, from
+		/// <see cref="KingdomPlotRules.StakeableSizes"/>.
+		/// <see cref="KingdomPlotRules.PlotSize.None"/> stakes the design's own.</param>
+		public static bool Commission(KingdomSystem System, Zone Z, KingdomRules.BuildEntry Entry, string SkinKey, KingdomPlotRules.PlotSize Stake, out string Failure)
+		{
 			Failure = null;
 			if (System == null || Z == null || Entry == null || !TryGetSpec(Entry.Key, out var spec))
 			{
 				Failure = "No such design.";
 				return false;
 			}
-			if (!KingdomPlotRules.Allows(System.Stage, spec.Size))
+			KingdomPlotRules.PlotSize staked = StakedSize(spec, Stake);
+			if (!KingdomPlotRules.Allows(System.Stage, staked))
 			{
-				Failure = KingdomPlotRules.RefuseStage(spec.Size, System.SeatName, System.Stage);
+				Failure = KingdomPlotRules.RefuseStage(staked, System.SeatName, System.Stage);
 				return false;
 			}
 			bool carved = KingdomPlotRules.IsUnderground(Z.Z);
@@ -734,12 +931,19 @@ namespace ThousandAndFirst
 				Failure = KingdomPlotRules.RefuseSky(Entry.Name);
 				return false;
 			}
+			if (KingdomPlotRules.RoofRefusesSky(spec))
+			{
+				// A tier that declared itself walled, for a design that needs weather. Refused by
+				// name rather than raised into something that could never work.
+				Failure = KingdomPlotRules.RefuseRoofSky(Entry.Name, spec.Roof);
+				return false;
+			}
 			if (Entry.Defence <= 0 && CountBuilt(Z) >= KingdomRules.MaxBuildingsForStage(System.Stage))
 			{
 				Failure = "There is no more room in the plan. " + System.SeatName + " is as built-up as this ground allows, until it grows into something larger.";
 				return false;
 			}
-			if (KingdomPlotRules.WouldExceedBudget(ReadPlots(Z), spec.Size, Z.Width, Z.Height))
+			if (KingdomPlotRules.WouldExceedBudget(ReadPlots(Z), staked, Z.Width, Z.Height))
 			{
 				Failure = KingdomPlotRules.RefuseBudget(System.SeatName);
 				return false;
@@ -750,12 +954,14 @@ namespace ThousandAndFirst
 				return false;
 			}
 			GroundGrid grid = new GroundGrid(Z);
-			if (!TryFindRect(Z, System, Entry, spec, grid, null, out var rect, out var outcome, out var refusal))
+			if (!TryFindRect(Z, System, Entry, spec, staked, grid, null, out var rect, out var outcome, out var refusal))
 			{
 				Failure = refusal;
 				return false;
 			}
-			GameObject works = Stake(System, Z, rect, Entry, spec, grid, SkinKey, carved);
+			// Qualified: this overload's own Stake parameter (the tier the founder chose) shadows
+			// the Stake method by name inside this body.
+			GameObject works = KingdomPlots.Stake(System, Z, rect, Entry, spec, grid, SkinKey, carved);
 			if (works == null)
 			{
 				Failure = "The ground could not be staked.";
@@ -767,7 +973,7 @@ namespace ThousandAndFirst
 			KingdomGrowth.ConsumeStoredWater(Z, Entry.CostDrams);
 			KingdomChronicle.Record(System, "ground was staked at " + System.KingdomDisplayName + " for " + XRL.Language.Grammar.A(Entry.Name));
 			string clause = KingdomLayoutRules.PlacementClause(KingdomLayout.PurposeOfEntry(Entry), outcome);
-			MessageQueue.AddPlayerMessage("{{G|A " + KingdomPlotRules.SizeName(spec.Size) + " plot is staked for the " + Entry.Name
+			MessageQueue.AddPlayerMessage("{{G|A " + KingdomPlotRules.SizeName(staked) + " plot is staked for the " + Entry.Name
 				+ ((clause == null) ? "" : (" " + clause)) + ".}}");
 			return true;
 		}
@@ -801,14 +1007,20 @@ namespace ThousandAndFirst
 			part.Y1 = Rect.Y1;
 			part.X2 = Rect.X2;
 			part.Y2 = Rect.Y2;
+			HeartFor(Z, Rect, out var heartX, out var heartY);
+			KingdomPlotRules.RoofState roof = KingdomPlotRules.RoofOnGround(Spec.Roof, Carved);
+			KingdomPlotRules.PlotRect footprint = FootprintFor(Rect, Spec, heartX, heartY);
 			part.StartTick = The.Game.TimeTicks;
+			// The whole PLOT is cleared and the FOOTPRINT is walled: staking wide is paid for in
+			// clearing, earned back in material and yard, and never in a longer wall than the
+			// building actually has.
 			part.TotalTicks = KingdomPlotRules.RaiseTicks(
 				KingdomCommission.CraftBuildTicks(Entry.BuildTicks, System.ZoneDistricts.Values),
-				Grid.CellsOf(Rect), Rect, Carved, Spec.Open);
+				Grid.CellsOf(Rect), footprint, roof, Carved);
 			part.StageApplied = (int)KingdomPlotRules.PlotStage.Staked;
 			part.Open = Spec.Open;
 			part.Carved = Carved;
-			part.WallBlueprint = (Spec.Open || Carved) ? null : KingdomPlotRules.WallBlueprintFor(System.Style, System.FoundingRegionName);
+			part.WallBlueprint = KingdomPlotRules.RaisesWalls(roof) ? KingdomPlotRules.WallBlueprintFor(System.Style, System.FoundingRegionName) : null;
 			part.ContentsTable = Spec.Contents;
 			part.StaffNeeded = Entry.Staff;
 			part.ThresholdManning = KingdomRules.IsThresholdManning(Entry.Manning);
@@ -818,20 +1030,20 @@ namespace ThousandAndFirst
 				bool hasAdvancedTinkering = The.Player != null && The.Player.HasSkill("Tinkering_Tinker1");
 				part.DefencePending = KingdomRules.WallDefence(Entry.Defence, System.FoundingTerrainBlueprint, System.FoundingRegionName, hasTinkering, hasAdvancedTinkering);
 			}
-			bool hasRite = TryRiteGround(Z, out var riteX, out var riteY);
-			bool hasHeart = KingdomPlotRules.TryHeart(KingdomLayout.ReadMarks(Z), hasRite, riteX, riteY, out var heartX, out var heartY);
-			bool foundDoor = KingdomPlotRules.TryDoor(Rect,
-				hasHeart ? heartX : Rect.CenterX, hasHeart ? heartY : Rect.CenterY, out var doorX, out var doorY);
-			part.HasDoor = foundDoor && !Spec.Open;
+			bool foundDoor = KingdomPlotRules.TryDoor(footprint, heartX, heartY, out var doorX, out var doorY);
+			part.HasDoor = foundDoor && KingdomPlotRules.Encloses(roof);
 			part.DoorX = doorX;
 			part.DoorY = doorY;
 			works.DisplayName = "plot: " + Entry.Name;
 			works.SetStringProperty(PlotIdProperty, Entry.Key + "@" + Rect.X1 + "." + Rect.Y1 + "." + The.Game.TimeTicks);
+			StampRect(works, Rect);
+			StampFootprint(works, footprint, roof);
 			works.SetStringProperty(KingdomUpgrade.BuildKeyProperty, Entry.Key);
 			KingdomDesign.StageSkin(works, Entry, SkinKey);
 			cell.AddObject(works);
 			KingdomLog.Log("plot staked: " + Entry.Key + " " + Rect.X1 + "," + Rect.Y1 + " to " + Rect.X2 + "," + Rect.Y2
-				+ (Carved ? " (carved)" : "") + " over " + part.TotalTicks + " ticks");
+				+ " footprint " + footprint.X1 + "," + footprint.Y1 + " to " + footprint.X2 + "," + footprint.Y2
+				+ " " + roof.ToString().ToLowerInvariant() + " over " + part.TotalTicks + " ticks");
 			return works;
 		}
 
@@ -898,6 +1110,11 @@ namespace ThousandAndFirst
 				if (KingdomPlotRules.IsUnderground(zone.Z) && spec.RequiresSky)
 				{
 					refusal = KingdomPlotRules.RefuseSky(Entry.Name);
+					return;
+				}
+				if (KingdomPlotRules.RoofRefusesSky(spec))
+				{
+					refusal = KingdomPlotRules.RefuseRoofSky(Entry.Name, spec.Roof);
 					return;
 				}
 				if (KingdomPlotRules.WouldExceedBudget(ReadPlots(zone), spec.Size, zone.Width, zone.Height))
@@ -988,6 +1205,348 @@ namespace ThousandAndFirst
 			return true;
 		}
 
+		// --- Staking foresight ------------------------------------------------------------
+
+		/// <summary>The tier actually staked: the founder's choice, floored at the ground the
+		/// design itself asks for. A plot is never staked smaller than the building on it.</summary>
+		public static KingdomPlotRules.PlotSize StakedSize(KingdomPlotRules.PlotSpec Spec, KingdomPlotRules.PlotSize Stake)
+		{
+			if (Spec == null)
+			{
+				return Stake;
+			}
+			return (Stake == KingdomPlotRules.PlotSize.None || Stake < Spec.Size) ? Spec.Size : Stake;
+		}
+
+		/// <summary>
+		/// Every tier a design will ever grow into, in order, with the ground each one stands on.
+		/// This is what the founder is shown before the stake goes in: the whole chain's
+		/// footprints, so staking wide or staking tight is a decision made with the ceiling in
+		/// view rather than discovered years later.
+		/// <para>
+		/// Walks the improvement chain by key and stops the moment it repeats one, so a
+		/// third-party chain that rings does not hang the commission screen. The catalogue
+		/// validator reports the ring separately; this just refuses to walk it.
+		/// </para>
+		/// </summary>
+		/// <returns>An empty list for a design that is not a plot at all.</returns>
+		public static List<KingdomPlotRules.ChainStep> ChainOf(KingdomRules.BuildEntry Entry)
+		{
+			List<KingdomPlotRules.ChainStep> steps = new List<KingdomPlotRules.ChainStep>();
+			List<string> walked = new List<string>();
+			KingdomRules.BuildEntry at = Entry;
+			while (at != null && !walked.Contains(at.Key))
+			{
+				walked.Add(at.Key);
+				if (!TryGetSpec(at.Key, out var spec) || !KingdomPlotRules.TryFootprint(spec, out var width, out var height))
+				{
+					break;
+				}
+				steps.Add(new KingdomPlotRules.ChainStep(at.Key, at.Name, width, height, spec.Roof));
+				if (!KingdomUpgrade.TryGetChain(at.Key, out var chain) || chain == null || !chain.Defined
+					|| !KingdomData.TryGetBuilding(chain.SuccessorKey, out var next))
+				{
+					break;
+				}
+				at = next;
+			}
+			return steps;
+		}
+
+		/// <summary>The tiers of plot a founder may stake for this design right now, smallest
+		/// first, for a picker. Empty when the design is not a plot or the settlement cannot lay
+		/// one yet, in which case the ordinary stage refusal says why.</summary>
+		public static List<KingdomPlotRules.PlotSize> StakeableSizes(KingdomSystem System, KingdomRules.BuildEntry Entry)
+		{
+			if (System == null || Entry == null || !TryGetSpec(Entry.Key, out var spec))
+			{
+				return new List<KingdomPlotRules.PlotSize>();
+			}
+			return KingdomPlotRules.StakeableSizes(spec.Size, System.Stage, ChainOf(Entry));
+		}
+
+		/// <summary>What the founder reads before choosing how much ground to stake: this plot's
+		/// span, the whole chain's footprints, and where the ceiling falls. Null for a design that
+		/// is not a plot.</summary>
+		public static string ForesightFor(KingdomRules.BuildEntry Entry, KingdomPlotRules.PlotSize Stake)
+		{
+			if (Entry == null || !TryGetSpec(Entry.Key, out var spec))
+			{
+				return null;
+			}
+			return KingdomPlotRules.ForesightLine(StakedSize(spec, Stake), ChainOf(Entry));
+		}
+
+		// --- Growing in place -------------------------------------------------------------
+
+		/// <summary>
+		/// Whether the next tier has room on the ground this one was staked on, and what the
+		/// founder is told when it does not. Two ways it can fail, and each names the thing that
+		/// would lift it: the tier wants more ground than the plot holds, or the ground it would
+		/// take is where a household's yard trade stands.
+		/// <para>
+		/// A yard work is never taken down to make room. The founder is told which trade is in the
+		/// way and chooses &mdash; let it go, or leave the building as it is &mdash; because the
+		/// trade was their decision and tidying it away silently would be the settlement making it
+		/// for them.
+		/// </para>
+		/// </summary>
+		/// <param name="Work">The standing work.</param>
+		/// <param name="SuccessorKey">The design it would become.</param>
+		/// <param name="Refusal">A founder-facing sentence when this returns true; null
+		/// otherwise.</param>
+		/// <returns>False for anything that is not a plot, for a successor that is not a plot, and
+		/// for a tier that has room &mdash; all three of which leave the improvement alone.</returns>
+		public static bool GrowRefused(GameObject Work, string SuccessorKey, out string Refusal)
+		{
+			Refusal = null;
+			if (Work == null || string.IsNullOrEmpty(SuccessorKey) || !TryGetSpec(SuccessorKey, out var spec))
+			{
+				return false;
+			}
+			if (!TryReadRect(Work, out var plot) || !TryReadFootprint(Work, out var footprint))
+			{
+				return false;
+			}
+			if (!KingdomPlotRules.TryFootprint(spec, out var width, out var height))
+			{
+				return false;
+			}
+			string name = KingdomDesign.ReferenceFor(Work, Work.ShortDisplayName);
+			string successorName = KingdomUpgrade.DisplayNameOf(SuccessorKey);
+			Zone zone = Work.CurrentZone;
+			if (zone == null)
+			{
+				return false;
+			}
+			HeartFor(zone, plot, out var heartX, out var heartY);
+			if (!KingdomPlotRules.TryFootprintWithin(plot, width, height, heartX, heartY, out var grown))
+			{
+				Refusal = KingdomPlotRules.RefuseFootprint(successorName, width, height,
+					KingdomPlotRules.SmallestPlotFor(plot.Width, plot.Height));
+				return true;
+			}
+			if (!KingdomPlotRules.TakesNewGround(footprint, grown))
+			{
+				return false;
+			}
+			for (int y = grown.Y1; y <= grown.Y2; y++)
+			{
+				for (int x = grown.X1; x <= grown.X2; x++)
+				{
+					if (footprint.Contains(x, y))
+					{
+						continue;
+					}
+					Cell cell = zone.GetCell(x, y);
+					if (cell == null)
+					{
+						continue;
+					}
+					foreach (GameObject item in cell.GetObjects())
+					{
+						if (item != null && item.GetIntProperty(KingdomYards.YardWorkProperty) == 1)
+						{
+							Refusal = KingdomPlotRules.RefuseYardWork(name, successorName, item.ShortDisplayNameStripped);
+							return true;
+						}
+					}
+				}
+			}
+			return false;
+		}
+
+		/// <summary>
+		/// Carries a plot across an improvement and stamps the new tier's footprint inside it. The
+		/// plot itself never moves: the ground the founder staked is the ground the building keeps,
+		/// and the yard is whatever the grown footprint leaves.
+		/// <para>
+		/// Called with the predecessor still standing, so everything the ground was recorded as is
+		/// still readable. A single-cell design carries nothing and this does nothing.
+		/// </para>
+		/// </summary>
+		public static void GrowInPlace(GameObject Predecessor, GameObject Successor, string SuccessorKey)
+		{
+			if (Predecessor == null || Successor == null || !TryReadRect(Predecessor, out var plot))
+			{
+				return;
+			}
+			string id = Predecessor.GetStringProperty(PlotIdProperty);
+			if (!string.IsNullOrEmpty(id))
+			{
+				Successor.SetStringProperty(PlotIdProperty, id);
+			}
+			StampRect(Successor, plot);
+			KingdomPlotRules.PlotRect old = TryReadFootprint(Predecessor, out var read) ? read : plot;
+			KingdomPlotRules.RoofState roof = RoofOf(Predecessor);
+			Zone zone = Predecessor.CurrentZone ?? Successor.CurrentZone;
+			if (zone == null || !TryGetSpec(SuccessorKey, out var spec))
+			{
+				// Nothing known about what it became: carry forward only what was actually
+				// recorded. A building raised before footprints existed has no roof stamped on it
+				// and gets none invented for it -- it filled its plot, and it still does.
+				if (Predecessor.HasIntProperty(PlotRoofProperty))
+				{
+					StampFootprint(Successor, old, roof);
+				}
+				return;
+			}
+			HeartFor(zone, plot, out var heartX, out var heartY);
+			KingdomPlotRules.RoofState grownRoof = KingdomPlotRules.RoofOnGround(spec.Roof, KingdomPlotRules.IsUnderground(zone.Z));
+			KingdomPlotRules.PlotRect grown = FootprintFor(plot, spec, heartX, heartY);
+			StampFootprint(Successor, grown, grownRoof);
+			KingdomSystem system = The.Game?.RequireSystem<KingdomSystem>();
+			// The settlement's wall material is derived and not stored, exactly as it is when a
+			// plot is first raised, so a grown building is walled in the same stone as its
+			// neighbours whether or not anybody wrote that stone down.
+			string wall = (system == null) ? null : KingdomPlotRules.WallBlueprintFor(system.Style, system.FoundingRegionName);
+			Restamp(zone, id, wall, old, grown, grownRoof, heartX, heartY);
+		}
+
+		/// <summary>
+		/// Raises the enclosure the grown tier needs and takes down the part of the old one that
+		/// now stands inside the room. Only ever touches objects this plot itself created and
+		/// marked, which is the one thing the protection law lets a kingdom system take down: a
+		/// wall the settlement raised on the settlement's own plot, now in the middle of a bigger
+		/// building. Anything else standing on the ground the building grew onto stops the cell
+		/// being built on rather than being cleared out of the way.
+		/// </summary>
+		private static void Restamp(Zone Z, string Id, string Wall, KingdomPlotRules.PlotRect Old, KingdomPlotRules.PlotRect Grown, KingdomPlotRules.RoofState Roof, int HeartX, int HeartY)
+		{
+			for (int y = Old.Y1; y <= Old.Y2; y++)
+			{
+				for (int x = Old.X1; x <= Old.X2; x++)
+				{
+					if (Grown.Contains(x, y) && Grown.IsBorder(x, y))
+					{
+						continue;
+					}
+					TakeDownEnclosure(Z.GetCell(x, y), Id);
+				}
+			}
+			if (!KingdomPlotRules.Encloses(Roof))
+			{
+				return;
+			}
+			bool hasDoor = KingdomPlotRules.TryDoor(Grown, HeartX, HeartY, out var doorX, out var doorY);
+			for (int y = Grown.Y1; y <= Grown.Y2; y++)
+			{
+				for (int x = Grown.X1; x <= Grown.X2; x++)
+				{
+					Cell cell = Z.GetCell(x, y);
+					if (cell == null || BlockedForPlot(cell))
+					{
+						continue;
+					}
+					bool border = Grown.IsBorder(x, y);
+					if (border && hasDoor && x == doorX && y == doorY)
+					{
+						PlaceForPlot(cell, DoorBlueprint, Id);
+						continue;
+					}
+					if (border)
+					{
+						if (KingdomPlotRules.RaisesWalls(Roof))
+						{
+							PlaceForPlot(cell, Wall, Id);
+						}
+						continue;
+					}
+					PlaceForPlot(cell, FloorBlueprint, Id);
+				}
+			}
+		}
+
+		/// <summary>Takes down this plot's own walls, doors, and posts in one cell, and nothing
+		/// else standing there: the floor stays because a floor outside a grown building is a swept
+		/// yard, and furniture, yard trades, and everything the founder put down are left exactly
+		/// where they are.</summary>
+		private static void TakeDownEnclosure(Cell C, string Id)
+		{
+			if (C == null || string.IsNullOrEmpty(Id))
+			{
+				return;
+			}
+			List<GameObject> standing = new List<GameObject>(C.GetObjects());
+			for (int i = 0; i < standing.Count; i++)
+			{
+				GameObject item = standing[i];
+				if (item == null || item.GetIntProperty(PlotPartProperty) != 1
+					|| item.GetStringProperty(PlotIdProperty) != Id
+					|| item.GetIntProperty(KingdomYards.YardWorkProperty) == 1)
+				{
+					continue;
+				}
+				if (item.IsWall() || item.IsDoor() || item.Blueprint == FrameBlueprint)
+				{
+					item.Destroy(null, Silent: true);
+				}
+			}
+		}
+
+		/// <summary>Whether anything in a cell stops the settlement building on it: something the
+		/// founder owns or placed, another work, open water, or a household's own yard trade. This
+		/// plot's own floor and walls do not, which is what lets a grown tier build through what
+		/// its smaller self left standing.</summary>
+		private static bool BlockedForPlot(Cell C)
+		{
+			if (C == null)
+			{
+				return true;
+			}
+			foreach (GameObject item in C.GetObjects())
+			{
+				if (item == null || item.IsCreature || item.IsPlayer())
+				{
+					continue;
+				}
+				if (item.GetIntProperty(KingdomYards.YardWorkProperty) == 1)
+				{
+					return true;
+				}
+				if (item.GetIntProperty(PlotPartProperty) == 1)
+				{
+					continue;
+				}
+				if (ReadObject(item) != KingdomPlotRules.GroundKind.Bare)
+				{
+					return true;
+				}
+			}
+			return false;
+		}
+
+		/// <summary>Places one object and marks it as this plot's, so a later striking takes down
+		/// exactly what the settlement raised and nothing else. Does nothing when the cell already
+		/// holds one of this plot's own objects of that blueprint, so re-stamping a grown tier
+		/// never doubles a wall or lays a second floor.</summary>
+		private static GameObject PlaceForPlot(Cell C, string Blueprint, string Id)
+		{
+			if (C == null || string.IsNullOrEmpty(Blueprint))
+			{
+				return null;
+			}
+			foreach (GameObject item in C.GetObjects())
+			{
+				if (item != null && item.Blueprint == Blueprint)
+				{
+					return null;
+				}
+			}
+			GameObject placed = GameObject.Create(Blueprint);
+			if (placed == null)
+			{
+				return null;
+			}
+			placed.SetIntProperty(PlotPartProperty, 1);
+			if (!string.IsNullOrEmpty(Id))
+			{
+				placed.SetStringProperty(PlotIdProperty, Id);
+			}
+			C.AddObject(placed);
+			return placed;
+		}
+
 		// --- The stamp --------------------------------------------------------------------
 
 		/// <summary>
@@ -1032,20 +1591,22 @@ namespace ThousandAndFirst
 			{
 				return false;
 			}
-			KingdomPlotRules.PlotRect rect = Works.Rect();
+			KingdomPlotRules.PlotRect plot = Works.Rect();
+			KingdomPlotRules.PlotRect footprint = TryReadFootprint(parent, out var stamped) ? stamped : plot;
+			KingdomPlotRules.RoofState roof = RoofOf(parent);
 			switch (Stage)
 			{
 				case KingdomPlotRules.PlotStage.Cleared:
-					ClearGround(Works, zone, rect);
+					ClearGround(Works, zone, plot, footprint, roof);
 					break;
 				case KingdomPlotRules.PlotStage.Frame:
-					RaiseFrame(Works, zone, rect);
+					RaiseFrame(Works, zone, footprint, roof);
 					break;
 				case KingdomPlotRules.PlotStage.Walls:
-					RaiseWalls(Works, zone, rect);
+					RaiseWalls(Works, zone, footprint, roof);
 					break;
 				case KingdomPlotRules.PlotStage.Done:
-					return Finish(Works, zone, rect);
+					return Finish(Works, zone, plot, footprint, roof);
 			}
 			string line = KingdomPlotRules.StageLine(Stage, Works.DisplayName ?? "work");
 			if (line != null && parent.IsValid() && zone.IsActive())
@@ -1062,19 +1623,20 @@ namespace ThousandAndFirst
 		/// thing may be destroyed &mdash; that decision was made, once, when the founder chose
 		/// this ground.
 		/// </summary>
-		private static void ClearGround(r_KingdomPlotWorks Works, Zone Z, KingdomPlotRules.PlotRect Rect)
+		private static void ClearGround(r_KingdomPlotWorks Works, Zone Z, KingdomPlotRules.PlotRect Plot, KingdomPlotRules.PlotRect Footprint, KingdomPlotRules.RoofState Roof)
 		{
 			int[] yields = new int[5];
-			// Carving cuts the room, not the hill. Everything on the plot's edge is left exactly
-			// where it stands, because underground that rock IS the enclosure -- which is the
-			// whole of the bargain that makes the doubled clearing cost worth paying. Only the
-			// doorway is cut through it.
-			bool carveOnly = Works.Carved && !Works.Open && Rect.Width > 2 && Rect.Height > 2;
-			for (int y = Rect.Y1; y <= Rect.Y2; y++)
+			// Carving cuts the room, not the hill. Everything on the building's own edge is left
+			// exactly where it stands, because underground that rock IS the enclosure -- which is
+			// the whole of the bargain that makes the doubled clearing cost worth paying. Only the
+			// doorway is cut through it. The yard around it is cleared like any other ground, and
+			// pays in stone for being cut out of rock.
+			bool carveOnly = Roof == KingdomPlotRules.RoofState.Carved && Footprint.Width > 2 && Footprint.Height > 2;
+			for (int y = Plot.Y1; y <= Plot.Y2; y++)
 			{
-				for (int x = Rect.X1; x <= Rect.X2; x++)
+				for (int x = Plot.X1; x <= Plot.X2; x++)
 				{
-					if (carveOnly && Rect.IsBorder(x, y) && !(Works.HasDoor && x == Works.DoorX && y == Works.DoorY))
+					if (carveOnly && Footprint.IsBorder(x, y) && !(Works.HasDoor && x == Works.DoorX && y == Works.DoorY))
 					{
 						continue;
 					}
@@ -1147,9 +1709,9 @@ namespace ThousandAndFirst
 			return The.Game.GetIntGameState(MaterialStatePrefix + Of);
 		}
 
-		private static void RaiseFrame(r_KingdomPlotWorks Works, Zone Z, KingdomPlotRules.PlotRect Rect)
+		private static void RaiseFrame(r_KingdomPlotWorks Works, Zone Z, KingdomPlotRules.PlotRect Rect, KingdomPlotRules.RoofState Roof)
 		{
-			if (Works.Open || Works.Carved)
+			if (!KingdomPlotRules.RaisesWalls(Roof))
 			{
 				return;
 			}
@@ -1159,11 +1721,12 @@ namespace ThousandAndFirst
 			PlaceMarked(Works, Z.GetCell(Rect.X2, Rect.Y2), FrameBlueprint);
 		}
 
-		private static void RaiseWalls(r_KingdomPlotWorks Works, Zone Z, KingdomPlotRules.PlotRect Rect)
+		private static void RaiseWalls(r_KingdomPlotWorks Works, Zone Z, KingdomPlotRules.PlotRect Rect, KingdomPlotRules.RoofState Roof)
 		{
-			if (Works.Open)
+			if (!KingdomPlotRules.Encloses(Roof))
 			{
-				// A field, a yard, a salt-pan, a reservoir. Same rect discipline, no enclosure.
+				// A field, a yard, a salt-pan, a reservoir, a tent: nothing the settlement raises
+				// stands round these. Same rect discipline, no enclosure and no floor.
 				return;
 			}
 			TakeDownFrame(Works, Z, Rect);
@@ -1187,7 +1750,7 @@ namespace ThousandAndFirst
 						// Underground the rock IS the wall: what the carving left standing around
 						// the plot is the enclosure, and raising a second one inside it would be
 						// building a wall against a wall.
-						if (!Works.Carved && !string.IsNullOrEmpty(Works.WallBlueprint))
+						if (KingdomPlotRules.RaisesWalls(Roof) && !string.IsNullOrEmpty(Works.WallBlueprint))
 						{
 							PlaceMarked(Works, cell, Works.WallBlueprint);
 						}
@@ -1228,23 +1791,7 @@ namespace ThousandAndFirst
 
 		private static GameObject PlaceMarked(r_KingdomPlotWorks Works, Cell C, string Blueprint)
 		{
-			if (C == null || string.IsNullOrEmpty(Blueprint))
-			{
-				return null;
-			}
-			GameObject placed = GameObject.Create(Blueprint);
-			if (placed == null)
-			{
-				return null;
-			}
-			placed.SetIntProperty(PlotPartProperty, 1);
-			string id = Works.ParentObject?.GetStringProperty(PlotIdProperty);
-			if (!string.IsNullOrEmpty(id))
-			{
-				placed.SetStringProperty(PlotIdProperty, id);
-			}
-			C.AddObject(placed);
-			return placed;
+			return PlaceForPlot(C, Blueprint, Works.ParentObject?.GetStringProperty(PlotIdProperty));
 		}
 
 		/// <summary>
@@ -1252,7 +1799,7 @@ namespace ThousandAndFirst
 		/// vanilla huts furnish, raises the object that stands for the building, hands it every
 		/// property the rest of the settlement reads a work by, and takes the works down.
 		/// </summary>
-		private static bool Finish(r_KingdomPlotWorks Works, Zone Z, KingdomPlotRules.PlotRect Rect)
+		private static bool Finish(r_KingdomPlotWorks Works, Zone Z, KingdomPlotRules.PlotRect Rect, KingdomPlotRules.PlotRect Footprint, KingdomPlotRules.RoofState Roof)
 		{
 			GameObject parent = Works.ParentObject;
 			Cell cell = parent?.CurrentCell;
@@ -1290,6 +1837,7 @@ namespace ThousandAndFirst
 				building.SetStringProperty(PlotIdProperty, id);
 			}
 			StampRect(building, Rect);
+			StampFootprint(building, Footprint, Roof);
 			if (building.GetPart<LiquidVolume>() != null)
 			{
 				building.SetIntProperty("KingdomStores", 1);
@@ -1315,7 +1863,7 @@ namespace ThousandAndFirst
 				}
 			}
 			building.MakeActive();
-			Furnish(Z, Rect, contents, id, entry.Key);
+			Furnish(Z, Footprint, contents, id, entry.Key);
 			KingdomLog.Log("plot complete: " + displayName + " (" + entry.Blueprint + ") over " + Rect.X1 + "," + Rect.Y1 + " to " + Rect.X2 + "," + Rect.Y2);
 			KingdomSystem system = The.Game.RequireSystem<KingdomSystem>();
 			if (system.Founded)

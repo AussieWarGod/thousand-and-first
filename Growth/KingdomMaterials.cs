@@ -656,6 +656,33 @@ namespace ThousandAndFirst
 		}
 
 		/// <summary>
+		/// Whether the dedicated stockpiles on this ground cover an IMPROVEMENT's material cost,
+		/// without spending any of it. The absorption law asks this before a work is judged ready,
+		/// so an improvement short of material is refused by name rather than begun and abandoned
+		/// at the moment <see cref="PayUpgrade"/> would have taken the cost.
+		/// </summary>
+		/// <param name="Z">Ground the work stands on.</param>
+		/// <param name="SuccessorKey">Registry key of the design it would become.</param>
+		/// <param name="Missing">What the stockpiles are short of, or null when they cover it.
+		/// </param>
+		public static bool CanPayUpgrade(Zone Z, string SuccessorKey, out string Missing)
+		{
+			Missing = null;
+			KingdomMaterialTally cost = UpgradeCostFor(SuccessorKey);
+			if (cost.IsEmpty())
+			{
+				return true;
+			}
+			MaterialStock stock = Stock(Z);
+			if (KingdomMaterialRules.Covers(stock.Tally, cost))
+			{
+				return true;
+			}
+			Missing = KingdomMaterialRules.Missing(stock.Tally, cost).Describe();
+			return false;
+		}
+
+		/// <summary>
 		/// Spends an improvement's material cost, and says once why an improvement is waiting
 		/// when it cannot. The automatic improvement path has no founder standing at it, so the
 		/// reason goes in the ledger where the homecoming report will read it out. STANDARDS 7b.
@@ -1060,13 +1087,20 @@ namespace ThousandAndFirst
 			int spilled = stock.PutAll(salvage, cell);
 			// Only ever an object the settlement created and marked, per the protection law:
 			// OrderStrike refuses anything without KingdomBuilt, and nothing else sets this.
+			// The socket layer reads the plot's own rect off Building before it goes, and reports
+			// whether it took over the telling: a live conversion supplies its own single combined
+			// line, an ordinary strike leaves the rect a re-buildable socket and says nothing here.
+			bool convertedInPlace = KingdomSocket.OnCleared(System, Z, Building);
 			Building.Obliterate();
 			string returned = salvage.Describe();
-			KingdomChronicle.Record(System, "the " + name + " of " + System.KingdomDisplayName + " was struck, and the crew stood in the gap where it had been");
-			System.RecordDeed("the striking of the " + name + " at " + System.KingdomDisplayName);
-			MessageQueue.AddPlayerMessage("{{W|The " + name + " comes down.}} "
-				+ ((returned == null) ? "Nothing of it was worth keeping." : (returned + " is carried to the stockpiles."))
-				+ ((spilled > 0) ? " Some of it went on the ground for want of a stockpile." : ""));
+			if (!convertedInPlace)
+			{
+				KingdomChronicle.Record(System, "the " + name + " of " + System.KingdomDisplayName + " was struck, and the crew stood in the gap where it had been");
+				System.RecordDeed("the striking of the " + name + " at " + System.KingdomDisplayName);
+				MessageQueue.AddPlayerMessage("{{W|The " + name + " comes down.}} "
+					+ ((returned == null) ? "Nothing of it was worth keeping." : (returned + " is carried to the stockpiles."))
+					+ ((spilled > 0) ? " Some of it went on the ground for want of a stockpile." : ""));
+			}
 			KingdomLog.Log("materials: struck " + name + " salvage=" + (returned ?? "none") + " spilled=" + spilled);
 		}
 

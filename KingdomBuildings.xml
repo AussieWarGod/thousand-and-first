@@ -67,6 +67,7 @@
   -->
   <building Key="tent" DisplayName="settler's tent (a roof by nightfall)" Blueprint="r_KingdomTent"
             Cost="3" Ticks="900" Styles="all" Category="housing" Plot="S"
+            Footprint="3x2" Roof="Soft"
             Materials="canvas:2" Carries="roof:2" Contents="r_KingdomFurnishings_Dwelling"
             UpgradesTo="tentrow">
     <skin Key="canvas" ColorString="&amp;y" DetailColor="w" />
@@ -77,10 +78,12 @@
   </building>
   <building Key="tentrow" DisplayName="staked tent-row (canvas, and a wall against the wind)" Blueprint="r_KingdomTentRow"
             Cost="5" Ticks="1200" Styles="all" Category="housing" Plot="S"
+            Footprint="5x2"
             Materials="canvas:3,timber:1" Carries="roof:3" Contents="r_KingdomFurnishings_Dwelling" />
 
   <building Key="hut" DisplayName="timber hut" Blueprint="r_KingdomHut"
             Cost="6" Ticks="1800" Styles="all" Category="housing" Plot="S"
+            Footprint="4x3"
             Materials="timber:6,mud:2" Carries="roof:3" Contents="r_KingdomFurnishings_Dwelling"
             UpgradesTo="hutyard">
     <!--
@@ -97,6 +100,7 @@
   </building>
   <building Key="hutyard" DisplayName="hut and yard (room to work outside the door)" Blueprint="r_KingdomHutYard"
             Cost="10" Ticks="2400" Styles="all" Category="housing" Plot="S"
+            Footprint="5x4"
             Materials="timber:10,stone:2" Carries="roof:5" Contents="r_KingdomFurnishings_Dwelling" />
 
   <building Key="house" DisplayName="stone house" Blueprint="r_KingdomHouse"

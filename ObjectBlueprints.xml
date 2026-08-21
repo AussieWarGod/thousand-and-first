@@ -667,6 +667,23 @@
     <stat Name="Hitpoints" Value="20" />
   </object>
 
+  <!-- A cleared plot, left standing by KingdomSocket.LeaveSocket once a struck plot's own
+       walls, floor, and door have come down. Inherits vanilla "Sign" wholesale for the same
+       reason r_KingdomClearanceStake does: STANDARDS.md requires shipped art for anything
+       carrying a Tile attribute, and bare staked ground owes none. Deliberately carries no
+       r_KingdomClearance part - this is not a live clearance order, and giving it one would
+       make KingdomMaterials.OnSettlementPass mistake every socket for an active clearance job
+       on an empty rect. r_KingdomSocket itself (Growth/KingdomSocket.cs) is the only part this
+       carries; the rect it stands for rides on the same KingdomPlots.PlotX1Property family
+       every laid plot already uses. -->
+  <object Name="r_KingdomSocket" Inherits="Sign">
+    <part Name="Render" DisplayName="cleared plot" ColorString="&amp;w" />
+    <part Name="Description" Short="Bare, level ground inside a staked square. Whatever stood here came down; whatever rises next can rise here again." />
+    <part Name="r_KingdomSocket" />
+    <part Name="Physics" Solid="false" Takeable="false" />
+    <stat Name="Hitpoints" Value="20" />
+  </object>
+
   <!-- A posted price. Inherits vanilla "Sign" wholesale rather than declaring a Tile of our
        own, for the same reason r_KingdomClearanceStake does: STANDARDS.md requires shipped art
        for anything carrying a Tile attribute, and a notice on a stake owes none.

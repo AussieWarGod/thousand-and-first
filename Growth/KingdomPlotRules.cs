@@ -108,6 +108,29 @@ namespace ThousandAndFirst
 			Scrap = 4
 		}
 
+		/// <summary>
+		/// What stands over a building's own footprint. Declared by the design's TIER and never by
+		/// the plot: the plot is an envelope of ground, and one envelope holds a tent under canvas
+		/// this year and a stone house under a roof the next.
+		/// </summary>
+		public enum RoofState
+		{
+			/// <summary>No roof and no walls: a field, a salt-pan, a reservoir, a market square.</summary>
+			Open = 0,
+
+			/// <summary>Canvas, brinestalk, hide. Shelter enough to sleep under, standing as the
+			/// design's own object rather than as walls the settlement raises, and it rolls back,
+			/// so weather still reaches what is under it.</summary>
+			Soft = 1,
+
+			/// <summary>Walls in the settlement's own material, a floor, and a door.</summary>
+			Walled = 2,
+
+			/// <summary>Cut out of rock. What the carving left standing IS the enclosure, which is
+			/// why nothing underground ever raises a wall.</summary>
+			Carved = 3
+		}
+
 		/// <summary>An inclusive rectangle of cells. Both corners are part of the plot.</summary>
 		public struct PlotRect
 		{
@@ -184,6 +207,31 @@ namespace ThousandAndFirst
 			/// <summary>Population table the finished interior is furnished from, the way vanilla
 			/// huts populate. Null furnishes nothing, which is correct for an open plot.</summary>
 			public string Contents;
+
+			/// <summary>
+			/// Cells across that the design's own tier takes inside the plot. Zero means the tier
+			/// declared no footprint of its own and fills the plot, which is what every design
+			/// written before footprints existed reads as, and why not one of them changed.
+			/// </summary>
+			public int FootprintWidth;
+
+			/// <summary>Cells down. See <see cref="FootprintWidth"/>.</summary>
+			public int FootprintHeight;
+
+			/// <summary>What stands over the footprint. When <see cref="RoofDeclared"/> is false
+			/// this is the derived default and the design has made no claim of its own.</summary>
+			public RoofState Roof;
+
+			/// <summary>
+			/// Whether the tier declared a roof state at all. The weather gate reads this rather
+			/// than <see cref="Roof"/>: a design that never claimed a roof is raised exactly as it
+			/// always was, and only a tier that declares itself walled can contradict a design
+			/// that needs sky.
+			/// </summary>
+			public bool RoofDeclared;
+
+			/// <summary>True when the tier takes the whole plot and there is no yard.</summary>
+			public bool FillsPlot => FootprintWidth < 1 || FootprintHeight < 1;
 		}
 
 		// --- Tier dimensions -------------------------------------------------------------
@@ -320,6 +368,490 @@ namespace ThousandAndFirst
 				return false;
 			}
 			return Size <= MaxSizeForStage(Stage);
+		}
+
+		// --- Roofs -----------------------------------------------------------------------
+
+		/// <summary>How the mod says a roof state out loud.</summary>
+		public static string RoofWord(RoofState Roof)
+		{
+			switch (Roof)
+			{
+				case RoofState.Open:
+					return "open to the sky";
+				case RoofState.Soft:
+					return "under canvas";
+				case RoofState.Carved:
+					return "carved from the rock";
+				default:
+					return "walled";
+			}
+		}
+
+		/// <summary>
+		/// How much weather a roof state keeps off. Rock and raised wall shelter alike, so they
+		/// share a rank rather than being ordered by the enum: nothing anywhere reads
+		/// <see cref="RoofState"/> ordinally, and a comparison that did would quietly decide a
+		/// carved chamber is better shelter than a house.
+		/// </summary>
+		public static int ShelterRank(RoofState Roof)
+		{
+			switch (Roof)
+			{
+				case RoofState.Open:
+					return 0;
+				case RoofState.Soft:
+					return 1;
+				default:
+					return 2;
+			}
+		}
+
+		/// <summary>The shelter a bed asks for. A settler sleeps under canvas and does not sleep
+		/// in a field, which is the whole of the tent's argument for existing.</summary>
+		public const int BedShelter = 1;
+
+		/// <summary>Whether anyone would sleep under this roof.</summary>
+		public static bool HoldsBeds(RoofState Roof)
+		{
+			return ShelterRank(Roof) >= BedShelter;
+		}
+
+		/// <summary>Whether weather reaches what stands under this roof. Wall and rock do not
+		/// admit it; canvas does, because canvas rolls back.</summary>
+		public static bool AdmitsSky(RoofState Roof)
+		{
+			return Roof == RoofState.Open || Roof == RoofState.Soft;
+		}
+
+		/// <summary>Whether the settlement raises an enclosure of its own here. Only
+		/// <see cref="RoofState.Walled"/> does: canvas is the design's own object, rock is the
+		/// hill's, and an open plot has none.</summary>
+		public static bool RaisesWalls(RoofState Roof)
+		{
+			return Roof == RoofState.Walled;
+		}
+
+		/// <summary>Whether anything stands around this footprint at all, ours or the hill's.
+		/// This is the roofed test, and <see cref="RoofFromEnclosure"/> is how a structure the
+		/// founder built by hand answers it.</summary>
+		public static bool Encloses(RoofState Roof)
+		{
+			return Roof == RoofState.Walled || Roof == RoofState.Carved;
+		}
+
+		/// <summary>
+		/// The roof a design actually gets on the ground it is raised on. Underground everything
+		/// is carved whatever the design declared: there is no weather to keep off, no wall worth
+		/// raising, and the rock is already all four sides.
+		/// </summary>
+		public static RoofState RoofOnGround(RoofState Declared, bool Underground)
+		{
+			return Underground ? RoofState.Carved : Declared;
+		}
+
+		/// <summary>The roof state a tier that declares none reads as: an open plot is open and
+		/// everything else is walled, which is exactly what every design written before footprints
+		/// existed already got.</summary>
+		public static RoofState DefaultRoof(bool Open)
+		{
+			return Open ? RoofState.Open : RoofState.Walled;
+		}
+
+		/// <summary>
+		/// What a structure the founder raised themselves has over it, measured rather than
+		/// declared. The adoption enclosure fill IS the roofed test
+		/// (<see cref="KingdomAdoptRules.MeasureEnclosure"/>), and this is the only place its
+		/// verdict is turned into a roof state, so the two can never drift apart.
+		/// <para>
+		/// A soft roof is never measured: canvas is not a wall and the fill runs straight past it,
+		/// so a tent somebody pitched by hand honestly reads open. Soft is a thing a design
+		/// declares about itself, never a thing walls prove.
+		/// </para>
+		/// </summary>
+		public static RoofState RoofFromEnclosure(KingdomAdoptRules.EnclosureMeasurement Enclosure, bool Underground)
+		{
+			if (!Enclosure.Bounded)
+			{
+				return RoofState.Open;
+			}
+			return Underground ? RoofState.Carved : RoofState.Walled;
+		}
+
+		/// <summary>
+		/// Whether a roof is enough for what a role needs: somewhere to sleep wants canvas at
+		/// least, a work wants something around it, and a cask stands wherever it is put.
+		/// Adoption and the catalogue ask the same question of the same table.
+		/// </summary>
+		public static bool RoofMeetsRole(KingdomAdoptRules.RoleKind Role, RoofState Roof)
+		{
+			switch (Role)
+			{
+				case KingdomAdoptRules.RoleKind.Housing:
+					return HoldsBeds(Roof);
+				case KingdomAdoptRules.RoleKind.Storage:
+					return true;
+				default:
+					return Encloses(Roof);
+			}
+		}
+
+		// --- Footprints: the building's own ground, inside the plot -----------------------
+
+		/// <summary>
+		/// The invariant the two layers owe each other, and the only one: a tier's footprint fits
+		/// inside its plot. Checked when the catalogue loads and again, by name, at the moment an
+		/// improvement would grow past it.
+		/// </summary>
+		public static bool FootprintFits(PlotSize Plot, int Width, int Height)
+		{
+			if (Width < 1 || Height < 1)
+			{
+				return false;
+			}
+			return TryDimensions(Plot, out var plotWidth, out var plotHeight) && Width <= plotWidth && Height <= plotHeight;
+		}
+
+		/// <summary>The cells a design's tier takes, which is the whole plot for a tier that
+		/// declares no footprint of its own.</summary>
+		/// <returns>False for a null spec and for one that is not a plot at all.</returns>
+		public static bool TryFootprint(PlotSpec Spec, out int Width, out int Height)
+		{
+			Width = 0;
+			Height = 0;
+			if (Spec == null)
+			{
+				return false;
+			}
+			if (Spec.FillsPlot)
+			{
+				return TryDimensions(Spec.Size, out Width, out Height);
+			}
+			Width = Spec.FootprintWidth;
+			Height = Spec.FootprintHeight;
+			return true;
+		}
+
+		/// <summary>The smallest tier of plot that holds a footprint, or
+		/// <see cref="PlotSize.None"/> when nothing a settlement lays does.</summary>
+		public static PlotSize SmallestPlotFor(int Width, int Height)
+		{
+			PlotSize[] order = new PlotSize[4] { PlotSize.Small, PlotSize.Medium, PlotSize.Large, PlotSize.Huge };
+			for (int i = 0; i < order.Length; i++)
+			{
+				if (FootprintFits(order[i], Width, Height))
+				{
+					return order[i];
+				}
+			}
+			return PlotSize.None;
+		}
+
+		/// <summary>
+		/// Where the building sits inside its plot: the position whose centre lies nearest the
+		/// heart, so a building fronts the settlement and its yard lies behind it, and so a tier
+		/// that grows eats the yard from the street inwards rather than jumping across the plot.
+		/// Ties break north-then-west, exactly as <see cref="TryDoor"/> does, which is what makes
+		/// the same plot lay out the same way every time it is read.
+		/// </summary>
+		/// <returns>False when the footprint is larger than the plot on either span, in which
+		/// case <paramref name="Footprint"/> is a zero rect and means nothing.</returns>
+		public static bool TryFootprintWithin(PlotRect Plot, int Width, int Height, int HeartX, int HeartY, out PlotRect Footprint)
+		{
+			Footprint = default(PlotRect);
+			if (Width < 1 || Height < 1 || Width > Plot.Width || Height > Plot.Height)
+			{
+				return false;
+			}
+			bool found = false;
+			int bestDistance = 0;
+			for (int y = Plot.Y1; y + Height - 1 <= Plot.Y2; y++)
+			{
+				for (int x = Plot.X1; x + Width - 1 <= Plot.X2; x++)
+				{
+					PlotRect rect = new PlotRect(x, y, x + Width - 1, y + Height - 1);
+					int distance = KingdomLayoutRules.Chebyshev(rect.CenterX, rect.CenterY, HeartX, HeartY);
+					if (!found || distance < bestDistance)
+					{
+						found = true;
+						bestDistance = distance;
+						Footprint = rect;
+					}
+				}
+			}
+			return found;
+		}
+
+		/// <summary>Whether a footprint lies wholly inside a plot.</summary>
+		public static bool Within(PlotRect Plot, PlotRect Footprint)
+		{
+			return Footprint.X1 >= Plot.X1 && Footprint.Y1 >= Plot.Y1
+				&& Footprint.X2 <= Plot.X2 && Footprint.Y2 <= Plot.Y2;
+		}
+
+		// --- The yard: plot minus footprint, recomputed per tier ---------------------------
+
+		/// <summary>
+		/// The yard, as up to four rectangles: everything inside the plot the building does not
+		/// stand on, north band and south band full width, then the two side bands beside the
+		/// footprint. Recomputed from the CURRENT tier, so a building that grows takes its yard
+		/// back a band at a time rather than the yard being a thing stored anywhere.
+		/// </summary>
+		/// <returns>An empty list for a footprint that fills its plot, and for one that is not
+		/// inside the plot at all, which has no yard anybody can name.</returns>
+		public static List<PlotRect> YardBands(PlotRect Plot, PlotRect Footprint)
+		{
+			List<PlotRect> bands = new List<PlotRect>();
+			if (!Within(Plot, Footprint))
+			{
+				return bands;
+			}
+			if (Footprint.Y1 > Plot.Y1)
+			{
+				bands.Add(new PlotRect(Plot.X1, Plot.Y1, Plot.X2, Footprint.Y1 - 1));
+			}
+			if (Footprint.Y2 < Plot.Y2)
+			{
+				bands.Add(new PlotRect(Plot.X1, Footprint.Y2 + 1, Plot.X2, Plot.Y2));
+			}
+			if (Footprint.X1 > Plot.X1)
+			{
+				bands.Add(new PlotRect(Plot.X1, Footprint.Y1, Footprint.X1 - 1, Footprint.Y2));
+			}
+			if (Footprint.X2 < Plot.X2)
+			{
+				bands.Add(new PlotRect(Footprint.X2 + 1, Footprint.Y1, Plot.X2, Footprint.Y2));
+			}
+			return bands;
+		}
+
+		/// <summary>Cells of yard a tier leaves. Zero for a tier that fills its plot.</summary>
+		public static int YardArea(PlotRect Plot, PlotRect Footprint)
+		{
+			List<PlotRect> bands = YardBands(Plot, Footprint);
+			int area = 0;
+			for (int i = 0; i < bands.Count; i++)
+			{
+				area += bands[i].Area;
+			}
+			return area;
+		}
+
+		/// <summary>Whether a cell is yard: inside the plot, and not under the building.</summary>
+		public static bool InYard(PlotRect Plot, PlotRect Footprint, int X, int Y)
+		{
+			return Plot.Contains(X, Y) && !Footprint.Contains(X, Y);
+		}
+
+		/// <summary>
+		/// Whether growing from one tier to the next takes ground the old one did not stand on.
+		/// False for a tier that grows into the same rect, which stamps nothing and can never be
+		/// refused for want of room.
+		/// </summary>
+		public static bool TakesNewGround(PlotRect Old, PlotRect Grown)
+		{
+			for (int y = Grown.Y1; y <= Grown.Y2; y++)
+			{
+				for (int x = Grown.X1; x <= Grown.X2; x++)
+				{
+					if (!Old.Contains(x, y))
+					{
+						return true;
+					}
+				}
+			}
+			return false;
+		}
+
+		// --- Staking foresight: the whole chain's ground, before the stake goes in ---------
+
+		/// <summary>
+		/// One tier of a design's improvement chain, reduced to what the founder needs to see
+		/// before choosing how much ground to stake: what it is called, and how much of the plot
+		/// it will stand on when the settlement gets that far.
+		/// </summary>
+		public readonly struct ChainStep
+		{
+			public readonly string Key;
+
+			public readonly string Name;
+
+			public readonly int Width;
+
+			public readonly int Height;
+
+			public readonly RoofState Roof;
+
+			public ChainStep(string Key, string Name, int Width, int Height, RoofState Roof)
+			{
+				this.Key = Key;
+				this.Name = Name;
+				this.Width = Width;
+				this.Height = Height;
+				this.Roof = Roof;
+			}
+
+			public int Area => Width * Height;
+		}
+
+		/// <summary>Whether every tier of a chain stands on one plot of this tier.</summary>
+		/// <param name="FirstUnfit">Index of the first tier that wants more ground than the plot
+		/// holds, or -1 when they all fit. An empty chain fits everything.</param>
+		public static bool ChainFits(PlotSize Plot, IList<ChainStep> Chain, out int FirstUnfit)
+		{
+			FirstUnfit = -1;
+			if (Chain == null)
+			{
+				return true;
+			}
+			for (int i = 0; i < Chain.Count; i++)
+			{
+				if (!FootprintFits(Plot, Chain[i].Width, Chain[i].Height))
+				{
+					FirstUnfit = i;
+					return false;
+				}
+			}
+			return true;
+		}
+
+		/// <summary>The smallest plot that holds a whole chain, or <see cref="PlotSize.None"/>
+		/// when no tier a settlement lays does.</summary>
+		public static PlotSize SmallestPlotForChain(IList<ChainStep> Chain)
+		{
+			if (Chain == null || Chain.Count == 0)
+			{
+				return PlotSize.None;
+			}
+			int width = 0;
+			int height = 0;
+			for (int i = 0; i < Chain.Count; i++)
+			{
+				if (Chain[i].Width > width)
+				{
+					width = Chain[i].Width;
+				}
+				if (Chain[i].Height > height)
+				{
+					height = Chain[i].Height;
+				}
+			}
+			return SmallestPlotFor(width, height);
+		}
+
+		/// <summary>
+		/// The plot tiers a founder may actually choose to stake for a design: never smaller than
+		/// the design's own declared plot or than its first tier needs, never larger than the
+		/// settlement has grown into. The choice is the ceiling: stake big for room to grow, or
+		/// tight for the yard trade sooner and take what that costs later.
+		/// </summary>
+		/// <returns>An empty list when the design is not a plot at all, when its own first tier
+		/// fits no plot, or when the settlement is not yet a settlement enough to lay one.</returns>
+		public static List<PlotSize> StakeableSizes(PlotSize Declared, GrowthStage Stage, IList<ChainStep> Chain)
+		{
+			List<PlotSize> sizes = new List<PlotSize>();
+			PlotSize floor = Declared;
+			if (Chain != null && Chain.Count > 0)
+			{
+				PlotSize needed = SmallestPlotFor(Chain[0].Width, Chain[0].Height);
+				if (needed == PlotSize.None)
+				{
+					return sizes;
+				}
+				if (needed > floor)
+				{
+					floor = needed;
+				}
+			}
+			if (floor == PlotSize.None)
+			{
+				return sizes;
+			}
+			PlotSize ceiling = MaxSizeForStage(Stage);
+			for (int size = (int)floor; size <= (int)ceiling; size++)
+			{
+				sizes.Add((PlotSize)size);
+			}
+			return sizes;
+		}
+
+		/// <summary>How the mod says a rectangle's size out loud.</summary>
+		public static string SpanWord(int Width, int Height)
+		{
+			return Width + " by " + Height;
+		}
+
+		/// <summary>The chain's ground, tier by tier, in the order the settlement will build
+		/// it.</summary>
+		/// <returns>Null for an empty chain, which has nothing to foresee.</returns>
+		public static string ChainFootprintLine(IList<ChainStep> Chain)
+		{
+			if (Chain == null || Chain.Count == 0)
+			{
+				return null;
+			}
+			string line = null;
+			for (int i = 0; i < Chain.Count; i++)
+			{
+				string piece = Chain[i].Name + " " + SpanWord(Chain[i].Width, Chain[i].Height);
+				line = (line == null) ? piece : (line + ", then " + piece);
+			}
+			return line;
+		}
+
+		/// <summary>One line for one stakeable tier, as the founder reads it in the list: how big
+		/// the ground is, how far up the chain it carries, and what is left over for a yard
+		/// meanwhile.</summary>
+		public static string StakeOptionLine(PlotSize Plot, IList<ChainStep> Chain)
+		{
+			if (!TryDimensions(Plot, out var width, out var height))
+			{
+				return null;
+			}
+			string ground = SizeName(Plot) + " ground, " + SpanWord(width, height);
+			if (Chain == null || Chain.Count == 0)
+			{
+				return ground;
+			}
+			bool fits = ChainFits(Plot, Chain, out var unfit);
+			if (unfit == 0)
+			{
+				return ground + ": too little ground for the work itself";
+			}
+			int yard = width * height - Chain[0].Area;
+			return ground + (fits ? ": holds every tier" : (": holds as far as the " + Chain[unfit - 1].Name))
+				+ ", " + yard + ((yard == 1) ? " cell" : " cells") + " of yard to begin with";
+		}
+
+		/// <summary>
+		/// What the founder is told before the stake goes in: the ground they are about to claim,
+		/// every tier that will ever stand on it, and where the ceiling falls if they stake tight.
+		/// Foresight rather than a warning: staking tight is a real choice, not a mistake, and the
+		/// sentence says so.
+		/// </summary>
+		public static string ForesightLine(PlotSize Plot, IList<ChainStep> Chain)
+		{
+			if (!TryDimensions(Plot, out var width, out var height) || Chain == null || Chain.Count == 0)
+			{
+				return null;
+			}
+			string line = "A " + SizeName(Plot) + " plot is " + SpanWord(width, height) + ". " + ChainFootprintLine(Chain) + ".";
+			if (Chain.Count == 1)
+			{
+				return line + " It never grows: what it takes now is what it takes.";
+			}
+			if (ChainFits(Plot, Chain, out var unfit))
+			{
+				return line + " Every tier it grows into stands on this ground.";
+			}
+			PlotSize whole = SmallestPlotForChain(Chain);
+			string ceiling = " The " + Chain[unfit].Name + " wants " + SpanWord(Chain[unfit].Width, Chain[unfit].Height)
+				+ ", which this plot does not hold. "
+				+ ((whole == PlotSize.None)
+					? "No plot this settlement lays holds the whole chain."
+					: ("A " + SizeName(whole) + " plot is the smallest that holds all of it."));
+			return line + ceiling + " Stake larger ground for room to grow, or stake here and take"
+				+ " the ceiling: what outgrows this plot waits until the ground is struck and staked again.";
 		}
 
 		// --- Zone interior and the road budget -------------------------------------------
@@ -857,7 +1389,22 @@ namespace ThousandAndFirst
 		/// </summary>
 		public static long EnclosureTicks(PlotRect Rect, bool Underground, bool Open)
 		{
-			if (Underground || Open)
+			return EnclosureTicks(Rect, RoofOnGround(DefaultRoof(Open), Underground));
+		}
+
+		/// <summary>
+		/// Ticks the enclosure costs, read off the roof the tier actually declared. Free for
+		/// everything the settlement does not raise itself: an open plot has no enclosure, canvas
+		/// is the design's own object, and underground the rock the carving left IS the wall
+		/// &mdash; which is the compensation for <see cref="UndergroundClearPercent"/>.
+		/// </summary>
+		/// <param name="Rect">The FOOTPRINT, not the plot: walls go round the building, and the
+		/// yard is the ground left outside them.</param>
+		/// <param name="Roof">The roof state on the ground it is raised on, from
+		/// <see cref="RoofOnGround"/>.</param>
+		public static long EnclosureTicks(PlotRect Rect, RoofState Roof)
+		{
+			if (!RaisesWalls(Roof))
 			{
 				return 0L;
 			}
@@ -871,7 +1418,22 @@ namespace ThousandAndFirst
 		/// </summary>
 		public static long RaiseTicks(long BaseTicks, IList<GroundKind> Ground, PlotRect Rect, bool Underground, bool Open)
 		{
-			long ticks = BaseTicks + (long)ClearEffort(Ground, Underground) * TicksPerEffort + EnclosureTicks(Rect, Underground, Open);
+			return RaiseTicks(BaseTicks, Ground, Rect, RoofOnGround(DefaultRoof(Open), Underground), Underground);
+		}
+
+		/// <summary>
+		/// How long raising this tier on this ground takes: the design's own time, plus what
+		/// clearing the whole PLOT costs, plus the enclosure round the FOOTPRINT. Staking wide is
+		/// paid for in clearing and earned back in material and yard; the walls are only ever as
+		/// long as the building is.
+		/// </summary>
+		/// <param name="Ground">Every cell of the plot, from the survey.</param>
+		/// <param name="Footprint">The ground the building itself stands on.</param>
+		/// <param name="Roof">The roof state on this ground, from <see cref="RoofOnGround"/>.</param>
+		/// <param name="Underground">Whether the plot is carved rather than cleared.</param>
+		public static long RaiseTicks(long BaseTicks, IList<GroundKind> Ground, PlotRect Footprint, RoofState Roof, bool Underground)
+		{
+			long ticks = BaseTicks + (long)ClearEffort(Ground, Underground) * TicksPerEffort + EnclosureTicks(Footprint, Roof);
 			return (ticks < 1L) ? 1L : ticks;
 		}
 
@@ -1030,20 +1592,41 @@ namespace ThousandAndFirst
 		// --- Parsing ---------------------------------------------------------------------
 
 		/// <summary>
-		/// Reads one design's plot attributes. Every one of them is optional, and a design that
-		/// declares none is not a plot at all &mdash; which is how every design that already
-		/// exists keeps the single-cell path it has always had.
+		/// Reads one design's plot attributes without a footprint or a roof, exactly as the
+		/// schema read before tiers declared their own ground. Kept because it is supported API:
+		/// a design read this way fills its plot and takes the walled default.
+		/// </summary>
+		public static bool TryParsePlotAttributes(string Key, string Plot, string Open, string Sky, string Contents, out PlotSpec Spec, out string Error)
+		{
+			return TryParsePlotAttributes(Key, Plot, Open, Sky, Contents, null, null, out Spec, out Error);
+		}
+
+		/// <summary>
+		/// Reads one design's plot attributes, footprint and roof included. Every one of them is
+		/// optional, and a design that declares none is not a plot at all &mdash; which is how
+		/// every design that already exists keeps the single-cell path it has always had.
+		/// <para>
+		/// A design that declares a <c>Plot</c> and no <c>Footprint</c> fills that plot and is
+		/// walled unless it is <c>Open</c>, which is exactly what it did before footprints
+		/// existed: not one entry written against the old schema changes what it builds.
+		/// </para>
 		/// </summary>
 		/// <param name="Key">The design's key. Blank is refused.</param>
 		/// <param name="Plot">Raw <c>Plot</c>: S, M, L, XL, or the long spellings. Absent means
 		/// not a plot.</param>
 		/// <param name="Open">Raw <c>Open</c>: an unroofed plot.</param>
-		/// <param name="Sky">Raw <c>Sky</c>: needs weather, so refuses underground.</param>
+		/// <param name="Sky">Raw <c>Sky</c>: needs weather, so refuses underground and refuses a
+		/// tier that declares itself walled.</param>
 		/// <param name="Contents">Raw <c>Contents</c>: population table the interior is furnished
 		/// from.</param>
+		/// <param name="Footprint">Raw <c>Footprint</c>: <c>WxH</c>, the ground this TIER stands
+		/// on inside the plot. Absent fills the plot. Larger than the plot is refused here and
+		/// again by the whole-catalogue validator, which is the one that sees the merged value.
+		/// </param>
+		/// <param name="Roof">Raw <c>Roof</c>: Open, Soft, Walled, or Carved.</param>
 		/// <param name="Spec">The parsed spec, or null on failure.</param>
 		/// <param name="Error">A log-facing reason, or null on success.</param>
-		public static bool TryParsePlotAttributes(string Key, string Plot, string Open, string Sky, string Contents, out PlotSpec Spec, out string Error)
+		public static bool TryParsePlotAttributes(string Key, string Plot, string Open, string Sky, string Contents, string Footprint, string Roof, out PlotSpec Spec, out string Error)
 		{
 			Spec = null;
 			Error = null;
@@ -1067,20 +1650,128 @@ namespace ThousandAndFirst
 				Error = "building " + Key + " has a bad Sky (want Yes or No)";
 				return false;
 			}
-			if (size == PlotSize.None && (open || sky || !string.IsNullOrWhiteSpace(Contents)))
+			if (!TryParseFootprint(Footprint, out var footprintWidth, out var footprintHeight))
+			{
+				Error = "building " + Key + " has a bad Footprint (want WxH, as in 6x4)";
+				return false;
+			}
+			if (!TryParseRoof(Roof, out var roof, out var roofDeclared))
+			{
+				Error = "building " + Key + " has a bad Roof (want Open, Soft, Walled, or Carved)";
+				return false;
+			}
+			bool footprintDeclared = footprintWidth > 0 && footprintHeight > 0;
+			if (size == PlotSize.None && (open || sky || footprintDeclared || roofDeclared || !string.IsNullOrWhiteSpace(Contents)))
 			{
 				Error = "building " + Key + " declares plot attributes without a Plot size; they would do nothing";
+				return false;
+			}
+			bool openDeclared = !string.IsNullOrWhiteSpace(Open);
+			if (roofDeclared && openDeclared && open != (roof == RoofState.Open))
+			{
+				Error = "building " + Key + " declares Open=" + (open ? "Yes" : "No") + " and a Roof of "
+					+ roof.ToString().ToLowerInvariant() + ", which disagree";
+				return false;
+			}
+			if (!roofDeclared)
+			{
+				roof = DefaultRoof(open);
+			}
+			if (footprintDeclared && !FootprintFits(size, footprintWidth, footprintHeight))
+			{
+				TryDimensions(size, out var plotWidth, out var plotHeight);
+				Error = "building " + Key + " wants a footprint of " + SpanWord(footprintWidth, footprintHeight)
+					+ " on a " + SizeName(size) + " plot, which is " + SpanWord(plotWidth, plotHeight)
+					+ "; a footprint never outgrows its plot";
 				return false;
 			}
 			Spec = new PlotSpec
 			{
 				Key = Key.Trim(),
 				Size = size,
-				Open = open,
+				Open = (roof == RoofState.Open),
 				RequiresSky = sky,
-				Contents = string.IsNullOrWhiteSpace(Contents) ? null : Contents.Trim()
+				Contents = string.IsNullOrWhiteSpace(Contents) ? null : Contents.Trim(),
+				FootprintWidth = footprintDeclared ? footprintWidth : 0,
+				FootprintHeight = footprintDeclared ? footprintHeight : 0,
+				Roof = roof,
+				RoofDeclared = roofDeclared
 			};
 			return true;
+		}
+
+		/// <summary>
+		/// Reads a footprint. Absent is "fills the plot" and not an error; anything the shape
+		/// <c>WxH</c> cannot be read out of is, rather than quietly filling the plot, because a
+		/// mistyped footprint that silently became the whole plot would move a building's walls
+		/// without saying so.
+		/// </summary>
+		public static bool TryParseFootprint(string Raw, out int Width, out int Height)
+		{
+			Width = 0;
+			Height = 0;
+			if (string.IsNullOrWhiteSpace(Raw))
+			{
+				return true;
+			}
+			string[] parts = Raw.Trim().ToLowerInvariant().Split(FootprintSeparator);
+			if (parts.Length != 2 || !int.TryParse(parts[0].Trim(), out var width) || !int.TryParse(parts[1].Trim(), out var height)
+				|| width < 1 || height < 1)
+			{
+				return false;
+			}
+			Width = width;
+			Height = height;
+			return true;
+		}
+
+		/// <summary>Between the two spans of a footprint: <c>6x4</c>. Case-folded before the
+		/// split, so <c>6X4</c> reads the same.</summary>
+		public const char FootprintSeparator = 'x';
+
+		/// <summary>Parses a roof state. Absent leaves <paramref name="Declared"/> false and the
+		/// design making no claim about its roof, which is what every entry written before roofs
+		/// existed does; anything unrecognised is an error rather than a silent walled default.
+		/// </summary>
+		public static bool TryParseRoof(string Raw, out RoofState Roof, out bool Declared)
+		{
+			Roof = RoofState.Walled;
+			Declared = false;
+			if (string.IsNullOrWhiteSpace(Raw))
+			{
+				return true;
+			}
+			switch (Raw.Trim().ToLowerInvariant())
+			{
+				case "open":
+					Roof = RoofState.Open;
+					break;
+				case "soft":
+				case "canvas":
+					Roof = RoofState.Soft;
+					break;
+				case "walled":
+				case "walls":
+					Roof = RoofState.Walled;
+					break;
+				case "carved":
+					Roof = RoofState.Carved;
+					break;
+				default:
+					return false;
+			}
+			Declared = true;
+			return true;
+		}
+
+		/// <summary>
+		/// Whether a design that needs weather is contradicted by its own tier. Only a tier that
+		/// DECLARES itself walled or carved contradicts it: a design that never claimed a roof has
+		/// made no claim to contradict, and is raised exactly as it always was.
+		/// </summary>
+		public static bool RoofRefusesSky(PlotSpec Spec)
+		{
+			return Spec != null && Spec.RequiresSky && Spec.RoofDeclared && !AdmitsSky(Spec.Roof);
 		}
 
 		/// <summary>Parses a tier. Absent is <see cref="PlotSize.None"/> and not an error;
@@ -1180,6 +1871,53 @@ namespace ThousandAndFirst
 		public static string RefuseBudget(string SeatName)
 		{
 			return "This ground is laid out. What already stands at " + SeatName + ", and the lanes between, leave no room for another plot until something is struck.";
+		}
+
+		/// <summary>
+		/// The improvement wants more ground than the plot it stands on holds. Refused BY NAME
+		/// rather than by silently siting the larger tier somewhere else or quietly shrinking it:
+		/// the ceiling was a choice the founder made when they staked this ground, and this is the
+		/// sentence that tells them the choice has arrived.
+		/// </summary>
+		/// <param name="Name">What would be raised.</param>
+		/// <param name="Width">Cells across it wants.</param>
+		/// <param name="Height">Cells down it wants.</param>
+		/// <param name="Plot">The tier of plot it stands on.</param>
+		public static string RefuseFootprint(string Name, int Width, int Height, PlotSize Plot)
+		{
+			string ground = TryDimensions(Plot, out var plotWidth, out var plotHeight)
+				? ("a " + SizeName(Plot) + " plot is " + SpanWord(plotWidth, plotHeight))
+				: "this ground is less than that";
+			return "The {{C|" + Name + "}} wants more ground than this plot holds: it stands "
+				+ SpanWord(Width, Height) + ", and " + ground
+				+ ". Strike what is here and stake larger ground, or leave it as it is.";
+		}
+
+		/// <summary>A design that needs weather, refused a tier that has declared itself
+		/// closed.</summary>
+		public static string RefuseRoofSky(string Name, RoofState Roof)
+		{
+			return "The " + Name + " wants weather, and this tier of it is " + RoofWord(Roof)
+				+ ". Raise it under something that lets the sky in.";
+		}
+
+		/// <summary>
+		/// The grown building would stand on the cell a yard trade is worked in. Never taken down
+		/// on its own: the founder is told which trade is in the way and chooses, because a
+		/// household's sideline is theirs and the settlement does not tidy it away to make room.
+		/// </summary>
+		public static string RefuseYardWork(string Name, string SuccessorName, string WorkName)
+		{
+			return "The " + Name + " could be raised into " + KingdomUpgradeRules.Article(SuccessorName)
+				+ ", but the {{C|" + WorkName + "}} in its yard stands on ground the larger building needs."
+				+ " Let the trade go first, and the work can begin. Nothing in the yard comes down on its own.";
+		}
+
+		/// <summary>A design people are meant to sleep in, on a tier with nothing over it.</summary>
+		public static string RefuseBedRoof(string Name)
+		{
+			return "Nobody sleeps in the open. The " + Name + " is " + RoofWord(RoofState.Open)
+				+ ", and a bed wants canvas over it at the very least.";
 		}
 	}
 }

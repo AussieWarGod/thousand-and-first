@@ -147,6 +147,28 @@ namespace ThousandAndFirst
 			return false;
 		}
 
+		/// <summary>The first free cell of a house's yard, band by band in the order
+		/// <c>KingdomPlotRules.YardBands</c> returns them, so a trade always lands on the same side
+		/// of the same house. A tier that fills its plot has no yard outside it, and
+		/// <c>KingdomPlots.YardRects</c> hands back its interior instead -- which is the ground yard
+		/// trades used before footprints existed, so nothing standing today moves.</summary>
+		public static bool TryFreeYardCell(Zone Z, List<KingdomPlotRules.PlotRect> Bands, out Cell Free)
+		{
+			Free = null;
+			if (Bands == null)
+			{
+				return false;
+			}
+			for (int i = 0; i < Bands.Count; i++)
+			{
+				if (TryFreeYardCell(Z, Bands[i], out Free))
+				{
+					return true;
+				}
+			}
+			return false;
+		}
+
 		/// <summary>Every finished house in a zone with room to take up a yard trade or already
 		/// carrying one &mdash; the candidate set <see cref="ShowYardTrades"/> lists.</summary>
 		public static List<GameObject> ListHousesWithYards(Zone Z)
@@ -167,7 +189,7 @@ namespace ThousandAndFirst
 					found.Add(item);
 					continue;
 				}
-				if (KingdomYardRules.TryYardInterior(rect, out var interior) && TryFreeYardCell(Z, interior, out _))
+				if (TryFreeYardCell(Z, KingdomPlots.YardRects(item), out _))
 				{
 					found.Add(item);
 				}
@@ -209,7 +231,7 @@ namespace ThousandAndFirst
 				return false;
 			}
 			Zone zone = Building.CurrentZone;
-			if (zone == null || !KingdomYardRules.TryYardInterior(rect, out var interior) || !TryFreeYardCell(zone, interior, out var cell))
+			if (zone == null || !TryFreeYardCell(zone, KingdomPlots.YardRects(Building), out var cell))
 			{
 				Failure = KingdomYardRules.RefuseNoRoom(houseName);
 				return false;

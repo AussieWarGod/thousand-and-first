@@ -802,6 +802,33 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void ASpecReadTheOldWayFillsItsPlotAndIsWalled()
+		{
+			// The five-argument call is still supported API, and a design read through it must
+			// build exactly what it always built: the whole plot, walled unless it is open.
+			Assert.IsTrue(KingdomPlotRules.TryParsePlotAttributes("hut", "M", "No", null, null, out var walled, out _));
+			Assert.IsTrue(walled.FillsPlot);
+			Assert.IsFalse(walled.RoofDeclared);
+			Assert.AreEqual(KingdomPlotRules.RoofState.Walled, walled.Roof);
+			Assert.IsTrue(KingdomPlotRules.TryParsePlotAttributes("field", "M", "Yes", null, null, out var open, out _));
+			Assert.IsTrue(open.FillsPlot);
+			Assert.AreEqual(KingdomPlotRules.RoofState.Open, open.Roof);
+		}
+
+		[Test]
+		public void TheOldEnclosureAndRaiseSignaturesStillCostWhatTheyCost()
+		{
+			// Both now answer through the roof table. A settlement mid-raise must not find its
+			// walls suddenly free, or suddenly charged for underground.
+			Rect rect = At(0, 0, Size.Medium);
+			Assert.AreEqual(1200L, KingdomPlotRules.EnclosureTicks(rect, Underground: false, Open: false));
+			Assert.AreEqual(0L, KingdomPlotRules.EnclosureTicks(rect, Underground: false, Open: true));
+			Assert.AreEqual(0L, KingdomPlotRules.EnclosureTicks(rect, Underground: true, Open: false));
+			Assert.AreEqual(1000L + 1600L + 1200L,
+				KingdomPlotRules.RaiseTicks(1000L, Cells(4, Ground.Trees), rect, Underground: false, Open: false));
+		}
+
+		[Test]
 		public void PlotAttributesWithoutASizeAreRefusedRatherThanIgnored()
 		{
 			// Silently accepting these would ship a design whose Contents table never rolls and

@@ -106,6 +106,7 @@ namespace ThousandAndFirst
 			KingdomMaterials.ClearCosts();
 			KingdomPlots.ClearSpecs();
 			KingdomYards.ClearSpecs();
+			KingdomMergeRules.ClearDrafts();
 			Dictionary<string, Action<XmlDataHelper>> handlers = null;
 			handlers = new Dictionary<string, Action<XmlDataHelper>>
 			{
@@ -197,30 +198,69 @@ namespace ThousandAndFirst
 
 		private static void HandleBuilding(XmlDataHelper xml)
 		{
-			string key = xml.GetAttribute("Key");
-			if (!KingdomRules.TryParseBuildAttributes(key, xml.GetAttribute("DisplayName"), xml.GetAttribute("Blueprint"), xml.GetAttribute("Cost"), xml.GetAttribute("Ticks"), xml.GetAttribute("Styles"), xml.GetAttribute("Category"), xml.GetAttribute("MinStage"), xml.GetAttribute("Staff"), xml.GetAttribute("Manning"), xml.GetAttribute("Defence"), out var entry, out var error))
+			// One read of every attribute, into one draft, before anything is parsed. Merge-by-key
+			// happens on the raw strings (KingdomMergeRules): a later <building Key="X"> overrides the
+			// attributes it names, leaves the ones it omits standing, and appends its skins, so every
+			// parser below goes on reading exactly the string it always read and none of them has to
+			// learn that catalogues layer. Reading each attribute unconditionally is required either
+			// way: the engine records which attributes a pass asked for and warns about the rest.
+			BuildingDraft declared = new BuildingDraft(xml.GetAttribute("Key"));
+			declared.Set(KingdomMergeRules.AttrDisplayName, xml.GetAttribute("DisplayName"));
+			declared.Set(KingdomMergeRules.AttrBlueprint, xml.GetAttribute("Blueprint"));
+			declared.Set(KingdomMergeRules.AttrCost, xml.GetAttribute("Cost"));
+			declared.Set(KingdomMergeRules.AttrTicks, xml.GetAttribute("Ticks"));
+			declared.Set(KingdomMergeRules.AttrStyles, xml.GetAttribute("Styles"));
+			declared.Set(KingdomMergeRules.AttrCategory, xml.GetAttribute("Category"));
+			declared.Set(KingdomMergeRules.AttrMinStage, xml.GetAttribute("MinStage"));
+			declared.Set(KingdomMergeRules.AttrStaff, xml.GetAttribute("Staff"));
+			declared.Set(KingdomMergeRules.AttrManning, xml.GetAttribute("Manning"));
+			declared.Set(KingdomMergeRules.AttrDefence, xml.GetAttribute("Defence"));
+			declared.Set(KingdomMergeRules.AttrCarries, xml.GetAttribute("Carries"));
+			declared.Set(KingdomMergeRules.AttrMaterials, xml.GetAttribute("Materials"));
+			declared.Set(KingdomMergeRules.AttrDistricts, xml.GetAttribute("Districts"));
+			declared.Set(KingdomMergeRules.AttrMinZones, xml.GetAttribute("MinZones"));
+			declared.Set(KingdomMergeRules.AttrKnowledge, xml.GetAttribute("Knowledge"));
+			declared.Set(KingdomMergeRules.AttrMinTech, xml.GetAttribute("MinTech"));
+			declared.Set(KingdomMergeRules.AttrUpgradesTo, xml.GetAttribute("UpgradesTo"));
+			declared.Set(KingdomMergeRules.AttrUpgradeCost, xml.GetAttribute("UpgradeCost"));
+			declared.Set(KingdomMergeRules.AttrUpgradeTicks, xml.GetAttribute("UpgradeTicks"));
+			declared.Set(KingdomMergeRules.AttrUpgradeCrew, xml.GetAttribute("UpgradeCrew"));
+			declared.Set(KingdomMergeRules.AttrUpgradeMinStage, xml.GetAttribute("UpgradeMinStage"));
+			declared.Set(KingdomMergeRules.AttrUpgradeMaterials, xml.GetAttribute("UpgradeMaterials"));
+			declared.Set(KingdomMergeRules.AttrPlot, xml.GetAttribute("Plot"));
+			declared.Set(KingdomMergeRules.AttrOpen, xml.GetAttribute("Open"));
+			declared.Set(KingdomMergeRules.AttrSky, xml.GetAttribute("Sky"));
+			declared.Set(KingdomMergeRules.AttrContents, xml.GetAttribute("Contents"));
+			declared.Set(KingdomMergeRules.AttrFootprint, xml.GetAttribute("Footprint"));
+			declared.Set(KingdomMergeRules.AttrRoof, xml.GetAttribute("Roof"));
+			BuildingDraft design = KingdomMergeRules.Absorb(declared);
+			if (!KingdomRules.TryParseBuildAttributes(design.Key, design.Get(KingdomMergeRules.AttrDisplayName), design.Get(KingdomMergeRules.AttrBlueprint), design.Get(KingdomMergeRules.AttrCost), design.Get(KingdomMergeRules.AttrTicks), design.Get(KingdomMergeRules.AttrStyles), design.Get(KingdomMergeRules.AttrCategory), design.Get(KingdomMergeRules.AttrMinStage), design.Get(KingdomMergeRules.AttrStaff), design.Get(KingdomMergeRules.AttrManning), design.Get(KingdomMergeRules.AttrDefence), out var entry, out var error))
 			{
 				MetricsManager.LogError("ThousandAndFirst KingdomBuildings: " + error);
-				// Nothing is registered and nothing already registered is cleared: a malformed
-				// entry does not replace the design of the same key that is already loaded, so it
-				// must not replace that design's gate or chain either.
+				// Nothing is registered and nothing already registered is cleared: a malformed entry
+				// does not replace the design of the same key that is already loaded, so it must not
+				// replace that design's gate or chain either. The draft is kept even so, so a later
+				// file that completes a half-declaration still can.
 				SkipChildren(xml);
 				return;
 			}
-			// Every optional gate and chain attribute is read whether or not it is present: the
-			// engine warns about attributes a parse pass never asked for, and an absent one is the
-			// ungated, unchanging default in both registries.
-			entry.Carries = xml.GetAttribute("Carries");
-			entry.Materials = xml.GetAttribute("Materials");
-			KingdomZoning.RegisterGate(entry.Key, xml.GetAttribute("Districts"), xml.GetAttribute("MinZones"), xml.GetAttribute("Knowledge"), xml.GetAttribute("MinTech"));
-			KingdomUpgrade.RegisterChain(entry.Key, xml.GetAttribute("UpgradesTo"), xml.GetAttribute("UpgradeCost"), xml.GetAttribute("UpgradeTicks"), xml.GetAttribute("UpgradeCrew"), xml.GetAttribute("UpgradeMinStage"));
-			KingdomMaterials.RegisterCost(entry.Key, xml.GetAttribute("Materials"), xml.GetAttribute("UpgradeMaterials"));
-			KingdomPlots.RegisterSpec(entry.Key, xml.GetAttribute("Plot"), xml.GetAttribute("Open"), xml.GetAttribute("Sky"), xml.GetAttribute("Contents"));
+			entry.Carries = design.Get(KingdomMergeRules.AttrCarries);
+			entry.Materials = design.Get(KingdomMergeRules.AttrMaterials);
+			entry.Skins = design.Skins;
+			KingdomZoning.RegisterGate(entry.Key, design.Get(KingdomMergeRules.AttrDistricts), design.Get(KingdomMergeRules.AttrMinZones), design.Get(KingdomMergeRules.AttrKnowledge), design.Get(KingdomMergeRules.AttrMinTech));
+			KingdomUpgrade.RegisterChain(entry.Key, design.Get(KingdomMergeRules.AttrUpgradesTo), design.Get(KingdomMergeRules.AttrUpgradeCost), design.Get(KingdomMergeRules.AttrUpgradeTicks), design.Get(KingdomMergeRules.AttrUpgradeCrew), design.Get(KingdomMergeRules.AttrUpgradeMinStage));
+			KingdomMaterials.RegisterCost(entry.Key, design.Get(KingdomMergeRules.AttrMaterials), design.Get(KingdomMergeRules.AttrUpgradeMaterials));
+			// The footprint and roof are registered post-merge like everything else: a file that
+			// shrinks the plot and a file that declares the footprint are two files, and only the
+			// merged pair is the design the validator can check.
+			KingdomPlots.RegisterSpec(entry.Key, design.Get(KingdomMergeRules.AttrPlot), design.Get(KingdomMergeRules.AttrOpen), design.Get(KingdomMergeRules.AttrSky), design.Get(KingdomMergeRules.AttrContents), design.Get(KingdomMergeRules.AttrFootprint), design.Get(KingdomMergeRules.AttrRoof));
 			KingdomRules.BuildEntry parsed = entry;
 			for (int i = 0; i < _buildings.Count; i++)
 			{
 				if (_buildings[i].Key == entry.Key)
 				{
+					// In place, so the catalogue keeps first-declaration order: a mod that re-costs
+					// the tent does not move the tent to the bottom of the founder's list.
 					_buildings[i] = entry;
 					entry = null;
 					break;
@@ -239,7 +279,7 @@ namespace ThousandAndFirst
 					"skin",
 					delegate(XmlDataHelper skinXml)
 					{
-						HandleSkin(skinXml, parsed);
+						HandleSkin(skinXml, parsed, design);
 					}
 				}
 			});
@@ -263,6 +303,9 @@ namespace ThousandAndFirst
 				KingdomUpgrade.TryGetChain(entry.Key, out chain);
 				KingdomPlotRules.PlotSpec spec;
 				KingdomPlots.TryGetSpec(entry.Key, out spec);
+				int declarations = KingdomMergeRules.DeclarationsOf(entry.Key);
+				BuildingDraft design;
+				KingdomMergeRules.TryGetDraft(entry.Key, out design);
 				view.Add(new CatalogueEntry
 				{
 					Key = entry.Key,
@@ -273,16 +316,28 @@ namespace ThousandAndFirst
 					Plot = (spec == null) ? KingdomPlotRules.PlotSize.None : spec.Size,
 					Open = (spec != null && spec.Open),
 					Contents = (spec == null) ? null : spec.Contents,
+					FootprintWidth = (spec == null) ? 0 : spec.FootprintWidth,
+					FootprintHeight = (spec == null) ? 0 : spec.FootprintHeight,
+					Roof = (spec == null) ? KingdomPlotRules.RoofState.Walled : spec.Roof,
+					RoofDeclared = (spec != null && spec.RoofDeclared),
+					RequiresSky = (spec != null && spec.RequiresSky),
 					CostDrams = entry.CostDrams,
 					Materials = entry.Materials,
 					Carries = entry.Carries,
 					Staff = entry.Staff,
 					Manning = entry.Manning,
 					Defence = entry.Defence,
-					SuccessorKey = (chain == null) ? null : chain.SuccessorKey
+					SuccessorKey = (chain == null) ? null : chain.SuccessorKey,
+					// How many files this design is the merge of, so a fault in a layered design says
+					// so and the author knows to look past their own file.
+					Declarations = (declarations < 1) ? 1 : declarations,
+					Origin = (design == null) ? null : design.Origin
 				});
 			}
-			List<CatalogueFinding> findings = KingdomCatalogueRules.Validate(view, _styles);
+			// The merges speak first, then the whole-file checks, so one load makes one log and it
+			// reads in the order the files were read.
+			List<CatalogueFinding> findings = new List<CatalogueFinding>(KingdomMergeRules.Findings);
+			findings.AddRange(KingdomCatalogueRules.Validate(view, _styles));
 			for (int i = 0; i < findings.Count; i++)
 			{
 				if (findings[i].Severity == CatalogueSeverity.Fault)
@@ -306,15 +361,21 @@ namespace ThousandAndFirst
 			});
 		}
 
-		private static void HandleSkin(XmlDataHelper xml, KingdomRules.BuildEntry Entry)
+		private static void HandleSkin(XmlDataHelper xml, KingdomRules.BuildEntry Entry, BuildingDraft Design)
 		{
 			if (!KingdomDesignRules.TryParseSkinAttributes(xml.GetAttribute("Key"), xml.GetAttribute("Style"), xml.GetAttribute("ColorString"), xml.GetAttribute("DetailColor"), xml.GetAttribute("RenderString"), xml.GetAttribute("Tile"), out var skin, out var error))
 			{
 				MetricsManager.LogError("ThousandAndFirst KingdomBuildings: building " + Entry.Key + ": " + error);
 			}
-			else if (!KingdomRules.TryAddSkin(Entry, skin, out var clash))
+			else if (!KingdomMergeRules.TryMergeSkin(Design, skin, out _, out var clash))
 			{
 				MetricsManager.LogError("ThousandAndFirst KingdomBuildings: " + clash);
+			}
+			else
+			{
+				// The draft owns the merged list -- an earlier file's skins plus this element's, with
+				// a repeated key replaced where it already sat -- and the entry shows exactly it.
+				Entry.Skins = Design.Skins;
 			}
 			xml.DoneWithElement();
 		}

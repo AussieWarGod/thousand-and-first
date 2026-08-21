@@ -157,6 +157,24 @@ playtest passes.
   distance-scaled days. The sign is the designation, one haul rides at a time, and a road cut by a
   raid costs the load in the chronicle, never in silence.
 
+### Added — catalogues that layer, buildings with their own ground, and the trigger law
+- **Catalogue files layer.** A later `<building>` with a known key merges: named attributes win,
+  omitted ones survive, skins append, chains extend across files — so mods can re-cost, re-skin and
+  extend each other's designs with no code. What a standing work already spent and cut into the
+  ground never follows a mod update; what the settlement re-reads each pass does.
+- **A tier owns its footprint and its roof.** Buildings front the heart with the yard behind;
+  footprint never outgrows the plot, refused at load and at improvement by name; sky-needing
+  designs refuse walled tiers; underground everything is carved. Growing in place never takes a
+  yard trade down without asking.
+- **The plot is a socket.** Change what a plot is within its own type×size set as one ceremony
+  with one disclosed figure; re-dress a standing building with any skin, including one added by a
+  mod after it was raised.
+- **The upgrade trigger law.** Housing improves itself only when its residents can lodge
+  elsewhere *to their own standard* — an ordinary settler takes a bunk, a notable will not take a
+  tent. A working building the city leans on is never taken offline automatically: below margin
+  the upgrade is a held offer, forceable with the dip disclosed first. No trigger anywhere reads
+  elapsed time as a cause — time is labour, never maturation.
+
 ### Changed
 - Districts are no longer flavour. Each of the six now changes something a player can measure:
   garrison adds defence across every claimed zone, agrarian bills upkeep at 90%, market adds a

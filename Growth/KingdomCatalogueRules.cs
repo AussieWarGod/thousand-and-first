@@ -100,6 +100,41 @@ namespace ThousandAndFirst
 
 		/// <summary>The <c>UpgradesTo</c> key, or null for a design that never changes.</summary>
 		public string SuccessorKey;
+
+		/// <summary>
+		/// Width of the footprint this tier declares, or zero for a design that fills its plot.
+		/// The footprint belongs to the building's tier; the plot is only the envelope it must fit
+		/// inside, and the yard is whatever the tier does not cover.
+		/// </summary>
+		public int FootprintWidth;
+
+		/// <summary>Height of the declared footprint. See <see cref="FootprintWidth"/>.</summary>
+		public int FootprintHeight;
+
+		/// <summary>What stands over the footprint. Meaningless unless
+		/// <see cref="RoofDeclared"/>, which is the only state that can contradict anything.
+		/// </summary>
+		public KingdomPlotRules.RoofState Roof = KingdomPlotRules.RoofState.Walled;
+
+		/// <summary>Whether the tier declared a roof of its own. Only a declared roof can
+		/// contradict a design that needs weather; a design that claimed nothing is raised exactly
+		/// as it always was.</summary>
+		public bool RoofDeclared;
+
+		/// <summary>The design's <c>Sky</c> flag: it needs sun, wind, or rain.</summary>
+		public bool RequiresSky;
+
+		/// <summary>
+		/// How many <c>&lt;building&gt;</c> declarations this design is the merge of
+		/// (<see cref="KingdomMergeRules"/>). One for a design only its own file declares; two or
+		/// more means a fault reported here may belong to a file the base catalogue's author never
+		/// saw, which the findings say out loud.
+		/// </summary>
+		public int Declarations = 1;
+
+		/// <summary>A label for the file that most recently named this key, when the loader has one
+		/// to give. Null is ordinary and simply leaves it out of the sentence.</summary>
+		public string Origin;
 	}
 
 	/// <summary>One <c>kind:amount</c> pair out of a <c>Carries</c> list.</summary>
@@ -134,6 +169,15 @@ namespace ThousandAndFirst
 	/// parser are <c>KingdomMaterialRules</c>. Gates are <see cref="KingdomZoningRules"/> and
 	/// chains are <see cref="KingdomUpgradeRules"/>. This file adds the denomination and the
 	/// whole-file cross-checks none of them can see alone, and defers everywhere else.
+	/// </para>
+	/// <para>
+	/// <b>The catalogue it reads is the merged one.</b> Layering across files belongs to
+	/// <see cref="KingdomMergeRules"/>: by the time a list reaches <see cref="Validate"/>, every
+	/// file that named a key has been folded into one entry. That is what makes the whole-file
+	/// checks worth having, because the contradictions that survive are the ones no single file
+	/// contains &mdash; a footprint one mod declared standing on a plot a second mod shrank, an
+	/// improvement ring whose last link is closed by a third. Every finding about a design more
+	/// than one file declares says so, so the author reading the log knows to look past their own.
 	/// </para>
 	/// <para>
 	/// <b>What this file never does.</b> Reject an entry. Every check returns a finding for the
@@ -408,11 +452,13 @@ namespace ThousandAndFirst
 					entries.Add(entry);
 					if (byKey.ContainsKey(entry.Key))
 					{
-						// Not the same thing as a third-party file overriding a key: that happens
-						// across files and is a supported way to retheme the catalogue. Twice in
-						// one merged pass means one of the two was written for nothing.
+						// Not the same thing as a third-party file re-using a key: that happens
+						// across files, is a supported way to retheme the catalogue, and is folded
+						// into ONE entry before validation (KingdomMergeRules.Absorb). Two entries
+						// under one key reaching this far means the caller did not merge, and the
+						// design the settlement builds is only half of what the files said.
 						findings.Add(new CatalogueFinding(entry.Key, "Key", CatalogueSeverity.Fault,
-							"building " + entry.Key + " is declared twice; only the last declaration is the design"));
+							"building " + entry.Key + " reaches the catalogue twice unmerged; a later declaration of a key merges into the earlier one rather than replacing it"));
 					}
 					byKey[entry.Key] = entry;
 				}
@@ -547,7 +593,64 @@ namespace ThousandAndFirst
 				Findings.Add(new CatalogueFinding(Entry.Key, "Category", CatalogueSeverity.Note,
 					"building " + Entry.Key + " is filed under " + (Fold(Entry.Category) ?? "nothing") + ", which no district claims; the plan will build it where the founder stands"));
 			}
+			ValidateFootprint(Entry, Findings);
+			// A tier that DECLARED its roof has made a claim the design can contradict. A design
+			// that declared nothing has claimed nothing, and is raised exactly as it always was.
+			if (Entry.RequiresSky && Entry.RoofDeclared && !KingdomPlotRules.AdmitsSky(Entry.Roof))
+			{
+				Findings.Add(new CatalogueFinding(Entry.Key, "Roof", CatalogueSeverity.Fault,
+					"building " + Entry.Key + " needs weather and declares a tier that is " + KingdomPlotRules.RoofWord(Entry.Roof)
+					+ "; it would be refused wherever it was raised" + Layered(Entry)));
+			}
+			if (Entry.Plot != KingdomPlotRules.PlotSize.None && Entry.RoofDeclared
+				&& !KingdomPlotRules.HoldsBeds(Entry.Roof) && Fold(Entry.Category) == "housing")
+			{
+				Findings.Add(new CatalogueFinding(Entry.Key, "Roof", CatalogueSeverity.Note,
+					"building " + Entry.Key + " is housing with nothing over it; nobody sleeps in the open" + Layered(Entry)));
+			}
 			ValidateChain(Entry, ByKey, Findings);
+		}
+
+		/// <summary>
+		/// The sole footprint invariant: footprint &le; plot. The tier declares what it covers and
+		/// the plot is only the envelope, so nothing here has an opinion about how big a tier
+		/// should be &mdash; only about whether it fits on the ground the founder staked.
+		/// <para>
+		/// This is the check merge-by-key most needs. One file may declare the tier and its
+		/// footprint; a second, wanting a smaller building, may override nothing but <c>Plot</c>.
+		/// Neither file is wrong on its own and neither author can see the other's, so the only
+		/// place the contradiction exists is the merged design &mdash; here.
+		/// </para>
+		/// </summary>
+		private static void ValidateFootprint(CatalogueEntry Entry, List<CatalogueFinding> Findings)
+		{
+			if (Entry.FootprintWidth <= 0 && Entry.FootprintHeight <= 0)
+			{
+				return;
+			}
+			if (Entry.FootprintWidth <= 0 || Entry.FootprintHeight <= 0)
+			{
+				Findings.Add(new CatalogueFinding(Entry.Key, "Footprint", CatalogueSeverity.Fault,
+					"building " + Entry.Key + " declares a footprint of " + Entry.FootprintWidth + " by " + Entry.FootprintHeight + "; a footprint needs both a width and a height" + Layered(Entry)));
+				return;
+			}
+			if (Entry.Plot == KingdomPlotRules.PlotSize.None)
+			{
+				Findings.Add(new CatalogueFinding(Entry.Key, "Footprint", CatalogueSeverity.Fault,
+					"building " + Entry.Key + " declares a footprint of " + Entry.FootprintWidth + " by " + Entry.FootprintHeight + " and no plot to stand it in" + Layered(Entry)));
+				return;
+			}
+			int width;
+			int height;
+			if (!KingdomPlotRules.TryDimensions(Entry.Plot, out width, out height))
+			{
+				return;
+			}
+			if (Entry.FootprintWidth > width || Entry.FootprintHeight > height)
+			{
+				Findings.Add(new CatalogueFinding(Entry.Key, "Footprint", CatalogueSeverity.Fault,
+					"building " + Entry.Key + " covers " + Entry.FootprintWidth + " by " + Entry.FootprintHeight + " and stands on " + PlotWord(Entry.Plot) + ", which is " + width + " by " + height + "; a tier's footprint fits inside its plot or it is never raised" + Layered(Entry)));
+			}
 		}
 
 		private static void ValidateChain(CatalogueEntry Entry, Dictionary<string, CatalogueEntry> ByKey, List<CatalogueFinding> Findings)
@@ -559,7 +662,7 @@ namespace ThousandAndFirst
 			if (!ByKey.TryGetValue(Entry.SuccessorKey, out var successor))
 			{
 				Findings.Add(new CatalogueFinding(Entry.Key, "UpgradesTo", CatalogueSeverity.Fault,
-					"building " + Entry.Key + " improves into " + Entry.SuccessorKey + ", which no building declares"));
+					"building " + Entry.Key + " improves into " + Entry.SuccessorKey + ", which no building declares" + Layered(Entry)));
 				return;
 			}
 			// Upgrades climb within a plot; sizes compete across plots. A design that improved into
@@ -568,7 +671,15 @@ namespace ThousandAndFirst
 			if (successor.Plot != Entry.Plot)
 			{
 				Findings.Add(new CatalogueFinding(Entry.Key, "UpgradesTo", CatalogueSeverity.Fault,
-					"building " + Entry.Key + " stands on " + PlotWord(Entry.Plot) + " and improves into " + successor.Key + ", which wants " + PlotWord(successor.Plot) + "; an improvement climbs within its own plot"));
+					"building " + Entry.Key + " stands on " + PlotWord(Entry.Plot) + " and improves into " + successor.Key + ", which wants " + PlotWord(successor.Plot) + "; an improvement climbs within its own plot" + Layered(Entry) + Layered(successor)));
+			}
+			// Footprints climb within the plot. A successor that stands on LESS ground is not wrong,
+			// but it hands back walled ground as yard, which is worth an author seeing.
+			if (successor.FootprintWidth > 0 && Entry.FootprintWidth > 0
+				&& successor.FootprintWidth * successor.FootprintHeight < Entry.FootprintWidth * Entry.FootprintHeight)
+			{
+				Findings.Add(new CatalogueFinding(Entry.Key, "Footprint", CatalogueSeverity.Note,
+					"building " + Entry.Key + " improves into " + successor.Key + ", which stands on less ground than it does" + Layered(Entry) + Layered(successor)));
 			}
 			GrowthStage from = EffectiveMinStage(Entry.MinStage, Entry.Plot);
 			GrowthStage to = EffectiveMinStage(successor.MinStage, successor.Plot);
@@ -599,9 +710,44 @@ namespace ThousandAndFirst
 			}
 			if (at != null && walked.Contains(at))
 			{
+				// Post-merge, a ring is a thing no single file need contain: one mod may name the
+				// first link and another the last, each correct alone. The finding therefore says
+				// which of the links are themselves layered, which is the only clue an author has
+				// that the file to fix may not be the one they wrote.
 				Findings.Add(new CatalogueFinding(Entry.Key, "UpgradesTo", CatalogueSeverity.Fault,
-					"the improvement chain from " + Entry.Key + " comes back to " + at));
+					"the improvement chain from " + Entry.Key + " comes back to " + at + RingLayers(walked, ByKey)));
 			}
+		}
+
+		/// <summary>
+		/// The clause that names a design as the merge of several files, or an empty string for a
+		/// design only one file declares. Appended to a fault so an author reading the log knows to
+		/// look past their own file (STANDARDS 7b: a thing that will not work says why, once, where
+		/// somebody can act on it).
+		/// </summary>
+		private static string Layered(CatalogueEntry Entry)
+		{
+			if (Entry == null || Entry.Declarations <= 1)
+			{
+				return "";
+			}
+			string origin = string.IsNullOrEmpty(Entry.Origin) ? "" : (", last from " + Entry.Origin);
+			return " (" + Entry.Key + " is the merge of " + Entry.Declarations + " declarations" + origin + ")";
+		}
+
+		/// <summary>Which links of a ring are themselves merged from more than one file.</summary>
+		private static string RingLayers(List<string> Walked, Dictionary<string, CatalogueEntry> ByKey)
+		{
+			string list = "";
+			for (int i = 0; i < Walked.Count; i++)
+			{
+				CatalogueEntry entry;
+				if (ByKey.TryGetValue(Walked[i], out entry) && entry != null && entry.Declarations > 1)
+				{
+					list += ((list.Length == 0) ? "" : ", ") + Walked[i] + " from " + entry.Declarations + " files";
+				}
+			}
+			return (list.Length == 0) ? "" : " (the ring closes across layered designs: " + list + ")";
 		}
 
 		/// <summary>Whether any finding in a list is a <see cref="CatalogueSeverity.Fault"/>.

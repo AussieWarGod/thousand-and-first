@@ -78,7 +78,7 @@ namespace ThousandAndFirst
 			}
 			while (true)
 			{
-				int num = Popup.PickOption(Title: system.SeatName + KingdomSettlement.VocationSuffix(system.Vocation), Options: new string[27] { (system.PetitionKind != KingdomRules.PetitionKind.None) ? ("{{W|Hear " + system.PetitionPetitioner + "}}") : "{{K|No one is waiting to speak}}", "Status", "What happened while you were away", "The Chronicle", "As others tell it", "Standings", "The roll of settlers", "Standing policy", "Designate district", "Commission a building", "Answer a threat", "Dedicate a vessel, larder, or stockpile", "Strike a trade charter", "Send a water manifest", "Share a meal from the larder", "Certify a machine", "Set the water detail", "Plans staked for later", "Adopt a building", "Release an adoption", (system.SettlementCount >= 2 || system.Seceded != null) ? "How your cities hold each other" : "{{K|One city cannot fall out with itself}}", "What the keepers know", "Your works, and what they become", "Name a building", "Set the crew on the ground", "Take down a building", "Post a price at the heart"}, Hotkeys: new char[27] { 'h', 's', 'w', 'c', 'a', 'n', 'l', 'p', 'd', 'm', 't', 'v', 'r', 'i', 'f', 'e', 'u', 'g', 'b', 'j', 'k', 'o', 'y', 'x', 'q', 'z', '1'}, AllowEscape: true);
+				int num = Popup.PickOption(Title: system.SeatName + KingdomSettlement.VocationSuffix(system.Vocation), Options: new string[29] { (system.PetitionKind != KingdomRules.PetitionKind.None) ? ("{{W|Hear " + system.PetitionPetitioner + "}}") : "{{K|No one is waiting to speak}}", "Status", "What happened while you were away", "The Chronicle", "As others tell it", "Standings", "The roll of settlers", "Standing policy", "Designate district", "Commission a building", "Answer a threat", "Dedicate a vessel, larder, or stockpile", "Strike a trade charter", "Send a water manifest", "Share a meal from the larder", "Certify a machine", "Set the water detail", "Plans staked for later", "Adopt a building", "Release an adoption", (system.SettlementCount >= 2 || system.Seceded != null) ? "How your cities hold each other" : "{{K|One city cannot fall out with itself}}", "What the keepers know", "Your works, and what they become", "Name a building", "Set the crew on the ground", "Take down a building", "Post a price at the heart", "Change what a plot is", "Give a building a new look"}, Hotkeys: new char[29] { 'h', 's', 'w', 'c', 'a', 'n', 'l', 'p', 'd', 'm', 't', 'v', 'r', 'i', 'f', 'e', 'u', 'g', 'b', 'j', 'k', 'o', 'y', 'x', 'q', 'z', '1', '2', '3'}, AllowEscape: true);
 				switch (num)
 				{
 				case 0:
@@ -161,6 +161,12 @@ namespace ThousandAndFirst
 					break;
 				case 26:
 					KingdomBounty.OpenNotices(system, ParentObject);
+					break;
+				case 27:
+					KingdomSocket.OpenConvert(system, ParentObject);
+					break;
+				case 28:
+					KingdomSocket.OpenRedress(system, ParentObject);
 					break;
 				default:
 					return;
@@ -472,7 +478,30 @@ namespace ThousandAndFirst
 				// kingdom's ground, where the commission below is going to be refused anyway.
 				bool onGround = zone != null && System.ClaimedZones.Contains(zone.ZoneID);
 				string skin = onGround ? KingdomDesign.ChooseSkin(available[num], System.Style)?.Key : null;
-				if (!KingdomCommission.Commission(System, available[num].Key, skin, out var failure))
+				// How much ground to stake is the founder's decision, and it is the one decision that
+				// sets the ceiling on everything this plot will ever become. The whole chain's
+				// footprints are shown before the stake goes in, never after it.
+				KingdomPlotRules.PlotSize stake = KingdomPlotRules.PlotSize.None;
+				if (onGround)
+				{
+					System.Collections.Generic.List<KingdomPlotRules.PlotSize> grounds = KingdomPlots.StakeableSizes(System, available[num]);
+					if (grounds.Count > 1)
+					{
+						System.Collections.Generic.List<KingdomPlotRules.ChainStep> chain = KingdomPlots.ChainOf(available[num]);
+						string[] stakes = new string[grounds.Count];
+						for (int i = 0; i < grounds.Count; i++)
+						{
+							stakes[i] = KingdomPlotRules.StakeOptionLine(grounds[i], chain);
+						}
+						int ground = Popup.PickOption(Title: "How much ground?", Intro: KingdomPlotRules.ForesightLine(grounds[0], chain), Options: stakes, AllowEscape: true);
+						if (ground < 0)
+						{
+							return;
+						}
+						stake = grounds[ground];
+					}
+				}
+				if (!KingdomCommission.Commission(System, available[num].Key, skin, stake, out var failure))
 				{
 					Popup.Show(failure);
 				}

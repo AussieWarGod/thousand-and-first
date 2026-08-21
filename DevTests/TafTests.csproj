@@ -35,6 +35,7 @@
     <Compile Include="KingdomUpgradeRulesTests.cs" />
     <Compile Include="KingdomDesignRulesTests.cs" />
     <Compile Include="KingdomPlotRulesTests.cs" />
+    <Compile Include="KingdomFootprintTests.cs" />
     <Compile Include="KingdomMaterialRulesTests.cs" />
     <Compile Include="KingdomCatalogueRulesTests.cs" />
     <Compile Include="KingdomCeremonyRulesTests.cs" />
@@ -42,6 +43,8 @@
     <Compile Include="KingdomRoadRulesTests.cs" />
     <Compile Include="KingdomYardRulesTests.cs" />
     <Compile Include="KingdomGuestRulesTests.cs" />
+    <Compile Include="KingdomMergeRulesTests.cs" />
+    <Compile Include="KingdomSocketRulesTests.cs" />
     <Compile Include="..\Core\KingdomRules.cs" />
     <Compile Include="..\Core\KingdomLedger.cs" />
     <Compile Include="..\Core\KingdomSettlement.cs" />
@@ -62,6 +65,8 @@
     <Compile Include="..\Growth\KingdomCatalogueRules.cs" />
     <Compile Include="..\Growth\KingdomRoadRules.cs" />
     <Compile Include="..\Growth\KingdomYardRules.cs" />
+    <Compile Include="..\Growth\KingdomMergeRules.cs" />
+    <Compile Include="..\Growth\KingdomSocketRules.cs" />
     <Compile Include="..\Quests\KingdomBountyRules.cs" />
     <Compile Include="..\Experience\KingdomVoiceRules.cs" />
     <Compile Include="..\Experience\KingdomOfficeRules.cs" />

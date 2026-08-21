@@ -320,6 +320,21 @@ anyone.
 | 59 | Return after days away and read the roll | **Guests**: notable travellers logged with one hook each — a ruin, a machine, a debt in a named village. Lodge one in a bed of the right tier and they settle with a trade; ignored, they leave a letter and the hook becomes a rumor — never lost |
 | 60 | Buy a carry-sign from a merchant; plant it on a pile you own out in the world | Confirms exactly what it will take, then porters haul it home over distance-scaled days, one haul in flight. It lands in the stockpiles, chronicled — or a raid threatening the settlement costs the load, chronicled, never silent |
 
+## Pass 19 — Layered catalogues, footprints, sockets, and the trigger law
+
+| Step | Action | Expect |
+|---|---|---|
+| 61 | Ship a tiny second mod file re-declaring `<building Key="tent">` with just a new cost and a new skin | The tent keeps its place in the list, costs the new figure, offers the new skin. Attributes the file omitted survive. A standing tent is untouched — what was spent and cut into the ground never follows a mod update; what the settlement re-reads (name, gates, skins) does |
+| 61a | Blank an attribute (`Contents=""`) vs omitting it | Blank erases; omitted keeps. The modder contract in MODDING.md says so |
+| 62 | Commission a design whose tier declares a footprint smaller than its plot | The building fronts the heart, the yard lies behind. Yard = plot minus footprint, recomputed as tiers grow |
+| 62a | Let a tier grow onto ground a yard trade occupies | The improvement refuses **by name** — nothing in a yard ever comes down on its own |
+| 62b | Author a tier whose footprint exceeds its plot | Refused at load with both spans named; refused again at improvement: "wants more ground than this plot holds — strike and stake larger, or leave it" |
+| 63 | Charter → **Change what a plot is** (`2`) | Within the plot's own type×size set: cheap, one ceremony, one disclosed figure (strike effort + new cost − salvage). Re-typing is the full strike-and-re-stake |
+| 63a | Charter → **Give a building a new look** (`3`) | Any registered skin — including one a mod added after the building was raised — for a tenth of build cost. No output change |
+| 64 | Grow a house until its upgrade is earned, with residents and spare tolerable beds | It upgrades by itself: residents lodge to their own standard during the rebuild. An ordinary settler takes a bunk; the notable in the fine house will not take a tent — and the upgrade **waits** until lodging they'd accept exists |
+| 64a | Earn an upgrade on a water work the city leans on | **Held, not taken**: "ready to improve, and held — the city leans on it." Nothing acts. Force it from the works screen and the dip is disclosed before your consent |
+| 64b | Read the held offer, walk away for a season, return | Still held, unchanged. No trigger anywhere reads elapsed time as a cause |
+
 ## Pass 4 — Attitudes and persistence
 
 | Step | Action | Expect |

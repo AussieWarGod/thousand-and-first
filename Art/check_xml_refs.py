@@ -10,6 +10,8 @@ references the game resolves by name at load or roll time, where a wrong name is
   book reference        a Book ID= that no blueprint points at, or a pointer to no book
   upgrade chain         an UpgradesTo= naming a design no <building> declares, or a ring of them
   zoning district       a Districts= token naming ground the founder can never declare
+  merged design         a footprint, chain link or key that only contradicts itself once the
+                        catalogue's <building> elements are folded together by Key
 
 The population case is the one that motivated this. `DynamicObjectsTable:Books` looked like a
 vanilla table to merge into. It is not declared anywhere; it is *fabricated* on demand from
@@ -136,33 +138,108 @@ def known_districts():
     return set(re.findall(r'"([^"]+)"', match.group(1)))
 
 
-def building_reference_problems():
-    """UpgradesTo resolution, chain cycles, and Districts tokens across our own catalogue."""
+def merged_buildings():
+    """Every <building> in our catalogue, folded the way the loader folds it.
+
+    A later element with the same Key MERGES into the earlier one: attributes it names override,
+    attributes it omits survive, and <skin> children append with a repeated skin key replacing.
+    Reading each element on its own is exactly how a merge-created contradiction hides -- neither
+    file is wrong by itself, and only the merged design is.
+    """
+    order = []
+    merged = {}
     if not os.path.isfile("KingdomBuildings.xml"):
-        return []
-    problems = []
-    root = ET.parse("KingdomBuildings.xml").getroot()
-    keys = set()
-    chain = {}
-    for building in root.iter("building"):
+        return order, merged
+    for building in ET.parse("KingdomBuildings.xml").getroot().iter("building"):
         key = building.get("Key")
         if not key:
             continue
-        keys.add(key)
-        successor = building.get("UpgradesTo")
+        if key not in merged:
+            merged[key] = {"attrs": {}, "skins": {}, "declarations": 0}
+            order.append(key)
+        entry = merged[key]
+        entry["attrs"].update(building.attrib)
+        entry["declarations"] += 1
+        for skin in building.iter("skin"):
+            skin_key = skin.get("Key")
+            if skin_key:
+                entry["skins"][skin_key] = dict(skin.attrib)
+    return order, merged
+
+
+# The tokens KingdomPlotRules.TryParseSize accepts, mapped to the tier they name.
+PLOT_TIERS = {
+    "s": "Small",
+    "small": "Small",
+    "m": "Medium",
+    "medium": "Medium",
+    "l": "Large",
+    "large": "Large",
+    "xl": "Huge",
+    "huge": "Huge",
+}
+
+
+def plot_dimensions():
+    """Tier dimensions read off KingdomPlotRules rather than copied, so this check cannot drift
+    from the geometry it is checking a footprint against."""
+    source = read(os.path.join("Growth", "KingdomPlotRules.cs"))
+    dims = {}
+    for name in ("Small", "Medium", "Large", "Huge"):
+        width = re.search(r"public const int %sWidth = (\d+)" % name, source)
+        height = re.search(r"public const int %sHeight = (\d+)" % name, source)
+        if width and height:
+            dims[name] = (int(width.group(1)), int(height.group(1)))
+    return dims
+
+
+def footprint_of(raw):
+    """A declared footprint as (width, height), or None for anything this script does not
+    recognise. The authoritative parser is the mod's own; guessing here would invent failures
+    rather than find them."""
+    if not raw:
+        return None
+    match = re.match(r"^\s*(\d+)\s*[xX,*]\s*(\d+)\s*$", raw)
+    if not match:
+        return None
+    return int(match.group(1)), int(match.group(2))
+
+
+def building_reference_problems():
+    """UpgradesTo resolution, chain cycles, chain plot agreement, footprint against plot,
+    mis-spelled merge keys, Districts tokens, skin tiles and Contents tables -- every one of them
+    against the MERGED catalogue, because merge-by-key means the design the game builds is not the
+    element any one author wrote."""
+    order, merged = merged_buildings()
+    if not merged:
+        return []
+    problems = []
+    keys = set(order)
+    chain = {}
+    for key in order:
+        successor = merged[key]["attrs"].get("UpgradesTo")
         if successor:
             chain[key] = successor
+
+    def layered(key):
+        count = merged.get(key, {}).get("declarations", 1)
+        return "" if count < 2 else " (%s is the merge of %d declarations)" % (key, count)
+
+    def plot_of(key):
+        raw = (merged[key]["attrs"].get("Plot") or "").strip().lower()
+        return PLOT_TIERS.get(raw, raw)
 
     for key, successor in sorted(chain.items()):
         if successor not in keys:
             problems.append(
-                "building %s upgrades into %s, which no <building> in this file declares"
-                % (key, successor)
+                "building %s upgrades into %s, which no <building> in this file declares%s"
+                % (key, successor, layered(key))
             )
 
     # A ring improves each work into the next forever, spending the settlement's whole surplus
     # on going in a circle. TryParseUpgradeAttributes catches the one-step case; only a pass over
-    # the whole catalogue can see a longer one.
+    # the whole catalogue can see a longer one, and only a pass over the MERGED catalogue can see
+    # one whose last link was added by a later file.
     for start in sorted(chain):
         seen = [start]
         at = chain[start]
@@ -173,10 +250,75 @@ def building_reference_problems():
             problems.append("upgrade chain loops: %s -> %s" % (" -> ".join(seen), at))
             break
 
+    # Upgrades climb within a plot; sizes compete across plots. One file may name the chain and a
+    # later file re-tier a single link, and neither element is wrong where it stands.
+    for key, successor in sorted(chain.items()):
+        if successor not in keys or plot_of(key) == plot_of(successor):
+            continue
+        problems.append(
+            "building %s stands on plot %s and improves into %s, which wants plot %s; an "
+            "improvement climbs within its own plot%s%s"
+            % (
+                key,
+                plot_of(key) or "none",
+                successor,
+                plot_of(successor) or "none",
+                layered(key),
+                layered(successor),
+            )
+        )
+
+    # The footprint belongs to the building's tier and the plot is only the envelope it fits
+    # inside. A merge that overrides one and not the other is the case no single element shows.
+    dims = plot_dimensions()
+    for key in order:
+        footprint = footprint_of(merged[key]["attrs"].get("Footprint"))
+        if not footprint:
+            continue
+        tier = plot_of(key)
+        if tier not in dims:
+            problems.append(
+                "building %s declares a footprint of %dx%d and no plot to stand it in%s"
+                % (key, footprint[0], footprint[1], layered(key))
+            )
+            continue
+        if footprint[0] > dims[tier][0] or footprint[1] > dims[tier][1]:
+            problems.append(
+                "building %s covers %dx%d and stands on a %s plot, which is %dx%d; a tier's "
+                "footprint fits inside its plot or it is never raised%s"
+                % (
+                    key,
+                    footprint[0],
+                    footprint[1],
+                    tier.lower(),
+                    dims[tier][0],
+                    dims[tier][1],
+                    layered(key),
+                )
+            )
+
+    # A merge fragment names a key an earlier file declared. One that names a key nothing else
+    # declares is a mis-spelling: the loader creates a half-entry, refuses it for want of a
+    # Blueprint, and the design the author meant to change is left exactly as it was.
+    for key in order:
+        if merged[key]["declarations"] > 1:
+            continue
+        missing = [
+            name
+            for name in ("DisplayName", "Blueprint", "Cost", "Ticks")
+            if not merged[key]["attrs"].get(name)
+        ]
+        if missing:
+            problems.append(
+                "building %s is declared once and is missing %s; a merge fragment whose key no "
+                "other <building> declares is a mis-spelled key and changes nothing"
+                % (key, ", ".join(missing))
+            )
+
     districts = known_districts() | {"none", "all"}
     if districts:
-        for building in root.iter("building"):
-            declared = building.get("Districts")
+        for key in order:
+            declared = merged[key]["attrs"].get("Districts")
             if not declared:
                 continue
             for token in declared.split(","):
@@ -185,20 +327,20 @@ def building_reference_problems():
                     problems.append(
                         "building %s wants the district %s, which is not one a founder can "
                         "declare, so nothing can ever be raised on ground that carries it"
-                        % (building.get("Key"), token)
+                        % (key, token)
                     )
 
     # A skin only ever names art that already exists. One of ours must exist on disk; a vanilla
     # path cannot be checked here because vanilla tiles live inside the packed Unity assets.
-    for building in root.iter("building"):
-        for skin in building.iter("skin"):
-            tile = skin.get("Tile")
+    for key in order:
+        for skin_key in sorted(merged[key]["skins"]):
+            tile = merged[key]["skins"][skin_key].get("Tile")
             if not tile or not tile.startswith("ThousandAndFirst/"):
                 continue
             if not os.path.isfile(os.path.join("Textures", tile)):
                 problems.append(
                     "building %s skin %s names the tile %s, which is not in Textures/"
-                    % (building.get("Key"), skin.get("Key"), tile)
+                    % (key, skin_key, tile)
                 )
 
     declared_pops = set()
@@ -206,12 +348,12 @@ def building_reference_problems():
         declared_pops = set(
             re.findall(r'<population\s+Name="([^"]+)"', read("PopulationTables.xml"))
         )
-    for building in root.iter("building"):
-        table = building.get("Contents")
+    for key in order:
+        table = merged[key]["attrs"].get("Contents")
         if table and table not in declared_pops:
             problems.append(
                 "building %s furnishes from %s, which no <population> declares, so the plot is "
-                "finished empty and nothing says why" % (building.get("Key"), table)
+                "finished empty and nothing says why" % (key, table)
             )
     return problems
 

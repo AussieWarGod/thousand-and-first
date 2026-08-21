@@ -95,6 +95,20 @@ thirst ladder fires, and it deposits only into a dedicated larder.
 `KingdomGuestbook` (notable guests with hooks that decay into rumors, and the carry-sign's
 distance-scaled hauls, one in flight, mirroring the water manifest's honesty rules).
 
+## Layering, footprints, sockets, and the trigger law
+
+Catalogue files **layer** (`KingdomMergeRules`): merge-by-key on raw attributes inside the single
+XML pass — named overrides, omitted survives, blank erases, skins append (same key replaces),
+chains extend across files; the post-merge design is what the validator sees. A tier declares
+`Footprint="WxH"` and `Roof="Open|Soft|Walled|Carved"` (absent = fills its plot, walled);
+footprint ≤ plot is enforced at load and refused by name at improvement; yard = plot − footprint,
+recomputed per tier. `KingdomSocket` keeps a struck plot as a re-buildable slot, converts within
+the plot's type×size set for one disclosed figure, and re-dresses standing buildings with any
+registered skin. The upgrade trigger law (`KingdomUpgradeRules`): housing auto-upgrades only when
+residents can be displaced to their own `LodgingStandard`; working buildings additionally need the
+reserve to cover the outage (`AbsorptionDemand`), else the verdict is a held offer (`IsOffer`),
+forceable via `KingdomUpgrade.Force` with the dip disclosed. No trigger reads elapsed time.
+
 ## Plots, materials, and gates
 
 The unit of building is the **plot** (`KingdomPlots` / `KingdomPlotRules`): S/M/L/XL rects,
