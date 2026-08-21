@@ -354,6 +354,32 @@ playtest passes.
 - Guests arrive at the gate and leave again through an absence, and the homecoming says who came,
   who waited, and how long ago.
 
+### Added — the ceremonies everybody attends, and the numbers that were being thrown away
+- **Every building is raised with a ceremony now, not four of fifty-seven.** A house, a field, a
+  larder or a temple finishing while you stand there gathers whoever is nearby, shares a measure
+  of water and chronicles who was present, exactly as a palisade already did; raised while you are
+  away, the homecoming tells it plainly. The plot path used to write a bare line instead.
+- **The chronicle can quote a plan for a house.** A plan staked for a plot-sized design now carries
+  the surveyor's words through the works and into the raising, the way a single-cell plan always
+  has. It used to be dropped the moment the plot measured its rect out of the marker's cell.
+- **A notable is worth something to the settlement.** Met tastes, a leader's virtue net of their
+  flaw, and the `Prefers` their quarters happen to meet are one shade on the settlement
+  (`KingdomSystem.NotableShade`), and the level reads it — up to five settlers, bound by the same
+  half-the-binding-level cap a shrine is bound by, and never a penalty when nothing is met. It was
+  computed, printed in the chronicle, and read by nothing. The status report names it.
+- **A household's yard trade feeds the settlement.** A vine lattice's `food:1`, a hide rack's
+  `craft:1` and a vellum press's `learning:1` now reach the level. They were parsed, capped, listed
+  in the Charter's own menu, and consumed by nothing.
+- **Lifts land where they reach (Addendum 6).** Craft, faith, learning, order and luxury now lift
+  the settlement in proportion to the roofs their work actually covers, instead of counting
+  citywide off the catalogue. Water, food and roofs are unchanged — they are drawn and carried, so
+  they stay citywide pools. Consequences worth knowing before you build: a quarter-band design
+  among the houses is worth all of it and the same design out past the fields is worth a fraction;
+  a headed great work in another claimed zone still carries whole; and an `S` design shades the
+  ground it stands on rather than the population count, so a camp whose only civic works are a
+  shrine and a fire pit no longer gets comfort headroom for them. Every rung is still holdable on
+  its binding goods, and one named notable puts a camp's headroom back.
+
 ### Changed
 - Districts are no longer flavour. Each of the six now changes something a player can measure:
   garrison adds defence across every claimed zone, agrarian bills upkeep at 90%, market adds a

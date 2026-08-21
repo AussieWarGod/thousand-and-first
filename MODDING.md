@@ -60,7 +60,12 @@ Ship a `KingdomBuildings.xml` in your mod root:
   because a town with water for ninety and bread for nine is a town of nine. Five **lift** —
   `craft`, `spirit`, `learning`, `order`, `luxury` — and are summed and then capped at half the
   binding level, so no quantity of shrines outruns the cistern. One point of `water` is one dram a
-  day sustained, which is one settler's thirst at camp rates. A support name this mod does not know
+  day sustained, which is one settler's thirst at camp rates. **The binding three are citywide
+  pools; a lift only lifts the people its work actually reaches** (`Reach`, below, and
+  `KingdomReachRules.Landed`): a design lands the share of the settlement's roofs it covers, so
+  the same shrine is worth its whole amount among the houses and a fraction of it out past the
+  fields, and an `S` design — which shades its own plot — lifts the settlement's level by nothing
+  while still shading the ground it stands on. A support name this mod does not know
   is accepted and lifts; a new *binding* good would make every catalogue that predates it
   unbuildable, so there will never be a sixth. Omitting the attribute adds nothing to the level,
   which is correct for a wall.
@@ -321,7 +326,7 @@ there takes it up; letting one go is free and returns nothing.
 | `DisplayName` | Required. |
 | `Blueprint` | Required. The object placed in the yard. |
 | `Trade` | The trade a household is said to take up. Falls back to `DisplayName`. |
-| `Shades` | Nothing. A `support:amount` list in the same language `Carries` uses on a `<building>`, summed and capped small (`KingdomYardRules.MaxShadePerWork`) so a household sideline never competes with a purpose-built work. |
+| `Shades` | Nothing. A `support:amount` list in the same language `Carries` uses on a `<building>`, summed and capped small (`KingdomYardRules.MaxShadePerWork`) so a household sideline never competes with a purpose-built work. It lands in the settlement's own level beside the house's `Carries` — a `food:1` vine lattice feeds one more person — and unlike a building's lift it is **not** reach-scoped: a household's trade has no plot of its own to shade, so what it makes goes to the settlement. |
 | `Goods` | `No`. `Yes` marks a trade whose output is a caravan good rather than anything the settlement's own equilibrium reads. |
 
 Entries live in their own file with root `<kingdomyardworks>` (`KingdomYardWorks.xml` ships the
@@ -408,6 +413,15 @@ cap.
 Only **lifts** are scoped. `water`, `food` and `roof` are drawn and carried, so they stay citywide
 pools whatever supplies them; `craft`, `spirit`, `learning`, `order`, `luxury` and any good another
 mod invents shade only what their work reaches.
+
+Scoped in two places, and both matter to an author. What the ground *feels like* — the quarter's
+name in the status report, whether a shrine reaches a home for creed conversion, whether a
+scriptorium softens a household's grudge — is the reach test on one cell. What the settlement's
+**level** gets is the same test summed: a work lands the share of the settlement's roofs it
+covers, so a `zone` or `city` design lands its whole amount, a `quarter` design lands what its
+cluster holds, and a `plot` design lands nothing on the level at all. An `S` design is therefore
+worth building for its ground and never for the population count — which is what "the wayside
+statue stays worth building forever" means here.
 
 A **quarter** is measured, never declared: built ground within six cells of built ground is one
 quarter, transitively, and a work's quarter is the cluster it stands in. Nothing is stored, so a

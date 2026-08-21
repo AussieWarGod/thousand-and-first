@@ -184,8 +184,54 @@ namespace ThousandAndFirst.Tests
 			KingdomCatalogueRules.SupportTally tally = Tally(Water: 44, Food: 30, Roof: 30);
 			// 44 drams at Town rates is 24 settlers, which is then the least of the three.
 			Assert.AreEqual(24, KingdomSubsidenceRules.LevelFromWater(44, GrowthStage.Town));
-			Assert.AreEqual(KingdomCatalogueRules.Equilibrium(24, 30, 30, 0),
+			Assert.AreEqual(KingdomCatalogueRules.Equilibrium(24, 30, 30, 0, 0),
 				KingdomSubsidenceRules.SupportedLevel(tally, GrowthStage.Town));
+		}
+
+		[Test]
+		public void SupportedLevel_ReadsWhatTheSettlementsNotableIsWorthToIt()
+		{
+			// The seam the brief's notable tastes, leader traits and Addendum 4's Prefers all end
+			// at. A Village on works for twelve holds fifteen once its notable is worth three.
+			KingdomCatalogueRules.SupportTally tally = Tally(18, 99, 99);
+			Assert.AreEqual(12, KingdomSubsidenceRules.SupportedLevel(tally, GrowthStage.Village));
+			Assert.AreEqual(15, KingdomSubsidenceRules.SupportedLevel(tally, GrowthStage.Village, 3));
+		}
+
+		[Test]
+		public void SupportedLevel_KeepsTheShadeUnderTheLiftCap()
+		{
+			// Half the binding level and no more, whichever half the comfort came from.
+			KingdomCatalogueRules.SupportTally tally = Tally(18, 99, 99);
+			Assert.AreEqual(18, KingdomSubsidenceRules.SupportedLevel(tally, GrowthStage.Village, 400));
+			Assert.AreEqual(18, KingdomSubsidenceRules.SupportedLevel(Tally(18, 99, 99, Lift: 4), GrowthStage.Village, 4));
+		}
+
+		[Test]
+		public void Slide_ConvergesOnTheLevelTheFounderWasActuallyTold()
+		{
+			// The shade is carried through every step for this reason: a settlement announced at
+			// fifteen must settle to fifteen, not to the twelve its works alone would carry.
+			KingdomCatalogueRules.SupportTally supports = Tally(18, 99, 99);
+			KingdomSubsidenceRules.Trajectory shaded = KingdomSubsidenceRules.Slide(
+				20, GrowthStage.Village, 64, supports, 400, AlreadySliding: false, Shade: 3);
+			Assert.AreEqual(15, shaded.Population);
+			Assert.AreEqual(5, shaded.Departed);
+			KingdomSubsidenceRules.Trajectory bare = KingdomSubsidenceRules.Slide(
+				20, GrowthStage.Village, 64, supports, 400, AlreadySliding: false);
+			Assert.AreEqual(12, bare.Population, "a settlement with nobody named settles to what its works carry");
+			Assert.Greater(shaded.Population, bare.Population);
+		}
+
+		[Test]
+		public void Slide_LeavesASettlementAloneWhenItsNotableLiftsItIntoItsBand()
+		{
+			// The arrest, reached by the shade rather than by a building: nothing here departs.
+			KingdomCatalogueRules.SupportTally supports = Tally(18, 99, 99);
+			Assert.AreEqual(0, KingdomSubsidenceRules.Slide(
+				15, GrowthStage.Village, 64, supports, 400, AlreadySliding: false, Shade: 3).Departed);
+			Assert.Greater(KingdomSubsidenceRules.Slide(
+				15, GrowthStage.Village, 64, supports, 400, AlreadySliding: false).Departed, 0);
 		}
 
 		[Test]

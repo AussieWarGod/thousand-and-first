@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using XRL;
 using XRL.Messages;
 using XRL.UI;
@@ -61,17 +61,39 @@ namespace ThousandAndFirst
 		/// </summary>
 		public static void TransferPlanQuote(GameObject Marker, GameObject Scaffold)
 		{
-			if (!Enabled || Marker == null || Scaffold == null)
+			CarryPlanQuote(ReadPlanQuote(Marker), Scaffold);
+		}
+
+		/// <summary>
+		/// The staked plan's text, off a marker or off the works that became one. Empty for
+		/// anything raised without ever being staked, which is a normal state and not a fault.
+		/// <para>
+		/// Exists beside <see cref="TransferPlanQuote"/> for the plot path, which measures its rect
+		/// out of the marker's own cell and so must take the marker down BEFORE the works that
+		/// will carry the quote exists. Read first, carry after.
+		/// </para>
+		/// </summary>
+		public static string ReadPlanQuote(GameObject From)
+		{
+			if (!Enabled || From == null)
+			{
+				return null;
+			}
+			return From.GetStringProperty(SurveyorsPlanProperty);
+		}
+
+		/// <summary>Writes a plan's text onto whatever will carry it to the raising. A blank text
+		/// writes nothing, so a design nobody staked is left with no property rather than an empty
+		/// one.</summary>
+		public static void CarryPlanQuote(string Text, GameObject Onto)
+		{
+			if (!Enabled || Onto == null || string.IsNullOrEmpty(Text))
 			{
 				return;
 			}
-			KingdomSystem.Guard("ceremony: transfer plan quote", delegate
+			KingdomSystem.Guard("ceremony: carry plan quote", delegate
 			{
-				string text = Marker.GetStringProperty(SurveyorsPlanProperty);
-				if (!string.IsNullOrEmpty(text))
-				{
-					Scaffold.SetStringProperty(SurveyorsPlanProperty, text);
-				}
+				Onto.SetStringProperty(SurveyorsPlanProperty, Text);
 			});
 		}
 
@@ -83,7 +105,10 @@ namespace ThousandAndFirst
 		/// Closes construction: while attended, gathers whichever settlers are standing in the
 		/// zone, shares a small measure of water, and chronicles who was there; while unattended,
 		/// leaves a plainer chronicle line and a homecoming note instead. Replaces the deed and
-		/// chronicle a scaffold's own completion used to write directly.
+		/// chronicle a completion used to write directly, and is called from <b>both</b> paths
+		/// that raise a building &mdash; <c>r_KingdomScaffold.Complete</c> for a single-cell
+		/// design and <c>KingdomPlots.Finish</c> for a plot one &mdash; because a house is not a
+		/// lesser thing to raise than a palisade.
 		/// </summary>
 		/// <param name="System">The realm. Null or unfounded is a no-op &mdash; nothing here can
 		/// fire before a settlement exists to own it.</param>
@@ -179,6 +204,10 @@ namespace ThousandAndFirst
 		/// Prefers (Addendum 4). Null skips that half and changes nothing else.</param>
 		/// <param name="QuartersKey">Design key of what they were housed in. Null is a notable
 		/// nobody has housed yet, whose Prefers are simply their default.</param>
+		/// <remarks>Side effect: writes <c>KingdomSystem.NotableShade</c>, which the level reads
+		/// (<c>KingdomSubsidenceRules.SupportedLevel</c>). It REPLACES rather than accumulates
+		/// &mdash; a settlement has one named notable, and what the place is worth to them is
+		/// re-derived whenever the office changes hands.</remarks>
 		public static void OnOfficeHolderNamed(KingdomSystem System, Zone Z, string Title, string HolderName, GameObject Holder = null, string QuartersKey = null)
 		{
 			if (!Enabled || System == null || !System.Founded || string.IsNullOrEmpty(HolderName))
@@ -194,7 +223,7 @@ namespace ThousandAndFirst
 				int flawIndex;
 				KingdomCeremonyRules.ChooseLeaderTraits(settlementId, ordinal, out virtueIndex, out flawIndex);
 				KingdomChronicle.Record(System, KingdomCeremonyRules.LeaderTraitChronicle(Title, HolderName, System.SeatName, virtueIndex, flawIndex));
-				KingdomLog.Log("ceremony: leader traits " + HolderName + " virtue=" + virtueIndex + " flaw=" + flawIndex + " shade=" + KingdomCeremonyRules.LeaderShade());
+				KingdomLog.Log("ceremony: leader traits " + HolderName + " virtue=" + virtueIndex + " flaw=" + flawIndex);
 
 				List<int> tastes = KingdomCeremonyRules.ChooseTastes(settlementId, ordinal);
 				List<bool> met = KingdomCeremonyRules.TastesMet(tastes, TasteOfferIn(Z));
@@ -202,11 +231,14 @@ namespace ThousandAndFirst
 				KingdomChronicle.Record(System, tasteLine);
 				MessageQueue.AddPlayerMessage("{{W|" + XRL.Language.Grammar.InitCap(tasteLine) + ".}}");
 				// Addendum 4 routes a resident's met Prefers through this same machinery rather than
-				// opening a second road to equilibrium: one shade, and one balance to keep. The two
-				// halves are shaded separately so each keeps its own cap, and the chronicle's own
-				// met-list is left exactly as it was.
-				int shade = KingdomCeremonyRules.TasteShade(met) + KingdomQol.PreferShade(Holder, QuartersKey);
-				KingdomLog.Log("ceremony: tastes " + HolderName + " shade=" + shade);
+				// opening a second road to equilibrium: one shade, and one balance to keep. The
+				// chronicle's own met-list is left exactly as it was, and the number goes where the
+				// brief always meant it to -- onto the settlement, for the level to read
+				// (KingdomSubsidenceRules.SupportedLevel). It replaces rather than accumulates:
+				// one settlement has one named notable, and what the place is worth to them is
+				// re-derived the next time the office changes hands.
+				System.NotableShade = KingdomCeremonyRules.NotableShade(met, KingdomQol.PreferShade(Holder, QuartersKey));
+				KingdomLog.Log("ceremony: tastes " + HolderName + " shade=" + System.NotableShade);
 			});
 		}
 

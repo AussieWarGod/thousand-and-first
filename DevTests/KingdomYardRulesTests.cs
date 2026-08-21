@@ -1,4 +1,4 @@
-#if TAF_TESTS
+﻿#if TAF_TESTS
 using System.Collections.Generic;
 using NUnit.Framework;
 using ThousandAndFirst;
@@ -284,6 +284,41 @@ namespace ThousandAndFirst.Tests
 			string summary = KingdomYardRules.ShadeSummary(spec);
 			StringAssert.Contains("craft", summary);
 			StringAssert.Contains("food", summary);
+		}
+
+		// --- What the shading is FOR: it reaches the settlement's own level ---------------------
+
+		[Test]
+		public void AParsedTradesShadesReachTheEquilibriumTally()
+		{
+			// The shipped vine lattice, end to end at the rules layer: the attribute parses, and
+			// the number it parsed to lands in the pool KingdomCatalogueRules.Equilibrium is the
+			// least of. Before this seam existed it was parsed, capped, printed, and read by
+			// nothing.
+			Spec spec;
+			string error;
+            Assert.IsTrue(KingdomYardRules.TryParseYardWorkAttributes(
+				"vinelattice", "vine lattice", "r_KingdomVineLattice", "tending the vine", "food:1", null, out spec, out error), error);
+			KingdomCatalogueRules.SupportTally tally = KingdomCatalogueRules.FoldShade(
+				default(KingdomCatalogueRules.SupportTally), spec.Shades, 100);
+			Assert.AreEqual(1, tally.Food);
+			Assert.AreEqual(0, tally.Works, "a household's sideline is not a second thing standing");
+		}
+
+		[Test]
+		public void ATradesWholeCapIsStillSmallerThanTheSmallestWork()
+		{
+			// The cap is what makes folding these into the level safe: a whole yard's worth of
+			// trade is worth MaxShadePerWork and never competes with a purpose-built design.
+			Spec spec;
+			string error;
+			Assert.IsTrue(KingdomYardRules.TryParseYardWorkAttributes(
+				"k", "k", "b", null, "craft:1,learning:1", null, out spec, out error), error);
+			Assert.AreEqual(KingdomYardRules.MaxShadePerWork, KingdomCatalogueRules.FoldShade(
+				default(KingdomCatalogueRules.SupportTally), spec.Shades, 100).Lift);
+			Assert.IsFalse(KingdomYardRules.TryParseYardWorkAttributes(
+				"k", "k", "b", null, "craft:2,learning:1", null, out spec, out error),
+				"a file that shades past the cap is refused before anything can fold it");
 		}
 	}
 }

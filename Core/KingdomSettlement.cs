@@ -158,6 +158,17 @@ namespace ThousandAndFirst
 		/// </summary>
 		public string SubsidenceBinding;
 
+		/// <summary>
+		/// What this settlement's named notable is worth to the level
+		/// (<c>KingdomCeremonyRules.NotableShade</c>): their met tastes, the net of their virtue
+		/// and their flaw, and the <c>Prefers</c> their quarters happen to meet (Addendum 4).
+		/// Written when the office is first filled or passes to somebody else, so it is exactly as
+		/// stale as the last time it changed hands &mdash; knowledge, like
+		/// <see cref="SupportedLevel"/>, rather than a meter. Zero for a settlement that has named
+		/// nobody, which is every settlement until it has people enough to.
+		/// </summary>
+		public int NotableShade;
+
 		public int ShopTier;
 
 		public long LastVisitTick;
@@ -375,6 +386,14 @@ namespace ThousandAndFirst
 			if (SupportedLevel < 0)
 			{
 				SupportedLevel = 0;
+			}
+			// A shade below zero is a corrupt reading too: a notable is texture and never a tax,
+			// so the worst any of them can be worth is nothing. Nothing clamps it from above
+			// here - a shade a later build writes wider is still a number this one can read, and
+			// KingdomCatalogueRules.LiftCapPercent binds whatever it is against the water.
+			if (NotableShade < 0)
+			{
+				NotableShade = 0;
 			}
 		}
 

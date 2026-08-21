@@ -1,4 +1,4 @@
-#if TAF_TESTS
+﻿#if TAF_TESTS
 using System.Collections.Generic;
 using NUnit.Framework;
 using ThousandAndFirst;
@@ -584,6 +584,78 @@ namespace ThousandAndFirst.Tests
 		public void PickPatternIndex_InvalidSettlementIdFallsBackToZero()
 		{
 			Assert.AreEqual(0, KingdomCeremonyRules.PickPatternIndex("", 0uL, 0, 3));
+		}
+
+		// ==================================================================================
+		// The one shade a named notable carries into the level.
+		// ==================================================================================
+
+		[Test]
+		public void NotableShade_IsMetTastesPlusTheLeadersNetPlusMetPrefers()
+		{
+			// Two tastes met, the virtue net of the flaw, and two Prefers met: the whole of what
+			// one notable is worth, and the number KingdomSubsidenceRules.SupportedLevel reads.
+			Assert.AreEqual((2 * KingdomCeremonyRules.TasteShadeAmount) + KingdomCeremonyRules.LeaderShade() + 2,
+				KingdomCeremonyRules.NotableShade(new List<bool> { true, true }, 2));
+		}
+
+		[Test]
+		public void NotableShade_IsNeverNothingBecauseEveryNotableCarriesAVirtue()
+		{
+			// Unmet tastes are not a penalty (the brief rejects the penalty half outright), so a
+			// notable who found nothing here is still worth their virtue net of their flaw.
+			Assert.AreEqual(KingdomCeremonyRules.LeaderShade(),
+				KingdomCeremonyRules.NotableShade(new List<bool> { false, false }, 0));
+			Assert.AreEqual(KingdomCeremonyRules.LeaderShade(), KingdomCeremonyRules.NotableShade(null, 0));
+		}
+
+		[Test]
+		public void NotableShade_TreatsANegativePreferShadeAsNone()
+		{
+			Assert.AreEqual(KingdomCeremonyRules.LeaderShade(), KingdomCeremonyRules.NotableShade(null, -9));
+		}
+
+		[Test]
+		public void NotableShade_NeverExceedsTheCeilingItsOwnParts()
+		{
+			Assert.AreEqual(KingdomCeremonyRules.MaxNotableShade,
+				KingdomCeremonyRules.NotableShade(new List<bool> { true, true, true, true }, 99));
+			Assert.AreEqual(5, KingdomCeremonyRules.MaxNotableShade,
+				"two tastes, a virtue net of a flaw, and two Prefers: texture, not a lever");
+		}
+
+		[Test]
+		public void MaxNotableShade_AgreesWithTheWidestDrawChooseTastesCanMake()
+		{
+			// A ceiling that disagreed with the draw would be a ceiling nothing reached.
+			List<int> widest = new List<int>();
+			for (ulong ordinal = 1uL; ordinal < 40uL && widest.Count < KingdomCeremonyRules.MaxTastesStated; ordinal++)
+			{
+				List<int> drawn = KingdomCeremonyRules.ChooseTastes("taf:settlement:sweep", ordinal);
+				Assert.LessOrEqual(drawn.Count, KingdomCeremonyRules.MaxTastesStated,
+					"no notable may state more tastes than the ceiling counts");
+				if (drawn.Count > widest.Count)
+				{
+					widest = drawn;
+				}
+			}
+			Assert.AreEqual(KingdomCeremonyRules.MaxTastesStated, widest.Count,
+				"the draw must be able to reach the ceiling, or the ceiling is fiction");
+		}
+
+		[Test]
+		public void ShadeClause_SaysNothingForASettlementWhoseNotableIsWorthNothing()
+		{
+			Assert.AreEqual("", KingdomCeremonyRules.ShadeClause(0));
+			Assert.AreEqual("", KingdomCeremonyRules.ShadeClause(-2));
+		}
+
+		[Test]
+		public void ShadeClause_NamesTheNumberSoItIsNotAnInvisibleModifier()
+		{
+			string clause = KingdomCeremonyRules.ShadeClause(3);
+			StringAssert.Contains("+3", clause);
+			StringAssert.Contains("notable", clause);
 		}
 	}
 }

@@ -17,6 +17,16 @@ namespace ThousandAndFirst
 	/// however much world time has passed, and tells the founder about it once.
 	/// </para>
 	/// <para>
+	/// <b>What the sum is made of.</b> Three things, and only the first is a building's
+	/// <c>Carries</c>. A household's yard trade shades the same pools beside the house it belongs
+	/// to (<see cref="Supports"/>); a work's LIFT lands only in proportion to the settlement's
+	/// roofs it reaches (<see cref="ScopedSupports"/>, Addendum 6); and the settlement's named
+	/// notable is worth a small shade of their own (<c>KingdomSystem.NotableShade</c>, from met
+	/// tastes, a leader's virtue net of their flaw, and met <c>Prefers</c>). All three ride the
+	/// one lift term inside <c>KingdomCatalogueRules.LiftCapPercent</c>, so none of them can carry
+	/// a settlement past its own water.
+	/// </para>
+	/// <para>
 	/// <b>The clock.</b> World time, uncapped, through <c>KingdomRules.ElapsedDays</c> and a
 	/// checkpoint that advances by exactly the steps it cashed. The settlement lives whether the
 	/// founder is there or not (Addendum 8 clause 1), so the slide runs the same length whether
@@ -70,6 +80,14 @@ namespace ThousandAndFirst
 		/// answers the same arithmetic.
 		/// </para>
 		/// </summary>
+		/// <para>
+		/// <b>And a household's yard trade carries with the house it belongs to.</b> A
+		/// <c>&lt;yardwork&gt;</c>'s <c>Shades</c> is denominated in exactly the same
+		/// <c>support:amount</c> language a design's <c>Carries</c> is, and is capped small
+		/// (<c>KingdomYardRules.MaxShadePerWork</c>) precisely because it lands here. It is folded
+		/// through <c>KingdomCatalogueRules.FoldShade</c> rather than <c>FoldWork</c>, so a vine
+		/// lattice feeds the settlement without pretending to be a second thing standing.
+		/// </para>
 		/// <param name="Survey">The pass's survey. Null carries nothing.</param>
 		public static KingdomCatalogueRules.SupportTally Supports(KingdomSurvey Survey)
 		{
@@ -95,8 +113,151 @@ namespace ThousandAndFirst
 				// parsed before the bad pair still counts, so the verdict is deliberately unread.
 				List<KindAmount> carries;
 				KingdomCatalogueRules.TryParseTally(entry.Carries, out carries, out _);
-				tally = KingdomCatalogueRules.FoldWork(tally, carries, KingdomWear.EffectivenessOf(work));
+				int effectiveness = KingdomWear.EffectivenessOf(work);
+				tally = KingdomCatalogueRules.FoldWork(tally, carries, effectiveness);
+				tally = KingdomCatalogueRules.FoldShade(tally, YardShadesOf(work), effectiveness);
 			}
+			return tally;
+		}
+
+		/// <summary>What the household living in this work has turned its yard to, or null for a
+		/// house that has taken up no trade and for every work that is not a house.</summary>
+		private static List<KindAmount> YardShadesOf(GameObject Work)
+		{
+			string key = Work.GetStringProperty(KingdomYards.YardKeyProperty);
+			KingdomYardRules.YardWorkSpec spec;
+			return (!string.IsNullOrEmpty(key) && KingdomYards.TryGetSpec(key, out spec)) ? spec.Shades : null;
+		}
+
+		/// <summary>The lifting half of one parsed <c>support:amount</c> list, scaled the way a
+		/// lift is scaled (<c>KingdomReachRules.Scaled</c>, which keeps a point of anything still
+		/// being worked). The binding half is left to <see cref="Supports"/>, which has already
+		/// folded it into the citywide pools.</summary>
+		private static int LiftOf(List<KindAmount> Shades, int EffectivenessPercent)
+		{
+			int lift = 0;
+			for (int i = 0; (Shades != null) && i < Shades.Count; i++)
+			{
+				if (!KingdomCatalogueRules.IsBindingSupport(Shades[i].Kind))
+				{
+					lift += KingdomReachRules.Scaled(Shades[i].Amount, EffectivenessPercent);
+				}
+			}
+			return lift;
+		}
+
+		/// <summary>
+		/// The same tally, with its lifting half scoped to what each work actually reaches
+		/// (Addendum 6). The <b>only</b> difference from <see cref="Supports"/> is
+		/// <c>SupportTally.Lift</c>: water, food and roofs are drawn and carried, so they stay the
+		/// citywide pools they have always been, and faith, order, learning, luxury and craft
+		/// shade the people in reach of the work giving them.
+		/// <para>
+		/// Denominated in roofs, which is the level's own currency for a person: a work's lift
+		/// lands in proportion to the settlement's housing it covers
+		/// (<c>KingdomReachRules.Landed</c>). A shrine standing among the houses is worth its
+		/// whole amount; the same shrine out past the fields is worth what it touches; and a
+		/// wayside statue that reaches no home lands nothing on the level while still shading the
+		/// ground it stands on. That is what makes the temple quarter different ground from the
+		/// tanners' rather than a second number nobody can see.
+		/// </para>
+		/// <para>
+		/// The great works of the realm's other claimed zones arrive whole, out of the record
+		/// their own attended passes wrote (<c>KingdomReach.CityShadeExcept</c>), because a city
+		/// band covers every cell of the city by definition. This zone's own record is deliberately
+		/// skipped: what stands here has just been counted from the ground.
+		/// </para>
+		/// </summary>
+		/// <param name="System">The realm. Null falls back to the unscoped tally rather than
+		/// dropping every lift &mdash; a caller with no realm to measure against is asking a
+		/// different question, not asking this one badly.</param>
+		/// <param name="Z">The zone the pass is in.</param>
+		/// <param name="Survey">The pass's survey.</param>
+		public static KingdomCatalogueRules.SupportTally ScopedSupports(KingdomSystem System, Zone Z, KingdomSurvey Survey)
+		{
+			KingdomCatalogueRules.SupportTally tally = Supports(Survey);
+			if (System == null || Z == null || Survey == null)
+			{
+				return tally;
+			}
+			List<Cell> homes = new List<Cell>();
+			List<int> housed = new List<int>();
+			List<GameObject> lifters = new List<GameObject>();
+			List<int> lifted = new List<int>();
+			int roofs = 0;
+			int trades = 0;
+			for (int i = 0; i < Survey.Built.Count; i++)
+			{
+				GameObject work = Survey.Built[i];
+				if (!GameObject.Validate(work))
+				{
+					continue;
+				}
+				string key = KingdomUpgrade.DesignKeyOf(work);
+				KingdomRules.BuildEntry entry;
+				if (string.IsNullOrEmpty(key) || !KingdomData.TryGetBuilding(key, out entry))
+				{
+					continue;
+				}
+				List<KindAmount> carries;
+				KingdomCatalogueRules.TryParseTally(entry.Carries, out carries, out _);
+				int effectiveness = KingdomWear.EffectivenessOf(work);
+				int lift = 0;
+				for (int c = 0; c < carries.Count; c++)
+				{
+					// The kinds come out of TryParseTally already folded, so the comparison
+					// against the catalogue's own constant is the whole test.
+					if (carries[c].Kind == KingdomCatalogueRules.SupportRoof)
+					{
+						int people = KingdomCatalogueRules.Carried(carries[c].Amount, effectiveness);
+						Cell cell = work.CurrentCell;
+						if (people > 0 && cell != null)
+						{
+							homes.Add(cell);
+							housed.Add(people);
+							roofs += people;
+						}
+						continue;
+					}
+					if (KingdomCatalogueRules.IsBindingSupport(carries[c].Kind))
+					{
+						continue;
+					}
+					lift += KingdomReachRules.Scaled(carries[c].Amount, effectiveness);
+				}
+				if (lift > 0)
+				{
+					lifters.Add(work);
+					lifted.Add(lift);
+				}
+				// A household's trade is not a work with ground of its own, so it has no band to
+				// be scoped by: what it makes goes to the settlement, and its whole ceiling is
+				// KingdomYardRules.MaxShadePerWork. Carried straight across, exactly as Supports
+				// folded it, so the scoped tally does not quietly lose the yard.
+				trades += LiftOf(YardShadesOf(work), effectiveness);
+			}
+			int scoped = trades;
+			for (int i = 0; i < lifters.Count; i++)
+			{
+				int reached = 0;
+				for (int h = 0; h < homes.Count; h++)
+				{
+					if (KingdomReach.ReachesCell(System, Z, lifters[i], Z, homes[h].X, homes[h].Y))
+					{
+						reached += housed[h];
+					}
+				}
+				scoped += KingdomReachRules.Landed(lifted[i], reached, roofs);
+			}
+			for (int i = 0; i < KingdomReachRules.LiftOrder.Length; i++)
+			{
+				int city = KingdomReach.CityShadeExcept(System, KingdomReachRules.LiftOrder[i], Z.ZoneID);
+				if (city > 0)
+				{
+					scoped += city;
+				}
+			}
+			tally.Lift = scoped;
 			return tally;
 		}
 
@@ -114,9 +275,9 @@ namespace ThousandAndFirst
 			{
 				return;
 			}
-			KingdomCatalogueRules.SupportTally supports = Supports(Survey);
+			KingdomCatalogueRules.SupportTally supports = ScopedSupports(System, Z, Survey);
 			string binding = KingdomSubsidenceRules.BindingSupportFor(supports, System.Stage);
-			int level = KingdomSubsidenceRules.SupportedLevel(supports, System.Stage);
+			int level = KingdomSubsidenceRules.SupportedLevel(supports, System.Stage, System.NotableShade);
 			// Recorded whether or not the slide is allowed to run: the level is knowledge, and a
 			// founder who has turned subsidence off is still owed the number their works carry.
 			System.SupportedLevel = level;
@@ -152,7 +313,8 @@ namespace ThousandAndFirst
 				return;
 			}
 			KingdomSubsidenceRules.Trajectory trajectory = KingdomSubsidenceRules.Slide(
-				System.Population, System.Stage, Survey.StorageCapacity, supports, elapsedDays, System.SubsidenceAnnounced);
+				System.Population, System.Stage, Survey.StorageCapacity, supports, elapsedDays, System.SubsidenceAnnounced,
+				System.NotableShade);
 			Say(System, binding, level);
 			if (trajectory.Departed <= 0)
 			{
@@ -201,7 +363,7 @@ namespace ThousandAndFirst
 			// Re-recorded against the rung the slide left, not the one it started from: the water
 			// bill per head fell with the stage, so the level the founder is now looking at is a
 			// different (higher) number from the one the announcement quoted.
-			System.SupportedLevel = KingdomSubsidenceRules.SupportedLevel(supports, System.Stage);
+			System.SupportedLevel = KingdomSubsidenceRules.SupportedLevel(supports, System.Stage, System.NotableShade);
 			System.SubsidenceBinding = KingdomSubsidenceRules.BindingSupportFor(supports, System.Stage);
 			Chronicle(System, Survey, anchor, TimeTicks, from, trajectory);
 			if (KingdomLog.Enabled)

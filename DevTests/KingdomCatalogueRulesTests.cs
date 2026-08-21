@@ -1,4 +1,4 @@
-#if TAF_TESTS
+﻿#if TAF_TESTS
 using System.Collections.Generic;
 using NUnit.Framework;
 using ThousandAndFirst;
@@ -119,30 +119,30 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void Equilibrium_IsTheLeastOfTheThreeBindingSupports()
 		{
-			Assert.AreEqual(20, KingdomCatalogueRules.Equilibrium(20, 30, 40, 0));
-			Assert.AreEqual(20, KingdomCatalogueRules.Equilibrium(40, 20, 30, 0));
-			Assert.AreEqual(20, KingdomCatalogueRules.Equilibrium(30, 40, 20, 0));
+			Assert.AreEqual(20, KingdomCatalogueRules.Equilibrium(20, 30, 40, 0, 0));
+			Assert.AreEqual(20, KingdomCatalogueRules.Equilibrium(40, 20, 30, 0, 0));
+			Assert.AreEqual(20, KingdomCatalogueRules.Equilibrium(30, 40, 20, 0, 0));
 		}
 
 		[Test]
 		public void Equilibrium_NeverFallsBelowTheFloor()
 		{
-			Assert.AreEqual(KingdomCatalogueRules.FloorLevel, KingdomCatalogueRules.Equilibrium(0, 0, 0, 0));
-			Assert.AreEqual(KingdomCatalogueRules.FloorLevel, KingdomCatalogueRules.Equilibrium(40, 0, 40, 0));
-			Assert.AreEqual(KingdomCatalogueRules.FloorLevel, KingdomCatalogueRules.Equilibrium(2, 2, 2, 0));
+			Assert.AreEqual(KingdomCatalogueRules.FloorLevel, KingdomCatalogueRules.Equilibrium(0, 0, 0, 0, 0));
+			Assert.AreEqual(KingdomCatalogueRules.FloorLevel, KingdomCatalogueRules.Equilibrium(40, 0, 40, 0, 0));
+			Assert.AreEqual(KingdomCatalogueRules.FloorLevel, KingdomCatalogueRules.Equilibrium(2, 2, 2, 0, 0));
 			// A negative binding total is arithmetic nobody intended, and it still may not push
 			// the settlement under its floor.
-			Assert.AreEqual(KingdomCatalogueRules.FloorLevel, KingdomCatalogueRules.Equilibrium(-5, 40, 40, 0));
+			Assert.AreEqual(KingdomCatalogueRules.FloorLevel, KingdomCatalogueRules.Equilibrium(-5, 40, 40, 0, 0));
 		}
 
 		[Test]
 		public void Equilibrium_LiftsTheLevelButOnlyToItsCap()
 		{
 			// Cap is half the binding level: twenty binding takes at most ten of lift.
-			Assert.AreEqual(23, KingdomCatalogueRules.Equilibrium(20, 20, 20, 3));
-			Assert.AreEqual(30, KingdomCatalogueRules.Equilibrium(20, 20, 20, 10));
-			Assert.AreEqual(30, KingdomCatalogueRules.Equilibrium(20, 20, 20, 11));
-			Assert.AreEqual(30, KingdomCatalogueRules.Equilibrium(20, 20, 20, 900));
+			Assert.AreEqual(23, KingdomCatalogueRules.Equilibrium(20, 20, 20, 3, 0));
+			Assert.AreEqual(30, KingdomCatalogueRules.Equilibrium(20, 20, 20, 10, 0));
+			Assert.AreEqual(30, KingdomCatalogueRules.Equilibrium(20, 20, 20, 11, 0));
+			Assert.AreEqual(30, KingdomCatalogueRules.Equilibrium(20, 20, 20, 900, 0));
 		}
 
 		[Test]
@@ -150,13 +150,89 @@ namespace ThousandAndFirst.Tests
 		{
 			// Zero binding means zero cap: comfort is worth nothing when the casks are dry, and
 			// the floor is what is left.
-			Assert.AreEqual(KingdomCatalogueRules.FloorLevel, KingdomCatalogueRules.Equilibrium(0, 90, 90, 400));
+			Assert.AreEqual(KingdomCatalogueRules.FloorLevel, KingdomCatalogueRules.Equilibrium(0, 90, 90, 400, 0));
 		}
 
 		[Test]
 		public void Equilibrium_TreatsANegativeLiftAsNone()
 		{
-			Assert.AreEqual(20, KingdomCatalogueRules.Equilibrium(20, 20, 20, -50));
+			Assert.AreEqual(20, KingdomCatalogueRules.Equilibrium(20, 20, 20, -50, 0));
+		}
+
+		// --- The shade a named notable carries (brief: notable tastes, leader traits, Add. 4) ---
+
+		[Test]
+		public void Equilibrium_ReadsTheNotablesShadeAsComfortOfItsOwn()
+		{
+			// The number the ceremony used to compute and log. Three points of shade with no
+			// lifting work standing is three more settlers, exactly as three points of shrine is.
+			Assert.AreEqual(23, KingdomCatalogueRules.Equilibrium(20, 20, 20, 0, 3));
+			Assert.AreEqual(26, KingdomCatalogueRules.Equilibrium(20, 20, 20, 3, 3));
+		}
+
+		[Test]
+		public void Equilibrium_BindsTheShadeWithTheSameLiftCap()
+		{
+			// A notable is texture, not a way past the water: twenty binding takes ten of lift and
+			// shade together, and not one more whichever half it came from.
+			Assert.AreEqual(30, KingdomCatalogueRules.Equilibrium(20, 20, 20, 8, 8));
+			Assert.AreEqual(30, KingdomCatalogueRules.Equilibrium(20, 20, 20, 0, 900));
+			Assert.AreEqual(KingdomCatalogueRules.FloorLevel, KingdomCatalogueRules.Equilibrium(0, 90, 90, 0, 40));
+		}
+
+		[Test]
+		public void Equilibrium_NeverLetsAShadeTakeTheLevelBelowWhatTheWorksCarry()
+		{
+			// There is no negative shade in the shipped tables, and if one ever arrives it costs
+			// the settlement nothing: an unmet taste means their default, never a penalty.
+			Assert.AreEqual(20, KingdomCatalogueRules.Equilibrium(20, 20, 20, 0, -50));
+			// Neither half may eat the other: a negative shade leaves a standing shrine alone.
+			Assert.AreEqual(23, KingdomCatalogueRules.Equilibrium(20, 20, 20, 3, -1));
+			Assert.AreEqual(23, KingdomCatalogueRules.Equilibrium(20, 20, 20, -50, 3));
+		}
+
+		// --- A household's yard trade (brief: yard trades) --------------------------------------
+
+		[Test]
+		public void FoldShade_LandsAYardTradesShadesWithoutCountingASecondThingStanding()
+		{
+			// The vine lattice's own line: food:1 is a binding good and reaches the pool, and the
+			// house it stands behind is still one work rather than two.
+			KingdomCatalogueRules.SupportTally house = KingdomCatalogueRules.FoldWork(
+				default(KingdomCatalogueRules.SupportTally), Parse("roof:4"), 100);
+			Assert.AreEqual(1, house.Works);
+			KingdomCatalogueRules.SupportTally worked = KingdomCatalogueRules.FoldShade(house, Parse("food:1"), 100);
+			Assert.AreEqual(1, worked.Food, "a vine lattice feeds the settlement it stands in");
+			Assert.AreEqual(4, worked.Roof);
+			Assert.AreEqual(1, worked.Works, "a yard trade is a household's sideline, not a second work");
+		}
+
+		[Test]
+		public void FoldShade_SendsATradesLiftToTheLiftingHalf()
+		{
+			KingdomCatalogueRules.SupportTally tally = KingdomCatalogueRules.FoldShade(
+				default(KingdomCatalogueRules.SupportTally), Parse("craft:1,learning:1"), 100);
+			Assert.AreEqual(2, tally.Lift);
+			Assert.AreEqual(0, tally.Works);
+		}
+
+		[Test]
+		public void FoldShade_ScalesWithTheConditionOfTheHouseItBelongsTo()
+		{
+			// Addendum 10(b) reaches a sideline the same way it reaches a work: a half-ruined
+			// house's yard is worth half of what it makes.
+			Assert.AreEqual(1, KingdomCatalogueRules.FoldShade(
+				default(KingdomCatalogueRules.SupportTally), Parse("food:2"), 50).Food);
+			Assert.AreEqual(0, KingdomCatalogueRules.FoldShade(
+				default(KingdomCatalogueRules.SupportTally), Parse("food:1"), 0).Food);
+		}
+
+		private static System.Collections.Generic.List<KindAmount> Parse(string Source)
+		{
+			System.Collections.Generic.List<KindAmount> tally;
+			string error;
+			Assert.IsTrue(KingdomCatalogueRules.TryParseTally(Source, out tally, out error), error);
+			return tally;
 		}
 
 		[TestCase(5, 9, 9, "water")]

@@ -269,15 +269,29 @@ namespace ThousandAndFirst
 		/// <param name="Water">Summed <c>water</c> contribution of every finished work.</param>
 		/// <param name="Food">Summed <c>food</c> contribution.</param>
 		/// <param name="Roof">Summed <c>roof</c> contribution.</param>
-		/// <param name="Lift">Summed contribution of every lifting support together.</param>
-		public static int Equilibrium(int Water, int Food, int Roof, int Lift)
+		/// <param name="Lift">Summed contribution of every lifting support together, already
+		/// scoped to what each work actually reaches (Addendum 6).</param>
+		/// <param name="Shade">What the settlement's named notable is worth to it &mdash; met
+		/// tastes, leader traits, and met <c>Prefers</c> together, from
+		/// <c>KingdomCeremonyRules.NotableShade</c>. Zero for a settlement that has named nobody,
+		/// and a negative reads as zero rather than as a tax.
+		/// <para>
+		/// Deliberately summed into the lift rather than added after it: a shade is a reason one
+		/// more person WANTS to live here, exactly as a shrine is, so it is bound by the same
+		/// <see cref="LiftCapPercent"/> and can never let a settlement outrun its own water. The
+		/// two are separate arguments rather than one because only one of them is a building.
+		/// </para></param>
+		public static int Equilibrium(int Water, int Food, int Roof, int Lift, int Shade)
 		{
 			int least = Least(Water, Food, Roof);
 			if (least < 0)
 			{
 				least = 0;
 			}
-			int lift = (Lift < 0) ? 0 : Lift;
+			// Each half is floored before they meet, so neither can eat the other: an unmet taste
+			// is never a penalty (the brief rejects the penalty half outright), and a shade cannot
+			// cancel a shrine that is standing.
+			int lift = ((Lift < 0) ? 0 : Lift) + ((Shade < 0) ? 0 : Shade);
 			int cap = least * LiftCapPercent / 100;
 			if (lift > cap)
 			{
@@ -496,20 +510,42 @@ namespace ThousandAndFirst
 		/// water whoever is home, and a holed cistern holds less of it (Addendum 10(b)).</param>
 		public static SupportTally FoldWork(SupportTally Running, List<KindAmount> Carries, int EffectivenessPercent)
 		{
-			SupportTally folded = Running;
+			SupportTally folded = FoldShade(Running, Carries, EffectivenessPercent);
 			folded.Works = Running.Works + 1;
-			if (Carries == null)
+			return folded;
+		}
+
+		/// <summary>
+		/// The same fold, for a contribution that is <b>not a work</b>: a household's yard trade
+		/// (<c>KingdomYardRules.YardWorkSpec.Shades</c>), which stands in a plot somebody else
+		/// already built and must not be counted as a second thing standing.
+		/// <para>
+		/// Copy-on-write, exactly as <see cref="FoldWork"/> is. The only difference between the
+		/// two is <see cref="SupportTally.Works"/>, which is what lets a founder be told "nothing
+		/// stands here" apart from "everything here carries nothing".
+		/// </para>
+		/// </summary>
+		/// <param name="Running">The tally so far.</param>
+		/// <param name="Shades">A parsed <c>support:amount</c> list. Null or empty folds in
+		/// nothing.</param>
+		/// <param name="EffectivenessPercent">What the household is working at. Hand a yard trade
+		/// the condition of the house it belongs to, so a ruined house's sideline is worth what
+		/// the house is (Addendum 10(b)).</param>
+		public static SupportTally FoldShade(SupportTally Running, List<KindAmount> Shades, int EffectivenessPercent)
+		{
+			SupportTally folded = Running;
+			if (Shades == null)
 			{
 				return folded;
 			}
-			for (int i = 0; i < Carries.Count; i++)
+			for (int i = 0; i < Shades.Count; i++)
 			{
-				int amount = Carried(Carries[i].Amount, EffectivenessPercent);
+				int amount = Carried(Shades[i].Amount, EffectivenessPercent);
 				if (amount <= 0)
 				{
 					continue;
 				}
-				switch (Fold(Carries[i].Kind))
+				switch (Fold(Shades[i].Kind))
 				{
 				case SupportWater:
 					folded.Water += amount;

@@ -92,13 +92,18 @@ namespace ThousandAndFirst
 		/// <c>KingdomCatalogueRules.Equilibrium</c>, handed a water figure converted out of drams
 		/// into settlers at this stage's own rate.
 		/// </summary>
-		/// <param name="Supports">Every finished work's <c>Carries</c>, summed.</param>
+		/// <param name="Supports">Every finished work's <c>Carries</c>, summed, with the lifting
+		/// half already scoped to what each work reaches (<c>KingdomSubsidence.Supports</c>).</param>
 		/// <param name="Stage">What the settlement is now.</param>
+		/// <param name="Shade">What the settlement's named notable is worth to it, from
+		/// <c>KingdomCeremonyRules.NotableShade</c>. Defaulted because most callers &mdash; and
+		/// every settlement that has never named anybody &mdash; honestly have none, and a
+		/// defaulted zero is the same answer this function always gave.</param>
 		/// <returns>Never below <c>KingdomCatalogueRules.FloorLevel</c>.</returns>
-		public static int SupportedLevel(KingdomCatalogueRules.SupportTally Supports, GrowthStage Stage)
+		public static int SupportedLevel(KingdomCatalogueRules.SupportTally Supports, GrowthStage Stage, int Shade = 0)
 		{
 			return KingdomCatalogueRules.Equilibrium(
-				LevelFromWater(Supports.Water, Stage), Supports.Food, Supports.Roof, Supports.Lift);
+				LevelFromWater(Supports.Water, Stage), Supports.Food, Supports.Roof, Supports.Lift, Shade);
 		}
 
 		/// <summary>
@@ -394,16 +399,20 @@ namespace ThousandAndFirst
 		/// level itself (<see cref="HasArrived"/>), so a settlement cannot begin and arrest inside
 		/// the same handful of settlers over and over. The caller remembers the flag in the same
 		/// place 7b's announcement lives, because they are the same fact.</param>
+		/// <param name="Shade">What the settlement's named notable is worth to it, from
+		/// <c>KingdomCeremonyRules.NotableShade</c>. Carried through every step for the same
+		/// reason the stage is: the level a slide converges on must be the level the founder was
+		/// told, or a settlement would be announced at one number and settled to another.</param>
 		/// <returns>A trajectory that begins where it was handed and never goes below the level.
 		/// A settlement inside its band comes back untouched, with zero steps.</returns>
 		public static Trajectory Slide(int Population, GrowthStage Stage, int StorageCapacity,
-			KingdomCatalogueRules.SupportTally Supports, int ElapsedDays, bool AlreadySliding)
+			KingdomCatalogueRules.SupportTally Supports, int ElapsedDays, bool AlreadySliding, int Shade = 0)
 		{
 			Trajectory trajectory = default(Trajectory);
 			trajectory.Population = Population;
 			trajectory.Stage = Stage;
 			trajectory.Breakpoints = new List<Breakpoint>();
-			int level = SupportedLevel(Supports, Stage);
+			int level = SupportedLevel(Supports, Stage, Shade);
 			trajectory.Arrived = HasArrived(Population, level);
 			if (ElapsedDays < StepDays || (!AlreadySliding && !IsSubsiding(Population, level)))
 			{
@@ -412,7 +421,7 @@ namespace ThousandAndFirst
 			int available = ElapsedDays / StepDays;
 			for (int step = 0; step < available && step < MaxSteps; step++)
 			{
-				level = SupportedLevel(Supports, trajectory.Stage);
+				level = SupportedLevel(Supports, trajectory.Stage, Shade);
 				if (HasArrived(trajectory.Population, level))
 				{
 					break;
@@ -434,7 +443,7 @@ namespace ThousandAndFirst
 					trajectory.Stage = next;
 				}
 			}
-			trajectory.Arrived = HasArrived(trajectory.Population, SupportedLevel(Supports, trajectory.Stage));
+			trajectory.Arrived = HasArrived(trajectory.Population, SupportedLevel(Supports, trajectory.Stage, Shade));
 			return trajectory;
 		}
 

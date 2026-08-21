@@ -429,6 +429,36 @@ namespace ThousandAndFirst
 			return (scaled < 1) ? 1 : scaled;
 		}
 
+		/// <summary>
+		/// How much of one work's lift reaches the settlement's own level: the share of the homes
+		/// it covers. This is the whole of Addendum 6's second clause on the level side &mdash;
+		/// binding needs stay citywide pools, and a lift only lifts the people it actually
+		/// reaches, so a shrine among the houses is worth its full amount and the same shrine out
+		/// past the fields is worth what it touches.
+		/// <para>
+		/// Floored the way <see cref="Scaled"/> floors, and for the same reason: a work that
+		/// reaches anybody at all keeps one point of what it declares. A work that reaches nobody
+		/// keeps nothing here &mdash; it still shades the ground it stands on
+		/// (<see cref="Character"/>), which is what an S plot was always for.
+		/// </para>
+		/// </summary>
+		/// <param name="Amount">The work's declared lift, already scaled by how well it runs.
+		/// Negative or zero lands nothing.</param>
+		/// <param name="Reached">Homes this work covers. Clamped to <paramref name="Homes"/>, so a
+		/// caller that double-counts a home cannot mint a lift.</param>
+		/// <param name="Homes">Homes the settlement has. Zero or fewer lands nothing: a
+		/// settlement with nowhere to live has nobody to lift, and its roof pool binds the level
+		/// to the floor anyway.</param>
+		public static int Landed(int Amount, int Reached, int Homes)
+		{
+			if (Amount <= 0 || Reached <= 0 || Homes <= 0)
+			{
+				return 0;
+			}
+			int reached = (Reached > Homes) ? Homes : Reached;
+			return Scaled(Amount, reached * 100 / Homes);
+		}
+
 		/// <summary>The order kinds are listed and ties are broken in: the catalogue's own
 		/// lifting supports, in the order it declares them. A kind neither file names keeps its
 		/// first-seen place after all of these.</summary>

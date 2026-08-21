@@ -1,4 +1,4 @@
-#if TAF_TESTS
+﻿#if TAF_TESTS
 using System.Collections.Generic;
 using NUnit.Framework;
 using ThousandAndFirst;
@@ -323,6 +323,68 @@ namespace ThousandAndFirst.Tests
 		public void Scaled_AWorkRunningAtAllKeepsAPointOfWhatItDeclares()
 		{
 			Assert.AreEqual(1, KingdomReachRules.Scaled(1, 25));
+		}
+
+		// --- What a lift lands on the settlement's own level (Addendum 6) -----------------------
+
+		[Test]
+		public void Landed_GivesAWorkItsWholeAmountWhereItReachesEveryHome()
+		{
+			// A zone-band work covers everything built around it, so nothing of it is lost.
+			Assert.AreEqual(6, KingdomReachRules.Landed(6, 20, 20));
+		}
+
+		[Test]
+		public void Landed_CountsNothingForAWorkThatReachesNobodyWhoLivesHere()
+		{
+			// The whole point of scoping: a shrine out past the fields lifts the level by nothing,
+			// however loudly it shades the ground it stands on.
+			Assert.AreEqual(0, KingdomReachRules.Landed(6, 0, 20));
+		}
+
+		[Test]
+		public void Landed_ScalesWithTheShareOfTheSettlementItCovers()
+		{
+			// Half the homes, half the lift. This is what makes one shrine in each quarter worth
+			// more to the level than two shrines in one.
+			Assert.AreEqual(3, KingdomReachRules.Landed(6, 10, 20));
+			Assert.AreEqual(1, KingdomReachRules.Landed(6, 5, 20));
+		}
+
+		[Test]
+		public void Landed_KeepsAPointForAWorkThatReachesAnybodyAtAll()
+		{
+			// The same floor Scaled keeps, for the same reason: a work that reaches somebody is
+			// never silently worth nothing.
+			Assert.AreEqual(1, KingdomReachRules.Landed(2, 1, 40));
+		}
+
+		[Test]
+		public void Landed_CannotMintALiftFromADoubleCountedHome()
+		{
+			Assert.AreEqual(6, KingdomReachRules.Landed(6, 99, 20));
+		}
+
+		[Test]
+		public void Landed_LandsNothingWhereNobodyLivesAndNothingForANegativeAmount()
+		{
+			Assert.AreEqual(0, KingdomReachRules.Landed(6, 4, 0));
+			Assert.AreEqual(0, KingdomReachRules.Landed(-6, 20, 20));
+		}
+
+		[Test]
+		public void Landed_LeavesTheBindingGoodsAloneByNeverBeingAskedAboutThem()
+		{
+			// The rule that keeps water, food and roofs citywide pools is ScopedByReach; this test
+			// pins the pair together, because a caller that scoped a binding good would be reading
+			// the addendum backwards.
+			Assert.IsFalse(KingdomReachRules.ScopedByReach("water"));
+			Assert.IsFalse(KingdomReachRules.ScopedByReach("food"));
+			Assert.IsFalse(KingdomReachRules.ScopedByReach("roof"));
+			Assert.IsTrue(KingdomReachRules.ScopedByReach("spirit"));
+			Assert.IsTrue(KingdomReachRules.ScopedByReach("craft"));
+			Assert.IsTrue(KingdomReachRules.ScopedByReach("order"));
+			Assert.IsTrue(KingdomReachRules.ScopedByReach("luxury"));
 		}
 
 		// --- The ground's character ----------------------------------------------------------------

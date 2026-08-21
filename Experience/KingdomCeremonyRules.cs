@@ -236,6 +236,12 @@ namespace ThousandAndFirst
 		/// not optimization.</summary>
 		public const int TasteShadeAmount = 1;
 
+		/// <summary>The most tastes one notable ever states, and so the width of the draw in
+		/// <see cref="ChooseTastes"/>. Named because <see cref="MaxNotableShade"/> has to know it
+		/// too, and a ceiling that disagreed with the draw would be a ceiling nothing reached.
+		/// </summary>
+		public const int MaxTastesStated = 2;
+
 		// --- Re-based onto the quality-of-life vocabulary (brief, Addendum 4) ------------------
 		//
 		// A notable's taste WAS a private system: a category string compared against
@@ -315,7 +321,7 @@ namespace ThousandAndFirst
 			}
 			ulong value;
 			int count = 1;
-			if (CounterRandom.TryDrawBelow(CeremonySeed, key, TasteCountDrawIndex, 2uL, out value, out fault))
+			if (CounterRandom.TryDrawBelow(CeremonySeed, key, TasteCountDrawIndex, (ulong)MaxTastesStated, out value, out fault))
 			{
 				count = (int)value + 1;
 			}
@@ -483,6 +489,62 @@ namespace ThousandAndFirst
 		public static int LeaderShade()
 		{
 			return VirtueShadeAmount - FlawShadeAmount;
+		}
+
+		// ==================================================================================
+		// The shade a named notable carries, and how the settlement reads it
+		// ==================================================================================
+
+		/// <summary>
+		/// The whole shade one named notable carries into
+		/// <c>KingdomCatalogueRules.Equilibrium</c>: their met tastes, the net of their virtue and
+		/// their flaw, and whatever their own <c>Prefers</c> found in the quarters they were given
+		/// (<c>KingdomQolRules.PreferShade</c>, Addendum 4). One number, because the three halves
+		/// were always meant to be one balance rather than three roads to the level.
+		/// <para>
+		/// Never a penalty: a notable whose tastes are unmet and whose Prefers found nothing still
+		/// brings their virtue, and the floor at zero means a hypothetical flaw heavier than a
+		/// virtue can never make a settlement carry fewer people than its works honestly do.
+		/// </para>
+		/// </summary>
+		/// <param name="Met">Met flags for the tastes stated, from <see cref="TastesMet"/>. Null
+		/// is a notable who stated none.</param>
+		/// <param name="PreferShade">This notable's met <c>Prefers</c>, already counted and capped
+		/// by <c>KingdomQolRules.PreferShade</c>. Negative reads as none.</param>
+		/// <returns>Between zero and <see cref="MaxNotableShade"/>.</returns>
+		public static int NotableShade(IList<bool> Met, int PreferShade)
+		{
+			int shade = TasteShade(Met) + LeaderShade() + ((PreferShade < 0) ? 0 : PreferShade);
+			if (shade < 0)
+			{
+				shade = 0;
+			}
+			return (shade > MaxNotableShade) ? MaxNotableShade : shade;
+		}
+
+		/// <summary>The most any one named notable can ever shade a settlement's equilibrium by:
+		/// two tastes met, a virtue net of a flaw, and two <c>Prefers</c> met. Texture, and small
+		/// enough to stay texture &mdash; the lift cap in
+		/// <c>KingdomCatalogueRules.Equilibrium</c> binds it again on top of this.</summary>
+		public static int MaxNotableShade
+		{
+			get
+			{
+				return (MaxTastesStated * TasteShadeAmount) + LeaderShade() + KingdomQolRules.MaxPreferShade;
+			}
+		}
+
+		/// <summary>
+		/// The status report's clause naming what the settlement's named notable is worth to the
+		/// level, so a shade is a thing the founder reads rather than an invisible modifier
+		/// (STANDARDS 7b's own posture, applied to a number that helps rather than blocks).
+		/// </summary>
+		/// <param name="Shade">From <see cref="NotableShade"/>.</param>
+		/// <returns>Empty for a settlement whose notable is worth nothing to it, which is a
+		/// sentence not worth writing.</returns>
+		public static string ShadeClause(int Shade)
+		{
+			return (Shade <= 0) ? "" : ("  {{K|+" + Shade + " for what its notable finds here}}");
 		}
 
 		// ==================================================================================

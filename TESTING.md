@@ -302,10 +302,12 @@ anyone.
 | 55e | Check building costs in the commission list | Water **and** materials. A design naming no materials costs water alone |
 | 55f | Reach Steading, then Town | M then L plots unlock — the city literally builds bigger as it grows. XL waits for City |
 | 55g | Claim one stratum down and commission there | The plot is **carved**: double clearing, paid back in stone, no walls — the rock is the wall. A weather-dependent design refuses underground by name |
-| 55h | Raise a building while standing there | The raising ceremony: crew gathers, water is shared, the chronicle names those present. Raised while away, the homecoming tells it plainly |
+| 55h | Raise a building while standing there — a **house or a field**, not only a wall | The raising ceremony: crew gathers, water is shared, the chronicle names those present. Raised while away, the homecoming tells it plainly. Every design closes this way, whether it rose on a scaffold or as a staged plot |
+| 55h2 | Stake a **plan** for a plot-sized design and let the settlement realise it | When it rises, the chronicle's raising line **quotes the plan** staked for it. A design commissioned directly has no plan and is chronicled without one |
 | 55i | Order a house | It comes **furnished** — bunks, torchpost, hookah arrive as contents. Nobody commissions a hookah one at a time |
 | 55j | Check a chartered caravan after several visits | Occasionally it carries a **pattern-book**: one foreign design chosen from three, merged into what the keepers know. The base catalogue is never gated on the draw |
 | 55k | Appoint an office holder; read their description | One virtue, one flaw, and one or two stated **tastes**. Met tastes shade the settlement up; unmet means their default, never a penalty |
+| 55k2 | Charter → Status after an office is filled | The level's own line carries **"+N for what its notable finds here"**, and the level is that much higher. Never negative, and never past half the binding level |
 
 ## Pass 18 — The posted price, worn ground, yard trades, and guests
 
@@ -374,6 +376,8 @@ anyone.
 |---|---|---|
 | 72 | Charter → Status, standing in different parts of a built-up zone | It names **which quarter you are in and what shades it** — the ground around a temple reads differently from the ground around a workshop. Water, food and roofs stay citywide |
 | 72a | Raise a small shrine, then a middling one, then a temple | Reach grows with the ground: plot, quarter, zone. The great work takes the city — once it is headed |
+| 72b | Raise a middling civic work **among the houses**, then strike it and raise the same design out past the fields | The level moves with it: a lift lands in proportion to the roofs it covers. A small (S) work shades its own ground and does not move the level at all |
+| 72c | Give a house a **yard trade** and watch the level | A vine lattice's `food:1` reaches the settlement's own pool; a hide rack's `craft:1` reaches the lift. Letting the trade go takes it back |
 | 73 | Commission an L design with no mason's yard | Refused: "there is no mason's yard." Build one and leave it unstaffed: **"the mason's yard stands idle"** — the two refusals read differently |
 | 73a | Run a yard | Two loads of raw become one of shaped, worked by whoever the staffing pass left, chronicled the first day the saws run. Crew speed reads off who they are — Strength at the saw-pit, a mind at the furnace |
 | 73b | Check a high-craft design's price | Denominated partly in **vanilla tinkering bits**, drawn from the stockpiles — donate by putting scrap in. Great works may also want a rare find, and say so |

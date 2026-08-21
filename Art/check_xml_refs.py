@@ -12,6 +12,10 @@ references the game resolves by name at load or roll time, where a wrong name is
   zoning district       a Districts= token naming ground the founder can never declare
   merged design         a footprint, chain link or key that only contradicts itself once the
                         catalogue's <building> elements are folded together by Key
+  raising ceremony      a completion path that finishes a building without calling the ceremony
+                        by name, so the building rises with no crew, no shared water and no
+                        record of who was there -- the one C# seam of exactly this shape, and
+                        the one this file's own audit found unjoined for 53 of 57 designs
 
 The population case is the one that motivated this. `DynamicObjectsTable:Books` looked like a
 vanilla table to merge into. It is not declared anywhere; it is *fabricated* on demand from
@@ -358,6 +362,80 @@ def building_reference_problems():
     return problems
 
 
+# --------------------------------------------------------------------------------------
+# The raising ceremony: a C# reference of the same shape as the XML ones above.
+# --------------------------------------------------------------------------------------
+
+# Every file that stamps a finished building. Two of them RAISE one and must therefore close
+# through the ceremony; the third only adopts what was already standing when the rite was
+# poured, which is not a raising and has nobody to gather. A file appearing here that this
+# list does not name is a new completion path, and the question it has to answer is the same.
+RAISING_PATHS = (
+    os.path.join("Growth", "KingdomScaffold.cs"),
+    os.path.join("Growth", "KingdomPlot2.cs"),
+)
+ADOPTING_PATHS = (os.path.join("Core", "KingdomFounding.cs"),)
+
+# Both files that realise a staked plan must carry the surveyor's words onto whatever finishes
+# the building, or the chronicle quotes a plan for a wall and never for a house.
+PLAN_PATHS = (
+    os.path.join("Growth", "KingdomPlanMarker.cs"),
+    os.path.join("Growth", "KingdomPlot2.cs"),
+)
+
+
+def raising_ceremony_problems():
+    """The completion paths, walked in both directions.
+
+    Silent in play in the way STANDARDS section 4 describes: a building raised without its
+    ceremony still rises, so nothing looks broken. It simply rises with nobody there.
+    """
+    problems = []
+    stampers = set()
+    for folder, _dirs, files in os.walk("."):
+        if any(part in folder for part in (".git", "DevTests", "Art")):
+            continue
+        for name in sorted(files):
+            if not name.endswith(".cs"):
+                continue
+            path = os.path.join(folder, name)
+            if 'SetIntProperty("KingdomBuilt", 1)' in read(path):
+                stampers.add(os.path.normpath(path[2:] if path.startswith("./") else path))
+
+    for path in sorted(stampers - set(RAISING_PATHS) - set(ADOPTING_PATHS)):
+        problems.append(
+            "%s finishes a building but is neither a known raising path nor a known adoption "
+            "path; if it raises one it must call KingdomCeremony.OnBuildingRaised" % path
+        )
+    for path in RAISING_PATHS:
+        if not os.path.isfile(path):
+            problems.append("raising path %s is gone; this check no longer walks anything" % path)
+            continue
+        text = read(path)
+        if "KingdomCeremony.OnBuildingRaised(" not in text:
+            problems.append(
+                "%s finishes a building without calling KingdomCeremony.OnBuildingRaised, so it "
+                "raises with no crew gathered, no water shared and no record of who was there"
+                % path
+            )
+        if re.search(r'KingdomChronicle\.Record\([^;]*was raised at', text):
+            problems.append(
+                "%s writes its own raising line instead of letting the ceremony write it; there "
+                "is one grammar for a building rising" % path
+            )
+    for path in PLAN_PATHS:
+        if not os.path.isfile(path):
+            problems.append("plan path %s is gone; this check no longer walks anything" % path)
+            continue
+        text = read(path)
+        if "PlanQuote(" not in text:
+            problems.append(
+                "%s realises a staked plan without carrying the surveyor's words onto what "
+                "finishes it, so the chronicle can never quote that plan" % path
+            )
+    return problems
+
+
 def main():
     base = None
     if "--base" in sys.argv:
@@ -423,7 +501,11 @@ def main():
     #    forever -- and none is visible by validating either end alone.
     problems.extend(building_reference_problems())
 
-    # 4. Book IDs referenced by blueprints exist, and books are reachable.
+    # 4. Every completion path closes through the raising ceremony, and every plan-realising
+    #    path carries the surveyor's words to it.
+    problems.extend(raising_ceremony_problems())
+
+    # 5. Book IDs referenced by blueprints exist, and books are reachable.
     if os.path.isfile("Books.xml"):
         book_ids = set(re.findall(r'<book\s+ID="([^"]+)"', read("Books.xml")))
         book_ids |= set(re.findall(r'ID="([^"]+)"', read("Books.xml")))

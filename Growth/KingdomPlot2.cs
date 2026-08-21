@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using XRL;
 using XRL.Messages;
@@ -1164,8 +1164,16 @@ namespace ThousandAndFirst
 					return;
 				}
 				string skinKey = Marker.GetStringProperty(KingdomDesign.PlannedSkinProperty);
+				// Read before the marker comes down and carried after the works stands, because a
+				// plot measures its rect out of the marker's own cell and cannot leave it standing
+				// while it does. Same fact the single-cell path transfers in one step
+				// (KingdomPlanMarker.Realize), and it is what lets the chronicle quote a plan for a
+				// house rather than only for a wall.
+				string planQuote = KingdomCeremony.ReadPlanQuote(Marker);
 				Marker.Destroy(null, Silent: true);
-				staked = Stake(System, zone, rect, Entry, spec, grid, skinKey, KingdomPlotRules.IsUnderground(zone.Z)) != null;
+				GameObject works = Stake(System, zone, rect, Entry, spec, grid, skinKey, KingdomPlotRules.IsUnderground(zone.Z));
+				KingdomCeremony.CarryPlanQuote(planQuote, works);
+				staked = works != null;
 			});
 			if (staked)
 			{
@@ -1819,7 +1827,10 @@ namespace ThousandAndFirst
 			string displayName = Works.DisplayName ?? entry.Name;
 			// Read before the works comes down, not after: everything the founder chose when they
 			// staked this ground rides on the works object, and the works is about to stop being a
-			// thing to read from.
+			// thing to read from. The plan quote and the due tick are the raising ceremony's own
+			// two facts, and they are read here for exactly the same reason.
+			string planQuote = KingdomCeremony.ReadPlanQuote(parent);
+			long completeTick = Works.StartTick + Works.TotalTicks;
 			Works.DesignKey = null;
 			GameObject building = GameObject.Create(entry.Blueprint);
 			if (building == null)
@@ -1868,10 +1879,15 @@ namespace ThousandAndFirst
 			KingdomSystem system = The.Game.RequireSystem<KingdomSystem>();
 			if (system.Founded)
 			{
-				system.RecordDeed("the " + displayName + " raised at " + system.KingdomDisplayName);
-				KingdomChronicle.Record(system, "the " + displayName + " was raised at " + system.KingdomDisplayName);
+				// The same close a single-cell scaffold has always had (r_KingdomScaffold.Complete):
+				// attended, the crew gathers and a measure of water is shared; unattended, the
+				// homecoming tells it. A house is not a lesser thing to raise than a palisade.
+				KingdomCeremony.OnBuildingRaised(system, cell, displayName, completeTick, planQuote);
 			}
-			MessageQueue.AddPlayerMessage("{{G|The " + displayName + " is complete.}}");
+			else
+			{
+				MessageQueue.AddPlayerMessage("{{G|The " + displayName + " is complete.}}");
+			}
 			return true;
 		}
 

@@ -59,7 +59,11 @@ namespace ThousandAndFirst
 				.Append(System.Withered ? " {{r|(withered)}}" : "")
 				.Append("  Population: ")
 				.Append(System.Population)
-				.Append(System.SupportedLevel > 0 ? ("  {{K|carries " + System.SupportedLevel + "}}") : "");
+				.Append(System.SupportedLevel > 0 ? ("  {{K|carries " + System.SupportedLevel + "}}") : "")
+				// What the settlement's own notable is worth to that number, named rather than
+				// left as an invisible modifier (the brief's tastes and leader traits, Addendum 4's
+				// Prefers, all through the one shade).
+				.Append(System.SupportedLevel > 0 ? KingdomCeremonyRules.ShadeClause(System.NotableShade) : "");
 			// The realm is the faction; the cities are where its history happened. A founder
 			// standing in one should be told the other is still out there, keeping itself.
 			if (System.Away != null)

@@ -35,6 +35,7 @@ neutral values.
 | `string Style` | City style key (`common`, `verdant`, `fungal`, `gyre`, `eater`, or one your mod declares). Drives which building designs are offered. |
 | `GrowthStage Stage` | `Camp`, `Steading`, `Village`, `Town`, `City`. **Moves in both directions.** `KingdomSubsidenceRules.StageWithHysteresis` is the only writer: it climbs on the reading and falls only on a clear shortfall (20% benefit of the doubt on both of `StageFor`'s inputs), one rung per reckoning, with `Camp` an absolute floor. Read it, never assume it — and never assume a rung already reached is kept. |
 | `int SupportedLevel` | Settlers the settlement's finished works honestly carry, from `KingdomSubsidenceRules.SupportedLevel`. **Knowledge, not truth**: it is as fresh as the last pass that measured it, and `0` means no pass ever has. Consumers that refuse something on it must check for that. |
+| `int NotableShade` | What the settlement's named notable is worth to that level (`KingdomCeremonyRules.NotableShade`: met tastes, the virtue net of the flaw, and met `Prefers`). Written when the office is filled or passes, so it is as stale as the last time it changed hands; `0` for a settlement that has named nobody. Never negative, and bound again by `KingdomCatalogueRules.LiftCapPercent` when the level reads it. |
 | `string SubsidenceBinding` | Which of `water` / `food` / `roof` is the least of the three and therefore what holds the level down, or null before a measurement. |
 | `long LastWaterWorkTick` | Checkpoint for water-works production. Planted on first read and advanced with `KingdomRules.AdvanceCheckpoint`; never a cap. |
 | `int Population` | Living settler count. |
@@ -113,7 +114,10 @@ notable's hook is never lost, only relocated into rumor.
 ## Reach, the chain, crews, and wear
 
 `KingdomReach` / `KingdomReachRules`: reach derives from plot size × chain position
-(plot/quarter/zone/city/realm, `Reach` attribute overriding); lifts shade residents in reach;
+(plot/quarter/zone/city/realm, `Reach` attribute overriding); lifts shade residents in reach —
+on one cell through `KingdomReach.CharacterAt` / `ShadedAt`, and on the settlement's own level
+through `KingdomReachRules.Landed(amount, reached, homes)`, which lands a work's lift in
+proportion to the roofs it covers and lands nothing at all for a work that reaches no home;
 quarters are measured (ground within six cells of ground); an XL's city effect is live only while
 the office machinery has named a head. `KingdomMaterials` gains the refined tier (shaped timber /
 shaped stone / worked metal via staffed yards), vanilla bits (`Bits=`) and exotic finds
@@ -201,8 +205,15 @@ plots, materials, gates, chains, skins, contents — is authorable from mergeabl
 
 ## City plans — three ways a thing gets built
 
-A settlement is laid out by a grammar, not scattered. All three paths end at the same
-`r_KingdomScaffold` pipeline, so a building raised any of these ways is the same building.
+A settlement is laid out by a grammar, not scattered. All three paths end at the same building:
+a single-cell design rises on an `r_KingdomScaffold` and a plot design rises through
+`r_KingdomPlotWorks`' own staged raising, and **both close through
+`KingdomCeremony.OnBuildingRaised`** — attended, the crew gathers, a measure of water is shared
+and the chronicle names who was there; unattended, the homecoming tells it. A plan staked for
+either kind carries the surveyor's words to that moment: `KingdomCeremony.TransferPlanQuote`
+where the marker and its successor exist together, or `ReadPlanQuote` before the marker comes
+down and `CarryPlanQuote` after the works stands, which is the order a plot must use because it
+measures its rect out of the marker's own cell.
 
 | Path | Member | Contract |
 |---|---|---|
@@ -316,13 +327,25 @@ world), gate the work on a labour term, spend the budget, and advance with `Adva
 Pure rules plus one engine-facing caller. `KingdomSubsidence.Supports(survey)` sums the
 catalogue's `Carries` over every `KingdomBuilt` work in the zone — every work scaled by
 `KingdomWearRules.WorkEffectiveness` (Addendum 10(b): a crewed work by its crew stretch reduced
-again by condition, a staffless one by condition alone) — and `SupportedLevel(tally, stage)`
-hands that to the frozen `KingdomCatalogueRules.Equilibrium`.
+again by condition, a staffless one by condition alone), plus the `Shades` of whatever yard trade
+each household has taken up — and `SupportedLevel(tally, stage, shade)` hands that to the frozen
+`KingdomCatalogueRules.Equilibrium`.
+
+`KingdomSubsidence.ScopedSupports(system, zone, survey)` is the same tally with **one** difference
+and it is the one the level reads: `SupportTally.Lift` is scoped by reach (Addendum 6). Each
+work's lift lands in proportion to the settlement's roofs it covers
+(`KingdomReachRules.Landed`), the headed great works of the realm's other claimed zones arrive
+whole out of `KingdomReach.CityShadeExcept`, and the binding three are untouched citywide pools.
+`Supports` remains the right call for a caller asking what the works make rather than what the
+settlement holds — the water-works production pass is one.
 
 | Member | Contract |
 |---|---|
+| `static int Equilibrium(int water, int food, int roof, int lift, int shade)` (on `KingdomCatalogueRules`) | The frozen arithmetic. The level is the least of the three binding goods, lifted by `lift + shade` up to `LiftCapPercent` of that least, floored at `FloorLevel`. Each of `lift` and `shade` is floored at zero on its own, so neither can eat the other and an unmet taste is never a penalty. |
+| `static SupportTally FoldShade(SupportTally, List<KindAmount>, int percent)` (on `KingdomCatalogueRules`) | `FoldWork` without the work count, for a contribution that stands in somebody else's plot — a household's yard trade. |
 | `static int LevelFromWater(int water, GrowthStage stage)` | Declared `water` is denominated at **camp rates**; this divides by `StageUpkeepPercent` before the equilibrium sees it. A cistern carrying eight in a camp carries three in a city. |
-| `static int SupportedLevel(SupportTally, GrowthStage)` / `BindingSupportFor(...)` | The level, and which of `water` / `food` / `roof` is holding it down. |
+| `static int SupportedLevel(SupportTally, GrowthStage, int shade = 0)` / `BindingSupportFor(...)` | The level, and which of `water` / `food` / `roof` is holding it down. `shade` is `KingdomSystem.NotableShade`; it defaults to none because a settlement that has named nobody honestly has none. |
+| `static Trajectory Slide(..., bool alreadySliding, int shade = 0)` | Carries the same shade through every step, so a slide converges on the level the founder was actually told. |
 | `const int StartMarginPercent` / `static int SlideBeginsAbove(int level)` / `IsSubsiding` / `HasArrived` | The 20% band. A settlement inside it never moves; the slide stops the moment it arrives. |
 | `const int StageFallMarginPercent` / `static GrowthStage StageWithHysteresis(...)` / `SettledStage(...)` | The ratchet, both ways. One rung per reckoning down, on a clear shortfall only, `Camp` an absolute floor. |
 | `const int StepDays` / `SettlersPerStep(GrowthStage)` / `const int MaxSteps` / `struct Breakpoint` / `struct Trajectory` / `static Trajectory Slide(...)` | Closed-form convergence: the whole slide is computed at once from the elapsed, and its rung changes come back as dated breakpoints for the chronicle. |
