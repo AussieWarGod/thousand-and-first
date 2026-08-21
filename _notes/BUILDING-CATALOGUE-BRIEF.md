@@ -734,3 +734,14 @@ machinery. A lane that cannot be built as a rendering returns as a design questi
 
 Favoured-dish meals (G3, in flight) are lane 1/3 groundwork. Lane-to-wave mapping is advisory;
 the mesh condition is not.
+
+**(j) N-city scaling doctrine** (author question, 2026-08-22 — "does the kingdom need to cap
+the number of cities of certain sizes to make this viable, or are we pretty free to scale"):
+FREE TO SCALE. The model is ~14 KiB per city (~87 KiB at nine zones); ten full cities ≈ 1 MB —
+trivial; materialisation never scales with city count (runs only where the player stands);
+reckon is closed-form, linear in cities, with staggering and a next-breakpoint priority queue
+(O(events), not O(cities×passes)) in reserve. NO engineering cap. Any cap on city count/size is
+GAMEPLAY (charter gates, rank, fiction), chosen for feel, never for viability. The one
+structural limit is inherited, not simulative: the seat + single-Away record pair — generalises
+to a roster of settlement records after W1/W2 (the by-name carry already doesn't care how many
+records there are); scheduled as its own wave.
