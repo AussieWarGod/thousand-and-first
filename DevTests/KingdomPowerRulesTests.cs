@@ -123,6 +123,24 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void WaterAvailabilityPercent_TheMillraceTurnsTheWheelAndIsNotWorthSitingFor()
+		{
+			// Wave G1: r_KingdomWaterWheel carries vanilla's SpawnWithLiquid the way vanilla's own
+			// Wooden Water Wheel does, so a wheel raised on dry ground digs itself one
+			// SaltyWaterPuddle - 500 drams - instead of reporting HydrodynamicForceInsufficient
+			// forever. Both halves of that have to stay true. It must TURN, because a work whose
+			// only failure mode is silent is a work the founder cannot debug; and it must be
+			// nearly worthless, because otherwise siting stops mattering and the wheel becomes a
+			// free generator anybody can raise anywhere.
+			const int MillraceDrams = 500;
+			int race = KingdomPowerRules.WaterAvailabilityPercent(MillraceDrams);
+			Assert.Greater(race, 0, "the wheel's own race must clear HydraulicMinimumDrams, or the wheel never turns");
+			Assert.Less(race, 10, "and it must stay near nothing, or siting beside real water stops being the point");
+			Assert.Greater(KingdomPowerRules.WaterAvailabilityPercent(KingdomPowerRules.HydraulicRatedDrams), race * 10,
+				"a real pool is worth more than an order of magnitude over the race");
+		}
+
+		[Test]
 		public void WaterAvailabilityPercent_NeverFallsAsWaterRises()
 		{
 			int previous = -1;

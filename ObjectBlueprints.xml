@@ -119,10 +119,24 @@
   <object Name="r_KingdomGreatCistern" Inherits="Furniture">
     <stag Name="Contemporary" />
     <part Name="Render" DisplayName="great cistern" RenderString="O" ColorString="&amp;B" Tile="ThousandAndFirst/r_KingdomGreatCistern.png" TileColor="&amp;b" DetailColor="C" />
-    <part Name="Description" Short="A tin-lined belly sunk to its rim in the earth. When it is full, the whole town sleeps easier; when it rings hollow, everyone hears it." />
+    <part Name="Description" Short="A tin-lined belly sunk to its rim in the earth. It makes nothing: what is in it was carried here in somebody's arms or run down a gutter from the works above. When it is full, the whole town sleeps easier; when it rings hollow, everyone hears it." />
+    <!-- Storage-only, and the MaxVolume is the whole of what it is for (Addendum 11(a): "a
+         reservoir holds water someone brought or piped - it does not conjure it"). The figure
+         is also a stage gate in its own right: KingdomRules.StageFor wants 16 / 64 / 256 / 1024
+         drams of dedicated capacity for Steading / Village / Town / City, and a design that
+         raises the ceiling is a design that opens the next rung.
+
+         WHY THIS VESSEL IS NOT BIGGER, and every store below likewise. A damaged store leaks
+         its own capacity to the ground over KingdomWearRules.LeakDaysToEmptyAtCeiling (50)
+         days at the wear ceiling, so a vessel of C drams loses C/50 a day when it is holed.
+         Every store in this file is sized so that figure stays UNDER the daily drinking bill
+         of the rung it opens at - 256/50 = 5.1 against a Steading's 6 - which is what keeps a
+         single bad season from being fatal: a settlement still making its water banks some of
+         it with a hole in the cistern. _notes/balance-sim.py's leak table is that check, and
+         it prints the share out loud. A store you want twice as big belongs a rung higher. -->
     <part Name="LiquidVolume" MaxVolume="256" Volume="0" />
     <part Name="Physics" Takeable="false" Weight="2000" />
-    <stat Name="Hitpoints" Value="200" />
+    <stat Name="Hitpoints" Value="240" />
   </object>
   <!-- Inherits the vanilla Chest wholesale (Container, Inventory, and its tile) rather than
        declaring a Tile of our own: STANDARDS.md requires art for anything that carries one, and
@@ -230,14 +244,50 @@
     <part Name="Physics" Takeable="false" Weight="40000" />
     <stat Name="Hitpoints" Value="1200" />
   </object>
+  <!--
+    THE WATER WORKS. Two shapes live in this block and they are not the same thing.
+
+    A PRODUCER carries vanilla's own LiquidProducer and its Carries figure in
+    KingdomBuildings.xml is derived from that part rather than asserted beside it:
+    LiquidProducer.Rate is turns per dram (VariableRate is re-rolled every cycle, so the mean
+    is the rate), KingdomRules.TicksPerDay is 1200, and
+
+        Carries="water:N"  <=>  N = 1200 / mean(VariableRate)
+
+    holds exactly for every producer below. That is the whole contract. Stand next to one of
+    these and count the drams and you get the number the ledger already used.
+
+    Every producer declares FillSelfOnly="true", and that is an invariant, not a style. Without
+    it LiquidProducer.DistributeLiquid falls through to "create a new Water object in the cell"
+    (D/XRL/World/Parts/LiquidProducer.cs:247,328) - an OPEN volume, which KingdomSurvey counts
+    as Pools/OpenWater and KingdomRules.FetchableDrams then lets the water detail haul again.
+    The same dram would be minted twice, once through Carries and once through the puddle.
+    FillSelfOnly also makes IsNeeded() false once the tank is full and pure (:146-160), so a
+    producer nobody draws down visibly stops. Filling is the crew's job.
+
+    A STORE carries a LiquidVolume and nothing else. It conjures no dram, and it is paid for
+    twice over anyway: KingdomRules.StageFor gates Steading / Village / Town / City on 16 / 64 /
+    256 / 1024 drams of dedicated capacity, and KingdomRules.FetchableDrams is clamped by the
+    room left in dedicated stores, so a settlement with nowhere to put water cannot haul any.
+
+    What is deliberately NOT here: rain. There is no precipitation system in Qud at any level
+    (_notes/VANILLA-PRODUCTION-TRUTH.md section 0) - Zone.CheckWeather rolls wind and nothing
+    else. Everything below condenses dew, evaporates brine, or taps a seep in the rock.
+  -->
   <object Name="r_KingdomSaltPan" Inherits="Furniture">
     <stag Name="Contemporary" />
     <part Name="Render" DisplayName="salt-pan" RenderString="&#8776;" ColorString="&amp;W" DetailColor="y" />
     <part Name="Description" Short="A shallow bed scraped level and flooded thin. The sun takes the water and leaves something worth raking up; what drips off the drying racks at dusk is worth more still." />
     <part Name="LiquidVolume" MaxVolume="32" Volume="0" />
-    <!-- Rate is turns per dram, the way vanilla's own collectors are written. Averaging one dram
-         every six hundred turns is two a day: a settler's thirst, and a settler's whole shift to
-         earn it. Slow on purpose - this is the crude end of the water axis, not a well. -->
+    <!-- Verified against the survey and unchanged: mean 600 turns a dram, 1200/600 = two a day,
+         which is one settler's thirst for one settler's whole shift. The chemistry is the
+         engine's own and needs no part of ours: LiquidVolume.UseDramsByEvaporativity takes
+         drams in proportion to each component's Evaporativity, and water's is 2 against salt's
+         0 (D/XRL/Liquids/LiquidWater.cs:29), so brine left open in a shallow pan really does
+         lose its water first and leave the salt behind. The pan does not START brined on
+         purpose: KingdomLiquids.CanReceiveFreshWater refuses a vessel holding a mixture, so a
+         pan pre-filled with water-600,salt-400 would count toward the settlement's storage
+         ceiling while being unable to hold a dram anybody could drink. -->
     <part Name="LiquidProducer" Liquid="water" VariableRate="400-800" FillSelfOnly="true" ChargeUse="0" IsEMPSensitive="false" IsTechScannable="false" />
     <part Name="Physics" Solid="false" Takeable="false" Weight="600" />
     <stat Name="Hitpoints" Value="60" />
@@ -246,6 +296,7 @@
     <part Name="Render" DisplayName="salt-pan terrace" ColorString="&amp;W" DetailColor="Y" />
     <part Name="Description" Short="Pans stepped down a slope so each one drinks the last one's leavings. Worked in shifts by people who stopped noticing the smell some time ago." />
     <part Name="LiquidVolume" MaxVolume="64" Volume="0" />
+    <!-- mean 300 -> 1200/300 = four a day. -->
     <part Name="LiquidProducer" VariableRate="200-400" />
     <part Name="Physics" Weight="1400" />
     <stat Name="Hitpoints" Value="100" />
@@ -253,41 +304,145 @@
   <object Name="r_KingdomCatchment" Inherits="Furniture">
     <stag Name="Contemporary" />
     <part Name="Render" DisplayName="dew catchment" RenderString="&#8801;" ColorString="&amp;w" DetailColor="W" />
-    <part Name="Description" Short="Stretched canvas, a gutter of split cane, and a cask underneath. It works best on the nights nobody wants to be out in." />
+    <!-- Dew, not rain. Vanilla's Air Well says it in its own words - "the small difference in
+         temperature inside the dome causes dew to condense from air" - and that is the only
+         honest reading available, because nothing falls out of the sky in Qud. -->
+    <part Name="Description" Short="Stretched canvas, a gutter of split cane, and a cask underneath. Nothing falls here; what it catches is the night giving back what the day took, and it works best when the cold is worst." />
     <part Name="LiquidVolume" MaxVolume="64" Volume="0" />
+    <!-- mean 400 -> three a day. -->
     <part Name="LiquidProducer" Liquid="water" VariableRate="250-550" FillSelfOnly="true" ChargeUse="0" IsEMPSensitive="false" IsTechScannable="false" />
     <part Name="Physics" Takeable="false" Weight="800" />
     <stat Name="Hitpoints" Value="80" />
   </object>
   <object Name="r_KingdomCatchmentBank" Inherits="r_KingdomCatchment">
     <part Name="Render" DisplayName="catchment bank" ColorString="&amp;W" DetailColor="C" />
-    <part Name="Description" Short="A whole roofline turned to the purpose, gutters running to a sunken row of casks. In a good week it fills faster than the settlement drinks." />
+    <part Name="Description" Short="A whole roofline turned to the purpose, gutters running to a sunken row of casks. On a cold clear night it fills faster than the settlement drinks." />
     <part Name="LiquidVolume" MaxVolume="160" Volume="0" />
+    <!-- mean 240 -> five a day. -->
     <part Name="LiquidProducer" VariableRate="160-320" />
     <part Name="Physics" Weight="2200" />
     <stat Name="Hitpoints" Value="160" />
   </object>
+  <!--
+    The air-well rungs. Vanilla's Air Well (B/ObjectBlueprints/Furniture.xml:2485) is a Tier-1,
+    non-tech, wholly unpowered carved stone dome that condenses dew into a catch basin, and it
+    is the single best water hook the game ships. These are that dome at settlement scale: the
+    same producer part, the same absence of any power connection, and a plot laid out so the
+    domes stand clear of one another with the night sky over them - which is what Sky="yes" is
+    doing on these designs. It is a siting rule, never a weather read.
+  -->
+  <object Name="r_KingdomAirWellCourt" Inherits="Furniture">
+    <stag Name="Contemporary" />
+    <part Name="Render" DisplayName="air-well court" RenderString="&#9675;" ColorString="&amp;y" DetailColor="Y" />
+    <part Name="Description" Short="Squat domes of dressed stone, windowed on every face so the air walks through them, ranked around a sunken basin. They are cold inside at dawn and the walls run with it." />
+    <part Name="LiquidVolume" MaxVolume="320" Volume="0" />
+    <!-- mean 80 -> 1200/80 = fifteen a day. -->
+    <part Name="LiquidProducer" Liquid="water" VariableRate="60-100" FillSelfOnly="true" ChargeUse="0" IsEMPSensitive="false" IsTechScannable="false" />
+    <part Name="Physics" Takeable="false" Weight="9000" />
+    <stat Name="Hitpoints" Value="500" />
+    <stat Name="AV" Value="10" />
+  </object>
+  <object Name="r_KingdomAirWellField" Inherits="r_KingdomAirWellCourt">
+    <part Name="Render" DisplayName="air-well field" RenderString="&#9675;" ColorString="&amp;Y" DetailColor="C" />
+    <part Name="Description" Short="Rank on rank of them out past the wall, spaced by a mason who worked out how far apart they had to stand, and gutters cut between the ranks to bring it all downhill to one place." />
+    <part Name="LiquidVolume" MaxVolume="768" Volume="0" />
+    <!-- mean 48 -> 1200/48 = twenty-five a day. -->
+    <part Name="LiquidProducer" VariableRate="32-64" />
+    <part Name="Physics" Weight="24000" />
+    <stat Name="Hitpoints" Value="800" />
+    <stat Name="AV" Value="14" />
+  </object>
+  <!--
+    The underground lane. Vanilla's answer to indefinite water under the ground is the weep: a
+    water lichen (B/ObjectBlueprints/Creatures.xml:9940) carrying the LiquidFont mutation, which
+    on each cooldown fills every open volume within its radius. These tap one.
+
+    We express the tap with LiquidProducer rather than by hanging LiquidFont on the building,
+    and the reason is the same invariant the block header states. LiquidFont's Bubble() CREATES
+    open pools in the cells around it (D/XRL/World/Parts/Mutation/LiquidFont.cs:96-101) - it
+    does not fill a vessel, it wets the floor - and every one of those pools is open fresh water
+    that KingdomSurvey counts and the water detail can then haul. The seep would be paid for
+    once in Carries and again in the puddles. LiquidProducer with FillSelfOnly does what a
+    cased, guttered tap actually does: it delivers into the settlement's own vessel and stops
+    when the vessel is full.
+  -->
+  <object Name="r_KingdomWeepTap" Inherits="Furniture">
+    <stag Name="Contemporary" />
+    <part Name="Render" DisplayName="weep-tap" RenderString="&#8801;" ColorString="&amp;B" DetailColor="g" />
+    <part Name="Description" Short="Somebody followed a damp seam back into the rock and found the lichen it was coming off. The face is cased in stone now, with a lead gutter under it and a cask at the end of that, and one of them goes down twice a day to scrape the growth back off the cut." />
+    <part Name="LiquidVolume" MaxVolume="96" Volume="0" />
+    <!-- mean 300 -> four a day. Crewed, because a weep left alone closes over. -->
+    <part Name="LiquidProducer" Liquid="water" VariableRate="240-360" FillSelfOnly="true" ChargeUse="0" IsEMPSensitive="false" IsTechScannable="false" />
+    <part Name="Physics" Takeable="false" Weight="1600" />
+    <stat Name="Hitpoints" Value="140" />
+  </object>
+  <object Name="r_KingdomWeepGallery" Inherits="r_KingdomWeepTap">
+    <part Name="Render" DisplayName="weep gallery" RenderString="&#8801;" ColorString="&amp;C" DetailColor="G" />
+    <part Name="Description" Short="A worked gallery along the whole wet seam, propped and drained, with taps every few paces and a walkway that stays slick no matter what is laid on it. The lichen is farmed now rather than fought." />
+    <part Name="LiquidVolume" MaxVolume="288" Volume="0" />
+    <!-- mean 100 -> twelve a day. -->
+    <part Name="LiquidProducer" VariableRate="70-130" />
+    <part Name="Physics" Weight="7000" />
+    <stat Name="Hitpoints" Value="420" />
+  </object>
+  <!--
+    The city rung, and the only water work in the catalogue behind a certified machine.
+
+    Vanilla marks its own commissionable/recoverable line with TinkerItem CanBuild: the Air Well
+    is Tier 1 and buildable, the Solar Still (Furniture.xml:2517) is Tier 3 and CanBuild="false"
+    - vanilla saying "you do not make one of these". So the condensing hall is gated on
+    Knowledge="machine:Solar Still" in KingdomBuildings.xml: the founder drags a still home onto
+    claimed ground, KingdomSalvage.Certify passes it fit for the grid, and the keepers who took
+    it apart know how the cold face works. What they build afterwards is theirs.
+
+    Its production is the Air Well's physics at hall scale and carries no charge cost, because
+    dew condensation in vanilla needs no power at all. The machinery on it is a real vanilla
+    SolarArray driving a real Capacitor through a real Circuitry bank - what runs the sluice
+    gates, the night covers, and the lamps in the galleries - and it is honest about failing:
+    SolarArray reports RadiationFluxInsufficient in the dark, indoors, and in a blacked-out cell
+    (D/XRL/World/Parts/SolarArray.cs:60-81). MinimumChargeToExplode="0" for the reason the
+    molten-salt store carries it: a Capacitor the settlement keeps full detonates for its whole
+    (D/XRL/World/Parts/SolarArray.cs:60-81). The pair is Solar Still's own configuration
+    (SolarArray + Circuitry, no capacitor and no transmission part), so the hall joins no grid
+    and advertises no connection it could not honour - and it carries no Capacitor at all,
+    which is the cheapest possible answer to Capacitor.HandleEvent(BeforeDeathRemovalEvent)
+    detonating a full bank when a raid drops the building.
+  -->
+  <object Name="r_KingdomCondensery" Inherits="Furniture">
+    <stag Name="Contemporary" />
+    <part Name="Render" DisplayName="the condensing hall" RenderString="&#8962;" ColorString="&amp;C" DetailColor="Y" />
+    <part Name="Description" Short="A hall built around one cold face, shuttered by day and thrown open at dusk, with the whole roof turned to catching what the stone gives up. The keepers took a dead still apart to learn it and never put that one back together." />
+    <part Name="LiquidVolume" MaxVolume="1600" Volume="0" />
+    <!-- mean 24 -> 1200/24 = fifty a day. -->
+    <part Name="LiquidProducer" Liquid="water" VariableRate="16-32" FillSelfOnly="true" ChargeUse="0" IsEMPSensitive="false" IsTechScannable="false" />
+    <part Name="SolarArray" ChargeRate="10" IsEMPSensitive="false" IsTechScannable="false" />
+    <part Name="Circuitry" IsEMPSensitive="false" IsTechScannable="false" NameForStatus="Sluice Gearing" />
+    <part Name="Physics" Takeable="false" Weight="50000" />
+    <stat Name="Hitpoints" Value="1200" />
+    <stat Name="AV" Value="16" />
+    <property Name="DontWarnOnOpen" Value="true" />
+  </object>
   <object Name="r_KingdomCisternVault" Inherits="Furniture">
     <stag Name="Contemporary" />
     <part Name="Render" DisplayName="vaulted cistern court" RenderString="O" ColorString="&amp;B" DetailColor="W" />
-    <part Name="Description" Short="A stone lid over six hundred drams and a hatch with a lock everybody has the key to. Cool enough down there to keep a body from going off, which has been tried." />
-    <part Name="LiquidVolume" MaxVolume="640" Volume="0" />
+    <part Name="Description" Short="A stone lid over seven hundred drams and a hatch with a lock everybody has the key to. Cool enough down there to keep a body from going off, which has been tried." />
+    <part Name="LiquidVolume" MaxVolume="768" Volume="0" />
     <part Name="Physics" Takeable="false" Weight="6000" />
-    <stat Name="Hitpoints" Value="400" />
+    <stat Name="Hitpoints" Value="500" />
   </object>
   <object Name="r_KingdomReservoir" Inherits="Furniture">
     <stag Name="Contemporary" />
     <part Name="Render" DisplayName="reservoir" RenderString="&#8776;" ColorString="&amp;B" DetailColor="C" />
-    <part Name="Description" Short="Open water inside your own wall, lined with dressed stone and edged with a low kerb. Children are told not to, and do anyway." />
-    <part Name="LiquidVolume" MaxVolume="1600" Volume="0" />
+    <part Name="Description" Short="Open water inside your own wall, lined with dressed stone and edged with a low kerb. Every dram in it was carried or channelled here by somebody; it is a held thing, not a found one. Children are told not to, and do anyway." />
+    <part Name="LiquidVolume" MaxVolume="1920" Volume="0" />
     <part Name="Physics" Solid="false" Takeable="false" Weight="20000" />
-    <stat Name="Hitpoints" Value="600" />
+    <stat Name="Hitpoints" Value="700" />
   </object>
   <object Name="r_KingdomWaterworks" Inherits="Furniture">
     <stag Name="Contemporary" />
     <part Name="Render" DisplayName="the waterworks" RenderString="O" ColorString="&amp;C" DetailColor="B" />
-    <part Name="Description" Short="Cistern, court, and channel, all one thing, and a keeper whose entire trade is knowing which valve. The founder was elsewhere the day it was finished, and the chronicle says so in both registers." />
-    <part Name="LiquidVolume" MaxVolume="4000" Volume="0" />
+    <part Name="Description" Short="Cistern, court, and channel, all one thing, and a keeper whose entire trade is knowing which valve. It makes not one dram: everything that goes through it came off the works upcountry or out of somebody's arms. The founder was elsewhere the day it was finished, and the chronicle says so in both registers." />
+    <part Name="LiquidVolume" MaxVolume="4608" Volume="0" />
     <part Name="Physics" Takeable="false" Weight="60000" />
     <stat Name="Hitpoints" Value="1000" />
   </object>
@@ -594,12 +749,30 @@
   </object>
   <object Name="r_KingdomWaterWheel" Inherits="Furniture">
     <part Name="Render" DisplayName="settlement water wheel" RenderString="21" ColorString="&amp;w" Tile="Items/sw_waterwheel_1.bmp" TileColor="&amp;w" DetailColor="y" />
-    <part Name="Description" Short="Paddles the settlement cut and lashed itself, set where the water already runs. Somebody greases the shaft each morning and pulls the weed off the buckets. That is the whole of the work, and it is somebody's." />
+    <part Name="Description" Short="Paddles the settlement cut and lashed itself, standing in a race they dug under it and lined with clay. Nobody drinks out of that race. Somebody greases the shaft each morning and pulls the weed off the buckets. That is the whole of the work, and it is somebody's." />
     <part Name="r_KingdomPowerWork" Source="Water" />
     <!-- Vanilla's own numbers, matched on purpose: KingdomPowerRules.HydraulicMinimumDrams and
          HydraulicRatedDrams are these two figures, so the wheel's operational state and the
          settlement's report never disagree in front of the player. -->
     <part Name="HydroTurbine" MinimumEffectiveVolume="400" MaximumEffectiveVolume="4000" MaximumChargeRate="10" IsTechScannable="false" />
+    <!-- The millrace, and the reason the wheel turns at all. HydroTurbine sums the LiquidVolume
+         of its own and adjacent cells and reports "HydrodynamicForceInsufficient" below
+         MinimumEffectiveVolume (D/XRL/World/Parts/HydroTurbine.cs:84,112-124), so a wheel raised
+         on dry ground never runs. Vanilla's own Wooden Water Wheel answers that by carrying
+         SpawnWithLiquid (B/ObjectBlueprints/Furniture.xml:1083) and ours did not, which made the
+         catalogue's "raise it beside open water" a silent failure rather than a siting rule.
+
+         SaltyWaterPuddle is vanilla's default and it is the right one twice over: 500 drams is
+         over the 400 the turbine wants, so the wheel runs off its own tailrace; and the puddle
+         is water-600,salt-400, which KingdomLiquids.HasFreshWater refuses, so KingdomSurvey
+         never counts a dram of it as OpenWater and the water detail can never haul it. The
+         wheel brings a millrace, not a water supply.
+
+         AdjacentPoolChance="0" against vanilla's 25: SpawnWithLiquid's adjacent roll would put
+         puddles on cells the settlement did not clear and does not own. Spawn() also skips
+         entirely when the cell already holds an open volume (:53-55), so a wheel the founder
+         DID site on a real brook still takes the brook and adds nothing. -->
+    <part Name="SpawnWithLiquid" LiquidObject="SaltyWaterPuddle" AdjacentPoolChance="0" />
     <part Name="MechanicalPowerTransmission" ChargeRate="100" IsProducer="true" IsTechScannable="false" />
     <part Name="Circuitry" MaxCharge="100" IsEMPSensitive="false" IsTechScannable="false" NameForStatus="Gearbox" />
     <part Name="AnimatedMaterialGeneric" AnimationLength="300" TileAnimationFrames="0=default,100=Items/sw_waterwheel_2.bmp,200=Items/sw_waterwheel_3.bmp" RequiresOperationalActivePart="HydroTurbine" />

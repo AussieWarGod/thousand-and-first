@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <populations>
   <!--
     Who actually turns up. A settlement of identical figures reads as a barracks,
@@ -69,9 +69,24 @@
     <object Blueprint="Torchpost" Number="1" Weight="25" />
     <object Blueprint="r_KingdomBench" Number="1" Weight="15" />
   </population>
+  <!--
+    The water table furnishes with VESSELS and never with producers, and that is deliberate. A
+    water design's Carries figure is derived from its own LiquidProducer (ObjectBlueprints.xml,
+    the water works block), so a furnishing that also produced would put more in the casks than
+    the ledger ever counted. Catchbasin is vanilla's own stoneware collector - the thing an Air
+    Well deploys beside itself - with StartVolume="0", 64 drams, Collector="true"; anything on a
+    finished plot carrying a LiquidVolume is dedicated to the settlement's stores by
+    KingdomPlot2, so a basin is real capacity against the stage gate the moment it lands.
+
+    Village Monument Amphora is the other obvious candidate and is deliberately NOT here: it
+    ships StartVolume="0-32" InitialLiquid="water-1000" (B/ObjectBlueprints/Furniture.xml:5626),
+    so every roll would arrive holding free fresh water. A vessel that arrives full is a
+    producer wearing a vessel's name.
+  -->
   <population Name="r_KingdomFurnishings_Water">
-    <object Blueprint="r_KingdomCaskRack" Number="1" Weight="80" />
-    <object Blueprint="Torchpost" Number="1" Weight="20" />
+    <object Blueprint="r_KingdomCaskRack" Number="1" Weight="55" />
+    <object Blueprint="Catchbasin" Number="1" Weight="30" />
+    <object Blueprint="Torchpost" Number="1" Weight="15" />
   </population>
   <population Name="r_KingdomFurnishings_Civic">
     <object Blueprint="r_KingdomBench" Number="1" Weight="55" />

@@ -40,8 +40,11 @@
   in. water, food, and roof BIND - the level is the least of the three, because a town with
   water for ninety and bread for nine is a town of nine. craft, spirit, learning, order, and
   luxury LIFT - they are summed and then capped at half the binding level, so no quantity of
-  shrines ever outruns the cistern. One point of water is one dram a day sustained, which is
-  one settler's thirst at camp rates.
+  shrines ever outruns the air-well field. One point of water is one dram a day sustained, which
+  is one settler's thirst at camp rates - and it is also a dram that really arrives, because
+  KingdomGrowth banks a water work's Carries into the casks day by day. That double reading is
+  why only a design with a real producer part on its blueprint may declare water at all: see the
+  WATER lane below.
 
   WHO READS THESE NUMBERS. KingdomSubsidence sums Carries over every finished (KingdomBuilt)
   work in the settlement, scaling a crewed work by how well it is actually running, and hands
@@ -52,7 +55,7 @@
 
   "AT CAMP RATES" IS LOAD-BEARING. KingdomRules.UpkeepDrams bills 100/120/150/180/220 per
   hundred by stage, so the water half is divided by that percentage before the level is taken:
-  a cistern carrying eight settlers in a camp carries three in a city. That is why the ladder
+  an air-well court carrying fifteen settlers in a camp carries six in a city. That is why the ladder
   below climbs so steeply on the water side and why every rung is exactly affordable - the
   drams a rung's own population drinks are the drams that carry it. _notes/balance-sim.py Q6
   is that cross-check, and it will say so out loud if a number here stops agreeing with it.
@@ -63,11 +66,14 @@
   house, then the fine house - four separate designs, each with its own tiers, and not one
   design that metamorphoses.
 
-  Removed from this file and not by accident: the solar condenser. Water that arrives with no
-  crew and no fuel is the far end of the autonomy axis, and the far end of that axis is always
-  recovered and certified, never commissioned. The condenser is a machine you drag home from a
-  ruin and have the keepers pass fit for the grid. Dry ground's early answers are the salt-pan,
-  patient collection, and trade - and they are all in here.
+  Not in this file and not by accident: the solar condenser, and any commission that hands a
+  founder water for no crew and no reason. Water that arrives out of nothing is the far end of
+  the autonomy axis, and the far end of that axis is always recovered and certified, never
+  commissioned. Vanilla draws the same line itself with TinkerItem CanBuild, and the water lane
+  keeps to it: everything a founder can ORDER is dew, brine, or a seep in the rock, and the one
+  city work above them is gated on a machine somebody dragged home from a ruin and had the
+  keepers pass fit for the grid. Dry ground's early answers are hauling, the salt-pan, patient
+  collection, and trade - and they are all in here.
 
   Extending this: ship your own KingdomBuildings.xml from your own mod. Re-using a Key
   overrides that entry entirely, skins and all, so retheming the base catalogue is a supported
@@ -181,27 +187,67 @@
             Materials="stone:78,shapedstone:12,timber:36,scrap:12" Carries="roof:40,luxury:2" Contents="r_KingdomFurnishings_Dwelling" />
 
   <!-- ======================================================================== WATER ==
-    There are no wells. New water comes from patient collection, from the salt-pan, from
-    trade, or from great machinery hauled home and certified - never from a hole in the
-    ground, because in Qud water is money and nothing mints money quietly.
+    There are no wells, and there is no rain either. Qud has no precipitation system at any
+    level - Zone.CheckWeather rolls wind and nothing else - so nothing in this lane may say
+    that water falls. New water comes from dew condensed out of cold night air, from brine
+    evaporated down in a pan, from a seep tapped in the rock, from trade, or from a machine
+    hauled home and certified. It never comes from a hole in the ground and it never comes
+    from the sky, because in Qud water is money and nothing mints money quietly.
 
-    Two lanes open at camp and they are honestly different. The catchment wants weather and
-    no crew; the salt-pan wants a crew and no weather, which is why it is the answer on dry
-    ground and the only water work that goes underground. Everything above them stores
-    rather than makes: a cistern raises the sustainable level because it carries the
-    settlement across the dry stretch, not because it conjures a dram.
+    STORAGE STORES; PRODUCERS PRODUCE; THEY ARE NOT THE SAME BUILDING. A cistern, a reservoir
+    and the waterworks declare no `water` at all now. They used to, and it was the largest
+    unearned claim in this file: `Carries="water:N"` is read BOTH as N settlers carried and as
+    N drams a day arriving in the casks (KingdomGrowth banks Supports(survey).Water x days), so
+    a vessel declaring it was quietly conjuring the water it claimed to be holding. What a
+    store is paid in instead is capacity, and capacity is not a consolation prize:
+    KingdomRules.StageFor gates Steading / Village / Town / City on 16 / 64 / 256 / 1024 drams
+    of dedicated storage, and KingdomRules.FetchableDrams is clamped by the room left in those
+    same vessels. A settlement with nowhere to put water cannot haul any and cannot grow.
+
+    A store's SIZE is not free either, which is why the cistern court still holds 256 and not
+    twice that. A holed store leaks its own capacity to the ground over fifty days
+    (KingdomWearRules.LeakDaysToEmptyAtCeiling), so every vessel here is sized to keep that
+    daily loss under the drinking bill of the rung it opens at. Storage got cheaper in this
+    lane rather than bigger: what it stopped claiming, it stopped charging for.
+
+    PRODUCTION IS NOT IMMEDIATELY ACCESSIBLE, and that is the shape of the early game. NOTHING
+    in this lane opens at Camp. A camp drinks what the founder brought, what the water detail
+    hauls out of the site's own finite pools (fetch mints nothing - it moves water that was
+    already standing there), and what a charter pays in. The first producer opens at Steading,
+    which wants five settlers and sixteen drams of dedicated storage before it will open at
+    all, and it wants stone or timber off cleared ground on top of that. The camp costs water.
+    That is the point of the camp.
+
+    THE NUMBERS ARE DERIVED, NOT ASSERTED. Every producer blueprint carries vanilla's own
+    LiquidProducer, whose Rate is turns per dram; KingdomRules.TicksPerDay is 1200; and for
+    every design below, Carries="water:N" is exactly 1200 / mean(VariableRate). Stand next to
+    one and count. The full derivation, and the FillSelfOnly invariant that stops a producer
+    minting the same dram twice through an open puddle, is in ObjectBlueprints.xml.
+
+    Three lanes open and they are honestly different, which is the whole of the siting game.
+    The dew lane wants open sky and no crew and refuses to go underground. The salt-pan wants a
+    crew and a flat sunlit bed and goes anywhere. The weep-tap wants rock to cut into and a
+    crew to keep the cut open, and it is the answer for a settlement that lives under the
+    ground. Above all three sits one city work, and it is behind a machine somebody dragged
+    home from a ruin.
   -->
   <building Key="saltpan" DisplayName="salt-pan (slow, salty work; a little fresh water and the salt it was hiding)" Blueprint="r_KingdomSaltPan"
-            Cost="4" Ticks="1800" Styles="all" Category="storage" Plot="S" Open="yes"
+            Cost="5" Ticks="1800" Styles="all" Category="storage" Plot="S" Open="yes" MinStage="Steading"
             Materials="stone:4" Staff="1" Manning="scaled" Carries="water:2"
             UpgradesTo="saltterrace" />
   <building Key="saltterrace" DisplayName="salt-pan terrace (pans stepped down a slope, worked in shifts)" Blueprint="r_KingdomSaltTerrace"
-            Cost="9" Ticks="2400" Styles="all" Category="storage" Plot="S" Open="yes"
+            Cost="10" Ticks="2400" Styles="all" Category="storage" Plot="S" Open="yes" MinStage="Steading"
             Materials="stone:10" Staff="1" Manning="scaled" Carries="water:4"
             Knowledge="origin:the salt marshes" />
 
-  <building Key="catchment" DisplayName="dew catchment (canvas, gutters, and patience)" Blueprint="r_KingdomCatchment"
-            Cost="8" Ticks="1800" Styles="all" Category="storage" Plot="S"
+  <!--
+    The dew lane. Sky="yes" is a SITING rule and never a weather read - it says this work wants
+    the open night over it and so refuses to go underground. Vanilla's Air Well is the pattern
+    end to end: Tier 1, no power connection of any kind, and a description that says in as many
+    words that what it catches is dew condensing on cold stone.
+  -->
+  <building Key="catchment" DisplayName="dew catchment (canvas, gutters, and a cold night)" Blueprint="r_KingdomCatchment"
+            Cost="8" Ticks="1800" Styles="all" Category="storage" Plot="S" MinStage="Steading"
             Sky="yes" Materials="timber:6,scrap:2" Carries="water:3" Contents="r_KingdomFurnishings_Water"
             UpgradesTo="catchmentbank">
     <skin Key="tin" ColorString="&amp;w" DetailColor="W" />
@@ -209,30 +255,79 @@
     <skin Key="eater" Style="eater" ColorString="&amp;r" DetailColor="w" />
   </building>
   <building Key="catchmentbank" DisplayName="catchment bank (a whole roofline turned to the purpose)" Blueprint="r_KingdomCatchmentBank"
-            Cost="14" Ticks="2400" Styles="all" Category="storage" Plot="S"
+            Cost="14" Ticks="2400" Styles="all" Category="storage" Plot="S" MinStage="Steading"
             Sky="yes" Materials="timber:10,stone:6,scrap:4" Carries="water:5" Contents="r_KingdomFurnishings_Water" />
 
+  <building Key="airwellcourt" DisplayName="air-well court (domes of carved stone, and what the night gives back)" Blueprint="r_KingdomAirWellCourt"
+            Cost="32" Ticks="4800" Styles="all" Category="storage" Plot="M" MinStage="Village"
+            Sky="yes" Materials="stone:24,shapedstone:4,scrap:6" Carries="water:15" Contents="r_KingdomFurnishings_Water"
+            Provides="taf:damp">
+    <skin Key="tin" ColorString="&amp;w" DetailColor="W" />
+    <skin Key="fulcrete" ColorString="&amp;W" DetailColor="c" />
+  </building>
+  <building Key="airwellfield" DisplayName="air-well field (rank on rank of them, and gutters running downhill)" Blueprint="r_KingdomAirWellField"
+            Cost="52" Ticks="7200" Styles="all" Category="storage" Plot="L" MinStage="Town"
+            Districts="agrarian,craft"
+            Sky="yes" Materials="stone:56,shapedstone:10,scrap:12" Carries="water:25" Contents="r_KingdomFurnishings_Water" Provides="taf:damp" />
+
+  <!--
+    The underground lane, and the only water production a settlement under the ground can raise
+    (the salt-pan goes down there too, but a pan wants sun it will never get). The vanilla
+    pattern is the water weep - a lichen carrying the LiquidFont mutation, which is exactly how
+    every indefinite underground water source in Qud works. These tap one and case it. Crewed,
+    both rungs: a weep left alone closes over.
+  -->
+  <building Key="weeptap" DisplayName="weep-tap (a damp seam, followed back and cased in stone)" Blueprint="r_KingdomWeepTap"
+            Cost="10" Ticks="2400" Styles="all" Category="storage" Plot="S" MinStage="Steading"
+            Materials="stone:8,scrap:2" Staff="1" Manning="scaled" Carries="water:4"
+            Contents="r_KingdomFurnishings_Water" />
+  <building Key="weepgallery" DisplayName="weep gallery (the whole seam worked, propped, and drained)" Blueprint="r_KingdomWeepGallery"
+            Cost="26" Ticks="4800" Styles="all" Category="storage" Plot="M" MinStage="Village"
+            Materials="stone:22,shapedstone:4,scrap:6" Staff="1" Manning="scaled" Carries="water:12"
+            Contents="r_KingdomFurnishings_Water" Provides="taf:damp" />
+
+  <!--
+    Storage, from here down. None of these declares a dram of `water`, and the cistern court is
+    where a founder learns why: it is the building that lets the water detail keep what it
+    hauled, and the building that opens the next rung, and it has never made a drop.
+  -->
   <building Key="cistern" DisplayName="cistern court (holds 256 drams, and everyone can hear when it rings hollow)" Blueprint="r_KingdomGreatCistern"
-            Cost="20" Ticks="3600" Styles="all" Category="storage" Plot="M" MinStage="Steading"
-            Materials="stone:20,scrap:6" Carries="water:8" Contents="r_KingdomFurnishings_Water" Provides="taf:damp"
+            Cost="16" Ticks="3600" Styles="all" Category="storage" Plot="M" MinStage="Steading"
+            Materials="stone:20,scrap:6" Contents="r_KingdomFurnishings_Water" Provides="taf:damp"
             UpgradesTo="cisternvault">
     <skin Key="tin" ColorString="&amp;B" DetailColor="C" />
     <skin Key="fulcrete" ColorString="&amp;w" DetailColor="W" />
     <skin Key="verdigris" ColorString="&amp;G" DetailColor="C" />
   </building>
-  <building Key="cisternvault" DisplayName="vaulted cistern court (holds 640 drams under a stone lid)" Blueprint="r_KingdomCisternVault"
-            Cost="34" Ticks="4800" Styles="all" Category="storage" Plot="M" MinStage="Village"
-            Materials="stone:38,scrap:10" Carries="water:18" Contents="r_KingdomFurnishings_Water" Provides="taf:damp" />
+  <building Key="cisternvault" DisplayName="vaulted cistern court (holds 768 drams under a stone lid)" Blueprint="r_KingdomCisternVault"
+            Cost="26" Ticks="4800" Styles="all" Category="storage" Plot="M" MinStage="Village"
+            Materials="stone:38,scrap:10" Contents="r_KingdomFurnishings_Water" Provides="taf:damp" />
 
-  <building Key="reservoir" DisplayName="reservoir (open water inside your own wall)" Blueprint="r_KingdomReservoir"
-            Cost="48" Ticks="7200" Styles="all" Category="storage" Plot="L" Open="yes" MinStage="Town"
+  <building Key="reservoir" DisplayName="reservoir (open water inside your own wall, and every dram of it carried there)" Blueprint="r_KingdomReservoir"
+            Cost="36" Ticks="7200" Styles="all" Category="storage" Plot="L" Open="yes" MinStage="Town"
             Districts="agrarian,market" MinZones="3"
-            Materials="stone:60" Carries="water:26" Provides="taf:openwater,taf:damp" />
+            Materials="stone:60" Carries="luxury:2" Provides="taf:openwater,taf:damp" />
 
   <building Key="waterworks" DisplayName="the waterworks (cistern, court, and channel, all one thing)" Blueprint="r_KingdomWaterworks"
-            Cost="100" Ticks="12000" Styles="all" Category="storage" Plot="XL" MinStage="City"
+            Cost="72" Ticks="12000" Styles="all" Category="storage" Plot="XL" MinStage="City"
             Districts="market,craft" MinZones="4" MinTech="workshop"
-            Materials="stone:100,shapedstone:16,scrap:30,workedmetal:10,marble:8" Bits="0034" Exotics="ingot:1" Carries="water:52,luxury:2" Contents="r_KingdomFurnishings_Water" />
+            Materials="stone:100,shapedstone:16,scrap:30,workedmetal:10,marble:8" Bits="0034" Carries="luxury:2" Contents="r_KingdomFurnishings_Water" />
+
+  <!--
+    The city rung, and the one water design in the catalogue that is not commissioned out of
+    what the ground gave back. Vanilla draws its own commissionable/recoverable line with
+    TinkerItem CanBuild: the Air Well is Tier 1 and buildable, the Solar Still is Tier 3 and
+    CanBuild="false" - the game saying "you do not make one of these". So the founder does not
+    make one. They drag a dead still home onto claimed ground, the keepers take it apart and
+    pass it fit for the grid (KingdomSalvage.Certify, which is also worth two craft points
+    toward the foundry level this design wants), and what the settlement builds afterwards out
+    of that knowledge is its own. Knowledge="machine:Solar Still" is that gate exactly.
+  -->
+  <building Key="condensery" DisplayName="the condensing hall (one cold face, and the whole roof turned to catching it)" Blueprint="r_KingdomCondensery"
+            Cost="100" Ticks="12000" Styles="all" Category="storage" Plot="XL" MinStage="City"
+            Districts="craft,market" MinZones="4" MinTech="foundry" Knowledge="machine:Solar Still"
+            Sky="yes" Materials="stone:80,shapedstone:16,scrap:30,workedmetal:12,marble:6" Bits="0034" Exotics="ingot:1"
+            Carries="water:50,luxury:1" Contents="r_KingdomFurnishings_Water" Provides="taf:damp" />
 
   <!-- ========================================================================= FOOD ==
     Food binds as hard as water and is quieter about it. The garden is one household's
@@ -241,8 +336,9 @@
     sustainable level and a bumper crop does not.
 
     This is the one lane in the catalogue that never automates. Water and roof each end in
-    a grand design that runs itself - a reservoir holds what falls into it, a court houses
-    whoever walks in - and food does not, because nothing grows itself. Every rung here
+    a grand design that runs itself - an air-well field condenses whether or not anybody is
+    standing in it, a court houses whoever walks in - and food does not, because nothing grows
+    itself. Every rung here
     past the kitchen garden wants somebody standing in it, and the big ones want somebody
     still. What scale buys is a better rate for the hands, never their discharge.
   -->
@@ -294,13 +390,13 @@
     ploughed fields six, a grange nearly nine, the home farm ten. (The granary is off that
     ladder at nine on a single keeper, because it grows nothing - it only refuses to waste
     what came in, which is a cheaper trade than growing and always was.) So a town that has
-    raised its reservoir keeps nobody on the water detail and three people in its fields,
+    raised its air-well fields keeps nobody on the water detail and three people in its fields,
     and a city keeps nobody on the water and eight. That is the handover the catalogue
     promises, stated honestly: hands never leave food; they stop being all of it.
 
     A bad season reaches every large binding work now. KingdomSubsidence scales every
-    work by what it is actually running at (Addendum 10(b)), so a slide that ruins a
-    reservoir costs the city water and one that ruins the home farm costs it dinners -
+    work by what it is actually running at (Addendum 10(b)), so a slide that ruins an
+    air-well field costs the city water and one that ruins the home farm costs it dinners -
     and a city short-handed for any other reason is still short of food first, because
     only food keeps hands. Food is the good that notices staffing. It is meant to be.
   -->
@@ -504,7 +600,16 @@
   <building Key="mill" DisplayName="crank mill (settlers turn it; makes power)" Blueprint="r_KingdomMill"
             Cost="8" Ticks="2400" Styles="all" Category="power" Plot="S"
             Materials="timber:8" Staff="3" Manning="scaled" Carries="craft:1" />
-  <building Key="waterwheel" DisplayName="water wheel (raise it beside open water)" Blueprint="r_KingdomWaterWheel"
+  <!--
+    The wheel digs its own race and it is nearly useless in it, which is the whole of the siting
+    advice. It carries vanilla's SpawnWithLiquid the way vanilla's own Wooden Water Wheel does,
+    so it always turns rather than reporting HydrodynamicForceInsufficient on dry ground - but
+    the race is one 500-dram brackish puddle against KingdomPowerRules.HydraulicRatedDrams of
+    4000, which is two per cent of its rating. Raise it beside a real pool and the same wheel
+    runs at a hundred. Nobody drinks out of the race either: it is water-600,salt-400, which
+    KingdomLiquids.HasFreshWater refuses, so KingdomSurvey never counts a dram of it.
+  -->
+  <building Key="waterwheel" DisplayName="water wheel (it will turn anywhere; it is only worth it beside open water)" Blueprint="r_KingdomWaterWheel"
             Cost="10" Ticks="2400" Styles="all" Category="power" Plot="S" Open="yes" MinStage="Steading"
             Materials="timber:10,scrap:4" Staff="1" Manning="scaled" Carries="craft:2" />
   <building Key="sailvane" DisplayName="sailvane (makes power where the wind blows)" Blueprint="r_KingdomSailvane"

@@ -469,6 +469,73 @@ it exposed.
   ties broken north-then-west, so the same settlement puts its gatehouse in the same place every
   time it's asked, reload included.
 
+### Changed — water is made, or it is carried; nothing conjures it
+
+Addendum 11(a): *"we shouldn't have a random plot that just produces water without any logical
+reason as to why the building on the plot is producing the water."* The survey behind this wave
+(`_notes/VANILLA-PRODUCTION-TRUTH.md`) went looking for the reason and found the hard fact under
+it first: **it does not rain in Caves of Qud.** There is no precipitation system at any level —
+`Zone.CheckWeather` rolls wind and nothing else — so a catchment that filled from rain was
+filling from a weather system the game has never had, and a reservoir that "holds what falls into
+it" was holding nothing. The whole lane is re-grounded on things that do exist.
+
+- **Storage stopped conjuring.** `cistern`, `cisternvault`, `reservoir` and `waterworks` no longer
+  declare `water` at all. This was the largest unearned number in the catalogue and it was worse
+  than a level figure: `Carries="water:N"` is banked as a real daily flow as well, so a vessel
+  declaring it was minting the water it claimed only to be holding. What a store is paid in now is
+  capacity, which is a stage gate in its own right (16 / 64 / 256 / 1024 drams of dedicated storage
+  for Steading / Village / Town / City) and the clamp on how much the water detail may haul — and
+  the four of them got cheaper rather than bigger, because what they stopped claiming they stopped
+  charging for. Vessel sizes are now derived too: a holed store leaks its own capacity over fifty
+  days, so every one is sized to keep that daily loss under the drinking bill of the rung it opens
+  at, and the balance model asserts it rather than describing it.
+- **Every producer's number is derived from its own part.** A design that declares `water` carries
+  vanilla's `LiquidProducer`, and its figure is `KingdomRules.TicksPerDay / mean(VariableRate)` —
+  stand next to one for a day and count the drams, and you get the number in the catalogue. All
+  nine of them are re-derived from the XML on every run of `_notes/balance-sim.py`, which fails if
+  one drifts. Every producer also declares `FillSelfOnly="true"`, without which `LiquidProducer`
+  overflows by creating an open pool the water detail can then haul — the same dram minted twice.
+- **The catchment lane is dew, not rain.** Renamed and rewritten around vanilla's own `Air Well`,
+  which is Tier 1, needs no power of any kind, and says in its own description that what it
+  catches is dew condensing on cold stone. `Sky="yes"` survives as a **siting** rule — this work
+  wants the open night over it — and never as a weather read. Two new rungs continue it: the
+  **air-well court** (middling plot, Village) and the **air-well field** (large plot, Town), which
+  is the staffless 25-drams-a-day work a Town hands its water bill to.
+- **The underground has a water lane of its own.** The **weep-tap** and the **weep gallery** are
+  built on vanilla's water weep — the lichen carrying `LiquidFont`, which is how every indefinite
+  underground water source in the game works. They tap a damp seam and case it, they want a crew
+  because a weep left alone closes over, and they are the answer for a settlement that lives under
+  the rock. (They express the tap with `LiquidProducer` rather than `LiquidFont` itself, because
+  `LiquidFont` wets the floor rather than filling a vessel, and a floor full of fresh puddles is a
+  seep paid for twice.)
+- **The city rung is a certified machine, not a commission.** The **condensing hall** is gated on
+  `MinTech="foundry"` and `Knowledge="machine:Solar Still"`: the founder drags a dead still home
+  onto claimed ground, the keepers pass it fit for the grid, and what the settlement builds out of
+  that knowledge afterwards is its own. Vanilla draws the same line itself with `TinkerItem
+  CanBuild` — the Air Well is buildable, the Solar Still is not — and the catalogue now keeps to
+  it. It carries a real `SolarArray` and `Circuitry`, which is `Solar Still`'s own configuration.
+- **Nothing in the water lane opens at Camp.** The salt-pan and the dew catchment moved up to
+  Steading. A camp drinks the stock the founder arrived with, what the detail hauls out of the
+  site's own finite pools — which do not refill, and which count only if they are *pure* water —
+  and what a charter pays in. The first producer is a thing you earn at five settlers and sixteen
+  drams of storage. The camp costs water; that is the point of the camp.
+- Every rung is still holdable by both a cheap plan and a grand one, and the balance model
+  asserts that too rather than reporting it. Steading's grandest actually holds more than it did
+  (8 against 6); Town holds the same 26; City slips from 70 to 68.
+
+### Fixed — the water wheel stood still
+
+`r_KingdomWaterWheel` carried vanilla's `HydroTurbine` but not the `SpawnWithLiquid` that vanilla's
+own `Wooden Water Wheel` carries beside it. `HydroTurbine` sums the liquid in its own and adjacent
+cells and reports `HydrodynamicForceInsufficient` under 400 drams, so a wheel raised anywhere but
+on standing water reported nothing but that failure, forever, with the catalogue's own display name
+as the only hint. It now digs itself a race the way vanilla's does — one 500-dram brackish puddle,
+`AdjacentPoolChance="0"` so it never wets ground the settlement did not clear. The wheel turns
+anywhere now, at about two per cent of its rating, and siting it beside real water is worth a
+hundred: a badly sited wheel fails visibly and by degree instead of silently and absolutely.
+Nobody drinks out of the race either — it is a salt mixture, and the settlement's survey counts
+only pure water — so the fix mints not one dram.
+
 ### Added — the ceremonies everybody attends, and the numbers that were being thrown away
 - **Every building is raised with a ceremony now, not four of fifty-seven.** A house, a field, a
   larder or a temple finishing while you stand there gathers whoever is nearby, shares a measure

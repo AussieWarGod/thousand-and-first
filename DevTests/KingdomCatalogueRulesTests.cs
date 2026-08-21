@@ -362,8 +362,15 @@ namespace ThousandAndFirst.Tests
 			{
 				Entry("tent", KingdomPlotRules.PlotSize.Small, GrowthStage.Camp, "housing", "roof:2", 3, Successor: "hut"),
 				Entry("hut", KingdomPlotRules.PlotSize.Small, GrowthStage.Camp, "housing", "roof:3", 6, Materials: "timber:6,mud:2"),
-				Entry("catchment", KingdomPlotRules.PlotSize.Small, GrowthStage.Camp, "storage", "water:3", 8),
-				Entry("cistern", KingdomPlotRules.PlotSize.Medium, GrowthStage.Steading, "storage", "water:8", 20),
+				// Mirrors the shipped water lane after Addendum 11(a): the producer declares the
+				// water and the vessel declares nothing, and a staffless design carrying nothing
+				// is deliberately NOT a finding (only a CREWED one that carries nothing is).
+				// `larder` is here because storage now opens above Camp on the water side, and
+				// the whole-catalogue check wants every category within a camp's reach - which is
+				// exactly the arrangement the shipped file has.
+				Entry("larder", KingdomPlotRules.PlotSize.Small, GrowthStage.Camp, "storage", "food:2", 4),
+				Entry("catchment", KingdomPlotRules.PlotSize.Small, GrowthStage.Steading, "storage", "water:3", 8),
+				Entry("cistern", KingdomPlotRules.PlotSize.Medium, GrowthStage.Steading, "storage", null, 16),
 				Entry("palisade", KingdomPlotRules.PlotSize.None, GrowthStage.Camp, "defense", null, 6, Defence: 3)
 			};
 			List<CatalogueFinding> findings = KingdomCatalogueRules.Validate(entries, new List<string> { "common" });

@@ -70,6 +70,29 @@ Ship a `KingdomBuildings.xml` in your mod root:
   unbuildable, so there will never be a sixth. Omitting the attribute adds nothing to the level,
   which is correct for a wall.
 
+  **`water` is read twice, so declare it only on a design that makes water.** A water point is
+  both a settler carried *and* a dram a day arriving in the casks: `KingdomGrowth` banks
+  `KingdomSubsidence.Supports(survey).Water x days` on its own checkpoint, so a design declaring
+  `Carries="water:8"` really does put eight drams a day into the settlement's stores whether or
+  not anyone is watching. That makes it a **minting** attribute, and it is why the shipped
+  catalogue's cisterns, reservoir and waterworks declare no `water` at all:
+
+  > A design that declares `water` carries a real producer part on its blueprint — vanilla's
+  > `LiquidProducer` — and its figure is `1200 / mean(VariableRate)`, which is
+  > `KingdomRules.TicksPerDay` divided by turns-per-dram. A design that only *holds* water
+  > declares no `water`; it is paid in `LiquidVolume MaxVolume`, which is a stage gate
+  > (16 / 64 / 256 / 1024 drams of dedicated capacity for Steading / Village / Town / City) and
+  > the clamp on how much the water detail may haul.
+
+  Nothing enforces this at load — a third-party catalogue may declare what it likes — but a
+  vessel that declares `water` is conjuring it, and there is no rain in Qud to conjure it from.
+  Give any producer you write `FillSelfOnly="true"`: without it `LiquidProducer` overflows by
+  creating an open `Water` object in its cell, which `KingdomSurvey` then counts as a pool the
+  water detail can haul, and the same dram is minted twice. Size a vessel so that its capacity
+  divided by `KingdomWearRules.LeakDaysToEmptyAtCeiling` (50) stays under the daily drinking
+  bill of the rung it opens at — a holed store leaks at exactly that rate, and one that
+  out-leaks its rung makes a single lost rung fatal.
+
 The whole merged catalogue is validated once, on load: a dangling `UpgradesTo`, a chain that rings,
 an improvement onto a larger plot, a footprint larger than the plot it stands on, a defence
 rating on a design that also claims a plot, and a
@@ -127,10 +150,11 @@ A charter may carry material as well as water, per caravan:
           Cost="16" Ticks="3000" Plot="M" MinStage="Steading" Open="yes"
           Materials="stone:14,timber:6" Staff="2" Refines="shapedstone" />
 
-<building Key="waterworks" DisplayName="the waterworks" Blueprint="r_KingdomWaterworks"
+<building Key="condensery" DisplayName="the condensing hall" Blueprint="r_KingdomCondensery"
           Cost="100" Ticks="12000" Plot="XL" MinStage="City"
-          Materials="stone:100,shapedstone:16,workedmetal:10"
-          Bits="0034" Exotics="ingot:1" />
+          MinTech="foundry" Knowledge="machine:Solar Still"
+          Materials="stone:80,shapedstone:16,workedmetal:12"
+          Bits="0034" Exotics="ingot:1" Carries="water:50" />
 ```
 
 | Attribute | What it wants |
@@ -211,7 +235,7 @@ everything the old work held and everything the founder had marked on it across.
 
 ```xml
 <building Key="cistern" DisplayName="cistern court (holds 256 drams)" Blueprint="r_KingdomGreatCistern"
-          Cost="20" Ticks="3600" Styles="all" Category="storage" UpgradesTo="cisternvault" />
+          Cost="16" Ticks="3600" Styles="all" Category="storage" UpgradesTo="cisternvault" />
 ```
 
 | Attribute | Default when absent |
@@ -636,7 +660,13 @@ by a registry. Two parts are the whole contract:
   settlement's power works. `Hands` is worth whatever fraction of its `Staff` the settlement
   crewed it with; `Water` also needs open water in or beside its cell (400 drams to turn at all,
   4000 for full output) and never counts a dedicated cistern; `Wind` reads the zone's own wind.
-  An unknown `Source` disables the work rather than defaulting it.
+  An unknown `Source` disables the work rather than defaulting it. A `Water` work wants vanilla's
+  `<part Name="SpawnWithLiquid" LiquidObject="SaltyWaterPuddle" AdjacentPoolChance="0" />` too —
+  it is what vanilla's own wooden water wheel carries, it digs the work a 500-dram brackish race
+  so the turbine never reports `HydrodynamicForceInsufficient` on dry ground, and because the race
+  is a mixture rather than pure water the settlement can never drink or haul it. 500 drams is two
+  per cent of the rating, so the wheel turns anywhere and is only worth siting beside real
+  standing water.
 - `<part Name="r_KingdomPowerStore" />` on any object that also carries a vanilla `Capacitor`
   makes it a store the settlement pours into and draws back from. Its `MaxCharge` is the capacity;
   set `ChargeRate="0"` and `MinimumChargeToExplode="0"` unless you intend otherwise.

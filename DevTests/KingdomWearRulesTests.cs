@@ -131,22 +131,25 @@ namespace ThousandAndFirst.Tests
 		{
 			int sound = KingdomWearRules.WorkEffectiveness(0, 0, 0);
 			int ruined = KingdomWearRules.WorkEffectiveness(0, 0, KingdomMaterialRules.MaxWearPercent);
-			Assert.Less(ruined, sound, "a ruined reservoir does not carry its full drams");
+			Assert.Less(ruined, sound, "a ruined air-well field does not carry its full drams");
 			Assert.Greater(ruined, 0, "and it is not gone either: a damaged work stands");
 		}
 
 		[Test]
-		public void WorkEffectiveness_TheReservoirCase()
+		public void WorkEffectiveness_TheGrandStafflessWaterWorkCase()
 		{
-			// KingdomBuildings.xml, Key="reservoir": Carries="water:26", no Staff attribute. The
-			// named case the ruling overturned - the grand water design automates to staffless, so
-			// under the old ternary it was the one work a collapse could never touch.
-			const int ReservoirDrams = 26;
-			int sound = KingdomCatalogueRules.Carried(ReservoirDrams, KingdomWearRules.WorkEffectiveness(0, 0, 0));
-			int wrecked = KingdomCatalogueRules.Carried(ReservoirDrams, KingdomWearRules.WorkEffectiveness(0, 0, KingdomMaterialRules.MaxWearPercent));
-			Assert.AreEqual(ReservoirDrams, sound, "a sound reservoir carries every dram it declares");
-			Assert.Less(wrecked, ReservoirDrams, "a half-wrecked reservoir carries fewer");
-			Assert.AreEqual(ReservoirDrams * KingdomMaterialRules.ConditionPercent(KingdomMaterialRules.MaxWearPercent) / 100, wrecked);
+			// KingdomBuildings.xml, Key="airwellfield": Carries="water:25", no Staff attribute.
+			// The named case the ruling overturned - the grand water design automates to
+			// staffless, so under the old ternary it was the one work a collapse could never
+			// touch. It was the reservoir until Addendum 11(a) flipped every store to
+			// storage-only; the work is a producer now and the arithmetic is identical, which is
+			// the point: what a staffless work carries has always been its condition.
+			const int FieldDrams = 25;
+			int sound = KingdomCatalogueRules.Carried(FieldDrams, KingdomWearRules.WorkEffectiveness(0, 0, 0));
+			int wrecked = KingdomCatalogueRules.Carried(FieldDrams, KingdomWearRules.WorkEffectiveness(0, 0, KingdomMaterialRules.MaxWearPercent));
+			Assert.AreEqual(FieldDrams, sound, "a sound air-well field carries every dram it declares");
+			Assert.Less(wrecked, FieldDrams, "a half-wrecked air-well field carries fewer");
+			Assert.AreEqual(FieldDrams * KingdomMaterialRules.ConditionPercent(KingdomMaterialRules.MaxWearPercent) / 100, wrecked);
 		}
 
 		[Test]
@@ -299,6 +302,38 @@ namespace ThousandAndFirst.Tests
 			Assert.AreEqual(1, (int)KingdomWearRules.LeakKind.Water);
 			Assert.AreEqual(2, (int)KingdomWearRules.LeakKind.Charge);
 			Assert.AreEqual(3, (int)KingdomWearRules.LeakKind.Food);
+		}
+
+		[Test]
+		public void Leaked_PricesAHoledCisternAgainstTheRungItOpens()
+		{
+			// The sizing law the whole water lane is built to (Wave G1). A store's declared
+			// MaxVolume is now the whole of what it is paid in - no vessel carries `water` any
+			// more - so nothing stops an author from declaring a vessel ten times the size, and
+			// what stops it is this: a holed store loses its own capacity over
+			// LeakDaysToEmptyAtCeiling, and that daily loss must stay under the drinking bill of
+			// the rung the store opens at. Otherwise one lost rung empties the cushion faster
+			// than the settlement can refill it, which is the death spiral this lane must not
+			// have. Shipped figures: cistern 256 drams at Steading (five settlers), cistern vault
+			// 768 at Village (twelve), reservoir 1920 at Town (twenty-five), waterworks 4608 at
+			// City (fifty).
+			(int Capacity, int Population, GrowthStage Stage)[] shipped = new[]
+			{
+				(256, 5, GrowthStage.Steading),
+				(768, 12, GrowthStage.Village),
+				(1920, 25, GrowthStage.Town),
+				(4608, 50, GrowthStage.City)
+			};
+			foreach ((int capacity, int population, GrowthStage stage) in shipped)
+			{
+				int lostInADay = KingdomWearRules.Leaked(capacity, capacity, KingdomMaterialRules.MaxWearPercent, 1);
+				int bill = KingdomRules.UpkeepDrams(population, stage);
+				Assert.Greater(lostInADay, 0, "a store at the wear ceiling must actually be losing something");
+				Assert.Less(lostInADay, bill,
+					"a " + capacity + "-dram store at " + stage + " leaks " + lostInADay
+						+ " a day against a bill of " + bill + "; a vessel that outruns its rung's "
+						+ "drinking makes one lost rung fatal");
+			}
 		}
 
 		[Test]

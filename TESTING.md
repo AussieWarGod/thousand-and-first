@@ -34,6 +34,9 @@ Say when you're launching so the log watch can run alongside.
 | 13 | Refill water, `kingdom:grow` | Streak resets; arrivals resume |
 | 14 | If the zone has a fresh-water pool: set a water detail (Charter → **The water detail**), then `kingdom:status` before/after `kingdom:grow` | The detail fetches pool water into dedicated containers (stored rises, open falls). With nobody on the detail, nothing is fetched — see 21w |
 | 14a | Put an empty dedicated vessel beside a salty pool, then `kingdom:grow` | No brine is fetched or converted; both volumes remain unchanged, and `kingdom:selftest` reports the mixed-liquid checks PASS |
+| 14b | At **Camp**, Charter → Commission and read the whole list | **Nothing in it makes water.** No salt-pan, no dew catchment: every water producer opens at Steading or above (Addendum 11(a)). A camp drinks the stock you arrived with, what the detail hauls out of the site's own pools, and what a charter pays |
+| 14c | Run a camp with an empty detail and no charter until the casks are dry | It climbs the thirst ladder and stops at the loyal core. That is the intended pressure: the camp **costs** water, and the answer is hands on the detail or a rung up the ladder, never a building |
+| 14d | Reach Steading (5 settlers, 16 drams of dedicated capacity), then Charter → Commission | The water lane opens all at once: salt-pan, salt-pan terrace, dew catchment, catchment bank, weep-tap. The first producer is a thing you **earned**, not a thing you started with |
 
 ## Pass 3 — The rite (no wishes)
 
@@ -397,7 +400,7 @@ anyone.
 
 | Step | Action | Expect |
 |---|---|---|
-| 77 | Grow a Town, raise its reservoir and its terrace, then strike the works that carry it (or let a raid take them). `kingdom:status` | The report names the level and **what binds it**: "carries 26 — water" becomes "carries 9 — food". Nothing has happened yet; the settlement is simply standing above what it carries |
+| 77 | Grow a Town, raise its air-well field and its terrace, then strike the works that carry it (or let a raid take them). `kingdom:status` | The report names the level and **what binds it**: "carries 25 — water" becomes "carries 9 — food". Nothing has happened yet; the settlement is simply standing above what it carries |
 | 77a | Stay put and let four world days pass | The slide begins and says so **once**, naming the binding good and the level it is heading for. It does not repeat, and it does not nag |
 | 77b | Watch it step | One step every four days, shedding (rung + 1) settlers a step — a City sheds five, a Steading two. Every departure names its cause |
 | 77c | Let it cross a rung | The stage falls **one rung per reckoning**, and only on a clear shortfall (20% benefit of the doubt on both of the stage's readings). Each lost rung gets a dated chronicle line — dated to the day it actually happened, not to the day you read it |
@@ -433,10 +436,11 @@ anyone.
 |---|---|---|
 | 79 | Found, dedicate water, leave for a season, come home | **Every day** you were gone is billed, out of the settlement's own stores. Nothing was forgiven and nothing was doubled. The report says what was drunk, delivered and lost |
 | 79a | Do the same with a nearly empty cistern | The thirst ladder runs off the same honest elapsed, and still stops at the loyal core: empty casks and one rung of the ladder, never an empty town |
-| 79b | Raise a reservoir at a Town — it wants no crew — and leave for a season | It **made water while you were gone**: what it carries arrives in the casks day by day, on the same checkpoint discipline fetch uses. The `carries` figure in the status report and the drams actually stored agree |
-| 79c | Compare the water detail against the bill at each rung | A camp wants half its people hauling and a Town over nine tenths, which is where hauling stops being a strategy. Two reservoirs cover a Town's whole bill **for no hands at all**. That is the handover |
+| 79b | Raise an air-well field at a Town — it wants no crew — and leave for a season | It **made water while you were gone**: what it carries arrives in the casks day by day, on the same checkpoint discipline fetch uses. The `carries` figure in the status report and the drams actually stored agree |
+| 79b1 | Raise a **reservoir** instead and leave for the same season | It made **nothing**, and never claimed to. A store holds; the stage gate it opens and the room it gives the detail are what it is for. If a vessel ever appears to make water, that is a bug worth filing |
+| 79c | Compare the water detail against the bill at each rung | A camp wants half its people hauling with nothing it can build to help, and a Town over nine tenths, which is where hauling stops being a strategy. Two air-well fields cover a Town's whole bill **for no hands at all**. That is the handover |
 | 79d | Hold a City on grand works and read who is standing where | Water and roofs want nobody. **Food still wants hands** — a grange takes three, the home farm four — and it is the only binding good whose big works do. Eight settlers of fifty feed the city, and that is the design rather than a gap |
-| 79e | Let a slide ruin a reservoir, then read `kingdom:status` | The Charter's level falls with it: every work now carries at its own condition, crewed or not (Addendum 10(b)), so the reservoir's `carries` figure reads under its catalogue number, not the full one. The roof half is answered separately, by condemnation (78h) |
+| 79e | Let a slide ruin an air-well field, then read `kingdom:status` | The Charter's level falls with it: every work now carries at its own condition, crewed or not (Addendum 10(b)), so the field's `carries` figure reads under its catalogue number, not the full one — and the drams arriving in the casks fall by the same fraction, because the two are one number. The roof half is answered separately, by condemnation (78h) |
 | 79f | Leave a staffed sawyer's yard to run for thirty days | Thirty days of shaping, held to the bench's own daily width — **not** eight units per homecoming. Leave the same yard **unstaffed** for thirty days and it shapes nothing, and says so once |
 | 79g | Leave a scaffold with nobody free to work on it | It does not rise. The shortfall is named once and clears itself the moment hands are free; the raising ceremony still tells attended from absent, because completion is stamped to when the work actually finished |
 | 79h | Leave a holed cistern (wear > 0) alone for a season | It is named **once** when the leak begins ("weeps down its east face, and what it holds runs away into the ground"). What it holds runs out on world days regardless of who is watching, proportional to the days away — lost to the ground, not pooled anywhere a founder can fetch it back |
@@ -464,12 +468,36 @@ to exercise it — this is the verb that reaches it.
 
 | Step | Action | Expect |
 |---|---|---|
-| 82 | Claim ground a stratum down, Charter → Commission | A sky-wanting design (dew catchment, catchment bank, sailvane) carries **[wants open sky]** in the list — the same tag every other blocked gate wears, so the catalogue never silently shortens |
-| 82a | Try to commission one of them anyway | Refused by name: "...wants weather — sun, wind, or rain — and there is none under the rock. Raise it on ground under open sky." |
+| 82 | Claim ground a stratum down, Charter → Commission | A sky-wanting design (dew catchment, catchment bank, air-well court, air-well field, the condensing hall, sailvane) carries **[wants open sky]** in the list — the same tag every other blocked gate wears, so the catalogue never silently shortens |
+| 82a | Try to commission one of them anyway | Refused by name: "The dew catchment wants weather, and there is none under the rock. Raise it under open sky." |
+| 82a1 | Read what IS offered down there instead | The **weep-tap** and the **weep gallery** — the underground water lane, cut into a damp seam rather than hung under the sky — plus the salt-pan, which goes anywhere. A stratum down is a different water game, not a poorer one |
 | 82b | Commission an **Open**-declared design underground instead (a tended plot, a salt-pan terrace) | It stays open: no walls, no door, no floor — a field cut into the rock, not a sealed chamber. It does not count as housing |
 | 82c | Commission a design that declares no `Roof` (defaults Walled) underground | Still carved, exactly as before: the rock is the wall, no wall is raised, clearing costs double, paid back in stone |
 | 83 | Reach **Town**, Charter → Commission → **gatehouse** | It rises astride the road: the buildable frontier cell nearest the settlement's own way out — the same cell `KingdomRoads` already walks a `HeartToGate` errand at — not a random gap in the wall line the way an ordinary wall segment sites |
 | 83a | Strike it and commission another | It returns to the same cell, reload after reload — ties break north-then-west, so the same settlement always puts its gatehouse in the same place |
+
+## Pass 28 — The water lane, re-grounded
+
+Water production is a thing you can now WATCH, and the whole point of this pass is that what
+you can watch and what the ledger counts are the same number. Every producer carries vanilla's
+`LiquidProducer`; a design's `Carries="water:N"` is `1200 / mean(VariableRate)` of that part;
+and no vessel declares water at all.
+
+| Step | Action | Expect |
+|---|---|---|
+| 84 | Raise a **salt-pan** at a Steading and stand beside it for a few hundred turns | Its own basin fills, a dram at a time. `l`ook at it: the pan is a real `LiquidVolume` with water in it, and you can `Fill` a skin from it by hand |
+| 84a | Leave the pan full and keep watching | It **stops**. `FillSelfOnly` makes the producer idle once its own tank is full and pure — a work nobody draws down is a work standing idle, and that reads correctly on the object |
+| 84b | Watch any producer for a whole day (1200 turns) and count the drams it made | It matches the design's `Carries` figure: 2 for the salt-pan, 3 for the dew catchment, 5 for the catchment bank, 4 for the weep-tap, 12 for the weep gallery, 15 for the air-well court, 25 for the air-well field, 50 for the condensing hall. A producer that visibly out-makes or under-makes its catalogue number is a bug worth filing |
+| 84c | Check the ground around any producer after a long watch | **No puddles.** A producer that overflowed onto the floor would mint open water the detail could then haul again — the same dram twice. Every producer fills only itself |
+| 85 | Raise a **cistern court**, a **reservoir**, or the **waterworks**, then read `kingdom:status` | Its `carries` contribution is zero on the water line. It raised **stored capacity** instead, which is what opens the next rung (16 / 64 / 256 / 1024 drams for Steading / Village / Town / City) and what bounds how much the detail may haul |
+| 85a | Raise a reservoir with an empty water detail and no producer, and leave for a season | The casks are as empty as you left them, minus the drinking. A reservoir holds; it has never conjured a dram, and after Addendum 11(a) it no longer claims to |
+| 86 | Reach **Village**, then Charter → Commission | Two new middling rungs: the **air-well court** (domes of carved stone, no crew, wants open sky) and the **weep gallery** (a worked seam, one hand, goes underground). The dew lane and the underground lane are genuinely different answers to the same rung |
+| 86a | Reach **Town** | The **air-well field** — 25 drams a day for no hands, on a large plot in an agrarian or craft quarter |
+| 87 | At **City**, try to commission the **condensing hall** without a certified Solar Still | Refused by name, and the refusal says which knowledge is missing. It is the one water design that is not commissioned out of what the ground gave back |
+| 87a | Drag a Solar Still home onto claimed ground and Charter → certify it, then look again | The gate opens (and certifying is worth two craft points toward the `foundry` level the hall also wants). The keepers took a dead still apart; what they build afterwards is theirs |
+| 88 | Raise a **water wheel** on dry ground | It **turns**. The wheel digs itself a brackish race the way vanilla's own wooden water wheel does, so it never reports `HydrodynamicForceInsufficient` — but `kingdom:status` prices it at about two per cent of its rating |
+| 88a | Try to drink or haul out of that race | Nothing. It is brine (water-600, salt-400), and the settlement's survey counts only pure water. The wheel brings a millrace, not a water supply |
+| 88b | Raise a second wheel beside a real pool and compare | Up to a hundred per cent. Siting is still the whole game; what changed is that a badly sited wheel now fails **visibly and by degree** instead of silently and absolutely |
 
 ## Pass 4 — Attitudes and persistence
 
