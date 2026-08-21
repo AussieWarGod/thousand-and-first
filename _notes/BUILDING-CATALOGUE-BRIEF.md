@@ -893,3 +893,14 @@ Resolution, folding the research's own refinements:
   declared topology at the new ground — announced, never silent.
 - Arcology rung: basic plots built into its design (author), so displaced essentials land
   INSIDE the shell where its floors provide for them.
+
+**HEART RULED (author, 2026-08-22: "ok, that sounds good, lets lock in that plan"):** the
+refined proposal above is the ruling. Build order: rungs 1-4 (growing plot, ghost survey,
+yielding marks, build-over) need no arcology prerequisites — build now; the relocation verb and
+the arcology rung wait for strata/hosted-plot work. Also opened by the author in the same
+breath: (a) DIVERSITY/CUSTOMISATION — buildings, plots, benefits, and TECHNOLOGY TREES varying
+by creed, genotype, race, and Qud-native traits (ideation dispatched, proposal doc to come);
+(b) the BODY-MODIFICATION LAB — late-game exotic building for augmenting with creature parts
+(golem-system precedent, anatomy-slot gating, preservation chain costs, creed friction as
+feature) — endorsed in principle, lands with the tech-tree design; (c) exotic buildings that
+introduce new mechanics and endgame content — per the XL-unlocks-functions ruling.
