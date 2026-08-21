@@ -1,4 +1,4 @@
-# Supported API — The Thousand and First
+﻿# Supported API — The Thousand and First
 
 Everything listed here is a supported contract: it changes only under the versioning rule
 in [STANDARDS.md](../STANDARDS.md) §9 (no removals in a minor release; deprecations marked
@@ -166,8 +166,9 @@ company are the interesting part.
 | `KingdomRules.LarderCapacityTag` / `DefaultLarderCapacity` / `LarderCapacity(int declared)` | How much a dedicated container holds. Declared on the **blueprint**, never in the catalogue. |
 | `KingdomRules.CivicLarderBlueprints` / `IsCivicLarderBlueprint(string)` | Which commissioned designs auto-dedicate as pantries (STANDARDS §7's "commissioned storage auto-flags"). |
 | `KingdomSurvey.FoodStored` / `FoodCapacity` / `FoodSpace` | The food side of `StoredWater` / `StorageCapacity` / `StorageSpace`. `FoodSpace` is **derived** from the other two, so a caller that puts food in by another road cannot leave it stale. |
-| `KingdomSurvey.StoreFood(int, string blueprint)` / `ConsumeFood(int)` / `SpoilFrom(GameObject, int)` / `AdoptLarder(GameObject)` | The food mirrors of `Store` / `Consume` / `LeakFrom`, plus the dedication of a commissioned pantry. All keep the survey's counters in step; all return what actually moved rather than what was asked for. |
-| `KingdomGrowth.FoodMadePerDay(KingdomSurvey)` | What the settlement's works bring in in a day *without growing it* — `KingdomSubsidence.Supports(survey).Food` less `KingdomCrops.CycledFoodPerDay(survey)`, at exactly the effectiveness the level is summed at. A sown field's food is delivered physically by its own cycle instead, so one field feeds the settlement exactly once; an unsown one is already zero here, and not by subtraction. |
+| `KingdomSurvey.StoreFood(int, string blueprint)` / `ConsumeFood(int)` / `ConsumeFood(int, string preferred, out int fromPreferred)` / `ConsumeCrop(string, int)` / `SpoilFrom(GameObject, int)` / `AdoptLarder(GameObject)` | The food mirrors of `Store` / `Consume` / `LeakFrom`, plus the dedication of a commissioned pantry. All keep the survey's counters in step; all return what actually moved rather than what was asked for. The three-argument `ConsumeFood` is the **meal-shaped** draw (below); `ConsumeCrop` is the mill's input half — one named blueprint only, so a mill never grinds the staple it just made. |
+| `KingdomSurvey.Kitchens` | Finished works here carrying vanilla's `Campfire` — the communal fire, and the oven above it. A settlement with none cannot cook, however full its larders are. |
+| `KingdomGrowth.FoodMadePerDay(KingdomSurvey)` | What the settlement's works bring in in a day *without growing it and without grinding it* — `KingdomSubsidence.Supports(survey).Food` less `KingdomCrops.CycledFoodPerDay(survey)` less `KingdomCrops.MilledFoodPerDay(survey)`, at exactly the effectiveness the level is summed at. A sown field's food is delivered physically by its own cycle and a mill's by its own grinding, so each feeds the settlement exactly once; an unsown field is already zero here, and not by subtraction. |
 | `KingdomGrowth.ScarcityEnabled` / `ThirstEnabled` / `HungerEnabled` | One switch (`r_TAF_OptionThirst`) for both binding goods. A founder who turned scarcity off did not ask to keep half of it. |
 
 **The identity the lane is built on.** One point of `food` is one settler fed for one day, and
@@ -202,6 +203,67 @@ however many things are wrong, so a settlement that is dry *and* starving emptie
 the worse of the two alone would. A city may be `Withered` and `Famished` at once and still lose
 exactly one settler for it. Subsidence is untouched underneath both — it is the *structural*
 consequence of standing above what the works carry, and these are the *immediate* one.
+
+### Meals, not ticks — the favoured dish (Addendum 11(b))
+
+The day's rations are the same servings they always were; what changed is that they are now a
+**meal**, drawn in a stated order and worth something afterwards. The whole chain is one thing:
+the fields grow the crop, the mill binds it into the **staple**, the staple is the first
+component of the settlement's own **dish**, and the ration draw reaches for it first.
+
+| Member | Contract |
+|---|---|
+| `KingdomRules.DeriveDish(string realm, string creedRecipe, string crop)` → `FavoredDish` | Pure, total and deterministic. **Creed picks the form, ground picks the body.** `creedRecipe` is the dominant creed faction's own vanilla `WaterRitualRecipe`; `crop` is `KingdomCropRules.CropBlueprintForStyle`. No input is an error — a realm of mixed people eats a stew. |
+| `KingdomRules.DishFormFor(string creedRecipe)` / `DefaultDishForm` | Vanilla's eight favourite dishes → a form word. Every word returned is one of `CookingRecipe.ingredientTileTypes`, which is what gets a derived dish a drawn tile instead of a defaulted one. |
+| `KingdomRules.CropWordFor(string crop)` / `PreservedStapleFor(string crop)` | The crop as an ingredient, and what it becomes when it is bound to keep. Three staples are vanilla's own `PreservableItem Result`; two crops vanilla cannot preserve get mod blueprints that *inherit* the nearest shipped preserve. `PreservedStapleFor` returns null for a crop this build has no staple for, and `KingdomCrops.StapleFor` then falls back to the crop's own `PreservableItem`. |
+| `KingdomRules.DishRecipeType` | `"r_KingdomFavoredDish"` — the one `CookingRecipe` subclass every realm's dish resolves to, in `XRL.World.Skills.Cooking`. It reads its display name and components off `KingdomSystem`, so one class serves every settlement. |
+| `KingdomDish.Ensure(KingdomSystem, bool announce)` | Derives and stamps the dish onto the realm's **`Faction`** (`WaterRitualRecipe`, `WaterRitualRecipeText`) and onto `KingdomSystem`. Idempotent; called at founding and on every settlement pass, so a city whose creed drifts changes what it is known for and says so once. `RecipeGenotype` is deliberately never set — both gates it drives refuse somebody dinner. |
+| `KingdomSystem.DishName` / `DishText` / `DishStaple` / `DishSource` | Realm state, not city state: a realm has one faction however many cities it holds. |
+| `KingdomRules.JudgeMeal(int owed, int fromDish, int fromStores, bool hasKitchen, GrowthStage)` → `MealVerdict` | `None` / `Scraps` / `Plain` / `Favored`. Favoured wants a kitchen standing **and** `FavoredMealPercent` (50%) of the day off the staple. `Scraps` — the larders gave nothing — is only spoken from `ScrapsSpokenFrom` (Village) up, because living off the land *is* what a camp does. |
+| `KingdomRules.MealShadeFor(MealVerdict)` / `FavoredMealShade` | One settler, for exactly one day. Never a penalty at any reading. |
+| `KingdomSystem.MealShade` / `LastMeal` / `ScrapsAnnounced` | Carried by the seat swap like every other city field. `MealShade` is **re-drawn every heartbeat**, never accumulated. |
+| `KingdomSystem.Shade` | What the level actually reads: `NotableShade + MealShade`, each floored. `KingdomSubsidence` reads this rather than either half, so the two can never disagree about which shades count. |
+
+**Why one settler and why one day** — both are vanilla's arithmetic rather than dials. A
+non-player eater's `ProceduralCookingEffect` expires at `StartTick + 1200` ticks and
+`KingdomRules.TicksPerDay` is 1200; only one meal effect stands at a time. So a settlement is
+well fed for the day it ate and no longer, and the lift rides the same term as a notable's shade
+and a shrine's spirit — `KingdomCatalogueRules.LiftCapPercent` binds it again on top.
+
+**The draw order, stated once.** Larder by larder in survey order, item by item in inventory
+order: the staple first, then everything else that is food. Nothing is random, so the same
+larders drained in the same sequence give the same answer on every reload — what Addendum 12(d)
+asks of any draw that lands on containers a founder can open.
+
+### Industry eats food — the mill (Addendum 11(b)/(c))
+
+| Member | Contract |
+|---|---|
+| `KingdomCrops.IsMill(GameObject)` | Asked of the **object**, off vanilla's own `Mill` part, so a third party's millstone counts the moment it declares one. |
+| `KingdomCrops.MilledFoodPerDay(KingdomSurvey)` | What the mills are counted for by the level, at the effectiveness the level counts them at. Subtracted from `FoodMadePerDay` for the same reason a sown field's is: the mill delivers its food physically. |
+| `KingdomCrops.StapleFor(string crop)` | The stated staple, else the crop's own `PreservableItem.Result`, read off a sample. |
+| `KingdomRules.PreserveMultiple` / `MillCropsPerDay` / `MilledGain(int)` / `CropsForGain(int)` | The conversion. **Two crops in, six staples back, a net of four** — which is exactly the grinding mill's declared `Carries="food:4"`. `_notes/balance-sim.py` §G3 asserts that identity against the catalogue XML. |
+| `KingdomRules.MillableStock(int foodStored, int population)` | Everything above one day's rations for everybody living here. **Industry never eats before the residents do**: the grinding runs after the heartbeat has drawn the day, and even then only on the surplus. |
+| `KingdomLedger.Milled` | The gain only. The crops themselves were counted when they were gathered. |
+
+×3 is vanilla's `Vinewafer` → `Vinewafer Sheaf` figure and the **least** of the three numbers this
+mod's crops carry, so the settlement never books more than the thinnest preserve in the game
+actually gives. It is flat across styles for the same reason `CropDaysForStyle` is flat: the
+ground a settlement is founded on is not chosen by the founder.
+
+**The machine and the accounting are different stock, on purpose.** `r_KingdomGrindMill` carries
+the real `Mill`, `Container`, `Inventory` and a `MechanicalPowerTransmission` consumer — the
+first consumer this mod has put on the mechanical grid, so a mill raised beside the settlement
+water wheel is genuinely driven by it. That part grinds the *mill's own inventory* while you are
+standing there, at vanilla's per-crop numbers; the settlement pass grinds the *larders* on the
+settlement's clock. Nothing is counted twice.
+
+**`TeachesDish` — not taken, and why.** The survey lists it as a free carrier (no vanilla
+blueprint uses it). It is a per-*creature* override that sits **above** the faction recipe in
+`WaterRitualCookingRecipe`'s resolution order — so with the faction recipe set, every citizen of
+the realm can already teach the dish, and `TeachesDish` would only let one named cook teach a
+*different* one. That needs the citizen-spawn path and buys nothing this wave asked for. Named
+here as a deliberate omission rather than an oversight.
 
 **Spoilage.** `KingdomWearRules.LeakKind.Food` is Addendum 10(b)'s explicitly deferred third kind
 ("food spoilage waits until food is a flow"), now spent: a damaged larder loses servings on world

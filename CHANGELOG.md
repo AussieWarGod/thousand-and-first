@@ -1,4 +1,4 @@
-# Changelog
+﻿# Changelog
 
 All notable changes to The Thousand and First. Versions are semantic: patch for fixes,
 minor for additive API and content, major for breaking changes. Supported API is defined in
@@ -353,6 +353,65 @@ playtest passes.
   window a homecoming buys is computed the same way everywhere.
 - Guests arrive at the gate and leave again through an absence, and the homecoming says who came,
   who waited, and how long ago.
+
+### Added — meals with a name, and a mill that eats the harvest
+
+Addendum 11(b)'s last clause and 11(c). Food had a beginning and an end and nothing in between:
+the settlement ate an abstract ration tick, and the one design whose whole claim was a
+*transformation* was a glyph with a number on it. Both ends are grounded now, and both in
+vanilla's own machinery rather than beside it.
+
+- **The realm has a favourite dish, and vanilla already had a place to keep one.** A faction
+  declares `<waterritual Recipe=… RecipeText=…/>`, which parses onto plain fields on `Faction`
+  that the faction's own serializer writes and reads — so the runtime faction this mod mints
+  carries its dish across save and load with no persistence of ours. Eight vanilla factions ship
+  one. The realm makes nine.
+- **It is derived, never authored: creed picks the form, ground picks the body.** Your people's
+  dominant creed lends the *shape* they make food in, borrowed from that faction's own vanilla
+  dish; the ground you founded on lends what it is made *of*. People who hold with Joppa, founded
+  in a marsh, are known for **vinewafer matz**; people who hold with the Barathrumites, on flower
+  fields, for **starapple porridge**. Hold with nobody and it is a stew, which is an answer and
+  not a fallback. Every form word is one vanilla's own recipe-tile generator can draw.
+- **A stranger can learn it.** The dish is offered through the water ritual in vanilla's own
+  sentence — *"Would you teach me to cook &lt;realm&gt;'s favorite dish?"* — reputation-priced, and
+  it lands in your journal as a real recipe. If the roll drifts and your people change their minds,
+  the kitchens change with them, and the chronicle says so once.
+- **The communal fire always was a real kitchen; now the settlement knows it.** `Campfire` is the
+  entire cooking system in Qud, and the fire's blueprint has been vanilla's `Campfire` since it
+  shipped. Any finished work carrying that part counts as somewhere to cook. Above it, the
+  **settlement oven** — an upgrade from the fire, a real vanilla `Oven`, with the realm's own dish
+  on its preset meals. Every named settlement in Qud has exactly this: its own oven, its own
+  signature meal.
+- **The daily draw is meal-shaped.** Same servings as before — a meal is a rendering of the ration,
+  not a second bill — but it reaches for the settlement's own **staple** first, larder by larder
+  and item by item in a stated, deterministic order, and then for everything else. A day where a
+  kitchen stood and half the bill came off that staple is the settlement eating its own dish, and
+  it is worth **one more settler for exactly one day**, re-earned every day. Both halves of that
+  are vanilla's arithmetic: a non-player's meal effect lasts 1200 ticks, which is exactly one
+  settlement day, and only one stands at a time. It rides the same capped lift term as a notable
+  and a shrine, so nobody eats their way past their own water.
+- **A city that ate scraps says so, once.** From a Village up: the larders gave nothing and the
+  settlement lived off the ridge. Unsaid the moment it eats out of its own stores again. A Camp
+  living off the land is a Camp working as designed and hears nothing.
+- **The grinding mill is a millstone.** It carries vanilla's own `Mill`, a `Container` you can
+  open, an `Inventory`, and a mechanical-power **consumer** — the first consumer this mod has put
+  on the mechanical grid, so a mill raised beside the settlement water wheel is genuinely driven
+  by it. Hand-feed it and it preserves at vanilla's per-crop numbers while you watch.
+- **And industry eats food.** The settlement's own pass grinds two crops a day out of the larders
+  into six preserved staples — a net of four servings, which is exactly what the design has always
+  declared it carries. What comes back is what went in times three, vanilla's own
+  vinewafer-to-sheaf figure and the thinnest of the three the mod's crops offer, so the mill can
+  never book more than the game itself gives. The staple it makes is the staple the dish is made
+  of: fields, mill and table are one chain.
+- **Residents eat first, always.** The grinding runs after the day's rations are drawn, and even
+  then only on what stands above one more day's bill. A settlement cannot go hungry because its
+  mill was busy. And a mill's food is subtracted from the clocked daily make exactly as a sown
+  field's is, so one millstone feeds the settlement once.
+- Two new preserved staples for the two crops vanilla cannot preserve — **pickled godshroom** and
+  **mashed dreadroot** — each inheriting the nearest shipped preserve, so neither owes new art nor
+  new plumbing. `TeachesDish` was surveyed and deliberately not taken: with the faction recipe set,
+  every citizen already teaches the dish, and the part would only let one named cook teach a
+  different one.
 
 ### Added — seeds, real rows, and a harvest that runs without you
 

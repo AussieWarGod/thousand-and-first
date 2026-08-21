@@ -1,4 +1,4 @@
-# Extending The Thousand and First
+﻿# Extending The Thousand and First
 
 > Adding content? Stay in this file — the XML registries need no code.
 > Writing code against the mod? See [docs/API.md](docs/API.md) for the supported API and its
@@ -405,6 +405,66 @@ real `Harvestable`, so gathering it by hand takes it out of the settlement's sha
 settlement gathers — attended or not, dated, and restamped from the harvest so multiple cycles
 resolve in one reckoning. The harvest lands in a dedicated larder here, or travels to one in
 another of the city's zones, or is lost for want of room, and says which.
+
+### Kitchens, the settlement's dish, and mills (all optional)
+
+**A kitchen is any finished work carrying vanilla's `Campfire` part.** That is not a new
+mechanism — `Campfire` *is* the whole cooking system in Qud, and the communal fire has always
+been one. Merge the part onto your own design and the settlement counts it:
+
+```xml
+<object Name="MyMod_Cookhouse" Inherits="Furniture">
+  <part Name="Campfire" PresetMeals="r_KingdomFavoredDish" />
+</object>
+```
+
+`PresetMeals` naming `r_KingdomFavoredDish` is what lets the founder eat *this realm's own dish*
+at your building, exactly the way every named settlement's oven in vanilla carries its own signature
+meal. Leave `PresetMeals` off and it is still a kitchen for the settlement's purposes and still a
+full cooking site for the player.
+
+**The dish itself is derived, never authored.** The realm's dominant creed picks the *form*
+(borrowed from that faction's own vanilla `WaterRitualRecipe`) and the founding ground picks the
+*body* (the style's crop). It is stamped onto the realm's `Faction.WaterRitualRecipe` and
+`WaterRitualRecipeText`, so it is teachable through the water ritual in vanilla's own frame. A mod
+that adds a style adds the dish with it, by adding to the two switches in `KingdomRules` — there is
+no XML surface for the dish, because there is no choice in it.
+
+**A mill is any finished work carrying vanilla's `Mill` part.**
+
+```xml
+<object Name="MyMod_Quern" Inherits="Furniture">
+  <part Name="Mill" ChargeUse="1" Transformations="Vinewafer,Starapple" />
+  <part Name="MechanicalPowerTransmission" ChargeRate="100" IsConsumer="true" />
+  <part Name="Container" />
+  <part Name="Inventory" />
+  <stag Name="Food" />
+</object>
+```
+
+```xml
+<building Key="quern" DisplayName="hand quern" Blueprint="MyMod_Quern"
+          Cost="18" Ticks="3600" Styles="all" Category="craft" Plot="M" MinStage="Steading"
+          Staff="2" Manning="scaled" Carries="food:4,craft:1" />
+```
+
+| Piece | What it does |
+|---|---|
+| `<part Name="Mill" .../>` | Makes the object a mill. A **blank** transformation target falls through to vanilla's preserve path (a vinewafer becomes three sheaves); a `From:To` target is a straight one-for-one replacement. |
+| `MechanicalPowerTransmission IsConsumer` | Optional, and the reason to want it: a mill on the grid is visibly driven by the settlement's water wheel or crank mill while you are standing there. |
+
+**`Carries="food:N"` is derived here too.** The settlement grinds `KingdomRules.MillCropsPerDay`
+crops a day at `KingdomRules.PreserveMultiple` back, so the honest `N` is
+`MillCropsPerDay × (PreserveMultiple − 1)` — four with the shipped numbers. `_notes/balance-sim.py`
+§G3 asserts it against the catalogue.
+
+Two things worth knowing before you build one:
+
+- **The part and the settlement grind different stock.** The `Mill` part works the mill's *own*
+  inventory while a player is present, at vanilla's per-crop numbers. The settlement pass grinds
+  the *larders*, on the settlement's clock, at the flat mod ratio. Neither counts the other's work.
+- **Industry never eats first.** The grinding runs after the day's rations are drawn and only
+  touches stock above one more day's bill, so a mill can never starve the people who built it.
 
 ### Yard trades: a house's own sideline (all optional)
 

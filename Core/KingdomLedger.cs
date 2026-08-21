@@ -39,6 +39,13 @@ namespace ThousandAndFirst
 		/// <see cref="UpkeepDrawn"/>.</summary>
 		public int RationsDrawn;
 
+		/// <summary>Servings the settlement's mills ADDED this pass by binding a raw harvest into
+		/// something that keeps: what came back out of the millstone less what went into it
+		/// (<c>KingdomGrowth.GrindHarvest</c>). The gain only &mdash; the crops themselves were
+		/// already counted when they were gathered, and counting them twice is exactly the error
+		/// the subtraction in <c>FoodMadePerDay</c> exists to prevent.</summary>
+		public int Milled;
+
 		/// <summary>Servings the fields made with nowhere to keep them. Loss and not transfer:
 		/// there was no larder, or the larders were full, and it was left in the field.</summary>
 		public int HarvestLost;
@@ -98,7 +105,7 @@ namespace ThousandAndFirst
 			get
 			{
 				return Fetched > 0 || UpkeepDrawn > 0 || ArrivalCost > 0 || Delivered > 0 || Plundered > 0 || Arrivals > 0 || Departures > 0
-					|| Harvested > 0 || Foraged > 0 || RationsDrawn > 0 || HarvestLost > 0
+					|| Harvested > 0 || Foraged > 0 || RationsDrawn > 0 || HarvestLost > 0 || Milled > 0
 					|| Notes.Count > 0 || BrinkLines.Count > 0;
 			}
 		}
@@ -110,6 +117,7 @@ namespace ThousandAndFirst
 			ArrivalCost = 0;
 			Delivered = 0;
 			Harvested = 0;
+			Milled = 0;
 			Foraged = 0;
 			RationsDrawn = 0;
 			HarvestLost = 0;
@@ -217,6 +225,11 @@ namespace ThousandAndFirst
 			if (Harvested > 0)
 			{
 				sb.Append(wrote ? ", " : "").Append(Harvested).Append(" gathered into the larders");
+				wrote = true;
+			}
+			if (Milled > 0)
+			{
+				sb.Append(wrote ? ", " : "").Append(Milled).Append(" more won out of the millstone");
 				wrote = true;
 			}
 			if (Foraged > 0)

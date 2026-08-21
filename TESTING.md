@@ -1,4 +1,4 @@
-# The Thousand and First — Test Session Protocol (v0.1.0)
+﻿# The Thousand and First — Test Session Protocol (v0.1.0)
 
 **Dev diagnostics are ON by default** in this build: every kingdom system writes `[TAF]`
 lines to Player.log (toggleable in Options). If anything looks wrong, wish `kingdom:dump`
@@ -514,6 +514,28 @@ and no vessel declares water at all.
 | 88 | Raise a **water wheel** on dry ground | It **turns**. The wheel digs itself a brackish race the way vanilla's own wooden water wheel does, so it never reports `HydrodynamicForceInsufficient` — but `kingdom:status` prices it at about two per cent of its rating |
 | 88a | Try to drink or haul out of that race | Nothing. It is brine (water-600, salt-400), and the settlement's survey counts only pure water. The wheel brings a millrace, not a water supply |
 | 88b | Raise a second wheel beside a real pool and compare | Up to a hundred per cent. Siting is still the whole game; what changed is that a badly sited wheel now fails **visibly and by degree** instead of silently and absolutely |
+
+## Pass 29 — Meals and industry
+
+The food lane's other end. What the settlement grows now becomes a **meal with a name**, and the
+mill is a real machine that eats the harvest and gives back something that keeps. As with the
+water lane, the point is that what you can watch and what the ledger counts are the same thing.
+
+| Step | Action | Expect |
+|---|---|---|
+| 89 | Found a realm, then run `kingdom:dump` | The realm has a **dish** — a name in Qud's own register, derived from your people and your ground: `starapple stew` on ordinary ground with nobody's creed dominant, `vinewafer matz` in a marsh once Joppa's people are the majority |
+| 89a | Water-ritual with any citizen of your own realm | The dish is offered for reputation, in vanilla's own sentence: *"Would you teach me to cook &lt;realm&gt;'s favorite dish?"* Accepting adds a real recipe note to your journal |
+| 89b | Let the roll drift until a different creed dominates, then walk back in | The kitchens change their minds. One line in the ledger and one in the chronicle, said once; the dish's name changes, and the old recipe you already learned is still yours |
+| 90 | Reach **Village** and commission the **settlement oven** (it upgrades from the communal fire) | A real vanilla `Oven`. Walk up and cook at it: **Eat &lt;your dish&gt;** is at the top of the menu, alongside whip-up, cook-from-recipe, preserve, and the nostrum treatments — all of it vanilla's, none of it re-implemented |
+| 90a | Cook at the plain **communal fire** instead | Every cooking action still works. It always did — the fire's blueprint has been vanilla's `Campfire` since it shipped, and what changed this wave is that the settlement *counts* it as a kitchen |
+| 91 | Put a stack of your settlement's **preserved staple** in a dedicated larder (vinewafer sheaves, starapple jam, pickled mushrooms…), then leave for a few days | The ration draw reaches for the staple **first**. `kingdom:status` names the day: the settlement ate its own dish, and the ledger says so with the dish by name |
+| 91a | Read `kingdom:dump` on that visit | `MealShade` is 1 and the supported level is one settler higher. Come back a day later with no staple left and it is 0 again — a settlement is well fed for the day it ate and no longer |
+| 91b | At a Village or above, empty the larders completely and leave for a week | One line, once: the larders gave nothing and the settlement ate what it could find. Fill them and it is unsaid. Do the same at a **Camp** and nothing is said at all — living off the land is what a camp is |
+| 92 | Raise a **grinding mill** at a Steading and `l`ook at it | A real millstone, not a glyph: it has a `Container` you can open and put things in, and it is a mechanical-power **consumer** |
+| 92a | Put a handful of raw crops into the mill's own container and stand there with the mill on a powered gearbox line from a water wheel or crank mill | The stones turn (animated), and the crops become preserves at **vanilla's own per-crop numbers** — a vinewafer gives three sheaves, a starapple five jars, a plump mushroom ten pickles |
+| 92b | Now leave the mill alone, keep crops in the **larders**, and leave for a week | Different stock, different clock: the settlement pass grinds two crops a day out of the larders into six staples, a net of four servings. `kingdom:status` reports it — *"N more won out of the millstone"* |
+| 92c | Run the larders down to about one day's food and leave again | The mill grinds **nothing**. Industry never eats before the residents do: the day's rations are drawn first, and the mill may only touch what stands above one more day's bill |
+| 92d | Compare the settlement's level with and without the mill standing | The mill's `food:4` is counted **once**. It is subtracted from the clocked daily make because it now delivers physically — a mill that fed the settlement twice would be the bug this step exists to catch |
 
 ## Pass 4 — Attitudes and persistence
 

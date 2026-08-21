@@ -473,9 +473,32 @@
     to trade, and - at a town - somewhere to be clean, which turns out to be the thing people
     tell caravans about.
   -->
-  <building Key="fire" DisplayName="communal fire" Blueprint="Campfire"
+  <!--
+    The fire has always been the best-grounded design in this file and nothing said so: its
+    Blueprint is vanilla's own Campfire, and Campfire IS the whole cooking system in Qud
+    (D/XRL/World/Parts/Campfire.cs - cook from a recipe, whip up a meal, choose ingredients,
+    preserve fresh food, treat a wound). A founder has been able to cook at the settlement's fire
+    since the day the design shipped. Now the settlement notices: KingdomSurvey counts anything
+    carrying Campfire as a KITCHEN, and a settlement with no kitchen cannot be said to have eaten
+    its own dish however full its larders are (KingdomRules.JudgeMeal).
+
+    The oven above it is where the dish becomes something the FOUNDER can eat too. Every named
+    settlement in Qud has its own oven with its own signature meal - nine of them ship
+    (B/ObjectBlueprints/Furniture.xml:4520-4585) - and r_KingdomOven is that, with PresetMeals
+    naming the realm's own derived dish instead of a fixed one.
+
+    It is a poor buy on lift alone: two spirit for fourteen drams where the gathering bench gives
+    the same for four. That is deliberate and it is honest - nobody builds an oven for the
+    argument space. They build it so there is something on the table with the settlement's name
+    on it, and that is what the Carries number is NOT measuring.
+  -->
+  <building Key="fire" DisplayName="communal fire (a real cooking site, and always was)" Blueprint="Campfire"
             Cost="2" Ticks="600" Styles="all" Category="civic" Plot="S" Open="yes"
-            Materials="timber:1" Carries="spirit:1" />
+            Materials="timber:1" Carries="spirit:1"
+            UpgradesTo="oven" />
+  <building Key="oven" DisplayName="settlement oven (the dish this place is known for)" Blueprint="r_KingdomOven"
+            Cost="14" Ticks="2400" Styles="all" Category="civic" Plot="S" MinStage="Village"
+            Materials="stone:10,timber:4" Carries="spirit:2" />
   <building Key="bench" DisplayName="gathering ground (benches, and the arguments held on them)" Blueprint="r_KingdomBench"
             Cost="4" Ticks="1200" Styles="all" Category="civic" Plot="S" Open="yes"
             Materials="timber:4" Carries="spirit:2">

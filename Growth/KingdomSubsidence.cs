@@ -21,8 +21,10 @@ namespace ThousandAndFirst
 	/// <c>Carries</c>. A household's yard trade shades the same pools beside the house it belongs
 	/// to (<see cref="Supports"/>); a work's LIFT lands only in proportion to the settlement's
 	/// roofs it reaches (<see cref="ScopedSupports"/>, Addendum 6); and the settlement's named
-	/// notable is worth a small shade of their own (<c>KingdomSystem.NotableShade</c>, from met
-	/// tastes, a leader's virtue net of their flaw, and met <c>Prefers</c>). All three ride the
+	/// settlement is worth a small shade of its own (<c>KingdomSystem.Shade</c>) &mdash; its named
+	/// notable's met tastes, virtue net of flaw and met <c>Prefers</c>, plus whatever the last
+	/// day's eating left behind (<c>KingdomRules.MealShadeFor</c>, Addendum 11(b): a settlement
+	/// that ate its own favourite dish is well fed for exactly one day). All of them ride the
 	/// one lift term inside <c>KingdomCatalogueRules.LiftCapPercent</c>, so none of them can carry
 	/// a settlement past its own water.
 	/// </para>
@@ -417,7 +419,7 @@ namespace ThousandAndFirst
 			KingdomCatalogueRules.SupportTally supports = KingdomSubsidenceRules.CityTally(here, others);
 			int storage = CityStorageCapacity(System, Z, Survey.StorageCapacity);
 			string binding = KingdomSubsidenceRules.BindingSupportFor(supports, System.Stage);
-			int level = KingdomSubsidenceRules.SupportedLevel(supports, System.Stage, System.NotableShade);
+			int level = KingdomSubsidenceRules.SupportedLevel(supports, System.Stage, System.Shade);
 			// Recorded whether or not the slide is allowed to run: the level is knowledge, and a
 			// founder who has turned subsidence off is still owed the number their works carry.
 			System.SupportedLevel = level;
@@ -454,7 +456,7 @@ namespace ThousandAndFirst
 			}
 			KingdomSubsidenceRules.Trajectory trajectory = KingdomSubsidenceRules.Slide(
 				System.Population, System.Stage, storage, supports, elapsedDays, System.SubsidenceAnnounced,
-				System.NotableShade);
+				System.Shade);
 			Say(System, binding, level);
 			if (trajectory.Departed <= 0)
 			{
@@ -503,7 +505,7 @@ namespace ThousandAndFirst
 			// Re-recorded against the rung the slide left, not the one it started from: the water
 			// bill per head fell with the stage, so the level the founder is now looking at is a
 			// different (higher) number from the one the announcement quoted.
-			System.SupportedLevel = KingdomSubsidenceRules.SupportedLevel(supports, System.Stage, System.NotableShade);
+			System.SupportedLevel = KingdomSubsidenceRules.SupportedLevel(supports, System.Stage, System.Shade);
 			System.SubsidenceBinding = KingdomSubsidenceRules.BindingSupportFor(supports, System.Stage);
 			Chronicle(System, Survey, anchor, TimeTicks, from, trajectory);
 			if (KingdomLog.Enabled)

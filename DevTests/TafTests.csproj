@@ -18,6 +18,7 @@
     <Compile Include="SettlementSeatTests.cs" />
     <Compile Include="LarderRulesTests.cs" />
     <Compile Include="KingdomHungerRulesTests.cs" />
+    <Compile Include="KingdomMealRulesTests.cs" />
     <Compile Include="ExileRulesTests.cs" />
     <Compile Include="FoundingPathsRulesTests.cs" />
     <Compile Include="ManifestRulesTests.cs" />

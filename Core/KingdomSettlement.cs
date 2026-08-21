@@ -186,6 +186,29 @@ namespace ThousandAndFirst
 		/// </summary>
 		public int NotableShade;
 
+
+		/// <summary>
+		/// What this settlement's last day's eating was worth to the level, for exactly the day
+		/// it was earned (<c>KingdomRules.MealShadeFor</c>). Re-drawn every heartbeat: a
+		/// settlement that ate its own dish yesterday and scraps today is worth the scraps. Rides
+		/// the same lift term as <see cref="NotableShade"/> and is capped again with it by
+		/// <c>KingdomCatalogueRules.LiftCapPercent</c>, so nobody eats their way past their own
+		/// water. Carried, so a city left mid-feast is still well fed when the founder walks back
+		/// into it.
+		/// </summary>
+		public int MealShade;
+
+		/// <summary>What the settlement's last drawn day of rations actually was
+		/// (<c>KingdomRules.JudgeMeal</c>). Knowledge for the report and the once-flag below;
+		/// <see cref="KingdomRules.MealVerdict.None"/> on a settlement no heartbeat has billed
+		/// yet.</summary>
+		public KingdomRules.MealVerdict LastMeal = KingdomRules.MealVerdict.None;
+
+		/// <summary>STANDARDS 7b's once-flag for a settlement whose larders gave nothing. Set
+		/// when the sentence is said, cleared the moment the settlement eats out of its own
+		/// stores again, so walking away and back does not re-say it.</summary>
+		public bool ScrapsAnnounced;
+
 		public int ShopTier;
 
 		public long LastVisitTick;
@@ -420,6 +443,12 @@ namespace ThousandAndFirst
 			if (NotableShade < 0)
 			{
 				NotableShade = 0;
+			}
+			// The meal shade fails closed the same way and for the same reason: a day's
+			// eating is never a tax, so the worst a bad supper can be worth is nothing.
+			if (MealShade < 0)
+			{
+				MealShade = 0;
 			}
 			// The two scarcity streaks fail closed the same way, and for the same reason: a
 			// negative streak is a corrupt reading, and a ladder cannot owe a settlement rungs.

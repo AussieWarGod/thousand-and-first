@@ -552,10 +552,43 @@
     <part Name="Physics" Takeable="false" Weight="7000" />
     <stat Name="Hitpoints" Value="320" />
   </object>
+  <!-- The one design in the catalogue whose whole claim is a TRANSFORMATION, and until Wave G3 it
+       was a glyph with a Carries number and no parts at all - the exact defect
+       VANILLA-PRODUCTION-TRUTH 6.2 names for it. Addendum 11(c) says extend the real machine, and
+       vanilla has exactly one that grinds: Millstone (B/ObjectBlueprints/Furniture.xml:1015-1043),
+       Tier 2, mechanically powered, Container + Inventory + Mill + <stag Food/>. This is that
+       configuration, at that register, on that tile.
+
+       Mill's transformation list is copied in vanilla's own two shapes. A BLANK target falls
+       through to Butcherable then Campfire.PerformPreserve (D/XRL/World/Parts/Mill.cs:82-101), which
+       is how a vinewafer becomes three sheaves with nothing else declared; the three crops that
+       carry a PreservableItem are listed that way, exactly as Millstone lists its own. The two that
+       carry none - godshroom and dreadroot - get an explicit From:To instead, which ReplaceWith
+       handles (:114), so the machine a founder is standing next to visibly works on every crop this
+       mod can grow.
+
+       MechanicalPowerTransmission IsConsumer is the point of the whole part: it is the first
+       consumer this mod has ever put on the mechanical grid, so a grinding mill raised cardinally
+       adjacent to r_KingdomWaterWheel or a gearbox line off one is genuinely driven by it - the
+       loop VANILLA-PRODUCTION-TRUTH 6.3 says was open (three producers, no consumer). The
+       settlement's own accounting does NOT read the grid: what the mill is worth to the level is
+       its crew and its condition like every other work, and the grid is what makes it turn in front
+       of you. Different stock, too - the part grinds the mill's own inventory
+       (WorksOnInventory, :47-51), the settlement pass grinds the larders. Nothing is counted twice.
+
+       No new art: Items/sw_millstone_1.bmp and its two animation frames are vanilla's, and
+       r_KingdomMill already renders with the first of them. -->
   <object Name="r_KingdomGrindMill" Inherits="Furniture">
     <stag Name="Contemporary" />
-    <part Name="Render" DisplayName="grinding mill" RenderString="&#8745;" ColorString="&amp;w" DetailColor="W" />
+    <stag Name="Food" />
+    <part Name="Render" DisplayName="grinding mill" RenderString="15" ColorString="&amp;y" TileColor="&amp;y" DetailColor="W" Tile="Items/sw_millstone_1.bmp" />
     <part Name="Description" Short="Two stones and a long handle, and a fine grey dust on everything within ten paces. Turns a harvest into something that keeps." />
+    <part Name="MechanicalPowerTransmission" ChargeRate="100" IsConsumer="true" IsTechScannable="false" />
+    <part Name="Mill" ChargeUse="1" Transformations="Vinewafer,Starapple,Plump Mushroom,Godshroom Cap:r_KingdomGodshroomPickle,Dreadroot Tuber:r_KingdomDreadrootMash" />
+    <part Name="AnimatedMaterialGeneric" AnimationLength="300" TileAnimationFrames="0=default,100=Items/sw_millstone_2.bmp,200=Items/sw_millstone_3.bmp" RequiresOperationalActivePart="Mill" ActivePartStatusIgnoreSubject="true" />
+    <part Name="Container" />
+    <part Name="Inventory" />
+    <property Name="DontWarnOnOpen" Value="true" />
     <part Name="Physics" Takeable="false" Weight="5000" />
     <stat Name="Hitpoints" Value="300" />
   </object>
@@ -668,6 +701,29 @@
     <part Name="Description" Short="Split logs worn smooth by sitting. The best arguments of the settlement happen here, and one or two of the marriages." />
     <part Name="Physics" Takeable="false" />
     <stat Name="Hitpoints" Value="80" />
+  </object>
+  <!-- The settlement's kitchen, and the exact vanilla precedent for one: EVERY named settlement in
+       Qud has its own oven carrying its own signature meal - JoppaOven -> AppleMatz,
+       KyakukyaOven -> MushroomCider, GritGateOven -> ThePorridge, and six more
+       (B/ObjectBlueprints/Furniture.xml:4520-4585). A town's oven with a town's dish on it is not
+       an invention; it is how Qud says a place is a place.
+
+       Inherits vanilla Oven, so it IS a real Campfire: the founder can cook from a recipe, whip up
+       a meal, preserve their fresh foods, and treat a wound at it, with nothing here to make any of
+       that work. What is ours is the one attribute - PresetMeals naming the realm's own dish, which
+       resolves through the same Activator.CreateInstance(ModManager.ResolveType("XRL.World.Skills.
+       Cooking." + name)) path every vanilla oven's does (D/XRL/World/Parts/Campfire.cs:203-214).
+
+       No PresetMealMessage tag, unlike the vanilla ovens: theirs name a fixed dish ("Eat fresh apple
+       matz"), and ours is derived per realm, so the menu line falls back to Campfire's own
+       "Eat <recipe display name>" and reads the settlement's own dish out of it.
+
+       No art owed: the tile, the render string and the description come off Oven. -->
+  <object Name="r_KingdomOven" Inherits="Oven">
+    <stag Name="Contemporary" />
+    <part Name="Render" DisplayName="settlement oven" ColorString="&amp;w" DetailColor="R" />
+    <part Name="Description" Short="A domed clay oven with a stone apron swept twice a day, standing where the fire used to be. What comes out of it is the thing strangers end up describing when they try to say where they have been." />
+    <part Name="Campfire" PresetMeals="r_KingdomFavoredDish" />
   </object>
   <object Name="r_KingdomShrine" Inherits="Furniture">
     <stag Name="Contemporary" />
@@ -1057,6 +1113,35 @@
     <part Name="Commerce" Value="30" />
     <part Name="r_KingdomSeed" />
     <tag Name="Tier" Value="3" />
+  </object>
+
+<!-- ======================================================================== STAPLES ==
+       What a harvest becomes when it is bound to keep, and the one blueprint that ties the whole
+       food chain into a single thing: the fields grow the crop, the grinding mill binds it into
+       the staple, the staple is the first component of the settlement's own favourite dish, and
+       the ration draw reaches for it before it reaches for anything else.
+
+       Three of the five crops need nothing from us. Vanilla already declares what they preserve
+       into, on the crop itself: Vinewafer -> Vinewafer Sheaf x3, Starapple -> Starapple Preserves
+       x5, Plump Mushroom -> Pickled Mushrooms x10 (B/ObjectBlueprints/Foods.xml:424,441,457). Two
+       declare no PreservableItem at all, so vanilla's own Millstone can do nothing with them - and
+       that is Addendum 11(c)'s third clause exactly: fill in only where the survey shows vanilla is
+       empty, and do it in vanilla's idiom.
+
+       So these two INHERIT the nearest shipped preserve of their own family rather than being
+       built from nothing. That inheritance carries vanilla's Preservable base (Food Satiation=None,
+       AlwaysStack), its PreparedCookingIngredient - which is what makes KingdomSurvey count them as
+       servings at all - and its already-drawn tile, so neither owes art (STANDARDS 4). Only the
+       name, the colour and the description are ours. -->
+  <object Name="r_KingdomGodshroomPickle" Inherits="Pickled Mushrooms">
+    <part Name="Render" DisplayName="{{o|pickled godshroom}}" ColorString="&amp;o" DetailColor="O" />
+    <part Name="Description" Short="Caps quartered and drowned in brine that went the wrong colour on the second day and has stayed that way. It keeps for years. Nobody has established why." />
+    <part Name="Commerce" Value="8" />
+  </object>
+  <object Name="r_KingdomDreadrootMash" Inherits="Mashed Lag">
+    <part Name="Render" DisplayName="{{K|mashed dreadroot}}" ColorString="&amp;K" DetailColor="w" />
+    <part Name="Description" Short="Boiled twice, drained twice, and pounded flat by somebody who wanted the job over with. Whatever is in a dreadroot that makes you afraid is mostly in the water they threw away." />
+    <part Name="Commerce" Value="14" />
   </object>
 
 <!-- ============================================================================= ROWS ==

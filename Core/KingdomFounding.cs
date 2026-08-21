@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using XRL;
 using XRL.Language;
 using XRL.Rules;
@@ -81,6 +81,13 @@ namespace ThousandAndFirst
 					faction.SetFactionFeeling(other.Name, Reputation.GetFeeling((float)standing));
 				}
 			}
+			// The realm's own favourite dish, in vanilla's own place for one: three plain fields
+			// on the Faction that vanilla's own serializer writes and reads
+			// (D/XRL/World/Faction.cs:72-76,286-288,362). Derived from the ground this rite was
+			// poured on; re-derived later if the people who settle here turn out to hold with
+			// somebody (KingdomDish.Ensure, called from every settlement pass). Silent here: the
+			// founding already has its line, and a realm has no dish to have CHANGED yet.
+			KingdomDish.Ensure(system, Announce: false);
 			// The one civic event that earns a mural. Mural space is capped at sixteen across a
 			// whole life and shared with the player's own history, so the settlement takes exactly
 			// one slot: the founding, which happens once per realm and is what everything else

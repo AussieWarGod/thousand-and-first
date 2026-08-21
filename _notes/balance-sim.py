@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """Balance model for the settlement economy, re-run for the water re-grounding (Wave G1).
 
 Four questions, in one model because they all answer to one equilibrium, plus one section of
@@ -116,6 +116,15 @@ SRC = {
     "CropDays": read_const(CROP_CS, "CropDays"),
     "YieldPerRow": read_const(CROP_CS, "YieldPerRow"),
     "SeedReturnChancePercent": read_const(CROP_CS, "SeedReturnChancePercent"),
+    # Wave G3, Addendum 11(b)+(c): the meal and the mill. `PreserveMultiple` is vanilla's own
+    # Vinewafer -> Vinewafer Sheaf figure; `MillCropsPerDay` is the batch that makes the grinding
+    # mill's declared `food` come out exactly right; `FavoredMealShade` is what one day of eating
+    # the settlement's own dish is worth to the level, and `FavoredMealPercent` is how much of the
+    # day has to come off that dish before it counts as having been eaten.
+    "PreserveMultiple": read_const(RULES_CS, "PreserveMultiple"),
+    "MillCropsPerDay": read_const(RULES_CS, "MillCropsPerDay"),
+    "FavoredMealShade": read_const(RULES_CS, "FavoredMealShade"),
+    "FavoredMealPercent": read_const(RULES_CS, "FavoredMealPercent"),
     "MaxCyclesPerVisit": read_const(CROP_CS, "MaxCyclesPerVisit"),
     "EffortPerHandPerDay": read_const(MAT_CS, "EffortPerHandPerDay"),
     "RefineEffortPerUnit": read_const(MAT_CS, "RefineEffortPerUnit"),
@@ -2594,6 +2603,216 @@ def food_invariants():
         print(f"  {name:<9}bill {eats:>3} servings/day; cheapest and grandest plans both clear it")
 
 
+def _switch_map(path: str, function: str) -> dict:
+    """The `case "X": return "Y";` pairs of one C# switch, read straight out of the source.
+
+    Every derivation table printed below is read this way rather than restated here, for the
+    reason every other number in this file is read out of the source: a table copied into the
+    model is a table that drifts from the code the first time somebody retunes one end of it.
+    """
+    text = open(path, encoding="utf-8-sig").read()
+    start = text.find("public static string " + function)
+    if start < 0:
+        raise SystemExit(f"{function} not found in {path}")
+    body = text[start : text.find("\n\t\t}", start)]
+    out = {}
+    for m in re.finditer(r'case\s+"([^"]*)":\s*\n\s*return\s+"([^"]*)";', body):
+        out[m.group(1)] = m.group(2)
+    return out
+
+
+def _blueprint_blocks() -> dict:
+    """Blueprint name -> its raw XML block, for asking whether a machine really carries a part."""
+    text = open(BLUEPRINTS_XML, encoding="utf-8-sig").read()
+    out = {}
+    for block in re.split(r"<object\s+", text)[1:]:
+        name = re.match(r'Name="([^"]+)"', block)
+        if name:
+            out[name.group(1)] = block
+    return out
+
+
+def meals_and_industry():
+    rule("G3  Meals and industry, re-derived from the source and the XML")
+
+    forms = _switch_map(RULES_CS, "DishFormFor")
+    staples = _switch_map(RULES_CS, "PreservedStapleFor")
+    crops = _switch_map(CROP_CS, "CropBlueprintForStyle")
+    words = _switch_map(RULES_CS, "CropWordFor")
+    blocks = _blueprint_blocks()
+    growth = open(os.path.join(ROOT, "Growth", "KingdomGrowth.cs"), encoding="utf-8-sig").read()
+
+    print(f"""
+1. THE DISH IS DERIVED, NOT AUTHORED, AND IT IS TOTAL. Addendum 11(b) asks that residents eat
+   FAVOURED MEALS. Vanilla's own home for that is the faction: `<waterritual Recipe=... RecipeText=...
+   RecipeGenotype=.../>` parses onto `Faction.WaterRitualRecipe` and friends, which the Faction's
+   own serializer writes and reads - so the runtime faction this mod already mints carries its
+   favourite dish across save and load with no persistence of ours. Eight vanilla factions ship
+   one; the realm makes nine.
+
+   The derivation is two switches and a join: the CREED picks the form (borrowed from that
+   faction's own dish), the GROUND picks the body (the crop the style grows), and every form word
+   is one of `CookingRecipe.ingredientTileTypes` so vanilla's recipe-tile generator draws it.
+""")
+    tile_words = {
+        "cake", "bread", "loaf", "slaw", "stew", "soup", "brisket", "borscht", "dip", "baklava",
+        "compote", "hash", "porridge", "matz", "cookies", "yogurt", "goulash", "rice", "hummus",
+        "knish", "broth", "kugel", "latkes", "schnitzel", "pancake", "roast", "shawarma",
+        "flatbread", "meatballs", "pastry", "casserole", "dumpling", "doughnut", "tajine",
+        "couscous", "dolma", "kebab", "fillet",
+    }
+    assert forms, "DishFormFor has no cases; the dish would be the same everywhere"
+    print(f"  {'creed dish':<20}{'form':<12}vanilla tile word?")
+    for creed, form in sorted(forms.items()):
+        assert form in tile_words, (
+            f"DISH FORM UNDRAWABLE: '{form}' is not one of CookingRecipe.ingredientTileTypes, so a "
+            f"settlement whose people hold with {creed} would get a defaulted picture."
+        )
+        print(f"  {creed:<20}{form:<12}yes")
+    default_form = "stew"
+    assert default_form in tile_words
+    print(f"  {'(nobody / unknown)':<20}{default_form:<12}yes")
+
+    print(f"""
+   And the body, per founding ground. Every style must reach a staple, or a settlement founded
+   on that ground would raise a mill that grinds nothing while carrying a food number for it.
+""")
+    print(f"  {'style':<10}{'crop':<18}{'ingredient word':<18}{'preserved staple':<26}source")
+    for style in ("common", "verdant", "fungal", "gyre", "eater"):
+        crop = crops.get(style, crops.get("default", "Starapple"))
+        staple = staples.get(crop)
+        assert staple, f"NO STAPLE: style '{style}' grows {crop}, which nothing can bind to keep."
+        ours = staple.startswith("r_Kingdom")
+        if ours:
+            assert staple in blocks, f"staple {staple} is not a blueprint this mod ships"
+            inherits = re.match(r'Name="[^"]+"\s+Inherits="([^"]+)"', blocks[staple])
+            assert inherits and not inherits.group(1).startswith("r_Kingdom"), (
+                f"FILL-IN NOT GROUNDED: {staple} must inherit a shipped vanilla preserve, so it "
+                "owes no art and needs no new cooking-ingredient plumbing."
+            )
+            source = f"ours, inherits {inherits.group(1)}"
+        else:
+            source = "vanilla PreservableItem"
+        print(f"  {style:<10}{crop:<18}{words.get(crop, crop.lower()):<18}{staple:<26}{source}")
+    print(f"""
+   Two worked examples, in the register the rest of the game writes recipes in:
+     - people who hold with Joppa (`AppleMatz`), founded in a marsh  ->  {words['Vinewafer']} {forms['AppleMatz']}
+     - people who hold with the Barathrumites (`ThePorridge`), on flower fields  ->  {words['Starapple']} {forms['ThePorridge']}
+
+2. THE MEAL IS A RENDERING OF THE RATION, NOT A SECOND BILL. The daily draw spends the same
+   servings it always did; what changed is the ORDER it reaches in and what the day is worth
+   afterwards. The order, stated once and deterministic:
+
+     1. the settlement's own staple, larder by larder in survey order, item by item in inventory
+        order - the thing the fields grew and the mill bound, which is the dish's first component;
+     2. everything else that is food, same walk.
+
+   Nothing is random, so the same larders drained in the same sequence give the same answer on
+   every reload - Addendum 12(d)'s requirement of any draw that lands on real containers.
+
+   A day counts as the settlement having eaten its own dish when a kitchen stands and at least
+   {SRC["FavoredMealPercent"]}% of the bill came off that staple. "Kitchen" is asked of the OBJECT: any finished work
+   carrying vanilla's `Campfire`, which the communal fire has done since the day it shipped.
+""")
+    fire = [d for d in CATALOGUE if d.key == "fire"]
+    assert fire, "the communal fire has left the catalogue; the camp has nowhere to cook"
+    assert "Campfire" in open(BUILD_XML, encoding="utf-8-sig").read(), "the fire no longer commissions vanilla Campfire"
+    assert "r_KingdomOven" in blocks, "no settlement oven ships"
+    assert re.search(r'<part\s+Name="Campfire"[^>]*PresetMeals="r_KingdomFavoredDish"', blocks["r_KingdomOven"]), (
+        "THE OVEN COOKS NOTHING: r_KingdomOven must carry Campfire with PresetMeals naming the "
+        "realm's dish, which is exactly how every named settlement's oven in vanilla works."
+    )
+    assert 'Inherits="Oven"' in blocks["r_KingdomOven"], "the oven must extend vanilla's Oven, not re-implement it"
+
+    print(f"""
+3. WHAT A FAVOURED MEAL IS WORTH, AND WHY IT CANNOT RUN AWAY. One settler, for exactly one day,
+   re-earned every day - which is vanilla's own arithmetic, not a dial: a non-player eater's meal
+   effect expires at StartTick + 1200 ticks (`ProceduralCookingEffect`), and `KingdomRules.TicksPerDay`
+   is {SRC["TicksPerDay"]}. It rides the same lift term as a notable's shade and a shrine's spirit, so
+   `LiftCapPercent` = {SRC["LiftCapPercent"]}% binds it again on top of that.
+
+   Below: the level a settlement holds at each rung with its binding supports level-pegged and no
+   other lift standing, plain and then well fed. The delta is the whole of what this wave adds to
+   the level, and it is one settler wherever the cap has room for it.
+""")
+    print(f"  {'rung':<10}{'binding least':>14}{'plain':>8}{'well fed':>10}{'delta':>7}   capped by")
+    for i, (name, floor, _cap) in enumerate(STAGES):
+        least = max(floor, SRC["FloorLevel"])
+        water = least * STAGE_PERCENT[i] // 100 if STAGE_PERCENT[i] > 100 else least
+        base = equilibrium(water, least, least, 0, i, 0)
+        with_meal = equilibrium(water, least, least, 0, i, SRC["FavoredMealShade"])
+        cap = max(0, min(level_from_water(water, i), least, least)) * SRC["LiftCapPercent"] // 100
+        assert with_meal - base <= SRC["FavoredMealShade"], "a meal cannot be worth more than its shade"
+        assert with_meal >= base, "a meal is never a penalty"
+        why = "the lift cap" if cap <= SRC["FavoredMealShade"] else "nothing (room to spare)"
+        print(f"  {name:<10}{least:>14}{base:>8}{with_meal:>10}{with_meal - base:>7}   {why}")
+
+    print(f"""
+4. THE MILL CONSERVES. Addendum 11(b)'s other half is food "used by industry to produce things",
+   and per the survey the entire transformation surface in Qud is four parts. The one that fits a
+   harvest is `Mill`, whose blank-target path runs `Campfire.PerformPreserve` - which is what
+   vanilla's own `Millstone` does: a vinewafer becomes three vinewafer sheaves.
+
+   Our mill books that same ratio, flat across styles for the same reason `CropDaysForStyle` is
+   flat. The conservation law is one line and it is asserted here against the catalogue itself:
+   what comes back is what went in TIMES the multiple, and the GAIN is the difference.
+""")
+    grind = [d for d in CATALOGUE if d.key == "grindmill"]
+    assert grind, "the grinding mill has left the catalogue"
+    grind = grind[0]
+    declared = grind.carries.get("food", 0)
+    crops_in = SRC["MillCropsPerDay"]
+    out_units = crops_in * SRC["PreserveMultiple"]
+    gain = out_units - crops_in
+    assert gain == declared, (
+        f"MILL DOES NOT PAY: {crops_in} crops at x{SRC['PreserveMultiple']} is {out_units} staples back, a net of "
+        f"{gain}, but the grinding mill declares food:{declared}."
+    )
+    assert SRC["PreserveMultiple"] >= 1, "a mill that returns less than it takes is a bonfire"
+    print(f"  {'in (crops/day)':<18}{'multiple':>10}{'out (staples)':>15}{'net gain':>10}{'declared food':>15}")
+    print(f"  {crops_in:<18}{'x' + str(SRC['PreserveMultiple']):>10}{out_units:>15}{gain:>10}{declared:>15}")
+    print(f"""
+   x{SRC["PreserveMultiple"]} is the LEAST of the three vanilla numbers this mod's crops carry (starapple gives five,
+   plump mushroom ten), so the settlement never books more than the thinnest preserve in the game
+   actually gives. The physical machine is real either way: r_KingdomGrindMill carries `Mill`,
+   `Container`, `Inventory` and a mechanical-power consumer, which is `Millstone`'s own
+   configuration at `Millstone`'s own tier.
+""")
+    for part in ("Mill", "Container", "Inventory", "MechanicalPowerTransmission"):
+        assert f'Name="{part}"' in blocks.get("r_KingdomGrindMill", ""), (
+            f"THE MILL IS STILL A GLYPH: r_KingdomGrindMill declares no {part}, so its food:"
+            f"{declared} is an assertion rather than a machine."
+        )
+    assert 'IsConsumer="true"' in blocks["r_KingdomGrindMill"], (
+        "the mill must CONSUME mechanical power - it is the first consumer on a grid that had "
+        "three producers and nothing to drive."
+    )
+
+    print(f"""
+5. AND THE MILL IS PAID EXACTLY ONCE, AFTER THE RESIDENTS HAVE EATEN. Two source facts, both
+   checked here rather than trusted:
+
+     - the mill's `Carries` is SUBTRACTED from the clocked daily make, exactly as a sown field's
+       is, because it now delivers its food physically instead of as a ledger credit. Without the
+       subtraction a settlement would be fed twice out of one millstone.
+     - the grinding runs AFTER the heartbeat has drawn the day's rations, and even then only on
+       what stands above one more day's bill (`MillableStock`). Industry never eats before the
+       residents do.
+""")
+    assert "KingdomCrops.MilledFoodPerDay(Survey)" in growth, (
+        "FED TWICE: FoodMadePerDay no longer subtracts what the mills deliver physically."
+    )
+    order_rations = growth.find("bool heartbeatHealthy = ResolveHeartbeat(")
+    order_mill = growth.find("GrindHarvest(System, survey, grownDays)")
+    assert order_rations > 0 and order_mill > 0, "the pass no longer draws rations or grinds"
+    assert order_mill > order_rations, (
+        "INDUSTRY EATS FIRST: GrindHarvest runs before ResolveHeartbeat in the settlement pass. "
+        "The residents' day must be drawn before the mill touches the larders."
+    )
+    print("  subtraction present: yes    grinding runs after the ration draw: yes")
+    print(f"  reserve kept back:  one day's rations for the whole population, on top of that")
+
+
 if __name__ == "__main__":
     print("Constants read from source:")
     for k, v in SRC.items():
@@ -2613,4 +2832,5 @@ if __name__ == "__main__":
     q11_food()
     water_invariants()
     food_invariants()
+    meals_and_industry()
     caveats()

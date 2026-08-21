@@ -79,6 +79,14 @@ namespace ThousandAndFirst
 		/// <summary>Beds the settlement built. Population cannot exceed these.</summary>
 		public int Beds;
 
+		/// <summary>
+		/// Finished works here that carry vanilla's <c>Campfire</c> part &mdash; the communal
+		/// fire, and the oven above it. A settlement with none of these cannot cook, however full
+		/// its larders are, which is the gate on the favoured meal
+		/// (<c>KingdomRules.JudgeMeal</c>).
+		/// </summary>
+		public int Kitchens;
+
 		/// <summary>Works the settlement built that require crew, in placement order.</summary>
 		public readonly List<GameObject> Works = new List<GameObject>();
 
@@ -130,6 +138,17 @@ namespace ThousandAndFirst
 					if (item.HasPart("Bed"))
 					{
 						survey.Beds++;
+					}
+					// Somewhere to cook, counted off vanilla's own cooking part rather than
+					// off a catalogue key: Campfire IS the entire cooking system in Qud
+					// (D/XRL/World/Parts/Campfire.cs), so the communal fire has always been a
+					// real cooking site and nothing in this mod said so until now. An oven is
+					// the same part with the settlement's own dish set on its PresetMeals.
+					// Addendum 11(c)'s first clause, read literally: extend the machine that
+					// already does the thing.
+					if (item.HasPart("Campfire"))
+					{
+						survey.Kitchens++;
 					}
 					// A field with no seed in it asks for nobody (Addendum 11(b)). It stays in
 					// Built, so it is still measured, still worn, still mended and still struck -
@@ -258,35 +277,45 @@ namespace ThousandAndFirst
 		/// <returns>Amount actually spent, which may be less than requested.</returns>
 		public int ConsumeFood(int Amount)
 		{
+			int _;
+			return ConsumeFood(Amount, null, out _);
+		}
+
+		/// <summary>
+		/// The meal-shaped draw (Addendum 11(b)): spends the day's food out of the dedicated
+		/// larders, <b>reaching for the settlement's own dish first</b>.
+		/// <para>
+		/// <b>The order, stated once and deterministic.</b> Pass one takes
+		/// <paramref name="Preferred"/> &mdash; the preserved staple the settlement's favourite
+		/// dish is made of, which is also what its mill produces &mdash; walking
+		/// <see cref="Larders"/> in the order found and each larder's inventory in the order
+		/// held. Pass two takes everything else that is food, in the same order. Nothing is
+		/// random, so the same larders drained in the same sequence give the same answer on every
+		/// reload, which is what Addendum 12(d) asks of any draw that lands on real containers.
+		/// </para>
+		/// <para>
+		/// Why the staple goes first and not last: a settlement eats what it cooks. The staple is
+		/// the thing the fields grew and the mill bound to keep, and a granary that hoards its own
+		/// dish while the settlement chews raw tubers is not a settlement anybody would write
+		/// down. It also makes the favoured meal reachable in exactly the case it should be
+		/// &mdash; when the chain from field to mill to table is actually running.
+		/// </para>
+		/// </summary>
+		/// <param name="Amount">Food units requested.</param>
+		/// <param name="Preferred">The dish's staple blueprint, or null to draw in plain order.</param>
+		/// <param name="FromPreferred">Set to how much of the draw came off that staple, which is
+		/// what <c>KingdomRules.JudgeMeal</c> reads to decide whether the settlement ate its own
+		/// dish or merely ate.</param>
+		/// <returns>Amount actually spent, which may be less than requested.</returns>
+		public int ConsumeFood(int Amount, string Preferred, out int FromPreferred)
+		{
+			FromPreferred = 0;
 			int remaining = Amount;
-			for (int i = 0; i < Larders.Count && remaining > 0; i++)
+			if (!string.IsNullOrEmpty(Preferred))
 			{
-				GameObject container = Larders[i];
-				if (container.Inventory == null)
-				{
-					continue;
-				}
-				// Snapshot first: destroying a food item below removes it from this same
-				// Inventory list, and mutating a collection mid-foreach throws.
-				List<GameObject> held = new List<GameObject>(container.Inventory.Objects);
-				for (int j = 0; j < held.Count && remaining > 0; j++)
-				{
-					GameObject food = held[j];
-					if (!food.HasPart("Food") && !food.HasPart("PreparedCookingIngredient"))
-					{
-						continue;
-					}
-					// Destroy() on a stack of more than one decrements it by exactly one and
-					// leaves the object in place (see Stacker.HandleEvent(BeforeDestroyObjectEvent));
-					// only the last unit actually removes it. Validate stops the loop the moment
-					// that happens, rather than trusting a return value for it.
-					while (remaining > 0 && GameObject.Validate(food))
-					{
-						food.Destroy(null, Silent: true);
-						remaining--;
-					}
-				}
+				FromPreferred = Draw(ref remaining, Preferred);
 			}
+			Draw(ref remaining, null);
 			int spent = Amount - remaining;
 			FoodStored -= spent;
 			if (FoodStored < 0)
@@ -295,6 +324,82 @@ namespace ThousandAndFirst
 			}
 			FoodAbundance = KingdomRules.ClassifyPantry(FoodStored);
 			return spent;
+		}
+
+		/// <summary>
+		/// One pass of the draw. Counters are left to the caller so a two-pass draw adjusts
+		/// <see cref="FoodStored"/> exactly once.
+		/// </summary>
+		/// <param name="Remaining">Servings still wanted; decremented in place.</param>
+		/// <param name="Blueprint">Restrict to this blueprint, or null for anything edible.</param>
+		/// <returns>Servings this pass took.</returns>
+		private int Draw(ref int Remaining, string Blueprint)
+		{
+			int took = 0;
+			for (int i = 0; i < Larders.Count && Remaining > 0; i++)
+			{
+				GameObject container = Larders[i];
+				if (container == null || container.Inventory == null)
+				{
+					continue;
+				}
+				// Snapshot first: destroying a food item below removes it from this same
+				// Inventory list, and mutating a collection mid-foreach throws.
+				List<GameObject> held = new List<GameObject>(container.Inventory.Objects);
+				for (int j = 0; j < held.Count && Remaining > 0; j++)
+				{
+					GameObject food = held[j];
+					if (!food.HasPart("Food") && !food.HasPart("PreparedCookingIngredient"))
+					{
+						continue;
+					}
+					if (Blueprint != null && food.Blueprint != Blueprint)
+					{
+						continue;
+					}
+					// Destroy() on a stack of more than one decrements it by exactly one and
+					// leaves the object in place (see Stacker.HandleEvent(BeforeDestroyObjectEvent));
+					// only the last unit actually removes it. Validate stops the loop the moment
+					// that happens, rather than trusting a return value for it.
+					while (Remaining > 0 && GameObject.Validate(food))
+					{
+						food.Destroy(null, Silent: true);
+						Remaining--;
+						took++;
+					}
+				}
+			}
+			return took;
+		}
+
+		/// <summary>
+		/// Takes raw crops of one named blueprint out of the larders, for industry rather than
+		/// for a mouth (Addendum 11(b): food "used by industry to produce things"). The grinding
+		/// mill's input half; <see cref="StoreFood"/> puts the preserved staple back.
+		/// <para>
+		/// Named rather than general on purpose: a mill grinds the settlement's own harvest, and
+		/// a draw that took anything edible would grind the staple it had just made back into
+		/// itself. Same order and the same determinism as <see cref="ConsumeFood"/>.
+		/// </para>
+		/// </summary>
+		/// <param name="Blueprint">The crop to grind. Null or empty takes nothing.</param>
+		/// <param name="Amount">Crops wanted.</param>
+		/// <returns>Crops actually taken, which may be fewer than asked for.</returns>
+		public int ConsumeCrop(string Blueprint, int Amount)
+		{
+			if (string.IsNullOrEmpty(Blueprint) || Amount <= 0)
+			{
+				return 0;
+			}
+			int remaining = Amount;
+			int took = Draw(ref remaining, Blueprint);
+			FoodStored -= took;
+			if (FoodStored < 0)
+			{
+				FoodStored = 0;
+			}
+			FoodAbundance = KingdomRules.ClassifyPantry(FoodStored);
+			return took;
 		}
 
 

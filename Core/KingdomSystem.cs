@@ -235,6 +235,43 @@ namespace ThousandAndFirst
 		/// </summary>
 		public int NotableShade;
 
+		/// <summary>
+		/// Everything this settlement is shaded by, which is what the level actually reads: the
+		/// named notable's standing worth plus whatever the last day's eating left behind. Summed
+		/// here rather than at the four call sites in <c>KingdomSubsidence</c> so the two can
+		/// never disagree about which shades count, and floored per half so neither can eat the
+		/// other. <c>KingdomCatalogueRules.Equilibrium</c> caps the total again.
+		/// </summary>
+		public int Shade
+		{
+			get
+			{
+				return ((NotableShade < 0) ? 0 : NotableShade) + ((MealShade < 0) ? 0 : MealShade);
+			}
+		}
+
+		/// <summary>
+		/// What this settlement's last day's eating was worth to the level, for exactly the day
+		/// it was earned (<c>KingdomRules.MealShadeFor</c>). Re-drawn every heartbeat: a
+		/// settlement that ate its own dish yesterday and scraps today is worth the scraps. Rides
+		/// the same lift term as <see cref="NotableShade"/> and is capped again with it by
+		/// <c>KingdomCatalogueRules.LiftCapPercent</c>, so nobody eats their way past their own
+		/// water. Carried, so a city left mid-feast is still well fed when the founder walks back
+		/// into it.
+		/// </summary>
+		public int MealShade;
+
+		/// <summary>What the settlement's last drawn day of rations actually was
+		/// (<c>KingdomRules.JudgeMeal</c>). Knowledge for the report and the once-flag below;
+		/// <see cref="KingdomRules.MealVerdict.None"/> on a settlement no heartbeat has billed
+		/// yet.</summary>
+		public KingdomRules.MealVerdict LastMeal = KingdomRules.MealVerdict.None;
+
+		/// <summary>STANDARDS 7b's once-flag for a settlement whose larders gave nothing. Set
+		/// when the sentence is said, cleared the moment the settlement eats out of its own
+		/// stores again, so walking away and back does not re-say it.</summary>
+		public bool ScrapsAnnounced;
+
 		public int ShopTier;
 
 		public long LastVisitTick;
@@ -543,6 +580,34 @@ namespace ThousandAndFirst
 		/// <summary>The creed the founder declared the realm's own, or null. See
 		/// <see cref="KingdomCreed.Declare"/>.</summary>
 		public string DeclaredCreed;
+
+		// --- The realm's own dish ----------------------------------------------------------
+		//
+		// Realm state and not city state, deliberately: the dish lives on the FACTION
+		// (Faction.WaterRitualRecipe / ...Text, D/XRL/World/Faction.cs:72-76), and a realm has
+		// exactly one faction however many cities it holds. These four fields are the mod's copy
+		// of what was written there, so a pass can tell whether the people who live here have
+		// changed their minds without re-deriving to find out, and so the ration draw knows what
+		// to look for on the shelves. See KingdomRules.DeriveDish and KingdomDish.Ensure.
+
+		/// <summary>What the realm's favourite dish is called, lower case
+		/// (<c>KingdomRules.FavoredDish.Name</c>). Null until the realm is founded.</summary>
+		public string DishName;
+
+		/// <summary>The sentence a stranger asks for the recipe with at the water ritual. Written
+		/// onto <c>Faction.WaterRitualRecipeText</c>; kept here so a load that finds the faction
+		/// stripped can put it back.</summary>
+		public string DishText;
+
+		/// <summary>The preserved staple the dish is made of, and what the grinding mill makes:
+		/// the one blueprint that ties the fields, the mill and the table together. The ration
+		/// draw reaches for this first (<c>KingdomSurvey.ConsumeFood</c>).</summary>
+		public string DishStaple;
+
+		/// <summary>The creed dish this one's form was borrowed from, or empty for a realm of
+		/// mixed people. Compared against the current creed each pass to notice a change of
+		/// heart.</summary>
+		public string DishSource;
 
 		/// <summary>Tick of the last rite of shared water. See <see cref="KingdomCreed.HoldRite"/>.</summary>
 		public long LastRiteTick;
@@ -1328,6 +1393,12 @@ namespace ThousandAndFirst
 			if (NotableShade < 0)
 			{
 				NotableShade = 0;
+			}
+			// The meal shade fails closed the same way and for the same reason: a day's
+			// eating is never a tax, so the worst a bad supper can be worth is nothing.
+			if (MealShade < 0)
+			{
+				MealShade = 0;
 			}
 			Away?.Normalize();
 			Seceded?.Normalize();

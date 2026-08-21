@@ -105,6 +105,12 @@ namespace ThousandAndFirst
 			// rack is its cistern; nothing the founder placed is touched, because only a
 			// KingdomBuilt work whose blueprint the catalogue calls a pantry is taken.
 			AdoptCivicLarders(survey);
+			// Before the day is drawn, and cheap: the realm's favourite dish is derived from
+			// who lives here and what the ground grows, and the ration draw below reaches for its
+			// staple first. Called every pass rather than once at founding because the creed a
+			// city holds is a thing that MOVES - people arrive holding with somebody - and a
+			// kitchen that changed its mind is worth a line (Addendum 11(b)).
+			KingdomDish.Ensure(System);
 			// Whatever of the city's harvest was still on the road lands NOW, before the day's
 			// rations are drawn: a load that arrived is a load the settlement can eat, and this is
 			// the crystallise-at-awareness half of Addendum 11(b-ii)'s cross-zone delivery. The
@@ -121,6 +127,11 @@ namespace ThousandAndFirst
 			if (System.LastFoodWorkTick <= 0)
 			{
 				System.LastFoodWorkTick = timeTicks;
+				// Planted, and the count zeroed with it. An unplanted stamp reads as "ticks since
+				// tick zero", which is the whole age of the world - harmless while only the block
+				// below read it, and a first-pass windfall the moment anything downstream does.
+				// GrindHarvest is downstream.
+				grownDays = 0;
 			}
 			else if (grownDays > 0)
 			{
@@ -128,6 +139,12 @@ namespace ThousandAndFirst
 				System.LastFoodWorkTick = KingdomRules.AdvanceCheckpoint(System.LastFoodWorkTick, timeTicks);
 			}
 			bool heartbeatHealthy = ResolveHeartbeat(System, Z, survey, timeTicks);
+			// AFTER the day is eaten, and never before it: industry consumes foodstuffs
+			// (Addendum 11(b)) and residents eat first. The order is the whole guarantee - a
+			// settlement cannot go hungry because its mill was busy - and KingdomRules.MillableStock
+			// keeps a day's rations back on top of it. Same elapsed days the fields were paid for,
+			// off the same checkpoint, which is why grownDays is read once and used twice.
+			GrindHarvest(System, survey, grownDays);
 			int arrivals = 0;
 			while (heartbeatHealthy && timeTicks >= System.NextArrivalTick && arrivals < KingdomRules.MaxArrivalsPerVisit && System.Population < KingdomRules.MaxPopulation
 				&& (System.SupportedLevel <= 0 || System.Population < KingdomSubsidenceRules.SlideBeginsAbove(System.SupportedLevel)))
@@ -260,6 +277,9 @@ namespace ThousandAndFirst
 			{
 				RecoverFromThirst(System);
 				RecoverFromHunger(System);
+				// No bill was drawn, so no meal was eaten. A shade left standing from the last
+				// day scarcity WAS on would be a lift the settlement is no longer earning.
+				SettleMeal(System, KingdomRules.MealVerdict.None);
 				return true;
 			}
 			KingdomRules.ThirstOutcome thirst = DrawWater(System, Survey, elapsed, days);
@@ -337,6 +357,7 @@ namespace ThousandAndFirst
 			int owed = KingdomRules.RationsForElapsed(System.Population, Elapsed);
 			if (owed <= 0)
 			{
+				SettleMeal(System, KingdomRules.MealVerdict.None);
 				RecoverFromHunger(System);
 				return KingdomRules.HungerOutcome.Fed;
 			}
@@ -347,8 +368,15 @@ namespace ThousandAndFirst
 			int fromWild = (foraged < owed) ? foraged : owed;
 			System.Ledger.Foraged += fromWild;
 			int shortfall = owed - fromWild;
-			int eaten = (shortfall > 0) ? Survey.ConsumeFood(shortfall) : 0;
+			// The draw is MEAL-SHAPED (Addendum 11(b)): it reaches for the staple the settlement's
+			// own favourite dish is made of before it reaches for anything else, and reports how
+			// much of the day actually came off it. Same servings either way - a meal is a
+			// rendering of the ration, not a second bill - and the only thing riding on the
+			// distinction is what the day was worth afterwards.
+			int fromDish = 0;
+			int eaten = (shortfall > 0) ? Survey.ConsumeFood(shortfall, System.DishStaple, out fromDish) : 0;
 			System.Ledger.RationsDrawn += eaten;
+			SettleMeal(System, KingdomRules.JudgeMeal(owed, fromDish, eaten, Survey.Kitchens > 0, System.Stage));
 			if (fromWild + eaten >= owed)
 			{
 				RecoverFromHunger(System);
@@ -359,6 +387,48 @@ namespace ThousandAndFirst
 			System.Ledger.Note("{{r|The larders are empty. Settlers will leave if the fields do not feed them.}}");
 			if (KingdomLog.Enabled) KingdomLog.Log("hunger: days=" + Days + " rations=" + (fromWild + eaten) + "/" + owed + " foraged=" + fromWild + " streak=" + System.HungerStreak);
 			return KingdomRules.ResolveHunger(System.HungerStreak, System.Stage, System.Population);
+		}
+
+		/// <summary>
+		/// Records what the day's eating was and what it left behind: the one-day shade a
+		/// settlement that ate its own dish is worth, and STANDARDS 7b's once-said sentence for a
+		/// settlement whose larders gave nothing.
+		/// <para>
+		/// <b>The shade is re-drawn every single heartbeat, never accumulated.</b> A meal effect
+		/// on a non-player eater expires at <c>StartTick + 1200</c> ticks
+		/// (<c>D/…/ProceduralCookingEffect.cs:212-223</c>), which is exactly
+		/// <c>KingdomRules.TicksPerDay</c>, and only one such effect stands at a time
+		/// (<c>D/…/Campfire.cs:740</c>). So a settlement is well fed for the day it ate and no
+		/// longer, and tomorrow has to earn it again. That is vanilla's number, not a balance
+		/// dial.
+		/// </para>
+		/// </summary>
+		private static void SettleMeal(KingdomSystem System, KingdomRules.MealVerdict Verdict)
+		{
+			System.LastMeal = Verdict;
+			System.MealShade = KingdomRules.MealShadeFor(Verdict);
+			if (Verdict == KingdomRules.MealVerdict.Favored)
+			{
+				string note = KingdomRules.FavoredMealNote(System.KingdomDisplayName, System.DishName);
+				if (note != null)
+				{
+					System.Ledger.Note(note);
+				}
+			}
+			if (Verdict != KingdomRules.MealVerdict.Scraps)
+			{
+				// The block lifted: something came out of the settlement's own stores, so the
+				// sentence below is unsaid and may be said again the next time it is true.
+				System.ScrapsAnnounced = false;
+				return;
+			}
+			if (System.ScrapsAnnounced)
+			{
+				return;
+			}
+			System.ScrapsAnnounced = true;
+			System.Ledger.Note(KingdomRules.ScrapsNote(System.KingdomDisplayName));
+			KingdomChronicle.Record(System, "the larders of " + System.KingdomDisplayName + " gave nothing, and the settlement ate what it could find");
 		}
 
 		private static void RecoverFromThirst(KingdomSystem System)
@@ -413,9 +483,17 @@ namespace ThousandAndFirst
 		/// removed from the clocked daily make by <c>KingdomCrops.CycledFoodPerDay</c>, folded at
 		/// the same effectiveness and through the same <c>KingdomCatalogueRules.Carried</c>, so
 		/// the subtraction cancels the addition to the unit. What is left in this figure is the
-		/// food a settlement makes without growing it: the larder and the granary, which refuse to
-		/// waste what came in, and the grinding mill, which turns a harvest into something that
-		/// keeps.
+		/// food a settlement makes without growing it.
+		/// </para>
+		/// <para>
+		/// <b>And so is every mill</b> (Addendum 11(b), Wave G3). A grinding mill now carries
+		/// vanilla's own <c>Mill</c> part and delivers its <c>food</c> the same physical way a
+		/// field does: <see cref="GrindHarvest"/> takes real crops off the larder shelves and puts
+		/// real preserved staples back. So it is subtracted here too, by
+		/// <c>KingdomCrops.MilledFoodPerDay</c>, at the same effectiveness and through the same
+		/// <c>Carried</c>. What is left in this figure after BOTH subtractions is the food a
+		/// settlement makes without growing it and without grinding it: the larder and the
+		/// granary, which refuse to waste what came in.
 		/// </para>
 		/// <para>
 		/// An UNSOWN field is already zero here, and not by subtraction: it carries no food at all
@@ -431,7 +509,9 @@ namespace ThousandAndFirst
 			{
 				return 0;
 			}
-			int made = KingdomSubsidence.Supports(Survey).Food - KingdomCrops.CycledFoodPerDay(Survey);
+			int made = KingdomSubsidence.Supports(Survey).Food
+				- KingdomCrops.CycledFoodPerDay(Survey)
+				- KingdomCrops.MilledFoodPerDay(Survey);
 			return (made > 0) ? made : 0;
 		}
 
@@ -480,6 +560,89 @@ namespace ThousandAndFirst
 			System.Ledger.Note("{{r|" + line + "}}");
 			MessageQueue.AddPlayerMessage("{{r|" + line + "}}");
 			if (KingdomLog.Enabled) KingdomLog.Log("harvest: made=" + Amount + " stored=" + stored + " lost=" + lost + " cap=" + Survey.FoodCapacity);
+		}
+
+		/// <summary>
+		/// The industry half of Addendum 11(b): the settlement's mills eat food and produce
+		/// things. Real crops leave the real larders and real preserved staples go back into them
+		/// &mdash; the same physical honesty the harvest already keeps, and what Addendum 12(d)
+		/// asks of any consumption that lands on containers a founder can walk up to and open.
+		/// <para>
+		/// <b>What the machine actually does, in vanilla's own numbers.</b> Vanilla's
+		/// <c>Millstone</c> carries <c>Mill</c> with blank transformation targets, so its one item
+		/// per powered turn falls through to <c>Campfire.PerformPreserve</c>: a vinewafer becomes
+		/// three vinewafer sheaves (<c>B/ObjectBlueprints/Foods.xml:424</c>). Our mill books the
+		/// same ratio, flat across styles &mdash; <c>KingdomRules.PreserveMultiple</c>, and the
+		/// reasoning for the flatness is on that constant. Two crops in, six staples back, a net
+		/// of four servings, which is exactly the <c>food:4</c> the grinding mill declares.
+		/// </para>
+		/// <para>
+		/// <b>Residents eat first, and the reserve is kept on top of that.</b> This runs after
+		/// <see cref="ResolveHeartbeat"/> has drawn the day's rations, and even then it grinds
+		/// only what stands above one more day's bill
+		/// (<c>KingdomRules.MillableStock</c>). A settlement cannot be starved by its own
+		/// industry, on this pass or the next one.
+		/// </para>
+		/// <para>
+		/// <b>The visible machine and the accounting are different stock, on purpose.</b> The
+		/// <c>Mill</c> part on the object grinds what is in the MILL'S OWN inventory while a
+		/// founder is standing there (<c>WorksOnInventory</c>, <c>D/…/Mill.cs:47-51</c>), at
+		/// vanilla's own per-crop numbers; this grinds the settlement's larders on the
+		/// settlement's own clock. Nothing is counted twice, and a founder who hand-feeds the
+		/// millstone gets vanilla's answer for their own goods.
+		/// </para>
+		/// </summary>
+		/// <param name="System">The kingdom. Its style names the crop, and its dish the staple.</param>
+		/// <param name="Survey">The pass's survey, whose counters this keeps correct.</param>
+		/// <param name="Days">Whole days since the food works were last paid. Zero grinds nothing.</param>
+		private static void GrindHarvest(KingdomSystem System, KingdomSurvey Survey, int Days)
+		{
+			if (Survey == null || Days <= 0)
+			{
+				return;
+			}
+			int owed = KingdomCrops.MilledFoodPerDay(Survey) * Days;
+			if (owed <= 0)
+			{
+				return;
+			}
+			string crop = KingdomCropRules.CropBlueprintForStyle(System.Style);
+			string staple = KingdomCrops.StapleFor(crop);
+			if (string.IsNullOrEmpty(staple))
+			{
+				// A crop nothing in the game can bind to keep. The mill stands and turns; it
+				// simply has nothing to make out of this harvest, and says so in the log rather
+				// than minting a serving from nowhere.
+				if (KingdomLog.Enabled) KingdomLog.Log("mill: " + crop + " has no staple to bind into; nothing ground");
+				return;
+			}
+			// The reserve, read off the larders AS THEY STAND after the day was eaten.
+			int spare = KingdomRules.MillableStock(Survey.FoodStored, System.Population);
+			int wanted = KingdomRules.CropsForGain(owed);
+			if (wanted > spare)
+			{
+				wanted = spare;
+			}
+			int ground = (wanted > 0) ? Survey.ConsumeCrop(crop, wanted) : 0;
+			if (ground <= 0)
+			{
+				return;
+			}
+			// What came back: the crops themselves, bound, plus the gain. Conservation is stated
+			// here in one line so it cannot drift - out is IN TIMES the multiple, never a figure
+			// arrived at some other way.
+			int made = ground * KingdomRules.PreserveMultiple;
+			int stored = Survey.StoreFood(made, staple);
+			System.Ledger.Milled += (stored > ground) ? (stored - ground) : 0;
+			int lost = made - stored;
+			if (lost > 0)
+			{
+				// Nowhere to put it, exactly as a harvest with a full larder has nowhere to go.
+				// The same once-flag speaks for both, because it is the same block: the pantries
+				// are full, and the settlement is losing what it made.
+				System.Ledger.HarvestLost += lost;
+			}
+			if (KingdomLog.Enabled) KingdomLog.Log("mill: days=" + Days + " owed=" + owed + " spare=" + spare + " ground=" + ground + " " + crop + " -> " + made + " " + staple + " stored=" + stored);
 		}
 
 		/// <summary>
