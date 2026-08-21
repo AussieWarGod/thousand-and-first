@@ -856,3 +856,17 @@ neighbouring parasangs and strata. Architecture already priced 9 zones (~88 KiB,
 formula); 12(j) rules the sim free to scale. Named checks for the expansion wave: claim
 adjacency and frontier-edge logic across PARASANG BORDERS (continuous zone grid, but built and
 tested inside 4 zones) and at STRATUM SEAMS.
+
+**Megastructure cardinality ruling + anti-overfit caution (author, 2026-08-22):** "lets not
+overfit to anno too hard, this is caves of qud remember. i think the arcology special structure
+would likely be the only megastructure in a city, though i'm open to the idea of specialised
+city end state megastructures, or multiple megastructures per city if it's justifiable."
+
+- Default: ONE megastructure per city — the arcology as the city's end-state, singular the way
+  a heart is singular.
+- Door open, burden of proof on the design: specialised end-state megastructures (a city that
+  became its granary; a temple-city) or multiple per city ONLY with justification that survives
+  the pillars and Qud's fiction — never as a build-more-wonders lane.
+- Comparables are quarries, not blueprints (standing rule, restated): Anno/Frostpunk/SS2 inform
+  the FEEL; Qud's own register — ruins, arcologies as the Yd Freehold, history heavier than
+  convenience — decides the SHAPE.
