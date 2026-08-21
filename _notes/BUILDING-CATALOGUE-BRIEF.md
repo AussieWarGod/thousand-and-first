@@ -928,3 +928,21 @@ learning idioms: "similar feel to the way blueprints/data disks/psychometry work
   (the 12(i) contract discipline).
 - Author asks for "thought and research on how to make this a deep, nuanced, elegant system
   that aligns with vanilla QUD" — design research dispatched before build.
+
+
+## Addendum 15, 2026-08-22 — strata sets, ruled (author answer to ideation Q2)
+
+- **Deep and arcology are SEPARATE building sets** — "primarily different, with different
+  research, different (appropriate) behaviour." Not filtered surface lists: a fungal vault is
+  not a dimmed farm; an arcology floor is not a filtered house. Sets start SMALL and grow by
+  want, never by symmetry (15 of 40 base sets sit empty today — no obligation to fill).
+- **Sky is a filtered subset** of surface.
+- **Sharing is BY TAG**: "some plots/buildings should be shared by tag where it makes sense" —
+  a design lives in its home set and additionally declares the strata it may stand in (the
+  WR-3 `Strata` attribute becomes home-stratum + share-tags, not a partition). Behaviour may
+  differ by where it stands only when the design says so.
+- Research divergence per stratum composes with Addendum 14 (deep research unlocks deep
+  designs; the visibility law applies — a surface city never sees the deep tree it hasn't
+  touched).
+- Unblocks: the WR-3 strata wave sizing; the deep-delve exotic (ideation Q9's first build).
+  Arcology set waits on Q6's answer (theatre-vs-arcology cardinality).
