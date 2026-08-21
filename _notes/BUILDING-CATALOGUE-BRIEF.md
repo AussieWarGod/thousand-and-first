@@ -870,3 +870,26 @@ city end state megastructures, or multiple megastructures per city if it's justi
 - Comparables are quarries, not blueprints (standing rule, restated): Anno/Frostpunk/SS2 inform
   the FEEL; Qud's own register — ruins, arcologies as the Yd Freehold, history heavier than
   convenience — decides the SHAPE.
+
+**Heart design — REFINED PROPOSAL after author concerns (2026-08-22, awaiting word):**
+Author raised: (1) an XL reservation deadens a one-zone start and a bowl cannot narratively
+claim castle ground; (2) post-arcology relocation must not strike automation to resources and
+force hand re-placement — "maybe some auto re-placement with some logic?"
+
+Resolution, folding the research's own refinements:
+- **The heart's plot grows with its rung** (S basin → M waterstone → L moot → XL court →
+  arcology); no rung reserves ground its building does not fill.
+- **Ghost survey = preference, never claim**: future extent as soft steering gradient in the
+  layout scorer; building there is free and marks the plot YIELDING (told at placement).
+  Narrative: the stakes are the founder's ambition paced out — dreams, not law; squatting on
+  ambition is legal, ambition arriving is what the mark promised.
+- **Relocation is identity-carry, never strike-to-resources** (the SS2 failure, rejected by
+  name): the plot moves whole — wear, residents, staffing, dedication position, name.
+- **Two-phase handover** (downtime = the transfer step only), **one move at a time** (the
+  one-mending-gate discipline), **destinations by the same layout scorer** that placed the plot
+  (auto re-placement with logic, inheriting district/adjacency/road preferences).
+- **Consent once, at plan level**: the founder sees every destination and approves the ring
+  call; crews execute over world-days; per-plot manual override stands. Networks re-join by
+  declared topology at the new ground — announced, never silent.
+- Arcology rung: basic plots built into its design (author), so displaced essentials land
+  INSIDE the shell where its floors provide for them.
