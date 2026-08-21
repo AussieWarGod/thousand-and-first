@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <!--
   THE CATALOGUE
 
@@ -42,6 +42,20 @@
   luxury LIFT - they are summed and then capped at half the binding level, so no quantity of
   shrines ever outruns the cistern. One point of water is one dram a day sustained, which is
   one settler's thirst at camp rates.
+
+  WHO READS THESE NUMBERS. KingdomSubsidence sums Carries over every finished (KingdomBuilt)
+  work in the settlement, scaling a crewed work by how well it is actually running, and hands
+  the total to KingdomCatalogueRules.Equilibrium through KingdomSubsidenceRules.SupportedLevel.
+  A settlement standing above that level settles back toward it as world time passes. So
+  raising a number here does not make a building better at its job - it makes the settlement
+  bigger, permanently, and a number set too high is a city that never has to earn itself.
+
+  "AT CAMP RATES" IS LOAD-BEARING. KingdomRules.UpkeepDrams bills 100/120/150/180/220 per
+  hundred by stage, so the water half is divided by that percentage before the level is taken:
+  a cistern carrying eight settlers in a camp carries three in a city. That is why the ladder
+  below climbs so steeply on the water side and why every rung is exactly affordable - the
+  drams a rung's own population drinks are the drams that carry it. _notes/balance-sim.py Q6
+  is that cross-check, and it will say so out loud if a number here stops agreeing with it.
 
   Improvements climb within a plot; sizes compete across plots. Nothing here grows from a small
   plot into a middling one: to trade up in size you strike what stands there, take the salvage,

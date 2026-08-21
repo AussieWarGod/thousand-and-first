@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
@@ -100,6 +100,10 @@ namespace ThousandAndFirst
 		/// not fetch a windfall the moment it is seated.</summary>
 		public long LastFetchTick;
 
+		/// <summary>Tick this city's water works last produced. Carried, so a dormant city's
+		/// works do not pour a windfall the moment it is seated.</summary>
+		public long LastWaterWorkTick;
+
 		/// <summary>Citizens of this city crewing works. Carried with the city.</summary>
 		public int AssignedCrew;
 
@@ -118,6 +122,41 @@ namespace ThousandAndFirst
 		public int DamagedWorks;
 
 		public bool IdleWorksAnnounced;
+
+		/// <summary>
+		/// Tick this settlement's level was last reckoned against its people
+		/// (<c>KingdomSubsidence</c>). Uncapped world time: the slide runs whether the founder is
+		/// there or not, and the stamp advances by exactly the steps a reckoning cashed, keeping
+		/// the part-step remainder. Carried, so a dormant city does not settle a season's worth
+		/// the moment it is seated.
+		/// </summary>
+		public long LastSubsidenceTick;
+
+		/// <summary>
+		/// STANDARDS 7b's once-flag for the slide, and the slide's own memory of being under way.
+		/// Set when a settlement is first told it is settling back, cleared the moment it arrests
+		/// &mdash; and read by <c>KingdomSubsidenceRules.Slide</c> as "already sliding", because a
+		/// slide that has been announced converges to the level rather than stopping at the band's
+		/// edge. The announcement and the hysteresis are the same fact, so they are one field.
+		/// </summary>
+		public bool SubsidenceAnnounced;
+
+		/// <summary>
+		/// People this settlement's finished works honestly carry, as of the last attended pass
+		/// (<c>KingdomSubsidenceRules.SupportedLevel</c>). Knowledge, not truth: it is exactly as
+		/// stale as the last visit. Zero on a settlement no pass has measured yet.
+		/// </summary>
+		public int SupportedLevel;
+
+		/// <summary>
+		/// Which of <c>KingdomCatalogueRules.BindingSupports</c> is holding
+		/// <see cref="SupportedLevel"/> where it is, so the level can always say why (7b). Null
+		/// until a pass has measured it, and read back through
+		/// <c>KingdomSubsidenceRules.NormalizedBinding</c> rather than repaired in
+		/// <c>Normalize</c> &mdash; the seat swap's contract is a byte-for-byte round trip, and
+		/// what actually needs preventing is a sentence blaming a good this build cannot name.
+		/// </summary>
+		public string SubsidenceBinding;
 
 		public int ShopTier;
 
@@ -154,10 +193,6 @@ namespace ThousandAndFirst
 		/// dissent, declared creed, and secession state are not (see <c>KingdomSystem</c>, which
 		/// carries those only on itself).</summary>
 		public Dictionary<string, int> CreedCounts = new Dictionary<string, int>();
-
-		/// <summary>See <see cref="KingdomSystem.LodgingGrace"/>. Per-city, so a founder who
-		/// walks to the other city does not carry this one's housing troubles with them.</summary>
-		public Dictionary<string, int> LodgingGrace = new Dictionary<string, int>();
 
 		/// <summary>See <see cref="KingdomSystem.ConversionShared"/>. Per-city, so a founder who
 		/// walks to the other city does not carry this one's half-turned believers with them.</summary>
@@ -294,10 +329,6 @@ namespace ThousandAndFirst
 			{
 				CreedCounts = new Dictionary<string, int>();
 			}
-			if (LodgingGrace == null)
-			{
-				LodgingGrace = new Dictionary<string, int>();
-			}
 			if (ConversionShared == null)
 			{
 				ConversionShared = new Dictionary<string, int>();
@@ -334,6 +365,16 @@ namespace ThousandAndFirst
 			if (!string.IsNullOrEmpty(Vocation) && !IsKnownVocation(Vocation))
 			{
 				Vocation = NeutralVocation;
+			}
+			// A stored level or stamp below zero is a corrupt reading, not a settlement in
+			// debt: subsidence mints nothing, so both fail closed to "nothing measured yet".
+			if (LastSubsidenceTick < 0L)
+			{
+				LastSubsidenceTick = 0L;
+			}
+			if (SupportedLevel < 0)
+			{
+				SupportedLevel = 0;
 			}
 		}
 

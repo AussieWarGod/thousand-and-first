@@ -71,11 +71,11 @@ namespace ThousandAndFirst
 		/// adds none of it.
 		/// </para>
 		/// </summary>
-		public const string SharedPassesProperty = "KingdomSharedPasses";
+		public const string SharedDaysProperty = "KingdomSharedDays";
 
-		/// <summary>Tick <see cref="SharedPassesProperty"/> was last advanced at, so two callers
+		/// <summary>Tick <see cref="SharedDaysProperty"/> was last advanced at, so two callers
 		/// resolving the same moment cannot count one evening twice.</summary>
-		public const string SharedPassTickProperty = "KingdomSharedPassTick";
+		public const string SharedDayTickProperty = "KingdomSharedDayTick";
 
 		/// <summary>Refusals this settler has given. See
 		/// <c>KingdomWaterRiteRules.AskedTooOften</c>.</summary>
@@ -250,15 +250,18 @@ namespace ThousandAndFirst
 		/// <para>
 		/// Preconditions: called from the settlement pass, on claimed ground, beside
 		/// <c>KingdomLodging.OnSettlementPass</c>. Side effects: advances
-		/// <see cref="SharedPassesProperty"/> by at most one day per citizen
-		/// (<c>KingdomWaterRiteRules.ShouldCountPass</c>), and registers this channel's pressure
-		/// source if a rebuild dropped it. Failure mode: returns having done nothing.
+		/// <see cref="SharedDaysProperty"/> by the whole days each citizen has lived here since
+		/// they were last counted (<c>KingdomWaterRiteRules.SharedDaysAfter</c>), and registers
+		/// this channel's pressure source if a rebuild dropped it. Failure mode: returns having
+		/// done nothing.
 		/// </para>
 		/// <para>
-		/// This is the whole of the absence guarantee for this channel. Shared living is counted
-		/// here and nowhere else, so a founder away for a season comes home to exactly the
-		/// settlement they left: nobody has grown closer to the realm's creed while nobody was
-		/// watching. Time is labour and shared living; it is never maturation.
+		/// Days pass here whether or not the founder does (Addendum 8 clause 1): a settler goes on
+		/// living in the settlement while nobody is watching, and pretending otherwise made a
+		/// founder who came home every third day the only founder whose people ever settled in.
+		/// Nothing irreversible rides on it &mdash; shared living buys REACH, and reach only makes
+		/// an invitation the founder must still extend and the settler must still accept more
+		/// likely to be accepted &mdash; so this counter carries no brink of its own.
 		/// </para>
 		/// </summary>
 		public static void OnSettlementPass(KingdomSystem System, Zone Z)
@@ -275,19 +278,32 @@ namespace ThousandAndFirst
 				{
 					continue;
 				}
-				if (KingdomWaterRiteRules.ShouldCountPass(item.GetLongProperty(SharedPassTickProperty), now))
+				long last = item.GetLongProperty(SharedDayTickProperty);
+				if (last <= 0L || now <= 0L)
 				{
-					item.SetLongProperty(SharedPassTickProperty, now);
-					item.SetIntProperty(SharedPassesProperty, KingdomWaterRiteRules.PassesAfter(item.GetIntProperty(SharedPassesProperty)));
+					// Planted before the first count, never read as elapsed: an unplanted stamp
+					// resolved against an uncapped clock is the age of the world, and a newcomer
+					// would arrive having already lived here a lifetime.
+					item.SetLongProperty(SharedDayTickProperty, now);
+					continue;
 				}
+				int days = KingdomRules.ElapsedDays(now - last);
+				if (days <= 0)
+				{
+					continue;
+				}
+				// Advanced by exactly the days credited, so the part-day counts toward the next one
+				// and a founder who steps out of the zone and back in buys nobody a free day.
+				item.SetLongProperty(SharedDayTickProperty, KingdomRules.AdvanceCheckpoint(last, now));
+				item.SetIntProperty(SharedDaysProperty, KingdomWaterRiteRules.SharedDaysAfter(item.GetIntProperty(SharedDaysProperty), days));
 			}
 		}
 
-		/// <summary>Attended passes this settler has lived here. Zero for anybody the pass has not
+		/// <summary>Cohabited days this settler has lived here. Zero for anybody the pass has not
 		/// reached yet, which is the ordinary state of a newcomer.</summary>
-		public static int SharedPassesOf(GameObject Resident)
+		public static int SharedDaysOf(GameObject Resident)
 		{
-			return (Resident == null) ? 0 : Resident.GetIntProperty(SharedPassesProperty);
+			return (Resident == null) ? 0 : Resident.GetIntProperty(SharedDaysProperty);
 		}
 
 		/// <summary>The line <c>kingdom:dump</c> appends for the zone the founder is standing in:
@@ -309,7 +325,7 @@ namespace ThousandAndFirst
 					continue;
 				}
 				here++;
-				total += SharedPassesOf(item);
+				total += SharedDaysOf(item);
 				string creed = item.GetStringProperty(AskedTooOftenCreedProperty);
 				if (!string.IsNullOrEmpty(creed))
 				{
@@ -321,7 +337,7 @@ namespace ThousandAndFirst
 				return "";
 			}
 			string line = "\nShared living: " + total + " passes over " + here + " here (cap "
-				+ KingdomWaterRiteRules.MaxCountedPasses + " each)";
+				+ KingdomWaterRiteRules.MaxCountedDays + " each)";
 			if (closed.Count > 0)
 			{
 				line += "  asked too often: " + string.Join(", ", closed);
@@ -369,7 +385,7 @@ namespace ThousandAndFirst
 			WaterRiteAnswer answer = KingdomWaterRiteRules.Answer(Offer.Facts);
 			KingdomLog.Log("water rite: " + name + " answer=" + answer
 				+ " distance=" + KingdomWaterRiteRules.Distance(Offer.Facts)
-				+ " reach=" + KingdomWaterRiteRules.Reach(Offer.Facts.SharedPasses)
+				+ " reach=" + KingdomWaterRiteRules.Reach(Offer.Facts.SharedDays)
 				+ " poured=" + poured);
 			if (KingdomWaterRiteRules.Converted(answer))
 			{
@@ -482,7 +498,7 @@ namespace ThousandAndFirst
 			ShrineCreed = RivalShrineNear(Z, Resident, RealmCreed);
 			return new WaterRiteFacts(
 				KingdomCreed.HostilityBetween(theirs, RealmCreed),
-				SharedPassesOf(Resident),
+				SharedDaysOf(Resident),
 				!string.IsNullOrEmpty(theirs),
 				!string.IsNullOrEmpty(ShrineCreed),
 				KingdomQolRules.Has(profile.Prefers, faith),
@@ -611,7 +627,7 @@ namespace ThousandAndFirst
 			Resident.SetIntProperty(StampHostilityProperty, Stamp.Hostility);
 			Resident.SetIntProperty(StampShrineProperty, Stamp.RivalShrine ? 1 : 0);
 			Resident.SetIntProperty(StampAbsoluteProperty, Stamp.Absolute ? 1 : 0);
-			Resident.SetIntProperty(StampNeededProperty, Stamp.NeededPasses);
+			Resident.SetIntProperty(StampNeededProperty, Stamp.NeededDays);
 			Resident.SetStringProperty(StampCreedProperty, Stamp.RealmCreed ?? "");
 		}
 

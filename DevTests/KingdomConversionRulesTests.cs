@@ -30,30 +30,30 @@ namespace ThousandAndFirst.Tests
 
 		// --- The closeness ladder: how much shared living a roof buys in one attended pass ------
 
-		[TestCase(Quarters.Packed, KingdomConversionRules.PackedSharedPerPass)]
-		[TestCase(Quarters.Close, KingdomConversionRules.CloseSharedPerPass)]
-		[TestCase(Quarters.Roomed, KingdomConversionRules.RoomedSharedPerPass)]
-		[TestCase(Quarters.Private, KingdomConversionRules.PrivateSharedPerPass)]
-		public void SharedLivingPerPass_ReadsTheLadderAtZeroHostility(Quarters quarters, int expected)
+		[TestCase(Quarters.Packed, KingdomConversionRules.PackedSharedPerDay)]
+		[TestCase(Quarters.Close, KingdomConversionRules.CloseSharedPerDay)]
+		[TestCase(Quarters.Roomed, KingdomConversionRules.RoomedSharedPerDay)]
+		[TestCase(Quarters.Private, KingdomConversionRules.PrivateSharedPerDay)]
+		public void SharedLivingPerDay_ReadsTheLadderAtZeroHostility(Quarters quarters, int expected)
 		{
-			Assert.AreEqual(expected, KingdomConversionRules.SharedLivingPerPass(quarters, 0));
+			Assert.AreEqual(expected, KingdomConversionRules.SharedLivingPerDay(quarters, 0));
 		}
 
 		[Test]
-		public void SharedLivingPerPass_PackedConvertsNobodyEvenAmongPeopleWhoAgree()
+		public void SharedLivingPerDay_PackedConvertsNobodyEvenAmongPeopleWhoAgree()
 		{
 			// The author's ruling, not an arithmetic consequence: one open room holds only people
 			// the feelings table has nothing filed between, so there is nothing there to cross --
 			// and a bunk row must never become a cheap conversion engine built on purpose.
-			Assert.AreEqual(0, KingdomConversionRules.SharedLivingPerPass(Quarters.Packed, 0));
+			Assert.AreEqual(0, KingdomConversionRules.SharedLivingPerDay(Quarters.Packed, 0));
 		}
 
 		[Test]
-		public void SharedLivingPerPass_TheHutIsFasterThanTheHouseAndTheHouseFasterThanTheManor()
+		public void SharedLivingPerDay_TheHutIsFasterThanTheHouseAndTheHouseFasterThanTheManor()
 		{
-			int close = KingdomConversionRules.SharedLivingPerPass(Quarters.Close, 0);
-			int roomed = KingdomConversionRules.SharedLivingPerPass(Quarters.Roomed, 0);
-			int priv = KingdomConversionRules.SharedLivingPerPass(Quarters.Private, 0);
+			int close = KingdomConversionRules.SharedLivingPerDay(Quarters.Close, 0);
+			int roomed = KingdomConversionRules.SharedLivingPerDay(Quarters.Roomed, 0);
+			int priv = KingdomConversionRules.SharedLivingPerDay(Quarters.Private, 0);
 			Assert.Greater(close, roomed, "a hut converts faster than a stone house");
 			Assert.Greater(roomed, priv, "a stone house converts faster than quarters of one's own");
 			Assert.Greater(priv, 0, "quarters of one's own still convert, slowly");
@@ -63,23 +63,23 @@ namespace ThousandAndFirst.Tests
 		[TestCase(Quarters.Close)]
 		[TestCase(Quarters.Roomed)]
 		[TestCase(Quarters.Private)]
-		public void SharedLivingPerPass_NothingIsConvertedAcrossARefusalAtAnyRung(Quarters quarters)
+		public void SharedLivingPerDay_NothingIsConvertedAcrossARefusalAtAnyRung(Quarters quarters)
 		{
 			int refuses = KingdomLodgingRules.RefusalHostility(quarters);
-			Assert.AreEqual(0, KingdomConversionRules.SharedLivingPerPass(quarters, refuses),
+			Assert.AreEqual(0, KingdomConversionRules.SharedLivingPerDay(quarters, refuses),
 				"you do not convert somebody you will not live beside");
-			Assert.AreEqual(0, KingdomConversionRules.SharedLivingPerPass(quarters, 100),
+			Assert.AreEqual(0, KingdomConversionRules.SharedLivingPerDay(quarters, 100),
 				"the named fault lines convert nobody anywhere");
 		}
 
 		[Test]
-		public void SharedLivingPerPass_TheStoneHouseIsWhereAnAmbientGrudgeGetsCrossed()
+		public void SharedLivingPerDay_TheStoneHouseIsWhereAnAmbientGrudgeGetsCrossed()
 		{
 			// Addendum 5's intended case, stated as a test: at the ambient -50 the hut refuses to
 			// hold them at all, and the stone house -- the one architecture that will -- is the one
 			// that does the work.
-			Assert.AreEqual(0, KingdomConversionRules.SharedLivingPerPass(Quarters.Close, KingdomLodgingRules.CloseRefusalHostility));
-			Assert.Greater(KingdomConversionRules.SharedLivingPerPass(Quarters.Roomed, KingdomLodgingRules.CloseRefusalHostility), 0);
+			Assert.AreEqual(0, KingdomConversionRules.SharedLivingPerDay(Quarters.Close, KingdomLodgingRules.CloseRefusalHostility));
+			Assert.Greater(KingdomConversionRules.SharedLivingPerDay(Quarters.Roomed, KingdomLodgingRules.CloseRefusalHostility), 0);
 		}
 
 		// --- The meal: small, and capped -------------------------------------------------------
@@ -246,14 +246,183 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void SharedLivingForConversion_IsASeasonOfComingHomeAndNotAWeekOfIt()
+		public void SharedLivingForConversion_IsASeasonOfSharedLivingAndNotAWeekOfIt()
 		{
-			// The fastest rung there is, expressed in the unit the founder actually spends:
-			// attended passes. A number small enough to be a week would make conversion a
-			// schedule instead of a chronicle entry.
-			int fastest = KingdomConversionRules.SharedLivingPerPass(Quarters.Close, 0);
-			int passes = KingdomConversionRules.SharedLivingForConversion / fastest;
-			Assert.GreaterOrEqual(passes, 20, "a conversion is a season of shared living");
+			// The fastest rung there is, expressed in the unit the road is now walked in: days
+			// actually lived under one roof. A number small enough to be a week would make
+			// conversion a schedule instead of a chronicle entry.
+			int fastest = KingdomConversionRules.SharedLivingPerDay(Quarters.Close, 0);
+			int days = KingdomConversionRules.SharedLivingForConversion / fastest;
+			Assert.GreaterOrEqual(days, 60, "a conversion is a season of shared living");
+		}
+
+		// --- The recalibration: passes to cohabitation days, at the same pace ---------------------
+
+		[Test]
+		public void EveryRungLandsOnTheExactWallClockDistanceItAlwaysHad()
+		{
+			// The equivalence that makes this a change of UNIT rather than a change of pace. The
+			// per-rung rates did not move -- they were per attended pass and are now per day --
+			// and the road moved by exactly the cadence, so a founder who comes home every third
+			// day walks the identical seventy-two, hundred and eight, and two hundred and sixteen
+			// days they always walked. If any of the four numbers drifts, this fails.
+			int cadence = KingdomBrinkRules.CohabitationDaysPerAttendedPass;
+			Assert.AreEqual(72, KingdomConversionRules.SharedLivingInPasses);
+			Assert.AreEqual(KingdomConversionRules.SharedLivingInPasses * cadence, KingdomConversionRules.SharedLivingForConversion);
+			foreach (Quarters rung in new Quarters[3] { Quarters.Close, Quarters.Roomed, Quarters.Private })
+			{
+				int perDay = KingdomConversionRules.SharedLivingPerDay(rung, 0);
+				int oldPasses = KingdomConversionRules.SharedLivingInPasses / perDay;
+				int newDays = KingdomConversionRules.SharedLivingForConversion / perDay;
+				Assert.AreEqual(oldPasses * cadence, newDays, rung + " changed length across the migration");
+			}
+		}
+
+		[Test]
+		public void NineMealsStillFillTheCeilingSoCultureDidNotSilentlyTripleInCost()
+		{
+			// A meal is an EVENT and needed no recalibrating for its own sake, but what a meal is
+			// WORTH relative to the road did: leaving MealShared at four against a road three
+			// times longer would have tripled the suppers culture costs without anybody deciding
+			// to. Nine before, nine now.
+			Assert.AreEqual(KingdomConversionRules.MealSharedInPasses * KingdomBrinkRules.CohabitationDaysPerAttendedPass,
+				KingdomConversionRules.MealShared);
+			int meals = 0;
+			int shared = 0;
+			while (KingdomConversionRules.MealSharedFor(shared) > 0)
+			{
+				shared += KingdomConversionRules.MealSharedFor(shared);
+				meals++;
+				Assert.Less(meals, 500, "the ceiling must terminate");
+			}
+			Assert.AreEqual(9, meals);
+			Assert.AreEqual(KingdomConversionRules.MealCeiling, shared);
+		}
+
+		// --- Rule 1: the road ends at a brink, and nothing accrues past it -----------------------
+
+		[Test]
+		public void AdvanceOverDays_ATenDayAbsenceAndAThousandDayOneArriveAtTheSamePlace()
+		{
+			int perDay = KingdomConversionRules.SharedLivingPerDay(Quarters.Close, 0);
+			ConversionProgress ten = KingdomConversionRules.AdvanceOverDays(ConversionProgress.None, "Barathrumites", perDay, 1000);
+			ConversionProgress aThousand = KingdomConversionRules.AdvanceOverDays(ConversionProgress.None, "Barathrumites", perDay, 100000);
+			Assert.AreEqual(KingdomConversionRules.SharedLivingForConversion, ten.Shared);
+			Assert.AreEqual(ten.Shared, aThousand.Shared, "nothing accrues past the road's end");
+			Assert.AreEqual("Barathrumites", aThousand.Creed);
+		}
+
+		[Test]
+		public void AdvanceOverDays_CreditsExactlyTheDaysLivedWhileShortOfTheRoadsEnd()
+		{
+			int perDay = KingdomConversionRules.SharedLivingPerDay(Quarters.Roomed, 0);
+			ConversionProgress after = KingdomConversionRules.AdvanceOverDays(ConversionProgress.None, "Barathrumites", perDay, 10);
+			Assert.AreEqual(perDay * 10, after.Shared);
+			Assert.IsFalse(KingdomConversionRules.AtMilestone(after.Shared));
+		}
+
+		[Test]
+		public void AdvanceOverDays_ANonPositiveStretchOrRateChangesNothing()
+		{
+			ConversionProgress held = new ConversionProgress("Barathrumites", 40);
+			Assert.AreEqual(40, KingdomConversionRules.AdvanceOverDays(held, "Barathrumites", 3, 0).Shared);
+			Assert.AreEqual(40, KingdomConversionRules.AdvanceOverDays(held, "Barathrumites", 0, 90).Shared,
+				"a bunk row buys nothing however many days pass in it");
+			Assert.AreEqual(40, KingdomConversionRules.AdvanceOverDays(held, null, 3, 90).Shared);
+		}
+
+		[Test]
+		public void AdvanceOverDays_ACounterPullTakesPointsOffAndIsHowABrinkIsArrested()
+		{
+			// The arrest channel Addendum 5 names: a settler standing at the end of one road who
+			// is pulled the other way is no longer at its end, and the shell lifts their brink on
+			// exactly that test.
+			ConversionProgress atTheEnd = new ConversionProgress("Barathrumites", KingdomConversionRules.SharedLivingForConversion);
+			Assert.IsTrue(KingdomConversionRules.AtMilestone(atTheEnd.Shared));
+			ConversionProgress pulledBack = KingdomConversionRules.AdvanceOverDays(atTheEnd, "Templar", 3, 10);
+			Assert.AreEqual("Barathrumites", pulledBack.Creed, "winning a tug of war does not happen in the pass you win it");
+			Assert.IsFalse(KingdomConversionRules.AtMilestone(pulledBack.Shared), "and they are no longer at a brink");
+		}
+
+		[Test]
+		public void AFullCityDoesNotMassConvertOnTheFirstUncappedPass()
+		{
+			// The exact scenario the clock-rework audit feared: uncap osmosis, come home from a
+			// season away, and find the city's whole minority converted in one pass. Twelve
+			// settlers, every one of them in a hut with a majority pulling at them, a thousand
+			// days of absence. Every one of them reaches the END OF THE ROAD -- clause 1 says
+			// people go on living together -- and NOT ONE of them converts, because the road ends
+			// at a brink and the brink is spent in attended passes the founder has to be there
+			// for. Six of them, by name, with the honest number of days, and any of them
+			// arrestable by breaking the household up.
+			const int city = 12;
+			int perDay = KingdomConversionRules.SharedLivingPerDay(Quarters.Close, 0);
+			int atTheRoadsEnd = 0;
+			for (int i = 0; i < city; i++)
+			{
+				ConversionProgress after = KingdomConversionRules.AdvanceOverDays(ConversionProgress.None, "Barathrumites", perDay, 1000);
+				Assert.AreEqual(KingdomConversionRules.SharedLivingForConversion, after.Shared, "held at the road's end and no further");
+				if (KingdomConversionRules.AtMilestone(after.Shared))
+				{
+					atTheRoadsEnd++;
+				}
+			}
+			Assert.AreEqual(city, atTheRoadsEnd, "a thousand days under one roof really does walk the whole road");
+			// And that is a brink, not a conversion: the founder has to stand there for the whole
+			// window before a single draw is asked.
+			Assert.Greater(KingdomBrinkRules.CreedBrinkWindow, 0);
+			Assert.IsFalse(KingdomBrinkRules.WindowSpent(BrinkKind.Creed, 0),
+				"the pass the city is told is not the pass the city turns");
+		}
+
+		// --- The road ordinal: counted, because progress no longer divides ------------------------
+
+		[TestCase(-3, 1)]
+		[TestCase(0, 1)]
+		[TestCase(1, 2)]
+		[TestCase(7, 8)]
+		public void RoadEnd_StandsAtTheOrdinalTheDrawIsKeyedOn(int walked, int ordinal)
+		{
+			Assert.AreEqual((ulong)ordinal, KingdomConversionRules.Milestone(KingdomConversionRules.RoadEnd(walked)));
+		}
+
+		[Test]
+		public void RoadEnd_TheFirstRoadStillDrawsOnOrdinalOneSoNoPendingAnswerWasReRolled()
+		{
+			// Progress now holds at the road's end, so the ordinal is counted rather than divided
+			// out of it. The counting had to land on the same numbers the dividing did, or every
+			// soul standing unconverted in every save would have been re-asked.
+			Assert.AreEqual(KingdomConversionRules.SharedLivingForConversion, KingdomConversionRules.RoadEnd(0));
+			Assert.AreEqual(1uL, KingdomConversionRules.Milestone(KingdomConversionRules.RoadEnd(0)));
+			Assert.IsTrue(KingdomConversionRules.AtMilestone(KingdomConversionRules.RoadEnd(0)));
+		}
+
+		[Test]
+		public void RoadEnd_ARoadThatAnsweredNoIsANewQuestionAtTheNext()
+		{
+			bool differed = false;
+			for (int i = 0; i < 60 && !differed; i++)
+			{
+				string name = "settler-" + i;
+				differed = KingdomConversionRules.Converts(City, ConversionChannel.Osmosis, name, KingdomConversionRules.RoadEnd(0))
+					!= KingdomConversionRules.Converts(City, ConversionChannel.Osmosis, name, KingdomConversionRules.RoadEnd(1));
+			}
+			Assert.IsTrue(differed, "a settler who walked a whole road and did not turn must get a genuinely new question");
+		}
+
+		[Test]
+		public void RoadEnd_AnswersTheSameWayEveryTimeItIsAskedHoweverManyRoadsHaveBeenWalked()
+		{
+			for (int road = 0; road < 6; road++)
+			{
+				for (int i = 0; i < 12; i++)
+				{
+					string name = "settler-" + i;
+					bool first = KingdomConversionRules.Converts(City, ConversionChannel.Osmosis, name, KingdomConversionRules.RoadEnd(road));
+					bool second = KingdomConversionRules.Converts(City, ConversionChannel.Osmosis, name, KingdomConversionRules.RoadEnd(road));
+					Assert.AreEqual(first, second, "a reload must never re-roll a soul");
+				}
+			}
 		}
 
 		// --- The draw: rare, and never re-rolled -------------------------------------------------

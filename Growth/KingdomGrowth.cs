@@ -72,9 +72,23 @@ namespace ThousandAndFirst
 			{
 				KingdomLog.Log("growth: fetched " + fetched + " drams from open water into stores");
 			}
+			// The water works make what their Carries promise, on world-time like everything else
+			// (Addendum 8): a reservoir's day is a reservoir's day whether anyone watched it. This
+			// is what lets the level the subsidence pass measures actually arrive in the casks.
+			int madeDays = KingdomRules.ElapsedDays(timeTicks - System.LastWaterWorkTick);
+			if (System.LastWaterWorkTick <= 0)
+			{
+				System.LastWaterWorkTick = timeTicks;
+			}
+			else if (madeDays > 0)
+			{
+				System.Ledger.Fetched += survey.Store(KingdomSubsidence.Supports(survey).Water * madeDays);
+				System.LastWaterWorkTick = KingdomRules.AdvanceCheckpoint(System.LastWaterWorkTick, timeTicks);
+			}
 			bool heartbeatHealthy = ResolveHeartbeat(System, Z, survey, timeTicks);
 			int arrivals = 0;
-			while (heartbeatHealthy && timeTicks >= System.NextArrivalTick && arrivals < KingdomRules.MaxArrivalsPerVisit && System.Population < KingdomRules.MaxPopulation)
+			while (heartbeatHealthy && timeTicks >= System.NextArrivalTick && arrivals < KingdomRules.MaxArrivalsPerVisit && System.Population < KingdomRules.MaxPopulation
+				&& (System.SupportedLevel <= 0 || System.Population < KingdomSubsidenceRules.SlideBeginsAbove(System.SupportedLevel)))
 			{
 				if (survey.StoredWater < KingdomRules.DramsPerArrival)
 				{
@@ -644,9 +658,39 @@ namespace ThousandAndFirst
 			return total;
 		}
 
+		/// <summary>
+		/// What the settlement has become, both ways, and the reckoning that can move it.
+		/// <para>
+		/// The ratchet this replaced only ever climbed (<c>if (stage &gt; System.Stage)</c>), so a
+		/// City could hold four people and <c>StageFor</c>'s own answer for a collapsed settlement
+		/// was computed and thrown away. It now runs in both directions, with a band on the way
+		/// down (<c>KingdomSubsidenceRules.StageWithHysteresis</c>) so a rung cannot flap on a
+		/// single arrival, and the way DOWN is driven by subsidence rather than by this line: the
+		/// reckoning below moves the people, and the stage follows them.
+		/// </para>
+		/// <para>
+		/// Order is load-bearing. The reckoning runs first, because it is what may change the
+		/// population and the stage; the rise is then asked of the figures that reckoning left,
+		/// so a settlement cannot be promoted on people who have already gone. Raising is
+		/// deliberately NOT gated on the supported level: hauling may still carry a settlement to
+		/// City, because the pillar promises that a city held up by your own hauling settles
+		/// back, not that it could never be raised at all.
+		/// </para>
+		/// <para>
+		/// And the whole of this runs after <see cref="AssignWork"/>, which is what makes the
+		/// summation honest: a crewed work carries what the staffing pass says it is running at,
+		/// so an unmanned field feeds nobody. The cost of that order is that a departure here
+		/// leaves the pass's <c>Survey.Settlers</c> holding an obliterated object &mdash; the same
+		/// bargain <see cref="ResolveHeartbeat"/>'s own <see cref="Emigrate"/> already makes, and
+		/// safe for the same reason: the only reader of that list is the staffing pass, which has
+		/// already run.
+		/// </para>
+		/// </summary>
 		public static void UpdateStage(KingdomSystem System, Zone Z, KingdomSurvey Survey = null)
 		{
-			GrowthStage stage = KingdomRules.StageFor(System.Population, (Survey != null) ? Survey.StorageCapacity : CountStorageCapacity(Z));
+			int capacity = (Survey != null) ? Survey.StorageCapacity : CountStorageCapacity(Z);
+			KingdomSubsidence.Reckon(System, Z, Survey, The.Game.TimeTicks);
+			GrowthStage stage = KingdomSubsidenceRules.StageWithHysteresis(System.Stage, System.Population, capacity);
 			if (stage > System.Stage)
 			{
 				System.Stage = stage;
@@ -654,6 +698,19 @@ namespace ThousandAndFirst
 				System.RecordDeed("the growth of " + System.KingdomDisplayName + "");
 				KingdomChronicle.Record(System, text, Accomplishment: true);
 				Popup.Show(KingdomVoices.Say(System, VoiceOccasion.StageUp, "{{C|" + text + ".}}"));
+			}
+			else if (stage < System.Stage)
+			{
+				// The rung a settlement loses without a slide: its people were taken by the
+				// drought, or its casks were undedicated, and the place is honestly smaller than
+				// the ladder says. Said plainly and never popped up - a stage-up is an
+				// achievement and interrupts; a stage-down is news, and the ledger is where news
+				// belongs.
+				GrowthStage lost = System.Stage;
+				System.Stage = stage;
+				string text = System.KingdomDisplayName + " is a " + stage.ToString().ToLower() + " again, and no longer a " + lost.ToString().ToLower();
+				KingdomChronicle.Record(System, text);
+				System.Ledger.Note("{{r|" + XRL.Language.Grammar.InitCap(text) + ".}}");
 			}
 			if (System.HasShopkeeper)
 			{

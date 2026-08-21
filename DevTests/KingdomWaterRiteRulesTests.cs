@@ -8,9 +8,9 @@ namespace ThousandAndFirst.Tests
 	{
 		private const string Realm = "Barathrumites";
 
-		private static WaterRiteFacts Facts(int Hostility = 0, int SharedPasses = 0, bool HoldsACreed = true, bool RivalShrine = false, bool Devout = false, bool Steadfast = false, string RealmCreed = Realm)
+		private static WaterRiteFacts Facts(int Hostility = 0, int SharedDays = 0, bool HoldsACreed = true, bool RivalShrine = false, bool Devout = false, bool Steadfast = false, string RealmCreed = Realm)
 		{
-			return new WaterRiteFacts(Hostility, SharedPasses, HoldsACreed, RivalShrine, Devout, Steadfast, RealmCreed);
+			return new WaterRiteFacts(Hostility, SharedDays, HoldsACreed, RivalShrine, Devout, Steadfast, RealmCreed);
 		}
 
 		private static WaterRiteStamp StampAt(WaterRiteFacts F)
@@ -73,18 +73,20 @@ namespace ThousandAndFirst.Tests
 
 		[TestCase(-3, 0)]
 		[TestCase(0, 0)]
-		[TestCase(1, KingdomWaterRiteRules.ReachPerSharedPass)]
-		[TestCase(10, 10 * KingdomWaterRiteRules.ReachPerSharedPass)]
-		public void Reach_GrowsOnePassAtATime(int passes, int expected)
+		[TestCase(3, KingdomWaterRiteRules.ReachPerSharedPass)]
+		[TestCase(30, 10 * KingdomWaterRiteRules.ReachPerSharedPass)]
+		public void Reach_GrowsThreeCohabitedDaysAtATime(int days, int expected)
 		{
-			Assert.AreEqual(expected, KingdomWaterRiteRules.Reach(passes));
+			// Three days buy what one attended pass used to buy, which is the whole of the
+			// recalibration expressed at the smallest scale it can be expressed at.
+			Assert.AreEqual(expected, KingdomWaterRiteRules.Reach(days));
 		}
 
 		[Test]
 		public void Reach_StopsAtTheCapAndStaysThere()
 		{
-			Assert.AreEqual(KingdomWaterRiteRules.ReachCap, KingdomWaterRiteRules.Reach(KingdomWaterRiteRules.MaxCountedPasses));
-			Assert.AreEqual(KingdomWaterRiteRules.ReachCap, KingdomWaterRiteRules.Reach(KingdomWaterRiteRules.MaxCountedPasses + 500));
+			Assert.AreEqual(KingdomWaterRiteRules.ReachCap, KingdomWaterRiteRules.Reach(KingdomWaterRiteRules.MaxCountedDays));
+			Assert.AreEqual(KingdomWaterRiteRules.ReachCap, KingdomWaterRiteRules.Reach(KingdomWaterRiteRules.MaxCountedDays + 500));
 		}
 
 		[Test]
@@ -97,8 +99,8 @@ namespace ThousandAndFirst.Tests
 			// and not one pass sooner. Break this identity and either the fault line becomes
 			// uncrossable by any channel in the mod, or it becomes cheap.
 			Assert.AreEqual(KingdomWaterRiteRules.ReachCap, KingdomWaterRiteRules.Distance(Facts(Hostility: 100)));
-			Assert.AreEqual(WaterRiteAnswer.Accepted, KingdomWaterRiteRules.Answer(Facts(Hostility: 100, SharedPasses: KingdomWaterRiteRules.MaxCountedPasses)));
-			Assert.AreNotEqual(WaterRiteAnswer.Accepted, KingdomWaterRiteRules.Answer(Facts(Hostility: 100, SharedPasses: KingdomWaterRiteRules.MaxCountedPasses - 1)));
+			Assert.AreEqual(WaterRiteAnswer.Accepted, KingdomWaterRiteRules.Answer(Facts(Hostility: 100, SharedDays: KingdomWaterRiteRules.MaxCountedDays)));
+			Assert.AreNotEqual(WaterRiteAnswer.Accepted, KingdomWaterRiteRules.Answer(Facts(Hostility: 100, SharedDays: KingdomWaterRiteRules.MaxCountedDays - 1)));
 		}
 
 		// --- The answer: one branch per obstacle, ordered by what the founder can do about it.
@@ -106,37 +108,37 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void Answer_AcceptsOnceTheSharedLifeCoversTheDistance()
 		{
-			Assert.AreEqual(WaterRiteAnswer.Accepted, KingdomWaterRiteRules.Answer(Facts(Hostility: 0, SharedPasses: 10)));
+			Assert.AreEqual(WaterRiteAnswer.Accepted, KingdomWaterRiteRules.Answer(Facts(Hostility: 0, SharedDays: 30)));
 		}
 
 		[Test]
 		public void Answer_ARefusesTagBeatsEverything_EvenAWholeSharedLife()
 		{
-			Assert.AreEqual(WaterRiteAnswer.Accepted, KingdomWaterRiteRules.Answer(Facts(Hostility: 0, SharedPasses: KingdomWaterRiteRules.MaxCountedPasses)));
-			Assert.AreEqual(WaterRiteAnswer.Steadfast, KingdomWaterRiteRules.Answer(Facts(Hostility: 0, SharedPasses: KingdomWaterRiteRules.MaxCountedPasses, Steadfast: true)));
+			Assert.AreEqual(WaterRiteAnswer.Accepted, KingdomWaterRiteRules.Answer(Facts(Hostility: 0, SharedDays: KingdomWaterRiteRules.MaxCountedDays)));
+			Assert.AreEqual(WaterRiteAnswer.Steadfast, KingdomWaterRiteRules.Answer(Facts(Hostility: 0, SharedDays: KingdomWaterRiteRules.MaxCountedDays, Steadfast: true)));
 		}
 
 		[Test]
 		public void Answer_NamesTheShrineWhenTakingItDownWouldByItselfHaveChangedTheAnswer()
 		{
-			// Ten passes reaches 40, which is the distance without the shrine; with it, 70.
-			Assert.AreEqual(WaterRiteAnswer.RivalShrine, KingdomWaterRiteRules.Answer(Facts(Hostility: 0, SharedPasses: 10, RivalShrine: true)));
-			Assert.AreEqual(WaterRiteAnswer.Accepted, KingdomWaterRiteRules.Answer(Facts(Hostility: 0, SharedPasses: 10)));
+			// Thirty days reaches 40, which is the distance without the shrine; with it, 70.
+			Assert.AreEqual(WaterRiteAnswer.RivalShrine, KingdomWaterRiteRules.Answer(Facts(Hostility: 0, SharedDays: 30, RivalShrine: true)));
+			Assert.AreEqual(WaterRiteAnswer.Accepted, KingdomWaterRiteRules.Answer(Facts(Hostility: 0, SharedDays: 30)));
 		}
 
 		[Test]
 		public void Answer_DoesNotNameTheShrineWhenRemovingItAloneWouldNotHaveHelped()
 		{
-			// One pass reaches 4 against a distance of 70, so the shrine is not what is standing in
-			// the way and naming it would be a lie the founder would act on (7b).
-			Assert.AreEqual(WaterRiteAnswer.TooNew, KingdomWaterRiteRules.Answer(Facts(Hostility: 0, SharedPasses: 1, RivalShrine: true)));
+			// Three days reaches 4 against a distance of 70, so the shrine is not what is standing
+			// in the way and naming it would be a lie the founder would act on (7b).
+			Assert.AreEqual(WaterRiteAnswer.TooNew, KingdomWaterRiteRules.Answer(Facts(Hostility: 0, SharedDays: 3, RivalShrine: true)));
 		}
 
 		[Test]
 		public void Answer_NamesDevotionWhenThatAloneIsWhatIsInTheWay()
 		{
-			// Ten passes reaches 40, the distance without the devotion; with it, 60.
-			Assert.AreEqual(WaterRiteAnswer.Devout, KingdomWaterRiteRules.Answer(Facts(Hostility: 0, SharedPasses: 10, Devout: true)));
+			// Thirty days reaches 40, the distance without the devotion; with it, 60.
+			Assert.AreEqual(WaterRiteAnswer.Devout, KingdomWaterRiteRules.Answer(Facts(Hostility: 0, SharedDays: 30, Devout: true)));
 		}
 
 		[Test]
@@ -144,13 +146,13 @@ namespace ThousandAndFirst.Tests
 		{
 			// Distance 90 against a reach of 80: taking down the shrine or setting aside the
 			// devotion would each have closed it, and only one of the two is the founder's to do.
-			Assert.AreEqual(WaterRiteAnswer.RivalShrine, KingdomWaterRiteRules.Answer(Facts(Hostility: 0, SharedPasses: 20, RivalShrine: true, Devout: true)));
+			Assert.AreEqual(WaterRiteAnswer.RivalShrine, KingdomWaterRiteRules.Answer(Facts(Hostility: 0, SharedDays: 60, RivalShrine: true, Devout: true)));
 		}
 
 		[Test]
 		public void Answer_TooNewWhenALongerSharedLifeWouldEventuallyDoIt()
 		{
-			Assert.AreEqual(WaterRiteAnswer.TooNew, KingdomWaterRiteRules.Answer(Facts(Hostility: 50, SharedPasses: 1)));
+			Assert.AreEqual(WaterRiteAnswer.TooNew, KingdomWaterRiteRules.Answer(Facts(Hostility: 50, SharedDays: 3)));
 		}
 
 		[Test]
@@ -158,13 +160,13 @@ namespace ThousandAndFirst.Tests
 		{
 			// A fault line with a rival shrine on top of it is past the cap: no number of passes
 			// reaches it, and the honest answer is that one of the two creeds has to move.
-			Assert.AreEqual(WaterRiteAnswer.TooBitter, KingdomWaterRiteRules.Answer(Facts(Hostility: 100, SharedPasses: 1, RivalShrine: true)));
+			Assert.AreEqual(WaterRiteAnswer.TooBitter, KingdomWaterRiteRules.Answer(Facts(Hostility: 100, SharedDays: 1, RivalShrine: true)));
 		}
 
 		[Test]
 		public void Answer_IsAPureFunctionOfTheFacts_AskedTwiceItSaysTheSameThing()
 		{
-			WaterRiteFacts facts = Facts(Hostility: 50, SharedPasses: 7, RivalShrine: true, Devout: true);
+			WaterRiteFacts facts = Facts(Hostility: 50, SharedDays: 7, RivalShrine: true, Devout: true);
 			Assert.AreEqual(KingdomWaterRiteRules.Answer(facts), KingdomWaterRiteRules.Answer(facts));
 		}
 
@@ -179,22 +181,22 @@ namespace ThousandAndFirst.Tests
 			Assert.IsFalse(KingdomWaterRiteRules.Converted(WaterRiteAnswer.Steadfast));
 		}
 
-		// --- Needed passes: the door a "not yet" leaves open, and it really does open.
+		// --- Needed days: the door a "not yet" leaves open, and it really does open.
 
-		[TestCase(4, 1)]
-		[TestCase(5, 2)]
-		[TestCase(8, 2)]
-		[TestCase(40, 10)]
-		public void NeededPasses_RoundsUp_SoTheNamedPassActuallyCoversTheDistance(int distance, int expected)
+		[TestCase(4, 3)]
+		[TestCase(5, 4)]
+		[TestCase(8, 6)]
+		[TestCase(40, 30)]
+		public void NeededDays_RoundsUp_SoTheNamedDayActuallyCoversTheDistance(int distance, int expected)
 		{
-			Assert.AreEqual(expected, KingdomWaterRiteRules.NeededPasses(distance));
+			Assert.AreEqual(expected, KingdomWaterRiteRules.NeededDays(distance));
 		}
 
 		[Test]
-		public void NeededPasses_IsZeroWhenNoSharedLifeWouldEverCoverIt()
+		public void NeededDays_IsZeroWhenNoSharedLifeWouldEverCoverIt()
 		{
-			Assert.AreEqual(0, KingdomWaterRiteRules.NeededPasses(KingdomWaterRiteRules.ReachCap + 1));
-			Assert.AreNotEqual(0, KingdomWaterRiteRules.NeededPasses(KingdomWaterRiteRules.ReachCap));
+			Assert.AreEqual(0, KingdomWaterRiteRules.NeededDays(KingdomWaterRiteRules.ReachCap + 1));
+			Assert.AreNotEqual(0, KingdomWaterRiteRules.NeededDays(KingdomWaterRiteRules.ReachCap));
 		}
 
 		[TestCase(0, false, false)]
@@ -203,13 +205,13 @@ namespace ThousandAndFirst.Tests
 		[TestCase(0, false, true)]
 		[TestCase(50, false, true)]
 		[TestCase(0, true, true)]
-		public void NeededPasses_LivingExactlyThatManyPassesIsAcceptedAndOneFewerIsNot(int hostility, bool shrine, bool devout)
+		public void NeededDays_LivingExactlyThatManyDaysIsAcceptedAndOneFewerIsNot(int hostility, bool shrine, bool devout)
 		{
-			WaterRiteFacts atZero = Facts(Hostility: hostility, SharedPasses: 0, RivalShrine: shrine, Devout: devout);
-			int needed = KingdomWaterRiteRules.NeededPasses(KingdomWaterRiteRules.Distance(atZero));
+			WaterRiteFacts atZero = Facts(Hostility: hostility, SharedDays: 0, RivalShrine: shrine, Devout: devout);
+			int needed = KingdomWaterRiteRules.NeededDays(KingdomWaterRiteRules.Distance(atZero));
 			Assert.Greater(needed, 0);
-			Assert.AreEqual(WaterRiteAnswer.Accepted, KingdomWaterRiteRules.Answer(Facts(Hostility: hostility, SharedPasses: needed, RivalShrine: shrine, Devout: devout)));
-			Assert.AreNotEqual(WaterRiteAnswer.Accepted, KingdomWaterRiteRules.Answer(Facts(Hostility: hostility, SharedPasses: needed - 1, RivalShrine: shrine, Devout: devout)));
+			Assert.AreEqual(WaterRiteAnswer.Accepted, KingdomWaterRiteRules.Answer(Facts(Hostility: hostility, SharedDays: needed, RivalShrine: shrine, Devout: devout)));
+			Assert.AreNotEqual(WaterRiteAnswer.Accepted, KingdomWaterRiteRules.Answer(Facts(Hostility: hostility, SharedDays: needed - 1, RivalShrine: shrine, Devout: devout)));
 		}
 
 		// --- The price: the founding basin, held again, for one person.
@@ -240,67 +242,67 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void SomethingChanged_IsFalseWhenTheFounderSimplyAsksTheSameQuestionAgain()
 		{
-			WaterRiteFacts facts = Facts(Hostility: 50, SharedPasses: 3);
+			WaterRiteFacts facts = Facts(Hostility: 50, SharedDays: 3);
 			Assert.IsFalse(KingdomWaterRiteRules.SomethingChanged(StampAt(facts), facts));
 		}
 
 		[Test]
 		public void SomethingChanged_IsFalseWhenTheyLivedOneMorePassButNotEnoughOfThem()
 		{
-			WaterRiteFacts then = Facts(Hostility: 50, SharedPasses: 3);
-			Assert.IsFalse(KingdomWaterRiteRules.SomethingChanged(StampAt(then), Facts(Hostility: 50, SharedPasses: 4)));
+			WaterRiteFacts then = Facts(Hostility: 50, SharedDays: 3);
+			Assert.IsFalse(KingdomWaterRiteRules.SomethingChanged(StampAt(then), Facts(Hostility: 50, SharedDays: 4)));
 		}
 
 		[Test]
 		public void SomethingChanged_OpensWhenTheSharedLifeHasGrownLongEnoughToCoverTheDistance()
 		{
-			WaterRiteFacts then = Facts(Hostility: 50, SharedPasses: 3);
+			WaterRiteFacts then = Facts(Hostility: 50, SharedDays: 3);
 			WaterRiteStamp stamp = StampAt(then);
-			Assert.IsTrue(KingdomWaterRiteRules.SomethingChanged(stamp, Facts(Hostility: 50, SharedPasses: stamp.NeededPasses)));
+			Assert.IsTrue(KingdomWaterRiteRules.SomethingChanged(stamp, Facts(Hostility: 50, SharedDays: stamp.NeededDays)));
 		}
 
 		[Test]
 		public void SomethingChanged_OpensWhenTheQuarrelHasEased()
 		{
-			WaterRiteFacts then = Facts(Hostility: 100, SharedPasses: 3);
-			Assert.IsTrue(KingdomWaterRiteRules.SomethingChanged(StampAt(then), Facts(Hostility: 50, SharedPasses: 3)));
+			WaterRiteFacts then = Facts(Hostility: 100, SharedDays: 3);
+			Assert.IsTrue(KingdomWaterRiteRules.SomethingChanged(StampAt(then), Facts(Hostility: 50, SharedDays: 3)));
 		}
 
 		[Test]
 		public void SomethingChanged_DoesNotOpenWhenTheQuarrelGotWorse()
 		{
-			WaterRiteFacts then = Facts(Hostility: 50, SharedPasses: 3);
-			Assert.IsFalse(KingdomWaterRiteRules.SomethingChanged(StampAt(then), Facts(Hostility: 100, SharedPasses: 3)));
+			WaterRiteFacts then = Facts(Hostility: 50, SharedDays: 3);
+			Assert.IsFalse(KingdomWaterRiteRules.SomethingChanged(StampAt(then), Facts(Hostility: 100, SharedDays: 3)));
 		}
 
 		[Test]
 		public void SomethingChanged_OpensWhenTheRivalShrineIsGone()
 		{
-			WaterRiteFacts then = Facts(Hostility: 50, SharedPasses: 3, RivalShrine: true);
-			Assert.IsTrue(KingdomWaterRiteRules.SomethingChanged(StampAt(then), Facts(Hostility: 50, SharedPasses: 3)));
+			WaterRiteFacts then = Facts(Hostility: 50, SharedDays: 3, RivalShrine: true);
+			Assert.IsTrue(KingdomWaterRiteRules.SomethingChanged(StampAt(then), Facts(Hostility: 50, SharedDays: 3)));
 		}
 
 		[Test]
 		public void SomethingChanged_DoesNotOpenWhenAShrineAppearsWhereThereWasNone()
 		{
-			WaterRiteFacts then = Facts(Hostility: 50, SharedPasses: 3);
-			Assert.IsFalse(KingdomWaterRiteRules.SomethingChanged(StampAt(then), Facts(Hostility: 50, SharedPasses: 3, RivalShrine: true)));
+			WaterRiteFacts then = Facts(Hostility: 50, SharedDays: 3);
+			Assert.IsFalse(KingdomWaterRiteRules.SomethingChanged(StampAt(then), Facts(Hostility: 50, SharedDays: 3, RivalShrine: true)));
 		}
 
 		[Test]
 		public void SomethingChanged_OpensWheneverTheRealmBelievesSomethingElse()
 		{
-			WaterRiteFacts then = Facts(Hostility: 50, SharedPasses: 3);
-			Assert.IsTrue(KingdomWaterRiteRules.SomethingChanged(StampAt(then), Facts(Hostility: 50, SharedPasses: 3, RealmCreed: "Joppa")));
+			WaterRiteFacts then = Facts(Hostility: 50, SharedDays: 3);
+			Assert.IsTrue(KingdomWaterRiteRules.SomethingChanged(StampAt(then), Facts(Hostility: 50, SharedDays: 3, RealmCreed: "Joppa")));
 		}
 
 		[Test]
 		public void SomethingChanged_ASteadfastRefusalIsReopenedOnlyByTheRealmBelievingSomethingElse()
 		{
-			WaterRiteStamp stamp = StampAt(Facts(Hostility: 100, SharedPasses: 1, RivalShrine: true, Steadfast: true));
+			WaterRiteStamp stamp = StampAt(Facts(Hostility: 100, SharedDays: 1, RivalShrine: true, Steadfast: true));
 			Assert.IsTrue(stamp.Absolute);
-			Assert.IsFalse(KingdomWaterRiteRules.SomethingChanged(stamp, Facts(Hostility: 0, SharedPasses: KingdomWaterRiteRules.MaxCountedPasses, Steadfast: true)));
-			Assert.IsTrue(KingdomWaterRiteRules.SomethingChanged(stamp, Facts(Hostility: 100, SharedPasses: 1, RivalShrine: true, Steadfast: true, RealmCreed: "Joppa")));
+			Assert.IsFalse(KingdomWaterRiteRules.SomethingChanged(stamp, Facts(Hostility: 0, SharedDays: KingdomWaterRiteRules.MaxCountedDays, Steadfast: true)));
+			Assert.IsTrue(KingdomWaterRiteRules.SomethingChanged(stamp, Facts(Hostility: 100, SharedDays: 1, RivalShrine: true, Steadfast: true, RealmCreed: "Joppa")));
 		}
 
 		[Test]
@@ -326,47 +328,59 @@ namespace ThousandAndFirst.Tests
 			Assert.AreEqual(same, KingdomWaterRiteRules.SameCreed(b, a));
 		}
 
-		// --- Shared living: attended passes, counted once, and never a clock.
+		// --- Shared living: the days somebody has actually lived here.
 
-		[Test]
-		public void ShouldCountPass_CountsASettlerNobodyHasCountedYet()
+		[TestCase(-1, 1, 1)]
+		[TestCase(0, 1, 1)]
+		[TestCase(5, 1, 6)]
+		[TestCase(5, 12, 17)]
+		public void SharedDaysAfter_AdvancesByExactlyTheDaysLived(int before, int days, int after)
 		{
-			Assert.IsTrue(KingdomWaterRiteRules.ShouldCountPass(0L, 0L));
-			Assert.IsTrue(KingdomWaterRiteRules.ShouldCountPass(-5L, 40L));
+			Assert.AreEqual(after, KingdomWaterRiteRules.SharedDaysAfter(before, days));
 		}
 
 		[Test]
-		public void ShouldCountPass_CountsAtMostOneDayOfSharedLivingPerDay()
+		public void SharedDaysAfter_ANonPositiveStretchChangesNothing()
 		{
-			// The pacing guard: walking out of the zone and back in is a second pass, and it must
-			// not be a second day lived. A day apart is required; a day apart is never sufficient
-			// on its own, because only the attended pass calls this at all.
-			Assert.IsFalse(KingdomWaterRiteRules.ShouldCountPass(KingdomRules.TicksPerDay, KingdomRules.TicksPerDay));
-			Assert.IsFalse(KingdomWaterRiteRules.ShouldCountPass(KingdomRules.TicksPerDay, KingdomRules.TicksPerDay + 1L));
-			Assert.IsFalse(KingdomWaterRiteRules.ShouldCountPass(KingdomRules.TicksPerDay, (KingdomRules.TicksPerDay * 2L) - 1L));
-			Assert.IsTrue(KingdomWaterRiteRules.ShouldCountPass(KingdomRules.TicksPerDay, KingdomRules.TicksPerDay * 2L));
+			Assert.AreEqual(5, KingdomWaterRiteRules.SharedDaysAfter(5, 0));
+			Assert.AreEqual(5, KingdomWaterRiteRules.SharedDaysAfter(5, -7));
+			Assert.AreEqual(0, KingdomWaterRiteRules.SharedDaysAfter(-3, 0), "a negative reads as none");
 		}
 
 		[Test]
-		public void ShouldCountPass_AClockThatWentBackwardsAwardsNothing()
+		public void SharedDaysAfter_StopsWhereTheReachStopsMeaningAnything()
 		{
-			Assert.IsFalse(KingdomWaterRiteRules.ShouldCountPass(KingdomRules.TicksPerDay * 9L, KingdomRules.TicksPerDay));
-		}
-
-		[TestCase(-1, 1)]
-		[TestCase(0, 1)]
-		[TestCase(5, 6)]
-		public void PassesAfter_AdvancesByExactlyOnePass(int before, int after)
-		{
-			Assert.AreEqual(after, KingdomWaterRiteRules.PassesAfter(before));
+			Assert.AreEqual(KingdomWaterRiteRules.MaxCountedDays, KingdomWaterRiteRules.SharedDaysAfter(KingdomWaterRiteRules.MaxCountedDays, 1));
+			Assert.AreEqual(KingdomWaterRiteRules.MaxCountedDays, KingdomWaterRiteRules.SharedDaysAfter(0, KingdomWaterRiteRules.MaxCountedDays + 9));
+			Assert.AreEqual(KingdomWaterRiteRules.MaxCountedDays, KingdomWaterRiteRules.SharedDaysAfter(0, 1000000000),
+				"a thousand days and a hundred and five arrive at the same place");
+			Assert.AreEqual(KingdomWaterRiteRules.ReachCap, KingdomWaterRiteRules.Reach(KingdomWaterRiteRules.MaxCountedDays));
 		}
 
 		[Test]
-		public void PassesAfter_StopsWhereTheReachStopsMeaningAnything()
+		public void SharedLivingHoldsItsPaceAcrossTheChangeOfUnit()
 		{
-			Assert.AreEqual(KingdomWaterRiteRules.MaxCountedPasses, KingdomWaterRiteRules.PassesAfter(KingdomWaterRiteRules.MaxCountedPasses));
-			Assert.AreEqual(KingdomWaterRiteRules.MaxCountedPasses, KingdomWaterRiteRules.PassesAfter(KingdomWaterRiteRules.MaxCountedPasses + 9));
-			Assert.AreEqual(KingdomWaterRiteRules.ReachCap, KingdomWaterRiteRules.Reach(KingdomWaterRiteRules.MaxCountedPasses));
+			// The recalibration, from the founder's side: three cohabited days buy exactly the
+			// four of reach one attended pass used to, and a hundred and five buy the whole of
+			// what thirty-five visits bought. If either drifts, the water rite silently became a
+			// different arc.
+			Assert.AreEqual(KingdomWaterRiteRules.ReachPerSharedPass,
+				KingdomWaterRiteRules.Reach(KingdomBrinkRules.CohabitationDaysPerAttendedPass));
+			Assert.AreEqual(KingdomWaterRiteRules.ReachCap,
+				KingdomWaterRiteRules.Reach(KingdomBrinkRules.InCohabitationDays(KingdomWaterRiteRules.SharedPassesForFullReach)));
+		}
+
+		[Test]
+		public void Reach_NeverFallsAsTheDaysRise()
+		{
+			int last = 0;
+			for (int days = 0; days <= KingdomWaterRiteRules.MaxCountedDays + 5; days++)
+			{
+				int reach = KingdomWaterRiteRules.Reach(days);
+				Assert.GreaterOrEqual(reach, last, "a day lived here can never take reach away");
+				Assert.LessOrEqual(reach, KingdomWaterRiteRules.ReachCap);
+				last = reach;
+			}
 		}
 
 		// --- The exit. A settler may always emigrate rather than convert.

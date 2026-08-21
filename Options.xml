@@ -20,5 +20,6 @@
   <option ID="r_TAF_OptionCarrySign" DisplayText="The Thousand and First: a planted carry-sign hauls a marked pile or container home over distance and days" Category="Mods" Type="Checkbox" Default="Yes" />
   <option ID="r_TAF_OptionLodging" DisplayText="The Thousand and First: settlers are assigned to specific homes, join only where one would take them, and leave if none will" Category="Mods" Type="Checkbox" Default="Yes" />
   <option ID="r_TAF_OptionFaith" DisplayText="The Thousand and First: consecrated shrines slowly draw neutral settlers toward their creed, and staffed scriptoria soften the ambient grudge" Category="Mods" Type="Checkbox" Default="Yes" />
+  <option ID="r_TAF_OptionSubsidence" DisplayText="The Thousand and First: a settlement standing above what its works carry settles back toward them, and its works fall into disrepair" Category="Mods" Type="Checkbox" Default="Yes" />
   <option ID="r_TAF_OptionWear" DisplayText="The Thousand and First: raids, hard running, and temperamental salvage can wear your works, which mend on their own out of what the stores can spare" Category="Mods" Type="Checkbox" Default="Yes" />
 </options>

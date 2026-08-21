@@ -64,6 +64,22 @@ namespace ThousandAndFirst
 		/// <summary>Works the settlement built that require crew, in placement order.</summary>
 		public readonly List<GameObject> Works = new List<GameObject>();
 
+		/// <summary>
+		/// Everything the settlement built and finished, crewed or not, in placement order.
+		/// <para>
+		/// A superset of <see cref="Works"/> and of <see cref="Defences"/>: a cistern asks for
+		/// nobody and a palisade defends without a crew, and both stand. This is the list
+		/// <c>KingdomSubsidence</c> sums <c>Carries</c> over, so a settlement is measured by
+		/// everything holding it up rather than only by the parts of it that want hands.
+		/// </para>
+		/// <para>
+		/// Gated on <c>KingdomBuilt</c> like the rest, which is what makes "a scaffold carries
+		/// nothing until it is raised" true here as well &mdash; a half-built cistern feeds
+		/// nobody, and a settlement cannot outrun its own level by staking plans.
+		/// </para>
+		/// </summary>
+		public readonly List<GameObject> Built = new List<GameObject>();
+
 		/// <summary>Defensive works built here, crewed or not.</summary>
 		public readonly List<GameObject> Defences = new List<GameObject>();
 
@@ -92,6 +108,7 @@ namespace ThousandAndFirst
 				}
 				if (item.GetIntProperty("KingdomBuilt") == 1)
 				{
+					survey.Built.Add(item);
 					if (item.HasPart("Bed"))
 					{
 						survey.Beds++;

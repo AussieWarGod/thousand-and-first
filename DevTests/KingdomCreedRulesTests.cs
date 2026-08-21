@@ -257,18 +257,45 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void AbsenceCannotOutrunPresence()
+		public void DissentRunsTheFullElapsedNowThatSecessionHasItsWindow()
 		{
-			// Dissent is the ONE counter the uncapping deliberately leaves alone, and this is why:
-			// secession fires on the same pass dissent reaches its threshold, with no arrestable
-			// window in front of it. Uncapping accrual before that window exists would make an
-			// absence lose a city faster than presence does -- Addendum 8 clause 3 exactly
-			// inverted. So KingdomCreed still reads the capped HeartbeatDays, and this test holds
-			// the line until the package that builds the brink can move both together.
-			int aSeason = KingdomRules.HeartbeatDays(KingdomRules.TicksPerDay * 90);
-			int atTheCap = KingdomRules.HeartbeatDays(KingdomRules.TicksPerDay * KingdomRules.LegacyAbsenceCap);
-			Assert.AreEqual(atTheCap, aSeason);
-			Assert.AreEqual(KingdomCreedRules.AccrueDissent(0, 100, atTheCap), KingdomCreedRules.AccrueDissent(0, 100, aSeason));
+			// The uncapping and the window landed together, and had to. Dissent now accrues over
+			// real elapsed days (Addendum 8 clause 1) rather than the three the absence cap used
+			// to forgive, so a season away really is a season of quarrelling.
+			int aSeason = KingdomRules.ElapsedDays(KingdomRules.TicksPerDay * 90);
+			Assert.AreEqual(90, aSeason, "the clock is uncapped");
+			Assert.Greater(KingdomCreedRules.AccrueDissent(0, 100, aSeason),
+				KingdomCreedRules.AccrueDissent(0, 100, KingdomRules.LegacyAbsenceCap),
+				"absence is no longer forgiven here");
+		}
+
+		[Test]
+		public void AbsenceCannotOutrunPresenceBecauseItStopsAtTheBreakingPoint()
+		{
+			// What replaced the cap. Uncapping accrual on its own would have made an absence lose
+			// a city FASTER than presence does -- clause 3 exactly inverted -- so the bound moved
+			// from the clock to the outcome: dissent clamps at the breaking point, records a
+			// brink, and the founder still gets SecessionWindowPasses attended passes. A founder
+			// away ninety days and one away a thousand come home to exactly the same realm.
+			int ninety = KingdomCreedRules.AccrueDissent(0, 100, 90);
+			int aThousand = KingdomCreedRules.AccrueDissent(0, 100, 1000);
+			Assert.AreEqual(KingdomCreedRules.DissentBreaking, ninety);
+			Assert.AreEqual(ninety, aThousand, "nothing accrues past the breaking point");
+			Assert.AreEqual(CityTemper.Secession, KingdomCreedRules.ClassifyTemper(aThousand));
+			Assert.Greater(KingdomCreedRules.SecessionWindowPasses, 0,
+				"and reaching it costs the founder nothing until they have spent the window");
+		}
+
+		[Test]
+		public void AccrueDissent_AnAbsenceLongEnoughToOverflowAnIntStillOnlyReachesTheBreakingPoint()
+		{
+			// Four points a day times an uncapped day count is a number an int cannot hold, and a
+			// dissent that wrapped negative would read as concord -- a realm at the breaking point
+			// silently reported as being at peace.
+			Assert.AreEqual(KingdomCreedRules.DissentBreaking, KingdomCreedRules.AccrueDissent(0, 100, int.MaxValue));
+			Assert.AreEqual(KingdomCreedRules.DissentBreaking, KingdomCreedRules.AccrueDissent(99, 100, int.MaxValue));
+			Assert.AreEqual(0, KingdomCreedRules.AccrueDissent(0, 20, int.MaxValue),
+				"and ordinary dislike still buys nothing at all, however long it is left");
 		}
 
 		[TestCase(50, -20, 30)]
@@ -324,8 +351,8 @@ namespace ThousandAndFirst.Tests
 		public void TheLoudestWarningStandsForManyAttendedDaysBeforeTheCityLeaves()
 		{
 			// "Long and high", not merely high: at the very worst hostility the shipped data holds,
-			// the founder gets a week of top-tier warning after the rupture line before losing
-			// anything, and every one of those days is a day they were present for.
+			// the founder gets a week of top-tier warning after the rupture line before the realm
+			// so much as reaches the breaking point.
 			int dissent = KingdomCreedRules.DissentRupture;
 			int days = 0;
 			while (KingdomCreedRules.ClassifyTemper(dissent) != CityTemper.Secession)
@@ -335,6 +362,50 @@ namespace ThousandAndFirst.Tests
 				Assert.Less(days, 100, "the ladder must terminate");
 			}
 			Assert.GreaterOrEqual(days, 7);
+			// And the window sits one rung under that span, so the loudest warning always stands
+			// for longer than the last chance that follows it. This is the relation the window's
+			// length was chosen for; if either number moves independently, it breaks here.
+			Assert.Less(KingdomCreedRules.SecessionWindowPasses, days,
+				"the window must be shorter than the warning that precedes it");
+		}
+
+		[Test]
+		public void SecessionHasAWindowAndItIsSpentInAttendedPassesLikeEveryOtherBrink()
+		{
+			// The gap the whole package existed to close: reaching the breaking point used to
+			// BE the secession. Now it is a brink, and the brink's own arithmetic decides when
+			// the city actually walks.
+			Assert.AreEqual(KingdomBrinkRules.CityBrinkWindow, KingdomCreedRules.SecessionWindowPasses);
+			int spent = KingdomBrinkRules.Unannounced;
+			int passes = 0;
+			while (!KingdomBrinkRules.WindowSpent(BrinkKind.City, spent))
+			{
+				spent = KingdomBrinkRules.AfterAttendedPass(spent);
+				passes++;
+			}
+			Assert.AreEqual(KingdomCreedRules.SecessionWindowPasses + 1, passes,
+				"the pass it is announced on, and then a whole window of attended passes");
+		}
+
+		[Test]
+		public void SecessionBrinkSpeech_NamesTheCityTheElapsedAndWhatIsLeftOfTheWindow()
+		{
+			// The Secession rung of TemperSpeech is deliberately silent -- until the brink there
+			// was nothing to say at that tier, because the city was already gone. This is the
+			// sentence that fills it, and it must carry all three facts a founder can act on.
+			Assert.AreEqual("", KingdomCreedRules.TemperSpeech(CityTemper.Secession, "Nesh", "Basra"));
+			string line = KingdomCreedRules.SecessionBrinkSpeech("Basra", "Nesh", 31, 3);
+			StringAssert.Contains("Basra", line);
+			StringAssert.Contains("Nesh", line);
+			StringAssert.Contains("31 days", line);
+			StringAssert.Contains("3 more visits", line);
+		}
+
+		[Test]
+		public void SecessionBrinkSpeech_IsSingularOnTheLastVisitAndSaysSomethingWithNoNamesAtAll()
+		{
+			StringAssert.Contains("One more visit", KingdomCreedRules.SecessionBrinkSpeech("Basra", "Nesh", 2, 1));
+			Assert.IsFalse(string.IsNullOrEmpty(KingdomCreedRules.SecessionBrinkSpeech(null, null, 0, 2)));
 		}
 
 		[Test]

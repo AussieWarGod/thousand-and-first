@@ -39,14 +39,16 @@ namespace ThousandAndFirst
 	/// rebalance moves it for a house raised a year ago and a save carries none of it.
 	/// </para>
 	/// <para>
-	/// <b>Housing binds (Addendum 4b).</b> A settler joins only if a home exists they would take
-	/// (<see cref="WouldTakeArrival"/>, called by the arrival loop). A settler who loses every
-	/// acceptable home is named once, given <c>KingdomLodgingRules.GracePasses</c> ATTENDED
-	/// passes for the founder to act, and then leaves through <c>KingdomGrowth.Emigrate</c>, the
-	/// machinery the settlement already has. The grace is counted in attended passes and in
-	/// nothing else: no clock is read here, so a founder who is away spends nobody's grace.
-	/// Nothing is a meter and nothing decays; the whole of the state is one small per-city map of
-	/// name to passes elapsed, and it empties the moment somebody is housed.
+	/// <b>Housing binds (Addendum 4b), through the brink.</b> A settler joins only if a home
+	/// exists they would take (<see cref="WouldTakeArrival"/>, called by the arrival loop). A
+	/// settler who loses every acceptable home has reached an irreversible line, so the loss is
+	/// RECORDED with the tick it happened (<see cref="KingdomBrink"/>) and nothing accrues past
+	/// it; they are named once with the honest elapsed; the founder gets
+	/// <c>KingdomLodgingRules.GracePasses</c> ATTENDED passes to act; and then they leave through
+	/// <c>KingdomGrowth.Emigrate</c>, the machinery the settlement already has. The window is
+	/// counted in attended passes and in nothing else, so a founder who is away spends nobody's.
+	/// Nothing is a meter and nothing decays; the record lives on the settler themselves and is
+	/// lifted &mdash; and unsaid &mdash; the moment somebody is housed.
 	/// </para>
 	/// </summary>
 	public static class KingdomLodging
@@ -267,16 +269,16 @@ namespace ThousandAndFirst
 					// cleared rather than left dangling, and they are reconsidered below exactly
 					// like a resident who never had a home.
 					resident.SetStringProperty(HomePlotIdProperty, null);
+					// Whoever they were living beside, they are not living beside them now, so
+					// the cohabitation clock osmosis reads restarts here rather than crediting a
+					// household that has stopped existing.
+					KingdomConversion.ForgetCohabitation(resident);
 				}
 				unassigned.Add(resident);
 			}
 			for (int i = 0; i < unassigned.Count; i++)
 			{
 				AssignOne(System, Z, unassigned[i], homes, occupancy, SpendGrace);
-			}
-			if (SpendGrace)
-			{
-				ForgetDeparted(System);
 			}
 			return occupancy;
 		}
@@ -357,18 +359,22 @@ namespace ThousandAndFirst
 			}
 			string winningPlotId = eligible[chosen].PlotId;
 			Resident.SetStringProperty(HomePlotIdProperty, winningPlotId);
+			// A new roof is a new household, so the cohabitation clock starts from tonight. They
+			// do not inherit the days they spent under somebody else's roof, or outside.
+			KingdomConversion.ForgetCohabitation(Resident);
 			bool wasUnhoused = Resident.GetIntProperty(UnhousedAnnouncedProperty) == 1;
 			if (wasUnhoused)
 			{
 				Resident.SetIntProperty(UnhousedAnnouncedProperty, 0);
 			}
-			// Housed is housed: the grace a settler was spending is not banked, halved or
-			// remembered. It is forgotten, and if they lose their home again they get the whole of
-			// it back, because the founder is being asked to act on THIS loss.
-			string housedRoll = RollNameOf(Resident);
-			if (!string.IsNullOrEmpty(housedRoll))
+			// Housed is housed: the window a settler was spending is not banked, halved or
+			// remembered. The brink is lifted outright, and if they lose their home again they get
+			// the whole of it back, because the founder is being asked to act on THIS loss. Rule 2
+			// -- the pressure is a fact re-derived every pass, so taking it off takes it off -- and
+			// the unsaying is owed as loudly as the warning was.
+			if (KingdomBrink.Lift(Resident, BrinkKind.Roof))
 			{
-				System.LodgingGrace.Remove(housedRoll);
+				KingdomBrink.Unsay(System, BrinkKind.Roof, residentName);
 			}
 			AddOccupant(Occupancy, winningPlotId, Resident);
 			if (wasUnhoused)
@@ -381,76 +387,61 @@ namespace ThousandAndFirst
 			}
 		}
 
-		// --- Addendum 4b: the grace, and the leaving ---------------------------------------
+		// --- Addendum 4b: the brink, the window, and the leaving ---------------------------
 
-		// One attended pass of grace, and never anything else: this runs from the settlement pass
-		// and from nowhere else, so a founder who is away cannot spend it. When it runs out the
-		// settler leaves through the emigration machinery the settlement already has, chronicled
-		// by name and cause in both registers by that machinery.
+		// The roof instance of the shared brink (KingdomBrinkRules). Losing every acceptable home
+		// is the irreversible line: it is RECORDED with the tick it happened and then nothing
+		// accrues, so a founder away a thousand days and a founder away ten come home to a settler
+		// standing in exactly the same place. The window is spent in attended passes and in
+		// nothing else -- this runs from the settlement pass and from nowhere else -- and when it
+		// is spent the settler leaves through the emigration machinery the settlement already has,
+		// chronicled by name and cause in both registers by that machinery.
 		private static void SpendOnePassOfGrace(KingdomSystem System, Zone Z, GameObject Resident, string ResidentName)
 		{
 			if (string.IsNullOrEmpty(ResidentName))
 			{
 				// Somebody the roll does not carry: a founding citizen, or a person the settlement
-				// never named. The grace is keyed to the roll, so an unnamed resident simply never
+				// never named. The brink names its subject, so an unnamed resident simply never
 				// enters it and never leaves for want of a roof. Staying is the safe answer to a
 				// question the registers cannot record, and it is the one taken here.
 				return;
 			}
-			int grace;
-			if (!System.LodgingGrace.TryGetValue(ResidentName, out grace))
+			long now = (The.Game != null) ? The.Game.TimeTicks : 0L;
+			// Recorded at the tick the roof was lost, which today is the pass that found it: no
+			// absence can currently take a settler's home while nobody is watching. The dating is
+			// built in rather than deferred so that when subsidence can (P2), the same line says
+			// the honest number without being rewritten.
+			KingdomBrink.Record(Resident, BrinkKind.Roof, now, null, 0);
+			BrinkRecord brink = KingdomBrink.Of(Resident, BrinkKind.Roof);
+			bool announce = KingdomBrinkRules.ShouldAnnounce(brink.PassesSpent);
+			brink = KingdomBrink.SpendPass(Resident, BrinkKind.Roof);
+			if (announce)
 			{
-				grace = KingdomLodgingRules.NoGrace;
+				KingdomBrink.Announce(System, BrinkKind.Roof, ResidentName, null, brink, now);
 			}
-			grace = KingdomLodgingRules.GraceAfterPass(grace);
-			System.LodgingGrace[ResidentName] = grace;
-			if (!KingdomLodgingRules.GraceRunOut(grace))
+			if (!KingdomBrinkRules.WindowSpent(BrinkKind.Roof, brink.PassesSpent))
 			{
 				return;
 			}
-			string leaving = KingdomLodgingRules.LeavingLine(ResidentName);
+			string leaving = KingdomLodgingRules.LeavingLine(ResidentName, KingdomBrinkRules.DaysStood(brink.ReachedTick, now));
 			System.Ledger.Note("{{r|" + leaving + "}}");
 			if (KingdomGrowth.Emigrate(System, Z, null, Resident, KingdomLodgingRules.DepartureCause))
 			{
-				System.LodgingGrace.Remove(ResidentName);
+				KingdomBrink.Lift(Resident, BrinkKind.Roof);
 				return;
 			}
 			// The settlement would not let them go &mdash; they are the last of the loyal core, or
-			// the emigration machinery could not take them. The grace stays spent and is tried
+			// the emigration machinery could not take them. The window stays spent and is tried
 			// again on the next attended pass rather than being reset, so nothing is lost and
 			// nobody is told twice that they are going.
 		}
 
-		// Names that have left the roll are names nothing will ever house again. Pruned here so a
-		// dead or departed settler's grace cannot be inherited by a later settler of the same
-		// name, and so the map stays the size of the city rather than of its history.
-		private static void ForgetDeparted(KingdomSystem System)
-		{
-			if (System.LodgingGrace.Count == 0)
-			{
-				return;
-			}
-			List<string> gone = null;
-			foreach (KeyValuePair<string, int> entry in System.LodgingGrace)
-			{
-				if (!System.RosterNames.Contains(entry.Key))
-				{
-					if (gone == null)
-					{
-						gone = new List<string>();
-					}
-					gone.Add(entry.Key);
-				}
-			}
-			if (gone == null)
-			{
-				return;
-			}
-			for (int i = 0; i < gone.Count; i++)
-			{
-				System.LodgingGrace.Remove(gone[i]);
-			}
-		}
+		// The per-city LodgingGrace map this file used to keep is RETIRED. A settler's window now
+		// lives on the settler (KingdomBrink), which fixes two things at once: two settlers of the
+		// same name in two cities no longer share one entry, and a departed settler's window
+		// cannot be inherited by a later settler of the same name, because it walks out of the
+		// settlement inside them. Nothing needs pruning, so nothing prunes. The field itself is
+		// KingdomSystem's and KingdomSettlement's to remove.
 
 		// --- Facts about people and places ------------------------------------------------
 
@@ -679,7 +670,8 @@ namespace ThousandAndFirst
 
 		/// <summary>The lodging line <c>kingdom:dump</c> appends for the zone the founder is
 		/// standing in: how many of the residents present are housed, who is not, and how much of
-		/// their grace (Addendum 4b) they have spent.</summary>
+		/// their brink window (Addendum 4b) they have spent, with how long they have actually been
+		/// without a roof.</summary>
 		public static string DumpLine(KingdomSystem System, Zone Z)
 		{
 			if (Z == null)
@@ -702,11 +694,12 @@ namespace ThousandAndFirst
 					continue;
 				}
 				string name = NameOf(resident);
-				string roll = RollNameOf(resident);
-				int grace;
-				if (System != null && roll != null && System.LodgingGrace.TryGetValue(roll, out grace))
+				BrinkRecord brink = KingdomBrink.Of(resident, BrinkKind.Roof);
+				if (brink.Stands)
 				{
-					name += " (grace " + grace + "/" + KingdomLodgingRules.GracePasses + ")";
+					long now = (The.Game != null) ? The.Game.TimeTicks : 0L;
+					name += " (brink " + brink.PassesSpent + "/" + KingdomLodgingRules.GracePasses
+						+ ", " + KingdomBrinkRules.DaysStood(brink.ReachedTick, now) + "d)";
 				}
 				sleepingOpen.Add(name);
 			}

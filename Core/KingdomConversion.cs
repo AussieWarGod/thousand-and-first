@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using XRL;
 using XRL.World;
 
 namespace ThousandAndFirst
@@ -38,14 +39,14 @@ namespace ThousandAndFirst
 	/// Conversion, and the exit from it. The engine-coupled shell for Addendum 5's two passive
 	/// channels and for the guard every channel shares.
 	/// <para>
-	/// <b>Osmosis.</b> Every attended pass, each housed settler whose household holds a creed by
-	/// strict majority is pulled a little toward it, scaled by the closeness ladder: nothing at
-	/// all in one open room (the people in it already agree by construction), fastest in a hut,
-	/// slowest in quarters of one's own, and nothing across a feeling the quarters would refuse.
-	/// The stone house is the only architecture that holds an ambient grudge under one roof, so
-	/// the stone house is where a real difference actually gets crossed &mdash; which is the whole
-	/// of the healing arc the fault-line ceiling (Addendum 4d) needs. Partition, then build
-	/// better, then the quarters dissolve.
+	/// <b>Osmosis.</b> Each housed settler whose household holds a creed by strict majority is
+	/// pulled a little toward it for every DAY they actually live under that roof, scaled by the
+	/// closeness ladder: nothing at all in one open room (the people in it already agree by
+	/// construction), fastest in a hut, slowest in quarters of one's own, and nothing across a
+	/// feeling the quarters would refuse. The stone house is the only architecture that holds an
+	/// ambient grudge under one roof, so the stone house is where a real difference actually gets
+	/// crossed &mdash; which is the whole of the healing arc the fault-line ceiling (Addendum 4d)
+	/// needs. Partition, then build better, then the quarters dissolve.
 	/// </para>
 	/// <para>
 	/// <b>Culture.</b> Each witnessed shared meal nudges its attendees toward the table's own
@@ -65,11 +66,21 @@ namespace ThousandAndFirst
 	/// its own.
 	/// </para>
 	/// <para>
-	/// <b>Counted in shared living, never in time.</b> Nothing in this file reads a tick, a day or
-	/// a calendar. Every counter moves in <see cref="OnSettlementPass"/> and in
-	/// <see cref="OnSharedMeal"/>, which run only when the founder is standing on the ground, so a
-	/// settlement left alone for a season comes home holding exactly what it held when it was
-	/// left. Time is labour here, never maturation.
+	/// <b>Counted in cohabitation time, resolved at awareness.</b> People go on living together
+	/// whether or not anyone is watching (Addendum 8 clause 1, which names osmosis), so shared
+	/// living accrues for every day two settlers actually spent under one roof and the founder's
+	/// presence has nothing to do with it. What the founder's presence still governs is the
+	/// WINDOW: the road ends in a brink rather than in a conversion, and its
+	/// <see cref="KingdomConversionRules.ResentedPasses"/> attended passes are spent here and
+	/// nowhere else, so nobody comes home to find their city has quietly changed its mind.
+	/// </para>
+	/// <para>
+	/// <b>What the absence is allowed to assume.</b> Who sleeps where is written only by
+	/// <c>KingdomLodging.OnSettlementPass</c>, which is attended, so the household standing at the
+	/// last pass is the household that stood through the whole stretch &mdash; nobody moved house
+	/// while nobody was there. The cohabitation clock is therefore honest by construction, and it
+	/// is restarted (<see cref="ForgetCohabitation"/>) the moment lodging does move somebody, so a
+	/// settler never inherits days spent under a roof they have left.
 	/// </para>
 	/// </summary>
 	public static class KingdomConversion
@@ -89,6 +100,22 @@ namespace ThousandAndFirst
 		// names a creed this settler resents is the one they leave over -- a second grievance does
 		// not make anybody leave twice.
 		private static readonly List<IConversionPressure> Sources = new List<IConversionPressure>();
+
+		/// <summary>
+		/// Tick this settler's cohabitation was last credited at. Stamped on the settler rather
+		/// than kept in a map, because how long somebody has lived under their roof is a fact
+		/// about them: it survives a seat swap, a secession and a save without any per-city map
+		/// having to remember to carry it.
+		/// </summary>
+		public const string CohabitTickProperty = "KingdomCohabitTick";
+
+		/// <summary>
+		/// Roads of shared living this settler has walked all the way to the end, converted or
+		/// refused. The draw's ordinal (<c>KingdomConversionRules.RoadEnd</c>): progress holds at
+		/// the road's end and can no longer be divided to find out which road they are on, so it
+		/// is counted instead.
+		/// </summary>
+		public const string RoadsWalkedProperty = "KingdomConversionRoads";
 
 		/// <summary>
 		/// Registers a standing source of conversion pressure. Idempotent: registering the same
@@ -113,9 +140,10 @@ namespace ThousandAndFirst
 		}
 
 		/// <summary>
-		/// The kingdom's one attended pass over what its people believe: pulls each household's
-		/// minority a little toward its majority, turns anyone the road and the draw agree on, and
-		/// spends one pass of grace on anyone standing under a creed they resent.
+		/// The kingdom's one attended pass over what its people believe: credits every household's
+		/// minority the days they actually spent under its roof, records a brink for anyone who
+		/// has reached the end of that road, spends one pass of every standing window, and turns
+		/// anyone whose window has run out and whose draw agrees.
 		/// <para>
 		/// Preconditions: called from the settlement pass, on claimed ground, AFTER
 		/// <c>KingdomLodging.OnSettlementPass</c> &mdash; who sleeps where is the input, so a pass
@@ -135,10 +163,18 @@ namespace ThousandAndFirst
 			{
 				return;
 			}
+			long now = (The.Game != null) ? The.Game.TimeTicks : 0L;
 			Dictionary<string, List<GameObject>> households = Households(residents);
+			// The window first, and osmosis after it, and the order is load-bearing: a brink
+			// recorded THIS pass is announced with nothing spent, and spending it again in the
+			// same pass would cost the founder a visit they never had.
 			for (int i = 0; i < residents.Count; i++)
 			{
-				Osmosis(System, Z, residents[i], households);
+				CreedWindow(System, Z, residents[i], now);
+			}
+			for (int i = 0; i < residents.Count; i++)
+			{
+				Osmosis(System, Z, residents[i], households, now);
 			}
 			for (int i = 0; i < residents.Count; i++)
 			{
@@ -196,7 +232,11 @@ namespace ThousandAndFirst
 					? KingdomConversionRules.MealSharedFor(progress.Shared)
 					: KingdomConversionRules.MealShared;
 				SetProgress(System, roll, KingdomConversionRules.Advance(progress, majority, points));
-				MaybeConvert(System, Z, attendee, roll, ConversionChannel.Culture);
+				// A meal can never carry anybody to the road's end -- the ceiling is half of it --
+				// so this is here for the settler the meal took points OFF: if a counter-pull has
+				// dropped them back below the end of a road they were standing at, their brink is
+				// lifted and unsaid on the spot.
+				LiftIfArrested(System, attendee, roll);
 			}
 		}
 
@@ -253,9 +293,10 @@ namespace ThousandAndFirst
 		/// cleared.
 		/// <para>
 		/// Side effects: the settler's creed property and the city's <c>CreedCounts</c> change,
-		/// two chronicle entries and one ledger note are written, and any standing grace this
-		/// settler was spending is forgotten &mdash; a person who has taken the creed is no longer
-		/// under pressure from it. Failure mode: returns false and changes nothing.
+		/// two chronicle entries and one ledger note are written, and any standing grace or brink
+		/// this settler was spending is forgotten &mdash; a person who has taken the creed is no
+		/// longer under pressure from it, and no longer one window away from it. Failure mode:
+		/// returns false and changes nothing.
 		/// </para>
 		/// </summary>
 		/// <param name="System">The realm.</param>
@@ -288,6 +329,12 @@ namespace ThousandAndFirst
 				System.ConversionToward.Remove(roll);
 				System.ConversionResented.Remove(roll);
 			}
+			// And the brink they were standing at, if any. Cleared HERE rather than at each call
+			// site because this is the one path a conversion may take: a person who has taken the
+			// creed is not one window away from taking it, and a record left standing would be
+			// unsaid on the next pass -- telling the founder that somebody who converted last
+			// night "holds what they held".
+			KingdomBrink.Lift(Settler, BrinkKind.Creed);
 			string creedName = KingdomCreed.CreedName(Creed);
 			string telling = KingdomConversionRules.ConversionTelling(Channel, named, creedName);
 			if (KingdomConversionRules.Contested(hostility))
@@ -304,14 +351,16 @@ namespace ThousandAndFirst
 		}
 
 		/// <summary>The conversion line <c>kingdom:dump</c> appends for the zone the founder is
-		/// standing in: who is being pulled where, how far along they are, and who is spending a
-		/// grace under a creed they resent.</summary>
+		/// standing in: who is being pulled where, how far along they are, who is standing at the
+		/// end of a road with a window running, and who is spending a grace under a creed they
+		/// resent.</summary>
 		public static string DumpLine(KingdomSystem System, Zone Z)
 		{
 			if (System == null || Z == null)
 			{
 				return "";
 			}
+			long now = (The.Game != null) ? The.Game.TimeTicks : 0L;
 			List<string> pulled = new List<string>();
 			foreach (KeyValuePair<string, int> entry in System.ConversionShared)
 			{
@@ -319,16 +368,34 @@ namespace ThousandAndFirst
 				System.ConversionToward.TryGetValue(entry.Key, out toward);
 				pulled.Add(entry.Key + "->" + (toward ?? "-") + " " + entry.Value + "/" + KingdomConversionRules.SharedLivingForConversion);
 			}
+			List<string> atTheEnd = new List<string>();
+			List<GameObject> residents = ResidentsIn(Z);
+			for (int i = 0; i < residents.Count; i++)
+			{
+				BrinkRecord brink = KingdomBrink.Of(residents[i], BrinkKind.Creed);
+				if (!brink.Stands)
+				{
+					continue;
+				}
+				atTheEnd.Add(RollNameOf(residents[i]) + "->" + (brink.Cause ?? "-")
+					+ " (" + (ConversionChannel)brink.Channel
+					+ " " + brink.PassesSpent + "/" + KingdomConversionRules.ResentedPasses
+					+ ", " + KingdomBrinkRules.DaysStood(brink.ReachedTick, now) + "d)");
+			}
 			List<string> leaving = new List<string>();
 			foreach (KeyValuePair<string, int> entry in System.ConversionResented)
 			{
 				leaving.Add(entry.Key + " (" + entry.Value + "/" + KingdomConversionRules.ResentedPasses + ")");
 			}
-			if (pulled.Count == 0 && leaving.Count == 0)
+			if (pulled.Count == 0 && leaving.Count == 0 && atTheEnd.Count == 0)
 			{
 				return "";
 			}
 			string line = "\nConversion: " + ((pulled.Count == 0) ? "nobody being pulled" : string.Join(", ", pulled));
+			if (atTheEnd.Count > 0)
+			{
+				line += "  at the road's end: " + string.Join(", ", atTheEnd);
+			}
 			if (leaving.Count > 0)
 			{
 				line += "  resenting a creed: " + string.Join(", ", leaving);
@@ -338,16 +405,49 @@ namespace ThousandAndFirst
 
 		// --- Osmosis ----------------------------------------------------------------------
 
-		private static void Osmosis(KingdomSystem System, Zone Z, GameObject Resident, Dictionary<string, List<GameObject>> Roofs)
+		/// <summary>
+		/// Restarts a settler's cohabitation clock, because the roof over them has changed.
+		/// Called by <c>KingdomLodging</c> the moment it houses somebody, moves them, or finds
+		/// their home gone &mdash; nowhere else.
+		/// <para>
+		/// Their PROGRESS is untouched: a settler carries what they have come to hold across a
+		/// move, and the counter-pull of a new household is what takes it off them. Only the days
+		/// restart, so nobody is ever credited for living somewhere they had already left.
+		/// </para>
+		/// </summary>
+		public static void ForgetCohabitation(GameObject Resident)
+		{
+			if (Resident != null)
+			{
+				Resident.SetLongProperty(CohabitTickProperty, 0L);
+			}
+		}
+
+		private static void Osmosis(KingdomSystem System, Zone Z, GameObject Resident, Dictionary<string, List<GameObject>> Roofs, long Now)
 		{
 			string roll = RollNameOf(Resident);
 			if (roll == null)
 			{
 				// Somebody the roll does not carry: a founding citizen, or a person the settlement
 				// never named. Progress is keyed to the roll, so an unnamed resident never enters
-				// it, and nothing happens to them. Exactly the rule Addendum 4b's grace uses, and
+				// it, and nothing happens to them. Exactly the rule Addendum 4b's window uses, and
 				// for the same reason: staying as they were is the safe answer to a question the
 				// registers cannot record.
+				return;
+			}
+			// The clock advances for everybody standing here, whatever their household turns out
+			// to buy them. A settler in a bunk row banks nothing, and a settler under a roof that
+			// refuses them banks nothing, and neither of them may keep those days in hand against
+			// the day they move somewhere that would have counted them.
+			int days = CohabitedDays(Resident, Now);
+			if (days <= 0)
+			{
+				return;
+			}
+			if (KingdomBrink.Stands(Resident, BrinkKind.Creed))
+			{
+				// At the end of the road already. Rule 1: nothing accrues past a brink, so the
+				// stretch is spent and buys nothing at all.
 				return;
 			}
 			string plotId = Resident.GetStringProperty(KingdomLodging.HomePlotIdProperty);
@@ -364,29 +464,169 @@ namespace ThousandAndFirst
 			{
 				return;
 			}
-			int points = KingdomConversionRules.SharedLivingPerPass(
+			int perDay = KingdomConversionRules.SharedLivingPerDay(
 				KingdomLodging.QuartersOf(Z, Resident),
 				KingdomCreed.HostilityBetween(creed, majority));
-			if (points <= 0)
+			if (perDay <= 0)
 			{
 				return;
 			}
-			SetProgress(System, roll, KingdomConversionRules.Advance(ProgressOf(System, roll), majority, points));
-			MaybeConvert(System, Z, Resident, roll, ConversionChannel.Osmosis);
+			ConversionProgress before = ProgressOf(System, roll);
+			ConversionProgress after = KingdomConversionRules.AdvanceOverDays(before, majority, perDay, days);
+			SetProgress(System, roll, after);
+			if (after.Creed != majority || !KingdomConversionRules.AtMilestone(after.Shared))
+			{
+				return;
+			}
+			// The road ended somewhere inside the stretch, and the founder is owed the day it
+			// actually ended on rather than the day they happened to walk back in.
+			long reached = KingdomBrinkRules.CrossingTick(
+				Now - (long)days * KingdomRules.TicksPerDay, Now,
+				before.Creed == majority ? before.Shared : 0,
+				KingdomConversionRules.SharedLivingForConversion, perDay);
+			NoteRoadsEnd(System, Resident, roll, majority, ConversionChannel.Osmosis, reached, Now);
 		}
 
-		private static void MaybeConvert(KingdomSystem System, Zone Z, GameObject Resident, string Roll, ConversionChannel Channel)
+		/// <summary>
+		/// Records that a settler has reached the end of a creed's road, and says so once. The
+		/// immediate form, for the channel that noticed it &mdash; <c>KingdomFaith</c>'s shrine
+		/// calls it too &mdash; so the founder is told on the pass it is seen rather than a pass
+		/// later.
+		/// <para>
+		/// Side effects: a brink is recorded against the settler with the tick the road actually
+		/// ended on, one pass of its window is spent (the pass it is announced on, exactly as
+		/// Addendum 4b's housing window does), and both registers carry the announcement. Failure
+		/// mode: returns false and changes nothing, which is what a settler already at a brink
+		/// gets &mdash; nobody is told twice.
+		/// </para>
+		/// </summary>
+		/// <param name="System">The realm.</param>
+		/// <param name="Resident">The settler.</param>
+		/// <param name="Roll">The name the roll carries them under.</param>
+		/// <param name="TowardCreed">The creed at the end of the road.</param>
+		/// <param name="Channel">Which channel walked them down it.</param>
+		/// <param name="ReachedTick">The tick the road ended, from
+		/// <c>KingdomBrinkRules.CrossingTick</c> or from the pass that found it.</param>
+		/// <param name="NowTick">Now, for the honest elapsed.</param>
+		public static bool NoteRoadsEnd(KingdomSystem System, GameObject Resident, string Roll, string TowardCreed, ConversionChannel Channel, long ReachedTick, long NowTick)
 		{
+			if (!Enabled || System == null || !System.Founded || Resident == null || string.IsNullOrEmpty(Roll) || string.IsNullOrEmpty(TowardCreed))
+			{
+				return false;
+			}
+			if (!KingdomBrink.Record(Resident, BrinkKind.Creed, ReachedTick, TowardCreed, (int)Channel))
+			{
+				return false;
+			}
+			BrinkRecord brink = KingdomBrink.SpendPass(Resident, BrinkKind.Creed);
+			KingdomBrink.Announce(System, BrinkKind.Creed, Roll, KingdomCreed.CreedName(TowardCreed), brink, NowTick);
+			return true;
+		}
+
+		// One attended pass of every standing creed brink, and the arrest that ends one. Runs from
+		// the settlement pass and from nowhere else, which is the whole of "absence never spends a
+		// window". The shrine's own brinks are skipped here and spent in KingdomFaith's pass,
+		// because what would arrest one of those is a fact about a building rather than about a
+		// household, and only that file can see it.
+		private static void CreedWindow(KingdomSystem System, Zone Z, GameObject Resident, long Now)
+		{
+			string roll = RollNameOf(Resident);
+			if (roll == null)
+			{
+				return;
+			}
+			BrinkRecord brink = KingdomBrink.Of(Resident, BrinkKind.Creed);
+			if (!brink.Stands || brink.Channel == (int)ConversionChannel.Shrine)
+			{
+				return;
+			}
+			if (LiftIfArrested(System, Resident, roll))
+			{
+				return;
+			}
+			brink = KingdomBrink.SpendPass(Resident, BrinkKind.Creed);
+			if (!KingdomBrinkRules.WindowSpent(BrinkKind.Creed, brink.PassesSpent))
+			{
+				return;
+			}
+			EndOfTheRoad(System, Z, Resident, roll, brink);
+		}
+
+		/// <summary>
+		/// Rule 2 for the creed brink: the pressure is a fact, so a settler whose progress has
+		/// fallen back off the road's end &mdash; a counter-pull at a rival table, a rehousing that
+		/// broke the household up, a creed they have already taken &mdash; is no longer at a brink
+		/// and is said to be no longer at one.
+		/// </summary>
+		/// <returns>True when a brink was lifted, which is the caller's signal to stop.</returns>
+		private static bool LiftIfArrested(KingdomSystem System, GameObject Resident, string Roll)
+		{
+			BrinkRecord brink = KingdomBrink.Of(Resident, BrinkKind.Creed);
+			if (!brink.Stands || brink.Channel == (int)ConversionChannel.Shrine)
+			{
+				return false;
+			}
 			ConversionProgress progress = ProgressOf(System, Roll);
-			if (!progress.Any || !KingdomConversionRules.AtMilestone(progress.Shared))
+			bool holds = progress.Creed == brink.Cause
+				&& KingdomConversionRules.AtMilestone(progress.Shared)
+				&& Resident.GetStringProperty(KingdomCreed.CreedProperty) != brink.Cause;
+			if (holds)
 			{
+				return false;
+			}
+			KingdomBrink.Lift(Resident, BrinkKind.Creed);
+			KingdomBrink.Unsay(System, BrinkKind.Creed, Roll);
+			return true;
+		}
+
+		/// <summary>
+		/// The window has run out with the household still pulling. NOW the draw is asked, and it
+		/// is the same draw that shipped: <c>KingdomConversionRules.ConversionChancePercent</c>, on
+		/// a key that names the settlement, the channel, the person and which road this is. A road
+		/// that answers no is walked from nothing again, and the next one is a new question rather
+		/// than the same one re-asked.
+		/// </summary>
+		private static void EndOfTheRoad(KingdomSystem System, Zone Z, GameObject Resident, string Roll, BrinkRecord Brink)
+		{
+			ConversionChannel channel = (ConversionChannel)Brink.Channel;
+			int roads = Resident.GetIntProperty(RoadsWalkedProperty);
+			bool turns = KingdomConversionRules.Converts(
+				KingdomChronicle.SettlementId(System.KingdomFactionName), channel, Roll, KingdomConversionRules.RoadEnd(roads));
+			Resident.SetIntProperty(RoadsWalkedProperty, roads + 1);
+			if (turns && Convert(System, Z, Resident, Brink.Cause, channel))
+			{
+				// Convert clears the brink and both maps. Nothing left to unsay: the founder was
+				// told this was coming and it came.
 				return;
 			}
-			if (!KingdomConversionRules.Converts(KingdomChronicle.SettlementId(System.KingdomFactionName), Channel, Roll, progress.Shared))
+			// It did not take. The brink is lifted rather than left standing, and the road starts
+			// again from nothing -- a soul that walked a whole season of shared living and did not
+			// turn is not one point away from turning tomorrow.
+			KingdomBrink.Lift(Resident, BrinkKind.Creed);
+			SetProgress(System, Roll, ConversionProgress.None);
+			KingdomBrink.Unsay(System, BrinkKind.Creed, Roll);
+		}
+
+		// Whole days this settler has lived under their present roof since the last time anything
+		// counted them, advancing the stamp by exactly the days credited so a part-day is never
+		// lost and never double-counted. A settler nobody has counted yet plants their stamp here
+		// and is credited nothing: an unplanted stamp read as elapsed would charge them the age of
+		// the world.
+		private static int CohabitedDays(GameObject Resident, long Now)
+		{
+			long last = Resident.GetLongProperty(CohabitTickProperty);
+			if (last <= 0L || Now <= 0L)
 			{
-				return;
+				Resident.SetLongProperty(CohabitTickProperty, Now);
+				return 0;
 			}
-			Convert(System, Z, Resident, progress.Creed, Channel);
+			int days = KingdomRules.ElapsedDays(Now - last);
+			if (days <= 0)
+			{
+				return 0;
+			}
+			Resident.SetLongProperty(CohabitTickProperty, KingdomRules.AdvanceCheckpoint(last, Now));
+			return days;
 		}
 
 		// --- The exit ---------------------------------------------------------------------

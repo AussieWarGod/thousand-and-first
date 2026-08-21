@@ -58,7 +58,8 @@ namespace ThousandAndFirst
 				.Append(System.Stage)
 				.Append(System.Withered ? " {{r|(withered)}}" : "")
 				.Append("  Population: ")
-				.Append(System.Population);
+				.Append(System.Population)
+				.Append(System.SupportedLevel > 0 ? ("  {{K|carries " + System.SupportedLevel + "}}") : "");
 			// The realm is the faction; the cities are where its history happened. A founder
 			// standing in one should be told the other is still out there, keeping itself.
 			if (System.Away != null)

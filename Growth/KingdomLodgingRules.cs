@@ -660,24 +660,33 @@ namespace ThousandAndFirst
 
 		// ==================================================================================
 		// Addendum 4b -- housing binds. A settler joins only if a home exists THEY would take,
-		// and a settler who loses every acceptable home is named once, given a short grace of
-		// ATTENDED passes for the founder to act, and then leaves through the emigration
+		// and a settler who loses every acceptable home is at a BRINK (KingdomBrinkRules): the
+		// loss is recorded with the tick it happened, they are named once, the founder gets a
+		// short window of ATTENDED passes to act, and then they leave through the emigration
 		// machinery the settlement already has. Every figure below is a count of attended passes
 		// -- never a clock, never a tick, never an age. Absence cannot advance any of it, because
 		// nothing here advances except when a pass calls it.
+		//
+		// The shape moved and the behaviour did not. What used to be this file's own private
+		// grace is now the roof instance of the one window every irreversible consequence in the
+		// mod shares, so a design that lengthens the rope moves KingdomBrinkRules.RoofBrinkWindow
+		// and every consumer of these three members follows it.
 		// ==================================================================================
 
 		/// <summary>
 		/// Attended passes a settler who has lost every acceptable home is given before they
 		/// leave. Two: long enough for a founder standing there to raise a bunk or stake a plan,
 		/// short enough that the answer to "why is nobody moving out" is never "wait longer".
+		/// Derived from <see cref="KingdomBrinkRules.RoofBrinkWindow"/>, which is where the
+		/// number now lives.
 		/// </summary>
-		public const int GracePasses = 2;
+		public const int GracePasses = KingdomBrinkRules.RoofBrinkWindow;
 
 		/// <summary>The grace of a settler nobody has warned the founder about yet. Negative so
 		/// it can never be confused with "warned, and no pass has run since", which is zero.
+		/// <see cref="KingdomBrinkRules.Unannounced"/>, shared with every other brink.
 		/// </summary>
-		public const int NoGrace = -1;
+		public const int NoGrace = KingdomBrinkRules.Unannounced;
 
 		/// <summary>
 		/// The grace after one more attended pass has found this settler still unhoused. A
@@ -691,7 +700,7 @@ namespace ThousandAndFirst
 		/// </summary>
 		public static int GraceAfterPass(int Grace)
 		{
-			return (Grace < 0) ? 0 : (Grace + 1);
+			return KingdomBrinkRules.AfterAttendedPass(Grace);
 		}
 
 		/// <summary>Whether a settler's grace is spent and they leave now: exactly
@@ -699,7 +708,7 @@ namespace ThousandAndFirst
 		/// </summary>
 		public static bool GraceRunOut(int Grace)
 		{
-			return Grace >= GracePasses;
+			return KingdomBrinkRules.WindowSpent(BrinkKind.Roof, Grace);
 		}
 
 		/// <summary>The cause a housing departure is chronicled and noted under, in both
@@ -715,8 +724,27 @@ namespace ThousandAndFirst
 		/// </summary>
 		public static string LeavingLine(string ResidentName)
 		{
+			return LeavingLine(ResidentName, 0);
+		}
+
+		/// <summary>
+		/// The same sentence, dated with how long they actually went without. The honest elapsed
+		/// is the brink's whole contribution to this line: the founder is told the real number of
+		/// days the settler slept outside, not the number a capped clock was willing to look at.
+		/// </summary>
+		/// <param name="ResidentName">The person, by name.</param>
+		/// <param name="Days">Whole days since the roof was lost, from
+		/// <see cref="KingdomBrinkRules.DaysStood"/>. Zero reads as a loss noticed tonight and
+		/// drops the clause entirely.</param>
+		public static string LeavingLine(string ResidentName, int Days)
+		{
 			string name = string.IsNullOrEmpty(ResidentName) ? "a settler" : ResidentName;
-			return name + " has waited out the grace with nowhere in the settlement to live, and is leaving.";
+			if (Days <= 0)
+			{
+				return name + " has waited out the grace with nowhere in the settlement to live, and is leaving.";
+			}
+			return name + " has waited out the grace with nowhere in the settlement to live \u2014 "
+				+ Days + ((Days == 1) ? " day" : " days") + " of it \u2014 and is leaving.";
 		}
 
 		/// <summary>One standing home as the arrival gate sees it. Whether its occupants refuse

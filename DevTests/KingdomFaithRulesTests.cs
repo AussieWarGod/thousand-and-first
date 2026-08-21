@@ -91,25 +91,55 @@ namespace ThousandAndFirst.Tests
 			Assert.AreNotEqual(Stance.Opposed, KingdomFaithRules.ClassifyStance("Ezra", "Kyakukya", 0));
 		}
 
-		// --- PullAfterPass / ConversionReady: slow, deterministic, no dice -------------------
+		// --- PullAfterDays / ConversionReady: slow, deterministic, no dice -------------------
 
-		[TestCase(0, 1)]
-		[TestCase(1, 2)]
-		[TestCase(29, 30)]
-		[TestCase(-1, 1)]
-		public void PullAfterPass_StepsByExactlyOnePerAttendedPass(int before, int expected)
+		[TestCase(0, 1, 1)]
+		[TestCase(1, 1, 2)]
+		[TestCase(29, 1, 30)]
+		[TestCase(-1, 1, 1)]
+		[TestCase(10, 12, 22)]
+		public void PullAfterDays_StepsByExactlyTheDaysTheShrineArgued(int before, int days, int expected)
 		{
-			Assert.AreEqual(expected, KingdomFaithRules.PullAfterPass(before));
+			Assert.AreEqual(expected, KingdomFaithRules.PullAfterDays(before, days));
+		}
+
+		[Test]
+		public void PullAfterDays_AnUnstaffedStretchBuysNothingHoweverLongItWas()
+		{
+			// KingdomRules.ActivityDays hands this zero for a shrine with nobody at it, and zero
+			// days must move nothing: Addendum 8 clause 2, idleness accrues nothing.
+			Assert.AreEqual(17, KingdomFaithRules.PullAfterDays(17, 0));
+			Assert.AreEqual(17, KingdomFaithRules.PullAfterDays(17, -400));
+		}
+
+		[Test]
+		public void PullAfterDays_HoldsAtTheRoadsEndSoAThousandDaysAndNinetyArriveTogether()
+		{
+			int ninety = KingdomFaithRules.PullAfterDays(0, KingdomFaithRules.ConversionPullThreshold);
+			int aThousand = KingdomFaithRules.PullAfterDays(0, 1000);
+			Assert.AreEqual(KingdomFaithRules.ConversionPullThreshold, ninety);
+			Assert.AreEqual(ninety, aThousand, "nothing accrues past a brink");
+			Assert.AreEqual(ninety, KingdomFaithRules.PullAfterDays(ninety, 1000000000), "and nothing overflows past it either");
 		}
 
 		[TestCase(0, false)]
-		[TestCase(29, false)]
-		[TestCase(30, true)]
-		[TestCase(31, true)]
+		[TestCase(89, false)]
+		[TestCase(90, true)]
+		[TestCase(91, true)]
 		public void ConversionReady_FiresExactlyAtTheNamedThreshold(int pull, bool expected)
 		{
-			Assert.AreEqual(30, KingdomFaithRules.ConversionPullThreshold, "the boundary cases above assume this constant; keep them in step if it moves");
+			Assert.AreEqual(90, KingdomFaithRules.ConversionPullThreshold, "the boundary cases above assume this constant; keep them in step if it moves");
 			Assert.AreEqual(expected, KingdomFaithRules.ConversionReady(pull));
+		}
+
+		[Test]
+		public void TheShrinesPullHoldsItsPaceAcrossTheChangeOfUnit()
+		{
+			// Thirty visits became ninety days at the cadence the design always assumed, so a
+			// founder who comes home every third day watches exactly the arc they watched before.
+			Assert.AreEqual(30, KingdomFaithRules.ConversionPullInPasses);
+			Assert.AreEqual(KingdomBrinkRules.InCohabitationDays(KingdomFaithRules.ConversionPullInPasses),
+				KingdomFaithRules.ConversionPullThreshold);
 		}
 
 		// --- SoftenedCloseness: one band gentler, capped at Private ---------------------------

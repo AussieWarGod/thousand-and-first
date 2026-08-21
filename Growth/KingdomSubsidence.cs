@@ -1,0 +1,307 @@
+﻿using System.Collections.Generic;
+using XRL;
+using XRL.Messages;
+using XRL.UI;
+using XRL.World;
+using XRL.World.Parts;
+
+namespace ThousandAndFirst
+{
+	/// <summary>
+	/// The consumer of the equilibrium arithmetic, and the slide that follows from it.
+	/// <para>
+	/// One reckoning per attended pass, run from <c>KingdomGrowth.UpdateStage</c> after the
+	/// staffing pass has said which works are actually running. It does four things in order:
+	/// sums what the finished works carry, converts that to a level at this settlement's own
+	/// stage (<see cref="KingdomSubsidenceRules.SupportedLevel"/>), runs the slide forward over
+	/// however much world time has passed, and tells the founder about it once.
+	/// </para>
+	/// <para>
+	/// <b>The clock.</b> World time, uncapped, through <c>KingdomRules.ElapsedDays</c> and a
+	/// checkpoint that advances by exactly the steps it cashed. The settlement lives whether the
+	/// founder is there or not (Addendum 8 clause 1), so the slide runs the same length whether
+	/// it is watched or not; what changes at a homecoming is only that somebody is told. The
+	/// stamp is planted on the first pass before any days are counted &mdash; the same lesson
+	/// <c>LastFetchTick</c> learned, where an unplanted stamp read as the age of the world.
+	/// </para>
+	/// <para>
+	/// <b>The protection law.</b> Nothing here deletes or moves anything. Works are ruined by
+	/// wear on the part the mending system already owns, capped at
+	/// <c>KingdomMaterialRules.MaxWearPercent</c>, and every point of it is mendable. People
+	/// leave through <c>KingdomGrowth.Emigrate</c>, which is the settlement's one departure path
+	/// and floors at <c>KingdomRules.LoyalCoreSettlers</c> &mdash; and the level itself floors at
+	/// <c>KingdomCatalogueRules.FloorLevel</c>, so the floor that actually binds is Camp's own
+	/// equilibrium and nobody subsides out of existence.
+	/// </para>
+	/// <para>
+	/// <b>One zone, not a realm.</b> The tally is taken from the pass's own survey, which is the
+	/// zone the founder is standing in &mdash; the same ground every other per-pass resolver
+	/// measures. A settlement spanning claimed zones is therefore measured by the one it is
+	/// entered through, exactly as its beds, its crew and its stores already are.
+	/// </para>
+	/// </summary>
+	public static class KingdomSubsidence
+	{
+		public static bool Enabled => Options.GetOption("r_TAF_OptionSubsidence") != "No";
+
+		private const string StaffNeededProperty = "KingdomStaffNeeded";
+
+		private const string EffectivenessProperty = "KingdomEffectiveness";
+
+		/// <summary>
+		/// What this settlement's finished works carry between them.
+		/// <para>
+		/// A work that asks for no crew carries in full &mdash; a cistern holds water whoever is
+		/// home. A work that asks for crew carries at what the staffing pass gave it, wear already
+		/// folded in by <c>KingdomWear</c>, so an unmanned field feeds nobody. That is Addendum 8
+		/// clause 2 applied to the level: infrastructure times labour, never infrastructure alone.
+		/// </para>
+		/// </summary>
+		/// <param name="Survey">The pass's survey. Null carries nothing.</param>
+		public static KingdomCatalogueRules.SupportTally Supports(KingdomSurvey Survey)
+		{
+			KingdomCatalogueRules.SupportTally tally = default(KingdomCatalogueRules.SupportTally);
+			if (Survey == null)
+			{
+				return tally;
+			}
+			for (int i = 0; i < Survey.Built.Count; i++)
+			{
+				GameObject work = Survey.Built[i];
+				if (!GameObject.Validate(work))
+				{
+					continue;
+				}
+				string key = KingdomUpgrade.DesignKeyOf(work);
+				KingdomRules.BuildEntry entry;
+				if (string.IsNullOrEmpty(key) || !KingdomData.TryGetBuilding(key, out entry))
+				{
+					continue;
+				}
+				// A malformed Carries is already reported by the catalogue validator, and whatever
+				// parsed before the bad pair still counts, so the verdict is deliberately unread.
+				List<KindAmount> carries;
+				KingdomCatalogueRules.TryParseTally(entry.Carries, out carries, out _);
+				int percent = (work.GetIntProperty(StaffNeededProperty) > 0)
+					? work.GetIntProperty(EffectivenessProperty)
+					: 100;
+				tally = KingdomCatalogueRules.FoldWork(tally, carries, percent);
+			}
+			return tally;
+		}
+
+		/// <summary>
+		/// The whole reckoning. Records the level and what holds it, runs the slide, ruins what
+		/// the fall took, and speaks once each way (STANDARDS 7b).
+		/// </summary>
+		/// <param name="System">The seated settlement.</param>
+		/// <param name="Z">The zone the pass is in.</param>
+		/// <param name="Survey">The pass's survey.</param>
+		/// <param name="TimeTicks">Now.</param>
+		public static void Reckon(KingdomSystem System, Zone Z, KingdomSurvey Survey, long TimeTicks)
+		{
+			if (System == null || !System.Founded || Z == null || Survey == null)
+			{
+				return;
+			}
+			KingdomCatalogueRules.SupportTally supports = Supports(Survey);
+			string binding = KingdomSubsidenceRules.BindingSupportFor(supports, System.Stage);
+			int level = KingdomSubsidenceRules.SupportedLevel(supports, System.Stage);
+			// Recorded whether or not the slide is allowed to run: the level is knowledge, and a
+			// founder who has turned subsidence off is still owed the number their works carry.
+			System.SupportedLevel = level;
+			System.SubsidenceBinding = binding;
+			if (!Enabled)
+			{
+				Unsay(System, level);
+				return;
+			}
+			if (System.LastSubsidenceTick <= 0)
+			{
+				System.LastSubsidenceTick = TimeTicks;
+				return;
+			}
+			int elapsedDays = KingdomRules.ElapsedDays(TimeTicks - System.LastSubsidenceTick);
+			if (elapsedDays <= 0)
+			{
+				return;
+			}
+			// A settlement inside its band, or already arrived, is not subsiding: unsay whatever
+			// was said, spend the days so they cannot be banked against a future overreach, and
+			// leave. This is the arrest, and it is why removing the cause stops the slide anywhere
+			// along it - the level is re-derived every pass and never remembered.
+			if (!KingdomSubsidenceRules.IsSubsiding(System.Population, level) && !System.SubsidenceAnnounced)
+			{
+				System.LastSubsidenceTick = Checkpoint(System.LastSubsidenceTick, elapsedDays / KingdomSubsidenceRules.StepDays);
+				return;
+			}
+			if (KingdomSubsidenceRules.HasArrived(System.Population, level))
+			{
+				Unsay(System, level);
+				System.LastSubsidenceTick = Checkpoint(System.LastSubsidenceTick, elapsedDays / KingdomSubsidenceRules.StepDays);
+				return;
+			}
+			KingdomSubsidenceRules.Trajectory trajectory = KingdomSubsidenceRules.Slide(
+				System.Population, System.Stage, Survey.StorageCapacity, supports, elapsedDays, System.SubsidenceAnnounced);
+			Say(System, binding, level);
+			if (trajectory.Departed <= 0)
+			{
+				// Announced and standing above the level, but not a whole step of world time has
+				// passed yet. Nothing is charged and nothing is banked.
+				return;
+			}
+			long anchor = System.LastSubsidenceTick;
+			GrowthStage from = System.Stage;
+			string cause = KingdomSubsidenceRules.DepartureCause(binding);
+			int departed = 0;
+			while (departed < trajectory.Departed && KingdomGrowth.Emigrate(System, Z, Survey, null, cause))
+			{
+				departed++;
+			}
+			// Charged for exactly what was cashed. A settlement whose people are standing in
+			// another claimed zone loses fewer than the trajectory called for, and keeps the rest
+			// of the elapsed for the pass that can find them.
+			int steps = trajectory.Steps * departed / trajectory.Departed;
+			System.LastSubsidenceTick = Checkpoint(anchor, steps);
+			if (departed <= 0)
+			{
+				return;
+			}
+			System.Stage = KingdomSubsidenceRules.SettledStage(from, System.Population, Survey.StorageCapacity);
+			// Re-recorded against the rung the slide left, not the one it started from: the water
+			// bill per head fell with the stage, so the level the founder is now looking at is a
+			// different (higher) number from the one the announcement quoted.
+			System.SupportedLevel = KingdomSubsidenceRules.SupportedLevel(supports, System.Stage);
+			System.SubsidenceBinding = KingdomSubsidenceRules.BindingSupportFor(supports, System.Stage);
+			Chronicle(System, Survey, anchor, TimeTicks, from, trajectory);
+			if (KingdomLog.Enabled)
+			{
+				KingdomLog.Log("subsidence: level=" + level + "->" + System.SupportedLevel + " binding=" + binding
+					+ " days=" + elapsedDays + " wanted=" + trajectory.Departed + " left=" + departed
+					+ " pop=" + System.Population + " stage=" + System.Stage);
+			}
+			if (KingdomSubsidenceRules.HasArrived(System.Population, System.SupportedLevel))
+			{
+				Unsay(System, System.SupportedLevel);
+			}
+		}
+
+		/// <summary>Moves the reckoning's stamp forward by exactly the steps just charged, keeping
+		/// the part-step remainder so it counts toward the next one. The same bargain
+		/// <c>KingdomRules.AdvanceCheckpoint</c> keeps, at this clock's own coarser granularity.
+		/// </summary>
+		private static long Checkpoint(long Previous, int Steps)
+		{
+			if (Steps <= 0)
+			{
+				return Previous;
+			}
+			return Previous + (long)Steps * KingdomSubsidenceRules.StepDays * KingdomRules.TicksPerDay;
+		}
+
+		// ==================================================================================
+		// 7b. Once when it begins, and unsaid the moment it stops.
+		// ==================================================================================
+
+		private static void Say(KingdomSystem System, string Binding, int Level)
+		{
+			if (System.SubsidenceAnnounced)
+			{
+				return;
+			}
+			System.SubsidenceAnnounced = true;
+			string line = KingdomSubsidenceRules.BeganNote(System.KingdomDisplayName, Binding, Level, System.Population);
+			MessageQueue.AddPlayerMessage("{{r|" + line + "}}");
+			System.Ledger.Note("{{r|" + line + "}}");
+			KingdomChronicle.Record(System, KingdomSubsidenceRules.BeganChronicle(System.KingdomDisplayName, Binding, Level));
+		}
+
+		private static void Unsay(KingdomSystem System, int Level)
+		{
+			if (!System.SubsidenceAnnounced)
+			{
+				return;
+			}
+			System.SubsidenceAnnounced = false;
+			string line = KingdomSubsidenceRules.ArrestedNote(System.KingdomDisplayName, Level, System.Population);
+			MessageQueue.AddPlayerMessage("{{G|" + line + "}}");
+			System.Ledger.Note("{{G|" + line + "}}");
+			KingdomChronicle.Record(System, KingdomSubsidenceRules.ArrestedChronicle(System.KingdomDisplayName, Level));
+		}
+
+		// ==================================================================================
+		// The breakpoints: the rungs, dated, and the works the fall left the worse for it.
+		// ==================================================================================
+
+		private static void Chronicle(KingdomSystem System, KingdomSurvey Survey, long Anchor, long TimeTicks,
+			GrowthStage From, KingdomSubsidenceRules.Trajectory Trajectory)
+		{
+			if (Trajectory.Breakpoints == null)
+			{
+				return;
+			}
+			string settlementId = KingdomChronicle.SettlementId(System.KingdomFactionName);
+			for (int i = 0; i < Trajectory.Breakpoints.Count; i++)
+			{
+				KingdomSubsidenceRules.Breakpoint breakpoint = Trajectory.Breakpoints[i];
+				// Only the rungs the settlement actually reached. A slide cut short because its
+				// people were standing somewhere else did not lose the rungs below where it
+				// stopped, and must not claim to have.
+				if (breakpoint.To < System.Stage)
+				{
+					continue;
+				}
+				long at = Anchor + (long)breakpoint.Day * KingdomRules.TicksPerDay;
+				int daysAgo = KingdomRules.ElapsedDays(TimeTicks - at);
+				KingdomChronicle.Record(System, KingdomSubsidenceRules.BreakpointChronicle(
+					System.KingdomDisplayName, breakpoint.From, breakpoint.To, daysAgo));
+				Ruin(System, Survey, settlementId, (ulong)((at > 0L) ? at : 0L));
+			}
+		}
+
+		/// <summary>
+		/// What one lost rung does to the works standing in it. Damage and nothing else: the part
+		/// is the mending system's own, the ceiling is its own, and a mending puts every point of
+		/// it back. Only <c>KingdomBuilt</c> works are candidates, which is the protection law's
+		/// own list of what a kingdom system may touch at all.
+		/// </summary>
+		/// <param name="Ordinal">The breakpoint's own due tick, used as a draw ordinal. It sits on
+		/// a fixed lattice from the reckoning's anchor and is never re-anchored, so a reload asks
+		/// each work the same question and gets the same answer.</param>
+		private static void Ruin(KingdomSystem System, KingdomSurvey Survey, string SettlementId, ulong Ordinal)
+		{
+			int ruined = 0;
+			for (int i = 0; i < Survey.Built.Count && ruined < KingdomSubsidenceRules.RuinedWorksPerBreakpoint; i++)
+			{
+				GameObject work = Survey.Built[i];
+				if (!GameObject.Validate(work) || !KingdomSubsidenceRules.RollRuin(SettlementId, work.id, Ordinal))
+				{
+					continue;
+				}
+				int increment = KingdomSubsidenceRules.RolledRuinIncrement(SettlementId, work.id, Ordinal);
+				if (increment <= 0)
+				{
+					continue;
+				}
+				r_KingdomWear wear = work.RequirePart<r_KingdomWear>();
+				int before = wear.Wear;
+				wear.Wear = KingdomMaterialRules.AddWear(wear.Wear, increment);
+				if (wear.Wear == before)
+				{
+					// Already at the ceiling. A real thing happened and there is nothing new to
+					// report, and 7b's "once" would be broken by saying it twice.
+					continue;
+				}
+				ruined++;
+				string name = KingdomDesign.ReferenceFor(work, work.ShortDisplayName);
+				string line = name + " fell into disrepair as " + System.KingdomDisplayName + " settled back, with nobody left who kept it";
+				System.Ledger.Note("{{r|" + XRL.Language.Grammar.InitCap(line) + ".}}");
+				KingdomChronicle.Record(System, line);
+				if (KingdomLog.Enabled)
+				{
+					KingdomLog.Log("subsidence: ruined " + work.Blueprint + " wear=" + wear.Wear);
+				}
+			}
+		}
+	}
+}

@@ -13,12 +13,16 @@ namespace ThousandAndFirst
 	/// <para>
 	/// A settler's creed is a <b>vanilla faction name</b>. A city's creed is whatever enough of
 	/// its residents hold; most cities are mixed and have none. When a realm's two cities hold
-	/// creeds the engine's own <c>Factions.xml</c> says are at odds, dissent accrues — only on
-	/// passes the founder is present for, capped by
-	/// <see cref="KingdomRules.HeartbeatDays"/> — and the founder is told
-	/// about it four tiers before it can cost them anything. If it runs to the top, the unhappier
-	/// city leaves, keeping its ground, its people and its buildings; nothing is destroyed and
-	/// nobody is driven out.
+	/// creeds the engine's own <c>Factions.xml</c> says are at odds, dissent accrues in real time
+	/// — two cities that cannot stand each other go on not standing each other whether or not
+	/// anyone is watching — and the founder is told about it four tiers before it can cost them
+	/// anything. When it runs to the top the realm stands at a BRINK
+	/// (<see cref="KingdomBrinkRules"/>) rather than losing a city on the spot: accrual halts, the
+	/// founder is named the city and the honest elapsed, and
+	/// <see cref="KingdomCreedRules.SecessionWindowPasses"/> attended passes stand between the
+	/// warning and the split. If those are spent with the quarrel still live, the unhappier city
+	/// leaves, keeping its ground, its people and its buildings; nothing is destroyed and nobody
+	/// is driven out.
 	/// </para>
 	/// <para>
 	/// The arithmetic all lives in <see cref="KingdomCreedRules"/>. This file is the wiring: what
@@ -264,20 +268,15 @@ namespace ThousandAndFirst
 		/// secession. Failure mode: returns having done nothing.
 		/// </para>
 		/// <para>
-		/// The whole absence guarantee lives in the two lines that call
-		/// <see cref="KingdomRules.HeartbeatDays"/> and
-		/// <see cref="KingdomRules.HeartbeatCheckpoint"/>: days are capped at
-		/// <see cref="KingdomRules.LegacyAbsenceCap"/> and anything past the cap is forgiven by
-		/// re-checkpointing to now. A founder away for a season accrues what a founder away three
-		/// days accrues.
-		/// </para>
-		/// <para>
-		/// Water no longer keeps that bargain &mdash; upkeep and fetch both run the full elapsed
-		/// (Addendum 8 clause 1) &mdash; and dissent is deliberately NOT following it yet.
-		/// Secession fires on the same pass dissent reaches its threshold, with no arrestable
-		/// window in front of it, so uncapping accrual first would make an absence lose a city
-		/// faster than presence does: clause 3 exactly inverted. The two move together, in the
-		/// package that builds the window.
+		/// Dissent runs the full elapsed (<see cref="KingdomRules.ElapsedDays"/>,
+		/// <see cref="KingdomRules.AdvanceCheckpoint"/>), which is Addendum 8 clause 1: a quarrel
+		/// between two cities is not something the founder's attention causes. The absence
+		/// guarantee moved rather than went away, and it is now clause 3's: dissent CLAMPS at
+		/// <see cref="KingdomCreedRules.DissentBreaking"/> and records a brink there, so a founder
+		/// away a season and a founder away a thousand days come home to a realm standing in
+		/// exactly the same place, told about it once with the real number of days, and holding
+		/// <see cref="KingdomCreedRules.SecessionWindowPasses"/> attended passes in which pouring
+		/// the rite or settling what the two cities believe still stops the split.
 		/// </para>
 		/// </summary>
 		public static void OnZoneActivated(KingdomSystem System, Zone Z)
@@ -295,21 +294,104 @@ namespace ThousandAndFirst
 				System.LastDissentTick = timeTicks;
 				return;
 			}
-			int days = KingdomRules.HeartbeatDays(timeTicks - System.LastDissentTick);
-			System.LastDissentTick = KingdomRules.HeartbeatCheckpoint(System.LastDissentTick, timeTicks);
+			string here = SeatCreed(System);
+			string there = AwayCreed(System);
+			int hostility = HostilityBetween(here, there);
+			if (KingdomBrink.CityStands())
+			{
+				// Nothing accrues past a brink, and the checkpoint is deliberately NOT advanced:
+				// while the brink stands, LastDissentTick is the day the realm reached it, which
+				// is what the announcement quotes and what the arrest resets.
+				SpendSecessionWindow(System, hostility, timeTicks);
+				return;
+			}
+			int days = KingdomRules.ElapsedDays(timeTicks - System.LastDissentTick);
+			System.LastDissentTick = KingdomRules.AdvanceCheckpoint(System.LastDissentTick, timeTicks);
 			if (days <= 0)
 			{
 				return;
 			}
-			string here = SeatCreed(System);
-			string there = AwayCreed(System);
-			int hostility = HostilityBetween(here, there);
-			System.Dissent = KingdomCreedRules.AccrueDissent(System.Dissent, hostility, days);
+			int before = System.Dissent;
+			System.Dissent = KingdomCreedRules.AccrueDissent(before, hostility, days);
 			Announce(System, here, there);
-			if (KingdomCreedRules.ClassifyTemper(System.Dissent) == CityTemper.Secession)
+			if (KingdomCreedRules.ClassifyTemper(System.Dissent) != CityTemper.Secession)
 			{
-				Secede(System, Forced: false, out var _);
+				return;
 			}
+			// The breaking point was crossed somewhere inside the stretch, and the founder is owed
+			// the day it was actually crossed on rather than the day they walked back in.
+			long reached = KingdomBrinkRules.CrossingTick(
+				timeTicks - (long)days * KingdomRules.TicksPerDay, timeTicks, before,
+				KingdomCreedRules.DissentBreaking, KingdomCreedRules.DissentPerDay(hostility));
+			RecordSecessionBrink(System, here, there, reached, timeTicks);
+		}
+
+		// The realm reaches the breaking point: recorded, announced once by name with the honest
+		// elapsed, and NOT acted on. This is the whole of what the clock rework owed secession --
+		// the four-tier warning ladder used to end in a tier that had nothing to say, because by
+		// the time it was reached the city was already gone.
+		private static void RecordSecessionBrink(KingdomSystem System, string HereCreed, string ThereCreed, long ReachedTick, long NowTick)
+		{
+			if (!KingdomBrink.RecordCity(System, ReachedTick))
+			{
+				return;
+			}
+			BrinkRecord brink = KingdomBrink.SpendCityPass(System);
+			string leaver;
+			string kept;
+			NameTheLeaver(System, HereCreed, ThereCreed, out leaver, out kept);
+			KingdomBrink.Announce(System, BrinkKind.City, leaver, kept, brink, NowTick);
+			MessageQueue.AddPlayerMessage(KingdomCreedRules.SecessionBrinkSpeech(
+				leaver, kept,
+				KingdomBrinkRules.DaysStood(brink.ReachedTick, NowTick),
+				KingdomBrinkRules.PassesLeft(BrinkKind.City, brink.PassesSpent)));
+		}
+
+		// One attended pass of the realm's window, and the arrest that ends it. Rule 2: the
+		// quarrel is a fact re-derived every pass, so a realm whose creeds stopped clashing -- or
+		// whose founder poured enough water to ease dissent back off the breaking point -- steps
+		// back from the edge and is told so.
+		private static void SpendSecessionWindow(KingdomSystem System, int Hostility, long NowTick)
+		{
+			string leaver;
+			string kept;
+			NameTheLeaver(System, SeatCreed(System), AwayCreed(System), out leaver, out kept);
+			if (Hostility <= 0 || System.Dissent < KingdomCreedRules.DissentBreaking)
+			{
+				if (KingdomBrink.LiftCity(System, NowTick))
+				{
+					KingdomBrink.Unsay(System, BrinkKind.City, leaver);
+					Rearm(System);
+				}
+				return;
+			}
+			BrinkRecord brink = KingdomBrink.SpendCityPass(System);
+			if (!KingdomBrinkRules.WindowSpent(BrinkKind.City, brink.PassesSpent))
+			{
+				return;
+			}
+			if (Secede(System, Forced: false, out var _))
+			{
+				KingdomBrink.LiftCity(System, NowTick);
+				return;
+			}
+			// The realm would not let it go -- the second city was already lost some other way, or
+			// the verdict refused. The window stays spent and is tried again on the next attended
+			// pass rather than being reset, so nothing is lost and nobody is warned twice.
+		}
+
+		// Which city the prose should name as the one that walks. A prediction rather than a
+		// decision -- KingdomCreedRules.AwayIsTheLeaver decides it again, from the same facts, on
+		// the day itself -- but it is deterministic in exactly those facts, so a founder told
+		// which city is drawing up its own charter is told the truth.
+		private static void NameTheLeaver(KingdomSystem System, string HereCreed, string ThereCreed, out string Leaver, out string Kept)
+		{
+			string awayName = (System.Away != null) ? System.Away.SettlementName : null;
+			bool awayLeaves = KingdomCreedRules.AwayIsTheLeaver(
+				Feeling(HereCreed, ThereCreed), Feeling(ThereCreed, HereCreed),
+				System.Population, (System.Away != null) ? System.Away.Population : 0);
+			Leaver = awayLeaves ? awayName : System.SeatName;
+			Kept = awayLeaves ? System.SeatName : awayName;
 		}
 
 		/// <summary>Whether the founder may hold a rite of shared water here and now.</summary>
@@ -568,6 +650,7 @@ namespace ThousandAndFirst
 			System.SecededTick = The.Game.TimeTicks;
 			System.Dissent = 0;
 			System.DissentSpoken = 0;
+			KingdomBrink.LiftCity(System, The.Game.TimeTicks);
 			System.LastDissentTick = The.Game.TimeTicks;
 			KingdomChronicle.RecordDisputed(System,
 				KingdomCreedRules.SecessionTelling(leaverName, keptName, leaverCreed),
@@ -623,6 +706,9 @@ namespace ThousandAndFirst
 			System.SecededTick = 0;
 			System.Dissent = 0;
 			System.DissentSpoken = 0;
+			// A realm that has taken a city back is not standing at a brink, whatever the state
+			// slot was left holding by a secession that has since been undone.
+			KingdomBrink.LiftCity(System, The.Game.TimeTicks);
 			System.LastDissentTick = The.Game.TimeTicks;
 			// The founder is standing in it, so it becomes the seat by the ordinary route rather
 			// than a second one invented here.
@@ -755,6 +841,19 @@ namespace ThousandAndFirst
 		private static void Rearm(KingdomSystem System)
 		{
 			System.DissentSpoken = (int)KingdomCreedRules.RememberedTemper(KingdomCreedRules.ClassifyTemper(System.Dissent), (CityTemper)System.DissentSpoken);
+			if (System.Dissent >= KingdomCreedRules.DissentBreaking || !KingdomBrink.CityStands())
+			{
+				return;
+			}
+			// A lever eased it back off the breaking point. The brink goes on the spot rather than
+			// on the next pass -- the founder poured the water, and they are owed the answer in
+			// the same breath -- and the clock restarts from now, so the days the realm spent
+			// standing at the edge are not billed again the moment it steps back.
+			string leaver;
+			string kept;
+			NameTheLeaver(System, SeatCreed(System), AwayCreed(System), out leaver, out kept);
+			KingdomBrink.LiftCity(System, The.Game.TimeTicks);
+			KingdomBrink.Unsay(System, BrinkKind.City, leaver);
 		}
 
 		/// <summary>

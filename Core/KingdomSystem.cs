@@ -110,6 +110,13 @@ namespace ThousandAndFirst
 		/// </summary>
 		public long LastFetchTick;
 
+		/// <summary>
+		/// Tick the settlement's water works last poured a day's making into the stores. Same
+		/// checkpoint discipline as <see cref="LastFetchTick"/>, and planted before the first
+		/// count for the same reason: unplanted, an uncapped read is the age of the world.
+		/// </summary>
+		public long LastWaterWorkTick;
+
 		/// <summary>Citizens crewing works as of the last assignment pass. Hands on a mill are
 		/// hands not carrying a bucket, which is what makes staffing a real choice.</summary>
 		public int AssignedCrew;
@@ -142,6 +149,41 @@ namespace ThousandAndFirst
 		public int DamagedWorks;
 
 		public bool IdleWorksAnnounced;
+
+		/// <summary>
+		/// Tick this settlement's level was last reckoned against its people
+		/// (<c>KingdomSubsidence</c>). Uncapped world time: the slide runs whether the founder is
+		/// there or not, and the stamp advances by exactly the steps a reckoning cashed, keeping
+		/// the part-step remainder. Carried, so a dormant city does not settle a season's worth
+		/// the moment it is seated.
+		/// </summary>
+		public long LastSubsidenceTick;
+
+		/// <summary>
+		/// STANDARDS 7b's once-flag for the slide, and the slide's own memory of being under way.
+		/// Set when a settlement is first told it is settling back, cleared the moment it arrests
+		/// &mdash; and read by <c>KingdomSubsidenceRules.Slide</c> as "already sliding", because a
+		/// slide that has been announced converges to the level rather than stopping at the band's
+		/// edge. The announcement and the hysteresis are the same fact, so they are one field.
+		/// </summary>
+		public bool SubsidenceAnnounced;
+
+		/// <summary>
+		/// People this settlement's finished works honestly carry, as of the last attended pass
+		/// (<c>KingdomSubsidenceRules.SupportedLevel</c>). Knowledge, not truth: it is exactly as
+		/// stale as the last visit. Zero on a settlement no pass has measured yet.
+		/// </summary>
+		public int SupportedLevel;
+
+		/// <summary>
+		/// Which of <c>KingdomCatalogueRules.BindingSupports</c> is holding
+		/// <see cref="SupportedLevel"/> where it is, so the level can always say why (7b). Null
+		/// until a pass has measured it, and read back through
+		/// <c>KingdomSubsidenceRules.NormalizedBinding</c> rather than repaired in
+		/// <c>Normalize</c> &mdash; the seat swap's contract is a byte-for-byte round trip, and
+		/// what actually needs preventing is a sentence blaming a good this build cannot name.
+		/// </summary>
+		public string SubsidenceBinding;
 
 		public int ShopTier;
 
@@ -294,27 +336,12 @@ namespace ThousandAndFirst
 		public Dictionary<string, int> CreedCounts = new Dictionary<string, int>();
 
 		/// <summary>
-		/// Addendum 4b: how many ATTENDED passes each settler who has lost every acceptable home
-		/// has spent of their grace, keyed by the name they are carried on the roll under. Zero is
-		/// the pass their loss was announced on; <c>KingdomLodgingRules.GracePasses</c> is the pass
-		/// they leave on. A settler who is housed is removed from the map at once, so it is empty
-		/// in every city that is housing its people, which is nearly all of them.
-		/// <para>
-		/// Per-city, and swapped with the seat exactly like <see cref="OriginCounts"/>: whose
-		/// housing failed is a fact about one city, and a founder walking to the other one must
-		/// not carry it there. Counted in passes and never in ticks &mdash; that is what makes the
-		/// grace unspendable while the founder is away.
-		/// </para>
-		/// </summary>
-		public Dictionary<string, int> LodgingGrace = new Dictionary<string, int>();
-
-		/// <summary>
 		/// Addendum 5: shared living each settler has accumulated toward somebody else's creed,
 		/// keyed by the name they are carried on the roll under. Counted in ATTENDED passes and in
 		/// witnessed meals, never in ticks &mdash; that is what makes conversion unspendable while
 		/// the founder is away. Empty for nearly every settler in nearly every city.
 		/// <para>
-		/// Per-city, and swapped with the seat exactly like <see cref="LodgingGrace"/>: which
+		/// Per-city, and swapped with the seat exactly like <see cref="OriginCounts"/>: which
 		/// household is pulling at whom is a fact about one city. Paired with
 		/// <see cref="ConversionToward"/>, which names the creed those points are toward.
 		/// </para>
@@ -1213,6 +1240,16 @@ namespace ThousandAndFirst
 			{
 				Vocation = KingdomSettlement.NeutralVocation;
 			}
+			// A stored level or stamp below zero is a corrupt reading, not a settlement in
+			// debt: subsidence mints nothing, so both fail closed to "nothing measured yet".
+			if (LastSubsidenceTick < 0L)
+			{
+				LastSubsidenceTick = 0L;
+			}
+			if (SupportedLevel < 0)
+			{
+				SupportedLevel = 0;
+			}
 			Away?.Normalize();
 			Seceded?.Normalize();
 			if (Dissent < 0 || Dissent > KingdomCreedRules.DissentBreaking)
@@ -1222,10 +1259,6 @@ namespace ThousandAndFirst
 			if (DissentSpoken < 0 || DissentSpoken > (int)CityTemper.Secession)
 			{
 				DissentSpoken = (DissentSpoken < 0) ? 0 : (int)CityTemper.Secession;
-			}
-			if (LodgingGrace == null)
-			{
-				LodgingGrace = new Dictionary<string, int>();
 			}
 			if (ConversionShared == null)
 			{

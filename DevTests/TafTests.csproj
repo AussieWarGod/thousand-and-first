@@ -53,7 +53,10 @@
     <Compile Include="KingdomReachRulesTests.cs" />
     <Compile Include="KingdomCrewRulesTests.cs" />
     <Compile Include="KingdomWearRulesTests.cs" />
+    <Compile Include="KingdomBrinkRulesTests.cs" />
+    <Compile Include="KingdomSubsidenceRulesTests.cs" />
     <Compile Include="..\Core\KingdomRules.cs" />
+    <Compile Include="..\Core\KingdomBrinkRules.cs" />
     <Compile Include="..\Core\KingdomLedger.cs" />
     <Compile Include="..\Core\KingdomSettlement.cs" />
     <Compile Include="..\Core\KingdomExileRules.cs" />
@@ -73,6 +76,7 @@
     <Compile Include="..\Growth\KingdomMaterialRules.cs" />
     <Compile Include="..\Growth\KingdomWearRules.cs" />
     <Compile Include="..\Growth\KingdomCatalogueRules.cs" />
+    <Compile Include="..\Growth\KingdomSubsidenceRules.cs" />
     <Compile Include="..\Growth\KingdomRoadRules.cs" />
     <Compile Include="..\Growth\KingdomYardRules.cs" />
     <Compile Include="..\Growth\KingdomCrewRules.cs" />

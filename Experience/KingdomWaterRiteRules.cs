@@ -84,8 +84,8 @@ namespace ThousandAndFirst
 		public readonly int Hostility;
 
 		/// <summary>Attended passes this settler has been present for. See
-		/// <see cref="KingdomWaterRiteRules.PassesAfter"/> for why that is not a clock.</summary>
-		public readonly int SharedPasses;
+		/// <see cref="KingdomWaterRiteRules.SharedDaysAfter"/> for what it is denominated in.</summary>
+		public readonly int SharedDays;
 
 		/// <summary>Whether they hold a creed of their own, as against holding nothing in
 		/// particular. Crossing from a belief is further than crossing from none.</summary>
@@ -108,10 +108,10 @@ namespace ThousandAndFirst
 		/// and the thing whose changing re-opens every closed door here.</summary>
 		public readonly string RealmCreed;
 
-		public WaterRiteFacts(int Hostility, int SharedPasses, bool HoldsACreed, bool RivalShrine, bool Devout, bool Steadfast, string RealmCreed)
+		public WaterRiteFacts(int Hostility, int SharedDays, bool HoldsACreed, bool RivalShrine, bool Devout, bool Steadfast, string RealmCreed)
 		{
 			this.Hostility = Hostility;
-			this.SharedPasses = SharedPasses;
+			this.SharedDays = SharedDays;
 			this.HoldsACreed = HoldsACreed;
 			this.RivalShrine = RivalShrine;
 			this.Devout = Devout;
@@ -144,20 +144,20 @@ namespace ThousandAndFirst
 		public readonly bool Absolute;
 
 		/// <summary>Shared passes at which their reach would have covered the distance, or zero
-		/// when no shared life could. From <see cref="KingdomWaterRiteRules.NeededPasses"/>.</summary>
-		public readonly int NeededPasses;
+		/// when no shared life could. From <see cref="KingdomWaterRiteRules.NeededDays"/>.</summary>
+		public readonly int NeededDays;
 
 		/// <summary>The realm's creed as it stood that night. A different creed is a different
 		/// question, and is always allowed to be asked.</summary>
 		public readonly string RealmCreed;
 
-		public WaterRiteStamp(WaterRiteAnswer Answer, int Hostility, bool RivalShrine, bool Absolute, int NeededPasses, string RealmCreed)
+		public WaterRiteStamp(WaterRiteAnswer Answer, int Hostility, bool RivalShrine, bool Absolute, int NeededDays, string RealmCreed)
 		{
 			this.Answer = Answer;
 			this.Hostility = Hostility;
 			this.RivalShrine = RivalShrine;
 			this.Absolute = Absolute;
-			this.NeededPasses = NeededPasses;
+			this.NeededDays = NeededDays;
 			this.RealmCreed = RealmCreed;
 		}
 	}
@@ -188,7 +188,7 @@ namespace ThousandAndFirst
 	/// <b>Two shared livings, and they are not the same quantity.</b>
 	/// <c>KingdomConversionRules.SharedLivingForConversion</c> counts shared living TOWARD ONE
 	/// CREED: household-scoped, closeness-scaled, redirected the moment somebody moves house.
-	/// <see cref="WaterRiteFacts.SharedPasses"/> counts shared living WITH THE SETTLEMENT: how
+	/// <see cref="WaterRiteFacts.SharedDays"/> counts shared living WITH THE SETTLEMENT: how
 	/// many attended passes this person has stood on this ground, whoever they sleep beside. The
 	/// rite needs the second precisely because it exists to reach the people the first cannot
 	/// &mdash; the settler in a quarter of their own, whom no household majority is pulling at.
@@ -235,7 +235,9 @@ namespace ThousandAndFirst
 		/// </summary>
 		public const int DevotionDistance = 20;
 
-		/// <summary>Distance one attended pass of shared living covers. Four.</summary>
+		/// <summary>Distance one attended pass of shared living covered before the clock rework.
+		/// Four. Kept as the INPUT to the recalibration rather than deleted, so
+		/// <see cref="MaxCountedDays"/> shows its own working.</summary>
 		public const int ReachPerSharedPass = 4;
 
 		/// <summary>
@@ -248,9 +250,24 @@ namespace ThousandAndFirst
 		/// </summary>
 		public const int ReachCap = 140;
 
-		/// <summary>Attended passes at which <see cref="Reach"/> stops rising. Nothing above it
-		/// ever means anything, which is why the shell stops counting there.</summary>
-		public const int MaxCountedPasses = ReachCap / ReachPerSharedPass;
+		/// <summary>The road in the unit it used to be walked in: thirty-five attended passes, at
+		/// four of reach apiece. The input to the recalibration.</summary>
+		public const int SharedPassesForFullReach = ReachCap / ReachPerSharedPass;
+
+		/// <summary>
+		/// Cohabited days at which <see cref="Reach"/> stops rising: a hundred and five, which is
+		/// <see cref="SharedPassesForFullReach"/> restated at
+		/// <see cref="KingdomBrinkRules.CohabitationDaysPerAttendedPass"/>. Nothing above it ever
+		/// means anything, which is why the shell stops counting there.
+		/// <para>
+		/// The old counter was already half a day counter &mdash; it refused to count a settler
+		/// twice inside one day &mdash; so what changed is not the unit but who spends it: days
+		/// now pass while the founder is away, and a founder who comes home at the cadence the
+		/// design assumes walks exactly the hundred and five days that used to be thirty-five
+		/// visits.
+		/// </para>
+		/// </summary>
+		public const int MaxCountedDays = SharedPassesForFullReach * KingdomBrinkRules.CohabitationDaysPerAttendedPass;
 
 		/// <summary>Distance one dram of the settlement's water is asked to carry. Four, so the
 		/// price of the basin rises with what is in the way without ever becoming the reason a
@@ -284,31 +301,39 @@ namespace ThousandAndFirst
 			return distance;
 		}
 
-		/// <summary>How far a shared life has carried them, capped at <see cref="ReachCap"/>.</summary>
-		/// <param name="SharedPasses">Attended passes lived here. Negative reads as none.</param>
-		public static int Reach(int SharedPasses)
+		/// <summary>How far a shared life has carried them, capped at <see cref="ReachCap"/>.
+		/// Exact at every third day, because <see cref="ReachCap"/> over
+		/// <see cref="MaxCountedDays"/> is four over three: three cohabited days buy the four this
+		/// used to give an attended pass, and a hundred and five buy the whole of it.</summary>
+		/// <param name="SharedDays">Cohabited days lived here. Negative reads as none.</param>
+		public static int Reach(int SharedDays)
 		{
-			if (SharedPasses <= 0)
+			if (SharedDays <= 0)
 			{
 				return 0;
 			}
-			return (SharedPasses >= MaxCountedPasses) ? ReachCap : (SharedPasses * ReachPerSharedPass);
+			return (SharedDays >= MaxCountedDays) ? ReachCap : (SharedDays * ReachCap / MaxCountedDays);
 		}
 
 		/// <summary>
-		/// Shared passes at which this distance would be covered, or zero when no shared life would
-		/// ever cover it. Recorded on a refusal so a second asking can tell "she has lived more of
-		/// it since" apart from "you asked her twice"; never shown to the founder as a number,
-		/// because a number on this would be a countdown and this is not a countdown.
+		/// Cohabited days at which this distance would be covered, or zero when no shared life
+		/// would ever cover it. Recorded on a refusal so a second asking can tell "she has lived
+		/// more of it since" apart from "you asked her twice"; never shown to the founder as a
+		/// number, because a number on this would be a countdown and this is not a countdown.
+		/// <para>
+		/// Rounded up, so the day this names actually covers the distance rather than falling one
+		/// point short of it &mdash; the inverse of <see cref="Reach"/>'s integer division, which
+		/// would otherwise let a promise be kept a day before it was true.
+		/// </para>
 		/// </summary>
 		/// <param name="Distance">From <see cref="Distance"/>.</param>
-		public static int NeededPasses(int Distance)
+		public static int NeededDays(int Distance)
 		{
 			if (Distance <= 0 || Distance > ReachCap)
 			{
 				return 0;
 			}
-			return (Distance + ReachPerSharedPass - 1) / ReachPerSharedPass;
+			return (int)(((long)Distance * MaxCountedDays + ReachCap - 1L) / ReachCap);
 		}
 
 		/// <summary>
@@ -345,7 +370,7 @@ namespace ThousandAndFirst
 				return WaterRiteAnswer.Steadfast;
 			}
 			int distance = Distance(Facts);
-			int reach = Reach(Facts.SharedPasses);
+			int reach = Reach(Facts.SharedDays);
 			if (reach >= distance)
 			{
 				return WaterRiteAnswer.Accepted;
@@ -386,7 +411,7 @@ namespace ThousandAndFirst
 				Clamp(Facts.Hostility, 0, 100),
 				Facts.RivalShrine,
 				Answer == WaterRiteAnswer.Steadfast,
-				NeededPasses(Distance(Facts)),
+				NeededDays(Distance(Facts)),
 				Facts.RealmCreed);
 		}
 
@@ -422,7 +447,7 @@ namespace ThousandAndFirst
 			{
 				return true;
 			}
-			return Then.NeededPasses > 0 && Now.SharedPasses >= Then.NeededPasses;
+			return Then.NeededDays > 0 && Now.SharedDays >= Then.NeededDays;
 		}
 
 		/// <summary>Whether two creed faction names are the same belief. Null and empty are one
@@ -440,48 +465,43 @@ namespace ThousandAndFirst
 		}
 
 		// ==================================================================================
-		// Shared living with the settlement. One attended pass, counted once, and never a tick
-		// of it while nobody is there. Deliberately not a date: the roll records the day
-		// somebody arrived, and that day is a fact about the calendar rather than about
-		// anything shared.
+		// Shared living with the settlement, counted in the days somebody has actually lived
+		// here. Deliberately not a date: the roll records the day somebody arrived, and that day
+		// is a fact about the calendar rather than about anything shared -- what this counts is
+		// how much of this settlement's own life they have been part of.
 		// ==================================================================================
 
 		/// <summary>
-		/// Whether this pass counts as another day of shared living for this settler: at most one
-		/// a day, and never one at all without a pass.
+		/// Shared living after a stretch of days lived here. Stops at
+		/// <see cref="MaxCountedDays"/>, which is exactly where <see cref="Reach"/> stops rising,
+		/// so the number never grows past the point of meaning anything.
 		/// <para>
-		/// The clock here forbids; it never causes. Elapsed days cannot add a single point of
-		/// shared living &mdash; only <c>KingdomWaterRite.OnSettlementPass</c> can, and that runs
-		/// only while the founder is standing on the ground. What the day-apart requirement buys
-		/// is that a founder cannot pace across the zone boundary and back to buy somebody's whole
-		/// life in an afternoon, and that two callers resolving the same evening cannot count it
-		/// twice. A clock that only ever says "not yet" is not a maturation timer.
+		/// The clock used to FORBID here and never cause: a settler could be counted at most once
+		/// a day, but only an attended pass could count them at all. Addendum 8 clause 1 makes the
+		/// days themselves the unit &mdash; a settler goes on living in the settlement whether or
+		/// not the founder is standing in it &mdash; and the one-a-day gate survives as arithmetic
+		/// rather than as a guard, because a stretch of elapsed time cannot yield more whole days
+		/// than it contains.
+		/// </para>
+		/// <para>
+		/// Nothing irreversible hangs off this counter, so it needs no brink of its own. It buys
+		/// REACH, which only makes an invitation the founder must still extend and the settler
+		/// must still accept more likely to be accepted; the rite's exit is its refusal counter,
+		/// and its pressure surface is <c>KingdomConversion</c>'s. One exit, many feeders.
 		/// </para>
 		/// </summary>
-		/// <param name="LastCountedTick">Tick the settler was last counted at. Zero or less is a
-		/// settler nobody has counted, who counts now.</param>
-		/// <param name="NowTick">Now. A tick at or behind the last one counts nothing, so a clock
-		/// that went backwards can never award a pass.</param>
-		public static bool ShouldCountPass(long LastCountedTick, long NowTick)
+		/// <param name="Held">Days so far. Negative reads as none.</param>
+		/// <param name="Days">Whole days lived here since the last count, from
+		/// <c>KingdomRules.ElapsedDays</c>. Non-positive changes nothing.</param>
+		public static int SharedDaysAfter(int Held, int Days)
 		{
-			if (LastCountedTick <= 0L)
+			int held = (Held < 0) ? 0 : Held;
+			if (Days <= 0)
 			{
-				return true;
+				return held;
 			}
-			return NowTick - LastCountedTick >= KingdomRules.TicksPerDay;
-		}
-
-		/// <summary>Shared living after one more attended pass. Stops at
-		/// <see cref="MaxCountedPasses"/>, which is exactly where <see cref="Reach"/> stops rising,
-		/// so the number never grows past the point of meaning anything.</summary>
-		/// <param name="Passes">Passes so far. Negative reads as none.</param>
-		public static int PassesAfter(int Passes)
-		{
-			if (Passes < 0)
-			{
-				return 1;
-			}
-			return (Passes >= MaxCountedPasses) ? MaxCountedPasses : (Passes + 1);
+			long total = (long)held + Days;
+			return (total >= MaxCountedDays) ? MaxCountedDays : (int)total;
 		}
 
 		// ==================================================================================

@@ -53,15 +53,18 @@ namespace ThousandAndFirst
 		public const string EducationLapsedAnnouncedProperty = "KingdomEducationLapsedAnnounced";
 
 		/// <summary>
-		/// Attended passes a neutral resident has spent drawn toward whichever staffed,
-		/// consecrated shrine claimed them this zone's last pass. Lives on the resident, exactly
-		/// as <c>KingdomCreed.CreedProperty</c> does, because a resident's own belief travelling
-		/// with their own object &mdash; rather than a realm-level dictionary keyed by name, the
-		/// way <c>KingdomSystem.LodgingGrace</c> tracks the UNHOUSED &mdash; is correct here: a
-		/// shrine only ever pulls a resident who already has a place in this settlement's own
-		/// zone, never one sleeping in the open with no stable object to speak of.
+		/// Days a neutral resident has spent drawn toward whichever staffed, consecrated shrine
+		/// claimed them. Lives on the resident, exactly as <c>KingdomCreed.CreedProperty</c> and
+		/// <c>KingdomBrink</c>'s own records do, because a resident's belief travelling with their
+		/// own object is correct here: a shrine only ever pulls a resident who already has a place
+		/// in this settlement's own zone, never one sleeping in the open with no stable object to
+		/// speak of.
 		/// </summary>
 		public const string ShrinePullProperty = "KingdomShrinePull";
+
+		/// <summary>Tick <see cref="ShrinePullProperty"/> was last advanced at, so the days a
+		/// shrine argued at somebody are counted once however many passes resolve them.</summary>
+		public const string ShrinePullTickProperty = "KingdomShrinePullTick";
 
 		/// <summary>Raw property name AssignWork stamps on every crewed work. No public const
 		/// exists for it yet anywhere in the mod (<c>KingdomLocus</c> reads the same literal
@@ -109,6 +112,44 @@ namespace ThousandAndFirst
 					RunEducationLapse(work, entry);
 				}
 			}
+			ForgetUnreached(System, Survey, claimed);
+		}
+
+		// Rule 2 of the brink, for the settlers no shrine spoke to at all this pass: the building
+		// that had them at the end of its road was struck, deconsecrated, unstaffed, or simply no
+		// longer reaches where they stand, so the pressure is gone and the brink goes with it.
+		// Without this sweep a shrine brink would outlive its shrine, which is the exact failure
+		// IConversionPressure's re-derive-every-pass contract exists to forbid.
+		private static void ForgetUnreached(KingdomSystem System, KingdomSurvey Survey, HashSet<GameObject> Claimed)
+		{
+			for (int i = 0; i < Survey.Settlers.Count; i++)
+			{
+				GameObject settler = Survey.Settlers[i];
+				if (Claimed.Contains(settler))
+				{
+					continue;
+				}
+				LiftShrineBrink(System, settler);
+				if (settler.GetIntProperty(ShrinePullProperty) != 0)
+				{
+					settler.SetIntProperty(ShrinePullProperty, 0);
+					settler.SetLongProperty(ShrinePullTickProperty, 0L);
+				}
+			}
+		}
+
+		// Lifts a standing shrine brink and unsays it. A creed brink reached through any other
+		// channel is not this file's to touch -- KingdomConversion spends and arrests those.
+		private static bool LiftShrineBrink(KingdomSystem System, GameObject Settler)
+		{
+			BrinkRecord brink = KingdomBrink.Of(Settler, BrinkKind.Creed);
+			if (!brink.Stands || brink.Channel != (int)ConversionChannel.Shrine)
+			{
+				return false;
+			}
+			KingdomBrink.Lift(Settler, BrinkKind.Creed);
+			KingdomBrink.Unsay(System, BrinkKind.Creed, NameOf(Settler));
+			return true;
 		}
 
 		private static void RunShrine(KingdomSystem System, Zone Z, KingdomSurvey Survey, GameObject Shrine, KingdomRules.BuildEntry Entry, HashSet<GameObject> Claimed)
@@ -156,32 +197,125 @@ namespace ThousandAndFirst
 					AdvancePull(System, Z, settler, shrineCreed, Entry.Name);
 					break;
 				case KingdomFaithRules.ShrineStance.Opposed:
-					if (settler.GetIntProperty(ShrinePullProperty) != 0)
-					{
-						settler.SetIntProperty(ShrinePullProperty, 0);
-					}
+					ForgetPull(System, settler);
 					HandOffOpposedPressure(System, Z, settler, shrineCreed);
 					break;
 				default:
-					if (settler.GetIntProperty(ShrinePullProperty) != 0)
-					{
-						settler.SetIntProperty(ShrinePullProperty, 0);
-					}
+					ForgetPull(System, settler);
 					break;
 				}
 			}
 		}
 
+		// Clears a settler's pull and any shrine brink standing over them, because the shrine has
+		// stopped arguing at them -- they took a creed, or they came to oppose it.
+		private static void ForgetPull(KingdomSystem System, GameObject Settler)
+		{
+			LiftShrineBrink(System, Settler);
+			if (Settler.GetIntProperty(ShrinePullProperty) != 0)
+			{
+				Settler.SetIntProperty(ShrinePullProperty, 0);
+				Settler.SetLongProperty(ShrinePullTickProperty, 0L);
+			}
+		}
+
+		/// <summary>
+		/// One staffed, consecrated shrine's day-by-day work on one neutral resident, and the
+		/// brink at the end of it.
+		/// <para>
+		/// The pull accrues over the days the shrine actually stood staffed over them (Addendum 8
+		/// clause 1 and clause 2 together: a consecrated building argues every day, and an
+		/// unstaffed one argues on none of them). The staffing is read as it stands on this pass
+		/// and applied to the whole stretch, which is the same honest approximation every
+		/// labour-gated clock in the mod makes: the founder's own passes are the only places the
+		/// settlement's staffing is ever decided, so the staffing at the last pass is the staffing
+		/// that held through the stretch.
+		/// </para>
+		/// <para>
+		/// At the end of the road NOTHING FIRES. This is the channel that used to change what
+		/// somebody believed with no warning of any kind &mdash; the only irreversible social
+		/// consequence in the mod without one. It now records a brink through
+		/// <c>KingdomConversion.NoteRoadsEnd</c>, which names the settler and the shrine's creed
+		/// and the honest elapsed in both registers (STANDARDS 7b), and the conversion itself
+		/// waits out <c>KingdomBrinkRules.CreedBrinkWindow</c> attended passes in which
+		/// deconsecrating the shrine, taking its staff off it, or moving the settler out of its
+		/// reach all stop it.
+		/// </para>
+		/// </summary>
 		private static void AdvancePull(KingdomSystem System, Zone Z, GameObject Settler, string ShrineCreed, string BuildingName)
 		{
-			int pull = KingdomFaithRules.PullAfterPass(Settler.GetIntProperty(ShrinePullProperty));
-			if (!KingdomFaithRules.ConversionReady(pull))
+			long now = (The.Game != null) ? The.Game.TimeTicks : 0L;
+			BrinkRecord brink = KingdomBrink.Of(Settler, BrinkKind.Creed);
+			if (brink.Stands)
 			{
-				Settler.SetIntProperty(ShrinePullProperty, pull);
+				if (brink.Channel == (int)ConversionChannel.Shrine)
+				{
+					SpendShrineWindow(System, Z, Settler, ShrineCreed, brink);
+				}
+				// A brink reached through some other channel is somebody else's window to spend,
+				// and nothing accrues past a brink in any case.
 				return;
 			}
-			Settler.SetIntProperty(ShrinePullProperty, 0);
+			long last = Settler.GetLongProperty(ShrinePullTickProperty);
+			if (last <= 0L || now <= 0L)
+			{
+				// Planting the stamp before the first count, for the reason the fetch clock plants
+				// its own: an unplanted stamp read as elapsed is the age of the world.
+				Settler.SetLongProperty(ShrinePullTickProperty, now);
+				return;
+			}
+			int days = KingdomRules.ElapsedDays(now - last);
+			if (days <= 0)
+			{
+				return;
+			}
+			Settler.SetLongProperty(ShrinePullTickProperty, KingdomRules.AdvanceCheckpoint(last, now));
+			int was = Settler.GetIntProperty(ShrinePullProperty);
+			int pull = KingdomFaithRules.PullAfterDays(was, days);
+			Settler.SetIntProperty(ShrinePullProperty, pull);
+			if (!KingdomFaithRules.ConversionReady(pull))
+			{
+				return;
+			}
+			long reached = KingdomBrinkRules.CrossingTick(
+				now - (long)days * KingdomRules.TicksPerDay, now, was,
+				KingdomFaithRules.ConversionPullThreshold, 1);
+			KingdomConversion.NoteRoadsEnd(System, Settler, NameOf(Settler), ShrineCreed, ConversionChannel.Shrine, reached, now);
+		}
+
+		// One attended pass of a standing shrine brink. The cause is re-derived by the caller --
+		// this only runs for a settler a staffed, consecrated shrine still reaches and still finds
+		// neutral -- so reaching here at all is the pressure still standing.
+		private static void SpendShrineWindow(KingdomSystem System, Zone Z, GameObject Settler, string ShrineCreed, BrinkRecord Brink)
+		{
+			if (Brink.Cause != ShrineCreed)
+			{
+				// A different shrine has claimed them, or this one was reconsecrated. The creed at
+				// the end of their road is not the creed being pressed any more.
+				LiftShrineBrink(System, Settler);
+				return;
+			}
+			BrinkRecord spent = KingdomBrink.SpendPass(Settler, BrinkKind.Creed);
+			if (!KingdomBrinkRules.WindowSpent(BrinkKind.Creed, spent.PassesSpent))
+			{
+				return;
+			}
 			string residentName = NameOf(Settler);
+			int roads = Settler.GetIntProperty(KingdomConversion.RoadsWalkedProperty);
+			bool turns = KingdomConversionRules.Converts(
+				KingdomChronicle.SettlementId(System.KingdomFactionName), ConversionChannel.Shrine, residentName,
+				KingdomConversionRules.RoadEnd(roads));
+			Settler.SetIntProperty(KingdomConversion.RoadsWalkedProperty, roads + 1);
+			KingdomBrink.Lift(Settler, BrinkKind.Creed);
+			Settler.SetIntProperty(ShrinePullProperty, 0);
+			Settler.SetLongProperty(ShrinePullTickProperty, 0L);
+			if (!turns)
+			{
+				// The shrine argued a whole season and it did not take. Said, because the founder
+				// was told it was coming.
+				KingdomBrink.Unsay(System, BrinkKind.Creed, residentName);
+				return;
+			}
 			// The one path a conversion may take. Calling KingdomCreed.Record directly here
 			// skipped Forget (the old creed's tally never decremented), left the settler's
 			// standing pressure entries in place, and wrote a chronicle line without the

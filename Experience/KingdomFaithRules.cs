@@ -15,8 +15,9 @@ namespace ThousandAndFirst
 	/// physically partitions into quarters. Conversion is the long road back. Architecture
 	/// manages the difference; practice (this file's shrine and education channels, alongside
 	/// osmosis, culture, and diplomacy) converts it; investment heals it. Conversions are RARE,
-	/// chronicled by name, counted only in attended passes (never calendar time — a founder away
-	/// a season spends no more of anybody's patience than a founder away three days), and never
+	/// chronicled by name, counted in the days a shrine actually stood staffed over somebody
+	/// (Addendum 8 clause 1 — a consecrated building argues every day, not every visit) and
+	/// resolved at a BRINK the founder gets a window of attended passes to arrest, and never
 	/// shown to the player as a meter or a percentage. The counting happens; the watching of it
 	/// does not.
 	/// </para>
@@ -124,30 +125,53 @@ namespace ThousandAndFirst
 		}
 
 		/// <summary>
-		/// Attended passes a neutral resident spends drawn toward a staffed, consecrated shrine
-		/// before they take up its creed. Thirty: large enough that a founder sees this happen
-		/// perhaps once or twice a whole game, in keeping with "conversions are rare" &mdash;
-		/// and, because it counts only passes the founder is present for standing on this ground,
-		/// a season away spends none of it. Named so a playtest that wants the arc to land sooner
-		/// or later changes one constant.
+		/// The pull as it was denominated before the clock rework: thirty attended passes under a
+		/// staffed, consecrated shrine. Kept as the INPUT to the recalibration rather than
+		/// deleted, so <see cref="ConversionPullThreshold"/> shows its own working.
 		/// </summary>
-		public const int ConversionPullThreshold = 30;
+		public const int ConversionPullInPasses = 30;
 
 		/// <summary>
-		/// The pull count after one more attended pass under a staffed, consecrated shrine finds
-		/// this resident still neutral. Zero (a resident never pulled before, or one just reset
-		/// by a stance that is not <see cref="ShrineStance.Neutral"/>) steps to one, the same
-		/// "one pass, one step" shape <c>KingdomLodgingRules.GraceAfterPass</c> uses for its own,
-		/// unrelated counter &mdash; the shape Addendum 5 asks every channel to share, not the
-		/// state.
+		/// Days a neutral resident spends drawn toward a staffed, consecrated shrine before the
+		/// road ends. Ninety: <see cref="ConversionPullInPasses"/> restated in days at
+		/// <see cref="KingdomBrinkRules.CohabitationDaysPerAttendedPass"/>, so a founder who comes
+		/// home at the cadence the design always assumed watches exactly the same arc they always
+		/// watched &mdash; large enough that this happens perhaps once or twice a whole game, in
+		/// keeping with "conversions are rare". Named so a playtest that wants the arc to land
+		/// sooner or later changes one constant.
+		/// <para>
+		/// A consecrated shrine argues every day, not every visit (Addendum 8 clause 1), so the
+		/// days pass whether or not the founder is there. What does NOT happen while they are away
+		/// is the conversion: the road ends in a brink, the founder is named the settler and the
+		/// creed and the honest elapsed, and the shrine's window is spent in attended passes like
+		/// every other (<see cref="KingdomBrinkRules.CreedBrinkWindow"/>).
+		/// </para>
 		/// </summary>
-		public static int PullAfterPass(int Pull)
+		public const int ConversionPullThreshold = ConversionPullInPasses * KingdomBrinkRules.CohabitationDaysPerAttendedPass;
+
+		/// <summary>
+		/// The pull count after a stretch of days under a staffed, consecrated shrine has found
+		/// this resident still neutral. Held at <see cref="ConversionPullThreshold"/>: the road's
+		/// end is a brink, and nothing accrues past a brink, so a founder away a thousand days and
+		/// one away ninety come home to a settler standing in the same place.
+		/// </summary>
+		/// <param name="Pull">Days pulled so far. Negative reads as none.</param>
+		/// <param name="Days">Days the shrine argued at them, from
+		/// <c>KingdomRules.ActivityDays</c> &mdash; an unstaffed shrine contributes none of them,
+		/// which is Addendum 8 clause 2 for this channel. Non-positive changes nothing.</param>
+		public static int PullAfterDays(int Pull, int Days)
 		{
-			return (Pull < 0) ? 1 : (Pull + 1);
+			int held = (Pull < 0) ? 0 : Pull;
+			if (Days <= 0)
+			{
+				return held;
+			}
+			long pulled = (long)held + Days;
+			return KingdomBrinkRules.HoldAtBrink((pulled > ConversionPullThreshold) ? ConversionPullThreshold : (int)pulled, ConversionPullThreshold);
 		}
 
-		/// <summary>Whether a resident's pull has run its course and they take up the shrine's
-		/// creed this pass.</summary>
+		/// <summary>Whether a resident's pull has run its course and the shrine's road ends
+		/// here.</summary>
 		public static bool ConversionReady(int Pull)
 		{
 			return Pull >= ConversionPullThreshold;

@@ -34,6 +34,21 @@ namespace ThousandAndFirst
 
 		public List<string> Notes = new List<string>();
 
+		/// <summary>
+		/// The brink lane: what is one window away from happening, and what stepped back from
+		/// one. Kept apart from <see cref="Notes"/> and printed above them, because a settler
+		/// about to leave and a settler who found a roof are not the same weight of news as the
+		/// drams that moved &mdash; and because the founder must not have to read past six lines
+		/// of housekeeping to find the one thing they can still act on (STANDARDS 7b).
+		/// <para>
+		/// Written only through <see cref="NoteBrink"/> and <see cref="NoteBrinkLifted"/>, which
+		/// <c>KingdomBrink</c> is the only caller of. Every line in here has already been said
+		/// once and will not be said again while its brink stands: the announce-once discipline
+		/// lives in the brink record, not in this list.
+		/// </para>
+		/// </summary>
+		public List<string> BrinkLines = new List<string>();
+
 #if !TAF_TESTS
 		public bool WantFieldReflection => false;
 
@@ -55,13 +70,17 @@ namespace ThousandAndFirst
 			{
 				Notes = new List<string>();
 			}
+			if (BrinkLines == null)
+			{
+				BrinkLines = new List<string>();
+			}
 		}
 
 		public bool Any
 		{
 			get
 			{
-				return Fetched > 0 || UpkeepDrawn > 0 || ArrivalCost > 0 || Delivered > 0 || Plundered > 0 || Arrivals > 0 || Departures > 0 || Notes.Count > 0;
+				return Fetched > 0 || UpkeepDrawn > 0 || ArrivalCost > 0 || Delivered > 0 || Plundered > 0 || Arrivals > 0 || Departures > 0 || Notes.Count > 0 || BrinkLines.Count > 0;
 			}
 		}
 
@@ -75,6 +94,7 @@ namespace ThousandAndFirst
 			Arrivals = 0;
 			Departures = 0;
 			Notes.Clear();
+			BrinkLines.Clear();
 		}
 
 		public void Note(string Line)
@@ -82,6 +102,37 @@ namespace ThousandAndFirst
 			if (!string.IsNullOrEmpty(Line) && Notes.Count < 12)
 			{
 				Notes.Add(Line);
+			}
+		}
+
+		/// <summary>Brink lines a homecoming report will carry before it gives up and stops
+		/// listing them. Eight: a settlement in which eight separate irreversible things are one
+		/// window away is a settlement whose founder needs to be told to come home, not handed a
+		/// longer list.</summary>
+		public const int MaxBrinkLines = 8;
+
+		/// <summary>
+		/// One brink's announcement, in the colour of a thing that has not happened yet but will.
+		/// Said once per brink by <c>KingdomBrink.Announce</c>; this list never dedupes, because
+		/// the brink record upstream already guarantees the line arrives once.
+		/// </summary>
+		public void NoteBrink(string Line)
+		{
+			AddBrink(Line, "{{r|");
+		}
+
+		/// <summary>The unsaying: a brink whose cause went before its window did. Green, because
+		/// it is the only good news in this lane and the founder earned it by acting.</summary>
+		public void NoteBrinkLifted(string Line)
+		{
+			AddBrink(Line, "{{G|");
+		}
+
+		private void AddBrink(string Line, string Colour)
+		{
+			if (!string.IsNullOrEmpty(Line) && BrinkLines.Count < MaxBrinkLines)
+			{
+				BrinkLines.Add(Colour + Line + "}}");
 			}
 		}
 
@@ -100,6 +151,13 @@ namespace ThousandAndFirst
 				sb.Append(" (").Append(Days).Append((Days == 1) ? " day" : " days").Append(" accounted)");
 			}
 			sb.Append("\n");
+			// The brink lane first, and dated by the day count above it: these are the lines the
+			// founder can still do something about, and every pass they spend reading past them
+			// is a pass of somebody's window.
+			for (int i = 0; i < BrinkLines.Count; i++)
+			{
+				sb.Append("\n").Append(BrinkLines[i]);
+			}
 			for (int i = 0; i < Notes.Count; i++)
 			{
 				sb.Append("\n").Append(Notes[i]);

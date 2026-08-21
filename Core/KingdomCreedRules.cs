@@ -134,9 +134,26 @@ namespace ThousandAndFirst
 		/// must be able to watch this coming from a very long way off.</summary>
 		public const int DissentMuttering = 20;
 
-		/// <summary>Days between rites of shared water. Three, matching the absence cap, so the
-		/// cadence a present founder can hold is the cadence an absent one is charged.</summary>
-		public const int RiteCooldownDays = 3;
+		/// <summary>Days between rites of shared water. Three, which was the absence cap when it
+		/// was written and is now <see cref="KingdomBrinkRules.CohabitationDaysPerAttendedPass"/>
+		/// &mdash; the same number wearing its honest name, the design's own model of how often a
+		/// present founder comes home. The cap it used to match is retired; the CADENCE it was
+		/// really about is not, and this is still the rate a founder who is here can hold.
+		/// </summary>
+		public const int RiteCooldownDays = KingdomBrinkRules.CohabitationDaysPerAttendedPass;
+
+		/// <summary>
+		/// Attended passes the realm has between reaching the breaking point and the unhappier
+		/// city walking. Three, from <see cref="KingdomBrinkRules.CityBrinkWindow"/>.
+		/// <para>
+		/// This window did not exist. Secession fired on the same pass dissent reached
+		/// <see cref="DissentBreaking"/>, which was survivable only because dissent could not
+		/// accrue faster than the absence cap allowed. Now that it accrues in real time, the
+		/// window is what keeps Addendum 8 clause 3 true: however long the absence, the moment of
+		/// realisation carries the last arrestable window the design promised.
+		/// </para>
+		/// </summary>
+		public const int SecessionWindowPasses = KingdomBrinkRules.CityBrinkWindow;
 
 		/// <summary>Dissent eased by holding a shared meal while the cities are at odds. Smaller
 		/// than a rite because the meal is not asked to be a policy — it is a good evening.</summary>
@@ -355,24 +372,37 @@ namespace ThousandAndFirst
 		}
 
 		/// <summary>
-		/// Dissent after a pass in which the founder was present.
+		/// Dissent after a stretch of days.
 		/// <para>
-		/// <paramref name="Days"/> comes from <see cref="KingdomRules.HeartbeatDays"/>, which is
-		/// capped, which is the whole guarantee: a founder who was away a season and one who was
-		/// away three days accrue identically. Absence never causes this.
+		/// <paramref name="Days"/> is UNCAPPED (Addendum 8 clause 1): two cities that cannot
+		/// stand each other go on not standing each other whether or not the founder is watching.
+		/// What bounds the outcome is no longer a forgiveness ceiling on the clock but
+		/// <see cref="DissentBreaking"/> itself &mdash; the value clamps there, records a brink,
+		/// and the unhappier city then waits <see cref="SecessionWindowPasses"/> ATTENDED passes
+		/// for the founder to do something about it. Uncapping this without that window would have
+		/// made an absence lose a city faster than presence does, which is clause 3 exactly
+		/// inverted; the two moved together, in one package, which is why this doc no longer
+		/// promises what it used to.
 		/// </para>
 		/// </summary>
 		/// <param name="Dissent">Dissent standing now.</param>
 		/// <param name="Hostility">From <see cref="Hostility"/>.</param>
-		/// <param name="Days">Attended days to resolve. Non-positive changes nothing.</param>
-		/// <returns>The new dissent, clamped to <c>[0, DissentBreaking]</c>.</returns>
+		/// <param name="Days">Days to resolve. Non-positive changes nothing.</param>
+		/// <returns>The new dissent, clamped to <c>[0, DissentBreaking]</c>. Arithmetic in long,
+		/// because an uncapped day count times four points a day is a number an int cannot always
+		/// hold, and a dissent that wrapped negative would read as concord.</returns>
 		public static int AccrueDissent(int Dissent, int Hostility, int Days)
 		{
 			if (Days <= 0)
 			{
 				return Clamp(Dissent);
 			}
-			return Clamp(Dissent + DissentPerDay(Hostility) * Days);
+			long accrued = (long)Dissent + (long)DissentPerDay(Hostility) * Days;
+			if (accrued >= DissentBreaking)
+			{
+				return DissentBreaking;
+			}
+			return Clamp((int)accrued);
 		}
 
 		/// <summary>Dissent after something the founder did about it. Clamped, so a lever can
@@ -677,6 +707,37 @@ namespace ThousandAndFirst
 			default:
 				return "";
 			}
+		}
+
+		/// <summary>
+		/// The loudest thing the realm ever says, and the one the ladder never had a rung for:
+		/// the two cities have reached the breaking point and the founder has a named, countable
+		/// number of visits to stop the split.
+		/// <para>
+		/// <see cref="TemperSpeech"/> deliberately returns nothing at
+		/// <see cref="CityTemper.Secession"/>, because until the brink there was nothing to say
+		/// at that tier &mdash; the city was already gone by the time the tier was reached. This
+		/// is what it says now.
+		/// </para>
+		/// </summary>
+		/// <param name="LeaverName">The city that will walk if nothing changes.</param>
+		/// <param name="KeptName">The city the realm would keep.</param>
+		/// <param name="Days">Whole days the realm has stood at the breaking point, from
+		/// <c>KingdomBrinkRules.DaysStood</c>.</param>
+		/// <param name="PassesLeft">Attended passes left, from
+		/// <c>KingdomBrinkRules.PassesLeft</c>.</param>
+		public static string SecessionBrinkSpeech(string LeaverName, string KeptName, int Days, int PassesLeft)
+		{
+			string leaver = string.IsNullOrEmpty(LeaverName) ? "the other city" : ("{{C|" + LeaverName + "}}");
+			string kept = string.IsNullOrEmpty(KeptName) ? "this one" : ("{{C|" + KeptName + "}}");
+			string stood = (Days <= 0)
+				? "tonight"
+				: ((Days == 1) ? "since yesterday" : ("for " + Days + " days"));
+			string window = (PassesLeft <= 1)
+				? "One more visit and it is done."
+				: (PassesLeft + " more visits and it is done.");
+			return "{{R|" + leaver + " has been drawing up its own charter " + stood + ", and it does not name "
+				+ kept + ". " + window + "}} {{K|(Charter: how your cities hold each other)}}";
 		}
 
 		/// <summary>

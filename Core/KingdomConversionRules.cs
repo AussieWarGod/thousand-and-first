@@ -11,7 +11,7 @@ namespace ThousandAndFirst
 	/// </summary>
 	public enum ConversionChannel
 	{
-		/// <summary>The household majority, counted in attended passes under one roof.</summary>
+		/// <summary>The household majority, counted in COHABITATION DAYS under one roof.</summary>
 		Osmosis = 1,
 
 		/// <summary>The witnessed shared meal, nudging attendees toward the table's majority.
@@ -68,20 +68,28 @@ namespace ThousandAndFirst
 	/// the city into quarters, and the guard that keeps that road from ever becoming a corridor.
 	/// <para>
 	/// <b>Two passive channels live here.</b> <i>Osmosis</i> is the household majority pulling at
-	/// the minority, counted in SHARED LIVING &mdash; attended passes spent under one roof &mdash;
-	/// and scaled by the closeness ladder, because how much of a difference a household can cross
-	/// is a property of its architecture and of nothing else. <i>Culture</i> is the witnessed
-	/// shared meal nudging its attendees toward the table's majority: small, capped at
-	/// <see cref="MealCeilingPercent"/> of the road, and a free rider on a ceremony the founder
-	/// was already holding. Neither is a meter, neither reads a clock, and neither advances by so
-	/// much as a point while the founder is away.
+	/// the minority, counted in SHARED LIVING &mdash; cohabitation days actually spent under one
+	/// roof &mdash; and scaled by the closeness ladder, because how much of a difference a
+	/// household can cross is a property of its architecture and of nothing else. <i>Culture</i>
+	/// is the witnessed shared meal nudging its attendees toward the table's majority: small,
+	/// capped at <see cref="MealCeilingPercent"/> of the road, and a free rider on a ceremony the
+	/// founder was already holding. Neither is a meter and neither is ever shown as a percentage.
 	/// </para>
 	/// <para>
-	/// <b>Time is labour, never maturation.</b> Every figure below is a count of attended passes
-	/// or of meals actually held. Nothing here converts a tick into progress, so a settlement left
-	/// alone for a season comes back holding exactly the beliefs it held when it was left. That is
-	/// the same guarantee <c>KingdomLodgingRules</c>' grace makes, made the same way: nothing
-	/// elapses on its own, because nothing here consults anything that elapses.
+	/// <b>People go on living together whether or not anyone is watching (Addendum 8 clause 1).</b>
+	/// Osmosis is named in the doctrine by name. Shared living is therefore denominated in
+	/// cohabitation TIME &mdash; days two people actually spent under one roof &mdash; and not in
+	/// visits, and this file's figures were recalibrated through
+	/// <see cref="KingdomBrinkRules.CohabitationDaysPerAttendedPass"/> so that a founder who comes
+	/// home at the cadence the design always assumed walks EXACTLY the road they walked before.
+	/// Only an absent founder sees any difference, and what they come home to is a brink rather
+	/// than a fait accompli.
+	/// </para>
+	/// <para>
+	/// <b>Rates are time x architecture, never time alone (clause 2).</b> The closeness ladder is
+	/// the multiplier: a bunk row buys nothing however many days pass in it, and a fine house buys
+	/// a third of what a hut does. An unhoused settler cohabits with nobody and accrues nothing at
+	/// all, which is the same rule stated from the other side.
 	/// </para>
 	/// <para>
 	/// <b>A settler may always emigrate rather than convert.</b> Osmosis and the shared table are
@@ -95,12 +103,21 @@ namespace ThousandAndFirst
 	/// both registers. The covenant is drunk, never administered.
 	/// </para>
 	/// <para>
-	/// <b>Rare, and never re-rolled.</b> Reaching the end of the road buys a DRAW, not a
-	/// conversion: <see cref="ConversionChancePercent"/> at each milestone, taken through
-	/// <see cref="CounterRandom"/> on a key that names the settlement, the channel, the person and
-	/// which milestone this is. The same milestone always answers the same way, in any process,
-	/// forever &mdash; a reload never re-rolls a soul, and a founder cannot save-scum a
-	/// conversion.
+	/// <b>The end of the road is a BRINK, not a conversion.</b> Reaching
+	/// <see cref="SharedLivingForConversion"/> records a creed brink
+	/// (<see cref="KingdomBrinkRules"/>) and shared living STOPS ACCRUING there, so a thousand-day
+	/// absence and a two-hundred-day one arrive at the same place. The founder is named once with
+	/// the honest elapsed and gets <see cref="ResentedPasses"/> attended passes to break the
+	/// household up, rehouse them, or bring another creed's pull to bear &mdash; and only when the
+	/// window is spent with the household still pulling is the draw asked at all.
+	/// </para>
+	/// <para>
+	/// <b>Rare, and never re-rolled.</b> The draw is <see cref="ConversionChancePercent"/>, taken
+	/// through <see cref="CounterRandom"/> on a key that names the settlement, the channel, the
+	/// person and which ROAD this is (<see cref="RoadEnd"/>). The same road always answers the
+	/// same way, in any process, forever &mdash; a reload never re-rolls a soul, and a founder
+	/// cannot save-scum a conversion. A road that answered no is walked again from nothing, and
+	/// the next one is a genuinely new question.
 	/// </para>
 	/// <para>
 	/// Engine-free, so the whole of it is tabled. Which people share which roof, and which of them
@@ -110,63 +127,106 @@ namespace ThousandAndFirst
 	public static class KingdomConversionRules
 	{
 		// ==================================================================================
-		// Addendum 5, the osmosis channel: shared living, counted in attended passes.
+		// Addendum 5, the osmosis channel: shared living, counted in COHABITATION DAYS.
 		//
-		// The unit is deliberately not a day, an hour or a tick. It is a pass -- one arrival of
-		// the founder on the settlement's own ground -- and it is spent by the lodging pass and
-		// by nothing else. That is the whole of "never absence-driven": there is no code path
-		// anywhere in this file or its caller that turns elapsed time into progress, so a
-		// season away and three days away buy identically nothing.
+		// The unit used to be a pass -- one arrival of the founder on the settlement's own ground
+		// -- and this block used to say, in as many words, that no code path here turned elapsed
+		// time into progress. Addendum 8 clause 1 names osmosis as a thing that happens as time
+		// passes, so the unit is now a day two people actually spent under one roof, and the
+		// founder's presence has nothing to do with it.
+		//
+		// THE RECALIBRATION, so the change of unit is not a change of pace. Every figure that
+		// moved was multiplied by KingdomBrinkRules.CohabitationDaysPerAttendedPass, which is the
+		// design's own model of how often a present founder comes home (three days; see that
+		// constant for where the number comes from and why it is not a guess). The per-rung rates
+		// below did not move at all -- they were per-pass and are now per-day -- and the ROAD
+		// moved by exactly the same factor, so every rung lands on the identical wall-clock
+		// distance it always had:
+		//
+		//     hut          24 passes x 3 days = 72 days   ==   216 / 3 per day  = 72 days
+		//     stone house  36 passes x 3 days = 108 days  ==   216 / 2 per day  = 108 days
+		//     fine house   72 passes x 3 days = 216 days  ==   216 / 1 per day  = 216 days
+		//
+		// An attentive founder therefore notices nothing. An absent one finds the road walked
+		// while they were gone, stopped at its end, waiting to be told about.
 		// ==================================================================================
 
 		/// <summary>
-		/// Shared living one settler must accumulate before the road even offers them a draw.
-		/// Seventy-two, which at the ladder below is twenty-four attended passes in a hut,
-		/// thirty-six in a stone house, and seventy-two in a fine house &mdash; a season of coming
-		/// home, never a week of it, and that is before the draw is asked for at all.
+		/// The road as it was denominated before the clock rework: seventy-two points of shared
+		/// living, bought at up to three a pass. Kept as the INPUT to the recalibration rather
+		/// than deleted, so <see cref="SharedLivingForConversion"/> shows its own working and a
+		/// playtest that wants a shorter road can move the figure it was actually calibrated in.
 		/// </summary>
-		public const int SharedLivingForConversion = 72;
+		public const int SharedLivingInPasses = 72;
+
+		/// <summary>
+		/// Shared living one settler must accumulate before the road ends and the brink is
+		/// recorded. Two hundred and sixteen: <see cref="SharedLivingInPasses"/> restated in
+		/// cohabitation days, which at the ladder below is seventy-two days under a hut's roof, a
+		/// hundred and eight under a stone house's, and two hundred and sixteen in quarters of
+		/// one's own &mdash; a season of shared living, never a week of it, and that is before the
+		/// draw is asked for at all.
+		/// </summary>
+		public const int SharedLivingForConversion = SharedLivingInPasses * KingdomBrinkRules.CohabitationDaysPerAttendedPass;
 
 		/// <summary>
 		/// Shared living a <see cref="KingdomLodgingRules.Closeness.Packed"/> household buys in a
-		/// pass: nothing, and by author's ruling rather than by arithmetic. One open room refuses
+		/// day: nothing, and by author's ruling rather than by arithmetic. One open room refuses
 		/// every filed feeling (<c>KingdomLodgingRules.PackedRefusalHostility</c> is one), so the
 		/// people in it already agree by construction. There is nothing there to cross, and a
 		/// bunk row must never become a cheap conversion engine the founder builds on purpose.
+		/// Zero is also the one rung a change of unit cannot move: no number of days multiplied by
+		/// nothing is anything.
 		/// </summary>
-		public const int PackedSharedPerPass = 0;
+		public const int PackedSharedPerDay = 0;
 
 		/// <summary>
 		/// Shared living a <see cref="KingdomLodgingRules.Closeness.Close"/> household buys in a
-		/// pass: three, the fastest rung there is. A hut is one household's worth of walls and a
+		/// day: three, the fastest rung there is. A hut is one household's worth of walls and a
 		/// door that shuts, and it holds only mild differences (it refuses the ambient grudge), so
-		/// what it converts it converts quickly.
+		/// what it converts it converts quickly &mdash; seventy-two days of it, which is what
+		/// twenty-four visits always bought.
 		/// </summary>
-		public const int CloseSharedPerPass = 3;
+		public const int CloseSharedPerDay = 3;
 
 		/// <summary>
 		/// Shared living a <see cref="KingdomLodgingRules.Closeness.Roomed"/> household buys in a
-		/// pass: two. This is the rung Addendum 5 is about &mdash; the stone house is the only
+		/// day: two. This is the rung Addendum 5 is about &mdash; the stone house is the only
 		/// architecture that will hold an ambient grudge under one roof at all, so it is the only
 		/// place a real difference gets crossed. Slower than the hut because the walls that make
-		/// it possible are also walls.
+		/// it possible are also walls: a hundred and eight days.
 		/// </summary>
-		public const int RoomedSharedPerPass = 2;
+		public const int RoomedSharedPerDay = 2;
 
 		/// <summary>
 		/// Shared living a <see cref="KingdomLodgingRules.Closeness.Private"/> household buys in a
-		/// pass: one. A household that meets at dinner because it chose to converts slowest of
-		/// all, which is the honest reading of quarters of one's own and is also the point:
-		/// the fine house's value is quality and notables, never a tool for processing people.
+		/// day: one. A household that meets at dinner because it chose to converts slowest of
+		/// all &mdash; the whole road, two hundred and sixteen days &mdash; which is the honest
+		/// reading of quarters of one's own and is also the point: the fine house's value is
+		/// quality and notables, never a tool for processing people.
 		/// </summary>
-		public const int PrivateSharedPerPass = 1;
+		public const int PrivateSharedPerDay = 1;
 
 		/// <summary>
-		/// Shared living one witnessed meal buys each attendee, before the ceiling: four. Small on
-		/// purpose &mdash; a meal is a good evening, not a policy, exactly as
-		/// <c>KingdomCreedRules.MealEase</c> is smaller than a rite.
+		/// Shared living one witnessed meal bought each attendee before the clock rework: four,
+		/// against a road of seventy-two. Kept as the input to the recalibration, so the fact that
+		/// nine meals fill the ceiling can be read off the arithmetic instead of trusted.
 		/// </summary>
-		public const int MealShared = 4;
+		public const int MealSharedInPasses = 4;
+
+		/// <summary>
+		/// Shared living one witnessed meal buys each attendee, before the ceiling: twelve. Small
+		/// on purpose &mdash; a meal is a good evening, not a policy, exactly as
+		/// <c>KingdomCreedRules.MealEase</c> is smaller than a rite.
+		/// <para>
+		/// A meal is an EVENT and not a stretch of time, so it did not need recalibrating for its
+		/// own sake. It is scaled anyway, by exactly the factor the road was, because the thing
+		/// worth holding still is what a meal is WORTH relative to the road: nine meals reached
+		/// the ceiling before and nine meals reach it now. Leaving this at four would have
+		/// tripled the number of suppers culture costs without anybody deciding to.
+		/// </para>
+		/// </summary>
+		public const int MealShared = MealSharedInPasses * KingdomBrinkRules.CohabitationDaysPerAttendedPass;
 
 		/// <summary>
 		/// Share of the road meals may ever carry a settler along: half. Culture nudges;
@@ -195,8 +255,9 @@ namespace ThousandAndFirst
 		}
 
 		/// <summary>
-		/// Shared living one attended pass under one roof buys, against the closeness ladder and
-		/// the creed feeling between the two people.
+		/// Shared living one day under one roof buys, against the closeness ladder and the creed
+		/// feeling between the two people. The whole of Addendum 8 clause 2 for this channel: the
+		/// time term is the day, and the architecture is the multiplier.
 		/// <para>
 		/// <b>No conversion across a refusal.</b> You do not convert somebody you will not live
 		/// beside: a hostility the quarters would refuse buys nothing at all, at every rung. The
@@ -207,9 +268,9 @@ namespace ThousandAndFirst
 		/// <param name="Quarters">The home's rung, from <c>KingdomLodging.QuartersOf</c>.</param>
 		/// <param name="Hostility">0-100 between the settler's creed and the creed pulling at
 		/// them, from <c>KingdomCreed.HostilityBetween</c>.</param>
-		/// <returns>Points of shared living; zero for Packed quarters and for any pair the
-		/// quarters would refuse.</returns>
-		public static int SharedLivingPerPass(KingdomLodgingRules.Closeness Quarters, int Hostility)
+		/// <returns>Points of shared living per cohabited day; zero for Packed quarters and for
+		/// any pair the quarters would refuse.</returns>
+		public static int SharedLivingPerDay(KingdomLodgingRules.Closeness Quarters, int Hostility)
 		{
 			if (Hostility >= KingdomLodgingRules.RefusalHostility(Quarters))
 			{
@@ -218,13 +279,13 @@ namespace ThousandAndFirst
 			switch (Quarters)
 			{
 			case KingdomLodgingRules.Closeness.Close:
-				return CloseSharedPerPass;
+				return CloseSharedPerDay;
 			case KingdomLodgingRules.Closeness.Roomed:
-				return RoomedSharedPerPass;
+				return RoomedSharedPerDay;
 			case KingdomLodgingRules.Closeness.Private:
-				return PrivateSharedPerPass;
+				return PrivateSharedPerDay;
 			default:
-				return PackedSharedPerPass;
+				return PackedSharedPerDay;
 			}
 		}
 
@@ -322,8 +383,64 @@ namespace ThousandAndFirst
 			return (left > 0) ? new ConversionProgress(Current.Creed, left) : ConversionProgress.None;
 		}
 
-		/// <summary>Whether this settler has reached a milestone of shared living and the draw is
-		/// owed. False for anyone short of the first one.</summary>
+		/// <summary>
+		/// One settler's progress after <paramref name="Days"/> of cohabitation at
+		/// <paramref name="PerDay"/> a day, held at the road's end.
+		/// <para>
+		/// The brink's Rule 1, expressed where the accrual happens: nothing banks past
+		/// <see cref="SharedLivingForConversion"/>, so a founder away a thousand days and a
+		/// founder away two hundred come home to a settler standing in exactly the same place.
+		/// Discarding the overflow rather than remembering it is the point &mdash; a banked
+		/// overflow would be a debt the founder could not see and could not pay, and it would make
+		/// the counter-pull that arrests this brink arithmetically impossible.
+		/// </para>
+		/// </summary>
+		/// <param name="Current">Progress now.</param>
+		/// <param name="TowardCreed">The creed the household is pulling toward.</param>
+		/// <param name="PerDay">From <see cref="SharedLivingPerDay"/>.</param>
+		/// <param name="Days">Cohabited days in the stretch. Non-positive changes nothing.</param>
+		public static ConversionProgress AdvanceOverDays(ConversionProgress Current, string TowardCreed, int PerDay, int Days)
+		{
+			if (string.IsNullOrEmpty(TowardCreed) || PerDay <= 0 || Days <= 0)
+			{
+				return Current;
+			}
+			// Long before the multiply, not after: a hundred thousand days at three a day is fine
+			// as a long and meaningless as an int, and the hold discards it either way.
+			long points = (long)PerDay * Days;
+			int capped = (points > SharedLivingForConversion) ? SharedLivingForConversion : (int)points;
+			ConversionProgress next = Advance(Current, TowardCreed, capped);
+			if (next.Creed != TowardCreed)
+			{
+				// A counter-pull. The points came OFF somebody else's road, and there is no brink
+				// on that side of the arithmetic to hold anything at.
+				return next;
+			}
+			return new ConversionProgress(TowardCreed, KingdomBrinkRules.HoldAtBrink(next.Shared, SharedLivingForConversion));
+		}
+
+		/// <summary>
+		/// The shared-living figure that stands at the end of the Nth road walked, which is what
+		/// the draw is keyed on.
+		/// <para>
+		/// A settler holds at <see cref="SharedLivingForConversion"/> and never above it, so the
+		/// road they are ON can no longer be read off their progress the way it used to be. It is
+		/// counted instead &mdash; the shell keeps a roads-walked tally per settler &mdash; and
+		/// this restates that count in the units <see cref="Milestone"/> already speaks, so the
+		/// first road still draws on ordinal one exactly as it did before the rework and no
+		/// pending answer is re-rolled.
+		/// </para>
+		/// </summary>
+		/// <param name="RoadsWalked">Roads this settler has already walked to the end, converted
+		/// or refused. Negative reads as none.</param>
+		public static int RoadEnd(int RoadsWalked)
+		{
+			int walked = (RoadsWalked < 0) ? 0 : RoadsWalked;
+			return SharedLivingForConversion * (walked + 1);
+		}
+
+		/// <summary>Whether this settler has reached the end of the road and the brink is owed.
+		/// False for anyone short of it.</summary>
 		public static bool AtMilestone(int Shared)
 		{
 			return Shared >= SharedLivingForConversion;
@@ -332,9 +449,10 @@ namespace ThousandAndFirst
 		/// <summary>
 		/// Which milestone this much shared living stands at &mdash; the kernel ordinal the draw
 		/// is keyed on, so every pass between one milestone and the next asks the identical
-		/// question and receives the identical answer. A milestone that answered no is not asked
-		/// again until the settler has earned a whole further
-		/// <see cref="SharedLivingForConversion"/>.
+		/// question and receives the identical answer. A road that answered no is not asked again
+		/// until the settler has walked a whole further <see cref="SharedLivingForConversion"/>,
+		/// which since the rework is counted rather than banked: the shell hands this
+		/// <see cref="RoadEnd"/> of the roads-walked tally.
 		/// </summary>
 		public static ulong Milestone(int Shared)
 		{
@@ -510,14 +628,17 @@ namespace ThousandAndFirst
 		/// Attended passes a settler under a creed they resent is given before they go. Six: three
 		/// times <c>KingdomLodgingRules.GracePasses</c>, because a roof is tonight's problem and a
 		/// creed is a life's, and the founder's answer here is a thing they must unsay or
-		/// deconsecrate rather than a bunk they can raise on the spot.
+		/// deconsecrate rather than a bunk they can raise on the spot. Derived from
+		/// <see cref="KingdomBrinkRules.CreedBrinkWindow"/>, which is where that ruling now lives
+		/// and which the end-of-the-road brink shares, so the two ways a settler can be one window
+		/// from losing their creed cannot drift apart.
 		/// </summary>
-		public const int ResentedPasses = 6;
+		public const int ResentedPasses = KingdomBrinkRules.CreedBrinkWindow;
 
 		/// <summary>The count of a settler nobody has warned the founder about yet. Negative so
 		/// it can never be confused with "warned, and no pass has run since", which is zero.
-		/// Mirrors <c>KingdomLodgingRules.NoGrace</c> deliberately.</summary>
-		public const int NoResentment = -1;
+		/// <see cref="KingdomBrinkRules.Unannounced"/>, shared with every other brink.</summary>
+		public const int NoResentment = KingdomBrinkRules.Unannounced;
 
 		/// <summary>Whether an imposed creed is one this settler resents.</summary>
 		/// <param name="Hostility">0-100 between the settler's own creed and the creed being
@@ -540,7 +661,7 @@ namespace ThousandAndFirst
 		/// </summary>
 		public static int ResentmentAfterPass(int Resented)
 		{
-			return (Resented < 0) ? 0 : (Resented + 1);
+			return KingdomBrinkRules.AfterAttendedPass(Resented);
 		}
 
 		/// <summary>Whether a settler's grace is spent and they leave now: exactly
@@ -548,7 +669,7 @@ namespace ThousandAndFirst
 		/// </summary>
 		public static bool ResentmentRunOut(int Resented)
 		{
-			return Resented >= ResentedPasses;
+			return KingdomBrinkRules.WindowSpent(BrinkKind.Creed, Resented);
 		}
 
 		/// <summary>The cause a conversion-pressure departure is chronicled and noted under, in
