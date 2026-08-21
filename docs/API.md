@@ -87,6 +87,17 @@ grow is read from the style the founding rite already recorded, not from a secon
 ground. It draws water only after the day's upkeep and arrivals, so it can never be the reason the
 thirst ladder fires, and it deposits only into a dedicated larder.
 
+## Plots, materials, and gates
+
+The unit of building is the **plot** (`KingdomPlots` / `KingdomPlotRules`): S/M/L/XL rects,
+stage-gated, sited by the layout grammar, raised in stages, carved underground. Materials
+(`KingdomMaterials` / `KingdomMaterialRules`) come from clearance — never minted — and live in
+dedicated stockpiles; building costs are water plus materials, and condemning returns half.
+Commissioning is gated by `KingdomZoning` (district, territory, known designs, derived craft
+level) with every refusal naming its fix; designs improve through `KingdomUpgrade` chains that
+carry every civic mark. `KingdomCatalogueRules` validates the building XML schema; all of it —
+plots, materials, gates, chains, skins, contents — is authorable from mergeable third-party XML.
+
 ## City plans — three ways a thing gets built
 
 A settlement is laid out by a grammar, not scattered. All three paths end at the same

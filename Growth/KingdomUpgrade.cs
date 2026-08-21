@@ -715,6 +715,15 @@ namespace ThousandAndFirst
 				KingdomLog.Log("improvement aborted: wanted " + A.CostDrams + " drams, drew " + paid);
 				return false;
 			}
+			// The same all-or-nothing rule for material. PayUpgrade says once, in the ledger, why a
+			// work that is ready to be bettered is standing still (STANDARDS 7b).
+			if (!KingdomMaterials.PayUpgrade(System, cell.ParentZone, A.SuccessorKey))
+			{
+				Survey.Store(paid);
+				scaffold.Obliterate();
+				KingdomLog.Log("improvement aborted: the stockpiles could not cover " + A.SuccessorKey);
+				return false;
+			}
 			scaffold.SetStringProperty(BuildKeyProperty, A.SuccessorKey);
 			r_KingdomScaffold part = scaffold.GetPart<r_KingdomScaffold>();
 			if (part != null)

@@ -86,10 +86,20 @@ namespace ThousandAndFirst
 				KingdomChronicle.Record(System, ((cycles > 1) ? (cycles + " caravans of ") : "a caravan of ") + displayName + " came to " + System.KingdomDisplayName + " and delivered " + delivered + " drams under charter");
 				System.Ledger.Delivered += delivered;
 				System.Ledger.Note("{{G|" + ((cycles > 1) ? (cycles + " caravans of ") : "A caravan of ") + displayName + " came under charter: " + delivered + " drams" + ((delivered < deal.IncomeDrams * cycles) ? ", and the stores overflowed" : "") + ".}}");
+				// A charter may carry material as well as water. Absent means water alone, which is
+				// every charter written before materials existed.
+				KingdomMaterialTally carried = KingdomMaterials.DealMaterialsFor(deal.Key).Scaled(cycles * 100);
+				if (!carried.IsEmpty())
+				{
+					KingdomMaterials.Deliver(System, Z, carried);
+					KingdomChronicle.Record(System, "a charter of " + displayName + " set down " + carried.Describe() + " at " + System.KingdomDisplayName);
+					System.Ledger.Note("{{G|The caravan also set down " + carried.Describe() + ".}}");
+				}
 				KingdomLog.Log("trade: caravan deal=" + deal.Key + " faction=" + System.ActiveDealFactions[i] + " delivered=" + delivered + "/" + deal.IncomeDrams);
 				System.DealNextTicks[i] = timeTicks + deal.IntervalTicks;
 				System.RecordDeed("the caravans that come to " + System.KingdomDisplayName);
 			}
+			KingdomCeremony.OnCaravanArrived(System, Z);
 		}
 
 		/// <summary>

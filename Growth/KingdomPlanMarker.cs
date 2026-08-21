@@ -130,6 +130,13 @@ namespace ThousandAndFirst
 			int cap = KingdomRules.MaxBuildingsForStage(System.Stage);
 			foreach (int index in KingdomPlanRules.PlansToRealize(pending, Survey.StoredWater, built, cap))
 			{
+				// Checked before the water is drawn: a plot whose ground is blocked must never spend
+				// anything, and it says why once (STANDARDS 7b). Not a plot design: says nothing and
+				// changes nothing.
+				if (KingdomPlots.PlanBlocked(System, markers[index], entries[index]))
+				{
+					continue;
+				}
 				// Measured, not trusted (STANDARDS.md): PlansToRealize decided this plan was
 				// affordable from the survey's own snapshot, but Consume can still return less
 				// than asked if what that snapshot counted cannot actually be drained in one
@@ -156,11 +163,11 @@ namespace ThousandAndFirst
 			int built = 0;
 			foreach (GameObject item in Z.GetObjects())
 			{
-				if (item.GetIntProperty("KingdomDefence") > 0)
+				if (item.GetIntProperty("KingdomDefence") > 0 || item.GetIntProperty(KingdomPlots.PlotPartProperty) == 1)
 				{
 					continue;
 				}
-				if (item.GetIntProperty("KingdomBuilt") == 1 || item.HasPart("r_KingdomScaffold"))
+				if (item.GetIntProperty("KingdomBuilt") == 1 || item.HasPart("r_KingdomScaffold") || item.HasPart("r_KingdomPlotWorks"))
 				{
 					built++;
 				}
@@ -181,6 +188,13 @@ namespace ThousandAndFirst
 			{
 				return;
 			}
+			// A plot-sized design measures out a rect from this stake rather than raising a single
+			// scaffold on it. It chronicles and announces itself; everything below is the
+			// single-cell path, unchanged.
+			if (KingdomPlots.StakeFromPlan(System, MarkerObject, Entry))
+			{
+				return;
+			}
 			GameObject scaffold = GameObject.Create("r_KingdomScaffold");
 			if (scaffold == null)
 			{
@@ -190,6 +204,7 @@ namespace ThousandAndFirst
 			// staked the plan rides on the marker exactly as it rides on a scaffold.
 			scaffold.SetStringProperty(KingdomUpgrade.BuildKeyProperty, Entry.Key);
 			KingdomDesign.StageSkin(scaffold, Entry, MarkerObject.GetStringProperty(KingdomDesign.PlannedSkinProperty));
+			KingdomCeremony.TransferPlanQuote(MarkerObject, scaffold);
 			MarkerObject.Destroy(null, Silent: true);
 			r_KingdomScaffold part = scaffold.GetPart<r_KingdomScaffold>();
 			if (part != null)

@@ -46,4 +46,35 @@
     is better than shipping a line that reads like it works. Art/check_xml_refs.py fails if it
     comes back.
   -->
+  <!--
+    Furnishings. The single-cell civic objects that used to be commissioned one at a time are now
+    what a finished plot is furnished WITH, populated the way a vanilla hut is. The blueprints did
+    not change and nothing was deleted; what changed is that a founder orders a house and gets the
+    bunk, rather than ordering the bunk. Each table is a weighted single pick, rolled
+    KingdomPlotRules.ContentsRolls(Size) times per finished plot.
+  -->
+  <population Name="r_KingdomFurnishings_Dwelling">
+    <object Blueprint="r_KingdomBunk" Number="1" Weight="60" />
+    <object Blueprint="Torchpost" Number="1" Weight="25" />
+    <object Blueprint="r_KingdomBench" Number="1" Weight="15" />
+  </population>
+  <population Name="r_KingdomFurnishings_Water">
+    <object Blueprint="r_KingdomCaskRack" Number="1" Weight="80" />
+    <object Blueprint="Torchpost" Number="1" Weight="20" />
+  </population>
+  <population Name="r_KingdomFurnishings_Civic">
+    <object Blueprint="r_KingdomBench" Number="1" Weight="55" />
+    <object Blueprint="Torchpost" Number="1" Weight="30" />
+    <object Blueprint="Bookshelf" Number="1" Weight="15" />
+  </population>
+  <population Name="r_KingdomFurnishings_Comfort">
+    <object Blueprint="Hookah" Number="1" Weight="40" />
+    <object Blueprint="r_KingdomBench" Number="1" Weight="35" />
+    <object Blueprint="Torchpost" Number="1" Weight="25" />
+  </population>
+  <population Name="r_KingdomFurnishings_Learning">
+    <object Blueprint="Bookshelf" Number="1" Weight="60" />
+    <object Blueprint="r_KingdomBench" Number="1" Weight="25" />
+    <object Blueprint="Torchpost" Number="1" Weight="15" />
+  </population>
 </populations>

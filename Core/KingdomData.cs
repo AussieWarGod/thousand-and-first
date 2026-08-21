@@ -103,6 +103,8 @@ namespace ThousandAndFirst
 			// about every attribute that pass did not happen to want.
 			KingdomZoning.ClearGates();
 			KingdomUpgrade.ClearChains();
+			KingdomMaterials.ClearCosts();
+			KingdomPlots.ClearSpecs();
 			Dictionary<string, Action<XmlDataHelper>> handlers = null;
 			handlers = new Dictionary<string, Action<XmlDataHelper>>
 			{
@@ -120,6 +122,7 @@ namespace ThousandAndFirst
 			{
 				item.HandleNodes(handlers);
 			}
+			ReportCatalogueFindings();
 			_deals = new List<KingdomRules.DealEntry>();
 			Dictionary<string, Action<XmlDataHelper>> dealHandlers = null;
 			dealHandlers = new Dictionary<string, Action<XmlDataHelper>>
@@ -141,12 +144,17 @@ namespace ThousandAndFirst
 
 		private static void HandleDeal(XmlDataHelper xml)
 		{
+			// Read whether or not the parse below succeeds, for the same reason the building
+			// handler reads its optional attributes unconditionally: the engine warns about an
+			// attribute a pass never asked for, and an absent one is the water-only default.
+			string materials = xml.GetAttribute("Materials");
 			if (!KingdomRules.TryParseDealAttributes(xml.GetAttribute("Key"), xml.GetAttribute("DisplayName"), xml.GetAttribute("MinStanding"), xml.GetAttribute("Income"), xml.GetAttribute("Interval"), xml.GetAttribute("Caravan"), out var entry, out var error))
 			{
 				MetricsManager.LogError("ThousandAndFirst KingdomDeals: " + error);
 			}
 			else
 			{
+				KingdomMaterials.RegisterDealMaterials(entry.Key, materials);
 				for (int i = 0; i < _deals.Count; i++)
 				{
 					if (_deals[i].Key == entry.Key)
@@ -179,8 +187,12 @@ namespace ThousandAndFirst
 			// Every optional gate and chain attribute is read whether or not it is present: the
 			// engine warns about attributes a parse pass never asked for, and an absent one is the
 			// ungated, unchanging default in both registries.
+			entry.Carries = xml.GetAttribute("Carries");
+			entry.Materials = xml.GetAttribute("Materials");
 			KingdomZoning.RegisterGate(entry.Key, xml.GetAttribute("Districts"), xml.GetAttribute("MinZones"), xml.GetAttribute("Knowledge"), xml.GetAttribute("MinTech"));
 			KingdomUpgrade.RegisterChain(entry.Key, xml.GetAttribute("UpgradesTo"), xml.GetAttribute("UpgradeCost"), xml.GetAttribute("UpgradeTicks"), xml.GetAttribute("UpgradeCrew"), xml.GetAttribute("UpgradeMinStage"));
+			KingdomMaterials.RegisterCost(entry.Key, xml.GetAttribute("Materials"), xml.GetAttribute("UpgradeMaterials"));
+			KingdomPlots.RegisterSpec(entry.Key, xml.GetAttribute("Plot"), xml.GetAttribute("Open"), xml.GetAttribute("Sky"), xml.GetAttribute("Contents"));
 			KingdomRules.BuildEntry parsed = entry;
 			for (int i = 0; i < _buildings.Count; i++)
 			{
@@ -208,6 +220,57 @@ namespace ThousandAndFirst
 					}
 				}
 			});
+		}
+
+		/// <summary>
+		/// Says out loud what is wrong with the merged catalogue, once per load. Nothing is
+		/// unregistered: a design that is wrong about itself stays buildable and becomes visible,
+		/// which is the only shape a check on third-party content can honestly take. The checks that
+		/// matter here are the ones no single entry can see &mdash; an improvement into a key nothing
+		/// declares, a chain that rings, an improvement onto a larger plot, a family a camp cannot
+		/// reach.
+		/// </summary>
+		private static void ReportCatalogueFindings()
+		{
+			List<CatalogueEntry> view = new List<CatalogueEntry>(_buildings.Count);
+			for (int i = 0; i < _buildings.Count; i++)
+			{
+				KingdomRules.BuildEntry entry = _buildings[i];
+				KingdomUpgradeRules.UpgradeChain chain;
+				KingdomUpgrade.TryGetChain(entry.Key, out chain);
+				KingdomPlotRules.PlotSpec spec;
+				KingdomPlots.TryGetSpec(entry.Key, out spec);
+				view.Add(new CatalogueEntry
+				{
+					Key = entry.Key,
+					DisplayName = entry.DisplayName,
+					Category = entry.Category,
+					Styles = entry.Styles,
+					MinStage = entry.MinStage,
+					Plot = (spec == null) ? KingdomPlotRules.PlotSize.None : spec.Size,
+					Open = (spec != null && spec.Open),
+					Contents = (spec == null) ? null : spec.Contents,
+					CostDrams = entry.CostDrams,
+					Materials = entry.Materials,
+					Carries = entry.Carries,
+					Staff = entry.Staff,
+					Manning = entry.Manning,
+					Defence = entry.Defence,
+					SuccessorKey = (chain == null) ? null : chain.SuccessorKey
+				});
+			}
+			List<CatalogueFinding> findings = KingdomCatalogueRules.Validate(view, _styles);
+			for (int i = 0; i < findings.Count; i++)
+			{
+				if (findings[i].Severity == CatalogueSeverity.Fault)
+				{
+					MetricsManager.LogError("ThousandAndFirst KingdomBuildings: " + findings[i].Message);
+				}
+				else
+				{
+					KingdomLog.Log("KingdomBuildings: " + findings[i].Message);
+				}
+			}
 		}
 
 		// A malformed <building> is already reported; its children are walked past without a second

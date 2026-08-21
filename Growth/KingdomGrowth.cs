@@ -117,6 +117,10 @@ namespace ThousandAndFirst
 			// hands the staffing pass has not already assigned, so it can only ever read a
 			// settlement that has finished feeding, watering, and building itself.
 			KingdomPower.OnSettlementPass(System, Z, survey);
+			// Last of all, and it spends no water at any point: clearing ground and striking a
+			// building spend hands, and only the hands the water detail and the staffing pass have
+			// already finished with (KingdomSystem.AssignedCrew, set by AssignWork above).
+			KingdomMaterials.OnSettlementPass(System, Z);
 			if (KingdomLog.Enabled) KingdomLog.Log("growth pass done: pop=" + System.Population + " stage=" + System.Stage + " arrivals=" + arrivals + " dry=" + System.DryStreak + " next=" + System.NextArrivalTick);
 		}
 

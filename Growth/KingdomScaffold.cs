@@ -62,6 +62,7 @@ namespace XRL.World.Parts
 			// Which registry entry ordered this, so a work never has to be recognised by reading
 			// its blueprint back against a catalog two designs may share.
 			string buildKey = ParentObject.GetStringProperty(KingdomUpgrade.BuildKeyProperty);
+			string planQuote = ParentObject.GetStringProperty(KingdomCeremony.SurveyorsPlanProperty);
 			TargetBlueprint = null;
 			if (cell == null)
 			{
@@ -113,10 +114,12 @@ namespace XRL.World.Parts
 			KingdomSystem system = The.Game.RequireSystem<KingdomSystem>();
 			if (system.Founded)
 			{
-				system.RecordDeed("the " + displayName + " raised at " + system.KingdomDisplayName);
-				KingdomChronicle.Record(system, "the " + displayName + " was raised at " + system.KingdomDisplayName);
+				KingdomCeremony.OnBuildingRaised(system, cell, displayName, CompleteTick, planQuote);
 			}
-			MessageQueue.AddPlayerMessage("{{G|The " + displayName + " is complete.}}");
+			else
+			{
+				MessageQueue.AddPlayerMessage("{{G|The " + displayName + " is complete.}}");
+			}
 		}
 	}
 }

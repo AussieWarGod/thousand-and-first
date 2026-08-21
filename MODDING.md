@@ -51,6 +51,64 @@ Ship a `KingdomBuildings.xml` in your mod root:
   category — a thing with a defence value is sited as a wall whatever else it is filed under.
 - `MinStage` — earliest growth stage the design appears at: `Camp` (default), `Steading`,
   `Village`, `Town`, `City`.
+- `Carries` — **what this design adds to the settlement's sustainable level**, as a comma list of
+  `support:settlers`. This is the denomination of the whole catalogue and it is *not* output per
+  day: it is how many more people the place honestly carries once nobody is hauling anything in.
+  Three supports **bind** — `water`, `food`, `roof` — and the level is the *least* of the three,
+  because a town with water for ninety and bread for nine is a town of nine. Five **lift** —
+  `craft`, `spirit`, `learning`, `order`, `luxury` — and are summed and then capped at half the
+  binding level, so no quantity of shrines outruns the cistern. One point of `water` is one dram a
+  day sustained, which is one settler's thirst at camp rates. A support name this mod does not know
+  is accepted and lifts; a new *binding* good would make every catalogue that predates it
+  unbuildable, so there will never be a sixth. Omitting the attribute adds nothing to the level,
+  which is correct for a wall.
+
+The whole merged catalogue is validated once, on load: a dangling `UpgradesTo`, a chain that rings,
+an improvement onto a larger plot, a defence rating on a design that also claims a plot, and a
+family no camp can ever reach are all reported to the log. None of them ever unregisters an entry —
+a design that is wrong about itself stays buildable and becomes visible, which is the only shape a
+check on third-party content can honestly take.
+
+### Paying in material (optional)
+
+```xml
+<building Key="hut" DisplayName="timber hut" Blueprint="r_KingdomHut"
+          Cost="6" Ticks="1800" Styles="all" Category="housing"
+          Materials="timber:6,brush:2" UpgradesTo="hutyard" UpgradeMaterials="timber:4,stone:2" />
+```
+
+- `Materials` — what the settlement must have in a dedicated stockpile, spent when the
+  commission is issued. Format is `material:units`, comma-separated. **Absent means the design
+  costs water alone**, which is what every design cost before this existed — no entry, ours or
+  yours, changes behaviour by doing nothing.
+- `UpgradeMaterials` — the same, for improving *into* this design. Absent means the improvement
+  costs water alone.
+- The vocabulary is six keys: `mud`, `brush`, `timber`, `stone`, `marble`, `scrap`. `canvas` is
+  accepted as an alias for `brush` and `scrap metal` for `scrap`. Anything else is a logged
+  error and the whole attribute is rejected — never half-applied.
+- A malformed value disables itself with a logged reason and leaves the design costing water
+  alone. It never crashes the registry and never half-registers.
+
+Materials are **never minted**. They come off ground somebody cleared, off a building somebody
+struck (half of what it was made of), or out of a caravan. A settlement holds them as real items
+in a container the founder dedicated as a **stockpile** — a mark, not a transfer, exactly like a
+larder: what is inside stays where it is and stays the player's, and the settlement only counts it.
+
+To make your own item count as one of the six, tag its blueprint:
+
+```xml
+<object Name="MyMod_IronwoodBeam" Inherits="Item">
+  <tag Name="r_KingdomMaterial" Value="timber" />
+</object>
+```
+
+A charter may carry material as well as water, per caravan:
+
+```xml
+<deal Key="timberroute" DisplayName="timber charter (4 drams and timber per caravan)"
+      MinStanding="400" Income="4" Interval="3600" Caravan="DromadTrader1"
+      Materials="timber:4" />
+```
 
 ### Gating a design (all optional)
 
@@ -66,6 +124,12 @@ never one that becomes unreachable with no way to find out why.
 | `MinZones` | Claimed zones the realm must hold. |
 | `Knowledge` | Comma list of things the settlement must know, **all** of them. A requirement written `kind:name` must match that kind exactly; one written as a bare name is satisfied by any kind. Kinds: `disk` (a design taught to the keepers from a data disk the founder carried home — the disk is read and handed back, never spent), `machine` (a machine hauled home and certified fit for the grid), `origin` (a trade the settlement holds because somebody from that country lives there, so it comes and goes with them). Invent your own kind freely; an unknown kind gates perfectly well and is worth no craft. |
 | `MinTech` | Craft the settlement must have reached: `hands` (the start, gates nothing), `salvage`, `workshop`, `foundry`, `arclight`. |
+
+A fifth kind is reserved by convention: `pattern` (a foreign design a chartered caravan
+occasionally offers a choice of, never taught by any disk, machine, or origin — see
+`Experience/KingdomCeremony.cs`). Write `Knowledge="pattern:some-name"` on an ordinary `<building>`
+entry to enter it into that pool; the base catalogue never depends on the draw, so an entry gated
+this way is purely additive.
 
 Craft is **derived, never authored and never set**: a taught design is worth 1 and a certified
 machine is worth 2, an origin is worth 0, and the level is read off the total. There is no research
@@ -84,8 +148,8 @@ itself through the same scaffold a commission uses, out of what the stores can s
 everything the old work held and everything the founder had marked on it across.
 
 ```xml
-<building Key="caskrack" DisplayName="cask rack (holds 64 drams)" Blueprint="r_KingdomCaskRack"
-          Cost="4" Ticks="1200" Styles="all" Category="storage" UpgradesTo="cistern" />
+<building Key="cistern" DisplayName="cistern court (holds 256 drams)" Blueprint="r_KingdomGreatCistern"
+          Cost="20" Ticks="3600" Styles="all" Category="storage" UpgradesTo="cisternvault" />
 ```
 
 | Attribute | Default when absent |
@@ -101,6 +165,51 @@ Re-declaring an entry **without** `UpgradesTo` clears whatever chain an earlier 
 The settlement never improves a structure the player built or that was merely adopted, never
 starts one that would leave the old work's contents nowhere to go, never draws the stores below the
 reserve it lives on, and can be told to leave one work — or the whole ground — exactly as it is.
+
+### Plots: designs that take ground (all optional)
+
+A design may declare how much ground it wants. Instead of one object in one cell, the settlement
+stakes out a rectangle, clears what stands on it, frames it, walls it in its own material, cuts a
+door on the side facing the heart, and furnishes the inside. A design that declares no `Plot` size
+is raised exactly as it always was.
+
+```xml
+<building Key="hut" DisplayName="timber hut" Blueprint="r_KingdomHut"
+          Cost="6" Ticks="1800" Styles="all" Category="housing"
+          Plot="S" Contents="r_KingdomFurnishings_Dwelling" />
+```
+
+| Attribute | Default when absent |
+|---|---|
+| `Plot` | Not a plot. `S` (5x4), `M` (8x6), `L` (12x9), `XL` (20x14); the long spellings `small`, `medium`, `large`, `huge` are accepted. Anything else is an error. |
+| `Open` | `No`. `Yes` makes an unroofed plot — a field, a yard, a salt-pan, a reservoir: same rect discipline, no walls, no door. |
+| `Sky` | `No`. `Yes` means the design needs weather, and it is refused underground by name rather than sited somewhere useless. |
+| `Contents` | Nothing. A population table the finished interior is furnished from, rolled once per S plot, twice per M, four times per L, six per XL. |
+
+Plot size is gated by stage: a Camp lays S, a Steading and a Village M, a Town L, a City XL.
+**Upgrades climb within a plot; sizes compete across plots** — there is no in-place S-to-M
+metamorphosis, and small plots never obsolete.
+
+Clearing the ground is how a settlement without a mine gets material: brush and trees yield timber,
+shale and granite yield stone, a marble seam yields marble, somebody else's fallen walls yield
+scrap. Effort scales with hardness, and it is part of how long the plot takes to raise. Underground
+(any zone below the surface stratum) a plot is **carved** instead: the clearing costs twice as much,
+it pays in stone, the plot's edge is left standing because that rock **is** the enclosure, and no
+wall is ever raised.
+
+Ground the settlement may not take refuses the plot outright and says which cell and what is
+standing in it — anything you placed, anything owned, any loose item, any of the settlement's own
+works, open water, and anything the yield table cannot name. Water is never filled in. Every plot
+also reserves a one-cell lane on all sides, and no more than sixty percent of a zone's interior is
+ever plot, so roads are never drawn — they are what is left between the plots.
+
+Specs are keyed by building `Key` like every other registry: re-declaring an entry replaces its
+whole plot spec, and re-declaring it **without** `Plot` returns that design to the single-cell path.
+Declaring `Open`, `Sky`, or `Contents` without a `Plot` size is an error rather than a silent no-op.
+
+Nothing already standing converts. A settlement raised before plots existed is a scatter of
+single-cell works and stays exactly that, working exactly as it did; plots begin with the next thing
+built.
 
 ### Skins: what a design looks like
 

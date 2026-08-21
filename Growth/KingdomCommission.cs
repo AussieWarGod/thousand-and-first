@@ -45,17 +45,26 @@ namespace ThousandAndFirst
 				Failure = refusal;
 				return false;
 			}
+			// A plot-sized design is raised over a rect in stages, not as one object in one cell.
+			// Every design that declares no Plot size - which is all of them until one does - falls
+			// through to the single-cell path below, untouched.
+			if (KingdomPlots.IsPlotDesign(entry.Key))
+			{
+				return KingdomPlots.Commission(System, zone, entry, SkinKey, out Failure);
+			}
 			// Walls do not count against the plan. A palisade is a LINE, and charging a slot per
 			// segment is what made enclosing a settlement impossible - the ring would have eaten
 			// the whole allowance before anything civic was built.
 			int built = 0;
 			foreach (GameObject item in zone.GetObjects())
 			{
-				if (item.GetIntProperty("KingdomDefence") > 0)
+				// A plot's walls, floor, and furnishings carry KingdomPlotPart and never count: the
+				// cap counts plots, not the hundred objects one plot is made of.
+				if (item.GetIntProperty("KingdomDefence") > 0 || item.GetIntProperty(KingdomPlots.PlotPartProperty) == 1)
 				{
 					continue;
 				}
-				if (item.GetIntProperty("KingdomBuilt") == 1 || item.HasPart("r_KingdomScaffold"))
+				if (item.GetIntProperty("KingdomBuilt") == 1 || item.HasPart("r_KingdomScaffold") || item.HasPart("r_KingdomPlotWorks"))
 				{
 					built++;
 				}
@@ -68,6 +77,14 @@ namespace ThousandAndFirst
 			if (KingdomGrowth.CountStoredWater(zone) < entry.CostDrams)
 			{
 				Failure = "The work would cost {{C|" + entry.CostDrams + " drams}} from the stores, and the stores cannot bear it.";
+				return false;
+			}
+			// After the water and before the ground is chosen: a founder is told the whole price
+			// before anything is committed, and a design with no material cost is always affordable,
+			// which is every design the catalogue carried before materials existed.
+			if (!KingdomMaterials.CanPay(zone, entry.Key, out var materialRefusal))
+			{
+				Failure = materialRefusal;
 				return false;
 			}
 			Cell cell = FindBuildCell(zone, System, entry, out var outcome);
@@ -83,6 +100,14 @@ namespace ThousandAndFirst
 			if (gameObject == null)
 			{
 				Failure = "The scaffold could not be raised.";
+				return false;
+			}
+			if (!KingdomMaterials.Pay(zone, entry.Key))
+			{
+				// Never trust the affordability check over the actual draw. The scaffold goes and
+				// the water stays where it was.
+				gameObject.Obliterate();
+				Failure = "The stockpiles could not cover the work after all.";
 				return false;
 			}
 			KingdomGrowth.ConsumeStoredWater(zone, entry.CostDrams);

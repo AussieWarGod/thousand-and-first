@@ -78,7 +78,7 @@ namespace ThousandAndFirst
 			}
 			while (true)
 			{
-				int num = Popup.PickOption(Title: system.SeatName + KingdomSettlement.VocationSuffix(system.Vocation), Options: new string[24] { (system.PetitionKind != KingdomRules.PetitionKind.None) ? ("{{W|Hear " + system.PetitionPetitioner + "}}") : "{{K|No one is waiting to speak}}", "Status", "What happened while you were away", "The Chronicle", "As others tell it", "Standings", "The roll of settlers", "Standing policy", "Designate district", "Commission a building", "Answer a threat", "Dedicate a vessel or larder", "Strike a trade charter", "Send a water manifest", "Share a meal from the larder", "Certify a machine", "Set the water detail", "Plans staked for later", "Adopt a building", "Release an adoption", (system.SettlementCount >= 2 || system.Seceded != null) ? "How your cities hold each other" : "{{K|One city cannot fall out with itself}}", "What the keepers know", "Your works, and what they become", "Name a building"}, Hotkeys: new char[24] { 'h', 's', 'w', 'c', 'a', 'n', 'l', 'p', 'd', 'm', 't', 'v', 'r', 'i', 'f', 'e', 'u', 'g', 'b', 'j', 'k', 'o', 'y', 'x'}, AllowEscape: true);
+				int num = Popup.PickOption(Title: system.SeatName + KingdomSettlement.VocationSuffix(system.Vocation), Options: new string[26] { (system.PetitionKind != KingdomRules.PetitionKind.None) ? ("{{W|Hear " + system.PetitionPetitioner + "}}") : "{{K|No one is waiting to speak}}", "Status", "What happened while you were away", "The Chronicle", "As others tell it", "Standings", "The roll of settlers", "Standing policy", "Designate district", "Commission a building", "Answer a threat", "Dedicate a vessel, larder, or stockpile", "Strike a trade charter", "Send a water manifest", "Share a meal from the larder", "Certify a machine", "Set the water detail", "Plans staked for later", "Adopt a building", "Release an adoption", (system.SettlementCount >= 2 || system.Seceded != null) ? "How your cities hold each other" : "{{K|One city cannot fall out with itself}}", "What the keepers know", "Your works, and what they become", "Name a building", "Order ground cleared", "Take down a building"}, Hotkeys: new char[26] { 'h', 's', 'w', 'c', 'a', 'n', 'l', 'p', 'd', 'm', 't', 'v', 'r', 'i', 'f', 'e', 'u', 'g', 'b', 'j', 'k', 'o', 'y', 'x', 'q', 'z'}, AllowEscape: true);
 				switch (num)
 				{
 				case 0:
@@ -153,6 +153,12 @@ namespace ThousandAndFirst
 				case 23:
 					KingdomDesign.RenameBuilding(system, ParentObject);
 					break;
+				case 24:
+					ClearGround(system);
+					break;
+				case 25:
+					StrikeBuilding(system);
+					break;
 				default:
 					return;
 				}
@@ -201,6 +207,121 @@ namespace ThousandAndFirst
 			Popup.Show((num == 0)
 				? "The buckets are hung up. " + System.SeatName + " will drink what you bring it."
 				: (num + ((num == 1) ? " settler walks" : " settlers walk") + " to the water now. The works have " + (System.Population - num) + " left to draw on."));
+		}
+
+		/// <summary>
+		/// Orders ground cleared around where the founder is standing. The size is the founder's
+		/// choice and nothing here gates it: what may then be laid on cleared ground is the plan's
+		/// business, not the clearing gang's. The service does its own messaging; this only picks
+		/// the rect and surfaces a decline.
+		/// </summary>
+		public void ClearGround(KingdomSystem System)
+		{
+			Zone zone = ParentObject.CurrentZone;
+			Cell cell = ParentObject.CurrentCell;
+			if (zone == null || cell == null || !System.ClaimedZones.Contains(zone.ZoneID))
+			{
+				Popup.Show("Ground is cleared on the kingdom's own claim.");
+				return;
+			}
+			int[] widths = new int[3] { 3, 5, 9 };
+			int[] heights = new int[3] { 3, 5, 7 };
+			string[] names = new string[3] { "the ground you stand on", "a working yard", "a wide clearing" };
+			string[] options = new string[3];
+			int[][] rects = new int[3][];
+			for (int i = 0; i < 3; i++)
+			{
+				int x1 = cell.X - widths[i] / 2;
+				int y1 = cell.Y - heights[i] / 2;
+				rects[i] = new int[4] { x1, y1, x1 + widths[i] - 1, y1 + heights[i] - 1 };
+				KingdomMaterials.ClearanceAssessment assessment = KingdomMaterials.Assess(System, zone, rects[i][0], rects[i][1], rects[i][2], rects[i][3]);
+				string size = " (" + widths[i] + " by " + heights[i] + ")";
+				if (!assessment.Valid)
+				{
+					options[i] = "{{K|" + names[i] + size + " — runs off the edge of this ground}}";
+				}
+				else if (assessment.Refusal != null)
+				{
+					options[i] = "{{K|" + names[i] + size + " — something stands in it}}";
+				}
+				else
+				{
+					string yield = assessment.Yield.Describe();
+					options[i] = names[i] + size + " — " + KingdomMaterialRules.DaysForOneHand(assessment.Effort) + " hand-days"
+						+ ((yield == null) ? "" : (", for " + yield));
+				}
+			}
+			int num = Popup.PickOption(Title: "Clear ground at " + System.SeatName,
+				Intro: "Clearing spends no water. It spends the hands the water detail and the works have left over, and everything that comes down is carried to the stockpiles.",
+				Options: options, AllowEscape: true);
+			if (num < 0)
+			{
+				return;
+			}
+			if (!KingdomMaterials.StakeClearance(System, zone, rects[num][0], rects[num][1], rects[num][2], rects[num][3], out var failure))
+			{
+				Popup.Show(failure);
+			}
+		}
+
+		/// <summary>
+		/// Condemns one of the settlement's own buildings, or calls off a condemnation already
+		/// standing. The service does its own eligibility check and its own messaging; this only
+		/// picks the target and surfaces a decline.
+		/// </summary>
+		public void StrikeBuilding(KingdomSystem System)
+		{
+			Zone zone = ParentObject.CurrentZone;
+			Cell cell = ParentObject.CurrentCell;
+			if (zone == null || cell == null || !System.ClaimedZones.Contains(zone.ZoneID))
+			{
+				Popup.Show("Buildings are struck on the kingdom's own ground.");
+				return;
+			}
+			System.Collections.Generic.List<GameObject> candidates = new System.Collections.Generic.List<GameObject>();
+			CollectBuiltNear(cell, candidates);
+			foreach (Cell adjacent in cell.GetLocalAdjacentCells())
+			{
+				CollectBuiltNear(adjacent, candidates);
+			}
+			if (candidates.Count == 0)
+			{
+				Popup.Show("Stand beside something " + System.SeatName + " built to take it down.");
+				return;
+			}
+			string[] options = new string[candidates.Count];
+			for (int i = 0; i < candidates.Count; i++)
+			{
+				int left = candidates[i].GetIntProperty(KingdomMaterials.StrikeEffortProperty);
+				options[i] = candidates[i].ShortDisplayName
+					+ ((left > 0) ? (" {{r|[condemned, " + KingdomMaterialRules.DaysForOneHand(left) + " hand-days left]}}") : "");
+			}
+			int num = Popup.PickOption(Title: "Take down a building at " + System.SeatName,
+				Intro: "Striking frees the plot and returns half of what the building was made of. It refunds no water, and picking one already condemned calls the order off.",
+				Options: options, AllowEscape: true);
+			if (num < 0)
+			{
+				return;
+			}
+			if (!KingdomMaterials.OrderStrike(System, zone, candidates[num], out var failure))
+			{
+				Popup.Show(failure);
+			}
+		}
+
+		private static void CollectBuiltNear(Cell C, System.Collections.Generic.List<GameObject> Into)
+		{
+			if (C == null)
+			{
+				return;
+			}
+			foreach (GameObject item in C.GetObjects())
+			{
+				if (item.GetIntProperty("KingdomBuilt") == 1 && !Into.Contains(item))
+				{
+					Into.Add(item);
+				}
+			}
 		}
 
 		/// <summary>
@@ -404,6 +525,7 @@ namespace ThousandAndFirst
 			}
 			r_KingdomPlanMarker part = marker.GetPart<r_KingdomPlanMarker>();
 			part?.ApplyDesign(chosen);
+			KingdomCeremony.StakePlan(marker, chosen, plannedSkin);
 			cell.AddObject(marker);
 			KingdomChronicle.Record(System, "a plan for " + XRL.Language.Grammar.A(chosen.Name) + " was staked at " + System.KingdomDisplayName);
 			Popup.Show("{{G|The plan is staked.}} " + System.SeatName + " will raise it when the water and the room allow.");
@@ -659,7 +781,12 @@ namespace ThousandAndFirst
 			}
 			for (int i = 0; i < larders.Count; i++)
 			{
-				options[vessels.Count + i + 1] = larders[i].ShortDisplayName + " {{K|(larder)}}" + ((larders[i].GetIntProperty("KingdomLarder") == 1) ? " {{G|[dedicated]}}" : " {{K|[personal]}}");
+				bool isLarder = larders[i].GetIntProperty("KingdomLarder") == 1;
+				bool isStockpile = KingdomMaterials.IsStockpile(larders[i]);
+				options[vessels.Count + i + 1] = larders[i].ShortDisplayName + " {{K|(store)}}"
+					+ (isLarder ? " {{G|[larder]}}" : "")
+					+ (isStockpile ? " {{G|[stockpile]}}" : "")
+					+ ((!isLarder && !isStockpile) ? " {{K|[personal]}}" : "");
 			}
 			int num = Popup.PickOption(Title: "Dedicate or release", Options: options, AllowEscape: true);
 			if (num == 0)
@@ -718,23 +845,44 @@ namespace ThousandAndFirst
 			}
 			if (num > vessels.Count)
 			{
-				GameObject larder = larders[num - vessels.Count - 1];
-				if (larder.GetIntProperty("KingdomLarder") != 1 && KingdomGrowth.CountDedicatedLarders(zone) >= KingdomRules.MaxDedicatedLarders)
+				GameObject store = larders[num - vessels.Count - 1];
+				bool isLarder = store.GetIntProperty("KingdomLarder") == 1;
+				bool isStockpile = KingdomMaterials.IsStockpile(store);
+				// Food and material are separate accounts kept by separate people, so one chest may be
+				// a larder, a stockpile, or both. Dedication is a mark either way: what is inside stays
+				// where it is and stays the founder's. The settlement only counts it.
+				int pick = Popup.PickOption(Title: store.ShortDisplayName,
+					Intro: "What should the settlement count what is in here as?",
+					Options: new string[2] {
+						(isLarder ? "{{G|Stop counting it as a larder}}" : "Dedicate it as a {{W|larder}} — food for the shared meal"),
+						(isStockpile ? "{{G|Stop counting it as a stockpile}}" : "Dedicate it as a {{W|stockpile}} — timber, stone, and whatever else is cleared")
+					}, AllowEscape: true);
+				if (pick < 0)
 				{
-					Popup.Show("The settlement keeps as many larders as anyone can keep an honest account of.");
 					return;
 				}
-				if (larder.GetIntProperty("KingdomLarder") == 1)
+				if (pick == 0)
 				{
-					larder.SetIntProperty("KingdomLarder", 0);
-					Popup.Show("The " + larder.ShortDisplayName + " is yours alone again. Nothing in it will be counted.");
+					if (!isLarder && KingdomGrowth.CountDedicatedLarders(zone) >= KingdomRules.MaxDedicatedLarders)
+					{
+						Popup.Show("The settlement keeps as many larders as anyone can keep an honest account of.");
+						return;
+					}
+					if (isLarder)
+					{
+						store.SetIntProperty("KingdomLarder", 0);
+						Popup.Show("The " + store.ShortDisplayName + " is no longer a larder. Nothing in it will be counted as food.");
+					}
+					else
+					{
+						store.SetIntProperty("KingdomLarder", 1);
+						Popup.Show("The " + store.ShortDisplayName + " is a larder of " + System.SeatName + " now. What is in it is counted, and still yours.");
+					}
+					return;
 				}
-				else
+				if (!KingdomMaterials.DedicateStockpile(System, zone, store, out var stockpileFailure))
 				{
-					// Dedication is a mark, not a transfer: what is inside stays where it is and
-					// stays the founder's. The settlement only counts it.
-					larder.SetIntProperty("KingdomLarder", 1);
-					Popup.Show("The " + larder.ShortDisplayName + " is a larder of " + System.SeatName + " now. What is in it is counted, and still yours.");
+					Popup.Show(stockpileFailure);
 				}
 			}
 		}

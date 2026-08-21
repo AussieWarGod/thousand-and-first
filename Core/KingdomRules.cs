@@ -1611,6 +1611,19 @@
 
 			public int Defence;
 
+			/// <summary>
+			/// Raw <c>Carries</c> attribute: what this design adds to the settlement's SUSTAINABLE
+			/// LEVEL, as a comma list of <c>support:settlers</c>. Read through
+			/// <see cref="KingdomCatalogueRules.TryParseTally"/>; <c>water</c>, <c>food</c> and
+			/// <c>roof</c> bind and the level is the least of them, everything else lifts. Null for a
+			/// design that adds nothing to what the place carries, which is correct for a wall.
+			/// </summary>
+			public string Carries;
+
+			/// <summary>Raw <c>Materials</c> attribute, kept for whole-file validation. The cost
+			/// itself is parsed and held by <c>KingdomMaterials</c>.</summary>
+			public string Materials;
+
 			public string ShortName;
 
 			/// <summary>

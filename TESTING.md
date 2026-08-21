@@ -290,6 +290,23 @@ anyone.
 | 54f | Let dissent run to the end | The unhappier city leaves — keeping its ground, its people, its buildings, its stores and its book. Nothing burns. Both registers record the day and **disagree about it** |
 | 54g | Walk onto the ground of a city that left, having removed the cause | You may ask them back. Try it without removing the cause and they say so to your face |
 
+## Pass 17 — Plots, materials, and the catalogue
+
+| Step | Action | Expect |
+|---|---|---|
+| 55 | Commission a plot-sized design (a tent, a timber hut) | The settlement stakes a **rectangle**, not a cell: staked → cleared → framed → walled → done, watchable, door cut toward the heart. The surveyor's plan on the stakes reads as the finished building's description, framed as intention |
+| 55a | Watch the clearing stage | Clearing **earns**: trees give timber, rock gives stone, ruin walls give scrap — carried to a stockpile you dedicated. No stockpile, and it says so once |
+| 55b | Try to stake a plot over your own dropped gear, or open water | Refused, naming the cell and the thing standing on it. Nothing player-placed is ever cleared |
+| 55c | Charter → **Clear ground** (`q`) | Spare hands work the rect down over days; the yield is itemised in the ledger |
+| 55d | Charter → **Take down a building** (`z`) on something the settlement built | Condemned: crew works it off, half its material returns to the stockpiles, the plot frees, no water refunds, chronicled both ways |
+| 55e | Check building costs in the commission list | Water **and** materials. A design naming no materials costs water alone |
+| 55f | Reach Steading, then Town | M then L plots unlock — the city literally builds bigger as it grows. XL waits for City |
+| 55g | Claim one stratum down and commission there | The plot is **carved**: double clearing, paid back in stone, no walls — the rock is the wall. A weather-dependent design refuses underground by name |
+| 55h | Raise a building while standing there | The raising ceremony: crew gathers, water is shared, the chronicle names those present. Raised while away, the homecoming tells it plainly |
+| 55i | Order a house | It comes **furnished** — bunks, torchpost, hookah arrive as contents. Nobody commissions a hookah one at a time |
+| 55j | Check a chartered caravan after several visits | Occasionally it carries a **pattern-book**: one foreign design chosen from three, merged into what the keepers know. The base catalogue is never gated on the draw |
+| 55k | Appoint an office holder; read their description | One virtue, one flaw, and one or two stated **tastes**. Met tastes shade the settlement up; unmet means their default, never a penalty |
+
 ## Pass 4 — Attitudes and persistence
 
 | Step | Action | Expect |

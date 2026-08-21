@@ -115,6 +115,29 @@ playtest passes.
   buildings, its stores and its book. Nothing burns and nobody is driven out. Both chronicle
   registers record the day and disagree about it. You can ask them back once the cause is gone.
 
+### Added — plots, materials, and the catalogue rebuilt
+- **Buildings take ground.** Designs declare a plot — S, M, L, XL, stage-gated — and rise over it
+  in watchable stages, walls in the settlement's own material, the door cut toward the heart.
+  Underground plots are carved: double the clearing, paid back in stone, and the rock is the wall.
+  Every plot reserves a lane; a settlement can never tile itself solid.
+- **Clearance is extraction.** Clearing ground yields what stood on it — timber, stone, marble,
+  scrap — as real items in a stockpile you dedicate. Building costs are water and materials.
+  Buildings can be condemned: half the material returns, the plot frees, nothing refunds.
+- **The catalogue is rewritten around plots**: fifty designs across ten families, every entry
+  denominated in how many more people the settlement honestly carries. Water, food and roofs bind;
+  craft, faith, learning, order and luxury lift, capped. The commissionable solar condenser is
+  gone — water that arrives with no crew is recovered and certified, never ordered. Houses come
+  furnished.
+- **Four gates on what may be commissioned** — the district the ground carries (hard for placement,
+  soft for effect), territory held, designs the keepers have learned, and a derived craft level
+  raised only by teaching data disks and certifying salvage. Blocked designs stay visible, tagged
+  with the one thing in the way.
+- **Improvements**: a design may name what it grows into; the settlement raises the successor
+  itself, out of surplus, carrying every civic mark and the founder's given name across. Any work
+  or a whole zone can be held as-is forever.
+- **Ceremony**: the surveyor's plan, the raising ceremony, notable tastes, leader traits (one
+  virtue, one flaw, no reroll), and the caravan pattern-book.
+
 ### Changed
 - Districts are no longer flavour. Each of the six now changes something a player can measure:
   garrison adds defence across every claimed zone, agrarian bills upkeep at 90%, market adds a

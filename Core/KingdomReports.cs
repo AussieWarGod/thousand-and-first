@@ -69,6 +69,9 @@ namespace ThousandAndFirst
 				// founder is standing on, and neither is carried on the system.
 				.Append(currentClaimed ? DefenceAndPantryLine(System, currentZone) : "")
 				.Append(currentClaimed ? PowerLine(System, currentZone) : "")
+				// Surveyed live for the same reason the pantry is: what the stockpiles hold is a fact
+				// about the ground the founder is standing on, not a field carried on the system.
+				.Append(currentClaimed ? ("\n" + KingdomMaterials.StockLine(currentZone)) : "")
 				// What the settlement can build at, and what the next level costs, so the craft
 				// level is never a number the founder has to reverse-engineer from refusals.
 				.Append(KingdomZoning.Readout(System))

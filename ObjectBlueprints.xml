@@ -97,6 +97,263 @@
     <part Name="Physics" Takeable="false" Organic="true" Weight="200" />
     <stat Name="Hitpoints" Value="60" />
   </object>
+<!-- ===================================================================== THE PLOT CATALOGUE ==
+       Every design KingdomBuildings.xml raises that did not already exist. None declares a Tile:
+       STANDARDS 4 forbids naming art nothing ships, and the glyph is the honest placeholder until
+       the tiles are drawn. Colour carries the difference between them in the meantime. -->
+  <object Name="r_KingdomTent" Inherits="Furniture">
+    <stag Name="Contemporary" />
+    <part Name="Render" DisplayName="settler's tent" RenderString="&#8745;" ColorString="&amp;y" DetailColor="w" />
+    <part Name="Description" Short="Canvas over a brinestalk frame, pegged against a wind that has opinions. It is not much. It is up before dark, which is the whole argument for it." />
+    <part Name="Bed" />
+    <part Name="Physics" Takeable="false" Organic="true" Weight="200" />
+    <stat Name="Hitpoints" Value="40" />
+  </object>
+  <object Name="r_KingdomTentRow" Inherits="r_KingdomTent">
+    <part Name="Render" DisplayName="staked tent-row" ColorString="&amp;Y" DetailColor="w" />
+    <part Name="Description" Short="Four tents in a line with a woven brake along the weather side. Nobody calls this a house, and everybody sleeps better." />
+    <part Name="Physics" Weight="400" />
+    <stat Name="Hitpoints" Value="60" />
+  </object>
+  <object Name="r_KingdomHut" Inherits="Furniture">
+    <stag Name="Contemporary" />
+    <part Name="Render" DisplayName="timber hut" RenderString="&#8962;" ColorString="&amp;y" DetailColor="w" />
+    <part Name="Description" Short="Posts, wattle, and a door that shuts. The first building here that will still be standing when the person who raised it is not." />
+    <part Name="Bed" />
+    <part Name="Physics" Takeable="false" Organic="true" Weight="1200" />
+    <stat Name="Hitpoints" Value="120" />
+  </object>
+  <object Name="r_KingdomHutYard" Inherits="r_KingdomHut">
+    <part Name="Render" DisplayName="hut and yard" ColorString="&amp;Y" DetailColor="w" />
+    <part Name="Description" Short="The hut, and a swept square of packed earth outside it with a rope line and a stool. Where the work happens when the weather allows it." />
+    <part Name="Physics" Weight="1600" />
+    <stat Name="Hitpoints" Value="150" />
+  </object>
+  <object Name="r_KingdomHouse" Inherits="Furniture">
+    <stag Name="Contemporary" />
+    <part Name="Render" DisplayName="stone house" RenderString="&#8962;" ColorString="&amp;W" DetailColor="w" />
+    <part Name="Description" Short="Fieldstone to the eaves, timber above, and a hearth that draws properly. Two families and a cat." />
+    <part Name="Bed" />
+    <part Name="Physics" Takeable="false" Weight="4000" />
+    <stat Name="Hitpoints" Value="300" />
+  </object>
+  <object Name="r_KingdomHouseCourt" Inherits="r_KingdomHouse">
+    <part Name="Render" DisplayName="house and court" ColorString="&amp;w" DetailColor="W" />
+    <part Name="Description" Short="Three households around one square, and a well-worn argument about whose turn it is to sweep it." />
+    <part Name="Physics" Weight="9000" />
+    <stat Name="Hitpoints" Value="500" />
+  </object>
+  <object Name="r_KingdomTerrace" Inherits="Furniture">
+    <stag Name="Contemporary" />
+    <part Name="Render" DisplayName="housing terrace" RenderString="&#9618;" ColorString="&amp;w" DetailColor="W" />
+    <part Name="Description" Short="A whole street raised in one season, every door the same width. The masons stopped signing them halfway along." />
+    <part Name="Bed" />
+    <part Name="Physics" Takeable="false" Weight="16000" />
+    <stat Name="Hitpoints" Value="700" />
+  </object>
+  <object Name="r_KingdomFineHouse" Inherits="Furniture">
+    <stag Name="Contemporary" />
+    <part Name="Render" DisplayName="fine house" RenderString="&#8962;" ColorString="&amp;Y" DetailColor="W" />
+    <part Name="Description" Short="Marble facing over honest stone, and a step nobody is allowed to sit on. Somebody of consequence is expected, and will not arrive until the plaster is dry." />
+    <part Name="Bed" />
+    <part Name="Physics" Takeable="false" Weight="5000" />
+    <stat Name="Hitpoints" Value="320" />
+  </object>
+  <object Name="r_KingdomManor" Inherits="r_KingdomFineHouse">
+    <part Name="Render" DisplayName="manor" ColorString="&amp;Y" DetailColor="C" />
+    <part Name="Description" Short="A courtyard, a gate that closes, and a name cut over the arch. Whether the name deserves the arch is the kind of thing the chronicle argues about for a hundred years." />
+    <part Name="Physics" Weight="12000" />
+    <stat Name="Hitpoints" Value="600" />
+  </object>
+  <object Name="r_KingdomCourt" Inherits="Furniture">
+    <stag Name="Contemporary" />
+    <part Name="Render" DisplayName="housing court" RenderString="&#9618;" ColorString="&amp;W" DetailColor="w" />
+    <part Name="Description" Short="Four storeys around a shaded well, stairs on the outside, washing on every rail. A quarter of the city roofed in one go, and full before the scaffolding came down." />
+    <part Name="Bed" />
+    <part Name="Physics" Takeable="false" Weight="40000" />
+    <stat Name="Hitpoints" Value="1200" />
+  </object>
+  <object Name="r_KingdomSaltPan" Inherits="Furniture">
+    <stag Name="Contemporary" />
+    <part Name="Render" DisplayName="salt-pan" RenderString="&#8776;" ColorString="&amp;W" DetailColor="y" />
+    <part Name="Description" Short="A shallow bed scraped level and flooded thin. The sun takes the water and leaves something worth raking up; what drips off the drying racks at dusk is worth more still." />
+    <part Name="LiquidVolume" MaxVolume="32" Volume="0" />
+    <!-- Rate is turns per dram, the way vanilla's own collectors are written. Averaging one dram
+         every six hundred turns is two a day: a settler's thirst, and a settler's whole shift to
+         earn it. Slow on purpose - this is the crude end of the water axis, not a well. -->
+    <part Name="LiquidProducer" Liquid="water" VariableRate="400-800" FillSelfOnly="true" ChargeUse="0" IsEMPSensitive="false" IsTechScannable="false" />
+    <part Name="Physics" Solid="false" Takeable="false" Weight="600" />
+    <stat Name="Hitpoints" Value="60" />
+  </object>
+  <object Name="r_KingdomSaltTerrace" Inherits="r_KingdomSaltPan">
+    <part Name="Render" DisplayName="salt-pan terrace" ColorString="&amp;W" DetailColor="Y" />
+    <part Name="Description" Short="Pans stepped down a slope so each one drinks the last one's leavings. Worked in shifts by people who stopped noticing the smell some time ago." />
+    <part Name="LiquidVolume" MaxVolume="64" Volume="0" />
+    <part Name="LiquidProducer" VariableRate="200-400" />
+    <part Name="Physics" Weight="1400" />
+    <stat Name="Hitpoints" Value="100" />
+  </object>
+  <object Name="r_KingdomCatchment" Inherits="Furniture">
+    <stag Name="Contemporary" />
+    <part Name="Render" DisplayName="dew catchment" RenderString="&#8801;" ColorString="&amp;w" DetailColor="W" />
+    <part Name="Description" Short="Stretched canvas, a gutter of split cane, and a cask underneath. It works best on the nights nobody wants to be out in." />
+    <part Name="LiquidVolume" MaxVolume="64" Volume="0" />
+    <part Name="LiquidProducer" Liquid="water" VariableRate="250-550" FillSelfOnly="true" ChargeUse="0" IsEMPSensitive="false" IsTechScannable="false" />
+    <part Name="Physics" Takeable="false" Weight="800" />
+    <stat Name="Hitpoints" Value="80" />
+  </object>
+  <object Name="r_KingdomCatchmentBank" Inherits="r_KingdomCatchment">
+    <part Name="Render" DisplayName="catchment bank" ColorString="&amp;W" DetailColor="C" />
+    <part Name="Description" Short="A whole roofline turned to the purpose, gutters running to a sunken row of casks. In a good week it fills faster than the settlement drinks." />
+    <part Name="LiquidVolume" MaxVolume="160" Volume="0" />
+    <part Name="LiquidProducer" VariableRate="160-320" />
+    <part Name="Physics" Weight="2200" />
+    <stat Name="Hitpoints" Value="160" />
+  </object>
+  <object Name="r_KingdomCisternVault" Inherits="Furniture">
+    <stag Name="Contemporary" />
+    <part Name="Render" DisplayName="vaulted cistern court" RenderString="O" ColorString="&amp;B" DetailColor="W" />
+    <part Name="Description" Short="A stone lid over six hundred drams and a hatch with a lock everybody has the key to. Cool enough down there to keep a body from going off, which has been tried." />
+    <part Name="LiquidVolume" MaxVolume="640" Volume="0" />
+    <part Name="Physics" Takeable="false" Weight="6000" />
+    <stat Name="Hitpoints" Value="400" />
+  </object>
+  <object Name="r_KingdomReservoir" Inherits="Furniture">
+    <stag Name="Contemporary" />
+    <part Name="Render" DisplayName="reservoir" RenderString="&#8776;" ColorString="&amp;B" DetailColor="C" />
+    <part Name="Description" Short="Open water inside your own wall, lined with dressed stone and edged with a low kerb. Children are told not to, and do anyway." />
+    <part Name="LiquidVolume" MaxVolume="1600" Volume="0" />
+    <part Name="Physics" Solid="false" Takeable="false" Weight="20000" />
+    <stat Name="Hitpoints" Value="600" />
+  </object>
+  <object Name="r_KingdomWaterworks" Inherits="Furniture">
+    <stag Name="Contemporary" />
+    <part Name="Render" DisplayName="the waterworks" RenderString="O" ColorString="&amp;C" DetailColor="B" />
+    <part Name="Description" Short="Cistern, court, and channel, all one thing, and a keeper whose entire trade is knowing which valve. The founder was elsewhere the day it was finished, and the chronicle says so in both registers." />
+    <part Name="LiquidVolume" MaxVolume="4000" Volume="0" />
+    <part Name="Physics" Takeable="false" Weight="60000" />
+    <stat Name="Hitpoints" Value="1000" />
+  </object>
+  <object Name="r_KingdomPlotRows" Inherits="r_KingdomPlot">
+    <part Name="Render" DisplayName="garden rows" ColorString="&amp;K" DetailColor="w" />
+    <part Name="Description" Short="Staked rows, weeded on a rota, watered by whoever drew the short straw. It is somebody's whole day and it feeds nine." />
+    <stat Name="Hitpoints" Value="90" />
+  </object>
+  <object Name="r_KingdomField" Inherits="Furniture">
+    <stag Name="Contemporary" />
+    <part Name="Render" DisplayName="field" RenderString="&quot;" ColorString="&amp;w" DetailColor="g" />
+    <part Name="Description" Short="Turned earth to the fence line, sown by everyone who could be spared and harvested the same way. For two weeks of the year the settlement does nothing else." />
+    <part Name="Physics" Solid="false" Takeable="false" Organic="true" Weight="400" />
+    <stat Name="Hitpoints" Value="80" />
+  </object>
+  <object Name="r_KingdomFieldRows" Inherits="r_KingdomField">
+    <part Name="Render" DisplayName="ploughed fields" ColorString="&amp;W" DetailColor="G" />
+    <part Name="Description" Short="Rows to the edge of the claim, and a plough that took a season's salvage to put together. The chronicle dates the good years from here." />
+    <stat Name="Hitpoints" Value="120" />
+  </object>
+  <!-- Inherits vanilla Chest for its Container, Inventory, and already-wired tile, the same way
+       r_KingdomLarder does, so the settlement's pantry rules need no new mechanism to read it. -->
+  <object Name="r_KingdomGranary" Inherits="Chest">
+    <stag Name="Contemporary" />
+    <part Name="Render" DisplayName="granary" ColorString="&amp;Y" DetailColor="y" />
+    <part Name="Description" Short="Raised on staddle stones with a lid that keeps the vermin honest. What is in here is the difference between a bad year and a bad story." />
+    <part Name="Physics" Takeable="false" Organic="true" Weight="3000" />
+    <stat Name="Hitpoints" Value="260" />
+  </object>
+  <object Name="r_KingdomToolShed" Inherits="Furniture">
+    <stag Name="Contemporary" />
+    <part Name="Render" DisplayName="tool shed" RenderString="&#8745;" ColorString="&amp;w" DetailColor="y" />
+    <part Name="Description" Short="A whetstone, a tar pot, and a bench somebody keeps tidy without ever having been asked to. The camp's entire industry, and not nothing." />
+    <part Name="Physics" Takeable="false" Weight="700" />
+    <stat Name="Hitpoints" Value="80" />
+  </object>
+  <object Name="r_KingdomSmithy" Inherits="Furniture">
+    <stag Name="Contemporary" />
+    <part Name="Render" DisplayName="smithy" RenderString="&#8745;" ColorString="&amp;r" DetailColor="w" />
+    <part Name="Description" Short="A hearth, a hammer, and someone who walked a long way for the chance to swing it. The ring of it carries further than the wall does." />
+    <part Name="Physics" Takeable="false" Weight="4000" />
+    <stat Name="Hitpoints" Value="280" />
+  </object>
+  <object Name="r_KingdomForge" Inherits="r_KingdomSmithy">
+    <part Name="Render" DisplayName="forge" ColorString="&amp;R" DetailColor="W" />
+    <part Name="Description" Short="Banked overnight and never quite cold. Getting heat to stay put is harder than getting it to start, and this is the building that knows the difference." />
+    <part Name="Physics" Weight="7000" />
+    <stat Name="Hitpoints" Value="400" />
+  </object>
+  <object Name="r_KingdomGrindMill" Inherits="Furniture">
+    <stag Name="Contemporary" />
+    <part Name="Render" DisplayName="grinding mill" RenderString="&#8745;" ColorString="&amp;w" DetailColor="W" />
+    <part Name="Description" Short="Two stones and a long handle, and a fine grey dust on everything within ten paces. Turns a harvest into something that keeps." />
+    <part Name="Physics" Takeable="false" Weight="5000" />
+    <stat Name="Hitpoints" Value="300" />
+  </object>
+  <object Name="r_KingdomWorkshop" Inherits="Furniture">
+    <stag Name="Contemporary" />
+    <part Name="Render" DisplayName="workshop" RenderString="&#8745;" ColorString="&amp;c" DetailColor="w" />
+    <part Name="Description" Short="Benches down both walls, everything hung where it belongs, and three people who can tell you why. Half the settlement's cleverness lives in this room." />
+    <part Name="Physics" Takeable="false" Weight="4000" />
+    <stat Name="Hitpoints" Value="300" />
+  </object>
+  <object Name="r_KingdomHall" Inherits="Furniture">
+    <stag Name="Contemporary" />
+    <part Name="Render" DisplayName="moot hall" RenderString="&#8745;" ColorString="&amp;W" DetailColor="y" />
+    <part Name="Description" Short="Long benches, a high seat nobody sits in, and the charter nailed where the light falls on it. Read out loud once a season whether anyone asks for it or not." />
+    <part Name="Physics" Takeable="false" Weight="8000" />
+    <stat Name="Hitpoints" Value="420" />
+  </object>
+  <object Name="r_KingdomBazaar" Inherits="Furniture">
+    <stag Name="Contemporary" />
+    <part Name="Render" DisplayName="bazaar" RenderString="&#960;" ColorString="&amp;M" DetailColor="Y" />
+    <part Name="Description" Short="Awnings, argument, and somebody's cousin selling salt at a price that is frankly insulting. Caravans stop here because it is worth stopping." />
+    <part Name="Physics" Solid="false" Takeable="false" Weight="2000" />
+    <stat Name="Hitpoints" Value="200" />
+  </object>
+  <object Name="r_KingdomBathhouse" Inherits="Furniture">
+    <stag Name="Contemporary" />
+    <part Name="Render" DisplayName="bathhouse" RenderString="&#8745;" ColorString="&amp;C" DetailColor="W" />
+    <part Name="Description" Short="Hot stone, cold water, and the extravagance of spending either on being clean. Word of it travels further than word of the wall ever did." />
+    <part Name="Physics" Takeable="false" Weight="12000" />
+    <stat Name="Hitpoints" Value="500" />
+  </object>
+  <object Name="r_KingdomShrineGarth" Inherits="Furniture">
+    <stag Name="Contemporary" />
+    <part Name="Render" DisplayName="shrine garth" RenderString="&#933;" ColorString="&amp;Y" DetailColor="g" />
+    <part Name="Description" Short="A low wall around the stone and a gate left open on purpose. Whatever is poured here is still gone by morning." />
+    <part Name="Shrine" />
+    <part Name="Physics" Takeable="false" Weight="2400" />
+    <stat Name="Hitpoints" Value="220" />
+  </object>
+  <object Name="r_KingdomTemple" Inherits="Furniture">
+    <stag Name="Contemporary" />
+    <part Name="Render" DisplayName="temple" RenderString="&#933;" ColorString="&amp;W" DetailColor="Y" />
+    <part Name="Description" Short="Raised to be seen from the road, and sited so that the road has to look. What is worshipped in it is the settlement's own business, and has changed at least once." />
+    <part Name="Shrine" />
+    <part Name="Physics" Takeable="false" Weight="20000" />
+    <stat Name="Hitpoints" Value="700" />
+  </object>
+  <object Name="r_KingdomScriptorium" Inherits="Furniture">
+    <stag Name="Contemporary" />
+    <part Name="Render" DisplayName="scriptorium" RenderString="&#8745;" ColorString="&amp;b" DetailColor="W" />
+    <part Name="Description" Short="Two registers of the same year kept on the same shelf, and a keeper who will show you both and let you decide. The disagreements are indexed." />
+    <part Name="Physics" Takeable="false" Weight="5000" />
+    <stat Name="Hitpoints" Value="320" />
+  </object>
+  <object Name="r_KingdomGatehouse" Inherits="Furniture">
+    <stag Name="Contemporary" />
+    <part Name="Render" DisplayName="gatehouse" RenderString="&#9619;" ColorString="&amp;W" DetailColor="y" Occluding="true" />
+    <part Name="Description" Short="Where the wall gives way, and the only place it does. Shut at dusk by somebody who has to be talked into opening it." />
+    <part Name="Physics" Solid="true" Takeable="false" Weight="9000" />
+    <stat Name="Hitpoints" Value="600" />
+    <stat Name="AV" Value="12" />
+  </object>
+  <object Name="r_KingdomBarracks" Inherits="Furniture">
+    <stag Name="Contemporary" />
+    <part Name="Render" DisplayName="barracks" RenderString="&#8745;" ColorString="&amp;w" DetailColor="r" />
+    <part Name="Description" Short="The watch sleeps in shifts and eats together, which is why the watch is a thing and not a rota. Boots by the door in the order they came off." />
+    <part Name="Bed" />
+    <part Name="Physics" Takeable="false" Weight="10000" />
+    <stat Name="Hitpoints" Value="500" />
+  </object>
   <!-- Inherits vanilla "Sign" wholesale rather than declaring a Tile of our own: STANDARDS.md
        requires art for anything that carries a Tile attribute, and a plain notice board owes
        none. Its render color moves to the same ochre r_KingdomScaffold rises in, since a plan
@@ -108,6 +365,24 @@
     <part Name="r_KingdomPlanMarker" />
     <part Name="Physics" Solid="false" Takeable="false" />
     <stat Name="Hitpoints" Value="20" />
+  </object>
+  <!-- A plot being raised. Stands in the middle of its own rect from the moment the ground is
+       staked until the finished work replaces it. No Tile: nothing in this mod ships art for it,
+       and a Tile naming a file that does not exist renders nothing and logs nothing. -->
+  <object Name="r_KingdomPlotWorks" Inherits="Furniture">
+    <part Name="Render" DisplayName="staked plot" RenderString="&#9618;" ColorString="&amp;y" DetailColor="w" />
+    <part Name="Description" Short="Cord and pegs marking out a rectangle of ground, and a tally of days scratched into the corner post. Something is being made here, a stage at a time." />
+    <part Name="r_KingdomPlotWorks" />
+    <part Name="Physics" Solid="false" Takeable="false" />
+    <stat Name="Hitpoints" Value="50" />
+  </object>
+  <!-- A corner post. Stands only between the frame stage and the walls, and is taken down by the
+       plot that raised it - the one thing STANDARDS 7 lets a kingdom system destroy. -->
+  <object Name="r_KingdomPlotFrame" Inherits="Furniture">
+    <part Name="Render" DisplayName="frame post" RenderString="&#9474;" ColorString="&amp;y" DetailColor="w" />
+    <part Name="Description" Short="A squared post sunk into cleared ground, waiting for a wall to be built against it." />
+    <part Name="Physics" Solid="false" Takeable="false" Weight="200" />
+    <stat Name="Hitpoints" Value="40" />
   </object>
   <object Name="r_KingdomBunk" Inherits="Bed">
     <stag Name="Contemporary" />
@@ -266,5 +541,80 @@
     <stat Name="Hitpoints" Value="200" />
     <stat Name="AV" Value="6" />
     <stag Name="Contemporary" />
+  </object>
+<!-- ==================================================================== MATERIALS ==
+    What clearing ground gives back, as real items in a real container. Nothing here is
+    minted: KingdomMaterials only ever creates one of these when something actually came
+    down, was salvaged off a struck building, or arrived under charter.
+
+    None declares a Tile of its own; each reuses a vanilla texture already referenced by a
+    vanilla blueprint (the dirt floor tile, Cloth Robe, Torch, Large Stone), the same reuse
+    r_KingdomSaltStore makes of Items/sw_kiln.bmp. The DynamicObjectsTable:Items membership
+    inherited from Item is deleted on every one of them: a material the world scatters
+    through random loot is a material the settlement did not earn.
+  -->
+  <object Name="r_KingdomMud" Inherits="Item">
+    <part Name="Render" DisplayName="hod of mud" RenderString="," ColorString="&amp;w" Tile="assets_content_textures_tiles_tile-dirt.png" TileColor="&amp;w" DetailColor="y" />
+    <part Name="Description" Short="Turned earth, wetted and trodden until it holds a shape. The cheapest wall anybody ever built, and the first one." />
+    <part Name="Physics" Weight="8" />
+    <part Name="Commerce" Value="1" />
+    <tag Name="r_KingdomMaterial" Value="mud" />
+    <tag Name="DynamicObjectsTable:Items" Value="*delete" />
+    <tag Name="ExcludeFromDynamicEncounters" />
+    <stag Name="Contemporary" />
+  </object>
+  <object Name="r_KingdomBrush" Inherits="Item">
+    <part Name="Render" DisplayName="bundle of brush" RenderString="=" ColorString="&amp;w" Tile="Items/sw_robes1.bmp" TileColor="&amp;w" DetailColor="y" />
+    <part Name="Description" Short="Cut scrub, bound and left to ret. It becomes cord, thatch, and the canvas a tent is made of, and it is the reason a roof can go up in an afternoon." />
+    <part Name="Physics" Weight="3" Organic="true" />
+    <part Name="Commerce" Value="1" />
+    <tag Name="r_KingdomMaterial" Value="brush" />
+    <tag Name="DynamicObjectsTable:Items" Value="*delete" />
+    <tag Name="ExcludeFromDynamicEncounters" />
+    <stag Name="Contemporary" />
+  </object>
+  <object Name="r_KingdomTimber" Inherits="Item">
+    <part Name="Render" DisplayName="length of timber" RenderString="/" ColorString="&amp;w" Tile="Items/sw_torch.png" TileColor="&amp;w" DetailColor="y" />
+    <part Name="Description" Short="A trunk stripped, squared, and stacked to season. Somebody spent a day on this with an axe." />
+    <part Name="Physics" Weight="12" Organic="true" />
+    <part Name="Commerce" Value="3" />
+    <tag Name="r_KingdomMaterial" Value="timber" />
+    <tag Name="DynamicObjectsTable:Items" Value="*delete" />
+    <tag Name="ExcludeFromDynamicEncounters" />
+    <stag Name="Contemporary" />
+  </object>
+  <object Name="r_KingdomCutStone" Inherits="Item">
+    <part Name="Render" DisplayName="block of cut stone" RenderString="*" ColorString="&amp;y" Tile="Items/sw_stone_large.bmp" TileColor="&amp;y" DetailColor="K" />
+    <part Name="Description" Short="Shale or limestone, split along the grain and dressed square. It was a hillside this morning." />
+    <part Name="Physics" Weight="20" />
+    <part Name="Commerce" Value="4" />
+    <tag Name="r_KingdomMaterial" Value="stone" />
+    <tag Name="DynamicObjectsTable:Items" Value="*delete" />
+    <tag Name="ExcludeFromDynamicEncounters" />
+    <stag Name="Contemporary" />
+  </object>
+  <object Name="r_KingdomMarbleBlock" Inherits="Item">
+    <part Name="Render" DisplayName="block of marble" RenderString="*" ColorString="&amp;Y" Tile="Items/sw_stone_large.bmp" TileColor="&amp;c" DetailColor="Y" />
+    <part Name="Description" Short="Snails and coral on the geologic press, cut out of a seam somebody found and will not stop talking about." />
+    <part Name="Physics" Weight="25" />
+    <part Name="Commerce" Value="20" />
+    <tag Name="r_KingdomMaterial" Value="marble" />
+    <tag Name="DynamicObjectsTable:Items" Value="*delete" />
+    <tag Name="ExcludeFromDynamicEncounters" />
+    <stag Name="Contemporary" />
+  </object>
+
+  <!-- The clearance order itself. Inherits vanilla "Sign" wholesale rather than declaring a
+       Tile of our own, for the same reason r_KingdomPlanMarker does: STANDARDS.md requires
+       shipped art for anything carrying a Tile attribute, and a line of pegs owes none.
+       Solid="false" and Takeable="false" matter — the stake stands inside the rect it names,
+       and KingdomMaterials leaves it standing until the ground is clear. -->
+  <object Name="r_KingdomClearanceStake" Inherits="Sign">
+    <part Name="Render" DisplayName="ground ordered cleared" ColorString="&amp;w" />
+    <part Name="Description" Short="A line of pegs and a cord, and a mark cut into the nearest thing still standing. Everything inside the cord is coming down, and the settlement will be the richer for it." />
+    <part Name="Chat" Says="[a tally of what stands here, and what it is worth once it does not.]" ShowInShortDescription="true" />
+    <part Name="r_KingdomClearance" />
+    <part Name="Physics" Solid="false" Takeable="false" />
+    <stat Name="Hitpoints" Value="20" />
   </object>
 </objects>

@@ -212,6 +212,10 @@ namespace ThousandAndFirst
 			KingdomChronicle.Record(System, chronicle);
 			MessageQueue.AddPlayerMessage("{{W|" + XRL.Language.Grammar.InitCap(chronicle) + ".}}");
 			KingdomLog.Log("office: " + transition + " title=" + title + " holder=" + (head ?? "-"));
+			if (head != null)
+			{
+				KingdomCeremony.OnOfficeHolderNamed(System, Z, title, head);
+			}
 		}
 
 		private static GameObject FindCitizen(Zone Z, string Name)

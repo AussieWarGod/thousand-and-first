@@ -57,6 +57,14 @@ namespace ThousandAndFirst
 			system.FoundingTerrainBlueprint = terrainBlueprint;
 			system.FoundingRegionName = regionName;
 			system.FoundingZLevel = zLevel;
+			// Where the water was poured. Every later plot's heart is seeded here and drifts toward
+			// whatever gets built (KingdomPlotRules.TryHeart).
+			Cell riteCell = The.Player?.CurrentCell;
+			if (foundingZone != null && riteCell != null && riteCell.ParentZone == foundingZone)
+			{
+				foundingZone.SetZoneProperty(KingdomPlots.RiteXProperty, riteCell.X.ToString());
+				foundingZone.SetZoneProperty(KingdomPlots.RiteYProperty, riteCell.Y.ToString());
+			}
 			// A ruin's ground already had its own history; the rite restores it rather than
 			// raising a settlement from nothing. See RestoreRuinStructures for what "restores"
 			// means in practice, and STANDARDS/VISION on why nothing here is moved or destroyed.
@@ -181,6 +189,12 @@ namespace ThousandAndFirst
 			// Force, because the whole point of this ground is that it does not border the realm.
 			// The foreign-faction refusal above already stands regardless of this Force.
 			ClaimZone(Site, Force: true);
+			Cell secondRiteCell = The.Player?.CurrentCell;
+			if (secondRiteCell != null && secondRiteCell.ParentZone == Site)
+			{
+				Site.SetZoneProperty(KingdomPlots.RiteXProperty, secondRiteCell.X.ToString());
+				Site.SetZoneProperty(KingdomPlots.RiteYProperty, secondRiteCell.Y.ToString());
+			}
 			The.Player?.RequirePart<KingdomCharterPart>().EnsureAbility();
 			return true;
 		}

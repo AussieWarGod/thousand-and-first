@@ -33,8 +33,15 @@ import re
 import sys
 import xml.etree.ElementTree as ET
 
-TAF_XML = ["ObjectBlueprints.xml", "PopulationTables.xml", "Books.xml", "KingdomBuildings.xml"]
-DEFAULT_BASE = "/mnt/f/SteamLibrary/steamapps/common/Caves of Qud/CoQ_Data/StreamingAssets/Base"
+TAF_XML = [
+    "ObjectBlueprints.xml",
+    "PopulationTables.xml",
+    "Books.xml",
+    "KingdomBuildings.xml",
+]
+DEFAULT_BASE = (
+    "/mnt/f/SteamLibrary/steamapps/common/Caves of Qud/CoQ_Data/StreamingAssets/Base"
+)
 
 
 def read(path):
@@ -70,7 +77,9 @@ def vanilla_blueprints(base):
     for name in sorted(os.listdir(folder)):
         if not name.endswith(".xml"):
             continue
-        for match in re.finditer(r'<object\s+Name="([^"]+)"', read(os.path.join(folder, name))):
+        for match in re.finditer(
+            r'<object\s+Name="([^"]+)"', read(os.path.join(folder, name))
+        ):
             names.add(match.group(1))
     return names
 
@@ -97,12 +106,24 @@ def rolled_by_our_code(table):
     """Does any TAF source actually roll this table by name?"""
     needle = '"%s"' % table
     for folder, _dirs, files in os.walk("."):
-        if any(part in folder for part in (os.sep + ".git", os.sep + "DevTests", os.sep + "obj")):
+        if any(
+            part in folder
+            for part in (os.sep + ".git", os.sep + "DevTests", os.sep + "obj")
+        ):
             continue
         for name in files:
             if name.endswith(".cs") and needle in read(os.path.join(folder, name)):
                 return True
     return False
+
+
+def contents_tables():
+    """Population tables the building catalogue furnishes finished plots from. Named in XML and
+    rolled through the plot registry, so no .cs file ever holds the name as a literal."""
+    if not os.path.isfile("KingdomBuildings.xml"):
+        return set()
+    root = ET.parse("KingdomBuildings.xml").getroot()
+    return {b.get("Contents") for b in root.iter("building") if b.get("Contents")}
 
 
 def known_districts():
@@ -136,7 +157,8 @@ def building_reference_problems():
         if successor not in keys:
             problems.append(
                 "building %s upgrades into %s, which no <building> in this file declares"
-                % (key, successor))
+                % (key, successor)
+            )
 
     # A ring improves each work into the next forever, spending the settlement's whole surplus
     # on going in a circle. TryParseUpgradeAttributes catches the one-step case; only a pass over
@@ -163,7 +185,8 @@ def building_reference_problems():
                     problems.append(
                         "building %s wants the district %s, which is not one a founder can "
                         "declare, so nothing can ever be raised on ground that carries it"
-                        % (building.get("Key"), token))
+                        % (building.get("Key"), token)
+                    )
 
     # A skin only ever names art that already exists. One of ours must exist on disk; a vanilla
     # path cannot be checked here because vanilla tiles live inside the packed Unity assets.
@@ -175,7 +198,21 @@ def building_reference_problems():
             if not os.path.isfile(os.path.join("Textures", tile)):
                 problems.append(
                     "building %s skin %s names the tile %s, which is not in Textures/"
-                    % (building.get("Key"), skin.get("Key"), tile))
+                    % (building.get("Key"), skin.get("Key"), tile)
+                )
+
+    declared_pops = set()
+    if os.path.isfile("PopulationTables.xml"):
+        declared_pops = set(
+            re.findall(r'<population\s+Name="([^"]+)"', read("PopulationTables.xml"))
+        )
+    for building in root.iter("building"):
+        table = building.get("Contents")
+        if table and table not in declared_pops:
+            problems.append(
+                "building %s furnishes from %s, which no <population> declares, so the plot is "
+                "finished empty and nothing says why" % (building.get("Key"), table)
+            )
     return problems
 
 
@@ -200,8 +237,10 @@ def main():
         if base and name in theirs:
             continue
         if base:
-            problems.append("unresolved blueprint %s, referenced by %s"
-                            % (name, ", ".join(sorted(sources))))
+            problems.append(
+                "unresolved blueprint %s, referenced by %s"
+                % (name, ", ".join(sorted(sources)))
+            )
 
     # 2. Every population we merge into exists or is genuinely fabricable.
     if base:
@@ -212,25 +251,29 @@ def main():
             ours_pop.add(pop.get("Name"))
         for pop in root.iter("population"):
             name = pop.get("Name")
-            load = (pop.get("Load") or "Merge")
+            load = pop.get("Load") or "Merge"
             if load != "Merge" or name in known:
                 continue
-            if name.startswith("DynamicObjectsTable:") or name.startswith("StaticObjectsTable:"):
+            if name.startswith("DynamicObjectsTable:") or name.startswith(
+                "StaticObjectsTable:"
+            ):
                 # Fabricated on demand from a matching blueprint tag. Declaring the name in XML
                 # pre-empts that fabrication, so a merge is only meaningful if the tag exists.
                 if not vanilla_tag_exists(base, name):
                     problems.append(
                         "dead population merge %s: not declared in vanilla, no blueprint carries "
                         "the tag it would be fabricated from, so nothing rolls it and our entry "
-                        "pre-empts a table that would never have content" % name)
-            elif not rolled_by_our_code(name):
+                        "pre-empts a table that would never have content" % name
+                    )
+            elif not rolled_by_our_code(name) and name not in contents_tables():
                 # A table we define and roll ourselves is a new table, which is fine and is how
                 # another mod is meant to add settlers. A table we define and never roll is the
                 # defect: Merge into an absent name silently creates one nothing reads.
                 problems.append(
                     "population merge %s targets a table that does not exist in vanilla and that "
                     "no TAF code rolls; Merge into an absent name creates a table nothing reads"
-                    % name)
+                    % name
+                )
 
     # 3. KingdomBuildings cross-references: a design that grows into a name nothing declares,
     #    a chain that loops back on itself, and ground no founder can ever name. All three are
@@ -242,9 +285,16 @@ def main():
     if os.path.isfile("Books.xml"):
         book_ids = set(re.findall(r'<book\s+ID="([^"]+)"', read("Books.xml")))
         book_ids |= set(re.findall(r'ID="([^"]+)"', read("Books.xml")))
-        pointed = set(re.findall(r'part\s+Name="Book"\s+ID="([^"]+)"', read("ObjectBlueprints.xml")))
+        pointed = set(
+            re.findall(
+                r'part\s+Name="Book"\s+ID="([^"]+)"', read("ObjectBlueprints.xml")
+            )
+        )
         for pointer in sorted(pointed - book_ids):
-            problems.append("blueprint points at book ID %s, which Books.xml does not define" % pointer)
+            problems.append(
+                "blueprint points at book ID %s, which Books.xml does not define"
+                % pointer
+            )
         for orphan in sorted(book_ids - pointed):
             problems.append("book %s is defined but no blueprint points at it" % orphan)
 

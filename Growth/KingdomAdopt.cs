@@ -150,6 +150,9 @@ namespace ThousandAndFirst
 			Candidate.SetStringProperty(AdoptedMarkProperty, mark);
 			ApplyRoleFixtures(Candidate, entry);
 			AnnounceAdoption(System, entry, Candidate);
+			// A plot-sized design speaks for a rect of ground, not one cell. Nothing the founder
+			// built is touched; the settlement only learns how much ground is spoken for.
+			KingdomPlots.StampAdopted(Candidate, entry);
 			return true;
 		}
 
@@ -222,6 +225,7 @@ namespace ThousandAndFirst
 			marker.SetStringProperty(AdoptedKeyProperty, Key);
 			ApplyRoleFixtures(marker, entry);
 			AnnounceAdoption(System, entry, marker);
+			KingdomPlots.StampAdopted(marker, entry);
 			return true;
 		}
 
