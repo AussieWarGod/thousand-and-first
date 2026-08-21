@@ -764,3 +764,25 @@ in the sky (on top of another building?, inside a tall arcology?, ??)"
 - Not scheduled; surfaces with WR-3 in a G/D-lane wave. Design questions to the author before
   build: what earns sky access (tech tier? XL host?), and whether deep/sky get their own
   building SETS (Addendum 2 type×size binding) or filtered subsets of the surface sets.
+
+**Extension (author, 2026-08-22):** rooftops/arcology floors "might need plot inside plot
+handling, with cases for destroying a plot, and a large enough arcology might sit over multiple
+tiles, maybe a special construction of some kind that takes humongous resources, and cannot be
+destroyed?"
+
+- **Nesting**: hosted plots are plots-inside-a-plot — the host's lifecycle owns the children's.
+  Destruction cases to design: host condemned → hosted plots condemned with it (announced,
+  brink-shaped, contents/residents follow 12(d)/roof-brink law); host demolished by the player →
+  hosted plots must be cleared first (consent-before-cost, the demolish lane's existing shape);
+  host ruined by slide → hosted plots ruin in sympathy, deeper than ground plots (they fall
+  further).
+- **The megastructure class**: an arcology may SPAN ZONES (a building over multiple tiles/zones —
+  composes with claims and the zone-row model; its floors are hosted plots) and is a SPECIAL
+  CONSTRUCTION: humongous resource cost (the full material chain at scale, yards, crews,
+  world-time — a project measured in seasons), and once raised it CANNOT BE DESTROYED — wear and
+  subsidence scar it, its floors can die back, but the structure itself endures as Qud's own
+  ruins endure (lore-native: the Yd Freehold). "Indestructible" = the shell outlives every
+  failure mode; only its life is losable.
+- Interacts: stage/reach (an arcology is its own district? its own reach ceiling?), networks
+  (the shell as backbone conduit), equilibrium (floors carry like works), the roster wave
+  (a city IN a building).
