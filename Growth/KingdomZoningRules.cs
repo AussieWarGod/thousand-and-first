@@ -34,8 +34,11 @@ namespace ThousandAndFirst
 	/// only thing standing between them and the building.
 	/// <para>
 	/// Stratum sits directly above district because the two are the same kind of refusal told at
-	/// different scales, and only one of them can be answered: ground can be named a district
-	/// tomorrow, and no naming puts weather under a mountain.
+	/// different scales: this ground will not take it, and here is ground that would. Both are
+	/// answered by walking &mdash; ground can be named a district tomorrow, and a claim reaches the
+	/// stratum above or below the one the city holds. What no walking answers is the weather, which
+	/// is why the stratum's two refusals are told in the order
+	/// <see cref="KingdomZoningRules.Judge"/> tells them.
 	/// </para>
 	/// <para>
 	/// <b>The three creed gates are checked FIRST and are numbered LAST</b>, which is the one
@@ -234,6 +237,21 @@ namespace ThousandAndFirst
 		/// </summary>
 		public readonly int CreedShare;
 
+		/// <summary>
+		/// Where this design lives and where else it may stand: a comma list in the tag idiom whose
+		/// FIRST welcomed token is the design's home stratum and whose remaining tokens are the
+		/// strata it shares into (Addendum 15). Null when the design was written before strata
+		/// existed, which stands everywhere &mdash; the whole of the back-compatibility promise, and
+		/// the reason the weep-tap goes on being raised under the rock.
+		/// <para>
+		/// Distinct from the plot spec's <c>Sky</c> flag on purpose, and the two are not
+		/// interchangeable: <c>Sky</c> says the work wants WEATHER, which is a fact about the design;
+		/// this says which SET the design belongs to, which is a fact about the catalogue. A carved
+		/// cell wants no weather and is still refused on open ground.
+		/// </para>
+		/// </summary>
+		public readonly string Strata;
+
 		public ZoneGate(string Districts, int MinZones, string Knowledge, TechLevel MinTech)
 			: this(Districts, MinZones, Knowledge, MinTech, null, null, ShareUnsaid)
 		{
@@ -241,6 +259,12 @@ namespace ThousandAndFirst
 
 		public ZoneGate(string Districts, int MinZones, string Knowledge, TechLevel MinTech,
 			string Builders, string Creed, int CreedShare)
+			: this(Districts, MinZones, Knowledge, MinTech, Builders, Creed, CreedShare, null)
+		{
+		}
+
+		public ZoneGate(string Districts, int MinZones, string Knowledge, TechLevel MinTech,
+			string Builders, string Creed, int CreedShare, string Strata)
 		{
 			this.Districts = Districts;
 			this.MinZones = MinZones;
@@ -249,6 +273,7 @@ namespace ThousandAndFirst
 			this.Builders = Builders;
 			this.Creed = Creed;
 			this.CreedShare = CreedShare;
+			this.Strata = Strata;
 		}
 
 		/// <summary>What <see cref="CreedShare"/> holds when the attribute was not written. Not
@@ -266,7 +291,8 @@ namespace ThousandAndFirst
 
 		/// <summary>True when nothing here can refuse anything.</summary>
 		public bool IsOpen => string.IsNullOrEmpty(Districts) && MinZones <= 0 && string.IsNullOrEmpty(Knowledge)
-			&& MinTech <= TechLevel.Hands && string.IsNullOrEmpty(Builders) && string.IsNullOrEmpty(Creed);
+			&& MinTech <= TechLevel.Hands && string.IsNullOrEmpty(Builders) && string.IsNullOrEmpty(Creed)
+			&& string.IsNullOrEmpty(Strata);
 	}
 
 	/// <summary>
@@ -300,12 +326,14 @@ namespace ThousandAndFirst
 	}
 
 	/// <summary>
-	/// Engine-free rules for what a founder may commission and where. Four gates sit on top of
+	/// Engine-free rules for what a founder may commission and where. Four gates sat on top of
 	/// the city style and growth stage <c>KingdomRules</c> already applies: the district the
 	/// ground carries, how much ground the realm holds, which designs the keepers have learned,
-	/// and how far the settlement's own craft has come.
+	/// and how far the settlement's own craft has come. Addendum 16 added the three creed gates
+	/// and Addendum 15 added <c>Strata</c> &mdash; which set of the catalogue a design lives in,
+	/// and which strata it may stand in besides.
 	/// <para>
-	/// All four are OPTIONAL attributes on a <c>&lt;building&gt;</c> entry and an absent
+	/// Every one of them is an OPTIONAL attribute on a <c>&lt;building&gt;</c> entry and an absent
 	/// attribute gates nothing, which is what keeps every entry written before this existed
 	/// &mdash; ours and every third party's &mdash; working untouched (STANDARDS 6).
 	/// </para>
@@ -643,6 +671,224 @@ namespace ThousandAndFirst
 				}
 			}
 			return JoinOr(names);
+		}
+
+		// ==================================================================================
+		// Strata (Addendum 15): the catalogue has more than one set, and a design says which.
+		// ==================================================================================
+
+		/// <summary>Ground with the weather over it. Every design written before strata existed
+		/// belongs here, and the token is the one <see cref="StrataAdmits"/> falls back to when a
+		/// design says nothing about the sky.</summary>
+		public const string StratumSurface = "surface";
+
+		/// <summary>Under the rock: carved works whose enclosure is free because the rock is the
+		/// wall, and a food lane grown rather than sown.</summary>
+		public const string StratumDeep = "deep";
+
+		/// <summary>Ground that is another building's roof. A FILTERED SUBSET of
+		/// <see cref="StratumSurface"/> rather than a set of its own (Addendum 15), which is
+		/// exactly how <see cref="StrataAdmits"/> reads it.</summary>
+		public const string StratumSky = "sky";
+
+		/// <summary>Inside the shell. Named here so the vocabulary is whole and the crown wave adds
+		/// records rather than tokens &mdash; Addendum 15 holds the arcology SET back until the
+		/// capital exists, and naming a token ships no set.</summary>
+		public const string StratumArcology = "arcology";
+
+		/// <summary>
+		/// The stratum a design LIVES in: the first welcomed token of its <c>Strata</c> list.
+		/// A design that declares nothing, or nothing but refusals, lives on the surface &mdash;
+		/// which is where the whole catalogue lived before this attribute existed.
+		/// </summary>
+		public static string HomeStratum(string Strata)
+		{
+			foreach (string token in Tokens(Strata))
+			{
+				if (token[0] != NegationPrefix && token != AnyToken)
+				{
+					return token;
+				}
+			}
+			return StratumSurface;
+		}
+
+		/// <summary>
+		/// Every stratum a design may stand in beside its home, in the order the author wrote them.
+		/// Empty for a design that shares nowhere, and empty for one that declares nothing &mdash;
+		/// a design with no <c>Strata</c> stands everywhere by default rather than by sharing, and
+		/// saying otherwise would put every entry in the catalogue in every set.
+		/// </summary>
+		public static List<string> StrataShared(string Strata)
+		{
+			List<string> shared = new List<string>();
+			string home = null;
+			foreach (string token in Tokens(Strata))
+			{
+				if (token[0] == NegationPrefix || token == AnyToken)
+				{
+					continue;
+				}
+				if (home == null)
+				{
+					home = token;
+					continue;
+				}
+				if (!shared.Contains(token))
+				{
+					shared.Add(token);
+				}
+			}
+			return shared;
+		}
+
+		/// <summary>
+		/// Whether a design may stand in one stratum. The tag idiom
+		/// (<see cref="TagAccepts"/>) with one clause added, and the clause is Addendum 15's
+		/// second ruling: <b>the sky is a filtered subset of the surface</b>. A design that never
+		/// mentions the sky is admitted there exactly as it is admitted to the surface, so the sky
+		/// set is the surface set minus what filters itself out with <c>!sky</c> rather than a
+		/// second enumeration somebody has to keep in step.
+		/// <para>
+		/// An absent list admits every stratum. That is the whole back-compatibility promise: the
+		/// weep-tap declares nothing and goes on being cut into rock, and no shipped entry &mdash;
+		/// ours or a third party's &mdash; loses ground the day this attribute lands.
+		/// </para>
+		/// </summary>
+		/// <param name="Strata">The design's <c>Strata</c> attribute. Null and empty admit
+		/// everything.</param>
+		/// <param name="Stratum">The ground's stratum, from <see cref="StratumOfGround"/>. Null is
+		/// admitted, so a caller who cannot name the ground is never the reason for a refusal.</param>
+		public static bool StrataAdmits(string Strata, string Stratum)
+		{
+			List<string> tokens = Tokens(Strata);
+			if (tokens.Count == 0)
+			{
+				return true;
+			}
+			string stratum = Fold(Stratum);
+			if (stratum == null)
+			{
+				return true;
+			}
+			if (stratum == StratumSky && !Mentions(tokens, StratumSky))
+			{
+				return TagAccepts(Strata, StratumSurface);
+			}
+			return TagAccepts(Strata, stratum);
+		}
+
+		/// <summary>
+		/// The stratum a piece of ground is: the two the ground itself can name today. The sky and
+		/// the arcology are ground some other building carries, so nothing derives them from a zone
+		/// id and this never returns them.
+		/// </summary>
+		/// <param name="Underground">Whether the ground is below <c>KingdomRules.SurfaceZLevel</c>
+		/// (<c>KingdomPlotRules.IsUnderground</c>).</param>
+		public static string StratumOfGround(bool Underground)
+		{
+			return Underground ? StratumDeep : StratumSurface;
+		}
+
+		/// <summary>
+		/// What the founder calls a stratum. A token this build does not ship comes back as the
+		/// author wrote it, because the strata set is open the way every tag set here is: a third
+		/// party's seabed names itself in the refusal rather than reading as a blank.
+		/// <para>
+		/// Deliberately not the same words as <see cref="StratumName(bool)"/>, which is older and
+		/// answers a different question: that one names the WEATHER a design was refused for want
+		/// of, and this one names the GROUND a design belongs to. A carved cell wants no weather
+		/// and is still refused on the surface.
+		/// </para>
+		/// </summary>
+		public static string StratumName(string Stratum)
+		{
+			string stratum = Fold(Stratum);
+			if (stratum == null || stratum == StratumSurface)
+			{
+				return "open ground";
+			}
+			if (stratum == StratumDeep)
+			{
+				return "the deep";
+			}
+			if (stratum == StratumSky)
+			{
+				return "the sky";
+			}
+			if (stratum == StratumArcology)
+			{
+				return "the arcology";
+			}
+			return stratum;
+		}
+
+		/// <summary>
+		/// A <c>Strata</c> list read back as founder-facing prose: "the deep", "the deep or open
+		/// ground", "open ground, but never the sky". The sentence a refusal owes the founder
+		/// (STANDARDS 7b) &mdash; it names every stratum that WOULD take the design, not merely the
+		/// one that would not.
+		/// </summary>
+		/// <returns>Null when the list gates nothing, so a caller can drop the whole clause.</returns>
+		public static string DescribeStrata(string Strata)
+		{
+			List<string> tokens = Tokens(Strata);
+			if (tokens.Count == 0)
+			{
+				return null;
+			}
+			List<string> welcomed = new List<string>();
+			List<string> refused = new List<string>();
+			bool takesAll = false;
+			for (int i = 0; i < tokens.Count; i++)
+			{
+				string token = tokens[i];
+				if (token[0] == NegationPrefix)
+				{
+					string name = token.Substring(1).Trim();
+					if (name.Length > 0 && !refused.Contains(StratumName(name)))
+					{
+						refused.Add(StratumName(name));
+					}
+					continue;
+				}
+				if (token == AnyToken)
+				{
+					takesAll = true;
+					continue;
+				}
+				if (!welcomed.Contains(StratumName(token)))
+				{
+					welcomed.Add(StratumName(token));
+				}
+			}
+			if (welcomed.Count == 0 && refused.Count == 0)
+			{
+				return null;
+			}
+			if (welcomed.Count == 0)
+			{
+				return "any stratum but " + JoinOr(refused);
+			}
+			string said = takesAll ? ("any stratum, or " + JoinOr(welcomed)) : JoinOr(welcomed);
+			return (refused.Count == 0) ? said : (said + ", but never " + JoinOr(refused));
+		}
+
+		// Whether a list says anything at all about one stratum, welcome or refusal. The sky
+		// clause turns on this rather than on TagAccepts: a design that has NOT mentioned the sky
+		// is the one that inherits the surface's answer, and one that wrote `!sky` has mentioned it.
+		private static bool Mentions(List<string> Tokens, string Stratum)
+		{
+			for (int i = 0; i < Tokens.Count; i++)
+			{
+				string token = Tokens[i];
+				string name = (token[0] == NegationPrefix) ? token.Substring(1).Trim() : token;
+				if (name == Stratum)
+				{
+					return true;
+				}
+			}
+			return false;
 		}
 
 		/// <summary>
@@ -1189,6 +1435,21 @@ namespace ThousandAndFirst
 		public static ZoneGate ParseGateAttributes(string Key, string Districts, string MinZones, string Knowledge, string MinTech,
 			string Builders, string Creed, string CreedShare, out string Error)
 		{
+			return ParseGateAttributes(Key, Districts, MinZones, Knowledge, MinTech, Builders, Creed, CreedShare, null, out Error);
+		}
+
+		/// <summary>
+		/// The same parse with Addendum 15's <c>Strata</c> folded in. A third overload for the
+		/// reason there was a second: the shape below it is published and a third party may already
+		/// be calling it (STANDARDS &sect;9), so it is this one with a null.
+		/// </summary>
+		/// <param name="Strata">The <c>Strata</c> attribute, or null. A list of nothing but
+		/// <see cref="AnyToken"/> is dropped to null, because a design that stands in every stratum
+		/// is a design that declares none &mdash; but <c>all,!deep</c> is KEPT, since a list that
+		/// refuses something is restricting something.</param>
+		public static ZoneGate ParseGateAttributes(string Key, string Districts, string MinZones, string Knowledge, string MinTech,
+			string Builders, string Creed, string CreedShare, string Strata, out string Error)
+		{
 			List<string> faults = new List<string>();
 			string districts = null;
 			if (!string.IsNullOrEmpty(Districts) && Districts.Trim().Length > 0)
@@ -1265,8 +1526,21 @@ namespace ThousandAndFirst
 					faults.Add("CreedShare (no Creed to take a share of)");
 				}
 			}
+			string strata = null;
+			if (!string.IsNullOrEmpty(Strata) && Strata.Trim().Length > 0)
+			{
+				strata = NormalizeList(Strata);
+				if (strata == null)
+				{
+					faults.Add("Strata");
+				}
+				else if (Tokens(strata).Count == 1 && ListContains(strata, AnyToken))
+				{
+					strata = null;
+				}
+			}
 			Error = (faults.Count == 0) ? null : ("building " + Key + " has a bad " + JoinOr(faults) + "; the attribute was ignored");
-			return new ZoneGate(districts, minZones, knowledge, minTech, builders, creed, creedShare);
+			return new ZoneGate(districts, minZones, knowledge, minTech, builders, creed, creedShare, strata);
 		}
 
 		/// <summary>
@@ -1298,9 +1572,11 @@ namespace ThousandAndFirst
 		/// catalogue still shows &mdash; a list that silently shortens teaches nothing.
 		/// </para>
 		/// <para>
-		/// Only the surface-only half of the stratum subset is expressible from what the
-		/// catalogue declares today: nothing can yet say "this design belongs to the deep". That
-		/// half wants an authored attribute and is deliberately not faked here.
+		/// That derived half is no longer the whole of it. Addendum 15's <c>Strata</c> attribute is
+		/// the authored half this comment used to say was missing: a design names the set it lives
+		/// in and the strata it shares into, and <see cref="StrataAdmits"/> is where "this design
+		/// belongs to the deep" is finally sayable. This overload derives the stratum from the
+		/// depth; the overload below takes it.
 		/// </para>
 		/// </summary>
 		/// <param name="Underground">Whether the ground is below <c>KingdomRules.SurfaceZLevel</c>
@@ -1331,6 +1607,34 @@ namespace ThousandAndFirst
 		/// <param name="Roll">Who lives here. <see cref="BuilderRoll.Unknown"/> permits.</param>
 		public static ZoningJudgement Judge(ZoneGate Gate, string TileDistrict, string Category, int ClaimedZones,
 			IEnumerable<string> Roster, bool Underground, bool RequiresSky, BuilderRoll Roll)
+		{
+			return Judge(Gate, TileDistrict, Category, ClaimedZones, Roster, Underground, RequiresSky, Roll,
+				StratumOfGround(Underground));
+		}
+
+		/// <summary>
+		/// The same verdict with the ground's own STRATUM named rather than derived, which is what
+		/// Addendum 15's separate building sets are judged against.
+		/// <para>
+		/// Two depth questions are asked here and they are not the same one.
+		/// <see cref="StratumAccepts"/> asks whether WEATHER reaches this ground, which is a fact
+		/// about the rock and answers the design's <c>Sky</c> flag. <see cref="StrataAdmits"/> asks
+		/// whether this design's SET stands here, which is a fact about the catalogue and answers
+		/// its <c>Strata</c> list. A carved cell wants no weather and is still refused on open
+		/// ground; an air-well wants weather and is still refused under it. Both refuse as
+		/// <see cref="ZoningVerdict.RefusedStratum"/> because they are the same refusal at the same
+		/// scale, and each names the stratum that would take the design instead.
+		/// </para>
+		/// <para>
+		/// <paramref name="Underground"/> and <paramref name="Stratum"/> are both taken rather than
+		/// one derived from the other, because they will stop agreeing: an arcology floor is not
+		/// under the rock and has no weather over it either.
+		/// </para>
+		/// </summary>
+		/// <param name="Stratum">The ground's stratum, from <see cref="StratumOfGround"/>. Null
+		/// admits every design, so ground nobody could name never refuses one.</param>
+		public static ZoningJudgement Judge(ZoneGate Gate, string TileDistrict, string Category, int ClaimedZones,
+			IEnumerable<string> Roster, bool Underground, bool RequiresSky, BuilderRoll Roll, string Stratum)
 		{
 			if (!Aligned(Roll, Gate.Creed))
 			{
@@ -1366,6 +1670,14 @@ namespace ThousandAndFirst
 			{
 				return new ZoningJudgement(ZoningVerdict.RefusedStratum, StratumName(Underground: false), "wants open sky");
 			}
+			// Asked second because the weather refusal is the one nothing can answer, and a founder
+			// told "claim ground in the deep" for a design that would want sun when they got there
+			// would have been sent a parasang the wrong way.
+			if (!StrataAdmits(Gate.Strata, Stratum))
+			{
+				return new ZoningJudgement(ZoningVerdict.RefusedStratum, DescribeStrata(Gate.Strata),
+					"wants " + StratumName(HomeStratum(Gate.Strata)));
+			}
 			if (!DistrictAccepts(TileDistrict, Gate.Districts, Category))
 			{
 				string where = DescribeDistricts(Gate.Districts);
@@ -1374,8 +1686,9 @@ namespace ThousandAndFirst
 			return ZoningJudgement.Allowed;
 		}
 
-		/// <summary>Whether this stratum will take this design at all. The one depth rule the
-		/// catalogue can state today: weather does not reach under the rock.</summary>
+		/// <summary>Whether the WEATHER a design wants reaches this ground: it does not, under the
+		/// rock. The derived half of the depth gate, and the older one. What SET a design belongs
+		/// to is the authored half and is <see cref="StrataAdmits"/>.</summary>
 		public static bool StratumAccepts(bool Underground, bool RequiresSky)
 		{
 			return !(Underground && RequiresSky);

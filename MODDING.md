@@ -229,6 +229,7 @@ never one that becomes unreachable with no way to find out why.
 | `MinZones` | Claimed zones the realm must hold. The eight designs that declare 2/3/4 line up with `MinStage` `Village`/`Town`/`City` — see `KingdomZoningRules.ZonesForStage`, which is also the ceiling the founder's own claim is checked against, so a settlement reaches the ground a design wants at the same moment it reaches the stage that wants it. Reachable now: the founder claims bordering ground (including a stratum directly above or below) from the Charter's **Claim this ground**. |
 | `Knowledge` | Comma list of things the settlement must know, **all** of them. A requirement written `kind:name` must match that kind exactly; one written as a bare name is satisfied by any kind. Kinds: `disk` (a design taught to the keepers from a data disk the founder carried home — the disk is read and handed back, never spent), `machine` (a machine hauled home and certified fit for the grid), `origin` (a trade the settlement holds because somebody from that country lives there, so it comes and goes with them). Invent your own kind freely; an unknown kind gates perfectly well and is worth no craft. |
 | `MinTech` | Craft the settlement must have reached: `hands` (the start, gates nothing), `salvage`, `workshop`, `foundry`, `arclight`. |
+| `Strata` | Which set of the catalogue the design lives in and which strata it may also stand in (Addendum 15). The **first** welcomed token is the home stratum; the rest are share-tags: `Strata="deep,surface"` lives in the deep and may stand on the surface. Same spellings as `Styles` (`all`, a leading `!` for "everywhere except"). Tokens today: `surface`, `deep`, `sky`, `arcology` — and the set is open, so a third-party stratum names itself. **Absent means everywhere**, which is why every record written before this attribute existed still stands wherever it stood. Sky is a filtered subset of the surface: a list that does not mention `sky` answers for sky ground exactly as it answers for the surface, so only `!sky` (or a sky home) separates them. `Sky="yes"` on the plot spec is a different question — wanting open weather — and is asked first. |
 
 A fifth kind is reserved by convention: `pattern` (a foreign design a chartered caravan
 occasionally offers a choice of, never taught by any disk, machine, or origin — see
@@ -906,6 +907,11 @@ Anything the settlement built (`KingdomBuilt=1`) or that the founder dedicated (
 and that accepts charge is filled from it — a charging post, a kiln, your own machine. Nothing the
 player merely left standing about is ever charged or read. The settlement does **not** use
 vanilla's `IPowerTransmission` grid, so you do not need to run conduit to anything.
+
+One more surface, for anything that spends more than its share: `KingdomDailyDraw` — an int
+property any settlement-built object may carry to declare what it spends on the power lane in a
+day. Absent or zero means one charging post's worth (`KingdomPowerRules.PostDailyNeedCharge`).
+The mirror-gate declares three.
 
 ## Happenings, ambience, and what a creed thinks of the founder
 

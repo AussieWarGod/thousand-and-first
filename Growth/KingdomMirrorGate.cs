@@ -1,0 +1,568 @@
+using System;
+
+using ThousandAndFirst;
+using ThousandAndFirst.Simulation.City;
+
+// XRL.World.Parts, for the reason r_KingdomPlot and r_KingdomLiquidConduit both state:
+// GamePartBlueprint resolves a part named in XML as exactly "XRL.World.Parts.<Name>" and tries no
+// other name (GamePartBlueprint.cs:178, :240). Only the part moves; the settlement-side resolver
+// below stays where the rest of the mod's code lives.
+namespace XRL.World.Parts
+{
+	/// <summary>
+	/// An arch keyed onto another of the founder's cities: step into it there, step out of it here.
+	/// <para>
+	/// <b>Inherit and extend, per Addendum 11(c)'s preference order.</b> The crossing itself is
+	/// vanilla's and is not reimplemented: <c>TeleporterPair</c> already carries
+	/// <c>LocationKey</c>/<c>DestinationKey</c> as game-state keys, publishes a cell address under
+	/// the first and reads a destination out of the second
+	/// (<c>D/XRL/World/Parts/TeleporterPair.cs:213-222</c>, <c>:166-175</c>), refuses to move
+	/// anyone with hostiles nearby (<c>:177-184</c>), and ends in <c>GameObject.ZoneTeleport</c>
+	/// (<c>:205</c>). All of that is inherited whole. What is added here is the part vanilla has no
+	/// opinion about, because vanilla's pair is a trinket in a satchel and this is a building on a
+	/// plot: an anchor that does not wait for the object to be picked up, a dedication rite, a
+	/// standing draw on the settlement's 12(g) power lane, and a brownout that closes it.
+	/// </para>
+	/// <para>
+	/// <b>Two knobs are turned off in the constructor and both are rulings rather than tuning.</b>
+	/// <c>ChargeUse</c> is zero because Addendum 22 A2 rules the standing draw the whole price of
+	/// the crossing &mdash; a per-step charge would be the second toll that addendum forbids.
+	/// <c>Cooldown</c> is zero because Addendum 8 forbids a timer of our own; what rations the
+	/// crossing is what the works can pay, which is a thing in the world.
+	/// </para>
+	/// </summary>
+	[Serializable]
+	public class r_KingdomMirrorGate : TeleporterPair
+	{
+		/// <summary>
+		/// Set while the works could not pay the standing draw. The arch is inert and says so
+		/// &mdash; STANDARDS 7b's applicable-but-blocked case, and the one stall this building can
+		/// have.
+		/// <para>
+		/// This is the state AND the once-flag, exactly as <c>KingdomSettlement.SubsidenceAnnounced</c>
+		/// is both: the founder is told on the crossing from open to dark, and recovery is unsaid in
+		/// silence, which is the discipline <c>KingdomPower.Brownouts</c> already keeps one lane
+		/// over.
+		/// </para>
+		/// </summary>
+		public bool Dark;
+
+		/// <summary>
+		/// Tick this arch last settled its draw to. Zero until the first day boundary plants it,
+		/// which is why an arch never pays for the day it was raised &mdash; the same discipline
+		/// <c>r_KingdomPowerWork.LastResolvedTick</c> keeps, and for the same reason.
+		/// </summary>
+		public long LastDrawTick;
+
+		public r_KingdomMirrorGate()
+		{
+			ChargeUse = 0;
+			Cooldown = 0;
+			// Vanilla's default key is shared by every teleporter orb in the game. Ours is its own
+			// even though nothing reads it at a zero cooldown, because a knob left pointing at
+			// somebody else's state is a bug waiting for the day the cooldown is not zero.
+			CooldownKey = "r_TAF_MirrorGateLastUsed";
+			WorksOnCellContents = true;
+			WorksOnAdjacentCellContents = true;
+		}
+
+		public override bool WantEvent(int ID, int cascade)
+		{
+			return base.WantEvent(ID, cascade) || ID == GetShortDescriptionEvent.ID;
+		}
+
+		/// <summary>
+		/// A dark arch is a part with its own reason for not working, and vanilla has a word for
+		/// that (<c>D/XRL/World/Parts/IActivePart.cs:1941</c>, <c>:2010-2012</c>). Declaring it here
+		/// rather than only in our own refusal is what makes every other reader honest at once: the
+		/// tech scan says why, an <c>AnimatedMaterialGeneric</c> keyed to this part stops running
+		/// the lit frames, and vanilla's own <c>AttemptTeleport</c> refuses a crossing the works did
+		/// not pay for even if some future caller reaches it without going through
+		/// <c>KingdomMirrorGate.Cross</c>.
+		/// </summary>
+		public override bool GetActivePartLocallyDefinedFailure()
+		{
+			return Dark;
+		}
+
+		/// <summary>Vanilla's own vocabulary for these &mdash; <c>WindTurbine</c> answers
+		/// <c>WindSpeedInsufficient</c> and <c>HydroTurbine</c> <c>HydrodynamicForceInsufficient</c>
+		/// &mdash; so a founder reading a status list sees one kind of word, not two.</summary>
+		public override string GetActivePartLocallyDefinedFailureDescription()
+		{
+			return "ChargeSupplyInsufficient";
+		}
+
+		/// <summary>
+		/// A day also turns over while the founder is standing there watching it, so the arch keeps
+		/// its own absolute stamp rather than a countdown that must be delivered every turn to stay
+		/// correct. <c>r_KingdomPowerWork</c>, <c>r_KingdomPlot</c> and <c>r_KingdomScaffold</c> all
+		/// keep time this way; missing ticks costs nothing.
+		/// </summary>
+		public override bool WantTurnTick()
+		{
+			return true;
+		}
+
+		public override void TurnTick(long TimeTick, int Amount)
+		{
+			if (LastDrawTick <= 0L)
+			{
+				// Planted at now rather than at tick zero: an arch raised this afternoon is not
+				// billed for every day since the world began.
+				LastDrawTick = TimeTick;
+				return;
+			}
+			if (TimeTick < LastDrawTick + KingdomRules.TicksPerDay)
+			{
+				return;
+			}
+			Zone zone = ParentObject?.CurrentZone;
+			KingdomSystem system = The.Game?.RequireSystem<KingdomSystem>();
+			if (zone == null || system == null || !system.Founded || system.ClaimedZones == null || !system.ClaimedZones.Contains(zone.ZoneID))
+			{
+				return;
+			}
+			KingdomSystem.Guard("mirror-gate day", delegate
+			{
+				KingdomMirrorGate.Settle(this, system, zone, TimeTick);
+			});
+		}
+
+		public override bool HandleEvent(GetShortDescriptionEvent E)
+		{
+			E.Postfix.Append(KingdomMirrorGate.DescriptionLine(this));
+			return base.HandleEvent(E);
+		}
+
+		/// <summary>
+		/// Deliberately not <c>base.HandleEvent</c>: the base offers "Activate" and writes its own
+		/// cooldown into the label, and neither sentence can describe this thing. An arch that is
+		/// dark is not an arch on cooldown, and an arch that has never been keyed is not an arch at
+		/// all yet.
+		/// </summary>
+		public override bool HandleEvent(GetInventoryActionsEvent E)
+		{
+			E.AddAction("Dedicate", KingdomMirrorGate.DedicateLabel(this), "r_DedicateMirrorGate", null, 'd', FireOnActor: false, 5);
+			E.AddAction("Cross", KingdomMirrorGate.CrossLabel(this), "r_CrossMirrorGate", null, 'c', FireOnActor: false, 100);
+			return true;
+		}
+
+		public override bool HandleEvent(InventoryActionEvent E)
+		{
+			if (E.Command == "r_DedicateMirrorGate" && E.Actor != null && E.Actor.IsPlayer())
+			{
+				KingdomMirrorGate.Dedicate(this, E.Actor);
+				return true;
+			}
+			if (E.Command == "r_CrossMirrorGate" && E.Actor != null && E.Actor.IsPlayer())
+			{
+				if (KingdomMirrorGate.Cross(this, E.Actor, E))
+				{
+					E.Actor.UseEnergy(1000, "Mirror Gate");
+					E.RequestInterfaceExit();
+				}
+				return true;
+			}
+			return base.HandleEvent(E);
+		}
+
+		/// <summary>
+		/// The base's own location sync is written for a trinket that moves &mdash; it fires on
+		/// Equipped, EnteredCell and AddedToInventory, and writes under whatever
+		/// <c>LocationKey</c> happens to hold. A building fires exactly one of those, once, at
+		/// placement, when the key is still empty; so the key is composed from the ground first and
+		/// vanilla's sync then does what it was always going to do.
+		/// </summary>
+		public override bool FireEvent(Event E)
+		{
+			if (E.ID == "EnteredCell")
+			{
+				KingdomSystem.Guard("mirror-gate anchor", delegate
+				{
+					KingdomMirrorGate.Anchor(this);
+				});
+			}
+			return base.FireEvent(E);
+		}
+	}
+}
+
+namespace ThousandAndFirst
+{
+	using XRL;
+	using XRL.Messages;
+	using XRL.UI;
+	using XRL.World;
+	using XRL.World.Parts;
+
+	/// <summary>
+	/// The engine-coupled half of the mirror-gate: anchoring an arch on real ground, the dedication
+	/// rite, the standing draw settled against real charge, and the crossing itself.
+	/// <para>
+	/// <b>The register is the pairing.</b> An arch never writes on its twin, because its twin is
+	/// almost always standing in a zone nobody has loaded. Both ends write only their own key; one
+	/// string in the game's own state says who answers whom, exactly as one string carries the
+	/// keepers' knowledge roster (<c>KingdomZoning.Roster</c>). That is what makes the capital-hub
+	/// re-keying QUESTION-BACKLOG QB-1 defers a rewrite of one column rather than a walk over
+	/// dormant cities, and it is why <c>KingdomMirrorGateRules.TryPair</c> exists as its own rule.
+	/// </para>
+	/// <para>
+	/// Every decision that does not need a real object &mdash; who may answer whom, what a day
+	/// costs, whether the works paid it, every refusal's wording &mdash; is delegated to the
+	/// engine-free <see cref="KingdomMirrorGateRules"/>.
+	/// </para>
+	/// </summary>
+	internal static class KingdomMirrorGate
+	{
+		/// <summary>The standing draw an arch declares to the 12(g) lane, where the lane can read it
+		/// off the object without knowing what a mirror-gate is.</summary>
+		internal const string DailyDrawProperty = "KingdomDailyDraw";
+
+		/// <summary>
+		/// Writes this arch's own cell address under its own key, and reads back out of the register
+		/// which arch it answers.
+		/// <para>
+		/// Cheap and idempotent, so it runs before every act rather than being scheduled: two
+		/// dictionary writes and a string split. Nothing here loads a zone.
+		/// </para>
+		/// </summary>
+		internal static void Anchor(r_KingdomMirrorGate Gate)
+		{
+			if (Gate == null || The.Game == null)
+			{
+				return;
+			}
+			Cell cell = Gate.ParentObject?.CurrentCell;
+			Zone zone = cell?.ParentZone;
+			if (zone == null)
+			{
+				return;
+			}
+			string key = KingdomMirrorGateRules.ComposeLocationKey(zone.ZoneID, cell.X, cell.Y);
+			if (string.IsNullOrEmpty(key))
+			{
+				return;
+			}
+			Gate.LocationKey = key;
+			The.Game.SetStringGameState(key, cell.GetAddress());
+			string partner = KingdomMirrorGateRules.PartnerOf(Register(null), key);
+			Gate.DestinationKey = partner;
+			// Declared where the power lane can read it, and only while the arch actually answers
+			// something: an unkeyed arch draws nothing, because idleness costs nothing (Addendum 8).
+			Gate.ParentObject.SetIntProperty(DailyDrawProperty, (partner.Length == 0) ? 0 : KingdomMirrorGateRules.OpenChargePerDay);
+		}
+
+		/// <summary>
+		/// One day boundary's worth of the standing draw, settled against the city's real charge.
+		/// <para>
+		/// <b>The works run first.</b> This calls the ordinary settlement power pass before drawing,
+		/// so the day's charge is in the salt before the arch reaches for it; without that, whether
+		/// a crossing survived a week away would depend on which part happened to tick first.
+		/// The pass stamps its own works to now, so calling it here costs a second visit nothing.
+		/// </para>
+		/// </summary>
+		internal static void Settle(r_KingdomMirrorGate Gate, KingdomSystem System, Zone Z, long TimeTick)
+		{
+			Anchor(Gate);
+			if (string.IsNullOrEmpty(Gate.DestinationKey))
+			{
+				Gate.LastDrawTick = TimeTick;
+				Gate.Dark = false;
+				return;
+			}
+			long days;
+			KingdomCityFault fault;
+			if (!KingdomProductionRules.TryDaysBetween(Gate.LastDrawTick, TimeTick, KingdomRules.TicksPerDay, out days, out fault) || days <= 0L)
+			{
+				return;
+			}
+			string city = CityOf(System, Z.ZoneID);
+			if (!KingdomPower.Enabled)
+			{
+				// The lane the arch draws on has been switched off entirely. It cannot be paid, and
+				// a founder who turned power off is owed the sentence rather than a dead arch.
+				Gate.LastDrawTick = TimeTick;
+				GoDark(Gate, System, city);
+				return;
+			}
+			KingdomSurvey survey = KingdomSurvey.Take(Z, System);
+			KingdomGrowth.AssignWork(System, survey);
+			KingdomPower.OnSettlementPass(System, Z, survey);
+			int owed = KingdomMirrorGateRules.DrawForDays(days);
+			int before = Gate.ParentObject.QueryCharge();
+			KingdomGateHold hold = KingdomMirrorGateRules.JudgeHold(owed, before);
+			Gate.LastDrawTick = TimeTick;
+			if (hold == KingdomGateHold.Held)
+			{
+				Gate.ParentObject.UseCharge(owed);
+				// Measured, never trusted: UseCharge reports what it found convenient, and what the
+				// arch actually cost the city is the difference between two readings (STANDARDS §1).
+				int spent = before - Gate.ParentObject.QueryCharge();
+				if (spent < owed)
+				{
+					hold = KingdomGateHold.Lost;
+				}
+				if (KingdomLog.Enabled) KingdomLog.Log("mirror-gate " + Gate.LocationKey + " days=" + days + " owed=" + owed + " spent=" + spent + " held=" + (hold == KingdomGateHold.Held));
+			}
+			if (hold == KingdomGateHold.Lost)
+			{
+				GoDark(Gate, System, city);
+				return;
+			}
+			if (hold == KingdomGateHold.Held)
+			{
+				// Recovery is unsaid, and unsaid in silence: a settlement that announced every
+				// return to normal would be a settlement that talks about itself constantly, which
+				// is the thing 7b's own complaint is actually about.
+				Gate.Dark = false;
+			}
+		}
+
+		/// <summary>
+		/// The dedication rite, on the arch itself rather than in the Charter: the Charter's letters
+		/// are full at thirty-six, and a new entry there would be a chapter rather than a line. The
+		/// verb idiom is the Charter's own &mdash; disclose the whole cost, ask, then act, and
+		/// surface only a decline (<c>KingdomCharterPart.CertifyMachine</c>).
+		/// </summary>
+		internal static void Dedicate(r_KingdomMirrorGate Gate, GameObject Actor)
+		{
+			KingdomSystem system = The.Game?.RequireSystem<KingdomSystem>();
+			if (system == null || !system.Founded)
+			{
+				Popup.Show("You rule nothing yet, and an arch keyed to nowhere is a wall with a hole in it.");
+				return;
+			}
+			Cell cell = Gate.ParentObject?.CurrentCell;
+			Zone zone = cell?.ParentZone;
+			if (zone == null)
+			{
+				return;
+			}
+			string city = CityOf(system, zone.ZoneID);
+			if (city == null)
+			{
+				Popup.Show(KingdomMirrorGateRules.NotOurGroundLine);
+				return;
+			}
+			if (Gate.ParentObject.GetIntProperty("KingdomBuilt") != 1 && Gate.ParentObject.GetIntProperty("KingdomGrid") != 1)
+			{
+				Popup.Show(KingdomMirrorGateRules.NotOurWorkLine);
+				return;
+			}
+			Anchor(Gate);
+			if (string.IsNullOrEmpty(Gate.LocationKey))
+			{
+				Popup.Show(KingdomMirrorGateRules.RefusalLine(KingdomGateVerdict.RefusedNamed, city));
+				return;
+			}
+			KingdomGateRow[] rows = Register(system);
+			if (KingdomMirrorGateRules.IndexOfKey(rows, Gate.LocationKey) >= 0)
+			{
+				Release(Gate, system, rows, city);
+				return;
+			}
+			int held = KingdomMirrorGateRules.IndexOfCity(rows, city);
+			if (held >= 0)
+			{
+				Popup.Show(KingdomMirrorGateRules.RefusalLine(KingdomGateVerdict.RefusedCityKeyed, rows[held].City));
+				return;
+			}
+			if (Popup.ShowYesNo(KingdomMirrorGateRules.DedicationPrompt(city)) != DialogResult.Yes)
+			{
+				return;
+			}
+			KingdomGateRow[] next;
+			string partner;
+			KingdomGateVerdict verdict = KingdomMirrorGateRules.TryDedicate(rows, Gate.LocationKey, city, out next, out partner);
+			if (verdict != KingdomGateVerdict.Offered && verdict != KingdomGateVerdict.Joined)
+			{
+				Popup.Show(KingdomMirrorGateRules.RefusalLine(verdict, city));
+				return;
+			}
+			Write(next);
+			Anchor(Gate);
+			if (verdict == KingdomGateVerdict.Offered)
+			{
+				system.Ledger.Note("{{C|" + KingdomMirrorGateRules.OfferedLine(city) + "}}");
+				MessageQueue.AddPlayerMessage("{{C|" + KingdomMirrorGateRules.OfferedLine(city) + "}}");
+				return;
+			}
+			string there = CityNamed(next, partner);
+			system.Ledger.Note("{{G|" + KingdomMirrorGateRules.JoinedLine(city, there) + "}}");
+			MessageQueue.AddPlayerMessage("{{G|" + KingdomMirrorGateRules.JoinedLine(city, there) + "}}");
+			system.RecordDeed("the arch of " + city + " opened onto " + there);
+			KingdomChronicle.Record(system, KingdomMirrorGateRules.JoinedTelling(city, there), Accomplishment: true);
+		}
+
+		/// <summary>
+		/// One crossing. Every refusal this can give is said out loud, because a founder standing in
+		/// front of an arch that does nothing has asked a question and is owed an answer.
+		/// </summary>
+		/// <returns>True once somebody has actually been moved, so the caller spends the turn.</returns>
+		internal static bool Cross(r_KingdomMirrorGate Gate, GameObject Actor, IEvent FromEvent)
+		{
+			KingdomSystem system = The.Game?.RequireSystem<KingdomSystem>();
+			if (system == null || !system.Founded)
+			{
+				Popup.ShowFail(KingdomMirrorGateRules.UnkeyedLine);
+				return false;
+			}
+			Anchor(Gate);
+			if (string.IsNullOrEmpty(Gate.DestinationKey))
+			{
+				Popup.ShowFail(KingdomMirrorGateRules.UnkeyedLine);
+				return false;
+			}
+			if (!KingdomPower.Enabled)
+			{
+				Popup.ShowFail(KingdomMirrorGateRules.NoPowerLine);
+				return false;
+			}
+			if (Gate.Dark)
+			{
+				Popup.ShowFail(KingdomMirrorGateRules.DarkLine);
+				return false;
+			}
+			// Vanilla's own from here down, and deliberately: the hostiles refusal, the destination
+			// address, the cooldown check that costs nothing at a zero cooldown, and the zone
+			// teleport are all TeleporterPair's and all inherited whole.
+			return Gate.AttemptTeleport(Actor, FromEvent);
+		}
+
+		/// <summary>The line the arch carries in its own description.</summary>
+		internal static string DescriptionLine(r_KingdomMirrorGate Gate)
+		{
+			KingdomGateRow[] rows = Register(null);
+			int at = KingdomMirrorGateRules.IndexOfKey(rows, Gate.LocationKey);
+			if (at < 0)
+			{
+				return KingdomMirrorGateRules.DescriptionLine(false, null, false);
+			}
+			return KingdomMirrorGateRules.DescriptionLine(true, CityNamed(rows, rows[at].Partner), Gate.Dark);
+		}
+
+		/// <summary>What the dedication action reads as in the list.</summary>
+		internal static string DedicateLabel(r_KingdomMirrorGate Gate)
+		{
+			return (KingdomMirrorGateRules.IndexOfKey(Register(null), Gate.LocationKey) >= 0)
+				? "unkey this arch"
+				: "key this arch to another of your cities";
+		}
+
+		/// <summary>What the crossing action reads as in the list. The state is in the label, so a
+		/// founder never presses a thing that cannot work and then reads why.</summary>
+		internal static string CrossLabel(r_KingdomMirrorGate Gate)
+		{
+			if (string.IsNullOrEmpty(Gate.DestinationKey))
+			{
+				return "{{K|cross}} [unkeyed]";
+			}
+			return Gate.Dark ? "{{K|cross}} [{{r|dark}}]" : "cross";
+		}
+
+		// ==================================================================================
+		// The register
+		// ==================================================================================
+
+		/// <summary>
+		/// The realm's arches, read out of game state and repaired if it needs it.
+		/// <para>
+		/// A row that cannot be read is dropped, the repaired register is written back, and the
+		/// founder is told once &mdash; which is once and only once because the repair makes the
+		/// condition non-recurring, so no latch is needed anywhere to hold it to that.
+		/// </para>
+		/// </summary>
+		/// <param name="System">Told when a row had to be dropped. Null asks nothing and says
+		/// nothing, which is what the read-only callers want.</param>
+		private static KingdomGateRow[] Register(KingdomSystem System)
+		{
+			if (The.Game == null)
+			{
+				return new KingdomGateRow[0];
+			}
+			KingdomGateRow[] rows;
+			int dropped;
+			KingdomMirrorGateRules.TryParseRegister(The.Game.GetStringGameState(KingdomMirrorGateRules.RegisterStateKey, ""), out rows, out dropped);
+			if (dropped <= 0)
+			{
+				return rows;
+			}
+			Write(rows);
+			KingdomLog.Log("mirror-gate: dropped " + dropped + " unreadable register row(s)");
+			if (System != null && System.Founded)
+			{
+				System.Ledger.Note("{{r|The realm's record of its arches was damaged, and " + dropped + " of them could not be read back. Those arches are standing but unkeyed; key them again.}}");
+			}
+			return rows;
+		}
+
+		private static void Write(KingdomGateRow[] rows)
+		{
+			The.Game?.SetStringGameState(KingdomMirrorGateRules.RegisterStateKey, KingdomMirrorGateRules.FormatRegister(rows));
+		}
+
+		private static void Release(r_KingdomMirrorGate Gate, KingdomSystem System, KingdomGateRow[] rows, string city)
+		{
+			if (Popup.ShowYesNo("Unkey the arch at " + city + "?\n\nIt will stand exactly where it stands and cost nothing at all; the crossing simply stops answering.") != DialogResult.Yes)
+			{
+				return;
+			}
+			KingdomGateRow[] next;
+			string orphan;
+			KingdomGateVerdict verdict = KingdomMirrorGateRules.TryRelease(rows, Gate.LocationKey, out next, out orphan);
+			if (verdict != KingdomGateVerdict.Released)
+			{
+				Popup.Show(KingdomMirrorGateRules.RefusalLine(verdict, city));
+				return;
+			}
+			Write(next);
+			Anchor(Gate);
+			Gate.Dark = false;
+			System.Ledger.Note("{{y|" + KingdomMirrorGateRules.ReleasedLine(city) + "}}");
+			if (orphan.Length > 0)
+			{
+				// The other end was unkeyed by the same act and its own city is nowhere near: told
+				// here, because there is no other moment at which the founder would find out.
+				System.Ledger.Note("{{y|" + KingdomMirrorGateRules.OrphanedLine(CityNamed(next, orphan)) + "}}");
+			}
+		}
+
+		private static void GoDark(r_KingdomMirrorGate Gate, KingdomSystem System, string city)
+		{
+			if (Gate.Dark)
+			{
+				return;
+			}
+			Gate.Dark = true;
+			System.Ledger.Note("{{r|" + KingdomMirrorGateRules.WentDarkLine(city) + "}}");
+			KingdomChronicle.Record(System, KingdomMirrorGateRules.WentDarkTelling(city, System.KingdomDisplayName));
+		}
+
+		/// <summary>The city keeping the arch under this key, or null when nothing does.</summary>
+		private static string CityNamed(KingdomGateRow[] rows, string key)
+		{
+			int at = KingdomMirrorGateRules.IndexOfKey(rows, key);
+			return (at < 0) ? null : rows[at].City;
+		}
+
+		/// <summary>
+		/// Which of the realm's cities holds this ground, or null when the realm does not hold it at
+		/// all. The seat's own zones are read off the system's flat fields and the other city's off
+		/// its record, which is the whole of the seat idiom (<c>KingdomSettlement</c>).
+		/// </summary>
+		private static string CityOf(KingdomSystem System, string ZoneId)
+		{
+			if (System.ClaimedZones != null && System.ClaimedZones.Contains(ZoneId))
+			{
+				return System.SeatName;
+			}
+			KingdomSettlement away = System.Away;
+			if (away != null && away.ClaimedZones != null && away.ClaimedZones.Contains(ZoneId))
+			{
+				return string.IsNullOrEmpty(away.SettlementName) ? System.KingdomDisplayName : away.SettlementName;
+			}
+			return null;
+		}
+	}
+}

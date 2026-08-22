@@ -287,13 +287,14 @@ namespace ThousandAndFirst
 			List<GameObject> sunk = new List<GameObject>();
 			for (int i = 0; i < Sinks.Count && at < count; i++)
 			{
+				int need = DailyNeedOf(Sinks[i]);
 				nodes[at++] = new KingdomNetworkNode(
 					KingdomCityRules.StableId(Sinks[i].ID),
 					KingdomNetworkRole.Sink,
 					TierOf(Sinks[i]),
 					0,
-					KingdomPowerRules.PostDailyNeedCharge);
-				wants.Add(new KingdomFlowDemand(KingdomCityRules.StableId(Sinks[i].ID), TierOf(Sinks[i]), KingdomPowerRules.PostDailyNeedCharge));
+					need);
+				wants.Add(new KingdomFlowDemand(KingdomCityRules.StableId(Sinks[i].ID), TierOf(Sinks[i]), need));
 				sunk.Add(Sinks[i]);
 			}
 			Sinks.Clear();
@@ -332,6 +333,17 @@ namespace ThousandAndFirst
 				return false;
 			}
 			return true;
+		}
+
+		/// <summary>
+		/// What one thing that spends charge wants in a day. A post is the default and the unit the
+		/// whole report is written in; anything that costs more than a post declares it on itself,
+		/// so this lane never has to learn what any particular work is.
+		/// </summary>
+		private static int DailyNeedOf(GameObject Sink)
+		{
+			int declared = Sink.GetIntProperty("KingdomDailyDraw");
+			return (declared > 0) ? declared : KingdomPowerRules.PostDailyNeedCharge;
 		}
 
 		/// <summary>Where a thing that spends charge sits on the brownout ladder, read off the

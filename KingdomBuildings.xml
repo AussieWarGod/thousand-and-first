@@ -307,12 +307,12 @@
   -->
   <!-- STYLE: A seep is a damp seam in LIVING rock, followed back and cased. A ruin field is rubble and fulcrete, and a cut into it finds the last people's drains. -->
   <building Key="weeptap" DisplayName="weep-tap (a damp seam, followed back and cased in stone)" Blueprint="r_KingdomWeepTap"
-            Cost="10" Ticks="2400" Styles="all,!eater" Category="storage" Plot="S" MinStage="Steading"
+            Cost="10" Ticks="2400" Styles="all,!eater" Strata="deep,surface" Category="storage" Plot="S" MinStage="Steading"
             Materials="stone:8,scrap:2" Staff="1" Manning="scaled" Carries="water:4"
             Contents="r_KingdomFurnishings_Water" />
   <!-- STYLE: The whole seam worked - and still a seam, and still not there under a fallen city. -->
   <building Key="weepgallery" DisplayName="weep gallery (the whole seam worked, propped, and drained)" Blueprint="r_KingdomWeepGallery"
-            Cost="26" Ticks="4800" Styles="all,!eater" Category="storage" Plot="M" MinStage="Village"
+            Cost="26" Ticks="4800" Styles="all,!eater" Strata="deep,surface" Category="storage" Plot="M" MinStage="Village"
             Materials="stone:22,shapedstone:4,scrap:6" Staff="1" Manning="scaled" Carries="water:12"
             Contents="r_KingdomFurnishings_Water" Provides="taf:damp" />
 
@@ -490,7 +490,7 @@
             Materials="timber:8,stone:4" Staff="2" Manning="scaled" Carries="craft:2"
             Refines="shapedtimber" />
   <building Key="masonyard" DisplayName="mason's yard (bankers, chisels, and a spoil heap growing all summer)" Blueprint="r_KingdomMasonYard"
-            Cost="16" Ticks="3000" Styles="all" Category="craft" Plot="M" Open="yes" MinStage="Steading"
+            Cost="16" Ticks="3000" Styles="all" Strata="all,!deep" Category="craft" Plot="M" Open="yes" MinStage="Steading"
             Districts="craft,none"
             Materials="stone:14,timber:6" Staff="2" Manning="scaled" Carries="craft:2"
             Refines="shapedstone" />
@@ -716,7 +716,7 @@
   -->
   <!-- STYLE: A cairn is fieldstone and the marsh has none. The grave-grove is what is raised there, and it is the same promise made out of what is to hand. -->
   <building Key="cairn" DisplayName="settler's cairn" Blueprint="r_KingdomCairn"
-            Cost="5" Ticks="1500" Styles="all,!verdant" Category="memorial" Plot="S" Open="yes"
+            Cost="5" Ticks="1500" Styles="all,!verdant" Strata="all,!deep" Category="memorial" Plot="S" Open="yes"
             Materials="stone:5" Carries="spirit:1" />
 
   <!-- ======================================================================== POWER ==
@@ -895,6 +895,74 @@
             Materials="stone:6,scrap:2" Defence="3"
             UpgradesTo="rampart" />
 
+  <!-- ======================================================================= THE DEEP ==
+    Addendum 15: the deep is a SET, not a filtered surface list. A fungal vault is not a
+    dimmed farm, and nothing below is a surface design with the sun taken off it.
+
+    Strata is the attribute that says so. The first name is where the design LIVES and the
+    rest are the strata it may also stand in; an entry that names none stands everywhere,
+    which is why every record above this comment is untouched and the weep-tap is still the
+    only water under the rock. See MODDING.md.
+
+    WHAT THE DEEP IS PAID AND WHAT IT PAYS, and neither number is written here because both
+    are the ground's: carving costs DOUBLE the clearing (KingdomPlotRules.UndergroundClear-
+    Percent) and gives the enclosure back for nothing (EnclosureTicks is zero when the roof
+    is Carved, because the rock the carving left IS the wall). So every record below carries
+    its surface precedent's Cost and Ticks exactly - discounting them here would spend the
+    same bargain twice - and what differs is the MATERIAL, which is stone, because stone is
+    what the cut gave back and there is no timber lane under a mountain.
+
+    NOTHING BELOW DECLARES A ROOF, and that is not an omission. RoofOnGround makes anything
+    not Open into Carved underground, and ProvidedByRoof already gives an enclosed tier
+    `taf:dark`. Declaring what the derivation already gives is a number that looks like a
+    decision - the same rule the fungal cap-roof keeps.
+
+    THE ASYMMETRY, stated so a founder can plan against it: the deep loses the whole sky
+    lane (no dew, no pan, no sailvane, no condensing hall - Sky="yes" already refuses it)
+    and it has NO grand food rung at all. It gains hands: one keeper in a vault feeds six
+    where a field wants two to feed eight, and two in the galleries feed eighteen. A deep
+    city is hand-cheap and ceilinged. That is the trade, and it is meant to be felt.
+
+    Six records. Addendum 15 rules that sets start SMALL and grow by want, never by
+    symmetry - fifteen of the forty base sets sit empty and there is no obligation to fill
+    this one either. The arcology set is NOT here: it waits on the capital wave.
+  -->
+  <building Key="carvedcell" DisplayName="carved cell (cut in an afternoon; the rock does the rest)" Blueprint="r_KingdomCarvedCell"
+            Cost="6" Ticks="1800" Styles="all" Strata="deep" Category="housing" Plot="S"
+            Footprint="4x3"
+            Materials="stone:6" Carries="roof:3" Contents="r_KingdomFurnishings_Dwelling" />
+  <building Key="carvedgallery" DisplayName="carved gallery (cells off one stair, and a door at the top of it)" Blueprint="r_KingdomCarvedGallery"
+            Cost="16" Ticks="3600" Styles="all" Strata="deep" Category="housing" Plot="M" MinStage="Steading"
+            Materials="stone:16" Carries="roof:8" Contents="r_KingdomFurnishings_Dwelling" />
+
+  <!-- The vault is the record Addendum 15 named. It is not the field with the lamps turned
+       down: it is not Open, it wants no season, and it wants ONE keeper where the field wants
+       two - inoculating and scraping is not sowing, weeding and harvesting. What it offers
+       that no field does is `taf:damp`, which KingdomQolRules reads as a NEED for a
+       fungal-bodied settler, so the deep is where those people actually want to live. -->
+  <building Key="fungalvault" DisplayName="fungal vault (spawn run into cut rock, and never a lamp in it)" Blueprint="r_KingdomFungalVault"
+            Cost="14" Ticks="3600" Styles="all" Strata="deep" Category="food" Plot="M" MinStage="Steading"
+            Materials="stone:10" Staff="1" Manning="scaled" Carries="food:6" Provides="taf:damp" />
+  <building Key="vaultgalleries" DisplayName="vault galleries (the whole run worked, propped, and kept damp)" Blueprint="r_KingdomVaultGalleries"
+            Cost="40" Ticks="7200" Styles="all" Strata="deep" Category="food" Plot="L" MinStage="Town"
+            Districts="agrarian,none" MinZones="3"
+            Materials="stone:34,shapedstone:8" Staff="2" Manning="scaled" Carries="food:18" Provides="taf:damp" />
+
+  <!-- STRATUM: A mason's yard is a spoil heap in the open, and the deep's whole difficulty is
+       that spoil has nowhere to go. The cut face is the yard it gets instead - same work, same
+       hands, and a face that never runs out. -->
+  <building Key="deepcut" DisplayName="deep cut (a working face, propped, with the spoil going back into the wall)" Blueprint="r_KingdomDeepCut"
+            Cost="16" Ticks="3000" Styles="all" Strata="deep" Category="craft" Plot="M" MinStage="Steading"
+            Districts="craft,none"
+            Materials="stone:14" Staff="2" Manning="scaled" Carries="craft:2"
+            Refines="shapedstone" />
+
+  <!-- STRATUM: A cairn is fieldstone STACKED, and there is no field. A niche is fieldstone CUT,
+       and the gallery wall is already there. Same promise, made out of what is to hand. -->
+  <building Key="nichetomb" DisplayName="niche tomb (cut in the gallery wall for somebody not yet lost)" Blueprint="r_KingdomNicheTomb"
+            Cost="5" Ticks="1500" Styles="all" Strata="deep" Category="memorial" Plot="S"
+            Materials="stone:5" Carries="spirit:1" />
+
   <!-- =============================================================== CREED-UNIQUE WORKS ==
     Addendum 16: each creed gets works nobody else raises, and they are the only designs in this
     file behind the whole gate stack. Four gates, and every one of them is a separate question:
@@ -938,5 +1006,47 @@
             Builders="creed:Consortium:2" Creed="Consortium" CreedShare="50"
             Materials="stone:22,timber:8,marble:4" Staff="1" Manning="scaled"
             Carries="luxury:4,order:3" />
+
+  <!-- =================================================================== THE MIRROR-GATE ==
+    An EXOTIC in Addendum 20's sense: independently gated, free to build or to skip, a
+    prerequisite of nothing. It is also the only design in the catalogue that gives time back.
+    END-STATE-CITIES-RESEARCH §4.4 is the whole argument - a kingdom of specialised cities is
+    Fallout 4's settlement system until something deletes the commute, and this deletes it.
+
+    THE GATE VOCABULARY, and both halves are derived rather than invented.
+
+    MinTech="arclight" is the catalogue's top rung and this is the first design to ask for it.
+    Craft is derived, never authored (KingdomZoningRules.TechThresholds): fourteen points is
+    seven certified machines, or a mix of disks and machines the keepers actually took apart.
+    A realm that can key an arch has been hauling ruins home for a long time.
+
+    Knowledge="machine:Reprogrammable Recoiler" is the condensery's own pattern one tier up.
+    Vanilla draws the line for us: a recoiler is the machine in Qud that remembers a place and
+    returns to it, the reprogrammable one is Tier 6 and Rare (B/ObjectBlueprints/Items.xml:11400),
+    and it is takeable - so the founder finds one, sets it down on claimed ground, and the keepers
+    certify it (worth two craft points toward the arclight this design wants). What the settlement
+    builds out of that knowledge afterwards is its own, and it is not a recoiler.
+
+    THE COST IS THE POWER, and it is not in this record. Raising the arch costs what is written
+    here; KEEPING it open costs KingdomMirrorGateRules.OpenChargePerDay a day on the 12(g) lane,
+    at BOTH ends, and crossing costs nothing beyond that (Addendum 22 A2: the draw is the price,
+    and there is no second toll). Category="craft" puts it on the brownout ladder's first rung, so
+    a city short of charge gives up its crossing before it gives up its forge.
+
+    NO STAFF, deliberately. It is machinery, not a workplace - the same call the condensery and
+    the reservoir make, and the same sentence: a grand design that runs itself.
+  -->
+  <building Key="mirrorgate" DisplayName="the mirror-gate (two rings of marble, and the other city standing between them)" Blueprint="r_KingdomMirrorGate"
+            Cost="120" Ticks="14400" Styles="all" Category="craft" Plot="XL" MinStage="City"
+            Districts="craft,market" MinZones="4" MinTech="arclight" Knowledge="machine:Reprogrammable Recoiler"
+            Footprint="11x8" Roof="Walled"
+            Materials="stone:76,shapedstone:20,marble:18,workedmetal:16,scrap:22" Bits="00346" Exotics="ingot:2,gem:1"
+            Carries="craft:5,luxury:4"
+            Contents="r_KingdomFurnishings_Civic">
+    <skin Key="verdant" Style="verdant" ColorString="&amp;G" DetailColor="g" />
+    <skin Key="fungal" Style="fungal" ColorString="&amp;M" DetailColor="m" />
+    <skin Key="gyre" Style="gyre" ColorString="&amp;C" DetailColor="c" />
+    <skin Key="eater" Style="eater" ColorString="&amp;R" DetailColor="r" />
+  </building>
 
 </kingdombuildings>

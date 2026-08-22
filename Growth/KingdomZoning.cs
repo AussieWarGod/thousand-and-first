@@ -80,12 +80,24 @@ namespace ThousandAndFirst
 		public static void RegisterGate(string Key, string Districts, string MinZones, string Knowledge, string MinTech,
 			string Builders, string Creed, string CreedShare)
 		{
+			RegisterGate(Key, Districts, MinZones, Knowledge, MinTech, Builders, Creed, CreedShare, null);
+		}
+
+		/// <summary>
+		/// The same registration with Addendum 15's <c>Strata</c>. Optional like the seven before
+		/// it: an entry that names no stratum stands in every one of them, which is what every
+		/// entry in the catalogue did the day before this landed.
+		/// </summary>
+		/// <param name="Strata">Raw <c>Strata</c> attribute.</param>
+		public static void RegisterGate(string Key, string Districts, string MinZones, string Knowledge, string MinTech,
+			string Builders, string Creed, string CreedShare, string Strata)
+		{
 			if (string.IsNullOrEmpty(Key))
 			{
 				return;
 			}
 			ZoneGate gate = KingdomZoningRules.ParseGateAttributes(Key, Districts, MinZones, Knowledge, MinTech,
-				Builders, Creed, CreedShare, out string error);
+				Builders, Creed, CreedShare, Strata, out string error);
 			if (error != null)
 			{
 				MetricsManager.LogError("ThousandAndFirst KingdomBuildings: " + error);
@@ -487,13 +499,19 @@ namespace ThousandAndFirst
 				return ZoningJudgement.Allowed;
 			}
 			int claimed = (System.ClaimedZones != null) ? System.ClaimedZones.Count : 0;
-			// The stratum half of the gate is the design's own Sky flag, which lives on the plot
-			// spec rather than on the build entry. A design the plot registry never registered
-			// wants no weather by definition, so it is never refused by depth.
+			return KingdomZoningRules.Judge(GateFor(Entry.Key), District, Entry.Category, claimed, Roster(System),
+				Underground, WantsSky(Entry), BuilderRollOf(System), KingdomZoningRules.StratumOfGround(Underground));
+		}
+
+		// The weather half of the depth gate is the design's own Sky flag, which lives on the plot
+		// spec rather than on the build entry. A design the plot registry never registered wants no
+		// weather by definition, so it is never refused for the want of it. Read in one place
+		// because the refusal has to ask the same question the judgement did, and two lookups that
+		// could ever disagree would put a sentence in front of the founder that was true of neither.
+		private static bool WantsSky(KingdomRules.BuildEntry Entry)
+		{
 			KingdomPlotRules.PlotSpec spec;
-			bool sky = KingdomPlots.TryGetSpec(Entry.Key, out spec) && spec != null && spec.RequiresSky;
-			return KingdomZoningRules.Judge(GateFor(Entry.Key), District, Entry.Category, claimed, Roster(System), Underground, sky,
-				BuilderRollOf(System));
+			return Entry != null && KingdomPlots.TryGetSpec(Entry.Key, out spec) && spec != null && spec.RequiresSky;
 		}
 
 		/// <summary>
@@ -518,8 +536,17 @@ namespace ThousandAndFirst
 				return XRL.Language.Grammar.A(name) + " wants a realm of at least {{C|" + Judgement.Detail + "}}, and " + seat
 					+ " holds {{C|" + ((System != null && System.ClaimedZones != null) ? System.ClaimedZones.Count : 0) + "}}. Claim more ground and ask again.";
 			case ZoningVerdict.RefusedStratum:
-				return XRL.Language.Grammar.A(name) + " wants weather — sun, wind, or rain — and there is none under the rock. Raise it on ground under {{C|"
-					+ Judgement.Detail + "}}.";
+				// One verdict, two refusals, and they want different sentences: the weather is a
+				// fact about the rock and the set is a fact about the catalogue. Asked in the same
+				// order Judge asks them, so the words always match the reason.
+				if (!KingdomZoningRules.StratumAccepts(StratumOf(ZoneID), WantsSky(Entry)))
+				{
+					return XRL.Language.Grammar.A(name) + " wants weather — sun, wind, or rain — and there is none under the rock. Raise it on ground under {{C|"
+						+ Judgement.Detail + "}}.";
+				}
+				return XRL.Language.Grammar.A(name) + " belongs to {{C|" + Judgement.Detail + "}}, and this ground is {{C|"
+					+ KingdomZoningRules.StratumName(KingdomZoningRules.StratumOfGround(StratumOf(ZoneID)))
+					+ "}}. Claim ground there and raise it there — a claim reaches the stratum directly above or below the one you hold.";
 			case ZoningVerdict.RefusedUnaligned:
 				return "Nobody at " + seat + " holds with {{C|" + KingdomCreed.CreedName(Judgement.Detail) + "}}, and nobody here ever has. "
 					+ XRL.Language.Grammar.A(name) + " is raised by people who believe it, or who once did. Take in people who hold with them, or let the creed spread here.";

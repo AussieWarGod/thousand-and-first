@@ -75,6 +75,47 @@ synergy products ship beside the systems they multiply.**
 rejections cited, 3 borderline parked. Author adds/removes at check-in; the lab wave ships
 the survivors minus QB-11/QB-12 holds under the provisionals above.
 
+**QB-14 — The mirror-gate's brownout rung.** The demand tier is derived from the record's
+`Category` (`KingdomFlowRules.TierOfCategory`), so choosing the category chooses when the arch
+goes dark. `Category="craft"` puts it on **Industry** — the first rung, so a short city gives
+up its crossing before its forge. The alternative is `civic` → **Amenity** (third): the city
+shuts its forges before its gate. **PROVISIONAL: `craft`/Industry** — the ladder's own comment
+says a city gives up what it is *doing* before what it *is*, and a felt brownout is the
+design's whole tension. Reversible: one attribute.
+
+**QB-15 — One keyed arch per city.** v1 refuses a second arch in a city that already keeps
+one, by name, naming the arch in the way. Follows §4.4's "one of your cities to another" and
+keeps the register at one row per city, which is what makes the hub re-key trivial.
+**PROVISIONAL: keep.** If the capital wave wants a capital with several arches, the rule
+relaxes to "one arch per (city, partner)" with no schema change.
+
+**QB-16 — `Sited="gate"` is its own small wave, not strata vocabulary.** It turned out to be
+a *placement* rule already sketched in `KingdomRoadRules.cs:544-556` (site the gatehouse at
+the frontier gate cell astride the road; today a hardcoded key match). Ship the authored
+attribute as its own one-line-plus-schema wave, or leave the gatehouse key-matched?
+**PROVISIONAL: leave key-matched; the attribute waits for a second design that wants it.**
+
+**QB-17 — Deep crops key on style, not stratum.** `KingdomCropRules.CropBlueprintForStyle`
+reads style only, so a common-style city's fungal vault grows **Starapple in the dark**.
+DIVERSITY:213 wanted fungal crops underground; Addendum 15's "behaviour may differ by stratum
+only when the design says so" is the hook, and no machinery expresses it yet. Options: (a) a
+stratum column in the crop table; (b) the vault records name their crop outright (a
+`Crop=`-shaped declaration, design-says-so literally); (c) leave it — starapple grows in the
+dark in Qud and nobody promised botany. **PROVISIONAL: none — vaults ship on the style table
+as-is; the crop question rides to the author.** (Pure flavor today: yields are identical.)
+
+**QB-18 — How does a SHARED design declare stratum-divergent behaviour?** Addendum 15 permits
+it ("only when the design says so"); nothing expresses it. Per-stratum overrides are new
+parallel machinery and must earn it (Addendum 13). No design needs it yet — the deep set went
+separate-records instead. **Recorded so the want has a number when it arrives.**
+
+**QB-19 — DEFECT: an `Open="yes"` plot underground advertises open sky.**
+`KingdomPlotRules.RoofOnGround` returns `Open` unchanged below the surface, so
+`KingdomQolRules.ProvidedByRoof` grants `taf:sky` under the rock. Reachable today (`plot`,
+`field`, `cairn`, `masonyard`, `grange`, `homefarm` are all Open, none declares `Sky`).
+**Fix planned this session** (orchestrator, autonomous authorization): underground Open
+ground provides no sky. Flagged here so the author sees the behaviour change.
+
 ## Answered
 
 (none yet)

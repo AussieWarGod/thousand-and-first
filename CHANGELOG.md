@@ -10,6 +10,25 @@ Pre-release: the mod has not yet run in a live game. Nothing here is stable unti
 playtest passes.
 
 ### Added
+- **The mirror-gate — step from one of your cities to another** (exotic #3,
+  END-STATE-CITIES-RESEARCH §4.4). A `TeleporterPair` extension, so the crossing itself is
+  vanilla's; ours adds the dedication rite on the arch, a standing draw of three
+  charging-posts' worth a day on the 12(g) lane at **both** ends, and a brownout that closes
+  it and says so once. Crossing costs nothing beyond the draw (Addendum 22 A2 — no second
+  toll) and there is no cooldown (Addendum 8 — no timer of ours). Gated `MinTech="arclight"`
+  (the catalogue's first) plus a certified `Reprogrammable Recoiler`. Pairing lives in a
+  realm register in game state, not on either arch, so the capital-hub topology can be
+  re-keyed later without a data loss (QUESTION-BACKLOG QB-1).
+- **The deep is a building set, not a dimmed surface list** (Addendum 15). The `Strata`
+  attribute lands on the zoning gate — home stratum first, share-tags after, absent admits
+  everywhere, `all`/`!` spellings shared with `Styles`, sky answering as a filtered subset
+  of the surface. Six deep records open the set: carved cell and carved gallery (the rock is
+  three of the four walls), fungal vault and vault galleries (one keeper, no season,
+  `taf:damp` for the people who want it), the deep cut (the yard the deep gets because spoil
+  has nowhere to go), and the niche tomb (a cairn is stacked; a niche is cut). The weep-tap
+  and weep gallery declare the deep their home out loud; the mason's yard and the cairn stay
+  above ground and say so. Refusals name every stratum that would take the design, per
+  STANDARDS 7b.
 - **City styles finally mean something, and they are tags.** All five (`common`, `verdant`,
   `fungal`, `gyre`, `eater`) now filter the catalogue: nineteen designs are refused to the ground
   that has no business raising them — the dew lane out of the marsh, the salt-pan out of the

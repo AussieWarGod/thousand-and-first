@@ -796,6 +796,50 @@
     <part Name="Physics" Takeable="false" Weight="1400" />
     <stat Name="Hitpoints" Value="150" />
   </object>
+
+  <!-- ======================================================================= THE DEEP ==
+    Addendum 15's set, six pieces, every one an inherit-extend off the surface precedent it
+    was derived from (the derivation notes live on the KingdomBuildings.xml records). No new
+    art and no new parts: what changes under the rock is the material and the words. -->
+  <object Name="r_KingdomCarvedCell" Inherits="r_KingdomHut">
+    <part Name="Render" DisplayName="carved cell" ColorString="&amp;w" DetailColor="K" />
+    <part Name="Description" Short="A room taken out of the rock in an afternoon, because three of its four walls were already standing. The chisel marks are left where they fell; nobody here has ever pretended this was masonry." />
+    <part Name="Physics" Organic="false" Weight="1200" />
+    <stat Name="Hitpoints" Value="160" />
+  </object>
+  <object Name="r_KingdomCarvedGallery" Inherits="r_KingdomHouse">
+    <part Name="Render" DisplayName="carved gallery" ColorString="&amp;W" DetailColor="K" />
+    <part Name="Description" Short="Cells cut off one stair, each with a curtain and a shelf, and a door at the top that shuts against the cold coming up. Nothing here was carried down but the door." />
+    <part Name="Physics" Weight="5000" />
+    <stat Name="Hitpoints" Value="400" />
+  </object>
+  <object Name="r_KingdomFungalVault" Inherits="r_KingdomField">
+    <part Name="Render" DisplayName="fungal vault" ColorString="&amp;m" DetailColor="M" />
+    <part Name="Description" Short="Spawn run into damp cut rock and left alone in the dark, which is the whole of the method. One person goes down to scrape and inoculate; nobody sows anything and nobody waits on a season." />
+    <part Name="Physics" Solid="false" Takeable="false" Organic="true" Weight="600" />
+    <tag Name="r_KingdomCropRows" Value="12" />
+    <stat Name="Hitpoints" Value="90" />
+  </object>
+  <object Name="r_KingdomVaultGalleries" Inherits="r_KingdomFungalVault">
+    <part Name="Render" DisplayName="vault galleries" ColorString="&amp;M" DetailColor="m" />
+    <part Name="Description" Short="The whole run worked, propped and kept wet, with beds to the reach of the lamp and a walkway down the middle that is slick no matter what is laid on it." />
+    <part Name="Physics" Weight="8000" />
+    <tag Name="r_KingdomCropRows" Value="36" />
+    <stat Name="Hitpoints" Value="440" />
+  </object>
+  <object Name="r_KingdomDeepCut" Inherits="r_KingdomMasonYard">
+    <part Name="Render" DisplayName="deep cut" ColorString="&amp;w" DetailColor="K" />
+    <part Name="Description" Short="A working face with props to the roof and the spoil going straight back into the wall behind it. The one yard in the settlement that will never run out of what it works." />
+    <part Name="Physics" Weight="6000" />
+    <stat Name="Hitpoints" Value="340" />
+  </object>
+  <object Name="r_KingdomNicheTomb" Inherits="r_KingdomCairn">
+    <part Name="Render" DisplayName="niche tomb" ColorString="&amp;w" DetailColor="K" />
+    <part Name="Description" Short="A niche cut in the gallery wall for somebody the settlement has not yet lost, and a name cut under it. There is no field to gather stone from. There is this wall." />
+    <part Name="Physics" Weight="1000" />
+    <stat Name="Hitpoints" Value="150" />
+  </object>
+
   <object Name="r_KingdomChargingPost" Inherits="Furniture">
     <stag Name="Contemporary" />
     <part Name="Render" DisplayName="charging post" RenderString="&#227;" ColorString="&amp;C" Tile="ThousandAndFirst/r_KingdomChargingPost.png" TileColor="&amp;c" DetailColor="C" />
@@ -942,6 +986,33 @@
     <property Name="DontWarnOnOpen" Value="true" />
     <stat Name="Hitpoints" Value="200" />
     <stat Name="AV" Value="6" />
+    <stag Name="Contemporary" />
+  </object>
+
+  <!--
+    The mirror-gate. Vanilla's own ring-gate dressing, because Addendum 11(a) says use vanilla
+    furniture to show real production and the ring gate IS Qud's gate: the tile, the glyph and
+    the marble are all its (Base Ring Gate, B/ObjectBlueprints/Furniture.xml:2322-2334).
+
+    The Capacitor is what puts the arch on the settlement's power lane at all: KingdomPower.Gather
+    reads a sink as anything that wants ChargeAvailableEvent, which a Capacitor does. 48,000 is
+    four days of the standing draw, which is vanilla's own ratio on the same machine (200,000 held
+    against a 50,000 traversal) read the other way round. ChargeRate is vanilla's 1,000; the
+    settlement pass delivers Forced, so it only ever throttles a founder plugging a cell in by hand.
+
+    The animation is keyed to our own part rather than left off, and it is honest because
+    r_KingdomMirrorGate answers GetActivePartLocallyDefinedFailure while it is dark: a brownout
+    stops the lit frames along with everything else.
+  -->
+  <object Name="r_KingdomMirrorGate" Inherits="Furniture">
+    <part Name="Render" DisplayName="mirror-gate" RenderString="239" ColorString="&amp;c" Tile="Items/sw_ring_gate_1_off.bmp" TileColor="&amp;y" DetailColor="m" />
+    <part Name="Description" Short="Two rings of bone-pale marble set one inside the other and turned a quarter apart, standing on a floor the masons levelled twice and then levelled again. Between them the air holds still. While the works are paying for it there is a street in there, and it is not this one." />
+    <part Name="r_KingdomMirrorGate" />
+    <part Name="Capacitor" MaxCharge="48000" ChargeRate="1000" StartCharge="0" />
+    <part Name="AnimatedMaterialGeneric" AnimationLength="200" ColorStringAnimationFrames="0=&amp;m" TileAnimationFrames="0=Items/sw_ring_gate_1_on_a.bmp,100=Items/sw_ring_gate_1_on_b.bmp" RequiresOperationalActivePart="r_KingdomMirrorGate" />
+    <part Name="Examiner" Complexity="6" Difficulty="2" />
+    <part Name="Physics" Takeable="false" Weight="2000" />
+    <stat Name="Hitpoints" Value="500" />
     <stag Name="Contemporary" />
   </object>
 

@@ -333,6 +333,12 @@ namespace ThousandAndFirst
 		/// in whole percent. A gate, so it reads again.</summary>
 		public const string AttrCreedShare = "CreedShare";
 
+		/// <summary>Which set of the catalogue a design lives in and which strata it may stand in
+		/// besides (Addendum 15): <c>Strata="deep,surface"</c>. Deliberately absent from
+		/// <see cref="SpentAttributes"/> and <see cref="StampedAttributes"/> for exactly
+		/// <see cref="AttrKnowledge"/>'s reason — a gate is asked again every time somebody asks.</summary>
+		public const string AttrStrata = "Strata";
+
 		public const string AttrUpgradesTo = "UpgradesTo";
 
 		public const string AttrUpgradeCost = "UpgradeCost";

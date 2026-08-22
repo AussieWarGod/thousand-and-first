@@ -24,6 +24,7 @@
     <Compile Include="ManifestRulesTests.cs" />
     <Compile Include="KingdomCropRulesTests.cs" />
     <Compile Include="KingdomPowerRulesTests.cs" />
+    <Compile Include="KingdomMirrorGateRulesTests.cs" />
     <Compile Include="KingdomSalvageRulesTests.cs" />
     <Compile Include="WallRulesTests.cs" />
     <Compile Include="VoiceRulesTests.cs" />
@@ -73,6 +74,7 @@
     <Compile Include="..\Trade\KingdomManifest.cs" />
     <Compile Include="..\Growth\KingdomCropRules.cs" />
     <Compile Include="..\Growth\KingdomPowerRules.cs" />
+    <Compile Include="..\Growth\KingdomMirrorGateRules.cs" />
     <Compile Include="..\Growth\KingdomSalvageRules.cs" />
     <Compile Include="..\Growth\KingdomLayoutRules.cs" />
     <Compile Include="..\Growth\KingdomPlanRules.cs" />
@@ -172,6 +174,7 @@
     <Compile Include="KingdomTechMapRulesTests.cs" />
     <Compile Include="KingdomCitizenRiteRulesTests.cs" />
     <Compile Include="KingdomCreedGateRulesTests.cs" />
+    <Compile Include="KingdomStrataRulesTests.cs" />
   </ItemGroup>
 
   <ItemGroup>
