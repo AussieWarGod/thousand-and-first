@@ -50,8 +50,10 @@ That collapses the original three-way question. The kingdom-of-specialised-citie
 is about power ("best of both worlds is too strong"), and every lore discussion found is *curious*
 rather than *offended* — players ask "why does that NPC have a robot arm?", get faction-lore
 answers, and move on. The camp that would call mutant-chrome a lore violation did not surface in
-any thread read for this document. That is a **negative finding stated honestly**, not proof of
-absence — see §8.
+any thread read for this document. Originally a negative finding about Steam, the wiki, and
+Workshop tabs only; **the Reddit gap has since been closed and the finding held** — seven
+r/cavesofqud threads, ~90 comments, zero lore objections, and the community's own top-voted
+explanation of the boundary is the registry reading (§1.7).
 
 ### 1.2 Thread-cluster A — "mutants with cybernetics?" (the lore question, asked directly)
 
@@ -171,6 +173,112 @@ The purity position exists in Qud and is **authored as villainy**.
 who want mutants dead.* Granting chrome to a mutant is therefore not a transgression against Qud's
 fiction — **it is a transgression against the Templar**, which the game already frames as the right
 side of that argument. The annexe does not need to apologise. It needs to be *dangerous*.
+
+### 1.7 The Reddit read — §8's largest gap, closed (2026-08-22)
+
+The gap stated in §8 — "the finding 'no lore objection to mutant-chrome was found' is a finding
+about Steam, the wiki, and Workshop comment tabs, not about the whole community" — is now closed.
+Route: the author's Reddit MCP server (Arctic Shift archive; scores may lag live Reddit). Seven
+r/cavesofqud threads read in full, ~90 comments, spanning 2020–2025. **The headline survives
+contact with Reddit, and comes back stronger than it went in.** Zero lore objections. The camp
+§1.1 could not rule out does not exist in the found record.
+
+**R-A. The direct question, asked head-on, answered as *policy*.**
+["why can't mutants use cybernetics?"](https://www.reddit.com/r/cavesofqud/comments/xwet30/why_cant_mutants_use_cybernetics/)
+(Oct 2022, 0.93 ratio) is the Reddit twin of §1.2's Steam thread, and its answer stack is the
+single best sentiment result in either corpus:
+
+- Top answer, **42 points** — twice the thread's own score:
+  > "**Mutants are not aristocrats.** The Eaters constructed their becoming nooks to detect and
+  > reject mutant genomes."
+  ([comment](https://www.reddit.com/r/cavesofqud/comments/xwet30/_/ir60hgn/)) — *aristocrats*: a
+  **caste** word, not a species word. The refusal belongs to the machine and the dead polity that
+  built it.
+- Second, 23 points: "Maybe **this tells you something about the people who built the becoming
+  nooks**" ([comment](https://www.reddit.com/r/cavesofqud/comments/xwet30/_/ir6022c/)) — the
+  boundary read as *characterisation of the Eaters*, not as physics.
+- Third, 14 points: "I've worked on printers. **I think machines can be racist.**"
+  ([comment](https://www.reddit.com/r/cavesofqud/comments/xwet30/_/ir6wpvd/)).
+- The lone biological reading in the thread (6 points) is per-mutation — regeneration would push
+  the implant out — and the thread *ends in upvoted mod recommendations* for crossing.
+
+The community's own top-voted explanation of the boundary **is F1**: an authorization check by a
+machine enforcing a dead aristocracy's enrollment policy. §2.3's `IsTrueKinEvent` reading did not
+have to be argued to Reddit — Reddit already holds it.
+
+**R-B. The registry vocabulary, volunteered unprompted.**
+["lore question"](https://www.reddit.com/r/cavesofqud/comments/10qq1b6/lore_question/) (Feb 2023,
+1.0 ratio) asks the F1 question verbatim — *"how do the implant machines differentiate between me
+and a true kin?"* — and the answers supply the fiction's whole vocabulary:
+
+- 17 points: "…a **specific marker gene that says 'this person is an aristocrat'**"
+  ([comment](https://www.reddit.com/r/cavesofqud/comments/10qq1b6/_/j6s53oh/)) — the record,
+  written into the body as a credential.
+- 7 points: the machines "check for **'NET-terminal gene'**… like in Blame!"
+  ([comment](https://www.reddit.com/r/cavesofqud/comments/10qq1b6/_/j6relkv/)) — the community's
+  spontaneous reference is the *strongest fictional precedent for record-over-blood in the genre*:
+  in Blame! the city's machines still check a credential humanity has lost, and the whole tragedy
+  is enrollment, not biology.
+- Another commenter cites the nook's own greeting — "**WELCOME ARISTOCRAT**" — as caste
+  recognition ([comment](https://www.reddit.com/r/cavesofqud/comments/10qq1b6/_/j6xufvo/)).
+- A third *invents the forgery fiction unprompted*, proposing a mod mutation that is "**a gene
+  sequence to trip up the nook's filters**"
+  ([comment](https://www.reddit.com/r/cavesofqud/comments/10qq1b6/_/j6srtux/)).
+- The thread's one essentialist — mutants "no longer even in the same genus" (11 points) — closes
+  by hoping the vanilla workaround is *never patched*: "That doesn't sound terribly fun, so I hope
+  they don't" ([comment](https://www.reddit.com/r/cavesofqud/comments/10qq1b6/_/j6rzb2z/)). Even
+  the purity reading votes against enforcement.
+
+**R-C. The theme, read by the room.** In
+[the Eaters thread](https://www.reddit.com/r/cavesofqud/comments/tjczm8/question_about_true_kin_and_the_eaters/)
+(Mar 2022): "I think a big part of the point of this game is **blurring the boundary between
+human/non-human. Are genetic mutations really that different from cybernetic enhancements?**"
+(9 points, [comment](https://www.reddit.com/r/cavesofqud/comments/tjczm8/_/i1jkdsh/)). The
+thread's top answer (22 points) says True Kin "are **(or are believed to be)** the descendants" of
+the aristocratic class ([comment](https://www.reddit.com/r/cavesofqud/comments/tjczm8/_/i1ji3jk/))
+— record-scepticism in passing — and a third notes the Eaters themselves were "very
+trans-humanist… changing their form at will"
+([comment](https://www.reddit.com/r/cavesofqud/comments/tjczm8/_/i1jip72/)): the purity doctrine
+is a *later invention*, not ancestral practice.
+
+**R-D. A finding Steam never surfaced: the boundary is already one-way, and the community knows
+it.** From [the True Kin balance thread](https://www.reddit.com/r/cavesofqud/comments/1hay731/is_it_me_or_true_kin_feels_kinda_underwhelming/)
+(Dec 2024, 70 comments):
+
+- "**Truekin can get mutant abilities, there is no way for mutants to get implant abilities.**"
+  ([comment](https://www.reddit.com/r/cavesofqud/comments/1hay731/_/m1dkmtc/))
+- "There are ways to get mutations as a True Kin, but Mutants are permanently locked out of
+  cybernetics. **That's enough for me to always play them** [True Kin]."
+  ([comment](https://www.reddit.com/r/cavesofqud/comments/1hay731/_/m1cl2k8/))
+- "…you can cheese Gamma Moths to get mutations as Truekin to end up with **the best of both
+  worlds**" ([comment](https://www.reddit.com/r/cavesofqud/comments/1hay731/_/m1d0trp/)).
+
+Vanilla's wall has a door in it and the door swings one way: gamma moths and brain brine carry
+mutations *into* True Kin bodies; nothing carries chrome the other way. **The becoming annexe does
+not breach a sacred boundary — it symmetrises an asymmetry vanilla already tolerates.** The same
+quotes carry the caution: per the second voice, chrome-exclusivity is *the* remaining reason to
+pick True Kin at all, so R4's cost-not-refusal answer is not optional politeness — it is what
+keeps the last exclusive worth having. One rung of the annexe priced too cheap deletes a genotype.
+
+**R-E. The routes players already walk, and who built them.** Every crossing thread converges on
+the same three routes: Dominate a Templar (vanilla, body-swap —
+[thread](https://www.reddit.com/r/cavesofqud/comments/ujd35h/mutant_with_cybernetics/), 0.96
+ratio, all how-to, no objection); precognition + gamma moths (vanilla, TK-side); and the Sifrah
+mod's nook-hacking. On that last: §1.5 already identified Sifrah as **the developer's own mod**,
+and in the Domination thread its author *personally recommends it as the mutant-chrome route* —
+"my mod Sifrah… makes it possible (though difficult) for mutants to hack becoming nooks and
+install cybernetics" (top comment, 12 points,
+[comment](https://www.reddit.com/r/cavesofqud/comments/ujd35h/_/i7inm35/)). §8's unclosed question
+— whether Freehold considers the boundary sacred — now has a revealed-preference answer, if not a
+stated one: **a Freehold developer ships and recommends the door.** The frame is hacking the
+*authorization* — the body never objects, only the ledger does — with the crossing priced
+("cybernetics rejection syndrome"). F1's fiction and R4's cost, already live in the wild, from the
+developer's own hand.
+
+One negative verified while reading: a commenter's "Genetic Resonance Tonic — makes you an
+aristocrat for 10 turns" is **not vanilla** — no such blueprint in the 2.0.211.51 decompile; it is
+the Equity Tonic mod's item. Recorded so nobody mistakes it for a vanilla route. (Note its idiom
+anyway: *makes you an aristocrat* — enrollment language again, even in a mod's design.)
 
 ---
 
@@ -1138,14 +1246,15 @@ Several of these are load-bearing, and the recommendation in §7 should be read 
 
 **On the Qud community cluster:**
 
-- **No Reddit content at all.** r/cavesofqud was unreachable to the research tooling throughout
-  (WebFetch refuses reddit.com and old.reddit.com; WebSearch rejects reddit.com as a domain; the
-  r.jina.ai proxy returned 403). This is the largest gap in the document. Steam forums skew
-  mechanical and strategic; Reddit is where the affective, first-person voice lives. **The finding
-  "no lore objection to mutant-chrome was found" is therefore a finding about Steam, the wiki, and
-  Workshop comment tabs — not about the whole community.** If the author wants that gap closed, a
-  human with a browser reading r/cavesofqud for "true kin" + "cybernetics" would close it in twenty
-  minutes and should.
+- ~~**No Reddit content at all.**~~ **CLOSED 2026-08-22** via the author's Reddit MCP server —
+  see §1.7. Seven r/cavesofqud threads read in full (~90 comments, 2020–2025); the "no lore
+  objection" finding held, the registry fiction (F1) gained community-sourced receipts, and two
+  new findings surfaced (the one-way permeability of the vanilla boundary; the Sifrah
+  revealed-preference answer to the Freehold question below). Honest residue: the archive route
+  (Arctic Shift) may lag live scores; one lore-rich thread
+  ([what True Kin exist](https://www.reddit.com/r/cavesofqud/comments/1i5ee12/aside_from_templar_and_the_player_what_true_kin/),
+  43 comments) failed retrieval twice and remains unread; r/cavesofqud beyond these seven threads
+  remains unswept.
 - **The official Discord's public spillover** was not reachable. Not attempted beyond search.
 - **Verbatim comment tabs for three of the four mutant-chrome mods.** Steam rate-limited
   (`"You've made too many requests recently"`) partway through, so `Hybrid: Cybernetic Mutants`,
@@ -1159,7 +1268,10 @@ Several of these are load-bearing, and the recommendation in §7 should be read 
 - **Any Freehold statement on *why* two genotypes exist.** Devlogs, press kit, the GDC 2019 procgen
   talk and Roguelike Radio ep. 45 were searched; no accessible transcript. The design rationale for
   Qud's own permanent fork remains undocumented in reachable sources — which matters, because it is
-  the one thing that could have settled whether Freehold considers the boundary sacred.
+  the one thing that could have settled whether Freehold considers the boundary sacred. *Partial
+  answer found on Reddit (§1.7 R-E): no stated rationale, but a revealed preference — the
+  developer's own Sifrah mod opens the boundary via nook-hacking, and its author recommends it for
+  exactly that purpose. The boundary's keeper sells keys.*
 - **No "chrome pilgrim" exists.** The brief asked about one; searched and not found. The nearest
   real things are the **Mechanimist pilgrim** (an ordinary faction creature) and the chrome liturgy
   in `B/Books.xml` (§2.4). Recorded so nobody hunts for it again.
