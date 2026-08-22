@@ -17,6 +17,44 @@ topology when the crown lands. **PROVISIONAL: (b)** — pairwise now; Addendum 2
 free-standing, and §4.4 calls the gate the highest-priority item. The hub constraint will be
 retrofitted as a re-keying when the capital exists (a gate re-dedication, not a data loss).
 
+**QB-2 — The chart on succession (C5 refinement).** Vanilla's `JournalMapNote.Forgettable()`
+returns false unconditionally (Qud/API/JournalMapNote.cs:305-308, verified) — the confirmed
+"mass-forget" cannot reach map notes via the vanilla API. Options: (a) SOFTEN C5 — the heir
+keeps the chart (the beloved Sunless Sea legacy shape: the map is the inheritance); (b) field
+surgery on the journal store (fights vanilla, verification debt). **Rec + PROVISIONAL: (a)
+soften — the chart survives succession.**
+
+**QB-3 — Accomplishments exempt from the forget?** Murals read the accomplishment list
+unfiltered; forgetting them would rewrite the founder's own history out of the walls. **Rec +
+PROVISIONAL: exempt — accomplishments are the realm's record, not the founder's memory.**
+
+**QB-4 — Zone fog (explored-map state).** Zone-scoped, untouched by any body swap; Amnesia
+clears it per-zone as the vanilla template if we ever want it. **Rec + PROVISIONAL: leave
+alone in v1.**
+
+**QB-5 — The corpse-read verb.** Shape of the act that restores the founder's journal (a
+read? a rite? the psychal-gland idiom — "someone else's memories seep into your own" — is the
+vanilla register for reading the dead), and when the "(inherited)" quest relabel fires.
+Needs a ruling on flavor; machinery is settled (giver-location map note per unfinished quest
+via QuestGiverLocationZoneID).
+
+**QB-6 — Is the founder's corpse honestly lossable** (burned, eaten, dissolved — journal
+restoration gone with it) or protected? **Rec + PROVISIONAL: lossable — Qud does not
+underwrite sentiment.**
+
+**QB-7 — Confirm v1.5 quest polish = flavor-classes only** (chronicle lines + inherited
+relabels via the Reclamation rename precedent); corpse-gated suspension and force-fail-all
+stay rejected (verified: FailQuest lands quests in FinishedQuests, which SATISFIES every
+IfFinishedQuest conversation gate — mass-fail is an unlock-everything button,
+XRLGame.cs:1141-1153, 1206-1209). **Rec: confirm.**
+
+**QB-8 — Inherited quest completion pays the heir** XP/rep as normal. **Rec + PROVISIONAL:
+yes — the errand was real, whoever finishes it.**
+
+**QB-9 — Quest popups during the interregnum** (C8): suppress and queue to the mourning
+rite, or fire as they land? **Rec + PROVISIONAL: queue to the rite — the rite is the witness
+surface.**
+
 ## Answered
 
 (none yet)
