@@ -1018,3 +1018,8 @@ foundry, or something)."
   for the end-state research to answer.
 - Composes with: the heart ladder (is the arcology the capital's crown or any city's?), the
   N-city roster, per-realm-vs-per-city research (a capital research megastructure?).
+
+**Ideation Q8 DEFERRED (author, 2026-08-22):** the four named lab procedures (Weeping Graft /
+Chimeric Confession / Cold Regard / Lantern Rib — DIVERSITY doc §3.7) stand as the working
+proposal; the author will circle back. Not blocking: the lab wave is behind the end-state
+ruling anyway, and the procedures are data-shaped — renameable and swappable up to build.
