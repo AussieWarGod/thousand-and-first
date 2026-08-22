@@ -1023,3 +1023,22 @@ foundry, or something)."
 Chimeric Confession / Cold Regard / Lantern Rib — DIVERSITY doc §3.7) stand as the working
 proposal; the author will circle back. Not blocking: the lab wave is behind the end-state
 ruling anyway, and the procedures are data-shaped — renameable and swappable up to build.
+
+
+## Addendum 20, 2026-08-22 — the exotics doctrine (author answer to ideation Q9)
+
+"I am not sure there should be a build order … they should be free to build, or not build each
+of them, or chase them, we should have some cool, fun hidden secret ones too."
+
+- **Portfolio, not progression**: exotics have NO order among themselves — each is
+  independently gated (some deliberately harder than others), and a player may build, skip, or
+  chase any of them. No exotic is a prerequisite for another unless its own fiction demands it.
+- **A growing portfolio**: the aim is many exotics with unique features and capabilities that
+  Qud players enjoy — each earning its place per the mesh condition and the
+  XL-unlocks-functions ruling.
+- **HIDDEN SECRET exotics exist**: some are discovery-ONLY — never listed anywhere until found
+  (rumor, ruin, rite, quest — the Addendum 14 visibility law at full strength: their existence
+  itself is the secret). Cool and fun is the stated design bar.
+- Dev-order note (the question Q9 actually asked): with no design coupling, waves ship as
+  their prerequisites unblock — delve behind the strata wave, mirror-gate free-standing, lab
+  behind the end-state ruling. Appetite may reorder freely.
