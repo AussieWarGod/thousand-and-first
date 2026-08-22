@@ -1097,3 +1097,91 @@ mode and 'roleplay' mode"
 - Implementation posture: modes are data (EmbarkModules.xml idiom — Classic + gamestate +
   mode system); Kingdom Mode is an embark entry plus the death-hook system. Classic stays
   untouched; the clone-vat remains in-world tech usable in any mode, priced, not a mode.
+
+
+## Addendum 22, 2026-08-22 — the great confirmation (author rules the full board)
+
+All 26 open rulings across five clusters confirmed to recommendation in one pass. Riders
+quoted verbatim where the author added one. The recommendations confirmed are as presented in
+the session's question board; the research docs (END-STATE-CITIES-RESEARCH,
+RESEARCH-SITING-AND-SECESSION, SUCCESSION-RESEARCH, DIVERSITY §3) carry the full text of each.
+
+### A — the end-state ruling (Q6 CLOSED)
+- **A1 — Design B confirmed**: theatre + annexe both megastructures, one purposeful
+  megastructure per ordinary city. Rider: "we can trial this shape with players and ask for
+  their feedback."
+- **A2 — capital as hub, not host, confirmed**: mirror-gate network hubbed at capital;
+  lower-rung outposts of both body-institutions may sit in the capital; top rungs and
+  once-ever ceremonies stay sited in dedicated cities; gate travel carries real cost.
+- **A3 — capital may NOT stack both body-megastructures.**
+- **A4 — the crown is a building, movable at real cost** (never named `Seat`).
+
+### B — knowledge siting (all eight, RESEARCH-SITING-AND-SECESSION §5)
+- **B1 — the registry model (D via C's kind-by-kind mapping)**: founder keeps discovery,
+  cities keep holdings; stored roster moves onto the settlement container.
+- **B2 — secession leaves the realm LEADS** (journal, provenance, seed head start). Rider:
+  "lost citizens, creeds, genotypes, and capabilities will likely be punishment enough on the
+  ability to build things, or do work."
+- **B3 — exile carries leads + seeds only** ("doors, never rooms").
+- **B4 — seat-only roster read**; teaching another city is an act (form of the act to be
+  specced in the research-system wave).
+- **B5 — certification idempotent per certifying city**; knowledge survives machine removal
+  per-city. **B6 — rejoin restores rolls whole and free.** **B7 — TechLevel per-city;
+  MinTech judged against the city being built in.** **B8 — pattern: keys sit with the city
+  where the ceremony was held.**
+
+### C — succession / Kingdom Mode (all thirteen, SUCCESSION-RESEARCH §7)
+- **C1 — the ladder confirmed**: Classic untouched (+ optional seal), KINGDOM MODE the named
+  middle, Roleplay untouched, clone-vat is content in every mode.
+- **C2 — charter declares the realm's succession law at the moot, changeable in-fiction.**
+- **C3 — seniority law now; groomed designee as the first succession verb later.**
+- **C4 — reputation reset + realm cell derived from the heir's row.** Rider: "player
+  configurable, but in the spirit of qud it should be like starting a new game as if you were
+  that citizen."
+- **C5 — journal mass-forget, re-reveal the realm's own ground.** Rider, NEW MECHANIC:
+  "finding your old dead body should allow re-population of journal, and quest updates (we
+  need to figure out quest handling here, and state of the world in regards to quest
+  handling)" — the corpse is a journal-restore point; quest handling NEEDS RESEARCH.
+- **C6 — quests persist in v1.** Rider: "as above, needs revisit + research to properly scope
+  this." QUEST-HANDLING RESEARCH QUEUED (shared scope with C5's rider).
+- **C7 — the corpse law: kit stays where it fell.** Rider: "maybe some level of player
+  config, though anything they really want to 'keep' they can make sure they store somewhere
+  accessible in the city."
+- **C8 — succession passes through the mourning rite.** Rider, NEW MECHANIC: "time should
+  pass, ceremony should happen and crossover to 'new' character should happen at time of
+  ceremony, time of ceremony should be when the kingdom 'realises' the character is dead" —
+  the interregnum runs from death to the kingdom LEARNING of the death; news must travel;
+  the crossover fires at the rite.
+- **C9 — the climb gates the charter on regard** (TryReturn threshold).
+- **C10 — the seal is orthogonal to the mode ladder; default import latest-eligible.**
+- **C11 — named procedures reset per heir; priced by world scarcity; no cap.**
+- **C12 — founder's shrine on owned registers now; sultanHistory rendering as stretch.**
+- **C13 — choosing costs the seat, confirmed as config A's definition.** Rider: "player
+  configurable, you decide default config as aligned to vanilla qud ethos, we can tweak later
+  based on feedback." Orchestrator's default, per that delegation: **seat-cost ON by
+  default** — choice may be free, consequence is not, which is Qud's own ethos; a sandbox
+  toggle may disable it.
+
+### D — the lab
+- **D1 — blocklist sustained** (self-replication, Invisibility, WallWalker, Metamorphosis
+  stay out of the derived catalogue; boundary powers arrive only as named procedures, one
+  ruling each). Rider: "can revisit based on player feedback."
+- **D2 — orchestrator to pull a reasonable wishlist of safe part classes** (spore puffer
+  among the candidates), audited class-by-class. Rider: "i can add later based on player
+  feedback."
+- (The four named procedures stood confirmed earlier this session: "those procedures seem
+  reasonable.")
+
+### E — research-design residuals
+- **E1 — the Int ladder is load-bearing at the top tier only.**
+- **E2 — schooling may raise the citizen Int cap by +1, never stacking.** Rider: "can
+  revisit on balance pass."
+
+### Work items minted by the riders
+1. **Quest-handling research** (C5/C6): corpse-as-journal-restore, quest state across
+   succession, world-state vs vanilla quests. Before the Kingdom Mode wave ships its v1
+   quest policy.
+2. **D2 audit**: the safe-part-class wishlist, delivered to the author for additions.
+3. **C8 spec detail**: how the kingdom learns of a death (news travel), and what the player
+   experiences during the interregnum.
+4. The four §8 verification debts in SUCCESSION-RESEARCH stand before the succession wave.
