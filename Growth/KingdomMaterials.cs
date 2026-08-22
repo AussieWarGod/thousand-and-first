@@ -1904,6 +1904,10 @@ namespace ThousandAndFirst
 			// whether it took over the telling: a live conversion supplies its own single combined
 			// line, an ordinary strike leaves the rect a re-buildable socket and says nothing here.
 			bool convertedInPlace = KingdomSocket.OnCleared(System, Z, Building);
+			// A struck delve is a filled hole. The rock under it goes back to being owned and
+			// unworkable, and it has to be forgotten HERE rather than inferred later, because
+			// nothing else will ever stand on this ground to say the shaft is gone.
+			KingdomDelve.OnStruck(key, Z.ZoneID);
 			Building.Obliterate();
 			string returned = salvage.Describe();
 			if (!convertedInPlace)

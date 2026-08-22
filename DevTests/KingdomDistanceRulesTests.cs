@@ -18,6 +18,12 @@ namespace ThousandAndFirst.Tests
 			return new KingdomZoneNode(id, x, y, z);
 		}
 
+		/// <summary>Ground with a finished delve going down from it.</summary>
+		private static KingdomZoneNode Shafted(string id, int x, int y, int z)
+		{
+			return new KingdomZoneNode(id, x, y, z, shaft: true);
+		}
+
 		/// <summary>
 		/// Orthogonal in the same stratum, plus the stratum directly above and below. Deliberately
 		/// narrower than KingdomRules.CoordsAdjacent, which admits diagonals because a CLAIM may
@@ -37,10 +43,14 @@ namespace ThousandAndFirst.Tests
 			Assert.AreEqual(KingdomZoneStep.None, KingdomDistanceRules.StepBetween(here, here));
 		}
 
-		/// <summary>Verticality is free: ZoneID already carries the stratum, so a city three strata
-		/// deep is the same arithmetic as a flat one (§0.0(f)).</summary>
+		/// <summary>
+		/// The ARITHMETIC of a stratum is free — ZoneID already carries it, so a city three strata
+		/// deep sums the same as a flat one (§0.0(f)). The GROUND never was, and that is the whole
+		/// of the delve: a direction always exists between a zone and the one under it, and an
+		/// EDGE exists only where somebody cut a shaft.
+		/// </summary>
 		[Test]
-		public void AStratumAboveOrBelowIsOneStep()
+		public void AStratumAboveOrBelowIsOneStepAndOnlyAnEdgeWhereAShaftWasCut()
 		{
 			KingdomZoneNode here = Node("a", 5, 5, 10);
 			Assert.AreEqual(KingdomZoneStep.Down, KingdomDistanceRules.StepBetween(here, Node("b", 5, 5, 11)));
@@ -48,6 +58,113 @@ namespace ThousandAndFirst.Tests
 			Assert.AreEqual(KingdomZoneStep.None, KingdomDistanceRules.StepBetween(here, Node("b", 5, 5, 12)));
 			Assert.AreEqual(KingdomZoneStep.None, KingdomDistanceRules.StepBetween(here, Node("b", 6, 5, 11)),
 				"a stairwell goes straight up, never up and across");
+
+			// The step is named and the rock is still shut.
+			Assert.IsFalse(KingdomDistanceRules.Adjacent(here, Node("b", 5, 5, 11)),
+				"unbroken rock is not a doorway because the coordinates differ by one");
+			Assert.IsFalse(KingdomDistanceRules.Adjacent(Node("b", 5, 5, 11), here),
+				"and it is shut from underneath too");
+
+			KingdomZoneNode cut = Shafted("a", 5, 5, 10);
+			Assert.IsTrue(KingdomDistanceRules.Adjacent(cut, Node("b", 5, 5, 11)));
+			Assert.IsTrue(KingdomDistanceRules.Adjacent(Node("b", 5, 5, 11), cut),
+				"a shaft is walked both ways, so the edge is symmetric whichever end asks");
+		}
+
+		/// <summary>The flag is read off the SHALLOWER node, because that is the ground the winding
+		/// gear stands on. A shaft claimed by the zone underneath opens nothing.</summary>
+		[Test]
+		public void TheShaftIsReadOffTheGroundTheWindingGearStandsOn()
+		{
+			Assert.IsFalse(KingdomDistanceRules.Adjacent(Node("a", 5, 5, 10), Shafted("b", 5, 5, 11)));
+		}
+
+		/// <summary>A shaft's foot must be rock. A stair up the inside of a tower is a building in
+		/// a set nobody has written, and it does not arrive through this door.</summary>
+		[Test]
+		public void NothingAboveTheSurfaceIsJoinedByAShaft()
+		{
+			Assert.IsFalse(KingdomDistanceRules.Adjacent(Shafted("a", 5, 5, 9), Node("b", 5, 5, 10)));
+		}
+
+		/// <summary>Rock with nothing cut down to it is unreachable in the graph — refused, never
+		/// estimated — which is what makes it sort LAST in the nearest-first apportionment rather
+		/// than looking like the nearest store in the city.</summary>
+		[Test]
+		public void UndelvedRockHasNoRouteAtAll()
+		{
+			KingdomZoneNode[] nodes = new KingdomZoneNode[2] { Node("surface", 5, 5, 10), Node("deep", 5, 5, 11) };
+			KingdomZoneGraph graph;
+			KingdomCityFault fault;
+			Assert.IsTrue(KingdomZoneGraph.TryBuild(nodes, 2, KingdomDistanceRules.ZoneTransitCells, out graph, out fault));
+			int cells;
+			Assert.IsFalse(graph.TryDistance(0, 1, out cells));
+			int[] path = new int[KingdomDistanceRules.MaxNodes];
+			int length;
+			Assert.IsFalse(graph.TryPath(0, 1, path, out length, out fault));
+		}
+
+		/// <summary>A cut shaft is three ordinary hops: the whole depth of a stratum, climbed, with
+		/// the load on your back. The catalogue promises the asymmetry out loud.</summary>
+		[Test]
+		public void ACutShaftCostsExactlyThreeOrdinaryHops()
+		{
+			KingdomZoneNode[] nodes = new KingdomZoneNode[2] { Shafted("surface", 5, 5, 10), Node("deep", 5, 5, 11) };
+			KingdomZoneGraph graph;
+			KingdomCityFault fault;
+			Assert.IsTrue(KingdomZoneGraph.TryBuild(nodes, 2, KingdomDistanceRules.ZoneTransitCells, out graph, out fault));
+			int down;
+			int up;
+			Assert.IsTrue(graph.TryDistance(0, 1, out down));
+			Assert.IsTrue(graph.TryDistance(1, 0, out up));
+			Assert.AreEqual(3 * KingdomDistanceRules.ZoneTransitCells, down);
+			Assert.AreEqual(down, up, "the climb costs the same whichever way the load is going");
+			Assert.AreEqual(KingdomDelveRules.ShaftHopCells(KingdomDistanceRules.ZoneTransitCells), down);
+		}
+
+		/// <summary>
+		/// The delve changed the deep and changed nothing else. Every surface pair of a parasang
+		/// measures exactly what it measured before a shaft existed, with a whole opened stratum
+		/// hanging off it — otherwise the wave quietly retuned every route in the game.
+		/// </summary>
+		[Test]
+		public void OpeningTheDeepLeavesEverySurfaceDistanceBitIdentical()
+		{
+			KingdomZoneNode[] flat = new KingdomZoneNode[9];
+			for (int i = 0; i < 9; i++)
+			{
+				flat[i] = Node("z" + i, i % 3, i / 3, 10);
+			}
+			KingdomZoneNode[] delved = new KingdomZoneNode[9];
+			for (int i = 0; i < 8; i++)
+			{
+				delved[i] = (i == 0) ? Shafted("z0", 0, 0, 10) : Node("z" + i, i % 3, i / 3, 10);
+			}
+			delved[8] = Node("under", 0, 0, 11);
+
+			KingdomZoneGraph plain;
+			KingdomZoneGraph opened;
+			KingdomCityFault fault;
+			Assert.IsTrue(KingdomZoneGraph.TryBuild(flat, 9, KingdomDistanceRules.ZoneTransitCells, out plain, out fault));
+			Assert.IsTrue(KingdomZoneGraph.TryBuild(delved, 9, KingdomDistanceRules.ZoneTransitCells, out opened, out fault));
+			for (int i = 0; i < 8; i++)
+			{
+				for (int j = 0; j < 8; j++)
+				{
+					int was;
+					int now;
+					bool hadRoute = plain.TryDistance(i, j, out was);
+					bool hasRoute = opened.TryDistance(i, j, out now);
+					Assert.AreEqual(hadRoute, hasRoute, "surface route " + i + "->" + j + " changed existence");
+					if (hadRoute)
+					{
+						Assert.AreEqual(was, now, "surface distance " + i + "->" + j + " changed length");
+					}
+				}
+			}
+			int descent;
+			Assert.IsTrue(opened.TryDistance(0, 8, out descent));
+			Assert.AreEqual(3 * KingdomDistanceRules.ZoneTransitCells, descent);
 		}
 
 		/// <summary>

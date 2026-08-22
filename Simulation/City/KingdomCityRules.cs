@@ -488,6 +488,23 @@ namespace ThousandAndFirst.Simulation.City
 		/// </summary>
 		internal static bool TryZoneGraph(KingdomCityState state, out KingdomZoneGraph graph, out KingdomCityFault fault)
 		{
+			return TryZoneGraph(state, null, out graph, out fault);
+		}
+
+		/// <summary>
+		/// The same graph, told which of the city's grounds have a shaft cut down from them.
+		/// <para>
+		/// The shafts are handed in rather than read here for the same reason the coordinates are
+		/// composed from zone ids: this file may not touch the ground (&sect;3.10(2)), and where a
+		/// delve stands is a fact about a built work. <c>KingdomDelve.DelvedZones</c> is what reads
+		/// it; this only spends it.
+		/// </para>
+		/// </summary>
+		/// <param name="shafts">Zone ids carrying a finished delve. Null and empty mean the caller
+		/// knows of none, which closes every vertical edge &mdash; the conservative answer, and the
+		/// right one for a realm that never went below.</param>
+		internal static bool TryZoneGraph(KingdomCityState state, string[] shafts, out KingdomZoneGraph graph, out KingdomCityFault fault)
+		{
 			graph = null;
 			if (state == null)
 			{
@@ -518,9 +535,25 @@ namespace ThousandAndFirst.Simulation.City
 					fault = KingdomCityFault.InvalidIndex;
 					return false;
 				}
-				nodes[i] = new KingdomZoneNode(row.ZoneId, gx, gy, stratum);
+				nodes[i] = new KingdomZoneNode(row.ZoneId, gx, gy, stratum, Names(shafts, row.ZoneId));
 			}
 			return KingdomZoneGraph.TryBuild(nodes, zones, KingdomDistanceRules.ZoneTransitCells, out graph, out fault);
+		}
+
+		private static bool Names(string[] Zones, string ZoneId)
+		{
+			if (Zones == null || string.IsNullOrEmpty(ZoneId))
+			{
+				return false;
+			}
+			for (int i = 0; i < Zones.Length; i++)
+			{
+				if (string.Equals(Zones[i], ZoneId, StringComparison.Ordinal))
+				{
+					return true;
+				}
+			}
+			return false;
 		}
 
 		/// <summary>
@@ -534,6 +567,17 @@ namespace ThousandAndFirst.Simulation.City
 		/// </para>
 		/// </summary>
 		internal static bool TryZoneDistances(KingdomCityState state, string seatedZoneId, int[] cells, out KingdomCityFault fault)
+		{
+			return TryZoneDistances(state, seatedZoneId, null, cells, out fault);
+		}
+
+		/// <summary>The same distances, over a graph that knows which rock has been opened.</summary>
+		/// <param name="shafts">Zone ids carrying a finished delve; see
+		/// <see cref="TryZoneGraph(KingdomCityState, string[], out KingdomZoneGraph, out KingdomCityFault)"/>.
+		/// Ground the graph cannot reach reads as <c>NoRoute</c> and so sorts LAST in the
+		/// nearest-first apportionment, which is the honest answer for rock nobody can carry out
+		/// of: it is drawn on only when there is nothing else.</param>
+		internal static bool TryZoneDistances(KingdomCityState state, string seatedZoneId, string[] shafts, int[] cells, out KingdomCityFault fault)
 		{
 			if (state == null || cells == null)
 			{
@@ -553,7 +597,7 @@ namespace ThousandAndFirst.Simulation.City
 			}
 			KingdomZoneGraph graph;
 			KingdomCityFault built;
-			if (!TryZoneGraph(state, out graph, out built))
+			if (!TryZoneGraph(state, shafts, out graph, out built))
 			{
 				return true;
 			}
@@ -620,6 +664,23 @@ namespace ThousandAndFirst.Simulation.City
 			out long total,
 			out KingdomCityFault fault)
 		{
+			return TryPlanTransfer(state, seatedZoneId, kind, demand, room, null, moved, out total, out fault);
+		}
+
+		/// <summary>The same apportionment, over a graph that knows which rock has been opened.</summary>
+		/// <param name="shafts">Zone ids carrying a finished delve; see
+		/// <see cref="TryZoneGraph(KingdomCityState, string[], out KingdomZoneGraph, out KingdomCityFault)"/>.</param>
+		internal static bool TryPlanTransfer(
+			KingdomCityState state,
+			string seatedZoneId,
+			KingdomStockKind kind,
+			long demand,
+			long room,
+			string[] shafts,
+			long[] moved,
+			out long total,
+			out KingdomCityFault fault)
+		{
 			total = 0L;
 			if (state == null || moved == null)
 			{
@@ -648,7 +709,7 @@ namespace ThousandAndFirst.Simulation.City
 			// urn inside that ground pays (§3.9, I4) — the two rules are about different
 			// questions, and stacking them this way is what lets both be true at once.
 			int[] cells = new int[zones];
-			if (!TryZoneDistances(state, seatedZoneId, cells, out fault))
+			if (!TryZoneDistances(state, seatedZoneId, shafts, cells, out fault))
 			{
 				return false;
 			}

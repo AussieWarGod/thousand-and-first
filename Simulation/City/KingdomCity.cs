@@ -1082,7 +1082,11 @@ namespace ThousandAndFirst.Simulation.City
 			long[] moved = new long[state.ZoneCount];
 			long total;
 			KingdomCityFault fault;
-			if (!KingdomCityRules.TryPlanTransfer(state, Z.ZoneID, kind, demand, room, moved, out total, out fault))
+			// The shafts are read here because this is the last place that may touch the ground:
+			// the nearest-first apportionment is over the ZONE GRAPH, and rock with nothing cut
+			// down to it is not a place a carrier can be sent (KingdomDelveRules).
+			string[] shafts = KingdomDelve.DelvedZones(System.ClaimedZones).ToArray();
+			if (!KingdomCityRules.TryPlanTransfer(state, Z.ZoneID, kind, demand, room, shafts, moved, out total, out fault))
 			{
 				Refuse("carry", fault);
 				return state;

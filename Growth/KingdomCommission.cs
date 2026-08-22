@@ -57,6 +57,14 @@ namespace ThousandAndFirst
 				Failure = refusal;
 				return false;
 			}
+			// And before the paths fork, because the way down is a fact about the GROUND and a wall
+			// is as unbuildable in unopened rock as a gallery is. The plot path asks again on its
+			// own account, since KingdomPlots.Commission is reachable without coming through here.
+			Failure = KingdomDelve.Refusal(System, zone.ZoneID, entry.Key, entry.Name);
+			if (Failure != null)
+			{
+				return false;
+			}
 			// A plot-sized design is raised over a rect in stages, not as one object in one cell.
 			// Every design that declares no Plot size - which is all of them until one does - falls
 			// through to the single-cell path below, untouched.

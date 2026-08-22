@@ -2369,7 +2369,9 @@ def w6_production_and_logistics():
    tie-broken on the lower row index. Inside a quarter the oldest dedication still pays first
    (§3.9, I4) - the two rules answer different questions and both stay true.
 """)
-    assert "TryZoneDistances(state, seatedZoneId, cells, out fault)" in rules, (
+    assert "TryZoneDistances(state, seatedZoneId, shafts, cells, out fault)" in rules, (
+        # The delve wave threaded the shaft set through the same call: still the seat,
+        # still distance-ordered, and now honest about which strata connect at all.
         "WALKS PAST A NEARER STORE: the carry is no longer ordered by distance."
     )
     assert "sources[i] = new KingdomVesselRow(i, cells[i], kind, available, available, true);" in rules, (

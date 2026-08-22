@@ -24,7 +24,14 @@ namespace ThousandAndFirst.Simulation.City
 	/// <para>
 	/// <c>ZoneID</c> carries the stratum &mdash; <c>Assemble(...).Append(ZoneZ)</c>
 	/// (<c>D/XRL/World/ZoneID.cs:12-24</c>) &mdash; so a city three parasangs wide and three strata
-	/// deep is the same arithmetic as a flat one. <b>Verticality is free.</b>
+	/// deep is the same <i>arithmetic</i> as a flat one.
+	/// </para>
+	/// <para>
+	/// <b>The arithmetic was free and the ground never was.</b> This file used to say verticality
+	/// cost nothing, and it was true of the sums and false of the world: rock is not a doorway, and
+	/// a carrier cannot walk down through it because the coordinates happen to differ by one. What
+	/// makes the descent real is a shaft somebody cut (<see cref="KingdomDelveRules"/>), and
+	/// <see cref="Shaft"/> is where the node carries whether one stands here.
 	/// </para>
 	/// </summary>
 	internal readonly struct KingdomZoneNode
@@ -39,12 +46,25 @@ namespace ThousandAndFirst.Simulation.City
 
 		internal readonly int Stratum;
 
+		/// <summary>Whether a finished delve goes down from this ground, which is the only thing
+		/// that makes the stratum below it an edge of this graph at all.</summary>
+		internal readonly bool Shaft;
+
+		/// <summary>Ground with no shaft in it, which is every piece of ground a caller has not
+		/// said otherwise about. The conservative default on purpose: an edge nobody vouched for
+		/// is unbroken rock, and a route through unbroken rock is refused rather than estimated.</summary>
 		internal KingdomZoneNode(string zoneId, int globalX, int globalY, int stratum)
+			: this(zoneId, globalX, globalY, stratum, shaft: false)
+		{
+		}
+
+		internal KingdomZoneNode(string zoneId, int globalX, int globalY, int stratum, bool shaft)
 		{
 			ZoneId = zoneId;
 			GlobalX = globalX;
 			GlobalY = globalY;
 			Stratum = stratum;
+			Shaft = shaft;
 		}
 	}
 
@@ -132,10 +152,30 @@ namespace ThousandAndFirst.Simulation.City
 			return KingdomZoneStep.None;
 		}
 
-		/// <summary>Whether two nodes share an edge of the routing graph.</summary>
+		/// <summary>
+		/// Whether two nodes share an edge a carrier can actually walk.
+		/// <para>
+		/// Not the same question as <see cref="StepBetween"/>, and the difference is the whole of
+		/// the delve. A direction always exists between a zone and the one under it; an EDGE
+		/// exists only where a shaft was cut (<see cref="KingdomDelveRules.ShaftJoinsStrata"/>).
+		/// Symmetric, because a shaft is: the flag is read off the SHALLOWER node, which is the
+		/// ground the winding gear stands on, whichever end the question is asked from.
+		/// </para>
+		/// </summary>
 		internal static bool Adjacent(KingdomZoneNode from, KingdomZoneNode to)
 		{
-			return StepBetween(from, to) != KingdomZoneStep.None;
+			KingdomZoneStep step = StepBetween(from, to);
+			if (step == KingdomZoneStep.None)
+			{
+				return false;
+			}
+			if (step != KingdomZoneStep.Up && step != KingdomZoneStep.Down)
+			{
+				return true;
+			}
+			KingdomZoneNode head = (from.Stratum < to.Stratum) ? from : to;
+			KingdomZoneNode foot = (from.Stratum < to.Stratum) ? to : from;
+			return KingdomDelveRules.ShaftJoinsStrata(head.Stratum, foot.Stratum, head.Shaft);
 		}
 
 		/// <summary>
@@ -280,9 +320,19 @@ namespace ThousandAndFirst.Simulation.City
 					}
 					if (KingdomDistanceRules.Adjacent(kept[i], kept[j]))
 					{
-						table[at] = (ushort)hopCells;
-						hops[at] = (sbyte)j;
-						continue;
+						KingdomZoneStep step = KingdomDistanceRules.StepBetween(kept[i], kept[j]);
+						int cells = (step == KingdomZoneStep.Up || step == KingdomZoneStep.Down)
+							? KingdomDelveRules.ShaftHopCells(hopCells)
+							: hopCells;
+						// A shaft priced past the table's own ceiling is a shaft nothing can be
+						// carried up. Clamped rather than cast, because the cast wraps and a
+						// wrapped distance reads as the shortest way through the city.
+						if (cells < KingdomDistanceRules.NoRoute)
+						{
+							table[at] = (ushort)cells;
+							hops[at] = (sbyte)j;
+							continue;
+						}
 					}
 					table[at] = (ushort)KingdomDistanceRules.NoRoute;
 					hops[at] = -1;

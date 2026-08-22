@@ -94,7 +94,12 @@ namespace ThousandAndFirst
 					stringBuilder.Append(" ").Append(originCount.Value).Append(" of ").Append(originCount.Key).Append(";");
 				}
 			}
+			// Rock the realm poured water on and never opened reads as a claim like any other, so
+			// the count alone would be a lie of omission: a founder counting four parasangs has no
+			// way to see that one of them is ground nobody can carry anything out of (STANDARDS 7b).
+			string unopened = KingdomDelve.UnreachedNote(System);
 			stringBuilder.Append("\nClaimed zones: ").Append(System.ClaimedZones.Count)
+				.Append((unopened == null) ? "" : ("\n{{r|" + unopened + "}}"))
 				.Append(currentClaimed ? ("  (here: " + KingdomGrowth.CountStoredWater(currentZone) + " drams stored, " + KingdomGrowth.CountOpenWater(currentZone) + " open, space for " + KingdomGrowth.CountStorageSpace(currentZone) + ")") : "")
 				.Append("\nShops: tier ").Append(System.ShopTier).Append(System.IdleWorks > 0 ? ("  {{r|" + System.IdleWorks + " works idle for want of hands}}") : "").Append(KingdomWearRules.StatusSuffix(System.DamagedWorks))
 				// Defence and the pantry are surveyed live: both are facts about the ground the

@@ -455,7 +455,10 @@ namespace ThousandAndFirst.Simulation.City
 			{
 				return null;
 			}
-			KingdomZoneNode here = new KingdomZoneNode(Seated.ZoneID, sx, sy, sz);
+			// The shaft flags are set on both ends because Adjacent now asks them: a neighbour under
+			// the floor is only a neighbour where a delve was cut, and prefetching rock nobody can
+			// reach would be holding a zone the carriers will never walk to.
+			KingdomZoneNode here = new KingdomZoneNode(Seated.ZoneID, sx, sy, sz, KingdomDelve.ShaftStands(Seated.ZoneID));
 			string best = null;
 			int bestOwed = 0;
 			int considered = 0;
@@ -472,7 +475,7 @@ namespace ThousandAndFirst.Simulation.City
 				int oz;
 				if (!KingdomRules.TryParseZoneID(row.ZoneId, out otherWorld, out ox, out oy, out oz)
 					|| !string.Equals(world, otherWorld, StringComparison.Ordinal)
-					|| !KingdomDistanceRules.Adjacent(here, new KingdomZoneNode(row.ZoneId, ox, oy, oz)))
+					|| !KingdomDistanceRules.Adjacent(here, new KingdomZoneNode(row.ZoneId, ox, oy, oz, KingdomDelve.ShaftStands(row.ZoneId))))
 				{
 					continue;
 				}

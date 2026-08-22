@@ -1190,6 +1190,15 @@ namespace ThousandAndFirst
 				Failure = KingdomPlotRules.RefuseStage(staked, System.SeatName, System.Stage);
 				return false;
 			}
+			// The way down is asked before the weather, and for the same reason the strata gate is
+			// asked before the district: a lack in the GROUND is the truer answer, and telling a
+			// founder their condensing hall wants sky when the rock it would stand in has never
+			// been opened names the second-best lack.
+			Failure = KingdomDelve.Refusal(System, Z.ZoneID, Entry.Key, Entry.Name);
+			if (Failure != null)
+			{
+				return false;
+			}
 			bool carved = KingdomPlotRules.IsUnderground(Z.Z);
 			if (carved && spec.RequiresSky)
 			{
@@ -1391,6 +1400,14 @@ namespace ThousandAndFirst
 				if (!KingdomPlotRules.Allows(System.Stage, spec.Size))
 				{
 					refusal = KingdomPlotRules.RefuseStage(spec.Size, System.SeatName, System.Stage);
+					return;
+				}
+				// Before the weather, because the way down is a fact about the ground and the
+				// founder should hear it whichever building they asked for: a design refused for
+				// want of sky in rock nobody has cut to would name the wrong lack twice over.
+				refusal = KingdomDelve.Refusal(System, zone.ZoneID, Entry.Key, Entry.Name);
+				if (refusal != null)
+				{
 					return;
 				}
 				if (KingdomPlotRules.IsUnderground(zone.Z) && spec.RequiresSky)
@@ -2356,6 +2373,16 @@ namespace ThousandAndFirst
 				// And the heart's own rung gets the chronicle's own voice on top of it: the same
 				// crew, the same shared water, one more sentence about what the ground has become.
 				KingdomCeremonyHeart.OnRungRaised(system, Z, entry.Key, heart);
+				if (KingdomDelveRules.IsDelve(entry.Key))
+				{
+					// A work whose whole point is that the settlement can now do something it
+					// could not do yesterday has to say so (STANDARDS 7b). Nothing else about a
+					// finished shaft looks different from any other roof on the skyline.
+					KingdomDelve.RecordShaft(Z.ZoneID);
+					string opened = KingdomDelveRules.ShaftOpens(system.SeatName);
+					system.Ledger.Note("{{G|" + opened + "}}");
+					MessageQueue.AddPlayerMessage("{{G|" + opened + "}}");
+				}
 			}
 			else
 			{

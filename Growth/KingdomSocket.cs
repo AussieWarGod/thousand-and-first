@@ -206,6 +206,13 @@ namespace ThousandAndFirst
 				Failure = KingdomSocketRules.RefuseTooSmall(newEntry.Name, rect.Width, rect.Height, needWidth, needHeight);
 				return false;
 			}
+			// The way down before the weather: a conversion is still a building raised, and rock
+			// whose shaft was struck since this plot went up will not take another one.
+			Failure = KingdomDelve.Refusal(System, Z.ZoneID, newEntry.Key, newEntry.Name);
+			if (Failure != null)
+			{
+				return false;
+			}
 			if (KingdomPlotRules.IsUnderground(Z.Z) && newSpec.RequiresSky)
 			{
 				Failure = KingdomPlotRules.RefuseSky(newEntry.Name);
@@ -506,6 +513,12 @@ namespace ThousandAndFirst
 			if (!KingdomSocketRules.FootprintFits(rect.Width, rect.Height, needWidth, needHeight))
 			{
 				Failure = KingdomSocketRules.RefuseTooSmall(entry.Name, rect.Width, rect.Height, needWidth, needHeight);
+				return false;
+			}
+			// The way down before the weather, for the same reason the conversion path asks it.
+			Failure = KingdomDelve.Refusal(System, Z.ZoneID, entry.Key, entry.Name);
+			if (Failure != null)
+			{
 				return false;
 			}
 			if (KingdomPlotRules.IsUnderground(Z.Z) && spec.RequiresSky)
