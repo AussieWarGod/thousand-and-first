@@ -37,24 +37,30 @@ Kingdom Mode ruled (all thirteen incl. C13 seat-cost default, delegated to orche
 set ON). Lab blocklist sustained; four named procedures confirmed. Int ladder load-bearing
 at top tier; schooling +1 cap. Riders minted work items — see Addendum 22 tail.
 
-## Queued waves (updated after Addendum 22 — most gates now open)
+## Queued waves — autonomous-run state (2026-08-22, second update)
 
-**Unblocked, proposed order**: mirror-gate FIRST (free-standing + Design B's hard
-prerequisite — the commute must exist before purposeful cities ship); then strata/WR-3
-(Addendum 15); research-system build (B+E rulings in); lab wave (A1+D; LAB-CLASS-AUDIT
-lands the derived-catalogue v1 list); becoming annexe (A1; fiction F1-F4 as ranked);
-capital/crown wave (A2-A4). Deep delve behind strata. Kingdom Mode + succession wave behind
-the quest-handling research (dispatched) and SUCCESSION-RESEARCH §8's four verification
-debts; the seal/cross-run wave builds on DECISIONS.md + INHERITANCE-SEAMS.md (now tracked),
-C10 confirmed orthogonal. Roster wave (N cities — 12(j)); heart rungs 5+ + relocation verb
-(behind strata); feel-lane remainders (companions, market, tinker services, trophies);
-map follow-ups (`_notes/CLOCK-REWORK-CHANGE-MAP.md` tail): bounty denominator, SealedVigour
-zero-caller, level-2 distances, refined haulage, heart follow-ups (roads TryHeart weight,
-socket second-heart refusal, rite-over-water re-attempt, `Heart="yes"` attribute).
+**SHIPPED this run, all verified + deployed**: mirror-gate + strata/deep set (40eeae7);
+QB-19 underground-sky fix (488e691); research system + knowledge siting, serialization v7
+(b0dc698); research integration remainders (867008f); THE LAB rungs 0–3 incl. the chimeric
+theatre as the first megastructure, the flesh petition, and the megastructure zoning gate
+(80ae42d). Suite 5,343 → 5,871; live install 179 files.
 
-**Research in flight (2026-08-22)**: LAB-CLASS-AUDIT.md (D2 wishlist) and
-QUEST-HANDLING-RESEARCH.md (C5/C6 riders) — both dispatched, land as drafts for
-orchestrator review + commit.
+**In flight**: the becoming annexe (F1 registry fiction, IsTrueKinEvent answer, enrolment
+rolls on the container, Chrome petition); the balance micro-wave (QB-29 yard wear + method
+factor into city-book rates and crops + sim model update).
+
+**Still queued**: capital/crown wave (A2-A4 — crown building, capital extras, arcology set,
+gate-hub re-key per QB-1); deep delve (behind strata — now unblocked); Kingdom Mode +
+succession wave (quest research done; SUCCESSION-RESEARCH §8's four verification debts run
+inside the wave); the seal/cross-run wave (DECISIONS.md + INHERITANCE-SEAMS.md, C10
+orthogonal); rite-mint hook (QB-27 provisional: first share); roster wave (N cities —
+12(j)); heart rungs 5+ + relocation verb; feel-lane remainders (companions/muster hall —
+Swarmer graft waits on it, market, tinker services, trophies); map follow-ups
+(`_notes/CLOCK-REWORK-CHANGE-MAP.md` tail); QB-16 `Sited=` (provisional: leave
+key-matched); the QB-33 lab follow-ups bundle.
+
+**The question backlog** (`_notes/QUESTION-BACKLOG.md`) is the author's check-in surface:
+33 entries, every provisional marked.
 
 ## The working method (this is the "behaviour and attitude")
 
