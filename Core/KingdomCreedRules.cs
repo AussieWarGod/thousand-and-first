@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 namespace ThousandAndFirst
@@ -99,6 +100,132 @@ namespace ThousandAndFirst
 		/// short of a majority nobody in Qud ever actually holds.
 		/// </summary>
 		public const int DominantSharePercent = 33;
+
+		// ==================================================================================
+		// Creed HISTORY (Addendum 16): what a settler has held and left.
+		// ==================================================================================
+
+		/// <summary>
+		/// Creeds one settler's history remembers. Three, and the bound is the point: a life is
+		/// not a ledger, and the record has to be a fixed width or the resident row it rides in
+		/// stops being budgetable (LIVING-CITY-ARCHITECTURE &sect;0.0(c)).
+		/// <para>
+		/// Three because it is the smallest number that can hold a story: what they were born to,
+		/// what they took here, and what they took after that. A fourth conversion is a person the
+		/// city has already learned everything it is going to learn about.
+		/// </para>
+		/// </summary>
+		public const int MaxKeptCreeds = 3;
+
+		/// <summary>
+		/// Separates creeds in a stored history. A pipe rather than the comma an author writes,
+		/// for the reason <c>KingdomZoningRules.RosterSeparator</c> gives: a stored key is a name
+		/// the GAME chose, and a comma is likelier to appear in one. A creed carrying this
+		/// character is refused at <see cref="RememberKept"/> rather than corrupting the record.
+		/// </summary>
+		public const char KeptSeparator = '|';
+
+		/// <summary>
+		/// Reads a stored creed history. Order is preserved &mdash; oldest first, which is the
+		/// order it was written in &mdash; duplicates and unusable names are dropped, and anything
+		/// past <see cref="MaxKeptCreeds"/> is left where a corrupted store put it: outside the
+		/// record. A store that is null, empty, or nonsense reads as an empty history rather than
+		/// throwing, because an unreadable history must never be able to cost a founder a
+		/// building.
+		/// </summary>
+		public static List<string> DecodeKept(string Encoded)
+		{
+			List<string> kept = new List<string>();
+			if (string.IsNullOrEmpty(Encoded))
+			{
+				return kept;
+			}
+			string[] parts = Encoded.Split(KeptSeparator);
+			for (int i = 0; i < parts.Length && kept.Count < MaxKeptCreeds; i++)
+			{
+				string name = (parts[i] == null) ? null : parts[i].Trim();
+				if (string.IsNullOrEmpty(name) || Holds(kept, name))
+				{
+					continue;
+				}
+				kept.Add(name);
+			}
+			return kept;
+		}
+
+		/// <summary>Writes a history back to its stored form. Round-trips
+		/// <see cref="DecodeKept"/> exactly, bound and de-duplication included.</summary>
+		public static string EncodeKept(IEnumerable<string> Kept)
+		{
+			List<string> names = new List<string>();
+			if (Kept != null)
+			{
+				foreach (string entry in Kept)
+				{
+					string name = (entry == null) ? null : entry.Trim();
+					if (string.IsNullOrEmpty(name) || name.IndexOf(KeptSeparator) >= 0 || Holds(names, name))
+					{
+						continue;
+					}
+					names.Add(name);
+					if (names.Count >= MaxKeptCreeds)
+					{
+						break;
+					}
+				}
+			}
+			return string.Join(KeptSeparator.ToString(), names.ToArray());
+		}
+
+		/// <summary>
+		/// One creed added to a stored history: the record a settler carries out of the creed they
+		/// have just left.
+		/// <para>
+		/// <b>First in wins, and the record never rewrites itself.</b> A full history takes no
+		/// more, rather than dropping its oldest entry to make room. That is the choice the
+		/// visibility law forces (Addendum 14): a creed-work a city could see yesterday must not
+		/// vanish from the menu today because somebody across town converted a fourth time. A
+		/// record that only ever grows is one a founder can plan against; one that rotates is a
+		/// door that closes for reasons nothing on the screen can name.
+		/// </para>
+		/// </summary>
+		/// <param name="Encoded">The history as stored. Null and empty are an empty history.</param>
+		/// <param name="Creed">The creed being left. Null, blank, one already remembered, and one
+		/// carrying <see cref="KeptSeparator"/> all change nothing.</param>
+		/// <param name="Added">True only when the record actually grew.</param>
+		/// <returns>The history to store. Unchanged when <paramref name="Added"/> is false.</returns>
+		public static string RememberKept(string Encoded, string Creed, out bool Added)
+		{
+			Added = false;
+			List<string> kept = DecodeKept(Encoded);
+			string name = (Creed == null) ? null : Creed.Trim();
+			if (string.IsNullOrEmpty(name) || name.IndexOf(KeptSeparator) >= 0 || Holds(kept, name) || kept.Count >= MaxKeptCreeds)
+			{
+				return EncodeKept(kept);
+			}
+			kept.Add(name);
+			Added = true;
+			return EncodeKept(kept);
+		}
+
+		/// <summary>Whether a history remembers a creed. Case-folded, because the name is written
+		/// once by the game and again by a catalogue author.</summary>
+		public static bool KeptHolds(string Encoded, string Creed)
+		{
+			return !string.IsNullOrEmpty(Creed) && Holds(DecodeKept(Encoded), Creed);
+		}
+
+		private static bool Holds(List<string> Names, string Name)
+		{
+			for (int i = 0; i < Names.Count; i++)
+			{
+				if (string.Equals(Names[i], Name, StringComparison.OrdinalIgnoreCase))
+				{
+					return true;
+				}
+			}
+			return false;
+		}
 
 		/// <summary>
 		/// How much hostility between two creeds buys one point of dissent a day. At the game's

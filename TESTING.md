@@ -739,6 +739,37 @@ it.
 | 124h | Corrupt or clear the city book (or catch a real fault) and open both the book and the asks board | Both say the book could not be read, in as many words. Neither shows a page of zeroes, and the asks board does **not** print "the stores hold, the roofs are enough" — reporting an unreadable book as a contented city is the report telling you the opposite of the truth |
 | 125 | Grep the log for `perf` through a season with extensions installed | Extension jobs appear on the reckon lane with a `ext:` label. Nothing else moved: the receipt is the regression test |
 
+## Pass 35 — Styles that mean something, and the creed-gate stack
+
+`_notes/BUILDING-CATALOGUE-BRIEF.md` Addendum 16, composing with Addendum 14's visibility law.
+Two halves: the five city styles finally filter the catalogue, and a design may now be gated on
+who the city's PEOPLE are rather than on where it stands.
+
+**What to be suspicious of.** Every other gate in this mod leaves the design in the list wearing a
+tag that names its key. The creed gate has ONE case that shows nothing at all, and if that case
+ever swallows a design a founder could actually have raised, they have no way to learn it exists.
+Steps 129–131 are that case from both sides.
+
+| Step | Action | Expect |
+|---|---|---|
+| 126 | `kingdom:style common`, then Charter → Commission and read the whole list | No `timber hut`, no `hut and yard`, no `sawyer's yard`, no `thorn palisade`, no `water wheel`. **A `mud-brick hut` and a `caravanserai` that no other style has.** The salt flats have no trees and no river; the list says so by what is in it |
+| 126a | `kingdom:style verdant`, same list | No `dew catchment`, no `catchment bank`, no `air-well court`, no `air-well field`, no `manor`, no `settler's cairn`. **A `stilt row` and a `grave-grove`.** The marsh has no dry night and no fieldstone |
+| 126b | `kingdom:style fungal` / `gyre` / `eater`, same list | fungal loses the salt-pan lane, the sailvane and the granary and gains the `spore cellar` and the `cap-roof` (the only dwelling that offers `taf:damp`); gyre loses the pan lane, the wheel, the bazaar and the bathhouse and gains the `bone fold` and the `sacrament court`; eater loses the weep lane, the timber lane and the palisade and gains the `block hut`, its yard, and the `re-stood course` |
+| 126c | In each of the five, check the water, food and housing lanes are all still there | Every style can still raise water, food and a roof at every stage. Losing a DESIGN is the pass; losing a LANE is a bug. `_notes/balance-sim.py` Q12 asserts the same thing off the same file |
+| 127 | Raise a `mud-brick hut` in a common city and let it improve | It improves into the `mud-brick hut and court`, not into anything with timber in it |
+| 128 | Load a save whose city has a `timber hut` standing and force `kingdom:style common` | The hut keeps working and is never touched (nothing regresses silently), and the improvement list reads *"hut and yard is not built in a city of this kind"* rather than offering it or dropping the line |
+| 129 | In a fresh city with no Barathrumites, Mechanimists or Consortium in it, read the whole Commission list, the plan list, and Charter → the keepers' map | **The `under-bench`, the `reliquary` and the `factor's house` are not in any of them.** Not greyed, not tagged — absent. A city that has never held the creed has no path to the work and nothing to be told |
+| 129a | `kingdom:dump` in the same city | `Creeds held:` and `once held:` are both `(none)` or name other creeds. That line is the evidence for what step 129 showed you |
+| 130 | Grow until a settler arrives holding with the Mechanimists (or hold a water rite with them and convert one), then re-read the Commission list | The `reliquary` **appears**, tagged with whatever is still in its way — the share, the hands, or the keepers' learning. It appeared the moment one person aligned |
+| 130a | Try to commission it anyway | Refused, and the refusal names ONE thing: how many hold with them against how many live here, or which hands are missing, or what the keepers were never taught. Never "cannot be raised here" |
+| 131 | Convert that settler AWAY from the Mechanimists to something else, then re-read the list | **The reliquary is still there.** A creed somebody once held is still a path — they can be turned back. This is the whole reason a settler's creed history is recorded, and a design that vanished here would be the bug |
+| 131a | `kingdom:dump` after step 131 | `once held:` now names Mechanimists. The record is on the person: it survives a save, a walk to the other city, and the seat swap |
+| 131b | Let that settler die or emigrate, then re-read the list | The reliquary is gone from the menus again. The history left with the person who carried it |
+| 132 | Stake a plan for a creed-work while the creed is held, then let the last believer leave before it is realised | **The plan still realises.** The gate is judged where the plan is STAKED — that is the cell and the moment the founder decided on — and the visibility law hides designs from a menu; it never reaches back and cancels a decision already made. A staked plan that quietly disappeared would be exactly the silent stall STANDARDS 7b exists against |
+| 132a | With the same city, now open the Commission list again | The creed-work is gone from the list, and the one that was already staked is still standing in the plan. Those two facts are consistent: one is an offer, the other is a commitment |
+| 133 | Ship a third-party `KingdomBuildings.xml` re-declaring `underbench` with `CreedShare="0"` and nothing else | Only the share changes; every other attribute the base catalogue wrote still stands, and one aligned builder is now enough. Grep the log for the merge note naming `CreedShare` |
+| 134 | Ship one with `Styles="all,!eatr"` (deliberate typo) | The load log notes a style built for that no `<style>` declares. `python3 Art/check_xml_refs.py` catches the same thing before the game ever runs |
+
 ## Pass 4 — Attitudes and persistence
 
 | Step | Action | Expect |

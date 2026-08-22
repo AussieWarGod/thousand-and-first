@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <objects>
   <object Name="r_KingdomSettler" Inherits="BaseFarmer">
     <part Name="Render" DisplayName="settler" ColorString="&amp;w" />
@@ -1354,4 +1354,132 @@
   <object Name="Dreadroot" Load="MergeIfExists">
     <part Name="r_KingdomWildSeed" Seed="r_KingdomSeedDreadroot" />
   </object>
+
+  <!-- =========================================================== STYLE-EXCLUSIVE WORKS ==
+    Addendum 16's other half. A style that only ever REMOVES designs reads as a punishment for
+    where you happened to found; each of the five keeps one or two works nobody else can raise,
+    and every one of them answers the thing that style lost. Mud brick for the salt flat with no
+    trees; a grove for the marsh with no fieldstone; a cut cellar for the spore-fall that spoils
+    a granary; a marble court for the height that keeps no bathhouse; re-stood courses for the
+    ruin field with no thorn to cut.
+
+    All of them inherit an object this mod already ships, so every one is an existing glyph and
+    an existing set of parts recoloured - the same discipline a <skin> keeps (STANDARDS 4: a tile
+    no check walks in both directions renders nowhere), applied one level up.
+  -->
+
+  <object Name="r_KingdomMudHut" Inherits="r_KingdomHut">
+    <part Name="Render" DisplayName="mud-brick hut" ColorString="&amp;w" DetailColor="y" />
+    <part Name="Description" Short="Bricks dug out of the pan, moulded in a frame, and left in the flat sun until they ring. Cool at noon, warm at midnight, and nothing in it ever grew." />
+    <part Name="Physics" Organic="false" Weight="2200" />
+    <stat Name="Hitpoints" Value="140" />
+  </object>
+
+  <object Name="r_KingdomMudHutCourt" Inherits="r_KingdomMudHut">
+    <part Name="Render" DisplayName="mud-brick hut and court" ColorString="&amp;W" DetailColor="y" />
+    <part Name="Description" Short="The hut, a wall around a square of swept pan, and a strip of shade along its north side that the whole street borrows in the afternoon." />
+    <part Name="Physics" Weight="3000" />
+    <stat Name="Hitpoints" Value="180" />
+  </object>
+
+  <object Name="r_KingdomCaravanserai" Inherits="r_KingdomBazaar">
+    <part Name="Render" DisplayName="caravanserai" ColorString="&amp;Y" DetailColor="w" />
+    <part Name="Description" Short="A blank wall to the wind, one gate wide enough for a laden pack-dromad, and a yard of stalls around a trough. Nobody who outspans here leaves without having argued about the price of salt." />
+    <part Name="Physics" Weight="9000" />
+    <stat Name="Hitpoints" Value="440" />
+  </object>
+
+  <object Name="r_KingdomStiltRow" Inherits="r_KingdomHouse">
+    <part Name="Render" DisplayName="stilt row" ColorString="&amp;g" DetailColor="w" />
+    <part Name="Description" Short="Posts driven into the silt, a plank walk between the doors, and standing water underneath that nobody pretends is going away. The floor stays dry. That is the whole ambition." />
+    <part Name="Physics" Organic="true" Weight="2600" />
+    <stat Name="Hitpoints" Value="240" />
+  </object>
+
+  <object Name="r_KingdomGraveGrove" Inherits="r_KingdomCairn">
+    <part Name="Render" DisplayName="grave-grove" ColorString="&amp;g" DetailColor="G" />
+    <part Name="Description" Short="A sapling planted for somebody the settlement has not yet lost, and a name cut into the stake beside it. There is no fieldstone here. There is this." />
+    <part Name="Physics" Organic="true" Weight="400" />
+    <stat Name="Hitpoints" Value="90" />
+  </object>
+
+  <object Name="r_KingdomSporeCellar" Inherits="r_KingdomGranary">
+    <part Name="Render" DisplayName="spore cellar" ColorString="&amp;m" DetailColor="M" />
+    <part Name="Description" Short="Cut down into cold earth and shut with a stone lid, because a granary standing in the open under this canopy is a granary full of somebody else's crop by spring." />
+    <part Name="Physics" Organic="false" Weight="3400" />
+    <stat Name="Hitpoints" Value="300" />
+  </object>
+
+  <object Name="r_KingdomCapRoof" Inherits="r_KingdomHut">
+    <part Name="Render" DisplayName="cap-roof" ColorString="&amp;m" DetailColor="M" />
+    <part Name="Description" Short="A dwelling cut under a living cap and left unlit, because the people who ask for one are the people a lamp keeps awake. Water beads on the gills all night and runs down the inside of the wall, and to the right tenant that is the whole selling point." />
+    <part Name="Physics" Organic="true" Weight="1000" />
+    <stat Name="Hitpoints" Value="130" />
+  </object>
+
+  <object Name="r_KingdomBoneFold" Inherits="r_KingdomHutYard">
+    <part Name="Render" DisplayName="bone fold" ColorString="&amp;c" DetailColor="C" />
+    <part Name="Description" Short="Chitin plate lashed over a sill of cut marble, and a fold of hide across the door against a cold that comes up through the stair. Everything in it was carried up." />
+    <part Name="Physics" Organic="true" Weight="1800" />
+    <stat Name="Hitpoints" Value="160" />
+  </object>
+
+  <object Name="r_KingdomSacramentCourt" Inherits="r_KingdomBathhouse">
+    <part Name="Render" DisplayName="sacrament court" ColorString="&amp;c" DetailColor="Y" />
+    <part Name="Description" Short="Marble, cold water, and the long silence. Nobody here would call it a bathhouse; what is done in it is done in order and answered aloud, and being clean afterwards is incidental." />
+    <part Name="Physics" Weight="14000" />
+    <stat Name="Hitpoints" Value="520" />
+  </object>
+
+  <object Name="r_KingdomBlockHut" Inherits="r_KingdomHut">
+    <part Name="Render" DisplayName="block hut" ColorString="&amp;r" DetailColor="w" />
+    <part Name="Description" Short="A fallen course of fulcrete squared off, roofed in salvaged plate, and lived in. The ancients cut the hard part; somebody swept it out." />
+    <part Name="Physics" Organic="false" Weight="3200" />
+    <stat Name="Hitpoints" Value="200" />
+  </object>
+
+  <object Name="r_KingdomBlockYard" Inherits="r_KingdomBlockHut">
+    <part Name="Render" DisplayName="block hut and yard" ColorString="&amp;R" DetailColor="w" />
+    <part Name="Description" Short="Two courses re-stood at a right angle and the corner between them swept, walled with plate, and used. The yard was a room once. Nobody knows whose." />
+    <part Name="Physics" Weight="4000" />
+    <stat Name="Hitpoints" Value="240" />
+  </object>
+
+  <object Name="r_KingdomRubbleWall" Inherits="r_KingdomRampart">
+    <part Name="Render" DisplayName="re-stood course" ColorString="&amp;r" DetailColor="w" />
+    <part Name="Description" Short="The wall that was already here, put back up. Half of it is still the original mortar and the other half is whatever came to hand, and from outside you cannot tell which half is which." />
+    <part Name="Physics" Weight="3000" />
+    <stat Name="Hitpoints" Value="220" />
+    <stat Name="AV" Value="5" />
+  </object>
+
+  <!-- ============================================================== CREED-UNIQUE WORKS ==
+    Addendum 16: each creed gets works nobody else raises, behind the whole gate stack -
+    builders, the amount of the creed the city holds, knowledge, and ALIGNMENT (raised only by
+    people who hold the creed or have previously held it). The catalogue entries carry the gates;
+    these are only what stands there afterwards, and each inherits a shipped object for the same
+    reason the style works do.
+  -->
+
+  <object Name="r_KingdomUnderBench" Inherits="r_KingdomWorkshop">
+    <part Name="Render" DisplayName="under-bench" ColorString="&amp;b" DetailColor="C" />
+    <part Name="Description" Short="Lamps strung low over a bench that was a bulkhead, and a rule pinned above it that the ancients were not gods and did not leave a note. Everything here comes apart before it goes together." />
+    <part Name="Physics" Weight="5000" />
+    <stat Name="Hitpoints" Value="340" />
+  </object>
+
+  <object Name="r_KingdomReliquary" Inherits="r_KingdomTemple">
+    <part Name="Render" DisplayName="reliquary" ColorString="&amp;M" DetailColor="Y" />
+    <part Name="Description" Short="One machine, cased, lit, and not repaired. It has not run in the memory of anyone here and that is not the point; the point is that it was made, and that making is holy." />
+    <part Name="Physics" Weight="16000" />
+    <stat Name="Hitpoints" Value="600" />
+  </object>
+
+  <object Name="r_KingdomFactorHouse" Inherits="r_KingdomHall">
+    <part Name="Render" DisplayName="factor's house" ColorString="&amp;C" DetailColor="Y" />
+    <part Name="Description" Short="A counting room, a strongbox, and a ledger of what every cask in this settlement is worth today against what it was worth last season. Water is money and this is where the money is written down." />
+    <part Name="Physics" Weight="9000" />
+    <stat Name="Hitpoints" Value="440" />
+  </object>
+
 </objects>

@@ -31,8 +31,8 @@ namespace ThousandAndFirst.Tests
 		/// <summary>LIVING-CITY-ARCHITECTURE §0.0(c), the widths, by value.</summary>
 		[TestCase(96, KingdomCityMemoryRules.ZoneRowBytes)]
 		[TestCase(64, KingdomCityMemoryRules.WorkRowBytes)]
-		[TestCase(96, KingdomCityMemoryRules.ResidentRowStructBytes)]
-		[TestCase(160, KingdomCityMemoryRules.ResidentRowBytes)]
+		[TestCase(104, KingdomCityMemoryRules.ResidentRowStructBytes)]
+		[TestCase(168, KingdomCityMemoryRules.ResidentRowBytes)]
 		[TestCase(16, KingdomCityMemoryRules.ClockRowBytes)]
 		[TestCase(32, KingdomCityMemoryRules.ToldRowBytes)]
 		[TestCase(256, KingdomCityMemoryRules.CityHeaderBytes)]
@@ -67,9 +67,16 @@ namespace ThousandAndFirst.Tests
 		/// <summary>
 		/// The brink half of the resident row, by value. W2 moved two windows off the settler's
 		/// property bag and into the row, and the row had to stay inside the ninety-six §0.0(c)
-		/// budgets it — which it does, at ninety-one, with the two windows costing seventeen bytes
+		/// budgets it — which it did, at ninety-one, with the two windows costing seventeen bytes
 		/// each. This pins the window itself so that widening it fails here rather than silently
 		/// eating the row's remaining headroom.
+		/// <para>
+		/// The creed-gate wave then spent the last of that headroom and more: Addendum 16 put the
+		/// creeds a person has HELD AND LEFT into the row, as one shared string reference, and
+		/// ninety-one plus eight is ninety-nine against a ninety-six budget. So the budget moved to
+		/// a hundred and four and the table moved with it — which is the whole point of measuring
+		/// the row rather than trusting the number.
+		/// </para>
 		/// </summary>
 		[Test]
 		public void ABrinkWindowIsAStandingFlagAndTwoTicks()
@@ -79,7 +86,29 @@ namespace ThousandAndFirst.Tests
 			Assert.AreEqual(17, bytes);
 			int row;
 			Assert.IsTrue(KingdomCityMemoryRules.TryMeasureDeclaredRowBytes(typeof(KingdomResidentRow), out row));
-			Assert.AreEqual(91, row, "the resident row moved; if it grew past 96, §0.0(c) needs the same edit");
+			Assert.AreEqual(99, row, "the resident row moved; if it grew past 104, §0.0(c) needs the same edit");
+		}
+
+		/// <summary>
+		/// The creed history is BOUNDED, and this is what makes that falsifiable rather than
+		/// promised. Addendum 16 wants a recorded fact, not a growing one: the record takes
+		/// <c>MaxKeptCreeds</c> names and then stops, and a fourth conversion changes nothing —
+		/// including, deliberately, not evicting the first. See
+		/// <c>KingdomCreedRules.RememberKept</c> for why the record never rotates.
+		/// </summary>
+		[Test]
+		public void ASettlersCreedHistoryIsBoundedAndNeverRotates()
+		{
+			string kept = "";
+			bool added;
+			for (int i = 0; i < KingdomCreedRules.MaxKeptCreeds + 3; i++)
+			{
+				kept = KingdomCreedRules.RememberKept(kept, "Creed" + i, out added);
+				Assert.AreEqual(i < KingdomCreedRules.MaxKeptCreeds, added, "creed " + i);
+			}
+			Assert.AreEqual(KingdomCreedRules.MaxKeptCreeds, KingdomCreedRules.DecodeKept(kept).Count);
+			Assert.IsTrue(KingdomCreedRules.KeptHolds(kept, "Creed0"), "the first creed a settler left is never evicted");
+			Assert.IsFalse(KingdomCreedRules.KeptHolds(kept, "Creed" + KingdomCreedRules.MaxKeptCreeds));
 		}
 
 		/// <summary>Six stock/capacity longs, forty-eight bytes, on the city and on every zone row.
@@ -99,15 +128,16 @@ namespace ThousandAndFirst.Tests
 			Assert.LessOrEqual(bytes, budget, row.Name + " declares " + bytes + " bytes against a budget of " + budget);
 		}
 
-		/// <summary>14,016 bytes ≈ 13.7 KiB, exactly as §0.0(c) computes it row by row with the
-		/// zone row at the ninety-six bytes W1 widened it to.</summary>
+		/// <summary>14,496 bytes ≈ 14.2 KiB, exactly as §0.0(c) computes it row by row with the
+		/// zone row at the ninety-six bytes W1 widened it to and the resident row at the hundred
+		/// and four the creed history widened it to.</summary>
 		[Test]
 		public void OneCityAtTodaysCapsIsTheTablesOwnFigure()
 		{
 			long bytes;
 			Assert.IsTrue(KingdomCityMemoryRules.TryCityModelBytes(
 				KingdomCityState.MaxZones, KingdomCityState.MaxWorks, KingdomCityState.MaxResidents, KingdomCityState.MaxClocks, out bytes));
-			Assert.AreEqual(14016L, bytes);
+			Assert.AreEqual(14496L, bytes);
 		}
 
 		[Test]
@@ -146,7 +176,7 @@ namespace ThousandAndFirst.Tests
 		{
 			long bytes;
 			Assert.IsTrue(KingdomCityMemoryRules.TryRealmBytesAtTodaysCaps(out bytes));
-			Assert.AreEqual(54340L, bytes, "the composed realm total moved");
+			Assert.AreEqual(55300L, bytes, "the composed realm total moved");
 			Assert.Less(bytes, KingdomBudgetRules.ModelBytesCeiling, "the realm broke the 64 KiB ceiling");
 			// W0 recorded this rather than asserting it away: the composed total (52.3 KiB) sat
 			// ABOVE §0.0's own 48 KiB warn rung, so the design shipped permanently inside its own
@@ -171,7 +201,7 @@ namespace ThousandAndFirst.Tests
 		{
 			long bytes;
 			Assert.IsTrue(KingdomCityMemoryRules.TryRealmBytesAtFullParasang(out bytes));
-			Assert.AreEqual(90500L, bytes);
+			Assert.AreEqual(92660L, bytes);
 			Assert.Greater(bytes, KingdomBudgetRules.ModelBytesCeiling, "a nine-zone realm is over TODAY's ceiling by design");
 			Assert.Less(bytes, 100L * KiB, "still under a tenth of a megabyte");
 		}

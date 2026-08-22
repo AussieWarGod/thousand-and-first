@@ -716,7 +716,9 @@ namespace ThousandAndFirst
 				{
 					continue;
 				}
-				if (!KingdomRules.StyleAllows(entry.Styles, System.Style) || System.Stage < entry.MinStage)
+				// KingdomZoning.Offered rather than the two checks by hand: a settlement that
+				// chooses its own next work must not choose a creed-work it has no way to.
+				if (!KingdomZoning.Offered(System, entry))
 				{
 					continue;
 				}

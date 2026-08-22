@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using XRL;
 using XRL.UI;
 using XRL.World;
@@ -555,7 +555,10 @@ namespace ThousandAndFirst
 			System.Collections.Generic.List<KingdomRules.BuildEntry> available = new System.Collections.Generic.List<KingdomRules.BuildEntry>();
 			foreach (KingdomRules.BuildEntry entry in KingdomData.Buildings)
 			{
-				if (KingdomRules.StyleAllows(entry.Styles, System.Style) && System.Stage >= entry.MinStage)
+				// Style, stage, and the visibility law (KingdomZoning.Offered): the whole
+				// catalogue is shown with its gates named, EXCEPT a creed-work this city has no
+				// way to at all, which is not a locked door but a door in another city.
+				if (KingdomZoning.Offered(System, entry))
 				{
 					available.Add(entry);
 				}
@@ -644,7 +647,10 @@ namespace ThousandAndFirst
 			System.Collections.Generic.List<KingdomRules.BuildEntry> available = new System.Collections.Generic.List<KingdomRules.BuildEntry>();
 			foreach (KingdomRules.BuildEntry entry in KingdomData.Buildings)
 			{
-				if (KingdomRules.StyleAllows(entry.Styles, System.Style) && System.Stage >= entry.MinStage)
+				// Style, stage, and the visibility law (KingdomZoning.Offered): the whole
+				// catalogue is shown with its gates named, EXCEPT a creed-work this city has no
+				// way to at all, which is not a locked door but a door in another city.
+				if (KingdomZoning.Offered(System, entry))
 				{
 					available.Add(entry);
 				}

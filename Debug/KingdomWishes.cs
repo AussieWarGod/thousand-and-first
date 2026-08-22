@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Text;
 using XRL;
 using XRL.Rules;
@@ -361,6 +361,7 @@ namespace ThousandAndFirst
 					.Append(" beds=").Append(survey.Beds).Append(" citizens=").Append(survey.Citizens);
 			}
 			sb.Append(KingdomLodging.DumpLine(system, here));
+			sb.Append(KingdomCreed.DumpLine(system));
 			sb.Append(KingdomConversion.DumpLine(system, here));
 			sb.Append(KingdomWaterRite.DumpLine(system, here));
 			sb.Append("\nPop: ").Append(system.Population).Append("  DryStreak: ").Append(system.DryStreak).Append("  HasShopkeeper: ").Append(system.HasShopkeeper);

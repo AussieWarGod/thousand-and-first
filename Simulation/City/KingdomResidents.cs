@@ -437,6 +437,10 @@ namespace ThousandAndFirst.Simulation.City
 			}
 			int originCode = KingdomResidentRules.OriginCode(settler.GetStringProperty("KingdomOrigin"));
 			int creedCode = KingdomCityRules.StableId(settler.GetStringProperty(KingdomCreed.CreedProperty));
+			// Addendum 16's recorded fact, read off the person the same way their present creed is.
+			// The row keeps the very string the settler carries, so the column costs a reference and
+			// the heap nothing.
+			string keptCreeds = settler.GetStringProperty(KingdomCreed.CreedPastProperty);
 			// W3 stamps the post on the person: KingdomGrowth.AssignWork already knew which
 			// settlers it crewed which work with (KingdomCrewRules.CrewOutcome.SettlerIndices) and
 			// now writes it down, so the column is a fact rather than a placeholder. A settler the
@@ -451,13 +455,14 @@ namespace ThousandAndFirst.Simulation.City
 			{
 				return existing
 					.WithReading(NameOf(settler, existing.Name), originCode, creedCode, homeWorkId, jobWorkId, 0, dayShape)
+					.WithKeptCreeds(keptCreeds)
 					.WithBoundZone(zoneId)
 					.WithStanding(KingdomResidentStanding.Resident, KingdomStandingCause.None);
 			}
 			return new KingdomResidentRow(id, NameOf(settler, null), originCode, creedCode,
 				(TimeTicks > 0L) ? TimeTicks : 0L, homeWorkId, jobWorkId, 0, dayShape,
 				KingdomResidentStanding.Resident, KingdomStandingCause.None, zoneId,
-				KingdomBrinkWindow.None, KingdomBrinkWindow.None, null, 0);
+				KingdomBrinkWindow.None, KingdomBrinkWindow.None, null, 0, keptCreeds);
 		}
 
 		/// <summary>

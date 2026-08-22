@@ -815,6 +815,7 @@ class Design:
     plot: str = ""  # S / M / L / XL, or "" for a single-cell design. KingdomReachRules.BandForSize
     larder: int = 0  # servings its blueprint's r_KingdomLarderCapacity tag holds; 0 if not a pantry
     rows: int = 0  # rows its blueprint's r_KingdomCropRows tag stands when sown; 0 if it grows nothing
+    styles: str = "all"  # the design's Styles tag list, verbatim (KingdomZoningRules.TagAccepts)
 
 
 def _store_capacities() -> dict:
@@ -835,19 +836,44 @@ def _store_capacities() -> dict:
 
 
 def _larder_capacities() -> dict:
-    """Blueprint -> r_KingdomLarderCapacity, off the real ObjectBlueprints.xml.
+    """Blueprint -> r_KingdomLarderCapacity, off the real ObjectBlueprints.xml, through Inherits.
 
     The food side of `_store_capacities`, and declared the same way and for the same reason:
     what a design adds to the sustainable LEVEL is a catalogue fact, and how much its vessel
     holds is a fact about the vessel.
+
+    Walks the inheritance chain exactly as `_crop_rows` does, and for the same reason: the game's
+    blueprint loader resolves an inherited tag, so a keeper that inherits a granary really does
+    hold a granary's servings. Reading only the object's own block was a latent asymmetry with the
+    rows half - it fired as "FOOD FROM NOWHERE" the first time a design inherited its pantry
+    rather than re-declaring one, which is the styles wave's `sporecellar`.
     """
+    return _inherited_tag_values("r_KingdomLarderCapacity")
+
+
+def _inherited_tag_values(tag_name: str) -> dict:
+    """Blueprint -> integer value of one tag, resolved through `Inherits` where the object does
+    not declare it itself. The one walk both tag lookups in this file share."""
     text = open(BLUEPRINTS_XML, encoding="utf-8-sig").read()
-    out = {}
+    own, parent = {}, {}
     for block in re.split(r"<object\s+", text)[1:]:
         name = re.match(r'Name="([^"]+)"', block)
-        tag = re.search(r'<tag\s+Name="r_KingdomLarderCapacity"\s+Value="(\d+)"', block)
-        if name and tag:
-            out[name.group(1)] = int(tag.group(1))
+        if not name:
+            continue
+        inherits = re.match(r'Name="[^"]+"\s+Inherits="([^"]+)"', block)
+        if inherits:
+            parent[name.group(1)] = inherits.group(1)
+        tag = re.search(r'<tag\s+Name="' + tag_name + r'"\s+Value="(\d+)"', block)
+        if tag:
+            own[name.group(1)] = int(tag.group(1))
+    out = dict(own)
+    for name in list(parent):
+        seen, walk = set(), name
+        while walk and walk not in own and walk not in seen:
+            seen.add(walk)
+            walk = parent.get(walk)
+        if walk in own:
+            out[name] = own[walk]
     return out
 
 
@@ -920,6 +946,7 @@ def _read_catalogue() -> list[Design]:
             tier.get(plot.group(1), 0) if plot else 0,
         )
         blueprint = re.search(r'\sBlueprint="([^"]+)"', attrs)
+        styles = re.search(r'\sStyles="([^"]*)"', attrs)
         out.append(
             Design(
                 key.group(1),
@@ -931,6 +958,7 @@ def _read_catalogue() -> list[Design]:
                 plot.group(1) if plot else "",
                 larders.get(blueprint.group(1), 0) if blueprint else 0,
                 rows.get(blueprint.group(1), 0) if blueprint else 0,
+                styles.group(1) if styles else "all",
             )
         )
     return out
@@ -1121,6 +1149,218 @@ the table above says. That is authored (the frozen arithmetic's own doc) and it 
 numbers are the FLOOR of what a rung costs rather than the expectation. What is new is that
 reaching the cap is no longer automatic: a lift now lands in proportion to the roofs its work
 covers, and a notable's own shade rides the same cap. Q10 is that whole reckoning.""")
+
+
+
+# --------------------------------------------------------------------------------------
+# 4b. Styles. The one diversity axis the code always honoured and the data never used.
+# --------------------------------------------------------------------------------------
+
+
+def _declared_styles() -> list:
+    """Every `<style Name="x" />` the catalogue declares, in file order."""
+    text = open(BUILD_XML, encoding="utf-8-sig").read()
+    return re.findall(r'<style\s+Name="([^"]+)"', text)
+
+
+def style_accepts(tags: str, style: str) -> bool:
+    """`KingdomZoningRules.TagAccepts`, re-implemented here on purpose.
+
+    This is the sim's whole job: if it imported the rule it would be asserting that the rule
+    equals itself. Written independently from the same three sentences the C# doc-comment
+    states, so a change to either side has to be made twice on purpose.
+
+      1. an empty list accepts everything;
+      2. a negation that matches refuses, whatever else the list says;
+      3. otherwise accept on `all`, on the name, or on a list of nothing but refusals.
+    """
+    tokens = [t.strip().lower() for t in (tags or "").split(",")]
+    tokens = [t for t in tokens if t]
+    if not tokens:
+        return True
+    want = (style or "").strip().lower()
+    welcomed = False
+    any_welcome = False
+    for token in tokens:
+        if token.startswith("!"):
+            refused = token[1:].strip()
+            if refused and (refused == want or refused == "all"):
+                return False
+            continue
+        any_welcome = True
+        if token in ("all", want):
+            welcomed = True
+    return welcomed or not any_welcome
+
+
+def _all_designs() -> list:
+    """Every `<building>` in the catalogue as (key, category, styles, stage), including the
+    walls and the plumbing that `_read_catalogue` drops for carrying nothing. The style pass has
+    to see the whole file: a style that lost its only wall has lost a lane whether or not a wall
+    contributes to the level."""
+    text = open(BUILD_XML, encoding="utf-8-sig").read()
+    names = {n: i for i, (n, _p, _c) in enumerate(STAGES)}
+    tier = {"S": 0, "M": 1, "L": 3, "XL": 4}
+    out = []
+    for attrs in re.findall(r"<building\s+(.*?)/?>", text, re.S):
+        key = re.search(r'Key="([^"]+)"', attrs)
+        if not key:
+            continue
+        category = re.search(r'\sCategory="([^"]*)"', attrs)
+        styles = re.search(r'\sStyles="([^"]*)"', attrs)
+        min_stage = re.search(r'\sMinStage="([^"]*)"', attrs)
+        plot = re.search(r'\sPlot="([^"]*)"', attrs)
+        creed = re.search(r'\sCreed="([^"]*)"', attrs)
+        reachable = max(
+            names.get(min_stage.group(1), 0) if min_stage else 0,
+            tier.get(plot.group(1), 0) if plot else 0,
+        )
+        out.append(
+            (
+                key.group(1),
+                category.group(1) if category else "civic",
+                styles.group(1) if styles else "all",
+                reachable,
+                creed.group(1) if creed else "",
+            )
+        )
+    return out
+
+
+def q12_styles():
+    rule("Q12 Styles: what each of the five cities may raise, and that every one can still stand")
+    styles = _declared_styles()
+    designs = _all_designs()
+    assert styles, "the catalogue declares no <style> at all"
+    assert designs, "the catalogue declares no <building> at all"
+
+    print(f"""
+BUILDING-CATALOGUE-BRIEF Addendum 16: exercise Styles first. `KingdomRules.StyleAllows` has been
+a complete, tested eligibility mechanism since the first wave and every design in the file said
+`Styles="all"`, so the axis existed and meant nothing. It means something now, and this section is
+the guardrail on what it is allowed to mean.
+
+THE LAW THIS ENFORCES, and it is the one the brief states: a style may lose designs, and a style
+may not lose a LANE. Concretely, three assertions:
+
+  1. every style keeps at least one design in every category the catalogue has;
+  2. every style can still HOLD EVERY RUNG - water, food and roof, at Steading through City, out
+     of the designs that style is actually offered, at its own cheapest plan;
+  3. no style reads as pure removal: a style that is refused anything is offered something
+     nobody else can raise.
+
+The third is not a balance rule, it is a design rule, and it is here because it is the one a data
+pass silently breaks. A style is a place, not a penalty.
+""")
+
+    # ---- 1. no empty category, per style -------------------------------------------------
+    categories = sorted({d[1] for d in designs})
+    # A design is SHARED when more than one style is offered it. That distinction is the whole of
+    # this table: being refused somebody else's exclusive is not a restriction, it is what an
+    # exclusive means, and counting the two together would flatter every column equally and
+    # measure nothing.
+    reach = {d[0]: [st for st in styles if style_accepts(d[2], st)] for d in designs}
+    shared = {key for key, offered_to in reach.items() if len(offered_to) > 1}
+    print(f"  {'style':<9}{'offered':>9}{'refused':>9}{'own':>6}   categories missing")
+    exclusives = {}
+    refusals = {}
+    for style in styles:
+        offered = [d for d in designs if style_accepts(d[2], style)]
+        refused = [d for d in designs if not style_accepts(d[2], style) and d[0] in shared]
+        own = [d for d in offered if len(reach[d[0]]) == 1]
+        exclusives[style] = [d[0] for d in own]
+        refusals[style] = [d[0] for d in refused]
+        held = {d[1] for d in offered}
+        missing = [c for c in categories if c not in held]
+        assert not missing, (
+            f"STYLE LOST A LANE: the {style} city is offered nothing at all filed under "
+            f"{', '.join(missing)}. A style filters the catalogue; it does not delete a family "
+            "out of it."
+        )
+        print(
+            f"  {style:<9}{len(offered):>9}{len(refused):>9}{len(own):>6}   "
+            f"{'none' if not missing else ', '.join(missing)}"
+        )
+
+    # ---- 3. nothing reads as pure removal ------------------------------------------------
+    print()
+    for style in styles:
+        if refusals[style] and not exclusives[style]:
+            raise AssertionError(
+                f"PURE REMOVAL: the {style} city is refused {len(refusals[style])} designs and is "
+                "offered nothing of its own. Addendum 16 ships the exclusives in the same pass as "
+                "the restrictions, for exactly this reason."
+            )
+        print(f"  {style:<9}is refused {', '.join(refusals[style]) or 'nothing the others have'}")
+        print(f"  {'':<9}and raises {', '.join(exclusives[style]) or 'nothing nobody else can'}")
+
+    # ---- 2. every style holds every rung -------------------------------------------------
+    print(f"""
+NOW THE RUNGS, which is Q6 run five times. Same arithmetic, same cheapest-first plan, but the
+catalogue narrowed to what each style is offered. `common` is the control: it is refused nothing
+in the binding lanes, so its column is Q6's own answer and every other column is read against it.
+""")
+    print(f"  {'rung':<9}{'style':<9}{'works':>7}{'drams':>8}{'level':>7}   plan")
+    cheapest = {}
+    for i, (name, floor, _cap) in enumerate(STAGES):
+        if i == 0:
+            continue
+        need_water = math.ceil(floor * STAGE_PERCENT[i] / 100)
+        for style in styles:
+            reach = [d for d in CATALOGUE if d.stage <= i and style_accepts(d.styles, style)]
+            plans, works, cost = [], 0, 0
+            points = {}
+            for kind, need in (("water", need_water), ("food", floor), ("roof", floor)):
+                rows = [d for d in reach if kind in d.carries]
+                assert rows, (
+                    f"STYLE CANNOT HOLD {name}: the {style} city is offered no design carrying "
+                    f"{kind} at that rung. Every style holds every rung or the restriction is a "
+                    "removal of the lane."
+                )
+                design = min(rows, key=lambda d: (d.cost / max(d.carries[kind], 1), -d.carries[kind]))
+                count = math.ceil(need / design.carries[kind])
+                plans.append(f"{design.key}x{count}")
+                works += count
+                cost += design.cost * count
+                points[kind] = design.carries[kind] * count
+            level = equilibrium(points["water"], points["food"], points["roof"], 0, i)
+            assert level >= floor, (
+                f"STYLE CANNOT HOLD {name}: the {style} city's cheapest plan reaches {level} "
+                f"against a rung of {floor}."
+            )
+            cheapest[(i, style)] = cost
+            print(
+                f"  {name if style == styles[0] else '':<9}{style:<9}{works:>7}{cost:>8}{level:>7}   "
+                f"{' | '.join(plans)}"
+            )
+        print()
+
+    # ---- and the price of being somewhere in particular ----------------------------------
+    control = styles[0]
+    worst = 0
+    for (i, style), cost in cheapest.items():
+        base = cheapest[(i, control)]
+        if base > 0:
+            worst = max(worst, cost * 100 // base)
+    assert worst <= 150, (
+        f"A STYLE IS BEING PUNISHED: some style's cheapest binding plan costs {worst}% of the "
+        f"{control} city's at the same rung. A style is a different set of answers, not a worse "
+        "one; anything past half again is a restriction that should have been a shade."
+    )
+    print(f"""
+  Costliest style's cheapest plan, against {control}'s at the same rung: {worst}% (ceiling 150%).
+
+Reading. Every style holds every rung out of its own catalogue, and the dearest of them pays
+{worst - 100}% more water than the plain city does for the same people. That number is the whole
+balance consequence of the pass and it is the one to watch: the restrictions above are chosen so
+that no style loses a LANE, only designs within one, and the moment a future restriction takes a
+style's last cheap answer to a binding good this line moves before anything else does.
+
+The creed-gated designs are deliberately absent from every column. They are gated on who the
+city's PEOPLE are rather than on where it stands, they carry no binding good, and the visibility
+law (Addendum 14) means most cities never see them at all - so a plan that leaned on one would be
+a plan for a city that may not exist.
+""")
 
 
 def q7_handover():
@@ -3248,6 +3488,7 @@ if __name__ == "__main__":
     q4_refined()
     q5_sensitivity()
     q6_level()
+    q12_styles()
     q7_handover()
     q8_trajectories()
     q9_feedback()

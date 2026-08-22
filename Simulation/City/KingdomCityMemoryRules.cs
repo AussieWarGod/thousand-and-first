@@ -34,8 +34,14 @@ namespace ThousandAndFirst.Simulation.City
 		/// RanThroughTick 8 + run-state 16 + pad 8. LIVING-CITY-ARCHITECTURE §0.0(c).</summary>
 		internal const int WorkRowBytes = 64;
 
-		/// <summary>The fields only. LIVING-CITY-ARCHITECTURE §0.0(c).</summary>
-		internal const int ResidentRowStructBytes = 96;
+		/// <summary>The fields only. LIVING-CITY-ARCHITECTURE §0.0(c), as the creed-gate wave
+		/// widened it: the row gained one shared string reference for the creeds this person has
+		/// held and left (Addendum 16's recorded fact), and ninety-six had only five bytes of
+		/// headroom left in it. Eight bytes over the ninety-six §0.0(c) first budgeted, and the
+		/// table carries the same edit — the formula is the contract, not the constant, and this
+		/// is the second time a field bought a widening rather than a widening excusing a field.
+		/// </summary>
+		internal const int ResidentRowStructBytes = 104;
 
 		/// <summary>One unique heap string per resident. The only heap string in the model:
 		/// zone ids and design keys are shared references. LIVING-CITY-ARCHITECTURE §0.0(c).</summary>

@@ -10,6 +10,30 @@ Pre-release: the mod has not yet run in a live game. Nothing here is stable unti
 playtest passes.
 
 ### Added
+- **City styles finally mean something, and they are tags.** All five (`common`, `verdant`,
+  `fungal`, `gyre`, `eater`) now filter the catalogue: nineteen designs are refused to the ground
+  that has no business raising them — the dew lane out of the marsh, the salt-pan out of the
+  spore-light and off the Moon Stair, the seep out of a ruin field, the timber lane off the salt
+  flats — each with its reason written beside it in `KingdomBuildings.xml`. Twelve style-exclusive
+  designs land in the same pass, one to three per style, so no style reads as pure removal.
+  `_notes/balance-sim.py` Q12 asserts that every style still holds every rung.
+- **The `Styles` mechanism is the general tag idiom** (`KingdomZoningRules.TagAccepts`): case
+  folded, `all` for everywhere, and a leading `!` for "everywhere except" — vanilla's own
+  negation operator, because the style set is open and enumeration goes stale the day somebody
+  ships a sixth style. `KingdomRules.StyleAllows` keeps its published signature and delegates.
+- **Creed-gated designs, and the whole gate stack behind them** (Addendum 16): `Builders` (who
+  must be standing here, by kind and by count), `Creed` (raised only by builders who hold the
+  creed **or have previously held it**), and `CreedShare` (how much of the city holds it, derived
+  from `KingdomCreedRules.DominantCreed`'s own threshold). Three creed-unique works ship on it —
+  the Barathrumite under-bench, the Mechanimist reliquary, the Consortium factor's house.
+- **A settler's creed history is a recorded fact.** Leaving a creed writes it into a bounded,
+  never-rotating record on the settler (`KingdomCreed.CreedPastProperty`, at the one conversion
+  path) and into the city's own book and tally. The resident row grew eight bytes for it and
+  LIVING-CITY-ARCHITECTURE §0.0(c) carries the same edit.
+- **The visibility law reaches the catalogue.** A creed-gated design a city has no path to —
+  nobody holds the creed and nobody living there ever has — does not appear in the commission
+  list, the plan list, the settlement's own choices, or the keepers' map. Every other refusal is
+  still spoken out loud and still names its fix.
 - Founding by water rite: the founder's basin item (obtainable from tier-1 merchants), the
   Charter activated ability, and the kingdom faction with its own standings ledger.
 - Growth engine: witnessed arrivals with settler provenance and conversations, water

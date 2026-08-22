@@ -91,7 +91,7 @@ namespace ThousandAndFirst
 			foreach (string key in roster)
 			{
 				string name = KingdomZoningRules.NameOf(key);
-				List<string> designs = DesignsNeeding(key);
+				List<string> designs = DesignsNeeding(system, key);
 				builder.Append("\n  ").Append(string.IsNullOrEmpty(name) ? key : name);
 				builder.Append((designs.Count == 0)
 					? " {{K|— nothing in the catalogue asks for it, yet}}"
@@ -102,7 +102,7 @@ namespace ThousandAndFirst
 		/// <summary>Every design whose <c>Knowledge</c> gate this one roster key satisfies a token
 		/// of. Asked one key at a time, which is the only way to say what a key OPENED rather than
 		/// what the roster as a whole opened.</summary>
-		private static List<string> DesignsNeeding(string key)
+		private static List<string> DesignsNeeding(KingdomSystem system, string key)
 		{
 			List<string> designs = new List<string>();
 			List<string> one = new List<string> { key };
@@ -110,7 +110,7 @@ namespace ThousandAndFirst
 			for (int i = 0; buildings != null && i < buildings.Count; i++)
 			{
 				KingdomRules.BuildEntry entry = buildings[i];
-				if (entry == null || string.IsNullOrEmpty(entry.Key))
+				if (entry == null || string.IsNullOrEmpty(entry.Key) || !KingdomZoning.Visible(system, entry))
 				{
 					continue;
 				}
@@ -138,12 +138,17 @@ namespace ThousandAndFirst
 		private static void Locked(KingdomSystem system, List<string> roster, TechLevel level, StringBuilder builder)
 		{
 			List<TechMapRow> rows = new List<TechMapRow>();
+			BuilderRoll roll = KingdomZoning.BuilderRollOf(system);
 			int open = 0;
 			List<KingdomRules.BuildEntry> buildings = KingdomData.Buildings;
 			for (int i = 0; buildings != null && i < buildings.Count; i++)
 			{
 				KingdomRules.BuildEntry entry = buildings[i];
-				if (entry == null || string.IsNullOrEmpty(entry.Key))
+				// The visibility law reaches the map too, and it has to: the map's whole job is to
+				// say what is nearly in reach, and a creed-work nobody here has ever aligned with
+				// is not nearly in reach -- naming it would be the spoiler screen Addendum 14
+				// forbids.
+				if (entry == null || string.IsNullOrEmpty(entry.Key) || !KingdomZoning.Visible(system, entry))
 				{
 					continue;
 				}
@@ -152,7 +157,11 @@ namespace ThousandAndFirst
 				bool techShort = gate.MinTech > level;
 				bool zonesShort = gate.MinZones > system.ClaimedZones.Count;
 				bool stageShort = entry.MinStage > system.Stage;
-				int distance = KingdomTechMapRules.Distance(techShort, unknown.Count, zonesShort, stageShort);
+				List<string> hands = KingdomZoningRules.DescribeBuilders(KingdomZoningRules.MissingBuilders(roll, gate.Builders));
+				int holding = string.IsNullOrEmpty(gate.Creed) ? 0 : roll.HoldingNow(gate.Creed);
+				bool creedShort = !string.IsNullOrEmpty(gate.Creed) && roll.Known
+					&& !KingdomZoningRules.CreedShareMet(holding, roll.People, gate.EffectiveCreedShare);
+				int distance = KingdomTechMapRules.Distance(techShort, unknown.Count, zonesShort, stageShort, hands.Count, creedShort);
 				if (distance <= 0)
 				{
 					open++;
@@ -165,7 +174,12 @@ namespace ThousandAndFirst
 					gate.MinZones,
 					system.ClaimedZones.Count,
 					stageShort ? entry.MinStage.ToString() : null,
-					KingdomZoningRules.DescribeDistricts(gate.Districts))));
+					KingdomZoningRules.DescribeDistricts(gate.Districts),
+					hands,
+					creedShort ? KingdomCreed.CreedName(gate.Creed) : null,
+					creedShort ? gate.EffectiveCreedShare : 0,
+					KingdomZoningRules.ShareHeld(holding, roll.People),
+					holding)));
 			}
 			KingdomTechMapRules.Sort(rows);
 			builder.Append("\n\n{{W|What is nearly in reach:}}");

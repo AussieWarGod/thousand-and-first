@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Qud.API;
 using XRL;
@@ -620,6 +620,24 @@ namespace ThousandAndFirst
 		/// counterpart <see cref="KingdomSettlement.CreedCounts"/> is what the reflected carry
 		/// checks this field against.</summary>
 		public Dictionary<string, int> CreedCounts = new Dictionary<string, int>();
+
+		/// <summary>
+		/// The seated city's tally of creeds its people have HELD AND LEFT &mdash; the other half
+		/// of <see cref="CreedCounts"/>, and the half no count of present belief can supply.
+		/// Addendum 16: a settler's creed history is a recorded fact from now on, and the ALIGNMENT
+		/// gate is satisfied by a builder who holds a creed <em>or has previously held it</em>.
+		/// <para>
+		/// Kept beside the present tally rather than derived from the people, because the people
+		/// of an unseated city are not loaded and a gate must answer anyway. Written at exactly two
+		/// seams: <c>KingdomCreed.RememberPast</c>, off the one conversion path, and
+		/// <c>KingdomCreed.Forget</c>, when the person carrying the history leaves or dies.
+		/// </para>
+		/// <para>
+		/// Per-city and swapped with the seat exactly like <see cref="CreedCounts"/>: what this
+		/// city's people have believed is not what the other city's have.
+		/// </para>
+		/// </summary>
+		public Dictionary<string, int> CreedPastCounts = new Dictionary<string, int>();
 
 		/// <summary>
 		/// Addendum 5: shared living each settler has accumulated toward somebody else's creed,
@@ -1851,6 +1869,10 @@ namespace ThousandAndFirst
 			if (OriginCounts == null)
 			{
 				OriginCounts = new Dictionary<string, int>();
+			}
+			if (CreedPastCounts == null)
+			{
+				CreedPastCounts = new Dictionary<string, int>();
 			}
 			if (CreedCounts == null)
 			{

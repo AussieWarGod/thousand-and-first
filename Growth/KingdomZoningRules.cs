@@ -37,6 +37,16 @@ namespace ThousandAndFirst
 	/// different scales, and only one of them can be answered: ground can be named a district
 	/// tomorrow, and no naming puts weather under a mountain.
 	/// </para>
+	/// <para>
+	/// <b>The three creed gates are checked FIRST and are numbered LAST</b>, which is the one
+	/// place where the ordinals and the reading order disagree. They belong at the head of the
+	/// order because who your people are is more fundamental than what your keepers were taught:
+	/// a city with nobody who has ever held a creed is not one disk away from its shrine, it is a
+	/// different city. They are numbered at the end because these ordinals are published
+	/// (STANDARDS &sect;9), and renumbering a published enum to make it read prettily would move
+	/// every value a third party already switched on. Appending is additive; renumbering is a
+	/// break. <see cref="KingdomZoningRules.Judge"/> is the authority on the order.
+	/// </para>
 	/// </summary>
 	public enum ZoningVerdict
 	{
@@ -45,14 +55,133 @@ namespace ThousandAndFirst
 		RefusedTechLevel = 2,
 		RefusedTerritory = 3,
 		RefusedStratum = 4,
-		RefusedDistrict = 5
+		RefusedDistrict = 5,
+
+		/// <summary>Nobody living here holds &mdash; or has ever held &mdash; the creed the design
+		/// belongs to. Checked first of all.</summary>
+		RefusedUnaligned = 6,
+
+		/// <summary>The creed is held here, but by too few of the city for a work of it to stand.
+		/// </summary>
+		RefusedCreedShare = 7,
+
+		/// <summary>The hands the design asks for are not among this city's people.</summary>
+		RefusedBuilders = 8
 	}
 
 	/// <summary>
-	/// The four optional gates a <c>&lt;building&gt;</c> entry may declare, parsed. Every field
+	/// Who a city's people are, as a gate has to see them: how many there are, where they walked
+	/// in from, what they hold with, and what they have <em>held and left</em>. The last of those
+	/// is the whole reason this type exists &mdash; a creed somebody once held is a fact about
+	/// them from the moment they leave it (Addendum 16), and no tally of present belief can say
+	/// it.
+	/// <para>
+	/// Three tallies and a head count, passed in already read. Lookups are case-insensitive and
+	/// linear because these tallies hold a handful of entries each and a linear scan allocates
+	/// nothing; nothing here ever enumerates one, so no answer depends on a dictionary's order.
+	/// </para>
+	/// <para>
+	/// <see cref="Unknown"/> is the roll a caller could not supply, and every creed gate
+	/// <b>permits</b> against it. That asymmetry is deliberate and is the same one
+	/// <c>KingdomZoning.Permits</c> already makes: a gate that cannot see the city must never be
+	/// the reason a founder cannot build in it.
+	/// </para>
+	/// </summary>
+	public readonly struct BuilderRoll
+	{
+		/// <summary>False for <see cref="Unknown"/>. Every creed gate permits when this is false.
+		/// </summary>
+		public readonly bool Known;
+
+		/// <summary>Everyone living in the city, believers and ordinary alike &mdash; the
+		/// denominator the creed share is taken against, exactly as
+		/// <c>KingdomCreedRules.DominantCreed</c> takes it.</summary>
+		public readonly int People;
+
+		private readonly IDictionary<string, int> origins;
+
+		private readonly IDictionary<string, int> holding;
+
+		private readonly IDictionary<string, int> kept;
+
+		/// <param name="People">The city's population.</param>
+		/// <param name="Origins">Country to people from it living here. Null reads as none.</param>
+		/// <param name="Holding">Creed to people holding it now. Null reads as none.</param>
+		/// <param name="Kept">Creed to people who have held it and left it. Null reads as none.
+		/// </param>
+		public BuilderRoll(int People, IDictionary<string, int> Origins, IDictionary<string, int> Holding, IDictionary<string, int> Kept)
+		{
+			Known = true;
+			this.People = (People > 0) ? People : 0;
+			origins = Origins;
+			holding = Holding;
+			kept = Kept;
+		}
+
+		/// <summary>A roll nobody supplied. Permits every creed gate; see the type's own summary.
+		/// </summary>
+		public static BuilderRoll Unknown => default(BuilderRoll);
+
+		/// <summary>People here who walked in from this country.</summary>
+		public int FromCountry(string Origin)
+		{
+			return Count(origins, Origin);
+		}
+
+		/// <summary>People here who hold with this creed today.</summary>
+		public int HoldingNow(string Creed)
+		{
+			return Count(holding, Creed);
+		}
+
+		/// <summary>People here who have held this creed and left it.</summary>
+		public int HeldOnce(string Creed)
+		{
+			return Count(kept, Creed);
+		}
+
+		/// <summary>People here who ALIGN with this creed: they hold it, or they once did. The
+		/// alignment gate's whole arithmetic, and the visibility law's
+		/// (<see cref="KingdomZoningRules.NoPathToCreed"/>).</summary>
+		public int Aligned(string Creed)
+		{
+			return HoldingNow(Creed) + HeldOnce(Creed);
+		}
+
+		// Linear and case-insensitive: a creed is a faction name and an origin is a country, both
+		// of them authored in one file and written again by hand in another, so "Barathrumites"
+		// and "barathrumites" must be one creed. Summed rather than short-circuited so that two
+		// keys differing only in case cannot hide half a tally.
+		private static int Count(IDictionary<string, int> Tally, string Key)
+		{
+			if (Tally == null || string.IsNullOrEmpty(Key))
+			{
+				return 0;
+			}
+			int total = 0;
+			foreach (KeyValuePair<string, int> entry in Tally)
+			{
+				if (entry.Value > 0 && string.Equals(entry.Key, Key, System.StringComparison.OrdinalIgnoreCase))
+				{
+					total += entry.Value;
+				}
+			}
+			return total;
+		}
+	}
+
+	/// <summary>
+	/// The optional gates a <c>&lt;building&gt;</c> entry may declare, parsed. Every field
 	/// has an "ungated" value and that value is what an absent attribute produces, so an entry
 	/// written before these gates existed &mdash; ours or a third party's &mdash; is
 	/// <see cref="IsOpen"/> and behaves exactly as it always did.
+	/// <para>
+	/// Four gates shipped first (district, ground, knowledge, craft). Addendum 16 added three
+	/// more, and they are the creed stack: who must be here to raise it, which creed it belongs
+	/// to, and how much of the city must hold that creed. The two constructors are both kept for
+	/// the same reason the verdict enum was appended to rather than renumbered &mdash; a
+	/// published shape is not re-cut under a third party who is already calling it.
+	/// </para>
 	/// </summary>
 	public readonly struct ZoneGate
 	{
@@ -76,20 +205,68 @@ namespace ThousandAndFirst
 		/// every settlement's starting level and therefore gates nothing.</summary>
 		public readonly TechLevel MinTech;
 
+		/// <summary>
+		/// Comma list of facts that must be true of the city's own people, ALL of them:
+		/// <c>origin:the rust wells</c>, <c>creed:Barathrumites</c>, <c>kept:Mechanimists</c>, any
+		/// of them optionally with a count (<c>origin:the rust wells:2</c>). Null when the design
+		/// asks for nobody in particular. See <see cref="MissingBuilders"/> for the match rule.
+		/// <para>
+		/// Distinct from <see cref="Knowledge"/> on purpose: knowledge is what the keepers were
+		/// TAUGHT and it never leaves, and this is who is STANDING here and it leaves when they
+		/// do.
+		/// </para>
+		/// </summary>
+		public readonly string Builders;
+
+		/// <summary>
+		/// The creed this design belongs to, by faction name, or null. Kept in the case the
+		/// author wrote it in rather than folded, because it is handed to the engine's own
+		/// faction table and read back to the founder as prose.
+		/// </summary>
+		public readonly string Creed;
+
+		/// <summary>
+		/// Percent of the city that must hold <see cref="Creed"/>. <see cref="ShareUnsaid"/> when
+		/// the design named a creed and no share, which reads as
+		/// <c>KingdomCreedRules.DominantSharePercent</c> &mdash; the same third a city's own creed
+		/// is read at, so "a creed-work wants a creed city" is one rule and not two. Zero means one
+		/// aligned builder is enough.
+		/// </summary>
+		public readonly int CreedShare;
+
 		public ZoneGate(string Districts, int MinZones, string Knowledge, TechLevel MinTech)
+			: this(Districts, MinZones, Knowledge, MinTech, null, null, ShareUnsaid)
+		{
+		}
+
+		public ZoneGate(string Districts, int MinZones, string Knowledge, TechLevel MinTech,
+			string Builders, string Creed, int CreedShare)
 		{
 			this.Districts = Districts;
 			this.MinZones = MinZones;
 			this.Knowledge = Knowledge;
 			this.MinTech = MinTech;
+			this.Builders = Builders;
+			this.Creed = Creed;
+			this.CreedShare = CreedShare;
 		}
 
-		/// <summary>A design that declares none of the four gates. What an entry with no new
+		/// <summary>What <see cref="CreedShare"/> holds when the attribute was not written. Not
+		/// zero, because zero is a thing an author can mean.</summary>
+		public const int ShareUnsaid = -1;
+
+		/// <summary>A design that declares none of the gates. What an entry with no new
 		/// attributes parses to, and the value used for any key the registry never registered.</summary>
 		public static ZoneGate Open => new ZoneGate(null, 0, null, TechLevel.Hands);
 
+		/// <summary>The share this gate actually asks for: what the author wrote, or the third a
+		/// city's own creed is read at when they wrote nothing. Meaningless without
+		/// <see cref="Creed"/>, and never consulted without it.</summary>
+		public int EffectiveCreedShare => (CreedShare == ShareUnsaid) ? KingdomCreedRules.DominantSharePercent : CreedShare;
+
 		/// <summary>True when nothing here can refuse anything.</summary>
-		public bool IsOpen => string.IsNullOrEmpty(Districts) && MinZones <= 0 && string.IsNullOrEmpty(Knowledge) && MinTech <= TechLevel.Hands;
+		public bool IsOpen => string.IsNullOrEmpty(Districts) && MinZones <= 0 && string.IsNullOrEmpty(Knowledge)
+			&& MinTech <= TechLevel.Hands && string.IsNullOrEmpty(Builders) && string.IsNullOrEmpty(Creed);
 	}
 
 	/// <summary>
@@ -155,6 +332,20 @@ namespace ThousandAndFirst
 		/// <summary>Token meaning "any ground at all". Equivalent to omitting the attribute; it
 		/// exists because <c>Styles="all"</c> already taught authors this spelling.</summary>
 		public const string AnyToken = "all";
+
+		/// <summary>
+		/// Prefix that turns one token of a tag list into a refusal: <c>Styles="all,!eater"</c> is
+		/// every style but the ancients'. Vanilla's own operator &mdash; <c>Chavvah</c>'s water
+		/// ritual ships <c>RecipeGenotype="!True Kin"</c> in <c>Factions.xml</c> &mdash; so an
+		/// author already knows how to read it.
+		/// <para>
+		/// It exists because the tag sets here are OPEN. A design that belongs everywhere except
+		/// one place cannot say so by enumeration: the moment a third party declares a sixth
+		/// style, every list that spelled "everywhere" as four names is quietly wrong about
+		/// itself. A refusal stays right.
+		/// </para>
+		/// </summary>
+		public const char NegationPrefix = '!';
 
 		/// <summary>Separator inside every comma list this file parses.</summary>
 		public const char ListSeparator = ',';
@@ -313,6 +504,120 @@ namespace ThousandAndFirst
 				return ListContains(RequiredDistricts, tile);
 			}
 			return ListContains(RequiredDistricts, UndistrictedToken) || IsOpenCategory(Category);
+		}
+
+		// ==================================================================================
+		// Tags: the one list idiom every open-ended set in the catalogue is matched by.
+		// ==================================================================================
+
+		/// <summary>
+		/// Whether a tag list accepts one value. The whole of what <c>Styles</c> means, and the
+		/// shape Addendum 16 rules every open-ended catalogue set into: a comma list of tags,
+		/// <see cref="AnyToken"/> for "all of them", and <see cref="NegationPrefix"/> for "all of
+		/// them except this".
+		/// <para>
+		/// Three rules, in this order, and the order is the contract:
+		/// </para>
+		/// <list type="number">
+		/// <item>An empty or absent list accepts everything. That is what keeps every entry
+		/// written before a tag existed working untouched (STANDARDS &sect;6).</item>
+		/// <item>A negation that matches refuses, whatever else the list says. An author who
+		/// writes both a welcome and a refusal for the same tag meant the refusal &mdash; nobody
+		/// writes <c>!x</c> by accident.</item>
+		/// <item>Otherwise the list accepts when it names <see cref="AnyToken"/>, when it names
+		/// the value, or when it names nothing but refusals &mdash; because a list of pure
+		/// refusals is "everywhere except", and reading it as "nowhere" would gate the design out
+		/// of the game.</item>
+		/// </list>
+		/// <para>
+		/// Case-folded on both sides, unlike the exact comparison <c>Styles</c> shipped with. A
+		/// tag is data an author types twice in two files, and <c>Verdant</c> silently matching
+		/// nothing was a trap rather than a rule.
+		/// </para>
+		/// </summary>
+		/// <param name="Tags">The authored list. Null and empty accept everything.</param>
+		/// <param name="Value">The one tag being tested. Null is accepted only by a list that
+		/// gates nothing, so a caller with nothing to test is never told it may not.</param>
+		public static bool TagAccepts(string Tags, string Value)
+		{
+			List<string> tokens = Tokens(Tags);
+			if (tokens.Count == 0)
+			{
+				return true;
+			}
+			string value = Fold(Value);
+			bool welcomed = false;
+			bool anyWelcome = false;
+			for (int i = 0; i < tokens.Count; i++)
+			{
+				string token = tokens[i];
+				if (token[0] == NegationPrefix)
+				{
+					string refused = token.Substring(1).Trim();
+					if (refused.Length == 0)
+					{
+						continue;
+					}
+					if (refused == value || refused == AnyToken)
+					{
+						return false;
+					}
+					continue;
+				}
+				anyWelcome = true;
+				if (token == AnyToken || token == value)
+				{
+					welcomed = true;
+				}
+			}
+			return welcomed || !anyWelcome;
+		}
+
+		/// <summary>
+		/// A tag list read back as prose: "the fungal or the eater city", "every style but the
+		/// eater's". Names come back exactly as the author folded them, because a tag set is open
+		/// and there is no table here to look a third party's tag up in.
+		/// </summary>
+		/// <returns>Null when the list gates nothing, so a caller can drop the whole clause.</returns>
+		public static string DescribeTags(string Tags)
+		{
+			List<string> tokens = Tokens(Tags);
+			if (tokens.Count == 0)
+			{
+				return null;
+			}
+			List<string> welcomed = new List<string>();
+			List<string> refused = new List<string>();
+			bool takesAll = false;
+			for (int i = 0; i < tokens.Count; i++)
+			{
+				string token = tokens[i];
+				if (token[0] == NegationPrefix)
+				{
+					string name = token.Substring(1).Trim();
+					if (name.Length > 0)
+					{
+						refused.Add(name);
+					}
+					continue;
+				}
+				if (token == AnyToken)
+				{
+					takesAll = true;
+					continue;
+				}
+				welcomed.Add(token);
+			}
+			if (welcomed.Count == 0 && refused.Count == 0)
+			{
+				return null;
+			}
+			if (welcomed.Count == 0)
+			{
+				return "anything but " + JoinOr(refused);
+			}
+			string said = takesAll ? ("anything, or " + JoinOr(welcomed)) : JoinOr(welcomed);
+			return (refused.Count == 0) ? said : (said + ", but never " + JoinOr(refused));
 		}
 
 		/// <summary>
@@ -486,6 +791,253 @@ namespace ThousandAndFirst
 			return missing;
 		}
 
+		// ==================================================================================
+		// The creed stack (Addendum 16): who is here, what they hold, and what they once held.
+		// ==================================================================================
+
+		/// <summary>A <c>Builders</c> kind: somebody living here holds that creed today. Read off
+		/// the city's own creed tally, so it comes and goes with the believers.</summary>
+		public const string KindCreed = "creed";
+
+		/// <summary>A <c>Builders</c> kind: somebody here has held that creed and LEFT it. The one
+		/// fact no tally of present belief can answer, and the reason a settler's creed history is
+		/// recorded at all (Addendum 16).</summary>
+		public const string KindKept = "kept";
+
+		/// <summary>
+		/// Whether the roll satisfies one <c>Builders</c> requirement.
+		/// <para>
+		/// A requirement is <c>kind:name</c>, or <c>kind:name:count</c> when one of them is not
+		/// enough. The kinds are <see cref="KindOrigin"/> (people from a country),
+		/// <see cref="KindCreed"/> (people holding a creed today) and <see cref="KindKept"/>
+		/// (people who hold it or once did &mdash; the aligned). A requirement written as a bare
+		/// name, with no kind, is satisfied by any of the three, exactly as
+		/// <see cref="Knows"/> lets a bare <c>Knowledge</c> name be satisfied by any kind.
+		/// </para>
+		/// <para>
+		/// A kind this file does not know never matches, and the refusal names the requirement as
+		/// the author wrote it. That is the same bargain <see cref="Knows"/> strikes for an
+		/// invented knowledge kind, told the other way round: a knowledge kind can be supplied by
+		/// a third party's own <c>Learn</c> call, and a people-kind cannot, so an unknown one here
+		/// is a gate that will never open and the log has to be able to say which.
+		/// </para>
+		/// </summary>
+		public static bool HasBuilders(BuilderRoll Roll, string Requirement)
+		{
+			string required = Fold(Requirement);
+			if (required == null)
+			{
+				return true;
+			}
+			if (!Roll.Known)
+			{
+				return true;
+			}
+			string kind;
+			string name;
+			int wanted;
+			if (!SplitBuilder(required, out kind, out name, out wanted))
+			{
+				return false;
+			}
+			if (kind == null)
+			{
+				return Roll.FromCountry(name) >= wanted || Roll.HoldingNow(name) >= wanted || Roll.Aligned(name) >= wanted;
+			}
+			if (kind == KindOrigin)
+			{
+				return Roll.FromCountry(name) >= wanted;
+			}
+			if (kind == KindCreed)
+			{
+				return Roll.HoldingNow(name) >= wanted;
+			}
+			if (kind == KindKept)
+			{
+				return Roll.Aligned(name) >= wanted;
+			}
+			return false;
+		}
+
+		/// <summary>Every requirement in a <c>Builders</c> list the roll does not satisfy, in the
+		/// order the author wrote them. Empty when the city has all the hands it asks for.</summary>
+		public static List<string> MissingBuilders(BuilderRoll Roll, string Required)
+		{
+			List<string> missing = new List<string>();
+			if (!Gated(Required) || !Roll.Known)
+			{
+				return missing;
+			}
+			foreach (string token in Tokens(Required))
+			{
+				if (!HasBuilders(Roll, token) && !missing.Contains(token))
+				{
+					missing.Add(token);
+				}
+			}
+			return missing;
+		}
+
+		/// <summary>One <c>Builders</c> requirement as prose: "somebody from the rust wells",
+		/// "three who hold with the Barathrumites", "somebody who has ever held with the
+		/// Mechanimists".</summary>
+		public static string DescribeBuilder(string Requirement)
+		{
+			string required = Fold(Requirement);
+			if (required == null)
+			{
+				return "";
+			}
+			string kind;
+			string name;
+			int wanted;
+			if (!SplitBuilder(required, out kind, out name, out wanted))
+			{
+				return required;
+			}
+			bool one = wanted <= 1;
+			string many = one ? "somebody" : (wanted + " people");
+			string holds = one ? "holds" : "hold";
+			if (kind == KindOrigin)
+			{
+				return many + " from " + name;
+			}
+			if (kind == KindCreed)
+			{
+				return many + " who " + holds + " with " + name;
+			}
+			if (kind == KindKept)
+			{
+				return many + " who " + holds + ", or " + (one ? "has" : "have") + " ever held, with " + name;
+			}
+			return many + " answering to " + required;
+		}
+
+		/// <summary>Every requirement of a list, read back as prose.</summary>
+		public static List<string> DescribeBuilders(IEnumerable<string> Requirements)
+		{
+			List<string> said = new List<string>();
+			if (Requirements == null)
+			{
+				return said;
+			}
+			foreach (string requirement in Requirements)
+			{
+				string one = DescribeBuilder(requirement);
+				if (!string.IsNullOrEmpty(one) && !said.Contains(one))
+				{
+					said.Add(one);
+				}
+			}
+			return said;
+		}
+
+		/// <summary>
+		/// Whether anybody here ALIGNS with a creed: holds it, or has held it and left it. The
+		/// alignment gate of Addendum 16 clause (4), and &mdash; through
+		/// <see cref="NoPathToCreed"/> &mdash; the visibility law of Addendum 14 as it applies to
+		/// creed-works.
+		/// </summary>
+		/// <returns>True for a design that names no creed, and true against
+		/// <see cref="BuilderRoll.Unknown"/>.</returns>
+		public static bool Aligned(BuilderRoll Roll, string Creed)
+		{
+			if (string.IsNullOrEmpty(Creed) || !Roll.Known)
+			{
+				return true;
+			}
+			return Roll.Aligned(Creed) > 0;
+		}
+
+		/// <summary>
+		/// A city with no way to this design at all: it names a creed, nobody here holds that
+		/// creed, and nobody here ever has. Addendum 14's visibility law &mdash; <i>you especially
+		/// cannot see what you CAN'T unlock</i> &mdash; and the exact complement of
+		/// <see cref="Aligned"/>, deliberately, so that "shown" and "buildable" can never drift
+		/// apart into two rules.
+		/// <para>
+		/// A creed somebody once held is still a path: they can be turned back, and their
+		/// household can be turned with them. Only a creed no one here has ever carried is a door
+		/// with no key, and only that one is hidden.
+		/// </para>
+		/// </summary>
+		public static bool NoPathToCreed(BuilderRoll Roll, string Creed)
+		{
+			return !Aligned(Roll, Creed);
+		}
+
+		/// <summary>
+		/// Whether enough of the city holds a creed for a work of it to stand &mdash; Addendum 16
+		/// clause (2), the AMOUNT.
+		/// <para>
+		/// The threshold is not chosen here. It is <c>KingdomCreedRules.DominantCreed</c>'s own
+		/// arithmetic, minus one clause: at least <c>KingdomCreedRules.MinBelievers</c> people, and
+		/// at least the asked share of everyone living there. What is dropped is the
+		/// no-larger-rival test, and dropping it is the point &mdash; that test answers "what creed
+		/// is this CITY", and a congregation large enough to raise its own shrine does not have to
+		/// be the largest congregation in town.
+		/// </para>
+		/// </summary>
+		/// <param name="Holding">People holding the creed now.</param>
+		/// <param name="People">Everyone living in the city.</param>
+		/// <param name="Percent">The share asked for. Zero and below ask for no share at all, and
+		/// the believers floor goes with it: an author who writes <c>CreedShare="0"</c> has said
+		/// one aligned builder is enough.</param>
+		public static bool CreedShareMet(int Holding, int People, int Percent)
+		{
+			if (Percent <= 0)
+			{
+				return true;
+			}
+			if (Holding < KingdomCreedRules.MinBelievers || People <= 0)
+			{
+				return false;
+			}
+			return Holding * 100 >= People * Percent;
+		}
+
+		/// <summary>The share a city actually holds, in whole percent, for the sentence that names
+		/// it. Zero for a city with nobody in it, which is the only honest answer.</summary>
+		public static int ShareHeld(int Holding, int People)
+		{
+			if (Holding <= 0 || People <= 0)
+			{
+				return 0;
+			}
+			return Holding * 100 / People;
+		}
+
+		// A Builders token, split. `kind:name`, `kind:name:count`, or a bare `name` (kind null).
+		// A count that is not a positive number is not a count -- it is part of the name, because
+		// nothing stops a country or a faction from ending in a colon and a word.
+		private static bool SplitBuilder(string Requirement, out string Kind, out string Name, out int Wanted)
+		{
+			Kind = null;
+			Name = Requirement;
+			Wanted = 1;
+			if (string.IsNullOrEmpty(Requirement))
+			{
+				return false;
+			}
+			int last = Requirement.LastIndexOf(KindSeparator);
+			if (last > 0 && last < Requirement.Length - 1)
+			{
+				int count;
+				if (int.TryParse(Requirement.Substring(last + 1), out count) && count > 0)
+				{
+					Wanted = count;
+					Name = Requirement.Substring(0, last);
+				}
+			}
+			int first = Name.IndexOf(KindSeparator);
+			if (first > 0 && first < Name.Length - 1)
+			{
+				Kind = Name.Substring(0, first);
+				Name = Name.Substring(first + 1);
+			}
+			return !string.IsNullOrEmpty(Name);
+		}
+
 		/// <summary>
 		/// Craft points the roster is worth. Each kind is weighed by what it cost to acquire; a
 		/// kind this file does not know is worth nothing, so a third party inventing a knowledge
@@ -622,6 +1174,21 @@ namespace ThousandAndFirst
 		/// <returns>The gate. Never invalid; every dropped attribute reads as absent.</returns>
 		public static ZoneGate ParseGateAttributes(string Key, string Districts, string MinZones, string Knowledge, string MinTech, out string Error)
 		{
+			return ParseGateAttributes(Key, Districts, MinZones, Knowledge, MinTech, null, null, null, out Error);
+		}
+
+		/// <summary>
+		/// The same parse with Addendum 16's three creed attributes folded in. Kept as a second
+		/// overload rather than a widened signature because the first one is published and a third
+		/// party may already be calling it (STANDARDS &sect;9); the four-gate overload is exactly
+		/// this one with three nulls.
+		/// </summary>
+		/// <param name="Builders">The <c>Builders</c> attribute, or null.</param>
+		/// <param name="Creed">The <c>Creed</c> attribute, or null.</param>
+		/// <param name="CreedShare">The <c>CreedShare</c> attribute (a whole percent), or null.</param>
+		public static ZoneGate ParseGateAttributes(string Key, string Districts, string MinZones, string Knowledge, string MinTech,
+			string Builders, string Creed, string CreedShare, out string Error)
+		{
 			List<string> faults = new List<string>();
 			string districts = null;
 			if (!string.IsNullOrEmpty(Districts) && Districts.Trim().Length > 0)
@@ -662,8 +1229,44 @@ namespace ThousandAndFirst
 				minTech = TechLevel.Hands;
 				faults.Add("MinTech");
 			}
+			string builders = null;
+			if (!string.IsNullOrEmpty(Builders) && Builders.Trim().Length > 0)
+			{
+				builders = NormalizeList(Builders);
+				if (builders == null || ListContains(builders, AnyToken))
+				{
+					// "all" is how every list in this file spells "no restriction", and a design
+					// that wants anybody at all wants nobody in particular.
+					builders = null;
+				}
+			}
+			// Trimmed and NOT folded: this is handed to the engine's faction table and read back to
+			// the founder as prose, and a faction name is the game's, not ours, to re-case.
+			string creed = (string.IsNullOrEmpty(Creed) || Creed.Trim().Length == 0) ? null : Creed.Trim();
+			int creedShare = ZoneGate.ShareUnsaid;
+			if (!string.IsNullOrEmpty(CreedShare) && CreedShare.Trim().Length > 0)
+			{
+				// A share outside 0..100 is not a stricter gate, it is a design nobody can ever
+				// raise; dropped to the default like every other malformed attribute here.
+				if (!int.TryParse(CreedShare.Trim(), out creedShare) || creedShare < 0 || creedShare > 100)
+				{
+					creedShare = ZoneGate.ShareUnsaid;
+					faults.Add("CreedShare");
+				}
+			}
+			if (creed == null && (creedShare != ZoneGate.ShareUnsaid || builders != null))
+			{
+				// Not a fault: Builders stands perfectly well on its own. A share without a creed
+				// does not, and saying so is cheaper than a design that silently ignores half of
+				// what its author wrote.
+				if (creedShare != ZoneGate.ShareUnsaid)
+				{
+					creedShare = ZoneGate.ShareUnsaid;
+					faults.Add("CreedShare (no Creed to take a share of)");
+				}
+			}
 			Error = (faults.Count == 0) ? null : ("building " + Key + " has a bad " + JoinOr(faults) + "; the attribute was ignored");
-			return new ZoneGate(districts, minZones, knowledge, minTech);
+			return new ZoneGate(districts, minZones, knowledge, minTech, builders, creed, creedShare);
 		}
 
 		/// <summary>
@@ -706,6 +1309,44 @@ namespace ThousandAndFirst
 		public static ZoningJudgement Judge(ZoneGate Gate, string TileDistrict, string Category, int ClaimedZones,
 			IEnumerable<string> Roster, bool Underground, bool RequiresSky)
 		{
+			return Judge(Gate, TileDistrict, Category, ClaimedZones, Roster, Underground, RequiresSky, BuilderRoll.Unknown);
+		}
+
+		/// <summary>
+		/// The same verdict with the city's own people folded in, which is what Addendum 16's
+		/// creed stack is judged against.
+		/// <para>
+		/// The three creed gates are checked BEFORE all five of the older ones, in the order the
+		/// addendum states them: alignment, then amount, then the hands. Alignment leads because it
+		/// is the only one of the eight that a founder cannot answer by doing anything to the
+		/// ground &mdash; a city where nobody has ever held the creed is not short of a disk or a
+		/// parasang, and telling them about the disk first would send them the wrong way for a
+		/// season.
+		/// </para>
+		/// <para>
+		/// Against <see cref="BuilderRoll.Unknown"/> every creed gate permits, so this overload
+		/// answers exactly as the one above it for a caller who has no roll to give.
+		/// </para>
+		/// </summary>
+		/// <param name="Roll">Who lives here. <see cref="BuilderRoll.Unknown"/> permits.</param>
+		public static ZoningJudgement Judge(ZoneGate Gate, string TileDistrict, string Category, int ClaimedZones,
+			IEnumerable<string> Roster, bool Underground, bool RequiresSky, BuilderRoll Roll)
+		{
+			if (!Aligned(Roll, Gate.Creed))
+			{
+				return new ZoningJudgement(ZoningVerdict.RefusedUnaligned, Gate.Creed, "no one holds with it");
+			}
+			if (!string.IsNullOrEmpty(Gate.Creed) && Roll.Known
+				&& !CreedShareMet(Roll.HoldingNow(Gate.Creed), Roll.People, Gate.EffectiveCreedShare))
+			{
+				return new ZoningJudgement(ZoningVerdict.RefusedCreedShare, Gate.Creed,
+					"wants " + Gate.EffectiveCreedShare + "% of the city");
+			}
+			List<string> hands = MissingBuilders(Roll, Gate.Builders);
+			if (hands.Count > 0)
+			{
+				return new ZoningJudgement(ZoningVerdict.RefusedBuilders, JoinAnd(DescribeBuilders(hands)), "nobody here can");
+			}
 			List<string> missing = MissingKnowledge(Roster, Gate.Knowledge);
 			if (missing.Count > 0)
 			{

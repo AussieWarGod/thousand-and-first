@@ -77,7 +77,34 @@ namespace ThousandAndFirst
 		/// </summary>
 		internal static int Distance(bool TechShort, int MissingKnowledge, bool ZonesShort, bool StageShort)
 		{
+			return Distance(TechShort, MissingKnowledge, ZonesShort, StageShort, 0, false);
+		}
+
+		/// <summary>
+		/// The same count with Addendum 16's creed stack folded in. A creed-work whose
+		/// congregation is too small, or whose hands are not here, is NOT "within reach", and the
+		/// map saying it was would be the same lie a docstring tells when the code moved out from
+		/// under it.
+		/// <para>
+		/// Alignment is deliberately not counted, and cannot be: a design nobody here has ever
+		/// aligned with is not on the map at all (the visibility law), so every row that reaches
+		/// this arithmetic has already passed that gate.
+		/// </para>
+		/// </summary>
+		/// <param name="MissingBuilders">Unmet <c>Builders</c> requirements.</param>
+		/// <param name="CreedShort">Whether the creed is held here by too few of the city.</param>
+		internal static int Distance(bool TechShort, int MissingKnowledge, bool ZonesShort, bool StageShort,
+			int MissingBuilders, bool CreedShort)
+		{
 			int distance = 0;
+			if (MissingBuilders > 0)
+			{
+				distance += MissingBuilders;
+			}
+			if (CreedShort)
+			{
+				distance++;
+			}
 			if (TechShort)
 			{
 				distance++;
@@ -106,7 +133,32 @@ namespace ThousandAndFirst
 		internal static string Missing(IList<string> UnknownNames, string WantedTech, string HaveTech,
 			int WantedZones, int HeldZones, string WantedStage, string District)
 		{
+			return Missing(UnknownNames, WantedTech, HaveTech, WantedZones, HeldZones, WantedStage, District, null, null, 0, 0, 0);
+		}
+
+		/// <summary>
+		/// The same clause with the creed stack named first, in <c>Judge</c>'s own order: the
+		/// hands, then the congregation, then everything the four older gates already said.
+		/// </summary>
+		/// <param name="MissingHands">Unmet <c>Builders</c> requirements, already read as prose.</param>
+		/// <param name="Creed">The creed the design belongs to, as the founder reads it, or null.</param>
+		/// <param name="WantedShare">Share of the city the design wants holding it.</param>
+		/// <param name="HeldShare">Share the city actually holds.</param>
+		/// <param name="Holding">People holding it, for the sentence that names them.</param>
+		internal static string Missing(IList<string> UnknownNames, string WantedTech, string HaveTech,
+			int WantedZones, int HeldZones, string WantedStage, string District,
+			IList<string> MissingHands, string Creed, int WantedShare, int HeldShare, int Holding)
+		{
 			List<string> parts = new List<string>();
+			if (MissingHands != null && MissingHands.Count > 0)
+			{
+				parts.Add("it is raised by " + KingdomZoningRules.JoinAnd(MissingHands) + ", and there is nobody here who is");
+			}
+			if (!string.IsNullOrEmpty(Creed) && WantedShare > 0)
+			{
+				parts.Add("it wants " + WantedShare + "% of the city holding with " + Creed + " and " + Holding
+					+ ((Holding == 1) ? " person does" : " people do") + " (" + HeldShare + "%)");
+			}
 			if (UnknownNames != null && UnknownNames.Count > 0)
 			{
 				parts.Add("the keepers have never been taught " + KingdomZoningRules.JoinAnd(UnknownNames));

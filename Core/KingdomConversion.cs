@@ -297,6 +297,8 @@ namespace ThousandAndFirst
 		/// cleared.
 		/// <para>
 		/// Side effects: the settler's creed property and the city's <c>CreedCounts</c> change,
+		/// the creed they are leaving is written into their own history and into the city's
+		/// <c>CreedPastCounts</c> (Addendum 16),
 		/// two chronicle entries and one ledger note are written, and any standing grace or brink
 		/// this settler was spending is forgotten &mdash; a person who has taken the creed is no
 		/// longer under pressure from it, and no longer one window away from it. Failure mode:
@@ -327,6 +329,15 @@ namespace ThousandAndFirst
 			// is read off the settler by Forget, so it must go before Record overwrites it.
 			KingdomCreed.Forget(System, Settler);
 			KingdomCreed.Record(System, Settler, Creed);
+			// And the history. THIS is the one place a creed is ever LEFT, which is why Addendum
+			// 16's recorded fact is written here and nowhere else: every other path either gives a
+			// settler their first creed (nothing left behind) or takes the whole person out of the
+			// city (nothing to remember them by). Forget, a line above, took this settler's whole
+			// history out of the city's tally along with their present creed, because its other two
+			// callers are a death and a departure; RememberPast puts it back with one more name in
+			// it. The record is bounded at KingdomCreedRules.MaxKeptCreeds and never rewrites
+			// itself, so a design this city could see yesterday cannot vanish today.
+			KingdomCreed.RememberPast(System, Settler, was);
 			if (roll != null)
 			{
 				System.ConversionShared.Remove(roll);

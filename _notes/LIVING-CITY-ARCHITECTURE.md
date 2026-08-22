@@ -108,20 +108,20 @@ resident, and zone ids and design keys are shared references.
 |---|---|---|---|
 | Zone | id ref 8 + district 4 + `LastReadTick` 8 + 6 stock/capacity longs 48 + roofs 4 + defence 4 + water carry 4 + food carry 4 + 3 signed owed figures 12 = **96** | 4 | 384 |
 | Work | id 4 + zone ref 8 + anchor 4 + design ref 8 + condition 4 + crew 4 + `RanThroughTick` 8 + run-state 16 + pad 8 = **64** | 40 | 2,560 |
-| Resident | 96 of fields (ids, ticks, enums, refs, two brink windows) + one unique name string ~64 = **160** | 60 | 9,600 |
+| Resident | 104 of fields (ids, ticks, enums, refs, two brink windows, the creed history ref) + one unique name string ~64 = **168** | 60 | 10,080 |
 | Clock | kind 4 + `NextDueTick` 8 + ordinal 4 = **16** | 12 | 192 |
 | Told-log | kind 4 + tick 8 + 2 subject ids 8 + place ref 8 + outcome 4 = **32** | 32 | 1,024 |
 | Arrays + carrier headers | — | — | 256 |
-| **Per city** | | | **14,016 B ≈ 13.7 KiB** |
-| **Per realm** (2 cities) | | | **28,032 B ≈ 27.4 KiB** |
+| **Per city** | | | **14,496 B ≈ 14.2 KiB** |
+| **Per realm** (2 cities) | | | **28,992 B ≈ 28.3 KiB** |
 | Binding registry, realm-scope (§3.8) | key 4 + kind 1 + zone ref 8 + object ref 8 + minted tick 8 + pad 3 = **32** | 120 residents + ≤ 16 open jobs + headers | 4,480 B ≈ 4.4 KiB |
 | Job rows with itineraries (§3.7) | header 64 + ≤ 6 legs x (zone ref 8 + enter 4 + exit 4 + length 4 + depart 8 + arrive 8 = 36) = **280** | ≤ 16 open jobs, realm-wide | 4,480 B ≈ 4.4 KiB |
 | Distance matrix (§3.10) | `ushort` per entry = **2** | works→edges ≤ 540 + same-zone pairs ≤ 900 + zone all-pairs ≤ 81, **per city** | 2 x 1,521 ≈ 3.0 KiB per city, 6.0 KiB per realm |
 | Network graphs (§3.11) | node 16 + edge 16 + **traversal 2/node**; per network 32 x 16 + 48 x 16 + 32 x 2 + header **64** = **1,408** | ≤ 4 networks per city | 5,632 B ≈ 5.5 KiB per city, 11.0 KiB per realm |
-| **Per realm, all of it** | | | **54,340 B ≈ 53.1 KiB** — warn **56 KiB**, ceiling **64 KiB** |
-| *the same, at nine zones and caps scaled with them* | | | *90,500 B ≈ 88.4 KiB — over today's ceiling by design, still under a tenth of a megabyte* |
+| **Per realm, all of it** | | | **55,300 B ≈ 54.0 KiB** — warn **56 KiB**, ceiling **64 KiB** |
+| *the same, at nine zones and caps scaled with them* | | | *92,660 B ≈ 90.5 KiB — over today's ceiling by design, still under a tenth of a megabyte* |
 
-**Six corrections and one ruling, from the three waves that had to evaluate this table.**
+**Seven corrections and one ruling, from the four waves that had to evaluate this table.**
 W0 built the formula (`KingdomCityMemoryRules`), W1 wired it, and W7 built the network rows the
 table had been pricing sight-unseen; between them they falsified six of the figures above. All six
 are corrected in place, because *the formula is the contract* and a table that disagrees with it is
@@ -163,6 +163,17 @@ the thing that is wrong:
    then one linear pass over it. Two bytes a node — a node index is at most 31, an edge index at
    most 47, and 255 is free as the no-parent sentinel — against 162 for a full adjacency index.
    **The realm total moves 768 bytes and stays under the advisory rung; the ceiling has not moved.**
+
+7. **The resident row is 104 bytes, not 96.** BUILDING-CATALOGUE-BRIEF Addendum 16 makes a
+   settler's creed HISTORY a recorded fact — the ALIGNMENT gate is satisfied by a builder who
+   holds a creed *or has previously held it*, which no tally of present belief can answer. The
+   record is bounded (`KingdomCreedRules.MaxKeptCreeds`, and it never rotates: first in wins, so a
+   design a city could see yesterday cannot vanish today) and rides the row as **one shared string
+   reference** — the very string the settler's own property bag carries, so the heap grows by
+   nothing and the row grows by eight. Ninety-one declared plus eight is ninety-nine, and
+   ninety-six had five bytes of headroom, so the budget moved with the field rather than the field
+   being squeezed to fit a number. **The realm total moves 960 bytes to 55,300 B ≈ 54.0 KiB, still
+   under the 56 KiB advisory rung; the ceiling has not moved.**
 
 Serialized it is smaller: no references, `WriteOptimizedString` dedupes zone ids and design keys
 across every row, ticks go out optimized — **≈ 5.2 KiB per city, ≈ 10.4 KiB per realm**, plus

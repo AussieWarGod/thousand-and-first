@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
@@ -245,6 +245,15 @@ namespace ThousandAndFirst
 		/// carries those only on itself).</summary>
 		public Dictionary<string, int> CreedCounts = new Dictionary<string, int>();
 
+		/// <summary>
+		/// Creeds this settlement's people have HELD AND LEFT. Per-city, so it is carried by the
+		/// seat swap like <see cref="CreedCounts"/>; the realm's own belief is
+		/// <c>KingdomSystem.DeclaredCreed</c> and is not this. See
+		/// <c>KingdomSystem.CreedPastCounts</c> for what writes it and why it is a tally rather
+		/// than a walk over the people.
+		/// </summary>
+		public Dictionary<string, int> CreedPastCounts = new Dictionary<string, int>();
+
 		/// <summary>See <see cref="KingdomSystem.ConversionShared"/>. Per-city, so a founder who
 		/// walks to the other city does not carry this one's half-turned believers with them.</summary>
 		public Dictionary<string, int> ConversionShared = new Dictionary<string, int>();
@@ -402,6 +411,10 @@ namespace ThousandAndFirst
 			if (CreedCounts == null)
 			{
 				CreedCounts = new Dictionary<string, int>();
+			}
+			if (CreedPastCounts == null)
+			{
+				CreedPastCounts = new Dictionary<string, int>();
 			}
 			if (ConversionShared == null)
 			{

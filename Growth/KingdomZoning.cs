@@ -67,11 +67,25 @@ namespace ThousandAndFirst
 		/// <param name="MinTech">Raw <c>MinTech</c> attribute.</param>
 		public static void RegisterGate(string Key, string Districts, string MinZones, string Knowledge, string MinTech)
 		{
+			RegisterGate(Key, Districts, MinZones, Knowledge, MinTech, null, null, null);
+		}
+
+		/// <summary>
+		/// The same registration with Addendum 16's creed stack. Every one of the three is
+		/// optional and an absent attribute gates nothing, exactly like the four before them.
+		/// </summary>
+		/// <param name="Builders">Raw <c>Builders</c> attribute.</param>
+		/// <param name="Creed">Raw <c>Creed</c> attribute.</param>
+		/// <param name="CreedShare">Raw <c>CreedShare</c> attribute.</param>
+		public static void RegisterGate(string Key, string Districts, string MinZones, string Knowledge, string MinTech,
+			string Builders, string Creed, string CreedShare)
+		{
 			if (string.IsNullOrEmpty(Key))
 			{
 				return;
 			}
-			ZoneGate gate = KingdomZoningRules.ParseGateAttributes(Key, Districts, MinZones, Knowledge, MinTech, out string error);
+			ZoneGate gate = KingdomZoningRules.ParseGateAttributes(Key, Districts, MinZones, Knowledge, MinTech,
+				Builders, Creed, CreedShare, out string error);
 			if (error != null)
 			{
 				MetricsManager.LogError("ThousandAndFirst KingdomBuildings: " + error);
@@ -212,6 +226,91 @@ namespace ThousandAndFirst
 		}
 
 		/// <summary>
+		/// Who lives in the seated city, as the creed stack has to see them: the head count, the
+		/// countries they walked in from, what they hold with, and what they have held and left
+		/// (<c>KingdomSystem.CreedPastCounts</c>).
+		/// <para>
+		/// Read off the city's own tallies rather than off the ground, so it answers for a city
+		/// whose people are not loaded &mdash; which is every city the founder is not standing in,
+		/// and the seated one before its zone has been walked.
+		/// </para>
+		/// </summary>
+		/// <param name="System">The realm. Null or unfounded yields
+		/// <c>BuilderRoll.Unknown</c>, which permits every creed gate.</param>
+		public static BuilderRoll BuilderRollOf(KingdomSystem System)
+		{
+			if (System == null || !System.Founded)
+			{
+				return BuilderRoll.Unknown;
+			}
+			return new BuilderRoll(System.Population, System.OriginCounts, System.CreedCounts, System.CreedPastCounts);
+		}
+
+		/// <summary>
+		/// Whether a design is OFFERED to this settlement at all &mdash; the one question every
+		/// menu that lists the catalogue asks, so that they all ask it the same way.
+		/// <para>
+		/// Style, stage, and one more: Addendum 14's visibility law as Addendum 16 applies it to
+		/// creed-works. <b>You see what you have unlocked, you do not see what you have not, and
+		/// you especially cannot see what you CAN'T unlock.</b> Everything else in this file's
+		/// gates is a door with a key somewhere &mdash; a disk to carry home, a machine to certify,
+		/// a parasang to claim, ground to name &mdash; and every one of those designs stays in the
+		/// list wearing the tag that says which key (<see cref="GateNote"/>), because a list that
+		/// silently shortens teaches nothing.
+		/// </para>
+		/// <para>
+		/// A creed nobody here holds and nobody here has ever held is the one gate with no key at
+		/// all. There is nothing the founder could go and do about it, so naming it would be noise
+		/// dressed as guidance, and the design is not shown. The moment one person aligns &mdash;
+		/// by arriving, by converting, or by having converted away years ago &mdash; the design
+		/// appears, tagged with whatever is still in its way.
+		/// </para>
+		/// </summary>
+		/// <param name="System">The realm. Null or unfounded offers nothing.</param>
+		/// <param name="Entry">The design. Null is not offered.</param>
+		public static bool Offered(KingdomSystem System, KingdomRules.BuildEntry Entry)
+		{
+			if (System == null || Entry == null)
+			{
+				return false;
+			}
+			if (!KingdomRules.StyleAllows(Entry.Styles, System.Style) || System.Stage < Entry.MinStage)
+			{
+				return false;
+			}
+			return Visible(System, Entry);
+		}
+
+		/// <summary>
+		/// The visibility half of <see cref="Offered"/> on its own, for a caller that has already
+		/// answered style and stage.
+		/// <para>
+		/// Fails OPEN, like every other judgment in this file: if the question throws, the design
+		/// is shown. A founder who sees one design they cannot raise is told why by
+		/// <see cref="GateNote"/>; a founder who cannot see a design they CAN raise has no way to
+		/// find out it exists.
+		/// </para>
+		/// </summary>
+		public static bool Visible(KingdomSystem System, KingdomRules.BuildEntry Entry)
+		{
+			bool hidden = false;
+			KingdomSystem.Guard("zoning visibility", delegate
+			{
+				if (!Enabled || System == null || !System.Founded || Entry == null || string.IsNullOrEmpty(Entry.Key))
+				{
+					return;
+				}
+				ZoneGate gate = GateFor(Entry.Key);
+				if (string.IsNullOrEmpty(gate.Creed))
+				{
+					return;
+				}
+				hidden = KingdomZoningRules.NoPathToCreed(BuilderRollOf(System), gate.Creed);
+			});
+			return !hidden;
+		}
+
+		/// <summary>
 		/// The settlement's verdict on raising one design on one piece of ground, with the module
 		/// switch and every null case already folded in.
 		/// </summary>
@@ -309,7 +408,7 @@ namespace ThousandAndFirst
 				List<string> lost = new List<string>();
 				foreach (KingdomRules.BuildEntry entry in KingdomData.Buildings)
 				{
-					if (!KingdomRules.StyleAllows(entry.Styles, System.Style) || System.Stage < entry.MinStage)
+					if (!Offered(System, entry))
 					{
 						continue;
 					}
@@ -393,7 +492,8 @@ namespace ThousandAndFirst
 			// wants no weather by definition, so it is never refused by depth.
 			KingdomPlotRules.PlotSpec spec;
 			bool sky = KingdomPlots.TryGetSpec(Entry.Key, out spec) && spec != null && spec.RequiresSky;
-			return KingdomZoningRules.Judge(GateFor(Entry.Key), District, Entry.Category, claimed, Roster(System), Underground, sky);
+			return KingdomZoningRules.Judge(GateFor(Entry.Key), District, Entry.Category, claimed, Roster(System), Underground, sky,
+				BuilderRollOf(System));
 		}
 
 		/// <summary>
@@ -420,6 +520,23 @@ namespace ThousandAndFirst
 			case ZoningVerdict.RefusedStratum:
 				return XRL.Language.Grammar.A(name) + " wants weather — sun, wind, or rain — and there is none under the rock. Raise it on ground under {{C|"
 					+ Judgement.Detail + "}}.";
+			case ZoningVerdict.RefusedUnaligned:
+				return "Nobody at " + seat + " holds with {{C|" + KingdomCreed.CreedName(Judgement.Detail) + "}}, and nobody here ever has. "
+					+ XRL.Language.Grammar.A(name) + " is raised by people who believe it, or who once did. Take in people who hold with them, or let the creed spread here.";
+			case ZoningVerdict.RefusedCreedShare:
+			{
+				string creed = KingdomCreed.CreedName(Judgement.Detail);
+				int holding = (System != null && System.CreedCounts != null && System.CreedCounts.TryGetValue(Judgement.Detail, out var held)) ? held : 0;
+				int people = (System != null) ? System.Population : 0;
+				int wanted = (Entry != null) ? GateFor(Entry.Key).EffectiveCreedShare : KingdomCreedRules.DominantSharePercent;
+				return XRL.Language.Grammar.A(name) + " wants {{C|" + wanted + "%}} of the city holding with {{C|" + creed
+					+ "}}, and " + seat + " has {{C|" + holding + "}} of {{C|" + people + "}} ("
+					+ KingdomZoningRules.ShareHeld(holding, people) + "%, and never fewer than "
+					+ KingdomCreedRules.MinBelievers + " of them). A creed-work waits on a congregation, not on a convert.";
+			}
+			case ZoningVerdict.RefusedBuilders:
+				return XRL.Language.Grammar.A(name) + " is raised by {{C|" + Judgement.Detail + "}}, and there is nobody at " + seat
+					+ " who answers to that. Grow, take in people from further off, or wait for somebody who does.";
 			case ZoningVerdict.RefusedDistrict:
 			{
 				string here = DistrictOf(System, ZoneID);

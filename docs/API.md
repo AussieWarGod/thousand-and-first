@@ -379,11 +379,14 @@ stage-gated, sited by the layout grammar, raised in stages, carved underground. 
 (`KingdomMaterials` / `KingdomMaterialRules`) come from clearance — never minted — and live in
 dedicated stockpiles; building costs are water plus materials, and condemning returns half.
 Commissioning is gated by `KingdomZoning` (district, territory, known designs, derived craft
-level) with every refusal naming its fix; designs improve through `KingdomUpgrade` chains that
+level, and the creed stack — who is standing here, which creed the design belongs to, and how much
+of the city holds it) with every refusal naming its fix, except the one refusal with no fix: a
+creed-work whose creed nobody here has ever held is **not shown at all** (`KingdomZoning.Offered`
+/ `Visible`), which is Addendum 14's visibility law; designs improve through `KingdomUpgrade` chains that
 carry every civic mark. `KingdomCatalogueRules` validates the building XML schema; all of it —
 plots, materials, gates, chains, skins, contents — is authorable from mergeable third-party XML.
 
-## `KingdomZoningRules` — the four gates, the stratum, and the claim
+## `KingdomZoningRules` — the seven gates, the tag idiom, the stratum, and the claim
 
 Pure and engine-free (`KingdomZoning`, same folder, is the engine-coupled half: reading a real
 zone's district, the founder's data disks, the certified machines, and the settlement's own
@@ -392,11 +395,18 @@ last, and stop at the first refusal — the founder is told one thing to fix, no
 
 | Member | Contract |
 |---|---|
-| `enum ZoningVerdict` | `Permitted`, `RefusedUnlearned`, `RefusedTechLevel`, `RefusedTerritory`, `RefusedStratum`, `RefusedDistrict`. |
-| `readonly struct ZoneGate` | The four OPTIONAL gates parsed off one `<building>` entry: `Districts`, `MinZones`, `Knowledge`, `MinTech`. `ZoneGate.Open` gates nothing, which is what an entry written before these gates existed parses to. |
+| `enum ZoningVerdict` | `Permitted`, `RefusedUnlearned`, `RefusedTechLevel`, `RefusedTerritory`, `RefusedStratum`, `RefusedDistrict`, and — appended, never renumbered — `RefusedUnaligned`, `RefusedCreedShare`, `RefusedBuilders`. The three creed verdicts are numbered **last** and checked **first**; `Judge` is the authority on the order, not the ordinals. |
+| `readonly struct ZoneGate` | The OPTIONAL gates parsed off one `<building>` entry: `Districts`, `MinZones`, `Knowledge`, `MinTech`, plus the creed stack `Builders`, `Creed`, `CreedShare`. `ZoneGate.Open` gates nothing, which is what an entry written before any of them existed parses to. `CreedShare` is `ZoneGate.ShareUnsaid` when unwritten; `EffectiveCreedShare` reads that as `KingdomCreedRules.DominantSharePercent`. Both constructors are kept — the four-gate one delegates. |
+| `readonly struct BuilderRoll` | Who lives in a city, as a gate must see them: `People` and three tallies — countries walked in from, creeds held now, creeds **held and left**. Lookups are case-insensitive. `BuilderRoll.Unknown` is the roll a caller could not supply and **permits every creed gate**. |
 | `readonly struct ZoningJudgement` | `Verdict` plus `Detail`/`Note` — what's missing, in the settlement's own words, and the menu's short tag. `Allowed` for a design with nothing to prove. |
 | `static ZoningJudgement Judge(ZoneGate, string tileDistrict, string category, int claimedZones, IEnumerable<string> roster)` | The four-gate verdict, stratum untested (equivalent to `Underground: false, RequiresSky: false`). |
 | `static ZoningJudgement Judge(ZoneGate, string tileDistrict, string category, int claimedZones, IEnumerable<string> roster, bool underground, bool requiresSky)` | The same, with the stratum folded in. A design whose plot spec declares `Sky` is refused **`RefusedStratum`** (`Note: "wants open sky"`) on ground below `KingdomRules.SurfaceZLevel` — checked before the district, so the menu itself carries the tag at the moment the founder is choosing, rather than only once they've picked the design and `KingdomPlotRules.RefuseSky` turns them away at the plot. Only the surface-only half of a per-stratum catalogue is expressible from what a design declares today — nothing yet says "this design belongs to the deep". |
+| `static ZoningJudgement Judge(ZoneGate, string tileDistrict, string category, int claimedZones, IEnumerable<string> roster, bool underground, bool requiresSky, BuilderRoll roll)` | The same again with the city's own people folded in. The three creed gates are checked **before** all five older ones, in Addendum 16's order — alignment, then amount, then hands — because alignment is the only gate a founder cannot answer by walking somewhere or carrying something home. Against `BuilderRoll.Unknown` this answers exactly as the overload above. |
+| `static bool TagAccepts(string tags, string value)` | **The one tag idiom**, and what `KingdomRules.StyleAllows` now is. An empty list accepts everything; a matching `!`-negation refuses whatever else the list says; otherwise accept on `all`, on the value, or on a list of nothing but refusals ("everywhere except"). Case-folded both sides. `NegationPrefix` is `'!'`, matching vanilla's own `RecipeGenotype="!True Kin"`. |
+| `static string DescribeTags(string tags)` | The list read back as prose, or null when it gates nothing. |
+| `static bool Aligned(BuilderRoll, string creed)` / `static bool NoPathToCreed(BuilderRoll, string creed)` | Whether anybody here holds the creed **or has ever held it**; and its exact complement, which is the visibility law (Addendum 14) — a design whose creed no one has ever held is not shown in any menu. One rule, two readings, so "shown" and "buildable" cannot drift apart. |
+| `static bool CreedShareMet(int holding, int people, int percent)` / `static int ShareHeld(int holding, int people)` | `KingdomCreedRules.DominantCreed`'s arithmetic minus the no-larger-rival clause: at least `MinBelievers`, and at least the asked share. A congregation big enough to raise its own work need not be the largest in town. `percent <= 0` asks for nothing, believers floor included. |
+| `static bool HasBuilders(BuilderRoll, string requirement)` / `MissingBuilders` / `DescribeBuilder` / `DescribeBuilders` | One `Builders` token — `kind:name`, `kind:name:count`, or a bare name matching any kind. Kinds `KindOrigin`, `KindCreed`, `KindKept`. An unknown kind never matches and is named in the refusal. |
 | `static bool StratumAccepts(bool underground, bool requiresSky)` | The one depth rule the catalogue can state today: `!(underground && requiresSky)` — weather does not reach under the rock. |
 | `static string StratumName(bool underground)` | `"under the rock"` / `"open sky"`, for the sentence that names it. |
 | `static int ZonesForStage(GrowthStage)` | How many zones a city of this stage may hold at most: Camp/Steading 1, Village 2, Town 3, City 4. Read off the catalogue's own `MinZones` pairs, not chosen separately — the two-zone designs are `MinStage="Village"`, the three-zone `Town`, the four-zone `City` — so a settlement reaches the ground a design wants at the same moment it reaches the stage that design wants. |
@@ -468,7 +478,8 @@ that dislike strangers by default are exactly the ones that make a realm hard to
 | Member | Contract |
 |---|---|
 | `CreedOf` / `SeatCreed` / `AwayCreed` | The creed a city holds, or null. |
-| `Draw` / `Record` / `Forget` | Creed at arrival, and its removal on death or departure. |
+| `Draw` / `Record` / `Forget` | Creed at arrival, and its removal on death or departure. `Forget` takes the **whole person** out of both tallies — what they hold and what they have held before. |
+| `const string CreedPastProperty` / `PastOf` / `Aligns` / `RememberPast` | **Creed history.** A settler's once-held creeds, stamped on the settler (so a seat swap, a secession and a save carry it without any map remembering to), bounded to `KingdomCreedRules.MaxKeptCreeds`. `RememberPast` is called from `KingdomConversion.Convert` and nowhere else: the one conversion path is the one place a creed is ever *left*. `Aligns(settler, creed)` is "holds it, or has held it". |
 | `RiteAvailable` / `HoldRite` / `EaseForMeal` | The founder's levers against dissent. |
 | `DeclarableCreeds` / `Declare` | Name the realm's creed: decisive, and costly across the world. |
 | `SecededHolds` / `Secede` / `TryRejoin` | A city may leave, keeping its ground, people and buildings. It can be asked back once the cause is gone. |

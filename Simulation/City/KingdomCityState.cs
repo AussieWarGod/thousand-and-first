@@ -613,6 +613,21 @@ namespace ThousandAndFirst.Simulation.City
 		/// on the day.</summary>
 		internal readonly byte CreedChannel;
 
+		/// <summary>
+		/// The creeds this person has HELD AND LEFT, as <c>KingdomCreedRules.EncodeKept</c> stores
+		/// them &mdash; bounded to <c>KingdomCreedRules.MaxKeptCreeds</c> names and joined by its
+		/// separator. Addendum 16's recorded fact, in the city's own book rather than only on the
+		/// settler's property bag, because a fact the city can be asked about while its people are
+		/// not loaded has to live where the city does.
+		/// <para>
+		/// A shared reference, like <see cref="CreedToward"/> and for the same reason: creeds are
+		/// open-ended faction names with no code to fold them into. The row holds the very string
+		/// the settler already carries, so the eight bytes are the reference and the heap grows by
+		/// nothing.
+		/// </para>
+		/// </summary>
+		internal readonly string KeptCreeds;
+
 		internal KingdomResidentRow(
 			int residentId,
 			string name,
@@ -630,7 +645,31 @@ namespace ThousandAndFirst.Simulation.City
 			KingdomBrinkWindow creedBrink,
 			string creedToward,
 			byte creedChannel)
+			: this(residentId, name, originCode, creedCode, arrivedTick, homeWorkId, jobWorkId, jobRole,
+				dayShape, standing, cause, boundZoneId, roofBrink, creedBrink, creedToward, creedChannel, null)
 		{
+		}
+
+		internal KingdomResidentRow(
+			int residentId,
+			string name,
+			int originCode,
+			int creedCode,
+			long arrivedTick,
+			int homeWorkId,
+			int jobWorkId,
+			byte jobRole,
+			KingdomDayShape dayShape,
+			KingdomResidentStanding standing,
+			KingdomStandingCause cause,
+			string boundZoneId,
+			KingdomBrinkWindow roofBrink,
+			KingdomBrinkWindow creedBrink,
+			string creedToward,
+			byte creedChannel,
+			string keptCreeds)
+		{
+			KeptCreeds = string.IsNullOrEmpty(keptCreeds) ? null : keptCreeds;
 			ResidentId = residentId;
 			Name = name;
 			OriginCode = originCode;
@@ -676,10 +715,10 @@ namespace ThousandAndFirst.Simulation.City
 			{
 			case BrinkKind.Roof:
 				return new KingdomResidentRow(ResidentId, Name, OriginCode, CreedCode, ArrivedTick, HomeWorkId, JobWorkId,
-					JobRole, DayShape, Standing, Cause, BoundZoneId, window, CreedBrink, CreedToward, CreedChannel);
+					JobRole, DayShape, Standing, Cause, BoundZoneId, window, CreedBrink, CreedToward, CreedChannel, KeptCreeds);
 			case BrinkKind.Creed:
 				return new KingdomResidentRow(ResidentId, Name, OriginCode, CreedCode, ArrivedTick, HomeWorkId, JobWorkId,
-					JobRole, DayShape, Standing, Cause, BoundZoneId, RoofBrink, window, creedToward, creedChannel);
+					JobRole, DayShape, Standing, Cause, BoundZoneId, RoofBrink, window, creedToward, creedChannel, KeptCreeds);
 			default:
 				return this;
 			}
@@ -691,7 +730,7 @@ namespace ThousandAndFirst.Simulation.City
 		internal KingdomResidentRow WithStanding(KingdomResidentStanding standing, KingdomStandingCause cause)
 		{
 			return new KingdomResidentRow(ResidentId, Name, OriginCode, CreedCode, ArrivedTick, HomeWorkId, JobWorkId,
-				JobRole, DayShape, standing, cause, BoundZoneId, RoofBrink, CreedBrink, CreedToward, CreedChannel);
+				JobRole, DayShape, standing, cause, BoundZoneId, RoofBrink, CreedBrink, CreedToward, CreedChannel, KeptCreeds);
 		}
 
 		/// <summary>This row bound to other ground. Placement is W3; what W2 ships is the fact that
@@ -699,7 +738,7 @@ namespace ThousandAndFirst.Simulation.City
 		internal KingdomResidentRow WithBoundZone(string boundZoneId)
 		{
 			return new KingdomResidentRow(ResidentId, Name, OriginCode, CreedCode, ArrivedTick, HomeWorkId, JobWorkId,
-				JobRole, DayShape, Standing, Cause, boundZoneId, RoofBrink, CreedBrink, CreedToward, CreedChannel);
+				JobRole, DayShape, Standing, Cause, boundZoneId, RoofBrink, CreedBrink, CreedToward, CreedChannel, KeptCreeds);
 		}
 
 		/// <summary>This row with what the ground says about the person: their name, where they came
@@ -707,7 +746,21 @@ namespace ThousandAndFirst.Simulation.City
 		internal KingdomResidentRow WithReading(string name, int originCode, int creedCode, int homeWorkId, int jobWorkId, byte jobRole, KingdomDayShape dayShape)
 		{
 			return new KingdomResidentRow(ResidentId, name, originCode, creedCode, ArrivedTick, homeWorkId, jobWorkId,
-				jobRole, dayShape, Standing, Cause, BoundZoneId, RoofBrink, CreedBrink, CreedToward, CreedChannel);
+				jobRole, dayShape, Standing, Cause, BoundZoneId, RoofBrink, CreedBrink, CreedToward, CreedChannel, KeptCreeds);
+		}
+
+		/// <summary>This row with the creeds the person has held and left. A separate reading from
+		/// <see cref="WithReading"/> because it is the one column that only ever GROWS: a history
+		/// that came back empty is a settler whose property bag has not been read yet, never a life
+		/// that un-happened, so an empty reading leaves what the row already remembers alone.</summary>
+		internal KingdomResidentRow WithKeptCreeds(string keptCreeds)
+		{
+			if (string.IsNullOrEmpty(keptCreeds))
+			{
+				return this;
+			}
+			return new KingdomResidentRow(ResidentId, Name, OriginCode, CreedCode, ArrivedTick, HomeWorkId, JobWorkId,
+				JobRole, DayShape, Standing, Cause, BoundZoneId, RoofBrink, CreedBrink, CreedToward, CreedChannel, keptCreeds);
 		}
 	}
 

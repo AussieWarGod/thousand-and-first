@@ -33,10 +33,29 @@ Ship a `KingdomBuildings.xml` in your mod root:
   for example, is literally `LiquidVolume MaxVolume`.
 - `Cost` — drams of water drawn from the settlement's physical stores.
 - `Ticks` — build time (1200 = one day).
-- `Styles` — comma list of city styles this design belongs to, or `all`. The default
-  city style is `common`; declared styles so far: `common`, `verdant`, `fungal`, `gyre`,
-  `eater` (founding paths will select them — devotion cities, the fungal quarter, Eater
-  restoration).
+- `Styles` — **a tag list.** Which city styles this design belongs to. The default city style is
+  `common`; the styles this mod declares are `common`, `verdant`, `fungal`, `gyre`, and `eater`,
+  each resolved from the ground a city was founded on. Three spellings, and they are the same
+  three every tag list in this file uses:
+
+  | Written | Means |
+  |---|---|
+  | `Styles="all"`, or omitting it | every style there is, including ones a mod adds after you |
+  | `Styles="fungal,gyre"` | these and nowhere else — how a style-exclusive design is declared |
+  | `Styles="all,!eater"` | everywhere **except** — how a restriction is declared |
+
+  The `!` prefix is vanilla's own negation operator (`Factions.xml` ships
+  `RecipeGenotype="!True Kin"` on Chavvah's water ritual), and it exists because **the style set
+  is open**. A design that belongs everywhere but one place cannot say so by enumeration: the
+  moment somebody ships a sixth style, a list that spelled "everywhere" as four names is quietly
+  wrong about itself. A refusal stays right. A refusal beats a welcome for the same tag whichever
+  order they are written in, and a list of nothing but refusals reads as "everywhere except" —
+  never as "nowhere". Matching is case-folded, so `Styles="Verdant"` works.
+
+  Declare your own style with `<style Name="mystyle" />` and designs tagged with it become
+  buildable in any city of that style; `KingdomData.Styles` is the registry's live union.
+  Restricting a base design is a merge: re-declare the key with nothing but the new tag list, and
+  every other attribute the base catalogue wrote still stands.
 - `Category` — what the building is FOR, which is what the settlement's own plan sites it by
   (default `civic`). Recognised values and where each is raised:
   | Category | Where the settlement puts it |
@@ -226,6 +245,73 @@ refuses placement; nothing anywhere gates the district *bonuses*, which stay rea
 unconditional, so a design raised off its natural ground simply misses a bonus. Housing, storage,
 and civic designs are additionally always accepted on undistricted ground, so a camp can never hit
 a wall before the founder has learned what a district is.
+
+### Creed-gated designs: the whole stack (all optional)
+
+Three more attributes, on top of the four above, and together with them they are the contract for
+a design that belongs to a *people* rather than to a place. Every one is optional, an absent
+attribute gates nothing, and a malformed one is logged and ignored — same bargain as the rest.
+
+| Attribute | What it wants |
+|---|---|
+| `Builders` | **Who must be standing here.** Comma list, **all** of them, in the same `kind:name` language `Knowledge` uses, optionally with a count: `Builders="origin:the rust wells:2,creed:Barathrumites"`. Kinds: `origin` (people who walked in from that country), `creed` (people holding that creed *today*), `kept` (people who hold it **or have ever held it** — the aligned). A token written as a bare name with no kind is satisfied by any of the three. A kind we do not know never matches, and the refusal names it, because unlike a `Knowledge` kind there is no `Learn` call a third party can make to supply one. |
+| `Creed` | **Alignment.** One faction name. The design is raised only by builders who hold that creed **or have previously held it**. A settler's creed history is a recorded fact from the moment they leave a creed (`KingdomCreed.CreedPastProperty`, written at the one conversion path), bounded to `KingdomCreedRules.MaxKeptCreeds` names and first-in-wins — it never rotates, so a design a city could see yesterday cannot vanish today. |
+| `CreedShare` | **The amount of it.** Whole percent of the city that must hold `Creed` *now*, floored at `KingdomCreedRules.MinBelievers` however small the city. Omit it and the design asks for `DominantSharePercent` — the same third a city's own creed is read at, so "a creed-work wants a creed city" is one rule and not two. Write `CreedShare="0"` to ask for no share at all: one aligned builder is enough. Writing it without a `Creed` is dropped and named. |
+
+Use `Knowledge` and `MinTech` for the knowledge and technology halves of the stack; when the
+research system lands, those keys are what get re-pointed, and your entry does not change.
+
+**The visibility law.** A creed-gated design a city has **no path to** — nobody holds the creed and
+nobody living there ever has — **does not appear in the commission list, the plan list, the
+settlement's own choices, or the keepers' map at all.** Every other gate in this file leaves the
+design in the list wearing a tag that says which key it wants, because a list that silently
+shortens teaches nothing; this one is the only gate with no key anywhere, so naming it would be
+noise dressed as guidance. The moment one person aligns — by arriving, by converting, or by having
+converted *away* years ago — the design appears, tagged with whatever is still in its way. Every
+other refusal in the stack is spoken out loud and names what would lift it.
+
+**A worked example.** A third-party mod adding a creed-work for a creed the base mod never
+mentions, using the whole stack and nothing but data:
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<kingdombuildings>
+  <!-- The Seekers of the Sightless Way keep a walking-house: no windows, no lamps, and a
+       floor cut so that the pattern of it can be read with the feet. -->
+  <building Key="mymod_walkinghouse"
+            DisplayName="walking-house (no windows, and a floor that can be read with the feet)"
+            Blueprint="MyMod_WalkingHouse"
+            Cost="24" Ticks="4800" Category="faith" Plot="M" MinStage="Village"
+            Styles="all,!gyre"
+            Districts="shrine,none"
+            MinTech="salvage"
+            Knowledge="origin:the desert canyons"
+            Builders="creed:Seekers:2,origin:the desert canyons"
+            Creed="Seekers"
+            CreedShare="20"
+            Materials="stone:18,timber:6"
+            Carries="spirit:5,learning:1" />
+</kingdombuildings>
+```
+
+Read it as the five separate questions it is:
+
+1. **Where** — `Styles="all,!gyre"`: anywhere but the cold height, whose own sacrament court already
+   answers for this.
+2. **Who is here** — `Builders`: two people who hold with the Seekers *today* to keep the house, and
+   one who grew up in the canyons and knows how the floor is cut.
+3. **Alignment** — `Creed="Seekers"`: raised by somebody who holds with them, or once did. This is
+   also the attribute the visibility law reads: a city that has never had a Seeker in it never sees
+   this entry.
+4. **How much of the city** — `CreedShare="20"`: a fifth of the town, and never fewer than
+   `MinBelievers`.
+5. **What is known** — `Knowledge` and `MinTech`, exactly as any other design declares them.
+
+Nothing above is registered in C#. `Seekers` is a vanilla faction name and the creed derivation
+admits it on its own terms (`KingdomCreed.CanBeCreed`); `origin:the desert canyons` is one of the
+settler origins the base mod already counts; and `Builders`, `Creed` and `CreedShare` merge by
+attribute like everything else, so another mod can re-declare `mymod_walkinghouse` with a
+different `CreedShare` and change only that.
 
 ### Designs that grow into other designs (all optional)
 

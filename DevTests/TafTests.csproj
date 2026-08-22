@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -171,6 +171,7 @@
     <Compile Include="KingdomBookRulesTests.cs" />
     <Compile Include="KingdomTechMapRulesTests.cs" />
     <Compile Include="KingdomCitizenRiteRulesTests.cs" />
+    <Compile Include="KingdomCreedGateRulesTests.cs" />
   </ItemGroup>
 
   <ItemGroup>

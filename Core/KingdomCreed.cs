@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using XRL;
 using XRL.Messages;
 using XRL.Rules;
@@ -43,6 +43,22 @@ namespace ThousandAndFirst
 		/// <c>KingdomOrigin</c>. Empty or absent means an ordinary settler, which is most of
 		/// them.</summary>
 		public const string CreedProperty = "KingdomCreed";
+
+		/// <summary>
+		/// The string property a settler carries the creeds they have HELD AND LEFT on, bounded to
+		/// <c>KingdomCreedRules.MaxKeptCreeds</c> and joined by
+		/// <c>KingdomCreedRules.KeptSeparator</c>. Empty or absent means somebody who has believed
+		/// one thing all their life, which is nearly everybody.
+		/// <para>
+		/// Stamped on the settler rather than kept in a map, for exactly the reason
+		/// <c>KingdomConversion.CohabitTickProperty</c> gives: what a person has believed is a
+		/// fact about them, and one carried on them survives a seat swap, a secession and a save
+		/// without any per-city map having to remember to carry it. The city's own
+		/// <c>KingdomSystem.CreedPastCounts</c> is a tally OF this, kept so that a gate can answer
+		/// without the people being loaded.
+		/// </para>
+		/// </summary>
+		public const string CreedPastProperty = "KingdomCreedPast";
 
 		/// <summary>
 		/// <c>HistoricalSignificance</c> at or above which an ancient faction still reads as a
@@ -243,6 +259,15 @@ namespace ThousandAndFirst
 			{
 				return;
 			}
+			// The whole person comes out of both tallies: what they hold, and what they held before
+			// that. A history is a fact about somebody, so it leaves with them exactly as their
+			// present creed does -- the alternative is a city that goes on being able to raise a
+			// creed-work because of a believer who died a year ago.
+			//
+			// KingdomConversion.Convert is the one caller for whom the person has NOT left, and it
+			// puts both halves back on the far side: Record for the present, RememberPast for the
+			// history it has just added to.
+			DropPast(System, Leaver);
 			string creed = Leaver.GetStringProperty(CreedProperty);
 			if (string.IsNullOrEmpty(creed))
 			{
@@ -256,6 +281,95 @@ namespace ThousandAndFirst
 			else
 			{
 				System.CreedCounts.Remove(creed);
+			}
+		}
+
+		/// <summary>
+		/// The creeds one settler has held and left, oldest first. Never null.
+		/// </summary>
+		/// <param name="Settler">A settler. Null reads as a history of nothing.</param>
+		public static List<string> PastOf(GameObject Settler)
+		{
+			return KingdomCreedRules.DecodeKept(Settler?.GetStringProperty(CreedPastProperty));
+		}
+
+		/// <summary>
+		/// Whether this settler ALIGNS with a creed: they hold it now, or they have held it and
+		/// left it. Addendum 16 clause (4), asked of one person.
+		/// </summary>
+		public static bool Aligns(GameObject Settler, string Creed)
+		{
+			if (Settler == null || string.IsNullOrEmpty(Creed))
+			{
+				return false;
+			}
+			if (string.Equals(Settler.GetStringProperty(CreedProperty), Creed, System.StringComparison.OrdinalIgnoreCase))
+			{
+				return true;
+			}
+			return KingdomCreedRules.KeptHolds(Settler.GetStringProperty(CreedPastProperty), Creed);
+		}
+
+		/// <summary>
+		/// Writes a creed into a settler's history and puts that whole history into the city's
+		/// tally.
+		/// <para>
+		/// Called from <c>KingdomConversion.Convert</c> and nowhere else: the one conversion path
+		/// is the one place a creed is ever LEFT, and a creed nobody left is not history, it is
+		/// what they still believe. Side effects: the settler's
+		/// <see cref="CreedPastProperty"/> may grow by one name, and every name in it is counted
+		/// into <c>KingdomSystem.CreedPastCounts</c> &mdash; the whole history rather than the one
+		/// name, because <see cref="Forget"/> ran a line earlier and took the rest of it out.
+		/// </para>
+		/// </summary>
+		/// <param name="System">The realm.</param>
+		/// <param name="Settler">The settler who has just left a creed.</param>
+		/// <param name="Creed">The creed they left. Empty is an ordinary settler taking their
+		/// first creed, which leaves nothing behind and records nothing.</param>
+		/// <returns>True when the settler's own record actually grew.</returns>
+		public static bool RememberPast(KingdomSystem System, GameObject Settler, string Creed)
+		{
+			if (System == null || Settler == null)
+			{
+				return false;
+			}
+			bool added;
+			string kept = KingdomCreedRules.RememberKept(Settler.GetStringProperty(CreedPastProperty), Creed, out added);
+			Settler.SetStringProperty(CreedPastProperty, string.IsNullOrEmpty(kept) ? null : kept);
+			List<string> names = KingdomCreedRules.DecodeKept(kept);
+			for (int i = 0; i < names.Count; i++)
+			{
+				System.CreedPastCounts.TryGetValue(names[i], out var count);
+				System.CreedPastCounts[names[i]] = count + 1;
+			}
+			if (added)
+			{
+				KingdomLog.Log("creed: " + (Settler.ShortDisplayName ?? "settler") + " has now held with " + Creed + " and left it ("
+					+ names.Count + "/" + KingdomCreedRules.MaxKeptCreeds + " remembered)");
+			}
+			return added;
+		}
+
+		// Takes one settler's whole history out of the city's tally. Never drives a count below
+		// zero, and removes the entry outright at zero so the tally never grows a tail of creeds
+		// nobody here has ever held -- which is the exact fact the visibility law reads.
+		private static void DropPast(KingdomSystem System, GameObject Leaver)
+		{
+			List<string> names = PastOf(Leaver);
+			for (int i = 0; i < names.Count; i++)
+			{
+				if (!System.CreedPastCounts.TryGetValue(names[i], out var count))
+				{
+					continue;
+				}
+				if (count > 1)
+				{
+					System.CreedPastCounts[names[i]] = count - 1;
+				}
+				else
+				{
+					System.CreedPastCounts.Remove(names[i]);
+				}
 			}
 		}
 
@@ -915,9 +1029,19 @@ namespace ThousandAndFirst
 		private static void Reconcile(KingdomSystem System)
 		{
 			Trim(System.CreedCounts, System.Population);
+			// And the history, on exactly the same terms and for a sharper reason. A past tally
+			// standing above the roll it was counted from would keep a creed-work VISIBLE in a city
+			// where nobody who ever held that creed is still alive -- and the visibility law is the
+			// one gate that shows nothing rather than refusing out loud, so the error would read as
+			// a design that simply exists rather than as one the city has no path to. Each entry
+			// counts PEOPLE, so the population is its ceiling exactly as it is the present tally's,
+			// even though the sum across creeds may legitimately exceed it (one person can be
+			// remembered under MaxKeptCreeds names).
+			Trim(System.CreedPastCounts, System.Population);
 			if (System.Away != null)
 			{
 				Trim(System.Away.CreedCounts, System.Away.Population);
+				Trim(System.Away.CreedPastCounts, System.Away.Population);
 			}
 		}
 
@@ -942,6 +1066,43 @@ namespace ThousandAndFirst
 					Counts[creed] = room;
 				}
 			}
+		}
+
+		/// <summary>
+		/// The creed line <c>kingdom:dump</c> appends: what the seated city holds with, and what it
+		/// has HELD AND LEFT. The second half is the one the alignment gate reads and the
+		/// visibility law hides designs on, so it has to be visible somewhere a tester can look
+		/// (STANDARDS 7b: a thing that decides what a founder may see says so out loud somewhere).
+		/// </summary>
+		/// <param name="System">The realm. Null or unfounded reports an empty string.</param>
+		public static string DumpLine(KingdomSystem System)
+		{
+			if (System == null || !System.Founded)
+			{
+				return "";
+			}
+			System.Text.StringBuilder line = new System.Text.StringBuilder("\nCreeds held: ");
+			line.Append(Tally(System.CreedCounts));
+			line.Append("   once held: ").Append(Tally(System.CreedPastCounts));
+			return line.ToString();
+		}
+
+		// Sorted by name so two runs of the same state print the same line: a dump nobody can diff
+		// is a dump nobody reads twice.
+		private static string Tally(Dictionary<string, int> Counts)
+		{
+			if (Counts == null || Counts.Count == 0)
+			{
+				return "(none)";
+			}
+			List<string> names = new List<string>(Counts.Keys);
+			names.Sort(System.StringComparer.Ordinal);
+			List<string> parts = new List<string>();
+			for (int i = 0; i < names.Count; i++)
+			{
+				parts.Add(names[i] + " x" + Counts[names[i]]);
+			}
+			return string.Join(", ", parts.ToArray());
 		}
 
 		private static string OtherCityName(KingdomSystem System)

@@ -316,6 +316,23 @@ namespace ThousandAndFirst
 
 		public const string AttrMinTech = "MinTech";
 
+		/// <summary>Who must be living here for the design to be raised at all (Addendum 16
+		/// clause 1): a comma list in the <c>kind:name</c> language <see cref="AttrKnowledge"/>
+		/// already uses, optionally with a count. Deliberately absent from
+		/// <see cref="SpentAttributes"/> and <see cref="StampedAttributes"/> for exactly
+		/// <see cref="AttrKnowledge"/>'s reason &mdash; a gate is asked again every time somebody
+		/// tries to raise the design, and re-writing it moves nothing already standing.</summary>
+		public const string AttrBuilders = "Builders";
+
+		/// <summary>The creed a design belongs to (Addendum 16 clause 4): raised only by builders
+		/// who hold it, or have previously held it. One faction name. A gate, so it reads again
+		/// like the rest of them.</summary>
+		public const string AttrCreed = "Creed";
+
+		/// <summary>How much of the city must hold <see cref="AttrCreed"/> (Addendum 16 clause 2),
+		/// in whole percent. A gate, so it reads again.</summary>
+		public const string AttrCreedShare = "CreedShare";
+
 		public const string AttrUpgradesTo = "UpgradesTo";
 
 		public const string AttrUpgradeCost = "UpgradeCost";

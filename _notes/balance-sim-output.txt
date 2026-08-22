@@ -193,6 +193,7 @@ heartcourt               96     10.0        108       32         64        172  
 condensery              100     10.0        116       28         56        172          11         28
 waterworks               72     10.0        138       26         52        190          11         26
 homefarm                 92     10.0        124       24         48        172           0         24
+reliquary                50      8.0         56       14         28         84           0         14
 court                    96     10.0        126       12         24        150           0         12
 airwellfield             52      6.0         68       10         20         88           0         10
 terrace                  40      6.0         44        8         16         60           0          8
@@ -200,10 +201,9 @@ grange                   40      6.0         46        8         16         62  
 temple                   44      6.0         48        8         16         64           0          8
 manor                    44      6.0         48        6         12         60           0          6
 bathhouse                46      6.0         60        6         12         72           0          6
-heartmoot                46      5.0         46        6         12         58           0          6
 
-    Bits, the third cost. 4 of 72 designs ask for vanilla tinkering bits at all,
-    and they are exactly the high-craft ones: chargingpost, condensery, heartcourt, waterworks.
+    Bits, the third cost. 5 of 87 designs ask for vanilla tinkering bits at all,
+    and they are exactly the high-craft ones: chargingpost, condensery, heartcourt, underbench, waterworks.
     Nobody in the settlement makes a bit; they come off salvage and out of caravans, so a
     design that names them is gated on the founder's own scavenging rather than on any yard.
     That is the intended shape (the catalogue's header says so) and it means the bit line is
@@ -335,6 +335,89 @@ the table above says. That is authored (the frozen arithmetic's own doc) and it 
 numbers are the FLOOR of what a rung costs rather than the expectation. What is new is that
 reaching the cap is no longer automatic: a lift now lands in proportion to the roofs its work
 covers, and a notable's own shade rides the same cap. Q10 is that whole reckoning.
+
+======================================================================================
+Q12 Styles: what each of the five cities may raise, and that every one can still stand
+======================================================================================
+
+BUILDING-CATALOGUE-BRIEF Addendum 16: exercise Styles first. `KingdomRules.StyleAllows` has been
+a complete, tested eligibility mechanism since the first wave and every design in the file said
+`Styles="all"`, so the axis existed and meant nothing. It means something now, and this section is
+the guardrail on what it is allowed to mean.
+
+THE LAW THIS ENFORCES, and it is the one the brief states: a style may lose designs, and a style
+may not lose a LANE. Concretely, three assertions:
+
+  1. every style keeps at least one design in every category the catalogue has;
+  2. every style can still HOLD EVERY RUNG - water, food and roof, at Steading through City, out
+     of the designs that style is actually offered, at its own cheapest plan;
+  3. no style reads as pure removal: a style that is refused anything is offered something
+     nobody else can raise.
+
+The third is not a balance rule, it is a design rule, and it is here because it is the one a data
+pass silently breaks. A style is a place, not a penalty.
+
+  style      offered  refused   own   categories missing
+  common          73        5     3   none
+  verdant         71        6     2   none
+  fungal          73        4     2   none
+  gyre            72        5     2   none
+  eater           72        6     3   none
+
+  common   is refused hut, hutyard, sawyeryard, palisade, waterwheel
+           and raises mudhut, mudhutcourt, caravanserai
+  verdant  is refused manor, catchment, catchmentbank, airwellcourt, airwellfield, cairn
+           and raises stiltrow, gravegrove
+  fungal   is refused saltpan, saltterrace, granary, sailvane
+           and raises sporecellar, caproof
+  gyre     is refused saltpan, saltterrace, bazaar, bathhouse, waterwheel
+           and raises bonefold, sacramentcourt
+  eater    is refused hut, hutyard, weeptap, weepgallery, sawyeryard, palisade
+           and raises blockhut, blockyard, rubblewall
+
+NOW THE RUNGS, which is Q6 run five times. Same arithmetic, same cheapest-first plan, but the
+catalogue narrowed to what each style is offered. `common` is the control: it is refused nothing
+in the binding lanes, so its column is Q6's own answer and every other column is read against it.
+
+  rung     style      works   drams  level   plan
+  Steading common         7      35      6   saltterracex2 | plotx2 | tentx3
+           verdant        7      35      6   saltterracex2 | plotx2 | tentx3
+           fungal         7      35      6   weeptapx2 | plotx2 | tentx3
+           gyre           7      35      6   weeptapx2 | plotx2 | tentx3
+           eater          7      35      6   saltterracex2 | plotx2 | tentx3
+
+  Village  common         7     102     12   airwellcourtx2 | plotx4 | housecourtx1
+           verdant        7      90     12   weepgalleryx2 | plotx4 | housecourtx1
+           fungal         7     102     12   airwellcourtx2 | plotx4 | housecourtx1
+           gyre           7     102     12   airwellcourtx2 | plotx4 | housecourtx1
+           eater          7     102     12   airwellcourtx2 | plotx4 | housecourtx1
+
+  Town     common        13     183     27   airwellfieldx2 | plotx9 | housecourtx2
+           verdant       15     183     26   weepgalleryx4 | plotx9 | housecourtx2
+           fungal        13     183     27   airwellfieldx2 | plotx9 | housecourtx2
+           gyre          13     183     27   airwellfieldx2 | plotx9 | housecourtx2
+           eater         13     183     27   airwellfieldx2 | plotx9 | housecourtx2
+
+  City     common        23     429     51   condenseryx3 | plotx17 | housecourtx3
+           verdant       23     429     51   condenseryx3 | plotx17 | housecourtx3
+           fungal        23     429     51   condenseryx3 | plotx17 | housecourtx3
+           gyre          23     429     51   condenseryx3 | plotx17 | housecourtx3
+           eater         23     429     51   condenseryx3 | plotx17 | housecourtx3
+
+
+  Costliest style's cheapest plan, against common's at the same rung: 100% (ceiling 150%).
+
+Reading. Every style holds every rung out of its own catalogue, and the dearest of them pays
+0% more water than the plain city does for the same people. That number is the whole
+balance consequence of the pass and it is the one to watch: the restrictions above are chosen so
+that no style loses a LANE, only designs within one, and the moment a future restriction takes a
+style's last cheap answer to a binding good this line moves before anything else does.
+
+The creed-gated designs are deliberately absent from every column. They are gated on who the
+city's PEOPLE are rather than on where it stands, they carry no binding good, and the visibility
+law (Addendum 14) means most cities never see them at all - so a plan that leaned on one would be
+a plan for a city that may not exist.
+
 
 ======================================================================================
 Q7  Where automation has to take over: hands against the water bill
@@ -637,11 +720,11 @@ one who put them out past the fields, where a quarter band reaches perhaps a thi
 roofs and a plot band reaches nobody who lives anywhere.
 
 rung      declared gathered scattered   cap   was gathered scattered
-Camp            13        0         0     2     6        4         4
-Steading        32       14         6     2     7        7         7
-Village         74       54        15     6    18       18        18
-Town           115       95        56    12    37       37        37
-City           138      118        79    25    75       75        75
+Camp            14        0         0     2     6        4         4
+Steading        33       14         6     2     7        7         7
+Village         90       69        18     6    18       18        18
+Town           157      136        86    12    37       37        37
+City           180      159       109    25    75       75        75
 
 Reading. Those columns say something worth saying plainly: with one of EVERY lifting design a
 rung can reach standing, the declared lift overruns the cap so far that scoping changes the
@@ -655,7 +738,7 @@ rung     design        band      declared gathered scattered
 Camp     shrinegarth   plot             3        0         0
 Steading smithy        quarter          3        3         1
 Village  workshop      quarter          8        8         2
-Town     manor         zone             9        9         9
+Town     reliquary     zone            11       11        11
 City     heartcourt    city            16       16        16
 
 That is the mechanic Addendum 6 asked for: the same shrine is worth its whole amount among the
@@ -919,6 +1002,7 @@ G2  The food lane's invariants, re-derived from the XML
   plotrows    food:5   grows (10 rows)
   field       food:8   grows (16 rows)
   granary     food:9   keeps (288 servings)
+  sporecellar food:9   keeps (288 servings)
   fieldrows   food:18  grows (36 rows)
   grange      food:26  grows (52 rows)
   homefarm    food:40  grows (80 rows)

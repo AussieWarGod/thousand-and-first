@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 
 namespace ThousandAndFirst
 {
@@ -953,7 +953,21 @@ namespace ThousandAndFirst
 			return (Plot == KingdomPlotRules.PlotSize.None) ? "no plot at all" : ("a " + KingdomPlotRules.SizeName(Plot) + " plot");
 		}
 
-		/// <returns>True when this entry is offered to every style there is.</returns>
+		/// <summary>
+		/// Reads one entry's <c>Styles</c> tag list into the union of styles the catalogue builds
+		/// for.
+		/// <para>
+		/// A NEGATED tag (<c>Styles="all,!eater"</c>) names a style just as loudly as a welcome
+		/// does &mdash; an author who refuses the eater city has referred to it, and reporting it
+		/// as a style nothing builds for would be false. It is collected under its bare name, with
+		/// the <c>!</c> stripped, so the undeclared-style check catches
+		/// <c>Styles="all,!eatr"</c>, which is precisely the typo that is otherwise invisible: a
+		/// mis-spelled refusal refuses nobody and the design silently goes everywhere.
+		/// </para>
+		/// </summary>
+		/// <returns>True when this entry is offered to every style there is &mdash; which a list
+		/// of pure refusals also is, because <c>KingdomZoningRules.TagAccepts</c> reads one as
+		/// "everywhere except".</returns>
 		private static bool CollectStyles(CatalogueEntry Entry, List<string> Into)
 		{
 			string styles = Entry.Styles;
@@ -962,6 +976,7 @@ namespace ThousandAndFirst
 				return false;
 			}
 			bool takesAll = false;
+			bool anyWelcome = false;
 			string[] parts = styles.Split(ListSeparator);
 			for (int i = 0; i < parts.Length; i++)
 			{
@@ -970,6 +985,16 @@ namespace ThousandAndFirst
 				{
 					continue;
 				}
+				if (part[0] == KingdomZoningRules.NegationPrefix)
+				{
+					part = Fold(part.Substring(1));
+					if (part != null && part != "all" && !Into.Contains(part))
+					{
+						Into.Add(part);
+					}
+					continue;
+				}
+				anyWelcome = true;
 				if (part == "all")
 				{
 					takesAll = true;
@@ -980,7 +1005,7 @@ namespace ThousandAndFirst
 					Into.Add(part);
 				}
 			}
-			return takesAll;
+			return takesAll || !anyWelcome;
 		}
 
 		private static int Least(int A, int B, int C)

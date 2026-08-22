@@ -1,4 +1,4 @@
-﻿namespace ThousandAndFirst
+namespace ThousandAndFirst
 {
 	public enum GrowthStage
 	{
@@ -2899,22 +2899,24 @@
 			return true;
 		}
 
+		/// <summary>
+		/// Whether a design's <c>Styles</c> list offers it to a city of this style.
+		/// <para>
+		/// A style is a TAG (Addendum 16), and this is the one tag idiom every open-ended set in
+		/// the catalogue is matched by: <c>KingdomZoningRules.TagAccepts</c>. The whole of the
+		/// rule lives there &mdash; a comma list, <c>all</c> for every style there is, and a
+		/// leading <c>!</c> for "every style but this one" &mdash; and this method is kept where
+		/// it has always been because a third party is calling it.
+		/// </para>
+		/// <para>
+		/// What the migration changed, and it only ever widens: the comparison is case-folded
+		/// now. <c>Styles="Verdant"</c> used to match nothing at all and say nothing about it,
+		/// which is the exact silent failure a tag idiom exists to make impossible.
+		/// </para>
+		/// </summary>
 		public static bool StyleAllows(string EntryStyles, string CityStyle)
 		{
-			if (string.IsNullOrEmpty(EntryStyles) || EntryStyles == "all")
-			{
-				return true;
-			}
-			string[] array = EntryStyles.Split(',');
-			for (int i = 0; i < array.Length; i++)
-			{
-				string text = array[i].Trim();
-				if (text == "all" || text == CityStyle)
-				{
-					return true;
-				}
-			}
-			return false;
+			return KingdomZoningRules.TagAccepts(EntryStyles, CityStyle);
 		}
 
 		/// <summary>

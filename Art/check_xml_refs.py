@@ -10,6 +10,11 @@ references the game resolves by name at load or roll time, where a wrong name is
   book reference        a Book ID= that no blueprint points at, or a pointer to no book
   upgrade chain         an UpgradesTo= naming a design no <building> declares, or a ring of them
   zoning district       a Districts= token naming ground the founder can never declare
+  city style            a Styles= token naming a style no <style> declares -- and, worse, a
+                        MIS-SPELLED refusal (Styles="all,!eatr"), which refuses nobody and sends
+                        the design everywhere while looking like a restriction
+  creed gate            a CreedShare= with no Creed= to take a share of, or a Builders= token
+                        naming a kind nothing on the roll can ever supply
   merged design         a footprint, chain link or key that only contradicts itself once the
                         catalogue's <building> elements are folded together by Key
   raising ceremony      a completion path that finishes a building without calling the ceremony
@@ -357,6 +362,56 @@ def building_reference_problems():
                 problems.append(
                     "building %s skin %s names the tile %s, which is not in Textures/"
                     % (key, skin_key, tile)
+                )
+
+    # A style is a TAG (Addendum 16) and the tag set is OPEN, so a token naming a style nothing
+    # declares is not automatically wrong -- a third party may ship the <style> in another file.
+    # Inside THIS repository it always is wrong, and the negated form is the one worth catching:
+    # `Styles="all,!eatr"` refuses nobody, so the design goes everywhere while reading, to its own
+    # author, as a restriction. That is a silent failure of exactly the shape this file exists for.
+    declared_styles = set(
+        name.strip().lower()
+        for name in re.findall(r'<style\s+Name="([^"]+)"', read("KingdomBuildings.xml"))
+    )
+    if declared_styles:
+        for key in order:
+            for token in (merged[key]["attrs"].get("Styles") or "").split(","):
+                token = token.strip().lower()
+                negated = token.startswith("!")
+                token = token.lstrip("!").strip()
+                if not token or token == "all" or token in declared_styles:
+                    continue
+                problems.append(
+                    "building %s %s the style %s, which no <style> in this file declares, so the "
+                    "%s does nothing at all"
+                    % (
+                        key,
+                        "refuses" if negated else "is offered to",
+                        token,
+                        "refusal" if negated else "offer",
+                    )
+                )
+
+    # The creed gate, as far as the XML can answer for itself. A share with no creed to take a
+    # share of is dropped at load and named in the log; naming it here is cheaper than a log line
+    # nobody reads. A Builders kind nothing supplies is a gate that will never open.
+    builder_kinds = {"origin", "creed", "kept"}
+    for key in order:
+        attrs = merged[key]["attrs"]
+        if attrs.get("CreedShare") and not attrs.get("Creed"):
+            problems.append(
+                "building %s declares CreedShare and no Creed, so there is no creed for the share "
+                "to be a share of and the attribute is dropped at load" % key
+            )
+        for token in (attrs.get("Builders") or "").split(","):
+            token = token.strip().lower()
+            if not token or token == "all" or ":" not in token:
+                continue
+            kind = token.split(":", 1)[0]
+            if kind not in builder_kinds:
+                problems.append(
+                    "building %s wants builders of the kind %s, which nothing puts on a city's "
+                    "roll, so the gate can never open" % (key, kind)
                 )
 
     declared_pops = set()

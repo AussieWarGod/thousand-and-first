@@ -38,7 +38,8 @@ namespace ThousandAndFirst.Tests
 				new KingdomResidentRow(9, "Ptoh", 2, 3, 400L, 4242, 4242, 1, KingdomDayShape.Field,
 					KingdomResidentStanding.Abroad, KingdomStandingCause.Followed, "taf:zone:b",
 					new KingdomBrinkWindow(true, 410L, 415L),
-					new KingdomBrinkWindow(true, 420L, KingdomBrinkRules.Unwarned), "Mechanimists", 1)
+					new KingdomBrinkWindow(true, 420L, KingdomBrinkRules.Unwarned), "Mechanimists", 1,
+					KingdomCreedRules.EncodeKept(new List<string> { "Joppa", "Barathrumites" }))
 			};
 			KingdomClockRow[] clocks = new KingdomClockRow[1]
 			{
@@ -123,6 +124,11 @@ namespace ThousandAndFirst.Tests
 			Assert.AreEqual(personBefore.CreedBrink.WarnedTick, personAfter.CreedBrink.WarnedTick);
 			Assert.AreEqual(personBefore.CreedToward, personAfter.CreedToward);
 			Assert.AreEqual(personBefore.CreedChannel, personAfter.CreedChannel);
+			// Addendum 16's recorded fact. A book that lost it would hand the alignment gate a city
+			// whose people had never believed anything, which is the one state that HIDES designs
+			// rather than refusing them -- so the loss would read as the works never having existed.
+			Assert.AreEqual(personBefore.KeptCreeds, personAfter.KeptCreeds);
+			CollectionAssert.AreEqual(new[] { "Joppa", "Barathrumites" }, KingdomCreedRules.DecodeKept(personAfter.KeptCreeds));
 
 			KingdomToldRow toldBefore;
 			KingdomToldRow toldAfter;

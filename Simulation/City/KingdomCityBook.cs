@@ -128,6 +128,12 @@ namespace ThousandAndFirst.Simulation.City
 
 		public List<int> ResidentCreedCodes = new List<int>();
 
+		/// <summary>The creeds each resident has HELD AND LEFT, as
+		/// <c>KingdomCreedRules.EncodeKept</c> stores them. Addendum 16: the alignment gate reads
+		/// what a person once believed, and a fact the city is asked about has to be written in the
+		/// city's own book.</summary>
+		public List<string> ResidentKeptCreeds = new List<string>();
+
 		public List<long> ResidentArrivedTicks = new List<long>();
 
 		public List<int> ResidentHomeWorkIds = new List<int>();
@@ -397,7 +403,8 @@ namespace ThousandAndFirst.Simulation.City
 			ResidentCreedWarnedTicks = Repair(ResidentCreedWarnedTicks);
 			ResidentCreedToward = Repair(ResidentCreedToward);
 			ResidentCreedChannels = Repair(ResidentCreedChannels);
-			int residents = Shortest(new int[20]
+			ResidentKeptCreeds = Repair(ResidentKeptCreeds);
+			int residents = Shortest(new int[21]
 			{
 				ResidentIds.Count, ResidentNames.Count, ResidentOriginCodes.Count,
 				ResidentCreedCodes.Count, ResidentArrivedTicks.Count, ResidentHomeWorkIds.Count,
@@ -405,7 +412,7 @@ namespace ThousandAndFirst.Simulation.City
 				ResidentStandings.Count, ResidentCauses.Count, ResidentBoundZoneIds.Count,
 				ResidentRoofStanding.Count, ResidentRoofTicks.Count, ResidentRoofWarnedTicks.Count,
 				ResidentCreedStanding.Count, ResidentCreedTicks.Count, ResidentCreedWarnedTicks.Count,
-				ResidentCreedToward.Count, ResidentCreedChannels.Count
+				ResidentCreedToward.Count, ResidentCreedChannels.Count, ResidentKeptCreeds.Count
 			});
 			if (residents > KingdomCityState.MaxResidents)
 			{
@@ -431,6 +438,7 @@ namespace ThousandAndFirst.Simulation.City
 			Trim(ResidentCreedWarnedTicks, residents);
 			Trim(ResidentCreedToward, residents);
 			Trim(ResidentCreedChannels, residents);
+			Trim(ResidentKeptCreeds, residents);
 			for (int i = 0; i < residents; i++)
 			{
 				if (ResidentNames[i] == null)
@@ -531,7 +539,8 @@ namespace ThousandAndFirst.Simulation.City
 				&& Rows(ResidentRoofStanding) == count && Rows(ResidentRoofTicks) == count
 				&& Rows(ResidentRoofWarnedTicks) == count && Rows(ResidentCreedStanding) == count
 				&& Rows(ResidentCreedTicks) == count && Rows(ResidentCreedWarnedTicks) == count
-				&& Rows(ResidentCreedToward) == count && Rows(ResidentCreedChannels) == count)
+				&& Rows(ResidentCreedToward) == count && Rows(ResidentCreedChannels) == count
+				&& Rows(ResidentKeptCreeds) == count)
 			{
 				return;
 			}
@@ -747,7 +756,8 @@ namespace ThousandAndFirst.Simulation.City
 					new KingdomBrinkWindow(ResidentRoofStanding[i] != 0, ResidentRoofTicks[i], ResidentRoofWarnedTicks[i]),
 					new KingdomBrinkWindow(ResidentCreedStanding[i] != 0, ResidentCreedTicks[i], ResidentCreedWarnedTicks[i]),
 					ResidentCreedToward[i],
-					(byte)ResidentCreedChannels[i]);
+					(byte)ResidentCreedChannels[i],
+					ResidentKeptCreeds[i]);
 			}
 			KingdomClockRow[] clocks = new KingdomClockRow[ClockKinds.Count];
 			for (int i = 0; i < clocks.Length; i++)
@@ -887,6 +897,7 @@ namespace ThousandAndFirst.Simulation.City
 				ResidentCreedWarnedTicks.Add(row.CreedBrink.WarnedTick);
 				ResidentCreedToward.Add(row.CreedToward ?? "");
 				ResidentCreedChannels.Add(row.CreedChannel);
+				ResidentKeptCreeds.Add(row.KeptCreeds ?? "");
 			}
 			for (int i = 0; i < state.ClockCount; i++)
 			{
@@ -969,6 +980,7 @@ namespace ThousandAndFirst.Simulation.City
 			ResidentCreedWarnedTicks.Clear();
 			ResidentCreedToward.Clear();
 			ResidentCreedChannels.Clear();
+			ResidentKeptCreeds.Clear();
 			ClockKinds.Clear();
 			ClockNextDueTicks.Clear();
 			ClockOrdinals.Clear();

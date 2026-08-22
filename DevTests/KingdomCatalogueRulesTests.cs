@@ -1,4 +1,4 @@
-﻿#if TAF_TESTS
+#if TAF_TESTS
 using System.Collections.Generic;
 using NUnit.Framework;
 using ThousandAndFirst;
@@ -655,6 +655,32 @@ namespace ThousandAndFirst.Tests
 			};
 			List<CatalogueFinding> findings = KingdomCatalogueRules.Validate(entries, new List<string> { "common", "gyre" });
 			Assert.IsFalse(Has(findings, null, "style", CatalogueSeverity.Note));
+		}
+
+		/// <summary>
+		/// A MIS-SPELLED REFUSAL is the typo the tag idiom made possible, and it is invisible
+		/// without this: `Styles="all,!eatr"` refuses nobody, so the design goes everywhere while
+		/// reading to its author as a restriction. Collecting the negated name catches it with the
+		/// check that was already there.
+		/// </summary>
+		[Test]
+		public void Validate_NotesAStyleThatIsONLYREFUSEDAndDeclaredByNoStyleElement()
+		{
+			List<CatalogueEntry> entries = new List<CatalogueEntry> { Entry("hut", Styles: "all,!eatr") };
+			List<CatalogueFinding> findings = KingdomCatalogueRules.Validate(entries, new List<string> { "common", "eater" });
+			Assert.IsTrue(Has(findings, null, "Styles", CatalogueSeverity.Note));
+		}
+
+		/// <summary>A list of nothing but refusals is offered to every style there is, so it
+		/// answers the unreferenced-style half of the check for all of them at once — exactly as
+		/// <c>Styles="all"</c> does, because that is what it means.</summary>
+		[Test]
+		public void Validate_TreatsAPureRefusalListAsAnOfferToEveryOtherStyle()
+		{
+			List<CatalogueEntry> entries = new List<CatalogueEntry> { Entry("hut", Styles: "!eater") };
+			List<CatalogueFinding> findings = KingdomCatalogueRules.Validate(entries, new List<string> { "common", "eater", "gyre" });
+			Assert.IsFalse(Has(findings, null, "style", CatalogueSeverity.Note));
+			Assert.IsFalse(Has(findings, null, "Styles", CatalogueSeverity.Note), "eater IS referred to, by being refused");
 		}
 
 		[Test]
