@@ -1083,3 +1083,17 @@ your city"
 - Research dispatched (SUCCESSION-RESEARCH.md): vanilla death-pipeline + body-swap machinery,
   the exile/TryReturn seam, comparables praise-first, sentiment on the degradation dial.
   Options + recommendation return as questions.
+
+**Addendum 21 extension (author, 2026-08-22):** "maybe it's a 'kingdom mode' between default
+mode and 'roleplay' mode"
+
+- **KINGDOM MODE, a named game mode on vanilla's own ladder**: Classic (death loses
+  everything) / KINGDOM (death loses the PERSON — permanent, unreloadable, witnessed — but
+  the run continues through the kingdom via succession) / Roleplay (death undone by
+  checkpoint). Fills the exact middle vanilla leaves empty, and the middle the community's
+  own "middle-ground between permadeath and no permadeath" thread asked for.
+- The succession honesty rule (Addendum 21) is the mode's DEFINITION: character-level
+  permadeath, kingdom-level continuity.
+- Implementation posture: modes are data (EmbarkModules.xml idiom — Classic + gamestate +
+  mode system); Kingdom Mode is an embark entry plus the death-hook system. Classic stays
+  untouched; the clone-vat remains in-world tech usable in any mode, priced, not a mode.
