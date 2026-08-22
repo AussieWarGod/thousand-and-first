@@ -1042,3 +1042,44 @@ of them, or chase them, we should have some cool, fun hidden secret ones too."
 - Dev-order note (the question Q9 actually asked): with no design coupling, waves ship as
   their prerequisites unblock — delve behind the strata wave, mirror-gate free-standing, lab
   behind the end-state ruling. Appetite may reorder freely.
+
+
+## Addendum 21, 2026-08-22 — death, succession, and the sandbox spectrum (author direction)
+
+"this could be new game modes, or optionals, player choice on where they land on the spectrum:
+- being able to choose which citizen you 'become' (though it should be as if you started a new
+game as this citizen, only blueprints this citizen would have known, their skills, their
+attributes, their body)
+- getting whichever citizen would have become the 'mayor' or 'sultan'
+- starting as a lowly farmer or porter in the city, needing to work your way back to being the
+mayor, then the sultan
+
+we should give the same sandbox freedom and options qud does, with the default being as
+roguelike and qudlike as possible, but explore our options and see what you come up with"
+
+Earlier the same session: "with sufficient technology, you just pop out as a clone of yourself
+the last time you saved your 'body template' at a cloning facility, but since that's endgame i
+was more thinking some thing where either the city persists across new games with slight
+degradation and some lore/history (we already have this) or you can play on as a citizen from
+your city"
+
+- **A SPECTRUM of modes/optionals, player-chosen** — mirroring vanilla's own Classic /
+  Roleplay / Wander posture. Not one canonical death answer; a dial.
+- **DEFAULT is maximally roguelike and Qudlike.** Whatever the default lands as, it must be
+  the option a permadeath purist respects.
+- **The succession honesty rule (RULED, binding on any succession shape):** becoming a citizen
+  is AS IF A NEW GAME BEGAN AS THAT CITIZEN — only the blueprints that citizen would have
+  known, their skills, their attributes, their body. No founder-knowledge inheritance, no
+  death-as-upgrade. (Composes with the knowledge-siting registry model: the founder's journal
+  dies with the founder; the city's holdings stand.)
+- **Three succession shapes to explore** (not yet ranked): chosen-citizen; the realm's own
+  succession law picks (the would-be "mayor"/"sultan"); the climb — start as a lowly farmer or
+  porter and work back up to mayor, then sultan.
+- **The clone-vat is the ENDGAME answer**, tech-gated: a saved body template at a cloning
+  facility; death wakes the clone. Checkpointing made diegetic. Staleness is the natural cost.
+- **Cross-run persistence is in scope**: the kingdom standing in the NEXT game's world,
+  slightly degraded, carrying its lore/history (chronicle, city book, typed wear and ruins
+  already shipped).
+- Research dispatched (SUCCESSION-RESEARCH.md): vanilla death-pipeline + body-swap machinery,
+  the exile/TryReturn seam, comparables praise-first, sentiment on the degradation dial.
+  Options + recommendation return as questions.
