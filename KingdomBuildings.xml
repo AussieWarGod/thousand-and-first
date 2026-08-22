@@ -1007,6 +1007,40 @@
             Materials="stone:22,timber:8,marble:4" Staff="1" Manning="scaled"
             Carries="luxury:4,order:3" />
 
+  <!-- ======================================================================== THE LAB ==
+    DIVERSITY §3's rung ladder, Addendum 22 cluster D. The slab reads bodies before it cuts
+    them; the vat-house keeps what was read; the hall grafts what was kept; the theatre
+    changes what a body IS - and the theatre is a MEGASTRUCTURE under Design B (Addendum 22
+    A1): a city that raises it has answered "what may a body be made of?" and that answer is
+    the city's purpose. The flesh-branch node gates land here per QB-22's provisional: new
+    records carry them, shipped records stay lightly gated. Procedure records live in
+    KingdomProcedures.xml; these are only the rooms they happen in. -->
+  <building Key="butcherslab" DisplayName="butcher's slab (a stone table, a gutter, and a hook)" Blueprint="r_KingdomButcherSlab"
+            Cost="4" Ticks="1200" Styles="all" Category="craft" Plot="S" MinStage="Steading"
+            Districts="craft,none" MinTech="salvage" Knowledge="node:butchery"
+            Materials="timber:6,stone:4" Staff="2" Manning="scaled" Carries="craft:1" />
+
+  <building Key="vathouse" DisplayName="vat-house (brine, tallow, and things kept longer than they should be)" Blueprint="r_KingdomVatHouse"
+            Cost="30" Ticks="4200" Styles="all" Category="craft" Plot="M" MinStage="Village"
+            Districts="craft,none" MinTech="workshop" Knowledge="node:vat"
+            Materials="stone:20,shapedstone:6,scrap:10" Bits="00" Staff="3" Manning="scaled"
+            Carries="craft:2" Provides="taf:damp,taf:offal" />
+
+  <building Key="graftinghall" DisplayName="the grafting hall (a lamp, a table, and somebody who has done this before)" Blueprint="r_KingdomGraftingHall"
+            Cost="90" Ticks="9000" Styles="all" Category="craft" Plot="L" MinStage="City"
+            Districts="craft,none" MinTech="foundry" Knowledge="node:graft"
+            Materials="stone:60,shapedstone:20,workedmetal:8" Bits="0023"
+            Staff="5" Manning="scaled" CrewNeeds="intelligence:18"
+            Carries="craft:6,learning:2" Provides="taf:damp,taf:offal" />
+
+  <building Key="chimerictheatre" DisplayName="the chimeric theatre (tiered seats around a table nobody sits at)" Blueprint="r_KingdomChimericTheatre"
+            Cost="140" Ticks="16800" Styles="all" Category="craft" Plot="XL" MinStage="City"
+            Districts="craft" MinZones="4" MinTech="arclight" Knowledge="node:chimerism"
+            Megastructure="yes" Footprint="20x14" Roof="Walled"
+            Materials="stone:90,shapedstone:28,marble:12,workedmetal:20,scrap:24" Bits="00346" Exotics="ingot:2,gem:1"
+            Staff="6" Manning="scaled" Carries="craft:8,learning:3" Provides="taf:damp,taf:offal"
+            Contents="r_KingdomFurnishings_Civic" />
+
   <!-- =================================================================== THE MIRROR-GATE ==
     An EXOTIC in Addendum 20's sense: independently gated, free to build or to skip, a
     prerequisite of nothing. It is also the only design in the catalogue that gives time back.

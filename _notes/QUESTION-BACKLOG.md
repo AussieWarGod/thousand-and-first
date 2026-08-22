@@ -151,6 +151,55 @@ with itself** (recorded for your eye, all reversible): the tech map keeps four c
 `node:notes` with roots revealed at first keepers'-screen look; the bench ticks per turn but
 charges once per world-day (the scaffold's own idiom vs §10.2's wording).
 
+**QB-27 — Which moment mints a `rite:` key?** Vanilla ships NO water-ritual completion event —
+only a start event (`WaterRitualStartEvent`, carrying `Initial` = first-ever share) and
+per-choice transactions (secret bought, recipe learned). Both shipped rite lanes in the mod are
+inward-facing and cannot mint vanilla-faction keys; every `SeededBy="rite:…"` in the tree is
+inert until this is answered. Options: (a) mint on the FIRST SHARE — the covenant moment, one
+handler; (b) mint on a grant actually taken — closer to DIVERSITY:158's "the founder's own
+water-ritual grants, mirrored", more handlers. **PROVISIONAL: (a) first share** — sitting and
+sharing water with a people is what a rite key says; the seed is 25% capped 50% either way.
+Implementation pending (a small hook wave; the handler home is whichever lane owns the
+founder's vanilla-ritual reads).
+
+**QB-28 — The keepers' roster string is unpriced in the byte budget.** The receipt prices the
+seven reference slots; the roster is a composed per-city heap string (the tree's own 21 grants
+= 598 B, uncapped above that by disks/machines/patterns). Any width chosen moves the realm
+total across or under the 56 KiB advisory rung: 640 B/city → 56,868 (under); 1,024 B/city →
+57,636 (over, flipping the pinned verdict). Marked OPEN in the source. **PROVISIONAL: none —
+the budget verdict is yours to re-pin; the advisory rung is not a ceiling and nothing breaks
+meanwhile.**
+
+**QB-29 — PRE-EXISTING SPEC BREACH: the refining yard has never applied wear.** Addendum 10(b)
+says each consumer applies `WorkEffectiveness` itself; crops and networks do, the work-yard
+reads raw crew stretch only (`KingdomMaterials.cs:1720`). Fixing it LOWERS refining output —
+a balance change, correctly not slipped into an integration wave. **PROVISIONAL: fix lands in
+the next balance-touching wave with a fresh balance-sim pass, not before.**
+
+**QB-30 — The `|` OR-grammar is declared in two places and implemented in one.** The
+visibility layer splits knowledge alternatives on `|`; the GATE layer (`Knows`) compares whole
+tokens — so any record written with a bar is invisible-and-unbuildable in two different ways.
+The lab shipped literal comma tokens only and the theatre's §3.3 OR-gate
+(`rite:Girsh|machine:*Regeneration Tank`) ships as `node:chimerism` instead — the flesh
+branch's own T4 node, which already requires `node:graft`, arclight, and is rite-seeded, so it
+expresses the intent through machinery that exists. Rule: (a) accept `node:chimerism`
+(**PROVISIONAL**); (b) implement OR in `Knows`; (c) pick one literal.
+
+**QB-31 — `Magnitude` is a schema field the brief never authorised by name.** QB-10's
+source-split (quartz-hide 5% vs mirror-carapace 100% reflection) is unimplementable without a
+discriminator, and a band on a FIELD is the only one that keeps "Grants names a class" intact.
+One optional attribute, nothing clamped. **PROVISIONAL: keep; your eye at check-in.**
+
+**QB-32 — Removal price is `Cost / 4` — invented.** §3.8 says only "costs less than the
+graft". **PROVISIONAL: keep the quarter; tune at the balance pass.**
+
+**QB-33 — Lab follow-ups bundle** (recorded, none blocking): the vat-house's staffed accrual
+clock (arithmetic shipped, wants the power-work's `LastResolvedTick` idiom); §3.6 happenings
+2–3 (the savant's price → notable tastes; somebody leaves → roof-brink) — surfaces exist,
+wiring wave wanted; `AllowStaticRegistration` cache-key trace for seven conditional-register
+classes (first in-game selftest); balance-sim run against a fully-grafted founder (§3.9 risk
+3) before the playtest.
+
 ## Answered
 
 **QB-19 — DEFECT FIXED: underground `Open` plots no longer advertise sky.** Sky is

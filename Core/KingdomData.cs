@@ -229,6 +229,7 @@ namespace ThousandAndFirst
 			declared.Set(KingdomMergeRules.AttrCreed, xml.GetAttribute("Creed"));
 			declared.Set(KingdomMergeRules.AttrCreedShare, xml.GetAttribute("CreedShare"));
 			declared.Set(KingdomMergeRules.AttrStrata, xml.GetAttribute("Strata"));
+			declared.Set(KingdomMergeRules.AttrMegastructure, xml.GetAttribute("Megastructure"));
 			declared.Set(KingdomMergeRules.AttrUpgradesTo, xml.GetAttribute("UpgradesTo"));
 			declared.Set(KingdomMergeRules.AttrUpgradeCost, xml.GetAttribute("UpgradeCost"));
 			declared.Set(KingdomMergeRules.AttrUpgradeTicks, xml.GetAttribute("UpgradeTicks"));
@@ -263,7 +264,8 @@ namespace ThousandAndFirst
 			entry.Materials = design.Get(KingdomMergeRules.AttrMaterials);
 			entry.Skins = design.Skins;
 			KingdomZoning.RegisterGate(entry.Key, design.Get(KingdomMergeRules.AttrDistricts), design.Get(KingdomMergeRules.AttrMinZones), design.Get(KingdomMergeRules.AttrKnowledge), design.Get(KingdomMergeRules.AttrMinTech),
-				design.Get(KingdomMergeRules.AttrBuilders), design.Get(KingdomMergeRules.AttrCreed), design.Get(KingdomMergeRules.AttrCreedShare), design.Get(KingdomMergeRules.AttrStrata));
+				design.Get(KingdomMergeRules.AttrBuilders), design.Get(KingdomMergeRules.AttrCreed), design.Get(KingdomMergeRules.AttrCreedShare), design.Get(KingdomMergeRules.AttrStrata),
+				design.Get(KingdomMergeRules.AttrMegastructure));
 			KingdomUpgrade.RegisterChain(entry.Key, design.Get(KingdomMergeRules.AttrUpgradesTo), design.Get(KingdomMergeRules.AttrUpgradeCost), design.Get(KingdomMergeRules.AttrUpgradeTicks), design.Get(KingdomMergeRules.AttrUpgradeCrew), design.Get(KingdomMergeRules.AttrUpgradeMinStage));
 			KingdomMaterials.RegisterCost(entry.Key, design.Get(KingdomMergeRules.AttrMaterials), design.Get(KingdomMergeRules.AttrUpgradeMaterials));
 			// Beside the material cost and out of the same merged draft, so a later file that

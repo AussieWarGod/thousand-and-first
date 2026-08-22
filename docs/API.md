@@ -436,6 +436,23 @@ discovery is `JournalObservation.Revealed` under `taf:node:<key>` (founder-held)
 `KnowledgeGateHeardOf` is the single visibility filter every menu, map row, and refusal funnels
 through. `Train` writes `BaseValue` only — never `Statistic.Max`.
 
+### The lab (`KingdomProcedureRules` / `KingdomLabRules` / `KingdomProcedures` / `KingdomLab`)
+
+`KingdomProcedureRules` (engine-free) carries the procedure record and its whole law: schema
+parse and registry validation, the anatomy-slot judgment (`Slots` against the player's own
+`BodyPart.Type`s, `SlotCategories` against `BodyPartCategory` per-procedure), the
+`Attach="body|weapon"` semantics (a weapon-event-only class must graft onto a natural weapon or
+is refused at commit, by name), the preservation arithmetic (`Number × Count`, corrected
+against `Campfire.PerformPreserve`), the mutation-source cap (levels 1–3, never the source's),
+the once-ever latch for the named procedures, the ONE sanctioned kernel draw (the Chimeric
+Confession's confessed gamble), and every refusal sentence. `KingdomLabRules` carries the rung
+ladder, the megastructure cardinality (`JudgePurpose` — one purposeful megastructure per city,
+re-keying the same design allowed), and the creed-friction prose. `KingdomProcedures` is the
+registry, the discovery ledger, the anatomy census, and the three write paths
+(stamp-at-butcher / rebuild-at-graft for parts; `AddPartAt` for limbs; `AddMutation` capped for
+glands). `KingdomLab` is the four building parts and the two-level `Popup.PickOption` slate —
+the golem's own screen idiom, no new screen class.
+
 ### The claim
 
 What widens the ground every gate above is measured against.

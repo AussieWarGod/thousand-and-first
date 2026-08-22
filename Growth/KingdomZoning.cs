@@ -59,6 +59,13 @@ namespace ThousandAndFirst
 		public static void ClearGates()
 		{
 			Gates.Clear();
+			// The purpose cache is derived from these, so it cannot outlive them. This is also the
+			// per-load invalidation: the catalogue is re-read on every AfterGameLoaded
+			// (KingdomLoader), so a second game in the same session cannot inherit the first one's
+			// answer about what its cities were about.
+			KeptCacheZone = null;
+			KeptCacheTick = -1L;
+			KeptCacheValue = null;
 		}
 
 		/// <summary>
@@ -98,12 +105,24 @@ namespace ThousandAndFirst
 		public static void RegisterGate(string Key, string Districts, string MinZones, string Knowledge, string MinTech,
 			string Builders, string Creed, string CreedShare, string Strata)
 		{
+			RegisterGate(Key, Districts, MinZones, Knowledge, MinTech, Builders, Creed, CreedShare, Strata, null);
+		}
+
+		/// <summary>
+		/// The same registration with Addendum 22 A1's <c>Megastructure</c>. Optional like the eight
+		/// before it: a design that does not claim to be one of the great works is ordinary, and
+		/// every design in the catalogue but one is.
+		/// </summary>
+		/// <param name="Megastructure">Raw <c>Megastructure</c> attribute.</param>
+		public static void RegisterGate(string Key, string Districts, string MinZones, string Knowledge, string MinTech,
+			string Builders, string Creed, string CreedShare, string Strata, string Megastructure)
+		{
 			if (string.IsNullOrEmpty(Key))
 			{
 				return;
 			}
 			ZoneGate gate = KingdomZoningRules.ParseGateAttributes(Key, Districts, MinZones, Knowledge, MinTech,
-				Builders, Creed, CreedShare, Strata, out string error);
+				Builders, Creed, CreedShare, Strata, Megastructure, out string error);
 			if (error != null)
 			{
 				MetricsManager.LogError("ThousandAndFirst KingdomBuildings: " + error);
@@ -600,7 +619,134 @@ namespace ThousandAndFirst
 			}
 			int claimed = (System.ClaimedZones != null) ? System.ClaimedZones.Count : 0;
 			return KingdomZoningRules.Judge(GateFor(Entry.Key), District, Entry.Category, claimed, Roster(System),
-				Underground, WantsSky(Entry), BuilderRollOf(System), KingdomZoningRules.StratumOfGround(Underground));
+				Underground, WantsSky(Entry), BuilderRollOf(System), KingdomZoningRules.StratumOfGround(Underground),
+				Entry.Key, KeptMegastructure(System));
+		}
+
+		// One entry, keyed by the ground and the tick it was read on. The purpose gate is asked once
+		// per catalogue row per menu redraw -- LockoutWarning alone asks it twice for every design in
+		// the game -- so the read has to be cheap or it is a stutter every time a founder opens the
+		// commission list. It is invalidated by the tick moving, which is the coarsest correct key:
+		// a megastructure cannot appear without time passing.
+		private static string KeptCacheZone;
+
+		private static long KeptCacheTick = -1L;
+
+		private static string KeptCacheValue;
+
+		/// <summary>
+		/// The registry key of the megastructure this city already keeps, or null when it keeps none
+		/// &mdash; and null, deliberately, when nothing could tell.
+		/// <para>
+		/// <b>Two sources, and they are not equals.</b> The city book is the RECORD: its work rows
+		/// cover every zone the city holds, including the ones nobody has stood in for a season, and
+		/// a cardinality rule that only saw loaded ground would let a founder raise a second great
+		/// work simply by walking away from the first. The loaded zone is the FRESHNESS PATCH: the
+		/// book's work rows for a zone are rebuilt at that zone's own settlement pass
+		/// (<c>KingdomCity.ReadWorks</c>), so a theatre finished since the last pass is standing in
+		/// the world and not yet written down. Where the two disagree it is always in that one
+		/// direction, and the patch closes it.
+		/// </para>
+		/// <para>
+		/// <b>Derivation only &mdash; nothing here is stored.</b> A serialized "this city's purpose"
+		/// field would be a second record of a thing the book already knows, and the two would drift
+		/// the first time a great work was demolished.
+		/// </para>
+		/// <para>
+		/// The book stores each work's BLUEPRINT (<c>KingdomCity.ReadWorks</c> writes
+		/// <c>work.Blueprint</c> into the design-key column), so each stored value is resolved
+		/// against both the registry's keys and its blueprints. Reading the raw column rather than
+		/// the frozen model is deliberate and is the one place in this file that does: <c>TryRead</c>
+		/// allocates a whole city &mdash; zones, works, residents &mdash; and this is a single-column
+		/// scan on a hot menu path.
+		/// </para>
+		/// </summary>
+		/// <param name="System">The realm. Null yields null, which permits.</param>
+		public static string KeptMegastructure(KingdomSystem System)
+		{
+			if (System == null || !System.Founded)
+			{
+				return null;
+			}
+			// Before the cache is trusted, not after: this is what runs ClearGates for a freshly
+			// loaded game, and a cache read that happened first could hand a second game in the same
+			// session the first one's answer on a shared tick and zone.
+			KingdomData.EnsureBuildings();
+			Zone active = The.ZoneManager?.ActiveZone;
+			string here = (active != null) ? active.ZoneID : "";
+			long now = (The.Game != null) ? The.Game.TimeTicks : 0L;
+			if (KeptCacheTick == now && string.Equals(KeptCacheZone, here))
+			{
+				return KeptCacheValue;
+			}
+			// Gathered once and searched against, rather than walking the whole catalogue for every
+			// stored work: a city's book can carry forty work rows and the catalogue eighty designs,
+			// and the megastructures among them are — by the rule this enforces — almost always one.
+			List<string> keys = new List<string>();
+			List<string> blueprints = new List<string>();
+			List<KingdomRules.BuildEntry> entries = KingdomData.Buildings;
+			for (int i = 0; i < entries.Count; i++)
+			{
+				if (GateFor(entries[i].Key).Megastructure)
+				{
+					keys.Add(entries[i].Key);
+					blueprints.Add(entries[i].Blueprint ?? "");
+				}
+			}
+			string kept = null;
+			if (keys.Count > 0)
+			{
+				Simulation.City.KingdomCityBook book = System.City;
+				if (book != null && book.WorkDesignKeys != null)
+				{
+					for (int i = 0; i < book.WorkDesignKeys.Count && kept == null; i++)
+					{
+						kept = MegastructureKeyOf(book.WorkDesignKeys[i], keys, blueprints);
+					}
+				}
+				if (kept == null && active != null)
+				{
+					foreach (GameObject work in active.GetObjects())
+					{
+						if (work == null || work.GetIntProperty("KingdomBuilt") != 1)
+						{
+							continue;
+						}
+						kept = MegastructureKeyOf(KingdomUpgrade.DesignKeyOf(work), keys, blueprints);
+						if (kept != null)
+						{
+							break;
+						}
+					}
+				}
+			}
+			KeptCacheZone = here;
+			KeptCacheTick = now;
+			KeptCacheValue = kept;
+			return kept;
+		}
+
+		/// <summary>
+		/// The registry key a stored work-row value names, if that design is a megastructure.
+		/// Matched against the registry's KEYS first and its BLUEPRINTS second, because the book's
+		/// column carries a blueprint (<c>KingdomCity.ReadWorks</c>) while the loaded-zone read
+		/// carries a key (<c>KingdomUpgrade.DesignKeyOf</c>), and a rule that read only one of the
+		/// two would be right about half its callers.
+		/// </summary>
+		private static string MegastructureKeyOf(string Stored, List<string> Keys, List<string> Blueprints)
+		{
+			if (string.IsNullOrEmpty(Stored))
+			{
+				return null;
+			}
+			for (int i = 0; i < Keys.Count; i++)
+			{
+				if (string.Equals(Keys[i], Stored) || string.Equals(Blueprints[i], Stored))
+				{
+					return Keys[i];
+				}
+			}
+			return null;
 		}
 
 		// The weather half of the depth gate is the design's own Sky flag, which lives on the plot
@@ -673,6 +819,10 @@ namespace ThousandAndFirst
 				return standing + ", and " + XRL.Language.Grammar.A(name) + " is raised in {{C|" + Judgement.Detail
 					+ "}}. Name this ground from the Charter, or walk to ground that already carries it.";
 			}
+			case ZoningVerdict.RefusedMegastructure:
+				// The Judgement carries the KEY; the founder is owed the NAME. Composed here, where
+				// the catalogue can be asked, so the rules layer never has to know it exists.
+				return KingdomLabRules.PurposeRefusalLine(KingdomUpgrade.DisplayNameOf(Judgement.Detail));
 			default:
 				return XRL.Language.Grammar.A(name) + " cannot be raised here.";
 			}

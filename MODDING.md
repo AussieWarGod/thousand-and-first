@@ -259,6 +259,23 @@ and never banked, and an unstaffed bench says so once. Discovery is a journal fa
 any menu — write `Knowledge="node:your-key"` on an ordinary `<building>` and the visibility law
 covers your record exactly as it covers ours.
 
+### Procedures (`KingdomProcedures.xml`, root `<kingdomprocedures>`)
+
+A `<procedure>` is what the grafting hall or the chimeric theatre will do to a body, merged by
+`Key` like every other record. `Grants` names a PART CLASS — never a creature, never "a
+creature's power" — so a modded creature carrying the class is a valid source the day that mod
+ships, with no entry of ours. `Slots` is checked against the player's OWN anatomy by
+`BodyPart.Type` ("there is nowhere on you to put it"); `SlotCategories` gates on
+`BodyPartCategory` per-procedure, which is how a True Kin, a robot, and a slime each read a
+different legal set with no genotype list anywhere. `Source` is `part`, `limb`, or `mutation`
+(mutation grafts cap at levels 1–3, never the source's level); `Attach` is `body` or `weapon` —
+a class that only fires on weapon events must graft onto a natural weapon, and a record whose
+part cannot fire on its new bearer is refused at commit, by name. `MinRung` places it on the
+ladder (2 the hall, 3 the theatre); `Preserved` is how many kept parts it consumes; `Creeds`
+carries the standing cost in the `-Faction` idiom. No procedure is ever random — the one
+confessed gamble is priced as one. The only legal input is a part the vat-house preserved:
+the hall will not open a body for a thing that was not kept.
+
 Gating is **hard for where a structure may stand and soft for how well it works**. `Districts`
 refuses placement; nothing anywhere gates the district *bonuses*, which stay realm-wide and
 unconditional, so a design raised off its natural ground simply misses a bonus. Housing, storage,

@@ -801,6 +801,49 @@
     <stat Name="Hitpoints" Value="150" />
   </object>
 
+  <!-- ======================================================================== THE LAB ==
+    The four rooms of the flesh doctrine, and one merge on a vanilla creature. -->
+  <object Name="r_KingdomButcherSlab" Inherits="Furniture">
+    <stag Name="Contemporary" />
+    <part Name="Render" DisplayName="butcher's slab" RenderString="&#8215;" ColorString="&amp;y" DetailColor="r" />
+    <part Name="Description" Short="A stone table with a gutter cut down the middle of it. What comes off a body here is read before it is cut, and written down." />
+    <part Name="Physics" Takeable="false" Weight="4000" />
+    <part Name="r_KingdomButcherSlab" />
+    <stat Name="Hitpoints" Value="200" />
+  </object>
+  <object Name="r_KingdomVatHouse" Inherits="Furniture">
+    <stag Name="Contemporary" />
+    <part Name="Render" DisplayName="vat-house" RenderString="&#8746;" ColorString="&amp;g" DetailColor="G" />
+    <part Name="Description" Short="Brine, tallow, and a shelf of things kept longer than anything ought to keep. Nothing here rots; that is the point of it." />
+    <part Name="Physics" Takeable="false" Weight="9000" />
+    <part Name="r_KingdomVatHouse" />
+    <stat Name="Hitpoints" Value="320" />
+  </object>
+  <object Name="r_KingdomGraftingHall" Inherits="Furniture">
+    <stag Name="Contemporary" />
+    <part Name="Render" DisplayName="the grafting hall" RenderString="&#8852;" ColorString="&amp;W" DetailColor="r" />
+    <part Name="Description" Short="A lamp over a table, and somebody who has done this before. It does not sell augmentation. It performs it." />
+    <part Name="Physics" Takeable="false" Weight="12000" />
+    <part Name="r_KingdomGraftingHall" />
+    <stat Name="Hitpoints" Value="420" />
+  </object>
+  <object Name="r_KingdomChimericTheatre" Inherits="Furniture">
+    <stag Name="Contemporary" />
+    <part Name="Render" DisplayName="the chimeric theatre" RenderString="&#937;" ColorString="&amp;M" DetailColor="W" />
+    <part Name="Description" Short="Tiered seats around a table nobody sits at. This city is about one thing, and this is the thing." />
+    <part Name="Physics" Takeable="false" Weight="20000" />
+    <part Name="r_KingdomChimericTheatre" />
+    <stat Name="Hitpoints" Value="600" />
+  </object>
+
+  <!-- LAB-CLASS-AUDIT §1 finding 2: FungusPuffer declares CorpseBlueprint="Dreadroot Tuber" and
+       CorpseChance="0" (B/ObjectBlueprints/Creatures.xml:6045), so the §3.5 chain has nothing to
+       butcher and the brooding gills would be an unreachable record. One merge, on the declared
+       blueprint the family already names — no new corpse, no new item, just a chance. -->
+  <object Name="FungusPuffer" Load="Merge">
+    <part Name="Corpse" CorpseChance="60" />
+  </object>
+
   <!-- ======================================================================= THE DEEP ==
     Addendum 15's set, six pieces, every one an inherit-extend off the surface precedent it
     was derived from (the derivation notes live on the KingdomBuildings.xml records). No new

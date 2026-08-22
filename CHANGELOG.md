@@ -18,6 +18,19 @@ playtest passes.
   that would have caught the defect lands with the fix.
 
 ### Added
+- **The lab, rungs 0 through 3 — the flesh half of the body doctrine.** The butcher's slab
+  reads a body before it cuts it; the vat-house preserves what was read into permanent,
+  tradeable parts on vanilla's own preservation arithmetic (corrected against the decompile:
+  `Number × Count`, and the doc's third factor never existed); the grafting hall performs
+  Class I riders and Class II defences from a thirteen-record catalogue where `Grants` names a
+  part class and never a creature; the chimeric theatre — the mod's **first megastructure**,
+  one purpose per city under Design B — changes anatomy outright and holds the four named
+  procedures: the Weeping Graft, the Chimeric Confession, the Cold Regard, the Lantern Rib.
+  Once each, ever, found in the world and never listed until found. Every rider class was
+  verified against the engine's own event routing (`Attach="body|weapon"` — five of the nine
+  planned riders would have been inert as body grafts and now are not), refusals name what is
+  missing, creed friction rides the shipped machinery, and the one random procedure is a
+  confessed gamble priced as one.
 - **The keepers' research — a tree without a second job** (Addendum 14, RESEARCH-SYSTEM-DESIGN,
   Addendum 22 B+E clusters). Twenty-one nodes over three branches and a trunk, each minting an
   ordinary `node:` roster key — no parallel gate system, no meter, no currency. Research is a

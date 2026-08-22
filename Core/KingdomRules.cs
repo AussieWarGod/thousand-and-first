@@ -1431,7 +1431,17 @@ namespace ThousandAndFirst
 			Shelter,
 			Craft,
 			Peace,
-			Memorial
+			Memorial,
+
+			/// <summary>
+			/// The hall is spoken against (DIVERSITY &sect;3.6). Unlike the five above it, this one
+			/// is never chosen by <see cref="ChoosePetition"/>: the settlement is not in a state
+			/// that raises it, a founder DID something, and the lab pushes it at the moment they do.
+			/// <para>
+			/// Appended, never renumbered &mdash; these ordinals are carried in a save.
+			/// </para>
+			/// </summary>
+			Flesh
 		}
 
 		public const long PetitionCooldownTicks = 3600L;
@@ -1717,6 +1727,12 @@ namespace ThousandAndFirst
 				return Standing >= Target;
 			case PetitionKind.Craft:
 				return IdleWorks == 0;
+			case PetitionKind.Flesh:
+				// The one kind no STATE answers. There is nothing the founder can build, fill or
+				// mend that settles "say out loud what you have built here" — DIVERSITY §3.6 is
+				// explicit that there is no correct answer — so what meets it is being HEARD, and
+				// KingdomPetitions.Heard is what writes the target this reads.
+				return Target > 0;
 			default:
 				return false;
 			}

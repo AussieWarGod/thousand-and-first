@@ -142,6 +142,8 @@
     <Compile Include="..\Quests\KingdomAskRules.cs" />
     <Compile Include="..\Core\KingdomTechMapRules.cs" />
     <Compile Include="..\Growth\KingdomResearchRules.cs" />
+    <Compile Include="..\Growth\KingdomProcedureRules.cs" />
+    <Compile Include="..\Growth\KingdomLabRules.cs" />
     <Compile Include="..\Experience\KingdomCitizenRiteRules.cs" />
     <Compile Include="KernelCanonicalTests.cs" />
     <Compile Include="CounterRandomTests.cs" />
@@ -174,6 +176,8 @@
     <Compile Include="KingdomBookRulesTests.cs" />
     <Compile Include="KingdomTechMapRulesTests.cs" />
     <Compile Include="KingdomResearchRulesTests.cs" />
+    <Compile Include="KingdomProcedureRulesTests.cs" />
+    <Compile Include="KingdomLabRulesTests.cs" />
     <Compile Include="KingdomKnowledgeSitingTests.cs" />
     <Compile Include="KingdomCitizenRiteRulesTests.cs" />
     <Compile Include="KingdomCreedGateRulesTests.cs" />

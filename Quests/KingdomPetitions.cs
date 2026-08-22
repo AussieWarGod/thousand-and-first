@@ -70,6 +70,55 @@ namespace ThousandAndFirst
 			if (KingdomLog.Enabled) KingdomLog.Log("petition issued: " + kind + " by " + petitioner + " target=" + System.PetitionTarget);
 		}
 
+		/// <summary>
+		/// Raises one petition the settlement's own state would never have chosen, because a founder
+		/// DID something rather than let something happen.
+		/// <para>
+		/// <see cref="Issue"/> asks the settlement what it is short of; this is the other door, and
+		/// the lab is its first caller (DIVERSITY &sect;3.6's authored happening: the hall is spoken
+		/// against). It builds nothing parallel &mdash; the same one-at-a-time rule, the same named
+		/// speaker, the same Charter, the same ledger line &mdash; and it refuses while a petition
+		/// already stands, so a founder is never queued at by their own city.
+		/// </para>
+		/// </summary>
+		/// <param name="System">The realm; must be founded.</param>
+		/// <param name="Kind">What they want to say.</param>
+		/// <param name="Faction">The creed the speaker holds, for the kinds whose speech names one.
+		/// May be null.</param>
+		/// <returns>True when a petition was actually raised.</returns>
+		public static bool Raise(KingdomSystem System, KingdomRules.PetitionKind Kind, string Faction)
+		{
+			if (!Enabled || System == null || !System.Founded
+				|| Kind == KingdomRules.PetitionKind.None
+				|| System.PetitionKind != KingdomRules.PetitionKind.None)
+			{
+				return false;
+			}
+			string petitioner = (System.RosterNames.Count > 0) ? System.RosterNames.GetRandomElement() : "a settler";
+			System.PetitionKind = Kind;
+			System.PetitionPetitioner = petitioner;
+			System.PetitionFaction = Faction;
+			System.PetitionIssuedTick = The.Game.TimeTicks;
+			System.PetitionTarget = 0;
+			System.Ledger.Note("{{W|" + petitioner + " is waiting to speak with you.}}");
+			MessageQueue.AddPlayerMessage("{{W|" + petitioner + " would have a word with you about " + Subject(Kind) + ".}}");
+			if (KingdomLog.Enabled) KingdomLog.Log("petition raised: " + Kind + " by " + petitioner);
+			return true;
+		}
+
+		/// <summary>
+		/// Records that the founder has actually stood in front of the petitioner and heard them
+		/// out. Only meaningful for the kinds no state can answer; harmless for the rest, which are
+		/// met by the settlement changing rather than by the founder listening.
+		/// </summary>
+		public static void Heard(KingdomSystem System)
+		{
+			if (System != null && System.PetitionKind == KingdomRules.PetitionKind.Flesh)
+			{
+				System.PetitionTarget = 1;
+			}
+		}
+
 		public static void Check(KingdomSystem System, Zone Z, KingdomSurvey Survey)
 		{
 			bool hasShrine = false;
@@ -127,6 +176,8 @@ namespace ThousandAndFirst
 				return "the ones who hate us";
 			case KingdomRules.PetitionKind.Memorial:
 				return "the dead";
+			case KingdomRules.PetitionKind.Flesh:
+				return KingdomLabRules.SpokenAgainstSubject();
 			default:
 				return "the settlement";
 			}
@@ -147,6 +198,18 @@ namespace ThousandAndFirst
 				return "\"" + ((System.PetitionFaction != null) ? XRL.World.Faction.GetFormattedName(System.PetitionFaction) : "They") + " will not hear us, and my people flinch at the road. I do not care how it is done — bought, begged, or drunk over. Just make it so they do not hate us.\"";
 			case KingdomRules.PetitionKind.Memorial:
 				return "\"We have buried people here now. There is nowhere to put a hand and say a name. Raise a shrine stone, and let the ground admit what it has taken.\"";
+			case KingdomRules.PetitionKind.Flesh:
+				// Being spoken to IS the answer to this one, and this method is called from exactly
+				// one place — the Charter, at the moment the founder stands in front of them
+				// (KingdomCharterPart.HearPetition). Marking it here is deliberate rather than
+				// incidental: there is no other event in the game that means "they were heard", and
+				// a petition nothing could ever meet would sit until its lifetime lapsed and read as
+				// a bug. The faction is carried on PetitionFaction like Peace's is, so the speaker
+				// names the creed they actually hold rather than one the code guessed at.
+				Heard(System);
+				return KingdomLabRules.SpokenAgainstSpeech((System.PetitionFaction != null)
+					? XRL.World.Faction.GetFormattedName(System.PetitionFaction)
+					: "everyone");
 			default:
 				return "\"It is nothing. It has passed.\"";
 			}
@@ -166,6 +229,8 @@ namespace ThousandAndFirst
 				return "the peace " + Name + " made with its enemies";
 			case KingdomRules.PetitionKind.Memorial:
 				return "the shrine " + Name + " raised over its dead";
+			case KingdomRules.PetitionKind.Flesh:
+				return KingdomLabRules.SpokenAgainstDeed(Name);
 			default:
 				return "the matter was settled at " + Name;
 			}

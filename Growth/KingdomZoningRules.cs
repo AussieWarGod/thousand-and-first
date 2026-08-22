@@ -82,7 +82,17 @@ namespace ThousandAndFirst
 		RefusedCreedShare = 7,
 
 		/// <summary>The hands the design asks for are not among this city's people.</summary>
-		RefusedBuilders = 8
+		RefusedBuilders = 8,
+
+		/// <summary>
+		/// This city already keeps a megastructure, and it is not this one (Addendum 22 A1). A city
+		/// is about one great thing; the contention is not for ground but for what the place is FOR.
+		/// <para>
+		/// Appended, like every value above it, for the reason the type's own summary gives:
+		/// renumbering a published enum moves every value a third party already switched on.
+		/// </para>
+		/// </summary>
+		RefusedMegastructure = 9
 	}
 
 	/// <summary>
@@ -265,6 +275,18 @@ namespace ThousandAndFirst
 		/// </summary>
 		public readonly string Strata;
 
+		/// <summary>
+		/// Whether this design is one of the great works a city may keep exactly one of
+		/// (Addendum 22 A1, Design B). False for every design in the catalogue but one, which is
+		/// why the gate that reads it is inert almost everywhere.
+		/// <para>
+		/// Not a size and not a plot: an XL design is ordinary unless it says this. The theatre
+		/// contends with the arcology because both are what a city is ABOUT, and nothing about
+		/// twenty cells by fourteen says that on its own.
+		/// </para>
+		/// </summary>
+		public readonly bool Megastructure;
+
 		public ZoneGate(string Districts, int MinZones, string Knowledge, TechLevel MinTech)
 			: this(Districts, MinZones, Knowledge, MinTech, null, null, ShareUnsaid)
 		{
@@ -278,6 +300,12 @@ namespace ThousandAndFirst
 
 		public ZoneGate(string Districts, int MinZones, string Knowledge, TechLevel MinTech,
 			string Builders, string Creed, int CreedShare, string Strata)
+			: this(Districts, MinZones, Knowledge, MinTech, Builders, Creed, CreedShare, Strata, Megastructure: false)
+		{
+		}
+
+		public ZoneGate(string Districts, int MinZones, string Knowledge, TechLevel MinTech,
+			string Builders, string Creed, int CreedShare, string Strata, bool Megastructure)
 		{
 			this.Districts = Districts;
 			this.MinZones = MinZones;
@@ -287,6 +315,7 @@ namespace ThousandAndFirst
 			this.Creed = Creed;
 			this.CreedShare = CreedShare;
 			this.Strata = Strata;
+			this.Megastructure = Megastructure;
 		}
 
 		/// <summary>What <see cref="CreedShare"/> holds when the attribute was not written. Not
@@ -305,7 +334,7 @@ namespace ThousandAndFirst
 		/// <summary>True when nothing here can refuse anything.</summary>
 		public bool IsOpen => string.IsNullOrEmpty(Districts) && MinZones <= 0 && string.IsNullOrEmpty(Knowledge)
 			&& MinTech <= TechLevel.Hands && string.IsNullOrEmpty(Builders) && string.IsNullOrEmpty(Creed)
-			&& string.IsNullOrEmpty(Strata);
+			&& string.IsNullOrEmpty(Strata) && !Megastructure;
 	}
 
 	/// <summary>
@@ -1503,6 +1532,19 @@ namespace ThousandAndFirst
 		public static ZoneGate ParseGateAttributes(string Key, string Districts, string MinZones, string Knowledge, string MinTech,
 			string Builders, string Creed, string CreedShare, string Strata, out string Error)
 		{
+			return ParseGateAttributes(Key, Districts, MinZones, Knowledge, MinTech, Builders, Creed, CreedShare,
+				Strata, null, out Error);
+		}
+
+		/// <summary>
+		/// The same parse with Addendum 22 A1's <c>Megastructure</c>. Optional like the eight before
+		/// it: a design that does not claim to be one of the great works is ordinary, which is what
+		/// every entry in the catalogue was the day before this landed.
+		/// </summary>
+		/// <param name="Megastructure">Raw <c>Megastructure</c> attribute.</param>
+		public static ZoneGate ParseGateAttributes(string Key, string Districts, string MinZones, string Knowledge, string MinTech,
+			string Builders, string Creed, string CreedShare, string Strata, string Megastructure, out string Error)
+		{
 			List<string> faults = new List<string>();
 			string districts = null;
 			if (!string.IsNullOrEmpty(Districts) && Districts.Trim().Length > 0)
@@ -1592,8 +1634,13 @@ namespace ThousandAndFirst
 					strata = null;
 				}
 			}
+			// No fault branch, and that is deliberate: KingdomLabRules.IsMegastructure reads "yes"
+			// and every other string — including a typo — as ordinary. A malformed value here cannot
+			// make a design unbuildable, only un-special, which is the safe direction for the one
+			// attribute in this file that takes a whole city's purpose away.
+			bool megastructure = KingdomLabRules.IsMegastructure(Megastructure);
 			Error = (faults.Count == 0) ? null : ("building " + Key + " has a bad " + JoinOr(faults) + "; the attribute was ignored");
-			return new ZoneGate(districts, minZones, knowledge, minTech, builders, creed, creedShare, strata);
+			return new ZoneGate(districts, minZones, knowledge, minTech, builders, creed, creedShare, strata, megastructure);
 		}
 
 		/// <summary>
@@ -1689,6 +1736,37 @@ namespace ThousandAndFirst
 		public static ZoningJudgement Judge(ZoneGate Gate, string TileDistrict, string Category, int ClaimedZones,
 			IEnumerable<string> Roster, bool Underground, bool RequiresSky, BuilderRoll Roll, string Stratum)
 		{
+			return Judge(Gate, TileDistrict, Category, ClaimedZones, Roster, Underground, RequiresSky, Roll, Stratum,
+				Key: null, CityKeeps: null);
+		}
+
+		/// <summary>
+		/// The same verdict with Addendum 22 A1's cardinality folded in: what this city already
+		/// keeps, and therefore whether it may be about a second thing.
+		/// <para>
+		/// <b>Asked LAST, after the district gate, and the position is the ruling.</b> Every gate
+		/// above it is about whether the realm CAN raise the design &mdash; a lack the founder
+		/// answers by teaching, claiming, growing or walking. This one is about whether the city
+		/// SHOULD, and the answer is a thing they already chose. Told last, it is the only sentence
+		/// left standing, so a founder who has not yet reached arclight hears about arclight rather
+		/// than about a purpose they cannot get near.
+		/// </para>
+		/// <para>
+		/// <b>Fails OPEN by construction.</b> A null or empty <paramref name="CityKeeps"/> permits,
+		/// which is exactly what a derivation that could not read the city hands back
+		/// (<c>KingdomZoning.KeptMegastructure</c>). A cardinality rule that could not see the city
+		/// must let the founder build; the alternative is a realm bricked by a book it could not
+		/// open.
+		/// </para>
+		/// </summary>
+		/// <param name="Key">The design's own registry key, so re-raising the megastructure a city
+		/// already keeps is not a second choice. Null reads as a design that is not the kept one.</param>
+		/// <param name="CityKeeps">The registry key of the megastructure this city already keeps, or
+		/// null when it keeps none and when nothing could tell.</param>
+		public static ZoningJudgement Judge(ZoneGate Gate, string TileDistrict, string Category, int ClaimedZones,
+			IEnumerable<string> Roster, bool Underground, bool RequiresSky, BuilderRoll Roll, string Stratum,
+			string Key, string CityKeeps)
+		{
 			if (!Aligned(Roll, Gate.Creed))
 			{
 				return new ZoningJudgement(ZoningVerdict.RefusedUnaligned, Gate.Creed, "no one holds with it");
@@ -1735,6 +1813,14 @@ namespace ThousandAndFirst
 			{
 				string where = DescribeDistricts(Gate.Districts);
 				return new ZoningJudgement(ZoningVerdict.RefusedDistrict, where, where);
+			}
+			if (KingdomLabRules.JudgePurpose(Gate.Megastructure, CityKeeps, Key) != KingdomPurposeVerdict.Allowed)
+			{
+				// The Detail is the KEY rather than the display name: the refusal is composed one
+				// lane over, where the catalogue can be asked what a key is called, and a rules
+				// class that reached for a display name would be a rules class that knew about the
+				// catalogue.
+				return new ZoningJudgement(ZoningVerdict.RefusedMegastructure, CityKeeps, "the city has its purpose");
 			}
 			return ZoningJudgement.Allowed;
 		}

@@ -339,6 +339,18 @@ namespace ThousandAndFirst
 		/// <see cref="AttrKnowledge"/>'s reason — a gate is asked again every time somebody asks.</summary>
 		public const string AttrStrata = "Strata";
 
+		/// <summary>
+		/// Whether this design is a MEGASTRUCTURE: a city gets one, and it is what the city is for
+		/// (Addendum 22 A1, Design B). <c>Megastructure="yes"</c>; anything else, absence included,
+		/// means ordinary.
+		/// <para>
+		/// Deliberately absent from <see cref="SpentAttributes"/> and <see cref="StampedAttributes"/>
+		/// for exactly <see cref="AttrStrata"/>'s reason &mdash; a gate is asked again every time
+		/// somebody asks, and what a city already keeps changes under a design that has not.
+		/// </para>
+		/// </summary>
+		public const string AttrMegastructure = "Megastructure";
+
 		public const string AttrUpgradesTo = "UpgradesTo";
 
 		public const string AttrUpgradeCost = "UpgradeCost";
