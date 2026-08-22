@@ -1003,3 +1003,18 @@ time.
   endgame body-modification content, Qud community sentiment on the chrome/genotype boundary
   (a live lore identity question — tread with evidence), and city-destiny specialisation
   precedents. Options + recommendation return for the final ruling.
+
+**Capital ruling (author, 2026-08-22, extending Addendum 19):** "Maybe the capital is special
+and can have a couple of extra megastructures that are capital specific, but other cities are
+restricted to 1 megastructure, and it generally serves a purpose (like a big drill, a huge
+foundry, or something)."
+
+- **Ordinary cities: ONE megastructure each, and it SERVES A PURPOSE** — the megastructure is
+  the city's functional identity (the drill-city, the foundry-city, the flesh-city, the
+  shell-city). Cardinality confirmed as identity, not scarcity for its own sake.
+- **The capital is special**: a couple of EXTRA capital-specific megastructures beyond its one
+  — structures only the seat of the kingdom may raise. What makes a city the capital (the
+  founding city? a designation? where the heart's ladder went highest?) is a design question
+  for the end-state research to answer.
+- Composes with: the heart ladder (is the arcology the capital's crown or any city's?), the
+  N-city roster, per-realm-vs-per-city research (a capital research megastructure?).
