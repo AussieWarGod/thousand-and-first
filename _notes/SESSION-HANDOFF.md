@@ -39,25 +39,26 @@ at top tier; schooling +1 cap. Riders minted work items — see Addendum 22 tail
 
 ## Queued waves — autonomous-run state (2026-08-22, second update)
 
-**SHIPPED this run, all verified + deployed**: mirror-gate + strata/deep set (40eeae7);
-QB-19 underground-sky fix (488e691); research system + knowledge siting, serialization v7
-(b0dc698); research integration remainders (867008f); THE LAB rungs 0–3 incl. the chimeric
-theatre as the first megastructure, the flesh petition, and the megastructure zoning gate
-(80ae42d). Suite 5,343 → 5,871; live install 179 files.
+**SHIPPED this run, all verified + deployed (187 files live)**: mirror-gate + strata/deep
+set (40eeae7); QB-19 underground-sky fix (488e691); research system + knowledge siting v7
+(b0dc698); integration remainders (867008f); THE LAB rungs 0–3 + first megastructure
+(80ae42d); yard wear + method consumers (ee858cd); THE BECOMING ANNEXE — the registry
+fiction live, IsTrueKinEvent answered, license points granted (35304da); THE DELVE —
+verticality priced, owned rock earns its reaching (52c263a); THE CAPITAL — crown, hub
+re-key with zero row loss, arcology set, satellites (1dca10b). Suite 5,343 → 6,114.
 
-**In flight**: the becoming annexe (F1 registry fiction, IsTrueKinEvent answer, enrolment
-rolls on the container, Chrome petition); the balance micro-wave (QB-29 yard wear + method
-factor into city-book rates and crops + sim model update).
+**In flight (the run's final majors)**: KINGDOM MODE (Addendum 21/22 C-cluster — death
+hook on the Vehicle/Metempsychosis seams, seniority heir, honesty-rule ledger scrub,
+mourning-rite interregnum with news travel, corpse as journal-restore, §8 debts verified
+in-wave) and THE SEAL (DECISIONS.md:109-249 executed — profile-level export before
+Classic's save deletion, four inherited states, no-item law, latest-eligible import).
 
-**Still queued**: capital/crown wave (A2-A4 — crown building, capital extras, arcology set,
-gate-hub re-key per QB-1); deep delve (behind strata — now unblocked); Kingdom Mode +
-succession wave (quest research done; SUCCESSION-RESEARCH §8's four verification debts run
-inside the wave); the seal/cross-run wave (DECISIONS.md + INHERITANCE-SEAMS.md, C10
-orthogonal); rite-mint hook (QB-27 provisional: first share); roster wave (N cities —
-12(j)); heart rungs 5+ + relocation verb; feel-lane remainders (companions/muster hall —
+**Still queued after those**: rite-mint hook (QB-27 provisional: first share); roster wave
+(N cities — 12(j)); heart rungs 5+ + relocation verb; feel-lane remainders (muster hall —
 Swarmer graft waits on it, market, tinker services, trophies); map follow-ups
 (`_notes/CLOCK-REWORK-CHANGE-MAP.md` tail); QB-16 `Sited=` (provisional: leave
-key-matched); the QB-33 lab follow-ups bundle.
+key-matched); the QB-33 lab follow-ups + QB-45 deep-lane bundles; an art wave for the
+six tile-less blueprints.
 
 **The question backlog** (`_notes/QUESTION-BACKLOG.md`) is the author's check-in surface:
 33 entries, every provisional marked.
