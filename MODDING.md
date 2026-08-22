@@ -227,7 +227,7 @@ never one that becomes unreachable with no way to find out why.
 |---|---|
 | `Districts` | Comma list of district keys whose ground will take this design: `agrarian`, `market`, `craft`, `shrine`, `garrison`, `academy`, plus `none` for ground the founder has never named. `all` (or omitting it) accepts everywhere. A key we do not recognise is treated as somebody else's district, never as open ground. |
 | `MinZones` | Claimed zones the realm must hold. The eight designs that declare 2/3/4 line up with `MinStage` `Village`/`Town`/`City` — see `KingdomZoningRules.ZonesForStage`, which is also the ceiling the founder's own claim is checked against, so a settlement reaches the ground a design wants at the same moment it reaches the stage that wants it. Reachable now: the founder claims bordering ground (including a stratum directly above or below) from the Charter's **Claim this ground**. |
-| `Knowledge` | Comma list of things the settlement must know, **all** of them. A requirement written `kind:name` must match that kind exactly; one written as a bare name is satisfied by any kind. Kinds: `disk` (a design taught to the keepers from a data disk the founder carried home — the disk is read and handed back, never spent), `machine` (a machine hauled home and certified fit for the grid), `origin` (a trade the settlement holds because somebody from that country lives there, so it comes and goes with them). Invent your own kind freely; an unknown kind gates perfectly well and is worth no craft. |
+| `Knowledge` | Comma list of things the settlement must know, **all** of them. A requirement written `kind:name` must match that kind exactly; one written as a bare name is satisfied by any kind. Kinds: `disk` (a design taught to the keepers from a data disk the founder carried home — the disk is read and handed back, never spent), `machine` (a machine hauled home and certified fit for the grid), `origin` (a trade the settlement holds because somebody from that country lives there, so it comes and goes with them), `node` (a subject the keepers worked out at a bench — see the research schema below), `rite` (what a water ritual seeded), `book`/`savant`/`culture`/`species` (declared for the identity and lab lanes; an unknown kind gates perfectly well and is worth no craft). **Knowledge lives with the CITY that learned it** (Addendum 22 B-cluster): the seat's rolls answer for the seat, a disk re-teaches freely at the other city, a machine re-certifies where it stands, and a seceding city walks out with what it knew. Invent your own kind freely. |
 | `MinTech` | Craft the settlement must have reached: `hands` (the start, gates nothing), `salvage`, `workshop`, `foundry`, `arclight`. |
 | `Strata` | Which set of the catalogue the design lives in and which strata it may also stand in (Addendum 15). The **first** welcomed token is the home stratum; the rest are share-tags: `Strata="deep,surface"` lives in the deep and may stand on the surface. Same spellings as `Styles` (`all`, a leading `!` for "everywhere except"). Tokens today: `surface`, `deep`, `sky`, `arcology` — and the set is open, so a third-party stratum names itself. **Absent means everywhere**, which is why every record written before this attribute existed still stands wherever it stood. Sky is a filtered subset of the surface: a list that does not mention `sky` answers for sky ground exactly as it answers for the surface, so only `!sky` (or a sky home) separates them. `Sky="yes"` on the plot spec is a different question — wanting open weather — and is asked first. |
 
@@ -238,8 +238,26 @@ entry to enter it into that pool; the base catalogue never depends on the draw, 
 this way is purely additive.
 
 Craft is **derived, never authored and never set**: a taught design is worth 1 and a certified
-machine is worth 2, an origin is worth 0, and the level is read off the total. There is no research
-tree and there will not be one.
+machine is worth 2, an origin is worth 0, and the level is read off the total — **per city**, judged
+against the city a design is being built in. The research tree does not change this: a node MINTS a
+roster key like any other kind and is worth no craft. Research TIER (what the keepers can take up)
+is a second, orthogonal ladder gated on the city's best researcher's Intelligence, and neither
+ladder ever substitutes for the other.
+
+### Research nodes (`KingdomResearch.xml`, root `<KingdomResearch>`)
+
+A `<node>` is a catalogue record in the buildings' own idiom, merged by `Key` so a later file
+overrides an earlier one. Each node names what it `Grants` (the `node:<key>` roster key it mints
+when finished), what it `Requires` (a `Knowledge`-grammar list), what `TaughtBy` completes it
+outright (a disk in the hand is a finished idea — never a `rite:`, which is a load-time schema
+error), what `SeededBy` merely *begins* it (a rite seeds a quarter of the work, capped at half —
+doors, never rooms), its `Tier` (1–4, gated on the best researcher's Intelligence: 10/14/18/22,
+hard at the boundary), and its `Effort` in labour ticks. Accrual is the scaffold's own idiom: a
+staffed knowledge bench charges real elapsed labour against ONE named subject, idle time is spent
+and never banked, and an unstaffed bench says so once. Discovery is a journal fact
+(`taf:node:<key>` observations): a design gated on a node nobody here has heard of is not shown in
+any menu — write `Knowledge="node:your-key"` on an ordinary `<building>` and the visibility law
+covers your record exactly as it covers ours.
 
 Gating is **hard for where a structure may stand and soft for how well it works**. `Districts`
 refuses placement; nothing anywhere gates the district *bonuses*, which stay realm-wide and
@@ -598,7 +616,9 @@ never heard of is never an error, and a tag nothing yet consumes simply waits fo
 
 A plot also provides what its **roof** gives, whether its author thought about it or not: `Open` and
 `Soft` tiers provide `taf:sky`, `Walled` and `Carved` tiers provide `taf:dark`. That is read from the
-same `AdmitsSky` the rest of the plot code uses, so the two can never disagree.
+same `AdmitsSky` the rest of the plot code uses, so the two can never disagree — **on the surface**.
+Underground there is no weather to reach anything, so **every** tier provides `taf:dark`, the open
+plot included.
 
 The tags this mod ships and promises to keep meaning the same thing:
 
@@ -607,8 +627,8 @@ The tags this mod ships and promises to keep meaning the same thing:
 | `taf:charge` | Somewhere to draw charge. |
 | `taf:openwater` | Open water at the door. |
 | `taf:damp` | Damp: a cellar, a cistern room, a fungal bed. |
-| `taf:dark` | Out of the sun. Derived from the roof. |
-| `taf:sky` | Open sky overhead. Derived from the roof. |
+| `taf:dark` | Out of the sun. Derived from the roof — and from the ground: every tier underground is dark. |
+| `taf:sky` | Open sky overhead. Derived from the roof, surface only — no roof admits sky under the rock. |
 | `taf:quiet` | A room away from the noise of the day. |
 
 A settling notable's stated taste uses the same namespace, one tag per building category —

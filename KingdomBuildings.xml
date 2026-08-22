@@ -355,7 +355,7 @@
   -->
   <building Key="condensery" DisplayName="the condensing hall (one cold face, and the whole roof turned to catching it)" Blueprint="r_KingdomCondensery"
             Cost="100" Ticks="12000" Styles="all" Category="storage" Plot="XL" MinStage="City"
-            Districts="craft,market" MinZones="4" MinTech="foundry" Knowledge="machine:Solar Still"
+            Districts="craft,market" MinZones="4" MinTech="foundry" Knowledge="machine:Solar Still,node:pressure"
             Sky="yes" Materials="stone:80,shapedstone:16,scrap:30,workedmetal:12,marble:6" Bits="0034" Exotics="ingot:1"
             Carries="water:50,luxury:1" Contents="r_KingdomFurnishings_Water" Provides="taf:damp" />
 
@@ -496,7 +496,7 @@
             Refines="shapedstone" />
   <building Key="smelter" DisplayName="smelter (a furnace somebody has to understand)" Blueprint="r_KingdomSmelter"
             Cost="22" Ticks="3600" Styles="all" Category="craft" Plot="M" MinStage="Village"
-            Districts="craft,none" MinTech="salvage"
+            Districts="craft,none" MinTech="salvage" Knowledge="node:cruciblesteel"
             Materials="stone:16,scrap:12" Staff="2" Manning="scaled" Carries="craft:3"
             Refines="workedmetal" />
 

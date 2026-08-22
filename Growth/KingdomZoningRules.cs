@@ -6,8 +6,21 @@ namespace ThousandAndFirst
 	/// How far a settlement's own craft has come. Derived, never authored and never set: it is a
 	/// readout of what the keepers have been taught and what they have certified fit for the grid
 	/// (<see cref="KingdomZoningRules.TechPoints"/>), so it rises by playing rather than by
-	/// spending anything on a research screen. This mod has no research tree and does not want
-	/// one &mdash; a tree is a second job, and the founder already has one.
+	/// spending anything on a research screen.
+	/// <para>
+	/// Per city, not per realm (Addendum 22 B7). The roster this is derived from sits on the
+	/// settlement record, so a design's <c>MinTech</c> is judged against the city it is being
+	/// raised in and the keepers' map finally means the city it is titled with.
+	/// </para>
+	/// <para>
+	/// This file used to say the mod had no research tree and did not want one. It has one
+	/// (Addendum 14), and the sentence that mattered survives intact: a tree is a second job, so
+	/// the tree is not a screen the founder spends into. Research is a LADDER BESIDE this one and
+	/// never a source for it &mdash; it mints roster keys, and roster keys of kind
+	/// <see cref="KingdomZoningRules.KindNode"/> are worth no craft points at all
+	/// (<see cref="KingdomZoningRules.TechPointsPerNode"/>). What rises this level is still a disk
+	/// carried home and a machine certified, exactly as before.
+	/// </para>
 	/// </summary>
 	public enum TechLevel
 	{
@@ -403,6 +416,33 @@ namespace ThousandAndFirst
 		/// Read live off the settlement's own peoples, so it comes and goes with them.</summary>
 		public const string KindOrigin = "origin";
 
+		/// <summary>A thing this city's keepers worked out for themselves at their own bench.
+		/// Minted by <see cref="KingdomResearchRules"/> through the same <c>Learn</c> the disk and
+		/// the certification use, and matched by the same <see cref="Knows"/>: research is a new
+		/// SOURCE of keys, never a parallel gate system.</summary>
+		public const string KindNode = "node";
+
+		/// <summary>Water shared with a faction, and what they taught over it. A seed and never a
+		/// ceiling (Addendum 18): it reveals a branch and begins its head, and no rite anywhere
+		/// finishes a node.</summary>
+		public const string KindRite = "rite";
+
+		/// <summary>A treatise carried home and read to the keepers.</summary>
+		public const string KindBook = "book";
+
+		/// <summary>A lodged notable, who teaches while they stay. Live, like
+		/// <see cref="KindOrigin"/>: the holding lapses when they leave and returns with them.</summary>
+		public const string KindSavant = "savant";
+
+		/// <summary>What a people KNOWS (Addendum 17). Declared here so a node or a third party's
+		/// design can gate on it; nothing in this build mints one yet, and an unminted kind is a
+		/// gate that stays shut rather than a load error.</summary>
+		public const string KindCulture = "culture";
+
+		/// <summary>What a body IS (Addendum 17). Declared and unminted, as
+		/// <see cref="KindCulture"/> is.</summary>
+		public const string KindSpecies = "species";
+
 		/// <summary>
 		/// The categories undistricted ground always accepts, whatever a design demands: a roof
 		/// over people, a vessel for the water, and the fire they sit around. The early game must
@@ -443,6 +483,15 @@ namespace ThousandAndFirst
 		/// population count. The level is what the settlement LEARNED and CERTIFIED, exactly.
 		/// </summary>
 		public const int TechPointsPerOrigin = 0;
+
+		/// <summary>
+		/// Points a research node is worth: none, and for a harder version of the reason an origin
+		/// is worth none. A research system that raised the craft rung would make that rung a
+		/// readout of the research system rather than of what was found in the world, and the two
+		/// ladders are orthogonal on purpose &mdash; craft is disks and certifications, exactly as
+		/// it was the day before nodes existed.
+		/// </summary>
+		public const int TechPointsPerNode = 0;
 
 		/// <summary>Points needed for each <see cref="TechLevel"/>, by its numeric value.</summary>
 		public static readonly int[] TechThresholds = new int[5] { 0, 2, 5, 9, 14 };
@@ -1325,6 +1374,10 @@ namespace ThousandAndFirst
 			if (kind == KindOrigin)
 			{
 				return TechPointsPerOrigin;
+			}
+			if (kind == KindNode)
+			{
+				return TechPointsPerNode;
 			}
 			return 0;
 		}

@@ -29,12 +29,18 @@ namespace ThousandAndFirst
 		public static bool Enabled => Options.GetOption("r_TAF_OptionZoning") != "No";
 
 		/// <summary>
-		/// Game-state key the keepers' roster is stored under. A flat, self-describing
-		/// string-to-string entry on the game rather than a new serialized field on
-		/// <c>KingdomSystem</c>: it cannot break positional field reflection, an older save
-		/// simply has no entry and reads as an empty roster, and a newer save read by an older
-		/// build carries a key that build ignores. Realm-wide on purpose &mdash; what the keepers
-		/// learned travels with the founder's own people to the founder's other city.
+		/// Game-state key the keepers' roster USED to be stored under, kept only so
+		/// <see cref="Stored"/> can fold an older save's roster into the city it belongs to and
+		/// retire the key.
+		/// <para>
+		/// It was a flat entry on the game, and that was wrong in a way nobody chose: the store was
+		/// game-wide rather than realm-wide, so a seceding city walked away with none of what its
+		/// own keepers had learned, and an exiled founder founded their next realm already holding
+		/// every design the old one had been taught. The exile modal says <i>"the charter is taken
+		/// from you"</i>; the tech base walked out of the gate with them. Addendum 22 B1 ends it:
+		/// the rolls sit on the city (<see cref="KingdomSettlement.KeepersRoster"/>), the leads sit
+		/// with the founder (the journal), and the realm reads rather than holds.
+		/// </para>
 		/// </summary>
 		public const string RosterState = "r_TAF_KeepersRoster";
 
@@ -120,16 +126,23 @@ namespace ThousandAndFirst
 		}
 
 		/// <summary>
-		/// Every knowledge key the settlement holds: the stored roster of designs taught and
-		/// machines certified, plus one <c>origin:</c> key for each people living here right now.
-		/// Origins are read live off <c>KingdomSystem.OriginCounts</c> rather than stored,
-		/// because a trade the settlement holds only because somebody from that country lives
-		/// here should leave with them.
+		/// Every knowledge key the SEATED city holds: its own stored rolls &mdash; designs taught,
+		/// machines certified, ceremonies held, nodes worked out &mdash; plus one <c>origin:</c> key
+		/// for each people living there right now. Origins are read live off
+		/// <c>KingdomSystem.OriginCounts</c> rather than stored, because a trade the settlement holds
+		/// only because somebody from that country lives here should leave with them.
+		/// <para>
+		/// <b>Seat only</b> (Addendum 22 B4). Knowledge is where it was taught, and teaching the
+		/// other city is an ACT: carry the disk and walk, certify the machine there too, or set down
+		/// at their bench what your other keepers worked out and let them walk the rest of it
+		/// (<see cref="ShowKeepers"/>). What the founder carries between cities is doors, never
+		/// rooms.
+		/// </para>
 		/// </summary>
 		/// <param name="System">The realm. Null yields an empty roster.</param>
 		public static List<string> Roster(KingdomSystem System)
 		{
-			List<string> roster = KingdomZoningRules.DecodeRoster(Stored());
+			List<string> roster = KingdomZoningRules.DecodeRoster(Stored(System));
 			if (System == null || System.OriginCounts == null)
 			{
 				return roster;
@@ -150,10 +163,40 @@ namespace ThousandAndFirst
 		}
 
 		/// <summary>
-		/// Adds one design to the keepers' stored knowledge. Idempotent: teaching the same design
-		/// twice changes nothing and reports false, so nothing can be farmed by repetition.
-		/// Announces a rise in the settlement's craft when one happens, once, where the founder
-		/// is standing.
+		/// The same read for a city the founder is not standing in &mdash; the realm's other city,
+		/// a seceded one, or one captured into an exile. Used by the teaching act, which has to be
+		/// able to say what the OTHER keepers know without seating them.
+		/// </summary>
+		/// <param name="City">The settlement record. Null yields an empty roster.</param>
+		public static List<string> RosterOf(KingdomSettlement City)
+		{
+			List<string> roster = KingdomZoningRules.DecodeRoster((City == null) ? null : City.KeepersRoster);
+			if (City == null || City.OriginCounts == null)
+			{
+				return roster;
+			}
+			foreach (KeyValuePair<string, int> people in City.OriginCounts)
+			{
+				if (people.Value <= 0)
+				{
+					continue;
+				}
+				string key = KingdomZoningRules.ComposeKey(KingdomZoningRules.KindOrigin, people.Key);
+				if (key != null && !roster.Contains(key))
+				{
+					roster.Add(key);
+				}
+			}
+			return roster;
+		}
+
+		/// <summary>
+		/// Adds one design to the SEATED city's keepers' stored knowledge &mdash; the keepers in
+		/// front of the founder are the keepers being taught. Idempotent per city: teaching the same
+		/// design twice in the same place changes nothing and reports false, so nothing can be
+		/// farmed by repetition, and teaching it again in the OTHER city teaches that city
+		/// (Addendum 22 B4/B5). Announces a rise in that city's craft when one happens, once, where
+		/// the founder is standing.
 		/// </summary>
 		/// <param name="System">The realm; must be founded for the announcement to have a name
 		/// to use, but the roster is stored regardless.</param>
@@ -169,14 +212,14 @@ namespace ThousandAndFirst
 				MetricsManager.LogError("ThousandAndFirst zoning: refused an unusable knowledge key for kind '" + Kind + "', name '" + Name + "'");
 				return false;
 			}
-			List<string> stored = KingdomZoningRules.DecodeRoster(Stored());
+			List<string> stored = KingdomZoningRules.DecodeRoster(Stored(System));
 			if (stored.Contains(key))
 			{
 				return false;
 			}
 			TechLevel before = KingdomZoningRules.LevelForPoints(KingdomZoningRules.TechPoints(stored));
 			stored.Add(key);
-			Store(KingdomZoningRules.EncodeRoster(stored));
+			Store(System, KingdomZoningRules.EncodeRoster(stored));
 			TechLevel after = KingdomZoningRules.LevelForPoints(KingdomZoningRules.TechPoints(stored));
 			KingdomLog.Log("zoning: learned " + key + " (" + before + " -> " + after + ")");
 			if (after > before && System != null && System.Founded)
@@ -190,8 +233,10 @@ namespace ThousandAndFirst
 		/// <summary>
 		/// Records that a machine hauled home was certified fit for the grid, which is one of the
 		/// two ways a settlement's craft rises. Deliberately one-way: taking the machine back off
-		/// the grid later returns the machine to the founder, not the knowledge to nobody. Safe
-		/// to call for a machine already recorded.
+		/// the grid later returns the machine to the founder, not the knowledge to nobody &mdash;
+		/// and one-way PER CITY (Addendum 22 B5), so a machine dragged on to the realm's other city
+		/// and certified there teaches there too, and neither city forgets when the machine
+		/// eventually leaves. Safe to call for a machine this city already recorded.
 		/// </summary>
 		/// <param name="System">The realm.</param>
 		/// <param name="Machine">The machine just certified. Null and blueprint-less objects are
@@ -204,7 +249,12 @@ namespace ThousandAndFirst
 				{
 					return;
 				}
-				Learn(System, KingdomZoningRules.KindMachine, Machine.Blueprint);
+				if (Learn(System, KingdomZoningRules.KindMachine, Machine.Blueprint))
+				{
+					// Holding the artifact is most of an answer and never all of it: a node this
+					// machine seeds is revealed and begun here, and the keepers still finish it.
+					KingdomResearch.ApplySources(System);
+				}
 			});
 		}
 
@@ -313,6 +363,17 @@ namespace ThousandAndFirst
 					return;
 				}
 				ZoneGate gate = GateFor(Entry.Key);
+				// The second gate with no key: a design that waits on a thing the founder has never
+				// heard of. Named here rather than in the catalogue or in the map, because this is
+				// the one question every menu, every map row and every refusal already funnels
+				// through -- so a third party's building gated on a hidden node is filtered by
+				// exactly the code that filters ours. Vanilla's own precedent for an unknown recipe
+				// is total omission: no greyed row, no silhouette, no count.
+				if (!KingdomResearch.KnowledgeGateHeardOf(System, gate.Knowledge))
+				{
+					hidden = true;
+					return;
+				}
 				if (string.IsNullOrEmpty(gate.Creed))
 				{
 					return;
@@ -457,23 +518,62 @@ namespace ThousandAndFirst
 					Popup.Show("You rule nothing yet.");
 					return;
 				}
+				KingdomResearch.RevealRoots(System);
+				KingdomResearch.EnsureBenches(System, The.ZoneManager?.ActiveZone);
 				while (true)
 				{
 					List<GameObject> disks = CarriedDisks();
+					// A fragment in hand tells the founder a thing exists before anybody is taught
+					// it, which is vanilla's own idiom one step out: a disk you cannot learn from
+					// still tells you what it is. Scanned here rather than on pickup, because a
+					// per-turn inventory walk is a cost this design refuses to pay.
+					KingdomResearch.RevealFromCarried(System, CarriedKeys(disks));
+					KingdomResearch.ApplySources(System);
+					List<ResearchNode> subjects = KingdomResearch.Offerable(System);
+					List<ResearchNode> carried = KingdomResearch.CarriedFromAway(System);
 					List<string> options = new List<string>();
 					List<char> hotkeys = new List<char>();
 					options.Add((disks.Count > 0)
 						? "{{W|Teach the keepers a design from a data disk}}"
 						: "{{K|You carry no data disk to teach from}}");
 					hotkeys.Add('t');
+					if (KingdomResearch.Enabled)
+					{
+						options.Add((subjects.Count > 0)
+							? "{{W|Set the keepers a thing to work out}}"
+							: "{{K|There is nothing here the keepers have heard of and not worked out}}");
+						hotkeys.Add('w');
+						if (carried.Count > 0)
+						{
+							options.Add("{{W|Set down what the keepers of " + AwayName(System) + " worked out}}");
+							hotkeys.Add('s');
+						}
+					}
 					options.Add("Close");
 					hotkeys.Add('z');
 					int chosen = Popup.PickOption(Title: "What the keepers of " + System.SeatName + " know", Intro: KeepersIntro(System), Options: options, Hotkeys: hotkeys, AllowEscape: true);
-					if (chosen != 0 || disks.Count == 0)
+					if (chosen < 0 || chosen >= hotkeys.Count || hotkeys[chosen] == 'z')
 					{
 						return;
 					}
-					TeachFromDisk(System, disks);
+					switch (hotkeys[chosen])
+					{
+					case 't':
+						if (disks.Count > 0)
+						{
+							TeachFromDisk(System, disks);
+						}
+						break;
+					case 'w':
+						if (subjects.Count > 0)
+						{
+							SetSubject(System, subjects);
+						}
+						break;
+					case 's':
+						SetDownWhatWasLearned(System, carried);
+						break;
+					}
 				}
 			});
 		}
@@ -578,6 +678,68 @@ namespace ThousandAndFirst
 			}
 		}
 
+		// The stand-in for the lab building's own action, and named one. Verdict 3 rules that the
+		// one pressable thing is the building in the world; until the laboratory is raised, the
+		// keepers' own screen is where a subject is taken up, and this whole method moves onto the
+		// lab the day it exists. Nothing else about the loop changes when it does.
+		private static void SetSubject(KingdomSystem System, List<ResearchNode> Subjects)
+		{
+			List<string> options = new List<string>();
+			for (int i = 0; i < Subjects.Count; i++)
+			{
+				string refusal;
+				bool can = KingdomResearch.CanTakeUp(System, Subjects[i], out refusal);
+				options.Add(Subjects[i].Named + (can ? "" : " {{K|[not yet]}}"));
+			}
+			int chosen = Popup.PickOption(Title: "What shall they work out?",
+				Intro: "One thing at a time, and nothing else moves while they do it. Setting a new subject aside keeps whatever work already stands on it.",
+				Options: options, AllowEscape: true);
+			if (chosen < 0)
+			{
+				return;
+			}
+			string failure;
+			if (!KingdomResearch.TakeUp(System, Subjects[chosen].Key, out failure))
+			{
+				Popup.Show(failure);
+				return;
+			}
+			Popup.Show("{{G|The keepers of " + System.SeatName + " take up " + Subjects[chosen].Named + ".}} What comes of it comes of their own work, in their own time.");
+		}
+
+		// The teaching act (Addendum 22 B4). What crosses between two of the founder's cities is a
+		// SEED and never a holding: the founder sets down what one city's keepers worked out, the
+		// other city's keepers have the shape of it, and the walking is still theirs. Doors, never
+		// rooms - Addendum 18's clause, applied to the road between two of your own cities exactly
+		// as it applies to the road out of exile.
+		private static void SetDownWhatWasLearned(KingdomSystem System, List<ResearchNode> Carried)
+		{
+			string away = AwayName(System);
+			List<string> named = new List<string>();
+			for (int i = 0; i < Carried.Count; i++)
+			{
+				if (KingdomResearch.Seed(System, Carried[i].Key, "the keepers of " + away))
+				{
+					named.Add(Carried[i].Named);
+				}
+			}
+			if (named.Count == 0)
+			{
+				Popup.Show("There is nothing here they could not already have told you themselves.");
+				return;
+			}
+			Popup.Show("{{G|You set it down for them: " + KingdomZoningRules.JoinAnd(named) + ".}} The keepers of "
+				+ System.SeatName + " have the shape of it now. The rest of the walking is theirs.");
+			KingdomChronicle.Record(System, "what the keepers of " + away + " knew was set down at " + System.SeatName);
+		}
+
+		private static string AwayName(KingdomSystem System)
+		{
+			return (System.Away != null && !string.IsNullOrEmpty(System.Away.SettlementName))
+				? System.Away.SettlementName
+				: "your other city";
+		}
+
 		private static string KeepersIntro(KingdomSystem System)
 		{
 			List<string> roster = Roster(System);
@@ -594,6 +756,8 @@ namespace ThousandAndFirst
 			AppendKind(text, roster, KingdomZoningRules.KindDisk, "\n\nTaught to the keepers: ");
 			AppendKind(text, roster, KingdomZoningRules.KindMachine, "\nCertified fit for the grid: ");
 			AppendKind(text, roster, KingdomZoningRules.KindOrigin, "\nTrades among the people: ");
+			AppendKind(text, roster, KingdomZoningRules.KindNode, "\nWorked out here: ");
+			AppendKind(text, roster, KingdomCeremonyRules.PatternKnowledgeKind, "\nHeld from a ceremony here: ");
 			return text.ToString();
 		}
 
@@ -637,6 +801,22 @@ namespace ThousandAndFirst
 				}
 			}
 			return disks;
+		}
+
+		// The roster keys the founder is carrying right now, as a node's TaughtBy and SeededBy
+		// lists would spell them. Never stored: this is what is in their hands this moment.
+		private static List<string> CarriedKeys(List<GameObject> Disks)
+		{
+			List<string> keys = new List<string>();
+			for (int i = 0; Disks != null && i < Disks.Count; i++)
+			{
+				string key = KingdomZoningRules.ComposeKey(KingdomZoningRules.KindDisk, DiskName(Disks[i].GetPart<DataDisk>()));
+				if (key != null && !keys.Contains(key))
+				{
+					keys.Add(key);
+				}
+			}
+			return keys;
 		}
 
 		/// <summary>
@@ -684,16 +864,44 @@ namespace ThousandAndFirst
 			KingdomChronicle.Record(System, "the keepers of " + System.KingdomDisplayName + " were taught to build " + design);
 			System.RecordDeed("taught the keepers of " + System.KingdomDisplayName + " to build " + design);
 			Popup.Show("{{G|The keepers copy it out and hand the disk back.}} " + System.SeatName + " can raise " + XRL.Language.Grammar.A(design) + " when the ground and the stores allow.");
+			// A roll changed, so a node somebody had already answered may now be answered here.
+			KingdomResearch.ApplySources(System);
 		}
 
-		private static string Stored()
+		// The seated city's own rolls, with the one-time fold in front of them.
+		//
+		// THE FOLD IS A SHIM AND IS NAMED ONE. Before the knowledge siting the roster was a single
+		// string on the game; a save written then carries it there and carries nothing on its
+		// cities. This reads it into the seat once and retires the key, so the same save never
+		// folds twice and a second city never inherits the first one's rolls by accident. It is not
+		// a migration harness and it is not a policy: when the release-era harness lands
+		// (Addendum 9) this is the first thing it should absorb.
+		private static string Stored(KingdomSystem System)
 		{
-			return The.Game?.GetStringGameState(RosterState, "") ?? "";
+			if (System == null)
+			{
+				return "";
+			}
+			string legacy = The.Game?.GetStringGameState(RosterState, "") ?? "";
+			if (legacy.Length > 0)
+			{
+				if (string.IsNullOrEmpty(System.KeepersRoster))
+				{
+					System.KeepersRoster = legacy;
+					KingdomLog.Log("zoning: folded the old game-held roster into " + System.SeatName + " and retired the key");
+				}
+				The.Game?.SetStringGameState(RosterState, "");
+			}
+			return System.KeepersRoster ?? "";
 		}
 
-		private static void Store(string Roster)
+		private static void Store(KingdomSystem System, string Roster)
 		{
-			The.Game?.SetStringGameState(RosterState, Roster ?? "");
+			if (System == null)
+			{
+				return;
+			}
+			System.KeepersRoster = Roster ?? "";
 		}
 	}
 }

@@ -9,7 +9,35 @@ minor for additive API and content, major for breaking changes. Supported API is
 Pre-release: the mod has not yet run in a live game. Nothing here is stable until the first
 playtest passes.
 
+### Fixed
+- **An `Open` plot underground no longer offers `taf:sky`.** Sky is weather-reach and weather
+  reaches nothing under the rock: below the surface every tier now provides `taf:dark`, the
+  open plot included. Offers are read against the ground a work stands on (the cache carries
+  a stratum now); lodging assignment, the upgrade absorption read, and the settling notable's
+  shade-taste all thread the ground through. Surface behaviour is unchanged, and the test
+  that would have caught the defect lands with the fix.
+
 ### Added
+- **The keepers' research — a tree without a second job** (Addendum 14, RESEARCH-SYSTEM-DESIGN,
+  Addendum 22 B+E clusters). Twenty-one nodes over three branches and a trunk, each minting an
+  ordinary `node:` roster key — no parallel gate system, no meter, no currency. Research is a
+  scaffold for an idea: a staffed knowledge bench (the scriptorium, until the lab wave) charges
+  real elapsed labour against one named subject; idle time is spent and never banked. The tech
+  map keeps its no-press law and gains two chapters, and its locked rows now honour the
+  visibility law — computed over what this realm has actually heard of, which is a deliberate
+  behavioural regression to the founder's convenience and the correct one. Research TIER is
+  gated on the city's best researcher's Intelligence (10/14/18/22, hard at the boundary);
+  `schooling` may raise a citizen's Int cap by exactly one, enforced in our own training code —
+  `Statistic.Max` is never written.
+- **Knowledge lives with the city that learned it** (Addendum 22 B1–B8). The keepers' roster
+  moves off game state onto the settlement container — so secession walks out with what the
+  city knew, exile carries doors and never rooms, and a returning city brings its rolls back
+  whole and free, all with zero new code in any of the four paths. The realm reads the seat;
+  teaching the other city is an act (a disk re-teaches freely, a machine re-certifies where it
+  stands, a node is *set down* as a seed — reveal and head start, never completion). Craft is
+  per-city and a design's `MinTech` is judged against the city being built in. Serialization
+  bumps to v7, named; an old save's realm-wide roster folds into the seat once and the old key
+  is retired.
 - **The mirror-gate — step from one of your cities to another** (exotic #3,
   END-STATE-CITIES-RESEARCH §4.4). A `TeleporterPair` extension, so the crossing itself is
   vanilla's; ours adds the dedication rite on the arch, a standing draw of three

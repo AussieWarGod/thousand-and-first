@@ -339,6 +339,63 @@ namespace ThousandAndFirst
 		public Dictionary<string, string> ZoneDistricts = new Dictionary<string, string>();
 
 		/// <summary>
+		/// What THIS city's keepers were taught, certified, and worked out: the encoded roster of
+		/// <c>disk:</c>, <c>machine:</c>, <c>pattern:</c> and <c>node:</c> keys
+		/// (<c>KingdomZoningRules.EncodeRoster</c>).
+		/// <para>
+		/// Addendum 22 B1, the knowledge siting. This used to be one game-global string, which meant
+		/// a seceding city walked away with none of what it had itself learned and an exiled founder
+		/// walked away with all of it. Sited here, secession, rejoin, exile and return handle
+		/// knowledge with no knowledge-specific code in any of the four paths: the container goes,
+		/// and the rolls go with it. Rejoin restores them whole and free, because rejoin restores
+		/// the container (B6).
+		/// </para>
+		/// <para>
+		/// The founder's own ledger of the world &mdash; which nodes they have HEARD of, and where
+		/// &mdash; is not here and never was: it is the vanilla journal, and it survives secession,
+		/// exile, and refounding by vanilla's own design (B2, B3). Cities keep rolls; the founder
+		/// keeps leads.
+		/// </para>
+		/// </summary>
+		public string KeepersRoster;
+
+		/// <summary>The one node this city's lab is working out, or null. One subject at a time:
+		/// there is no queue, so there is nothing to schedule and nothing to optimise.</summary>
+		public string ResearchSubject;
+
+		/// <summary>Labour ticks banked against <see cref="ResearchSubject"/>.</summary>
+		public int ResearchAccrued;
+
+		/// <summary>
+		/// Tick this city took up <see cref="ResearchSubject"/>. Nothing before it is ever banked:
+		/// a bench that stood unlooked-at for a season and a subject set this morning charge from
+		/// the same instant, so a city cannot bank an absence and cash it as a burst of thinking.
+		/// Each lab keeps its own last-worked stamp and charges from whichever of the two is later.
+		/// </summary>
+		public long ResearchTakenUpTick;
+
+		/// <summary>STANDARDS 7b's once-flag for a lab that will not progress &mdash; nobody at the
+		/// bench, nobody clever enough, or nowhere to think at all. Cleared the moment the block
+		/// lifts, so the sentence is unsaid as well as said.</summary>
+		public bool ResearchStalledAnnounced;
+
+		/// <summary>
+		/// Subjects this city shelved, and the labour still standing on each. Shelving is memory,
+		/// not a queue: nothing here progresses, and the founder can neither order it nor spend
+		/// against it. Capped at <c>KingdomResearchRules.ShelfRows</c>; the row a ninth shelving
+		/// pushes off is the least advanced, named once.
+		/// </summary>
+		public Dictionary<string, int> ResearchShelf = new Dictionary<string, int>();
+
+		/// <summary>
+		/// The highest Intelligence among this city's people as of the last attended pass, which is
+		/// what decides which research tier its bench may work at (verdict 5). Knowledge, not truth:
+		/// exactly as stale as the founder's last visit, like <see cref="SupportedLevel"/> and
+		/// <see cref="LastKnownStorageSpace"/> beside it. Zero for a city no pass has measured.
+		/// </summary>
+		public int ResearchBestMind;
+
+		/// <summary>
 		/// This city's whole model: stocks, zone rows, work rows, and what each zone still owes its
 		/// own containers. LIVING-CITY-ARCHITECTURE &sect;1.3 &mdash; one book per settlement, on
 		/// the settlement, as a named-field composite.
@@ -435,6 +492,20 @@ namespace ThousandAndFirst
 			if (ZoneDistricts == null)
 			{
 				ZoneDistricts = new Dictionary<string, string>();
+			}
+			if (ResearchShelf == null)
+			{
+				ResearchShelf = new Dictionary<string, int>();
+			}
+			// A negative accrual is a corrupt reading, not a city in debt to its own bench: the lab
+			// mints nothing, so the worst a shelved or current subject can stand at is nothing.
+			if (ResearchAccrued < 0)
+			{
+				ResearchAccrued = 0;
+			}
+			if (ResearchTakenUpTick < 0L)
+			{
+				ResearchTakenUpTick = 0L;
 			}
 			if (GuestbookLines == null)
 			{

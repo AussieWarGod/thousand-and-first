@@ -50,6 +50,15 @@ namespace ThousandAndFirst
 			StringBuilder builder = new StringBuilder();
 			KingdomSystem.Guard("keepers' map", delegate
 			{
+				// The map is not a screen the founder is given; it is a thing the keepers begin to
+				// draw. Until somebody here writes anything down there is one sentence and no
+				// chapters, and every "how does the founder find the tree" question resolves the
+				// same way everything else in this mod does: by doing something in the world.
+				if (!KingdomResearch.KeepsNotes(System))
+				{
+					builder.Append(KingdomResearchRules.NothingWrittenDown(System.SeatName));
+					return;
+				}
 				List<string> roster = KingdomZoning.Roster(System);
 				int points = KingdomZoningRules.TechPoints(roster);
 				TechLevel level = KingdomZoningRules.LevelForPoints(points);
@@ -59,11 +68,14 @@ namespace ThousandAndFirst
 					toNext,
 					KingdomZoningRules.TechName((TechLevel)((int)level + 1))));
 				Opened(System, roster, builder);
+				Working(System, builder);
 				Locked(System, roster, level, builder);
+				HeardOf(System, builder);
 				string roads = KingdomTechMapRules.RoadsNotTaken(
 					Any(roster, KingdomZoningRules.KindDisk),
 					Any(roster, KingdomZoningRules.KindMachine),
-					Any(roster, KingdomZoningRules.KindOrigin));
+					Any(roster, KingdomZoningRules.KindOrigin),
+					Any(roster, KingdomZoningRules.KindRite));
 				if (!string.IsNullOrEmpty(roads))
 				{
 					builder.Append("\n\n").Append(roads);
@@ -132,9 +144,37 @@ namespace ThousandAndFirst
 		}
 
 		// ==================================================================================
-		// The nearest locked things, and why (§2.8 rendering 2)
+		// What they are working out (§6.4 chapter 2) and what they have heard of (chapter 3)
 		// ==================================================================================
 
+		private static void Working(KingdomSystem system, StringBuilder builder)
+		{
+			string chapter = KingdomResearch.Working(system);
+			if (!string.IsNullOrEmpty(chapter))
+			{
+				builder.Append("\n\n").Append(chapter);
+			}
+		}
+
+		private static void HeardOf(KingdomSystem system, StringBuilder builder)
+		{
+			if (!KingdomResearch.Enabled)
+			{
+				return;
+			}
+			builder.Append("\n\n").Append(KingdomTechMapRules.HeardOfChapter(KingdomResearch.HeardOf(system)));
+		}
+
+		// ==================================================================================
+		// The nearest locked things, and why (§2.8 rendering 2, under the visibility law)
+		// ==================================================================================
+
+		// The row set and the tail count are computed over the DISCOVERED set only, and the filter
+		// is KingdomZoning.Visible's -- a design waiting on a node the founder has never heard of is
+		// absent, not greyed, and is not in the number either. This is the one line of shipped
+		// behaviour Addendum 14 deletes: the chapter used to walk the whole catalogue and tail with
+		// a count over every locked design in it, which let the founder COUNT what they could not
+		// see. It is a regression to the founder's convenience and it is the correct one.
 		private static void Locked(KingdomSystem system, List<string> roster, TechLevel level, StringBuilder builder)
 		{
 			List<TechMapRow> rows = new List<TechMapRow>();

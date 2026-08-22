@@ -109,13 +109,55 @@ it ("only when the design says so"); nothing expresses it. Per-stratum overrides
 parallel machinery and must earn it (Addendum 13). No design needs it yet — the deep set went
 separate-records instead. **Recorded so the want has a number when it arrives.**
 
-**QB-19 — DEFECT: an `Open="yes"` plot underground advertises open sky.**
-`KingdomPlotRules.RoofOnGround` returns `Open` unchanged below the surface, so
-`KingdomQolRules.ProvidedByRoof` grants `taf:sky` under the rock. Reachable today (`plot`,
-`field`, `cairn`, `masonyard`, `grange`, `homefarm` are all Open, none declares `Sky`).
-**Fix planned this session** (orchestrator, autonomous authorization): underground Open
-ground provides no sky. Flagged here so the author sees the behaviour change.
+**QB-20 — LATENT: the rest of the QoL read family is surface-only.** `KingdomQol.Judge` /
+`WillLive` / `Tolerates` / `PreferFlags` / `FirstTolerable` still resolve offers by design key
+alone. Zero live callers today, so no Zone overloads were minted (no speculative API). The day
+one is called from a deep zone it will be wrong. Recorded so the decision is visible.
+
+**QB-21 — LATENT: the housing/beds invariant is stated twice and enforced nowhere.** The
+catalogue check flags "housing with nothing over it" only as a Note and only when a roof was
+declared; `KingdomLodging.RoofCapacity` derives capacity from `Carries` roof amount, not roof
+state. An `Open="yes"` housing design with `Carries="roof:N"` would house people under the
+open sky. Nothing shipped does this; a third-party record could. Candidate: promote to a
+catalogue Fault.
+
+**QB-22 — The node-gate data pass over the shipped catalogue.** The tree mints 21 keys and
+almost nothing gates on them yet. Applied now (safe, Village+): smelter ← `node:cruciblesteel`,
+condensing hall ← `node:pressure` (second gate beside its machine). NOT applied — the research
+wave's suggested list contained deadlocks: masonyard ← `node:kiln` (Steading-stage design gated
+behind the Village-stage bench), bookshelf ← `node:notes` (the shelf would gate behind the bench
+it precedes), moot-family gates (the hall reads the charter — gating it gates the charter).
+Question: how deep should node-gating cut into the shipped catalogue, and should the lab wave's
+new records carry the flesh-branch gates (`node:vat`, `node:graft`, `node:butchery`) instead —
+**PROVISIONAL: yes, new records carry them; shipped records stay lightly gated pending your
+balance eye.**
+
+**QB-23 — Gate-grammar wants the design doc promised but verdict 1 forbids without a ruling:**
+wildcard machines (`machine:*Furnace`) and counted kinds (`disk:×4`). The wave shipped only
+satisfiable literal tokens. Rule the grammar in, or keep the literal vocabulary?
+**PROVISIONAL: literal only.**
+
+**QB-24 — `culture:`/`species:` are declared but nothing mints them** (needs per-city identity
+tallies at settler intake — Addendum 17's four readers). The vat's identity arm ships as
+rite-seeded instead. Minting wave wanted; when?
+
+**QB-25 — First research bench is the scriptorium (Village).** Camp/Steading realms cannot
+research at all. If the trunk should be walkable earlier, the lab wave wants a staffed S-plot
+copyist's desk. **PROVISIONAL: leave Village-gated; research is a settled realm's luxury.**
+
+**QB-26 — Three defensible readings the research wave took where the design doc conflicted
+with itself** (recorded for your eye, all reversible): the tech map keeps four chapters
+(visibility-filter reading of verdict 7, not §6.4's replace); the whole map gates on
+`node:notes` with roots revealed at first keepers'-screen look; the bench ticks per turn but
+charges once per world-day (the scaffold's own idiom vs §10.2's wording).
 
 ## Answered
 
-(none yet)
+**QB-19 — DEFECT FIXED: underground `Open` plots no longer advertise sky.** Sky is
+weather-reach; underground every tier now provides `taf:dark`, the open plot included.
+`RoofOnGround`'s Open-stays-Open untouched (Open is a claim about walls, still true). Offer
+cache split per stratum; lodging, upgrade, and the notable's shade-taste threaded with the
+ground. Mutation-checked: reverting the rule fails 9 cases. Correction to the original entry:
+`cairn` and `masonyard` were NOT reachable (they carry `Strata="all,!deep"`); the true
+reachable set was wider — storage, civic, power, and craft `Open` designs with no `Strata`
+exclusion, all now covered by the same fix.

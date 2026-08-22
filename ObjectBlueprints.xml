@@ -696,6 +696,10 @@
     <stag Name="Contemporary" />
     <part Name="Render" DisplayName="scriptorium" RenderString="&#8745;" ColorString="&amp;b" DetailColor="W" />
     <part Name="Description" Short="Two registers of the same year kept on the same shelf, and a keeper who will show you both and let you decide. The disagreements are indexed." />
+    <!-- The scriptorium is the settlement's first research bench (rung 100): r_KingdomInquiry
+         is r_KingdomScaffold for an idea, and the staffed knowledge-work is where it lives
+         until the lab wave raises purpose-built benches. -->
+    <part Name="r_KingdomInquiry" />
     <part Name="Physics" Takeable="false" Weight="5000" />
     <stat Name="Hitpoints" Value="320" />
   </object>

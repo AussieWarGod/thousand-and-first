@@ -50,13 +50,22 @@ namespace ThousandAndFirst
 		/// porter nobody can place.
 		/// </para>
 		/// <para>
-		/// No migration machinery ships for any of them, and Addendum 9 is why: the mod has never
-		/// run, so there are no older saves in the world, and "version bumps stay clean and
-		/// deliberate" means the gate refuses an older layout by name rather than silently reading
-		/// a city that has lost something.
+		/// Version 7 is the knowledge siting (Addendum 22 B1). Every city gains
+		/// <see cref="KeepersRoster"/> and the lab's own header &mdash; subject, accrual, stamp,
+		/// shelf &mdash; and the game-state key <c>r_TAF_KeepersRoster</c> is retired.
+		/// </para>
+		/// <para>
+		/// <b>This bump does NOT move <see cref="FirstNamedSerializationVersion"/>, and that is the
+		/// point of the difference.</b> Five and six were refused by name because a version-4 book
+		/// had lost a warning's deadline and a version-5 binding could name a carrier nothing could
+		/// place: state that could not be recovered. A version-6 save has lost nothing at all &mdash;
+		/// its rolls are on the game, they are complete, and <c>KingdomZoning</c>'s one-time fold
+		/// reads them into the seated city on first look. STANDARDS &sect;1 is explicit that a
+		/// version at or below the current one which CAN be read must be read; refusing this one
+		/// would turn a routine additive change into a save-wipe for nothing.
 		/// </para>
 		/// </summary>
-		private const int CurrentSerializationVersion = 6;
+		private const int CurrentSerializationVersion = 7;
 
 		private const int FirstNamedSerializationVersion = 6;
 
@@ -473,6 +482,30 @@ namespace ThousandAndFirst
 		public List<string> ClaimedZones = new List<string>();
 
 		public Dictionary<string, string> ZoneDistricts = new Dictionary<string, string>();
+
+		/// <summary>The seated city's own rolls. See <see cref="KingdomSettlement.KeepersRoster"/>;
+		/// this is the flat field the seat swap carries them in, which is the whole of what makes
+		/// secession, rejoin, exile and return handle knowledge without one line of their own.</summary>
+		public string KeepersRoster;
+
+		/// <summary>The seated city's current subject. See
+		/// <see cref="KingdomSettlement.ResearchSubject"/>.</summary>
+		public string ResearchSubject;
+
+		/// <summary>See <see cref="KingdomSettlement.ResearchAccrued"/>.</summary>
+		public int ResearchAccrued;
+
+		/// <summary>See <see cref="KingdomSettlement.ResearchTakenUpTick"/>.</summary>
+		public long ResearchTakenUpTick;
+
+		/// <summary>See <see cref="KingdomSettlement.ResearchStalledAnnounced"/>.</summary>
+		public bool ResearchStalledAnnounced;
+
+		/// <summary>See <see cref="KingdomSettlement.ResearchShelf"/>.</summary>
+		public Dictionary<string, int> ResearchShelf = new Dictionary<string, int>();
+
+		/// <summary>See <see cref="KingdomSettlement.ResearchBestMind"/>.</summary>
+		public int ResearchBestMind;
 
 		/// <summary>The seated city's model. See <see cref="KingdomSettlement.City"/>; this is the
 		/// flat field the seat swap carries it in.</summary>
@@ -1299,6 +1332,10 @@ namespace ThousandAndFirst
 		public override void AfterLoad(XRLGame Game)
 		{
 			base.AfterLoad(Game);
+			// The research registry and everything it caches about the world are process statics,
+			// so a second game in the same session would otherwise read the first one's quest
+			// verdicts and believe its journal notes were already filed.
+			KingdomResearch.Reload();
 			NormalizeState();
 		}
 
@@ -1322,6 +1359,23 @@ namespace ThousandAndFirst
 			// The second reify hook (§3.5), and the one instant the stale-transient sweep may run
 			// (§3.8 t3): any zone coming off disk, before intake and before anything looks at it.
 			Registrar.Register(ZoneThawedEvent.ID);
+			// Research quest locks are event-driven and cached, never polled. This fires AFTER all
+			// quest state is consistent, which is why it and not QuestStepFinishedEvent is the hook.
+			Registrar.Register(QuestFinishedEvent.ID);
+		}
+
+		/// <summary>
+		/// A quest finished. The only thing in the world that can change whether a research node
+		/// exists at all, so the cached verdicts are dropped here and nowhere else &mdash; there is
+		/// no per-turn quest polling anywhere in this mod.
+		/// </summary>
+		public override bool HandleEvent(QuestFinishedEvent E)
+		{
+			Guard("quest", delegate
+			{
+				KingdomResearch.ForgetQuests();
+			});
+			return base.HandleEvent(E);
 		}
 
 		/// <summary>
@@ -1707,6 +1761,20 @@ namespace ThousandAndFirst
 			if (ResidentCounter < 0)
 			{
 				ResidentCounter = 0;
+			}
+			if (ResearchShelf == null)
+			{
+				ResearchShelf = new Dictionary<string, int>();
+			}
+			// The lab mints nothing, so a negative accrual or stamp is a corrupt reading rather
+			// than a city that owes its own bench: both fail closed to "nothing worked out yet".
+			if (ResearchAccrued < 0)
+			{
+				ResearchAccrued = 0;
+			}
+			if (ResearchTakenUpTick < 0L)
+			{
+				ResearchTakenUpTick = 0L;
 			}
 			// A founded save written before cities had names of their own carries only the realm's.
 			// The seat is that first city, so it takes that name rather than arriving unnamed.

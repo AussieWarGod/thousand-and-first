@@ -332,7 +332,8 @@ both route through it.
 ## The quality-of-life vocabulary, and lodging
 
 `KingdomQolRules` / `KingdomQol`: one namespaced tag vocabulary — buildings declare `Provides`
-(catalogue attribute, merged like every other; roofs contribute their own), residents carry
+(catalogue attribute, merged like every other; roofs contribute their own — sky on the surface
+only, shade everywhere underground), residents carry
 Needs / Prefers / Refuses, derived first from vanilla parts (Robot, aquatic brains, LiveFungus,
 PhotosyntheticSkin, Inorganic) and refined by `r_TAF_*` blueprint tags, with `-tag` removing a
 derived entry. Unknown tags are inert. `KingdomLodging` / `KingdomLodgingRules` assign every
@@ -412,6 +413,28 @@ last, and stop at the first refusal — the founder is told one thing to fix, no
 | `static bool StratumAccepts(bool underground, bool requiresSky)` | The one depth rule the catalogue can state today: `!(underground && requiresSky)` — weather does not reach under the rock. |
 | `static string StratumName(bool underground)` | `"under the rock"` / `"open sky"`, for the sentence that names it. |
 | `static int ZonesForStage(GrowthStage)` | How many zones a city of this stage may hold at most: Camp/Steading 1, Village 2, Town 3, City 4. Read off the catalogue's own `MinZones` pairs, not chosen separately — the two-zone designs are `MinStage="Village"`, the three-zone `Town`, the four-zone `City` — so a settlement reaches the ground a design wants at the same moment it reaches the stage that design wants. |
+
+### Where knowledge lives, and the research work (`KingdomResearch` / `KingdomResearchRules`)
+
+The rolls moved (Addendum 22 B-cluster): `KingdomZoning.Roster(System)` reads the **seat city's**
+container, `KingdomZoning.RosterOf(KingdomSettlement)` reads any other city's, and the old
+game-state key `r_TAF_KeepersRoster` is retired — read once by a named migration shim into the
+seat, then blanked, never written again. `Learn` writes to the seat, so certification and teaching
+are per-city; a seceding city walks out with its rolls and a returning one brings them back whole.
+`Tech(System)` is likewise per-city, and a design's `MinTech` is judged against the city it is
+being built in.
+
+`KingdomResearchRules` (engine-free) carries the node record (`ResearchNode`: Key, Grants,
+Requires, TaughtBy, SeededBy, Tier, Effort), the tier ladder (Int 10/14/18/22, hard at the
+boundary), the accrual arithmetic (crew × condition × tier bonus × bench rung, any factor zero ⇒
+zero), the seed constants (25% capped 50%), the shelf (8, least-advanced dropped deterministically
+and said so), the citizen Int ceiling (`MaxHeadroomIntelligence = 1` — schooling may raise the cap
+by one and nothing stacks it), and every player-facing sentence. `KingdomResearch` is the registry
+and the ledger: `Advance(system, tick, labStamp, crew, wear, rung, name)` is the whole bench
+contract (`r_KingdomInquiry` rides it at rung 100; the lab wave's benches raise the rung),
+discovery is `JournalObservation.Revealed` under `taf:node:<key>` (founder-held), and
+`KnowledgeGateHeardOf` is the single visibility filter every menu, map row, and refusal funnels
+through. `Train` writes `BaseValue` only — never `Statistic.Max`.
 
 ### The claim
 
