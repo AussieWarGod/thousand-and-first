@@ -10,6 +10,11 @@ Pre-release: the mod has not yet run in a live game. Nothing here is stable unti
 playtest passes.
 
 ### Fixed
+- **The refining yard applies its own wear** (QB-29 — a standing breach of the wear doctrine:
+  crops and networks paid it, the yard never did). The condition rides the effort percent
+  rather than the crew term, because every yard stands two and a percent folded into a head
+  count of two truncates to a lie. A pristine yard is bit-identical; a neglected one now
+  refines at the floor the doctrine always priced.
 - **An `Open` plot underground no longer offers `taf:sky`.** Sky is weather-reach and weather
   reaches nothing under the rock: below the surface every tier now provides `taf:dark`, the
   open plot included. Offers are read against the ground a work stands on (the cache carries
@@ -18,6 +23,20 @@ playtest passes.
   that would have caught the defect lands with the fix.
 
 ### Added
+- **The becoming annexe — the city keeps its own rolls, and the old machines accept them.**
+  The chrome half of the body doctrine (Addendum 22 A1; the registry fiction, F1). Enrolment
+  is a once-ever ceremony that enters a citizen — or the founder — on the city's rolls as
+  `enrolled:` keys on the settlement container, so a seceding city walks out with its own
+  book, which is the fiction's teeth. The enrolled answer vanilla's own `IsTrueKinEvent` —
+  raising, never lowering — so the Eaters' machines accept them unmodified, and the annexe
+  grants the genotype's own two license points, derived not invented. The whole reach of the
+  answer is disclosed at the door (it is wider than the nook — tonics, terminals, five
+  Sifrah boards), the Mechanimist chrome-debt can be spoken about through the shipped
+  petitions, and losing the rolls closes a door without ever reaching into a body. Gated
+  behind the foundry's new capstone node, `the rolls`, which a Templar city never sees.
+- **The method factor reaches the fields and the city book.** Harvests, gathers, and the
+  book's food and water rates now carry the keepers' method bonus — never below baseline,
+  never a tax, never scaling what a city consumes.
 - **The lab, rungs 0 through 3 — the flesh half of the body doctrine.** The butcher's slab
   reads a body before it cuts it; the vat-house preserves what was read into permanent,
   tradeable parts on vanilla's own preservation arithmetic (corrected against the decompile:

@@ -1441,7 +1441,15 @@ namespace ThousandAndFirst
 			/// Appended, never renumbered &mdash; these ordinals are carried in a save.
 			/// </para>
 			/// </summary>
-			Flesh
+			Flesh,
+
+			/// <summary>
+			/// The rolls are spoken about (END-STATE §2.4 &mdash; the Mechanimist chrome-debt).
+			/// The annexe's twin of <see cref="Flesh"/>: never chosen by state, pushed by the
+			/// first enrolment while a debt-minded minority lives in the city. Appended, never
+			/// renumbered.
+			/// </summary>
+			Chrome
 		}
 
 		public const long PetitionCooldownTicks = 3600L;
@@ -1732,6 +1740,10 @@ namespace ThousandAndFirst
 				// mend that settles "say out loud what you have built here" — DIVERSITY §3.6 is
 				// explicit that there is no correct answer — so what meets it is being HEARD, and
 				// KingdomPetitions.Heard is what writes the target this reads.
+				return Target > 0;
+			case PetitionKind.Chrome:
+				// Flesh's twin, met the same way and for the same reason: the debt is not a bill
+				// the founder can pay, it is a thing said to their face.
 				return Target > 0;
 			default:
 				return false;

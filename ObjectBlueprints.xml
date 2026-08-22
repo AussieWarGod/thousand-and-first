@@ -835,6 +835,14 @@
     <part Name="r_KingdomChimericTheatre" />
     <stat Name="Hitpoints" Value="600" />
   </object>
+  <object Name="r_KingdomBecomingAnnexe" Inherits="Furniture">
+    <stag Name="Contemporary" />
+    <part Name="Render" DisplayName="the becoming annexe" RenderString="&#920;" ColorString="&amp;C" DetailColor="Y" />
+    <part Name="Description" Short="A clean white room, a chair with restraints nobody has ever needed, and a book nobody else may read. The machines do not ask who your parents were. They ask the book." />
+    <part Name="Physics" Takeable="false" Weight="20000" />
+    <part Name="r_KingdomBecomingAnnexe" />
+    <stat Name="Hitpoints" Value="600" />
+  </object>
 
   <!-- LAB-CLASS-AUDIT §1 finding 2: FungusPuffer declares CorpseBlueprint="Dreadroot Tuber" and
        CorpseChance="0" (B/ObjectBlueprints/Creatures.xml:6045), so the §3.5 chain has nothing to

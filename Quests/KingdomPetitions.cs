@@ -113,7 +113,8 @@ namespace ThousandAndFirst
 		/// </summary>
 		public static void Heard(KingdomSystem System)
 		{
-			if (System != null && System.PetitionKind == KingdomRules.PetitionKind.Flesh)
+			if (System != null && (System.PetitionKind == KingdomRules.PetitionKind.Flesh
+				|| System.PetitionKind == KingdomRules.PetitionKind.Chrome))
 			{
 				System.PetitionTarget = 1;
 			}
@@ -178,6 +179,8 @@ namespace ThousandAndFirst
 				return "the dead";
 			case KingdomRules.PetitionKind.Flesh:
 				return KingdomLabRules.SpokenAgainstSubject();
+			case KingdomRules.PetitionKind.Chrome:
+				return KingdomAnnexeRules.SpokenAboutSubject();
 			default:
 				return "the settlement";
 			}
@@ -210,6 +213,12 @@ namespace ThousandAndFirst
 				return KingdomLabRules.SpokenAgainstSpeech((System.PetitionFaction != null)
 					? XRL.World.Faction.GetFormattedName(System.PetitionFaction)
 					: "everyone");
+			case KingdomRules.PetitionKind.Chrome:
+				// Flesh's twin, same deliberate side effect, same single caller.
+				Heard(System);
+				return KingdomAnnexeRules.SpokenAboutSpeech((System.PetitionFaction != null)
+					? XRL.World.Faction.GetFormattedName(System.PetitionFaction)
+					: "the debt-minded");
 			default:
 				return "\"It is nothing. It has passed.\"";
 			}
@@ -231,6 +240,8 @@ namespace ThousandAndFirst
 				return "the shrine " + Name + " raised over its dead";
 			case KingdomRules.PetitionKind.Flesh:
 				return KingdomLabRules.SpokenAgainstDeed(Name);
+			case KingdomRules.PetitionKind.Chrome:
+				return KingdomAnnexeRules.SpokenAboutDeed(Name);
 			default:
 				return "the matter was settled at " + Name;
 			}

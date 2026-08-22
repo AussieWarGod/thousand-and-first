@@ -453,6 +453,20 @@ registry, the discovery ledger, the anatomy census, and the three write paths
 glands). `KingdomLab` is the four building parts and the two-level `Popup.PickOption` slate —
 the golem's own screen idiom, no new screen class.
 
+### The annexe (`KingdomAnnexeRules` / `KingdomAnnexe`)
+
+The chrome half. `KingdomAnnexeRules` (engine-free) carries the enrolment verdicts
+(`KingdomEnrolVerdict`), the rolls as `enrolled:<GeneID>` keys on the settlement container
+(no new serialized field — the container's own carry is the fiction's teeth),
+`AnswersTrueKin(Seeded, Held)` — raises and never lowers, so a lapsed roll can never un-Kin
+the born — the price and disclosure prose (the whole reach of the answer named at the door,
+including what lies past the nook), and the chrome-debt petition strings. `r_KingdomEnrolled`
+answers vanilla's `IsTrueKinEvent` with a per-tick-cached live read across every city the
+realm still holds; losing the rolls closes a door and never reaches into a body. The annexe
+grants the True Kin genotype's own two cybernetics license points — the door would otherwise
+open onto an empty room. `GatheredYield`/`HarvestYield` gained additive `MethodPercent`
+overloads, and `KingdomCityAdvanceable` a fourth constructor argument, for the method lane.
+
 ### The claim
 
 What widens the ground every gate above is measured against.

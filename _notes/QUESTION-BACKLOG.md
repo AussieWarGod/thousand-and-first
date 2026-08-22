@@ -170,11 +170,35 @@ total across or under the 56 KiB advisory rung: 640 B/city → 56,868 (under); 1
 the budget verdict is yours to re-pin; the advisory rung is not a ceiling and nothing breaks
 meanwhile.**
 
-**QB-29 — PRE-EXISTING SPEC BREACH: the refining yard has never applied wear.** Addendum 10(b)
-says each consumer applies `WorkEffectiveness` itself; crops and networks do, the work-yard
-reads raw crew stretch only (`KingdomMaterials.cs:1720`). Fixing it LOWERS refining output —
-a balance change, correctly not slipped into an integration wave. **PROVISIONAL: fix lands in
-the next balance-touching wave with a fresh balance-sim pass, not before.**
+**QB-34 — The enrolment answer is a blanket across ~30 vanilla systems.** `IsTrueKinEvent`
+carries no asker context, so the enrolled mutant also gets True Kin tonic dosages, five
+easier Sifrah boards, True-Kin-only baetyl rewards and conversation nodes — not just the
+nook. Options: (a) unconditional + disclosed at the ceremony (**PROVISIONAL, shipped** — the
+disclosure names the whole reach, §1.5's lesson); (b) narrow to terminal proximity; (c)
+option toggle. The balance camp (§1.4, R-D) is who cares.
+
+**QB-35 — Does the annexe get a rung ladder like the theatre's?** Shipped as one building
+per the brief; §7.5 Q3 left it open. **PROVISIONAL: one building; rungs if the playtest
+wants a slower door.**
+
+**QB-36 — Annexe numbers are tabled but untuned**: `StandingPerCreed = 150` (3× the lab's),
+`EnrolmentDrams = 180`. Same shape as QB-32. **PROVISIONAL: keep; balance pass.**
+
+**QB-37 — Installed implants when the rolls lapse: nothing happens.** The lapse closes a
+door and never reaches into a body — verified: no vanilla path re-checks `IsTrueKin` for a
+fitted implant. **PROVISIONAL: confirmed shape, pin at check-in.**
+
+**QB-38 — The annexe's keeper staffing** is `RosterNames[0]`, the grafting hall's own
+crudeness. Wants the lodged-savant binding (a psyberneticist), not a global guest-table
+entry. Rides the QB-33 follow-ups bundle.
+
+**QB-39 — Cosmetic mismatch**: tonic RULES text reads raw genotype, so an enrolled mutant
+gets True Kin effects with mutant blurbs. Fixing means writing the `Genotype` property —
+exactly the data hack the registry fiction exists to avoid. **PROVISIONAL: leave; it is
+even good fiction — the paperwork says one thing and the blood says another.**
+
+**QB-40 — Each roll adds ~12 B to a city's roster string** — folds into QB-28's budget
+re-pin when you make it.
 
 **QB-30 — The `|` OR-grammar is declared in two places and implemented in one.** The
 visibility layer splits knowledge alternatives on `|`; the GATE layer (`Knows`) compares whole
@@ -201,6 +225,13 @@ classes (first in-game selftest); balance-sim run against a fully-grafted founde
 3) before the playtest.
 
 ## Answered
+
+**QB-29 — FIXED: the refining yard applies its own wear.** One correction to the entry as
+written: the fix rides the EFFORT percent, not the crew term — every yard stands two, and a
+wear percent folded into a head count of two truncates to zero and reports "nobody is
+standing at it" to a founder looking at two people. Pristine yards bit-identical
+(mutation-guarded in the sim: reverting the line kills it by name). Wear ceiling = 40% of a
+sound month; neglect costs 2.5× the schedule.
 
 **QB-19 — DEFECT FIXED: underground `Open` plots no longer advertise sky.** Sky is
 weather-reach; underground every tier now provides `taf:dark`, the open plot included.

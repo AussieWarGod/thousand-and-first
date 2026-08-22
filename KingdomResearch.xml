@@ -100,7 +100,15 @@
 
   <node Key="arclightdiscipline" DisplayName="arclight discipline" Branch="foundry" Tier="4"
         Requires="node:lattice,node:pressure" MinTech="Arclight" Grants="node:arclight"
-        Effort="30" SeededBy="rite:Barathrumites" />
+        Effort="30" SeededBy="rite:Barathrumites"
+        Reveals="node:therolls" />
+
+  <!-- The chrome half of the body doctrine (Addendum 22 A1; END-STATE §2.3, §7.4). True Kin
+       is a matter of RECORD: this node is the city working out how to keep its own. A Templar
+       city never sees it - the visibility law at full strength, same as the vat. -->
+  <node Key="therolls" DisplayName="the rolls" Branch="foundry" Tier="4"
+        Requires="node:arclight" MinTech="Arclight" Grants="node:rolls" Effort="30"
+        SeededBy="rite:Mechanimists" Forbidden="creed:Templar" />
 
   <!-- ====================================================================== THE FLESH ==
     Bodies, medicine, and what a city may teach the people who live in it. The vat is the

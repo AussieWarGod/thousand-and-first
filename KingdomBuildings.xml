@@ -1041,6 +1041,21 @@
             Staff="6" Manning="scaled" Carries="craft:8,learning:3" Provides="taf:damp,taf:offal"
             Contents="r_KingdomFurnishings_Civic" />
 
+  <!-- The theatre's opposite number at the same tier (Addendum 22 A1; END-STATE §2, §4.2,
+       §7.4). Cost and Ticks are deliberately theatre-identical so neither body-megastructure
+       is the cheap one; what differs is the material (metal-dominant - chrome wants ruins
+       hauled home) and the gates. Carries order, not learning: a register is an instrument
+       of order. The rolls it keeps are enrolled: keys on the settlement container, so a city
+       that secedes walks out with its own book - which is the fiction's teeth. -->
+  <building Key="becomingannexe" DisplayName="the becoming annexe (a clean white room and a book nobody else may read)" Blueprint="r_KingdomBecomingAnnexe"
+            Cost="140" Ticks="16800" Styles="all" Category="craft" Plot="XL" MinStage="City"
+            Districts="craft" MinZones="4" MinTech="arclight" Knowledge="node:rolls"
+            Megastructure="yes" Footprint="20x14" Roof="Walled"
+            Materials="stone:64,shapedstone:24,marble:16,workedmetal:48,scrap:40" Bits="00346" Exotics="ingot:2,gem:1"
+            Staff="6" Manning="scaled" CrewNeeds="intelligence:18"
+            Carries="craft:8,order:3" Provides="taf:charge"
+            Contents="r_KingdomFurnishings_Civic" />
+
   <!-- =================================================================== THE MIRROR-GATE ==
     An EXOTIC in Addendum 20's sense: independently gated, free to build or to skip, a
     prerequisite of nothing. It is also the only design in the catalogue that gives time back.
