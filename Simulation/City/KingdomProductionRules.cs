@@ -156,6 +156,62 @@ namespace ThousandAndFirst.Simulation.City
 			return true;
 		}
 
+		// --- The third factor (RESEARCH-SYSTEM-DESIGN §8.2) ----------------------------------
+
+		/// <summary>
+		/// What method is worth to a realm that has researched nothing: exactly what it was worth
+		/// before the tree existed. <c>KingdomResearchRules.MethodPercent</c> returns this for an
+		/// empty roster, and the two agreeing is what the baseline-unchanged test holds.
+		/// </summary>
+		internal const int BaselineMethodPercent = 100;
+
+		/// <summary>
+		/// One percent-scaled production factor with the keepers' method folded into it.
+		/// <para>
+		/// RESEARCH-SYSTEM-DESIGN &sect;8.2: <i>output = base &times; crew &times; wear &times;
+		/// method</i>, and method is a THIRD factor, never folded into the first two. It is folded
+		/// into neither here either &mdash; the caller multiplies it into the one factor it owns and
+		/// leaves crew and condition alone, so <c>min(0, x) = 0</c> still means an unstaffed work
+		/// makes nothing however much the keepers know (Addendum 8 clause 2), and a broken building
+		/// is still broken.
+		/// </para>
+		/// <para>
+		/// <b>A bonus lane, never a tax.</b> Below the baseline the method percent is read AS the
+		/// baseline, so no roster and no research produce exactly today's number and no path
+		/// through here can make a realm that abstained produce less than one that never heard of
+		/// the tree. A non-positive quantity &mdash; the consuming lane, where a negative rate
+		/// drains a row &mdash; is returned untouched for the same reason: multiplying a draw by
+		/// the method factor would charge a city for what its keepers worked out.
+		/// </para>
+		/// <para>
+		/// A factor, never a timer (Addendum 8): what this scales is the RATE the crew works at,
+		/// and the days it works are counted by <see cref="TryDaysBetween"/> and by nothing here.
+		/// </para>
+		/// <para>
+		/// Total over every representable input: an <c>int</c> times an <c>int</c> cannot leave
+		/// <c>long</c>, and the one clamp is at the top of the <c>int</c> the caller carries.
+		/// </para>
+		/// </summary>
+		/// <param name="quantity">The factor the caller owns, as a percent. Non-positive is
+		/// returned unchanged.</param>
+		/// <param name="methodPercent">The realm's method, from
+		/// <c>KingdomResearch.MethodPercent</c>. Anything under
+		/// <see cref="BaselineMethodPercent"/> is read as the baseline.</param>
+		internal static int Methoded(int quantity, int methodPercent)
+		{
+			if (quantity <= 0)
+			{
+				return quantity;
+			}
+			int method = (methodPercent < BaselineMethodPercent) ? BaselineMethodPercent : methodPercent;
+			if (method == BaselineMethodPercent)
+			{
+				return quantity;
+			}
+			long scaled = (long)quantity * method / BaselineMethodPercent;
+			return (scaled > int.MaxValue) ? int.MaxValue : (int)scaled;
+		}
+
 		/// <summary>
 		/// The ground wins for what is physical; the outstanding claim survives it.
 		/// <para>

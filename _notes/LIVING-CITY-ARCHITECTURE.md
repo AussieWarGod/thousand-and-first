@@ -118,8 +118,10 @@ resident, and zone ids and design keys are shared references.
 | Job rows with itineraries (§3.7) | header 64 + ≤ 6 legs x (zone ref 8 + enter 4 + exit 4 + length 4 + depart 8 + arrive 8 = 36) = **280** | ≤ 16 open jobs, realm-wide | 4,480 B ≈ 4.4 KiB |
 | Distance matrix (§3.10) | `ushort` per entry = **2** | works→edges ≤ 540 + same-zone pairs ≤ 900 + zone all-pairs ≤ 81, **per city** | 2 x 1,521 ≈ 3.0 KiB per city, 6.0 KiB per realm |
 | Network graphs (§3.11) | node 16 + edge 16 + **traversal 2/node**; per network 32 x 16 + 48 x 16 + 32 x 2 + header **64** = **1,408** | ≤ 4 networks per city | 5,632 B ≈ 5.5 KiB per city, 11.0 KiB per realm |
-| **Per realm, all of it** | | | **55,300 B ≈ 54.0 KiB** — warn **56 KiB**, ceiling **64 KiB** |
-| *the same, at nine zones and caps scaled with them* | | | *92,660 B ≈ 90.5 KiB — over today's ceiling by design, still under a tenth of a megabyte* |
+| The keepers' state (research, Addendum 22 B1) | header = the seven named settlement fields, **measured off the type, budget 48** | per city | 48 B per city |
+| Research shelf | key 4 + accrued 8 = **12** | ≤ 8 per city (`KingdomResearchRules.ShelfRows`) | 96 B per city |
+| **Per realm, all of it** | | | **55,588 B ≈ 54.3 KiB** — warn **56 KiB**, ceiling **64 KiB** |
+| *the same, at nine zones and caps scaled with them* | | | *92,948 B ≈ 90.8 KiB — over today's ceiling by design, still under a tenth of a megabyte* |
 
 **Seven corrections and one ruling, from the four waves that had to evaluate this table.**
 W0 built the formula (`KingdomCityMemoryRules`), W1 wired it, and W7 built the network rows the

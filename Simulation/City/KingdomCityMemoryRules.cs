@@ -43,8 +43,10 @@ namespace ThousandAndFirst.Simulation.City
 		/// </summary>
 		internal const int ResidentRowStructBytes = 104;
 
-		/// <summary>One unique heap string per resident. The only heap string in the model:
-		/// zone ids and design keys are shared references. LIVING-CITY-ARCHITECTURE §0.0(c).</summary>
+		/// <summary>One unique heap string per resident. The only heap string in the MODEL: zone ids
+		/// and design keys are shared references. LIVING-CITY-ARCHITECTURE §0.0(c). (The knowledge
+		/// siting put a second composed string on the settlement container beside the model — see
+		/// <see cref="ResearchHeaderBytes"/>, which names it and does not yet price it.)</summary>
 		internal const int ResidentNameBytes = 64;
 
 		internal const int ResidentRowBytes = ResidentRowStructBytes + ResidentNameBytes;
@@ -141,6 +143,71 @@ namespace ThousandAndFirst.Simulation.City
 		/// </summary>
 		internal const int NetworkTraversalBytesPerNode = 2;
 
+		// ---- The keepers' own state, per city. -------------------------------------------------
+
+		/// <summary>
+		/// The seven fields the settlement container serializes for the keepers, by name.
+		/// <para>
+		/// The names are the contract, not the widths. <see cref="TryMeasureDeclaredFieldBytes"/>
+		/// sums what these fields actually declare on the settlement type, so
+		/// <see cref="ResearchHeaderBytes"/> is falsifiable the same way every row width above is:
+		/// add a <c>long</c> to the lane and the header exceeds the budget; rename or retire a
+		/// field and the measurement is REFUSED rather than quietly answering for six fields.
+		/// A lane the receipt cannot see is a lane with no owner, and a lane the receipt sees
+		/// through a restated constant is the same lane wearing a number.
+		/// </para>
+		/// <para>
+		/// Held as names rather than as a type reference because the settlement type is not
+		/// engine-free &mdash; the same reason <see cref="CitiesPerRealm"/> is a copy. The caller
+		/// that owns the type hands it in.
+		/// </para>
+		/// </summary>
+		internal static readonly string[] ResearchFields = new string[7]
+		{
+			"KeepersRoster",
+			"ResearchSubject",
+			"ResearchAccrued",
+			"ResearchTakenUpTick",
+			"ResearchStalledAnnounced",
+			"ResearchShelf",
+			"ResearchBestMind"
+		};
+
+		/// <summary>
+		/// The keepers' header, per city: roster ref 8 + subject ref 8 + accrued 4 + taken-up tick
+		/// 8 + stalled flag 1 + shelf ref 8 + best mind 4 = 41 declared, against the 48 the table
+		/// budgets it &mdash; the padding headroom every row above carries, and room for one more
+		/// reference before the table has to take an edit. LIVING-CITY-ARCHITECTURE &sect;0.0(c),
+		/// as the research wave widened it.
+		/// <para>
+		/// <b>Reference slots, not the strings behind them</b> &mdash; which is what a "field" has
+		/// meant in this table since &sect;0.0(c)'s first row ("id ref 8 … design ref 8"). The one
+		/// exception the table has ever made is <see cref="ResidentNameBytes"/>, and the composed
+		/// keepers' roster is now a second per-city heap string of the same kind.
+		/// </para>
+		/// <para>
+		/// <b>OPEN, and named rather than quietly omitted:</b> the roster STRING is not priced
+		/// here. The authored tree's own grants compose to about six hundred bytes, and disks,
+		/// machines and patterns add to it without a cap; any width chosen for it moves the realm
+		/// total across or under &sect;0.0's 56 KiB advisory rung, which is a ruling about the
+		/// budget rather than an edit to a row. Until it is ruled the receipt answers for the
+		/// slot and says so, because a lane the receipt cannot see is a lane with no owner and a
+		/// lane it half-sees should at least say which half.
+		/// </para>
+		/// </summary>
+		internal const int ResearchHeaderBytes = 48;
+
+		/// <summary>One shelved subject: the node key as a shared reference 8 + the labour still
+		/// standing on it 4. The key is shared with the loaded tree, exactly as zone ids and design
+		/// keys are shared, so the shelf costs no characters of its own.
+		/// LIVING-CITY-ARCHITECTURE &sect;0.0(c).</summary>
+		internal const int ResearchShelfRowBytes = 12;
+
+		/// <summary>The shelf's cap, from the rule that enforces it. Referenced rather than copied
+		/// because <c>KingdomResearchRules</c> is itself engine-free, so this one cannot drift the
+		/// way <see cref="CitiesPerRealm"/> could.</summary>
+		internal const int ResearchShelfRows = KingdomResearchRules.ShelfRows;
+
 		/// <summary>The nine-zone reading of LIVING-CITY-ARCHITECTURE §0.0(f): one whole parasang,
 		/// caps scaled with it. Named so the formula can be evaluated at a size the rules do not
 		/// permit today, which is the only way to show that nothing here scales with the city.</summary>
@@ -231,8 +298,28 @@ namespace ThousandAndFirst.Simulation.City
 		}
 
 		/// <summary>
+		/// What the keepers cost, per city: the header's seven fields plus the shelf at its cap.
+		/// <para>
+		/// Its own line rather than a term folded into <see cref="TryCityModelBytes"/>, because the
+		/// state is not in the city's book &mdash; it sits on the settlement container, which is
+		/// where Addendum 22 B1 sited it so that secession, rejoin and exile move the rolls by
+		/// moving the container. Same shape as <see cref="TryNetworkBytes"/> beside it.
+		/// </para>
+		/// </summary>
+		internal static bool TryResearchBytes(int cities, out long bytes)
+		{
+			bytes = 0L;
+			if (cities < 0)
+			{
+				return false;
+			}
+			bytes = (long)cities * (ResearchHeaderBytes + (long)ResearchShelfRows * ResearchShelfRowBytes);
+			return true;
+		}
+
+		/// <summary>
 		/// Everything &sect;0.0's "Model in RAM" row is answerable for: model + registry +
-		/// itineraries + distance matrix + network graphs, per realm.
+		/// itineraries + distance matrix + network graphs + the keepers, per realm.
 		/// </summary>
 		internal static bool TryRealmBytes(
 			int cities,
@@ -249,16 +336,18 @@ namespace ThousandAndFirst.Simulation.City
 			long jobs;
 			long distance;
 			long networks;
+			long research;
 			if (cities < 0
 				|| !TryCityModelBytes(zonesPerCity, worksPerCity, residentsPerCity, clocksPerCity, out city)
 				|| !TryRegistryBytes(residentsPerCity, cities, openJobs, out registry)
 				|| !TryJobBytes(openJobs, out jobs)
 				|| !TryDistanceMatrixBytes(cities, out distance)
-				|| !TryNetworkBytes(cities, out networks))
+				|| !TryNetworkBytes(cities, out networks)
+				|| !TryResearchBytes(cities, out research))
 			{
 				return false;
 			}
-			bytes = (long)cities * city + registry + jobs + distance + networks;
+			bytes = (long)cities * city + registry + jobs + distance + networks + research;
 			return true;
 		}
 
@@ -308,6 +397,45 @@ namespace ThousandAndFirst.Simulation.City
 				return false;
 			}
 			return TryMeasure(rowType, 0, out bytes);
+		}
+
+		/// <summary>
+		/// What a NAMED set of fields on a type declares, summed the same way
+		/// <see cref="TryMeasureDeclaredRowBytes"/> sums a whole row.
+		/// <para>
+		/// For a lane whose state hangs off a type this table does not own the whole of &mdash; the
+		/// keepers' seven fields on the settlement container, which also carries everything else a
+		/// settlement is. Measuring the whole type would price the wrong thing; restating the
+		/// widths as constants would price nothing at all, because a restated constant goes on
+		/// agreeing with itself after the field it stood for is gone.
+		/// </para>
+		/// <para>
+		/// A name this type does not declare is a REFUSAL, not a zero: the whole value of the row
+		/// is that it stops agreeing when the lane moves.
+		/// </para>
+		/// </summary>
+		internal static bool TryMeasureDeclaredFieldBytes(Type type, string[] fieldNames, out int bytes)
+		{
+			bytes = 0;
+			if (type == null || fieldNames == null)
+			{
+				return false;
+			}
+			int total = 0;
+			for (int i = 0; i < fieldNames.Length; i++)
+			{
+				FieldInfo field = (fieldNames[i] == null)
+					? null
+					: type.GetField(fieldNames[i], BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+				int fieldBytes;
+				if (field == null || !TryMeasure(field.FieldType, 0, out fieldBytes))
+				{
+					return false;
+				}
+				total += fieldBytes;
+			}
+			bytes = total;
+			return true;
 		}
 
 		private static bool TryMeasure(Type type, int depth, out int bytes)

@@ -4,6 +4,7 @@ using XRL;
 using XRL.Messages;
 using XRL.World;
 using ThousandAndFirst;
+using ThousandAndFirst.Simulation.City;
 
 // The engine resolves an XML <part Name="X"/> as the single type "XRL.World.Parts.X":
 // GamePartBlueprint.Namespace defaults to that string (GamePartBlueprint.cs:178) and
@@ -1639,9 +1640,15 @@ namespace ThousandAndFirst
 			// The yards first and unconditionally: they are staffed works, and the staffing pass
 			// spent their crews before this ran. Refining takes no hand the clearing gang was ever
 			// going to have, so it neither waits on a strike order nor competes with one.
+			//
+			// The keepers' method is realm-wide (RESEARCH-SYSTEM-DESIGN 8.2 -- the keepers write to
+			// each other), so it is read ONCE for the whole ground rather than per bench: every
+			// yard in this zone works to the same method, and asking the roster once a yard would
+			// walk the tree once a yard for one answer.
+			int method = KingdomResearch.MethodPercent(System);
 			for (int i = 0; i < yards.Count; i++)
 			{
-				WorkYard(System, Z, yards[i], KingdomMaterialRules.AverageStat(strength), KingdomMaterialRules.AverageStat(intelligence), timeTicks);
+				WorkYard(System, Z, yards[i], KingdomMaterialRules.AverageStat(strength), KingdomMaterialRules.AverageStat(intelligence), method, timeTicks);
 			}
 			if (strike != null)
 			{
@@ -1694,7 +1701,10 @@ namespace ThousandAndFirst
 		/// reports a COUNT and never says which bench it was.
 		/// </para>
 		/// </summary>
-		private static void WorkYard(KingdomSystem System, Zone Z, GameObject Yard, int Strength, int Intelligence, long TimeTicks)
+		/// <param name="MethodPercent">What this realm's keepers have worked out, as a percent to
+		/// multiply the bench's output by (<c>KingdomResearch.MethodPercent</c>). A hundred is a
+		/// realm that has researched nothing, and a hundred changes nothing.</param>
+		private static void WorkYard(KingdomSystem System, Zone Z, GameObject Yard, int Strength, int Intelligence, int MethodPercent, long TimeTicks)
 		{
 			if (!TryRefineryOf(Yard.GetStringProperty(KingdomUpgrade.BuildKeyProperty), out var kind))
 			{
@@ -1748,7 +1758,15 @@ namespace ThousandAndFirst
 			Yard.SetIntProperty(RefineUnstaffedProperty, 0);
 			Yard.SetIntProperty(RefineIdleProperty, 0);
 			int capability = KingdomMaterialRules.CrewCapability(kind, Strength, Intelligence);
-			int made = KingdomMaterialRules.RefinedThisPass(crew, days, capability, refinable);
+			// RESEARCH-SYSTEM-DESIGN 8.2, the third factor: crew, then condition, then METHOD.
+			// It rides the capability percent into the effort because that is the one percent this
+			// bench's arithmetic already carries, and it is NOT folded into crew -- crew is what
+			// makes an unstaffed yard make nothing, and zero times anything is still zero, so no
+			// amount of knowledge can staff a bench nobody is standing at (Addendum 8 clause 2).
+			// The raw capability is what the founder is TOLD about below: the word describes who
+			// is holding the tool, and the keepers' method is not a thing about that crew.
+			int methoded = KingdomProductionRules.Methoded(capability, MethodPercent);
+			int made = KingdomMaterialRules.RefinedThisPass(crew, days, methoded, refinable);
 			if (made <= 0)
 			{
 				return;
@@ -1797,7 +1815,7 @@ namespace ThousandAndFirst
 					+ " was set down on the ground for want of a stockpile to hold it.}}");
 			}
 			KingdomLog.Log("materials: " + KingdomMaterialRules.YardKey(kind) + " made=" + made + " from=" + KingdomMaterialRules.MaterialKey(raw)
-				+ " crew=" + crew + " days=" + days + " capability=" + capability + " spilled=" + spilled);
+				+ " crew=" + crew + " days=" + days + " capability=" + capability + " method=" + MethodPercent + " spilled=" + spilled);
 		}
 
 		/// <summary>One settler's stat, or <c>KingdomMaterialRules.BaselineStat</c> when the engine

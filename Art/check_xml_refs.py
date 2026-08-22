@@ -21,6 +21,15 @@ references the game resolves by name at load or roll time, where a wrong name is
                         by name, so the building rises with no crew, no shared water and no
                         record of who was there -- the one C# seam of exactly this shape, and
                         the one this file's own audit found unjoined for 53 of 57 designs
+  research teacher      a TaughtBy/SeededBy/Requires token naming a disk nobody can carry or a
+                        machine nobody can haul home, so the node has a source that can never
+                        fire and reads, to its author, as a road into the tree
+  research grant        two <node> elements minting the same `node:` key, so one of them is a
+                        completion nothing notices, because the gate it was written for was
+                        already open
+  knowledge gate        a Knowledge="node:..." on a <building> naming a key no <node> grants,
+                        which is a design gated on research that does not exist -- refused for
+                        ever, and refused for a reason the founder is never given
 
 The population case is the one that motivated this. `DynamicObjectsTable:Books` looked like a
 vanilla table to merge into. It is not declared anywhere; it is *fabricated* on demand from
@@ -610,6 +619,254 @@ def crop_chain_problems(vanilla):
     return problems
 
 
+# --------------------------------------------------------------------------------------
+# The tree: a node's sources, its grants, and the gates written against them.
+# --------------------------------------------------------------------------------------
+
+RESEARCH_XML = "KingdomResearch.xml"
+
+# The three attributes a roster token may legally appear in on a <node>. Forbidden is deliberately
+# not among them: a token that makes a node invisible does not have to name anything that exists,
+# because refusing on a creed nobody in Qud holds is a refusal, not a dangling reference.
+SOURCE_ATTRIBUTES = ("Requires", "TaughtBy", "SeededBy")
+
+
+def research_nodes():
+    """Every <node> in the tree, folded the way the registry folds it.
+
+    A later element with the same Key REPLACES the earlier one whole -- KingdomResearch.cs:166-178
+    assigns over the row rather than updating it, which is NOT how <building> merges. So the last
+    declaration is the node, and checking the first would check a node the game never builds.
+    """
+    order, bykey = [], {}
+    if not os.path.isfile(RESEARCH_XML):
+        return order, bykey
+    for node in ET.parse(RESEARCH_XML).getroot().iter("node"):
+        key = (node.get("Key") or "").strip().lower()
+        if not key:
+            continue
+        if key not in bykey:
+            order.append(key)
+        bykey[key] = dict(node.attrib)
+    return order, bykey
+
+
+def roster_tokens(raw):
+    """One roster list, split the way the mod splits it.
+
+    Commas separate requirements (KingdomZoningRules.Tokens) and a `|` inside one requirement
+    separates arms that are alternatives (KingdomResearchRules.Validate:788, AnyRoadVisible:578).
+    Every arm names something on its own, so every arm is checked on its own. Folded to lower
+    case because KingdomZoningRules.Fold does, and the roster is matched folded.
+    """
+    tokens = []
+    for token in (raw or "").split(","):
+        for arm in token.split("|"):
+            arm = arm.strip().lower()
+            if arm:
+                tokens.append(arm)
+    return tokens
+
+
+def split_key(token):
+    """A roster key as (kind, name). An unqualified token has no kind, exactly as
+    KingdomZoningRules.KindOf reports it."""
+    kind, sep, name = token.partition(":")
+    if not sep:
+        return None, kind.strip()
+    return kind.strip(), name.strip()
+
+
+# Read with regexes and not with ElementTree, for the same reason vanilla_blueprints above does:
+# the shipped blueprint corpus carries character references a conforming XML parser refuses
+# (ObjectBlueprints/Creatures.xml:3291 among them), and a reference checker that cannot read the
+# game's own files checks nothing. The patterns allow a '>' inside a quoted value, because
+# descriptions contain them and a tag cut short there would drop the attributes after it.
+_TAG_ATTRS = r'((?:[^>"]|"[^"]*")*)'
+_OBJECT_OPEN = re.compile(r"<object\s+" + _TAG_ATTRS + r"(/?)>", re.S)
+_PART_TAG = re.compile(r"<part\s+" + _TAG_ATTRS + r"/?>", re.S)
+_ATTRIBUTE = re.compile(r'([\w:.-]+)\s*=\s*"([^"]*)"')
+
+
+def _attributes(raw):
+    return dict(_ATTRIBUTE.findall(raw))
+
+
+def blueprint_corpus(base):
+    """Every blueprint the game will hold, ours and vanilla's, with the parts each declares.
+
+    Built once. The checks below walk Inherits, and re-reading three megabytes of vanilla per
+    token would turn a reference check into a build step.
+    """
+    corpus = {}
+    paths = ["ObjectBlueprints.xml"]
+    folder = os.path.join(base, "ObjectBlueprints") if base else None
+    if folder and os.path.isdir(folder):
+        paths.extend(
+            os.path.join(folder, name)
+            for name in sorted(os.listdir(folder))
+            if name.endswith(".xml")
+        )
+    for path in paths:
+        if not os.path.isfile(path):
+            continue
+        text = read(path)
+        opens = list(_OBJECT_OPEN.finditer(text))
+        for index, match in enumerate(opens):
+            attrs = _attributes(match.group(1))
+            name = attrs.get("Name")
+            if not name:
+                continue
+            entry = corpus.setdefault(name, {"inherits": None, "parts": {}})
+            if attrs.get("Inherits"):
+                entry["inherits"] = attrs["Inherits"]
+            if match.group(2) == "/":
+                continue
+            # Objects do not nest, so one object's body runs to the next object's opening tag.
+            stop = opens[index + 1].start() if index + 1 < len(opens) else len(text)
+            for part in _PART_TAG.finditer(text, match.end(), stop):
+                part_attrs = _attributes(part.group(1))
+                part_name = part_attrs.get("Name")
+                if part_name:
+                    entry["parts"].setdefault(part_name, {}).update(part_attrs)
+    return corpus
+
+
+def resolved_part(corpus, name, part_name):
+    """A part's parameters as the engine resolves them: an ancestor declares the part, and every
+    descendant overrides the parameters it names. None when nothing in the chain declares it."""
+    chain, seen, walk = [], set(), name
+    while walk and walk in corpus and walk not in seen:
+        seen.add(walk)
+        chain.append(walk)
+        walk = corpus[walk]["inherits"]
+    params = {}
+    for step in reversed(chain):
+        params.update(corpus[step]["parts"].get(part_name, {}))
+    return params or None
+
+
+def buildable_blueprints(corpus):
+    """The names a data disk can teach the keepers under.
+
+    A Build recipe is a blueprint whose resolved TinkerItem says CanBuild="true" and names no
+    SubstituteBlueprint (D/XRL/World/Parts/TinkerItem.cs:205-236), and the string it teaches under
+    is the blueprint's own Name -- KingdomZoning.DiskName returns TinkerData.Blueprint for
+    everything that is not a modification, and TinkerData.Blueprint is Blueprint.Name.
+    """
+    names = set()
+    for name in corpus:
+        part = resolved_part(corpus, name, "TinkerItem")
+        if not part:
+            continue
+        if (part.get("CanBuild") or "").strip().lower() != "true":
+            continue
+        if (part.get("SubstituteBlueprint") or "").strip():
+            continue
+        names.add(name.strip().lower())
+    return names
+
+
+def moddable_display_names(base):
+    """The other half of what a disk can teach: a modification's TinkerDisplayName, which is what
+    KingdomZoning.DiskName returns for a Type="Mod" recipe. TinkerAllowed defaults to true
+    (D/XRL/World/Tinkering/TinkerData.cs:209-223)."""
+    if not base:
+        return set()
+    path = os.path.join(base, "Mods.xml")
+    if not os.path.isfile(path):
+        return set()
+    names = set()
+    for mod in ET.parse(path).getroot().iter("mod"):
+        if (mod.get("TinkerAllowed") or "true").strip().lower() != "true":
+            continue
+        shown = mod.get("TinkerDisplayName")
+        if shown:
+            names.add(shown.strip().lower())
+    return names
+
+
+def research_reference_problems(base):
+    """The tree walked in both directions.
+
+    Silent in exactly the way STANDARDS section 4 describes. A node taught by a disk that does not
+    exist still loads, still shows, and simply never fires -- the founder carries every disk in
+    Qud home and the keepers never once say "we have seen this before". A building gated on a key
+    no node grants is refused for ever, and the refusal names a thing that cannot be got.
+
+    What is NOT checked here: a `node:` token in Requires or Reveals naming a node nothing grants.
+    KingdomResearchRules.Validate already walks that at load and says it in the log, and a second
+    copy of the same rule is a second thing to keep true.
+    """
+    order, bykey = research_nodes()
+    if not bykey:
+        return []
+    problems = []
+
+    # 1. Two nodes minting the same key. The second completion mints a key the first already
+    #    minted, so it opens nothing and nothing anywhere reports a node that did no work.
+    granted = {}
+    for key in order:
+        attrs = bykey[key]
+        for token in roster_tokens(attrs.get("Grants") or ("node:" + key)):
+            kind, name = split_key(token)
+            if kind != "node" or not name:
+                continue
+            if name in granted and granted[name] != key:
+                problems.append(
+                    "node %s grants node:%s, which node %s already grants; the second completion "
+                    "mints a key that is already minted and opens nothing"
+                    % (key, name, granted[name])
+                )
+                continue
+            granted[name] = key
+
+    # 2. Every teacher resolves. Only with --base: a machine or a disk naming one of OUR blueprints
+    #    resolves without vanilla, but the tree's teachers are vanilla's and refusing to answer is
+    #    better than answering wrongly.
+    if base:
+        corpus = blueprint_corpus(base)
+        blueprints = set(name.strip().lower() for name in corpus)
+        buildable = buildable_blueprints(corpus)
+        mods = moddable_display_names(base)
+        for key in order:
+            for attribute in SOURCE_ATTRIBUTES:
+                for token in roster_tokens(bykey[key].get(attribute)):
+                    kind, name = split_key(token)
+                    # A wildcard names no one thing, so there is nothing to resolve it against.
+                    if not name or "*" in name:
+                        continue
+                    if kind == "machine" and name not in blueprints:
+                        problems.append(
+                            "node %s %s machine:%s in %s, which is no blueprint the game declares, "
+                            "so no machine anyone hauls home can ever certify it"
+                            % (key, attribute, name, RESEARCH_XML)
+                        )
+                    elif kind == "disk" and name not in buildable and name not in mods:
+                        problems.append(
+                            "node %s %s disk:%s in %s, which is neither a blueprint carrying "
+                            "TinkerItem CanBuild=true nor a modification's TinkerDisplayName, so "
+                            "no data disk in Qud teaches under that name"
+                            % (key, attribute, name, RESEARCH_XML)
+                        )
+
+    # 3. The other direction: a catalogue gate written against a node key nothing mints. Read off
+    #    the MERGED catalogue, because a Knowledge attribute can be added by a later file.
+    building_order, merged = merged_buildings()
+    for key in building_order:
+        for token in roster_tokens(merged[key]["attrs"].get("Knowledge")):
+            kind, name = split_key(token)
+            if kind != "node" or not name or "*" in name:
+                continue
+            if name not in granted:
+                problems.append(
+                    "building %s is gated on node:%s in KingdomBuildings.xml, which no <node> in "
+                    "%s grants, so the design is refused for ever and the refusal names a thing "
+                    "nobody can get" % (key, name, RESEARCH_XML)
+                )
+    return problems
+
+
 def _blueprint_index(tree):
     index = {}
     for obj in tree.getroot().iter("object"):
@@ -731,6 +988,10 @@ def main():
             )
         for orphan in sorted(book_ids - pointed):
             problems.append("book %s is defined but no blueprint points at it" % orphan)
+
+    # 7. The research tree: teachers that resolve, grants that are minted once, and catalogue
+    #    gates written against keys the tree actually mints. Both directions, as above.
+    problems.extend(research_reference_problems(base))
 
     if problems:
         print("XML REFERENCES FAILED")

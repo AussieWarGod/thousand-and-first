@@ -39,6 +39,8 @@ namespace ThousandAndFirst.Tests
 		[TestCase(32, KingdomCityMemoryRules.BindingRowBytes)]
 		[TestCase(36, KingdomCityMemoryRules.LegBytes)]
 		[TestCase(280, KingdomCityMemoryRules.JobRowBytes)]
+		[TestCase(48, KingdomCityMemoryRules.ResearchHeaderBytes)]
+		[TestCase(12, KingdomCityMemoryRules.ResearchShelfRowBytes)]
 		public void TheTablesWidthsAreWhatTheConstitutionWroteDown(int expected, int actual)
 		{
 			Assert.AreEqual(expected, actual);
@@ -121,6 +123,53 @@ namespace ThousandAndFirst.Tests
 			Assert.AreEqual(48, bytes);
 		}
 
+		/// <summary>
+		/// The keepers' header is the fields the settlement actually serializes, not a number that
+		/// says so. Seven named fields — roster ref 8 + subject ref 8 + accrued 4 + taken-up tick 8
+		/// + stalled flag 1 + shelf ref 8 + best mind 4 — measured off the settlement type through
+		/// the same declared-width sizer every row above uses. Add a <c>long</c> to the lane and
+		/// this passes forty-eight and something has to give: the field, or the table.
+		/// </summary>
+		[Test]
+		public void TheKeepersHeaderIsTheFieldsTheSettlementActuallySerialises()
+		{
+			int bytes;
+			Assert.IsTrue(
+				KingdomCityMemoryRules.TryMeasureDeclaredFieldBytes(typeof(KingdomSettlement), KingdomCityMemoryRules.ResearchFields, out bytes),
+				"a field the receipt names is no longer on the settlement, so the lane moved and nothing said so");
+			Assert.AreEqual(7, KingdomCityMemoryRules.ResearchFields.Length);
+			Assert.AreEqual(41, bytes, "the keepers' fields moved; if they grew past 48, §0.0(c) needs the same edit");
+			Assert.LessOrEqual(bytes, KingdomCityMemoryRules.ResearchHeaderBytes);
+		}
+
+		/// <summary>A name the type does not declare is refused rather than counted as nothing —
+		/// which is the only reason measuring by name is worth more than restating the width.</summary>
+		[Test]
+		public void AFieldTheTypeNoLongerDeclaresIsRefusedRatherThanCountedAsZero()
+		{
+			int bytes;
+			Assert.IsFalse(KingdomCityMemoryRules.TryMeasureDeclaredFieldBytes(
+				typeof(KingdomSettlement), new string[1] { "ResearchFieldThatWasRenamed" }, out bytes));
+			Assert.AreEqual(0, bytes);
+			Assert.IsFalse(KingdomCityMemoryRules.TryMeasureDeclaredFieldBytes(typeof(KingdomSettlement), null, out bytes));
+			Assert.IsFalse(KingdomCityMemoryRules.TryMeasureDeclaredFieldBytes(null, KingdomCityMemoryRules.ResearchFields, out bytes));
+		}
+
+		/// <summary>The shelf's row count is the rule's own, not a copy of it: a ninth shelving
+		/// drops a row rather than widening the receipt behind its back.</summary>
+		[Test]
+		public void TheShelfIsPricedAtTheCapTheRuleEnforces()
+		{
+			Assert.AreEqual(KingdomResearchRules.ShelfRows, KingdomCityMemoryRules.ResearchShelfRows);
+			long bytes;
+			Assert.IsTrue(KingdomCityMemoryRules.TryResearchBytes(1, out bytes));
+			Assert.AreEqual(
+				KingdomCityMemoryRules.ResearchHeaderBytes + (long)KingdomResearchRules.ShelfRows * KingdomCityMemoryRules.ResearchShelfRowBytes,
+				bytes);
+			Assert.IsFalse(KingdomCityMemoryRules.TryResearchBytes(-1, out bytes));
+			Assert.AreEqual(0L, bytes);
+		}
+
 		private static void AssertRowFits(Type row, int budget)
 		{
 			int bytes;
@@ -165,6 +214,13 @@ namespace ThousandAndFirst.Tests
 			// realm total moves 768 bytes and stays under the advisory rung; the ceiling has not
 			// moved and is what a regression is measured against.
 			Assert.AreEqual(5632L, networks, "network graphs, per city");
+
+			long research;
+			Assert.IsTrue(KingdomCityMemoryRules.TryResearchBytes(1, out research));
+			// The keepers, per city: the seven-field header at 48 plus eight shelf rows at 12.
+			// Its own line because the state hangs off the settlement container and not off the
+			// city's book -- Addendum 22 B1's siting, priced where it actually lives.
+			Assert.AreEqual(144L, research, "the keepers' state, per city");
 		}
 
 		/// <summary>
@@ -176,7 +232,10 @@ namespace ThousandAndFirst.Tests
 		{
 			long bytes;
 			Assert.IsTrue(KingdomCityMemoryRules.TryRealmBytesAtTodaysCaps(out bytes));
-			Assert.AreEqual(55300L, bytes, "the composed realm total moved");
+			// 55,300 + 288: the research wave put the keepers' seven fields and their eight-row
+			// shelf on each of the realm's two settlement containers, and a lane the receipt
+			// cannot see is a lane with no owner.
+			Assert.AreEqual(55588L, bytes, "the composed realm total moved");
 			Assert.Less(bytes, KingdomBudgetRules.ModelBytesCeiling, "the realm broke the 64 KiB ceiling");
 			// W0 recorded this rather than asserting it away: the composed total (52.3 KiB) sat
 			// ABOVE §0.0's own 48 KiB warn rung, so the design shipped permanently inside its own
@@ -201,7 +260,7 @@ namespace ThousandAndFirst.Tests
 		{
 			long bytes;
 			Assert.IsTrue(KingdomCityMemoryRules.TryRealmBytesAtFullParasang(out bytes));
-			Assert.AreEqual(92660L, bytes);
+			Assert.AreEqual(92948L, bytes);
 			Assert.Greater(bytes, KingdomBudgetRules.ModelBytesCeiling, "a nine-zone realm is over TODAY's ceiling by design");
 			Assert.Less(bytes, 100L * KiB, "still under a tenth of a megabyte");
 		}

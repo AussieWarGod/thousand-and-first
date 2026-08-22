@@ -300,6 +300,94 @@ namespace ThousandAndFirst.Tests
 			Assert.AreEqual(500L, a.Stocks.Water.Level + b.Stocks.Water.Level);
 			Assert.AreEqual(300, a.OwedWater + b.OwedWater);
 		}
+
+		// ---- The third factor (RESEARCH-SYSTEM-DESIGN §8.2) ------------------------------------
+
+		/// <summary>
+		/// <b>The regression bar.</b> A realm that has researched nothing produces exactly what it
+		/// produced before the tree existed. The baseline is not a number this test chose: it is
+		/// what <c>KingdomResearchRules.MethodPercent</c> answers for an empty roster, and the two
+		/// agreeing is the whole claim.
+		/// </summary>
+		[TestCase(1)]
+		[TestCase(37)]
+		[TestCase(100)]
+		[TestCase(250)]
+		[TestCase(int.MaxValue)]
+		public void ARealmThatResearchedNothingProducesExactlyWhatItAlwaysDid(int quantity)
+		{
+			Assert.AreEqual(KingdomProductionRules.BaselineMethodPercent, KingdomResearchRules.MethodPercent(0),
+				"the baseline moved out from under the production seam");
+			Assert.AreEqual(quantity, KingdomProductionRules.Methoded(quantity, KingdomResearchRules.MethodPercent(0)));
+		}
+
+		/// <summary>
+		/// Knowledge is not a tax, and this is the clause that makes that unrepresentable rather
+		/// than promised: every method percent BELOW the baseline &mdash; a mod's negative grant, a
+		/// zero from a lane that has not read the roster yet, a hostile value &mdash; is read as the
+		/// baseline, so there is no input at all for which a researching realm makes less than one
+		/// that never heard of the tree.
+		/// </summary>
+		[TestCase(int.MinValue)]
+		[TestCase(-150)]
+		[TestCase(0)]
+		[TestCase(1)]
+		[TestCase(99)]
+		public void NoMethodPercentAnywhereCanLowerWhatABenchMakes(int method)
+		{
+			Assert.AreEqual(100, KingdomProductionRules.Methoded(100, method));
+		}
+
+		/// <summary>The documented bonus: a realm holding the tree's efficiency grants works at
+		/// what §8.2 says it works at, and the lane's cap is the lane's, not the sum of the
+		/// grants'.</summary>
+		[TestCase(0, 100, 100)]
+		[TestCase(5, 100, 105)]
+		[TestCase(20, 100, 120)]
+		[TestCase(50, 100, 150)]
+		[TestCase(500, 100, 150)]
+		[TestCase(20, 60, 72)]
+		public void AHeldMethodNodeIsWorthWhatTheDesignSaysItIs(int sumEfficiency, int capability, int expected)
+		{
+			Assert.AreEqual(expected, KingdomProductionRules.Methoded(capability, KingdomResearchRules.MethodPercent(sumEfficiency)));
+		}
+
+		/// <summary>
+		/// Method never staffs a bench and never mends a building. Zero in is zero out, because
+		/// §8.2's shape is a product and <c>min(0, x) = 0</c> &mdash; and a consuming lane, where
+		/// the quantity is negative, is returned untouched rather than scaled, because charging a
+		/// city more for what its keepers worked out is the same defect wearing the other hat.
+		/// </summary>
+		[TestCase(0, 0)]
+		[TestCase(-1, -1)]
+		[TestCase(-400, -400)]
+		[TestCase(int.MinValue, int.MinValue)]
+		public void MethodNeverStaffsABenchAndNeverChargesForKnowing(int quantity, int expected)
+		{
+			Assert.AreEqual(expected, KingdomProductionRules.Methoded(quantity, KingdomResearchRules.MaxMethodPercent));
+		}
+
+		/// <summary>Total over representable input: the top of the int the caller carries is a
+		/// clamp, never a wrap into a negative output.</summary>
+		[Test]
+		public void TheFactorClampsAtTheIntTheCallerCarriesRatherThanWrapping()
+		{
+			Assert.AreEqual(int.MaxValue, KingdomProductionRules.Methoded(int.MaxValue, KingdomResearchRules.MaxMethodPercent));
+			Assert.AreEqual(int.MaxValue, KingdomProductionRules.Methoded(int.MaxValue - 1, KingdomResearchRules.MaxMethodPercent));
+		}
+
+		/// <summary>Determinism: the same two numbers answer the same way every time, and the
+		/// factor reads nothing but the two numbers.</summary>
+		[Test]
+		public void TheSameFactorAndTheSameMethodAlwaysAgree()
+		{
+			for (int method = 100; method <= KingdomResearchRules.MaxMethodPercent; method++)
+			{
+				int first = KingdomProductionRules.Methoded(97, method);
+				Assert.AreEqual(first, KingdomProductionRules.Methoded(97, method), "method " + method);
+				Assert.GreaterOrEqual(first, 97, "method " + method + " lowered the bench");
+			}
+		}
 	}
 }
 #endif
