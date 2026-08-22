@@ -22,33 +22,39 @@
 
 ## Open on the author
 
-1. **Q6 final ruling** — end-state megastructures. Research recommends **Design B** (flesh-city
-   / chrome-city / arcology-capital, one purposeful megastructure per city, capital gets
-   extras — the author's own capital ruling) with the mirror-gate as hard prerequisite (the
-   Anno-vs-Fallout4 commute variable) and cross-megastructure dependency against the
-   Songs-of-Syx saturation ceiling. Capital designation: the crown is a BUILDING, movable at
-   real cost (never name it `Seat` — taken, KingdomSystem.cs:674). Chrome annexe fiction
-   ranked: F1 the registry (IsTrueKinEvent — True Kin is a matter of record) + F2 the
-   unspendable wedge, staffed by F3 the psyberneticist, F4 Mechanimist debt as friction.
-2. **Research-design's three questions**: per-realm vs per-city research (hold against Q6's
-   kingdom shape); how hard the Int ladder bites (are wild savants load-bearing or flavour);
-   may `schooling` raise the Int cap (+1 proposed).
-3. **Q8 deferred**: the four named lab procedures await author review (DIVERSITY §3.7).
-4. **THE PLAYTEST** — TESTING.md is ~36+ passes; none ever run by the author. The receipts
-   (`[TAF] perf`) are readable in-game.
-5. Housekeeping: the author's own Creature Control mod shipped a TEMP-DIAG logging block in
+1. **THE PLAYTEST** — TESTING.md is ~36+ passes; none ever run by the author. The receipts
+   (`[TAF] perf`) are readable in-game. Now doubly urgent: Addendum 22 A1 confirms Design B
+   "for trial with players" — the trial needs a playable build the author has actually seen.
+2. **D2 additions** — the safe-part-class wishlist audit is dispatched; the author adds
+   wanted classes to it after delivery ("i can add later based on player feedback").
+3. Housekeeping: the author's own Creature Control mod shipped a TEMP-DIAG logging block in
    its 17 Aug Steam update.
 
-## Queued waves (prerequisites noted, no order among exotics — Addendum 20)
+**Everything else RULED 2026-08-22 — Addendum 22 (the great confirmation): all 26 board
+questions confirmed to recommendation.** Q6 CLOSED (Design B + capital-as-hub + no
+capital stacking + crown-is-a-building). Knowledge siting ruled (registry model, all eight).
+Kingdom Mode ruled (all thirteen incl. C13 seat-cost default, delegated to orchestrator and
+set ON). Lab blocklist sustained; four named procedures confirmed. Int ladder load-bearing
+at top tier; schooling +1 cap. Riders minted work items — see Addendum 22 tail.
 
-Research-system build (behind Q-answers above); strata/WR-3 wave (Addendum 15 —
-deep/arcology sets, `Strata` home+share-tags, `Sited="gate"`); deep delve; mirror-gate
-(free-standing, now also Design B's prerequisite); the lab (behind Q6 + Q8); becoming annexe
-(behind Q6); capital/crown wave; roster wave (N cities — 12(j)); heart rungs 5+ + relocation
-verb (behind strata); feel-lane remainders (companions, market, tinker services, trophies);
+## Queued waves (updated after Addendum 22 — most gates now open)
+
+**Unblocked, proposed order**: mirror-gate FIRST (free-standing + Design B's hard
+prerequisite — the commute must exist before purposeful cities ship); then strata/WR-3
+(Addendum 15); research-system build (B+E rulings in); lab wave (A1+D; LAB-CLASS-AUDIT
+lands the derived-catalogue v1 list); becoming annexe (A1; fiction F1-F4 as ranked);
+capital/crown wave (A2-A4). Deep delve behind strata. Kingdom Mode + succession wave behind
+the quest-handling research (dispatched) and SUCCESSION-RESEARCH §8's four verification
+debts; the seal/cross-run wave builds on DECISIONS.md + INHERITANCE-SEAMS.md (now tracked),
+C10 confirmed orthogonal. Roster wave (N cities — 12(j)); heart rungs 5+ + relocation verb
+(behind strata); feel-lane remainders (companions, market, tinker services, trophies);
 map follow-ups (`_notes/CLOCK-REWORK-CHANGE-MAP.md` tail): bounty denominator, SealedVigour
 zero-caller, level-2 distances, refined haulage, heart follow-ups (roads TryHeart weight,
 socket second-heart refusal, rite-over-water re-attempt, `Heart="yes"` attribute).
+
+**Research in flight (2026-08-22)**: LAB-CLASS-AUDIT.md (D2 wishlist) and
+QUEST-HANDLING-RESEARCH.md (C5/C6 riders) — both dispatched, land as drafts for
+orchestrator review + commit.
 
 ## The working method (this is the "behaviour and attitude")
 

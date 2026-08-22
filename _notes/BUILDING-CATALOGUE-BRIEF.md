@@ -1185,3 +1185,17 @@ RESEARCH-SITING-AND-SECESSION, SUCCESSION-RESEARCH, DIVERSITY §3) carry the ful
 3. **C8 spec detail**: how the kingdom learns of a death (news travel), and what the player
    experiences during the interregnum.
 4. The four §8 verification debts in SUCCESSION-RESEARCH stand before the succession wave.
+
+**Addendum 22 operating extension (author, 2026-08-22):** "ok, once you are done dealing with
+all of those, keep building, put any questions you come across in a backlog for me, and work
+autonomously with your agents until everything in the build and idea backlog is done, i will
+check in later and go through the question backlog"
+
+- **Autonomous build authorization**: the orchestrator runs the queued waves with agents,
+  without per-wave go-asks, under the full working covenant (wave protocol, independent
+  verification before every commit, deploy after every wave, honest reporting).
+- **Questions no longer block**: rulings the author must make go to
+  `_notes/QUESTION-BACKLOG.md` with options and, where work cannot wait, a marked PROVISIONAL
+  the orchestrator proceeded on — reversible, and never pinned as doctrine until ruled.
+- Scope: "everything in the build and idea backlog" — the queued waves in SESSION-HANDOFF.md
+  plus work items minted by Addendum 22's riders.
