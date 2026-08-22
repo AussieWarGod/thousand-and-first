@@ -963,6 +963,15 @@
             Cost="5" Ticks="1500" Styles="all" Strata="deep" Category="memorial" Plot="S"
             Materials="stone:5" Carries="spirit:1" />
 
+  <!-- STRATUM: the one design in the file that is not raised to do a job but to make a job
+       possible. Everything below the rock was owned and unreachable until this stands. It shares
+       into the deep because a shaft is a shaft: the rock does not care which side of it you
+       started the cut from, and the second stratum wants a second one. -->
+  <building Key="delve" DisplayName="delve (a shaft, a windlass, and the first bucket of the deep)" Blueprint="r_KingdomDelve"
+            Cost="30" Ticks="9600" Styles="all" Strata="surface,deep,!sky" Category="craft" Plot="M" MinStage="Village"
+            Districts="craft,none" Knowledge="node:measuredwork"
+            Materials="stone:34,shapedstone:14" />
+
   <!-- =============================================================== CREED-UNIQUE WORKS ==
     Addendum 16: each creed gets works nobody else raises, and they are the only designs in this
     file behind the whole gate stack. Four gates, and every one of them is a separate question:
@@ -1097,5 +1106,115 @@
     <skin Key="gyre" Style="gyre" ColorString="&amp;C" DetailColor="c" />
     <skin Key="eater" Style="eater" ColorString="&amp;R" DetailColor="r" />
   </building>
+
+  <!-- ==================================================================== THE CROWN ==
+    Addendum 22 A4: the crown is a BUILDING, movable at real cost - and never called the
+    seat. `Seat` is taken, with a different lifetime: the settlement the founder is standing
+    in, exchanged by TrySeat every time they walk (Core/KingdomSystem.cs:674). A capital that
+    moved when a founder walked would be a cursor, not a capital. This is
+    END-STATE-CITIES-RESEARCH §5.2's rule (b) - Civ's movable Palace, the only designation
+    rule in the comparables with praise attached to it.
+
+    THE HALL IS THE PROJECT; THE CROWN IS THE MOMENT. Raising this where the realm has no
+    capital crowns the city as soon as the founder sets the crown down in it. MOVING the
+    capital means raising a second one somewhere else and walking there - so this record's
+    Cost and Ticks ARE the price of a move. The old hall keeps its stone and loses its name.
+
+    NOT A MEGASTRUCTURE, and that is a ruling. The capital ruling gives the capital "its one
+    PLUS extras"; a crown that ate the purpose slot would be a capital that could never also
+    be the flesh-city. NOT Capital-gated either: it is what MAKES a capital, and a gate on
+    itself is a door locked from the inside.
+
+    NOT A HEART RUNG - the one place a shipped recommendation and a later ruling disagree.
+    §5.3 proposed the crown as the heart ladder's final rung; A4 then ruled it MOVABLE, and
+    the heart plot is the founding ground where UpgradesTo never un-upgrades. Recorded rather
+    than papered over; the author's eye is wanted.
+
+    THE GATES ARE THE ORDINARY GATES, exactly as the heart chain's comment says of its own.
+  -->
+  <building Key="crownhall" DisplayName="the crown hall (a room built to hold one thing, and the kingdom keeps it here)" Blueprint="r_KingdomCrownHall"
+            Cost="110" Ticks="13200" Styles="all" Category="civic" Plot="XL" MinStage="City"
+            MinZones="3" MinTech="foundry"
+            Footprint="14x10" Roof="Walled"
+            Materials="stone:84,shapedstone:26,marble:22,workedmetal:10" Bits="0034"
+            Staff="2" Manning="scaled" Carries="order:6,spirit:3"
+            Contents="r_KingdomFurnishings_Civic">
+    <skin Key="verdant" Style="verdant" ColorString="&amp;G" DetailColor="g" />
+    <skin Key="fungal" Style="fungal" ColorString="&amp;M" DetailColor="m" />
+    <skin Key="gyre" Style="gyre" ColorString="&amp;C" DetailColor="c" />
+    <skin Key="eater" Style="eater" ColorString="&amp;R" DetailColor="r" />
+  </building>
+
+  <!-- ================================================================= THE ARCOLOGY ==
+    The capital's own set (§4.3: capital-only, because a realm of six arcologies is not Qud,
+    and because it gives the capital something to BE rather than more to HAVE). Three
+    records - Addendum 15 rules that sets start SMALL and grow by want, never by symmetry.
+
+    `Capital="yes"` is the second cardinality lane and it does NOT spend the city's one
+    purpose (KingdomLabRules.JudgePurpose). None of these declares Megastructure, so the
+    capital may still be the flesh-city or the chrome-city and A3 stands untouched.
+
+    STRATA="arcology,surface" on the two interior records is Addendum 15's sharing-BY-TAG
+    used exactly as ruled: home set first, shared strata after. They belong to the arcology
+    set from the day they land AND they are reachable on the capital's own ground today, so
+    nothing here ships as content that renders nowhere. The day the hosted-plot carrier gives
+    the arcology ground of its own they move indoors with no schema change.
+
+    THE FOOTPRINT IS THE WHOLE OF XL AND NO MORE. §5.5's capital-clutter warning wanted the
+    arcology to span zones so it never crowds the capital's economy; zone-spanning is
+    machinery this wave deliberately did not build. 20x14 is as far as the shipped plot
+    vocabulary reaches, and the arcology takes all of it. Backlogged, not faked.
+  -->
+  <building Key="arcology" DisplayName="the arcology (one building with a city inside it, and the sky a long way up)" Blueprint="r_KingdomArcology"
+            Cost="190" Ticks="22800" Styles="all" Category="housing" Plot="XL" MinStage="City"
+            MinZones="4" MinTech="arclight" Knowledge="node:arclight"
+            Capital="yes" Footprint="20x14" Roof="Walled"
+            Materials="stone:130,shapedstone:46,marble:26,workedmetal:38,scrap:32" Bits="00346" Exotics="ingot:3,gem:2"
+            Staff="4" Manning="scaled" Carries="roof:60,order:4,luxury:4"
+            Contents="r_KingdomFurnishings_Dwelling" />
+
+  <building Key="arcologyward" DisplayName="stacked ward (dwellings over dwellings, and a stair where a street would be)" Blueprint="r_KingdomArcologyWard"
+            Cost="70" Ticks="9600" Styles="all" Strata="arcology,surface" Category="housing" Plot="L" MinStage="City"
+            MinTech="arclight" Capital="yes"
+            Materials="stone:48,shapedstone:16,workedmetal:14" Bits="0034"
+            Carries="roof:26,luxury:2" Contents="r_KingdomFurnishings_Dwelling" />
+
+  <!-- No Sky flag: there is no weather inside an arcology either, so a terrace that demanded
+       it would refuse its own home stratum the day that stratum exists. Lamps and light
+       wells are the fiction, and the yield is the fiction's price. -->
+  <building Key="arcologyterrace" DisplayName="hanging terrace (soil carried up a hundred feet, and it grows anyway)" Blueprint="r_KingdomArcologyTerrace"
+            Cost="46" Ticks="7200" Styles="all" Strata="arcology,surface" Category="food" Plot="M" MinStage="City"
+            MinTech="arclight" Capital="yes"
+            Materials="stone:26,shapedstone:10,workedmetal:6"
+            Staff="2" Manning="scaled" Carries="food:14" />
+
+  <!-- ================================================================ THE SATELLITES ==
+    Anno's Palace and its local departments, transferred (§5.5): each great work projects a
+    cheap one-per-city outpost carrying a SLICE of its function, so the realm's colossi are
+    felt everywhere rather than hoarded. Addendum 22 A2's clause exactly - lower rungs may
+    sit anywhere including the capital; top rungs and once-ever ceremonies stay sited.
+
+    `Satellite="<key>"` names the great work by KEY, so a third-party file ships an outpost
+    of ITS megastructure with no code of ours changing. The parent is asked for REALM-wide;
+    the outpost is counted CITY-wide (§5.6: a satellite city must stay low-attention).
+
+    THE REDUCTION IS NOT ENFORCED BY NEW CODE. The surgery carries the SHIPPED slab and vat
+    parts and nothing else, so KingdomLab.RungAt answers rung 1 without being told. The
+    office is not the annexe, so KingdomAnnexe's own enrolment gate refuses the ceremony
+    through the question it was already asking.
+  -->
+  <building Key="hallsurgery" DisplayName="the hall's surgery (a slab, a vat, and the great table a long way off)" Blueprint="r_KingdomHallSurgery"
+            Cost="34" Ticks="4800" Styles="all" Category="craft" Plot="M" MinStage="Village"
+            Districts="craft,none" MinTech="workshop" Knowledge="node:vat"
+            Satellite="chimerictheatre"
+            Materials="stone:22,shapedstone:6,scrap:12" Bits="00" Staff="3" Manning="scaled"
+            Carries="craft:2" Provides="taf:damp,taf:offal" />
+
+  <building Key="registryoffice" DisplayName="the registry office (a desk, a clerk, and a copy of a book kept somewhere else)" Blueprint="r_KingdomRegistryOffice"
+            Cost="24" Ticks="3600" Styles="all" Category="civic" Plot="M" MinStage="Village"
+            MinTech="workshop" Knowledge="node:rolls"
+            Satellite="becomingannexe"
+            Materials="stone:18,timber:6,workedmetal:4" Staff="1" Manning="scaled"
+            Carries="order:3" />
 
 </kingdombuildings>

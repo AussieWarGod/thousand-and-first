@@ -92,7 +92,36 @@ namespace ThousandAndFirst
 		/// renumbering a published enum moves every value a third party already switched on.
 		/// </para>
 		/// </summary>
-		RefusedMegastructure = 9
+		RefusedMegastructure = 9,
+
+		/// <summary>
+		/// This design is an outpost of a great work, and nowhere in the realm does that work stand
+		/// (END-STATE-CITIES-RESEARCH &sect;5.5). <see cref="ZoningJudgement.Detail"/> carries the
+		/// PARENT's registry key.
+		/// </summary>
+		RefusedSatellite = 10,
+
+		/// <summary>
+		/// This city already keeps an outpost of the same great work, and one to a city is the whole
+		/// of the rule. <see cref="ZoningJudgement.Detail"/> carries the KEPT outpost's key.
+		/// <para>
+		/// <b>A second value rather than a second reading of <see cref="RefusedSatellite"/>'s
+		/// detail</b>, and the precedent is <see cref="RefusedUnaligned"/> beside
+		/// <see cref="RefusedCreedShare"/>: two flavours of one gate, told apart by the verdict,
+		/// because a composer that had to guess which key a Detail held would guess wrong the first
+		/// time an outpost was named after its parent.
+		/// </para>
+		/// </summary>
+		RefusedSatelliteKept = 11,
+
+		/// <summary>
+		/// Only a capital may raise this, and the crown is not set down in this city (Addendum 22
+		/// A4; the capital ruling extending Addendum 19). <see cref="ZoningJudgement.Detail"/>
+		/// carries the city keeping the crown, or null when the realm has no capital at all
+		/// &mdash; which are two different sentences and one verdict, because the ACT the founder
+		/// is being pointed at is the same one either way.
+		/// </summary>
+		RefusedUncrowned = 12
 	}
 
 	/// <summary>
@@ -287,6 +316,20 @@ namespace ThousandAndFirst
 		/// </summary>
 		public readonly bool Megastructure;
 
+		/// <summary>
+		/// Whether only the capital may raise this design (Addendum 22 A4 and the capital ruling
+		/// extending Addendum 19). False for every design in the catalogue but the arcology set.
+		/// <para>
+		/// <b>The second cardinality lane, and not a degree of the first.</b>
+		/// <see cref="Megastructure"/> asks the city to spend its one purpose;
+		/// this asks the realm to have set its crown down here, and a design declaring it never
+		/// touches the purpose slot &mdash; which is what "a couple of extra capital-specific
+		/// megastructures BEYOND its one" means when it is written down as a rule
+		/// (<c>KingdomLabRules.JudgePurpose</c> holds the precedence).
+		/// </para>
+		/// </summary>
+		public readonly bool Capital;
+
 		public ZoneGate(string Districts, int MinZones, string Knowledge, TechLevel MinTech)
 			: this(Districts, MinZones, Knowledge, MinTech, null, null, ShareUnsaid)
 		{
@@ -306,6 +349,12 @@ namespace ThousandAndFirst
 
 		public ZoneGate(string Districts, int MinZones, string Knowledge, TechLevel MinTech,
 			string Builders, string Creed, int CreedShare, string Strata, bool Megastructure)
+			: this(Districts, MinZones, Knowledge, MinTech, Builders, Creed, CreedShare, Strata, Megastructure, Capital: false)
+		{
+		}
+
+		public ZoneGate(string Districts, int MinZones, string Knowledge, TechLevel MinTech,
+			string Builders, string Creed, int CreedShare, string Strata, bool Megastructure, bool Capital)
 		{
 			this.Districts = Districts;
 			this.MinZones = MinZones;
@@ -316,6 +365,7 @@ namespace ThousandAndFirst
 			this.CreedShare = CreedShare;
 			this.Strata = Strata;
 			this.Megastructure = Megastructure;
+			this.Capital = Capital;
 		}
 
 		/// <summary>What <see cref="CreedShare"/> holds when the attribute was not written. Not
@@ -1545,6 +1595,21 @@ namespace ThousandAndFirst
 		public static ZoneGate ParseGateAttributes(string Key, string Districts, string MinZones, string Knowledge, string MinTech,
 			string Builders, string Creed, string CreedShare, string Strata, string Megastructure, out string Error)
 		{
+			return ParseGateAttributes(Key, Districts, MinZones, Knowledge, MinTech, Builders, Creed, CreedShare,
+				Strata, Megastructure, null, out Error);
+		}
+
+		/// <summary>
+		/// The same parse with the capital ruling's <c>Capital</c>. A fifth overload for the reason
+		/// there was a fourth: the shape above is published and a third party may already be
+		/// calling it (STANDARDS &sect;9), so it is this one with a null.
+		/// </summary>
+		/// <param name="Capital">Raw <c>Capital</c> attribute. Optional like the ten before it: a
+		/// design that does not claim the capital stands in any city, which is what every entry in
+		/// the catalogue did the day before this landed.</param>
+		public static ZoneGate ParseGateAttributes(string Key, string Districts, string MinZones, string Knowledge, string MinTech,
+			string Builders, string Creed, string CreedShare, string Strata, string Megastructure, string Capital, out string Error)
+		{
 			List<string> faults = new List<string>();
 			string districts = null;
 			if (!string.IsNullOrEmpty(Districts) && Districts.Trim().Length > 0)
@@ -1639,8 +1704,12 @@ namespace ThousandAndFirst
 			// make a design unbuildable, only un-special, which is the safe direction for the one
 			// attribute in this file that takes a whole city's purpose away.
 			bool megastructure = KingdomLabRules.IsMegastructure(Megastructure);
+			// No fault branch here either, and for the same reason one line up: a malformed value
+			// makes a design un-special rather than unbuildable, which is the safe direction for an
+			// attribute that can put a whole city's capital between the founder and a building.
+			bool capital = KingdomLabRules.IsCapitalOnly(Capital);
 			Error = (faults.Count == 0) ? null : ("building " + Key + " has a bad " + JoinOr(faults) + "; the attribute was ignored");
-			return new ZoneGate(districts, minZones, knowledge, minTech, builders, creed, creedShare, strata, megastructure);
+			return new ZoneGate(districts, minZones, knowledge, minTech, builders, creed, creedShare, strata, megastructure, capital);
 		}
 
 		/// <summary>
@@ -1767,6 +1836,52 @@ namespace ThousandAndFirst
 			IEnumerable<string> Roster, bool Underground, bool RequiresSky, BuilderRoll Roll, string Stratum,
 			string Key, string CityKeeps)
 		{
+			return Judge(Gate, TileDistrict, Category, ClaimedZones, Roster, Underground, RequiresSky, Roll, Stratum,
+				Key, CityKeeps, Crowned: false, CapitalName: null,
+				Satellite: KingdomSatelliteVerdict.Allowed, SatelliteDetail: null);
+		}
+
+		/// <summary>
+		/// The same verdict with the capital's two lanes folded in: whether the crown is set down
+		/// in this city, and whether this design is an outpost the realm and the city will carry.
+		/// <para>
+		/// <b>The satellite gate is asked with the territory gates and the crown gate is asked
+		/// last</b>, and the split is the same one that already orders this method. "Nowhere in the
+		/// realm does that great work stand" is a lack of the same kind as "the realm holds three
+		/// zones and this wants four" &mdash; a fact about the realm the founder answers by
+		/// building elsewhere &mdash; so it sits with them. "Only a capital raises this" is not a
+		/// lack at all; it is a decision the founder already made about a different city, which is
+		/// where the purpose gate lives and why both are told after everything a founder could go
+		/// and fix today.
+		/// </para>
+		/// <para>
+		/// <b>Both new answers are computed by the CALLER</b> and passed in already read, exactly
+		/// as <paramref name="CityKeeps"/> and <paramref name="Roll"/> are. Reading a realm's books
+		/// needs an engine, and this class does not have one and must not grow one.
+		/// </para>
+		/// <para>
+		/// The overload above chains here with <paramref name="Crowned"/> false, which is the
+		/// fail-CLOSED direction and is deliberate: the crown is a realm fact carried in one
+		/// always-readable string, so "we could not tell" is not a state it has, and a caller that
+		/// does not know about capitals must not hand an uncrowned realm the capital's catalogue.
+		/// It changes nothing for any existing caller, because no design declared
+		/// <c>Capital</c> before this landed.
+		/// </para>
+		/// </summary>
+		/// <param name="Crowned">Whether the realm's crown is set down in the city holding this
+		/// ground (<c>KingdomCrown.CrownedOnActiveGround</c>).</param>
+		/// <param name="CapitalName">The city keeping the crown, for the refusal, or null when the
+		/// realm has no capital.</param>
+		/// <param name="Satellite">What the outpost lane answered
+		/// (<c>KingdomSatellite.JudgeActiveGround</c>).
+		/// <see cref="KingdomSatelliteVerdict.Allowed"/> for every design that is not one.</param>
+		/// <param name="SatelliteDetail">The parent's key or the kept outpost's key, per the
+		/// verdict.</param>
+		public static ZoningJudgement Judge(ZoneGate Gate, string TileDistrict, string Category, int ClaimedZones,
+			IEnumerable<string> Roster, bool Underground, bool RequiresSky, BuilderRoll Roll, string Stratum,
+			string Key, string CityKeeps, bool Crowned, string CapitalName,
+			KingdomSatelliteVerdict Satellite, string SatelliteDetail)
+		{
 			if (!Aligned(Roll, Gate.Creed))
 			{
 				return new ZoningJudgement(ZoningVerdict.RefusedUnaligned, Gate.Creed, "no one holds with it");
@@ -1797,6 +1912,18 @@ namespace ThousandAndFirst
 				string zones = Gate.MinZones + ((Gate.MinZones == 1) ? " claimed zone" : " claimed zones");
 				return new ZoningJudgement(ZoningVerdict.RefusedTerritory, zones, "wants " + Gate.MinZones + " zones");
 			}
+			// Beside the territory gate, because it is the same kind of lack at a different scale:
+			// the realm does not hold enough ground, or the realm does not hold the great work this
+			// is an outpost of. Both are answered by going and building somewhere, and neither is
+			// answered by anything on this piece of ground.
+			if (Satellite == KingdomSatelliteVerdict.RefusedNoParent)
+			{
+				return new ZoningJudgement(ZoningVerdict.RefusedSatellite, SatelliteDetail, "nothing to be an outpost of");
+			}
+			if (Satellite == KingdomSatelliteVerdict.RefusedCityKeeps)
+			{
+				return new ZoningJudgement(ZoningVerdict.RefusedSatelliteKept, SatelliteDetail, "one to a city");
+			}
 			if (!StratumAccepts(Underground, RequiresSky))
 			{
 				return new ZoningJudgement(ZoningVerdict.RefusedStratum, StratumName(Underground: false), "wants open sky");
@@ -1814,7 +1941,15 @@ namespace ThousandAndFirst
 				string where = DescribeDistricts(Gate.Districts);
 				return new ZoningJudgement(ZoningVerdict.RefusedDistrict, where, where);
 			}
-			if (KingdomLabRules.JudgePurpose(Gate.Megastructure, CityKeeps, Key) != KingdomPurposeVerdict.Allowed)
+			KingdomPurposeVerdict purpose = KingdomLabRules.JudgePurpose(Gate.Megastructure, Gate.Capital, Crowned, CityKeeps, Key);
+			if (purpose == KingdomPurposeVerdict.RefusedUncrowned)
+			{
+				// The Detail is a CITY and not a key, which is the one Detail in this method that
+				// is already prose: a city's name is the founder's own word for it and nothing
+				// downstream should be looking it up in a catalogue.
+				return new ZoningJudgement(ZoningVerdict.RefusedUncrowned, CapitalName, "only the capital");
+			}
+			if (purpose != KingdomPurposeVerdict.Allowed)
 			{
 				// The Detail is the KEY rather than the display name: the refusal is composed one
 				// lane over, where the catalogue can be asked what a key is called, and a rules

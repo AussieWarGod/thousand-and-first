@@ -844,6 +844,60 @@
     <stat Name="Hitpoints" Value="600" />
   </object>
 
+  <!-- ======================================================= THE CROWN AND THE CAPITAL == -->
+  <object Name="r_KingdomCrownHall" Inherits="Furniture">
+    <stag Name="Contemporary" />
+    <part Name="Render" DisplayName="the crown hall" RenderString="&#9632;" ColorString="&amp;W" DetailColor="Y" />
+    <part Name="Description" Short="One room, and everything in it points at the middle of it. The floor was levelled by people who knew what would stand on it. Whatever else the kingdom argues about, it does not argue about where this is." />
+    <part Name="r_KingdomCrownHall" />
+    <part Name="Physics" Takeable="false" Weight="50000" />
+    <stat Name="Hitpoints" Value="1200" />
+  </object>
+  <object Name="r_KingdomArcology" Inherits="Furniture">
+    <stag Name="Contemporary" />
+    <part Name="Render" DisplayName="the arcology" RenderString="&#9619;" ColorString="&amp;Y" DetailColor="c" />
+    <part Name="Description" Short="It went up in one piece and it has weather of its own. Somewhere near the bottom is a street that has never seen the sun, and somewhere near the top is a window nobody has opened. People are born in here who do not go outside for a season and do not think of it as strange." />
+    <part Name="Bed" />
+    <part Name="Physics" Takeable="false" Weight="200000" />
+    <stat Name="Hitpoints" Value="2400" />
+  </object>
+  <object Name="r_KingdomArcologyWard" Inherits="Furniture">
+    <stag Name="Contemporary" />
+    <part Name="Render" DisplayName="stacked ward" RenderString="&#9618;" ColorString="&amp;y" DetailColor="c" />
+    <part Name="Description" Short="Dwellings over dwellings over dwellings, and a stair doing the work a street would do. Everyone's ceiling is somebody's floor and everyone knows whose." />
+    <part Name="Bed" />
+    <part Name="Physics" Takeable="false" Weight="60000" />
+    <stat Name="Hitpoints" Value="1200" />
+  </object>
+  <!-- Inherits the field because it IS one - a growing surface the crop machinery works -
+       and the rows derive its food the way every grower's is derived: half a point a row,
+       28 rows for food:14. The sim's food invariant is what caught this blueprint shipping
+       as bare furniture, and the rows are the answer it demanded. -->
+  <object Name="r_KingdomArcologyTerrace" Inherits="r_KingdomField">
+    <part Name="Render" DisplayName="hanging terrace" RenderString="&#8776;" ColorString="&amp;G" DetailColor="g" />
+    <part Name="Description" Short="Soil carried up a hundred feet a basket at a time, and it grows anyway. The lamps run all day because there is nothing above this but more building." />
+    <part Name="Physics" Solid="false" Takeable="false" Organic="true" Weight="20000" />
+    <tag Name="r_KingdomCropRows" Value="28" />
+    <stat Name="Hitpoints" Value="400" />
+  </object>
+  <object Name="r_KingdomHallSurgery" Inherits="Furniture">
+    <stag Name="Contemporary" />
+    <part Name="Render" DisplayName="the hall's surgery" RenderString="&#8745;" ColorString="&amp;c" DetailColor="R" />
+    <part Name="Description" Short="A stone table with a gutter cut in it, brine in the jars behind, and a hook by the door. What is dragged home here becomes parts and is kept. What happens to parts afterwards happens somewhere else." />
+    <part Name="r_KingdomButcherSlab" />
+    <part Name="r_KingdomVatHouse" />
+    <part Name="Physics" Takeable="false" Weight="20000" />
+    <stat Name="Hitpoints" Value="400" />
+  </object>
+  <object Name="r_KingdomRegistryOffice" Inherits="Furniture">
+    <stag Name="Contemporary" />
+    <part Name="Render" DisplayName="the registry office" RenderString="&#9633;" ColorString="&amp;C" DetailColor="Y" />
+    <part Name="Description" Short="A desk, a lamp, a clerk, and a copy of a book kept somewhere else. You may read who the realm counts. You may not become one of them at this desk." />
+    <part Name="r_KingdomRegistryOffice" />
+    <part Name="Physics" Takeable="false" Weight="8000" />
+    <stat Name="Hitpoints" Value="300" />
+  </object>
+
   <!-- LAB-CLASS-AUDIT §1 finding 2: FungusPuffer declares CorpseBlueprint="Dreadroot Tuber" and
        CorpseChance="0" (B/ObjectBlueprints/Creatures.xml:6045), so the §3.5 chain has nothing to
        butcher and the brooding gills would be an unreachable record. One merge, on the declared
@@ -893,6 +947,13 @@
     <part Name="Description" Short="A niche cut in the gallery wall for somebody the settlement has not yet lost, and a name cut under it. There is no field to gather stone from. There is this wall." />
     <part Name="Physics" Weight="1000" />
     <stat Name="Hitpoints" Value="150" />
+  </object>
+  <object Name="r_KingdomDelve" Inherits="Furniture">
+    <stag Name="Contemporary" />
+    <part Name="Render" DisplayName="delve" RenderString="&#8964;" ColorString="&amp;K" DetailColor="y" />
+    <part Name="Description" Short="A collared shaft, a windlass over it, and a rope going down further than the lamp reaches. The settlement owned the rock before this. Now it can get to it." />
+    <part Name="Physics" Takeable="false" Weight="8000" />
+    <stat Name="Hitpoints" Value="340" />
   </object>
 
   <object Name="r_KingdomChargingPost" Inherits="Furniture">

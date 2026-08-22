@@ -230,6 +230,8 @@ namespace ThousandAndFirst
 			declared.Set(KingdomMergeRules.AttrCreedShare, xml.GetAttribute("CreedShare"));
 			declared.Set(KingdomMergeRules.AttrStrata, xml.GetAttribute("Strata"));
 			declared.Set(KingdomMergeRules.AttrMegastructure, xml.GetAttribute("Megastructure"));
+			declared.Set(KingdomMergeRules.AttrCapital, xml.GetAttribute("Capital"));
+			declared.Set(KingdomMergeRules.AttrSatellite, xml.GetAttribute("Satellite"));
 			declared.Set(KingdomMergeRules.AttrUpgradesTo, xml.GetAttribute("UpgradesTo"));
 			declared.Set(KingdomMergeRules.AttrUpgradeCost, xml.GetAttribute("UpgradeCost"));
 			declared.Set(KingdomMergeRules.AttrUpgradeTicks, xml.GetAttribute("UpgradeTicks"));
@@ -265,7 +267,11 @@ namespace ThousandAndFirst
 			entry.Skins = design.Skins;
 			KingdomZoning.RegisterGate(entry.Key, design.Get(KingdomMergeRules.AttrDistricts), design.Get(KingdomMergeRules.AttrMinZones), design.Get(KingdomMergeRules.AttrKnowledge), design.Get(KingdomMergeRules.AttrMinTech),
 				design.Get(KingdomMergeRules.AttrBuilders), design.Get(KingdomMergeRules.AttrCreed), design.Get(KingdomMergeRules.AttrCreedShare), design.Get(KingdomMergeRules.AttrStrata),
-				design.Get(KingdomMergeRules.AttrMegastructure));
+				design.Get(KingdomMergeRules.AttrMegastructure), design.Get(KingdomMergeRules.AttrCapital));
+			// Beside the gate and out of the same merged draft, because it IS a gate -- one asked of
+			// the whole realm rather than of this ground, which is why it keeps its own small
+			// registry instead of a field on ZoneGate (KingdomSatellite says why at length).
+			KingdomSatellite.Declare(entry.Key, design.Get(KingdomMergeRules.AttrSatellite));
 			KingdomUpgrade.RegisterChain(entry.Key, design.Get(KingdomMergeRules.AttrUpgradesTo), design.Get(KingdomMergeRules.AttrUpgradeCost), design.Get(KingdomMergeRules.AttrUpgradeTicks), design.Get(KingdomMergeRules.AttrUpgradeCrew), design.Get(KingdomMergeRules.AttrUpgradeMinStage));
 			KingdomMaterials.RegisterCost(entry.Key, design.Get(KingdomMergeRules.AttrMaterials), design.Get(KingdomMergeRules.AttrUpgradeMaterials));
 			// Beside the material cost and out of the same merged draft, so a later file that

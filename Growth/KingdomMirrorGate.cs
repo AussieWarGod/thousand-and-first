@@ -502,6 +502,84 @@ namespace ThousandAndFirst
 			The.Game?.SetStringGameState(KingdomMirrorGateRules.RegisterStateKey, KingdomMirrorGateRules.FormatRegister(rows));
 		}
 
+		/// <summary>
+		/// Points every arch in the realm at the capital's, and says what changed.
+		/// <para>
+		/// Called by the crown the moment a capital is made or moved (Addendum 22 A2: the network
+		/// is hubbed at the capital), and this is the whole of the retrofit QB-1 deferred. Nothing
+		/// here loads a zone, visits an arch, or rebuilds anything: the register carries the
+		/// pairing, so re-keying the realm is a rewrite of one column and the arches find out the
+		/// next time each is anchored &mdash; which is before every crossing, every dedication and
+		/// every day's draw, so no arch can act on a stale partner.
+		/// </para>
+		/// <para>
+		/// One live object is the exception worth taking: an arch standing in the zone the founder
+		/// is in has a <c>DestinationKey</c> in memory right now and a description they may be
+		/// reading, so any loaded arch is re-anchored here rather than at some later event.
+		/// </para>
+		/// </summary>
+		/// <param name="System">The realm, for the telling. Never null in practice.</param>
+		/// <param name="Capital">The city keeping the crown.</param>
+		internal static void Hub(KingdomSystem System, string Capital)
+		{
+			if (System == null || !System.Founded || string.IsNullOrEmpty(Capital) || The.Game == null)
+			{
+				return;
+			}
+			KingdomGateRow[] rows = Register(System);
+			if (rows.Length == 0)
+			{
+				// Not applicable rather than blocked: a realm that has never keyed an arch is not
+				// being stopped from anything, and 7b's first kind says nothing, correctly.
+				return;
+			}
+			KingdomGateRow[] next;
+			int rekeyed;
+			string hubKey;
+			KingdomGateVerdict verdict = KingdomMirrorGateRules.TryHub(rows, Capital, out next, out rekeyed, out hubKey);
+			if (verdict == KingdomGateVerdict.RefusedUnkeyed)
+			{
+				System.Ledger.Note(KingdomMirrorGateRules.NoArchAtCapitalLine(Capital));
+				MessageQueue.AddPlayerMessage(KingdomMirrorGateRules.NoArchAtCapitalLine(Capital));
+				return;
+			}
+			if (verdict != KingdomGateVerdict.Joined && verdict != KingdomGateVerdict.Offered)
+			{
+				KingdomLog.Log("mirror-gate hub refused for " + Capital + ": " + verdict);
+				return;
+			}
+			Write(next);
+			ReAnchorHere();
+			if (rekeyed <= 0)
+			{
+				return;
+			}
+			string line = KingdomMirrorGateRules.HubbedLine(Capital, rekeyed);
+			System.Ledger.Note(line);
+			MessageQueue.AddPlayerMessage(line);
+			KingdomChronicle.Record(System, KingdomMirrorGateRules.HubbedTelling(Capital));
+			KingdomLog.Log("mirror-gate hub=" + Capital + " rekeyed=" + rekeyed + " rows=" + next.Length);
+		}
+
+		/// <summary>Re-reads the register into whatever arch is standing in the zone the founder is
+		/// in. Every other arch reads it for itself the next time it is anchored.</summary>
+		private static void ReAnchorHere()
+		{
+			Zone active = The.ZoneManager?.ActiveZone;
+			if (active == null)
+			{
+				return;
+			}
+			foreach (GameObject found in active.GetObjects())
+			{
+				r_KingdomMirrorGate arch = found?.GetPart<r_KingdomMirrorGate>();
+				if (arch != null)
+				{
+					Anchor(arch);
+				}
+			}
+		}
+
 		private static void Release(r_KingdomMirrorGate Gate, KingdomSystem System, KingdomGateRow[] rows, string city)
 		{
 			if (Popup.ShowYesNo("Unkey the arch at " + city + "?\n\nIt will stand exactly where it stands and cost nothing at all; the crossing simply stops answering.") != DialogResult.Yes)
@@ -548,21 +626,13 @@ namespace ThousandAndFirst
 
 		/// <summary>
 		/// Which of the realm's cities holds this ground, or null when the realm does not hold it at
-		/// all. The seat's own zones are read off the system's flat fields and the other city's off
-		/// its record, which is the whole of the seat idiom (<c>KingdomSettlement</c>).
+		/// all. Delegated to <c>KingdomCrown.CityOf</c>, which is the one copy: the crown lane needs
+		/// exactly this read and two of them would eventually disagree about which city an arch
+		/// stands in, which is the one thing the register may never be wrong about.
 		/// </summary>
 		private static string CityOf(KingdomSystem System, string ZoneId)
 		{
-			if (System.ClaimedZones != null && System.ClaimedZones.Contains(ZoneId))
-			{
-				return System.SeatName;
-			}
-			KingdomSettlement away = System.Away;
-			if (away != null && away.ClaimedZones != null && away.ClaimedZones.Contains(ZoneId))
-			{
-				return string.IsNullOrEmpty(away.SettlementName) ? System.KingdomDisplayName : away.SettlementName;
-			}
-			return null;
+			return KingdomCrown.CityOf(System, ZoneId);
 		}
 	}
 }

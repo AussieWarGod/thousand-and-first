@@ -23,6 +23,24 @@ playtest passes.
   that would have caught the defect lands with the fix.
 
 ### Added
+- **The crown, the capital, and the arcology.** The crown is a building (never the seat — the
+  seat walks with the founder, the capital does not): raise the crown hall and set the crown
+  down, and the city is the capital; moving it means raising another and walking there, so
+  the record's own cost is the price of a move. The mirror-gate network re-keys onto the
+  capital — one column rewritten, no arch visited, no row lost — and gates do not go dark
+  for politics: the cost of the move is that your crossings now land somewhere else, told
+  before consent. Capital-specific works arrive on their own cardinality lane (`Capital=`,
+  which never spends the city's purpose slot — the capital may still be the flesh-city or
+  the chrome-city): the arcology and its first two interior records open the set. And the
+  great works project outward: the hall's surgery and the registry office are cheap
+  one-per-city satellites carrying the lower rungs only — the top rungs and the once-ever
+  ceremonies stay where the colossus stands.
+- **The delve — the way down is a built thing.** The distance file used to say it plainly:
+  "verticality is free." It no longer is. Unbroken rock stops being a doorway: crews path
+  between strata only where a shaft has been cut, and the climb costs three level hops with
+  the load on your back. A claim below is ground you own and cannot work until the delve
+  stands; the refusal names the shaft it waits for, and the shaft's completion names what it
+  opened.
 - **The becoming annexe — the city keeps its own rolls, and the old machines accept them.**
   The chrome half of the body doctrine (Addendum 22 A1; the registry fiction, F1). Enrolment
   is a once-ever ceremony that enters a citizen — or the founder — on the city's rolls as

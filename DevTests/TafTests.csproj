@@ -25,6 +25,7 @@
     <Compile Include="KingdomCropRulesTests.cs" />
     <Compile Include="KingdomPowerRulesTests.cs" />
     <Compile Include="KingdomMirrorGateRulesTests.cs" />
+    <Compile Include="KingdomDelveRulesTests.cs" />
     <Compile Include="KingdomSalvageRulesTests.cs" />
     <Compile Include="WallRulesTests.cs" />
     <Compile Include="VoiceRulesTests.cs" />
@@ -75,6 +76,7 @@
     <Compile Include="..\Growth\KingdomCropRules.cs" />
     <Compile Include="..\Growth\KingdomPowerRules.cs" />
     <Compile Include="..\Growth\KingdomMirrorGateRules.cs" />
+    <Compile Include="..\Growth\KingdomDelveRules.cs" />
     <Compile Include="..\Growth\KingdomSalvageRules.cs" />
     <Compile Include="..\Growth\KingdomLayoutRules.cs" />
     <Compile Include="..\Growth\KingdomPlanRules.cs" />
@@ -184,6 +186,10 @@
     <Compile Include="KingdomCitizenRiteRulesTests.cs" />
     <Compile Include="KingdomCreedGateRulesTests.cs" />
     <Compile Include="KingdomStrataRulesTests.cs" />
+    <Compile Include="..\Growth\KingdomCrownRules.cs" />
+    <Compile Include="..\Growth\KingdomSatelliteRules.cs" />
+    <Compile Include="KingdomCrownRulesTests.cs" />
+    <Compile Include="KingdomSatelliteRulesTests.cs" />
   </ItemGroup>
 
   <ItemGroup>

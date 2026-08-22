@@ -467,6 +467,21 @@ grants the True Kin genotype's own two cybernetics license points — the door w
 open onto an empty room. `GatheredYield`/`HarvestYield` gained additive `MethodPercent`
 overloads, and `KingdomCityAdvanceable` a fourth constructor argument, for the method lane.
 
+### The crown, the satellites, and the delve (`KingdomCrownRules` / `KingdomSatelliteRules` / `KingdomDelveRules`)
+
+`KingdomCrownRules` (engine-free) carries the crown record format, `Resolve` — the capital
+derivation (one game-state string, validated on every read against the city books; the halls
+win and the record is repaired out loud when they disagree; ties break on name order, never
+seat order) — and `JudgeTakeUp` with the move's full disclosure. `KingdomSatelliteRules`
+carries the `Satellite=` judgment: parent asked realm-wide, outpost counted city-wide, the
+verb slice enforced by the shipped parts a satellite blueprint carries rather than by new
+code. `KingdomDelveRules` carries the shaft vocabulary: `IsShaftPair`/`ShaftJoins` (straight
+down, one stratum, foot in rock), `ReachedZones` (the flood that separates ground a city OWNS
+from ground it can WORK — the surface is always reached; rock spreads from a shaft's foot and
+never through a corner), `JudgeDelve` and its refusals, and `ShaftHopCells` — a vertical hop
+costs three level hops, and unbroken rock is not an edge at all. `KingdomLabRules.JudgePurpose`
+gained the five-argument capital-aware overload; the three-argument shape is unchanged.
+
 ### The claim
 
 What widens the ground every gate above is measured against.

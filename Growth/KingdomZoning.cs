@@ -66,6 +66,12 @@ namespace ThousandAndFirst
 			KeptCacheZone = null;
 			KeptCacheTick = -1L;
 			KeptCacheValue = null;
+			// The capital's two lanes are emptied in the same breath and for the same reason. The
+			// outpost registry is keyed by building key and rebuilt by HandleBuilding in this one
+			// pass, exactly as the gates are; the crown's cached answer is derived from the
+			// catalogue's own keys, so it cannot outlive them either.
+			KingdomSatellite.Reset();
+			KingdomCrown.ClearCache();
 		}
 
 		/// <summary>
@@ -117,12 +123,24 @@ namespace ThousandAndFirst
 		public static void RegisterGate(string Key, string Districts, string MinZones, string Knowledge, string MinTech,
 			string Builders, string Creed, string CreedShare, string Strata, string Megastructure)
 		{
+			RegisterGate(Key, Districts, MinZones, Knowledge, MinTech, Builders, Creed, CreedShare, Strata, Megastructure, null);
+		}
+
+		/// <summary>
+		/// The same registration with the capital ruling's <c>Capital</c>. Optional like the nine
+		/// before it: a design that does not claim the capital may be raised in any city, and every
+		/// design in the catalogue could be the day before this landed.
+		/// </summary>
+		/// <param name="Capital">Raw <c>Capital</c> attribute.</param>
+		public static void RegisterGate(string Key, string Districts, string MinZones, string Knowledge, string MinTech,
+			string Builders, string Creed, string CreedShare, string Strata, string Megastructure, string Capital)
+		{
 			if (string.IsNullOrEmpty(Key))
 			{
 				return;
 			}
 			ZoneGate gate = KingdomZoningRules.ParseGateAttributes(Key, Districts, MinZones, Knowledge, MinTech,
-				Builders, Creed, CreedShare, Strata, Megastructure, out string error);
+				Builders, Creed, CreedShare, Strata, Megastructure, Capital, out string error);
 			if (error != null)
 			{
 				MetricsManager.LogError("ThousandAndFirst KingdomBuildings: " + error);
@@ -618,9 +636,16 @@ namespace ThousandAndFirst
 				return ZoningJudgement.Allowed;
 			}
 			int claimed = (System.ClaimedZones != null) ? System.ClaimedZones.Count : 0;
+			// The capital's two lanes are read here rather than inside the rules, because both need
+			// the realm's books and the rules class has no engine. Both are cheap on this path for
+			// the same reason KeptMegastructure is: the crown's answer is cached by ground and tick,
+			// and the outpost lane asks nothing at all of a design nobody declared an outpost.
+			KingdomSatelliteVerdict satellite = KingdomSatellite.JudgeActiveGround(System, Entry.Key, out string satelliteDetail);
 			return KingdomZoningRules.Judge(GateFor(Entry.Key), District, Entry.Category, claimed, Roster(System),
 				Underground, WantsSky(Entry), BuilderRollOf(System), KingdomZoningRules.StratumOfGround(Underground),
-				Entry.Key, KeptMegastructure(System));
+				Entry.Key, KeptMegastructure(System),
+				KingdomCrown.CrownedOnActiveGround(System), KingdomCrown.CapitalName(System),
+				satellite, satelliteDetail);
 		}
 
 		// One entry, keyed by the ground and the tick it was read on. The purpose gate is asked once
@@ -823,6 +848,19 @@ namespace ThousandAndFirst
 				// The Judgement carries the KEY; the founder is owed the NAME. Composed here, where
 				// the catalogue can be asked, so the rules layer never has to know it exists.
 				return KingdomLabRules.PurposeRefusalLine(KingdomUpgrade.DisplayNameOf(Judgement.Detail));
+			case ZoningVerdict.RefusedSatellite:
+				// The Detail is the PARENT's key: the founder is told which great work is missing
+				// and that it may be raised in any of their cities, not only this one.
+				return KingdomSatelliteRules.NoParentRefusalLine(KingdomUpgrade.DisplayNameOf(Judgement.Detail));
+			case ZoningVerdict.RefusedSatelliteKept:
+				// A different verdict rather than a second reading of the same Detail, because this
+				// Detail is the KEPT outpost and the one above is the PARENT, and a composer that
+				// had to guess which would guess wrong.
+				return KingdomSatelliteRules.CityKeepsRefusalLine(KingdomUpgrade.DisplayNameOf(Judgement.Detail));
+			case ZoningVerdict.RefusedUncrowned:
+				// The Detail is already a CITY, so nothing is looked up: a city's name is the
+				// founder's own word for it.
+				return KingdomLabRules.UncrownedRefusalLine(Judgement.Detail);
 			default:
 				return XRL.Language.Grammar.A(name) + " cannot be raised here.";
 			}

@@ -17,7 +17,11 @@ namespace ThousandAndFirst
 		Allowed = 0,
 
 		/// <summary>This city already keeps a megastructure, and it is not this one.</summary>
-		RefusedKept = 1
+		RefusedKept = 1,
+
+		/// <summary>The design is one only a capital may raise, and the crown is not set down in
+		/// this city (Addendum 22 A4; the capital ruling extending Addendum 19).</summary>
+		RefusedUncrowned = 2
 	}
 
 	/// <summary>
@@ -148,6 +152,70 @@ namespace ThousandAndFirst
 		/// <param name="Key">The design being zoned.</param>
 		public static KingdomPurposeVerdict JudgePurpose(bool Megastructure, string Kept, string Key)
 		{
+			return JudgePurpose(Megastructure, CapitalOnly: false, Crowned: false, Kept: Kept, Key: Key);
+		}
+
+		/// <summary>
+		/// The building-record attribute that says a design is one only the capital may raise:
+		/// <c>"yes"</c>, in the same shape <see cref="MegastructureAttribute"/> is already written.
+		/// <para>
+		/// <b>The second cardinality lane, and it is deliberately a separate one.</b>
+		/// <see cref="MegastructureAttribute"/> asks the city to spend its one purpose;
+		/// <c>Capital</c> asks the realm to have set its crown down here. The capital ruling
+		/// (author, extending Addendum 19) is exactly that split: an ordinary city gets ONE
+		/// purposeful megastructure, and the capital gets its one PLUS extras that are capital
+		/// specific. Two questions, two attributes, and neither one is the other's degree.
+		/// </para>
+		/// </summary>
+		public const string CapitalAttribute = "Capital";
+
+		/// <summary>Whether a design's <c>Capital</c> declaration means yes. Anything else,
+		/// including absence, means no &mdash; a design stands in any city until it says
+		/// otherwise.</summary>
+		public static bool IsCapitalOnly(string Declared)
+		{
+			return IsMegastructure(Declared);
+		}
+
+		/// <summary>
+		/// The whole cardinality verdict: the city's one purpose, and the crown.
+		/// <para>
+		/// <b>A capital-specific design is judged against the CROWN and never against the purpose
+		/// slot</b>, and that precedence is the capital ruling rather than an implementation
+		/// convenience. "A couple of extra capital-specific megastructures BEYOND its one" only
+		/// means anything if the extras do not eat the one; a capital whose arcology had taken its
+		/// purpose would be a capital that could not also be the flesh-city or the chrome-city, and
+		/// the ruling says the opposite in the same breath it says A3. So the crown check runs
+		/// first and returns, and <paramref name="Kept"/> is not consulted at all for such a design.
+		/// </para>
+		/// <para>
+		/// <b>A3 still holds and is not weakened by any of this</b>: the theatre and the annexe are
+		/// megastructures and neither is capital-specific, so the capital is judged against the
+		/// purpose slot for both exactly as every other city is, and it may keep one of them, never
+		/// two.
+		/// </para>
+		/// <para>
+		/// <b>Fails CLOSED on the crown and OPEN on the purpose slot</b>, and the two directions are
+		/// both deliberate. An unknown purpose permits, because a derivation that could not read the
+		/// city must not brick the realm. An unknown crown refuses, because the crown is a fact
+		/// about the REALM rather than about a dormant city &mdash; one string, always readable
+		/// (<c>KingdomCrownRules.RegisterStateKey</c>) &mdash; so "we could not tell" is not a state
+		/// the crown has, and treating a missing crown as a present one would hand every uncrowned
+		/// realm the capital's whole catalogue.
+		/// </para>
+		/// </summary>
+		/// <param name="Megastructure">Whether the design being zoned is one.</param>
+		/// <param name="CapitalOnly">Whether the design declares <see cref="CapitalAttribute"/>.</param>
+		/// <param name="Crowned">Whether the realm's crown is set down in THIS city
+		/// (<c>KingdomCrown.CrownedHere</c>).</param>
+		/// <param name="Kept">The key of the megastructure this city already keeps, or null.</param>
+		/// <param name="Key">The design being zoned.</param>
+		public static KingdomPurposeVerdict JudgePurpose(bool Megastructure, bool CapitalOnly, bool Crowned, string Kept, string Key)
+		{
+			if (CapitalOnly)
+			{
+				return Crowned ? KingdomPurposeVerdict.Allowed : KingdomPurposeVerdict.RefusedUncrowned;
+			}
 			if (!Megastructure || string.IsNullOrEmpty(Kept))
 			{
 				return KingdomPurposeVerdict.Allowed;
@@ -155,6 +223,24 @@ namespace ThousandAndFirst
 			return string.Equals(Kept, Key, System.StringComparison.OrdinalIgnoreCase)
 				? KingdomPurposeVerdict.Allowed
 				: KingdomPurposeVerdict.RefusedKept;
+		}
+
+		/// <summary>
+		/// The refusal for a design only a capital may raise. Names where the crown IS rather than
+		/// the rule that keeps it there, so a founder learns the act rather than the law (STANDARDS
+		/// 7b) &mdash; and the act is a real one either way: go and build there, or bring the crown
+		/// here.
+		/// </summary>
+		/// <param name="CapitalName">The city keeping the crown, as the founder reads it, or null
+		/// when the realm has no capital at all.</param>
+		public static string UncrownedRefusalLine(string CapitalName)
+		{
+			if (string.IsNullOrEmpty(CapitalName))
+			{
+				return "Only a capital raises this, and the realm has no capital. Raise a crown hall in one of your cities and set the crown down in it.";
+			}
+			return "Only a capital raises this, and the crown is at " + Named(CapitalName)
+				+ ". Build it there, or raise a crown hall here and move the crown to it.";
 		}
 
 		/// <summary>

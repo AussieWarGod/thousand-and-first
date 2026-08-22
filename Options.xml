@@ -8,6 +8,7 @@
   <option ID="r_TAF_OptionResearch" DisplayText="The Thousand and First: the keepers' research — a bench, one subject at a time, and a map that only shows what you have heard of" Category="Mods" Type="Checkbox" Default="Yes" />
   <option ID="r_TAF_OptionLab" DisplayText="The Thousand and First: the grafting hall — butcher, keep, and have things done to your own body" Category="Mods" Type="Checkbox" Default="Yes" />
   <option ID="r_TAF_OptionAnnexe" DisplayText="The Thousand and First: the becoming annexe — your city keeps its own rolls, and the old machines accept them" Category="Mods" Type="Checkbox" Default="Yes" />
+  <option ID="r_TAF_OptionCapital" DisplayText="The Thousand and First: the crown — one city wears it, the gates lead to it, and the arcology rises only there" Category="Mods" Type="Checkbox" Default="Yes" />
   <option ID="r_TAF_OptionPetitions" DisplayText="The Thousand and First: settlers petition you about the settlement's needs" Category="Mods" Type="Checkbox" Default="Yes" />
   <option ID="r_TAF_OptionPower" DisplayText="The Thousand and First: settlements make and store power at the works you commission" Category="Mods" Type="Checkbox" Default="Yes" />
   <option ID="r_TAF_OptionHappenings" DisplayText="The Thousand and First: the city's life is told - weddings, funerals, festivals, and breakdowns" Category="Mods" Type="Checkbox" Default="Yes" />

@@ -351,6 +351,31 @@ namespace ThousandAndFirst
 		/// </summary>
 		public const string AttrMegastructure = "Megastructure";
 
+		/// <summary>
+		/// Whether only the capital may raise this design (Addendum 22 A4 and the capital ruling
+		/// extending Addendum 19). <c>Capital="yes"</c>; anything else, absence included, means any
+		/// city may.
+		/// <para>
+		/// Deliberately absent from <see cref="SpentAttributes"/> and <see cref="StampedAttributes"/>
+		/// for exactly <see cref="AttrMegastructure"/>'s reason: this is a gate, gates are asked
+		/// again every time somebody asks, and where the crown stands changes under a design that
+		/// has not.
+		/// </para>
+		/// </summary>
+		public const string AttrCapital = "Capital";
+
+		/// <summary>
+		/// The registry key of the great work this design is an outpost of
+		/// (END-STATE-CITIES-RESEARCH &sect;5.5). A key rather than a flag, so a third-party file
+		/// declares an outpost of ITS megastructure without a line of our code changing.
+		/// <para>
+		/// Absent from <see cref="SpentAttributes"/> and <see cref="StampedAttributes"/> for
+		/// <see cref="AttrCapital"/>'s reason: what the realm keeps is re-read every time somebody
+		/// asks, and changing this moves nothing that is already standing.
+		/// </para>
+		/// </summary>
+		public const string AttrSatellite = "Satellite";
+
 		public const string AttrUpgradesTo = "UpgradesTo";
 
 		public const string AttrUpgradeCost = "UpgradeCost";

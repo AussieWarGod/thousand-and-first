@@ -224,7 +224,60 @@ wiring wave wanted; `AllowStaticRegistration` cache-key trace for seven conditio
 classes (first in-game selftest); balance-sim run against a fully-grafted founder (§3.9 risk
 3) before the playtest.
 
+**QB-41 — The crown vs the heart ladder.** §5.3 proposed the crown as the heart's final rung;
+A4 ruled it MOVABLE, and a heart rung cannot move without unbuilding the founding ground's
+own history (`UpgradesTo` never un-upgrades). Shipped as its own XL civic hall; the one place
+a shipped recommendation and a later ruling disagree. **PROVISIONAL: own hall.**
+
+**QB-42 — What the hub's arch offers a 3+-city realm.** A row carries one partner (vanilla's
+`DestinationKey` is one key), so the capital's arch answers the first spoke in register
+order. At two cities a hub IS a pair and nothing is lost. Menu of spokes, round-robin, or
+first-spoke? Supersedes QB-15's relaxation note — the hub kept one row per city with no
+schema change, exactly as predicted. **PROVISIONAL: first-spoke until the roster wave brings
+a third city.**
+
+**QB-43 — The delve design fork not taken.** The stronger fiction is "the delve CLAIMS the
+rock at its foot" — then `ClaimedZones` alone carries everything and no register exists. It
+requires removing the free vertical claim, which MODDING.md and docs/API.md document as
+public behaviour. Shipped: claim stays free, the shaft gates WORK. **Your ruling wanted.**
+
+**QB-44 — The tree has no masonry/stonework node** — foundry is metallurgy. The delve gates
+on `node:measuredwork` (survey before you sink — honest, Village-reachable, no deadlock). If
+the delve should sit behind a stone lane instead, the tree needs a new node. **PROVISIONAL:
+measuredwork.**
+
+**QB-45 — Deep-lane follow-ups bundle** (recorded, none blocking): a deep zone has no
+frontier edges, so no gate road ever wears there — the shaft foot IS its gate, wants a
+delve-aware companion; `EdgeToward` still routes vertical hauls through the West wall (its
+own comment concedes it; the shaft head is the honest entry cell); porters hardcode ≤3 legs
+so multi-hop vertical haulage is unmodelled; `ShaftHopMultiplier = 3` is a design number
+wanting a balance eye; wear on a delve — a ruined shaft still opens the deep at full
+effectiveness; `KingdomReachRules` is stratum-blind (a shrine's spirit reaches through rock
+— probably correct, belief is not haulage, but it should be a decision); the city-book zone
+row carries no shaft field, so the delved set is recomputed per carry (≤9 game-state reads —
+cheap, but the book could hold it if the byte budget is ever re-pinned); and
+`KingdomDistanceMatrix` remains fully implemented with zero runtime callers — its Up/Down
+slots now, at last, mean something.
+
+**QB-46 — Capital numbers are tabled and untuned** (crown 110/13200; the arcology set), same
+shape as QB-36. And a struck crown does NOT auto-promote a former crown hall — the realm
+goes capital-less until the founder sets the crown down again, because a capital that moved
+back on its own would be a capital nobody decided. **PROVISIONAL: keep both.**
+
+**QB-47 — The arcology has no ground of its own yet.** The interior records ship
+`Strata="arcology,surface"` so they are reachable today and move indoors free when the
+hosted-plot carrier gives the arcology real interior ground (zone-spanning was deliberately
+not built — the shipped plot vocabulary tops out at 20×14, and the arcology takes all of
+it). Nothing gates the interior records on the arcology STANDING — capital-only is the
+proxy until the stratum is real. And the registry office reads the SEAT's roster ("a copy
+of a book kept somewhere else") — arguably correct, worth an eye.
+
 ## Answered
+
+**QB-1 — CLOSED: the hub re-key landed exactly as the provisional promised.** Pairwise
+shipped first; the capital wave re-keyed the register by rewriting one column — no arch
+visited, no row lost, asserted column-by-column. Cities without arches untouched; a capital
+keeping no arch leaves the register byte-identical and says so.
 
 **QB-29 — FIXED: the refining yard applies its own wear.** One correction to the entry as
 written: the fix rides the EFFORT percent, not the crew term — every yard stands two, and a

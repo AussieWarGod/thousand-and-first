@@ -338,10 +338,17 @@ namespace ThousandAndFirst
 				Popup.Show("You rule nothing yet.");
 				return;
 			}
+			// Whether the building this screen was opened from may hold the ceremony at all. The
+			// enrolment gate already asks this (JudgeFor's Annexe: argument), and asking it here as
+			// well is what keeps the OFFER honest: a registry office that listed a name and then
+			// refused it on the press would be teaching the founder that the outpost is broken
+			// rather than that it is an outpost (Addendum 22 A2; END-STATE §5.5).
+			bool enrols = Building != null && Building.HasPart("r_KingdomBecomingAnnexe");
+			string city = CityAt(realm, Building);
 			while (true)
 			{
 				List<string> rolls = KingdomAnnexeRules.Rolls(KingdomZoning.Roster(realm));
-				List<GameObject> candidates = Candidates(realm, Building, Actor);
+				List<GameObject> candidates = enrols ? Candidates(realm, Building, Actor) : new List<GameObject>();
 				List<string> options = new List<string>();
 				List<GameObject> targets = new List<GameObject>();
 				for (int i = 0; i < candidates.Count; i++)
@@ -351,9 +358,12 @@ namespace ThousandAndFirst
 				}
 				if (options.Count == 0)
 				{
-					// 7b's applicable-but-blocked case: the register is open, there is nobody in
-					// front of it this city could write down, and nothing else would say so.
-					options.Add("{{K|There is nobody here this city could enter}}");
+					// 7b's applicable-but-blocked case, and it has two readings that must not be
+					// told with one sentence: the annexe with nobody in front of it is waiting for a
+					// person, and the outpost is never going to write anybody down at all.
+					options.Add(enrols
+						? "{{K|There is nobody here this city could enter}}"
+						: "{{K|Names are entered on the rolls only at the annexe itself}}");
 					targets.Add(null);
 				}
 				List<string> names = RollNames(Building, rolls);
@@ -365,7 +375,7 @@ namespace ThousandAndFirst
 				options.Add("Close");
 				targets.Add(null);
 				int picked = Popup.PickOption(
-					Title: KingdomAnnexeRules.RegisterTitle(realm.SeatName),
+					Title: KingdomAnnexeRules.RegisterTitle(city),
 					Intro: KingdomAnnexeRules.RegisterIntro(KeeperAt(realm), rolls.Count),
 					Options: options, AllowEscape: true, RespectOptionNewlines: true);
 				if (picked < 0 || picked >= targets.Count || targets[picked] == null)
@@ -587,6 +597,24 @@ namespace ThousandAndFirst
 				AlreadyKin: KinByBirth(Who),
 				AlreadyEnrolled: Who != null && HeldBy(Realm, Who.GeneID),
 				StoredWater: StoredWater(Realm, Building));
+		}
+
+		/// <summary>
+		/// The city this building actually stands in, for the heading over its own book.
+		/// <para>
+		/// Not <c>Realm.SeatName</c>, which is what this used to read. The seat is the settlement
+		/// that owns physical truth and <b>retargeting it is never automatic</b>
+		/// (FOUNDATION-CONTRACT), so a founder standing in front of a register in their other city
+		/// could be shown the seat's name over the seat's rolls and reasonably conclude they were
+		/// reading a different city's book. The ground is asked instead, exactly as the arch asks
+		/// it, and the seat is only the answer when the ground could not be named at all.
+		/// </para>
+		/// </summary>
+		private static string CityAt(KingdomSystem Realm, GameObject Building)
+		{
+			Zone zone = Building?.CurrentZone;
+			string city = (zone == null) ? null : KingdomCrown.CityOf(Realm, zone.ZoneID);
+			return string.IsNullOrEmpty(city) ? Realm.SeatName : city;
 		}
 
 		private static int StoredWater(KingdomSystem Realm, GameObject Building)
