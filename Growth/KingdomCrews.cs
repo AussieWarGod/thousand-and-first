@@ -30,7 +30,7 @@ namespace ThousandAndFirst
 	/// </summary>
 	public static class KingdomCrews
 	{
-		// Keyed by building Key like KingdomQol's own Declared/OfferCache (STANDARDS 6): a later
+		// Keyed by building Key like KingdomQol's own Declared registry (STANDARDS 6): a later
 		// file re-using a key owns that design's whole CrewNeeds, and a re-declaration that names
 		// no CrewNeeds at all correctly leaves it with none.
 		private static readonly Dictionary<string, string> Declared = new Dictionary<string, string>();

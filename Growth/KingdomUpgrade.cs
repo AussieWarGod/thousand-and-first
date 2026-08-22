@@ -636,7 +636,7 @@ namespace ThousandAndFirst
 			// live. One citizen with nowhere to charge holds the rebuild exactly as a missing roof
 			// does -- and holds it only: nobody is moved, and the refusal is named by the verdict.
 			demand.QuartersRefused = demand.IsHousing
-				&& KingdomUpgradeRules.QuartersRefused(KingdomQol.OfferOf(bestKey), ResidentProfilesIn(Z), out _);
+				&& KingdomUpgradeRules.QuartersRefused(KingdomQol.OfferOf(bestKey, Z), ResidentProfilesIn(Z), out _);
 			demand.MaterialsInHand = Z == null || KingdomMaterials.CanPayUpgrade(Z, SuccessorKey, out _);
 			demand.CraftMet = CraftReaches(System, Z, SuccessorKey);
 			return demand;

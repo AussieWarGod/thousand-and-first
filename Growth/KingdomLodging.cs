@@ -18,8 +18,10 @@ namespace ThousandAndFirst
 	/// <c>KingdomQol.ProfileOf</c> &mdash; derived from vanilla truth first (a robot needs charge
 	/// whether or not anybody authored it) and then refined by the blueprint's own
 	/// <c>r_TAF_*</c> tags. What a home offers is <c>KingdomQol.OfferOf</c>, which is the design's
-	/// declared <c>Provides</c> plus what its roof gives. This file reads no tag off an object
-	/// itself: there is one vocabulary and one place it is assembled.
+	/// declared <c>Provides</c> plus what its roof gives <em>on the ground it stands on</em>
+	/// &mdash; the zone goes with the key at every call here, because an open plot in the deep
+	/// offers shade and not sky. This file reads no tag off an object itself: there is one
+	/// vocabulary and one place it is assembled.
 	/// </para>
 	/// <para>
 	/// <b>Where a design lives.</b> Storing "who lives where" needs an identity for the specific
@@ -203,7 +205,7 @@ namespace ThousandAndFirst
 				List<GameObject> occupants;
 				occupancy.TryGetValue(plotId, out occupants);
 				offers.Add(new KingdomLodgingRules.ArrivalHome(
-					new List<string>(KingdomQol.OfferOf(entry.Key)),
+					new List<string>(KingdomQol.OfferOf(entry.Key, Z)),
 					capacity,
 					(occupants == null) ? 0 : occupants.Count,
 					occupants != null && AnyOccupantConflicts(refuses, selfTags, creed, occupants, KingdomFaith.EducatedCloseness(Z, QuartersOf(entry), homes[i]))));
@@ -352,7 +354,7 @@ namespace ThousandAndFirst
 					continue;
 				}
 				anyStanding = true;
-				List<string> provides = new List<string>(KingdomQol.OfferOf(entry.Key));
+				List<string> provides = new List<string>(KingdomQol.OfferOf(entry.Key, Z));
 				if (!KingdomLodgingRules.MeetsNeeds(needs, provides))
 				{
 					continue;
@@ -417,7 +419,7 @@ namespace ThousandAndFirst
 			{
 				KingdomRules.BuildEntry winEntry;
 				TryGetBuiltEntry(eligibleHomes[chosen], out winEntry);
-				string matched = KingdomLodgingRules.MatchedTag(needs, (winEntry == null) ? null : new List<string>(KingdomQol.OfferOf(winEntry.Key)));
+				string matched = KingdomLodgingRules.MatchedTag(needs, (winEntry == null) ? null : new List<string>(KingdomQol.OfferOf(winEntry.Key, Z)));
 				string line = residentName + " found shelter: " + KingdomLodgingRules.HomeSuffix((winEntry != null) ? winEntry.Name : null, matched) + ".";
 				KingdomChronicle.Record(System, line);
 			}
@@ -802,7 +804,7 @@ namespace ThousandAndFirst
 			KingdomRules.BuildEntry entry;
 			TryGetBuiltEntry(home, out entry);
 			List<string> needs = new List<string>(KingdomQol.ProfileOf(resident).Needs);
-			string matched = KingdomLodgingRules.MatchedTag(needs, (entry == null) ? null : new List<string>(KingdomQol.OfferOf(entry.Key)));
+			string matched = KingdomLodgingRules.MatchedTag(needs, (entry == null) ? null : new List<string>(KingdomQol.OfferOf(entry.Key, Z)));
 			return " {{K|(" + KingdomLodgingRules.HomeSuffix((entry != null) ? entry.Name : null, matched) + ")}}";
 		}
 

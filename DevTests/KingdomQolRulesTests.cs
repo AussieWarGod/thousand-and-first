@@ -386,6 +386,145 @@ namespace ThousandAndFirst.Tests
 			Assert.IsFalse(Holds(offer, KingdomQolRules.TagDark));
 		}
 
+		// --- The stratum: weather reaches nothing under rock (QB-19) ---------------------------
+
+		[TestCase(KingdomPlotRules.RoofState.Open)]
+		[TestCase(KingdomPlotRules.RoofState.Soft)]
+		[TestCase(KingdomPlotRules.RoofState.Walled)]
+		[TestCase(KingdomPlotRules.RoofState.Carved)]
+		public void ProvidedByRoof_UndergroundEveryRoofIsShadeAndNoneIsSky(KingdomPlotRules.RoofState roof)
+		{
+			string[] provided = KingdomQolRules.ProvidedByRoof(roof, Underground: true);
+			Assert.AreEqual(1, provided.Length);
+			Assert.AreEqual(KingdomQolRules.TagDark, provided[0]);
+		}
+
+		[Test]
+		public void ProvidedByRoof_AnOpenPlotUnderTheRockDoesNotAdvertiseOpenSky()
+		{
+			// The defect this rule exists to close: RoofOnGround correctly leaves an open plot open
+			// underground -- Open is a claim about walls, and a field in the deep raises none -- so
+			// reading AdmitsSky alone sold a cellar-field as sky and housed a photosynthetic
+			// settler several hundred feet under the sun.
+			Assert.IsTrue(KingdomPlotRules.AdmitsSky(
+				KingdomPlotRules.RoofOnGround(KingdomPlotRules.RoofState.Open, Underground: true)));
+			string[] provided = KingdomQolRules.ProvidedByRoof(KingdomPlotRules.RoofState.Open, Underground: true);
+			Assert.IsFalse(Holds(provided, KingdomQolRules.TagSky));
+			Assert.IsTrue(Holds(provided, KingdomQolRules.TagDark));
+		}
+
+		[TestCase(KingdomPlotRules.RoofState.Open, "taf:sky")]
+		[TestCase(KingdomPlotRules.RoofState.Soft, "taf:sky")]
+		[TestCase(KingdomPlotRules.RoofState.Walled, "taf:dark")]
+		[TestCase(KingdomPlotRules.RoofState.Carved, "taf:dark")]
+		public void ProvidedByRoof_TheSurfaceAnswerIsExactlyWhatItAlwaysWas(KingdomPlotRules.RoofState roof, string expected)
+		{
+			string[] provided = KingdomQolRules.ProvidedByRoof(roof, Underground: false);
+			Assert.AreEqual(1, provided.Length);
+			Assert.AreEqual(expected, provided[0]);
+			CollectionAssert.AreEqual(KingdomQolRules.ProvidedByRoof(roof), provided);
+		}
+
+		[TestCase(KingdomPlotRules.RoofState.Open)]
+		[TestCase(KingdomPlotRules.RoofState.Soft)]
+		[TestCase(KingdomPlotRules.RoofState.Walled)]
+		[TestCase(KingdomPlotRules.RoofState.Carved)]
+		public void ProvidedByRoof_DoesNotCareWhetherItIsHandedTheDeclaredRoofOrTheGroundRoof(KingdomPlotRules.RoofState roof)
+		{
+			for (int i = 0; i < 2; i++)
+			{
+				bool underground = i == 1;
+				CollectionAssert.AreEqual(
+					KingdomQolRules.ProvidedByRoof(KingdomPlotRules.RoofOnGround(roof, underground), underground),
+					KingdomQolRules.ProvidedByRoof(roof, underground));
+			}
+		}
+
+		[Test]
+		public void DesignOffer_AnOpenPlotInTheDeepOffersShadeAndKeepsWhatItDeclared()
+		{
+			string[] offer = KingdomQolRules.DesignOffer("taf:damp", KingdomPlotRules.RoofState.Open, IsPlot: true, Underground: true);
+			Assert.IsFalse(Holds(offer, KingdomQolRules.TagSky));
+			Assert.IsTrue(Holds(offer, KingdomQolRules.TagDark));
+			Assert.IsTrue(Holds(offer, KingdomQolRules.TagDamp));
+		}
+
+		[Test]
+		public void DesignOffer_CanvasUnderTheRockIsNoMoreSkyThanRockIs()
+		{
+			Assert.IsFalse(Holds(
+				KingdomQolRules.DesignOffer(null, KingdomPlotRules.RoofState.Soft, IsPlot: true, Underground: true),
+				KingdomQolRules.TagSky));
+		}
+
+		[TestCase(KingdomPlotRules.RoofState.Open)]
+		[TestCase(KingdomPlotRules.RoofState.Soft)]
+		[TestCase(KingdomPlotRules.RoofState.Walled)]
+		[TestCase(KingdomPlotRules.RoofState.Carved)]
+		public void DesignOffer_TheSurfaceOfferIsUnchangedForEveryRoofState(KingdomPlotRules.RoofState roof)
+		{
+			CollectionAssert.AreEqual(
+				KingdomQolRules.DesignOffer("taf:quiet", roof, IsPlot: true),
+				KingdomQolRules.DesignOffer("taf:quiet", roof, IsPlot: true, Underground: false));
+		}
+
+		[Test]
+		public void DesignOffer_ASingleCellWorkInTheDeepStillOffersOnlyWhatItDeclared()
+		{
+			string[] offer = KingdomQolRules.DesignOffer("taf:charge", KingdomPlotRules.RoofState.Open, IsPlot: false, Underground: true);
+			Assert.AreEqual(1, offer.Length);
+			Assert.IsTrue(Holds(offer, KingdomQolRules.TagCharge));
+			Assert.IsFalse(Holds(offer, KingdomQolRules.TagDark));
+		}
+
+		// --- The same question the lodging pass actually asks ----------------------------------
+
+		[Test]
+		public void Lodging_ThePhotosyntheticSettlerTakesAnOpenPlotInTheSunAndRefusesTheSameOneInTheDeep()
+		{
+			ResidentTruth truth = ResidentTruth.Person;
+			truth.Photosynthetic = true;
+			List<string> needs = new List<string>(KingdomQolRules.Derive(truth).Needs);
+			Assert.IsTrue(KingdomLodgingRules.MeetsNeeds(needs, new List<string>(
+				KingdomQolRules.DesignOffer(null, KingdomPlotRules.RoofState.Open, IsPlot: true, Underground: false))));
+			Assert.IsFalse(KingdomLodgingRules.MeetsNeeds(needs, new List<string>(
+				KingdomQolRules.DesignOffer(null, KingdomPlotRules.RoofState.Open, IsPlot: true, Underground: true))));
+		}
+
+		[Test]
+		public void Lodging_TheFungalSettlerTakesTheDeepPlotThePhotosyntheticOneRefused()
+		{
+			ResidentTruth truth = ResidentTruth.Person;
+			truth.Fungal = true;
+			QolProfile profile = KingdomQolRules.Derive(truth);
+			string[] deep = KingdomQolRules.DesignOffer("taf:damp", KingdomPlotRules.RoofState.Open, IsPlot: true, Underground: true);
+			Assert.IsTrue(KingdomLodgingRules.MeetsNeeds(new List<string>(profile.Needs), new List<string>(deep)));
+			Assert.AreEqual(KingdomCeremonyRules.TasteShadeAmount, KingdomQolRules.PreferShade(deep, profile));
+		}
+
+		[Test]
+		public void Lodging_TheDarkAFungalSettlerWantedIsOnlyThereOnceTheRockIs()
+		{
+			ResidentTruth truth = ResidentTruth.Person;
+			truth.Fungal = true;
+			QolProfile profile = KingdomQolRules.Derive(truth);
+			string[] sunlit = KingdomQolRules.DesignOffer("taf:damp", KingdomPlotRules.RoofState.Open, IsPlot: true, Underground: false);
+			Assert.AreEqual(0, KingdomQolRules.PreferShade(sunlit, profile));
+		}
+
+		[Test]
+		public void Lodging_ASettlerWhoWillNotLiveUnderSkyIsRefusedTheOpenPlotOnlyInTheSun()
+		{
+			QolProfile profile = Profile(null, null, new string[1] { KingdomQolRules.TagSky });
+			string tag;
+			Assert.AreEqual(QolVerdict.Refused, KingdomQolRules.Judge(
+				KingdomQolRules.DesignOffer(null, KingdomPlotRules.RoofState.Open, IsPlot: true, Underground: false),
+				profile, out tag));
+			Assert.AreEqual(QolVerdict.Match, KingdomQolRules.Judge(
+				KingdomQolRules.DesignOffer(null, KingdomPlotRules.RoofState.Open, IsPlot: true, Underground: true),
+				profile, out tag));
+		}
+
 		// --- The match ------------------------------------------------------------------------
 
 		[Test]

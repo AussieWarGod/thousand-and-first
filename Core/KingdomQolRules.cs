@@ -180,12 +180,14 @@ namespace ThousandAndFirst
 		/// <summary>Damp: a cellar, a cistern room, a fungal bed.</summary>
 		public const string TagDamp = "taf:damp";
 
-		/// <summary>Out of the sun. Derived by any tier that encloses (<see cref="ProvidedByRoof"/>).
-		/// </summary>
+		/// <summary>Out of the sun. Derived by any tier that encloses, and by every tier
+		/// underground, where the hill encloses on the settlement's behalf
+		/// (<see cref="ProvidedByRoof(KingdomPlotRules.RoofState, bool)"/>).</summary>
 		public const string TagDark = "taf:dark";
 
 		/// <summary>Open sky overhead. Derived by any tier weather reaches under, canvas
-		/// included.</summary>
+		/// included &mdash; and only above ground, because weather reaches nothing under
+		/// rock.</summary>
 		public const string TagSky = "taf:sky";
 
 		/// <summary>A room away from the noise of the day &mdash; the same want the housing taste
@@ -373,8 +375,8 @@ namespace ThousandAndFirst
 		/// a lit room and simply be no happier for it.</item>
 		/// <item><b>Photosynthetic</b> needs <see cref="TagSky"/>, which is
 		/// <c>PhotosyntheticSkin.HasSunlight</c> stated as a placement constraint. Canvas admits
-		/// sky (<c>KingdomPlotRules.AdmitsSky</c>), so a tent houses them and a sealed room does
-		/// not.</item>
+		/// sky (<c>KingdomPlotRules.AdmitsSky</c>), so a tent houses them, a sealed room does not,
+		/// and nothing underground does whatever its roof says.</item>
 		/// <item><b>Inorganic</b> eats and drinks nothing, whatever parts it happens to carry:
 		/// <c>GameObject.IsAlive</c> requires <c>IsOrganic</c>, and the food and water ladders are
 		/// a living body's.</item>
@@ -479,10 +481,32 @@ namespace ThousandAndFirst
 		/// for anything weather reaches under, dark for anything it does not. Read straight off
 		/// <c>KingdomPlotRules.AdmitsSky</c>, so canvas gives sky and a carved room does not, and
 		/// the two can never drift apart.
+		/// <para>
+		/// <b>Sky is weather-reach, and weather reaches nothing under rock.</b> Underground every
+		/// roof reads dark, the open plot included. That is not a contradiction of
+		/// <c>KingdomPlotRules.RoofOnGround</c>, which correctly leaves an open plot open down
+		/// there: Open is a claim about walls, and a field cut into the deep raises none, exactly
+		/// as it raises none in the sun. It simply has a hill over it. Reading the roof state
+		/// alone would have a photosynthetic settler housed in a cellar-field on the strength of a
+		/// sky that is several hundred feet of rock away.
+		/// </para>
+		/// </summary>
+		/// <param name="Roof">The tier's roof state, as declared.</param>
+		/// <param name="Underground">Whether this ground is below
+		/// <c>KingdomRules.SurfaceZLevel</c>. Handed in rather than derived: this file has no
+		/// engine to ask, and <c>KingdomPlotRules.IsUnderground</c> is the one read that answers
+		/// it.</param>
+		public static string[] ProvidedByRoof(KingdomPlotRules.RoofState Roof, bool Underground)
+		{
+			return new string[1] { (!Underground && KingdomPlotRules.AdmitsSky(Roof)) ? TagSky : TagDark };
+		}
+
+		/// <summary>What a roof provides on the surface, where weather does reach.
+		/// <see cref="ProvidedByRoof(KingdomPlotRules.RoofState, bool)"/> is the whole rule.
 		/// </summary>
 		public static string[] ProvidedByRoof(KingdomPlotRules.RoofState Roof)
 		{
-			return new string[1] { KingdomPlotRules.AdmitsSky(Roof) ? TagSky : TagDark };
+			return ProvidedByRoof(Roof, Underground: false);
 		}
 
 		/// <summary>
@@ -493,10 +517,19 @@ namespace ThousandAndFirst
 		/// <param name="Roof">The tier's roof state.</param>
 		/// <param name="IsPlot">False for a design that takes no ground at all, whose roof state is
 		/// not a claim about anything; such a design offers only what it declared.</param>
-		public static string[] DesignOffer(string Declared, KingdomPlotRules.RoofState Roof, bool IsPlot)
+		/// <param name="Underground">The stratum this design is standing in, for
+		/// <see cref="ProvidedByRoof(KingdomPlotRules.RoofState, bool)"/>. One design raised on two
+		/// strata offers two different things, which is why the caller says where.</param>
+		public static string[] DesignOffer(string Declared, KingdomPlotRules.RoofState Roof, bool IsPlot, bool Underground)
 		{
 			string[] declared = ParseTags(Declared);
-			return IsPlot ? Merge(ProvidedByRoof(Roof), declared) : declared;
+			return IsPlot ? Merge(ProvidedByRoof(Roof, Underground), declared) : declared;
+		}
+
+		/// <summary>The same offer, from a design standing on the surface.</summary>
+		public static string[] DesignOffer(string Declared, KingdomPlotRules.RoofState Roof, bool IsPlot)
+		{
+			return DesignOffer(Declared, Roof, IsPlot, Underground: false);
 		}
 
 		// --- The match ------------------------------------------------------------------------

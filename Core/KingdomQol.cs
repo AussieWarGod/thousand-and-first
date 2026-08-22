@@ -37,14 +37,26 @@ namespace ThousandAndFirst
 		// attribute and merges happen before anything is parsed.
 		private static readonly Dictionary<string, string> Declared = new Dictionary<string, string>();
 
-		private static readonly Dictionary<string, string[]> OfferCache = new Dictionary<string, string[]>();
+		// One design does not have one offer. What a roof gives depends on the stratum it stands
+		// in -- nothing underground admits sky, whatever its roof state says -- so the assembled
+		// answer is cached per stratum rather than per key, and a design raised both above and
+		// below the surface is answered correctly for each.
+		private static readonly Dictionary<string, string[]> SurfaceOffers = new Dictionary<string, string[]>();
+
+		private static readonly Dictionary<string, string[]> DeepOffers = new Dictionary<string, string[]>();
+
+		private static Dictionary<string, string[]> OfferCacheFor(bool Underground)
+		{
+			return Underground ? DeepOffers : SurfaceOffers;
+		}
 
 		/// <summary>Forgets every registered <c>Provides</c>. Called by the registry loader before
 		/// it re-reads the XML streams.</summary>
 		public static void ClearProvides()
 		{
 			Declared.Clear();
-			OfferCache.Clear();
+			SurfaceOffers.Clear();
+			DeepOffers.Clear();
 		}
 
 		/// <summary>
@@ -63,7 +75,8 @@ namespace ThousandAndFirst
 			{
 				return;
 			}
-			OfferCache.Remove(Key);
+			SurfaceOffers.Remove(Key);
+			DeepOffers.Remove(Key);
 			if (string.IsNullOrEmpty(Provides) || Provides.Trim().Length == 0)
 			{
 				Declared.Remove(Key);
@@ -91,41 +104,68 @@ namespace ThousandAndFirst
 		}
 
 		/// <summary>
-		/// Everything a design offers a resident: its declared tags plus what its own roof gives
-		/// (sky under canvas and open ground, shade under wall and rock), so an author who never
-		/// wrote a <c>Provides</c> still houses a photosynthetic settler correctly.
+		/// Everything a design offers a resident on the ground it is standing on: its declared
+		/// tags plus what its own roof gives (sky under canvas and open ground, shade under wall
+		/// and rock), so an author who never wrote a <c>Provides</c> still houses a photosynthetic
+		/// settler correctly.
+		/// <para>
+		/// The stratum is the caller's to supply because it is not a property of the design. An
+		/// open plot cut into the deep is still an open plot &mdash; it raises no walls, exactly as
+		/// <c>KingdomPlotRules.RoofOnGround</c> says &mdash; but the hill is over it, so it offers
+		/// shade and never sky.
+		/// </para>
 		/// </summary>
+		/// <param name="BuildingKey">The design's registry key. Blank offers nothing.</param>
+		/// <param name="Underground">Whether this ground is below
+		/// <c>KingdomRules.SurfaceZLevel</c>; <c>KingdomPlotRules.IsUnderground</c> is the read
+		/// that answers it.</param>
 		/// <returns>Never null. Empty for a design that declares nothing and takes no ground.
 		/// </returns>
-		public static string[] OfferOf(string BuildingKey)
+		public static string[] OfferOf(string BuildingKey, bool Underground)
 		{
 			if (string.IsNullOrEmpty(BuildingKey))
 			{
 				return KingdomQolRules.NoTags;
 			}
+			Dictionary<string, string[]> cache = OfferCacheFor(Underground);
 			string[] cached;
-			if (OfferCache.TryGetValue(BuildingKey, out cached))
+			if (cache.TryGetValue(BuildingKey, out cached))
 			{
 				return cached;
 			}
 			KingdomPlotRules.PlotSpec spec;
 			bool isPlot = KingdomPlots.TryGetSpec(BuildingKey, out spec) && spec != null;
 			string[] offer = KingdomQolRules.DesignOffer(DeclaredProvides(BuildingKey),
-				isPlot ? spec.Roof : KingdomPlotRules.RoofState.Walled, isPlot);
-			OfferCache[BuildingKey] = offer;
+				isPlot ? spec.Roof : KingdomPlotRules.RoofState.Walled, isPlot, Underground);
+			cache[BuildingKey] = offer;
 			return offer;
 		}
 
+		/// <summary>The same offer, for a caller holding the zone the design stands in &mdash;
+		/// which is every caller that reads a settlement's own housing. A null zone reads as the
+		/// surface.</summary>
+		public static string[] OfferOf(string BuildingKey, Zone Z)
+		{
+			return OfferOf(BuildingKey, Z != null && KingdomPlotRules.IsUnderground(Z.Z));
+		}
+
+		/// <summary>What a design offers on the surface.</summary>
+		public static string[] OfferOf(string BuildingKey)
+		{
+			return OfferOf(BuildingKey, Underground: false);
+		}
+
 		/// <summary>What a work standing on the ground offers, read off the design key it was
-		/// raised under. A work with no key on it &mdash; anything the settlement did not raise
-		/// &mdash; offers nothing.</summary>
+		/// raised under and the stratum it is standing in. A work with no key on it &mdash;
+		/// anything the settlement did not raise &mdash; offers nothing, and a work in no zone at
+		/// all is read as standing on the surface.</summary>
 		public static string[] OfferOf(GameObject Work)
 		{
 			if (Work == null)
 			{
 				return KingdomQolRules.NoTags;
 			}
-			return OfferOf(Work.GetStringProperty(KingdomUpgrade.BuildKeyProperty));
+			return OfferOf(Work.GetStringProperty(KingdomUpgrade.BuildKeyProperty), Work.CurrentZone);
 		}
 
 		// --- Reading a creature ------------------------------------------------------------

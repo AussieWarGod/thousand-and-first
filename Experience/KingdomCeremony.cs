@@ -237,7 +237,9 @@ namespace ThousandAndFirst
 				// (KingdomSubsidenceRules.SupportedLevel). It replaces rather than accumulates:
 				// one settlement has one named notable, and what the place is worth to them is
 				// re-derived the next time the office changes hands.
-				System.NotableShade = KingdomCeremonyRules.NotableShade(met, KingdomQol.PreferShade(Holder, QuartersKey));
+				// The offer is read against the ground the quarters stand on, not the design key
+				// alone -- underground there is no sky for a taste to be met by (QB-19).
+				System.NotableShade = KingdomCeremonyRules.NotableShade(met, KingdomQolRules.PreferShade(KingdomQol.OfferOf(QuartersKey, Z), KingdomQol.ProfileOf(Holder)));
 				KingdomLog.Log("ceremony: tastes " + HolderName + " shade=" + System.NotableShade);
 			});
 		}
