@@ -55,6 +55,26 @@ yes — the errand was real, whoever finishes it.**
 rite, or fire as they land? **Rec + PROVISIONAL: queue to the rite — the rite is the witness
 surface.**
 
+**QB-10 — Mirror Bug's 100% reflect (lab audit #6).** `ReflectDamage` sources range from
+Quartz Baboon's 5% to Mirror Bug's 100%. Ship the class with: (a) a cap (e.g. the graft
+grants the class at a fixed low magnitude regardless of source); (b) source-split records
+(baboon-hide graft ≠ mirror-carapace graft, priced apart); (c) exclude Mirror Bug as a
+source. **Rec + PROVISIONAL: (b) source-split, Mirror Bug's record priced as rung-3.**
+
+**QB-11 — `TemperatureVenting` is Girsh-nephilim-only.** Shipping it as a derived record
+gives the lab a second nephal product beside the Cold Regard named procedure. (a) ship as
+II/3 with `rite:Girsh` gate; (b) shelf it — nephal bodies feed the Cold Regard only. **Rec +
+PROVISIONAL: (b) shelf — one nephal product, and it is the named one.**
+
+**QB-12 — Should the lab sell `Swarmer`?** Pack-synergy (+hit/+pen per ally adjacent to
+target) is null solo but multiplies with the muster-hall companion lane later. Sell now,
+hold for muster hall, or never? **Rec + PROVISIONAL: hold for the muster-hall wave —
+synergy products ship beside the systems they multiply.**
+
+**QB-13 — D2 wishlist delivered** (`_notes/LAB-CLASS-AUDIT.md`): 10 survivors ranked, 32
+rejections cited, 3 borderline parked. Author adds/removes at check-in; the lab wave ships
+the survivors minus QB-11/QB-12 holds under the provisionals above.
+
 ## Answered
 
 (none yet)
