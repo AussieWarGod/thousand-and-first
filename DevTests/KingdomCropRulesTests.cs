@@ -2,6 +2,7 @@
 using System;
 using NUnit.Framework;
 using ThousandAndFirst;
+using ThousandAndFirst.Simulation.City;
 
 namespace ThousandAndFirst.Tests
 {
@@ -217,6 +218,86 @@ namespace ThousandAndFirst.Tests
 			Assert.AreEqual(
 				KingdomCropRules.HarvestYield(16, 100),
 				KingdomCropRules.HarvestYield(16, 400));
+		}
+
+		// --- The third factor: what the keepers worked out (RESEARCH-SYSTEM-DESIGN §8.2) -------
+
+		[TestCase(1)]
+		[TestCase(4)]
+		[TestCase(16)]
+		[TestCase(400)]
+		public void HarvestYield_AtTheBaselineMethodIsExactlyTheFieldItAlwaysWas(int rows)
+		{
+			// The regression bar for the whole lane: a realm that has researched nothing gathers
+			// the numbers this file asserted before the tree existed, to the serving.
+			for (int effectiveness = 0; effectiveness <= 100; effectiveness += 10)
+			{
+				Assert.AreEqual(
+					KingdomCropRules.HarvestYield(rows, effectiveness),
+					KingdomCropRules.HarvestYield(rows, effectiveness, KingdomProductionRules.BaselineMethodPercent),
+					"the baseline method moved a field's own yield");
+				Assert.AreEqual(
+					KingdomCropRules.HarvestYield(rows, effectiveness),
+					KingdomCropRules.HarvestYield(rows, effectiveness, KingdomResearchRules.MethodPercent(0)),
+					"an empty roster is not the baseline the field reads");
+			}
+		}
+
+		[Test]
+		public void HarvestYield_LiftsAGatheringByTheMethodAndNotByTheEffectivenessClamp()
+		{
+			// The third factor is applied AFTER the clamp, so it is not a way of running a field
+			// above what its hands and its condition manage - it is a heavier row off the same
+			// hands. Sixteen rows at three a row is 48; half again is 72.
+			Assert.AreEqual(48, KingdomCropRules.HarvestYield(16, 100, 100));
+			Assert.AreEqual(72, KingdomCropRules.HarvestYield(16, 100, 150));
+			// And the clamp still holds underneath it: a corrupt 400 reads as 100 and is then
+			// lifted by the same half, rather than compounding into a four-fold crop.
+			Assert.AreEqual(
+				KingdomCropRules.HarvestYield(16, 100, 150),
+				KingdomCropRules.HarvestYield(16, 400, 150));
+		}
+
+		[TestCase(0)]
+		[TestCase(50)]
+		[TestCase(99)]
+		public void HarvestYield_IsNeverATaxOnAFieldWhoseRealmAbstained(int method)
+		{
+			// A method under the baseline is read AS the baseline. No path through the tree can
+			// leave a realm gathering less than one that never heard of it.
+			Assert.AreEqual(
+				KingdomCropRules.HarvestYield(16, 100),
+				KingdomCropRules.HarvestYield(16, 100, method));
+		}
+
+		[TestCase(100)]
+		[TestCase(150)]
+		public void HarvestYield_StillGathersNothingFromAFieldNobodyWorks(int method)
+		{
+			// Addendum 8 clause 2, in the crop lane: no amount of knowledge staffs a field. Zero
+			// effectiveness returns before the method factor is ever reached.
+			Assert.AreEqual(0, KingdomCropRules.HarvestYield(16, 0, method));
+			Assert.AreEqual(0, KingdomCropRules.HarvestYield(0, 100, method));
+		}
+
+		[Test]
+		public void GatheredYield_CarriesTheMethodIntoEveryCycleOfAReckoning()
+		{
+			int baseline = KingdomCropRules.GatheredYield(16, 10, 4, CountsRipeLast: true, EffectivenessPercent: 100);
+			Assert.AreEqual(
+				baseline,
+				KingdomCropRules.GatheredYield(16, 10, 4, CountsRipeLast: true, EffectivenessPercent: 100,
+					MethodPercent: KingdomProductionRules.BaselineMethodPercent),
+				"the baseline method moved a whole reckoning");
+			Assert.AreEqual(
+				KingdomCropRules.HarvestYield(16, 100, 150) * 3 + KingdomCropRules.HarvestYield(10, 100, 150),
+				KingdomCropRules.GatheredYield(16, 10, 4, CountsRipeLast: true, EffectivenessPercent: 100,
+					MethodPercent: 150),
+				"a reckoning is every cycle's own methoded gathering and nothing else");
+			Assert.Greater(
+				KingdomCropRules.GatheredYield(16, 10, 4, CountsRipeLast: true, EffectivenessPercent: 100,
+					MethodPercent: 150),
+				baseline);
 		}
 
 		// --- The cycle, closed form -----------------------------------------------------------

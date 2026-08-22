@@ -40,6 +40,21 @@ invariants the water lane now has to keep:
      holdable both cheaply and grandly. The leak table asserts the fourth: a vessel's capacity
      over `LeakDaysToEmptyAtCeiling` must stay under its rung's own daily bill.
 
+  6. THE THIRD FACTOR, AND THE YARD'S OWN CONDITION (Addendum 10(b), QB-29,
+     RESEARCH-SYSTEM-DESIGN 8.2). Two corrections that both move production numbers, so
+     they are modelled in one pass. (a) The refining yard had never applied wear at all: it
+     read the staffing pass's crew stretch and stopped there, while the crops and the
+     networks folded their own condition in as the ruling requires. It folds it in now — into
+     the EFFORT percent rather than into the head count, because every yard in the catalogue
+     stands two and a condition folded into a head count of two truncates a damaged yard to
+     nobody — and section 2 grows a wear ladder that prices the neglect. (b) The keepers'
+     method (`KingdomProductionRules.Methoded`) is a THIRD factor — output = base x crew x
+     wear x method — and it now reaches the city book's water and food rates and the crop
+     harvest as well as the yard. It is 100 for a realm that has researched nothing, and 100
+     is a no-op, so every table in this file is still a BASELINE table and not one number in
+     it moved for the method: what is asserted below is that the baseline agrees and that the
+     lane is a bonus and never a tax.
+
 Every constant is read out of the C# and the model refuses to run if a body it depends on
 has moved, so this cannot silently drift from the source. Run `python3 _notes/balance-sim.py`.
 
@@ -60,6 +75,13 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 RULES_CS = os.path.join(ROOT, "Core", "KingdomRules.cs")
 CROP_CS = os.path.join(ROOT, "Growth", "KingdomCropRules.cs")
 MAT_CS = os.path.join(ROOT, "Growth", "KingdomMaterialRules.cs")
+# The engine-coupled half of the yard, read only to PIN it. The arithmetic this model
+# reproduces for refining is COMPOSED there rather than in the rules file, and QB-29 was
+# exactly a line in there silently disagreeing with the rule it was meant to obey.
+YARDIMPL_CS = os.path.join(ROOT, "Growth", "KingdomMaterials.cs")
+PROD_CS = os.path.join(ROOT, "Simulation", "City", "KingdomProductionRules.cs")
+CITY_CS = os.path.join(ROOT, "Simulation", "City", "KingdomCityRules.cs")
+RESEARCH_CS = os.path.join(ROOT, "Growth", "KingdomResearchRules.cs")
 CAT_CS = os.path.join(ROOT, "Growth", "KingdomCatalogueRules.cs")
 SUB_CS = os.path.join(ROOT, "Growth", "KingdomSubsidenceRules.cs")
 SUBIMPL_CS = os.path.join(ROOT, "Growth", "KingdomSubsidence.cs")
@@ -388,6 +410,71 @@ _FEEDBACK_PINS = [
 for text, needle, complaint in _FEEDBACK_PINS:
     assert needle in text, complaint
 
+# The third factor, and the yard's own condition. Both are composed in engine-coupled source
+# rather than in a rules file, so both are PINNED rather than described: QB-29 was precisely
+# the case of one of these lines disagreeing with the rule it was meant to be obeying, for
+# the whole life of the mod, with nothing anywhere to notice.
+_yardimpl_text = open(YARDIMPL_CS, encoding="utf-8-sig").read()
+_prod_text = open(PROD_CS, encoding="utf-8-sig").read()
+_city_text = open(CITY_CS, encoding="utf-8-sig").read()
+_crop_text = open(CROP_CS, encoding="utf-8-sig").read()
+_METHOD_PINS = [
+    (
+        _yardimpl_text,
+        "int conditioned = capability * KingdomMaterialRules.ConditionPercent(KingdomWear.WearOf(Yard)) / 100;",
+        "the yard no longer applies its own wear - QB-29 has regressed and the wear ladder below is fiction",
+    ),
+    (
+        _yardimpl_text,
+        "int methoded = KingdomProductionRules.Methoded(conditioned, MethodPercent);",
+        "the yard's third factor moved, or no longer rides the conditioned percent",
+    ),
+    (
+        _yardimpl_text,
+        'int crew = Yard.GetIntProperty("KingdomStaffNeeded") * Yard.GetIntProperty("KingdomEffectiveness") / 100;',
+        "the yard's crew is no longer a bare head count off the staffing pass; the wear ladder "
+        "assumes condition rides the EFFORT and never the count",
+    ),
+    (
+        _prod_text,
+        "int method = (methodPercent < BaselineMethodPercent) ? BaselineMethodPercent : methodPercent;",
+        "Methoded is no longer a bonus lane - a realm that abstained can now be taxed",
+    ),
+    (
+        _prod_text,
+        "long scaled = (long)quantity * method / BaselineMethodPercent;",
+        "Methoded body changed - what the keepers' method is worth moved",
+    ),
+    (
+        _city_text,
+        "return Methoded(RateOf(waterRatePerDay, index, row.WaterCarry));",
+        "the city book's water rate no longer carries the method factor",
+    ),
+    (
+        _city_text,
+        "return Methoded(RateOf(foodRatePerDay, index, row.FoodCarry));",
+        "the city book's food rate no longer carries the method factor",
+    ),
+    (
+        _crop_text,
+        "return KingdomProductionRules.Methoded((yield > int.MaxValue) ? int.MaxValue : (int)yield, MethodPercent);",
+        "HarvestYield no longer carries the method factor",
+    ),
+]
+for text, needle, complaint in _METHOD_PINS:
+    assert needle in text, complaint
+
+# Why every table in this file is still a baseline table: an empty roster answers the
+# baseline, and the baseline is a no-op through Methoded.
+BASELINE_METHOD = read_const(PROD_CS, "BaselineMethodPercent")
+MAX_METHOD = read_const(RESEARCH_CS, "MaxMethodPercent")
+assert BASELINE_METHOD == 100, (
+    "the baseline method is no longer a hundred; every production table below moved with it"
+)
+assert MAX_METHOD >= BASELINE_METHOD, (
+    "the method ceiling sits under the baseline, which would make the tree a tax"
+)
+
 # The loop's SECOND consequence, and the one that reaches works no crew ever stood in. A home
 # worn this far stops counting as a roof for lodging - not for the level, which is a different
 # reckoning. Derived rather than read, because the source derives it too.
@@ -656,18 +743,25 @@ shaped stone, worked metal, through a staffed yard) -> spent on building costs.
     MaxRefinedPerDay     = {SRC["MaxRefinedPerDay"]}      throughput ceiling, per DAY of running
     MaxClearingHands     = {SRC["MaxClearingHands"]}      most hands one clearing gang uses
 """)
-    print("Refined units a yard turns out, by crew and days (capability 100%):\n")
-    print(
-        f"{'crew':>5} " + "".join(f"{'d=' + str(d):>8}" for d in (1, 2, 3, 5, 10, 30))
-    )
+    def refined_units(crew: int, days: int, percent: int = 100) -> int:
+        """`KingdomMaterialRules.RefinedThisPass` over unlimited stock.
+
+        `percent` is the EFFORT percent the bench hands in, which
+        `KingdomMaterials.WorkYard` composes in this order and no other: the crew's own
+        capability, scaled by the work's CONDITION, then lifted by the keepers' METHOD.
+        A hundred is an ordinary crew at a sound bench in a realm that has researched
+        nothing, and a hundred is what every other table in this file assumes.
+        """
+        effort = crew * days * SRC["EffortPerHandPerDay"] * percent // 100
+        return min(effort // SRC["RefineEffortPerUnit"], SRC["MaxRefinedPerDay"] * days)
+
+    DAY_COLUMNS = (1, 2, 3, 5, 10, 30)
+    print("Refined units a yard turns out, by crew and days (effort 100%):\n")
+    print(f"{'crew':>5} " + "".join(f"{'d=' + str(d):>8}" for d in DAY_COLUMNS))
     for crew in (1, 2, 3, 4, 6):
         row = f"{crew:>5} "
-        for d in (1, 2, 3, 5, 10, 30):
-            effort = crew * d * SRC["EffortPerHandPerDay"]
-            units = min(
-                effort // SRC["RefineEffortPerUnit"], SRC["MaxRefinedPerDay"] * d
-            )
-            row += f"{units:>8}"
+        for d in DAY_COLUMNS:
+            row += f"{refined_units(crew, d):>8}"
         print(row)
     print(f"""
     THIS TABLE IS THE UNCAPPING, VISIBLE. It used to be flat across the day columns, because
@@ -680,6 +774,53 @@ shaped stone, worked metal, through a staffed yard) -> spent on building costs.
     {SRC["RefineEffortPerUnit"]}, so one pair of hands makes {SRC["EffortPerHandPerDay"] * 2 // SRC["RefineEffortPerUnit"]} a day and it takes {math.ceil(SRC["MaxRefinedPerDay"] * SRC["RefineEffortPerUnit"] / SRC["EffortPerHandPerDay"])} hands to reach the
     bench's own width. A yard nobody stands in still makes nothing for thirty days, which is
     clause 2 exactly: time times LABOUR, never time alone.""")
+
+    # QB-29, priced. The yard read the staffing pass's crew stretch and stopped there for the
+    # whole life of the mod, so a holed saw-pit shaped exactly what a new one did. It applies
+    # its own condition now, the way the crops and the networks always have.
+    floor_condition = 100 - SRC["MaxWearPercent"]
+    print(f"""
+And what NEGLECT costs, which is new. Addendum 10(b) says damage degrades every work's
+function in its own kind, and a yard's kind is what comes off it; the refining bench was the
+one consumer that had never applied its own wear (QB-29). Condition is 100 - wear, floored at
+{floor_condition} by MaxWearPercent = {SRC["MaxWearPercent"]}, and it rides the EFFORT percent rather than the head
+count - a two-hand yard times a {floor_condition}% condition would truncate to nobody and report itself
+UNSTAFFED, which is the wrong sentence for a bench people are standing at. Every yard in the
+catalogue is Staff="2", so this is that yard:
+""")
+    print(
+        f"{'wear':>5}{'cond':>6}  "
+        + "".join(f"{'d=' + str(d):>8}" for d in DAY_COLUMNS)
+    )
+    for wear in (0, 20, 40, SRC["MaxWearPercent"]):
+        condition = 100 - min(wear, SRC["MaxWearPercent"])
+        row = f"{wear:>5}{condition:>6}  "
+        for d in DAY_COLUMNS:
+            row += f"{refined_units(2, d, condition):>8}"
+        print(row)
+    sound_month = refined_units(2, 30)
+    worn_month = refined_units(2, 30, floor_condition)
+    print(f"""
+    Reading the ladder. A sound two-hand yard shapes {sound_month} units in a month; the same yard at
+    the wear ceiling shapes {worn_month} - {100 * worn_month // sound_month}% of it, which is the condition floor and not a
+    number chosen here. The consequence is bounded exactly where every other work's is, it
+    is a SLOPE rather than a cliff (the row at wear {SRC["MaxWearPercent"]} is short, never zero, over any stretch
+    a founder would notice), and mending ends it outright: the work is the same work again.
+    The single-day column is the one place it reads as nothing, and that is the same
+    integer truncation a sound one-hand yard already lived with.
+
+    The catalogue table below still prices the SOUND yard, because that is the schedule a
+    founder is quoted when they commission a design. A neglected one takes {sound_month / worn_month:.1f}x as long.""")
+
+    print(f"""
+    The third factor, for the record and for nothing else. The keepers' method
+    (RESEARCH-SYSTEM-DESIGN 8.2) now rides this same effort percent, and reaches the city
+    book's water and food rates and the crop harvest besides. A realm that has researched
+    nothing carries {BASELINE_METHOD}%, {BASELINE_METHOD}% is a no-op through Methoded, and NO table in this file moved
+    for it - they are all baseline tables and they are meant to stay that way. What the
+    ceiling would be worth if a realm reached it: a sound two-hand yard shapes {refined_units(2, 30, MAX_METHOD)} units in
+    a month at {MAX_METHOD}% against {sound_month} at the baseline. A factor on the effort, never on the days,
+    and never on a draw.""")
 
     # Catalogue costs, split into what the ground gives and what a yard has to shape.
     entries = re.findall(

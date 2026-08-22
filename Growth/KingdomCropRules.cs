@@ -1,5 +1,6 @@
 ﻿using System.Text;
 
+using ThousandAndFirst.Simulation.City;
 using ThousandAndFirst.Simulation.Kernel;
 
 namespace ThousandAndFirst
@@ -219,13 +220,25 @@ namespace ThousandAndFirst
 		/// <param name="EffectivenessPercent">What the field is running at.</param>
 		public static int GatheredYield(int StandingRows, int RipeRows, int Cycles, bool CountsRipeLast, int EffectivenessPercent)
 		{
+			return GatheredYield(StandingRows, RipeRows, Cycles, CountsRipeLast, EffectivenessPercent,
+				KingdomProductionRules.BaselineMethodPercent);
+		}
+
+		/// <summary>
+		/// The same reckoning for a realm whose keepers have worked something out.
+		/// </summary>
+		/// <param name="MethodPercent">The realm's method, from <c>KingdomResearch.MethodPercent</c>.
+		/// The baseline is what a realm that has researched nothing carries, and it changes no
+		/// number here.</param>
+		public static int GatheredYield(int StandingRows, int RipeRows, int Cycles, bool CountsRipeLast, int EffectivenessPercent, int MethodPercent)
+		{
 			if (Cycles <= 0)
 			{
 				return 0;
 			}
 			int last = CountsRipeLast ? RipeRows : StandingRows;
-			long yield = (long)HarvestYield(StandingRows, EffectivenessPercent) * (Cycles - 1)
-				+ HarvestYield(last, EffectivenessPercent);
+			long yield = (long)HarvestYield(StandingRows, EffectivenessPercent, MethodPercent) * (Cycles - 1)
+				+ HarvestYield(last, EffectivenessPercent, MethodPercent);
 			return (yield > int.MaxValue) ? int.MaxValue : (int)yield;
 		}
 
@@ -263,13 +276,32 @@ namespace ThousandAndFirst
 		/// <param name="EffectivenessPercent">0-100, from <c>KingdomWear.EffectivenessOf</c>.</param>
 		public static int HarvestYield(int Rows, int EffectivenessPercent)
 		{
+			return HarvestYield(Rows, EffectivenessPercent, KingdomProductionRules.BaselineMethodPercent);
+		}
+
+		/// <summary>
+		/// The same gathering, with the keepers' method on it.
+		/// <para>
+		/// RESEARCH-SYSTEM-DESIGN &sect;8.2: <i>output = base &times; crew &times; wear &times;
+		/// method</i>, and method is a THIRD factor. It is applied AFTER the effectiveness clamp
+		/// and is deliberately not folded into it &mdash; a field may not run above what its hands
+		/// and its condition manage, and what better husbandry buys is a heavier row off the same
+		/// hands rather than a hundred-and-fifty-percent-staffed field. A field nobody works still
+		/// gathers nothing, because a zero effectiveness returns before this multiplies.
+		/// </para>
+		/// </summary>
+		/// <param name="MethodPercent">The realm's method, from <c>KingdomResearch.MethodPercent</c>.
+		/// Anything under the baseline is read as the baseline, so the tree is a bonus lane and
+		/// never a tax.</param>
+		public static int HarvestYield(int Rows, int EffectivenessPercent, int MethodPercent)
+		{
 			if (Rows <= 0 || EffectivenessPercent <= 0)
 			{
 				return 0;
 			}
 			int percent = (EffectivenessPercent > 100) ? 100 : EffectivenessPercent;
 			long yield = (long)Rows * YieldPerRow * percent / 100L;
-			return (yield > int.MaxValue) ? int.MaxValue : (int)yield;
+			return KingdomProductionRules.Methoded((yield > int.MaxValue) ? int.MaxValue : (int)yield, MethodPercent);
 		}
 
 		/// <summary>

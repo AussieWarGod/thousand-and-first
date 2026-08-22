@@ -90,29 +90,65 @@ namespace ThousandAndFirst.Simulation.City
 		private readonly int[] foodRatePerDay;
 
 		/// <summary>
+		/// The realm's method, as <c>KingdomResearch.MethodPercent</c> reads it off the keepers'
+		/// roster. Handed in and never derived, because this class may not read a realm: it is one
+		/// number for the whole book, exactly as it is one number for the whole yard floor
+		/// (<c>KingdomMaterials.OnSettlementPass</c>), because the keepers write to each other.
+		/// </summary>
+		private readonly int methodPercent;
+
+		/// <summary>
 		/// Rates may be handed in per zone row, in row order, so a test can drive the integration
 		/// over a chosen crossing. A null or short array reads as <b>the row's own measured
 		/// carry</b>: the runtime supplies no override at all, because the rate a zone runs at is a
 		/// fact about that zone's works and belongs on that zone's row rather than in a parallel
 		/// array somebody has to keep in step with it.
+		/// <para>
+		/// This overload is the realm that has researched nothing, and it is what every caller who
+		/// does not care about method gets: <c>KingdomProductionRules.BaselineMethodPercent</c>
+		/// changes no number anywhere.
+		/// </para>
 		/// </summary>
 		internal KingdomCityAdvanceable(long ticksPerDay, int[] waterRatePerDay, int[] foodRatePerDay)
+			: this(ticksPerDay, waterRatePerDay, foodRatePerDay, KingdomProductionRules.BaselineMethodPercent)
+		{
+		}
+
+		/// <summary>
+		/// The same model, told what the realm's keepers have worked out.
+		/// </summary>
+		/// <param name="methodPercent">RESEARCH-SYSTEM-DESIGN &sect;8.2's third factor. Anything at
+		/// or below <c>KingdomProductionRules.BaselineMethodPercent</c> is the baseline, so no
+		/// roster and no research reach exactly the numbers this model produced before the tree
+		/// existed.</param>
+		internal KingdomCityAdvanceable(long ticksPerDay, int[] waterRatePerDay, int[] foodRatePerDay, int methodPercent)
 		{
 			this.ticksPerDay = ticksPerDay;
 			this.waterRatePerDay = waterRatePerDay;
 			this.foodRatePerDay = foodRatePerDay;
+			this.methodPercent = methodPercent;
 		}
 
 		/// <summary>What this zone makes in a day, per stock kind: the override if one was handed
-		/// in for this row, and the row's own measured carry otherwise.</summary>
+		/// in for this row, and the row's own measured carry otherwise, with the keepers' method
+		/// riding it.
+		/// <para>
+		/// The measured carry already composes crew and condition &mdash; it is
+		/// <c>KingdomSubsidence.Supports</c>'s own tally, folded at
+		/// <c>KingdomWearRules.WorkEffectiveness</c> on the pass that read the ground. Method is the
+		/// THIRD factor and enters here rather than there, so it scales what the works MAKE without
+		/// touching what they carry: the supported level a settlement can hold is a fact about its
+		/// buildings, and no amount of knowledge adds a roof.
+		/// </para>
+		/// </summary>
 		internal long WaterRateOf(KingdomZoneRow row, int index)
 		{
-			return RateOf(waterRatePerDay, index, row.WaterCarry);
+			return Methoded(RateOf(waterRatePerDay, index, row.WaterCarry));
 		}
 
 		internal long FoodRateOf(KingdomZoneRow row, int index)
 		{
-			return RateOf(foodRatePerDay, index, row.FoodCarry);
+			return Methoded(RateOf(foodRatePerDay, index, row.FoodCarry));
 		}
 
 		public int RowCount(KingdomCityState state)
@@ -246,6 +282,22 @@ namespace ThousandAndFirst.Simulation.City
 				return measured;
 			}
 			return rates[index];
+		}
+
+		/// <summary>
+		/// A bonus lane and never a tax, and never a charge on a draw. <b>Both of those are
+		/// <c>KingdomProductionRules.Methoded</c>'s own law</b> — it reads a sub-baseline percent as
+		/// the baseline and returns a non-positive quantity untouched — and neither is restated
+		/// here; what this adds is only the narrowing, so that a rate outside <c>int</c> is carried
+		/// through rather than cast into a different number. Every rate reaching here came off an
+		/// <c>int</c> row or an <c>int</c> override, so that is a guard against a representable
+		/// future and not against today's arithmetic.
+		/// </summary>
+		private long Methoded(long ratePerDay)
+		{
+			return (ratePerDay > 0L && ratePerDay <= int.MaxValue)
+				? KingdomProductionRules.Methoded((int)ratePerDay, methodPercent)
+				: ratePerDay;
 		}
 	}
 

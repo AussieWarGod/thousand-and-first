@@ -494,6 +494,88 @@ namespace ThousandAndFirst.Tests
 			Assert.AreEqual(70L, b.Stocks.Food.Level);
 		}
 
+		// ---- The third factor: the keepers' method on the book's own rates (§8.2) -------------
+
+		private static KingdomAdvanceOutcome<KingdomCityState> RunMethoded(KingdomCityState state, int[] waterRates, long fromTick, long toTick, int method)
+		{
+			KingdomAdvanceOutcome<KingdomCityState> outcome;
+			KingdomCityFault fault;
+			Assert.IsTrue(KingdomAdvanceRules.TryRun(
+				new KingdomCityAdvanceable(KingdomRules.TicksPerDay, waterRates, null, method),
+				state, fromTick, toTick, out outcome, out fault), fault.ToString());
+			return outcome;
+		}
+
+		/// <summary>
+		/// The regression bar for the whole wave on this lane: a realm that has researched nothing
+		/// reckons exactly the book it reckoned before the tree existed, level for level and debt
+		/// for debt. Both the baseline constant and what an empty roster actually answers are
+		/// checked, because the two agreeing is the property the lane rests on.
+		/// </summary>
+		[Test]
+		public void TheBaselineMethodReckonsExactlyTheBookItAlwaysDid()
+		{
+			KingdomCityState state = City(
+				Making("a", 40L, 1000L, 10L, 1000L, 12, 3),
+				Making("b", 5L, 1000L, 0L, 1000L, 2, 7));
+			long horizon = 90L * KingdomRules.TicksPerDay;
+			KingdomCityState before = RunFrom(state, 0L, horizon).State;
+			foreach (int method in new int[2] { KingdomProductionRules.BaselineMethodPercent, KingdomResearchRules.MethodPercent(0) })
+			{
+				KingdomCityState after = RunMethoded(state, null, 0L, horizon, method).State;
+				Assert.AreEqual(Held(before, KingdomStockKind.Water), Held(after, KingdomStockKind.Water),
+					"the baseline method moved the water a season makes");
+				Assert.AreEqual(Held(before, KingdomStockKind.Food), Held(after, KingdomStockKind.Food),
+					"the baseline method moved the food a season makes");
+				Assert.AreEqual(Owed(before, KingdomStockKind.Water), Owed(after, KingdomStockKind.Water));
+				Assert.AreEqual(Owed(before, KingdomStockKind.Food), Owed(after, KingdomStockKind.Food));
+			}
+		}
+
+		/// <summary>
+		/// What the keepers worked out lifts what the works MAKE and never what they hold: the
+		/// supported level is a fact about buildings, and no amount of knowledge adds a cistern.
+		/// </summary>
+		[Test]
+		public void TheKeepersMethodLiftsWhatAZoneMakesAndNeverWhatItHolds()
+		{
+			KingdomCityState state = City(Making("a", 0L, 1000L, 0L, 1000L, 12, 3));
+			KingdomZoneRow row;
+			Assert.IsTrue(RunMethoded(state, null, 0L, 10L * KingdomRules.TicksPerDay, 150).State.TryZone(0, out row));
+			// Twelve drams a day becomes eighteen; three servings becomes four, because a percent
+			// of a small integer truncates and is never rounded up into food nobody grew.
+			Assert.AreEqual(180L, row.Stocks.Water.Level);
+			Assert.AreEqual(40L, row.Stocks.Food.Level);
+			Assert.AreEqual(1000L, row.Stocks.Water.Capacity, "method is a rate and never a vessel");
+			Assert.AreEqual(1000L, row.Stocks.Food.Capacity);
+		}
+
+		/// <summary>
+		/// A bonus lane, never a tax and never a charge on a draw. A method under the baseline is
+		/// read as the baseline, and a consuming row — the negative rate that drains a stock — is
+		/// untouched however much the keepers know, because billing a city for its own learning is
+		/// the one shape §8.2 forbids outright.
+		/// </summary>
+		[TestCase(0)]
+		[TestCase(50)]
+		[TestCase(99)]
+		[TestCase(100)]
+		[TestCase(150)]
+		public void NoMethodAnywhereCanLowerAZonesMakingOrRaiseItsDrinking(int method)
+		{
+			KingdomCityState making = City(Making("a", 0L, 1000L, 0L, 1000L, 12, 3));
+			KingdomZoneRow made;
+			Assert.IsTrue(RunMethoded(making, null, 0L, 10L * KingdomRules.TicksPerDay, method).State.TryZone(0, out made));
+			Assert.GreaterOrEqual(made.Stocks.Water.Level, 120L, "no path through the tree makes a realm that abstained produce less");
+
+			// A span short enough that the draw has NOT finished, so a method that leaked onto a
+			// negative rate would show as a lower level rather than hiding behind the empty clamp.
+			KingdomCityState drinking = City(Zone("a", 100L, 60L, 100L, 0L, 0L));
+			KingdomZoneRow drunk;
+			Assert.IsTrue(RunMethoded(drinking, new int[1] { -20 }, 0L, 2L * KingdomRules.TicksPerDay, method).State.TryZone(0, out drunk));
+			Assert.AreEqual(20L, drunk.Stocks.Water.Level, "a draw is a draw at every method there is");
+		}
+
 		/// <summary>
 		/// <b>I1 across a season of production.</b> The ground did not change while the founder was
 		/// away, so <c>level - owed</c> may not either: what the works made is a claim on a vessel

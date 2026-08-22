@@ -1692,6 +1692,19 @@ namespace ThousandAndFirst
 		/// time is labour and never decay.
 		/// </para>
 		/// <para>
+		/// <b>And a damaged bench shapes less</b> (QB-29). Addendum 10(b) &mdash; damage degrades
+		/// function, for every work, in its own kind &mdash; had reached the field
+		/// (<c>KingdomCrops</c>) and the network (<c>KingdomNetworks</c>) and never this bench,
+		/// which read the staffing pass's crew stretch and stopped there. It reaches it now, in the
+		/// EFFORT percent rather than in the head count: those two are the same product, and only
+		/// the percent has the resolution to carry it, because every yard in the catalogue stands
+		/// two and a condition folded into a head count of two truncates a damaged yard to nobody.
+		/// A sound yard is untouched, because a sound work's condition is a hundred; a holed one
+		/// shapes the share of its work its condition allows, floored where every other work's is
+		/// by <c>KingdomMaterialRules.MaxWearPercent</c>. Mending restores it outright &mdash; the
+		/// consequence is of damage, not of history.
+		/// </para>
+		/// <para>
 		/// <b>Idle days are spent, not banked.</b> The day budget advances whether or not anyone
 		/// stood at the bench, so an empty yard does not accumulate a debt of labour that a later
 		/// crew discharges in one burst. That was already what the code did; what it did not do
@@ -1727,6 +1740,12 @@ namespace ThousandAndFirst
 			// staffs it next. KingdomMaterialRules.AssessYard holds the ordering ("nobody is
 			// here" outranks "there is nothing to work"), so the reason the founder is given is
 			// the one they can act on.
+			//
+			// Crew is a HEADCOUNT and answers to the staffing pass alone. The bench's condition is
+			// folded into the effort percent below instead of into this count, because every yard
+			// in the catalogue stands two: fold a 40% condition into a headcount of two and it
+			// truncates to nobody, which would make a damaged yard report "nobody is standing at
+			// it" and stop dead, when what is true is that it is holed and shaping less.
 			int crew = Yard.GetIntProperty("KingdomStaffNeeded") * Yard.GetIntProperty("KingdomEffectiveness") / 100;
 			bool staffed = Yard.GetIntProperty("KingdomStaffed") == 1 && crew > 0;
 			MaterialStock stock = null;
@@ -1758,14 +1777,26 @@ namespace ThousandAndFirst
 			Yard.SetIntProperty(RefineUnstaffedProperty, 0);
 			Yard.SetIntProperty(RefineIdleProperty, 0);
 			int capability = KingdomMaterialRules.CrewCapability(kind, Strength, Intelligence);
-			// RESEARCH-SYSTEM-DESIGN 8.2, the third factor: crew, then condition, then METHOD.
-			// It rides the capability percent into the effort because that is the one percent this
-			// bench's arithmetic already carries, and it is NOT folded into crew -- crew is what
-			// makes an unstaffed yard make nothing, and zero times anything is still zero, so no
-			// amount of knowledge can staff a bench nobody is standing at (Addendum 8 clause 2).
-			// The raw capability is what the founder is TOLD about below: the word describes who
-			// is holding the tool, and the keepers' method is not a thing about that crew.
-			int methoded = KingdomProductionRules.Methoded(capability, MethodPercent);
+			// RESEARCH-SYSTEM-DESIGN 8.2, the third factor: crew, then condition, then METHOD --
+			// and now all three of them, in that order. Both ride the capability percent into the
+			// effort because that is the one percent this bench's arithmetic already carries, and
+			// neither is folded into crew -- crew is what makes an unstaffed yard make nothing, and
+			// zero times anything is still zero, so no amount of knowledge and no state of repair
+			// can staff a bench nobody is standing at (Addendum 8 clause 2).
+			//
+			// CONDITION is the second of them and it had never been applied at all (QB-29): the
+			// KingdomEffectiveness the crew was read off is crew stretch ALONE, and Addendum 10(b)
+			// makes each consumer fold its own condition in -- which the crops and the networks do
+			// through KingdomWear.EffectivenessOf and this bench, alone among them, did not. The
+			// wear comes off KingdomWear.WearOf, which is the single reader EffectivenessOf is
+			// itself built on ("absent means sound", stated once); only the SLOT differs, because
+			// this is the one consumer whose crew term is a head count rather than a percent.
+			//
+			// The raw capability is what the founder is TOLD about below: the word describes who is
+			// holding the tool, and neither the roof's holes nor the keepers' method is a thing
+			// about that crew.
+			int conditioned = capability * KingdomMaterialRules.ConditionPercent(KingdomWear.WearOf(Yard)) / 100;
+			int methoded = KingdomProductionRules.Methoded(conditioned, MethodPercent);
 			int made = KingdomMaterialRules.RefinedThisPass(crew, days, methoded, refinable);
 			if (made <= 0)
 			{
@@ -1815,7 +1846,8 @@ namespace ThousandAndFirst
 					+ " was set down on the ground for want of a stockpile to hold it.}}");
 			}
 			KingdomLog.Log("materials: " + KingdomMaterialRules.YardKey(kind) + " made=" + made + " from=" + KingdomMaterialRules.MaterialKey(raw)
-				+ " crew=" + crew + " days=" + days + " capability=" + capability + " method=" + MethodPercent + " spilled=" + spilled);
+				+ " crew=" + crew + " wear=" + KingdomWear.WearOf(Yard) + " days=" + days + " capability=" + capability
+				+ " method=" + MethodPercent + " spilled=" + spilled);
 		}
 
 		/// <summary>One settler's stat, or <c>KingdomMaterialRules.BaselineStat</c> when the engine

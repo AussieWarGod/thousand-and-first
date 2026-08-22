@@ -464,7 +464,7 @@ namespace ThousandAndFirst.Simulation.City
 		{
 			KingdomReckonJob job = new KingdomReckonJob(
 				System.SeatName ?? state.SettlementId,
-				new KingdomCityAdvanceable(KingdomRules.TicksPerDay, null, null));
+				new KingdomCityAdvanceable(KingdomRules.TicksPerDay, null, null, KingdomResearch.MethodPercent(System)));
 			KingdomComputeResult<KingdomCityState> result = Executor.Submit(new KingdomReckonInput(state, TimeTicks), job);
 			KingdomCityState advanced = result.Published ? result.Value : state;
 			Stamp(System, advanced);

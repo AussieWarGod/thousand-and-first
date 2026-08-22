@@ -348,7 +348,8 @@ namespace ThousandAndFirst
 			bool countsRipeLast = !holdLast && field.Stage == KingdomCropRules.PlotStage.Ripe;
 			int standing = rows.Count;
 			int yield = KingdomCropRules.GatheredYield(
-				standing, countsRipeLast ? KingdomCrops.CountRipe(rows) : standing, gather, countsRipeLast, effectiveness);
+				standing, countsRipeLast ? KingdomCrops.CountRipe(rows) : standing, gather, countsRipeLast, effectiveness,
+				KingdomResearch.MethodPercent(System));
 			long lastDue = KingdomCropRules.LastRipeTick(field.NextStageTick, gather);
 			field.NextStageTick = KingdomCropRules.RestampedRipeTick(field.NextStageTick, gather);
 			if (holdLast)

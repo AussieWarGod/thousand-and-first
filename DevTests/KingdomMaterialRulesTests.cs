@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using NUnit.Framework;
 using ThousandAndFirst;
+using ThousandAndFirst.Simulation.City;
 
 namespace ThousandAndFirst.Tests
 {
@@ -1375,6 +1376,94 @@ namespace ThousandAndFirst.Tests
 			// And a crewed bench with nothing on it is a DIFFERENT sentence, still zero.
 			Assert.AreEqual(KingdomMaterialRules.YardStall.NoStock, KingdomMaterialRules.AssessYard(true, 3, 0));
 			Assert.AreEqual(0, KingdomMaterialRules.RefinedThisPass(3, 400, 100, 0));
+		}
+
+		// --- The bench's effort: capability, then CONDITION, then method (Addendum 10(b), QB-29) --
+
+		/// <summary>
+		/// The percent <c>KingdomMaterials.WorkYard</c> hands <see cref="RefinedThisPass"/>, stated
+		/// once here so the three factors have a table: the crew's own capability, scaled by the
+		/// bench's condition, lifted by what the keepers worked out. The engine line itself is
+		/// pinned in <c>_notes/balance-sim.py</c>, which asserts the source composes it this way and
+		/// not off the bare crew stretch it read for the whole of the mod's life before QB-29.
+		/// </summary>
+		private static int YardEffort(int capability, int wear, int method)
+		{
+			return KingdomProductionRules.Methoded(
+				capability * KingdomMaterialRules.ConditionPercent(wear) / 100, method);
+		}
+
+		[TestCase(100)]
+		[TestCase(KingdomMaterialRules.MaxCapabilityPercent)]
+		[TestCase(KingdomMaterialRules.MinCapabilityPercent)]
+		public void ASoundYardWorksAtExactlyThePercentItAlwaysDid(int capability)
+		{
+			// The regression bar for QB-29. Folding condition in may not move a single number for a
+			// bench nobody has damaged: a sound work's condition is a hundred.
+			Assert.AreEqual(capability, YardEffort(capability, 0, KingdomProductionRules.BaselineMethodPercent));
+		}
+
+		[Test]
+		public void ADamagedYardShapesLessAndAMendedOneShapesAsMuchAsItEverDid()
+		{
+			// Addendum 10(b) at the bench, which is the whole of QB-29: damage degrades function
+			// for every work, in its own kind, and a yard's kind is what comes off it.
+			int sound = YardEffort(100, 0, 100);
+			int worn = YardEffort(100, KingdomMaterialRules.MaxWearPercent, 100);
+			Assert.AreEqual(100, sound);
+			Assert.Less(worn, sound, "a holed saw-pit shapes as much as a whole one");
+			Assert.Greater(worn, 0, "wear is bounded, so a bench is degraded and never destroyed");
+			Assert.Greater(
+				KingdomMaterialRules.RefinedThisPass(2, 10, sound, 9999),
+				KingdomMaterialRules.RefinedThisPass(2, 10, worn, 9999));
+			Assert.Greater(KingdomMaterialRules.RefinedThisPass(2, 10, worn, 9999), 0,
+				"a damaged yard is slow, not shut");
+			// Mending ends the consequence outright: the work is the same work again.
+			Assert.AreEqual(sound, YardEffort(100, 0, 100));
+		}
+
+		[Test]
+		public void AYardsEffortFallsWithWearAndNeverBelowTheFloor()
+		{
+			int previous = int.MaxValue;
+			for (int wear = 0; wear <= KingdomMaterialRules.MaxWearPercent; wear += 10)
+			{
+				int effort = YardEffort(100, wear, 100);
+				Assert.LessOrEqual(effort, previous, "wear may not make a bench better");
+				Assert.Greater(effort, 0);
+				previous = effort;
+			}
+			// Past the ceiling the reading is clamped, not extrapolated: nothing wears to nothing.
+			Assert.AreEqual(
+				YardEffort(100, KingdomMaterialRules.MaxWearPercent, 100),
+				YardEffort(100, 400, 100));
+		}
+
+		[Test]
+		public void WearIsFoldedIntoTheEffortAndNeverIntoTheHeadcount()
+		{
+			// Why the condition rides the percent and not the crew: every yard in the catalogue
+			// stands two, and a headcount of two times a 40% condition truncates to nobody. That
+			// would make a damaged bench report "nobody is standing at it" (the WRONG sentence
+			// under STANDARDS 7b) and stop dead, instead of shaping less and saying nothing.
+			int crewAtTheCeiling = 2 * KingdomWearRules.WorkEffectiveness(2, 100, KingdomMaterialRules.MaxWearPercent) / 100;
+			Assert.AreEqual(0, crewAtTheCeiling, "the truncation this shape exists to avoid is real");
+			Assert.AreEqual(KingdomMaterialRules.YardStall.Working,
+				KingdomMaterialRules.AssessYard(true, 2, 999),
+				"a two-hand yard at the wear ceiling is still a yard somebody is standing in");
+			Assert.Greater(
+				KingdomMaterialRules.RefinedThisPass(2, 10, YardEffort(100, KingdomMaterialRules.MaxWearPercent, 100), 9999),
+				0);
+		}
+
+		[Test]
+		public void NoStateOfRepairCanStaffABenchNobodyIsStandingAt()
+		{
+			// Addendum 8 clause 2: the crew term is what makes an unstaffed yard make nothing, and
+			// neither condition nor method is allowed anywhere near it.
+			Assert.AreEqual(KingdomMaterialRules.YardStall.Unstaffed, KingdomMaterialRules.AssessYard(true, 0, 999));
+			Assert.AreEqual(0, KingdomMaterialRules.RefinedThisPass(0, 400, YardEffort(100, 0, 150), 9999));
+			Assert.AreEqual(0, KingdomMaterialRules.RefinedThisPass(0, 400, YardEffort(100, KingdomMaterialRules.MaxWearPercent, 150), 9999));
 		}
 
 		[Test]

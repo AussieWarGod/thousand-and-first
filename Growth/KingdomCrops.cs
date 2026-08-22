@@ -172,6 +172,17 @@ namespace ThousandAndFirst
 		/// through exactly the same <c>KingdomCatalogueRules.Carried</c>, so the subtraction
 		/// cancels the addition to the unit rather than approximately.
 		/// </para>
+		/// <para>
+		/// <b>And it carries no method factor, deliberately.</b> What this subtracts is what the
+		/// book CREDITED the field with, not what the field GREW: the credit is
+		/// <c>Supports</c>'s own baseline carry, so the subtraction has to be that same baseline or
+		/// it stops cancelling. The keepers' method lands on the physical gathering instead
+		/// (<c>KingdomCropRules.HarvestYield</c>), which is why a researched realm eats better
+		/// &mdash; the book removes one field's worth and the field delivers rather more than one field's
+		/// worth, and the difference is exactly the bonus. Methoding this line as well would hand
+		/// that difference straight back and, on a settlement whose granaries are counted here
+		/// too, would charge the granaries for the fields' learning.
+		/// </para>
 		/// </summary>
 		/// <param name="Survey">The pass's survey. Null carries nothing.</param>
 		public static int CycledFoodPerDay(KingdomSurvey Survey)
@@ -238,6 +249,10 @@ namespace ThousandAndFirst
 		/// food PHYSICALLY, by taking real crops off the larder shelves and putting real preserves
 		/// back, so its <c>Carries</c> must be subtracted from the clocked daily make or the
 		/// settlement would be fed twice out of one millstone.
+		/// <para>
+		/// Baseline, and no method factor, for <see cref="CycledFoodPerDay"/>'s reason exactly: a
+		/// subtraction that removes a CREDIT has to be the size of the credit.
+		/// </para>
 		/// </summary>
 		/// <param name="Survey">The pass's survey. Null makes nothing.</param>
 		public static int MilledFoodPerDay(KingdomSurvey Survey)
