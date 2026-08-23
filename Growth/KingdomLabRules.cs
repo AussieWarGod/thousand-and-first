@@ -2,6 +2,32 @@ using System.Collections.Generic;
 
 namespace ThousandAndFirst
 {
+	internal enum KingdomVatSettlement : byte
+	{
+		Wait = 0,
+		CreateOutput = 1,
+		ConsumeInput = 2,
+		CollectOutput = 3,
+		ReturnInput = 4,
+		Missing = 5
+	}
+
+	internal readonly struct KingdomVatAccrual
+	{
+		public readonly long NextTick;
+		public readonly int RemainingTicks;
+		public readonly int WorkedTicks;
+		public readonly bool Complete;
+
+		public KingdomVatAccrual(long NextTick, int RemainingTicks, int WorkedTicks, bool Complete)
+		{
+			this.NextTick = NextTick;
+			this.RemainingTicks = RemainingTicks;
+			this.WorkedTicks = WorkedTicks;
+			this.Complete = Complete;
+		}
+	}
+
 	/// <summary>
 	/// What one attempt to zone a megastructure came to.
 	/// <para>
@@ -36,6 +62,57 @@ namespace ThousandAndFirst
 	/// </summary>
 	public static class KingdomLabRules
 	{
+		internal static KingdomVatAccrual AccrueVat(long LastTick, long TimeTick, int RemainingTicks,
+			int CrewEffectiveness, int WearEffectiveness, bool Settled, bool Cancelled)
+		{
+			int remaining = (RemainingTicks > 0) ? RemainingTicks : 0;
+			if (Settled || Cancelled)
+			{
+				return new KingdomVatAccrual(TimeTick, remaining, 0, Complete: false);
+			}
+			if (remaining == 0)
+			{
+				return new KingdomVatAccrual(TimeTick, 0, 0, Complete: true);
+			}
+			if (LastTick <= 0L || TimeTick <= LastTick)
+			{
+				return new KingdomVatAccrual((TimeTick > 0L) ? TimeTick : LastTick, remaining, 0, Complete: false);
+			}
+			int worked = KingdomProcedureRules.VatWorked(TimeTick - LastTick, CrewEffectiveness, WearEffectiveness);
+			if (worked <= 0)
+			{
+				return new KingdomVatAccrual(TimeTick, remaining, 0, Complete: false);
+			}
+			if (worked >= remaining)
+			{
+				return new KingdomVatAccrual(TimeTick, 0, remaining, Complete: true);
+			}
+			return new KingdomVatAccrual(TimeTick, remaining - worked, worked, Complete: false);
+		}
+
+		internal static KingdomVatSettlement VatSettlement(bool InputPresent, bool OutputPresent,
+			bool WorkComplete, bool CancelRequested)
+		{
+			if (CancelRequested)
+			{
+				if (OutputPresent)
+				{
+					return KingdomVatSettlement.CollectOutput;
+				}
+				return InputPresent ? KingdomVatSettlement.ReturnInput : KingdomVatSettlement.Missing;
+			}
+			if (!WorkComplete)
+			{
+				return InputPresent ? KingdomVatSettlement.Wait
+					: (OutputPresent ? KingdomVatSettlement.CollectOutput : KingdomVatSettlement.Missing);
+			}
+			if (OutputPresent)
+			{
+				return InputPresent ? KingdomVatSettlement.ConsumeInput : KingdomVatSettlement.CollectOutput;
+			}
+			return InputPresent ? KingdomVatSettlement.CreateOutput : KingdomVatSettlement.Missing;
+		}
+
 		// --- The four buildings ------------------------------------------------------------------
 		//
 		// Catalogue keys, held here rather than in the XML alone, because the rung a city has

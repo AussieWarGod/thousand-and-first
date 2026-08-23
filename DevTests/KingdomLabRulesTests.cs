@@ -522,6 +522,119 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("Go and do something else", line);
 		}
 
+		// --- The vat-house's durable job ----------------------------------------------------------
+
+		[Test]
+		public void VatAccrual_FirstLookPlantsAStampAndNeverBackdatesWork()
+		{
+			KingdomVatAccrual result = KingdomLabRules.AccrueVat(LastTick: 0L, TimeTick: 100000L,
+				RemainingTicks: 1200, CrewEffectiveness: 100, WearEffectiveness: 100,
+				Settled: false, Cancelled: false);
+			Assert.AreEqual(100000L, result.NextTick);
+			Assert.AreEqual(1200, result.RemainingTicks);
+			Assert.AreEqual(0, result.WorkedTicks);
+			Assert.IsFalse(result.Complete);
+		}
+
+		[Test]
+		public void VatAccrual_NoStaffSpendsTimeButDoesNoWork()
+		{
+			KingdomVatAccrual result = KingdomLabRules.AccrueVat(100L, 1300L, 1200,
+				CrewEffectiveness: 0, WearEffectiveness: 100, Settled: false, Cancelled: false);
+			Assert.AreEqual(1300L, result.NextTick);
+			Assert.AreEqual(1200, result.RemainingTicks);
+			Assert.AreEqual(0, result.WorkedTicks);
+			Assert.IsFalse(result.Complete);
+		}
+
+		[Test]
+		public void VatAccrual_PartialCrewBanksOnlyWorkActuallyDone()
+		{
+			KingdomVatAccrual result = KingdomLabRules.AccrueVat(100L, 1300L, 1200,
+				CrewEffectiveness: 50, WearEffectiveness: 100, Settled: false, Cancelled: false);
+			Assert.AreEqual(600, result.WorkedTicks);
+			Assert.AreEqual(600, result.RemainingTicks);
+			Assert.IsFalse(result.Complete);
+		}
+
+		[Test]
+		public void VatAccrual_CompletesAtZeroAndNeverRunsBelowIt()
+		{
+			KingdomVatAccrual result = KingdomLabRules.AccrueVat(100L, 1300L, 400,
+				CrewEffectiveness: 100, WearEffectiveness: 100, Settled: false, Cancelled: false);
+			Assert.AreEqual(400, result.WorkedTicks);
+			Assert.AreEqual(0, result.RemainingTicks);
+			Assert.IsTrue(result.Complete);
+		}
+
+		[Test]
+		public void VatAccrual_SettledOrCancelledJobsNeverCompleteAgain()
+		{
+			KingdomVatAccrual settled = KingdomLabRules.AccrueVat(100L, 1300L, 0,
+				100, 100, Settled: true, Cancelled: false);
+			KingdomVatAccrual cancelled = KingdomLabRules.AccrueVat(100L, 1300L, 1200,
+				100, 100, Settled: false, Cancelled: true);
+			Assert.IsFalse(settled.Complete);
+			Assert.IsFalse(cancelled.Complete);
+			Assert.AreEqual(0, settled.WorkedTicks);
+			Assert.AreEqual(0, cancelled.WorkedTicks);
+		}
+
+		[Test]
+		public void VatSettlement_CreatesThenConsumesThenOnlyCollects()
+		{
+			Assert.AreEqual(KingdomVatSettlement.CreateOutput,
+				KingdomLabRules.VatSettlement(InputPresent: true, OutputPresent: false,
+					WorkComplete: true, CancelRequested: false));
+			Assert.AreEqual(KingdomVatSettlement.ConsumeInput,
+				KingdomLabRules.VatSettlement(InputPresent: true, OutputPresent: true,
+					WorkComplete: true, CancelRequested: false));
+			Assert.AreEqual(KingdomVatSettlement.CollectOutput,
+				KingdomLabRules.VatSettlement(InputPresent: false, OutputPresent: true,
+					WorkComplete: true, CancelRequested: false));
+			Assert.AreNotEqual(KingdomVatSettlement.CreateOutput,
+				KingdomLabRules.VatSettlement(InputPresent: false, OutputPresent: true,
+					WorkComplete: true, CancelRequested: false));
+		}
+
+		[Test]
+		public void VatSettlement_CancellationReturnsInputAndRecoversFinishedOutput()
+		{
+			Assert.AreEqual(KingdomVatSettlement.ReturnInput,
+				KingdomLabRules.VatSettlement(InputPresent: true, OutputPresent: false,
+					WorkComplete: false, CancelRequested: true));
+			Assert.AreEqual(KingdomVatSettlement.CollectOutput,
+				KingdomLabRules.VatSettlement(InputPresent: true, OutputPresent: true,
+					WorkComplete: true, CancelRequested: true));
+			Assert.AreNotEqual(KingdomVatSettlement.ReturnInput,
+				KingdomLabRules.VatSettlement(InputPresent: true, OutputPresent: true,
+					WorkComplete: false, CancelRequested: true));
+			Assert.AreEqual(KingdomVatSettlement.Missing,
+				KingdomLabRules.VatSettlement(InputPresent: false, OutputPresent: false,
+					WorkComplete: false, CancelRequested: true));
+		}
+
+		[Test]
+		public void VatAccrual_HugeAbsenceSaturatesWithoutOverflow()
+		{
+			KingdomVatAccrual result = KingdomLabRules.AccrueVat(1L, long.MaxValue, int.MaxValue,
+				CrewEffectiveness: int.MaxValue, WearEffectiveness: int.MaxValue,
+				Settled: false, Cancelled: false);
+			Assert.AreEqual(int.MaxValue, result.WorkedTicks);
+			Assert.AreEqual(0, result.RemainingTicks);
+			Assert.IsTrue(result.Complete);
+		}
+
+		[Test]
+		public void VatAccrual_BackwardClockMintsNothing()
+		{
+			KingdomVatAccrual result = KingdomLabRules.AccrueVat(1300L, 100L, 1200,
+				CrewEffectiveness: 100, WearEffectiveness: 100, Settled: false, Cancelled: false);
+			Assert.AreEqual(1200, result.RemainingTicks);
+			Assert.AreEqual(0, result.WorkedTicks);
+			Assert.IsFalse(result.Complete);
+		}
+
 		[Test]
 		public void EveryLine_IsWrittenInRegisterAndNoneOfThemSaysThatSomethingFailed()
 		{

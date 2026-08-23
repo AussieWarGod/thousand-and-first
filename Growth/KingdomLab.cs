@@ -72,8 +72,32 @@ namespace XRL.World.Parts
 	{
 		/// <summary>Tick this vat last settled its labour to. Zero until the first day boundary
 		/// plants it, so a vat never works for the day it was raised &mdash; the same discipline
-		/// <c>r_KingdomMirrorGate.LastDrawTick</c> keeps, and for the same reason.</summary>
+		/// <c>r_KingdomMirrorGate.LastDrawTick</c> keeps, and for the same reason.
+		/// <para>
+		/// This stays the part's only serialized field. Pending work lives on the physical input's
+		/// ordinary property dictionaries inside the vat's ordinary inventory, so both halves ride
+		/// the engine's existing object serialization and this part's positional save layout
+		/// never changes.
+		/// </para>
+		/// </summary>
 		public long LastWorkedTick;
+
+		public override bool WantTurnTick()
+		{
+			return true;
+		}
+
+		public override void TurnTick(long TimeTick, int Amount)
+		{
+			if (KingdomLab.HasPending(this))
+			{
+				KingdomSystem.Guard("vat-house work", delegate
+				{
+					KingdomLab.Advance(this, TimeTick);
+				});
+			}
+			base.TurnTick(TimeTick, Amount);
+		}
 
 		public override bool WantEvent(int ID, int cascade)
 		{
@@ -223,6 +247,15 @@ namespace ThousandAndFirst
 		/// count only what we made and marked).</summary>
 		internal const string KeptProperty = "r_TAF_LabKept";
 
+		private const string VatPendingProperty = "r_TAF_VatPending";
+		private const string VatRemainingProperty = "r_TAF_VatRemaining";
+		private const string VatResultProperty = "r_TAF_VatResult";
+		private const string VatYieldProperty = "r_TAF_VatYield";
+		private const string VatJobProperty = "r_TAF_VatJob";
+		private const string VatReadyProperty = "r_TAF_VatReady";
+		private const string VatOutputJobProperty = "r_TAF_VatOutputJob";
+		private const string VatBlockedProperty = "r_TAF_VatBlocked";
+
 		// ==================================================================================
 		// Rung 0 — the slab
 		// ==================================================================================
@@ -294,11 +327,29 @@ namespace ThousandAndFirst
 			{
 				return;
 			}
+			if (Vat == null || Vat.ParentObject == null || Actor == null)
+			{
+				return;
+			}
+			Advance(Vat, The.Game?.TimeTicks ?? Vat.LastWorkedTick);
+			GameObject pending = Pending(Vat);
+			if (pending != null)
+			{
+				ManagePending(Vat, Actor, pending);
+				return;
+			}
+			List<GameObject> ready = VatContents(Vat, VatReadyProperty);
+			if (ready.Count > 0)
+			{
+				Collect(Vat, Actor, ready);
+				return;
+			}
 			List<GameObject> raw = new List<GameObject>();
 			List<string> names = new List<string>();
 			foreach (GameObject item in Actor.GetInventoryAndEquipment())
 			{
-				if (item == null || item.GetIntProperty(KeptProperty) == 1)
+				if (item == null || item.GetIntProperty(KeptProperty) == 1
+					|| item.GetIntProperty(VatPendingProperty) == 1)
 				{
 					continue;
 				}
@@ -336,20 +387,286 @@ namespace ThousandAndFirst
 			string stamp2 = part.GetStringProperty(KingdomProcedures.StampProperty);
 			string source = part.GetStringProperty(KingdomProcedures.SourceProperty);
 			string blueprint = (preservable == null || string.IsNullOrEmpty(preservable.Result)) ? part.Blueprint : preservable.Result;
-			part.Obliterate();
-			GameObject kept = GameObject.Create(blueprint);
-			if (kept == null)
+			if (string.IsNullOrEmpty(blueprint))
 			{
 				MessageQueue.AddPlayerMessage("{{r|The vats could not make anything of it.}}");
 				return;
 			}
+			string job = string.IsNullOrEmpty(part.ID) ? Guid.NewGuid().ToString("N") : part.ID;
+			part.SetIntProperty(VatPendingProperty, 1);
+			part.SetIntProperty(VatRemainingProperty,
+				KingdomProcedureRules.StaffDayTicks(KingdomProcedureRules.PreserveDays));
+			part.SetStringProperty(VatResultProperty, blueprint);
+			part.SetIntProperty(VatYieldProperty, yield);
+			part.SetStringProperty(VatJobProperty, job);
+			part.SetStringProperty(KingdomProcedures.StampProperty, stamp2);
+			part.SetStringProperty(KingdomProcedures.SourceProperty, source);
+			Inventory inventory = Vat.ParentObject.RequirePart<Inventory>();
+			inventory.AddObjectToInventory(part, Actor, Silent: true, NoStack: true);
+			if (part.Physics == null || part.Physics.InInventory != Vat.ParentObject)
+			{
+				Actor.RequirePart<Inventory>().AddObjectToInventory(part, Actor, Silent: true, NoStack: true);
+				ClearPending(part);
+				Popup.Show((part.Physics != null && part.Physics.InInventory == Actor)
+					? "The vats could not take hold of that part. It is back in your hands; nothing was spent."
+					: "The vats could not take hold of that part. Check the ground and your inventory; the raw part was not consumed.");
+				return;
+			}
+			Vat.LastWorkedTick = The.Game?.TimeTicks ?? 0L;
+			MessageQueue.AddPlayerMessage("{{G|" + KingdomLabRules.StakedLine("keeping " + source,
+				KingdomProcedureRules.PreserveDays) + "}}");
+		}
+
+		internal static bool HasPending(r_KingdomVatHouse Vat)
+		{
+			List<GameObject> contents = Vat?.ParentObject?.Inventory?.Objects;
+			for (int i = 0; contents != null && i < contents.Count; i++)
+			{
+				if (contents[i] != null && contents[i].GetIntProperty(VatPendingProperty) == 1)
+				{
+					return true;
+				}
+			}
+			return false;
+		}
+
+		internal static void Advance(r_KingdomVatHouse Vat, long TimeTick)
+		{
+			GameObject input = Pending(Vat);
+			if (Vat == null || Vat.ParentObject == null || input == null)
+			{
+				return;
+			}
+			int staffNeeded = Vat.ParentObject.GetIntProperty(KingdomAdopt.StaffNeededProperty);
+			int crew = (staffNeeded > 0) ? Vat.ParentObject.GetIntProperty("KingdomEffectiveness") : 100;
+			int wear = KingdomMaterialRules.ConditionPercent(KingdomWear.WearOf(Vat.ParentObject));
+			KingdomVatAccrual accrual = KingdomLabRules.AccrueVat(Vat.LastWorkedTick, TimeTick,
+				input.GetIntProperty(VatRemainingProperty), crew, wear, Settled: false, Cancelled: false);
+			Vat.LastWorkedTick = accrual.NextTick;
+			input.SetIntProperty(VatRemainingProperty, accrual.RemainingTicks);
+			if (crew <= 0 || wear <= 0)
+			{
+				if (input.GetIntProperty(VatBlockedProperty) == 0)
+				{
+					input.SetIntProperty(VatBlockedProperty, 1);
+					MessageQueue.AddPlayerMessage((crew <= 0)
+						? "{{r|The vat-house stands idle. No crew is working the vats; assign hands or free them from other works.}}"
+						: "{{r|The vat-house cannot work in its present condition. Mend it, and the crew will take the keeping up again.}}");
+				}
+				return;
+			}
+			if (!accrual.Complete)
+			{
+				input.RemoveIntProperty(VatBlockedProperty);
+				return;
+			}
+			string job = input.GetStringProperty(VatJobProperty);
+			GameObject output = OutputFor(Vat, job);
+			KingdomVatSettlement settlement = KingdomLabRules.VatSettlement(InputPresent: true,
+				OutputPresent: output != null, WorkComplete: true, CancelRequested: false);
+			if (settlement == KingdomVatSettlement.CreateOutput)
+			{
+				output = CreateVatOutput(Vat, input, job);
+				if (output == null)
+				{
+					if (input.GetIntProperty(VatBlockedProperty) == 0)
+					{
+						input.SetIntProperty(VatBlockedProperty, 1);
+						MessageQueue.AddPlayerMessage("{{r|The vats finished their work but could not jar the result. The raw part remains untouched; inspect the vat-house and try again.}}");
+					}
+					return;
+				}
+				settlement = KingdomLabRules.VatSettlement(InputPresent: true, OutputPresent: true,
+					WorkComplete: true, CancelRequested: false);
+			}
+			if (settlement != KingdomVatSettlement.ConsumeInput)
+			{
+				return;
+			}
+			if (!input.Obliterate() || GameObject.Validate(input))
+			{
+				if (input.GetIntProperty(VatBlockedProperty) == 0)
+				{
+					input.SetIntProperty(VatBlockedProperty, 1);
+					MessageQueue.AddPlayerMessage("{{r|The vats have sealed the result but cannot release the raw part. Both remain in the vat-house; collect nothing until the obstruction is cleared.}}");
+				}
+				return;
+			}
+			Vat.LastWorkedTick = 0L;
+			MessageQueue.AddPlayerMessage("{{G|The vat-house has finished its keeping. The sealed parts wait there for collection.}}");
+		}
+
+		private static GameObject CreateVatOutput(r_KingdomVatHouse Vat, GameObject Input, string Job)
+		{
+			string blueprint = Input.GetStringProperty(VatResultProperty);
+			int yield = Input.GetIntProperty(VatYieldProperty);
+			if (string.IsNullOrEmpty(blueprint) || yield <= 0)
+			{
+				return null;
+			}
+			GameObject kept = GameObject.Create(blueprint);
+			if (kept == null)
+			{
+				return null;
+			}
 			kept.Count = yield;
 			kept.SetIntProperty(KeptProperty, 1);
-			kept.SetStringProperty(KingdomProcedures.StampProperty, stamp2);
-			kept.SetStringProperty(KingdomProcedures.SourceProperty, source);
-			Actor.TakeObject(kept, NoStack: true, Silent: true);
-			MessageQueue.AddPlayerMessage("{{G|The vats have it. " + yield + " kept "
-				+ ((yield == 1) ? "part" : "parts") + ", and they will keep as long as you do.}}");
+			kept.SetIntProperty(VatReadyProperty, 1);
+			kept.SetStringProperty(VatOutputJobProperty, Job);
+			kept.SetStringProperty(KingdomProcedures.StampProperty,
+				Input.GetStringProperty(KingdomProcedures.StampProperty));
+			kept.SetStringProperty(KingdomProcedures.SourceProperty,
+				Input.GetStringProperty(KingdomProcedures.SourceProperty));
+			Inventory inventory = Vat.ParentObject.RequirePart<Inventory>();
+			inventory.AddObject(kept, null, Silent: true, NoStack: true);
+			if (kept.Physics == null || kept.Physics.InInventory != Vat.ParentObject)
+			{
+				kept.Obliterate();
+				return null;
+			}
+			return kept;
+		}
+
+		private static void ManagePending(r_KingdomVatHouse Vat, GameObject Actor, GameObject Input)
+		{
+			int remaining = Input.GetIntProperty(VatRemainingProperty);
+			GameObject output = OutputFor(Vat, Input.GetStringProperty(VatJobProperty));
+			if (output != null)
+			{
+				Popup.Show("The keeping is finished and its sealed result is already in the vat-house, but the raw part has not released. Nothing can be collected or cancelled until the obstruction is cleared.");
+				return;
+			}
+			int crew = Vat.ParentObject.GetIntProperty("KingdomEffectiveness");
+			int wear = KingdomMaterialRules.ConditionPercent(KingdomWear.WearOf(Vat.ParentObject));
+			int whole = KingdomProcedureRules.StaffDayTicks(KingdomProcedureRules.PreserveDays);
+			long earned = (long)whole - remaining;
+			int done = (whole > 0) ? (int)(earned * 100L / whole) : 100;
+			if (done < 0)
+			{
+				done = 0;
+			}
+			else if (done > 100)
+			{
+				done = 100;
+			}
+			string state;
+			if (crew <= 0)
+			{
+				state = "{{r|Nobody is working the vats. No idle time has counted as work.}}";
+			}
+			else if (wear <= 0)
+			{
+				state = "{{r|The vat-house needs mending before the crew can continue.}}";
+			}
+			else
+			{
+				state = "The keeping is {{C|" + done + "%}} done, and the crew is working.";
+			}
+			int picked = Popup.PickOption(Title: "The vat-house",
+				Intro: Input.DisplayName + " is still in the vats. " + state,
+				Options: new string[2] { "Leave it in the crew's hands.", "Cancel the keeping and take the raw part back." },
+				AllowEscape: true);
+			if (picked != 1 || Popup.ShowYesNo("Cancel this keeping? The raw part returns unchanged, and the work already spent is lost.") != DialogResult.Yes)
+			{
+				return;
+			}
+			if (KingdomLabRules.VatSettlement(InputPresent: true, OutputPresent: false,
+				WorkComplete: remaining <= 0, CancelRequested: true) != KingdomVatSettlement.ReturnInput)
+			{
+				return;
+			}
+			Actor.RequirePart<Inventory>().AddObjectToInventory(Input, Actor, Silent: true, NoStack: true);
+			if (Input.Physics == null || Input.Physics.InInventory != Actor)
+			{
+				Vat.ParentObject.RequirePart<Inventory>().AddObjectToInventory(Input, Actor, Silent: true, NoStack: true);
+				Popup.Show("The vat-house could not hand the part back. The raw part was not consumed; inspect the vats before trying again.");
+				return;
+			}
+			ClearPending(Input);
+			Vat.LastWorkedTick = 0L;
+			MessageQueue.AddPlayerMessage("{{K|The keeping was cancelled. The raw part is back in your hands.}}");
+		}
+
+		private static void Collect(r_KingdomVatHouse Vat, GameObject Actor, List<GameObject> Ready)
+		{
+			int taken = 0;
+			Inventory inventory = Actor.RequirePart<Inventory>();
+			for (int i = 0; i < Ready.Count; i++)
+			{
+				GameObject output = Ready[i];
+				inventory.AddObjectToInventory(output, Actor, Silent: true, NoStack: true);
+				if (output.Physics != null && output.Physics.InInventory == Actor)
+				{
+					output.RemoveIntProperty(VatReadyProperty);
+					output.RemoveStringProperty(VatOutputJobProperty);
+					taken += output.Count;
+				}
+				else
+				{
+					Vat.ParentObject.RequirePart<Inventory>().AddObjectToInventory(output, Actor,
+						Silent: true, NoStack: true);
+				}
+			}
+			if (taken > 0)
+			{
+				MessageQueue.AddPlayerMessage("{{G|You collect " + taken + " kept "
+					+ ((taken == 1) ? "part" : "parts") + " from the vat-house.}}");
+			}
+			else
+			{
+				Popup.Show("The sealed parts could not be handed over. They remain in the vat-house.");
+			}
+		}
+
+		private static GameObject Pending(r_KingdomVatHouse Vat)
+		{
+			List<GameObject> contents = Vat?.ParentObject?.Inventory?.Objects;
+			for (int i = 0; contents != null && i < contents.Count; i++)
+			{
+				if (contents[i] != null && contents[i].GetIntProperty(VatPendingProperty) == 1)
+				{
+					return contents[i];
+				}
+			}
+			return null;
+		}
+
+		private static GameObject OutputFor(r_KingdomVatHouse Vat, string Job)
+		{
+			List<GameObject> ready = VatContents(Vat, VatReadyProperty);
+			for (int i = 0; i < ready.Count; i++)
+			{
+				if (string.Equals(ready[i].GetStringProperty(VatOutputJobProperty), Job,
+					StringComparison.Ordinal))
+				{
+					return ready[i];
+				}
+			}
+			return null;
+		}
+
+		private static List<GameObject> VatContents(r_KingdomVatHouse Vat, string Marker)
+		{
+			List<GameObject> result = new List<GameObject>();
+			List<GameObject> contents = Vat?.ParentObject?.Inventory?.Objects;
+			for (int i = 0; contents != null && i < contents.Count; i++)
+			{
+				if (contents[i] != null && contents[i].GetIntProperty(Marker) == 1)
+				{
+					result.Add(contents[i]);
+				}
+			}
+			return result;
+		}
+
+		private static void ClearPending(GameObject Input)
+		{
+			Input.RemoveIntProperty(VatPendingProperty);
+			Input.RemoveIntProperty(VatRemainingProperty);
+			Input.RemoveStringProperty(VatResultProperty);
+			Input.RemoveIntProperty(VatYieldProperty);
+			Input.RemoveStringProperty(VatJobProperty);
+			Input.RemoveIntProperty(VatBlockedProperty);
 		}
 
 		// ==================================================================================
