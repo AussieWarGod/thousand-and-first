@@ -813,7 +813,7 @@
   </object>
   <object Name="r_KingdomVatHouse" Inherits="Furniture">
     <stag Name="Contemporary" />
-    <part Name="Render" DisplayName="vat-house" RenderString="&#8746;" ColorString="&amp;g" DetailColor="G" />
+    <part Name="Render" DisplayName="vat-house" RenderString="&#8746;" ColorString="&amp;g" Tile="ThousandAndFirst/r_KingdomVatHouse.png" TileColor="&amp;g" DetailColor="G" />
     <part Name="Description" Short="Brine, tallow, and a shelf of things kept longer than anything ought to keep. Nothing here rots; that is the point of it." />
     <part Name="Physics" Takeable="false" Weight="9000" />
     <part Name="r_KingdomVatHouse" />
@@ -821,7 +821,7 @@
   </object>
   <object Name="r_KingdomGraftingHall" Inherits="Furniture">
     <stag Name="Contemporary" />
-    <part Name="Render" DisplayName="the grafting hall" RenderString="&#8852;" ColorString="&amp;W" DetailColor="r" />
+    <part Name="Render" DisplayName="the grafting hall" RenderString="&#8852;" ColorString="&amp;W" Tile="ThousandAndFirst/r_KingdomGraftingHall.png" TileColor="&amp;W" DetailColor="r" />
     <part Name="Description" Short="A lamp over a table, and somebody who has done this before. It does not sell augmentation. It performs it." />
     <part Name="Physics" Takeable="false" Weight="12000" />
     <part Name="r_KingdomGraftingHall" />
@@ -829,7 +829,7 @@
   </object>
   <object Name="r_KingdomChimericTheatre" Inherits="Furniture">
     <stag Name="Contemporary" />
-    <part Name="Render" DisplayName="the chimeric theatre" RenderString="&#937;" ColorString="&amp;M" DetailColor="W" />
+    <part Name="Render" DisplayName="the chimeric theatre" RenderString="&#937;" ColorString="&amp;M" Tile="ThousandAndFirst/r_KingdomChimericTheatre.png" TileColor="&amp;M" DetailColor="W" />
     <part Name="Description" Short="Tiered seats around a table nobody sits at. This city is about one thing, and this is the thing." />
     <part Name="Physics" Takeable="false" Weight="20000" />
     <part Name="r_KingdomChimericTheatre" />
@@ -837,7 +837,7 @@
   </object>
   <object Name="r_KingdomBecomingAnnexe" Inherits="Furniture">
     <stag Name="Contemporary" />
-    <part Name="Render" DisplayName="the becoming annexe" RenderString="&#920;" ColorString="&amp;C" DetailColor="Y" />
+    <part Name="Render" DisplayName="the becoming annexe" RenderString="&#920;" ColorString="&amp;C" Tile="ThousandAndFirst/r_KingdomBecomingAnnexe.png" TileColor="&amp;C" DetailColor="Y" />
     <part Name="Description" Short="A clean white room, a chair with restraints nobody has ever needed, and a book nobody else may read. The machines do not ask who your parents were. They ask the book." />
     <part Name="Physics" Takeable="false" Weight="20000" />
     <part Name="r_KingdomBecomingAnnexe" />
@@ -847,7 +847,7 @@
   <!-- ======================================================= THE CROWN AND THE CAPITAL == -->
   <object Name="r_KingdomCrownHall" Inherits="Furniture">
     <stag Name="Contemporary" />
-    <part Name="Render" DisplayName="the crown hall" RenderString="&#9632;" ColorString="&amp;W" DetailColor="Y" />
+    <part Name="Render" DisplayName="the crown hall" RenderString="&#9632;" ColorString="&amp;W" Tile="ThousandAndFirst/r_KingdomCrownHall.png" TileColor="&amp;W" DetailColor="Y" />
     <part Name="Description" Short="One room, and everything in it points at the middle of it. The floor was levelled by people who knew what would stand on it. Whatever else the kingdom argues about, it does not argue about where this is." />
     <part Name="r_KingdomCrownHall" />
     <part Name="Physics" Takeable="false" Weight="50000" />
@@ -855,7 +855,7 @@
   </object>
   <object Name="r_KingdomArcology" Inherits="Furniture">
     <stag Name="Contemporary" />
-    <part Name="Render" DisplayName="the arcology" RenderString="&#9619;" ColorString="&amp;Y" DetailColor="c" />
+    <part Name="Render" DisplayName="the arcology" RenderString="&#9619;" ColorString="&amp;Y" Tile="ThousandAndFirst/r_KingdomArcology.png" TileColor="&amp;Y" DetailColor="c" />
     <part Name="Description" Short="It went up in one piece and it has weather of its own. Somewhere near the bottom is a street that has never seen the sun, and somewhere near the top is a window nobody has opened. People are born in here who do not go outside for a season and do not think of it as strange." />
     <part Name="Bed" />
     <part Name="Physics" Takeable="false" Weight="200000" />
