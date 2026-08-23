@@ -50,7 +50,11 @@ namespace ThousandAndFirst.Simulation.City
 
 		/// <summary>The realm let the whole city go. Every binding it held is evicted at
 		/// once.</summary>
-		Dissolved = 5
+		Dissolved = 5,
+
+		/// <summary>The resident took the charter and became the player. Their real body remains,
+		/// but it is no longer a city-model view and must never be re-minted from the old row.</summary>
+		Accession = 6
 	}
 
 	/// <summary>

@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<embarkmodules>
+  <module Class="XRL.CharacterBuilds.Qud.QudGamemodeModule">
+    <modes>
+      <mode ID="Kingdom" Title="Kingdom">
+        <icon Tile="ThousandAndFirst/r_FoundingBook.png" Foreground="y" Detail="W"></icon>
+        <description>
+          Character permadeath; kingdom continuity. When you die, your realm mourns you and its own senior heir takes the charter. If no heir stands, the dynasty ends.
+        </description>
+        <stringgamestate Name="GameMode" Value="Kingdom"></stringgamestate>
+        <boolgamestate Name="r_TAF_KingdomMode" Value="true"></boolgamestate>
+        <gamesystem Class="ThousandAndFirst.KingdomSuccession"></gamesystem>
+      </mode>
+    </modes>
+  </module>
+</embarkmodules>

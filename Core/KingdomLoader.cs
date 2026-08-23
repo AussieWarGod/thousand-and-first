@@ -11,10 +11,12 @@ namespace ThousandAndFirst
 		{
 			KingdomData.Reload();
 			KingdomSystem kingdomSystem = The.Game?.RequireSystem<KingdomSystem>();
+			KingdomSeal seal = The.Game?.RequireSystem<KingdomSeal>();
 			if (kingdomSystem != null && kingdomSystem.Founded && The.Player != null)
 			{
 				The.Player.RequirePart<KingdomCharterPart>().EnsureAbility();
 			}
+			seal?.ReconcileProfile();
 		}
 	}
 
@@ -24,6 +26,7 @@ namespace ThousandAndFirst
 		public void mutate(GameObject player)
 		{
 			The.Game?.RequireSystem<KingdomSystem>();
+			The.Game?.RequireSystem<KingdomSeal>();
 		}
 	}
 }

@@ -1411,6 +1411,19 @@ namespace ThousandAndFirst
 			{
 				Simulation.City.KingdomCity.OnSuspending(this, E.Zone);
 			});
+			if (Founded && E.Zone != null && (ClaimedZones.Contains(E.Zone.ZoneID)
+				|| (Away != null && Away.ClaimedZones.Contains(E.Zone.ZoneID))))
+			{
+				Guard("seal final read", delegate
+				{
+					string failure;
+					if (!KingdomSeal.TryStageSemanticSnapshot("zone final read", out failure))
+					{
+						KingdomLog.Log("seal: zone final read was not staged ("
+							+ (string.IsNullOrEmpty(failure) ? "unknown failure" : failure) + ")");
+					}
+				});
+			}
 			return base.HandleEvent(E);
 		}
 
@@ -1573,6 +1586,18 @@ namespace ThousandAndFirst
 					// settlement says it has news and waits to be asked, in the Charter.
 					XRL.Messages.MessageQueue.AddPlayerMessage("{{C|" + SeatName + "}} has news of the "
 						+ ((HomecomingDays == 1) ? "day" : HomecomingDays + " days") + " you were away. {{K|(Charter: what happened while you were away)}}");
+				}
+			});
+			// This is the coherent boundary for a settlement visit: intake, simulation, ground
+			// publication, chronicle, and digest have all finished. The profile journal compares the
+			// semantic snapshot and writes only when one of those facts actually changed.
+			Guard("seal stage", delegate
+			{
+				string failure;
+				if (!KingdomSeal.TryStageSemanticSnapshot("settlement pass", out failure))
+				{
+					KingdomLog.Log("seal: settlement pass was not staged ("
+						+ (string.IsNullOrEmpty(failure) ? "unknown failure" : failure) + ")");
 				}
 			});
 			return base.HandleEvent(E);

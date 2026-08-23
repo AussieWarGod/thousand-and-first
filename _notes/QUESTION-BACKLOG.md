@@ -272,6 +272,68 @@ it). Nothing gates the interior records on the arcology STANDING — capital-onl
 proxy until the stratum is real. And the registry office reads the SEAT's roster ("a copy
 of a book kept somewhere else") — arguably correct, worth an eye.
 
+**QB-48 — CLOSED/PINNED (2026-08-23): Seal/Succession engine authority.** Source verification
+against 2.0.211.51 fixed one owner for every transition; no two systems race to interpret the
+same death.
+
+- **Live stage:** `KingdomSeal` is the profile coordinator in every mode. A semantic kingdom
+  mutation marks it dirty; it journals the next coherent snapshot at the end of that action,
+  with one-world-day polling as a missed-dirty backstop. `IGameSystem.BeforeSave` is the final
+  synchronous flush. `AfterSave` is never called a commit: `XRLGame.SaveSystems` invokes it
+  before the primary writer has finished. Founding and retirement flush immediately.
+- **Death:** `AfterDieEvent` is the capture seam. It carries `Reason` / `ThirdPersonReason`; the
+  dying body's `Physics.LastDeathCategory` is the category authority. The event fires before
+  `GameObject.Die` rechecks `IsPlayer`, so `KingdomSuccession` alone owns the Kingdom-mode body
+  swap. `KingdomSeal` observes deaths directly outside Kingdom Mode. Inside Kingdom Mode it
+  never guesses from handler order: succession explicitly asks it for a terminal attempt only
+  when no eligible/reachable heir remains. A successful accession writes a new living
+  generation instead. Checkpoint/debug restoration can only leave an attempt, never a legacy.
+- **C8 crossover:** the mourning/news interval is resolved synchronously inside the Kingdom
+  `AfterDieEvent`; world time advances by the ruled road delay, the rite is told, then the real
+  resident body becomes player before the engine's identity recheck. The old founder therefore
+  follows vanilla's non-player corpse/removal path and keeps their kit where they fell.
+- **Retirement:** a named Charter chapter action, two explicit confirmations. It snapshots and
+  promotes an immutable retired legacy immediately, marks that exact `LegacyId` sealed in the
+  still-live origin save, and never deletes or abandons the save. Further play cannot rewrite
+  that generation; a later succession mints a new per-generation `LegacyId` under the stable
+  dynasty `LineageId`.
+- **Automatic promotion:** reconciliation happens only on a later boot/action. The sole
+  automatic proof is an exact `ScoreEntry2.GameId == OriginGameId` and no standing
+  Primary in either canonical `DataManager.SyncedPath("Saves")` or
+  `DataManager.SavePath("Saves")` root. Both Qud loadable forms, `Primary.sav.gz` and the legacy
+  `Primary.sav` fallback, count. Any present/ambiguous root or Primary fails closed as standing;
+  score+save is checkpointed, save without score is living, neither is an orphan. Only a
+  `Terminal` attempt may use this proof. `Retired` is the explicit path above; a merely `Living`
+  stage never promotes.
+- **Reservation/consume:** the new-game `[GameStateSingleton]` selects latest eligible by
+  default and obtains an atomic exclusive claim on the unique `LegacyId`, bound to target
+  `GameID`, before world generation. Joppa `OnAfterBuild` reserves one still-mutable site and
+  copies the sanitized payload into target state. A fresh engine `Applied` result persists as
+  `AppliedPendingDurability`; that initial `Applied` result is what proved and published the exact
+  inherited objects and marker, while the external receipt remains `reserved`. It may advance
+  monotonically to `committed` only after a later load proves the target Primary, its persisted
+  target phase, the recomputed immutable marker, the exact loaded-zone marker, and the built
+  target. It deliberately does not recheck current object contents or positions after player
+  interaction. Primary presence alone never proves application and never commits. No primary is
+  recoverable interrupted worldgen and releases only when no live OS claim is held; a primary
+  with unapplied or unproved payload stays reserved and reacquires that claim. Placement and
+  reconstruction key target marker and immutable reserved receipt tuple, so retries do not build
+  twice. Site refusal releases the claim and leaves the legacy eligible. An explicit decline is
+  an immutable spent receipt; silence/crash is not a decline.
+- **Playtest candidate boundary:** build seniority succession, honest ledger reset, corpse
+  memory recovery, persistent quests, one-seat/four-state inheritance, latest-eligible import,
+  and retirement now. Chosen heir, groomed designee, climb mode, sultan-history rendering,
+  multi-zone inheritance and clone templates remain separately ruled later/stretch work, not
+  disguised as missing pieces of this first end-to-end candidate.
+
+**QB-49 — Choose inherited-seat discoverability after playtest.** Current v1.5 provisional:
+install one silently/immediately revealed map note at embark, then an exact priority-6100
+`LocationFinder` with `Value=1` records the first physical arrival as a vanilla travel
+accomplishment (and 1 XP). Decide whether final UX keeps the inherited chart as part of the
+legacy, starts unrevealed behind a rumor/natural discovery, or uses another nonmodal reveal. This
+choice changes only note/finder presentation; it must not change reservation, placement,
+durability, or one-seat consumption.
+
 ## Answered
 
 **QB-1 — CLOSED: the hub re-key landed exactly as the provisional promised.** Pairwise

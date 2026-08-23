@@ -112,6 +112,9 @@ namespace ThousandAndFirst
 				});
 			}
 			The.Player?.RequirePart<KingdomCharterPart>().EnsureAbility();
+			// The first durable snapshot waits for the rite's ground claim. Before that claim the
+			// seal has no honest semantic ground id to carry.
+			KingdomSeal.MarkSemanticDirty("founding publication");
 			return faction;
 		}
 
@@ -213,7 +216,7 @@ namespace ThousandAndFirst
 			KingdomChronicle.Record(system, "you poured again on " + StyleGroundClause(system.Style) + ", and " + Name + " was " + verb + " as " + KingdomSettlement.VocationClause(vocation) + ", the second city of " + system.KingdomDisplayName + KingdomRules.RuinRestorationClause(structuresRestored), Accomplishment: true);
 			// Force, because the whole point of this ground is that it does not border the realm.
 			// The foreign-faction refusal above already stands regardless of this Force.
-			ClaimZone(Site, Force: true);
+			ClaimZone(Site, Force: true, StageSnapshot: false);
 			Cell secondRiteCell = The.Player?.CurrentCell;
 			if (secondRiteCell != null && secondRiteCell.ParentZone == Site)
 			{
@@ -229,6 +232,8 @@ namespace ThousandAndFirst
 				});
 			}
 			The.Player?.RequirePart<KingdomCharterPart>().EnsureAbility();
+			string sealFailure;
+			KingdomSeal.TryStageSemanticSnapshot("second founding", out sealFailure);
 			return true;
 		}
 
@@ -367,6 +372,11 @@ namespace ThousandAndFirst
 		/// <returns>True if claimed; false if unfounded, null, or not adjacent to the realm.</returns>
 		public static bool ClaimZone(Zone Z, bool Force = false)
 		{
+			return ClaimZone(Z, Force, StageSnapshot: true);
+		}
+
+		private static bool ClaimZone(Zone Z, bool Force, bool StageSnapshot)
+		{
 			KingdomSystem system = The.Game.RequireSystem<KingdomSystem>();
 			if (!system.Founded || Z == null)
 			{
@@ -413,6 +423,8 @@ namespace ThousandAndFirst
 					return false;
 				}
 			}
+			bool firstRealmClaim = StageSnapshot && system.SettlementCount == 1
+				&& system.ClaimedZones.Count == 0;
 			Z.SetZoneProperty("faction", system.KingdomFactionName);
 			Faction faction = Factions.Get(system.KingdomFactionName);
 			if (faction != null && !faction.HolyPlaces.Contains(Z.ZoneID))
@@ -427,6 +439,18 @@ namespace ThousandAndFirst
 			if (system.NextArrivalTick <= 0)
 			{
 				system.NextArrivalTick = The.Game.TimeTicks + KingdomRules.ArrivalIntervalTicks(system.Population);
+			}
+			if (StageSnapshot)
+			{
+				string sealFailure;
+				if (firstRealmClaim)
+				{
+					KingdomSeal.TryFoundingCompleted(out sealFailure);
+				}
+				else
+				{
+					KingdomSeal.TryStageSemanticSnapshot("ground claimed", out sealFailure);
+				}
 			}
 			return true;
 		}
@@ -549,6 +573,8 @@ namespace ThousandAndFirst
 				System.SetStanding(VillageFactionName, KingdomRules.VillageCharterSealedStanding);
 			}
 			KingdomChronicle.Record(System, "you asked, and " + VillageDisplayName + " agreed: their ground stays theirs, and a covenant now stands between them and " + System.KingdomDisplayName, Accomplishment: true);
+			string sealFailure;
+			KingdomSeal.TryStageSemanticSnapshot("village charter", out sealFailure);
 		}
 	}
 }

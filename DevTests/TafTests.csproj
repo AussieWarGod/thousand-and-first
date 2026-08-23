@@ -69,6 +69,15 @@
     <Compile Include="..\Core\KingdomBrinkRules.cs" />
     <Compile Include="..\Core\KingdomLedger.cs" />
     <Compile Include="..\Core\KingdomSettlement.cs" />
+    <Compile Include="..\Core\KingdomSealFormat.cs" />
+    <Compile Include="..\Core\KingdomSealRecord.cs" />
+    <Compile Include="..\Core\KingdomSealRules.cs" />
+    <Compile Include="..\Core\KingdomSealStore.cs" />
+    <Compile Include="..\Core\KingdomSealEngineRules.cs" />
+    <Compile Include="..\Core\KingdomInheritRules.cs" />
+    <Compile Include="..\Core\KingdomInheritEngine.cs" />
+    <Compile Include="..\Core\KingdomInheritanceSiteRules.cs" />
+    <Compile Include="..\Core\KingdomInheritanceStateRules.cs" />
     <Compile Include="..\Core\KingdomExileRules.cs" />
     <Compile Include="..\Core\KingdomCreedRules.cs" />
     <Compile Include="..\Core\KingdomQolRules.cs" />
@@ -106,6 +115,7 @@
     <Compile Include="..\Experience\KingdomFaithRules.cs" />
     <Compile Include="..\Experience\KingdomGuestRules.cs" />
     <Compile Include="..\Experience\KingdomWaterRiteRules.cs" />
+    <Compile Include="..\Experience\KingdomSuccessionRules.cs" />
     <Compile Include="..\Simulation\City\KingdomBudgetRules.cs" />
     <Compile Include="..\Simulation\City\KingdomCityState.cs" />
     <Compile Include="..\Simulation\City\KingdomCityRules.cs" />
@@ -190,6 +200,15 @@
     <Compile Include="..\Growth\KingdomSatelliteRules.cs" />
     <Compile Include="KingdomCrownRulesTests.cs" />
     <Compile Include="KingdomSatelliteRulesTests.cs" />
+    <Compile Include="KingdomSealFormatTests.cs" />
+    <Compile Include="KingdomSealRulesTests.cs" />
+    <Compile Include="KingdomSealStoreTests.cs" />
+    <Compile Include="KingdomSealEngineRulesTests.cs" />
+    <Compile Include="KingdomInheritRulesTests.cs" />
+    <Compile Include="KingdomInheritEngineTests.cs" />
+    <Compile Include="KingdomInheritanceSiteRulesTests.cs" />
+    <Compile Include="KingdomInheritanceStateRulesTests.cs" />
+    <Compile Include="KingdomSuccessionRulesTests.cs" />
   </ItemGroup>
 
   <ItemGroup>

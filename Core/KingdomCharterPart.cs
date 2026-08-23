@@ -64,6 +64,11 @@ namespace ThousandAndFirst
 			if (E.ID == COMMAND)
 			{
 				OpenMenu();
+				string sealFailure;
+				if (!KingdomSeal.TryStageSemanticSnapshot("charter actions", out sealFailure))
+				{
+					KingdomLog.Log("seal: charter actions remain pending (" + sealFailure + ")");
+				}
 			}
 			return base.FireEvent(E);
 		}
@@ -85,7 +90,7 @@ namespace ThousandAndFirst
 				// first, and that has bitten this file before. ONE digit is left. When it goes,
 				// the next entry is a chapter inside an existing one, the way the city book
 				// (W5, '7') holds six readings behind one letter - not a second Charter.
-				int num = Popup.PickOption(Title: system.SeatName + KingdomSettlement.VocationSuffix(system.Vocation), Options: new string[35] { (system.PetitionKind != KingdomRules.PetitionKind.None) ? ("{{W|Hear " + system.PetitionPetitioner + "}}") : "{{K|No one is waiting to speak}}", "Status", "What happened while you were away", "The Chronicle", "As others tell it", "Standings", "The roll of settlers", "Standing policy", "Designate district", "Commission a building", "Answer a threat", "Dedicate a vessel, larder, or stockpile", "Strike a trade charter", "Send a water manifest", "Share a meal from the larder", "Certify a machine", "Set the water detail", "Plans staked for later", "Adopt a building", "Release an adoption", (system.SettlementCount >= 2 || system.Seceded != null) ? "How your cities hold each other" : "{{K|One city cannot fall out with itself}}", "What the keepers know", "Your works, and what they become", "Name a building", "Set the crew on the ground", "Take down a building", "Post a price at the heart", "Change what a plot is", "Give a building a new look", "Consecrate a shrine", "Share water with a settler", "Claim this ground", "The book of the city", "Where the keepers' craft could go", "What the city is asking for"}, Hotkeys: new char[35] { 'h', 's', 'w', 'c', 'a', 'n', 'l', 'p', 'd', 'm', 't', 'v', 'r', 'i', 'f', 'e', 'u', 'g', 'b', 'j', 'k', 'o', 'y', 'x', 'q', 'z', '1', '2', '3', '4', '5', '6', '7', '8', '9'}, AllowEscape: true);
+				int num = Popup.PickOption(Title: system.SeatName + KingdomSettlement.VocationSuffix(system.Vocation), Options: new string[35] { (system.PetitionKind != KingdomRules.PetitionKind.None) ? ("{{W|Hear " + system.PetitionPetitioner + "}}") : "{{K|No one is waiting to speak}}", "Status", "What happened while you were away", "The Chronicle and dynasty", "As others tell it", "Standings", "The roll of settlers", "Standing policy", "Designate district", "Commission a building", "Answer a threat", "Dedicate a vessel, larder, or stockpile", "Strike a trade charter", "Send a water manifest", "Share a meal from the larder", "Certify a machine", "Set the water detail", "Plans staked for later", "Adopt a building", "Release an adoption", (system.SettlementCount >= 2 || system.Seceded != null) ? "How your cities hold each other" : "{{K|One city cannot fall out with itself}}", "What the keepers know", "Your works, and what they become", "Name a building", "Set the crew on the ground", "Take down a building", "Post a price at the heart", "Change what a plot is", "Give a building a new look", "Consecrate a shrine", "Share water with a settler", "Claim this ground", "The book of the city", "Where the keepers' craft could go", "What the city is asking for"}, Hotkeys: new char[35] { 'h', 's', 'w', 'c', 'a', 'n', 'l', 'p', 'd', 'm', 't', 'v', 'r', 'i', 'f', 'e', 'u', 'g', 'b', 'j', 'k', 'o', 'y', 'x', 'q', 'z', '1', '2', '3', '4', '5', '6', '7', '8', '9'}, AllowEscape: true);
 				switch (num)
 				{
 				case 0:
@@ -98,7 +103,7 @@ namespace ThousandAndFirst
 					ShowHomecoming(system);
 					break;
 				case 3:
-					Popup.Show(KingdomReports.Chronicle(system));
+					OpenChronicleAndDynasty(system);
 					break;
 				case 4:
 					Popup.Show(KingdomReports.Chronicle(system, Outsider: true));
@@ -201,6 +206,68 @@ namespace ThousandAndFirst
 					return;
 				}
 			}
+		}
+
+		private static void OpenChronicleAndDynasty(KingdomSystem System)
+		{
+			int chapter = Popup.PickOption(
+				Title: "The Chronicle and dynasty of " + System.KingdomDisplayName,
+				Options: new string[2] { "Read the Chronicle", "Dynasty and retirement" },
+				Hotkeys: new char[2] { 'c', 'd' }, AllowEscape: true);
+			if (chapter == 0)
+			{
+				Popup.Show(KingdomReports.Chronicle(System));
+			}
+			else if (chapter == 1)
+			{
+				OpenDynastyChapter(System);
+			}
+		}
+
+		private static void OpenDynastyChapter(KingdomSystem System)
+		{
+			KingdomSeal seal = The.Game?.GetSystem<KingdomSeal>();
+			if (seal == null)
+			{
+				Popup.Show("The profile seal is unavailable. Nothing has been retired.");
+				return;
+			}
+			bool retired = !string.IsNullOrEmpty(seal.CurrentLegacyId)
+				&& string.Equals(seal.RetiredLegacyId, seal.CurrentLegacyId,
+					StringComparison.Ordinal);
+			string generation = seal.CurrentGeneration == 0
+				? "the founder's generation" : "generation " + seal.CurrentGeneration;
+			int choice = Popup.PickOption(
+				Title: "The dynasty of " + System.KingdomDisplayName,
+				Intro: retired
+					? "This generation is already an immutable legacy in your profile. The current save continues, but play cannot rewrite that retired generation."
+					: "You are playing " + generation + ". Retirement seals this generation without ending the current save.",
+				Options: new string[1]
+				{
+					retired ? "{{G|This generation is already retired}}"
+						: "Retire this generation into the profile legacy"
+				}, AllowEscape: true);
+			if (choice != 0 || retired)
+			{
+				return;
+			}
+			if (Popup.ShowYesNo("Retire " + generation + " of {{C|" + System.KingdomDisplayName
+				+ "}}?\n\nThis writes an immutable legacy to your profile. The current save continues, but future play cannot rewrite this generation's legacy.") != DialogResult.Yes)
+			{
+				return;
+			}
+			if (Popup.ShowYesNo("Seal this generation now?\n\nThe profile legacy cannot be withdrawn or changed. This save remains playable; a later succession begins a new generation instead of rewriting the retired one.") != DialogResult.Yes)
+			{
+				return;
+			}
+			string failure;
+			if (!KingdomSeal.TryRetireGeneration(out failure))
+			{
+				Popup.Show("Retirement did not finish. The current save continues. The seal may hold a pending retirement, but no completed profile legacy is being reported; return here to retry.\n\n"
+					+ (string.IsNullOrEmpty(failure) ? "The profile seal could not be completed." : failure));
+				return;
+			}
+			Popup.Show("{{G|This generation is retired.}} Its immutable legacy is written to your profile. The current save continues, and later play cannot rewrite what was sealed.");
 		}
 
 		/// <summary>

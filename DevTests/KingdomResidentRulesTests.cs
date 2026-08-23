@@ -21,6 +21,43 @@ namespace ThousandAndFirst.Tests
 	{
 		private const string Here = "taf:zone:here";
 
+		[TestCase(true, false, true, false, KingdomAccessionCarrierState.Original)]
+		[TestCase(false, true, false, true, KingdomAccessionCarrierState.Committed)]
+		[TestCase(false, true, true, false, KingdomAccessionCarrierState.CityAdvanced)]
+		[TestCase(true, false, false, true, KingdomAccessionCarrierState.BindingAdvanced)]
+		[TestCase(true, true, true, true, KingdomAccessionCarrierState.Unknown)]
+		[TestCase(false, false, false, false, KingdomAccessionCarrierState.Unknown)]
+		public void AccessionCarrierClassifierNamesOnlyExactStates(bool cityOriginal,
+			bool cityAdvanced, bool bindingOriginal, bool bindingAdvanced,
+			KingdomAccessionCarrierState expected)
+		{
+			Assert.AreEqual(expected, KingdomResidentRules.AccessionCarriers(cityOriginal,
+				cityAdvanced, bindingOriginal, bindingAdvanced));
+		}
+
+		[Test]
+		public void TornNonResidentCityColumnsCannotProveAccessionOriginalOrCommitted()
+		{
+			KingdomResidentRow resident = Settler(7, KingdomResidentStanding.Resident,
+				KingdomStandingCause.None);
+			KingdomWorkRow work = new KingdomWorkRow(11, Here, 4, 9, "r_KingdomTent",
+				62, 2, 700L, new KingdomWorkRunState(KingdomWorkKind.Other, 0, 0, 0L));
+			KingdomCityState original = City(new[] { work }, new[] { resident });
+			KingdomCityState advanced;
+			KingdomCityFault fault;
+			Assert.IsTrue(original.TryWithResidents(new KingdomResidentRow[0], out advanced,
+				out fault), fault.ToString());
+			KingdomCityState torn = City(new KingdomWorkRow[0], new[] { resident });
+
+			Assert.IsFalse(KingdomResidentRules.SameCity(torn, original),
+				"matching resident rows cannot hide a torn work column");
+			Assert.IsFalse(KingdomResidentRules.SameCity(torn, advanced));
+			Assert.AreEqual(KingdomAccessionCarrierState.Unknown,
+				KingdomResidentRules.AccessionCarriers(
+					KingdomResidentRules.SameCity(torn, original),
+					KingdomResidentRules.SameCity(torn, advanced), true, false));
+		}
+
 		private static KingdomResidentRow Settler(int id, KingdomResidentStanding standing, KingdomStandingCause cause)
 		{
 			return new KingdomResidentRow(id, "Ptoh-" + id, 2, 3, 400L, 0, 0, 0, KingdomDayShape.Hearth,
@@ -33,6 +70,18 @@ namespace ThousandAndFirst.Tests
 			KingdomCityFault fault;
 			Assert.IsTrue(KingdomCityState.TryCreate(KingdomCityRules.SchemaVersion, KingdomCityRules.RulesVersion,
 				"taf:city:kavvat", 900L, default(KingdomStocks), null, null, rows, null, out state, out fault), fault.ToString());
+			return state;
+		}
+
+		private static KingdomCityState City(KingdomWorkRow[] works,
+			KingdomResidentRow[] residents)
+		{
+			KingdomCityState state;
+			KingdomCityFault fault;
+			Assert.IsTrue(KingdomCityState.TryCreate(KingdomCityRules.SchemaVersion,
+				KingdomCityRules.RulesVersion, "taf:city:kavvat", 900L,
+				default(KingdomStocks), null, works, residents, null, out state, out fault),
+				fault.ToString());
 			return state;
 		}
 
