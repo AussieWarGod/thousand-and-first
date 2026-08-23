@@ -85,9 +85,12 @@ live_list() {
 	find . -type f -not -path './.git/*' -print | sed 's|^\./||' | LC_ALL=C sort
 }
 
-cmd_diff() {
+cmd_diff() (
+	# Keep cleanup scoped to this diff invocation.  A RETURN trap installed in
+	# a function leaks into its caller on this Bash path; once cmd_diff returns,
+	# its local tmp is gone and the caller's RETURN trips `set -u`.
 	local tmp; tmp="$(mktemp -d)"
-	trap 'rm -rf "$tmp"' RETURN
+	trap 'rm -rf -- "$tmp"' EXIT
 	sorted_list > "$tmp/staged"
 	live_list > "$tmp/live"
 
@@ -99,7 +102,7 @@ cmd_diff() {
 	done
 	echo "=== DELETE (live, not in runtime set) ==="
 	comm -13 "$tmp/staged" "$tmp/live"
-}
+)
 
 cmd_deploy() {
 	local apply="${1:-}"
