@@ -813,20 +813,17 @@ namespace ThousandAndFirst
 		/// The city the founder is not standing in, or null until a second is founded.
 		/// <para>
 		/// Everything above this line describes the seat &mdash; the settlement the founder is
-		/// currently in &mdash; and every consumer reads those fields directly. The other city
-		/// waits here, and the two are exchanged by <see cref="TrySeat"/> when the founder walks
-		/// into its ground.
+		/// currently in &mdash; and every physical consumer reads those fields directly. The other
+		/// city's serialized seat mirror waits here, and the two are exchanged by
+		/// <see cref="TrySeat"/> when the founder walks into its ground.
 		/// </para>
 		/// <para>
-		/// A dormant city needs no clock. Its <c>LastHeartbeatTick</c> and <c>LastVisitTick</c>
-		/// travel with it, so the ordinary catch-up in <c>KingdomGrowth</c> resolves the whole
-		/// absence the moment it is seated &mdash; the lazy tick-stamp idiom vanilla uses for
-		/// zone repair. The water half of that catch-up is now honest rather than capped
-		/// (<see cref="KingdomRules.ElapsedDays"/>): a city dormant for a season drinks a season
-		/// and fetches a season, and the two net. What is still bounded per visit is arrivals
-		/// (<see cref="KingdomRules.MaxArrivalsPerVisit"/>), so a dormant city cannot arrive with
-		/// a season of settlers, and the thirst ladder, which steps once per resolve however long
-		/// the absence.
+		/// The away city's <see cref="KingdomSettlement.City"/> book advances beside the seated
+		/// book on <c>KingdomHeartbeat</c>; production, upkeep, bounded arrivals, brinks, and news
+		/// therefore follow world time without loading its zone. Physical objects and advisory
+		/// seat fields reconcile only after <see cref="TrySeat"/> obtains that ground as the fresh
+		/// active seat. Its tick stamps travel with it so the projection cannot bill a modeled day
+		/// twice.
 		/// </para>
 		/// </summary>
 		public KingdomSettlement Away;
@@ -866,10 +863,10 @@ namespace ThousandAndFirst
 		/// dedication, and the ground still carries the old realm's faction property.
 		/// </para>
 		/// <para>
-		/// A dormant realm needs no clock, exactly as <see cref="Away"/> does not: both cities keep
-		/// their own <c>LastHeartbeatTick</c> and <c>LastVisitTick</c>, so a founder who is taken
-		/// back resolves the whole absence through the ordinary capped catch-up rather than
-		/// arriving to a season of settlers at once.
+		/// An exiled realm is a frozen archive rather than an active city-book owner. Both cities
+		/// keep their exact clocks; if the founder is taken back, the restored realm resumes under
+		/// the current uncapped elapsed-time and witnessed-brink rules. It is not silently simulated
+		/// as a rival polity while nobody holds its authority.
 		/// </para>
 		/// </summary>
 		public string ExiledFactionName;

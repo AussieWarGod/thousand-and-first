@@ -177,10 +177,10 @@ playtest passes.
   exchange. Charter titles, the roll, petitions, policy and the homecoming report all name the city
   you are in; the chronicle and standings stay the realm's, because the realm is the faction and
   the cities are only where its history happened.
-- A dormant city needs no clock and gets none. It carries its own tick stamps, so it catches up the
-  moment it is seated — the same lazy tick-stamp idiom vanilla uses for zone repair — and it
-  catches up in full: every day of upkeep, and at most three arrivals in the one pass, which is
-  a rule about the gate rather than about the calendar.
+- Both city books advance on the realm heartbeat, including the city the founder is not standing
+  in. Its physical ground remains unloaded and untouched; production, upkeep, bounded arrivals,
+  brinks, and news reconcile through the model, then the next fresh seated pass projects what the
+  active zone can actually prove.
 - Ground the realm's other city holds cannot be claimed by this one, even forced.
 
 ### Added — the larder and the shared meal
@@ -190,9 +190,9 @@ playtest passes.
 - **Share a meal from the larder**, from the Charter, when the larder can feed one. Food is spent
   from dedicated larders only, a settler from the roll speaks, and it becomes the settlement's
   deed, so word travels the way it does for any deed.
-- An empty larder costs nothing: no hunger, no unhappiness, no decay. A player who never dedicates
-  food plays exactly as they did before. Every food effect is a bonus for engaging, never a penalty
-  for abstaining.
+- Calling a shared meal remains optional: an empty larder spends nothing on that action. Ordinary
+  settlement upkeep is separate. Above the Camp foraging ceiling, people eat one ration each per
+  day and a shortage advances the witnessed hunger ladder described below.
 
 ### Added — leaving, and being taken back
 - A realm's **regard for its founder** is the vanilla reputation cell for its own faction, so there
@@ -299,8 +299,9 @@ playtest passes.
   they settle with a trade; ignored, they leave a letter and the hook becomes a standing rumor —
   never lost, only relocated.
 - **The carry-sign.** A cheap marker planted on a pile you own, anywhere: porters haul it home over
-  distance-scaled days. The sign is the designation, one haul rides at a time, and a road cut by a
-  raid costs the load in the chronicle, never in silence.
+  distance-scaled days. The sign is the designation and one haul rides at a time. A raid warning or
+  live raiders at the destination hold the exact load in escrow; the first later safe settlement
+  pass delivers it. Absence never invents a road loss.
 
 ### Added — catalogues that layer, buildings with their own ground, and the trigger law
 - **Catalogue files layer.** A later `<building>` with a known key merges: named attributes win,

@@ -253,16 +253,15 @@ namespace ThousandAndFirst.Tests
 			Assert.AreEqual(expected, KingdomGuestRules.ShouldResolveHaul(timeTicks, dueTick));
 		}
 
-		[TestCase(false, 0, false)]
-		[TestCase(false, 99, false)]
-		[TestCase(true, -1, false)]
-		[TestCase(true, 0, true)]
-		[TestCase(true, KingdomGuestRules.RoadRiskPercent - 1, true)]
-		[TestCase(true, KingdomGuestRules.RoadRiskPercent, false)]
-		[TestCase(true, 99, false)]
-		public void HaulAtRisk_OnlyFiresWhileARaidThreatensAndOnlyBelowTheRiskPercent(bool raidActive, int riskRoll, bool expected)
+		[TestCase(false, false, false)]
+		[TestCase(true, false, true)]
+		[TestCase(false, true, true)]
+		[TestCase(true, true, true)]
+		public void HaulWaitsForSafety_UntilWarningAndPhysicalRaidersAreBothGone(
+			bool raidActive, bool raidersPresent, bool expected)
 		{
-			Assert.AreEqual(expected, KingdomGuestRules.HaulAtRisk(raidActive, riskRoll));
+			Assert.AreEqual(expected,
+				KingdomGuestRules.HaulWaitsForSafety(raidActive, raidersPresent));
 		}
 
 		// ---- Plant verdict: precedence in the order a founder would hit the refusals ----
@@ -317,21 +316,6 @@ namespace ThousandAndFirst.Tests
 			string text = KingdomGuestRules.DeliveredChronicleLine("Tamsketh", "6 marble");
 			StringAssert.Contains("Tamsketh", text);
 			StringAssert.Contains("6 marble", text);
-		}
-
-		[Test]
-		public void LostChronicleLine_NamesSettlementFactionAndManifest()
-		{
-			string text = KingdomGuestRules.LostChronicleLine("Tamsketh", "the Snapjaws", "6 marble");
-			StringAssert.Contains("Tamsketh", text);
-			StringAssert.Contains("the Snapjaws", text);
-			StringAssert.Contains("6 marble", text);
-		}
-
-		[Test]
-		public void LostLedgerNote_NamesTheManifest()
-		{
-			StringAssert.Contains("6 marble", KingdomGuestRules.LostLedgerNote("6 marble"));
 		}
 
 		[Test]

@@ -454,26 +454,14 @@ namespace ThousandAndFirst
 		}
 
 		/// <summary>
-		/// Chance out of 100 a haul is lost to the road while a raid presently threatens its
-		/// destination. Zero whenever no raid is warned: an ordinary road is safe, and threat has
-		/// to cost more than the tribute that ends it (STANDARDS 8) or paying tribute would never
-		/// pay for itself against an inbound haul.
+		/// Whether a due haul must remain in escrow. A warning nobody has answered and raiders
+		/// still physically standing on the destination ground are both witnessed threats; neither
+		/// is authority to invent a loss on a road the player did not see. The exact haul waits and
+		/// is delivered on the first later settlement pass that proves both are absent.
 		/// </summary>
-		public const int RoadRiskPercent = 35;
-
-		/// <summary>
-		/// Whether a haul is lost, judged only from state live at the moment of resolution
-		/// &mdash; never from a raid that came and went while nobody was there to see this haul
-		/// through it. Addendum 8 clause 3: the consequence is decided at awareness, against
-		/// what is true then, rather than reconstructed out of a threat that has already
-		/// passed.
-		/// </summary>
-		/// <param name="RaidActive">The destination settlement currently has a raid warned
-		/// against it (<c>KingdomSystem.RaidState == 1</c>).</param>
-		/// <param name="RiskRoll">A roll in [0, 100).</param>
-		public static bool HaulAtRisk(bool RaidActive, int RiskRoll)
+		public static bool HaulWaitsForSafety(bool RaidActive, bool RaidersPresent)
 		{
-			return RaidActive && RiskRoll >= 0 && RiskRoll < RoadRiskPercent;
+			return RaidActive || RaidersPresent;
 		}
 
 		public enum PlantVerdict
@@ -561,14 +549,5 @@ namespace ThousandAndFirst
 			return "{{G|Porters arrived carrying " + ManifestDescription + " that a carry-sign had marked out on the road.}}";
 		}
 
-		public static string LostChronicleLine(string SettlementName, string RaidFactionName, string ManifestDescription)
-		{
-			return "porters carrying " + ManifestDescription + " toward " + SettlementName + " never made it past " + RaidFactionName + "'s riders, and the load is given up for lost";
-		}
-
-		public static string LostLedgerNote(string ManifestDescription)
-		{
-			return "{{r|A carry-sign's load never made it home: " + ManifestDescription + " lost to raiders on the road.}}";
-		}
 	}
 }

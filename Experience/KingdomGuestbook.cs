@@ -641,40 +641,28 @@ namespace ThousandAndFirst
 			manifest.Set(KingdomMaterial.Scrap, haul.Scrap);
 			string description = manifest.Describe() ?? "the load";
 			bool raidActive = System.RaidState == 1;
-			int riskRoll;
-			if (!TryDrawRoadRisk(System, haul, out riskRoll)) return;
-			bool lost = KingdomGuestRules.HaulAtRisk(raidActive, riskRoll);
-			System.Haul = null;
-			if (lost)
+			bool raidersPresent = false;
+			foreach (GameObject item in Z.GetObjects())
 			{
-				string factionDisplay = string.IsNullOrEmpty(System.RaidFactionName) ? "raiders" : Faction.GetFormattedName(System.RaidFactionName);
-				KingdomChronicle.Record(System, KingdomGuestRules.LostChronicleLine(System.SeatName, factionDisplay, description));
-				System.Ledger.Note(KingdomGuestRules.LostLedgerNote(description));
-				KingdomLog.Log("carry-sign: lost manifest=" + description);
+				if (GameObject.Validate(item) && item.GetIntProperty("KingdomRaider") == 1)
+				{
+					raidersPresent = true;
+					break;
+				}
+			}
+			if (KingdomGuestRules.HaulWaitsForSafety(raidActive, raidersPresent))
+			{
+				KingdomLog.Log("carry-sign: due haul retained while threat stands manifest="
+					+ description);
 				return;
 			}
+			System.Haul = null;
 			int spilled = KingdomMaterials.Deliver(System, Z, manifest);
 			KingdomChronicle.Record(System, KingdomGuestRules.DeliveredChronicleLine(System.SeatName, description));
 			System.Ledger.Note(KingdomGuestRules.DeliveredLedgerNote(description));
 			KingdomLog.Log("carry-sign: delivered manifest=" + description + " spilled=" + spilled);
 		}
 
-		private static bool TryDrawRoadRisk(KingdomSystem System, KingdomCarryHaul Haul,
-			out int Roll)
-		{
-			Roll = 0;
-			string settlementId = KingdomChronicle.SettlementId(System);
-			SemanticEventKey key;
-			KernelFaultCode fault;
-			if (SemanticEventKey.TryCreate(1, settlementId, "taf:carry:risk:v1", 1u, (ulong)Haul.PlantedTick, out key, out fault)
-				&& CounterRandom.TryDrawBelow(default(KernelSeed128), key, 0u, 100uL, out ulong value, out fault))
-			{
-				Roll = (int)value;
-				return true;
-			}
-			KingdomLog.Log("carry-sign: risk draw refused; exact haul retained");
-			return false;
-		}
 	}
 
 	/// <summary>

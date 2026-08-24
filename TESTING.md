@@ -1,8 +1,9 @@
-﻿# The Thousand and First — Test Session Protocol (v0.1.0)
+﻿# The Thousand and First — Test Session Protocol (v0.2.0)
 
-**Dev diagnostics are ON by default** in this build: every kingdom system writes `[TAF]`
-lines to Player.log (toggleable in Options). If anything looks wrong, wish `kingdom:dump`
-for the full state readout — it prints to screen and to the log for the log-watcher.
+**Dev diagnostics are OFF by default** in the release build. Enable **The Thousand and First:
+write diagnostic lines to Player.log** in Options for a test session; the isolated smoke profile
+enables it itself. If anything looks wrong, wish `kingdom:dump` for the full state readout — it
+prints to screen and, while diagnostics are enabled, to the log for the log-watcher.
 
 Fresh game launch (never mid-session approval — ghost assembly generations). Approve
 **The Thousand and First** at the mod prompt, then load any save or start a new game.
@@ -17,7 +18,7 @@ worlds; option is sampled during world creation, not changed retroactively insid
 |---|---|---|
 | 0a | In Options, leave **import the latest eligible sealed realm** unchecked (its default), then create a new non-Tutorial, non-Daily world | No inherited-realm map note or site is installed. World creation never asks for or reserves a legacy |
 | 0b | Quit, enable that option **before** creating another new world, then create it | Latest eligible realm now appears as inherited map note/site. Its appearance proves step 0a left seal eligible rather than silently declining or consuming it |
-| 0c | Visit inherited site; inspect every restored container, liquid vessel, powered object, and citizen | Old layout/history may return; no old item, water/liquid, charge, or player inventory returns. Save, quit, reload, revisit: site exists once, never duplicates |
+| 0c | Visit the inherited site; inspect every restored structure, container, liquid vessel, and powered object | Old layout/history may return; no citizen, old item, water/liquid, charge, or player inventory returns. Save, quit, reload, revisit: site exists once, never duplicates |
 
 ## Pass 1 — Foundation (wishes)
 
@@ -357,7 +358,7 @@ anyone.
 | 58 | Charter → your works (`y`) → give a small house a yard trade | Vine lattice, hide rack, dye vat, or vellum press. The house's description and the roll of settlers say the household took up the trade. Letting it go is free |
 | 59 | Return within a notable's 2-day patience of their arrival, and read the roll | **Guests**: the notable is still standing at the gate, logged with one hook — a ruin, a machine, a debt in a named village. Lodge them in a bed of the right tier and they settle with a trade; ignore them and they leave a letter and the hook becomes a rumor — never lost |
 | 59a | Leave long enough that a notable's 2 days of patience (a third of a day, for an ordinary traveller) has run out before you return | Nobody is standing at the gate — the roll instead reads one dated ledger note, "N notables came to the gate while you were away and found no bed offered", naming how many and how long ago the last of them stood there. Their hooks are rumor now, same as an ignored one, never lost |
-| 60 | Buy a carry-sign from a merchant; plant it on a pile you own out in the world | Confirms exactly what it will take, then porters haul it home over distance-scaled days, one haul in flight. It lands in the stockpiles, chronicled — or a raid threatening the settlement costs the load, chronicled, never silent |
+| 60 | Buy a carry-sign from a merchant; plant it on a pile you own out in the world | Confirms exactly what it will take, then porters haul it home over distance-scaled days, one haul in flight. It lands in the stockpiles and is chronicled. If a raid warning or live raiders stand at the destination, the exact haul waits without loss and arrives on the first later safe settlement pass |
 
 ## Pass 19 — Layered catalogues, footprints, sockets, and the trigger law
 
@@ -798,10 +799,9 @@ Steps 129–131 are that case from both sides.
 - No ownership stamping on claims (can't rob your own city — membership design pending).
 - Settlers use vanilla farmer behavior between posts; the city moves their anchor by the hour and
   vanilla walks them, so a settler with no post keeps the hearth and looks exactly as they did.
-- Prefetch (`r_TAF_OptionPrefetch`) has no checkbox in the options menu yet and reads its own
-  default, which is off. Crossings cost the plain vanilla thaw they always did.
-- The model's per-zone production rates are not wired to the heartbeat: the slice runs on its
-  cadence and keeps the clock, but the numbers it advances still come from the attended pass.
+- Inherited sites restore bounded structures, their founder's cairn, and history only. Prior
+  people remain historical: this release adds no successor citizens, autonomous rival polity,
+  world-map warbands, or offscreen clashes.
 - Stage moves in **both directions** now. It climbs on the reading and falls only on a clear
   shortfall, one rung per reckoning, with Camp an absolute floor. A city that subsides is the
   system working; a city that subsides while it is inside its 20% band is a bug worth filing.
@@ -838,4 +838,3 @@ Steps 129–131 are that case from both sides.
   went dark while the forge was still lit" is a bug. Recovery says **nothing** — a settlement that
   announced every recovery would be a settlement that never stops talking about itself — so a pass
   reporting "it never told me the power came back" is correct behaviour.
-- Founder's basin is wish-obtainable only; its acquisition quest is slice 0.2 content.

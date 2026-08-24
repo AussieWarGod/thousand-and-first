@@ -4,11 +4,9 @@ using XRL.World;
 namespace ThousandAndFirst
 {
 	/// <summary>
-	/// The shared meal: the one action in the mod that spends what the dedicated larders
-	/// hold. Nothing else consumes food &mdash; an empty larder costs the founder nothing,
-	/// per the mod's own rule that engaging is rewarded and abstaining is never punished, and
-	/// this is the only path by which a full one ever costs anything, and only because the
-	/// founder called for it.
+	/// The optional shared meal spends an extra serving from dedicated larders when the founder
+	/// calls for it. Ordinary daily settlement food upkeep is a separate heartbeat responsibility;
+	/// refusing this ceremony never adds a second cost.
 	/// </summary>
 	public static class KingdomLarder
 	{
