@@ -117,7 +117,14 @@ namespace ThousandAndFirst
 		GrowthClock = 12,
 		GrowthPendingCrop = 13,
 		GrowthField = 14,
-		GrowthHealth = 15
+		GrowthHealth = 15,
+		GrowthScarcity = 16,
+		GrowthAccounting = 17,
+		GrowthCropRegistry = 18,
+		GrowthSubsidenceSchedule = 19,
+		GrowthPorterJob = 20,
+		GrowthEscrowRelease = 21,
+		GrowthArrivalCandidate = 22
 	}
 
 	public enum KingdomLifecycleLeaseState : byte
@@ -140,7 +147,10 @@ namespace ThousandAndFirst
 		Sow = 5,
 		Withdraw = 6,
 		Ripen = 7,
-		Harvest = 8
+		Harvest = 8,
+		Fetch = 9,
+		Mill = 10,
+		Irrigate = 11
 	}
 
 	public enum KingdomGrowthPhase : byte
@@ -175,7 +185,9 @@ namespace ThousandAndFirst
 		Arrival = 2,
 		Departure = 3,
 		Delivery = 4,
-		Field = 5
+		Field = 5,
+		Fetch = 6,
+		Mill = 7
 	}
 
 	public enum KingdomGrowthDomainStepKind : byte
@@ -187,7 +199,13 @@ namespace ThousandAndFirst
 		Population = 4,
 		PendingCrop = 5,
 		Field = 6,
-		Clock = 7
+		Clock = 7,
+		Scarcity = 8,
+		Accounting = 9,
+		CropRegistry = 10,
+		SubsidenceSchedule = 11,
+		PorterJob = 12,
+		EscrowRelease = 13
 	}
 
 	public enum KingdomGrowthObjectMutationKind : byte
@@ -198,7 +216,8 @@ namespace ThousandAndFirst
 		InventoryAdd = 3,
 		Receive = 4,
 		DestroyOne = 5,
-		Obliterate = 6
+		Obliterate = 6,
+		HarvestableRipeSet = 7
 	}
 
 	public enum KingdomGrowthWaterMutationKind : byte
@@ -223,7 +242,110 @@ namespace ThousandAndFirst
 		CreedSet = 4,
 		PopulationAdjust = 5,
 		PendingCropSet = 6,
-		FieldSet = 7
+		FieldSet = 7,
+		ScarcitySet = 8,
+		AccountingSet = 9,
+		CropRegistrySet = 10,
+		SubsidenceScheduleSet = 11,
+		PorterJobSet = 12,
+		EscrowRelease = 13
+	}
+
+	// Growth-only location contract. Outer lifecycle/carry topology stays byte- and enum-sealed.
+	public enum KingdomGrowthLocationKind : byte
+	{
+		None = 0,
+		Absent = 1,
+		Escrow = 2,
+		Cell = 3,
+		Inventory = 4,
+		Graveyard = 5
+	}
+
+	public enum KingdomGrowthArrivalDisposition : byte
+	{
+		None = 0,
+		Joined = 1,
+		WaterUnavailable = 2,
+		NoAcceptableHome = 3,
+		NoGround = 4,
+		PopulationCap = 5,
+		SupportCap = 6
+	}
+
+	public enum KingdomGrowthArrivalRefusalReason : byte
+	{
+		None = 0,
+		NoRoofAtAll = 1,
+		NeedsUnmet = 2,
+		Full = 3,
+		Refused = 4,
+		Condemned = 5
+	}
+
+	public enum KingdomGrowthDeliveryMode : byte
+	{
+		None = 0,
+		PlainLarder = 1,
+		PorterJob = 2
+	}
+
+	public enum KingdomGrowthDepartureCauseKind : byte
+	{
+		None = 0,
+		Scarcity = 1,
+		Subsidence = 2,
+		Lodging = 3,
+		Conversion = 4,
+		Exile = 5,
+		Death = 6
+	}
+
+	public enum KingdomGrowthThirstOutcome : byte
+	{
+		Sustained = 0,
+		Warned = 1,
+		Emigration = 2,
+		Withering = 3
+	}
+
+	public enum KingdomGrowthHungerOutcome : byte
+	{
+		Fed = 0,
+		Warned = 1,
+		Emigration = 2,
+		Famine = 3
+	}
+
+	public enum KingdomGrowthComposedBite : byte
+	{
+		None = 0,
+		Warned = 1,
+		Departure = 2,
+		Terminal = 3
+	}
+
+	public enum KingdomGrowthArrivalCandidatePhase : byte
+	{
+		Prepared = 1,
+		CreateIntent = 2,
+		Escrowed = 3,
+		LodgingIntent = 4,
+		Observed = 5,
+		ConsumeIntent = 6,
+		RefusalIntent = 7,
+		Settled = 8,
+		Quarantined = 9
+	}
+
+	public enum KingdomGrowthOutboxSinkKind : byte
+	{
+		None = 0,
+		Chronicle = 1,
+		Ledger = 2,
+		Message = 3,
+		Deed = 4,
+		Guestbook = 5
 	}
 
 	[Serializable]
@@ -423,6 +545,7 @@ namespace ThousandAndFirst
 		public string PendingCropBlueprint;
 		public string PendingCropZoneId;
 		public bool OptionEnabled;
+		public bool ScarcityEnabled;
 		public bool Healthy;
 		public long ArrivalIntervalTicks;
 	}
@@ -435,6 +558,186 @@ namespace ThousandAndFirst
 	}
 
 	[Serializable]
+	public sealed class KingdomGrowthScarcitySnapshot
+	{
+		public int DryStreak;
+		public bool Withered;
+		public int HungerStreak;
+		public bool Famished;
+		public KingdomRules.MealVerdict LastMeal;
+		public int MealShade;
+		public bool ScrapsAnnounced;
+		public long ElapsedTicks;
+		public int Days;
+		public int Population;
+		public int Stage;
+		public int UpkeepRequested;
+		public int WaterAvailable;
+		public int RationsAvailable;
+		public int Foraged;
+		public int Eaten;
+		public int FromDish;
+		public int Kitchens;
+		public string DishName;
+		public string DishText;
+		public string DishStaple;
+		public string DishSource;
+		public KingdomGrowthComposedBite ComposedBite;
+		public int RequestedWater;
+		public int ProvedWater;
+		public int RequestedRations;
+		public int ProvedRations;
+		public int StoresPolicy;
+		public int DistrictPercent;
+		public KingdomGrowthThirstOutcome ThirstOutcome;
+		public KingdomGrowthHungerOutcome HungerOutcome;
+		public bool Thirsting;
+		public bool Starving;
+		public bool Withering;
+		public bool Famishing;
+		public bool Healthy;
+	}
+
+	[Serializable]
+	public sealed class KingdomGrowthAccountingSnapshot
+	{
+		public int Fetched;
+		public int UpkeepDrawn;
+		public int ArrivalCost;
+		public int Delivered;
+		public int Harvested;
+		public int Foraged;
+		public int RationsDrawn;
+		public int Milled;
+		public int HarvestLost;
+		public int Plundered;
+		public int Arrivals;
+		public int Departures;
+	}
+
+	[Serializable]
+	public sealed class KingdomGrowthOutboxEvent
+	{
+		public string EventId;
+		public string Kind;
+		public int ChronicleBeforeCount;
+		public int ChronicleDeclaredAfterCount;
+		public int ChronicleObservedCount = -1;
+		public string ChronicleBeforeHash;
+		public string ChronicleDeclaredAfterHash;
+		public string ChronicleObservedHash;
+		public int LedgerBeforeCount;
+		public int LedgerDeclaredAfterCount;
+		public int LedgerObservedCount = -1;
+		public string LedgerBeforeHash;
+		public string LedgerDeclaredAfterHash;
+		public string LedgerObservedHash;
+		public KingdomLifecycleOutbox Outbox;
+	}
+
+	[Serializable]
+	public sealed class KingdomGrowthObjectCallbackStep
+	{
+		public string EventId;
+		public KingdomGrowthObjectMutationKind Kind;
+		public KingdomGrowthLocationKind FromLocation;
+		public KingdomGrowthLocationKind ToLocation;
+		public string EscrowKey;
+		public string BeforeOwnerId;
+		public string AfterOwnerId;
+		public string BeforeZoneId;
+		public string AfterZoneId;
+		public int BeforeX = -1;
+		public int BeforeY = -1;
+		public int AfterX = -1;
+		public int AfterY = -1;
+		public int BeforeCount;
+		public int AfterCount;
+		public bool NoStack;
+		public bool BeforeHasHarvestable;
+		public bool AfterHasHarvestable;
+		public bool BeforeRipe;
+		public bool AfterRipe;
+		public int BeforeRegenTimer;
+		public int AfterRegenTimer;
+		public string BeforeRegenTime;
+		public string AfterRegenTime;
+		public int BeforeTileIndex;
+		public int AfterTileIndex;
+		public string BeforeRenderTile;
+		public string AfterRenderTile;
+		public string BeforeRenderColor;
+		public string AfterRenderColor;
+		public string BeforeRenderDetail;
+		public string AfterRenderDetail;
+		public string BeforeRenderString;
+		public string AfterRenderString;
+		public string BeforeTileColor;
+		public string AfterTileColor;
+		public string BeforeOwnerGraphHash;
+		public string AfterOwnerGraphHash;
+		public string BeforeObjectGraphHash;
+		public string AfterObjectGraphHash;
+		public string BeforeTopologyHash;
+		public string AfterTopologyHash;
+		public KingdomLifecyclePhysicalState State;
+		public string ReceiptId;
+		public int ReceiptBeforeMatches = -1;
+		public int ReceiptAfterMatches = -1;
+		public int ReceiptBeforeCount = -1;
+		public int ReceiptAfterCount = -1;
+		public string ReceiptCallbackObjectId;
+		public string ReceiptCallbackMarker;
+		public string ReceiptCallbackReferenceHash;
+		public bool ReceiptSameReference;
+		public string ReceiptBeforeOwnerGraphHash;
+		public string ReceiptAfterOwnerGraphHash;
+		public string ReceiptBeforeObjectGraphHash;
+		public string ReceiptAfterObjectGraphHash;
+		public string ReceiptBeforeTopologyHash;
+		public string ReceiptAfterTopologyHash;
+		public string ReceiptProofId;
+		public KingdomLifecyclePhysicalState ReceiptState;
+	}
+
+	[Serializable]
+	public sealed class KingdomGrowthArrivalCandidate
+	{
+		public long Sequence;
+		public string Id;
+		public string PlanHash;
+		public string SettlementId;
+		public long CreatedTick;
+		public long UpdatedTick;
+		public KingdomGrowthArrivalCandidatePhase Phase;
+		public KingdomGrowthArrivalCandidatePhase EvidencePhase;
+		public KingdomGrowthArrivalDisposition Disposition;
+		public KingdomGrowthArrivalRefusalReason RefusalReason;
+		public string ObjectId;
+		public string Marker;
+		public string Blueprint;
+		public string EscrowKey;
+		public KingdomLifecycleResourceLease CandidateLease;
+		public KingdomLifecycleResourceLease LodgingLease;
+		public KingdomLifecycleResourceLease EscrowLease;
+		public KingdomGrowthObjectCallbackStep CreateStep;
+		public KingdomGrowthObjectCallbackStep DispositionStep;
+		public string LodgingZoneId;
+		public int LodgingX = -1;
+		public int LodgingY = -1;
+		public string LodgingBeforeGraphHash;
+		public string LodgingDeclaredGraphHash;
+		public string LodgingReceiptGraphHash;
+		public string LodgingCallbackReferenceHash;
+		public bool LodgingSameReference;
+		public string LodgingReceiptId;
+		public KingdomLifecyclePhysicalState LodgingState;
+		public string ConsumingOperationId;
+		public long ConsumingOperationSequence;
+		public string Fault;
+	}
+
+	[Serializable]
 	public sealed class KingdomGrowthWaterLeg
 	{
 		public string OperationId;
@@ -443,6 +746,17 @@ namespace ThousandAndFirst
 		public KingdomGrowthWaterMutationKind MutationKind;
 		public KingdomGrowthWaterContainerKind ContainerKind;
 		public string ContainerId;
+		public KingdomGrowthLocationKind BeforeLocation;
+		public KingdomGrowthLocationKind AfterLocation;
+		public string BeforeOwnerId;
+		public string AfterOwnerId;
+		public string BeforeZoneId;
+		public string AfterZoneId;
+		public int BeforeX = -1;
+		public int BeforeY = -1;
+		public int AfterX = -1;
+		public int AfterY = -1;
+		public bool OwnerRemovedAfter;
 		public KingdomLifecycleTopology OwnerTopology;
 		public string OwnerId;
 		public string Blueprint;
@@ -505,6 +819,13 @@ namespace ThousandAndFirst
 		public string AfterTopologyHash;
 		public string CreatedMarker;
 		public string DetachedMarker;
+		public KingdomGrowthLocationKind BeforeLocation;
+		public KingdomGrowthLocationKind AfterLocation;
+		public string EscrowKey;
+		public int CallbackCursor;
+		public List<KingdomGrowthObjectCallbackStep> Callbacks =
+			new List<KingdomGrowthObjectCallbackStep>();
+		public KingdomLifecycleResourceLease Lease;
 		public KingdomLifecyclePhysicalState State;
 		public string ReceiptId;
 		public string ReceiptTopologyId;
@@ -541,6 +862,48 @@ namespace ThousandAndFirst
 		public int X = -1;
 		public int Y = -1;
 		public int Count;
+		public bool HasHarvestable;
+		public bool Ripe;
+		public int RegenTimer;
+		public string RegenTime;
+		public int TileIndex;
+		public string RenderTile;
+		public string RenderColor;
+		public string RenderDetail;
+		public string RenderString;
+		public string TileColor;
+		public string PartGraphHash;
+		public string ObjectGraphHash;
+		public string TopologyHash;
+		public long Revision;
+		public string LastOperationId;
+	}
+
+	[Serializable]
+	public sealed class KingdomGrowthFieldState
+	{
+		public string FieldId;
+		public string WorkObjectId;
+		public string WorkPartId;
+		public string Marker;
+		public string Blueprint;
+		public string ZoneId;
+		public int X = -1;
+		public int Y = -1;
+		public string CropBlueprint;
+		public int Stage;
+		public long NextStageTick;
+		public long SownTick;
+		public int Cycles;
+		public int SaidWant;
+		public int DeclaredRows;
+		public int EffectivenessPercent;
+		public int MethodPercent;
+		public bool NoLarderAnnounced;
+		public string SeedBlueprint;
+		public string PartGraphHash;
+		public string ObjectGraphHash;
+		public string TopologyHash;
 	}
 
 	[Serializable]
@@ -560,6 +923,7 @@ namespace ThousandAndFirst
 		public string TargetMarker;
 		public string Blueprint;
 		public KingdomLifecycleTopology TargetTopology;
+		public KingdomGrowthLocationKind TargetLocation;
 		public string TargetOwnerId;
 		public int TargetX = -1;
 		public int TargetY = -1;
@@ -569,6 +933,8 @@ namespace ThousandAndFirst
 		public long HealthTick;
 		public long EffectiveWorkBefore;
 		public long EffectiveWorkAfter;
+		public long FieldClockBefore;
+		public long FieldClockAfter;
 		public long HeartbeatBefore;
 		public long HeartbeatAfter;
 		public long ArrivalBefore;
@@ -577,16 +943,49 @@ namespace ThousandAndFirst
 		public long FetchAfter;
 		public long MillBefore;
 		public long MillAfter;
+		public string MillCropBlueprint;
+		public string MillStapleBlueprint;
 		public long SubsidenceBefore;
 		public long SubsidenceAfter;
+		public long DeliveryBefore;
+		public long DeliveryAfter;
+		public long DepartureBefore;
+		public long DepartureAfter;
+		public KingdomGrowthArrivalDisposition ArrivalDisposition;
+		public string ArrivalCandidateId;
+		public KingdomGrowthDeliveryMode DeliveryMode;
+		public KingdomGrowthDepartureCauseKind DepartureCauseKind;
+		public string DepartureCause;
+		public string DepartureNote;
+		public string DepartureName;
+		public string DepartureOrigin;
+		public long DepartureArrivedTick;
+		public string DepartureCreed;
+		public bool DepartureChronicled;
+		public string TriggeredByOperationId;
+		public KingdomLifecycleOptionState ScarcityOptionState;
+		public long ScarcityOptionTick;
 		public int PendingCropBefore;
 		public int PendingCropDelta;
 		public int PendingCropAfter;
-		public string PendingCropBlueprint;
-		public string PendingCropZoneId;
+		public string PendingCropBlueprintBefore;
+		public string PendingCropZoneIdBefore;
+		public string PendingCropBlueprintAfter;
+		public string PendingCropZoneIdAfter;
 		public int PopulationBefore;
 		public int PopulationDelta;
 		public int PopulationAfter;
+		// Exact pure oracle inputs for a harvest. They are zero/default for every
+		// other action; the expected yield is recomputed and never caller-credited.
+		public int HarvestStandingRows;
+		public int HarvestRipeRows;
+		public int HarvestCycles;
+		public bool HarvestCountsRipeLast;
+		public int HarvestEffectivenessPercent;
+		public int HarvestMethodPercent;
+		public ulong HarvestFirstOrdinal;
+		public string HarvestCropBlueprint;
+		public string HarvestSeedBlueprint;
 		public int WaterCursor;
 		public List<KingdomGrowthWaterLeg> WaterLegs =
 			new List<KingdomGrowthWaterLeg>();
@@ -599,7 +998,8 @@ namespace ThousandAndFirst
 			new List<KingdomGrowthDomainStep>();
 		public KingdomLifecycleResourceLease ClockLease;
 		public KingdomLifecyclePhysicalState ClockState;
-		public KingdomLifecycleOutbox Outbox;
+		public List<KingdomGrowthOutboxEvent> OutboxEvents =
+			new List<KingdomGrowthOutboxEvent>();
 		public string Fault;
 	}
 
@@ -629,6 +1029,18 @@ namespace ThousandAndFirst
 		public string ReceiptProofId;
 		public KingdomLifecyclePhysicalState ReceiptState;
 		public KingdomLifecycleResourceLease Lease;
+		public KingdomGrowthScarcitySnapshot ScarcityBefore;
+		public KingdomGrowthScarcitySnapshot ScarcityAfter;
+		public KingdomGrowthAccountingSnapshot AccountingBefore;
+		public KingdomGrowthAccountingSnapshot AccountingAfter;
+		public KingdomGrowthFieldState FieldBefore;
+		public KingdomGrowthFieldState FieldAfter;
+		public List<KingdomGrowthCropRow> CropRowsBefore;
+		/// <summary>Plan-stable row graph. A newly-created row has no ObjectId or graph
+		/// witnesses until the exact Create receipt settles.</summary>
+		public List<KingdomGrowthCropRow> CropRowsDeclaredAfter;
+		/// <summary>Exact observed row graph, present only after the registry CAS proves.</summary>
+		public List<KingdomGrowthCropRow> CropRowsAfter;
 	}
 
 	[Serializable]
@@ -638,6 +1050,29 @@ namespace ThousandAndFirst
 		public long NextSequence = 1L;
 		public long RetiredThrough;
 		public long ClockTick;
+		public long CommitRevision;
+		public string LastOperationId;
+		public string WorkObjectId;
+		public string WorkPartId;
+		public string Marker;
+		public string Blueprint;
+		public string ZoneId;
+		public int X = -1;
+		public int Y = -1;
+		public string CropBlueprint;
+		public int Stage;
+		public long NextStageTick;
+		public long SownTick;
+		public int Cycles;
+		public int SaidWant;
+		public int DeclaredRows;
+		public int EffectivenessPercent;
+		public int MethodPercent;
+		public bool NoLarderAnnounced;
+		public string SeedBlueprint;
+		public string PartGraphHash;
+		public string ObjectGraphHash;
+		public string TopologyHash;
 		public bool Quarantined;
 		public string Fault;
 		public KingdomGrowthOperation Operation;
@@ -676,6 +1111,8 @@ namespace ThousandAndFirst
 		public long OptionTick;
 		public KingdomGrowthHealthState HealthState;
 		public long HealthTick;
+		public KingdomLifecycleOptionState ScarcityOptionState;
+		public long ScarcityOptionTick;
 		public bool WorkPaused;
 		public long WorkPauseStartedTick;
 		public long WorkPausedTicks;
@@ -686,6 +1123,8 @@ namespace ThousandAndFirst
 		public long LastFetchTick;
 		public long LastMillTick;
 		public long LastSubsidenceTick;
+		public long LastDeliveryTick;
+		public long LastDepartureTick;
 		public int PendingCrop;
 		public string PendingCropBlueprint;
 		public string PendingCropZoneId;
@@ -697,10 +1136,19 @@ namespace ThousandAndFirst
 		public long DepartureRetiredThrough;
 		public long DeliveryNextSequence = 1L;
 		public long DeliveryRetiredThrough;
+		public long FetchNextSequence = 1L;
+		public long FetchRetiredThrough;
+		public long MillNextSequence = 1L;
+		public long MillRetiredThrough;
+		public long ArrivalCandidateNextSequence = 1L;
+		public long ArrivalCandidateRetiredThrough;
 		public KingdomGrowthOperation HeartbeatOp;
 		public KingdomGrowthOperation ArrivalOp;
 		public KingdomGrowthOperation DepartureOp;
 		public KingdomGrowthOperation DeliveryOp;
+		public KingdomGrowthOperation FetchOp;
+		public KingdomGrowthOperation MillOp;
+		public KingdomGrowthArrivalCandidate ArrivalCandidate;
 		public List<KingdomGrowthFieldSlot> FieldOps = new List<KingdomGrowthFieldSlot>();
 		public List<KingdomGrowthCropRow> CropRows = new List<KingdomGrowthCropRow>();
 		public List<KingdomLifecycleResourceRevision> Resources =
@@ -1289,18 +1737,26 @@ namespace ThousandAndFirst
 			w.Write(b.MigratedFromLifecycleVersion); w.Write(b.MigrationPending);
 			w.Write(b.MigrationTick);
 			w.Write((byte)b.OptionState); w.Write(b.OptionTick);
-			w.Write((byte)b.HealthState); w.Write(b.HealthTick); w.Write(b.WorkPaused);
+			w.Write((byte)b.HealthState); w.Write(b.HealthTick);
+			w.Write((byte)b.ScarcityOptionState); w.Write(b.ScarcityOptionTick);
+			w.Write(b.WorkPaused);
 			w.Write(b.WorkPauseStartedTick); w.Write(b.WorkPausedTicks); w.Write(b.EffectiveWorkTick);
 			w.Write(b.LastHeartbeatTick); w.Write(b.NextArrivalTick);
 			w.Write(b.ArrivalIntervalTicks); w.Write(b.LastFetchTick);
-			w.Write(b.LastMillTick); w.Write(b.LastSubsidenceTick); w.Write(b.PendingCrop);
+			w.Write(b.LastMillTick); w.Write(b.LastSubsidenceTick);
+			w.Write(b.LastDeliveryTick); w.Write(b.LastDepartureTick); w.Write(b.PendingCrop);
 			S(w, b.PendingCropBlueprint, false); S(w, b.PendingCropZoneId, false);
 			w.Write(b.HeartbeatNextSequence); w.Write(b.HeartbeatRetiredThrough);
 			w.Write(b.ArrivalNextSequence); w.Write(b.ArrivalRetiredThrough);
 			w.Write(b.DepartureNextSequence); w.Write(b.DepartureRetiredThrough);
 			w.Write(b.DeliveryNextSequence); w.Write(b.DeliveryRetiredThrough);
+			w.Write(b.FetchNextSequence); w.Write(b.FetchRetiredThrough);
+			w.Write(b.MillNextSequence); w.Write(b.MillRetiredThrough);
+			w.Write(b.ArrivalCandidateNextSequence); w.Write(b.ArrivalCandidateRetiredThrough);
 			WriteGrowthOperation(w, b.HeartbeatOp); WriteGrowthOperation(w, b.ArrivalOp);
 			WriteGrowthOperation(w, b.DepartureOp); WriteGrowthOperation(w, b.DeliveryOp);
+			WriteGrowthOperation(w, b.FetchOp); WriteGrowthOperation(w, b.MillOp);
+			WriteGrowthArrivalCandidate(w, b.ArrivalCandidate);
 			w.Write(b.FieldOps.Count);
 			for (int i = 0; i < b.FieldOps.Count; i++) WriteGrowthField(w, b.FieldOps[i]);
 			w.Write(b.CropRows.Count);
@@ -1322,20 +1778,29 @@ namespace ThousandAndFirst
 				MigrationPending = ReadExactBoolean(r), MigrationTick = r.ReadInt64(),
 				OptionState = (KingdomLifecycleOptionState)r.ReadByte(),
 				OptionTick = r.ReadInt64(), HealthState = (KingdomGrowthHealthState)r.ReadByte(),
-				HealthTick = r.ReadInt64(), WorkPaused = ReadExactBoolean(r),
+				HealthTick = r.ReadInt64(),
+				ScarcityOptionState = (KingdomLifecycleOptionState)r.ReadByte(),
+				ScarcityOptionTick = r.ReadInt64(), WorkPaused = ReadExactBoolean(r),
 				WorkPauseStartedTick = r.ReadInt64(), WorkPausedTicks = r.ReadInt64(),
 				EffectiveWorkTick = r.ReadInt64(),
 				LastHeartbeatTick = r.ReadInt64(), NextArrivalTick = r.ReadInt64(),
 				ArrivalIntervalTicks = r.ReadInt64(), LastFetchTick = r.ReadInt64(),
 				LastMillTick = r.ReadInt64(),
-				LastSubsidenceTick = r.ReadInt64(), PendingCrop = r.ReadInt32(),
+				LastSubsidenceTick = r.ReadInt64(), LastDeliveryTick = r.ReadInt64(),
+				LastDepartureTick = r.ReadInt64(), PendingCrop = r.ReadInt32(),
 				PendingCropBlueprint = S(r, false), PendingCropZoneId = S(r, false),
 				HeartbeatNextSequence = r.ReadInt64(), HeartbeatRetiredThrough = r.ReadInt64(),
 				ArrivalNextSequence = r.ReadInt64(), ArrivalRetiredThrough = r.ReadInt64(),
 				DepartureNextSequence = r.ReadInt64(), DepartureRetiredThrough = r.ReadInt64(),
 				DeliveryNextSequence = r.ReadInt64(), DeliveryRetiredThrough = r.ReadInt64(),
+				FetchNextSequence = r.ReadInt64(), FetchRetiredThrough = r.ReadInt64(),
+				MillNextSequence = r.ReadInt64(), MillRetiredThrough = r.ReadInt64(),
+				ArrivalCandidateNextSequence = r.ReadInt64(),
+				ArrivalCandidateRetiredThrough = r.ReadInt64(),
 				HeartbeatOp = ReadGrowthOperation(r), ArrivalOp = ReadGrowthOperation(r),
-				DepartureOp = ReadGrowthOperation(r), DeliveryOp = ReadGrowthOperation(r)
+				DepartureOp = ReadGrowthOperation(r), DeliveryOp = ReadGrowthOperation(r),
+				FetchOp = ReadGrowthOperation(r), MillOp = ReadGrowthOperation(r),
+				ArrivalCandidate = ReadGrowthArrivalCandidate(r)
 			};
 			int fields = ReadCount(r, KingdomLifecycleRules.MaxGrowthFields);
 			b.FieldOps = new List<KingdomGrowthFieldSlot>(fields);
@@ -1360,21 +1825,41 @@ namespace ThousandAndFirst
 			EnsureCount(o.Outputs, KingdomLifecycleRules.MaxGrowthOutputs, "growth outputs");
 			EnsureCount(o.DomainSteps, KingdomLifecycleRules.MaxResourceLeases,
 				"growth domain leases");
+			EnsureCount(o.OutboxEvents, KingdomLifecycleRules.MaxGrowthOutboxEvents,
+				"growth outbox events");
 			w.Write(o.Sequence); S(w, o.Id, true); S(w, o.PlanHash, true);
 			w.Write((byte)o.Action); w.Write((byte)o.Phase); w.Write(o.CreatedTick);
 			w.Write(o.UpdatedTick); S(w, o.SettlementId, true); S(w, o.FieldId, true);
 			S(w, o.ZoneId, false); S(w, o.TargetId, true); S(w, o.TargetMarker, true);
 			S(w, o.Blueprint, false); w.Write((byte)o.TargetTopology);
+			w.Write((byte)o.TargetLocation);
 			S(w, o.TargetOwnerId, true); w.Write(o.TargetX); w.Write(o.TargetY);
 			w.Write((byte)o.OptionState); w.Write(o.OptionTick); w.Write((byte)o.HealthState);
 			w.Write(o.HealthTick); w.Write(o.EffectiveWorkBefore); w.Write(o.EffectiveWorkAfter);
+			w.Write(o.FieldClockBefore); w.Write(o.FieldClockAfter);
 			w.Write(o.HeartbeatBefore); w.Write(o.HeartbeatAfter); w.Write(o.ArrivalBefore);
 			w.Write(o.ArrivalAfter); w.Write(o.FetchBefore); w.Write(o.FetchAfter);
-			w.Write(o.MillBefore); w.Write(o.MillAfter); w.Write(o.SubsidenceBefore);
-			w.Write(o.SubsidenceAfter); w.Write(o.PendingCropBefore);
+			w.Write(o.MillBefore); w.Write(o.MillAfter); S(w, o.MillCropBlueprint, false);
+			S(w, o.MillStapleBlueprint, false); w.Write(o.SubsidenceBefore);
+			w.Write(o.SubsidenceAfter); w.Write(o.DeliveryBefore); w.Write(o.DeliveryAfter);
+			w.Write(o.DepartureBefore); w.Write(o.DepartureAfter);
+			w.Write((byte)o.ArrivalDisposition); S(w, o.ArrivalCandidateId, true);
+			w.Write((byte)o.DeliveryMode); w.Write((byte)o.DepartureCauseKind);
+			S(w, o.DepartureCause, false); S(w, o.DepartureNote, false, true);
+			S(w, o.DepartureName, false); S(w, o.DepartureOrigin, false);
+			w.Write(o.DepartureArrivedTick); S(w, o.DepartureCreed, false);
+			w.Write(o.DepartureChronicled); S(w, o.TriggeredByOperationId, true);
+			w.Write((byte)o.ScarcityOptionState); w.Write(o.ScarcityOptionTick);
+			w.Write(o.PendingCropBefore);
 			w.Write(o.PendingCropDelta); w.Write(o.PendingCropAfter);
-			S(w, o.PendingCropBlueprint, false); S(w, o.PendingCropZoneId, false);
+			S(w, o.PendingCropBlueprintBefore, false); S(w, o.PendingCropZoneIdBefore, false);
+			S(w, o.PendingCropBlueprintAfter, false); S(w, o.PendingCropZoneIdAfter, false);
 			w.Write(o.PopulationBefore); w.Write(o.PopulationDelta); w.Write(o.PopulationAfter);
+			w.Write(o.HarvestStandingRows); w.Write(o.HarvestRipeRows);
+			w.Write(o.HarvestCycles); w.Write(o.HarvestCountsRipeLast);
+			w.Write(o.HarvestEffectivenessPercent); w.Write(o.HarvestMethodPercent);
+			w.Write(o.HarvestFirstOrdinal);
+			S(w, o.HarvestCropBlueprint, false); S(w, o.HarvestSeedBlueprint, false);
 			w.Write(o.WaterCursor); w.Write(o.WaterLegs.Count);
 			for (int i = 0; i < o.WaterLegs.Count; i++) WriteGrowthWater(w, o.WaterLegs[i]);
 			w.Write(o.SourceCursor); w.Write(o.Sources.Count);
@@ -1397,11 +1882,22 @@ namespace ThousandAndFirst
 				S(w, d.ReceiptBeforeGraphHash, true); S(w, d.ReceiptAfterGraphHash, true);
 				S(w, d.ReceiptBeforeMapHash, true); S(w, d.ReceiptAfterMapHash, true);
 				S(w, d.ReceiptProofId, true); w.Write((byte)d.ReceiptState);
-				WriteLease(w, d.Lease);
+				WriteLease(w, d.Lease); WriteGrowthScarcity(w, d.ScarcityBefore);
+				WriteGrowthScarcity(w, d.ScarcityAfter);
+				WriteGrowthAccounting(w, d.AccountingBefore);
+				WriteGrowthAccounting(w, d.AccountingAfter);
+				WriteGrowthFieldState(w, d.FieldBefore);
+				WriteGrowthFieldState(w, d.FieldAfter);
+				WriteGrowthCropRows(w, d.CropRowsBefore);
+				WriteGrowthCropRows(w, d.CropRowsDeclaredAfter);
+				WriteGrowthCropRows(w, d.CropRowsAfter);
 			}
 			WriteLease(w, o.ClockLease);
 			w.Write((byte)o.ClockState);
-			WriteOutbox(w, o.Outbox); S(w, o.Fault, false, true);
+			w.Write(o.OutboxEvents.Count);
+			for (int i = 0; i < o.OutboxEvents.Count; i++) WriteGrowthOutboxEvent(w,
+				o.OutboxEvents[i]);
+			S(w, o.Fault, false, true);
 		}
 
 		private static KingdomGrowthOperation ReadGrowthOperation(BinaryReader r)
@@ -1414,20 +1910,42 @@ namespace ThousandAndFirst
 				CreatedTick = r.ReadInt64(), UpdatedTick = r.ReadInt64(), SettlementId = S(r, true),
 				FieldId = S(r, true), ZoneId = S(r, false), TargetId = S(r, true),
 				TargetMarker = S(r, true), Blueprint = S(r, false),
-				TargetTopology = (KingdomLifecycleTopology)r.ReadByte(), TargetOwnerId = S(r, true),
+				TargetTopology = (KingdomLifecycleTopology)r.ReadByte(),
+				TargetLocation = (KingdomGrowthLocationKind)r.ReadByte(), TargetOwnerId = S(r, true),
 				TargetX = r.ReadInt32(), TargetY = r.ReadInt32(),
 				OptionState = (KingdomLifecycleOptionState)r.ReadByte(), OptionTick = r.ReadInt64(),
 				HealthState = (KingdomGrowthHealthState)r.ReadByte(), HealthTick = r.ReadInt64(),
 				EffectiveWorkBefore = r.ReadInt64(), EffectiveWorkAfter = r.ReadInt64(),
+				FieldClockBefore = r.ReadInt64(), FieldClockAfter = r.ReadInt64(),
 				HeartbeatBefore = r.ReadInt64(), HeartbeatAfter = r.ReadInt64(),
 				ArrivalBefore = r.ReadInt64(), ArrivalAfter = r.ReadInt64(),
 				FetchBefore = r.ReadInt64(), FetchAfter = r.ReadInt64(),
 				MillBefore = r.ReadInt64(), MillAfter = r.ReadInt64(),
+				MillCropBlueprint = S(r, false), MillStapleBlueprint = S(r, false),
 				SubsidenceBefore = r.ReadInt64(), SubsidenceAfter = r.ReadInt64(),
+				DeliveryBefore = r.ReadInt64(), DeliveryAfter = r.ReadInt64(),
+				DepartureBefore = r.ReadInt64(), DepartureAfter = r.ReadInt64(),
+				ArrivalDisposition = (KingdomGrowthArrivalDisposition)r.ReadByte(),
+				ArrivalCandidateId = S(r, true),
+				DeliveryMode = (KingdomGrowthDeliveryMode)r.ReadByte(),
+				DepartureCauseKind = (KingdomGrowthDepartureCauseKind)r.ReadByte(),
+				DepartureCause = S(r, false), DepartureNote = S(r, false, true),
+				DepartureName = S(r, false), DepartureOrigin = S(r, false),
+				DepartureArrivedTick = r.ReadInt64(), DepartureCreed = S(r, false),
+				DepartureChronicled = ReadExactBoolean(r), TriggeredByOperationId = S(r, true),
+				ScarcityOptionState = (KingdomLifecycleOptionState)r.ReadByte(),
+				ScarcityOptionTick = r.ReadInt64(),
 				PendingCropBefore = r.ReadInt32(), PendingCropDelta = r.ReadInt32(),
-				PendingCropAfter = r.ReadInt32(), PendingCropBlueprint = S(r, false),
-				PendingCropZoneId = S(r, false), PopulationBefore = r.ReadInt32(),
-				PopulationDelta = r.ReadInt32(), PopulationAfter = r.ReadInt32()
+				PendingCropAfter = r.ReadInt32(), PendingCropBlueprintBefore = S(r, false),
+				PendingCropZoneIdBefore = S(r, false), PendingCropBlueprintAfter = S(r, false),
+				PendingCropZoneIdAfter = S(r, false), PopulationBefore = r.ReadInt32(),
+				PopulationDelta = r.ReadInt32(), PopulationAfter = r.ReadInt32(),
+				HarvestStandingRows = r.ReadInt32(), HarvestRipeRows = r.ReadInt32(),
+				HarvestCycles = r.ReadInt32(), HarvestCountsRipeLast = ReadExactBoolean(r),
+				HarvestEffectivenessPercent = r.ReadInt32(),
+				HarvestMethodPercent = r.ReadInt32(),
+				HarvestFirstOrdinal = r.ReadUInt64(),
+				HarvestCropBlueprint = S(r, false), HarvestSeedBlueprint = S(r, false)
 			};
 			o.WaterCursor = r.ReadInt32();
 			int water = ReadCount(r, KingdomLifecycleRules.MaxWaterLegs);
@@ -1458,11 +1976,21 @@ namespace ThousandAndFirst
 				ReceiptBeforeGraphHash = S(r, true), ReceiptAfterGraphHash = S(r, true),
 				ReceiptBeforeMapHash = S(r, true), ReceiptAfterMapHash = S(r, true),
 				ReceiptProofId = S(r, true),
-				ReceiptState = (KingdomLifecyclePhysicalState)r.ReadByte(), Lease = ReadLease(r)
+				ReceiptState = (KingdomLifecyclePhysicalState)r.ReadByte(), Lease = ReadLease(r),
+				ScarcityBefore = ReadGrowthScarcity(r), ScarcityAfter = ReadGrowthScarcity(r),
+				AccountingBefore = ReadGrowthAccounting(r),
+				AccountingAfter = ReadGrowthAccounting(r),
+				FieldBefore = ReadGrowthFieldState(r), FieldAfter = ReadGrowthFieldState(r),
+				CropRowsBefore = ReadGrowthCropRows(r),
+				CropRowsDeclaredAfter = ReadGrowthCropRows(r),
+				CropRowsAfter = ReadGrowthCropRows(r)
 			});
 			o.ClockLease = ReadLease(r);
 			o.ClockState = (KingdomLifecyclePhysicalState)r.ReadByte();
-			o.Outbox = ReadOutbox(r); o.Fault = S(r, false, true); return o;
+			int outbox = ReadCount(r, KingdomLifecycleRules.MaxGrowthOutboxEvents);
+			o.OutboxEvents = new List<KingdomGrowthOutboxEvent>(outbox);
+			for (int i = 0; i < outbox; i++) o.OutboxEvents.Add(ReadGrowthOutboxEvent(r));
+			o.Fault = S(r, false, true); return o;
 		}
 
 		private static void WriteGrowthObject(BinaryWriter w, KingdomGrowthObjectLeg x)
@@ -1477,6 +2005,15 @@ namespace ThousandAndFirst
 			S(w, x.AfterObjectGraphHash, true); S(w, x.BeforeTopologyHash, true);
 			S(w, x.AfterTopologyHash, true); S(w, x.CreatedMarker, true);
 			S(w, x.DetachedMarker, true);
+			w.Write((byte)x.BeforeLocation);
+			w.Write((byte)x.AfterLocation); S(w, x.EscrowKey, true);
+			w.Write(x.CallbackCursor);
+			EnsureCount(x.Callbacks, KingdomLifecycleRules.MaxGrowthObjectCallbacks,
+				"growth object callbacks");
+			w.Write(x.Callbacks.Count);
+			for (int i = 0; i < x.Callbacks.Count; i++) WriteGrowthObjectCallback(w,
+				x.Callbacks[i]);
+			WriteLease(w, x.Lease);
 			w.Write((byte)x.State); S(w, x.ReceiptId, false); S(w, x.ReceiptTopologyId, false);
 			w.Write(x.ReceiptBeforeIdMatches); w.Write(x.ReceiptBeforeMarkerMatches);
 			w.Write(x.ReceiptBeforeCount); w.Write(x.ReceiptAfterIdMatches);
@@ -1486,14 +2023,13 @@ namespace ThousandAndFirst
 			S(w, x.ReceiptAfterObjectGraphHash, true); S(w, x.ReceiptBeforeTopologyHash, true);
 			S(w, x.ReceiptAfterTopologyHash, true); S(w, x.ReceiptCallbackObjectId, true);
 			S(w, x.ReceiptCallbackMarker, true); S(w, x.ReceiptCallbackReferenceHash, true);
-			w.Write(x.ReceiptSameReference);
-			S(w, x.ReceiptProofId, false);
+			w.Write(x.ReceiptSameReference); S(w, x.ReceiptProofId, false);
 			w.Write((byte)x.ReceiptState);
 		}
 
 		private static KingdomGrowthObjectLeg ReadGrowthObject(BinaryReader r)
 		{
-			return new KingdomGrowthObjectLeg
+			KingdomGrowthObjectLeg x = new KingdomGrowthObjectLeg
 			{
 				OperationId = S(r, true), EventId = S(r, true), ObjectId = S(r, true),
 				Marker = S(r, true), Blueprint = S(r, false), ZoneId = S(r, false),
@@ -1505,18 +2041,98 @@ namespace ThousandAndFirst
 				BeforeObjectGraphHash = S(r, true), AfterObjectGraphHash = S(r, true),
 				BeforeTopologyHash = S(r, true), AfterTopologyHash = S(r, true),
 				CreatedMarker = S(r, true), DetachedMarker = S(r, true),
-				State = (KingdomLifecyclePhysicalState)r.ReadByte(), ReceiptId = S(r, false),
-				ReceiptTopologyId = S(r, false), ReceiptBeforeIdMatches = r.ReadInt32(),
-				ReceiptBeforeMarkerMatches = r.ReadInt32(), ReceiptBeforeCount = r.ReadInt32(),
-				ReceiptAfterIdMatches = r.ReadInt32(), ReceiptAfterMarkerMatches = r.ReadInt32(),
-				ReceiptAfterCount = r.ReadInt32(),
-				ReceiptBeforeOwnerGraphHash = S(r, true), ReceiptAfterOwnerGraphHash = S(r, true),
-				ReceiptBeforeObjectGraphHash = S(r, true), ReceiptAfterObjectGraphHash = S(r, true),
-				ReceiptBeforeTopologyHash = S(r, true), ReceiptAfterTopologyHash = S(r, true),
+				BeforeLocation = (KingdomGrowthLocationKind)r.ReadByte(),
+				AfterLocation = (KingdomGrowthLocationKind)r.ReadByte(), EscrowKey = S(r, true),
+				CallbackCursor = r.ReadInt32()
+			};
+			int callbacks = ReadCount(r, KingdomLifecycleRules.MaxGrowthObjectCallbacks);
+			x.Callbacks = new List<KingdomGrowthObjectCallbackStep>(callbacks);
+			for (int i = 0; i < callbacks; i++) x.Callbacks.Add(ReadGrowthObjectCallback(r));
+			x.Lease = ReadLease(r);
+			x.State = (KingdomLifecyclePhysicalState)r.ReadByte(); x.ReceiptId = S(r, false);
+			x.ReceiptTopologyId = S(r, false); x.ReceiptBeforeIdMatches = r.ReadInt32();
+			x.ReceiptBeforeMarkerMatches = r.ReadInt32(); x.ReceiptBeforeCount = r.ReadInt32();
+			x.ReceiptAfterIdMatches = r.ReadInt32(); x.ReceiptAfterMarkerMatches = r.ReadInt32();
+			x.ReceiptAfterCount = r.ReadInt32();
+			x.ReceiptBeforeOwnerGraphHash = S(r, true); x.ReceiptAfterOwnerGraphHash = S(r, true);
+			x.ReceiptBeforeObjectGraphHash = S(r, true); x.ReceiptAfterObjectGraphHash = S(r, true);
+			x.ReceiptBeforeTopologyHash = S(r, true); x.ReceiptAfterTopologyHash = S(r, true);
+			x.ReceiptCallbackObjectId = S(r, true); x.ReceiptCallbackMarker = S(r, true);
+			x.ReceiptCallbackReferenceHash = S(r, true);
+			x.ReceiptSameReference = ReadExactBoolean(r); x.ReceiptProofId = S(r, false);
+			x.ReceiptState = (KingdomLifecyclePhysicalState)r.ReadByte();
+			return x;
+		}
+
+		private static void WriteGrowthObjectCallback(BinaryWriter w,
+			KingdomGrowthObjectCallbackStep x)
+		{
+			if (x == null) throw new InvalidDataException("null growth object callback");
+			S(w, x.EventId, true); w.Write((byte)x.Kind); w.Write((byte)x.FromLocation);
+			w.Write((byte)x.ToLocation); S(w, x.EscrowKey, true); S(w, x.BeforeOwnerId, true);
+			S(w, x.AfterOwnerId, true); S(w, x.BeforeZoneId, false); S(w, x.AfterZoneId, false);
+			w.Write(x.BeforeX); w.Write(x.BeforeY); w.Write(x.AfterX); w.Write(x.AfterY);
+			w.Write(x.BeforeCount);
+			w.Write(x.AfterCount); w.Write(x.NoStack); w.Write(x.BeforeHasHarvestable);
+			w.Write(x.AfterHasHarvestable); w.Write(x.BeforeRipe); w.Write(x.AfterRipe);
+			w.Write(x.BeforeRegenTimer); w.Write(x.AfterRegenTimer);
+			S(w, x.BeforeRegenTime, false); S(w, x.AfterRegenTime, false);
+			w.Write(x.BeforeTileIndex); w.Write(x.AfterTileIndex);
+			S(w, x.BeforeRenderTile, false); S(w, x.AfterRenderTile, false);
+			S(w, x.BeforeRenderColor, false); S(w, x.AfterRenderColor, false);
+			S(w, x.BeforeRenderDetail, false); S(w, x.AfterRenderDetail, false);
+			S(w, x.BeforeRenderString, false); S(w, x.AfterRenderString, false);
+			S(w, x.BeforeTileColor, false); S(w, x.AfterTileColor, false);
+			S(w, x.BeforeOwnerGraphHash, true);
+			S(w, x.AfterOwnerGraphHash, true); S(w, x.BeforeObjectGraphHash, true);
+			S(w, x.AfterObjectGraphHash, true); S(w, x.BeforeTopologyHash, true);
+			S(w, x.AfterTopologyHash, true); w.Write((byte)x.State); S(w, x.ReceiptId, true);
+			w.Write(x.ReceiptBeforeMatches); w.Write(x.ReceiptAfterMatches);
+			w.Write(x.ReceiptBeforeCount); w.Write(x.ReceiptAfterCount);
+			S(w, x.ReceiptCallbackObjectId, true); S(w, x.ReceiptCallbackMarker, true);
+			S(w, x.ReceiptCallbackReferenceHash, true); w.Write(x.ReceiptSameReference);
+			S(w, x.ReceiptBeforeOwnerGraphHash, true); S(w, x.ReceiptAfterOwnerGraphHash, true);
+			S(w, x.ReceiptBeforeObjectGraphHash, true); S(w, x.ReceiptAfterObjectGraphHash, true);
+			S(w, x.ReceiptBeforeTopologyHash, true); S(w, x.ReceiptAfterTopologyHash, true);
+			S(w, x.ReceiptProofId, true); w.Write((byte)x.ReceiptState);
+		}
+
+		private static KingdomGrowthObjectCallbackStep ReadGrowthObjectCallback(BinaryReader r)
+		{
+			return new KingdomGrowthObjectCallbackStep
+			{
+				EventId = S(r, true), Kind = (KingdomGrowthObjectMutationKind)r.ReadByte(),
+				FromLocation = (KingdomGrowthLocationKind)r.ReadByte(),
+				ToLocation = (KingdomGrowthLocationKind)r.ReadByte(), EscrowKey = S(r, true),
+				BeforeOwnerId = S(r, true), AfterOwnerId = S(r, true),
+				BeforeZoneId = S(r, false), AfterZoneId = S(r, false),
+				BeforeX = r.ReadInt32(), BeforeY = r.ReadInt32(),
+				AfterX = r.ReadInt32(), AfterY = r.ReadInt32(),
+				BeforeCount = r.ReadInt32(), AfterCount = r.ReadInt32(),
+				NoStack = ReadExactBoolean(r), BeforeHasHarvestable = ReadExactBoolean(r),
+				AfterHasHarvestable = ReadExactBoolean(r), BeforeRipe = ReadExactBoolean(r),
+				AfterRipe = ReadExactBoolean(r), BeforeRegenTimer = r.ReadInt32(),
+				AfterRegenTimer = r.ReadInt32(), BeforeRegenTime = S(r, false),
+				AfterRegenTime = S(r, false), BeforeTileIndex = r.ReadInt32(),
+				AfterTileIndex = r.ReadInt32(), BeforeRenderTile = S(r, false),
+				AfterRenderTile = S(r, false), BeforeRenderColor = S(r, false),
+				AfterRenderColor = S(r, false), BeforeRenderDetail = S(r, false),
+				AfterRenderDetail = S(r, false), BeforeRenderString = S(r, false),
+				AfterRenderString = S(r, false), BeforeTileColor = S(r, false),
+				AfterTileColor = S(r, false),
+				BeforeOwnerGraphHash = S(r, true), AfterOwnerGraphHash = S(r, true),
+				BeforeObjectGraphHash = S(r, true), AfterObjectGraphHash = S(r, true),
+				BeforeTopologyHash = S(r, true), AfterTopologyHash = S(r, true),
+				State = (KingdomLifecyclePhysicalState)r.ReadByte(), ReceiptId = S(r, true),
+				ReceiptBeforeMatches = r.ReadInt32(), ReceiptAfterMatches = r.ReadInt32(),
+				ReceiptBeforeCount = r.ReadInt32(), ReceiptAfterCount = r.ReadInt32(),
 				ReceiptCallbackObjectId = S(r, true), ReceiptCallbackMarker = S(r, true),
 				ReceiptCallbackReferenceHash = S(r, true),
 				ReceiptSameReference = ReadExactBoolean(r),
-				ReceiptProofId = S(r, false),
+				ReceiptBeforeOwnerGraphHash = S(r, true), ReceiptAfterOwnerGraphHash = S(r, true),
+				ReceiptBeforeObjectGraphHash = S(r, true), ReceiptAfterObjectGraphHash = S(r, true),
+				ReceiptBeforeTopologyHash = S(r, true), ReceiptAfterTopologyHash = S(r, true),
+				ReceiptProofId = S(r, true),
 				ReceiptState = (KingdomLifecyclePhysicalState)r.ReadByte()
 			};
 		}
@@ -1525,8 +2141,64 @@ namespace ThousandAndFirst
 		{
 			if (x == null) throw new InvalidDataException("null growth field slot");
 			S(w, x.FieldId, true); w.Write(x.NextSequence); w.Write(x.RetiredThrough);
-			w.Write(x.ClockTick);
+			w.Write(x.ClockTick); w.Write(x.CommitRevision); S(w, x.LastOperationId, true);
+			S(w, x.WorkObjectId, true); S(w, x.WorkPartId, true); S(w, x.Marker, true);
+			S(w, x.Blueprint, false); S(w, x.ZoneId, false); w.Write(x.X); w.Write(x.Y);
+			S(w, x.CropBlueprint, false); w.Write(x.Stage); w.Write(x.NextStageTick);
+			w.Write(x.SownTick); w.Write(x.Cycles); w.Write(x.SaidWant);
+			w.Write(x.DeclaredRows); w.Write(x.EffectivenessPercent); w.Write(x.MethodPercent);
+			w.Write(x.NoLarderAnnounced); S(w, x.SeedBlueprint, false);
+			S(w, x.PartGraphHash, true); S(w, x.ObjectGraphHash, true);
+			S(w, x.TopologyHash, true);
 			w.Write(x.Quarantined); S(w, x.Fault, false, true); WriteGrowthOperation(w, x.Operation);
+		}
+
+		private static void WriteGrowthFieldState(BinaryWriter w, KingdomGrowthFieldState x)
+		{
+			w.Write(x != null); if (x == null) return;
+			S(w, x.FieldId, true); S(w, x.WorkObjectId, true); S(w, x.WorkPartId, true);
+			S(w, x.Marker, true); S(w, x.Blueprint, false); S(w, x.ZoneId, false);
+			w.Write(x.X); w.Write(x.Y); S(w, x.CropBlueprint, false); w.Write(x.Stage);
+			w.Write(x.NextStageTick); w.Write(x.SownTick); w.Write(x.Cycles);
+			w.Write(x.SaidWant); w.Write(x.DeclaredRows); w.Write(x.EffectivenessPercent);
+			w.Write(x.MethodPercent); w.Write(x.NoLarderAnnounced);
+			S(w, x.SeedBlueprint, false); S(w, x.PartGraphHash, true);
+			S(w, x.ObjectGraphHash, true); S(w, x.TopologyHash, true);
+		}
+
+		private static KingdomGrowthFieldState ReadGrowthFieldState(BinaryReader r)
+		{
+			if (!ReadExactBoolean(r)) return null;
+			return new KingdomGrowthFieldState
+			{
+				FieldId = S(r, true), WorkObjectId = S(r, true), WorkPartId = S(r, true),
+				Marker = S(r, true), Blueprint = S(r, false), ZoneId = S(r, false),
+				X = r.ReadInt32(), Y = r.ReadInt32(), CropBlueprint = S(r, false),
+				Stage = r.ReadInt32(), NextStageTick = r.ReadInt64(), SownTick = r.ReadInt64(),
+					Cycles = r.ReadInt32(), SaidWant = r.ReadInt32(), DeclaredRows = r.ReadInt32(),
+					EffectivenessPercent = r.ReadInt32(), MethodPercent = r.ReadInt32(),
+				NoLarderAnnounced = ReadExactBoolean(r), SeedBlueprint = S(r, false),
+				PartGraphHash = S(r, true), ObjectGraphHash = S(r, true),
+				TopologyHash = S(r, true)
+			};
+		}
+
+		private static void WriteGrowthCropRows(BinaryWriter w,
+			List<KingdomGrowthCropRow> rows)
+		{
+			w.Write(rows != null); if (rows == null) return;
+			EnsureCount(rows, KingdomLifecycleRules.MaxGrowthCropRows, "growth domain crop rows");
+			w.Write(rows.Count);
+			for (int i = 0; i < rows.Count; i++) WriteCropRow(w, rows[i]);
+		}
+
+		private static List<KingdomGrowthCropRow> ReadGrowthCropRows(BinaryReader r)
+		{
+			if (!ReadExactBoolean(r)) return null;
+			int count = ReadCount(r, KingdomLifecycleRules.MaxGrowthCropRows);
+			List<KingdomGrowthCropRow> rows = new List<KingdomGrowthCropRow>(count);
+			for (int i = 0; i < count; i++) rows.Add(ReadCropRow(r));
+			return rows;
 		}
 
 		private static KingdomGrowthFieldSlot ReadGrowthField(BinaryReader r)
@@ -1534,7 +2206,16 @@ namespace ThousandAndFirst
 			return new KingdomGrowthFieldSlot
 			{
 				FieldId = S(r, true), NextSequence = r.ReadInt64(), RetiredThrough = r.ReadInt64(),
-				ClockTick = r.ReadInt64(),
+				ClockTick = r.ReadInt64(), CommitRevision = r.ReadInt64(),
+				LastOperationId = S(r, true), WorkObjectId = S(r, true), WorkPartId = S(r, true),
+				Marker = S(r, true), Blueprint = S(r, false), ZoneId = S(r, false),
+				X = r.ReadInt32(), Y = r.ReadInt32(), CropBlueprint = S(r, false),
+				Stage = r.ReadInt32(), NextStageTick = r.ReadInt64(), SownTick = r.ReadInt64(),
+					Cycles = r.ReadInt32(), SaidWant = r.ReadInt32(), DeclaredRows = r.ReadInt32(),
+					EffectivenessPercent = r.ReadInt32(), MethodPercent = r.ReadInt32(),
+				NoLarderAnnounced = ReadExactBoolean(r), SeedBlueprint = S(r, false),
+				PartGraphHash = S(r, true), ObjectGraphHash = S(r, true),
+				TopologyHash = S(r, true),
 				Quarantined = ReadExactBoolean(r), Fault = S(r, false, true),
 				Operation = ReadGrowthOperation(r)
 			};
@@ -1546,6 +2227,12 @@ namespace ThousandAndFirst
 			S(w, x.FieldId, true); S(w, x.RowId, true); S(w, x.ObjectId, true);
 			S(w, x.Marker, true); S(w, x.Blueprint, false); S(w, x.ZoneId, false);
 			S(w, x.OwnerId, true); w.Write(x.X); w.Write(x.Y); w.Write(x.Count);
+			w.Write(x.HasHarvestable); w.Write(x.Ripe); w.Write(x.RegenTimer);
+			S(w, x.RegenTime, false); w.Write(x.TileIndex); S(w, x.RenderTile, false);
+			S(w, x.RenderColor, false); S(w, x.RenderDetail, false);
+			S(w, x.RenderString, false); S(w, x.TileColor, false);
+			S(w, x.PartGraphHash, true); S(w, x.ObjectGraphHash, true);
+			S(w, x.TopologyHash, true); w.Write(x.Revision); S(w, x.LastOperationId, true);
 		}
 
 		private static KingdomGrowthCropRow ReadCropRow(BinaryReader r)
@@ -1554,7 +2241,14 @@ namespace ThousandAndFirst
 			{
 				FieldId = S(r, true), RowId = S(r, true), ObjectId = S(r, true),
 				Marker = S(r, true), Blueprint = S(r, false), ZoneId = S(r, false),
-				OwnerId = S(r, true), X = r.ReadInt32(), Y = r.ReadInt32(), Count = r.ReadInt32()
+				OwnerId = S(r, true), X = r.ReadInt32(), Y = r.ReadInt32(), Count = r.ReadInt32(),
+				HasHarvestable = ReadExactBoolean(r), Ripe = ReadExactBoolean(r),
+				RegenTimer = r.ReadInt32(), RegenTime = S(r, false), TileIndex = r.ReadInt32(),
+				RenderTile = S(r, false), RenderColor = S(r, false), RenderDetail = S(r, false),
+				RenderString = S(r, false), TileColor = S(r, false),
+				PartGraphHash = S(r, true),
+				ObjectGraphHash = S(r, true), TopologyHash = S(r, true),
+				Revision = r.ReadInt64(), LastOperationId = S(r, true)
 			};
 		}
 
@@ -1573,6 +2267,162 @@ namespace ThousandAndFirst
 				Sequence = r.ReadInt64(), Id = S(r, true), PlanHash = S(r, true),
 				Action = (KingdomGrowthAction)r.ReadByte(), Tick = r.ReadInt64()
 			};
+		}
+
+		private static void WriteGrowthScarcity(BinaryWriter w,
+			KingdomGrowthScarcitySnapshot x)
+		{
+			w.Write(x != null); if (x == null) return;
+			w.Write(x.DryStreak); w.Write(x.Withered); w.Write(x.HungerStreak);
+			w.Write(x.Famished); w.Write((int)x.LastMeal); w.Write(x.MealShade);
+			w.Write(x.ScrapsAnnounced); w.Write(x.ElapsedTicks); w.Write(x.Days);
+			w.Write(x.Population); w.Write(x.Stage); w.Write(x.UpkeepRequested);
+			w.Write(x.WaterAvailable);
+			w.Write(x.RationsAvailable); w.Write(x.Foraged); w.Write(x.Eaten);
+			w.Write(x.FromDish); w.Write(x.Kitchens); S(w, x.DishName, false, true);
+			S(w, x.DishText, false, true); S(w, x.DishStaple, false, true);
+			S(w, x.DishSource, false, true);
+			w.Write((byte)x.ComposedBite);
+			w.Write(x.RequestedWater); w.Write(x.ProvedWater); w.Write(x.RequestedRations);
+			w.Write(x.ProvedRations); w.Write(x.StoresPolicy); w.Write(x.DistrictPercent);
+			w.Write((byte)x.ThirstOutcome); w.Write((byte)x.HungerOutcome);
+			w.Write(x.Thirsting); w.Write(x.Starving); w.Write(x.Withering);
+			w.Write(x.Famishing); w.Write(x.Healthy);
+		}
+
+		private static KingdomGrowthScarcitySnapshot ReadGrowthScarcity(BinaryReader r)
+		{
+			if (!ReadExactBoolean(r)) return null;
+			return new KingdomGrowthScarcitySnapshot
+			{
+				DryStreak = r.ReadInt32(), Withered = ReadExactBoolean(r),
+				HungerStreak = r.ReadInt32(), Famished = ReadExactBoolean(r),
+				LastMeal = (KingdomRules.MealVerdict)r.ReadInt32(), MealShade = r.ReadInt32(),
+				ScrapsAnnounced = ReadExactBoolean(r), ElapsedTicks = r.ReadInt64(),
+				Days = r.ReadInt32(), Population = r.ReadInt32(), Stage = r.ReadInt32(),
+				UpkeepRequested = r.ReadInt32(), WaterAvailable = r.ReadInt32(),
+				RationsAvailable = r.ReadInt32(), Foraged = r.ReadInt32(), Eaten = r.ReadInt32(),
+				FromDish = r.ReadInt32(), Kitchens = r.ReadInt32(),
+				DishName = S(r, false, true), DishText = S(r, false, true),
+				DishStaple = S(r, false, true), DishSource = S(r, false, true),
+				ComposedBite = (KingdomGrowthComposedBite)r.ReadByte(),
+				RequestedWater = r.ReadInt32(), ProvedWater = r.ReadInt32(),
+				RequestedRations = r.ReadInt32(), ProvedRations = r.ReadInt32(),
+				StoresPolicy = r.ReadInt32(), DistrictPercent = r.ReadInt32(),
+				ThirstOutcome = (KingdomGrowthThirstOutcome)r.ReadByte(),
+				HungerOutcome = (KingdomGrowthHungerOutcome)r.ReadByte(),
+				Thirsting = ReadExactBoolean(r), Starving = ReadExactBoolean(r),
+				Withering = ReadExactBoolean(r), Famishing = ReadExactBoolean(r),
+				Healthy = ReadExactBoolean(r)
+			};
+		}
+
+		private static void WriteGrowthAccounting(BinaryWriter w,
+			KingdomGrowthAccountingSnapshot x)
+		{
+			w.Write(x != null); if (x == null) return;
+			w.Write(x.Fetched); w.Write(x.UpkeepDrawn); w.Write(x.ArrivalCost);
+			w.Write(x.Delivered); w.Write(x.Harvested); w.Write(x.Foraged);
+			w.Write(x.RationsDrawn); w.Write(x.Milled); w.Write(x.HarvestLost);
+			w.Write(x.Plundered); w.Write(x.Arrivals); w.Write(x.Departures);
+		}
+
+		private static KingdomGrowthAccountingSnapshot ReadGrowthAccounting(BinaryReader r)
+		{
+			if (!ReadExactBoolean(r)) return null;
+			return new KingdomGrowthAccountingSnapshot
+			{
+				Fetched = r.ReadInt32(), UpkeepDrawn = r.ReadInt32(), ArrivalCost = r.ReadInt32(),
+				Delivered = r.ReadInt32(), Harvested = r.ReadInt32(), Foraged = r.ReadInt32(),
+				RationsDrawn = r.ReadInt32(), Milled = r.ReadInt32(),
+				HarvestLost = r.ReadInt32(), Plundered = r.ReadInt32(), Arrivals = r.ReadInt32(),
+				Departures = r.ReadInt32()
+			};
+		}
+
+		private static void WriteGrowthOutboxEvent(BinaryWriter w, KingdomGrowthOutboxEvent x)
+		{
+			if (x == null) throw new InvalidDataException("null growth outbox event");
+			S(w, x.EventId, true); S(w, x.Kind, false); w.Write(x.ChronicleBeforeCount);
+			w.Write(x.ChronicleDeclaredAfterCount); w.Write(x.ChronicleObservedCount);
+			S(w, x.ChronicleBeforeHash, true); S(w, x.ChronicleDeclaredAfterHash, true);
+			S(w, x.ChronicleObservedHash, true); w.Write(x.LedgerBeforeCount);
+			w.Write(x.LedgerDeclaredAfterCount); w.Write(x.LedgerObservedCount);
+			S(w, x.LedgerBeforeHash, true); S(w, x.LedgerDeclaredAfterHash, true);
+			S(w, x.LedgerObservedHash, true); WriteOutbox(w, x.Outbox);
+		}
+
+		private static KingdomGrowthOutboxEvent ReadGrowthOutboxEvent(BinaryReader r)
+		{
+			return new KingdomGrowthOutboxEvent
+			{
+				EventId = S(r, true), Kind = S(r, false), ChronicleBeforeCount = r.ReadInt32(),
+				ChronicleDeclaredAfterCount = r.ReadInt32(), ChronicleObservedCount = r.ReadInt32(),
+				ChronicleBeforeHash = S(r, true), ChronicleDeclaredAfterHash = S(r, true),
+				ChronicleObservedHash = S(r, true), LedgerBeforeCount = r.ReadInt32(),
+				LedgerDeclaredAfterCount = r.ReadInt32(), LedgerObservedCount = r.ReadInt32(),
+				LedgerBeforeHash = S(r, true), LedgerDeclaredAfterHash = S(r, true),
+				LedgerObservedHash = S(r, true), Outbox = ReadOutbox(r)
+			};
+		}
+
+		private static void WriteGrowthArrivalCandidate(BinaryWriter w,
+			KingdomGrowthArrivalCandidate x)
+		{
+			w.Write(x != null); if (x == null) return;
+			w.Write(x.Sequence); S(w, x.Id, true); S(w, x.PlanHash, true);
+			S(w, x.SettlementId, true); w.Write(x.CreatedTick); w.Write(x.UpdatedTick);
+			w.Write((byte)x.Phase); w.Write((byte)x.EvidencePhase);
+			w.Write((byte)x.Disposition); w.Write((byte)x.RefusalReason); S(w, x.ObjectId, true);
+			S(w, x.Marker, true); S(w, x.Blueprint, false); S(w, x.EscrowKey, true);
+			WriteLease(w, x.CandidateLease); WriteLease(w, x.LodgingLease);
+			WriteLease(w, x.EscrowLease);
+			WriteGrowthOptionalObjectCallback(w, x.CreateStep);
+			WriteGrowthOptionalObjectCallback(w, x.DispositionStep); S(w, x.LodgingZoneId, false);
+			w.Write(x.LodgingX); w.Write(x.LodgingY); S(w, x.LodgingBeforeGraphHash, true);
+			S(w, x.LodgingDeclaredGraphHash, true); S(w, x.LodgingReceiptGraphHash, true);
+			S(w, x.LodgingCallbackReferenceHash, true); w.Write(x.LodgingSameReference);
+			S(w, x.LodgingReceiptId, true); w.Write((byte)x.LodgingState);
+			S(w, x.ConsumingOperationId, true); w.Write(x.ConsumingOperationSequence);
+			S(w, x.Fault, false, true);
+		}
+
+		private static KingdomGrowthArrivalCandidate ReadGrowthArrivalCandidate(BinaryReader r)
+		{
+			if (!ReadExactBoolean(r)) return null;
+			return new KingdomGrowthArrivalCandidate
+			{
+				Sequence = r.ReadInt64(), Id = S(r, true), PlanHash = S(r, true),
+				SettlementId = S(r, true), CreatedTick = r.ReadInt64(), UpdatedTick = r.ReadInt64(),
+				Phase = (KingdomGrowthArrivalCandidatePhase)r.ReadByte(),
+				EvidencePhase = (KingdomGrowthArrivalCandidatePhase)r.ReadByte(),
+				Disposition = (KingdomGrowthArrivalDisposition)r.ReadByte(),
+				RefusalReason = (KingdomGrowthArrivalRefusalReason)r.ReadByte(),
+				ObjectId = S(r, true),
+				Marker = S(r, true), Blueprint = S(r, false), EscrowKey = S(r, true),
+				CandidateLease = ReadLease(r), LodgingLease = ReadLease(r),
+				EscrowLease = ReadLease(r),
+				CreateStep = ReadGrowthOptionalObjectCallback(r),
+				DispositionStep = ReadGrowthOptionalObjectCallback(r), LodgingZoneId = S(r, false),
+				LodgingX = r.ReadInt32(), LodgingY = r.ReadInt32(),
+				LodgingBeforeGraphHash = S(r, true), LodgingDeclaredGraphHash = S(r, true),
+				LodgingReceiptGraphHash = S(r, true), LodgingCallbackReferenceHash = S(r, true),
+				LodgingSameReference = ReadExactBoolean(r), LodgingReceiptId = S(r, true),
+				LodgingState = (KingdomLifecyclePhysicalState)r.ReadByte(),
+				ConsumingOperationId = S(r, true), ConsumingOperationSequence = r.ReadInt64(),
+				Fault = S(r, false, true)
+			};
+		}
+
+		private static void WriteGrowthOptionalObjectCallback(BinaryWriter w,
+			KingdomGrowthObjectCallbackStep x)
+		{
+			w.Write(x != null); if (x != null) WriteGrowthObjectCallback(w, x);
+		}
+
+		private static KingdomGrowthObjectCallbackStep ReadGrowthOptionalObjectCallback(BinaryReader r)
+		{
+			return ReadExactBoolean(r) ? ReadGrowthObjectCallback(r) : null;
 		}
 
 		private static KingdomGrowthBook PoisonGrowth(string Fault)
@@ -1834,7 +2684,12 @@ namespace ThousandAndFirst
 			if (x == null) throw new InvalidDataException("null growth water leg");
 			S(w, x.OperationId, true); S(w, x.EventId, true); S(w, x.LeaseKey, true);
 			w.Write((byte)x.MutationKind); w.Write((byte)x.ContainerKind);
-			S(w, x.ContainerId, true); w.Write((byte)x.OwnerTopology); S(w, x.OwnerId, true);
+			S(w, x.ContainerId, true); w.Write((byte)x.BeforeLocation);
+			w.Write((byte)x.AfterLocation); S(w, x.BeforeOwnerId, true);
+			S(w, x.AfterOwnerId, true); S(w, x.BeforeZoneId, false);
+			S(w, x.AfterZoneId, false); w.Write(x.BeforeX); w.Write(x.BeforeY);
+			w.Write(x.AfterX); w.Write(x.AfterY); w.Write(x.OwnerRemovedAfter);
+			w.Write((byte)x.OwnerTopology); S(w, x.OwnerId, true);
 			S(w, x.Blueprint, false); S(w, x.ZoneId, false); w.Write(x.X); w.Write(x.Y);
 			w.Write(x.Capacity); w.Write(x.Before); w.Write(x.Delta); w.Write(x.After);
 			S(w, x.BeforeComposition, false, true); S(w, x.AfterComposition, false, true);
@@ -1859,8 +2714,15 @@ namespace ThousandAndFirst
 				OperationId = S(r, true), EventId = S(r, true), LeaseKey = S(r, true),
 				MutationKind = (KingdomGrowthWaterMutationKind)r.ReadByte(),
 				ContainerKind = (KingdomGrowthWaterContainerKind)r.ReadByte(),
-				ContainerId = S(r, true), OwnerTopology = (KingdomLifecycleTopology)r.ReadByte(),
-				OwnerId = S(r, true),
+				ContainerId = S(r, true),
+				BeforeLocation = (KingdomGrowthLocationKind)r.ReadByte(),
+				AfterLocation = (KingdomGrowthLocationKind)r.ReadByte(),
+				BeforeOwnerId = S(r, true), AfterOwnerId = S(r, true),
+				BeforeZoneId = S(r, false), AfterZoneId = S(r, false),
+				BeforeX = r.ReadInt32(), BeforeY = r.ReadInt32(),
+				AfterX = r.ReadInt32(), AfterY = r.ReadInt32(),
+				OwnerRemovedAfter = ReadExactBoolean(r),
+				OwnerTopology = (KingdomLifecycleTopology)r.ReadByte(), OwnerId = S(r, true),
 				Blueprint = S(r, false), ZoneId = S(r, false), X = r.ReadInt32(), Y = r.ReadInt32(),
 				Capacity = r.ReadInt32(), Before = r.ReadInt32(), Delta = r.ReadInt32(),
 				After = r.ReadInt32(), BeforeComposition = S(r, false, true),
