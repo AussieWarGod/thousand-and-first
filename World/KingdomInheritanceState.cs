@@ -6,6 +6,7 @@ using Qud.API;
 using XRL;
 using XRL.CharacterBuilds.Qud;
 using XRL.Messages;
+using XRL.UI;
 using XRL.World;
 using XRL.World.Parts;
 using XRL.World.WorldBuilders;
@@ -135,7 +136,7 @@ namespace ThousandAndFirst
 			ResetNewGame();
 			XRLGame game = The.Game;
 			if (game == null || !KingdomInheritanceStateRules.ShouldOffer(game.gameMode,
-				TutorialManager.currentStep != null))
+				TutorialManager.currentStep != null) || !LegacyImportEnabled())
 			{
 				return;
 			}
@@ -196,6 +197,13 @@ namespace ThousandAndFirst
 					SetRepair("legacy reservation failed: " + ex.Message);
 				}
 			}
+		}
+
+		private static bool LegacyImportEnabled()
+		{
+			// Fail closed when the option is absent or unreadable. This is read before the
+			// profile coordinator is required, so Off cannot reserve, decline, or consume a seal.
+			return Options.GetOption("r_TAF_OptionLegacyImport", "No") == "Yes";
 		}
 
 		public void HandleEvent(EmbarkEvent E)

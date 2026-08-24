@@ -10,6 +10,10 @@ Pre-release: the mod has not yet run in a live game. Nothing here is stable unti
 playtest passes.
 
 ### Fixed
+- **New worlds no longer silently import a prior kingdom.** Cross-run realm import now defaults
+  off, and its option says it must be enabled before world creation. Off exits before any legacy
+  reservation and writes no decline, so latest eligible seal remains available for a later opted-in
+  world; in-run seniority succession and seal capture are unchanged.
 - **The refining yard applies its own wear** (QB-29 — a standing breach of the wear doctrine:
   crops and networks paid it, the yard never did). The condition rides the effort percent
   rather than the crew term, because every yard stands two and a percent folded into a head

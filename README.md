@@ -22,6 +22,10 @@ three answers, trade charters and caravans, a second city and the water manifest
 exile and return, the dated two-register chronicle, a homecoming report, and the Charter ability
 that fronts all of it.
 
+Cross-run realm inheritance is explicit opt-in. Its Options checkbox defaults off and must be
+enabled before creating a new world; leaving it off does not consume an eligible sealed realm.
+When enabled, only layout and history cross worlds—never items, liquids, or charge.
+
 - Design document: published artifact "The Thousand and First" (DLC-scale design, research-grounded).
 - [VISION.md](VISION.md) — where this is going and the rules it holds itself to. The rules are
   the product, not guardrails: where these shapes exist in other games, they are the loved part.

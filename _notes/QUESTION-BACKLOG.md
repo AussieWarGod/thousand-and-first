@@ -307,8 +307,8 @@ same death.
   score+save is checkpointed, save without score is living, neither is an orphan. Only a
   `Terminal` attempt may use this proof. `Retired` is the explicit path above; a merely `Living`
   stage never promotes.
-- **Reservation/consume:** the new-game `[GameStateSingleton]` selects latest eligible by
-  default and obtains an atomic exclusive claim on the unique `LegacyId`, bound to target
+- **Reservation/consume:** when the pre-world import option is explicitly enabled, the new-game
+  `[GameStateSingleton]` selects latest eligible and obtains an atomic exclusive claim on the unique `LegacyId`, bound to target
   `GameID`, before world generation. Joppa `OnAfterBuild` reserves one still-mutable site and
   copies the sanitized payload into target state. A fresh engine `Applied` result persists as
   `AppliedPendingDurability`; that initial `Applied` result is what proved and published the exact
@@ -321,7 +321,8 @@ same death.
   with unapplied or unproved payload stays reserved and reacquires that claim. Placement and
   reconstruction key target marker and immutable reserved receipt tuple, so retries do not build
   twice. Site refusal releases the claim and leaves the legacy eligible. An explicit decline is
-  an immutable spent receipt; silence/crash is not a decline.
+  an immutable spent receipt; silence/crash is not a decline. Import defaults off; Off makes no
+  reservation and writes no decline, leaving eligible seals untouched for a later opted-in world.
 - **Playtest candidate boundary:** build seniority succession, honest ledger reset, corpse
   memory recovery, persistent quests, one-seat/four-state inheritance, latest-eligible import,
   and retirement now. Chosen heir, groomed designee, climb mode, sultan-history rendering,

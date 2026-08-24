@@ -1,4 +1,5 @@
 #if TAF_TESTS
+using System;
 using System.IO;
 using System.Threading.Tasks;
 using NUnit.Framework;
@@ -8,6 +9,56 @@ namespace ThousandAndFirst.Tests
 {
 	public class KingdomInheritanceStateRulesTests
 	{
+		private static string WorkspaceRoot()
+		{
+			DirectoryInfo cursor = new DirectoryInfo(AppContext.BaseDirectory);
+			while (cursor != null)
+			{
+				if (File.Exists(Path.Combine(cursor.FullName, "Options.xml"))
+					&& Directory.Exists(Path.Combine(cursor.FullName, "Core")))
+					return cursor.FullName;
+				cursor = cursor.Parent;
+			}
+			throw new InvalidOperationException("Cannot locate workspace root");
+		}
+
+		private static string Source(string relative)
+		{
+			string path = Path.Combine(WorkspaceRoot(), relative);
+			if (File.Exists(path)) return File.ReadAllText(path);
+			throw new InvalidOperationException("Cannot locate " + relative);
+		}
+
+		private static int MatchingBrace(string source, int open)
+		{
+			Assert.GreaterOrEqual(open, 0);
+			int depth = 0;
+			for (int i = open; i < source.Length; i++)
+			{
+				if (source[i] == '{') depth++;
+				else if (source[i] == '}' && --depth == 0) return i;
+			}
+			Assert.Fail("Unclosed source block");
+			return -1;
+		}
+
+		private static string MethodBody(string source, string signature)
+		{
+			int method = source.IndexOf(signature, StringComparison.Ordinal);
+			Assert.GreaterOrEqual(method, 0);
+			int open = source.IndexOf('{', method);
+			int close = MatchingBrace(source, open);
+			return source.Substring(open + 1, close - open - 1);
+		}
+
+		private static int Occurrences(string source, string token)
+		{
+			int count = 0;
+			for (int at = 0; (at = source.IndexOf(token, at,
+				StringComparison.Ordinal)) >= 0; at += token.Length) count++;
+			return count;
+		}
+
 		private static KingdomSealRecord Legacy()
 		{
 			return new KingdomSealRecord
@@ -103,6 +154,64 @@ namespace ThousandAndFirst.Tests
 				receipt, "JoppaWorld.4.5.1.2.10", 1, out marker));
 			Assert.AreEqual("taf-inherit-v1|lineage-a|legacy-a|target-game|reserved|321|"
 				+ "JoppaWorld.4.5.1.2.10", marker);
+		}
+
+		[Test]
+		public void CrossRunImportRequiresExplicitPreWorldOptInWithoutSpendingDecline()
+		{
+			string options = Source("Options.xml");
+			string state = Source(Path.Combine("World", "KingdomInheritanceState.cs"));
+			string seal = Source(Path.Combine("Core", "KingdomSeal.cs"));
+			const string optionId = "r_TAF_OptionLegacyImport";
+			int option = options.IndexOf("<option ID=\"" + optionId + "\"",
+				StringComparison.Ordinal);
+			Assert.GreaterOrEqual(option, 0);
+			int optionEnd = options.IndexOf("/>", option, StringComparison.Ordinal);
+			Assert.Greater(optionEnd, option);
+			string declaration = options.Substring(option, optionEnd - option);
+			StringAssert.Contains("Default=\"No\"", declaration);
+			StringAssert.Contains("enable before creating a new world", declaration);
+
+			string initialize = MethodBody(state, "public void Initialize()");
+			int optionGate = initialize.IndexOf("!LegacyImportEnabled()",
+				StringComparison.Ordinal);
+			Assert.GreaterOrEqual(optionGate, 0);
+			int gateOpen = initialize.IndexOf('{', optionGate);
+			int gateClose = MatchingBrace(initialize, gateOpen);
+			int reserve = initialize.IndexOf(".TryReserveImport(", optionGate,
+				StringComparison.Ordinal);
+			Assert.AreEqual("return;",
+				initialize.Substring(gateOpen + 1, gateClose - gateOpen - 1).Trim(),
+				"the disabled path must exit before acquiring the seal coordinator");
+			Assert.Greater(reserve, optionGate,
+				"option Off must return before any profile reservation attempt");
+			Assert.AreEqual(1, Occurrences(initialize, ".TryReserveImport("));
+			Assert.AreEqual(1, Occurrences(state, ".TryReserveImport("),
+				"no helper or alternate call path may reserve outside the consent gate");
+			int productionCalls = 0;
+			string productionCaller = null;
+			string root = WorkspaceRoot();
+			foreach (string path in Directory.GetFiles(root, "*.cs", SearchOption.AllDirectories))
+			{
+				string relative = Path.GetRelativePath(root, path);
+				if (relative.StartsWith("DevTests" + Path.DirectorySeparatorChar,
+					StringComparison.Ordinal)) continue;
+				int calls = Occurrences(File.ReadAllText(path), ".TryReserveImport(");
+				if (calls > 0) productionCaller = path;
+				productionCalls += calls;
+			}
+			Assert.AreEqual(1, productionCalls,
+				"the consent-gated new-world singleton must be the sole production caller");
+			Assert.AreEqual(Path.GetFullPath(Path.Combine(root, "World",
+				"KingdomInheritanceState.cs")), Path.GetFullPath(productionCaller));
+			StringAssert.Contains(
+				"Options.GetOption(\"r_TAF_OptionLegacyImport\", \"No\") == \"Yes\"",
+				state);
+			StringAssert.Contains(
+				"Options.GetOption(\"r_TAF_OptionLegacyImport\", \"No\") == \"Yes\"",
+				seal);
+			Assert.IsFalse(state.Contains("TryDeclineImport"),
+				"global option Off is silence, not an explicit per-run decline");
 		}
 
 		[Test]

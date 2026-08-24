@@ -8,6 +8,17 @@ Fresh game launch (never mid-session approval — ghost assembly generations). A
 **The Thousand and First** at the mod prompt, then load any save or start a new game.
 Say when you're launching so the log watch can run alongside.
 
+## Pass 0 — Cross-run inheritance consent
+
+Use a profile with one promoted, eligible sealed realm. This pass deliberately creates two new
+worlds; option is sampled during world creation, not changed retroactively inside a run.
+
+| Step | Action | Expect |
+|---|---|---|
+| 0a | In Options, leave **import the latest eligible sealed realm** unchecked (its default), then create a new non-Tutorial, non-Daily world | No inherited-realm map note or site is installed. World creation never asks for or reserves a legacy |
+| 0b | Quit, enable that option **before** creating another new world, then create it | Latest eligible realm now appears as inherited map note/site. Its appearance proves step 0a left seal eligible rather than silently declining or consuming it |
+| 0c | Visit inherited site; inspect every restored container, liquid vessel, powered object, and citizen | Old layout/history may return; no old item, water/liquid, charge, or player inventory returns. Save, quit, reload, revisit: site exists once, never duplicates |
+
 ## Pass 1 — Foundation (wishes)
 
 | Step | Wish / action | Expect |

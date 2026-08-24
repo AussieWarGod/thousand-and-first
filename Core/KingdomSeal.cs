@@ -1775,7 +1775,7 @@ namespace ThousandAndFirst
 
 		private static bool LegacyImportEnabled()
 		{
-			return Options.GetOption("r_TAF_OptionLegacyImport", "Yes") != "No";
+			return Options.GetOption("r_TAF_OptionLegacyImport", "No") == "Yes";
 		}
 
 		private static string DeathReason(AfterDieEvent Death)
