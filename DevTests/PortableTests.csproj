@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <AssemblyName>TafPortableTests</AssemblyName>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <DefineConstants>TAF_TESTS</DefineConstants>
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="NUnit" Version="[3.14.0]" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="TestMain.cs" />
+    <Compile Include="PortableRepositoryRootTests.cs" />
+    <Compile Include="KernelCanonicalTests.cs" />
+    <Compile Include="CounterRandomTests.cs" />
+    <Compile Include="TickMathTests.cs" />
+    <Compile Include="OptionLatchTests.cs" />
+    <Compile Include="JobTransitionTests.cs" />
+    <Compile Include="FixedPeriodToyTests.cs" />
+    <Compile Include="KernelPropertyTests.cs" />
+    <Compile Include="..\Simulation\Kernel\KernelContracts.cs" />
+    <Compile Include="..\Simulation\Kernel\CanonicalBytes.cs" />
+    <Compile Include="..\Simulation\Kernel\CounterRandom.cs" />
+    <Compile Include="..\Simulation\Kernel\TickMath.cs" />
+    <Compile Include="..\Simulation\Kernel\OptionLatch.cs" />
+    <Compile Include="..\Simulation\Kernel\JobTransitions.cs" />
+    <Compile Include="..\Simulation\Kernel\FixedPeriodToy.cs" />
+  </ItemGroup>
+</Project>

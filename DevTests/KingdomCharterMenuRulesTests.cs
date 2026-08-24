@@ -14,20 +14,7 @@ namespace ThousandAndFirst.Tests
 	{
 		private static string Source(string Relative)
 		{
-			return File.ReadAllText(Path.Combine(RepoRoot().FullName, Relative));
-		}
-
-		private static DirectoryInfo RepoRoot()
-		{
-			DirectoryInfo cursor = new DirectoryInfo(AppContext.BaseDirectory);
-			while (cursor != null)
-			{
-				if (Directory.Exists(Path.Combine(cursor.FullName, "Core"))
-					&& File.Exists(Path.Combine(cursor.FullName, "DevTests", "TafTests.csproj")))
-					return cursor;
-				cursor = cursor.Parent;
-			}
-			throw new InvalidOperationException("Cannot locate repository root");
+			return TestMain.ReadRepositoryText(Relative);
 		}
 
 		private static string Between(string SourceText, string Start, string End)
@@ -416,7 +403,7 @@ namespace ThousandAndFirst.Tests
 				RegexOptions.Singleline);
 			int callers = 0;
 			string callerPath = null;
-			string root = RepoRoot().FullName;
+			string root = TestMain.RepositoryRoot;
 			foreach (string path in Directory.GetFiles(root, "*.cs", SearchOption.AllDirectories))
 			{
 				if (path.IndexOf(Path.DirectorySeparatorChar + "DevTests"

@@ -9,14 +9,7 @@ namespace ThousandAndFirst.Tests
 	{
 		private static string Source(string relative)
 		{
-			DirectoryInfo cursor = new DirectoryInfo(AppContext.BaseDirectory);
-			while (cursor != null)
-			{
-				string path = Path.Combine(cursor.FullName, relative);
-				if (File.Exists(path)) return File.ReadAllText(path);
-				cursor = cursor.Parent;
-			}
-			throw new InvalidOperationException("Cannot locate " + relative);
+			return TestMain.ReadRepositoryText(relative);
 		}
 
 		[Test]

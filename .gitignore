@@ -1,5 +1,6 @@
 ﻿DevTests/bin/
 DevTests/obj/
+Tools/PortableOutput/
 DevTests/out/
 DevTests/build-generated.rsp
 *.dll

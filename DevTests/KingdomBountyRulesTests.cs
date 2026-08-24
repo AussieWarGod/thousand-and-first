@@ -15,15 +15,7 @@ namespace ThousandAndFirst.Tests
 
 		private static string ReadRepoSource(string relative)
 		{
-			DirectoryInfo cursor = new DirectoryInfo(AppContext.BaseDirectory);
-			while (cursor != null)
-			{
-				string path = Path.Combine(cursor.FullName,
-					relative.Replace('/', Path.DirectorySeparatorChar));
-				if (File.Exists(path)) return File.ReadAllText(path);
-				cursor = cursor.Parent;
-			}
-			throw new InvalidOperationException("Cannot locate repository source " + relative);
+			return TestMain.ReadRepositoryText(relative);
 		}
 
 		private static List<string> Roster(params string[] Names)

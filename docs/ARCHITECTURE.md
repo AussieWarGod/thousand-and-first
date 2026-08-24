@@ -107,13 +107,16 @@ documentation and compatibility tests in the same change; do not silently reinte
 1. Checkout-only inventory check: `./Tools/stage.sh verify`. `python3 Art/check_xml_refs.py`
    always checks internal XML and auto-adds vanilla resolution when its default Qud install is
    present; `--base` selects another licensed installation.
-2. Pure rule/source-contract suite: `dotnet run --project DevTests/TafTests.csproj -v q --nologo`.
-   Rule sources are engine-free, but current runner references Qud's licensed NUnit DLL and is not
-   a checkout-only portable test harness.
-3. Exact staged compile, base-game XML/tile verification, ABI and release harness:
+2. Portable kernel and repository-locator slice: `dotnet restore
+   DevTests/PortableTests.csproj --locked-mode` then `dotnet run --project
+   DevTests/PortableTests.csproj --no-restore -v q --nologo`. This is currently 171
+   cases, not the full native suite and not a runtime compile gate.
+3. Pure rule/source-contract native suite: `dotnet run --project DevTests/TafTests.csproj -v q
+   --nologo`. It references Qud's licensed NUnit DLL and remains local-only.
+4. Exact staged compile, base-game XML/tile verification, ABI and release harness:
    `./Tools/release-check.sh`. Current scripts require a locally owned Qud install, WSL/Windows
    PowerShell, and configured Windows paths.
-4. Controlled in-game passes: [TESTING.md](../TESTING.md), including isolated load, player-log
+5. Controlled in-game passes: [TESTING.md](../TESTING.md), including isolated load, player-log
    review, and save/reload scenarios.
 
 Game assemblies, decompiled sources, and extracted assets cannot be redistributed to make hosted

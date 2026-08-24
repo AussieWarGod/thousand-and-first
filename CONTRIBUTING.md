@@ -38,10 +38,18 @@ python3 Art/check_xml_refs.py
 
 `Tools/stage.sh verify` is checkout-only. `Art/check_xml_refs.py` always checks internal XML; it
 also verifies vanilla references when the script's default Qud install is present or `--base` is
-given. Pure rule classes are intentionally independent of the game engine, but current test
-runner is not yet standalone: `DevTests/TafTests.csproj` references Qud's copy of
-`nunit.framework.dll` at the configured Windows install. Running tests therefore requires a
-licensed local Caves of Qud installation and .NET 9:
+given. Public contributors can also run the locked, checkout-only portable kernel and repository
+locator slice (currently 171 cases):
+
+```bash
+dotnet restore DevTests/PortableTests.csproj --locked-mode
+dotnet run --project DevTests/PortableTests.csproj --no-restore -v q --nologo
+```
+
+This is a deliberately small subset, not a claim that the full native suite is portable or that it
+compiles the mod runtime. `DevTests/TafTests.csproj` still references Qud's copy of
+`nunit.framework.dll` at the configured Windows install. Running the full suite therefore requires
+a licensed local Caves of Qud installation and .NET 9:
 
 ```powershell
 dotnet run --project DevTests/TafTests.csproj -v q --nologo
@@ -76,7 +84,8 @@ audits, smoke-launcher harness, and deploy dry run:
 
 This requires the configured licensed game files and WSL/Windows bridge. It does not replace
 the controlled live-game passes in [TESTING.md](TESTING.md). Never report a manual pass you did
-not perform.
+not perform. Maintainers follow [docs/RELEASING.md](docs/RELEASING.md) for package, private
+subscription, and public Workshop transitions.
 
 ## Change risk
 

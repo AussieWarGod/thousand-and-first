@@ -792,14 +792,7 @@ namespace ThousandAndFirst.Tests
 
 		private static string LocateRepository()
 		{
-			DirectoryInfo cursor = new DirectoryInfo(AppContext.BaseDirectory);
-			while (cursor != null)
-			{
-				if (File.Exists(Path.Combine(cursor.FullName, "Growth", "KingdomSocket.cs")))
-					return cursor.FullName;
-				cursor = cursor.Parent;
-			}
-			throw new InvalidOperationException("Cannot locate repository root.");
+			return TestMain.RepositoryRoot;
 		}
 
 		[Test]

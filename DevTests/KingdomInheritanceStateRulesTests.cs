@@ -11,22 +11,12 @@ namespace ThousandAndFirst.Tests
 	{
 		private static string WorkspaceRoot()
 		{
-			DirectoryInfo cursor = new DirectoryInfo(AppContext.BaseDirectory);
-			while (cursor != null)
-			{
-				if (File.Exists(Path.Combine(cursor.FullName, "Options.xml"))
-					&& Directory.Exists(Path.Combine(cursor.FullName, "Core")))
-					return cursor.FullName;
-				cursor = cursor.Parent;
-			}
-			throw new InvalidOperationException("Cannot locate workspace root");
+			return TestMain.RepositoryRoot;
 		}
 
 		private static string Source(string relative)
 		{
-			string path = Path.Combine(WorkspaceRoot(), relative);
-			if (File.Exists(path)) return File.ReadAllText(path);
-			throw new InvalidOperationException("Cannot locate " + relative);
+			return TestMain.ReadRepositoryText(relative);
 		}
 
 		private static int MatchingBrace(string source, int open)

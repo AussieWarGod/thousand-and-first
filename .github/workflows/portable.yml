@@ -1,0 +1,71 @@
+name: Portable checks
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: portable-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  portable-tests:
+    name: portable kernel + locator tests (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    env:
+      TAF_REPO_ROOT: ${{ github.workspace }}
+      NUGET_PACKAGES: ${{ runner.temp }}/taf-nuget-packages
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@d4c94342e560b34958eacfc5d055d21461ed1c5d # v5.0.0
+        with:
+          dotnet-version: 9.0.x
+      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ${{ env.NUGET_PACKAGES }}
+          key: ${{ runner.os }}-nuget-${{ hashFiles('DevTests/PortableTests.csproj', 'DevTests/packages.lock.json') }}
+      - run: dotnet restore DevTests/PortableTests.csproj --locked-mode
+      - run: dotnet run --project DevTests/PortableTests.csproj --no-restore -v q --nologo
+
+  repository-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: changed-lines whitespace check
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            git diff --check "origin/${{ github.base_ref }}...HEAD"
+          else
+            before="${{ github.event.before }}"
+            empty_tree="$(git hash-object -t tree /dev/null)"
+            if [[ "$before" =~ ^[0-9a-f]{40}$ && "$before" != "0000000000000000000000000000000000000000" ]]; then
+              if ! git cat-file -e "$before^{commit}" 2>/dev/null; then
+                git fetch --no-tags origin "$before" || true
+              fi
+              if git cat-file -e "$before^{commit}" 2>/dev/null; then
+                git diff --check "$before" HEAD
+              else
+                echo "before SHA unavailable after force-push; checking full checkout"
+                git diff --check "$empty_tree" HEAD
+              fi
+            else
+              git diff --check "$empty_tree" HEAD
+            fi
+          fi
+      - name: runtime inventory, XML, and portable-reference audit
+        run: Tools/portable-check.sh
