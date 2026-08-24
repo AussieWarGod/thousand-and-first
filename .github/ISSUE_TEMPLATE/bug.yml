@@ -34,7 +34,7 @@ body:
     attributes:
       label: TAF version and commit
       description: Give manifest version plus commit hash for source builds.
-      placeholder: "0.1.0 / 8c678f6"
+      placeholder: "0.2.0 / full-or-short-commit"
     validations:
       required: true
   - type: dropdown

@@ -31,7 +31,7 @@ body:
     id: taf_version
     attributes:
       label: TAF version and commit
-      placeholder: "0.1.0 / 8c678f6"
+      placeholder: "0.2.0 / full-or-short-commit"
     validations:
       required: true
   - type: dropdown
@@ -53,7 +53,7 @@ body:
       description: Include mod versions or Workshop IDs. Say whether the issue reproduces with TAF only.
       placeholder: |
         TAF only: no
-        1. The Thousand and First 0.1.0
+        1. The Thousand and First 0.2.0
         2. Other Mod 2.3 (Workshop ID ...)
     validations:
       required: true
