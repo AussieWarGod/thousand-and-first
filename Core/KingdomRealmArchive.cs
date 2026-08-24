@@ -213,7 +213,9 @@ namespace ThousandAndFirst
 				!string.IsNullOrEmpty(System.PendingSettlementAuthority) ||
 				!KingdomIdentityRules.IsRealmId(System.CurrentRealmId) ||
 				!System.TryExactSettlementIds(RequirePublishedClaims: true,
-					out List<string> settlementIds, out Failure))
+					out List<string> settlementIds, out Failure) ||
+				!System.TryRetainedSettlementIds(RequirePublishedClaims: true,
+					IncludePending: false, out List<string> retainedIds, out Failure))
 			{
 				Failure = "current immutable realm identity cannot be proved";
 				return false;
@@ -236,8 +238,12 @@ namespace ThousandAndFirst
 					out KingdomSettlement frozenAway, out Failure) ||
 				!KingdomArchivedSettlementCodec.TryClone(System.Seceded,
 					out KingdomSettlement frozenSeceded, out Failure) ||
-				!TryCloneCarry(System.CarryBook, out KingdomCarryBook frozenCarry, out Failure))
+				!TryCloneCarry(System.CarryBook, out KingdomCarryBook frozenCarry, out Failure) ||
+				!ExactCarrySettlementIds(frozenCarry, retainedIds))
+			{
+				Failure = Failure ?? "retained Carry topology does not match the archived realm";
 				return false;
+			}
 			KingdomRealmArchive candidate;
 			try
 			{
@@ -468,7 +474,10 @@ namespace ThousandAndFirst
 					out Failure);
 			if (CarryBook == null || CarryBook.LegacyIdentity ||
 				!string.Equals(CarryBook.RealmId, RealmId, StringComparison.Ordinal) ||
-				!KingdomLifecycleRules.CanOwnAuthority(CarryBook))
+				!KingdomLifecycleRules.CanOwnAuthority(CarryBook) ||
+				!TryArchivedRetainedIds(RealmId, Seat, Away, Seceded,
+					out List<string> retainedIds) ||
+				!ExactCarrySettlementIds(CarryBook, retainedIds))
 				return Refuse("archive carry authority does not match exact realm identity", out Failure);
 			if (!ValidHaulAuthority(Haul))
 				return Refuse("archive haul has malformed value or immutable destination evidence",
@@ -798,6 +807,41 @@ namespace ThousandAndFirst
 			if (ExpectedIds == null || ids.Count != ExpectedIds.Count) return false;
 			for (int i = 0; i < ids.Count; i++)
 				if (!string.Equals(ids[i], ExpectedIds[i], StringComparison.Ordinal)) return false;
+			return true;
+		}
+
+		private static bool TryArchivedRetainedIds(string RealmId,
+			KingdomSettlement Seat, KingdomSettlement Away, KingdomSettlement Seceded,
+			out List<string> Ids)
+		{
+			Ids = new List<string>();
+			if (!ArchivedSettlementMatches(RealmId, Seat, out string seatId)) return false;
+			Ids.Add(seatId);
+			if (Away != null)
+			{
+				if (!ArchivedSettlementMatches(RealmId, Away, out string awayId)) return false;
+				Ids.Add(awayId);
+			}
+			if (Seceded != null)
+			{
+				if (!ArchivedSettlementMatches(RealmId, Seceded, out string secededId))
+					return false;
+				Ids.Add(secededId);
+			}
+			KingdomIdentityFault fault;
+			if (!KingdomIdentityRules.ValidateRealmTopology(RealmId, Ids, out fault)) return false;
+			Ids.Sort(StringComparer.Ordinal);
+			return true;
+		}
+
+		private static bool ExactCarrySettlementIds(KingdomCarryBook Book,
+			IList<string> Expected)
+		{
+			if (Book?.SettlementIds == null || Expected == null ||
+				Book.SettlementIds.Count != Expected.Count) return false;
+			for (int i = 0; i < Expected.Count; i++)
+				if (!string.Equals(Book.SettlementIds[i], Expected[i],
+					StringComparison.Ordinal)) return false;
 			return true;
 		}
 

@@ -24,6 +24,7 @@
     <Compile Include="KingdomFoundingTransactionRulesTests.cs" />
 	<Compile Include="KingdomIdentityRulesTests.cs" />
 	<Compile Include="KingdomRuntimeIdentitySourceTests.cs" />
+	<Compile Include="KingdomSecondCityPublicationRulesTests.cs" />
 	<Compile Include="KingdomRealmCallbackProofRulesTests.cs" />
     <Compile Include="ManifestRulesTests.cs" />
     <Compile Include="KingdomCropRulesTests.cs" />
@@ -76,6 +77,7 @@
     <Compile Include="..\Core\KingdomRules.cs" />
     <Compile Include="..\Core\KingdomFoundingTransactionRules.cs" />
 	<Compile Include="..\Core\KingdomIdentityRules.cs" />
+	<Compile Include="..\Core\KingdomSecondCityPublicationRules.cs" />
     <Compile Include="..\Core\KingdomBrinkRules.cs" />
     <Compile Include="..\Core\KingdomGovernanceRules.cs" />
     <Compile Include="..\Core\KingdomLedger.cs" />

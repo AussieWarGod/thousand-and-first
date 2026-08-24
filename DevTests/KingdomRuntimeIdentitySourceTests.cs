@@ -72,7 +72,7 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void LaterFoundingFreezesSiteAndPendingTupleBeforeMonotoneTradeExpansion()
+		public void LaterFoundingFreezesSiteAndPendingTupleBeforePairedTopologyCommit()
 		{
 			string founding = Source(Path.Combine("Core", "KingdomFoundingTransaction.cs"));
 			int publish = founding.IndexOf("private static void PublishSecondCore",
@@ -95,18 +95,198 @@ namespace ThousandAndFirst.Tests
 			int settlement = founding.IndexOf(
 				"Site.SetZoneProperty(SecondIdentitySettlementProperty", transaction,
 				StringComparison.Ordinal);
+			int prepare = founding.IndexOf("TryPrepareSecondCityTopology", freeze,
+				StringComparison.Ordinal);
 			int pending = founding.IndexOf("TryStagePendingSettlementIdentity", settlement,
 				StringComparison.Ordinal);
-			int expand = founding.IndexOf("TryExpandTradeIdentity", pending,
-				StringComparison.Ordinal);
 			int irrevocable = founding.IndexOf(
-				"Basin.PendingPhase = KingdomFoundingPhase.PublicationCommitted", expand,
+				"Basin.PendingPhase = KingdomFoundingPhase.PublicationCommitted", pending,
+				StringComparison.Ordinal);
+			int commit = founding.IndexOf("TryCommitSecondCityTopology", irrevocable,
 				StringComparison.Ordinal);
 			Assert.Greater(transaction, freeze);
 			Assert.Greater(settlement, transaction);
+			Assert.Greater(prepare, freeze);
+			Assert.Less(prepare, transaction);
 			Assert.Greater(pending, settlement);
-			Assert.Greater(expand, pending);
-			Assert.Greater(irrevocable, expand);
+			Assert.Greater(irrevocable, pending);
+			Assert.Greater(commit, irrevocable);
+		}
+
+		[Test]
+		public void SecondCityCutBarriersPrecedeWaterAndTopologyMutations()
+		{
+			string founding = Source(Path.Combine("Core", "KingdomFoundingTransaction.cs"));
+			int begin = founding.IndexOf("private static KingdomFoundingResult Begin(",
+				StringComparison.Ordinal);
+			int prepare = founding.IndexOf("TryPrepareSecondCityTopology", begin,
+				StringComparison.Ordinal);
+			int receipt = founding.IndexOf("Basin.PendingKind = Kind", prepare,
+				StringComparison.Ordinal);
+			int stageSite = founding.IndexOf("StageSiteReservation", prepare,
+				StringComparison.Ordinal);
+			int acquireGlobal = founding.IndexOf("AcquireGlobalReservation", stageSite,
+				StringComparison.Ordinal);
+			int waterBarrier = founding.IndexOf(
+				"Basin.PendingPhase = KingdomFoundingPhase.WaterCommitted", acquireGlobal,
+				StringComparison.Ordinal);
+			int drain = founding.IndexOf("KingdomLiquids.Drain", waterBarrier,
+				StringComparison.Ordinal);
+			Assert.Greater(prepare, begin);
+			Assert.Greater(receipt, prepare);
+			Assert.Greater(stageSite, prepare);
+			Assert.Greater(acquireGlobal, stageSite);
+			Assert.Greater(waterBarrier, acquireGlobal);
+			Assert.Greater(drain, waterBarrier);
+			StringAssert.Contains("TryFinishWaterCommit", founding);
+		}
+
+		[Test]
+		public void DirectSecondRouteStagesSiteBeforeGlobalAndReacquiresExactCleanupCut()
+		{
+			string founding = Source(Path.Combine("Core", "KingdomFoundingTransaction.cs"));
+			int direct = founding.IndexOf(
+				"private static bool TryFoundSecondWithoutWaterCore", StringComparison.Ordinal);
+			int next = founding.IndexOf("internal static bool TryFoundFirstWithoutWater",
+				direct, StringComparison.Ordinal);
+			string body = founding.Substring(direct, next - direct);
+			int readExisting = body.IndexOf("TryReadSiteReservation", StringComparison.Ordinal);
+			int mint = body.IndexOf("authority = NewAuthority", readExisting,
+				StringComparison.Ordinal);
+			int stage = body.IndexOf("StageSiteReservation", mint, StringComparison.Ordinal);
+			int acquire = body.IndexOf("AcquireGlobalReservation", stage,
+				StringComparison.Ordinal);
+			Assert.Greater(readExisting, 0);
+			Assert.Greater(mint, readExisting);
+			Assert.Greater(stage, mint);
+			Assert.Greater(acquire, stage);
+			Assert.IsFalse(body.Substring(0, stage).Contains("AcquireGlobalReservation"));
+			Assert.IsFalse(body.Contains(
+				"hasSite && realm.GetStringProperty(RealmReservationProperty"));
+			StringAssert.Contains("this exact site receipt can retry", body);
+
+			int cleanup = founding.IndexOf("private static bool ClearExactReservationSet",
+				StringComparison.Ordinal);
+			int cleanupEnd = founding.IndexOf("internal static bool HasSiteReservation",
+				cleanup, StringComparison.Ordinal);
+			string cleanupBody = founding.Substring(cleanup, cleanupEnd - cleanup);
+			int releaseGlobal = cleanupBody.IndexOf("ReleaseGlobalReservation",
+				StringComparison.Ordinal);
+			int releaseSite = cleanupBody.IndexOf("ReleaseSiteReservation",
+				StringComparison.Ordinal);
+			Assert.Greater(releaseGlobal, 0);
+			Assert.Greater(releaseSite, releaseGlobal);
+		}
+
+		[Test]
+		public void StaleDirectContenderClearsSiteAndGlobalAfterAnotherCityWins()
+		{
+			Assert.IsFalse(KingdomFoundingTransactionRules.SecondRecoveryCanProject(
+				2, 2, AwayIsNull: false, TargetIsExactSeat: false,
+				TargetIsExactAway: false, AlreadyPublished: false));
+			string founding = Source(Path.Combine("Core", "KingdomFoundingTransaction.cs"));
+			int direct = founding.IndexOf(
+				"private static bool TryFoundSecondWithoutWaterCore", StringComparison.Ordinal);
+			int next = founding.IndexOf("internal static bool TryFoundFirstWithoutWater",
+				direct, StringComparison.Ordinal);
+			string body = founding.Substring(direct, next - direct);
+			int lostSeat = body.IndexOf("SecondRecoveryCanProject", StringComparison.Ordinal);
+			int redo = body.IndexOf("DirectSecondHasForwardRedo", lostSeat,
+				StringComparison.Ordinal);
+			int noRedo = body.IndexOf("if (!forwardRedo)", redo, StringComparison.Ordinal);
+			int clear = body.IndexOf("ClearExactReservationSet", noRedo,
+				StringComparison.Ordinal);
+			Assert.Greater(redo, lostSeat);
+			Assert.Greater(noRedo, redo);
+			Assert.Greater(clear, noRedo);
+			Assert.IsFalse(body.Substring(lostSeat, clear - lostSeat).Contains("if (!hasSite)"));
+
+			int helper = founding.IndexOf("private static bool DirectSecondHasForwardRedo",
+				StringComparison.Ordinal);
+			int helperEnd = founding.IndexOf("private static bool PublishedSecondAuthorityMatches",
+				helper, StringComparison.Ordinal);
+			string helperBody = founding.Substring(helper, helperEnd - helper);
+			StringAssert.Contains("PendingSettlementAuthority == EncodedAuthority", helperBody);
+			StringAssert.Contains("PublishedSecondAuthorityMatches", helperBody);
+			StringAssert.Contains("System.TradeBook.SettlementIds.Contains(settlementId)",
+				helperBody);
+			StringAssert.Contains("System.CarryBook.SettlementIds.Contains(settlementId)",
+				helperBody);
+		}
+
+		[Test]
+		public void PublishedSecondRetryAlwaysSettlesPairedTopologyAndCompletionProvesAbsence()
+		{
+			string founding = Source(Path.Combine("Core", "KingdomFoundingTransaction.cs"));
+			int publish = founding.IndexOf("private static void PublishSecond(",
+				StringComparison.Ordinal);
+			int core = founding.IndexOf("private static void PublishSecondCore", publish,
+				StringComparison.Ordinal);
+			string body = founding.Substring(publish, core - publish);
+			int conditionalCore = body.IndexOf("if (!published)", StringComparison.Ordinal);
+			int seat = body.LastIndexOf("SeatSecond", StringComparison.Ordinal);
+			int settle = body.IndexOf("TrySettlePendingSettlementIdentity", seat,
+				StringComparison.Ordinal);
+			Assert.Greater(conditionalCore, 0);
+			Assert.Greater(seat, conditionalCore);
+			Assert.Greater(settle, seat);
+			StringAssert.Contains("TryProveSettledSecondCityTopology", founding);
+
+			string system = Source(Path.Combine("Core", "KingdomSystem.cs"));
+			Assert.IsFalse(system.Contains("ClearPendingSettlementIdentity("));
+			StringAssert.Contains("TryAbortPendingSettlementIdentity", system);
+			StringAssert.Contains("TrySettlePendingSettlementIdentity", system);
+		}
+
+		[Test]
+		public void PendingOldCarryCutIsAcceptedBeforeAnyRebindOrQuarantine()
+		{
+			string system = Source(Path.Combine("Core", "KingdomSystem.cs"));
+			int method = system.IndexOf("private bool TryBindDormantLifecycleIdentity",
+				StringComparison.Ordinal);
+			int carry = system.IndexOf("if (CarryBook == null)", method,
+				StringComparison.Ordinal);
+			int acceptExpanded = system.IndexOf("CarryIdentityMatches(carrySettlementIds)",
+				carry, StringComparison.Ordinal);
+			int acceptOldCut = system.IndexOf("KingdomLifecycleRules.CanOwnAuthority(CarryBook)",
+				acceptExpanded, StringComparison.Ordinal);
+			int transitional = system.IndexOf("CarryIdentityMatches()", acceptOldCut,
+				StringComparison.Ordinal);
+			int bind = system.IndexOf("KingdomLifecycleRules.BindCarryIdentity", transitional,
+				StringComparison.Ordinal);
+			Assert.Greater(acceptExpanded, carry);
+			Assert.Greater(acceptOldCut, acceptExpanded);
+			Assert.Greater(transitional, acceptOldCut);
+			Assert.Greater(bind, transitional);
+		}
+
+		[Test]
+		public void SecondRuinRestorationStagesPerObjectTransactionBeforeBuiltStamp()
+		{
+			string founding = Source(Path.Combine("Core", "KingdomFounding.cs"));
+			int method = founding.IndexOf("internal static bool TryRestoreRuinStructures",
+				StringComparison.Ordinal);
+			int marker = founding.IndexOf(
+				"item.SetStringProperty(RuinRestorationTransactionProperty, TransactionId)",
+				method, StringComparison.Ordinal);
+			int built = founding.IndexOf("item.SetIntProperty(\"KingdomBuilt\", 1)", marker,
+				StringComparison.Ordinal);
+			int recount = founding.IndexOf("for (int i = 0; i < objects.Count; i++)",
+				built, StringComparison.Ordinal);
+			Assert.Greater(marker, method);
+			Assert.Greater(built, marker);
+			Assert.Greater(recount, built);
+			StringAssert.Contains("TryRestoreRuinStructures(foundingZone, TransactionID",
+				founding);
+			StringAssert.Contains(
+				"if (eligible && item.GetIntProperty(\"KingdomBuilt\") == 1) continue;",
+				founding);
+
+			string transaction = Source(Path.Combine("Core",
+				"KingdomFoundingTransaction.cs"));
+			StringAssert.Contains("KingdomFounding.TryRestoreRuinStructures(Site,",
+				transaction);
+			StringAssert.Contains("realm != currentSystem.RealmId", transaction);
 		}
 
 		[Test]
@@ -117,7 +297,7 @@ namespace ThousandAndFirst.Tests
 				StringComparison.Ordinal);
 			string body = system.Substring(normalize);
 			StringAssert.Contains("KingdomTradeRules.BindExactIdentity", body);
-			StringAssert.Contains("KingdomTradeRules.ExpandExactIdentity", body);
+			StringAssert.Contains("PendingSettlementIdentityAbsent", body);
 			StringAssert.Contains("TryAuthenticateExactExileClosedTick", body);
 			StringAssert.Contains("TradeBook.Archives.Count > 0", body);
 			StringAssert.Contains("QuarantineBook(TradeBook", body);
@@ -130,6 +310,7 @@ namespace ThousandAndFirst.Tests
 			Assert.IsFalse(body.Contains("LegacyCharterId("));
 			Assert.IsFalse(body.Contains("LegacyManifestId("));
 			Assert.IsFalse(body.Contains("LegacySettlementId("));
+			Assert.IsFalse(body.Contains("ExpandExactIdentity"));
 			Assert.IsFalse(body.Contains("ActiveDealKeys.Clear()"));
 			Assert.IsFalse(body.Contains("Manifest = null"));
 			Assert.IsFalse(system.Contains("TryGetExactExileClosedTick"));
@@ -882,9 +1063,34 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("public KingdomLifecycleBook LifecycleBook", settlement);
 			StringAssert.Contains("public KingdomCarryBook CarryBook", system);
 			StringAssert.Contains("BindSettlementIdentity(LifecycleBook", system);
-			StringAssert.Contains("CarryBook.RealmId = RealmId", system);
+			StringAssert.DoesNotContain("ExistingIds: null", system);
+			StringAssert.Contains("BindCarryIdentity(CarryBook, RealmId", system);
+			StringAssert.DoesNotContain("CarryBook.RealmId = RealmId", system);
 			StringAssert.Contains("TryCloneCarry(Archive.CarryBook", system);
 			StringAssert.Contains("CarryBook = carry", system);
+		}
+
+		[Test]
+		public void FirstFoundingCarryIdentityIsBoundAtomicallyBeforeAuthorityCheck()
+		{
+			string system = Source(Path.Combine("Core", "KingdomSystem.cs"));
+			int method = system.IndexOf("internal bool TryBindFirstFoundingIdentity",
+				StringComparison.Ordinal);
+			int next = system.IndexOf("internal bool FirstIdentityMatches", method,
+				StringComparison.Ordinal);
+			Assert.Greater(method, -1);
+			Assert.Greater(next, method);
+			string body = system.Substring(method, next - method);
+			int prepare = body.IndexOf("TryPrepareFirstIdentityBooks(LifecycleBook",
+				StringComparison.Ordinal);
+			int publishRealm = body.IndexOf("RealmId = realm", StringComparison.Ordinal);
+			int publishLifecycle = body.IndexOf("LifecycleBook = preparedLifecycle",
+				StringComparison.Ordinal);
+			Assert.Greater(prepare, -1);
+			Assert.Greater(publishRealm, prepare);
+			Assert.Greater(publishLifecycle, publishRealm);
+			StringAssert.DoesNotContain("CarryBook.RealmId = RealmId", body);
+			StringAssert.Contains("CarryBook = preparedCarry", body);
 		}
 
 		[Test]

@@ -1198,6 +1198,15 @@ namespace ThousandAndFirst
 			}
 			if (FirstIdentityStateEmpty())
 			{
+				KingdomLifecycleBook preparedLifecycle;
+				KingdomCarryBook preparedCarry;
+				if (!KingdomLifecycleRules.TryPrepareFirstIdentityBooks(LifecycleBook,
+					CarryBook, realm, settlement, out preparedLifecycle,
+					out preparedCarry))
+				{
+					Failure = "Dormant lifecycle or carry evidence is not pristine.";
+					return false;
+				}
 				RealmId = realm;
 				RealmIdentityVersion = KingdomIdentityRules.RulesVersion;
 				RealmIdentityOrigin = KingdomIdentityOrigin.FoundingTransaction;
@@ -1216,10 +1225,22 @@ namespace ThousandAndFirst
 				SettlementIdentityFoundedTick = 0L;
 				SettlementIdentityFirstClaimedZone = ZoneId;
 				SettlementIdentityLegacyId = null;
+				LifecycleBook = preparedLifecycle;
+				CarryBook = preparedCarry;
 			}
-			if (TryBindDormantLifecycleIdentity(out Failure) &&
-				FirstIdentityMatches(TransactionId, ZoneId)) return true;
-			QuarantineIdentity("first-founding immutable identity is partial, replaced, or belongs to another transaction");
+			if (TryBindDormantLifecycleIdentity(out Failure))
+			{
+				if (FirstIdentityMatches(TransactionId, ZoneId)) return true;
+				// An exact pending tuple owned by another transaction is not corruption. Refuse
+				// without poisoning the only authority that can resume it.
+				if (FirstIdentityMatches(RealmIdentityTransactionId,
+					RealmIdentityFirstClaimedZone))
+				{
+					Failure = "The immutable first founding belongs to another transaction or site.";
+					return false;
+				}
+			}
+			QuarantineIdentity("first-founding immutable identity is partial or replaced");
 			Failure = IdentityFault;
 			return false;
 		}
@@ -1255,7 +1276,8 @@ namespace ThousandAndFirst
 			SettlementId = null;
 			Failure = null;
 			List<string> current;
-			if (!TryExactSettlementIds(RequirePublishedClaims: true, out current, out Failure))
+			if (!TryRetainedSettlementIds(RequirePublishedClaims: true,
+				IncludePending: false, out current, out Failure))
 				return false;
 			KingdomIdentityFault fault = KingdomIdentityFault.None;
 			if (string.IsNullOrEmpty(ZoneId) || ZoneId.Length > 512 ||
@@ -1269,6 +1291,14 @@ namespace ThousandAndFirst
 			}
 			if (current.Contains(SettlementId))
 			{
+				bool exactPendingPublication = PendingSettlementTupleValid(out string _) &&
+					PendingSettlementId == SettlementId &&
+					PendingSettlementTransactionId == TransactionId &&
+					PendingSettlementZoneId == ZoneId &&
+					!string.IsNullOrEmpty(PendingSettlementAuthority) &&
+					(SeatedLaterIdentityMatches(SettlementId, TransactionId, ZoneId) ||
+					 LaterSettlementIdentityMatches(Away, SettlementId, TransactionId, ZoneId));
+				if (exactPendingPublication) return true;
 				Failure = "The later founding transaction collides with an existing city identity.";
 				SettlementId = null;
 				return false;
@@ -1276,9 +1306,30 @@ namespace ThousandAndFirst
 			return true;
 		}
 
+		/// <summary>Returns every other retained lifecycle identity that a binding must scan.
+		/// Exact ids are de-duplicated because archived mirrors may name the same retained city.</summary>
+		internal List<string> LifecycleCollisionIds(bool IncludeSeat, bool IncludeAway)
+		{
+			List<string> ids = new List<string>();
+			HashSet<string> seen = new HashSet<string>(StringComparer.Ordinal);
+			if (IncludeSeat) AddLifecycleCollisionId(ids, seen, City?.SettlementId);
+			if (IncludeAway) AddLifecycleCollisionId(ids, seen, Away?.City?.SettlementId);
+			AddLifecycleCollisionId(ids, seen, Seceded?.City?.SettlementId);
+			AddLifecycleCollisionId(ids, seen, ExiledSeat?.City?.SettlementId);
+			AddLifecycleCollisionId(ids, seen, ExiledAway?.City?.SettlementId);
+			ids.Sort(StringComparer.Ordinal);
+			return ids;
+		}
+
+		private static void AddLifecycleCollisionId(List<string> Ids,
+			HashSet<string> Seen, string Id)
+		{
+			if (!string.IsNullOrEmpty(Id) && Seen.Add(Id)) Ids.Add(Id);
+		}
+
 		internal static bool TryBindSettlementIdentity(KingdomSettlement Settlement,
 			string SettlementId, string TransactionId, string ZoneId, long FoundedTick,
-			out string Failure)
+			ICollection<string> ExistingSettlementIds, out string Failure)
 		{
 			Failure = null;
 			if (Settlement == null)
@@ -1300,7 +1351,7 @@ namespace ThousandAndFirst
 			KingdomLifecycleRules.Normalize(Settlement.LifecycleBook);
 			if (KingdomLifecycleRules.BindSettlementIdentity(Settlement.LifecycleBook,
 				SettlementId, LegacyMigration: false, MigrationKey: null,
-				ExistingIds: null)) return true;
+				ExistingIds: ExistingSettlementIds)) return true;
 			Settlement.LifecycleBook.Quarantined = true;
 			Settlement.LifecycleBook.Fault =
 				"lifecycle book could not bind the exact new settlement identity";
@@ -1419,14 +1470,60 @@ namespace ThousandAndFirst
 			return true;
 		}
 
+		/// <summary>Returns the monotone authority topology: active cities, any retained seceded
+		/// city, and optionally the exact pending later-city tuple.</summary>
+		internal bool TryRetainedSettlementIds(bool RequirePublishedClaims,
+			bool IncludePending, out List<string> SettlementIds, out string Failure)
+		{
+			if (!TryExactSettlementIds(RequirePublishedClaims, out SettlementIds,
+				out Failure)) return false;
+			KingdomIdentityFault fault = KingdomIdentityFault.None;
+			if (Seceded != null)
+			{
+				if (!SettlementIdentityMatches(Seceded.City,
+					Seceded.SettlementIdentityVersion, Seceded.SettlementIdentityOrigin,
+					Seceded.SettlementIdentityTransactionId,
+					Seceded.SettlementIdentityFoundedTick,
+					Seceded.SettlementIdentityFirstClaimedZone, RequirePublishedClaims,
+					Seceded.ClaimedZones, out fault) ||
+					!LifecycleIdentityMatches(Seceded.LifecycleBook,
+						Seceded.City?.SettlementId))
+				{
+					Failure = "The retained seceded city identity cannot be reproved (" +
+						fault + ").";
+					return false;
+				}
+				SettlementIds.Add(Seceded.City.SettlementId);
+			}
+			if (IncludePending && (!string.IsNullOrEmpty(PendingSettlementId) ||
+				!string.IsNullOrEmpty(PendingSettlementTransactionId) ||
+				!string.IsNullOrEmpty(PendingSettlementZoneId) ||
+				!string.IsNullOrEmpty(PendingSettlementAuthority)))
+			{
+				if (!PendingSettlementTupleValid(out Failure)) return false;
+				if (!SettlementIds.Contains(PendingSettlementId))
+					SettlementIds.Add(PendingSettlementId);
+			}
+			if (!KingdomIdentityRules.ValidateRealmTopology(RealmId, SettlementIds,
+				out fault))
+			{
+				Failure = "The retained city identity set is invalid (" + fault + ").";
+				return false;
+			}
+			SettlementIds.Sort(StringComparer.Ordinal);
+			return true;
+		}
+
 		private bool TryBindDormantLifecycleIdentity(out string Failure)
 		{
 			Failure = null;
 			if (LifecycleBook == null) LifecycleBook = new KingdomLifecycleBook();
 			KingdomLifecycleRules.Normalize(LifecycleBook);
+			List<string> otherLifecycleIds = LifecycleCollisionIds(
+				IncludeSeat: false, IncludeAway: true);
 			if (!KingdomLifecycleRules.BindSettlementIdentity(LifecycleBook,
 				City?.SettlementId, LegacyMigration: false, MigrationKey: null,
-				ExistingIds: null))
+				ExistingIds: otherLifecycleIds))
 			{
 				LifecycleBook.Quarantined = true;
 				LifecycleBook.Fault =
@@ -1436,15 +1533,27 @@ namespace ThousandAndFirst
 			}
 			if (CarryBook == null) CarryBook = new KingdomCarryBook();
 			KingdomLifecycleRules.Normalize(CarryBook);
-			if (string.IsNullOrEmpty(CarryBook.RealmId) && !CarryBook.LegacyIdentity &&
-				!CarryBook.Quarantined && CarryBook.Open == null &&
-				(CarryBook.RecentProofs == null || CarryBook.RecentProofs.Count == 0) &&
-				CarryBook.NextSequence == 1L && CarryBook.RetiredThrough == 0L)
+			List<string> carrySettlementIds;
+			if (!TryExpectedCarryTopology(out carrySettlementIds, out Failure))
 			{
-				CarryBook.RealmId = RealmId;
+				CarryBook.Quarantined = true;
+				CarryBook.Fault =
+					"carry book could not bind exact immutable realm topology";
+				Failure = Failure ?? CarryBook.Fault;
+				return false;
 			}
-			KingdomLifecycleRules.Normalize(CarryBook);
-			if (CarryIdentityMatches()) return true;
+			// Pending publication permits exactly two cut states: old retained topology or
+			// expanded topology. Never ask BindCarryIdentity to reinterpret an already-bound
+			// old book as corruption before the paired coordinator can recover forward.
+			if (CarryIdentityMatches(carrySettlementIds)) return true;
+			if (KingdomLifecycleRules.CanOwnAuthority(CarryBook) &&
+				CarryIdentityMatches()) return true;
+			if (KingdomLifecycleRules.BindCarryIdentity(CarryBook, RealmId,
+				carrySettlementIds, LegacyMigration: false, MigrationKey: null))
+			{
+				KingdomLifecycleRules.Normalize(CarryBook);
+				if (CarryIdentityMatches(carrySettlementIds)) return true;
+			}
 			CarryBook.Quarantined = true;
 			CarryBook.Fault = "carry book could not bind exact immutable realm identity";
 			Failure = CarryBook.Fault;
@@ -1462,52 +1571,147 @@ namespace ThousandAndFirst
 
 		private bool CarryIdentityMatches()
 		{
-			return CarryBook != null && !CarryBook.LegacyIdentity &&
-				string.Equals(CarryBook.RealmId, RealmId, StringComparison.Ordinal) &&
-				KingdomLifecycleRules.CanOwnAuthority(CarryBook);
+			List<string> expected;
+			string failure;
+			if (!TryExpectedCarryTopology(out expected, out failure)) return false;
+			if (CarryIdentityMatches(expected)) return true;
+			// A proved pending later-city tuple is a durable redo barrier. Save cuts may
+			// therefore retain either the old exact Carry set or the expanded exact set;
+			// no third topology is accepted.
+			if (!string.IsNullOrEmpty(PendingSettlementId) &&
+				expected.Remove(PendingSettlementId))
+			{
+				KingdomIdentityFault fault;
+				return KingdomIdentityRules.ValidateRealmTopology(RealmId, expected,
+					out fault) && CarryIdentityMatches(expected);
+			}
+			return false;
+		}
+
+		private bool CarryIdentityMatches(IList<string> Expected)
+		{
+			if (CarryBook == null || CarryBook.LegacyIdentity || Expected == null ||
+				CarryBook.SettlementIds == null ||
+				CarryBook.SettlementIds.Count != Expected.Count ||
+				!string.Equals(CarryBook.RealmId, RealmId, StringComparison.Ordinal) ||
+				!KingdomLifecycleRules.CanOwnAuthority(CarryBook)) return false;
+			for (int i = 0; i < Expected.Count; i++)
+				if (!string.Equals(CarryBook.SettlementIds[i], Expected[i],
+					StringComparison.Ordinal)) return false;
+			return true;
+		}
+
+		private bool TryExpectedCarryTopology(out List<string> SettlementIds,
+			out string Failure)
+		{
+			SettlementIds = new List<string>();
+			Failure = null;
+			AddLifecycleCollisionId(SettlementIds,
+				new HashSet<string>(StringComparer.Ordinal), City?.SettlementId);
+			HashSet<string> seen = new HashSet<string>(SettlementIds,
+				StringComparer.Ordinal);
+			AddLifecycleCollisionId(SettlementIds, seen, Away?.City?.SettlementId);
+			AddLifecycleCollisionId(SettlementIds, seen, Seceded?.City?.SettlementId);
+			bool hasPending = !string.IsNullOrEmpty(PendingSettlementId) ||
+				!string.IsNullOrEmpty(PendingSettlementTransactionId) ||
+				!string.IsNullOrEmpty(PendingSettlementZoneId) ||
+				!string.IsNullOrEmpty(PendingSettlementAuthority);
+			if (hasPending)
+			{
+				if (!PendingSettlementTupleValid(out Failure)) return false;
+				AddLifecycleCollisionId(SettlementIds, seen, PendingSettlementId);
+			}
+			KingdomIdentityFault fault;
+			if (!KingdomIdentityRules.ValidateRealmTopology(RealmId, SettlementIds,
+				out fault))
+			{
+				Failure = "The retained carry topology is invalid (" + fault + ").";
+				return false;
+			}
+			SettlementIds.Sort(StringComparer.Ordinal);
+			return true;
 		}
 
 		internal bool TryBindTradeIdentity(out string Failure)
 		{
 			List<string> settlements;
-			if (!TryExactSettlementIds(RequirePublishedClaims: true, out settlements,
-				out Failure)) return false;
+			if (!TryRetainedSettlementIds(RequirePublishedClaims: true,
+				IncludePending: true, out settlements, out Failure)) return false;
 			if (TradeBook == null) TradeBook = new KingdomTradeBook();
 			KingdomTradeRules.Normalize(TradeBook);
 			return KingdomTradeRules.BindExactIdentity(TradeBook, RealmId, settlements,
 				out Failure);
 		}
 
-		/// <summary>Preflights and atomically expands Trade's exact city topology before a later
-		/// city publishes any permanent marker or occupies Away.</summary>
-		internal bool TryExpandTradeIdentity(string NewSettlementId, out string Failure)
+		/// <summary>Freezes paired detached Trade and Carry replacements. No live authority
+		/// changes until the basin has published its forward-recovery barrier.</summary>
+		internal bool TryPrepareSecondCityTopology(string NewSettlementId,
+			out KingdomSecondCityTopologyPlan Plan, out string Failure)
+		{
+			Plan = null;
+			bool hasPending = !PendingSettlementIdentityAbsent();
+			if (hasPending && (!PendingSettlementTupleValid(out Failure) ||
+				PendingSettlementId != NewSettlementId))
+			{
+				Failure = Failure ??
+					"Another pending city owns the topology publication barrier.";
+				return false;
+			}
+			if (!TryRetainedSettlementIds(RequirePublishedClaims: true,
+				IncludePending: false, out List<string> current, out Failure)) return false;
+			return KingdomSecondCityPublicationRules.TryPrepare(RealmId, current,
+				NewSettlementId, TradeBook, CarryBook, out Plan, out Failure);
+		}
+
+		/// <summary>Publishes a prepared paired replacement after PublicationCommitted.
+		/// Exact retries retain both original references and bytes.</summary>
+		internal bool TryCommitSecondCityTopology(KingdomSecondCityTopologyPlan Plan,
+			string TransactionId, string ZoneId, string Authority, out string Failure)
+		{
+			Failure = null;
+			if (Plan == null || !PendingSettlementTupleMatches(TransactionId, ZoneId,
+				Authority) || Plan.SettlementId != PendingSettlementId)
+			{
+				Failure = "The paired topology plan does not match the pending city tuple.";
+				return false;
+			}
+			return KingdomSecondCityPublicationRules.TryCommit(Plan, ref TradeBook,
+				ref CarryBook, out Failure);
+		}
+
+		internal bool TryProveSettledSecondCityTopology(out string Failure)
+		{
+			Failure = null;
+			if (!PendingSettlementIdentityAbsent())
+			{
+				Failure = "The later-city pending tuple has not settled.";
+				return false;
+			}
+			if (!TryRetainedSettlementIds(RequirePublishedClaims: true,
+				IncludePending: false, out List<string> published, out Failure)) return false;
+			if (KingdomSecondCityPublicationRules.ExactTopology(published, RealmId,
+				TradeBook, CarryBook)) return true;
+			Failure = "Trade and Carry do not name the exact published city topology.";
+			return false;
+		}
+
+		/// <summary>Verifies that published Carry authority names the complete live city set.</summary>
+		internal bool TryBindCarryIdentity(out string Failure)
 		{
 			List<string> settlements;
-			if (!TryExactSettlementIds(RequirePublishedClaims: true, out settlements,
-				out Failure)) return false;
-			if (!KingdomIdentityRules.IsSettlementId(NewSettlementId) ||
-				settlements.Contains(NewSettlementId) ||
-				settlements.Count >= KingdomIdentityRules.MaxSettlements)
+			if (!TryRetainedSettlementIds(RequirePublishedClaims: true,
+				IncludePending: true, out settlements, out Failure)) return false;
+			if (CarryBook == null)
 			{
-				Failure = "The proposed city cannot extend the exact settlement set.";
+				Failure = "Carry identity is absent.";
 				return false;
 			}
-			settlements.Add(NewSettlementId);
-			settlements.Sort(StringComparer.Ordinal);
-			KingdomIdentityFault fault;
-			if (!KingdomIdentityRules.ValidateRealmTopology(RealmId, settlements, out fault))
-			{
-				Failure = "The proposed complete settlement set is invalid (" + fault + ").";
-				return false;
-			}
-			if (TradeBook == null)
-			{
-				Failure = "Trade identity has not been bound to the first city.";
-				return false;
-			}
-			KingdomTradeRules.Normalize(TradeBook);
-			return KingdomTradeRules.ExpandExactIdentity(TradeBook, RealmId, settlements,
-				out Failure);
+			KingdomLifecycleRules.Normalize(CarryBook);
+			if (KingdomLifecycleRules.BindCarryIdentity(CarryBook, RealmId, settlements,
+				LegacyMigration: false, MigrationKey: null) && CarryIdentityMatches())
+				return true;
+			Failure = "Carry identity does not match the complete published city set.";
+			return false;
 		}
 
 		internal bool TryStagePendingSettlementIdentity(string SettlementId,
@@ -1516,10 +1720,15 @@ namespace ThousandAndFirst
 			Failure = null;
 			string expected;
 			KingdomIdentityFault fault;
+			KingdomFoundingAuthority parsed;
 			if (!KingdomIdentityRules.TryMintSettlement(RealmId, TransactionId,
 					out expected, out fault) || expected != SettlementId ||
 				string.IsNullOrEmpty(ZoneId) || ZoneId.Length > 512 ||
-				string.IsNullOrEmpty(Authority) || Authority.Length > 4096)
+				string.IsNullOrEmpty(Authority) || Authority.Length > 4096 ||
+				!KingdomFoundingTransactionRules.TryParseAuthority(Authority, out parsed) ||
+				parsed.Kind != KingdomFoundingKind.SecondCity ||
+				parsed.TransactionID != TransactionId || parsed.ZoneID != ZoneId ||
+				parsed.RealmFaction != KingdomFactionName)
 			{
 				Failure = "The pending city identity tuple is malformed.";
 				return false;
@@ -1543,21 +1752,76 @@ namespace ThousandAndFirst
 			return false;
 		}
 
-		internal bool ClearPendingSettlementIdentity(string TransactionId,
+		internal bool TryAbortPendingSettlementIdentity(string TransactionId,
+			string ZoneId, string Authority, out string Failure)
+		{
+			Failure = null;
+			if (PendingSettlementIdentityAbsent()) return true;
+			if (!PendingSettlementTupleMatches(TransactionId, ZoneId, Authority))
+			{
+				Failure = "The pending city tuple does not match abort authority.";
+				return false;
+			}
+			if (!TryRetainedSettlementIds(RequirePublishedClaims: true,
+				IncludePending: false, out List<string> published, out Failure) ||
+				!KingdomSecondCityPublicationRules.CanAbort(published,
+					PendingSettlementId, RealmId, TradeBook, CarryBook))
+			{
+				Failure = Failure ??
+					"Expanded or published city topology can only recover forward.";
+				return false;
+			}
+			ClearPendingSettlementIdentityFields();
+			return PendingSettlementIdentityAbsent();
+		}
+
+		internal bool TrySettlePendingSettlementIdentity(string TransactionId,
+			string ZoneId, string Authority, out string Failure)
+		{
+			Failure = null;
+			if (PendingSettlementIdentityAbsent())
+				return TryProveSettledSecondCityTopology(out Failure);
+			if (!PendingSettlementTupleMatches(TransactionId, ZoneId, Authority))
+			{
+				Failure = "The pending city tuple does not match settlement authority.";
+				return false;
+			}
+			if (!TryRetainedSettlementIds(RequirePublishedClaims: true,
+				IncludePending: false, out List<string> published, out Failure) ||
+				!KingdomSecondCityPublicationRules.CanSettle(published,
+					PendingSettlementId, RealmId, TradeBook, CarryBook))
+			{
+				Failure = Failure ??
+					"Published city, Trade, and Carry do not prove one exact topology.";
+				return false;
+			}
+			ClearPendingSettlementIdentityFields();
+			return TryProveSettledSecondCityTopology(out Failure);
+		}
+
+		private bool PendingSettlementTupleMatches(string TransactionId,
 			string ZoneId, string Authority)
 		{
-			if (string.IsNullOrEmpty(PendingSettlementId) &&
+			return PendingSettlementTupleValid(out string _) &&
+				PendingSettlementTransactionId == TransactionId &&
+				PendingSettlementZoneId == ZoneId &&
+				PendingSettlementAuthority == Authority;
+		}
+
+		private bool PendingSettlementIdentityAbsent()
+		{
+			return string.IsNullOrEmpty(PendingSettlementId) &&
 				string.IsNullOrEmpty(PendingSettlementTransactionId) &&
 				string.IsNullOrEmpty(PendingSettlementZoneId) &&
-				string.IsNullOrEmpty(PendingSettlementAuthority)) return true;
-			if (PendingSettlementTransactionId != TransactionId ||
-				PendingSettlementZoneId != ZoneId ||
-				PendingSettlementAuthority != Authority) return false;
+				string.IsNullOrEmpty(PendingSettlementAuthority);
+		}
+
+		private void ClearPendingSettlementIdentityFields()
+		{
 			PendingSettlementId = null;
 			PendingSettlementTransactionId = null;
 			PendingSettlementZoneId = null;
 			PendingSettlementAuthority = null;
-			return true;
 		}
 
 		private bool SettlementIdentityMatches(Simulation.City.KingdomCityBook Book,
@@ -1793,12 +2057,20 @@ namespace ThousandAndFirst
 				Refusal = "The realm's exact history cannot be archived: " + archiveFailure + ".";
 				return false;
 			}
+			List<string> authoritySettlements;
+			if (!TryRetainedSettlementIds(RequirePublishedClaims: true,
+				IncludePending: false, out authoritySettlements, out archiveFailure))
+			{
+				Refusal = "The realm's retained authority topology cannot be archived: " +
+					archiveFailure + ".";
+				return false;
+			}
 			// A save may cut after Trade atomically unbound the realm but before Core published its
 			// archive. Authenticate that exact receipt first and reuse its original close tick; the
 			// current wall clock is never substitute authority on retry.
 			if (TradeBook != null && !TradeBook.IdentityBound &&
 				!KingdomTradeRules.TryAuthenticateExactExileClosedTick(TradeBook, RealmId,
-					exactSettlements, out proposedTick, out archiveFailure))
+					authoritySettlements, out proposedTick, out archiveFailure))
 			{
 				Refusal = "The settled Trade exile receipt cannot be authenticated: " +
 					archiveFailure + ".";
@@ -1825,7 +2097,7 @@ namespace ThousandAndFirst
 			// the entire Core/Trade graph unchanged, or atomically replaces only TradeBook with
 			// the exact old-realm receipt. No Chronicle callback or exile mirror exists before it.
 			if (!KingdomTrade.TryOnExile(this, proposedTick, archive.RealmId,
-				exactSettlements, out long settledTick, out archiveFailure))
+				authoritySettlements, out long settledTick, out archiveFailure))
 			{
 				Refusal = "Trade could not close the exact realm; no realm state was changed: " +
 					archiveFailure;
@@ -1833,7 +2105,7 @@ namespace ThousandAndFirst
 			}
 			if (settledTick < 0L || (TradeBook == null || TradeBook.IdentityBound) ||
 				!KingdomTradeRules.TryAuthenticateExactExileClosedTick(TradeBook, archive.RealmId,
-					exactSettlements, out long provedTick, out archiveFailure) ||
+					authoritySettlements, out long provedTick, out archiveFailure) ||
 				provedTick != settledTick || !archive.CurrentGraphMatches(this, out archiveFailure) ||
 				!TryExactSettlementIds(RequirePublishedClaims: true,
 					out List<string> postTradeSettlements, out archiveFailure) ||
@@ -5231,9 +5503,11 @@ namespace ThousandAndFirst
 			{
 				if (Away.LifecycleBook == null) Away.LifecycleBook = new KingdomLifecycleBook();
 				KingdomLifecycleRules.Normalize(Away.LifecycleBook);
+				List<string> seatedLifecycleIds = LifecycleCollisionIds(
+					IncludeSeat: true, IncludeAway: false);
 				if (!KingdomLifecycleRules.BindSettlementIdentity(Away.LifecycleBook,
 					Away.City?.SettlementId, LegacyMigration: false, MigrationKey: null,
-					ExistingIds: null))
+					ExistingIds: seatedLifecycleIds))
 				{
 					Away.LifecycleBook.Quarantined = true;
 					Away.LifecycleBook.Fault =
@@ -5262,11 +5536,10 @@ namespace ThousandAndFirst
 			if (!string.IsNullOrEmpty(PendingSettlementId) &&
 				current.Contains(PendingSettlementId))
 			{
-				// The city publication won the save cut. Settle only after Trade proves the same
-				// complete set; no name or seat role participates.
-				if (!TryBindTradeIdentity(out failure) ||
-					!ClearPendingSettlementIdentity(PendingSettlementTransactionId,
-						PendingSettlementZoneId, PendingSettlementAuthority))
+				// City publication won the save cut. Only explicit forward settlement may erase
+				// the redo tuple; normalization never grows either authority book independently.
+				if (!TrySettlePendingSettlementIdentity(PendingSettlementTransactionId,
+					PendingSettlementZoneId, PendingSettlementAuthority, out failure))
 				{
 					QuarantineIdentity("published pending city could not settle exact topology: " +
 						failure);
@@ -5366,6 +5639,7 @@ namespace ThousandAndFirst
 			if (!any) return true;
 			string expected;
 			KingdomIdentityFault fault;
+			KingdomFoundingAuthority authority;
 			if (string.IsNullOrEmpty(PendingSettlementId) ||
 				string.IsNullOrEmpty(PendingSettlementZoneId) ||
 				PendingSettlementZoneId.Length > 512 ||
@@ -5373,7 +5647,13 @@ namespace ThousandAndFirst
 				PendingSettlementAuthority.Length > 4096 ||
 				!KingdomIdentityRules.TryMintSettlement(RealmId,
 					PendingSettlementTransactionId, out expected, out fault) ||
-				expected != PendingSettlementId)
+				expected != PendingSettlementId ||
+				!KingdomFoundingTransactionRules.TryParseAuthority(
+					PendingSettlementAuthority, out authority) ||
+				authority.Kind != KingdomFoundingKind.SecondCity ||
+				authority.TransactionID != PendingSettlementTransactionId ||
+				authority.ZoneID != PendingSettlementZoneId ||
+				authority.RealmFaction != KingdomFactionName)
 			{
 				Failure = "pending settlement identity evidence is partial or malformed";
 				return false;
@@ -5430,10 +5710,17 @@ namespace ThousandAndFirst
 			if (ExiledRealmArchive != null &&
 				ExiledRealmArchive.Phase != KingdomRealmArchivePhase.None) return;
 			if (!Founded || !string.IsNullOrEmpty(IdentityFault)) return;
+			if (!PendingSettlementIdentityAbsent())
+			{
+				// Paired second-city coordinator owns all pending topology changes. Load-time
+				// normalization may recover Trade receipts, but never expand or contract Trade
+				// alone across a save cut.
+				return;
+			}
 			List<string> exact;
 			string failure;
-			if (!TryExactSettlementIds(RequirePublishedClaims: true, out exact,
-				out failure)) return;
+			if (!TryRetainedSettlementIds(RequirePublishedClaims: true,
+				IncludePending: false, out exact, out failure)) return;
 			if (!TradeBook.IdentityBound)
 			{
 				// Trade may be one callback ahead of Core after atomically closing exile.
@@ -5449,15 +5736,6 @@ namespace ThousandAndFirst
 				}
 				if (!KingdomTradeRules.BindExactIdentity(TradeBook, RealmId, exact,
 					out failure)) return;
-			}
-			if (!string.IsNullOrEmpty(PendingSettlementId) &&
-				!exact.Contains(PendingSettlementId))
-			{
-				exact.Add(PendingSettlementId);
-				exact.Sort(StringComparer.Ordinal);
-				KingdomTradeRules.ExpandExactIdentity(TradeBook, RealmId, exact,
-					out failure);
-				return;
 			}
 			KingdomTradeRules.BindExactIdentity(TradeBook, RealmId, exact,
 				out failure);

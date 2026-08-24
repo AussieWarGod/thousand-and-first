@@ -270,7 +270,7 @@ namespace ThousandAndFirst
 				step = 1;
 			}
 			// A ruin's ground already had its own history; the rite restores it rather than
-			// raising a settlement from nothing. See RestoreRuinStructures for what "restores"
+			// raising a settlement from nothing. See TryRestoreRuinStructures for what "restores"
 			// means in practice, and STANDARDS/VISION on why nothing here is moved or destroyed.
 			if (step < 2)
 			{
@@ -315,7 +315,9 @@ namespace ThousandAndFirst
 			int structuresRestored = faction.GetIntProperty("TAFFoundingRestored");
 			if (step < 3)
 			{
-				structuresRestored = isRuin ? RestoreRuinStructures(foundingZone) : 0;
+				if (isRuin && !TryRestoreRuinStructures(foundingZone, TransactionID,
+					out structuresRestored)) return null;
+				if (!isRuin) structuresRestored = 0;
 				faction.SetProperty("TAFFoundingRestored", structuresRestored);
 				KingdomDish.Ensure(system, Announce: false);
 				if (!system.FirstIdentityMatches(TransactionID, foundingZone.ZoneID))
@@ -1045,33 +1047,68 @@ namespace ThousandAndFirst
 		/// chose this exact ground, once, deliberately, and the chronicle says so.
 		/// </para>
 		/// </summary>
-		/// <param name="Site">The founding zone. Null yields zero.</param>
-		/// <returns>How many structures were credited.</returns>
-		internal static int RestoreRuinStructures(Zone Site)
+		private const string RuinRestorationTransactionProperty =
+			"r_TAF_RuinRestorationTransaction_v1";
+
+		/// <summary>Second-founding restoration receipt. Each eligible object retains the
+		/// exact transaction before KingdomBuilt changes, so interruption can recount and
+		/// finish the same set without losing already-stamped structures.</summary>
+		internal static bool TryRestoreRuinStructures(Zone Site, string TransactionId,
+			out int Restored)
 		{
-			int restored = 0;
-			if (Site == null)
+			Restored = 0;
+			if (Site == null || !KingdomIdentityRules.IsFoundingTransaction(TransactionId))
+				return false;
+			try
 			{
-				return 0;
-			}
-			// A hostile part or a zone mid-teardown degrades to "nothing was already standing"
-			// rather than breaking the rite (STANDARDS 9): the founder still gets their city.
-			KingdomSystem.Guard("ruin restoration", delegate
-			{
-				foreach (GameObject item in Site.GetObjects())
+				List<GameObject> objects = Site.GetObjects();
+				if (objects == null || objects.Count > 65536) return false;
+				for (int i = 0; i < objects.Count; i++)
 				{
-					if (item.GetIntProperty("KingdomBuilt") == 1)
+					GameObject item = objects[i];
+					if (!GameObject.Validate(item)) return false;
+					bool eligible = item.HasPart("Bed") || item.HasPart("Shrine");
+					string owner = item.GetStringProperty(
+						RuinRestorationTransactionProperty, null);
+					if (!string.IsNullOrEmpty(owner) && owner != TransactionId)
 					{
+						// Completed furniture from an older realm is ordinary prebuilt ground for
+						// this rite. Only a foreign incomplete or malformed marker blocks reuse.
+						if (eligible && item.GetIntProperty("KingdomBuilt") == 1) continue;
+						return false;
+					}
+					if (owner == TransactionId)
+					{
+						if (!eligible) return false;
+						if (item.GetIntProperty("KingdomBuilt") != 1)
+							item.SetIntProperty("KingdomBuilt", 1);
+						if (item.GetIntProperty("KingdomBuilt") != 1) return false;
 						continue;
 					}
-					if (item.HasPart("Bed") || item.HasPart("Shrine"))
-					{
-						item.SetIntProperty("KingdomBuilt", 1);
-						restored++;
-					}
+					if (!eligible || item.GetIntProperty("KingdomBuilt") == 1) continue;
+					item.SetStringProperty(RuinRestorationTransactionProperty, TransactionId);
+					if (item.GetStringProperty(RuinRestorationTransactionProperty, null) !=
+						TransactionId) return false;
+					item.SetIntProperty("KingdomBuilt", 1);
+					if (item.GetIntProperty("KingdomBuilt") != 1) return false;
 				}
-			});
-			return restored;
+				for (int i = 0; i < objects.Count; i++)
+				{
+					GameObject item = objects[i];
+					if (item.GetStringProperty(RuinRestorationTransactionProperty, null) !=
+						TransactionId) continue;
+					if (item.GetIntProperty("KingdomBuilt") != 1 ||
+						(!item.HasPart("Bed") && !item.HasPart("Shrine"))) return false;
+					if (Restored == int.MaxValue) return false;
+					Restored++;
+				}
+				return true;
+			}
+			catch
+			{
+				Restored = 0;
+				return false;
+			}
 		}
 
 		/// <summary>

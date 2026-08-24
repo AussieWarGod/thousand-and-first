@@ -421,6 +421,89 @@ function Assert-PrimaryJson {
     return $saveInfo.GameVersion
 }
 
+function Assert-TafSyncedState {
+    param(
+        [Parameter(Mandatory = $true)][string]$SyncedPath,
+        [Parameter(Mandatory = $true)][string]$OriginId
+    )
+
+    $tafRoot = Join-Path $SyncedPath 'ThousandAndFirst'
+    if (-not (Test-Path -LiteralPath $tafRoot)) {
+        return
+    }
+    if (-not (Test-Path -LiteralPath $tafRoot -PathType Container)) {
+        throw "Resume TAF synced state is not a directory: $tafRoot"
+    }
+    $tafEntries = @(Get-ChildItem -LiteralPath $tafRoot -Force | Sort-Object Name)
+    if ($tafEntries.Count -ne 1 -or -not $tafEntries[0].PSIsContainer -or
+        $tafEntries[0].Name -cne 'Stages') {
+        throw "Resume TAF synced state has unexpected entries: $tafRoot"
+    }
+    $stages = $tafEntries[0].FullName
+    $stageEntries = @(Get-ChildItem -LiteralPath $stages -Force | Sort-Object Name)
+    $lockName = ".journal-${OriginId}.lock"
+    $lock = @($stageEntries | Where-Object { $_.Name -ceq $lockName })
+    $seals = @($stageEntries | Where-Object {
+        -not $_.PSIsContainer -and $_.Name -cmatch ('^' +
+            [regex]::Escape($OriginId) + '\.[ab]\.seal$')
+    })
+    if ($lock.Count -ne 1 -or $lock[0].PSIsContainer -or $lock[0].Length -ne 0 -or
+        $seals.Count -lt 1 -or $seals.Count -gt 2 -or
+        $stageEntries.Count -ne (1 + $seals.Count) -or
+        @($stageEntries | Where-Object PSIsContainer).Count -ne 0) {
+        throw "Resume TAF stage journal has partial or unexpected entries: $stages"
+    }
+    $strictUtf8 = [Text.UTF8Encoding]::new($false, $true)
+    foreach ($seal in $seals) {
+        if ($seal.Length -lt 96 -or $seal.Length -gt 1048576) {
+            throw "Resume TAF stage seal exceeds its structural bound: $($seal.FullName)"
+        }
+        try {
+            $text = [IO.File]::ReadAllText($seal.FullName, $strictUtf8)
+        }
+        catch {
+            throw "Resume TAF stage seal is not strict UTF-8: $($seal.FullName)"
+        }
+        if ($text -cnotmatch '(?s)^taf-seal 4\nsha256 ([0-9a-f]{64})\nlength ([0-9]+)\n(.+)$') {
+            throw "Resume TAF stage seal has an invalid envelope: $($seal.FullName)"
+        }
+        $expectedHash = $Matches[1]
+        [long]$declaredLength = 0
+        if (-not [long]::TryParse($Matches[2], [ref]$declaredLength)) {
+            throw "Resume TAF stage seal has an invalid length: $($seal.FullName)"
+        }
+        $body = $Matches[3]
+        if (-not $body.EndsWith("`n", [StringComparison]::Ordinal)) {
+            throw "Resume TAF stage seal has no terminal delimiter: $($seal.FullName)"
+        }
+        $body = $body.Substring(0, $body.Length - 1)
+        $bodyBytes = $strictUtf8.GetBytes($body)
+        if ($declaredLength -ne $bodyBytes.LongLength) {
+            throw "Resume TAF stage seal length differs from its body: $($seal.FullName)"
+        }
+        $sha = [Security.Cryptography.SHA256]::Create()
+        try {
+            $actualHash = ([BitConverter]::ToString($sha.ComputeHash($bodyBytes))).Replace('-', '').ToLowerInvariant()
+        }
+        finally {
+            $sha.Dispose()
+        }
+        if ($actualHash -cne $expectedHash) {
+            throw "Resume TAF stage seal digest differs from its body: $($seal.FullName)"
+        }
+        try {
+            $record = $body | ConvertFrom-Json
+        }
+        catch {
+            throw "Resume TAF stage seal body is invalid JSON: $($seal.FullName)"
+        }
+        if ($record.kind -isnot [string] -or $record.kind -cne 'record' -or
+            $record.origin -isnot [string] -or $record.origin -cne $OriginId) {
+            throw "Resume TAF stage seal belongs to another origin: $($seal.FullName)"
+        }
+    }
+}
+
 function Assert-SmokeProfile {
     param(
         [Parameter(Mandatory = $true)][string]$ProfileRoot,
@@ -496,7 +579,9 @@ function Assert-SmokeProfile {
         }
         $syncedEntries = @(Get-ChildItem -LiteralPath $syncedPath -Force |
             Sort-Object Name | ForEach-Object Name)
-        if (($syncedEntries -join "`n") -ne 'Saves') {
+        $allowedSynced = @('Saves', 'ThousandAndFirst')
+        if (@($syncedEntries | Where-Object { $allowedSynced -cnotcontains $_ }).Count -ne 0 -or
+            $syncedEntries -cnotcontains 'Saves') {
             throw "Resume Synced directory contains an unexpected entry: $syncedPath"
         }
         $saveEntries = @(Get-ChildItem -LiteralPath $syncedSaves -Force)
@@ -504,6 +589,7 @@ function Assert-SmokeProfile {
             throw "Resume needs exactly one isolated save directory: $syncedSaves"
         }
         $saveItem = $saveEntries[0]
+        Assert-TafSyncedState -SyncedPath $syncedPath -OriginId $saveItem.Name
         $saveChildren = @(Get-ChildItem -LiteralPath $saveItem.FullName -Force | Sort-Object Name)
         $saveFiles = @($saveChildren | ForEach-Object Name)
         $requiredSaveFiles = @('Cache.db', 'Primary.json', 'Primary.sav.gz')

@@ -1560,7 +1560,7 @@ namespace ThousandAndFirst
 			{
 				byte[] payload = GrowthPayloadForWrite(Book.Growth);
 				Writer.Write(payload.Length);
-				Writer.Write(payload);
+				Writer.Write(payload, 0, payload.Length);
 			}
 		}
 
@@ -2721,7 +2721,7 @@ namespace ThousandAndFirst
 				throw new InvalidDataException("bounded string length exceeded");
 			byte[] bytes = StrictUtf8.GetBytes(Value);
 			Writer.Write(byteCount);
-			Writer.Write(bytes);
+			Writer.Write(bytes, 0, bytes.Length);
 		}
 
 		private static void WriteOperation(BinaryWriter w, KingdomLifecycleOperation o)

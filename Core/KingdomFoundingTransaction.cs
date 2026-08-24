@@ -604,18 +604,14 @@ namespace ThousandAndFirst
 				Failure = "This ground carries another transaction's city publication.";
 				return false;
 			}
-			if (hasSite && realm.GetStringProperty(RealmReservationProperty, null) !=
-				encodedAuthority)
-			{
-				Failure = "The reserved realm faction was removed or replaced.";
-				return false;
-			}
-			if (encodedAuthority == null || !Lease.Bind(encodedAuthority, null) ||
-				!AcquireGlobalReservation(encodedAuthority, system.KingdomFactionName, null))
+			if (encodedAuthority == null || !Lease.Bind(encodedAuthority, null))
 			{
 				Failure = "Another founding already holds this realm or site reservation.";
 				return false;
 			}
+			// Site is durable recovery authority for direct founding. Publish it before broad
+			// realm/global locks; an interrupted cleanup that already released those locks can
+			// therefore reacquire the same exact authority instead of minting a replacement.
 			if (!StageSiteReservation(Site, encodedAuthority, Name, vocation, null, null))
 			{
 				if (hasSite)
@@ -625,11 +621,17 @@ namespace ThousandAndFirst
 				}
 				bool cleanedSite = ClearStagedSiteSubset(Site, encodedAuthority, Name,
 					vocation, null, null);
-				bool cleanedGlobal = ReleaseGlobalReservation(encodedAuthority,
-					system.KingdomFactionName, null);
-				Failure = cleanedSite && cleanedGlobal
+				Failure = cleanedSite
 					? "Another founding already holds this realm or site reservation."
 					: "The direct second-founding reservation remains staged for exact cleanup.";
+				return false;
+			}
+			if (!AcquireGlobalReservation(encodedAuthority,
+				system.KingdomFactionName, null))
+			{
+				// Existing exact site is retry receipt. New site also remains exact: clearing it
+				// here would recreate site-last cleanup and lose authority across callback cuts.
+				Failure = "Another founding holds the realm lock; this exact site receipt can retry.";
 				return false;
 			}
 			bool published = SecondPublished(system, Name, Site.ZoneID,
@@ -644,7 +646,9 @@ namespace ThousandAndFirst
 				system.SettlementCount, KingdomSettlement.MaxSettlements,
 				system.Away == null, targetIsExactSeat, targetIsExactAway, published))
 			{
-				if (!hasSite)
+				bool forwardRedo = DirectSecondHasForwardRedo(system, Site, authority,
+					encodedAuthority);
+				if (!forwardRedo)
 				{
 					if (!ClearExactReservationSet(Site, encodedAuthority,
 						system.KingdomFactionName, null))
@@ -653,7 +657,9 @@ namespace ThousandAndFirst
 						return false;
 					}
 				}
-				Failure = "The realm's city seats no longer match this exact transaction.";
+				Failure = forwardRedo
+					? "The realm's city seats changed, but this exact forward-recovery receipt remains."
+					: "The realm's city seats no longer match this stale transaction; its exact reservations were cleared.";
 				return false;
 			}
 			bool partialClaim = Site.GetZoneProperty("faction", null) ==
@@ -1162,21 +1168,26 @@ namespace ThousandAndFirst
 			{
 				return false;
 			}
-			if (HasSiteReservation(Site) &&
-				(!SiteReservationMatches(Site, Authority) ||
-				 !ReleaseSiteReservation(Site, Authority)))
-			{
-				return false;
-			}
 			if (KingdomFoundingTransactionRules.TryParseAuthority(Authority,
 				out var parsedAuthority) && parsedAuthority.Kind == KingdomFoundingKind.SecondCity)
 			{
 				KingdomSystem system = The.Game?.GetSystem<KingdomSystem>();
-				if (system != null && !system.ClearPendingSettlementIdentity(
-					parsedAuthority.TransactionID, parsedAuthority.ZoneID, Authority))
+				if (system == null || !system.Founded ||
+					system.KingdomFactionName != parsedAuthority.RealmFaction ||
+					!system.TryAbortPendingSettlementIdentity(
+						parsedAuthority.TransactionID, parsedAuthority.ZoneID, Authority,
+						out string pendingFailure))
 					return false;
 			}
+			// Clear broad reservation before site evidence. A save cut therefore leaves the
+			// exact site marker available to reacquire authority; never an ownerless global lock.
 			if (!ReleaseGlobalReservation(Authority, Realm, VillageFaction))
+			{
+				return false;
+			}
+			if (HasSiteReservation(Site) &&
+				(!SiteReservationMatches(Site, Authority) ||
+				 !ReleaseSiteReservation(Site, Authority)))
 			{
 				return false;
 			}
@@ -1409,6 +1420,13 @@ namespace ThousandAndFirst
 			if (Site == null || !KingdomFoundingTransactionRules.TryParseAuthority(
 				Authority, out var parsed) || parsed.ZoneID != Site.ZoneID)
 				return false;
+			KingdomSystem currentSystem = null;
+			if (parsed.Kind == KingdomFoundingKind.SecondCity)
+			{
+				currentSystem = The.Game?.GetSystem<KingdomSystem>();
+				if (currentSystem == null || !currentSystem.Founded ||
+					currentSystem.KingdomFactionName != parsed.RealmFaction) return false;
+			}
 			bool any = Site.HasZoneProperty(SecondIdentityTransactionProperty) ||
 				Site.HasZoneProperty(SecondIdentityRealmProperty) ||
 				Site.HasZoneProperty(SecondIdentitySettlementProperty) ||
@@ -1421,7 +1439,8 @@ namespace ThousandAndFirst
 			string settlement = Site.GetZoneProperty(
 				SecondIdentitySettlementProperty, null);
 			if ((transaction != null && transaction != parsed.TransactionID) ||
-				(realm != null && !KingdomIdentityRules.IsRealmId(realm)) ||
+				(realm != null && (currentSystem == null ||
+				 realm != currentSystem.RealmId)) ||
 				(Site.HasZoneProperty(SecondIdentityVersionProperty) &&
 				 Site.GetZoneProperty(SecondIdentityVersionProperty, null) !=
 					KingdomIdentityRules.RulesVersion.ToString()) ||
@@ -1767,6 +1786,20 @@ namespace ThousandAndFirst
 					KingdomFoundingProjection.None,
 					"The founding authority could not be encoded exactly.");
 			}
+			if (Kind == KingdomFoundingKind.SecondCity)
+			{
+				if (!system.TryPrepareLaterSettlementIdentity(transaction, Site.ZoneID,
+						out string preflightSettlementId, out string topologyFailure) ||
+					!system.TryPrepareSecondCityTopology(preflightSettlementId,
+						out KingdomSecondCityTopologyPlan ignoredPlan, out topologyFailure))
+				{
+					return Result(KingdomFoundingOutcome.Refused,
+						KingdomFoundingWaterDisposition.Untouched,
+						KingdomFoundingProjection.None,
+						"Trade or Carry cannot admit another city before this pour: " +
+							topologyFailure);
+				}
+			}
 
 			try
 			{
@@ -1821,19 +1854,6 @@ namespace ThousandAndFirst
 					stagedFailure);
 			}
 			bool siteWasReserved = HasSiteReservation(Site);
-			if (!AcquireGlobalReservation(encodedAuthority, realmFaction,
-				Kind == KingdomFoundingKind.VillageCharter ? VillageFaction : null))
-			{
-				string villageReservation = Kind == KingdomFoundingKind.VillageCharter
-					? VillageFaction : null;
-				bool cleared = ExactAuthorityMarkersAbsent(encodedAuthority,
-					realmFaction, villageReservation, Site) && SafeClearReceipt(Basin);
-				return Result(cleared ? KingdomFoundingOutcome.Refused :
-						KingdomFoundingOutcome.RecoverableFailure,
-					KingdomFoundingWaterDisposition.Untouched,
-					KingdomFoundingProjection.None,
-					"Another founding already reserves this realm or ground.");
-			}
 			if (!StageSiteReservation(Site, encodedAuthority, Name, Vocation,
 					VillageFaction, VillageDisplayName) ||
 				!ValidateReceiptPayload(Basin, Site, vessel, out stagedFailure) ||
@@ -1844,12 +1864,8 @@ namespace ThousandAndFirst
 					ClearStagedSiteSubset(Site, encodedAuthority, Name, Vocation,
 						VillageFaction, VillageDisplayName);
 				}
-				string villageReservation = Kind == KingdomFoundingKind.VillageCharter
-					? VillageFaction : null;
-				ReleaseGlobalReservation(encodedAuthority, realmFaction,
-					villageReservation);
 				bool cleared = ExactAuthorityMarkersAbsent(encodedAuthority,
-					realmFaction, villageReservation, Site) &&
+					realmFaction, VillageFaction, Site) &&
 					(siteWasReserved || !HasSiteReservation(Site)) &&
 					SafeClearReceipt(Basin);
 				return Result(cleared ? KingdomFoundingOutcome.Refused :
@@ -1857,11 +1873,31 @@ namespace ThousandAndFirst
 					KingdomFoundingWaterDisposition.Untouched,
 					KingdomFoundingProjection.None,
 					"The exact site reservation could not be staged and read back before the pour: " +
-					stagedFailure);
+						stagedFailure);
+			}
+			string reservationVillage = Kind == KingdomFoundingKind.VillageCharter
+				? VillageFaction : null;
+			if (!AcquireGlobalReservation(encodedAuthority, realmFaction,
+				reservationVillage))
+			{
+				if (!siteWasReserved)
+					ClearStagedSiteSubset(Site, encodedAuthority, Name, Vocation,
+						VillageFaction, VillageDisplayName);
+				bool cleared = ExactAuthorityMarkersAbsent(encodedAuthority,
+					realmFaction, reservationVillage, Site) &&
+					(siteWasReserved || !HasSiteReservation(Site)) && SafeClearReceipt(Basin);
+				return Result(cleared ? KingdomFoundingOutcome.Refused :
+						KingdomFoundingOutcome.RecoverableFailure,
+					KingdomFoundingWaterDisposition.Untouched,
+					KingdomFoundingProjection.None,
+					"Another founding already reserves this realm or ground.");
 			}
 
 			try
 			{
+				// Durable forward-recovery intent precedes liquid removal. A save from inside
+				// Drain can never look like an unpaid staged receipt.
+				Basin.PendingPhase = KingdomFoundingPhase.WaterCommitted;
 				int removed = KingdomLiquids.Drain(vessel, KingdomRules.FoundingCostDrams);
 				if (removed != KingdomRules.FoundingCostDrams || vessel.Volume != committedVolume)
 				{
@@ -1892,7 +1928,6 @@ namespace ThousandAndFirst
 					throw new InvalidOperationException(
 						"The basin's committed liquid snapshot did not match its staged algebra.");
 				}
-				Basin.PendingPhase = KingdomFoundingPhase.WaterCommitted;
 				return Result(KingdomFoundingOutcome.Committed,
 					KingdomFoundingWaterDisposition.Spent,
 					KingdomFoundingProjection.Water);
@@ -1956,6 +1991,16 @@ namespace ThousandAndFirst
 					KingdomFoundingWaterDisposition.RestorationFailed,
 					KingdomFoundingProjection.None,
 					"This basin does not own the founding receipt; its authority was quarantined.");
+			}
+			if (Basin.PendingPhase == KingdomFoundingPhase.WaterCommitted &&
+				OriginalSnapshotStillExact(Basin, vessel) &&
+				!TryFinishWaterCommit(Basin, vessel, out string waterFailure))
+			{
+				return Result(KingdomFoundingOutcome.RecoverableFailure,
+					Basin.PendingPhase == KingdomFoundingPhase.RecoveryRequired
+						? KingdomFoundingWaterDisposition.RestorationFailed
+						: KingdomFoundingWaterDisposition.HeldForRecovery,
+					KingdomFoundingProjection.Water, waterFailure);
 			}
 			if (Basin.PendingPhase == KingdomFoundingPhase.RecoveryRequired ||
 				!CommittedSnapshotStillExact(Basin, vessel))
@@ -2096,7 +2141,8 @@ namespace ThousandAndFirst
 			catch (Exception ex)
 			{
 				bool published = DetectPublication(Basin, Site);
-				if (published)
+				if (published ||
+					Basin.PendingPhase == KingdomFoundingPhase.PublicationCommitted)
 				{
 					Basin.PendingPhase = KingdomFoundingPhase.PublicationCommitted;
 					return Result(KingdomFoundingOutcome.RecoverableFailure,
@@ -2125,6 +2171,40 @@ namespace ThousandAndFirst
 						: KingdomFoundingWaterDisposition.RestorationFailed,
 					projection, Describe(ex));
 			}
+		}
+
+		/// <summary>Completes the one safe save cut between WaterCommitted intent and Drain.
+		/// Only the exact original snapshot may retry removal; every third water graph poisons.</summary>
+		private static bool TryFinishWaterCommit(r_FounderBasin Basin,
+			LiquidVolume Vessel, out string Failure)
+		{
+			Failure = null;
+			if (CommittedSnapshotStillExact(Basin, Vessel)) return true;
+			if (Basin == null || Vessel == null ||
+				Basin.PendingPhase != KingdomFoundingPhase.WaterCommitted ||
+				!OriginalSnapshotStillExact(Basin, Vessel))
+			{
+				Failure = "The water-commit barrier does not retain its exact original snapshot.";
+				return false;
+			}
+			try
+			{
+				int removed = KingdomLiquids.Drain(Vessel, KingdomRules.FoundingCostDrams);
+				if (removed == KingdomRules.FoundingCostDrams &&
+					CommittedSnapshotStillExact(Basin, Vessel)) return true;
+			}
+			catch (Exception ex)
+			{
+				if (CommittedSnapshotStillExact(Basin, Vessel)) return true;
+				if (OriginalSnapshotStillExact(Basin, Vessel))
+				{
+					Failure = "The deferred water commit can retry: " + Describe(ex);
+					return false;
+				}
+			}
+			if (!OriginalSnapshotStillExact(Basin, Vessel)) PoisonReceipt(Basin, Vessel);
+			Failure = "The deferred water commit did not yield the exact measured amount.";
+			return false;
 		}
 
 		private static void PublishFirst(r_FounderBasin Basin, GameObject Actor, Zone Site,
@@ -2255,6 +2335,13 @@ namespace ThousandAndFirst
 			{
 				throw new InvalidOperationException("The second city exists, but its ground cannot take the seat.");
 			}
+			if (!system.TrySettlePendingSettlementIdentity(Basin.PendingTransactionID,
+				Site.ZoneID, Basin.PendingAuthority, out string topologyFailure))
+			{
+				throw new InvalidOperationException(
+					"The published city could not settle paired Trade and Carry topology: " +
+					topologyFailure);
+			}
 			Basin.PendingPhase = KingdomFoundingPhase.PublicationCommitted;
 			Projection = KingdomFoundingProjection.Identity;
 			if (faction == null || !system.ClaimedZones.Contains(Site.ZoneID) ||
@@ -2307,12 +2394,18 @@ namespace ThousandAndFirst
 				}
 				return stage;
 			}
-			int restored;
+			int restored = 0;
 			string restoredRaw = Site.GetZoneProperty(SecondRestoredProperty, null);
 			if (string.IsNullOrEmpty(restoredRaw))
 			{
 				bool isRuin = KingdomRules.IsRuinSite(system.FoundingTerrainBlueprint);
-				restored = isRuin ? KingdomFounding.RestoreRuinStructures(Site) : 0;
+				if (isRuin && !KingdomFounding.TryRestoreRuinStructures(Site,
+					Basin.PendingTransactionID, out restored))
+				{
+					throw new InvalidOperationException(
+						"The ruin-restoration object receipts could not settle exactly.");
+				}
+				if (!isRuin) restored = 0;
 				Site.SetZoneProperty(SecondRestoredProperty, restored.ToString());
 			}
 			else if (!int.TryParse(restoredRaw, out restored) || restored < 0)
@@ -2458,9 +2551,11 @@ namespace ThousandAndFirst
 					LastSemanticTick = foundedTick
 				};
 				string lifecycleFailure;
+				List<string> existingSettlementIds = System.LifecycleCollisionIds(
+					IncludeSeat: true, IncludeAway: true);
 				if (!KingdomSystem.TryBindSettlementIdentity(founded, frozenSettlementId,
 					Basin.PendingTransactionID, Site.ZoneID, foundedTick,
-					out lifecycleFailure))
+					existingSettlementIds, out lifecycleFailure))
 				{
 					throw new InvalidOperationException(
 						"The new city's exact lifecycle identity could not bind: " +
@@ -2499,15 +2594,6 @@ namespace ThousandAndFirst
 					throw new InvalidOperationException("The city seat did not retain the new settlement.");
 				}
 			}
-			if (!System.TryBindTradeIdentity(out string finalTradeFailure) ||
-				!System.ClearPendingSettlementIdentity(Basin.PendingTransactionID,
-					Site.ZoneID, Basin.PendingAuthority))
-			{
-				throw new InvalidOperationException(
-					"The published city could not settle its exact topology: " +
-					finalTradeFailure);
-			}
-			Basin.PendingPhase = KingdomFoundingPhase.PublicationCommitted;
 		}
 
 		/// <summary>Freezes the later city's immutable output before Trade topology expansion,
@@ -2539,6 +2625,8 @@ namespace ThousandAndFirst
 				Failure = "the site carries a third-value immutable identity field";
 				return false;
 			}
+			if (!System.TryPrepareSecondCityTopology(SettlementId,
+				out KingdomSecondCityTopologyPlan topologyPlan, out Failure)) return false;
 			try
 			{
 				Site.SetZoneProperty(SecondIdentityTransactionProperty,
@@ -2569,18 +2657,20 @@ namespace ThousandAndFirst
 					((int)KingdomIdentityOrigin.FoundingTransaction).ToString() ||
 				!System.TryStagePendingSettlementIdentity(SettlementId,
 					Basin.PendingTransactionID, Site.ZoneID, Basin.PendingAuthority,
-					out Failure) ||
-				!System.TryExpandTradeIdentity(SettlementId, out Failure))
+					out Failure))
 			{
-				System.ClearPendingSettlementIdentity(Basin.PendingTransactionID,
-					Site.ZoneID, Basin.PendingAuthority);
+				System.TryAbortPendingSettlementIdentity(Basin.PendingTransactionID,
+					Site.ZoneID, Basin.PendingAuthority, out string ignoredAbortFailure);
 				if (string.IsNullOrEmpty(Failure))
-					Failure = "site identity readback or Trade topology expansion failed";
+					Failure = "site identity readback or pending topology staging failed";
 				return false;
 			}
-			// Expansion is monotone and cannot be cancelled. From this line the founding must
-			// recover forward even if the next zone callback is cut before its marker write.
+			// Paired expansion is irreversible. Publish durable redo barrier first; any later
+			// failure retains authenticated site+system tuple for forward recovery.
 			Basin.PendingPhase = KingdomFoundingPhase.PublicationCommitted;
+			if (!System.TryCommitSecondCityTopology(topologyPlan,
+				Basin.PendingTransactionID, Site.ZoneID, Basin.PendingAuthority,
+				out Failure)) return false;
 			return SiteReservationMatches(Site, Basin.PendingAuthority) &&
 				System.TryPrepareLaterSettlementIdentity(Basin.PendingTransactionID,
 					Site.ZoneID, out string reproved, out Failure) && reproved == SettlementId;
@@ -2658,7 +2748,8 @@ namespace ThousandAndFirst
 			{
 			case KingdomFoundingKind.FirstCity:
 				Faction pendingFaction = Factions.GetIfExists(Basin.PendingName);
-				return pendingFaction != null &&
+				return system.FirstIdentityMatches(Basin.PendingTransactionID, Site.ZoneID) ||
+					(pendingFaction != null &&
 					pendingFaction.GetIntProperty("PlayerKingdom") == 1 &&
 					pendingFaction.GetIntProperty("Village") == 1 &&
 					pendingFaction.GetStringProperty(PendingFactionTransactionProperty, null) ==
@@ -2666,7 +2757,7 @@ namespace ThousandAndFirst
 					pendingFaction.GetStringProperty(PendingFactionAuthorityProperty, null) ==
 						Basin.PendingAuthority &&
 					((system.Founded && system.KingdomFactionName == Basin.PendingName) ||
-					 pendingFaction.GetIntProperty(PendingFactionProperty) == 1);
+					 pendingFaction.GetIntProperty(PendingFactionProperty) == 1));
 			case KingdomFoundingKind.SecondCity:
 				return SiteReservationMatches(Site, Basin.PendingAuthority) &&
 					PublishedSecondAuthorityMatches(Site, Basin.PendingAuthority);
@@ -2704,6 +2795,36 @@ namespace ThousandAndFirst
 				System.Away.ClaimedZones.Contains(ZoneID) &&
 				System.LaterSettlementIdentityMatches(System.Away, expectedId,
 					TransactionId, ZoneID);
+		}
+
+		/// <summary>A direct contender may retain locks after terminal seat loss only when
+		/// immutable forward work exists for this exact transaction. Site reservation alone is
+		/// reversible staging and never qualifies.</summary>
+		private static bool DirectSecondHasForwardRedo(KingdomSystem System, Zone Site,
+			KingdomFoundingAuthority Authority, string EncodedAuthority)
+		{
+			if (System == null || Site == null || string.IsNullOrEmpty(EncodedAuthority) ||
+				Authority.Kind != KingdomFoundingKind.SecondCity ||
+				Authority.ZoneID != Site.ZoneID ||
+				Authority.RealmFaction != System.KingdomFactionName ||
+				!KingdomIdentityRules.TryMintSettlement(System.RealmId,
+					Authority.TransactionID, out string settlementId,
+					out KingdomIdentityFault fault)) return false;
+			if (PublishedSecondAuthorityMatches(Site, EncodedAuthority)) return true;
+			bool pending = System.PendingSettlementId == settlementId &&
+				System.PendingSettlementTransactionId == Authority.TransactionID &&
+				System.PendingSettlementZoneId == Site.ZoneID &&
+				System.PendingSettlementAuthority == EncodedAuthority;
+			if (pending) return true;
+			bool trade = KingdomTradeRules.BookUsable(System.TradeBook) &&
+				System.TradeBook.RealmId == System.RealmId &&
+				System.TradeBook.SettlementIds != null &&
+				System.TradeBook.SettlementIds.Contains(settlementId);
+			bool carry = KingdomLifecycleRules.CanOwnAuthority(System.CarryBook) &&
+				System.CarryBook.RealmId == System.RealmId &&
+				System.CarryBook.SettlementIds != null &&
+				System.CarryBook.SettlementIds.Contains(settlementId);
+			return trade || carry;
 		}
 
 		private static bool PublishedSecondAuthorityMatches(Zone Site, string Authority)
@@ -3103,6 +3224,7 @@ namespace ThousandAndFirst
 				break;
 			case KingdomFoundingKind.SecondCity:
 				projected = System.SettlementCount == 2 &&
+					System.TryProveSettledSecondCityTopology(out string _) &&
 					PublishedSecondAuthorityMatches(Site, Basin.PendingAuthority) &&
 					SecondIsExactSeat(System, Basin.PendingName, Site.ZoneID,
 						Basin.PendingTransactionID) &&
@@ -3155,12 +3277,20 @@ namespace ThousandAndFirst
 			{
 				return false;
 			}
-			if (HasSiteReservation(Site) &&
-				!ClearCompletedSiteReservation(Site, Basin))
+			if (KingdomFoundingTransactionRules.TryParseAuthority(authority,
+				out var parsed) && parsed.Kind == KingdomFoundingKind.SecondCity)
+			{
+				KingdomSystem system = The.Game?.GetSystem<KingdomSystem>();
+				if (system == null || !system.Founded ||
+					system.KingdomFactionName != parsed.RealmFaction ||
+					!system.TryProveSettledSecondCityTopology(out string _)) return false;
+			}
+			if (!ReleaseGlobalReservation(authority, Basin.PendingRealmFaction, village))
 			{
 				return false;
 			}
-			if (!ReleaseGlobalReservation(authority, Basin.PendingRealmFaction, village))
+			if (HasSiteReservation(Site) &&
+				!ClearCompletedSiteReservation(Site, Basin))
 			{
 				return false;
 			}

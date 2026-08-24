@@ -1622,7 +1622,8 @@ namespace ThousandAndFirst
 				exact.Sort(StringComparer.Ordinal);
 				List<string> liveTopology;
 				string topologyFailure;
-				if (!System.TryExactSettlementIds(true, out liveTopology, out topologyFailure)
+				if (!System.TryRetainedSettlementIds(true, false,
+					out liveTopology, out topologyFailure)
 					|| !ExactSettlementTopology(liveTopology, exact))
 				{
 					Failure = "Trade exile could not reprove the complete exact settlement topology: "
@@ -1663,7 +1664,8 @@ namespace ThousandAndFirst
 					return false;
 				}
 				List<string> finalTopology;
-				if (!System.TryExactSettlementIds(true, out finalTopology, out topologyFailure)
+				if (!System.TryRetainedSettlementIds(true, false,
+					out finalTopology, out topologyFailure)
 					|| !ExactSettlementTopology(finalTopology, exact)
 					|| !ReferenceEquals(System.TradeBook, original) || !ExactBytes(before, after)
 					|| !string.Equals(System.CurrentRealmId, currentRealm, StringComparison.Ordinal)

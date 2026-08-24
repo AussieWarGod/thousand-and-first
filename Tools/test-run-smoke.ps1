@@ -205,6 +205,38 @@ function Add-ResumeSave {
     $Profile.Save = $save
 }
 
+function Add-TafStageJournal {
+    param($Profile, [string]$RecordOrigin = '')
+
+    if ($null -eq $Profile.Save) {
+        throw 'TAF stage journal fixture needs a resume save.'
+    }
+    if ([string]::IsNullOrEmpty($RecordOrigin)) {
+        $RecordOrigin = $Profile.Save.Id
+    }
+    $stages = Join-Path $Profile.Synced 'ThousandAndFirst\Stages'
+    [void][IO.Directory]::CreateDirectory($stages)
+    $lock = Join-Path $stages ".journal-$($Profile.Save.Id).lock"
+    [IO.File]::WriteAllBytes($lock, [byte[]]@())
+    $seal = Join-Path $stages "$($Profile.Save.Id).a.seal"
+    $body = '{"kind":"record","origin":"' + $RecordOrigin + '"}'
+    $bodyBytes = [Text.UTF8Encoding]::new($false, $true).GetBytes($body)
+    $sha = [Security.Cryptography.SHA256]::Create()
+    try {
+        $hash = ([BitConverter]::ToString($sha.ComputeHash($bodyBytes))).Replace('-', '').ToLowerInvariant()
+    }
+    finally {
+        $sha.Dispose()
+    }
+    $envelope = "taf-seal 4`nsha256 $hash`nlength $($bodyBytes.LongLength)`n$body`n"
+    Write-Utf8NoBom $seal $envelope
+    return [pscustomobject]@{
+        Stages = $stages
+        Lock = $lock
+        Seal = $seal
+    }
+}
+
 function Add-KnownGoodSaveFixture {
     param($Profile, [string]$FixturePath)
 
@@ -601,6 +633,44 @@ try {
     Write-Utf8NoBom (Join-Path $profile.Save.Directory 'Cache.db-wal') 'allowed-sidecar'
     Write-Utf8NoBom (Join-Path $profile.Save.Directory 'Cache.db-shm') 'allowed-sidecar'
     Invoke-ValidationSuccess 'resume accepts synthetic shape, sidecars, and equal Qud offsets' $profile -Resume
+
+    $profile = New-TestProfile
+    Add-ResumeSave $profile $script:GameVersion
+    $journal = Add-TafStageJournal $profile
+    Invoke-ValidationSuccess 'resume accepts exact TAF stage journal' $profile -Resume
+
+    $profile = New-TestProfile
+    Add-ResumeSave $profile $script:GameVersion
+    $journal = Add-TafStageJournal $profile
+    $sealText = [IO.File]::ReadAllText($journal.Seal)
+    Write-Utf8NoBom $journal.Seal $sealText.Replace("taf-seal 4`n", "taf-seal 3`n")
+    Invoke-ExpectedFailure 'TAF stage seal malformed envelope' $profile `
+        "Resume TAF stage seal has an invalid envelope: $($journal.Seal)" -Resume
+
+    $profile = New-TestProfile
+    Add-ResumeSave $profile $script:GameVersion
+    $journal = Add-TafStageJournal $profile
+    $sealText = [IO.File]::ReadAllText($journal.Seal)
+    $zeroHash = '0' * 64
+    $sealText = [regex]::Replace(
+        $sealText, '(?m)^sha256 [0-9a-f]{64}$', "sha256 $zeroHash")
+    Write-Utf8NoBom $journal.Seal $sealText
+    Invoke-ExpectedFailure 'TAF stage seal digest mismatch' $profile `
+        "Resume TAF stage seal digest differs from its body: $($journal.Seal)" -Resume
+
+    $profile = New-TestProfile
+    Add-ResumeSave $profile $script:GameVersion
+    $foreignOrigin = [guid]::NewGuid().ToString('D')
+    $journal = Add-TafStageJournal $profile $foreignOrigin
+    Invoke-ExpectedFailure 'TAF stage seal foreign origin' $profile `
+        "Resume TAF stage seal belongs to another origin: $($journal.Seal)" -Resume
+
+    $profile = New-TestProfile
+    Add-ResumeSave $profile $script:GameVersion
+    $journal = Add-TafStageJournal $profile
+    Write-Utf8NoBom (Join-Path $journal.Stages 'unexpected.tmp') 'unexpected'
+    Invoke-ExpectedFailure 'TAF stage journal extra entry' $profile `
+        "Resume TAF stage journal has partial or unexpected entries: $($journal.Stages)" -Resume
 
     $syntheticFixture = Join-Path $script:SupportRoot 'synthetic-sanitized-save'
     [void][IO.Directory]::CreateDirectory($syntheticFixture)

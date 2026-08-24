@@ -137,7 +137,8 @@ namespace ThousandAndFirst
 		public const int MaxResourceRows = 128;
 		public const int MaxCarrySources = 64;
 		public const int MaxCarryOutputs = 64;
-		public const int MaxSettlementIds = 64;
+		public const int MaxSettlementIds = 4;
+		public const int MaxLifecycleCollisionIds = 64;
 		public const int MaxCoordinate = 4095;
 		public const int MaxIdChars = 256;
 		public const int MaxNameChars = 512;
@@ -231,6 +232,125 @@ namespace ThousandAndFirst
 			Book.IdentityProof = CarryIdentityProof(Book.RealmId, Book.SettlementIds,
 				Book.LegacyIdentity, Book.LegacyMigrationKey);
 			return ExactCarryIdentityProof(Book);
+		}
+
+		/// <summary>Builds the first city's two authority books off-graph. Dirty dormant
+		/// books are evidence and are never overwritten during first publication.</summary>
+		public static bool TryPrepareFirstIdentityBooks(KingdomLifecycleBook ExistingLifecycle,
+			KingdomCarryBook ExistingCarry, string RealmId, string SettlementId,
+			out KingdomLifecycleBook Lifecycle, out KingdomCarryBook Carry)
+		{
+			Lifecycle = null;
+			Carry = null;
+			KingdomLifecycleBook sourceLifecycle = ExistingLifecycle ??
+				new KingdomLifecycleBook();
+			KingdomCarryBook sourceCarry = ExistingCarry ?? new KingdomCarryBook();
+			if (!PristineLifecycleBook(sourceLifecycle) ||
+				!PristineCarryBook(sourceCarry)) return false;
+			KingdomLifecycleBook lifecycle = new KingdomLifecycleBook();
+			KingdomCarryBook carry = new KingdomCarryBook();
+			if (!BindSettlementIdentity(lifecycle, SettlementId, LegacyMigration: false,
+				MigrationKey: null, ExistingIds: new List<string>()) ||
+				!BindCarryIdentity(carry, RealmId, new List<string> { SettlementId },
+					LegacyMigration: false, MigrationKey: null)) return false;
+			Lifecycle = lifecycle;
+			Carry = carry;
+			return true;
+		}
+
+		/// <summary>Preflights a monotone exact-city expansion without changing the book.</summary>
+		public static bool CanExpandCarryIdentity(KingdomCarryBook Book, string RealmId,
+			ICollection<string> SettlementIds, out string Failure)
+		{
+			Failure = null;
+			if (!CanOwnAuthority(Book))
+			{
+				Failure = "Carry identity expansion requires bound exact authority.";
+				return false;
+			}
+			List<string> frozen;
+			if (!TryFrozenSettlementSet(SettlementIds, out frozen))
+			{
+				Failure = "Carry identity expansion candidate is malformed or exceeds cap.";
+				return false;
+			}
+			if (!CanOwnAuthority(Book))
+			{
+				Failure = "Carry authority changed while its expansion candidate was frozen.";
+				return false;
+			}
+			if (!string.Equals(Book.RealmId, RealmId, StringComparison.Ordinal))
+			{
+				Failure = "The immutable carry realm changed during identity expansion.";
+				return false;
+			}
+			if (ExactStringList(Book.SettlementIds, frozen)) return true;
+			for (int i = 0; i < Book.SettlementIds.Count; i++)
+				if (!frozen.Contains(Book.SettlementIds[i]))
+				{
+					Failure = "An exact carry settlement identity was removed or replaced.";
+					return false;
+				}
+			if (Book.Open != null)
+			{
+				Failure = "Carry identity expansion deferred while a haul receipt is open.";
+				return false;
+			}
+			return true;
+		}
+
+		/// <summary>Publishes a preflighted monotone exact-city expansion and its new proof.</summary>
+		public static bool ExpandCarryIdentity(KingdomCarryBook Book, string RealmId,
+			ICollection<string> SettlementIds, out string Failure)
+		{
+			Failure = null;
+			if (Book == null || !CanOwnAuthority(Book))
+			{
+				Failure = "Carry identity expansion requires bound exact authority.";
+				return false;
+			}
+			List<string> frozen;
+			if (!TryFrozenSettlementSet(SettlementIds, out frozen))
+			{
+				Failure = "Carry identity expansion candidate is malformed or exceeds cap.";
+				return false;
+			}
+			if (!CanOwnAuthority(Book))
+			{
+				Deny(Book, "carry authority changed while its expansion candidate was frozen");
+				Failure = Book.Fault;
+				return false;
+			}
+			if (!string.Equals(Book.RealmId, RealmId, StringComparison.Ordinal))
+			{
+				Deny(Book, "immutable carry realm changed during identity expansion");
+				Failure = Book.Fault;
+				return false;
+			}
+			if (ExactStringList(Book.SettlementIds, frozen)) return true;
+			for (int i = 0; i < Book.SettlementIds.Count; i++)
+				if (!frozen.Contains(Book.SettlementIds[i]))
+				{
+					Deny(Book, "exact carry settlement identity was removed or replaced");
+					Failure = Book.Fault;
+					return false;
+				}
+			if (Book.Open != null)
+			{
+				Failure = "Carry identity expansion deferred while a haul receipt is open.";
+				return false;
+			}
+			List<string> previous = Book.SettlementIds;
+			string previousProof = Book.IdentityProof;
+			Book.SettlementIds = frozen;
+			Book.IdentityProof = CarryIdentityProof(Book.RealmId, Book.SettlementIds,
+				Book.LegacyIdentity, Book.LegacyMigrationKey);
+			if (CanOwnAuthority(Book)) return true;
+			Book.SettlementIds = previous;
+			Book.IdentityProof = previousProof;
+			Deny(Book, "expanded carry identity did not retain exact authority");
+			Failure = Book.Fault;
+			return false;
 		}
 
 		#if TAF_TESTS
@@ -11980,13 +12100,13 @@ namespace ThousandAndFirst
 			if (source == null) return false;
 			try
 			{
-				if (source.Count > MaxSettlementIds) return false;
+				if (source.Count > MaxLifecycleCollisionIds) return false;
 				HashSet<string> seen = new HashSet<string>(StringComparer.Ordinal);
 				int count = 0;
 				foreach (string id in source)
 				{
 					count++;
-					if (count > MaxSettlementIds || !ValidRootId(id) || !seen.Add(id)
+					if (count > MaxLifecycleCollisionIds || !ValidRootId(id) || !seen.Add(id)
 						|| string.Equals(id, exactId, StringComparison.Ordinal)) return false;
 				}
 				return count == source.Count;

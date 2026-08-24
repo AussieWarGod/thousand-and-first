@@ -1423,11 +1423,11 @@ namespace ThousandAndFirst.Tests
 			Assert.Greater(snapshot, 0);
 			Assert.Greater(listAccess, snapshot,
 				"Trade bytes must be frozen before any caller-owned topology access");
-			int firstTopology = body.IndexOf("System.TryExactSettlementIds(true",
+			int firstTopology = body.IndexOf("System.TryRetainedSettlementIds(true, false",
 				StringComparison.Ordinal);
 			int coreCapture = body.IndexOf("TryCaptureExileCoreSeal", StringComparison.Ordinal);
 			int prepare = body.IndexOf("KingdomTradeRules.TryPrepareExile", StringComparison.Ordinal);
-			int finalTopology = body.IndexOf("System.TryExactSettlementIds(true",
+			int finalTopology = body.IndexOf("System.TryRetainedSettlementIds(true, false",
 				firstTopology + 1, StringComparison.Ordinal);
 			int finalCore = body.IndexOf("ExactExileCoreSeal", finalTopology,
 				StringComparison.Ordinal);

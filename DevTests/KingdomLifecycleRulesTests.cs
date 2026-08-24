@@ -1134,6 +1134,237 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void FirstFoundingCarryBinding_PublishesOneAtomicIdentityReceipt()
+		{
+			KingdomCarryBook book = new KingdomCarryBook();
+			Assert.IsTrue(KingdomLifecycleRules.BindCarryIdentity(book, "realm-first",
+				new List<string> { "city-first" }, false, null));
+			Assert.IsTrue(KingdomLifecycleRules.CanOwnAuthority(book));
+			Assert.AreEqual("realm-first", book.RealmId);
+			CollectionAssert.AreEqual(new[] { "city-first" }, book.SettlementIds);
+			Assert.IsTrue(book.IdentityBound);
+			Assert.IsNotEmpty(book.IdentityProof);
+
+			KingdomCarryBook preseeded = new KingdomCarryBook { RealmId = "realm-first" };
+			KingdomLifecycleRules.Normalize(preseeded);
+			Assert.IsTrue(preseeded.Quarantined,
+				"a realm id without its atomic identity receipt owns no authority");
+			Assert.IsFalse(KingdomLifecycleRules.CanOwnAuthority(preseeded));
+		}
+
+		[Test]
+		public void CarryIdentityExpansion_IsCanonicalMonotoneRetryStableAndWireStable()
+		{
+			KingdomCarryBook book = new KingdomCarryBook();
+			Assert.IsTrue(KingdomLifecycleRules.BindCarryIdentity(book, "realm-expand",
+				new List<string> { "city-b" }, false, null));
+			List<string> singleton = book.SettlementIds;
+			string singletonProof = book.IdentityProof;
+			byte[] singletonWire = CarryBytes(book);
+			string failure;
+
+			Assert.IsTrue(KingdomLifecycleRules.CanExpandCarryIdentity(book, "realm-expand",
+				new List<string> { "city-b", "city-a" }, out failure), failure);
+			Assert.AreSame(singleton, book.SettlementIds);
+			Assert.AreEqual(singletonProof, book.IdentityProof);
+			CollectionAssert.AreEqual(singletonWire, CarryBytes(book));
+			Assert.IsTrue(KingdomLifecycleRules.ExpandCarryIdentity(book, "realm-expand",
+				new List<string> { "city-b", "city-a" }, out failure), failure);
+			Assert.AreNotSame(singleton, book.SettlementIds);
+			Assert.AreNotEqual(singletonProof, book.IdentityProof);
+			CollectionAssert.AreEqual(new[] { "city-a", "city-b" }, book.SettlementIds);
+			Assert.IsTrue(KingdomLifecycleRules.CanOwnAuthority(book));
+
+			List<string> expanded = book.SettlementIds;
+			string expandedProof = book.IdentityProof;
+			byte[] expandedWire = CarryBytes(book);
+			Assert.IsTrue(KingdomLifecycleRules.CanExpandCarryIdentity(book, "realm-expand",
+				new List<string> { "city-b", "city-a" }, out failure), failure);
+			Assert.IsTrue(KingdomLifecycleRules.ExpandCarryIdentity(book, "realm-expand",
+				new List<string> { "city-b", "city-a" }, out failure), failure);
+			Assert.AreSame(expanded, book.SettlementIds,
+				"an exact retry must not replace the established topology object");
+			Assert.AreEqual(expandedProof, book.IdentityProof);
+			CollectionAssert.AreEqual(expandedWire, CarryBytes(book));
+
+			KingdomCarryBook reloaded = RoundTrip(book);
+			Assert.IsTrue(KingdomLifecycleRules.CanOwnAuthority(reloaded));
+			Assert.AreEqual(expandedProof, reloaded.IdentityProof);
+			CollectionAssert.AreEqual(expanded, reloaded.SettlementIds);
+			CollectionAssert.AreEqual(expandedWire, CarryBytes(reloaded));
+		}
+
+		[Test]
+		public void CarryIdentityExpansion_RejectsWrongRealmRemovalAndReplacement()
+		{
+			string failure;
+			KingdomCarryBook wrongRealm = CarryBook();
+			List<string> wrongRealmTopology = wrongRealm.SettlementIds;
+			Assert.IsFalse(KingdomLifecycleRules.CanExpandCarryIdentity(wrongRealm, "realm-b",
+				new List<string> { "city-a", "city-b", "city-c" }, out failure));
+			Assert.IsNotEmpty(failure);
+			Assert.IsFalse(wrongRealm.Quarantined);
+			Assert.IsFalse(KingdomLifecycleRules.ExpandCarryIdentity(wrongRealm, "realm-b",
+				new List<string> { "city-a", "city-b", "city-c" }, out failure));
+			Assert.IsTrue(wrongRealm.Quarantined);
+			Assert.AreSame(wrongRealmTopology, wrongRealm.SettlementIds);
+
+			KingdomCarryBook removal = CarryBook();
+			List<string> removalTopology = removal.SettlementIds;
+			Assert.IsFalse(KingdomLifecycleRules.CanExpandCarryIdentity(removal, "realm-a",
+				new List<string> { "city-a" }, out failure));
+			Assert.IsNotEmpty(failure);
+			Assert.IsFalse(removal.Quarantined);
+			Assert.IsFalse(KingdomLifecycleRules.ExpandCarryIdentity(removal, "realm-a",
+				new List<string> { "city-a" }, out failure));
+			Assert.IsTrue(removal.Quarantined);
+			Assert.AreSame(removalTopology, removal.SettlementIds);
+			CollectionAssert.AreEqual(new[] { "city-a", "city-b" }, removal.SettlementIds);
+
+			KingdomCarryBook replacement = CarryBook();
+			List<string> replacementTopology = replacement.SettlementIds;
+			Assert.IsFalse(KingdomLifecycleRules.CanExpandCarryIdentity(replacement, "realm-a",
+				new List<string> { "city-a", "city-c" }, out failure));
+			Assert.IsNotEmpty(failure);
+			Assert.IsFalse(replacement.Quarantined);
+			Assert.IsFalse(KingdomLifecycleRules.ExpandCarryIdentity(replacement, "realm-a",
+				new List<string> { "city-a", "city-c" }, out failure));
+			Assert.IsTrue(replacement.Quarantined);
+			Assert.AreSame(replacementTopology, replacement.SettlementIds);
+			CollectionAssert.AreEqual(new[] { "city-a", "city-b" }, replacement.SettlementIds);
+		}
+
+		[Test]
+		public void CarryIdentityExpansion_OpenReceiptDefersWithoutChangingAuthority()
+		{
+			KingdomCarryBook book = CarryBook();
+			KingdomCarryOperation operation = BuildCarry(book, 1L, 1, 1);
+			Assert.IsTrue(KingdomLifecycleRules.TryPublishCarry(book, operation));
+			List<string> topology = book.SettlementIds;
+			string proof = book.IdentityProof;
+			byte[] before = CarryBytes(book);
+			string failure;
+
+			Assert.IsFalse(KingdomLifecycleRules.CanExpandCarryIdentity(book, "realm-a",
+				new List<string> { "city-a", "city-b", "city-c" }, out failure));
+			Assert.IsNotEmpty(failure);
+			StringAssert.Contains("open", failure.ToLowerInvariant());
+			Assert.IsFalse(KingdomLifecycleRules.ExpandCarryIdentity(book, "realm-a",
+				new List<string> { "city-a", "city-b", "city-c" }, out failure));
+			Assert.IsNotEmpty(failure);
+			StringAssert.Contains("open", failure.ToLowerInvariant());
+			Assert.IsFalse(book.Quarantined);
+			Assert.IsTrue(KingdomLifecycleRules.CanOwnAuthority(book));
+			Assert.AreSame(topology, book.SettlementIds);
+			Assert.AreSame(operation, book.Open);
+			Assert.AreEqual(proof, book.IdentityProof);
+			CollectionAssert.AreEqual(before, CarryBytes(book));
+		}
+
+		[Test]
+		public void CarryIdentityExpansion_MalformedAndOverCapCandidatesLeaveBookExact()
+		{
+			KingdomCarryBook book = CarryBook();
+			List<string> topology = book.SettlementIds;
+			string proof = book.IdentityProof;
+			byte[] before = CarryBytes(book);
+			string oversizedId = new string('x', KingdomLifecycleRules.MaxIdChars + 1);
+			ICollection<string>[] malformed = new ICollection<string>[]
+			{
+				null,
+				new List<string>(),
+				new List<string> { "city-a", "city-a" },
+				new List<string> { "city-a", null },
+				new List<string> { "city-a", "city-b", oversizedId },
+				new List<string> { "city-a", "city-b", "city-c", "city-d", "city-e" }
+			};
+
+			for (int i = 0; i < malformed.Length; i++)
+			{
+				string failure;
+				Assert.IsFalse(KingdomLifecycleRules.CanExpandCarryIdentity(book, "realm-a",
+					malformed[i], out failure), "preflight candidate " + i);
+				Assert.IsNotEmpty(failure, "preflight candidate " + i);
+				Assert.IsFalse(KingdomLifecycleRules.ExpandCarryIdentity(book, "realm-a",
+					malformed[i], out failure), "publish candidate " + i);
+				Assert.IsNotEmpty(failure, "publish candidate " + i);
+				Assert.IsFalse(book.Quarantined, "candidate " + i);
+				Assert.IsTrue(KingdomLifecycleRules.CanOwnAuthority(book), "candidate " + i);
+				Assert.AreSame(topology, book.SettlementIds, "candidate " + i);
+				Assert.AreEqual(proof, book.IdentityProof, "candidate " + i);
+				CollectionAssert.AreEqual(before, CarryBytes(book), "candidate " + i);
+			}
+		}
+
+		[Test]
+		public void CarryIdentityExpansion_HostileEnumerationCannotPublishChangedAuthority()
+		{
+			KingdomCarryBook preflight = CarryBook();
+			List<string> preflightTopology = preflight.SettlementIds;
+			MutatingCollection candidate = new MutatingCollection(
+				new List<string> { "city-a", "city-b", "city-c" },
+				delegate { preflight.IdentityProof = "hostile-proof"; });
+			string failure;
+			Assert.IsFalse(KingdomLifecycleRules.CanExpandCarryIdentity(preflight, "realm-a",
+				candidate, out failure));
+			Assert.IsNotEmpty(failure);
+			StringAssert.Contains("changed", failure.ToLowerInvariant());
+			Assert.AreSame(preflightTopology, preflight.SettlementIds);
+			Assert.IsFalse(preflight.Quarantined);
+			Assert.IsFalse(KingdomLifecycleRules.CanOwnAuthority(preflight));
+
+			KingdomCarryBook publish = CarryBook();
+			List<string> publishTopology = publish.SettlementIds;
+			candidate = new MutatingCollection(
+				new List<string> { "city-a", "city-b", "city-c" },
+				delegate { publish.NextSequence = 2L; });
+			Assert.IsFalse(KingdomLifecycleRules.ExpandCarryIdentity(publish, "realm-a",
+				candidate, out failure));
+			Assert.IsTrue(publish.Quarantined);
+			StringAssert.Contains("changed", publish.Fault);
+			Assert.AreSame(publishTopology, publish.SettlementIds);
+			CollectionAssert.AreEqual(new[] { "city-a", "city-b" }, publish.SettlementIds);
+			Assert.IsFalse(KingdomLifecycleRules.CanOwnAuthority(publish));
+		}
+
+		[Test]
+		public void SettlementIdentityCollisionScan_UsesIndependentBoundAndRejectsAliases()
+		{
+			List<string> fiveOtherSettlements = new List<string>
+			{
+				"city-1", "city-2", "city-3", "city-4", "city-5"
+			};
+			KingdomLifecycleBook accepted = new KingdomLifecycleBook();
+			Assert.IsTrue(KingdomLifecycleRules.BindSettlementIdentity(accepted, "city-target",
+				false, null, fiveOtherSettlements),
+				"collision scan must not inherit four-city carry topology cap");
+			Assert.IsTrue(KingdomLifecycleRules.CanOwnAuthority(accepted));
+
+			KingdomLifecycleBook duplicate = new KingdomLifecycleBook();
+			Assert.IsFalse(KingdomLifecycleRules.BindSettlementIdentity(duplicate, "city-target",
+				false, null, new List<string> { "city-1", "city-2", "city-3", "city-4",
+					"city-5", "city-5" }));
+			Assert.IsNull(duplicate.SettlementId);
+
+			KingdomLifecycleBook target = new KingdomLifecycleBook();
+			Assert.IsFalse(KingdomLifecycleRules.BindSettlementIdentity(target, "city-target",
+				false, null, new List<string> { "city-1", "city-2", "city-3", "city-4",
+					"city-5", "city-target" }));
+			Assert.IsNull(target.SettlementId);
+
+			List<string> maximum = new List<string>();
+			for (int i = 0; i < KingdomLifecycleRules.MaxLifecycleCollisionIds; i++)
+				maximum.Add("city-global-" + i);
+			KingdomLifecycleBook atCap = new KingdomLifecycleBook();
+			Assert.IsTrue(KingdomLifecycleRules.BindSettlementIdentity(atCap, "city-at-cap",
+				false, null, maximum));
+			maximum.Add("city-over-cap");
+			KingdomLifecycleBook overCap = new KingdomLifecycleBook();
+			Assert.IsFalse(KingdomLifecycleRules.BindSettlementIdentity(overCap, "city-over",
+				false, null, maximum));
+		}
+
+		[Test]
 		public void IdentityBinding_CallbackMutatedOrThrowingTopologyCannotPublishAuthority()
 		{
 			KingdomLifecycleBook mutated = new KingdomLifecycleBook();
@@ -1185,6 +1416,17 @@ namespace ThousandAndFirst.Tests
 			using (MemoryStream stream = new MemoryStream(bytes))
 				Assert.Throws<InvalidDataException>(() => KingdomLifecycleWireCodec.ReadCarry(
 					new BinaryReader(stream), new KingdomCarryBook()));
+		}
+
+		[Test]
+		public void CompositeWire_WritesRawBytesWithoutCallingOverriddenArrayFraming()
+		{
+			KingdomLifecycleBook lifecycle = Book("city-hostile-writer");
+			KingdomCarryBook carry = CarryBook();
+			CollectionAssert.AreEqual(LifecycleBytes(lifecycle),
+				LifecycleBytesWithHostileArrayWriter(lifecycle));
+			CollectionAssert.AreEqual(CarryBytes(carry),
+				CarryBytesWithHostileArrayWriter(carry));
 		}
 
 		private static KingdomLifecycleOperation Build(KingdomLifecycleBook book,
@@ -1780,6 +2022,61 @@ namespace ThousandAndFirst.Tests
 				KingdomCarryBook result = new KingdomCarryBook();
 				KingdomLifecycleWireCodec.ReadCarry(new BinaryReader(stream), result);
 				return result;
+			}
+		}
+
+		private static byte[] CarryBytes(KingdomCarryBook book)
+		{
+			using (MemoryStream stream = new MemoryStream())
+			{
+				using (BinaryWriter writer = new BinaryWriter(stream,
+					System.Text.Encoding.UTF8, true))
+					KingdomLifecycleWireCodec.WriteCarry(writer, book);
+				return stream.ToArray();
+			}
+		}
+
+		private static byte[] LifecycleBytes(KingdomLifecycleBook book)
+		{
+			using (MemoryStream stream = new MemoryStream())
+			{
+				using (BinaryWriter writer = new BinaryWriter(stream,
+					System.Text.Encoding.UTF8, true))
+					KingdomLifecycleWireCodec.WriteLifecycle(writer, book);
+				return stream.ToArray();
+			}
+		}
+
+		private static byte[] LifecycleBytesWithHostileArrayWriter(KingdomLifecycleBook book)
+		{
+			using (MemoryStream stream = new MemoryStream())
+			{
+				using (BinaryWriter writer = new HostileArrayWriter(stream))
+					KingdomLifecycleWireCodec.WriteLifecycle(writer, book);
+				return stream.ToArray();
+			}
+		}
+
+		private static byte[] CarryBytesWithHostileArrayWriter(KingdomCarryBook book)
+		{
+			using (MemoryStream stream = new MemoryStream())
+			{
+				using (BinaryWriter writer = new HostileArrayWriter(stream))
+					KingdomLifecycleWireCodec.WriteCarry(writer, book);
+				return stream.ToArray();
+			}
+		}
+
+		private sealed class HostileArrayWriter : BinaryWriter
+		{
+			public HostileArrayWriter(Stream stream)
+				: base(stream, System.Text.Encoding.UTF8, true)
+			{
+			}
+
+			public override void Write(byte[] buffer)
+			{
+				throw new InvalidOperationException("typed-array framing was invoked");
 			}
 		}
 
