@@ -558,22 +558,24 @@ def daily_balance(
     r: Rules,
     pop: int,
     watered: bool,
-    visit_every: int,
+    accounting_span: int,
     water_crew: int,
     capacity: int = 1024,
     charters: int = 0,
 ) -> dict:
-    """Drams per day in and out, averaged over one visit cycle.
+    """Drams per day in and out, averaged over one elapsed accounting span.
 
     `water_crew` is System.WaterCrew: hands the founder put on the detail, and only those
-    hands fetch. Everyone else is drinking without hauling.
+    hands fetch. Everyone else is drinking without hauling. `accounting_span` is not the
+    current visit cadence: it exists to expose the retired cap's distortion against the
+    current uncapped elapsed arithmetic.
     """
     up = upkeep_per_day(pop, capacity)
-    upkeep_rate = up * charged_days(r, visit_every) / visit_every
+    upkeep_rate = up * charged_days(r, accounting_span) / accounting_span
 
     hands = min(water_crew, pop)
     fetch_rate = (
-        hands * SRC["FetchDramsPerSettler"] * fetched_days(r, visit_every) / visit_every
+        hands * SRC["FetchDramsPerSettler"] * fetched_days(r, accounting_span) / accounting_span
         if watered
         else 0.0
     )
@@ -644,7 +646,7 @@ columns are System.WaterCrew - hands the founder put on the detail.
                 f"{(need_s if watered else '-'):>16}"
             )
 
-    print("\nSurplus/day by visit cadence, watered, half the settlement on the detail.")
+    print("\nSurplus/day by elapsed accounting span, watered, half the settlement on the detail.")
     print("CAPPED rows are the pre-rework rules; UNCAPPED are the doctrine's.\n")
     print(
         f"{'pop':>4} {'rules':<22}"
@@ -660,8 +662,12 @@ columns are System.WaterCrew - hands the founder put on the detail.
     print("""
 Read: under the cap, a long absence flattened BOTH halves toward zero, so the rate drifted
 to nothing and the settlement neither gained nor lost - absence was inert, which is what
-the doctrine calls forgiveness. Uncapped, the rate a settlement runs at while you are away
-is the same rate it runs at while you watch, which is clause 1 in one number.""")
+the doctrine calls forgiveness. The V columns are accounting spans, not the current visit
+schedule. While the founder remains on claimed ground, the canonical physical pass runs at
+absolute daily boundaries; while no claimed ground is attended, every city book still advances
+on the heartbeat and physical stores reconcile on the next attended pass. Uncapped arithmetic
+keeps the same elapsed rate whichever way that span is partitioned, which is clause 1 in one
+number.""")
 
 
 def q2_floor():
@@ -694,41 +700,46 @@ water is exactly break-even.
     print("""
 The stage ramp is the whole difficulty curve: Camp wants half its people on water, a City
 wants 110% of them and therefore cannot be held by hauling at all. That is intended - the
-city is meant to need infrastructure - but note what it means with the cap gone: an
-un-infrastructured City now bleeds continuously instead of bleeding for three days and
-stopping. The bound on that bleed is subsidence toward the supported level, which is not
-built yet; until it is, the interim bound is the thirst ladder, which steps ONCE per
-resolve however long the absence (see Q3).""")
+city is meant to need infrastructure - but note what it means with the cap gone: the elapsed
+bill continues instead of stopping after three days. The shipped bounds are two different
+clocks. Subsidence folds every elapsed four-day step toward the supported level. Immediate
+scarcity steps once per canonical physical resolve: daily while the founder remains on
+claimed ground, once over the whole elapsed span when ground is next attended after an
+absence (see Q3 and Q8).""")
 
 
 def q3_ladder():
-    rule("Q3  What a long absence actually costs, with no subsidence built yet")
+    rule("Q3  What scarcity and subsidence do with elapsed time")
     print("""
-The uncapping's real risk is not the arithmetic, it is the ladder in front of it: charge a
-season of upkeep in one pass and a settlement could empty in one homecoming. It cannot,
-and the reason is structural rather than tuned - `KingdomGrowth.ResolveHeartbeat` steps
-`DryStreak` once per FAILED RESOLVE, not once per dry day, and `Emigrate` walks out one
-settler and floors at LoyalCoreSettlers.
+One long unattended span and the same span watched day by day are deliberately not the same
+thing for immediate scarcity. `KingdomGrowth.ResolveHeartbeat` bills all elapsed days in the
+next attended pass but steps `DryStreak` once per FAILED RESOLVE, not once per billed day.
+While the founder remains on claimed ground, `KingdomSemanticDispatcher` supplies one such
+resolve at each absolute daily boundary. Each resolve can walk out at most one settler, and
+`Emigrate` floors at LoyalCoreSettlers.
 """)
     print(
-        f"{'absence (days)':>15}{'drams owed (pop 20)':>22}{'streak steps':>14}"
-        f"{'settlers lost':>15}"
+        f"{'elapsed days':>15}{'catch-up bill at pop 20':>25}{'away scarcity':>16}"
+        f"{'watched resolves':>18}{'slide steps due':>17}"
     )
     for days in (1, 3, 10, 30, 90, 400):
         owed = upkeep_per_day(20) * days
-        # One resolve per homecoming, whatever the length.
-        steps = 1
-        lost = 1 if SRC["DryIntervalsToEmigrate"] <= 1 else 0
-        print(f"{days:>15}{owed:>22}{steps:>14}{lost:>15}")
+        # One immediate scarcity resolve when an unattended physical span is reconciled.
+        away_steps = 1
+        watched_steps = days
+        slide_steps = days // SRC["StepDays"]
+        print(f"{days:>15}{owed:>25}{away_steps:>16}{watched_steps:>18}{slide_steps:>17}")
     print(f"""
     DryIntervalsToEmigrate = {SRC["DryIntervalsToEmigrate"]}, DryIntervalsToWither = {SRC["DryIntervalsToWither"]},
-    LoyalCoreSettlers = {SRC["LoyalCoreSettlers"]}. So a founder who leaves a dry settlement for a
-    year comes home to empty cisterns and ONE rung of the ladder, not to an empty town.
-    Repeated neglect still empties it, one visit at a time, down to the loyal core.
+    LoyalCoreSettlers = {SRC["LoyalCoreSettlers"]}. The `away scarcity` column therefore means
+    one warning from a fresh dry streak, not one automatic departure; repeated failed resolves
+    can still walk people out down to the loyal core. The watched column is opportunities, not
+    a prediction of total departures: population, stores and support all change between passes.
 
-    This is the interim bound and it should be named as one. When subsidence lands, the
-    honest bound becomes "the level the works actually carry", and the ladder stops being
-    load-bearing.""")
+    Subsidence is separate and already shipped. Its own uncapped clock may cash every whole
+    {SRC["StepDays"]}-day step shown above in the same homecoming reckoning, shedding multiple
+    settlers toward what the works carry. Q8 computes those structural trajectories. Thus a long
+    absence is bounded, but not by the old claim that a homecoming can cost only one settler.""")
 
 
 def q4_refined():
@@ -1570,22 +1581,24 @@ vessel: `airwellfield` condenses 25 drams a day for zero hands and two of them c
 45. `condensery` makes 50 and three cover a City's 110 - behind the foundry level and a
 certified Solar Still, which is the point at which the settlement stops counting.
 
-THE WIRING IS THERE, and it is why the flip mattered. A water work's `Carries` is read BOTH
-ways: `KingdomGrowth` stores `KingdomSubsidence.Supports(survey).Water * madeDays` off its own
-uncapped checkpoint, on the same discipline as fetch, so every declared point is a dram that
-actually arrives in the casks - over an absence too. That is exactly why a store could not go
-on declaring one. One point of `water` is one dram a day and one dram a day is one settler at
-camp rates, so `airwellfield` x2 both raises a Town's level to 26 and puts 50 drams a day in
-its casks against a bill of 45 - and it does it out of a LiquidProducer whose mean rate is 48
-turns a dram, which is 1200/48 = 25, which is the number in the catalogue.
+THE WIRING IS THERE, and it is why the flip mattered. A water work's `Carries` is measured
+onto its zone row when that ground is attended. The city model then integrates every row's
+water rate from its single `ProcessedThroughTick`, whether the founder is watching or not,
+and bounded reify lands the debt in real vessels. `LastWaterWorkTick` is only the published
+mirror of that model clock. At baseline, one point of `water` is one dram a day and one dram
+a day is one settler at camp rates, so `airwellfield` x2 both raises a Town's level to 26 and
+puts 50 drams a day in its casks against a bill of 45 - and it does it out of a LiquidProducer
+whose mean rate is 48 turns a dram, which is 1200/48 = 25, the catalogue number.
 
-FOOD IS NO LONGER THE HALF NOT WIRED. It was, for exactly one wave: `food` bound the
-sustainable level without anything ever producing or eating a ration. `KingdomGrowth` now
-stores `KingdomSubsidence.Supports(survey).Food * grownDays` off its own `LastFoodWorkTick`,
-and `ResolveHeartbeat` bills `KingdomRules.RationsForElapsed` against it, so both binding
-goods are wired the same way off the same catalogue. Q11 is the food half of this table, and
-its handover reads differently on purpose: water hands over from hauling to works and food
-never does.""")
+FOOD IS NO LONGER THE HALF NOT WIRED, but it has two physical lanes rather than water's one.
+The city model integrates `KingdomGrowth.FoodMadePerDay` off `ProcessedThroughTick`; that
+figure deliberately subtracts sown fields and mills. Sown fields catch up their absolute
+six-day crop cycles through `KingdomPlot`, and mills transform real larder stock through
+`GrindHarvest` on the attended pass. `ResolveHeartbeat` bills
+`KingdomRules.RationsForElapsed` against the real larders before the mill runs.
+`LastFoodWorkTick` belongs to mills only, never to the fields or the city model. Q11 is the
+food half of this table, and its handover reads differently on purpose: water hands over from
+hauling to works and food never does.""")
 
 
 def q8_trajectories():
@@ -2188,8 +2201,8 @@ def w6_production_and_logistics():
     city model's single `ProcessedThroughTick`. A move is only safe if the number is the same
     number, so the first four checks are source facts, asserted rather than trusted: the old
     crediting is GONE from the settlement pass, the new one reads the SAME `Supports` tally the
-    ladder is derived from, and the settlement's two work stamps are now written by the model and
-    by nobody else.
+    ladder is derived from. The model publishes the water stamp as its mirror; the food stamp
+    remains the mills' separate physical clock.
     """
     rule("W6  Production on the model, and logistics that never look stupid")
 
@@ -2668,9 +2681,12 @@ def caveats():
        the settlement's yield and not an addition to it (the gathering counts rows still standing
        RIPE), so it cannot inflate any column here; what it can do is make a founder personally
        rich in vinewafers, which is not an economy this file models.
-     - TRADE. No charter carries food, so the only ways into a larder are the fields, the wild,
-       and the founder's own hands. Seed now moves on the wares tables; food still does not. That
-       is a real gap and it is named as a follow-up rather than modelled.
+     - TRADE. The two shipped deal records declare water income only. The trade operation also
+       has a keyed material-cargo lane, but neither current deal declares materials and neither
+       lane carries food. The only ways into a larder are therefore the fields, the wild and the
+       founder's own hands. Seed moves on the wares tables; food does not. This model assigns
+       trade food zero as the current scope boundary, rather than pretending a future food deal
+       already ships.
 
 6. THE ARRIVAL TIMER, NOT WATER, IS STILL THE GROWTH GATE above about eight settlers:
    3 + pop/2 days per arrival means pop 50 waits 28 days for one. No water tuning touches
@@ -3052,9 +3068,12 @@ grand water designs are stores as much as makers. Food has no grand STORE - the 
 middling plot and the ladder stops there - so a city keeps its bread in several of the same
 building rather than in one big one.
 
-What bounds that from becoming a death spiral is the RESOLVE, not the day. The hunger ladder
-steps once per heartbeat resolve exactly as the thirst ladder does, so an absence of any length
-costs at most one rung of it, and `Emigrate` floors at {SRC["LoyalCoreSettlers"]}.
+What bounds the IMMEDIATE hunger ladder is the RESOLVE, not the number of days one resolve
+bills. A long span with no attended claimed ground advances it once when physical stores next
+reconcile; while the founder remains on claimed ground, the stationary scheduler supplies one
+resolve at each absolute daily boundary. Either way one resolve removes at most one settler
+and `Emigrate` floors at {SRC["LoyalCoreSettlers"]}. Subsidence remains the independent
+structural clock and can cash multiple elapsed steps in that same homecoming pass.
 """)
 
     rule("Q11c The two ladders together: the composition rule, exhaustively")

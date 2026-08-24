@@ -68,7 +68,7 @@ columns are System.WaterCrew - hands the founder put on the detail.
   40 Town      watered         72    -72.09      -32.09      +7.91         36 of 40
   40 Town      DRY             72    -72.09      -72.09     -72.09                -
 
-Surplus/day by visit cadence, watered, half the settlement on the detail.
+Surplus/day by elapsed accounting span, watered, half the settlement on the detail.
 CAPPED rows are the pre-rework rules; UNCAPPED are the doctrine's.
 
  pop rules                         V=1        V=3        V=7       V=30      V=400
@@ -81,8 +81,12 @@ CAPPED rows are the pre-rework rules; UNCAPPED are the doctrine's.
 
 Read: under the cap, a long absence flattened BOTH halves toward zero, so the rate drifted
 to nothing and the settlement neither gained nor lost - absence was inert, which is what
-the doctrine calls forgiveness. Uncapped, the rate a settlement runs at while you are away
-is the same rate it runs at while you watch, which is clause 1 in one number.
+the doctrine calls forgiveness. The V columns are accounting spans, not the current visit
+schedule. While the founder remains on claimed ground, the canonical physical pass runs at
+absolute daily boundaries; while no claimed ground is attended, every city book still advances
+on the heartbeat and physical stores reconcile on the next attended pass. Uncapped arithmetic
+keeps the same elapsed rate whichever way that span is partitioned, which is clause 1 in one
+number.
 
 ======================================================================================
 Q2  The floor: is Camp self-sustaining with the cap gone?
@@ -117,38 +121,42 @@ And at every size, watered ground, the share of the settlement the detail wants:
 
 The stage ramp is the whole difficulty curve: Camp wants half its people on water, a City
 wants 110% of them and therefore cannot be held by hauling at all. That is intended - the
-city is meant to need infrastructure - but note what it means with the cap gone: an
-un-infrastructured City now bleeds continuously instead of bleeding for three days and
-stopping. The bound on that bleed is subsidence toward the supported level, which is not
-built yet; until it is, the interim bound is the thirst ladder, which steps ONCE per
-resolve however long the absence (see Q3).
+city is meant to need infrastructure - but note what it means with the cap gone: the elapsed
+bill continues instead of stopping after three days. The shipped bounds are two different
+clocks. Subsidence folds every elapsed four-day step toward the supported level. Immediate
+scarcity steps once per canonical physical resolve: daily while the founder remains on
+claimed ground, once over the whole elapsed span when ground is next attended after an
+absence (see Q3 and Q8).
 
 ======================================================================================
-Q3  What a long absence actually costs, with no subsidence built yet
+Q3  What scarcity and subsidence do with elapsed time
 ======================================================================================
 
-The uncapping's real risk is not the arithmetic, it is the ladder in front of it: charge a
-season of upkeep in one pass and a settlement could empty in one homecoming. It cannot,
-and the reason is structural rather than tuned - `KingdomGrowth.ResolveHeartbeat` steps
-`DryStreak` once per FAILED RESOLVE, not once per dry day, and `Emigrate` walks out one
-settler and floors at LoyalCoreSettlers.
+One long unattended span and the same span watched day by day are deliberately not the same
+thing for immediate scarcity. `KingdomGrowth.ResolveHeartbeat` bills all elapsed days in the
+next attended pass but steps `DryStreak` once per FAILED RESOLVE, not once per billed day.
+While the founder remains on claimed ground, `KingdomSemanticDispatcher` supplies one such
+resolve at each absolute daily boundary. Each resolve can walk out at most one settler, and
+`Emigrate` floors at LoyalCoreSettlers.
 
- absence (days)   drams owed (pop 20)  streak steps  settlers lost
-              1                    30             1              0
-              3                    90             1              0
-             10                   300             1              0
-             30                   900             1              0
-             90                  2700             1              0
-            400                 12000             1              0
+   elapsed days  catch-up bill at pop 20   away scarcity  watched resolves  slide steps due
+              1                       30               1                 1                0
+              3                       90               1                 3                0
+             10                      300               1                10                2
+             30                      900               1                30                7
+             90                     2700               1                90               22
+            400                    12000               1               400              100
 
     DryIntervalsToEmigrate = 2, DryIntervalsToWither = 3,
-    LoyalCoreSettlers = 2. So a founder who leaves a dry settlement for a
-    year comes home to empty cisterns and ONE rung of the ladder, not to an empty town.
-    Repeated neglect still empties it, one visit at a time, down to the loyal core.
+    LoyalCoreSettlers = 2. The `away scarcity` column therefore means
+    one warning from a fresh dry streak, not one automatic departure; repeated failed resolves
+    can still walk people out down to the loyal core. The watched column is opportunities, not
+    a prediction of total departures: population, stores and support all change between passes.
 
-    This is the interim bound and it should be named as one. When subsidence lands, the
-    honest bound becomes "the level the works actually carry", and the ladder stops being
-    load-bearing.
+    Subsidence is separate and already shipped. Its own uncapped clock may cash every whole
+    4-day step shown above in the same homecoming reckoning, shedding multiple
+    settlers toward what the works carry. Q8 computes those structural trajectories. Thus a long
+    absence is bounded, but not by the old claim that a homecoming can cost only one settler.
 
 ======================================================================================
 Q4  The refined-material chain, priced
@@ -163,7 +171,7 @@ shaped stone, worked metal, through a staffed yard) -> spent on building costs.
     MaxRefinedPerDay     = 8      throughput ceiling, per DAY of running
     MaxClearingHands     = 6      most hands one clearing gang uses
 
-Refined units a yard turns out, by crew and days (capability 100%):
+Refined units a yard turns out, by crew and days (effort 100%):
 
  crew      d=1     d=2     d=3     d=5    d=10    d=30
     1        0       1       2       3       6      20
@@ -183,36 +191,70 @@ Refined units a yard turns out, by crew and days (capability 100%):
     bench's own width. A yard nobody stands in still makes nothing for thirty days, which is
     clause 2 exactly: time times LABOUR, never time alone.
 
+And what NEGLECT costs, which is new. Addendum 10(b) says damage degrades every work's
+function in its own kind, and a yard's kind is what comes off it; the refining bench was the
+one consumer that had never applied its own wear (QB-29). Condition is 100 - wear, floored at
+40 by MaxWearPercent = 60, and it rides the EFFORT percent rather than the head
+count - a two-hand yard times a 40% condition would truncate to nobody and report itself
+UNSTAFFED, which is the wrong sentence for a bench people are standing at. Every yard in the
+catalogue is Staff="2", so this is that yard:
+
+ wear  cond       d=1     d=2     d=3     d=5    d=10    d=30
+    0   100         1       2       4       6      13      40
+   20    80         1       2       3       5      10      32
+   40    60         0       1       2       4       8      24
+   60    40         0       1       1       2       5      16
+
+    Reading the ladder. A sound two-hand yard shapes 40 units in a month; the same yard at
+    the wear ceiling shapes 16 - 40% of it, which is the condition floor and not a
+    number chosen here. The consequence is bounded exactly where every other work's is, it
+    is a SLOPE rather than a cliff (the row at wear 60 is short, never zero, over any stretch
+    a founder would notice), and mending ends it outright: the work is the same work again.
+    The single-day column is the one place it reads as nothing, and that is the same
+    integer truncation a sound one-hand yard already lived with.
+
+    The catalogue table below still prices the SOUND yard, because that is the schedule a
+    founder is quoted when they commission a design. A neglected one takes 2.5x as long.
+
+    The third factor, for the record and for nothing else. The keepers' method
+    (RESEARCH-SYSTEM-DESIGN 8.2) now rides this same effort percent, and reaches the city
+    book's water and food rates and the crop harvest besides. A realm that has researched
+    nothing carries 100%, 100% is a no-op through Methoded, and NO table in this file moved
+    for it - they are all baseline tables and they are meant to stay that way. What the
+    ceiling would be worth if a realm reached it: a sound two-hand yard shapes 60 units in
+    a month at 150% against 40 at the baseline. A factor on the effort, never on the days,
+    and never on a draw.
+
 What the catalogue asks for. Materials split into what CLEARING gives back (timber, stone,
 scrap, marble, mud, canvas) and what a YARD has to shape - only the second half is on the
 refining chain, and it eats 2 raw per unit on top of the raw the design
 names outright. A two-hand yard shapes 1 unit(s) a day.
 
 design                drams  build d  raw named  refined  raw eaten  raw total  bit weight  yard-days
+arcology                190     19.0        188       84        168        356          18         84
+becomingannexe          140     14.0        120       72        144        264          18         72
+chimerictheatre         140     14.0        126       48         96        222          18         48
+mirrorgate              120     12.0        116       36         72        188          18         36
+crownhall               110     11.0        106       36         72        178          11         36
 heartcourt               96     10.0        108       32         64        172          11         32
+arcologyward             70      8.0         48       30         60        108          11         30
 condensery              100     10.0        116       28         56        172          11         28
+graftinghall             90      7.5         60       28         56        116           9         28
 waterworks               72     10.0        138       26         52        190          11         26
 homefarm                 92     10.0        124       24         48        172           0         24
-reliquary                50      8.0         56       14         28         84           0         14
-court                    96     10.0        126       12         24        150           0         12
-airwellfield             52      6.0         68       10         20         88           0         10
-terrace                  40      6.0         44        8         16         60           0          8
-grange                   40      6.0         46        8         16         62           0          8
-temple                   44      6.0         48        8         16         64           0          8
-manor                    44      6.0         48        6         12         60           0          6
-bathhouse                46      6.0         60        6         12         72           0          6
+arcologyterrace          46      6.0         26       16         32         58           0         16
 
-    Bits, the third cost. 5 of 87 designs ask for vanilla tinkering bits at all,
-    and they are exactly the high-craft ones: chargingpost, condensery, heartcourt, underbench, waterworks.
+    Bits, the third cost. 14 of 106 designs ask for vanilla tinkering bits at all,
+    and they are exactly the high-craft ones: arcology, arcologyward, becomingannexe, chargingpost, chimerictheatre, condensery, crownhall, graftinghall, hallsurgery, heartcourt, mirrorgate, underbench, vathouse, waterworks.
     Nobody in the settlement makes a bit; they come off salvage and out of caravans, so a
     design that names them is gated on the founder's own scavenging rather than on any yard.
     That is the intended shape (the catalogue's header says so) and it means the bit line is
     a GATE and not a rate - it never appears in the yard-days column, and no amount of crew
     shortens it.
 
-    Reading. The heaviest design in the catalogue (heartcourt) wants 32 refined
-    units: 32 days of a two-hand yard, and 64 raw loads eaten on top of the
-    108 it names outright. Against a build time of 10 days, the YARD is the schedule
+    Reading. The heaviest design in the catalogue (arcology) wants 84 refined
+    units: 84 days of a two-hand yard, and 168 raw loads eaten on top of the
+    188 it names outright. Against a build time of 19 days, the YARD is the schedule
     for anything grand - the scaffold is not what you wait for.
 
     The yard-days column is now TRUE rather than aspirational. It was not, for the whole of
@@ -286,7 +328,7 @@ must be plausible, because both are things players do.
   Steading       4      58      2      8   catchmentbankx2 | fieldx1 | housex1  holds
   Village        4     114      3     18   airwellcourtx2 | fieldrowsx1 | housecourtx1  holds
   Town           4     184      3     26   airwellfieldx2 | grangex1 | terracex1  holds
-  City           7     676      8     68   condenseryx3 | homefarmx2 | courtx2  holds
+  City           6     674     12     60   condenseryx3 | homefarmx2 | arcologyx1  holds
 
 
 Reading. Every rung is holdable both ways. That is now a stronger statement than it was,
@@ -358,11 +400,11 @@ The third is not a balance rule, it is a design rule, and it is here because it 
 pass silently breaks. A style is a place, not a penalty.
 
   style      offered  refused   own   categories missing
-  common          73        5     3   none
-  verdant         71        6     2   none
-  fungal          73        4     2   none
-  gyre            72        5     2   none
-  eater           72        6     3   none
+  common          92        5     3   none
+  verdant         90        6     2   none
+  fungal          92        4     2   none
+  gyre            91        5     2   none
+  eater           91        6     3   none
 
   common   is refused hut, hutyard, sawyeryard, palisade, waterwheel
            and raises mudhut, mudhutcourt, caravanserai
@@ -468,22 +510,24 @@ vessel: `airwellfield` condenses 25 drams a day for zero hands and two of them c
 45. `condensery` makes 50 and three cover a City's 110 - behind the foundry level and a
 certified Solar Still, which is the point at which the settlement stops counting.
 
-THE WIRING IS THERE, and it is why the flip mattered. A water work's `Carries` is read BOTH
-ways: `KingdomGrowth` stores `KingdomSubsidence.Supports(survey).Water * madeDays` off its own
-uncapped checkpoint, on the same discipline as fetch, so every declared point is a dram that
-actually arrives in the casks - over an absence too. That is exactly why a store could not go
-on declaring one. One point of `water` is one dram a day and one dram a day is one settler at
-camp rates, so `airwellfield` x2 both raises a Town's level to 26 and puts 50 drams a day in
-its casks against a bill of 45 - and it does it out of a LiquidProducer whose mean rate is 48
-turns a dram, which is 1200/48 = 25, which is the number in the catalogue.
+THE WIRING IS THERE, and it is why the flip mattered. A water work's `Carries` is measured
+onto its zone row when that ground is attended. The city model then integrates every row's
+water rate from its single `ProcessedThroughTick`, whether the founder is watching or not,
+and bounded reify lands the debt in real vessels. `LastWaterWorkTick` is only the published
+mirror of that model clock. At baseline, one point of `water` is one dram a day and one dram
+a day is one settler at camp rates, so `airwellfield` x2 both raises a Town's level to 26 and
+puts 50 drams a day in its casks against a bill of 45 - and it does it out of a LiquidProducer
+whose mean rate is 48 turns a dram, which is 1200/48 = 25, the catalogue number.
 
-FOOD IS NO LONGER THE HALF NOT WIRED. It was, for exactly one wave: `food` bound the
-sustainable level without anything ever producing or eating a ration. `KingdomGrowth` now
-stores `KingdomSubsidence.Supports(survey).Food * grownDays` off its own `LastFoodWorkTick`,
-and `ResolveHeartbeat` bills `KingdomRules.RationsForElapsed` against it, so both binding
-goods are wired the same way off the same catalogue. Q11 is the food half of this table, and
-its handover reads differently on purpose: water hands over from hauling to works and food
-never does.
+FOOD IS NO LONGER THE HALF NOT WIRED, but it has two physical lanes rather than water's one.
+The city model integrates `KingdomGrowth.FoodMadePerDay` off `ProcessedThroughTick`; that
+figure deliberately subtracts sown fields and mills. Sown fields catch up their absolute
+six-day crop cycles through `KingdomPlot`, and mills transform real larder stock through
+`GrindHarvest` on the attended pass. `ResolveHeartbeat` bills
+`KingdomRules.RationsForElapsed` against the real larders before the mill runs.
+`LastFoodWorkTick` belongs to mills only, never to the fields or the city model. Q11 is the
+food half of this table, and its handover reads differently on purpose: water hands over from
+hauling to works and food never does.
 
 ======================================================================================
 Q8  What a slide actually costs, in days and in people
@@ -560,7 +604,7 @@ loop can do, by construction:
   Steading      2      8        4      4   water
   Village       3     18        7      4   food
   Town          3     26       10      4   food
-  City          8     79       27      4   water
+  City         12     75       26      4   roof
 
 And the cheapest plan - the many-small-plots build, which at every rung above Steading is
 entirely staffless. Under the old ternary its wrecked column EQUALLED its sound one, which was
@@ -720,11 +764,11 @@ one who put them out past the fields, where a quarter band reaches perhaps a thi
 roofs and a plot band reaches nobody who lives anywhere.
 
 rung      declared gathered scattered   cap   was gathered scattered
-Camp            14        0         0     2     6        4         4
-Steading        33       14         6     2     7        7         7
-Village         90       69        18     6    18       18        18
-Town           157      136        86    12    37       37        37
-City           180      159       109    25    75       75        75
+Camp            15        0         0     2     6        4         4
+Steading        37       16         7     2     7        7         7
+Village        101       78        22     6    18       18        18
+Town           168      145        90    12    37       37        37
+City           249      226       171    25    75       75        75
 
 Reading. Those columns say something worth saying plainly: with one of EVERY lifting design a
 rung can reach standing, the declared lift overruns the cap so far that scoping changes the
@@ -864,9 +908,12 @@ grand water designs are stores as much as makers. Food has no grand STORE - the 
 middling plot and the ladder stops there - so a city keeps its bread in several of the same
 building rather than in one big one.
 
-What bounds that from becoming a death spiral is the RESOLVE, not the day. The hunger ladder
-steps once per heartbeat resolve exactly as the thirst ladder does, so an absence of any length
-costs at most one rung of it, and `Emigrate` floors at 2.
+What bounds the IMMEDIATE hunger ladder is the RESOLVE, not the number of days one resolve
+bills. A long span with no attended claimed ground advances it once when physical stores next
+reconcile; while the founder remains on claimed ground, the stationary scheduler supplies one
+resolve at each absolute daily boundary. Either way one resolve removes at most one settler
+and `Emigrate` floors at 2. Subsidence remains the independent
+structural clock and can cash multiple elapsed steps in that same homecoming pass.
 
 
 ======================================================================================
@@ -984,8 +1031,11 @@ G2  The food lane's invariants, re-derived from the XML
   design      blueprint                 rows  derived  declared   plot cells
   plot        r_KingdomPlot                6        3         3   6/20 (30%)
   plotrows    r_KingdomPlotRows           10        5         5   10/20 (50%)
+  fungalvault r_KingdomFungalVault        12        6         6   12/48 (25%)
   field       r_KingdomField              16        8         8   16/48 (33%)
+  arcologyterracer_KingdomArcologyTerrace    28       14        14   28/48 (58%)
   fieldrows   r_KingdomFieldRows          36       18        18   36/48 (75%)
+  vaultgalleriesr_KingdomVaultGalleries     36       18        18   36/108 (33%)
   grange      r_KingdomGrange             52       26        26   52/108 (48%)
   homefarm    r_KingdomHomeFarm           80       40        40   80/280 (29%)
 
@@ -1000,10 +1050,13 @@ G2  The food lane's invariants, re-derived from the XML
   plot        food:3   grows (6 rows)
   grindmill   food:4   makes (a mill, and it carries craft to say so)
   plotrows    food:5   grows (10 rows)
+  fungalvault food:6   grows (12 rows)
   field       food:8   grows (16 rows)
   granary     food:9   keeps (288 servings)
   sporecellar food:9   keeps (288 servings)
+  arcologyterracefood:14  grows (28 rows)
   fieldrows   food:18  grows (36 rows)
+  vaultgalleriesfood:18  grows (36 rows)
   grange      food:26  grows (52 rows)
   homefarm    food:40  grows (80 rows)
 
@@ -1033,8 +1086,11 @@ G2  The food lane's invariants, re-derived from the XML
   design        rows  carries/d   over 6d  one gathering
   plot             6          3        18             18
   plotrows        10          5        30             30
+  fungalvault     12          6        36             36
   field           16          8        48             48
+  arcologyterrace    28         14        84             84
   fieldrows       36         18       108            108
+  vaultgalleries    36         18       108            108
   grange          52         26       156            156
   homefarm        80         40       240            240
 
@@ -1384,9 +1440,12 @@ Where this model is too crude to decide anything
        the settlement's yield and not an addition to it (the gathering counts rows still standing
        RIPE), so it cannot inflate any column here; what it can do is make a founder personally
        rich in vinewafers, which is not an economy this file models.
-     - TRADE. No charter carries food, so the only ways into a larder are the fields, the wild,
-       and the founder's own hands. Seed now moves on the wares tables; food still does not. That
-       is a real gap and it is named as a follow-up rather than modelled.
+     - TRADE. The two shipped deal records declare water income only. The trade operation also
+       has a keyed material-cargo lane, but neither current deal declares materials and neither
+       lane carries food. The only ways into a larder are therefore the fields, the wild and the
+       founder's own hands. Seed moves on the wares tables; food does not. This model assigns
+       trade food zero as the current scope boundary, rather than pretending a future food deal
+       already ships.
 
 6. THE ARRIVAL TIMER, NOT WATER, IS STILL THE GROWTH GATE above about eight settlers:
    3 + pop/2 days per arrival means pop 50 waits 28 days for one. No water tuning touches
