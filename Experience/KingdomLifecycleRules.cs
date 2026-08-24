@@ -26,6 +26,24 @@ namespace ThousandAndFirst
 		public bool ReconcileOpenWork;
 	}
 
+	public sealed class KingdomGrowthAvailabilityDecision
+	{
+		public bool Valid;
+		public string Failure;
+		public bool AllowStarters;
+		public bool ReconcileOpen;
+		public KingdomLifecycleOptionState OptionState;
+		public KingdomGrowthHealthState HealthState;
+		public long ObservedTick;
+		public bool WorkPaused;
+		public long PauseStartedTick;
+		public long PausedTicks;
+		public long EffectiveWorkTick;
+		public bool RestampClocks;
+		public long NextArrivalTick;
+		public long ArrivalIntervalTicks;
+	}
+
 	public enum KingdomLifecycleMutationAction : byte
 	{
 		Settled = 0,
@@ -98,7 +116,15 @@ namespace ThousandAndFirst
 	/// <summary>Engine-free authority, replay, FSM, and conservation laws.</summary>
 	public static class KingdomLifecycleRules
 	{
-		public const int CurrentFormatVersion = 5;
+		public const int LegacyLifecycleFormatVersion = 5;
+		public const int CurrentFormatVersion = 6;
+		public const int CurrentCarryFormatVersion = 5;
+		public const int CurrentGrowthFormatVersion = 1;
+		public const int MaxGrowthFields = 8;
+		public const int MaxGrowthSources = 64;
+		public const int MaxGrowthOutputs = 96;
+		public const int MaxGrowthCropRows = 96;
+		public const int MaxGrowthSectionBytes = 512 * 1024;
 		public const int MaxRecentProofs = 64;
 		public const int MaxWaterLegs = 24;
 		public const int MaxProjections = 64;
@@ -129,7 +155,7 @@ namespace ThousandAndFirst
 		public static bool CanOwnAuthority(KingdomCarryBook Book)
 		{
 			return Book != null && !Book.WireRejected && !Book.Quarantined
-				&& Book.FormatVersion == CurrentFormatVersion && ValidRootId(Book.RealmId)
+				&& Book.FormatVersion == CurrentCarryFormatVersion && ValidRootId(Book.RealmId)
 				&& Book.IdentityBound && ExactCarryIdentityProof(Book)
 				&& CarryBookShape(Book);
 		}
@@ -159,14 +185,18 @@ namespace ThousandAndFirst
 						LegacyMigration ? MigrationKey : null, StringComparison.Ordinal);
 			if (LegacyMigration && !ValidRootId(MigrationKey)) return false;
 			if (!LegacyMigration && !string.IsNullOrEmpty(MigrationKey)) return false;
-			if (!ExistingIdsExclude(ExistingIds, ExactId) || !PristineLifecycleBook(Book))
+			if (!ExistingIdsExclude(ExistingIds, ExactId) || !PristineLifecycleBook(Book) ||
+				!PristineGrowthBook(Book.Growth))
 				return false;
+			KingdomGrowthBook growth = NewBoundGrowth(ExactId);
+			if (growth == null) return false;
 			Book.SettlementId = ExactId;
 			Book.LegacyIdentity = LegacyMigration;
 			Book.LegacyMigrationKey = LegacyMigration ? MigrationKey : null;
 			Book.IdentityBound = true;
 			Book.IdentityProof = SettlementIdentityProof(Book.SettlementId,
 				Book.LegacyIdentity, Book.LegacyMigrationKey);
+			Book.Growth = growth;
 			return ExactSettlementIdentityProof(Book);
 		}
 
@@ -1906,7 +1936,7 @@ namespace ThousandAndFirst
 				&& LaneAuthorityValid(book, KingdomLifecycleLane.NotableGuest, book.NotableGuest)
 				&& LaneAuthorityValid(book, KingdomLifecycleLane.Raid, book.Raid)
 				&& LaneAuthorityValid(book, KingdomLifecycleLane.Petition, book.Petition)
-				&& ActiveResourcesValid(book);
+				&& ActiveResourcesValid(book) && GrowthAttachmentValid(book);
 		}
 
 		private static bool CarryBookShape(KingdomCarryBook book)
@@ -2313,6 +2343,7 @@ namespace ThousandAndFirst
 		{
 			if (Book == null) return;
 			if (PristineLifecycleBook(Book)) return;
+			if (CanonicalLifecycleQuarantine(Book)) return;
 			if (Book.FormatVersion != CurrentFormatVersion)
 			{
 				Book.WireRejected = true;
@@ -2362,7 +2393,7 @@ namespace ThousandAndFirst
 		{
 			if (Book == null) return;
 			if (PristineCarryBook(Book)) return;
-			if (Book.FormatVersion != CurrentFormatVersion)
+			if (Book.FormatVersion != CurrentCarryFormatVersion)
 			{
 				Book.WireRejected = true;
 				Deny(Book, "unsupported carry book version");
@@ -3229,7 +3260,7 @@ namespace ThousandAndFirst
 			long after;
 			return lease != null && ValidRootId(OperationId)
 				&& string.Equals(lease.OperationId, OperationId, StringComparison.Ordinal)
-				&& KnownResourceKind(lease.Kind) && ValidRootId(lease.ScopeId)
+				&& KnownOuterResourceKind(lease.Kind) && ValidRootId(lease.ScopeId)
 				&& ValidRootId(lease.SubjectId)
 				&& string.Equals(lease.Key, ResourceKey(lease.Kind, lease.ScopeId, lease.SubjectId),
 					StringComparison.Ordinal)
@@ -3243,7 +3274,7 @@ namespace ThousandAndFirst
 
 		private static bool ResourceShape(KingdomLifecycleResourceRevision row)
 		{
-			return row != null && KnownResourceKind(row.Kind) && ValidRootId(row.ScopeId)
+			return row != null && KnownOuterResourceKind(row.Kind) && ValidRootId(row.ScopeId)
 				&& ValidRootId(row.SubjectId) && row.Revision >= 0L
 				&& string.Equals(row.Key, ResourceKey(row.Kind, row.ScopeId, row.SubjectId),
 					StringComparison.Ordinal)
@@ -3265,7 +3296,7 @@ namespace ThousandAndFirst
 		{
 			if (!ValidName(ZoneId)) return false;
 			if (topology == KingdomLifecycleTopology.Cell)
-				return string.IsNullOrEmpty(OwnerId) && X >= 0 && X <= MaxCoordinate
+				return OwnerId == null && X >= 0 && X <= MaxCoordinate
 					&& Y >= 0 && Y <= MaxCoordinate;
 			if (topology == KingdomLifecycleTopology.Inventory)
 				return ValidRootId(OwnerId) && X == -1 && Y == -1;
@@ -3752,7 +3783,7 @@ namespace ThousandAndFirst
 			for (int i = 0; i < Book.Resources.Count; i++)
 			{
 				KingdomLifecycleResourceRevision row = Book.Resources[i];
-				if (string.IsNullOrEmpty(row.ActiveOperationId)) continue;
+				if (row.ActiveOperationId == null) continue;
 				if (Book.Open == null || !string.Equals(row.ActiveOperationId,
 					Book.Open.Id, StringComparison.Ordinal)
 					|| !string.Equals(row.Key, Book.Open.ScheduleLease == null
@@ -3771,7 +3802,7 @@ namespace ThousandAndFirst
 			for (int i = 0; i < Book.Resources.Count; i++)
 			{
 				KingdomLifecycleResourceRevision row = Book.Resources[i];
-				if (string.IsNullOrEmpty(row.ActiveOperationId)) continue;
+				if (row.ActiveOperationId == null) continue;
 				KingdomLifecycleOperation op = FindOpenOperation(Book, row.ActiveOperationId);
 				KingdomLifecycleResourceLease lease = op == null ? null : FindLease(op, row.Key);
 				if (lease == null || !ResourceWitnessMatches(row, lease)) return false;
@@ -4115,13 +4146,2757 @@ namespace ThousandAndFirst
 				&& Kind != KingdomLifecycleResourceKind.None;
 		}
 
+		private static bool KnownOuterResourceKind(KingdomLifecycleResourceKind Kind)
+		{
+			return KnownResourceKind(Kind) &&
+				(byte)Kind <= (byte)KingdomLifecycleResourceKind.Raid;
+		}
+
 		private static bool IsDomainResourceKind(KingdomLifecycleResourceKind Kind)
 		{
-			return KnownResourceKind(Kind)
+			return KnownOuterResourceKind(Kind)
 				&& Kind != KingdomLifecycleResourceKind.Schedule
 				&& Kind != KingdomLifecycleResourceKind.WaterVessel
 				&& Kind != KingdomLifecycleResourceKind.Object
 				&& Kind != KingdomLifecycleResourceKind.Projection;
+		}
+
+		public static bool CanOwnGrowthAuthority(KingdomLifecycleBook Parent)
+		{
+			return Parent != null && CanOwnAuthority(Parent) && Parent.Growth != null &&
+				CanOwnGrowthAuthority(Parent.Growth, Parent.SettlementId);
+		}
+
+		public static bool CanOwnGrowthAuthority(KingdomGrowthBook Book, string SettlementId)
+		{
+			return Book != null && !Book.Quarantined && Book.OpaquePayload == null &&
+				Book.FormatVersion == CurrentGrowthFormatVersion && !Book.MigrationPending &&
+				ValidRootId(SettlementId) && Book.IdentityBound &&
+				string.Equals(Book.SettlementId, SettlementId, StringComparison.Ordinal) &&
+				string.Equals(Book.IdentityProof, GrowthIdentityProof(SettlementId),
+					StringComparison.Ordinal) && GrowthRootShape(Book, ValidateOperations: true)
+				&& KingdomLifecycleWireCodec.GrowthPayloadFitsAggregateCap(Book);
+		}
+
+		/// <summary>Structural writer gate. Opaque bytes are exact evidence; parsed current
+		/// envelopes must be canonical authority, a staged v5 migration, or a canonical empty
+		/// quarantine. Programmatic malformed state is refused rather than truncated.</summary>
+		public static bool GrowthEnvelopeWritable(KingdomGrowthBook Book)
+		{
+			if (Book == null || Book.FormatVersion != CurrentGrowthFormatVersion ||
+				TooLong(Book.Fault, MaxTextChars)) return false;
+			if (Book.OpaquePayload != null)
+				return KingdomLifecycleWireCodec.OpaqueGrowthEnvelopeWritable(Book);
+			if (Book.OpaqueWireVersion != 0 || !GrowthCollectionsBounded(Book)) return false;
+			bool shape = Book.MigrationPending ? StagedGrowthShape(Book)
+				: Book.Quarantined ? CanonicalQuarantinedGrowth(Book)
+					: GrowthRootShape(Book, ValidateOperations: true);
+			return shape && KingdomLifecycleWireCodec.GrowthPayloadFitsAggregateCap(Book);
+		}
+
+		/// <summary>Validates the exact v5 outer graph before installing a dormant staged
+		/// Growth book. No clock or pending-crop authority is fabricated here.</summary>
+		public static bool TryStageGrowthMigrationFromV5(KingdomLifecycleBook Book,
+			out KingdomGrowthBook Staged)
+		{
+			Staged = null;
+			if (Book == null || Book.FormatVersion != LegacyLifecycleFormatVersion ||
+				Book.WireRejected || !LegacyResourceKindsOnly(Book)) return false;
+			int version = Book.FormatVersion;
+			KingdomGrowthBook prior = Book.Growth;
+			KingdomGrowthBook staged = NewStagedGrowth();
+			Book.FormatVersion = CurrentFormatVersion;
+			bool unbound = !Book.IdentityBound;
+			Book.Growth = unbound ? new KingdomGrowthBook() : staged;
+			bool valid = PristineLifecycleBook(Book) ||
+				CanonicalLifecycleQuarantine(Book) ||
+				(!Book.Quarantined && ValidRootId(Book.SettlementId) && Book.IdentityBound &&
+				 ExactSettlementIdentityProof(Book) && LifecycleBookShape(Book));
+			Book.FormatVersion = version;
+			Book.Growth = prior;
+			if (!valid) return false;
+			Staged = unbound ? new KingdomGrowthBook() : staged;
+			return true;
+		}
+
+		public static bool StageLegacyGrowthMigration(KingdomLifecycleBook Book)
+		{
+			if (!TryStageGrowthMigrationFromV5(Book, out KingdomGrowthBook staged)) return false;
+			Book.FormatVersion = CurrentFormatVersion;
+			Book.Growth = staged;
+			return true;
+		}
+
+		public static KingdomGrowthMigrationResult ApplyGrowthMigration(
+			KingdomLifecycleBook Parent, KingdomGrowthMigrationInput Input)
+		{
+			KingdomGrowthMigrationResult result = new KingdomGrowthMigrationResult
+			{
+				Failure = "growth migration input is invalid"
+			};
+			if (Parent == null || !CanOwnAuthority(Parent) ||
+				!ValidRootId(Parent.SettlementId) || !Parent.IdentityBound ||
+				!ExactSettlementIdentityProof(Parent) || Parent.Growth == null ||
+				!StagedGrowthShape(Parent.Growth) || Input == null || !Input.HasNow ||
+				Input.Now < 0L || Input.ArrivalIntervalTicks <= 0L ||
+				!ValidCount(Input.PendingCrop) || TooLong(Input.PendingCropBlueprint, MaxNameChars) ||
+				TooLong(Input.PendingCropZoneId, MaxNameChars)
+				|| (Input.PendingCrop == 0 ? (!string.IsNullOrEmpty(Input.PendingCropBlueprint)
+					|| !string.IsNullOrEmpty(Input.PendingCropZoneId))
+					: (!ValidName(Input.PendingCropBlueprint) || !ValidName(Input.PendingCropZoneId))))
+				return result;
+			long arrival;
+			if (!CheckedAdd(Input.Now, Input.ArrivalIntervalTicks, out arrival))
+			{
+				result.Failure = "growth arrival migration clock overflowed";
+				return result;
+			}
+			KingdomGrowthBook growth = NewBoundGrowth(Parent.SettlementId);
+			if (growth == null) return result;
+			growth.MigratedFromLifecycleVersion = LegacyLifecycleFormatVersion;
+			growth.MigrationTick = Input.Now;
+			growth.OptionState = Input.OptionEnabled ? KingdomLifecycleOptionState.Enabled :
+				KingdomLifecycleOptionState.Disabled;
+			growth.OptionTick = Input.Now;
+			growth.HealthState = Input.Healthy ? KingdomGrowthHealthState.Healthy :
+				KingdomGrowthHealthState.Unhealthy;
+			growth.HealthTick = Input.Now;
+			growth.WorkPaused = !Input.OptionEnabled || !Input.Healthy;
+			growth.WorkPauseStartedTick = growth.WorkPaused ? Input.Now : 0L;
+			growth.WorkPausedTicks = 0L;
+			growth.EffectiveWorkTick = Input.Now;
+			growth.LastHeartbeatTick = Input.Now;
+			growth.NextArrivalTick = growth.WorkPaused ? 0L : arrival;
+			growth.ArrivalIntervalTicks = Input.ArrivalIntervalTicks;
+			growth.LastFetchTick = Input.Now;
+			growth.LastMillTick = Input.Now;
+			growth.LastSubsidenceTick = Input.Now;
+			growth.PendingCrop = Input.PendingCrop;
+			growth.PendingCropBlueprint = Input.PendingCrop == 0 ? null : Input.PendingCropBlueprint;
+			growth.PendingCropZoneId = Input.PendingCrop == 0 ? null : Input.PendingCropZoneId;
+			if (!CanOwnGrowthAuthority(growth, Parent.SettlementId))
+			{
+				result.Failure = "detached growth migration result is malformed";
+				return result;
+			}
+			result.Valid = true;
+			result.Failure = null;
+			result.Growth = growth;
+			return result;
+		}
+
+		public static bool TryPublishGrowthMigration(KingdomLifecycleBook Parent,
+			KingdomGrowthMigrationResult Result)
+		{
+			if (Parent == null || !CanOwnAuthority(Parent) || Result == null
+				|| !Result.Valid || Result.Growth == null ||
+				!StagedGrowthShape(Parent.Growth) || !ValidRootId(Parent.SettlementId) ||
+				!ExactSettlementIdentityProof(Parent) ||
+				!CanOwnGrowthAuthority(Result.Growth, Parent.SettlementId)) return false;
+			KingdomGrowthBook detached;
+			try
+			{
+				detached = KingdomLifecycleWireCodec.ReadGrowthPayload(
+					KingdomLifecycleWireCodec.GrowthPayloadForWrite(Result.Growth));
+			}
+			catch (Exception) { return false; }
+			if (!CanOwnGrowthAuthority(detached, Parent.SettlementId)) return false;
+			Parent.Growth = detached;
+			return true;
+		}
+
+		public static KingdomGrowthAvailabilityDecision ObserveGrowthAvailability(
+			KingdomGrowthBook Book, bool OptionEnabled, bool Healthy, long Now,
+			long CurrentArrivalIntervalTicks)
+		{
+			KingdomGrowthAvailabilityDecision result = new KingdomGrowthAvailabilityDecision
+			{
+				Failure = "growth availability observation is malformed",
+				ReconcileOpen = HasOpenGrowthOperation(Book)
+			};
+			if (Book == null || Book.Quarantined || Book.MigrationPending || Now < 0L ||
+				CurrentArrivalIntervalTicks <= 0L || Book.OptionTick < 0L || Book.HealthTick < 0L ||
+				Book.EffectiveWorkTick < 0L || Book.WorkPausedTicks < 0L ||
+				!KnownOption(Book.OptionState) || !KnownGrowthHealth(Book.HealthState)
+				|| Now < Book.OptionTick || Now < Book.HealthTick || Now < Book.EffectiveWorkTick
+				|| Now < Book.LastHeartbeatTick || Now < Book.LastFetchTick
+				|| Now < Book.LastMillTick || Now < Book.LastSubsidenceTick
+				|| Now < Book.MigrationTick) return result;
+			bool active = OptionEnabled && Healthy;
+			bool wasActive = Book.OptionState == KingdomLifecycleOptionState.Enabled &&
+				Book.HealthState == KingdomGrowthHealthState.Healthy && !Book.WorkPaused;
+			long paused = Book.WorkPausedTicks;
+			if (Book.WorkPaused && Book.WorkPauseStartedTick > Now) return result;
+			if (Book.WorkPaused && active &&
+				!CheckedAdd(paused, Now - Book.WorkPauseStartedTick, out paused)) return result;
+			long nextArrival = Book.NextArrivalTick;
+			bool restamp = active != wasActive || Book.OptionState == KingdomLifecycleOptionState.Unknown ||
+				Book.HealthState == KingdomGrowthHealthState.Unknown;
+			if (!active) nextArrival = Book.ArrivalOp == null ? 0L : Book.NextArrivalTick;
+			else if (restamp && !CheckedAdd(Now, CurrentArrivalIntervalTicks, out nextArrival))
+				return result;
+			long effectiveAnchor = active ? Now : (Book.WorkPaused ?
+				Book.WorkPauseStartedTick : Now);
+			if (effectiveAnchor < paused) return result;
+			long effectiveNow = effectiveAnchor - paused;
+			result.Valid = true; result.Failure = null; result.AllowStarters = active;
+			result.OptionState = OptionEnabled ? KingdomLifecycleOptionState.Enabled :
+				KingdomLifecycleOptionState.Disabled;
+			result.HealthState = Healthy ? KingdomGrowthHealthState.Healthy :
+				KingdomGrowthHealthState.Unhealthy;
+			result.ObservedTick = Now; result.WorkPaused = !active;
+			result.PauseStartedTick = active ? 0L : (Book.WorkPaused ?
+				Book.WorkPauseStartedTick : Now);
+			result.PausedTicks = paused; result.EffectiveWorkTick = restamp ? effectiveNow :
+				Book.EffectiveWorkTick; result.RestampClocks = restamp;
+			result.NextArrivalTick = nextArrival;
+			result.ArrivalIntervalTicks = CurrentArrivalIntervalTicks;
+			return result;
+		}
+
+		public static bool ApplyGrowthAvailability(KingdomGrowthBook Book,
+			KingdomGrowthAvailabilityDecision Decision)
+		{
+			if (Book == null || Decision == null || !Decision.Valid ||
+				!CanOwnGrowthAuthority(Book, Book.SettlementId)) return false;
+			KingdomGrowthAvailabilityDecision expected = ObserveGrowthAvailability(Book,
+				Decision.OptionState == KingdomLifecycleOptionState.Enabled,
+				Decision.HealthState == KingdomGrowthHealthState.Healthy,
+				Decision.ObservedTick, Decision.ArrivalIntervalTicks);
+			if (!expected.Valid || expected.AllowStarters != Decision.AllowStarters
+				|| expected.ReconcileOpen != Decision.ReconcileOpen
+				|| expected.OptionState != Decision.OptionState
+				|| expected.HealthState != Decision.HealthState
+				|| expected.WorkPaused != Decision.WorkPaused
+				|| expected.PauseStartedTick != Decision.PauseStartedTick
+				|| expected.PausedTicks != Decision.PausedTicks
+				|| expected.EffectiveWorkTick != Decision.EffectiveWorkTick
+				|| expected.RestampClocks != Decision.RestampClocks
+				|| expected.NextArrivalTick != Decision.NextArrivalTick) return false;
+			KingdomLifecycleOptionState oldOption = Book.OptionState;
+			long oldOptionTick = Book.OptionTick;
+			KingdomGrowthHealthState oldHealth = Book.HealthState;
+			long oldHealthTick = Book.HealthTick;
+			bool oldPaused = Book.WorkPaused; long oldPauseStart = Book.WorkPauseStartedTick;
+			long oldPausedTicks = Book.WorkPausedTicks; long oldEffective = Book.EffectiveWorkTick;
+			long oldArrival = Book.NextArrivalTick; long oldInterval = Book.ArrivalIntervalTicks;
+			Book.OptionState = Decision.OptionState; Book.OptionTick = Decision.ObservedTick;
+			Book.HealthState = Decision.HealthState; Book.HealthTick = Decision.ObservedTick;
+			Book.WorkPaused = Decision.WorkPaused;
+			Book.WorkPauseStartedTick = Decision.PauseStartedTick;
+			Book.WorkPausedTicks = Decision.PausedTicks;
+			Book.EffectiveWorkTick = Decision.EffectiveWorkTick;
+			Book.NextArrivalTick = Decision.NextArrivalTick;
+			Book.ArrivalIntervalTicks = Decision.ArrivalIntervalTicks;
+			if (CanOwnGrowthAuthority(Book, Book.SettlementId)) return true;
+			Book.OptionState = oldOption; Book.OptionTick = oldOptionTick;
+			Book.HealthState = oldHealth; Book.HealthTick = oldHealthTick;
+			Book.WorkPaused = oldPaused; Book.WorkPauseStartedTick = oldPauseStart;
+			Book.WorkPausedTicks = oldPausedTicks; Book.EffectiveWorkTick = oldEffective;
+			Book.NextArrivalTick = oldArrival; Book.ArrivalIntervalTicks = oldInterval;
+			return false;
+		}
+
+		public static bool TryEffectiveWorkElapsed(KingdomGrowthBook Book, long Now,
+			out long Elapsed)
+		{
+			Elapsed = 0L;
+			if (Book == null || Book.WorkPaused ||
+				Book.OptionState != KingdomLifecycleOptionState.Enabled ||
+				Book.HealthState != KingdomGrowthHealthState.Healthy) return false;
+			long effectiveNow;
+			if (!TryGrowthEffectiveNow(Book, Now, out effectiveNow)
+				|| effectiveNow < Book.EffectiveWorkTick) return false;
+			Elapsed = effectiveNow - Book.EffectiveWorkTick;
+			return true;
+		}
+
+		private static bool TryGrowthEffectiveNow(KingdomGrowthBook Book, long Now,
+			out long EffectiveNow)
+		{
+			EffectiveNow = 0L;
+			if (Book == null || Now < 0L || Book.WorkPausedTicks < 0L
+				|| (Book.WorkPaused && (Book.WorkPauseStartedTick < 0L
+					|| Now < Book.WorkPauseStartedTick))) return false;
+			long anchor = Book.WorkPaused ? Book.WorkPauseStartedTick : Now;
+			if (anchor < Book.WorkPausedTicks) return false;
+			EffectiveNow = anchor - Book.WorkPausedTicks;
+			return true;
+		}
+
+		private static bool GrowthEffectiveWorkBounded(KingdomGrowthBook book)
+		{
+			if (book == null || book.FieldOps == null) return false;
+			long observationTick = Math.Max(book.OptionTick, book.HealthTick);
+			long ceiling;
+			if (!TryGrowthEffectiveNow(book, observationTick, out ceiling)) return false;
+			for (int i = 0; i < book.FieldOps.Count; i++)
+			{
+				KingdomGrowthFieldSlot field = book.FieldOps[i];
+				if (field == null || field.ClockTick < 0L) return false;
+				if (field.ClockTick > ceiling) ceiling = field.ClockTick;
+			}
+			return book.EffectiveWorkTick <= ceiling;
+		}
+
+		public static string GrowthOperationId(string SettlementId, KingdomGrowthSlotKind Slot,
+			string FieldId, long Sequence)
+		{
+			if (Slot != KingdomGrowthSlotKind.Field && FieldId != null && FieldId.Length == 0)
+				FieldId = null;
+			if (!ValidRootId(SettlementId) || !KnownGrowthSlot(Slot) || Sequence <= 0L
+				|| (Slot == KingdomGrowthSlotKind.Field ? !ValidRootId(FieldId)
+					: FieldId != null)) return null;
+			return HashId("growth-operation", delegate(BinaryWriter w)
+			{
+				CanonicalString(w, SettlementId); w.Write((byte)Slot);
+				CanonicalString(w, FieldId); w.Write(Sequence);
+			});
+		}
+
+		public static bool TryRegisterGrowthField(KingdomGrowthBook Book, string FieldId)
+		{
+			if (!CanOwnGrowthAuthority(Book, Book == null ? null : Book.SettlementId)
+				|| !ValidRootId(FieldId)) return false;
+			KingdomGrowthFieldSlot existing = FindGrowthField(Book, FieldId);
+			if (existing != null) return !existing.Quarantined;
+			if (Book.FieldOps.Count >= MaxGrowthFields) return false;
+			KingdomGrowthFieldSlot added = new KingdomGrowthFieldSlot { FieldId = FieldId };
+			Book.FieldOps.Add(added);
+			if (CanOwnGrowthAuthority(Book, Book.SettlementId)) return true;
+			Book.FieldOps.RemoveAt(Book.FieldOps.Count - 1);
+			return false;
+		}
+
+		public static KingdomGrowthOperation PrepareGrowthOperation(KingdomGrowthBook Book,
+			KingdomGrowthAction Action, string FieldId, long Tick)
+		{
+			bool productiveStarter = Action == KingdomGrowthAction.Arrival ||
+				Action >= KingdomGrowthAction.Sow;
+			if (!CanOwnGrowthAuthority(Book, Book == null ? null : Book.SettlementId)
+				|| Tick < 0L || !KnownGrowthAction(Action)
+				|| (productiveStarter && (Book.OptionState != KingdomLifecycleOptionState.Enabled
+					|| Book.HealthState != KingdomGrowthHealthState.Healthy || Book.WorkPaused))
+				|| Tick < Book.OptionTick || Tick < Book.HealthTick || Tick < Book.EffectiveWorkTick
+				|| Tick < Book.LastHeartbeatTick || Tick < Book.LastFetchTick
+				|| Tick < Book.LastMillTick || Tick < Book.LastSubsidenceTick) return null;
+			KingdomGrowthSlotKind slot = SlotForGrowthAction(Action);
+			if (slot == KingdomGrowthSlotKind.None) return null;
+			if (slot != KingdomGrowthSlotKind.Field && FieldId != null && FieldId.Length == 0)
+				FieldId = null;
+			KingdomGrowthFieldSlot field = slot == KingdomGrowthSlotKind.Field
+				? FindGrowthField(Book, FieldId) : null;
+			if (slot == KingdomGrowthSlotKind.Field && (field == null || field.Quarantined)) return null;
+			if (slot != KingdomGrowthSlotKind.Field && FieldId != null) return null;
+			if (GetGrowthOperation(Book, slot, FieldId) != null) return null;
+			long next = GetGrowthNext(Book, slot, field);
+			long retired = GetGrowthRetired(Book, slot, field);
+			if (!IsExactSuccessor(next, retired) || next == long.MaxValue) return null;
+			if (Action == KingdomGrowthAction.Arrival &&
+				(Book.ArrivalIntervalTicks <= 0L || Book.NextArrivalTick <= 0L
+					|| Tick < Book.NextArrivalTick)) return null;
+			long clockBefore = GrowthClockValue(Book, Action, field);
+			long clockAfter = Tick;
+			long effectiveNow;
+			if (!TryGrowthEffectiveNow(Book, Tick, out effectiveNow)) return null;
+			if (slot == KingdomGrowthSlotKind.Field) clockAfter = effectiveNow;
+			if (Action == KingdomGrowthAction.Arrival &&
+				!CheckedAdd(Tick, Book.ArrivalIntervalTicks, out clockAfter)) return null;
+			long delta;
+			if (!CheckedAdd(clockAfter, -clockBefore, out delta) || delta == 0L) return null;
+			string id = GrowthOperationId(Book.SettlementId, slot, FieldId, next);
+			string subject = GrowthClockSubject(Book.SettlementId, slot, FieldId);
+			string key = ResourceKey(KingdomLifecycleResourceKind.GrowthClock,
+				Book.SettlementId, subject);
+			KingdomLifecycleResourceRevision row = FindGrowthResource(Book, key);
+			if (id == null || key == null || (row != null && (!string.IsNullOrEmpty(row.ActiveOperationId)
+				|| row.Revision == long.MaxValue))) return null;
+			long revision = row == null ? 0L : row.Revision;
+			KingdomGrowthOperation operation = new KingdomGrowthOperation
+			{
+				Sequence = next, Id = id, Action = Action, Phase = KingdomGrowthPhase.Prepared,
+				CreatedTick = Tick, UpdatedTick = Tick, SettlementId = Book.SettlementId,
+				FieldId = FieldId, TargetX = -1, TargetY = -1,
+				OptionState = Book.OptionState, OptionTick = Book.OptionTick,
+				HealthState = Book.HealthState, HealthTick = Book.HealthTick,
+				EffectiveWorkBefore = Book.EffectiveWorkTick,
+				EffectiveWorkAfter = Action >= KingdomGrowthAction.Sow
+					? effectiveNow : Book.EffectiveWorkTick,
+				HeartbeatBefore = Book.LastHeartbeatTick,
+				HeartbeatAfter = Action == KingdomGrowthAction.Heartbeat ? Tick : Book.LastHeartbeatTick,
+				ArrivalBefore = Book.NextArrivalTick,
+				ArrivalAfter = Action == KingdomGrowthAction.Arrival ? clockAfter : Book.NextArrivalTick,
+				FetchBefore = Book.LastFetchTick,
+				FetchAfter = Action == KingdomGrowthAction.Delivery ? Tick : Book.LastFetchTick,
+				MillBefore = Book.LastMillTick, MillAfter = Book.LastMillTick,
+				SubsidenceBefore = Book.LastSubsidenceTick,
+				SubsidenceAfter = Action == KingdomGrowthAction.Departure ? Tick : Book.LastSubsidenceTick,
+				PendingCropBefore = Book.PendingCrop, PendingCropAfter = Book.PendingCrop,
+				PendingCropBlueprint = Book.PendingCropBlueprint,
+				PendingCropZoneId = Book.PendingCropZoneId,
+				ClockState = KingdomLifecyclePhysicalState.Prepared,
+				ClockLease = new KingdomLifecycleResourceLease
+				{
+					OperationId = id, Kind = KingdomLifecycleResourceKind.GrowthClock,
+					ScopeId = Book.SettlementId, SubjectId = subject, Key = key,
+					Before = clockBefore, Delta = delta, After = clockAfter,
+					BeforeRevision = revision, AfterRevision = revision + 1L,
+					State = KingdomLifecycleLeaseState.Prepared
+				}
+			};
+			operation.Outbox = PrepareGrowthOutbox(operation, null, null, null, null, null);
+			return operation;
+		}
+
+		public static KingdomLifecycleOutbox PrepareGrowthOutbox(KingdomGrowthOperation Operation,
+			string Chronicle, string Ledger, string Message, string Deed, string Guestbook)
+		{
+			if (Operation == null || !ValidGeneratedId(Operation.Id)) return null;
+			if (Chronicle != null && Chronicle.Length == 0) Chronicle = null;
+			if (Ledger != null && Ledger.Length == 0) Ledger = null;
+			if (Message != null && Message.Length == 0) Message = null;
+			if (Deed != null && Deed.Length == 0) Deed = null;
+			if (Guestbook != null && Guestbook.Length == 0) Guestbook = null;
+			return new KingdomLifecycleOutbox
+			{
+				OperationId = Operation.Id, EventId = ChildId(Operation.Id, "outbox", 0),
+				ChronicleReceiptId = ChildId(Operation.Id, "chronicle", 0),
+				Chronicle = Chronicle, ChronicleDisposition = InitialDisposition(Chronicle),
+				ChronicleState = InitialSink(Chronicle), Ledger = Ledger,
+				LedgerDisposition = InitialDisposition(Ledger), LedgerState = InitialSink(Ledger),
+				Message = Message, MessageDisposition = InitialDisposition(Message),
+				MessageState = InitialSink(Message), Deed = Deed,
+				DeedDisposition = InitialDisposition(Deed), DeedState = InitialSink(Deed),
+				GuestbookLine = Guestbook, GuestbookDisposition = InitialDisposition(Guestbook),
+				GuestbookState = InitialSink(Guestbook)
+			};
+		}
+
+		public static bool TryGrowthPlanHash(KingdomGrowthOperation Operation, out string Hash)
+		{
+			Hash = null;
+			if (Operation == null) return false;
+			try
+			{
+				Hash = HashId("growth-plan", delegate(BinaryWriter w)
+				{
+					w.Write(Operation.Sequence); CanonicalString(w, Operation.Id);
+					w.Write((byte)Operation.Action); w.Write(Operation.CreatedTick);
+					CanonicalString(w, Operation.SettlementId);
+					CanonicalString(w, Operation.FieldId); CanonicalString(w, Operation.ZoneId);
+					CanonicalString(w, Operation.TargetId); CanonicalString(w, Operation.TargetMarker);
+					CanonicalString(w, Operation.Blueprint); w.Write((byte)Operation.TargetTopology);
+					CanonicalString(w, Operation.TargetOwnerId); w.Write(Operation.TargetX);
+					w.Write(Operation.TargetY); w.Write((byte)Operation.OptionState);
+					w.Write(Operation.OptionTick); w.Write((byte)Operation.HealthState);
+					w.Write(Operation.HealthTick); w.Write(Operation.EffectiveWorkBefore);
+					w.Write(Operation.EffectiveWorkAfter); w.Write(Operation.HeartbeatBefore);
+					w.Write(Operation.HeartbeatAfter); w.Write(Operation.ArrivalBefore);
+					w.Write(Operation.ArrivalAfter); w.Write(Operation.FetchBefore);
+					w.Write(Operation.FetchAfter); w.Write(Operation.MillBefore);
+					w.Write(Operation.MillAfter); w.Write(Operation.SubsidenceBefore);
+					w.Write(Operation.SubsidenceAfter); w.Write(Operation.PendingCropBefore);
+					w.Write(Operation.PendingCropDelta); w.Write(Operation.PendingCropAfter);
+					CanonicalString(w, Operation.PendingCropBlueprint);
+					CanonicalString(w, Operation.PendingCropZoneId);
+					w.Write(Operation.PopulationBefore); w.Write(Operation.PopulationDelta);
+					w.Write(Operation.PopulationAfter);
+					w.Write(Operation.WaterLegs == null ? -1 : Operation.WaterLegs.Count);
+					if (Operation.WaterLegs != null) for (int i = 0;
+						i < Operation.WaterLegs.Count; i++) WriteGrowthWaterPlan(w,
+							Operation.WaterLegs[i]);
+					w.Write(Operation.Sources == null ? -1 : Operation.Sources.Count);
+					if (Operation.Sources != null) for (int i = 0; i < Operation.Sources.Count; i++)
+						WriteGrowthObjectPlan(w, Operation.Sources[i]);
+					w.Write(Operation.Outputs == null ? -1 : Operation.Outputs.Count);
+					if (Operation.Outputs != null) for (int i = 0; i < Operation.Outputs.Count; i++)
+						WriteGrowthObjectPlan(w, Operation.Outputs[i]);
+					w.Write(Operation.DomainSteps == null ? -1 : Operation.DomainSteps.Count);
+					if (Operation.DomainSteps != null) for (int i = 0;
+						i < Operation.DomainSteps.Count; i++) WriteGrowthDomainPlan(w,
+							Operation.DomainSteps[i]);
+					WriteLeasePlan(w, Operation.ClockLease);
+					WriteOutboxPlan(w, Operation.Outbox);
+				});
+				return ValidHashNamespace(Hash, "growth-plan");
+			}
+			catch (Exception)
+			{
+				Hash = null;
+				return false;
+			}
+		}
+
+		private static void WriteGrowthWaterPlan(BinaryWriter w, KingdomGrowthWaterLeg x)
+		{
+			CanonicalString(w, x.OperationId); CanonicalString(w, x.EventId);
+			CanonicalString(w, x.LeaseKey); w.Write((byte)x.MutationKind);
+			w.Write((byte)x.ContainerKind); CanonicalString(w, x.ContainerId);
+			w.Write((byte)x.OwnerTopology); CanonicalString(w, x.OwnerId);
+			CanonicalString(w, x.Blueprint); CanonicalString(w, x.ZoneId); w.Write(x.X);
+			w.Write(x.Y); w.Write(x.Capacity); w.Write(x.Before); w.Write(x.Delta);
+			w.Write(x.After); CanonicalString(w, x.BeforeComposition);
+			CanonicalString(w, x.AfterComposition);
+			CanonicalString(w, x.BeforeOwnerGraphHash); CanonicalString(w, x.AfterOwnerGraphHash);
+			CanonicalString(w, x.BeforePartGraphHash); CanonicalString(w, x.AfterPartGraphHash);
+			CanonicalString(w, x.BeforeTopologyHash); CanonicalString(w, x.AfterTopologyHash);
+			CanonicalString(w, x.ReceiptId); WriteLeasePlan(w, x.Lease);
+		}
+
+		private static void WriteGrowthObjectPlan(BinaryWriter w, KingdomGrowthObjectLeg x)
+		{
+			CanonicalString(w, x.OperationId); CanonicalString(w, x.EventId);
+			CanonicalString(w, x.ObjectId); CanonicalString(w, x.Marker);
+			CanonicalString(w, x.Blueprint); CanonicalString(w, x.ZoneId);
+			w.Write((byte)x.Topology); CanonicalString(w, x.OwnerId); w.Write(x.X); w.Write(x.Y);
+			w.Write(x.BeforeCount); w.Write(x.Delta); w.Write(x.AfterCount); w.Write(x.NoStack);
+			w.Write((byte)x.MutationKind); CanonicalString(w, x.BeforeOwnerGraphHash);
+			CanonicalString(w, x.AfterOwnerGraphHash); CanonicalString(w, x.BeforeObjectGraphHash);
+			CanonicalString(w, x.AfterObjectGraphHash); CanonicalString(w, x.BeforeTopologyHash);
+			CanonicalString(w, x.AfterTopologyHash); CanonicalString(w, x.CreatedMarker);
+			CanonicalString(w, x.DetachedMarker); CanonicalString(w, x.ReceiptId);
+			CanonicalString(w, x.ReceiptTopologyId);
+		}
+
+		private static void WriteGrowthDomainPlan(BinaryWriter w, KingdomGrowthDomainStep x)
+		{
+			w.Write((byte)x.Kind); w.Write((byte)x.CallbackKind);
+			CanonicalString(w, x.CallbackBodyHash); CanonicalString(w, x.EventId);
+			CanonicalString(w, x.ActorId);
+			CanonicalString(w, x.SubjectId); w.Write(x.BeforeValue); w.Write(x.AfterValue);
+			CanonicalString(w, x.BeforeGraphHash); CanonicalString(w, x.AfterGraphHash);
+			CanonicalString(w, x.BeforeMapHash); CanonicalString(w, x.AfterMapHash);
+			CanonicalString(w, x.ReceiptId); WriteLeasePlan(w, x.Lease);
+		}
+
+		public static bool TryPublishGrowth(KingdomGrowthBook Book,
+			KingdomGrowthOperation Operation)
+		{
+			if (!CanOwnGrowthAuthority(Book, Book == null ? null : Book.SettlementId)
+				|| Operation == null) return false;
+			KingdomGrowthSlotKind slot = SlotForGrowthAction(Operation.Action);
+			KingdomGrowthFieldSlot field = slot == KingdomGrowthSlotKind.Field
+				? FindGrowthField(Book, Operation.FieldId) : null;
+			if (slot == KingdomGrowthSlotKind.None || (slot == KingdomGrowthSlotKind.Field
+				&& (field == null || field.Quarantined)) || GetGrowthOperation(Book, slot,
+					Operation.FieldId) != null || Operation.Sequence != GetGrowthNext(Book, slot, field)
+				|| !IsExactSuccessor(Operation.Sequence, GetGrowthRetired(Book, slot, field))
+				|| Operation.Sequence == long.MaxValue
+				|| !GrowthOperationShape(Book, Operation, slot, Operation.FieldId, true)
+				|| !GrowthPublicationSnapshotsMatch(Book, Operation, field)
+				|| !GrowthActiveIdentityClaimsValid(Book, Operation)) return false;
+			string hash;
+			if (!TryGrowthPlanHash(Operation, out hash)) return false;
+			List<KingdomLifecycleResourceLease> leases = GrowthLeases(Operation);
+			if (leases == null) return false;
+			List<KingdomLifecycleResourceRevision> rows =
+				new List<KingdomLifecycleResourceRevision>(leases.Count);
+			List<bool> createdRows = new List<bool>(leases.Count);
+			List<string> activeBefore = new List<string>(leases.Count);
+			HashSet<string> keys = new HashSet<string>(StringComparer.Ordinal);
+			int newRows = 0;
+			for (int i = 0; i < leases.Count; i++)
+			{
+				KingdomLifecycleResourceLease lease = leases[i];
+				if (!GrowthLeaseShape(lease, Operation.Id, true) || !keys.Add(lease.Key)) return false;
+				KingdomLifecycleResourceRevision row = FindGrowthResource(Book, lease.Key);
+				bool created = row == null;
+				if (row == null)
+				{
+					row = new KingdomLifecycleResourceRevision
+					{
+						Kind = lease.Kind, ScopeId = lease.ScopeId, SubjectId = lease.SubjectId,
+						Key = lease.Key, Revision = 0L
+					};
+					newRows++;
+				}
+				if (!GrowthResourceMatches(row, lease) || row.Revision != lease.BeforeRevision
+					|| !string.IsNullOrEmpty(row.ActiveOperationId)
+					|| string.Equals(row.LastOperationId, Operation.Id, StringComparison.Ordinal))
+					return false;
+				rows.Add(row);
+				createdRows.Add(created);
+				activeBefore.Add(row.ActiveOperationId);
+			}
+			if (Book.Resources.Count + newRows > MaxResourceRows) return false;
+			string planHashBefore = Operation.PlanHash;
+			Operation.PlanHash = hash;
+			for (int i = 0; i < rows.Count; i++)
+			{
+				if (FindGrowthResource(Book, rows[i].Key) == null) Book.Resources.Add(rows[i]);
+				rows[i].ActiveOperationId = Operation.Id;
+			}
+			SetGrowthNext(Book, slot, field, Operation.Sequence + 1L);
+			SetGrowthOperation(Book, slot, field, Operation);
+			if (CanOwnGrowthAuthority(Book, Book.SettlementId)) return true;
+			SetGrowthOperation(Book, slot, field, null);
+			SetGrowthNext(Book, slot, field, Operation.Sequence);
+			for (int i = rows.Count - 1; i >= 0; i--)
+			{
+				if (createdRows[i]) Book.Resources.Remove(rows[i]);
+				else rows[i].ActiveOperationId = activeBefore[i];
+			}
+			Operation.PlanHash = planHashBefore;
+			return false;
+		}
+
+		public static bool CanTransitionGrowth(KingdomGrowthAction Action,
+			KingdomGrowthPhase From, KingdomGrowthPhase To)
+		{
+			// Quarantine publication owns a bounded fault and retained evidence. The generic
+			// phase mover cannot construct that receipt, so it must never enter this phase.
+			if (To == KingdomGrowthPhase.Quarantined) return false;
+			KingdomGrowthPhase next;
+			return TryNextGrowthPhase(Action, From, out next) && next == To;
+		}
+
+		public static bool AdvanceGrowthPhase(KingdomGrowthBook Book,
+			KingdomGrowthOperation Operation, KingdomGrowthPhase To, long Tick)
+		{
+			if (!ExactGrowthOperationAuthority(Book, Operation) || Tick < Operation.UpdatedTick
+				|| !CanTransitionGrowth(Operation.Action, Operation.Phase, To)
+				|| !GrowthTransitionReady(Book, Operation, To)) return false;
+			KingdomGrowthPhase phaseBefore = Operation.Phase;
+			long tickBefore = Operation.UpdatedTick;
+			Operation.Phase = To; Operation.UpdatedTick = Tick;
+			if (ExactGrowthOperationAuthority(Book, Operation)) return true;
+			Operation.Phase = phaseBefore; Operation.UpdatedTick = tickBefore;
+			return false;
+		}
+
+		public static KingdomLifecycleCasAction GrowthClockAction(KingdomGrowthBook Book,
+			KingdomGrowthOperation Operation, long CurrentValue)
+		{
+			if (!ExactGrowthOperationAuthority(Book, Operation)
+				|| Operation.Phase != KingdomGrowthPhase.ClockIntent) return KingdomLifecycleCasAction.Quarantine;
+			KingdomLifecycleResourceLease lease = Operation.ClockLease;
+			KingdomLifecycleResourceRevision row = FindGrowthResource(Book, lease.Key);
+			if (!GrowthResourceMatches(row, lease)
+				|| !string.Equals(row.ActiveOperationId, Operation.Id, StringComparison.Ordinal)
+				|| CurrentValue < GrowthClockValue(Book, Operation.Action,
+					SlotForGrowthAction(Operation.Action) == KingdomGrowthSlotKind.Field
+						? FindGrowthField(Book, Operation.FieldId) : null))
+				return KingdomLifecycleCasAction.Quarantine;
+			if (Operation.ClockState == KingdomLifecyclePhysicalState.Prepared
+				&& lease.State == KingdomLifecycleLeaseState.Prepared)
+				return CurrentValue == lease.Before && row.Revision == lease.BeforeRevision
+					&& !string.Equals(row.LastOperationId, Operation.Id, StringComparison.Ordinal)
+					? KingdomLifecycleCasAction.Apply : KingdomLifecycleCasAction.Quarantine;
+			if ((Operation.ClockState == KingdomLifecyclePhysicalState.Intent
+				|| Operation.ClockState == KingdomLifecyclePhysicalState.Proved)
+				&& (lease.State == KingdomLifecycleLeaseState.Intent
+					|| lease.State == KingdomLifecycleLeaseState.Proved))
+				return CurrentValue == lease.After && (row.Revision == lease.BeforeRevision
+					|| row.Revision == lease.AfterRevision) ? KingdomLifecycleCasAction.Confirm
+					: KingdomLifecycleCasAction.Quarantine;
+			return KingdomLifecycleCasAction.Quarantine;
+		}
+
+		public static bool BeginGrowthClock(KingdomGrowthBook Book,
+			KingdomGrowthOperation Operation, long CurrentValue)
+		{
+			if (GrowthClockAction(Book, Operation, CurrentValue) != KingdomLifecycleCasAction.Apply)
+				return false;
+			Operation.ClockState = KingdomLifecyclePhysicalState.Intent;
+			Operation.ClockLease.State = KingdomLifecycleLeaseState.Intent;
+			return true;
+		}
+
+		public static bool CommitGrowthClockWitness(KingdomGrowthBook Book,
+			KingdomGrowthOperation Operation, long CurrentValue)
+		{
+			if (GrowthClockAction(Book, Operation, CurrentValue) != KingdomLifecycleCasAction.Confirm
+				|| Operation.ClockState != KingdomLifecyclePhysicalState.Intent
+				|| Operation.ClockLease.State != KingdomLifecycleLeaseState.Intent) return false;
+			KingdomLifecycleResourceLease lease = Operation.ClockLease;
+			KingdomLifecycleResourceRevision row = FindGrowthResource(Book, lease.Key);
+			if (row.Revision != lease.BeforeRevision
+				|| string.Equals(row.LastOperationId, Operation.Id, StringComparison.Ordinal)) return false;
+			long rowRevisionBefore = row.Revision;
+			string rowLastOperationBefore = row.LastOperationId;
+			KingdomLifecycleLeaseState leaseStateBefore = lease.State;
+			KingdomLifecyclePhysicalState clockStateBefore = Operation.ClockState;
+			long heartbeatBefore = Book.LastHeartbeatTick;
+			long arrivalBefore = Book.NextArrivalTick;
+			long fetchBefore = Book.LastFetchTick;
+			long subsidenceBefore = Book.LastSubsidenceTick;
+			long effectiveBefore = Book.EffectiveWorkTick;
+			KingdomGrowthFieldSlot field = SlotForGrowthAction(Operation.Action) ==
+				KingdomGrowthSlotKind.Field ? FindGrowthField(Book, Operation.FieldId) : null;
+			long fieldClockBefore = field == null ? 0L : field.ClockTick;
+			row.Revision = lease.AfterRevision; row.LastOperationId = Operation.Id;
+			lease.State = KingdomLifecycleLeaseState.Proved;
+			Operation.ClockState = KingdomLifecyclePhysicalState.Proved;
+			ApplyGrowthClockValue(Book, Operation);
+			if (ExactGrowthOperationAuthority(Book, Operation)) return true;
+			row.Revision = rowRevisionBefore; row.LastOperationId = rowLastOperationBefore;
+			lease.State = leaseStateBefore; Operation.ClockState = clockStateBefore;
+			Book.LastHeartbeatTick = heartbeatBefore; Book.NextArrivalTick = arrivalBefore;
+			Book.LastFetchTick = fetchBefore; Book.LastSubsidenceTick = subsidenceBefore;
+			Book.EffectiveWorkTick = effectiveBefore;
+			if (field != null) field.ClockTick = fieldClockBefore;
+			return false;
+		}
+
+		public static bool RecoverGrowthOutbox(KingdomGrowthBook Book,
+			KingdomGrowthOperation Operation)
+		{
+			if (!ExactGrowthOperationAuthority(Book, Operation)
+				|| Operation.Phase != KingdomGrowthPhase.Sinks || Operation.Outbox == null) return false;
+			Operation.Outbox.ChronicleState = ResumeSink(Operation.Outbox.ChronicleState, true);
+			Operation.Outbox.LedgerState = ResumeSink(Operation.Outbox.LedgerState, false);
+			Operation.Outbox.MessageState = ResumeSink(Operation.Outbox.MessageState, false);
+			Operation.Outbox.DeedState = ResumeSink(Operation.Outbox.DeedState, false);
+			Operation.Outbox.GuestbookState = ResumeSink(Operation.Outbox.GuestbookState, false);
+			return ExactGrowthOperationAuthority(Book, Operation);
+		}
+
+		public static bool RetireGrowth(KingdomGrowthBook Book,
+			KingdomGrowthOperation Operation, long Tick)
+		{
+			if (!ExactGrowthOperationAuthority(Book, Operation) || Tick < Operation.UpdatedTick
+				|| Operation.Phase != KingdomGrowthPhase.Terminal || !GrowthOutboxTerminal(Operation)
+				|| !GrowthAllResourcesProved(Book, Operation)) return false;
+			KingdomGrowthSlotKind slot = SlotForGrowthAction(Operation.Action);
+			KingdomGrowthFieldSlot field = slot == KingdomGrowthSlotKind.Field
+				? FindGrowthField(Book, Operation.FieldId) : null;
+			if (!IsExactSuccessor(Operation.Sequence, GetGrowthRetired(Book, slot, field))) return false;
+			List<KingdomLifecycleResourceLease> leases = GrowthLeases(Operation);
+			KingdomGrowthProof proof = new KingdomGrowthProof
+			{
+				Slot = slot, FieldId = Operation.FieldId, Sequence = Operation.Sequence,
+				Id = Operation.Id, PlanHash = Operation.PlanHash, Action = Operation.Action, Tick = Tick
+			};
+			if (leases == null || !GrowthProofAppendWouldBeValid(Book, proof, slot, field)) return false;
+			long retiredBefore = GetGrowthRetired(Book, slot, field);
+			long arrivalBefore = Book.NextArrivalTick;
+			List<KingdomGrowthProof> proofsBefore =
+				new List<KingdomGrowthProof>(Book.RecentProofs);
+			for (int i = 0; i < leases.Count; i++)
+				FindGrowthResource(Book, leases[i].Key).ActiveOperationId = null;
+			SetGrowthRetired(Book, slot, field, Operation.Sequence);
+			AppendGrowthProof(Book, proof);
+			SetGrowthOperation(Book, slot, field, null);
+			if (slot == KingdomGrowthSlotKind.Arrival && Book.WorkPaused)
+				Book.NextArrivalTick = 0L;
+			if (CanOwnGrowthAuthority(Book, Book.SettlementId)) return true;
+			for (int i = 0; i < leases.Count; i++)
+				FindGrowthResource(Book, leases[i].Key).ActiveOperationId = Operation.Id;
+			SetGrowthRetired(Book, slot, field, retiredBefore);
+			Book.RecentProofs.Clear(); Book.RecentProofs.AddRange(proofsBefore);
+			SetGrowthOperation(Book, slot, field, Operation);
+			Book.NextArrivalTick = arrivalBefore;
+			return false;
+		}
+
+		public static bool QuarantineGrowthField(KingdomGrowthBook Book, string FieldId,
+			string Fault)
+		{
+			if (!CanOwnGrowthAuthority(Book, Book == null ? null : Book.SettlementId)
+				|| !ValidRootId(FieldId) || string.IsNullOrEmpty(Fault)
+				|| TooLong(Fault, MaxTextChars)) return false;
+			KingdomGrowthFieldSlot field = FindGrowthField(Book, FieldId);
+			if (field == null || field.Quarantined) return false;
+			bool oldQuarantined = field.Quarantined;
+			string oldFault = field.Fault;
+			field.Quarantined = true; field.Fault = SafeFault(Fault);
+			if (CanOwnGrowthAuthority(Book, Book.SettlementId)) return true;
+			field.Quarantined = oldQuarantined; field.Fault = oldFault;
+			return false;
+		}
+
+		public static bool TryAddGrowthCropRow(KingdomGrowthBook Book,
+			KingdomGrowthCropRow Row)
+		{
+			if (!CanOwnGrowthAuthority(Book, Book == null ? null : Book.SettlementId)
+				|| Row == null || Book.CropRows.Count >= MaxGrowthCropRows
+				|| !GrowthCropRowShape(Book, Row, true)) return false;
+			for (int i = 0; i < Book.CropRows.Count; i++)
+				if (string.Equals(Book.CropRows[i].RowId, Row.RowId, StringComparison.Ordinal)
+					|| string.Equals(Book.CropRows[i].ObjectId, Row.ObjectId, StringComparison.Ordinal)
+					|| string.Equals(Book.CropRows[i].Marker, Row.Marker, StringComparison.Ordinal))
+					return false;
+			KingdomGrowthCropRow added = new KingdomGrowthCropRow
+			{
+				FieldId = Row.FieldId, RowId = Row.RowId, ObjectId = Row.ObjectId,
+				Marker = Row.Marker, Blueprint = Row.Blueprint, ZoneId = Row.ZoneId,
+				OwnerId = Row.OwnerId, X = Row.X, Y = Row.Y, Count = Row.Count
+			};
+			Book.CropRows.Add(added);
+			if (CanOwnGrowthAuthority(Book, Book.SettlementId)) return true;
+			Book.CropRows.RemoveAt(Book.CropRows.Count - 1);
+			return false;
+		}
+
+		public static KingdomGrowthWaterLeg PrepareGrowthWaterLeg(KingdomGrowthBook Book,
+			KingdomGrowthOperation Operation, KingdomGrowthWaterMutationKind MutationKind,
+			string ContainerId, KingdomLifecycleTopology OwnerTopology, string OwnerId,
+			string Blueprint, string ZoneId, int X, int Y, int Capacity, int Before, int Delta,
+			string BeforeComposition, string AfterComposition, string BeforeOwnerGraphHash,
+			string AfterOwnerGraphHash, string BeforePartGraphHash, string AfterPartGraphHash,
+			string BeforeTopologyHash, string AfterTopologyHash)
+		{
+			if (OwnerTopology == KingdomLifecycleTopology.Cell && OwnerId != null
+				&& OwnerId.Length == 0) OwnerId = null;
+			if (!CanOwnGrowthAuthority(Book, Book == null ? null : Book.SettlementId)
+				|| Operation == null || Operation.Phase != KingdomGrowthPhase.Prepared
+				|| Operation.PlanHash != null || Operation.WaterLegs == null
+				|| Operation.WaterLegs.Count >= MaxWaterLegs) return null;
+			int ordinal = Operation.WaterLegs.Count;
+			int after;
+			if (Delta <= 0 || !CheckedAdd(Before,
+				MutationKind == KingdomGrowthWaterMutationKind.Drain ? -Delta : Delta, out after))
+				return null;
+			string key = ResourceKey(KingdomLifecycleResourceKind.WaterVessel, ZoneId, ContainerId);
+			KingdomLifecycleResourceRevision row = FindGrowthResource(Book, key);
+			if (key == null || (row != null && (!string.IsNullOrEmpty(row.ActiveOperationId)
+				|| row.Revision == long.MaxValue))) return null;
+			long revision = row == null ? 0L : row.Revision;
+			KingdomGrowthWaterLeg leg = new KingdomGrowthWaterLeg
+			{
+				OperationId = Operation.Id, EventId = ChildId(Operation.Id, "water", ordinal),
+				LeaseKey = key, MutationKind = MutationKind,
+				ContainerKind = KingdomGrowthWaterContainerKind.LiquidVolume,
+				ContainerId = ContainerId, OwnerTopology = OwnerTopology, OwnerId = OwnerId,
+				Blueprint = Blueprint, ZoneId = ZoneId, X = X, Y = Y, Capacity = Capacity,
+				Before = Before, Delta = Delta, After = after,
+				BeforeComposition = BeforeComposition, AfterComposition = AfterComposition,
+				BeforeOwnerGraphHash = BeforeOwnerGraphHash,
+				AfterOwnerGraphHash = AfterOwnerGraphHash,
+				BeforePartGraphHash = BeforePartGraphHash,
+				AfterPartGraphHash = AfterPartGraphHash,
+				BeforeTopologyHash = BeforeTopologyHash, AfterTopologyHash = AfterTopologyHash,
+				State = KingdomLifecyclePhysicalState.Prepared,
+				ReceiptId = ChildId(Operation.Id, "water-receipt", ordinal),
+				ReceiptState = KingdomLifecyclePhysicalState.Prepared,
+				Lease = new KingdomLifecycleResourceLease
+				{
+					OperationId = Operation.Id, Kind = KingdomLifecycleResourceKind.WaterVessel,
+					ScopeId = ZoneId, SubjectId = ContainerId, Key = key, Before = Before,
+					Delta = MutationKind == KingdomGrowthWaterMutationKind.Drain ? -Delta : Delta,
+					After = after, BeforeRevision = revision, AfterRevision = revision + 1L,
+					State = KingdomLifecycleLeaseState.Prepared
+				}
+			};
+			return GrowthWaterShape(Operation, leg, ordinal, true) ? leg : null;
+		}
+
+		public static KingdomGrowthObjectLeg PrepareGrowthObjectLeg(
+			KingdomGrowthOperation Operation, bool Output,
+			KingdomGrowthObjectMutationKind MutationKind, string ObjectId, string Marker,
+			string Blueprint, KingdomLifecycleTopology Topology, string OwnerId, string ZoneId,
+			int X, int Y, int BeforeCount, int Delta, bool NoStack,
+			string BeforeOwnerGraphHash, string AfterOwnerGraphHash,
+			string BeforeObjectGraphHash, string AfterObjectGraphHash,
+			string BeforeTopologyHash, string AfterTopologyHash)
+		{
+			if (Topology == KingdomLifecycleTopology.Cell && OwnerId != null
+				&& OwnerId.Length == 0) OwnerId = null;
+			if (Operation == null || Operation.Phase != KingdomGrowthPhase.Prepared
+				|| Operation.PlanHash != null || Operation.Sources == null || Operation.Outputs == null)
+				return null;
+			List<KingdomGrowthObjectLeg> list = Output ? Operation.Outputs : Operation.Sources;
+			if (list.Count >= (Output ? MaxGrowthOutputs : MaxGrowthSources)) return null;
+			int after;
+			if (!CheckedAdd(BeforeCount, Delta, out after)) return null;
+			int ordinal = list.Count;
+			KingdomGrowthObjectLeg leg = new KingdomGrowthObjectLeg
+			{
+				OperationId = Operation.Id, EventId = ChildId(Operation.Id,
+					Output ? "output" : "source", ordinal), ObjectId = ObjectId, Marker = Marker,
+				Blueprint = Blueprint, Topology = Topology, OwnerId = OwnerId, ZoneId = ZoneId,
+				X = X, Y = Y, BeforeCount = BeforeCount, Delta = Delta, AfterCount = after,
+				NoStack = NoStack, MutationKind = MutationKind,
+				BeforeOwnerGraphHash = BeforeOwnerGraphHash,
+				AfterOwnerGraphHash = AfterOwnerGraphHash,
+				BeforeObjectGraphHash = BeforeObjectGraphHash,
+				AfterObjectGraphHash = AfterObjectGraphHash,
+				BeforeTopologyHash = BeforeTopologyHash, AfterTopologyHash = AfterTopologyHash,
+				CreatedMarker = Output && MutationKind == KingdomGrowthObjectMutationKind.Create
+					? Marker : null,
+				DetachedMarker = !Output || MutationKind != KingdomGrowthObjectMutationKind.Create
+					? Marker : null,
+				State = KingdomLifecyclePhysicalState.Prepared,
+				ReceiptId = ChildId(Operation.Id, Output ? "output-receipt" : "source-receipt",
+					ordinal), ReceiptTopologyId = TopologyId(Topology, OwnerId, ZoneId, X, Y),
+				ReceiptState = KingdomLifecyclePhysicalState.Prepared
+			};
+			return GrowthObjectShape(Operation, leg, ordinal, Output, true) ? leg : null;
+		}
+
+		public static KingdomGrowthDomainStep PrepareGrowthDomainStep(KingdomGrowthBook Book,
+			KingdomGrowthOperation Operation, KingdomGrowthDomainStepKind Kind,
+			KingdomGrowthDomainCallbackKind CallbackKind, string ActorId, string SubjectId,
+			long Before, long After, string CallbackBodyHash, string BeforeGraphHash,
+			string AfterGraphHash, string BeforeMapHash, string AfterMapHash)
+		{
+			if (!CanOwnGrowthAuthority(Book, Book == null ? null : Book.SettlementId)
+				|| Operation == null || Operation.Phase != KingdomGrowthPhase.Prepared
+				|| Operation.PlanHash != null || Operation.DomainSteps == null
+				|| Operation.DomainSteps.Count >= MaxResourceLeases) return null;
+			KingdomLifecycleResourceKind resourceKind;
+			if (!TryGrowthDomainKind(Kind, CallbackKind, out resourceKind)) return null;
+			long delta;
+			if (!CheckedAdd(After, -Before, out delta) || delta == 0L) return null;
+			string key = ResourceKey(resourceKind, Operation.SettlementId, SubjectId);
+			KingdomLifecycleResourceRevision row = FindGrowthResource(Book, key);
+			if (key == null || (row != null && (!string.IsNullOrEmpty(row.ActiveOperationId)
+				|| row.Revision == long.MaxValue))) return null;
+			long revision = row == null ? 0L : row.Revision;
+			int ordinal = Operation.DomainSteps.Count;
+			KingdomGrowthDomainStep step = new KingdomGrowthDomainStep
+			{
+				Kind = Kind, CallbackKind = CallbackKind, CallbackBodyHash = CallbackBodyHash,
+				EventId = ChildId(Operation.Id, "domain", ordinal), ActorId = ActorId,
+				SubjectId = SubjectId, BeforeValue = Before, AfterValue = After,
+				BeforeGraphHash = BeforeGraphHash, AfterGraphHash = AfterGraphHash,
+				BeforeMapHash = BeforeMapHash, AfterMapHash = AfterMapHash,
+				State = KingdomLifecyclePhysicalState.Prepared,
+				ReceiptId = ChildId(Operation.Id, "domain-receipt", ordinal),
+				ReceiptState = KingdomLifecyclePhysicalState.Prepared,
+				Lease = new KingdomLifecycleResourceLease
+				{
+					OperationId = Operation.Id, Kind = resourceKind, ScopeId = Operation.SettlementId,
+					SubjectId = SubjectId, Key = key, Before = Before, Delta = delta, After = After,
+					BeforeRevision = revision, AfterRevision = revision + 1L,
+					State = KingdomLifecycleLeaseState.Prepared
+				}
+			};
+			return GrowthDomainShape(Operation, step, ordinal, true) ? step : null;
+		}
+
+		private static bool GrowthPublicationSnapshotsMatch(KingdomGrowthBook book,
+			KingdomGrowthOperation operation, KingdomGrowthFieldSlot field)
+		{
+			if (operation.OptionState != book.OptionState || operation.OptionTick != book.OptionTick
+				|| operation.HealthState != book.HealthState || operation.HealthTick != book.HealthTick
+				|| operation.EffectiveWorkBefore != book.EffectiveWorkTick
+				|| operation.HeartbeatBefore != book.LastHeartbeatTick
+				|| operation.ArrivalBefore != book.NextArrivalTick
+				|| operation.FetchBefore != book.LastFetchTick
+				|| operation.MillBefore != book.LastMillTick
+				|| operation.SubsidenceBefore != book.LastSubsidenceTick
+				|| operation.PendingCropBefore != book.PendingCrop
+				|| !string.Equals(operation.PendingCropBlueprint, book.PendingCropBlueprint,
+					StringComparison.Ordinal)
+				|| !string.Equals(operation.PendingCropZoneId, book.PendingCropZoneId,
+					StringComparison.Ordinal)) return false;
+			if (operation.Action == KingdomGrowthAction.Arrival)
+			{
+				long after;
+				if (book.ArrivalIntervalTicks <= 0L || operation.CreatedTick < book.NextArrivalTick
+					|| !CheckedAdd(operation.CreatedTick, book.ArrivalIntervalTicks, out after)
+					|| operation.ArrivalAfter != after) return false;
+			}
+			if (field != null && operation.ClockLease.Before != field.ClockTick) return false;
+			return GrowthNonTargetScalarsFrozen(operation);
+		}
+
+		private static bool GrowthNonTargetScalarsFrozen(KingdomGrowthOperation operation)
+		{
+			if (operation.Action != KingdomGrowthAction.Heartbeat
+				&& operation.HeartbeatAfter != operation.HeartbeatBefore) return false;
+			if (operation.Action != KingdomGrowthAction.Arrival
+				&& operation.ArrivalAfter != operation.ArrivalBefore) return false;
+			if (operation.Action != KingdomGrowthAction.Delivery
+				&& operation.FetchAfter != operation.FetchBefore) return false;
+			if (operation.MillAfter != operation.MillBefore) return false;
+			if (operation.Action != KingdomGrowthAction.Departure
+				&& operation.SubsidenceAfter != operation.SubsidenceBefore) return false;
+			if (operation.Action < KingdomGrowthAction.Sow
+				&& operation.EffectiveWorkAfter != operation.EffectiveWorkBefore) return false;
+			if (operation.Action == KingdomGrowthAction.Heartbeat
+				|| operation.Action == KingdomGrowthAction.Delivery)
+				return operation.PendingCropDelta == 0 && operation.PopulationDelta == 0;
+			if (operation.Action == KingdomGrowthAction.Arrival)
+				return operation.PendingCropDelta == 0 && operation.PopulationDelta > 0;
+			if (operation.Action == KingdomGrowthAction.Departure)
+				return operation.PendingCropDelta == 0 && operation.PopulationDelta < 0;
+			return operation.PopulationDelta == 0;
+		}
+
+		private static List<KingdomLifecycleResourceLease> GrowthLeases(
+			KingdomGrowthOperation operation)
+		{
+			if (operation == null || operation.ClockLease == null || operation.WaterLegs == null
+				|| operation.DomainSteps == null) return null;
+			List<KingdomLifecycleResourceLease> result =
+				new List<KingdomLifecycleResourceLease>(1 + operation.WaterLegs.Count
+					+ operation.DomainSteps.Count);
+			for (int i = 0; i < operation.WaterLegs.Count; i++)
+				if (operation.WaterLegs[i] == null || operation.WaterLegs[i].Lease == null) return null;
+				else result.Add(operation.WaterLegs[i].Lease);
+			for (int i = 0; i < operation.DomainSteps.Count; i++)
+				if (operation.DomainSteps[i] == null || operation.DomainSteps[i].Lease == null) return null;
+				else result.Add(operation.DomainSteps[i].Lease);
+			result.Add(operation.ClockLease);
+			return result;
+		}
+
+		private static bool GrowthResourceMatches(KingdomLifecycleResourceRevision row,
+			KingdomLifecycleResourceLease lease)
+		{
+			return row != null && lease != null && row.Kind == lease.Kind
+				&& string.Equals(row.ScopeId, lease.ScopeId, StringComparison.Ordinal)
+				&& string.Equals(row.SubjectId, lease.SubjectId, StringComparison.Ordinal)
+				&& string.Equals(row.Key, lease.Key, StringComparison.Ordinal);
+		}
+
+		private static bool TryNextGrowthPhase(KingdomGrowthAction action,
+			KingdomGrowthPhase from, out KingdomGrowthPhase to)
+		{
+			to = KingdomGrowthPhase.Invalid;
+			bool water = action == KingdomGrowthAction.Arrival || action == KingdomGrowthAction.Sow;
+			bool source = action == KingdomGrowthAction.Departure
+				|| action == KingdomGrowthAction.Delivery || action == KingdomGrowthAction.Sow
+				|| action == KingdomGrowthAction.Withdraw || action == KingdomGrowthAction.Harvest;
+			bool output = action == KingdomGrowthAction.Arrival
+				|| action == KingdomGrowthAction.Delivery || action == KingdomGrowthAction.Sow
+				|| action == KingdomGrowthAction.Withdraw || action == KingdomGrowthAction.Harvest;
+			switch (from)
+			{
+			case KingdomGrowthPhase.Prepared:
+				to = water ? KingdomGrowthPhase.WaterIntent : source
+					? KingdomGrowthPhase.SourceIntent : output
+						? KingdomGrowthPhase.OutputIntent : KingdomGrowthPhase.DomainIntent; return true;
+			case KingdomGrowthPhase.WaterIntent: if (!water) return false;
+				to = KingdomGrowthPhase.WaterSettled; return true;
+			case KingdomGrowthPhase.WaterSettled: if (!water) return false;
+				to = source ? KingdomGrowthPhase.SourceIntent : output
+					? KingdomGrowthPhase.OutputIntent : KingdomGrowthPhase.DomainIntent; return true;
+			case KingdomGrowthPhase.SourceIntent: if (!source) return false;
+				to = KingdomGrowthPhase.SourcesSettled; return true;
+			case KingdomGrowthPhase.SourcesSettled: if (!source) return false;
+				to = output ? KingdomGrowthPhase.OutputIntent : KingdomGrowthPhase.DomainIntent; return true;
+			case KingdomGrowthPhase.OutputIntent: if (!output) return false;
+				to = KingdomGrowthPhase.OutputsSettled; return true;
+			case KingdomGrowthPhase.OutputsSettled: if (!output) return false;
+				to = KingdomGrowthPhase.DomainIntent; return true;
+			case KingdomGrowthPhase.DomainIntent: to = KingdomGrowthPhase.DomainSettled; return true;
+			case KingdomGrowthPhase.DomainSettled: to = KingdomGrowthPhase.ClockIntent; return true;
+			case KingdomGrowthPhase.ClockIntent: to = KingdomGrowthPhase.Sinks; return true;
+			case KingdomGrowthPhase.Sinks: to = KingdomGrowthPhase.Terminal; return true;
+			default: return false;
+			}
+		}
+
+		private static int GrowthPhaseIndex(KingdomGrowthAction action, KingdomGrowthPhase phase)
+		{
+			KingdomGrowthPhase current = KingdomGrowthPhase.Prepared;
+			for (int i = 0; i < 16; i++)
+			{
+				if (current == phase) return i;
+				if (!TryNextGrowthPhase(action, current, out current)) return -1;
+			}
+			return -1;
+		}
+
+		private static bool ExactGrowthOperationAuthority(KingdomGrowthBook book,
+			KingdomGrowthOperation operation)
+		{
+			if (!CanOwnGrowthAuthority(book, book == null ? null : book.SettlementId)
+				|| operation == null) return false;
+			KingdomGrowthSlotKind slot = SlotForGrowthAction(operation.Action);
+			KingdomGrowthFieldSlot field = slot == KingdomGrowthSlotKind.Field
+				? FindGrowthField(book, operation.FieldId) : null;
+			if (slot == KingdomGrowthSlotKind.Field
+				&& (field == null || field.Quarantined)) return false;
+			return slot != KingdomGrowthSlotKind.None && ReferenceEquals(
+				GetGrowthOperation(book, slot, operation.FieldId), operation);
+		}
+
+		private static bool GrowthTransitionReady(KingdomGrowthBook book,
+			KingdomGrowthOperation operation, KingdomGrowthPhase to)
+		{
+			if (to == KingdomGrowthPhase.WaterSettled)
+				return operation.WaterCursor == operation.WaterLegs.Count;
+			if (to == KingdomGrowthPhase.SourcesSettled)
+				return operation.SourceCursor == operation.Sources.Count;
+			if (to == KingdomGrowthPhase.OutputsSettled)
+				return operation.OutputCursor == operation.Outputs.Count;
+			if (to == KingdomGrowthPhase.DomainSettled)
+				return operation.DomainCursor == operation.DomainSteps.Count;
+			if (to == KingdomGrowthPhase.Sinks)
+				return GrowthAllPrefixesSettled(operation)
+					&& operation.ClockState == KingdomLifecyclePhysicalState.Proved
+					&& GrowthLeaseProvedByRow(book, operation.ClockLease);
+			if (to == KingdomGrowthPhase.Terminal)
+				return GrowthAllPrefixesSettled(operation) && GrowthAllResourcesProved(book, operation)
+					&& GrowthOutboxTerminal(operation);
+			return true;
+		}
+
+		private static bool GrowthAllPrefixesSettled(KingdomGrowthOperation operation)
+		{
+			return operation.WaterCursor == operation.WaterLegs.Count
+				&& operation.SourceCursor == operation.Sources.Count
+				&& operation.OutputCursor == operation.Outputs.Count
+				&& operation.DomainCursor == operation.DomainSteps.Count;
+		}
+
+		private static bool GrowthLeaseProvedByRow(KingdomGrowthBook book,
+			KingdomLifecycleResourceLease lease)
+		{
+			KingdomLifecycleResourceRevision row = FindGrowthResource(book,
+				lease == null ? null : lease.Key);
+			return lease != null && lease.State == KingdomLifecycleLeaseState.Proved
+				&& GrowthResourceMatches(row, lease) && row.Revision == lease.AfterRevision
+				&& string.Equals(row.LastOperationId, lease.OperationId, StringComparison.Ordinal)
+				&& string.Equals(row.ActiveOperationId, lease.OperationId, StringComparison.Ordinal);
+		}
+
+		private static bool GrowthAllResourcesProved(KingdomGrowthBook book,
+			KingdomGrowthOperation operation)
+		{
+			List<KingdomLifecycleResourceLease> leases = GrowthLeases(operation);
+			if (leases == null) return false;
+			for (int i = 0; i < leases.Count; i++)
+				if (!GrowthLeaseProvedByRow(book, leases[i])) return false;
+			return true;
+		}
+
+		private static void ApplyGrowthClockValue(KingdomGrowthBook book,
+			KingdomGrowthOperation operation)
+		{
+			switch (operation.Action)
+			{
+			case KingdomGrowthAction.Heartbeat: book.LastHeartbeatTick = operation.ClockLease.After; break;
+			case KingdomGrowthAction.Arrival: book.NextArrivalTick = operation.ClockLease.After; break;
+			case KingdomGrowthAction.Departure: book.LastSubsidenceTick = operation.ClockLease.After; break;
+			case KingdomGrowthAction.Delivery: book.LastFetchTick = operation.ClockLease.After; break;
+			default:
+				KingdomGrowthFieldSlot field = FindGrowthField(book, operation.FieldId);
+				if (field != null) field.ClockTick = operation.ClockLease.After;
+				if (operation.EffectiveWorkAfter > book.EffectiveWorkTick)
+					book.EffectiveWorkTick = operation.EffectiveWorkAfter;
+				break;
+			}
+		}
+
+		private static void AppendGrowthProof(KingdomGrowthBook book, KingdomGrowthProof proof)
+		{
+			if (book.RecentProofs.Count == MaxRecentProofs) book.RecentProofs.RemoveAt(0);
+			book.RecentProofs.Add(proof);
+		}
+
+		private static bool GrowthProofAppendWouldBeValid(KingdomGrowthBook book,
+			KingdomGrowthProof candidate, KingdomGrowthSlotKind slot, KingdomGrowthFieldSlot field)
+		{
+			if (book == null || candidate == null || book.RecentProofs == null
+				|| book.RecentProofs.Count > MaxRecentProofs
+				|| !IsExactSuccessor(candidate.Sequence, GetGrowthRetired(book, slot, field))) return false;
+			HashSet<string> ids = new HashSet<string>(StringComparer.Ordinal);
+			long priorTick = -1L;
+			int start = book.RecentProofs.Count == MaxRecentProofs ? 1 : 0;
+			for (int i = start; i <= book.RecentProofs.Count; i++)
+			{
+				KingdomGrowthProof proof = i == book.RecentProofs.Count
+					? candidate : book.RecentProofs[i];
+				if (proof == null) return false;
+				long retired = proof.Slot == slot
+					&& (slot != KingdomGrowthSlotKind.Field || string.Equals(proof.FieldId,
+						field == null ? null : field.FieldId, StringComparison.Ordinal))
+					? candidate.Sequence : GrowthProofRetiredThrough(book, proof);
+				if (!GrowthProofShape(book, proof, retired) || proof.Tick < priorTick
+					|| !ids.Add(proof.Id)) return false;
+				priorTick = proof.Tick;
+			}
+			return true;
+		}
+
+		private static bool GrowthProofShape(KingdomGrowthBook book, KingdomGrowthProof proof,
+			long retiredThrough)
+		{
+			return proof != null && KnownGrowthSlot(proof.Slot) && proof.Sequence > 0L
+				&& KnownGrowthAction(proof.Action) && SlotForGrowthAction(proof.Action) == proof.Slot
+				&& (proof.Slot == KingdomGrowthSlotKind.Field ? ValidRootId(proof.FieldId)
+					: proof.FieldId == null)
+				&& string.Equals(proof.Id, GrowthOperationId(book.SettlementId, proof.Slot,
+					proof.FieldId, proof.Sequence), StringComparison.Ordinal)
+				&& ValidHashNamespace(proof.PlanHash, "growth-plan")
+				&& proof.Tick >= 0L && proof.Sequence <= retiredThrough;
+		}
+
+		private static bool GrowthCropRowShape(KingdomGrowthBook book, KingdomGrowthCropRow row,
+			bool requireLiveField)
+		{
+			KingdomGrowthFieldSlot field = FindGrowthField(book, row == null ? null : row.FieldId);
+			return row != null && field != null && (!requireLiveField || !field.Quarantined)
+				&& ValidRootId(row.RowId)
+				&& ValidRootId(row.ObjectId) && ValidRootId(row.Marker) && ValidName(row.Blueprint)
+				&& ValidName(row.ZoneId) && ValidRootId(row.OwnerId) && row.X >= 0
+				&& row.X <= MaxCoordinate && row.Y >= 0 && row.Y <= MaxCoordinate
+				&& row.Count > 0 && row.Count <= MaxPhysicalCount;
+		}
+
+		public static void NormalizeGrowth(KingdomGrowthBook Book)
+		{
+			if (Book == null || GrowthEnvelopeWritable(Book)) return;
+			Book.FormatVersion = CurrentGrowthFormatVersion;
+			Book.Quarantined = true;
+			Book.Fault = "malformed growth authority was quarantined";
+			Book.OpaqueWireVersion = 0;
+			Book.OpaquePayload = null;
+			Book.SettlementId = null; Book.IdentityBound = false; Book.IdentityProof = null;
+			Book.MigratedFromLifecycleVersion = 0; Book.MigrationPending = false;
+			Book.MigrationTick = 0L; Book.OptionState = KingdomLifecycleOptionState.Unknown;
+			Book.OptionTick = 0L; Book.HealthState = KingdomGrowthHealthState.Unknown;
+			Book.HealthTick = 0L; Book.WorkPaused = false; Book.WorkPauseStartedTick = 0L;
+			Book.WorkPausedTicks = 0L; Book.EffectiveWorkTick = 0L;
+			Book.LastHeartbeatTick = 0L; Book.NextArrivalTick = 0L;
+			Book.ArrivalIntervalTicks = 0L; Book.LastFetchTick = 0L;
+			Book.LastMillTick = 0L; Book.LastSubsidenceTick = 0L;
+			Book.PendingCrop = 0; Book.PendingCropBlueprint = null; Book.PendingCropZoneId = null;
+			Book.HeartbeatNextSequence = Book.ArrivalNextSequence =
+				Book.DepartureNextSequence = Book.DeliveryNextSequence = 1L;
+			Book.HeartbeatRetiredThrough = Book.ArrivalRetiredThrough =
+				Book.DepartureRetiredThrough = Book.DeliveryRetiredThrough = 0L;
+			Book.HeartbeatOp = Book.ArrivalOp = Book.DepartureOp = Book.DeliveryOp = null;
+			Book.FieldOps = new List<KingdomGrowthFieldSlot>();
+			Book.CropRows = new List<KingdomGrowthCropRow>();
+			Book.Resources = new List<KingdomLifecycleResourceRevision>();
+			Book.RecentProofs = new List<KingdomGrowthProof>();
+		}
+
+		private static KingdomGrowthBook NewStagedGrowth()
+		{
+			return new KingdomGrowthBook
+			{
+				FormatVersion = CurrentGrowthFormatVersion,
+				MigratedFromLifecycleVersion = LegacyLifecycleFormatVersion,
+				MigrationPending = true
+			};
+		}
+
+		private static KingdomGrowthBook NewBoundGrowth(string settlementId)
+		{
+			if (!ValidRootId(settlementId)) return null;
+			KingdomGrowthBook result = new KingdomGrowthBook
+			{
+				FormatVersion = CurrentGrowthFormatVersion,
+				SettlementId = settlementId,
+				IdentityBound = true,
+				IdentityProof = GrowthIdentityProof(settlementId)
+			};
+			return result;
+		}
+
+		private static string GrowthIdentityProof(string settlementId)
+		{
+			return HashId("growth-binding", delegate(BinaryWriter w)
+			{
+				CanonicalString(w, settlementId);
+			});
+		}
+
+		private static bool KnownGrowthHealth(KingdomGrowthHealthState state)
+		{
+			return Enum.IsDefined(typeof(KingdomGrowthHealthState), state);
+		}
+
+		private static bool KnownGrowthAction(KingdomGrowthAction action)
+		{
+			return Enum.IsDefined(typeof(KingdomGrowthAction), action) &&
+				action != KingdomGrowthAction.None;
+		}
+
+		private static bool KnownGrowthPhase(KingdomGrowthPhase phase)
+		{
+			return Enum.IsDefined(typeof(KingdomGrowthPhase), phase) &&
+				phase != KingdomGrowthPhase.Invalid;
+		}
+
+		private static bool KnownGrowthSlot(KingdomGrowthSlotKind slot)
+		{
+			return Enum.IsDefined(typeof(KingdomGrowthSlotKind), slot) &&
+				slot != KingdomGrowthSlotKind.None;
+		}
+
+		private static bool GrowthCollectionsBounded(KingdomGrowthBook book)
+		{
+			return book != null && book.FieldOps != null && book.FieldOps.Count <= MaxGrowthFields
+				&& book.CropRows != null && book.CropRows.Count <= MaxGrowthCropRows
+				&& book.Resources != null && book.Resources.Count <= MaxResourceRows
+				&& book.RecentProofs != null && book.RecentProofs.Count <= MaxRecentProofs;
+		}
+
+		private static bool PristineGrowthBook(KingdomGrowthBook book)
+		{
+			return book != null && book.FormatVersion == CurrentGrowthFormatVersion
+				&& !book.Quarantined && book.Fault == null
+				&& book.OpaqueWireVersion == 0 && book.OpaquePayload == null
+				&& book.SettlementId == null && !book.IdentityBound
+				&& book.IdentityProof == null
+				&& book.MigratedFromLifecycleVersion == 0 && !book.MigrationPending
+				&& book.MigrationTick == 0L && book.OptionState == KingdomLifecycleOptionState.Unknown
+				&& book.OptionTick == 0L && book.HealthState == KingdomGrowthHealthState.Unknown
+				&& book.HealthTick == 0L && !book.WorkPaused && book.WorkPauseStartedTick == 0L
+				&& book.WorkPausedTicks == 0L && book.EffectiveWorkTick == 0L
+				&& book.LastHeartbeatTick == 0L && book.NextArrivalTick == 0L
+				&& book.ArrivalIntervalTicks == 0L && book.LastFetchTick == 0L
+				&& book.LastMillTick == 0L && book.LastSubsidenceTick == 0L
+				&& book.PendingCrop == 0 && book.PendingCropBlueprint == null
+				&& book.PendingCropZoneId == null
+				&& book.HeartbeatNextSequence == 1L && book.HeartbeatRetiredThrough == 0L
+				&& book.ArrivalNextSequence == 1L && book.ArrivalRetiredThrough == 0L
+				&& book.DepartureNextSequence == 1L && book.DepartureRetiredThrough == 0L
+				&& book.DeliveryNextSequence == 1L && book.DeliveryRetiredThrough == 0L
+				&& book.HeartbeatOp == null && book.ArrivalOp == null
+				&& book.DepartureOp == null && book.DeliveryOp == null
+				&& GrowthCollectionsBounded(book) && book.FieldOps.Count == 0
+				&& book.CropRows.Count == 0 && book.Resources.Count == 0
+				&& book.RecentProofs.Count == 0;
+		}
+
+		internal static bool OpaqueGrowthParsedStateIsPristine(KingdomGrowthBook book)
+		{
+			if (book == null) return false;
+			bool quarantined = book.Quarantined;
+			string fault = book.Fault;
+			int wireVersion = book.OpaqueWireVersion;
+			byte[] payload = book.OpaquePayload;
+			try
+			{
+				book.Quarantined = false;
+				book.Fault = null;
+				book.OpaqueWireVersion = 0;
+				book.OpaquePayload = null;
+				return PristineGrowthBook(book);
+			}
+			finally
+			{
+				book.Quarantined = quarantined;
+				book.Fault = fault;
+				book.OpaqueWireVersion = wireVersion;
+				book.OpaquePayload = payload;
+			}
+		}
+
+		private static bool StagedGrowthShape(KingdomGrowthBook book)
+		{
+			if (book == null || book.FormatVersion != CurrentGrowthFormatVersion || book.Quarantined
+				|| book.Fault != null || book.OpaquePayload != null
+				|| book.OpaqueWireVersion != 0 || !book.MigrationPending
+				|| book.MigratedFromLifecycleVersion != LegacyLifecycleFormatVersion) return false;
+			bool pending = book.MigrationPending;
+			int migrated = book.MigratedFromLifecycleVersion;
+			book.MigrationPending = false; book.MigratedFromLifecycleVersion = 0;
+			bool result = PristineGrowthBook(book);
+			book.MigrationPending = pending; book.MigratedFromLifecycleVersion = migrated;
+			return result;
+		}
+
+		private static bool CanonicalQuarantinedGrowth(KingdomGrowthBook book)
+		{
+			if (book == null || !book.Quarantined || string.IsNullOrEmpty(book.Fault)
+				|| TooLong(book.Fault, MaxTextChars) || book.OpaquePayload != null) return false;
+			bool quarantined = book.Quarantined; string fault = book.Fault;
+			book.Quarantined = false; book.Fault = null;
+			bool result = PristineGrowthBook(book);
+			book.Quarantined = quarantined; book.Fault = fault;
+			return result;
+		}
+
+		private static bool GrowthAttachmentValid(KingdomLifecycleBook book)
+		{
+			if (book == null || book.Growth == null) return false;
+			if (book.Growth.OpaquePayload != null || book.Growth.Quarantined)
+				return GrowthEnvelopeWritable(book.Growth);
+			if (book.Growth.MigrationPending) return StagedGrowthShape(book.Growth);
+			if (!book.IdentityBound) return PristineGrowthBook(book.Growth);
+			return CanOwnGrowthAuthority(book.Growth, book.SettlementId);
+		}
+
+		private static bool GrowthRootShape(KingdomGrowthBook book, bool ValidateOperations)
+		{
+			if (book == null || book.FormatVersion != CurrentGrowthFormatVersion || book.Quarantined
+				|| book.OpaquePayload != null || book.OpaqueWireVersion != 0 || book.MigrationPending
+				|| TooLong(book.Fault, MaxTextChars) || book.Fault != null
+				|| !GrowthCollectionsBounded(book) || !KnownOption(book.OptionState)
+				|| !KnownGrowthHealth(book.HealthState) || book.OptionTick < 0L || book.HealthTick < 0L
+				|| book.WorkPauseStartedTick < 0L || book.WorkPausedTicks < 0L
+				|| book.EffectiveWorkTick < 0L || book.LastHeartbeatTick < 0L
+				|| book.NextArrivalTick < 0L || book.ArrivalIntervalTicks < 0L
+				|| book.LastFetchTick < 0L || book.LastMillTick < 0L || book.LastSubsidenceTick < 0L
+				|| !ValidCount(book.PendingCrop)
+				|| TooLong(book.PendingCropBlueprint, MaxNameChars)
+				|| TooLong(book.PendingCropZoneId, MaxNameChars)
+				|| !CounterShape(book.HeartbeatNextSequence, book.HeartbeatRetiredThrough)
+				|| !CounterShape(book.ArrivalNextSequence, book.ArrivalRetiredThrough)
+				|| !CounterShape(book.DepartureNextSequence, book.DepartureRetiredThrough)
+				|| !CounterShape(book.DeliveryNextSequence, book.DeliveryRetiredThrough)) return false;
+			if (!book.IdentityBound || !ValidRootId(book.SettlementId)
+				|| !string.Equals(book.IdentityProof, GrowthIdentityProof(book.SettlementId),
+					StringComparison.Ordinal)) return false;
+			if (book.WorkPaused)
+			{
+				if (book.WorkPauseStartedTick > Math.Max(book.OptionTick, book.HealthTick)
+					|| !PausedArrivalClockAllowed(book)) return false;
+			}
+			else if ((book.OptionState == KingdomLifecycleOptionState.Disabled
+				|| book.HealthState == KingdomGrowthHealthState.Unhealthy)) return false;
+			if (!GrowthEffectiveWorkBounded(book)) return false;
+			if (book.ArrivalIntervalTicks == 0L && book.NextArrivalTick != 0L) return false;
+			if (book.PendingCrop == 0 ? (book.PendingCropBlueprint != null
+				|| book.PendingCropZoneId != null)
+				: (!ValidName(book.PendingCropBlueprint) || !ValidName(book.PendingCropZoneId)))
+				return false;
+			if (!GrowthFieldRowsValid(book) || !GrowthCropRowsValid(book)
+				|| !GrowthResourceRowsValid(book) || !GrowthProofRowsValid(book)
+				|| !GrowthActiveResourcesValid(book)
+				|| !GrowthActiveIdentityClaimsValid(book, null)) return false;
+			return !ValidateOperations || GrowthOperationsValid(book);
+		}
+
+		private static bool PausedArrivalClockAllowed(KingdomGrowthBook book)
+		{
+			if (book == null || !book.WorkPaused) return false;
+			KingdomGrowthOperation operation = book.ArrivalOp;
+			if (operation == null) return book.NextArrivalTick == 0L;
+			if (operation.Action != KingdomGrowthAction.Arrival || operation.ClockLease == null)
+				return false;
+			bool proved = operation.ClockState == KingdomLifecyclePhysicalState.Proved
+				&& operation.ClockLease.State == KingdomLifecycleLeaseState.Proved;
+			bool before = operation.ClockState == KingdomLifecyclePhysicalState.Prepared
+				&& operation.ClockLease.State == KingdomLifecycleLeaseState.Prepared
+				|| operation.ClockState == KingdomLifecyclePhysicalState.Intent
+					&& operation.ClockLease.State == KingdomLifecycleLeaseState.Intent;
+			return (proved && book.NextArrivalTick == operation.ClockLease.After)
+				|| (before && book.NextArrivalTick == operation.ClockLease.Before);
+		}
+
+		private static bool GrowthFieldRowsValid(KingdomGrowthBook book)
+		{
+			HashSet<string> ids = new HashSet<string>(StringComparer.Ordinal);
+			for (int i = 0; i < book.FieldOps.Count; i++)
+			{
+				KingdomGrowthFieldSlot field = book.FieldOps[i];
+				if (field == null || !ValidRootId(field.FieldId) || !ids.Add(field.FieldId)
+					|| !CounterShape(field.NextSequence, field.RetiredThrough) || field.ClockTick < 0L
+					|| TooLong(field.Fault, MaxTextChars)) return false;
+				if (field.Quarantined)
+				{
+					if (string.IsNullOrEmpty(field.Fault)
+						|| !GrowthOperationEvidenceBounded(field.Operation)) return false;
+				}
+				else if (field.Fault != null) return false;
+			}
+			return true;
+		}
+
+		private static bool GrowthCropRowsValid(KingdomGrowthBook book)
+		{
+			HashSet<string> ids = new HashSet<string>(StringComparer.Ordinal);
+			HashSet<string> objects = new HashSet<string>(StringComparer.Ordinal);
+			HashSet<string> markers = new HashSet<string>(StringComparer.Ordinal);
+			for (int i = 0; i < book.CropRows.Count; i++)
+			{
+				KingdomGrowthCropRow row = book.CropRows[i];
+				if (!GrowthCropRowShape(book, row, false) || !ids.Add(row.RowId)
+					|| !objects.Add(row.ObjectId) || !markers.Add(row.Marker)) return false;
+			}
+			return true;
+		}
+
+		private static bool GrowthResourceRowsValid(KingdomGrowthBook book)
+		{
+			HashSet<string> keys = new HashSet<string>(StringComparer.Ordinal);
+			for (int i = 0; i < book.Resources.Count; i++)
+				if (!GrowthResourceShape(book.Resources[i]) || !keys.Add(book.Resources[i].Key))
+					return false;
+			return true;
+		}
+
+		private static bool GrowthActiveResourcesValid(KingdomGrowthBook book)
+		{
+			Dictionary<string, string> expected = new Dictionary<string, string>(StringComparer.Ordinal);
+			List<KingdomGrowthOperation> operations = new List<KingdomGrowthOperation>();
+			if (book.HeartbeatOp != null) operations.Add(book.HeartbeatOp);
+			if (book.ArrivalOp != null) operations.Add(book.ArrivalOp);
+			if (book.DepartureOp != null) operations.Add(book.DepartureOp);
+			if (book.DeliveryOp != null) operations.Add(book.DeliveryOp);
+			for (int i = 0; i < book.FieldOps.Count; i++)
+				if (book.FieldOps[i].Operation != null && (!book.FieldOps[i].Quarantined
+					|| ValidHashNamespace(book.FieldOps[i].Operation.PlanHash, "growth-plan")))
+					operations.Add(book.FieldOps[i].Operation);
+			for (int i = 0; i < operations.Count; i++)
+			{
+				KingdomGrowthOperation operation = operations[i];
+				List<KingdomLifecycleResourceLease> leases = GrowthLeases(operation);
+				if (leases == null) return false;
+				for (int j = 0; j < leases.Count; j++)
+				{
+					KingdomLifecycleResourceLease lease = leases[j];
+					KingdomLifecycleResourceRevision row = FindGrowthResource(book, lease.Key);
+					if (!GrowthResourceMatches(row, lease) || expected.ContainsKey(lease.Key)
+						|| !string.Equals(row.ActiveOperationId, operation.Id,
+							StringComparison.Ordinal)) return false;
+					if (lease.State == KingdomLifecycleLeaseState.Proved)
+					{
+						if (row.Revision != lease.AfterRevision || !string.Equals(row.LastOperationId,
+							operation.Id, StringComparison.Ordinal)) return false;
+					}
+					else if (lease.State == KingdomLifecycleLeaseState.Prepared
+						|| lease.State == KingdomLifecycleLeaseState.Intent)
+					{
+						if (row.Revision != lease.BeforeRevision || string.Equals(row.LastOperationId,
+							operation.Id, StringComparison.Ordinal)) return false;
+					}
+					else return false;
+					expected.Add(lease.Key, operation.Id);
+				}
+			}
+			for (int i = 0; i < book.Resources.Count; i++)
+			{
+				KingdomLifecycleResourceRevision row = book.Resources[i];
+				if (string.IsNullOrEmpty(row.ActiveOperationId)) continue;
+				if (!expected.TryGetValue(row.Key, out string operationId)
+					|| !string.Equals(operationId, row.ActiveOperationId, StringComparison.Ordinal))
+					return false;
+			}
+			return true;
+		}
+
+		private static bool GrowthActiveIdentityClaimsValid(KingdomGrowthBook book,
+			KingdomGrowthOperation candidate)
+		{
+			if (book == null) return false;
+			Dictionary<string, string> claims =
+				new Dictionary<string, string>(StringComparer.Ordinal);
+			if (!ClaimGrowthOperationIdentities(claims, book.HeartbeatOp)
+				|| !ClaimGrowthOperationIdentities(claims, book.ArrivalOp)
+				|| !ClaimGrowthOperationIdentities(claims, book.DepartureOp)
+				|| !ClaimGrowthOperationIdentities(claims, book.DeliveryOp)) return false;
+			for (int i = 0; i < book.FieldOps.Count; i++)
+			{
+				KingdomGrowthFieldSlot field = book.FieldOps[i];
+				if (field == null || field.Operation == null) continue;
+				if (field.Quarantined
+					&& !ValidHashNamespace(field.Operation.PlanHash, "growth-plan")) continue;
+				if (!ClaimGrowthOperationIdentities(claims, field.Operation)) return false;
+			}
+			return candidate == null || !GrowthOperationAlreadyPresent(book, candidate)
+				&& ClaimGrowthOperationIdentities(claims, candidate);
+		}
+
+		private static bool GrowthOperationAlreadyPresent(KingdomGrowthBook book,
+			KingdomGrowthOperation operation)
+		{
+			if (ReferenceEquals(book.HeartbeatOp, operation) || ReferenceEquals(book.ArrivalOp, operation)
+				|| ReferenceEquals(book.DepartureOp, operation)
+				|| ReferenceEquals(book.DeliveryOp, operation)) return true;
+			for (int i = 0; i < book.FieldOps.Count; i++)
+				if (ReferenceEquals(book.FieldOps[i].Operation, operation)) return true;
+			return false;
+		}
+
+		private static bool ClaimGrowthOperationIdentities(Dictionary<string, string> claims,
+			KingdomGrowthOperation operation)
+		{
+			if (operation == null) return true;
+			if (!ValidGeneratedId(operation.Id) || operation.WaterLegs == null
+				|| operation.Sources == null || operation.Outputs == null) return false;
+			string owner = operation.Id;
+			if (!ClaimGrowthIdentity(claims, "field", operation.FieldId, owner)
+				|| !ClaimGrowthIdentity(claims, "object", operation.TargetId, owner)
+				|| !ClaimGrowthIdentity(claims, "marker", operation.TargetMarker, owner)) return false;
+			if (operation.TargetId != null)
+			{
+				string topology = TopologyId(operation.TargetTopology, operation.TargetOwnerId,
+					operation.ZoneId, operation.TargetX, operation.TargetY);
+				if (topology == null || !ClaimGrowthIdentity(claims, "target-topology",
+					operation.TargetId + "\n" + topology, owner)) return false;
+			}
+			for (int i = 0; i < operation.WaterLegs.Count; i++)
+			{
+				KingdomGrowthWaterLeg leg = operation.WaterLegs[i];
+				if (leg == null || !ClaimGrowthIdentity(claims, "water-container",
+					leg.ContainerId, owner)) return false;
+				string topology = TopologyId(leg.OwnerTopology, leg.OwnerId, leg.ZoneId, leg.X, leg.Y);
+				if (topology == null || !ClaimGrowthIdentity(claims, "water-topology",
+					leg.ContainerId + "\n" + topology, owner)) return false;
+			}
+			if (!ClaimGrowthObjectIdentities(claims, operation.Sources, owner)
+				|| !ClaimGrowthObjectIdentities(claims, operation.Outputs, owner)) return false;
+			return true;
+		}
+
+		private static bool ClaimGrowthObjectIdentities(Dictionary<string, string> claims,
+			List<KingdomGrowthObjectLeg> legs, string owner)
+		{
+			for (int i = 0; i < legs.Count; i++)
+			{
+				KingdomGrowthObjectLeg leg = legs[i];
+				if (leg == null || !ClaimGrowthIdentity(claims, "object", leg.ObjectId, owner)
+					|| !ClaimGrowthIdentity(claims, "marker", leg.Marker, owner)
+					|| !ClaimGrowthIdentity(claims, "marker", leg.CreatedMarker, owner)
+					|| !ClaimGrowthIdentity(claims, "marker", leg.DetachedMarker, owner)) return false;
+			}
+			return true;
+		}
+
+		private static bool ClaimGrowthIdentity(Dictionary<string, string> claims,
+			string kind, string value, string owner)
+		{
+			if (value == null) return true;
+			if (value.Length == 0) return false;
+			string key = kind + "\n" + value;
+			string prior;
+			if (claims.TryGetValue(key, out prior))
+				return string.Equals(prior, owner, StringComparison.Ordinal);
+			claims.Add(key, owner);
+			return true;
+		}
+
+		private static bool GrowthProofRowsValid(KingdomGrowthBook book)
+		{
+			HashSet<string> ids = new HashSet<string>(StringComparer.Ordinal);
+			long priorTick = -1L;
+			for (int i = 0; i < book.RecentProofs.Count; i++)
+			{
+				KingdomGrowthProof proof = book.RecentProofs[i];
+				if (proof == null || !KnownGrowthSlot(proof.Slot) || proof.Sequence <= 0L
+					|| !KnownGrowthAction(proof.Action) || proof.Tick < priorTick || !ids.Add(proof.Id)
+					|| SlotForGrowthAction(proof.Action) != proof.Slot
+					|| (proof.Slot == KingdomGrowthSlotKind.Field ? !ValidRootId(proof.FieldId)
+						: proof.FieldId != null)
+					|| !string.Equals(proof.Id, GrowthOperationId(book.SettlementId, proof.Slot,
+						proof.FieldId, proof.Sequence), StringComparison.Ordinal)
+					|| !ValidHashNamespace(proof.PlanHash, "growth-plan")
+					|| proof.Sequence > GrowthProofRetiredThrough(book, proof)) return false;
+				priorTick = proof.Tick;
+			}
+			return true;
+		}
+
+		private static long GrowthProofRetiredThrough(KingdomGrowthBook book,
+			KingdomGrowthProof proof)
+		{
+			if (proof.Slot == KingdomGrowthSlotKind.Field)
+			{
+				KingdomGrowthFieldSlot field = FindGrowthField(book, proof.FieldId);
+				return field == null ? -1L : field.RetiredThrough;
+			}
+			return GetGrowthRetired(book, proof.Slot, null);
+		}
+
+		private static bool GrowthOperationsValid(KingdomGrowthBook book)
+		{
+			if (!GrowthOperationSlotValid(book, KingdomGrowthSlotKind.Heartbeat, null,
+				book.HeartbeatOp, book.HeartbeatNextSequence, book.HeartbeatRetiredThrough)
+				|| !GrowthOperationSlotValid(book, KingdomGrowthSlotKind.Arrival, null,
+					book.ArrivalOp, book.ArrivalNextSequence, book.ArrivalRetiredThrough)
+				|| !GrowthOperationSlotValid(book, KingdomGrowthSlotKind.Departure, null,
+					book.DepartureOp, book.DepartureNextSequence, book.DepartureRetiredThrough)
+				|| !GrowthOperationSlotValid(book, KingdomGrowthSlotKind.Delivery, null,
+					book.DeliveryOp, book.DeliveryNextSequence, book.DeliveryRetiredThrough)) return false;
+			for (int i = 0; i < book.FieldOps.Count; i++)
+			{
+				KingdomGrowthFieldSlot field = book.FieldOps[i];
+				if (field.Quarantined) continue;
+				if (!GrowthOperationSlotValid(book, KingdomGrowthSlotKind.Field, field.FieldId,
+					field.Operation, field.NextSequence, field.RetiredThrough)) return false;
+			}
+			return true;
+		}
+
+		private static bool GrowthOperationSlotValid(KingdomGrowthBook book,
+			KingdomGrowthSlotKind slot, string fieldId, KingdomGrowthOperation operation,
+			long next, long retired)
+		{
+			if (operation == null) return IsExactSuccessor(next, retired);
+			KingdomGrowthFieldSlot field = slot == KingdomGrowthSlotKind.Field
+				? FindGrowthField(book, fieldId) : null;
+			return IsExactSuccessor(operation.Sequence, retired)
+				&& IsExactSuccessor(next, operation.Sequence)
+				&& GrowthOperationShape(book, operation, slot, fieldId, false)
+				&& GrowthPersistedClockMatches(book, operation, field);
+		}
+
+		private static bool GrowthPersistedClockMatches(KingdomGrowthBook book,
+			KingdomGrowthOperation operation, KingdomGrowthFieldSlot field)
+		{
+			if (book == null || operation == null || operation.ClockLease == null) return false;
+			bool proved = operation.ClockState == KingdomLifecyclePhysicalState.Proved
+				&& operation.ClockLease.State == KingdomLifecycleLeaseState.Proved;
+			bool before = operation.ClockState == KingdomLifecyclePhysicalState.Prepared
+				&& operation.ClockLease.State == KingdomLifecycleLeaseState.Prepared
+				|| operation.ClockState == KingdomLifecyclePhysicalState.Intent
+					&& operation.ClockLease.State == KingdomLifecycleLeaseState.Intent;
+			if (!proved && !before) return false;
+			long expected = proved ? operation.ClockLease.After : operation.ClockLease.Before;
+			return GrowthClockValue(book, operation.Action, field) == expected;
+		}
+
+		private static bool GrowthOperationShape(KingdomGrowthBook book,
+			KingdomGrowthOperation operation, KingdomGrowthSlotKind slot, string fieldId,
+			bool publication)
+		{
+			if (book == null || operation == null || !KnownGrowthAction(operation.Action)
+				|| !KnownGrowthPhase(operation.Phase) || operation.Sequence <= 0L
+				|| operation.CreatedTick < 0L || operation.UpdatedTick < operation.CreatedTick
+				|| !string.Equals(operation.SettlementId, book.SettlementId, StringComparison.Ordinal)
+				|| !string.Equals(operation.FieldId, fieldId, StringComparison.Ordinal)
+				|| (slot == KingdomGrowthSlotKind.Field ? !ValidRootId(operation.FieldId)
+					: operation.FieldId != null)
+				|| !string.Equals(operation.Id, GrowthOperationId(book.SettlementId, slot,
+					fieldId, operation.Sequence), StringComparison.Ordinal)
+				|| !GrowthPhaseAllowed(operation.Action, operation.Phase)
+				|| operation.WaterLegs == null || operation.WaterLegs.Count > MaxWaterLegs
+				|| operation.Sources == null || operation.Sources.Count > MaxGrowthSources
+				|| operation.Outputs == null || operation.Outputs.Count > MaxGrowthOutputs
+				|| operation.DomainSteps == null || operation.DomainSteps.Count > MaxResourceLeases
+				|| operation.WaterCursor < 0 || operation.WaterCursor > operation.WaterLegs.Count
+				|| operation.SourceCursor < 0 || operation.SourceCursor > operation.Sources.Count
+				|| operation.OutputCursor < 0 || operation.OutputCursor > operation.Outputs.Count
+				|| operation.DomainCursor < 0 || operation.DomainCursor > operation.DomainSteps.Count
+				|| !KnownPhysical(operation.ClockState)
+				|| operation.ClockLease == null || !GrowthLeaseShape(operation.ClockLease,
+					operation.Id, publication) || operation.ClockLease.Kind !=
+					KingdomLifecycleResourceKind.GrowthClock || TooLong(operation.Fault, MaxTextChars)
+				|| !GrowthOperationScalarsValid(book, operation, slot, fieldId))
+				return false;
+			if (slot == KingdomGrowthSlotKind.Heartbeat && operation.Action != KingdomGrowthAction.Heartbeat
+				|| slot == KingdomGrowthSlotKind.Arrival && operation.Action != KingdomGrowthAction.Arrival
+				|| slot == KingdomGrowthSlotKind.Departure && operation.Action != KingdomGrowthAction.Departure
+				|| slot == KingdomGrowthSlotKind.Delivery && operation.Action != KingdomGrowthAction.Delivery
+				|| slot == KingdomGrowthSlotKind.Field && (operation.Action < KingdomGrowthAction.Sow
+					|| operation.Action > KingdomGrowthAction.Harvest)) return false;
+			if (!GrowthTargetShape(operation, slot) || !GrowthPrefixShape(operation, publication)
+				|| !GrowthOutboxShape(operation, publication)) return false;
+			HashSet<string> events = new HashSet<string>(StringComparer.Ordinal);
+			HashSet<string> leaseKeys = new HashSet<string>(StringComparer.Ordinal);
+			HashSet<string> waterContainers = new HashSet<string>(StringComparer.Ordinal);
+			HashSet<string> objectIds = new HashSet<string>(StringComparer.Ordinal);
+			HashSet<string> markers = new HashSet<string>(StringComparer.Ordinal);
+			for (int i = 0; i < operation.WaterLegs.Count; i++)
+				if (!GrowthWaterShape(operation, operation.WaterLegs[i], i, publication)
+					|| !events.Add(operation.WaterLegs[i].EventId)
+					|| !waterContainers.Add(operation.WaterLegs[i].ContainerId)
+					|| !leaseKeys.Add(operation.WaterLegs[i].Lease.Key)) return false;
+			for (int i = 0; i < operation.Sources.Count; i++)
+				if (!GrowthObjectShape(operation, operation.Sources[i], i, false, publication)
+					|| !events.Add(operation.Sources[i].EventId)
+					|| !objectIds.Add(operation.Sources[i].ObjectId)
+					|| !markers.Add(operation.Sources[i].Marker)) return false;
+			for (int i = 0; i < operation.Outputs.Count; i++)
+				if (!GrowthObjectShape(operation, operation.Outputs[i], i, true, publication)
+					|| !events.Add(operation.Outputs[i].EventId)
+					|| !objectIds.Add(operation.Outputs[i].ObjectId)
+					|| !markers.Add(operation.Outputs[i].Marker)) return false;
+			for (int i = 0; i < operation.DomainSteps.Count; i++)
+				if (!GrowthDomainShape(operation, operation.DomainSteps[i], i, publication)
+					|| !events.Add(operation.DomainSteps[i].EventId)
+					|| !leaseKeys.Add(operation.DomainSteps[i].Lease.Key)) return false;
+			if (!leaseKeys.Add(operation.ClockLease.Key)
+				|| !GrowthGroupsMatchAction(operation)) return false;
+			string hash;
+			if (!TryGrowthPlanHash(operation, out hash)) return false;
+			if (publication)
+				return operation.Phase == KingdomGrowthPhase.Prepared
+					&& operation.CreatedTick == operation.UpdatedTick
+					&& operation.PlanHash == null
+					&& operation.Fault == null
+					&& operation.ClockState == KingdomLifecyclePhysicalState.Prepared;
+			return string.Equals(operation.PlanHash, hash, StringComparison.Ordinal)
+				&& (operation.Phase == KingdomGrowthPhase.Quarantined
+					? !string.IsNullOrEmpty(operation.Fault) : operation.Fault == null);
+		}
+
+		public static bool GrowthPhaseAllowed(KingdomGrowthAction action, KingdomGrowthPhase phase)
+		{
+			if (!KnownGrowthAction(action) || !KnownGrowthPhase(phase)) return false;
+			if (phase == KingdomGrowthPhase.Quarantined) return true;
+			if (phase == KingdomGrowthPhase.Prepared || phase == KingdomGrowthPhase.DomainIntent
+				|| phase == KingdomGrowthPhase.DomainSettled || phase == KingdomGrowthPhase.ClockIntent
+				|| phase == KingdomGrowthPhase.Sinks || phase == KingdomGrowthPhase.Terminal) return true;
+			if (phase == KingdomGrowthPhase.WaterIntent || phase == KingdomGrowthPhase.WaterSettled)
+				return action == KingdomGrowthAction.Arrival || action == KingdomGrowthAction.Sow;
+			if (phase == KingdomGrowthPhase.SourceIntent || phase == KingdomGrowthPhase.SourcesSettled)
+				return action == KingdomGrowthAction.Departure || action == KingdomGrowthAction.Delivery
+					|| action == KingdomGrowthAction.Sow || action == KingdomGrowthAction.Withdraw
+					|| action == KingdomGrowthAction.Harvest;
+			if (phase == KingdomGrowthPhase.OutputIntent || phase == KingdomGrowthPhase.OutputsSettled)
+				return action == KingdomGrowthAction.Arrival || action == KingdomGrowthAction.Delivery
+					|| action == KingdomGrowthAction.Sow || action == KingdomGrowthAction.Withdraw
+					|| action == KingdomGrowthAction.Harvest;
+			return false;
+		}
+
+		private static bool GrowthOperationScalarsValid(KingdomGrowthBook book,
+			KingdomGrowthOperation operation, KingdomGrowthSlotKind slot, string fieldId)
+		{
+			int pending; int population;
+			if (!KnownOption(operation.OptionState) || !KnownGrowthHealth(operation.HealthState)
+				|| operation.OptionTick < 0L || operation.HealthTick < 0L
+				|| operation.EffectiveWorkBefore < 0L || operation.EffectiveWorkAfter < 0L
+				|| operation.HeartbeatBefore < 0L || operation.HeartbeatAfter < 0L
+				|| operation.ArrivalBefore < 0L || operation.ArrivalAfter < 0L
+				|| operation.FetchBefore < 0L || operation.FetchAfter < 0L
+				|| operation.MillBefore < 0L || operation.MillAfter < 0L
+				|| operation.SubsidenceBefore < 0L || operation.SubsidenceAfter < 0L
+				|| !ValidCount(operation.PendingCropBefore)
+				|| !CheckedAdd(operation.PendingCropBefore, operation.PendingCropDelta, out pending)
+				|| pending != operation.PendingCropAfter || !ValidCount(operation.PendingCropAfter)
+				|| !CheckedAdd(operation.PopulationBefore, operation.PopulationDelta, out population)
+				|| population != operation.PopulationAfter || !ValidCount(operation.PopulationBefore)
+				|| !ValidCount(operation.PopulationAfter)
+				|| TooLong(operation.PendingCropBlueprint, MaxNameChars)
+				|| TooLong(operation.PendingCropZoneId, MaxNameChars)
+				|| (operation.PendingCropBefore == 0 && operation.PendingCropAfter == 0
+					? operation.PendingCropBlueprint != null || operation.PendingCropZoneId != null
+					: !ValidName(operation.PendingCropBlueprint)
+						|| !ValidName(operation.PendingCropZoneId))) return false;
+			long clockBefore = operation.ClockLease.Before;
+			long clockAfter = operation.ClockLease.After;
+			KingdomGrowthFieldSlot field = slot == KingdomGrowthSlotKind.Field
+				? FindGrowthField(book, fieldId) : null;
+			if (!string.Equals(operation.ClockLease.SubjectId,
+				GrowthClockSubject(book.SettlementId, slot, fieldId), StringComparison.Ordinal)
+				|| !string.Equals(operation.ClockLease.ScopeId, book.SettlementId,
+					StringComparison.Ordinal)) return false;
+			switch (operation.Action)
+			{
+			case KingdomGrowthAction.Heartbeat:
+				return clockBefore == operation.HeartbeatBefore && clockAfter == operation.HeartbeatAfter
+					&& operation.HeartbeatAfter > operation.HeartbeatBefore;
+			case KingdomGrowthAction.Arrival:
+				return clockBefore == operation.ArrivalBefore && clockAfter == operation.ArrivalAfter
+					&& operation.ArrivalAfter > operation.CreatedTick;
+			case KingdomGrowthAction.Departure:
+				// Departure is the transactional owner of the legacy subsidence cadence.
+				return clockBefore == operation.SubsidenceBefore
+					&& clockAfter == operation.SubsidenceAfter
+					&& operation.SubsidenceAfter > operation.SubsidenceBefore;
+			case KingdomGrowthAction.Delivery:
+				return clockBefore == operation.FetchBefore && clockAfter == operation.FetchAfter
+					&& operation.FetchAfter > operation.FetchBefore;
+			default:
+				return field != null && clockBefore >= 0L && clockAfter > clockBefore
+					&& operation.EffectiveWorkAfter >= operation.EffectiveWorkBefore;
+			}
+		}
+
+		private static bool GrowthTargetShape(KingdomGrowthOperation operation,
+			KingdomGrowthSlotKind slot)
+		{
+			bool empty = operation.TargetId == null
+				&& operation.TargetMarker == null
+				&& operation.Blueprint == null && operation.ZoneId == null
+				&& operation.TargetTopology == KingdomLifecycleTopology.None
+				&& operation.TargetOwnerId == null
+				&& operation.TargetX == -1 && operation.TargetY == -1;
+			if (empty) return slot != KingdomGrowthSlotKind.Field
+				&& operation.Action != KingdomGrowthAction.Departure;
+			return ValidRootId(operation.TargetId) && ValidRootId(operation.TargetMarker)
+				&& ValidName(operation.Blueprint) && GrowthTopologyValid(operation.TargetTopology,
+					operation.TargetOwnerId, operation.ZoneId, operation.TargetX, operation.TargetY);
+		}
+
+		private static bool GrowthGroupsMatchAction(KingdomGrowthOperation operation)
+		{
+			bool water = operation.Action == KingdomGrowthAction.Arrival
+				|| operation.Action == KingdomGrowthAction.Sow;
+			bool source = operation.Action == KingdomGrowthAction.Departure
+				|| operation.Action == KingdomGrowthAction.Delivery
+				|| operation.Action == KingdomGrowthAction.Sow
+				|| operation.Action == KingdomGrowthAction.Withdraw
+				|| operation.Action == KingdomGrowthAction.Harvest;
+			bool output = operation.Action == KingdomGrowthAction.Arrival
+				|| operation.Action == KingdomGrowthAction.Delivery
+				|| operation.Action == KingdomGrowthAction.Sow
+				|| operation.Action == KingdomGrowthAction.Withdraw
+				|| operation.Action == KingdomGrowthAction.Harvest;
+			return (water ? operation.WaterLegs.Count > 0 : operation.WaterLegs.Count == 0)
+				&& (source ? operation.Sources.Count > 0 : operation.Sources.Count == 0)
+				&& (output ? operation.Outputs.Count > 0 : operation.Outputs.Count == 0)
+				&& GrowthDomainSetMatchesAction(operation);
+		}
+
+		private static bool GrowthDomainSetMatchesAction(KingdomGrowthOperation operation)
+		{
+			KingdomGrowthDomainStepKind[] expected;
+			switch (operation.Action)
+			{
+			case KingdomGrowthAction.Heartbeat:
+			case KingdomGrowthAction.Delivery:
+				expected = new KingdomGrowthDomainStepKind[0]; break;
+			case KingdomGrowthAction.Arrival:
+				expected = new[] { KingdomGrowthDomainStepKind.Enrollment,
+					KingdomGrowthDomainStepKind.Roster, KingdomGrowthDomainStepKind.Creed,
+					KingdomGrowthDomainStepKind.Population }; break;
+			case KingdomGrowthAction.Departure:
+				expected = new[] { KingdomGrowthDomainStepKind.Roster,
+					KingdomGrowthDomainStepKind.Creed, KingdomGrowthDomainStepKind.Population }; break;
+			case KingdomGrowthAction.Sow:
+			case KingdomGrowthAction.Harvest:
+				expected = new[] { KingdomGrowthDomainStepKind.PendingCrop,
+					KingdomGrowthDomainStepKind.Field }; break;
+			case KingdomGrowthAction.Withdraw:
+			case KingdomGrowthAction.Ripen:
+				expected = new[] { KingdomGrowthDomainStepKind.Field }; break;
+			default: return false;
+			}
+			if (operation.DomainSteps.Count != expected.Length) return false;
+			for (int i = 0; i < expected.Length; i++)
+			{
+				KingdomGrowthDomainStep step = operation.DomainSteps[i];
+				if (step == null || step.Kind != expected[i]
+					|| !string.Equals(step.Lease.ScopeId, operation.SettlementId,
+						StringComparison.Ordinal)) return false;
+				if (step.Kind == KingdomGrowthDomainStepKind.Population
+					|| step.Kind == KingdomGrowthDomainStepKind.PendingCrop)
+				{
+					if (!string.Equals(step.SubjectId, operation.SettlementId,
+						StringComparison.Ordinal)) return false;
+				}
+				else if (step.Kind == KingdomGrowthDomainStepKind.Field)
+				{
+					if (!string.Equals(step.SubjectId, operation.FieldId,
+						StringComparison.Ordinal) || !string.Equals(step.ActorId,
+						operation.TargetId, StringComparison.Ordinal)) return false;
+				}
+				else
+				{
+					string actor = operation.Action == KingdomGrowthAction.Arrival
+						? operation.Outputs[0].ObjectId : operation.TargetId;
+					if (!string.Equals(step.ActorId, actor, StringComparison.Ordinal)
+						|| !string.Equals(step.SubjectId, actor, StringComparison.Ordinal)) return false;
+				}
+			}
+			return true;
+		}
+
+		private static bool GrowthLeaseShape(KingdomLifecycleResourceLease lease,
+			string operationId, bool publication)
+		{
+			long after;
+			return lease != null && ValidGeneratedId(operationId)
+				&& string.Equals(lease.OperationId, operationId, StringComparison.Ordinal)
+				&& GrowthResourceKindAllowed(lease.Kind) && ValidRootId(lease.ScopeId)
+				&& ValidRootId(lease.SubjectId)
+				&& string.Equals(lease.Key, ResourceKey(lease.Kind, lease.ScopeId,
+					lease.SubjectId), StringComparison.Ordinal)
+				&& lease.Delta != 0L && CheckedAdd(lease.Before, lease.Delta, out after)
+				&& after == lease.After && lease.BeforeRevision >= 0L
+				&& lease.BeforeRevision < long.MaxValue
+				&& lease.AfterRevision == lease.BeforeRevision + 1L
+				&& Enum.IsDefined(typeof(KingdomLifecycleLeaseState), lease.State)
+				&& (!publication || lease.State == KingdomLifecycleLeaseState.Prepared);
+		}
+
+		private static bool GrowthResourceKindAllowed(KingdomLifecycleResourceKind kind)
+		{
+			return kind == KingdomLifecycleResourceKind.Population
+				|| kind == KingdomLifecycleResourceKind.Roster
+				|| kind == KingdomLifecycleResourceKind.OriginRoster
+				|| kind == KingdomLifecycleResourceKind.CreedRoster
+				|| kind == KingdomLifecycleResourceKind.WaterVessel
+				|| kind == KingdomLifecycleResourceKind.Object
+				|| kind == KingdomLifecycleResourceKind.Projection
+				|| kind == KingdomLifecycleResourceKind.GrowthClock
+				|| kind == KingdomLifecycleResourceKind.GrowthPendingCrop
+				|| kind == KingdomLifecycleResourceKind.GrowthField
+				|| kind == KingdomLifecycleResourceKind.GrowthHealth;
+		}
+
+		private static bool GrowthResourceShape(KingdomLifecycleResourceRevision row)
+		{
+			return row != null && GrowthResourceKindAllowed(row.Kind) && ValidRootId(row.ScopeId)
+				&& ValidRootId(row.SubjectId) && row.Revision >= 0L
+				&& string.Equals(row.Key, ResourceKey(row.Kind, row.ScopeId, row.SubjectId),
+					StringComparison.Ordinal)
+				&& (row.ActiveOperationId == null
+					|| ValidGeneratedId(row.ActiveOperationId))
+				&& (row.LastOperationId == null
+					|| ValidGeneratedId(row.LastOperationId));
+		}
+
+		private static bool GrowthPrefixShape(KingdomGrowthOperation operation, bool publication)
+		{
+			int current = GrowthPhaseIndex(operation.Action, operation.Phase);
+			if (current < 0 || !GrowthWaterPhaseShape(operation, current, publication)
+				|| !GrowthObjectPhaseShape(operation, operation.Sources, operation.SourceCursor,
+					KingdomGrowthPhase.SourceIntent, KingdomGrowthPhase.SourcesSettled,
+					current, publication)
+				|| !GrowthObjectPhaseShape(operation, operation.Outputs, operation.OutputCursor,
+					KingdomGrowthPhase.OutputIntent, KingdomGrowthPhase.OutputsSettled,
+					current, publication)
+				|| !GrowthDomainPhaseShape(operation, current, publication))
+				return false;
+			if (publication) return operation.ClockState == KingdomLifecyclePhysicalState.Prepared
+				&& operation.ClockLease.State == KingdomLifecycleLeaseState.Prepared;
+			if (operation.Phase == KingdomGrowthPhase.Sinks
+				|| operation.Phase == KingdomGrowthPhase.Terminal)
+				return operation.ClockState == KingdomLifecyclePhysicalState.Proved
+					&& operation.ClockLease.State == KingdomLifecycleLeaseState.Proved
+					&& (operation.Phase != KingdomGrowthPhase.Terminal
+						|| GrowthOutboxTerminal(operation));
+			if (operation.Phase == KingdomGrowthPhase.ClockIntent)
+				return operation.ClockState == KingdomLifecyclePhysicalState.Prepared
+					&& operation.ClockLease.State == KingdomLifecycleLeaseState.Prepared
+					|| operation.ClockState == KingdomLifecyclePhysicalState.Intent
+						&& operation.ClockLease.State == KingdomLifecycleLeaseState.Intent
+					|| operation.ClockState == KingdomLifecyclePhysicalState.Proved
+						&& operation.ClockLease.State == KingdomLifecycleLeaseState.Proved;
+			return operation.ClockState == KingdomLifecyclePhysicalState.Prepared
+				&& operation.ClockLease.State == KingdomLifecycleLeaseState.Prepared;
+		}
+
+		private static bool GrowthWaterPhaseShape(KingdomGrowthOperation operation,
+			int current, bool publication)
+		{
+			int intent = GrowthPhaseIndex(operation.Action, KingdomGrowthPhase.WaterIntent);
+			int settled = GrowthPhaseIndex(operation.Action, KingdomGrowthPhase.WaterSettled);
+			if (intent < 0) return operation.WaterLegs.Count == 0 && operation.WaterCursor == 0;
+			if (current < intent || publication) return operation.WaterCursor == 0
+				&& GrowthWaterPrefix(operation.WaterLegs, 0, true);
+			if (current == intent) return GrowthWaterPrefix(operation.WaterLegs,
+				operation.WaterCursor, false);
+			return current >= settled && operation.WaterCursor == operation.WaterLegs.Count
+				&& GrowthWaterPrefix(operation.WaterLegs, operation.WaterCursor, false);
+		}
+
+		private static bool GrowthObjectPhaseShape(KingdomGrowthOperation operation,
+			List<KingdomGrowthObjectLeg> rows, int cursor, KingdomGrowthPhase intentPhase,
+			KingdomGrowthPhase settledPhase, int current, bool publication)
+		{
+			int intent = GrowthPhaseIndex(operation.Action, intentPhase);
+			int settled = GrowthPhaseIndex(operation.Action, settledPhase);
+			if (intent < 0) return rows.Count == 0 && cursor == 0;
+			if (current < intent || publication) return cursor == 0
+				&& GrowthObjectPrefix(rows, 0, true);
+			if (current == intent) return GrowthObjectPrefix(rows, cursor, false);
+			return current >= settled && cursor == rows.Count && GrowthObjectPrefix(rows, cursor, false);
+		}
+
+		private static bool GrowthDomainPhaseShape(KingdomGrowthOperation operation,
+			int current, bool publication)
+		{
+			int intent = GrowthPhaseIndex(operation.Action, KingdomGrowthPhase.DomainIntent);
+			int settled = GrowthPhaseIndex(operation.Action, KingdomGrowthPhase.DomainSettled);
+			if (current < intent || publication) return operation.DomainCursor == 0
+				&& GrowthDomainPrefix(operation.DomainSteps, 0, true);
+			if (current == intent) return GrowthDomainPrefix(operation.DomainSteps,
+				operation.DomainCursor, false);
+			return current >= settled && operation.DomainCursor == operation.DomainSteps.Count
+				&& GrowthDomainPrefix(operation.DomainSteps, operation.DomainCursor, false);
+		}
+
+		private static bool GrowthWaterPrefix(List<KingdomGrowthWaterLeg> rows, int cursor,
+			bool publication)
+		{
+			for (int i = 0; i < rows.Count; i++)
+			{
+				KingdomLifecyclePhysicalState expected = i < cursor
+					? KingdomLifecyclePhysicalState.Proved : KingdomLifecyclePhysicalState.Prepared;
+				if (i == cursor && !publication && rows[i].State == KingdomLifecyclePhysicalState.Intent)
+					expected = KingdomLifecyclePhysicalState.Intent;
+				if (rows[i].State != expected) return false;
+			}
+			return !publication || cursor == 0;
+		}
+
+		private static bool GrowthObjectPrefix(List<KingdomGrowthObjectLeg> rows, int cursor,
+			bool publication)
+		{
+			for (int i = 0; i < rows.Count; i++)
+			{
+				KingdomLifecyclePhysicalState expected = i < cursor
+					? KingdomLifecyclePhysicalState.Proved : KingdomLifecyclePhysicalState.Prepared;
+				if (i == cursor && !publication && rows[i].State == KingdomLifecyclePhysicalState.Intent)
+					expected = KingdomLifecyclePhysicalState.Intent;
+				if (rows[i].State != expected) return false;
+			}
+			return !publication || cursor == 0;
+		}
+
+		private static bool GrowthDomainPrefix(List<KingdomGrowthDomainStep> rows, int cursor,
+			bool publication)
+		{
+			int prior = 0;
+			for (int i = 0; i < rows.Count; i++)
+			{
+				int rank = (int)rows[i].Kind;
+				if (rank <= 0 || rank < prior) return false;
+				prior = rank;
+				KingdomLifecyclePhysicalState expected = i < cursor
+					? KingdomLifecyclePhysicalState.Proved : KingdomLifecyclePhysicalState.Prepared;
+				if (i == cursor && !publication && rows[i].State == KingdomLifecyclePhysicalState.Intent)
+					expected = KingdomLifecyclePhysicalState.Intent;
+				if (rows[i].State != expected) return false;
+			}
+			return !publication || cursor == 0;
+		}
+
+		private static bool GrowthWaterShape(KingdomGrowthOperation operation,
+			KingdomGrowthWaterLeg leg, int ordinal, bool publication)
+		{
+			int after;
+			if (leg == null || !string.Equals(leg.OperationId, operation.Id, StringComparison.Ordinal)
+				|| !string.Equals(leg.EventId, ChildId(operation.Id, "water", ordinal),
+					StringComparison.Ordinal)
+				|| leg.ContainerKind != KingdomGrowthWaterContainerKind.LiquidVolume
+				|| !ValidRootId(leg.ContainerId) || !ValidName(leg.Blueprint)
+				|| !GrowthTopologyValid(leg.OwnerTopology, leg.OwnerId, leg.ZoneId, leg.X, leg.Y)
+				|| leg.Capacity <= 0 || leg.Before < 0 || leg.Before > leg.Capacity
+				|| leg.Delta <= 0 || !CheckedAdd(leg.Before,
+					leg.MutationKind == KingdomGrowthWaterMutationKind.Drain ? -leg.Delta : leg.Delta,
+					out after) || after != leg.After || leg.After < 0 || leg.After > leg.Capacity
+				|| (leg.MutationKind != KingdomGrowthWaterMutationKind.Drain
+					&& leg.MutationKind != KingdomGrowthWaterMutationKind.Fill)
+				|| string.IsNullOrEmpty(leg.BeforeComposition)
+				|| string.IsNullOrEmpty(leg.AfterComposition)
+				|| TooLong(leg.BeforeComposition, MaxTextChars)
+				|| TooLong(leg.AfterComposition, MaxTextChars)
+				|| !GrowthWitnessHash(leg.BeforeOwnerGraphHash)
+				|| !GrowthWitnessHash(leg.AfterOwnerGraphHash)
+				|| !GrowthWitnessHash(leg.BeforePartGraphHash)
+				|| !GrowthWitnessHash(leg.AfterPartGraphHash)
+				|| !GrowthWitnessHash(leg.BeforeTopologyHash)
+				|| !GrowthWitnessHash(leg.AfterTopologyHash)
+				|| string.Equals(leg.BeforePartGraphHash, leg.AfterPartGraphHash,
+					StringComparison.Ordinal)
+				|| !string.Equals(leg.ReceiptId, ChildId(operation.Id, "water-receipt", ordinal),
+					StringComparison.Ordinal)
+				|| !GrowthLeaseShape(leg.Lease, operation.Id, publication)
+				|| leg.Lease.Kind != KingdomLifecycleResourceKind.WaterVessel
+				|| !string.Equals(leg.Lease.ScopeId, leg.ZoneId, StringComparison.Ordinal)
+				|| !string.Equals(leg.Lease.SubjectId, leg.ContainerId, StringComparison.Ordinal)
+				|| !string.Equals(leg.LeaseKey, leg.Lease.Key, StringComparison.Ordinal)
+				|| leg.Lease.Before != leg.Before || leg.Lease.After != leg.After
+				|| !KnownPhysical(leg.State) || !KnownPhysical(leg.ReceiptState)) return false;
+			return GrowthWaterReceiptShape(operation, leg, ordinal, publication);
+		}
+
+		private static bool GrowthWaterReceiptShape(KingdomGrowthOperation operation,
+			KingdomGrowthWaterLeg leg, int ordinal, bool publication)
+		{
+			if (publication || leg.State == KingdomLifecyclePhysicalState.Prepared)
+				return leg.State == KingdomLifecyclePhysicalState.Prepared
+					&& leg.ReceiptState == KingdomLifecyclePhysicalState.Prepared
+					&& leg.Lease.State == KingdomLifecycleLeaseState.Prepared
+					&& leg.ReceiptBeforeMatches == -1 && leg.ReceiptAfterMatches == -1
+					&& GrowthWaterReceiptHashesEmpty(leg) && leg.ReceiptProofId == null;
+			if (leg.State == KingdomLifecyclePhysicalState.Intent)
+				return leg.ReceiptState == KingdomLifecyclePhysicalState.Intent
+					&& leg.Lease.State == KingdomLifecycleLeaseState.Intent
+					&& leg.ReceiptBeforeMatches == 1 && leg.ReceiptAfterMatches == -1
+					&& GrowthWaterReceiptBeforeExact(leg) && GrowthWaterReceiptAfterEmpty(leg)
+					&& leg.ReceiptProofId == null;
+			return leg.State == KingdomLifecyclePhysicalState.Proved
+				&& leg.ReceiptState == KingdomLifecyclePhysicalState.Proved
+				&& leg.Lease.State == KingdomLifecycleLeaseState.Proved
+				&& leg.ReceiptBeforeMatches == 1 && leg.ReceiptAfterMatches == 1
+				&& GrowthWaterReceiptBeforeExact(leg) && GrowthWaterReceiptAfterExact(leg)
+				&& string.Equals(leg.ReceiptCallbackContainerId, leg.ContainerId,
+					StringComparison.Ordinal)
+				&& GrowthWitnessHash(leg.ReceiptCallbackReferenceHash)
+				&& leg.ReceiptSameReference
+				&& string.Equals(leg.ReceiptProofId,
+					GrowthWaterReceiptProof(operation, leg, ordinal), StringComparison.Ordinal);
+		}
+
+		private static bool GrowthWaterReceiptHashesEmpty(KingdomGrowthWaterLeg leg)
+		{
+			return leg.ReceiptBeforeOwnerGraphHash == null
+				&& leg.ReceiptAfterOwnerGraphHash == null
+				&& leg.ReceiptBeforePartGraphHash == null
+				&& leg.ReceiptAfterPartGraphHash == null
+				&& leg.ReceiptBeforeTopologyHash == null
+				&& leg.ReceiptAfterTopologyHash == null
+				&& leg.ReceiptCallbackContainerId == null
+				&& leg.ReceiptCallbackReferenceHash == null
+				&& !leg.ReceiptSameReference;
+		}
+
+		private static bool GrowthWaterReceiptBeforeExact(KingdomGrowthWaterLeg leg)
+		{
+			return string.Equals(leg.ReceiptBeforeOwnerGraphHash, leg.BeforeOwnerGraphHash,
+				StringComparison.Ordinal) && string.Equals(leg.ReceiptBeforePartGraphHash,
+				leg.BeforePartGraphHash, StringComparison.Ordinal)
+				&& string.Equals(leg.ReceiptBeforeTopologyHash, leg.BeforeTopologyHash,
+					StringComparison.Ordinal);
+		}
+
+		private static bool GrowthWaterReceiptAfterEmpty(KingdomGrowthWaterLeg leg)
+		{
+			return leg.ReceiptAfterOwnerGraphHash == null
+				&& leg.ReceiptAfterPartGraphHash == null
+				&& leg.ReceiptAfterTopologyHash == null
+				&& leg.ReceiptCallbackContainerId == null
+				&& leg.ReceiptCallbackReferenceHash == null
+				&& !leg.ReceiptSameReference;
+		}
+
+		private static bool GrowthWaterReceiptAfterExact(KingdomGrowthWaterLeg leg)
+		{
+			return string.Equals(leg.ReceiptAfterOwnerGraphHash, leg.AfterOwnerGraphHash,
+				StringComparison.Ordinal) && string.Equals(leg.ReceiptAfterPartGraphHash,
+				leg.AfterPartGraphHash, StringComparison.Ordinal)
+				&& string.Equals(leg.ReceiptAfterTopologyHash, leg.AfterTopologyHash,
+					StringComparison.Ordinal);
+		}
+
+		private static bool GrowthObjectShape(KingdomGrowthOperation operation,
+			KingdomGrowthObjectLeg leg, int ordinal, bool output, bool publication)
+		{
+			int after;
+			if (leg == null || !string.Equals(leg.OperationId, operation.Id, StringComparison.Ordinal)
+				|| !string.Equals(leg.EventId, ChildId(operation.Id,
+					output ? "output" : "source", ordinal), StringComparison.Ordinal)
+				|| !ValidRootId(leg.ObjectId) || !ValidRootId(leg.Marker)
+				|| !ValidName(leg.Blueprint) || !GrowthTopologyValid(leg.Topology, leg.OwnerId,
+					leg.ZoneId, leg.X, leg.Y) || leg.BeforeCount < 0
+				|| !CheckedAdd(leg.BeforeCount, leg.Delta, out after) || after != leg.AfterCount
+				|| !ValidCount(leg.BeforeCount) || !ValidCount(leg.AfterCount) || leg.Delta == 0
+				|| !GrowthWitnessHash(leg.BeforeOwnerGraphHash)
+				|| !GrowthWitnessHash(leg.AfterOwnerGraphHash)
+				|| !GrowthWitnessHash(leg.BeforeObjectGraphHash)
+				|| !GrowthWitnessHash(leg.AfterObjectGraphHash)
+				|| !GrowthWitnessHash(leg.BeforeTopologyHash)
+				|| !GrowthWitnessHash(leg.AfterTopologyHash)
+				|| string.Equals(leg.BeforeOwnerGraphHash, leg.AfterOwnerGraphHash,
+					StringComparison.Ordinal)
+				|| !string.Equals(leg.ReceiptId, ChildId(operation.Id,
+					output ? "output-receipt" : "source-receipt", ordinal),
+					StringComparison.Ordinal)
+				|| !string.Equals(leg.ReceiptTopologyId, TopologyId(leg.Topology, leg.OwnerId,
+					leg.ZoneId, leg.X, leg.Y), StringComparison.Ordinal)
+				|| !KnownPhysical(leg.State) || !KnownPhysical(leg.ReceiptState)) return false;
+			if (output)
+			{
+				if (leg.Delta <= 0 || !leg.NoStack
+					|| (leg.MutationKind != KingdomGrowthObjectMutationKind.Create
+						&& leg.MutationKind != KingdomGrowthObjectMutationKind.CellAdd
+						&& leg.MutationKind != KingdomGrowthObjectMutationKind.InventoryAdd
+						&& leg.MutationKind != KingdomGrowthObjectMutationKind.Receive)) return false;
+				if (leg.MutationKind == KingdomGrowthObjectMutationKind.Create
+					? (!string.Equals(leg.CreatedMarker, leg.Marker, StringComparison.Ordinal)
+						|| leg.DetachedMarker != null || leg.BeforeCount != 0)
+					: (leg.CreatedMarker != null || !string.Equals(
+						leg.DetachedMarker, leg.Marker, StringComparison.Ordinal))) return false;
+				if (leg.MutationKind == KingdomGrowthObjectMutationKind.CellAdd
+					&& leg.Topology != KingdomLifecycleTopology.Cell) return false;
+				if ((leg.MutationKind == KingdomGrowthObjectMutationKind.InventoryAdd
+					|| leg.MutationKind == KingdomGrowthObjectMutationKind.Receive)
+					&& leg.Topology != KingdomLifecycleTopology.Inventory) return false;
+			}
+			else
+			{
+				if (leg.Delta >= 0 || leg.CreatedMarker != null
+					|| !string.Equals(leg.DetachedMarker, leg.Marker, StringComparison.Ordinal)
+					|| (leg.MutationKind != KingdomGrowthObjectMutationKind.DestroyOne
+						&& leg.MutationKind != KingdomGrowthObjectMutationKind.Obliterate)) return false;
+				if (leg.MutationKind == KingdomGrowthObjectMutationKind.DestroyOne && leg.Delta != -1)
+					return false;
+				if (leg.MutationKind == KingdomGrowthObjectMutationKind.Obliterate
+					&& leg.AfterCount != 0) return false;
+			}
+			return GrowthObjectReceiptShape(operation, leg, ordinal, output, publication);
+		}
+
+		private static bool GrowthObjectReceiptShape(KingdomGrowthOperation operation,
+			KingdomGrowthObjectLeg leg, int ordinal, bool output, bool publication)
+		{
+			if (publication || leg.State == KingdomLifecyclePhysicalState.Prepared)
+				return leg.State == KingdomLifecyclePhysicalState.Prepared
+					&& leg.ReceiptState == KingdomLifecyclePhysicalState.Prepared
+					&& leg.ReceiptBeforeIdMatches == -1 && leg.ReceiptBeforeMarkerMatches == -1
+					&& leg.ReceiptBeforeCount == -1 && leg.ReceiptAfterIdMatches == -1
+					&& leg.ReceiptAfterMarkerMatches == -1 && leg.ReceiptAfterCount == -1
+					&& GrowthObjectReceiptHashesEmpty(leg) && leg.ReceiptProofId == null;
+			int beforeMatches = output && leg.MutationKind == KingdomGrowthObjectMutationKind.Create
+				? 0 : 1;
+			if (leg.State == KingdomLifecyclePhysicalState.Intent)
+				return leg.ReceiptState == KingdomLifecyclePhysicalState.Intent
+					&& leg.ReceiptBeforeIdMatches == beforeMatches
+					&& leg.ReceiptBeforeMarkerMatches == beforeMatches
+					&& leg.ReceiptBeforeCount == leg.BeforeCount
+					&& leg.ReceiptAfterIdMatches == -1 && leg.ReceiptAfterMarkerMatches == -1
+					&& leg.ReceiptAfterCount == -1 && GrowthObjectReceiptBeforeExact(leg)
+					&& GrowthObjectReceiptAfterEmpty(leg) && leg.ReceiptProofId == null;
+			int afterMatches = leg.AfterCount == 0 ? 0 : 1;
+			return leg.State == KingdomLifecyclePhysicalState.Proved
+				&& leg.ReceiptState == KingdomLifecyclePhysicalState.Proved
+				&& leg.ReceiptBeforeIdMatches == beforeMatches
+				&& leg.ReceiptBeforeMarkerMatches == beforeMatches
+				&& leg.ReceiptBeforeCount == leg.BeforeCount
+				&& leg.ReceiptAfterIdMatches == afterMatches
+				&& leg.ReceiptAfterMarkerMatches == afterMatches
+				&& leg.ReceiptAfterCount == leg.AfterCount
+				&& GrowthObjectReceiptBeforeExact(leg) && GrowthObjectReceiptAfterExact(leg)
+				&& string.Equals(leg.ReceiptCallbackObjectId, leg.ObjectId, StringComparison.Ordinal)
+				&& string.Equals(leg.ReceiptCallbackMarker, leg.Marker, StringComparison.Ordinal)
+				&& GrowthWitnessHash(leg.ReceiptCallbackReferenceHash)
+				&& leg.ReceiptSameReference
+				&& string.Equals(leg.ReceiptProofId,
+					GrowthObjectReceiptProof(operation, leg, ordinal, output), StringComparison.Ordinal);
+		}
+
+		private static bool GrowthObjectReceiptHashesEmpty(KingdomGrowthObjectLeg leg)
+		{
+			return leg.ReceiptBeforeOwnerGraphHash == null
+				&& leg.ReceiptAfterOwnerGraphHash == null
+				&& leg.ReceiptBeforeObjectGraphHash == null
+				&& leg.ReceiptAfterObjectGraphHash == null
+				&& leg.ReceiptBeforeTopologyHash == null
+				&& leg.ReceiptAfterTopologyHash == null
+				&& leg.ReceiptCallbackObjectId == null
+				&& leg.ReceiptCallbackMarker == null
+				&& leg.ReceiptCallbackReferenceHash == null
+				&& !leg.ReceiptSameReference;
+		}
+
+		private static bool GrowthObjectReceiptBeforeExact(KingdomGrowthObjectLeg leg)
+		{
+			return string.Equals(leg.ReceiptBeforeOwnerGraphHash, leg.BeforeOwnerGraphHash,
+				StringComparison.Ordinal) && string.Equals(leg.ReceiptBeforeObjectGraphHash,
+				leg.BeforeObjectGraphHash, StringComparison.Ordinal)
+				&& string.Equals(leg.ReceiptBeforeTopologyHash, leg.BeforeTopologyHash,
+					StringComparison.Ordinal);
+		}
+
+		private static bool GrowthObjectReceiptAfterEmpty(KingdomGrowthObjectLeg leg)
+		{
+			return leg.ReceiptAfterOwnerGraphHash == null
+				&& leg.ReceiptAfterObjectGraphHash == null
+				&& leg.ReceiptAfterTopologyHash == null
+				&& leg.ReceiptCallbackObjectId == null
+				&& leg.ReceiptCallbackMarker == null
+				&& leg.ReceiptCallbackReferenceHash == null
+				&& !leg.ReceiptSameReference;
+		}
+
+		private static bool GrowthObjectReceiptAfterExact(KingdomGrowthObjectLeg leg)
+		{
+			return string.Equals(leg.ReceiptAfterOwnerGraphHash, leg.AfterOwnerGraphHash,
+				StringComparison.Ordinal) && string.Equals(leg.ReceiptAfterObjectGraphHash,
+				leg.AfterObjectGraphHash, StringComparison.Ordinal)
+				&& string.Equals(leg.ReceiptAfterTopologyHash, leg.AfterTopologyHash,
+					StringComparison.Ordinal);
+		}
+
+		private static bool GrowthDomainShape(KingdomGrowthOperation operation,
+			KingdomGrowthDomainStep step, int ordinal, bool publication)
+		{
+			KingdomLifecycleResourceKind kind;
+			if (step == null || !TryGrowthDomainKind(step.Kind, step.CallbackKind, out kind)
+				|| !GrowthWitnessHash(step.CallbackBodyHash)
+				|| !string.Equals(step.EventId, ChildId(operation.Id, "domain", ordinal),
+					StringComparison.Ordinal)
+				|| !ValidRootId(step.ActorId) || !ValidRootId(step.SubjectId)
+				|| !GrowthWitnessHash(step.BeforeGraphHash) || !GrowthWitnessHash(step.AfterGraphHash)
+				|| !GrowthWitnessHash(step.BeforeMapHash) || !GrowthWitnessHash(step.AfterMapHash)
+				|| string.Equals(step.BeforeMapHash, step.AfterMapHash, StringComparison.Ordinal)
+				|| !string.Equals(step.ReceiptId, ChildId(operation.Id, "domain-receipt", ordinal),
+					StringComparison.Ordinal)
+				|| !GrowthLeaseShape(step.Lease, operation.Id, publication)
+				|| step.Lease.Kind != kind || !string.Equals(step.Lease.SubjectId, step.SubjectId,
+					StringComparison.Ordinal) || step.Lease.Before != step.BeforeValue
+				|| step.Lease.After != step.AfterValue || !KnownPhysical(step.State)
+				|| !KnownPhysical(step.ReceiptState)) return false;
+			if (publication || step.State == KingdomLifecyclePhysicalState.Prepared)
+				return step.State == KingdomLifecyclePhysicalState.Prepared
+					&& step.ReceiptState == KingdomLifecyclePhysicalState.Prepared
+					&& step.Lease.State == KingdomLifecycleLeaseState.Prepared
+					&& step.ReceiptBeforeValue == 0L && step.ReceiptAfterValue == 0L
+					&& GrowthDomainReceiptHashesEmpty(step)
+					&& step.ReceiptProofId == null;
+			if (step.State == KingdomLifecyclePhysicalState.Intent)
+				return step.ReceiptState == KingdomLifecyclePhysicalState.Intent
+					&& step.Lease.State == KingdomLifecycleLeaseState.Intent
+					&& step.ReceiptBeforeValue == step.BeforeValue
+					&& step.ReceiptAfterValue == 0L && GrowthDomainReceiptBeforeExact(step)
+					&& GrowthDomainReceiptAfterEmpty(step) && step.ReceiptProofId == null;
+			return step.State == KingdomLifecyclePhysicalState.Proved
+				&& step.ReceiptState == KingdomLifecyclePhysicalState.Proved
+				&& step.Lease.State == KingdomLifecycleLeaseState.Proved
+				&& step.ReceiptBeforeValue == step.BeforeValue
+				&& step.ReceiptAfterValue == step.AfterValue
+				&& GrowthDomainReceiptBeforeExact(step) && GrowthDomainReceiptAfterExact(step)
+				&& string.Equals(step.ReceiptProofId,
+					GrowthDomainReceiptProof(operation, step, ordinal), StringComparison.Ordinal);
+		}
+
+		private static bool TryGrowthDomainKind(KingdomGrowthDomainStepKind stepKind,
+			KingdomGrowthDomainCallbackKind callbackKind,
+			out KingdomLifecycleResourceKind resourceKind)
+		{
+			resourceKind = KingdomLifecycleResourceKind.None;
+			switch (stepKind)
+			{
+			case KingdomGrowthDomainStepKind.Enrollment:
+				if (callbackKind != KingdomGrowthDomainCallbackKind.Enroll) return false;
+				resourceKind = KingdomLifecycleResourceKind.OriginRoster; return true;
+			case KingdomGrowthDomainStepKind.Roster:
+				if (callbackKind != KingdomGrowthDomainCallbackKind.RosterAdd
+					&& callbackKind != KingdomGrowthDomainCallbackKind.RosterRemove) return false;
+				resourceKind = KingdomLifecycleResourceKind.Roster; return true;
+			case KingdomGrowthDomainStepKind.Creed:
+				if (callbackKind != KingdomGrowthDomainCallbackKind.CreedSet) return false;
+				resourceKind = KingdomLifecycleResourceKind.CreedRoster; return true;
+			case KingdomGrowthDomainStepKind.Population:
+				if (callbackKind != KingdomGrowthDomainCallbackKind.PopulationAdjust) return false;
+				resourceKind = KingdomLifecycleResourceKind.Population; return true;
+			case KingdomGrowthDomainStepKind.PendingCrop:
+				if (callbackKind != KingdomGrowthDomainCallbackKind.PendingCropSet) return false;
+				resourceKind = KingdomLifecycleResourceKind.GrowthPendingCrop; return true;
+			case KingdomGrowthDomainStepKind.Field:
+				if (callbackKind != KingdomGrowthDomainCallbackKind.FieldSet) return false;
+				resourceKind = KingdomLifecycleResourceKind.GrowthField; return true;
+			default: return false;
+			}
+		}
+
+		private static bool GrowthDomainReceiptHashesEmpty(KingdomGrowthDomainStep step)
+		{
+			return step.ReceiptBeforeGraphHash == null
+				&& step.ReceiptAfterGraphHash == null
+				&& step.ReceiptBeforeMapHash == null
+				&& step.ReceiptAfterMapHash == null;
+		}
+
+		private static bool GrowthDomainReceiptBeforeExact(KingdomGrowthDomainStep step)
+		{
+			return string.Equals(step.ReceiptBeforeGraphHash, step.BeforeGraphHash,
+				StringComparison.Ordinal) && string.Equals(step.ReceiptBeforeMapHash,
+				step.BeforeMapHash, StringComparison.Ordinal);
+		}
+
+		private static bool GrowthDomainReceiptAfterEmpty(KingdomGrowthDomainStep step)
+		{
+			return step.ReceiptAfterGraphHash == null
+				&& step.ReceiptAfterMapHash == null;
+		}
+
+		private static bool GrowthDomainReceiptAfterExact(KingdomGrowthDomainStep step)
+		{
+			return string.Equals(step.ReceiptAfterGraphHash, step.AfterGraphHash,
+				StringComparison.Ordinal) && string.Equals(step.ReceiptAfterMapHash,
+				step.AfterMapHash, StringComparison.Ordinal);
+		}
+
+		private static bool GrowthOutboxShape(KingdomGrowthOperation operation, bool publication)
+		{
+			KingdomLifecycleOutbox box = operation.Outbox;
+			return box != null && string.Equals(box.OperationId, operation.Id, StringComparison.Ordinal)
+				&& string.Equals(box.EventId, ChildId(operation.Id, "outbox", 0),
+					StringComparison.Ordinal)
+				&& string.Equals(box.ChronicleReceiptId, ChildId(operation.Id, "chronicle", 0),
+					StringComparison.Ordinal)
+				&& TooLong(box.Chronicle, MaxTextChars) == false
+				&& TooLong(box.Ledger, MaxTextChars) == false
+				&& TooLong(box.Message, MaxTextChars) == false
+				&& TooLong(box.Deed, MaxTextChars) == false
+				&& TooLong(box.GuestbookLine, MaxTextChars) == false
+				&& GrowthSinkTextShape(box.Chronicle, box.ChronicleDisposition,
+					box.ChronicleState, publication)
+				&& GrowthSinkTextShape(box.Ledger, box.LedgerDisposition, box.LedgerState, publication)
+				&& GrowthSinkTextShape(box.Message, box.MessageDisposition, box.MessageState, publication)
+				&& GrowthSinkTextShape(box.Deed, box.DeedDisposition, box.DeedState, publication)
+				&& GrowthSinkTextShape(box.GuestbookLine, box.GuestbookDisposition,
+					box.GuestbookState, publication);
+		}
+
+		private static bool GrowthSinkTextShape(string text,
+			KingdomLifecycleSinkDisposition disposition, KingdomLifecycleSinkState state,
+			bool publication)
+		{
+			return (disposition == KingdomLifecycleSinkDisposition.Skip ? text == null
+				: text != null && text.Length > 0)
+				&& SinkTextShape(text, disposition, state, publication);
+		}
+
+		private static bool GrowthOutboxTerminal(KingdomGrowthOperation operation)
+		{
+			if (!GrowthOutboxShape(operation, false)) return false;
+			KingdomLifecycleOutbox box = operation.Outbox;
+			return SinkSettled(box.ChronicleState) && SinkSettled(box.LedgerState)
+				&& SinkSettled(box.MessageState) && SinkSettled(box.DeedState)
+				&& SinkSettled(box.GuestbookState)
+				&& (box.Chronicle == null
+					? box.ChronicleState == KingdomLifecycleSinkState.Skipped
+					: box.ChronicleState == KingdomLifecycleSinkState.Delivered);
+		}
+
+		private static bool GrowthWitnessHash(string value)
+		{
+			if (value == null || value.Length != 64) return false;
+			for (int i = 0; i < value.Length; i++)
+				if (!((value[i] >= '0' && value[i] <= '9')
+					|| (value[i] >= 'a' && value[i] <= 'f'))) return false;
+			return true;
+		}
+
+		private static bool GrowthTopologyValid(KingdomLifecycleTopology topology,
+			string ownerId, string zoneId, int x, int y)
+		{
+			return TopologyValid(topology, ownerId, zoneId, x, y)
+				&& (topology != KingdomLifecycleTopology.Cell || ownerId == null);
+		}
+
+		private static string GrowthWaterReceiptProof(KingdomGrowthOperation operation,
+			KingdomGrowthWaterLeg leg, int ordinal)
+		{
+			return HashId("growth-water-receipt", delegate(BinaryWriter w)
+			{
+				CanonicalString(w, operation.SettlementId); CanonicalString(w, operation.Id);
+				CanonicalString(w, operation.PlanHash); w.Write(ordinal);
+				WriteGrowthWaterPlan(w, leg); CanonicalString(w, leg.ReceiptBeforeOwnerGraphHash);
+				CanonicalString(w, leg.ReceiptAfterOwnerGraphHash);
+				CanonicalString(w, leg.ReceiptBeforePartGraphHash);
+				CanonicalString(w, leg.ReceiptAfterPartGraphHash);
+					CanonicalString(w, leg.ReceiptBeforeTopologyHash);
+					CanonicalString(w, leg.ReceiptAfterTopologyHash);
+					CanonicalString(w, leg.ReceiptCallbackContainerId);
+					CanonicalString(w, leg.ReceiptCallbackReferenceHash);
+					w.Write(leg.ReceiptSameReference);
+				});
+		}
+
+		private static string GrowthObjectReceiptProof(KingdomGrowthOperation operation,
+			KingdomGrowthObjectLeg leg, int ordinal, bool output)
+		{
+			return HashId("growth-object-receipt", delegate(BinaryWriter w)
+			{
+				CanonicalString(w, operation.SettlementId); CanonicalString(w, operation.Id);
+				CanonicalString(w, operation.PlanHash); w.Write(output); w.Write(ordinal);
+				WriteGrowthObjectPlan(w, leg); w.Write(leg.ReceiptBeforeIdMatches);
+				w.Write(leg.ReceiptBeforeMarkerMatches); w.Write(leg.ReceiptBeforeCount);
+				w.Write(leg.ReceiptAfterIdMatches); w.Write(leg.ReceiptAfterMarkerMatches);
+				w.Write(leg.ReceiptAfterCount); CanonicalString(w, leg.ReceiptBeforeOwnerGraphHash);
+				CanonicalString(w, leg.ReceiptAfterOwnerGraphHash);
+				CanonicalString(w, leg.ReceiptBeforeObjectGraphHash);
+				CanonicalString(w, leg.ReceiptAfterObjectGraphHash);
+				CanonicalString(w, leg.ReceiptBeforeTopologyHash);
+				CanonicalString(w, leg.ReceiptAfterTopologyHash);
+					CanonicalString(w, leg.ReceiptCallbackObjectId);
+					CanonicalString(w, leg.ReceiptCallbackMarker);
+					CanonicalString(w, leg.ReceiptCallbackReferenceHash);
+					w.Write(leg.ReceiptSameReference);
+				});
+		}
+
+		private static string GrowthDomainReceiptProof(KingdomGrowthOperation operation,
+			KingdomGrowthDomainStep step, int ordinal)
+		{
+			return HashId("growth-domain-receipt", delegate(BinaryWriter w)
+			{
+				CanonicalString(w, operation.SettlementId); CanonicalString(w, operation.Id);
+				CanonicalString(w, operation.PlanHash); w.Write(ordinal);
+				WriteGrowthDomainPlan(w, step); w.Write(step.ReceiptBeforeValue);
+				w.Write(step.ReceiptAfterValue); CanonicalString(w, step.ReceiptBeforeGraphHash);
+				CanonicalString(w, step.ReceiptAfterGraphHash);
+				CanonicalString(w, step.ReceiptBeforeMapHash);
+				CanonicalString(w, step.ReceiptAfterMapHash);
+			});
+		}
+
+		private static bool GrowthOperationEvidenceBounded(KingdomGrowthOperation operation)
+		{
+			if (operation == null) return true;
+			if (operation.WaterLegs == null || operation.WaterLegs.Count > MaxWaterLegs
+				|| operation.Sources == null || operation.Sources.Count > MaxGrowthSources
+				|| operation.Outputs == null || operation.Outputs.Count > MaxGrowthOutputs
+				|| operation.DomainSteps == null || operation.DomainSteps.Count > MaxResourceLeases
+				|| operation.ClockLease == null || operation.Outbox == null
+				|| TooLong(operation.Fault, MaxTextChars)
+				|| (operation.Phase == KingdomGrowthPhase.Quarantined
+					? string.IsNullOrEmpty(operation.Fault) : operation.Fault != null)) return false;
+			for (int i = 0; i < operation.WaterLegs.Count; i++) if (operation.WaterLegs[i] == null
+				|| operation.WaterLegs[i].Lease == null) return false;
+			for (int i = 0; i < operation.Sources.Count; i++) if (operation.Sources[i] == null) return false;
+			for (int i = 0; i < operation.Outputs.Count; i++) if (operation.Outputs[i] == null) return false;
+			for (int i = 0; i < operation.DomainSteps.Count; i++) if (operation.DomainSteps[i] == null
+				|| operation.DomainSteps[i].Lease == null) return false;
+			return true;
+		}
+
+		private static bool LegacyResourceKindsOnly(KingdomLifecycleBook book)
+		{
+			if (book == null || book.Resources == null) return false;
+			for (int i = 0; i < book.Resources.Count; i++)
+				if (book.Resources[i] == null || (byte)book.Resources[i].Kind > 11) return false;
+			KingdomLifecycleOperation[] operations = { book.PlainGuest, book.NotableGuest,
+				book.Raid, book.Petition };
+			for (int i = 0; i < operations.Length; i++)
+			{
+				KingdomLifecycleOperation operation = operations[i];
+				if (operation == null || operation.ResourceLeases == null) continue;
+				for (int j = 0; j < operation.ResourceLeases.Count; j++)
+					if (operation.ResourceLeases[j] == null ||
+						(byte)operation.ResourceLeases[j].Kind > 11) return false;
+			}
+			return true;
+		}
+
+		private static bool HasOpenGrowthOperation(KingdomGrowthBook book)
+		{
+			if (book == null) return false;
+			if (book.HeartbeatOp != null || book.ArrivalOp != null || book.DepartureOp != null
+				|| book.DeliveryOp != null) return true;
+			if (book.FieldOps != null) for (int i = 0; i < book.FieldOps.Count; i++)
+				if (book.FieldOps[i] != null && book.FieldOps[i].Operation != null) return true;
+			return false;
+		}
+
+		private static KingdomGrowthSlotKind SlotForGrowthAction(KingdomGrowthAction action)
+		{
+			switch (action)
+			{
+			case KingdomGrowthAction.Heartbeat: return KingdomGrowthSlotKind.Heartbeat;
+			case KingdomGrowthAction.Arrival: return KingdomGrowthSlotKind.Arrival;
+			case KingdomGrowthAction.Departure: return KingdomGrowthSlotKind.Departure;
+			case KingdomGrowthAction.Delivery: return KingdomGrowthSlotKind.Delivery;
+			case KingdomGrowthAction.Sow:
+			case KingdomGrowthAction.Withdraw:
+			case KingdomGrowthAction.Ripen:
+			case KingdomGrowthAction.Harvest: return KingdomGrowthSlotKind.Field;
+			default: return KingdomGrowthSlotKind.None;
+			}
+		}
+
+		private static KingdomGrowthFieldSlot FindGrowthField(KingdomGrowthBook book,
+			string fieldId)
+		{
+			if (book == null || book.FieldOps == null || fieldId == null) return null;
+			KingdomGrowthFieldSlot found = null;
+			for (int i = 0; i < book.FieldOps.Count; i++)
+			{
+				KingdomGrowthFieldSlot field = book.FieldOps[i];
+				if (field == null || !string.Equals(field.FieldId, fieldId,
+					StringComparison.Ordinal)) continue;
+				if (found != null) return null;
+				found = field;
+			}
+			return found;
+		}
+
+		private static KingdomGrowthOperation GetGrowthOperation(KingdomGrowthBook book,
+			KingdomGrowthSlotKind slot, string fieldId)
+		{
+			if (book == null) return null;
+			switch (slot)
+			{
+			case KingdomGrowthSlotKind.Heartbeat: return book.HeartbeatOp;
+			case KingdomGrowthSlotKind.Arrival: return book.ArrivalOp;
+			case KingdomGrowthSlotKind.Departure: return book.DepartureOp;
+			case KingdomGrowthSlotKind.Delivery: return book.DeliveryOp;
+			case KingdomGrowthSlotKind.Field:
+				KingdomGrowthFieldSlot field = FindGrowthField(book, fieldId);
+				return field == null ? null : field.Operation;
+			default: return null;
+			}
+		}
+
+		private static void SetGrowthOperation(KingdomGrowthBook book,
+			KingdomGrowthSlotKind slot, KingdomGrowthFieldSlot field,
+			KingdomGrowthOperation operation)
+		{
+			switch (slot)
+			{
+			case KingdomGrowthSlotKind.Heartbeat: book.HeartbeatOp = operation; break;
+			case KingdomGrowthSlotKind.Arrival: book.ArrivalOp = operation; break;
+			case KingdomGrowthSlotKind.Departure: book.DepartureOp = operation; break;
+			case KingdomGrowthSlotKind.Delivery: book.DeliveryOp = operation; break;
+			case KingdomGrowthSlotKind.Field: field.Operation = operation; break;
+			}
+		}
+
+		private static long GetGrowthNext(KingdomGrowthBook book, KingdomGrowthSlotKind slot,
+			KingdomGrowthFieldSlot field)
+		{
+			switch (slot)
+			{
+			case KingdomGrowthSlotKind.Heartbeat: return book.HeartbeatNextSequence;
+			case KingdomGrowthSlotKind.Arrival: return book.ArrivalNextSequence;
+			case KingdomGrowthSlotKind.Departure: return book.DepartureNextSequence;
+			case KingdomGrowthSlotKind.Delivery: return book.DeliveryNextSequence;
+			case KingdomGrowthSlotKind.Field: return field == null ? long.MaxValue : field.NextSequence;
+			default: return long.MaxValue;
+			}
+		}
+
+		private static void SetGrowthNext(KingdomGrowthBook book, KingdomGrowthSlotKind slot,
+			KingdomGrowthFieldSlot field, long value)
+		{
+			switch (slot)
+			{
+			case KingdomGrowthSlotKind.Heartbeat: book.HeartbeatNextSequence = value; break;
+			case KingdomGrowthSlotKind.Arrival: book.ArrivalNextSequence = value; break;
+			case KingdomGrowthSlotKind.Departure: book.DepartureNextSequence = value; break;
+			case KingdomGrowthSlotKind.Delivery: book.DeliveryNextSequence = value; break;
+			case KingdomGrowthSlotKind.Field: field.NextSequence = value; break;
+			}
+		}
+
+		private static long GetGrowthRetired(KingdomGrowthBook book, KingdomGrowthSlotKind slot,
+			KingdomGrowthFieldSlot field)
+		{
+			switch (slot)
+			{
+			case KingdomGrowthSlotKind.Heartbeat: return book.HeartbeatRetiredThrough;
+			case KingdomGrowthSlotKind.Arrival: return book.ArrivalRetiredThrough;
+			case KingdomGrowthSlotKind.Departure: return book.DepartureRetiredThrough;
+			case KingdomGrowthSlotKind.Delivery: return book.DeliveryRetiredThrough;
+			case KingdomGrowthSlotKind.Field: return field == null ? long.MaxValue : field.RetiredThrough;
+			default: return long.MaxValue;
+			}
+		}
+
+		private static void SetGrowthRetired(KingdomGrowthBook book, KingdomGrowthSlotKind slot,
+			KingdomGrowthFieldSlot field, long value)
+		{
+			switch (slot)
+			{
+			case KingdomGrowthSlotKind.Heartbeat: book.HeartbeatRetiredThrough = value; break;
+			case KingdomGrowthSlotKind.Arrival: book.ArrivalRetiredThrough = value; break;
+			case KingdomGrowthSlotKind.Departure: book.DepartureRetiredThrough = value; break;
+			case KingdomGrowthSlotKind.Delivery: book.DeliveryRetiredThrough = value; break;
+			case KingdomGrowthSlotKind.Field: field.RetiredThrough = value; break;
+			}
+		}
+
+		private static long GrowthClockValue(KingdomGrowthBook book,
+			KingdomGrowthAction action, KingdomGrowthFieldSlot field)
+		{
+			switch (action)
+			{
+			case KingdomGrowthAction.Heartbeat: return book.LastHeartbeatTick;
+			case KingdomGrowthAction.Arrival: return book.NextArrivalTick;
+			case KingdomGrowthAction.Departure: return book.LastSubsidenceTick;
+			case KingdomGrowthAction.Delivery: return book.LastFetchTick;
+			case KingdomGrowthAction.Sow:
+			case KingdomGrowthAction.Withdraw:
+			case KingdomGrowthAction.Ripen:
+			case KingdomGrowthAction.Harvest: return field == null ? -1L : field.ClockTick;
+			default: return -1L;
+			}
+		}
+
+		private static string GrowthClockSubject(string settlementId,
+			KingdomGrowthSlotKind slot, string fieldId)
+		{
+			return HashId("growth-clock-subject", delegate(BinaryWriter w)
+			{
+				CanonicalString(w, settlementId); w.Write((byte)slot); CanonicalString(w, fieldId);
+			});
+		}
+
+		private static KingdomLifecycleResourceRevision FindGrowthResource(KingdomGrowthBook book,
+			string key)
+		{
+			if (book == null || book.Resources == null || key == null) return null;
+			KingdomLifecycleResourceRevision found = null;
+			for (int i = 0; i < book.Resources.Count; i++)
+			{
+				KingdomLifecycleResourceRevision row = book.Resources[i];
+				if (row == null || !string.Equals(row.Key, key, StringComparison.Ordinal)) continue;
+				if (found != null) return null;
+				found = row;
+			}
+			return found;
 		}
 
 		private static bool IsPhysicalResourceKind(KingdomLifecycleResourceKind Kind)
@@ -4157,12 +6932,26 @@ namespace ThousandAndFirst
 				&& book.PlainGuest == null && book.NotableGuest == null
 				&& book.Raid == null && book.Petition == null
 				&& book.Resources != null && book.Resources.Count == 0
-				&& book.RecentProofs != null && book.RecentProofs.Count == 0;
+				&& book.RecentProofs != null && book.RecentProofs.Count == 0
+				&& PristineGrowthBook(book.Growth);
+		}
+
+		private static bool CanonicalLifecycleQuarantine(KingdomLifecycleBook book)
+		{
+			if (book == null || book.FormatVersion != CurrentFormatVersion || book.WireRejected
+				|| !book.Quarantined || string.IsNullOrEmpty(book.Fault)
+				|| TooLong(book.Fault, MaxTextChars)) return false;
+			bool identity = book.IdentityBound
+				? ValidRootId(book.SettlementId) && ExactSettlementIdentityProof(book)
+				: string.IsNullOrEmpty(book.SettlementId)
+					&& string.IsNullOrEmpty(book.IdentityProof) && !book.LegacyIdentity
+					&& string.IsNullOrEmpty(book.LegacyMigrationKey);
+			return identity && LifecycleBookShape(book);
 		}
 
 		private static bool PristineCarryBook(KingdomCarryBook book)
 		{
-			return book != null && book.FormatVersion == CurrentFormatVersion
+			return book != null && book.FormatVersion == CurrentCarryFormatVersion
 				&& !book.WireRejected && !book.Quarantined && string.IsNullOrEmpty(book.Fault)
 				&& string.IsNullOrEmpty(book.RealmId) && !book.IdentityBound
 				&& string.IsNullOrEmpty(book.IdentityProof) && !book.LegacyIdentity
@@ -4303,17 +7092,23 @@ namespace ThousandAndFirst
 
 		private static bool ValidRootId(string Value)
 		{
-			return !string.IsNullOrEmpty(Value) && Value.Length <= MaxIdChars;
+			return !string.IsNullOrEmpty(Value) && !TooLong(Value, MaxIdChars);
 		}
 
 		private static bool ValidName(string Value)
 		{
-			return !string.IsNullOrEmpty(Value) && Value.Length <= MaxNameChars;
+			return !string.IsNullOrEmpty(Value) && !TooLong(Value, MaxNameChars);
 		}
 
 		private static bool TooLong(string Value, int Limit)
 		{
-			return Value != null && Value.Length > Limit;
+			if (Value == null) return false;
+			if (Limit < 0 || Value.Length > Limit) return true;
+			try
+			{
+				return StrictUtf8.GetByteCount(Value) > (long)Limit * 4L;
+			}
+			catch (EncoderFallbackException) { return true; }
 		}
 
 		private static string SafeFault(string Value)

@@ -53,6 +53,7 @@
     <Compile Include="KingdomYardRulesTests.cs" />
     <Compile Include="KingdomGuestRulesTests.cs" />
 	<Compile Include="KingdomLifecycleRulesTests.cs" />
+	<Compile Include="KingdomGrowthLifecycleRulesTests.cs" />
     <Compile Include="KingdomMergeRulesTests.cs" />
     <Compile Include="KingdomSocketRulesTests.cs" />
     <Compile Include="KingdomQolRulesTests.cs" />

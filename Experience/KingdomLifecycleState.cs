@@ -113,7 +113,11 @@ namespace ThousandAndFirst
 		Object = 8,
 		Projection = 9,
 		Petition = 10,
-		Raid = 11
+		Raid = 11,
+		GrowthClock = 12,
+		GrowthPendingCrop = 13,
+		GrowthField = 14,
+		GrowthHealth = 15
 	}
 
 	public enum KingdomLifecycleLeaseState : byte
@@ -123,6 +127,103 @@ namespace ThousandAndFirst
 		Intent = 2,
 		Proved = 3,
 		Skipped = 4
+	}
+
+	// Numeric values are append-only nested Growth wire contracts.
+	public enum KingdomGrowthAction : byte
+	{
+		None = 0,
+		Heartbeat = 1,
+		Arrival = 2,
+		Departure = 3,
+		Delivery = 4,
+		Sow = 5,
+		Withdraw = 6,
+		Ripen = 7,
+		Harvest = 8
+	}
+
+	public enum KingdomGrowthPhase : byte
+	{
+		Invalid = 0,
+		Prepared = 1,
+		WaterIntent = 2,
+		WaterSettled = 3,
+		SourceIntent = 4,
+		SourcesSettled = 5,
+		OutputIntent = 6,
+		OutputsSettled = 7,
+		DomainIntent = 8,
+		DomainSettled = 9,
+		ClockIntent = 10,
+		Sinks = 11,
+		Terminal = 12,
+		Quarantined = 13
+	}
+
+	public enum KingdomGrowthHealthState : byte
+	{
+		Unknown = 0,
+		Healthy = 1,
+		Unhealthy = 2
+	}
+
+	public enum KingdomGrowthSlotKind : byte
+	{
+		None = 0,
+		Heartbeat = 1,
+		Arrival = 2,
+		Departure = 3,
+		Delivery = 4,
+		Field = 5
+	}
+
+	public enum KingdomGrowthDomainStepKind : byte
+	{
+		None = 0,
+		Enrollment = 1,
+		Roster = 2,
+		Creed = 3,
+		Population = 4,
+		PendingCrop = 5,
+		Field = 6,
+		Clock = 7
+	}
+
+	public enum KingdomGrowthObjectMutationKind : byte
+	{
+		None = 0,
+		Create = 1,
+		CellAdd = 2,
+		InventoryAdd = 3,
+		Receive = 4,
+		DestroyOne = 5,
+		Obliterate = 6
+	}
+
+	public enum KingdomGrowthWaterMutationKind : byte
+	{
+		None = 0,
+		Drain = 1,
+		Fill = 2
+	}
+
+	public enum KingdomGrowthWaterContainerKind : byte
+	{
+		None = 0,
+		LiquidVolume = 1
+	}
+
+	public enum KingdomGrowthDomainCallbackKind : byte
+	{
+		None = 0,
+		Enroll = 1,
+		RosterAdd = 2,
+		RosterRemove = 3,
+		CreedSet = 4,
+		PopulationAdjust = 5,
+		PendingCropSet = 6,
+		FieldSet = 7
 	}
 
 	[Serializable]
@@ -311,6 +412,302 @@ namespace ThousandAndFirst
 		public long Tick;
 	}
 
+	/// <summary>Wave-1 migration input. Runtime Wave 2 supplies the load tick and the old
+	/// city-carried pending crop tuple. All legacy clocks are deliberately restamped to Now;
+	/// none of their elapsed pre-transactional time becomes backlog.</summary>
+	public sealed class KingdomGrowthMigrationInput
+	{
+		public bool HasNow;
+		public long Now;
+		public int PendingCrop;
+		public string PendingCropBlueprint;
+		public string PendingCropZoneId;
+		public bool OptionEnabled;
+		public bool Healthy;
+		public long ArrivalIntervalTicks;
+	}
+
+	public sealed class KingdomGrowthMigrationResult
+	{
+		public bool Valid;
+		public string Failure;
+		public KingdomGrowthBook Growth;
+	}
+
+	[Serializable]
+	public sealed class KingdomGrowthWaterLeg
+	{
+		public string OperationId;
+		public string EventId;
+		public string LeaseKey;
+		public KingdomGrowthWaterMutationKind MutationKind;
+		public KingdomGrowthWaterContainerKind ContainerKind;
+		public string ContainerId;
+		public KingdomLifecycleTopology OwnerTopology;
+		public string OwnerId;
+		public string Blueprint;
+		public string ZoneId;
+		public int X = -1;
+		public int Y = -1;
+		public int Capacity;
+		public int Before;
+		public int Delta;
+		public int After;
+		public string BeforeComposition;
+		public string AfterComposition;
+		public string BeforeOwnerGraphHash;
+		public string AfterOwnerGraphHash;
+		public string BeforePartGraphHash;
+		public string AfterPartGraphHash;
+		public string BeforeTopologyHash;
+		public string AfterTopologyHash;
+		public KingdomLifecyclePhysicalState State;
+		public string ReceiptId;
+		public int ReceiptBeforeMatches = -1;
+		public int ReceiptAfterMatches = -1;
+		public string ReceiptBeforeOwnerGraphHash;
+		public string ReceiptAfterOwnerGraphHash;
+		public string ReceiptBeforePartGraphHash;
+		public string ReceiptAfterPartGraphHash;
+		public string ReceiptBeforeTopologyHash;
+		public string ReceiptAfterTopologyHash;
+		public string ReceiptCallbackContainerId;
+		public string ReceiptCallbackReferenceHash;
+		public bool ReceiptSameReference;
+		public string ReceiptProofId;
+		public KingdomLifecyclePhysicalState ReceiptState;
+		public KingdomLifecycleResourceLease Lease;
+	}
+
+	[Serializable]
+	public sealed class KingdomGrowthObjectLeg
+	{
+		public string OperationId;
+		public string EventId;
+		public string ObjectId;
+		public string Marker;
+		public string Blueprint;
+		public string ZoneId;
+		public KingdomLifecycleTopology Topology;
+		public string OwnerId;
+		public int X = -1;
+		public int Y = -1;
+		public int BeforeCount;
+		public int Delta;
+		public int AfterCount;
+		public bool NoStack;
+		public KingdomGrowthObjectMutationKind MutationKind;
+		public string BeforeOwnerGraphHash;
+		public string AfterOwnerGraphHash;
+		public string BeforeObjectGraphHash;
+		public string AfterObjectGraphHash;
+		public string BeforeTopologyHash;
+		public string AfterTopologyHash;
+		public string CreatedMarker;
+		public string DetachedMarker;
+		public KingdomLifecyclePhysicalState State;
+		public string ReceiptId;
+		public string ReceiptTopologyId;
+		public int ReceiptBeforeIdMatches = -1;
+		public int ReceiptBeforeMarkerMatches = -1;
+		public int ReceiptBeforeCount = -1;
+		public int ReceiptAfterIdMatches = -1;
+		public int ReceiptAfterMarkerMatches = -1;
+		public int ReceiptAfterCount = -1;
+		public string ReceiptBeforeOwnerGraphHash;
+		public string ReceiptAfterOwnerGraphHash;
+		public string ReceiptBeforeObjectGraphHash;
+		public string ReceiptAfterObjectGraphHash;
+		public string ReceiptBeforeTopologyHash;
+		public string ReceiptAfterTopologyHash;
+		public string ReceiptCallbackObjectId;
+		public string ReceiptCallbackMarker;
+		public string ReceiptCallbackReferenceHash;
+		public bool ReceiptSameReference;
+		public string ReceiptProofId;
+		public KingdomLifecyclePhysicalState ReceiptState;
+	}
+
+	[Serializable]
+	public sealed class KingdomGrowthCropRow
+	{
+		public string FieldId;
+		public string RowId;
+		public string ObjectId;
+		public string Marker;
+		public string Blueprint;
+		public string ZoneId;
+		public string OwnerId;
+		public int X = -1;
+		public int Y = -1;
+		public int Count;
+	}
+
+	[Serializable]
+	public sealed class KingdomGrowthOperation
+	{
+		public long Sequence;
+		public string Id;
+		public string PlanHash;
+		public KingdomGrowthAction Action;
+		public KingdomGrowthPhase Phase;
+		public long CreatedTick;
+		public long UpdatedTick;
+		public string SettlementId;
+		public string FieldId;
+		public string ZoneId;
+		public string TargetId;
+		public string TargetMarker;
+		public string Blueprint;
+		public KingdomLifecycleTopology TargetTopology;
+		public string TargetOwnerId;
+		public int TargetX = -1;
+		public int TargetY = -1;
+		public KingdomLifecycleOptionState OptionState;
+		public long OptionTick;
+		public KingdomGrowthHealthState HealthState;
+		public long HealthTick;
+		public long EffectiveWorkBefore;
+		public long EffectiveWorkAfter;
+		public long HeartbeatBefore;
+		public long HeartbeatAfter;
+		public long ArrivalBefore;
+		public long ArrivalAfter;
+		public long FetchBefore;
+		public long FetchAfter;
+		public long MillBefore;
+		public long MillAfter;
+		public long SubsidenceBefore;
+		public long SubsidenceAfter;
+		public int PendingCropBefore;
+		public int PendingCropDelta;
+		public int PendingCropAfter;
+		public string PendingCropBlueprint;
+		public string PendingCropZoneId;
+		public int PopulationBefore;
+		public int PopulationDelta;
+		public int PopulationAfter;
+		public int WaterCursor;
+		public List<KingdomGrowthWaterLeg> WaterLegs =
+			new List<KingdomGrowthWaterLeg>();
+		public int SourceCursor;
+		public List<KingdomGrowthObjectLeg> Sources = new List<KingdomGrowthObjectLeg>();
+		public int OutputCursor;
+		public List<KingdomGrowthObjectLeg> Outputs = new List<KingdomGrowthObjectLeg>();
+		public int DomainCursor;
+		public List<KingdomGrowthDomainStep> DomainSteps =
+			new List<KingdomGrowthDomainStep>();
+		public KingdomLifecycleResourceLease ClockLease;
+		public KingdomLifecyclePhysicalState ClockState;
+		public KingdomLifecycleOutbox Outbox;
+		public string Fault;
+	}
+
+	[Serializable]
+	public sealed class KingdomGrowthDomainStep
+	{
+		public KingdomGrowthDomainStepKind Kind;
+		public KingdomGrowthDomainCallbackKind CallbackKind;
+		public string CallbackBodyHash;
+		public string EventId;
+		public string ActorId;
+		public string SubjectId;
+		public long BeforeValue;
+		public long AfterValue;
+		public string BeforeGraphHash;
+		public string AfterGraphHash;
+		public string BeforeMapHash;
+		public string AfterMapHash;
+		public KingdomLifecyclePhysicalState State;
+		public string ReceiptId;
+		public long ReceiptBeforeValue;
+		public long ReceiptAfterValue;
+		public string ReceiptBeforeGraphHash;
+		public string ReceiptAfterGraphHash;
+		public string ReceiptBeforeMapHash;
+		public string ReceiptAfterMapHash;
+		public string ReceiptProofId;
+		public KingdomLifecyclePhysicalState ReceiptState;
+		public KingdomLifecycleResourceLease Lease;
+	}
+
+	[Serializable]
+	public sealed class KingdomGrowthFieldSlot
+	{
+		public string FieldId;
+		public long NextSequence = 1L;
+		public long RetiredThrough;
+		public long ClockTick;
+		public bool Quarantined;
+		public string Fault;
+		public KingdomGrowthOperation Operation;
+	}
+
+	[Serializable]
+	public sealed class KingdomGrowthProof
+	{
+		public KingdomGrowthSlotKind Slot;
+		public string FieldId;
+		public long Sequence;
+		public string Id;
+		public string PlanHash;
+		public KingdomGrowthAction Action;
+		public long Tick;
+	}
+
+	/// <summary>Nested, settlement-bound Growth authority. Future payload bytes are retained
+	/// exactly and re-emitted, including malformed known-version payloads whose outer length is
+	/// intact. Opaque evidence grants no Growth authority and does not poison enclosing lifecycle.</summary>
+	[Serializable]
+	public sealed class KingdomGrowthBook
+	{
+		public int FormatVersion = KingdomLifecycleRules.CurrentGrowthFormatVersion;
+		public bool Quarantined;
+		public string Fault;
+		public int OpaqueWireVersion;
+		public byte[] OpaquePayload;
+		public string SettlementId;
+		public bool IdentityBound;
+		public string IdentityProof;
+		public int MigratedFromLifecycleVersion;
+		public bool MigrationPending;
+		public long MigrationTick;
+		public KingdomLifecycleOptionState OptionState;
+		public long OptionTick;
+		public KingdomGrowthHealthState HealthState;
+		public long HealthTick;
+		public bool WorkPaused;
+		public long WorkPauseStartedTick;
+		public long WorkPausedTicks;
+		public long EffectiveWorkTick;
+		public long LastHeartbeatTick;
+		public long NextArrivalTick;
+		public long ArrivalIntervalTicks;
+		public long LastFetchTick;
+		public long LastMillTick;
+		public long LastSubsidenceTick;
+		public int PendingCrop;
+		public string PendingCropBlueprint;
+		public string PendingCropZoneId;
+		public long HeartbeatNextSequence = 1L;
+		public long HeartbeatRetiredThrough;
+		public long ArrivalNextSequence = 1L;
+		public long ArrivalRetiredThrough;
+		public long DepartureNextSequence = 1L;
+		public long DepartureRetiredThrough;
+		public long DeliveryNextSequence = 1L;
+		public long DeliveryRetiredThrough;
+		public KingdomGrowthOperation HeartbeatOp;
+		public KingdomGrowthOperation ArrivalOp;
+		public KingdomGrowthOperation DepartureOp;
+		public KingdomGrowthOperation DeliveryOp;
+		public List<KingdomGrowthFieldSlot> FieldOps = new List<KingdomGrowthFieldSlot>();
+		public List<KingdomGrowthCropRow> CropRows = new List<KingdomGrowthCropRow>();
+		public List<KingdomLifecycleResourceRevision> Resources =
+			new List<KingdomLifecycleResourceRevision>();
+		public List<KingdomGrowthProof> RecentProofs = new List<KingdomGrowthProof>();
+	}
+
 	/// <summary>Per-settlement authority. Every lane has its own monotone replay barrier.</summary>
 	[Serializable]
 	public sealed class KingdomLifecycleBook
@@ -349,6 +746,7 @@ namespace ThousandAndFirst
 		public List<KingdomLifecycleResourceRevision> Resources =
 			new List<KingdomLifecycleResourceRevision>();
 		public List<KingdomLifecycleProof> RecentProofs = new List<KingdomLifecycleProof>();
+		public KingdomGrowthBook Growth = new KingdomGrowthBook();
 
 		[NonSerialized]
 		public bool WireRejected;
@@ -495,7 +893,7 @@ namespace ThousandAndFirst
 		: IComposite
 #endif
 	{
-		public int FormatVersion = KingdomLifecycleRules.CurrentFormatVersion;
+		public int FormatVersion = KingdomLifecycleRules.CurrentCarryFormatVersion;
 		public bool LegacyIdentity;
 		public string LegacyMigrationKey;
 		public bool Quarantined;
@@ -551,17 +949,110 @@ namespace ThousandAndFirst
 	{
 		public const int LifecycleMagic = 0x544C4332; // TLC2
 		public const int CarryMagic = 0x54434332; // TCC2
+		public const int GrowthMagic = 0x54475231; // TGR1
 		private static readonly UTF8Encoding StrictUtf8 = new UTF8Encoding(false, true);
 
+		private sealed class GrowthCappedWriteStream : Stream
+		{
+			private readonly MemoryStream Inner = new MemoryStream();
+			private readonly long Maximum;
+
+			public GrowthCappedWriteStream(long maximum)
+			{
+				if (maximum < 0L) throw new ArgumentOutOfRangeException(nameof(maximum));
+				Maximum = maximum;
+			}
+
+			public byte[] ToArray() { return Inner.ToArray(); }
+
+			private void RequireCapacity(long count)
+			{
+				if (count < 0L || Position > Maximum - count)
+					throw new InvalidDataException(
+						"growth aggregate cap reached before write allocation");
+			}
+
+			public override bool CanRead => true;
+			public override bool CanSeek => true;
+			public override bool CanWrite => true;
+			public override long Length => Inner.Length;
+			public override long Position
+			{
+				get { return Inner.Position; }
+				set
+				{
+					if (value < 0L || value > Maximum)
+						throw new InvalidDataException("growth stream position exceeds cap");
+					Inner.Position = value;
+				}
+			}
+
+			public override void Flush() { Inner.Flush(); }
+			public override int Read(byte[] buffer, int offset, int count)
+			{
+				return Inner.Read(buffer, offset, count);
+			}
+			public override long Seek(long offset, SeekOrigin origin)
+			{
+				long target;
+				switch (origin)
+				{
+				case SeekOrigin.Begin: target = offset; break;
+				case SeekOrigin.Current: target = Position + offset; break;
+				case SeekOrigin.End: target = Length + offset; break;
+				default: throw new ArgumentOutOfRangeException(nameof(origin));
+				}
+				Position = target;
+				return target;
+			}
+			public override void SetLength(long value)
+			{
+				if (value < 0L || value > Maximum)
+					throw new InvalidDataException("growth stream length exceeds cap");
+				Inner.SetLength(value);
+			}
+			public override void Write(byte[] buffer, int offset, int count)
+			{
+				RequireCapacity(count); Inner.Write(buffer, offset, count);
+			}
+			public override void WriteByte(byte value)
+			{
+				RequireCapacity(1L); Inner.WriteByte(value);
+			}
+			protected override void Dispose(bool disposing)
+			{
+				if (disposing) Inner.Dispose();
+				base.Dispose(disposing);
+			}
+		}
+
 		public static void WriteLifecycle(BinaryWriter Writer, KingdomLifecycleBook Book)
+		{
+			WriteLifecycleCore(Writer, Book, KingdomLifecycleRules.CurrentFormatVersion,
+				IncludeGrowth: true);
+		}
+
+		#if TAF_TESTS
+		internal static void WriteLifecycleV5Fixture(BinaryWriter Writer,
+			KingdomLifecycleBook Book)
+		{
+			WriteLifecycleCore(Writer, Book, KingdomLifecycleRules.LegacyLifecycleFormatVersion,
+				IncludeGrowth: false);
+		}
+		#endif
+
+		private static void WriteLifecycleCore(BinaryWriter Writer, KingdomLifecycleBook Book,
+			int WireVersion, bool IncludeGrowth)
 		{
 			if (Writer == null || Book == null || Book.WireRejected
 				|| Book.FormatVersion != KingdomLifecycleRules.CurrentFormatVersion)
 				throw new InvalidDataException("lifecycle authority is not writable");
 			EnsureCount(Book.Resources, KingdomLifecycleRules.MaxResourceRows, "resource rows");
 			EnsureCount(Book.RecentProofs, KingdomLifecycleRules.MaxRecentProofs, "proof rows");
+			EnsureOuterResourceKinds(Book.Resources, Book.PlainGuest, Book.NotableGuest,
+				Book.Raid, Book.Petition);
 			Writer.Write(LifecycleMagic);
-			Writer.Write(KingdomLifecycleRules.CurrentFormatVersion);
+			Writer.Write(WireVersion);
 			Writer.Write(Book.LegacyIdentity);
 			WriteString(Writer, Book.LegacyMigrationKey, KingdomLifecycleRules.MaxIdBytes);
 			Writer.Write(Book.Quarantined);
@@ -589,9 +1080,21 @@ namespace ThousandAndFirst
 			for (int i = 0; i < Book.Resources.Count; i++) WriteResource(Writer, Book.Resources[i]);
 			Writer.Write(Book.RecentProofs.Count);
 			for (int i = 0; i < Book.RecentProofs.Count; i++) WriteProof(Writer, Book.RecentProofs[i]);
+			if (IncludeGrowth)
+			{
+				byte[] payload = GrowthPayloadForWrite(Book.Growth);
+				Writer.Write(payload.Length);
+				Writer.Write(payload);
+			}
 		}
 
 		public static void ReadLifecycle(BinaryReader Reader, KingdomLifecycleBook Target)
+		{
+			ReadLifecycle(Reader, Target, null);
+		}
+
+		public static void ReadLifecycle(BinaryReader Reader, KingdomLifecycleBook Target,
+			KingdomGrowthMigrationInput Migration)
 		{
 			if (Reader == null || Target == null) throw new ArgumentNullException();
 			try
@@ -599,7 +1102,8 @@ namespace ThousandAndFirst
 				if (Reader.ReadInt32() != LifecycleMagic) Reject(Target, "invalid lifecycle framing");
 				int version = Reader.ReadInt32();
 				Target.FormatVersion = version;
-				if (version != KingdomLifecycleRules.CurrentFormatVersion)
+				if (version != KingdomLifecycleRules.CurrentFormatVersion &&
+					version != KingdomLifecycleRules.LegacyLifecycleFormatVersion)
 					Reject(Target, "unsupported lifecycle version");
 				KingdomLifecycleBook value = new KingdomLifecycleBook();
 				value.FormatVersion = version;
@@ -622,16 +1126,35 @@ namespace ThousandAndFirst
 				ReadOption(Reader, out value.NotableOption, out value.NotableOptionTick);
 				ReadOption(Reader, out value.RaidOption, out value.RaidOptionTick);
 				ReadOption(Reader, out value.PetitionOption, out value.PetitionOptionTick);
-				value.PlainGuest = ReadOperation(Reader);
-				value.NotableGuest = ReadOperation(Reader);
-				value.Raid = ReadOperation(Reader);
-				value.Petition = ReadOperation(Reader);
+				bool legacyWire = version == KingdomLifecycleRules.LegacyLifecycleFormatVersion;
+				value.PlainGuest = ReadOperation(Reader, legacyWire);
+				value.NotableGuest = ReadOperation(Reader, legacyWire);
+				value.Raid = ReadOperation(Reader, legacyWire);
+				value.Petition = ReadOperation(Reader, legacyWire);
 				int resources = ReadCount(Reader, KingdomLifecycleRules.MaxResourceRows);
 				value.Resources = new List<KingdomLifecycleResourceRevision>(resources);
-				for (int i = 0; i < resources; i++) value.Resources.Add(ReadResource(Reader));
+				for (int i = 0; i < resources; i++)
+					value.Resources.Add(ReadResource(Reader, legacyWire));
 				int proofs = ReadCount(Reader, KingdomLifecycleRules.MaxRecentProofs);
 				value.RecentProofs = new List<KingdomLifecycleProof>(proofs);
 				for (int i = 0; i < proofs; i++) value.RecentProofs.Add(ReadProof(Reader));
+				if (version == KingdomLifecycleRules.LegacyLifecycleFormatVersion)
+				{
+					if (!KingdomLifecycleRules.TryStageGrowthMigrationFromV5(value,
+						out KingdomGrowthBook staged))
+						throw new InvalidDataException("legacy lifecycle v5 graph is malformed");
+					value.FormatVersion = KingdomLifecycleRules.CurrentFormatVersion;
+					value.Growth = staged;
+					if (Migration != null && staged.MigrationPending)
+					{
+						KingdomGrowthMigrationResult migrated =
+							KingdomLifecycleRules.ApplyGrowthMigration(value, Migration);
+						if (!migrated.Valid ||
+							!KingdomLifecycleRules.TryPublishGrowthMigration(value, migrated))
+							throw new InvalidDataException(migrated.Failure);
+					}
+				}
+				else value.Growth = ReadGrowthSection(Reader);
 				KingdomLifecycleRules.Normalize(value);
 				Copy(value, Target);
 			}
@@ -642,17 +1165,461 @@ namespace ThousandAndFirst
 			}
 		}
 
+		public static byte[] GrowthPayloadForWrite(KingdomGrowthBook Book)
+		{
+			if (Book == null) throw new InvalidDataException("growth authority is absent");
+			if (Book.OpaquePayload != null)
+			{
+				if (!KingdomLifecycleRules.GrowthEnvelopeWritable(Book))
+					throw new InvalidDataException("opaque growth envelope is malformed");
+				return (byte[])Book.OpaquePayload.Clone();
+			}
+			if (!KingdomLifecycleRules.GrowthEnvelopeWritable(Book))
+				throw new InvalidDataException("growth envelope is not bounded and writable");
+			using (GrowthCappedWriteStream stream =
+				new GrowthCappedWriteStream(KingdomLifecycleRules.MaxGrowthSectionBytes))
+			using (BinaryWriter writer = new BinaryWriter(stream, StrictUtf8, true))
+			{
+				WriteGrowth(writer, Book);
+				writer.Flush();
+				return stream.ToArray();
+			}
+		}
+
+		internal static bool GrowthPayloadFitsAggregateCap(KingdomGrowthBook Book)
+		{
+			if (Book == null || Book.OpaquePayload != null) return false;
+			try
+			{
+				using (GrowthCappedWriteStream stream =
+					new GrowthCappedWriteStream(KingdomLifecycleRules.MaxGrowthSectionBytes))
+				using (BinaryWriter writer = new BinaryWriter(stream, StrictUtf8, true))
+				{
+					WriteGrowth(writer, Book); writer.Flush();
+					return stream.Length <= KingdomLifecycleRules.MaxGrowthSectionBytes;
+				}
+			}
+			catch (Exception ex) when (ex is InvalidDataException || ex is IOException
+				|| ex is EncoderFallbackException || ex is ArgumentException)
+			{
+				return false;
+			}
+		}
+
+		internal static bool OpaqueGrowthEnvelopeWritable(KingdomGrowthBook Book)
+		{
+			if (Book == null || !Book.Quarantined || Book.OpaquePayload == null
+				|| string.IsNullOrEmpty(Book.Fault)
+				|| Book.OpaquePayload.Length > KingdomLifecycleRules.MaxGrowthSectionBytes) return false;
+			try
+			{
+				KingdomGrowthBook derived = ReadGrowthPayload(Book.OpaquePayload);
+				if (derived.OpaquePayload == null
+					|| derived.OpaqueWireVersion != Book.OpaqueWireVersion
+					|| !string.Equals(derived.Fault, Book.Fault, StringComparison.Ordinal)
+					|| derived.OpaquePayload.Length != Book.OpaquePayload.Length) return false;
+				for (int i = 0; i < Book.OpaquePayload.Length; i++)
+					if (derived.OpaquePayload[i] != Book.OpaquePayload[i]) return false;
+				return KingdomLifecycleRules.OpaqueGrowthParsedStateIsPristine(Book);
+			}
+			catch (Exception) { return false; }
+		}
+
+		public static KingdomGrowthBook ReadGrowthPayload(byte[] Payload)
+		{
+			if (Payload == null || Payload.Length > KingdomLifecycleRules.MaxGrowthSectionBytes)
+				throw new InvalidDataException("growth payload framing is malformed");
+			if (Payload.Length < 8)
+				return OpaqueGrowth(Payload, 0, "growth payload is too short");
+			int headerVersion = 0;
+			bool hasHeaderVersion = false;
+			try
+			{
+				using (MemoryStream stream = new MemoryStream(Payload, false))
+				using (BinaryReader reader = new BinaryReader(stream, StrictUtf8, true))
+				{
+					if (reader.ReadInt32() != GrowthMagic)
+						return OpaqueGrowth(Payload, 0, "growth payload marker is malformed");
+					int version = reader.ReadInt32();
+					headerVersion = version;
+					hasHeaderVersion = true;
+					if (version > KingdomLifecycleRules.CurrentGrowthFormatVersion)
+						return OpaqueGrowth(Payload, version,
+							"future growth payload preserved as opaque evidence");
+					if (version != KingdomLifecycleRules.CurrentGrowthFormatVersion)
+						return OpaqueGrowth(Payload, version,
+							"growth payload version is unsupported");
+					KingdomGrowthBook value = ReadGrowth(reader);
+					if (stream.Position != stream.Length)
+						return OpaqueGrowth(Payload, version,
+							"growth payload has trailing bytes");
+					if (!KingdomLifecycleRules.GrowthEnvelopeWritable(value))
+						return OpaqueGrowth(Payload, version,
+							"malformed current growth payload preserved as opaque evidence");
+					return value;
+				}
+			}
+			catch (Exception ex)
+			{
+				return OpaqueGrowth(Payload, hasHeaderVersion ? headerVersion : 0,
+					"malformed growth payload: " + BoundFault(ex.Message));
+			}
+		}
+
+		private static KingdomGrowthBook ReadGrowthSection(BinaryReader Reader)
+		{
+			int length = Reader.ReadInt32();
+			if (length < 0 || length > KingdomLifecycleRules.MaxGrowthSectionBytes)
+				throw new InvalidDataException("growth section length exceeds framing bounds");
+			byte[] payload = Reader.ReadBytes(length);
+			if (payload.Length != length)
+				throw new EndOfStreamException("growth section is truncated");
+			return ReadGrowthPayload(payload);
+		}
+
+		private static void WriteGrowth(BinaryWriter w, KingdomGrowthBook b)
+		{
+			EnsureCount(b.FieldOps, KingdomLifecycleRules.MaxGrowthFields, "growth field slots");
+			EnsureCount(b.CropRows, KingdomLifecycleRules.MaxGrowthCropRows, "growth crop rows");
+			EnsureCount(b.Resources, KingdomLifecycleRules.MaxResourceRows, "growth resources");
+			EnsureCount(b.RecentProofs, KingdomLifecycleRules.MaxRecentProofs, "growth proofs");
+			w.Write(GrowthMagic); w.Write(KingdomLifecycleRules.CurrentGrowthFormatVersion);
+			w.Write(b.Quarantined); S(w, b.Fault, false, true);
+			S(w, b.SettlementId, true); w.Write(b.IdentityBound); S(w, b.IdentityProof, true);
+			w.Write(b.MigratedFromLifecycleVersion); w.Write(b.MigrationPending);
+			w.Write(b.MigrationTick);
+			w.Write((byte)b.OptionState); w.Write(b.OptionTick);
+			w.Write((byte)b.HealthState); w.Write(b.HealthTick); w.Write(b.WorkPaused);
+			w.Write(b.WorkPauseStartedTick); w.Write(b.WorkPausedTicks); w.Write(b.EffectiveWorkTick);
+			w.Write(b.LastHeartbeatTick); w.Write(b.NextArrivalTick);
+			w.Write(b.ArrivalIntervalTicks); w.Write(b.LastFetchTick);
+			w.Write(b.LastMillTick); w.Write(b.LastSubsidenceTick); w.Write(b.PendingCrop);
+			S(w, b.PendingCropBlueprint, false); S(w, b.PendingCropZoneId, false);
+			w.Write(b.HeartbeatNextSequence); w.Write(b.HeartbeatRetiredThrough);
+			w.Write(b.ArrivalNextSequence); w.Write(b.ArrivalRetiredThrough);
+			w.Write(b.DepartureNextSequence); w.Write(b.DepartureRetiredThrough);
+			w.Write(b.DeliveryNextSequence); w.Write(b.DeliveryRetiredThrough);
+			WriteGrowthOperation(w, b.HeartbeatOp); WriteGrowthOperation(w, b.ArrivalOp);
+			WriteGrowthOperation(w, b.DepartureOp); WriteGrowthOperation(w, b.DeliveryOp);
+			w.Write(b.FieldOps.Count);
+			for (int i = 0; i < b.FieldOps.Count; i++) WriteGrowthField(w, b.FieldOps[i]);
+			w.Write(b.CropRows.Count);
+			for (int i = 0; i < b.CropRows.Count; i++) WriteCropRow(w, b.CropRows[i]);
+			w.Write(b.Resources.Count);
+			for (int i = 0; i < b.Resources.Count; i++) WriteResource(w, b.Resources[i]);
+			w.Write(b.RecentProofs.Count);
+			for (int i = 0; i < b.RecentProofs.Count; i++) WriteGrowthProof(w, b.RecentProofs[i]);
+		}
+
+		private static KingdomGrowthBook ReadGrowth(BinaryReader r)
+		{
+			KingdomGrowthBook b = new KingdomGrowthBook
+			{
+				FormatVersion = KingdomLifecycleRules.CurrentGrowthFormatVersion,
+				Quarantined = ReadExactBoolean(r), Fault = S(r, false, true),
+				SettlementId = S(r, true), IdentityBound = ReadExactBoolean(r),
+				IdentityProof = S(r, true), MigratedFromLifecycleVersion = r.ReadInt32(),
+				MigrationPending = ReadExactBoolean(r), MigrationTick = r.ReadInt64(),
+				OptionState = (KingdomLifecycleOptionState)r.ReadByte(),
+				OptionTick = r.ReadInt64(), HealthState = (KingdomGrowthHealthState)r.ReadByte(),
+				HealthTick = r.ReadInt64(), WorkPaused = ReadExactBoolean(r),
+				WorkPauseStartedTick = r.ReadInt64(), WorkPausedTicks = r.ReadInt64(),
+				EffectiveWorkTick = r.ReadInt64(),
+				LastHeartbeatTick = r.ReadInt64(), NextArrivalTick = r.ReadInt64(),
+				ArrivalIntervalTicks = r.ReadInt64(), LastFetchTick = r.ReadInt64(),
+				LastMillTick = r.ReadInt64(),
+				LastSubsidenceTick = r.ReadInt64(), PendingCrop = r.ReadInt32(),
+				PendingCropBlueprint = S(r, false), PendingCropZoneId = S(r, false),
+				HeartbeatNextSequence = r.ReadInt64(), HeartbeatRetiredThrough = r.ReadInt64(),
+				ArrivalNextSequence = r.ReadInt64(), ArrivalRetiredThrough = r.ReadInt64(),
+				DepartureNextSequence = r.ReadInt64(), DepartureRetiredThrough = r.ReadInt64(),
+				DeliveryNextSequence = r.ReadInt64(), DeliveryRetiredThrough = r.ReadInt64(),
+				HeartbeatOp = ReadGrowthOperation(r), ArrivalOp = ReadGrowthOperation(r),
+				DepartureOp = ReadGrowthOperation(r), DeliveryOp = ReadGrowthOperation(r)
+			};
+			int fields = ReadCount(r, KingdomLifecycleRules.MaxGrowthFields);
+			b.FieldOps = new List<KingdomGrowthFieldSlot>(fields);
+			for (int i = 0; i < fields; i++) b.FieldOps.Add(ReadGrowthField(r));
+			int crops = ReadCount(r, KingdomLifecycleRules.MaxGrowthCropRows);
+			b.CropRows = new List<KingdomGrowthCropRow>(crops);
+			for (int i = 0; i < crops; i++) b.CropRows.Add(ReadCropRow(r));
+			int resources = ReadCount(r, KingdomLifecycleRules.MaxResourceRows);
+			b.Resources = new List<KingdomLifecycleResourceRevision>(resources);
+			for (int i = 0; i < resources; i++) b.Resources.Add(ReadResource(r));
+			int proofs = ReadCount(r, KingdomLifecycleRules.MaxRecentProofs);
+			b.RecentProofs = new List<KingdomGrowthProof>(proofs);
+			for (int i = 0; i < proofs; i++) b.RecentProofs.Add(ReadGrowthProof(r));
+			return b;
+		}
+
+		private static void WriteGrowthOperation(BinaryWriter w, KingdomGrowthOperation o)
+		{
+			w.Write(o != null); if (o == null) return;
+			EnsureCount(o.WaterLegs, KingdomLifecycleRules.MaxWaterLegs, "growth water legs");
+			EnsureCount(o.Sources, KingdomLifecycleRules.MaxGrowthSources, "growth sources");
+			EnsureCount(o.Outputs, KingdomLifecycleRules.MaxGrowthOutputs, "growth outputs");
+			EnsureCount(o.DomainSteps, KingdomLifecycleRules.MaxResourceLeases,
+				"growth domain leases");
+			w.Write(o.Sequence); S(w, o.Id, true); S(w, o.PlanHash, true);
+			w.Write((byte)o.Action); w.Write((byte)o.Phase); w.Write(o.CreatedTick);
+			w.Write(o.UpdatedTick); S(w, o.SettlementId, true); S(w, o.FieldId, true);
+			S(w, o.ZoneId, false); S(w, o.TargetId, true); S(w, o.TargetMarker, true);
+			S(w, o.Blueprint, false); w.Write((byte)o.TargetTopology);
+			S(w, o.TargetOwnerId, true); w.Write(o.TargetX); w.Write(o.TargetY);
+			w.Write((byte)o.OptionState); w.Write(o.OptionTick); w.Write((byte)o.HealthState);
+			w.Write(o.HealthTick); w.Write(o.EffectiveWorkBefore); w.Write(o.EffectiveWorkAfter);
+			w.Write(o.HeartbeatBefore); w.Write(o.HeartbeatAfter); w.Write(o.ArrivalBefore);
+			w.Write(o.ArrivalAfter); w.Write(o.FetchBefore); w.Write(o.FetchAfter);
+			w.Write(o.MillBefore); w.Write(o.MillAfter); w.Write(o.SubsidenceBefore);
+			w.Write(o.SubsidenceAfter); w.Write(o.PendingCropBefore);
+			w.Write(o.PendingCropDelta); w.Write(o.PendingCropAfter);
+			S(w, o.PendingCropBlueprint, false); S(w, o.PendingCropZoneId, false);
+			w.Write(o.PopulationBefore); w.Write(o.PopulationDelta); w.Write(o.PopulationAfter);
+			w.Write(o.WaterCursor); w.Write(o.WaterLegs.Count);
+			for (int i = 0; i < o.WaterLegs.Count; i++) WriteGrowthWater(w, o.WaterLegs[i]);
+			w.Write(o.SourceCursor); w.Write(o.Sources.Count);
+			for (int i = 0; i < o.Sources.Count; i++) WriteGrowthObject(w, o.Sources[i]);
+			w.Write(o.OutputCursor); w.Write(o.Outputs.Count);
+			for (int i = 0; i < o.Outputs.Count; i++) WriteGrowthObject(w, o.Outputs[i]);
+			w.Write(o.DomainCursor); w.Write(o.DomainSteps.Count);
+			for (int i = 0; i < o.DomainSteps.Count; i++)
+			{
+				if (o.DomainSteps[i] == null)
+					throw new InvalidDataException("null growth domain step");
+				KingdomGrowthDomainStep d = o.DomainSteps[i];
+				w.Write((byte)d.Kind); w.Write((byte)d.CallbackKind);
+				S(w, d.CallbackBodyHash, true); S(w, d.EventId, true); S(w, d.ActorId, true);
+				S(w, d.SubjectId, true); w.Write(d.BeforeValue); w.Write(d.AfterValue);
+				S(w, d.BeforeGraphHash, true); S(w, d.AfterGraphHash, true);
+				S(w, d.BeforeMapHash, true); S(w, d.AfterMapHash, true);
+				w.Write((byte)d.State); S(w, d.ReceiptId, true);
+				w.Write(d.ReceiptBeforeValue); w.Write(d.ReceiptAfterValue);
+				S(w, d.ReceiptBeforeGraphHash, true); S(w, d.ReceiptAfterGraphHash, true);
+				S(w, d.ReceiptBeforeMapHash, true); S(w, d.ReceiptAfterMapHash, true);
+				S(w, d.ReceiptProofId, true); w.Write((byte)d.ReceiptState);
+				WriteLease(w, d.Lease);
+			}
+			WriteLease(w, o.ClockLease);
+			w.Write((byte)o.ClockState);
+			WriteOutbox(w, o.Outbox); S(w, o.Fault, false, true);
+		}
+
+		private static KingdomGrowthOperation ReadGrowthOperation(BinaryReader r)
+		{
+			if (!ReadExactBoolean(r)) return null;
+			KingdomGrowthOperation o = new KingdomGrowthOperation
+			{
+				Sequence = r.ReadInt64(), Id = S(r, true), PlanHash = S(r, true),
+				Action = (KingdomGrowthAction)r.ReadByte(), Phase = (KingdomGrowthPhase)r.ReadByte(),
+				CreatedTick = r.ReadInt64(), UpdatedTick = r.ReadInt64(), SettlementId = S(r, true),
+				FieldId = S(r, true), ZoneId = S(r, false), TargetId = S(r, true),
+				TargetMarker = S(r, true), Blueprint = S(r, false),
+				TargetTopology = (KingdomLifecycleTopology)r.ReadByte(), TargetOwnerId = S(r, true),
+				TargetX = r.ReadInt32(), TargetY = r.ReadInt32(),
+				OptionState = (KingdomLifecycleOptionState)r.ReadByte(), OptionTick = r.ReadInt64(),
+				HealthState = (KingdomGrowthHealthState)r.ReadByte(), HealthTick = r.ReadInt64(),
+				EffectiveWorkBefore = r.ReadInt64(), EffectiveWorkAfter = r.ReadInt64(),
+				HeartbeatBefore = r.ReadInt64(), HeartbeatAfter = r.ReadInt64(),
+				ArrivalBefore = r.ReadInt64(), ArrivalAfter = r.ReadInt64(),
+				FetchBefore = r.ReadInt64(), FetchAfter = r.ReadInt64(),
+				MillBefore = r.ReadInt64(), MillAfter = r.ReadInt64(),
+				SubsidenceBefore = r.ReadInt64(), SubsidenceAfter = r.ReadInt64(),
+				PendingCropBefore = r.ReadInt32(), PendingCropDelta = r.ReadInt32(),
+				PendingCropAfter = r.ReadInt32(), PendingCropBlueprint = S(r, false),
+				PendingCropZoneId = S(r, false), PopulationBefore = r.ReadInt32(),
+				PopulationDelta = r.ReadInt32(), PopulationAfter = r.ReadInt32()
+			};
+			o.WaterCursor = r.ReadInt32();
+			int water = ReadCount(r, KingdomLifecycleRules.MaxWaterLegs);
+			o.WaterLegs = new List<KingdomGrowthWaterLeg>(water);
+			for (int i = 0; i < water; i++) o.WaterLegs.Add(ReadGrowthWater(r));
+			o.SourceCursor = r.ReadInt32();
+			int sources = ReadCount(r, KingdomLifecycleRules.MaxGrowthSources);
+			o.Sources = new List<KingdomGrowthObjectLeg>(sources);
+			for (int i = 0; i < sources; i++) o.Sources.Add(ReadGrowthObject(r));
+			o.OutputCursor = r.ReadInt32();
+			int outputs = ReadCount(r, KingdomLifecycleRules.MaxGrowthOutputs);
+			o.Outputs = new List<KingdomGrowthObjectLeg>(outputs);
+			for (int i = 0; i < outputs; i++) o.Outputs.Add(ReadGrowthObject(r));
+			o.DomainCursor = r.ReadInt32();
+			int leases = ReadCount(r, KingdomLifecycleRules.MaxResourceLeases);
+			o.DomainSteps = new List<KingdomGrowthDomainStep>(leases);
+			for (int i = 0; i < leases; i++) o.DomainSteps.Add(new KingdomGrowthDomainStep
+			{
+				Kind = (KingdomGrowthDomainStepKind)r.ReadByte(),
+				CallbackKind = (KingdomGrowthDomainCallbackKind)r.ReadByte(),
+				CallbackBodyHash = S(r, true), EventId = S(r, true),
+				ActorId = S(r, true), SubjectId = S(r, true), BeforeValue = r.ReadInt64(),
+				AfterValue = r.ReadInt64(), BeforeGraphHash = S(r, true),
+				AfterGraphHash = S(r, true), BeforeMapHash = S(r, true),
+				AfterMapHash = S(r, true),
+				State = (KingdomLifecyclePhysicalState)r.ReadByte(), ReceiptId = S(r, true),
+				ReceiptBeforeValue = r.ReadInt64(), ReceiptAfterValue = r.ReadInt64(),
+				ReceiptBeforeGraphHash = S(r, true), ReceiptAfterGraphHash = S(r, true),
+				ReceiptBeforeMapHash = S(r, true), ReceiptAfterMapHash = S(r, true),
+				ReceiptProofId = S(r, true),
+				ReceiptState = (KingdomLifecyclePhysicalState)r.ReadByte(), Lease = ReadLease(r)
+			});
+			o.ClockLease = ReadLease(r);
+			o.ClockState = (KingdomLifecyclePhysicalState)r.ReadByte();
+			o.Outbox = ReadOutbox(r); o.Fault = S(r, false, true); return o;
+		}
+
+		private static void WriteGrowthObject(BinaryWriter w, KingdomGrowthObjectLeg x)
+		{
+			if (x == null) throw new InvalidDataException("null growth object leg");
+			S(w, x.OperationId, true); S(w, x.EventId, true); S(w, x.ObjectId, true);
+			S(w, x.Marker, true); S(w, x.Blueprint, false); S(w, x.ZoneId, false);
+			w.Write((byte)x.Topology); S(w, x.OwnerId, true); w.Write(x.X); w.Write(x.Y);
+			w.Write(x.BeforeCount); w.Write(x.Delta); w.Write(x.AfterCount); w.Write(x.NoStack);
+			w.Write((byte)x.MutationKind); S(w, x.BeforeOwnerGraphHash, true);
+			S(w, x.AfterOwnerGraphHash, true); S(w, x.BeforeObjectGraphHash, true);
+			S(w, x.AfterObjectGraphHash, true); S(w, x.BeforeTopologyHash, true);
+			S(w, x.AfterTopologyHash, true); S(w, x.CreatedMarker, true);
+			S(w, x.DetachedMarker, true);
+			w.Write((byte)x.State); S(w, x.ReceiptId, false); S(w, x.ReceiptTopologyId, false);
+			w.Write(x.ReceiptBeforeIdMatches); w.Write(x.ReceiptBeforeMarkerMatches);
+			w.Write(x.ReceiptBeforeCount); w.Write(x.ReceiptAfterIdMatches);
+			w.Write(x.ReceiptAfterMarkerMatches); w.Write(x.ReceiptAfterCount);
+			S(w, x.ReceiptBeforeOwnerGraphHash, true);
+			S(w, x.ReceiptAfterOwnerGraphHash, true); S(w, x.ReceiptBeforeObjectGraphHash, true);
+			S(w, x.ReceiptAfterObjectGraphHash, true); S(w, x.ReceiptBeforeTopologyHash, true);
+			S(w, x.ReceiptAfterTopologyHash, true); S(w, x.ReceiptCallbackObjectId, true);
+			S(w, x.ReceiptCallbackMarker, true); S(w, x.ReceiptCallbackReferenceHash, true);
+			w.Write(x.ReceiptSameReference);
+			S(w, x.ReceiptProofId, false);
+			w.Write((byte)x.ReceiptState);
+		}
+
+		private static KingdomGrowthObjectLeg ReadGrowthObject(BinaryReader r)
+		{
+			return new KingdomGrowthObjectLeg
+			{
+				OperationId = S(r, true), EventId = S(r, true), ObjectId = S(r, true),
+				Marker = S(r, true), Blueprint = S(r, false), ZoneId = S(r, false),
+				Topology = (KingdomLifecycleTopology)r.ReadByte(), OwnerId = S(r, true),
+				X = r.ReadInt32(), Y = r.ReadInt32(), BeforeCount = r.ReadInt32(),
+				Delta = r.ReadInt32(), AfterCount = r.ReadInt32(), NoStack = ReadExactBoolean(r),
+				MutationKind = (KingdomGrowthObjectMutationKind)r.ReadByte(),
+				BeforeOwnerGraphHash = S(r, true), AfterOwnerGraphHash = S(r, true),
+				BeforeObjectGraphHash = S(r, true), AfterObjectGraphHash = S(r, true),
+				BeforeTopologyHash = S(r, true), AfterTopologyHash = S(r, true),
+				CreatedMarker = S(r, true), DetachedMarker = S(r, true),
+				State = (KingdomLifecyclePhysicalState)r.ReadByte(), ReceiptId = S(r, false),
+				ReceiptTopologyId = S(r, false), ReceiptBeforeIdMatches = r.ReadInt32(),
+				ReceiptBeforeMarkerMatches = r.ReadInt32(), ReceiptBeforeCount = r.ReadInt32(),
+				ReceiptAfterIdMatches = r.ReadInt32(), ReceiptAfterMarkerMatches = r.ReadInt32(),
+				ReceiptAfterCount = r.ReadInt32(),
+				ReceiptBeforeOwnerGraphHash = S(r, true), ReceiptAfterOwnerGraphHash = S(r, true),
+				ReceiptBeforeObjectGraphHash = S(r, true), ReceiptAfterObjectGraphHash = S(r, true),
+				ReceiptBeforeTopologyHash = S(r, true), ReceiptAfterTopologyHash = S(r, true),
+				ReceiptCallbackObjectId = S(r, true), ReceiptCallbackMarker = S(r, true),
+				ReceiptCallbackReferenceHash = S(r, true),
+				ReceiptSameReference = ReadExactBoolean(r),
+				ReceiptProofId = S(r, false),
+				ReceiptState = (KingdomLifecyclePhysicalState)r.ReadByte()
+			};
+		}
+
+		private static void WriteGrowthField(BinaryWriter w, KingdomGrowthFieldSlot x)
+		{
+			if (x == null) throw new InvalidDataException("null growth field slot");
+			S(w, x.FieldId, true); w.Write(x.NextSequence); w.Write(x.RetiredThrough);
+			w.Write(x.ClockTick);
+			w.Write(x.Quarantined); S(w, x.Fault, false, true); WriteGrowthOperation(w, x.Operation);
+		}
+
+		private static KingdomGrowthFieldSlot ReadGrowthField(BinaryReader r)
+		{
+			return new KingdomGrowthFieldSlot
+			{
+				FieldId = S(r, true), NextSequence = r.ReadInt64(), RetiredThrough = r.ReadInt64(),
+				ClockTick = r.ReadInt64(),
+				Quarantined = ReadExactBoolean(r), Fault = S(r, false, true),
+				Operation = ReadGrowthOperation(r)
+			};
+		}
+
+		private static void WriteCropRow(BinaryWriter w, KingdomGrowthCropRow x)
+		{
+			if (x == null) throw new InvalidDataException("null growth crop row");
+			S(w, x.FieldId, true); S(w, x.RowId, true); S(w, x.ObjectId, true);
+			S(w, x.Marker, true); S(w, x.Blueprint, false); S(w, x.ZoneId, false);
+			S(w, x.OwnerId, true); w.Write(x.X); w.Write(x.Y); w.Write(x.Count);
+		}
+
+		private static KingdomGrowthCropRow ReadCropRow(BinaryReader r)
+		{
+			return new KingdomGrowthCropRow
+			{
+				FieldId = S(r, true), RowId = S(r, true), ObjectId = S(r, true),
+				Marker = S(r, true), Blueprint = S(r, false), ZoneId = S(r, false),
+				OwnerId = S(r, true), X = r.ReadInt32(), Y = r.ReadInt32(), Count = r.ReadInt32()
+			};
+		}
+
+		private static void WriteGrowthProof(BinaryWriter w, KingdomGrowthProof x)
+		{
+			if (x == null) throw new InvalidDataException("null growth proof");
+			w.Write((byte)x.Slot); S(w, x.FieldId, true); w.Write(x.Sequence);
+			S(w, x.Id, true); S(w, x.PlanHash, true); w.Write((byte)x.Action); w.Write(x.Tick);
+		}
+
+		private static KingdomGrowthProof ReadGrowthProof(BinaryReader r)
+		{
+			return new KingdomGrowthProof
+			{
+				Slot = (KingdomGrowthSlotKind)r.ReadByte(), FieldId = S(r, true),
+				Sequence = r.ReadInt64(), Id = S(r, true), PlanHash = S(r, true),
+				Action = (KingdomGrowthAction)r.ReadByte(), Tick = r.ReadInt64()
+			};
+		}
+
+		private static KingdomGrowthBook PoisonGrowth(string Fault)
+		{
+			return new KingdomGrowthBook
+			{
+				FormatVersion = KingdomLifecycleRules.CurrentGrowthFormatVersion,
+				Quarantined = true,
+				Fault = BoundFault(Fault)
+			};
+		}
+
+		private static KingdomGrowthBook OpaqueGrowth(byte[] Payload, int WireVersion,
+			string Fault)
+		{
+			return new KingdomGrowthBook
+			{
+				FormatVersion = KingdomLifecycleRules.CurrentGrowthFormatVersion,
+				Quarantined = true,
+				Fault = BoundFault(Fault),
+				OpaqueWireVersion = WireVersion,
+				OpaquePayload = Payload == null ? null : (byte[])Payload.Clone()
+			};
+		}
+
+		private static string BoundFault(string Fault)
+		{
+			if (string.IsNullOrEmpty(Fault)) return "growth payload was rejected";
+			return Fault.Length <= KingdomLifecycleRules.MaxTextChars ? Fault :
+				Fault.Substring(0, KingdomLifecycleRules.MaxTextChars);
+		}
+
 		public static void WriteCarry(BinaryWriter Writer, KingdomCarryBook Book)
 		{
 			if (Writer == null || Book == null || Book.WireRejected
-				|| Book.FormatVersion != KingdomLifecycleRules.CurrentFormatVersion)
+				|| Book.FormatVersion != KingdomLifecycleRules.CurrentCarryFormatVersion)
 				throw new InvalidDataException("carry authority is not writable");
 			EnsureCount(Book.SettlementIds, KingdomLifecycleRules.MaxSettlementIds,
 				"settlement ids");
 			EnsureCount(Book.Resources, KingdomLifecycleRules.MaxResourceRows, "resource rows");
 			EnsureCount(Book.RecentProofs, KingdomLifecycleRules.MaxRecentProofs, "proof rows");
+			EnsureOuterResourceKinds(Book.Resources);
+			if (Book.Open != null && Book.Open.ScheduleLease != null &&
+				(byte)Book.Open.ScheduleLease.Kind > (byte)KingdomLifecycleResourceKind.Raid)
+				throw new InvalidDataException("carry lease kind exceeds v5 contract");
 			Writer.Write(CarryMagic);
-			Writer.Write(KingdomLifecycleRules.CurrentFormatVersion);
+			Writer.Write(KingdomLifecycleRules.CurrentCarryFormatVersion);
 			Writer.Write(Book.LegacyIdentity);
 			WriteString(Writer, Book.LegacyMigrationKey, KingdomLifecycleRules.MaxIdBytes);
 			Writer.Write(Book.Quarantined);
@@ -680,7 +1647,7 @@ namespace ThousandAndFirst
 				if (Reader.ReadInt32() != CarryMagic) Reject(Target, "invalid carry framing");
 				int version = Reader.ReadInt32();
 				Target.FormatVersion = version;
-				if (version != KingdomLifecycleRules.CurrentFormatVersion)
+				if (version != KingdomLifecycleRules.CurrentCarryFormatVersion)
 					Reject(Target, "unsupported carry version");
 				KingdomCarryBook value = new KingdomCarryBook();
 				value.FormatVersion = version;
@@ -700,7 +1667,7 @@ namespace ThousandAndFirst
 				value.Open = ReadCarryOperation(Reader);
 				int resources = ReadCount(Reader, KingdomLifecycleRules.MaxResourceRows);
 				value.Resources = new List<KingdomLifecycleResourceRevision>(resources);
-				for (int i = 0; i < resources; i++) value.Resources.Add(ReadResource(Reader));
+				for (int i = 0; i < resources; i++) value.Resources.Add(ReadResource(Reader, true));
 				int proofs = ReadCount(Reader, KingdomLifecycleRules.MaxRecentProofs);
 				value.RecentProofs = new List<KingdomLifecycleProof>(proofs);
 				for (int i = 0; i < proofs; i++) value.RecentProofs.Add(ReadProof(Reader));
@@ -791,6 +1758,11 @@ namespace ThousandAndFirst
 
 		private static KingdomLifecycleOperation ReadOperation(BinaryReader r)
 		{
+			return ReadOperation(r, false);
+		}
+
+		private static KingdomLifecycleOperation ReadOperation(BinaryReader r, bool legacyWire)
+		{
 			if (!ReadExactBoolean(r)) return null;
 			KingdomLifecycleOperation o = new KingdomLifecycleOperation();
 			o.Sequence = r.ReadInt64();
@@ -822,7 +1794,7 @@ namespace ThousandAndFirst
 			o.EffectState = (KingdomLifecyclePhysicalState)r.ReadByte();
 			int leases = ReadCount(r, KingdomLifecycleRules.MaxResourceLeases);
 			o.ResourceLeases = new List<KingdomLifecycleResourceLease>(leases);
-			for (int i = 0; i < leases; i++) o.ResourceLeases.Add(ReadLease(r));
+			for (int i = 0; i < leases; i++) o.ResourceLeases.Add(ReadLease(r, legacyWire));
 			o.Defence = r.ReadInt32(); o.PartySize = r.ReadInt32(); o.Spawned = r.ReadInt32();
 			o.PlunderRequested = r.ReadInt32(); o.PlunderProved = r.ReadInt32();
 			o.ArrivalText = S(r, false, true); o.Outbox = ReadOutbox(r); o.Fault = S(r, false, true);
@@ -854,6 +1826,59 @@ namespace ThousandAndFirst
 				ReceiptProofId = S(r, false),
 				ReceiptState = (KingdomLifecyclePhysicalState)r.ReadByte(),
 				State = (KingdomLifecyclePhysicalState)r.ReadByte()
+			};
+		}
+
+		private static void WriteGrowthWater(BinaryWriter w, KingdomGrowthWaterLeg x)
+		{
+			if (x == null) throw new InvalidDataException("null growth water leg");
+			S(w, x.OperationId, true); S(w, x.EventId, true); S(w, x.LeaseKey, true);
+			w.Write((byte)x.MutationKind); w.Write((byte)x.ContainerKind);
+			S(w, x.ContainerId, true); w.Write((byte)x.OwnerTopology); S(w, x.OwnerId, true);
+			S(w, x.Blueprint, false); S(w, x.ZoneId, false); w.Write(x.X); w.Write(x.Y);
+			w.Write(x.Capacity); w.Write(x.Before); w.Write(x.Delta); w.Write(x.After);
+			S(w, x.BeforeComposition, false, true); S(w, x.AfterComposition, false, true);
+			S(w, x.BeforeOwnerGraphHash, true);
+			S(w, x.AfterOwnerGraphHash, true); S(w, x.BeforePartGraphHash, true);
+			S(w, x.AfterPartGraphHash, true); S(w, x.BeforeTopologyHash, true);
+			S(w, x.AfterTopologyHash, true); S(w, x.ReceiptId, false);
+			w.Write(x.ReceiptBeforeMatches); w.Write(x.ReceiptAfterMatches);
+			S(w, x.ReceiptBeforeOwnerGraphHash, true);
+			S(w, x.ReceiptAfterOwnerGraphHash, true); S(w, x.ReceiptBeforePartGraphHash, true);
+			S(w, x.ReceiptAfterPartGraphHash, true); S(w, x.ReceiptBeforeTopologyHash, true);
+			S(w, x.ReceiptAfterTopologyHash, true); S(w, x.ReceiptCallbackContainerId, true);
+			S(w, x.ReceiptCallbackReferenceHash, true); w.Write(x.ReceiptSameReference);
+			S(w, x.ReceiptProofId, false);
+			w.Write((byte)x.ReceiptState); w.Write((byte)x.State); WriteLease(w, x.Lease);
+		}
+
+		private static KingdomGrowthWaterLeg ReadGrowthWater(BinaryReader r)
+		{
+			return new KingdomGrowthWaterLeg
+			{
+				OperationId = S(r, true), EventId = S(r, true), LeaseKey = S(r, true),
+				MutationKind = (KingdomGrowthWaterMutationKind)r.ReadByte(),
+				ContainerKind = (KingdomGrowthWaterContainerKind)r.ReadByte(),
+				ContainerId = S(r, true), OwnerTopology = (KingdomLifecycleTopology)r.ReadByte(),
+				OwnerId = S(r, true),
+				Blueprint = S(r, false), ZoneId = S(r, false), X = r.ReadInt32(), Y = r.ReadInt32(),
+				Capacity = r.ReadInt32(), Before = r.ReadInt32(), Delta = r.ReadInt32(),
+				After = r.ReadInt32(), BeforeComposition = S(r, false, true),
+				AfterComposition = S(r, false, true),
+				BeforeOwnerGraphHash = S(r, true), AfterOwnerGraphHash = S(r, true),
+				BeforePartGraphHash = S(r, true), AfterPartGraphHash = S(r, true),
+				BeforeTopologyHash = S(r, true), AfterTopologyHash = S(r, true),
+				ReceiptId = S(r, false), ReceiptBeforeMatches = r.ReadInt32(),
+				ReceiptAfterMatches = r.ReadInt32(),
+				ReceiptBeforeOwnerGraphHash = S(r, true), ReceiptAfterOwnerGraphHash = S(r, true),
+				ReceiptBeforePartGraphHash = S(r, true), ReceiptAfterPartGraphHash = S(r, true),
+				ReceiptBeforeTopologyHash = S(r, true), ReceiptAfterTopologyHash = S(r, true),
+				ReceiptCallbackContainerId = S(r, true),
+				ReceiptCallbackReferenceHash = S(r, true),
+				ReceiptSameReference = ReadExactBoolean(r),
+				ReceiptProofId = S(r, false),
+				ReceiptState = (KingdomLifecyclePhysicalState)r.ReadByte(),
+				State = (KingdomLifecyclePhysicalState)r.ReadByte(), Lease = ReadLease(r)
 			};
 		}
 
@@ -906,9 +1931,18 @@ namespace ThousandAndFirst
 
 		private static KingdomLifecycleResourceLease ReadLease(BinaryReader r)
 		{
+			return ReadLease(r, false);
+		}
+
+		private static KingdomLifecycleResourceLease ReadLease(BinaryReader r, bool legacyWire)
+		{
+			string operationId = S(r, true);
+			byte rawKind = r.ReadByte();
+			if (legacyWire && rawKind > (byte)KingdomLifecycleResourceKind.Raid)
+				throw new InvalidDataException("legacy lifecycle lease kind is unsupported");
 			return new KingdomLifecycleResourceLease
 			{
-				OperationId = S(r, true), Kind = (KingdomLifecycleResourceKind)r.ReadByte(),
+				OperationId = operationId, Kind = (KingdomLifecycleResourceKind)rawKind,
 				ScopeId = S(r, true), SubjectId = S(r, true), Key = S(r, true),
 				Before = r.ReadInt64(), Delta = r.ReadInt64(), After = r.ReadInt64(),
 				BeforeRevision = r.ReadInt64(), AfterRevision = r.ReadInt64(),
@@ -926,9 +1960,17 @@ namespace ThousandAndFirst
 
 		private static KingdomLifecycleResourceRevision ReadResource(BinaryReader r)
 		{
+			return ReadResource(r, false);
+		}
+
+		private static KingdomLifecycleResourceRevision ReadResource(BinaryReader r, bool legacyWire)
+		{
+			byte rawKind = r.ReadByte();
+			if (legacyWire && rawKind > (byte)KingdomLifecycleResourceKind.Raid)
+				throw new InvalidDataException("legacy lifecycle resource kind is unsupported");
 			return new KingdomLifecycleResourceRevision
 			{
-				Kind = (KingdomLifecycleResourceKind)r.ReadByte(), ScopeId = S(r, true),
+				Kind = (KingdomLifecycleResourceKind)rawKind, ScopeId = S(r, true),
 				SubjectId = S(r, true), Key = S(r, true), Revision = r.ReadInt64(),
 				ActiveOperationId = S(r, true), LastOperationId = S(r, true)
 			};
@@ -1046,7 +2088,7 @@ namespace ThousandAndFirst
 			o.DueTick = r.ReadInt64(); o.RiskFrozen = ReadExactBoolean(r);
 			o.LostOnRoad = ReadExactBoolean(r);
 			o.SourceIndex = r.ReadInt32(); o.OutputIndex = r.ReadInt32();
-			o.ScheduleLease = ReadLease(r);
+			o.ScheduleLease = ReadLease(r, true);
 			o.ScheduleReceiptId = S(r, false); o.ScheduleTopologyId = S(r, false);
 			o.ScheduleBeforeMatches = r.ReadInt32(); o.ScheduleAfterMatches = r.ReadInt32();
 			o.ScheduleSameReference = ReadExactBoolean(r); o.ScheduleProofId = S(r, false);
@@ -1145,6 +2187,27 @@ namespace ThousandAndFirst
 				throw new InvalidDataException("invalid " + description);
 		}
 
+		private static void EnsureOuterResourceKinds(
+			List<KingdomLifecycleResourceRevision> rows,
+			params KingdomLifecycleOperation[] operations)
+		{
+			if (rows != null) for (int i = 0; i < rows.Count; i++)
+				if (rows[i] == null || (byte)rows[i].Kind >
+					(byte)KingdomLifecycleResourceKind.Raid)
+					throw new InvalidDataException("outer resource kind exceeds v5 contract");
+			if (operations == null) return;
+			for (int i = 0; i < operations.Length; i++)
+			{
+				KingdomLifecycleOperation operation = operations[i];
+				if (operation == null || operation.ResourceLeases == null) continue;
+				for (int j = 0; j < operation.ResourceLeases.Count; j++)
+					if (operation.ResourceLeases[j] == null ||
+						(byte)operation.ResourceLeases[j].Kind >
+						(byte)KingdomLifecycleResourceKind.Raid)
+						throw new InvalidDataException("outer lease kind exceeds v5 contract");
+			}
+		}
+
 		private static void Reject(KingdomLifecycleBook target, string fault)
 		{
 			target.WireRejected = true; target.Quarantined = true; target.Fault = fault;
@@ -1168,6 +2231,7 @@ namespace ThousandAndFirst
 			target.Petition = null;
 			target.Resources = new List<KingdomLifecycleResourceRevision>();
 			target.RecentProofs = new List<KingdomLifecycleProof>();
+			target.Growth = PoisonGrowth("enclosing lifecycle wire was rejected");
 		}
 
 		private static void Poison(KingdomCarryBook target, string fault)
@@ -1200,7 +2264,8 @@ namespace ThousandAndFirst
 			b.PetitionOption = a.PetitionOption; b.PetitionOptionTick = a.PetitionOptionTick;
 			b.PlainGuest = a.PlainGuest; b.NotableGuest = a.NotableGuest;
 			b.Raid = a.Raid; b.Petition = a.Petition;
-			b.Resources = a.Resources; b.RecentProofs = a.RecentProofs; b.WireRejected = false;
+			b.Resources = a.Resources; b.RecentProofs = a.RecentProofs;
+			b.Growth = a.Growth; b.WireRejected = false;
 		}
 
 		private static void Copy(KingdomCarryBook a, KingdomCarryBook b)

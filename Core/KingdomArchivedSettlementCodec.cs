@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Globalization;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
@@ -18,9 +19,11 @@ namespace ThousandAndFirst
 	internal static class KingdomArchivedSettlementCodec
 	{
 		public const int Magic = 0x54415331; // TAS1
-		public const int CurrentVersion = 1;
+		public const int LegacyVersion = 1;
+		public const int CurrentVersion = 2;
 		public const int MaxPayloadBytes = 2 * 1024 * 1024;
 		public const int MaxStringBytes = 16 * 1024;
+		public const int MaxByteArrayBytes = 512 * 1024;
 		public const int MaxCollectionCount = 1024;
 		private const int MaxDepth = 12;
 		private const int MaxObjects = 16384;
@@ -30,6 +33,91 @@ namespace ThousandAndFirst
 		private sealed class Budget
 		{
 			public int Objects;
+		}
+
+		/// <summary>Pre-allocation aggregate bound. Per-field caps are not an aggregate cap:
+		/// 1,024 individually legal strings can otherwise grow a MemoryStream far beyond the
+		/// archive envelope before the post-write length check runs.</summary>
+		private sealed class CappedWriteStream : Stream
+		{
+			private readonly MemoryStream Inner = new MemoryStream();
+			private readonly long Maximum;
+
+			public CappedWriteStream(long Maximum)
+			{
+				if (Maximum < 0L) throw new ArgumentOutOfRangeException(nameof(Maximum));
+				this.Maximum = Maximum;
+			}
+
+			public byte[] ToArray()
+			{
+				return Inner.ToArray();
+			}
+
+			private void RequireCapacity(long Count)
+			{
+				if (Count < 0L || Position > Maximum - Count)
+					throw new InvalidDataException(
+						"Archived settlement aggregate cap reached before write.");
+			}
+
+			public override bool CanRead => true;
+			public override bool CanSeek => true;
+			public override bool CanWrite => true;
+			public override long Length => Inner.Length;
+			public override long Position
+			{
+				get { return Inner.Position; }
+				set
+				{
+					if (value < 0L || value > Maximum)
+						throw new InvalidDataException(
+							"Archived settlement stream position exceeds cap.");
+					Inner.Position = value;
+				}
+			}
+
+			public override void Flush() { Inner.Flush(); }
+			public override int Read(byte[] Buffer, int Offset, int Count)
+			{
+				return Inner.Read(Buffer, Offset, Count);
+			}
+			public override long Seek(long Offset, SeekOrigin Origin)
+			{
+				long target;
+				switch (Origin)
+				{
+				case SeekOrigin.Begin: target = Offset; break;
+				case SeekOrigin.Current: target = Position + Offset; break;
+				case SeekOrigin.End: target = Length + Offset; break;
+				default: throw new ArgumentOutOfRangeException(nameof(Origin));
+				}
+				Position = target;
+				return target;
+			}
+			public override void SetLength(long Value)
+			{
+				if (Value < 0L || Value > Maximum)
+					throw new InvalidDataException(
+						"Archived settlement stream length exceeds cap.");
+				Inner.SetLength(Value);
+			}
+			public override void Write(byte[] Buffer, int Offset, int Count)
+			{
+				RequireCapacity(Count);
+				Inner.Write(Buffer, Offset, Count);
+			}
+			public override void WriteByte(byte Value)
+			{
+				RequireCapacity(1L);
+				Inner.WriteByte(Value);
+			}
+
+			protected override void Dispose(bool Disposing)
+			{
+				if (Disposing) Inner.Dispose();
+				base.Dispose(Disposing);
+			}
 		}
 
 		private sealed class ReferenceComparer : IEqualityComparer<object>
@@ -57,6 +145,14 @@ namespace ThousandAndFirst
 			typeof(KingdomLifecycleResourceLease),
 			typeof(KingdomLifecycleResourceRevision),
 			typeof(KingdomLifecycleProof),
+			typeof(KingdomGrowthBook),
+			typeof(KingdomGrowthOperation),
+			typeof(KingdomGrowthWaterLeg),
+			typeof(KingdomGrowthObjectLeg),
+			typeof(KingdomGrowthCropRow),
+			typeof(KingdomGrowthDomainStep),
+			typeof(KingdomGrowthFieldSlot),
+			typeof(KingdomGrowthProof),
 			typeof(KingdomCarryBook),
 			typeof(KingdomCarryOperation),
 			typeof(KingdomCarrySource),
@@ -74,7 +170,7 @@ namespace ThousandAndFirst
 			{
 				if (!StrictMutableRoot(Value, typeof(KingdomSettlement), out Failure))
 					return false;
-				using (MemoryStream stream = new MemoryStream())
+				using (CappedWriteStream stream = new CappedWriteStream(MaxPayloadBytes))
 				using (BinaryWriter writer = new BinaryWriter(stream, StrictUtf8, true))
 				{
 					writer.Write(Magic);
@@ -95,6 +191,45 @@ namespace ThousandAndFirst
 				return false;
 			}
 		}
+
+#if TAF_TESTS
+		/// <summary>Test-only producer for the immutable archive-v1 field envelope. Production
+		/// never writes v1 again; keeping this independent write path lets the migration reader
+		/// prove that adding nested Growth did not strand an already archived settlement.</summary>
+		internal static bool TryEncodeLegacyV1ForTests(KingdomSettlement Value,
+			out byte[] Payload, out string Failure)
+		{
+			Payload = null;
+			Failure = null;
+			try
+			{
+				if (!StrictMutableRoot(Value, typeof(KingdomSettlement), out Failure))
+					return false;
+				using (CappedWriteStream stream = new CappedWriteStream(MaxPayloadBytes))
+				using (BinaryWriter writer = new BinaryWriter(stream, StrictUtf8, true))
+				{
+					writer.Write(Magic);
+					writer.Write(LegacyVersion);
+					WriteString(writer, Shape(typeof(KingdomSettlement), Legacy: true),
+						MaxShapeBytes);
+					WriteValue(writer, typeof(KingdomSettlement), Value, 0, new Budget(),
+						Legacy: true);
+					writer.Flush();
+					if (stream.Length > MaxPayloadBytes)
+						throw new InvalidDataException(
+							"Archived settlement v1 payload exceeds cap.");
+					Payload = stream.ToArray();
+					return true;
+				}
+			}
+			catch (Exception ex)
+			{
+				Failure = Bound(ex.Message);
+				Payload = null;
+				return false;
+			}
+		}
+#endif
 
 		/// <summary>Returns false for malformed/current-unsupported data. A strictly newer version
 		/// returns false with <paramref name="FutureVersion"/> set so the caller can retain the exact
@@ -121,16 +256,22 @@ namespace ThousandAndFirst
 						Failure = "Archived settlement uses future version " + version + ".";
 						return false;
 					}
-					if (version != CurrentVersion)
+					if (version != LegacyVersion && version != CurrentVersion)
 						throw new InvalidDataException("Archived settlement version is unsupported.");
+					bool legacy = version == LegacyVersion;
 					string shape = ReadString(reader, MaxShapeBytes, Required: true);
-					if (!string.Equals(shape, Shape(typeof(KingdomSettlement)),
+					if (!string.Equals(shape, Shape(typeof(KingdomSettlement), legacy),
 						StringComparison.Ordinal))
 						throw new InvalidDataException("Archived settlement schema shape is unknown.");
-					object decoded = ReadValue(reader, typeof(KingdomSettlement), 0, new Budget());
+					object decoded = ReadValue(reader, typeof(KingdomSettlement), 0,
+						new Budget(), legacy);
 					if (stream.Position != stream.Length)
 						throw new InvalidDataException("Archived settlement has trailing bytes.");
 					Value = (KingdomSettlement)decoded;
+					if (legacy && Value != null &&
+						!KingdomLifecycleRules.StageLegacyGrowthMigration(Value.LifecycleBook))
+						throw new InvalidDataException(
+							"Archived settlement legacy lifecycle could not stage Growth migration.");
 					return true;
 				}
 			}
@@ -304,6 +445,11 @@ namespace ThousandAndFirst
 			Failure = null;
 			if (Value == null || Type == typeof(string) || Type.IsPrimitive || Type.IsEnum)
 				return true;
+			if (Value.GetType() != Type)
+			{
+				Failure = "Realm reference runtime type is not exact: " + Type.FullName + ".";
+				return false;
+			}
 			if (Forbidden != null && Forbidden.Contains(Value))
 			{
 				Failure = "Archived and live realm graphs share mutable " + Type.FullName + ".";
@@ -320,6 +466,15 @@ namespace ThousandAndFirst
 				return false;
 			}
 			Collected?.Add(Value);
+			if (Type == typeof(byte[]))
+			{
+				if (((byte[])Value).Length > MaxByteArrayBytes)
+				{
+					Failure = "Realm byte array exceeds proof cap.";
+					return false;
+				}
+				return true;
+			}
 			if (IsList(Type))
 			{
 				IList list = (IList)Value;
@@ -337,6 +492,11 @@ namespace ThousandAndFirst
 			if (IsDictionary(Type))
 			{
 				IDictionary dictionary = (IDictionary)Value;
+				if (!CanonicalDictionaryComparer(Type, dictionary))
+				{
+					Failure = "Realm dictionary comparer is noncanonical.";
+					return false;
+				}
 				if (dictionary.Count > MaxCollectionCount)
 				{
 					Failure = "Realm reference dictionary exceeds proof cap.";
@@ -385,6 +545,11 @@ namespace ThousandAndFirst
 				return false;
 			}
 			if (Type == typeof(string) || Type.IsPrimitive || Type.IsEnum) return true;
+			if (Left.GetType() != Type || Right.GetType() != Type)
+			{
+				Failure = "Settlement runtime type differs from its declared schema type.";
+				return false;
+			}
 			if (ReferenceEquals(Left, Right))
 			{
 				Failure = "Archived and live settlement graphs share mutable " + Type.FullName + ".";
@@ -406,6 +571,20 @@ namespace ThousandAndFirst
 			}
 			LeftToRight.Add(Left, Right);
 			RightToLeft.Add(Right, Left);
+			if (Type == typeof(byte[]))
+			{
+				byte[] left = (byte[])Left;
+				byte[] right = (byte[])Right;
+				if (left.Length != right.Length || left.Length > MaxByteArrayBytes)
+				{
+					Failure = "Settlement byte-array topology or bound differs.";
+					return false;
+				}
+				int difference = 0;
+				for (int i = 0; i < left.Length; i++) difference |= left[i] ^ right[i];
+				if (difference != 0) Failure = "Settlement byte arrays differ.";
+				return difference == 0;
+			}
 			if (IsList(Type))
 			{
 				IList left = (IList)Left;
@@ -425,6 +604,12 @@ namespace ThousandAndFirst
 			{
 				IDictionary left = (IDictionary)Left;
 				IDictionary right = (IDictionary)Right;
+				if (!CanonicalDictionaryComparer(Type, left)
+					|| !CanonicalDictionaryComparer(Type, right))
+				{
+					Failure = "Settlement dictionary comparer is noncanonical.";
+					return false;
+				}
 				if (left.Count != right.Count || left.Count > MaxCollectionCount)
 				{
 					Failure = "Settlement dictionary topology or bound differs.";
@@ -464,7 +649,16 @@ namespace ThousandAndFirst
 		private static void WriteValue(BinaryWriter Writer, Type Type, object Value,
 			int Depth, Budget Budget)
 		{
+			WriteValue(Writer, Type, Value, Depth, Budget, Legacy: false);
+		}
+
+		private static void WriteValue(BinaryWriter Writer, Type Type, object Value,
+			int Depth, Budget Budget, bool Legacy)
+		{
 			if (Depth > MaxDepth) throw new InvalidDataException("Archived settlement graph is too deep.");
+			if (Value != null && !Type.IsValueType && Value.GetType() != Type)
+				throw new InvalidDataException(
+					"Archived settlement runtime type is not exact: " + Type.FullName + ".");
 			if (Type == typeof(string))
 			{
 				WriteString(Writer, (string)Value, MaxStringBytes);
@@ -473,8 +667,12 @@ namespace ThousandAndFirst
 			if (Type.IsEnum)
 			{
 				long raw = Convert.ToInt64(Value);
-				if (!Enum.IsDefined(Type, Value))
+				if (!EnumRawFits(Type, raw) || !Enum.IsDefined(Type, Value))
 					throw new InvalidDataException("Archived settlement enum value is unknown.");
+				if (Legacy && Type == typeof(KingdomLifecycleResourceKind) &&
+					raw > (long)KingdomLifecycleResourceKind.Raid)
+					throw new InvalidDataException(
+						"Archived settlement v1 resource kind is unknown.");
 				Writer.Write(raw);
 				return;
 			}
@@ -486,6 +684,16 @@ namespace ThousandAndFirst
 			if (Type == typeof(ushort)) { Writer.Write((ushort)Value); return; }
 			if (Type == typeof(uint)) { Writer.Write((uint)Value); return; }
 			if (Type == typeof(ulong)) { Writer.Write((ulong)Value); return; }
+			if (Type == typeof(byte[]))
+			{
+				if (Value == null) { Writer.Write(-1); return; }
+				byte[] bytes = (byte[])Value;
+				if (bytes.Length > MaxByteArrayBytes)
+					throw new InvalidDataException("Archived settlement byte array exceeds cap.");
+				Writer.Write(bytes.Length);
+				Writer.Write(bytes);
+				return;
+			}
 			if (IsList(Type))
 			{
 				if (Value == null) { Writer.Write(-1); return; }
@@ -495,13 +703,16 @@ namespace ThousandAndFirst
 				Writer.Write(list.Count);
 				Type itemType = Type.GetGenericArguments()[0];
 				for (int i = 0; i < list.Count; i++)
-					WriteValue(Writer, itemType, list[i], Depth + 1, Budget);
+					WriteValue(Writer, itemType, list[i], Depth + 1, Budget, Legacy);
 				return;
 			}
 			if (IsDictionary(Type))
 			{
 				if (Value == null) { Writer.Write(-1); return; }
 				IDictionary dictionary = (IDictionary)Value;
+				if (!CanonicalDictionaryComparer(Type, dictionary))
+					throw new InvalidDataException(
+						"Archived settlement dictionary comparer is noncanonical.");
 				if (dictionary.Count > MaxCollectionCount)
 					throw new InvalidDataException("Archived settlement dictionary exceeds cap.");
 				Type[] arguments = Type.GetGenericArguments();
@@ -518,7 +729,8 @@ namespace ThousandAndFirst
 				for (int i = 0; i < keys.Count; i++)
 				{
 					WriteString(Writer, keys[i], MaxStringBytes);
-					WriteValue(Writer, arguments[1], dictionary[keys[i]], Depth + 1, Budget);
+					WriteValue(Writer, arguments[1], dictionary[keys[i]], Depth + 1, Budget,
+						Legacy);
 				}
 				return;
 			}
@@ -528,23 +740,36 @@ namespace ThousandAndFirst
 			if (Value == null) return;
 			if (++Budget.Objects > MaxObjects)
 				throw new InvalidDataException("Archived settlement object count exceeds cap.");
-			FieldInfo[] fields = Fields(Type);
+			FieldInfo[] fields = Fields(Type, Legacy);
 			for (int i = 0; i < fields.Length; i++)
 				WriteValue(Writer, fields[i].FieldType, fields[i].GetValue(Value),
-					Depth + 1, Budget);
+					Depth + 1, Budget, Legacy);
 		}
 
 		private static object ReadValue(BinaryReader Reader, Type Type, int Depth,
 			Budget Budget)
+		{
+			return ReadValue(Reader, Type, Depth, Budget, Legacy: false);
+		}
+
+		private static object ReadValue(BinaryReader Reader, Type Type, int Depth,
+			Budget Budget, bool Legacy)
 		{
 			if (Depth > MaxDepth) throw new InvalidDataException("Archived settlement graph is too deep.");
 			if (Type == typeof(string)) return ReadString(Reader, MaxStringBytes, Required: false);
 			if (Type.IsEnum)
 			{
 				long raw = Reader.ReadInt64();
+				if (!EnumRawFits(Type, raw))
+					throw new InvalidDataException(
+						"Archived settlement enum encoding is noncanonical.");
 				object value = Enum.ToObject(Type, raw);
 				if (!Enum.IsDefined(Type, value))
 					throw new InvalidDataException("Archived settlement enum value is unknown.");
+				if (Legacy && Type == typeof(KingdomLifecycleResourceKind) &&
+					raw > (long)KingdomLifecycleResourceKind.Raid)
+					throw new InvalidDataException(
+						"Archived settlement v1 resource kind is unknown.");
 				return value;
 			}
 			if (Type == typeof(bool))
@@ -560,6 +785,15 @@ namespace ThousandAndFirst
 			if (Type == typeof(ushort)) return Reader.ReadUInt16();
 			if (Type == typeof(uint)) return Reader.ReadUInt32();
 			if (Type == typeof(ulong)) return Reader.ReadUInt64();
+			if (Type == typeof(byte[]))
+			{
+				int count = ReadCount(Reader, MaxByteArrayBytes, AllowNull: true);
+				if (count == -1) return null;
+				byte[] bytes = Reader.ReadBytes(count);
+				if (bytes.Length != count)
+					throw new EndOfStreamException("Archived settlement byte array is truncated.");
+				return bytes;
+			}
 			if (IsList(Type))
 			{
 				int count = ReadCount(Reader, MaxCollectionCount, AllowNull: true);
@@ -567,7 +801,7 @@ namespace ThousandAndFirst
 				IList list = (IList)Activator.CreateInstance(Type, count);
 				Type itemType = Type.GetGenericArguments()[0];
 				for (int i = 0; i < count; i++)
-					list.Add(ReadValue(Reader, itemType, Depth + 1, Budget));
+					list.Add(ReadValue(Reader, itemType, Depth + 1, Budget, Legacy));
 				return list;
 			}
 			if (IsDictionary(Type))
@@ -584,7 +818,8 @@ namespace ThousandAndFirst
 					string key = ReadString(Reader, MaxStringBytes, Required: true);
 					if (previous != null && string.CompareOrdinal(previous, key) >= 0)
 						throw new InvalidDataException("Archived settlement dictionary order is noncanonical.");
-					dictionary.Add(key, ReadValue(Reader, arguments[1], Depth + 1, Budget));
+					dictionary.Add(key, ReadValue(Reader, arguments[1], Depth + 1, Budget,
+						Legacy));
 					previous = key;
 				}
 				return dictionary;
@@ -597,10 +832,10 @@ namespace ThousandAndFirst
 			if (++Budget.Objects > MaxObjects)
 				throw new InvalidDataException("Archived settlement object count exceeds cap.");
 			object result = Activator.CreateInstance(Type);
-			FieldInfo[] fields = Fields(Type);
+			FieldInfo[] fields = Fields(Type, Legacy);
 			for (int i = 0; i < fields.Length; i++)
 				fields[i].SetValue(result, ReadValue(Reader, fields[i].FieldType,
-					Depth + 1, Budget));
+					Depth + 1, Budget, Legacy));
 			return result;
 		}
 
@@ -609,6 +844,20 @@ namespace ThousandAndFirst
 			int count = Reader.ReadInt32();
 			if ((AllowNull && count == -1) || (count >= 0 && count <= Maximum)) return count;
 			throw new InvalidDataException("Archived settlement collection count exceeds cap.");
+		}
+
+		private static bool EnumRawFits(Type EnumType, long Raw)
+		{
+			Type underlying = Enum.GetUnderlyingType(EnumType);
+			if (underlying == typeof(byte)) return Raw >= byte.MinValue && Raw <= byte.MaxValue;
+			if (underlying == typeof(sbyte)) return Raw >= sbyte.MinValue && Raw <= sbyte.MaxValue;
+			if (underlying == typeof(short)) return Raw >= short.MinValue && Raw <= short.MaxValue;
+			if (underlying == typeof(ushort)) return Raw >= ushort.MinValue && Raw <= ushort.MaxValue;
+			if (underlying == typeof(int)) return Raw >= int.MinValue && Raw <= int.MaxValue;
+			if (underlying == typeof(uint)) return Raw >= uint.MinValue && Raw <= uint.MaxValue;
+			if (underlying == typeof(long)) return true;
+			if (underlying == typeof(ulong)) return Raw >= 0L;
+			return false;
 		}
 
 		private static void WriteString(BinaryWriter Writer, string Value, int MaximumBytes)
@@ -642,6 +891,19 @@ namespace ThousandAndFirst
 			return Type.IsGenericType && Type.GetGenericTypeDefinition() == typeof(Dictionary<,>);
 		}
 
+		private static bool CanonicalDictionaryComparer(Type Type, IDictionary Value)
+		{
+			if (Value == null || !IsDictionary(Type)) return false;
+			Type[] arguments = Type.GetGenericArguments();
+			if (arguments[0] != typeof(string)) return false;
+			PropertyInfo property = Type.GetProperty("Comparer", BindingFlags.Instance |
+				BindingFlags.Public);
+			if (property == null) return false;
+			object comparer = property.GetValue(Value, null);
+			return ReferenceEquals(comparer, EqualityComparer<string>.Default)
+				|| ReferenceEquals(comparer, StringComparer.Ordinal);
+		}
+
 		private static bool Approved(Type Type)
 		{
 			// KingdomCarryHaul lives in the engine-coupled Guestbook file, which the pure test
@@ -654,10 +916,16 @@ namespace ThousandAndFirst
 
 		private static FieldInfo[] Fields(Type Type)
 		{
+			return Fields(Type, Legacy: false);
+		}
+
+		private static FieldInfo[] Fields(Type Type, bool Legacy)
+		{
 			FieldInfo[] source = Type.GetFields(BindingFlags.Instance | BindingFlags.Public);
 			List<FieldInfo> fields = new List<FieldInfo>(source.Length);
 			for (int i = 0; i < source.Length; i++)
-				if (!source[i].IsDefined(typeof(NonSerializedAttribute), false))
+				if (!source[i].IsDefined(typeof(NonSerializedAttribute), false)
+					&& (!Legacy || LegacyField(Type, source[i].Name)))
 					fields.Add(source[i]);
 			fields.Sort(delegate(FieldInfo Left, FieldInfo Right)
 			{
@@ -666,44 +934,91 @@ namespace ThousandAndFirst
 			return fields.ToArray();
 		}
 
+		/// <summary>Archive v1 reflected the then-public settlement graph. Growth v6 added a
+		/// nested root, so its independent v1 reader retains that exact historical surface.</summary>
+		private static bool LegacyField(Type Type, string Name)
+		{
+			if (Type == typeof(KingdomLifecycleBook))
+				return !string.Equals(Name, "Growth", StringComparison.Ordinal);
+			return true;
+		}
+
 		private static string Shape(Type Root)
+		{
+			return Shape(Root, Legacy: false);
+		}
+
+		private static string Shape(Type Root, bool Legacy)
 		{
 			StringBuilder shape = new StringBuilder();
 			HashSet<Type> visited = new HashSet<Type>();
-			AppendShape(shape, Root, visited);
+			AppendShape(shape, Root, visited, Legacy);
 			if (StrictUtf8.GetByteCount(shape.ToString()) > MaxShapeBytes)
 				throw new InvalidDataException("Archived settlement schema shape exceeds cap.");
 			return shape.ToString();
 		}
 
 		private static void AppendShape(StringBuilder Shape, Type Type,
-			HashSet<Type> Visited)
+			HashSet<Type> Visited, bool Legacy)
 		{
-			if (Type.IsEnum || Type.IsPrimitive || Type == typeof(string))
+			if (Type.IsEnum)
+			{
+				if (Legacy)
+				{
+					Shape.Append(Type.FullName).Append(';');
+					return;
+				}
+				Type underlying = Enum.GetUnderlyingType(Type);
+				Shape.Append("enum:").Append(Type.FullName).Append('<')
+					.Append(underlying.FullName).Append(">{");
+				string[] names = Enum.GetNames(Type);
+				Array.Sort(names, StringComparer.Ordinal);
+				bool unsigned = underlying == typeof(byte) || underlying == typeof(ushort) ||
+					underlying == typeof(uint) || underlying == typeof(ulong);
+				for (int i = 0; i < names.Length; i++)
+				{
+					object value = Enum.Parse(Type, names[i]);
+					Shape.Append(names[i]).Append('=');
+					if (unsigned)
+						Shape.Append(Convert.ToUInt64(value).ToString(CultureInfo.InvariantCulture));
+					else
+						Shape.Append(Convert.ToInt64(value).ToString(CultureInfo.InvariantCulture));
+					Shape.Append(';');
+				}
+				Shape.Append("};");
+				return;
+			}
+			if (Type.IsPrimitive || Type == typeof(string))
 			{
 				Shape.Append(Type.FullName).Append(';');
 				return;
 			}
+			if (Type == typeof(byte[]))
+			{
+				Shape.Append("bytes;");
+				return;
+			}
 			if (IsList(Type))
 			{
-				Shape.Append("list<"); AppendShape(Shape, Type.GetGenericArguments()[0], Visited);
+				Shape.Append("list<"); AppendShape(Shape, Type.GetGenericArguments()[0],
+					Visited, Legacy);
 				Shape.Append(">;"); return;
 			}
 			if (IsDictionary(Type))
 			{
 				Type[] arguments = Type.GetGenericArguments();
-				Shape.Append("map<"); AppendShape(Shape, arguments[0], Visited);
-				AppendShape(Shape, arguments[1], Visited); Shape.Append(">;"); return;
+				Shape.Append("map<"); AppendShape(Shape, arguments[0], Visited, Legacy);
+				AppendShape(Shape, arguments[1], Visited, Legacy); Shape.Append(">;"); return;
 			}
 			if (!Approved(Type)) throw new InvalidDataException(
 				"Archived settlement schema includes unsupported type " + Type.FullName + ".");
 			if (!Visited.Add(Type)) { Shape.Append("ref:").Append(Type.FullName).Append(';'); return; }
 			Shape.Append("object:").Append(Type.FullName).Append('{');
-			FieldInfo[] fields = Fields(Type);
+			FieldInfo[] fields = Fields(Type, Legacy);
 			for (int i = 0; i < fields.Length; i++)
 			{
 				Shape.Append(fields[i].Name).Append(':');
-				AppendShape(Shape, fields[i].FieldType, Visited);
+				AppendShape(Shape, fields[i].FieldType, Visited, Legacy);
 			}
 			Shape.Append("};");
 		}

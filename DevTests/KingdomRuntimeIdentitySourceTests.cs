@@ -1,6 +1,8 @@
 #if TAF_TESTS
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Security.Cryptography;
 using NUnit.Framework;
 
 namespace ThousandAndFirst.Tests
@@ -11,6 +13,11 @@ namespace ThousandAndFirst.Tests
 		private static readonly string RealmId = new string('a', 64);
 		private static readonly string SettlementA = new string('b', 64);
 		private static readonly string SettlementB = new string('c', 64);
+
+		private sealed class HostileSettlement : KingdomSettlement
+		{
+			public List<string> HiddenEvidence = new List<string> { "must-not-drop" };
+		}
 
 		private static string Source(string relative)
 		{
@@ -574,11 +581,13 @@ namespace ThousandAndFirst.Tests
 				out byte[] aliasedPayload, out failure));
 			Assert.IsNull(aliasedPayload);
 			settlement.RosterOrigins = new System.Collections.Generic.List<string>();
-			payload[4] = 2; payload[5] = 0; payload[6] = 0; payload[7] = 0;
+			int futureVersion = KingdomArchivedSettlementCodec.CurrentVersion + 1;
+			payload[4] = (byte)futureVersion;
+			payload[5] = 0; payload[6] = 0; payload[7] = 0;
 			Assert.IsFalse(KingdomArchivedSettlementCodec.TryDecode(payload,
 				out KingdomSettlement decoded, out int future, out failure));
 			Assert.IsNull(decoded);
-			Assert.AreEqual(2, future);
+			Assert.AreEqual(futureVersion, future);
 
 			var bindings = new Simulation.City.KingdomBindingRegistry();
 			var jobs = new Simulation.City.KingdomJobRegistry();
@@ -589,6 +598,286 @@ namespace ThousandAndFirst.Tests
 			Assert.IsTrue(KingdomArchivedSettlementCodec.EmptyCarry(carry));
 			carry.NextSequence++;
 			Assert.IsFalse(KingdomArchivedSettlementCodec.EmptyCarry(carry));
+		}
+
+		[Test]
+		public void ArchivedSettlementV1_StagesDormantGrowthAndRewritesAsV2()
+		{
+			KingdomSettlement legacy = new KingdomSettlement { SettlementName = "old ground" };
+			Assert.IsTrue(KingdomLifecycleRules.BindSettlementIdentity(legacy.LifecycleBook,
+				SettlementA, false, null, new List<string>()));
+			legacy.LifecycleBook.LocusOption = KingdomLifecycleOptionState.Enabled;
+			legacy.LifecycleBook.LocusOptionTick = 41L;
+			legacy.LifecycleBook.FormatVersion =
+				KingdomLifecycleRules.LegacyLifecycleFormatVersion;
+			legacy.LifecycleBook.Growth = null;
+
+			Assert.IsTrue(KingdomArchivedSettlementCodec.TryEncodeLegacyV1ForTests(legacy,
+				out byte[] v1, out string failure), failure);
+			Assert.AreEqual(KingdomArchivedSettlementCodec.LegacyVersion,
+				BitConverter.ToInt32(v1, 4));
+			byte[] wrappedV1Enum = (byte[])v1.Clone();
+			int wrappedV1Offset = UniqueLongPair(wrappedV1Enum,
+				(long)KingdomLifecycleOptionState.Enabled, 41L);
+			wrappedV1Enum[wrappedV1Offset + 1] = 1;
+			Assert.IsFalse(KingdomArchivedSettlementCodec.TryDecode(wrappedV1Enum,
+				out KingdomSettlement wrappedV1, out int wrappedFuture, out failure));
+			Assert.IsNull(wrappedV1);
+			Assert.AreEqual(0, wrappedFuture);
+			Assert.IsTrue(KingdomArchivedSettlementCodec.TryDecode(v1,
+				out KingdomSettlement staged, out int future, out failure), failure);
+			Assert.AreEqual(0, future);
+			Assert.AreEqual(KingdomLifecycleRules.CurrentFormatVersion,
+				staged.LifecycleBook.FormatVersion);
+			Assert.AreEqual(SettlementA, staged.LifecycleBook.SettlementId);
+			Assert.AreEqual(KingdomLifecycleOptionState.Enabled,
+				staged.LifecycleBook.LocusOption);
+			Assert.AreEqual(41L, staged.LifecycleBook.LocusOptionTick);
+			Assert.IsNotNull(staged.LifecycleBook.Growth);
+			Assert.IsTrue(staged.LifecycleBook.Growth.MigrationPending);
+			Assert.IsFalse(KingdomLifecycleRules.CanOwnGrowthAuthority(
+				staged.LifecycleBook));
+
+			Assert.IsTrue(KingdomArchivedSettlementCodec.TryEncode(staged,
+				out byte[] v2, out failure), failure);
+			Assert.AreEqual(KingdomArchivedSettlementCodec.CurrentVersion,
+				BitConverter.ToInt32(v2, 4));
+			byte[] wrappedV2Enum = (byte[])v2.Clone();
+			int wrappedV2Offset = UniqueLongPair(wrappedV2Enum,
+				(long)KingdomLifecycleOptionState.Enabled, 41L);
+			wrappedV2Enum[wrappedV2Offset + 1] = 1;
+			Assert.IsFalse(KingdomArchivedSettlementCodec.TryDecode(wrappedV2Enum,
+				out KingdomSettlement wrappedV2, out wrappedFuture, out failure));
+			Assert.IsNull(wrappedV2);
+			Assert.AreEqual(0, wrappedFuture);
+			Assert.IsTrue(KingdomArchivedSettlementCodec.TryDecode(v2,
+				out KingdomSettlement roundTrip, out future, out failure), failure);
+			Assert.AreEqual(0, future);
+			Assert.IsTrue(roundTrip.LifecycleBook.Growth.MigrationPending);
+			Assert.AreEqual(SettlementA, roundTrip.LifecycleBook.SettlementId);
+		}
+
+		[Test]
+		public void ArchivedSettlementV1_NullSlotDecodesAndReencodesExactly()
+		{
+			Assert.IsTrue(KingdomArchivedSettlementCodec.TryEncodeLegacyV1ForTests(
+				null, out byte[] v1, out string failure), failure);
+			Assert.IsTrue(KingdomArchivedSettlementCodec.TryDecode(v1,
+				out KingdomSettlement decoded, out int futureVersion, out failure), failure);
+			Assert.IsNull(decoded);
+			Assert.AreEqual(0, futureVersion);
+			Assert.IsTrue(KingdomArchivedSettlementCodec.TryEncodeLegacyV1ForTests(
+				decoded, out byte[] exactV1, out failure), failure);
+			CollectionAssert.AreEqual(v1, exactV1);
+			Assert.IsTrue(KingdomArchivedSettlementCodec.TryEncode(decoded,
+				out byte[] v2, out failure), failure);
+			Assert.AreEqual(KingdomArchivedSettlementCodec.CurrentVersion,
+				BitConverter.ToInt32(v2, 4));
+			Assert.IsTrue(KingdomArchivedSettlementCodec.TryDecode(v2,
+				out decoded, out futureVersion, out failure), failure);
+			Assert.IsNull(decoded);
+			Assert.AreEqual(0, futureVersion);
+		}
+
+		[Test]
+		public void ArchivedSettlementV2_ShapePinsPersistedEnumContract()
+		{
+			Assert.IsTrue(KingdomArchivedSettlementCodec.TryEncode(
+				new KingdomSettlement(), out byte[] v2, out string failure), failure);
+			int shapeLength = BitConverter.ToInt32(v2, 8);
+			string shape = System.Text.Encoding.UTF8.GetString(v2, 12, shapeLength);
+			StringAssert.Contains(
+				"enum:ThousandAndFirst.KingdomLifecycleOptionState<System.Byte>" +
+				"{Disabled=1;Enabled=2;Unknown=0;};", shape);
+		}
+
+		[Test]
+		public void ArchivedSettlementCodec_RejectsRuntimeSubclassesBeforeFieldLoss()
+		{
+			KingdomSettlement source = new HostileSettlement
+			{
+				SettlementName = "declared base, hostile runtime subtype"
+			};
+			Assert.IsFalse(KingdomArchivedSettlementCodec.TryEncode(source,
+				out byte[] payload, out string failure));
+			Assert.IsNull(payload);
+			StringAssert.Contains("runtime type is not exact", failure);
+		}
+
+		[Test]
+		public void ArchivedSettlementCodec_StopsAggregateWriteAtTwoMiB()
+		{
+			KingdomSettlement source = new KingdomSettlement
+			{
+				SettlementName = "aggregate cap"
+			};
+			string individuallyLegal = new string('x',
+				KingdomArchivedSettlementCodec.MaxStringBytes);
+			source.RosterNames = new List<string>(
+				KingdomArchivedSettlementCodec.MaxCollectionCount);
+			for (int i = 0; i < KingdomArchivedSettlementCodec.MaxCollectionCount; i++)
+				source.RosterNames.Add(individuallyLegal);
+			Assert.IsFalse(KingdomArchivedSettlementCodec.TryEncode(source,
+				out byte[] payload, out string failure));
+			Assert.IsNull(payload);
+			StringAssert.Contains("aggregate cap reached before write", failure);
+		}
+
+		[Test]
+		public void ArchivedSettlementCodec_RejectsNoncanonicalDictionaryComparer()
+		{
+			KingdomSettlement source = new KingdomSettlement
+			{
+				SettlementName = "comparer evidence",
+				OriginCounts = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
+				{
+					{ "MiXeD", 7 }
+				}
+			};
+			Assert.IsTrue(source.OriginCounts.ContainsKey("mixed"));
+			Assert.IsFalse(KingdomArchivedSettlementCodec.TryClone(source,
+				out KingdomSettlement clone, out string failure));
+			Assert.IsNull(clone);
+			StringAssert.Contains("dictionary comparer is noncanonical", failure);
+		}
+
+		[Test]
+		public void ArchivedSettlementCodec_AcceptsIndependentOrdinalDictionaries()
+		{
+			Dictionary<string, int> archived =
+				new Dictionary<string, int>(StringComparer.Ordinal) { { "a", 1 } };
+			Dictionary<string, int> live =
+				new Dictionary<string, int>(StringComparer.Ordinal) { { "a", 1 } };
+			Assert.IsTrue(KingdomArchivedSettlementCodec.DisjointMutableGraphs(
+				new object[] { archived }, new object[] { live }, out string failure), failure);
+		}
+
+		[Test]
+		public void ArchivedSettlementV1Writer_MatchesIndependent0501Golden()
+		{
+			const string settlementId = "settlement-golden-v1";
+			const string zoneId = "zone-golden-v1";
+			const string ownerId = "vessel-golden-v1";
+			KingdomSettlement settlement = new KingdomSettlement
+			{
+				SettlementName = "archive-v1-golden",
+				FoundedTick = 23L,
+				PendingCrop = 2,
+				PendingCropBlueprint = "Watervine"
+			};
+			Assert.IsTrue(KingdomLifecycleRules.BindSettlementIdentity(
+				settlement.LifecycleBook, settlementId, false, null, new List<string>()));
+			string operationId = KingdomLifecycleRules.OperationId(settlementId,
+				KingdomLifecycleLane.PlainGuest, 1L);
+			string resourceKey = KingdomLifecycleRules.ResourceKey(
+				KingdomLifecycleResourceKind.WaterVessel, zoneId, ownerId);
+			KingdomLifecycleOperation operation = new KingdomLifecycleOperation
+			{
+				Sequence = 1L, Id = operationId, Lane = KingdomLifecycleLane.PlainGuest,
+				Action = KingdomLifecycleAction.OfferWater,
+				Phase = KingdomLifecyclePhase.WaterIntent,
+				CreatedTick = 41L, UpdatedTick = 42L, SettlementId = settlementId,
+				ZoneId = zoneId, WaterRequested = 3, WaterOutstanding = 3,
+				WaterState = KingdomLifecyclePhysicalState.Prepared,
+				RemovalState = KingdomLifecyclePhysicalState.Skipped,
+				EffectState = KingdomLifecyclePhysicalState.Skipped
+			};
+			operation.WaterLegs.Add(new KingdomLifecycleWaterLeg
+			{
+				OperationId = operationId, LeaseKey = resourceKey, OwnerId = ownerId,
+				Blueprint = "Waterskin", ZoneId = zoneId, Capacity = 20,
+				Before = 10, Delta = 3, After = 7, Composition = "water",
+				ReceiptId = KingdomLifecycleRules.ChildId(operationId, "water-receipt", 0),
+				ReceiptState = KingdomLifecyclePhysicalState.Prepared,
+				State = KingdomLifecyclePhysicalState.Prepared
+			});
+			operation.ResourceLeases.Add(new KingdomLifecycleResourceLease
+			{
+				OperationId = operationId,
+				Kind = KingdomLifecycleResourceKind.WaterVessel,
+				ScopeId = zoneId, SubjectId = ownerId, Key = resourceKey,
+				Before = 10L, Delta = -3L, After = 7L,
+				BeforeRevision = 7L, AfterRevision = 8L,
+				State = KingdomLifecycleLeaseState.Prepared
+			});
+			settlement.LifecycleBook.PlainGuest = operation;
+			settlement.LifecycleBook.PlainGuestNextSequence = 2L;
+			settlement.LifecycleBook.Resources.Add(new KingdomLifecycleResourceRevision
+			{
+				Kind = KingdomLifecycleResourceKind.WaterVessel, ScopeId = zoneId,
+				SubjectId = ownerId, Key = resourceKey, Revision = 7L,
+				ActiveOperationId = operationId
+			});
+			settlement.LifecycleBook.FormatVersion =
+				KingdomLifecycleRules.LegacyLifecycleFormatVersion;
+			settlement.LifecycleBook.Growth = null;
+
+			Assert.IsTrue(KingdomArchivedSettlementCodec.TryEncodeLegacyV1ForTests(
+				settlement, out byte[] payload, out string failure), failure);
+			Assert.AreEqual(14623, payload.Length);
+			using (SHA256 sha = SHA256.Create())
+			{
+				string digest = BitConverter.ToString(sha.ComputeHash(payload))
+					.Replace("-", "").ToLowerInvariant();
+				Assert.AreEqual(
+					"9d5c49ccc95ec7033a38cfc88b4b9ab1c3f48af5f628af6edcb4fe47b8895690",
+					digest);
+			}
+		}
+
+		[Test]
+		public void ArchivedSettlementV2_DeepCopiesOpaqueGrowthEvidence()
+		{
+			KingdomSettlement source = new KingdomSettlement { SettlementName = "new ground" };
+			Assert.IsTrue(KingdomLifecycleRules.BindSettlementIdentity(source.LifecycleBook,
+				SettlementB, false, null, new List<string>()));
+			source.LifecycleBook.Growth.Quarantined = true;
+			source.LifecycleBook.Growth.Fault = "future nested growth";
+			source.LifecycleBook.Growth.OpaqueWireVersion =
+				KingdomLifecycleRules.CurrentGrowthFormatVersion + 1;
+			source.LifecycleBook.Growth.OpaquePayload = new byte[] { 9, 7, 5, 3, 1 };
+
+			Assert.IsTrue(KingdomArchivedSettlementCodec.TryClone(source,
+				out KingdomSettlement clone, out string failure), failure);
+			Assert.IsTrue(KingdomArchivedSettlementCodec.ExactGraph(source, clone,
+				out failure), failure);
+			Assert.AreNotSame(source.LifecycleBook.Growth.OpaquePayload,
+				clone.LifecycleBook.Growth.OpaquePayload);
+			CollectionAssert.AreEqual(source.LifecycleBook.Growth.OpaquePayload,
+				clone.LifecycleBook.Growth.OpaquePayload);
+			Assert.IsTrue(KingdomArchivedSettlementCodec.DisjointMutableGraphs(
+				new object[] { source }, new object[] { clone }, out failure), failure);
+
+			clone.LifecycleBook.Growth.OpaquePayload[0] = 0;
+			Assert.AreEqual(9, source.LifecycleBook.Growth.OpaquePayload[0]);
+			clone.LifecycleBook.Growth.OpaquePayload =
+				source.LifecycleBook.Growth.OpaquePayload;
+			Assert.IsFalse(KingdomArchivedSettlementCodec.DisjointMutableGraphs(
+				new object[] { source }, new object[] { clone }, out failure));
+
+			source.LifecycleBook.Growth.OpaquePayload =
+				new byte[KingdomArchivedSettlementCodec.MaxByteArrayBytes + 1];
+			Assert.IsFalse(KingdomArchivedSettlementCodec.TryEncode(source,
+				out byte[] oversized, out failure));
+			Assert.IsNull(oversized);
+		}
+
+		private static int UniqueLongPair(byte[] Payload, long First, long Second)
+		{
+			byte[] first = BitConverter.GetBytes(First);
+			byte[] second = BitConverter.GetBytes(Second);
+			int found = -1;
+			for (int i = 0; i <= Payload.Length - 16; i++)
+			{
+				bool same = true;
+				for (int j = 0; j < 8 && same; j++)
+					same = Payload[i + j] == first[j] && Payload[i + 8 + j] == second[j];
+				if (!same) continue;
+				Assert.AreEqual(-1, found, "long-pair marker must be unique");
+				found = i;
+			}
+			Assert.GreaterOrEqual(found, 0, "long-pair marker was absent");
+			return found;
 		}
 
 		[Test]
