@@ -90,146 +90,145 @@ namespace ThousandAndFirst
 			}
 			while (true)
 			{
-				// Taken hotkeys, all thirty-five of them: every letter a-z is spoken for, so a
-				// new entry takes the next digit. Used so far: h s w c a n l p d m t v r i f e u
-				// g b j k o y x q z and the digits 1 2 3 4 5 6 7 8 9. Check this list before
-				// adding an entry - a duplicated hotkey silently picks whichever option comes
-				// first, and that has bitten this file before. ONE digit is left. When it goes,
-				// the next entry is a chapter inside an existing one, the way the city book
-				// (W5, '7') holds six readings behind one letter - not a second Charter.
-				string petitionLine = KingdomPetitions.IsAwaitingAnswer(system)
-					? ("{{W|Hear " + system.PetitionPetitioner + "}}")
-					: (KingdomPetitions.IsAccepted(system)
-						? ("{{G|Petition accepted: " + system.PetitionPetitioner + "}}")
-						: "{{K|No one is waiting to speak}}");
-				int num = Popup.PickOption(Title: system.SeatName + KingdomSettlement.VocationSuffix(system.Vocation), Options: new string[35] { petitionLine, "Status", "What happened while you were away", "The Chronicle and dynasty", "As others tell it", "Standings", "The roll of settlers", "Standing policy", "Designate district", "Commission a building", "Answer a threat", "Dedicate a vessel, larder, or stockpile", "Strike a trade charter", "Send a water manifest", "Share a meal from the larder", "Certify a machine", "Set the water detail", "Plans staked for later", "Adopt a building", "Release an adoption", (system.SettlementCount >= 2 || system.Seceded != null) ? "How your cities hold each other" : "{{K|One city cannot fall out with itself}}", "What the keepers know", "Your works, and what they become", "Name a building", "Set the crew on the ground", "Take down a building", "Post a price at the heart", "Change what a plot is", "Give a building a new look", "Consecrate a shrine", "Share water with a settler", "Claim this ground", "The book of the city", "Where the keepers' craft could go", "What the city is asking for"}, Hotkeys: new char[35] { 'h', 's', 'w', 'c', 'a', 'n', 'l', 'p', 'd', 'm', 't', 'v', 'r', 'i', 'f', 'e', 'u', 'g', 'b', 'j', 'k', 'o', 'y', 'x', 'q', 'z', '1', '2', '3', '4', '5', '6', '7', '8', '9'}, AllowEscape: true);
-				KingdomGovernanceScope action = KingdomGovernanceScope.Begin(ParentObject);
-				try
+				KingdomCharterMenuRoute[] routes = KingdomCharterMenuRules.RootEntries();
+				int pick = Popup.PickOption(
+					Title: system.SeatName + KingdomSettlement.VocationSuffix(system.Vocation),
+					Intro: CharterAtAGlance(system), Options: RouteLabels(routes, system),
+					Hotkeys: RouteHotkeys(routes), AllowEscape: true);
+				if (pick < 0 || pick >= routes.Length)
 				{
-					switch (num)
+					return;
+				}
+				KingdomCharterMenuRoute route = routes[pick];
+				if (route.Kind == KingdomCharterRouteKind.Chapter)
+				{
+					if (OpenChapter(system, route.Chapter))
 					{
-				case 0:
-					HearPetition(system);
-					break;
-				case 1:
-					Popup.Show(KingdomReports.Status(system, ParentObject?.CurrentZone));
-					break;
-				case 2:
-					ShowHomecoming(system);
-					break;
-				case 3:
-					OpenChronicleAndDynasty(system);
-					break;
-				case 4:
-					Popup.Show(KingdomReports.Chronicle(system, Outsider: true));
-					break;
-				case 5:
-					Popup.Show(KingdomReports.Standings(system));
-					break;
-				case 6:
-					Popup.Show(KingdomReports.Roll(system));
-					break;
-				case 7:
-					SetPolicy(system);
-					break;
-				case 8:
-					DesignateDistrict(system);
-					break;
-				case 9:
-					CommissionBuilding(system);
-					break;
-				case 10:
-					AnswerThreat(system);
-					break;
-				case 11:
-					DedicateVessel(system);
-					break;
-				case 12:
-					StrikeTradeCharter(system);
-					break;
-				case 13:
-					LoadManifest(system);
-					break;
-				case 14:
-					HoldSharedMeal(system);
-					break;
-				case 16:
-					SetWaterDetail(system);
-					break;
-				case 15:
-					CertifyMachine(system);
-					break;
-				case 17:
-					ManagePlans(system);
-					break;
-				case 18:
-					AdoptBuilding(system);
-					break;
-				case 19:
-					ReleaseBuilding(system);
-					break;
-				case 20:
-					ManageCreed(system);
-					break;
-				case 21:
-					KingdomZoning.ShowKeepers(system);
-					break;
-				case 22:
-					KingdomYards.ShowWorksAndTrades(system);
-					break;
-				case 23:
-					KingdomDesign.RenameBuilding(system, ParentObject);
-					break;
-				case 24:
-					GroundWork(system);
-					break;
-				case 25:
-					StrikeBuilding(system);
-					break;
-				case 26:
-					KingdomBounty.OpenNotices(system, ParentObject);
-					break;
-				case 27:
-					KingdomSocket.OpenConvert(system, ParentObject);
-					break;
-				case 28:
-					KingdomSocket.OpenRedress(system, ParentObject);
-					break;
-				case 29:
-					KingdomFaith.OpenConsecration(system, ParentObject);
-					break;
-				case 30:
-					KingdomWaterRite.OpenRite(system, ParentObject);
-					break;
-				case 31:
-					ClaimGround(system);
-					break;
-				// W5. Three readings, and nothing on any of them can be pressed: the city book
-				// (LIVING-CITY-ARCHITECTURE §5's works board and everything beside it), the
-				// keepers' map (DIVERSITY-AND-TECH-TREES §2.8 - a MAP, never a spend), and what
-				// the city is asking for (§5's petitions and bounties, issued from model state).
-				case 32:
-					Simulation.City.KingdomBookReport.Open(system);
-					break;
-				case 33:
-					Popup.Show(KingdomTechMap.Draw(system));
-					break;
-				case 34:
-					Popup.Show(KingdomAsks.Board(system));
-					break;
-					default:
 						return;
 					}
 				}
-				finally
-				{
-					action.Dispose();
-				}
-				if (action.Committed)
+				else if (route.Kind == KingdomCharterRouteKind.Action && RunAction(system, route.Action))
 				{
 					return;
 				}
 			}
+		}
+
+		private string CharterAtAGlance(KingdomSystem System)
+		{
+			string need = KingdomReports.NextNeed(System, ParentObject?.CurrentZone);
+			return "{{C|" + System.Stage + "}}  " + System.Population
+				+ ((System.Population == 1) ? " settler" : " settlers")
+				+ (string.IsNullOrEmpty(need) ? "" : ("\n{{W|Next need: " + need + "}}"));
+		}
+
+		private bool OpenChapter(KingdomSystem System, KingdomCharterChapter Chapter)
+		{
+			while (true)
+			{
+				KingdomCharterMenuRoute[] routes = KingdomCharterMenuRules.ChapterEntries(Chapter);
+				int pick = Popup.PickOption(
+					Title: KingdomCharterMenuRules.ChapterTitle(Chapter) + " of " + System.SeatName,
+					Options: RouteLabels(routes, System), Hotkeys: RouteHotkeys(routes),
+					AllowEscape: true);
+				if (pick < 0 || pick >= routes.Length || routes[pick].Kind == KingdomCharterRouteKind.Back)
+				{
+					return false;
+				}
+				if (routes[pick].Kind == KingdomCharterRouteKind.Action
+					&& RunAction(System, routes[pick].Action))
+				{
+					return true;
+				}
+			}
+		}
+
+		private static char[] RouteHotkeys(KingdomCharterMenuRoute[] Routes)
+		{
+			char[] hotkeys = new char[Routes.Length];
+			for (int i = 0; i < Routes.Length; i++) hotkeys[i] = Routes[i].Hotkey;
+			return hotkeys;
+		}
+
+		private static string[] RouteLabels(KingdomCharterMenuRoute[] Routes, KingdomSystem System)
+		{
+			string[] labels = new string[Routes.Length];
+			for (int i = 0; i < Routes.Length; i++)
+			{
+				KingdomCharterMenuRoute route = Routes[i];
+				if (route.Kind == KingdomCharterRouteKind.Action
+					&& route.Action == KingdomCharterAction.HearPetition)
+				{
+					labels[i] = KingdomPetitions.IsAwaitingAnswer(System)
+						? ("{{W|Hear " + System.PetitionPetitioner + "}}")
+						: (KingdomPetitions.IsAccepted(System)
+							? ("{{G|Petition accepted: " + System.PetitionPetitioner + "}}")
+							: "{{K|No one is waiting to speak}}");
+				}
+				else if (route.Kind == KingdomCharterRouteKind.Action
+					&& route.Action == KingdomCharterAction.ManageCreed
+					&& System.SettlementCount < 2 && System.Seceded == null)
+				{
+					labels[i] = "{{K|One city cannot fall out with itself}}";
+				}
+				else
+				{
+					labels[i] = route.Label;
+				}
+			}
+			return labels;
+		}
+
+		/// <summary>Runs one old Charter verb inside exactly one governance scope.</summary>
+		private bool RunAction(KingdomSystem System, KingdomCharterAction Action)
+		{
+			KingdomGovernanceScope action = KingdomGovernanceScope.Begin(ParentObject);
+			try
+			{
+				switch (Action)
+				{
+				case KingdomCharterAction.HearPetition: HearPetition(System); break;
+				case KingdomCharterAction.Status: Popup.Show(KingdomReports.Status(System, ParentObject?.CurrentZone)); break;
+				case KingdomCharterAction.Homecoming: ShowHomecoming(System); break;
+				case KingdomCharterAction.ChronicleAndDynasty: OpenChronicleAndDynasty(System); break;
+				case KingdomCharterAction.OutsiderChronicle: Popup.Show(KingdomReports.Chronicle(System, Outsider: true)); break;
+				case KingdomCharterAction.Standings: Popup.Show(KingdomReports.Standings(System)); break;
+				case KingdomCharterAction.SettlerRoll: Popup.Show(KingdomReports.Roll(System)); break;
+				case KingdomCharterAction.StandingPolicy: SetPolicy(System); break;
+				case KingdomCharterAction.DesignateDistrict: DesignateDistrict(System); break;
+				case KingdomCharterAction.CommissionBuilding: CommissionBuilding(System); break;
+				case KingdomCharterAction.AnswerThreat: AnswerThreat(System); break;
+				case KingdomCharterAction.DedicateStores: DedicateVessel(System); break;
+				case KingdomCharterAction.StrikeTradeCharter: StrikeTradeCharter(System); break;
+				case KingdomCharterAction.SendManifest: LoadManifest(System); break;
+				case KingdomCharterAction.ShareMeal: HoldSharedMeal(System); break;
+				case KingdomCharterAction.CertifyMachine: CertifyMachine(System); break;
+				case KingdomCharterAction.SetWaterDetail: SetWaterDetail(System); break;
+				case KingdomCharterAction.ManagePlans: ManagePlans(System); break;
+				case KingdomCharterAction.AdoptBuilding: AdoptBuilding(System); break;
+				case KingdomCharterAction.ReleaseAdoption: ReleaseBuilding(System); break;
+				case KingdomCharterAction.ManageCreed: ManageCreed(System); break;
+				case KingdomCharterAction.KeepersKnowledge: KingdomZoning.ShowKeepers(System); break;
+				case KingdomCharterAction.WorksAndTrades: KingdomYards.ShowWorksAndTrades(System); break;
+				case KingdomCharterAction.NameBuilding: KingdomDesign.RenameBuilding(System, ParentObject); break;
+				case KingdomCharterAction.GroundWork: GroundWork(System); break;
+				case KingdomCharterAction.StrikeBuilding: StrikeBuilding(System); break;
+				case KingdomCharterAction.PostPrice: KingdomBounty.OpenNotices(System, ParentObject); break;
+				case KingdomCharterAction.ConvertPlot: KingdomSocket.OpenConvert(System, ParentObject); break;
+				case KingdomCharterAction.RedressBuilding: KingdomSocket.OpenRedress(System, ParentObject); break;
+				case KingdomCharterAction.ConsecrateShrine: KingdomFaith.OpenConsecration(System, ParentObject); break;
+				case KingdomCharterAction.ShareWater: KingdomWaterRite.OpenRite(System, ParentObject); break;
+				case KingdomCharterAction.ClaimGround: ClaimGround(System); break;
+				case KingdomCharterAction.CityBook: Simulation.City.KingdomBookReport.Open(System); break;
+				case KingdomCharterAction.TechMap: Popup.Show(KingdomTechMap.Draw(System)); break;
+				case KingdomCharterAction.CityAsks: Popup.Show(KingdomAsks.Board(System)); break;
+				}
+			}
+			finally
+			{
+				action.Dispose();
+			}
+			return action.Committed;
 		}
 
 		private static void OpenChronicleAndDynasty(KingdomSystem System)

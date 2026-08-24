@@ -694,20 +694,23 @@ W5. `_notes/LIVING-CITY-ARCHITECTURE.md` §5 and §7.4 (engagement, and the API 
 published contract), `_notes/BUILDING-CATALOGUE-BRIEF.md` Addendum 12(i) and Addendum 13 lanes 1
 and 8, and `_notes/DIVERSITY-AND-TECH-TREES.md` §2.8 (the tech map).
 
-**Three new Charter entries, on the last three digits: `7` the book of the city, `8` where the
-keepers' craft could go, `9` what the city is asking for.** All three are READINGS. The single
-thing this pass is most for: *find anything on any of them that can be pressed.* If you can, that
-is the failure — the no-research-tree ruling and VISION's "not a second job" pillar both turn on
-it.
+**Three readings now live together under Charter → The city in full (`c`): `b` the book of the
+city, `k` where the keepers' craft could go, `a` what the city is asking for.** The Charter root
+shows **Status and next need** first, then seven named chapters. All three city-in-full entries are
+READINGS. The single thing this pass is most for: *find anything on any of them that can be
+pressed.* If you can, that is the failure — the no-research-tree ruling and VISION's "not a second
+job" pillar both turn on it.
 
-**Hotkeys.** Thirty-five entries; `0` is the only key left. A duplicated hotkey silently picks
-whichever option comes first, and it has bitten this file before — step 119 exists solely to catch
-it.
+**Hotkeys.** There are thirty-five action routes across the seven chapters. Keys are local to the
+screen, every chapter ends with **Back to the Charter** (`x`), and controller cancel does the same
+thing. A duplicated key within one screen silently picks whichever option comes first, and it has
+bitten this file before — step 119 exists solely to catch it.
 
 | Step | Action | Expect |
 |---|---|---|
-| 119 | Open the Charter and press every key from `a` to `z` and `1` to `9` in turn, closing each screen | Thirty-five distinct screens. No key opens the wrong one, and no key opens nothing |
-| 120 | Press `7` — the book of the city | Six chapters, and a headline naming the tick the model is carried through and how many days behind now that is. A city that has just been reckoned reads `(current)` |
+| 119 | Open the Charter and traverse the root and all seven chapters | Eight root rows: **Status and next need** first, then seven chapters. Every screen has unique keys; every chapter has explicit `x` Back and controller cancel. Entering, backing out, and cancelling spend no turn |
+| 119a | Traverse every action route in every chapter, returning after each read-only screen | All thirty-five old actions appear exactly once and open the right screen. Readings return to their chapter; a committed action closes the Charter and spends exactly one turn |
+| 120 | Charter → The city in full (`c`) → The book of the city (`b`) | Six chapters, and a headline naming the tick the model is carried through and how many days behind now that is. A city that has just been reckoned reads `(current)` |
 | 120a | Read *the stores, and what holds them* with two zones claimed and a granary in the far one | The far zone's food is a real number, without walking there. A city that has dedicated no vessels reads **"nothing dedicated"**, never `0 of 0` — those are different sentences |
 | 120b | Leave for a season, come home, and open the same chapter **before** walking to the far zone | A "the count and the vessels have not been squared here" clause with a signed figure. Walk there, come back, and it is gone. That is Addendum 12(d)'s debt, told rather than silently repaired |
 | 120c | Read *the works, and what they are waiting on* | Every work in the **city**, not the zone. The count of "waiting on you" matches the works that actually are: a worn-past-the-line one, and a producer/refiner/power work with no hands. A larder or a field with nobody on it is **not** waiting |
@@ -715,12 +718,12 @@ it.
 | 120e | Read *the people, and where their day puts them* | Living, away-with-you, and buried counted apart; the day-shape spread; the office holder named **with their epithet**; and a closing line counting how many citizens here will share water |
 | 120f | Read *the turn of the year* | Today's date as the status bar gives it, the next feast and how many days off, the realm's dish, and the heart's rung when you are standing on the rite ground |
 | 120g | Open the book standing **outside** the city | It still reads. The rung line says nothing stands on the rite ground — a report must never load a parasang to write a heading, so the heart is only read where you stand |
-| 121 | Press `8` — where the keepers' craft could go | The craft level and what the next rung costs, the same numbers the keepers' screen (`o`) gives. If the two disagree, one of them is lying |
+| 121 | Charter → The city in full (`c`) → Where the keepers' craft could go (`k`) | The craft level and what the next rung costs, the same numbers the keepers' screen gives. If the two disagree, one of them is lying |
 | 121a | Certify a solar still and re-read | Under *what they know, and what it opened*, the still now names the condensing hall. Before certifying it, the hall was in *what is nearly in reach* with "the keepers have never been taught solar condenser" against it |
 | 121b | Read *what is nearly in reach* | Sorted nearest first, each with what is in the way in the gates' own refusal order: knowledge, then craft, then ground, then stage, then the district. A design gated **only** by a district counts as within reach — you answer it by standing somewhere else |
 | 121c | Read *roads not taken* on a fresh city | All three named: no disk read, no machine certified, nobody arrived with a trade. Take in a settler with an origin and the third disappears |
 | 121d | Turn `r_TAF_OptionZoning` off and re-open | One honest sentence saying every design is open and there is no map to draw. Not an empty screen |
-| 122 | Press `9` — what the city is asking for | Worst first. A dry cistern is `!!`, more people than roofs is `!`, an idle mill is `·`. **Every** line names what would settle it |
+| 122 | Charter → The city in full (`c`) → What the city is asking for (`a`) | Worst first. A dry cistern is `!!`, more people than roofs is `!`, an idle mill is `·`. **Every** line names what would settle it |
 | 122a | Empty the cisterns to exactly zero, then put one dram back | The thirst ask appears and then goes. One dram is not an ask — the board fires on empty, never on "low", because it is forbidden a balance number of its own |
 | 122b | Dedicate no vessels at all | **No** thirst ask. The city has no cisterns, which is a different thing, and the book's stores chapter says so on its own line |
 | 122c | Fill one zone's larder to the lid while another zone has room | A haulage ask naming the full one. Empty the other larder's ceiling too (or claim only one zone) and it goes: a city with nowhere to put anything is asking for a larder, not for haulage |

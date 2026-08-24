@@ -66,8 +66,11 @@ namespace ThousandAndFirst
 		{
 			Zone currentZone = The.Player?.CurrentZone;
 			bool currentClaimed = currentZone != null && System.ClaimedZones.Contains(currentZone.ZoneID);
+			long now = The.Game.TimeTicks;
 			StringBuilder stringBuilder = new StringBuilder();
-			stringBuilder.Append("{{C|").Append(System.SeatName).Append("}}").Append(KingdomSettlement.VocationSuffix(System.Vocation)).Append(", founded tick ").Append(System.FoundedTick)
+			stringBuilder.Append("{{C|").Append(System.SeatName).Append("}}").Append(KingdomSettlement.VocationSuffix(System.Vocation)).Append(", ")
+				.Append(KingdomCharterMenuRules.FoundedWhen(System.FoundedTick, now,
+					KingdomRules.TicksPerDay))
 				.Append("\nStage: ")
 				.Append(System.Stage)
 				.Append(System.Withered ? " {{r|(withered)}}" : "")
@@ -125,11 +128,10 @@ namespace ThousandAndFirst
 				.Append(System.DryStreak)
 				.Append("  Hunger streak: ")
 				.Append(System.HungerStreak)
-				.Append("\nNext arrival due: tick ")
-				.Append(System.NextArrivalTick)
-				.Append(" (now ")
-				.Append(The.Game.TimeTicks)
-				.Append(")\nPlayer rep with kingdom: ")
+				.Append("\nNext arrival: ")
+				.Append(KingdomCharterMenuRules.DueWhen(System.NextArrivalTick, now,
+					KingdomRules.TicksPerDay))
+				.Append("\nYour standing with the kingdom: ")
 				.Append(The.Game.PlayerReputation.Get(System.KingdomFactionName));
 			string need = NextNeed(System, currentZone);
 			if (!string.IsNullOrEmpty(need))
@@ -140,8 +142,67 @@ namespace ThousandAndFirst
 			return stringBuilder.ToString();
 		}
 
-		/// <summary>Read-only projection of the named-field trade authority.</summary>
+		/// <summary>Player-facing trade summary. Detailed mode remains a wish-only diagnostic.</summary>
 		public static string TradeStatus(KingdomSystem System, bool Detailed = false)
+		{
+			if (Detailed) return TradeDiagnosticStatus(System);
+			KingdomTradeBook book = System?.TradeBook;
+			if (book == null) return "\nTrade: no trade has been recorded.";
+			StringBuilder text = new StringBuilder();
+			if (!KingdomTradeRules.BookUsable(book))
+			{
+				text.Append("\nTrade: {{r|the saved trade record needs inspection.}} No new trade can rely on it.");
+				return text.ToString();
+			}
+			int active = 0;
+			int quarantined = 0;
+			int charterLimit = Math.Min(book.Charters?.Count ?? 0,
+				KingdomTradeRules.MaxCharters);
+			for (int i = 0; i < charterLimit; i++)
+			{
+				KingdomTradeCharter row = book.Charters[i];
+				if (row == null || row.Quarantined) quarantined++;
+				else active++;
+			}
+			text.Append("\nTrade: ").Append(active).Append(active == 1 ? " active charter" : " active charters");
+			if (quarantined > 0)
+				text.Append("; ").Append(quarantined).Append(quarantined == 1
+					? " charter held for inspection" : " charters held for inspection");
+			if (book.Manifest != null)
+				text.Append("; water manifest ").Append(ManifestStatus(book.Manifest.Status))
+					.Append(" with ").Append(book.Manifest.EscrowDrams).Append(" drams from ")
+					.Append(book.Manifest.OriginName ?? "an unknown city").Append(" to ")
+					.Append(book.Manifest.DestinationName ?? "an unknown city");
+			if (book.OpenOperation != null)
+				text.Append("; {{W|one trade change is still being settled}}");
+			if (book.RetainedEscrowDrams > 0)
+				text.Append("; ").Append(book.RetainedEscrowDrams)
+					.Append(" drams remain held after earlier trade");
+			if (book.RetiredThrough > 0)
+				text.Append("; earlier trade has been safely closed");
+			int projections = 0;
+			int projectionLimit = Math.Min(book.Projections?.Count ?? 0,
+				KingdomTradeRules.MaxProjectionRows);
+			for (int i = 0; i < projectionLimit; i++)
+				if (book.Projections[i] != null && !book.Projections[i].Quarantined) projections++;
+			if (projections > 0)
+				text.Append("; remembered in ").Append(projections)
+					.Append(projections == 1 ? " city record" : " city records");
+			return text.ToString();
+		}
+
+		private static string ManifestStatus(KingdomTradeManifestStatus Status)
+		{
+			switch (Status)
+			{
+			case KingdomTradeManifestStatus.InFlight: return "is on the road";
+			case KingdomTradeManifestStatus.Delivered: return "has arrived";
+			case KingdomTradeManifestStatus.Quarantined: return "is held for inspection";
+			default: return "is not on the road";
+			}
+		}
+
+		private static string TradeDiagnosticStatus(KingdomSystem System)
 		{
 			KingdomTradeBook book = System?.TradeBook;
 			if (book == null) return "\nTrade: no receipt book.";
@@ -187,25 +248,22 @@ namespace ThousandAndFirst
 			for (int i = 0; i < projectionLimit; i++)
 				if (book.Projections[i] != null && !book.Projections[i].Quarantined) projections++;
 			text.Append("; city projections ").Append(projections);
-			if (Detailed)
+			for (int i = 0; i < charterLimit; i++)
 			{
-				for (int i = 0; i < charterLimit; i++)
-				{
-					KingdomTradeCharter row = book.Charters[i];
-					if (row == null) continue;
-					text.Append("\n  charter ").Append(row.Id).Append(" ")
-						.Append(row.DealKey).Append("/").Append(row.Faction)
-						.Append(" next=").Append(row.NextTick)
-						.Append(row.Quarantined ? " QUARANTINED" : "");
-				}
-				for (int i = 0; i < projectionLimit; i++)
-				{
-					KingdomTradeProjectionRow row = book.Projections[i];
-					if (row == null) continue;
-					text.Append("\n  projection city=").Append(row.SettlementId)
-						.Append(" zone=").Append(row.ZoneId).Append(" object=")
-						.Append(row.ObjectId).Append(row.Quarantined ? " QUARANTINED" : "");
-				}
+				KingdomTradeCharter row = book.Charters[i];
+				if (row == null) continue;
+				text.Append("\n  charter ").Append(row.Id).Append(" ")
+					.Append(row.DealKey).Append("/").Append(row.Faction)
+					.Append(" next=").Append(row.NextTick)
+					.Append(row.Quarantined ? " QUARANTINED" : "");
+			}
+			for (int i = 0; i < projectionLimit; i++)
+			{
+				KingdomTradeProjectionRow row = book.Projections[i];
+				if (row == null) continue;
+				text.Append("\n  projection city=").Append(row.SettlementId)
+					.Append(" zone=").Append(row.ZoneId).Append(" object=")
+					.Append(row.ObjectId).Append(row.Quarantined ? " QUARANTINED" : "");
 			}
 			return text.ToString();
 		}

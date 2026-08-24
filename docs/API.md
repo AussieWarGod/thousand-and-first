@@ -502,9 +502,9 @@ What widens the ground every gate above is measured against.
 | `static int EdgeCount(KingdomRules.Frontier)` | How many of the four edges are set. |
 | `static string ClaimHoldingLine(int held, int ceiling)` | "N held; room for M more at this rung" or "N held, which is all this rung answers for." |
 
-The founder's own claim action is `KingdomCharterPart.ClaimGround` (Charter → **Claim this
-ground**, hotkey `6`) — the first caller `KingdomFounding.ClaimZone` has ever had outside the
-founding rite and two debug wishes. **It costs nothing**, which is a decision: the brief prices
+The founder's own claim action is `KingdomCharterPart.ClaimGround` (Charter → **Works & ground**
+(`w`) → **Claim this ground** (`l`)) — the first caller `KingdomFounding.ClaimZone` has ever had
+outside the founding rite and two debug wishes. **It costs nothing**, which is a decision: the brief prices
 founding and every building and names no price for a claim, because what a claim actually costs
 is paid afterward and in kind — a new wall line to raise, a new budget of ground to lay, and a
 stage that has to have been earned first. A claim that goes through reports the wall clause and
@@ -1231,16 +1231,16 @@ exactly as one in ours would. Discovery uses the engine's cached attribute scan
 combined `GetInstancesWithAttribute` would let one class with no default constructor take down
 every mod's extension at once.
 
-## Reading surfaces — the Charter's three W5 entries
+## Reading surfaces — The city in full
 
-All three are **readings**. Nothing on any of them can be pressed; the verbs that answer them are
-the Charter's own.
+All three live under Charter → **The city in full** (`c`) and are **readings**. Nothing on any of
+them can be pressed; the verbs that answer them are the Charter's own.
 
-| Entry | Hotkey | Member |
+| Entry | Route | Member |
 |---|---|---|
-| The book of the city | `7` | `ThousandAndFirst.Simulation.City.KingdomBookReport.Open(system)` — six chapters: the stores and what holds them, the works and what they wait on, the people and where their day puts them, the turn of the year, what has happened here, and who else writes in this book. |
-| Where the keepers' craft could go | `8` | `ThousandAndFirst.KingdomTechMap.Draw(system)` — what each thing the keepers know opened, the nearest locked designs and what is in the way of each, and the ways of learning this city has never walked. A map, never a spend: gated on `r_TAF_OptionZoning`. |
-| What the city is asking for | `9` | `ThousandAndFirst.KingdomAsks.Board(system)` — the standing petition, the city's own model-derived asks, and every extension's, worst first. Gated on `r_TAF_OptionPetitions`. |
+| The book of the city | `c` → `b` | `ThousandAndFirst.Simulation.City.KingdomBookReport.Open(system)` — six chapters: the stores and what holds them, the works and what they wait on, the people and where their day puts them, the turn of the year, what has happened here, and who else writes in this book. |
+| Where the keepers' craft could go | `c` → `k` | `ThousandAndFirst.KingdomTechMap.Draw(system)` — what each thing the keepers know opened, the nearest locked designs and what is in the way of each, and the ways of learning this city has never walked. A map, never a spend: gated on `r_TAF_OptionZoning`. |
+| What the city is asking for | `c` → `a` | `ThousandAndFirst.KingdomAsks.Board(system)` — the standing petition, the city's own model-derived asks, and every extension's, worst first. Gated on `r_TAF_OptionPetitions`. |
 
 ## `KingdomCitizenRite` — your own settlers will share water with you
 

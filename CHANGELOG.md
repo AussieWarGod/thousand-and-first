@@ -27,6 +27,12 @@ playtest passes.
   that would have caught the defect lands with the fix.
 
 ### Added
+- **The Charter is now a navigable book instead of a thirty-five-line wall.** Its root leads with
+  status and the next need, then seven short chapters with local hotkeys, explicit Back, and
+  controller cancel. Navigation spends no turn; every old action remains reachable exactly once;
+  readings return to their chapter; a committed action closes the book and spends one turn. Raw
+  founding ticks and ordinary trade internals no longer leak into the player report—the full
+  diagnostic trade ledger remains available through the debug wish.
 - **Water rituals now open research doors.** The first time a founder shares water with a
   faction, that faction becomes a permanent founder-held `rite:` source. The matching research head
   is revealed and seeded by 25% in each city, with durable per-city receipts, distinct-source
@@ -671,7 +677,7 @@ the eight `MinZones` designs, vertical claims below or above the seat — was al
 tested and had nothing to exercise it. This is the verb that reaches it, plus the two real fixes
 it exposed.
 
-- **Claim the ground you're standing on.** Charter → **Claim this ground** (hotkey `6`) takes
+- **Claim the ground you're standing on.** Charter → **Works & ground** → **Claim this ground** takes
   bordering ground into the seated city, including the stratum directly above or below what you
   already hold — a cellar or a tower is a claim now, not only a founding-day accident. It costs
   nothing, and that is a decision: the brief prices founding and every building and names no price

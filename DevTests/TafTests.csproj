@@ -57,6 +57,7 @@
     <Compile Include="KingdomMergeRulesTests.cs" />
     <Compile Include="KingdomSocketRulesTests.cs" />
     <Compile Include="KingdomQolRulesTests.cs" />
+	<Compile Include="KingdomCharterMenuRulesTests.cs" />
     <Compile Include="KingdomLodgingRulesTests.cs" />
     <Compile Include="KingdomConversionRulesTests.cs" />
     <Compile Include="KingdomFaithRulesTests.cs" />
@@ -93,6 +94,7 @@
     <Compile Include="..\Core\KingdomExileRules.cs" />
     <Compile Include="..\Core\KingdomCreedRules.cs" />
     <Compile Include="..\Core\KingdomQolRules.cs" />
+	<Compile Include="..\Core\KingdomCharterMenuRules.cs" />
 	<Compile Include="..\Chronicle\KingdomChronicleReceiptRules.cs" />
     <Compile Include="..\Trade\KingdomManifest.cs" />
     <Compile Include="..\Trade\KingdomTradeState.cs" />
