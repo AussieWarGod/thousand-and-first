@@ -94,18 +94,20 @@ as polished as the game's flagship features. These rules are binding for every s
    save → quit → reload → `kingdom:status` pass whenever serialized state changed. Player.log
    is watched during test sessions; "Bad event bind" is a serialization regression, full stop.
 
-**An asset is not shipped until something proves it is reachable.** Four tiles once passed the
-whole art pipeline — source grid, PNG, coverage measurement, preview, contact sheet — with no
-`Tile=` attribute in any blueprint. Every check that existed was a check on the art, and the art
-was correct; it simply rendered nowhere. Qud falls back to the ASCII glyph without logging
-anything, so the failure is invisible in play and looks like a deliberate styling choice.
+**An asset is not shipped until something proves it is reachable.** Pre-release tile drafts once
+existed without a `Tile=` attribute in any blueprint. Qud falls back to the text glyph without
+logging anything, so the failure is invisible in play and looks like a deliberate styling choice.
+The public release avoids a second, harder provenance problem as well: it bundles no original
+runtime bitmap sprites. Mod renders either use an intentional glyph or reference an exact tile
+path already named by the installed base game; no game art is copied into this repository.
 
 The rule generalises past tiles: wherever the mod produces an asset that some other file must
 reference by name to reach — a texture, a blueprint, a population table entry, a conversation
 node, a book ID — a check walks the reference in **both** directions. Unreferenced asset and
 dangling reference are both errors, and neither is detectable by validating either file alone.
-`Art/check_wiring.py` is the instance of this for tiles, and it is verified the only way such a
-check can be: by confirming it fails against the commit that contained the defect.
+`Art/check_wiring.py` is the instance of this for tiles. It rejects bundled runtime rasters and
+local tile paths, then proves every referenced vanilla path occurs in the installed base XML
+corpus. A misspelling therefore fails before Qud can silently fall back.
 
 `Art/check_xml_refs.py` is the instance for names the game resolves at load or roll time. Writing
 it immediately found the population-table case the paragraph above predicted: an entry merging our

@@ -10,6 +10,11 @@ Pre-release: the mod has not yet run in a live game. Nothing here is stable unti
 playtest passes.
 
 ### Fixed
+- **Release art now uses only verified vanilla references or deliberate civic glyphs.** Fifteen
+  pre-release bitmap drafts and their grid compiler are absent from the runtime tree; no game art
+  is copied into the mod. The staged XML audit now checks every tile and animation frame against
+  the installed base corpus, rejects local raster paths, and prevents `BaseFarmer.RandomTile`
+  from silently replacing fixed settler and guest silhouettes.
 - **New worlds no longer silently import a prior kingdom.** Cross-run realm import now defaults
   off, and its option says it must be enabled before world creation. Off exits before any legacy
   reservation and writes no decline, so latest eligible seal remains available for a later opted-in

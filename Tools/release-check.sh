@@ -52,7 +52,8 @@ TEST_SCRIPT="$(wslpath -w "$REPO/DevTests/test.ps1")"
 
 echo "[6/9] XML and tile reachability"
 python3 Art/check_xml_refs.py --base "$BASE"
-python3 Art/check_wiring.py
+python3 -m unittest Art.test_check_wiring
+TAF_QUD_BASE="$BASE" python3 Art/check_wiring.py
 
 echo "[7/9] deterministic balance model"
 python3 _notes/balance-sim.py

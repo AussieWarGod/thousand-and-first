@@ -1,117 +1,214 @@
-"""Verify every drawn tile is reachable in game, and every referenced tile exists.
+"""Enforce the release art boundary and validate every vanilla tile reference.
 
-This exists because four tiles shipped with PNGs, source grids, previews, and a contact sheet,
-and no `Tile=` attribute in any blueprint. Everything the art pipeline checks passed. The art
-was correct and rendered nowhere, which is the failure mode a build step that only looks at
-art cannot see.
+The public package contains no original runtime bitmap sprites. `Tile=` values may point at the
+base game's packed assets, but no copy of those assets and no retired custom draft belongs under
+Textures/. This check proves both sides:
 
-Two directions, both of which are silent at runtime:
+  bundled art       any runtime PNG/BMP in Textures is a release failure
+  local reference   any ThousandAndFirst/ Tile= is a release failure
+  unknown vanilla   any external tile path absent from the installed base XML corpus is a typo
 
-  orphaned art       a PNG with no blueprint referencing it -- drawn, shipped, invisible
-  dangling reference a Tile= pointing at a file that is not there -- Qud falls back to the
-                     ASCII glyph without complaint, so it looks like a styling choice
-
-Also checks that a Render carrying highlight pixels declares DetailColor, since a two-tone
-tile with no DetailColor renders its highlight in the default and quietly loses the second
-tone the grid was drawn to have.
-
-Run from the repository root:  python3 Art/check_wiring.py
+The last test does not unpack or copy game assets. It only checks that Qud itself names the exact
+path somewhere in its XML. Run from the repository root: python3 Art/check_wiring.py
 """
 
 import io
 import os
 import re
+import subprocess
 import sys
 import xml.etree.ElementTree as ET
 
-TEXTURE_DIR = os.path.join("Textures", "ThousandAndFirst")
-SOURCE_DIR = os.path.join("Art", "src")
-BLUEPRINTS = "ObjectBlueprints.xml"
-BUILDINGS = "KingdomBuildings.xml"
-PREFIX = "ThousandAndFirst/"
+
+DEFAULT_BASE = "/mnt/f/SteamLibrary/steamapps/common/Caves of Qud/CoQ_Data/StreamingAssets/Base"
+STAGE_TOOL = os.path.join("Tools", "stage.sh")
+RASTER_EXTENSIONS = (".bmp", ".gif", ".jpeg", ".jpg", ".png", ".tga", ".webp")
+LOCAL_PREFIX = "ThousandAndFirst/"
 
 
-def highlight_glyphs(tile_path):
-    """True if the source grid contains any pixel that resolves to the highlight tone."""
-    with io.open(tile_path, encoding="utf-8") as handle:
-        for line in handle:
-            if line.startswith("#!"):
-                continue
-            # 'o' is a solid highlight; 'd'/'D' checker and 's'/'S' stipple both mix highlight in.
-            if any(glyph in line for glyph in ("o", "d", "D")):
-                return True
-    return False
+def read(path):
+    with io.open(path, encoding="utf-8-sig") as handle:
+        return handle.read()
+
+
+def runtime_xml_paths():
+    """Return the canonical staged XML set instead of maintaining a second inventory."""
+    if not os.path.isfile(STAGE_TOOL):
+        raise RuntimeError("canonical runtime inventory is missing: %s" % STAGE_TOOL)
+    result = subprocess.run(
+        [STAGE_TOOL, "list"],
+        check=False,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+    if result.returncode != 0:
+        detail = result.stderr.strip() or "exit %d" % result.returncode
+        raise RuntimeError("canonical runtime inventory failed: %s" % detail)
+    paths = sorted(
+        line.strip() for line in result.stdout.splitlines()
+        if line.strip().lower().endswith(".xml")
+    )
+    if not paths:
+        raise RuntimeError("canonical runtime inventory contains no XML")
+    missing = [path for path in paths if not os.path.isfile(path)]
+    if missing:
+        raise RuntimeError("staged XML is missing: %s" % ", ".join(missing))
+    return paths
+
+
+def tile_paths(attribute, value):
+    """Yield paths from Tile and animation-frame attributes, ignoring `default`."""
+    if "tile" not in attribute.lower():
+        return []
+    values = [value] if attribute.lower() == "tile" else value.split(",")
+    paths = []
+    for token in values:
+        token = token.strip()
+        if "=" in token:
+            token = token.split("=", 1)[1].strip()
+        if token.lower().endswith((".bmp", ".png")):
+            paths.append(token)
+    return paths
+
+
+def referenced_tiles(paths):
+    references = {}
+    for path in paths:
+        root = ET.parse(path).getroot()
+        for element in root.iter():
+            owner = element.get("DisplayName") or element.get("Name") or element.get("Key")
+            for attribute, value in element.attrib.items():
+                for tile in tile_paths(attribute, value):
+                    references.setdefault(tile, []).append(
+                        "%s:%s:%s" % (path, owner or element.tag, attribute)
+                    )
+    return references
+
+
+def fixed_farmer_tile_problems(blueprint_path="ObjectBlueprints.xml"):
+    """A BaseFarmer descendant's RandomTile builder otherwise overwrites its fixed render."""
+    if not os.path.isfile(blueprint_path):
+        return ["required runtime XML is missing: %s" % blueprint_path]
+    objects = {
+        element.get("Name"): element
+        for element in ET.parse(blueprint_path).getroot().iter("object")
+        if element.get("Name")
+    }
+    problems = []
+    for name, element in sorted(objects.items()):
+        fixed = any(
+            part.get("Name") == "Render" and part.get("Tile")
+            for part in element.findall("part")
+        )
+        if not fixed:
+            continue
+        at = element
+        seen = set()
+        inherits_farmer = False
+        removes_random_tile = False
+        while at is not None:
+            current_name = at.get("Name")
+            if current_name in seen:
+                break
+            seen.add(current_name)
+            if any(
+                child.tag == "removebuilder" and child.get("Name") == "RandomTile"
+                for child in at
+            ):
+                removes_random_tile = True
+            parent = at.get("Inherits")
+            if parent == "BaseFarmer":
+                inherits_farmer = True
+                break
+            at = objects.get(parent)
+        if inherits_farmer and not removes_random_tile:
+            problems.append(
+                "%s fixes Render.Tile but inherits BaseFarmer RandomTile without removing it"
+                % name
+            )
+    return problems
+
+
+def bundled_rasters():
+    found = []
+    if not os.path.isdir("Textures"):
+        return found
+    for root, _dirs, files in os.walk("Textures"):
+        for name in files:
+            if name.lower().endswith(RASTER_EXTENSIONS):
+                found.append(os.path.join(root, name))
+    return sorted(found)
+
+
+def vanilla_tiles(base):
+    folder = os.path.join(base, "ObjectBlueprints")
+    if not os.path.isdir(folder):
+        return None
+    paths = set()
+    for name in sorted(os.listdir(folder)):
+        if name.endswith(".xml"):
+            text = re.sub(r"<!--.*?-->", "", read(os.path.join(folder, name)), flags=re.S)
+            for value in re.findall(r'["\']([^"\']+\.(?:bmp|png)(?:,[^"\']*)?)["\']',
+                    text, flags=re.I):
+                for token in value.split(","):
+                    token = token.strip()
+                    if "=" in token:
+                        token = token.split("=", 1)[1].strip()
+                    if token.lower().endswith((".bmp", ".png")):
+                        paths.add(token)
+    return paths
 
 
 def main():
-    if not os.path.isfile(BLUEPRINTS):
-        sys.exit("run from the repository root: %s not found" % BLUEPRINTS)
-
-    on_disk = set()
-    for name in sorted(os.listdir(TEXTURE_DIR)):
-        if name.endswith(".png"):
-            on_disk.add(name)
-
-    referenced = {}
-    tree = ET.parse(BLUEPRINTS)
-    for obj in tree.getroot().iter("object"):
-        blueprint = obj.get("Name", "<unnamed>")
-        for part in obj.iter("part"):
-            if part.get("Name") != "Render":
-                continue
-            tile = part.get("Tile")
-            if not tile or not tile.startswith(PREFIX):
-                continue
-            referenced.setdefault(os.path.basename(tile), []).append(
-                (blueprint, part.get("DetailColor"))
-            )
-
-    # A <skin> names a Render override for a design, so a tile reached only from one is reached.
-    # Without this the two checks disagree: the tile would be live in game and reported here as
-    # orphaned art, which is the same "correct art, wrong conclusion" failure this file exists for.
-    if os.path.isfile(BUILDINGS):
-        for building in ET.parse(BUILDINGS).getroot().iter("building"):
-            for skin in building.iter("skin"):
-                tile = skin.get("Tile")
-                if not tile or not tile.startswith(PREFIX):
-                    continue
-                referenced.setdefault(os.path.basename(tile), []).append(
-                    ("%s skin %s" % (building.get("Key", "<unkeyed>"), skin.get("Key", "<unkeyed>")),
-                     skin.get("DetailColor"))
-                )
-
+    base = os.environ.get("TAF_QUD_BASE", DEFAULT_BASE)
     problems = []
 
-    for name in sorted(on_disk - set(referenced)):
-        problems.append(
-            "orphaned art: %s has no blueprint Tile= and renders nowhere" % name)
+    try:
+        runtime_xml = runtime_xml_paths()
+    except RuntimeError as error:
+        problems.append(str(error))
+        references = {}
+    else:
+        references = referenced_tiles(runtime_xml)
+        if not references:
+            problems.append("staged runtime XML contains no tile references")
 
-    for name in sorted(set(referenced) - on_disk):
-        users = ", ".join(b for b, _ in referenced[name])
-        problems.append(
-            "dangling reference: %s is referenced by %s but does not exist" % (name, users))
+    for path in bundled_rasters():
+        problems.append("bundled runtime art is forbidden by release policy: %s" % path)
 
-    for name in sorted(set(referenced) & on_disk):
-        source = os.path.join(SOURCE_DIR, name[:-4] + ".tile")
-        if not os.path.isfile(source):
-            problems.append("missing source grid: %s has no .tile in %s" % (name, SOURCE_DIR))
-            continue
-        if not highlight_glyphs(source):
-            continue
-        for blueprint, detail in referenced[name]:
-            if not detail:
+    problems.extend(fixed_farmer_tile_problems())
+
+    for tile, owners in sorted(references.items()):
+        if tile.startswith(LOCAL_PREFIX):
+            problems.append(
+                "local tile reference is forbidden by release policy: %s (%s)"
+                % (tile, ", ".join(owners))
+            )
+
+    known_tiles = vanilla_tiles(base)
+    if known_tiles is None:
+        problems.append("installed base ObjectBlueprints directory not found: %s" % base)
+    else:
+        for tile, owners in sorted(references.items()):
+            if tile.startswith(LOCAL_PREFIX):
+                continue
+            if tile not in known_tiles:
                 problems.append(
-                    "%s draws highlight pixels but %s declares no DetailColor, so the second "
-                    "tone renders in the default" % (name, blueprint))
+                    "tile path is not named by installed base XML: %s (%s)"
+                    % (tile, ", ".join(owners))
+                )
 
     if problems:
-        print("TILE WIRING FAILED")
+        print("ART POLICY FAILED")
         for problem in problems:
             print("  " + problem)
         return 1
 
-    print("TILE WIRING CLEAN: %d tiles drawn, %d referenced, every one reachable"
-          % (len(on_disk), len(referenced)))
+    print(
+        "ART POLICY CLEAN: 0 bundled runtime rasters; %d vanilla tile paths verified"
+        % len(references)
+    )
     return 0
 
 

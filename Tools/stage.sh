@@ -53,7 +53,9 @@ stage_list() {
 	args+=( -type f '(' -name '*.cs' -o -name '*.xml' ')' -print )
 	find "${args[@]}"
 	for d in "${ASSET_DIRS[@]}"; do
-		[ -d "$d" ] && find "$d" -type f -print
+		if [ -d "$d" ]; then
+			find "$d" -type f -print
+		fi
 	done
 }
 
