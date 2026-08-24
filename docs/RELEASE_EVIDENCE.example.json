@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "releaseVersion": "0.2.0",
+  "candidateCommit": "FULL_LOWERCASE_PRIVATE_CANDIDATE_COMMIT",
+  "gameMarketingVersion": "1.0.5",
+  "gameCoreBuild": "2.0.211.51",
+  "workshopId": 0,
+  "previewSha256": "SHA256_OF_PREVIEW_PNG",
+  "privatePackageReceiptSha256": "SHA256_OF_PRIVATE_PACKAGE_RECEIPT_FILE",
+  "privateSubscription": {
+    "source": "steam-subscription",
+    "inventory": "clean",
+    "receipt": "clean",
+    "loader": "passed",
+    "newGame": "passed",
+    "saveReload": "passed",
+    "oldSave": "passed",
+    "representativeFeatures": "passed",
+    "playerLog": "clean",
+    "localDuplicatesRemoved": true,
+    "uploadHiddenFiles": true,
+    "testedBy": "HUMAN_TESTER_NAME_OR_ALIAS",
+    "completedUtc": "YYYY-MM-DDTHH:MM:SSZ"
+  }
+}

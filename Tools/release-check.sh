@@ -31,34 +31,35 @@ REF_ASSEMBLY_CSHARP="$(sed -n 's/^-r:"\(.*Assembly-CSharp\.dll\)"$/\1/p' "$REPO/
 
 cd "$REPO"
 
-echo "[1/9] patch hygiene"
+echo "[1/10] patch hygiene"
 git diff --check
 
-echo "[2/9] shipped IPart save ABI"
+echo "[2/10] shipped IPart save ABI"
 ./Tools/check-ipart-abi.sh
 
-echo "[3/9] cold-install inventory"
+echo "[3/10] cold-install inventory"
+cmp <(./Tools/stage.sh list-head HEAD) <(./Tools/stage.sh list)
 ./Tools/stage.sh verify
 
-echo "[4/9] exact staged compile"
+echo "[4/10] exact staged compile"
 ./Tools/gate.sh
 
-echo "[5/9] pure and source-contract tests"
+echo "[5/10] pure and source-contract tests"
 TEST_SCRIPT="$(wslpath -w "$REPO/DevTests/test.ps1")"
 (
 	cd /mnt/c
 	powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$TEST_SCRIPT"
 )
 
-echo "[6/9] XML and tile reachability"
+echo "[6/10] XML and tile reachability"
 python3 Art/check_xml_refs.py --base "$BASE"
 python3 -m unittest Art.test_check_wiring
 TAF_QUD_BASE="$BASE" python3 Art/check_wiring.py
 
-echo "[7/9] deterministic balance model"
+echo "[7/10] deterministic balance model"
 python3 _notes/balance-sim.py
 
-echo "[8/9] executable isolated prepare/launcher harness"
+echo "[8/10] executable isolated prepare/launcher harness"
 SMOKE_SCRIPT="$(wslpath -w "$REPO/Tools/run-smoke.ps1")"
 SMOKE_TEST="$(wslpath -w "$REPO/Tools/test-run-smoke.ps1")"
 
@@ -178,8 +179,16 @@ if [ -n "${TAF_KNOWN_GOOD_SAVE_FIXTURE:-}" ]; then
 fi
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$SMOKE_TEST" "${smoke_args[@]}"
 
-echo "[9/9] deployment dry run"
+echo "[9/10] Workshop metadata and package boundary"
+readarray -t workshop_fields < <(python3 Tools/workshop_metadata.py fields manifest.json)
+[ "${#workshop_fields[@]}" -eq 3 ]
+python3 Tools/workshop_metadata.py preview "${workshop_fields[2]}"
+python3 Tools/workshop_metadata.py workshop test manifest.json workshop.json
+./Tools/test-workshop-package.sh
+
+echo "[10/10] deployment boundary and dry run"
+./Tools/test-stage-safety.sh
 ./Tools/stage.sh deploy
 
-echo "RELEASE CHECK CLEAN"
+echo "AUTOMATED RELEASE PRECHECK CLEAN"
 echo "After the isolated in-game run: Tools/check-player-log.sh PLAYER_LOG"

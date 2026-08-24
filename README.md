@@ -31,10 +31,13 @@ When enabled, only layout and history cross worlds—never items, liquids, or ch
   the product, not guardrails: where these shapes exist in other games, they are the loved part.
 - [STANDARDS.md](STANDARDS.md) — engineering charter (vanilla conformance, depth standard, three-layer testing).
 - [TESTING.md](TESTING.md) — the current playtest protocol.
+- [docs/RELEASING.md](docs/RELEASING.md) — frozen-package, private-item, subscribed-test, and
+  public Workshop release procedure.
 - `DevTests/` — compile gate + NUnit suite (hidden from the mod loader; `#if TAF_TESTS` guarded).
   Run `DevTests/build.ps1` and `DevTests/test.ps1`.
 
-Requires Caves of Qud v1.0.5+ (build 2.0.211.51 verified). No dependencies; Hearthpyre
-and Qud Industry are planned optional enhancements, never requirements.
+Requires Caves of Qud v1.0.5, core build 2.0.211.51. Newer builds are unverified until the
+licensed integration checks pass again. No dependencies; Hearthpyre and Qud Industry are planned
+optional enhancements, never requirements.
 
 MIT licensed. Caves of Qud is a trademark of Freehold Games, LLC; this is an unofficial community project, not affiliated with or endorsed by Freehold.

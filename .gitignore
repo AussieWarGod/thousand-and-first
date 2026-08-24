@@ -28,3 +28,6 @@ _notes/*
 !_notes/balance-sim.py
 !_notes/balance-sim-output.txt
 Tools/last-deploy-receipt.txt
+__pycache__/
+*.py[cod]
+.ruff_cache/
