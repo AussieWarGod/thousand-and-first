@@ -369,8 +369,12 @@ namespace ThousandAndFirst
 		public KingdomLifecyclePhysicalState ReceiptState;
 		public KingdomLifecyclePhysicalState State;
 
+		#if TAF_TESTS
+		// Opaque reference retained only by the trusted-world proof harness. Runtime authority
+		// is established from engine observations at the shell and never stored in the save DTO.
 		[NonSerialized]
 		internal object LiveAuthority;
+		#endif
 	}
 
 	[Serializable]
@@ -404,8 +408,12 @@ namespace ThousandAndFirst
 		public string ReceiptProofId;
 		public KingdomLifecyclePhysicalState ReceiptState;
 
+		#if TAF_TESTS
+		// Opaque reference retained only by the trusted-world proof harness. Runtime authority
+		// is established from engine observations at the shell and never stored in the save DTO.
 		[NonSerialized]
 		internal object LiveAuthority;
+		#endif
 	}
 
 	[Serializable]
