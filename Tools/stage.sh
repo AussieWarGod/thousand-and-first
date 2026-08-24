@@ -8,6 +8,8 @@
 #   Tools/stage.sh manifest            print sorted relative-path + sha256 manifest
 #   Tools/stage.sh list                print sorted relative paths only
 #   Tools/stage.sh copy <dir>          materialise the runtime set into <dir>
+#   Tools/stage.sh verify              prove a fresh cold-install tree matches byte-for-byte
+#   Tools/stage.sh verify <dir>        prove an existing tree is exactly the runtime set
 #   Tools/stage.sh diff                inventory diff: staged set vs the live mod folder
 #   Tools/stage.sh deploy              DRY RUN: what deploy would add/update/delete
 #   Tools/stage.sh deploy --apply      back up, mirror into the live folder, verify, receipt
@@ -76,6 +78,62 @@ cmd_copy() {
 		cp -p "$f" "$dest/$f"
 	done
 }
+
+tree_list() {
+	local tree="$1"
+	[ -d "$tree" ] || return 0
+	(
+		cd "$tree"
+		find . -type f -print | sed 's|^\./||' | LC_ALL=C sort
+	)
+}
+
+verify_tree() (
+	local tree="$1"
+	local scratch; scratch="$(mktemp -d)"
+	trap 'rm -rf -- "$scratch"' EXIT
+
+	sorted_list > "$scratch/expected"
+	tree_list "$tree" > "$scratch/actual"
+	if ! cmp -s "$scratch/expected" "$scratch/actual"; then
+		echo "COLD-INSTALL INVENTORY MISMATCH: $tree" >&2
+		echo "=== MISSING ===" >&2
+		comm -23 "$scratch/expected" "$scratch/actual" >&2
+		echo "=== UNEXPECTED ===" >&2
+		comm -13 "$scratch/expected" "$scratch/actual" >&2
+		return 1
+	fi
+
+	local failed=0
+	while IFS= read -r f; do
+		cmp -s "$REPO/$f" "$tree/$f" || {
+			echo "COLD-INSTALL CONTENT MISMATCH: $f" >&2
+			failed=1
+		}
+	done < "$scratch/expected"
+	if find "$tree" -type l -print -quit | grep -q .; then
+		echo "COLD-INSTALL CONTAINS A SYMBOLIC LINK" >&2
+		failed=1
+	fi
+	grep -q '"id": *"r_ThousandAndFirst"' "$tree/manifest.json" 2>/dev/null || {
+		echo "COLD-INSTALL MANIFEST IDENTITY MISMATCH" >&2
+		failed=1
+	}
+	[ "$failed" -eq 0 ] || return 1
+	echo "COLD-INSTALL CLEAN ($(wc -l < "$scratch/expected") files)"
+)
+
+cmd_verify() (
+	local supplied="${1:-}"
+	if [ -n "$supplied" ]; then
+		verify_tree "$(cd "$supplied" && pwd)"
+		return
+	fi
+	local cold; cold="$(mktemp -d)"
+	trap 'rm -rf -- "$cold"' EXIT
+	cmd_copy "$cold"
+	verify_tree "$cold"
+)
 
 # Every relative path currently in the live folder, excluding the dev worktree
 # metadata that a git-based sync leaves behind.
@@ -176,6 +234,7 @@ case "${1:-}" in
 	manifest) cmd_manifest ;;
 	list)     cmd_list ;;
 	copy)     cmd_copy "${2:-}" ;;
+	verify)   cmd_verify "${2:-}" ;;
 	diff)     cmd_diff ;;
 	deploy)   cmd_deploy "${2:-}" ;;
 	*) sed -n '2,20p' "${BASH_SOURCE[0]}"; exit 2 ;;

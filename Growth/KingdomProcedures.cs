@@ -9,6 +9,80 @@ using XRL.World.Anatomy;
 
 namespace ThousandAndFirst
 {
+	internal readonly struct KingdomLabOwnershipSnapshot
+	{
+		public readonly string ProcedureKey;
+		public readonly string JobId;
+		public readonly string PatientId;
+		public readonly int BodyPartId;
+		public readonly string BearerId;
+		public readonly string Grants;
+		public readonly int Source;
+		public readonly int Attach;
+		public readonly string Manager;
+		public readonly string Detail;
+		public readonly string Fingerprint;
+		public readonly int PartOrdinal;
+		public readonly string EffectNonce;
+
+		public KingdomLabOwnershipSnapshot(string ProcedureKey, string JobId, string PatientId,
+			int BodyPartId, string BearerId)
+		{
+			this.ProcedureKey = ProcedureKey ?? "";
+			this.JobId = JobId ?? "";
+			this.PatientId = PatientId ?? "";
+			this.BodyPartId = BodyPartId;
+			this.BearerId = BearerId ?? "";
+			Grants = "";
+			Source = -1;
+			Attach = -1;
+			Manager = "";
+			Detail = "";
+			Fingerprint = "";
+			PartOrdinal = -1;
+			EffectNonce = "";
+		}
+
+		public KingdomLabOwnershipSnapshot(string ProcedureKey, string JobId, string PatientId,
+			int BodyPartId, string BearerId, string Grants, int Source, int Attach,
+			string Manager, string Detail, string Fingerprint, int PartOrdinal,
+			string EffectNonce = "")
+		{
+			this.ProcedureKey = ProcedureKey ?? "";
+			this.JobId = JobId ?? "";
+			this.PatientId = PatientId ?? "";
+			this.BodyPartId = BodyPartId;
+			this.BearerId = BearerId ?? "";
+			this.Grants = Grants ?? "";
+			this.Source = Source;
+			this.Attach = Attach;
+			this.Manager = Manager ?? "";
+			this.Detail = Detail ?? "";
+			this.Fingerprint = Fingerprint ?? "";
+			this.PartOrdinal = PartOrdinal;
+			this.EffectNonce = EffectNonce ?? "";
+		}
+	}
+
+	internal sealed class KingdomLabGrantAttempt
+	{
+		public KingdomLabOwnedTargetState State = KingdomLabOwnedTargetState.Uncertain;
+		public IPart ExactPart;
+		public BodyPart ExactBodyPart;
+		public int BodyPartId;
+		public int PartOrdinal = -1;
+		public string BearerId = "";
+		public string Failure = "";
+	}
+
+	internal sealed class KingdomLabOwnedTarget
+	{
+		public GameObject Bearer;
+		public XRL.World.Parts.r_KingdomLabEffectLedger Ledger;
+		public IPart ExactPart;
+		public BodyPart ExactBodyPart;
+	}
+
 	/// <summary>
 	/// The engine-coupled half of the procedure system: the registry of authored records, the
 	/// founder's ledger of which named procedures they have found, the read of a real body into the
@@ -56,6 +130,18 @@ namespace ThousandAndFirst
 		/// <summary>The property a preserved part carries the source's own display name under, so
 		/// the slate can say what a thing came off without holding a reference to a dead creature.</summary>
 		public const string SourceProperty = "r_TAF_LabSource";
+
+		/// <summary>Per-procedure ownership marker. Removal requires this marker and an exact record
+		/// identity, so a native same-class effect is never selected by a class scan.</summary>
+		public static string OwnerProperty(string Key)
+		{
+			return "r_TAF_LabOwner::" + (Key ?? "").Trim().ToLowerInvariant();
+		}
+
+		public static string OwnerNonceProperty(string Key)
+		{
+			return "r_TAF_LabOwnerNonce::" + (Key ?? "").Trim().ToLowerInvariant();
+		}
 
 		/// <summary>
 		/// Every graft's manager key, so <c>Body.RemovePartsByManager</c> undoes one in a single
@@ -379,6 +465,62 @@ namespace ThousandAndFirst
 			return codes;
 		}
 
+		/// <summary>Live and detached anatomy are one identity domain.</summary>
+		internal static List<BodyPart> AllBodyParts(GameObject Who)
+		{
+			List<BodyPart> result = new List<BodyPart>();
+			List<BodyPart> live = Who?.Body?.GetParts();
+			for (int i = 0; live != null && i < live.Count; i++)
+			{
+				if (live[i] != null && !ContainsReference(result, live[i])) result.Add(live[i]);
+			}
+			List<XRL.World.Parts.Body.DismemberedPart> detached = Who?.Body?.DismemberedParts;
+			for (int i = 0; detached != null && i < detached.Count; i++)
+			{
+				BodyPart part = detached[i]?.Part;
+				if (part != null && !ContainsReference(result, part)) result.Add(part);
+			}
+			return result;
+		}
+
+		internal static BodyPart ExactBodyPart(GameObject Who, int BodyPartId)
+		{
+			return (BodyPartId > 0) ? Who?.Body?.GetPartByID(BodyPartId, EvenIfDismembered: true) : null;
+		}
+
+		/// <summary>Exact identity in the live body tree. Detached anatomy is deliberately excluded.</summary>
+		internal static BodyPart ExactLiveBodyPart(GameObject Who, int BodyPartId)
+		{
+			if (BodyPartId <= 0 || Who?.Body == null) return null;
+			BodyPart candidate = Who.Body.GetPartByID(BodyPartId, EvenIfDismembered: false);
+			return BodyOwnsLivePart(Who, candidate) ? candidate : null;
+		}
+
+		internal static bool BodyOwnsLivePart(GameObject Who, BodyPart Candidate)
+		{
+			return Who?.Body != null && Candidate != null
+				&& ReferenceEquals(Candidate.ParentBody, Who.Body)
+				&& ContainsReference(Who.Body.GetParts(), Candidate);
+		}
+
+		internal static bool BodyOwnsPart(GameObject Who, BodyPart Candidate)
+		{
+			if (Who?.Body == null || Candidate == null || !ReferenceEquals(Candidate.ParentBody, Who.Body))
+			{
+				return false;
+			}
+			return ContainsReference(AllBodyParts(Who), Candidate);
+		}
+
+		private static bool ContainsReference(IList<BodyPart> Parts, BodyPart Candidate)
+		{
+			for (int i = 0; Parts != null && i < Parts.Count; i++)
+			{
+				if (ReferenceEquals(Parts[i], Candidate)) return true;
+			}
+			return false;
+		}
+
 		// ==================================================================================
 		// The stamp — read the creature BEFORE it is butchered
 		// ==================================================================================
@@ -522,85 +664,215 @@ namespace ThousandAndFirst
 				Failure = KingdomProcedureRules.RefusalLine(LabVerdict.RefusedNoSlot, Procedure);
 				return false;
 			}
+			return GrantAt(Who, Procedure, slot.ID,
+				(Procedure.Attach == LabAttach.Weapon && GameObject.Validate(slot.DefaultBehavior))
+					? slot.DefaultBehavior.ID : Who.ID,
+				Stamp, Guid.NewGuid().ToString("N"), out Failure);
+		}
+
+		/// <summary>Terminal grant against the exact slot and bearer selected at commission.</summary>
+		public static bool GrantAt(GameObject Who, LabProcedure Procedure, int BodyPartId,
+			string BearerId, string Stamp, string JobId, out string Failure)
+		{
+			string detail = ExecutionDetail(Procedure, Stamp);
+			string manager = ManagerFor(Procedure?.Key);
+			string fingerprint = KingdomLabRules.EffectFingerprint(
+				KingdomLabRules.EffectContractVersion, Procedure?.Key, Procedure?.Grants,
+				(int)(Procedure?.Source ?? LabSource.Part),
+				(int)(Procedure?.Attach ?? LabAttach.Body), manager, detail);
+			KingdomLabGrantAttempt attempt = GrantAtExact(Who, Procedure, BodyPartId, BearerId,
+				Stamp, JobId, manager, detail, fingerprint);
+			Failure = attempt.Failure;
+			return attempt.State == KingdomLabOwnedTargetState.Present;
+		}
+
+		internal static KingdomLabGrantAttempt GrantAtExact(GameObject Who, LabProcedure Procedure,
+			int BodyPartId, string BearerId, string Stamp, string JobId, string Manager,
+			string Detail, string Fingerprint)
+		{
+			KingdomLabGrantAttempt attempt = new KingdomLabGrantAttempt { BearerId = BearerId ?? "" };
+			if (Who == null || Procedure == null || Who.Body == null)
+			{
+				attempt.Failure = "There is nobody on the table.";
+				return attempt;
+			}
+			if (!KingdomLabRules.ValidEffectContract(KingdomLabRules.EffectContractVersion,
+				Procedure.Key, Procedure.Grants, (int)Procedure.Source, (int)Procedure.Attach,
+				Manager, Fingerprint, Detail))
+			{
+				attempt.Failure = "The paid job's immutable effect contract is not valid.";
+				return attempt;
+			}
+			BodyPart slot = ExactLiveBodyPart(Who, BodyPartId);
+			if (slot == null || slot.Abstract || !BodyOwnsLivePart(Who, slot))
+			{
+				attempt.Failure = KingdomProcedureRules.RefusalLine(LabVerdict.RefusedNoSlot, Procedure);
+				return attempt;
+			}
+			GameObject expected = (Procedure.Attach == LabAttach.Weapon) ? slot.DefaultBehavior : Who;
+			if (!GameObject.Validate(expected) || !string.Equals(expected.ID, BearerId,
+				StringComparison.Ordinal) || (Procedure.Attach == LabAttach.Weapon
+					&& !ReferenceEquals(slot.DefaultBehavior, expected)))
+			{
+				attempt.Failure = "The selected body part no longer bears the exact thing the paid contract recorded.";
+				return attempt;
+			}
+			if (HasProcedureClass(Who, Procedure))
+			{
+				attempt.Failure = "That procedure already exists on live or detached anatomy. The hall will not create a second instance.";
+				return attempt;
+			}
 			switch (Procedure.Source)
 			{
 			case LabSource.Limb:
-				return GrantLimb(Who, Procedure, slot, out Failure);
+				return GrantLimb(Who, Procedure, slot, JobId, Manager, Detail, Fingerprint);
 			case LabSource.Mutation:
-				return GrantMutation(Who, Procedure, Stamp, out Failure);
+				return GrantMutation(Who, Procedure, slot, Stamp, JobId, Manager, Detail,
+					Fingerprint);
 			default:
-				return GrantPart(Who, Procedure, slot, Stamp, out Failure);
+				return GrantPart(Who, Procedure, slot, expected, Stamp, JobId, Manager, Detail,
+					Fingerprint);
 			}
 		}
 
-		private static bool GrantPart(GameObject Who, LabProcedure Procedure, BodyPart Slot, string Stamp, out string Failure)
+		private static KingdomLabGrantAttempt GrantPart(GameObject Who, LabProcedure Procedure,
+			BodyPart Slot, GameObject Bearer, string Stamp, string JobId, string Manager,
+			string Detail, string Fingerprint)
 		{
-			Failure = null;
-			GameObject bearer = Who;
-			if (Procedure.Attach == LabAttach.Weapon)
-			{
-				// The audit's whole lesson, enforced at the commit rather than trusted at the
-				// record: a part that only ever fires "WeaponHit" goes onto the thing a natural
-				// attack is actually made with (Combat.cs:1186 fires it on the weapon; the weapon
-				// for a natural attack is this limb's DefaultBehavior, BodyPart.cs:2874-2895).
-				bearer = Slot.DefaultBehavior;
-				if (!GameObject.Validate(bearer))
-				{
-					Failure = KingdomProcedureRules.RefusalLine(LabVerdict.RefusedNoWeapon, Procedure);
-					return false;
-				}
-			}
+			KingdomLabGrantAttempt attempt = new KingdomLabGrantAttempt { BearerId = Bearer.ID };
 			IPart built;
 			if (!TryRebuild(Procedure.Grants, Stamp, out built))
 			{
-				Failure = "The hall could not make sense of what was kept. Nothing was done, and nothing was spent.";
-				return false;
+				attempt.State = KingdomLabOwnedTargetState.Absent;
+				attempt.Failure = "The hall could not make sense of what was kept. No body effect was made.";
+				return attempt;
 			}
-			if (bearer.GetPart(Procedure.Grants) != null)
+			if (Bearer.GetPart(Procedure.Grants) != null)
 			{
-				// One live instance per part type, always: duplicates double-fire events and escape
-				// every GetPart-based toggle in the game (DIVERSITY §3.0b, technique 4).
-				Failure = "You already carry that, and carrying it twice would only make it fire twice.";
-				return false;
+				attempt.Failure = "You already carry that, and carrying it twice would only make it fire twice.";
+				return attempt;
 			}
-			bearer.AddPart(built);
-			// Recorded on the founder even when the part rode a claw, because the record is a record
-			// of what was done to the FOUNDER and the claw is not the patient.
-			Record(Who).Note(Procedure.Key, Slot.Type, (Procedure.Attach == LabAttach.Weapon));
-			Who.WantToReequip();
-			return true;
+			XRL.World.Parts.r_KingdomLabEffectLedger ledger;
+			if (!PrepareOwnershipIntent(Bearer, Who, Procedure, Slot.ID, JobId, Manager, Detail,
+				Fingerprint, built, Bearer.PartsList?.Count ?? 0, out ledger, out attempt.Failure))
+			{
+				attempt.State = KingdomLabOwnedTargetState.Absent;
+				return attempt;
+			}
+			Exception error = null;
+			try
+			{
+				Bearer.AddPart(built);
+			}
+			catch (Exception ex)
+			{
+				error = ex;
+			}
+			int ordinal = ReferencePartOrdinal(Bearer, built);
+			if (ordinal >= 0 && ReferenceEquals(built.ParentObject, Bearer)
+				&& CountPartClass(Bearer, Procedure.Grants) == 1)
+			{
+				PublishOwnership(Who, Bearer, Procedure, Slot.Type, Slot.ID, JobId, Manager,
+					Detail, Fingerprint, built, ordinal, ledger, attempt);
+				if (error != null) attempt.Failure = "The engine callback threw after the exact effect was attached; ownership was recovered: " + error.Message;
+				return attempt;
+			}
+			bool absent = TryRollbackExactPart(Bearer, built);
+			if (absent)
+			{
+				ledger.Forget(Procedure.Key, JobId, CleanupPatient: false);
+				ClearOwnerIfExact(Bearer, Procedure.Key, JobId);
+				attempt.State = KingdomLabOwnedTargetState.Absent;
+				attempt.Failure = (error == null) ? "The exact effect did not attach."
+					: "The attachment callback threw; the exact attempted part was rolled back.";
+			}
+			else
+			{
+				ledger.Quarantine(Procedure.Key, JobId);
+				attempt.Failure = "The exact attempted part changed topology during attachment. Its intent is quarantined; no same-class part will be adopted.";
+			}
+			return attempt;
 		}
 
-		private static bool GrantLimb(GameObject Who, LabProcedure Procedure, BodyPart Slot, out string Failure)
+		private static KingdomLabGrantAttempt GrantLimb(GameObject Who, LabProcedure Procedure,
+			BodyPart Slot, string JobId, string Manager, string Detail, string Fingerprint)
 		{
-			Failure = null;
-			List<string> wanted = KingdomProcedureRules.SlotTypes(Procedure);
-			string type = (wanted.Count > 0) ? wanted[0] : Slot.Type;
-			// The precedent's own call, positionally: Manager is the seventh argument and InsertAfter
-			// the twenty-first (D/XRL/World/Parts/CyberneticsGraftedMirrorArm.cs:31). Named here,
-			// because a bare wall of nulls is how that line became unreadable — and OrInsertBefore
-			// is typed rather than omitted because two overloads differ only in it
-			// (D/XRL/World/Anatomy/BodyPart.cs:3917 and :3927) and omitting it is ambiguous.
-			BodyPart grown = Slot.AddPartAt(Base: type, Manager: ManagerFor(Procedure.Key),
-				InsertAfter: Slot.Type, OrInsertBefore: (string)null);
-			if (grown == null)
+			KingdomLabGrantAttempt attempt = new KingdomLabGrantAttempt { BearerId = Who.ID };
+			string type = string.IsNullOrEmpty(Detail) ? Slot.Type : Detail;
+			BodyPart grown = new BodyPart(type, 0, Slot.ParentBody, Manager: Manager);
+			int grownId = grown.ID;
+			XRL.World.Parts.r_KingdomLabEffectLedger ledger;
+			if (!PrepareOwnershipIntent(Who, Who, Procedure, grownId, JobId, Manager, Detail,
+				Fingerprint, null, -1, out ledger, out attempt.Failure))
 			{
-				Failure = KingdomProcedureRules.RefusalLine(LabVerdict.RefusedNoSlot, Procedure);
-				return false;
+				attempt.State = KingdomLabOwnedTargetState.Absent;
+				return attempt;
 			}
-			Record(Who).Note(Procedure.Key, type, OnWeapon: false);
-			Who.WantToReequip();
-			return true;
+			Exception error = null;
+			try
+			{
+				Slot.AddPart(grown, Slot.Type, DoUpdate: false);
+			}
+			catch (Exception ex)
+			{
+				error = ex;
+			}
+			if (BodyOwnsLivePart(Who, grown)
+				&& ReferenceEquals(ExactLiveBodyPart(Who, grownId), grown))
+			{
+				PublishOwnership(Who, Who, Procedure, type, grownId, JobId, Manager, Detail,
+					Fingerprint, null, -1, ledger, attempt);
+				attempt.ExactBodyPart = grown;
+				attempt.BodyPartId = grownId;
+				try
+				{
+					Who.Body.UpdateBodyParts();
+					Who.Body.RecalculateTypeArmor(type);
+					Who.WantToReequip();
+				}
+				catch (Exception ex)
+				{
+					error = error ?? ex;
+				}
+				if (error != null) attempt.Failure = "The body update callback threw after the exact limb and ownership receipt were durable: " + error.Message;
+				return attempt;
+			}
+			bool absent = TryRollbackExactBodyPart(Who, grown);
+			if (absent)
+			{
+				ledger.Forget(Procedure.Key, JobId, CleanupPatient: false);
+				ClearOwnerIfExact(Who, Procedure.Key, JobId);
+				attempt.State = KingdomLabOwnedTargetState.Absent;
+				attempt.Failure = (error == null) ? "The exact limb did not enter the patient's body."
+					: "The limb insertion threw; the exact partial limb was rolled back.";
+			}
+			else
+			{
+				ledger.Quarantine(Procedure.Key, JobId);
+				attempt.State = KingdomLabOwnedTargetState.Uncertain;
+				attempt.Failure = "The limb insertion left uncertain exact topology. Its prepublished intent is quarantined; no same-type limb will be adopted.";
+			}
+			return attempt;
 		}
 
-		private static bool GrantMutation(GameObject Who, LabProcedure Procedure, string Stamp, out string Failure)
+		private static bool TryRollbackExactBodyPart(GameObject Who, BodyPart Part)
 		{
-			Failure = null;
+			if (!BodyOwnsPart(Who, Part) && Part?.ParentPart == null) return true;
+			try { Who?.Body?.RemovePart(Part); }
+			catch { }
+			return !BodyOwnsPart(Who, Part) && Part?.ParentPart == null;
+		}
+
+		private static KingdomLabGrantAttempt GrantMutation(GameObject Who, LabProcedure Procedure,
+			BodyPart Slot, string Stamp, string JobId, string Manager, string Detail,
+			string Fingerprint)
+		{
+			KingdomLabGrantAttempt attempt = new KingdomLabGrantAttempt { BearerId = Who.ID };
 			XRL.World.Parts.Mutations mutations = Who.RequirePart<XRL.World.Parts.Mutations>();
-			if (mutations.HasMutation(Procedure.Grants))
+			if (Who.GetPart(Procedure.Grants) is XRL.World.Parts.Mutation.BaseMutation)
 			{
-				Failure = "You already have that. The hall cannot give a body a thing it is already doing.";
-				return false;
+				attempt.Failure = "You already have that, whether native or modifier-backed. The hall will not replace it.";
+				return attempt;
 			}
 			int level;
 			int.TryParse(KingdomProcedureRules.StampedField(Stamp, Procedure.Grants, "Level"), out level);
@@ -608,17 +880,268 @@ namespace ThousandAndFirst
 			// the mod this whole design learned from is remembered for granting mutations at the
 			// source's strength, and its own author wrote down that it ruined the combat design.
 			int granted = KingdomProcedureRules.GrantedMutationLevel(level);
-			// Measured, never trusted: the engine answers -1 for a class it could not create
-			// (D/XRL/World/Parts/Mutations.cs:444,459-462), so the state change is read back rather
-			// than inferred from a return value whose name is not a contract (STANDARDS §1).
-			mutations.AddMutation(Procedure.Grants, granted);
-			if (!mutations.HasMutation(Procedure.Grants))
+			XRL.World.Parts.Mutation.BaseMutation exact =
+				XRL.World.Parts.Mutation.BaseMutation.Create(Procedure.Grants);
+			if (exact == null)
 			{
-				Failure = "Your body would not take it, and the hall will not force a thing that is refusing.";
+				attempt.State = KingdomLabOwnedTargetState.Absent;
+				attempt.Failure = "The frozen mutation class could not be constructed.";
+				return attempt;
+			}
+			XRL.World.Parts.r_KingdomLabEffectLedger ledger;
+			if (!PrepareOwnershipIntent(Who, Who, Procedure, Slot.ID, JobId, Manager, Detail,
+				Fingerprint, exact, Who.PartsList?.Count ?? 0, out ledger, out attempt.Failure))
+			{
+				attempt.State = KingdomLabOwnedTargetState.Absent;
+				return attempt;
+			}
+			Exception error = null;
+			try
+			{
+				mutations.AddMutation(exact, granted);
+			}
+			catch (Exception ex)
+			{
+				error = ex;
+			}
+			int ordinal = ReferencePartOrdinal(Who, exact);
+			bool listed = MutationListed(mutations, exact);
+			if (ordinal >= 0 && ReferenceEquals(exact.ParentObject, Who) && listed)
+			{
+				PublishOwnership(Who, Who, Procedure, "", Slot.ID, JobId, Manager, Detail,
+					Fingerprint, exact, ordinal, ledger, attempt);
+				if (error != null) attempt.Failure = "The mutation callback threw after the exact listed mutation and ownership receipt were durable: " + error.Message;
+				return attempt;
+			}
+			bool absent = !listed && TryRollbackExactPart(Who, exact);
+			if (absent)
+			{
+				ledger.Forget(Procedure.Key, JobId, CleanupPatient: false);
+				ClearOwnerIfExact(Who, Procedure.Key, JobId);
+				attempt.State = KingdomLabOwnedTargetState.Absent;
+				attempt.Failure = "Mutation publication stopped before MutationList accepted the exact instance; the partial part was rolled back.";
+			}
+			else
+			{
+				ledger.Quarantine(Procedure.Key, JobId);
+				attempt.Failure = "Mutation publication left an uncertain exact instance. It is quarantined; no class replacement will be adopted.";
+			}
+			return attempt;
+		}
+
+		internal static string ContractDetail(LabProcedure Procedure)
+		{
+			if (Procedure?.Source != LabSource.Limb) return "";
+			List<string> wanted = KingdomProcedureRules.SlotTypes(Procedure);
+			return (wanted.Count > 0) ? wanted[0] : "";
+		}
+
+		internal static string ExecutionDetail(LabProcedure Procedure, string Stamp)
+		{
+			string catalog = ContractDetail(Procedure);
+			if (Procedure?.Source == LabSource.Limb) return catalog;
+			return "stamp:" + KingdomLabRules.ExecutionStampFingerprint(Stamp);
+		}
+
+		internal static bool CatalogMatchesExecutionDetail(LabProcedure Procedure, string Detail)
+		{
+			if (Procedure == null || Detail == null) return false;
+			return Procedure.Source == LabSource.Limb
+				? string.Equals(Detail, ContractDetail(Procedure), StringComparison.Ordinal)
+				: Detail.StartsWith("stamp:", StringComparison.Ordinal)
+					&& Detail.Length == "stamp:".Length + 16;
+		}
+
+		private static bool PrepareOwnershipIntent(GameObject Bearer, GameObject Who,
+			LabProcedure Procedure, int BodyPartId, string JobId, string Manager, string Detail,
+			string Fingerprint, IPart RuntimePart, int PartOrdinal,
+			out XRL.World.Parts.r_KingdomLabEffectLedger Ledger, out string Failure)
+		{
+			Ledger = null;
+			Failure = null;
+			try
+			{
+				Ledger = Bearer.RequirePart<XRL.World.Parts.r_KingdomLabEffectLedger>();
+				if (Ledger == null || CountPartClass(Bearer, nameof(XRL.World.Parts.r_KingdomLabEffectLedger)) != 1)
+				{
+					Failure = "The bearer has an ambiguous ownership ledger.";
+					return false;
+				}
+				int prior = Ledger.IndexOf(Procedure.Key, JobId);
+				Ledger.TrackIntent(Procedure.Key, JobId, Who.ID, BodyPartId,
+					(int)Procedure.Source, (int)Procedure.Attach, Procedure.Grants, Manager,
+					Detail, Fingerprint, PartOrdinal, RuntimePart);
+				int ledgerAt = Ledger.IndexOf(Procedure.Key, JobId);
+				string nonce = Ledger.NonceAt(ledgerAt);
+				string priorOwner = Bearer.GetStringProperty(OwnerProperty(Procedure.Key));
+				string priorNonce = Bearer.GetStringProperty(OwnerNonceProperty(Procedure.Key));
+				if ((!string.IsNullOrEmpty(priorOwner)
+						&& !string.Equals(priorOwner, JobId, StringComparison.Ordinal))
+					|| (!string.IsNullOrEmpty(priorNonce)
+						&& !string.Equals(priorNonce, nonce, StringComparison.Ordinal)))
+				{
+					Failure = "A foreign ownership marker already occupies this procedure key.";
+					if (prior < 0) Ledger.Forget(Procedure.Key, JobId, CleanupPatient: false);
+					return false;
+				}
+				Bearer.SetStringProperty(OwnerProperty(Procedure.Key), JobId ?? "");
+				Bearer.SetStringProperty(OwnerNonceProperty(Procedure.Key), nonce);
+				if (Ledger.IndexOf(Procedure.Key, JobId) < 0
+					|| !string.Equals(Bearer.GetStringProperty(OwnerProperty(Procedure.Key)),
+						JobId, StringComparison.Ordinal)
+					|| !string.Equals(Bearer.GetStringProperty(
+						OwnerNonceProperty(Procedure.Key)),
+						Ledger.NonceAt(Ledger.IndexOf(Procedure.Key, JobId)), StringComparison.Ordinal))
+				{
+					Failure = "The exact ownership intent could not be published before body mutation.";
+					Ledger.Forget(Procedure.Key, JobId, CleanupPatient: false);
+					ClearOwnerIfExact(Bearer, Procedure.Key, JobId);
+					return false;
+				}
+				return true;
+			}
+			catch (Exception ex)
+			{
+				Failure = "Ownership intent publication threw before body mutation: " + ex.Message;
+				try { Ledger?.Forget(Procedure.Key, JobId, CleanupPatient: false); } catch { }
+				ClearOwnerIfExact(Bearer, Procedure.Key, JobId);
 				return false;
 			}
-			Record(Who).Note(Procedure.Key, "", OnWeapon: false);
-			return true;
+		}
+
+		private static void PublishOwnership(GameObject Who, GameObject Bearer,
+			LabProcedure Procedure, string Place, int BodyPartId, string JobId, string Manager,
+			string Detail, string Fingerprint, IPart RuntimePart, int PartOrdinal,
+			XRL.World.Parts.r_KingdomLabEffectLedger Ledger, KingdomLabGrantAttempt Attempt)
+		{
+			Attempt.State = KingdomLabOwnedTargetState.Present;
+			Attempt.ExactPart = RuntimePart;
+			Attempt.BodyPartId = BodyPartId;
+			Attempt.PartOrdinal = PartOrdinal;
+			Attempt.BearerId = Bearer.ID;
+			try
+			{
+				Ledger.CommitBinding(Procedure.Key, JobId, PartOrdinal, RuntimePart);
+				Bearer.SetStringProperty(OwnerProperty(Procedure.Key), JobId ?? "");
+				int ledgerAt = Ledger.IndexOf(Procedure.Key, JobId);
+				Bearer.SetStringProperty(OwnerNonceProperty(Procedure.Key), Ledger.NonceAt(ledgerAt));
+				Record(Who).Note(Procedure.Key, Place,
+					Procedure.Attach == LabAttach.Weapon, BodyPartId, Bearer.ID, JobId,
+					Procedure.Named, Procedure.Grants, (int)Procedure.Source,
+					(int)Procedure.Attach, Manager, Detail, Fingerprint, PartOrdinal,
+					Ledger.NonceAt(ledgerAt));
+			}
+			catch (Exception ex)
+			{
+				Attempt.Failure = "The exact effect is present; post-effect ownership publication needs repair: " + ex.Message;
+			}
+		}
+
+		private static void ClearOwnerIfExact(GameObject Bearer, string Key, string JobId)
+		{
+			try
+			{
+				if (GameObject.Validate(Bearer) && string.Equals(Bearer.GetStringProperty(
+					OwnerProperty(Key)), JobId, StringComparison.Ordinal))
+				{
+					Bearer.RemoveStringProperty(OwnerProperty(Key));
+					Bearer.RemoveStringProperty(OwnerNonceProperty(Key));
+				}
+			}
+			catch { }
+		}
+
+		internal static int ReferencePartOrdinal(GameObject Bearer, IPart Part)
+		{
+			for (int i = 0; Bearer?.PartsList != null && i < Bearer.PartsList.Count; i++)
+			{
+				if (ReferenceEquals(Bearer.PartsList[i], Part)) return i;
+			}
+			return -1;
+		}
+
+		private static int CountPartClass(GameObject Bearer, string ClassName)
+		{
+			int count = 0;
+			for (int i = 0; Bearer?.PartsList != null && i < Bearer.PartsList.Count; i++)
+			{
+				if (string.Equals(Bearer.PartsList[i]?.Name, ClassName,
+					StringComparison.Ordinal)) count++;
+			}
+			return count;
+		}
+
+		private static bool TryRollbackExactPart(GameObject Bearer, IPart Part)
+		{
+			if (ReferencePartOrdinal(Bearer, Part) < 0
+				&& (Part?.ParentObject == null || ReferenceEquals(Part.ParentObject, Bearer)))
+			{
+				return true;
+			}
+			try
+			{
+				Bearer.RemovePart(Part);
+			}
+			catch { }
+			return ReferencePartOrdinal(Bearer, Part) < 0
+				&& (Part?.ParentObject == null || ReferenceEquals(Part.ParentObject, Bearer));
+		}
+
+		internal static bool MutationListed(XRL.World.Parts.Mutations Mutations,
+			XRL.World.Parts.Mutation.BaseMutation Mutation)
+		{
+			for (int i = 0; Mutations?.MutationList != null && i < Mutations.MutationList.Count; i++)
+			{
+				if (ReferenceEquals(Mutations.MutationList[i], Mutation)) return true;
+			}
+			return false;
+		}
+
+		/// <summary>Actual global class presence across founder and every natural-weapon bearer.</summary>
+		public static bool HasProcedureClass(GameObject Who, LabProcedure Procedure)
+		{
+			if (Who == null || Procedure == null)
+			{
+				return false;
+			}
+			if (Procedure.Source == LabSource.Mutation)
+			{
+				// Modifier-backed mutations live as BaseMutation parts but are deliberately absent
+				// from Mutations.MutationList. AddMutation removes such a part before adding its own;
+				// checking the live part is therefore the non-destructive global collision test.
+				return Who.GetPart(Procedure.Grants) is XRL.World.Parts.Mutation.BaseMutation;
+			}
+			if (Procedure.Source == LabSource.Limb)
+			{
+				List<BodyPart> held = AllBodyParts(Who);
+				for (int i = 0; held != null && i < held.Count; i++)
+				{
+					if (string.Equals(held[i]?.Manager, ManagerFor(Procedure.Key), StringComparison.Ordinal))
+					{
+						return true;
+					}
+				}
+				return false;
+			}
+			if (Who.GetPart(Procedure.Grants) != null)
+			{
+				return true;
+			}
+			List<BodyPart> parts = AllBodyParts(Who);
+			List<GameObject> seen = new List<GameObject>();
+			for (int i = 0; parts != null && i < parts.Count; i++)
+			{
+				GameObject bearer = parts[i]?.DefaultBehavior;
+				if (GameObject.Validate(bearer) && !seen.Contains(bearer))
+				{
+					seen.Add(bearer);
+					if (bearer.GetPart(Procedure.Grants) != null)
+					{
+						return true;
+					}
+				}
+			}
+			return false;
 		}
 
 		/// <summary>
@@ -669,61 +1192,501 @@ namespace ThousandAndFirst
 			return true;
 		}
 
-		/// <summary>
-		/// Takes a graft off. Costs less than the graft, returns nothing, and is chronicled.
-		/// <para>
-		/// One call for a limb, because every limb we ever grew carries our manager
-		/// (<c>Body.RemovePartsByManager</c>, <c>D/XRL/World/Parts/Body.cs:708-734</c>); an explicit
-		/// walk for a part, because a part sits on the founder or on one of their claws and only the
-		/// record knows which.
-		/// </para>
-		/// </summary>
-		/// <returns>True when something actually came off.</returns>
-		public static bool Remove(GameObject Who, string Key)
+		/// <summary>Freezes the exact ownership identity before a removal receipt can spend water.
+		/// A pre-ledger record is deliberately not upgraded by guessing.</summary>
+		internal static KingdomLabOwnedTargetState SnapshotOwned(GameObject Who, string Key,
+			out KingdomLabOwnershipSnapshot Snapshot)
 		{
-			LabProcedure procedure;
-			if (Who == null || !TryGet(Key, out procedure))
+			Snapshot = default(KingdomLabOwnershipSnapshot);
+			if (Who == null || string.IsNullOrEmpty(Key))
+			{
+				return KingdomLabOwnedTargetState.Uncertain;
+			}
+			XRL.World.Parts.r_KingdomLabRecord record = Record(Who);
+			record.Normalize();
+			int at = record.IndexOf(Key);
+			if (at < 0)
+			{
+				return KingdomLabOwnedTargetState.Uncertain;
+			}
+			if (!record.ContractAt(at, out Snapshot, Who.ID))
+			{
+				// Legacy type/manager/ordinal rows remain visible to the slate, but are
+				// read-only quarantine. They cannot mint mutation authority by inference.
+				return KingdomLabOwnedTargetState.Uncertain;
+			}
+			if (Snapshot.Source == (int)LabSource.Limb && !EnsureLimbLedger(Who, Snapshot))
+			{
+				return KingdomLabOwnedTargetState.Uncertain;
+			}
+			KingdomLabOwnedTarget target;
+			return ClassifyOwned(Who, Snapshot, out target);
+		}
+
+		private static bool TryMigrateLegacyLimb(GameObject Who, LabProcedure Procedure,
+			XRL.World.Parts.r_KingdomLabRecord Record, int At,
+			out KingdomLabOwnershipSnapshot Snapshot)
+		{
+			Snapshot = default(KingdomLabOwnershipSnapshot);
+			if (Who == null || Procedure?.Source != LabSource.Limb || Record.RegistryQuarantined
+				|| At < 0 || At >= Record.Keys.Count || !string.IsNullOrEmpty(Record.Fingerprints[At])
+				|| At >= Record.EffectNonces.Count || Record.EffectNonces[At].Length != 32)
 			{
 				return false;
 			}
-			bool removed = false;
-			if (procedure.Source == LabSource.Limb)
+			string manager = ManagerFor(Procedure.Key);
+			BodyPart exact = null;
+			List<BodyPart> all = AllBodyParts(Who);
+			for (int i = 0; i < all.Count; i++)
 			{
-				removed = Who.RemoveBodyPartsByManager(ManagerFor(procedure.Key), EvenIfDismembered: true) > 0;
+				if (!string.Equals(all[i]?.Manager, manager, StringComparison.Ordinal)) continue;
+				if (exact != null) return false;
+				exact = all[i];
 			}
-			else if (procedure.Source == LabSource.Mutation)
-			{
-				XRL.World.Parts.Mutations mutations = Who.GetPart<XRL.World.Parts.Mutations>();
-				XRL.World.Parts.Mutation.BaseMutation held = mutations?.GetMutation(procedure.Grants);
-				if (held != null)
-				{
-					mutations.RemoveMutation(held);
-					removed = !mutations.HasMutation(procedure.Grants);
-				}
-			}
-			else
-			{
-				removed = RemovePartFrom(Who, procedure.Grants);
-				List<BodyPart> parts = Who.Body?.GetParts();
-				for (int i = 0; parts != null && i < parts.Count && !removed; i++)
-				{
-					if (GameObject.Validate(parts[i].DefaultBehavior))
-					{
-						removed = RemovePartFrom(parts[i].DefaultBehavior, procedure.Grants);
-					}
-				}
-			}
-			if (removed)
-			{
-				Record(Who).Forget(procedure.Key);
-				Who.WantToReequip();
-			}
-			return removed;
+			if (exact == null || !BodyOwnsPart(Who, exact)
+				|| (Record.BodyPartIds[At] > 0 && Record.BodyPartIds[At] != exact.ID)) return false;
+			string detail = ContractDetail(Procedure);
+			string fingerprint = KingdomLabRules.EffectFingerprint(
+				KingdomLabRules.EffectContractVersion, Procedure.Key, Procedure.Grants,
+				(int)Procedure.Source, (int)Procedure.Attach, manager, detail);
+			string job = string.IsNullOrEmpty(Record.JobIds[At])
+				? Guid.NewGuid().ToString("N") : Record.JobIds[At];
+			if (!Record.UpgradeLegacyLimbAt(At, exact.ID, Who.ID, job, Procedure.Named,
+				Procedure.Grants, (int)Procedure.Attach, manager, detail, fingerprint)) return false;
+			if (!Record.ContractAt(At, out Snapshot, Who.ID)) return false;
+			return EnsureLimbLedger(Who, Snapshot);
 		}
 
-		private static bool RemovePartFrom(GameObject Bearer, string ClassName)
+		private static bool EnsureLimbLedger(GameObject Who, KingdomLabOwnershipSnapshot Snapshot)
 		{
-			return Bearer != null && Bearer.GetPart(ClassName) != null && Bearer.RemovePart(ClassName);
+			if (Who == null || Snapshot.Source != (int)LabSource.Limb
+				|| !string.Equals(Who.ID, Snapshot.PatientId, StringComparison.Ordinal)
+				|| !string.Equals(Who.ID, Snapshot.BearerId, StringComparison.Ordinal)) return false;
+			BodyPart limb = ExactBodyPart(Who, Snapshot.BodyPartId);
+			if (limb == null || !BodyOwnsPart(Who, limb)
+				|| !string.Equals(limb.Manager, Snapshot.Manager, StringComparison.Ordinal)) return false;
+			try
+			{
+				XRL.World.Parts.r_KingdomLabEffectLedger ledger =
+					Who.RequirePart<XRL.World.Parts.r_KingdomLabEffectLedger>();
+				int at = ledger.IndexOf(Snapshot.ProcedureKey, Snapshot.JobId);
+				if (at < 0)
+				{
+					ledger.TrackIntent(Snapshot.ProcedureKey, Snapshot.JobId, Who.ID,
+						Snapshot.BodyPartId, Snapshot.Source, Snapshot.Attach, Snapshot.Grants,
+						Snapshot.Manager, Snapshot.Detail, Snapshot.Fingerprint, -1, null,
+						Snapshot.EffectNonce);
+				}
+				else if (!ledger.EntryMatches(at, Snapshot.ProcedureKey, Snapshot.JobId, Who.ID,
+					Snapshot.BodyPartId, Snapshot.Source, Snapshot.Attach, Snapshot.Grants,
+					Snapshot.Manager, Snapshot.Detail, Snapshot.Fingerprint, -1))
+				{
+					if (!ledger.UpgradeLegacyLimb(Snapshot.ProcedureKey, Snapshot.JobId, Who.ID,
+						Snapshot.BodyPartId, Snapshot.Attach, Snapshot.Grants, Snapshot.Manager,
+						Snapshot.Detail, Snapshot.Fingerprint)) return false;
+				}
+				string marker = Who.GetStringProperty(OwnerProperty(Snapshot.ProcedureKey));
+				if (!string.IsNullOrEmpty(marker) && !string.Equals(marker, Snapshot.JobId,
+					StringComparison.Ordinal)) return false;
+				Who.SetStringProperty(OwnerProperty(Snapshot.ProcedureKey), Snapshot.JobId);
+				Who.SetStringProperty(OwnerNonceProperty(Snapshot.ProcedureKey),
+					Snapshot.EffectNonce);
+				ledger.CommitBinding(Snapshot.ProcedureKey, Snapshot.JobId, -1, null);
+				return true;
+			}
+			catch (Exception ex)
+			{
+				KingdomLog.Log("lab: exact legacy limb migration stopped (" + ex.Message + ")");
+				return false;
+			}
+		}
+
+		/// <summary>Finds a current commission in the bearer ledger without inventing a legacy
+		/// identity from a same-class effect.</summary>
+		internal static KingdomLabOwnedTargetState SnapshotTracked(GameObject Who,
+			LabProcedure Procedure, string JobId, string BearerId,
+			out KingdomLabOwnershipSnapshot Snapshot)
+		{
+			Snapshot = default(KingdomLabOwnershipSnapshot);
+			if (Who == null || Procedure == null || string.IsNullOrEmpty(JobId)
+				|| string.IsNullOrEmpty(BearerId))
+			{
+				return KingdomLabOwnedTargetState.Uncertain;
+			}
+			GameObject bearer = string.Equals(BearerId, Who.ID, StringComparison.Ordinal)
+				? Who : GameObject.FindByID(BearerId);
+			XRL.World.Parts.r_KingdomLabEffectLedger ledger =
+				bearer?.GetPart<XRL.World.Parts.r_KingdomLabEffectLedger>();
+			int at = ledger?.IndexOf(Procedure.Key, JobId) ?? -1;
+			if (at < 0 || !string.Equals(ledger.PatientIds[at], Who.ID,
+				StringComparison.Ordinal) || ledger.LedgerQuarantined
+				|| !KingdomLabRules.ValidEffectContract(KingdomLabRules.EffectContractVersion,
+					ledger.ProcedureKeys[at], ledger.ClassNames[at], ledger.Sources[at],
+					ledger.Attaches[at], ledger.Managers[at], ledger.Fingerprints[at],
+					ledger.Details[at]))
+			{
+				return KingdomLabOwnedTargetState.Uncertain;
+			}
+			Snapshot = new KingdomLabOwnershipSnapshot(Procedure.Key, JobId, Who.ID,
+				ledger.BodyPartIds[at], BearerId, ledger.ClassNames[at], ledger.Sources[at],
+				ledger.Attaches[at], ledger.Managers[at], ledger.Details[at],
+				ledger.Fingerprints[at], ledger.PartOrdinals[at], ledger.NonceAt(at));
+			KingdomLabOwnedTarget target;
+			return ClassifyOwned(Who, Snapshot, out target);
+		}
+
+		/// <summary>Reads one tracked target. Missing physical state proves absence; a same-class
+		/// replacement without the original tracker is foreign and therefore uncertain.</summary>
+		internal static KingdomLabOwnedTargetState ClassifyOwned(GameObject Who,
+			LabProcedure Procedure, KingdomLabOwnershipSnapshot Snapshot,
+			out KingdomLabOwnedTarget Target)
+		{
+			if (Procedure == null || !string.Equals(Procedure.Key, Snapshot.ProcedureKey,
+				StringComparison.OrdinalIgnoreCase))
+			{
+				Target = null;
+				return KingdomLabOwnedTargetState.Uncertain;
+			}
+			return ClassifyOwned(Who, Snapshot, out Target);
+		}
+
+		internal static KingdomLabOwnedTargetState ClassifyOwned(GameObject Who,
+			KingdomLabOwnershipSnapshot Snapshot, out KingdomLabOwnedTarget Target)
+		{
+			Target = null;
+			if (Who == null
+				|| !string.Equals(Who.ID, Snapshot.PatientId, StringComparison.Ordinal)
+				|| string.IsNullOrEmpty(Snapshot.JobId) || Snapshot.BodyPartId <= 0
+				|| string.IsNullOrEmpty(Snapshot.BearerId) || Snapshot.EffectNonce.Length != 32
+				|| !KingdomLabRules.ValidEffectContract(KingdomLabRules.EffectContractVersion,
+					Snapshot.ProcedureKey, Snapshot.Grants, Snapshot.Source, Snapshot.Attach,
+					Snapshot.Manager, Snapshot.Fingerprint, Snapshot.Detail))
+			{
+				return KingdomLabOwnedTargetState.Uncertain;
+			}
+			GameObject bearer;
+			if (!ResolveExactBearer(Who, Snapshot, out bearer))
+			{
+				return KingdomLabOwnedTargetState.Uncertain;
+			}
+			XRL.World.Parts.r_KingdomLabEffectLedger ledger =
+				bearer.GetPart<XRL.World.Parts.r_KingdomLabEffectLedger>();
+			int entry = ledger?.IndexOf(Snapshot.ProcedureKey, Snapshot.JobId) ?? -1;
+			if (entry < 0)
+			{
+				return UntrackedPhysicalState(Who, bearer, Snapshot);
+			}
+			if (ledger.LedgerQuarantined || ledger.BindingStates[entry] == 2
+				|| !string.Equals(ledger.NonceAt(entry), Snapshot.EffectNonce,
+					StringComparison.Ordinal)
+				|| !string.Equals(bearer.GetStringProperty(
+					OwnerNonceProperty(Snapshot.ProcedureKey)), Snapshot.EffectNonce,
+					StringComparison.Ordinal)
+				|| !ledger.EntryMatches(entry, Snapshot.ProcedureKey, Snapshot.JobId, Who.ID,
+					Snapshot.BodyPartId, Snapshot.Source, Snapshot.Attach, Snapshot.Grants,
+					Snapshot.Manager, Snapshot.Detail, Snapshot.Fingerprint,
+					Snapshot.PartOrdinal))
+			{
+				return KingdomLabOwnedTargetState.Uncertain;
+			}
+			Target = new KingdomLabOwnedTarget { Bearer = bearer, Ledger = ledger };
+			if (ledger.BindingStates[entry] == 4)
+			{
+				return KingdomLabOwnedTargetState.Uncertain;
+			}
+			if (Snapshot.Source == (int)LabSource.Limb)
+			{
+				BodyPart limb = ExactBodyPart(Who, Snapshot.BodyPartId);
+				if (ledger.BindingStates[entry] == 3)
+				{
+					if (limb == null) return KingdomLabOwnedTargetState.Absent;
+					if (!BodyOwnsPart(Who, limb) || !string.Equals(limb.Manager,
+						Snapshot.Manager, StringComparison.Ordinal))
+					{
+						return KingdomLabOwnedTargetState.Uncertain;
+					}
+					Target.ExactBodyPart = limb;
+					return KingdomLabOwnedTargetState.Present;
+				}
+				if (limb == null)
+				{
+					return KingdomLabOwnedTargetState.Absent;
+				}
+				if (!BodyOwnsPart(Who, limb) || !string.Equals(limb.Manager,
+					Snapshot.Manager, StringComparison.Ordinal))
+				{
+					return KingdomLabOwnedTargetState.Uncertain;
+				}
+				Target.ExactBodyPart = limb;
+				return KingdomLabOwnedTargetState.Present;
+			}
+			if (ledger.BindingStates[entry] == 3)
+			{
+				IPart tombstonePart;
+				KingdomLabOwnedTargetState tombstone = ledger.ClassifyTombstone(entry,
+					out tombstonePart);
+				Target.ExactPart = tombstonePart;
+				return tombstone;
+			}
+			IPart exact = ledger.ResolvePart(entry);
+			if (Snapshot.Source == (int)LabSource.Mutation)
+			{
+				XRL.World.Parts.Mutations mutations = Who.GetPart<XRL.World.Parts.Mutations>();
+				XRL.World.Parts.Mutation.BaseMutation owned =
+					exact as XRL.World.Parts.Mutation.BaseMutation;
+				if (owned != null && MutationListed(mutations, owned))
+				{
+					Target.ExactPart = owned;
+					return KingdomLabOwnedTargetState.Present;
+				}
+				// RemoveMutation deliberately leaves modifier-backed mutation parts. The exact
+				// runtime instance plus absence from MutationList proves only our contribution gone.
+				if (owned != null)
+				{
+					Target.ExactPart = owned;
+					return KingdomLabOwnedTargetState.Absent;
+				}
+				return KingdomLabOwnedTargetState.Uncertain;
+			}
+			if (exact != null)
+			{
+				Target.ExactPart = exact;
+				return KingdomLabOwnedTargetState.Present;
+			}
+			return KingdomLabOwnedTargetState.Uncertain;
+		}
+
+		private static KingdomLabOwnedTargetState UntrackedPhysicalState(GameObject Who,
+			GameObject Bearer, KingdomLabOwnershipSnapshot Snapshot)
+		{
+			if (Snapshot.Source == (int)LabSource.Limb)
+			{
+				return ExactBodyPart(Who, Snapshot.BodyPartId) == null
+					? KingdomLabOwnedTargetState.Absent : KingdomLabOwnedTargetState.Uncertain;
+			}
+			return Bearer.GetPart(Snapshot.Grants) == null
+				? KingdomLabOwnedTargetState.Absent : KingdomLabOwnedTargetState.Uncertain;
+		}
+
+		private static bool ResolveExactBearer(GameObject Who,
+			KingdomLabOwnershipSnapshot Snapshot, out GameObject Bearer)
+		{
+			Bearer = null;
+			if (Snapshot.Source != (int)LabSource.Part
+				|| Snapshot.Attach == (int)LabAttach.Body)
+			{
+				if (!string.Equals(Snapshot.BearerId, Who.ID, StringComparison.Ordinal)) return false;
+				Bearer = Who;
+				return true;
+			}
+			if (Snapshot.Attach != (int)LabAttach.Weapon) return false;
+			BodyPart slot = ExactBodyPart(Who, Snapshot.BodyPartId);
+			GameObject exact = slot?.DefaultBehavior;
+			if (slot == null || !BodyOwnsPart(Who, slot) || !GameObject.Validate(exact)
+				|| !ReferenceEquals(slot.DefaultBehavior, exact)
+				|| !string.Equals(exact.ID, Snapshot.BearerId, StringComparison.Ordinal)) return false;
+			Bearer = exact;
+			return true;
+		}
+
+		/// <summary>Calls the engine only with the exact tracked instance or exact body-part ID.</summary>
+		internal static KingdomLabOwnedTargetState RemoveExact(GameObject Who,
+			LabProcedure Procedure, KingdomLabOwnershipSnapshot Snapshot)
+		{
+			KingdomLabOwnedTarget target;
+			KingdomLabOwnedTargetState before = ClassifyOwned(Who, Snapshot, out target);
+			if (before != KingdomLabOwnedTargetState.Present || target == null)
+			{
+				return before;
+			}
+			int tracked = target.Ledger.IndexOf(Snapshot.ProcedureKey, Snapshot.JobId);
+			if (target.Ledger.BindingStateAt(tracked) == 3
+				&& !target.Ledger.RearmPresent(tracked, target.ExactPart))
+			{
+				return KingdomLabOwnedTargetState.Uncertain;
+			}
+			if (!target.Ledger.BeginRemoval(Snapshot.ProcedureKey, Snapshot.JobId))
+			{
+				return KingdomLabOwnedTargetState.Uncertain;
+			}
+			try
+			{
+				if (Snapshot.Source == (int)LabSource.Limb)
+				{
+					Who.Body.RemovePartByID(Snapshot.BodyPartId);
+				}
+				else if (Snapshot.Source == (int)LabSource.Mutation)
+				{
+					Who.GetPart<XRL.World.Parts.Mutations>()?.RemoveMutation(
+						target.ExactPart as XRL.World.Parts.Mutation.BaseMutation);
+				}
+				else
+				{
+					target.Bearer.RemovePart(target.ExactPart);
+				}
+			}
+			catch (Exception ex)
+			{
+				KingdomLog.Log("lab: exact removal callback threw (" + ex.Message + ")");
+			}
+			return SettleRemovalIntent(Who, Snapshot, target);
+		}
+
+		private static KingdomLabOwnedTargetState SettleRemovalIntent(GameObject Who,
+			KingdomLabOwnershipSnapshot Snapshot, KingdomLabOwnedTarget Target)
+		{
+			int entry = Target.Ledger.IndexOf(Snapshot.ProcedureKey, Snapshot.JobId);
+			if (entry < 0) return KingdomLabOwnedTargetState.Uncertain;
+			if (Target.Ledger.BindingStateAt(entry) == 3)
+			{
+				KingdomLabOwnedTarget ignored;
+				return ClassifyOwned(Who, Snapshot, out ignored);
+			}
+			if (Target.Ledger.BindingStateAt(entry) != 4)
+			{
+				return KingdomLabOwnedTargetState.Uncertain;
+			}
+			if (Snapshot.Source == (int)LabSource.Limb)
+			{
+				BodyPart limb = ExactBodyPart(Who, Snapshot.BodyPartId);
+				if (limb == null)
+				{
+					Target.Ledger.MarkRemoved(Snapshot.ProcedureKey, Snapshot.JobId);
+					return KingdomLabOwnedTargetState.Absent;
+				}
+				if (BodyOwnsPart(Who, limb) && string.Equals(limb.Manager,
+					Snapshot.Manager, StringComparison.Ordinal))
+				{
+					Target.Ledger.CancelRemoval(Snapshot.ProcedureKey, Snapshot.JobId);
+					return KingdomLabOwnedTargetState.Present;
+				}
+				Target.Ledger.Quarantine(Snapshot.ProcedureKey, Snapshot.JobId);
+				return KingdomLabOwnedTargetState.Uncertain;
+			}
+			IPart exact = Target.ExactPart;
+			int ordinal = ReferencePartOrdinal(Target.Bearer, exact);
+			if (exact == null || exact.ParentObject == null || ordinal < 0)
+			{
+				Target.Ledger.MarkRemoved(Snapshot.ProcedureKey, Snapshot.JobId);
+				return KingdomLabOwnedTargetState.Absent;
+			}
+			if (!ReferenceEquals(exact.ParentObject, Target.Bearer)
+				|| ordinal != Snapshot.PartOrdinal
+				|| !string.Equals(exact.Name, Snapshot.Grants, StringComparison.Ordinal))
+			{
+				Target.Ledger.Quarantine(Snapshot.ProcedureKey, Snapshot.JobId);
+				return KingdomLabOwnedTargetState.Uncertain;
+			}
+			if (Snapshot.Source == (int)LabSource.Mutation
+				&& !MutationListed(Who.GetPart<XRL.World.Parts.Mutations>(),
+					exact as XRL.World.Parts.Mutation.BaseMutation))
+			{
+				Target.Ledger.MarkRemoved(Snapshot.ProcedureKey, Snapshot.JobId);
+				return KingdomLabOwnedTargetState.Absent;
+			}
+			Target.Ledger.CancelRemoval(Snapshot.ProcedureKey, Snapshot.JobId);
+			return KingdomLabOwnedTargetState.Present;
+		}
+
+		internal static bool CleanupOwned(GameObject Who, LabProcedure Procedure,
+			KingdomLabOwnershipSnapshot Snapshot)
+		{
+			KingdomLabOwnedTarget ignored;
+			if (ClassifyOwned(Who, Snapshot, out ignored) != KingdomLabOwnedTargetState.Absent)
+				return false;
+			GameObject bearer;
+			if (!ResolveExactBearer(Who, Snapshot, out bearer)) return false;
+			XRL.World.Parts.r_KingdomLabEffectLedger ledger =
+				bearer?.GetPart<XRL.World.Parts.r_KingdomLabEffectLedger>();
+			int entry = ledger?.IndexOf(Snapshot.ProcedureKey, Snapshot.JobId) ?? -1;
+			if (entry < 0) return false;
+			ledger.MarkRemoved(Snapshot.ProcedureKey, Snapshot.JobId);
+			IPart tombstonePart;
+			if (ledger.ClassifyTombstone(entry, out tombstonePart)
+				!= KingdomLabOwnedTargetState.Absent) return false;
+			string marker = bearer.GetStringProperty(OwnerProperty(Snapshot.ProcedureKey));
+			string nonceMarker = bearer.GetStringProperty(
+				OwnerNonceProperty(Snapshot.ProcedureKey));
+			if (!string.IsNullOrEmpty(marker)
+				&& !string.Equals(marker, Snapshot.JobId, StringComparison.Ordinal)) return false;
+			if (!string.IsNullOrEmpty(nonceMarker)
+				&& !string.Equals(nonceMarker, Snapshot.EffectNonce,
+					StringComparison.Ordinal)) return false;
+			if (string.Equals(marker, Snapshot.JobId, StringComparison.Ordinal))
+			{
+				try { bearer.RemoveStringProperty(OwnerProperty(Snapshot.ProcedureKey)); }
+				catch { return false; }
+				if (!string.IsNullOrEmpty(bearer.GetStringProperty(
+					OwnerProperty(Snapshot.ProcedureKey)))) return false;
+			}
+			if (string.Equals(nonceMarker, Snapshot.EffectNonce, StringComparison.Ordinal))
+			{
+				try { bearer.RemoveStringProperty(OwnerNonceProperty(Snapshot.ProcedureKey)); }
+				catch { return false; }
+			}
+			XRL.World.Parts.r_KingdomLabRecord record =
+				Who?.GetPart<XRL.World.Parts.r_KingdomLabRecord>();
+			record?.ForgetOwned(Snapshot.ProcedureKey, Snapshot.JobId);
+			return ledger.IndexOf(Snapshot.ProcedureKey, Snapshot.JobId) == entry
+				&& ledger.BindingStateAt(entry) == 3
+				&& !string.Equals(bearer.GetStringProperty(OwnerProperty(Snapshot.ProcedureKey)),
+					Snapshot.JobId, StringComparison.Ordinal)
+				&& !string.Equals(bearer.GetStringProperty(
+					OwnerNonceProperty(Snapshot.ProcedureKey)), Snapshot.EffectNonce,
+					StringComparison.Ordinal)
+				&& !RecordContains(record, Snapshot.ProcedureKey, Snapshot.JobId);
+		}
+
+		internal static bool PurgeOwnedTombstone(GameObject Who,
+			KingdomLabOwnershipSnapshot Snapshot)
+		{
+			GameObject bearer;
+			if (!ResolveExactBearer(Who, Snapshot, out bearer)) return false;
+			XRL.World.Parts.r_KingdomLabEffectLedger ledger =
+				bearer.GetPart<XRL.World.Parts.r_KingdomLabEffectLedger>();
+			int entry = ledger?.IndexOf(Snapshot.ProcedureKey, Snapshot.JobId) ?? -1;
+			if (entry < 0) return true;
+			IPart exact;
+			if (ledger.BindingStateAt(entry) != 3
+				|| ledger.ClassifyTombstone(entry, out exact)
+					!= KingdomLabOwnedTargetState.Absent) return false;
+			ledger.Forget(Snapshot.ProcedureKey, Snapshot.JobId, CleanupPatient: false);
+			return ledger.IndexOf(Snapshot.ProcedureKey, Snapshot.JobId) < 0;
+		}
+
+		private static bool RecordContains(XRL.World.Parts.r_KingdomLabRecord Record,
+			string Key, string JobId)
+		{
+			Record?.Normalize();
+			for (int i = 0; Record != null && i < Record.Keys.Count; i++)
+			{
+				if (string.Equals(Record.Keys[i], Key, StringComparison.OrdinalIgnoreCase)
+					&& string.Equals(Record.JobIds[i], JobId, StringComparison.Ordinal)) return true;
+			}
+			return false;
+		}
+
+		/// <summary>Compatibility entrypoint, now using the exact ownership protocol.</summary>
+		public static bool Remove(GameObject Who, string Key)
+		{
+			KingdomLabOwnershipSnapshot snapshot;
+			if (SnapshotOwned(Who, Key, out snapshot) != KingdomLabOwnedTargetState.Present)
+			{
+				return false;
+			}
+			LabProcedure procedure;
+			if (!TryGet(Key, out procedure)
+				|| RemoveExact(Who, procedure, snapshot) != KingdomLabOwnedTargetState.Absent)
+				return false;
+			try { Who.WantToReequip(); }
+			catch (Exception ex)
+			{
+				KingdomLog.Log("lab: compatibility removal reequip threw (" + ex.Message + ")");
+			}
+			KingdomLabOwnedTarget ignored;
+			return ClassifyOwned(Who, snapshot, out ignored) == KingdomLabOwnedTargetState.Absent
+				&& CleanupOwned(Who, procedure, snapshot)
+				&& PurgeOwnedTombstone(Who, snapshot);
 		}
 
 		/// <summary>The founder's own record of what has been done to them, minted on first use.
@@ -760,6 +1723,664 @@ namespace XRL.World.Parts
 	using ThousandAndFirst;
 
 	/// <summary>
+	/// Bearer-side proof of which exact live effect one lab commission owns. Primitive named fields
+	/// survive saves; runtime references are rebuilt only while this proof remains present. A
+	/// PartRemovedEvent erases the proof before a same-class replacement can inherit it.
+	/// </summary>
+	[Serializable]
+	public class r_KingdomLabEffectLedger : IPart
+	{
+		public List<string> ProcedureKeys = new List<string>();
+		public List<string> JobIds = new List<string>();
+		public List<string> PatientIds = new List<string>();
+		public List<int> BodyPartIds = new List<int>();
+		public List<int> Sources = new List<int>();
+		public List<string> ClassNames = new List<string>();
+		public List<int> Attaches = new List<int>();
+		public List<string> Managers = new List<string>();
+		public List<string> Details = new List<string>();
+		public List<string> Fingerprints = new List<string>();
+		public List<int> PartOrdinals = new List<int>();
+		public List<int> BindingStates = new List<int>();
+		public List<string> EffectNonces = new List<string>();
+		public bool LedgerQuarantined;
+
+		[NonSerialized]
+		private List<IPart> RuntimeParts;
+
+		public override bool SameAs(IPart p)
+		{
+			return false;
+		}
+
+		public override IPart DeepCopy(GameObject Parent, Func<GameObject, GameObject> MapInv)
+		{
+			r_KingdomLabEffectLedger copy = (r_KingdomLabEffectLedger)base.DeepCopy(Parent, MapInv);
+			copy.ProcedureKeys = new List<string>(ProcedureKeys ?? new List<string>());
+			copy.JobIds = new List<string>(JobIds ?? new List<string>());
+			copy.PatientIds = new List<string>(PatientIds ?? new List<string>());
+			copy.BodyPartIds = new List<int>(BodyPartIds ?? new List<int>());
+			copy.Sources = new List<int>(Sources ?? new List<int>());
+			copy.ClassNames = new List<string>(ClassNames ?? new List<string>());
+			copy.Attaches = new List<int>(Attaches ?? new List<int>());
+			copy.Managers = new List<string>(Managers ?? new List<string>());
+			copy.Details = new List<string>(Details ?? new List<string>());
+			copy.Fingerprints = new List<string>(Fingerprints ?? new List<string>());
+			copy.PartOrdinals = new List<int>(PartOrdinals ?? new List<int>());
+			copy.BindingStates = new List<int>(BindingStates ?? new List<int>());
+			copy.EffectNonces = new List<string>(EffectNonces ?? new List<string>());
+			copy.RuntimeParts = null;
+			return copy;
+		}
+
+		public override void FinalizeCopy(GameObject Source, bool CopyEffects, bool CopyID,
+			Func<GameObject, GameObject> MapInv)
+		{
+			base.FinalizeCopy(Source, CopyEffects, CopyID, MapInv);
+			Normalize();
+			for (int i = 0; i < EffectNonces.Count; i++)
+			{
+				EffectNonces[i] = Guid.NewGuid().ToString("N");
+				BindingStates[i] = 2;
+			}
+			LedgerQuarantined = true;
+		}
+
+		public override bool WantEvent(int ID, int cascade)
+		{
+			return base.WantEvent(ID, cascade) || ID == PooledEvent<PartRemovedEvent>.ID;
+		}
+
+		public override bool HandleEvent(PartRemovedEvent E)
+		{
+			Normalize();
+			for (int i = ProcedureKeys.Count - 1; i >= 0; i--)
+			{
+				IPart runtime = RuntimeParts[i];
+				if (ReferenceEquals(runtime, E.Part))
+				{
+					if (BindingStates[i] == 4 || BindingStates[i] == 3)
+					{
+						BindingStates[i] = 3;
+					}
+					else
+					{
+						ForgetAt(i, CleanupPatient: true);
+					}
+				}
+			}
+			return base.HandleEvent(E);
+		}
+
+		public override void ObjectLoaded()
+		{
+			base.ObjectLoaded();
+			Normalize();
+			for (int i = 0; i < ProcedureKeys.Count; i++)
+			{
+				RebindAt(i);
+			}
+		}
+
+		public void Track(string ProcedureKey, string JobId, string PatientId, int BodyPartId,
+			int Source, string ClassName, IPart RuntimePart)
+		{
+			string manager = KingdomProcedures.ManagerFor(ProcedureKey);
+			string fingerprint = KingdomLabRules.EffectFingerprint(
+				KingdomLabRules.EffectContractVersion, ProcedureKey, ClassName, Source,
+				(int)LabAttach.Body, manager, "");
+			TrackIntent(ProcedureKey, JobId, PatientId, BodyPartId, Source,
+				(int)LabAttach.Body, ClassName, manager, "", fingerprint,
+				KingdomProcedures.ReferencePartOrdinal(ParentObject, RuntimePart), RuntimePart);
+			CommitBinding(ProcedureKey, JobId,
+				KingdomProcedures.ReferencePartOrdinal(ParentObject, RuntimePart), RuntimePart);
+		}
+
+		public void TrackIntent(string ProcedureKey, string JobId, string PatientId,
+			int BodyPartId, int Source, int Attach, string ClassName, string Manager,
+			string Detail, string Fingerprint, int PartOrdinal, IPart RuntimePart,
+			string EffectNonce = "")
+		{
+			Normalize();
+			string nonce = EffectNonce ?? "";
+			if (LedgerQuarantined)
+			{
+				LedgerQuarantined = true;
+				throw new InvalidOperationException("lab effect ledger is quarantined");
+			}
+			if (!KingdomLabRules.ValidEffectContract(KingdomLabRules.EffectContractVersion,
+				ProcedureKey, ClassName, Source, Attach, Manager, Fingerprint, Detail))
+			{
+				throw new InvalidOperationException("invalid lab effect contract");
+			}
+			int existing = IndexOf(ProcedureKey, JobId);
+			if (existing >= 0)
+			{
+				if (string.IsNullOrEmpty(nonce)) nonce = EffectNonces[existing];
+				if (!EntryMatches(existing, ProcedureKey, JobId, PatientId, BodyPartId,
+					Source, Attach, ClassName, Manager, Detail, Fingerprint, PartOrdinal,
+					IgnoreOrdinal: true)
+					|| nonce.Length != 32
+					|| !string.Equals(EffectNonces[existing], nonce, StringComparison.Ordinal))
+				{
+					throw new InvalidOperationException("lab effect identity collision");
+				}
+				RuntimeParts[existing] = RuntimePart;
+				PartOrdinals[existing] = PartOrdinal;
+				BindingStates[existing] = 0;
+				return;
+			}
+			if (string.IsNullOrEmpty(nonce)) nonce = Guid.NewGuid().ToString("N");
+			if (nonce.Length != 32)
+				throw new InvalidOperationException("invalid lab effect nonce");
+			if (ProcedureKeys.Count >= KingdomLabRules.MaxEffectRows)
+			{
+				LedgerQuarantined = true;
+				throw new InvalidOperationException("lab effect ledger is full");
+			}
+			ProcedureKeys.Add(ProcedureKey ?? "");
+			JobIds.Add(JobId ?? "");
+			PatientIds.Add(PatientId ?? "");
+			BodyPartIds.Add(BodyPartId);
+			Sources.Add(Source);
+			ClassNames.Add(ClassName ?? "");
+			Attaches.Add(Attach);
+			Managers.Add(Manager ?? "");
+			Details.Add(Detail ?? "");
+			Fingerprints.Add(Fingerprint ?? "");
+			PartOrdinals.Add(PartOrdinal);
+			BindingStates.Add(0);
+			EffectNonces.Add(nonce);
+			RuntimeParts.Add(RuntimePart);
+		}
+
+		public string NonceAt(int At)
+		{
+			Normalize();
+			return At >= 0 && At < EffectNonces.Count ? EffectNonces[At] : "";
+		}
+
+		public void CommitBinding(string ProcedureKey, string JobId, int PartOrdinal,
+			IPart RuntimePart)
+		{
+			int at = IndexOf(ProcedureKey, JobId);
+			if (at < 0) throw new InvalidOperationException("lab effect intent is absent");
+			if (Sources[at] == (int)LabSource.Limb)
+			{
+				BodyPart limb = KingdomProcedures.ExactBodyPart(ParentObject, BodyPartIds[at]);
+				if (limb == null || !KingdomProcedures.BodyOwnsPart(ParentObject, limb)
+					|| !string.Equals(limb.Manager, Managers[at], StringComparison.Ordinal))
+				{
+					BindingStates[at] = 2;
+					throw new InvalidOperationException("exact limb binding is not present");
+				}
+			}
+			else
+			{
+				if (RuntimePart == null || !ReferenceEquals(RuntimePart.ParentObject, ParentObject)
+					|| KingdomProcedures.ReferencePartOrdinal(ParentObject, RuntimePart) != PartOrdinal)
+				{
+					BindingStates[at] = 2;
+					throw new InvalidOperationException("exact part binding is not present at its ordinal");
+				}
+			}
+			PartOrdinals[at] = PartOrdinal;
+			RuntimeParts[at] = RuntimePart;
+			BindingStates[at] = 1;
+		}
+
+		public void Quarantine(string ProcedureKey, string JobId)
+		{
+			int at = IndexOf(ProcedureKey, JobId);
+			if (at >= 0) BindingStates[at] = 2;
+		}
+
+		public bool BeginRemoval(string ProcedureKey, string JobId)
+		{
+			int at = IndexOf(ProcedureKey, JobId);
+			if (at < 0 || BindingStates[at] == 2 || BindingStates[at] == 3) return false;
+			BindingStates[at] = 4;
+			return true;
+		}
+
+		public void MarkRemoved(string ProcedureKey, string JobId)
+		{
+			int at = IndexOf(ProcedureKey, JobId);
+			if (at >= 0 && BindingStates[at] != 2) BindingStates[at] = 3;
+		}
+
+		public void CancelRemoval(string ProcedureKey, string JobId)
+		{
+			int at = IndexOf(ProcedureKey, JobId);
+			if (at >= 0 && BindingStates[at] == 4) BindingStates[at] = 1;
+		}
+
+		public int BindingStateAt(int At)
+		{
+			Normalize();
+			return At < 0 || At >= BindingStates.Count ? 2 : BindingStates[At];
+		}
+
+		internal bool RearmPresent(int At, IPart Exact)
+		{
+			Normalize();
+			if (At < 0 || At >= ProcedureKeys.Count || BindingStates[At] != 3) return false;
+			if (Sources[At] == (int)LabSource.Limb)
+			{
+				BodyPart limb = KingdomProcedures.ExactBodyPart(ParentObject, BodyPartIds[At]);
+				if (limb == null || !KingdomProcedures.BodyOwnsPart(ParentObject, limb)
+					|| !string.Equals(limb.Manager, Managers[At], StringComparison.Ordinal))
+					return false;
+			}
+			else
+			{
+				int ordinal = KingdomProcedures.ReferencePartOrdinal(ParentObject, Exact);
+				if (Exact == null || !ReferenceEquals(Exact.ParentObject, ParentObject)
+					|| ordinal != PartOrdinals[At]
+					|| !string.Equals(Exact.Name, ClassNames[At], StringComparison.Ordinal)
+					|| (Sources[At] == (int)LabSource.Mutation
+						&& !KingdomProcedures.MutationListed(ParentObject.GetPart<Mutations>(),
+							Exact as XRL.World.Parts.Mutation.BaseMutation))) return false;
+				RuntimeParts[At] = Exact;
+			}
+			BindingStates[At] = 1;
+			return true;
+		}
+
+		internal KingdomLabOwnedTargetState ClassifyTombstone(int At, out IPart Exact)
+		{
+			Exact = null;
+			Normalize();
+			if (At < 0 || At >= ProcedureKeys.Count || BindingStates[At] != 3)
+				return KingdomLabOwnedTargetState.Uncertain;
+			IPart runtime = RuntimeParts[At];
+			if (runtime == null || runtime.ParentObject == null)
+			{
+				int frozenOrdinal = PartOrdinals[At];
+				IPart candidate = frozenOrdinal >= 0 && ParentObject?.PartsList != null
+					&& frozenOrdinal < ParentObject.PartsList.Count
+					? ParentObject.PartsList[frozenOrdinal] : null;
+				if (candidate == null || !string.Equals(candidate.Name, ClassNames[At],
+					StringComparison.Ordinal)) return KingdomLabOwnedTargetState.Absent;
+				if (Sources[At] == (int)LabSource.Mutation
+					&& !KingdomProcedures.MutationListed(ParentObject.GetPart<Mutations>(),
+						candidate as XRL.World.Parts.Mutation.BaseMutation))
+				{
+					return KingdomLabOwnedTargetState.Absent;
+				}
+				return KingdomLabOwnedTargetState.Uncertain;
+			}
+			int ordinal = KingdomProcedures.ReferencePartOrdinal(ParentObject, runtime);
+			if (!ReferenceEquals(runtime.ParentObject, ParentObject) || ordinal < 0
+				|| ordinal != PartOrdinals[At]
+				|| !string.Equals(runtime.Name, ClassNames[At], StringComparison.Ordinal))
+				return KingdomLabOwnedTargetState.Uncertain;
+			if (Sources[At] == (int)LabSource.Mutation
+				&& !KingdomProcedures.MutationListed(ParentObject.GetPart<Mutations>(),
+					runtime as XRL.World.Parts.Mutation.BaseMutation))
+				return KingdomLabOwnedTargetState.Absent;
+			Exact = runtime;
+			return KingdomLabOwnedTargetState.Present;
+		}
+
+		public bool UpgradeLegacyLimb(string ProcedureKey, string JobId, string PatientId,
+			int BodyPartId, int Attach, string ClassName, string Manager, string Detail,
+			string Fingerprint)
+		{
+			Normalize();
+			if (LedgerQuarantined || string.IsNullOrEmpty(JobId)
+				|| !KingdomLabRules.ValidEffectContract(KingdomLabRules.EffectContractVersion,
+					ProcedureKey, ClassName, (int)LabSource.Limb, Attach, Manager,
+					Fingerprint, Detail)) return false;
+			int at = IndexOf(ProcedureKey, JobId);
+			if (at < 0 || !string.Equals(PatientIds[at], PatientId, StringComparison.Ordinal)
+				|| Sources[at] != (int)LabSource.Limb || BodyPartIds[at] != BodyPartId
+				|| (!string.IsNullOrEmpty(ClassNames[at])
+					&& !string.Equals(ClassNames[at], ClassName, StringComparison.Ordinal)))
+			{
+				return false;
+			}
+			BodyPart limb = KingdomProcedures.ExactBodyPart(ParentObject, BodyPartId);
+			if (limb == null || !KingdomProcedures.BodyOwnsPart(ParentObject, limb)
+				|| !string.Equals(limb.Manager, Manager, StringComparison.Ordinal)
+				|| !string.Equals(ParentObject?.GetStringProperty(
+					KingdomProcedures.OwnerProperty(ProcedureKey)), JobId, StringComparison.Ordinal))
+			{
+				return false;
+			}
+			ClassNames[at] = ClassName;
+			Attaches[at] = Attach;
+			Managers[at] = Manager;
+			Details[at] = Detail;
+			Fingerprints[at] = Fingerprint;
+			PartOrdinals[at] = -1;
+			BindingStates[at] = 1;
+			return true;
+		}
+
+		public int IndexOf(string ProcedureKey, string JobId)
+		{
+			Normalize();
+			for (int i = 0; i < ProcedureKeys.Count; i++)
+			{
+				if (string.Equals(ProcedureKeys[i], ProcedureKey,
+					StringComparison.OrdinalIgnoreCase)
+					&& string.Equals(JobIds[i], JobId, StringComparison.Ordinal))
+				{
+					return i;
+				}
+			}
+			return -1;
+		}
+
+		public bool EntryMatches(int At, string ProcedureKey, string JobId, string PatientId,
+			int BodyPartId, int Source, int Attach, string ClassName, string Manager,
+			string Detail, string Fingerprint, int PartOrdinal, bool IgnoreOrdinal = false)
+		{
+			Normalize();
+			return At >= 0 && At < ProcedureKeys.Count
+				&& string.Equals(ProcedureKeys[At], ProcedureKey,
+					StringComparison.OrdinalIgnoreCase)
+				&& string.Equals(JobIds[At], JobId, StringComparison.Ordinal)
+				&& string.Equals(PatientIds[At], PatientId, StringComparison.Ordinal)
+				&& BodyPartIds[At] == BodyPartId && Sources[At] == Source && Attaches[At] == Attach
+				&& string.Equals(ClassNames[At], ClassName, StringComparison.Ordinal)
+				&& string.Equals(Managers[At], Manager, StringComparison.Ordinal)
+				&& string.Equals(Details[At], Detail, StringComparison.Ordinal)
+				&& string.Equals(Fingerprints[At], Fingerprint, StringComparison.Ordinal)
+				&& (IgnoreOrdinal || PartOrdinals[At] == PartOrdinal);
+		}
+
+		public bool EntryMatches(int At, string ProcedureKey, string JobId, string PatientId,
+			int BodyPartId, int Source, string ClassName)
+		{
+			Normalize();
+			return At >= 0 && At < ProcedureKeys.Count
+				&& string.Equals(ProcedureKeys[At], ProcedureKey, StringComparison.OrdinalIgnoreCase)
+				&& string.Equals(JobIds[At], JobId, StringComparison.Ordinal)
+				&& string.Equals(PatientIds[At], PatientId, StringComparison.Ordinal)
+				&& BodyPartIds[At] == BodyPartId && Sources[At] == Source
+				&& string.Equals(ClassNames[At], ClassName, StringComparison.Ordinal);
+		}
+
+		public IPart ResolvePart(int At)
+		{
+			Normalize();
+			if (LedgerQuarantined || At < 0 || At >= ProcedureKeys.Count
+				|| Sources[At] == (int)LabSource.Limb || BindingStates[At] == 2
+				|| BindingStates[At] == 3 || BindingStates[At] == 4)
+			{
+				return null;
+			}
+			IPart runtime = RuntimeParts[At];
+			if (runtime != null && ReferenceEquals(runtime.ParentObject, ParentObject)
+				&& KingdomProcedures.ReferencePartOrdinal(ParentObject, runtime) == PartOrdinals[At]
+				&& string.Equals(runtime.Name, ClassNames[At], StringComparison.Ordinal))
+			{
+				return runtime;
+			}
+			RuntimeParts[At] = null;
+			return RebindAt(At);
+		}
+
+		private IPart RebindAt(int At)
+		{
+			if (LedgerQuarantined || At < 0 || At >= ProcedureKeys.Count
+				|| BindingStates[At] == 2
+				|| !string.Equals(ParentObject?.GetStringProperty(
+					KingdomProcedures.OwnerProperty(ProcedureKeys[At])), JobIds[At],
+					StringComparison.Ordinal)
+				|| !string.Equals(ParentObject?.GetStringProperty(
+					KingdomProcedures.OwnerNonceProperty(ProcedureKeys[At])), EffectNonces[At],
+					StringComparison.Ordinal))
+			{
+				return null;
+			}
+			if (BindingStates[At] == 3) return null;
+			if (BindingStates[At] == 4)
+			{
+				BindingStates[At] = 2;
+				return null;
+			}
+			if (Sources[At] == (int)LabSource.Limb)
+			{
+				BodyPart limb = KingdomProcedures.ExactBodyPart(ParentObject, BodyPartIds[At]);
+				if (limb != null && KingdomProcedures.BodyOwnsPart(ParentObject, limb)
+					&& string.Equals(limb.Manager, Managers[At], StringComparison.Ordinal)
+					&& KingdomLabRules.ValidEffectContract(KingdomLabRules.EffectContractVersion,
+						ProcedureKeys[At], ClassNames[At], Sources[At], Attaches[At], Managers[At],
+						Fingerprints[At], Details[At]))
+				{
+					BindingStates[At] = 1;
+					return null;
+				}
+				BindingStates[At] = 2;
+				return null;
+			}
+			int ordinal = PartOrdinals[At];
+			if (ordinal < 0 || ParentObject?.PartsList == null || ordinal >= ParentObject.PartsList.Count)
+			{
+				BindingStates[At] = 2;
+				return null;
+			}
+			IPart candidate = ParentObject.PartsList[ordinal];
+			if (candidate == null || !ReferenceEquals(candidate.ParentObject, ParentObject)
+				|| !string.Equals(candidate.Name, ClassNames[At], StringComparison.Ordinal)
+				|| !KingdomLabRules.ValidEffectContract(KingdomLabRules.EffectContractVersion,
+					ProcedureKeys[At], ClassNames[At], Sources[At], Attaches[At], Managers[At],
+					Fingerprints[At], Details[At]))
+			{
+				BindingStates[At] = 2;
+				return null;
+			}
+			if (Sources[At] == (int)LabSource.Mutation
+				&& !KingdomProcedures.MutationListed(
+					ParentObject.GetPart<XRL.World.Parts.Mutations>(),
+					candidate as XRL.World.Parts.Mutation.BaseMutation))
+			{
+				BindingStates[At] = 2;
+				return null;
+			}
+			RuntimeParts[At] = candidate;
+			BindingStates[At] = 1;
+			return candidate;
+		}
+
+		public void Forget(string ProcedureKey, string JobId, bool CleanupPatient)
+		{
+			int at = IndexOf(ProcedureKey, JobId);
+			if (at >= 0)
+			{
+				ForgetAt(at, CleanupPatient);
+			}
+		}
+
+		private void ForgetAt(int At, bool CleanupPatient)
+		{
+			string key = ProcedureKeys[At];
+			string job = JobIds[At];
+			string nonce = EffectNonces[At];
+			string patientId = PatientIds[At];
+			ProcedureKeys.RemoveAt(At);
+			JobIds.RemoveAt(At);
+			PatientIds.RemoveAt(At);
+			BodyPartIds.RemoveAt(At);
+			Sources.RemoveAt(At);
+			ClassNames.RemoveAt(At);
+			Attaches.RemoveAt(At);
+			Managers.RemoveAt(At);
+			Details.RemoveAt(At);
+			Fingerprints.RemoveAt(At);
+			PartOrdinals.RemoveAt(At);
+			BindingStates.RemoveAt(At);
+			EffectNonces.RemoveAt(At);
+			RuntimeParts.RemoveAt(At);
+			try
+			{
+				if (string.Equals(ParentObject.GetStringProperty(
+					KingdomProcedures.OwnerProperty(key)), job, StringComparison.Ordinal))
+				{
+					ParentObject.RemoveStringProperty(KingdomProcedures.OwnerProperty(key));
+				}
+				if (string.Equals(ParentObject.GetStringProperty(
+					KingdomProcedures.OwnerNonceProperty(key)), nonce, StringComparison.Ordinal))
+				{
+					ParentObject.RemoveStringProperty(KingdomProcedures.OwnerNonceProperty(key));
+				}
+				if (CleanupPatient)
+				{
+					GameObject patient = GameObject.FindByID(patientId);
+					patient?.GetPart<r_KingdomLabRecord>()?.ForgetOwned(key, job);
+				}
+			}
+			catch (Exception ex)
+			{
+				KingdomLog.Log("lab: effect-ledger cleanup threw (" + ex.Message + ")");
+			}
+		}
+
+		public void Normalize()
+		{
+			ProcedureKeys = ProcedureKeys ?? new List<string>();
+			JobIds = JobIds ?? new List<string>();
+			PatientIds = PatientIds ?? new List<string>();
+			BodyPartIds = BodyPartIds ?? new List<int>();
+			Sources = Sources ?? new List<int>();
+			ClassNames = ClassNames ?? new List<string>();
+			Attaches = Attaches ?? new List<int>();
+			Managers = Managers ?? new List<string>();
+			Details = Details ?? new List<string>();
+			Fingerprints = Fingerprints ?? new List<string>();
+			PartOrdinals = PartOrdinals ?? new List<int>();
+			BindingStates = BindingStates ?? new List<int>();
+			EffectNonces = EffectNonces ?? new List<string>();
+			int original = ProcedureKeys.Count;
+			int count = original;
+			count = Math.Min(count, JobIds.Count);
+			count = Math.Min(count, PatientIds.Count);
+			count = Math.Min(count, BodyPartIds.Count);
+			count = Math.Min(count, Sources.Count);
+			count = Math.Min(count, ClassNames.Count);
+			if (count != original || JobIds.Count != original || PatientIds.Count != original
+				|| BodyPartIds.Count != original || Sources.Count != original
+				|| ClassNames.Count != original)
+			{
+				LedgerQuarantined = true;
+			}
+			if (Attaches.Count != count || Managers.Count != count || Details.Count != count
+				|| Fingerprints.Count != count || PartOrdinals.Count != count
+				|| BindingStates.Count != count)
+			{
+				// Pre-contract ledgers cannot prove which authored effect they own. Keep the
+				// rows as individually quarantined; a unique manager-owned legacy limb may be
+				// upgraded later without making a class-only inference.
+			}
+			if (count > KingdomLabRules.MaxEffectRows)
+			{
+				LedgerQuarantined = true;
+				count = KingdomLabRules.MaxEffectRows;
+			}
+			Trim(ProcedureKeys, count);
+			Trim(JobIds, count);
+			Trim(PatientIds, count);
+			Trim(BodyPartIds, count);
+			Trim(Sources, count);
+			Trim(ClassNames, count);
+			Pad(Attaches, count, -1);
+			Pad(Managers, count, "");
+			Pad(Details, count, "");
+			Pad(Fingerprints, count, "");
+			Pad(PartOrdinals, count, -1);
+			Pad(BindingStates, count, 2);
+			Pad(EffectNonces, count, "");
+			for (int i = 0; i < count; i++)
+			{
+				if (BindingStates[i] < 0 || BindingStates[i] > 4
+					|| EffectNonces[i].Length != 32
+					|| !KingdomLabRules.ValidEffectContract(KingdomLabRules.EffectContractVersion,
+						ProcedureKeys[i], ClassNames[i], Sources[i], Attaches[i], Managers[i],
+						Fingerprints[i], Details[i]))
+				{
+					BindingStates[i] = 2;
+				}
+				for (int j = 0; j < i; j++)
+				{
+					if (string.Equals(ProcedureKeys[i], ProcedureKeys[j], StringComparison.OrdinalIgnoreCase)
+						&& string.Equals(JobIds[i], JobIds[j], StringComparison.Ordinal))
+					{
+						BindingStates[i] = BindingStates[j] = 2;
+						LedgerQuarantined = true;
+					}
+				}
+			}
+			RuntimeParts = RuntimeParts ?? new List<IPart>();
+			Trim(RuntimeParts, count);
+			while (RuntimeParts.Count < count)
+			{
+				RuntimeParts.Add(null);
+			}
+		}
+
+		private static void Pad<T>(List<T> Values, int Count, T Value)
+		{
+			Trim(Values, Count);
+			while (Values.Count < Count) Values.Add(Value);
+		}
+
+		private static void Trim<T>(List<T> Values, int Count)
+		{
+			if (Values.Count > Count)
+			{
+				Values.RemoveRange(Count, Values.Count - Count);
+			}
+		}
+
+		public override void Write(GameObject Basis, SerializationWriter Writer)
+		{
+			Normalize();
+			for (int i = 0; i < ProcedureKeys.Count; i++)
+			{
+				if (BindingStates[i] == 2 || BindingStates[i] == 3) continue;
+				if (BindingStates[i] == 4)
+				{
+					BindingStates[i] = 2;
+					continue;
+				}
+				if (Sources[i] == (int)LabSource.Limb)
+				{
+					BodyPart limb = KingdomProcedures.ExactBodyPart(ParentObject, BodyPartIds[i]);
+					if (limb == null || !KingdomProcedures.BodyOwnsPart(ParentObject, limb)
+						|| !string.Equals(limb.Manager, Managers[i], StringComparison.Ordinal))
+					{
+						BindingStates[i] = 2;
+					}
+					continue;
+				}
+				IPart exact = RuntimeParts[i];
+				int ordinal = KingdomProcedures.ReferencePartOrdinal(ParentObject, exact);
+				if (exact == null || ordinal < 0 || ordinal != PartOrdinals[i]
+					|| !ReferenceEquals(exact.ParentObject, ParentObject)
+					|| !string.Equals(exact.Name, ClassNames[i], StringComparison.Ordinal)
+					|| (Sources[i] == (int)LabSource.Mutation
+						&& !KingdomProcedures.MutationListed(
+							ParentObject?.GetPart<XRL.World.Parts.Mutations>(),
+							exact as XRL.World.Parts.Mutation.BaseMutation)))
+				{
+					BindingStates[i] = 2;
+				}
+			}
+			Writer.WriteNamedFields(this, typeof(r_KingdomLabEffectLedger));
+		}
+
+		public override void Read(GameObject Basis, SerializationReader Reader)
+		{
+			Reader.ReadNamedFields(this, typeof(r_KingdomLabEffectLedger));
+			RuntimeParts = null;
+			Normalize();
+		}
+	}
+
+	/// <summary>
 	/// What the lab has done to one founder, and what it may never do to them again.
 	/// <para>
 	/// <b>Named fields from version one, deliberately</b> (STANDARDS &sect;1). The precedent's own
@@ -790,6 +2411,29 @@ namespace XRL.World.Parts
 		/// for index. What <c>KingdomProcedures.Remove</c> would otherwise have to guess.</summary>
 		public List<bool> OnWeapon = new List<bool>();
 
+		/// <summary>Stable selected body-part identity, index for index.</summary>
+		public List<int> BodyPartIds = new List<int>();
+
+		/// <summary>Stable exact effect bearer identity, index for index.</summary>
+		public List<string> BearerIds = new List<string>();
+
+		/// <summary>Commission identity written into the ownership marker.</summary>
+		public List<string> JobIds = new List<string>();
+
+		/// <summary>Frozen execution contract. DisplayNames is presentation only; the remaining
+		/// columns authorize exact recovery and removal.</summary>
+		public List<string> DisplayNames = new List<string>();
+		public List<string> Grants = new List<string>();
+		public List<int> Sources = new List<int>();
+		public List<int> Attaches = new List<int>();
+		public List<string> Managers = new List<string>();
+		public List<string> Details = new List<string>();
+		public List<string> Fingerprints = new List<string>();
+		public List<int> PartOrdinals = new List<int>();
+		public List<string> EffectNonces = new List<string>();
+		public bool RegistryQuarantined;
+		public string RegistryFault = "";
+
 		/// <summary>
 		/// Named procedures this founder has had, ever, whether or not the graft is still on them.
 		/// <para>
@@ -812,18 +2456,139 @@ namespace XRL.World.Parts
 			return false;
 		}
 
+		public override IPart DeepCopy(GameObject Parent, Func<GameObject, GameObject> MapInv)
+		{
+			r_KingdomLabRecord copy = (r_KingdomLabRecord)base.DeepCopy(Parent, MapInv);
+			copy.Keys = new List<string>(Keys ?? new List<string>());
+			copy.Places = new List<string>(Places ?? new List<string>());
+			copy.OnWeapon = new List<bool>(OnWeapon ?? new List<bool>());
+			copy.BodyPartIds = new List<int>(BodyPartIds ?? new List<int>());
+			copy.BearerIds = new List<string>(BearerIds ?? new List<string>());
+			copy.JobIds = new List<string>(JobIds ?? new List<string>());
+			copy.DisplayNames = new List<string>(DisplayNames ?? new List<string>());
+			copy.Grants = new List<string>(Grants ?? new List<string>());
+			copy.Sources = new List<int>(Sources ?? new List<int>());
+			copy.Attaches = new List<int>(Attaches ?? new List<int>());
+			copy.Managers = new List<string>(Managers ?? new List<string>());
+			copy.Details = new List<string>(Details ?? new List<string>());
+			copy.Fingerprints = new List<string>(Fingerprints ?? new List<string>());
+			copy.PartOrdinals = new List<int>(PartOrdinals ?? new List<int>());
+			copy.EffectNonces = new List<string>(EffectNonces ?? new List<string>());
+			copy.Excluded = new List<string>(Excluded ?? new List<string>());
+			return copy;
+		}
+
+		public override void FinalizeCopy(GameObject Source, bool CopyEffects, bool CopyID,
+			Func<GameObject, GameObject> MapInv)
+		{
+			base.FinalizeCopy(Source, CopyEffects, CopyID, MapInv);
+			for (int i = 0; i < EffectNonces.Count; i++)
+				EffectNonces[i] = Guid.NewGuid().ToString("N");
+			RegistryQuarantined = true;
+			RegistryFault = "Copied patient receipt has fresh nonces and no procedure authority.";
+		}
+
 		/// <summary>Records one procedure. Idempotent on the latch, so nothing anywhere has to
 		/// remember whether it already asked.</summary>
 		public void Note(string Key, string Place, bool OnWeapon)
 		{
-			if (string.IsNullOrEmpty(Key))
+			NoteLegacy(Key, Place, OnWeapon, 0, "", "");
+		}
+
+		public void Note(string Key, string Place, bool OnWeapon, int BodyPartId,
+			string BearerId, string JobId)
+		{
+			NoteLegacy(Key, Place, OnWeapon, BodyPartId, BearerId, JobId);
+		}
+
+		private void NoteLegacy(string Key, string Place, bool OnWeapon, int BodyPartId,
+			string BearerId, string JobId)
+		{
+			if (string.IsNullOrEmpty(Key)) return;
+			Normalize();
+			if (Keys.Count >= KingdomLabRules.MaxEffectRows)
 			{
+				RegistryQuarantined = true;
+				RegistryFault = "The patient ownership receipt registry is full.";
 				return;
 			}
-			Normalize();
 			Keys.Add(Key);
 			Places.Add(Place ?? "");
 			this.OnWeapon.Add(OnWeapon);
+			BodyPartIds.Add(BodyPartId);
+			BearerIds.Add(BearerId ?? "");
+			JobIds.Add(JobId ?? "");
+			DisplayNames.Add("");
+			Grants.Add("");
+			Sources.Add(-1);
+			Attaches.Add(-1);
+			Managers.Add("");
+			Details.Add("");
+			Fingerprints.Add("");
+			PartOrdinals.Add(-1);
+			EffectNonces.Add("");
+			LabProcedure procedure;
+			if (KingdomProcedures.TryGet(Key, out procedure) && procedure.IsNamed)
+			{
+				NamedLatch = KingdomProcedureRules.Latch(NamedLatch, Key);
+			}
+		}
+
+		public void Note(string Key, string Place, bool OnWeapon, int BodyPartId,
+			string BearerId, string JobId, string DisplayName, string Grants, int Source,
+			int Attach, string Manager, string Detail, string Fingerprint, int PartOrdinal,
+			string EffectNonce = "")
+		{
+			Normalize();
+			if (RegistryQuarantined || string.IsNullOrEmpty(Key) || string.IsNullOrEmpty(JobId)
+				|| BodyPartId <= 0 || string.IsNullOrEmpty(BearerId)
+				|| !KingdomLabRules.ValidEffectContract(KingdomLabRules.EffectContractVersion,
+					Key, Grants, Source, Attach, Manager, Fingerprint, Detail)
+				|| string.IsNullOrEmpty(EffectNonce) || EffectNonce.Length != 32)
+			{
+				throw new InvalidOperationException("invalid or quarantined patient ownership receipt");
+			}
+			for (int i = 0; i < Keys.Count; i++)
+			{
+				if (!string.Equals(Keys[i], Key, StringComparison.OrdinalIgnoreCase)
+					|| !string.Equals(JobIds[i], JobId, StringComparison.Ordinal)) continue;
+				if (BodyPartIds[i] == BodyPartId
+					&& string.Equals(BearerIds[i], BearerId, StringComparison.Ordinal)
+					&& string.Equals(this.Grants[i], Grants, StringComparison.Ordinal)
+					&& Sources[i] == Source && Attaches[i] == Attach
+					&& string.Equals(Managers[i], Manager, StringComparison.Ordinal)
+					&& string.Equals(Details[i], Detail, StringComparison.Ordinal)
+					&& string.Equals(Fingerprints[i], Fingerprint, StringComparison.Ordinal)
+					&& PartOrdinals[i] == PartOrdinal
+					&& string.Equals(EffectNonces[i], EffectNonce, StringComparison.Ordinal))
+				{
+					return;
+				}
+				RegistryQuarantined = true;
+				RegistryFault = "An ownership receipt reused a job ID with different physical identity.";
+				throw new InvalidOperationException(RegistryFault);
+			}
+			if (Keys.Count >= KingdomLabRules.MaxEffectRows)
+			{
+				RegistryQuarantined = true;
+				RegistryFault = "The patient ownership receipt registry is full.";
+				throw new InvalidOperationException(RegistryFault);
+			}
+			Keys.Add(Key);
+			Places.Add(Place ?? "");
+			this.OnWeapon.Add(OnWeapon);
+			BodyPartIds.Add(BodyPartId);
+			BearerIds.Add(BearerId ?? "");
+			JobIds.Add(JobId ?? "");
+			DisplayNames.Add(DisplayName ?? Key);
+			this.Grants.Add(Grants ?? "");
+			Sources.Add(Source);
+			Attaches.Add(Attach);
+			Managers.Add(Manager ?? "");
+			Details.Add(Detail ?? "");
+			Fingerprints.Add(Fingerprint ?? "");
+			PartOrdinals.Add(PartOrdinal);
+			EffectNonces.Add(EffectNonce);
 			LabProcedure procedure;
 			if (KingdomProcedures.TryGet(Key, out procedure) && procedure.IsNamed)
 			{
@@ -841,17 +2606,44 @@ namespace XRL.World.Parts
 				{
 					continue;
 				}
-				Keys.RemoveAt(i);
-				if (i < Places.Count)
-				{
-					Places.RemoveAt(i);
-				}
-				if (i < OnWeapon.Count)
-				{
-					OnWeapon.RemoveAt(i);
-				}
+				RemoveAt(i);
 				return;
 			}
+		}
+
+		/// <summary>Forgets only the record minted by one exact commission.</summary>
+		public void ForgetOwned(string Key, string JobId)
+		{
+			Normalize();
+			for (int i = Keys.Count - 1; i >= 0; i--)
+			{
+				if (string.Equals(Keys[i], Key, StringComparison.OrdinalIgnoreCase)
+					&& i < JobIds.Count
+					&& string.Equals(JobIds[i], JobId, StringComparison.Ordinal))
+				{
+					RemoveAt(i);
+					return;
+				}
+			}
+		}
+
+		private void RemoveAt(int At)
+		{
+			Keys.RemoveAt(At);
+			Places.RemoveAt(At);
+			OnWeapon.RemoveAt(At);
+			BodyPartIds.RemoveAt(At);
+			BearerIds.RemoveAt(At);
+			JobIds.RemoveAt(At);
+			DisplayNames.RemoveAt(At);
+			Grants.RemoveAt(At);
+			Sources.RemoveAt(At);
+			Attaches.RemoveAt(At);
+			Managers.RemoveAt(At);
+			Details.RemoveAt(At);
+			Fingerprints.RemoveAt(At);
+			PartOrdinals.RemoveAt(At);
+			EffectNonces.RemoveAt(At);
 		}
 
 		/// <summary>Whether a named procedure has already been performed on this founder, ever.</summary>
@@ -891,12 +2683,85 @@ namespace XRL.World.Parts
 			Normalize();
 			for (int i = 0; i < Keys.Count && i < Places.Count; i++)
 			{
-				if (string.Equals(Places[i], Place, StringComparison.OrdinalIgnoreCase))
+				if (BodyPartIds[i] <= 0
+					&& string.Equals(Places[i], Place, StringComparison.OrdinalIgnoreCase))
 				{
 					return Keys[i];
 				}
 			}
 			return null;
+		}
+
+		/// <summary>Exact identity lookup for current records; type is only a legacy fallback.</summary>
+		public string GraftedAt(int BodyPartId, string LegacyPlace)
+		{
+			Normalize();
+			for (int i = 0; i < Keys.Count; i++)
+			{
+				if (BodyPartId > 0 && i < BodyPartIds.Count && BodyPartIds[i] == BodyPartId)
+				{
+					return Keys[i];
+				}
+			}
+			return GraftedAt(LegacyPlace);
+		}
+
+		internal bool ContractAt(int At, out KingdomLabOwnershipSnapshot Snapshot, string PatientId)
+		{
+			Normalize();
+			Snapshot = default(KingdomLabOwnershipSnapshot);
+			if (RegistryQuarantined || At < 0 || At >= Keys.Count || BodyPartIds[At] <= 0
+				|| string.IsNullOrEmpty(BearerIds[At]) || string.IsNullOrEmpty(JobIds[At])
+				|| EffectNonces[At].Length != 32
+				|| !KingdomLabRules.ValidEffectContract(KingdomLabRules.EffectContractVersion,
+					Keys[At], Grants[At], Sources[At], Attaches[At], Managers[At],
+					Fingerprints[At], Details[At]))
+			{
+				return false;
+			}
+			Snapshot = new KingdomLabOwnershipSnapshot(Keys[At], JobIds[At], PatientId,
+				BodyPartIds[At], BearerIds[At], Grants[At], Sources[At], Attaches[At],
+				Managers[At], Details[At], Fingerprints[At], PartOrdinals[At],
+				EffectNonces[At]);
+			return true;
+		}
+
+		internal bool UpgradeLegacyLimbAt(int At, int BodyPartId, string BearerId,
+			string JobId, string DisplayName, string Grants, int Attach, string Manager,
+			string Detail, string Fingerprint)
+		{
+			Normalize();
+			if (RegistryQuarantined || At < 0 || At >= Keys.Count || BodyPartId <= 0
+				|| string.IsNullOrEmpty(BearerId) || string.IsNullOrEmpty(JobId)
+				|| !string.IsNullOrEmpty(Fingerprints[At])
+				|| !KingdomLabRules.ValidEffectContract(KingdomLabRules.EffectContractVersion,
+					Keys[At], Grants, (int)LabSource.Limb, Attach, Manager,
+					Fingerprint, Detail)) return false;
+			BodyPartIds[At] = BodyPartId;
+			BearerIds[At] = BearerId;
+			JobIds[At] = JobId;
+			DisplayNames[At] = DisplayName ?? Keys[At];
+			this.Grants[At] = Grants;
+			Sources[At] = (int)LabSource.Limb;
+			Attaches[At] = Attach;
+			Managers[At] = Manager;
+			Details[At] = Detail;
+			Fingerprints[At] = Fingerprint;
+			PartOrdinals[At] = -1;
+			return true;
+		}
+
+		public int IndexOf(string Key)
+		{
+			Normalize();
+			for (int i = 0; i < Keys.Count; i++)
+			{
+				if (string.Equals(Keys[i], Key, StringComparison.OrdinalIgnoreCase))
+				{
+					return i;
+				}
+			}
+			return -1;
 		}
 
 		/// <summary>Repairs a record read from a save written by an older build: null containers
@@ -905,34 +2770,91 @@ namespace XRL.World.Parts
 		/// nothing.</summary>
 		public void Normalize()
 		{
-			if (Keys == null)
+			Keys = Keys ?? new List<string>();
+			Places = Places ?? new List<string>();
+			OnWeapon = OnWeapon ?? new List<bool>();
+			Excluded = Excluded ?? new List<string>();
+			BodyPartIds = BodyPartIds ?? new List<int>();
+			BearerIds = BearerIds ?? new List<string>();
+			JobIds = JobIds ?? new List<string>();
+			DisplayNames = DisplayNames ?? new List<string>();
+			Grants = Grants ?? new List<string>();
+			Sources = Sources ?? new List<int>();
+			Attaches = Attaches ?? new List<int>();
+			Managers = Managers ?? new List<string>();
+			Details = Details ?? new List<string>();
+			Fingerprints = Fingerprints ?? new List<string>();
+			PartOrdinals = PartOrdinals ?? new List<int>();
+			EffectNonces = EffectNonces ?? new List<string>();
+			NamedLatch = NamedLatch ?? "";
+			RegistryFault = RegistryFault ?? "";
+
+			if (Keys.Count > KingdomLabRules.MaxEffectRows)
 			{
-				Keys = new List<string>();
+				RegistryQuarantined = true;
+				RegistryFault = "Patient ownership receipt registry exceeded its bound.";
+				Keys.RemoveRange(KingdomLabRules.MaxEffectRows,
+					Keys.Count - KingdomLabRules.MaxEffectRows);
 			}
-			if (Places == null)
+			int count = Keys.Count;
+			bool anyContract = DisplayNames.Count > 0 || Grants.Count > 0 || Sources.Count > 0
+				|| Attaches.Count > 0 || Managers.Count > 0 || Details.Count > 0
+				|| Fingerprints.Count > 0 || PartOrdinals.Count > 0 || EffectNonces.Count > 0;
+			if (anyContract && (DisplayNames.Count != count || Grants.Count != count
+				|| Sources.Count != count || Attaches.Count != count || Managers.Count != count
+				|| Details.Count != count || Fingerprints.Count != count
+				|| PartOrdinals.Count != count || EffectNonces.Count != count))
 			{
-				Places = new List<string>();
+				RegistryQuarantined = true;
+				RegistryFault = "Patient ownership receipt columns disagree.";
 			}
-			if (OnWeapon == null)
+			Pad(Places, count, "");
+			Pad(OnWeapon, count, false);
+			Pad(BodyPartIds, count, 0);
+			Pad(BearerIds, count, "");
+			Pad(JobIds, count, "");
+			Pad(DisplayNames, count, "");
+			Pad(Grants, count, "");
+			Pad(Sources, count, -1);
+			Pad(Attaches, count, -1);
+			Pad(Managers, count, "");
+			Pad(Details, count, "");
+			Pad(Fingerprints, count, "");
+			Pad(PartOrdinals, count, -1);
+			Pad(EffectNonces, count, "");
+			for (int i = 0; i < count; i++)
 			{
-				OnWeapon = new List<bool>();
+				bool claimsContract = !string.IsNullOrEmpty(Fingerprints[i])
+					|| !string.IsNullOrEmpty(Grants[i]) || Sources[i] >= 0 || Attaches[i] >= 0;
+				if (claimsContract && (!KingdomLabRules.ValidEffectContract(
+					KingdomLabRules.EffectContractVersion, Keys[i], Grants[i], Sources[i],
+					Attaches[i], Managers[i], Fingerprints[i], Details[i])
+					|| EffectNonces[i].Length != 32))
+				{
+					RegistryQuarantined = true;
+					RegistryFault = "A patient ownership receipt has an invalid effect contract.";
+				}
+				if (string.IsNullOrEmpty(JobIds[i])) continue;
+				for (int j = 0; j < i; j++)
+				{
+					if (string.Equals(Keys[i], Keys[j], StringComparison.OrdinalIgnoreCase)
+						&& string.Equals(JobIds[i], JobIds[j], StringComparison.Ordinal))
+					{
+						RegistryQuarantined = true;
+						RegistryFault = "Patient ownership receipts duplicate one job identity.";
+					}
+				}
 			}
-			if (Excluded == null)
+			if (Excluded.Count > 256)
 			{
-				Excluded = new List<string>();
+				Excluded.RemoveRange(256, Excluded.Count - 256);
 			}
-			if (NamedLatch == null)
-			{
-				NamedLatch = "";
-			}
-			while (Places.Count < Keys.Count)
-			{
-				Places.Add("");
-			}
-			while (OnWeapon.Count < Keys.Count)
-			{
-				OnWeapon.Add(false);
-			}
+		}
+
+		private static void Pad<T>(List<T> Values, int Count, T Value)
+		{
+			if (Values.Count > Count) Values.RemoveRange(Count, Values.Count - Count);
+			while (Values.Count < Count) Values.Add(Value);
 		}
 
 #if !TAF_TESTS

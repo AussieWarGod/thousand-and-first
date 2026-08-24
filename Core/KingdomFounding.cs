@@ -1,4 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Text;
 using XRL;
 using XRL.Language;
 using XRL.Rules;
@@ -9,6 +12,15 @@ namespace ThousandAndFirst
 {
 	public static class KingdomFounding
 	{
+		private const string PendingFactionProperty = "TAFFoundingPending";
+		private const string FoundingStepProperty = "TAFFoundingStep";
+		private const string FoundingChronicleEventProperty = "TAFFoundingChronicleEvent_v1";
+		private const string FoundingChronicleStageProperty = "TAFFoundingChronicleStage_v1";
+		private const string FoundingChronicleDispositionProperty =
+			"TAFFoundingChronicleDisposition_v1";
+		private const string FoundingStandingsProperty = "TAFFoundingStandings_v1";
+		private const int MaxFoundingStandingsLength = 262144;
+
 		/// <summary>
 		/// Founds the player's kingdom: creates and registers a runtime faction following the
 		/// engine's village-faction recipe, seeds its standings from the founder's current
@@ -20,70 +32,278 @@ namespace ThousandAndFirst
 		/// nothing has changed.</returns>
 		public static Faction Found(string Name)
 		{
+			return KingdomFoundingTransaction.TryFoundFirstWithoutWater(Name,
+				The.Player?.CurrentZone, out var faction, out var failure)
+				? faction : null;
+		}
+
+		/// <summary>Transaction overload binding terrain and rite placement to the prepared site,
+		/// not wherever the player happens to stand during a recovery attempt.</summary>
+		internal static Faction Found(string Name, Zone FoundingZone, Cell RiteCell,
+			string TransactionID, string Authority)
+		{
+			if (string.IsNullOrEmpty(Name) || FoundingZone == null || RiteCell == null ||
+				RiteCell.ParentZone != FoundingZone ||
+				!KingdomFoundingTransactionRules.TryParseAuthority(Authority,
+					out var parsedAuthority) ||
+				parsedAuthority.Kind != KingdomFoundingKind.FirstCity ||
+				parsedAuthority.TransactionID != TransactionID ||
+				parsedAuthority.RealmFaction != Name ||
+				parsedAuthority.ZoneID != FoundingZone.ZoneID ||
+				parsedAuthority.RiteX != RiteCell.X || parsedAuthority.RiteY != RiteCell.Y ||
+				!KingdomFoundingTransaction.AuthorityIsSynchronouslyInFlight(Authority) ||
+				!KingdomFoundingTransaction.GlobalReservationMatches(Authority) ||
+				!KingdomFoundingTransaction.SiteReservationMatches(FoundingZone, Authority))
+			{
+				return null;
+			}
 			KingdomSystem system = The.Game.RequireSystem<KingdomSystem>();
+			string identityFailure;
+			// Plain persisted fields only: immutable realm + first-city ids exist and read back
+			// before faction registration, reputation, zone properties, journal, or any step marker.
+			if (!system.TryBindFirstFoundingIdentity(TransactionID, FoundingZone.ZoneID,
+				out identityFailure))
+			{
+				KingdomLog.Log("founding identity refused: " + identityFailure);
+				return null;
+			}
 			if (system.Founded)
 			{
-				return Factions.Get(system.KingdomFactionName);
+				Faction current = Factions.GetIfExists(system.KingdomFactionName);
+				// Ordinary repeated debug calls keep their old idempotent meaning. The sole exception
+				// is an interrupted first founding, whose faction is deliberately marked until the
+				// basin has verified claim, ability, placement, and seal.
+				if (current == null || current.GetIntProperty(PendingFactionProperty) != 1 ||
+					system.KingdomFactionName != Name)
+				{
+					return current;
+				}
+				if (!KingdomFoundingTransaction.FactionRegistryCoherent(Name, current) ||
+					string.IsNullOrEmpty(TransactionID) ||
+					current.GetStringProperty(
+						KingdomFoundingTransaction.PendingFactionTransactionProperty, null) !=
+						TransactionID)
+				{
+					return null;
+				}
+					return CompleteFirstPublication(system, current, Name,
+						FoundingZone, RiteCell, TransactionID, Authority);
+			}
+			if (string.IsNullOrEmpty(Name) || string.IsNullOrEmpty(TransactionID))
+			{
+				return null;
 			}
 			// Factions.AddNewFaction is a Dictionary.Add (XRL/World/Factions.cs:270) and a runtime
 			// faction can never be removed or renamed - so after an expulsion the old realm's name
 			// is taken forever. Refuse before the rite commits anything rather than throwing part
 			// way through it.
+			Faction faction;
 			if (Factions.Exists(Name))
+			{
+				// AddNewFaction cannot be reversed. A faction carrying this marker is the exact
+				// recoverable state left if the engine threw after Dictionary.Add; any other existing
+				// faction is somebody else's identity and remains an absolute refusal.
+				faction = Factions.GetIfExists(Name);
+				if (faction == null || faction.GetIntProperty(PendingFactionProperty) != 1 ||
+					faction.GetIntProperty("PlayerKingdom") != 1 ||
+					faction.GetStringProperty(
+						KingdomFoundingTransaction.PendingFactionTransactionProperty, null) !=
+						TransactionID ||
+					faction.GetStringProperty(
+						KingdomFoundingTransaction.PendingFactionAuthorityProperty, null) !=
+						Authority ||
+					faction.GetStringProperty(FoundingChronicleEventProperty, null) !=
+						KingdomFoundingTransaction.FoundingEventID(
+							KingdomFoundingKind.FirstCity, TransactionID, "chronicle") ||
+					!KingdomFoundingTransaction.RepairPendingFactionRegistry(Name,
+						TransactionID, Authority))
+				{
+					return null;
+				}
+			}
+			else
+			{
+				if (!KingdomFoundingTransaction.FactionNameAvailable(Name))
+				{
+					return null;
+				}
+				faction = new Faction();
+				faction.Old = false;
+				faction.ExtradimensionalVersions = false;
+				faction.Visible = true;
+				faction.Name = Name;
+				faction.DisplayName = Name;
+				faction.PositiveSound = "Sounds/Reputation/sfx_reputation_village_positive";
+				faction.NegativeSound = "Sounds/Reputation/sfx_reputation_village_negative";
+				faction.SetProperty("PlayerKingdom", 1);
+				faction.SetProperty("Village", 1);
+				faction.SetProperty(PendingFactionProperty, 1);
+				faction.SetProperty(
+					KingdomFoundingTransaction.PendingFactionTransactionProperty,
+					TransactionID);
+				faction.SetProperty(
+					KingdomFoundingTransaction.PendingFactionAuthorityProperty, Authority);
+				faction.SetProperty(
+					KingdomFoundingTransaction.RealmReservationProperty, Authority);
+				faction.SetProperty(FoundingStepProperty, 0);
+				faction.SetProperty(FoundingChronicleEventProperty,
+					KingdomFoundingTransaction.FoundingEventID(
+						KingdomFoundingKind.FirstCity, TransactionID, "chronicle"));
+				faction.SetProperty(FoundingChronicleStageProperty, 0);
+				faction.SetProperty(FoundingChronicleDispositionProperty,
+					(int)KingdomChronicleDisposition.None);
+				faction.WaterRitualLiquid = "water";
+				VillageBase.SetVillageFactionEmblem(faction, faction.Name);
+				faction.SetFactionFeeling("Player", 100);
+				Factions.AddNewFaction(faction);
+				if (!system.FirstIdentityMatches(TransactionID, FoundingZone.ZoneID) ||
+					!KingdomFoundingTransaction.FactionRegistryCoherent(Name, faction))
+				{
+					return null;
+				}
+			}
+			return CompleteFirstPublication(system, faction, Name,
+				FoundingZone, RiteCell, TransactionID, Authority);
+		}
+
+		internal static bool TryGetRecoverableFirstPublication(KingdomSystem System,
+			string Name, out Faction Faction, out string TransactionID)
+		{
+			Faction = Factions.GetIfExists(Name);
+			TransactionID = Faction?.GetStringProperty(
+				KingdomFoundingTransaction.PendingFactionTransactionProperty, null);
+			return System != null && !string.IsNullOrEmpty(Name) &&
+				Faction != null && !string.IsNullOrEmpty(TransactionID) &&
+				Faction.GetIntProperty(PendingFactionProperty) == 1 &&
+				Faction.GetIntProperty("PlayerKingdom") == 1 &&
+				KingdomFoundingTransaction.FactionRegistryCoherent(Name, Faction) &&
+				(!System.Founded || System.KingdomFactionName == Name);
+		}
+
+		/// <summary>
+		/// Idempotently finishes the realm-side publication after faction registration. The step
+		/// marker lives on the runtime faction because that is the one engine object registration
+		/// cannot remove. A retry therefore continues rather than colliding with its own name.
+		/// Claim and external seal remain the basin transaction's checked responsibility.
+		/// </summary>
+		private static Faction CompleteFirstPublication(KingdomSystem system, Faction faction,
+			string Name, Zone foundingZone, Cell riteCell, string TransactionID,
+			string Authority)
+		{
+			if (system == null || faction == null || string.IsNullOrEmpty(Name) ||
+				!system.FirstIdentityMatches(TransactionID, foundingZone?.ZoneID) ||
+				faction.Name != Name || faction.GetIntProperty("PlayerKingdom") != 1 ||
+				faction.GetIntProperty("Village") != 1 ||
+				string.IsNullOrEmpty(TransactionID) ||
+				faction.GetStringProperty(
+					KingdomFoundingTransaction.PendingFactionTransactionProperty, null) !=
+					TransactionID ||
+				faction.GetStringProperty(
+					KingdomFoundingTransaction.PendingFactionAuthorityProperty, null) !=
+					Authority ||
+				faction.GetStringProperty(
+					KingdomFoundingTransaction.RealmReservationProperty, null) != Authority ||
+				faction.GetStringProperty(FoundingChronicleEventProperty, null) !=
+					KingdomFoundingTransaction.FoundingEventID(
+						KingdomFoundingKind.FirstCity, TransactionID, "chronicle") ||
+				!KingdomFoundingTransaction.FactionRegistryCoherent(Name, faction))
 			{
 				return null;
 			}
-			Faction faction = new Faction();
-			faction.Old = false;
-			faction.ExtradimensionalVersions = false;
-			faction.Visible = true;
-			faction.Name = Name;
-			faction.DisplayName = Name;
-			faction.PositiveSound = "Sounds/Reputation/sfx_reputation_village_positive";
-			faction.NegativeSound = "Sounds/Reputation/sfx_reputation_village_negative";
-			faction.SetProperty("PlayerKingdom", 1);
-			faction.WaterRitualLiquid = "water";
-			VillageBase.SetVillageFactionEmblem(faction, faction.Name);
-			faction.SetFactionFeeling("Player", 100);
-			Factions.AddNewFaction(faction);
-			system.KingdomFactionName = faction.Name;
-			system.KingdomDisplayName = faction.DisplayName;
-			system.SettlementName = faction.DisplayName;
-			system.FoundedTick = The.Game.TimeTicks;
+			int step = faction.GetIntProperty(FoundingStepProperty);
+			int chronicleStage = faction.GetIntProperty(FoundingChronicleStageProperty);
+			if (step < 0 || step > 4 || chronicleStage < 0 || chronicleStage > 2 ||
+				(step < 3 && chronicleStage != 0) ||
+				(step == 4 && chronicleStage != 2))
+			{
+				return null;
+			}
+			if (step < 1)
+			{
+				system.KingdomFactionName = faction.Name;
+				system.KingdomDisplayName = faction.DisplayName;
+				system.SettlementName = faction.DisplayName;
+				if (system.FoundedTick <= 0L)
+				{
+					system.FoundedTick = The.Game.TimeTicks;
+				}
 			// The realm's simulation seed, minted here and never again. Deferred out of W0 because
 			// there was nothing to seed yet; the founding is the one moment that has a realm name,
 			// a founding tick and a world to domain-separate against all at once.
-			system.MintSimulationSeed(The.Game.GetWorldSeed(), faction.Name, system.FoundedTick);
-			system.LastHeartbeatTick = The.Game.TimeTicks;
-			system.LastVisitTick = The.Game.TimeTicks;
-			Zone foundingZone = The.Player?.CurrentZone;
-			system.Style = ResolveFoundingStyle(foundingZone, out string terrainBlueprint, out string regionName, out int zLevel);
-			system.FoundingTerrainBlueprint = terrainBlueprint;
-			system.FoundingRegionName = regionName;
-			system.FoundingZLevel = zLevel;
+				if ((system.SimulationSeedHigh == 0UL && system.SimulationSeedLow == 0UL &&
+					 !system.MintSimulationSeed(The.Game.GetWorldSeed(), system.RealmId,
+						system.FoundedTick)) ||
+					!system.SimulationSeedMatches(The.Game.GetWorldSeed(), system.RealmId,
+						system.FoundedTick))
+				{
+					return null;
+				}
+				if (system.LastHeartbeatTick <= 0L)
+				{
+					system.LastHeartbeatTick = The.Game.TimeTicks;
+				}
+				if (system.LastVisitTick <= 0L)
+				{
+					system.LastVisitTick = The.Game.TimeTicks;
+				}
+				if (system.LastSemanticTick <= 0L)
+				{
+					system.LastSemanticTick = The.Game.TimeTicks;
+				}
+				system.Style = ResolveFoundingStyle(foundingZone, out string terrainBlueprint,
+					out string regionName, out int zLevel);
+				system.FoundingTerrainBlueprint = terrainBlueprint;
+				system.FoundingRegionName = regionName;
+				system.FoundingZLevel = zLevel;
 			// Where the water was poured. Every later plot's heart is seeded here and drifts toward
 			// whatever gets built (KingdomPlotRules.TryHeart).
-			Cell riteCell = The.Player?.CurrentCell;
-			if (foundingZone != null && riteCell != null && riteCell.ParentZone == foundingZone)
-			{
-				foundingZone.SetZoneProperty(KingdomPlots.RiteXProperty, riteCell.X.ToString());
-				foundingZone.SetZoneProperty(KingdomPlots.RiteYProperty, riteCell.Y.ToString());
+				if (foundingZone != null && riteCell != null && riteCell.ParentZone == foundingZone)
+				{
+					foundingZone.SetZoneProperty(KingdomPlots.RiteXProperty, riteCell.X.ToString());
+					foundingZone.SetZoneProperty(KingdomPlots.RiteYProperty, riteCell.Y.ToString());
+				}
+				if (!system.FirstIdentityMatches(TransactionID, foundingZone.ZoneID))
+				{
+					return null;
+				}
+				faction.SetProperty(FoundingStepProperty, 1);
+				step = 1;
 			}
 			// A ruin's ground already had its own history; the rite restores it rather than
 			// raising a settlement from nothing. See RestoreRuinStructures for what "restores"
 			// means in practice, and STANDARDS/VISION on why nothing here is moved or destroyed.
-			bool isRuin = KingdomRules.IsRuinSite(terrainBlueprint);
-			int structuresRestored = isRuin ? RestoreRuinStructures(foundingZone) : 0;
-			string verb = isRuin ? "reclaimed" : "founded";
-			The.Game.PlayerReputation.Set(faction.Name, RuleSettings.REPUTATION_LOVED + 100);
-			foreach (Faction other in Factions.Loop())
+			if (step < 2)
 			{
-				if (other != faction && other.Name != "Player")
+				if (!TryReadOrFreezeFoundingStandings(faction,
+					out List<KeyValuePair<string, int>> frozenStandings) ||
+					!TryResolveFoundingStandings(faction, frozenStandings,
+						out List<KeyValuePair<Faction, int>> resolvedStandings) ||
+					!KingdomFoundingTransaction.FoundingAuthorityStillExact(
+						Authority, foundingZone))
 				{
-					int standing = The.Game.PlayerReputation.Get(other);
-					system.SetStanding(other.Name, standing);
-					faction.SetFactionFeeling(other.Name, Reputation.GetFeeling((float)standing));
+					return null;
 				}
+				The.Game.PlayerReputation.Set(faction.Name, RuleSettings.REPUTATION_LOVED + 100);
+				// Reputation writes raise engine events synchronously. A handler may try to found
+				// again or disturb a reservation, so do not continue publishing on stale authority.
+				if (!system.FirstIdentityMatches(TransactionID, foundingZone.ZoneID) ||
+					!KingdomFoundingTransaction.FoundingAuthorityStillExact(
+					Authority, foundingZone))
+				{
+					return null;
+				}
+				foreach (KeyValuePair<Faction, int> target in resolvedStandings)
+				{
+					system.SetStanding(target.Key.Name, target.Value);
+					faction.SetFactionFeeling(target.Key.Name,
+						Reputation.GetFeeling((float)target.Value));
+					if (!system.FirstIdentityMatches(TransactionID, foundingZone.ZoneID))
+					{
+						return null;
+					}
+				}
+				faction.SetProperty(FoundingStepProperty, 2);
+				step = 2;
 			}
 			// The realm's own favourite dish, in vanilla's own place for one: three plain fields
 			// on the Faction that vanilla's own serializer writes and reads
@@ -91,12 +311,53 @@ namespace ThousandAndFirst
 			// poured on; re-derived later if the people who settle here turn out to hold with
 			// somebody (KingdomDish.Ensure, called from every settlement pass). Silent here: the
 			// founding already has its line, and a realm has no dish to have CHANGED yet.
-			KingdomDish.Ensure(system, Announce: false);
+			bool isRuin = KingdomRules.IsRuinSite(system.FoundingTerrainBlueprint);
+			int structuresRestored = faction.GetIntProperty("TAFFoundingRestored");
+			if (step < 3)
+			{
+				structuresRestored = isRuin ? RestoreRuinStructures(foundingZone) : 0;
+				faction.SetProperty("TAFFoundingRestored", structuresRestored);
+				KingdomDish.Ensure(system, Announce: false);
+				if (!system.FirstIdentityMatches(TransactionID, foundingZone.ZoneID))
+				{
+					return null;
+				}
+				faction.SetProperty(FoundingStepProperty, 3);
+				step = 3;
+			}
 			// The one civic event that earns a mural. Mural space is capped at sixteen across a
 			// whole life and shared with the player's own history, so the settlement takes exactly
 			// one slot: the founding, which happens once per realm and is what everything else
 			// hangs off. Every other civic accomplishment files with no mural weight.
-			KingdomChronicle.Record(system, "you poured the first water, and " + faction.DisplayName + " was " + verb + " on " + StyleGroundClause(system.Style) + KingdomRules.RuinRestorationClause(structuresRestored), Accomplishment: true, MuralText: "Poured the first water and " + verb + " " + faction.DisplayName + ".");
+			string verb = isRuin ? "reclaimed" : "founded";
+			if (step < 4)
+			{
+				string eventID = faction.GetStringProperty(
+					FoundingChronicleEventProperty, null);
+				KingdomFoundingTransaction.RecordChronicleOnce(system, eventID,
+					"you poured the first water, and " + faction.DisplayName + " was " +
+					verb + " on " + StyleGroundClause(system.Style) +
+					KingdomRules.RuinRestorationClause(structuresRestored),
+					Accomplishment: true, MuralText: "Poured the first water and " +
+					verb + " " + faction.DisplayName + ".",
+					ReadStage: () => faction.GetIntProperty(FoundingChronicleStageProperty),
+					WriteStage: stage => faction.SetProperty(
+						FoundingChronicleStageProperty, stage),
+					ReadDisposition: () => faction.HasProperty(
+						FoundingChronicleDispositionProperty)
+						? (int?)faction.GetIntProperty(FoundingChronicleDispositionProperty)
+						: null,
+					WriteDisposition: disposition => faction.SetProperty(
+						FoundingChronicleDispositionProperty, disposition),
+					ValidateAuthority: () =>
+						KingdomFoundingTransaction.FoundingAuthorityStillExact(
+							Authority, foundingZone));
+				if (!system.FirstIdentityMatches(TransactionID, foundingZone.ZoneID))
+				{
+					return null;
+				}
+				faction.SetProperty(FoundingStepProperty, 4);
+			}
 			// Paced out while the water soaks in, and AFTER the ruin's own structures are back on
 			// their ground, so the heart is surveyed around what is standing rather than through
 			// it: the whole extent the heart may one day take, stood about with stakes anybody can
@@ -108,7 +369,10 @@ namespace ThousandAndFirst
 			{
 				KingdomSystem.Guard("founding: the heart surveyed", delegate
 				{
-					KingdomPlots.SurveyHeart(system, foundingZone, riteCell.X, riteCell.Y);
+					if (!KingdomPlots.TrySurveyedHeart(foundingZone, out var _))
+					{
+						KingdomPlots.SurveyHeart(system, foundingZone, riteCell.X, riteCell.Y);
+					}
 				});
 			}
 			The.Player?.RequirePart<KingdomCharterPart>().EnsureAbility();
@@ -116,6 +380,199 @@ namespace ThousandAndFirst
 			// seal has no honest semantic ground id to carry.
 			KingdomSeal.MarkSemanticDirty("founding publication");
 			return faction;
+		}
+
+		internal static KingdomChronicleDisposition FirstChronicleDisposition(Faction Faction)
+		{
+			return Faction == null || !Faction.HasProperty(FoundingChronicleDispositionProperty)
+				? KingdomChronicleDisposition.None
+				: (KingdomChronicleDisposition)Faction.GetIntProperty(
+					FoundingChronicleDispositionProperty);
+		}
+
+		internal static bool ClearDebugFoundingMarkers(Faction Faction)
+		{
+			if (Faction == null)
+			{
+				return false;
+			}
+			Faction.RemoveProperty(PendingFactionProperty);
+			Faction.RemoveProperty(KingdomFoundingTransaction.PendingFactionTransactionProperty);
+			Faction.RemoveProperty(KingdomFoundingTransaction.PendingFactionAuthorityProperty);
+			Faction.RemoveProperty(FoundingStepProperty);
+			Faction.RemoveProperty(FoundingChronicleEventProperty);
+			Faction.RemoveProperty(FoundingChronicleStageProperty);
+			Faction.RemoveProperty(FoundingChronicleDispositionProperty);
+			Faction.RemoveProperty(FoundingStandingsProperty);
+			Faction.RemoveProperty("TAFFoundingRestored");
+			return !Faction.HasProperty(PendingFactionProperty) &&
+				!Faction.HasProperty(
+					KingdomFoundingTransaction.PendingFactionTransactionProperty) &&
+				!Faction.HasProperty(
+					KingdomFoundingTransaction.PendingFactionAuthorityProperty) &&
+				!Faction.HasProperty(FoundingStepProperty) &&
+				!Faction.HasProperty(FoundingChronicleEventProperty) &&
+				!Faction.HasProperty(FoundingChronicleStageProperty) &&
+				!Faction.HasProperty(FoundingChronicleDispositionProperty) &&
+				!Faction.HasProperty(FoundingStandingsProperty) &&
+				!Faction.HasProperty("TAFFoundingRestored");
+		}
+
+		/// <summary>
+		/// Freezes the founder's standings before the first standing mutation. A publication
+		/// retry must finish the same ledger even if reputation changed while the prior attempt
+		/// was interrupted.
+		/// </summary>
+		private static bool TryReadOrFreezeFoundingStandings(Faction Realm,
+			out List<KeyValuePair<string, int>> Targets)
+		{
+			Targets = null;
+			if (Realm == null || string.IsNullOrEmpty(Realm.Name))
+			{
+				return false;
+			}
+			if (!Realm.HasProperty(FoundingStandingsProperty))
+			{
+				List<KeyValuePair<string, int>> captured =
+					new List<KeyValuePair<string, int>>();
+				foreach (Faction other in Factions.Loop())
+				{
+					if (other == null || ReferenceEquals(other, Realm) || other.Name == "Player")
+					{
+						continue;
+					}
+					if (string.IsNullOrEmpty(other.Name) || other.Name.Length > 512)
+					{
+						return false;
+					}
+					captured.Add(new KeyValuePair<string, int>(other.Name,
+						The.Game.PlayerReputation.Get(other)));
+				}
+				captured.Sort(delegate(KeyValuePair<string, int> Left,
+					KeyValuePair<string, int> Right)
+				{
+					return StringComparer.Ordinal.Compare(Left.Key, Right.Key);
+				});
+				string encoded = EncodeFoundingStandings(captured);
+				if (encoded == null)
+				{
+					return false;
+				}
+				Realm.SetProperty(FoundingStandingsProperty, encoded);
+				if (Realm.GetStringProperty(FoundingStandingsProperty, null) != encoded)
+				{
+					return false;
+				}
+			}
+			return TryDecodeFoundingStandings(
+				Realm.GetStringProperty(FoundingStandingsProperty, null), out Targets);
+		}
+
+		private static bool TryResolveFoundingStandings(Faction Realm,
+			List<KeyValuePair<string, int>> Targets,
+			out List<KeyValuePair<Faction, int>> Resolved)
+		{
+			Resolved = new List<KeyValuePair<Faction, int>>();
+			if (Realm == null || Targets == null)
+			{
+				return false;
+			}
+			foreach (KeyValuePair<string, int> target in Targets)
+			{
+				Faction other = Factions.GetIfExists(target.Key);
+				if (other == null || ReferenceEquals(other, Realm) || other.Name == "Player")
+				{
+					return false;
+				}
+				Resolved.Add(new KeyValuePair<Faction, int>(other, target.Value));
+			}
+			return true;
+		}
+
+		private static string EncodeFoundingStandings(
+			List<KeyValuePair<string, int>> Targets)
+		{
+			StringBuilder encoded = new StringBuilder("v1");
+			string previous = null;
+			for (int i = 0; i < Targets.Count; i++)
+			{
+				string name = Targets[i].Key;
+				if (string.IsNullOrEmpty(name) || name.Length > 512 ||
+					(previous != null && StringComparer.Ordinal.Compare(previous, name) >= 0))
+				{
+					return null;
+				}
+				previous = name;
+				encoded.Append(';').Append(Convert.ToBase64String(
+					Encoding.UTF8.GetBytes(name))).Append(':').Append(
+					Targets[i].Value.ToString(CultureInfo.InvariantCulture));
+				if (encoded.Length > MaxFoundingStandingsLength)
+				{
+					return null;
+				}
+			}
+			return encoded.ToString();
+		}
+
+		private static bool TryDecodeFoundingStandings(string Encoded,
+			out List<KeyValuePair<string, int>> Targets)
+		{
+			Targets = null;
+			if (string.IsNullOrEmpty(Encoded) || Encoded.Length > MaxFoundingStandingsLength)
+			{
+				return false;
+			}
+			string[] rows = Encoded.Split(';');
+			if (rows.Length == 0 || rows[0] != "v1")
+			{
+				return false;
+			}
+			List<KeyValuePair<string, int>> decoded =
+				new List<KeyValuePair<string, int>>(rows.Length - 1);
+			string previous = null;
+			try
+			{
+				UTF8Encoding strictUtf8 = new UTF8Encoding(false, true);
+				for (int i = 1; i < rows.Length; i++)
+				{
+					int separator = rows[i].IndexOf(':');
+					if (separator <= 0 || separator != rows[i].LastIndexOf(':'))
+					{
+						return false;
+					}
+					string nameText = rows[i].Substring(0, separator);
+					byte[] nameBytes = Convert.FromBase64String(nameText);
+					if (Convert.ToBase64String(nameBytes) != nameText)
+					{
+						return false;
+					}
+					string name = strictUtf8.GetString(nameBytes);
+					if (string.IsNullOrEmpty(name) || name.Length > 512 ||
+						(previous != null && StringComparer.Ordinal.Compare(previous, name) >= 0) ||
+						!int.TryParse(rows[i].Substring(separator + 1),
+							NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture,
+							out int standing))
+					{
+						return false;
+					}
+					previous = name;
+					decoded.Add(new KeyValuePair<string, int>(name, standing));
+				}
+			}
+			catch (FormatException)
+			{
+				return false;
+			}
+			catch (DecoderFallbackException)
+			{
+				return false;
+			}
+			if (EncodeFoundingStandings(decoded) != Encoded)
+			{
+				return false;
+			}
+			Targets = decoded;
+			return true;
 		}
 
 		/// <summary>
@@ -167,74 +624,15 @@ namespace ThousandAndFirst
 		/// tester need not walk past the horizon). The two-city cap and the refusal to found on
 		/// ground the realm already holds stand regardless &mdash; forcing either would leave two
 		/// cities claiming one zone.</param>
-		/// <returns>True if the city was founded. False means the site was refused, and nothing
-		/// has changed &mdash; in particular no water has been spent, because the caller checks
-		/// before it pours.</returns>
+		/// <returns>True only after claim, seat, Charter ability, rite placement, and seal are all
+		/// verified. False is either a pre-publication refusal or an explicitly logged recoverable
+		/// projection failure; calling the same name and site again resumes the latter. This debug
+		/// route never spends water.</returns>
 		public static bool FoundSecond(string Name, string Vocation, Zone Site, bool Force = false)
 		{
-			KingdomSystem system = The.Game.RequireSystem<KingdomSystem>();
-			if (string.IsNullOrEmpty(Name) || Site == null)
-			{
-				return false;
-			}
-			KingdomSettlement.SecondFoundingVerdict verdict = JudgeSite(system, Site);
-			if (verdict != KingdomSettlement.SecondFoundingVerdict.Allowed && !(Force && verdict == KingdomSettlement.SecondFoundingVerdict.GroundIsTooClose))
-			{
-				return false;
-			}
-			// A second city is never forced onto ground another faction already answers to, even
-			// under Force &mdash; that parameter only ever meant "bypass the adjacency
-			// requirement" (see the doc comment on it above). A living village is asked into a
-			// covenant through the charter rite, never annexed by this one; anything else foreign
-			// simply is not this rite's to take.
-			if (KingdomRules.GroundIsForeignFaction(Site.GetZoneProperty("faction"), system.KingdomFactionName))
-			{
-				return false;
-			}
-			string vocation = KingdomSettlement.IsKnownVocation(Vocation) ? Vocation : KingdomSettlement.NeutralVocation;
-			KingdomSettlement founded = new KingdomSettlement();
-			founded.SettlementName = Name;
-			founded.Vocation = vocation;
-			founded.Style = ResolveFoundingStyle(Site, out string terrainBlueprint, out string regionName, out int zLevel);
-			founded.FoundingTerrainBlueprint = terrainBlueprint;
-			founded.FoundingRegionName = regionName;
-			founded.FoundingZLevel = zLevel;
-			founded.FoundedTick = The.Game.TimeTicks;
-			founded.LastHeartbeatTick = The.Game.TimeTicks;
-			founded.LastVisitTick = The.Game.TimeTicks;
-			bool isRuin = KingdomRules.IsRuinSite(terrainBlueprint);
-			int structuresRestored = isRuin ? RestoreRuinStructures(Site) : 0;
-			string verb = isRuin ? "reclaimed" : "founded";
-			// Captured before the new city is seated, so the old one keeps every clock it had:
-			// it is dormant, not paused, and catches up when the founder next stands in it.
-			KingdomSettlement wasSeated = system.Capture();
-			system.Restore(founded);
-			system.Away = wasSeated;
-			// One entry per register, not a stream: the founding, the purpose, and the fact that
-			// the realm now holds two cities, said once. Written before the claim so the book
-			// reads in the order the day happened.
-			KingdomChronicle.Record(system, "you poured again on " + StyleGroundClause(system.Style) + ", and " + Name + " was " + verb + " as " + KingdomSettlement.VocationClause(vocation) + ", the second city of " + system.KingdomDisplayName + KingdomRules.RuinRestorationClause(structuresRestored), Accomplishment: true);
-			// Force, because the whole point of this ground is that it does not border the realm.
-			// The foreign-faction refusal above already stands regardless of this Force.
-			ClaimZone(Site, Force: true, StageSnapshot: false);
-			Cell secondRiteCell = The.Player?.CurrentCell;
-			if (secondRiteCell != null && secondRiteCell.ParentZone == Site)
-			{
-				Site.SetZoneProperty(KingdomPlots.RiteXProperty, secondRiteCell.X.ToString());
-				Site.SetZoneProperty(KingdomPlots.RiteYProperty, secondRiteCell.Y.ToString());
-				// A second city is a city: it pours its own water, holds its own rite ground, and
-				// is surveyed for its own heart. The one-per-city ruling caps colossi INSIDE a
-				// city, not across the realm, and the top rung of this ladder is not built here
-				// anyway.
-				KingdomSystem.Guard("second founding: the heart surveyed", delegate
-				{
-					KingdomPlots.SurveyHeart(system, Site, secondRiteCell.X, secondRiteCell.Y);
-				});
-			}
-			The.Player?.RequirePart<KingdomCharterPart>().EnsureAbility();
-			string sealFailure;
-			KingdomSeal.TryStageSemanticSnapshot("second founding", out sealFailure);
-			return true;
+			string failure;
+			return KingdomFoundingTransaction.TryFoundSecondWithoutWater(
+				Name, Vocation, Site, Force, out failure);
 		}
 
 		/// <summary>Every zone the realm holds, across both cities. The seat's claims come first
@@ -268,7 +666,7 @@ namespace ThousandAndFirst
 		/// <param name="RegionName">The canonical terrain region read, or null if unavailable.</param>
 		/// <param name="ZLevel">The founding zone's depth, captured alongside the terrain evidence.</param>
 		/// <returns>A style from <see cref="KingdomRules.Styles"/>; "common" on any failure.</returns>
-		private static string ResolveFoundingStyle(Zone FoundingZone, out string TerrainBlueprint, out string RegionName, out int ZLevel)
+		internal static string ResolveFoundingStyle(Zone FoundingZone, out string TerrainBlueprint, out string RegionName, out int ZLevel)
 		{
 			string terrainBlueprint = null;
 			string regionName = null;
@@ -372,13 +770,38 @@ namespace ThousandAndFirst
 		/// <returns>True if claimed; false if unfounded, null, or not adjacent to the realm.</returns>
 		public static bool ClaimZone(Zone Z, bool Force = false)
 		{
-			return ClaimZone(Z, Force, StageSnapshot: true);
+			return ClaimZone(Z, Force, StageSnapshot: true, Authority: null);
 		}
 
-		private static bool ClaimZone(Zone Z, bool Force, bool StageSnapshot)
+		internal static bool ClaimZone(Zone Z, bool Force, bool StageSnapshot,
+			string Authority)
 		{
 			KingdomSystem system = The.Game.RequireSystem<KingdomSystem>();
 			if (!system.Founded || Z == null)
+			{
+				return false;
+			}
+			Faction reservedRealm = Factions.GetIfExists(system.KingdomFactionName);
+			bool reserved = KingdomFoundingTransaction.HasGlobalReservation() ||
+				KingdomFoundingTransaction.HasSiteReservation(Z) ||
+				!string.IsNullOrEmpty(reservedRealm?.GetStringProperty(
+					KingdomFoundingTransaction.RealmReservationProperty, null));
+			KingdomFoundingAuthority foundingAuthority = default(KingdomFoundingAuthority);
+			if (reserved)
+			{
+				if (string.IsNullOrEmpty(Authority) ||
+					!KingdomFoundingTransaction.GlobalReservationMatches(Authority) ||
+					!KingdomFoundingTransaction.SiteReservationMatches(Z, Authority) ||
+					!KingdomFoundingTransactionRules.TryParseAuthority(Authority,
+						out foundingAuthority) ||
+					foundingAuthority.Kind != KingdomFoundingKind.FirstCity ||
+					foundingAuthority.RealmFaction != system.KingdomFactionName ||
+					foundingAuthority.ZoneID != Z.ZoneID)
+				{
+					return false;
+				}
+			}
+			else if (!string.IsNullOrEmpty(Authority))
 			{
 				return false;
 			}
@@ -403,7 +826,7 @@ namespace ThousandAndFirst
 			// there was a live hazard the ecosystem-compat audit found in this exact call. Force
 			// is for debug/scripted foundings only; FoundSecond judges this itself before it ever
 			// reaches here with Force set, so a real second founding cannot route around it.
-			if (!Force && KingdomRules.GroundIsForeignFaction(Z.GetZoneProperty("faction"), system.KingdomFactionName))
+			if (KingdomRules.GroundIsForeignFaction(Z.GetZoneProperty("faction"), system.KingdomFactionName))
 			{
 				return false;
 			}
@@ -423,18 +846,117 @@ namespace ThousandAndFirst
 					return false;
 				}
 			}
-			bool firstRealmClaim = StageSnapshot && system.SettlementCount == 1
+			bool firstRealmClaim = system.SettlementCount == 1
 				&& system.ClaimedZones.Count == 0;
+			Faction faction = reservedRealm;
+			if (!KingdomFoundingTransaction.FactionRegistryCoherent(
+				system.KingdomFactionName, faction) ||
+				faction.GetIntProperty("PlayerKingdom") != 1 ||
+				faction.GetIntProperty("Village") != 1 ||
+				(reserved &&
+				 (faction.GetStringProperty(
+					 KingdomFoundingTransaction.PendingFactionTransactionProperty, null) !=
+						foundingAuthority.TransactionID ||
+				  faction.GetStringProperty(
+					 KingdomFoundingTransaction.PendingFactionAuthorityProperty, null) !=
+						Authority)))
+			{
+				return false;
+			}
+			bool alreadyClaimed = system.ClaimedZones.Contains(Z.ZoneID);
+			string claimEvent = Z.GetZoneProperty(
+				KingdomFoundingTransaction.ClaimChronicleEventProperty, null);
+			string expectedClaimEvent = reserved
+				? KingdomFoundingTransaction.FoundingEventID(
+					KingdomFoundingKind.FirstCity, foundingAuthority.TransactionID, "claim")
+				: claimEvent;
+			if (string.IsNullOrEmpty(expectedClaimEvent))
+			{
+				expectedClaimEvent = "taf:claim:v1:" + Guid.NewGuid().ToString("N");
+			}
+			if (string.IsNullOrEmpty(claimEvent))
+			{
+				Z.SetZoneProperty(KingdomFoundingTransaction.ClaimChronicleEventProperty,
+					expectedClaimEvent);
+				Z.SetZoneProperty(KingdomFoundingTransaction.ClaimChronicleStageProperty,
+					alreadyClaimed ? "2" : "0");
+				Z.SetZoneProperty(
+					KingdomFoundingTransaction.ClaimChronicleDispositionProperty,
+					((int)(alreadyClaimed
+						? KingdomChronicleDisposition.Skipped
+						: KingdomChronicleDisposition.None)).ToString());
+				Z.SetZoneProperty(KingdomFoundingTransaction.ClaimFoundingProperty,
+					firstRealmClaim ? "1" : "0");
+				claimEvent = Z.GetZoneProperty(
+					KingdomFoundingTransaction.ClaimChronicleEventProperty, null);
+			}
+			if (claimEvent != expectedClaimEvent)
+			{
+				return false;
+			}
+			string foundingRaw = Z.GetZoneProperty(
+				KingdomFoundingTransaction.ClaimFoundingProperty, null);
+			if ((foundingRaw != "0" && foundingRaw != "1") ||
+				(reserved && foundingRaw != "1"))
+			{
+				return false;
+			}
+			bool foundingClaim = foundingRaw == "1";
+			int ClaimStage()
+			{
+				string raw = Z.GetZoneProperty(
+					KingdomFoundingTransaction.ClaimChronicleStageProperty, null);
+				if (!int.TryParse(raw, out var stage) || stage < 0 || stage > 2)
+				{
+					throw new InvalidOperationException("The claim chronicle stage is malformed.");
+				}
+				return stage;
+			}
 			Z.SetZoneProperty("faction", system.KingdomFactionName);
-			Faction faction = Factions.Get(system.KingdomFactionName);
 			if (faction != null && !faction.HolyPlaces.Contains(Z.ZoneID))
 			{
 				faction.HolyPlaces.Add(Z.ZoneID);
 			}
-			if (!system.ClaimedZones.Contains(Z.ZoneID))
+			try
+			{
+				KingdomFoundingTransaction.RecordChronicleOnce(system, claimEvent,
+					system.KingdomDisplayName + " claimed " + Grammar.GetProsaicZoneName(Z),
+					Accomplishment: false, MuralText: null,
+					ReadStage: ClaimStage,
+					WriteStage: stage => Z.SetZoneProperty(
+						KingdomFoundingTransaction.ClaimChronicleStageProperty,
+						stage.ToString()),
+					ReadDisposition: () => Z.HasZoneProperty(
+						KingdomFoundingTransaction.ClaimChronicleDispositionProperty)
+						? (int?)int.Parse(Z.GetZoneProperty(
+							KingdomFoundingTransaction.ClaimChronicleDispositionProperty, null))
+						: null,
+					WriteDisposition: disposition => Z.SetZoneProperty(
+						KingdomFoundingTransaction.ClaimChronicleDispositionProperty,
+						disposition.ToString()),
+					ValidateAuthority: reserved
+						? (Func<bool>)(() =>
+							KingdomFoundingTransaction.FoundingAuthorityStillExact(
+								Authority, Z))
+						: null);
+			}
+			catch (Exception ex)
+			{
+				KingdomLog.Log("claim chronicle remains recoverable: " + ex.Message);
+				return false;
+			}
+			if (!alreadyClaimed)
 			{
 				system.ClaimedZones.Add(Z.ZoneID);
-				KingdomChronicle.Record(system, system.KingdomDisplayName + " claimed " + Grammar.GetProsaicZoneName(Z));
+			}
+			if (!system.ClaimedZones.Contains(Z.ZoneID) ||
+				Z.GetZoneProperty("faction", null) != system.KingdomFactionName ||
+				!faction.HolyPlaces.Contains(Z.ZoneID) || ClaimStage() != 2 ||
+				Z.GetZoneProperty(
+					KingdomFoundingTransaction.ClaimChronicleDispositionProperty, null) !=
+					((int)KingdomChronicleDisposition.Skipped).ToString())
+			{
+				return false;
 			}
 			if (system.NextArrivalTick <= 0)
 			{
@@ -443,14 +965,25 @@ namespace ThousandAndFirst
 			if (StageSnapshot)
 			{
 				string sealFailure;
-				if (firstRealmClaim)
+				bool sealedClaim;
+				if (foundingClaim)
 				{
-					KingdomSeal.TryFoundingCompleted(out sealFailure);
+					sealedClaim = KingdomSeal.TryFoundingCompleted(out sealFailure);
 				}
 				else
 				{
-					KingdomSeal.TryStageSemanticSnapshot("ground claimed", out sealFailure);
+					sealedClaim = KingdomSeal.TryStageSemanticSnapshot(
+						"ground claimed", out sealFailure);
 				}
+					if (!sealedClaim)
+					{
+						// Faction, holy place, chronicle, and ClaimedZones are already durable.
+						// Report committed so Charter charges exactly once; seal dirty state is its
+						// own retryable outbox and will flush on later Charter/zone boundaries.
+						KingdomSeal.MarkSemanticDirty("ground claim seal pending");
+						KingdomLog.Log("claim seal remains pending: " + sealFailure);
+						return true;
+					}
 			}
 			return true;
 		}
@@ -514,7 +1047,7 @@ namespace ThousandAndFirst
 		/// </summary>
 		/// <param name="Site">The founding zone. Null yields zero.</param>
 		/// <returns>How many structures were credited.</returns>
-		private static int RestoreRuinStructures(Zone Site)
+		internal static int RestoreRuinStructures(Zone Site)
 		{
 			int restored = 0;
 			if (Site == null)
@@ -568,11 +1101,23 @@ namespace ThousandAndFirst
 			{
 				return;
 			}
+			Faction village = Factions.GetIfExists(VillageFactionName);
+			if (KingdomFoundingTransaction.HasGlobalReservation() ||
+				!KingdomFoundingTransaction.FactionRegistryCoherent(
+					VillageFactionName, village) ||
+				village.GetIntProperty("Village") != 1 ||
+				village.DisplayName != VillageDisplayName)
+			{
+				return;
+			}
 			if (System.GetStanding(VillageFactionName) < KingdomRules.VillageCharterSealedStanding)
 			{
 				System.SetStanding(VillageFactionName, KingdomRules.VillageCharterSealedStanding);
 			}
-			KingdomChronicle.Record(System, "you asked, and " + VillageDisplayName + " agreed: their ground stays theirs, and a covenant now stands between them and " + System.KingdomDisplayName, Accomplishment: true);
+			KingdomFoundingTransaction.RecordChronicleAtomically(System,
+				"you asked, and " + VillageDisplayName +
+				" agreed: their ground stays theirs, and a covenant now stands between them and " +
+				System.KingdomDisplayName, Accomplishment: true);
 			string sealFailure;
 			KingdomSeal.TryStageSemanticSnapshot("village charter", out sealFailure);
 		}

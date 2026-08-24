@@ -132,6 +132,7 @@ namespace ThousandAndFirst
 				return false;
 			}
 			Candidate.SetIntProperty(BuiltProperty, 1);
+			KingdomGovernanceScope.Commit("adopt building");
 			Candidate.SetIntProperty(AdoptedProperty, 1);
 			Candidate.SetStringProperty(AdoptedKeyProperty, Key);
 			string mark = "";
@@ -220,7 +221,14 @@ namespace ThousandAndFirst
 				return false;
 			}
 			Anchor.AddObject(marker);
+			if (marker.CurrentCell != Anchor)
+			{
+				marker.Obliterate(null, Silent: true);
+				Failure = "The marker could not be set down.";
+				return false;
+			}
 			marker.SetIntProperty(BuiltProperty, 1);
+			KingdomGovernanceScope.Commit("adopt building");
 			marker.SetIntProperty(AdoptedProperty, 1);
 			marker.SetStringProperty(AdoptedKeyProperty, Key);
 			ApplyRoleFixtures(marker, entry);
@@ -270,6 +278,7 @@ namespace ThousandAndFirst
 			string mark = Adopted.GetStringProperty(AdoptedMarkProperty);
 			string name = Adopted.ShortDisplayName;
 			Adopted.SetIntProperty(BuiltProperty, 0);
+			KingdomGovernanceScope.Commit("release adoption");
 			Adopted.SetIntProperty(AdoptedProperty, 0);
 			Adopted.SetStringProperty(AdoptedKeyProperty, null, RemoveIfNull: true);
 			Adopted.SetStringProperty(AdoptedMarkProperty, null, RemoveIfNull: true);

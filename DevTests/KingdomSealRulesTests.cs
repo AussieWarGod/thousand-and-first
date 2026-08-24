@@ -9,6 +9,25 @@ namespace ThousandAndFirst.Tests
 {
 	public class KingdomSealRulesTests
 	{
+		private const string FoundingTransaction = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+		private static readonly string ExactRealmId = MintRealm();
+		private static readonly string ExactSettlementId = MintSettlement();
+
+		private static string MintRealm()
+		{
+			Assert.IsTrue(KingdomIdentityRules.TryMintRealm(FoundingTransaction,
+				out string id, out KingdomIdentityFault fault), fault.ToString());
+			return id;
+		}
+
+		private static string MintSettlement()
+		{
+			Assert.IsTrue(KingdomIdentityRules.TryMintSettlement(ExactRealmId,
+				FoundingTransaction, out string id, out KingdomIdentityFault fault),
+				fault.ToString());
+			return id;
+		}
+
 		private static KingdomSettlement SampleSettlement()
 		{
 			KingdomSettlement seat = new KingdomSettlement();
@@ -31,7 +50,7 @@ namespace ThousandAndFirst.Tests
 			seat.DeadCauses.Add("fell in a raid");
 
 			KingdomCityBook book = new KingdomCityBook();
-			book.SettlementId = "kavvat-id";
+			book.SettlementId = ExactSettlementId;
 			book.WaterLevel = 25;
 			book.ZoneIds.Add("JoppaWorld.1.1.1.1.10");
 			book.ZoneDefences.Add(7);
@@ -45,10 +64,55 @@ namespace ThousandAndFirst.Tests
 			return seat;
 		}
 
+		private static KingdomSealIdentity SampleIdentity(KingdomSettlement Seat)
+		{
+			Seat.City.SettlementId = ExactSettlementId;
+			KingdomSealIdentity identity = new KingdomSealIdentity
+			{
+				RealmId = ExactRealmId,
+				SettlementId = ExactSettlementId,
+				SettlementIds = new List<string> { ExactSettlementId },
+				RealmIdentityVersion = KingdomIdentityRules.RulesVersion,
+				RealmIdentityOrigin = KingdomIdentityOrigin.FoundingTransaction,
+				RealmIdentityTransactionId = FoundingTransaction,
+				RealmIdentityFoundedTick = 10L,
+				RealmIdentityFirstClaimedZone = Seat.ClaimedZones[0],
+				SettlementIdentityVersion = KingdomIdentityRules.RulesVersion,
+				SettlementIdentityOrigin = KingdomIdentityOrigin.FoundingTransaction,
+				SettlementIdentityTransactionId = FoundingTransaction,
+				SettlementIdentityFoundedTick = Seat.FoundedTick,
+				SettlementIdentityFirstClaimedZone = Seat.ClaimedZones[0]
+			};
+			Assert.IsTrue(KingdomSealRules.TryBuildSettlementProvenance(ExactSettlementId,
+				identity.SettlementIdentityVersion, identity.SettlementIdentityOrigin,
+				identity.SettlementIdentityTransactionId, identity.SettlementIdentityFoundedTick,
+				identity.SettlementIdentityFirstClaimedZone,
+				identity.SettlementIdentityLegacyId, out string provenance));
+			identity.SettlementProvenanceRows.Add(provenance);
+			return identity;
+		}
+
+		[Test]
+		public void CaptureNeverPromotesMutableSettlementNameIntoIdentityPayload()
+		{
+			KingdomSettlement seat = SampleSettlement();
+			seat.City.SettlementId = null;
+			Assert.Throws<ArgumentException>(() => KingdomSealRules.Capture(seat, null,
+				new KingdomSealLineage("lineage", "legacy", "origin", 0, 1),
+				"Realm", "Founder", new List<string>(), new List<string>(), 100L));
+
+			seat.City.SettlementId = ExactSettlementId;
+			KingdomSealRecord bound = KingdomSealRules.Capture(seat, SampleIdentity(seat),
+				new KingdomSealLineage("lineage", "legacy", "origin", 0, 1),
+				"Realm", "Founder", new List<string>(), new List<string>(), 100L);
+			Assert.AreEqual(ExactSettlementId, bound.SettlementId);
+		}
+
 		private static KingdomSealRecord SampleCapturedRecord(string lineageId, string legacyId, string originId, int generation, int revision)
 		{
+			KingdomSettlement seat = SampleSettlement();
 			return KingdomSealRules.Capture(
-				SampleSettlement(),
+				seat, SampleIdentity(seat),
 				new KingdomSealLineage(lineageId, legacyId, originId, generation, revision),
 				"Realm of Salt",
 				"Abram",
@@ -90,7 +154,7 @@ namespace ThousandAndFirst.Tests
 			book.WorkDesignKeys.Add("r_KingdomRiteGround");
 			book.WorkConditions.Add(88);
 
-			KingdomSealRecord record = KingdomSealRules.Capture(seat,
+			KingdomSealRecord record = KingdomSealRules.Capture(seat, SampleIdentity(seat),
 				new KingdomSealLineage("lineage", "legacy", "origin", 0, 1),
 				"Realm", "Founder", new List<string>(), new List<string>(), 100L);
 			CollectionAssert.AreEqual(new[] { "tent", "heartbasin" }, record.WorkKeys);
@@ -117,7 +181,7 @@ namespace ThousandAndFirst.Tests
 			book.WorkDesignKeys.Add("r_KingdomHouse");
 			book.WorkConditions.Add(90);
 
-			KingdomSealRecord record = KingdomSealRules.Capture(seat,
+			KingdomSealRecord record = KingdomSealRules.Capture(seat, SampleIdentity(seat),
 				new KingdomSealLineage("lineage", "legacy", "origin", 0, 1),
 				"Realm", "Founder", new List<string>(), new List<string>(), 100L);
 			CollectionAssert.AreEqual(new[] { "tent", "house" }, record.WorkKeys,
@@ -193,10 +257,49 @@ namespace ThousandAndFirst.Tests
 			Assert.IsTrue(KingdomSealRecord.TryParse(heir.Compose(), out parsed, out fault, out detail), detail);
 			Assert.AreEqual("dynasty", parsed.LineageId);
 			Assert.AreEqual("legacy-heir", parsed.LegacyId);
+			CollectionAssert.AreEqual(heir.RealmSettlementProvenance,
+				parsed.RealmSettlementProvenance);
 		}
 
 		[Test]
-		public void SchemaOneMigratesItsSingleIdentityToLineageAndLegacy()
+		public void WholeTopologyProvenanceRejectsReplacementAndWrongRealm()
+		{
+			const string secondTransaction = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
+			Assert.IsTrue(KingdomIdentityRules.TryMintSettlement(ExactRealmId,
+				secondTransaction, out string second, out KingdomIdentityFault fault),
+				fault.ToString());
+			Assert.IsTrue(KingdomSealRules.TryBuildSettlementProvenance(ExactSettlementId,
+				KingdomIdentityRules.RulesVersion, KingdomIdentityOrigin.FoundingTransaction,
+				FoundingTransaction, 10L, "zone-a", "", out string firstRow));
+			Assert.IsTrue(KingdomSealRules.TryBuildSettlementProvenance(second,
+				KingdomIdentityRules.RulesVersion, KingdomIdentityOrigin.FoundingTransaction,
+				secondTransaction, 20L, "zone-b", "", out string secondRow));
+			List<KeyValuePair<string, string>> pairs = new List<KeyValuePair<string, string>>
+			{
+				new KeyValuePair<string, string>(ExactSettlementId, firstRow),
+				new KeyValuePair<string, string>(second, secondRow)
+			};
+			pairs.Sort((a, b) => string.CompareOrdinal(a.Key, b.Key));
+			List<string> ids = new List<string> { pairs[0].Key, pairs[1].Key };
+			List<string> rows = new List<string> { pairs[0].Value, pairs[1].Value };
+			Assert.IsTrue(KingdomSealRules.ExactTopologyProvenance(ExactRealmId, ids, rows));
+
+			const string replacementTransaction = "cccccccccccccccccccccccccccccccc";
+			Assert.IsTrue(KingdomIdentityRules.TryMintSettlement(ExactRealmId,
+				replacementTransaction, out string replacement, out fault), fault.ToString());
+			List<string> replaced = new List<string>(ids);
+			replaced[1] = replacement;
+			replaced.Sort(StringComparer.Ordinal);
+			Assert.IsFalse(KingdomSealRules.ExactTopologyProvenance(ExactRealmId,
+				replaced, rows));
+
+			Assert.IsTrue(KingdomIdentityRules.TryMintRealm(secondTransaction,
+				out string wrongRealm, out fault), fault.ToString());
+			Assert.IsFalse(KingdomSealRules.ExactTopologyProvenance(wrongRealm, ids, rows));
+		}
+
+		[Test]
+		public void PreIdentitySchemaIsDeliberatelyRejected()
 		{
 			KingdomSealRecord original = SampleCapturedRecord("old-identity", "ignored-v2-identity", "game-old", 0, 1);
 			KingdomSealBody current = original.WriteBody();
@@ -231,10 +334,22 @@ namespace ThousandAndFirst.Tests
 			KingdomSealRecord migrated;
 			KingdomSealFault fault;
 			string detail;
-			Assert.IsTrue(KingdomSealRecord.TryParse(KingdomSealFormat.Compose(1, schemaOne),
-				out migrated, out fault, out detail), detail);
-			Assert.AreEqual("old-identity", migrated.LineageId);
-			Assert.AreEqual("old-identity", migrated.LegacyId);
+			Assert.IsFalse(KingdomSealRecord.TryParse(KingdomSealFormat.Compose(1, schemaOne),
+				out migrated, out fault, out detail));
+			Assert.IsNull(migrated);
+			Assert.AreEqual(KingdomSealFault.UnsupportedSchema, fault);
+		}
+
+		[Test]
+		public void PreTopologyProvenanceSchemaIsDeliberatelyRejected()
+		{
+			KingdomSealRecord original = SampleCapturedRecord("old-topology", "old-topology-run",
+				"game-old-topology", 0, 1);
+			Assert.IsFalse(KingdomSealRecord.TryParse(
+				KingdomSealFormat.Compose(3, original.WriteBody()), out KingdomSealRecord parsed,
+				out KingdomSealFault fault, out string detail));
+			Assert.IsNull(parsed);
+			Assert.AreEqual(KingdomSealFault.UnsupportedSchema, fault, detail);
 		}
 
 		[Test]
@@ -285,6 +400,49 @@ namespace ThousandAndFirst.Tests
 			KingdomCityBook none = new KingdomCityBook();
 			string fallback = KingdomSealRules.ChooseGround(none, new List<string> { "z9", "z4" });
 			Assert.AreEqual("z4", fallback);
+		}
+	}
+
+	/// <summary>Canonical immutable authority for seal fixtures outside engine-backed tests.</summary>
+	internal static class KingdomSealTestIdentity
+	{
+		private const string TransactionId = "0123456789abcdef0123456789abcdef";
+
+		public static KingdomSealRecord Bind(KingdomSealRecord Record)
+		{
+			if (Record == null) throw new ArgumentNullException("Record");
+			KingdomIdentityFault fault;
+			string realmId;
+			string settlementId;
+			if (!KingdomIdentityRules.TryMintRealm(TransactionId, out realmId, out fault) ||
+				!KingdomIdentityRules.TryMintSettlement(realmId, TransactionId,
+					out settlementId, out fault))
+				throw new InvalidOperationException("Test identity mint failed: " + fault);
+			Record.RealmId = realmId;
+			Record.SettlementId = settlementId;
+			Record.RealmSettlementIds = new List<string> { settlementId };
+			Record.RealmIdentityVersion = KingdomIdentityRules.RulesVersion;
+			Record.RealmIdentityOrigin = KingdomIdentityOrigin.FoundingTransaction;
+			Record.RealmIdentityTransactionId = TransactionId;
+			Record.RealmIdentityLegacyFaction = "";
+			Record.RealmIdentityFoundedTick = Record.FoundedTick;
+			Record.RealmIdentitySeedHigh = 0UL;
+			Record.RealmIdentitySeedLow = 0UL;
+			Record.RealmIdentityFirstClaimedZone = Record.GroundZoneId ?? "";
+			Record.SettlementIdentityVersion = KingdomIdentityRules.RulesVersion;
+			Record.SettlementIdentityOrigin = KingdomIdentityOrigin.FoundingTransaction;
+			Record.SettlementIdentityTransactionId = TransactionId;
+			Record.SettlementIdentityFoundedTick = Record.FoundedTick;
+			Record.SettlementIdentityFirstClaimedZone = Record.GroundZoneId ?? "";
+			Record.SettlementIdentityLegacyId = "";
+			if (!KingdomSealRules.TryBuildSettlementProvenance(settlementId,
+				Record.SettlementIdentityVersion, Record.SettlementIdentityOrigin,
+				Record.SettlementIdentityTransactionId, Record.SettlementIdentityFoundedTick,
+				Record.SettlementIdentityFirstClaimedZone, Record.SettlementIdentityLegacyId,
+				out string provenance))
+				throw new InvalidOperationException("Test settlement provenance row failed.");
+			Record.RealmSettlementProvenance = new List<string> { provenance };
+			return Record;
 		}
 	}
 }

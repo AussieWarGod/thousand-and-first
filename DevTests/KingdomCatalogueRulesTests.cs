@@ -441,6 +441,38 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void Validate_AcceptsTheExactHeartRingsGrowingAcrossSurveyedGround()
+		{
+			List<CatalogueEntry> entries = new List<CatalogueEntry>
+			{
+				Entry("heartbasin", KingdomPlotRules.PlotSize.Small, GrowthStage.Camp,
+					"civic", "spirit:1", 0, Successor: "heartwaterstone"),
+				Entry("heartwaterstone", KingdomPlotRules.PlotSize.Medium, GrowthStage.Steading,
+					"civic", "spirit:2,order:1", 18, Successor: "heartmoot"),
+				Entry("heartmoot", KingdomPlotRules.PlotSize.Large, GrowthStage.Town,
+					"civic", "spirit:4,order:3", 46, Successor: "heartcourt"),
+				Entry("heartcourt", KingdomPlotRules.PlotSize.Huge, GrowthStage.City,
+					"civic", "spirit:8,order:6,learning:2", 96)
+			};
+			List<CatalogueFinding> findings = KingdomCatalogueRules.Validate(entries, null);
+			Assert.AreEqual(0, Count(findings, CatalogueSeverity.Fault), FirstMessage(findings));
+		}
+
+		[Test]
+		public void Validate_DoesNotLetAHeartNameSkipTheAdjacentRingLaw()
+		{
+			List<CatalogueEntry> entries = new List<CatalogueEntry>
+			{
+				Entry("heartbasin", KingdomPlotRules.PlotSize.Small, GrowthStage.Camp,
+					"civic", "spirit:1", 0, Successor: "heartmoot"),
+				Entry("heartmoot", KingdomPlotRules.PlotSize.Large, GrowthStage.Town,
+					"civic", "spirit:4,order:3", 46)
+			};
+			List<CatalogueFinding> findings = KingdomCatalogueRules.Validate(entries, null);
+			Assert.IsTrue(Has(findings, "heartbasin", "UpgradesTo", CatalogueSeverity.Fault));
+		}
+
+		[Test]
 		public void Validate_AcceptsAnImprovementThatStaysOnItsOwnPlot()
 		{
 			List<CatalogueEntry> entries = new List<CatalogueEntry>

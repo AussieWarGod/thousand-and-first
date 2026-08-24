@@ -14,7 +14,7 @@
   <option ID="r_TAF_OptionHappenings" DisplayText="The Thousand and First: the city's life is told - weddings, funerals, festivals, and breakdowns" Category="Mods" Type="Checkbox" Default="Yes" />
   <option ID="r_TAF_OptionPrefetch" DisplayText="The Thousand and First: pre-thaw and catch up your city's neighbouring zones as you move through it (experimental)" Category="Mods" Type="Checkbox" Default="No" />
   <option ID="r_TAF_OptionMemory" DisplayText="The Thousand and First: the settlement remembers its dead and names an elder among its settlers" Category="Mods" Type="Checkbox" Default="Yes" />
-  <option ID="r_TAF_OptionDevLog" DisplayText="The Thousand and First: write diagnostic lines to Player.log (dev builds)" Category="Mods" Type="Checkbox" Default="Yes" />
+  <option ID="r_TAF_OptionDevLog" DisplayText="The Thousand and First: write diagnostic lines to Player.log (dev builds)" Category="Mods" Type="Checkbox" Default="No" />
   <option ID="r_TAF_OptionLocus" DisplayText="The Thousand and First: the gathering bench gets a keeper, and travelers may pass through" Category="Mods" Type="Checkbox" Default="Yes" />
   <option ID="r_TAF_OptionZoning" DisplayText="The Thousand and First: designs can want a district, a larger realm, a recipe your keepers know, or more craft than the settlement has" Category="Mods" Type="Checkbox" Default="Yes" />
   <option ID="r_TAF_OptionImprovement" DisplayText="The Thousand and First: the settlement betters its own works out of what the stores can spare" Category="Mods" Type="Checkbox" Default="Yes" />

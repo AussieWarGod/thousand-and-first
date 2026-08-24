@@ -605,21 +605,27 @@ namespace ThousandAndFirst
 				Failure = "You poured for them too recently. A rite held every day is a habit, and a habit mends nothing.";
 				return false;
 			}
-			if (KingdomGrowth.CountStoredWater(Z) < cost)
+			KingdomSurvey survey = KingdomSurvey.Take(Z);
+			KingdomWaterDebit debit;
+			if (!survey.TryReserveExactWater(cost, out debit))
 			{
-				Failure = "The rite would cost {{C|" + cost + " drams}} from the stores, and the stores cannot bear it.";
+				Failure = "The rite requires exactly {{C|" + cost
+					+ " drams}} from the dedicated stores, and they cannot provide it.";
 				return false;
 			}
-			int poured = KingdomGrowth.ConsumeStoredWater(Z, cost);
-			if (poured <= 0)
+			// Last safe point before the realm's cadence, dissent or history changes. This receipt
+			// either drains the whole stated cost or restores every vessel it touched.
+			if (!debit.Commit())
 			{
-				Failure = "The stores would not give up the water.";
+				Failure = "The dedicated stores could not yield exactly {{C|" + cost
+					+ " drams}}. No rite was held.";
 				return false;
 			}
 			System.LastRiteTick = The.Game.TimeTicks;
+			KingdomGovernanceScope.Commit("hold shared rite");
 			System.Dissent = KingdomCreedRules.ApplyDissent(System.Dissent, -KingdomCreedRules.RiteEase(temper));
 			string awayName = (System.Away != null) ? System.Away.SettlementName : null;
-			KingdomChronicle.Record(System, KingdomCreedRules.RiteTelling(System.SeatName, awayName, poured));
+			KingdomChronicle.Record(System, KingdomCreedRules.RiteTelling(System.SeatName, awayName, cost));
 			Popup.Show(KingdomCreedRules.RiteNotice(Temper(System), awayName));
 			Rearm(System);
 			return true;
@@ -687,6 +693,7 @@ namespace ThousandAndFirst
 					return false;
 				}
 				System.DeclaredCreed = null;
+				KingdomGovernanceScope.Commit("recant creed");
 				KingdomChronicle.Record(System, KingdomCreedRules.RecantTelling(System.KingdomDisplayName));
 				Popup.Show("You unsay it. The roads go back to carrying whoever they were carrying before, and nobody is owed an explanation.");
 				return true;
@@ -711,6 +718,7 @@ namespace ThousandAndFirst
 				}
 			}
 			System.DeclaredCreed = CreedFactionName;
+			KingdomGovernanceScope.Commit("declare creed");
 			if (!string.IsNullOrEmpty(slighted))
 			{
 				System.AdjustStanding(slighted, KingdomCreedRules.DeclarationStandingCost);
@@ -860,6 +868,7 @@ namespace ThousandAndFirst
 				return false;
 			}
 			System.Away = System.Seceded;
+			KingdomGovernanceScope.Commit("rejoin city");
 			System.Seceded = null;
 			System.SecededTick = 0;
 			System.Dissent = 0;

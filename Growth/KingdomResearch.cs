@@ -453,7 +453,8 @@ namespace ThousandAndFirst
 		/// Failure mode: returns false with <paramref name="Refusal"/> set, having changed nothing.
 		/// </para>
 		/// </summary>
-		public static bool TakeUp(KingdomSystem System, string Key, out string Refusal)
+		public static bool TakeUp(KingdomSystem System, string Key, out string Refusal,
+			string GovernanceVerb = null)
 		{
 			ResearchNode node;
 			Refusal = null;
@@ -466,8 +467,9 @@ namespace ThousandAndFirst
 			{
 				return false;
 			}
-			Shelve(System);
+			Shelve(System, GovernanceVerb);
 			System.ResearchSubject = node.Key;
+			MarkGovernance(GovernanceVerb);
 			System.ResearchAccrued = Recall(System, node.Key);
 			System.ResearchTakenUpTick = (The.Game != null) ? The.Game.TimeTicks : 0L;
 			System.ResearchStalledAnnounced = false;
@@ -477,7 +479,7 @@ namespace ThousandAndFirst
 
 		// The shelf is memory, never a queue: the abandoned subject keeps its labour and nothing
 		// there progresses. The ninth shelving drops the least advanced row and says so once.
-		private static void Shelve(KingdomSystem System)
+		private static void Shelve(KingdomSystem System, string GovernanceVerb = null)
 		{
 			if (string.IsNullOrEmpty(System.ResearchSubject) || System.ResearchAccrued <= 0)
 			{
@@ -493,12 +495,14 @@ namespace ThousandAndFirst
 				if (crowded != null)
 				{
 					System.ResearchShelf.Remove(crowded);
+					MarkGovernance(GovernanceVerb);
 					ResearchNode dropped;
 					System.Ledger.Note("{{K|" + KingdomResearchRules.ForgottenLine(System.SeatName,
 						TryGetNode(crowded, out dropped) ? dropped.Named : crowded) + "}}");
 				}
 			}
 			System.ResearchShelf[System.ResearchSubject] = System.ResearchAccrued;
+			MarkGovernance(GovernanceVerb);
 		}
 
 		private static int Recall(KingdomSystem System, string Key)
@@ -895,7 +899,8 @@ namespace ThousandAndFirst
 		/// Addendum 22 B3/B4).
 		/// </summary>
 		/// <returns>True when anything changed.</returns>
-		public static bool Seed(KingdomSystem System, string Key, string LearnedFrom)
+		public static bool Seed(KingdomSystem System, string Key, string LearnedFrom,
+			string GovernanceVerb = null)
 		{
 			ResearchNode node;
 			if (System == null || !System.Founded || !Enabled || !TryGetNode(Key, out node) || !Admissible(System, node))
@@ -907,6 +912,10 @@ namespace ThousandAndFirst
 				return false;
 			}
 			bool revealed = Reveal(node.Key, LearnedFrom);
+			if (revealed)
+			{
+				MarkGovernance(GovernanceVerb);
+			}
 			int standing = (System.ResearchSubject == node.Key) ? System.ResearchAccrued : Peek(System, node.Key);
 			int seeded = KingdomResearchRules.Seeded(node.Effort, standing);
 			if (seeded <= standing)
@@ -916,6 +925,7 @@ namespace ThousandAndFirst
 			if (System.ResearchSubject == node.Key)
 			{
 				System.ResearchAccrued = seeded;
+				MarkGovernance(GovernanceVerb);
 			}
 			else
 			{
@@ -932,9 +942,18 @@ namespace ThousandAndFirst
 					}
 				}
 				System.ResearchShelf[node.Key] = seeded;
+				MarkGovernance(GovernanceVerb);
 			}
 			KingdomLog.Log("research: seeded " + node.Key + " at " + System.SeatName + " to " + seeded + " ticks");
 			return true;
+		}
+
+		private static void MarkGovernance(string Verb)
+		{
+			if (!string.IsNullOrEmpty(Verb) && !KingdomGovernanceScope.HasCommitted)
+			{
+				KingdomGovernanceScope.Commit(Verb);
+			}
 		}
 
 		private static int Peek(KingdomSystem System, string Key)

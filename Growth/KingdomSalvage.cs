@@ -118,6 +118,7 @@ namespace ThousandAndFirst
 			if (Machine.GetIntProperty(CertifiedProperty) == 1)
 			{
 				Machine.SetIntProperty(CertifiedProperty, 0);
+				KingdomGovernanceScope.Commit("certify machine");
 				MessageQueue.AddPlayerMessage("{{K|" + Machine.ShortDisplayName + " is taken off the grid of " + System.SeatName + ".}} It stands exactly where it stood.");
 				KingdomLog.Log("salvage: decommissioned " + Machine.ShortDisplayName + " at " + System.SeatName);
 				return true;
@@ -132,6 +133,7 @@ namespace ThousandAndFirst
 			}
 			survey.Consume(waterCost);
 			Machine.SetIntProperty(CertifiedProperty, 1);
+			KingdomGovernanceScope.Commit("certify machine");
 			// Certifying teaches. Taking the machine back off the grid above does not unteach:
 			// the keepers took it apart once and the knowledge is theirs now.
 			KingdomZoning.RecordCertification(System, Machine);

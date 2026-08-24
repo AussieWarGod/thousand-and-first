@@ -21,6 +21,10 @@
     <Compile Include="KingdomMealRulesTests.cs" />
     <Compile Include="ExileRulesTests.cs" />
     <Compile Include="FoundingPathsRulesTests.cs" />
+    <Compile Include="KingdomFoundingTransactionRulesTests.cs" />
+	<Compile Include="KingdomIdentityRulesTests.cs" />
+	<Compile Include="KingdomRuntimeIdentitySourceTests.cs" />
+	<Compile Include="KingdomRealmCallbackProofRulesTests.cs" />
     <Compile Include="ManifestRulesTests.cs" />
     <Compile Include="KingdomCropRulesTests.cs" />
     <Compile Include="KingdomPowerRulesTests.cs" />
@@ -44,9 +48,11 @@
     <Compile Include="KingdomCatalogueRulesTests.cs" />
     <Compile Include="KingdomCeremonyRulesTests.cs" />
     <Compile Include="KingdomBountyRulesTests.cs" />
+    <Compile Include="KingdomTradeRulesTests.cs" />
     <Compile Include="KingdomRoadRulesTests.cs" />
     <Compile Include="KingdomYardRulesTests.cs" />
     <Compile Include="KingdomGuestRulesTests.cs" />
+	<Compile Include="KingdomLifecycleRulesTests.cs" />
     <Compile Include="KingdomMergeRulesTests.cs" />
     <Compile Include="KingdomSocketRulesTests.cs" />
     <Compile Include="KingdomQolRulesTests.cs" />
@@ -66,9 +72,14 @@
     <Compile Include="KingdomNetworkRulesTests.cs" />
     <Compile Include="KingdomFlowRulesTests.cs" />
     <Compile Include="..\Core\KingdomRules.cs" />
+    <Compile Include="..\Core\KingdomFoundingTransactionRules.cs" />
+	<Compile Include="..\Core\KingdomIdentityRules.cs" />
     <Compile Include="..\Core\KingdomBrinkRules.cs" />
+    <Compile Include="..\Core\KingdomGovernanceRules.cs" />
     <Compile Include="..\Core\KingdomLedger.cs" />
     <Compile Include="..\Core\KingdomSettlement.cs" />
+	<Compile Include="..\Core\KingdomArchivedSettlementCodec.cs" />
+	<Compile Include="..\Core\KingdomRealmCallbackProofRules.cs" />
     <Compile Include="..\Core\KingdomSealFormat.cs" />
     <Compile Include="..\Core\KingdomSealRecord.cs" />
     <Compile Include="..\Core\KingdomSealRules.cs" />
@@ -81,7 +92,10 @@
     <Compile Include="..\Core\KingdomExileRules.cs" />
     <Compile Include="..\Core\KingdomCreedRules.cs" />
     <Compile Include="..\Core\KingdomQolRules.cs" />
+	<Compile Include="..\Chronicle\KingdomChronicleReceiptRules.cs" />
     <Compile Include="..\Trade\KingdomManifest.cs" />
+    <Compile Include="..\Trade\KingdomTradeState.cs" />
+    <Compile Include="..\Trade\KingdomTradeRules.cs" />
     <Compile Include="..\Growth\KingdomCropRules.cs" />
     <Compile Include="..\Growth\KingdomPowerRules.cs" />
     <Compile Include="..\Growth\KingdomMirrorGateRules.cs" />
@@ -101,6 +115,8 @@
     <Compile Include="..\Growth\KingdomSubsidenceRules.cs" />
     <Compile Include="..\Growth\KingdomRoadRules.cs" />
     <Compile Include="..\Growth\KingdomYardRules.cs" />
+    <Compile Include="..\Growth\KingdomWaterDebitRules.cs" />
+    <Compile Include="..\Growth\KingdomMaterialDebitRules.cs" />
     <Compile Include="..\Growth\KingdomCrewRules.cs" />
     <Compile Include="..\Growth\KingdomMergeRules.cs" />
     <Compile Include="..\Growth\KingdomSocketRules.cs" />
@@ -108,12 +124,15 @@
     <Compile Include="..\Growth\KingdomReachRules.cs" />
     <Compile Include="..\Core\KingdomConversionRules.cs" />
     <Compile Include="..\Quests\KingdomBountyRules.cs" />
+    <Compile Include="..\Quests\KingdomPetitionRules.cs" />
     <Compile Include="..\Experience\KingdomVoiceRules.cs" />
     <Compile Include="..\Experience\KingdomOfficeRules.cs" />
     <Compile Include="..\Experience\KingdomLocusRules.cs" />
     <Compile Include="..\Experience\KingdomCeremonyRules.cs" />
     <Compile Include="..\Experience\KingdomFaithRules.cs" />
     <Compile Include="..\Experience\KingdomGuestRules.cs" />
+	<Compile Include="..\Experience\KingdomLifecycleState.cs" />
+	<Compile Include="..\Experience\KingdomLifecycleRules.cs" />
     <Compile Include="..\Experience\KingdomWaterRiteRules.cs" />
     <Compile Include="..\Experience\KingdomSuccessionRules.cs" />
     <Compile Include="..\Simulation\City\KingdomBudgetRules.cs" />
@@ -132,6 +151,7 @@
     <Compile Include="..\Simulation\City\KingdomProductionRules.cs" />
     <Compile Include="..\Simulation\City\KingdomNetworkRules.cs" />
     <Compile Include="..\Simulation\City\KingdomFlowRules.cs" />
+    <Compile Include="..\Simulation\City\KingdomSemanticClockRules.cs" />
     <Compile Include="..\Simulation\City\KingdomLogisticsRules.cs" />
     <Compile Include="..\Simulation\City\KingdomJobRegistry.cs" />
     <Compile Include="..\Simulation\City\KingdomExecutor.cs" />
@@ -209,6 +229,16 @@
     <Compile Include="KingdomInheritanceSiteRulesTests.cs" />
     <Compile Include="KingdomInheritanceStateRulesTests.cs" />
     <Compile Include="KingdomSuccessionRulesTests.cs" />
+    <Compile Include="KingdomGovernanceRulesTests.cs" />
+    <Compile Include="KingdomPetitionLifecycleTests.cs" />
+    <Compile Include="KingdomBountyScheduleTests.cs" />
+    <Compile Include="KingdomSemanticClockRulesTests.cs" />
+    <Compile Include="KingdomWaterDebitRulesTests.cs" />
+    <Compile Include="KingdomMaterialDebitRulesTests.cs" />
+	<Compile Include="KingdomChronicleSourceTests.cs" />
+	<Compile Include="KingdomChronicleReceiptRulesTests.cs" />
+	<Compile Include="KingdomConstructionRulesTests.cs" />
+	<Compile Include="..\Growth\KingdomConstructionRules.cs" />
   </ItemGroup>
 
   <ItemGroup>

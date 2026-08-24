@@ -859,13 +859,12 @@ namespace ThousandAndFirst.Simulation.City
 			}
 			List<GameObject> larders = Ordered(Survey.Larders);
 			int remaining = -owed;
-			for (int i = 0; i < larders.Count && remaining > 0; i++)
+			if (larders.Count > 0 && remaining > 0)
 			{
 				// SpoilFrom is the survey's own "take this many servings out of THIS container and
 				// keep the counters right". Reusing it is deliberate: a second implementation of
 				// how a food stack comes apart would be a second answer to the same question.
-				remaining -= Survey.SpoilFrom(larders[i], remaining);
-				break;
+				remaining -= Survey.SpoilFrom(larders[0], remaining);
 			}
 			return -remaining;
 		}

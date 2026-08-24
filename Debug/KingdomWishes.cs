@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Text;
 using XRL;
@@ -19,21 +20,17 @@ namespace ThousandAndFirst
 			KingdomSystem system = The.Game.RequireSystem<KingdomSystem>();
 			if (system.Founded)
 			{
-				Popup.Show("The kingdom of {{C|" + system.KingdomDisplayName + "}} is already founded. ({{W|kingdom:found2 NAME:VOCATION}} founds the second city here.)");
+				Popup.Show("The kingdom of {{C|" + system.KingdomDisplayName +
+					"}} is already founded. ({{W|kingdom:found2 NAME:VOCATION}} founds the second city here.)");
 				return;
 			}
-			// Factions.AddNewFaction is a Dictionary.Add, and a runtime faction can never be
-			// removed or renamed — so after an expulsion the old realm's name is taken forever,
-			// and re-using it would throw part-way through the rite.
-			if (Factions.Exists(name))
+			Zone site = The.Player?.CurrentZone;
+			if (!KingdomFoundingTransaction.TryFoundFirstWithoutWater(name, site,
+				out var faction, out var failure) || faction == null)
 			{
-				Popup.Show("There is already a {{C|" + name + "}} in the world" + (system.Exiled && name == system.ExiledFactionName ? " — the one that put you out, which is still standing." : ".") + " Pick another name.");
-				return;
-			}
-			Faction faction = KingdomFounding.Found(name);
-			if (faction == null)
-			{
-				Popup.Show("The founding was refused. ({{W|kingdom:dump}} for state.)");
+				Popup.Show((string.IsNullOrEmpty(failure)
+					? "The founding was refused."
+					: failure) + " ({{W|kingdom:dump}} for state.)");
 				return;
 			}
 			Popup.Show("{{C|" + faction.DisplayName + "}} is founded on " + KingdomFounding.StyleGroundClause(system.Style) + ". The chronicle begins.\n\nStandings seeded from your reputation with " + system.Standings.Count + " factions.");
@@ -60,7 +57,17 @@ namespace ThousandAndFirst
 			string vocation = KingdomSettlement.NeutralVocation;
 			if (!string.IsNullOrEmpty(Parameter))
 			{
+				if (Parameter.Length > KingdomTradeRules.MaxNameChars * 2)
+				{
+					Popup.Show("Second-city wish text is too long to parse safely.");
+					return;
+				}
 				string[] parts = Parameter.Trim().Split(':');
+				if (parts.Length > 2)
+				{
+					Popup.Show("Use NAME or NAME:VOCATION.");
+					return;
+				}
 				if (!string.IsNullOrEmpty(parts[0]))
 				{
 					name = parts[0].Trim();
@@ -372,11 +379,7 @@ namespace ThousandAndFirst
 			{
 				sb.Append(d.Key).Append("=").Append(d.Value).Append(" ");
 			}
-			sb.Append("\nDeals: ").Append(system.ActiveDealKeys.Count);
-			for (int i = 0; i < system.ActiveDealKeys.Count; i++)
-			{
-				sb.Append("\n  ").Append(system.ActiveDealKeys[i]).Append(" with ").Append(system.ActiveDealFactions[i]).Append(" next=").Append(system.DealNextTicks[i]);
-			}
+				sb.Append(KingdomReports.TradeStatus(system, Detailed: true));
 			sb.Append("\nStandings: ").Append(system.Standings.Count).Append("  Chronicle: ").Append(system.ChronicleEntries.Count).Append("/").Append(system.OutsiderEntries.Count);
 			sb.Append("\nRegistry: ").Append(KingdomData.Buildings.Count).Append(" buildings, ").Append(KingdomData.Deals.Count).Append(" deals, ").Append(KingdomData.Styles.Count).Append(" styles");
 			if (zone != null)
@@ -443,6 +446,20 @@ namespace ThousandAndFirst
 			{
 				return;
 			}
+			Zone zone = The.Player?.CurrentZone;
+			if (!KingdomFoundingTransaction.TryPrepareDebugReset(system, The.Player,
+				zone, out var resetFailure))
+			{
+				Popup.Show("Reset refused without changing kingdom state: " + resetFailure +
+					" Resolve or resume that founding transaction first.");
+				return;
+			}
+			string tradeResetFailure;
+			if (!KingdomTrade.ResetAuthority(system, out tradeResetFailure))
+			{
+				Popup.Show(tradeResetFailure);
+				return;
+			}
 			foreach (string name in new string[2] { system.KingdomFactionName, system.ExiledFactionName })
 			{
 				if (string.IsNullOrEmpty(name))
@@ -461,11 +478,6 @@ namespace ThousandAndFirst
 					item.FactionFeeling.Remove(name);
 				}
 				The.Game.PlayerReputation.ReputationValues.Remove(name);
-			}
-			Zone zone = The.Player?.CurrentZone;
-			if (zone != null && (system.ClaimedZones.Contains(zone.ZoneID) || (system.Away != null && system.Away.ClaimedZones.Contains(zone.ZoneID))))
-			{
-				zone.SetZoneProperty("faction", null);
 			}
 			KingdomCharterPart part = The.Player?.GetPart<KingdomCharterPart>();
 			if (part != null)
@@ -497,7 +509,7 @@ namespace ThousandAndFirst
 			system.ChronicleEntries.Clear();
 			system.OutsiderEntries.Clear();
 			system.Standings.Clear();
-			system.Manifest = null;
+				system.Manifest = null;
 			Popup.Show("Both cities are dissolved. The ground forgets; the chronicle does not survive it.");
 		}
 

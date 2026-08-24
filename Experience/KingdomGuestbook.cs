@@ -231,7 +231,7 @@ namespace ThousandAndFirst
 
 		private static void DrawHook(KingdomSystem System, long TimeTicks, out KingdomGuestRules.HookKind Kind, out string HookText)
 		{
-			string settlementId = KingdomChronicle.SettlementId(System.KingdomFactionName);
+			string settlementId = KingdomChronicle.SettlementId(System);
 			ulong ordinal = (ulong)TimeTicks;
 			SemanticEventKey key;
 			KernelFaultCode fault;
@@ -245,11 +245,10 @@ namespace ThousandAndFirst
 				HookText = KingdomGuestRules.HookText(Kind, flavorRoll);
 				return;
 			}
-			// The kernel draw refused — no settlement name yet, or this machine's crypto provider
-			// is failing. A notable still arrives; the hook just loses its reload-stable drift for
-			// this one guest rather than the arrival being lost outright.
-			Kind = KingdomGuestRules.PickHookKind((ulong)Stat.Random(0, KingdomGuestRules.HookKindCount - 1));
-			HookText = KingdomGuestRules.HookText(Kind, (ulong)Stat.Random(0, 999));
+			// No immutable subject means no mutable random fallback. The guest still arrives with
+			// the stable first authored hook; later identity repair cannot rewrite that choice.
+			Kind = KingdomGuestRules.PickHookKind(0UL);
+			HookText = KingdomGuestRules.HookText(Kind, 0UL);
 		}
 
 		private static void DepartUnattended(KingdomSystem System, GameObject Guest)
@@ -308,7 +307,54 @@ namespace ThousandAndFirst
 					: KingdomGuestRules.NoRoomRefusal());
 				return;
 			}
-			KingdomFounding.EnrollCitizen(Guest);
+			int arrivalCost = KingdomRules.DramsPerArrival;
+			KingdomWaterDebit debit;
+			if (!survey.TryReserveExactWater(arrivalCost, out debit))
+			{
+				Popup.Show("Lodging " + Guest.ShortDisplayName + " requires exactly {{C|"
+					+ arrivalCost + " drams}} from the dedicated stores, and they cannot provide it.");
+				return;
+			}
+			// Visitor becomes an arrival at EnrollCitizen. Commit immediately before that boundary:
+			// no roster, allegiance, creed or population mutation can happen on a short debit.
+			if (!debit.Commit())
+			{
+				Popup.Show("The dedicated stores could not yield exactly {{C|" + arrivalCost
+					+ " drams}}. " + Guest.ShortDisplayName + " was not lodged.");
+				return;
+			}
+			bool enrolled;
+			try
+			{
+				enrolled = KingdomFounding.EnrollCitizen(Guest);
+			}
+			catch (Exception error)
+			{
+				bool returned = debit.Rollback();
+				MetricsManager.LogError("ThousandAndFirst notable guest enrolment", error);
+				if (!returned)
+				{
+					MetricsManager.LogError("ThousandAndFirst notable guest enrolment: the exact "
+						+ arrivalCost + "-dram debit could not be restored: " + (debit.Failure ?? "unknown failure"));
+				}
+				Popup.Show(returned
+					? "The lodging was interrupted. Exactly {{C|" + arrivalCost + " drams}} were returned to the same stores."
+					: "The lodging was interrupted, and the stores could not be restored exactly. See the game log.");
+				return;
+			}
+			if (!enrolled)
+			{
+				bool returned = debit.Rollback();
+				if (!returned)
+				{
+					MetricsManager.LogError("ThousandAndFirst notable guest enrolment: rejected arrival and the exact "
+						+ arrivalCost + "-dram debit could not be restored: " + (debit.Failure ?? "unknown failure"));
+				}
+				Popup.Show(returned
+					? Guest.ShortDisplayName + " could not be enrolled. Exactly {{C|" + arrivalCost + " drams}} were returned to the same stores."
+					: Guest.ShortDisplayName + " could not be enrolled, and the stores could not be restored exactly. See the game log.");
+				return;
+			}
 			Guest.SetIntProperty("KingdomBorn", 1);
 			Guest.SetIntProperty(NotableGuestProperty, 0);
 			string name = Guest.ShortDisplayName;
@@ -325,7 +371,6 @@ namespace ThousandAndFirst
 				"Live and drink.",
 				Question: "What were you bound for, before?",
 				Answer: KingdomGuestRules.LodgedConversationAnswer(kind, hookText));
-			KingdomGrowth.ConsumeStoredWater(zone, KingdomRules.DramsPerArrival);
 			system.Population++;
 			bool milestone = !system.FirstNotableGuestLodged;
 			KingdomChronicle.Record(system, KingdomGuestRules.LodgedChronicleLine(name, system.SeatName, kind), Accomplishment: milestone);
@@ -449,6 +494,12 @@ namespace ThousandAndFirst
 			{
 				return;
 			}
+			string destinationId = system.CurrentSettlementId;
+			if (!KingdomIdentityRules.IsSettlementId(destinationId))
+			{
+				Popup.Show("The city's immutable identity cannot be proved. The load was not moved.");
+				return;
+			}
 			RemoveManifestItems(cell, container);
 			long plantedTick = The.Game.TimeTicks;
 			KingdomCarryHaul haul = new KingdomCarryHaul
@@ -456,6 +507,7 @@ namespace ThousandAndFirst
 				OriginZoneID = zone.ZoneID,
 				OriginX = cell.X,
 				OriginY = cell.Y,
+				DestinationSettlementId = destinationId,
 				DestinationSettlementName = system.SeatName,
 				PlantedTick = plantedTick,
 				DueTick = KingdomGuestRules.HaulDueTick(plantedTick, days),
@@ -573,7 +625,10 @@ namespace ThousandAndFirst
 		private static void ResolveHaulIfDue(KingdomSystem System, Zone Z, long TimeTicks)
 		{
 			KingdomCarryHaul haul = System.Haul;
-			if (haul == null || System.SeatName != haul.DestinationSettlementName || !KingdomGuestRules.ShouldResolveHaul(TimeTicks, haul.DueTick))
+			if (haul == null || !string.Equals(System.CurrentSettlementId,
+				haul.DestinationSettlementId, StringComparison.Ordinal) ||
+				!KingdomIdentityRules.IsSettlementId(haul.DestinationSettlementId) ||
+				!KingdomGuestRules.ShouldResolveHaul(TimeTicks, haul.DueTick))
 			{
 				return;
 			}
@@ -586,7 +641,8 @@ namespace ThousandAndFirst
 			manifest.Set(KingdomMaterial.Scrap, haul.Scrap);
 			string description = manifest.Describe() ?? "the load";
 			bool raidActive = System.RaidState == 1;
-			int riskRoll = DrawRoadRisk(System, haul);
+			int riskRoll;
+			if (!TryDrawRoadRisk(System, haul, out riskRoll)) return;
 			bool lost = KingdomGuestRules.HaulAtRisk(raidActive, riskRoll);
 			System.Haul = null;
 			if (lost)
@@ -603,17 +659,21 @@ namespace ThousandAndFirst
 			KingdomLog.Log("carry-sign: delivered manifest=" + description + " spilled=" + spilled);
 		}
 
-		private static int DrawRoadRisk(KingdomSystem System, KingdomCarryHaul Haul)
+		private static bool TryDrawRoadRisk(KingdomSystem System, KingdomCarryHaul Haul,
+			out int Roll)
 		{
-			string settlementId = KingdomChronicle.SettlementId(System.KingdomFactionName);
+			Roll = 0;
+			string settlementId = KingdomChronicle.SettlementId(System);
 			SemanticEventKey key;
 			KernelFaultCode fault;
 			if (SemanticEventKey.TryCreate(1, settlementId, "taf:carry:risk:v1", 1u, (ulong)Haul.PlantedTick, out key, out fault)
 				&& CounterRandom.TryDrawBelow(default(KernelSeed128), key, 0u, 100uL, out ulong value, out fault))
 			{
-				return (int)value;
+				Roll = (int)value;
+				return true;
 			}
-			return Stat.Random(0, 99);
+			KingdomLog.Log("carry-sign: risk draw refused; exact haul retained");
+			return false;
 		}
 	}
 
@@ -621,8 +681,8 @@ namespace ThousandAndFirst
 	/// The realm's one carry-sign haul in flight: materials already swept from their origin,
 	/// waiting to be poured into the destination settlement's stockpiles the next time it
 	/// activates and the haul is due. Held on <see cref="KingdomSystem"/> directly, realm-level
-	/// like <c>KingdomSystem.Manifest</c> — a haul is addressed to a settlement by name, not to
-	/// whichever city happens to be seated, so it survives every seat swap untouched.
+	/// like <c>KingdomSystem.Manifest</c> — a haul is addressed to an immutable settlement id;
+	/// the carried name is prose only, so it survives renames and every seat swap untouched.
 	/// </summary>
 	[Serializable]
 	public class KingdomCarryHaul
@@ -638,9 +698,10 @@ namespace ThousandAndFirst
 
 		public int OriginY;
 
-		/// <summary>The settlement this haul is bound for. Delivery fires when this equals the
-		/// currently seated city's own name, the same contract <c>KingdomManifest.DestinationName</c>
-		/// keeps.</summary>
+		/// <summary>Immutable destination authority. The name below is prose only.</summary>
+		public string DestinationSettlementId;
+
+		/// <summary>The settlement's frozen display name, used only in prose.</summary>
 		public string DestinationSettlementName;
 
 		public long PlantedTick;

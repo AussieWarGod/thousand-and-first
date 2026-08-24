@@ -3,6 +3,84 @@ using ThousandAndFirst.Simulation.Kernel;
 
 namespace ThousandAndFirst
 {
+	public enum KingdomWearSinkDisposition
+	{
+		None = 0,
+		Pending = 1,
+		Attempting = 2,
+		Delivered = 3,
+		Skipped = 4,
+		Lost = 5
+	}
+
+	/// <summary>Durable attended-pass phases. Values are save-facing object properties.</summary>
+	public enum KingdomWearPassPhase
+	{
+		None = 0,
+		Bound = 1,
+		StreakIntent = 2,
+		StreakDone = 3,
+		HardIncident = 4,
+		HardDone = 5,
+		TemperIncident = 6,
+		TemperDone = 7,
+		Quarantined = 8
+	}
+
+	public enum KingdomWearPassAction
+	{
+		Start = 0,
+		Resume = 1,
+		AlreadyApplied = 2,
+		Quarantine = 3
+	}
+
+	/// <summary>One damage incident's exact mutation and telling phases.</summary>
+	public enum KingdomWearIncidentPhase
+	{
+		None = 0,
+		Bound = 1,
+		MutationIntent = 2,
+		Mutated = 3,
+		ChronicleDone = 4,
+		MessageIntent = 5,
+		MessageDone = 6,
+		Complete = 7,
+		Quarantined = 8
+	}
+
+	/// <summary>One storage-loss incident's exact mutation and telling phases.</summary>
+	public enum KingdomWearLeakPhase
+	{
+		None = 0,
+		Bound = 1,
+		MutationIntent = 2,
+		Mutated = 3,
+		ChronicleDone = 4,
+		LedgerIntent = 5,
+		LedgerDone = 6,
+		MessageIntent = 7,
+		MessageDone = 8,
+		Complete = 9,
+		Quarantined = 10
+	}
+
+	public enum KingdomWearMutationAction
+	{
+		Wait = 0,
+		Apply = 1,
+		Confirm = 2,
+		Quarantine = 3
+	}
+
+	public enum KingdomWearClockAction
+	{
+		Plant = 0,
+		Wait = 1,
+		Advance = 2,
+		Quarantine = 3
+	}
+
 	/// <summary>
 	/// Engine-free rules for WHETHER a work wears, what that damage costs it, and what a repair
 	/// job is waiting on (BUILDING-CATALOGUE-BRIEF.md Addendum 7: "maintenance/wear translation",
@@ -43,6 +121,165 @@ namespace ThousandAndFirst
 	/// </summary>
 	public static class KingdomWearRules
 	{
+		public const int MaxSavedTextChars = 4096;
+		public const int MaxRows = 256;
+		public const int MaxRowsChars = 8192;
+		public const int MaxObjectIdChars = 256;
+		public const int MaxIntegerChars = 10;
+		public const int MaxRepairPayloadChars = 64;
+
+		public static bool SinkSettled(KingdomWearSinkDisposition State)
+		{
+			return State == KingdomWearSinkDisposition.Delivered
+				|| State == KingdomWearSinkDisposition.Skipped
+				|| State == KingdomWearSinkDisposition.Lost;
+		}
+
+		public static KingdomWearSinkDisposition RecoverUninspectable(
+			KingdomWearSinkDisposition State)
+		{
+			return State == KingdomWearSinkDisposition.Attempting
+				? KingdomWearSinkDisposition.Lost : State;
+		}
+
+		public static bool TryCanonicalIntRows(string Text, out int[] Values)
+		{
+			Values = null;
+			if (string.IsNullOrEmpty(Text) || Text.Length > MaxRowsChars) return false;
+			int separators = 0;
+			for (int i = 0; i < Text.Length; i++)
+			{
+				if (Text[i] == '|') separators++;
+				if (separators >= MaxRows) return false;
+			}
+			string[] rows = Text.Split('|');
+			if (rows.Length == 0 || rows.Length > MaxRows) return false;
+			Values = new int[rows.Length];
+			for (int i = 0; i < rows.Length; i++)
+			{
+				if (rows[i].Length == 0 || rows[i].Length > MaxIntegerChars
+					|| !int.TryParse(rows[i], global::System.Globalization.NumberStyles.None,
+						global::System.Globalization.CultureInfo.InvariantCulture, out Values[i])
+					|| Values[i] < 0 || Values[i].ToString(
+						global::System.Globalization.CultureInfo.InvariantCulture) != rows[i]) return false;
+			}
+			return true;
+		}
+
+		public static bool TryObjectIdRows(string Text, out string[] Values)
+		{
+			Values = null;
+			if (string.IsNullOrEmpty(Text) || Text.Length > MaxRowsChars) return false;
+			int separators = 0;
+			for (int i = 0; i < Text.Length; i++)
+			{
+				if (Text[i] == '|') separators++;
+				if (separators >= MaxRows) return false;
+			}
+			string[] rows = Text.Split('|');
+			if (rows.Length == 0 || rows.Length > MaxRows) return false;
+			for (int i = 0; i < rows.Length; i++)
+			{
+				if (string.IsNullOrEmpty(rows[i]) || rows[i].Length > MaxObjectIdChars) return false;
+				for (int j = 0; j < i; j++)
+					if (string.Equals(rows[j], rows[i], global::System.StringComparison.Ordinal)) return false;
+			}
+			Values = rows;
+			return true;
+		}
+
+		public static bool TryRepairPayload(string Payload, out int Wear, out bool Finishing)
+		{
+			Wear = 0;
+			Finishing = false;
+			if (string.IsNullOrEmpty(Payload) || Payload.Length > MaxRepairPayloadChars) return false;
+			int separators = 0;
+			for (int i = 0; i < Payload.Length; i++) if (Payload[i] == '|') separators++;
+			if (separators != 2) return false;
+			string[] fields = Payload.Split('|');
+			return fields.Length == 3 && fields[0] == "v1"
+				&& fields[1].Length > 0 && fields[1].Length <= MaxIntegerChars
+				&& int.TryParse(fields[1], global::System.Globalization.NumberStyles.None,
+					global::System.Globalization.CultureInfo.InvariantCulture, out Wear)
+				&& Wear > 0 && Wear.ToString(global::System.Globalization.CultureInfo.InvariantCulture) == fields[1]
+				&& (fields[2] == "0" || fields[2] == "1")
+				&& ((Finishing = fields[2] == "1") || fields[2] == "0");
+		}
+
+		/// <summary>Pure clock/phase law for an attended semantic pass.</summary>
+		public static KingdomWearPassAction PassAction(long LastCompletedTick,
+			long ActiveTick, KingdomWearPassPhase Phase, long NowTick)
+		{
+			if (LastCompletedTick < 0L || ActiveTick < 0L || NowTick < 0L
+				|| Phase < KingdomWearPassPhase.None || Phase > KingdomWearPassPhase.Quarantined)
+			{
+				return KingdomWearPassAction.Quarantine;
+			}
+			if (Phase == KingdomWearPassPhase.Quarantined) return KingdomWearPassAction.Quarantine;
+			if (NowTick < LastCompletedTick) return KingdomWearPassAction.Quarantine;
+			if (NowTick == LastCompletedTick && LastCompletedTick > 0L)
+			{
+				return KingdomWearPassAction.AlreadyApplied;
+			}
+			if (Phase == KingdomWearPassPhase.None)
+			{
+				return ActiveTick == 0L ? KingdomWearPassAction.Start : KingdomWearPassAction.Quarantine;
+			}
+			return ActiveTick == NowTick
+				? KingdomWearPassAction.Resume : KingdomWearPassAction.Quarantine;
+		}
+
+		/// <summary>Pure absolute-clock law for one work's storage loss.</summary>
+		public static KingdomWearClockAction LeakClockAction(bool Initialized,
+			long LastTick, long NowTick, int ElapsedDays)
+		{
+			if (LastTick < 0L || NowTick < 0L || ElapsedDays < 0 || NowTick < LastTick)
+			{
+				return KingdomWearClockAction.Quarantine;
+			}
+			if (!Initialized) return KingdomWearClockAction.Plant;
+			return ElapsedDays == 0 ? KingdomWearClockAction.Wait : KingdomWearClockAction.Advance;
+		}
+
+		/// <summary>
+		/// Exact-state recovery for damage, water, charge, or one bound food row. Only original
+		/// state authorizes mutation; only exact intended state proves completion.
+		/// </summary>
+		public static KingdomWearMutationAction MutationAction(int Phase, int BoundPhase,
+			int IntentPhase, int TerminalPhase, int Before, int Current, int After)
+		{
+			if (Before < 0 || Current < 0 || After < 0
+				|| Phase < BoundPhase || Phase > TerminalPhase)
+			{
+				return KingdomWearMutationAction.Quarantine;
+			}
+			if (Phase >= TerminalPhase) return KingdomWearMutationAction.Wait;
+			if (Current == After) return KingdomWearMutationAction.Confirm;
+			if (Current == Before && Phase <= IntentPhase) return KingdomWearMutationAction.Apply;
+			return KingdomWearMutationAction.Quarantine;
+		}
+
+		public static KingdomWearMutationAction DamageMutationAction(
+			KingdomWearIncidentPhase Phase, int Before, int Current, int After)
+		{
+			return MutationAction((int)Phase, (int)KingdomWearIncidentPhase.Bound,
+				(int)KingdomWearIncidentPhase.MutationIntent,
+				(int)KingdomWearIncidentPhase.Quarantined, Before, Current, After);
+		}
+
+		public static KingdomWearMutationAction LeakMutationAction(
+			KingdomWearLeakPhase Phase, int Before, int Current, int After)
+		{
+			if (Before < 0 || Current < 0 || After < 0 || After > Before)
+				return KingdomWearMutationAction.Quarantine;
+			if (Phase >= KingdomWearLeakPhase.Mutated
+				&& Phase < KingdomWearLeakPhase.Quarantined) return KingdomWearMutationAction.Wait;
+			if (Phase == KingdomWearLeakPhase.Bound && Current == Before)
+				return KingdomWearMutationAction.Apply;
+			// Persisted intent and a Bound receipt already shaped like After are both ambiguous:
+			// only a same-stack callback frame may publish the physical loss.
+			return KingdomWearMutationAction.Quarantine;
+		}
 		// ==================================================================================
 		// The three causes. Named, never anonymous: every damage event says which of the three
 		// it was, both in the moment (the message this file composes) and later (LastCause on
@@ -247,7 +484,7 @@ namespace ThousandAndFirst
 		/// belongs in the stream rather than the ordinal because two different works asked about
 		/// in the same pass must not be forced to share one answer.
 		/// </summary>
-		/// <param name="WorkId">The work's own persistent <c>GameObject.id</c>. Null and blank
+		/// <param name="WorkId">The work's own persistent <c>GameObject.ID</c>. Null and blank
 		/// yield the lane an unidentified work would draw on, which nothing in production ever
 		/// asks for.</param>
 		internal static string WorkStream(string WorkId)

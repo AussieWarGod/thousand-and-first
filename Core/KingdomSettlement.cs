@@ -211,7 +211,26 @@ namespace ThousandAndFirst
 
 		public int ShopTier;
 
+		/// <summary>Last completed once-per-world-day attended-semantic dispatch. Separate from
+		/// <see cref="LastVisitTick"/>, which belongs to the homecoming report.</summary>
+		public long LastSemanticTick;
+
+		/// <summary>Receipt for a partially completed attended pass. Carried with the city so a
+		/// seat swap cannot resume one settlement's work against another settlement's ground.</summary>
+		public bool SemanticPassActive;
+
+		public long SemanticPassStartedTick;
+
+		public string SemanticPassZoneId;
+
+		public long SemanticPassStartedMask;
+
+		public long SemanticPassCompletedMask;
+
 		public long LastVisitTick;
+
+		/// <summary>Age of this city's unread ledger, never a realm-global presentation counter.</summary>
+		public int HomecomingDays;
 
 		public string LastDeed;
 
@@ -265,6 +284,16 @@ namespace ThousandAndFirst
 		public Dictionary<string, int> ConversionResented = new Dictionary<string, int>();
 
 		public KingdomRules.PetitionKind PetitionKind = KingdomRules.PetitionKind.None;
+
+		public PetitionLifecycle PetitionState = PetitionLifecycle.None;
+
+		public string PetitionEventId;
+
+		public string PetitionOriginSettlementId;
+
+		public string PetitionCauseSnapshot;
+
+		public long LastPetitionMonthOrdinal = -1L;
 
 		public string PetitionPetitioner;
 
@@ -395,6 +424,26 @@ namespace ThousandAndFirst
 		/// </summary>
 		public int ResearchBestMind;
 
+		/// <summary>Frozen provenance for <see cref="City"/>'s immutable settlement id. The same
+		/// fields exist on <c>KingdomSystem</c>, so seat exchange carries identity without deriving
+		/// it from the city's mutable name or current seat.</summary>
+		public int SettlementIdentityVersion;
+
+		public KingdomIdentityOrigin SettlementIdentityOrigin;
+
+		public string SettlementIdentityTransactionId;
+
+		public long SettlementIdentityFoundedTick;
+
+		public string SettlementIdentityFirstClaimedZone;
+
+		/// <summary>The retired pre-identity city label, retained only as migration evidence.</summary>
+		public string SettlementIdentityLegacyId;
+
+		/// <summary>Dormant lifecycle authority carried with this exact city. No lane executes
+		/// from it until the engine adapters are wired in a later wave.</summary>
+		public KingdomLifecycleBook LifecycleBook = new KingdomLifecycleBook();
+
 		/// <summary>
 		/// This city's whole model: stocks, zone rows, work rows, and what each zone still owes its
 		/// own containers. LIVING-CITY-ARCHITECTURE &sect;1.3 &mdash; one book per settlement, on
@@ -433,6 +482,41 @@ namespace ThousandAndFirst
 		/// </summary>
 		public void Normalize()
 		{
+			if (!Enum.IsDefined(typeof(GrowthStage), Stage))
+			{
+				Stage = GrowthStage.Camp;
+			}
+			if (LastMeal != KingdomRules.MealVerdict.None &&
+				LastMeal != KingdomRules.MealVerdict.Scraps &&
+				LastMeal != KingdomRules.MealVerdict.Plain &&
+				LastMeal != KingdomRules.MealVerdict.Favored)
+			{
+				LastMeal = KingdomRules.MealVerdict.None;
+			}
+			if (Gate != KingdomRules.GatePolicy.Open &&
+				Gate != KingdomRules.GatePolicy.Guarded)
+			{
+				Gate = KingdomRules.GatePolicy.Open;
+			}
+			if (Stores != KingdomRules.StoresPolicy.Plenty &&
+				Stores != KingdomRules.StoresPolicy.Thrift)
+			{
+				Stores = KingdomRules.StoresPolicy.Plenty;
+			}
+			if (!Enum.IsDefined(typeof(KingdomRules.PetitionKind), PetitionKind))
+			{
+				PetitionKind = KingdomRules.PetitionKind.None;
+			}
+			if (!Enum.IsDefined(typeof(PetitionLifecycle), PetitionState))
+			{
+				PetitionState = PetitionLifecycle.None;
+			}
+			if (RaidState != 0 && RaidState != 1)
+			{
+				RaidState = 0;
+				RaidFactionName = null;
+				RaidDueTick = 0L;
+			}
 			if (RosterNames == null)
 			{
 				RosterNames = new List<string>();
@@ -461,6 +545,8 @@ namespace ThousandAndFirst
 			{
 				DeadCauses = new List<string>();
 			}
+			TruncateParallelRows(RosterNames, RosterOrigins, RosterArrived);
+			TruncateParallelRows(DeadNames, DeadOrigins, DeadArrived, DeadCauses);
 			if (OriginCounts == null)
 			{
 				OriginCounts = new Dictionary<string, int>();
@@ -521,6 +607,11 @@ namespace ThousandAndFirst
 				City = new Simulation.City.KingdomCityBook();
 			}
 			City.Normalize();
+			if (LifecycleBook == null)
+			{
+				LifecycleBook = new KingdomLifecycleBook();
+			}
+			KingdomLifecycleRules.Normalize(LifecycleBook);
 			if (string.IsNullOrEmpty(Style))
 			{
 				Style = "common";
@@ -567,6 +658,31 @@ namespace ThousandAndFirst
 			{
 				LastFoodWorkTick = 0L;
 			}
+			if (LastSemanticTick < 0L)
+			{
+				LastSemanticTick = 0L;
+			}
+			if (HomecomingDays < 0)
+			{
+				HomecomingDays = 0;
+			}
+			if (!SemanticPassActive)
+			{
+				SemanticPassStartedTick = 0L;
+				SemanticPassZoneId = null;
+				SemanticPassStartedMask = 0L;
+				SemanticPassCompletedMask = 0L;
+			}
+			else if (SemanticPassStartedTick < 0L || string.IsNullOrEmpty(SemanticPassZoneId)
+				|| SemanticPassStartedMask < 0L || SemanticPassCompletedMask < 0L
+				|| (SemanticPassCompletedMask & ~SemanticPassStartedMask) != 0L)
+			{
+				SemanticPassActive = false;
+				SemanticPassStartedTick = 0L;
+				SemanticPassZoneId = null;
+				SemanticPassStartedMask = 0L;
+				SemanticPassCompletedMask = 0L;
+			}
 			// A load in flight fails closed the same way: a negative count is a corrupt reading,
 			// and a delivery cannot owe a city servings. A count with no crop name still arrives -
 			// KingdomCrops.DeliverPending falls back to the city's own crop - so only the count is
@@ -574,6 +690,26 @@ namespace ThousandAndFirst
 			if (PendingCrop < 0)
 			{
 				PendingCrop = 0;
+			}
+		}
+
+		internal static void TruncateParallelRows(params List<string>[] Columns)
+		{
+			if (Columns == null || Columns.Length == 0)
+			{
+				return;
+			}
+			int rows = Columns[0].Count;
+			for (int i = 1; i < Columns.Length; i++)
+			{
+				rows = Math.Min(rows, Columns[i].Count);
+			}
+			for (int i = 0; i < Columns.Length; i++)
+			{
+				if (Columns[i].Count > rows)
+				{
+					Columns[i].RemoveRange(rows, Columns[i].Count - rows);
+				}
 			}
 		}
 
@@ -829,6 +965,7 @@ namespace ThousandAndFirst
 				.Append(" hunger=").Append(HungerStreak)
 				.Append(" claims=").Append(ClaimedZones.Count)
 				.Append(" founded=").Append(FoundedTick)
+				.Append(" semantic=").Append(LastSemanticTick)
 				.Append(" visit=").Append(LastVisitTick)
 				.Append(" heartbeat=").Append(LastHeartbeatTick)
 				.Append(" nextArrival=").Append(NextArrivalTick)

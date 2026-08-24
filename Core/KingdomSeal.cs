@@ -239,6 +239,10 @@ namespace ThousandAndFirst
 				}
 				Reader.ReadNamedFields(this, typeof(KingdomSeal),
 					BindingFlags.Instance | BindingFlags.NonPublic);
+				if (SerializationVersion != CurrentSerializationVersion)
+				{
+					throw new InvalidOperationException("Unsupported ThousandAndFirst seal named-field version.");
+				}
 				if (disabledBeforeRead)
 				{
 					SealDisabled = true;
@@ -1419,17 +1423,32 @@ namespace ThousandAndFirst
 					return false;
 				}
 				string founder = The.Player?.BaseDisplayNameStripped;
-				if (string.IsNullOrEmpty(founder))
+					if (string.IsNullOrEmpty(founder))
 				{
-					founder = The.Game?.PlayerName;
-				}
-				Record = KingdomSealRules.Capture(Kingdom.Capture(),
-					new KingdomSealLineage(LineageId, CaptureLegacyId, OriginGameId,
+						founder = The.Game?.PlayerName;
+					}
+					if (!Kingdom.TryCaptureSealIdentity(out KingdomSealIdentity identity,
+						out Failure)) return false;
+					KingdomSettlement seat = Kingdom.Capture();
+					if (!Kingdom.SealIdentityStillMatches(identity) ||
+						!KingdomSealRules.ExactIdentity(identity, seat))
+					{
+						Failure = "the immutable realm topology changed during seal capture";
+						return false;
+					}
+					Record = KingdomSealRules.Capture(seat, identity,
+						new KingdomSealLineage(LineageId, CaptureLegacyId, OriginGameId,
 						CaptureGeneration, CaptureRevision),
 					Kingdom.KingdomDisplayName, founder, Kingdom.ChronicleEntries,
 					Kingdom.OutsiderEntries, WrittenTick);
-				Record.WriterVersion = VersionOf(typeof(KingdomSeal).Assembly);
-				Record.EngineVersion = VersionOf(typeof(XRLGame).Assembly);
+					Record.WriterVersion = VersionOf(typeof(KingdomSeal).Assembly);
+					Record.EngineVersion = VersionOf(typeof(XRLGame).Assembly);
+					if (!Kingdom.SealIdentityStillMatches(identity))
+					{
+						Failure = "the immutable realm topology changed before seal storage";
+						Record = null;
+						return false;
+					}
 				// Compose/read validates bounds and derived vigour before any store path is touched.
 				KingdomSealRecord echo;
 				KingdomSealFault fault;

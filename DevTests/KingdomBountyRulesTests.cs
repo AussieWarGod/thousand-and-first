@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System;
 using System.Collections.Generic;
+using System.IO;
 using NUnit.Framework;
 using ThousandAndFirst;
 
@@ -11,6 +12,19 @@ namespace ThousandAndFirst.Tests
 		private const string Settlement = "taf:settlement:testville";
 
 		private const string OtherSettlement = "taf:settlement:othertown";
+
+		private static string ReadRepoSource(string relative)
+		{
+			DirectoryInfo cursor = new DirectoryInfo(AppContext.BaseDirectory);
+			while (cursor != null)
+			{
+				string path = Path.Combine(cursor.FullName,
+					relative.Replace('/', Path.DirectorySeparatorChar));
+				if (File.Exists(path)) return File.ReadAllText(path);
+				cursor = cursor.Parent;
+			}
+			throw new InvalidOperationException("Cannot locate repository source " + relative);
+		}
 
 		private static List<string> Roster(params string[] Names)
 		{
@@ -824,6 +838,177 @@ namespace ThousandAndFirst.Tests
 			Assert.AreEqual(char.ToLowerInvariant(deed[0]), deed[0]);
 			Assert.IsFalse(deed.EndsWith("."));
 			Assert.IsTrue(deed.Contains("Ulu"));
+		}
+
+		// --- Durable lifecycle fault decisions --------------------------------------------
+
+		[Test]
+		public void NoticeEventId_IsStableBoundedAndDistinctPerNotice()
+		{
+			string first = KingdomBountyRules.NoticeEventId("Notice / 41");
+			Assert.AreEqual(first, KingdomBountyRules.NoticeEventId("Notice / 41"));
+			Assert.AreNotEqual(first, KingdomBountyRules.NoticeEventId("Notice / 42"));
+			Assert.IsTrue(KingdomBountyRules.IsNoticeEventId(first));
+			Assert.LessOrEqual(first.Length, 180);
+		}
+
+		[Test]
+		public void TransferAction_ReloadNeverContinuesAMutationIntent()
+		{
+			Assert.AreEqual(BountyTransferAction.Bind, KingdomBountyRules.TransferAction(
+				BountyTransferPhase.None, BountyTransferLocation.SourceOnly));
+			Assert.AreEqual(BountyTransferAction.Remove, KingdomBountyRules.TransferAction(
+				BountyTransferPhase.Bound, BountyTransferLocation.SourceOnly));
+			Assert.AreEqual(BountyTransferAction.Quarantine, KingdomBountyRules.TransferAction(
+				BountyTransferPhase.RemoveIntent, BountyTransferLocation.Detached));
+			Assert.AreEqual(BountyTransferAction.Quarantine, KingdomBountyRules.TransferAction(
+				BountyTransferPhase.Detached, BountyTransferLocation.Detached));
+			Assert.AreEqual(BountyTransferAction.Quarantine, KingdomBountyRules.TransferAction(
+				BountyTransferPhase.AddIntent, BountyTransferLocation.DestinationOnly));
+			Assert.AreEqual(BountyTransferAction.Confirm, KingdomBountyRules.TransferAction(
+				BountyTransferPhase.Arrived, BountyTransferLocation.DestinationOnly));
+			Assert.AreEqual(BountyTransferAction.Quarantine, KingdomBountyRules.TransferAction(
+				BountyTransferPhase.RemoveIntent, BountyTransferLocation.SourceOnly),
+				"an interrupted remove callback may have restored the source");
+			Assert.AreEqual(BountyTransferAction.Quarantine, KingdomBountyRules.TransferAction(
+				BountyTransferPhase.AddIntent, BountyTransferLocation.Detached),
+				"an interrupted add callback may have detached the item again");
+			Assert.AreEqual(BountyTransferAction.Quarantine, KingdomBountyRules.TransferAction(
+				BountyTransferPhase.Arrived, BountyTransferLocation.Both));
+		}
+
+		[Test]
+		public void ObservePayment_DistinguishesOriginalCompleteMixedAndUncertainReceipts()
+		{
+			int proved;
+			int[] original = new int[2] { 10, 8 };
+			int[] allocation = new int[2] { 3, 3 };
+			bool[] same = new bool[2] { true, true };
+			bool[] pure = new bool[2] { true, true };
+			Assert.AreEqual(BountyPaymentObservation.Original, KingdomBountyRules.ObservePayment(
+				6, original, new int[2] { 10, 8 }, allocation, same, pure, out proved));
+			Assert.AreEqual(0, proved);
+			Assert.AreEqual(BountyPaymentObservation.Debited, KingdomBountyRules.ObservePayment(
+				6, original, new int[2] { 7, 5 }, allocation, same, pure, out proved));
+			Assert.AreEqual(6, proved);
+			Assert.AreEqual(BountyPaymentObservation.Mixed, KingdomBountyRules.ObservePayment(
+				6, original, new int[2] { 7, 8 }, allocation, same, pure, out proved));
+			Assert.AreEqual(3, proved);
+			Assert.AreEqual(BountyPaymentObservation.Uncertain, KingdomBountyRules.ObservePayment(
+				6, original, new int[2] { 9, 8 }, allocation, same, pure, out proved));
+			Assert.AreEqual(0, proved);
+			Assert.AreEqual(BountyPaymentObservation.Uncertain, KingdomBountyRules.ObservePayment(
+				6, original, new int[2] { 7, 5 }, allocation,
+				new bool[2] { true, false }, pure, out proved));
+		}
+
+		[Test]
+		public void PaymentAction_NeverDebitsAgainAfterAnIntent()
+		{
+			Assert.AreEqual(BountyPaymentAction.Bind, KingdomBountyRules.PaymentAction(
+				BountyPaymentPhase.None, BountyPaymentObservation.Malformed));
+			Assert.AreEqual(BountyPaymentAction.Debit, KingdomBountyRules.PaymentAction(
+				BountyPaymentPhase.Bound, BountyPaymentObservation.Original));
+			Assert.AreEqual(BountyPaymentAction.Quarantine, KingdomBountyRules.PaymentAction(
+				BountyPaymentPhase.DebitIntent, BountyPaymentObservation.Original));
+			Assert.AreEqual(BountyPaymentAction.Quarantine, KingdomBountyRules.PaymentAction(
+				BountyPaymentPhase.DebitIntent, BountyPaymentObservation.Debited));
+			Assert.AreEqual(BountyPaymentAction.Quarantine, KingdomBountyRules.PaymentAction(
+				BountyPaymentPhase.DebitIntent, BountyPaymentObservation.Mixed));
+			Assert.AreEqual(BountyPaymentAction.Wait, KingdomBountyRules.PaymentAction(
+				BountyPaymentPhase.Credited, BountyPaymentObservation.Original));
+		}
+
+		[Test]
+		public void ValidLifecycleScalars_RejectsMalformedReloadStateFailClosed()
+		{
+			Assert.IsTrue(KingdomBountyRules.ValidLifecycleScalars((int)BountyTask.Fetch, 8, 3,
+				true, "Aeru", 2, KingdomBountyRules.NoticeEventStream("41"), 1200L,
+				false, 7, 0, 0, 0, 0));
+			Assert.IsFalse(KingdomBountyRules.ValidLifecycleScalars(99, 8, 0, false, null,
+				0, null, 0L, false, 0, 0, 0, 0, 0));
+			Assert.IsFalse(KingdomBountyRules.ValidLifecycleScalars((int)BountyTask.Fetch, 8, 9,
+				false, null, 0, null, 0L, false, 0, 0, 0, 0, 0));
+			Assert.IsFalse(KingdomBountyRules.ValidLifecycleScalars((int)BountyTask.Fetch, 8, 0,
+				true, null, 0, null, 0L, false, 0, 0, 0, 0, 0));
+			Assert.IsFalse(KingdomBountyRules.ValidLifecycleScalars((int)BountyTask.Fetch, 8, 0,
+				false, null, 2, "bad-stream", 1200L, false, 0, 0, 0, 0, 0));
+			Assert.IsFalse(KingdomBountyRules.ValidLifecycleScalars((int)BountyTask.Fetch, 8, 0,
+				false, null, 0, null, 0L, false, 0, 99, 0, 0, 0));
+		}
+
+		[Test]
+		public void BountySource_WiresLiveFramesBeforeExactPaymentAndOneShotTerminalCleanup()
+		{
+			string source = ReadRepoSource("Quests/KingdomBounty.cs");
+			int paymentIntent = source.IndexOf(
+				"Data.PaymentPhase = (int)BountyPaymentPhase.DebitIntent", StringComparison.Ordinal);
+			int paymentCall = source.IndexOf("bool committed = debit.Commit()", paymentIntent,
+				StringComparison.Ordinal);
+			Assert.GreaterOrEqual(paymentIntent, 0);
+			Assert.Greater(paymentCall, paymentIntent);
+			StringAssert.Contains("TryCaptureBoundPayment(Data, Z, Survey, Notice", source);
+			StringAssert.Contains("ObserveCapturedPayment(frame", source);
+			StringAssert.Contains("ReferenceEquals(vessel.ComponentLiquids, Frame.Dictionaries[i])", source);
+			StringAssert.Contains("ReferenceEquals(Frame.Survey.Stores, Frame.Stores)", source);
+			StringAssert.Contains("PendingWorkerResidentId = ResidentIdFor", source);
+			StringAssert.Contains("KingdomChronicle.RecordOnce", source);
+			int cleanupIntent = source.IndexOf(
+				"Data.TerminalPhase = (int)BountyTerminalPhase.CleanupAttempting",
+				StringComparison.Ordinal);
+			int cleanupCall = source.IndexOf("InvokeCleanupOnce(Notice, false)", cleanupIntent,
+				StringComparison.Ordinal);
+			Assert.Greater(cleanupCall, cleanupIntent);
+			Assert.AreEqual(1, Count(source, ".Obliterate("));
+			int recovery = source.IndexOf("else if (phase == BountyTerminalPhase.CleanupAttempting)",
+				cleanupCall, StringComparison.Ordinal);
+			int recoveryEnd = source.IndexOf("\n\t\t}\n", recovery, StringComparison.Ordinal);
+			Assert.Greater(recovery, cleanupCall);
+			Assert.IsFalse(source.Substring(recovery, recoveryEnd - recovery).Contains("InvokeCleanupOnce"));
+		}
+
+		[Test]
+		public void SavedRowParsers_CapRawTextRowsAndFieldsBeforeSplit()
+		{
+			int[] numbers;
+			string[] ids;
+			Assert.IsTrue(KingdomBountyRules.TryCanonicalIntRows("0|7|2147483647", out numbers));
+			Assert.AreEqual(3, numbers.Length);
+			Assert.IsFalse(KingdomBountyRules.TryCanonicalIntRows("01", out numbers));
+			Assert.IsFalse(KingdomBountyRules.TryCanonicalIntRows(
+				new string('1', KingdomBountyRules.MaxPaymentRowsChars + 1), out numbers));
+			Assert.IsFalse(KingdomBountyRules.TryCanonicalIntRows(
+				new string('|', KingdomBountyRules.MaxPaymentRows), out numbers));
+			Assert.IsTrue(KingdomBountyRules.TryObjectIdRows("vessel-1|vessel-2", out ids));
+			Assert.IsFalse(KingdomBountyRules.TryObjectIdRows("same|same", out ids));
+			string rules = ReadRepoSource("Quests/KingdomBountyRules.cs");
+			Assert.Less(rules.IndexOf("Text.Length > MaxPaymentRowsChars", StringComparison.Ordinal),
+				rules.IndexOf("Text.Split('|')", StringComparison.Ordinal));
+		}
+
+		[Test]
+		public void UninspectableSinkRecovery_IsExplicitLossNotClaimedDelivery()
+		{
+			Assert.AreEqual(BountySinkDisposition.Lost,
+				KingdomBountyRules.RecoverUninspectable(BountySinkDisposition.Attempting));
+			Assert.AreEqual(BountySinkDisposition.Pending,
+				KingdomBountyRules.RecoverUninspectable(BountySinkDisposition.Pending));
+			Assert.IsTrue(KingdomBountyRules.SinkSettled(BountySinkDisposition.Delivered));
+			Assert.IsTrue(KingdomBountyRules.SinkSettled(BountySinkDisposition.Skipped));
+			Assert.IsTrue(KingdomBountyRules.SinkSettled(BountySinkDisposition.Lost));
+			Assert.IsFalse(KingdomBountyRules.SinkSettled(BountySinkDisposition.Attempting));
+		}
+
+		private static int Count(string Text, string Needle)
+		{
+			int count = 0;
+			for (int at = 0; ; )
+			{
+				at = Text.IndexOf(Needle, at, StringComparison.Ordinal);
+				if (at < 0) return count;
+				count++;
+				at += Needle.Length;
+			}
 		}
 	}
 }

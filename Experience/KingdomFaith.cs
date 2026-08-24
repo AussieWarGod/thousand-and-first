@@ -318,8 +318,10 @@ namespace ThousandAndFirst
 			int ago = KingdomBrinkRules.DaysStood(KingdomBrinkRules.ExpiryTick(BrinkKind.Creed, Brink.WarnedTick), now);
 			string residentName = NameOf(Settler);
 			int roads = Settler.GetIntProperty(KingdomConversion.RoadsWalkedProperty);
+			string settlementId = KingdomChronicle.SettlementId(System);
+			if (!KingdomIdentityRules.IsSettlementId(settlementId)) return;
 			bool turns = KingdomConversionRules.Converts(
-				KingdomChronicle.SettlementId(System.KingdomFactionName), ConversionChannel.Shrine, residentName,
+				settlementId, ConversionChannel.Shrine, residentName,
 				KingdomConversionRules.RoadEnd(roads));
 			Settler.SetIntProperty(KingdomConversion.RoadsWalkedProperty, roads + 1);
 			KingdomBrink.Lift(Settler, BrinkKind.Creed);
@@ -524,6 +526,7 @@ namespace ThousandAndFirst
 				return;
 			}
 			target.SetStringProperty(ShrineCreedProperty, chosenCreed);
+			KingdomGovernanceScope.Commit("consecrate shrine");
 			target.SetIntProperty(ShrineLapsedAnnouncedProperty, 0);
 			KingdomChronicle.Record(System, KingdomFaithRules.ConsecrationChronicle(target.ShortDisplayName, System.SeatName, creedDisplay, reconsecration));
 			Popup.Show(KingdomFaithRules.ConsecrationNotice(target.ShortDisplayName, creedDisplay, reconsecration, neverStaffable));

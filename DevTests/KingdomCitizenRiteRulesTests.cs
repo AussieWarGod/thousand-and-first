@@ -16,6 +16,11 @@ namespace ThousandAndFirst.Tests
 	/// </summary>
 	internal class KingdomCitizenRiteRulesTests
 	{
+		private const string RealmA =
+			"taf:realm:v1:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+		private const string RealmB =
+			"taf:realm:v1:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
+
 		/// <summary>Everything true is a host.</summary>
 		[Test]
 		public void Judge_EverythingInPlaceIsAHost()
@@ -139,10 +144,10 @@ namespace ThousandAndFirst.Tests
 		{
 			string id;
 			string text;
-			Assert.IsTrue(KingdomCitizenRiteRules.TryTradableSecret("taf_kingdom_kavvat", "Travelers claim that the well ran dry.", out id, out text));
+			Assert.IsTrue(KingdomCitizenRiteRules.TryTradableSecret(RealmA, "Travelers claim that the well ran dry.", out id, out text));
 			string again;
 			string sameText;
-			Assert.IsTrue(KingdomCitizenRiteRules.TryTradableSecret("taf_kingdom_kavvat", "Travelers claim that the well ran dry.", out again, out sameText));
+			Assert.IsTrue(KingdomCitizenRiteRules.TryTradableSecret(RealmA, "Travelers claim that the well ran dry.", out again, out sameText));
 			Assert.AreEqual(id, again);
 			Assert.AreEqual(text, sameText);
 		}
@@ -155,8 +160,8 @@ namespace ThousandAndFirst.Tests
 			string a;
 			string b;
 			string text;
-			Assert.IsTrue(KingdomCitizenRiteRules.TryTradableSecret("taf_kingdom_kavvat", "Travelers claim that the well ran dry.", out a, out text));
-			Assert.IsTrue(KingdomCitizenRiteRules.TryTradableSecret("taf_kingdom_yd", "Travelers claim that the well ran dry.", out b, out text));
+			Assert.IsTrue(KingdomCitizenRiteRules.TryTradableSecret(RealmA, "Travelers claim that the well ran dry.", out a, out text));
+			Assert.IsTrue(KingdomCitizenRiteRules.TryTradableSecret(RealmB, "Travelers claim that the well ran dry.", out b, out text));
 			Assert.AreNotEqual(a, b);
 		}
 
@@ -167,9 +172,9 @@ namespace ThousandAndFirst.Tests
 		{
 			string id;
 			string text;
-			Assert.IsTrue(KingdomCitizenRiteRules.TryTradableSecret("taf_kingdom_kavvat", "Some deny that Kavvat took in a hundred settlers.", out id, out text));
+			Assert.IsTrue(KingdomCitizenRiteRules.TryTradableSecret(RealmA, "Some deny that Kavvat took in a hundred settlers.", out id, out text));
 			Assert.AreEqual("Some deny that Kavvat took in a hundred settlers.", text);
-			StringAssert.StartsWith("taf:chronicle:taf_kingdom_kavvat:", id);
+			StringAssert.StartsWith("taf:chronicle:" + RealmA + ":", id);
 		}
 
 		[Test]
@@ -179,8 +184,19 @@ namespace ThousandAndFirst.Tests
 			string text;
 			Assert.IsFalse(KingdomCitizenRiteRules.TryTradableSecret("", "a line", out id, out text));
 			Assert.AreEqual("", id);
-			Assert.IsFalse(KingdomCitizenRiteRules.TryTradableSecret("taf_kingdom_kavvat", "", out id, out text));
+			Assert.IsFalse(KingdomCitizenRiteRules.TryTradableSecret(RealmA, "", out id, out text));
 			Assert.IsFalse(KingdomCitizenRiteRules.TryTradableSecret(null, null, out id, out text));
+		}
+
+		[Test]
+		public void MutableRealmNamesNeverBecomeSecretIdentityKeys()
+		{
+			string id;
+			string text;
+			Assert.IsFalse(KingdomCitizenRiteRules.TryTradableSecret(
+				"taf_kingdom_kavvat", "a line", out id, out text));
+			Assert.AreEqual("", id);
+			Assert.AreEqual("", text);
 		}
 
 		/// <summary>

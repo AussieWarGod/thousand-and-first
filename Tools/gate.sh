@@ -1,10 +1,8 @@
 #!/usr/bin/env bash
 # Compile gate over the EXACT set the game will compile.
 #
-# DevTests/build.ps1 compiles every .cs in the repo except DevTests/. The game
-# compiles every .cs beneath the deployed mod root, which is a different set.
-# This gate compiles Tools/stage.sh's runtime set, so gate and deployment ask
-# the same question.
+# This gate compiles Tools/stage.sh's runtime set, so the game, deployment, this
+# script, and DevTests/build.ps1 all ask the same question.
 #
 #   Tools/gate.sh            compile the staged runtime set
 #   Tools/gate.sh --keep     leave the staged tree in place and print its path

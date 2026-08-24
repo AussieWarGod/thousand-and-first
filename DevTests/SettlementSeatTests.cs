@@ -17,24 +17,25 @@ namespace ThousandAndFirst.Tests
 	{
 		/// <summary>Realm state: one faction, one history. None of this may live on a city, or
 		/// walking between cities would rewrite the realm.</summary>
-		private static readonly string[] RealmOnlyFields = new string[15]
+		private static readonly string[] RealmOnlyFields = new string[16]
 		{
 			"KingdomFactionName", "KingdomDisplayName", "Standings", "ChronicleEntries", "OutsiderEntries",
-			"SerializationVersion", "LoadFailed", "HomecomingDays", "ActiveDealKeys", "ActiveDealFactions",
+			"SerializationVersion", "LoadFailed", "ActiveDealKeys", "ActiveDealFactions",
 			"DealNextTicks", "Away",
 			// LIVING-CITY-ARCHITECTURE §3.8: the binding registry and the id counter under it are
 			// realm-scope, because a bound body can be standing in the other city's ground or walked
 			// off the map entirely. A registry a seat swap carried would answer for half the realm
 			// and lose the other half every time the founder crossed a zone line, and two per-city id
 			// counters would hand the same number to two people.
-			"Bindings", "ResidentCounter", "DedicationCounter"
+			"Bindings", "ResidentCounter", "DedicationCounter", "RealmId", "CarryBook"
 		};
 
 		/// <summary>Fields that must be on a city, named here only so the reflective tests cannot
 		/// pass by finding nothing at all.</summary>
-		private static readonly string[] SettlementFields = new string[6]
+		private static readonly string[] SettlementFields = new string[7]
 		{
-			"SettlementName", "Vocation", "Population", "ClaimedZones", "Ledger", "LastHeartbeatTick"
+			"SettlementName", "Vocation", "Population", "ClaimedZones", "Ledger", "LastHeartbeatTick",
+			"HomecomingDays"
 		};
 
 		[Test]
@@ -178,6 +179,33 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void TwoCitiesKeepTheirOwnUnreadReportAgeAcrossASwap()
+		{
+			KingdomSettlement seat = new KingdomSettlement
+			{
+				SettlementName = "Kavvat",
+				HomecomingDays = 5
+			};
+			seat.Ledger.Note("Kavvat has news.");
+			KingdomSettlement away = new KingdomSettlement
+			{
+				SettlementName = "Ezra",
+				HomecomingDays = 2
+			};
+			away.Ledger.Note("Ezra has different news.");
+
+			KingdomSettlement captured = new KingdomSettlement();
+			captured.ReadFrom(seat);
+			KingdomSettlement nowSeated = new KingdomSettlement();
+			away.WriteTo(nowSeated);
+
+			Assert.AreEqual(5, captured.HomecomingDays);
+			Assert.AreEqual(2, nowSeated.HomecomingDays);
+			StringAssert.Contains("Kavvat", captured.Ledger.Notes[0]);
+			StringAssert.Contains("Ezra", nowSeated.Ledger.Notes[0]);
+		}
+
+		[Test]
 		public void NoRealmStateIsCarriedByACity()
 		{
 			List<string> carried = CarriedFieldNames();
@@ -231,6 +259,65 @@ namespace ThousandAndFirst.Tests
 			strange.Vocation = "capital-of-the-world";
 			strange.Normalize();
 			Assert.AreEqual(KingdomSettlement.NeutralVocation, strange.Vocation);
+		}
+
+		[Test]
+		public void NormalizeRejectsEveryUnnamedSerializedLifecycleValue()
+		{
+			KingdomSettlement settlement = new KingdomSettlement
+			{
+				Stage = (GrowthStage)(-1),
+				LastMeal = (KingdomRules.MealVerdict)255,
+				Gate = (KingdomRules.GatePolicy)255,
+				Stores = (KingdomRules.StoresPolicy)(-1),
+				PetitionKind = (KingdomRules.PetitionKind)255,
+				PetitionState = (PetitionLifecycle)255,
+				RaidState = 255,
+				RaidFactionName = "foreign",
+				RaidDueTick = 1234L
+			};
+			settlement.Normalize();
+			Assert.AreEqual(GrowthStage.Camp, settlement.Stage);
+			Assert.AreEqual(KingdomRules.MealVerdict.None, settlement.LastMeal);
+			Assert.AreEqual(KingdomRules.GatePolicy.Open, settlement.Gate);
+			Assert.AreEqual(KingdomRules.StoresPolicy.Plenty, settlement.Stores);
+			Assert.AreEqual(KingdomRules.PetitionKind.None, settlement.PetitionKind);
+			Assert.AreEqual(PetitionLifecycle.None, settlement.PetitionState);
+			Assert.AreEqual(0, settlement.RaidState);
+			Assert.IsNull(settlement.RaidFactionName);
+			Assert.AreEqual(0L, settlement.RaidDueTick);
+		}
+
+		[Test]
+		public void NormalizeTruncatesParallelRosterRowsWithoutCrossZipping()
+		{
+			KingdomSettlement settlement = new KingdomSettlement
+			{
+				RosterNames = new List<string> { "Ptoh", "Ptoh", "A third" },
+				RosterOrigins = new List<string> { "salt", "reef" },
+				RosterArrived = new List<string> { "one", "two", "stale", "staler" },
+				DeadNames = new List<string> { "Eresh", "Eresh", "A third" },
+				DeadOrigins = new List<string> { "dune", "reef", "salt" },
+				DeadArrived = new List<string> { "first" },
+				DeadCauses = new List<string> { "age", "stale" }
+			};
+			settlement.Normalize();
+			Assert.AreEqual(2, settlement.RosterNames.Count);
+			Assert.AreEqual(2, settlement.RosterOrigins.Count);
+			Assert.AreEqual(2, settlement.RosterArrived.Count);
+			Assert.AreEqual("Ptoh", settlement.RosterNames[0]);
+			Assert.AreEqual("Ptoh", settlement.RosterNames[1],
+				"duplicate names are legitimate rows, not a normalization key");
+			Assert.AreEqual("reef", settlement.RosterOrigins[1]);
+			Assert.AreEqual("two", settlement.RosterArrived[1]);
+			Assert.AreEqual(1, settlement.DeadNames.Count);
+			Assert.AreEqual(1, settlement.DeadOrigins.Count);
+			Assert.AreEqual(1, settlement.DeadArrived.Count);
+			Assert.AreEqual(1, settlement.DeadCauses.Count);
+			Assert.AreEqual("Eresh", settlement.DeadNames[0]);
+			Assert.AreEqual("dune", settlement.DeadOrigins[0]);
+			Assert.AreEqual("first", settlement.DeadArrived[0]);
+			Assert.AreEqual("age", settlement.DeadCauses[0]);
 		}
 
 		[Test]
@@ -350,7 +437,30 @@ namespace ThousandAndFirst.Tests
 				fields[i].SetValue(Settlement, value);
 				written[fields[i].Name] = value;
 			}
+			// These five fields form one receipt. Independent arbitrary longs can describe a
+			// completed step which was never started, and Normalize is then required to discard the
+			// corrupt group. Give the reflective carry test a valid non-default partial receipt.
+			SetSample(fields, Settlement, written, "SemanticPassActive", true);
+			SetSample(fields, Settlement, written, "SemanticPassStartedTick", 2400L);
+			SetSample(fields, Settlement, written, "SemanticPassZoneId", "JoppaWorld.11.22.1.1.10");
+			SetSample(fields, Settlement, written, "SemanticPassStartedMask", 7L);
+			SetSample(fields, Settlement, written, "SemanticPassCompletedMask", 3L);
 			return written;
+		}
+
+		private static void SetSample(FieldInfo[] Fields, KingdomSettlement Settlement,
+			Dictionary<string, object> Written, string Name, object Value)
+		{
+			for (int i = 0; i < Fields.Length; i++)
+			{
+				if (Fields[i].Name == Name)
+				{
+					Fields[i].SetValue(Settlement, Value);
+					Written[Name] = Value;
+					return;
+				}
+			}
+			Assert.Fail("SettlementSeatTests expected carried field " + Name + ".");
 		}
 
 		private static object SampleValue(FieldInfo Field, int Index)
@@ -360,6 +470,13 @@ namespace ThousandAndFirst.Tests
 			if (Field.Name == "Vocation")
 			{
 				return KingdomSettlement.Vocations[0];
+			}
+			// RaidState is a serialized lifecycle code, not an unconstrained counter. Normalize
+			// deliberately rejects unnamed values, so the carry fixture must exercise a valid
+			// active state instead of asking corruption repair to preserve 147.
+			if (Field.Name == "RaidState")
+			{
+				return 1;
 			}
 			Type type = Field.FieldType;
 			if (type == typeof(string))
@@ -405,6 +522,14 @@ namespace ThousandAndFirst.Tests
 				book.SettlementId = Field.Name + "-" + Index;
 				book.ProcessedThroughTick = 500L + Index;
 				return book;
+			}
+			if (type == typeof(KingdomLifecycleBook))
+			{
+				return new KingdomLifecycleBook
+				{
+					SettlementId = "taf:settlement:v1:" + new string('a', 64),
+					PlainGuestNextSequence = 10L + Index
+				};
 			}
 			if (type == typeof(KingdomLedger))
 			{
@@ -505,15 +630,15 @@ namespace ThousandAndFirst.Tests
 		/// day someone adds a field to the settlement and not to <c>KingdomSystem</c>.</summary>
 		private sealed class PartialSeat
 		{
-			public string SettlementName;
+			public string SettlementName = null;
 
-			public int Population;
+			public int Population = 0;
 		}
 
 		/// <summary>A seat whose field of that name cannot hold what the city keeps there.</summary>
 		private sealed class MistypedSeat
 		{
-			public string Population;
+			public string Population = null;
 		}
 	}
 }

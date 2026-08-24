@@ -333,8 +333,8 @@ namespace ThousandAndFirst
 		}
 
 		/// <summary>
-		/// Offers the settlement's own water to a guest, spent from its dedicated stores the same
-		/// way an arriving settler's welcome is (<c>KingdomGrowth.ConsumeStoredWater</c>). Called
+		/// Offers the settlement's own water to a guest, spent exactly from its dedicated stores.
+		/// Called
 		/// from <see cref="XRL.World.Parts.r_KingdomGuest"/>'s inventory action; a no-op if the
 		/// guest has already been offered water or is no longer present.
 		/// </summary>
@@ -351,20 +351,75 @@ namespace ThousandAndFirst
 			{
 				return;
 			}
-			int drawn = KingdomGrowth.ConsumeStoredWater(zone, KingdomLocusRules.GuestWaterCostDrams);
-			if (drawn < KingdomLocusRules.GuestWaterCostDrams)
+			int cost = KingdomLocusRules.GuestWaterCostDrams;
+			string measure = cost + ((cost == 1) ? " dram" : " drams");
+			KingdomSurvey survey = KingdomSurvey.Take(zone);
+			KingdomWaterDebit debit;
+			if (!survey.TryReserveExactWater(cost, out debit))
 			{
-				Popup.Show("There is no water to spare for " + Guest.ShortDisplayName + " here.");
+				Popup.Show("Offering water to " + Guest.ShortDisplayName + " requires exactly {{C|"
+					+ measure + "}} from the dedicated stores, and they cannot provide it.");
 				return;
 			}
-			Guest.SetIntProperty("KingdomGuestOffered", 1);
-			Popup.Show(KingdomLocusRules.GuestThanks(Guest.ShortDisplayName, system.KingdomDisplayName));
-			DepartGuest(system, Guest, Greeted: true);
+			// Last safe point before the guest is marked as having received the settlement's gift.
+			if (!debit.Commit())
+			{
+				Popup.Show("The dedicated stores could not yield exactly {{C|" + measure
+					+ "}} for " + Guest.ShortDisplayName + ". No water was offered.");
+				return;
+			}
+			try
+			{
+				Guest.SetIntProperty("KingdomGuestOffered", 1);
+			}
+			catch (Exception error)
+			{
+				bool returned = debit.Rollback();
+				MetricsManager.LogError("ThousandAndFirst guest water", error);
+				if (!returned)
+				{
+					MetricsManager.LogError("ThousandAndFirst guest water: the exact " + cost
+						+ "-dram debit could not be restored: " + (debit.Failure ?? "unknown failure"));
+				}
+				Popup.Show(returned
+					? "The offering was interrupted. Exactly {{C|" + measure + "}} was returned to the same stores."
+					: "The offering was interrupted, and the stores could not be restored exactly. See the game log.");
+				return;
+			}
+			string guestName = Guest.ShortDisplayName;
+			if (!DepartGuest(system, Guest, Greeted: true))
+			{
+				try
+				{
+					Guest.SetIntProperty("KingdomGuestOffered", 0, RemoveIfZero: true);
+				}
+				catch (Exception error)
+				{
+					MetricsManager.LogError("ThousandAndFirst guest water: could not clear failed offering", error);
+				}
+				bool returned = debit.Rollback();
+				if (!returned)
+				{
+					MetricsManager.LogError("ThousandAndFirst guest water: departure was refused and the exact "
+						+ cost + "-dram debit could not be restored: " + (debit.Failure ?? "unknown failure"));
+				}
+				Popup.Show(returned
+					? guestName + " could not leave. Exactly {{C|" + measure + "}} was returned to the same stores."
+					: guestName + " could not leave, and the stores could not be restored exactly. See the game log.");
+				return;
+			}
+			Popup.Show(KingdomLocusRules.GuestThanks(guestName, system.KingdomDisplayName));
 		}
 
-		private static void DepartGuest(KingdomSystem System, GameObject Guest, bool Greeted)
+		private static bool DepartGuest(KingdomSystem System, GameObject Guest, bool Greeted)
 		{
 			string name = Guest.ShortDisplayName;
+			// BeforeDestroyObjectEvent may veto even Obliterate. Nothing else about departure is
+			// written until the engine confirms the traveller actually left.
+			if (!Guest.Obliterate())
+			{
+				return false;
+			}
 			bool milestone = Greeted && !System.FirstGuestGreeted;
 			string line = milestone
 				? System.KingdomDisplayName + " gave water to its first guest since its founding, and the traveller went on speaking well of it"
@@ -385,7 +440,7 @@ namespace ThousandAndFirst
 			}
 			System.NextGuestTick = KingdomLocusRules.NextGuestDueTick(The.Game.TimeTicks);
 			System.GuestDepartTick = 0L;
-			Guest.Obliterate();
+			return true;
 		}
 	}
 }

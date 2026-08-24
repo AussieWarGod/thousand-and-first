@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Text;
 using XRL;
 using XRL.World;
@@ -135,15 +136,86 @@ namespace ThousandAndFirst
 			{
 				stringBuilder.Append("\r\n\r\n{{W|").Append(need).Append("}}");
 			}
-			if (System.ActiveDealKeys.Count > 0)
+			stringBuilder.Append(TradeStatus(System));
+			return stringBuilder.ToString();
+		}
+
+		/// <summary>Read-only projection of the named-field trade authority.</summary>
+		public static string TradeStatus(KingdomSystem System, bool Detailed = false)
+		{
+			KingdomTradeBook book = System?.TradeBook;
+			if (book == null) return "\nTrade: no receipt book.";
+			StringBuilder text = new StringBuilder();
+			text.Append("\nTrade: format ").Append(book.FormatVersion)
+				.Append(" ").Append(book.SchemaState);
+			if (!KingdomTradeRules.BookUsable(book))
 			{
-				stringBuilder.Append("\nCharters: ");
-				for (int i = 0; i < System.ActiveDealKeys.Count; i++)
+				text.Append(" {{r|(not authoritative)}}");
+				if (!string.IsNullOrEmpty(book.SchemaFault))
 				{
-					stringBuilder.Append(System.ActiveDealKeys[i]).Append(" with ").Append(System.ActiveDealFactions[i]).Append("; ");
+					text.Append(" — ");
+					AppendBoundedTradeText(text, book.SchemaFault,
+						KingdomTradeRules.MaxNameChars);
+				}
+				return text.ToString();
+			}
+			int active = 0;
+			int quarantined = 0;
+			int charterLimit = Math.Min(book.Charters?.Count ?? 0,
+				KingdomTradeRules.MaxCharters);
+			for (int i = 0; i < charterLimit; i++)
+			{
+				KingdomTradeCharter row = book.Charters[i];
+				if (row == null || row.Quarantined) quarantined++;
+				else active++;
+			}
+			text.Append("; charters ").Append(active);
+			if (quarantined > 0) text.Append("+").Append(quarantined).Append(" quarantined");
+			if (book.Manifest != null)
+				text.Append("; manifest ").Append(book.Manifest.Status).Append(" ")
+					.Append(book.Manifest.EscrowDrams).Append(" drams ")
+					.Append(book.Manifest.OriginName ?? "?").Append("→")
+					.Append(book.Manifest.DestinationName ?? "?");
+			if (book.OpenOperation != null)
+				text.Append("; receipt ").Append(book.OpenOperation.Sequence).Append("/")
+					.Append(book.OpenOperation.Phase);
+			text.Append("; retained ").Append(book.RetainedEscrowDrams)
+				.Append("; retired through ").Append(book.RetiredThrough);
+			int projections = 0;
+			int projectionLimit = Math.Min(book.Projections?.Count ?? 0,
+				KingdomTradeRules.MaxProjectionRows);
+			for (int i = 0; i < projectionLimit; i++)
+				if (book.Projections[i] != null && !book.Projections[i].Quarantined) projections++;
+			text.Append("; city projections ").Append(projections);
+			if (Detailed)
+			{
+				for (int i = 0; i < charterLimit; i++)
+				{
+					KingdomTradeCharter row = book.Charters[i];
+					if (row == null) continue;
+					text.Append("\n  charter ").Append(row.Id).Append(" ")
+						.Append(row.DealKey).Append("/").Append(row.Faction)
+						.Append(" next=").Append(row.NextTick)
+						.Append(row.Quarantined ? " QUARANTINED" : "");
+				}
+				for (int i = 0; i < projectionLimit; i++)
+				{
+					KingdomTradeProjectionRow row = book.Projections[i];
+					if (row == null) continue;
+					text.Append("\n  projection city=").Append(row.SettlementId)
+						.Append(" zone=").Append(row.ZoneId).Append(" object=")
+						.Append(row.ObjectId).Append(row.Quarantined ? " QUARANTINED" : "");
 				}
 			}
-			return stringBuilder.ToString();
+			return text.ToString();
+		}
+
+		private static void AppendBoundedTradeText(StringBuilder Text, string Value, int Limit)
+		{
+			if (Text == null || string.IsNullOrEmpty(Value) || Limit <= 0) return;
+			int count = Math.Min(Value.Length, Limit);
+			Text.Append(Value, 0, count);
+			if (count < Value.Length) Text.Append("...");
 		}
 
 		/// <summary>

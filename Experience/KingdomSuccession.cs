@@ -149,6 +149,10 @@ namespace ThousandAndFirst
 				}
 				Reader.ReadNamedFields(this, typeof(KingdomSuccession),
 					BindingFlags.Instance | BindingFlags.NonPublic);
+				if (SerializationVersion != CurrentSerializationVersion)
+				{
+					throw new InvalidOperationException("Unsupported ThousandAndFirst succession named-field version.");
+				}
 				SerializationVersion = CurrentSerializationVersion;
 				ValidateSavedState();
 			}

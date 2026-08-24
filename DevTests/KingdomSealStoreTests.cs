@@ -99,7 +99,7 @@ namespace ThousandAndFirst.Tests
 			record.StoredWater = 5;
 			record.Vigour = KingdomRules.SealedVigour((GrowthStage)record.Stage, record.Population,
 				record.Defence, record.StoredWater, false);
-			return record;
+			return KingdomSealTestIdentity.Bind(record);
 		}
 
 		private static KingdomSealRecord PromotedRecord(string lineage, string legacy, string origin, int generation, int revision)

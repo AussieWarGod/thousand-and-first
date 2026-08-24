@@ -375,27 +375,130 @@ namespace ThousandAndFirst
 			{
 				return;
 			}
-			// Measure the delta rather than trusting the request (STANDARDS 1): Consume can draw
-			// less than asked if a container the aggregate StoredWater counted cannot give it up,
-			// and half a seedbed wetted for no crop is worse than waiting.
-			int drawn = survey.Consume(KingdomCropRules.PlantWaterCostDrams);
-			if (drawn < KingdomCropRules.PlantWaterCostDrams)
+			KingdomWaterDebit debit;
+			if (!survey.TryReserveExactWater(KingdomCropRules.PlantWaterCostDrams, out debit))
+			{
+				Popup.Show(KingdomCropRules.SowRefusal(KingdomCropRules.SowVerdict.NoWater));
+				return;
+			}
+
+			// Snapshot field and its pre-existing rows before touching either. Water can therefore
+			// return to the exact casks, and a refused seed leaves no half-sown field behind.
+			KingdomCropRules.PlotStage oldStage = field.Stage;
+			string oldCrop = field.CropBlueprint;
+			long oldNext = field.NextStageTick;
+			bool oldNoLarder = field.NoLarderAnnounced;
+			string oldSeed = work.GetStringProperty(SeedProperty);
+			bool hadRows = work.HasIntProperty(RowsProperty);
+			int oldRows = work.GetIntProperty(RowsProperty);
+			bool hadSownTick = work.HasIntProperty(SownTickProperty);
+			int oldSownTick = work.GetIntProperty(SownTickProperty);
+			bool hadCycles = work.HasIntProperty(CyclesProperty);
+			int oldCycles = work.GetIntProperty(CyclesProperty);
+			bool hadSaid = work.HasIntProperty(SaidProperty);
+			int oldSaid = work.GetIntProperty(SaidProperty);
+			List<GameObject> rowsBefore = RowsOf(zone, work);
+			// Snapshot first, then cross the exact physical debit boundary. Nothing below may
+			// discover that it did not know how to compensate only after water has moved.
+			if (!debit.Commit())
 			{
 				Popup.Show(KingdomCropRules.SowRefusal(KingdomCropRules.SowVerdict.NoWater));
 				return;
 			}
 			long now = The.Game.TimeTicks;
-			field.CropBlueprint = crop;
-			work.SetStringProperty(SeedProperty, Seed.Blueprint);
-			work.SetIntProperty(RowsProperty, rows);
-			work.SetIntProperty(SownTickProperty, StampOf(now));
-			work.SetIntProperty(CyclesProperty, 0);
-			work.SetIntProperty(SaidProperty, 0);
-			field.NoLarderAnnounced = false;
-			field.NextStageTick = KingdomCropRules.RipenTick(now);
-			field.ApplyStage(KingdomCropRules.PlotStage.Growing);
-			int laid = LayRows(zone, work, row, rows);
-			Seed.Destroy(null, Silent: true);
+			int laid = 0;
+			int seedCount = Seed.Count;
+			try
+			{
+				field.CropBlueprint = crop;
+				work.SetStringProperty(SeedProperty, Seed.Blueprint);
+				work.SetIntProperty(RowsProperty, rows);
+				work.SetIntProperty(SownTickProperty, StampOf(now));
+				work.SetIntProperty(CyclesProperty, 0);
+				work.SetIntProperty(SaidProperty, 0);
+				field.NoLarderAnnounced = false;
+				field.NextStageTick = KingdomCropRules.RipenTick(now);
+				field.ApplyStage(KingdomCropRules.PlotStage.Growing);
+				laid = LayRows(zone, work, row, rows);
+				if (laid <= 0)
+				{
+					throw new InvalidOperationException("No crop row could be laid in the field footprint.");
+				}
+				bool destroyed = Seed.Destroy(null, Silent: true);
+				bool seedSpent = (seedCount > 1 && GameObject.Validate(Seed) && Seed.Count == seedCount - 1)
+					|| (seedCount == 1 && destroyed && !GameObject.Validate(Seed));
+				if (!seedSpent)
+				{
+					throw new InvalidOperationException("The seed refused to leave its stack.");
+				}
+			}
+			catch (Exception ex)
+			{
+				// Restore the receipt first. Even a hostile callback in field or row compensation
+				// cannot strand the physical debit behind it.
+				bool waterRestored = debit.Rollback();
+				bool fieldRestored = true;
+				try
+				{
+					field.CropBlueprint = oldCrop;
+					field.NextStageTick = oldNext;
+					field.NoLarderAnnounced = oldNoLarder;
+					field.ApplyStage(oldStage);
+				}
+				catch (Exception restoreError)
+				{
+					fieldRestored = false;
+					KingdomLog.Log("crop: field snapshot restore failed (" + restoreError.Message + ")");
+				}
+				try
+				{
+					work.SetStringProperty(SeedProperty, oldSeed);
+					RestoreInt(work, RowsProperty, hadRows, oldRows);
+					RestoreInt(work, SownTickProperty, hadSownTick, oldSownTick);
+					RestoreInt(work, CyclesProperty, hadCycles, oldCycles);
+					RestoreInt(work, SaidProperty, hadSaid, oldSaid);
+				}
+				catch (Exception restoreError)
+				{
+					fieldRestored = false;
+					KingdomLog.Log("crop: work snapshot restore failed (" + restoreError.Message + ")");
+				}
+				try
+				{
+					List<GameObject> rowsAfter = RowsOf(zone, work);
+					for (int i = 0; i < rowsAfter.Count; i++)
+					{
+						if (!rowsBefore.Contains(rowsAfter[i])
+							&& !rowsAfter[i].Obliterate(null, Silent: true))
+						{
+							fieldRestored = false;
+						}
+					}
+				}
+				catch (Exception restoreError)
+				{
+					fieldRestored = false;
+					KingdomLog.Log("crop: row cleanup failed (" + restoreError.Message + ")");
+				}
+				try
+				{
+					if (GameObject.Validate(Seed) && Seed.Count != seedCount)
+					{
+						Seed.Count = seedCount;
+					}
+				}
+				catch (Exception restoreError)
+				{
+					fieldRestored = false;
+					KingdomLog.Log("crop: seed stack restore failed (" + restoreError.Message + ")");
+				}
+				KingdomLog.Log("crop: sow transaction refused (" + ex.Message + "; water restored="
+					+ waterRestored + "; field restored=" + fieldRestored + ")");
+				Popup.Show(waterRestored && fieldRestored
+					? "The sowing would not hold. The field is unchanged and the water was returned to its casks."
+					: "The sowing would not hold, and one rollback could not be proved exact. Inspect the field, seed, and stores.");
+				return;
+			}
 			// Crewed straight away, off a survey retaken now that the field asks for hands at all:
 			// an unsown field is deliberately not in KingdomSurvey.Works, so until this runs the
 			// new field carries no crew stamp and would read as "sown and nobody working it" to a
@@ -413,6 +516,18 @@ namespace ThousandAndFirst
 					+ " rows the " + fieldName + " wants. Clear what is standing in it, and sow again for the rest.}}");
 			}
 			if (KingdomLog.Enabled) KingdomLog.Log("crop: sown " + fieldName + " crop=" + crop + " rows=" + laid + "/" + rows);
+		}
+
+		private static void RestoreInt(GameObject Object, string Property, bool Had, int Value)
+		{
+			if (Had)
+			{
+				Object.SetIntProperty(Property, Value);
+			}
+			else
+			{
+				Object.RemoveIntProperty(Property);
+			}
 		}
 
 		/// <summary>

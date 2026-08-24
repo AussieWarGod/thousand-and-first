@@ -1738,8 +1738,8 @@ namespace ThousandAndFirst
 			case PetitionKind.Flesh:
 				// The one kind no STATE answers. There is nothing the founder can build, fill or
 				// mend that settles "say out loud what you have built here" — DIVERSITY §3.6 is
-				// explicit that there is no correct answer — so what meets it is being HEARD, and
-				// KingdomPetitions.Heard is what writes the target this reads.
+				// explicit that there is no correct answer. Hearing the speech supplies this
+				// frozen target; acceptance separately gates resolution in CanResolve.
 				return Target > 0;
 			case PetitionKind.Chrome:
 				// Flesh's twin, met the same way and for the same reason: the debt is not a bill

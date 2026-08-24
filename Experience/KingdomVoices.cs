@@ -36,10 +36,13 @@ namespace ThousandAndFirst
 			}
 			try
 			{
+				string settlementId = KingdomChronicle.SettlementId(System);
+				if (!KingdomIdentityRules.IsSettlementId(settlementId))
+					return KingdomVoiceRules.Speaker.None;
 				return KingdomVoiceRules.ChooseSpeaker(
 					System.RosterNames,
 					System.RosterOrigins,
-					KingdomChronicle.SettlementId(System.KingdomFactionName),
+					settlementId,
 					Occasion,
 					CurrentOrdinal());
 			}

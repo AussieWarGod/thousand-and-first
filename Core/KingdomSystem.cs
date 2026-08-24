@@ -4,6 +4,7 @@ using Qud.API;
 using XRL;
 using XRL.UI;
 using XRL.World;
+using XRL.World.Parts;
 
 namespace ThousandAndFirst
 {
@@ -65,9 +66,18 @@ namespace ThousandAndFirst
 		/// would turn a routine additive change into a save-wipe for nothing.
 		/// </para>
 		/// </summary>
-		private const int CurrentSerializationVersion = 7;
+		/// <summary>
+		/// Version 8 is immutable runtime identity and the bounded realm archive. Version 7's
+		/// newly custom Trade payload cannot be skipped safely by an older named-field reader, and
+		/// it never persisted the founding transactions needed to distinguish a renamed realm from
+		/// a new incarnation. This is still pre-release, so the compatibility boundary is deliberate:
+		/// named versions before 8 are refused instead of manufacturing live authority from names.
+		/// The separate reflected-v1 branch below is the only layout whose enclosing reader can
+		/// still supply complete migration evidence; that branch performs one bounded migration.
+		/// </summary>
+		private const int CurrentSerializationVersion = 8;
 
-		private const int FirstNamedSerializationVersion = 6;
+		private const int FirstNamedSerializationVersion = 8;
 
 		private const int LegacyReflectedSerializationVersion = 1;
 
@@ -81,12 +91,47 @@ namespace ThousandAndFirst
 		public bool LoadFailed;
 
 		/// <summary>
-		/// Days accounted for by the homecoming report now waiting in the Charter. Not
-		/// serialized: a homecoming is news about this visit, and a saved one would be told
-		/// twice on the next load.
+		/// Days accounted for by this settlement's unread homecoming report. Carried with the
+		/// settlement and serialized beside its ledger: swapping seats or saving cannot hand one
+		/// city's age to another city's news.
 		/// </summary>
-		[NonSerialized]
 		public int HomecomingDays;
+
+		/// <summary>Immutable realm incarnation. Never derived from a current faction/display name.</summary>
+		public string RealmId;
+
+		public int RealmIdentityVersion;
+
+		public KingdomIdentityOrigin RealmIdentityOrigin;
+
+		/// <summary>The exact 32-lowerhex first-founding transaction, on the live-mint lane.</summary>
+		public string RealmIdentityTransactionId;
+
+		/// <summary>Frozen pre-identity faction evidence, populated only by reflected-v1 migration.</summary>
+		public string RealmIdentityLegacyFaction;
+
+		public long RealmIdentityFoundedTick;
+
+		public ulong RealmIdentitySeedHigh;
+
+		public ulong RealmIdentitySeedLow;
+
+		public string RealmIdentityFirstClaimedZone;
+
+		/// <summary>Nonempty permanently denies identity authority while preserving every source
+		/// field for inspection. Normalization never repairs a partial/duplicate set first-wins.</summary>
+		public string IdentityFault;
+
+		/// <summary>One later-city identity frozen before monotone Trade expansion and cleared only
+		/// after the exact city is present in the full topology. It is not a city and grants no
+		/// draw/authority by itself.</summary>
+		public string PendingSettlementId;
+
+		public string PendingSettlementTransactionId;
+
+		public string PendingSettlementZoneId;
+
+		public string PendingSettlementAuthority;
 
 		public string KingdomFactionName;
 
@@ -324,6 +369,27 @@ namespace ThousandAndFirst
 
 		public int ShopTier;
 
+		/// <summary>
+		/// Last completed attended-semantic dispatch for this city. This is deliberately separate
+		/// from <see cref="LastVisitTick"/>: the latter owns homecoming presentation, while this stamp
+		/// owns the once-per-world-day simulation boundary. Carried with the settlement so changing
+		/// seats cannot make either city repeat a day.
+		/// </summary>
+		public long LastSemanticTick;
+
+		/// <summary>Durable identity of the attended pass currently being reconciled. A guarded
+		/// subsystem fault leaves these receipts in place, so retry resumes the same ordered pass
+		/// instead of rerunning every earlier subsystem or publishing a completed-day stamp.</summary>
+		public bool SemanticPassActive;
+
+		public long SemanticPassStartedTick;
+
+		public string SemanticPassZoneId;
+
+		public long SemanticPassStartedMask;
+
+		public long SemanticPassCompletedMask;
+
 		public long LastVisitTick;
 
 		public string LastDeed;
@@ -343,6 +409,21 @@ namespace ThousandAndFirst
 		public List<string> RosterArrived = new List<string>();
 
 		public KingdomRules.PetitionKind PetitionKind = KingdomRules.PetitionKind.None;
+
+		/// <summary>Explicit petition lifecycle; legacy non-empty petitions normalize to Offered.</summary>
+		public PetitionLifecycle PetitionState = PetitionLifecycle.None;
+
+		/// <summary>Immutable identity of the offered petition event.</summary>
+		public string PetitionEventId;
+
+		/// <summary>Settlement identity captured when the petition was offered.</summary>
+		public string PetitionOriginSettlementId;
+
+		/// <summary>Cause as spoken at offer time; later standings or labels do not rewrite it.</summary>
+		public string PetitionCauseSnapshot;
+
+		/// <summary>Canonical Qud month that last minted an offer. Negative means no evidence yet.</summary>
+		public long LastPetitionMonthOrdinal = -1L;
 
 		public string PetitionPetitioner;
 
@@ -507,6 +588,25 @@ namespace ThousandAndFirst
 		/// <summary>See <see cref="KingdomSettlement.ResearchBestMind"/>.</summary>
 		public int ResearchBestMind;
 
+		/// <summary>Provenance for <see cref="City"/>'s immutable settlement id. These fields are
+		/// city-carried and have exact counterparts on <see cref="KingdomSettlement"/>.</summary>
+		public int SettlementIdentityVersion;
+
+		public KingdomIdentityOrigin SettlementIdentityOrigin;
+
+		public string SettlementIdentityTransactionId;
+
+		public long SettlementIdentityFoundedTick;
+
+		public string SettlementIdentityFirstClaimedZone;
+
+		/// <summary>The retired pre-identity city label, retained only as migration evidence.</summary>
+		public string SettlementIdentityLegacyId;
+
+		/// <summary>Dormant per-city lifecycle authority, exact-bound during identity publication.
+		/// No lane executes from it yet; carrying it now avoids another save-schema boundary.</summary>
+		public KingdomLifecycleBook LifecycleBook = new KingdomLifecycleBook();
+
 		/// <summary>The seated city's model. See <see cref="KingdomSettlement.City"/>; this is the
 		/// flat field the seat swap carries it in.</summary>
 		public Simulation.City.KingdomCityBook City = new Simulation.City.KingdomCityBook();
@@ -642,6 +742,13 @@ namespace ThousandAndFirst
 
 		public List<long> DealNextTicks = new List<long>();
 
+		/// <summary>
+		/// Realm trade authority. The three lists above and <see cref="Manifest"/> are retained
+		/// only as bounded legacy evidence. Identity v8 never converts or clears their mutable-name
+		/// authority; any nonempty row quarantines Trade for inspection.
+		/// </summary>
+		public KingdomTradeBook TradeBook = new KingdomTradeBook();
+
 		public List<string> ChronicleEntries = new List<string>();
 
 		public List<string> OutsiderEntries = new List<string>();
@@ -738,6 +845,13 @@ namespace ThousandAndFirst
 		/// addresses a settlement by name rather than by seat/Away role. See
 		/// <see cref="ThousandAndFirst.KingdomGuestbook"/> and <see cref="ThousandAndFirst.KingdomCarryHaul"/>.</summary>
 		public KingdomCarryHaul Haul;
+
+		/// <summary>Dormant realm-scope carry authority, exact-bound to <see cref="RealmId"/>.</summary>
+		public KingdomCarryBook CarryBook = new KingdomCarryBook();
+
+		/// <summary>Bounded realm-scoped state retained across exile. Cities and standings stay in
+		/// their existing exile slots; this receipt owns the transactional close/restore phases.</summary>
+		public KingdomRealmArchive ExiledRealmArchive;
 
 		/// <summary>
 		/// The realm that put the founder out, kept whole: its faction name, its display name, and
@@ -894,33 +1008,646 @@ namespace ThousandAndFirst
 		/// </summary>
 		internal Simulation.Kernel.KernelSeed128 SimulationSeed => new Simulation.Kernel.KernelSeed128(SimulationSeedHigh, SimulationSeedLow);
 
+		/// <summary>The exact seated-city id, or null when any realm/city provenance or topology
+		/// cannot be reproved whole. Callers must fail closed; there is deliberately no name fold.</summary>
+		internal string CurrentSettlementId
+		{
+			get
+			{
+				string realm;
+				string settlement;
+				return TryGetCurrentIdentity(out realm, out settlement) ? settlement : null;
+			}
+		}
+
+		/// <summary>The exact realm id under the same whole-topology proof as the current city.</summary>
+		internal string CurrentRealmId
+		{
+			get
+			{
+				string realm;
+				string settlement;
+				return TryGetCurrentIdentity(out realm, out settlement) ? realm : null;
+			}
+		}
+
+		internal bool TryGetCurrentIdentity(out string ExactRealmId,
+			out string ExactSettlementId)
+		{
+			ExactRealmId = null;
+			ExactSettlementId = null;
+			if (RealmTransitionActive()) return false;
+			List<string> settlements;
+			string failure = null;
+			if (!TryExactSettlementIds(RequirePublishedClaims: true, out settlements,
+				out failure) || City == null || !settlements.Contains(City.SettlementId))
+			{
+				return false;
+			}
+			ExactRealmId = RealmId;
+			ExactSettlementId = City.SettlementId;
+			return true;
+		}
+
+		internal bool TryCaptureSealIdentity(out KingdomSealIdentity Identity,
+			out string Failure)
+		{
+			Identity = null;
+			Failure = null;
+			if (!TryGetCurrentIdentity(out string realm, out string settlement) ||
+				!TryExactSettlementIds(RequirePublishedClaims: true, out List<string> settlements,
+					out Failure))
+			{
+				Failure = Failure ?? "current immutable realm topology cannot be proved";
+				return false;
+			}
+			KingdomSettlement seat;
+			try { seat = Capture(); }
+			catch (Exception ex) { Failure = ex.Message; return false; }
+			settlements.Sort(StringComparer.Ordinal);
+			if (!TryBuildSealSettlementProvenance(settlements, seat, Away,
+				out List<string> provenance, out Failure)) return false;
+			KingdomSealIdentity candidate = new KingdomSealIdentity
+			{
+				RealmId = realm,
+				SettlementId = settlement,
+				SettlementIds = new List<string>(settlements),
+				SettlementProvenanceRows = provenance,
+				RealmIdentityVersion = RealmIdentityVersion,
+				RealmIdentityOrigin = RealmIdentityOrigin,
+				RealmIdentityTransactionId = RealmIdentityTransactionId,
+				RealmIdentityLegacyFaction = RealmIdentityLegacyFaction,
+				RealmIdentityFoundedTick = RealmIdentityFoundedTick,
+				RealmIdentitySeedHigh = RealmIdentitySeedHigh,
+				RealmIdentitySeedLow = RealmIdentitySeedLow,
+				RealmIdentityFirstClaimedZone = RealmIdentityFirstClaimedZone,
+				SettlementIdentityVersion = seat.SettlementIdentityVersion,
+				SettlementIdentityOrigin = seat.SettlementIdentityOrigin,
+				SettlementIdentityTransactionId = seat.SettlementIdentityTransactionId,
+				SettlementIdentityFoundedTick = seat.SettlementIdentityFoundedTick,
+				SettlementIdentityFirstClaimedZone = seat.SettlementIdentityFirstClaimedZone,
+				SettlementIdentityLegacyId = seat.SettlementIdentityLegacyId
+			};
+			if (!KingdomSealRules.ExactIdentity(candidate, seat))
+			{
+				Failure = "current seal identity provenance cannot be reproved";
+				return false;
+			}
+			Identity = candidate;
+			return true;
+		}
+
+		private static bool TryBuildSealSettlementProvenance(IList<string> SettlementIds,
+			KingdomSettlement Seat, KingdomSettlement Away, out List<string> Rows,
+			out string Failure)
+		{
+			Rows = new List<string>();
+			Failure = null;
+			if (SettlementIds == null || Seat?.City == null)
+			{
+				Failure = "seal settlement topology is absent";
+				return false;
+			}
+			for (int i = 0; i < SettlementIds.Count; i++)
+			{
+				KingdomSettlement source = null;
+				if (Seat.City.SettlementId == SettlementIds[i]) source = Seat;
+				if (Away?.City?.SettlementId == SettlementIds[i])
+				{
+					if (source != null)
+					{
+						Failure = "seal settlement topology has duplicate city identity";
+						return false;
+					}
+					source = Away;
+				}
+				if (source == null || !KingdomSealRules.TryBuildSettlementProvenance(
+					SettlementIds[i], source.SettlementIdentityVersion,
+					source.SettlementIdentityOrigin, source.SettlementIdentityTransactionId,
+					source.SettlementIdentityFoundedTick,
+					source.SettlementIdentityFirstClaimedZone,
+					source.SettlementIdentityLegacyId, out string row))
+				{
+					Failure = "seal settlement provenance cannot be bounded";
+					return false;
+				}
+				Rows.Add(row);
+			}
+			return true;
+		}
+
+		internal bool SealIdentityStillMatches(KingdomSealIdentity Expected)
+		{
+			if (Expected == null || !TryCaptureSealIdentity(out KingdomSealIdentity current,
+				out string _)) return false;
+			if (Expected.RealmId != current.RealmId ||
+				Expected.SettlementId != current.SettlementId ||
+				Expected.RealmIdentityVersion != current.RealmIdentityVersion ||
+				Expected.RealmIdentityOrigin != current.RealmIdentityOrigin ||
+				Expected.RealmIdentityTransactionId != current.RealmIdentityTransactionId ||
+				Expected.RealmIdentityLegacyFaction != current.RealmIdentityLegacyFaction ||
+				Expected.RealmIdentityFoundedTick != current.RealmIdentityFoundedTick ||
+				Expected.RealmIdentitySeedHigh != current.RealmIdentitySeedHigh ||
+				Expected.RealmIdentitySeedLow != current.RealmIdentitySeedLow ||
+				Expected.RealmIdentityFirstClaimedZone != current.RealmIdentityFirstClaimedZone ||
+				Expected.SettlementIdentityVersion != current.SettlementIdentityVersion ||
+				Expected.SettlementIdentityOrigin != current.SettlementIdentityOrigin ||
+				Expected.SettlementIdentityTransactionId != current.SettlementIdentityTransactionId ||
+				Expected.SettlementIdentityFoundedTick != current.SettlementIdentityFoundedTick ||
+				Expected.SettlementIdentityFirstClaimedZone !=
+					current.SettlementIdentityFirstClaimedZone ||
+				Expected.SettlementIdentityLegacyId != current.SettlementIdentityLegacyId ||
+				Expected.SettlementIds == null || current.SettlementIds == null ||
+				Expected.SettlementIds.Count != current.SettlementIds.Count ||
+				Expected.SettlementProvenanceRows == null ||
+				current.SettlementProvenanceRows == null ||
+				Expected.SettlementProvenanceRows.Count !=
+					current.SettlementProvenanceRows.Count) return false;
+			for (int i = 0; i < Expected.SettlementIds.Count; i++)
+				if (Expected.SettlementIds[i] != current.SettlementIds[i] ||
+					Expected.SettlementProvenanceRows[i] !=
+						current.SettlementProvenanceRows[i]) return false;
+			return true;
+		}
+
+		private bool RealmTransitionActive()
+		{
+			if (ExiledRealmArchive == null ||
+				ExiledRealmArchive.Phase == KingdomRealmArchivePhase.Closed ||
+				ExiledRealmArchive.Phase == KingdomRealmArchivePhase.Restored) return false;
+			if (ExiledRealmArchive.Phase == KingdomRealmArchivePhase.Quarantined)
+				return string.Equals(RealmId, ExiledRealmArchive.RealmId,
+					StringComparison.Ordinal);
+			return true;
+		}
+
+		/// <summary>Stages the first realm and city ids before faction registration or any engine
+		/// callback. A retry accepts only the exact same transaction and founding ground.</summary>
+		internal bool TryBindFirstFoundingIdentity(string TransactionId, string ZoneId,
+			out string Failure)
+		{
+			Failure = null;
+			string realm;
+			string settlement;
+			KingdomIdentityFault fault = KingdomIdentityFault.None;
+			if (string.IsNullOrEmpty(ZoneId) || ZoneId.Length > 512 ||
+				!KingdomIdentityRules.TryMintRealm(TransactionId, out realm, out fault) ||
+				!KingdomIdentityRules.TryMintSettlement(realm, TransactionId,
+					out settlement, out fault))
+			{
+				Failure = "The first founding transaction could not mint bounded immutable identity (" +
+					fault + ").";
+				return false;
+			}
+			if (FirstIdentityStateEmpty())
+			{
+				RealmId = realm;
+				RealmIdentityVersion = KingdomIdentityRules.RulesVersion;
+				RealmIdentityOrigin = KingdomIdentityOrigin.FoundingTransaction;
+				RealmIdentityTransactionId = TransactionId;
+				RealmIdentityLegacyFaction = null;
+				RealmIdentityFoundedTick = 0L;
+				RealmIdentitySeedHigh = 0UL;
+				RealmIdentitySeedLow = 0UL;
+				RealmIdentityFirstClaimedZone = ZoneId;
+				IdentityFault = null;
+				if (City == null) City = new Simulation.City.KingdomCityBook();
+				City.SettlementId = settlement;
+				SettlementIdentityVersion = KingdomIdentityRules.RulesVersion;
+				SettlementIdentityOrigin = KingdomIdentityOrigin.FoundingTransaction;
+				SettlementIdentityTransactionId = TransactionId;
+				SettlementIdentityFoundedTick = 0L;
+				SettlementIdentityFirstClaimedZone = ZoneId;
+				SettlementIdentityLegacyId = null;
+			}
+			if (TryBindDormantLifecycleIdentity(out Failure) &&
+				FirstIdentityMatches(TransactionId, ZoneId)) return true;
+			QuarantineIdentity("first-founding immutable identity is partial, replaced, or belongs to another transaction");
+			Failure = IdentityFault;
+			return false;
+		}
+
+		internal bool FirstIdentityMatches(string TransactionId, string ZoneId)
+		{
+			KingdomIdentityFault fault = KingdomIdentityFault.None;
+			return string.IsNullOrEmpty(IdentityFault) && Away == null && City != null &&
+				RealmIdentityOrigin == KingdomIdentityOrigin.FoundingTransaction &&
+				SettlementIdentityOrigin == KingdomIdentityOrigin.FoundingTransaction &&
+				RealmIdentityTransactionId == TransactionId &&
+				SettlementIdentityTransactionId == TransactionId &&
+				RealmIdentityFirstClaimedZone == ZoneId &&
+				SettlementIdentityFirstClaimedZone == ZoneId &&
+				KingdomIdentityRules.ReproveRealm(RealmId, RealmIdentityVersion,
+					RealmIdentityOrigin, RealmIdentityTransactionId,
+					RealmIdentityLegacyFaction, RealmIdentityFoundedTick,
+					RealmIdentitySeedHigh, RealmIdentitySeedLow,
+					RealmIdentityFirstClaimedZone, out fault) &&
+				KingdomIdentityRules.ReproveSettlement(City.SettlementId, RealmId,
+					SettlementIdentityVersion, SettlementIdentityOrigin,
+					SettlementIdentityTransactionId, SettlementIdentityFoundedTick,
+					SettlementIdentityFirstClaimedZone, out fault) &&
+				LifecycleIdentityMatches(LifecycleBook, City.SettlementId) &&
+				CarryIdentityMatches();
+		}
+
+		/// <summary>Computes (without publishing) the later city's exact id. The caller freezes it
+		/// on the founding site before any permanent city marker or Away assignment.</summary>
+		internal bool TryPrepareLaterSettlementIdentity(string TransactionId, string ZoneId,
+			out string SettlementId, out string Failure)
+		{
+			SettlementId = null;
+			Failure = null;
+			List<string> current;
+			if (!TryExactSettlementIds(RequirePublishedClaims: true, out current, out Failure))
+				return false;
+			KingdomIdentityFault fault = KingdomIdentityFault.None;
+			if (string.IsNullOrEmpty(ZoneId) || ZoneId.Length > 512 ||
+				!KingdomIdentityRules.TryMintSettlement(RealmId, TransactionId,
+					out SettlementId, out fault))
+			{
+				Failure = "The later founding transaction could not mint immutable city identity (" +
+					fault + ").";
+				SettlementId = null;
+				return false;
+			}
+			if (current.Contains(SettlementId))
+			{
+				Failure = "The later founding transaction collides with an existing city identity.";
+				SettlementId = null;
+				return false;
+			}
+			return true;
+		}
+
+		internal static bool TryBindSettlementIdentity(KingdomSettlement Settlement,
+			string SettlementId, string TransactionId, string ZoneId, long FoundedTick,
+			out string Failure)
+		{
+			Failure = null;
+			if (Settlement == null)
+			{
+				Failure = "No settlement record was supplied for immutable identity.";
+				return false;
+			}
+			if (Settlement.City == null)
+				Settlement.City = new Simulation.City.KingdomCityBook();
+			Settlement.City.SettlementId = SettlementId;
+			Settlement.SettlementIdentityVersion = KingdomIdentityRules.RulesVersion;
+			Settlement.SettlementIdentityOrigin = KingdomIdentityOrigin.FoundingTransaction;
+			Settlement.SettlementIdentityTransactionId = TransactionId;
+				Settlement.SettlementIdentityFoundedTick = FoundedTick;
+				Settlement.SettlementIdentityFirstClaimedZone = ZoneId;
+				Settlement.SettlementIdentityLegacyId = null;
+			if (Settlement.LifecycleBook == null)
+				Settlement.LifecycleBook = new KingdomLifecycleBook();
+			KingdomLifecycleRules.Normalize(Settlement.LifecycleBook);
+			if (KingdomLifecycleRules.BindSettlementIdentity(Settlement.LifecycleBook,
+				SettlementId, LegacyMigration: false, MigrationKey: null,
+				ExistingIds: null)) return true;
+			Settlement.LifecycleBook.Quarantined = true;
+			Settlement.LifecycleBook.Fault =
+				"lifecycle book could not bind the exact new settlement identity";
+			Failure = Settlement.LifecycleBook.Fault;
+			return false;
+		}
+
+		internal bool LaterSettlementIdentityMatches(KingdomSettlement Settlement,
+			string ExpectedId, string TransactionId, string ZoneId)
+		{
+			if (Settlement == null || Settlement.City == null ||
+				Settlement.SettlementIdentityFirstClaimedZone != ZoneId ||
+				Settlement.ClaimedZones == null || !Settlement.ClaimedZones.Contains(ZoneId))
+				return false;
+			KingdomIdentityFault fault;
+			return string.Equals(Settlement.City.SettlementId, ExpectedId,
+					StringComparison.Ordinal) &&
+				Settlement.SettlementIdentityOrigin ==
+					KingdomIdentityOrigin.FoundingTransaction &&
+				Settlement.SettlementIdentityTransactionId == TransactionId &&
+				KingdomIdentityRules.ReproveSettlement(Settlement.City.SettlementId,
+					RealmId, Settlement.SettlementIdentityVersion,
+					Settlement.SettlementIdentityOrigin,
+					Settlement.SettlementIdentityTransactionId,
+					Settlement.SettlementIdentityFoundedTick,
+					Settlement.SettlementIdentityFirstClaimedZone, out fault);
+		}
+
+		internal bool SeatedLaterIdentityMatches(string ExpectedId,
+			string TransactionId, string ZoneId)
+		{
+			if (City == null || SettlementIdentityFirstClaimedZone != ZoneId ||
+				ClaimedZones == null || !ClaimedZones.Contains(ZoneId)) return false;
+			KingdomIdentityFault fault;
+			return string.Equals(City.SettlementId, ExpectedId, StringComparison.Ordinal) &&
+				SettlementIdentityOrigin == KingdomIdentityOrigin.FoundingTransaction &&
+				SettlementIdentityTransactionId == TransactionId &&
+				KingdomIdentityRules.ReproveSettlement(City.SettlementId, RealmId,
+					SettlementIdentityVersion, SettlementIdentityOrigin,
+					SettlementIdentityTransactionId, SettlementIdentityFoundedTick,
+					SettlementIdentityFirstClaimedZone, out fault) &&
+				LifecycleIdentityMatches(LifecycleBook, City.SettlementId);
+		}
+
+		/// <summary>Resolves a mutable city name only when it denotes exactly one proven current
+		/// city. It returns the immutable id; no caller receives first-match authority.</summary>
+		internal bool TryResolveSettlementIdByName(string Name, out string SettlementId)
+		{
+			SettlementId = null;
+			if (string.IsNullOrEmpty(Name)) return false;
+			List<string> identities;
+			string failure;
+			if (!TryExactSettlementIds(RequirePublishedClaims: true, out identities,
+				out failure)) return false;
+			List<string> names = new List<string> { SettlementName };
+			List<string> ids = new List<string> { City.SettlementId };
+			if (Away != null)
+			{
+				names.Add(Away.SettlementName);
+				ids.Add(Away.City.SettlementId);
+			}
+			KingdomIdentityFault fault;
+			return KingdomIdentityRules.TryResolveUniqueSettlementName(names, ids, Name,
+				out SettlementId, out fault);
+		}
+
+		internal bool TryExactSettlementIds(bool RequirePublishedClaims,
+			out List<string> SettlementIds, out string Failure)
+		{
+			SettlementIds = new List<string>();
+			Failure = null;
+			if (!string.IsNullOrEmpty(IdentityFault))
+			{
+				Failure = IdentityFault;
+				return false;
+			}
+			KingdomIdentityFault fault;
+			if (!KingdomIdentityRules.ReproveRealm(RealmId, RealmIdentityVersion,
+				RealmIdentityOrigin, RealmIdentityTransactionId,
+				RealmIdentityLegacyFaction, RealmIdentityFoundedTick,
+				RealmIdentitySeedHigh, RealmIdentitySeedLow,
+				RealmIdentityFirstClaimedZone, out fault) ||
+				!SettlementIdentityMatches(City, SettlementIdentityVersion,
+					SettlementIdentityOrigin, SettlementIdentityTransactionId,
+					SettlementIdentityFoundedTick, SettlementIdentityFirstClaimedZone,
+					RequirePublishedClaims, ClaimedZones, out fault) ||
+				!LifecycleIdentityMatches(LifecycleBook, City?.SettlementId) ||
+				!CarryIdentityMatches())
+			{
+				Failure = "The seated city identity cannot be reproved (" + fault + ").";
+				return false;
+			}
+			SettlementIds.Add(City.SettlementId);
+			if (Away != null)
+			{
+				if (!SettlementIdentityMatches(Away.City, Away.SettlementIdentityVersion,
+					Away.SettlementIdentityOrigin, Away.SettlementIdentityTransactionId,
+					Away.SettlementIdentityFoundedTick,
+					Away.SettlementIdentityFirstClaimedZone, RequirePublishedClaims,
+					Away.ClaimedZones, out fault) ||
+					!LifecycleIdentityMatches(Away.LifecycleBook,
+						Away.City?.SettlementId))
+				{
+					Failure = "The away city identity cannot be reproved (" + fault + ").";
+					return false;
+				}
+				SettlementIds.Add(Away.City.SettlementId);
+			}
+			if (!KingdomIdentityRules.ValidateRealmTopology(RealmId, SettlementIds,
+				out fault))
+			{
+				Failure = "The complete city identity set is invalid (" + fault + ").";
+				return false;
+			}
+			SettlementIds.Sort(StringComparer.Ordinal);
+			return true;
+		}
+
+		private bool TryBindDormantLifecycleIdentity(out string Failure)
+		{
+			Failure = null;
+			if (LifecycleBook == null) LifecycleBook = new KingdomLifecycleBook();
+			KingdomLifecycleRules.Normalize(LifecycleBook);
+			if (!KingdomLifecycleRules.BindSettlementIdentity(LifecycleBook,
+				City?.SettlementId, LegacyMigration: false, MigrationKey: null,
+				ExistingIds: null))
+			{
+				LifecycleBook.Quarantined = true;
+				LifecycleBook.Fault =
+					"lifecycle book could not bind exact seated-city identity";
+				Failure = LifecycleBook.Fault;
+				return false;
+			}
+			if (CarryBook == null) CarryBook = new KingdomCarryBook();
+			KingdomLifecycleRules.Normalize(CarryBook);
+			if (string.IsNullOrEmpty(CarryBook.RealmId) && !CarryBook.LegacyIdentity &&
+				!CarryBook.Quarantined && CarryBook.Open == null &&
+				(CarryBook.RecentProofs == null || CarryBook.RecentProofs.Count == 0) &&
+				CarryBook.NextSequence == 1L && CarryBook.RetiredThrough == 0L)
+			{
+				CarryBook.RealmId = RealmId;
+			}
+			KingdomLifecycleRules.Normalize(CarryBook);
+			if (CarryIdentityMatches()) return true;
+			CarryBook.Quarantined = true;
+			CarryBook.Fault = "carry book could not bind exact immutable realm identity";
+			Failure = CarryBook.Fault;
+			return false;
+		}
+
+		private static bool LifecycleIdentityMatches(KingdomLifecycleBook Book,
+			string SettlementId)
+		{
+			return Book != null && !Book.LegacyIdentity &&
+				string.Equals(Book.SettlementId, SettlementId,
+					StringComparison.Ordinal) &&
+				KingdomLifecycleRules.CanOwnAuthority(Book);
+		}
+
+		private bool CarryIdentityMatches()
+		{
+			return CarryBook != null && !CarryBook.LegacyIdentity &&
+				string.Equals(CarryBook.RealmId, RealmId, StringComparison.Ordinal) &&
+				KingdomLifecycleRules.CanOwnAuthority(CarryBook);
+		}
+
+		internal bool TryBindTradeIdentity(out string Failure)
+		{
+			List<string> settlements;
+			if (!TryExactSettlementIds(RequirePublishedClaims: true, out settlements,
+				out Failure)) return false;
+			if (TradeBook == null) TradeBook = new KingdomTradeBook();
+			KingdomTradeRules.Normalize(TradeBook);
+			return KingdomTradeRules.BindExactIdentity(TradeBook, RealmId, settlements,
+				out Failure);
+		}
+
+		/// <summary>Preflights and atomically expands Trade's exact city topology before a later
+		/// city publishes any permanent marker or occupies Away.</summary>
+		internal bool TryExpandTradeIdentity(string NewSettlementId, out string Failure)
+		{
+			List<string> settlements;
+			if (!TryExactSettlementIds(RequirePublishedClaims: true, out settlements,
+				out Failure)) return false;
+			if (!KingdomIdentityRules.IsSettlementId(NewSettlementId) ||
+				settlements.Contains(NewSettlementId) ||
+				settlements.Count >= KingdomIdentityRules.MaxSettlements)
+			{
+				Failure = "The proposed city cannot extend the exact settlement set.";
+				return false;
+			}
+			settlements.Add(NewSettlementId);
+			settlements.Sort(StringComparer.Ordinal);
+			KingdomIdentityFault fault;
+			if (!KingdomIdentityRules.ValidateRealmTopology(RealmId, settlements, out fault))
+			{
+				Failure = "The proposed complete settlement set is invalid (" + fault + ").";
+				return false;
+			}
+			if (TradeBook == null)
+			{
+				Failure = "Trade identity has not been bound to the first city.";
+				return false;
+			}
+			KingdomTradeRules.Normalize(TradeBook);
+			return KingdomTradeRules.ExpandExactIdentity(TradeBook, RealmId, settlements,
+				out Failure);
+		}
+
+		internal bool TryStagePendingSettlementIdentity(string SettlementId,
+			string TransactionId, string ZoneId, string Authority, out string Failure)
+		{
+			Failure = null;
+			string expected;
+			KingdomIdentityFault fault;
+			if (!KingdomIdentityRules.TryMintSettlement(RealmId, TransactionId,
+					out expected, out fault) || expected != SettlementId ||
+				string.IsNullOrEmpty(ZoneId) || ZoneId.Length > 512 ||
+				string.IsNullOrEmpty(Authority) || Authority.Length > 4096)
+			{
+				Failure = "The pending city identity tuple is malformed.";
+				return false;
+			}
+			if (string.IsNullOrEmpty(PendingSettlementId) &&
+				string.IsNullOrEmpty(PendingSettlementTransactionId) &&
+				string.IsNullOrEmpty(PendingSettlementZoneId) &&
+				string.IsNullOrEmpty(PendingSettlementAuthority))
+			{
+				PendingSettlementId = SettlementId;
+				PendingSettlementTransactionId = TransactionId;
+				PendingSettlementZoneId = ZoneId;
+				PendingSettlementAuthority = Authority;
+			}
+			if (PendingSettlementId == SettlementId &&
+				PendingSettlementTransactionId == TransactionId &&
+				PendingSettlementZoneId == ZoneId &&
+				PendingSettlementAuthority == Authority) return true;
+			QuarantineIdentity("pending later-city identity carries a third value");
+			Failure = IdentityFault;
+			return false;
+		}
+
+		internal bool ClearPendingSettlementIdentity(string TransactionId,
+			string ZoneId, string Authority)
+		{
+			if (string.IsNullOrEmpty(PendingSettlementId) &&
+				string.IsNullOrEmpty(PendingSettlementTransactionId) &&
+				string.IsNullOrEmpty(PendingSettlementZoneId) &&
+				string.IsNullOrEmpty(PendingSettlementAuthority)) return true;
+			if (PendingSettlementTransactionId != TransactionId ||
+				PendingSettlementZoneId != ZoneId ||
+				PendingSettlementAuthority != Authority) return false;
+			PendingSettlementId = null;
+			PendingSettlementTransactionId = null;
+			PendingSettlementZoneId = null;
+			PendingSettlementAuthority = null;
+			return true;
+		}
+
+		private bool SettlementIdentityMatches(Simulation.City.KingdomCityBook Book,
+			int Version, KingdomIdentityOrigin Origin, string TransactionId,
+			long IdentityFoundedTick, string FirstClaimedZone, bool RequirePublishedClaim,
+			List<string> Claims, out KingdomIdentityFault Fault)
+		{
+			if (Book == null || string.IsNullOrEmpty(FirstClaimedZone) ||
+				(RequirePublishedClaim && (Claims == null ||
+				 !Claims.Contains(FirstClaimedZone))))
+			{
+				Fault = KingdomIdentityFault.InvalidEvidence;
+				return false;
+			}
+			return KingdomIdentityRules.ReproveSettlement(Book.SettlementId, RealmId,
+				Version, Origin, TransactionId, IdentityFoundedTick, FirstClaimedZone,
+				out Fault);
+		}
+
+		private bool FirstIdentityStateEmpty()
+		{
+			return string.IsNullOrEmpty(RealmId) && RealmIdentityVersion == 0 &&
+				RealmIdentityOrigin == KingdomIdentityOrigin.None &&
+				string.IsNullOrEmpty(RealmIdentityTransactionId) &&
+				string.IsNullOrEmpty(RealmIdentityLegacyFaction) &&
+				RealmIdentityFoundedTick == 0L && RealmIdentitySeedHigh == 0UL &&
+				RealmIdentitySeedLow == 0UL &&
+				string.IsNullOrEmpty(RealmIdentityFirstClaimedZone) &&
+				string.IsNullOrEmpty(IdentityFault) && SettlementIdentityVersion == 0 &&
+				SettlementIdentityOrigin == KingdomIdentityOrigin.None &&
+				string.IsNullOrEmpty(SettlementIdentityTransactionId) &&
+				SettlementIdentityFoundedTick == 0L &&
+				string.IsNullOrEmpty(SettlementIdentityFirstClaimedZone) &&
+				string.IsNullOrEmpty(SettlementIdentityLegacyId) &&
+				(City == null || string.IsNullOrEmpty(City.SettlementId)) && Away == null;
+		}
+
+		internal void QuarantineIdentity(string Failure)
+		{
+			if (!string.IsNullOrEmpty(IdentityFault)) return;
+			IdentityFault = string.IsNullOrEmpty(Failure)
+				? "immutable identity requires inspection"
+				: (Failure.Length > 512 ? Failure.Substring(0, 512) : Failure);
+			KingdomLog.Log("identity: quarantined: " + IdentityFault);
+		}
+
 		/// <summary>
 		/// Mints the realm's simulation seed, once, at founding.
 		/// <para>
 		/// LIVING-CITY-ARCHITECTURE W0 deferred this to W1 and the kernel says what it has to be:
 		/// "whatever mints it must domain-separate on realm incarnation". So it is a pure function
-		/// of the world seed, the realm's name and the tick the water was poured &mdash; two realms
+		/// of the world seed, the immutable realm id and the tick the water was poured &mdash; two realms
 		/// in one world differ, and the same realm across a reload does not. Re-minting is refused
 		/// rather than performed: a seed that moves is a history that did not happen.
 		/// </para>
 		/// </summary>
-		internal bool MintSimulationSeed(int WorldSeed, string RealmName, long FoundedTick)
+		internal bool MintSimulationSeed(int WorldSeed, string ExactRealmId, long FoundedTick)
 		{
 			if (SimulationSeedHigh != 0UL || SimulationSeedLow != 0UL)
 			{
 				return false;
 			}
 			Simulation.Kernel.KernelSeed128 seed;
-			Simulation.City.KingdomCityFault fault;
-			if (!Simulation.City.KingdomCityRules.TryMintSeed(WorldSeed, RealmName, FoundedTick, out seed, out fault))
+			Simulation.City.KingdomCityFault fault = Simulation.City.KingdomCityFault.None;
+			if (!KingdomIdentityRules.IsRealmId(ExactRealmId) ||
+				!Simulation.City.KingdomCityRules.TryMintSeed(WorldSeed, ExactRealmId,
+					FoundedTick, out seed, out fault))
 			{
 				KingdomLog.Log("seed: refused (" + fault + "); the realm runs unseeded until it is founded again");
 				return false;
 			}
 			SimulationSeedHigh = seed.High;
 			SimulationSeedLow = seed.Low;
-			KingdomLog.Log("seed: minted for " + RealmName + " at tick " + FoundedTick);
+			KingdomLog.Log("seed: minted for immutable realm " + ExactRealmId +
+				" at tick " + FoundedTick);
 			return true;
+		}
+
+		internal bool SimulationSeedMatches(int WorldSeed, string ExactRealmId,
+			long FoundedTick)
+		{
+			Simulation.Kernel.KernelSeed128 expected;
+			Simulation.City.KingdomCityFault fault;
+			return KingdomIdentityRules.IsRealmId(ExactRealmId) && FoundedTick >= 0L &&
+				Simulation.City.KingdomCityRules.TryMintSeed(WorldSeed, ExactRealmId,
+					FoundedTick, out expected, out fault) &&
+				SimulationSeedHigh == expected.High && SimulationSeedLow == expected.Low;
 		}
 
 		/// <summary>How many cities the realm holds, seat included.</summary>
@@ -1038,6 +1765,15 @@ namespace ThousandAndFirst
 		public bool Exile(string Deed, bool Forced, out string Refusal)
 		{
 			Refusal = "";
+			if (ExiledRealmArchive != null &&
+				(ExiledRealmArchive.Phase == KingdomRealmArchivePhase.TradeClosed ||
+				 ExiledRealmArchive.Phase == KingdomRealmArchivePhase.MirrorsPublished ||
+				 ExiledRealmArchive.Phase == KingdomRealmArchivePhase.ChronicleFrozen ||
+				 ExiledRealmArchive.Phase == KingdomRealmArchivePhase.ChronicleCleared ||
+				 ExiledRealmArchive.Phase == KingdomRealmArchivePhase.Resetting))
+			{
+				return ContinueExileTransition(out Refusal);
+			}
 			ExileVerdict verdict = KingdomExileRules.JudgeExile(Founded, Exiled, KingdomExileRules.ClassifyRegard(FounderRegard()), Forced);
 			if (verdict != ExileVerdict.Warranted)
 			{
@@ -1047,39 +1783,627 @@ namespace ThousandAndFirst
 			string realmName = KingdomDisplayName;
 			string deed = string.IsNullOrEmpty(Deed) ? KingdomExileRules.DeedClause(null) : Deed;
 			int cities = SettlementCount;
-			// Written while the realm still stands, so the entry keys to it rather than to the
-			// founder's unfounded interval, and so the book reads in the order the day happened.
-			KingdomChronicle.RecordDisputed(this, KingdomExileRules.ExileTelling(realmName, deed), KingdomExileRules.ExileRumour(realmName, KingdomChronicle.FounderName()), Accomplishment: true);
-			ExiledFactionName = KingdomFactionName;
-			ExiledDisplayName = KingdomDisplayName;
-			ExiledTick = The.Game.TimeTicks;
-			ExiledDeed = deed;
-			ExiledSeat = Capture();
-			ExiledAway = Away;
-			ExiledStandings = Standings;
-			// A manifest belongs to the realm that loaded it. Left alone it would outlive that
-			// realm on this singleton system, and the next realm's Charter would refuse to send
-			// water while quoting two cities that are no longer the founder's.
-			if (Manifest != null)
+			string chronicleRegistry;
+			string chronicleFault;
+			string archiveFailure;
+			List<string> exactSettlements;
+			long proposedTick = The.Game.TimeTicks;
+			if (!KingdomChronicle.TryCaptureRealmRegistry(out chronicleRegistry,
+				out chronicleFault, out archiveFailure) ||
+				!TryExactSettlementIds(RequirePublishedClaims: true,
+					out exactSettlements, out archiveFailure))
 			{
-				KingdomChronicle.Record(this, KingdomManifestRules.ManifestLapseDeed(Manifest.OriginName, Manifest.DestinationName, Manifest.Drams));
-				KingdomLog.Log("manifest: voided by exile, " + Manifest.Drams + " drams " + Manifest.OriginName + " -> " + Manifest.DestinationName);
-				Manifest = null;
+				Refusal = "The realm's exact history cannot be archived: " + archiveFailure + ".";
+				return false;
 			}
-			KingdomFactionName = null;
-			KingdomDisplayName = null;
-			// Seating a blank settlement clears every per-settlement field there is, so a field
-			// added later cannot be forgotten here.
-			Restore(new KingdomSettlement());
-			Away = null;
-			Standings = new Dictionary<string, int>();
-			RegardSpoken = (int)RealmRegard.Beloved;
-			ReturnAskedRegard = int.MinValue;
-			DoorClosedTold = false;
-			The.Player?.GetPart<KingdomCharterPart>()?.RemoveAbility();
+			// A save may cut after Trade atomically unbound the realm but before Core published its
+			// archive. Authenticate that exact receipt first and reuse its original close tick; the
+			// current wall clock is never substitute authority on retry.
+			if (TradeBook != null && !TradeBook.IdentityBound &&
+				!KingdomTradeRules.TryAuthenticateExactExileClosedTick(TradeBook, RealmId,
+					exactSettlements, out proposedTick, out archiveFailure))
+			{
+				Refusal = "The settled Trade exile receipt cannot be authenticated: " +
+					archiveFailure + ".";
+				return false;
+			}
+			if (!KingdomRealmArchive.TryCapture(this, chronicleRegistry, chronicleFault,
+				proposedTick, deed, out KingdomRealmArchive archive, out archiveFailure))
+			{
+				Refusal = "The realm graph cannot be captured exactly: " + archiveFailure + ".";
+				return false;
+			}
+			if (!ExactArchivedSettlements(archive.RealmId, archive.Seat, archive.Away,
+				archive.SettlementIds) || !archive.CurrentGraphMatches(this, out archiveFailure) ||
+				!TryExactSettlementIds(RequirePublishedClaims: true,
+					out List<string> preTradeSettlements, out archiveFailure) ||
+				!ExactStringRows(preTradeSettlements, exactSettlements) ||
+				!ExactStringRows(preTradeSettlements, archive.SettlementIds))
+			{
+				Refusal = "The complete realm graph or city identity set changed during archive preparation: " +
+					(archiveFailure ?? "exact topology differs") + ".";
+				return false;
+			}
+			// Trade is the first mutating boundary. Its detached preflight either refuses with
+			// the entire Core/Trade graph unchanged, or atomically replaces only TradeBook with
+			// the exact old-realm receipt. No Chronicle callback or exile mirror exists before it.
+			if (!KingdomTrade.TryOnExile(this, proposedTick, archive.RealmId,
+				exactSettlements, out long settledTick, out archiveFailure))
+			{
+				Refusal = "Trade could not close the exact realm; no realm state was changed: " +
+					archiveFailure;
+				return false;
+			}
+			if (settledTick < 0L || (TradeBook == null || TradeBook.IdentityBound) ||
+				!KingdomTradeRules.TryAuthenticateExactExileClosedTick(TradeBook, archive.RealmId,
+					exactSettlements, out long provedTick, out archiveFailure) ||
+				provedTick != settledTick || !archive.CurrentGraphMatches(this, out archiveFailure) ||
+				!TryExactSettlementIds(RequirePublishedClaims: true,
+					out List<string> postTradeSettlements, out archiveFailure) ||
+				!ExactStringRows(postTradeSettlements, exactSettlements) ||
+				!ExactStringRows(postTradeSettlements, archive.SettlementIds))
+			{
+				Refusal = "Trade closed, but its exact settled tick or unchanged Core graph cannot be reproved: " +
+					archiveFailure + ".";
+				return false;
+			}
+			archive.ClosedTick = settledTick;
+			archive.Phase = KingdomRealmArchivePhase.TradeClosed;
+			ExiledRealmArchive = archive;
+			if (!ContinueExileTransition(out Refusal))
+			{
+				return false;
+			}
 			KingdomLog.Log("exile: " + ExiledFactionName + " (" + cities + " cities, " + ExiledStandings.Count + " standings) put the founder out at regard " + ExiledRealmRegard() + "; deed=" + deed);
 			Popup.Show(KingdomExileRules.ExileNotice(realmName, deed, cities));
 			return true;
+		}
+
+		private bool ContinueExileTransition(out string Refusal)
+		{
+			Refusal = "";
+			KingdomRealmArchive archive = ExiledRealmArchive;
+			string failure = null;
+			if (archive == null || archive.Quarantined || !archive.Validate(out failure))
+			{
+				if (archive != null && !archive.Quarantined)
+					archive.Quarantine(failure ?? "exile mirrors differ from archive intent");
+				Refusal = "The exiled realm archive requires inspection.";
+				return false;
+			}
+			if (!TradeTransitionProofMatches(archive, RequireBound: false, out failure))
+			{
+				archive.Quarantine(failure ??
+					"Trade exile receipt no longer matches the archived close tick");
+				Refusal = "The settled Trade exile receipt requires inspection.";
+				return false;
+			}
+			if (archive.Phase != KingdomRealmArchivePhase.TradeClosed &&
+				archive.Phase != KingdomRealmArchivePhase.MirrorsPublished &&
+				archive.Phase != KingdomRealmArchivePhase.ChronicleFrozen &&
+				archive.Phase != KingdomRealmArchivePhase.ChronicleCleared &&
+				archive.Phase != KingdomRealmArchivePhase.Resetting &&
+				archive.Phase != KingdomRealmArchivePhase.Closed)
+			{
+				archive.Quarantine("persisted exile phase predates the transactional Trade boundary");
+				Refusal = "The exiled realm archive carries an impossible transition phase and requires inspection.";
+				return false;
+			}
+			if (!TryEnsureExileMirrors(archive,
+				AllowCanonicalMissing: archive.Phase == KingdomRealmArchivePhase.TradeClosed,
+				out failure) || !ExactExileMirrors(archive))
+			{
+				archive.Quarantine(failure ?? "exile mirrors differ from archive intent");
+				Refusal = "The exiled realm mirrors require inspection.";
+				return false;
+			}
+			if (archive.Phase == KingdomRealmArchivePhase.TradeClosed)
+				archive.Phase = KingdomRealmArchivePhase.MirrorsPublished;
+			if (archive.Phase == KingdomRealmArchivePhase.MirrorsPublished)
+			{
+				if (!DispatchExileChronicle(archive, out Refusal) ||
+					!archive.Validate(out failure))
+				{
+					if (string.IsNullOrEmpty(Refusal))
+						Refusal = "The realm chronicle could not freeze exactly: " + failure + ".";
+					return false;
+				}
+				// Publish the exact clear before/after tuple before the first registry setter.
+				// A save after either half of that two-key CAS resumes from these frozen bytes;
+				// it never rebuilds a shorter registry from the lone exile event.
+				archive.Phase = KingdomRealmArchivePhase.ChronicleFrozen;
+			}
+			if (archive.Phase == KingdomRealmArchivePhase.ChronicleFrozen)
+			{
+				if (!KingdomChronicle.TryClearRealmRegistry(archive.ChronicleRegistry,
+					archive.ChronicleRegistryFault, out failure))
+				{
+					Refusal = "The realm chronicle could not close exactly: " + failure + ".";
+					return false;
+				}
+				archive.Phase = KingdomRealmArchivePhase.ChronicleCleared;
+			}
+			if (archive.Phase == KingdomRealmArchivePhase.ChronicleCleared)
+			{
+				if (!DispatchExileAbilityRemoval(archive, out Refusal)) return false;
+				archive.Phase = KingdomRealmArchivePhase.Resetting;
+			}
+			if (archive.Phase == KingdomRealmArchivePhase.Resetting)
+			{
+				ResetCurrentRealmAfterExile();
+				archive.Phase = KingdomRealmArchivePhase.Closed;
+			}
+			return archive.Phase == KingdomRealmArchivePhase.Closed;
+		}
+
+		private bool DispatchExileChronicle(KingdomRealmArchive Archive,
+			out string Refusal)
+		{
+			string eventId = "taf:realm:exile:v1:" + Archive.RealmId;
+			string telling = KingdomExileRules.ExileTelling(Archive.DisplayName,
+				Archive.ExileDeed);
+			return DispatchRealmChronicle(Archive, Archive.ExileChronicle, eventId, telling,
+				"exile", out Refusal);
+		}
+
+		private bool DispatchRealmChronicle(KingdomRealmArchive Archive,
+			KingdomRealmCallbackReceipt Receipt, string EventId, string Telling,
+			string Context, out string Refusal)
+		{
+			Refusal = "";
+			if (!KingdomChronicleReceiptRules.TryFingerprint(EventId, Telling, true, null,
+				out string fingerprint) || !TryInspectChronicle(EventId, fingerprint,
+				out string registryHash, out bool present, out bool terminal, out bool lost,
+				out bool conflict, out string registry, out string registryFault,
+				out string otherRegistryHash, out KingdomChronicleReceipt eventReceipt))
+				return QuarantineReturn(Archive, Context + " Chronicle cannot be inspected", out Refusal);
+			string expected = EventId + "|" + fingerprint;
+			KingdomChronicleDeclaration declaration;
+			string frozenRegistryHash;
+			string frozenOtherHash;
+			string frozenRegistryFault;
+			string before;
+			if (Receipt.Phase == KingdomRealmCallbackPhase.None)
+			{
+				if (present)
+					return QuarantineReturn(Archive, Context +
+						" Chronicle row exists without outer declaration intent", out Refusal);
+				if (!KingdomChronicle.TryDeclareOnce(this, EventId, Telling, true, null,
+					out declaration) || declaration.Fingerprint != fingerprint ||
+					!TryCreateChronicleIntent(EventId, declaration, registryHash,
+						otherRegistryHash, registryFault, out before))
+					return QuarantineReturn(Archive, Context +
+						" Chronicle declaration cannot be frozen", out Refusal);
+				frozenRegistryHash = registryHash; frozenOtherHash = otherRegistryHash;
+				frozenRegistryFault = registryFault;
+			}
+			else if (!TryParseChronicleIntent(Receipt.BeforeEffect, EventId, Telling, true,
+				null, out declaration, out frozenRegistryHash, out frozenOtherHash,
+				out frozenRegistryFault))
+				return QuarantineReturn(Archive, Context +
+					" Chronicle declaration receipt is malformed", out Refusal);
+			else before = Receipt.BeforeEffect;
+			if (Receipt.Phase != KingdomRealmCallbackPhase.None && Receipt.AfterEffect != expected)
+				return QuarantineReturn(Archive,
+					Context + " Chronicle intent conflicts with frozen content", out Refusal);
+			if (!ChronicleDeclarationMatchesArchive(Archive, declaration, out string proofFailure) ||
+				conflict || otherRegistryHash != frozenOtherHash ||
+				!TryValidateChronicleLists(declaration, eventReceipt, present, terminal,
+					out string officialHash, out string outsiderHash, out bool listLost) ||
+				!KingdomRealmCallbackProofRules.ChronicleFaultMatches(present, terminal,
+					eventReceipt == null ? KingdomChronicleSinkDisposition.Pending :
+						eventReceipt.OfficialState,
+					eventReceipt == null ? KingdomChronicleSinkDisposition.Pending :
+						eventReceipt.OutsiderState,
+					eventReceipt == null ? KingdomChronicleSinkDisposition.Pending :
+						eventReceipt.JournalState, registryFault, frozenRegistryFault))
+				return QuarantineReturn(Archive, proofFailure ?? Context +
+					" Chronicle lists or unrelated rows reached a third state", out Refusal);
+			string observed = terminal ? ChronicleObserved(registryHash, otherRegistryHash,
+				officialHash, outsiderHash, eventReceipt) : null;
+			if (Receipt.Phase == KingdomRealmCallbackPhase.Settled)
+				return terminal && EnsureArchiveChronicleState(Archive, declaration,
+					eventReceipt, registry, registryFault, frozenRegistryHash, out Refusal) &&
+					SettledCallbackStillMatches(Archive, Receipt, observed, out Refusal);
+			if (!PrepareReturnCallback(Archive, Receipt, KingdomRealmCallbackScope.Chronicle,
+				before, expected,
+				out bool invokeAuthorized, out Refusal)) return false;
+			if (!present && (registryHash != frozenRegistryHash ||
+				officialHash != declaration.OfficialBefore ||
+				outsiderHash != declaration.OutsiderBefore))
+				return QuarantineReturn(Archive,
+					Context + " Chronicle reached a third prestate", out Refusal);
+			if (!terminal)
+			{
+				if (!present && !invokeAuthorized)
+					return QuarantineReturn(Archive,
+						Context + " Chronicle callback was interrupted before receipt publication",
+						out Refusal);
+				if (!Archive.CurrentGraphMatchesExceptChronicle(this,
+					out string graphFailure) || (!present &&
+					(!KingdomRealmArchive.TryCurrentGraphHash(this, out string graph,
+						out graphFailure) || graph != Receipt.BeforeGraph)))
+					return QuarantineReturn(Archive, graphFailure ??
+						Context + " Chronicle Core graph changed before callback", out Refusal);
+				List<string> officialReference = ChronicleEntries;
+				List<string> outsiderReference = OutsiderEntries;
+				if (!KingdomChronicle.RecordDeclaredOnce(this, declaration) ||
+					!ReferenceEquals(officialReference, ChronicleEntries) ||
+					!ReferenceEquals(outsiderReference, OutsiderEntries) ||
+					!Archive.CurrentGraphMatchesExceptChronicle(this, out graphFailure))
+				{
+					Refusal = "The " + Context + " telling remains in its exact Chronicle receipt.";
+					return false;
+				}
+				if (!TryInspectChronicle(EventId, fingerprint, out registryHash, out present,
+					out terminal, out lost, out conflict, out registry, out registryFault,
+					out otherRegistryHash, out eventReceipt) || conflict || !terminal ||
+					otherRegistryHash != frozenOtherHash ||
+					!TryValidateChronicleLists(declaration, eventReceipt, true, true,
+						out officialHash, out outsiderHash, out listLost) ||
+					!KingdomRealmCallbackProofRules.ChronicleFaultMatches(true, true,
+						eventReceipt.OfficialState, eventReceipt.OutsiderState,
+						eventReceipt.JournalState, registryFault, frozenRegistryFault))
+					return QuarantineReturn(Archive,
+						Context + " Chronicle callback lacks exact terminal proof", out Refusal);
+			}
+			if (!EnsureArchiveChronicleState(Archive, declaration, eventReceipt, registry,
+				registryFault, frozenRegistryHash, out Refusal)) return false;
+			observed = ChronicleObserved(registryHash, otherRegistryHash, officialHash,
+				outsiderHash, eventReceipt);
+			return SettleReturnCallback(Archive, Receipt, (listLost ||
+				eventReceipt.JournalState == KingdomChronicleSinkDisposition.Lost || lost)
+				? KingdomRealmCallbackDisposition.Lost
+				: KingdomRealmCallbackDisposition.Delivered,
+				observed, out Refusal);
+		}
+
+		private bool DispatchExileAbilityRemoval(KingdomRealmArchive Archive,
+			out string Refusal)
+		{
+			Refusal = "";
+			if (!TryObserveCharterAbility(out CharterAbilityObservation observation))
+				return QuarantineReturn(Archive, "charter removal graph cannot be bounded",
+					out Refusal);
+			KingdomRealmCallbackReceipt receipt = Archive.ExileAbility;
+			string before = receipt.Phase == KingdomRealmCallbackPhase.None
+				? AbilityEffect(observation) : receipt.BeforeEffect;
+			string after = receipt.Phase == KingdomRealmCallbackPhase.None
+				? AbilityIntent(observation.StableHash, observation.TargetTemplateHash,
+					observation.State == "player-absent" ? "player-absent" : "removed")
+				: receipt.AfterEffect;
+			if (!TryParseAbilityEffect(before, out string beforeFull, out string frozenStable,
+				out string frozenTemplate, out string beforeState) ||
+				!TryParseAbilityEffect(after, out string ignoredFull, out string expectedStable,
+					out string expectedTemplate, out string expectedState) ||
+				frozenStable != expectedStable || frozenTemplate != expectedTemplate ||
+				(expectedState != "removed" && expectedState != "player-absent"))
+				return QuarantineReturn(Archive, "charter removal intent is malformed",
+					out Refusal);
+			if (receipt.Phase == KingdomRealmCallbackPhase.Settled)
+				return observation.State == expectedState &&
+					observation.StableHash == frozenStable &&
+					SettledCallbackStillMatches(Archive, receipt,
+						AbilityEffect(observation), out Refusal);
+			if (!PrepareReturnCallback(Archive, receipt, KingdomRealmCallbackScope.Ability,
+				before, after,
+				out bool invokeAuthorized, out Refusal)) return false;
+			if (!TryObserveCharterAbility(out observation) ||
+				observation.StableHash != frozenStable)
+				return QuarantineReturn(Archive,
+					"charter removal changed unaffected ability or part graph", out Refusal);
+			string current = AbilityEffect(observation);
+			if (observation.State == expectedState)
+				return SettleReturnCallback(Archive, receipt,
+					before == current
+						? KingdomRealmCallbackDisposition.Skipped
+						: KingdomRealmCallbackDisposition.Delivered,
+					current, out Refusal);
+			if (!observation.Recoverable || current != before ||
+				observation.State != beforeState || observation.FullHash != beforeFull)
+				return QuarantineReturn(Archive, "charter removal found duplicate ability state",
+					out Refusal);
+			if (!invokeAuthorized)
+				return QuarantineReturn(Archive,
+					"charter removal was interrupted before exact poststate publication", out Refusal);
+			if (!TryCaptureCharterReferences(out CharterReferenceSnapshot charterReferences))
+				return QuarantineReturn(Archive, "charter removal reference graph is unbounded",
+					out Refusal);
+			The.Player?.GetPart<KingdomCharterPart>()?.RemoveAbility();
+			if (!TryObserveCharterAbility(out observation) ||
+				!CharterReferencesStillMatch(charterReferences, AllowPartCreation: false) ||
+				observation.StableHash != frozenStable || observation.State != expectedState)
+				return QuarantineReturn(Archive,
+					"charter removal callback did not settle exact absence", out Refusal);
+			return SettleReturnCallback(Archive, receipt,
+				KingdomRealmCallbackDisposition.Delivered,
+				AbilityEffect(observation), out Refusal);
+		}
+
+		private static bool CharterAbilityRemoved()
+		{
+			GameObject player = The.Player;
+			if (player == null) return true;
+			int partCount = 0;
+			KingdomCharterPart part = null;
+			for (int i = 0; i < player.PartsList.Count; i++)
+			{
+				IPart candidate = player.PartsList[i];
+				if (candidate != null && candidate.GetType().Name == "KingdomCharterPart")
+				{
+					partCount++;
+					if (candidate is KingdomCharterPart typed) part = typed;
+				}
+			}
+			if (partCount > 1 || (partCount == 1 && (part == null ||
+				!ReferenceEquals(part.ParentObject, player))) ||
+				(part != null && part.ActivatedAbilityID != Guid.Empty)) return false;
+			System.Collections.Generic.Dictionary<Guid, ActivatedAbilityEntry> abilities =
+				player.ActivatedAbilities?.AbilityByGuid;
+			if (abilities == null) return true;
+			foreach (KeyValuePair<Guid, ActivatedAbilityEntry> row in abilities)
+				if (row.Value != null && row.Value.Command == KingdomCharterPart.COMMAND) return false;
+			return true;
+		}
+
+		private bool ExactExileMirrors(KingdomRealmArchive Archive)
+		{
+			if (Archive == null || ExiledSeat == null || string.IsNullOrEmpty(ExiledFactionName)
+				|| ExiledStandings == null) return false;
+			string failure;
+			if (!Archive.ExactMirrors(ExiledFactionName, ExiledDisplayName, ExiledDeed,
+				ExiledTick, ExiledSeat, ExiledAway, ExiledStandings, out failure)) return false;
+			if (!ExactArchivedSettlements(Archive.RealmId, ExiledSeat, ExiledAway,
+				Archive.SettlementIds)) return false;
+			KingdomSettlement currentSeat;
+			try { currentSeat = Capture(); }
+			catch { return false; }
+			object[] currentRoots = { currentSeat, Away, Seceded, Standings, Bindings, Jobs,
+				ChronicleEntries, OutsiderEntries, Haul, CarryBook };
+			object[] mirrorRoots = { ExiledSeat, ExiledAway, ExiledStandings };
+			return KingdomArchivedSettlementCodec.DisjointMutableGraphs(currentRoots,
+				mirrorRoots, out failure);
+		}
+
+		/// <summary>Clears the published exile mirror by exact-or-cleared CAS. Each assignment may
+		/// be a save cut: a retry accepts the archive value or its canonical cleared value only.</summary>
+		private bool TryClearExileMirrors(KingdomRealmArchive Archive, out string Failure)
+		{
+			Failure = null;
+			if (Archive == null ||
+				!ClearMirrorString(ref ExiledFactionName, Archive.FactionName) ||
+				!ClearMirrorString(ref ExiledDisplayName, Archive.DisplayName) ||
+				!ClearSettlementMirror(ref ExiledSeat, Archive.Seat, out Failure) ||
+				!ClearSettlementMirror(ref ExiledAway, Archive.Away, out Failure) ||
+				!ClearStandingsMirror(Archive.Standings, out Failure) ||
+				!ClearMirrorString(ref ExiledDeed, Archive.ExileDeed) ||
+				!ClearMirrorTick(ref ExiledTick, Archive.ClosedTick))
+			{
+				Failure = Failure ?? "return cleanup mirror reached a third value";
+				return false;
+			}
+			return true;
+		}
+
+		private static bool ClearMirrorString(ref string Current, string Expected)
+		{
+			if (Current == null) return true;
+			if (!string.Equals(Current, Expected, StringComparison.Ordinal)) return false;
+			Current = null;
+			return true;
+		}
+
+		private static bool ClearMirrorTick(ref long Current, long Expected)
+		{
+			if (Current == 0L) return true;
+			if (Current != Expected) return false;
+			Current = 0L;
+			return true;
+		}
+
+		private static bool ClearSettlementMirror(ref KingdomSettlement Current,
+			KingdomSettlement Expected, out string Failure)
+		{
+			Failure = null;
+			if (Current == null) return true;
+			if (Expected == null ||
+				!KingdomArchivedSettlementCodec.ExactGraph(Expected, Current, out Failure) ||
+				!KingdomArchivedSettlementCodec.DisjointMutableGraphs(
+					new object[] { Expected }, new object[] { Current }, out Failure)) return false;
+			Current = null;
+			return true;
+		}
+
+		private bool ClearStandingsMirror(Dictionary<string, int> Expected,
+			out string Failure)
+		{
+			Failure = null;
+			if (ExiledStandings == null)
+			{
+				Failure = "return cleanup standings mirror is null";
+				return false;
+			}
+			if (ReferenceEquals(Expected, ExiledStandings))
+			{
+				Failure = "return cleanup standings mirror aliases archive";
+				return false;
+			}
+			if (ExiledStandings.Count == 0) return true;
+			if (Expected == null ||
+				!KingdomRealmArchive.ExactDictionary(Expected, ExiledStandings))
+			{
+				Failure = "return cleanup standings mirror reached a third value or alias";
+				return false;
+			}
+			ExiledStandings = new Dictionary<string, int>();
+			return true;
+		}
+
+		/// <summary>Completes only canonical missing writes from the authoritative TradeClosed
+		/// archive. A third scalar, partial collection, or non-equal graph is never overwritten.</summary>
+		private bool TryEnsureExileMirrors(KingdomRealmArchive Archive,
+			bool AllowCanonicalMissing, out string Failure)
+		{
+			Failure = null;
+			if (Archive == null) { Failure = "exile archive is absent"; return false; }
+			if (!EnsureMirrorString(ref ExiledFactionName, Archive.FactionName,
+				AllowCanonicalMissing) ||
+				!EnsureMirrorString(ref ExiledDisplayName, Archive.DisplayName,
+					AllowCanonicalMissing) ||
+				!EnsureMirrorString(ref ExiledDeed, Archive.ExileDeed, AllowCanonicalMissing) ||
+				!EnsureMirrorTick(ref ExiledTick, Archive.ClosedTick, AllowCanonicalMissing))
+			{
+				Failure = "exile scalar mirror reached a third value";
+				return false;
+			}
+			if (!EnsureSettlementMirror(ref ExiledSeat, Archive.Seat, AllowCanonicalMissing,
+				out Failure) || !EnsureSettlementMirror(ref ExiledAway, Archive.Away,
+					AllowCanonicalMissing, out Failure)) return false;
+			if (ExiledStandings == null ||
+				(AllowCanonicalMissing && ExiledStandings.Count == 0 && Archive.Standings.Count != 0))
+			{
+				if (!AllowCanonicalMissing)
+				{
+					Failure = "exile standings mirror is absent";
+					return false;
+				}
+				ExiledStandings = KingdomRealmArchive.CloneStandings(Archive.Standings);
+			}
+			else if (!KingdomRealmArchive.ExactDictionary(Archive.Standings, ExiledStandings))
+			{
+				Failure = "exile standings mirror reached a third value";
+				return false;
+			}
+			return true;
+		}
+
+		private static bool EnsureMirrorString(ref string Current, string Expected,
+			bool AllowCanonicalMissing)
+		{
+			if (string.Equals(Current, Expected, StringComparison.Ordinal)) return true;
+			if (!AllowCanonicalMissing || Current != null) return false;
+			Current = Expected;
+			return true;
+		}
+
+		private static bool EnsureMirrorTick(ref long Current, long Expected,
+			bool AllowCanonicalMissing)
+		{
+			if (Current == Expected) return true;
+			if (!AllowCanonicalMissing || Current != 0L) return false;
+			Current = Expected;
+			return true;
+		}
+
+		private static bool EnsureSettlementMirror(ref KingdomSettlement Current,
+			KingdomSettlement Expected, bool AllowCanonicalMissing, out string Failure)
+		{
+			Failure = null;
+			if (Expected == null) return Current == null;
+			if (Current == null)
+			{
+				if (!AllowCanonicalMissing)
+				{
+					Failure = "exile settlement mirror is absent";
+					return false;
+				}
+				return KingdomArchivedSettlementCodec.TryClone(Expected, out Current, out Failure);
+			}
+			return KingdomArchivedSettlementCodec.ExactGraph(Expected, Current, out Failure);
+		}
+
+		private static bool ExactArchivedSettlements(string RealmId,
+			KingdomSettlement Seat, KingdomSettlement Away,
+			IList<string> ExpectedIds = null)
+		{
+			List<string> ids = new List<string>();
+			if (!ArchivedSettlementMatches(RealmId, Seat, out string seatId))
+				return false;
+			ids.Add(seatId);
+			if (Away != null)
+			{
+				if (!ArchivedSettlementMatches(RealmId, Away, out string awayId))
+					return false;
+				ids.Add(awayId);
+			}
+			KingdomIdentityFault fault;
+			if (!KingdomIdentityRules.ValidateRealmTopology(RealmId, ids, out fault)) return false;
+			ids.Sort(StringComparer.Ordinal);
+			if (ExpectedIds == null || ids.Count != ExpectedIds.Count) return ExpectedIds == null;
+			for (int i = 0; i < ids.Count; i++)
+				if (!string.Equals(ids[i], ExpectedIds[i], StringComparison.Ordinal)) return false;
+			return true;
+		}
+
+		private static bool ArchivedSettlementMatches(string RealmId,
+			KingdomSettlement Settlement, out string SettlementId)
+		{
+			SettlementId = Settlement?.City?.SettlementId;
+			KingdomIdentityFault fault;
+			return Settlement != null && Settlement.ClaimedZones != null &&
+				Settlement.ClaimedZones.Contains(Settlement.SettlementIdentityFirstClaimedZone) &&
+				KingdomIdentityRules.ReproveSettlement(SettlementId, RealmId,
+					Settlement.SettlementIdentityVersion, Settlement.SettlementIdentityOrigin,
+					Settlement.SettlementIdentityTransactionId,
+					Settlement.SettlementIdentityFoundedTick,
+					Settlement.SettlementIdentityFirstClaimedZone, out fault) &&
+				Settlement.LifecycleBook != null && !Settlement.LifecycleBook.LegacyIdentity &&
+				string.Equals(Settlement.LifecycleBook.SettlementId, SettlementId,
+					StringComparison.Ordinal) &&
+				KingdomLifecycleRules.CanOwnAuthority(Settlement.LifecycleBook);
+		}
+
+		private void ResetCurrentRealmAfterExile()
+		{
+			KingdomFactionName = null;
+			KingdomDisplayName = null;
+			Restore(new KingdomSettlement());
+			Away = null;
+			Standings = new Dictionary<string, int>();
+			RealmId = null;
+			RealmIdentityVersion = 0;
+			RealmIdentityOrigin = KingdomIdentityOrigin.None;
+			RealmIdentityTransactionId = null;
+			RealmIdentityLegacyFaction = null;
+			RealmIdentityFoundedTick = 0L;
+			RealmIdentitySeedHigh = 0UL;
+			RealmIdentitySeedLow = 0UL;
+			RealmIdentityFirstClaimedZone = null;
+			IdentityFault = null;
+			PendingSettlementId = null;
+			PendingSettlementTransactionId = null;
+			PendingSettlementZoneId = null;
+			PendingSettlementAuthority = null;
+			SimulationSeedHigh = 0UL;
+			SimulationSeedLow = 0UL;
+			Bindings = new Simulation.City.KingdomBindingRegistry();
+			ResidentCounter = 0;
+			Jobs = new Simulation.City.KingdomJobRegistry();
+			LastSliceTick = 0L;
+			ReifyTick = 0L;
+			ReifyThirdsSpent = 0;
+			ReifyHeavySpent = 0;
+			ReifyQuietUntilTick = 0L;
+			DedicationCounter = 0;
+			ChronicleEntries = new List<string>();
+			OutsiderEntries = new List<string>();
+			RegardSpoken = (int)RealmRegard.Beloved;
+			Dissent = 0;
+			DissentSpoken = 0;
+			LastDissentTick = 0L;
+			DeclaredCreed = null;
+			DishName = null;
+			DishText = null;
+			DishStaple = null;
+			DishSource = null;
+			LastRiteTick = 0L;
+			LastSoulRiteTick = 0L;
+			Seceded = null;
+			SecededTick = 0L;
+			Haul = null;
+			CarryBook = new KingdomCarryBook();
+			ReturnAskedRegard = int.MinValue;
+			DoorClosedTold = false;
 		}
 
 		/// <summary>
@@ -1100,6 +2424,11 @@ namespace ThousandAndFirst
 		public bool TryReturn(Zone Site, out string Refusal)
 		{
 			Refusal = "";
+			if (ExiledRealmArchive != null &&
+				(ExiledRealmArchive.Phase == KingdomRealmArchivePhase.Restoring ||
+				 ExiledRealmArchive.Phase == KingdomRealmArchivePhase.Restored ||
+				 ExiledRealmArchive.Phase == KingdomRealmArchivePhase.ReturnCleaning))
+				return ContinueReturnTransition(Site, out Refusal);
 			int regard = ExiledRealmRegard();
 			ReturnVerdict verdict = KingdomExileRules.JudgeReturn(Exiled, Founded, ExiledRealmKeptGround, Site != null && ExiledRealmHolds(Site.ZoneID), regard);
 			if (verdict != ReturnVerdict.Allowed)
@@ -1107,47 +2436,1679 @@ namespace ThousandAndFirst
 				Refusal = KingdomExileRules.ReturnRefusal(verdict, ExiledDisplayName, KingdomDisplayName);
 				return false;
 			}
-			// A remembered realm with no seat cannot be restored into. Promoting its other city
-			// beats writing a null over the flat fields; only a save mangled elsewhere gets here.
-			if (ExiledSeat == null)
+			KingdomRealmArchive archive = ExiledRealmArchive;
+			string failure = null;
+			if (archive == null || archive.Phase != KingdomRealmArchivePhase.Closed ||
+				archive.Quarantined || !archive.Validate(out failure) ||
+				!ExactExileMirrors(archive))
 			{
-				ExiledSeat = ExiledAway ?? new KingdomSettlement();
-				ExiledAway = null;
+				if (archive != null && !archive.Quarantined)
+					archive.Quarantine(failure ?? "return mirrors differ from archived identity");
+				Refusal = "The exiled realm archive cannot be reproved and requires inspection.";
+				return false;
 			}
-			int restored = KingdomExileRules.RegardOnReturn(regard);
-			KingdomFactionName = ExiledFactionName;
-			KingdomDisplayName = ExiledDisplayName;
-			Restore(ExiledSeat);
-			Away = ExiledAway;
-			Standings = ExiledStandings;
-			ExiledFactionName = null;
-			ExiledDisplayName = null;
-			ExiledSeat = null;
-			ExiledAway = null;
-			ExiledStandings = new Dictionary<string, int>();
-			ExiledDeed = null;
-			ExiledTick = 0L;
+			if (!CurrentRealmIsCanonicalBlank(archive))
+			{
+				archive.Quarantine("return found a third current-realm identity before intent");
+				Refusal = "A different current realm state blocks exact return.";
+				return false;
+			}
+			if (TradeBook == null || TradeBook.IdentityBound ||
+				!KingdomTradeRules.TryAuthenticateExactExileClosedTick(TradeBook, archive.RealmId,
+				archive.SettlementIds, out long provedClosedTick, out failure) ||
+				provedClosedTick != archive.ClosedTick)
+			{
+				Refusal = "The settled Trade exile receipt cannot authorize return: " +
+					(failure ?? "close tick differs") + ".";
+				return false;
+			}
+			archive.ReturnRegard = KingdomExileRules.RegardOnReturn(regard);
+			archive.Phase = KingdomRealmArchivePhase.Restoring;
+			return ContinueReturnTransition(Site, out Refusal);
+		}
+
+		private bool ContinueReturnTransition(Zone Site, out string Refusal)
+		{
+			Refusal = "";
+			KingdomRealmArchive archive = ExiledRealmArchive;
+			string failure = null;
+			if (archive == null || archive.Quarantined ||
+				(archive.Phase != KingdomRealmArchivePhase.Restoring &&
+				 archive.Phase != KingdomRealmArchivePhase.Restored &&
+				 archive.Phase != KingdomRealmArchivePhase.ReturnCleaning) ||
+				!archive.Validate(out failure) ||
+				archive.ReturnRegard == int.MinValue)
+			{
+				if (archive != null && !archive.Quarantined)
+					archive.Quarantine(failure ?? "return receipt or exact mirrors are malformed");
+				Refusal = "The exiled realm return receipt requires inspection.";
+				return false;
+			}
+			if (archive.Phase == KingdomRealmArchivePhase.ReturnCleaning)
+			{
+				if (!archive.CurrentGraphMatches(this, out failure) ||
+					!TradeTransitionProofMatches(archive, RequireBound: true, out failure))
+					return QuarantineReturn(archive, failure ??
+						"return cleanup authority no longer matches", out Refusal);
+				return FinishReturnCleanup(archive, out Refusal);
+			}
+			if (!ExactExileMirrors(archive))
+				return QuarantineReturn(archive, "return mirrors differ from archive intent",
+					out Refusal);
+			if (TradeBook == null || TradeBook.IdentityBound ||
+				!KingdomTradeRules.TryAuthenticateExactExileClosedTick(TradeBook, archive.RealmId,
+				archive.SettlementIds, out long provedClosedTick, out failure) ||
+				provedClosedTick != archive.ClosedTick)
+				return QuarantineReturn(archive, failure ??
+					"Trade exile receipt no longer matches the archived close tick", out Refusal);
+			if (archive.Phase == KingdomRealmArchivePhase.Restoring)
+			{
+				if (!RestoreArchivedRealmCore(archive, out failure) ||
+					!KingdomChronicle.TryRestoreRealmRegistry(archive.ChronicleRegistry,
+					archive.ChronicleRegistryFault, out failure) ||
+					!TryBindTradeIdentity(out failure) ||
+					!TradeTransitionProofMatches(archive, RequireBound: true, out failure) ||
+					!CurrentRealmMatchesArchive(archive))
+				{
+					Refusal = "The archived realm did not restore exactly: " + failure + ".";
+					return false;
+				}
+				archive.Phase = KingdomRealmArchivePhase.Restored;
+			}
+			return FinishReturnedRealm(Site, archive, out Refusal);
+		}
+
+		private bool FinishReturnedRealm(Zone Site, KingdomRealmArchive Archive,
+			out string Refusal)
+		{
+			Refusal = "";
+			if (!DispatchReturnChronicle(Archive, out Refusal) ||
+				!DispatchReturnReputation(Archive, out Refusal) ||
+				!DispatchReturnFeelings(Archive, out Refusal) ||
+				!DispatchReturnSeat(Site, Archive, out Refusal) ||
+				!DispatchReturnAbility(Archive, out Refusal)) return false;
+			string factionName = KingdomFactionName;
+			string seatName = SeatName;
+			string displayName = KingdomDisplayName;
+			int restored = Archive.ReturnRegard;
+			Archive.Phase = KingdomRealmArchivePhase.ReturnCleaning;
+			return FinishReturnCleanup(Archive, out Refusal, factionName, seatName,
+				displayName, restored);
+		}
+
+		private bool FinishReturnCleanup(KingdomRealmArchive Archive, out string Refusal,
+			string FactionName = null, string SeatNameValue = null,
+			string DisplayName = null, int Restored = int.MinValue)
+		{
+			Refusal = "";
+			if (Archive == null || Archive.Phase != KingdomRealmArchivePhase.ReturnCleaning)
+				return false;
+			if (FactionName == null) FactionName = KingdomFactionName;
+			if (SeatNameValue == null) SeatNameValue = SeatName;
+			if (DisplayName == null) DisplayName = KingdomDisplayName;
+			if (Restored == int.MinValue) Restored = Archive.ReturnRegard;
+			if (!TryClearExileMirrors(Archive, out string failure))
+				return QuarantineReturn(Archive, failure, out Refusal);
 			ReturnAskedRegard = int.MinValue;
 			DoorClosedTold = false;
-			RegardSpoken = (int)KingdomExileRules.ClassifyRegard(restored);
-			Faction realm = Factions.GetIfExists(KingdomFactionName);
-			if (realm != null)
-			{
-				// Set, never Modify. Modify is an award pipeline: it fires pre- and post-change
-				// events, queues sounds, can pop up, and can file a journal accomplishment and a
-				// persistent BecameLoved property. Being let back through a gate is a civic act,
-				// and the mod says so in its own words rather than through that machinery.
-				The.Game.PlayerReputation.Set(realm, restored);
-			}
-			ReassertFeelings();
-			// The seat is whichever city was seated on the day of the expulsion; a founder who
-			// walked back into the other one is corrected here rather than on the next zone change.
-			TrySeat(Site);
-			The.Player?.RequirePart<KingdomCharterPart>().EnsureAbility();
-			KingdomChronicle.RecordDisputed(this, KingdomExileRules.ReturnTelling(KingdomDisplayName), KingdomExileRules.ReturnRumour(KingdomDisplayName, KingdomChronicle.FounderName()), Accomplishment: true);
-			KingdomLog.Log("return: " + KingdomFactionName + " took the founder back at regard " + regard + " -> " + restored + "; seated " + SeatName);
-			Popup.Show(KingdomExileRules.ReturnNotice(KingdomDisplayName, SeatName));
+			ExiledRealmArchive = null;
+			KingdomLog.Log("return: " + FactionName + " took the founder back -> " + Restored
+				+ "; seated " + SeatNameValue);
+			Popup.Show(KingdomExileRules.ReturnNotice(DisplayName, SeatNameValue));
 			return true;
+		}
+
+		private bool PrepareReturnCallback(KingdomRealmArchive Archive,
+			KingdomRealmCallbackReceipt Receipt, KingdomRealmCallbackScope Scope,
+			string BeforeEffect, string AfterEffect,
+			out bool InvokeAuthorized, out string Refusal,
+			int BeforeStamp = int.MinValue, int AfterStamp = int.MinValue)
+		{
+			InvokeAuthorized = false;
+			Refusal = "";
+			if (Archive == null || Receipt == null || Scope == KingdomRealmCallbackScope.None ||
+				BeforeEffect == null || AfterEffect == null ||
+				BeforeEffect.Length > KingdomRealmCallbackReceipt.MaxEffectChars ||
+				AfterEffect.Length > KingdomRealmCallbackReceipt.MaxEffectChars)
+				return QuarantineReturn(Archive, "callback intent is unbounded", out Refusal);
+			if (Receipt.Phase == KingdomRealmCallbackPhase.None)
+			{
+				if (!Archive.CurrentGraphMatches(this, out string failure) ||
+					!ExactExileMirrors(Archive) ||
+					!TradeTransitionProofMatches(Archive,
+						RequireBound: ReturnCallbackTradeBound(Archive), out failure) ||
+					!KingdomRealmArchive.TryCurrentGraphHash(this, out string graph, out failure) ||
+					!Archive.TryAuthorityHash(Receipt, Scope, out string archiveGraph, out failure))
+					return QuarantineReturn(Archive, failure, out Refusal);
+				Receipt.Scope = Scope;
+				Receipt.BeforeGraph = graph;
+				Receipt.BeforeArchiveGraph = archiveGraph;
+				Receipt.BeforeEffect = BeforeEffect;
+				Receipt.AfterEffect = AfterEffect;
+				Receipt.BeforeStamp = BeforeStamp;
+				Receipt.AfterStamp = AfterStamp;
+				Receipt.Phase = KingdomRealmCallbackPhase.Intent;
+			}
+			if (!Receipt.Validate() || Receipt.Scope != Scope || Receipt.BeforeEffect != BeforeEffect ||
+				Receipt.AfterEffect != AfterEffect || Receipt.BeforeStamp != BeforeStamp ||
+				Receipt.AfterStamp != AfterStamp)
+				return QuarantineReturn(Archive, "callback receipt conflicts with frozen intent",
+					out Refusal);
+			if (Receipt.Phase == KingdomRealmCallbackPhase.Intent)
+			{
+				if (!Archive.CurrentGraphMatches(this, out string failure) ||
+					!ExactExileMirrors(Archive) ||
+					!TradeTransitionProofMatches(Archive,
+						RequireBound: ReturnCallbackTradeBound(Archive), out failure) ||
+					!KingdomRealmArchive.TryCurrentGraphHash(this, out string graph, out failure) ||
+					!Archive.TryAuthorityHash(Receipt, Scope, out string archiveGraph, out failure) ||
+					!string.Equals(graph, Receipt.BeforeGraph, StringComparison.Ordinal) ||
+					!string.Equals(archiveGraph, Receipt.BeforeArchiveGraph,
+						StringComparison.Ordinal))
+					return QuarantineReturn(Archive,
+						failure ?? "callback graph changed before attempt", out Refusal);
+				Receipt.Phase = KingdomRealmCallbackPhase.Attempting;
+				InvokeAuthorized = true;
+			}
+			return true;
+		}
+
+		private bool SettleReturnCallback(KingdomRealmArchive Archive,
+			KingdomRealmCallbackReceipt Receipt, KingdomRealmCallbackDisposition Disposition,
+			string ObservedEffect, out string Refusal, bool SeatSwapped = false)
+		{
+			Refusal = "";
+			string failure = null;
+			string graph = null;
+			string archiveGraph = null;
+			if (Receipt == null || Receipt.Phase != KingdomRealmCallbackPhase.Attempting ||
+				Disposition == KingdomRealmCallbackDisposition.None ||
+				ObservedEffect == null ||
+				ObservedEffect.Length > KingdomRealmCallbackReceipt.MaxEffectChars ||
+				!(SeatSwapped ? Archive.CurrentGraphMatchesAfterSeat(this, true, out failure) :
+					Archive.CurrentGraphMatches(this, out failure)) ||
+				!ExactExileMirrors(Archive) ||
+				!TradeTransitionProofMatches(Archive,
+					RequireBound: ReturnCallbackTradeBound(Archive), out failure) ||
+				!KingdomRealmArchive.TryCurrentGraphHash(this, out graph, out failure) ||
+				!Archive.TryAuthorityHash(Receipt, Receipt.Scope, out archiveGraph, out failure) ||
+				!string.Equals(archiveGraph, Receipt.BeforeArchiveGraph,
+					StringComparison.Ordinal) ||
+				((Receipt.Scope == KingdomRealmCallbackScope.Ability ||
+				  Receipt.Scope == KingdomRealmCallbackScope.Reputation) &&
+				 !string.Equals(graph, Receipt.BeforeGraph, StringComparison.Ordinal)))
+				return QuarantineReturn(Archive, failure ?? "callback could not settle exact graph",
+					out Refusal);
+			Receipt.AfterGraph = graph;
+			Receipt.AfterArchiveGraph = archiveGraph;
+			Receipt.ObservedEffect = ObservedEffect;
+			Receipt.Disposition = Disposition;
+			Receipt.Phase = KingdomRealmCallbackPhase.Settled;
+			return Receipt.Validate();
+		}
+
+		private bool SettledCallbackStillMatches(KingdomRealmArchive Archive,
+			KingdomRealmCallbackReceipt Receipt, string ObservedEffect, out string Refusal)
+		{
+			Refusal = "";
+			string failure = null;
+			if (Receipt == null || !Receipt.Validate() ||
+				Receipt.Phase != KingdomRealmCallbackPhase.Settled ||
+				!string.Equals(ObservedEffect, Receipt.ObservedEffect, StringComparison.Ordinal) ||
+				!Archive.CurrentGraphMatches(this, out failure) ||
+				!ExactExileMirrors(Archive) ||
+				!TradeTransitionProofMatches(Archive,
+					RequireBound: ReturnCallbackTradeBound(Archive), out failure) ||
+				!KingdomRealmArchive.TryCurrentGraphHash(this, out string graph, out failure) ||
+				!Archive.TryAuthorityHash(Receipt, Receipt.Scope, out string archiveGraph, out failure) ||
+				!string.Equals(graph, Receipt.AfterGraph, StringComparison.Ordinal) ||
+				!string.Equals(archiveGraph, Receipt.AfterArchiveGraph,
+					StringComparison.Ordinal))
+				return QuarantineReturn(Archive, failure ??
+					"settled callback proof no longer matches exact poststate", out Refusal);
+			return true;
+		}
+
+		private bool TradeTransitionProofMatches(KingdomRealmArchive Archive,
+			bool RequireBound, out string Failure)
+		{
+			Failure = null;
+			if (Archive == null || TradeBook == null ||
+				!KingdomTradeRules.TryAuthenticateExactExileClosedTick(TradeBook, Archive.RealmId,
+					Archive.SettlementIds, out long closedTick, out Failure) ||
+				closedTick != Archive.ClosedTick)
+			{
+				Failure = Failure ?? "Trade exile receipt differs from archive";
+				return false;
+			}
+			if (!RequireBound)
+			{
+				if (!TradeBook.IdentityBound) return true;
+				Failure = "Trade must remain unbound before returned realm publication";
+				return false;
+			}
+			if (!KingdomTradeRules.BookUsable(TradeBook) ||
+				!string.Equals(TradeBook.RealmId, Archive.RealmId, StringComparison.Ordinal) ||
+				TradeBook.SettlementIds == null ||
+				TradeBook.SettlementIds.Count != Archive.SettlementIds.Count)
+			{
+				Failure = "Trade is not bound to the returned exact realm topology";
+				return false;
+			}
+			for (int i = 0; i < Archive.SettlementIds.Count; i++)
+				if (!string.Equals(TradeBook.SettlementIds[i], Archive.SettlementIds[i],
+					StringComparison.Ordinal))
+				{
+					Failure = "Trade returned settlement topology differs from archive";
+					return false;
+				}
+			return true;
+		}
+
+		private static bool ExactStringRows(List<string> Left, List<string> Right)
+		{
+			if (Left == null || Right == null || Left.Count != Right.Count) return false;
+			for (int i = 0; i < Left.Count; i++)
+				if (!string.Equals(Left[i], Right[i], StringComparison.Ordinal)) return false;
+			return true;
+		}
+
+		private static bool ReturnCallbackTradeBound(KingdomRealmArchive Archive)
+		{
+			return Archive != null &&
+				(Archive.Phase == KingdomRealmArchivePhase.Restored ||
+				 Archive.Phase == KingdomRealmArchivePhase.ReturnCleaning);
+		}
+
+		private bool DispatchReturnReputation(KingdomRealmArchive Archive, out string Refusal)
+		{
+			Refusal = "";
+			Faction realm = Factions.GetIfExists(Archive.FactionName);
+			if (!TryReputationEffect(realm, Archive, Desired: false, out string before) ||
+				!TryReputationEffect(realm, Archive, Desired: true, out string after))
+				return QuarantineReturn(Archive, "reputation graph cannot be bounded", out Refusal);
+			KingdomRealmCallbackReceipt receipt = Archive.ReturnReputation;
+			if (receipt.Phase == KingdomRealmCallbackPhase.Settled)
+				return TryReputationEffect(realm, Archive, Desired: false, out string settled) &&
+					string.Equals(settled, receipt.AfterEffect,
+					StringComparison.Ordinal) && CurrentRealmMatchesArchive(Archive) &&
+					SettledCallbackStillMatches(Archive, receipt, settled, out Refusal);
+			if (receipt.Phase != KingdomRealmCallbackPhase.None)
+			{
+				before = receipt.BeforeEffect; after = receipt.AfterEffect;
+			}
+			if (!PrepareReturnCallback(Archive, receipt, KingdomRealmCallbackScope.Reputation,
+				before, after,
+				out bool invokeAuthorized, out Refusal)) return false;
+			if (!TryReputationEffect(realm, Archive, Desired: false, out string current))
+				return QuarantineReturn(Archive, "reputation graph cannot be inspected", out Refusal);
+			if (current == after)
+				return SettleReturnCallback(Archive, receipt,
+					before == after ? KingdomRealmCallbackDisposition.Skipped :
+					KingdomRealmCallbackDisposition.Delivered, current, out Refusal);
+			if (current != before)
+				return QuarantineReturn(Archive, "reputation callback reached a third value",
+					out Refusal);
+			if (realm == null)
+				return SettleReturnCallback(Archive, receipt,
+					KingdomRealmCallbackDisposition.Skipped, current, out Refusal);
+			if (!invokeAuthorized)
+				return QuarantineReturn(Archive,
+					"reputation callback was interrupted before exact poststate publication",
+					out Refusal);
+			XRLGame gameReference = The.Game;
+			Reputation reputationReference = gameReference.PlayerReputation;
+			Dictionary<string, float> valuesReference = reputationReference.ReputationValues;
+			Dictionary<string, string> ranksReference = reputationReference.FactionRanks;
+			List<WorshipTracking> worshipReference = reputationReference.WorshipTracking;
+			List<WorshipTracking> blasphemyReference = reputationReference.BlasphemyTracking;
+			Dictionary<string, int> feelingReference = realm.FactionFeeling;
+			The.Game.PlayerReputation.Set(realm, Archive.ReturnRegard);
+			if (!ReferenceEquals(The.Game, gameReference) ||
+				!ReferenceEquals(The.Game.PlayerReputation, reputationReference) ||
+				!ReferenceEquals(reputationReference.ReputationValues, valuesReference) ||
+				!ReferenceEquals(reputationReference.FactionRanks, ranksReference) ||
+				!ReferenceEquals(reputationReference.WorshipTracking, worshipReference) ||
+				!ReferenceEquals(reputationReference.BlasphemyTracking, blasphemyReference) ||
+				!ReferenceEquals(Factions.GetIfExists(Archive.FactionName), realm) ||
+				!ReferenceEquals(realm.FactionFeeling, feelingReference) ||
+				!TryReputationEffect(realm, Archive, Desired: false, out current) || current != after)
+				return QuarantineReturn(Archive, "reputation callback did not publish exact target",
+					out Refusal);
+			return SettleReturnCallback(Archive, receipt,
+				KingdomRealmCallbackDisposition.Delivered, current, out Refusal);
+		}
+
+		private static bool TryReputationEffect(Faction Realm, KingdomRealmArchive Archive,
+			bool Desired, out string Effect)
+		{
+			Effect = null;
+			if (Realm == null) { Effect = "absent"; return true; }
+			try
+			{
+				Reputation reputation = The.Game?.PlayerReputation;
+				if (reputation?.ReputationValues == null || reputation.FactionRanks == null ||
+					reputation.WorshipTracking == null || reputation.BlasphemyTracking == null ||
+					Realm.FactionFeeling == null || reputation.ReputationValues.Count > 4096 ||
+					reputation.FactionRanks.Count > 4096 ||
+					reputation.WorshipTracking.Count > 4096 ||
+					reputation.BlasphemyTracking.Count > 4096 || Realm.FactionFeeling.Count > 4096 ||
+					!string.Equals(Realm.Name, Archive.FactionName, StringComparison.Ordinal)) return false;
+				using (System.IO.MemoryStream stream = new System.IO.MemoryStream())
+				using (System.IO.BinaryWriter writer = new System.IO.BinaryWriter(stream,
+					new System.Text.UTF8Encoding(false, true), true))
+				{
+					writer.Write(0x54525031); // TRP1
+					WriteProofString(writer, Realm.Name); writer.Write(Realm.ID);
+					List<string> valueKeys = new List<string>(reputation.ReputationValues.Keys);
+					if (!valueKeys.Contains(Archive.FactionName)) valueKeys.Add(Archive.FactionName);
+					valueKeys.Sort(StringComparer.Ordinal); writer.Write(valueKeys.Count);
+					for (int i = 0; i < valueKeys.Count; i++)
+					{
+						WriteProofString(writer, valueKeys[i]);
+						if (Desired && valueKeys[i] == Archive.FactionName)
+							writer.Write((float)Archive.ReturnRegard);
+						else if (reputation.ReputationValues.TryGetValue(valueKeys[i], out float value))
+							writer.Write(value);
+						else writer.Write(float.NaN);
+					}
+					WriteProofStringDictionary(writer, reputation.FactionRanks);
+					WriteWorshipProof(writer, reputation.WorshipTracking);
+					WriteWorshipProof(writer, reputation.BlasphemyTracking);
+					List<string> feelingKeys = new List<string>(Realm.FactionFeeling.Keys);
+					if (!feelingKeys.Contains("Player")) feelingKeys.Add("Player");
+					feelingKeys.Sort(StringComparer.Ordinal); writer.Write(feelingKeys.Count);
+					for (int i = 0; i < feelingKeys.Count; i++)
+					{
+						WriteProofString(writer, feelingKeys[i]);
+						if (Desired && feelingKeys[i] == "Player")
+							writer.Write(Reputation.GetFeeling((float)Archive.ReturnRegard));
+						else if (Realm.FactionFeeling.TryGetValue(feelingKeys[i], out int value))
+							writer.Write(value);
+						else writer.Write(int.MinValue);
+					}
+					return FinishProofHash(stream, writer, out Effect);
+				}
+			}
+			catch { return false; }
+		}
+
+		private bool DispatchReturnSeat(Zone Site, KingdomRealmArchive Archive,
+			out string Refusal)
+		{
+			Refusal = "";
+			string before = SeatEffect(City?.SettlementId, Away?.City?.SettlementId);
+			bool shouldSwap = Site != null && Archive.Away != null &&
+				Archive.Away.ClaimedZones != null && Archive.Away.ClaimedZones.Contains(Site.ZoneID) &&
+				(Archive.Seat.ClaimedZones == null || !Archive.Seat.ClaimedZones.Contains(Site.ZoneID));
+			string after = shouldSwap
+				? SeatEffect(Archive.Away.City?.SettlementId, Archive.Seat.City?.SettlementId)
+				: SeatEffect(Archive.Seat.City?.SettlementId, Archive.Away?.City?.SettlementId);
+			KingdomRealmCallbackReceipt receipt = Archive.ReturnSeat;
+			if (receipt.Phase != KingdomRealmCallbackPhase.None)
+			{
+				before = receipt.BeforeEffect; after = receipt.AfterEffect;
+				shouldSwap = !string.Equals(before, after, StringComparison.Ordinal);
+			}
+			string current = SeatEffect(City?.SettlementId, Away?.City?.SettlementId);
+			if (receipt.Phase == KingdomRealmCallbackPhase.Settled)
+				return current == after && SettledCallbackStillMatches(Archive, receipt,
+					current, out Refusal);
+			if (!PrepareReturnCallback(Archive, receipt, KingdomRealmCallbackScope.Seat,
+				before, after,
+				out bool invokeAuthorized, out Refusal)) return false;
+			current = SeatEffect(City?.SettlementId, Away?.City?.SettlementId);
+			if (current == after)
+			{
+				if (!Archive.CurrentGraphMatchesAfterSeat(this, shouldSwap, out string failure))
+					return QuarantineReturn(Archive, failure ?? "seat poststate differs from intent",
+						out Refusal);
+				return SettleReturnCallback(Archive, receipt, shouldSwap
+					? KingdomRealmCallbackDisposition.Delivered
+					: KingdomRealmCallbackDisposition.Skipped, current, out Refusal, shouldSwap);
+			}
+			string beforeFailure = null;
+			if (current != before || !Archive.CurrentGraphMatchesAfterSeat(this, false,
+				out beforeFailure))
+				return QuarantineReturn(Archive, beforeFailure ??
+					"seat callback reached a third topology", out Refusal);
+			if (!shouldSwap)
+				return SettleReturnCallback(Archive, receipt,
+					KingdomRealmCallbackDisposition.Skipped, current, out Refusal);
+			if (!invokeAuthorized)
+				return QuarantineReturn(Archive,
+					"seat callback was interrupted before exact topology publication", out Refusal);
+			TrySeat(Site);
+			current = SeatEffect(City?.SettlementId, Away?.City?.SettlementId);
+			string afterFailure = null;
+			if (current != after || !Archive.CurrentGraphMatchesAfterSeat(this, true,
+				out afterFailure))
+				return QuarantineReturn(Archive, afterFailure ??
+					"seat callback did not publish exact frozen topology", out Refusal);
+			return SettleReturnCallback(Archive, receipt,
+				KingdomRealmCallbackDisposition.Delivered, current, out Refusal,
+				SeatSwapped: true);
+		}
+
+		private static string SeatEffect(string SeatId, string AwayId)
+		{
+			return (SeatId ?? "-") + "|" + (AwayId ?? "-");
+		}
+
+		private bool DispatchReturnAbility(KingdomRealmArchive Archive,
+			out string Refusal)
+		{
+			Refusal = "";
+			if (!TryObserveCharterAbility(out CharterAbilityObservation observation))
+				return QuarantineReturn(Archive, "charter return graph cannot be bounded",
+					out Refusal);
+			KingdomRealmCallbackReceipt receipt = Archive.ReturnAbility;
+			string restoreTemplate = observation.TargetTemplateHash;
+			if (receipt.Phase == KingdomRealmCallbackPhase.None &&
+				observation.State != "player-absent" && restoreTemplate == null)
+			{
+				if (!TryParseAbilityEffect(Archive.ExileAbility?.BeforeEffect,
+					out string ignoredExileFull, out string ignoredExileStable,
+					out restoreTemplate, out string ignoredExileState) || restoreTemplate == null)
+					return QuarantineReturn(Archive,
+						"charter return lacks frozen exact target template", out Refusal);
+			}
+			string before = receipt.Phase == KingdomRealmCallbackPhase.None
+				? AbilityEffect(observation) : receipt.BeforeEffect;
+			string after = receipt.Phase == KingdomRealmCallbackPhase.None
+				? AbilityIntent(observation.StableHash, restoreTemplate,
+					observation.State == "player-absent" ? "player-absent" : "valid")
+				: receipt.AfterEffect;
+			if (!TryParseAbilityEffect(before, out string beforeFull, out string frozenStable,
+				out string beforeTemplate, out string beforeState) ||
+				!TryParseAbilityEffect(after, out string ignoredFull, out string expectedStable,
+					out string expectedTemplate, out string expectedState) ||
+				frozenStable != expectedStable ||
+				(expectedState != "valid" && expectedState != "player-absent") ||
+				(expectedState == "valid" && expectedTemplate == null))
+				return QuarantineReturn(Archive, "charter return intent is malformed", out Refusal);
+			if (receipt.Phase == KingdomRealmCallbackPhase.Settled)
+				return observation.State == expectedState &&
+					observation.StableHash == frozenStable &&
+					(expectedState != "valid" ||
+					 observation.TargetTemplateHash == expectedTemplate) &&
+					SettledCallbackStillMatches(Archive, receipt,
+						AbilityEffect(observation), out Refusal);
+			if (!PrepareReturnCallback(Archive, receipt, KingdomRealmCallbackScope.Ability,
+				before, after,
+				out bool invokeAuthorized, out Refusal)) return false;
+			if (!TryObserveCharterAbility(out observation) ||
+				observation.StableHash != frozenStable)
+				return QuarantineReturn(Archive,
+					"charter return changed unaffected ability or part graph", out Refusal);
+			string current = AbilityEffect(observation);
+			if (observation.State == expectedState &&
+				(expectedState != "valid" || observation.TargetTemplateHash == expectedTemplate))
+				return SettleReturnCallback(Archive, receipt,
+					current == before ? KingdomRealmCallbackDisposition.Skipped :
+					KingdomRealmCallbackDisposition.Delivered, current, out Refusal);
+			if (!observation.Recoverable || current != before ||
+				observation.State != beforeState || observation.FullHash != beforeFull ||
+				observation.TargetTemplateHash != beforeTemplate)
+				return QuarantineReturn(Archive,
+					"charter callback reached duplicate or foreign ability state", out Refusal);
+			if (!invokeAuthorized)
+				return QuarantineReturn(Archive,
+					"charter callback was interrupted before exact poststate publication", out Refusal);
+			if (!Archive.CurrentGraphMatches(this, out string failure))
+				return QuarantineReturn(Archive, failure, out Refusal);
+			if (!TryCaptureCharterReferences(out CharterReferenceSnapshot charterReferences))
+				return QuarantineReturn(Archive, "charter reference graph is unbounded", out Refusal);
+			The.Player.RequirePart<KingdomCharterPart>().EnsureAbility();
+			if (!TryObserveCharterAbility(out observation) ||
+				!CharterReferencesStillMatch(charterReferences, AllowPartCreation: true) ||
+				observation.StableHash != frozenStable || observation.State != expectedState ||
+				observation.TargetTemplateHash != expectedTemplate)
+				return QuarantineReturn(Archive,
+					"charter callback did not settle exact target-only graph", out Refusal);
+			return SettleReturnCallback(Archive, receipt,
+				KingdomRealmCallbackDisposition.Delivered,
+				AbilityEffect(observation), out Refusal);
+		}
+
+		private static string InspectCharterAbility(out bool Valid, out bool Recoverable)
+		{
+			Valid = false;
+			Recoverable = false;
+			GameObject player = The.Player;
+			if (player == null) return "player-absent";
+			int partCount = 0;
+			KingdomCharterPart exactPart = null;
+			for (int i = 0; i < player.PartsList.Count; i++)
+			{
+				IPart part = player.PartsList[i];
+				if (part != null && part.GetType().Name == "KingdomCharterPart")
+				{
+					partCount++;
+					if (part is KingdomCharterPart typed) exactPart = typed;
+				}
+			}
+			int commandCount = 0;
+			Guid commandId = Guid.Empty;
+			System.Collections.Generic.Dictionary<Guid, ActivatedAbilityEntry> abilities =
+				player.ActivatedAbilities?.AbilityByGuid;
+			if (abilities != null)
+			{
+				foreach (KeyValuePair<Guid, ActivatedAbilityEntry> row in abilities)
+					if (row.Value != null && row.Value.Command == KingdomCharterPart.COMMAND)
+					{
+						commandCount++;
+						commandId = row.Key;
+					}
+			}
+			Guid pointer = exactPart == null ? Guid.Empty : exactPart.ActivatedAbilityID;
+			Valid = partCount == 1 && exactPart != null &&
+				ReferenceEquals(exactPart.ParentObject, player) && commandCount == 1 &&
+				commandId != Guid.Empty && pointer == commandId;
+			Recoverable = partCount <= 1 && (partCount == 0 || exactPart != null) &&
+				commandCount <= 1 && (pointer == Guid.Empty ||
+					(commandId != Guid.Empty && pointer == commandId));
+			try
+			{
+				using (System.IO.MemoryStream stream = new System.IO.MemoryStream())
+				using (System.IO.BinaryWriter writer = new System.IO.BinaryWriter(stream,
+					new System.Text.UTF8Encoding(false, true), true))
+				{
+					writer.Write(0x54414331); // TAC1
+					WriteProofString(writer, player.IDIfAssigned);
+					if (player.PartsList.Count > 4096) return null;
+					writer.Write(player.PartsList.Count);
+					for (int i = 0; i < player.PartsList.Count; i++)
+					{
+						IPart part = player.PartsList[i];
+						WriteProofString(writer, part?.GetType().FullName);
+						if (part != null && part.GetType().Name == "KingdomCharterPart")
+							writer.Write((part as KingdomCharterPart)?.ActivatedAbilityID.ToByteArray()
+								?? Guid.Empty.ToByteArray());
+					}
+					writer.Write(partCount); writer.Write(commandCount);
+					writer.Write(pointer.ToByteArray()); writer.Write(commandId.ToByteArray());
+					ActivatedAbilities activated = player.ActivatedAbilities;
+					writer.Write(activated == null ? (byte)0 : (byte)1);
+					if (activated != null)
+					{
+						writer.Write(activated.Silent);
+						Dictionary<Guid, ActivatedAbilityEntry> map = activated.AbilityByGuid;
+						if (map == null || map.Count > 4096) return null;
+						writer.Write(map.Count);
+						foreach (KeyValuePair<Guid, ActivatedAbilityEntry> row in map)
+						{
+							writer.Write(row.Key.ToByteArray());
+							writer.Write(row.Value == null ? (byte)0 :
+								ReferenceEquals(row.Value.Abilities, activated) ? (byte)1 : (byte)2);
+							WriteActivatedAbilityProof(writer, row.Value);
+						}
+						List<CommandCooldown> cooldowns = activated.Cooldowns;
+						if (cooldowns == null || cooldowns.Count > 4096) return null;
+						writer.Write(cooldowns.Count);
+						for (int i = 0; i < cooldowns.Count; i++)
+						{
+							CommandCooldown cooldown = cooldowns[i];
+							writer.Write(cooldown == null ? (byte)0 : (byte)1);
+							if (cooldown != null)
+							{
+								WriteProofString(writer, cooldown.Command);
+								writer.Write(cooldown.Segments); writer.Write(cooldown.Token);
+							}
+						}
+					}
+					return FinishProofHash(stream, writer, out string hash) ? hash : null;
+				}
+			}
+			catch { return null; }
+		}
+
+		private sealed class CharterAbilityObservation
+		{
+			public string FullHash;
+			public string StableHash;
+			public string TargetTemplateHash;
+			public string State;
+			public bool Recoverable;
+		}
+
+		private static bool TryObserveCharterAbility(out CharterAbilityObservation Observation)
+		{
+			Observation = null;
+			string full = InspectCharterAbility(out bool valid, out bool recoverable);
+			if (full == null) return false;
+			if (The.Player == null)
+			{
+				Observation = new CharterAbilityObservation
+				{
+					FullHash = full, StableHash = "player-absent",
+					TargetTemplateHash = null, State = "player-absent", Recoverable = true
+				};
+				return true;
+			}
+			if (!TryHashCharterInvariant(out string stable, out string targetTemplate,
+				out bool exactTargetOwner)) return false;
+			valid = valid && exactTargetOwner && targetTemplate != null;
+			string state = valid ? "valid" : CharterAbilityRemoved() ? "removed" :
+				recoverable ? "recoverable" : "invalid";
+			Observation = new CharterAbilityObservation
+			{
+				FullHash = full, StableHash = stable, TargetTemplateHash = targetTemplate,
+				State = state, Recoverable = recoverable
+			};
+			return true;
+		}
+
+		private static bool TryHashCharterInvariant(out string StableHash,
+			out string TargetTemplateHash, out bool ExactTargetOwner)
+		{
+			StableHash = null; TargetTemplateHash = null; ExactTargetOwner = false;
+			GameObject player = The.Player;
+			if (player == null) { StableHash = "player-absent"; ExactTargetOwner = true; return true; }
+			try
+			{
+				ActivatedAbilities activated = player.ActivatedAbilities;
+				Dictionary<Guid, ActivatedAbilityEntry> map = activated?.AbilityByGuid;
+				List<CommandCooldown> cooldowns = activated?.Cooldowns;
+				if (player.PartsList == null || player.PartsList.Count > 4096 || map == null ||
+					map.Count > 4096 || cooldowns == null || cooldowns.Count > 4096) return false;
+				using (System.IO.MemoryStream stream = new System.IO.MemoryStream())
+				using (System.IO.BinaryWriter writer = new System.IO.BinaryWriter(stream,
+					new System.Text.UTF8Encoding(false, true), true))
+				{
+					writer.Write(0x54414932); // TAI2
+					List<object> referenceTopology = new List<object>();
+					WriteReferenceTopologyProof(writer, player, referenceTopology);
+					WriteReferenceTopologyProof(writer, player.PartsList, referenceTopology);
+					WriteProofString(writer, player.IDIfAssigned);
+					int otherParts = 0;
+					for (int i = 0; i < player.PartsList.Count; i++)
+						if (player.PartsList[i] == null ||
+							player.PartsList[i].GetType().Name != "KingdomCharterPart") otherParts++;
+					writer.Write(otherParts);
+					for (int i = 0; i < player.PartsList.Count; i++)
+					{
+						IPart part = player.PartsList[i];
+						if (part != null && part.GetType().Name == "KingdomCharterPart") continue;
+						WriteReferenceTopologyProof(writer, part, referenceTopology);
+						WriteReferenceTopologyProof(writer, part?.ParentObject, referenceTopology);
+						WriteProofString(writer, part?.GetType().FullName);
+					}
+					WriteReferenceTopologyProof(writer, activated, referenceTopology);
+					WriteReferenceTopologyProof(writer, map, referenceTopology);
+					WriteReferenceTopologyProof(writer, cooldowns, referenceTopology);
+					writer.Write(activated.Silent);
+					int otherEntries = 0;
+					foreach (KeyValuePair<Guid, ActivatedAbilityEntry> row in map)
+						if (row.Value == null || row.Value.Command != KingdomCharterPart.COMMAND)
+							otherEntries++;
+					writer.Write(otherEntries);
+					ActivatedAbilityEntry target = null;
+					Guid targetId = Guid.Empty;
+					int targetCount = 0;
+					foreach (KeyValuePair<Guid, ActivatedAbilityEntry> row in map)
+					{
+						if (row.Value != null && row.Value.Command == KingdomCharterPart.COMMAND)
+						{
+							targetCount++;
+							if (targetCount == 1) { target = row.Value; targetId = row.Key; }
+							else { target = null; targetId = Guid.Empty; }
+							continue;
+						}
+						writer.Write(row.Key.ToByteArray());
+						WriteReferenceTopologyProof(writer, row.Value, referenceTopology);
+						WriteReferenceTopologyProof(writer, row.Value?.Abilities,
+							referenceTopology);
+						WriteReferenceTopologyProof(writer, row.Value?.CommandCooldown,
+							referenceTopology);
+						WriteReferenceTopologyProof(writer, row.Value?.UITileDefault,
+							referenceTopology);
+						WriteReferenceTopologyProof(writer, row.Value?.UITileToggleOn,
+							referenceTopology);
+						WriteReferenceTopologyProof(writer, row.Value?.UITileDisabled,
+							referenceTopology);
+						WriteReferenceTopologyProof(writer, row.Value?.UITileCoolingDown,
+							referenceTopology);
+						writer.Write(row.Value == null ? (byte)0 :
+							ReferenceEquals(row.Value.Abilities, activated) ? (byte)1 : (byte)2);
+						WriteActivatedAbilityProof(writer, row.Value);
+					}
+					writer.Write(cooldowns.Count);
+					for (int i = 0; i < cooldowns.Count; i++)
+					{
+						CommandCooldown cooldown = cooldowns[i];
+						WriteReferenceTopologyProof(writer, cooldown, referenceTopology);
+						writer.Write(cooldown == null ? (byte)0 : (byte)1);
+						if (cooldown != null)
+						{
+							WriteProofString(writer, cooldown.Command);
+							writer.Write(cooldown.Segments); writer.Write(cooldown.Token);
+						}
+					}
+					if (!FinishProofHash(stream, writer, out StableHash)) return false;
+					if (targetCount == 1 && target != null)
+					{
+						ExactTargetOwner = targetId != Guid.Empty && target.ID == targetId &&
+							ReferenceEquals(target.Abilities, activated);
+						using (System.IO.MemoryStream targetStream = new System.IO.MemoryStream())
+						using (System.IO.BinaryWriter targetWriter = new System.IO.BinaryWriter(targetStream,
+							new System.Text.UTF8Encoding(false, true), true))
+						{
+							targetWriter.Write(0x54415432); // TAT2
+							WriteReferenceTopologyProof(targetWriter, target, referenceTopology);
+							WriteReferenceTopologyProof(targetWriter, target.Abilities,
+								referenceTopology);
+							WriteReferenceTopologyProof(targetWriter, target.CommandCooldown,
+								referenceTopology);
+							WriteReferenceTopologyProof(targetWriter, target.UITileDefault,
+								referenceTopology);
+							WriteReferenceTopologyProof(targetWriter, target.UITileToggleOn,
+								referenceTopology);
+							WriteReferenceTopologyProof(targetWriter, target.UITileDisabled,
+								referenceTopology);
+							WriteReferenceTopologyProof(targetWriter, target.UITileCoolingDown,
+								referenceTopology);
+							WriteActivatedAbilityTemplateProof(targetWriter, target);
+							if (!FinishProofHash(targetStream, targetWriter,
+								out TargetTemplateHash)) return false;
+						}
+					}
+					else ExactTargetOwner = targetCount == 0;
+					return true;
+				}
+			}
+			catch { return false; }
+		}
+
+		private const string AbilityEffectPrefix = "ability-v2";
+
+		private static string AbilityEffect(CharterAbilityObservation Observation)
+		{
+			return Observation == null ? null : AbilityEffectPrefix + "|" +
+				(Observation.FullHash ?? "-") + "|" + (Observation.StableHash ?? "-") + "|" +
+				(Observation.TargetTemplateHash ?? "-") + "|" + (Observation.State ?? "-");
+		}
+
+		private static string AbilityIntent(string StableHash, string TargetTemplateHash,
+			string TargetState)
+		{
+			return AbilityEffectPrefix + "|-|" + (StableHash ?? "-") + "|" +
+				(TargetTemplateHash ?? "-") + "|" + (TargetState ?? "-");
+		}
+
+		private static bool TryParseAbilityEffect(string Value, out string FullHash,
+			out string StableHash, out string TargetTemplateHash, out string State)
+		{
+			FullHash = null; StableHash = null; TargetTemplateHash = null; State = null;
+			if (Value == null || Value.Length > 512) return false;
+			string[] fields = Value.Split('|');
+			if (fields.Length != 5 || fields[0] != AbilityEffectPrefix) return false;
+			FullHash = fields[1] == "-" ? null : fields[1];
+			StableHash = fields[2] == "-" ? null : fields[2];
+			TargetTemplateHash = fields[3] == "-" ? null : fields[3];
+			State = fields[4];
+			return (FullHash == null || FullHash == "player-absent" ||
+				ValidProofHash(FullHash)) &&
+				(StableHash == "player-absent" || ValidProofHash(StableHash)) &&
+				(TargetTemplateHash == null || ValidProofHash(TargetTemplateHash)) &&
+				(State == "player-absent" || State == "valid" || State == "removed" ||
+				 State == "recoverable" || State == "invalid");
+		}
+
+		private sealed class CharterReferenceSnapshot
+		{
+			public GameObject Player;
+			public PartRack Parts;
+			public ActivatedAbilities Abilities;
+			public Dictionary<Guid, ActivatedAbilityEntry> Map;
+			public List<CommandCooldown> Cooldowns;
+			public KingdomCharterPart Part;
+			public string StableHash;
+			public List<IPart> OtherParts = new List<IPart>();
+			public List<GameObject> OtherPartOwners = new List<GameObject>();
+			public List<Guid> OtherIds = new List<Guid>();
+			public List<ActivatedAbilityEntry> OtherEntries =
+				new List<ActivatedAbilityEntry>();
+			public List<ActivatedAbilities> OtherOwners = new List<ActivatedAbilities>();
+			public List<CommandCooldown> OtherEntryCooldowns = new List<CommandCooldown>();
+			public List<ConsoleLib.Console.Renderable> OtherTileDefaults =
+				new List<ConsoleLib.Console.Renderable>();
+			public List<ConsoleLib.Console.Renderable> OtherTileToggleOns =
+				new List<ConsoleLib.Console.Renderable>();
+			public List<ConsoleLib.Console.Renderable> OtherTileDisabled =
+				new List<ConsoleLib.Console.Renderable>();
+			public List<ConsoleLib.Console.Renderable> OtherTileCoolingDown =
+				new List<ConsoleLib.Console.Renderable>();
+			public List<CommandCooldown> CooldownRows = new List<CommandCooldown>();
+		}
+
+		private static bool TryCaptureCharterReferences(out CharterReferenceSnapshot Snapshot)
+		{
+			Snapshot = new CharterReferenceSnapshot { Player = The.Player };
+			if (The.Player == null) return true;
+			Snapshot.Parts = The.Player.PartsList;
+			Snapshot.Abilities = The.Player.ActivatedAbilities;
+			Snapshot.Map = Snapshot.Abilities?.AbilityByGuid;
+			Snapshot.Cooldowns = Snapshot.Abilities?.Cooldowns;
+			if (Snapshot.Parts == null || Snapshot.Parts.Count > 4096 || Snapshot.Map == null ||
+				Snapshot.Map.Count > 4096 || Snapshot.Cooldowns == null ||
+				Snapshot.Cooldowns.Count > 4096 ||
+				!TryHashCharterInvariant(out Snapshot.StableHash,
+					out string ignoredTarget, out bool ignoredOwner)) return false;
+			for (int i = 0; i < Snapshot.Parts.Count; i++)
+			{
+				IPart part = Snapshot.Parts[i];
+				if (part != null && part.GetType().Name == "KingdomCharterPart")
+				{
+					if (Snapshot.Part != null || !(part is KingdomCharterPart typed)) return false;
+					Snapshot.Part = typed;
+				}
+				else
+				{
+					Snapshot.OtherParts.Add(part);
+					Snapshot.OtherPartOwners.Add(part?.ParentObject);
+				}
+			}
+			foreach (KeyValuePair<Guid, ActivatedAbilityEntry> row in Snapshot.Map)
+				if (row.Value == null || row.Value.Command != KingdomCharterPart.COMMAND)
+				{
+					Snapshot.OtherIds.Add(row.Key); Snapshot.OtherEntries.Add(row.Value);
+					Snapshot.OtherOwners.Add(row.Value?.Abilities);
+					Snapshot.OtherEntryCooldowns.Add(row.Value?.CommandCooldown);
+					Snapshot.OtherTileDefaults.Add(row.Value?.UITileDefault);
+					Snapshot.OtherTileToggleOns.Add(row.Value?.UITileToggleOn);
+					Snapshot.OtherTileDisabled.Add(row.Value?.UITileDisabled);
+					Snapshot.OtherTileCoolingDown.Add(row.Value?.UITileCoolingDown);
+				}
+			for (int i = 0; i < Snapshot.Cooldowns.Count; i++)
+				Snapshot.CooldownRows.Add(Snapshot.Cooldowns[i]);
+			return true;
+		}
+
+		private static bool CharterReferencesStillMatch(CharterReferenceSnapshot Snapshot,
+			bool AllowPartCreation)
+		{
+			if (Snapshot == null || !ReferenceEquals(The.Player, Snapshot.Player)) return false;
+			if (Snapshot.Player == null) return true;
+			if (!ReferenceEquals(The.Player.PartsList, Snapshot.Parts) ||
+				!ReferenceEquals(The.Player.ActivatedAbilities, Snapshot.Abilities) ||
+				!ReferenceEquals(Snapshot.Abilities?.AbilityByGuid, Snapshot.Map) ||
+				!ReferenceEquals(Snapshot.Abilities?.Cooldowns, Snapshot.Cooldowns)) return false;
+			if (!TryHashCharterInvariant(out string stableHash, out string ignoredTarget,
+				out bool ignoredOwner) || stableHash != Snapshot.StableHash) return false;
+			KingdomCharterPart currentPart = null;
+			int otherPartIndex = 0;
+			for (int i = 0; i < The.Player.PartsList.Count; i++)
+			{
+				IPart part = The.Player.PartsList[i];
+				if (part != null && part.GetType().Name == "KingdomCharterPart")
+				{
+					if (currentPart != null || !(part is KingdomCharterPart typed)) return false;
+					currentPart = typed;
+				}
+				else
+				{
+					if (otherPartIndex >= Snapshot.OtherParts.Count ||
+						!ReferenceEquals(part, Snapshot.OtherParts[otherPartIndex]) ||
+						!ReferenceEquals(part?.ParentObject,
+							Snapshot.OtherPartOwners[otherPartIndex])) return false;
+					otherPartIndex++;
+				}
+			}
+			if (otherPartIndex != Snapshot.OtherParts.Count) return false;
+			if (Snapshot.Part != null ? !ReferenceEquals(Snapshot.Part, currentPart) :
+				(!AllowPartCreation && currentPart != null)) return false;
+			int otherCount = 0;
+			foreach (KeyValuePair<Guid, ActivatedAbilityEntry> row in Snapshot.Map)
+				if (row.Value == null || row.Value.Command != KingdomCharterPart.COMMAND)
+				{
+					if (otherCount >= Snapshot.OtherEntries.Count ||
+						row.Key != Snapshot.OtherIds[otherCount] ||
+						!ReferenceEquals(row.Value, Snapshot.OtherEntries[otherCount]) ||
+						!ReferenceEquals(row.Value?.Abilities, Snapshot.OtherOwners[otherCount]) ||
+						!ReferenceEquals(row.Value?.CommandCooldown,
+							Snapshot.OtherEntryCooldowns[otherCount]) ||
+						!ReferenceEquals(row.Value?.UITileDefault,
+							Snapshot.OtherTileDefaults[otherCount]) ||
+						!ReferenceEquals(row.Value?.UITileToggleOn,
+							Snapshot.OtherTileToggleOns[otherCount]) ||
+						!ReferenceEquals(row.Value?.UITileDisabled,
+							Snapshot.OtherTileDisabled[otherCount]) ||
+						!ReferenceEquals(row.Value?.UITileCoolingDown,
+							Snapshot.OtherTileCoolingDown[otherCount])) return false;
+					otherCount++;
+				}
+			if (otherCount != Snapshot.OtherEntries.Count ||
+				Snapshot.Cooldowns.Count != Snapshot.CooldownRows.Count) return false;
+			for (int i = 0; i < Snapshot.Cooldowns.Count; i++)
+				if (!ReferenceEquals(Snapshot.Cooldowns[i], Snapshot.CooldownRows[i])) return false;
+			return true;
+		}
+
+		private bool DispatchReturnFeelings(KingdomRealmArchive Archive,
+			out string Refusal)
+		{
+			Refusal = "";
+			if (!TryFeelingEffect(Archive, Desired: false, out string before) ||
+				!TryFeelingEffect(Archive, Desired: true, out string after))
+				return QuarantineReturn(Archive, "feeling graph cannot be bounded", out Refusal);
+			KingdomRealmCallbackReceipt receipt = Archive.ReturnFeelings;
+			if (receipt.Phase != KingdomRealmCallbackPhase.None)
+			{
+				before = receipt.BeforeEffect; after = receipt.AfterEffect;
+			}
+			int targetSpoken = (int)KingdomExileRules.ClassifyRegard(Archive.ReturnRegard);
+			int beforeSpoken = receipt.Phase == KingdomRealmCallbackPhase.None
+				? Archive.RegardSpoken : receipt.BeforeStamp;
+			if (!TryFeelingEffect(Archive, Desired: false, out string current))
+				return QuarantineReturn(Archive, "feeling graph cannot be inspected", out Refusal);
+			if (receipt.Phase == KingdomRealmCallbackPhase.Settled)
+				return current == after && RegardSpoken == targetSpoken &&
+					Archive.RegardSpoken == targetSpoken &&
+					SettledCallbackStillMatches(Archive, receipt, current, out Refusal);
+			if (!PrepareReturnCallback(Archive, receipt, KingdomRealmCallbackScope.Feelings,
+				before, after,
+				out bool invokeAuthorized, out Refusal, BeforeStamp: beforeSpoken,
+				AfterStamp: targetSpoken)) return false;
+			if (!TryFeelingEffect(Archive, Desired: false, out current))
+				return QuarantineReturn(Archive, "feeling graph changed during intent", out Refusal);
+			if (current != before && current != after)
+				return QuarantineReturn(Archive, "feeling callback reached a third graph", out Refusal);
+			bool stampBefore = RegardSpoken == beforeSpoken &&
+				Archive.RegardSpoken == beforeSpoken;
+			bool stampCut = RegardSpoken == targetSpoken &&
+				Archive.RegardSpoken == beforeSpoken;
+			bool stampAfter = RegardSpoken == targetSpoken &&
+				Archive.RegardSpoken == targetSpoken;
+			if (!stampBefore && !stampCut && !stampAfter)
+				return QuarantineReturn(Archive,
+					"feeling callback reached a third or reverse regard stamp", out Refusal);
+			if (current == after)
+			{
+				if (!TrySettleFeelingStamp(Archive, beforeSpoken, targetSpoken))
+					return QuarantineReturn(Archive,
+						"feeling callback stamp could not settle exact poststate", out Refusal);
+				return SettleReturnCallback(Archive, receipt,
+					before == after && beforeSpoken == targetSpoken
+						? KingdomRealmCallbackDisposition.Skipped :
+					KingdomRealmCallbackDisposition.Delivered, current, out Refusal);
+			}
+			if (current != before)
+				return QuarantineReturn(Archive,
+					"feeling callback poststate lacks matching regard stamp", out Refusal);
+			if (!stampBefore)
+				return QuarantineReturn(Archive,
+					"feeling callback stamp advanced without inspectable poststate", out Refusal);
+			if (!invokeAuthorized)
+				return QuarantineReturn(Archive,
+					"feeling callback was interrupted before exact poststate publication", out Refusal);
+			if (!TryCaptureFeelingReferences(out List<Faction> factionReferences,
+				out List<Dictionary<string, int>> feelingReferences))
+				return QuarantineReturn(Archive, "feeling reference graph cannot be bounded",
+					out Refusal);
+			ReassertFeelings();
+			if (!FeelingReferencesStillMatch(factionReferences, feelingReferences) ||
+				!TryFeelingEffect(Archive, Desired: false, out current) || current != after)
+				return QuarantineReturn(Archive,
+					"feeling callback did not publish the complete exact graph", out Refusal);
+			if (!TrySettleFeelingStamp(Archive, beforeSpoken, targetSpoken))
+				return QuarantineReturn(Archive,
+					"feeling callback stamp could not publish exact poststate", out Refusal);
+			return SettleReturnCallback(Archive, receipt,
+				before == after && beforeSpoken == targetSpoken
+					? KingdomRealmCallbackDisposition.Skipped :
+				KingdomRealmCallbackDisposition.Delivered, current, out Refusal);
+		}
+
+		private bool TrySettleFeelingStamp(KingdomRealmArchive Archive, int Before, int After)
+		{
+			if (Archive == null || (RegardSpoken != Before && RegardSpoken != After) ||
+				(Archive.RegardSpoken != Before && Archive.RegardSpoken != After) ||
+				(Archive.RegardSpoken == After && RegardSpoken == Before)) return false;
+			if (RegardSpoken == Before) RegardSpoken = After;
+			if (Archive.RegardSpoken == Before) Archive.RegardSpoken = After;
+			return RegardSpoken == After && Archive.RegardSpoken == After;
+		}
+
+		private bool TryFeelingEffect(KingdomRealmArchive Archive, bool Desired,
+			out string Effect)
+		{
+			Effect = null;
+			if (Archive?.Standings == null || Archive.Standings.Count > 512) return false;
+			try
+			{
+				IReadOnlyList<Faction> source = Factions.GetList();
+				if (source == null || source.Count > 4096) return false;
+				List<Faction> factions = new List<Faction>(source.Count);
+				for (int i = 0; i < source.Count; i++)
+					if (source[i] != null) factions.Add(source[i]);
+				factions.Sort((left, right) => string.CompareOrdinal(left.Name, right.Name));
+				using (System.IO.MemoryStream stream = new System.IO.MemoryStream())
+				using (System.IO.BinaryWriter writer = new System.IO.BinaryWriter(stream,
+					new System.Text.UTF8Encoding(false, true), true))
+				{
+					writer.Write(0x54464631); // TFF1
+					writer.Write(factions.Count);
+					for (int i = 0; i < factions.Count; i++)
+					{
+						Faction faction = factions[i];
+						if (i > 0 && faction.Name == factions[i - 1].Name) return false;
+						if (faction.FactionFeeling == null || faction.FactionFeeling.Count > 4096)
+							return false;
+						WriteProofString(writer, faction.Name); writer.Write(faction.ID);
+						List<string> keys = new List<string>(faction.FactionFeeling.Keys);
+						bool mirrorsStanding = Archive.Standings.ContainsKey(faction.Name);
+						if (Desired && mirrorsStanding && !keys.Contains(Archive.FactionName))
+							keys.Add(Archive.FactionName);
+						bool mirrorsPlayer = faction.Name == Archive.FactionName;
+						if (Desired && mirrorsPlayer && !keys.Contains("Player")) keys.Add("Player");
+						keys.Sort(StringComparer.Ordinal); writer.Write(keys.Count);
+						for (int j = 0; j < keys.Count; j++)
+						{
+							WriteProofString(writer, keys[j]);
+							if (Desired && mirrorsStanding && keys[j] == Archive.FactionName)
+								writer.Write(Reputation.GetFeeling(
+									(float)Archive.Standings[faction.Name]));
+							else if (Desired && mirrorsPlayer && keys[j] == "Player")
+								writer.Write(Reputation.GetFeeling((float)Archive.ReturnRegard));
+							else writer.Write(faction.FactionFeeling[keys[j]]);
+						}
+					}
+					return FinishProofHash(stream, writer, out Effect);
+				}
+			}
+			catch { return false; }
+		}
+
+		private static bool TryCaptureFeelingReferences(out List<Faction> FactionReferences,
+			out List<Dictionary<string, int>> FeelingReferences)
+		{
+			FactionReferences = new List<Faction>();
+			FeelingReferences = new List<Dictionary<string, int>>();
+			IReadOnlyList<Faction> source = Factions.GetList();
+			if (source == null || source.Count > 4096) return false;
+			for (int i = 0; i < source.Count; i++)
+				if (source[i] != null) FactionReferences.Add(source[i]);
+			FactionReferences.Sort((left, right) => string.CompareOrdinal(left.Name, right.Name));
+			for (int i = 0; i < FactionReferences.Count; i++)
+			{
+				if (FactionReferences[i].FactionFeeling == null ||
+					(i > 0 && FactionReferences[i].Name == FactionReferences[i - 1].Name)) return false;
+				FeelingReferences.Add(FactionReferences[i].FactionFeeling);
+			}
+			return true;
+		}
+
+		private static bool FeelingReferencesStillMatch(List<Faction> FactionReferences,
+			List<Dictionary<string, int>> FeelingReferences)
+		{
+			if (!TryCaptureFeelingReferences(out List<Faction> currentFactions,
+				out List<Dictionary<string, int>> currentFeelings) ||
+				FactionReferences == null || FeelingReferences == null ||
+				FactionReferences.Count != currentFactions.Count ||
+				FeelingReferences.Count != currentFeelings.Count) return false;
+			for (int i = 0; i < FactionReferences.Count; i++)
+				if (!ReferenceEquals(FactionReferences[i], currentFactions[i]) ||
+					!ReferenceEquals(FeelingReferences[i], currentFeelings[i])) return false;
+			return true;
+		}
+
+		private bool DispatchReturnChronicle(KingdomRealmArchive Archive,
+			out string Refusal)
+		{
+			string eventId = "taf:realm:return:v1:" + Archive.RealmId;
+			string telling = KingdomExileRules.ReturnTelling(Archive.DisplayName);
+			return DispatchRealmChronicle(Archive, Archive.ReturnChronicle, eventId, telling,
+				"return", out Refusal);
+		}
+
+		private static bool ChronicleDeclarationMatchesArchive(KingdomRealmArchive Archive,
+			KingdomChronicleDeclaration Declaration, out string Failure)
+		{
+			Failure = null;
+			if (Archive == null || Declaration == null ||
+				!DeclarationListMatches(Archive.ChronicleEntries, "official",
+					Declaration.Official, Declaration.OfficialBefore,
+					Declaration.OfficialAfter) ||
+				!DeclarationListMatches(Archive.OutsiderEntries, "outsider",
+					Declaration.Outsider, Declaration.OutsiderBefore,
+					Declaration.OutsiderAfter))
+			{
+				Failure = "archived Chronicle declaration lists differ from frozen CAS";
+				return false;
+			}
+			return true;
+		}
+
+		private static bool DeclarationListMatches(List<string> Values, string Domain,
+			string DeclaredValue, string BeforeHash, string AfterHash)
+		{
+			if (Values == null || string.IsNullOrEmpty(DeclaredValue) ||
+				!KingdomChronicleReceiptRules.TryHashList(Domain, Values,
+					out string current)) return false;
+			if (current == BeforeHash)
+				return KingdomChronicleReceiptRules.TryHashAfter(Domain, Values, DeclaredValue,
+					out string declaredAfter) && declaredAfter == AfterHash;
+			return current == AfterHash && Values.Count > 0 &&
+				string.Equals(Values[Values.Count - 1], DeclaredValue,
+					StringComparison.Ordinal);
+		}
+
+		private bool TryValidateChronicleLists(KingdomChronicleDeclaration Declaration,
+			KingdomChronicleReceipt EventReceipt, bool Present, bool Terminal,
+			out string OfficialHash, out string OutsiderHash, out bool ListLost)
+		{
+			OfficialHash = null; OutsiderHash = null; ListLost = false;
+			if (Declaration == null ||
+				!DeclarationListMatches(ChronicleEntries, "official", Declaration.Official,
+					Declaration.OfficialBefore, Declaration.OfficialAfter) ||
+				!DeclarationListMatches(OutsiderEntries, "outsider", Declaration.Outsider,
+					Declaration.OutsiderBefore, Declaration.OutsiderAfter) ||
+				!KingdomChronicleReceiptRules.TryHashList("official", ChronicleEntries,
+					out OfficialHash) ||
+				!KingdomChronicleReceiptRules.TryHashList("outsider", OutsiderEntries,
+					out OutsiderHash)) return false;
+			if (!Present)
+				return !Terminal && EventReceipt == null &&
+					OfficialHash == Declaration.OfficialBefore &&
+					OutsiderHash == Declaration.OutsiderBefore;
+			if (EventReceipt == null ||
+				(!EventReceipt.Compact &&
+				 (!string.Equals(EventReceipt.Official, Declaration.Official,
+					 StringComparison.Ordinal) ||
+				  !string.Equals(EventReceipt.Outsider, Declaration.Outsider,
+					 StringComparison.Ordinal) ||
+				  EventReceipt.OfficialBefore != Declaration.OfficialBefore ||
+				  EventReceipt.OfficialAfter != Declaration.OfficialAfter ||
+				  EventReceipt.OutsiderBefore != Declaration.OutsiderBefore ||
+				  EventReceipt.OutsiderAfter != Declaration.OutsiderAfter))) return false;
+			return KingdomRealmCallbackProofRules.ChronicleListsMatch(
+				EventReceipt.OfficialState, OfficialHash, Declaration.OfficialBefore,
+				Declaration.OfficialAfter, EventReceipt.OutsiderState, OutsiderHash,
+				Declaration.OutsiderBefore, Declaration.OutsiderAfter, Terminal,
+				out ListLost);
+		}
+
+		private bool EnsureArchiveChronicleState(KingdomRealmArchive Archive,
+			KingdomChronicleDeclaration Declaration, KingdomChronicleReceipt EventReceipt,
+			string Registry, string RegistryFault, string FrozenRegistryHash,
+			out string Refusal)
+		{
+			Refusal = "";
+			if (Archive == null || Declaration == null || EventReceipt == null ||
+				!KingdomChronicleReceiptRules.IsTerminal(EventReceipt) ||
+				!KingdomChronicleReceiptRules.TryHashList("official", ChronicleEntries,
+					out string officialLive) ||
+				!KingdomChronicleReceiptRules.TryHashList("outsider", OutsiderEntries,
+					out string outsiderLive))
+				return QuarantineReturn(Archive,
+					"Chronicle terminal archive state cannot be bounded", out Refusal);
+			string officialExpected = EventReceipt.OfficialState ==
+				KingdomChronicleSinkDisposition.Delivered ? Declaration.OfficialAfter :
+				EventReceipt.OfficialState == KingdomChronicleSinkDisposition.Lost ?
+				Declaration.OfficialBefore : null;
+			string outsiderExpected = EventReceipt.OutsiderState ==
+				KingdomChronicleSinkDisposition.Delivered ? Declaration.OutsiderAfter :
+				EventReceipt.OutsiderState == KingdomChronicleSinkDisposition.Lost ?
+				Declaration.OutsiderBefore : null;
+			if (officialExpected == null || outsiderExpected == null ||
+				officialLive != officialExpected || outsiderLive != outsiderExpected ||
+				!TryHashTextPair(Registry, RegistryFault, out string desiredRegistryHash) ||
+				!TryHashTextPair(Archive.ChronicleRegistry, Archive.ChronicleRegistryFault,
+					out string archivedRegistryHash))
+				return QuarantineReturn(Archive,
+					"Chronicle terminal sinks do not match declared state", out Refusal);
+			if (!KingdomChronicleReceiptRules.TryHashList("official", Archive.ChronicleEntries,
+					out string archivedOfficial) ||
+				(archivedOfficial != Declaration.OfficialBefore &&
+				 archivedOfficial != officialExpected) ||
+				!KingdomChronicleReceiptRules.TryHashList("outsider", Archive.OutsiderEntries,
+					out string archivedOutsider) ||
+				(archivedOutsider != Declaration.OutsiderBefore &&
+				 archivedOutsider != outsiderExpected) ||
+				(archivedRegistryHash != FrozenRegistryHash &&
+				 archivedRegistryHash != desiredRegistryHash))
+				return QuarantineReturn(Archive,
+					"archived Chronicle CAS reached a third state", out Refusal);
+			if (archivedOfficial == Declaration.OfficialBefore)
+				Archive.ChronicleEntries = KingdomRealmArchive.CloneStrings(ChronicleEntries);
+			if (archivedOutsider == Declaration.OutsiderBefore)
+				Archive.OutsiderEntries = KingdomRealmArchive.CloneStrings(OutsiderEntries);
+			if (archivedRegistryHash == FrozenRegistryHash)
+			{
+				Archive.ChronicleRegistry = Registry;
+				Archive.ChronicleRegistryFault = RegistryFault;
+			}
+			return true;
+		}
+
+		private static bool TryInspectChronicle(string EventId, string Fingerprint,
+			out string RegistryHash, out bool Present, out bool Terminal, out bool Lost,
+			out bool Conflict, out string Registry, out string RegistryFault,
+			out string OtherRegistryHash, out KingdomChronicleReceipt EventReceipt)
+		{
+			RegistryHash = null; Present = false; Terminal = false; Lost = false;
+			Conflict = false; Registry = null; RegistryFault = null; OtherRegistryHash = null;
+			EventReceipt = null;
+			if (!KingdomChronicle.TryCaptureRealmRegistry(out Registry, out RegistryFault,
+				out string failure) || !TryHashTextPair(Registry, RegistryFault, out RegistryHash) ||
+				!KingdomChronicleReceiptRules.TryParseRegistry(Registry,
+					out List<KingdomChronicleReceipt> rows, out bool migrated,
+					out KingdomChronicleRegistryFault fault) || migrated) return false;
+			List<KingdomChronicleReceipt> otherRows =
+				new List<KingdomChronicleReceipt>(rows.Count);
+			for (int i = 0; i < rows.Count; i++)
+			{
+				if (!string.Equals(rows[i].EventId, EventId, StringComparison.Ordinal))
+				{
+					otherRows.Add(rows[i].Copy());
+					continue;
+				}
+				if (Present) { Conflict = true; return true; }
+				Present = true;
+				if (!string.Equals(rows[i].Fingerprint, Fingerprint, StringComparison.Ordinal))
+				{
+					Conflict = true; return true;
+				}
+				EventReceipt = rows[i].Copy();
+				Terminal = KingdomChronicleReceiptRules.IsTerminal(rows[i]);
+				Lost = rows[i].OfficialState == KingdomChronicleSinkDisposition.Lost ||
+					rows[i].OutsiderState == KingdomChronicleSinkDisposition.Lost ||
+					rows[i].JournalState == KingdomChronicleSinkDisposition.Lost;
+			}
+			return KingdomChronicleReceiptRules.TryWriteRegistry(otherRows,
+				out string otherRegistry, out KingdomChronicleRegistryFault otherFault) &&
+				otherFault == KingdomChronicleRegistryFault.None &&
+				// Fault state is diagnostic output of this exact callback (not unrelated row
+				// authority): an honest Lost sink may update it. Freeze only other receipt rows.
+				TryHashTextPair(otherRegistry, null, out OtherRegistryHash);
+		}
+
+		private const string ChronicleIntentPrefix = "chronicle-v2";
+
+		private static bool TryCreateChronicleIntent(string EventId,
+			KingdomChronicleDeclaration Declaration, string RegistryHash,
+			string OtherRegistryHash, string RegistryFault, out string Intent)
+		{
+			Intent = null;
+			if (Declaration == null || !ValidProofHash(RegistryHash) ||
+				!ValidProofHash(OtherRegistryHash) ||
+				!ValidProofHash(Declaration.Fingerprint) ||
+				!ValidProofHash(Declaration.OfficialBefore) ||
+				!ValidProofHash(Declaration.OfficialAfter) ||
+				!ValidProofHash(Declaration.OutsiderBefore) ||
+				!ValidProofHash(Declaration.OutsiderAfter) || RegistryFault == null ||
+				RegistryFault.Length > 160 ||
+				!string.Equals(EventId, Declaration.EventId, StringComparison.Ordinal)) return false;
+			try
+			{
+				System.Text.UTF8Encoding utf8 = new System.Text.UTF8Encoding(false, true);
+				Intent = ChronicleIntentPrefix + "|" +
+					Convert.ToBase64String(utf8.GetBytes(EventId)) + "|" +
+					Declaration.Fingerprint + "|" + RegistryHash + "|" + OtherRegistryHash + "|" +
+					Declaration.OfficialBefore + "|" + Declaration.OfficialAfter + "|" +
+					Declaration.OutsiderBefore + "|" + Declaration.OutsiderAfter + "|" +
+					Convert.ToBase64String(utf8.GetBytes(Declaration.Official)) + "|" +
+					Convert.ToBase64String(utf8.GetBytes(Declaration.Outsider)) + "|" +
+					Convert.ToBase64String(utf8.GetBytes(RegistryFault));
+				return Intent.Length <= KingdomRealmCallbackReceipt.MaxEffectChars;
+			}
+			catch { Intent = null; return false; }
+		}
+
+		private static bool TryParseChronicleIntent(string Intent, string ExpectedEventId,
+			string Text, bool Accomplishment, string MuralText,
+			out KingdomChronicleDeclaration Declaration, out string RegistryHash,
+			out string OtherRegistryHash, out string RegistryFault)
+		{
+			Declaration = null; RegistryHash = null; OtherRegistryHash = null;
+			RegistryFault = null;
+			if (Intent == null || Intent.Length > KingdomRealmCallbackReceipt.MaxEffectChars)
+				return false;
+			string[] fields = Intent.Split('|');
+			if (fields.Length != 12 || fields[0] != ChronicleIntentPrefix ||
+				fields[1].Length > KingdomChronicleReceiptRules.MaxEventIdChars * 6 ||
+				fields[9].Length > KingdomChronicleReceiptRules.MaxEntryChars * 6 ||
+				fields[10].Length > KingdomChronicleReceiptRules.MaxEntryChars * 6 ||
+				fields[11].Length > 960 ||
+				!ValidProofHash(fields[2]) || !ValidProofHash(fields[3]) ||
+				!ValidProofHash(fields[4]) || !ValidProofHash(fields[5]) ||
+				!ValidProofHash(fields[6]) || !ValidProofHash(fields[7]) ||
+				!ValidProofHash(fields[8])) return false;
+			try
+			{
+				System.Text.UTF8Encoding utf8 = new System.Text.UTF8Encoding(false, true);
+				string eventId = utf8.GetString(Convert.FromBase64String(fields[1]));
+				string official = utf8.GetString(Convert.FromBase64String(fields[9]));
+				string outsider = utf8.GetString(Convert.FromBase64String(fields[10]));
+				string registryFault = utf8.GetString(Convert.FromBase64String(fields[11]));
+				if (!string.Equals(eventId, ExpectedEventId, StringComparison.Ordinal) ||
+					string.IsNullOrEmpty(official) || string.IsNullOrEmpty(outsider) ||
+					official.Length > KingdomChronicleReceiptRules.MaxEntryChars ||
+					outsider.Length > KingdomChronicleReceiptRules.MaxEntryChars ||
+					registryFault.Length > 160 ||
+					!KingdomChronicleReceiptRules.TryFingerprint(eventId, Text, Accomplishment,
+						MuralText, out string fingerprint) || fingerprint != fields[2]) return false;
+				Declaration = new KingdomChronicleDeclaration(eventId, Text, Accomplishment,
+					MuralText, fields[2], official, outsider, fields[5], fields[6],
+					fields[7], fields[8]);
+				RegistryHash = fields[3]; OtherRegistryHash = fields[4];
+				RegistryFault = registryFault;
+				return true;
+			}
+			catch { Declaration = null; RegistryFault = null; return false; }
+		}
+
+		private static string ChronicleObserved(string RegistryHash, string OtherRegistryHash,
+			string OfficialHash, string OutsiderHash, KingdomChronicleReceipt Receipt)
+		{
+			return Receipt == null ? null : ChronicleIntentPrefix + "|observed|" + RegistryHash +
+				"|" + OtherRegistryHash + "|" + OfficialHash + "|" + OutsiderHash + "|" +
+				((int)Receipt.OfficialState).ToString() + "|" +
+				((int)Receipt.OutsiderState).ToString() + "|" +
+				((int)Receipt.JournalState).ToString();
+		}
+
+		private static bool ValidProofHash(string Value)
+		{
+			if (Value == null || Value.Length != 64) return false;
+			for (int i = 0; i < Value.Length; i++)
+				if (!((Value[i] >= '0' && Value[i] <= '9') ||
+					(Value[i] >= 'a' && Value[i] <= 'f'))) return false;
+			return true;
+		}
+
+		private static bool TryHashTextPair(string Left, string Right, out string Hash)
+		{
+			Hash = null;
+			try
+			{
+				System.Text.UTF8Encoding utf8 = new System.Text.UTF8Encoding(false, true);
+				using (System.IO.MemoryStream stream = new System.IO.MemoryStream())
+				using (System.IO.BinaryWriter writer = new System.IO.BinaryWriter(stream, utf8, true))
+				{
+					WriteHashText(writer, Left, utf8); WriteHashText(writer, Right, utf8);
+					writer.Flush();
+					if (stream.Length > KingdomChronicleReceiptRules.MaxRegistryChars * 4L + 1024L)
+						return false;
+					using (global::System.Security.Cryptography.SHA256 sha =
+						global::System.Security.Cryptography.SHA256.Create())
+					{
+						byte[] digest = sha.ComputeHash(stream.ToArray());
+						System.Text.StringBuilder text = new System.Text.StringBuilder(64);
+						for (int i = 0; i < digest.Length; i++) text.Append(digest[i].ToString("x2"));
+						Hash = text.ToString(); return true;
+					}
+				}
+			}
+			catch { return false; }
+		}
+
+		private static void WriteProofString(System.IO.BinaryWriter Writer, string Value)
+		{
+			if (Value == null) { Writer.Write(-1); return; }
+			byte[] bytes = new System.Text.UTF8Encoding(false, true).GetBytes(Value);
+			if (bytes.Length > 16384) throw new System.IO.InvalidDataException(
+				"Engine callback proof string exceeds cap.");
+			Writer.Write(bytes.Length); Writer.Write(bytes);
+		}
+
+		private static void WriteProofStringDictionary(System.IO.BinaryWriter Writer,
+			Dictionary<string, string> Values)
+		{
+			if (Values == null || Values.Count > 4096) throw new System.IO.InvalidDataException(
+				"Engine callback proof dictionary exceeds cap.");
+			List<string> keys = new List<string>(Values.Keys);
+			keys.Sort(StringComparer.Ordinal); Writer.Write(keys.Count);
+			for (int i = 0; i < keys.Count; i++)
+			{
+				WriteProofString(Writer, keys[i]); WriteProofString(Writer, Values[keys[i]]);
+			}
+		}
+
+		private static void WriteWorshipProof(System.IO.BinaryWriter Writer,
+			List<WorshipTracking> Values)
+		{
+			if (Values == null || Values.Count > 4096) throw new System.IO.InvalidDataException(
+				"Engine callback worship proof exceeds cap.");
+			Writer.Write(Values.Count);
+			for (int i = 0; i < Values.Count; i++)
+			{
+				WorshipTracking row = Values[i];
+				Writer.Write(row == null ? (byte)0 : (byte)1);
+				if (row == null) continue;
+				WriteProofString(Writer, row.Name); WriteProofString(Writer, row.Faction);
+				Writer.Write(row.Devoted); Writer.Write(row.Times);
+				Writer.Write(row.First); Writer.Write(row.Last);
+			}
+		}
+
+		private static void WriteActivatedAbilityProof(System.IO.BinaryWriter Writer,
+			ActivatedAbilityEntry Value)
+		{
+			Writer.Write(Value == null ? (byte)0 : (byte)1);
+			if (Value == null) return;
+			Writer.Write(Value.ID.ToByteArray()); WriteProofString(Writer, Value.DisplayName);
+			WriteProofString(Writer, Value.Command); WriteProofString(Writer, Value.Class);
+			WriteProofString(Writer, Value.Description); WriteProofString(Writer, Value.Icon);
+			WriteProofString(Writer, Value.DisabledMessage); Writer.Write(Value.Flags);
+			WriteProofString(Writer, Value._DescriptionCommand);
+			CommandCooldown cooldown = Value.CommandCooldown;
+			Writer.Write(cooldown == null ? (byte)0 : (byte)1);
+			if (cooldown != null)
+			{
+				WriteProofString(Writer, cooldown.Command); Writer.Write(cooldown.Segments);
+				Writer.Write(cooldown.Token);
+			}
+			WriteRenderableProof(Writer, Value.UITileDefault);
+			WriteRenderableProof(Writer, Value.UITileToggleOn);
+			WriteRenderableProof(Writer, Value.UITileDisabled);
+			WriteRenderableProof(Writer, Value.UITileCoolingDown);
+		}
+
+		private static void WriteReferenceTopologyProof(System.IO.BinaryWriter Writer,
+			object Value, List<object> References)
+		{
+			if (Value == null) { Writer.Write(-1); return; }
+			for (int i = 0; i < References.Count; i++)
+				if (ReferenceEquals(References[i], Value)) { Writer.Write(i); return; }
+			Writer.Write(-2 - References.Count);
+			References.Add(Value);
+		}
+
+		private static void WriteActivatedAbilityTemplateProof(System.IO.BinaryWriter Writer,
+			ActivatedAbilityEntry Value)
+		{
+			Writer.Write(Value == null ? (byte)0 : (byte)1);
+			if (Value == null) return;
+			WriteProofString(Writer, Value.DisplayName); WriteProofString(Writer, Value.Command);
+			WriteProofString(Writer, Value.Class); WriteProofString(Writer, Value.Description);
+			WriteProofString(Writer, Value.Icon); WriteProofString(Writer, Value.DisabledMessage);
+			Writer.Write(Value.Flags); WriteProofString(Writer, Value._DescriptionCommand);
+			CommandCooldown cooldown = Value.CommandCooldown;
+			Writer.Write(cooldown == null ? (byte)0 : (byte)1);
+			if (cooldown != null)
+			{
+				WriteProofString(Writer, cooldown.Command); Writer.Write(cooldown.Segments);
+				Writer.Write(cooldown.Token);
+			}
+			WriteRenderableProof(Writer, Value.UITileDefault);
+			WriteRenderableProof(Writer, Value.UITileToggleOn);
+			WriteRenderableProof(Writer, Value.UITileDisabled);
+			WriteRenderableProof(Writer, Value.UITileCoolingDown);
+		}
+
+		private static void WriteRenderableProof(System.IO.BinaryWriter Writer,
+			ConsoleLib.Console.Renderable Value)
+		{
+			Writer.Write(Value == null ? (byte)0 : (byte)1);
+			if (Value == null) return;
+			WriteProofString(Writer, Value.Tile); WriteProofString(Writer, Value.RenderString);
+			WriteProofString(Writer, Value.ColorString); WriteProofString(Writer, Value.TileColor);
+			Writer.Write(Value.DetailColor);
+		}
+
+		private static bool FinishProofHash(System.IO.MemoryStream Stream,
+			System.IO.BinaryWriter Writer, out string Hash)
+		{
+			Hash = null;
+			Writer.Flush();
+			if (Stream.Length > KingdomArchivedSettlementCodec.MaxPayloadBytes * 4L) return false;
+			using (global::System.Security.Cryptography.SHA256 sha =
+				global::System.Security.Cryptography.SHA256.Create())
+			{
+				byte[] digest = sha.ComputeHash(Stream.ToArray());
+				System.Text.StringBuilder text = new System.Text.StringBuilder(64);
+				for (int i = 0; i < digest.Length; i++) text.Append(digest[i].ToString("x2"));
+				Hash = text.ToString();
+				return true;
+			}
+		}
+
+		private static void WriteHashText(System.IO.BinaryWriter Writer, string Value,
+			System.Text.Encoding Utf8)
+		{
+			if (Value == null) { Writer.Write(-1); return; }
+			int count = Utf8.GetByteCount(Value); Writer.Write(count);
+			Writer.Write(Utf8.GetBytes(Value));
+		}
+
+		private bool QuarantineReturn(KingdomRealmArchive Archive, string Failure,
+			out string Refusal)
+		{
+			Archive.Quarantine(Failure);
+			Refusal = "The returned realm changed during an engine callback and requires inspection.";
+			return false;
+		}
+
+		private bool CurrentRealmIsCanonicalBlank(KingdomRealmArchive Archive)
+		{
+			if (Archive == null || Founded || KingdomFactionName != null || RealmId != null ||
+				KingdomDisplayName != null ||
+				Away != null || Standings == null || Standings.Count != 0 ||
+				RealmIdentityVersion != 0 || RealmIdentityOrigin != KingdomIdentityOrigin.None ||
+				RealmIdentityTransactionId != null || RealmIdentityLegacyFaction != null ||
+				RealmIdentityFoundedTick != 0L || RealmIdentitySeedHigh != 0UL ||
+				RealmIdentitySeedLow != 0UL || RealmIdentityFirstClaimedZone != null ||
+				IdentityFault != null || PendingSettlementId != null ||
+				PendingSettlementTransactionId != null || PendingSettlementZoneId != null ||
+				PendingSettlementAuthority != null || SimulationSeedHigh != 0UL ||
+				SimulationSeedLow != 0UL || Bindings == null || ResidentCounter != 0 || Jobs == null ||
+				LastSliceTick != 0L || ReifyTick != 0L || ReifyThirdsSpent != 0 ||
+				ReifyHeavySpent != 0 || ReifyQuietUntilTick != 0L || DedicationCounter != 0 ||
+				ChronicleEntries == null || ChronicleEntries.Count != 0 || OutsiderEntries == null ||
+				OutsiderEntries.Count != 0 || RegardSpoken != (int)RealmRegard.Beloved ||
+				Dissent != 0 || DissentSpoken != 0 || LastDissentTick != 0L ||
+				DeclaredCreed != null || DishName != null || DishText != null ||
+				DishStaple != null || DishSource != null || LastRiteTick != 0L ||
+				LastSoulRiteTick != 0L || Seceded != null || SecededTick != 0L || Haul != null ||
+				CarryBook == null || ReturnAskedRegard != int.MinValue || DoorClosedTold)
+				return false;
+			try
+			{
+				return KingdomArchivedSettlementCodec.ExactGraph(Capture(),
+					new KingdomSettlement(), out string _) &&
+					KingdomArchivedSettlementCodec.EmptyRegistries(Bindings, Jobs) &&
+					KingdomArchivedSettlementCodec.EmptyCarry(CarryBook);
+			}
+			catch
+			{
+				return false;
+			}
+		}
+
+		private bool RestoreArchivedRealmCore(KingdomRealmArchive Archive,
+			out string Failure)
+		{
+			Failure = null;
+			if (Archive == null ||
+				!KingdomArchivedSettlementCodec.TryClone(Archive.Seat,
+					out KingdomSettlement seat, out Failure) ||
+				!KingdomArchivedSettlementCodec.TryClone(Archive.Away,
+					out KingdomSettlement away, out Failure) ||
+				!KingdomArchivedSettlementCodec.TryClone(Archive.Seceded,
+					out KingdomSettlement seceded, out Failure) ||
+				!KingdomRealmArchive.TryCloneCarry(Archive.CarryBook,
+					out KingdomCarryBook carry, out Failure)) return false;
+			Simulation.City.KingdomBindingRegistry bindings =
+				KingdomRealmArchive.CloneBindings(Archive.Bindings);
+			Simulation.City.KingdomJobRegistry jobs = KingdomRealmArchive.CloneJobs(Archive.Jobs);
+			List<string> chronicle = KingdomRealmArchive.CloneStrings(Archive.ChronicleEntries);
+			List<string> outsider = KingdomRealmArchive.CloneStrings(Archive.OutsiderEntries);
+			Dictionary<string, int> standings = KingdomRealmArchive.CloneStandings(Archive.Standings);
+			if (seat == null || bindings == null || jobs == null || chronicle == null ||
+				outsider == null || standings == null)
+			{
+				Failure = "archived realm graph has a null required root";
+				return false;
+			}
+			KingdomFactionName = Archive.FactionName;
+			KingdomDisplayName = Archive.DisplayName;
+			Restore(seat);
+			Away = away;
+			Standings = standings;
+			RealmId = Archive.RealmId;
+			RealmIdentityVersion = Archive.RealmIdentityVersion;
+			RealmIdentityOrigin = Archive.RealmIdentityOrigin;
+			RealmIdentityTransactionId = Archive.RealmIdentityTransactionId;
+			RealmIdentityLegacyFaction = Archive.RealmIdentityLegacyFaction;
+			RealmIdentityFoundedTick = Archive.RealmIdentityFoundedTick;
+			RealmIdentitySeedHigh = Archive.RealmIdentitySeedHigh;
+			RealmIdentitySeedLow = Archive.RealmIdentitySeedLow;
+			RealmIdentityFirstClaimedZone = Archive.RealmIdentityFirstClaimedZone;
+			IdentityFault = null;
+			SimulationSeedHigh = Archive.SimulationSeedHigh;
+			SimulationSeedLow = Archive.SimulationSeedLow;
+			Bindings = bindings;
+			ResidentCounter = Archive.ResidentCounter;
+			Jobs = jobs;
+			LastSliceTick = Archive.LastSliceTick;
+			ReifyTick = Archive.ReifyTick;
+			ReifyThirdsSpent = Archive.ReifyThirdsSpent;
+			ReifyHeavySpent = Archive.ReifyHeavySpent;
+			ReifyQuietUntilTick = Archive.ReifyQuietUntilTick;
+			DedicationCounter = Archive.DedicationCounter;
+			ChronicleEntries = chronicle;
+			OutsiderEntries = outsider;
+			RegardSpoken = Archive.RegardSpoken;
+			Dissent = Archive.Dissent;
+			DissentSpoken = Archive.DissentSpoken;
+			LastDissentTick = Archive.LastDissentTick;
+			DeclaredCreed = Archive.DeclaredCreed;
+			DishName = Archive.DishName;
+			DishText = Archive.DishText;
+			DishStaple = Archive.DishStaple;
+			DishSource = Archive.DishSource;
+			LastRiteTick = Archive.LastRiteTick;
+			LastSoulRiteTick = Archive.LastSoulRiteTick;
+			Seceded = seceded;
+			SecededTick = Archive.SecededTick;
+			Haul = KingdomRealmArchive.CloneHaul(Archive.Haul);
+			CarryBook = carry;
+			PendingSettlementId = null;
+			PendingSettlementTransactionId = null;
+			PendingSettlementZoneId = null;
+			PendingSettlementAuthority = null;
+			ReturnAskedRegard = int.MinValue;
+			DoorClosedTold = false;
+			return true;
+		}
+
+		private bool CurrentRealmMatchesArchive(KingdomRealmArchive Archive)
+		{
+			List<string> ids;
+			string failure;
+			if (Archive == null || Archive.Quarantined ||
+				!string.Equals(RealmId, Archive.RealmId, StringComparison.Ordinal) ||
+				!TryExactSettlementIds(RequirePublishedClaims: true, out ids, out failure) ||
+				Archive.SettlementIds == null || ids.Count != Archive.SettlementIds.Count)
+				return false;
+			for (int i = 0; i < ids.Count; i++)
+				if (!string.Equals(ids[i], Archive.SettlementIds[i],
+					StringComparison.Ordinal)) return false;
+			return string.Equals(RealmId, Archive.RealmId, StringComparison.Ordinal) &&
+				ExactArchivedSettlements(Archive.RealmId, ExiledSeat, ExiledAway,
+					Archive.SettlementIds) && Archive.CurrentGraphMatches(this, out failure);
 		}
 
 		/// <summary>Founder-facing reason an expulsion did not proceed.</summary>
@@ -1292,7 +4253,7 @@ namespace ThousandAndFirst
 				if (SerializationVersion == LegacyReflectedSerializationVersion)
 				{
 					SerializationVersion = CurrentSerializationVersion;
-					NormalizeState();
+					NormalizeState(AllowLegacyIdentityMigration: true);
 					return;
 				}
 				int magic = Reader.ReadInt32();
@@ -1307,7 +4268,7 @@ namespace ThousandAndFirst
 				}
 				Reader.ReadNamedFields(this, typeof(KingdomSystem));
 				SerializationVersion = CurrentSerializationVersion;
-				NormalizeState();
+				NormalizeState(AllowLegacyIdentityMigration: false);
 			}
 			catch
 			{
@@ -1336,7 +4297,18 @@ namespace ThousandAndFirst
 			// so a second game in the same session would otherwise read the first one's quest
 			// verdicts and believe its journal notes were already filed.
 			KingdomResearch.Reload();
-			NormalizeState();
+			NormalizeState(AllowLegacyIdentityMigration: false);
+			if (ExiledRealmArchive != null &&
+				(ExiledRealmArchive.Phase == KingdomRealmArchivePhase.Prepared ||
+				 ExiledRealmArchive.Phase == KingdomRealmArchivePhase.TradeClosed ||
+				 ExiledRealmArchive.Phase == KingdomRealmArchivePhase.MirrorsPublished ||
+				 ExiledRealmArchive.Phase == KingdomRealmArchivePhase.ChronicleFrozen ||
+				 ExiledRealmArchive.Phase == KingdomRealmArchivePhase.ChronicleCleared ||
+				 ExiledRealmArchive.Phase == KingdomRealmArchivePhase.Resetting))
+			{
+				string refusal;
+				ContinueExileTransition(out refusal);
+			}
 		}
 
 		public override void Register(XRLGame Game, IEventRegistrar Registrar)
@@ -1386,7 +4358,7 @@ namespace ThousandAndFirst
 		{
 			Guard("pump", delegate
 			{
-				Simulation.City.KingdomHeartbeat.OnEndTurn(this);
+				Simulation.City.KingdomHeartbeat.OnEndTurn(this, AttendSeatedSemantics);
 			});
 			return base.HandleEvent(E);
 		}
@@ -1456,67 +4428,128 @@ namespace ThousandAndFirst
 					XRL.Messages.MessageQueue.AddPlayerMessage("{{K|This ground isn't yours to keep anymore. (Charter: how your cities hold each other)}}");
 				}
 			});
-			if (!Founded || E.Zone == null || !ClaimedZones.Contains(E.Zone.ZoneID))
+			Guard("semantic activation", delegate
 			{
-				return base.HandleEvent(E);
+				Simulation.City.KingdomSemanticDispatcher.OnZoneActivated(this, E.Zone,
+					The.Game.TimeTicks, AttendSeatedSemantics);
+			});
+			return base.HandleEvent(E);
+		}
+
+		/// <summary>
+		/// The single ordered attended settlement pass. Zone activation and the stationary
+		/// end-turn scheduler both enter through <see cref="Simulation.City.KingdomSemanticDispatcher"/>,
+		/// so waiting and crossing a boundary cannot select different implementations.
+		/// </summary>
+		private const long SemanticStepCheckIn = 1L << 0;
+		private const long SemanticStepTrade = 1L << 1;
+		private const long SemanticStepGrowth = 1L << 2;
+		private const long SemanticStepPetitions = 1L << 3;
+		private const long SemanticStepImprovement = 1L << 4;
+		private const long SemanticStepBounties = 1L << 5;
+		private const long SemanticStepRaids = 1L << 6;
+		private const long SemanticStepWear = 1L << 7;
+		private const long SemanticStepOffices = 1L << 8;
+		private const long SemanticStepReach = 1L << 9;
+		private const long SemanticStepLocus = 1L << 10;
+		private const long SemanticStepGuestbook = 1L << 11;
+		private const long SemanticStepCreed = 1L << 12;
+		private const long SemanticStepFaith = 1L << 13;
+		private const long SemanticStepHappenings = 1L << 14;
+		private const long SemanticStepCheckOut = 1L << 15;
+		private const long SemanticStepDigest = 1L << 16;
+		private const long SemanticStepSeal = 1L << 17;
+		private const long SemanticStepLab = 1L << 18;
+		private const long SemanticStepConstruction = 1L << 19;
+
+		private const long SemanticRequiredMask = (1L << 20) - 1L;
+
+		private bool AttendSeatedSemantics(Zone Z)
+		{
+			if (!Founded || Z == null || !ClaimedZones.Contains(Z.ZoneID))
+			{
+				return false;
+			}
+			if (!PrepareSemanticPass(Z, The.Game.TimeTicks))
+			{
+				return false;
 			}
 			KingdomSurvey survey = null;
 			Guard("survey", delegate
 			{
 				// The district-aware overload: a garrison district trains the whole watch, so the
 				// bonus has to be on the shared survey Raids later reads defence from.
-				survey = KingdomSurvey.Take(E.Zone, this);
+				survey = KingdomSurvey.Take(Z, this);
 			});
 			if (survey == null)
 			{
-				return base.HandleEvent(E);
+				return false;
 			}
-			Ledger.Reset();
+			// The ledger is an unread report, not one pass's scratch buffer. It is cleared only
+			// after the founder opens the report in the Charter; stationary daily reconciliation
+			// therefore appends instead of erasing yesterday's news.
 			// After survey and before trade, and the order is the whole of LIVING-CITY-ARCHITECTURE
 			// §3.1: the model is advanced to now, this zone's standing debt is paid onto its real
 			// containers in dedication order, the city's own stock is carried to where the founder
 			// is standing, and then the ground overwrites the row. Everything below reads a ground
 			// the book has already made true.
-			Guard("check-in", delegate
+			if (!TrySemanticStep(SemanticStepCheckIn, "check-in", delegate
 			{
-				Simulation.City.KingdomCity.CheckIn(this, E.Zone, survey, The.Game.TimeTicks);
-			});
-			// What this city has room for, remembered for as long as the founder is away from it.
-			LastKnownStorageSpace = survey.StorageSpace;
+				Simulation.City.KingdomCity.CheckIn(this, Z, survey, The.Game.TimeTicks);
+				// What this city has room for, remembered for as long as the founder is away from it.
+				LastKnownStorageSpace = survey.StorageSpace;
+			}))
+			{
+				return false;
+			}
 			// Trade runs BEFORE growth, and the order is load-bearing. Both draw on one shared
 			// survey, and growth is where upkeep is taken and the thirst ladder resolves. Water
 			// that arrived this pass - a caravan under charter, a manifest sent from the realm's
 			// other city - has to be in the stores before anything is drawn from them, or a
 			// delivery sent precisely to end a drought would arrive one step too late to stop the
 			// emigration it was sent to prevent.
-			Guard("trade", delegate
+			if (!TrySemanticStep(SemanticStepTrade, "trade", delegate
 			{
-				KingdomTrade.OnZoneActivated(this, E.Zone, survey);
-			});
-			Guard("growth", delegate
+				KingdomTrade.OnZoneActivated(this, Z, survey);
+			})) return false;
+			if (!TrySemanticStep(SemanticStepGrowth, "growth", delegate
 			{
-				KingdomGrowth.OnZoneActivated(this, E.Zone, survey);
-			});
+				KingdomGrowth.OnZoneActivated(this, Z, survey);
+			})) return false;
+			// Costed construction is an independent semantic lane. Growth's option controls new
+			// settler arrivals, not whether an already-paid scaffold, plot, road, conversion, upgrade,
+			// or repair may recover. Run its durable receipt resolver after upkeep/work assignment and
+			// before any later luxury lane can spend the same remaining stores.
+			if (!TrySemanticStep(SemanticStepConstruction, "construction", delegate
+			{
+				KingdomConstruction.OnSettlementPass(this, Z, survey);
+			})) return false;
+			// Petitions own their own option and calendar. They are settlement asks, not a side
+			// effect of population growth, so disabling Growth cannot silence an accepted promise.
+			if (!TrySemanticStep(SemanticStepPetitions, "petitions", delegate
+			{
+				KingdomPetitions.OnSettlementPass(this, Z, survey);
+			})) return false;
 			// After growth, and the order is load-bearing for the same reason trade runs before it:
 			// growth is where this pass's arrivals, upkeep, and work assignment land, so the free
 			// hands and the stores an improvement is allowed to draw on are only true once growth
 			// has finished with them. An improvement is a luxury paid out of what is left.
-			Guard("improvement", delegate
+			if (!TrySemanticStep(SemanticStepImprovement, "improvement", delegate
 			{
-				KingdomUpgrade.OnZoneActivated(this, E.Zone, survey);
-			});
+				KingdomUpgrade.OnZoneActivated(this, Z, survey);
+			})) return false;
 			// After improvement, and the order is load-bearing for the same reason improvement runs
 			// after growth: a posted price is paid out of what the stores still hold once the
 			// settlement's own upkeep and arrivals are done with them, and a manning notice can only
 			// fill an idleness AssignWork has already finished measuring.
-			Guard("bounties", delegate
+			if (!TrySemanticStep(SemanticStepBounties, "bounties", delegate
 			{
-				KingdomBounty.OnSettlementPass(this, E.Zone, survey);
-			});
-			Guard("raids", delegate
+				KingdomBounty.OnSettlementPass(this, Z, survey);
+			})) return false;
+			if (!TrySemanticStep(SemanticStepRaids, "raids", delegate
 			{
-				KingdomRaids.OnZoneActivated(this, E.Zone, survey);
-			});
+				KingdomRaids.OnZoneActivated(this, Z, survey);
+			})) return false;
 			// After raids, and the order is load-bearing in both directions. After growth, because
 			// hard running is read off the crew stretch KingdomGrowth.AssignWork stamps on
 			// KingdomEffectiveness. After bounties and raids, because both move a work this pass
@@ -1526,60 +4559,80 @@ namespace ThousandAndFirst
 			// itself (Addendum 10(b)), so the ordering no longer decides that arithmetic. Raid damage itself is a separate hook inside KingdomRaids.ExecuteRaid,
 			// invoked from the "raids" step above -- it does not run from here. Before reach, so a
 			// damaged great work shades its ground by what it is actually managing.
-			Guard("wear", delegate
+			if (!TrySemanticStep(SemanticStepWear, "wear", delegate
 			{
-				KingdomWear.OnZoneActivated(this, E.Zone, survey);
-			});
-			Guard("offices", delegate
+				KingdomWear.OnZoneActivated(this, Z, survey);
+			})) return false;
+			// The Lab reads staffing after growth and condition after wear. Its persisted job clock
+			// receives the pass's stable start tick, so a failed later step and retry cannot mint
+			// another slice of staffed work from wall-clock time that elapsed between attempts.
+			if (!TrySemanticStep(SemanticStepLab, "lab work", delegate
 			{
-				KingdomOffices.OnZoneActivated(this, E.Zone);
-			});
+				KingdomLab.OnSemanticStep(this, Z, survey, SemanticPassStartedTick);
+			})) return false;
+			if (!TrySemanticStep(SemanticStepOffices, "offices", delegate
+			{
+				KingdomOffices.OnZoneActivated(this, Z);
+			})) return false;
 			// A great work is an office SEAT (Addendum 6), so the settlement's own office settles
 			// first and the faith pass below can already ask what reaches whom.
-			Guard("reach", delegate
+			if (!TrySemanticStep(SemanticStepReach, "reach", delegate
 			{
-				KingdomReach.OnZoneActivated(this, E.Zone, survey);
-			});
-			Guard("locus", delegate
+				KingdomReach.OnZoneActivated(this, Z, survey);
+			})) return false;
+			if (!TrySemanticStep(SemanticStepLocus, "locus", delegate
 			{
-				KingdomLocus.OnZoneActivated(this, E.Zone, survey);
-			});
-			Guard("guestbook", delegate
+				KingdomLocus.OnZoneActivated(this, Z, survey);
+			})) return false;
+			if (!TrySemanticStep(SemanticStepGuestbook, "guestbook", delegate
 			{
-				KingdomGuestbook.OnZoneActivated(this, E.Zone, survey);
-			});
-			Guard("creed", delegate
+				KingdomGuestbook.OnZoneActivated(this, Z, survey);
+			})) return false;
+			if (!TrySemanticStep(SemanticStepCreed, "creed", delegate
 			{
-				KingdomCreed.OnZoneActivated(this, E.Zone);
-			});
-			Guard("faith", delegate
+				KingdomCreed.OnZoneActivated(this, Z);
+			})) return false;
+			if (!TrySemanticStep(SemanticStepFaith, "faith", delegate
 			{
-				KingdomFaith.OnZoneActivated(this, E.Zone, survey);
-			});
+				KingdomFaith.OnZoneActivated(this, Z, survey);
+			})) return false;
 			// W4. After faith, and last of the resolvers, because a happening is a RENDERING of
 			// what the pass has already settled: the creed the city holds with, the works that are
 			// still turning, and who is left on the roll. Running it earlier would tell the founder
 			// about a city one step out of date.
-			Guard("happenings", delegate
+			if (!TrySemanticStep(SemanticStepHappenings, "happenings", delegate
 			{
-				Simulation.City.KingdomHappenings.OnZoneActivated(this, E.Zone);
-			});
+				Simulation.City.KingdomHappenings.OnZoneActivated(this, Z);
+			})) return false;
 			// The cheaper last read, and the one that usually beats SuspendingEvent there: what
 			// this zone actually holds once the day has been drawn and the works have run. A
 			// missed check-out costs freshness, never correctness (§3.4).
-			Guard("check-out", delegate
+			if (!TrySemanticStep(SemanticStepCheckOut, "check-out", delegate
 			{
-				Simulation.City.KingdomCity.CheckOut(this, E.Zone, survey, The.Game.TimeTicks);
-			});
-			Guard("digest", delegate
+				Simulation.City.KingdomCity.CheckOut(this, Z, survey, The.Game.TimeTicks);
+			})) return false;
+			if (!TrySemanticStep(SemanticStepDigest, "digest", delegate
 			{
+				if (Simulation.City.KingdomSemanticDispatcher.IsStationaryDispatch)
+				{
+					// The founder remained on this ground. Keep the presentation clock current, but
+					// do not turn a daily settlement resolve into news of an absence that never happened.
+					LastVisitTick = The.Game.TimeTicks;
+					if (!Ledger.Any)
+					{
+						HomecomingDays = 0;
+					}
+					return;
+				}
 				long elapsed = The.Game.TimeTicks - LastVisitTick;
 				// W4. What the told-log ring holds since the founder last stood here, counted into
 				// the ordinary note lane before the report announces itself. Read from the ring
 				// and nowhere else, so a happening is remembered once and reported once.
 				Simulation.City.KingdomHappenings.Digest(this, City, LastVisitTick);
 				LastVisitTick = The.Game.TimeTicks;
-				HomecomingDays = KingdomRules.ElapsedDays(elapsed);
+				int newlyAccounted = KingdomRules.ElapsedDays(elapsed);
+				long totalAccounted = (long)HomecomingDays + newlyAccounted;
+				HomecomingDays = (totalAccounted > int.MaxValue) ? int.MaxValue : (int)totalAccounted;
 				if (Ledger.Any && elapsed >= KingdomRules.TicksPerDay)
 				{
 					// Nonmodal on purpose. You come home to a report, not an inspection: the
@@ -1587,11 +4640,11 @@ namespace ThousandAndFirst
 					XRL.Messages.MessageQueue.AddPlayerMessage("{{C|" + SeatName + "}} has news of the "
 						+ ((HomecomingDays == 1) ? "day" : HomecomingDays + " days") + " you were away. {{K|(Charter: what happened while you were away)}}");
 				}
-			});
+			})) return false;
 			// This is the coherent boundary for a settlement visit: intake, simulation, ground
 			// publication, chronicle, and digest have all finished. The profile journal compares the
 			// semantic snapshot and writes only when one of those facts actually changed.
-			Guard("seal stage", delegate
+			if (!TrySemanticStep(SemanticStepSeal, "seal stage", delegate
 			{
 				string failure;
 				if (!KingdomSeal.TryStageSemanticSnapshot("settlement pass", out failure))
@@ -1599,8 +4652,60 @@ namespace ThousandAndFirst
 					KingdomLog.Log("seal: settlement pass was not staged ("
 						+ (string.IsNullOrEmpty(failure) ? "unknown failure" : failure) + ")");
 				}
-			});
-			return base.HandleEvent(E);
+			})) return false;
+			return (SemanticPassCompletedMask & SemanticRequiredMask) == SemanticRequiredMask;
+		}
+
+		/// <summary>Starts a new durable pass only after the previous receipt was published. An
+		/// unfinished pass is tied to its original ground and resumes there even after more world
+		/// time elapsed; every subsystem owns its own absolute catch-up clock.</summary>
+		private bool PrepareSemanticPass(Zone Z, long NowTick)
+		{
+			Simulation.City.KingdomSemanticPassReceiptVerdict verdict =
+				Simulation.City.KingdomSemanticClockRules.ReceiptVerdict(
+					SemanticPassActive, SemanticPassStartedTick, SemanticPassZoneId,
+					SemanticPassCompletedMask, SemanticRequiredMask, LastSemanticTick, Z.ZoneID);
+			if (verdict == Simulation.City.KingdomSemanticPassReceiptVerdict.Start)
+			{
+				SemanticPassActive = true;
+				SemanticPassStartedTick = (NowTick > 0L) ? NowTick : 0L;
+				SemanticPassZoneId = Z.ZoneID;
+				SemanticPassStartedMask = 0L;
+				SemanticPassCompletedMask = 0L;
+				return true;
+			}
+			if (verdict == Simulation.City.KingdomSemanticPassReceiptVerdict.RefuseDifferentGround)
+			{
+				KingdomLog.Log("semantic: unfinished pass remains bound to "
+					+ (SemanticPassZoneId ?? "?") + "; refused resume on " + Z.ZoneID);
+				return false;
+			}
+			return true;
+		}
+
+		/// <summary>One named subsystem receipt. Started is written before the call and completed
+		/// only after it returns. A throw stops the pass without advancing LastSemanticTick; retry
+		/// skips every completed predecessor and re-enters only the incomplete step.</summary>
+		private bool TrySemanticStep(long Bit, string Step, System.Action Action)
+		{
+			if ((SemanticPassCompletedMask & Bit) != 0L)
+			{
+				return true;
+			}
+			SemanticPassStartedMask |= Bit;
+			try
+			{
+				Action();
+				SemanticPassCompletedMask |= Bit;
+				return true;
+			}
+			catch (System.Exception ex)
+			{
+				MetricsManager.LogError("ThousandAndFirst: semantic " + Step
+					+ " failed; the pass remains recoverable", ex);
+				KingdomLog.Log("SEMANTIC caught in " + Step + ": " + ex.Message);
+				return false;
+			}
 		}
 
 		/// <summary>
@@ -1716,18 +4821,25 @@ namespace ThousandAndFirst
 		/// <param name="FactionName">Faction name (not display name).</param>
 		public void MirrorFeeling(string FactionName)
 		{
-			if (!Founded || FactionName == KingdomFactionName || FactionName == "Player")
+			if (!Founded || string.IsNullOrEmpty(FactionName)
+				|| FactionName == KingdomFactionName || FactionName == "Player")
 			{
 				return;
 			}
-			// GetIfExists, never Get: Factions.Get throws on an unknown name, and a standings key
-			// can outlive the faction it names when a save moves between builds. A throw here
-			// would abort the whole re-assert loop, not just this one faction.
-			Faction faction = Factions.GetIfExists(FactionName);
-			if (faction != null)
+			// One projection is never allowed to abort the rest of a load-time reassertion. The
+			// standings dictionary is durable truth; a missing or hostile faction implementation
+			// merely leaves its derived feeling stale until the next retry.
+			Guard("feeling projection " + (FactionName ?? "?"), delegate
 			{
-				faction.SetFactionFeeling(KingdomFactionName, Reputation.GetFeeling((float)GetStanding(FactionName)));
-			}
+				// GetIfExists, never Get: a standings key can outlive the faction it names when a
+				// save moves between builds.
+				Faction faction = Factions.GetIfExists(FactionName);
+				if (faction != null)
+				{
+					faction.SetFactionFeeling(KingdomFactionName,
+						Reputation.GetFeeling((float)GetStanding(FactionName)));
+				}
+			});
 		}
 
 		/// <summary>
@@ -1758,13 +4870,58 @@ namespace ThousandAndFirst
 			}
 		}
 
-		private void NormalizeState()
+		private void NormalizeState(bool AllowLegacyIdentityMigration)
 		{
+			if (!Enum.IsDefined(typeof(GrowthStage), Stage))
+			{
+				Stage = GrowthStage.Camp;
+			}
+			if (LastMeal != KingdomRules.MealVerdict.None &&
+				LastMeal != KingdomRules.MealVerdict.Scraps &&
+				LastMeal != KingdomRules.MealVerdict.Plain &&
+				LastMeal != KingdomRules.MealVerdict.Favored)
+			{
+				LastMeal = KingdomRules.MealVerdict.None;
+			}
+			if (Gate != KingdomRules.GatePolicy.Open &&
+				Gate != KingdomRules.GatePolicy.Guarded)
+			{
+				Gate = KingdomRules.GatePolicy.Open;
+			}
+			if (Stores != KingdomRules.StoresPolicy.Plenty &&
+				Stores != KingdomRules.StoresPolicy.Thrift)
+			{
+				Stores = KingdomRules.StoresPolicy.Plenty;
+			}
+			if (!Enum.IsDefined(typeof(KingdomRules.PetitionKind), PetitionKind))
+			{
+				PetitionKind = KingdomRules.PetitionKind.None;
+			}
+			if (!Enum.IsDefined(typeof(PetitionLifecycle), PetitionState))
+			{
+				PetitionState = PetitionLifecycle.None;
+			}
+			if (RaidState != 0 && RaidState != 1)
+			{
+				RaidState = 0;
+				RaidFactionName = null;
+				RaidDueTick = 0L;
+			}
 			if (City == null)
 			{
 				City = new Simulation.City.KingdomCityBook();
 			}
 			City.Normalize();
+			if (LifecycleBook == null)
+			{
+				LifecycleBook = new KingdomLifecycleBook();
+			}
+			KingdomLifecycleRules.Normalize(LifecycleBook);
+			if (CarryBook == null)
+			{
+				CarryBook = new KingdomCarryBook();
+			}
+			KingdomLifecycleRules.Normalize(CarryBook);
 			if (Jobs == null)
 			{
 				Jobs = new Simulation.City.KingdomJobRegistry();
@@ -1817,6 +4974,33 @@ namespace ThousandAndFirst
 			{
 				LastSubsidenceTick = 0L;
 			}
+			if (LastSemanticTick < 0L)
+			{
+				LastSemanticTick = 0L;
+			}
+			if (HomecomingDays < 0)
+			{
+				HomecomingDays = 0;
+			}
+			if (!SemanticPassActive)
+			{
+				SemanticPassStartedTick = 0L;
+				SemanticPassZoneId = null;
+				SemanticPassStartedMask = 0L;
+				SemanticPassCompletedMask = 0L;
+			}
+			else if (SemanticPassStartedTick < 0L || string.IsNullOrEmpty(SemanticPassZoneId)
+				|| SemanticPassStartedMask < 0L || SemanticPassCompletedMask < 0L
+				|| (SemanticPassCompletedMask & ~SemanticPassStartedMask) != 0L)
+			{
+				// A corrupt receipt cannot safely say which subsystem already mutated. Drop only
+				// the scheduler receipt; every subsystem's own absolute clock remains authoritative.
+				SemanticPassActive = false;
+				SemanticPassStartedTick = 0L;
+				SemanticPassZoneId = null;
+				SemanticPassStartedMask = 0L;
+				SemanticPassCompletedMask = 0L;
+			}
 			if (SupportedLevel < 0)
 			{
 				SupportedLevel = 0;
@@ -1843,7 +5027,7 @@ namespace ThousandAndFirst
 			}
 			if (DissentSpoken < 0 || DissentSpoken > (int)CityTemper.Secession)
 			{
-				DissentSpoken = (DissentSpoken < 0) ? 0 : (int)CityTemper.Secession;
+				DissentSpoken = 0;
 			}
 			if (ConversionShared == null)
 			{
@@ -1857,30 +5041,43 @@ namespace ThousandAndFirst
 			{
 				ConversionResented = new Dictionary<string, int>();
 			}
-			if (ExiledStandings == null)
+			bool archiveTransactionActive = ExiledRealmArchive != null &&
+				ExiledRealmArchive.Phase != KingdomRealmArchivePhase.None;
+			// Once an archive phase exists, only its explicit exact-or-missing mirror CAS may
+			// publish or retire mirror fields. Generic load normalization must not promote,
+			// clear, allocate, or normalize one half of that transaction.
+			if (!archiveTransactionActive)
 			{
-				ExiledStandings = new Dictionary<string, int>();
-			}
-			if (Exiled)
-			{
-				// A remembered realm must have a seat to be restored into. Promoting its other
-				// city beats refusing the return outright, and beats restoring a null.
-				if (ExiledSeat == null)
+				if (ExiledStandings == null)
 				{
-					ExiledSeat = ExiledAway ?? new KingdomSettlement();
-					ExiledAway = null;
+					ExiledStandings = new Dictionary<string, int>();
 				}
+				if (Exiled)
+				{
+					// Legacy saves without an archive may promote their sole remembered city.
+					if (ExiledSeat == null)
+					{
+						ExiledSeat = ExiledAway ?? new KingdomSettlement();
+						ExiledAway = null;
+					}
+				}
+				else
+				{
+					ExiledDisplayName = null;
+					ExiledDeed = null;
+					ExiledSeat = null;
+					ExiledAway = null;
+					ExiledStandings.Clear();
+				}
+				ExiledSeat?.Normalize();
+				ExiledAway?.Normalize();
 			}
-			else
+			if (ExiledRealmArchive != null && !ExiledRealmArchive.Quarantined)
 			{
-				ExiledDisplayName = null;
-				ExiledDeed = null;
-				ExiledSeat = null;
-				ExiledAway = null;
-				ExiledStandings.Clear();
+				string archiveFailure;
+				if (!ExiledRealmArchive.Validate(out archiveFailure))
+					ExiledRealmArchive.Quarantine(archiveFailure);
 			}
-			ExiledSeat?.Normalize();
-			ExiledAway?.Normalize();
 			if (RegardSpoken < (int)RealmRegard.Beloved || RegardSpoken > (int)RealmRegard.Repudiated)
 			{
 				RegardSpoken = (int)RealmRegard.Beloved;
@@ -1913,6 +5110,10 @@ namespace ThousandAndFirst
 			{
 				DeadCauses = new List<string>();
 			}
+			KingdomSettlement.TruncateParallelRows(
+				RosterNames, RosterOrigins, RosterArrived);
+			KingdomSettlement.TruncateParallelRows(
+				DeadNames, DeadOrigins, DeadArrived, DeadCauses);
 			if (Ledger == null)
 			{
 				Ledger = new KingdomLedger();
@@ -1922,6 +5123,7 @@ namespace ThousandAndFirst
 			{
 				ClaimedZones = new List<string>();
 			}
+			NormalizeIdentity(AllowLegacyIdentityMigration);
 			if (ZoneDistricts == null)
 			{
 				ZoneDistricts = new Dictionary<string, string>();
@@ -1938,19 +5140,7 @@ namespace ThousandAndFirst
 			{
 				DealNextTicks = new List<long>();
 			}
-			int dealCount = Math.Min(ActiveDealKeys.Count, Math.Min(ActiveDealFactions.Count, DealNextTicks.Count));
-			if (ActiveDealKeys.Count > dealCount)
-			{
-				ActiveDealKeys.RemoveRange(dealCount, ActiveDealKeys.Count - dealCount);
-			}
-			if (ActiveDealFactions.Count > dealCount)
-			{
-				ActiveDealFactions.RemoveRange(dealCount, ActiveDealFactions.Count - dealCount);
-			}
-			if (DealNextTicks.Count > dealCount)
-			{
-				DealNextTicks.RemoveRange(dealCount, DealNextTicks.Count - dealCount);
-			}
+			NormalizeTradeBook();
 			if (ChronicleEntries == null)
 			{
 				ChronicleEntries = new List<string>();
@@ -1976,5 +5166,278 @@ namespace ThousandAndFirst
 				Standings = new Dictionary<string, int>();
 			}
 		}
+
+		private void NormalizeIdentity(bool AllowLegacyMigration)
+		{
+			if (!Founded)
+			{
+				// A first-founding callback may save after exact ids were written but before the
+				// faction/name publication. That complete transaction tuple is recoverable; every
+				// other current-realm fragment is quarantined rather than guessed into authority.
+				if (NewIdentityEvidenceEmpty() &&
+					string.IsNullOrEmpty(PendingSettlementId) &&
+					string.IsNullOrEmpty(PendingSettlementTransactionId) &&
+					string.IsNullOrEmpty(PendingSettlementZoneId) &&
+					string.IsNullOrEmpty(PendingSettlementAuthority)) return;
+				if (RealmIdentityOrigin == KingdomIdentityOrigin.FoundingTransaction &&
+					FirstIdentityMatches(RealmIdentityTransactionId,
+						RealmIdentityFirstClaimedZone)) return;
+				QuarantineIdentity("unfounded state carries partial current-realm identity");
+				return;
+			}
+
+			if (NewIdentityEvidenceEmpty())
+			{
+				string migrationFailure = null;
+				if (!AllowLegacyMigration || !TryMigrateLegacyIdentity(out migrationFailure))
+				{
+					QuarantineIdentity(AllowLegacyMigration
+						? migrationFailure
+						: "this named save has no immutable identity; pre-v8 authority is not readable");
+					return;
+				}
+			}
+			string lifecycleFailure;
+			if (!TryBindDormantLifecycleIdentity(out lifecycleFailure))
+			{
+				QuarantineIdentity(lifecycleFailure);
+				return;
+			}
+			if (Away != null)
+			{
+				if (Away.LifecycleBook == null) Away.LifecycleBook = new KingdomLifecycleBook();
+				KingdomLifecycleRules.Normalize(Away.LifecycleBook);
+				if (!KingdomLifecycleRules.BindSettlementIdentity(Away.LifecycleBook,
+					Away.City?.SettlementId, LegacyMigration: false, MigrationKey: null,
+					ExistingIds: null))
+				{
+					Away.LifecycleBook.Quarantined = true;
+					Away.LifecycleBook.Fault =
+						"away lifecycle book does not match immutable city identity";
+					QuarantineIdentity(Away.LifecycleBook.Fault);
+					return;
+				}
+			}
+			List<string> current;
+			string failure;
+			if (!TryExactSettlementIds(RequirePublishedClaims: true, out current,
+				out failure))
+			{
+				// The exact first transaction is permitted to wait for its claim callback. It
+				// grants no CurrentSettlementId until the claim exists.
+				if (FirstIdentityMatches(RealmIdentityTransactionId,
+					RealmIdentityFirstClaimedZone)) return;
+				QuarantineIdentity(failure);
+				return;
+			}
+			if (!PendingSettlementTupleValid(out string pendingFailure))
+			{
+				QuarantineIdentity(pendingFailure);
+				return;
+			}
+			if (!string.IsNullOrEmpty(PendingSettlementId) &&
+				current.Contains(PendingSettlementId))
+			{
+				// The city publication won the save cut. Settle only after Trade proves the same
+				// complete set; no name or seat role participates.
+				if (!TryBindTradeIdentity(out failure) ||
+					!ClearPendingSettlementIdentity(PendingSettlementTransactionId,
+						PendingSettlementZoneId, PendingSettlementAuthority))
+				{
+					QuarantineIdentity("published pending city could not settle exact topology: " +
+						failure);
+				}
+			}
+		}
+
+		private bool TryMigrateLegacyIdentity(out string Failure)
+		{
+			Failure = null;
+			string seatZone;
+			string awayZone = null;
+			if (!TryFirstClaimEvidence(ClaimedZones, out seatZone) ||
+				(Away != null && !TryFirstClaimEvidence(Away.ClaimedZones, out awayZone)) ||
+				string.IsNullOrEmpty(KingdomFactionName) || KingdomFactionName.Length > 512 ||
+				(City != null && City.SettlementId != null && City.SettlementId.Length > 256) ||
+				(Away?.City != null && Away.City.SettlementId != null &&
+				 Away.City.SettlementId.Length > 256))
+			{
+				Failure = "legacy identity evidence is partial or outside hard bounds";
+				return false;
+			}
+			KingdomIdentityFault fault;
+			string realm;
+			string seatId;
+			string awayId = null;
+			if (!KingdomIdentityRules.TryMigrateRealm(KingdomFactionName, FoundedTick,
+					SimulationSeedHigh, SimulationSeedLow, seatZone, out realm, out fault) ||
+				!KingdomIdentityRules.TryMigrateSettlement(realm, FoundedTick, seatZone,
+					out seatId, out fault) ||
+				(Away != null && !KingdomIdentityRules.TryMigrateSettlement(realm,
+					Away.FoundedTick, awayZone, out awayId, out fault)))
+			{
+				Failure = "legacy identity evidence could not mint a complete set (" + fault + ").";
+				return false;
+			}
+			List<string> ids = new List<string> { seatId };
+			if (awayId != null) ids.Add(awayId);
+			if (!KingdomIdentityRules.ValidateRealmTopology(realm, ids, out fault))
+			{
+				Failure = "legacy identity set is duplicate or malformed (" + fault + ").";
+				return false;
+			}
+			string oldSeatId = City?.SettlementId;
+			string oldAwayId = Away?.City?.SettlementId;
+			RealmId = realm;
+			RealmIdentityVersion = KingdomIdentityRules.RulesVersion;
+			RealmIdentityOrigin = KingdomIdentityOrigin.LegacyMigration;
+			RealmIdentityTransactionId = null;
+			RealmIdentityLegacyFaction = KingdomFactionName;
+			RealmIdentityFoundedTick = FoundedTick;
+			RealmIdentitySeedHigh = SimulationSeedHigh;
+			RealmIdentitySeedLow = SimulationSeedLow;
+			RealmIdentityFirstClaimedZone = seatZone;
+			if (City == null) City = new Simulation.City.KingdomCityBook();
+			City.SettlementId = seatId;
+			SettlementIdentityVersion = KingdomIdentityRules.RulesVersion;
+			SettlementIdentityOrigin = KingdomIdentityOrigin.LegacyMigration;
+			SettlementIdentityTransactionId = null;
+			SettlementIdentityFoundedTick = FoundedTick;
+			SettlementIdentityFirstClaimedZone = seatZone;
+			SettlementIdentityLegacyId = oldSeatId;
+			if (Away != null)
+			{
+				if (Away.City == null) Away.City = new Simulation.City.KingdomCityBook();
+				Away.City.SettlementId = awayId;
+				Away.SettlementIdentityVersion = KingdomIdentityRules.RulesVersion;
+				Away.SettlementIdentityOrigin = KingdomIdentityOrigin.LegacyMigration;
+				Away.SettlementIdentityTransactionId = null;
+				Away.SettlementIdentityFoundedTick = Away.FoundedTick;
+				Away.SettlementIdentityFirstClaimedZone = awayZone;
+				Away.SettlementIdentityLegacyId = oldAwayId;
+			}
+			IdentityFault = null;
+			return true;
+		}
+
+		private static bool TryFirstClaimEvidence(List<string> Claims, out string ZoneId)
+		{
+			ZoneId = null;
+			if (Claims == null || Claims.Count < 1 || Claims.Count > 4096) return false;
+			string first = Claims[0];
+			if (string.IsNullOrEmpty(first) || first.Length > 512) return false;
+			for (int i = 0; i < Claims.Count; i++)
+				if (string.IsNullOrEmpty(Claims[i]) || Claims[i].Length > 512) return false;
+			ZoneId = first;
+			return true;
+		}
+
+		private bool PendingSettlementTupleValid(out string Failure)
+		{
+			Failure = null;
+			bool any = !string.IsNullOrEmpty(PendingSettlementId) ||
+				!string.IsNullOrEmpty(PendingSettlementTransactionId) ||
+				!string.IsNullOrEmpty(PendingSettlementZoneId) ||
+				!string.IsNullOrEmpty(PendingSettlementAuthority);
+			if (!any) return true;
+			string expected;
+			KingdomIdentityFault fault;
+			if (string.IsNullOrEmpty(PendingSettlementId) ||
+				string.IsNullOrEmpty(PendingSettlementZoneId) ||
+				PendingSettlementZoneId.Length > 512 ||
+				string.IsNullOrEmpty(PendingSettlementAuthority) ||
+				PendingSettlementAuthority.Length > 4096 ||
+				!KingdomIdentityRules.TryMintSettlement(RealmId,
+					PendingSettlementTransactionId, out expected, out fault) ||
+				expected != PendingSettlementId)
+			{
+				Failure = "pending settlement identity evidence is partial or malformed";
+				return false;
+			}
+			return true;
+		}
+
+		private bool NewIdentityEvidenceEmpty()
+		{
+			return string.IsNullOrEmpty(RealmId) && RealmIdentityVersion == 0 &&
+				RealmIdentityOrigin == KingdomIdentityOrigin.None &&
+				string.IsNullOrEmpty(RealmIdentityTransactionId) &&
+				string.IsNullOrEmpty(RealmIdentityLegacyFaction) &&
+				RealmIdentityFoundedTick == 0L && RealmIdentitySeedHigh == 0UL &&
+				RealmIdentitySeedLow == 0UL &&
+				string.IsNullOrEmpty(RealmIdentityFirstClaimedZone) &&
+				string.IsNullOrEmpty(IdentityFault) && SettlementIdentityVersion == 0 &&
+				SettlementIdentityOrigin == KingdomIdentityOrigin.None &&
+				string.IsNullOrEmpty(SettlementIdentityTransactionId) &&
+				SettlementIdentityFoundedTick == 0L &&
+				string.IsNullOrEmpty(SettlementIdentityFirstClaimedZone) &&
+				string.IsNullOrEmpty(SettlementIdentityLegacyId);
+		}
+
+		/// <summary>Binds Trade only from the complete immutable topology. Positional name rows
+		/// remain quarantined evidence and are never promoted into live charter/manifest authority.</summary>
+		private void NormalizeTradeBook()
+		{
+			if (TradeBook == null)
+			{
+				TradeBook = new KingdomTradeBook();
+			}
+			bool hasLegacyTrade = ActiveDealKeys.Count > 0 || ActiveDealFactions.Count > 0
+				|| DealNextTicks.Count > 0 || Manifest != null;
+			// Detect the dual graph before Trade recovery can settle or retire anything. Both
+			// source graphs remain present as quarantined evidence; neither may be normalized
+			// into authority first.
+			if (hasLegacyTrade)
+			{
+				if (TradeBook.FormatVersion == KingdomTradeRules.CurrentFormatVersion &&
+					TradeBook.SchemaState == KingdomTradeSchemaState.Compatible)
+					KingdomTradeRules.QuarantineBook(TradeBook,
+						"legacy name-based trade rows were preserved but cannot become live authority");
+				return;
+			}
+			KingdomTradeRules.Normalize(TradeBook);
+			// Unknown-future and quarantined books are evidence, not authority this build may
+			// reinterpret. Preserve both the named-field graph and the legacy source rows.
+			if (TradeBook.FormatVersion != KingdomTradeRules.CurrentFormatVersion ||
+				TradeBook.SchemaState != KingdomTradeSchemaState.Compatible)
+			{
+				return;
+			}
+			if (ExiledRealmArchive != null &&
+				ExiledRealmArchive.Phase != KingdomRealmArchivePhase.None) return;
+			if (!Founded || !string.IsNullOrEmpty(IdentityFault)) return;
+			List<string> exact;
+			string failure;
+			if (!TryExactSettlementIds(RequirePublishedClaims: true, out exact,
+				out failure)) return;
+			if (!TradeBook.IdentityBound)
+			{
+				// Trade may be one callback ahead of Core after atomically closing exile.
+				// Preserve that exact unbound receipt for Exile recovery; any malformed or
+				// wrong-topology archive evidence is quarantine, never fresh bind authority.
+				if (TradeBook.Archives != null && TradeBook.Archives.Count > 0)
+				{
+					if (KingdomTradeRules.TryAuthenticateExactExileClosedTick(TradeBook,
+						RealmId, exact, out long ignoredClosedTick, out failure)) return;
+					KingdomTradeRules.QuarantineBook(TradeBook,
+						failure ?? "unbound Trade exile receipt cannot be authenticated");
+					return;
+				}
+				if (!KingdomTradeRules.BindExactIdentity(TradeBook, RealmId, exact,
+					out failure)) return;
+			}
+			if (!string.IsNullOrEmpty(PendingSettlementId) &&
+				!exact.Contains(PendingSettlementId))
+			{
+				exact.Add(PendingSettlementId);
+				exact.Sort(StringComparer.Ordinal);
+				KingdomTradeRules.ExpandExactIdentity(TradeBook, RealmId, exact,
+					out failure);
+				return;
+			}
+			KingdomTradeRules.BindExactIdentity(TradeBook, RealmId, exact,
+				out failure);
+		}
+
 	}
 }

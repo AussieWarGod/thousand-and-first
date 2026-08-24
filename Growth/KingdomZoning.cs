@@ -241,7 +241,8 @@ namespace ThousandAndFirst
 		/// own mod invents.</param>
 		/// <param name="Name">Blueprint or design name. Case is folded away.</param>
 		/// <returns>True when the settlement did not already know this.</returns>
-		public static bool Learn(KingdomSystem System, string Kind, string Name)
+		public static bool Learn(KingdomSystem System, string Kind, string Name,
+			string GovernanceVerb = null)
 		{
 			string key = KingdomZoningRules.ComposeKey(Kind, Name);
 			if (key == null)
@@ -257,6 +258,10 @@ namespace ThousandAndFirst
 			TechLevel before = KingdomZoningRules.LevelForPoints(KingdomZoningRules.TechPoints(stored));
 			stored.Add(key);
 			Store(System, KingdomZoningRules.EncodeRoster(stored));
+			if (!string.IsNullOrEmpty(GovernanceVerb) && !KingdomGovernanceScope.HasCommitted)
+			{
+				KingdomGovernanceScope.Commit(GovernanceVerb);
+			}
 			TechLevel after = KingdomZoningRules.LevelForPoints(KingdomZoningRules.TechPoints(stored));
 			KingdomLog.Log("zoning: learned " + key + " (" + before + " -> " + after + ")");
 			if (after > before && System != null && System.Founded)
@@ -611,6 +616,10 @@ namespace ThousandAndFirst
 						SetDownWhatWasLearned(System, carried);
 						break;
 					}
+					if (KingdomGovernanceScope.HasCommitted)
+					{
+						return;
+					}
 				}
 			});
 		}
@@ -887,7 +896,8 @@ namespace ThousandAndFirst
 				return;
 			}
 			string failure;
-			if (!KingdomResearch.TakeUp(System, Subjects[chosen].Key, out failure))
+			if (!KingdomResearch.TakeUp(System, Subjects[chosen].Key, out failure,
+				"set research subject"))
 			{
 				Popup.Show(failure);
 				return;
@@ -906,7 +916,8 @@ namespace ThousandAndFirst
 			List<string> named = new List<string>();
 			for (int i = 0; i < Carried.Count; i++)
 			{
-				if (KingdomResearch.Seed(System, Carried[i].Key, "the keepers of " + away))
+				if (KingdomResearch.Seed(System, Carried[i].Key, "the keepers of " + away,
+					"share keeper knowledge"))
 				{
 					named.Add(Carried[i].Named);
 				}
@@ -1044,7 +1055,7 @@ namespace ThousandAndFirst
 				return;
 			}
 			string design = DiskName(Disks[chosen].GetPart<DataDisk>());
-			if (!Learn(System, KingdomZoningRules.KindDisk, design))
+			if (!Learn(System, KingdomZoningRules.KindDisk, design, "teach keeper design"))
 			{
 				Popup.Show("The keepers of " + System.SeatName + " already have that one written down.");
 				return;

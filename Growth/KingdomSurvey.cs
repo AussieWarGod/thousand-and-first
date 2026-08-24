@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using XRL.World;
 using XRL.World.Parts;
 
@@ -264,6 +265,27 @@ namespace ThousandAndFirst
 				}
 			}
 			return Drams - remaining;
+		}
+
+		/// <summary>
+		/// Reserves an all-or-nothing water debit against the exact dedicated vessels in this
+		/// snapshot. Reservation does not remove water. The returned receipt must be
+		/// <see cref="KingdomWaterDebit.Commit"/>ted after the caller's other preconditions pass,
+		/// and may be <see cref="KingdomWaterDebit.Rollback"/>ed into those same vessels if the
+		/// enclosing operation later fails. Use <see cref="Consume"/> instead where a deliberately
+		/// partial simulation loss is the rule.
+		/// </summary>
+		/// <param name="Drams">Exact amount required. Non-positive amounts reserve a total no-op.</param>
+		public KingdomWaterDebit ReserveExactWater(int Drams)
+		{
+			return KingdomWaterDebit.Reserve(this, Drams);
+		}
+
+		/// <summary>Try-pattern facade for callers that must not proceed without an exact receipt.</summary>
+		public bool TryReserveExactWater(int Drams, out KingdomWaterDebit Debit)
+		{
+			Debit = ReserveExactWater(Drams);
+			return Debit.State == KingdomWaterDebitState.Reserved;
 		}
 
 		/// <summary>
@@ -552,38 +574,183 @@ namespace ThousandAndFirst
 		/// <returns>Servings actually lost, measured from the container rather than assumed.</returns>
 		public int SpoilFrom(GameObject Container, int Amount)
 		{
-			if (Container == null || Container.Inventory == null || Amount <= 0)
-			{
-				return 0;
-			}
+			int lost;
+			TrySpoilFromExact(Container, Amount, out lost);
+			return lost;
+		}
+
+		private sealed class SpoilFrame
+		{
+			internal GameObject Container;
+			internal string ContainerId;
+			internal Zone Zone;
+			internal string ZoneId;
+			internal Cell Cell;
+			internal Inventory Inventory;
+			internal List<GameObject> List;
+			internal GameObject[] Items;
+			internal string[] ItemIds;
+			internal int[] Counts;
+			internal bool[] Edible;
+			internal List<GameObject> LarderList;
+			internal GameObject[] LarderRows;
+			internal int FoodStored;
+			internal int FoodCapacity;
+			internal KingdomRules.PantryTier FoodAbundance;
+		}
+
+		/// <summary>
+		/// Invokes each destructive food callback once. Every unit is counted only after the exact
+		/// same container, Inventory part/list, item ordering, identities, ownership, and counts prove
+		/// the one expected transition. A veto with no delta never counts.
+		/// </summary>
+		public bool TrySpoilFromExact(GameObject Container, int Amount, out int Lost)
+		{
+			Lost = 0;
+			SpoilFrame frame;
+			if (!TryCaptureSpoilFrame(Container, Amount, out frame)) return false;
+			int[] expected = (int[])frame.Counts.Clone();
 			int remaining = Amount;
-			// Snapshot first, for the reason ConsumeFood snapshots: destroying an item removes it
-			// from the same Inventory list, and mutating a collection mid-foreach throws.
-			List<GameObject> held = new List<GameObject>(Container.Inventory.Objects);
-			for (int i = 0; i < held.Count && remaining > 0; i++)
+			for (int i = 0; i < frame.Items.Length && remaining > 0; i++)
 			{
-				GameObject food = held[i];
-				if (!food.HasPart("Food") && !food.HasPart("PreparedCookingIngredient"))
+				if (!frame.Edible[i]) continue;
+				GameObject food = frame.Items[i];
+				while (remaining > 0 && expected[i] > 0)
 				{
-					continue;
-				}
-				// Destroy() decrements a stack of more than one and leaves the object in place;
-				// only the last unit removes it. Validate stops the loop the moment that happens,
-				// exactly as ConsumeFood does.
-				while (remaining > 0 && GameObject.Validate(food))
-				{
-					food.Destroy(null, Silent: true);
+					if (!SpoilTopologyExact(frame, expected)) return false;
+					int before = expected[i];
+					try
+					{
+						food.Destroy(null, Silent: true);
+					}
+					catch
+					{
+						// The exact post-callback topology below, never the exception or return value,
+						// decides whether one physical unit was lost.
+					}
+					expected[i] = before - 1;
+					if (!SpoilTopologyExact(frame, expected))
+					{
+						expected[i] = before;
+						if (SpoilTopologyExact(frame, expected))
+						{
+							if (!PublishSpoilCounters(frame, Lost)) Lost = 0;
+						}
+						else Lost = 0;
+						return false;
+					}
+					Lost++;
 					remaining--;
 				}
 			}
-			int lost = Amount - remaining;
-			FoodStored -= lost;
-			if (FoodStored < 0)
+			if (!PublishSpoilCounters(frame, Lost))
 			{
-				FoodStored = 0;
+				Lost = 0;
+				return false;
 			}
-			FoodAbundance = KingdomRules.ClassifyPantry(FoodStored);
-			return lost;
+			return Lost == Amount;
+		}
+
+		private bool PublishSpoilCounters(SpoilFrame Frame, int Lost)
+		{
+			if (Frame == null || Lost < 0 || Lost > Frame.FoodStored
+				|| FoodStored != Frame.FoodStored || FoodCapacity != Frame.FoodCapacity
+				|| FoodAbundance != Frame.FoodAbundance) return false;
+			if (Lost > 0)
+			{
+				FoodStored = Frame.FoodStored - Lost;
+				FoodAbundance = KingdomRules.ClassifyPantry(FoodStored);
+			}
+			return true;
+		}
+
+		private bool TryCaptureSpoilFrame(GameObject Container, int Amount,
+			out SpoilFrame Frame)
+		{
+			Frame = null;
+			Inventory inventory = GameObject.Validate(Container) ? Container.Inventory : null;
+			if (inventory == null || inventory.Objects == null || inventory.ParentObject != Container
+				|| Container.CurrentZone == null || Container.CurrentCell == null
+				|| Container.CurrentCell.ParentZone != Container.CurrentZone || Amount <= 0
+				|| FoodStored < Amount || !Larders.Contains(Container)) return false;
+			GameObject[] items = inventory.Objects.ToArray();
+			int[] counts = new int[items.Length];
+			string[] ids = new string[items.Length];
+			bool[] edible = new bool[items.Length];
+			int available = 0;
+			for (int i = 0; i < items.Length; i++)
+			{
+				GameObject item = items[i];
+				if (!GameObject.Validate(item) || item.Physics == null || item.InInventory != Container
+					|| item.CurrentCell != null || item.Count <= 0 || string.IsNullOrEmpty(item.ID)) return false;
+				for (int j = 0; j < i; j++) if (ReferenceEquals(items[j], item)) return false;
+				counts[i] = item.Count;
+				ids[i] = item.ID;
+				edible[i] = item.HasPart("Food") || item.HasPart("PreparedCookingIngredient");
+				if (edible[i])
+				{
+					long next = (long)available + item.Count;
+					available = (next > int.MaxValue) ? int.MaxValue : (int)next;
+				}
+			}
+			if (available < Amount) return false;
+			Frame = new SpoilFrame
+			{
+				Container = Container,
+				ContainerId = Container.ID,
+				Zone = Container.CurrentZone,
+				ZoneId = Container.CurrentZone.ZoneID,
+				Cell = Container.CurrentCell,
+				Inventory = inventory,
+				List = inventory.Objects,
+				Items = items,
+				ItemIds = ids,
+				Counts = counts,
+				Edible = edible,
+				LarderList = Larders,
+				LarderRows = Larders.ToArray(),
+				FoodStored = FoodStored,
+				FoodCapacity = FoodCapacity,
+				FoodAbundance = FoodAbundance
+			};
+			return true;
+		}
+
+		private bool SpoilTopologyExact(SpoilFrame Frame, int[] Expected)
+		{
+			if (Frame == null || Expected == null || Expected.Length != Frame.Items.Length
+				|| !GameObject.Validate(Frame.Container) || Frame.Container.ID != Frame.ContainerId
+				|| Frame.Container.CurrentZone != Frame.Zone || Frame.Zone.ZoneID != Frame.ZoneId
+				|| Frame.Container.CurrentCell != Frame.Cell
+				|| Frame.Cell == null || Frame.Cell.ParentZone != Frame.Zone
+				|| !ReferenceEquals(Frame.Container.Inventory, Frame.Inventory)
+				|| Frame.Inventory.ParentObject != Frame.Container
+				|| !ReferenceEquals(Frame.Inventory.Objects, Frame.List)
+				|| !ReferenceEquals(Larders, Frame.LarderList)
+				|| Larders.Count != Frame.LarderRows.Length
+				|| FoodStored != Frame.FoodStored || FoodCapacity != Frame.FoodCapacity
+				|| FoodAbundance != Frame.FoodAbundance) return false;
+			for (int i = 0; i < Frame.LarderRows.Length; i++)
+				if (!ReferenceEquals(Larders[i], Frame.LarderRows[i])) return false;
+			int live = 0;
+			for (int i = 0; i < Frame.Items.Length; i++) if (Expected[i] > 0) live++;
+			if (Frame.List.Count != live) return false;
+			int row = 0;
+			for (int i = 0; i < Frame.Items.Length; i++)
+			{
+				GameObject item = Frame.Items[i];
+				if (Expected[i] <= 0)
+				{
+					if (Frame.List.Contains(item) || GameObject.Validate(item)) return false;
+					continue;
+				}
+				if (!ReferenceEquals(Frame.List[row++], item) || !GameObject.Validate(item)
+					|| item.ID != Frame.ItemIds[i] || item.Count != Expected[i]
+					|| item.InInventory != Frame.Container || item.CurrentCell != null
+					|| (item.HasPart("Food") || item.HasPart("PreparedCookingIngredient")) != Frame.Edible[i])
+					return false;
+			}
+			return true;
 		}
 
 		/// <summary>
@@ -598,28 +765,75 @@ namespace ThousandAndFirst
 		/// <returns>Drams actually lost, measured from the vessel rather than assumed.</returns>
 		public int LeakFrom(LiquidVolume Store, int Drams)
 		{
-			if (Store == null || Drams <= 0)
+			int lost;
+			return TryLeakFromExact(Store, Drams, out lost) ? lost : 0;
+		}
+
+		/// <summary>Exact callback-safe leak from one dedicated pure-water vessel.</summary>
+		public bool TryLeakFromExact(LiquidVolume Store, int Drams, out int Lost)
+		{
+			Lost = 0;
+			GameObject owner = (Store == null) ? null : Store.ParentObject;
+			Zone zone = GameObject.Validate(owner) ? owner.CurrentZone : null;
+			Cell cell = GameObject.Validate(owner) ? owner.CurrentCell : null;
+			string ownerId = GameObject.Validate(owner) ? owner.ID : null;
+			string zoneId = (zone == null) ? null : zone.ZoneID;
+			Dictionary<string, int> dictionary = (Store == null) ? null : Store.ComponentLiquids;
+			Dictionary<string, int> components = (dictionary == null)
+				? null : new Dictionary<string, int>(dictionary);
+			LiquidVolume[] rows = Stores.ToArray();
+			int occurrences = 0;
+			for (int i = 0; i < rows.Length; i++) if (ReferenceEquals(rows[i], Store)) occurrences++;
+			if (Store == null || Drams <= 0 || occurrences != 1 || !GameObject.Validate(owner)
+				|| zone == null || cell == null || cell.ParentZone != zone
+				|| owner.GetIntProperty("KingdomStores") != 1 || Store.ParentObject != owner
+				|| !ReferenceEquals(owner.GetPart<LiquidVolume>(), Store)
+				|| dictionary == null || components == null || Store.MaxVolume < 0
+				|| Store.Volume < Drams || !KingdomLiquids.HasFreshWater(Store)
+				|| StoredWater < Drams || StorageSpace < 0) return false;
+			int before = Store.Volume;
+			int max = Store.MaxVolume;
+			int oldStored = StoredWater;
+			int oldSpace = StorageSpace;
+			try
 			{
-				return 0;
+				KingdomLiquids.Drain(Store, Drams);
 			}
-			bool fresh = KingdomLiquids.HasFreshWater(Store);
-			int removed = KingdomLiquids.Drain(Store, Drams);
-			if (removed <= 0)
+			catch
 			{
-				return 0;
+				// Exact post-state below is authoritative even when a refresh callback throws.
 			}
-			if (fresh)
+			if (!GameObject.Validate(owner) || owner.ID != ownerId || owner.CurrentZone != zone
+				|| zone.ZoneID != zoneId || owner.CurrentCell != cell || cell.ParentZone != zone
+				|| owner.GetIntProperty("KingdomStores") != 1
+				|| Store.ParentObject != owner || !ReferenceEquals(owner.GetPart<LiquidVolume>(), Store)
+				|| Store.MaxVolume != max || Store.Volume != before - Drams
+				|| !ReferenceEquals(Store.ComponentLiquids, dictionary)
+				|| !LeakComponentsExact(Store.ComponentLiquids, components, Store.Volume == 0)
+				|| Stores.Count != rows.Length || StoredWater != oldStored || StorageSpace != oldSpace)
+				return false;
+			for (int i = 0; i < rows.Length; i++) if (!ReferenceEquals(Stores[i], rows[i])) return false;
+			int newSpace;
+			try { newSpace = checked(oldSpace + Drams); }
+			catch (OverflowException) { return false; }
+			StoredWater = oldStored - Drams;
+			StorageSpace = newSpace;
+			Lost = Drams;
+			return true;
+		}
+
+		private static bool LeakComponentsExact(Dictionary<string, int> Current,
+			Dictionary<string, int> Before, bool Empty)
+		{
+			if (Current == null || Before == null) return false;
+			if (Empty) return Current.Count == 0;
+			if (Current.Count != Before.Count) return false;
+			foreach (KeyValuePair<string, int> pair in Before)
 			{
-				StoredWater -= removed;
-				StorageSpace += removed;
+				int value;
+				if (!Current.TryGetValue(pair.Key, out value) || value != pair.Value) return false;
 			}
-			else if (Store.Volume <= 0)
-			{
-				// A vessel of something else that the leak has just emptied is room for fresh
-				// water where there was none, exactly as Take would have counted it.
-				StorageSpace += Store.MaxVolume;
-			}
-			return removed;
+			return true;
 		}
 
 		/// <summary>Pours water into the dedicated stores, updating the survey's counters.</summary>

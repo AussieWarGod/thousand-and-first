@@ -208,7 +208,6 @@ namespace ThousandAndFirst
 				System.NextArrivalTick, timeTicks, Interval(System, Z), 0);
 			AssignWork(System, survey);
 			UpdateStage(System, Z, survey);
-			KingdomPetitions.OnSettlementPass(System, Z, survey);
 			// Last of the water-consuming steps in the pass, on purpose: a plot only ever
 			// spends what the day's upkeep and arrivals left in the stores, so it can never be
 			// the reason the thirst ladder fires.

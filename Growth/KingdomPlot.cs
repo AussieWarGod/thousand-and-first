@@ -412,7 +412,7 @@ namespace ThousandAndFirst
 				return 0;
 			}
 			int seeds = KingdomCropRules.SeedReturned(
-				KingdomChronicle.SettlementId(System.KingdomFactionName), Work.ID, FirstOrdinal, Cycles, Yield);
+				KingdomChronicle.SettlementId(System), Work.ID, FirstOrdinal, Cycles, Yield);
 			int placed = 0;
 			for (int i = 0; i < seeds; i++)
 			{

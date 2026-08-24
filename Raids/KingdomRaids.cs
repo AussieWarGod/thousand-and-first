@@ -80,12 +80,19 @@ namespace ThousandAndFirst
 				return false;
 			}
 			int demand = KingdomRules.TributeDemand(KingdomRules.RaidTributeDrams, System.RaidTimesDeferred);
-			if (Z == null || KingdomGrowth.CountStoredWater(Z) < demand)
+			KingdomSurvey survey = (Z == null) ? null : KingdomSurvey.Take(Z, System);
+			KingdomWaterDebit debit;
+			if (survey == null || !survey.TryReserveExactWater(demand, out debit))
 			{
 				Failure = "Tribute costs {{C|" + demand + " drams}} from the stores here, and the stores cannot bear it.";
 				return false;
 			}
-			KingdomGrowth.ConsumeStoredWater(Z, demand);
+			if (!debit.Commit())
+			{
+				Failure = "The stores changed before they could yield exactly {{C|" + demand + " drams}}. Nothing was paid.";
+				return false;
+			}
+			KingdomGovernanceScope.Commit("pay tribute");
 			string displayName = Faction.GetFormattedName(System.RaidFactionName);
 			System.AdjustStanding(System.RaidFactionName, 50);
 			System.RaidState = 0;
@@ -147,6 +154,7 @@ namespace ThousandAndFirst
 			}
 			string displayName = Faction.GetFormattedName(System.RaidFactionName);
 			System.RaidState = 0;
+			KingdomGovernanceScope.Commit("answer threat");
 			System.RaidFactionName = null;
 			System.RaidTimesDeferred = 0;
 			System.LastRaidTick = The.Game.TimeTicks;

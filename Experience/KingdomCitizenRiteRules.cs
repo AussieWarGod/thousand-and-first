@@ -184,7 +184,7 @@ namespace ThousandAndFirst
 		/// would be a different thing, and a less true one.
 		/// </para>
 		/// <para>
-		/// <b>The id is derived from the text and the realm</b>, so filing it twice is a no-op:
+		/// <b>The id is derived from the text and the immutable realm id</b>, so filing it twice is a no-op:
 		/// <c>JournalAPI.AddObservation</c> refuses an id it already holds, which makes the pass
 		/// that files this idempotent without a cursor to keep in step with a register that is
 		/// trimmed at two hundred entries. Two identical tellings share an id and are filed once,
@@ -192,20 +192,23 @@ namespace ThousandAndFirst
 		/// </para>
 		/// <para>
 		/// Preconditions: none. Side effects: none. Failure mode: <c>false</c> with both outputs
-		/// empty, for a realm with no name or a telling with no words.
+		/// empty, for an unproved realm identity or a telling with no words.
 		/// </para>
 		/// </summary>
-		internal static bool TryTradableSecret(string FactionName, string OutsiderLine, out string Id, out string Text)
+		internal static bool TryTradableSecret(string ExactRealmId, string OutsiderLine,
+			out string Id, out string Text)
 		{
 			Id = "";
 			Text = "";
-			if (string.IsNullOrEmpty(FactionName) || string.IsNullOrEmpty(OutsiderLine))
+			if (!KingdomIdentityRules.IsRealmId(ExactRealmId) ||
+				string.IsNullOrEmpty(OutsiderLine))
 			{
 				return false;
 			}
 			Text = OutsiderLine;
-			Id = "taf:chronicle:" + FactionName + ":"
-				+ Simulation.City.KingdomCityRules.StableId(FactionName + "\u001f" + OutsiderLine);
+			Id = "taf:chronicle:" + ExactRealmId + ":"
+				+ Simulation.City.KingdomCityRules.StableId(
+					ExactRealmId + "\u001f" + OutsiderLine);
 			return true;
 		}
 

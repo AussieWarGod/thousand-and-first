@@ -259,9 +259,10 @@ namespace ThousandAndFirst.Simulation.City
 		private static string PartPhrase(GameObject Founder, string PartName)
 		{
 			BaseMutation mutation = Founder.GetPart(PartName) as BaseMutation;
-			if (mutation != null && !string.IsNullOrEmpty(mutation.DisplayName))
+			string displayName = mutation?.GetDisplayName();
+			if (!string.IsNullOrEmpty(displayName))
 			{
-				return mutation.DisplayName.ToLowerInvariant();
+				return displayName.ToLowerInvariant();
 			}
 			return Unpack(PartName);
 		}

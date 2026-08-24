@@ -51,6 +51,12 @@ namespace ThousandAndFirst
 			// whatever the pantry reads afterward.
 			KingdomRules.PantryTier tier = survey.FoodAbundance;
 			int spent = survey.ConsumeFood(KingdomRules.MealServingsSpent(survey.FoodStored));
+			if (spent <= 0)
+			{
+				Failure = "The larders changed before the meal could be set. Nothing was shared.";
+				return false;
+			}
+			KingdomGovernanceScope.Commit("share meal");
 			string sizeName = KingdomRules.MealSizeName(tier);
 			KingdomVoiceRules.Speaker speaker = KingdomVoices.Draw(System, VoiceOccasion.MealShared);
 			KingdomChronicle.Record(System, sizeName + " was shared at " + System.KingdomDisplayName + ", and " + speaker.Attribution + " spoke well of it");

@@ -63,7 +63,8 @@ namespace ThousandAndFirst.Tests
 			};
 			record.Vigour = KingdomRules.SealedVigour((GrowthStage)record.Stage,
 				record.Population, record.Defence, record.StoredWater, record.Withered);
-			return KingdomSealRules.PromoteRetirement(KingdomSealRules.WithRetirement(record));
+			return KingdomSealRules.PromoteRetirement(KingdomSealRules.WithRetirement(
+				KingdomSealTestIdentity.Bind(record)));
 		}
 
 		private static KingdomInheritanceSavedShape PendingShape()

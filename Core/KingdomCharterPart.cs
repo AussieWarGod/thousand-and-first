@@ -36,15 +36,22 @@ namespace ThousandAndFirst
 
 		public void EnsureAbility()
 		{
-			if (ActivatedAbilityID != Guid.Empty)
+			System.Collections.Generic.Dictionary<Guid, ActivatedAbilityEntry> abilities =
+				ParentObject?.ActivatedAbilities?.AbilityByGuid;
+			if (ActivatedAbilityID != Guid.Empty && abilities != null &&
+				abilities.TryGetValue(ActivatedAbilityID, out var retained) &&
+				retained != null && retained.Command == COMMAND)
 			{
 				return;
 			}
-			if (ParentObject.ActivatedAbilities != null && ParentObject.ActivatedAbilities.AbilityByGuid != null)
+			// Empty map entry, deleted GUID, or a GUID now naming another command is stale
+			// serialized state. Clear only our pointer; never remove somebody else's ability.
+			ActivatedAbilityID = Guid.Empty;
+			if (abilities != null)
 			{
-				foreach (System.Collections.Generic.KeyValuePair<Guid, ActivatedAbilityEntry> item in ParentObject.ActivatedAbilities.AbilityByGuid)
+				foreach (System.Collections.Generic.KeyValuePair<Guid, ActivatedAbilityEntry> item in abilities)
 				{
-					if (item.Value.Command == COMMAND)
+					if (item.Value != null && item.Value.Command == COMMAND)
 					{
 						ActivatedAbilityID = item.Key;
 						return;
@@ -90,9 +97,17 @@ namespace ThousandAndFirst
 				// first, and that has bitten this file before. ONE digit is left. When it goes,
 				// the next entry is a chapter inside an existing one, the way the city book
 				// (W5, '7') holds six readings behind one letter - not a second Charter.
-				int num = Popup.PickOption(Title: system.SeatName + KingdomSettlement.VocationSuffix(system.Vocation), Options: new string[35] { (system.PetitionKind != KingdomRules.PetitionKind.None) ? ("{{W|Hear " + system.PetitionPetitioner + "}}") : "{{K|No one is waiting to speak}}", "Status", "What happened while you were away", "The Chronicle and dynasty", "As others tell it", "Standings", "The roll of settlers", "Standing policy", "Designate district", "Commission a building", "Answer a threat", "Dedicate a vessel, larder, or stockpile", "Strike a trade charter", "Send a water manifest", "Share a meal from the larder", "Certify a machine", "Set the water detail", "Plans staked for later", "Adopt a building", "Release an adoption", (system.SettlementCount >= 2 || system.Seceded != null) ? "How your cities hold each other" : "{{K|One city cannot fall out with itself}}", "What the keepers know", "Your works, and what they become", "Name a building", "Set the crew on the ground", "Take down a building", "Post a price at the heart", "Change what a plot is", "Give a building a new look", "Consecrate a shrine", "Share water with a settler", "Claim this ground", "The book of the city", "Where the keepers' craft could go", "What the city is asking for"}, Hotkeys: new char[35] { 'h', 's', 'w', 'c', 'a', 'n', 'l', 'p', 'd', 'm', 't', 'v', 'r', 'i', 'f', 'e', 'u', 'g', 'b', 'j', 'k', 'o', 'y', 'x', 'q', 'z', '1', '2', '3', '4', '5', '6', '7', '8', '9'}, AllowEscape: true);
-				switch (num)
+				string petitionLine = KingdomPetitions.IsAwaitingAnswer(system)
+					? ("{{W|Hear " + system.PetitionPetitioner + "}}")
+					: (KingdomPetitions.IsAccepted(system)
+						? ("{{G|Petition accepted: " + system.PetitionPetitioner + "}}")
+						: "{{K|No one is waiting to speak}}");
+				int num = Popup.PickOption(Title: system.SeatName + KingdomSettlement.VocationSuffix(system.Vocation), Options: new string[35] { petitionLine, "Status", "What happened while you were away", "The Chronicle and dynasty", "As others tell it", "Standings", "The roll of settlers", "Standing policy", "Designate district", "Commission a building", "Answer a threat", "Dedicate a vessel, larder, or stockpile", "Strike a trade charter", "Send a water manifest", "Share a meal from the larder", "Certify a machine", "Set the water detail", "Plans staked for later", "Adopt a building", "Release an adoption", (system.SettlementCount >= 2 || system.Seceded != null) ? "How your cities hold each other" : "{{K|One city cannot fall out with itself}}", "What the keepers know", "Your works, and what they become", "Name a building", "Set the crew on the ground", "Take down a building", "Post a price at the heart", "Change what a plot is", "Give a building a new look", "Consecrate a shrine", "Share water with a settler", "Claim this ground", "The book of the city", "Where the keepers' craft could go", "What the city is asking for"}, Hotkeys: new char[35] { 'h', 's', 'w', 'c', 'a', 'n', 'l', 'p', 'd', 'm', 't', 'v', 'r', 'i', 'f', 'e', 'u', 'g', 'b', 'j', 'k', 'o', 'y', 'x', 'q', 'z', '1', '2', '3', '4', '5', '6', '7', '8', '9'}, AllowEscape: true);
+				KingdomGovernanceScope action = KingdomGovernanceScope.Begin(ParentObject);
+				try
 				{
+					switch (num)
+					{
 				case 0:
 					HearPetition(system);
 					break;
@@ -202,7 +217,16 @@ namespace ThousandAndFirst
 				case 34:
 					Popup.Show(KingdomAsks.Board(system));
 					break;
-				default:
+					default:
+						return;
+					}
+				}
+				finally
+				{
+					action.Dispose();
+				}
+				if (action.Committed)
+				{
 					return;
 				}
 			}
@@ -267,6 +291,7 @@ namespace ThousandAndFirst
 					+ (string.IsNullOrEmpty(failure) ? "The profile seal could not be completed." : failure));
 				return;
 			}
+			KingdomGovernanceScope.Commit("retire generation");
 			Popup.Show("{{G|This generation is retired.}} Its immutable legacy is written to your profile. The current save continues, and later play cannot rewrite what was sealed.");
 		}
 
@@ -325,6 +350,7 @@ namespace ThousandAndFirst
 				Popup.Show("The claim did not hold. This ground is not the city's.");
 				return;
 			}
+			KingdomGovernanceScope.Commit("claim ground");
 			int after = WorldFacingEdges(held, System.ClaimedZones);
 			Popup.Show("{{G|" + System.SeatName + " holds " + XRL.Language.Grammar.GetProsaicZoneName(zone) + ".}}\n\n"
 				+ KingdomZoningRules.ClaimedWallClause(before, after, System.SeatName)
@@ -380,6 +406,7 @@ namespace ThousandAndFirst
 				return;
 			}
 			System.WaterCrew = num;
+			KingdomGovernanceScope.Commit("set water detail");
 			KingdomChronicle.Record(System, (num == 0)
 				? ("the water detail of " + System.SeatName + " was stood down")
 				: (num + ((num == 1) ? " settler was" : " settlers were") + " set to carrying water for " + System.SeatName));
@@ -408,7 +435,12 @@ namespace ThousandAndFirst
 				ClearGround(System);
 				return;
 			}
-			if (num == 1 && !KingdomRoads.Pave(System, zone, ParentObject.CurrentCell, out var failure) && failure != null)
+			string failure = null;
+			if (num == 1 && KingdomRoads.Pave(System, zone, ParentObject.CurrentCell, out failure))
+			{
+				return;
+			}
+			else if (num == 1 && failure != null)
 			{
 				Popup.Show(failure);
 			}
@@ -466,6 +498,7 @@ namespace ThousandAndFirst
 			if (!KingdomMaterials.StakeClearance(System, zone, rects[num][0], rects[num][1], rects[num][2], rects[num][3], out var failure))
 			{
 				Popup.Show(failure);
+				return;
 			}
 		}
 
@@ -508,9 +541,11 @@ namespace ThousandAndFirst
 			{
 				return;
 			}
-			if (!KingdomMaterials.OrderStrike(System, zone, candidates[num], out var failure))
+			if (!KingdomMaterials.OrderStrike(System, zone, candidates[num], out var failure,
+				"condemn building"))
 			{
 				Popup.Show(failure);
+				return;
 			}
 		}
 
@@ -541,22 +576,42 @@ namespace ThousandAndFirst
 				return;
 			}
 			Popup.Show(System.Ledger.Digest(System.SeatName, System.HomecomingDays));
+			// A report remains durable until it has actually been shown. Reading it is
+			// bookkeeping, so this reset never marks the governance scope or costs a turn.
+			System.Ledger.Reset();
+			System.HomecomingDays = 0;
 		}
 
 		/// <summary>Hears the settler who is waiting, and lets the founder decline.</summary>
 		public void HearPetition(KingdomSystem System)
 		{
-			if (System.PetitionKind == KingdomRules.PetitionKind.None)
+			PetitionLifecycle status = KingdomPetitions.Status(System);
+			if (status != PetitionLifecycle.Offered && status != PetitionLifecycle.Accepted)
 			{
 				Popup.Show("No one is waiting. The settlement is content, or too busy to complain.");
 				return;
 			}
+			if (status == PetitionLifecycle.Accepted)
+			{
+				Popup.Show(KingdomPetitions.Speech(System)
+					+ "\n\n{{G|You gave your word.}} The petition remains open until the thing asked for is true, or its time runs out.");
+				return;
+			}
 			int num = Popup.PickOption(Title: System.PetitionPetitioner + " of " + System.SeatName, Intro: KingdomPetitions.Speech(System), Options: new string[2] { "Say it will be seen to", "Tell them it must wait" }, AllowEscape: true);
+			if (num == 0)
+			{
+				if (KingdomPetitions.Accept(System))
+				{
+					Popup.Show("{{G|You give your word.}} The petition will be judged against exactly what was asked for today.");
+				}
+				return;
+			}
 			if (num == 1)
 			{
-				KingdomChronicle.Record(System, System.PetitionPetitioner + " was told the matter must wait");
-				KingdomPetitions.Close(System);
-				Popup.Show("They nod, and go back to work. Nothing is held against you; the thing simply remains undone.");
+				if (KingdomPetitions.Decline(System))
+				{
+					Popup.Show("They nod, and go back to work. Nothing is held against you; the thing simply remains undone.");
+				}
 			}
 		}
 
@@ -580,13 +635,16 @@ namespace ThousandAndFirst
 				if (num == 0)
 				{
 					System.Gate = (System.Gate == KingdomRules.GatePolicy.Open) ? KingdomRules.GatePolicy.Guarded : KingdomRules.GatePolicy.Open;
+					KingdomGovernanceScope.Commit("set gate policy");
 					KingdomChronicle.Record(System, System.SeatName + " set its gates " + ((System.Gate == KingdomRules.GatePolicy.Open) ? "open to all comers" : "under the watch"));
 				}
 				else
 				{
 					System.Stores = (System.Stores == KingdomRules.StoresPolicy.Plenty) ? KingdomRules.StoresPolicy.Thrift : KingdomRules.StoresPolicy.Plenty;
+					KingdomGovernanceScope.Commit("set stores policy");
 					KingdomChronicle.Record(System, "the water-keepers of " + System.SeatName + " were told to " + ((System.Stores == KingdomRules.StoresPolicy.Thrift) ? "ration" : "pour freely"));
 				}
+				return;
 			}
 		}
 
@@ -602,6 +660,14 @@ namespace ThousandAndFirst
 			if (num >= 0)
 			{
 				string district = KingdomRules.Districts[num];
+				string currentDistrict;
+				if (System.ZoneDistricts.TryGetValue(zone.ZoneID, out currentDistrict)
+					&& currentDistrict == district)
+				{
+					Popup.Show("This ground is already the {{C|" + KingdomRules.DistrictName(district)
+						+ "}} of " + System.SeatName + ".");
+					return;
+				}
 				// Zoning is a decision, and a decision whose price the founder cannot see is a
 				// trap: what this naming would put out of reach here is said before it does it.
 				string lockout = KingdomZoning.LockoutWarning(System, zone.ZoneID, district);
@@ -610,6 +676,7 @@ namespace ThousandAndFirst
 					return;
 				}
 				System.ZoneDistricts[zone.ZoneID] = district;
+				KingdomGovernanceScope.Commit("designate district");
 				KingdomChronicle.Record(System, "the ground here was named the " + KingdomRules.DistrictName(district) + " of " + System.SeatName);
 				Popup.Show("This ground is the {{C|" + KingdomRules.DistrictName(district) + "}} of " + System.SeatName + ".");
 			}
@@ -677,6 +744,7 @@ namespace ThousandAndFirst
 				if (!KingdomCommission.Commission(System, available[num].Key, skin, stake, out var failure))
 				{
 					Popup.Show(failure);
+					return;
 				}
 			}
 		}
@@ -761,6 +829,13 @@ namespace ThousandAndFirst
 			part?.ApplyDesign(chosen);
 			KingdomCeremony.StakePlan(marker, chosen, plannedSkin);
 			cell.AddObject(marker);
+			if (marker.CurrentCell != cell)
+			{
+				marker.Obliterate(null, Silent: true);
+				Popup.Show("The plan could not be staked.");
+				return;
+			}
+			KingdomGovernanceScope.Commit("stake building plan");
 			KingdomChronicle.Record(System, "a plan for " + XRL.Language.Grammar.A(chosen.Name) + " was staked at " + System.KingdomDisplayName);
 			Popup.Show("{{G|The plan is staked.}} " + System.SeatName + " will raise it when the water and the room allow.");
 		}
@@ -790,6 +865,10 @@ namespace ThousandAndFirst
 				if (num == 0)
 				{
 					PlaceBuildingPlan(System);
+					if (KingdomGovernanceScope.HasCommitted)
+					{
+						return;
+					}
 					markers = KingdomPlanMarker.FindPending(zone);
 					continue;
 				}
@@ -842,6 +921,7 @@ namespace ThousandAndFirst
 				break;
 			case 2:
 				System.RaidTimesDeferred++;
+				KingdomGovernanceScope.Commit("meet threat");
 				Popup.Show("You let the demand stand. They will come, and what they ask next time will be more.");
 				break;
 			}
@@ -849,6 +929,11 @@ namespace ThousandAndFirst
 
 		public void StrikeTradeCharter(KingdomSystem System)
 		{
+			if (!KingdomTrade.Enabled)
+			{
+				Popup.Show("Trade is disabled. Existing receipts remain recorded, but no new charter is struck.");
+				return;
+			}
 			System.Collections.Generic.List<KingdomRules.DealEntry> deals = KingdomData.Deals;
 			if (deals.Count == 0)
 			{
@@ -894,29 +979,27 @@ namespace ThousandAndFirst
 			}
 		}
 
-		/// <summary>
-		/// Loads the realm's one in-flight water manifest, drawing drams from the stores of
-		/// whichever city the founder is standing in and addressing them to its sibling. The
-		/// draw is immediate and physical, through <see cref="KingdomGrowth.ConsumeStoredWater"/>
-		/// &mdash; the same measured-delta path every other charge on the stores uses &mdash; so
-		/// nothing is promised before it is actually taken.
-		/// </summary>
+		/// <summary>Loads the realm's one receipt-bound manifest through <see cref="KingdomTrade"/>.</summary>
 		public void LoadManifest(KingdomSystem System)
 		{
+			if (!KingdomTrade.Enabled)
+			{
+				Popup.Show("Trade is disabled. Existing manifests keep their receipts, but no new load leaves the stores.");
+				return;
+			}
 			Zone zone = ParentObject.CurrentZone;
 			bool onGround = zone != null && System.ClaimedZones.Contains(zone.ZoneID);
 			if (onGround)
 			{
-				// A load attempt is itself a witnessed moment: a manifest that already missed
-				// its window is cleared here rather than left blocking the one in-flight slot
-				// until the founder happens to visit whichever city it was bound for.
 				KingdomManifest lapsed = KingdomTrade.ExpireManifestIfStale(System, zone, The.Game.TimeTicks);
 				if (lapsed != null)
 				{
-					Popup.Show(KingdomManifestRules.ManifestLapseNotice(lapsed.OriginName, lapsed.DestinationName, lapsed.Drams));
+					Popup.Show("The manifest road has closed. Its " + lapsed.Drams
+						+ " drams remain held under their permanent receipt; none were destroyed or reissued.");
 					return;
 				}
 			}
+			KingdomTradeManifestState current = KingdomTrade.CurrentManifest(System);
 			bool hasSecondCity = System.Away != null;
 			int stored = onGround ? KingdomGrowth.CountStoredWater(zone) : 0;
 			// Sized against what the realm BELIEVES the other city can take - the figure it had
@@ -924,10 +1007,19 @@ namespace ThousandAndFirst
 			// with nowhere to put it a rare, specific event rather than routine spillage.
 			int believedRoom = System.Away?.LastKnownStorageSpace ?? 0;
 			int amount = KingdomManifestRules.CapToDestination(KingdomManifestRules.ManifestAmount(stored, System.Population), believedRoom);
-			KingdomManifestRules.ManifestVerdict verdict = KingdomManifestRules.JudgeManifest(onGround, hasSecondCity, System.Manifest != null, KingdomManifestRules.ManifestAmount(stored, System.Population), believedRoom);
+			KingdomManifestRules.ManifestVerdict verdict = KingdomManifestRules.JudgeManifest(onGround, hasSecondCity, current != null, KingdomManifestRules.ManifestAmount(stored, System.Population), believedRoom);
 			if (verdict == KingdomManifestRules.ManifestVerdict.AlreadyInFlight)
 			{
-				Popup.Show(KingdomManifestRules.ManifestInFlightStatus(System.Manifest.OriginName, System.Manifest.DestinationName, System.Manifest.Drams, The.Game.TimeTicks, System.Manifest.DeadlineTick));
+				if (current.Status == KingdomTradeManifestStatus.Quarantined)
+				{
+					Popup.Show("The manifest receipt is held for inspection: " + (current.Fault ?? "its physical state is uncertain") + ". No second load will be issued against it.");
+				}
+				else
+				{
+					Popup.Show(KingdomManifestRules.ManifestInFlightStatus(current.OriginName,
+						current.DestinationName, current.EscrowDrams, The.Game.TimeTicks,
+						current.DeadlineTick));
+				}
 				return;
 			}
 			if (verdict != KingdomManifestRules.ManifestVerdict.Allowed)
@@ -945,26 +1037,18 @@ namespace ThousandAndFirst
 			{
 				return;
 			}
-			int drawn = KingdomGrowth.ConsumeStoredWater(zone, amount);
-			if (drawn <= 0)
-			{
-				Popup.Show(KingdomManifestRules.ManifestRefusal(KingdomManifestRules.ManifestVerdict.StoresCannotSpare, System.Away.SettlementName));
-				return;
-			}
-			long now = The.Game.TimeTicks;
 			string origin = System.SeatName;
 			string destination = System.Away.SettlementName;
-			System.Manifest = new KingdomManifest
+			if (!KingdomTrade.TryLoadManifest(System, zone, amount, origin, destination,
+				out string failure))
 			{
-				OriginName = origin,
-				DestinationName = destination,
-				Drams = drawn,
-				LoadedTick = now,
-				DeadlineTick = KingdomManifestRules.ManifestDeadline(now)
-			};
-			KingdomChronicle.Record(System, "the water-keepers of " + origin + " sent " + drawn + " drams toward " + destination);
-			Popup.Show("{{G|" + drawn + " drams leave the stores of " + origin + ", bound for " + destination + ".}} The road is given " + KingdomManifestRules.ManifestWindowDays + " days; stand in " + destination + " within that time and the water will already be waiting in its stores.");
-			KingdomLog.Log("manifest: loaded " + drawn + " from " + origin + " to " + destination + " deadline=" + System.Manifest.DeadlineTick);
+				Popup.Show(failure);
+				return;
+			}
+			KingdomGovernanceScope.Commit("send water manifest");
+			KingdomTradeManifestState loaded = KingdomTrade.CurrentManifest(System);
+			KingdomLog.Log("manifest: loaded id=" + loaded?.Id + " amount=" + amount
+				+ " deadline=" + loaded?.DeadlineTick);
 		}
 
 		public void DedicateVessel(KingdomSystem System)
@@ -1038,6 +1122,10 @@ namespace ThousandAndFirst
 						candidate.SetIntProperty("KingdomStores", 1);
 						dedicated++;
 						room--;
+						if (!KingdomGovernanceScope.HasCommitted)
+						{
+							KingdomGovernanceScope.Commit("dedicate stores");
+						}
 					}
 				}
 				int larderRoom = KingdomRules.MaxDedicatedLarders - KingdomGrowth.CountDedicatedLarders(zone);
@@ -1052,6 +1140,10 @@ namespace ThousandAndFirst
 						candidate.SetIntProperty("KingdomLarder", 1);
 						dedicated++;
 						larderRoom--;
+						if (!KingdomGovernanceScope.HasCommitted)
+						{
+							KingdomGovernanceScope.Commit("dedicate stores");
+						}
 					}
 				}
 				Popup.Show((dedicated > 0) ? (dedicated + " are dedicated to the stores of " + System.SeatName + ".") : "Everything here is already dedicated, or the keepers can account for no more.");
@@ -1068,11 +1160,13 @@ namespace ThousandAndFirst
 				if (vessel.GetIntProperty("KingdomStores") == 1)
 				{
 					vessel.SetIntProperty("KingdomStores", 0);
+					KingdomGovernanceScope.Commit("change water stores");
 					Popup.Show("The " + vessel.ShortDisplayName + " is yours alone again.");
 				}
 				else
 				{
 					vessel.SetIntProperty("KingdomStores", 1);
+					KingdomGovernanceScope.Commit("change water stores");
 					Popup.Show("The " + vessel.ShortDisplayName + " is dedicated to the stores of " + System.SeatName + ".");
 				}
 				return;
@@ -1105,11 +1199,13 @@ namespace ThousandAndFirst
 					if (isLarder)
 					{
 						store.SetIntProperty("KingdomLarder", 0);
+						KingdomGovernanceScope.Commit("change larder");
 						Popup.Show("The " + store.ShortDisplayName + " is no longer a larder. Nothing in it will be counted as food.");
 					}
 					else
 					{
 						store.SetIntProperty("KingdomLarder", 1);
+						KingdomGovernanceScope.Commit("change larder");
 						Popup.Show("The " + store.ShortDisplayName + " is a larder of " + System.SeatName + " now. What is in it is counted, and still yours.");
 					}
 					return;
@@ -1117,6 +1213,10 @@ namespace ThousandAndFirst
 				if (!KingdomMaterials.DedicateStockpile(System, zone, store, out var stockpileFailure))
 				{
 					Popup.Show(stockpileFailure);
+				}
+				else
+				{
+					KingdomGovernanceScope.Commit("change stockpile");
 				}
 			}
 		}
@@ -1145,6 +1245,7 @@ namespace ThousandAndFirst
 			if (!KingdomLarder.HoldSharedMeal(System, zone, out var failure))
 			{
 				Popup.Show(failure);
+				return;
 			}
 		}
 
@@ -1217,6 +1318,7 @@ namespace ThousandAndFirst
 			if (!KingdomSalvage.Certify(System, zone, machine, out var failure))
 			{
 				Popup.Show(failure);
+				return;
 			}
 		}
 
@@ -1260,6 +1362,7 @@ namespace ThousandAndFirst
 				if (!KingdomAdopt.AdoptWork(System, zone, cell, entry.Key, out var workFailure))
 				{
 					Popup.Show(workFailure);
+					return;
 				}
 				return;
 			}
@@ -1311,6 +1414,7 @@ namespace ThousandAndFirst
 			if (!KingdomAdopt.AdoptExisting(System, zone, candidate, entry.Key, out var failure))
 			{
 				Popup.Show(failure);
+				return;
 			}
 		}
 
@@ -1368,6 +1472,7 @@ namespace ThousandAndFirst
 			if (!KingdomAdopt.Release(System, zone, target, out var failure))
 			{
 				Popup.Show(failure);
+				return;
 			}
 		}
 
@@ -1407,16 +1512,28 @@ namespace ThousandAndFirst
 					{
 						Popup.Show(riteFailure);
 					}
+					else
+					{
+						return;
+					}
 				}
 				else if (num == 2)
 				{
 					DeclareCreed(System, declarable);
+					if (KingdomGovernanceScope.HasCommitted)
+					{
+						return;
+					}
 				}
 				else if (num == 3)
 				{
 					if (!KingdomCreed.TryRejoin(System, zone, out var rejoinFailure))
 					{
 						Popup.Show(rejoinFailure);
+					}
+					else
+					{
+						return;
 					}
 				}
 			}
@@ -1455,6 +1572,7 @@ namespace ThousandAndFirst
 			if (!KingdomCreed.Declare(System, chosen, out var failure))
 			{
 				Popup.Show(failure);
+				return;
 			}
 		}
 	}

@@ -535,7 +535,7 @@ namespace ThousandAndFirst
 			{
 				return;
 			}
-			string settlementId = KingdomChronicle.SettlementId(System.KingdomFactionName);
+			string settlementId = KingdomChronicle.SettlementId(System);
 			for (int i = 0; i < Trajectory.Breakpoints.Count; i++)
 			{
 				KingdomSubsidenceRules.Breakpoint breakpoint = Trajectory.Breakpoints[i];
@@ -592,11 +592,11 @@ namespace ThousandAndFirst
 			for (int i = 0; i < Survey.Built.Count; i++)
 			{
 				GameObject work = Survey.Built[i];
-				if (!GameObject.Validate(work) || !KingdomSubsidenceRules.RollRuin(SettlementId, work.id, Ordinal, From))
+				if (!GameObject.Validate(work) || !KingdomSubsidenceRules.RollRuin(SettlementId, work.ID, Ordinal, From))
 				{
 					continue;
 				}
-				int increment = KingdomSubsidenceRules.RolledRuinIncrement(SettlementId, work.id, Ordinal);
+				int increment = KingdomSubsidenceRules.RolledRuinIncrement(SettlementId, work.ID, Ordinal);
 				if (increment <= 0)
 				{
 					continue;

@@ -9,7 +9,9 @@
         </description>
         <stringgamestate Name="GameMode" Value="Kingdom"></stringgamestate>
         <boolgamestate Name="r_TAF_KingdomMode" Value="true"></boolgamestate>
-        <gamesystem Class="ThousandAndFirst.KingdomSuccession"></gamesystem>
+        <!-- Qud's gamesystem handler records the attribute but does not consume an end node;
+             this element must therefore be empty/self-closing or the loader warns. -->
+        <gamesystem Class="ThousandAndFirst.KingdomSuccession" />
       </mode>
     </modes>
   </module>

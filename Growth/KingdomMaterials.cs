@@ -128,6 +128,9 @@ namespace ThousandAndFirst
 		/// </summary>
 		public const string StrikeWorkedProperty = "KingdomStrikeWorked";
 
+		/// <summary>Stable key stamped on each exact salvage output before insertion.</summary>
+		public const string StrikeSalvageReceiptProperty = "KingdomStrikeSalvageReceipt";
+
 		/// <summary>Blueprint of the marker a clearance order stands as.</summary>
 		public const string ClearanceStakeBlueprint = "r_KingdomClearanceStake";
 
@@ -575,22 +578,6 @@ namespace ThousandAndFirst
 		}
 
 		/// <summary>
-		/// How dear a thing is to break up, for the order the keepers reach along a shelf: the sum
-		/// of its bits weighted by tier, so a corroded circuit board sorts below a metamorphic
-		/// core. Zero for anything worth no bits, which sorts first and is skipped anyway.
-		/// </summary>
-		private static int BitWorth(GameObject Object)
-		{
-			KingdomBitTally worth = UnitBits(Object);
-			int total = 0;
-			for (int i = 0; i < KingdomMaterialRules.BitTierCount; i++)
-			{
-				total += worth.Get(i) * (i + 1);
-			}
-			return total;
-		}
-
-		/// <summary>
 		/// What the dedicated stockpiles on one ground hold, and the means to spend it and fill
 		/// it. A snapshot: spending and delivering through this object keep its tally correct,
 		/// but an item placed after it was taken does not retroactively appear in it &mdash; the
@@ -670,36 +657,24 @@ namespace ThousandAndFirst
 			}
 
 			/// <summary>
-			/// Spends a whole cost, or spends nothing. Checked against the tally first, so a
-			/// settlement is never left holding half a house's worth of missing timber.
+			/// Legacy immediate material-only draw. New work should reserve a composite
+			/// <see cref="KingdomMaterialDebit"/> before making its durable job. This wrapper returns
+			/// true only for an exact commit; any engine veto is measured and logged by the receipt,
+			/// never described as an all-or-nothing refusal after a terminal source vanished.
 			/// </summary>
-			/// <returns>False when the stockpiles do not cover the cost; nothing was taken.</returns>
 			public bool Spend(KingdomMaterialTally Cost)
 			{
-				if (Cost == null || Cost.IsEmpty())
-				{
-					return true;
-				}
-				if (!KingdomMaterialRules.Covers(Tally, Cost))
-				{
-					return false;
-				}
-				for (int i = 0; i < KingdomMaterialRules.MaterialCount; i++)
-				{
-					KingdomMaterial material = (KingdomMaterial)i;
-					int wanted = Cost.Get(material);
-					if (wanted > 0)
-					{
-						Take(material, wanted);
-					}
-				}
-				return true;
+				KingdomMaterialDebit debit = KingdomMaterialDebit.Reserve(this,
+					new KingdomMaterialDebitCost(Cost, null, null));
+				KingdomMaterialDebitResult result = debit.Commit();
+				LogLegacyPartial("material", result);
+				return result.Exact;
 			}
 
 			/// <summary>
-			/// Spends a whole bit cost by taking apart the stock that carries it, or spends
-			/// nothing. Bits are not held loose &mdash; the settlement holds SCRAP, and the
-			/// keepers break up whatever answers the price, exactly as a tinker would.
+			/// Legacy immediate bit-only receipt. Bits are not held loose &mdash; the settlement
+			/// holds SCRAP, and the keepers break up whatever answers the price, exactly as a
+			/// tinker would. Dynamic vetoes remain explicitly classified by the receipt.
 			/// <para>
 			/// A piece broken up for one bit gives up whatever else was in it, and that surplus is
 			/// gone. That is honest and it is the reason a design is priced in cheap tiers wherever
@@ -708,138 +683,38 @@ namespace ThousandAndFirst
 			/// either.
 			/// </para>
 			/// </summary>
-			/// <returns>False when the stockpiles do not cover the cost; nothing was taken.</returns>
+			/// <returns>True only when the exact receipt committed.</returns>
 			public bool SpendBits(KingdomBitTally Cost)
 			{
-				if (Cost == null || Cost.IsEmpty())
-				{
-					return true;
-				}
-				if (!KingdomMaterialRules.CoversBits(Bits, Cost))
-				{
-					return false;
-				}
-				KingdomBitTally owed = Cost.Copy();
-				for (int i = 0; i < Stockpiles.Count && owed.Total() > 0; i++)
-				{
-					GameObject container = Stockpiles[i];
-					if (container.Inventory == null)
-					{
-						continue;
-					}
-					// Snapshot first: destroying an item below removes it from this same Inventory
-					// list, and mutating a collection mid-foreach throws. Sorted cheapest-first so
-					// the keepers reach for the bent metal sheet before the AI master unit.
-					List<GameObject> held = new List<GameObject>(container.Inventory.Objects);
-					held.Sort(delegate(GameObject A, GameObject B)
-					{
-						return BitWorth(A).CompareTo(BitWorth(B));
-					});
-					for (int j = 0; j < held.Count && owed.Total() > 0; j++)
-					{
-						GameObject item = held[j];
-						// Same exclusion the counting pass makes, and it has to be the same or the
-						// settlement would break up the walls' own scrap for a bit it never counted.
-						if (TryMaterialOf(item, out _) || TryExoticOf(item, out _))
-						{
-							continue;
-						}
-						KingdomBitTally worth = UnitBits(item);
-						if (worth.IsEmpty())
-						{
-							continue;
-						}
-						while (owed.Total() > 0 && Wanted(owed, worth) && GameObject.Validate(item))
-						{
-							int before = item.Count;
-							item.Destroy(null, Silent: true);
-							if (GameObject.Validate(item) && item.Count >= before)
-							{
-								break;
-							}
-							for (int tier = 0; tier < KingdomMaterialRules.BitTierCount; tier++)
-							{
-								int taken = worth.Get(tier);
-								if (taken > 0)
-								{
-									owed.Add(tier, -taken);
-									Bits.Add(tier, -taken);
-								}
-							}
-						}
-					}
-				}
-				return owed.Total() == 0;
+				KingdomMaterialDebit debit = KingdomMaterialDebit.Reserve(this,
+					new KingdomMaterialDebitCost(null, Cost, null));
+				KingdomMaterialDebitResult result = debit.Commit();
+				LogLegacyPartial("bit", result);
+				return result.Exact;
 			}
 
 			/// <summary>
-			/// Spends a whole cost in rare finds, or spends nothing. A gemstone is a gemstone: the
-			/// keepers take the first one that answers, because nothing here is worth more to a
-			/// wall than any other of its kind.
+			/// Legacy immediate exotic-only receipt. A gemstone is a gemstone: the keepers take
+			/// the first one that answers, because nothing here is worth more to a wall than any
+			/// other of its kind. Dynamic vetoes remain explicitly classified by the receipt.
 			/// </summary>
-			/// <returns>False when the stockpiles do not cover the cost; nothing was taken.</returns>
+			/// <returns>True only when the exact receipt committed.</returns>
 			public bool SpendExotics(KingdomExoticTally Cost)
 			{
-				if (Cost == null || Cost.IsEmpty())
-				{
-					return true;
-				}
-				if (!KingdomMaterialRules.CoversExotics(Exotics, Cost))
-				{
-					return false;
-				}
-				for (int i = 0; i < KingdomMaterialRules.ExoticCount; i++)
-				{
-					KingdomExotic exotic = (KingdomExotic)i;
-					int remaining = Cost.Get(exotic);
-					for (int j = 0; j < Stockpiles.Count && remaining > 0; j++)
-					{
-						GameObject container = Stockpiles[j];
-						if (container.Inventory == null)
-						{
-							continue;
-						}
-						List<GameObject> held = new List<GameObject>(container.Inventory.Objects);
-						for (int k = 0; k < held.Count && remaining > 0; k++)
-						{
-							GameObject item = held[k];
-							if (!TryExoticOf(item, out var kind) || kind != exotic)
-							{
-								continue;
-							}
-							while (remaining > 0 && GameObject.Validate(item))
-							{
-								int before = item.Count;
-								item.Destroy(null, Silent: true);
-								if (GameObject.Validate(item) && item.Count >= before)
-								{
-									break;
-								}
-								remaining--;
-								Exotics.Add(exotic, -1);
-							}
-						}
-					}
-					if (remaining > 0)
-					{
-						return false;
-					}
-				}
-				return true;
+				KingdomMaterialDebit debit = KingdomMaterialDebit.Reserve(this,
+					new KingdomMaterialDebitCost(null, null, Cost));
+				KingdomMaterialDebitResult result = debit.Commit();
+				LogLegacyPartial("exotic", result);
+				return result.Exact;
 			}
 
-			/// <summary>Whether breaking up a thing worth <paramref name="Worth"/> would answer any
-			/// part of what is still owed.</summary>
-			private static bool Wanted(KingdomBitTally Owed, KingdomBitTally Worth)
+			private static void LogLegacyPartial(string Lane, KingdomMaterialDebitResult Result)
 			{
-				for (int i = 0; i < KingdomMaterialRules.BitTierCount; i++)
+				if (Result != null && Result.Partial)
 				{
-					if (Owed.Get(i) > 0 && Worth.Get(i) > 0)
-					{
-						return true;
-					}
+					KingdomLog.Log("materials: legacy " + Lane + " draw ended " + Result.Outcome
+						+ "; outstanding=" + Result.Outstanding.ToClaimString());
 				}
-				return false;
 			}
 
 			/// <summary>
@@ -1056,6 +931,40 @@ namespace ThousandAndFirst
 		// --- Paying for a building in material ------------------------------------------------
 
 		/// <summary>
+		/// Reserves an arbitrary composite claim against the exact physical contents of this
+		/// ground's dedicated stockpiles. Reservation is read-only. The returned receipt is non-null
+		/// even on refusal; inspect <c>Reservation.Outcome</c> before creating or funding a job.
+		/// </summary>
+		public static KingdomMaterialDebit ReserveComposite(Zone Z, KingdomMaterialDebitCost Cost)
+		{
+			return KingdomMaterialDebit.Reserve(Stock(Z), Cost);
+		}
+
+		/// <summary>Read-only exact reservation of a catalogue design's full composite price.</summary>
+		public static KingdomMaterialDebit ReservePayment(Zone Z, string Key)
+		{
+			return ReserveComposite(Z, new KingdomMaterialDebitCost(
+				CostFor(Key), BitCostFor(Key), ExoticCostFor(Key)));
+		}
+
+		/// <summary>
+		/// Read-only exact reservation of an improvement's registered price. The present catalogue
+		/// authors upgrade material separately and declares no upgrade-only bit or exotic attributes,
+		/// so those two lanes are empty until that data contract is extended explicitly.
+		/// </summary>
+		public static KingdomMaterialDebit ReserveUpgradePayment(Zone Z, string SuccessorKey)
+		{
+			return ReserveComposite(Z, new KingdomMaterialDebitCost(
+				UpgradeCostFor(SuccessorKey), null, null));
+		}
+
+		/// <summary>Read-only exact reservation of an arbitrary bit price, including a lab record.</summary>
+		public static KingdomMaterialDebit ReserveBits(Zone Z, KingdomBitTally Bits)
+		{
+			return ReserveComposite(Z, new KingdomMaterialDebitCost(null, Bits, null));
+		}
+
+		/// <summary>
 		/// Whether the dedicated stockpiles on this ground cover a design's material cost. A
 		/// design with no material cost is always affordable, which is every design the catalogue
 		/// carried before materials existed.
@@ -1208,39 +1117,26 @@ namespace ThousandAndFirst
 		}
 
 		/// <summary>
-		/// Spends a design's material cost from this ground's stockpiles, and its bits and rare
-		/// finds with it. Spends the whole cost or none of it.
+		/// Legacy immediate entry for a design's composite stockpile cost. New construction must
+		/// call <see cref="ReservePayment"/>, persist its job, then inspect the receipt result. This
+		/// wrapper remains for compatibility and returns true only for an exact commit; a dynamic
+		/// terminal veto is logged with its outstanding claim rather than reported as "nothing taken."
 		/// </summary>
-		/// <returns>False when the stockpiles did not cover it; nothing was taken.</returns>
+		/// <returns>True only when the exact composite receipt committed.</returns>
 		public static bool Pay(Zone Z, string Key)
 		{
-			KingdomMaterialTally cost = CostFor(Key);
-			KingdomBitTally bits = BitCostFor(Key);
-			KingdomExoticTally exotics = ExoticCostFor(Key);
-			if (cost.IsEmpty() && bits.IsEmpty() && exotics.IsEmpty())
+			KingdomMaterialDebit debit = ReservePayment(Z, Key);
+			KingdomMaterialDebitResult result = debit.Commit();
+			if (result.Partial)
 			{
-				return true;
+				KingdomLog.Log("materials: legacy payment on " + Key + " ended " + result.Outcome
+					+ "; outstanding=" + result.Outstanding.ToClaimString());
 			}
-			MaterialStock stock = Stock(Z);
-			// Every price is checked before any of them is taken, so a design short of one gemstone
-			// never costs the settlement the forty stone it was going to be built of.
-			if (!KingdomMaterialRules.Covers(stock.Tally, cost)
-				|| !KingdomMaterialRules.CoversBits(stock.Bits, bits)
-				|| !KingdomMaterialRules.CoversExotics(stock.Exotics, exotics))
+			else if (result.Exact)
 			{
-				return false;
+				KingdomLog.Log("materials: exact composite payment on " + Key);
 			}
-			if (!stock.Spend(cost))
-			{
-				return false;
-			}
-			stock.SpendBits(bits);
-			stock.SpendExotics(exotics);
-			KingdomLog.Log("materials: spent " + (cost.Describe() ?? "nothing")
-				+ ((bits.IsEmpty()) ? "" : (" and bits " + bits.Describe()))
-				+ ((exotics.IsEmpty()) ? "" : (" and " + exotics.Describe()))
-				+ " on " + Key);
-			return true;
+			return result.Exact;
 		}
 
 		/// <summary>
@@ -1271,11 +1167,11 @@ namespace ThousandAndFirst
 		}
 
 		/// <summary>
-		/// Spends an improvement's material cost, and says once why an improvement is waiting
+		/// Reserves and commits an improvement's material cost, and says once why it is waiting
 		/// when it cannot. The automatic improvement path has no founder standing at it, so the
 		/// reason goes in the ledger where the homecoming report will read it out. STANDARDS 7b.
 		/// </summary>
-		/// <returns>False when the stockpiles did not cover it; nothing was taken.</returns>
+		/// <returns>True only for an exact receipt. Partial outcomes are named in the ledger.</returns>
 		public static bool PayUpgrade(KingdomSystem System, Zone Z, string SuccessorKey)
 		{
 			KingdomMaterialTally cost = UpgradeCostFor(SuccessorKey);
@@ -1283,15 +1179,20 @@ namespace ThousandAndFirst
 			{
 				return true;
 			}
-			MaterialStock stock = Stock(Z);
-			if (stock.Spend(cost))
+			KingdomMaterialDebit debit = ReserveUpgradePayment(Z, SuccessorKey);
+			KingdomMaterialDebitResult result = debit.Commit();
+			if (result.Exact)
 			{
 				return true;
 			}
 			if (System != null)
 			{
-				string missing = KingdomMaterialRules.Missing(stock.Tally, cost).Describe();
-				System.Ledger.Note("{{r|A work is ready to be bettered, and the stockpiles are short " + ((missing == null) ? "of what it wants" : missing) + ".}}");
+				string missing = result.Outstanding.Materials.Describe();
+				System.Ledger.Note(result.Partial
+					? ("{{r|An improvement's material receipt was interrupted after a measured loss. It remains owed "
+						+ (missing ?? "part of its price") + "; inspect the stockpiles before retrying.}}")
+					: ("{{r|A work is ready to be bettered, and the stockpiles are short "
+						+ ((missing == null) ? "of what it wants" : missing) + ".}}"));
 			}
 			return false;
 		}
@@ -1483,6 +1384,13 @@ namespace ThousandAndFirst
 			stake.DisplayName = "ground ordered cleared";
 			cell.AddObject(stake);
 			stake.MakeActive();
+			if (stake.CurrentCell != cell)
+			{
+				stake.Obliterate(null, Silent: true);
+				Failure = "The stake could not be driven.";
+				return false;
+			}
+			KingdomGovernanceScope.Commit("clear ground");
 			string yield = assessment.Yield.Describe();
 			KingdomChronicle.Record(System, System.KingdomDisplayName + " set its people to clearing " + assessment.Cells + " paces of ground");
 			int days = KingdomMaterialRules.DaysForOneHand(assessment.Effort);
@@ -1529,8 +1437,29 @@ namespace ThousandAndFirst
 		/// <param name="Failure">A founder-facing reason when this returns false. Nothing is
 		/// marked when it does.</param>
 		/// <returns>True once the order stands, or once it has been called off.</returns>
-		public static bool OrderStrike(KingdomSystem System, Zone Z, GameObject Building, out string Failure)
+		public static bool OrderStrike(KingdomSystem System, Zone Z, GameObject Building,
+			out string Failure, string GovernanceVerb = null)
 		{
+			KingdomConstructionJob ignored = null;
+			return OrderStrikeDurable(System, Z, Building, null, true, true,
+				GovernanceVerb, out ignored, out Failure);
+		}
+
+		/// <summary>Conversion entry: extends the already-funded exact job instead of creating one.</summary>
+		internal static bool OrderStrikeForConstruction(KingdomSystem System, Zone Z,
+			GameObject Building, KingdomConstructionJob Job,
+			out KingdomConstructionJob Updated, out string Failure)
+		{
+			return OrderStrikeDurable(System, Z, Building, Job, false, false, null,
+				out Updated, out Failure);
+		}
+
+		private static bool OrderStrikeDurable(KingdomSystem System, Zone Z,
+			GameObject Building, KingdomConstructionJob Supplied, bool AllowCancellation,
+			bool Announce, string GovernanceVerb, out KingdomConstructionJob Updated,
+			out string Failure)
+		{
+			Updated = Supplied;
 			Failure = null;
 			if (System == null || !System.Founded)
 			{
@@ -1552,31 +1481,239 @@ namespace ThousandAndFirst
 				Failure = "The settlement strikes what it raised. That is not one of its buildings.";
 				return false;
 			}
-			if (Building.GetIntProperty(StrikeEffortProperty) > 0)
+			KingdomConstructionJob carried = Supplied;
+			if (carried == null)
 			{
-				Building.SetIntProperty(StrikeEffortProperty, 0);
-				Building.SetIntProperty(StrikeTotalProperty, 0);
-				Building.SetIntProperty(StrikeAnnouncedProperty, 0);
-				Building.SetStringProperty(StrikeWorkedProperty, null);
+				string receiptId = Building.GetStringProperty(KingdomConstruction.ReceiptProperty);
+				if (!string.IsNullOrEmpty(receiptId))
+					KingdomConstruction.TryFind(receiptId, out carried);
+			}
+			if (Supplied == null && carried != null
+				&& KingdomConstruction.CanSupersedeTerminalReceipt(System, Z, Building, carried))
+			{
+				// Keep immutable terminal proof in registry; only carried object pointer is superseded.
+				carried = null;
+			}
+			bool activeStrike = carried != null && KingdomConstruction.Owns(System, Z, carried)
+				&& !KingdomConstructionRules.IsTerminal(carried.Phase)
+				&& (carried.Route == KingdomConstructionRoute.Strike
+					|| carried.Route == KingdomConstructionRoute.SocketConvert)
+				&& carried.SourceId == Building.ID;
+			if (carried != null && !activeStrike)
+			{
+				Failure = "That building carries another construction receipt.";
+				return false;
+			}
+			if (activeStrike && carried.PhysicalPhase != KingdomPhysicalPhase.None)
+			{
+				Updated = carried;
+				if (carried.PhysicalPhase == KingdomPhysicalPhase.StrikeCancellationPending)
+				{
+					if (!FinishStrikeCancellation(Z, Building, ref carried))
+					{
+						Failure = carried.Failure;
+						return false;
+					}
+					Updated = carried;
+					return true;
+				}
+				if (!AllowCancellation || carried.Route == KingdomConstructionRoute.SocketConvert)
+					return true;
+				if (carried.PhysicalPhase != KingdomPhysicalPhase.StrikeWorking
+					|| Building.GetIntProperty(StrikeEffortProperty) <= 0)
+				{
+					Failure = "That strike has crossed its physical boundary and cannot be called off.";
+					return false;
+				}
+				if (!KingdomConstruction.UpdatePhysical(ref carried,
+					KingdomPhysicalPhase.StrikeCancellationPending, carried.PhysicalIndex,
+					carried.PhysicalAmount, carried.PhysicalSpilled, carried.PhysicalItemId,
+					carried.PhysicalDestinationId, carried.PhysicalReceipt)
+					|| !FinishStrikeCancellation(Z, Building, ref carried))
+				{
+					Failure = "The strike receipt could not be cancelled safely.";
+					return false;
+				}
+				if (!string.IsNullOrEmpty(GovernanceVerb))
+				{
+					KingdomGovernanceScope.Commit(GovernanceVerb);
+				}
 				MessageQueue.AddPlayerMessage("{{K|The order to strike the " + Building.ShortDisplayName + " is called off.}} It stands exactly where it stood.");
+				Updated = carried;
 				return true;
 			}
 			string key = Building.GetStringProperty(KingdomUpgrade.BuildKeyProperty);
 			KingdomMaterialTally cost = CostFor(key);
 			int drams = (KingdomData.TryGetBuilding(key, out var entry) ? entry.CostDrams : 0);
 			int effort = KingdomMaterialRules.StrikeEffort(cost.Total(), drams);
-			Building.SetIntProperty(StrikeEffortProperty, effort);
-			Building.SetIntProperty(StrikeTotalProperty, effort);
-			Building.SetIntProperty(StrikeAnnouncedProperty, 0);
-			WriteTick(Building, StrikeWorkedProperty, The.Game.TimeTicks);
-			string salvage = KingdomMaterialRules.StrikeSalvage(cost).Describe();
-			KingdomChronicle.Record(System, "the " + Building.ShortDisplayName + " of " + System.KingdomDisplayName + " was condemned, and the crew set to taking it down");
-			int days = KingdomMaterialRules.DaysForOneHand(effort);
-			MessageQueue.AddPlayerMessage("{{W|The " + Building.ShortDisplayName + " is condemned.}} The crew will take it down over "
-				+ days + ((days == 1) ? " day" : " days") + " of work for a single pair of hands"
-				+ ((salvage == null) ? ", and there is nothing in it worth keeping" : (", and " + salvage + " comes back")) + ". No water is refunded.");
+			KingdomMaterialTally salvageTally = KingdomMaterialRules.StrikeSalvage(cost);
+			if (salvageTally.Total() > 4096)
+			{
+				Failure = "The strike salvage exceeds the bounded physical receipt.";
+				return false;
+			}
+			KingdomStrikeIntent intent = new KingdomStrikeIntent
+			{
+				DisplayName = Building.ShortDisplayName,
+				BuildKey = key,
+				TargetDisplayName = activeStrike
+					&& carried.Route == KingdomConstructionRoute.SocketConvert
+					&& KingdomData.TryGetBuilding(carried.TargetKey, out var targetEntry)
+						? targetEntry.Name : null,
+				SalvageClaim = new KingdomMaterialDebitCost(salvageTally).ToClaimString(),
+				HasPlot = false, Effort = effort,
+				Targets = new List<KingdomStrikeTarget>(),
+				X1 = -1, Y1 = -1, X2 = -1, Y2 = -1
+			};
+			if (KingdomPlots.TryReadRect(Building, out KingdomPlotRules.PlotRect plotRect))
+			{
+				intent.HasPlot = true;
+				intent.X1 = plotRect.X1;
+				intent.Y1 = plotRect.Y1;
+				intent.X2 = plotRect.X2;
+				intent.Y2 = plotRect.Y2;
+				intent.PlotId = Building.GetStringProperty(KingdomPlots.PlotIdProperty);
+				HashSet<string> frozenIds = new HashSet<string>(StringComparer.Ordinal);
+				for (int y = plotRect.Y1; y <= plotRect.Y2; y++)
+				{
+					for (int x = plotRect.X1; x <= plotRect.X2; x++)
+					{
+						Cell plotCell = Z.GetCell(x, y);
+						if (plotCell == null) continue;
+						foreach (GameObject part in plotCell.GetObjects())
+						{
+							if (!GameObject.Validate(part) || part.ID == Building.ID
+								|| part.GetIntProperty(KingdomPlots.PlotPartProperty) != 1
+								|| part.GetStringProperty(KingdomPlots.PlotIdProperty) != intent.PlotId)
+								continue;
+							if (!frozenIds.Add(part.ID)
+								|| intent.Targets.Count >= KingdomConstructionRules.MaxStrikeTargets)
+							{
+								Failure = "The strike footprint exceeds or duplicates its exact target receipt.";
+								return false;
+							}
+							intent.Targets.Add(new KingdomStrikeTarget
+								{ Id = part.ID, Blueprint = part.Blueprint, X = x, Y = y });
+						}
+					}
+				}
+			}
+			if (!KingdomConstructionRules.TryEncodeStrikeIntent(intent, out string physicalReceipt))
+			{
+				Failure = "The strike's exact physical receipt could not be frozen.";
+				return false;
+			}
+			KingdomConstructionJob job = carried;
+			if (job == null)
+			{
+				job = KingdomConstruction.NewJob(System, Z, KingdomConstructionRoute.Strike,
+					Building.CurrentCell, Building, key, null, 0,
+					new KingdomMaterialDebitCost());
+				if (!KingdomConstruction.TryPublish(job, out Failure)) return false;
+			}
+			if (!KingdomConstruction.IsCurrent(job)
+				|| !KingdomConstruction.UpdatePhysical(ref job,
+					KingdomPhysicalPhase.StrikeOrdered, 0, 0, 0, null, null,
+					physicalReceipt))
+			{
+				Failure = "The strike's exact physical intent could not be published.";
+				return false;
+			}
+			if (!ResumeStrikeStamp(Z, Building, intent, ref job))
+			{
+				Updated = job;
+				Failure = "The strike work phase could not be published.";
+				return false;
+			}
+			if (!string.IsNullOrEmpty(GovernanceVerb))
+			{
+				KingdomGovernanceScope.Commit(GovernanceVerb);
+			}
+			if (Announce)
+			{
+				string salvage = salvageTally.Describe();
+				KingdomChronicle.Record(System, "the " + Building.ShortDisplayName + " of " + System.KingdomDisplayName + " was condemned, and the crew set to taking it down");
+				int days = KingdomMaterialRules.DaysForOneHand(effort);
+				MessageQueue.AddPlayerMessage("{{W|The " + Building.ShortDisplayName + " is condemned.}} The crew will take it down over "
+					+ days + ((days == 1) ? " day" : " days") + " of work for a single pair of hands"
+					+ ((salvage == null) ? ", and there is nothing in it worth keeping" : (", and " + salvage + " comes back")) + ". No water is refunded.");
+			}
 			KingdomLog.Log("materials: strike ordered on " + Building.ShortDisplayName + " effort=" + effort);
+			Updated = job;
 			return true;
+		}
+
+		private static bool ResumeStrikeStamp(Zone Z, GameObject Building,
+			KingdomStrikeIntent Intent, ref KingdomConstructionJob Job)
+		{
+			if (Intent == null || Intent.Effort <= 0 || Intent.Targets == null
+				|| !GameObject.Validate(Building) || Building.ID != Job.SourceId
+				|| Building.CurrentZone != Z || Building.CurrentCell != Z.GetCell(Job.X, Job.Y)
+				|| Building.GetIntProperty("KingdomBuilt") != 1)
+			{
+				KingdomConstruction.Quarantine(ref Job,
+					"The strike predecessor changed before its order could be stamped.");
+				return false;
+			}
+			if (Job.PhysicalPhase == KingdomPhysicalPhase.StrikeOrdered
+				&& !KingdomConstruction.UpdatePhysical(ref Job,
+					KingdomPhysicalPhase.StrikeStampPending, 0, 0, 0, null, null,
+					Job.PhysicalReceipt)) return false;
+			if (Job.PhysicalPhase != KingdomPhysicalPhase.StrikeStampPending
+				&& Job.PhysicalPhase != KingdomPhysicalPhase.StrikeWorking) return false;
+			if (Job.PhysicalPhase == KingdomPhysicalPhase.StrikeStampPending)
+			{
+				KingdomConstruction.Bind(Building, Job);
+				Building.SetIntProperty(StrikeEffortProperty, Intent.Effort);
+				Building.SetIntProperty(StrikeTotalProperty, Intent.Effort);
+				Building.SetIntProperty(StrikeAnnouncedProperty, 0);
+				WriteTick(Building, StrikeWorkedProperty, The.Game.TimeTicks);
+				if (!GameObject.Validate(Building) || Building.ID != Job.SourceId
+					|| Building.CurrentZone != Z || !KingdomConstruction.HasReceipt(Building, Job)
+					|| Building.GetIntProperty(StrikeEffortProperty) != Intent.Effort
+					|| Building.GetIntProperty(StrikeTotalProperty) != Intent.Effort)
+				{
+					KingdomConstruction.Quarantine(ref Job,
+						"The strike predecessor changed while its order was stamped.");
+					return false;
+				}
+				if (!KingdomConstruction.UpdatePhysical(ref Job,
+					KingdomPhysicalPhase.StrikeWorking, 0, 0, 0, null, null,
+					Job.PhysicalReceipt)) return false;
+			}
+			return Job.Route != KingdomConstructionRoute.Strike
+				|| Job.Phase == KingdomConstructionPhase.Working
+				|| KingdomConstruction.FinishProjection(ref Job, true, true);
+		}
+
+		private static bool FinishStrikeCancellation(Zone Z, GameObject Building,
+			ref KingdomConstructionJob Job)
+		{
+			if (Job == null || Job.PhysicalPhase != KingdomPhysicalPhase.StrikeCancellationPending
+				|| !GameObject.Validate(Building) || Building.ID != Job.SourceId
+				|| Building.CurrentZone != Z || Building.CurrentCell != Z.GetCell(Job.X, Job.Y)
+				|| !KingdomConstruction.HasReceipt(Building, Job))
+			{
+				KingdomConstruction.Quarantine(ref Job,
+					"Strike cancellation lost its exact live predecessor.");
+				return false;
+			}
+			// Cleanup is published and proved before the terminal receipt. A save in this
+			// phase only repeats idempotent property removal; it can never resume strike work.
+			Building.SetIntProperty(StrikeEffortProperty, 0);
+			Building.SetIntProperty(StrikeTotalProperty, 0);
+			Building.SetIntProperty(StrikeAnnouncedProperty, 0);
+			Building.RemoveStringProperty(StrikeWorkedProperty);
+			if (!GameObject.Validate(Building) || Building.ID != Job.SourceId
+				|| Building.CurrentZone != Z || Building.GetIntProperty(StrikeEffortProperty) != 0
+				|| Building.GetIntProperty(StrikeTotalProperty) != 0
+				|| !string.IsNullOrEmpty(Building.GetStringProperty(StrikeWorkedProperty)))
+			{
+				KingdomConstruction.Quarantine(ref Job,
+					"Strike cancellation cleanup could not be proved exact.");
+				return false;
+			}
+			return KingdomConstruction.Cancel(ref Job, "The strike order was called off.");
 		}
 
 		// --- The pass -------------------------------------------------------------------------
@@ -1611,7 +1748,8 @@ namespace ThousandAndFirst
 			List<int> intelligence = new List<int>();
 			foreach (GameObject item in Z.GetObjects())
 			{
-				if (strike == null && item.GetIntProperty(StrikeEffortProperty) > 0)
+				if (strike == null && (item.GetIntProperty(StrikeEffortProperty) > 0
+					|| HasActiveStrikeReceipt(System, Z, item)))
 				{
 					strike = item;
 				}
@@ -1858,11 +1996,31 @@ namespace ThousandAndFirst
 			return (statistic == null) ? KingdomMaterialRules.BaselineStat : statistic.Value;
 		}
 
-		private static void WorkStrike(KingdomSystem System, Zone Z, GameObject Building, int Hands, long TimeTicks)
+		private static void WorkStrike(KingdomSystem System, Zone Z, GameObject Building,
+			int Hands, long TimeTicks)
 		{
-			// The order keeps its own checkpoint, for the same reason the water detail had to
-			// grow one: charged per zone activation instead, a founder could work a building down
-			// by stepping out of the zone and back in, without a day passing.
+			if (!TryStrikeJob(System, Z, Building, out KingdomConstructionJob job))
+			{
+				int legacyLeft = Building.GetIntProperty(StrikeEffortProperty);
+				int legacyTotal = Building.GetIntProperty(StrikeTotalProperty);
+				if (legacyLeft <= 0 || !OrderStrikeDurable(System, Z, Building, null, false,
+					false, null, out job, out _)) return;
+				Building.SetIntProperty(StrikeEffortProperty, legacyLeft);
+				Building.SetIntProperty(StrikeTotalProperty,
+					legacyTotal > 0 ? legacyTotal : legacyLeft);
+			}
+			if (job.PhysicalPhase != KingdomPhysicalPhase.StrikeWorking
+				|| Building.GetIntProperty(StrikeEffortProperty) <= 0)
+			{
+				if (job.PhysicalPhase == KingdomPhysicalPhase.StrikeWorking
+					&& Building.GetIntProperty(StrikeEffortProperty) <= 0)
+					KingdomConstruction.UpdatePhysical(ref job,
+						KingdomPhysicalPhase.StrikeWorkComplete, 0, 0,
+						job.PhysicalSpilled, null, null, job.PhysicalReceipt);
+				ContinueStrike(System, Z, Building, job);
+				return;
+			}
+			// The order keeps its own checkpoint so zone activation cannot manufacture work-days.
 			long worked = ReadTick(Building, StrikeWorkedProperty);
 			if (worked <= 0)
 			{
@@ -1870,10 +2028,7 @@ namespace ThousandAndFirst
 				return;
 			}
 			int days = KingdomRules.ElapsedDays(TimeTicks - worked);
-			if (days <= 0)
-			{
-				return;
-			}
+			if (days <= 0) return;
 			if (Hands <= 0)
 			{
 				if (Building.GetIntProperty(StrikeAnnouncedProperty) != 1)
@@ -1881,44 +2036,492 @@ namespace ThousandAndFirst
 					Building.SetIntProperty(StrikeAnnouncedProperty, 1);
 					System.Ledger.Note("{{r|The " + Building.ShortDisplayName + " is condemned, and there is nobody free to take it down. Stand a settler down off the water or a work.}}");
 				}
-				WriteTick(Building, StrikeWorkedProperty, KingdomRules.AdvanceCheckpoint(worked, TimeTicks));
+				WriteTick(Building, StrikeWorkedProperty,
+					KingdomRules.AdvanceCheckpoint(worked, TimeTicks));
 				return;
 			}
 			Building.SetIntProperty(StrikeAnnouncedProperty, 0);
-			WriteTick(Building, StrikeWorkedProperty, KingdomRules.AdvanceCheckpoint(worked, TimeTicks));
-			int left = Building.GetIntProperty(StrikeEffortProperty) - KingdomMaterialRules.EffortWorked(Hands, days);
-			if (left > 0)
+			WriteTick(Building, StrikeWorkedProperty,
+				KingdomRules.AdvanceCheckpoint(worked, TimeTicks));
+			int left = Building.GetIntProperty(StrikeEffortProperty)
+				- KingdomMaterialRules.EffortWorked(Hands, days);
+			Building.SetIntProperty(StrikeEffortProperty, Math.Max(0, left));
+			if (left <= 0 && KingdomConstruction.UpdatePhysical(ref job,
+				KingdomPhysicalPhase.StrikeWorkComplete, 0, 0, job.PhysicalSpilled,
+				null, null, job.PhysicalReceipt)) ContinueStrike(System, Z, Building, job);
+		}
+
+		internal static void RetryConstruction(KingdomSystem System, Zone Z,
+			KingdomConstructionJob Job)
+		{
+			if (System == null || Z == null || Job == null
+				|| (Job.Route != KingdomConstructionRoute.Strike
+					&& Job.Route != KingdomConstructionRoute.SocketConvert)
+				|| Job.PhysicalPhase == KingdomPhysicalPhase.None) return;
+			GameObject source = ExactObject(Job.SourceId);
+			if (Job.PhysicalPhase == KingdomPhysicalPhase.StrikeCancellationPending)
 			{
-				Building.SetIntProperty(StrikeEffortProperty, left);
+				KingdomConstructionJob cancelling = Job;
+				FinishStrikeCancellation(Z, source, ref cancelling);
 				return;
 			}
-			string name = Building.ShortDisplayName;
-			string key = Building.GetStringProperty(KingdomUpgrade.BuildKeyProperty);
-			KingdomMaterialTally salvage = KingdomMaterialRules.StrikeSalvage(CostFor(key));
-			Cell cell = Building.CurrentCell;
-			MaterialStock stock = Stock(Z);
-			int spilled = stock.PutAll(salvage, cell);
-			// Only ever an object the settlement created and marked, per the protection law:
-			// OrderStrike refuses anything without KingdomBuilt, and nothing else sets this.
-			// The socket layer reads the plot's own rect off Building before it goes, and reports
-			// whether it took over the telling: a live conversion supplies its own single combined
-			// line, an ordinary strike leaves the rect a re-buildable socket and says nothing here.
-			bool convertedInPlace = KingdomSocket.OnCleared(System, Z, Building);
-			// A struck delve is a filled hole. The rock under it goes back to being owned and
-			// unworkable, and it has to be forgotten HERE rather than inferred later, because
-			// nothing else will ever stand on this ground to say the shaft is gone.
-			KingdomDelve.OnStruck(key, Z.ZoneID);
-			Building.Obliterate();
-			string returned = salvage.Describe();
-			if (!convertedInPlace)
+			if (Job.PhysicalPhase == KingdomPhysicalPhase.StrikeOrdered
+				|| Job.PhysicalPhase == KingdomPhysicalPhase.StrikeStampPending)
 			{
-				KingdomChronicle.Record(System, "the " + name + " of " + System.KingdomDisplayName + " was struck, and the crew stood in the gap where it had been");
-				System.RecordDeed("the striking of the " + name + " at " + System.KingdomDisplayName);
-				MessageQueue.AddPlayerMessage("{{W|The " + name + " comes down.}} "
-					+ ((returned == null) ? "Nothing of it was worth keeping." : (returned + " is carried to the stockpiles."))
-					+ ((spilled > 0) ? " Some of it went on the ground for want of a stockpile." : ""));
+				if (!KingdomConstructionRules.TryDecodeStrikeIntent(Job.PhysicalReceipt,
+					out KingdomStrikeIntent stampIntent) || stampIntent.Targets == null)
+				{
+					QuarantineStrike(Job, "Legacy or malformed strike stamp lacks exact targets.");
+					return;
+				}
+				KingdomConstructionJob stamping = Job;
+				ResumeStrikeStamp(Z, source, stampIntent, ref stamping);
+				return;
 			}
-			KingdomLog.Log("materials: struck " + name + " salvage=" + (returned ?? "none") + " spilled=" + spilled);
+			if (GameObject.Validate(source) && source.CurrentZone == Z
+				&& source.GetIntProperty(StrikeEffortProperty) > 0
+				&& Job.PhysicalPhase == KingdomPhysicalPhase.StrikeWorking) return;
+			if (GameObject.Validate(source) && source.CurrentZone == Z
+				&& source.GetIntProperty(StrikeEffortProperty) <= 0
+				&& Job.PhysicalPhase == KingdomPhysicalPhase.StrikeWorking)
+			{
+				KingdomConstructionJob completed = Job;
+				if (!KingdomConstruction.UpdatePhysical(ref completed,
+					KingdomPhysicalPhase.StrikeWorkComplete, 0, 0,
+					completed.PhysicalSpilled, null, null, completed.PhysicalReceipt)) return;
+				Job = completed;
+			}
+			ContinueStrike(System, Z, source, Job);
+		}
+
+		internal static void InspectConstruction(KingdomSystem System, Zone Z,
+			KingdomConstructionJob Job)
+		{
+			RetryConstruction(System, Z, Job);
+		}
+
+		private static bool HasActiveStrikeReceipt(KingdomSystem System, Zone Z,
+			GameObject Building)
+		{
+			return TryStrikeJob(System, Z, Building, out KingdomConstructionJob job)
+				&& job.PhysicalPhase != KingdomPhysicalPhase.None;
+		}
+
+		private static bool TryStrikeJob(KingdomSystem System, Zone Z, GameObject Building,
+			out KingdomConstructionJob Job)
+		{
+			Job = null;
+			if (!GameObject.Validate(Building)) return false;
+			string receipt = Building.GetStringProperty(KingdomConstruction.ReceiptProperty);
+			return !string.IsNullOrEmpty(receipt) && KingdomConstruction.TryFind(receipt, out Job)
+				&& KingdomConstruction.Owns(System, Z, Job)
+				&& !KingdomConstructionRules.IsTerminal(Job.Phase)
+				&& (Job.Route == KingdomConstructionRoute.Strike
+					|| Job.Route == KingdomConstructionRoute.SocketConvert)
+				&& Job.SourceId == Building.ID;
+		}
+
+		private static GameObject ExactObject(string Id)
+		{
+			if (string.IsNullOrEmpty(Id)) return null;
+			GameObject item = GameObject.FindByID(Id);
+			return GameObject.Validate(item) && item.ID == Id ? item : null;
+		}
+
+		private static void ContinueStrike(KingdomSystem System, Zone Z,
+			GameObject Building, KingdomConstructionJob Job)
+		{
+			if (!KingdomConstruction.Owns(System, Z, Job)
+				|| !KingdomConstruction.IsCurrent(Job)
+				|| !KingdomConstructionRules.TryDecodeStrikeIntent(Job.PhysicalReceipt,
+					out KingdomStrikeIntent intent) || intent.Targets == null
+				|| intent.Effort <= 0)
+			{
+				QuarantineStrike(Job, "The strike's frozen physical receipt is absent or stale.");
+				return;
+			}
+			for (int step = 0; step < 512; step++)
+			{
+				if (Job.PhysicalPhase == KingdomPhysicalPhase.Quarantined
+					|| Job.Phase == KingdomConstructionPhase.InspectionRequired) return;
+				if (Job.PhysicalPhase == KingdomPhysicalPhase.StrikeWorkComplete)
+				{
+					if (!ValidateFrozenStrikeTargets(Z, intent, Job.SourceId,
+						Job.PhysicalIndex, out GameObject plotPart, out string targetFailure))
+					{
+						QuarantineStrike(Job, targetFailure);
+						return;
+					}
+					if (Job.PhysicalIndex < intent.Targets.Count)
+					{
+						RemoveStrikePlotPart(Z, intent, plotPart, ref Job);
+						if (Job.PhysicalPhase != KingdomPhysicalPhase.StrikeWorkComplete) return;
+						continue;
+					}
+					RemoveStrikePredecessor(Z, Building, ref Job);
+					if (Job.PhysicalPhase != KingdomPhysicalPhase.PredecessorRemoved) return;
+				}
+				else if (Job.PhysicalPhase == KingdomPhysicalPhase.PlotPartRemovalPending)
+				{
+					// No durable callback-success tombstone was written. FindByID null cannot
+					// distinguish removal from an unloaded/moved exact target.
+					QuarantineStrike(Job,
+						"Plot-part removal was interrupted before exact callback-success proof.");
+					return;
+				}
+				else if (Job.PhysicalPhase == KingdomPhysicalPhase.PredecessorRemovalPending)
+				{
+					QuarantineStrike(Job,
+						"Strike predecessor removal was interrupted before exact callback-success proof.");
+					return;
+				}
+
+				if (Job.PhysicalPhase == KingdomPhysicalPhase.PredecessorRemoved
+					|| Job.PhysicalPhase == KingdomPhysicalPhase.SalvageAddPending)
+				{
+					if (ExactObject(Job.SourceId) != null)
+					{
+						QuarantineStrike(Job, "Salvage was blocked because the exact predecessor still exists.");
+						return;
+					}
+					KingdomDelve.OnStruck(intent.BuildKey, Z.ZoneID);
+					if (!ContinueStrikeSalvage(Z, intent, ref Job)) return;
+					if (Job.PhysicalPhase != KingdomPhysicalPhase.SalvageSettled) continue;
+				}
+
+				if (Job.PhysicalPhase == KingdomPhysicalPhase.SalvageSettled
+					|| Job.PhysicalPhase == KingdomPhysicalPhase.SuccessorPending)
+				{
+					bool fresh = Job.PhysicalPhase == KingdomPhysicalPhase.SalvageSettled;
+					if (fresh && !KingdomConstruction.UpdatePhysical(ref Job,
+						KingdomPhysicalPhase.SuccessorPending, Job.PhysicalIndex, 0,
+						Job.PhysicalSpilled, null, null, Job.PhysicalReceipt)) return;
+					if (!KingdomSocket.ResumeStrikeSuccessor(System, Z, intent, fresh,
+						ref Job, out _, out string successorFailure))
+					{
+						QuarantineStrike(Job, successorFailure
+							?? "The strike successor is absent or ambiguous.");
+						return;
+					}
+					if (!KingdomConstruction.UpdatePhysical(ref Job,
+						KingdomPhysicalPhase.SuccessorSettled, Job.PhysicalIndex, 0,
+						Job.PhysicalSpilled, null, null, Job.PhysicalReceipt)) return;
+				}
+
+				if (Job.PhysicalPhase == KingdomPhysicalPhase.SuccessorSettled
+					|| Job.PhysicalPhase == KingdomPhysicalPhase.TellingsPending)
+				{
+					SettleStrikeTellings(System, intent, ref Job);
+					return;
+				}
+				if (Job.PhysicalPhase == KingdomPhysicalPhase.Settled) return;
+			}
+		}
+
+		private static bool ValidateFrozenStrikeTargets(Zone Z, KingdomStrikeIntent Intent,
+			string SourceId, int Index, out GameObject Current, out string Failure)
+		{
+			Current = null;
+			Failure = null;
+			if (Z == null || Intent == null || Intent.Targets == null || Index < 0
+				|| Index > Intent.Targets.Count)
+			{
+				Failure = "The frozen strike target index is invalid.";
+				return false;
+			}
+			if (!Intent.HasPlot)
+			{
+				if (Intent.Targets.Count == 0 && Index == 0) return true;
+				Failure = "A non-plot strike carries plot-part targets.";
+				return false;
+			}
+			HashSet<string> remaining = new HashSet<string>(StringComparer.Ordinal);
+			for (int i = 0; i < Intent.Targets.Count; i++)
+			{
+				KingdomStrikeTarget target = Intent.Targets[i];
+				GameObject exact = ExactObject(target.Id);
+				if (i < Index)
+				{
+					if (GameObject.Validate(exact))
+					{
+						Failure = "A proved-removed strike target reappeared.";
+						return false;
+					}
+					continue;
+				}
+				if (!remaining.Add(target.Id) || !GameObject.Validate(exact)
+					|| exact.ID == SourceId || exact.CurrentZone != Z
+					|| exact.CurrentCell != Z.GetCell(target.X, target.Y)
+					|| exact.Blueprint != target.Blueprint
+					|| exact.GetIntProperty(KingdomPlots.PlotPartProperty) != 1
+					|| exact.GetStringProperty(KingdomPlots.PlotIdProperty) != Intent.PlotId)
+				{
+					Failure = "A frozen strike target was removed, moved, replaced, or changed.";
+					return false;
+				}
+				if (i == Index) Current = exact;
+			}
+			foreach (GameObject item in Z.GetObjects())
+			{
+				if (GameObject.Validate(item) && item.ID != SourceId
+					&& item.GetIntProperty(KingdomPlots.PlotPartProperty) == 1
+					&& item.GetStringProperty(KingdomPlots.PlotIdProperty) == Intent.PlotId
+					&& !remaining.Contains(item.ID))
+				{
+					Failure = "A new or replacement plot part entered the frozen strike footprint.";
+					return false;
+				}
+			}
+			return Index == Intent.Targets.Count || GameObject.Validate(Current);
+		}
+
+		private static void RemoveStrikePlotPart(Zone Z, KingdomStrikeIntent Intent,
+			GameObject Part, ref KingdomConstructionJob Job)
+		{
+			if (!GameObject.Validate(Part) || Part.CurrentZone != Z || Part.ID == Job.SourceId
+				|| Part.GetIntProperty(KingdomPlots.PlotPartProperty) != 1
+				|| Part.GetStringProperty(KingdomPlots.PlotIdProperty) != Intent.PlotId
+				|| !ReferenceEquals(ExactObject(Part.ID), Part))
+			{
+				QuarantineStrike(Job, "A plot part changed before exact removal intent published.");
+				return;
+			}
+			string id = Part.ID;
+			if (!KingdomConstruction.UpdatePhysical(ref Job,
+				KingdomPhysicalPhase.PlotPartRemovalPending, Job.PhysicalIndex, 0,
+				Job.PhysicalSpilled, id, null, Job.PhysicalReceipt)) return;
+			bool removed;
+			try { removed = Part.Obliterate(null, Silent: true); }
+			catch (Exception ex)
+			{
+				QuarantineStrike(Job, "Plot-part removal threw: " + ex.Message);
+				return;
+			}
+			if (!removed || GameObject.Validate(Part) || ExactObject(id) != null)
+			{
+				QuarantineStrike(Job, "Plot-part removal was vetoed, moved, or replaced.");
+				return;
+			}
+			KingdomConstruction.UpdatePhysical(ref Job, KingdomPhysicalPhase.StrikeWorkComplete,
+				Job.PhysicalIndex + 1, 0, Job.PhysicalSpilled, null, null, Job.PhysicalReceipt);
+		}
+
+		private static void RemoveStrikePredecessor(Zone Z, GameObject Building,
+			ref KingdomConstructionJob Job)
+		{
+			GameObject source = GameObject.Validate(Building) ? Building : ExactObject(Job.SourceId);
+			Cell expected = Z.GetCell(Job.X, Job.Y);
+			if (!GameObject.Validate(source) || source.ID != Job.SourceId
+				|| !ReferenceEquals(ExactObject(Job.SourceId), source)
+				|| source.CurrentZone != Z || source.CurrentCell != expected
+				|| source.GetIntProperty("KingdomBuilt") != 1)
+			{
+				QuarantineStrike(Job, "The exact strike predecessor changed before removal.");
+				return;
+			}
+			if (!KingdomConstruction.UpdatePhysical(ref Job,
+				KingdomPhysicalPhase.PredecessorRemovalPending, 0, 0, 0, null, null,
+				Job.PhysicalReceipt)) return;
+			bool removed;
+			try { removed = source.Obliterate(null, Silent: true); }
+			catch (Exception ex)
+			{
+				QuarantineStrike(Job, "Strike predecessor removal threw: " + ex.Message);
+				return;
+			}
+			if (!removed || GameObject.Validate(source) || ExactObject(Job.SourceId) != null)
+			{
+				QuarantineStrike(Job, "Strike predecessor removal was vetoed, moved, or replaced.");
+				return;
+			}
+			KingdomConstruction.UpdatePhysical(ref Job,
+				KingdomPhysicalPhase.PredecessorRemoved, 0, 0, 0, null, null,
+				Job.PhysicalReceipt);
+		}
+
+		private static bool ContinueStrikeSalvage(Zone Z, KingdomStrikeIntent Intent,
+			ref KingdomConstructionJob Job)
+		{
+			if (!KingdomMaterialDebitCost.TryParseClaim(Intent.SalvageClaim,
+				out KingdomMaterialDebitCost salvage) || !salvage.Bits.IsEmpty()
+				|| !salvage.Exotics.IsEmpty())
+			{
+				QuarantineStrike(Job, "The frozen strike salvage claim cannot be read.");
+				return false;
+			}
+			if (Job.PhysicalPhase == KingdomPhysicalPhase.SalvageAddPending)
+			{
+				GameObject pending = ExactObject(Job.PhysicalItemId);
+				if (!ExactSalvageDestination(Z, pending, Job))
+				{
+					QuarantineStrike(Job, "Pending strike salvage is missing, replaced, merged, or moved.");
+					return false;
+				}
+				int next = Job.PhysicalIndex + Job.PhysicalAmount;
+				if (!KingdomConstruction.UpdatePhysical(ref Job,
+					KingdomPhysicalPhase.PredecessorRemoved, next, 0,
+					Job.PhysicalSpilled + (Job.PhysicalDestinationId == null
+						? Job.PhysicalAmount : 0), null, null, Job.PhysicalReceipt)) return false;
+			}
+			if (!TryMaterialAtOrdinal(salvage.Materials, Job.PhysicalIndex,
+				out KingdomMaterial material, out int remaining))
+			{
+				return KingdomConstruction.UpdatePhysical(ref Job,
+					KingdomPhysicalPhase.SalvageSettled, Job.PhysicalIndex, 0,
+					Job.PhysicalSpilled, null, null, Job.PhysicalReceipt);
+			}
+			string blueprint = BlueprintFor(material);
+			GameObject item = string.IsNullOrEmpty(blueprint) ? null : GameObject.Create(blueprint);
+			if (!GameObject.Validate(item))
+			{
+				QuarantineStrike(Job, "The exact strike salvage blueprint could not be created.");
+				return false;
+			}
+			int amount = item.HasPart("Stacker") ? remaining : 1;
+			item.Count = amount;
+			item.SetStringProperty(StrikeSalvageReceiptProperty, Job.Id);
+			GameObject destination = null;
+			MaterialStock stock = Stock(Z);
+			for (int i = 0; i < stock.Stockpiles.Count; i++)
+			{
+				GameObject candidate = stock.Stockpiles[i];
+				if (GameObject.Validate(candidate) && candidate.CurrentZone == Z
+					&& candidate.Inventory != null)
+				{
+					destination = candidate;
+					break;
+				}
+			}
+			string destinationId = destination == null ? null : destination.ID;
+			if (!KingdomConstruction.UpdatePhysical(ref Job,
+				KingdomPhysicalPhase.SalvageAddPending, Job.PhysicalIndex, amount,
+				Job.PhysicalSpilled, item.ID, destinationId, Job.PhysicalReceipt))
+			{
+				item.Obliterate(null, Silent: true);
+				return false;
+			}
+			try
+			{
+				if (destination != null) destination.Inventory.AddObject(item, null, Silent: true);
+				else Z.GetCell(Job.X, Job.Y)?.AddObject(item);
+			}
+			catch (Exception ex)
+			{
+				QuarantineStrike(Job, "Strike salvage insertion threw: " + ex.Message);
+				return false;
+			}
+			if (!KingdomConstruction.IsCurrent(Job)
+				|| !ExactSalvageDestination(Z, item, Job))
+			{
+				QuarantineStrike(Job, "Strike salvage insertion was vetoed, merged, replaced, or moved.");
+				return false;
+			}
+			int spilled = Job.PhysicalSpilled + (destination == null ? amount : 0);
+			return KingdomConstruction.UpdatePhysical(ref Job,
+				KingdomPhysicalPhase.PredecessorRemoved, Job.PhysicalIndex + amount, 0,
+				spilled, null, null, Job.PhysicalReceipt);
+		}
+
+		private static bool TryMaterialAtOrdinal(KingdomMaterialTally Tally, int Ordinal,
+			out KingdomMaterial Material, out int Remaining)
+		{
+			Material = KingdomMaterial.Mud;
+			Remaining = 0;
+			if (Tally == null || Ordinal < 0) return false;
+			int offset = Ordinal;
+			for (int i = 0; i < KingdomMaterialRules.MaterialCount; i++)
+			{
+				int count = Tally.Get((KingdomMaterial)i);
+				if (offset < count)
+				{
+					Material = (KingdomMaterial)i;
+					Remaining = count - offset;
+					return true;
+				}
+				offset -= count;
+			}
+			return false;
+		}
+
+		private static bool ExactSalvageDestination(Zone Z, GameObject Item,
+			KingdomConstructionJob Job)
+		{
+			if (!GameObject.Validate(Item) || Item.ID != Job.PhysicalItemId
+				|| Item.Count != Job.PhysicalAmount
+				|| Item.GetStringProperty(StrikeSalvageReceiptProperty) != Job.Id) return false;
+			if (Job.PhysicalDestinationId == null)
+				return Item.Physics != null && Item.Physics.InInventory == null
+					&& Item.CurrentCell == Z.GetCell(Job.X, Job.Y);
+			GameObject destination = ExactObject(Job.PhysicalDestinationId);
+			return GameObject.Validate(destination) && destination.CurrentZone == Z
+				&& destination.Inventory != null && Item.Physics != null
+				&& Item.Physics.InInventory == destination
+				&& destination.Inventory.Objects.Contains(Item);
+		}
+
+		private static void SettleStrikeTellings(KingdomSystem System,
+			KingdomStrikeIntent Intent, ref KingdomConstructionJob Job)
+		{
+			bool converted = Job.Route == KingdomConstructionRoute.SocketConvert;
+			if (Job.Outbox == null)
+			{
+				string returned = null;
+				if (KingdomMaterialDebitCost.TryParseClaim(Intent.SalvageClaim,
+					out KingdomMaterialDebitCost salvage)) returned = salvage.Materials.Describe();
+				string target = Intent.TargetDisplayName ?? Job.TargetKey ?? "the new work";
+				KingdomConstructionOutbox box = new KingdomConstructionOutbox
+				{
+					EventId = "construction:" + Job.Id + ":strike",
+					Mode = converted ? 2 : 1,
+					Chronicle = converted
+						? "the " + Intent.DisplayName + " of " + System.KingdomDisplayName
+							+ " came down, and " + XRL.Language.Grammar.A(target)
+							+ " rose on its ground"
+						: "the " + Intent.DisplayName + " of " + System.KingdomDisplayName
+							+ " was struck, and the crew stood in the gap where it had been",
+					ChronicleState = KingdomConstructionSinkDisposition.Pending,
+					LedgerState = KingdomConstructionSinkDisposition.Skipped,
+					Message = converted
+						? "{{W|The " + Intent.DisplayName + " comes down,}} {{G|and the ground is already rising into "
+							+ XRL.Language.Grammar.A(target) + ".}}"
+						: "{{W|The " + Intent.DisplayName + " comes down.}} "
+							+ (returned == null ? "Nothing of it was worth keeping."
+								: returned + " is carried to the stockpiles.")
+							+ (Job.PhysicalSpilled > 0
+								? " Some of it went on the ground for want of a stockpile." : ""),
+					MessageState = KingdomConstructionSinkDisposition.Pending,
+					Deed = converted ? null : "the striking of the " + Intent.DisplayName
+						+ " at " + System.KingdomDisplayName,
+					DeedState = converted ? KingdomConstructionSinkDisposition.Skipped
+						: KingdomConstructionSinkDisposition.Pending
+				};
+				if (!KingdomConstruction.UpdateOutbox(ref Job, box)) return;
+			}
+			if (!KingdomConstruction.UpdatePhysical(ref Job,
+				KingdomPhysicalPhase.TellingsPending, Job.PhysicalIndex, 0,
+				Job.PhysicalSpilled, null, null, Job.PhysicalReceipt)) return;
+			if (!converted && !KingdomConstructionRules.IsTerminal(Job.Phase)
+				&& !KingdomConstruction.Complete(ref Job)) return;
+			if (!KingdomCeremony.DispatchPending(System, ref Job)) return;
+			KingdomConstruction.UpdatePhysical(ref Job, KingdomPhysicalPhase.Settled,
+				Job.PhysicalIndex, 0, Job.PhysicalSpilled, null, null, Job.PhysicalReceipt);
+			KingdomLog.Log("materials: struck " + Intent.DisplayName + " salvage="
+				+ Job.PhysicalIndex + " spilled=" + Job.PhysicalSpilled);
+		}
+
+		private static void QuarantineStrike(KingdomConstructionJob Job, string Failure)
+		{
+			if (Job == null) return;
+			KingdomConstructionJob current = Job;
+			if (!KingdomConstruction.IsCurrent(current))
+				KingdomConstruction.TryFind(Job.Id, out current);
+			if (current == null || KingdomConstructionRules.IsTerminal(current.Phase)) return;
+			KingdomConstruction.UpdatePhysical(ref current, KingdomPhysicalPhase.Quarantined,
+				current.PhysicalIndex, current.PhysicalAmount, current.PhysicalSpilled,
+				current.PhysicalItemId, current.PhysicalDestinationId, current.PhysicalReceipt,
+				Failure);
+			KingdomConstruction.Quarantine(ref current, Failure);
+			KingdomLog.Log("materials: strike quarantined " + current.Id + ": " + Failure);
 		}
 
 		private static void WorkClearance(KingdomSystem System, Zone Z, GameObject StakeObject, r_KingdomClearance Order, int Hands, long TimeTicks)

@@ -1,5 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.Security.Cryptography;
+using System.Text;
 using XRL;
 using XRL.Messages;
 using XRL.UI;
@@ -69,6 +72,204 @@ namespace XRL.World.Parts
 		/// </summary>
 		public int AnnouncedReason;
 
+		// The shipped IPart wire ends at AnnouncedReason. IComponent.Write/Read serializes every
+		// instance field positionally, so durable handover state lives in namespaced GameObject
+		// properties. Explicit accessors have no backing fields and therefore do not alter that wire.
+		private const string HandoverPrefix = "r_TAF_ImprovementHandover:";
+		private const string HandoverEscrowPrefix = "r_TAF_ImprovementItemEscrow:";
+		private const int MaxHandoverText = 4096;
+		private const int MaxHandoverComponents = 64;
+		private const int MaxHandoverTopologyObjects = 4096;
+
+		private int HandoverInt(string Name)
+		{
+			return ParentObject == null ? 0 : ParentObject.GetIntProperty(HandoverPrefix + Name);
+		}
+
+		private void HandoverInt(string Name, int Value)
+		{
+			ParentObject?.SetIntProperty(HandoverPrefix + Name, Value);
+		}
+
+		private string HandoverText(string Name)
+		{
+			return ParentObject?.GetStringProperty(HandoverPrefix + Name);
+		}
+
+		private void HandoverText(string Name, string Value)
+		{
+			ParentObject?.SetStringProperty(HandoverPrefix + Name, Value);
+		}
+
+		internal int HandoverPhase
+		{
+			get { return HandoverInt("LiquidPhase"); }
+			set { HandoverInt("LiquidPhase", value); }
+		}
+
+		internal bool HandoverQuarantined
+		{
+			get { return HandoverInt("Quarantined") == 1; }
+			set { HandoverInt("Quarantined", value ? 1 : 0); }
+		}
+
+		internal string HandoverFailure
+		{
+			get { return HandoverText("Failure"); }
+			set { HandoverText("Failure", value); }
+		}
+
+		internal string HandoverSourceId
+		{
+			get { return HandoverText("SourceId"); }
+			set { HandoverText("SourceId", value); }
+		}
+
+		internal string HandoverTargetId
+		{
+			get { return HandoverText("TargetId"); }
+			set { HandoverText("TargetId", value); }
+		}
+
+		internal string HandoverConstructionReceipt
+		{
+			get { return HandoverText("ConstructionReceipt"); }
+			set { HandoverText("ConstructionReceipt", value); }
+		}
+
+		internal int HandoverSourceVolumeBefore
+		{
+			get { return HandoverInt("SourceVolumeBefore"); }
+			set { HandoverInt("SourceVolumeBefore", value); }
+		}
+
+		internal int HandoverSourceVolumeAfter
+		{
+			get { return HandoverInt("SourceVolumeAfter"); }
+			set { HandoverInt("SourceVolumeAfter", value); }
+		}
+
+		internal int HandoverTargetVolumeBefore
+		{
+			get { return HandoverInt("TargetVolumeBefore"); }
+			set { HandoverInt("TargetVolumeBefore", value); }
+		}
+
+		internal int HandoverTargetVolumeAfter
+		{
+			get { return HandoverInt("TargetVolumeAfter"); }
+			set { HandoverInt("TargetVolumeAfter", value); }
+		}
+
+		internal int HandoverTargetCapacity
+		{
+			get { return HandoverInt("TargetCapacity"); }
+			set { HandoverInt("TargetCapacity", value); }
+		}
+
+		internal string HandoverSourceComposition
+		{
+			get { return HandoverText("SourceComposition"); }
+			set { HandoverText("SourceComposition", value); }
+		}
+
+		internal string HandoverTargetCompositionBefore
+		{
+			get { return HandoverText("TargetCompositionBefore"); }
+			set { HandoverText("TargetCompositionBefore", value); }
+		}
+
+		internal string HandoverTargetCompositionAfter
+		{
+			get { return HandoverText("TargetCompositionAfter"); }
+			set { HandoverText("TargetCompositionAfter", value); }
+		}
+
+		internal string HandoverItemId
+		{
+			get { return HandoverText("ItemId"); }
+			set { HandoverText("ItemId", value); }
+		}
+
+		internal string HandoverItemBlueprint
+		{
+			get { return HandoverText("ItemBlueprint"); }
+			set { HandoverText("ItemBlueprint", value); }
+		}
+
+		internal string HandoverItemDestinationId
+		{
+			get { return HandoverText("ItemDestinationId"); }
+			set { HandoverText("ItemDestinationId", value); }
+		}
+
+		internal string HandoverItemEscrowKey
+		{
+			get { return HandoverText("ItemEscrowKey"); }
+			set { HandoverText("ItemEscrowKey", value); }
+		}
+
+		internal int HandoverItemCount
+		{
+			get { return HandoverInt("ItemCount"); }
+			set { HandoverInt("ItemCount", value); }
+		}
+
+		internal int HandoverItemPhase
+		{
+			get { return HandoverInt("ItemPhase"); }
+			set { HandoverInt("ItemPhase", value); }
+		}
+
+		internal int HandoverItemDestinationKind
+		{
+			get { return HandoverInt("ItemDestinationKind"); }
+			set { HandoverInt("ItemDestinationKind", value); }
+		}
+
+		internal int HandoverMovedItems
+		{
+			get { return HandoverInt("MovedItems"); }
+			set { HandoverInt("MovedItems", value); }
+		}
+
+		internal int HandoverItemMovedBefore
+		{
+			get { return HandoverInt("ItemMovedBefore"); }
+			set { HandoverInt("ItemMovedBefore", value); }
+		}
+
+		internal int HandoverItemMovedAfter
+		{
+			get { return HandoverInt("ItemMovedAfter"); }
+			set { HandoverInt("ItemMovedAfter", value); }
+		}
+
+		internal bool HandoverInventoryDone
+		{
+			get { return HandoverInt("InventoryDone") == 1; }
+			set { HandoverInt("InventoryDone", value ? 1 : 0); }
+		}
+
+		internal bool HandoverEffectsDone
+		{
+			get { return HandoverInt("EffectsDone") == 1; }
+			set { HandoverInt("EffectsDone", value ? 1 : 0); }
+		}
+
+		internal bool HandoverFlagsValid()
+		{
+			return BinaryHandoverFlag("Quarantined")
+				&& BinaryHandoverFlag("InventoryDone")
+				&& BinaryHandoverFlag("EffectsDone");
+		}
+
+		private bool BinaryHandoverFlag(string Name)
+		{
+			int value = HandoverInt(Name);
+			return value == 0 || value == 1;
+		}
+
 		/// <summary>
 		/// Ticks past the scaffold's due time before an improvement whose successor never
 		/// appeared is given up on. Generous: the scaffold only ticks in an active zone, so a
@@ -76,26 +277,846 @@ namespace XRL.World.Parts
 		/// </summary>
 		public const long AbandonGraceTicks = 2400L;
 
-		public override bool WantTurnTick()
-		{
-			return true;
-		}
-
-		public override void TurnTick(long TimeTick, int Amount)
-		{
-			if (Working)
-			{
-				KingdomSystem.Guard("improvement handover", delegate
-				{
-					PollHandover(TimeTick);
-				});
-			}
-			base.TurnTick(TimeTick, Amount);
-		}
-
 		public override bool WantEvent(int ID, int cascade)
 		{
 			return base.WantEvent(ID, cascade) || ID == GetShortDescriptionEvent.ID;
+		}
+
+		internal static bool CarryLiquidDurable(GameObject SourceObject, GameObject TargetObject,
+			r_KingdomImprovement Receipt, out int Moved)
+		{
+			Moved = 0;
+			if (Receipt == null || !Receipt.HandoverFlagsValid())
+				return FailHandover(Receipt, "Handover boolean flags are corrupt.");
+			if (Receipt.HandoverQuarantined) return false;
+			if (!ExactHandoverObjects(SourceObject, TargetObject, Receipt))
+				return FailHandover(Receipt, "Handover endpoints do not match their exact IDs.");
+			if (Receipt.HandoverPhase < 0 || Receipt.HandoverPhase > 3)
+				return FailHandover(Receipt, "Liquid handover phase is corrupt.");
+			if (!ExactLiquidReceiptShape(Receipt))
+				return FailHandover(Receipt, "Liquid handover receipt is corrupt or unbounded.");
+			LiquidVolume source = SourceObject.GetPart<LiquidVolume>();
+			LiquidVolume target = TargetObject.GetPart<LiquidVolume>();
+			if (source == null || source.Volume <= 0)
+			{
+				if (Receipt.HandoverPhase >= 1 && Receipt.HandoverSourceVolumeBefore > 0)
+					return ResumeDrainedLiquid(SourceObject, TargetObject, Receipt, source, target,
+						out Moved);
+				Receipt.HandoverPhase = 3;
+				return true;
+			}
+			if (target == null)
+				return FailHandover(Receipt, "Liquid source has no exact successor vessel.");
+			if (Receipt.HandoverPhase == 0)
+			{
+				int space = target.MaxVolume < 0 ? int.MaxValue : target.MaxVolume - target.Volume;
+				string sourceComposition = EncodeLiquid(source);
+				string targetComposition = EncodeLiquid(target);
+				if (source.Volume <= 0 || target.Volume < 0 || space < source.Volume
+					|| (long)target.Volume + source.Volume > int.MaxValue
+					|| sourceComposition == null || targetComposition == null
+					|| !TryFrozenLiquid(sourceComposition, source.Volume, out _)
+					|| (target.Volume > 0
+						&& !TryFrozenLiquid(targetComposition, target.Volume, out _)))
+					return FailHandover(Receipt, "Successor liquid capacity changed before handover.");
+				Receipt.HandoverSourceId = SourceObject.ID;
+				Receipt.HandoverTargetId = TargetObject.ID;
+				Receipt.HandoverSourceVolumeBefore = source.Volume;
+				Receipt.HandoverSourceVolumeAfter = 0;
+				Receipt.HandoverTargetVolumeBefore = target.Volume;
+				Receipt.HandoverTargetVolumeAfter = -1;
+				Receipt.HandoverTargetCapacity = target.MaxVolume;
+				Receipt.HandoverSourceComposition = sourceComposition;
+				Receipt.HandoverTargetCompositionBefore = targetComposition;
+				Receipt.HandoverTargetCompositionAfter = null;
+				Receipt.HandoverPhase = 1;
+			}
+			if (Receipt.HandoverPhase == 3)
+			{
+				if (!ExactLiquidEndpoint(SourceObject, source, Receipt.HandoverSourceVolumeAfter,
+					EncodeEmptyLiquid()) || !ExactLiquidEndpoint(TargetObject, target,
+					Receipt.HandoverTargetVolumeAfter, Receipt.HandoverTargetCompositionAfter)
+					|| target.MaxVolume != Receipt.HandoverTargetCapacity)
+					return FailHandover(Receipt, "Settled liquid receipt no longer matches both vessels.");
+				Moved = Receipt.HandoverSourceVolumeBefore;
+				return true;
+			}
+			if (Receipt.HandoverPhase != 1
+				|| !ExactLiquidEndpoint(SourceObject, source, Receipt.HandoverSourceVolumeBefore,
+					Receipt.HandoverSourceComposition)
+				|| !ExactLiquidEndpoint(TargetObject, target, Receipt.HandoverTargetVolumeBefore,
+					Receipt.HandoverTargetCompositionBefore)
+				|| target.MaxVolume != Receipt.HandoverTargetCapacity)
+				return FailHandover(Receipt, "Pending liquid receipt is ambiguous before drain.");
+
+			int drained = KingdomLiquids.Drain(source, Receipt.HandoverSourceVolumeBefore);
+			if (drained != Receipt.HandoverSourceVolumeBefore
+				|| !ExactLiquidEndpoint(SourceObject, source, 0, EncodeEmptyLiquid())
+				|| !ExactHandoverObjects(SourceObject, TargetObject, Receipt)
+				|| !ReferenceEquals(target, TargetObject.GetPart<LiquidVolume>()))
+				return FailHandover(Receipt, "Liquid drain did not leave the exact frozen aftermath.");
+			Receipt.HandoverPhase = 2;
+			return ResumeDrainedLiquid(SourceObject, TargetObject, Receipt, source, target,
+				out Moved);
+		}
+
+		private static bool ResumeDrainedLiquid(GameObject SourceObject, GameObject TargetObject,
+			r_KingdomImprovement Receipt, LiquidVolume Source, LiquidVolume Target, out int Moved)
+		{
+			Moved = 0;
+			if (Receipt.HandoverPhase == 3)
+			{
+				if (ExactLiquidEndpoint(SourceObject, Source, Receipt.HandoverSourceVolumeAfter,
+						EncodeEmptyLiquid()) && ExactLiquidEndpoint(TargetObject, Target,
+						Receipt.HandoverTargetVolumeAfter, Receipt.HandoverTargetCompositionAfter)
+					&& Target.MaxVolume == Receipt.HandoverTargetCapacity
+					&& ExactHandoverObjects(SourceObject, TargetObject, Receipt))
+				{
+					Moved = Receipt.HandoverSourceVolumeBefore;
+					return true;
+				}
+				return FailHandover(Receipt, "Completed liquid aftermath changed before recovery.");
+			}
+			if (Receipt.HandoverPhase != 2 || Source == null || Target == null
+				|| !ExactLiquidEndpoint(SourceObject, Source, 0, EncodeEmptyLiquid())
+				|| !ExactLiquidEndpoint(TargetObject, Target, Receipt.HandoverTargetVolumeBefore,
+					Receipt.HandoverTargetCompositionBefore)
+				|| Target.MaxVolume != Receipt.HandoverTargetCapacity
+				|| !ExactHandoverObjects(SourceObject, TargetObject, Receipt))
+				return FailHandover(Receipt, "Drained liquid receipt is ambiguous before fill.");
+			LiquidVolume frozen;
+			if (!TryFrozenLiquid(Receipt.HandoverSourceComposition,
+				Receipt.HandoverSourceVolumeBefore, out frozen))
+				return FailHandover(Receipt, "Frozen liquid composition cannot be reconstructed.");
+			bool accepted = false;
+			try { accepted = Target.MixWith(frozen, PouredFrom: SourceObject); }
+			catch (System.Exception ex)
+			{
+				return CompensateLiquid(SourceObject, TargetObject, Receipt, Source, Target,
+					frozen, "Liquid fill threw: " + ex.Message);
+			}
+			if (!ExactHandoverObjects(SourceObject, TargetObject, Receipt)
+				|| !ReferenceEquals(Source, SourceObject.GetPart<LiquidVolume>())
+				|| !ReferenceEquals(Target, TargetObject.GetPart<LiquidVolume>()))
+				return FailHandover(Receipt, "A liquid endpoint changed during fill callback.");
+			int expected = Receipt.HandoverTargetVolumeBefore
+				+ Receipt.HandoverSourceVolumeBefore;
+			if (accepted && Target.Volume == expected
+				&& ExactLiquidEndpoint(SourceObject, Source, 0, EncodeEmptyLiquid()))
+			{
+				string after = EncodeLiquid(Target);
+				if (after == null || !ExactLiquidEndpoint(TargetObject, Target, expected, after))
+					return FailHandover(Receipt,
+						"Liquid fill produced an invalid or unbounded after-composition.");
+				Receipt.HandoverTargetVolumeAfter = Target.Volume;
+				Receipt.HandoverTargetCompositionAfter = after;
+				Receipt.HandoverPhase = 3;
+				Moved = Receipt.HandoverSourceVolumeBefore;
+				return true;
+			}
+			return CompensateLiquid(SourceObject, TargetObject, Receipt, Source, Target,
+				frozen, "Liquid fill was vetoed or partial.");
+		}
+
+		private static bool CompensateLiquid(GameObject SourceObject, GameObject TargetObject,
+			r_KingdomImprovement Receipt, LiquidVolume Source, LiquidVolume Target,
+			LiquidVolume Frozen, string Failure)
+		{
+			// Exact compensation is possible only when target still equals its frozen before-image.
+			if (!ExactLiquidEndpoint(TargetObject, Target, Receipt.HandoverTargetVolumeBefore,
+				Receipt.HandoverTargetCompositionBefore))
+				return FailHandover(Receipt, Failure + " Target changed, so compensation is unsafe.");
+			try { Source.MixWith(Frozen, PouredFrom: TargetObject); }
+			catch (System.Exception ex)
+			{
+				return FailHandover(Receipt, Failure + " Compensation threw: " + ex.Message);
+			}
+			if (!ExactLiquidEndpoint(SourceObject, Source, Receipt.HandoverSourceVolumeBefore,
+					Receipt.HandoverSourceComposition)
+				|| !ExactLiquidEndpoint(TargetObject, Target, Receipt.HandoverTargetVolumeBefore,
+					Receipt.HandoverTargetCompositionBefore)
+				|| Target.MaxVolume != Receipt.HandoverTargetCapacity
+				|| !ExactHandoverObjects(SourceObject, TargetObject, Receipt))
+				return FailHandover(Receipt, Failure + " Exact compensation could not be proved.");
+			Receipt.HandoverPhase = 0;
+			Receipt.HandoverFailure = Failure;
+			return false;
+		}
+
+		internal static bool CarryInventoryDurable(GameObject Source, GameObject Target, Cell Where,
+			r_KingdomImprovement Receipt, out int Moved)
+		{
+			Moved = Receipt == null ? 0 : Receipt.HandoverMovedItems;
+			if (Receipt == null || !Receipt.HandoverFlagsValid())
+				return FailHandover(Receipt, "Handover boolean flags are corrupt.");
+			if (Receipt.HandoverQuarantined) return false;
+			if (Receipt.HandoverMovedItems < 0) return FailHandover(Receipt,
+				"Inventory moved count is corrupt.");
+			if (!ExactHandoverObjects(Source, Target, Receipt))
+				return FailHandover(Receipt, "Inventory endpoints changed before transfer.");
+			if (Receipt.HandoverInventoryDone)
+			{
+				if (Receipt.HandoverItemPhase != 0
+					|| !string.IsNullOrEmpty(Receipt.HandoverItemEscrowKey)
+					|| (Source.Inventory != null && Source.Inventory.Objects.Count != 0))
+					return FailHandover(Receipt,
+						"Settled inventory handover no longer has an empty exact source.");
+				Moved = Receipt.HandoverMovedItems;
+				return true;
+			}
+			if (Source.Inventory == null)
+			{
+				if (Receipt.HandoverItemPhase != 0
+					|| !string.IsNullOrEmpty(Receipt.HandoverItemEscrowKey))
+					return FailHandover(Receipt,
+						"Inventory source part disappeared with an item pending.");
+				Receipt.HandoverInventoryDone = true;
+				return true;
+			}
+			if (Receipt.HandoverItemPhase == 0
+				&& !string.IsNullOrEmpty(Receipt.HandoverItemEscrowKey))
+				return FailHandover(Receipt,
+					"An inventory escrow root exists without its pending phase.");
+			if (Receipt.HandoverItemPhase != 0
+				&& !ResumePendingItem(Source, Target, Where, Receipt)) return false;
+			List<GameObject> held = new List<GameObject>(Source.Inventory.Objects);
+			for (int i = 0; i < held.Count; i++)
+			{
+				GameObject item = held[i];
+				if (!ExactItemOwner(item, Source, Receipt: null))
+					return FailHandover(Receipt, "Inventory source changed while enumerated.");
+				if (!BoundedIdentity(item.ID) || string.IsNullOrEmpty(item.Blueprint)
+					|| item.Blueprint.Length > 256 || item.Count <= 0
+					|| Receipt.HandoverMovedItems == int.MaxValue)
+					return FailHandover(Receipt, "Inventory item identity or count is out of bounds.");
+				string destination = Target?.Inventory != null ? Target.ID : CellKey(Where);
+				if (!BoundedIdentity(destination))
+					return FailHandover(Receipt, "Inventory destination cannot be frozen exactly.");
+				Receipt.HandoverItemId = item.ID;
+				Receipt.HandoverItemBlueprint = item.Blueprint;
+				Receipt.HandoverItemCount = item.Count;
+				Receipt.HandoverItemDestinationKind = Target?.Inventory != null ? 1 : 2;
+				Receipt.HandoverItemDestinationId = destination;
+				Receipt.HandoverItemMovedBefore = Receipt.HandoverMovedItems;
+				Receipt.HandoverItemMovedAfter = Receipt.HandoverMovedItems + 1;
+				Receipt.HandoverItemEscrowKey = EscrowKeyFor(Source, item,
+					Receipt.HandoverItemMovedBefore);
+				if (!RootEscrowItem(Source, Target, Where, Receipt, item)) return false;
+				Receipt.HandoverItemPhase = 1;
+				Inventory sourceInventory = Source.Inventory;
+				bool removed;
+				try { removed = sourceInventory.RemoveObjectFromInventory(item, null,
+					Silent: true, NoStack: true); }
+				catch (System.Exception ex)
+				{
+					if (!ReproveEscrowItem(Source, Target, Where, Receipt, item)) return false;
+					if (!ReferenceEquals(sourceInventory, Source.Inventory)
+						|| !ExactHandoverObjects(Source, Target, Receipt))
+						return FailHandover(Receipt,
+							"Inventory removal changed an endpoint before throwing: " + ex.Message);
+					if (ExactItemOwner(item, Source, Receipt))
+					{
+						if (!RetirePendingItem(Receipt, item)) return false;
+						Receipt.HandoverFailure = "Inventory removal threw before changing ownership: "
+							+ ex.Message;
+						return false;
+					}
+					if (ExactDestination(item, Target, Where, Receipt))
+						return SettlePendingItem(Target, Where, Receipt, item);
+					if (ExactLooseItem(item, Receipt))
+					{
+						Receipt.HandoverItemPhase = 2;
+						return PlacePendingItem(Source, Target, Where, Receipt, item);
+					}
+					return FailHandover(Receipt,
+						"Inventory removal lost, moved, replaced, or restacked its source before throwing: "
+						+ ex.Message);
+				}
+				if (!ReproveEscrowItem(Source, Target, Where, Receipt, item)) return false;
+				if (!ReferenceEquals(sourceInventory, Source.Inventory))
+					return FailHandover(Receipt,
+						"Inventory source part changed during removal callback.");
+				if (!removed)
+				{
+					if (ExactItemOwner(item, Source, Receipt))
+					{
+						if (!RetirePendingItem(Receipt, item)) return false;
+						return false;
+					}
+					if (ExactDestination(item, Target, Where, Receipt))
+						return SettlePendingItem(Target, Where, Receipt, item);
+					if (ExactLooseItem(item, Receipt))
+						return RestoreItem(Source, Target, Where, Receipt, item,
+							"Inventory removal refused after removing its exact source item.");
+					return FailHandover(Receipt,
+						"Inventory removal refused after changing exact ownership.");
+				}
+				if (ExactItemOwner(item, Source, Receipt))
+					return FailHandover(Receipt,
+						"Inventory removal reported success without changing ownership.");
+				if (ExactDestination(item, Target, Where, Receipt))
+					return SettlePendingItem(Target, Where, Receipt, item);
+				if (!ExactLooseItem(item, Receipt))
+					return FailHandover(Receipt, "Inventory removal lost, moved, replaced, or restacked its source.");
+				Receipt.HandoverItemPhase = 2;
+				if (!PlacePendingItem(Source, Target, Where, Receipt, item)) return false;
+			}
+			if ((Source.Inventory != null && Source.Inventory.Objects.Count != 0)
+				|| Receipt.HandoverItemPhase != 0)
+				return FailHandover(Receipt,
+					"Inventory source changed after its frozen items were transferred.");
+			Moved = Receipt.HandoverMovedItems;
+			Receipt.HandoverInventoryDone = true;
+			return true;
+		}
+
+		private static bool ResumePendingItem(GameObject Source, GameObject Target, Cell Where,
+			r_KingdomImprovement Receipt)
+		{
+			if (Receipt.HandoverItemPhase < 1 || Receipt.HandoverItemPhase > 4
+				|| !BoundedIdentity(Receipt.HandoverItemId)
+				|| string.IsNullOrEmpty(Receipt.HandoverItemBlueprint)
+				|| Receipt.HandoverItemBlueprint.Length > 256
+				|| Receipt.HandoverItemCount <= 0
+				|| !BoundedIdentity(Receipt.HandoverItemDestinationId)
+				|| Receipt.HandoverItemDestinationKind < 1
+				|| Receipt.HandoverItemDestinationKind > 2
+				|| Receipt.HandoverItemMovedBefore < 0
+				|| Receipt.HandoverItemMovedBefore == int.MaxValue
+				|| Receipt.HandoverItemMovedAfter != Receipt.HandoverItemMovedBefore + 1
+				|| (Receipt.HandoverMovedItems != Receipt.HandoverItemMovedBefore
+					&& Receipt.HandoverMovedItems != Receipt.HandoverItemMovedAfter))
+				return FailHandover(Receipt, "Pending inventory receipt is malformed.");
+			GameObject item;
+			if (!TryEscrowItem(Source, Target, Where, Receipt, out item)) return false;
+			if (ExactDestination(item, Target, Where, Receipt))
+				return SettlePendingItem(Target, Where, Receipt, item);
+			if (Receipt.HandoverItemPhase >= 3)
+				return FailHandover(Receipt,
+					"Count-settlement phase lost its exact destination item.");
+			if (ExactItemOwner(item, Source, Receipt))
+			{
+				// Exact source ownership proves prior attempt had no physical effect.
+				if (!RetirePendingItem(Receipt, item)) return false;
+				return false;
+			}
+			if (ExactEnteringCell(item, Source, Target, Where, Receipt))
+			{
+				item.Physics.CurrentCell = null;
+				if (!ExactLooseItem(item, Receipt))
+					return FailHandover(Receipt,
+						"Cell-entry recovery could not restore the exact escrow item to loose state.");
+			}
+			if (!ExactLooseItem(item, Receipt))
+				return FailHandover(Receipt, "Pending inventory item has an ambiguous owner.");
+			Receipt.HandoverItemPhase = 2;
+			return PlacePendingItem(Source, Target, Where, Receipt, item);
+		}
+
+		private static bool PlacePendingItem(GameObject Source, GameObject Target, Cell Where,
+			r_KingdomImprovement Receipt, GameObject Item)
+		{
+			Inventory destination = Receipt.HandoverItemDestinationKind == 1
+				? Target?.Inventory : null;
+			GameObject accepted = null;
+			try
+			{
+				if (Receipt.HandoverItemDestinationKind == 1 && destination != null)
+					accepted = destination.AddObject(Item, null, Silent: true, NoStack: true);
+				else if (Receipt.HandoverItemDestinationKind == 2 && Where != null)
+					accepted = Where.AddObject(Item, NoStack: true, Silent: true);
+				else return RestoreItem(Source, Target, Where, Receipt, Item,
+					"Inventory destination disappeared before AddObject.");
+			}
+			catch (System.Exception ex)
+			{
+				if (!ReproveEscrowItem(Source, Target, Where, Receipt, Item)) return false;
+				if (ExactHandoverObjects(Source, Target, Receipt)
+					&& (Receipt.HandoverItemDestinationKind != 1
+						|| ReferenceEquals(destination, Target.Inventory))
+					&& ExactDestination(Item, Target, Where, Receipt))
+					return SettlePendingItem(Target, Where, Receipt, Item);
+				return RestoreItem(Source, Target, Where, Receipt, Item,
+					"Inventory AddObject threw: " + ex.Message);
+			}
+			if (!ReproveEscrowItem(Source, Target, Where, Receipt, Item)) return false;
+			if (!ExactHandoverObjects(Source, Target, Receipt))
+				return FailHandover(Receipt, "Inventory endpoint changed during AddObject callback.");
+			if ((Receipt.HandoverItemDestinationKind == 1
+					&& !ReferenceEquals(destination, Target.Inventory))
+				|| !ReferenceEquals(accepted, Item))
+				return FailHandover(Receipt,
+					"Inventory AddObject replaced its exact destination or return identity.");
+			if (ExactDestination(Item, Target, Where, Receipt))
+				return SettlePendingItem(Target, Where, Receipt, Item);
+			return RestoreItem(Source, Target, Where, Receipt, Item,
+				"Inventory destination did not retain exact item ownership.");
+		}
+
+		private static bool RestoreItem(GameObject Source, GameObject Target, Cell Where,
+			r_KingdomImprovement Receipt, GameObject Item, string Failure)
+		{
+			if (ExactDestination(Item, Target, Where, Receipt))
+				return SettlePendingItem(Target, Where, Receipt, Item);
+			// Cell.AddObject runs EnvironmentalUpdate after assigning CurrentCell but before
+			// Cell.Objects.Add. That exact escrow topology is recoverable: detach only the frozen
+			// reference, prove it loose, then restore it to its exact source inventory.
+			if (ExactEnteringCell(Item, Source, Target, Where, Receipt))
+			{
+				Item.Physics.CurrentCell = null;
+				if (!ExactLooseItem(Item, Receipt))
+					return FailHandover(Receipt,
+						Failure + " Cell-entry recovery could not prove an exact loose item.");
+			}
+			if (!ExactLooseItem(Item, Receipt) && !ExactItemOwner(Item, Source, Receipt))
+				return FailHandover(Receipt, Failure + " Exact recovery source is unavailable.");
+			if (!ExactItemOwner(Item, Source, Receipt))
+			{
+				if (Source.Inventory == null)
+					return FailHandover(Receipt,
+						Failure + " Exact source inventory no longer exists.");
+				GameObject restored;
+				try { restored = Source.Inventory.AddObject(Item, null,
+					Silent: true, NoStack: true); }
+				catch (System.Exception ex)
+				{
+					ReproveEscrowItem(Source, Target, Where, Receipt, Item);
+					return FailHandover(Receipt, Failure + " Recovery threw: " + ex.Message);
+				}
+				if (!ReproveEscrowItem(Source, Target, Where, Receipt, Item)) return false;
+				if (!ReferenceEquals(restored, Item))
+					return FailHandover(Receipt,
+						Failure + " Recovery replaced the exact item identity.");
+			}
+			if (!ExactItemOwner(Item, Source, Receipt))
+				return FailHandover(Receipt, Failure + " Exact source recovery failed.");
+			if (!RetirePendingItem(Receipt, Item)) return false;
+			Receipt.HandoverFailure = Failure;
+			return false;
+		}
+
+		private static bool ExactHandoverObjects(GameObject Source, GameObject Target,
+			r_KingdomImprovement Receipt)
+		{
+			if (!GameObject.Validate(Source) || !GameObject.Validate(Target) || Receipt == null
+				|| Source.GetPart<r_KingdomImprovement>() != Receipt
+				|| Source.CurrentCell == null || Target.CurrentCell != Source.CurrentCell) return false;
+			if (Receipt.HandoverSourceId == null && Receipt.HandoverTargetId == null)
+			{
+				if (!BoundedIdentity(Source.ID) || !BoundedIdentity(Target.ID)) return false;
+				Receipt.HandoverSourceId = Source.ID;
+				Receipt.HandoverTargetId = Target.ID;
+			}
+			return BoundedIdentity(Receipt.HandoverSourceId)
+				&& BoundedIdentity(Receipt.HandoverTargetId)
+				&& Source.ID == Receipt.HandoverSourceId && Target.ID == Receipt.HandoverTargetId
+				&& ExactHandoverAuthority(Source, Target, Receipt);
+		}
+
+		private static bool ExactHandoverAuthority(GameObject Source, GameObject Target,
+			r_KingdomImprovement Receipt)
+		{
+			string frozen = Receipt?.HandoverConstructionReceipt;
+			string sourceReceipt = Source?.GetStringProperty(KingdomConstruction.ReceiptProperty);
+			string targetReceipt = Target?.GetStringProperty(KingdomConstruction.ReceiptProperty);
+			if (string.IsNullOrEmpty(frozen)) return false;
+			if (!BoundedIdentity(frozen) || sourceReceipt != frozen || targetReceipt != frozen)
+				return false;
+			KingdomConstructionJob job;
+			Zone zone = Source.CurrentZone;
+			KingdomSystem system = The.Game == null
+				? null : The.Game.RequireSystem<KingdomSystem>();
+			GameObject exactSource;
+			GameObject exactTarget;
+			return zone != null && Target.CurrentZone == zone
+				&& KingdomConstruction.TryFind(frozen, out job)
+				&& job.Route == KingdomConstructionRoute.Improvement
+				&& !KingdomConstructionRules.IsTerminal(job.Phase)
+				&& Receipt.Working && !string.IsNullOrEmpty(Receipt.SuccessorBlueprint)
+				&& Receipt.SuccessorBlueprint.Length <= 256
+				&& !string.IsNullOrEmpty(Receipt.SuccessorKey)
+				&& Receipt.SuccessorKey.Length <= KingdomConstructionRules.MaxTargetChars
+				&& Source.GetIntProperty(KingdomUpgrade.BuiltProperty) == 1
+				&& Target.GetIntProperty(KingdomUpgrade.BuiltProperty) == 1
+				&& Target.Blueprint == Receipt.SuccessorBlueprint
+				&& Target.GetStringProperty(KingdomUpgrade.BuildKeyProperty)
+					== Receipt.SuccessorKey
+				&& job.SubjectId == Source.ID && job.SourceId == Source.ID
+				&& job.OutputId == Target.ID && job.TargetKey == Receipt.SuccessorKey
+				&& Source.CurrentCell == zone.GetCell(job.X, job.Y)
+				&& Target.CurrentCell == Source.CurrentCell
+				&& KingdomConstruction.Owns(system, zone, job)
+				&& KingdomConstruction.IsCurrent(job)
+				&& KingdomConstruction.FindExactId(zone, Source.ID, out exactSource)
+					== KingdomPhysicalLookupState.Exact
+				&& ReferenceEquals(exactSource, Source)
+				&& KingdomConstruction.FindExactId(zone, Target.ID, out exactTarget)
+					== KingdomPhysicalLookupState.Exact
+				&& ReferenceEquals(exactTarget, Target);
+		}
+
+		private static bool BoundedIdentity(string Value)
+		{
+			return !string.IsNullOrEmpty(Value) && Value.Length <= 128;
+		}
+
+		private static string EscrowKeyFor(GameObject Source, GameObject Item, int MovedBefore)
+		{
+			return EscrowKeyFor(Source?.ID, Item?.ID, MovedBefore);
+		}
+
+		private static string EscrowKeyFor(string SourceId, string ItemId, int MovedBefore)
+		{
+			if (!BoundedIdentity(SourceId) || !BoundedIdentity(ItemId) || MovedBefore < 0)
+				return null;
+			byte[] bytes = Encoding.UTF8.GetBytes(SourceId + "\n" + ItemId + "\n"
+				+ MovedBefore.ToString(CultureInfo.InvariantCulture));
+			byte[] digest;
+			using (SHA256 hash = SHA256.Create()) digest = hash.ComputeHash(bytes);
+			StringBuilder key = new StringBuilder(HandoverEscrowPrefix, 96);
+			for (int i = 0; i < digest.Length; i++)
+				key.Append(digest[i].ToString("x2", CultureInfo.InvariantCulture));
+			return key.ToString();
+		}
+
+		private static bool BoundedEscrowKey(string Key)
+		{
+			return !string.IsNullOrEmpty(Key) && Key.Length <= 128
+				&& Key.StartsWith(HandoverEscrowPrefix, StringComparison.Ordinal);
+		}
+
+		private static bool RootEscrowItem(GameObject Source, GameObject Target, Cell Where,
+			r_KingdomImprovement Receipt, GameObject Item)
+		{
+			string expected = EscrowKeyFor(Source, Item, Receipt.HandoverItemMovedBefore);
+			if (The.Game == null || !BoundedEscrowKey(expected)
+				|| Receipt.HandoverItemEscrowKey != expected)
+				return FailHandover(Receipt, "The inventory escrow key could not be frozen exactly.");
+			object collision;
+			if (The.Game.ObjectGameState.TryGetValue(expected, out collision)
+				&& !ReferenceEquals(collision, Item))
+				return FailHandover(Receipt,
+					"The inventory escrow key collides with another exact object.");
+			The.Game.SetObjectGameState(expected, Item);
+			if (!The.Game.ObjectGameState.TryGetValue(expected, out collision)
+				|| !ReferenceEquals(collision, Item))
+				return FailHandover(Receipt,
+					"The exact inventory item did not remain rooted before removal.");
+			GameObject rooted;
+			if (!TryEscrowItem(Source, Target, Where, Receipt, out rooted)) return false;
+			return (ReferenceEquals(rooted, Item)
+				&& EscrowTopologyOf(Source, Target, Where, Receipt, Item)
+					== KingdomHandoverItemTopology.Source) || FailHandover(Receipt,
+						"The rooted inventory item did not remain at its exact source.");
+		}
+
+		private static bool TryEscrowItem(GameObject Source, GameObject Target, Cell Where,
+			r_KingdomImprovement Receipt, out GameObject Item)
+		{
+			Item = null;
+			if (Receipt == null) return false;
+			string key = Receipt?.HandoverItemEscrowKey;
+			object rooted;
+			if (The.Game == null || !BoundedEscrowKey(key)
+				|| key != EscrowKeyFor(Source?.ID, Receipt?.HandoverItemId,
+					Receipt.HandoverItemMovedBefore)
+				|| !The.Game.ObjectGameState.TryGetValue(key, out rooted))
+				return FailHandover(Receipt, "The exact inventory escrow root is absent or malformed.");
+			Item = rooted as GameObject;
+			if (!GameObject.Validate(Item) || Item.ID != Receipt.HandoverItemId
+				|| Item.Blueprint != Receipt.HandoverItemBlueprint
+				|| Item.Count != Receipt.HandoverItemCount
+				|| EscrowTopologyOf(Source, Target, Where, Receipt, Item)
+					== KingdomHandoverItemTopology.Invalid)
+				return FailHandover(Receipt,
+					"The rooted inventory item is missing, duplicated, replaced, or restacked.");
+			return true;
+		}
+
+		private static bool ReproveEscrowItem(GameObject Source, GameObject Target, Cell Where,
+			r_KingdomImprovement Receipt, GameObject Expected)
+		{
+			GameObject rooted;
+			if (!TryEscrowItem(Source, Target, Where, Receipt, out rooted)) return false;
+			return ReferenceEquals(rooted, Expected) || FailHandover(Receipt,
+				"The inventory callback replaced its exact rooted object reference.");
+		}
+
+		private static KingdomHandoverItemTopology EscrowTopologyOf(GameObject Source,
+			GameObject Target,
+			Cell Where, r_KingdomImprovement Receipt, GameObject Item)
+		{
+			if (!ExactHandoverObjects(Source, Target, Receipt) || Where == null
+				|| Source.CurrentCell != Where || Target.CurrentCell != Where
+				|| !ReferenceEquals(The.Game?.GetObjectGameState(
+					Receipt.HandoverItemEscrowKey), Item)) return KingdomHandoverItemTopology.Invalid;
+			int sourceRefs = ReferenceCount(Source.Inventory?.Objects, Item);
+			int targetRefs = ReferenceCount(Target.Inventory?.Objects, Item);
+			int cellRefs = ReferenceCount(Where.GetObjects(), Item);
+			int idOccurrences;
+			int exactOccurrences;
+			if (!CountZoneIdentity(Where.ParentZone, Receipt.HandoverItemId, Item,
+				out idOccurrences, out exactOccurrences) || Item.Physics == null)
+				return KingdomHandoverItemTopology.Invalid;
+			int inventoryOwner = Item.Physics.InInventory == null ? 0
+				: ReferenceEquals(Item.Physics.InInventory, Source) ? 1
+				: ReferenceEquals(Item.Physics.InInventory, Target) ? 2 : 3;
+			int cellOwner = Item.CurrentCell == null ? 0
+				: ReferenceEquals(Item.CurrentCell, Where) ? 1 : 2;
+			return KingdomConstructionRules.HandoverItemTopology(sourceRefs, targetRefs,
+				cellRefs, idOccurrences, exactOccurrences, inventoryOwner, cellOwner);
+		}
+
+		private static bool CountZoneIdentity(Zone Zone, string Id, GameObject Exact,
+			out int Occurrences, out int ExactOccurrences)
+		{
+			Occurrences = 0;
+			ExactOccurrences = 0;
+			if (Zone == null || !BoundedIdentity(Id) || Exact == null) return false;
+			List<GameObject> pending = new List<GameObject>(Zone.GetObjects());
+			HashSet<GameObject> expanded = new HashSet<GameObject>();
+			int visited = 0;
+			while (pending.Count > 0)
+			{
+				if (++visited > MaxHandoverTopologyObjects) return false;
+				int last = pending.Count - 1;
+				GameObject item = pending[last];
+				pending.RemoveAt(last);
+				if (item == null) continue;
+				if (item.ID == Id)
+				{
+					Occurrences++;
+					if (ReferenceEquals(item, Exact)) ExactOccurrences++;
+				}
+				if (!expanded.Add(item)) return false;
+				if (item.Inventory != null)
+					for (int i = 0; i < item.Inventory.Objects.Count; i++)
+						pending.Add(item.Inventory.Objects[i]);
+			}
+			return Occurrences <= 1 && ExactOccurrences <= 1;
+		}
+
+		private static bool ExactEnteringCell(GameObject Item, GameObject Source,
+			GameObject Target, Cell Where, r_KingdomImprovement Receipt)
+		{
+			return EscrowTopologyOf(Source, Target, Where, Receipt, Item)
+				== KingdomHandoverItemTopology.EnteringCell;
+		}
+
+		private static bool ExactLiquidEndpoint(GameObject Owner, LiquidVolume Part, int Volume,
+			string Composition)
+		{
+			return GameObject.Validate(Owner) && Part != null && Part.ParentObject == Owner
+				&& ReferenceEquals(Owner.GetPart<LiquidVolume>(), Part) && Part.Volume == Volume
+				&& EncodeLiquid(Part) == Composition;
+		}
+
+		private static bool ExactItemOwner(GameObject Item, GameObject Owner,
+			r_KingdomImprovement Receipt)
+		{
+			return GameObject.Validate(Item) && GameObject.Validate(Owner) && Owner.Inventory != null
+				&& Item.Physics != null && Item.Physics.InInventory == Owner
+				&& ReferenceCount(Owner.Inventory.Objects, Item) == 1
+				&& (Receipt == null || (ExactEscrowReference(Receipt, Item)
+					&& Item.ID == Receipt.HandoverItemId
+					&& Item.Blueprint == Receipt.HandoverItemBlueprint
+					&& Item.Count == Receipt.HandoverItemCount));
+		}
+
+		private static bool ExactLooseItem(GameObject Item, r_KingdomImprovement Receipt)
+		{
+			return GameObject.Validate(Item) && Item.Physics != null
+				&& Item.Physics.InInventory == null && Item.CurrentCell == null
+				&& ExactEscrowReference(Receipt, Item)
+				&& Item.ID == Receipt.HandoverItemId && Item.Blueprint == Receipt.HandoverItemBlueprint
+				&& Item.Count == Receipt.HandoverItemCount;
+		}
+
+		private static bool ExactDestination(GameObject Item, GameObject Target, Cell Where,
+			r_KingdomImprovement Receipt)
+		{
+			if (!GameObject.Validate(Item) || !ExactEscrowReference(Receipt, Item)
+				|| Item.ID != Receipt.HandoverItemId
+				|| Item.Blueprint != Receipt.HandoverItemBlueprint
+				|| Item.Count != Receipt.HandoverItemCount) return false;
+			if (Receipt.HandoverItemDestinationKind == 1)
+				return GameObject.Validate(Target) && ExactItemOwner(Item, Target, Receipt)
+					&& Target.ID == Receipt.HandoverItemDestinationId;
+			return Receipt.HandoverItemDestinationKind == 2 && Where != null
+				&& Item.Physics != null && Item.Physics.InInventory == null
+				&& Item.CurrentCell == Where
+				&& ReferenceCount(Where.GetObjects(), Item) == 1
+				&& CellKey(Where) == Receipt.HandoverItemDestinationId;
+		}
+
+		private static bool ExactEscrowReference(r_KingdomImprovement Receipt, GameObject Item)
+		{
+			object rooted;
+			return Receipt != null && GameObject.Validate(Item) && The.Game != null
+				&& BoundedEscrowKey(Receipt.HandoverItemEscrowKey)
+				&& The.Game.ObjectGameState.TryGetValue(Receipt.HandoverItemEscrowKey, out rooted)
+				&& ReferenceEquals(rooted, Item);
+		}
+
+		private static int ReferenceCount(IList<GameObject> Objects, GameObject Item)
+		{
+			if (Objects == null || Item == null) return 0;
+			int count = 0;
+			for (int i = 0; i < Objects.Count; i++) if (ReferenceEquals(Objects[i], Item)) count++;
+			return count;
+		}
+
+		private static string CellKey(Cell Where)
+		{
+			if (Where?.ParentZone == null || string.IsNullOrEmpty(Where.ParentZone.ZoneID)) return null;
+			return Where.ParentZone.ZoneID + ":" + Where.X.ToString(CultureInfo.InvariantCulture)
+				+ "," + Where.Y.ToString(CultureInfo.InvariantCulture);
+		}
+
+		private static bool SettlePendingItem(GameObject Target, Cell Where,
+			r_KingdomImprovement Receipt, GameObject Item)
+		{
+			if (!ExactDestination(Item, Target, Where, Receipt))
+				return FailHandover(Receipt, "Inventory destination identity is not exact.");
+			if (Receipt.HandoverItemPhase < 3) Receipt.HandoverItemPhase = 3;
+			int current = Receipt.HandoverMovedItems;
+			if (current == Receipt.HandoverItemMovedBefore)
+				Receipt.HandoverMovedItems = Receipt.HandoverItemMovedAfter;
+			else if (current != Receipt.HandoverItemMovedAfter)
+				return FailHandover(Receipt,
+					"Inventory moved count has a third value outside its frozen receipt.");
+			if (Receipt.HandoverMovedItems != Receipt.HandoverItemMovedAfter) return false;
+			Receipt.HandoverItemPhase = 4;
+			return RetirePendingItem(Receipt, Item);
+		}
+
+		private static bool RetirePendingItem(r_KingdomImprovement Receipt, GameObject Item)
+		{
+			string key = Receipt?.HandoverItemEscrowKey;
+			object rooted;
+			if (The.Game == null || !BoundedEscrowKey(key)
+				|| !The.Game.ObjectGameState.TryGetValue(key, out rooted)
+				|| !ReferenceEquals(rooted, Item))
+				return FailHandover(Receipt,
+					"The exact inventory escrow root changed before receipt cleanup.");
+			The.Game.ObjectGameState.Remove(key);
+			if (The.Game.ObjectGameState.ContainsKey(key))
+				return FailHandover(Receipt,
+					"The exact inventory escrow root could not be retired after settlement.");
+			ClearPendingItem(Receipt);
+			return true;
+		}
+
+		private static void ClearPendingItem(r_KingdomImprovement Receipt)
+		{
+			// Phase zero is the commit marker. Stale identity properties are harmless if a save lands
+			// between these property writes; no later callback consults them while phase is zero.
+			Receipt.HandoverItemPhase = 0;
+			Receipt.HandoverItemId = null;
+			Receipt.HandoverItemBlueprint = null;
+			Receipt.HandoverItemDestinationId = null;
+			Receipt.HandoverItemEscrowKey = null;
+			Receipt.HandoverItemCount = 0;
+			Receipt.HandoverItemDestinationKind = 0;
+			Receipt.HandoverItemMovedBefore = 0;
+			Receipt.HandoverItemMovedAfter = 0;
+		}
+
+		internal static bool FailHandover(r_KingdomImprovement Receipt, string Failure)
+		{
+			if (Receipt != null)
+			{
+				Receipt.HandoverQuarantined = true;
+				Receipt.HandoverFailure = Failure != null && Failure.Length > 2048
+					? Failure.Substring(0, 2048) : Failure;
+			}
+			return false;
+		}
+
+		private static string EncodeEmptyLiquid()
+		{
+			return "v1";
+		}
+
+		private static bool ExactLiquidReceiptShape(r_KingdomImprovement Receipt)
+		{
+			if (Receipt.HandoverPhase == 0) return true;
+			if (Receipt.HandoverSourceVolumeBefore == 0)
+				return Receipt.HandoverPhase == 3
+					&& Receipt.HandoverSourceVolumeAfter == 0;
+			if (Receipt.HandoverSourceVolumeBefore < 0
+				|| Receipt.HandoverSourceVolumeAfter != 0
+				|| Receipt.HandoverTargetVolumeBefore < 0) return false;
+			long expected = (long)Receipt.HandoverTargetVolumeBefore
+				+ Receipt.HandoverSourceVolumeBefore;
+			if (expected > int.MaxValue
+				|| (Receipt.HandoverTargetCapacity != -1
+					&& Receipt.HandoverTargetCapacity < expected)
+				|| !TryFrozenLiquid(Receipt.HandoverSourceComposition,
+					Receipt.HandoverSourceVolumeBefore, out _)
+				|| (Receipt.HandoverTargetVolumeBefore == 0
+					? Receipt.HandoverTargetCompositionBefore != EncodeEmptyLiquid()
+					: !TryFrozenLiquid(Receipt.HandoverTargetCompositionBefore,
+						Receipt.HandoverTargetVolumeBefore, out _))) return false;
+			if (Receipt.HandoverPhase < 3)
+				return Receipt.HandoverTargetVolumeAfter == -1
+					&& Receipt.HandoverTargetCompositionAfter == null;
+			return Receipt.HandoverTargetVolumeAfter == (int)expected
+				&& TryFrozenLiquid(Receipt.HandoverTargetCompositionAfter,
+					(int)expected, out _);
+		}
+
+		private static string EncodeLiquid(LiquidVolume Volume)
+		{
+			if (Volume == null || Volume.Volume <= 0) return EncodeEmptyLiquid();
+			if (Volume.ComponentLiquids == null || Volume.ComponentLiquids.Count == 0
+				|| Volume.ComponentLiquids.Count > MaxHandoverComponents) return null;
+			List<string> keys = new List<string>(Volume.ComponentLiquids.Keys);
+			keys.Sort(StringComparer.Ordinal);
+			StringBuilder text = new StringBuilder("v1");
+			int total = 0;
+			for (int i = 0; i < keys.Count; i++)
+			{
+				int proportion = Volume.ComponentLiquids[keys[i]];
+				if (string.IsNullOrEmpty(keys[i]) || keys[i].Length > 128
+					|| proportion <= 0 || proportion > 1000) return null;
+				total += proportion;
+				text.Append(';').Append(Convert.ToBase64String(Encoding.UTF8.GetBytes(keys[i])))
+					.Append(',').Append(proportion.ToString(
+						CultureInfo.InvariantCulture));
+				if (text.Length > MaxHandoverText) return null;
+			}
+			return total == 1000 ? text.ToString() : null;
+		}
+
+		private static bool TryFrozenLiquid(string Text, int Volume, out LiquidVolume Frozen)
+		{
+			Frozen = null;
+			if (Volume <= 0 || string.IsNullOrEmpty(Text) || Text.Length > MaxHandoverText) return false;
+			string[] terms = Text.Split(';');
+			if (terms.Length < 2 || terms.Length - 1 > MaxHandoverComponents
+				|| terms[0] != "v1") return false;
+			Dictionary<string, int> components = new Dictionary<string, int>();
+			int total = 0;
+			for (int i = 1; i < terms.Length; i++)
+			{
+				string[] pair = terms[i].Split(',');
+				int proportion;
+				string key;
+				try { key = Encoding.UTF8.GetString(Convert.FromBase64String(pair[0])); }
+				catch { return false; }
+				if (pair.Length != 2 || string.IsNullOrEmpty(key) || key.Length > 128
+					|| components.ContainsKey(key)
+					|| !int.TryParse(pair[1], NumberStyles.None, CultureInfo.InvariantCulture,
+						out proportion) || proportion <= 0 || proportion > 1000) return false;
+				components.Add(key, proportion);
+				total += proportion;
+			}
+			if (total != 1000) return false;
+			Frozen = new LiquidVolume();
+			Frozen.Volume = Volume;
+			Frozen.ComponentLiquids = components;
+			return EncodeLiquid(Frozen) == Text;
 		}
 
 		/// <summary>
@@ -104,7 +1125,13 @@ namespace XRL.World.Parts
 		/// </summary>
 		public override bool HandleEvent(GetShortDescriptionEvent E)
 		{
-			if (Working)
+			if (HandoverQuarantined)
+			{
+				E.Postfix.Append("\n{{r|This improvement handover requires inspection: ")
+					.Append(HandoverFailure ?? "its physical receipt is ambiguous")
+					.Append(".}}");
+			}
+			else if (Working)
 			{
 				E.Postfix.Append("\n{{rules|The settlement is raising this into ")
 					.Append(KingdomUpgrade.DisplayNameOf(SuccessorKey))
@@ -130,9 +1157,31 @@ namespace XRL.World.Parts
 				return;
 			}
 			Cell cell = ParentObject?.CurrentCell;
-			GameObject successor = FindSuccessor(cell);
-			if (successor != null)
+			GameObject successor;
+			KingdomPhysicalLookupState successorState = FindSuccessor(cell, out successor);
+			if (successorState == KingdomPhysicalLookupState.Ambiguous)
 			{
+				FailHandover(this, "The improvement successor ID is duplicated or malformed.");
+				string duplicateReceipt = ParentObject.GetStringProperty(
+					KingdomConstruction.ReceiptProperty);
+				if (KingdomConstruction.TryFind(duplicateReceipt, out var duplicate))
+					KingdomConstruction.Quarantine(ref duplicate, HandoverFailure);
+				return;
+			}
+			if (successorState == KingdomPhysicalLookupState.Exact)
+			{
+				string receipt = ParentObject.GetStringProperty(KingdomConstruction.ReceiptProperty);
+				KingdomConstructionJob job;
+				if (!string.IsNullOrEmpty(receipt))
+				{
+					KingdomSystem system = The.Game == null
+						? null : The.Game.RequireSystem<KingdomSystem>();
+					if (!KingdomConstruction.TryFind(receipt, out job)
+						|| !KingdomConstruction.Owns(system, ParentObject.CurrentZone, job)
+						|| job.Route != KingdomConstructionRoute.Improvement
+						|| KingdomConstructionRules.IsTerminal(job.Phase)) return;
+					KingdomConstruction.Bind(successor, job);
+				}
 				KingdomUpgrade.HandOver(ParentObject, successor, SuccessorKey);
 				return;
 			}
@@ -140,15 +1189,18 @@ namespace XRL.World.Parts
 			{
 				return;
 			}
-			// The scaffold is gone and nothing was raised: something took it down. Nothing was
-			// destroyed here - this work never stopped working - but the water is spent, the same
-			// way a commissioned scaffold's is, and the founder is owed the news.
-			Working = false;
-			SuccessorKey = null;
-			SuccessorBlueprint = null;
-			AnnouncedReason = 0;
-			MessageQueue.AddPlayerMessage("{{r|The work on " + KingdomDesign.ReferenceFor(ParentObject, ParentObject.ShortDisplayName) + " came to nothing. It stands as it did.}}");
-			KingdomLog.Log("improvement abandoned: " + ParentObject.Blueprint + " scaffold lost");
+			// Paid work never evaporates. Publish the missing projection as retryable; the durable
+			// construction step can raise the exact same successor without charging again.
+			string id = ParentObject.GetStringProperty(KingdomConstruction.ReceiptProperty);
+			KingdomConstructionJob outstanding;
+			if (!string.IsNullOrEmpty(id) && KingdomConstruction.TryFind(id, out outstanding)
+				&& outstanding.Phase != KingdomConstructionPhase.Outstanding)
+			{
+				KingdomConstruction.FinishProjection(ref outstanding, false, false,
+					"The paid improvement scaffold is absent; projection remains outstanding.");
+				MessageQueue.AddPlayerMessage("{{r|The improvement scaffold is gone, but its paid receipt remains queued.}}");
+				KingdomLog.Log("improvement projection outstanding: " + ParentObject.Blueprint);
+			}
 		}
 
 		/// <summary>
@@ -157,23 +1209,56 @@ namespace XRL.World.Parts
 		/// build can never be mistaken for the new work.
 		/// </summary>
 		/// <param name="Where">Cell this work stands in. Null finds nothing.</param>
-		public GameObject FindSuccessor(Cell Where)
+		public KingdomPhysicalLookupState FindSuccessor(Cell Where, out GameObject Successor)
 		{
+			Successor = null;
 			if (Where == null || string.IsNullOrEmpty(SuccessorBlueprint))
 			{
-				return null;
+				return KingdomPhysicalLookupState.Absent;
+			}
+			string receipt = ParentObject.GetStringProperty(KingdomConstruction.ReceiptProperty);
+			if (!string.IsNullOrEmpty(receipt))
+			{
+				if (!KingdomConstruction.TryFind(receipt, out var exactJob)
+					|| string.IsNullOrEmpty(exactJob.OutputId))
+					return KingdomPhysicalLookupState.Ambiguous;
+				KingdomPhysicalLookupState state = KingdomConstruction.FindExactId(
+					Where.ParentZone, exactJob.OutputId, out var candidate);
+				if (state != KingdomPhysicalLookupState.Exact) return state;
+				if (candidate == ParentObject || candidate.CurrentCell != Where
+					|| candidate.Blueprint != SuccessorBlueprint
+					|| candidate.GetIntProperty(KingdomUpgrade.BuiltProperty) != 1
+					|| candidate.GetStringProperty(KingdomUpgrade.BuildKeyProperty) != SuccessorKey
+					|| candidate.GetStringProperty(KingdomConstruction.ReceiptProperty) != receipt)
+					return KingdomPhysicalLookupState.Ambiguous;
+				Successor = candidate;
+				return KingdomPhysicalLookupState.Exact;
 			}
 			List<GameObject> objects = Where.GetObjects();
+			int count = 0;
 			for (int i = 0; i < objects.Count; i++)
 			{
 				GameObject candidate = objects[i];
 				if (candidate != ParentObject && candidate.Blueprint == SuccessorBlueprint
-					&& candidate.GetIntProperty(KingdomUpgrade.BuiltProperty) == 1)
+					&& candidate.GetIntProperty(KingdomUpgrade.BuiltProperty) == 1
+					&& candidate.GetStringProperty(KingdomUpgrade.BuildKeyProperty) == SuccessorKey
+					&& string.IsNullOrEmpty(candidate.GetStringProperty(
+						KingdomConstruction.ReceiptProperty)))
 				{
-					return candidate;
+					count++;
+					if (count == 1) Successor = candidate;
 				}
 			}
-			return null;
+			if (count == 0) return KingdomPhysicalLookupState.Absent;
+			if (count == 1)
+			{
+				GameObject global;
+				if (KingdomConstruction.FindExactId(Where.ParentZone, Successor.ID,
+					out global) == KingdomPhysicalLookupState.Exact
+					&& ReferenceEquals(global, Successor)) return KingdomPhysicalLookupState.Exact;
+			}
+			Successor = null;
+			return KingdomPhysicalLookupState.Ambiguous;
 		}
 	}
 }
@@ -216,6 +1301,287 @@ namespace ThousandAndFirst
 	/// </summary>
 	public static class KingdomUpgrade
 	{
+		internal static void RetryConstruction(KingdomSystem System, Zone Z, KingdomConstructionJob Job)
+		{
+			if (System == null || Z == null || Job == null
+				|| Job.Route != KingdomConstructionRoute.Improvement
+				|| !KingdomData.TryGetBuilding(Job.TargetKey, out var successor))
+			{
+				return;
+			}
+			GameObject work;
+			KingdomPhysicalLookupState workState = KingdomConstruction.FindExactId(
+				Z, Job.SubjectId, out work);
+			if (workState == KingdomPhysicalLookupState.Ambiguous)
+			{
+				KingdomConstructionJob duplicate = Job;
+				KingdomConstruction.Quarantine(ref duplicate,
+					"The improvement predecessor ID resolves to more than one loaded object.");
+				return;
+			}
+			if (!EnsureExactImprovementPredecessor(System, Z, work, Job))
+			{
+				KingdomConstructionJob complete = Job;
+				GameObject result;
+				int results = r_KingdomScaffold.FindExactSuccessors(Z, Job,
+					successor.Blueprint, null, out result);
+				if (results > 1)
+				{
+					KingdomConstruction.Quarantine(ref complete,
+						"More than one exact improvement successor carries this receipt.");
+					return;
+				}
+				if (results != 1 || !r_KingdomScaffold.HasRemovalProof(result, Job.SubjectId))
+				{
+					KingdomConstruction.Quarantine(ref complete,
+						"The improvement predecessor is not exact and no proved successor replaces it.");
+					return;
+				}
+				if (KingdomConstruction.Complete(ref complete))
+					r_KingdomScaffold.TellCompletion(System, result, complete);
+				return;
+			}
+			r_KingdomImprovement improvement = work.GetPart<r_KingdomImprovement>();
+			GameObject finished = null;
+			KingdomPhysicalLookupState finishedState = improvement == null
+				? KingdomPhysicalLookupState.Absent
+				: improvement.FindSuccessor(work.CurrentCell, out finished);
+			if (finishedState == KingdomPhysicalLookupState.Ambiguous)
+			{
+				KingdomConstructionJob ambiguous = Job;
+				KingdomConstruction.Quarantine(ref ambiguous,
+					"The improvement successor ID is duplicated or malformed.");
+				return;
+			}
+			if (finishedState == KingdomPhysicalLookupState.Exact)
+			{
+				KingdomConstruction.Bind(finished, Job);
+				HandOver(work, finished, Job.TargetKey);
+				return;
+			}
+			if (improvement != null && improvement.Working)
+			{
+				if (!ExpectedImprovementScaffold(improvement.Scaffold, work.CurrentCell, successor)
+					|| !KingdomConstruction.HasReceipt(improvement.Scaffold, Job))
+				{
+					KingdomConstructionJob ambiguous = Job;
+					KingdomConstruction.Quarantine(ref ambiguous,
+						"The linked improvement scaffold is absent, moved, changed, or unreceipted.");
+					return;
+				}
+				r_KingdomScaffold scaffoldPart = improvement.Scaffold.GetPart<r_KingdomScaffold>();
+				if (scaffoldPart.RemainingTicks <= 0 && scaffoldPart.LastWorkedTick > 0)
+					scaffoldPart.RetryDurable(System, Z, Job);
+				else
+				{
+					KingdomConstructionJob working = Job;
+					KingdomConstruction.FinishProjection(ref working, true, true);
+				}
+				return;
+			}
+			ProjectImprovement(System, work, successor, Job, out _, out _);
+		}
+
+		internal static void InspectConstruction(KingdomSystem System, Zone Z,
+			KingdomConstructionJob Job)
+		{
+			if (System == null || Z == null || Job == null
+				|| Job.Route != KingdomConstructionRoute.Improvement
+				|| !KingdomData.TryGetBuilding(Job.TargetKey, out var successor)) return;
+			if (Job.Phase == KingdomConstructionPhase.Complete)
+			{
+				GameObject completed;
+				int completedCount = r_KingdomScaffold.FindExactSuccessors(Z, Job,
+					successor.Blueprint, null, out completed);
+				if (completedCount > 1)
+				{
+					KingdomConstructionJob duplicate = Job;
+					KingdomConstruction.Quarantine(ref duplicate,
+						"More than one terminal improvement successor carries this receipt.");
+				}
+				else if (completedCount == 1)
+				{
+					if (!r_KingdomScaffold.HasRemovalProof(completed, Job.SubjectId))
+					{
+						KingdomConstructionJob unproved = Job;
+						KingdomConstruction.Quarantine(ref unproved,
+							"The terminal improvement successor lacks predecessor-removal proof.");
+					}
+					else r_KingdomScaffold.TellCompletion(System, completed, Job);
+				}
+				return;
+			}
+			GameObject work;
+			KingdomPhysicalLookupState workState = KingdomConstruction.FindExactId(
+				Z, Job.SubjectId, out work);
+			if (workState == KingdomPhysicalLookupState.Ambiguous)
+			{
+				KingdomConstructionJob duplicate = Job;
+				KingdomConstruction.Quarantine(ref duplicate,
+					"The improvement predecessor ID resolves to more than one loaded object.");
+				return;
+			}
+			if (!EnsureExactImprovementPredecessor(System, Z, work, Job))
+			{
+				KingdomConstructionJob absent = Job;
+				GameObject completed;
+				int completedCount = r_KingdomScaffold.FindExactSuccessors(Z, Job,
+					successor.Blueprint, null, out completed);
+				if (completedCount == 1
+					&& r_KingdomScaffold.HasRemovalProof(completed, Job.SubjectId))
+				{
+					if (KingdomConstruction.Complete(ref absent))
+						r_KingdomScaffold.TellCompletion(System, completed, absent);
+				}
+				else
+				{
+					KingdomConstruction.Quarantine(ref absent, completedCount > 1
+						? "More than one exact improvement successor carries this receipt."
+						: "The improvement predecessor moved, changed, or disappeared without exact removal proof.");
+				}
+				return;
+			}
+			r_KingdomImprovement carriedIntent = GameObject.Validate(work)
+				? work.GetPart<r_KingdomImprovement>() : null;
+			Cell expectedCell = Z.GetCell(Job.X, Job.Y);
+			GameObject exactScaffold;
+			KingdomPhysicalLookupState scaffoldState = FindImprovementScaffold(
+				expectedCell, successor, Job, out exactScaffold);
+			if (scaffoldState == KingdomPhysicalLookupState.Ambiguous)
+			{
+				KingdomConstructionJob duplicate = Job;
+				KingdomConstruction.Quarantine(ref duplicate,
+					"The improvement scaffold is duplicated, moved, replaced, or malformed.");
+				return;
+			}
+			if (carriedIntent != null && carriedIntent.Working
+				&& GameObject.Validate(carriedIntent.Scaffold)
+				&& (!ExpectedImprovementScaffold(carriedIntent.Scaffold, expectedCell, successor)
+					|| !KingdomConstruction.HasReceipt(carriedIntent.Scaffold, Job)))
+			{
+				KingdomConstructionJob moved = Job;
+				KingdomConstruction.Quarantine(ref moved,
+					"The exact improvement scaffold moved, changed, or lost its receipt.");
+				return;
+			}
+			GameObject scaffold = carriedIntent != null && carriedIntent.Working
+					? (scaffoldState == KingdomPhysicalLookupState.Exact
+						&& ReferenceEquals(exactScaffold, carriedIntent.Scaffold)
+						? exactScaffold : null)
+				: (scaffoldState == KingdomPhysicalLookupState.Exact ? exactScaffold : null);
+			KingdomConstructionJob inspected = Job;
+			if (GameObject.Validate(scaffold))
+			{
+				GameObject attemptedScaffold = scaffold;
+				r_KingdomScaffold scaffoldPart = scaffold.GetPart<r_KingdomScaffold>();
+				int finalPending = scaffold.GetIntProperty(r_KingdomScaffold.FinalPendingProperty);
+				if (finalPending != 0 && finalPending != 1)
+				{
+					KingdomConstruction.Quarantine(ref inspected,
+						"The improvement scaffold final flag is not an exact boolean.");
+					return;
+				}
+				if (Job.Phase == KingdomConstructionPhase.ProjectionPending
+					&& finalPending == 0)
+					KingdomConstruction.FinishProjection(ref inspected, true, true);
+				else if (Job.Phase == KingdomConstructionPhase.Working
+					|| Job.Phase == KingdomConstructionPhase.ProjectionPending)
+					scaffoldPart.AdvanceDurable(System, Z, Job, The.Game.TimeTicks);
+				else if (Job.Phase == KingdomConstructionPhase.Outstanding
+					&& scaffoldPart.RemainingTicks <= 0 && scaffoldPart.LastWorkedTick > 0)
+					scaffoldPart.RetryDurable(System, Z, Job);
+				// Re-read after callbacks: the scaffold may now be gone and its exact successor present.
+				scaffold = carriedIntent != null && carriedIntent.Working
+					&& ExpectedImprovementScaffold(carriedIntent.Scaffold, expectedCell, successor)
+					&& KingdomConstruction.HasReceipt(carriedIntent.Scaffold, Job)
+						? carriedIntent.Scaffold : null;
+				if (GameObject.Validate(attemptedScaffold))
+				{
+					if (!ExpectedImprovementScaffold(attemptedScaffold, expectedCell, successor)
+						|| !KingdomConstruction.HasReceipt(attemptedScaffold, Job))
+					{
+						KingdomConstruction.Quarantine(ref inspected,
+							"The improvement scaffold changed during its continuation callback.");
+					}
+					return;
+				}
+			}
+			if (GameObject.Validate(work) && work.GetIntProperty(BuiltProperty) == 1
+				&& work.GetStringProperty(BuildKeyProperty) == Job.TargetKey
+				&& work.ID != Job.SubjectId)
+			{
+				if (!r_KingdomScaffold.HasRemovalProof(work, Job.SubjectId))
+				{
+					KingdomConstruction.Quarantine(ref inspected,
+						"The improvement successor lacks predecessor-removal proof.");
+					return;
+				}
+				if (KingdomConstruction.Complete(ref inspected))
+					r_KingdomScaffold.TellCompletion(System, work, inspected);
+				return;
+			}
+			if (GameObject.Validate(work) && !string.IsNullOrEmpty(Job.SubjectId)
+				&& work.ID != Job.SubjectId)
+			{
+				return;
+			}
+			if (GameObject.Validate(work))
+			{
+				r_KingdomImprovement improvement = work.GetPart<r_KingdomImprovement>();
+				GameObject finished = null;
+				KingdomPhysicalLookupState finishedState = improvement == null
+					? KingdomPhysicalLookupState.Absent
+					: improvement.FindSuccessor(work.CurrentCell, out finished);
+				if (finishedState == KingdomPhysicalLookupState.Ambiguous)
+				{
+					KingdomConstruction.Quarantine(ref inspected,
+						"The improvement successor ID is duplicated or malformed.");
+					return;
+				}
+				if (finishedState == KingdomPhysicalLookupState.Exact)
+				{
+					KingdomConstruction.Bind(finished, inspected);
+					HandOver(work, finished, Job.TargetKey);
+					return;
+				}
+			}
+			else
+			{
+				GameObject result;
+				KingdomPhysicalLookupState resultState = KingdomConstruction.FindReceipt(
+					Z, Job, out result);
+				if (resultState == KingdomPhysicalLookupState.Ambiguous)
+				{
+					KingdomConstruction.Quarantine(ref inspected,
+						"More than one physical object carries the improvement receipt.");
+					return;
+				}
+				if (GameObject.Validate(result) && result.GetIntProperty(BuiltProperty) == 1
+					&& result.GetStringProperty(BuildKeyProperty) == Job.TargetKey
+					&& r_KingdomScaffold.HasRemovalProof(result, Job.SubjectId))
+				{
+					if (KingdomConstruction.Complete(ref inspected))
+						r_KingdomScaffold.TellCompletion(System, result, inspected);
+				}
+				return;
+			}
+			if (scaffold != null)
+			{
+				if (Job.Phase != KingdomConstructionPhase.Working)
+				{
+					KingdomConstruction.FinishProjection(ref inspected, true, true);
+				}
+				return;
+			}
+			KingdomConstruction.Quarantine(ref inspected,
+				"The improvement projection has no safely identifiable scaffold or successor.");
+		}
+
+		private static bool HasActiveConstruction(GameObject Work)
+		{
+			return KingdomConstruction.ReceiptBlocksCurrent(Work);
+		}
+
 		public static bool Enabled => Options.GetOption("r_TAF_OptionImprovement") != "No";
 
 		public const string BuiltProperty = "KingdomBuilt";
@@ -501,7 +1867,8 @@ namespace ThousandAndFirst
 				SuccessorKnown: known,
 				StyleAllowed: !known || KingdomRules.StyleAllows(successor.Styles, System.Style),
 				OurWork: Work.GetIntProperty(BuiltProperty) == 1 && Work.GetIntProperty(AdoptedProperty) != 1,
-				AlreadyWorking: improvement != null && improvement.Working,
+				AlreadyWorking: (improvement != null && improvement.Working)
+					|| HasActiveConstruction(Work),
 				HeldOnThisGround: IsGroundHeld(Z),
 				HeldByFounder: improvement != null && improvement.Held,
 				Stage: System.Stage,
@@ -784,7 +2151,7 @@ namespace ThousandAndFirst
 			foreach (GameObject item in Z.GetObjects())
 			{
 				r_KingdomImprovement improvement = item.GetPart<r_KingdomImprovement>();
-				if (improvement != null && improvement.Working)
+				if ((improvement != null && improvement.Working) || HasActiveConstruction(item))
 				{
 					otherWorkUnderway = true;
 				}
@@ -872,60 +2239,42 @@ namespace ThousandAndFirst
 				return false;
 			}
 			Cell cell = Work?.CurrentCell;
-			if (cell == null)
+			if (cell == null || HasActiveConstruction(Work)
+				|| KingdomConstruction.HasActiveSubject(System, Z,
+					KingdomConstructionRoute.Improvement, Work))
 			{
 				return false;
 			}
-			// Raised before it is paid for, the same way a commission is: if the scaffold cannot
-			// be created the settlement must not already have spent the water on nothing.
-			GameObject scaffold = GameObject.Create("r_KingdomScaffold");
-			if (scaffold == null)
+			KingdomWaterDebit water = Survey.ReserveExactWater(A.CostDrams);
+			KingdomMaterialDebit materials = KingdomMaterials.ReserveUpgradePayment(Z,
+				A.SuccessorKey);
+			KingdomMaterialDebitCost claim = new KingdomMaterialDebitCost(
+				KingdomMaterials.UpgradeCostFor(A.SuccessorKey));
+			long now = The.Game.TimeTicks;
+			KingdomConstructionJob job = KingdomConstruction.NewJob(System, Z,
+				KingdomConstructionRoute.Improvement, cell, Work, A.SuccessorKey, A.Key,
+				A.CostDrams, claim, now, now + A.BuildTicks);
+			KingdomConstructionStartResult funding = KingdomConstruction.TryFundNew(job,
+				water, materials, out job, out string fundingFailure);
+			if (funding == KingdomConstructionStartResult.Refused)
 			{
+				KingdomLog.Log("improvement refused cleanly: "
+					+ (fundingFailure ?? A.SuccessorKey));
 				return false;
 			}
-			int paid = Survey.Consume(A.CostDrams);
-			if (paid < A.CostDrams)
+			KingdomConstruction.Bind(Work, job);
+			if (funding == KingdomConstructionStartResult.Outstanding)
 			{
-				// Never trust the affordability check over the actual delta. Whatever came out
-				// goes straight back and nothing happens this pass.
-				Survey.Store(paid);
-				scaffold.Obliterate();
-				KingdomLog.Log("improvement aborted: wanted " + A.CostDrams + " drams, drew " + paid);
-				return false;
+				System.Ledger.Note("{{r|The improvement receipt remains outstanding. The old work stands while its exact claim retries.}}");
+				return true;
 			}
-			// The same all-or-nothing rule for material. PayUpgrade says once, in the ledger, why a
-			// work that is ready to be bettered is standing still (STANDARDS 7b).
-			if (!KingdomMaterials.PayUpgrade(System, cell.ParentZone, A.SuccessorKey))
+			if (!ProjectImprovement(System, Work, A.Successor, job, out job,
+				out string projectionFailure))
 			{
-				Survey.Store(paid);
-				scaffold.Obliterate();
-				KingdomLog.Log("improvement aborted: the stockpiles could not cover " + A.SuccessorKey);
-				return false;
+				System.Ledger.Note("{{r|The paid improvement could not yet raise its scaffold. Its receipt remains queued.}}");
+				KingdomLog.Log("construction: improvement projection waits: " + projectionFailure);
+				return true;
 			}
-			scaffold.SetStringProperty(BuildKeyProperty, A.SuccessorKey);
-			r_KingdomScaffold part = scaffold.GetPart<r_KingdomScaffold>();
-			if (part != null)
-			{
-				part.TargetBlueprint = A.Successor.Blueprint;
-				part.TargetDisplayName = A.Successor.Name;
-				part.CompleteTick = The.Game.TimeTicks + A.BuildTicks;
-				part.StaffNeeded = A.Successor.Staff;
-				part.ThresholdManning = KingdomRules.IsThresholdManning(A.Successor.Manning);
-				if (A.Successor.Defence > 0)
-				{
-					bool hasTinkering = The.Player != null && The.Player.HasSkill("Tinkering");
-					bool hasAdvancedTinkering = The.Player != null && The.Player.HasSkill("Tinkering_Tinker1");
-					scaffold.SetIntProperty("KingdomDefencePending", KingdomRules.WallDefence(A.Successor.Defence, System.FoundingTerrainBlueprint, System.FoundingRegionName, hasTinkering, hasAdvancedTinkering));
-				}
-			}
-			cell.AddObject(scaffold);
-			r_KingdomImprovement improvement = Work.RequirePart<r_KingdomImprovement>();
-			improvement.SuccessorKey = A.SuccessorKey;
-			improvement.SuccessorBlueprint = A.Successor.Blueprint;
-			improvement.Working = true;
-			improvement.Scaffold = scaffold;
-			improvement.WorkCompleteTick = The.Game.TimeTicks + A.BuildTicks;
-			improvement.AnnouncedReason = 0;
 			string standing = KingdomDesign.ReferenceFor(Work, Work.ShortDisplayName);
 			string line = KingdomUpgradeRules.BegunLine(standing, A.Successor.Name, A.CostDrams);
 			MessageQueue.AddPlayerMessage("{{G|" + line + "}}");
@@ -933,6 +2282,250 @@ namespace ThousandAndFirst
 			KingdomChronicle.Record(System, "the " + standing + " at " + System.KingdomDisplayName + " was set to be raised into " + KingdomUpgradeRules.Article(A.Successor.Name));
 			KingdomLog.Log("improvement begun: " + A.Key + " -> " + A.SuccessorKey + " cost=" + A.CostDrams + " ticks=" + A.BuildTicks + " at " + cell.X + "," + cell.Y);
 			return true;
+		}
+
+		private static bool ProjectImprovement(KingdomSystem System, GameObject Work,
+			KingdomRules.BuildEntry Successor, KingdomConstructionJob Job,
+			out KingdomConstructionJob Updated, out string Failure)
+		{
+			Updated = Job;
+			Failure = null;
+			Cell cell = Work?.CurrentCell;
+			Zone zone = cell?.ParentZone;
+			if (Successor == null || !EnsureExactImprovementPredecessor(System, zone, Work, Job))
+			{
+				Failure = "The paid predecessor no longer matches its exact recorded identity.";
+				KingdomConstruction.Quarantine(ref Updated, Failure);
+				return false;
+			}
+			r_KingdomImprovement existing = Work.GetPart<r_KingdomImprovement>();
+			GameObject exactScaffold;
+			KingdomPhysicalLookupState scaffoldState = FindImprovementScaffold(
+				cell, Successor, Job, out exactScaffold);
+			if (scaffoldState == KingdomPhysicalLookupState.Ambiguous)
+			{
+				Failure = "The improvement scaffold is duplicated, moved, replaced, or malformed.";
+				KingdomConstruction.Quarantine(ref Updated, Failure);
+				return false;
+			}
+			GameObject paidScaffold = existing != null && existing.Working
+				? (scaffoldState == KingdomPhysicalLookupState.Exact
+					&& ReferenceEquals(exactScaffold, existing.Scaffold)
+						? exactScaffold : null)
+				: (scaffoldState == KingdomPhysicalLookupState.Exact ? exactScaffold : null);
+			if (paidScaffold != null)
+			{
+				r_KingdomImprovement recovered = Work.RequirePart<r_KingdomImprovement>();
+				recovered.SuccessorKey = Successor.Key;
+				recovered.SuccessorBlueprint = Successor.Blueprint;
+				recovered.Working = true;
+				recovered.Scaffold = paidScaffold;
+				recovered.WorkCompleteTick = Job.DueTick;
+				KingdomConstruction.Bind(Work, Job);
+				if (!KingdomConstruction.FinishProjection(ref Updated, true, true))
+				{
+					Failure = "The paid improvement scaffold stands, but Working did not persist.";
+					return false;
+				}
+				return true;
+			}
+			if (existing != null && existing.Working
+				&& scaffoldState != KingdomPhysicalLookupState.Exact)
+			{
+				Failure = "The linked improvement scaffold lacks exact frozen output identity proof.";
+				KingdomConstruction.Quarantine(ref Updated, Failure);
+				return false;
+			}
+			if (!KingdomConstruction.BeginProjection(ref Updated, out Failure))
+			{
+				return false;
+			}
+			GameObject scaffold;
+			try
+			{
+				scaffold = GameObject.Create("r_KingdomScaffold");
+			}
+			catch (System.Exception ex)
+			{
+				Failure = "The improvement scaffold threw during creation: " + ex.Message;
+				KingdomConstruction.Quarantine(ref Updated, Failure);
+				return false;
+			}
+			if (scaffold == null)
+			{
+				Failure = "The improvement scaffold blueprint could not be created.";
+				KingdomConstruction.FinishProjection(ref Updated, false, false, Failure);
+				return false;
+			}
+			if (!KingdomConstruction.Owns(System, zone, Updated)
+				|| !EnsureExactImprovementPredecessor(System, zone, Work, Updated))
+			{
+				RemoveCreatedProjection(scaffold);
+				Failure = "Improvement authority or predecessor changed during scaffold creation.";
+				KingdomConstruction.Quarantine(ref Updated, Failure);
+				return false;
+			}
+			if (!KingdomConstruction.UpdateOutput(ref Updated, scaffold.ID))
+			{
+				bool removed = RemoveCreatedProjection(scaffold);
+				Failure = "The improvement scaffold identity could not be published before AddObject.";
+				if (!removed) KingdomConstruction.Quarantine(ref Updated, Failure);
+				return false;
+			}
+			r_KingdomScaffold part = scaffold.GetPart<r_KingdomScaffold>();
+			if (part == null)
+			{
+				bool removed = RemoveCreatedProjection(scaffold);
+				Failure = "The improvement scaffold carries no raising capability.";
+				if (removed) KingdomConstruction.FinishProjection(ref Updated, false, false, Failure);
+				else KingdomConstruction.Quarantine(ref Updated, Failure);
+				return false;
+			}
+			scaffold.SetStringProperty(BuildKeyProperty, Successor.Key);
+			KingdomConstruction.Bind(scaffold, Updated);
+			part.TargetBlueprint = Successor.Blueprint;
+			part.TargetDisplayName = Successor.Name;
+			part.CompleteTick = Updated.DueTick;
+			part.StaffNeeded = Successor.Staff;
+			part.ThresholdManning = KingdomRules.IsThresholdManning(Successor.Manning);
+			if (Successor.Defence > 0)
+			{
+				bool hasTinkering = The.Player != null && The.Player.HasSkill("Tinkering");
+				bool hasAdvancedTinkering = The.Player != null && The.Player.HasSkill("Tinkering_Tinker1");
+				scaffold.SetIntProperty("KingdomDefencePending", KingdomRules.WallDefence(
+					Successor.Defence, System.FoundingTerrainBlueprint,
+					System.FoundingRegionName, hasTinkering, hasAdvancedTinkering));
+			}
+			GameObject accepted;
+			try
+			{
+				accepted = cell.AddObject(scaffold);
+			}
+			catch (System.Exception ex)
+			{
+				bool removed = RemoveCreatedProjection(scaffold);
+				Failure = "The improvement scaffold threw during AddObject: " + ex.Message;
+				if (removed) KingdomConstruction.FinishProjection(ref Updated, false, false, Failure);
+				else KingdomConstruction.Quarantine(ref Updated, Failure);
+				return false;
+			}
+			GameObject globalScaffold;
+			if (!ReferenceEquals(accepted, scaffold)
+				|| !KingdomConstruction.Owns(System, zone, Updated)
+				|| KingdomConstruction.FindExactId(zone, Updated.OutputId, out globalScaffold)
+					!= KingdomPhysicalLookupState.Exact
+				|| !ReferenceEquals(globalScaffold, scaffold)
+				|| !ExpectedImprovementScaffold(scaffold, cell, Successor)
+				|| !KingdomConstruction.HasReceipt(scaffold, Updated)
+				|| !EnsureExactImprovementPredecessor(System, zone, Work, Updated)
+				|| !KingdomConstruction.IsCurrent(Updated))
+			{
+				bool removed = RemoveCreatedProjection(scaffold);
+				Failure = "The improvement scaffold could not be verified beside its predecessor.";
+				if (removed) KingdomConstruction.FinishProjection(ref Updated, false, false, Failure);
+				else KingdomConstruction.Quarantine(ref Updated, Failure);
+				return false;
+			}
+			r_KingdomImprovement improvement = Work.RequirePart<r_KingdomImprovement>();
+			improvement.SuccessorKey = Successor.Key;
+			improvement.SuccessorBlueprint = Successor.Blueprint;
+			improvement.Working = true;
+			improvement.Scaffold = scaffold;
+			improvement.WorkCompleteTick = Updated.DueTick;
+			improvement.AnnouncedReason = 0;
+			KingdomConstruction.Bind(Work, Updated);
+			if (!improvement.Working || improvement.Scaffold != scaffold
+				|| !EnsureExactImprovementPredecessor(System, zone, Work, Updated))
+			{
+				Failure = "The improvement intent could not be verified on its predecessor.";
+				KingdomConstruction.FinishProjection(ref Updated, false, false, Failure);
+				return false;
+			}
+			if (!KingdomConstruction.FinishProjection(ref Updated, true, true))
+			{
+				Failure = "The improvement scaffold stands, but Working did not persist.";
+				return false;
+			}
+			return true;
+		}
+
+		private static bool ExpectedImprovementScaffold(GameObject Scaffold, Cell Cell,
+			KingdomRules.BuildEntry Successor)
+		{
+			r_KingdomScaffold part = GameObject.Validate(Scaffold)
+				? Scaffold.GetPart<r_KingdomScaffold>() : null;
+			return part != null && Scaffold.CurrentCell == Cell && Successor != null
+				&& Scaffold.GetStringProperty(BuildKeyProperty) == Successor.Key
+				&& part.TargetBlueprint == Successor.Blueprint;
+		}
+
+		private static KingdomPhysicalLookupState FindImprovementScaffold(Cell Cell,
+			KingdomRules.BuildEntry Successor, KingdomConstructionJob Job,
+			out GameObject Scaffold)
+		{
+			Scaffold = null;
+			if (Cell == null || Successor == null || Job == null
+				|| string.IsNullOrEmpty(Job.OutputId)) return KingdomPhysicalLookupState.Absent;
+			GameObject found = null;
+			int count = 0;
+			foreach (GameObject item in Cell.GetObjects())
+			{
+				if (!KingdomConstruction.HasReceipt(item, Job)) continue;
+				count++;
+				if (count > 1 || item.ID != Job.OutputId
+					|| !ExpectedImprovementScaffold(item, Cell, Successor))
+					return KingdomPhysicalLookupState.Ambiguous;
+				found = item;
+			}
+			GameObject global;
+			KingdomPhysicalLookupState globalState = KingdomConstruction.FindExactId(
+				Cell.ParentZone, Job.OutputId, out global);
+			if (count == 0)
+				return globalState == KingdomPhysicalLookupState.Absent
+					? KingdomPhysicalLookupState.Absent : KingdomPhysicalLookupState.Ambiguous;
+			if (globalState != KingdomPhysicalLookupState.Exact
+				|| !ReferenceEquals(global, found)) return KingdomPhysicalLookupState.Ambiguous;
+			Scaffold = found;
+			return KingdomPhysicalLookupState.Exact;
+		}
+
+		private static bool IsImprovementPredecessorIdentity(KingdomSystem System, Zone Z,
+			GameObject Work, KingdomConstructionJob Job)
+		{
+			Cell cell = Z == null || Job == null ? null : Z.GetCell(Job.X, Job.Y);
+			return GameObject.Validate(Work) && cell != null
+				&& KingdomConstruction.Owns(System, Z, Job)
+				&& Work.ID == Job.SubjectId && Work.CurrentZone == Z && Work.CurrentCell == cell
+				&& Work.GetIntProperty(BuiltProperty) == 1
+				&& (string.IsNullOrEmpty(Job.Payload)
+					|| Work.GetStringProperty(BuildKeyProperty) == Job.Payload);
+		}
+
+		private static bool EnsureExactImprovementPredecessor(KingdomSystem System, Zone Z,
+			GameObject Work, KingdomConstructionJob Job)
+		{
+			if (!IsImprovementPredecessorIdentity(System, Z, Work, Job)
+				|| !KingdomConstruction.IsCurrent(Job)) return false;
+			GameObject global;
+			if (KingdomConstruction.FindExactId(Z, Job.SubjectId, out global)
+					!= KingdomPhysicalLookupState.Exact
+				|| !ReferenceEquals(global, Work)) return false;
+			string receipt = Work.GetStringProperty(KingdomConstruction.ReceiptProperty);
+			if (string.IsNullOrEmpty(receipt)) KingdomConstruction.Bind(Work, Job);
+			return KingdomConstruction.HasReceipt(Work, Job);
+		}
+
+		private static bool RemoveCreatedProjection(GameObject Object)
+		{
+			try
+			{
+				return !GameObject.Validate(Object)
+					|| (Object.Obliterate(null, Silent: true) && !GameObject.Validate(Object));
+			}
+			catch
+			{
+				return false;
+			}
 		}
 
 		/// <summary>
@@ -1017,26 +2610,291 @@ namespace ThousandAndFirst
 		/// <param name="SuccessorKey">Registry key to stamp on the new work.</param>
 		public static void HandOver(GameObject Predecessor, GameObject Successor, string SuccessorKey)
 		{
-			if (Predecessor == null || Successor == null)
+			if (!GameObject.Validate(Predecessor) || !GameObject.Validate(Successor))
 			{
 				return;
 			}
-			Cell cell = Predecessor.CurrentCell ?? Successor.CurrentCell;
-			int carriedLiquid = CarryLiquid(Predecessor, Successor);
-			int carriedItems = CarryInventory(Predecessor, Successor, cell);
-			CarryMarks(Predecessor, Successor, SuccessorKey);
-			// A plot grows in place: the successor keeps the ground the predecessor was staked on and
-			// the next tier's footprint is stamped inside it, walls and all. Read while the
-			// predecessor still stands, because everything the ground was recorded as rides on it. A
-			// single-cell design carries nothing and this is a no-op.
-			KingdomPlots.GrowInPlace(Predecessor, Successor, SuccessorKey);
+			Cell cell = Predecessor.CurrentCell;
+			string predecessorId = Predecessor.ID;
+			if (cell == null || Successor.CurrentCell != cell
+				|| Successor.GetIntProperty(BuiltProperty) != 1)
+			{
+				return;
+			}
+			r_KingdomImprovement intent = Predecessor.GetPart<r_KingdomImprovement>();
+			if (intent != null && !string.IsNullOrEmpty(intent.SuccessorBlueprint)
+				&& Successor.Blueprint != intent.SuccessorBlueprint)
+			{
+				return;
+			}
+			if (intent == null || !intent.HandoverFlagsValid()) return;
+			if (intent.HandoverSourceId == null && intent.HandoverTargetId == null)
+			{
+				if (string.IsNullOrEmpty(Predecessor.ID) || Predecessor.ID.Length > 128
+					|| string.IsNullOrEmpty(Successor.ID) || Successor.ID.Length > 128) return;
+				intent.HandoverSourceId = Predecessor.ID;
+				intent.HandoverTargetId = Successor.ID;
+			}
+			else if (intent.HandoverSourceId != Predecessor.ID
+				|| intent.HandoverTargetId != Successor.ID) return;
+			string receipt = Predecessor.GetStringProperty(KingdomConstruction.ReceiptProperty);
+			if (string.IsNullOrEmpty(receipt))
+			{
+				r_KingdomImprovement.FailHandover(intent,
+					"Legacy improvement handover lacks a current exact construction receipt.");
+				return;
+			}
+			if (string.IsNullOrEmpty(intent.HandoverConstructionReceipt))
+			{
+				if (!string.IsNullOrEmpty(receipt))
+				{
+					if (receipt.Length > 128) return;
+					intent.HandoverConstructionReceipt = receipt;
+				}
+			}
+			else if (intent.HandoverConstructionReceipt != receipt) return;
+			KingdomConstructionJob job = null;
+			KingdomSystem ownerSystem = null;
+			if (!string.IsNullOrEmpty(receipt))
+			{
+				ownerSystem = The.Game == null
+					? null : The.Game.RequireSystem<KingdomSystem>();
+				if (!KingdomConstruction.TryFind(receipt, out job)
+					|| !KingdomConstruction.Owns(ownerSystem, Predecessor.CurrentZone, job)
+					|| job.Route != KingdomConstructionRoute.Improvement
+					|| KingdomConstructionRules.IsTerminal(job.Phase)
+					|| (job.Phase != KingdomConstructionPhase.Working
+						&& job.Phase != KingdomConstructionPhase.ProjectionPending
+						&& job.Phase != KingdomConstructionPhase.Outstanding)
+					|| job.SubjectId != Predecessor.ID
+					|| SuccessorKey != job.TargetKey || intent == null || !intent.Working
+					|| intent.Scaffold == null
+					|| Successor.GetStringProperty(r_KingdomScaffold.RemovalProofProperty)
+						!= intent.Scaffold.ID
+					|| !EnsureExactImprovementPredecessor(ownerSystem, Predecessor.CurrentZone,
+						Predecessor, job)
+					|| !r_KingdomScaffold.IsExactSuccessor(Successor, Predecessor.CurrentZone,
+						cell, job, intent.SuccessorBlueprint)) return;
+				if (!KingdomConstruction.BeginProjection(ref job, out _)) return;
+				if (job.PhysicalPhase == KingdomPhysicalPhase.FinalRemovalPending)
+				{
+					r_KingdomImprovement.FailHandover(intent,
+						"Improvement removal was interrupted before callback-success proof.");
+					KingdomConstruction.Quarantine(ref job,
+						intent.HandoverFailure);
+					return;
+				}
+				KingdomConstruction.Bind(Successor, job);
+			}
+			if (!ExactHandoverEndpointsAfterCallback(Predecessor, Successor, cell,
+				SuccessorKey, intent, job))
+			{
+				r_KingdomImprovement.FailHandover(intent,
+					"The exact handover endpoints are absent, duplicated, or unauthorized.");
+				if (job != null) KingdomConstruction.Quarantine(ref job, intent.HandoverFailure);
+				return;
+			}
+			int carriedLiquid;
+			if (!r_KingdomImprovement.CarryLiquidDurable(Predecessor, Successor, intent,
+				out carriedLiquid))
+			{
+				if (job != null)
+				{
+					if (intent.HandoverQuarantined)
+						KingdomConstruction.Quarantine(ref job, intent.HandoverFailure);
+					else KingdomConstruction.FinishProjection(ref job, false, false,
+						"The exact liquid handover was restored and remains retryable.");
+				}
+				return;
+			}
+			if (!ExactHandoverEndpointsAfterCallback(Predecessor, Successor, cell,
+				SuccessorKey, intent, job))
+			{
+				r_KingdomImprovement.FailHandover(intent,
+					"A construction endpoint changed during liquid handover.");
+				if (job != null) KingdomConstruction.Quarantine(ref job, intent.HandoverFailure);
+				return;
+			}
+			int carriedItems;
+			if (!r_KingdomImprovement.CarryInventoryDurable(Predecessor, Successor, cell, intent,
+				out carriedItems))
+			{
+				if (job != null)
+				{
+					if (intent.HandoverQuarantined)
+						KingdomConstruction.Quarantine(ref job, intent.HandoverFailure);
+					else KingdomConstruction.FinishProjection(ref job, false, false,
+						"The exact item handover was restored and remains retryable.");
+				}
+				return;
+			}
+			if (!ExactHandoverEndpointsAfterCallback(Predecessor, Successor, cell,
+				SuccessorKey, intent, job))
+			{
+				r_KingdomImprovement.FailHandover(intent,
+					"A construction endpoint changed during item handover.");
+				if (job != null) KingdomConstruction.Quarantine(ref job, intent.HandoverFailure);
+				return;
+			}
+			if (!intent.HandoverEffectsDone)
+			{
+				// Grow first: it reads and restamps the predecessor's plot. CarryMarks is the final,
+				// callback-free publication that the successor owns the predecessor's founder marks.
+					try
+					{
+						if (!KingdomPlots.GrowInPlace(Predecessor, Successor, SuccessorKey))
+							throw new InvalidOperationException(
+								"The frozen plot-growth receipt did not settle exactly.");
+					}
+				catch (System.Exception ex)
+				{
+					r_KingdomImprovement.FailHandover(intent,
+						"Plot growth threw during handover: " + ex.Message);
+					if (job != null) KingdomConstruction.Quarantine(ref job, intent.HandoverFailure);
+					return;
+				}
+				if (!ExactHandoverEndpointsAfterCallback(Predecessor, Successor, cell,
+					SuccessorKey, intent, job))
+				{
+					r_KingdomImprovement.FailHandover(intent,
+						"An improvement endpoint changed during plot growth.");
+					if (job != null) KingdomConstruction.Quarantine(ref job, intent.HandoverFailure);
+					return;
+				}
+				CarryMarks(Predecessor, Successor, SuccessorKey);
+				if (!ExactCarriedMarks(Predecessor, Successor, SuccessorKey))
+				{
+					r_KingdomImprovement.FailHandover(intent,
+						"Founder marks did not settle exactly on the successor.");
+					if (job != null) KingdomConstruction.Quarantine(ref job, intent.HandoverFailure);
+					return;
+				}
+				intent.HandoverEffectsDone = true;
+			}
+			else if (!KingdomPlots.GrowInPlace(Predecessor, Successor, SuccessorKey)
+				|| !ExactCarriedMarks(Predecessor, Successor, SuccessorKey))
+			{
+				r_KingdomImprovement.FailHandover(intent,
+					"Settled founder marks changed before predecessor removal.");
+				if (job != null) KingdomConstruction.Quarantine(ref job, intent.HandoverFailure);
+				return;
+			}
 			string predecessorName = KingdomDesign.ReferenceFor(Predecessor, Predecessor.ShortDisplayName);
 			LiquidVolume remaining = Predecessor.GetPart<LiquidVolume>();
 			if (remaining != null && remaining.Volume > 0 && cell != null)
 			{
-				remaining.EmptyIntoCell(cell);
+				r_KingdomImprovement.FailHandover(intent,
+					"Liquid reappeared after the exact handover receipt settled.");
+				if (job != null) KingdomConstruction.Quarantine(ref job, intent.HandoverFailure);
+				return;
 			}
-			Predecessor.Destroy(null, Silent: true);
+			GameObject exactPredecessor;
+			GameObject exactSuccessor;
+			if (!GameObject.Validate(Predecessor) || Predecessor.CurrentCell != cell
+				|| Successor.CurrentCell != cell || Successor.GetIntProperty(BuiltProperty) != 1
+				|| Successor.GetStringProperty(BuildKeyProperty) != SuccessorKey
+				|| (job != null && (!KingdomConstruction.HasReceipt(Predecessor, job)
+					|| !r_KingdomScaffold.IsExactSuccessor(Successor,
+						Predecessor.CurrentZone, cell, job, intent.SuccessorBlueprint)
+						|| !KingdomConstruction.Owns(ownerSystem, Predecessor.CurrentZone, job)
+						|| KingdomConstruction.FindExactId(Predecessor.CurrentZone,
+							predecessorId, out exactPredecessor) != KingdomPhysicalLookupState.Exact
+						|| !ReferenceEquals(exactPredecessor, Predecessor)
+						|| KingdomConstruction.FindExactId(Predecessor.CurrentZone,
+							Successor.ID, out exactSuccessor) != KingdomPhysicalLookupState.Exact
+						|| !ReferenceEquals(exactSuccessor, Successor)
+						|| Successor.GetStringProperty(r_KingdomScaffold.RemovalProofProperty)
+						!= intent.Scaffold.ID
+					|| !KingdomConstruction.IsCurrent(job))))
+			{
+				r_KingdomImprovement.FailHandover(intent,
+					"The improved successor could not be verified before handover.");
+				if (job != null) KingdomConstruction.Quarantine(ref job, intent.HandoverFailure);
+				return;
+			}
+			if (job != null && !KingdomConstruction.UpdatePhysical(ref job,
+				KingdomPhysicalPhase.FinalRemovalPending, carriedItems, carriedLiquid, 0,
+				predecessorId, Successor.ID, "improvement-handover:v1"))
+			{
+				r_KingdomImprovement.FailHandover(intent,
+					"The final predecessor-removal intent could not be published exactly.");
+				if (job != null && KingdomConstruction.IsCurrent(job))
+					KingdomConstruction.Quarantine(ref job, intent.HandoverFailure);
+				return;
+			}
+			bool removed;
+			try
+			{
+				removed = Predecessor.Destroy(null, Silent: true);
+			}
+			catch (System.Exception ex)
+			{
+				r_KingdomImprovement.FailHandover(intent,
+					"Improvement predecessor removal threw: " + ex.Message);
+				if (job != null)
+					KingdomConstruction.Quarantine(ref job, intent.HandoverFailure);
+				return;
+			}
+			KingdomPhysicalLookupState predecessorState = job == null
+				? (GameObject.Validate(Predecessor) ? KingdomPhysicalLookupState.Exact
+					: KingdomPhysicalLookupState.Absent)
+				: KingdomConstruction.FindExactId(Successor.CurrentZone, predecessorId, out _);
+			if (!removed || GameObject.Validate(Predecessor)
+				|| predecessorState != KingdomPhysicalLookupState.Absent
+				|| Successor.CurrentCell != cell)
+			{
+				r_KingdomImprovement.FailHandover(intent,
+					"Improvement removal was vetoed, moved, or partially changed an endpoint.");
+				if (job != null)
+					KingdomConstruction.Quarantine(ref job, intent.HandoverFailure);
+				return;
+			}
+			if (job != null)
+			{
+					GameObject exactAfter;
+					if (!KingdomConstruction.Owns(ownerSystem, Successor.CurrentZone, job)
+						|| KingdomConstruction.FindExactId(Successor.CurrentZone,
+							Successor.ID, out exactAfter) != KingdomPhysicalLookupState.Exact
+						|| !ReferenceEquals(exactAfter, Successor)
+						|| !r_KingdomScaffold.IsExactSuccessor(Successor, Successor.CurrentZone,
+						cell, job, intent.SuccessorBlueprint)
+						|| !KingdomConstruction.IsCurrent(job))
+				{
+					r_KingdomImprovement.FailHandover(intent,
+						"The improvement successor changed during predecessor removal.");
+					KingdomConstruction.Quarantine(ref job,
+						intent.HandoverFailure);
+					return;
+				}
+				Successor.SetStringProperty(r_KingdomScaffold.RemovalProofProperty, predecessorId);
+				if (!r_KingdomScaffold.HasRemovalProof(Successor, predecessorId))
+				{
+					r_KingdomImprovement.FailHandover(intent,
+						"The improvement successor did not retain predecessor-removal proof.");
+					KingdomConstruction.Quarantine(ref job,
+						intent.HandoverFailure);
+					return;
+				}
+				if (!KingdomConstruction.UpdatePhysical(ref job,
+					KingdomPhysicalPhase.FinalRemoved, carriedItems, carriedLiquid, 0,
+					predecessorId, Successor.ID, "improvement-handover:v1"))
+				{
+					r_KingdomImprovement.FailHandover(intent,
+						"Exact predecessor absence could not be committed to its receipt.");
+					if (KingdomConstruction.IsCurrent(job))
+						KingdomConstruction.Quarantine(ref job, intent.HandoverFailure);
+					return;
+				}
+				if (!KingdomConstruction.Complete(ref job))
+				{
+					r_KingdomImprovement.FailHandover(intent,
+						"The physically closed improvement receipt could not complete.");
+					if (KingdomConstruction.IsCurrent(job))
+						KingdomConstruction.Quarantine(ref job, intent.HandoverFailure);
+					return;
+				}
+				r_KingdomScaffold.TellCompletion(ownerSystem, Successor, job);
+			}
 			if (carriedLiquid > 0 || carriedItems > 0)
 			{
 				MessageQueue.AddPlayerMessage("{{G|Everything the " + predecessorName + " held was moved into " + KingdomDesign.ReferenceFor(Successor, Successor.ShortDisplayName) + ".}}");
@@ -1058,6 +2916,65 @@ namespace ThousandAndFirst
 			}
 		}
 
+		private static bool ExactHandoverEndpointsAfterCallback(GameObject Predecessor,
+			GameObject Successor, Cell Cell, string SuccessorKey, r_KingdomImprovement Intent,
+			KingdomConstructionJob Job)
+		{
+			KingdomSystem system = The.Game == null
+				? null : The.Game.RequireSystem<KingdomSystem>();
+			Zone zone = GameObject.Validate(Predecessor) ? Predecessor.CurrentZone : null;
+			GameObject exactPredecessor;
+			GameObject exactSuccessor;
+			return GameObject.Validate(Predecessor) && GameObject.Validate(Successor)
+				&& Intent != null && Predecessor.GetPart<r_KingdomImprovement>() == Intent
+				&& Predecessor.ID == Intent.HandoverSourceId
+				&& Successor.ID == Intent.HandoverTargetId
+				&& Predecessor.CurrentCell == Cell && Successor.CurrentCell == Cell
+				&& Successor.GetIntProperty(BuiltProperty) == 1
+				&& Successor.GetStringProperty(BuildKeyProperty) == SuccessorKey
+				&& KingdomConstruction.FindExactId(zone, Predecessor.ID,
+					out exactPredecessor) == KingdomPhysicalLookupState.Exact
+				&& ReferenceEquals(exactPredecessor, Predecessor)
+				&& KingdomConstruction.FindExactId(zone, Successor.ID,
+					out exactSuccessor) == KingdomPhysicalLookupState.Exact
+				&& ReferenceEquals(exactSuccessor, Successor)
+				&& (Job == null || (KingdomConstruction.Owns(system, zone, Job)
+					&& KingdomConstruction.HasReceipt(Predecessor, Job)
+					&& r_KingdomScaffold.IsExactSuccessor(Successor,
+						Predecessor.CurrentZone, Cell, Job, Intent.SuccessorBlueprint)
+					&& KingdomConstruction.IsCurrent(Job)));
+		}
+
+		private static bool ExactCarriedMarks(GameObject Predecessor, GameObject Successor,
+			string SuccessorKey)
+		{
+			if (!GameObject.Validate(Predecessor) || !GameObject.Validate(Successor)
+				|| Successor.GetIntProperty(BuiltProperty) != 1
+				|| Successor.GetStringProperty(BuildKeyProperty) != SuccessorKey) return false;
+			if (Predecessor.GetIntProperty(KingdomAdopt.LarderProperty) == 1
+				&& (Successor.Inventory == null
+					|| Successor.GetIntProperty(KingdomAdopt.LarderProperty) != 1)) return false;
+			if (Predecessor.GetIntProperty(KingdomAdopt.StoresProperty) == 1
+				&& (Successor.GetPart<LiquidVolume>() == null
+					|| Successor.GetIntProperty(KingdomAdopt.StoresProperty) != 1)) return false;
+			if (Predecessor.GetIntProperty(KingdomSalvage.CertifiedProperty) == 1
+				&& Successor.GetIntProperty(KingdomSalvage.CertifiedProperty) != 1) return false;
+			string given = Predecessor.GetStringProperty(KingdomDesign.GivenNameProperty);
+			if (!string.IsNullOrEmpty(given)
+				&& Successor.GetStringProperty(KingdomDesign.GivenNameProperty) != given) return false;
+			if (Predecessor.GetIntProperty(AdoptedProperty) == 1
+				&& Successor.GetIntProperty(AdoptedProperty) != 1) return false;
+			if (KingdomPlots.TryReadRect(Predecessor, out _))
+			{
+				if (!KingdomPlots.TryReadRect(Successor, out _)) return false;
+				string plot = Predecessor.GetStringProperty(KingdomPlots.PlotIdProperty);
+				if (!string.IsNullOrEmpty(plot)
+					&& Successor.GetStringProperty(KingdomPlots.PlotIdProperty) != plot) return false;
+			}
+			return Predecessor.GetIntProperty(KingdomPlots.YieldingProperty) != 1
+				|| Successor.GetIntProperty(KingdomPlots.YieldingProperty) == 1;
+		}
+
 		/// <summary>
 		/// Pours the predecessor's liquid into the successor, mixture and all. Every component is
 		/// moved at its real dram count &mdash; <c>ComponentLiquids</c> holds parts per thousand,
@@ -1067,31 +2984,10 @@ namespace ThousandAndFirst
 		/// <returns>Drams actually moved.</returns>
 		public static int CarryLiquid(GameObject Predecessor, GameObject Successor)
 		{
-			LiquidVolume source = Predecessor?.GetPart<LiquidVolume>();
-			LiquidVolume target = Successor?.GetPart<LiquidVolume>();
-			if (source == null || target == null || source.Volume <= 0)
-			{
-				return 0;
-			}
-			int total = source.Volume;
-			int moved = 0;
-			List<string> components = new List<string>(source.ComponentLiquids.Keys);
-			int assigned = 0;
-			for (int i = 0; i < components.Count; i++)
-			{
-				int drams = (i == components.Count - 1) ? (total - assigned) : (total * source.ComponentLiquids[components[i]] / 1000);
-				assigned += drams;
-				if (drams <= 0)
-				{
-					continue;
-				}
-				int added = KingdomLiquids.Fill(target, components[i], drams);
-				if (added > 0)
-				{
-					moved += KingdomLiquids.Drain(source, added);
-				}
-			}
-			return moved;
+			r_KingdomImprovement receipt = Predecessor?.GetPart<r_KingdomImprovement>();
+			int moved;
+			return r_KingdomImprovement.CarryLiquidDurable(Predecessor, Successor, receipt,
+				out moved) ? moved : 0;
 		}
 
 		/// <summary>
@@ -1101,32 +2997,10 @@ namespace ThousandAndFirst
 		/// <returns>Objects actually moved or set down.</returns>
 		public static int CarryInventory(GameObject Predecessor, GameObject Successor, Cell Where)
 		{
-			if (Predecessor?.Inventory == null)
-			{
-				return 0;
-			}
-			// Snapshot first: removing from an Inventory mutates the list being walked.
-			List<GameObject> held = new List<GameObject>(Predecessor.Inventory.Objects);
-			int moved = 0;
-			for (int i = 0; i < held.Count; i++)
-			{
-				GameObject item = held[i];
-				if (!Predecessor.Inventory.RemoveObjectFromInventory(item, null, Silent: true))
-				{
-					continue;
-				}
-				if (Successor?.Inventory != null)
-				{
-					Successor.Inventory.AddObject(item, null, Silent: true);
-					moved++;
-				}
-				else if (Where != null)
-				{
-					Where.AddObject(item);
-					moved++;
-				}
-			}
-			return moved;
+			r_KingdomImprovement receipt = Predecessor?.GetPart<r_KingdomImprovement>();
+			int moved;
+			return r_KingdomImprovement.CarryInventoryDurable(Predecessor, Successor, Where,
+				receipt, out moved) ? moved : 0;
 		}
 
 		/// <summary>
@@ -1232,7 +3106,7 @@ namespace ThousandAndFirst
 				foreach (GameObject item in zone.GetObjects())
 				{
 					r_KingdomImprovement improvement = item.GetPart<r_KingdomImprovement>();
-					if (improvement != null && improvement.Working)
+					if ((improvement != null && improvement.Working) || HasActiveConstruction(item))
 					{
 						otherWorkUnderway = true;
 					}
@@ -1269,19 +3143,28 @@ namespace ThousandAndFirst
 				if (picked >= works.Count)
 				{
 					SetGroundHeld(zone, !groundHeld);
-					continue;
+					KingdomGovernanceScope.Commit("set ground improvements");
+					return;
 				}
 				// A held offer is the one verdict the founder may overrule, so picking it asks
 				// rather than toggling: the dip is disclosed and consented to before anything moves.
 				// Everything else in this screen still only ever decides what to leave alone.
 				Assessment picking = assessments[picked];
-				if (KingdomUpgradeRules.IsOffer(picking.Verdict) && OpenHeldOffer(System, zone, works[picked], picking, survey))
+				if (KingdomUpgradeRules.IsOffer(picking.Verdict))
 				{
-					continue;
+					if (OpenHeldOffer(System, zone, works[picked], picking, survey))
+					{
+						KingdomGovernanceScope.Commit("force improvement");
+					}
+					// Leaving, escaping, or failing the force attempt is a cancellation. A held
+					// offer must never fall through into the ordinary held-state toggle.
+					return;
 				}
 				r_KingdomImprovement held = works[picked].RequirePart<r_KingdomImprovement>();
 				held.Held = !held.Held;
 				held.AnnouncedReason = 0;
+				KingdomGovernanceScope.Commit("set work improvement");
+				return;
 			}
 		}
 

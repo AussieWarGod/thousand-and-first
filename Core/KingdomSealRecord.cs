@@ -48,11 +48,11 @@ namespace ThousandAndFirst
 	internal sealed class KingdomSealRecord
 	{
 		/// <summary>The only schema this build writes.</summary>
-		public const int CurrentSchema = 2;
+		public const int CurrentSchema = 4;
 
-		/// <summary>The oldest schema this build reads. Schema 1 carried one identity; its reader
-		/// migrates that identity into both lineage and per-generation legacy fields.</summary>
-		public const int FirstSchema = 1;
+		/// <summary>The oldest schema this build reads. Pre-release schemas through 3 lacked
+		/// per-member immutable topology provenance and are deliberately refused.</summary>
+		public const int FirstSchema = 4;
 
 		public const int MaxNameChars = 96;
 
@@ -102,6 +102,23 @@ namespace ThousandAndFirst
 		private const string KeyRealm = "realm";
 		private const string KeySettlement = "settlement";
 		private const string KeySettlementId = "settlement_id";
+		private const string KeyRealmId = "realm_id";
+		private const string KeyRealmSettlementId = "realm_settlement_id";
+		private const string KeyRealmSettlementProvenance = "realm_settlement_provenance";
+		private const string KeyRealmIdentityVersion = "realm_identity_version";
+		private const string KeyRealmIdentityOrigin = "realm_identity_origin";
+		private const string KeyRealmIdentityTransaction = "realm_identity_transaction";
+		private const string KeyRealmIdentityLegacy = "realm_identity_legacy";
+		private const string KeyRealmIdentityFounded = "realm_identity_founded";
+		private const string KeyRealmSeedHigh = "realm_seed_high";
+		private const string KeyRealmSeedLow = "realm_seed_low";
+		private const string KeyRealmIdentityZone = "realm_identity_zone";
+		private const string KeySettlementIdentityVersion = "settlement_identity_version";
+		private const string KeySettlementIdentityOrigin = "settlement_identity_origin";
+		private const string KeySettlementIdentityTransaction = "settlement_identity_transaction";
+		private const string KeySettlementIdentityFounded = "settlement_identity_founded";
+		private const string KeySettlementIdentityZone = "settlement_identity_zone";
+		private const string KeySettlementIdentityLegacy = "settlement_identity_legacy";
 		private const string KeyVocation = "vocation";
 		private const string KeyStyle = "style";
 		private const string KeyFounded = "founded";
@@ -146,7 +163,7 @@ namespace ThousandAndFirst
 			KeyOutsider, KeyDeadName, KeyDeadCause
 		};
 
-		private static readonly string[] CanonicalKeys = new string[47]
+		private static readonly string[] CanonicalKeysV2 = new string[47]
 		{
 			KeyKind, KeyWriter, KeyEngine, KeyStatus, KeyLineage, KeyLegacy, KeyOrigin, KeyGeneration,
 			KeyRevision, KeyWritten, KeyFounder, KeyCause, KeyCauseKind, KeyCauseTurn, KeyRealm,
@@ -155,6 +172,25 @@ namespace ThousandAndFirst
 			KeyRoll, KeyState, KeyWorkKey, KeyWorkX, KeyWorkY, KeyWorkCondition, KeyRollName,
 			KeyRollOrigin, KeyRollArrived, KeyOriginKey, KeyOriginCount, KeyCreedKey, KeyCreedCount,
 			KeyChronicle, KeyOutsider, KeyDeadName, KeyDeadCause
+		};
+
+		private static readonly string[] CanonicalKeys = new string[]
+		{
+			KeyKind, KeyWriter, KeyEngine, KeyStatus, KeyLineage, KeyLegacy, KeyOrigin,
+			KeyGeneration, KeyRevision, KeyWritten, KeyFounder, KeyCause, KeyCauseKind,
+			KeyCauseTurn, KeyRealm, KeyRealmId, KeyRealmSettlementId,
+			KeyRealmSettlementProvenance,
+			KeyRealmIdentityVersion, KeyRealmIdentityOrigin, KeyRealmIdentityTransaction,
+			KeyRealmIdentityLegacy, KeyRealmIdentityFounded, KeyRealmSeedHigh, KeyRealmSeedLow,
+			KeyRealmIdentityZone, KeySettlement, KeySettlementId,
+			KeySettlementIdentityVersion, KeySettlementIdentityOrigin,
+			KeySettlementIdentityTransaction, KeySettlementIdentityFounded,
+			KeySettlementIdentityZone, KeySettlementIdentityLegacy, KeyVocation, KeyStyle,
+			KeyFounded, KeyGround, KeyRegion, KeyTerrain, KeyDepth, KeyStage, KeyPeople,
+			KeyDefence, KeyWater, KeyWithered, KeyVigour, KeyRoll, KeyState, KeyWorkKey,
+			KeyWorkX, KeyWorkY, KeyWorkCondition, KeyRollName, KeyRollOrigin, KeyRollArrived,
+			KeyOriginKey, KeyOriginCount, KeyCreedKey, KeyCreedCount, KeyChronicle,
+			KeyOutsider, KeyDeadName, KeyDeadCause
 		};
 
 		private static readonly string[] StatusNames = new string[4] { "living", "terminal", "retired", "promoted" };
@@ -203,6 +239,24 @@ namespace ThousandAndFirst
 
 		/// <summary>The settlement's stable semantic id, for telling two seals apart.</summary>
 		public string SettlementId = "";
+
+		public string RealmId = "";
+		public List<string> RealmSettlementIds = new List<string>();
+		public List<string> RealmSettlementProvenance = new List<string>();
+		public int RealmIdentityVersion;
+		public KingdomIdentityOrigin RealmIdentityOrigin;
+		public string RealmIdentityTransactionId = "";
+		public string RealmIdentityLegacyFaction = "";
+		public long RealmIdentityFoundedTick;
+		public ulong RealmIdentitySeedHigh;
+		public ulong RealmIdentitySeedLow;
+		public string RealmIdentityFirstClaimedZone = "";
+		public int SettlementIdentityVersion;
+		public KingdomIdentityOrigin SettlementIdentityOrigin;
+		public string SettlementIdentityTransactionId = "";
+		public long SettlementIdentityFoundedTick;
+		public string SettlementIdentityFirstClaimedZone = "";
+		public string SettlementIdentityLegacyId = "";
 
 		public string Vocation = "";
 
@@ -342,8 +396,25 @@ namespace ThousandAndFirst
 			body.Put(KeyCauseKind, CauseKind);
 			body.Put(KeyCauseTurn, CauseTurn);
 			body.Put(KeyRealm, RealmName);
+			body.Put(KeyRealmId, RealmId);
+			body.PutList(KeyRealmSettlementId, RealmSettlementIds);
+			body.PutList(KeyRealmSettlementProvenance, RealmSettlementProvenance);
+			body.Put(KeyRealmIdentityVersion, RealmIdentityVersion);
+			body.Put(KeyRealmIdentityOrigin, (int)RealmIdentityOrigin);
+			body.Put(KeyRealmIdentityTransaction, RealmIdentityTransactionId);
+			body.Put(KeyRealmIdentityLegacy, EncodeEvidence(RealmIdentityLegacyFaction));
+			body.Put(KeyRealmIdentityFounded, RealmIdentityFoundedTick);
+			body.Put(KeyRealmSeedHigh, RealmIdentitySeedHigh.ToString("x16"));
+			body.Put(KeyRealmSeedLow, RealmIdentitySeedLow.ToString("x16"));
+			body.Put(KeyRealmIdentityZone, RealmIdentityFirstClaimedZone);
 			body.Put(KeySettlement, SettlementName);
 			body.Put(KeySettlementId, SettlementId);
+			body.Put(KeySettlementIdentityVersion, SettlementIdentityVersion);
+			body.Put(KeySettlementIdentityOrigin, (int)SettlementIdentityOrigin);
+			body.Put(KeySettlementIdentityTransaction, SettlementIdentityTransactionId);
+			body.Put(KeySettlementIdentityFounded, SettlementIdentityFoundedTick);
+			body.Put(KeySettlementIdentityZone, SettlementIdentityFirstClaimedZone);
+			body.Put(KeySettlementIdentityLegacy, EncodeEvidence(SettlementIdentityLegacyId));
 			body.Put(KeyVocation, Vocation);
 			body.Put(KeyStyle, Style);
 			body.Put(KeyFounded, FoundedTick);
@@ -382,7 +453,8 @@ namespace ThousandAndFirst
 			Record = null;
 			Fault = KingdomSealFault.None;
 			Detail = "";
-			string[] canonical = (Schema == 1) ? CanonicalKeysV1 : CanonicalKeys;
+			string[] canonical = (Schema == 1) ? CanonicalKeysV1 :
+				(Schema == 2 ? CanonicalKeysV2 : CanonicalKeys);
 			HashSet<string> known = new HashSet<string>(canonical);
 			for (int i = 0; i < Body.Keys.Count; i++)
 			{
@@ -430,6 +502,89 @@ namespace ThousandAndFirst
 				|| !ReadToken(Body, KeyTerrain, out record.TerrainBlueprint, ref Fault, ref Detail))
 			{
 				return false;
+			}
+			if (Schema >= 3)
+			{
+				string realmLegacy;
+				string settlementLegacy;
+				string high;
+				string low;
+				int realmOrigin;
+				int settlementOrigin;
+				if (!ReadToken(Body, KeyRealmId, out record.RealmId, ref Fault, ref Detail) ||
+					!ReadTokens(Body, KeyRealmSettlementId, KingdomIdentityRules.MaxSettlements,
+						out record.RealmSettlementIds, ref Fault, ref Detail) ||
+					!ReadBoundedTokens(Body, KeyRealmSettlementProvenance,
+						KingdomIdentityRules.MaxSettlements, 4300,
+						out record.RealmSettlementProvenance, ref Fault, ref Detail) ||
+					!ReadInt(Body, KeyRealmIdentityVersion, 0, 32,
+						out record.RealmIdentityVersion, ref Fault, ref Detail) ||
+					!ReadInt(Body, KeyRealmIdentityOrigin, 0, 3, out realmOrigin,
+						ref Fault, ref Detail) ||
+					!ReadOptionalToken(Body, KeyRealmIdentityTransaction,
+						out record.RealmIdentityTransactionId, ref Fault, ref Detail) ||
+					!ReadText(Body, KeyRealmIdentityLegacy, 1400, out realmLegacy,
+						ref Fault, ref Detail) ||
+					!ReadLong(Body, KeyRealmIdentityFounded, 0L, long.MaxValue,
+						out record.RealmIdentityFoundedTick, ref Fault, ref Detail) ||
+					!ReadToken(Body, KeyRealmSeedHigh, out high, ref Fault, ref Detail) ||
+					!ReadToken(Body, KeyRealmSeedLow, out low, ref Fault, ref Detail) ||
+					!ReadBoundedToken(Body, KeyRealmIdentityZone, 512,
+						out record.RealmIdentityFirstClaimedZone, ref Fault, ref Detail) ||
+					!ReadInt(Body, KeySettlementIdentityVersion, 0, 32,
+						out record.SettlementIdentityVersion, ref Fault, ref Detail) ||
+					!ReadInt(Body, KeySettlementIdentityOrigin, 0, 3,
+						out settlementOrigin, ref Fault, ref Detail) ||
+					!ReadOptionalToken(Body, KeySettlementIdentityTransaction,
+						out record.SettlementIdentityTransactionId, ref Fault, ref Detail) ||
+					!ReadLong(Body, KeySettlementIdentityFounded, 0L, long.MaxValue,
+						out record.SettlementIdentityFoundedTick, ref Fault, ref Detail) ||
+					!ReadBoundedToken(Body, KeySettlementIdentityZone, 512,
+						out record.SettlementIdentityFirstClaimedZone, ref Fault, ref Detail) ||
+					!ReadText(Body, KeySettlementIdentityLegacy, 1400,
+						out settlementLegacy, ref Fault, ref Detail) ||
+					!TryParseHex64(high, out record.RealmIdentitySeedHigh) ||
+					!TryParseHex64(low, out record.RealmIdentitySeedLow) ||
+					!TryDecodeEvidence(realmLegacy, out record.RealmIdentityLegacyFaction) ||
+					!TryDecodeEvidence(settlementLegacy, out record.SettlementIdentityLegacyId))
+				{
+					if (Fault == KingdomSealFault.None)
+					{
+						Fault = KingdomSealFault.OutOfBounds;
+						Detail = "the seal's immutable identity provenance is malformed";
+					}
+					return false;
+				}
+				record.RealmIdentityOrigin = (KingdomIdentityOrigin)realmOrigin;
+				record.SettlementIdentityOrigin = (KingdomIdentityOrigin)settlementOrigin;
+				KingdomIdentityFault identityFault;
+				if (!KingdomIdentityRules.ReproveRealm(record.RealmId,
+					record.RealmIdentityVersion, record.RealmIdentityOrigin,
+					record.RealmIdentityTransactionId, record.RealmIdentityLegacyFaction,
+					record.RealmIdentityFoundedTick, record.RealmIdentitySeedHigh,
+					record.RealmIdentitySeedLow, record.RealmIdentityFirstClaimedZone,
+					out identityFault) || !KingdomIdentityRules.ValidateRealmTopology(
+						record.RealmId, record.RealmSettlementIds, out identityFault) ||
+					!record.RealmSettlementIds.Contains(record.SettlementId) ||
+					!KingdomSealRules.ExactTopologyProvenance(record.RealmId,
+						record.RealmSettlementIds, record.RealmSettlementProvenance,
+						record.SettlementId, record.SettlementIdentityVersion,
+						record.SettlementIdentityOrigin,
+						record.SettlementIdentityTransactionId,
+						record.SettlementIdentityFoundedTick,
+						record.SettlementIdentityFirstClaimedZone,
+						record.SettlementIdentityLegacyId) ||
+					!KingdomIdentityRules.ReproveSettlement(record.SettlementId,
+						record.RealmId, record.SettlementIdentityVersion,
+						record.SettlementIdentityOrigin,
+						record.SettlementIdentityTransactionId,
+						record.SettlementIdentityFoundedTick,
+						record.SettlementIdentityFirstClaimedZone, out identityFault))
+				{
+					Fault = KingdomSealFault.OutOfBounds;
+					Detail = "the seal's immutable realm topology or provenance cannot be reproved";
+					return false;
+				}
 			}
 			if (Schema == 1)
 			{
@@ -709,6 +864,27 @@ namespace ThousandAndFirst
 			return true;
 		}
 
+		private static bool ReadBoundedToken(KingdomSealBody Body, string Key, int Maximum,
+			out string Value, ref KingdomSealFault Fault, ref string Detail)
+		{
+			Value = "";
+			if (Body.KindOf(Key) != KingdomSealKind.Text)
+			{
+				Fault = KingdomSealFault.WrongKind;
+				Detail = "'" + Key + "' is not written as text";
+				return false;
+			}
+			string text = Body.Text(Key) ?? "";
+			if (text.Length == 0 || text.Length > Maximum || !KingdomSealRules.IsToken(text))
+			{
+				Fault = KingdomSealFault.OutOfBounds;
+				Detail = "'" + Key + "' is not a bounded identifier this build accepts";
+				return false;
+			}
+			Value = text;
+			return true;
+		}
+
 		private static bool ReadLong(KingdomSealBody Body, string Key, long Low, long High, out long Value, ref KingdomSealFault Fault, ref string Detail)
 		{
 			Value = 0L;
@@ -799,6 +975,35 @@ namespace ThousandAndFirst
 			return true;
 		}
 
+		private static bool ReadBoundedTokens(KingdomSealBody Body, string Key, int MaxItems,
+			int MaxChars, out List<string> Values, ref KingdomSealFault Fault, ref string Detail)
+		{
+			Values = null;
+			List<string> list = Body.TextList(Key);
+			if (list == null)
+			{
+				Fault = KingdomSealFault.WrongKind;
+				Detail = "'" + Key + "' is not written as a list of text";
+				return false;
+			}
+			if (list.Count > MaxItems)
+			{
+				Fault = KingdomSealFault.OutOfBounds;
+				Detail = "'" + Key + "' exceeds its row cap";
+				return false;
+			}
+			for (int i = 0; i < list.Count; i++)
+				if (string.IsNullOrEmpty(list[i]) || list[i].Length > MaxChars ||
+					!KingdomSealRules.IsToken(list[i]))
+				{
+					Fault = KingdomSealFault.OutOfBounds;
+					Detail = "an entry of '" + Key + "' is not a bounded canonical token";
+					return false;
+				}
+			Values = list;
+			return true;
+		}
+
 		private static bool ReadInts(KingdomSealBody Body, string Key, int MaxItems, int Low, int High, out List<int> Values, ref KingdomSealFault Fault, ref string Detail)
 		{
 			Values = null;
@@ -827,6 +1032,45 @@ namespace ThousandAndFirst
 				narrow.Add((int)list[i]);
 			}
 			Values = narrow;
+			return true;
+		}
+
+		private static string EncodeEvidence(string Value)
+		{
+			if (string.IsNullOrEmpty(Value)) return "";
+			byte[] bytes = new UTF8Encoding(false, true).GetBytes(Value);
+			if (bytes.Length > 1024)
+				throw new InvalidOperationException("Immutable identity evidence exceeds seal cap.");
+			return Convert.ToBase64String(bytes);
+		}
+
+		private static bool TryDecodeEvidence(string Value, out string Evidence)
+		{
+			Evidence = "";
+			if (string.IsNullOrEmpty(Value)) return true;
+			if (Value.Length > 1400) return false;
+			try
+			{
+				byte[] bytes = Convert.FromBase64String(Value);
+				if (bytes.Length > 1024) return false;
+				Evidence = new UTF8Encoding(false, true).GetString(bytes);
+				return true;
+			}
+			catch { Evidence = ""; return false; }
+		}
+
+		private static bool TryParseHex64(string Value, out ulong Parsed)
+		{
+			Parsed = 0UL;
+			if (Value == null || Value.Length != 16) return false;
+			for (int i = 0; i < Value.Length; i++)
+			{
+				char c = Value[i];
+				int digit = c >= '0' && c <= '9' ? c - '0' :
+					(c >= 'a' && c <= 'f' ? c - 'a' + 10 : -1);
+				if (digit < 0) { Parsed = 0UL; return false; }
+				Parsed = (Parsed << 4) | (uint)digit;
+			}
 			return true;
 		}
 

@@ -311,7 +311,8 @@ namespace ThousandAndFirst
 		/// <param name="Creed">The faction name they now hold with.</param>
 		/// <param name="Channel">Which channel turned them, which picks the words in both
 		/// registers.</param>
-		public static bool Convert(KingdomSystem System, Zone Z, GameObject Settler, string Creed, ConversionChannel Channel)
+		public static bool Convert(KingdomSystem System, Zone Z, GameObject Settler, string Creed,
+			ConversionChannel Channel, string GovernanceVerb = null)
 		{
 			if (!Enabled || System == null || !System.Founded || Settler == null || string.IsNullOrEmpty(Creed))
 			{
@@ -328,6 +329,12 @@ namespace ThousandAndFirst
 			// The existing surfaces, in the only order that keeps the tally honest: the old creed
 			// is read off the settler by Forget, so it must go before Record overwrites it.
 			KingdomCreed.Forget(System, Settler);
+			if (!string.IsNullOrEmpty(GovernanceVerb) && !KingdomGovernanceScope.HasCommitted)
+			{
+				// Forget is the first durable tally/person mutation. Mark before Record or any
+				// telling callback can fail, so a partially completed conversion is never free.
+				KingdomGovernanceScope.Commit(GovernanceVerb);
+			}
 			KingdomCreed.Record(System, Settler, Creed);
 			// And the history. THIS is the one place a creed is ever LEFT, which is why Addendum
 			// 16's recorded fact is written here and nowhere else: every other path either gives a
@@ -638,8 +645,10 @@ namespace ThousandAndFirst
 		{
 			ConversionChannel channel = (ConversionChannel)Brink.Channel;
 			int roads = Resident.GetIntProperty(RoadsWalkedProperty);
+			string settlementId = KingdomChronicle.SettlementId(System);
+			if (!KingdomIdentityRules.IsSettlementId(settlementId)) return;
 			bool turns = KingdomConversionRules.Converts(
-				KingdomChronicle.SettlementId(System.KingdomFactionName), channel, Roll, KingdomConversionRules.RoadEnd(roads));
+				settlementId, channel, Roll, KingdomConversionRules.RoadEnd(roads));
 			Resident.SetIntProperty(RoadsWalkedProperty, roads + 1);
 			bool here = KingdomWord.StandsIn(Z);
 			int ago = KingdomBrinkRules.DaysStood(KingdomBrinkRules.ExpiryTick(BrinkKind.Creed, Brink.WarnedTick), Now);

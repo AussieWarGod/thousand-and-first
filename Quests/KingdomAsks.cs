@@ -176,8 +176,16 @@ namespace ThousandAndFirst
 
 		private static void Petition(KingdomSystem System, StringBuilder builder)
 		{
-			if (System.PetitionKind == KingdomRules.PetitionKind.None)
+			PetitionLifecycle state = KingdomPetitions.Status(System);
+			if (state != PetitionLifecycle.Offered && state != PetitionLifecycle.Accepted)
 			{
+				return;
+			}
+			if (state == PetitionLifecycle.Accepted)
+			{
+				builder.Append("\n\n{{G|Petition accepted: ").Append(System.PetitionPetitioner)
+					.Append("}} — about ").Append(KingdomPetitions.Subject(System.PetitionKind))
+					.Append(".\n  {{K|Your word stands. Review the exact request at the Charter; the city checks it on its daily settlement pass.}}");
 				return;
 			}
 			builder.Append("\n\n{{W|").Append(System.PetitionPetitioner).Append(" is waiting to speak}} — about ")

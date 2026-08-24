@@ -75,10 +75,11 @@ namespace ThousandAndFirst.Simulation.City
 	/// <c>The.Game.TimeTicks</c> deltas; the pump only decides <b>when a slice of it is spent</b>.
 	/// </para>
 	/// <para>
-	/// Four things happen here and nothing else does: the heartbeat slice on its cadence
+	/// Five things happen here and nothing else does: the heartbeat slice on its cadence
 	/// (&sect;3.6), the retirement of jobs that ran out while nobody was watching (&sect;3.8 t2),
-	/// one turn's amortised reify spend (&sect;3.5), and the prefetch (&sect;6.4). Every one of
-	/// them returns immediately when there is no seated claimed zone and no debt.
+	/// the O(1) attended-semantic due check, one turn's amortised reify spend (&sect;3.5), and the
+	/// prefetch (&sect;6.4). Every one returns immediately when there is no seated claimed zone and
+	/// no debt; the semantic check does not take a survey until its absolute day boundary is due.
 	/// </para>
 	/// </summary>
 	public static class KingdomHeartbeat
@@ -130,11 +131,20 @@ namespace ThousandAndFirst.Simulation.City
 		/// <summary>
 		/// One turn of the city, whether or not anybody is looking at it.
 		/// <para>
-		/// Called from <c>KingdomSystem</c>'s <c>EndTurnEvent</c> handler and nowhere else. Each
-		/// step is guarded on its own, so a step that faults costs its own work and never the turn.
+		/// Compatibility overload. Core uses the callback overload below once the attended pass is
+		/// wired; callers which cannot supply that pass retain the city-book pump without semantics.
 		/// </para>
 		/// </summary>
 		public static void OnEndTurn(KingdomSystem System)
+		{
+			OnEndTurn(System, null);
+		}
+
+		/// <summary>
+		/// One turn of the city, with the canonical attended semantic pass supplied by
+		/// <c>KingdomSystem</c>. The overload above preserves callers while Core wires the pass.
+		/// </summary>
+		public static void OnEndTurn(KingdomSystem System, KingdomSemanticDispatcher.AttendedPass AttendedPass)
 		{
 			if (System == null || !System.Founded || The.Game == null)
 			{
@@ -150,6 +160,20 @@ namespace ThousandAndFirst.Simulation.City
 			{
 				KingdomPorters.Retire(System, now);
 			});
+			if (seated != null && AttendedPass != null)
+			{
+				KingdomSystem.Guard("semantic", delegate
+				{
+					KingdomSemanticDispatcher.OnEndTurn(System, seated, now, AttendedPass);
+				});
+			}
+			if (seated != null)
+			{
+				// Presentation heartbeat, independent of the once-per-day semantic cadence. An
+				// absence begins when the founder actually stopped standing here, not at the last
+				// daily boundary; unread ledger days remain untouched until the report is read.
+				System.LastVisitTick = now;
+			}
 			bool saturated = false;
 			if (seated != null)
 			{

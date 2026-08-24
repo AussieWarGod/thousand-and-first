@@ -48,6 +48,38 @@ namespace ThousandAndFirst
 	/// </summary>
 	public static class KingdomRoads
 	{
+		internal static void RetryConstruction(KingdomSystem System, Zone Z, KingdomConstructionJob Job)
+		{
+			if (System == null || Z == null || Job == null
+				|| Job.Route != KingdomConstructionRoute.RoadPaving)
+			{
+				return;
+			}
+			List<KingdomConstructionCell> cells;
+			if (!KingdomConstructionRules.TryDecodeCells(Job.Payload, out cells)) return;
+			ProjectPaving(Z, Job.TargetKey, cells, Job, out _, out _, out _);
+		}
+
+		internal static void InspectConstruction(KingdomSystem System, Zone Z,
+			KingdomConstructionJob Job)
+		{
+			if (System == null || Z == null || Job == null
+				|| Job.Route != KingdomConstructionRoute.RoadPaving) return;
+			List<KingdomConstructionCell> cells;
+			if (!KingdomConstructionRules.TryDecodeCells(Job.Payload, out cells)) return;
+			KingdomConstructionJob inspected = Job;
+			if (inspected.Phase == KingdomConstructionPhase.Complete)
+			{
+				if (inspected.PhysicalPhase == KingdomPhysicalPhase.RoadTallySettled)
+					SettleRoadTerminal(System, Z, Job.TargetKey, cells, ref inspected);
+				return;
+			}
+			if (inspected.Phase != KingdomConstructionPhase.InspectionRequired
+				&& (inspected.Phase == KingdomConstructionPhase.ProjectionPending
+					|| inspected.PhysicalPhase != KingdomPhysicalPhase.None))
+				ProjectPaving(Z, Job.TargetKey, cells, inspected, out _, out _, out _);
+		}
+
 		/// <summary>Zone property carrying the worn-ground tally, written by
 		/// <c>KingdomRoadRules.Encode</c>.</summary>
 		public const string TallyProperty = "r_TAF_Roads";
@@ -173,25 +205,51 @@ namespace ThousandAndFirst
 		/// <param name="C">The cell. Null answers null.</param>
 		public static GameObject OurFloor(Cell C)
 		{
-			if (C == null)
-			{
-				return null;
-			}
+			GameObject floor;
+			return FindOurFloor(C, out floor) == KingdomPhysicalLookupState.Exact ? floor : null;
+		}
+
+		/// <summary>Counts every loaded road-floor identity; duplicates and malformed shapes
+		/// are ambiguous, never an absent floor that may be replaced.</summary>
+		public static KingdomPhysicalLookupState FindOurFloor(Cell C, out GameObject Floor)
+		{
+			Floor = null;
+			if (C == null) return KingdomPhysicalLookupState.Absent;
+			int count = 0;
+			bool exactShape = false;
 			foreach (GameObject item in C.GetObjects())
 			{
 				if (item != null && item.GetIntProperty(PathStateProperty) > 0)
 				{
-					return item;
+					count++;
+					if (count == 1)
+					{
+						Floor = item;
+						int state = item.GetIntProperty(PathStateProperty);
+						exactShape = GameObject.Validate(item) && item.CurrentCell == C
+							&& state >= (int)KingdomRoadRules.WearState.Trodden
+							&& state <= (int)KingdomRoadRules.WearState.Paved;
+					}
 				}
 			}
-			return null;
+			KingdomPhysicalLookupState result = KingdomConstructionRules.PhysicalLookupState(
+				count, exactShape);
+			if (result == KingdomPhysicalLookupState.Exact)
+			{
+				GameObject global;
+				if (KingdomConstruction.FindExactId(C.ParentZone, Floor.ID, out global)
+						!= KingdomPhysicalLookupState.Exact || !ReferenceEquals(global, Floor))
+					result = KingdomPhysicalLookupState.Ambiguous;
+			}
+			if (result != KingdomPhysicalLookupState.Exact) Floor = null;
+			return result;
 		}
 
 		/// <summary>The rung a cell has already been brought to by this system.</summary>
 		public static KingdomRoadRules.WearState AppliedState(Cell C)
 		{
-			GameObject floor = OurFloor(C);
-			if (floor == null)
+			GameObject floor;
+			if (FindOurFloor(C, out floor) != KingdomPhysicalLookupState.Exact)
 			{
 				return KingdomRoadRules.WearState.Untouched;
 			}
@@ -510,7 +568,12 @@ namespace ThousandAndFirst
 					continue;
 				}
 				Cell ground = Z.GetCell(cell.X, cell.Y);
-				KingdomRoadRules.WearState applied = AppliedState(ground);
+				GameObject exactFloor;
+				KingdomPhysicalLookupState floorState = FindOurFloor(ground, out exactFloor);
+				if (floorState == KingdomPhysicalLookupState.Ambiguous) continue;
+				KingdomRoadRules.WearState applied = floorState == KingdomPhysicalLookupState.Exact
+					? (KingdomRoadRules.WearState)exactFloor.GetIntProperty(PathStateProperty)
+					: KingdomRoadRules.WearState.Untouched;
 				if (applied >= wanted)
 				{
 					if (wanted == KingdomRoadRules.WearState.Path)
@@ -557,6 +620,14 @@ namespace ThousandAndFirst
 		/// this install.</returns>
 		public static bool Lay(Cell C, KingdomRoadRules.WearState State, string PavedBlueprint)
 		{
+			GameObject ignored;
+			return Lay(C, State, PavedBlueprint, null, out ignored);
+		}
+
+		private static bool Lay(Cell C, KingdomRoadRules.WearState State,
+			string PavedBlueprint, KingdomConstructionJob Job, out GameObject Floor)
+		{
+			Floor = null;
 			if (C == null)
 			{
 				return false;
@@ -576,14 +647,49 @@ namespace ThousandAndFirst
 				default:
 					return false;
 			}
+			if (Job != null)
+			{
+				GameObject existing = null;
+				List<GameObject> old = new List<GameObject>();
+				foreach (GameObject item in C.GetObjects())
+				{
+					if (item.GetIntProperty(PathStateProperty) <= 0) continue;
+					if (item.Blueprint == blueprint
+						&& item.GetIntProperty(PathStateProperty) == (int)State
+						&& KingdomConstruction.HasReceipt(item, Job))
+					{
+						if (existing == null) existing = item;
+						else old.Add(item);
+					}
+					else old.Add(item);
+				}
+				if (existing != null)
+				{
+					for (int i = 0; i < old.Count; i++) old[i].Obliterate(null, Silent: true);
+					for (int i = 0; i < old.Count; i++)
+					{
+						if (old[i].CurrentCell == C) return false;
+					}
+					Floor = existing;
+					return true;
+				}
+			}
 			GameObject floor = GameObject.Create(blueprint);
 			if (floor == null)
 			{
 				KingdomLog.Log("roads: no blueprint named " + blueprint + "; the ground was left as it was");
 				return false;
 			}
-			GameObject previous = OurFloor(C);
+			List<GameObject> previous = new List<GameObject>();
+			foreach (GameObject item in C.GetObjects())
+			{
+				if (item.GetIntProperty(PathStateProperty) > 0) previous.Add(item);
+			}
 			floor.SetIntProperty(PathStateProperty, (int)State);
+			if (Job != null)
+			{
+				KingdomConstruction.Bind(floor, Job);
+			}
 			C.AddObject(floor);
 			if (floor.CurrentCell != C)
 			{
@@ -592,7 +698,15 @@ namespace ThousandAndFirst
 				floor.Obliterate();
 				return false;
 			}
-			previous?.Obliterate();
+			for (int i = 0; i < previous.Count; i++)
+			{
+				previous[i].Obliterate(null, Silent: true);
+			}
+			for (int i = 0; i < previous.Count; i++)
+			{
+				if (previous[i].CurrentCell == C) return false;
+			}
+			Floor = floor;
 			return true;
 		}
 
@@ -714,6 +828,11 @@ namespace ThousandAndFirst
 				Failure = KingdomRoadRules.RefuseNotOurGround();
 				return false;
 			}
+			if (KingdomConstruction.HasActive(System, Z, KingdomConstructionRoute.RoadPaving))
+			{
+				Failure = "A paid paving order on this ground is already in hand.";
+				return false;
+			}
 			List<Cell> paths = PathCells(Z, From);
 			if (paths.Count == 0)
 			{
@@ -749,39 +868,514 @@ namespace ThousandAndFirst
 				return false;
 			}
 			string blueprint = KingdomRoadRules.PavedFloorFor(wall);
-			List<KingdomRoadRules.WornCell> tally = ReadTally(Z);
-			int laid = 0;
+			List<KingdomConstructionCell> route = new List<KingdomConstructionCell>();
 			for (int i = 0; i < cells; i++)
 			{
-				if (Lay(paths[i], KingdomRoadRules.WearState.Paved, blueprint))
-				{
-					KingdomRoadRules.Retire(tally, paths[i].X, paths[i].Y);
-					laid++;
-				}
+				route.Add(new KingdomConstructionCell(paths[i].X, paths[i].Y));
 			}
-			if (laid <= 0)
+			if (!KingdomConstructionRules.TryEncodeCells(route, out string payload))
 			{
-				// Nothing went down, so nothing is charged. The stockpiles are counted against
-				// what was actually laid rather than what was asked for, because a price quoted
-				// is not a price paid (STANDARDS 1: measure the state change).
-				Failure = "The ground would not take the paving. Nothing was spent.";
+				Failure = "The paving route could not be recorded safely. Nothing was spent.";
 				return false;
 			}
-			WriteTally(Z, tally);
 			KingdomMaterialTally price = new KingdomMaterialTally();
-			price.Add(material, KingdomRoadRules.PaveCost(laid));
-			if (!stock.Spend(price))
+			price.Add(material, cost);
+			KingdomMaterialDebitCost claim = new KingdomMaterialDebitCost(price);
+			KingdomSurvey survey = KingdomSurvey.Take(Z, System);
+			KingdomWaterDebit water = survey.ReserveExactWater(0);
+			KingdomMaterialDebit materials = KingdomMaterials.ReserveComposite(Z, claim);
+			KingdomConstructionJob job = KingdomConstruction.NewJob(System, Z,
+				KingdomConstructionRoute.RoadPaving, paths[0], null, blueprint, payload, 0, claim);
+			KingdomConstructionStartResult funding = KingdomConstruction.TryFundNew(job,
+				water, materials, out job, out string fundingFailure);
+			if (funding == KingdomConstructionStartResult.Refused)
 			{
-				KingdomLog.Log("roads: paving was laid at " + System.SeatName + " and the stockpiles could not be charged for it");
+				Failure = fundingFailure ?? "The stockpiles could not cover the paving after all.";
+				return false;
+			}
+			KingdomGovernanceScope.Commit("pave ground");
+			if (funding == KingdomConstructionStartResult.Outstanding)
+			{
+				System.Ledger.Note("{{r|The paving receipt remains outstanding and will retry without another charge.}}");
+				return true;
+			}
+			if (!ProjectPaving(Z, blueprint, route, job, out job, out int laid,
+				out string projectionFailure))
+			{
+				System.Ledger.Note("{{r|The paid paving could not all be laid. Its exact remaining cells stay queued.}}");
+				KingdomLog.Log("construction: paving projection waits: " + projectionFailure);
+				return true;
 			}
 			// Paving retires cells from the tally, so the ground the settlement is wearing now
 			// has room to be recorded again, and the reason it stalled is over.
-			Z.SetZoneProperty(FullSaidProperty, "0");
-			MessageQueue.AddPlayerMessage(KingdomRoadRules.PavedLine(laid, material, System.SeatName));
-			KingdomChronicle.Record(System, KingdomRoadRules.PavedRecord(laid, material, System.KingdomDisplayName));
-			System.RecordDeed("the paving of the ways at " + System.SeatName);
+			SettleRoadTerminal(System, Z, blueprint, route, ref job);
 			KingdomLog.Log("roads: paved " + laid + " cells in " + KingdomMaterialRules.MaterialKey(material) + " at " + System.SeatName);
 			return true;
+		}
+
+		private static bool SettleRoadTerminal(KingdomSystem System, Zone Z,
+			string Blueprint, IList<KingdomConstructionCell> Cells,
+			ref KingdomConstructionJob Job)
+		{
+			if (System == null || Job == null || Job.Phase != KingdomConstructionPhase.Complete
+				|| Job.PhysicalPhase == KingdomPhysicalPhase.Settled) return Job != null
+					&& Job.PhysicalPhase == KingdomPhysicalPhase.Settled;
+			if (Job.PhysicalPhase != KingdomPhysicalPhase.RoadTallySettled
+				|| !CurrentRoadOwner(Z, Job)
+				|| !RoadTerminalExact(Z, Blueprint, Cells, Job)
+				|| !KingdomCeremony.EnsureRoadPavedFromReceipt(System, ref Job)) return false;
+			return KingdomConstruction.UpdatePhysical(ref Job, KingdomPhysicalPhase.Settled,
+				Job.PhysicalIndex, Job.PhysicalAmount, Job.PhysicalSpilled,
+				Job.PhysicalItemId, Job.PhysicalDestinationId, Job.PhysicalReceipt);
+		}
+
+		private sealed class RoadReceipt
+		{
+			public string TallyBefore, TallyAfter, FullBefore, FullAfter;
+			public int State;
+			public List<RoadRow> Rows = new List<RoadRow>();
+		}
+
+		private sealed class RoadRow
+		{
+			public int X, Y;
+			public string OldId, OldBlueprint, NewId;
+			public bool Settled;
+		}
+
+		private static bool RoadTerminalExact(Zone Z, string Blueprint,
+			IList<KingdomConstructionCell> Cells, KingdomConstructionJob Job)
+		{
+			if (Z == null || string.IsNullOrEmpty(Blueprint) || Cells == null || Job == null
+				|| !TryDecodeRoadReceipt(Job.PhysicalReceipt, out var receipt)
+				|| receipt.State != 2 || receipt.Rows.Count != Cells.Count
+				|| Job.PhysicalIndex != receipt.Rows.Count
+				|| (Z.GetZoneProperty(TallyProperty, null) ?? "") != receipt.TallyAfter
+				|| (Z.GetZoneProperty(FullSaidProperty, null) ?? "") != receipt.FullAfter) return false;
+			for (int i = 0; i < receipt.Rows.Count; i++)
+			{
+				RoadRow row = receipt.Rows[i];
+				if (!row.Settled || row.X != Cells[i].X || row.Y != Cells[i].Y
+					|| !ExactRoadFloor(Z, row, Blueprint, Job, true)) return false;
+			}
+			return true;
+		}
+
+		private static bool ProjectPaving(Zone Z, string Blueprint,
+			IList<KingdomConstructionCell> Cells, KingdomConstructionJob Job,
+			out KingdomConstructionJob Updated, out int NewlyLaid, out string Failure)
+		{
+			Updated = Job;
+			NewlyLaid = 0;
+			Failure = null;
+			if (Z == null || string.IsNullOrEmpty(Blueprint) || Cells == null || Cells.Count == 0
+				|| !CurrentRoadOwner(Z, Job))
+				return false;
+			if (KingdomConstructionRules.IsTerminal(Updated.Phase))
+				return Updated.Phase == KingdomConstructionPhase.Complete
+					&& Updated.PhysicalPhase == KingdomPhysicalPhase.RoadTallySettled;
+			RoadReceipt receipt;
+			if (Updated.PhysicalPhase == KingdomPhysicalPhase.None)
+			{
+				if (Updated.Phase != KingdomConstructionPhase.ProjectionPending
+					&& !KingdomConstruction.BeginProjection(ref Updated, out Failure)) return false;
+				if (!FreezeRoadReceipt(Z, Cells, out receipt))
+				{
+					Failure = "The exact old road-floor identities or tally could not be frozen.";
+					KingdomConstruction.Quarantine(ref Updated, Failure);
+					return false;
+				}
+				if (!KingdomConstruction.UpdatePhysical(ref Updated,
+					KingdomPhysicalPhase.RoadPlanFrozen, 0, 0, 0, null, null,
+					EncodeRoadReceipt(receipt))) return false;
+			}
+			if (!TryDecodeRoadReceipt(Updated.PhysicalReceipt, out receipt)
+				|| receipt.Rows.Count != Cells.Count || Updated.PhysicalIndex > receipt.Rows.Count)
+			{
+				Failure = "The frozen road receipt is malformed.";
+				KingdomConstruction.Quarantine(ref Updated, Failure);
+				return false;
+			}
+			for (int i = 0; i < receipt.Rows.Count; i++)
+			{
+				RoadRow row = receipt.Rows[i];
+				if (row.X != Cells[i].X || row.Y != Cells[i].Y)
+				{
+					Failure = "Road receipt coordinates no longer match the frozen route.";
+					KingdomConstruction.Quarantine(ref Updated, Failure);
+					return false;
+				}
+				if (row.Settled)
+				{
+					if (!ExactRoadFloor(Z, row, Blueprint, Updated, true))
+					{
+						Failure = "A settled paved floor moved, changed, or was replaced.";
+						KingdomConstruction.Quarantine(ref Updated, Failure);
+						return false;
+					}
+					continue;
+				}
+				Cell cell = Z.GetCell(row.X, row.Y);
+				GameObject old;
+				GameObject floor;
+				KingdomPhysicalLookupState oldState = FindRoadId(Z, row.OldId, out old);
+				KingdomPhysicalLookupState floorState = FindRoadId(Z, row.NewId, out floor);
+				if (oldState == KingdomPhysicalLookupState.Ambiguous
+					|| floorState == KingdomPhysicalLookupState.Ambiguous)
+				{
+					Failure = "A road receipt ID resolves to more than one loaded physical object.";
+					KingdomConstruction.Quarantine(ref Updated, Failure);
+					return false;
+				}
+				if (Updated.PhysicalPhase == KingdomPhysicalPhase.RoadOutputPending
+					&& Updated.PhysicalIndex == i)
+				{
+					if (!ExactRoadOld(old, cell, row) || !ExactRoadFloor(Z, row,
+						Blueprint, Updated, false))
+					{
+						Failure = "Road AddObject was interrupted without exact old/new proof.";
+						KingdomConstruction.Quarantine(ref Updated, Failure);
+						return false;
+					}
+					if (!KingdomConstruction.UpdatePhysical(ref Updated,
+						KingdomPhysicalPhase.RoadOutputSettled, i, 0, 0,
+						row.OldId, row.NewId, EncodeRoadReceipt(receipt))) return false;
+				}
+				else if (Updated.PhysicalPhase == KingdomPhysicalPhase.RoadRemovalPending
+					&& Updated.PhysicalIndex == i)
+				{
+					Failure = "Road predecessor removal was interrupted before callback-success proof.";
+					KingdomConstruction.Quarantine(ref Updated, Failure);
+					return false;
+				}
+				else if (Updated.PhysicalPhase == KingdomPhysicalPhase.RoadPlanFrozen)
+				{
+					if (!ExactRoadOld(old, cell, row)
+						|| floorState != KingdomPhysicalLookupState.Absent)
+					{
+						Failure = "A frozen old road floor changed before paving.";
+						KingdomConstruction.Quarantine(ref Updated, Failure);
+						return false;
+					}
+					if (string.IsNullOrEmpty(row.NewId))
+					{
+						do { row.NewId = System.Guid.NewGuid().ToString("N"); }
+						while (FindRoadId(Z, row.NewId, out _)
+							== KingdomPhysicalLookupState.Exact);
+						if (FindRoadId(Z, row.NewId, out _)
+							!= KingdomPhysicalLookupState.Absent
+							|| !KingdomConstruction.UpdatePhysical(ref Updated,
+								KingdomPhysicalPhase.RoadPlanFrozen, i, 0, 0,
+								row.OldId, row.NewId, EncodeRoadReceipt(receipt))) return false;
+						floorState = FindRoadId(Z, row.NewId, out floor);
+					}
+					if (floorState != KingdomPhysicalLookupState.Absent)
+					{
+						Failure = "The frozen road output ID is absent, duplicated, or already occupied.";
+						KingdomConstruction.Quarantine(ref Updated, Failure);
+						return false;
+					}
+					try { floor = GameObject.Create(Blueprint); }
+					catch (System.Exception ex)
+					{
+						Failure = "Road floor creation threw: " + ex.Message;
+						KingdomConstruction.Quarantine(ref Updated, Failure);
+						return false;
+					}
+					if (!GameObject.Validate(floor))
+					{
+						Failure = "Road floor blueprint created no exact output.";
+						KingdomConstruction.Quarantine(ref Updated, Failure);
+						return false;
+					}
+					if (!CurrentRoadOwner(Z, Updated) || !ExactRoadOld(old, cell, row)
+						|| FindRoadId(Z, row.NewId, out _) != KingdomPhysicalLookupState.Absent)
+					{
+						RemoveRoadObject(floor);
+						Failure = "Road endpoints changed during output creation.";
+						KingdomConstruction.Quarantine(ref Updated, Failure);
+						return false;
+					}
+					floor.ID = row.NewId;
+					floor.SetIntProperty(PathStateProperty,
+						(int)KingdomRoadRules.WearState.Paved);
+					KingdomConstruction.Bind(floor, Updated);
+					if (!KingdomConstruction.UpdatePhysical(ref Updated,
+						KingdomPhysicalPhase.RoadOutputPending, i, 0, 0,
+						row.OldId, row.NewId, EncodeRoadReceipt(receipt)))
+					{
+						RemoveRoadObject(floor);
+						return false;
+					}
+					GameObject accepted;
+					try { accepted = cell.AddObject(floor); }
+					catch (System.Exception ex)
+					{
+						bool cleaned = RemoveRoadObject(floor);
+						Failure = (cleaned ? "Road AddObject threw after output publication: "
+							: "Road AddObject threw and cleanup failed: ") + ex.Message;
+						KingdomConstruction.Quarantine(ref Updated, Failure);
+						return false;
+					}
+					if (!ReferenceEquals(accepted, floor) || !CurrentRoadOwner(Z, Updated)
+						|| !ExactRoadOld(old, cell, row)
+						|| !ExactRoadFloor(Z, row, Blueprint, Updated, false))
+					{
+						Failure = "Road endpoints changed during AddObject.";
+						KingdomConstruction.Quarantine(ref Updated, Failure);
+						return false;
+					}
+					if (!KingdomConstruction.UpdatePhysical(ref Updated,
+						KingdomPhysicalPhase.RoadOutputSettled, i, 0, 0,
+						row.OldId, row.NewId, EncodeRoadReceipt(receipt))) return false;
+				}
+				if (Updated.PhysicalPhase != KingdomPhysicalPhase.RoadOutputSettled
+					|| !KingdomConstruction.UpdatePhysical(ref Updated,
+						KingdomPhysicalPhase.RoadRemovalPending, i, 0, 0,
+						row.OldId, row.NewId, EncodeRoadReceipt(receipt))) return false;
+				bool removed;
+				try { removed = old.Obliterate(null, Silent: true); }
+				catch (System.Exception ex)
+				{
+					Failure = "Road predecessor removal threw: " + ex.Message;
+					KingdomConstruction.Quarantine(ref Updated, Failure);
+					return false;
+				}
+				KingdomPhysicalLookupState oldAfter = FindRoadId(Z, row.OldId, out var oldReplacement);
+				if (!removed || GameObject.Validate(old)
+					|| oldAfter != KingdomPhysicalLookupState.Absent
+					|| GameObject.Validate(oldReplacement) || !CurrentRoadOwner(Z, Updated)
+					|| !ExactRoadFloor(Z, row, Blueprint, Updated, false))
+				{
+					Failure = "Road predecessor removal was vetoed, moved, or replaced.";
+					KingdomConstruction.Quarantine(ref Updated, Failure);
+					return false;
+				}
+				row.Settled = true;
+				NewlyLaid++;
+				if (!KingdomConstruction.UpdatePhysical(ref Updated,
+					KingdomPhysicalPhase.RoadPlanFrozen, i + 1, 0, 0,
+					row.OldId, row.NewId, EncodeRoadReceipt(receipt))) return false;
+			}
+			if (receipt.State == 0)
+			{
+				receipt.State = 1;
+				if (!KingdomConstruction.UpdatePhysical(ref Updated,
+					KingdomPhysicalPhase.RoadTallyPending, receipt.Rows.Count, 0, 0,
+					null, null, EncodeRoadReceipt(receipt))) return false;
+			}
+			if (receipt.State != 1 || Updated.PhysicalPhase != KingdomPhysicalPhase.RoadTallyPending)
+			{
+				Failure = "Road tally receipt carries an impossible state.";
+				KingdomConstruction.Quarantine(ref Updated, Failure);
+				return false;
+			}
+			string tally = Z.GetZoneProperty(TallyProperty, null) ?? "";
+			if (tally == receipt.TallyBefore)
+			{
+				Z.SetZoneProperty(TallyProperty, receipt.TallyAfter);
+				if (!CurrentRoadOwner(Z, Updated)) return false;
+			}
+			else if (tally != receipt.TallyAfter)
+			{
+				Failure = "Road tally changed outside its frozen before/after values.";
+				KingdomConstruction.Quarantine(ref Updated, Failure);
+				return false;
+			}
+			string full = Z.GetZoneProperty(FullSaidProperty, null) ?? "";
+			if (full == receipt.FullBefore)
+			{
+				Z.SetZoneProperty(FullSaidProperty, receipt.FullAfter);
+				if (!CurrentRoadOwner(Z, Updated)) return false;
+			}
+			else if (full != receipt.FullAfter)
+			{
+				Failure = "Road full-tally notice changed outside its frozen before/after values.";
+				KingdomConstruction.Quarantine(ref Updated, Failure);
+				return false;
+			}
+			if ((Z.GetZoneProperty(TallyProperty, null) ?? "") != receipt.TallyAfter
+				|| (Z.GetZoneProperty(FullSaidProperty, null) ?? "") != receipt.FullAfter)
+				return false;
+			receipt.State = 2;
+			if (!KingdomConstruction.UpdatePhysical(ref Updated,
+				KingdomPhysicalPhase.RoadTallySettled, receipt.Rows.Count, 0, 0,
+				null, null, EncodeRoadReceipt(receipt))) return false;
+			return KingdomConstruction.Complete(ref Updated);
+		}
+
+		private static bool FreezeRoadReceipt(Zone Z, IList<KingdomConstructionCell> Cells,
+			out RoadReceipt Receipt)
+		{
+			Receipt = null;
+			string raw = Z.GetZoneProperty(TallyProperty, null) ?? "";
+			if (!KingdomRoadRules.TryDecode(raw, out var tally, out _)) return false;
+			RoadReceipt receipt = new RoadReceipt
+			{
+				TallyBefore = raw,
+				FullBefore = Z.GetZoneProperty(FullSaidProperty, null) ?? "",
+				FullAfter = "0"
+			};
+			HashSet<string> ids = new HashSet<string>(System.StringComparer.Ordinal);
+			for (int i = 0; i < Cells.Count; i++)
+			{
+				Cell cell = Z.GetCell(Cells[i].X, Cells[i].Y);
+				GameObject old = null;
+				foreach (GameObject item in cell?.GetObjects() ?? new List<GameObject>())
+				{
+					if (GameObject.Validate(item) && item.GetIntProperty(PathStateProperty) > 0)
+					{
+						if (old != null) return false;
+						old = item;
+					}
+				}
+				if (!GameObject.Validate(old)
+					|| old.GetIntProperty(PathStateProperty) != (int)KingdomRoadRules.WearState.Path
+					|| !ids.Add(old.ID)) return false;
+				if (KingdomConstruction.FindExactId(Z, old.ID, out var exactOld)
+					!= KingdomPhysicalLookupState.Exact || !ReferenceEquals(exactOld, old)) return false;
+				string outputId;
+				do { outputId = System.Guid.NewGuid().ToString("N"); }
+				while (ids.Contains(outputId));
+				if (KingdomConstruction.FindExactId(Z, outputId, out _)
+					!= KingdomPhysicalLookupState.Absent || !ids.Add(outputId)) return false;
+				receipt.Rows.Add(new RoadRow { X = Cells[i].X, Y = Cells[i].Y,
+					OldId = old.ID, OldBlueprint = old.Blueprint, NewId = outputId });
+				KingdomRoadRules.Retire(tally, Cells[i].X, Cells[i].Y);
+			}
+			receipt.TallyAfter = KingdomRoadRules.Encode(tally) ?? "";
+			Receipt = receipt;
+			return true;
+		}
+
+		private static string EncodeRoadReceipt(RoadReceipt Receipt)
+		{
+			if (Receipt == null || Receipt.Rows == null
+				|| Receipt.Rows.Count > KingdomRoadRules.MaxRouteCells) return null;
+			System.Text.StringBuilder text = new System.Text.StringBuilder("r1|")
+				.Append(RoadText(Receipt.TallyBefore)).Append('|').Append(RoadText(Receipt.TallyAfter))
+				.Append('|').Append(RoadText(Receipt.FullBefore)).Append('|')
+				.Append(RoadText(Receipt.FullAfter)).Append('|').Append(Receipt.State.ToString(
+					global::System.Globalization.CultureInfo.InvariantCulture));
+			for (int i = 0; i < Receipt.Rows.Count; i++)
+			{
+				RoadRow row = Receipt.Rows[i];
+				if (row == null || string.IsNullOrEmpty(row.OldId)
+					|| string.IsNullOrEmpty(row.OldBlueprint)) return null;
+				text.Append(';').Append(row.X.ToString(
+					global::System.Globalization.CultureInfo.InvariantCulture)).Append(',')
+					.Append(row.Y.ToString(global::System.Globalization.CultureInfo.InvariantCulture)).Append(',')
+					.Append(RoadText(row.OldId)).Append(',').Append(RoadText(row.OldBlueprint))
+					.Append(',').Append(RoadText(row.NewId ?? "")).Append(',')
+					.Append(row.Settled ? '1' : '0');
+			}
+			return text.Length <= KingdomConstructionRules.MaxPhysicalReceiptChars
+				? text.ToString() : null;
+		}
+
+		private static bool TryDecodeRoadReceipt(string Text, out RoadReceipt Receipt)
+		{
+			Receipt = null;
+			if (string.IsNullOrEmpty(Text)
+				|| Text.Length > KingdomConstructionRules.MaxPhysicalReceiptChars) return false;
+			string[] terms = Text.Split(';');
+			string[] head = terms[0].Split('|');
+			if (head.Length != 6 || head[0] != "r1" || terms.Length - 1 > KingdomRoadRules.MaxRouteCells
+				|| !TryRoadInt(head[5], 2, out int state)) return false;
+			try
+			{
+				RoadReceipt parsed = new RoadReceipt { TallyBefore = UnroadText(head[1]),
+					TallyAfter = UnroadText(head[2]), FullBefore = UnroadText(head[3]),
+					FullAfter = UnroadText(head[4]), State = state };
+				HashSet<string> ids = new HashSet<string>(System.StringComparer.Ordinal);
+				for (int i = 1; i < terms.Length; i++)
+				{
+					string[] f = terms[i].Split(',');
+					if (f.Length != 6 || (f[5] != "0" && f[5] != "1")
+						|| !TryRoadInt(f[0], 1023, out int x)
+						|| !TryRoadInt(f[1], 1023, out int y)) return false;
+					string id = UnroadText(f[2]), blueprint = UnroadText(f[3]);
+					string output = UnroadText(f[4]);
+					if (string.IsNullOrEmpty(id) || id.Length > 128
+						|| string.IsNullOrEmpty(blueprint) || blueprint.Length > 256
+						|| output.Length > 128 || !ids.Add(id)
+						|| (output.Length > 0 && !ids.Add(output))) return false;
+					parsed.Rows.Add(new RoadRow { X = x, Y = y, OldId = id,
+						OldBlueprint = blueprint, NewId = output.Length == 0 ? null : output,
+						Settled = f[5] == "1" });
+				}
+				if (EncodeRoadReceipt(parsed) != Text) return false;
+				Receipt = parsed;
+				return true;
+			}
+			catch { return false; }
+		}
+
+		private static bool TryRoadInt(string Text, int Maximum, out int Value)
+		{
+			return int.TryParse(Text, global::System.Globalization.NumberStyles.None,
+				global::System.Globalization.CultureInfo.InvariantCulture, out Value)
+				&& Value >= 0 && Value <= Maximum
+				&& Value.ToString(global::System.Globalization.CultureInfo.InvariantCulture) == Text;
+		}
+
+		private static string RoadText(string Value)
+		{
+			return System.Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(Value ?? ""));
+		}
+
+		private static string UnroadText(string Value)
+		{
+			return System.Text.Encoding.UTF8.GetString(System.Convert.FromBase64String(Value));
+		}
+
+		private static KingdomPhysicalLookupState FindRoadId(Zone Z, string Id,
+			out GameObject Exact)
+		{
+			return KingdomConstruction.FindExactId(Z, Id, out Exact);
+		}
+
+		private static bool ExactRoadOld(GameObject Old, Cell Cell, RoadRow Row)
+		{
+			GameObject global;
+			return GameObject.Validate(Old) && Cell != null && Old.ID == Row.OldId
+				&& Old.CurrentCell == Cell
+				&& Old.Blueprint == Row.OldBlueprint
+				&& Old.GetIntProperty(PathStateProperty) == (int)KingdomRoadRules.WearState.Path
+				&& FindRoadId(Cell.ParentZone, Row.OldId, out global)
+					== KingdomPhysicalLookupState.Exact
+				&& ReferenceEquals(global, Old);
+		}
+
+		private static bool ExactRoadFloor(Zone Z, RoadRow Row, string Blueprint,
+			KingdomConstructionJob Job, bool RequireOldAbsent)
+		{
+			GameObject floor;
+			if (FindRoadId(Z, Row.NewId, out floor) != KingdomPhysicalLookupState.Exact
+				|| !GameObject.Validate(floor) || floor.CurrentCell != Z.GetCell(Row.X, Row.Y)
+				|| floor.Blueprint != Blueprint
+				|| floor.GetIntProperty(PathStateProperty) != (int)KingdomRoadRules.WearState.Paved
+				|| !KingdomConstruction.HasReceipt(floor, Job)) return false;
+			if (RequireOldAbsent && FindRoadId(Z, Row.OldId, out _)
+				!= KingdomPhysicalLookupState.Absent) return false;
+			foreach (GameObject item in floor.CurrentCell.GetObjects())
+				if (item != floor && item.GetIntProperty(PathStateProperty) > 0) return false;
+			return true;
+		}
+
+		private static bool RemoveRoadObject(GameObject Object)
+		{
+			if (!GameObject.Validate(Object)) return true;
+			try { return Object.Obliterate(null, Silent: true) && !GameObject.Validate(Object); }
+			catch { return false; }
+		}
+
+		private static bool CurrentRoadOwner(Zone Z, KingdomConstructionJob Job)
+		{
+			KingdomSystem system = The.Game == null
+				? null : The.Game.RequireSystem<KingdomSystem>();
+			return KingdomConstruction.Owns(system, Z, Job)
+				&& KingdomConstruction.IsCurrent(Job);
 		}
 
 		/// <summary>

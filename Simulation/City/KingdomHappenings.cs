@@ -705,7 +705,7 @@ namespace ThousandAndFirst.Simulation.City
 			SemanticEventKey key;
 			KernelFaultCode fault;
 			ulong value;
-			if (SemanticEventKey.TryCreate(HappeningRulesVersion, KingdomChronicle.SettlementId(System.KingdomFactionName), stream, kind, ordinal, out key, out fault)
+			if (SemanticEventKey.TryCreate(HappeningRulesVersion, KingdomChronicle.SettlementId(System), stream, kind, ordinal, out key, out fault)
 				&& CounterRandom.TryDrawBelow(HappeningSeed, key, index, 100uL, out value, out fault))
 			{
 				return (int)value < chancePercent;

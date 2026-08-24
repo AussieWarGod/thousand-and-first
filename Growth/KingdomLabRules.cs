@@ -1,4 +1,7 @@
+using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.Text;
 
 namespace ThousandAndFirst
 {
@@ -10,6 +13,24 @@ namespace ThousandAndFirst
 		CollectOutput = 3,
 		ReturnInput = 4,
 		Missing = 5
+	}
+
+	/// <summary>Durable output-transfer receipt. Intent is never replayed after a reload.</summary>
+	internal enum KingdomVatOutputPhase : byte
+	{
+		None = 0,
+		AddIntent = 1,
+		Added = 2,
+		Quarantined = 3
+	}
+
+	/// <summary>Durable raw-destruction receipt, mirrored onto the surviving output.</summary>
+	internal enum KingdomVatRawPhase : byte
+	{
+		Present = 0,
+		DestroyIntent = 1,
+		Destroyed = 2,
+		Quarantined = 3
 	}
 
 	internal readonly struct KingdomVatAccrual
@@ -25,6 +46,222 @@ namespace ThousandAndFirst
 			this.RemainingTicks = RemainingTicks;
 			this.WorkedTicks = WorkedTicks;
 			this.Complete = Complete;
+		}
+	}
+
+	/// <summary>One source in an exact kept-parts debit. <see cref="Remaining"/> is written first;
+	/// a zero remainder is instead finalized only after every such source passed preflight.</summary>
+	internal readonly struct KingdomKeptSpendStep
+	{
+		public readonly int Source;
+		public readonly int Original;
+		public readonly int Taken;
+		public readonly int Remaining;
+
+		public bool NeedsFinalization => Remaining == 0;
+
+		public KingdomKeptSpendStep(int Source, int Original, int Taken)
+		{
+			this.Source = Source;
+			this.Original = Original;
+			this.Taken = Taken;
+			Remaining = Original - Taken;
+		}
+	}
+
+	/// <summary>Pure, deterministic receipt for an exact kept-parts debit.</summary>
+	internal sealed class KingdomKeptSpendPlan
+	{
+		public readonly int Owed;
+		public readonly List<KingdomKeptSpendStep> Steps;
+
+		public int Finalizers
+		{
+			get
+			{
+				int total = 0;
+				for (int i = 0; i < Steps.Count; i++)
+				{
+					if (Steps[i].NeedsFinalization)
+					{
+						total++;
+					}
+				}
+				return total;
+			}
+		}
+
+		public KingdomKeptSpendPlan(int Owed, List<KingdomKeptSpendStep> Steps)
+		{
+			this.Owed = Owed;
+			this.Steps = Steps;
+		}
+	}
+
+	/// <summary>Observable phase of a prepared kept-parts debit.</summary>
+	internal enum KingdomKeptSpendPhase : byte
+	{
+		RefusedClean = 0,
+		ApplyCounts = 1,
+		Finalize = 2,
+		SpentExact = 3,
+		Partial = 4
+	}
+
+	/// <summary>Durable procedure-job phases. Values are persisted; append only.</summary>
+	internal enum KingdomLabJobPhase : byte
+	{
+		Funding = 0,
+		FundingRecovery = 1,
+		Working = 2,
+		Ready = 3,
+		Applying = 4,
+		ApplicationRecovery = 5,
+		Complete = 6,
+		Cancelled = 7
+	}
+
+	/// <summary>Patient-owned removal phases. Values are persisted; append only.</summary>
+	internal enum KingdomLabRemovalPhase : byte
+	{
+		Funding = 0,
+		FundingRecovery = 1,
+		Paid = 2,
+		Removing = 3,
+		RemovalRecovery = 4,
+		Removed = 5,
+		Complete = 6,
+		Quarantined = 7,
+		Cancelled = 8
+	}
+
+	/// <summary>Observation of the one effect identity a removal receipt owns.</summary>
+	internal enum KingdomLabOwnedTargetState : byte
+	{
+		Present = 0,
+		Absent = 1,
+		Uncertain = 2
+	}
+
+	internal enum KingdomLabStandingPhase : byte
+	{
+		Pending = 0,
+		Bound = 1,
+		Intent = 2,
+		Applied = 3,
+		Quarantined = 4
+	}
+
+	internal enum KingdomLabMessagePhase : byte
+	{
+		Pending = 0,
+		Intent = 1,
+		Delivered = 2,
+		Skipped = 3,
+		Lost = 4
+	}
+
+	/// <summary>Bounded canonical cross-receipt state for one application job.</summary>
+	internal enum KingdomLabRegistryStatus : byte
+	{
+		Active = 0,
+		Complete = 1,
+		Cancelled = 2,
+		Abandoned = 3,
+		Quarantined = 4
+	}
+
+	/// <summary>
+	/// Engine-free row written to game state before a hall publishes its physical job part. The row
+	/// is deliberately small: the hall owns detailed progress, while this proves which hall, patient,
+	/// realm incarnation and immutable effect contract may ever act on the job.
+	/// </summary>
+	internal sealed class KingdomLabRegistryEntry
+	{
+		public string JobId = "";
+		public string BuildingId = "";
+		public string PatientId = "";
+		public string GameId = "";
+		public string RealmId = "";
+		public long RealmFoundedTick;
+		public int ContractVersion;
+		public string ProcedureKey = "";
+		public string Grants = "";
+		public int Source = -1;
+		public int Attach = -1;
+		public string Manager = "";
+		public string Detail = "";
+		public string Fingerprint = "";
+		public KingdomLabRegistryStatus Status;
+		public long UpdatedTick;
+
+		public KingdomLabRegistryEntry Copy()
+		{
+			return new KingdomLabRegistryEntry
+			{
+				JobId = JobId ?? "",
+				BuildingId = BuildingId ?? "",
+				PatientId = PatientId ?? "",
+				GameId = GameId ?? "",
+				RealmId = RealmId ?? "",
+				RealmFoundedTick = RealmFoundedTick,
+				ContractVersion = ContractVersion,
+				ProcedureKey = ProcedureKey ?? "",
+				Grants = Grants ?? "",
+				Source = Source,
+				Attach = Attach,
+				Manager = Manager ?? "",
+				Detail = Detail ?? "",
+				Fingerprint = Fingerprint ?? "",
+				Status = Status,
+				UpdatedTick = UpdatedTick
+			};
+		}
+	}
+
+	/// <summary>Pure decision for an output identity frozen on a vat input.</summary>
+	internal enum KingdomVatOutputDecision : byte
+	{
+		CreateAndFreeze = 0,
+		UseExact = 1,
+		QuarantineMissing = 2,
+		QuarantineMismatch = 3
+	}
+
+	internal readonly struct KingdomLabJobAccrual
+	{
+		public readonly long NextTick;
+		public readonly int RemainingTicks;
+		public readonly int WorkedTicks;
+		public readonly KingdomLabJobPhase Phase;
+
+		public KingdomLabJobAccrual(long NextTick, int RemainingTicks, int WorkedTicks,
+			KingdomLabJobPhase Phase)
+		{
+			this.NextTick = NextTick;
+			this.RemainingTicks = RemainingTicks;
+			this.WorkedTicks = WorkedTicks;
+			this.Phase = Phase;
+		}
+	}
+
+	/// <summary>Persistable aggregate of every physical water attempt on one lab job.</summary>
+	internal readonly struct KingdomLabWaterClaim
+	{
+		public readonly int Paid;
+		public readonly int Lost;
+		public readonly int Outstanding;
+		public readonly bool Quarantined;
+		public readonly bool Settled;
+
+		public KingdomLabWaterClaim(int Paid, int Lost, int Outstanding,
+			bool Quarantined, bool Settled)
+		{
+			this.Paid = Paid;
+			this.Lost = Lost;
+			this.Outstanding = Outstanding;
+			this.Quarantined = Quarantined;
+			this.Settled = Settled;
 		}
 	}
 
@@ -62,21 +299,700 @@ namespace ThousandAndFirst
 	/// </summary>
 	public static class KingdomLabRules
 	{
+		internal const int EffectContractVersion = 1;
+		internal const int MaxRegistryRows = 64;
+		internal const int MaxEffectRows = 64;
+		internal const int MaxStandingRows = 64;
+		internal const int MaxRegistryFieldChars = 512;
+		internal const int ReplayProofBytes = 512;
+
+		/// <summary>Stable effect identity. Registry display data is never included.</summary>
+		internal static string EffectFingerprint(int Version, string Key, string Grants,
+			int Source, int Attach, string Manager, string Detail = "")
+		{
+			ulong hash = 14695981039346656037UL;
+			Fold(ref hash, Version.ToString(CultureInfo.InvariantCulture));
+			Fold(ref hash, (Key ?? "").Trim().ToLowerInvariant());
+			Fold(ref hash, Grants ?? "");
+			Fold(ref hash, Source.ToString(CultureInfo.InvariantCulture));
+			Fold(ref hash, Attach.ToString(CultureInfo.InvariantCulture));
+			Fold(ref hash, Manager ?? "");
+			Fold(ref hash, Detail ?? "");
+			return hash.ToString("x16", CultureInfo.InvariantCulture);
+		}
+
+		internal static bool ValidEffectContract(int Version, string Key, string Grants,
+			int Source, int Attach, string Manager, string Fingerprint, string Detail = "")
+		{
+			return Version == EffectContractVersion && Bounded(Key, 128) && Bounded(Grants, 256)
+				&& Bounded(Manager, 256) && Bounded(Fingerprint, 32)
+				&& Detail != null && Detail.Length <= MaxRegistryFieldChars
+				&& Enum.IsDefined(typeof(LabSource), (LabSource)Source)
+				&& Enum.IsDefined(typeof(LabAttach), (LabAttach)Attach)
+				&& string.Equals(Fingerprint, EffectFingerprint(Version, Key, Grants, Source,
+					Attach, Manager, Detail), StringComparison.Ordinal);
+		}
+
+		internal static string ExecutionStampFingerprint(string Stamp)
+		{
+			ulong hash = 14695981039346656037UL;
+			Fold(ref hash, Stamp ?? "");
+			return hash.ToString("x16", CultureInfo.InvariantCulture);
+		}
+
+		internal static KingdomVatOutputDecision VatOutputIdentity(bool FrozenId,
+			bool Resolved, bool FingerprintMatches)
+		{
+			if (!FrozenId)
+			{
+				return KingdomVatOutputDecision.CreateAndFreeze;
+			}
+			if (!Resolved)
+			{
+				return KingdomVatOutputDecision.QuarantineMissing;
+			}
+			return FingerprintMatches ? KingdomVatOutputDecision.UseExact
+				: KingdomVatOutputDecision.QuarantineMismatch;
+		}
+
+		internal static string VatOutputFingerprint(string JobId, string Blueprint, int Yield,
+			string Stamp, string Source)
+		{
+			ulong hash = 14695981039346656037UL;
+			Fold(ref hash, JobId ?? "");
+			Fold(ref hash, Blueprint ?? "");
+			Fold(ref hash, Yield.ToString(CultureInfo.InvariantCulture));
+			Fold(ref hash, Stamp ?? "");
+			Fold(ref hash, Source ?? "");
+			return hash.ToString("x16", CultureInfo.InvariantCulture);
+		}
+
+		internal static string VatRawFingerprint(string JobId, string RawId, string Blueprint,
+			int Count, string Stamp, string Source)
+		{
+			ulong hash = 14695981039346656037UL;
+			Fold(ref hash, JobId ?? "");
+			Fold(ref hash, RawId ?? "");
+			Fold(ref hash, Blueprint ?? "");
+			Fold(ref hash, Count.ToString(CultureInfo.InvariantCulture));
+			Fold(ref hash, Stamp ?? "");
+			Fold(ref hash, Source ?? "");
+			return hash.ToString("x16", CultureInfo.InvariantCulture);
+		}
+
+		/// <summary>An interrupted external intent is evidence of uncertainty, never permission
+		/// to invoke that callback a second time.</summary>
+		internal static KingdomVatOutputPhase ResumeVatOutput(KingdomVatOutputPhase Phase,
+			bool ExactOutputInVat)
+		{
+			if (Phase != KingdomVatOutputPhase.AddIntent) return Phase;
+			return ExactOutputInVat ? KingdomVatOutputPhase.Added
+				: KingdomVatOutputPhase.Quarantined;
+		}
+
+		internal static KingdomVatRawPhase ResumeVatRaw(KingdomVatRawPhase Phase,
+			bool ExactRawPresent, bool ExactOutputInVat)
+		{
+			if (Phase != KingdomVatRawPhase.DestroyIntent) return Phase;
+			return !ExactRawPresent && ExactOutputInVat ? KingdomVatRawPhase.Destroyed
+				: KingdomVatRawPhase.Quarantined;
+		}
+
+		internal static int StandingAfter(int Before, int Delta)
+		{
+			long value = (long)Before + Delta;
+			return value > int.MaxValue ? int.MaxValue
+				: value < int.MinValue ? int.MinValue : (int)value;
+		}
+
+		internal static KingdomLabStandingPhase ObserveStanding(
+			KingdomLabStandingPhase Phase, int Current, int Before, int After)
+		{
+			if (Phase == KingdomLabStandingPhase.Bound)
+				return Current == Before ? Phase : KingdomLabStandingPhase.Quarantined;
+			if (Phase == KingdomLabStandingPhase.Intent)
+				return Current == After ? KingdomLabStandingPhase.Applied
+					: KingdomLabStandingPhase.Quarantined;
+			return Phase;
+		}
+
+		internal static KingdomLabMessagePhase ResumeMessage(KingdomLabMessagePhase Phase)
+		{
+			return Phase == KingdomLabMessagePhase.Intent
+				? KingdomLabMessagePhase.Lost : Phase;
+		}
+
+		internal static bool MessageSettled(KingdomLabMessagePhase Phase)
+		{
+			return Phase == KingdomLabMessagePhase.Delivered
+				|| Phase == KingdomLabMessagePhase.Skipped
+				|| Phase == KingdomLabMessagePhase.Lost;
+		}
+
+		internal static bool RegistryAuthority(KingdomLabRegistryEntry Entry, string JobId,
+			string BuildingId, string PatientId, string GameId, string RealmId,
+			long RealmFoundedTick, string Fingerprint, bool RequireActive)
+		{
+			return ValidRegistryEntry(Entry)
+				&& string.Equals(Entry.JobId, JobId, StringComparison.Ordinal)
+				&& string.Equals(Entry.BuildingId, BuildingId, StringComparison.Ordinal)
+				&& string.Equals(Entry.PatientId, PatientId, StringComparison.Ordinal)
+				&& string.Equals(Entry.GameId, GameId, StringComparison.Ordinal)
+				&& string.Equals(Entry.RealmId, RealmId, StringComparison.Ordinal)
+				&& Entry.RealmFoundedTick == RealmFoundedTick
+				&& string.Equals(Entry.Fingerprint, Fingerprint, StringComparison.Ordinal)
+				&& (!RequireActive || Entry.Status == KingdomLabRegistryStatus.Active);
+		}
+
+		internal static bool RegistryAuthority(KingdomLabRegistryEntry Entry,
+			KingdomLabRegistryEntry Expected, bool RequireActive)
+		{
+			return Expected != null && RegistryAuthority(Entry, Expected.JobId,
+				Expected.BuildingId, Expected.PatientId, Expected.GameId, Expected.RealmId,
+				Expected.RealmFoundedTick, Expected.Fingerprint, RequireActive)
+				&& Entry.ContractVersion == Expected.ContractVersion
+				&& string.Equals(Entry.ProcedureKey, Expected.ProcedureKey, StringComparison.OrdinalIgnoreCase)
+				&& string.Equals(Entry.Grants, Expected.Grants, StringComparison.Ordinal)
+				&& Entry.Source == Expected.Source && Entry.Attach == Expected.Attach
+				&& string.Equals(Entry.Manager, Expected.Manager, StringComparison.Ordinal)
+				&& string.Equals(Entry.Detail, Expected.Detail, StringComparison.Ordinal);
+		}
+
+		internal static List<KingdomLabRegistryEntry> ParseRegistry(string Text,
+			out bool Quarantined)
+		{
+			List<KingdomLabRegistryEntry> rows = new List<KingdomLabRegistryEntry>();
+			Quarantined = false;
+			if (string.IsNullOrEmpty(Text))
+			{
+				return rows;
+			}
+			string[] lines = Text.Split('\n');
+			if (lines.Length == 0 || lines[0] != "v1")
+			{
+				Quarantined = true;
+				return rows;
+			}
+			for (int i = 1; i < lines.Length; i++)
+			{
+				if (string.IsNullOrEmpty(lines[i])) continue;
+				if (rows.Count >= MaxRegistryRows)
+				{
+					Quarantined = true;
+					break;
+				}
+				string[] fields = lines[i].Split('|');
+				long founded;
+				long updated;
+				int status;
+				string job;
+				string building;
+				string patient;
+				string game;
+				string realm;
+				string key;
+				string grants;
+				string manager;
+				string detail;
+				string fingerprint;
+				int version;
+				int source;
+				int attach;
+				if (fields.Length != 16 || !Decode(fields[0], out job)
+					|| !Decode(fields[1], out building) || !Decode(fields[2], out patient)
+					|| !Decode(fields[3], out game) || !Decode(fields[4], out realm)
+					|| !long.TryParse(fields[5], NumberStyles.Integer, CultureInfo.InvariantCulture,
+						out founded)
+					|| !int.TryParse(fields[6], NumberStyles.None, CultureInfo.InvariantCulture,
+						out version) || !Decode(fields[7], out key) || !Decode(fields[8], out grants)
+					|| !int.TryParse(fields[9], NumberStyles.Integer, CultureInfo.InvariantCulture,
+						out source) || !int.TryParse(fields[10], NumberStyles.Integer,
+						CultureInfo.InvariantCulture, out attach) || !Decode(fields[11], out manager)
+					|| !Decode(fields[12], out detail) || !Decode(fields[13], out fingerprint)
+					|| !int.TryParse(fields[14], NumberStyles.None, CultureInfo.InvariantCulture,
+					out status) || !Enum.IsDefined(typeof(KingdomLabRegistryStatus),
+						(KingdomLabRegistryStatus)status)
+					|| !long.TryParse(fields[15], NumberStyles.Integer, CultureInfo.InvariantCulture,
+						out updated))
+				{
+					Quarantined = true;
+					continue;
+				}
+				KingdomLabRegistryEntry row = new KingdomLabRegistryEntry
+				{
+					JobId = job,
+					BuildingId = building,
+					PatientId = patient,
+					GameId = game,
+					RealmId = realm,
+					RealmFoundedTick = founded,
+					ContractVersion = version,
+					ProcedureKey = key,
+					Grants = grants,
+					Source = source,
+					Attach = attach,
+					Manager = manager,
+					Detail = detail,
+					Fingerprint = fingerprint,
+					Status = (KingdomLabRegistryStatus)status,
+					UpdatedTick = updated
+				};
+				if (!ValidRegistryEntry(row) || IndexOfRegistry(rows, row.JobId) >= 0)
+				{
+					Quarantined = true;
+					continue;
+				}
+				rows.Add(row);
+			}
+			return rows;
+		}
+
+		internal static string FormatRegistry(IList<KingdomLabRegistryEntry> Rows)
+		{
+			StringBuilder text = new StringBuilder("v1");
+			int count = Math.Min(Rows?.Count ?? 0, MaxRegistryRows);
+			for (int i = 0; i < count; i++)
+			{
+				KingdomLabRegistryEntry row = Rows[i];
+				if (!ValidRegistryEntry(row)) continue;
+				text.Append('\n').Append(Encode(row.JobId)).Append('|')
+					.Append(Encode(row.BuildingId)).Append('|')
+					.Append(Encode(row.PatientId)).Append('|')
+					.Append(Encode(row.GameId)).Append('|')
+					.Append(Encode(row.RealmId)).Append('|')
+					.Append(row.RealmFoundedTick.ToString(CultureInfo.InvariantCulture)).Append('|')
+					.Append(row.ContractVersion.ToString(CultureInfo.InvariantCulture)).Append('|')
+					.Append(Encode(row.ProcedureKey)).Append('|')
+					.Append(Encode(row.Grants)).Append('|')
+					.Append(row.Source.ToString(CultureInfo.InvariantCulture)).Append('|')
+					.Append(row.Attach.ToString(CultureInfo.InvariantCulture)).Append('|')
+					.Append(Encode(row.Manager)).Append('|')
+					.Append(Encode(row.Detail)).Append('|')
+					.Append(Encode(row.Fingerprint)).Append('|')
+					.Append(((int)row.Status).ToString(CultureInfo.InvariantCulture)).Append('|')
+					.Append(row.UpdatedTick.ToString(CultureInfo.InvariantCulture));
+			}
+			return text.ToString();
+		}
+
+		internal static bool UpsertRegistry(List<KingdomLabRegistryEntry> Rows,
+			KingdomLabRegistryEntry Entry)
+		{
+			if (Rows == null || !ValidRegistryEntry(Entry)) return false;
+			int at = IndexOfRegistry(Rows, Entry.JobId);
+			if (at >= 0)
+			{
+				KingdomLabRegistryEntry existing = Rows[at];
+				if (!RegistryAuthority(existing, Entry, RequireActive: false))
+				{
+					return false;
+				}
+				KingdomLabRegistryEntry replacement = Entry.Copy();
+				replacement.UpdatedTick = Math.Max(existing.UpdatedTick, replacement.UpdatedTick);
+				Rows[at] = replacement;
+				return true;
+			}
+			if (Rows.Count >= MaxRegistryRows)
+			{
+				// A terminal label alone never proves its physical receipt and every outbox
+				// were cleaned. Callers explicitly remove only after recording replay proof.
+				return false;
+			}
+			Rows.Add(Entry.Copy());
+			return true;
+		}
+
+		internal static bool RemoveRegistry(List<KingdomLabRegistryEntry> Rows,
+			string JobId, KingdomLabRegistryStatus ExpectedStatus)
+		{
+			int at = IndexOfRegistry(Rows, JobId);
+			if (at < 0 || Rows[at] == null || Rows[at].Status != ExpectedStatus
+				|| ExpectedStatus == KingdomLabRegistryStatus.Active) return false;
+			Rows.RemoveAt(at);
+			return IndexOfRegistry(Rows, JobId) < 0;
+		}
+
+		internal static bool ReplayContains(string Text, string StableId, out bool Malformed)
+		{
+			byte[] bits;
+			long count;
+			Malformed = !TryParseReplay(Text, out bits, out count);
+			if (Malformed || string.IsNullOrEmpty(StableId)) return true;
+			for (int salt = 0; salt < 4; salt++)
+			{
+				int bit = ReplayBit(StableId, salt);
+				if ((bits[bit >> 3] & (1 << (bit & 7))) == 0) return false;
+			}
+			return true;
+		}
+
+		internal static bool AddReplayProof(string Text, string StableId,
+			out string Written)
+		{
+			Written = null;
+			byte[] bits;
+			long count;
+			if (!TryParseReplay(Text, out bits, out count) || string.IsNullOrEmpty(StableId)
+				|| StableId.Length > 256) return false;
+			bool present = true;
+			for (int salt = 0; salt < 4; salt++)
+			{
+				int bit = ReplayBit(StableId, salt);
+				byte mask = (byte)(1 << (bit & 7));
+				if ((bits[bit >> 3] & mask) == 0) present = false;
+				bits[bit >> 3] |= mask;
+			}
+			if (!present && count < long.MaxValue) count++;
+			Written = "v1|" + count.ToString(CultureInfo.InvariantCulture) + "|"
+				+ Convert.ToBase64String(bits);
+			return true;
+		}
+
+		private static bool TryParseReplay(string Text, out byte[] Bits, out long Count)
+		{
+			Bits = new byte[ReplayProofBytes];
+			Count = 0L;
+			if (string.IsNullOrEmpty(Text)) return true;
+			string[] fields = Text.Split('|');
+			if (fields.Length != 3 || fields[0] != "v1"
+				|| !long.TryParse(fields[1], NumberStyles.None, CultureInfo.InvariantCulture,
+					out Count) || Count < 0L) return false;
+			try
+			{
+				byte[] parsed = Convert.FromBase64String(fields[2]);
+				if (parsed.Length != ReplayProofBytes) return false;
+				Bits = parsed;
+				return true;
+			}
+			catch { return false; }
+		}
+
+		private static int ReplayBit(string StableId, int Salt)
+		{
+			ulong hash = 14695981039346656037UL;
+			Fold(ref hash, Salt.ToString(CultureInfo.InvariantCulture));
+			Fold(ref hash, StableId ?? "");
+			return (int)(hash % (ulong)(ReplayProofBytes * 8));
+		}
+
+		internal static int IndexOfRegistry(IList<KingdomLabRegistryEntry> Rows, string JobId)
+		{
+			for (int i = 0; Rows != null && i < Rows.Count; i++)
+			{
+				if (string.Equals(Rows[i]?.JobId, JobId, StringComparison.Ordinal)) return i;
+			}
+			return -1;
+		}
+
+		private static bool ValidRegistryEntry(KingdomLabRegistryEntry Entry)
+		{
+			return Entry != null && Bounded(Entry.JobId, 128) && Bounded(Entry.BuildingId, 128)
+				&& Bounded(Entry.PatientId, 128) && Bounded(Entry.GameId, 256)
+				&& Bounded(Entry.RealmId, 256) && Bounded(Entry.Fingerprint, 32)
+				&& ValidEffectContract(Entry.ContractVersion, Entry.ProcedureKey, Entry.Grants,
+					Entry.Source, Entry.Attach, Entry.Manager, Entry.Fingerprint, Entry.Detail)
+				&& Entry.RealmFoundedTick >= 0L && Entry.UpdatedTick >= 0L
+				&& Enum.IsDefined(typeof(KingdomLabRegistryStatus), Entry.Status);
+		}
+
+		private static bool Bounded(string Text, int Maximum)
+		{
+			return !string.IsNullOrEmpty(Text) && Text.Length <= Maximum;
+		}
+
+		private static void Fold(ref ulong Hash, string Text)
+		{
+			string value = Text ?? "";
+			for (int i = 0; i < value.Length; i++)
+			{
+				Hash ^= value[i];
+				Hash *= 1099511628211UL;
+			}
+			Hash ^= 0xffU;
+			Hash *= 1099511628211UL;
+		}
+
+		private static string Encode(string Value)
+		{
+			return Convert.ToBase64String(Encoding.UTF8.GetBytes(Value ?? ""));
+		}
+
+		private static bool Decode(string Value, out string Decoded)
+		{
+			Decoded = null;
+			try
+			{
+				byte[] bytes = Convert.FromBase64String(Value ?? "");
+				if (bytes.Length > MaxRegistryFieldChars * 4) return false;
+				Decoded = Encoding.UTF8.GetString(bytes);
+				return Decoded.Length <= MaxRegistryFieldChars;
+			}
+			catch
+			{
+				return false;
+			}
+		}
+		/// <summary>Advances only paid, staffed work from an absolute semantic boundary.</summary>
+		internal static KingdomLabJobAccrual AccrueJob(long LastTick, long TimeTick,
+			int RemainingTicks, int CrewEffectiveness, int WearEffectiveness,
+			KingdomLabJobPhase Phase)
+		{
+			int remaining = (RemainingTicks > 0) ? RemainingTicks : 0;
+			if (Phase != KingdomLabJobPhase.Working)
+			{
+				return new KingdomLabJobAccrual(LastTick, remaining, 0, Phase);
+			}
+			if (remaining == 0)
+			{
+				return new KingdomLabJobAccrual((TimeTick > LastTick) ? TimeTick : LastTick,
+					0, 0, KingdomLabJobPhase.Ready);
+			}
+			if (LastTick <= 0L)
+			{
+				return new KingdomLabJobAccrual((TimeTick > 0L) ? TimeTick : 0L,
+					remaining, 0, KingdomLabJobPhase.Working);
+			}
+			if (TimeTick <= LastTick)
+			{
+				// A resumed older semantic pass may observe a boundary behind a newer job stamp.
+				// It settles nothing and, critically, cannot rewind the job into pre-commission time.
+				return new KingdomLabJobAccrual(LastTick, remaining, 0,
+					KingdomLabJobPhase.Working);
+			}
+			int worked = KingdomProcedureRules.VatWorked(TimeTick - LastTick,
+				CrewEffectiveness, WearEffectiveness);
+			if (worked <= 0)
+			{
+				return new KingdomLabJobAccrual(TimeTick, remaining, 0,
+					KingdomLabJobPhase.Working);
+			}
+			if (worked >= remaining)
+			{
+				return new KingdomLabJobAccrual(TimeTick, 0, remaining,
+					KingdomLabJobPhase.Ready);
+			}
+			return new KingdomLabJobAccrual(TimeTick, remaining - worked, worked,
+				KingdomLabJobPhase.Working);
+		}
+
+		/// <summary>
+		/// Merges one transient debit into the durable job receipt. Uncertain observation is sticky:
+		/// once vessel identity or composition cannot be proved, no automatic retry may charge the
+		/// apparent outstanding amount.
+		/// </summary>
+		internal static KingdomLabWaterClaim MergeWaterClaim(int Owed, int Paid, int Lost,
+			bool Quarantined, int AttemptSpent, int AttemptLost, bool AttemptExact)
+		{
+			int owed = (Owed > 0) ? Owed : 0;
+			int paid = ClampAdd(Paid, AttemptSpent, owed);
+			int lost = SaturatingNonnegativeAdd(Lost, AttemptLost);
+			bool quarantined = Quarantined || !AttemptExact;
+			int outstanding = owed - paid;
+			return new KingdomLabWaterClaim(paid, lost, outstanding, quarantined,
+				!quarantined && outstanding == 0);
+		}
+
+		/// <summary>
+		/// Mutation effect score: listed/native contribution outranks modifier-only contribution,
+		/// so adding and removing a lab mutation remains observable without trampling equipment,
+		/// tonic, cooking, or external mutation providers.
+		/// </summary>
+		internal static int MutationPresence(bool ListedMutation, bool LiveMutationPart)
+		{
+			return ListedMutation ? 2 : (LiveMutationPart ? 1 : 0);
+		}
+
+		private static int ClampAdd(int Left, int Right, int Maximum)
+		{
+			long left = (Left > 0) ? Left : 0;
+			long right = (Right > 0) ? Right : 0;
+			long sum = left + right;
+			return (sum >= Maximum) ? Maximum : (int)sum;
+		}
+
+		private static int SaturatingNonnegativeAdd(int Left, int Right)
+		{
+			long sum = (long)((Left > 0) ? Left : 0) + ((Right > 0) ? Right : 0);
+			return (sum > int.MaxValue) ? int.MaxValue : (int)sum;
+		}
+
+		/// <summary>Classifies the persisted funding receipt after one synchronous attempt.</summary>
+		internal static KingdomLabJobPhase FundingPhase(bool WaterExact, bool BitsExact,
+			KingdomKeptSpendPhase KeptPhase)
+		{
+			return WaterExact && BitsExact && KeptPhase == KingdomKeptSpendPhase.SpentExact
+				? KingdomLabJobPhase.Working
+				: KingdomLabJobPhase.FundingRecovery;
+		}
+
+		/// <summary>A removal can touch the body only after an exact, fully paid receipt.</summary>
+		internal static KingdomLabRemovalPhase RemovalFundingPhase(int Owed, int Paid,
+			bool Quarantined)
+		{
+			if (Quarantined)
+			{
+				return KingdomLabRemovalPhase.Quarantined;
+			}
+			int owed = (Owed > 0) ? Owed : 0;
+			int paid = (Paid > 0) ? Paid : 0;
+			return paid >= owed ? KingdomLabRemovalPhase.Paid
+				: KingdomLabRemovalPhase.FundingRecovery;
+		}
+
+		/// <summary>Classifies the durable read after an exact removal call was started.</summary>
+		internal static KingdomLabRemovalPhase RemovalObservation(
+			KingdomLabOwnedTargetState Target, bool RemovingStarted)
+		{
+			switch (Target)
+			{
+			case KingdomLabOwnedTargetState.Absent:
+				return KingdomLabRemovalPhase.Removed;
+			case KingdomLabOwnedTargetState.Present:
+				return RemovingStarted ? KingdomLabRemovalPhase.RemovalRecovery
+					: KingdomLabRemovalPhase.Paid;
+			default:
+				return KingdomLabRemovalPhase.Quarantined;
+			}
+		}
+
+		internal static bool IsLiveJob(KingdomLabJobPhase Phase)
+		{
+			return Phase != KingdomLabJobPhase.Complete && Phase != KingdomLabJobPhase.Cancelled;
+		}
+
+		internal static string JobProgressLine(string ProcedureName, KingdomLabJobPhase Phase,
+			int RemainingTicks, int StaffDays, bool Staffed, bool WornOut)
+		{
+			switch (Phase)
+			{
+			case KingdomLabJobPhase.Funding:
+				return Named(ProcedureName) + " is recording its payment.";
+			case KingdomLabJobPhase.FundingRecovery:
+				return "{{r|Payment was interrupted. Inspect and recover this commission before doing anything else.}}";
+			case KingdomLabJobPhase.Ready:
+			case KingdomLabJobPhase.Applying:
+				return "{{G|" + Named(ProcedureName) + " is ready. Return to the table to finish it.}}";
+			case KingdomLabJobPhase.ApplicationRecovery:
+				return "{{r|The terminal procedure needs recovery. Its payment and work are preserved; inspect and retry.}}";
+			case KingdomLabJobPhase.Complete:
+				return "{{G|The commission is complete.}}";
+			case KingdomLabJobPhase.Cancelled:
+				return "{{K|The commission was cancelled.}}";
+			default:
+				if (!Staffed)
+				{
+					return "{{r|No crew is working this commission.}}";
+				}
+				if (WornOut)
+				{
+					return "{{r|The hall is too worn to continue this commission.}}";
+				}
+				int total = KingdomProcedureRules.StaffDayTicks(StaffDays);
+				int done = (total > RemainingTicks) ? total - RemainingTicks : 0;
+				return Named(ProcedureName) + ": {{C|" + done + "/" + total
+					+ "}} staffed work ticks complete.";
+			}
+		}
+		/// <summary>
+		/// Plans a deterministic first-source-first debit without touching an engine object. Zero and
+		/// negative source counts carry nothing. A false result has no partial plan.
+		/// </summary>
+		internal static bool TryPlanKeptSpend(IList<int> Available, int Owed, out KingdomKeptSpendPlan Plan)
+		{
+			Plan = null;
+			if (Available == null || Owed < 0)
+			{
+				return false;
+			}
+			List<KingdomKeptSpendStep> steps = new List<KingdomKeptSpendStep>();
+			int remaining = Owed;
+			for (int i = 0; i < Available.Count && remaining > 0; i++)
+			{
+				int held = Available[i];
+				if (held <= 0)
+				{
+					continue;
+				}
+				int take = (held < remaining) ? held : remaining;
+				steps.Add(new KingdomKeptSpendStep(i, held, take));
+				remaining -= take;
+			}
+			if (remaining != 0)
+			{
+				return false;
+			}
+			Plan = new KingdomKeptSpendPlan(Owed, steps);
+			return true;
+		}
+
+		/// <summary>
+		/// Pure phase classifier used by engine transaction and exhaustive tests. Once any terminal
+		/// source vanished, failure is partial and reversible counts must not masquerade as rollback.
+		/// </summary>
+		internal static KingdomKeptSpendPhase KeptSpendPhase(KingdomKeptSpendPlan Plan,
+			bool PreflightPassed, bool CountsApplied, int Finalized, bool OperationRefused,
+			bool CountsRestored)
+		{
+			if (Plan == null || Finalized < 0 || Finalized > (Plan?.Finalizers ?? 0))
+			{
+				return KingdomKeptSpendPhase.Partial;
+			}
+			if (!PreflightPassed)
+			{
+				return (Finalized == 0 && CountsRestored)
+					? KingdomKeptSpendPhase.RefusedClean
+					: KingdomKeptSpendPhase.Partial;
+			}
+			if (!CountsApplied)
+			{
+				return OperationRefused
+					? ((Finalized == 0 && CountsRestored)
+						? KingdomKeptSpendPhase.RefusedClean
+						: KingdomKeptSpendPhase.Partial)
+					: KingdomKeptSpendPhase.ApplyCounts;
+			}
+			if (OperationRefused)
+			{
+				return (Finalized == 0 && CountsRestored)
+					? KingdomKeptSpendPhase.RefusedClean
+					: KingdomKeptSpendPhase.Partial;
+			}
+			if (Finalized < Plan.Finalizers)
+			{
+				return KingdomKeptSpendPhase.Finalize;
+			}
+			return KingdomKeptSpendPhase.SpentExact;
+		}
+
+		/// <summary>Whether an engine call durably changed the requested procedure despite what it
+		/// returned or threw. Addition wants a larger presence count; removal wants a smaller one.</summary>
+		internal static bool ProcedureEffectChanged(int Before, int After, bool Removing)
+		{
+			return Before >= 0 && After >= 0 && (Removing ? After < Before : After > Before);
+		}
+
 		internal static KingdomVatAccrual AccrueVat(long LastTick, long TimeTick, int RemainingTicks,
 			int CrewEffectiveness, int WearEffectiveness, bool Settled, bool Cancelled)
 		{
 			int remaining = (RemainingTicks > 0) ? RemainingTicks : 0;
 			if (Settled || Cancelled)
 			{
-				return new KingdomVatAccrual(TimeTick, remaining, 0, Complete: false);
+				return new KingdomVatAccrual((TimeTick > LastTick) ? TimeTick : LastTick,
+					remaining, 0, Complete: false);
 			}
 			if (remaining == 0)
 			{
-				return new KingdomVatAccrual(TimeTick, 0, 0, Complete: true);
+				return new KingdomVatAccrual((TimeTick > LastTick) ? TimeTick : LastTick,
+					0, 0, Complete: true);
 			}
-			if (LastTick <= 0L || TimeTick <= LastTick)
+			if (LastTick <= 0L)
 			{
-				return new KingdomVatAccrual((TimeTick > 0L) ? TimeTick : LastTick, remaining, 0, Complete: false);
+				return new KingdomVatAccrual((TimeTick > 0L) ? TimeTick : 0L,
+					remaining, 0, Complete: false);
+			}
+			if (TimeTick <= LastTick)
+			{
+				return new KingdomVatAccrual(LastTick, remaining, 0, Complete: false);
 			}
 			int worked = KingdomProcedureRules.VatWorked(TimeTick - LastTick, CrewEffectiveness, WearEffectiveness);
 			if (worked <= 0)
@@ -561,6 +1477,19 @@ namespace ThousandAndFirst
 				.Append((Procedure.Preserved == 1) ? " kept part" : " kept parts");
 			text.Append(", and ").Append(Procedure.StaffDays)
 				.Append((Procedure.StaffDays == 1) ? " day" : " days").Append(" of the hall's work");
+			List<KeyValuePair<string, int>> standing = StandingCost(Procedure.Creeds, StandingPerCreed);
+			if (standing.Count > 0)
+			{
+				text.Append("; standing ");
+				for (int i = 0; i < standing.Count; i++)
+				{
+					if (i > 0)
+					{
+						text.Append(", ");
+					}
+					text.Append(standing[i].Value).Append(" with ").Append(standing[i].Key);
+				}
+			}
 			return text.ToString();
 		}
 

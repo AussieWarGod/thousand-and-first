@@ -113,51 +113,384 @@ namespace ThousandAndFirst
 				Failure = "There is no clear ground for it here.";
 				return false;
 			}
-			// Raised before it is paid for, deliberately: if the scaffold cannot be created the
-			// settlement must not have already spent the water on nothing. There is no refund
-			// path, because there is nothing to refund.
-			GameObject gameObject = GameObject.Create("r_KingdomScaffold");
-			if (gameObject == null)
+			if (KingdomConstruction.HasActiveAt(System, zone, cell))
 			{
-				Failure = "The scaffold could not be raised.";
+				Failure = "That ground already has a paid construction receipt in hand.";
 				return false;
 			}
-			if (!KingdomMaterials.Pay(zone, entry.Key))
+			KingdomSurvey survey = KingdomSurvey.Take(zone, System);
+			KingdomWaterDebit water = survey.ReserveExactWater(entry.CostDrams);
+			KingdomMaterialDebit materials = KingdomMaterials.ReservePayment(zone, entry.Key);
+			long due = The.Game.TimeTicks + CraftBuildTicks(entry.BuildTicks, System.ZoneDistricts.Values);
+			KingdomMaterialDebitCost claim = new KingdomMaterialDebitCost(
+				KingdomMaterials.CostFor(entry.Key), KingdomMaterials.BitCostFor(entry.Key),
+				KingdomMaterials.ExoticCostFor(entry.Key));
+			KingdomConstructionJob job = KingdomConstruction.NewJob(System, zone,
+				KingdomConstructionRoute.CommissionScaffold, cell, null, entry.Key, SkinKey,
+				entry.CostDrams, claim, The.Game.TimeTicks, due);
+			KingdomConstructionStartResult funded = KingdomConstruction.TryFundNew(job,
+				water, materials, out job, out string fundingFailure);
+			if (funded == KingdomConstructionStartResult.Refused)
 			{
-				// Never trust the affordability check over the actual draw. The scaffold goes and
-				// the water stays where it was.
-				gameObject.Obliterate();
-				Failure = "The stockpiles could not cover the work after all.";
+				Failure = fundingFailure ?? "The stores could not cover the work after all.";
 				return false;
 			}
-			KingdomGrowth.ConsumeStoredWater(zone, entry.CostDrams);
-			gameObject.SetStringProperty(KingdomUpgrade.BuildKeyProperty, entry.Key);
-			KingdomDesign.StageSkin(gameObject, entry, SkinKey);
-			r_KingdomScaffold part = gameObject.GetPart<r_KingdomScaffold>();
-			if (part != null)
+			if (funded == KingdomConstructionStartResult.Outstanding)
 			{
-				part.TargetBlueprint = entry.Blueprint;
-				part.TargetDisplayName = entry.Name;
-				part.CompleteTick = The.Game.TimeTicks + CraftBuildTicks(entry.BuildTicks, System.ZoneDistricts.Values);
-				part.StaffNeeded = entry.Staff;
-				part.ThresholdManning = KingdomRules.IsThresholdManning(entry.Manning);
-				if (entry.Defence > 0)
-				{
-					// The founder standing at the commission is who the ground and the skill
-					// check both belong to; a wall is built by hands that are here, not by
-					// whoever last passed through.
-					bool hasTinkering = The.Player != null && The.Player.HasSkill("Tinkering");
-					bool hasAdvancedTinkering = The.Player != null && The.Player.HasSkill("Tinkering_Tinker1");
-					int defence = KingdomRules.WallDefence(entry.Defence, System.FoundingTerrainBlueprint, System.FoundingRegionName, hasTinkering, hasAdvancedTinkering);
-					gameObject.SetIntProperty("KingdomDefencePending", defence);
-				}
+				KingdomGovernanceScope.Commit("commission building");
+				System.Ledger.Note("{{r|The commission has a measured receipt still outstanding. It remains queued and will not charge its paid claims twice.}} ");
+				return true;
 			}
-			cell.AddObject(gameObject);
+			if (!ProjectScaffold(System, zone, entry, SkinKey, job, out job, out string projectionFailure))
+			{
+				KingdomGovernanceScope.Commit("commission building");
+				System.Ledger.Note("{{r|The paid commission could not put its scaffold on the ground. Its durable receipt remains queued for another pass.}} ");
+				KingdomLog.Log("construction: commission projection waits: " + projectionFailure);
+				return true;
+			}
+			KingdomGovernanceScope.Commit("commission building");
 			KingdomChronicle.Record(System, XRL.Language.Grammar.A(entry.Name) + " was commissioned at " + System.KingdomDisplayName);
 			string clause = KingdomLayoutRules.PlacementClause(KingdomLayout.PurposeOfEntry(entry), outcome);
 			MessageQueue.AddPlayerMessage("{{G|The " + entry.Name + " is commissioned. Scaffolding rises"
 				+ ((clause == null) ? "" : (" " + clause)) + ".}}");
 			return true;
+		}
+
+		internal static void RetryConstruction(KingdomSystem System, Zone Z, KingdomConstructionJob Job)
+		{
+			if (System == null || Z == null || Job == null || Job.Route != KingdomConstructionRoute.CommissionScaffold
+				|| !KingdomData.TryGetBuilding(Job.TargetKey, out var entry))
+			{
+				return;
+			}
+			GameObject scaffold = FindExpectedScaffold(Z, Job, entry);
+			if (scaffold != null && scaffold.ID == Job.SubjectId)
+			{
+				r_KingdomScaffold part = scaffold.GetPart<r_KingdomScaffold>();
+				if (part.RemainingTicks <= 0 && part.LastWorkedTick > 0)
+				{
+					part.RetryDurable(System, Z, Job);
+					return;
+				}
+			}
+			ProjectScaffold(System, Z, entry, Job.Payload, Job, out _, out _);
+		}
+
+		internal static void InspectConstruction(KingdomSystem System, Zone Z,
+			KingdomConstructionJob Job)
+		{
+			if (System == null || Z == null || Job == null
+				|| Job.Route != KingdomConstructionRoute.CommissionScaffold
+				|| !KingdomData.TryGetBuilding(Job.TargetKey, out var entry)) return;
+			if (CountExpectedScaffolds(Z, Job, entry) > 1)
+			{
+				KingdomConstructionJob duplicate = Job;
+				KingdomConstruction.Quarantine(ref duplicate,
+					"More than one commissioned scaffold carries the exact receipt.");
+				return;
+			}
+			GameObject existing = FindExpectedScaffold(Z, Job, entry);
+			KingdomConstructionJob inspected = Job;
+			GameObject successor;
+			int successors = r_KingdomScaffold.FindExactSuccessors(Z, Job,
+				entry.Blueprint, existing, out successor);
+			if (successors > 1)
+			{
+				KingdomConstruction.Quarantine(ref inspected,
+					"More than one exact commissioned successor carries this receipt.");
+				return;
+			}
+			if (Job.Phase == KingdomConstructionPhase.Complete)
+			{
+				if (existing != null)
+				{
+					if (!KingdomConstructionRules.FullyFundedExact(Job))
+					{
+						KingdomConstruction.Quarantine(ref inspected,
+							"A premature terminal commission does not carry exact paid claims.");
+						return;
+					}
+					if (inspected.SubjectId != existing.ID
+						&& !KingdomConstruction.UpdateSubject(ref inspected, existing.ID)) return;
+					if (successors == 1)
+					{
+						KingdomConstruction.FinishProjection(ref inspected, false, false,
+							"The terminal receipt still has an exact scaffold to remove.");
+					}
+					else
+					{
+						KingdomConstruction.FinishProjection(ref inspected, true, true);
+					}
+				}
+				else if (successors == 1)
+				{
+					if (!r_KingdomScaffold.HasRemovalProof(successor, Job.SubjectId))
+					{
+						KingdomConstruction.Quarantine(ref inspected,
+							"The terminal commissioned successor lacks scaffold-removal proof.");
+						return;
+					}
+					r_KingdomScaffold.TellCompletion(System, successor, Job);
+				}
+				return;
+			}
+			if (existing != null)
+			{
+				if (inspected.SubjectId != existing.ID)
+				{
+					if (!KingdomConstruction.UpdateSubject(ref inspected, existing.ID)) return;
+					KingdomConstruction.FinishProjection(ref inspected, true, true);
+					return;
+				}
+				r_KingdomScaffold part = existing.GetPart<r_KingdomScaffold>();
+				int finalPending = existing.GetIntProperty(r_KingdomScaffold.FinalPendingProperty);
+				if (finalPending != 0 && finalPending != 1)
+				{
+					KingdomConstruction.Quarantine(ref inspected,
+						"The commissioned scaffold final flag is not an exact boolean.");
+					return;
+				}
+				if (Job.Phase == KingdomConstructionPhase.ProjectionPending
+					&& finalPending == 0)
+				{
+					KingdomConstruction.FinishProjection(ref inspected, true, true);
+				}
+				else if (Job.Phase == KingdomConstructionPhase.Working
+					|| Job.Phase == KingdomConstructionPhase.ProjectionPending)
+					part.AdvanceDurable(System, Z, Job, The.Game.TimeTicks);
+				else if (Job.Phase == KingdomConstructionPhase.Outstanding)
+				{
+					if (part.RemainingTicks <= 0 && part.LastWorkedTick > 0)
+						part.RetryDurable(System, Z, Job);
+					else
+						KingdomConstruction.FinishProjection(ref inspected, true, true);
+				}
+				return;
+			}
+			if (successors == 1)
+			{
+				if (!r_KingdomScaffold.HasRemovalProof(successor, Job.SubjectId))
+				{
+					KingdomConstruction.Quarantine(ref inspected,
+						"The commissioned successor lacks exact scaffold-removal proof.");
+					return;
+				}
+				if (KingdomConstruction.Complete(ref inspected))
+					r_KingdomScaffold.TellCompletion(System, successor, inspected);
+				return;
+			}
+			KingdomConstruction.Quarantine(ref inspected,
+				"The commissioned receipt has no exact predecessor or successor at its recorded cell.");
+		}
+
+		private static bool ProjectScaffold(KingdomSystem System, Zone Z,
+			KingdomRules.BuildEntry Entry, string SkinKey, KingdomConstructionJob Job,
+			out KingdomConstructionJob Updated, out string Failure)
+		{
+			Updated = Job;
+			Failure = null;
+			Cell cell = Z?.GetCell(Job.X, Job.Y);
+			if (CountExpectedScaffolds(Z, Job, Entry) > 1)
+			{
+				Failure = "More than one commissioned scaffold carries the exact receipt.";
+				KingdomConstruction.Quarantine(ref Updated, Failure);
+				return false;
+			}
+			GameObject existing = FindExpectedScaffold(Z, Job, Entry);
+			if (IsExpectedScaffold(existing, cell, Entry))
+			{
+				if (Updated.SubjectId != existing.ID
+					&& !KingdomConstruction.UpdateSubject(ref Updated, existing.ID))
+				{
+					Failure = "The scaffold identity could not be published.";
+					return false;
+				}
+				if (!KingdomConstruction.FinishProjection(ref Updated, true, true))
+				{
+					Failure = "The scaffold stands, but its Working state did not persist.";
+					return false;
+				}
+				return true;
+			}
+			GameObject unexpected;
+			KingdomPhysicalLookupState receiptState = KingdomConstruction.FindReceipt(
+				Z, Job, out unexpected);
+			if (receiptState != KingdomPhysicalLookupState.Absent)
+			{
+				Failure = receiptState == KingdomPhysicalLookupState.Ambiguous
+					? "More than one physical object carries the construction receipt."
+					: "The construction receipt is attached to an unexpected projection.";
+				KingdomConstruction.Quarantine(ref Updated, Failure);
+				return false;
+			}
+			if (cell == null || !KingdomConstruction.BeginProjection(ref Updated, out Failure))
+			{
+				return false;
+			}
+			GameObject scaffold;
+			try
+			{
+				scaffold = GameObject.Create("r_KingdomScaffold");
+			}
+			catch (System.Exception ex)
+			{
+				Failure = "The scaffold blueprint threw during creation: " + ex.Message;
+				KingdomConstruction.Quarantine(ref Updated, Failure);
+				return false;
+			}
+				if (scaffold == null)
+			{
+				Failure = "The scaffold blueprint could not be created.";
+				KingdomConstruction.FinishProjection(ref Updated, false, false, Failure);
+				return false;
+				}
+				if (!KingdomConstruction.UpdateOutput(ref Updated, scaffold.ID))
+				{
+					bool removed = RemoveCreated(scaffold);
+					Failure = "The scaffold identity could not be published before AddObject.";
+					if (!removed) KingdomConstruction.Quarantine(ref Updated, Failure);
+					return false;
+				}
+				if (!KingdomConstruction.Owns(System, Z, Updated)
+					|| !KingdomConstruction.IsCurrent(Updated))
+				{
+					RemoveCreated(scaffold);
+					Failure = "Commission authority changed during scaffold creation.";
+					KingdomConstruction.Quarantine(ref Updated, Failure);
+					return false;
+				}
+				scaffold.SetStringProperty(KingdomUpgrade.BuildKeyProperty, Entry.Key);
+			KingdomDesign.StageSkin(scaffold, Entry, SkinKey);
+			KingdomConstruction.Bind(scaffold, Updated);
+			r_KingdomScaffold part = scaffold.GetPart<r_KingdomScaffold>();
+			if (part == null)
+			{
+				bool removed = RemoveCreated(scaffold);
+				Failure = "The created scaffold carries no raising capability.";
+				if (removed) KingdomConstruction.FinishProjection(ref Updated, false, false, Failure);
+				else KingdomConstruction.Quarantine(ref Updated, Failure);
+				return false;
+			}
+			part.TargetBlueprint = Entry.Blueprint;
+			part.TargetDisplayName = Entry.Name;
+			part.CompleteTick = Updated.DueTick;
+			part.StaffNeeded = Entry.Staff;
+			part.ThresholdManning = KingdomRules.IsThresholdManning(Entry.Manning);
+			if (Entry.Defence > 0)
+			{
+				bool hasTinkering = The.Player != null && The.Player.HasSkill("Tinkering");
+				bool hasAdvancedTinkering = The.Player != null && The.Player.HasSkill("Tinkering_Tinker1");
+				scaffold.SetIntProperty("KingdomDefencePending", KingdomRules.WallDefence(
+					Entry.Defence, System.FoundingTerrainBlueprint, System.FoundingRegionName,
+					hasTinkering, hasAdvancedTinkering));
+			}
+			GameObject accepted;
+			try
+			{
+				accepted = cell.AddObject(scaffold);
+			}
+			catch (System.Exception ex)
+			{
+				bool removed = RemoveCreated(scaffold);
+				Failure = "The scaffold threw while entering its commissioned cell: " + ex.Message;
+				if (removed) KingdomConstruction.FinishProjection(ref Updated, false, false, Failure);
+				else KingdomConstruction.Quarantine(ref Updated, Failure);
+				return false;
+			}
+			GameObject exactScaffold;
+			if (!ReferenceEquals(accepted, scaffold)
+				|| !KingdomConstruction.Owns(System, Z, Updated)
+				|| KingdomConstruction.FindExactId(Z, Updated.OutputId, out exactScaffold)
+					!= KingdomPhysicalLookupState.Exact
+				|| !ReferenceEquals(exactScaffold, scaffold)
+				|| !IsExpectedScaffold(scaffold, cell, Entry)
+				|| !KingdomConstruction.HasReceipt(scaffold, Updated)
+				|| !KingdomConstruction.IsCurrent(Updated))
+			{
+				bool removed = RemoveCreated(scaffold);
+				Failure = "The scaffold could not be verified in its commissioned cell.";
+				if (removed) KingdomConstruction.FinishProjection(ref Updated, false, false, Failure);
+				else KingdomConstruction.Quarantine(ref Updated, Failure);
+				return false;
+			}
+			if (!KingdomConstruction.UpdateSubject(ref Updated, scaffold.ID))
+			{
+				Failure = "The commissioned scaffold identity could not be published.";
+				return false;
+			}
+			if (!KingdomConstruction.FinishProjection(ref Updated, true, true))
+			{
+				Failure = "The commissioned scaffold stands, but its Working state did not persist.";
+				return false;
+			}
+			return true;
+		}
+
+		private static GameObject FindExpectedScaffold(Zone Z, KingdomConstructionJob Job,
+			KingdomRules.BuildEntry Entry)
+		{
+			Cell cell = Z?.GetCell(Job.X, Job.Y);
+			if (cell == null) return null;
+			GameObject found = null;
+			GameObject exact = null;
+			int count = 0;
+			foreach (GameObject item in cell.GetObjects())
+			{
+				if (IsExpectedScaffold(item, cell, Entry)
+					&& KingdomConstruction.HasReceipt(item, Job))
+				{
+					count++;
+					if (item.ID == Job.OutputId || item.ID == Job.SubjectId) exact = item;
+					else if (found == null) found = item;
+				}
+			}
+			GameObject global;
+			return count == 1 && exact != null
+				&& KingdomConstruction.FindExactId(Z, exact.ID, out global)
+					== KingdomPhysicalLookupState.Exact
+				&& ReferenceEquals(global, exact) ? exact : null;
+		}
+
+		private static bool RemoveCreated(GameObject Object)
+		{
+			try
+			{
+				return !GameObject.Validate(Object)
+					|| (Object.Obliterate(null, Silent: true) && !GameObject.Validate(Object));
+			}
+			catch
+			{
+				return false;
+			}
+		}
+
+		private static int CountExpectedScaffolds(Zone Z, KingdomConstructionJob Job,
+			KingdomRules.BuildEntry Entry)
+		{
+			if (Z == null || Job == null || Entry == null) return 0;
+			Cell cell = Z?.GetCell(Job.X, Job.Y);
+			if (cell == null) return 0;
+			int count = 0;
+			foreach (GameObject item in cell.GetObjects())
+					if (IsExpectedScaffold(item, cell, Entry)
+						&& KingdomConstruction.HasReceipt(item, Job))
+					{
+						if (item.ID != Job.OutputId && item.ID != Job.SubjectId) return 2;
+						count++;
+					}
+			return count;
+		}
+
+		private static bool IsExpectedScaffold(GameObject Scaffold, Cell Cell,
+			KingdomRules.BuildEntry Entry)
+		{
+			if (!GameObject.Validate(Scaffold) || Scaffold.CurrentCell != Cell || Entry == null
+				|| Scaffold.GetStringProperty(KingdomUpgrade.BuildKeyProperty) != Entry.Key)
+			{
+				return false;
+			}
+			r_KingdomScaffold part = Scaffold.GetPart<r_KingdomScaffold>();
+			return part != null && part.TargetBlueprint == Entry.Blueprint;
 		}
 
 		/// <summary>

@@ -127,8 +127,8 @@ namespace ThousandAndFirst
 			{
 				return;
 			}
-			int total = Amounts[index] + Units;
-			Amounts[index] = (total > 0) ? total : 0;
+			long total = (long)Amounts[index] + Units;
+			Amounts[index] = (total <= 0L) ? 0 : ((total >= int.MaxValue) ? int.MaxValue : (int)total);
 		}
 
 		/// <summary>Sets units of one material outright, clamping negatives to zero.</summary>
@@ -158,12 +158,12 @@ namespace ThousandAndFirst
 		/// <summary>Units of every material added together.</summary>
 		public int Total()
 		{
-			int total = 0;
+			long total = 0L;
 			for (int i = 0; i < Amounts.Length; i++)
 			{
 				total += Amounts[i];
 			}
-			return total;
+			return (total >= int.MaxValue) ? int.MaxValue : (int)total;
 		}
 
 		/// <summary>True when nothing at all is held. An absent material cost is empty, and an
@@ -199,7 +199,8 @@ namespace ThousandAndFirst
 			}
 			for (int i = 0; i < Amounts.Length; i++)
 			{
-				scaled.Amounts[i] = Amounts[i] * Percent / 100;
+				long amount = (long)Amounts[i] * Percent / 100L;
+				scaled.Amounts[i] = (amount >= int.MaxValue) ? int.MaxValue : (int)amount;
 			}
 			return scaled;
 		}
@@ -258,8 +259,8 @@ namespace ThousandAndFirst
 			{
 				return;
 			}
-			int total = Amounts[Tier] + Count;
-			Amounts[Tier] = (total > 0) ? total : 0;
+			long total = (long)Amounts[Tier] + Count;
+			Amounts[Tier] = (total <= 0L) ? 0 : ((total >= int.MaxValue) ? int.MaxValue : (int)total);
 		}
 
 		/// <summary>Sets bits of one tier outright, clamping negatives to zero.</summary>
@@ -288,12 +289,12 @@ namespace ThousandAndFirst
 		/// <summary>Bits of every tier added together.</summary>
 		public int Total()
 		{
-			int total = 0;
+			long total = 0L;
 			for (int i = 0; i < Amounts.Length; i++)
 			{
 				total += Amounts[i];
 			}
-			return total;
+			return (total >= int.MaxValue) ? int.MaxValue : (int)total;
 		}
 
 		/// <summary>True when no bits at all are held. An absent bit cost is empty, and an empty
@@ -325,7 +326,8 @@ namespace ThousandAndFirst
 			}
 			for (int i = 0; i < Amounts.Length; i++)
 			{
-				scaled.Amounts[i] = Amounts[i] * Percent / 100;
+				long amount = (long)Amounts[i] * Percent / 100L;
+				scaled.Amounts[i] = (amount >= int.MaxValue) ? int.MaxValue : (int)amount;
 			}
 			return scaled;
 		}
@@ -370,8 +372,8 @@ namespace ThousandAndFirst
 			{
 				return;
 			}
-			int total = Amounts[index] + Units;
-			Amounts[index] = (total > 0) ? total : 0;
+			long total = (long)Amounts[index] + Units;
+			Amounts[index] = (total <= 0L) ? 0 : ((total >= int.MaxValue) ? int.MaxValue : (int)total);
 		}
 
 		/// <summary>Sets units of one exotic outright, clamping negatives to zero.</summary>
@@ -388,12 +390,12 @@ namespace ThousandAndFirst
 		/// <summary>Units of every exotic added together.</summary>
 		public int Total()
 		{
-			int total = 0;
+			long total = 0L;
 			for (int i = 0; i < Amounts.Length; i++)
 			{
 				total += Amounts[i];
 			}
-			return total;
+			return (total >= int.MaxValue) ? int.MaxValue : (int)total;
 		}
 
 		/// <summary>True when nothing rare is held or wanted.</summary>

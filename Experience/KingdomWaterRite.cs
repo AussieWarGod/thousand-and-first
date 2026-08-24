@@ -399,52 +399,87 @@ namespace ThousandAndFirst
 			{
 				return;
 			}
-			// Measured, never trusted: the stores give up what they give up, and what they gave up
-			// is what was poured.
-			int poured = KingdomGrowth.ConsumeStoredWater(Z, Offer.Drams);
-			if (poured <= 0)
+			WaterRiteAnswer answer = closing
+				? default(WaterRiteAnswer)
+				: KingdomWaterRiteRules.Answer(Offer.Facts);
+			// One survey binds one exact receipt to the dedicated vessels that are standing here
+			// now. A stale row in the picker may say the water existed; only this reservation is
+			// permission to hold the rite.
+			KingdomSurvey survey = KingdomSurvey.Take(Z);
+			KingdomWaterDebit debit;
+			if (!survey.TryReserveExactWater(Offer.Drams, out debit))
 			{
-				Popup.Show("The stores would not give up the water.");
+				Popup.Show("The rite requires exactly {{C|" + Offer.Drams
+					+ " drams}} from the dedicated stores, and they cannot provide it.");
 				return;
 			}
-			System.LastSoulRiteTick = (The.Game != null) ? The.Game.TimeTicks : 0L;
+			// Last safe point before any answer, stamp or cadence changes. Commit itself is
+			// all-or-nothing; a failed commit restores every receipt-bound vessel.
+			if (!debit.Commit())
+			{
+				Popup.Show("The dedicated stores could not yield exactly {{C|" + Offer.Drams
+					+ " drams}}. No rite was held.");
+				return;
+			}
 			if (closing)
 			{
 				Close(System, Resident, RealmCreed, name, takesTheRoad);
+				System.LastSoulRiteTick = (The.Game != null) ? The.Game.TimeTicks : 0L;
 				return;
 			}
-			WaterRiteAnswer answer = KingdomWaterRiteRules.Answer(Offer.Facts);
-			KingdomLog.Log("water rite: " + name + " answer=" + answer
-				+ " distance=" + KingdomWaterRiteRules.Distance(Offer.Facts)
-				+ " reach=" + KingdomWaterRiteRules.Reach(Offer.Facts.SharedDays)
-				+ " poured=" + poured);
 			if (KingdomWaterRiteRules.Converted(answer))
 			{
-				Accept(System, Z, Resident, RealmCreed, name);
+				if (!Accept(System, Z, Resident, RealmCreed, name))
+				{
+					bool returned = debit.Rollback();
+					if (!returned)
+					{
+						MetricsManager.LogError("ThousandAndFirst water rite: conversion failed and the exact "
+							+ Offer.Drams + "-dram debit could not be restored: " + (debit.Failure ?? "unknown failure"));
+					}
+					Popup.Show(returned
+						? "The rite did not take hold. Exactly {{C|" + Offer.Drams + " drams}} were returned to the same stores."
+						: "The rite did not take hold, and the stores could not be restored exactly. See the game log.");
+					return;
+				}
+				LogRite(name, answer, Offer);
+				System.LastSoulRiteTick = (The.Game != null) ? The.Game.TimeTicks : 0L;
 				return;
 			}
 			Refuse(System, Resident, RealmCreed, Offer, answer, name);
+			LogRite(name, answer, Offer);
+			System.LastSoulRiteTick = (The.Game != null) ? The.Game.TimeTicks : 0L;
 		}
 
-		private static void Accept(KingdomSystem System, Zone Z, GameObject Resident, string RealmCreed, string Name)
+		private static void LogRite(string Name, WaterRiteAnswer Answer, RiteOffer Offer)
+		{
+			KingdomLog.Log("water rite: " + Name + " answer=" + Answer
+				+ " distance=" + KingdomWaterRiteRules.Distance(Offer.Facts)
+				+ " reach=" + KingdomWaterRiteRules.Reach(Offer.Facts.SharedDays)
+				+ " poured=" + Offer.Drams);
+		}
+
+		private static bool Accept(KingdomSystem System, Zone Z, GameObject Resident, string RealmCreed, string Name)
 		{
 			// One path for every conversion in the mod: the tally moves, both registers are
 			// written in this channel's own words, and the ledger is noted -- all of it there, none
 			// of it here, so no two channels can ever tell a conversion differently.
-			if (!KingdomConversion.Convert(System, Z, Resident, RealmCreed, ConversionChannel.Diplomacy))
+			if (!KingdomConversion.Convert(System, Z, Resident, RealmCreed,
+				ConversionChannel.Diplomacy, "share water rite"))
 			{
-				Popup.Show("The water goes round, and the evening is a good one, and nothing about it changes what anybody holds.");
-				return;
+				return false;
 			}
 			ClearStamp(Resident);
 			Resident.SetIntProperty(RefusalsProperty, 0, RemoveIfZero: true);
 			Resident.SetStringProperty(AskedTooOftenCreedProperty, null, RemoveIfNull: true);
 			Popup.Show(KingdomWaterRiteRules.AcceptNotice(Name, KingdomCreed.CreedName(RealmCreed)));
+			return true;
 		}
 
 		private static void Refuse(KingdomSystem System, GameObject Resident, string RealmCreed, RiteOffer Offer, WaterRiteAnswer Answer, string Name)
 		{
 			WriteStamp(Resident, KingdomWaterRiteRules.StampFor(Offer.Facts, Answer));
+			KingdomGovernanceScope.Commit("share water rite");
 			Resident.SetIntProperty(RefusalsProperty, KingdomWaterRiteRules.RefusalsAfter(Resident.GetIntProperty(RefusalsProperty)));
 			Chronicle(System,
 				Offer.Facts.Hostility,
@@ -465,6 +500,7 @@ namespace ThousandAndFirst
 		private static void Close(KingdomSystem System, GameObject Resident, string RealmCreed, string Name, bool TakesTheRoad)
 		{
 			Resident.SetStringProperty(AskedTooOftenCreedProperty, RealmCreed);
+			KingdomGovernanceScope.Commit("share water rite");
 			Chronicle(System,
 				KingdomConversionRules.ContestedHostility,
 				KingdomWaterRiteRules.ClosedTelling(Name, System.SeatName),

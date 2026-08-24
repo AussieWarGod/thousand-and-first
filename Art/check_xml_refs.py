@@ -54,10 +54,16 @@ import sys
 import xml.etree.ElementTree as ET
 
 TAF_XML = [
-    "ObjectBlueprints.xml",
-    "PopulationTables.xml",
     "Books.xml",
+    "EmbarkModules.xml",
     "KingdomBuildings.xml",
+    "KingdomDeals.xml",
+    "KingdomProcedures.xml",
+    "KingdomResearch.xml",
+    "KingdomYardWorks.xml",
+    "ObjectBlueprints.xml",
+    "Options.xml",
+    "PopulationTables.xml",
 ]
 DEFAULT_BASE = (
     "/mnt/f/SteamLibrary/steamapps/common/Caves of Qud/CoQ_Data/StreamingAssets/Base"
@@ -67,6 +73,21 @@ DEFAULT_BASE = (
 def read(path):
     with io.open(path, encoding="utf-8") as handle:
         return handle.read()
+
+
+def xml_syntax_problems():
+    """Every root the game will stream must be well formed, including data files that do not
+    otherwise participate in a cross-reference check below."""
+    problems = []
+    for path in TAF_XML:
+        if not os.path.isfile(path):
+            problems.append("required runtime XML is missing: %s" % path)
+            continue
+        try:
+            ET.parse(path)
+        except ET.ParseError as error:
+            problems.append("%s is not well-formed XML: %s" % (path, error))
+    return problems
 
 
 def taf_blueprints():
@@ -900,6 +921,27 @@ def inherited_tag(tree, name, tag_name):
     return None
 
 
+def embark_module_problems():
+    """Loader-shape checks the generic XML parser cannot express after ElementTree folds it.
+
+    QudGamemodeModule.HandleGameSystemNode records the Class attribute but, unlike the adjacent
+    game-state handlers, does not call DoneWithElement.  A paired start/end form therefore leaves
+    an EndElement for HandleNodes and emits a MODWARN.  The semantically identical self-closing
+    form is the exact runtime contract.
+    """
+    path = "EmbarkModules.xml"
+    if not os.path.isfile(path):
+        return []
+    source = read(path)
+    problems = []
+    if re.search(r"<gamesystem\b[^>]*>\s*</gamesystem\s*>", source, re.I):
+        problems.append(
+            "EmbarkModules gamesystem uses a paired end tag; Qud's handler does not consume it "
+            "and warns Unexpected EndElement, so gamesystem must be self-closing"
+        )
+    return problems
+
+
 def main():
     base = None
     if "--base" in sys.argv:
@@ -910,7 +952,12 @@ def main():
     if not os.path.isfile("ObjectBlueprints.xml"):
         sys.exit("run from the repository root")
 
-    problems = []
+    problems = xml_syntax_problems()
+    if problems:
+        print("XML REFERENCES FAILED")
+        for problem in problems:
+            print("  " + problem)
+        return 1
     ours = taf_blueprints()
     theirs = vanilla_blueprints(base) if base else set()
 
@@ -992,6 +1039,9 @@ def main():
     # 7. The research tree: teachers that resolve, grants that are minted once, and catalogue
     #    gates written against keys the tree actually mints. Both directions, as above.
     problems.extend(research_reference_problems(base))
+
+    # 8. Embark module nodes whose textual XML form changes Qud's streaming-loader behaviour.
+    problems.extend(embark_module_problems())
 
     if problems:
         print("XML REFERENCES FAILED")

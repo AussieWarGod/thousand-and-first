@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using XRL;
 using XRL.UI;
@@ -241,6 +242,7 @@ namespace ThousandAndFirst
 					return;
 				}
 				target.SetStringProperty(GivenNameProperty, null, RemoveIfNull: true);
+				KingdomGovernanceScope.Commit("remove building name");
 				KingdomChronicle.Record(System, existing + " is called that no longer");
 				Popup.Show("The name is let go.");
 				return;
@@ -250,7 +252,13 @@ namespace ThousandAndFirst
 				Popup.Show(error);
 				return;
 			}
+			if (string.Equals(existing, cleaned, StringComparison.Ordinal))
+			{
+				Popup.Show("It is already called " + cleaned + ".");
+				return;
+			}
 			target.SetStringProperty(GivenNameProperty, cleaned);
+			KingdomGovernanceScope.Commit("name building");
 			System.RecordDeed(cleaned + " was named, at " + System.KingdomDisplayName);
 			KingdomChronicle.Record(System, target.ShortDisplayNameStripped + " at " + System.KingdomDisplayName + " was named " + cleaned);
 			System.Ledger.Note("{{G|" + cleaned + " (" + target.ShortDisplayNameStripped + ") now stands named at " + System.KingdomDisplayName + ".}}");

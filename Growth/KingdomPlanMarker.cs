@@ -96,10 +96,14 @@ namespace ThousandAndFirst
 		/// </summary>
 		public static void OnSettlementPass(KingdomSystem System, Zone Z, KingdomSurvey Survey)
 		{
-			if (!KingdomGrowth.Enabled || System == null || !System.Founded || Z == null || Survey == null)
+			if (System == null || !System.Founded || Z == null || Survey == null)
 			{
 				return;
 			}
+			// Resume existing durable receipts before considering any unbound marker. The root
+			// semantic dispatcher also calls this independently of settler arrivals; this local call
+			// keeps direct/test callers under the same no-second-job law.
+			KingdomConstruction.OnSettlementPass(System, Z, Survey);
 			List<GameObject> markers = new List<GameObject>();
 			List<KingdomRules.BuildEntry> entries = new List<KingdomRules.BuildEntry>();
 			List<KingdomPendingPlan> pending = new List<KingdomPendingPlan>();
@@ -110,11 +114,36 @@ namespace ThousandAndFirst
 				{
 					continue;
 				}
+				string receipt = item.GetStringProperty(KingdomConstruction.ReceiptProperty);
+				if (!string.IsNullOrEmpty(receipt))
+				{
+					KingdomConstructionJob existing;
+					if (!KingdomConstruction.TryFind(receipt, out existing))
+					{
+						// Missing/unreadable registry is ambiguous. Never publish a second job against
+						// a marker that may already have paid.
+						continue;
+					}
+					if (!KingdomConstructionRules.IsTerminal(existing.Phase)
+						|| existing.Phase == KingdomConstructionPhase.Complete)
+					{
+						continue;
+					}
+					// Clean compensation/cancellation paid nothing and may try again normally.
+					item.RemoveStringProperty(KingdomConstruction.ReceiptProperty);
+				}
 				// A design an outside mod withdrew (or one that never shipped) leaves its marker
 				// waiting forever rather than throwing or silently vanishing -- the same
 				// "waiting is not failing" contract as a plan that simply cannot afford its cost
 				// yet.
 				if (!KingdomData.TryGetBuilding(marker.DesignKey, out var entry))
+				{
+					continue;
+				}
+				if (KingdomConstruction.HasActiveSubject(System, Z,
+						KingdomConstructionRoute.PlanScaffold, item)
+					|| KingdomConstruction.HasActiveSubject(System, Z,
+						KingdomConstructionRoute.PlotPlan, item))
 				{
 					continue;
 				}
@@ -137,17 +166,55 @@ namespace ThousandAndFirst
 				{
 					continue;
 				}
-				// Measured, not trusted (STANDARDS.md): PlansToRealize decided this plan was
-				// affordable from the survey's own snapshot, but Consume can still return less
-				// than asked if what that snapshot counted cannot actually be drained in one
-				// draw. A short draw is left exactly where it was found -- the marker still
-				// stands, and it simply tries again next pass.
-				int drawn = Survey.Consume(entries[index].CostDrams);
-				if (drawn < entries[index].CostDrams)
+				GameObject markerObject = markers[index];
+				KingdomRules.BuildEntry entry = entries[index];
+				Cell cell = markerObject.CurrentCell;
+				if (cell == null)
 				{
 					continue;
 				}
-				Realize(System, markers[index], entries[index]);
+				string materialRefusal;
+				if (!KingdomMaterials.CanPay(Z, entry.Key, out materialRefusal))
+				{
+					continue;
+				}
+				KingdomWaterDebit water = Survey.ReserveExactWater(entry.CostDrams);
+				KingdomMaterialDebit materials = KingdomMaterials.ReservePayment(Z, entry.Key);
+				KingdomMaterialDebitCost claim = new KingdomMaterialDebitCost(
+					KingdomMaterials.CostFor(entry.Key), KingdomMaterials.BitCostFor(entry.Key),
+					KingdomMaterials.ExoticCostFor(entry.Key));
+				KingdomConstructionRoute route = KingdomPlots.IsPlotDesign(entry.Key)
+					? KingdomConstructionRoute.PlotPlan : KingdomConstructionRoute.PlanScaffold;
+				string payload = markerObject.GetStringProperty(KingdomDesign.PlannedSkinProperty);
+				long duration = KingdomCommission.CraftBuildTicks(entry.BuildTicks,
+					System.ZoneDistricts.Values);
+				if (route == KingdomConstructionRoute.PlotPlan)
+				{
+					KingdomPlotRules.PlotRect plannedRect;
+					if (!KingdomPlots.TryPreparePlan(System, markerObject, entry,
+						out plannedRect, out payload, out duration))
+					{
+						continue;
+					}
+					cell = Z.GetCell(plannedRect.CenterX, plannedRect.CenterY);
+				}
+				long due = The.Game.TimeTicks + duration;
+				KingdomConstructionJob job = KingdomConstruction.NewJob(System, Z, route, cell,
+					markerObject, entry.Key, payload,
+					entry.CostDrams, claim, The.Game.TimeTicks, due);
+				KingdomConstructionStartResult funding = KingdomConstruction.TryFundNew(job,
+					water, materials, out job, out string fundingFailure);
+				if (funding == KingdomConstructionStartResult.Refused)
+				{
+					continue;
+				}
+				if (funding == KingdomConstructionStartResult.Outstanding)
+				{
+					KingdomConstruction.Bind(markerObject, job);
+					KingdomLog.Log("construction: plan receipt waits: " + (fundingFailure ?? "outstanding claim"));
+					continue;
+				}
+				Realize(System, markerObject, entry, job, out _);
 			}
 		}
 
@@ -181,37 +248,113 @@ namespace ThousandAndFirst
 		/// sited at the marker's own cell instead of a freshly chosen one, because the founder
 		/// already chose it when they staked the plan.
 		/// </summary>
-		private static void Realize(KingdomSystem System, GameObject MarkerObject, KingdomRules.BuildEntry Entry)
+		private static bool Realize(KingdomSystem System, GameObject MarkerObject,
+			KingdomRules.BuildEntry Entry, KingdomConstructionJob Job,
+			out KingdomConstructionJob Updated)
 		{
-			Cell cell = MarkerObject.CurrentCell;
-			if (cell == null)
+			Updated = Job;
+			Cell cell = GameObject.Validate(MarkerObject) ? MarkerObject.CurrentCell : null;
+			Zone zone = cell?.ParentZone;
+			if (Job != null && Job.Route == KingdomConstructionRoute.PlotPlan)
 			{
-				return;
+				r_KingdomPlanMarker plotMarker = GameObject.Validate(MarkerObject)
+					? MarkerObject.GetPart<r_KingdomPlanMarker>() : null;
+				if (Entry == null || cell == null || !KingdomPlots.IsPlotDesign(Entry.Key)
+					|| !KingdomConstruction.Owns(System, zone, Job)
+					|| MarkerObject.ID != (Job.SourceId ?? Job.SubjectId) || plotMarker == null
+					|| plotMarker.DesignKey != Entry.Key || !KingdomConstruction.IsCurrent(Job))
+				{
+					KingdomConstruction.Quarantine(ref Updated,
+						"The paid plot plan no longer matches its exact marker and design.");
+					return false;
+				}
+				if (!KingdomConstruction.BeginProjection(ref Updated, out _)) return false;
+				KingdomConstruction.Bind(MarkerObject, Updated);
+				if (!KingdomConstruction.HasReceipt(MarkerObject, Updated)
+					|| MarkerObject.CurrentCell != cell || plotMarker.DesignKey != Entry.Key
+					|| !KingdomConstruction.IsCurrent(Updated))
+				{
+					KingdomConstruction.Quarantine(ref Updated,
+						"The plot marker changed across its durable projection boundary.");
+					return false;
+				}
+				KingdomConstructionJob plotUpdated;
+				bool plotStaked = KingdomPlots.StakeFromPlan(System, MarkerObject, Entry,
+					Updated, out plotUpdated);
+				Updated = plotUpdated;
+				return plotStaked;
 			}
-			// A plot-sized design measures out a rect from this stake rather than raising a single
-			// scaffold on it. It chronicles and announces itself; everything below is the
-			// single-cell path, unchanged.
-			if (KingdomPlots.StakeFromPlan(System, MarkerObject, Entry))
+			Cell expected = zone == null || Job == null ? null : zone.GetCell(Job.X, Job.Y);
+			if (Entry == null || Job == null || Job.Route != KingdomConstructionRoute.PlanScaffold
+				|| cell == null || cell != expected || !KingdomConstruction.Owns(System, zone, Job)
+				|| !IsExactPlanMarker(MarkerObject, zone, expected, Job, Entry, false)
+				|| !KingdomConstruction.IsCurrent(Job))
 			{
-				return;
+				KingdomConstruction.Quarantine(ref Updated,
+					"The paid plan marker no longer matches its exact recorded ground and design.");
+				return false;
 			}
-			GameObject scaffold = GameObject.Create("r_KingdomScaffold");
+			if (!KingdomConstruction.BeginProjection(ref Updated, out _))
+			{
+				return false;
+			}
+			KingdomConstruction.Bind(MarkerObject, Updated);
+			if (!IsExactPlanMarker(MarkerObject, zone, expected, Updated, Entry, true)
+				|| !KingdomConstruction.IsCurrent(Updated))
+			{
+				KingdomConstruction.Quarantine(ref Updated,
+					"The plan marker changed across its durable projection boundary.");
+				return false;
+			}
+			GameObject scaffold;
+			try
+			{
+				scaffold = GameObject.Create("r_KingdomScaffold");
+			}
+			catch (System.Exception ex)
+			{
+				KingdomConstruction.Quarantine(ref Updated,
+					"The plan's scaffold threw during creation: " + ex.Message);
+				return false;
+			}
 			if (scaffold == null)
 			{
-				return;
+				KingdomConstruction.FinishProjection(ref Updated, false, false,
+					"The plan's scaffold blueprint could not be created.");
+				return false;
+			}
+			if (!KingdomConstruction.Owns(System, zone, Updated)
+				|| !KingdomConstruction.IsCurrent(Updated)
+				|| !IsExactPlanMarker(MarkerObject, zone, expected, Updated, Entry, true))
+			{
+				RemoveCreated(scaffold);
+				KingdomConstruction.Quarantine(ref Updated,
+					"Plan authority or predecessor changed during scaffold creation.");
+				return false;
 			}
 			// Read off the marker before it is taken down: the look the founder chose when they
 			// staked the plan rides on the marker exactly as it rides on a scaffold.
 			scaffold.SetStringProperty(KingdomUpgrade.BuildKeyProperty, Entry.Key);
 			KingdomDesign.StageSkin(scaffold, Entry, MarkerObject.GetStringProperty(KingdomDesign.PlannedSkinProperty));
 			KingdomCeremony.TransferPlanQuote(MarkerObject, scaffold);
-			MarkerObject.Destroy(null, Silent: true);
+			KingdomConstruction.Bind(scaffold, Updated);
 			r_KingdomScaffold part = scaffold.GetPart<r_KingdomScaffold>();
-			if (part != null)
+			if (part == null)
+			{
+				bool removed = RemoveCreated(scaffold);
+				if (removed)
+					KingdomConstruction.FinishProjection(ref Updated, false, false,
+						"The plan's scaffold carries no raising capability.");
+				else
+					KingdomConstruction.Quarantine(ref Updated,
+						"The invalid plan scaffold could not be removed exactly.");
+				return false;
+			}
+			else
 			{
 				part.TargetBlueprint = Entry.Blueprint;
 				part.TargetDisplayName = Entry.Name;
-				part.CompleteTick = The.Game.TimeTicks + KingdomCommission.CraftBuildTicks(Entry.BuildTicks, System.ZoneDistricts.Values);
+				part.CompleteTick = Updated.DueTick;
 				part.StaffNeeded = Entry.Staff;
 				part.ThresholdManning = KingdomRules.IsThresholdManning(Entry.Manning);
 				if (Entry.Defence > 0)
@@ -225,11 +368,459 @@ namespace ThousandAndFirst
 					int defence = KingdomRules.WallDefence(Entry.Defence, System.FoundingTerrainBlueprint, System.FoundingRegionName, hasTinkering, hasAdvancedTinkering);
 					scaffold.SetIntProperty("KingdomDefencePending", defence);
 				}
+				if (!KingdomConstruction.UpdateOutput(ref Updated, scaffold.ID))
+				{
+					bool removed = RemoveCreated(scaffold);
+					KingdomConstruction.Quarantine(ref Updated, removed
+						? "The plan scaffold identity conflicted before AddObject."
+						: "The plan scaffold identity conflicted and exact cleanup failed.");
+					return false;
+				}
 			}
-			cell.AddObject(scaffold);
+			GameObject accepted;
+			try
+			{
+				accepted = cell.AddObject(scaffold);
+			}
+			catch (System.Exception ex)
+			{
+				bool removed = RemoveCreated(scaffold);
+				KingdomConstruction.Quarantine(ref Updated, (removed
+					? "The plan scaffold threw after its identity was published: "
+					: "The plan scaffold threw and could not be removed exactly: ") + ex.Message);
+				return false;
+			}
+			GameObject exactScaffold;
+			if (!ReferenceEquals(accepted, scaffold)
+				|| !KingdomConstruction.Owns(System, zone, Updated)
+				|| KingdomConstruction.FindExactId(zone, Updated.OutputId, out exactScaffold)
+					!= KingdomPhysicalLookupState.Exact
+				|| !ReferenceEquals(exactScaffold, scaffold)
+				|| scaffold.CurrentCell != cell || scaffold.CurrentZone != zone
+				|| scaffold.GetPart<r_KingdomScaffold>() == null
+				|| scaffold.GetPart<r_KingdomScaffold>().TargetBlueprint != Entry.Blueprint
+				|| scaffold.GetStringProperty(KingdomUpgrade.BuildKeyProperty) != Entry.Key
+				|| !KingdomConstruction.HasReceipt(scaffold, Updated)
+				|| !KingdomConstruction.IsCurrent(Updated)
+				|| !IsExactPlanMarker(MarkerObject, zone, expected, Updated, Entry, true))
+			{
+				bool removed = RemoveCreated(scaffold);
+				KingdomConstruction.Quarantine(ref Updated, removed
+					? "The published plan scaffold changed during AddObject."
+					: "The published plan scaffold changed and could not be removed exactly.");
+				return false;
+			}
+			string markerId = MarkerObject.ID;
+			bool markerRemoved;
+			try
+			{
+				markerRemoved = MarkerObject.Destroy(null, Silent: true);
+			}
+			catch (System.Exception ex)
+			{
+				KingdomConstruction.Quarantine(ref Updated,
+					"Plan-marker removal threw after scaffold placement: " + ex.Message);
+				return false;
+			}
+			if (KingdomConstructionRules.ExactRemovalAction(true, markerRemoved,
+				GameObject.Validate(MarkerObject), KingdomConstruction.FindExactId(
+					zone, markerId, out _) != KingdomPhysicalLookupState.Absent, true)
+				!= KingdomExactRemovalAction.ProvedAbsent)
+			{
+				KingdomConstruction.Quarantine(ref Updated,
+					"Plan-marker removal was vetoed, moved, replaced, or only partially changed the predecessor.");
+				return false;
+			}
+			GameObject exactAfterRemoval;
+			if (!KingdomConstruction.Owns(System, zone, Updated)
+				|| KingdomConstruction.FindExactId(zone, scaffold.ID, out exactAfterRemoval)
+					!= KingdomPhysicalLookupState.Exact
+				|| !ReferenceEquals(exactAfterRemoval, scaffold)
+				|| !IsExactPlanScaffold(scaffold, zone, expected, Updated, Entry)
+				|| !KingdomConstruction.IsCurrent(Updated))
+			{
+				KingdomConstruction.Quarantine(ref Updated,
+					"The planned scaffold changed during marker removal.");
+				return false;
+			}
+			scaffold.SetStringProperty(r_KingdomScaffold.RemovalProofProperty, markerId);
+			if (!r_KingdomScaffold.HasRemovalProof(scaffold, markerId))
+			{
+				KingdomConstruction.Quarantine(ref Updated,
+					"The planned scaffold did not retain marker-removal proof.");
+				return false;
+			}
+			if (!KingdomConstruction.UpdateSubject(ref Updated, scaffold.ID))
+			{
+				return false;
+			}
+			if (!KingdomConstruction.FinishProjection(ref Updated, true, true)) return false;
 			KingdomChronicle.Record(System, XRL.Language.Grammar.A(Entry.Name) + " began to rise at " + System.KingdomDisplayName + ", true to the plan staked there");
 			System.Ledger.Note("{{G|The plan staked at " + System.KingdomDisplayName + " is under way: the " + Entry.Name + " rises.}}");
 			MessageQueue.AddPlayerMessage("{{G|The plan staked at " + System.KingdomDisplayName + " is under way. The " + Entry.Name + " rises.}}");
+			return true;
+		}
+
+		internal static void RetryConstruction(KingdomSystem System, Zone Z, KingdomConstructionJob Job)
+		{
+			if (System == null || Z == null || Job == null || Job.Route != KingdomConstructionRoute.PlanScaffold
+				|| !KingdomData.TryGetBuilding(Job.TargetKey, out var entry))
+			{
+				return;
+			}
+			if (CountPlanScaffolds(Z, Job, entry) > 1)
+			{
+				KingdomConstructionJob duplicate = Job;
+				KingdomConstruction.Quarantine(ref duplicate,
+					"More than one planned scaffold carries the exact receipt.");
+				return;
+			}
+			GameObject existing = FindPlanScaffold(Z, Job, entry);
+			GameObject marker = FindExactPlanMarker(System, Z, Job, entry);
+			GameObject namedSubject;
+			KingdomPhysicalLookupState subjectState = KingdomConstruction.FindExactId(
+				Z, Job.SubjectId, out namedSubject);
+			if (subjectState == KingdomPhysicalLookupState.Ambiguous)
+			{
+				KingdomConstructionJob duplicate = Job;
+				KingdomConstruction.Quarantine(ref duplicate,
+					"The planned subject ID resolves to more than one loaded object.");
+				return;
+			}
+			if (GameObject.Validate(namedSubject) && marker == null
+				&& (existing == null || namedSubject != existing))
+			{
+				KingdomConstructionJob moved = Job;
+				KingdomConstruction.Quarantine(ref moved,
+					"The paid plan predecessor no longer matches its recorded cell or design.");
+				return;
+			}
+			if (existing != null && existing.CurrentCell == Z.GetCell(Job.X, Job.Y)
+				&& existing.GetPart<r_KingdomScaffold>() != null
+				&& existing.GetPart<r_KingdomScaffold>().TargetBlueprint == entry.Blueprint)
+			{
+				KingdomConstructionJob complete = Job;
+				if (marker != null && marker.GetPart<r_KingdomPlanMarker>() != null)
+				{
+					if (!KingdomConstruction.BeginProjection(ref complete, out _)) return;
+					if (!KingdomConstruction.IsCurrent(complete)
+						|| !KingdomConstruction.HasReceipt(marker, complete)
+						|| !KingdomConstruction.HasReceipt(existing, complete)) return;
+					string markerId = marker.ID;
+					bool removed;
+					try
+					{
+						removed = marker.Destroy(null, Silent: true);
+					}
+					catch (System.Exception ex)
+					{
+						KingdomConstruction.Quarantine(ref complete,
+							"Plan-marker retry threw during removal: " + ex.Message);
+						return;
+					}
+					if (KingdomConstructionRules.ExactRemovalAction(true, removed,
+						GameObject.Validate(marker), KingdomConstruction.FindExactId(
+							Z, markerId, out _) != KingdomPhysicalLookupState.Absent, true)
+						!= KingdomExactRemovalAction.ProvedAbsent)
+					{
+						KingdomConstruction.Quarantine(ref complete,
+							"Plan-marker retry was vetoed, moved, replaced, or partially changed.");
+						return;
+					}
+					GameObject exactAfterRemoval;
+					if (!KingdomConstruction.Owns(System, Z, complete)
+						|| KingdomConstruction.FindExactId(Z, existing.ID, out exactAfterRemoval)
+							!= KingdomPhysicalLookupState.Exact
+						|| !ReferenceEquals(exactAfterRemoval, existing)
+						|| !IsExactPlanScaffold(existing, Z, Z.GetCell(Job.X, Job.Y), complete, entry)
+						|| !KingdomConstruction.IsCurrent(complete))
+					{
+						KingdomConstruction.Quarantine(ref complete,
+							"The planned scaffold changed during retried marker removal.");
+						return;
+					}
+					existing.SetStringProperty(r_KingdomScaffold.RemovalProofProperty, markerId);
+					if (!r_KingdomScaffold.HasRemovalProof(existing, markerId))
+					{
+						KingdomConstruction.Quarantine(ref complete,
+							"The planned scaffold did not retain retried marker-removal proof.");
+						return;
+					}
+				}
+				if (!GameObject.Validate(existing) || existing.CurrentCell != Z.GetCell(Job.X, Job.Y)
+					|| !KingdomConstruction.HasReceipt(existing, complete)
+					|| !KingdomConstruction.IsCurrent(complete)) return;
+				if (complete.SubjectId != existing.ID)
+				{
+					if (!r_KingdomScaffold.HasRemovalProof(existing, complete.SubjectId))
+					{
+						KingdomConstruction.Quarantine(ref complete,
+							"The planned scaffold lacks exact marker-removal proof.");
+						return;
+					}
+					if (!KingdomConstruction.UpdateSubject(ref complete, existing.ID)) return;
+				}
+				r_KingdomScaffold part = existing.GetPart<r_KingdomScaffold>();
+				if (part.RemainingTicks <= 0 && part.LastWorkedTick > 0)
+					part.RetryDurable(System, Z, complete);
+				else
+					KingdomConstruction.FinishProjection(ref complete, true, true);
+				return;
+			}
+			if (marker != null && marker.GetPart<r_KingdomPlanMarker>() != null)
+			{
+				Realize(System, marker, entry, Job, out _);
+				return;
+			}
+			KingdomConstructionJob absent = Job;
+			KingdomConstruction.Quarantine(ref absent,
+				"The planned receipt has no exact marker or scaffold at its recorded cell.");
+		}
+
+		internal static void InspectConstruction(KingdomSystem System, Zone Z,
+			KingdomConstructionJob Job)
+		{
+			if (System == null || Z == null || Job == null
+				|| Job.Route != KingdomConstructionRoute.PlanScaffold
+				|| !KingdomData.TryGetBuilding(Job.TargetKey, out var entry)) return;
+			GameObject result = FindPlanScaffold(Z, Job, entry);
+			Cell cell = Z.GetCell(Job.X, Job.Y);
+			KingdomConstructionJob inspected = Job;
+			if (CountPlanScaffolds(Z, Job, entry) > 1)
+			{
+				KingdomConstruction.Quarantine(ref inspected,
+					"More than one planned scaffold carries the exact receipt.");
+				return;
+			}
+			GameObject marker = FindExactPlanMarker(System, Z, Job, entry);
+			GameObject namedSubject;
+			KingdomPhysicalLookupState subjectState = KingdomConstruction.FindExactId(
+				Z, Job.SubjectId, out namedSubject);
+			if (subjectState == KingdomPhysicalLookupState.Ambiguous)
+			{
+				KingdomConstruction.Quarantine(ref inspected,
+					"The planned subject ID resolves to more than one loaded object.");
+				return;
+			}
+			r_KingdomScaffold scaffold = GameObject.Validate(result)
+				? result.GetPart<r_KingdomScaffold>() : null;
+			GameObject successor;
+			int successors = r_KingdomScaffold.FindExactSuccessors(Z, Job,
+				entry.Blueprint, result, out successor);
+			if (successors > 1)
+			{
+				KingdomConstruction.Quarantine(ref inspected,
+					"More than one exact planned successor carries this receipt.");
+				return;
+			}
+			if (Job.Phase == KingdomConstructionPhase.Complete)
+			{
+				if (result != null)
+				{
+					if (!KingdomConstructionRules.FullyFundedExact(Job))
+					{
+						KingdomConstruction.Quarantine(ref inspected,
+							"A premature terminal plan does not carry exact paid claims.");
+						return;
+					}
+					if (marker != null)
+					{
+						KingdomConstruction.FinishProjection(ref inspected, false, false,
+							"The terminal plan still has its exact marker to remove.");
+						return;
+					}
+					// Migration for the first registry wave, which terminalized after marker
+					// removal and scaffold placement. That old path carried no removal-proof stamp.
+					if (inspected.SubjectId != result.ID
+						&& !KingdomConstruction.UpdateSubject(ref inspected, result.ID)) return;
+					if (successors == 1)
+						KingdomConstruction.FinishProjection(ref inspected, false, false,
+							"The terminal receipt still has an exact scaffold to remove.");
+					else
+						KingdomConstruction.FinishProjection(ref inspected, true, true);
+				}
+				else if (successors == 1)
+				{
+					if (!r_KingdomScaffold.HasRemovalProof(successor, Job.SubjectId))
+					{
+						KingdomConstruction.Quarantine(ref inspected,
+							"The terminal planned successor lacks scaffold-removal proof.");
+						return;
+					}
+					r_KingdomScaffold.TellCompletion(System, successor, Job);
+				}
+				return;
+			}
+			if (scaffold != null && result.CurrentCell == cell
+				&& scaffold.TargetBlueprint == entry.Blueprint)
+			{
+				if (marker != null && marker.GetPart<r_KingdomPlanMarker>() != null)
+				{
+					KingdomConstruction.FinishProjection(ref inspected, false, false,
+						"The scaffold is verified and its exact plan marker still needs removal.");
+				}
+				else
+				{
+					if (inspected.SubjectId != result.ID)
+					{
+						if (!r_KingdomScaffold.HasRemovalProof(result, inspected.SubjectId))
+						{
+							KingdomConstruction.Quarantine(ref inspected,
+								"The planned scaffold lacks exact marker-removal proof after reload.");
+							return;
+						}
+						if (!KingdomConstruction.UpdateSubject(ref inspected, result.ID)) return;
+					}
+				int finalPending = result.GetIntProperty(r_KingdomScaffold.FinalPendingProperty);
+				if (finalPending != 0 && finalPending != 1)
+				{
+					KingdomConstruction.Quarantine(ref inspected,
+						"The planned scaffold final flag is not an exact boolean.");
+					return;
+				}
+				if (Job.Phase == KingdomConstructionPhase.ProjectionPending
+					&& finalPending == 0)
+					{
+						KingdomConstruction.FinishProjection(ref inspected, true, true);
+					}
+					else if (Job.Phase == KingdomConstructionPhase.Working
+						|| Job.Phase == KingdomConstructionPhase.ProjectionPending)
+						scaffold.AdvanceDurable(System, Z, inspected, The.Game.TimeTicks);
+					else if (Job.Phase == KingdomConstructionPhase.Outstanding)
+					{
+						if (scaffold.RemainingTicks <= 0 && scaffold.LastWorkedTick > 0)
+							scaffold.RetryDurable(System, Z, inspected);
+						else
+							KingdomConstruction.FinishProjection(ref inspected, true, true);
+					}
+				}
+				return;
+			}
+			if (successors == 1)
+			{
+				if (!r_KingdomScaffold.HasRemovalProof(successor, Job.SubjectId))
+				{
+					KingdomConstruction.Quarantine(ref inspected,
+						"The planned successor lacks exact scaffold-removal proof.");
+					return;
+				}
+				if (KingdomConstruction.Complete(ref inspected))
+					r_KingdomScaffold.TellCompletion(System, successor, inspected);
+				return;
+			}
+			if (GameObject.Validate(namedSubject) && marker == null
+				&& (result == null || namedSubject != result))
+			{
+				KingdomConstruction.Quarantine(ref inspected,
+					"The plan predecessor moved or changed outside its exact recorded identity.");
+				return;
+			}
+			KingdomConstruction.Quarantine(ref inspected,
+				"The interrupted plan projection has no safely identifiable exact endpoint.");
+		}
+
+		private static GameObject FindExactPlanMarker(KingdomSystem System, Zone Z,
+			KingdomConstructionJob Job,
+			KingdomRules.BuildEntry Entry)
+		{
+			GameObject marker;
+			if (KingdomConstruction.FindExactId(Z, Job?.SourceId ?? Job?.SubjectId,
+				out marker) != KingdomPhysicalLookupState.Exact) return null;
+			Cell cell = Z == null || Job == null ? null : Z.GetCell(Job.X, Job.Y);
+			if (!KingdomConstruction.Owns(System, Z, Job)
+				|| !KingdomConstruction.IsCurrent(Job)
+				|| !IsExactPlanMarker(marker, Z, cell, Job, Entry, false)) return null;
+			if (string.IsNullOrEmpty(marker.GetStringProperty(KingdomConstruction.ReceiptProperty)))
+				KingdomConstruction.Bind(marker, Job);
+			return IsExactPlanMarker(marker, Z, cell, Job, Entry, true) ? marker : null;
+		}
+
+		private static bool IsExactPlanMarker(GameObject Marker, Zone Z, Cell Cell,
+			KingdomConstructionJob Job, KingdomRules.BuildEntry Entry, bool RequireReceipt)
+		{
+			if (!GameObject.Validate(Marker) || Z == null || Cell == null || Job == null
+				|| Entry == null || Marker.ID != (Job.SourceId ?? Job.SubjectId) || Marker.CurrentZone != Z
+				|| Marker.CurrentCell != Cell || Cell != Z.GetCell(Job.X, Job.Y)) return false;
+			r_KingdomPlanMarker marker = Marker.GetPart<r_KingdomPlanMarker>();
+			string receipt = Marker.GetStringProperty(KingdomConstruction.ReceiptProperty);
+			return marker != null && marker.DesignKey == Entry.Key
+				&& (RequireReceipt ? receipt == Job.Id
+					: string.IsNullOrEmpty(receipt) || receipt == Job.Id);
+		}
+
+		private static bool IsExactPlanScaffold(GameObject Scaffold, Zone Z, Cell Cell,
+			KingdomConstructionJob Job, KingdomRules.BuildEntry Entry)
+		{
+			if (!GameObject.Validate(Scaffold) || Z == null || Cell == null || Job == null
+				|| Entry == null || Scaffold.CurrentZone != Z || Scaffold.CurrentCell != Cell
+				|| Cell != Z.GetCell(Job.X, Job.Y)
+				|| Scaffold.GetStringProperty(KingdomUpgrade.BuildKeyProperty) != Entry.Key
+				|| !KingdomConstruction.HasReceipt(Scaffold, Job)) return false;
+			r_KingdomScaffold scaffold = Scaffold.GetPart<r_KingdomScaffold>();
+			return scaffold != null && scaffold.TargetBlueprint == Entry.Blueprint;
+		}
+
+		private static GameObject FindPlanScaffold(Zone Z, KingdomConstructionJob Job,
+			KingdomRules.BuildEntry Entry)
+		{
+			if (Z == null || Job == null || Entry == null) return null;
+			Cell cell = Z.GetCell(Job.X, Job.Y);
+			if (cell == null) return null;
+			GameObject found = null;
+			GameObject exact = null;
+			int count = 0;
+			foreach (GameObject item in cell.GetObjects())
+			{
+				r_KingdomScaffold scaffold = item.GetPart<r_KingdomScaffold>();
+				if (scaffold != null && item.CurrentCell == cell
+					&& scaffold.TargetBlueprint == Entry.Blueprint
+					&& item.GetStringProperty(KingdomUpgrade.BuildKeyProperty) == Entry.Key
+					&& KingdomConstruction.HasReceipt(item, Job))
+				{
+					count++;
+					if (found == null) found = item;
+					if (item.ID == Job.OutputId || item.ID == Job.SubjectId) exact = item;
+				}
+			}
+			GameObject global;
+			return count == 1 && exact != null
+				&& KingdomConstruction.FindExactId(Z, exact.ID, out global)
+					== KingdomPhysicalLookupState.Exact
+				&& ReferenceEquals(global, exact) ? exact : null;
+		}
+
+		private static bool RemoveCreated(GameObject Object)
+		{
+			try
+			{
+				return !GameObject.Validate(Object)
+					|| (Object.Obliterate(null, Silent: true) && !GameObject.Validate(Object));
+			}
+			catch
+			{
+				return false;
+			}
+		}
+
+		private static int CountPlanScaffolds(Zone Z, KingdomConstructionJob Job,
+			KingdomRules.BuildEntry Entry)
+		{
+			if (Z == null || Job == null || Entry == null) return 0;
+			Cell cell = Z?.GetCell(Job.X, Job.Y);
+			if (cell == null) return 0;
+			int count = 0;
+			foreach (GameObject item in cell.GetObjects())
+			{
+				r_KingdomScaffold scaffold = item.GetPart<r_KingdomScaffold>();
+				if (scaffold != null && scaffold.TargetBlueprint == Entry.Blueprint
+					&& item.GetStringProperty(KingdomUpgrade.BuildKeyProperty) == Entry.Key
+						&& KingdomConstruction.HasReceipt(item, Job))
+					{
+						if (item.ID != Job.OutputId && item.ID != Job.SubjectId) return 2;
+						count++;
+					}
+			}
+			return count;
 		}
 
 		/// <summary>Every plan currently staked and waiting in Z, oldest first.</summary>

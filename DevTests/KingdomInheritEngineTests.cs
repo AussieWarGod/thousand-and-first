@@ -264,7 +264,7 @@ namespace ThousandAndFirst.Tests
 				record.WorkConditions.Add(90 - i * 5);
 			}
 			record.Chronicle.Add("The first wall went up before the first rain.");
-			return record;
+			return KingdomSealTestIdentity.Bind(record);
 		}
 
 		private static KingdomSealRecord Promoted(params string[] Keys)

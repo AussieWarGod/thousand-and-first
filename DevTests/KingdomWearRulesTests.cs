@@ -1,4 +1,6 @@
 ﻿#if TAF_TESTS
+using System;
+using System.IO;
 using NUnit.Framework;
 using ThousandAndFirst;
 using ThousandAndFirst.Simulation.Kernel;
@@ -22,6 +24,19 @@ namespace ThousandAndFirst.Tests
 	public class KingdomWearRulesTests
 	{
 		private const string City = "taf:settlement:test-city";
+
+		private static string ReadRepoSource(string relative)
+		{
+			DirectoryInfo cursor = new DirectoryInfo(AppContext.BaseDirectory);
+			while (cursor != null)
+			{
+				string path = Path.Combine(cursor.FullName,
+					relative.Replace('/', Path.DirectorySeparatorChar));
+				if (File.Exists(path)) return File.ReadAllText(path);
+				cursor = cursor.Parent;
+			}
+			throw new InvalidOperationException("Cannot locate repository source " + relative);
+		}
 
 		// --- Causes: named, and each with its own increment ------------------------------------
 
@@ -676,6 +691,264 @@ namespace ThousandAndFirst.Tests
 			Assert.IsNotNull(KingdomWearRules.ReasonLine(Verdict.NoHands, "the mill"));
 			// A real crew over the same stretch does real work, linearly in the days.
 			Assert.AreEqual(KingdomMaterialRules.EffortWorked(2, 1) * 400, KingdomMaterialRules.EffortWorked(2, 400));
+		}
+
+		// --- Durable pass and incident fault decisions ------------------------------------
+
+		[Test]
+		public void PassAction_StartsOnceResumesEveryPhaseAndRejectsRegression()
+		{
+			Assert.AreEqual(KingdomWearPassAction.Start, KingdomWearRules.PassAction(
+				1200L, 0L, KingdomWearPassPhase.None, 2400L));
+			Assert.AreEqual(KingdomWearPassAction.AlreadyApplied, KingdomWearRules.PassAction(
+				2400L, 0L, KingdomWearPassPhase.None, 2400L));
+			for (int raw = (int)KingdomWearPassPhase.Bound;
+				raw <= (int)KingdomWearPassPhase.TemperDone; raw++)
+			{
+				Assert.AreEqual(KingdomWearPassAction.Resume, KingdomWearRules.PassAction(
+					1200L, 2400L, (KingdomWearPassPhase)raw, 2400L), "phase " + raw);
+			}
+			Assert.AreEqual(KingdomWearPassAction.Quarantine, KingdomWearRules.PassAction(
+				2400L, 0L, KingdomWearPassPhase.None, 1200L));
+			Assert.AreEqual(KingdomWearPassAction.Quarantine, KingdomWearRules.PassAction(
+				1200L, 1800L, KingdomWearPassPhase.HardIncident, 2400L));
+			Assert.AreEqual(KingdomWearPassAction.Quarantine, KingdomWearRules.PassAction(
+				-1L, 0L, KingdomWearPassPhase.None, 2400L));
+			Assert.AreEqual(KingdomWearPassAction.Quarantine, KingdomWearRules.PassAction(
+				0L, 0L, (KingdomWearPassPhase)99, 2400L));
+		}
+
+		[Test]
+		public void DamageMutationAction_AppliesOnlyTheBoundDeltaAndConfirmsItsExactResult()
+		{
+			Assert.AreEqual(KingdomWearMutationAction.Apply,
+				KingdomWearRules.DamageMutationAction(KingdomWearIncidentPhase.Bound, 20, 20, 30));
+			Assert.AreEqual(KingdomWearMutationAction.Apply,
+				KingdomWearRules.DamageMutationAction(KingdomWearIncidentPhase.MutationIntent, 20, 20, 30));
+			Assert.AreEqual(KingdomWearMutationAction.Confirm,
+				KingdomWearRules.DamageMutationAction(KingdomWearIncidentPhase.MutationIntent, 20, 30, 30));
+			Assert.AreEqual(KingdomWearMutationAction.Quarantine,
+				KingdomWearRules.DamageMutationAction(KingdomWearIncidentPhase.MutationIntent, 20, 25, 30));
+			for (int raw = (int)KingdomWearIncidentPhase.Mutated;
+				raw <= (int)KingdomWearIncidentPhase.Complete; raw++)
+			{
+				Assert.AreEqual(KingdomWearMutationAction.Confirm,
+					KingdomWearRules.DamageMutationAction((KingdomWearIncidentPhase)raw, 20, 30, 30),
+					"phase " + raw);
+			}
+			Assert.AreEqual(KingdomWearMutationAction.Wait,
+				KingdomWearRules.DamageMutationAction(KingdomWearIncidentPhase.Quarantined, 20, 30, 30));
+		}
+
+		[Test]
+		public void LeakMutationAction_NeverReappliesAnIntentWhoseCallbackMayHaveRestoredState()
+		{
+			Assert.AreEqual(KingdomWearMutationAction.Apply,
+				KingdomWearRules.LeakMutationAction(KingdomWearLeakPhase.Bound, 20, 20, 15));
+			Assert.AreEqual(KingdomWearMutationAction.Quarantine,
+				KingdomWearRules.LeakMutationAction(KingdomWearLeakPhase.MutationIntent, 20, 20, 15));
+			Assert.AreEqual(KingdomWearMutationAction.Quarantine,
+				KingdomWearRules.LeakMutationAction(KingdomWearLeakPhase.MutationIntent, 20, 15, 15));
+			Assert.AreEqual(KingdomWearMutationAction.Quarantine,
+				KingdomWearRules.LeakMutationAction(KingdomWearLeakPhase.MutationIntent, 20, 18, 15));
+			for (int raw = (int)KingdomWearLeakPhase.Mutated;
+				raw <= (int)KingdomWearLeakPhase.Complete; raw++)
+			{
+				Assert.AreEqual(KingdomWearMutationAction.Wait,
+					KingdomWearRules.LeakMutationAction((KingdomWearLeakPhase)raw, 20, 15, 15),
+					"phase " + raw);
+			}
+			Assert.AreEqual(KingdomWearMutationAction.Quarantine,
+				KingdomWearRules.LeakMutationAction(KingdomWearLeakPhase.Quarantined, 20, 15, 15));
+		}
+
+		[Test]
+		public void LeakClockAction_PreservesAbsoluteTimeAndQuarantinesMalformedOrRegressedClocks()
+		{
+			Assert.AreEqual(KingdomWearClockAction.Plant,
+				KingdomWearRules.LeakClockAction(false, 0L, 1200L, 1));
+			Assert.AreEqual(KingdomWearClockAction.Wait,
+				KingdomWearRules.LeakClockAction(true, 1200L, 1800L, 0));
+			Assert.AreEqual(KingdomWearClockAction.Advance,
+				KingdomWearRules.LeakClockAction(true, 1200L, 2400L, 1));
+			Assert.AreEqual(KingdomWearClockAction.Quarantine,
+				KingdomWearRules.LeakClockAction(true, 2400L, 1200L, 0));
+			Assert.AreEqual(KingdomWearClockAction.Quarantine,
+				KingdomWearRules.LeakClockAction(true, -1L, 1200L, 1));
+			Assert.AreEqual(KingdomWearClockAction.Quarantine,
+				KingdomWearRules.LeakClockAction(true, 1200L, 2400L, -1));
+		}
+
+		[Test]
+		public void SavedWearParsers_CapRawRowsAndFieldsBeforeSplit()
+		{
+			int[] numbers;
+			string[] ids;
+			int wear;
+			bool finishing;
+			Assert.IsTrue(KingdomWearRules.TryCanonicalIntRows("0|7|2147483647", out numbers));
+			Assert.IsFalse(KingdomWearRules.TryCanonicalIntRows("01", out numbers));
+			Assert.IsFalse(KingdomWearRules.TryCanonicalIntRows(
+				new string('1', KingdomWearRules.MaxRowsChars + 1), out numbers));
+			Assert.IsFalse(KingdomWearRules.TryCanonicalIntRows(
+				new string('|', KingdomWearRules.MaxRows), out numbers));
+			Assert.IsTrue(KingdomWearRules.TryObjectIdRows("food-a|food-b", out ids));
+			Assert.IsFalse(KingdomWearRules.TryObjectIdRows("food-a|food-a", out ids));
+			Assert.IsFalse(KingdomWearRules.TryObjectIdRows(
+				new string('x', KingdomWearRules.MaxObjectIdChars + 1), out ids));
+			Assert.IsTrue(KingdomWearRules.TryRepairPayload("v1|25|1", out wear, out finishing));
+			Assert.AreEqual(25, wear);
+			Assert.IsTrue(finishing);
+			Assert.IsFalse(KingdomWearRules.TryRepairPayload(
+				new string('1', KingdomWearRules.MaxRepairPayloadChars + 1),
+				out wear, out finishing));
+			Assert.IsFalse(KingdomWearRules.TryRepairPayload("v1|25|1|extra",
+				out wear, out finishing));
+			string rules = ReadRepoSource("Growth/KingdomWearRules.cs");
+			Assert.Less(rules.IndexOf("Text.Length > MaxRowsChars", StringComparison.Ordinal),
+				rules.IndexOf("Text.Split('|')", StringComparison.Ordinal));
+			Assert.Less(rules.IndexOf("Payload.Length > MaxRepairPayloadChars",
+				StringComparison.Ordinal), rules.IndexOf("Payload.Split('|')",
+				StringComparison.Ordinal));
+		}
+
+		[Test]
+		public void UninspectableWearSinks_AreLostNeverClaimedDelivered()
+		{
+			Assert.AreEqual(KingdomWearSinkDisposition.Lost,
+				KingdomWearRules.RecoverUninspectable(KingdomWearSinkDisposition.Attempting));
+			Assert.AreEqual(KingdomWearSinkDisposition.Pending,
+				KingdomWearRules.RecoverUninspectable(KingdomWearSinkDisposition.Pending));
+			Assert.IsTrue(KingdomWearRules.SinkSettled(KingdomWearSinkDisposition.Delivered));
+			Assert.IsTrue(KingdomWearRules.SinkSettled(KingdomWearSinkDisposition.Skipped));
+			Assert.IsTrue(KingdomWearRules.SinkSettled(KingdomWearSinkDisposition.Lost));
+			Assert.IsFalse(KingdomWearRules.SinkSettled(KingdomWearSinkDisposition.Attempting));
+		}
+
+		[Test]
+		public void WearSource_QuarantinesReloadedMutationAndPublishesOnlyAfterExactProof()
+		{
+			string source = ReadRepoSource("Growth/KingdomWear.cs");
+			StringAssert.Contains("NormalizeSerializedFields", source);
+			StringAssert.Contains("LeakCapacity", source);
+			StringAssert.Contains("TryReadStrictTick", source);
+			StringAssert.Contains("KingdomChronicle.RecordOnce", source);
+			StringAssert.Contains("LastCompletedIncidentId", source);
+			int recovery = source.IndexOf(
+				"if (phase == KingdomWearLeakPhase.MutationIntent)", StringComparison.Ordinal);
+			int recoveryEnd = source.IndexOf(
+				"if (phase >= KingdomWearLeakPhase.Mutated)", recovery, StringComparison.Ordinal);
+			Assert.GreaterOrEqual(recovery, 0);
+			StringAssert.Contains("QuarantineLeak", source.Substring(recovery,
+				recoveryEnd - recovery));
+			Assert.IsFalse(source.Substring(recovery, recoveryEnd - recovery)
+				.Contains("TryLeakFromExact"));
+			int leakIntent = source.IndexOf(
+				"Wear.LeakPhase = (int)KingdomWearLeakPhase.MutationIntent",
+				StringComparison.Ordinal);
+			int waterMutation = source.IndexOf("Survey.TryLeakFromExact(boundVessel", leakIntent,
+				StringComparison.Ordinal);
+			Assert.Greater(waterMutation, leakIntent);
+			int proof = source.IndexOf("!LeakWorkExact(frame", waterMutation,
+				StringComparison.Ordinal);
+			int checkpoint = source.IndexOf("Wear.LastLeakTick = Wear.LeakToTick", proof,
+				StringComparison.Ordinal);
+			Assert.Greater(proof, waterMutation);
+			Assert.Greater(checkpoint, proof);
+			int passComplete = source.IndexOf(
+				"KingdomMaterials.WriteTick(Work, SemanticPassCompletedTickProperty",
+				StringComparison.Ordinal);
+			int temperIncident = source.IndexOf("ApplyDamageIncident(System, Work",
+				source.IndexOf("KingdomWearPassPhase.TemperIncident", StringComparison.Ordinal),
+				StringComparison.Ordinal);
+			Assert.Greater(passComplete, temperIncident);
+		}
+
+		[Test]
+		public void SurveySource_ProvesEveryLeakAndSpoilCallbackBeforePublishingCounters()
+		{
+			string survey = ReadRepoSource("Growth/KingdomSurvey.cs");
+			int spoil = survey.IndexOf("public bool TrySpoilFromExact", StringComparison.Ordinal);
+			int spoilEnd = survey.IndexOf("private bool PublishSpoilCounters", spoil,
+				StringComparison.Ordinal);
+			string spoilBody = survey.Substring(spoil, spoilEnd - spoil);
+			Assert.AreEqual(1, Count(spoilBody, "food.Destroy(null, Silent: true)"));
+			int destroy = spoilBody.IndexOf("food.Destroy", StringComparison.Ordinal);
+			Assert.Greater(spoilBody.IndexOf("SpoilTopologyExact(frame, expected)", destroy,
+				StringComparison.Ordinal), destroy);
+			Assert.Greater(spoilBody.IndexOf("PublishSpoilCounters(frame, Lost)", destroy,
+				StringComparison.Ordinal), destroy);
+			StringAssert.Contains("ReferenceEquals(Frame.Inventory.Objects, Frame.List)", survey);
+			StringAssert.Contains("item.ID != Frame.ItemIds[i]", survey);
+			int leak = survey.IndexOf("public bool TryLeakFromExact", StringComparison.Ordinal);
+			int drain = survey.IndexOf("KingdomLiquids.Drain(Store, Drams)", leak,
+				StringComparison.Ordinal);
+			int leakProof = survey.IndexOf("Store.ParentObject != owner", drain,
+				StringComparison.Ordinal);
+			int waterCounter = survey.IndexOf("StoredWater = oldStored - Drams", leakProof,
+				StringComparison.Ordinal);
+			Assert.Greater(drain, leak);
+			Assert.Greater(leakProof, drain);
+			Assert.Greater(waterCounter, leakProof);
+			StringAssert.Contains("ReferenceEquals(Store.ComponentLiquids, dictionary)", survey);
+			StringAssert.Contains("owner.ID != ownerId", survey);
+		}
+
+		[Test]
+		public void RepairSource_FreezesOutboxThenInvokesPartRemovedOnceAndDispatchesAfterProof()
+		{
+			string source = ReadRepoSource("Growth/KingdomWear.cs");
+			Assert.AreEqual(1, Count(source, "Work.RemovePart(WearPart)"));
+			int finish = source.IndexOf("private static bool FinishRepairProjection",
+				StringComparison.Ordinal);
+			int prepare = source.IndexOf("KingdomCeremony.PrepareWearRepaired", finish,
+				StringComparison.Ordinal);
+			int attempt = source.IndexOf("RepairRemovalAttemptProperty, Updated.Id", prepare,
+				StringComparison.Ordinal);
+			int remove = source.IndexOf("Work.RemovePart(WearPart)", attempt,
+				StringComparison.Ordinal);
+			int proof = source.IndexOf("RepairRemovalProofProperty, Updated.Id", remove,
+				StringComparison.Ordinal);
+			int complete = source.IndexOf("KingdomConstruction.Complete(ref Updated)", proof,
+				StringComparison.Ordinal);
+			int dispatch = source.IndexOf("KingdomCeremony.DispatchPending(System, ref Updated)",
+				complete, StringComparison.Ordinal);
+			Assert.Greater(prepare, finish);
+			Assert.Greater(attempt, prepare);
+			Assert.Greater(remove, attempt);
+			Assert.Greater(proof, remove);
+			Assert.Greater(complete, proof);
+			Assert.Greater(dispatch, complete);
+			StringAssert.Contains("A repair part-removal callback was interrupted and will not be repeated",
+				source);
+			StringAssert.Contains("MarkRepairRemovalLost", source);
+			Assert.IsFalse(source.Contains(
+				"KingdomChronicle.Record(System, line, Accomplishment: true)"));
+		}
+
+		[Test]
+		public void WearOptionSource_FreezesClocksAndReanchorsWithoutBacklog()
+		{
+			string source = ReadRepoSource("Growth/KingdomWear.cs");
+			StringAssert.Contains("if (!Enabled)", source);
+			StringAssert.Contains("AnchorDisabledClocks(System, Z, Survey, now)", source);
+			StringAssert.Contains("AnchorReenabledClocks(System, Z, Survey, now)", source);
+			StringAssert.Contains("wear.LastLeakTick = Now", source);
+			StringAssert.Contains("KingdomMaterials.WriteTick(work, RepairWorkedProperty, Now)",
+				source);
+			StringAssert.Contains("ResolveSafeReceipts(System, Survey, work)", source);
+		}
+
+		private static int Count(string Text, string Needle)
+		{
+			int count = 0;
+			for (int at = 0; ; )
+			{
+				at = Text.IndexOf(Needle, at, StringComparison.Ordinal);
+				if (at < 0) return count;
+				count++;
+				at += Needle.Length;
+			}
 		}
 	}
 }

@@ -940,7 +940,7 @@ namespace ThousandAndFirst.Simulation.City
 			}
 			brain.Wanders = false;
 			brain.WandersRandomly = false;
-			brain.Hostile = false;
+			brain.Allegiance.Hostile = false;
 		}
 
 		private static void Walk(GameObject Body, Zone Z, int x, int y)
@@ -1019,17 +1019,13 @@ namespace ThousandAndFirst.Simulation.City
 		/// <summary>
 		/// The settlement id every draw about this city's deliveries hangs off.
 		/// <para>
-		/// <c>KingdomChronicle.SettlementId</c>'s own folding, and not a second one: a semantic id
-		/// has a grammar (<c>KernelSemanticId.IsValid</c>) and a second encoder is a second chance
-		/// to produce a string the kernel refuses. Keyed on the SEAT's name rather than the realm's,
-		/// so a realm's two cities domain-separate and one city's deliveries cannot draw the other's
-		/// carriers.
+		/// The seated city's persisted immutable id. Names and seat order are prose only, so a
+		/// rename or seat exchange cannot move a delivery draw onto another subject.
 		/// </para>
 		/// </summary>
 		private static string SeedLabel(KingdomSystem System)
 		{
-			string name = System.SeatName;
-			return KingdomChronicle.SettlementId(string.IsNullOrEmpty(name) ? System.KingdomFactionName : name);
+			return KingdomChronicle.SettlementId(System);
 		}
 
 		private static void Refuse(string step, KingdomCityFault fault)

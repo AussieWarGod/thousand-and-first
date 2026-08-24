@@ -838,7 +838,7 @@ namespace ThousandAndFirst
 			// Upgrades climb within a plot; sizes compete across plots. A design that improved into
 			// a larger one would be an in-place metamorphosis onto ground the settlement never
 			// cleared, and would quietly make the whole size-versus-stacking decision free.
-			if (successor.Plot != Entry.Plot)
+			if (successor.Plot != Entry.Plot && !IsHeartGrowth(Entry, successor))
 			{
 				Findings.Add(new CatalogueFinding(Entry.Key, "UpgradesTo", CatalogueSeverity.Fault,
 					"building " + Entry.Key + " stands on " + PlotWord(Entry.Plot) + " and improves into " + successor.Key + ", which wants " + PlotWord(successor.Plot) + "; an improvement climbs within its own plot" + Layered(Entry) + Layered(successor)));
@@ -887,6 +887,23 @@ namespace ThousandAndFirst
 				Findings.Add(new CatalogueFinding(Entry.Key, "UpgradesTo", CatalogueSeverity.Fault,
 					"the improvement chain from " + Entry.Key + " comes back to " + at + RingLayers(walked, ByKey)));
 			}
+		}
+
+		/// <summary>The heart is the one authored chain whose surveyed plot grows one ring at a
+		/// time. Both links must be adjacent named rungs and their declared sizes must match the
+		/// rung table; merely borrowing a heart key cannot waive the ordinary same-plot law.</summary>
+		private static bool IsHeartGrowth(CatalogueEntry Entry, CatalogueEntry Successor)
+		{
+			if (Entry == null || Successor == null)
+			{
+				return false;
+			}
+			int from = KingdomPlotRules.HeartRungOf(Entry.Key);
+			int to = KingdomPlotRules.HeartRungOf(Successor.Key);
+			return from > 0 && to == from + 1
+				&& Entry.SuccessorKey == Successor.Key
+				&& Entry.Plot == KingdomPlotRules.HeartSizeForRung(from)
+				&& Successor.Plot == KingdomPlotRules.HeartSizeForRung(to);
 		}
 
 		/// <summary>

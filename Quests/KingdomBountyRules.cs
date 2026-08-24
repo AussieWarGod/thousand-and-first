@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Text;
 using ThousandAndFirst.Simulation.Kernel;
 
 namespace ThousandAndFirst
@@ -69,6 +70,130 @@ namespace ThousandAndFirst
 		Taken = 2
 	}
 
+	/// <summary>Durable take-over phases. Values are save format: append only.</summary>
+	public enum BountyTakePhase
+	{
+		None = 0,
+		Bound = 1,
+		TaskIntent = 2,
+		TaskDone = 3,
+		ChronicleDone = 4,
+		LedgerIntent = 5,
+		LedgerDone = 6,
+		MessageIntent = 7,
+		MessageDone = 8,
+		Complete = 9,
+		Quarantined = 10
+	}
+
+	/// <summary>One exact inventory transfer's durable phase. Values are save format.</summary>
+	public enum BountyTransferPhase
+	{
+		None = 0,
+		Bound = 1,
+		RemoveIntent = 2,
+		Detached = 3,
+		AddIntent = 4,
+		Arrived = 5,
+		Quarantined = 6
+	}
+
+	/// <summary>Where a receipt-bound item can be proved to be.</summary>
+	public enum BountyTransferLocation
+	{
+		Missing = 0,
+		SourceOnly = 1,
+		Detached = 2,
+		DestinationOnly = 3,
+		Both = 4,
+		Elsewhere = 5
+	}
+
+	public enum BountyTransferAction
+	{
+		Wait = 0,
+		Bind = 1,
+		Remove = 2,
+		Add = 3,
+		Confirm = 4,
+		Quarantine = 5
+	}
+
+	/// <summary>Honest outcome of an uninspectable founder-facing sink.</summary>
+	public enum BountySinkDisposition
+	{
+		None = 0,
+		Pending = 1,
+		Attempting = 2,
+		Delivered = 3,
+		Skipped = 4,
+		Lost = 5
+	}
+
+	/// <summary>Publication of a newly staked, already-durable notice.</summary>
+	public enum BountyPostPhase
+	{
+		None = 0,
+		Bound = 1,
+		ChronicleDone = 2,
+		MessageSettled = 3,
+		Complete = 4
+	}
+
+	/// <summary>Durable founder withdrawal, including its one-shot destruction callback.</summary>
+	public enum BountyWithdrawPhase
+	{
+		None = 0,
+		Bound = 1,
+		MarkCleared = 2,
+		ChronicleDone = 3,
+		MessageSettled = 4,
+		CleanupAttempting = 5,
+		CleanupLost = 6
+	}
+
+	/// <summary>Exact-water payout phases. Bound and DebitIntent always carry vessel rows.</summary>
+	public enum BountyPaymentPhase
+	{
+		None = 0,
+		Bound = 1,
+		DebitIntent = 2,
+		Debited = 3,
+		Credited = 4,
+		Quarantined = 5
+	}
+
+	public enum BountyPaymentObservation
+	{
+		Malformed = 0,
+		Original = 1,
+		Debited = 2,
+		Mixed = 3,
+		Uncertain = 4
+	}
+
+	public enum BountyPaymentAction
+	{
+		Wait = 0,
+		Bind = 1,
+		Debit = 2,
+		Credit = 3,
+		Quarantine = 4
+	}
+
+	/// <summary>Paid-notice publication phases. Intent precedes every uninspectable output.</summary>
+	public enum BountyTerminalPhase
+	{
+		None = 0,
+		ChronicleDone = 1,
+		LedgerIntent = 2,
+		LedgerDone = 3,
+		MessageIntent = 4,
+		MessageDone = 5,
+		CleanupAttempting = 6,
+		CleanupLost = 7
+	}
+
 	/// <summary>
 	/// The posted price: engine-free arithmetic and every hand-written line behind the notice a
 	/// founder stakes at the heart (<see cref="KingdomBounty"/> is the engine-coupled shell).
@@ -89,7 +214,78 @@ namespace ThousandAndFirst
 	/// </summary>
 	public static class KingdomBountyRules
 	{
+		public const int MaxSavedTextChars = 4096;
+		public const int MaxPaymentRows = 256;
+		public const int MaxPaymentRowsChars = 8192;
+		public const int MaxObjectIdChars = 256;
+		public const int MaxCanonicalIntegerChars = 10;
+
+		public static bool SinkSettled(BountySinkDisposition State)
+		{
+			return State == BountySinkDisposition.Delivered
+				|| State == BountySinkDisposition.Skipped
+				|| State == BountySinkDisposition.Lost;
+		}
+
+		/// <summary>An interrupted uninspectable call is explicit loss, never assumed delivery.</summary>
+		public static BountySinkDisposition RecoverUninspectable(BountySinkDisposition State)
+		{
+			return State == BountySinkDisposition.Attempting
+				? BountySinkDisposition.Lost : State;
+		}
+
+		/// <summary>Strict bounded canonical non-negative integer rows.</summary>
+		public static bool TryCanonicalIntRows(string Text, out int[] Values)
+		{
+			Values = null;
+			if (string.IsNullOrEmpty(Text) || Text.Length > MaxPaymentRowsChars) return false;
+			int separators = 0;
+			for (int i = 0; i < Text.Length; i++)
+			{
+				if (Text[i] == '|') separators++;
+				if (separators >= MaxPaymentRows) return false;
+			}
+			string[] rows = Text.Split('|');
+			if (rows.Length == 0 || rows.Length > MaxPaymentRows) return false;
+			Values = new int[rows.Length];
+			for (int i = 0; i < rows.Length; i++)
+			{
+				if (rows[i].Length == 0 || rows[i].Length > MaxCanonicalIntegerChars
+					|| !int.TryParse(rows[i], global::System.Globalization.NumberStyles.None,
+						global::System.Globalization.CultureInfo.InvariantCulture, out Values[i])
+					|| Values[i] < 0 || Values[i].ToString(
+						global::System.Globalization.CultureInfo.InvariantCulture) != rows[i]) return false;
+			}
+			return true;
+		}
+
+		/// <summary>Strict bounded object-id rows; separators are never valid inside an id.</summary>
+		public static bool TryObjectIdRows(string Text, out string[] Values)
+		{
+			Values = null;
+			if (string.IsNullOrEmpty(Text) || Text.Length > MaxPaymentRowsChars) return false;
+			int separators = 0;
+			for (int i = 0; i < Text.Length; i++)
+			{
+				if (Text[i] == '|') separators++;
+				if (separators >= MaxPaymentRows) return false;
+			}
+			string[] rows = Text.Split('|');
+			if (rows.Length == 0 || rows.Length > MaxPaymentRows) return false;
+			for (int i = 0; i < rows.Length; i++)
+			{
+				if (string.IsNullOrEmpty(rows[i]) || rows[i].Length > MaxObjectIdChars) return false;
+				for (int j = 0; j < i; j++)
+				{
+					if (string.Equals(rows[j], rows[i], global::System.StringComparison.Ordinal)) return false;
+				}
+			}
+			Values = rows;
+			return true;
+		}
 		private const int BountyRulesVersion = 1;
+
+		private const int ScheduledBountyRulesVersion = 2;
 
 		/// <summary>Fixed, all-zero seed, exactly as <c>KingdomChronicle</c>,
 		/// <c>KingdomVoiceRules</c>, and <c>KingdomCeremonyRules</c> use it: domain separation is
@@ -100,6 +296,8 @@ namespace ThousandAndFirst
 		/// <summary>Ordinal lane for notice draws &mdash; one per settlement, shared with no other
 		/// kernel-backed draw in the mod.</summary>
 		private const string NoticeEventStreamId = "taf:bounty:notice:v1";
+
+		private const string ScheduledNoticeStreamPrefix = "taf:bounty:notice:v2:";
 
 		/// <summary>Ordinal lane for the frontier pick. A lane of its own rather than another draw
 		/// index on the notice lane: the notice's indices are <c>pass * 3 + k</c> and already
@@ -118,6 +316,286 @@ namespace ThousandAndFirst
 		/// past <c>uint</c>. Ten million passes is roughly ten million attended visits to one
 		/// notice; the cap exists so the arithmetic is total, not because it can be reached.</summary>
 		public const int MaxPasses = 10000000;
+
+		/// <summary>One opportunity per Qud day, independent of zone activation cadence.</summary>
+		public const long AttemptIntervalTicks = 1200L;
+
+		/// <summary>
+		/// Compatibility cap for callers which inspect an absolute schedule as a prefix. Runtime
+		/// notices deliberately resolve only the latest due opportunity, because an unattended
+		/// historical draw has no historically captured roster to resolve against.
+		/// </summary>
+		public const int MaxAttemptsPerSettlementPass = 4096;
+
+		/// <summary>Compatibility presentation cap for schedule-inspection clients. Runtime's
+		/// latest-only policy can produce at most one refusal in an attended pass.</summary>
+		public const int MaxAttemptPresentations = 3;
+
+		/// <summary>
+		/// Persistent semantic lane for one notice. Qud object ids are decimal game-object ids, but
+		/// folding is total for imported or hand-edited values too.
+		/// </summary>
+		public static string NoticeEventStream(string NoticeId)
+		{
+			StringBuilder builder = new StringBuilder(ScheduledNoticeStreamPrefix);
+			if (string.IsNullOrEmpty(NoticeId))
+			{
+				builder.Append("unknown");
+			}
+			else
+			{
+				for (int i = 0; i < NoticeId.Length && builder.Length < 128; i++)
+				{
+					char c = NoticeId[i];
+					if (c >= 'A' && c <= 'Z')
+					{
+						c = (char)(c + 32);
+					}
+					bool allowed = (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9')
+						|| c == '.' || c == '_' || c == ':' || c == '-';
+					builder.Append(allowed ? c : '-');
+				}
+			}
+			return builder.ToString();
+		}
+
+		/// <summary>Stable caller key for keyed chronicle and durable output receipts.</summary>
+		public static string NoticeEventId(string NoticeId)
+		{
+			const string prefix = "taf:bounty:event:v1:";
+			StringBuilder builder = new StringBuilder(prefix);
+			string source = string.IsNullOrEmpty(NoticeId) ? "unknown" : NoticeId;
+			for (int i = 0; i < source.Length && builder.Length < 180; i++)
+			{
+				char c = source[i];
+				if (c >= 'A' && c <= 'Z') c = (char)(c + 32);
+				bool allowed = (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9')
+					|| c == '.' || c == '_' || c == ':' || c == '-';
+				builder.Append(allowed ? c : '-');
+			}
+			return builder.ToString();
+		}
+
+		public static bool IsNoticeEventStream(string Value)
+		{
+			return !string.IsNullOrEmpty(Value) && Value.Length <= 128
+				&& Value.StartsWith(ScheduledNoticeStreamPrefix, System.StringComparison.Ordinal);
+		}
+
+		public static bool IsNoticeEventId(string Value)
+		{
+			return !string.IsNullOrEmpty(Value) && Value.Length <= 180
+				&& Value.StartsWith("taf:bounty:event:v1:", System.StringComparison.Ordinal);
+		}
+
+		/// <summary>Pure recovery law for one exact item move.</summary>
+		public static BountyTransferAction TransferAction(BountyTransferPhase Phase,
+			BountyTransferLocation Location)
+		{
+			if (Phase == BountyTransferPhase.Quarantined)
+			{
+				return BountyTransferAction.Wait;
+			}
+			if (Phase == BountyTransferPhase.None)
+			{
+				return BountyTransferAction.Bind;
+			}
+			if (Phase == BountyTransferPhase.Bound
+				&& Location == BountyTransferLocation.SourceOnly)
+			{
+				return BountyTransferAction.Remove;
+			}
+			if (Phase == BountyTransferPhase.Arrived
+				&& Location == BountyTransferLocation.DestinationOnly)
+			{
+				return BountyTransferAction.Confirm;
+			}
+			return BountyTransferAction.Quarantine;
+		}
+
+		/// <summary>
+		/// Classifies a persisted exact-water receipt. A row only proves payment when same bound
+		/// vessel has exactly its intended post-debit volume. Any other deficit is uncertain and
+		/// may not authorize another debit.
+		/// </summary>
+		public static BountyPaymentObservation ObservePayment(int Requested,
+			int[] OriginalVolumes, int[] CurrentVolumes, int[] Allocations,
+			bool[] SameVessel, bool[] EmptyOrPureWater, out int ProvedRemoved)
+		{
+			ProvedRemoved = 0;
+			if (Requested <= 0 || OriginalVolumes == null || CurrentVolumes == null
+				|| Allocations == null || SameVessel == null || EmptyOrPureWater == null
+				|| OriginalVolumes.Length == 0
+				|| OriginalVolumes.Length != CurrentVolumes.Length
+				|| OriginalVolumes.Length != Allocations.Length
+				|| OriginalVolumes.Length != SameVessel.Length
+				|| OriginalVolumes.Length != EmptyOrPureWater.Length)
+			{
+				return BountyPaymentObservation.Malformed;
+			}
+			bool allOriginal = true;
+			bool allDebited = true;
+			bool everyRowExact = true;
+			long proved = 0L;
+			long allocated = 0L;
+			for (int i = 0; i < OriginalVolumes.Length; i++)
+			{
+				int original = OriginalVolumes[i];
+				int allocation = Allocations[i];
+				if (original <= 0 || allocation <= 0 || allocation > original)
+				{
+					return BountyPaymentObservation.Malformed;
+				}
+				allocated += allocation;
+				bool identity = SameVessel[i] && EmptyOrPureWater[i];
+				bool originalRow = identity && CurrentVolumes[i] == original;
+				bool debitedRow = identity && CurrentVolumes[i] == original - allocation;
+				allOriginal &= originalRow;
+				allDebited &= debitedRow;
+				if (debitedRow) proved += allocation;
+				if (!originalRow && !debitedRow) everyRowExact = false;
+			}
+			if (allocated != Requested || proved > int.MaxValue)
+			{
+				return BountyPaymentObservation.Malformed;
+			}
+			ProvedRemoved = (int)proved;
+			if (allOriginal) return BountyPaymentObservation.Original;
+			if (allDebited) return BountyPaymentObservation.Debited;
+			return everyRowExact ? BountyPaymentObservation.Mixed : BountyPaymentObservation.Uncertain;
+		}
+
+		public static BountyPaymentAction PaymentAction(BountyPaymentPhase Phase,
+			BountyPaymentObservation Observation)
+		{
+			if (Phase == BountyPaymentPhase.Quarantined) return BountyPaymentAction.Wait;
+			if (Phase == BountyPaymentPhase.None) return BountyPaymentAction.Bind;
+			if (Phase == BountyPaymentPhase.Bound
+				&& Observation == BountyPaymentObservation.Original)
+			{
+				return BountyPaymentAction.Debit;
+			}
+			if (Phase == BountyPaymentPhase.Credited) return BountyPaymentAction.Wait;
+			return BountyPaymentAction.Quarantine;
+		}
+
+		/// <summary>Save-facing scalar lifecycle validity. Engine shell additionally validates bindings.</summary>
+		public static bool ValidLifecycleScalars(int TaskCode, int Price, int Paid, bool Done,
+			string WorkerName, int ScheduleVersion, string EventStreamId, long NextAttemptTick,
+			bool ScheduleExhausted, int Passes, int TakePhase, int TransferPhase,
+			int PaymentPhase, int TerminalPhase)
+		{
+			if (TaskCode < 0 || TaskCode >= TaskCount || Price < MinPrice || Price > MaxPrice
+				|| Paid < 0 || Paid > Price || Passes < 0 || Passes > MaxPasses)
+			{
+				return false;
+			}
+			if (Done && string.IsNullOrEmpty(WorkerName)) return false;
+			if (ScheduleVersion != 0 && ScheduleVersion != ScheduledBountyRulesVersion) return false;
+			if (ScheduleVersion == ScheduledBountyRulesVersion
+				&& (!IsNoticeEventStream(EventStreamId)
+					|| (ScheduleExhausted ? NextAttemptTick != 0L : NextAttemptTick <= 0L)))
+			{
+				return false;
+			}
+			return TakePhase >= 0 && TakePhase <= (int)BountyTakePhase.Quarantined
+				&& TransferPhase >= 0 && TransferPhase <= (int)BountyTransferPhase.Quarantined
+				&& PaymentPhase >= 0 && PaymentPhase <= (int)BountyPaymentPhase.Quarantined
+				&& TerminalPhase >= 0 && TerminalPhase <= (int)BountyTerminalPhase.CleanupLost;
+		}
+
+		/// <summary>First opportunity strictly after posting. False only at tick exhaustion.</summary>
+		public static bool TryFirstAttemptTick(long PostedTick, out long Tick)
+		{
+			Tick = 0L;
+			long posted = (PostedTick > 0L) ? PostedTick : 0L;
+			if (posted > long.MaxValue - AttemptIntervalTicks)
+			{
+				return false;
+			}
+			Tick = posted + AttemptIntervalTicks;
+			return true;
+		}
+
+		/// <summary>Next opportunity in the same absolute daily lane.</summary>
+		public static bool TryAdvanceAttemptTick(long CurrentTick, out long NextTick)
+		{
+			NextTick = 0L;
+			if (CurrentTick < 0L || CurrentTick > long.MaxValue - AttemptIntervalTicks)
+			{
+				return false;
+			}
+			NextTick = CurrentTick + AttemptIntervalTicks;
+			return true;
+		}
+
+		/// <summary>
+		/// First aligned opportunity strictly after Now. Used only to migrate visit-counted legacy
+		/// notices: old outcomes remain consumed, and loading the new build cannot immediately roll
+		/// another reader.
+		/// </summary>
+		public static bool TryAttemptAfter(long NowTick, long PostedTick, out long Tick)
+		{
+			Tick = 0L;
+			long now = (NowTick > 0L) ? NowTick : 0L;
+			long first;
+			if (!TryFirstAttemptTick(PostedTick, out first))
+			{
+				return false;
+			}
+			if (now < first)
+			{
+				Tick = first;
+				return true;
+			}
+			long elapsed = now - first;
+			long steps = elapsed / AttemptIntervalTicks + 1L;
+			if (steps > (long.MaxValue - first) / AttemptIntervalTicks)
+			{
+				return false;
+			}
+			Tick = first + steps * AttemptIntervalTicks;
+			return true;
+		}
+
+		/// <summary>
+		/// Bounded prefix arithmetic retained for diagnostics and compatibility. It does not decide
+		/// which roster may answer those opportunities; runtime uses <see cref="TryLatestDueAttempt"/>
+		/// and consumes older opportunities without drawing them.
+		/// </summary>
+		public static int DueAttemptPrefix(long NowTick, long NextTick, bool Exhausted, int Cap)
+		{
+			if (Exhausted || Cap <= 0 || NextTick < 0L || NowTick < NextTick)
+			{
+				return 0;
+			}
+			long count = (NowTick - NextTick) / AttemptIntervalTicks + 1L;
+			return (count > Cap) ? Cap : (int)count;
+		}
+
+		/// <summary>
+		/// Selects only the latest due opportunity. Earlier unattended opportunities are skipped,
+		/// because resolving them against a future roster lets a newcomer act before they arrived.
+		/// The returned skip count is durable audit truth; callers advance both cursor and consumed
+		/// count before asking the current roster about <paramref name="LatestTick"/>.
+		/// </summary>
+		public static bool TryLatestDueAttempt(long NowTick, long NextTick, bool Exhausted,
+			out long LatestTick, out long Skipped)
+		{
+			LatestTick = 0L;
+			Skipped = 0L;
+			if (Exhausted || NextTick < 0L || NowTick < NextTick)
+			{
+				return false;
+			}
+			Skipped = (NowTick - NextTick) / AttemptIntervalTicks;
+			if (Skipped > 0L && Skipped > (long.MaxValue - NextTick) / AttemptIntervalTicks)
+			{
+				return false;
+			}
+			LatestTick = NextTick + Skipped * AttemptIntervalTicks;
+			return LatestTick <= NowTick && NowTick - LatestTick < AttemptIntervalTicks;
+		}
 
 		// ==================================================================================
 		// The tasks
@@ -386,6 +864,10 @@ namespace ThousandAndFirst
 		/// names without re-deriving any of it.</summary>
 		public struct BountyAttempt
 		{
+			/// <summary>False only when the kernel refused before an outcome existed. Callers must
+			/// leave the scheduled cursor on this event and retry it; no truth was burned.</summary>
+			public bool Determined;
+
 			/// <summary>What the pass came to.</summary>
 			public BountyOutcome Outcome;
 
@@ -429,13 +911,6 @@ namespace ThousandAndFirst
 		/// <param name="Price">Drams promised.</param>
 		public static BountyAttempt Resolve(string SettlementId, long PostedTick, int PassIndex, IList<string> Roster, BountyTask Task, int Price)
 		{
-			BountyAttempt attempt = default(BountyAttempt);
-			attempt.Outcome = BountyOutcome.NobodyTried;
-			attempt.RosterIndex = -1;
-			if (Roster == null || Roster.Count == 0)
-			{
-				return attempt;
-			}
 			int pass = (PassIndex > 0) ? PassIndex : 0;
 			if (pass > MaxPasses)
 			{
@@ -445,19 +920,61 @@ namespace ThousandAndFirst
 			KernelFaultCode fault;
 			if (!SemanticEventKey.TryCreate(BountyRulesVersion, SettlementId, NoticeEventStreamId, NoticeEventKind, (ulong)((PostedTick > 0L) ? PostedTick : 0L), out key, out fault))
 			{
+				return EmptyAttempt();
+			}
+			return ResolveKey(SettlementId, key, (uint)pass * DrawsPerPass, Roster, Task, Price);
+		}
+
+		/// <summary>
+		/// Resolves one absolute scheduled opportunity. Notice identity owns the event stream and
+		/// the scheduled world tick owns the ordinal, so entering a zone cannot mint a new draw.
+		/// </summary>
+		public static BountyAttempt ResolveScheduled(string SettlementId, string EventStreamId,
+			long ScheduledTick, IList<string> Roster, BountyTask Task, int Price)
+		{
+			if (ScheduledTick < 0L)
+			{
+				return EmptyAttempt();
+			}
+			SemanticEventKey key;
+			KernelFaultCode fault;
+			if (!SemanticEventKey.TryCreate(ScheduledBountyRulesVersion, SettlementId,
+				EventStreamId, NoticeEventKind, (ulong)ScheduledTick, out key, out fault))
+			{
+				return EmptyAttempt();
+			}
+			return ResolveKey(SettlementId, key, 0u, Roster, Task, Price);
+		}
+
+		private static BountyAttempt EmptyAttempt()
+		{
+			BountyAttempt attempt = default(BountyAttempt);
+			attempt.Outcome = BountyOutcome.NobodyTried;
+			attempt.RosterIndex = -1;
+			return attempt;
+		}
+
+		private static BountyAttempt ResolveKey(string SettlementId, SemanticEventKey Key,
+			uint DrawBase, IList<string> Roster, BountyTask Task, int Price)
+		{
+			BountyAttempt attempt = EmptyAttempt();
+			if (Roster == null || Roster.Count == 0)
+			{
+				attempt.Determined = true;
 				return attempt;
 			}
-			uint drawBase = (uint)pass * DrawsPerPass;
+			KernelFaultCode fault;
 			ulong value;
-			if (!CounterRandom.TryDrawBelow(BountySeed, key, drawBase, 100uL, out value, out fault))
+			if (!CounterRandom.TryDrawBelow(BountySeed, Key, DrawBase, 100uL, out value, out fault))
 			{
 				return attempt;
 			}
 			if (value >= (ulong)ReadChancePercent(Price))
 			{
+				attempt.Determined = true;
 				return attempt;
 			}
-			if (!CounterRandom.TryDrawBelow(BountySeed, key, drawBase + 1u, (ulong)Roster.Count, out value, out fault))
+			if (!CounterRandom.TryDrawBelow(BountySeed, Key, DrawBase + 1u, (ulong)Roster.Count, out value, out fault))
 			{
 				return attempt;
 			}
@@ -481,7 +998,7 @@ namespace ThousandAndFirst
 				}
 			}
 			attempt.Outcome = BountyOutcome.Refused;
-			if (!CounterRandom.TryDrawBelow(BountySeed, key, drawBase + 2u, 100uL, out value, out fault))
+			if (!CounterRandom.TryDrawBelow(BountySeed, Key, DrawBase + 2u, 100uL, out value, out fault))
 			{
 				return attempt;
 			}
@@ -490,6 +1007,7 @@ namespace ThousandAndFirst
 			{
 				attempt.Outcome = BountyOutcome.Taken;
 			}
+			attempt.Determined = true;
 			return attempt;
 		}
 
@@ -639,6 +1157,18 @@ namespace ThousandAndFirst
 			default:
 				return 0;
 			}
+		}
+
+		/// <summary>Absolute completion tick, saturated rather than wrapped into the past.</summary>
+		public static long WorkDueTick(long TakenTick, int Days)
+		{
+			long taken = (TakenTick > 0L) ? TakenTick : 0L;
+			if (Days <= 0)
+			{
+				return 0L;
+			}
+			long duration = (long)Days * KingdomRules.TicksPerDay;
+			return (taken > long.MaxValue - duration) ? long.MaxValue : taken + duration;
 		}
 
 		// ==================================================================================

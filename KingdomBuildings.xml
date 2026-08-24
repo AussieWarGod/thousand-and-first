@@ -770,13 +770,13 @@
     labour to trench them. Cheap per length, because a line is many lengths.
   -->
   <building Key="watermain" DisplayName="water main (a length of the fresh line)" Blueprint="r_KingdomWaterMain"
-            Cost="2" Ticks="300" Styles="all" Category="storage" Open="yes" MinStage="Steading"
+            Cost="2" Ticks="300" Styles="all" Category="storage" MinStage="Steading"
             Materials="timber:2,scrap:1" />
   <building Key="brinemain" DisplayName="brine main (a length of the salt line; it will not join the fresh one)" Blueprint="r_KingdomBrineMain"
-            Cost="2" Ticks="300" Styles="all" Category="storage" Open="yes" MinStage="Village"
+            Cost="2" Ticks="300" Styles="all" Category="storage" MinStage="Village"
             Materials="timber:2,scrap:1" />
   <building Key="liquidcrossing" DisplayName="crossing piece (two lines through one tile, and they never meet)" Blueprint="r_KingdomLiquidCrossing"
-            Cost="3" Ticks="450" Styles="all" Category="storage" Open="yes" MinStage="Village"
+            Cost="3" Ticks="450" Styles="all" Category="storage" MinStage="Village"
             Materials="timber:2,stone:2" />
   <building Key="watertap" DisplayName="water tap (puts a vessel on the fresh line)" Blueprint="r_KingdomWaterTap"
             Cost="4" Ticks="600" Styles="all" Category="storage" MinStage="Steading"

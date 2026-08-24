@@ -441,41 +441,124 @@ namespace ThousandAndFirst
 				Popup.Show("The register cannot get a clean hand on " + named + ". Nothing was written and nothing was spent.");
 				return;
 			}
-			// Measured, never trusted: what the ceremony actually cost the city is the difference
-			// the draw reports, not the number we asked for (STANDARDS §1). A short draw is a
-			// refusal with the water already back where it was.
-			// The verdict above already refuses a groundless annexe as Unpaid, because a null zone
-			// stores no water -- but the draw itself walks the zone, so the invariant is asserted
-			// here rather than inferred from a rule one edit away from changing.
 			Zone zone = Building?.CurrentZone;
-			if (zone == null
-				|| KingdomGrowth.ConsumeStoredWater(zone, KingdomAnnexeRules.EnrolmentDrams) < KingdomAnnexeRules.EnrolmentDrams)
+			KingdomSurvey survey = (zone == null) ? null : KingdomSurvey.Take(zone, Realm);
+			KingdomWaterDebit debit;
+			if (survey == null || !survey.TryReserveExactWater(KingdomAnnexeRules.EnrolmentDrams, out debit))
 			{
 				Popup.Show(KingdomAnnexeRules.RefusalLine(KingdomEnrolVerdict.Unpaid, named, city, StoredWater(Realm, Building)));
 				return;
 			}
-			if (!KingdomZoning.Learn(Realm, KingdomAnnexeRules.EnrolmentKind, id))
-			{
-				// Learn refuses only what this city already holds, which Judge already excluded,
-				// so reaching here means the store itself refused the key. The water is gone, so
-				// the founder is told plainly rather than quietly given nothing.
-				Popup.Show("The book would not take the entry. Nothing is on the rolls, and the ceremony's water is spent.");
-				KingdomLog.Log("annexe: store refused roll for " + id);
-				return;
-			}
-			r_KingdomEnrolled record = Who.RequirePart<r_KingdomEnrolled>();
-			record.Who = id;
-			record.Named = named;
-			record.City = city;
-			record.Tick = (The.Game != null) ? The.Game.TimeTicks : 0L;
-			record.LapseAnnounced = false;
-			// The door the event opens leads into an empty room without this. See
-			// KingdomAnnexeRules.EnrolmentLicenses for the finding it answers.
-			Who.ModIntProperty(LicenseProperty, KingdomAnnexeRules.EnrolmentLicenses);
+
+			// One transaction, in reversible-first order. KeepersRoster, the person's enrolment
+			// part, licenses and standing all have exact snapshots. Water is committed only after
+			// those snapshots exist; any refusal or exception restores every one of them and the
+			// same physical vessels named by this survey's receipt.
+			// Force the one-time legacy migration, then copy only physically stored entries. Roster
+			// also derives citizens' origins; persisting that view would turn temporary population
+			// knowledge into permanent keeper knowledge.
+			KingdomZoning.Roster(Realm);
+			List<string> roster = KingdomZoningRules.DecodeRoster(Realm.KeepersRoster);
+			string roll = KingdomAnnexeRules.EnrolmentKey(id);
+			string oldRoster = Realm.KeepersRoster;
+			r_KingdomEnrolled oldRecord = Who.GetPart<r_KingdomEnrolled>();
+			string oldWho = (oldRecord == null) ? null : oldRecord.Who;
+			string oldNamed = (oldRecord == null) ? null : oldRecord.Named;
+			string oldCity = (oldRecord == null) ? null : oldRecord.City;
+			long oldTick = (oldRecord == null) ? 0L : oldRecord.Tick;
+			bool oldLapse = oldRecord != null && oldRecord.LapseAnnounced;
+			bool hadLicenses = Who.HasIntProperty(LicenseProperty);
+			int oldLicenses = Who.GetIntProperty(LicenseProperty);
 			List<KeyValuePair<string, int>> standing = KingdomAnnexeRules.StandingCost();
+			List<int> oldStanding = new List<int>();
+			List<bool> hadStanding = new List<bool>();
 			for (int i = 0; i < standing.Count; i++)
 			{
-				Realm.AdjustStanding(standing[i].Key, standing[i].Value);
+				oldStanding.Add(Realm.GetStanding(standing[i].Key));
+				hadStanding.Add(Realm.Standings != null && Realm.Standings.ContainsKey(standing[i].Key));
+			}
+			bool waterCommitted = false;
+			try
+			{
+				if (!debit.Commit())
+				{
+					Popup.Show(KingdomAnnexeRules.RefusalLine(KingdomEnrolVerdict.Unpaid, named, city,
+						KingdomSurvey.Take(zone, Realm).StoredWater));
+					return;
+				}
+				waterCommitted = true;
+				if (roll == null || roster.Contains(roll))
+				{
+					throw new InvalidOperationException("The roll changed before it could be written.");
+				}
+				roster.Add(roll);
+				Realm.KeepersRoster = KingdomZoningRules.EncodeRoster(roster);
+				if (!KingdomAnnexeRules.Enrolled(KingdomZoning.Roster(Realm), id))
+				{
+					throw new InvalidOperationException("The register did not retain the enrolment.");
+				}
+
+				r_KingdomEnrolled record = Who.RequirePart<r_KingdomEnrolled>();
+				record.Who = id;
+				record.Named = named;
+				record.City = city;
+				record.Tick = (The.Game != null) ? The.Game.TimeTicks : 0L;
+				record.LapseAnnounced = false;
+				Who.ModIntProperty(LicenseProperty, KingdomAnnexeRules.EnrolmentLicenses);
+				for (int i = 0; i < standing.Count; i++)
+				{
+					Realm.AdjustStanding(standing[i].Key, standing[i].Value, Mirror: false);
+				}
+			}
+			catch (Exception ex)
+			{
+				// Water first: no engine callback from compensating body/standing state may strand a
+				// physical debit by throwing before the same-vessel receipt is restored.
+				bool waterRestored = !waterCommitted || debit.Rollback();
+				Realm.KeepersRoster = oldRoster ?? "";
+				if (oldRecord == null)
+				{
+					Who.RemovePart("r_KingdomEnrolled");
+				}
+				else
+				{
+					oldRecord.Who = oldWho;
+					oldRecord.Named = oldNamed;
+					oldRecord.City = oldCity;
+					oldRecord.Tick = oldTick;
+					oldRecord.LapseAnnounced = oldLapse;
+				}
+				if (hadLicenses)
+				{
+					Who.SetIntProperty(LicenseProperty, oldLicenses);
+				}
+				else
+				{
+					Who.RemoveIntProperty(LicenseProperty);
+				}
+				for (int i = 0; i < standing.Count; i++)
+				{
+					if (hadStanding[i])
+					{
+						Realm.SetStanding(standing[i].Key, oldStanding[i], Mirror: false);
+					}
+					else
+					{
+						Realm.Standings?.Remove(standing[i].Key);
+					}
+				}
+				KingdomLog.Log("annexe: enrolment transaction refused for " + id + " (" + ex.Message
+					+ "; water restored=" + waterRestored + ")");
+				Popup.Show("The book would not take the entry. Nothing remains on the rolls and "
+					+ (waterRestored ? "the ceremony's water was returned to its casks." : "the casks could not be restored exactly; inspect the stores."));
+				return;
+			}
+
+			// External faction mirrors and authored telling happen after the durable core. A broken
+			// notification cannot turn a completed enrolment into a second charge on retry.
+			for (int i = 0; i < standing.Count; i++)
+			{
+				Realm.MirrorFeeling(standing[i].Key);
 			}
 			MessageQueue.AddPlayerMessage(KingdomAnnexeRules.DoneLine(named, city));
 			KingdomChronicle.Record(Realm, KingdomAnnexeRules.DoneTelling(named, city), Accomplishment: true);

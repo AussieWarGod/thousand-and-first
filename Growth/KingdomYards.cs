@@ -251,7 +251,14 @@ namespace ThousandAndFirst
 				placed.SetStringProperty(KingdomPlots.PlotIdProperty, plotId);
 			}
 			cell.AddObject(placed);
+			if (placed.CurrentCell != cell)
+			{
+				placed.Obliterate(null, Silent: true);
+				Failure = "The " + work.DisplayName + " could not be set in the yard.";
+				return false;
+			}
 			Building.SetStringProperty(YardKeyProperty, work.Key);
+			KingdomGovernanceScope.Commit("take up yard trade");
 			Building.RequirePart<r_KingdomYardTrade>();
 			KingdomLog.Log("yards: " + houseName + " took up " + work.Key + " at " + cell.X + "," + cell.Y);
 			KingdomChronicle.Record(System, KingdomYardRules.TakeUpLine(houseName, work));
@@ -293,11 +300,16 @@ namespace ThousandAndFirst
 					{
 						continue;
 					}
-					item.Destroy(null, Silent: true);
+					if (!item.Destroy(null, Silent: true))
+					{
+						Failure = "The yard work would not come down. Nothing was released.";
+						return false;
+					}
 					break;
 				}
 			}
 			Building.SetStringProperty(YardKeyProperty, null);
+			KingdomGovernanceScope.Commit("release yard trade");
 			KingdomLog.Log("yards: " + houseName + " let go of " + key);
 			KingdomChronicle.Record(System, KingdomYardRules.ReleaseLine(houseName, work));
 			MessageQueue.AddPlayerMessage("{{K|" + houseName.Capitalize() + " lets go of " + work.Trade + ". Nothing is recovered.}}");
@@ -360,6 +372,10 @@ namespace ThousandAndFirst
 					{
 						Popup.Show(releaseFailure);
 					}
+					else
+					{
+						return;
+					}
 					continue;
 				}
 				List<string> workKeys = AllSpecKeys();
@@ -384,6 +400,10 @@ namespace ThousandAndFirst
 				if (!TryTakeUpTrade(System, chosen, workKeys[workPicked], out var takeFailure))
 				{
 					Popup.Show(takeFailure);
+				}
+				else
+				{
+					return;
 				}
 			}
 		}

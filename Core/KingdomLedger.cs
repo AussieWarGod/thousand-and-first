@@ -10,7 +10,7 @@ namespace ThousandAndFirst
 	/// <summary>
 	/// What the settlement did since the founder last stood in it: the arithmetic of a
 	/// visit, kept so the player can be told plainly rather than guessing why the stores
-	/// moved. Reset at the start of every settlement pass.
+	/// moved. It accumulates across settlement passes and resets only after the founder reads it.
 	/// </summary>
 	[Serializable]
 	public class KingdomLedger

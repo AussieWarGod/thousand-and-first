@@ -213,7 +213,7 @@ namespace ThousandAndFirst
 			string id;
 			string text;
 			if (!KingdomCitizenRiteRules.TryTradableSecret(
-					System.KingdomFactionName,
+					System.CurrentRealmId,
 					System.OutsiderEntries[System.OutsiderEntries.Count - 1],
 					out id,
 					out text)
@@ -260,7 +260,7 @@ namespace ThousandAndFirst
 			// value over the event when it is non-empty (D/XRL/World/Parts/Brain.cs:2102-2109), so
 			// the engine's own "water" default stands. Only a liquid that was NAMED and does not
 			// exist is fatal.
-			bool pourable = string.IsNullOrEmpty(liquid) || LiquidVolume.getLiquid(liquid) != null;
+			bool pourable = string.IsNullOrEmpty(liquid) || LiquidVolume.GetLiquid(liquid) != null;
 			CitizenRiteVerdict verdict = KingdomCitizenRiteRules.Judge(founded, citizen, body, known, pourable);
 			if (verdict != CitizenRiteVerdict.Host)
 			{
