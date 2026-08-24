@@ -168,6 +168,57 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void CandidateStarterRequiresCurrentActiveAvailabilityAndPublicationTick()
+		{
+			KingdomGrowthBook disabled = Migrated("city-candidate-disabled",
+				100L, false, true, 20L);
+			KingdomGrowthBook unhealthy = Migrated("city-candidate-unhealthy",
+				100L, true, false, 20L);
+			KingdomGrowthBook unknownOption = Migrated("city-candidate-option-unknown",
+				100L, true, true, 20L);
+			unknownOption.OptionState = KingdomLifecycleOptionState.Unknown;
+			KingdomGrowthBook unknownHealth = Migrated("city-candidate-health-unknown",
+				100L, true, true, 20L);
+			unknownHealth.HealthState = KingdomGrowthHealthState.Unknown;
+			foreach (KingdomGrowthBook blocked in new[]
+				{ disabled, unhealthy, unknownOption, unknownHealth })
+			{
+				Assert.IsTrue(KingdomLifecycleRules.CanOwnGrowthAuthority(blocked,
+					blocked.SettlementId));
+				byte[] before = KingdomLifecycleWireCodec.GrowthPayloadForWrite(blocked);
+				Assert.IsNull(KingdomLifecycleRules.PrepareGrowthArrivalCandidate(blocked,
+					"blocked-marker", "Settler", "blocked-escrow", "zone-a", 120L,
+					Digest('1'), Digest('2'), Digest('3')));
+				CollectionAssert.AreEqual(before,
+					KingdomLifecycleWireCodec.GrowthPayloadForWrite(blocked));
+			}
+
+			KingdomGrowthBook growth = Migrated("city-candidate-stale-publish",
+				100L, true, true, 20L);
+			KingdomGrowthArrivalCandidate detached =
+				KingdomLifecycleRules.PrepareGrowthArrivalCandidate(growth, "stale-marker",
+					"Settler", "stale-escrow", "zone-a", 120L,
+					Digest('1'), Digest('2'), Digest('3'));
+			Assert.NotNull(detached);
+			KingdomGrowthAvailabilityDecision pause =
+				KingdomLifecycleRules.ObserveGrowthAvailability(growth, false, true, 130L, 20L);
+			Assert.IsTrue(KingdomLifecycleRules.ApplyGrowthAvailability(growth, pause));
+			byte[] paused = KingdomLifecycleWireCodec.GrowthPayloadForWrite(growth);
+			Assert.IsFalse(KingdomLifecycleRules.TryPublishGrowthArrivalCandidate(growth,
+				detached));
+			CollectionAssert.AreEqual(paused,
+				KingdomLifecycleWireCodec.GrowthPayloadForWrite(growth));
+			KingdomGrowthAvailabilityDecision resume =
+				KingdomLifecycleRules.ObserveGrowthAvailability(growth, true, true, 160L, 20L);
+			Assert.IsTrue(KingdomLifecycleRules.ApplyGrowthAvailability(growth, resume));
+			byte[] resumed = KingdomLifecycleWireCodec.GrowthPayloadForWrite(growth);
+			Assert.IsFalse(KingdomLifecycleRules.TryPublishGrowthArrivalCandidate(growth,
+				detached), "detached preparation predates the current availability witness");
+			CollectionAssert.AreEqual(resumed,
+				KingdomLifecycleWireCodec.GrowthPayloadForWrite(growth));
+		}
+
+		[Test]
 		public void GrowthOpaquePayloadsRemainExactAndLocal()
 		{
 			byte[] validCurrent = KingdomLifecycleWireCodec.GrowthPayloadForWrite(
@@ -1352,7 +1403,7 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void LifecycleV6GrowthV1RichWireGoldenPinsAllPreparedBranches()
+		public void LifecycleV6GrowthV2RichWireGoldenPinsAllPreparedBranches()
 		{
 			KingdomLifecycleBook parent = MigratedParent("city-rich-golden", 100L, true, true, 20L);
 			Assert.IsTrue(KingdomLifecycleRules.TryRegisterGrowthField(parent.Growth, "field-a"));
@@ -1375,7 +1426,7 @@ namespace ThousandAndFirst.Tests
 				"independent semantic producer emits exact same nested bytes");
 			CollectionAssert.AreEqual(wrapper, independentWrapper,
 				"independent semantic producer emits exact same wrapper bytes");
-			Console.WriteLine("[TAF] growth-v1-rich nested={0} sha={1} wrapper={2} sha={3}",
+			Console.WriteLine("[TAF] growth-v2-rich nested={0} sha={1} wrapper={2} sha={3}",
 				nested.Length, Sha256(nested), wrapper.Length, Sha256(wrapper));
 			int lengthOffset = wrapper.Length - nested.Length - 4;
 			byte[] extractedNested = new byte[nested.Length];
@@ -1391,12 +1442,43 @@ namespace ThousandAndFirst.Tests
 				BitConverter.ToInt32(nested, 0));
 			Assert.AreEqual(KingdomLifecycleRules.CurrentGrowthFormatVersion,
 				BitConverter.ToInt32(nested, 4));
-			Assert.AreEqual(10698, nested.Length);
-			Assert.AreEqual("dce983f6337b71eebbeea78781069b6c6511a9e02c9458645df8dd9e64e6d715",
+			Assert.AreEqual(10699, nested.Length);
+			Assert.AreEqual("9a33f3e44cc00a1436b219e8cd84bd6a9bb3ecfcb8cfccf8fdc3c140af8bbd38",
 				Sha256(nested));
-			Assert.AreEqual(10943, wrapper.Length);
-			Assert.AreEqual("1790a41325591d09dc4bb788c667e55f03ea1bb8e45d107027e8c5ae682462a8",
+			Assert.AreEqual(10944, wrapper.Length);
+			Assert.AreEqual("3b8eb25ea3aaeaffecc827d6b0e0408665cb09854354b2b1851aea055d24003d",
 				Sha256(wrapper));
+
+			// Growth v1 stays byte-exact and readable. V2 adds the explicit compatibility
+			// bit and dual Chronicle registers; only new writes use that honest receipt shape.
+			byte[] legacyNested = KingdomLifecycleWireCodec.GrowthV1PayloadFixture(parent.Growth);
+			Assert.AreEqual(KingdomLifecycleRules.LegacyGrowthFormatVersion,
+				BitConverter.ToInt32(legacyNested, 4));
+			Assert.AreEqual(10698, legacyNested.Length);
+			Assert.AreEqual("dce983f6337b71eebbeea78781069b6c6511a9e02c9458645df8dd9e64e6d715",
+				Sha256(legacyNested));
+			byte[] legacyWrapper = new byte[lengthOffset + 4 + legacyNested.Length];
+			Buffer.BlockCopy(wrapper, 0, legacyWrapper, 0, lengthOffset);
+			Buffer.BlockCopy(BitConverter.GetBytes(legacyNested.Length), 0, legacyWrapper,
+				lengthOffset, 4);
+			Buffer.BlockCopy(legacyNested, 0, legacyWrapper, lengthOffset + 4,
+				legacyNested.Length);
+			Assert.AreEqual(10943, legacyWrapper.Length);
+			Assert.AreEqual("1790a41325591d09dc4bb788c667e55f03ea1bb8e45d107027e8c5ae682462a8",
+				Sha256(legacyWrapper));
+			KingdomLifecycleBook legacyOuterLoaded = ReadLifecycle(legacyWrapper);
+			Assert.IsFalse(legacyOuterLoaded.Growth.Quarantined);
+			Assert.IsTrue(legacyOuterLoaded.Growth.FieldOps[0].Operation.LegacyGrowthV1Plan);
+			KingdomGrowthBook legacyLoaded =
+				KingdomLifecycleWireCodec.ReadGrowthPayload(legacyNested);
+			Assert.IsFalse(legacyLoaded.Quarantined);
+			Assert.AreEqual(KingdomLifecycleRules.CurrentGrowthFormatVersion,
+				legacyLoaded.FormatVersion);
+			Assert.IsTrue(legacyLoaded.FieldOps[0].Operation.LegacyGrowthV1Plan);
+			byte[] rewritten = KingdomLifecycleWireCodec.GrowthPayloadForWrite(legacyLoaded);
+			Assert.AreEqual(KingdomLifecycleRules.CurrentGrowthFormatVersion,
+				BitConverter.ToInt32(rewritten, 4));
+			Assert.IsFalse(KingdomLifecycleWireCodec.ReadGrowthPayload(rewritten).Quarantined);
 
 			KingdomLifecycleBook loaded = ReadLifecycle(wrapper);
 			KingdomGrowthOperation loadedOp = loaded.Growth.FieldOps[0].Operation;
@@ -1413,13 +1495,89 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void GrowthV1ChronicleReceiptMigratesWithoutInventingOutsiderProof()
+		{
+			KingdomGrowthBook growth = Migrated("city-v1-chronicle", 100L, true, true, 20L);
+			KingdomGrowthOperation op = HeartbeatPlan(growth, 121L);
+			KingdomGrowthOutboxEvent e = KingdomLifecycleRules.PrepareDeclaredGrowthOutboxEvent(op,
+				0, "legacy", "chronicle", "official legacy", "outsider legacy", "ledger", null, null, null,
+				2, Digest('1'), 3, Digest('2'), 4, Digest('3'), 5, Digest('4'),
+				6, Digest('5'), 7, Digest('6'));
+			Assert.NotNull(e); op.OutboxEvents.Add(e);
+			Assert.IsTrue(KingdomLifecycleRules.TryPublishGrowth(growth, op));
+
+			// Recreate the exact semantic form historical v1 could persist. It remains valid
+			// evidence, but current publication cannot mint another one-register promise.
+			op.LegacyGrowthV1Plan = true;
+			e.LegacySingleRegisterChronicle = true;
+			e.ChronicleOfficial = null; e.ChronicleOutsider = null;
+			e.OutsiderBeforeCount = 0; e.OutsiderDeclaredAfterCount = 0;
+			e.OutsiderObservedCount = -1; e.OutsiderBeforeHash = null;
+			e.OutsiderDeclaredAfterHash = null; e.OutsiderObservedHash = null;
+			Assert.IsTrue(KingdomLifecycleRules.TryGrowthPlanHash(op, out string planHash));
+			op.PlanHash = planHash;
+			Assert.IsTrue(KingdomLifecycleRules.CanOwnGrowthAuthority(growth,
+				growth.SettlementId));
+
+			byte[] v1 = KingdomLifecycleWireCodec.GrowthV1PayloadFixture(growth);
+			KingdomGrowthBook loaded = KingdomLifecycleWireCodec.ReadGrowthPayload(v1);
+			Assert.IsFalse(loaded.Quarantined);
+			Assert.IsTrue(loaded.HeartbeatOp.LegacyGrowthV1Plan);
+			Assert.IsTrue(loaded.HeartbeatOp.OutboxEvents[0].LegacySingleRegisterChronicle);
+			Assert.AreEqual(-1, loaded.HeartbeatOp.OutboxEvents[0].OutsiderObservedCount);
+			Assert.IsNull(loaded.HeartbeatOp.OutboxEvents[0].OutsiderDeclaredAfterHash);
+			Assert.IsTrue(KingdomLifecycleRules.CanOwnGrowthAuthority(loaded,
+				loaded.SettlementId));
+			Assert.IsNull(KingdomLifecycleRules.PrepareGrowthOutboxEvent(
+				HeartbeatPlan(Migrated("city-v2-no-legacy", 100L, true, true, 20L), 121L),
+				0, "legacy", "chronicle", null, null, null, null,
+				2, Digest('1'), 3, Digest('2'), 0, null, 0, null),
+				"v2 never mints the dishonest one-register Chronicle receipt");
+		}
+
+		[Test]
+		public void CurrentChronicleDeclarationsAreFrozenAndCannotMasqueradeAsV1()
+		{
+			KingdomGrowthBook growth = Migrated("city-v2-frozen-chronicle",
+				100L, true, true, 20L);
+			KingdomGrowthOperation op = HeartbeatPlan(growth, 121L);
+			KingdomGrowthOutboxEvent e = KingdomLifecycleRules.PrepareDeclaredGrowthOutboxEvent(op,
+				0, "frozen", "chronicle fingerprint", "official frozen text",
+				"outsider frozen text", null, null, null, null,
+				2, Digest('1'), 3, Digest('2'), 4, Digest('3'), 5, Digest('4'),
+				0, null, 0, null);
+			Assert.NotNull(e); op.OutboxEvents.Add(e);
+			Assert.IsTrue(KingdomLifecycleRules.TryPublishGrowth(growth, op));
+
+			KingdomGrowthBook loaded = RoundTripGrowth(growth);
+			Assert.AreEqual("official frozen text",
+				loaded.HeartbeatOp.OutboxEvents[0].ChronicleOfficial);
+			Assert.AreEqual("outsider frozen text",
+				loaded.HeartbeatOp.OutboxEvents[0].ChronicleOutsider);
+			Assert.Throws<InvalidDataException>(() =>
+				KingdomLifecycleWireCodec.GrowthV1PayloadFixture(loaded),
+				"v2 dual-register promises have no honest v1 representation");
+
+			KingdomGrowthBook officialTamper = RoundTripGrowth(growth);
+			officialTamper.HeartbeatOp.OutboxEvents[0].ChronicleOfficial += " altered";
+			Assert.IsFalse(KingdomLifecycleRules.CanOwnGrowthAuthority(officialTamper,
+				officialTamper.SettlementId));
+			KingdomGrowthBook outsiderTamper = RoundTripGrowth(growth);
+			outsiderTamper.HeartbeatOp.OutboxEvents[0].ChronicleOutsider += " altered";
+			Assert.IsFalse(KingdomLifecycleRules.CanOwnGrowthAuthority(outsiderTamper,
+				outsiderTamper.SettlementId));
+		}
+
+		[Test]
 		public void GrowthOutboxUsesInspectableCasAndAtMostOnceRecoveryAcrossSaveCuts()
 		{
 			KingdomGrowthBook growth = Migrated("city-outbox-cas", 100L, true, true, 20L);
 			KingdomGrowthOperation op = HeartbeatPlan(growth, 121L);
-			KingdomGrowthOutboxEvent e = KingdomLifecycleRules.PrepareGrowthOutboxEvent(op,
-				0, "heartbeat", "chronicle line", "ledger line", "message", null, null,
-				2, Digest('1'), 3, Digest('2'), 5, Digest('3'), 6, Digest('4'));
+			KingdomGrowthOutboxEvent e = KingdomLifecycleRules.PrepareDeclaredGrowthOutboxEvent(op,
+				0, "heartbeat", "chronicle line", "official heartbeat", "outsider heartbeat",
+				"ledger line", "message", null, null,
+				2, Digest('1'), 3, Digest('2'), 7, Digest('5'), 8, Digest('6'),
+				5, Digest('3'), 6, Digest('4'));
 			Assert.NotNull(e); op.OutboxEvents.Add(e);
 			Assert.IsTrue(KingdomLifecycleRules.TryPublishGrowth(growth, op));
 			Assert.IsTrue(KingdomLifecycleRules.AdvanceGrowthPhase(growth, op,
@@ -1437,22 +1595,22 @@ namespace ThousandAndFirst.Tests
 				KingdomGrowthPhase.Sinks, 125L));
 
 			Assert.AreEqual(KingdomLifecycleCasAction.Apply,
-				KingdomLifecycleRules.GrowthInspectableOutboxAction(growth, op, 0,
-					KingdomGrowthOutboxSinkKind.Chronicle, 2, Digest('1')));
-			Assert.IsTrue(KingdomLifecycleRules.BeginGrowthInspectableOutbox(growth, op, 0,
-				KingdomGrowthOutboxSinkKind.Chronicle, 2, Digest('1')));
+				KingdomLifecycleRules.GrowthChronicleOutboxAction(growth, op, 0,
+					2, Digest('1'), 7, Digest('5')));
+			Assert.IsTrue(KingdomLifecycleRules.BeginGrowthChronicleOutbox(growth, op, 0,
+				2, Digest('1'), 7, Digest('5')));
 			growth = RoundTripGrowth(growth); op = growth.HeartbeatOp;
 			Assert.AreEqual(KingdomLifecycleCasAction.Apply,
-				KingdomLifecycleRules.GrowthInspectableOutboxAction(growth, op, 0,
-					KingdomGrowthOutboxSinkKind.Chronicle, 2, Digest('1')),
+				KingdomLifecycleRules.GrowthChronicleOutboxAction(growth, op, 0,
+					2, Digest('1'), 7, Digest('5')),
 				"Intent plus exact before remains safely applicable");
 			byte[] beforeThird = KingdomLifecycleWireCodec.GrowthPayloadForWrite(growth);
-			Assert.IsFalse(KingdomLifecycleRules.CommitGrowthInspectableOutbox(growth, op, 0,
-				KingdomGrowthOutboxSinkKind.Chronicle, 4, Digest('5')));
+			Assert.IsFalse(KingdomLifecycleRules.CommitGrowthChronicleOutbox(growth, op, 0,
+				3, Digest('2'), 9, Digest('6')));
 			CollectionAssert.AreEqual(beforeThird,
 				KingdomLifecycleWireCodec.GrowthPayloadForWrite(growth));
-			Assert.IsTrue(KingdomLifecycleRules.CommitGrowthInspectableOutbox(growth, op, 0,
-				KingdomGrowthOutboxSinkKind.Chronicle, 3, Digest('2')));
+			Assert.IsTrue(KingdomLifecycleRules.CommitGrowthChronicleOutbox(growth, op, 0,
+				3, Digest('2'), 8, Digest('6')));
 
 			Assert.IsTrue(KingdomLifecycleRules.BeginGrowthInspectableOutbox(growth, op, 0,
 				KingdomGrowthOutboxSinkKind.Ledger, 5, Digest('3')));
@@ -1476,6 +1634,71 @@ namespace ThousandAndFirst.Tests
 			Assert.IsTrue(KingdomLifecycleRules.AdvanceGrowthPhase(growth, op,
 				KingdomGrowthPhase.Terminal, 126L));
 			Assert.IsTrue(KingdomLifecycleRules.RetireGrowth(growth, op, 127L));
+		}
+
+		[Test]
+		public void GrowthChronicleDualRegisterReceiptsSurviveCapAndOutsiderCut()
+		{
+			KingdomGrowthBook growth = Migrated("city-outbox-cap", 100L, true, true, 20L);
+			KingdomGrowthOperation op = HeartbeatPlan(growth, 121L);
+			KingdomGrowthOutboxEvent e = KingdomLifecycleRules.PrepareDeclaredGrowthOutboxEvent(op,
+				0, "cap", "chronicle line", "official cap", "outsider cap", null, null, null, null,
+				KingdomChronicleReceiptRules.MaxEntries, Digest('1'),
+				KingdomChronicleReceiptRules.MaxEntries, Digest('2'),
+				KingdomChronicleReceiptRules.MaxEntries, Digest('3'),
+				KingdomChronicleReceiptRules.MaxEntries, Digest('4'),
+				0, null, 0, null);
+			Assert.NotNull(e, "bounded append changes hashes while both counts stay at cap");
+			op.OutboxEvents.Add(e);
+			Assert.IsTrue(KingdomLifecycleRules.TryPublishGrowth(growth, op));
+			Assert.IsTrue(KingdomLifecycleRules.AdvanceGrowthPhase(growth, op,
+				KingdomGrowthPhase.DomainIntent, 122L));
+			for (int i = 0; i < op.DomainSteps.Count; i++) ProveDomain(growth, op, i);
+			Assert.IsTrue(KingdomLifecycleRules.AdvanceGrowthPhase(growth, op,
+				KingdomGrowthPhase.DomainSettled, 123L));
+			Assert.IsTrue(KingdomLifecycleRules.AdvanceGrowthPhase(growth, op,
+				KingdomGrowthPhase.ClockIntent, 124L));
+			Assert.IsTrue(KingdomLifecycleRules.BeginGrowthClock(growth, op,
+				op.ClockLease.Before));
+			Assert.IsTrue(KingdomLifecycleRules.CommitGrowthClockWitness(growth, op,
+				op.ClockLease.After));
+			Assert.IsTrue(KingdomLifecycleRules.AdvanceGrowthPhase(growth, op,
+				KingdomGrowthPhase.Sinks, 125L));
+			Assert.IsTrue(KingdomLifecycleRules.BeginGrowthChronicleOutbox(growth, op, 0,
+				KingdomChronicleReceiptRules.MaxEntries, Digest('1'),
+				KingdomChronicleReceiptRules.MaxEntries, Digest('3')));
+
+			growth = RoundTripGrowth(growth); op = growth.HeartbeatOp;
+			byte[] intent = KingdomLifecycleWireCodec.GrowthPayloadForWrite(growth);
+			Assert.AreEqual(KingdomLifecycleCasAction.Apply,
+				KingdomLifecycleRules.GrowthChronicleOutboxAction(growth, op, 0,
+					KingdomChronicleReceiptRules.MaxEntries, Digest('2'),
+					KingdomChronicleReceiptRules.MaxEntries, Digest('3')),
+				"the ordered official-only cut resumes the frozen outsider delivery");
+			Assert.IsFalse(KingdomLifecycleRules.CommitGrowthChronicleOutbox(growth, op, 0,
+				KingdomChronicleReceiptRules.MaxEntries, Digest('2'),
+				KingdomChronicleReceiptRules.MaxEntries, Digest('3')));
+			CollectionAssert.AreEqual(intent,
+				KingdomLifecycleWireCodec.GrowthPayloadForWrite(growth));
+			Assert.AreEqual(KingdomLifecycleCasAction.Quarantine,
+				KingdomLifecycleRules.GrowthChronicleOutboxAction(growth, op, 0,
+					KingdomChronicleReceiptRules.MaxEntries, Digest('1'),
+					KingdomChronicleReceiptRules.MaxEntries, Digest('4')),
+				"outsider-before-official cannot be produced by the delivery order");
+			Assert.IsTrue(KingdomLifecycleRules.CommitGrowthChronicleOutbox(growth, op, 0,
+				KingdomChronicleReceiptRules.MaxEntries, Digest('2'),
+				KingdomChronicleReceiptRules.MaxEntries, Digest('4')));
+			Assert.AreEqual(KingdomChronicleReceiptRules.MaxEntries,
+				op.OutboxEvents[0].OutsiderObservedCount);
+
+			Assert.IsNull(KingdomLifecycleRules.PrepareDeclaredGrowthOutboxEvent(
+				HeartbeatPlan(Migrated("city-outbox-over-cap", 100L, true, true, 20L), 121L),
+				0, "over-cap", "line", "official over-cap", "outsider over-cap",
+				null, null, null, null,
+				KingdomChronicleReceiptRules.MaxEntries, Digest('1'),
+				KingdomChronicleReceiptRules.MaxEntries + 1, Digest('2'),
+				KingdomChronicleReceiptRules.MaxEntries, Digest('3'),
+				KingdomChronicleReceiptRules.MaxEntries, Digest('4'), 0, null, 0, null));
 		}
 
 		[Test]
@@ -1599,7 +1822,7 @@ namespace ThousandAndFirst.Tests
 			KingdomGrowthBook growth = Migrated("city-candidate-refusal", 100L, true, true, 20L);
 			KingdomGrowthArrivalCandidate candidate =
 				KingdomLifecycleRules.PrepareGrowthArrivalCandidate(growth, "arrival-marker",
-					"Settler", "arrival-escrow", 120L, Digest('1'), Digest('2'), Digest('3'));
+					"Settler", "arrival-escrow", "zone-a", 120L, Digest('1'), Digest('2'), Digest('3'));
 			Assert.NotNull(candidate); Assert.IsNull(candidate.ObjectId);
 			Assert.AreEqual(KingdomGrowthArrivalCandidatePhase.Prepared, candidate.Phase);
 			Assert.IsTrue(KingdomLifecycleRules.TryPublishGrowthArrivalCandidate(growth, candidate));
@@ -1616,6 +1839,7 @@ namespace ThousandAndFirst.Tests
 			growth = RoundTripGrowth(growth); candidate = growth.ArrivalCandidate;
 			Assert.AreEqual("settler-final", candidate.ObjectId);
 			Assert.AreEqual(KingdomLifecycleLeaseState.Proved, candidate.CandidateLease.State);
+			string baseCandidatePlanHash = candidate.PlanHash;
 
 			Assert.IsTrue(KingdomLifecycleRules.BeginGrowthArrivalLodgingObservation(growth,
 				candidate, "zone-a", 2, 3, Digest('8'), 123L));
@@ -1636,6 +1860,29 @@ namespace ThousandAndFirst.Tests
 				Digest('a'), true, 124L));
 			Assert.AreEqual(KingdomGrowthArrivalRefusalReason.Refused,
 				candidate.RefusalReason);
+			Assert.AreNotEqual(candidate.LodgingReceiptGraphHash,
+				candidate.LodgingDeclaredGraphHash,
+				"the declared field is a plan-bound observation proof, not caller echo");
+			Assert.AreNotEqual(baseCandidatePlanHash, candidate.PlanHash,
+				"the observed plan freezes the exact lodging result");
+			KingdomGrowthBook changedOutcome = RoundTripGrowth(growth);
+			changedOutcome.ArrivalCandidate.Disposition = KingdomGrowthArrivalDisposition.Joined;
+			changedOutcome.ArrivalCandidate.RefusalReason =
+				KingdomGrowthArrivalRefusalReason.None;
+			Assert.IsFalse(KingdomLifecycleRules.CanOwnGrowthAuthority(changedOutcome,
+				changedOutcome.SettlementId));
+			KingdomGrowthBook changedCoordinate = RoundTripGrowth(growth);
+			changedCoordinate.ArrivalCandidate.LodgingX++;
+			Assert.IsFalse(KingdomLifecycleRules.CanOwnGrowthAuthority(changedCoordinate,
+				changedCoordinate.SettlementId));
+			KingdomGrowthBook changedReceipt = RoundTripGrowth(growth);
+			changedReceipt.ArrivalCandidate.LodgingReceiptGraphHash = Digest('b');
+			Assert.IsFalse(KingdomLifecycleRules.CanOwnGrowthAuthority(changedReceipt,
+				changedReceipt.SettlementId));
+			KingdomGrowthBook changedCallback = RoundTripGrowth(growth);
+			changedCallback.ArrivalCandidate.LodgingCallbackReferenceHash = Digest('c');
+			Assert.IsFalse(KingdomLifecycleRules.CanOwnGrowthAuthority(changedCallback,
+				changedCallback.SettlementId));
 			growth = RoundTripGrowth(growth); candidate = growth.ArrivalCandidate;
 			Assert.AreEqual(KingdomGrowthArrivalRefusalReason.Refused,
 				candidate.RefusalReason);
@@ -1656,7 +1903,7 @@ namespace ThousandAndFirst.Tests
 			arrival = growth.ArrivalOp;
 			Assert.AreEqual(KingdomLifecycleLeaseState.Intent, candidate.EscrowLease.State);
 			Assert.IsTrue(KingdomLifecycleRules.CommitGrowthArrivalCandidateDisposition(growth,
-				candidate, Digest('1'), true, 127L));
+				candidate, Digest('1'), false, 127L));
 			growth = RoundTripGrowth(growth); candidate = growth.ArrivalCandidate;
 			arrival = growth.ArrivalOp;
 			Assert.AreEqual(KingdomGrowthArrivalCandidatePhase.Settled, candidate.Phase);
@@ -1684,7 +1931,7 @@ namespace ThousandAndFirst.Tests
 			KingdomGrowthBook growth = Migrated("city-candidate-joined", 100L, true, true, 20L);
 			KingdomGrowthArrivalCandidate candidate =
 				KingdomLifecycleRules.PrepareGrowthArrivalCandidate(growth, "joined-marker",
-					"Settler", "joined-escrow", 120L, Digest('1'), Digest('2'), Digest('3'));
+					"Settler", "joined-escrow", "zone-a", 120L, Digest('1'), Digest('2'), Digest('3'));
 			Assert.IsTrue(KingdomLifecycleRules.TryPublishGrowthArrivalCandidate(growth, candidate));
 			Assert.IsTrue(KingdomLifecycleRules.BeginGrowthArrivalCandidateCreate(growth,
 				candidate, 121L));
@@ -1728,6 +1975,25 @@ namespace ThousandAndFirst.Tests
 			arrival.DomainSteps.Add(Accounting(growth, arrival, EmptyAccounting(), after));
 			Assert.IsTrue(KingdomLifecycleRules.TryPublishGrowth(growth, arrival),
 				"linked candidate and operation share one exact physical identity");
+			KingdomGrowthBook retained = RoundTripGrowth(growth);
+			KingdomGrowthOperation retainedOp = retained.ArrivalOp;
+			KingdomGrowthArrivalCandidate retainedCandidate = retained.ArrivalCandidate;
+			Assert.IsTrue(KingdomLifecycleRules.AdvanceGrowthPhase(retained, retainedOp,
+				KingdomGrowthPhase.WaterIntent, 126L));
+			Assert.IsTrue(KingdomLifecycleRules.QuarantineGrowthOperation(retained,
+				retainedOp, "arrival water entered a third state"));
+			Assert.IsTrue(KingdomLifecycleRules.QuarantineGrowthArrivalCandidate(retained,
+				retainedCandidate, "linked candidate retained beside failed arrival"));
+			Assert.AreEqual(KingdomGrowthArrivalCandidatePhase.Observed,
+				retainedCandidate.EvidencePhase);
+			Assert.IsTrue(KingdomLifecycleRules.CanOwnGrowthAuthority(retained,
+				retained.SettlementId));
+			retained = RoundTripGrowth(retained);
+			Assert.AreEqual(KingdomGrowthPhase.Quarantined, retained.ArrivalOp.Phase);
+			Assert.AreEqual(KingdomGrowthArrivalCandidatePhase.Quarantined,
+				retained.ArrivalCandidate.Phase);
+			Assert.AreEqual(KingdomGrowthArrivalCandidatePhase.Observed,
+				retained.ArrivalCandidate.EvidencePhase);
 
 			byte[] beforeWrong = KingdomLifecycleWireCodec.GrowthPayloadForWrite(growth);
 			Assert.IsFalse(KingdomLifecycleRules.BeginGrowthArrivalCandidateDisposition(growth,
@@ -1747,6 +2013,371 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void HistoricalV1ObservedCandidateMigratesItsLodgingIdentityExactly()
+		{
+			KingdomGrowthBook growth = Migrated("city-candidate-v1", 100L, true, true, 20L);
+			KingdomGrowthArrivalCandidate candidate =
+				KingdomLifecycleRules.PrepareGrowthArrivalCandidate(growth, "v1-marker",
+					"Settler", "v1-escrow", "zone-a", 120L, Digest('1'), Digest('2'), Digest('3'));
+			Assert.IsTrue(KingdomLifecycleRules.TryPublishGrowthArrivalCandidate(growth, candidate));
+			Assert.IsTrue(KingdomLifecycleRules.BeginGrowthArrivalCandidateCreate(growth,
+				candidate, 121L));
+			Assert.IsTrue(KingdomLifecycleRules.CommitGrowthArrivalCandidateCreate(growth,
+				candidate, "v1-object", Digest('4'), Digest('5'), Digest('6'), Digest('7'),
+				true, 122L));
+			Assert.IsTrue(KingdomLifecycleRules.BeginGrowthArrivalLodgingObservation(growth,
+				candidate, "zone-a", 2, 3, Digest('8'), 123L));
+			Assert.IsTrue(KingdomLifecycleRules.CommitGrowthArrivalLodgingObservation(growth,
+				candidate, KingdomGrowthArrivalDisposition.Joined,
+				KingdomGrowthArrivalRefusalReason.None, Digest('9'), Digest('a'), true, 124L));
+
+			byte[] historical = KingdomLifecycleWireCodec.GrowthV1PayloadFixture(growth);
+			Assert.AreEqual(4327, historical.Length,
+				"historical candidate fixture layout is pinned, not merely self-round-tripped");
+			Assert.AreEqual("521b8e42ce902e25777ef6198f19159a2cbdf98ca7ca1e6dee66db431b8fb1d8",
+				Sha256(historical));
+			KingdomGrowthBook loaded = KingdomLifecycleWireCodec.ReadGrowthPayload(historical);
+			Assert.IsFalse(loaded.Quarantined);
+			Assert.AreEqual(KingdomLifecycleRules.CurrentGrowthFormatVersion,
+				loaded.FormatVersion);
+			Assert.AreEqual(KingdomGrowthArrivalCandidatePhase.Observed,
+				loaded.ArrivalCandidate.Phase);
+			Assert.AreNotEqual(loaded.ArrivalCandidate.LodgingReceiptGraphHash,
+				loaded.ArrivalCandidate.LodgingDeclaredGraphHash);
+			Assert.IsTrue(KingdomLifecycleRules.CanOwnGrowthAuthority(loaded,
+				loaded.SettlementId));
+			KingdomGrowthBook current = RoundTripGrowth(loaded);
+			Assert.IsFalse(current.Quarantined);
+			Assert.AreEqual(loaded.ArrivalCandidate.PlanHash,
+				current.ArrivalCandidate.PlanHash);
+		}
+
+		[Test]
+		public void HistoricalV1PreLodgingCandidatesBindOnceToTheirFirstClaimedZone()
+		{
+			foreach (KingdomGrowthArrivalCandidatePhase phase in new[]
+			{
+				KingdomGrowthArrivalCandidatePhase.Prepared,
+				KingdomGrowthArrivalCandidatePhase.CreateIntent,
+				KingdomGrowthArrivalCandidatePhase.Escrowed
+			})
+			{
+				KingdomGrowthBook growth = Migrated("city-v1-unbound-" + phase,
+					100L, true, true, 20L);
+				KingdomGrowthArrivalCandidate candidate =
+					KingdomLifecycleRules.PrepareGrowthArrivalCandidate(growth,
+						"v1-unbound-marker-" + phase, "Settler",
+						"v1-unbound-escrow-" + phase, "zone-original", 120L,
+						Digest('1'), Digest('2'), Digest('3'));
+				Assert.IsTrue(KingdomLifecycleRules.TryPublishGrowthArrivalCandidate(
+					growth, candidate));
+				if ((byte)phase >= (byte)KingdomGrowthArrivalCandidatePhase.CreateIntent)
+					Assert.IsTrue(KingdomLifecycleRules.BeginGrowthArrivalCandidateCreate(
+						growth, candidate, 121L));
+				if (phase == KingdomGrowthArrivalCandidatePhase.Escrowed)
+					Assert.IsTrue(KingdomLifecycleRules.CommitGrowthArrivalCandidateCreate(
+						growth, candidate, "v1-unbound-object", Digest('4'), Digest('5'),
+						Digest('6'), Digest('7'), true, 122L));
+
+				byte[] historical = KingdomLifecycleWireCodec.GrowthV1PayloadFixture(growth);
+				int expectedLength = phase == KingdomGrowthArrivalCandidatePhase.Prepared
+					? 3171 : phase == KingdomGrowthArrivalCandidatePhase.CreateIntent ? 3415 : 4072;
+				string expectedSha = phase == KingdomGrowthArrivalCandidatePhase.Prepared
+					? "551099320ca73ef150afc46a64392999a042889a708ede91df91776b79e020a1"
+					: phase == KingdomGrowthArrivalCandidatePhase.CreateIntent
+						? "49003afaab3fa918a68ba232e3a82b8f4b12a12f3d728f6bd8e81724bc2be361"
+						: "c874d96fb64f550f08d75efa8f5790523589f92d2ce80f726879fa7f3d95347d";
+				Assert.AreEqual(expectedLength, historical.Length,
+					phase + " historical layout changed");
+				Assert.AreEqual(expectedSha, Sha256(historical), phase.ToString());
+				KingdomGrowthBook loaded = KingdomLifecycleWireCodec.ReadGrowthPayload(historical);
+				Assert.IsFalse(loaded.Quarantined, phase.ToString());
+				Assert.IsTrue(loaded.ArrivalCandidate.LegacyGrowthV1UnboundZone,
+					phase.ToString());
+				Assert.IsNull(loaded.ArrivalCandidate.LodgingZoneId, phase.ToString());
+				Assert.AreEqual(phase, loaded.ArrivalCandidate.Phase);
+				Assert.IsTrue(KingdomLifecycleRules.CanOwnGrowthAuthority(loaded,
+					loaded.SettlementId));
+				loaded = RoundTripGrowth(loaded);
+				string legacyPlan = loaded.ArrivalCandidate.PlanHash;
+				Assert.IsTrue(KingdomLifecycleRules.BindLegacyGrowthArrivalCandidateZone(
+					loaded, loaded.ArrivalCandidate, "zone-claimed", 130L));
+				Assert.IsFalse(loaded.ArrivalCandidate.LegacyGrowthV1UnboundZone);
+				Assert.AreEqual("zone-claimed", loaded.ArrivalCandidate.LodgingZoneId);
+				Assert.AreNotEqual(legacyPlan, loaded.ArrivalCandidate.PlanHash);
+				Assert.IsTrue(KingdomLifecycleRules.CanOwnGrowthAuthority(loaded,
+					loaded.SettlementId));
+				Assert.IsFalse(KingdomLifecycleRules.BindLegacyGrowthArrivalCandidateZone(
+					loaded, loaded.ArrivalCandidate, "zone-other", 131L),
+					"zone affinity is a one-way compatibility transition");
+			}
+		}
+
+		[Test]
+		public void HistoricalV1QuarantinedCandidateEvidenceNeverBindsOrRewrites()
+		{
+			KingdomGrowthBook growth = Migrated("city-v1-quarantined-candidate",
+				100L, true, true, 20L);
+			KingdomGrowthArrivalCandidate candidate =
+				KingdomLifecycleRules.PrepareGrowthArrivalCandidate(growth,
+					"v1-quarantine-marker", "Settler", "v1-quarantine-escrow",
+					"zone-original", 120L, Digest('1'), Digest('2'), Digest('3'));
+			Assert.IsTrue(KingdomLifecycleRules.TryPublishGrowthArrivalCandidate(growth,
+				candidate));
+			Assert.IsTrue(KingdomLifecycleRules.QuarantineGrowthArrivalCandidate(growth,
+				candidate, "historical candidate evidence retained"));
+			byte[] historical = KingdomLifecycleWireCodec.GrowthV1PayloadFixture(growth);
+			KingdomGrowthBook loaded = KingdomLifecycleWireCodec.ReadGrowthPayload(historical);
+			Assert.IsFalse(loaded.Quarantined);
+			Assert.AreEqual(KingdomGrowthArrivalCandidatePhase.Quarantined,
+				loaded.ArrivalCandidate.Phase);
+			Assert.IsTrue(loaded.ArrivalCandidate.LegacyGrowthV1UnboundZone);
+			Assert.IsTrue(KingdomLifecycleRules.CanOwnGrowthAuthority(loaded,
+				loaded.SettlementId));
+			byte[] before = KingdomLifecycleWireCodec.GrowthPayloadForWrite(loaded);
+			Assert.IsFalse(KingdomLifecycleRules.BindLegacyGrowthArrivalCandidateZone(
+				loaded, loaded.ArrivalCandidate, "zone-claimed", 130L));
+			CollectionAssert.AreEqual(before,
+				KingdomLifecycleWireCodec.GrowthPayloadForWrite(loaded));
+		}
+
+		[Test]
+		public void ArrivalCandidateIntentPlansBindZoneSnapshotAndExactDispositionEndpoint()
+		{
+			KingdomGrowthBook growth = Migrated("city-candidate-intents", 100L, true, true, 20L);
+			KingdomGrowthArrivalCandidate candidate =
+				KingdomLifecycleRules.PrepareGrowthArrivalCandidate(growth, "intent-marker",
+					"Settler", "intent-escrow", "zone-a", 120L, Digest('1'), Digest('2'),
+					Digest('3'));
+			Assert.IsTrue(KingdomLifecycleRules.TryPublishGrowthArrivalCandidate(growth, candidate));
+			Assert.IsTrue(KingdomLifecycleRules.BeginGrowthArrivalCandidateCreate(growth,
+				candidate, 121L));
+			Assert.IsTrue(KingdomLifecycleRules.CommitGrowthArrivalCandidateCreate(growth,
+				candidate, "intent-object", Digest('4'), Digest('5'), Digest('6'), Digest('7'),
+				true, 122L));
+			string basePlan = candidate.PlanHash;
+			Assert.IsTrue(KingdomLifecycleRules.BeginGrowthArrivalLodgingObservation(growth,
+				candidate, "zone-a", 2, 3, Digest('8'), 123L));
+			Assert.AreNotEqual(basePlan, candidate.PlanHash,
+				"lodging coordinates and snapshot enter authority before observation");
+			KingdomGrowthBook lodgingTamper = RoundTripGrowth(growth);
+			lodgingTamper.ArrivalCandidate.LodgingX++;
+			Assert.IsFalse(KingdomLifecycleRules.CanOwnGrowthAuthority(lodgingTamper,
+				lodgingTamper.SettlementId));
+			Assert.IsTrue(KingdomLifecycleRules.CommitGrowthArrivalLodgingObservation(growth,
+				candidate, KingdomGrowthArrivalDisposition.Joined,
+				KingdomGrowthArrivalRefusalReason.None, Digest('9'), Digest('a'), true, 124L));
+
+			KingdomGrowthOperation arrival = KingdomLifecycleRules.PrepareGrowthOperation(growth,
+				KingdomGrowthAction.Arrival, null, 125L);
+			arrival.ArrivalDisposition = KingdomGrowthArrivalDisposition.Joined;
+			arrival.ArrivalCandidateId = candidate.Id;
+			arrival.TargetId = candidate.ObjectId; arrival.TargetMarker = candidate.Marker;
+			arrival.Blueprint = candidate.Blueprint; arrival.ZoneId = candidate.LodgingZoneId;
+			arrival.TargetTopology = KingdomLifecycleTopology.Cell;
+			arrival.TargetLocation = KingdomGrowthLocationKind.Cell;
+			arrival.TargetOwnerId = null; arrival.TargetX = 2; arrival.TargetY = 3;
+			arrival.PopulationBefore = 1; arrival.PopulationDelta = 1; arrival.PopulationAfter = 2;
+			arrival.WaterLegs.Add(Water(growth, arrival, KingdomGrowthWaterMutationKind.Drain,
+				"intent-water", 2, 2));
+			arrival.DomainSteps.Add(Domain(growth, arrival,
+				KingdomGrowthDomainStepKind.Enrollment,
+				KingdomGrowthDomainCallbackKind.Enroll, candidate.ObjectId, candidate.ObjectId, 0, 1));
+			arrival.DomainSteps.Add(Domain(growth, arrival, KingdomGrowthDomainStepKind.Roster,
+				KingdomGrowthDomainCallbackKind.RosterAdd, candidate.ObjectId, candidate.ObjectId, 0, 1));
+			arrival.DomainSteps.Add(Domain(growth, arrival, KingdomGrowthDomainStepKind.Creed,
+				KingdomGrowthDomainCallbackKind.CreedSet, candidate.ObjectId, candidate.ObjectId, 0, 1));
+			arrival.DomainSteps.Add(Domain(growth, arrival, KingdomGrowthDomainStepKind.Population,
+				KingdomGrowthDomainCallbackKind.PopulationAdjust, candidate.ObjectId,
+				growth.SettlementId, 1, 2));
+			KingdomGrowthAccountingSnapshot after = EmptyAccounting();
+			after.ArrivalCost = 2; after.Arrivals = 1;
+			arrival.DomainSteps.Add(Accounting(growth, arrival, EmptyAccounting(), after));
+			Assert.IsTrue(KingdomLifecycleRules.TryPublishGrowth(growth, arrival));
+			Assert.IsTrue(KingdomLifecycleRules.BeginGrowthArrivalCandidateDisposition(growth,
+				candidate, arrival.Id, KingdomGrowthObjectMutationKind.CellAdd,
+				KingdomGrowthLocationKind.Cell, null, "zone-a", 2, 3, Digest('b'), Digest('c'),
+				Digest('d'), Digest('e'), Digest('f'), Digest('0'), 126L));
+			KingdomGrowthBook endpointTamper = RoundTripGrowth(growth);
+			endpointTamper.ArrivalCandidate.DispositionStep.AfterX++;
+			Assert.IsFalse(KingdomLifecycleRules.CanOwnGrowthAuthority(endpointTamper,
+				endpointTamper.SettlementId), "joined callback endpoint is cross-bound to candidate and op");
+			KingdomGrowthBook kindTamper = RoundTripGrowth(growth);
+			kindTamper.ArrivalCandidate.DispositionStep.Kind =
+				KingdomGrowthObjectMutationKind.InventoryAdd;
+			Assert.IsFalse(KingdomLifecycleRules.CanOwnGrowthAuthority(kindTamper,
+				kindTamper.SettlementId));
+		}
+
+		[Test]
+		public void OpenObservedCandidatePreservesClockAcrossOptionAndHealthPauses()
+		{
+			KingdomGrowthBook growth = Migrated("city-candidate-pause", 100L, true, true, 20L);
+			KingdomGrowthArrivalCandidate candidate =
+				KingdomLifecycleRules.PrepareGrowthArrivalCandidate(growth, "pause-marker", "Settler",
+					"pause-escrow", "zone-a", 120L, Digest('1'), Digest('2'), Digest('3'));
+			Assert.IsTrue(KingdomLifecycleRules.TryPublishGrowthArrivalCandidate(growth, candidate));
+			Assert.IsTrue(KingdomLifecycleRules.BeginGrowthArrivalCandidateCreate(growth,
+				candidate, 121L));
+			Assert.IsTrue(KingdomLifecycleRules.CommitGrowthArrivalCandidateCreate(growth,
+				candidate, "pause-object", Digest('4'), Digest('5'), Digest('6'), Digest('7'), true,
+				122L));
+			Assert.IsTrue(KingdomLifecycleRules.BeginGrowthArrivalLodgingObservation(growth,
+				candidate, "zone-a", 2, 3, Digest('8'), 123L));
+			Assert.IsTrue(KingdomLifecycleRules.CommitGrowthArrivalLodgingObservation(growth,
+				candidate, KingdomGrowthArrivalDisposition.Joined,
+				KingdomGrowthArrivalRefusalReason.None, Digest('9'), Digest('a'), true, 124L));
+			Assert.AreEqual(120L, growth.NextArrivalTick);
+
+			KingdomGrowthAvailabilityDecision disabled =
+				KingdomLifecycleRules.ObserveGrowthAvailability(growth, false, true, 130L, 20L);
+			Assert.IsTrue(disabled.Valid); Assert.AreEqual(120L, disabled.NextArrivalTick);
+			Assert.IsTrue(KingdomLifecycleRules.ApplyGrowthAvailability(growth, disabled));
+			Assert.IsTrue(growth.WorkPaused);
+			growth = RoundTripGrowth(growth);
+			KingdomGrowthAvailabilityDecision enabled =
+				KingdomLifecycleRules.ObserveGrowthAvailability(growth, true, true, 160L, 20L);
+			Assert.IsTrue(enabled.Valid); Assert.AreEqual(120L, enabled.NextArrivalTick);
+			Assert.IsTrue(KingdomLifecycleRules.ApplyGrowthAvailability(growth, enabled));
+			Assert.NotNull(KingdomLifecycleRules.PrepareGrowthOperation(growth,
+				KingdomGrowthAction.Arrival, null, 160L));
+
+			KingdomGrowthAvailabilityDecision unhealthy =
+				KingdomLifecycleRules.ObserveGrowthAvailability(growth, true, false, 170L, 20L);
+			Assert.IsTrue(unhealthy.Valid); Assert.AreEqual(120L, unhealthy.NextArrivalTick);
+			Assert.IsTrue(KingdomLifecycleRules.ApplyGrowthAvailability(growth, unhealthy));
+			Assert.IsTrue(KingdomLifecycleRules.CanOwnGrowthAuthority(growth, growth.SettlementId));
+		}
+
+		[Test]
+		public void JoinedArrivalRetiresEveryReceiptExactlyOnceAcrossPhaseCuts()
+		{
+			KingdomGrowthBook growth = Migrated("city-arrival-complete", 100L, true, true, 20L);
+			KingdomGrowthArrivalCandidate candidate =
+				KingdomLifecycleRules.PrepareGrowthArrivalCandidate(growth, "complete-marker",
+					"Settler", "complete-escrow", "zone-a", 120L, Digest('1'), Digest('2'), Digest('3'));
+			Assert.IsTrue(KingdomLifecycleRules.TryPublishGrowthArrivalCandidate(growth, candidate));
+			Assert.IsTrue(KingdomLifecycleRules.BeginGrowthArrivalCandidateCreate(growth,
+				candidate, 121L));
+			Assert.IsTrue(KingdomLifecycleRules.CommitGrowthArrivalCandidateCreate(growth,
+				candidate, "complete-object", Digest('4'), Digest('5'), Digest('6'), Digest('7'),
+				true, 122L));
+			Assert.IsTrue(KingdomLifecycleRules.BeginGrowthArrivalLodgingObservation(growth,
+				candidate, "zone-a", 2, 3, Digest('8'), 123L));
+			Assert.IsTrue(KingdomLifecycleRules.CommitGrowthArrivalLodgingObservation(growth,
+				candidate, KingdomGrowthArrivalDisposition.Joined,
+				KingdomGrowthArrivalRefusalReason.None, Digest('9'), Digest('a'), true, 124L));
+
+			KingdomGrowthOperation op = KingdomLifecycleRules.PrepareGrowthOperation(growth,
+				KingdomGrowthAction.Arrival, null, 125L);
+			op.ArrivalDisposition = KingdomGrowthArrivalDisposition.Joined;
+			op.ArrivalCandidateId = candidate.Id;
+			op.TargetId = candidate.ObjectId; op.TargetMarker = candidate.Marker;
+			op.Blueprint = candidate.Blueprint; op.ZoneId = candidate.LodgingZoneId;
+			op.TargetTopology = KingdomLifecycleTopology.Cell;
+			op.TargetLocation = KingdomGrowthLocationKind.Cell;
+			op.TargetOwnerId = null; op.TargetX = candidate.LodgingX; op.TargetY = candidate.LodgingY;
+			op.PopulationBefore = 7; op.PopulationDelta = 1; op.PopulationAfter = 8;
+			op.WaterLegs.Add(Water(growth, op, KingdomGrowthWaterMutationKind.Drain,
+				"arrival-water-complete", 2, 2));
+			op.DomainSteps.Add(Domain(growth, op, KingdomGrowthDomainStepKind.Enrollment,
+				KingdomGrowthDomainCallbackKind.Enroll, candidate.ObjectId, candidate.ObjectId, 0, 1));
+			op.DomainSteps.Add(Domain(growth, op, KingdomGrowthDomainStepKind.Roster,
+				KingdomGrowthDomainCallbackKind.RosterAdd, candidate.ObjectId, candidate.ObjectId, 0, 1));
+			op.DomainSteps.Add(Domain(growth, op, KingdomGrowthDomainStepKind.Creed,
+				KingdomGrowthDomainCallbackKind.CreedSet, candidate.ObjectId, candidate.ObjectId, 0, 1));
+			op.DomainSteps.Add(Domain(growth, op, KingdomGrowthDomainStepKind.Population,
+				KingdomGrowthDomainCallbackKind.PopulationAdjust, candidate.ObjectId,
+				growth.SettlementId, 7, 8));
+			KingdomGrowthAccountingSnapshot accountingAfter = EmptyAccounting();
+			accountingAfter.ArrivalCost = 2; accountingAfter.Arrivals = 1;
+			op.DomainSteps.Add(Accounting(growth, op, EmptyAccounting(), accountingAfter));
+			KingdomGrowthOutboxEvent notice = KingdomLifecycleRules.PrepareDeclaredGrowthOutboxEvent(op,
+				0, "joined", "chronicle", "official joined", "outsider joined",
+				"ledger", null, null, null,
+				2, Digest('b'), 3, Digest('c'), 6, Digest('f'), 7, Digest('0'),
+				4, Digest('d'), 5, Digest('e'));
+			Assert.NotNull(notice); op.OutboxEvents.Add(notice);
+			Assert.IsTrue(KingdomLifecycleRules.TryPublishGrowth(growth, op));
+
+			growth = RoundTripGrowth(growth); op = growth.ArrivalOp;
+			candidate = growth.ArrivalCandidate;
+			Assert.IsTrue(KingdomLifecycleRules.AdvanceGrowthPhase(growth, op,
+				KingdomGrowthPhase.WaterIntent, 126L));
+			growth = RoundTripGrowth(growth); op = growth.ArrivalOp;
+			candidate = growth.ArrivalCandidate;
+			ProveWater(growth, op, 0);
+			Assert.AreEqual(1, op.WaterCursor);
+			Assert.IsTrue(KingdomLifecycleRules.AdvanceGrowthPhase(growth, op,
+				KingdomGrowthPhase.WaterSettled, 127L));
+			Assert.IsTrue(KingdomLifecycleRules.BeginGrowthArrivalCandidateDisposition(growth,
+				candidate, op.Id, KingdomGrowthObjectMutationKind.CellAdd,
+				KingdomGrowthLocationKind.Cell, null, "zone-a", 2, 3, Digest('1'), Digest('2'),
+				Digest('3'), Digest('4'), Digest('5'), Digest('6'), 128L));
+			Assert.IsTrue(KingdomLifecycleRules.CommitGrowthArrivalCandidateDisposition(growth,
+				candidate, Digest('7'), true, 129L));
+			Assert.IsTrue(KingdomLifecycleRules.AdvanceGrowthPhase(growth, op,
+				KingdomGrowthPhase.DomainIntent, 130L));
+			for (int i = 0; i < op.DomainSteps.Count; i++) ProveDomain(growth, op, i);
+			Assert.AreEqual(5, op.DomainCursor);
+			Assert.IsTrue(KingdomLifecycleRules.AdvanceGrowthPhase(growth, op,
+				KingdomGrowthPhase.DomainSettled, 131L));
+			growth = RoundTripGrowth(growth); op = growth.ArrivalOp;
+			candidate = growth.ArrivalCandidate;
+			Assert.IsTrue(KingdomLifecycleRules.AdvanceGrowthPhase(growth, op,
+				KingdomGrowthPhase.ClockIntent, 132L));
+			Assert.IsTrue(KingdomLifecycleRules.BeginGrowthClock(growth, op,
+				op.ClockLease.Before));
+			growth = RoundTripGrowth(growth); op = growth.ArrivalOp;
+			candidate = growth.ArrivalCandidate;
+			Assert.IsTrue(KingdomLifecycleRules.CommitGrowthClockWitness(growth, op,
+				op.ClockLease.After));
+			Assert.IsTrue(KingdomLifecycleRules.AdvanceGrowthPhase(growth, op,
+				KingdomGrowthPhase.Sinks, 133L));
+			Assert.IsTrue(KingdomLifecycleRules.BeginGrowthChronicleOutbox(growth, op, 0,
+				2, Digest('b'), 6, Digest('f')));
+			Assert.IsTrue(KingdomLifecycleRules.CommitGrowthChronicleOutbox(growth, op, 0,
+				3, Digest('c'), 7, Digest('0')));
+			Assert.IsTrue(KingdomLifecycleRules.BeginGrowthInspectableOutbox(growth, op, 0,
+				KingdomGrowthOutboxSinkKind.Ledger, 4, Digest('d')));
+			Assert.IsTrue(KingdomLifecycleRules.CommitGrowthInspectableOutbox(growth, op, 0,
+				KingdomGrowthOutboxSinkKind.Ledger, 5, Digest('e')));
+			growth = RoundTripGrowth(growth); op = growth.ArrivalOp;
+			candidate = growth.ArrivalCandidate;
+			Assert.AreEqual(KingdomLifecycleSinkState.Delivered,
+				op.OutboxEvents[0].Outbox.ChronicleState);
+			Assert.AreEqual(KingdomLifecycleSinkState.Delivered,
+				op.OutboxEvents[0].Outbox.LedgerState);
+			Assert.IsTrue(KingdomLifecycleRules.AdvanceGrowthPhase(growth, op,
+				KingdomGrowthPhase.Terminal, 134L));
+			long completedClock = growth.NextArrivalTick;
+			KingdomGrowthAvailabilityDecision pause =
+				KingdomLifecycleRules.ObserveGrowthAvailability(growth, false, true, 135L, 20L);
+			Assert.IsTrue(KingdomLifecycleRules.ApplyGrowthAvailability(growth, pause));
+			Assert.AreEqual(completedClock, growth.NextArrivalTick);
+			Assert.IsTrue(KingdomLifecycleRules.RetireGrowth(growth, op, 136L));
+			Assert.IsNull(growth.ArrivalOp);
+			Assert.NotNull(growth.ArrivalCandidate);
+			Assert.AreEqual(completedClock, growth.NextArrivalTick,
+				"linked candidate keeps the proved clock until its barrier retires");
+			growth = RoundTripGrowth(growth); candidate = growth.ArrivalCandidate;
+			Assert.IsTrue(KingdomLifecycleRules.RetireGrowthArrivalCandidate(growth, candidate));
+			Assert.AreEqual(1L, growth.ArrivalRetiredThrough);
+			Assert.AreEqual(1L, growth.ArrivalCandidateRetiredThrough);
+			Assert.AreEqual(0L, growth.NextArrivalTick);
+			Assert.IsNull(growth.ArrivalOp); Assert.IsNull(growth.ArrivalCandidate);
+			byte[] retired = KingdomLifecycleWireCodec.GrowthPayloadForWrite(growth);
+			Assert.IsFalse(KingdomLifecycleRules.RetireGrowth(growth, op, 137L));
+			Assert.IsFalse(KingdomLifecycleRules.RetireGrowthArrivalCandidate(growth, candidate));
+			CollectionAssert.AreEqual(retired,
+				KingdomLifecycleWireCodec.GrowthPayloadForWrite(growth));
+			KingdomGrowthAvailabilityDecision resume =
+				KingdomLifecycleRules.ObserveGrowthAvailability(growth, true, true, 160L, 20L);
+			Assert.IsTrue(KingdomLifecycleRules.ApplyGrowthAvailability(growth, resume));
+			Assert.AreEqual(180L, growth.NextArrivalTick);
+		}
+
+		[Test]
 		public void CandidateCreateCollisionRollsBackEveryReceiptAndRegistryByte()
 		{
 			KingdomGrowthBook growth = Migrated("city-candidate-collision", 100L, true, true, 20L);
@@ -1755,7 +2386,7 @@ namespace ThousandAndFirst.Tests
 			Assert.IsTrue(KingdomLifecycleRules.TryPublishGrowth(growth, heartbeat));
 			KingdomGrowthArrivalCandidate candidate =
 				KingdomLifecycleRules.PrepareGrowthArrivalCandidate(growth, "arrival-marker",
-					"Settler", "arrival-escrow", 122L, Digest('1'), Digest('2'), Digest('3'));
+					"Settler", "arrival-escrow", "zone-a", 122L, Digest('1'), Digest('2'), Digest('3'));
 			Assert.NotNull(candidate);
 			Assert.IsTrue(KingdomLifecycleRules.TryPublishGrowthArrivalCandidate(growth, candidate));
 			Assert.IsTrue(KingdomLifecycleRules.BeginGrowthArrivalCandidateCreate(growth,
@@ -1768,6 +2399,229 @@ namespace ThousandAndFirst.Tests
 				KingdomLifecycleWireCodec.GrowthPayloadForWrite(growth));
 			Assert.IsNull(candidate.ObjectId);
 			Assert.AreEqual(KingdomGrowthArrivalCandidatePhase.CreateIntent, candidate.Phase);
+		}
+
+		[Test]
+		public void EverySimpleArrivalDispositionBurnsOneClockAndRetiresExactlyOnce()
+		{
+			KingdomGrowthArrivalDisposition[] dispositions =
+			{
+				KingdomGrowthArrivalDisposition.WaterUnavailable,
+				KingdomGrowthArrivalDisposition.NoGround,
+				KingdomGrowthArrivalDisposition.PopulationCap,
+				KingdomGrowthArrivalDisposition.SupportCap
+			};
+			for (int i = 0; i < dispositions.Length; i++)
+			{
+				KingdomGrowthBook growth = Migrated("city-simple-arrival-" + i,
+					100L, true, true, 20L);
+				KingdomGrowthOperation op = KingdomLifecycleRules.PrepareGrowthOperation(growth,
+					KingdomGrowthAction.Arrival, null, 120L);
+				Assert.NotNull(op, dispositions[i].ToString());
+				op.ArrivalDisposition = dispositions[i];
+				Assert.IsTrue(KingdomLifecycleRules.TryPublishGrowth(growth, op));
+				growth = RoundTripGrowth(growth); op = growth.ArrivalOp;
+				Assert.AreEqual(0, op.WaterLegs.Count);
+				Assert.AreEqual(0, op.DomainSteps.Count);
+				Assert.IsNull(growth.ArrivalCandidate);
+				Assert.AreEqual(120L, op.ClockLease.Before);
+				Assert.AreEqual(140L, op.ClockLease.After);
+				Assert.IsTrue(KingdomLifecycleRules.AdvanceGrowthPhase(growth, op,
+					KingdomGrowthPhase.ClockIntent, 121L));
+				Assert.IsTrue(KingdomLifecycleRules.BeginGrowthClock(growth, op, 120L));
+				growth = RoundTripGrowth(growth); op = growth.ArrivalOp;
+				Assert.IsTrue(KingdomLifecycleRules.CommitGrowthClockWitness(growth, op, 140L));
+				Assert.AreEqual(140L, growth.NextArrivalTick);
+				Assert.IsTrue(KingdomLifecycleRules.AdvanceGrowthPhase(growth, op,
+					KingdomGrowthPhase.Sinks, 122L));
+				Assert.IsTrue(KingdomLifecycleRules.AdvanceGrowthPhase(growth, op,
+					KingdomGrowthPhase.Terminal, 123L));
+				growth = RoundTripGrowth(growth); op = growth.ArrivalOp;
+				Assert.IsTrue(KingdomLifecycleRules.RetireGrowth(growth, op, 124L));
+				Assert.IsNull(growth.ArrivalOp);
+				Assert.AreEqual(1L, growth.ArrivalRetiredThrough);
+				Assert.AreEqual(140L, growth.NextArrivalTick);
+				Assert.IsNull(KingdomLifecycleRules.PrepareGrowthOperation(growth,
+					KingdomGrowthAction.Arrival, null, 139L), "retry cannot spend the slot twice");
+				byte[] retired = KingdomLifecycleWireCodec.GrowthPayloadForWrite(growth);
+				Assert.IsFalse(KingdomLifecycleRules.RetireGrowth(growth, op, 125L));
+				CollectionAssert.AreEqual(retired,
+					KingdomLifecycleWireCodec.GrowthPayloadForWrite(growth));
+			}
+		}
+
+		[Test]
+		public void RuntimeArrivalOwnsEveryIrreversibleMutationWithFrozenReceipts()
+		{
+			string source = TestMain.ReadRepositoryText("Growth/KingdomGrowth.cs");
+			string pass = Slice(source, "public static void OnZoneActivated",
+				"private static bool ResolveHeartbeat");
+			AssertOrdered(pass, "SynchronizeArrivalAuthority(System, Z, survey",
+				"ResolveHeartbeat(System, Z, survey", "PublishArrivalHealth(System, Z, timeTicks",
+				"ResolveOrStartArrival(System, Z, survey");
+			StringAssert.Contains("CurrentSettlementId", source);
+			StringAssert.Contains("CanOwnGrowthAuthority(growth, settlementId)", source);
+			AssertOrdered(source, "MigrationPending", "ApplyGrowthMigration(parent, input)",
+				"TryPublishGrowthMigration(parent, migration)",
+				"system.NextArrivalTick = parent.Growth.NextArrivalTick");
+
+			string starter = Slice(source, "private static ArrivalResult ResolveOrStartArrival",
+				"private static ArrivalResult StartSimpleArrival");
+			AssertOrdered(starter, "PrepareGrowthArrivalCandidate", "TryPublishGrowthArrivalCandidate",
+				"ReconcileArrival(system, zone, survey");
+			StringAssert.Contains("KingdomGrowthArrivalDisposition.WaterUnavailable", starter);
+			StringAssert.Contains("remaining == 0 && operation.WaterLegs.Count > 0", source);
+
+			string reconcile = Slice(source, "private static ArrivalResult ReconcileArrival(",
+				"private static bool PrepareCandidateArrivalOperation");
+			AssertOrdered(reconcile, "BeginGrowthArrivalCandidateCreate", "GameObject.Create",
+				"RootArrivalCandidate", "CommitGrowthArrivalCandidateCreate",
+				"ObservePreparedArrival", "BeginGrowthArrivalLodgingObservation");
+			int lodgingIntent = reconcile.IndexOf(
+				"candidate.Phase == KingdomGrowthArrivalCandidatePhase.LodgingIntent",
+				StringComparison.Ordinal);
+			int pureObservation = reconcile.IndexOf("ObservePreparedArrival", lodgingIntent,
+				StringComparison.Ordinal);
+			int lodgingCommit = reconcile.IndexOf("CommitGrowthArrivalLodgingObservation",
+				pureObservation, StringComparison.Ordinal);
+			Assert.That(lodgingIntent, Is.GreaterThanOrEqualTo(0));
+			Assert.That(pureObservation, Is.GreaterThan(lodgingIntent));
+			Assert.That(lodgingCommit, Is.GreaterThan(pureObservation));
+			StringAssert.DoesNotContain("WouldTakeArrival", reconcile);
+			StringAssert.DoesNotContain("PrepareArrivalObservation", reconcile);
+			StringAssert.DoesNotContain("Settle(", reconcile);
+			StringAssert.Contains("QuarantineArrival(growth", reconcile);
+			StringAssert.Contains("!AllowCandidateConsumption || growth.WorkPaused", reconcile);
+			AssertOrdered(reconcile,
+				"candidate.Phase == KingdomGrowthArrivalCandidatePhase.Quarantined",
+				"candidate.LegacyGrowthV1UnboundZone",
+				"BindLegacyGrowthArrivalCandidateZone");
+
+			string lodgingSource = TestMain.ReadRepositoryText("Growth/KingdomLodging.cs");
+			string observation = Slice(lodgingSource,
+				"internal static bool ObservePreparedArrival(KingdomSystem System, Zone Z,",
+				"public static string HomeDesignKeyOf");
+			StringAssert.Contains("ProjectedOccupancy(Z)", observation);
+			foreach (string mutation in new[] { "SetStringProperty", "SetIntProperty",
+				"KingdomChronicle.Record", ".Ledger.Note", "KingdomBrink.", "Settle(" })
+				StringAssert.DoesNotContain(mutation, observation);
+			string settle = Slice(lodgingSource,
+				"private static Dictionary<string, List<GameObject>> Settle(",
+				"private static void AssignOne");
+			string assign = Slice(lodgingSource, "private static void AssignOne(",
+				"private static string ChooseHome(");
+			string chooser = Slice(lodgingSource, "private static string ChooseHome(",
+				"// --- Addendum 4b");
+			string projection = Slice(lodgingSource,
+				"private static Dictionary<string, List<GameObject>> ProjectedOccupancy(",
+				"private static bool ObserveOccupantConflicts");
+			StringAssert.Contains("AssignOne(System, Z, unassigned[i], homes, occupancy",
+				settle);
+			StringAssert.Contains("ChooseHome(Z, Resident, Homes, Occupancy", assign);
+			StringAssert.Contains("ChooseHome(Z, unassigned[i], homes, result", projection);
+			foreach (string mutation in new[] { "SetStringProperty", "SetIntProperty",
+				"KingdomChronicle.Record", ".Ledger.Note", "KingdomBrink.",
+				"ForgetCohabitation" })
+			{
+				StringAssert.DoesNotContain(mutation, chooser);
+				StringAssert.DoesNotContain(mutation, projection);
+			}
+
+			string water = Slice(source, "private static bool ReconcileArrivalWater",
+				"private static bool ReconcileCandidateDisposition");
+			AssertOrdered(water, "BeginGrowthWaterCallback", "KingdomLiquids.Drain",
+				"CommitGrowthWaterCallback");
+			StringAssert.Contains("removed != leg.Delta", water);
+			string disposition = Slice(source, "private static bool ReconcileCandidateDisposition",
+				"private static bool ReconcileArrivalDomains");
+			AssertOrdered(disposition, "BeginGrowthArrivalCandidateDisposition", "cell.AddObject",
+				"CommitGrowthArrivalCandidateDisposition");
+			StringAssert.Contains("ExactDispositionEndpoint", disposition);
+			StringAssert.Contains("settler.Obliterate()", disposition);
+
+			string domains = Slice(source, "private static bool ReconcileArrivalDomains",
+				"private static void ApplyArrivalDomain");
+			AssertOrdered(domains, "ArrivalDomainBodyHash", "BeginGrowthDomainCallback",
+				"ApplyArrivalDomain",
+				"CommitGrowthDomainCallback");
+			StringAssert.Contains("operation.LegacyGrowthV1Plan", domains);
+			string apply = Slice(source, "private static void ApplyArrivalDomain",
+				"private static bool ReconcileArrivalClock");
+			StringAssert.Contains("EnrollCitizen(settler)", apply);
+			StringAssert.Contains("system.Population++", apply);
+			StringAssert.Contains("system.Ledger.ArrivalCost += KingdomRules.DramsPerArrival", apply);
+			string personGraph = Slice(source, "private static string PersonDomainHash",
+				"private static string PersonDomainMapHash");
+			foreach (string witness in new[] { "Brain?.Allegiance", "allegiance.Previous",
+				"allegiance.Reason", "allegiance.Reason.Time", "sourced.Name",
+				"allegiance.Flags", "ConversationID", "Quest",
+				"PreQuestConversationID", "InQuestConversationID", "PostQuestConversationID",
+				"ClearLost", "FilterExtras", "SuppressPowerSwitchTwiddle",
+				"blueprint.Attributes", "blueprint.Children", "ArrivalConversationText",
+				"ArrivalConversationAnswerPrefix" })
+				StringAssert.Contains(witness, personGraph);
+			StringAssert.Contains("if (legacyV1)", personGraph);
+			StringAssert.Contains("ArrivalAllegianceRepresentable", personGraph);
+			StringAssert.Contains("ArrivalAllyReasonRepresentable", personGraph);
+			StringAssert.Contains("ArrivalConversationRepresentable", personGraph);
+			StringAssert.Contains("ReferenceEquals(seen[i], allegiance)", personGraph);
+			StringAssert.DoesNotContain("writer.Write((byte)2)", personGraph);
+			StringAssert.DoesNotContain("writer.Write(-2)", personGraph);
+			StringAssert.Contains("kind == KingdomGrowthDomainStepKind.Enrollment && !legacyV1",
+				source);
+
+			string clock = Slice(source, "private static bool ReconcileArrivalClock",
+				"private static bool ReconcileArrivalOutbox");
+			AssertOrdered(clock, "BeginGrowthClock", "system.NextArrivalTick = operation.ClockLease.After",
+				"CommitGrowthClockWitness");
+			string outbox = Slice(source, "private static bool ReconcileInspectableOutbox",
+				"private static bool RetireArrivalCandidate");
+			AssertOrdered(outbox, "BeginGrowthInspectableOutbox", "append(text)",
+				"CommitGrowthInspectableOutbox");
+			string chronicle = Slice(source, "private static bool ReconcileChronicleOutbox",
+				"private static bool ReconcileInspectableOutbox");
+			AssertOrdered(chronicle, "GrowthChronicleOutboxAction",
+				"BeginGrowthChronicleOutbox", "KingdomChronicle.RecordDeclaredOnce",
+				"CommitGrowthChronicleOutbox");
+			StringAssert.Contains("system.OutsiderEntries", chronicle);
+			string completion = Slice(source, "private static ArrivalResult CompleteArrivalOperation",
+				"private static bool ReconcileArrivalWater");
+			AssertOrdered(completion, "ReconcileArrivalWater", "ReconcileCandidateDisposition",
+				"ReconcileArrivalDomains", "ReconcileArrivalClock", "ReconcileArrivalOutbox",
+				"RetireGrowth(growth, operation", "RetireArrivalCandidate");
+			StringAssert.Contains("system.NextArrivalTick = growth.NextArrivalTick", completion);
+			string retireCandidate = Slice(source,
+				"private static bool RetireArrivalCandidate", "private static bool AppendArrivalOutbox");
+			AssertOrdered(retireCandidate, "RetireGrowthArrivalCandidate(growth, candidate)",
+				"system.NextArrivalTick = growth.NextArrivalTick");
+
+			string refusal = Slice(source,
+				"private static KingdomGrowthArrivalRefusalReason ArrivalRefusalReason",
+				"private static ArrivalResult CandidateResult");
+			foreach (string reason in new[] { "NoRoofAtAll", "NeedsUnmet", "Full", "Refused",
+				"Condemned" })
+			{
+				StringAssert.Contains("UnhousedReason." + reason, refusal, reason);
+				StringAssert.Contains("KingdomGrowthArrivalRefusalReason." + reason, refusal, reason);
+			}
+
+			string publicSpawn = Slice(source,
+				"public static bool SpawnSettler(KingdomSystem System, Zone Z, KingdomSurvey Survey, out ArrivalRefusal Refusal)",
+				"private static bool SynchronizeArrivalAuthority");
+			StringAssert.DoesNotContain("GameObject.Create", publicSpawn);
+			StringAssert.DoesNotContain("Survey.Consume", publicSpawn);
+			StringAssert.DoesNotContain("System.Population++", publicSpawn);
+			StringAssert.DoesNotContain("KingdomChronicle.Record", publicSpawn);
+			StringAssert.Contains("System.ClaimedZones.Contains(Z.ZoneID)", publicSpawn);
+			AssertOrdered(publicSpawn, "reconciledResult != ArrivalResult.Deferred",
+				"if (!Enabled)", "ResolveOrStartArrival(System, Z, survey");
+			string synchronize = Slice(source,
+				"private static bool SynchronizeArrivalAuthority", "private static bool TryMigrateArrivalAuthority");
+			StringAssert.Contains("lastObservedHealthy", synchronize);
+			StringAssert.Contains("out reconciledRefusal, null, false", synchronize);
+			StringAssert.Contains("system.ClaimedZones.Contains(zone.ZoneID)", synchronize);
+			StringAssert.Contains("QuarantineGrowthArrivalCandidate", source);
+			StringAssert.Contains("QuarantineGrowthOperation", source);
 		}
 
 		[Test]
@@ -1902,21 +2756,25 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomGrowthBook growth = Migrated("city-outbox-chain", 100L, true, true, 20L);
 			KingdomGrowthOperation op = HeartbeatPlan(growth, 121L);
-			op.OutboxEvents.Add(KingdomLifecycleRules.PrepareGrowthOutboxEvent(op, 0, "first",
-				"chronicle one", "ledger one", null, null, null, 0, Digest('1'), 1,
-				Digest('2'), 0, Digest('3'), 1, Digest('4')));
-			op.OutboxEvents.Add(KingdomLifecycleRules.PrepareGrowthOutboxEvent(op, 1, "second",
-				"chronicle two", "ledger two", null, null, null, 1, Digest('2'), 2,
-				Digest('5'), 1, Digest('4'), 2, Digest('6')));
+			op.OutboxEvents.Add(KingdomLifecycleRules.PrepareDeclaredGrowthOutboxEvent(op, 0, "first",
+				"chronicle one", "official one", "outsider one", "ledger one", null, null, null, 0, Digest('1'), 1,
+				Digest('2'), 0, Digest('7'), 1, Digest('8'), 0, Digest('3'), 1,
+				Digest('4')));
+			op.OutboxEvents.Add(KingdomLifecycleRules.PrepareDeclaredGrowthOutboxEvent(op, 1, "second",
+				"chronicle two", "official two", "outsider two", "ledger two", null, null, null, 1, Digest('2'), 2,
+				Digest('5'), 1, Digest('8'), 2, Digest('9'), 1, Digest('4'), 2,
+				Digest('6')));
 			Assert.IsTrue(KingdomLifecycleRules.TryPublishGrowth(growth, op));
 			KingdomGrowthBook hostile = Migrated("city-outbox-chain-bad", 100L, true, true, 20L);
 			KingdomGrowthOperation bad = HeartbeatPlan(hostile, 121L);
-			bad.OutboxEvents.Add(KingdomLifecycleRules.PrepareGrowthOutboxEvent(bad, 0, "first",
-				"chronicle one", "ledger one", null, null, null, 0, Digest('1'), 1,
-				Digest('2'), 0, Digest('3'), 1, Digest('4')));
-			bad.OutboxEvents.Add(KingdomLifecycleRules.PrepareGrowthOutboxEvent(bad, 1, "second",
-				"chronicle two", "ledger two", null, null, null, 1, Digest('7'), 2,
-				Digest('5'), 1, Digest('4'), 2, Digest('6')));
+			bad.OutboxEvents.Add(KingdomLifecycleRules.PrepareDeclaredGrowthOutboxEvent(bad, 0, "first",
+				"chronicle one", "official one", "outsider one", "ledger one", null, null, null, 0, Digest('1'), 1,
+				Digest('2'), 0, Digest('7'), 1, Digest('8'), 0, Digest('3'), 1,
+				Digest('4')));
+			bad.OutboxEvents.Add(KingdomLifecycleRules.PrepareDeclaredGrowthOutboxEvent(bad, 1, "second",
+				"chronicle two", "official two", "outsider two", "ledger two", null, null, null, 1, Digest('2'), 2,
+				Digest('5'), 1, Digest('7'), 2, Digest('9'), 1, Digest('4'), 2,
+				Digest('6')));
 			Assert.IsFalse(KingdomLifecycleRules.TryPublishGrowth(hostile, bad));
 			Assert.IsNull(bad.PlanHash); Assert.IsNull(hostile.HeartbeatOp);
 		}
@@ -2809,6 +3667,26 @@ namespace ThousandAndFirst.Tests
 		{
 			using (SHA256 hash = SHA256.Create())
 				return BitConverter.ToString(hash.ComputeHash(bytes)).Replace("-", "").ToLowerInvariant();
+		}
+
+		private static string Slice(string source, string first, string after)
+		{
+			int start = source.IndexOf(first, StringComparison.Ordinal);
+			Assert.GreaterOrEqual(start, 0, "source start: " + first);
+			int end = source.IndexOf(after, start + first.Length, StringComparison.Ordinal);
+			Assert.Greater(end, start, "source end: " + after);
+			return source.Substring(start, end - start);
+		}
+
+		private static void AssertOrdered(string source, params string[] fragments)
+		{
+			int cursor = -1;
+			for (int i = 0; i < fragments.Length; i++)
+			{
+				int found = source.IndexOf(fragments[i], cursor + 1, StringComparison.Ordinal);
+				Assert.Greater(found, cursor, "ordered source fragment: " + fragments[i]);
+				cursor = found;
+			}
 		}
 
 		private static int UniqueLongTriple(byte[] bytes, long a, long b, long c)

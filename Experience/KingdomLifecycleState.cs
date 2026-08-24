@@ -620,12 +620,25 @@ namespace ThousandAndFirst
 	{
 		public string EventId;
 		public string Kind;
+		/// <summary>True only on a Growth-v1 event migrated from the historical single-register
+		/// Chronicle receipt. New v2 plans may not mint this compatibility shape.</summary>
+		public bool LegacySingleRegisterChronicle;
 		public int ChronicleBeforeCount;
 		public int ChronicleDeclaredAfterCount;
 		public int ChronicleObservedCount = -1;
 		public string ChronicleBeforeHash;
 		public string ChronicleDeclaredAfterHash;
 		public string ChronicleObservedHash;
+		/// <summary>Exact rendered entries frozen before a v2 dual-register Chronicle callback.
+		/// Historical v1 single-register evidence leaves both null.</summary>
+		public string ChronicleOfficial;
+		public string ChronicleOutsider;
+		public int OutsiderBeforeCount;
+		public int OutsiderDeclaredAfterCount;
+		public int OutsiderObservedCount = -1;
+		public string OutsiderBeforeHash;
+		public string OutsiderDeclaredAfterHash;
+		public string OutsiderObservedHash;
 		public int LedgerBeforeCount;
 		public int LedgerDeclaredAfterCount;
 		public int LedgerObservedCount = -1;
@@ -711,6 +724,10 @@ namespace ThousandAndFirst
 		public long UpdatedTick;
 		public KingdomGrowthArrivalCandidatePhase Phase;
 		public KingdomGrowthArrivalCandidatePhase EvidencePhase;
+		/// <summary>Historical Growth-v1 candidates published before lodging did not bind an
+		/// origin zone. This compatibility state grants no starter authority; the first claimed
+		/// zone must bind it transactionally before reconciliation can continue.</summary>
+		public bool LegacyGrowthV1UnboundZone;
 		public KingdomGrowthArrivalDisposition Disposition;
 		public KingdomGrowthArrivalRefusalReason RefusalReason;
 		public string ObjectId;
@@ -912,6 +929,9 @@ namespace ThousandAndFirst
 		public long Sequence;
 		public string Id;
 		public string PlanHash;
+		/// <summary>Compatibility proof for an operation decoded from the exact Growth-v1
+		/// plan-hash domain. New v2 operations always leave this false.</summary>
+		public bool LegacyGrowthV1Plan;
 		public KingdomGrowthAction Action;
 		public KingdomGrowthPhase Phase;
 		public long CreatedTick;
@@ -1634,6 +1654,48 @@ namespace ThousandAndFirst
 			}
 		}
 
+		/// <summary>Test/migration fixture writer for the exact historical Growth-v1 layout.
+		/// Production writers always emit the current version.</summary>
+		internal static byte[] GrowthV1PayloadFixture(KingdomGrowthBook Book)
+		{
+			if (Book == null || Book.OpaquePayload != null
+				|| !KingdomLifecycleRules.GrowthEnvelopeWritable(Book))
+				throw new InvalidDataException("growth v1 fixture source is malformed");
+			KingdomGrowthBook fixture = ReadGrowthPayload(GrowthPayloadForWrite(Book));
+			if (fixture == null || fixture.Quarantined || fixture.OpaquePayload != null
+				|| !GrowthV1OperationsRepresentable(fixture)
+				|| !KingdomLifecycleRules.DowngradeGrowthArrivalCandidateForV1Fixture(
+					fixture.ArrivalCandidate))
+				throw new InvalidDataException("growth v1 candidate fixture could not downgrade");
+			using (GrowthCappedWriteStream stream =
+				new GrowthCappedWriteStream(KingdomLifecycleRules.MaxGrowthSectionBytes))
+			using (BinaryWriter writer = new BinaryWriter(stream, StrictUtf8, true))
+			{
+				WriteGrowth(writer, fixture, KingdomLifecycleRules.LegacyGrowthFormatVersion);
+				writer.Flush(); return stream.ToArray();
+			}
+		}
+
+		private static bool GrowthV1OperationsRepresentable(KingdomGrowthBook Book)
+		{
+			if (Book == null) return false;
+			KingdomGrowthOperation[] direct = { Book.HeartbeatOp, Book.ArrivalOp,
+				Book.DepartureOp, Book.DeliveryOp, Book.FetchOp, Book.MillOp };
+			for (int i = 0; i < direct.Length; i++)
+				if (!GrowthV1OperationRepresentable(direct[i])) return false;
+			if (Book.FieldOps == null) return false;
+			for (int i = 0; i < Book.FieldOps.Count; i++)
+				if (Book.FieldOps[i] != null
+					&& !GrowthV1OperationRepresentable(Book.FieldOps[i].Operation)) return false;
+			return true;
+		}
+
+		private static bool GrowthV1OperationRepresentable(KingdomGrowthOperation Operation)
+		{
+			return Operation == null || Operation.LegacyGrowthV1Plan
+				|| Operation.OutboxEvents != null && Operation.OutboxEvents.Count == 0;
+		}
+
 		internal static bool GrowthPayloadFitsAggregateCap(KingdomGrowthBook Book)
 		{
 			if (Book == null || Book.OpaquePayload != null) return false;
@@ -1694,10 +1756,11 @@ namespace ThousandAndFirst
 					if (version > KingdomLifecycleRules.CurrentGrowthFormatVersion)
 						return OpaqueGrowth(Payload, version,
 							"future growth payload preserved as opaque evidence");
-					if (version != KingdomLifecycleRules.CurrentGrowthFormatVersion)
+					if (version != KingdomLifecycleRules.CurrentGrowthFormatVersion
+						&& version != KingdomLifecycleRules.LegacyGrowthFormatVersion)
 						return OpaqueGrowth(Payload, version,
 							"growth payload version is unsupported");
-					KingdomGrowthBook value = ReadGrowth(reader);
+					KingdomGrowthBook value = ReadGrowth(reader, version);
 					if (stream.Position != stream.Length)
 						return OpaqueGrowth(Payload, version,
 							"growth payload has trailing bytes");
@@ -1727,11 +1790,19 @@ namespace ThousandAndFirst
 
 		private static void WriteGrowth(BinaryWriter w, KingdomGrowthBook b)
 		{
+			WriteGrowth(w, b, KingdomLifecycleRules.CurrentGrowthFormatVersion);
+		}
+
+		private static void WriteGrowth(BinaryWriter w, KingdomGrowthBook b, int wireVersion)
+		{
+			if (wireVersion != KingdomLifecycleRules.CurrentGrowthFormatVersion
+				&& wireVersion != KingdomLifecycleRules.LegacyGrowthFormatVersion)
+				throw new InvalidDataException("unsupported growth fixture version");
 			EnsureCount(b.FieldOps, KingdomLifecycleRules.MaxGrowthFields, "growth field slots");
 			EnsureCount(b.CropRows, KingdomLifecycleRules.MaxGrowthCropRows, "growth crop rows");
 			EnsureCount(b.Resources, KingdomLifecycleRules.MaxResourceRows, "growth resources");
 			EnsureCount(b.RecentProofs, KingdomLifecycleRules.MaxRecentProofs, "growth proofs");
-			w.Write(GrowthMagic); w.Write(KingdomLifecycleRules.CurrentGrowthFormatVersion);
+			w.Write(GrowthMagic); w.Write(wireVersion);
 			w.Write(b.Quarantined); S(w, b.Fault, false, true);
 			S(w, b.SettlementId, true); w.Write(b.IdentityBound); S(w, b.IdentityProof, true);
 			w.Write(b.MigratedFromLifecycleVersion); w.Write(b.MigrationPending);
@@ -1753,12 +1824,16 @@ namespace ThousandAndFirst
 			w.Write(b.FetchNextSequence); w.Write(b.FetchRetiredThrough);
 			w.Write(b.MillNextSequence); w.Write(b.MillRetiredThrough);
 			w.Write(b.ArrivalCandidateNextSequence); w.Write(b.ArrivalCandidateRetiredThrough);
-			WriteGrowthOperation(w, b.HeartbeatOp); WriteGrowthOperation(w, b.ArrivalOp);
-			WriteGrowthOperation(w, b.DepartureOp); WriteGrowthOperation(w, b.DeliveryOp);
-			WriteGrowthOperation(w, b.FetchOp); WriteGrowthOperation(w, b.MillOp);
-			WriteGrowthArrivalCandidate(w, b.ArrivalCandidate);
+			WriteGrowthOperation(w, b.HeartbeatOp, wireVersion);
+			WriteGrowthOperation(w, b.ArrivalOp, wireVersion);
+			WriteGrowthOperation(w, b.DepartureOp, wireVersion);
+			WriteGrowthOperation(w, b.DeliveryOp, wireVersion);
+			WriteGrowthOperation(w, b.FetchOp, wireVersion);
+			WriteGrowthOperation(w, b.MillOp, wireVersion);
+			WriteGrowthArrivalCandidate(w, b.ArrivalCandidate, wireVersion);
 			w.Write(b.FieldOps.Count);
-			for (int i = 0; i < b.FieldOps.Count; i++) WriteGrowthField(w, b.FieldOps[i]);
+			for (int i = 0; i < b.FieldOps.Count; i++)
+				WriteGrowthField(w, b.FieldOps[i], wireVersion);
 			w.Write(b.CropRows.Count);
 			for (int i = 0; i < b.CropRows.Count; i++) WriteCropRow(w, b.CropRows[i]);
 			w.Write(b.Resources.Count);
@@ -1767,7 +1842,7 @@ namespace ThousandAndFirst
 			for (int i = 0; i < b.RecentProofs.Count; i++) WriteGrowthProof(w, b.RecentProofs[i]);
 		}
 
-		private static KingdomGrowthBook ReadGrowth(BinaryReader r)
+		private static KingdomGrowthBook ReadGrowth(BinaryReader r, int wireVersion)
 		{
 			KingdomGrowthBook b = new KingdomGrowthBook
 			{
@@ -1797,14 +1872,17 @@ namespace ThousandAndFirst
 				MillNextSequence = r.ReadInt64(), MillRetiredThrough = r.ReadInt64(),
 				ArrivalCandidateNextSequence = r.ReadInt64(),
 				ArrivalCandidateRetiredThrough = r.ReadInt64(),
-				HeartbeatOp = ReadGrowthOperation(r), ArrivalOp = ReadGrowthOperation(r),
-				DepartureOp = ReadGrowthOperation(r), DeliveryOp = ReadGrowthOperation(r),
-				FetchOp = ReadGrowthOperation(r), MillOp = ReadGrowthOperation(r),
-				ArrivalCandidate = ReadGrowthArrivalCandidate(r)
+				HeartbeatOp = ReadGrowthOperation(r, wireVersion),
+				ArrivalOp = ReadGrowthOperation(r, wireVersion),
+				DepartureOp = ReadGrowthOperation(r, wireVersion),
+				DeliveryOp = ReadGrowthOperation(r, wireVersion),
+				FetchOp = ReadGrowthOperation(r, wireVersion),
+				MillOp = ReadGrowthOperation(r, wireVersion),
+				ArrivalCandidate = ReadGrowthArrivalCandidate(r, wireVersion)
 			};
 			int fields = ReadCount(r, KingdomLifecycleRules.MaxGrowthFields);
 			b.FieldOps = new List<KingdomGrowthFieldSlot>(fields);
-			for (int i = 0; i < fields; i++) b.FieldOps.Add(ReadGrowthField(r));
+			for (int i = 0; i < fields; i++) b.FieldOps.Add(ReadGrowthField(r, wireVersion));
 			int crops = ReadCount(r, KingdomLifecycleRules.MaxGrowthCropRows);
 			b.CropRows = new List<KingdomGrowthCropRow>(crops);
 			for (int i = 0; i < crops; i++) b.CropRows.Add(ReadCropRow(r));
@@ -1814,10 +1892,15 @@ namespace ThousandAndFirst
 			int proofs = ReadCount(r, KingdomLifecycleRules.MaxRecentProofs);
 			b.RecentProofs = new List<KingdomGrowthProof>(proofs);
 			for (int i = 0; i < proofs; i++) b.RecentProofs.Add(ReadGrowthProof(r));
+			if (wireVersion == KingdomLifecycleRules.LegacyGrowthFormatVersion
+				&& !KingdomLifecycleRules.UpgradeLegacyGrowthArrivalCandidate(
+					b.ArrivalCandidate))
+				throw new InvalidDataException("legacy growth arrival candidate cannot migrate");
 			return b;
 		}
 
-		private static void WriteGrowthOperation(BinaryWriter w, KingdomGrowthOperation o)
+		private static void WriteGrowthOperation(BinaryWriter w, KingdomGrowthOperation o,
+			int wireVersion)
 		{
 			w.Write(o != null); if (o == null) return;
 			EnsureCount(o.WaterLegs, KingdomLifecycleRules.MaxWaterLegs, "growth water legs");
@@ -1828,6 +1911,8 @@ namespace ThousandAndFirst
 			EnsureCount(o.OutboxEvents, KingdomLifecycleRules.MaxGrowthOutboxEvents,
 				"growth outbox events");
 			w.Write(o.Sequence); S(w, o.Id, true); S(w, o.PlanHash, true);
+			if (wireVersion >= KingdomLifecycleRules.CurrentGrowthFormatVersion)
+				w.Write(o.LegacyGrowthV1Plan);
 			w.Write((byte)o.Action); w.Write((byte)o.Phase); w.Write(o.CreatedTick);
 			w.Write(o.UpdatedTick); S(w, o.SettlementId, true); S(w, o.FieldId, true);
 			S(w, o.ZoneId, false); S(w, o.TargetId, true); S(w, o.TargetMarker, true);
@@ -1896,16 +1981,23 @@ namespace ThousandAndFirst
 			w.Write((byte)o.ClockState);
 			w.Write(o.OutboxEvents.Count);
 			for (int i = 0; i < o.OutboxEvents.Count; i++) WriteGrowthOutboxEvent(w,
-				o.OutboxEvents[i]);
+				o.OutboxEvents[i], wireVersion);
 			S(w, o.Fault, false, true);
 		}
 
-		private static KingdomGrowthOperation ReadGrowthOperation(BinaryReader r)
+		private static KingdomGrowthOperation ReadGrowthOperation(BinaryReader r,
+			int wireVersion)
 		{
 			if (!ReadExactBoolean(r)) return null;
+			long sequence = r.ReadInt64();
+			string id = S(r, true);
+			string planHash = S(r, true);
+			bool legacyV1 = wireVersion == KingdomLifecycleRules.LegacyGrowthFormatVersion
+				|| ReadExactBoolean(r);
 			KingdomGrowthOperation o = new KingdomGrowthOperation
 			{
-				Sequence = r.ReadInt64(), Id = S(r, true), PlanHash = S(r, true),
+				Sequence = sequence, Id = id, PlanHash = planHash,
+				LegacyGrowthV1Plan = legacyV1,
 				Action = (KingdomGrowthAction)r.ReadByte(), Phase = (KingdomGrowthPhase)r.ReadByte(),
 				CreatedTick = r.ReadInt64(), UpdatedTick = r.ReadInt64(), SettlementId = S(r, true),
 				FieldId = S(r, true), ZoneId = S(r, false), TargetId = S(r, true),
@@ -1989,7 +2081,8 @@ namespace ThousandAndFirst
 			o.ClockState = (KingdomLifecyclePhysicalState)r.ReadByte();
 			int outbox = ReadCount(r, KingdomLifecycleRules.MaxGrowthOutboxEvents);
 			o.OutboxEvents = new List<KingdomGrowthOutboxEvent>(outbox);
-			for (int i = 0; i < outbox; i++) o.OutboxEvents.Add(ReadGrowthOutboxEvent(r));
+			for (int i = 0; i < outbox; i++)
+				o.OutboxEvents.Add(ReadGrowthOutboxEvent(r, wireVersion));
 			o.Fault = S(r, false, true); return o;
 		}
 
@@ -2137,7 +2230,8 @@ namespace ThousandAndFirst
 			};
 		}
 
-		private static void WriteGrowthField(BinaryWriter w, KingdomGrowthFieldSlot x)
+		private static void WriteGrowthField(BinaryWriter w, KingdomGrowthFieldSlot x,
+			int wireVersion)
 		{
 			if (x == null) throw new InvalidDataException("null growth field slot");
 			S(w, x.FieldId, true); w.Write(x.NextSequence); w.Write(x.RetiredThrough);
@@ -2150,7 +2244,8 @@ namespace ThousandAndFirst
 			w.Write(x.NoLarderAnnounced); S(w, x.SeedBlueprint, false);
 			S(w, x.PartGraphHash, true); S(w, x.ObjectGraphHash, true);
 			S(w, x.TopologyHash, true);
-			w.Write(x.Quarantined); S(w, x.Fault, false, true); WriteGrowthOperation(w, x.Operation);
+			w.Write(x.Quarantined); S(w, x.Fault, false, true);
+			WriteGrowthOperation(w, x.Operation, wireVersion);
 		}
 
 		private static void WriteGrowthFieldState(BinaryWriter w, KingdomGrowthFieldState x)
@@ -2201,7 +2296,7 @@ namespace ThousandAndFirst
 			return rows;
 		}
 
-		private static KingdomGrowthFieldSlot ReadGrowthField(BinaryReader r)
+		private static KingdomGrowthFieldSlot ReadGrowthField(BinaryReader r, int wireVersion)
 		{
 			return new KingdomGrowthFieldSlot
 			{
@@ -2217,7 +2312,7 @@ namespace ThousandAndFirst
 				PartGraphHash = S(r, true), ObjectGraphHash = S(r, true),
 				TopologyHash = S(r, true),
 				Quarantined = ReadExactBoolean(r), Fault = S(r, false, true),
-				Operation = ReadGrowthOperation(r)
+				Operation = ReadGrowthOperation(r, wireVersion)
 			};
 		}
 
@@ -2340,39 +2435,77 @@ namespace ThousandAndFirst
 			};
 		}
 
-		private static void WriteGrowthOutboxEvent(BinaryWriter w, KingdomGrowthOutboxEvent x)
+		private static void WriteGrowthOutboxEvent(BinaryWriter w, KingdomGrowthOutboxEvent x,
+			int wireVersion)
 		{
 			if (x == null) throw new InvalidDataException("null growth outbox event");
 			S(w, x.EventId, true); S(w, x.Kind, false); w.Write(x.ChronicleBeforeCount);
 			w.Write(x.ChronicleDeclaredAfterCount); w.Write(x.ChronicleObservedCount);
 			S(w, x.ChronicleBeforeHash, true); S(w, x.ChronicleDeclaredAfterHash, true);
-			S(w, x.ChronicleObservedHash, true); w.Write(x.LedgerBeforeCount);
+			S(w, x.ChronicleObservedHash, true);
+			if (wireVersion >= KingdomLifecycleRules.CurrentGrowthFormatVersion)
+			{
+				w.Write(x.LegacySingleRegisterChronicle); w.Write(x.OutsiderBeforeCount);
+				w.Write(x.OutsiderDeclaredAfterCount); w.Write(x.OutsiderObservedCount);
+				S(w, x.OutsiderBeforeHash, true); S(w, x.OutsiderDeclaredAfterHash, true);
+				S(w, x.OutsiderObservedHash, true);
+				S(w, x.ChronicleOfficial, false, true);
+				S(w, x.ChronicleOutsider, false, true);
+			}
+			w.Write(x.LedgerBeforeCount);
 			w.Write(x.LedgerDeclaredAfterCount); w.Write(x.LedgerObservedCount);
 			S(w, x.LedgerBeforeHash, true); S(w, x.LedgerDeclaredAfterHash, true);
 			S(w, x.LedgerObservedHash, true); WriteOutbox(w, x.Outbox);
 		}
 
-		private static KingdomGrowthOutboxEvent ReadGrowthOutboxEvent(BinaryReader r)
+		private static KingdomGrowthOutboxEvent ReadGrowthOutboxEvent(BinaryReader r,
+			int wireVersion)
 		{
-			return new KingdomGrowthOutboxEvent
+			KingdomGrowthOutboxEvent result = new KingdomGrowthOutboxEvent
 			{
 				EventId = S(r, true), Kind = S(r, false), ChronicleBeforeCount = r.ReadInt32(),
 				ChronicleDeclaredAfterCount = r.ReadInt32(), ChronicleObservedCount = r.ReadInt32(),
 				ChronicleBeforeHash = S(r, true), ChronicleDeclaredAfterHash = S(r, true),
-				ChronicleObservedHash = S(r, true), LedgerBeforeCount = r.ReadInt32(),
-				LedgerDeclaredAfterCount = r.ReadInt32(), LedgerObservedCount = r.ReadInt32(),
-				LedgerBeforeHash = S(r, true), LedgerDeclaredAfterHash = S(r, true),
-				LedgerObservedHash = S(r, true), Outbox = ReadOutbox(r)
+				ChronicleObservedHash = S(r, true)
 			};
+			if (wireVersion >= KingdomLifecycleRules.CurrentGrowthFormatVersion)
+			{
+				result.LegacySingleRegisterChronicle = ReadExactBoolean(r);
+				result.OutsiderBeforeCount = r.ReadInt32();
+				result.OutsiderDeclaredAfterCount = r.ReadInt32();
+				result.OutsiderObservedCount = r.ReadInt32();
+				result.OutsiderBeforeHash = S(r, true);
+				result.OutsiderDeclaredAfterHash = S(r, true);
+				result.OutsiderObservedHash = S(r, true);
+				result.ChronicleOfficial = S(r, false, true);
+				result.ChronicleOutsider = S(r, false, true);
+			}
+			else
+			{
+				result.LegacySingleRegisterChronicle = true;
+				result.OutsiderObservedCount = -1;
+			}
+			result.LedgerBeforeCount = r.ReadInt32();
+			result.LedgerDeclaredAfterCount = r.ReadInt32();
+			result.LedgerObservedCount = r.ReadInt32();
+			result.LedgerBeforeHash = S(r, true);
+			result.LedgerDeclaredAfterHash = S(r, true);
+			result.LedgerObservedHash = S(r, true);
+			result.Outbox = ReadOutbox(r);
+			if (result.Outbox == null || result.Outbox.Chronicle == null)
+				result.LegacySingleRegisterChronicle = false;
+			return result;
 		}
 
 		private static void WriteGrowthArrivalCandidate(BinaryWriter w,
-			KingdomGrowthArrivalCandidate x)
+			KingdomGrowthArrivalCandidate x, int wireVersion)
 		{
 			w.Write(x != null); if (x == null) return;
 			w.Write(x.Sequence); S(w, x.Id, true); S(w, x.PlanHash, true);
 			S(w, x.SettlementId, true); w.Write(x.CreatedTick); w.Write(x.UpdatedTick);
 			w.Write((byte)x.Phase); w.Write((byte)x.EvidencePhase);
+			if (wireVersion != KingdomLifecycleRules.LegacyGrowthFormatVersion)
+				w.Write(x.LegacyGrowthV1UnboundZone);
 			w.Write((byte)x.Disposition); w.Write((byte)x.RefusalReason); S(w, x.ObjectId, true);
 			S(w, x.Marker, true); S(w, x.Blueprint, false); S(w, x.EscrowKey, true);
 			WriteLease(w, x.CandidateLease); WriteLease(w, x.LodgingLease);
@@ -2387,15 +2520,18 @@ namespace ThousandAndFirst
 			S(w, x.Fault, false, true);
 		}
 
-		private static KingdomGrowthArrivalCandidate ReadGrowthArrivalCandidate(BinaryReader r)
+		private static KingdomGrowthArrivalCandidate ReadGrowthArrivalCandidate(BinaryReader r,
+			int wireVersion)
 		{
 			if (!ReadExactBoolean(r)) return null;
-			return new KingdomGrowthArrivalCandidate
+			KingdomGrowthArrivalCandidate result = new KingdomGrowthArrivalCandidate
 			{
 				Sequence = r.ReadInt64(), Id = S(r, true), PlanHash = S(r, true),
 				SettlementId = S(r, true), CreatedTick = r.ReadInt64(), UpdatedTick = r.ReadInt64(),
 				Phase = (KingdomGrowthArrivalCandidatePhase)r.ReadByte(),
 				EvidencePhase = (KingdomGrowthArrivalCandidatePhase)r.ReadByte(),
+				LegacyGrowthV1UnboundZone = wireVersion ==
+					KingdomLifecycleRules.LegacyGrowthFormatVersion ? false : ReadExactBoolean(r),
 				Disposition = (KingdomGrowthArrivalDisposition)r.ReadByte(),
 				RefusalReason = (KingdomGrowthArrivalRefusalReason)r.ReadByte(),
 				ObjectId = S(r, true),
@@ -2412,6 +2548,14 @@ namespace ThousandAndFirst
 				ConsumingOperationId = S(r, true), ConsumingOperationSequence = r.ReadInt64(),
 				Fault = S(r, false, true)
 			};
+			KingdomGrowthArrivalCandidatePhase phase = result.Phase ==
+				KingdomGrowthArrivalCandidatePhase.Quarantined
+					? result.EvidencePhase : result.Phase;
+			if (wireVersion == KingdomLifecycleRules.LegacyGrowthFormatVersion
+				&& result.LodgingZoneId == null
+				&& (byte)phase <= (byte)KingdomGrowthArrivalCandidatePhase.Escrowed)
+				result.LegacyGrowthV1UnboundZone = true;
+			return result;
 		}
 
 		private static void WriteGrowthOptionalObjectCallback(BinaryWriter w,

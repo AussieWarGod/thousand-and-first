@@ -121,7 +121,8 @@ namespace ThousandAndFirst
 		public const int LegacyLifecycleFormatVersion = 5;
 		public const int CurrentFormatVersion = 6;
 		public const int CurrentCarryFormatVersion = 5;
-		public const int CurrentGrowthFormatVersion = 1;
+		public const int LegacyGrowthFormatVersion = 1;
+		public const int CurrentGrowthFormatVersion = 2;
 		public const int MaxGrowthFields = 8;
 		public const int MaxGrowthSources = 64;
 		public const int MaxGrowthOutputs = 96;
@@ -4339,8 +4340,10 @@ namespace ThousandAndFirst
 			long nextArrival = Book.NextArrivalTick;
 			bool restamp = active != wasActive || Book.OptionState == KingdomLifecycleOptionState.Unknown ||
 				Book.HealthState == KingdomGrowthHealthState.Unknown;
-			if (!active) nextArrival = Book.ArrivalOp == null ? 0L : Book.NextArrivalTick;
-			else if (restamp && !CheckedAdd(Now, CurrentArrivalIntervalTicks, out nextArrival))
+			bool openArrival = Book.ArrivalOp != null || Book.ArrivalCandidate != null;
+			if (!active) nextArrival = openArrival ? Book.NextArrivalTick : 0L;
+			else if (restamp && !openArrival
+				&& !CheckedAdd(Now, CurrentArrivalIntervalTicks, out nextArrival))
 				return result;
 			long effectiveAnchor = active ? Now : (Book.WorkPaused ?
 				Book.WorkPauseStartedTick : Now);
@@ -4489,6 +4492,128 @@ namespace ThousandAndFirst
 		public static bool TryGrowthArrivalCandidatePlanHash(
 			KingdomGrowthArrivalCandidate Candidate, out string Hash)
 		{
+			string baseHash;
+			if (!TryGrowthArrivalCandidateBasePlanHash(Candidate, out baseHash))
+			{
+				Hash = null;
+				return false;
+			}
+			KingdomGrowthArrivalCandidatePhase phase = Candidate.Phase ==
+				KingdomGrowthArrivalCandidatePhase.Quarantined
+					? Candidate.EvidencePhase : Candidate.Phase;
+			if (phase == KingdomGrowthArrivalCandidatePhase.Prepared
+				|| phase == KingdomGrowthArrivalCandidatePhase.CreateIntent
+				|| phase == KingdomGrowthArrivalCandidatePhase.Escrowed)
+			{
+				Hash = baseHash;
+				return true;
+			}
+			if (phase == KingdomGrowthArrivalCandidatePhase.LodgingIntent)
+				return TryGrowthArrivalLodgingIntentPlanHash(Candidate, baseHash, out Hash);
+			string observedHash;
+			if (!TryGrowthArrivalObservedPlanHash(Candidate, baseHash, out observedHash))
+			{
+				Hash = null;
+				return false;
+			}
+			if (phase == KingdomGrowthArrivalCandidatePhase.Observed)
+			{
+				Hash = observedHash;
+				return true;
+			}
+			return TryGrowthArrivalDispositionPlanHash(Candidate, observedHash, out Hash);
+		}
+
+		private static bool TryGrowthArrivalLodgingIntentPlanHash(
+			KingdomGrowthArrivalCandidate Candidate, string BaseHash, out string Hash)
+		{
+			try
+			{
+				Hash = HashId("growth-arrival-candidate-plan", delegate(BinaryWriter w)
+				{
+					CanonicalString(w, BaseHash); CanonicalString(w, "lodging-intent");
+					CanonicalString(w, Candidate.ObjectId);
+					CanonicalString(w, Candidate.LodgingZoneId);
+					w.Write(Candidate.LodgingX); w.Write(Candidate.LodgingY);
+					CanonicalString(w, Candidate.LodgingBeforeGraphHash);
+					CanonicalString(w, Candidate.LodgingReceiptId);
+				});
+				return ValidHashNamespace(Hash, "growth-arrival-candidate-plan");
+			}
+			catch (Exception) { Hash = null; return false; }
+		}
+
+		private static bool TryGrowthArrivalObservedPlanHash(
+			KingdomGrowthArrivalCandidate Candidate, string BaseHash, out string Hash)
+		{
+			Hash = null;
+			if (Candidate == null || Candidate.LodgingState !=
+				KingdomLifecyclePhysicalState.Proved) return false;
+			try
+			{
+				Hash = HashId("growth-arrival-candidate-plan", delegate(BinaryWriter w)
+				{
+					CanonicalString(w, BaseHash); CanonicalString(w, "observed");
+					CanonicalString(w, Candidate.ObjectId);
+					CanonicalString(w, Candidate.LodgingZoneId);
+					w.Write(Candidate.LodgingX); w.Write(Candidate.LodgingY);
+					w.Write((byte)Candidate.Disposition);
+					w.Write((byte)Candidate.RefusalReason);
+					CanonicalString(w, Candidate.LodgingBeforeGraphHash);
+					CanonicalString(w, Candidate.LodgingDeclaredGraphHash);
+					CanonicalString(w, Candidate.LodgingReceiptGraphHash);
+					CanonicalString(w, Candidate.LodgingCallbackReferenceHash);
+					w.Write(Candidate.LodgingSameReference);
+					CanonicalString(w, Candidate.LodgingReceiptId);
+				});
+				return ValidHashNamespace(Hash, "growth-arrival-candidate-plan");
+			}
+			catch (Exception) { Hash = null; return false; }
+		}
+
+		private static bool TryGrowthArrivalDispositionPlanHash(
+			KingdomGrowthArrivalCandidate Candidate, string ObservedHash, out string Hash)
+		{
+			Hash = null;
+			KingdomGrowthObjectCallbackStep step = Candidate == null
+				? null : Candidate.DispositionStep;
+			if (step == null || string.IsNullOrEmpty(Candidate.ConsumingOperationId)
+				|| Candidate.ConsumingOperationSequence <= 0L) return false;
+			try
+			{
+				Hash = HashId("growth-arrival-candidate-plan", delegate(BinaryWriter w)
+				{
+					CanonicalString(w, ObservedHash); CanonicalString(w, "disposition-intent");
+					CanonicalString(w, Candidate.ConsumingOperationId);
+					w.Write(Candidate.ConsumingOperationSequence);
+					WriteGrowthObjectCallbackPlan(w, step);
+					CanonicalString(w, step.BeforeOwnerGraphHash);
+					CanonicalString(w, step.AfterOwnerGraphHash);
+					CanonicalString(w, step.BeforeObjectGraphHash);
+					CanonicalString(w, step.AfterObjectGraphHash);
+					CanonicalString(w, step.BeforeTopologyHash);
+					CanonicalString(w, step.AfterTopologyHash);
+				});
+				return ValidHashNamespace(Hash, "growth-arrival-candidate-plan");
+			}
+			catch (Exception) { Hash = null; return false; }
+		}
+
+		private static bool TryGrowthArrivalCandidateBasePlanHash(
+			KingdomGrowthArrivalCandidate Candidate, out string Hash)
+		{
+			return TryGrowthArrivalCandidateBasePlanHashCore(Candidate, true, out Hash);
+		}
+
+		private static bool TryLegacyGrowthArrivalCandidateBasePlanHash(
+			KingdomGrowthArrivalCandidate Candidate, out string Hash)
+		{
+			return TryGrowthArrivalCandidateBasePlanHashCore(Candidate, false, out Hash);
+		}
+
+		private static bool TryGrowthArrivalCandidateBasePlanHashCore(
+			KingdomGrowthArrivalCandidate Candidate, bool IncludeZone, out string Hash)
+		{
 			Hash = null;
 			if (Candidate == null || Candidate.CreateStep == null) return false;
 			try
@@ -4499,6 +4624,7 @@ namespace ThousandAndFirst
 					CanonicalString(w, Candidate.SettlementId); w.Write(Candidate.CreatedTick);
 					CanonicalString(w, Candidate.Marker); CanonicalString(w, Candidate.Blueprint);
 					CanonicalString(w, Candidate.EscrowKey);
+					if (IncludeZone) CanonicalString(w, Candidate.LodgingZoneId);
 					WriteLeasePlan(w, Candidate.CandidateLease);
 					WriteLeasePlan(w, Candidate.LodgingLease);
 					WriteLeasePlan(w, Candidate.EscrowLease);
@@ -4517,15 +4643,181 @@ namespace ThousandAndFirst
 			catch (Exception) { Hash = null; return false; }
 		}
 
+		private static string GrowthArrivalLodgingProof(
+			KingdomGrowthArrivalCandidate Candidate)
+		{
+			string baseHash;
+			if (!TryGrowthArrivalCandidateBasePlanHash(Candidate, out baseHash)) return null;
+			string proof = HashId("growth-arrival-lodging-proof", delegate(BinaryWriter w)
+			{
+				CanonicalString(w, baseHash); CanonicalString(w, Candidate.ObjectId);
+				CanonicalString(w, Candidate.LodgingZoneId);
+				w.Write(Candidate.LodgingX); w.Write(Candidate.LodgingY);
+				w.Write((byte)Candidate.Disposition); w.Write((byte)Candidate.RefusalReason);
+				CanonicalString(w, Candidate.LodgingBeforeGraphHash);
+				CanonicalString(w, Candidate.LodgingReceiptGraphHash);
+				CanonicalString(w, Candidate.LodgingCallbackReferenceHash);
+				w.Write(Candidate.LodgingSameReference);
+				CanonicalString(w, Candidate.LodgingReceiptId);
+			});
+			return ValidHashNamespace(proof, "growth-arrival-lodging-proof")
+				? proof.Substring(proof.Length - 64) : null;
+		}
+
+		internal static bool UpgradeLegacyGrowthArrivalCandidate(
+			KingdomGrowthArrivalCandidate Candidate)
+		{
+			if (Candidate == null) return true;
+			string legacyBaseHash;
+			string baseHash;
+			if (!TryLegacyGrowthArrivalCandidateBasePlanHash(Candidate, out legacyBaseHash)
+				|| !string.Equals(Candidate.PlanHash, legacyBaseHash, StringComparison.Ordinal)
+				) return false;
+			KingdomGrowthObjectCallbackStep create = Candidate.CreateStep;
+			if (create != null && create.State == KingdomLifecyclePhysicalState.Proved
+				&& !string.Equals(create.ReceiptProofId,
+					GrowthArrivalCandidateCallbackProof(Candidate, create, 0, true),
+					StringComparison.Ordinal)) return false;
+			KingdomGrowthArrivalCandidatePhase phase = Candidate.Phase ==
+				KingdomGrowthArrivalCandidatePhase.Quarantined
+					? Candidate.EvidencePhase : Candidate.Phase;
+			if (Candidate.LegacyGrowthV1UnboundZone)
+			{
+				return Candidate.LodgingZoneId == null
+					&& (phase == KingdomGrowthArrivalCandidatePhase.Prepared
+						|| phase == KingdomGrowthArrivalCandidatePhase.CreateIntent
+						|| phase == KingdomGrowthArrivalCandidatePhase.Escrowed)
+					&& Candidate.LodgingState == KingdomLifecyclePhysicalState.None;
+			}
+			if (!ValidName(Candidate.LodgingZoneId)
+				|| !TryGrowthArrivalCandidateBasePlanHash(Candidate, out baseHash)) return false;
+			string currentHash;
+			if (Candidate.LodgingState != KingdomLifecyclePhysicalState.Proved)
+			{
+				if (!TryGrowthArrivalCandidatePlanHash(Candidate, out currentHash)) return false;
+				Candidate.PlanHash = currentHash;
+				if (create != null && create.State == KingdomLifecyclePhysicalState.Proved)
+					create.ReceiptProofId = GrowthArrivalCandidateCallbackProof(
+						Candidate, create, 0);
+				return true;
+			}
+			string proof = GrowthArrivalLodgingProof(Candidate);
+			if (proof == null) return false;
+			if (!string.Equals(Candidate.LodgingDeclaredGraphHash,
+					Candidate.LodgingReceiptGraphHash, StringComparison.Ordinal)) return false;
+			KingdomGrowthObjectCallbackStep disposition = Candidate.DispositionStep;
+			if (disposition != null
+				&& disposition.State == KingdomLifecyclePhysicalState.Proved
+				&& !string.Equals(disposition.ReceiptProofId,
+					GrowthArrivalCandidateCallbackProof(Candidate, disposition, 1, true),
+					StringComparison.Ordinal)) return false;
+			Candidate.LodgingDeclaredGraphHash = proof;
+			if (!TryGrowthArrivalCandidatePlanHash(Candidate, out currentHash)) return false;
+			Candidate.PlanHash = currentHash;
+			if (create != null && create.State == KingdomLifecyclePhysicalState.Proved)
+				create.ReceiptProofId = GrowthArrivalCandidateCallbackProof(Candidate, create, 0);
+			if (disposition != null
+				&& disposition.State == KingdomLifecyclePhysicalState.Proved)
+				disposition.ReceiptProofId = GrowthArrivalCandidateCallbackProof(
+					Candidate, disposition, 1);
+			return true;
+		}
+
+		internal static bool BindLegacyGrowthArrivalCandidateZone(KingdomGrowthBook Book,
+			KingdomGrowthArrivalCandidate Candidate, string ZoneId, long Tick)
+		{
+			if (!ExactGrowthArrivalCandidateAuthority(Book, Candidate)
+				|| Candidate.Phase == KingdomGrowthArrivalCandidatePhase.Quarantined
+				|| !Candidate.LegacyGrowthV1UnboundZone || Candidate.LodgingZoneId != null
+				|| !ValidName(ZoneId) || Tick < Candidate.UpdatedTick
+				|| Tick < Book.OptionTick || Tick < Book.HealthTick) return false;
+			KingdomGrowthArrivalCandidatePhase phase = Candidate.Phase ==
+				KingdomGrowthArrivalCandidatePhase.Quarantined
+					? Candidate.EvidencePhase : Candidate.Phase;
+			if (phase != KingdomGrowthArrivalCandidatePhase.Prepared
+				&& phase != KingdomGrowthArrivalCandidatePhase.CreateIntent
+				&& phase != KingdomGrowthArrivalCandidatePhase.Escrowed) return false;
+			string oldHash = Candidate.PlanHash;
+			long oldTick = Candidate.UpdatedTick;
+			string oldProof = Candidate.CreateStep == null
+				? null : Candidate.CreateStep.ReceiptProofId;
+			Candidate.LodgingZoneId = ZoneId;
+			Candidate.LegacyGrowthV1UnboundZone = false;
+			string hash;
+			if (!TryGrowthArrivalCandidatePlanHash(Candidate, out hash))
+			{
+				Candidate.LodgingZoneId = null;
+				Candidate.LegacyGrowthV1UnboundZone = true;
+				return false;
+			}
+			Candidate.PlanHash = hash;
+			if (Candidate.CreateStep != null
+				&& Candidate.CreateStep.State == KingdomLifecyclePhysicalState.Proved)
+				Candidate.CreateStep.ReceiptProofId = GrowthArrivalCandidateCallbackProof(
+					Candidate, Candidate.CreateStep, 0);
+			Candidate.UpdatedTick = Tick;
+			if (ExactGrowthArrivalCandidateAuthority(Book, Candidate)) return true;
+			Candidate.LodgingZoneId = null;
+			Candidate.LegacyGrowthV1UnboundZone = true;
+			Candidate.PlanHash = oldHash;
+			Candidate.UpdatedTick = oldTick;
+			if (Candidate.CreateStep != null)
+				Candidate.CreateStep.ReceiptProofId = oldProof;
+			return false;
+		}
+
+		internal static bool DowngradeGrowthArrivalCandidateForV1Fixture(
+			KingdomGrowthArrivalCandidate Candidate)
+		{
+			if (Candidate == null) return true;
+			string currentHash;
+			string legacyBaseHash;
+			if (!TryGrowthArrivalCandidatePlanHash(Candidate, out currentHash)
+				|| !string.Equals(Candidate.PlanHash, currentHash, StringComparison.Ordinal)
+				|| !TryLegacyGrowthArrivalCandidateBasePlanHash(Candidate,
+					out legacyBaseHash)) return false;
+			if (Candidate.LodgingState == KingdomLifecyclePhysicalState.Proved)
+			{
+				string proof = GrowthArrivalLodgingProof(Candidate);
+				if (proof == null || !string.Equals(Candidate.LodgingDeclaredGraphHash, proof,
+					StringComparison.Ordinal)) return false;
+				Candidate.LodgingDeclaredGraphHash = Candidate.LodgingReceiptGraphHash;
+			}
+			KingdomGrowthArrivalCandidatePhase phase = Candidate.Phase ==
+				KingdomGrowthArrivalCandidatePhase.Quarantined
+					? Candidate.EvidencePhase : Candidate.Phase;
+			if (phase == KingdomGrowthArrivalCandidatePhase.Prepared
+				|| phase == KingdomGrowthArrivalCandidatePhase.CreateIntent
+				|| phase == KingdomGrowthArrivalCandidatePhase.Escrowed)
+			{
+				Candidate.LodgingZoneId = null;
+				Candidate.LegacyGrowthV1UnboundZone = true;
+			}
+			Candidate.PlanHash = legacyBaseHash;
+			KingdomGrowthObjectCallbackStep create = Candidate.CreateStep;
+			if (create != null && create.State == KingdomLifecyclePhysicalState.Proved)
+				create.ReceiptProofId = GrowthArrivalCandidateCallbackProof(
+					Candidate, create, 0, true);
+			KingdomGrowthObjectCallbackStep disposition = Candidate.DispositionStep;
+			if (disposition != null
+				&& disposition.State == KingdomLifecyclePhysicalState.Proved)
+				disposition.ReceiptProofId = GrowthArrivalCandidateCallbackProof(
+					Candidate, disposition, 1, true);
+			return true;
+		}
+
 		public static KingdomGrowthArrivalCandidate PrepareGrowthArrivalCandidate(
-			KingdomGrowthBook Book, string Marker, string Blueprint, string EscrowKey,
+			KingdomGrowthBook Book, string Marker, string Blueprint, string EscrowKey, string ZoneId,
 			long Tick, string BeforeOwnerGraphHash, string BeforeObjectGraphHash,
 			string BeforeTopologyHash)
 		{
 			if (!CanOwnGrowthAuthority(Book, Book == null ? null : Book.SettlementId)
 				|| Book.ArrivalCandidate != null || Book.ArrivalCandidateNextSequence == long.MaxValue
+				|| Book.OptionState != KingdomLifecycleOptionState.Enabled
+				|| Book.HealthState != KingdomGrowthHealthState.Healthy || Book.WorkPaused
 				|| Tick < Book.OptionTick || Tick < Book.HealthTick || Tick < Book.ScarcityOptionTick
 				|| !ValidRootId(Marker) || !ValidName(Blueprint) || !ValidRootId(EscrowKey)
+				|| !ValidName(ZoneId)
 				|| !GrowthWitnessHash(BeforeOwnerGraphHash)
 				|| !GrowthWitnessHash(BeforeObjectGraphHash)
 				|| !GrowthWitnessHash(BeforeTopologyHash)) return null;
@@ -4555,6 +4847,7 @@ namespace ThousandAndFirst
 				CreatedTick = Tick, UpdatedTick = Tick,
 				Phase = KingdomGrowthArrivalCandidatePhase.Prepared,
 				Marker = Marker, Blueprint = Blueprint, EscrowKey = EscrowKey,
+				LodgingZoneId = ZoneId,
 				CandidateLease = new KingdomLifecycleResourceLease
 				{
 					OperationId = id, Kind = KingdomLifecycleResourceKind.GrowthArrivalCandidate,
@@ -4606,6 +4899,10 @@ namespace ThousandAndFirst
 		{
 			if (!CanOwnGrowthAuthority(Book, Book == null ? null : Book.SettlementId)
 				|| Candidate == null || Book.ArrivalCandidate != null
+				|| Book.OptionState != KingdomLifecycleOptionState.Enabled
+				|| Book.HealthState != KingdomGrowthHealthState.Healthy || Book.WorkPaused
+				|| Candidate.CreatedTick < Book.OptionTick
+				|| Candidate.CreatedTick < Book.HealthTick
 				|| !GrowthArrivalCandidateShape(Book, Candidate, true)
 				|| !ClaimGrowthArrivalCandidateAgainstBook(Book, Candidate)) return false;
 			string hash;
@@ -4794,7 +5091,9 @@ namespace ThousandAndFirst
 		{
 			if (!ExactGrowthArrivalCandidateAuthority(Book, Candidate)
 				|| Candidate.Phase != KingdomGrowthArrivalCandidatePhase.Escrowed
-				|| Tick < Candidate.UpdatedTick || !ValidName(ZoneId) || X < 0 || X > MaxCoordinate
+				|| Tick < Candidate.UpdatedTick || !string.Equals(ZoneId,
+					Candidate.LodgingZoneId, StringComparison.Ordinal)
+				|| X < 0 || X > MaxCoordinate
 				|| Y < 0 || Y > MaxCoordinate || !GrowthWitnessHash(BeforeGraphHash)) return false;
 			string oldZone = Candidate.LodgingZoneId;
 			int oldX = Candidate.LodgingX; int oldY = Candidate.LodgingY;
@@ -4804,6 +5103,7 @@ namespace ThousandAndFirst
 			KingdomLifecyclePhysicalState oldState = Candidate.LodgingState;
 			KingdomLifecycleLeaseState oldLease = Candidate.LodgingLease.State;
 			KingdomGrowthArrivalCandidatePhase oldPhase = Candidate.Phase;
+			string oldPlanHash = Candidate.PlanHash;
 			long oldTick = Candidate.UpdatedTick;
 			Candidate.LodgingZoneId = ZoneId; Candidate.LodgingX = X; Candidate.LodgingY = Y;
 			Candidate.LodgingBeforeGraphHash = BeforeGraphHash;
@@ -4813,12 +5113,17 @@ namespace ThousandAndFirst
 			Candidate.LodgingLease.State = KingdomLifecycleLeaseState.Intent;
 			Candidate.Phase = KingdomGrowthArrivalCandidatePhase.LodgingIntent;
 			Candidate.UpdatedTick = Tick;
-			if (ExactGrowthArrivalCandidateAuthority(Book, Candidate)) return true;
+			string intentPlanHash;
+			if (TryGrowthArrivalCandidatePlanHash(Candidate, out intentPlanHash))
+				Candidate.PlanHash = intentPlanHash;
+			if (intentPlanHash != null && ExactGrowthArrivalCandidateAuthority(Book, Candidate))
+				return true;
 			Candidate.LodgingZoneId = oldZone; Candidate.LodgingX = oldX;
 			Candidate.LodgingY = oldY; Candidate.LodgingBeforeGraphHash = oldBefore;
 			Candidate.LodgingDeclaredGraphHash = oldDeclared;
 			Candidate.LodgingReceiptId = oldReceiptId; Candidate.LodgingState = oldState;
 			Candidate.LodgingLease.State = oldLease; Candidate.Phase = oldPhase;
+			Candidate.PlanHash = oldPlanHash;
 			Candidate.UpdatedTick = oldTick;
 			return false;
 		}
@@ -4853,6 +5158,7 @@ namespace ThousandAndFirst
 			string oldReceiptGraph = Candidate.LodgingReceiptGraphHash;
 			string oldCallbackReference = Candidate.LodgingCallbackReferenceHash;
 			bool oldSameReference = Candidate.LodgingSameReference;
+			string oldPlanHash = Candidate.PlanHash;
 			KingdomLifecyclePhysicalState oldState = Candidate.LodgingState;
 			long oldRevision = lodgingRow.Revision;
 			string oldLastOperation = lodgingRow.LastOperationId;
@@ -4861,11 +5167,27 @@ namespace ThousandAndFirst
 			long oldTick = Candidate.UpdatedTick;
 			Candidate.Disposition = Disposition;
 			Candidate.RefusalReason = RefusalReason;
-			Candidate.LodgingDeclaredGraphHash = ReceiptGraphHash;
 			Candidate.LodgingReceiptGraphHash = ReceiptGraphHash;
 			Candidate.LodgingCallbackReferenceHash = CallbackReferenceHash;
 			Candidate.LodgingSameReference = true;
+			Candidate.LodgingDeclaredGraphHash = GrowthArrivalLodgingProof(Candidate);
 			Candidate.LodgingState = KingdomLifecyclePhysicalState.Proved;
+			string observedPlanHash;
+			string basePlanHash;
+			if (Candidate.LodgingDeclaredGraphHash == null
+				|| !TryGrowthArrivalCandidateBasePlanHash(Candidate, out basePlanHash)
+				|| !TryGrowthArrivalObservedPlanHash(Candidate, basePlanHash,
+					out observedPlanHash))
+			{
+				Candidate.Disposition = oldDisposition; Candidate.RefusalReason = oldReason;
+				Candidate.LodgingDeclaredGraphHash = oldDeclaredGraph;
+				Candidate.LodgingReceiptGraphHash = oldReceiptGraph;
+				Candidate.LodgingCallbackReferenceHash = oldCallbackReference;
+				Candidate.LodgingSameReference = oldSameReference;
+				Candidate.LodgingState = oldState;
+				return false;
+			}
+			Candidate.PlanHash = observedPlanHash;
 			lodgingRow.Revision = Candidate.LodgingLease.AfterRevision;
 			lodgingRow.LastOperationId = Candidate.Id;
 			Candidate.LodgingLease.State = KingdomLifecycleLeaseState.Proved;
@@ -4878,6 +5200,7 @@ namespace ThousandAndFirst
 			Candidate.LodgingReceiptGraphHash = oldReceiptGraph;
 			Candidate.LodgingCallbackReferenceHash = oldCallbackReference;
 			Candidate.LodgingSameReference = oldSameReference;
+			Candidate.PlanHash = oldPlanHash;
 			Candidate.LodgingState = oldState;
 			lodgingRow.Revision = oldRevision; lodgingRow.LastOperationId = oldLastOperation;
 			Candidate.LodgingLease.State = oldLease; Candidate.Phase = oldPhase;
@@ -4948,6 +5271,7 @@ namespace ThousandAndFirst
 			KingdomGrowthObjectCallbackStep oldStep = Candidate.DispositionStep;
 			string oldConsuming = Candidate.ConsumingOperationId;
 			long oldConsumingSequence = Candidate.ConsumingOperationSequence;
+			string oldPlanHash = Candidate.PlanHash;
 			KingdomLifecycleLeaseState oldLease = Candidate.EscrowLease.State;
 			KingdomGrowthArrivalCandidatePhase oldPhase = Candidate.Phase;
 			long oldTick = Candidate.UpdatedTick;
@@ -4958,11 +5282,15 @@ namespace ThousandAndFirst
 			Candidate.Phase = joined ? KingdomGrowthArrivalCandidatePhase.ConsumeIntent
 				: KingdomGrowthArrivalCandidatePhase.RefusalIntent;
 			Candidate.UpdatedTick = Tick;
-			if (ExactGrowthArrivalCandidateAuthority(Book, Candidate)
+			string dispositionPlanHash;
+			if (TryGrowthArrivalCandidatePlanHash(Candidate, out dispositionPlanHash))
+				Candidate.PlanHash = dispositionPlanHash;
+			if (dispositionPlanHash != null && ExactGrowthArrivalCandidateAuthority(Book, Candidate)
 				&& ExactGrowthOperationAuthority(Book, operation)) return true;
 			Candidate.DispositionStep = oldStep;
 			Candidate.ConsumingOperationId = oldConsuming;
 			Candidate.ConsumingOperationSequence = oldConsumingSequence;
+			Candidate.PlanHash = oldPlanHash;
 			Candidate.EscrowLease.State = oldLease;
 			Candidate.Phase = oldPhase; Candidate.UpdatedTick = oldTick;
 			return false;
@@ -4976,7 +5304,8 @@ namespace ThousandAndFirst
 				|| (Candidate.Phase != KingdomGrowthArrivalCandidatePhase.ConsumeIntent
 					&& Candidate.Phase != KingdomGrowthArrivalCandidatePhase.RefusalIntent)
 				|| Tick < Candidate.UpdatedTick || !GrowthWitnessHash(CallbackReferenceHash)
-				|| !SameReference) return false;
+				|| SameReference != (Candidate.Disposition ==
+					KingdomGrowthArrivalDisposition.Joined)) return false;
 			KingdomGrowthObjectCallbackStep step = Candidate.DispositionStep;
 			KingdomLifecycleResourceLease[] leases = { Candidate.EscrowLease };
 			KingdomLifecycleResourceRevision[] rows =
@@ -5010,7 +5339,7 @@ namespace ThousandAndFirst
 			step.ReceiptCallbackObjectId = Candidate.ObjectId;
 			step.ReceiptCallbackMarker = Candidate.Marker;
 			step.ReceiptCallbackReferenceHash = CallbackReferenceHash;
-			step.ReceiptSameReference = true;
+			step.ReceiptSameReference = SameReference;
 			step.ReceiptAfterOwnerGraphHash = step.AfterOwnerGraphHash;
 			step.ReceiptAfterObjectGraphHash = step.AfterObjectGraphHash;
 			step.ReceiptAfterTopologyHash = step.AfterTopologyHash;
@@ -5066,13 +5395,16 @@ namespace ThousandAndFirst
 			string lodgingActive = lodgingRow.ActiveOperationId;
 			string escrowActive = escrowRow.ActiveOperationId;
 			long retiredBefore = Book.ArrivalCandidateRetiredThrough;
+			long arrivalBefore = Book.NextArrivalTick;
 			candidateRow.ActiveOperationId = null; lodgingRow.ActiveOperationId = null;
 			escrowRow.ActiveOperationId = null;
 			Book.ArrivalCandidateRetiredThrough = Candidate.Sequence;
 			Book.ArrivalCandidate = null;
+			if (Book.WorkPaused) Book.NextArrivalTick = 0L;
 			if (CanOwnGrowthAuthority(Book, Book.SettlementId)) return true;
 			Book.ArrivalCandidate = Candidate;
 			Book.ArrivalCandidateRetiredThrough = retiredBefore;
+			Book.NextArrivalTick = arrivalBefore;
 			candidateRow.ActiveOperationId = candidateActive;
 			lodgingRow.ActiveOperationId = lodgingActive;
 			escrowRow.ActiveOperationId = escrowActive;
@@ -5130,14 +5462,20 @@ namespace ThousandAndFirst
 
 		private static string GrowthArrivalCandidateCallbackProof(
 			KingdomGrowthArrivalCandidate candidate, KingdomGrowthObjectCallbackStep step,
-			int ordinal)
+			int ordinal, bool LegacyV1 = false)
 		{
+			string binding = candidate == null ? null : candidate.PlanHash;
+			if (ordinal == 0
+				&& !(LegacyV1
+					? TryLegacyGrowthArrivalCandidateBasePlanHash(candidate, out binding)
+					: TryGrowthArrivalCandidateBasePlanHash(candidate, out binding))) return null;
 			return HashId("growth-arrival-candidate-callback-proof", delegate(BinaryWriter w)
 			{
-				CanonicalString(w, candidate.Id); CanonicalString(w, candidate.PlanHash);
+				CanonicalString(w, candidate.Id); CanonicalString(w, binding);
 				w.Write(ordinal); CanonicalString(w, candidate.ObjectId);
 				CanonicalString(w, candidate.Marker); CanonicalString(w, step.EventId);
 				CanonicalString(w, step.ReceiptCallbackReferenceHash);
+				if (!LegacyV1) w.Write(step.ReceiptSameReference);
 				CanonicalString(w, step.ReceiptAfterOwnerGraphHash);
 				CanonicalString(w, step.ReceiptAfterObjectGraphHash);
 				CanonicalString(w, step.ReceiptAfterTopologyHash);
@@ -5324,7 +5662,17 @@ namespace ThousandAndFirst
 			string Ledger, string Message, string Deed, string Guestbook)
 		{
 			return PrepareGrowthOutboxEvent(Operation, Ordinal, Kind, Chronicle, Ledger,
-				Message, Deed, Guestbook, 0, null, 0, null, 0, null, 0, null);
+				Message, Deed, Guestbook, 0, null, 0, null, 0, null, 0, null,
+				0, null, 0, null);
+		}
+
+		internal static string GrowthChronicleOutboxReceiptId(
+			KingdomGrowthOperation Operation, int Ordinal)
+		{
+			if (Operation == null || !ValidGeneratedId(Operation.Id) || Ordinal < 0
+				|| Ordinal >= MaxGrowthOutboxEvents) return null;
+			string eventId = ChildId(Operation.Id, "outbox-event", Ordinal);
+			return ChildId(eventId, "chronicle", 0);
 		}
 
 		public static KingdomGrowthOutboxEvent PrepareGrowthOutboxEvent(
@@ -5335,6 +5683,48 @@ namespace ThousandAndFirst
 			int LedgerBeforeCount, string LedgerBeforeHash,
 			int LedgerDeclaredAfterCount, string LedgerDeclaredAfterHash)
 		{
+			// The v1 signature remains callable for source compatibility, but v2 cannot mint a
+			// one-register Chronicle promise. Null Chronicle declarations remain canonical.
+			if (Chronicle != null) return null;
+			return PrepareGrowthOutboxEvent(Operation, Ordinal, Kind, Chronicle, Ledger,
+				Message, Deed, Guestbook, ChronicleBeforeCount, ChronicleBeforeHash,
+				ChronicleDeclaredAfterCount, ChronicleDeclaredAfterHash,
+				0, null, 0, null, LedgerBeforeCount, LedgerBeforeHash,
+				LedgerDeclaredAfterCount, LedgerDeclaredAfterHash);
+		}
+
+		public static KingdomGrowthOutboxEvent PrepareGrowthOutboxEvent(
+			KingdomGrowthOperation Operation, int Ordinal, string Kind, string Chronicle,
+			string Ledger, string Message, string Deed, string Guestbook,
+			int ChronicleBeforeCount, string ChronicleBeforeHash,
+			int ChronicleDeclaredAfterCount, string ChronicleDeclaredAfterHash,
+			int OutsiderBeforeCount, string OutsiderBeforeHash,
+			int OutsiderDeclaredAfterCount, string OutsiderDeclaredAfterHash,
+			int LedgerBeforeCount, string LedgerBeforeHash,
+			int LedgerDeclaredAfterCount, string LedgerDeclaredAfterHash)
+		{
+			// A v2 Chronicle callback must carry exact rendered entries. Compatibility callers
+			// without them may still prepare every non-Chronicle sink.
+			if (Chronicle != null && Chronicle.Length > 0) return null;
+			return PrepareDeclaredGrowthOutboxEvent(Operation, Ordinal, Kind, Chronicle,
+				null, null, Ledger, Message, Deed, Guestbook, ChronicleBeforeCount,
+				ChronicleBeforeHash, ChronicleDeclaredAfterCount, ChronicleDeclaredAfterHash,
+				OutsiderBeforeCount, OutsiderBeforeHash, OutsiderDeclaredAfterCount,
+				OutsiderDeclaredAfterHash, LedgerBeforeCount, LedgerBeforeHash,
+				LedgerDeclaredAfterCount, LedgerDeclaredAfterHash);
+		}
+
+		internal static KingdomGrowthOutboxEvent PrepareDeclaredGrowthOutboxEvent(
+			KingdomGrowthOperation Operation, int Ordinal, string Kind, string Chronicle,
+			string ChronicleOfficial, string ChronicleOutsider, string Ledger, string Message,
+			string Deed, string Guestbook,
+			int ChronicleBeforeCount, string ChronicleBeforeHash,
+			int ChronicleDeclaredAfterCount, string ChronicleDeclaredAfterHash,
+			int OutsiderBeforeCount, string OutsiderBeforeHash,
+			int OutsiderDeclaredAfterCount, string OutsiderDeclaredAfterHash,
+			int LedgerBeforeCount, string LedgerBeforeHash,
+			int LedgerDeclaredAfterCount, string LedgerDeclaredAfterHash)
+		{
 			if (Chronicle != null && Chronicle.Length == 0) Chronicle = null;
 			if (Ledger != null && Ledger.Length == 0) Ledger = null;
 			if (Message != null && Message.Length == 0) Message = null;
@@ -5342,9 +5732,17 @@ namespace ThousandAndFirst
 			if (Guestbook != null && Guestbook.Length == 0) Guestbook = null;
 			if (Operation == null || Ordinal < 0 || Ordinal >= MaxGrowthOutboxEvents
 				|| !ValidName(Kind)
+				|| (Chronicle == null ? ChronicleOfficial != null || ChronicleOutsider != null
+					: string.IsNullOrEmpty(ChronicleOfficial)
+						|| ChronicleOfficial.Length > KingdomChronicleReceiptRules.MaxEntryChars
+						|| string.IsNullOrEmpty(ChronicleOutsider)
+						|| ChronicleOutsider.Length > KingdomChronicleReceiptRules.MaxEntryChars)
 				|| !GrowthSinkDeclarationShape(Chronicle, ChronicleBeforeCount,
 					ChronicleBeforeHash, ChronicleDeclaredAfterCount,
-					ChronicleDeclaredAfterHash)
+					ChronicleDeclaredAfterHash, KingdomChronicleReceiptRules.MaxEntries)
+				|| !GrowthSinkDeclarationShape(Chronicle, OutsiderBeforeCount,
+					OutsiderBeforeHash, OutsiderDeclaredAfterCount,
+					OutsiderDeclaredAfterHash, KingdomChronicleReceiptRules.MaxEntries)
 				|| !GrowthSinkDeclarationShape(Ledger, LedgerBeforeCount, LedgerBeforeHash,
 					LedgerDeclaredAfterCount, LedgerDeclaredAfterHash)) return null;
 			KingdomLifecycleOutbox box = PrepareGrowthOutbox(Operation, Chronicle, Ledger,
@@ -5360,6 +5758,12 @@ namespace ThousandAndFirst
 				ChronicleBeforeHash = ChronicleBeforeHash,
 				ChronicleDeclaredAfterCount = ChronicleDeclaredAfterCount,
 				ChronicleDeclaredAfterHash = ChronicleDeclaredAfterHash,
+				ChronicleOfficial = ChronicleOfficial,
+				ChronicleOutsider = ChronicleOutsider,
+				OutsiderBeforeCount = OutsiderBeforeCount,
+				OutsiderBeforeHash = OutsiderBeforeHash,
+				OutsiderDeclaredAfterCount = OutsiderDeclaredAfterCount,
+				OutsiderDeclaredAfterHash = OutsiderDeclaredAfterHash,
 				LedgerBeforeCount = LedgerBeforeCount, LedgerBeforeHash = LedgerBeforeHash,
 				LedgerDeclaredAfterCount = LedgerDeclaredAfterCount,
 				LedgerDeclaredAfterHash = LedgerDeclaredAfterHash
@@ -5367,12 +5771,17 @@ namespace ThousandAndFirst
 		}
 
 		private static bool GrowthSinkDeclarationShape(string text, int beforeCount,
-			string beforeHash, int afterCount, string afterHash)
+			string beforeHash, int afterCount, string afterHash, int boundedCount = -1)
 		{
 			if (text == null) return beforeCount == 0 && afterCount == 0
 				&& beforeHash == null && afterHash == null;
-			return beforeCount >= 0 && beforeCount < int.MaxValue
-				&& afterCount == beforeCount + 1 && GrowthWitnessHash(beforeHash)
+			bool countShape = boundedCount < 0
+				? beforeCount >= 0 && beforeCount < int.MaxValue
+					&& afterCount == beforeCount + 1
+				: beforeCount >= 0 && beforeCount <= boundedCount
+					&& (beforeCount < boundedCount ? afterCount == beforeCount + 1
+						: afterCount == beforeCount);
+			return countShape && GrowthWitnessHash(beforeHash)
 				&& GrowthWitnessHash(afterHash)
 				&& !string.Equals(beforeHash, afterHash, StringComparison.Ordinal);
 		}
@@ -5454,7 +5863,7 @@ namespace ThousandAndFirst
 					w.Write(Operation.OutboxEvents == null ? -1 : Operation.OutboxEvents.Count);
 					if (Operation.OutboxEvents != null) for (int i = 0;
 						i < Operation.OutboxEvents.Count; i++) WriteGrowthOutboxEventPlan(w,
-							Operation.OutboxEvents[i]);
+							Operation.OutboxEvents[i], Operation.LegacyGrowthV1Plan);
 				});
 				return ValidHashNamespace(Hash, "growth-plan");
 			}
@@ -5466,12 +5875,21 @@ namespace ThousandAndFirst
 		}
 
 		private static void WriteGrowthOutboxEventPlan(BinaryWriter w,
-			KingdomGrowthOutboxEvent x)
+			KingdomGrowthOutboxEvent x, bool legacyV1 = false)
 		{
 			CanonicalString(w, x.EventId); CanonicalString(w, x.Kind);
 			w.Write(x.ChronicleBeforeCount); w.Write(x.ChronicleDeclaredAfterCount);
 			CanonicalString(w, x.ChronicleBeforeHash);
 			CanonicalString(w, x.ChronicleDeclaredAfterHash);
+			if (!legacyV1)
+			{
+				w.Write(x.LegacySingleRegisterChronicle);
+				CanonicalString(w, x.ChronicleOfficial);
+				CanonicalString(w, x.ChronicleOutsider);
+				w.Write(x.OutsiderBeforeCount); w.Write(x.OutsiderDeclaredAfterCount);
+				CanonicalString(w, x.OutsiderBeforeHash);
+				CanonicalString(w, x.OutsiderDeclaredAfterHash);
+			}
 			w.Write(x.LedgerBeforeCount); w.Write(x.LedgerDeclaredAfterCount);
 			CanonicalString(w, x.LedgerBeforeHash);
 			CanonicalString(w, x.LedgerDeclaredAfterHash);
@@ -5641,7 +6059,7 @@ namespace ThousandAndFirst
 			KingdomGrowthOperation Operation)
 		{
 			if (!CanOwnGrowthAuthority(Book, Book == null ? null : Book.SettlementId)
-				|| Operation == null) return false;
+				|| Operation == null || Operation.LegacyGrowthV1Plan) return false;
 			KingdomGrowthSlotKind slot = SlotForGrowthAction(Operation.Action);
 			KingdomGrowthFieldSlot field = slot == KingdomGrowthSlotKind.Field
 				? FindGrowthField(Book, Operation.FieldId) : null;
@@ -5849,6 +6267,9 @@ namespace ThousandAndFirst
 			if (e == null || (Sink != KingdomGrowthOutboxSinkKind.Chronicle
 				&& Sink != KingdomGrowthOutboxSinkKind.Ledger))
 				return KingdomLifecycleCasAction.Quarantine;
+			if (Sink == KingdomGrowthOutboxSinkKind.Chronicle
+				&& !e.LegacySingleRegisterChronicle)
+				return KingdomLifecycleCasAction.Quarantine;
 			KingdomLifecycleSinkState state = Sink == KingdomGrowthOutboxSinkKind.Chronicle
 				? e.Outbox.ChronicleState : e.Outbox.LedgerState;
 			string text = Sink == KingdomGrowthOutboxSinkKind.Chronicle
@@ -5877,6 +6298,83 @@ namespace ThousandAndFirst
 				return after ? KingdomLifecycleCasAction.Confirm
 					: KingdomLifecycleCasAction.Quarantine;
 			return KingdomLifecycleCasAction.Quarantine;
+		}
+
+		internal static KingdomLifecycleCasAction GrowthChronicleOutboxAction(
+			KingdomGrowthBook Book, KingdomGrowthOperation Operation, int EventOrdinal,
+			int ChronicleCount, string ChronicleHash, int OutsiderCount, string OutsiderHash)
+		{
+			KingdomGrowthOutboxEvent e = GrowthOutboxEventAt(Book, Operation, EventOrdinal);
+			if (e == null || e.LegacySingleRegisterChronicle || e.Outbox.Chronicle == null)
+				return KingdomLifecycleCasAction.Quarantine;
+			KingdomLifecycleSinkState state = e.Outbox.ChronicleState;
+			bool before = ChronicleCount == e.ChronicleBeforeCount
+				&& string.Equals(ChronicleHash, e.ChronicleBeforeHash, StringComparison.Ordinal)
+				&& OutsiderCount == e.OutsiderBeforeCount
+				&& string.Equals(OutsiderHash, e.OutsiderBeforeHash, StringComparison.Ordinal);
+			bool after = ChronicleCount == e.ChronicleDeclaredAfterCount
+				&& string.Equals(ChronicleHash, e.ChronicleDeclaredAfterHash,
+					StringComparison.Ordinal)
+				&& OutsiderCount == e.OutsiderDeclaredAfterCount
+				&& string.Equals(OutsiderHash, e.OutsiderDeclaredAfterHash,
+					StringComparison.Ordinal);
+			bool orderedCut = ChronicleCount == e.ChronicleDeclaredAfterCount
+				&& string.Equals(ChronicleHash, e.ChronicleDeclaredAfterHash,
+					StringComparison.Ordinal)
+				&& OutsiderCount == e.OutsiderBeforeCount
+				&& string.Equals(OutsiderHash, e.OutsiderBeforeHash,
+					StringComparison.Ordinal);
+			if (state == KingdomLifecycleSinkState.Pending
+				|| state == KingdomLifecycleSinkState.Intent)
+				return before ? KingdomLifecycleCasAction.Apply
+					: state == KingdomLifecycleSinkState.Intent && orderedCut
+						? KingdomLifecycleCasAction.Apply
+					: state == KingdomLifecycleSinkState.Intent && after
+						? KingdomLifecycleCasAction.Confirm
+						: KingdomLifecycleCasAction.Quarantine;
+			return state == KingdomLifecycleSinkState.Delivered && after
+				? KingdomLifecycleCasAction.Confirm : KingdomLifecycleCasAction.Quarantine;
+		}
+
+		internal static bool BeginGrowthChronicleOutbox(KingdomGrowthBook Book,
+			KingdomGrowthOperation Operation, int EventOrdinal, int ChronicleBeforeCount,
+			string ChronicleBeforeHash, int OutsiderBeforeCount, string OutsiderBeforeHash)
+		{
+			if (GrowthChronicleOutboxAction(Book, Operation, EventOrdinal,
+				ChronicleBeforeCount, ChronicleBeforeHash, OutsiderBeforeCount,
+				OutsiderBeforeHash) != KingdomLifecycleCasAction.Apply) return false;
+			KingdomGrowthOutboxEvent e = Operation.OutboxEvents[EventOrdinal];
+			KingdomLifecycleSinkState old = e.Outbox.ChronicleState;
+			e.Outbox.ChronicleState = KingdomLifecycleSinkState.Intent;
+			if (ExactGrowthOperationAuthority(Book, Operation)) return true;
+			e.Outbox.ChronicleState = old; return false;
+		}
+
+		internal static bool CommitGrowthChronicleOutbox(KingdomGrowthBook Book,
+			KingdomGrowthOperation Operation, int EventOrdinal, int ChronicleObservedCount,
+			string ChronicleObservedHash, int OutsiderObservedCount, string OutsiderObservedHash)
+		{
+			if (GrowthChronicleOutboxAction(Book, Operation, EventOrdinal,
+				ChronicleObservedCount, ChronicleObservedHash, OutsiderObservedCount,
+				OutsiderObservedHash) != KingdomLifecycleCasAction.Confirm) return false;
+			KingdomGrowthOutboxEvent e = Operation.OutboxEvents[EventOrdinal];
+			KingdomLifecycleSinkState oldState = e.Outbox.ChronicleState;
+			int oldChronicleCount = e.ChronicleObservedCount;
+			string oldChronicleHash = e.ChronicleObservedHash;
+			int oldOutsiderCount = e.OutsiderObservedCount;
+			string oldOutsiderHash = e.OutsiderObservedHash;
+			e.Outbox.ChronicleState = KingdomLifecycleSinkState.Delivered;
+			e.ChronicleObservedCount = ChronicleObservedCount;
+			e.ChronicleObservedHash = ChronicleObservedHash;
+			e.OutsiderObservedCount = OutsiderObservedCount;
+			e.OutsiderObservedHash = OutsiderObservedHash;
+			if (ExactGrowthOperationAuthority(Book, Operation)) return true;
+			e.Outbox.ChronicleState = oldState;
+			e.ChronicleObservedCount = oldChronicleCount;
+			e.ChronicleObservedHash = oldChronicleHash;
+			e.OutsiderObservedCount = oldOutsiderCount;
+			e.OutsiderObservedHash = oldOutsiderHash;
+			return false;
 		}
 
 		internal static bool BeginGrowthInspectableOutbox(KingdomGrowthBook Book,
@@ -6054,7 +6552,8 @@ namespace ThousandAndFirst
 			SetGrowthRetired(Book, slot, field, Operation.Sequence);
 			AppendGrowthProof(Book, proof);
 			SetGrowthOperation(Book, slot, field, null);
-			if (slot == KingdomGrowthSlotKind.Arrival && Book.WorkPaused)
+			if (slot == KingdomGrowthSlotKind.Arrival && Book.WorkPaused
+				&& Book.ArrivalCandidate == null)
 				Book.NextArrivalTick = 0L;
 			if (CanOwnGrowthAuthority(Book, Book.SettlementId)) return true;
 			for (int i = 0; i < leases.Count; i++)
@@ -7885,7 +8384,8 @@ namespace ThousandAndFirst
 		{
 			if (book == null || !book.WorkPaused) return false;
 			KingdomGrowthOperation operation = book.ArrivalOp;
-			if (operation == null) return book.NextArrivalTick == 0L;
+			if (operation == null) return book.ArrivalCandidate == null
+				? book.NextArrivalTick == 0L : book.NextArrivalTick > 0L;
 			if (operation.Action != KingdomGrowthAction.Arrival || operation.ClockLease == null)
 				return false;
 			bool proved = operation.ClockState == KingdomLifecyclePhysicalState.Proved
@@ -7946,21 +8446,32 @@ namespace ThousandAndFirst
 				? candidate.EvidencePhase : candidate.Phase;
 			if (publication && phase != KingdomGrowthArrivalCandidatePhase.Prepared) return false;
 			string hash;
-			if (!TryGrowthArrivalCandidatePlanHash(candidate, out hash)
+			bool legacyUnbound = candidate.LegacyGrowthV1UnboundZone;
+			if (legacyUnbound)
+			{
+				if (publication || candidate.LodgingZoneId != null
+					|| phase != KingdomGrowthArrivalCandidatePhase.Prepared
+						&& phase != KingdomGrowthArrivalCandidatePhase.CreateIntent
+						&& phase != KingdomGrowthArrivalCandidatePhase.Escrowed
+					|| !TryLegacyGrowthArrivalCandidateBasePlanHash(candidate, out hash)
+					|| !string.Equals(candidate.PlanHash, hash, StringComparison.Ordinal)) return false;
+			}
+			else if (!TryGrowthArrivalCandidatePlanHash(candidate, out hash)
 				|| (publication ? candidate.PlanHash != null
 					: !string.Equals(candidate.PlanHash, hash, StringComparison.Ordinal))) return false;
 			if (!GrowthArrivalCandidateLeaseStates(candidate, phase)
-				|| !GrowthArrivalCreateStepShape(candidate, phase)) return false;
+				|| !GrowthArrivalCreateStepShape(candidate, phase, legacyUnbound)) return false;
 			if (phase == KingdomGrowthArrivalCandidatePhase.Prepared
 				|| phase == KingdomGrowthArrivalCandidatePhase.CreateIntent)
 				return candidate.ObjectId == null && candidate.DispositionStep == null
-					&& GrowthArrivalLodgingEmpty(candidate)
+					&& GrowthArrivalLodgingEmpty(candidate, legacyUnbound)
 					&& GrowthArrivalDispositionReasonShape(candidate)
 					&& candidate.ConsumingOperationId == null
 					&& candidate.ConsumingOperationSequence == 0L;
 			if (!ValidRootId(candidate.ObjectId)) return false;
 			if (phase == KingdomGrowthArrivalCandidatePhase.Escrowed)
-				return candidate.DispositionStep == null && GrowthArrivalLodgingEmpty(candidate)
+				return candidate.DispositionStep == null
+					&& GrowthArrivalLodgingEmpty(candidate, legacyUnbound)
 					&& GrowthArrivalDispositionReasonShape(candidate)
 					&& candidate.ConsumingOperationId == null
 					&& candidate.ConsumingOperationSequence == 0L;
@@ -8015,7 +8526,7 @@ namespace ThousandAndFirst
 		}
 
 		private static bool GrowthArrivalCreateStepShape(KingdomGrowthArrivalCandidate candidate,
-			KingdomGrowthArrivalCandidatePhase phase)
+			KingdomGrowthArrivalCandidatePhase phase, bool legacyV1 = false)
 		{
 			KingdomGrowthObjectCallbackStep step = candidate.CreateStep;
 			if (step == null || step.Kind != KingdomGrowthObjectMutationKind.Create
@@ -8037,7 +8548,10 @@ namespace ThousandAndFirst
 			bool proved = phase >= KingdomGrowthArrivalCandidatePhase.Escrowed;
 			if (proved) return GrowthObjectCallbackStepShape(step, candidate.Id,
 				candidate.ObjectId, candidate.Marker, 0)
-				&& step.State == KingdomLifecyclePhysicalState.Proved;
+				&& step.State == KingdomLifecyclePhysicalState.Proved
+				&& string.Equals(step.ReceiptProofId,
+					GrowthArrivalCandidateCallbackProof(candidate, step, 0, legacyV1),
+					StringComparison.Ordinal);
 			if (step.AfterOwnerGraphHash != null || step.AfterObjectGraphHash != null
 				|| step.AfterTopologyHash != null) return false;
 			if (phase == KingdomGrowthArrivalCandidatePhase.Prepared)
@@ -8059,9 +8573,11 @@ namespace ThousandAndFirst
 				&& step.ReceiptProofId == null;
 		}
 
-		private static bool GrowthArrivalLodgingEmpty(KingdomGrowthArrivalCandidate candidate)
+		private static bool GrowthArrivalLodgingEmpty(KingdomGrowthArrivalCandidate candidate,
+			bool allowLegacyUnbound = false)
 		{
-			return candidate.LodgingZoneId == null && candidate.LodgingX == -1
+			return (allowLegacyUnbound ? candidate.LodgingZoneId == null
+				: ValidName(candidate.LodgingZoneId)) && candidate.LodgingX == -1
 				&& candidate.LodgingY == -1 && candidate.LodgingBeforeGraphHash == null
 				&& candidate.LodgingDeclaredGraphHash == null
 				&& candidate.LodgingReceiptGraphHash == null
@@ -8094,12 +8610,13 @@ namespace ThousandAndFirst
 				&& candidate.LodgingY <= MaxCoordinate
 				&& GrowthWitnessHash(candidate.LodgingBeforeGraphHash)
 				&& GrowthWitnessHash(candidate.LodgingDeclaredGraphHash)
-				&& string.Equals(candidate.LodgingReceiptGraphHash,
-					candidate.LodgingDeclaredGraphHash, StringComparison.Ordinal)
+				&& GrowthWitnessHash(candidate.LodgingReceiptGraphHash)
 				&& GrowthWitnessHash(candidate.LodgingCallbackReferenceHash)
 				&& candidate.LodgingSameReference
 				&& string.Equals(candidate.LodgingReceiptId,
 					ChildId(candidate.Id, "lodging-receipt", 0), StringComparison.Ordinal)
+				&& string.Equals(candidate.LodgingDeclaredGraphHash,
+					GrowthArrivalLodgingProof(candidate), StringComparison.Ordinal)
 				&& candidate.LodgingState == KingdomLifecyclePhysicalState.Proved;
 		}
 
@@ -8118,15 +8635,31 @@ namespace ThousandAndFirst
 		{
 			KingdomGrowthObjectCallbackStep step = candidate.DispositionStep;
 			if (step == null || !GrowthObjectCallbackStepShape(step, candidate.Id,
-				candidate.ObjectId, candidate.Marker, 1)
+				candidate.ObjectId, candidate.Marker, 1,
+				candidate.Disposition == KingdomGrowthArrivalDisposition.NoAcceptableHome)
 				|| step.FromLocation != KingdomGrowthLocationKind.Escrow
 				|| !string.Equals(step.EscrowKey, candidate.EscrowKey, StringComparison.Ordinal)
+				|| step.BeforeOwnerId != null || step.BeforeZoneId != null
+				|| step.BeforeX != -1 || step.BeforeY != -1 || step.BeforeCount != 1
 				|| (candidate.Disposition == KingdomGrowthArrivalDisposition.Joined
 					? step.Kind != KingdomGrowthObjectMutationKind.CellAdd
-						&& step.Kind != KingdomGrowthObjectMutationKind.InventoryAdd
-						&& step.Kind != KingdomGrowthObjectMutationKind.Receive
-					: step.Kind != KingdomGrowthObjectMutationKind.Obliterate)) return false;
+						|| step.ToLocation != KingdomGrowthLocationKind.Cell
+						|| step.AfterOwnerId != null
+						|| !string.Equals(step.AfterZoneId, candidate.LodgingZoneId,
+							StringComparison.Ordinal)
+						|| step.AfterX != candidate.LodgingX || step.AfterY != candidate.LodgingY
+						|| step.AfterCount != 1 || !step.NoStack
+					: step.Kind != KingdomGrowthObjectMutationKind.Obliterate
+						|| step.ToLocation != KingdomGrowthLocationKind.Graveyard
+						|| step.AfterOwnerId != null || step.AfterZoneId != null
+						|| step.AfterX != -1 || step.AfterY != -1 || step.AfterCount != 0
+						|| step.NoStack)) return false;
 			return proved ? step.State == KingdomLifecyclePhysicalState.Proved
+				&& step.ReceiptSameReference == (candidate.Disposition ==
+					KingdomGrowthArrivalDisposition.Joined)
+				&& string.Equals(step.ReceiptProofId,
+					GrowthArrivalCandidateCallbackProof(candidate, step, 1),
+					StringComparison.Ordinal)
 				: step.State == KingdomLifecyclePhysicalState.Intent;
 		}
 
@@ -9346,16 +9879,22 @@ namespace ThousandAndFirst
 				return candidate.Phase == KingdomGrowthArrivalCandidatePhase.Observed
 					&& candidate.ConsumingOperationId == null
 					&& candidate.ConsumingOperationSequence == 0L;
-			if (candidate.Phase == KingdomGrowthArrivalCandidatePhase.Observed)
+			if (candidate.Phase == KingdomGrowthArrivalCandidatePhase.Quarantined
+				&& operation.Phase != KingdomGrowthPhase.Quarantined) return false;
+			KingdomGrowthArrivalCandidatePhase effectivePhase = candidate.Phase ==
+				KingdomGrowthArrivalCandidatePhase.Quarantined
+					? candidate.EvidencePhase : candidate.Phase;
+			if (effectivePhase == KingdomGrowthArrivalCandidatePhase.Observed)
 				return candidate.ConsumingOperationId == null
 					&& candidate.ConsumingOperationSequence == 0L
 					&& (operation.Phase == KingdomGrowthPhase.Prepared
 						|| operation.Phase == KingdomGrowthPhase.WaterIntent
-						|| operation.Phase == KingdomGrowthPhase.WaterSettled);
+						|| operation.Phase == KingdomGrowthPhase.WaterSettled
+						|| operation.Phase == KingdomGrowthPhase.Quarantined);
 			bool rightIntent = candidate.Disposition == KingdomGrowthArrivalDisposition.Joined
-				? candidate.Phase == KingdomGrowthArrivalCandidatePhase.ConsumeIntent
-				: candidate.Phase == KingdomGrowthArrivalCandidatePhase.RefusalIntent;
-			return (rightIntent || candidate.Phase == KingdomGrowthArrivalCandidatePhase.Settled)
+				? effectivePhase == KingdomGrowthArrivalCandidatePhase.ConsumeIntent
+				: effectivePhase == KingdomGrowthArrivalCandidatePhase.RefusalIntent;
+			return (rightIntent || effectivePhase == KingdomGrowthArrivalCandidatePhase.Settled)
 				&& string.Equals(candidate.ConsumingOperationId, operation.Id,
 					StringComparison.Ordinal)
 				&& candidate.ConsumingOperationSequence == operation.Sequence;
@@ -10192,7 +10731,8 @@ namespace ThousandAndFirst
 		}
 
 		private static bool GrowthObjectCallbackStepShape(KingdomGrowthObjectCallbackStep step,
-			string parentId, string objectId, string marker, int ordinal)
+			string parentId, string objectId, string marker, int ordinal,
+			bool allowAbsentReference = false)
 		{
 			if (step == null || !string.Equals(step.EventId,
 				ChildId(parentId, "object-callback", ordinal), StringComparison.Ordinal)
@@ -10291,7 +10831,10 @@ namespace ThousandAndFirst
 				&& step.ReceiptAfterCount == step.AfterCount
 				&& string.Equals(step.ReceiptCallbackObjectId, objectId, StringComparison.Ordinal)
 				&& string.Equals(step.ReceiptCallbackMarker, marker, StringComparison.Ordinal)
-				&& GrowthWitnessHash(step.ReceiptCallbackReferenceHash) && step.ReceiptSameReference
+				&& GrowthWitnessHash(step.ReceiptCallbackReferenceHash)
+				&& (step.ReceiptSameReference || allowAbsentReference
+					&& step.Kind == KingdomGrowthObjectMutationKind.Obliterate
+					&& step.AfterCount == 0)
 				&& GrowthObjectCallbackReceiptBeforeExact(step)
 				&& string.Equals(step.ReceiptAfterOwnerGraphHash, step.AfterOwnerGraphHash,
 					StringComparison.Ordinal)
@@ -10854,11 +11397,13 @@ namespace ThousandAndFirst
 				|| operation.OutboxEvents.Count > MaxGrowthOutboxEvents) return false;
 			HashSet<string> ids = new HashSet<string>(StringComparer.Ordinal);
 			bool haveChronicle = false; int chronicleCount = 0; string chronicleHash = null;
+			bool haveOutsider = false; int outsiderCount = 0; string outsiderHash = null;
 			bool haveLedger = false; int ledgerCount = 0; string ledgerHash = null;
 			for (int i = 0; i < operation.OutboxEvents.Count; i++)
 			{
 				KingdomGrowthOutboxEvent e = operation.OutboxEvents[i];
 				KingdomLifecycleOutbox box = e == null ? null : e.Outbox;
+				bool legacyChronicle = e != null && e.LegacySingleRegisterChronicle;
 				if (box == null || !ValidName(e.Kind)
 					|| !string.Equals(e.EventId, ChildId(operation.Id, "outbox-event", i),
 						StringComparison.Ordinal) || !ids.Add(e.EventId)
@@ -10879,10 +11424,32 @@ namespace ThousandAndFirst
 						box.DeedState, publication)
 					|| !GrowthSinkTextShape(box.GuestbookLine, box.GuestbookDisposition,
 						box.GuestbookState, publication)
+					|| (legacyChronicle && (!operation.LegacyGrowthV1Plan
+						|| box.Chronicle == null))
+					|| (operation.LegacyGrowthV1Plan && box.Chronicle != null
+						&& !legacyChronicle)
+					|| (box.Chronicle == null
+						? e.ChronicleOfficial != null || e.ChronicleOutsider != null
+						: legacyChronicle
+							? e.ChronicleOfficial != null || e.ChronicleOutsider != null
+							: string.IsNullOrEmpty(e.ChronicleOfficial)
+								|| e.ChronicleOfficial.Length >
+									KingdomChronicleReceiptRules.MaxEntryChars
+								|| string.IsNullOrEmpty(e.ChronicleOutsider)
+								|| e.ChronicleOutsider.Length >
+									KingdomChronicleReceiptRules.MaxEntryChars)
 					|| !GrowthInspectableSinkShape(box.Chronicle, box.ChronicleState,
 						e.ChronicleBeforeCount, e.ChronicleBeforeHash,
 						e.ChronicleDeclaredAfterCount, e.ChronicleDeclaredAfterHash,
-						e.ChronicleObservedCount, e.ChronicleObservedHash, publication)
+						e.ChronicleObservedCount, e.ChronicleObservedHash, publication,
+						legacyChronicle ? -1 : KingdomChronicleReceiptRules.MaxEntries)
+					|| (legacyChronicle
+						? !GrowthOutsiderReceiptEmpty(e)
+						: !GrowthInspectableSinkShape(box.Chronicle, box.ChronicleState,
+							e.OutsiderBeforeCount, e.OutsiderBeforeHash,
+							e.OutsiderDeclaredAfterCount, e.OutsiderDeclaredAfterHash,
+							e.OutsiderObservedCount, e.OutsiderObservedHash, publication,
+							KingdomChronicleReceiptRules.MaxEntries))
 					|| !GrowthInspectableSinkShape(box.Ledger, box.LedgerState,
 						e.LedgerBeforeCount, e.LedgerBeforeHash,
 						e.LedgerDeclaredAfterCount, e.LedgerDeclaredAfterHash,
@@ -10894,6 +11461,15 @@ namespace ThousandAndFirst
 							StringComparison.Ordinal))) return false;
 					haveChronicle = true; chronicleCount = e.ChronicleDeclaredAfterCount;
 					chronicleHash = e.ChronicleDeclaredAfterHash;
+					if (!legacyChronicle)
+					{
+						if (haveOutsider && (e.OutsiderBeforeCount != outsiderCount
+							|| !string.Equals(e.OutsiderBeforeHash, outsiderHash,
+								StringComparison.Ordinal))) return false;
+						haveOutsider = true;
+						outsiderCount = e.OutsiderDeclaredAfterCount;
+						outsiderHash = e.OutsiderDeclaredAfterHash;
+					}
 				}
 				if (box.Ledger != null)
 				{
@@ -10910,10 +11486,10 @@ namespace ThousandAndFirst
 		private static bool GrowthInspectableSinkShape(string text,
 			KingdomLifecycleSinkState state, int beforeCount, string beforeHash,
 			int declaredAfterCount, string declaredAfterHash, int observedCount,
-			string observedHash, bool publication)
+			string observedHash, bool publication, int boundedCount = -1)
 		{
 			if (!GrowthSinkDeclarationShape(text, beforeCount, beforeHash,
-				declaredAfterCount, declaredAfterHash)) return false;
+				declaredAfterCount, declaredAfterHash, boundedCount)) return false;
 			if (text == null)
 				return state == KingdomLifecycleSinkState.Skipped
 					&& observedCount == -1 && observedHash == null;
@@ -10923,6 +11499,13 @@ namespace ThousandAndFirst
 			return state == KingdomLifecycleSinkState.Delivered
 				&& observedCount == declaredAfterCount
 				&& string.Equals(observedHash, declaredAfterHash, StringComparison.Ordinal);
+		}
+
+		private static bool GrowthOutsiderReceiptEmpty(KingdomGrowthOutboxEvent e)
+		{
+			return e.OutsiderBeforeCount == 0 && e.OutsiderDeclaredAfterCount == 0
+				&& e.OutsiderObservedCount == -1 && e.OutsiderBeforeHash == null
+				&& e.OutsiderDeclaredAfterHash == null && e.OutsiderObservedHash == null;
 		}
 
 		private static bool GrowthSinkTextShape(string text,

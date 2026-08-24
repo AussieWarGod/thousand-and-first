@@ -1,4 +1,9 @@
+using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
+using System.Security.Cryptography;
+using System.Text;
 using XRL;
 using XRL.UI;
 using XRL.World;
@@ -146,10 +151,9 @@ namespace ThousandAndFirst
 		/// take this newcomer &mdash; meets their Needs, has a bed free, and holds nobody either
 		/// of them refuses. Assignment-level, not a bed tally, because a settlement with ten empty
 		/// beds and no charging post genuinely has no room for a robot.
-		/// <para>
-		/// Re-settles the zone first, so an arrival earlier in this same visit already holds the
-		/// bed it was going to hold and the second arrival is judged against the truth.
-		/// </para>
+		/// Reads standing assignments without changing them. The ordinary settlement pass owns
+		/// assignment, brink, and announcement writes; admission is a pure observation until its
+		/// lodging intent has published.
 		/// </summary>
 		/// <param name="System">The realm.</param>
 		/// <param name="Z">The zone the arrival would walk into.</param>
@@ -157,36 +161,56 @@ namespace ThousandAndFirst
 		/// <param name="Reason">Why nobody would take them, for the founder's line.</param>
 		public static bool WouldTakeArrival(KingdomSystem System, Zone Z, GameObject Newcomer, out KingdomLodgingRules.UnhousedReason Reason)
 		{
+			string ignored;
+			return ObservePreparedArrival(System, Z, Newcomer, out Reason, out ignored);
+		}
+
+		/// <summary>Pure arrival decision over already-refreshed assignments. The returned hash
+		/// freezes every semantic input consumed by the gate; this method writes no game state.</summary>
+		internal static bool ObservePreparedArrival(KingdomSystem System, Zone Z,
+			GameObject Newcomer, out KingdomLodgingRules.UnhousedReason Reason,
+			out string ObservationHash)
+		{
+			return ObservePreparedArrival(System, Z, Newcomer, null, out Reason,
+				out ObservationHash);
+		}
+
+		/// <summary>Pure arrival decision using an already-frozen creed when the newcomer has not
+		/// yet published that creed onto their ordinary resident property.</summary>
+		internal static bool ObservePreparedArrival(KingdomSystem System, Zone Z,
+			GameObject Newcomer, string PlannedCreed,
+			out KingdomLodgingRules.UnhousedReason Reason, out string ObservationHash)
+		{
 			Reason = KingdomLodgingRules.UnhousedReason.Housed;
-			if (!Enabled)
+			ObservationHash = null;
+			string creed = PlannedCreed ?? ((Newcomer == null) ? null
+				: Newcomer.GetStringProperty(KingdomCreed.CreedProperty));
+			if (!Enabled || System == null || Z == null || !System.Founded)
 			{
+				ObservationHash = ArrivalObservationHash(delegate(BinaryWriter writer)
+				{
+					WriteObservationString(writer, "bypassed");
+					WriteObservationString(writer, Z == null ? null : Z.ZoneID);
+					WriteObservationString(writer, Newcomer == null ? null : Newcomer.ID);
+					WriteObservationString(writer, creed);
+				});
 				return true;
 			}
-			if (System == null || Z == null)
-			{
-				return true;
-			}
-			// Settling first, and without spending anybody's grace: this is a question, not a
-			// pass. A founder is never charged a pass of somebody else's grace for asking whether
-			// a stranger could stay.
-			Dictionary<string, List<GameObject>> occupancy = Settle(System, Z, RunBrink: false);
-			if (occupancy == null)
-			{
-				return true;
-			}
+			Dictionary<string, List<GameObject>> occupancy = ProjectedOccupancy(Z);
 			QolProfile profile = KingdomQol.ProfileOf(Newcomer);
 			List<string> needs = new List<string>(profile.Needs);
 			List<string> refuses = new List<string>(profile.Refuses);
 			List<string> selfTags = SelfTagsOf(profile);
-			string creed = (Newcomer == null) ? null : Newcomer.GetStringProperty(KingdomCreed.CreedProperty);
 			List<GameObject> homes = HousingIn(Z);
 			List<KingdomLodgingRules.ArrivalHome> offers = new List<KingdomLodgingRules.ArrivalHome>();
+			List<string> homeEvidence = new List<string>();
 			bool anyCondemned = false;
 			for (int i = 0; i < homes.Count; i++)
 			{
-				string plotId = homes[i].GetStringProperty(KingdomPlots.PlotIdProperty);
+				GameObject home = homes[i];
+				string plotId = home.GetStringProperty(KingdomPlots.PlotIdProperty);
 				KingdomRules.BuildEntry entry;
-				if (string.IsNullOrEmpty(plotId) || !TryGetBuiltEntry(homes[i], out entry))
+				if (string.IsNullOrEmpty(plotId) || !TryGetBuiltEntry(home, out entry))
 				{
 					continue;
 				}
@@ -197,20 +221,61 @@ namespace ThousandAndFirst
 				}
 				// Counted rather than merely skipped: a settlement whose every roof has fallen in
 				// must be told to MEND, not to commission housing it already built.
-				if (IsCondemned(homes[i]))
+				bool condemned = IsCondemned(home);
+				if (condemned)
 				{
 					anyCondemned = true;
+					homeEvidence.Add(ArrivalObservationHash(delegate(BinaryWriter writer)
+					{
+						WriteObservationString(writer, home.ID);
+						WriteObservationString(writer, home.Blueprint);
+						WriteObservationString(writer, plotId);
+						WriteObservationString(writer, entry.Key);
+						writer.Write(capacity); writer.Write(true);
+					}));
 					continue;
 				}
 				List<GameObject> occupants;
 				occupancy.TryGetValue(plotId, out occupants);
+				List<string> occupantEvidence;
+				KingdomLodgingRules.Closeness quarters = KingdomFaith.EducatedCloseness(
+					Z, QuartersOf(entry), home);
+				bool conflict = ObserveOccupantConflicts(refuses, selfTags, creed,
+					occupants, quarters, out occupantEvidence);
+				List<string> provides = new List<string>(KingdomQol.OfferOf(entry.Key, Z));
 				offers.Add(new KingdomLodgingRules.ArrivalHome(
-					new List<string>(KingdomQol.OfferOf(entry.Key, Z)),
-					capacity,
-					(occupants == null) ? 0 : occupants.Count,
-					occupants != null && AnyOccupantConflicts(refuses, selfTags, creed, occupants, KingdomFaith.EducatedCloseness(Z, QuartersOf(entry), homes[i]))));
+					provides, capacity, (occupants == null) ? 0 : occupants.Count, conflict));
+				provides.Sort(StringComparer.Ordinal);
+				occupantEvidence.Sort(StringComparer.Ordinal);
+				homeEvidence.Add(ArrivalObservationHash(delegate(BinaryWriter writer)
+				{
+					WriteObservationString(writer, home.ID);
+					WriteObservationString(writer, home.Blueprint);
+					WriteObservationString(writer, plotId);
+					WriteObservationString(writer, entry.Key);
+					writer.Write(capacity); writer.Write(false); writer.Write((int)quarters);
+					WriteObservationList(writer, provides);
+					WriteObservationList(writer, occupantEvidence);
+					writer.Write(conflict);
+				}));
 			}
-			return KingdomLodgingRules.AnyWouldTake(offers, needs, out Reason, anyCondemned);
+			bool joined = KingdomLodgingRules.AnyWouldTake(offers, needs, out Reason,
+				anyCondemned);
+			KingdomLodgingRules.UnhousedReason frozenReason = Reason;
+			needs.Sort(StringComparer.Ordinal); refuses.Sort(StringComparer.Ordinal);
+			selfTags.Sort(StringComparer.Ordinal); homeEvidence.Sort(StringComparer.Ordinal);
+			ObservationHash = ArrivalObservationHash(delegate(BinaryWriter writer)
+			{
+				WriteObservationString(writer, "prepared-arrival");
+				WriteObservationString(writer, Z.ZoneID);
+				WriteObservationString(writer, Newcomer == null ? null : Newcomer.ID);
+				WriteObservationString(writer, Newcomer == null ? null : Newcomer.Blueprint);
+				WriteObservationString(writer, creed);
+				WriteObservationList(writer, needs); WriteObservationList(writer, refuses);
+				WriteObservationList(writer, selfTags); WriteObservationList(writer, homeEvidence);
+				writer.Write(anyCondemned); writer.Write(joined); writer.Write((int)frozenReason);
+			});
+			return joined;
 		}
 
 		/// <summary>The design key of the home this resident sleeps in, for a caller that wants to
@@ -308,82 +373,15 @@ namespace ThousandAndFirst
 
 		private static void AssignOne(KingdomSystem System, Zone Z, GameObject Resident, List<GameObject> Homes, Dictionary<string, List<GameObject>> Occupancy, bool RunBrink)
 		{
-			QolProfile profile = KingdomQol.ProfileOf(Resident);
-			List<string> needs = new List<string>(profile.Needs);
-			List<string> refuses = new List<string>(profile.Refuses);
-			List<string> selfTags = SelfTagsOf(profile);
-			string creed = Resident.GetStringProperty(KingdomCreed.CreedProperty);
-
-			bool anyRoofAtAll = Homes.Count > 0;
-			bool anyStanding = false;
-			bool anyMeetsNeeds = false;
-			bool anyHasCapacity = false;
-			bool anyWithoutRefusal = false;
-			// Addendum 4c: the roomiest quarters that had a bed free and still would not take them.
-			// This is what the founder can act on -- whatever they build next has to beat it -- and
-			// it is what the refusal line names.
-			KingdomLodgingRules.Closeness roomiestRefused = KingdomLodgingRules.Closeness.Packed;
-			List<KingdomLodgingRules.LodgingCandidate> eligible = new List<KingdomLodgingRules.LodgingCandidate>();
-			List<GameObject> eligibleHomes = new List<GameObject>();
-
-			for (int i = 0; i < Homes.Count; i++)
-			{
-				GameObject home = Homes[i];
-				string plotId = home.GetStringProperty(KingdomPlots.PlotIdProperty);
-				if (string.IsNullOrEmpty(plotId))
-				{
-					continue;
-				}
-				KingdomRules.BuildEntry entry;
-				if (!TryGetBuiltEntry(home, out entry))
-				{
-					continue;
-				}
-				int capacity = RoofCapacity(entry);
-				if (capacity <= 0)
-				{
-					continue;
-				}
-				// A house worn past KingdomLodgingRules.CondemnedWearPercent is not a roof. It is
-				// still standing, still the settlement's, still mendable, and nobody sleeps in it
-				// -- so it is rejected here rather than filtered out of Homes, which keeps
-				// "there are roofs, and they have all fallen in" tellable apart from "nothing is
-				// built here yet".
-				if (IsCondemned(home))
-				{
-					continue;
-				}
-				anyStanding = true;
-				List<string> provides = new List<string>(KingdomQol.OfferOf(entry.Key, Z));
-				if (!KingdomLodgingRules.MeetsNeeds(needs, provides))
-				{
-					continue;
-				}
-				anyMeetsNeeds = true;
-				List<GameObject> occupants;
-				Occupancy.TryGetValue(plotId, out occupants);
-				int occupantCount = (occupants == null) ? 0 : occupants.Count;
-				if (!KingdomLodgingRules.HasFreeBed(capacity, occupantCount))
-				{
-					continue;
-				}
-				anyHasCapacity = true;
-				KingdomLodgingRules.Closeness quarters = KingdomFaith.EducatedCloseness(Z, QuartersOf(entry), home);
-				if (occupants != null && AnyOccupantConflicts(refuses, selfTags, creed, occupants, quarters))
-				{
-					roomiestRefused = KingdomLodgingRules.Roomier(roomiestRefused, quarters);
-					continue;
-				}
-				anyWithoutRefusal = true;
-				eligible.Add(new KingdomLodgingRules.LodgingCandidate(plotId, capacity, occupantCount));
-				eligibleHomes.Add(home);
-			}
-
-			int chosen = KingdomLodgingRules.ChooseIndex(eligible);
+			GameObject winningHome;
+			KingdomLodgingRules.UnhousedReason reason;
+			KingdomLodgingRules.Closeness roomiestRefused;
+			List<string> needs;
+			string winningPlotId = ChooseHome(Z, Resident, Homes, Occupancy,
+				out winningHome, out reason, out roomiestRefused, out needs);
 			string residentName = NameOf(Resident);
-			if (chosen < 0)
+			if (winningPlotId == null)
 			{
-				KingdomLodgingRules.UnhousedReason reason = KingdomLodgingRules.Diagnose(anyRoofAtAll, anyMeetsNeeds, anyHasCapacity, anyWithoutRefusal, anyStanding);
 				AnnounceUnhoused(System, Resident, residentName, reason, roomiestRefused);
 				if (RunBrink)
 				{
@@ -391,7 +389,6 @@ namespace ThousandAndFirst
 				}
 				return;
 			}
-			string winningPlotId = eligible[chosen].PlotId;
 			Resident.SetStringProperty(HomePlotIdProperty, winningPlotId);
 			// A new roof is a new household, so the cohabitation clock starts from tonight. They
 			// do not inherit the days they spent under somebody else's roof, or outside.
@@ -418,11 +415,75 @@ namespace ThousandAndFirst
 			if (wasUnhoused)
 			{
 				KingdomRules.BuildEntry winEntry;
-				TryGetBuiltEntry(eligibleHomes[chosen], out winEntry);
+				TryGetBuiltEntry(winningHome, out winEntry);
 				string matched = KingdomLodgingRules.MatchedTag(needs, (winEntry == null) ? null : new List<string>(KingdomQol.OfferOf(winEntry.Key, Z)));
 				string line = residentName + " found shelter: " + KingdomLodgingRules.HomeSuffix((winEntry != null) ? winEntry.Name : null, matched) + ".";
 				KingdomChronicle.Record(System, line);
 			}
+		}
+
+		/// <summary>Shared pure chooser for the real settlement pass and admission's projected
+		/// occupancy. All mutation remains in <see cref="AssignOne"/>.</summary>
+		private static string ChooseHome(Zone Z, GameObject Resident, List<GameObject> Homes,
+			Dictionary<string, List<GameObject>> Occupancy, out GameObject WinningHome,
+			out KingdomLodgingRules.UnhousedReason Reason,
+			out KingdomLodgingRules.Closeness RoomiestRefused, out List<string> Needs)
+		{
+			WinningHome = null;
+			Reason = KingdomLodgingRules.UnhousedReason.Housed;
+			RoomiestRefused = KingdomLodgingRules.Closeness.Packed;
+			QolProfile profile = KingdomQol.ProfileOf(Resident);
+			Needs = new List<string>(profile.Needs);
+			List<string> refuses = new List<string>(profile.Refuses);
+			List<string> selfTags = SelfTagsOf(profile);
+			string creed = Resident.GetStringProperty(KingdomCreed.CreedProperty);
+			bool anyRoofAtAll = Homes.Count > 0;
+			bool anyStanding = false;
+			bool anyMeetsNeeds = false;
+			bool anyHasCapacity = false;
+			bool anyWithoutRefusal = false;
+			List<KingdomLodgingRules.LodgingCandidate> eligible =
+				new List<KingdomLodgingRules.LodgingCandidate>();
+			List<GameObject> eligibleHomes = new List<GameObject>();
+			for (int i = 0; i < Homes.Count; i++)
+			{
+				GameObject home = Homes[i];
+				string plotId = home.GetStringProperty(KingdomPlots.PlotIdProperty);
+				KingdomRules.BuildEntry entry;
+				if (string.IsNullOrEmpty(plotId) || !TryGetBuiltEntry(home, out entry)) continue;
+				int capacity = RoofCapacity(entry);
+				if (capacity <= 0 || IsCondemned(home)) continue;
+				anyStanding = true;
+				List<string> provides = new List<string>(KingdomQol.OfferOf(entry.Key, Z));
+				if (!KingdomLodgingRules.MeetsNeeds(Needs, provides)) continue;
+				anyMeetsNeeds = true;
+				List<GameObject> occupants;
+				Occupancy.TryGetValue(plotId, out occupants);
+				int occupantCount = occupants == null ? 0 : occupants.Count;
+				if (!KingdomLodgingRules.HasFreeBed(capacity, occupantCount)) continue;
+				anyHasCapacity = true;
+				KingdomLodgingRules.Closeness quarters = KingdomFaith.EducatedCloseness(
+					Z, QuartersOf(entry), home);
+				if (occupants != null && AnyOccupantConflicts(refuses, selfTags, creed,
+					occupants, quarters))
+				{
+					RoomiestRefused = KingdomLodgingRules.Roomier(RoomiestRefused, quarters);
+					continue;
+				}
+				anyWithoutRefusal = true;
+				eligible.Add(new KingdomLodgingRules.LodgingCandidate(
+					plotId, capacity, occupantCount));
+				eligibleHomes.Add(home);
+			}
+			int chosen = KingdomLodgingRules.ChooseIndex(eligible);
+			if (chosen < 0)
+			{
+				Reason = KingdomLodgingRules.Diagnose(anyRoofAtAll, anyMeetsNeeds,
+					anyHasCapacity, anyWithoutRefusal, anyStanding);
+				return null;
+			}
+			WinningHome = eligibleHomes[chosen];
+			return eligible[chosen].PlotId;
 		}
 
 		// --- Addendum 4b: the brink, the window, and the leaving ---------------------------
@@ -504,6 +565,76 @@ namespace ThousandAndFirst
 			return tags;
 		}
 
+		/// <summary>Purely projects the ordinary settlement pass: standing assignments keep
+		/// their beds, then every unassigned or stale-home resident is seated in normal resident
+		/// order. No property, brink, Chronicle, ledger, or cohabitation state is changed.</summary>
+		private static Dictionary<string, List<GameObject>> ProjectedOccupancy(Zone Z)
+		{
+			Dictionary<string, List<GameObject>> result =
+				new Dictionary<string, List<GameObject>>(StringComparer.Ordinal);
+			HashSet<string> standing = new HashSet<string>(StringComparer.Ordinal);
+			List<GameObject> homes = HousingIn(Z);
+			for (int i = 0; i < homes.Count; i++)
+			{
+				string plot = homes[i].GetStringProperty(KingdomPlots.PlotIdProperty);
+				if (!string.IsNullOrEmpty(plot)) standing.Add(plot);
+			}
+			List<GameObject> residents = ResidentsIn(Z);
+			List<GameObject> unassigned = new List<GameObject>();
+			for (int i = 0; i < residents.Count; i++)
+			{
+				string plot = residents[i].GetStringProperty(HomePlotIdProperty);
+				if (standing.Contains(plot)) AddOccupant(result, plot, residents[i]);
+				else unassigned.Add(residents[i]);
+			}
+			for (int i = 0; i < unassigned.Count; i++)
+			{
+				GameObject ignoredHome;
+				KingdomLodgingRules.UnhousedReason ignoredReason;
+				KingdomLodgingRules.Closeness ignoredRefusal;
+				List<string> ignoredNeeds;
+				string plot = ChooseHome(Z, unassigned[i], homes, result, out ignoredHome,
+					out ignoredReason, out ignoredRefusal, out ignoredNeeds);
+				if (plot != null) AddOccupant(result, plot, unassigned[i]);
+			}
+			return result;
+		}
+
+		private static bool ObserveOccupantConflicts(List<string> Refuses,
+			List<string> SelfTags, string Creed, List<GameObject> Occupants,
+			KingdomLodgingRules.Closeness Quarters, out List<string> Evidence)
+		{
+			Evidence = new List<string>();
+			bool any = false;
+			if (Occupants == null) return false;
+			for (int i = 0; i < Occupants.Count; i++)
+			{
+				GameObject occupant = Occupants[i];
+				string occupantCreed = occupant.GetStringProperty(KingdomCreed.CreedProperty);
+				int hostility = KingdomCreed.HostilityBetween(Creed, occupantCreed);
+				QolProfile profile = KingdomQol.ProfileOf(occupant);
+				List<string> needs = new List<string>(profile.Needs);
+				List<string> prefers = new List<string>(profile.Prefers);
+				List<string> refuses = new List<string>(profile.Refuses);
+				List<string> selfTags = SelfTagsOf(profile);
+				bool conflict = KingdomLodgingRules.Conflicts(Refuses, SelfTags,
+					refuses, selfTags, hostility, Quarters);
+				any |= conflict;
+				needs.Sort(StringComparer.Ordinal); prefers.Sort(StringComparer.Ordinal);
+				refuses.Sort(StringComparer.Ordinal); selfTags.Sort(StringComparer.Ordinal);
+				Evidence.Add(ArrivalObservationHash(delegate(BinaryWriter writer)
+				{
+					WriteObservationString(writer, occupant.ID);
+					WriteObservationString(writer, occupant.Blueprint);
+					WriteObservationString(writer, occupantCreed);
+					WriteObservationList(writer, needs); WriteObservationList(writer, prefers);
+					WriteObservationList(writer, refuses); WriteObservationList(writer, selfTags);
+					writer.Write(hostility); writer.Write((int)Quarters); writer.Write(conflict);
+				}));
+			}
+			return any;
+		}
+
 		private static bool AnyOccupantConflicts(List<string> Refuses, List<string> SelfTags, string Creed, List<GameObject> Occupants, KingdomLodgingRules.Closeness Quarters)
 		{
 			for (int i = 0; i < Occupants.Count; i++)
@@ -526,6 +657,40 @@ namespace ThousandAndFirst
 				}
 			}
 			return false;
+		}
+
+		private static string ArrivalObservationHash(Action<BinaryWriter> Write)
+		{
+			if (Write == null) return null;
+			using (MemoryStream stream = new MemoryStream())
+			using (BinaryWriter writer = new BinaryWriter(stream,
+				new UTF8Encoding(false, true), true))
+			{
+				WriteObservationString(writer, "taf:lodging-arrival-observation:v1");
+				Write(writer); writer.Flush();
+				using (SHA256 sha = SHA256.Create())
+				{
+					byte[] digest = sha.ComputeHash(stream.ToArray());
+					StringBuilder text = new StringBuilder(64);
+					for (int i = 0; i < digest.Length; i++)
+						text.Append(digest[i].ToString("x2", CultureInfo.InvariantCulture));
+					return text.ToString();
+				}
+			}
+		}
+
+		private static void WriteObservationString(BinaryWriter Writer, string Value)
+		{
+			if (Value == null) { Writer.Write(-1); return; }
+			byte[] bytes = new UTF8Encoding(false, true).GetBytes(Value);
+			Writer.Write(bytes.Length); Writer.Write(bytes);
+		}
+
+		private static void WriteObservationList(BinaryWriter Writer, List<string> Values)
+		{
+			Writer.Write(Values == null ? -1 : Values.Count);
+			if (Values != null) for (int i = 0; i < Values.Count; i++)
+				WriteObservationString(Writer, Values[i]);
 		}
 
 		private static void AnnounceUnhoused(KingdomSystem System, GameObject Resident, string ResidentName, KingdomLodgingRules.UnhousedReason Reason, KingdomLodgingRules.Closeness RoomiestRefused)
