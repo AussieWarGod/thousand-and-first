@@ -163,11 +163,14 @@ namespace ThousandAndFirst
 		}
 
 		/// <summary>
-		/// Every knowledge key the SEATED city holds: its own stored rolls &mdash; designs taught,
+		/// Every knowledge key effective at the SEATED city: its own stored rolls &mdash; designs taught,
 		/// machines certified, ceremonies held, nodes worked out &mdash; plus one <c>origin:</c> key
 		/// for each people living there right now. Origins are read live off
 		/// <c>KingdomSystem.OriginCounts</c> rather than stored, because a trade the settlement holds
 		/// only because somebody from that country lives here should leave with them.
+		/// The founder's permanent <c>rite:</c> ledger is then projected into this read. It never
+		/// enters <see cref="KingdomSettlement.KeepersRoster"/>: the founder carries doors between
+		/// cities and out of exile, while each city keeps only the rooms its own people finished.
 		/// <para>
 		/// <b>Seat only</b> (Addendum 22 B4). Knowledge is where it was taught, and teaching the
 		/// other city is an ACT: carry the disk and walk, certify the machine there too, or set down
@@ -180,7 +183,18 @@ namespace ThousandAndFirst
 		public static List<string> Roster(KingdomSystem System)
 		{
 			List<string> roster = KingdomZoningRules.DecodeRoster(Stored(System));
-			if (System == null || System.OriginCounts == null)
+			if (System == null)
+			{
+				return roster;
+			}
+			foreach (string rite in KingdomResearch.FounderRites())
+			{
+				if (!roster.Contains(rite))
+				{
+					roster.Add(rite);
+				}
+			}
+			if (System.OriginCounts == null)
 			{
 				return roster;
 			}
@@ -909,15 +923,19 @@ namespace ThousandAndFirst
 		// SEED and never a holding: the founder sets down what one city's keepers worked out, the
 		// other city's keepers have the shape of it, and the walking is still theirs. Doors, never
 		// rooms - Addendum 18's clause, applied to the road between two of your own cities exactly
-		// as it applies to the road out of exile.
+		// as it applies to the road out of exile. The other city's immutable id is the source, so
+		// opening this menu repeatedly cannot turn one lesson into several seeds.
 		private static void SetDownWhatWasLearned(KingdomSystem System, List<ResearchNode> Carried)
 		{
 			string away = AwayName(System);
+			string awayId = (System.Away == null || System.Away.City == null)
+				? null : System.Away.City.SettlementId;
+			string source = KingdomZoningRules.ComposeKey("settlement", awayId);
 			List<string> named = new List<string>();
 			for (int i = 0; i < Carried.Count; i++)
 			{
-				if (KingdomResearch.Seed(System, Carried[i].Key, "the keepers of " + away,
-					"share keeper knowledge"))
+				if (source != null && KingdomResearch.SeedFromSource(System, Carried[i].Key, source,
+					"the keepers of " + away, "share keeper knowledge"))
 				{
 					named.Add(Carried[i].Named);
 				}
@@ -957,6 +975,7 @@ namespace ThousandAndFirst
 			AppendKind(text, roster, KingdomZoningRules.KindOrigin, "\nTrades among the people: ");
 			AppendKind(text, roster, KingdomZoningRules.KindNode, "\nWorked out here: ");
 			AppendKind(text, roster, KingdomCeremonyRules.PatternKnowledgeKind, "\nHeld from a ceremony here: ");
+			AppendKind(text, roster, KingdomZoningRules.KindRite, "\nRites the founder remembers: ");
 			return text.ToString();
 		}
 

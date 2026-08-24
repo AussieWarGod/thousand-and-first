@@ -9,7 +9,7 @@ using XRL.World.Parts;
 namespace ThousandAndFirst
 {
 	[Serializable]
-	public class KingdomSystem : IGameSystem
+	public class KingdomSystem : IPlayerSystem
 	{
 		private const int SerializationMagic = 1413563987;
 
@@ -4334,6 +4334,33 @@ namespace ThousandAndFirst
 			// Research quest locks are event-driven and cached, never polled. This fires AFTER all
 			// quest state is consistent, which is why it and not QuestStepFinishedEvent is the hook.
 			Registrar.Register(QuestFinishedEvent.ID);
+		}
+
+		/// <summary>Player-scoped events follow the active body. <see cref="IPlayerSystem"/>
+		/// unregisters this system from the old body and registers it on the new one after
+		/// domination, metempsychosis, or Kingdom succession.</summary>
+		public override void RegisterPlayer(GameObject Player, IEventRegistrar Registrar)
+		{
+			// Vanilla exposes no ritual-completion event. Its player-dispatched start event carries
+			// Initial, the exact first-sharing fact a rite source needs.
+			Registrar.Register(WaterRitualStartEvent.ID);
+		}
+
+		/// <summary>
+		/// The first time the founder shares water with one ritualist, remember that faction's way
+		/// in the founder-held ledger. Vanilla owns the ritual and all of its awards; this is only
+		/// the research source its start event makes observable and later projects at a seated city.
+		/// </summary>
+		public override bool HandleEvent(WaterRitualStartEvent E)
+		{
+			Guard("rite seed", delegate
+			{
+				// The record freezes the faction whose ritual actually paid reputation. Re-reading
+				// conversation-global speaker state or its current allegiance can name another faction.
+				KingdomResearch.RememberRite(this, E.Initial,
+					(E.Record == null) ? null : E.Record.faction);
+			});
+			return base.HandleEvent(E);
 		}
 
 		/// <summary>

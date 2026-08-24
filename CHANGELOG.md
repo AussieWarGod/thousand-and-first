@@ -23,6 +23,12 @@ playtest passes.
   that would have caught the defect lands with the fix.
 
 ### Added
+- **Water rituals now open research doors.** The first time a founder shares water with a
+  faction, that faction becomes a permanent founder-held `rite:` source. The matching research head
+  is revealed and seeded by 25% in each city, with durable per-city receipts, distinct-source
+  stacking capped at 50%, and no path to automatic completion. Rituals performed before founding
+  or between realms remain usable; Kingdom succession clears the dead founder's personal rite
+  ledger while preserving the cities' own research standing.
 - **The crown, the capital, and the arcology.** The crown is a building (never the seat — the
   seat walks with the founder, the capital does not): raise the crown hall and set the crown
   down, and the city is the capital; moving it means raising another and walking there, so

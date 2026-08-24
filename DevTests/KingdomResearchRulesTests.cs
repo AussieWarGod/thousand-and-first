@@ -155,6 +155,25 @@ namespace ThousandAndFirst.Tests
 			Assert.AreEqual(standing, KingdomResearchRules.Seeded(20, standing));
 		}
 
+		[TestCase(0, 0)]
+		[TestCase(1, 25)]
+		[TestCase(2, 50)]
+		[TestCase(9, 50)]
+		public void SeededBySources_IsARecoverableCappedFloor(int sources, int expectedPercent)
+		{
+			int effort = KingdomResearchRules.EffortTicks(20);
+			Assert.AreEqual(effort * expectedPercent / 100,
+				KingdomResearchRules.SeededBySources(20, 0, sources));
+		}
+
+		[Test]
+		public void SeededBySources_NeverLowersWorkAlreadyDone()
+		{
+			int effort = KingdomResearchRules.EffortTicks(20);
+			int standing = effort * 3 / 4;
+			Assert.AreEqual(standing, KingdomResearchRules.SeededBySources(20, standing, 2));
+		}
+
 		// --- The shelf: memory, deterministic, and it says what it forgot ----------------------
 
 		[Test]

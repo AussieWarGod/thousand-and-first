@@ -229,6 +229,10 @@ namespace ThousandAndFirst.Tests
 			Assert.IsTrue(KingdomZoningRules.Knows(new List<string> { "machine:solar condenser" }, "solar condenser"));
 			Assert.IsTrue(KingdomZoningRules.Knows(new List<string> { "origin:the rust wells" }, "the rust wells"));
 			Assert.IsFalse(KingdomZoningRules.Knows(new List<string> { "disk:chem cell" }, "solar condenser"));
+			Assert.IsTrue(KingdomZoningRules.Knows(new List<string> { "machine:solar condenser" },
+				"disk:solar condenser|machine:solar condenser"));
+			Assert.IsFalse(KingdomZoningRules.Knows(new List<string> { "machine:chem cell" },
+				"disk:solar condenser|machine:solar condenser"));
 		}
 
 		[Test]

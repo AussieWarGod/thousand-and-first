@@ -842,7 +842,24 @@ def research_reference_problems(base):
                 continue
             granted[name] = key
 
-    # 2. Every teacher resolves. Only with --base: a machine or a disk naming one of OUR blueprints
+    # 2. One rite seeds one branch head. Reusing one faction on a later node makes sharing water
+    #    advance several places on the same or different spines, contrary to the seed-not-ceiling
+    #    law and without any warning in play.
+    rite_heads = {}
+    for key in order:
+        for token in roster_tokens(bykey[key].get("SeededBy")):
+            kind, name = split_key(token)
+            if kind != "rite" or not name:
+                continue
+            if name in rite_heads and rite_heads[name] != key:
+                problems.append(
+                    "node %s is seeded by rite:%s, which already seeds node %s; one rite may "
+                    "seed only one branch head" % (key, name, rite_heads[name])
+                )
+                continue
+            rite_heads[name] = key
+
+    # 3. Every teacher resolves. Only with --base: a machine or a disk naming one of OUR blueprints
     #    resolves without vanilla, but the tree's teachers are vanilla's and refusing to answer is
     #    better than answering wrongly.
     if base:
@@ -871,7 +888,7 @@ def research_reference_problems(base):
                             % (key, attribute, name, RESEARCH_XML)
                         )
 
-    # 3. The other direction: a catalogue gate written against a node key nothing mints. Read off
+    # 4. The other direction: a catalogue gate written against a node key nothing mints. Read off
     #    the MERGED catalogue, because a Knowledge attribute can be added by a later file.
     building_order, merged = merged_buildings()
     for key in building_order:

@@ -429,8 +429,15 @@ Requires, TaughtBy, SeededBy, Tier, Effort), the tier ladder (Int 10/14/18/22, h
 boundary), the accrual arithmetic (crew × condition × tier bonus × bench rung, any factor zero ⇒
 zero), the seed constants (25% capped 50%), the shelf (8, least-advanced dropped deterministically
 and said so), the citizen Int ceiling (`MaxHeadroomIntelligence = 1` — schooling may raise the cap
-by one and nothing stacks it), and every player-facing sentence. `KingdomResearch` is the registry
-and the ledger: `Advance(system, tick, labStamp, crew, wear, rung, name)` is the whole bench
+by one and nothing stacks it), and every player-facing sentence. Vanilla's
+`WaterRitualStartEvent.Initial` is the rite source: first sharing water with a faction durably
+records its `rite:<faction>` key in the founder-held ledger, including before founding or between
+realms. The effective seated roster projects that ledger without writing it into the city's rolls;
+matching `SeededBy` entries receive per-city receipts and recoverable 25% floors, capped at 50%.
+Comma-separated sources can stack when they resolve to distinct concrete keys; `|` remains the
+declared alternative-arm grammar. One rite may seed only one branch head, and no rite completes a
+node. `KingdomResearch` is the registry and the ledger:
+`Advance(system, tick, labStamp, crew, wear, rung, name)` is the whole bench
 contract (`r_KingdomInquiry` rides it at rung 100; the lab wave's benches raise the rung),
 discovery is `JournalObservation.Revealed` under `taf:node:<key>` (founder-held), and
 `KnowledgeGateHeardOf` is the single visibility filter every menu, map row, and refusal funnels

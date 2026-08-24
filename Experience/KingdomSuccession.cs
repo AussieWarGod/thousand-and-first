@@ -988,6 +988,7 @@ namespace ThousandAndFirst
 			List<TinkerData> recipes = (TinkerData.KnownRecipes == null)
 				? new List<TinkerData>() : new List<TinkerData>(TinkerData.KnownRecipes);
 			Reputation oldReputation = The.Game.PlayerReputation;
+			string founderRites = The.Game.GetStringGameState(KingdomResearch.FounderRiteState, "");
 			try
 			{
 				string attribute = KingdomSuccessionRules.FounderAttribute(Token);
@@ -1010,6 +1011,12 @@ namespace ThousandAndFirst
 				}
 				RevealRealmGround(System);
 				TinkerData.KnownRecipes?.Clear();
+				The.Game.SetStringGameState(KingdomResearch.FounderRiteState, "");
+				if (!string.IsNullOrEmpty(The.Game.GetStringGameState(
+					KingdomResearch.FounderRiteState, "")))
+				{
+					throw new InvalidOperationException("founder rite ledger did not clear");
+				}
 				Reputation next = new Reputation();
 				next.Init();
 				Faction realm = Factions.GetIfExists(System.KingdomFactionName);
@@ -1045,6 +1052,20 @@ namespace ThousandAndFirst
 				catch (Exception recipeEx)
 				{
 					MetricsManager.LogError("ThousandAndFirst: recipe rollback failed", recipeEx);
+				}
+				try
+				{
+					The.Game.SetStringGameState(KingdomResearch.FounderRiteState, founderRites);
+					if (!string.Equals(The.Game.GetStringGameState(
+						KingdomResearch.FounderRiteState, ""), founderRites,
+						StringComparison.Ordinal))
+					{
+						throw new InvalidOperationException("founder rite ledger rollback did not stick");
+					}
+				}
+				catch (Exception riteEx)
+				{
+					MetricsManager.LogError("ThousandAndFirst: founder rite rollback failed", riteEx);
 				}
 				try
 				{

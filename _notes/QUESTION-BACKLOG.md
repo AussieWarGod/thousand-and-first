@@ -151,7 +151,7 @@ with itself** (recorded for your eye, all reversible): the tech map keeps four c
 `node:notes` with roots revealed at first keepers'-screen look; the bench ticks per turn but
 charges once per world-day (the scaffold's own idiom vs §10.2's wording).
 
-**QB-27 — Which moment mints a `rite:` key?** Vanilla ships NO water-ritual completion event —
+**QB-27 — CLOSED: first sharing water mints a `rite:` key.** Vanilla ships NO water-ritual completion event —
 only a start event (`WaterRitualStartEvent`, carrying `Initial` = first-ever share) and
 per-choice transactions (secret bought, recipe learned). Both shipped rite lanes in the mod are
 inward-facing and cannot mint vanilla-faction keys; every `SeededBy="rite:…"` in the tree is
@@ -159,8 +159,9 @@ inert until this is answered. Options: (a) mint on the FIRST SHARE — the coven
 handler; (b) mint on a grant actually taken — closer to DIVERSITY:158's "the founder's own
 water-ritual grants, mirrored", more handlers. **PROVISIONAL: (a) first share** — sitting and
 sharing water with a people is what a rite key says; the seed is 25% capped 50% either way.
-Implementation pending (a small hook wave; the handler home is whichever lane owns the
-founder's vanilla-ritual reads).
+Implemented on the player-scoped `WaterRitualStartEvent.Initial` edge. The bounded founder ledger
+works before founding and across exile/refounding; per-city canonical receipts make retries
+idempotent and keep city progress sited with the city.
 
 **QB-28 — The keepers' roster string is unpriced in the byte budget.** The receipt prices the
 seven reference slots; the roster is a composed per-city heap string (the tree's own 21 grants
@@ -200,14 +201,15 @@ even good fiction — the paperwork says one thing and the blood says another.**
 **QB-40 — Each roll adds ~12 B to a city's roster string** — folds into QB-28's budget
 re-pin when you make it.
 
-**QB-30 — The `|` OR-grammar is declared in two places and implemented in one.** The
-visibility layer splits knowledge alternatives on `|`; the GATE layer (`Knows`) compares whole
-tokens — so any record written with a bar is invisible-and-unbuildable in two different ways.
+**QB-30 — CLOSED: implement the declared `|` OR-grammar in the gate.** The visibility layer
+already split knowledge alternatives on `|`; the GATE layer (`Knows`) formerly compared whole
+tokens, so a record written with a bar was invisible-and-unbuildable in two different ways.
 The lab shipped literal comma tokens only and the theatre's §3.3 OR-gate
 (`rite:Girsh|machine:*Regeneration Tank`) ships as `node:chimerism` instead — the flesh
 branch's own T4 node, which already requires `node:graft`, arclight, and is rite-seeded, so it
-expresses the intent through machinery that exists. Rule: (a) accept `node:chimerism`
-(**PROVISIONAL**); (b) implement OR in `Knows`; (c) pick one literal.
+expresses the intent through machinery that exists and remains the shipped literal. `Knows`,
+source resolution, teaching, and seed receipts now all resolve OR arms in author order and dedupe
+the same concrete source.
 
 **QB-31 — `Magnitude` is a schema field the brief never authorised by name.** QB-10's
 source-split (quartz-hide 5% vs mirror-carapace 100% reflection) is unimplementable without a

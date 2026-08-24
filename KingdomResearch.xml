@@ -169,7 +169,6 @@
         Reveals="node:assent" />
 
   <node Key="assent" DisplayName="assent" Branch="choir" Tier="4"
-        Requires="node:listening" Grants="node:assent" Effort="30"
-        SeededBy="rite:Chavvah" />
+        Requires="node:listening" Grants="node:assent" Effort="30" />
 
 </kingdomresearch>

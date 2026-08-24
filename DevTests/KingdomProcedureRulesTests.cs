@@ -568,16 +568,20 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void KnowledgeMet_IsExactlyTheShippedGrammarAndNotOneTokenMore()
+		public void KnowledgeMet_AllowsDeclaredAlternativesWithinOneRequiredToken()
 		{
-			// The gate is a comma list of LITERAL tokens, all required. It is NOT an OR grammar:
-			// KingdomZoningRules.Knows compares the whole token (:1043-1067) and nothing splits it
-			// on the roster separator on the way in. A record written with bars would be a gate
-			// nothing could ever satisfy, so this asserts the boundary rather than the wish —
-			// see the wave's spec-conflict note about §3.3's authored `a|b` gates.
+			// Commas remain ALL. A bar inside one token is the roster's declared OR grammar, shared
+			// with research visibility and source resolution rather than reimplemented here.
 			List<string> roster = new List<string> { "rite:Girsh" };
 			Assert.IsTrue(KingdomProcedureRules.KnowledgeMet(roster, "rite:Girsh"));
-			Assert.IsFalse(KingdomProcedureRules.KnowledgeMet(roster, "rite:Girsh|machine:Regeneration Tank"));
+			Assert.IsTrue(KingdomProcedureRules.KnowledgeMet(roster,
+				"rite:Girsh|machine:Regeneration Tank"));
+			Assert.IsTrue(KingdomProcedureRules.KnowledgeMet(
+				new List<string> { "machine:Regeneration Tank" },
+				"rite:Girsh|machine:Regeneration Tank"));
+			Assert.IsFalse(KingdomProcedureRules.KnowledgeMet(
+				new List<string> { "machine:Solar Condenser" },
+				"rite:Girsh|machine:Regeneration Tank"));
 		}
 
 		[Test]

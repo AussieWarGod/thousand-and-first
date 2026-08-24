@@ -1,4 +1,7 @@
+using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.Text;
 
 namespace ThousandAndFirst
 {
@@ -319,6 +322,258 @@ namespace ThousandAndFirst
 		/// shared water with all of Qud still walks half of every road.</summary>
 		public const int MaxSeedPercent = 50;
 
+		/// <summary>Bound on durable per-city source receipts. The shipped tree uses fewer than
+		/// a dozen; the larger ceiling leaves extensions room while malformed XML cannot grow one
+		/// game-state string without limit.</summary>
+		internal const int MaxSeedReceiptRows = 256;
+
+		internal const int MaxSeedReceiptNodeLength = 256;
+
+		internal const int MaxSeedReceiptSourceLength = 512;
+
+		internal const int MaxSeedReceiptEncodedLength = MaxSeedReceiptRows *
+			(MaxSeedReceiptNodeLength + MaxSeedReceiptSourceLength + 32);
+
+		internal const int MaxSeedReceiptEncodedUtf8Bytes = MaxSeedReceiptEncodedLength * 4;
+
+		/// <summary>Distinct sources beyond this cannot raise a node's seed floor and therefore do
+		/// not need durable receipt rows.</summary>
+		internal const int MaxSeedSourcesPerNode = MaxSeedPercent / SeedPercent;
+
+		/// <summary>Bound on the founder's permanent water-ritual ledger. Vanilla currently has far
+		/// fewer ritual factions; the headroom is for extensions, not unbounded game state.</summary>
+		internal const int MaxFounderRites = 256;
+
+		internal const int MaxFounderRiteNameLength = 256;
+
+		internal const int MaxFounderRiteEncodedLength = MaxFounderRites *
+			(MaxFounderRiteNameLength + 6);
+
+		internal const string SeedReceiptKind = "researchseed";
+
+		/// <summary>
+		/// Whether a vanilla water-ritual start is the covenant moment that may put a rite source
+		/// on the founder's permanent ledger. Vanilla has no completion event: its start event's
+		/// <c>Initial</c> bit is the one first-share fact it publishes. A later visit to the same
+		/// ritual must not become a second source, and a malformed faction name must not poison the
+		/// ledger it will be stored in.
+		/// </summary>
+		/// <param name="Initial">Vanilla's first-ever-share bit.</param>
+		/// <param name="Faction">The ritual record's faction.</param>
+		internal static bool MayRememberRite(bool Initial, string Faction)
+		{
+			if (!Initial || Faction == null || Faction.Length > MaxFounderRiteNameLength)
+			{
+				return false;
+			}
+			return IsCanonicalFounderRite(KingdomZoningRules.ComposeKey(KindRite, Faction));
+		}
+
+		internal static bool IsCanonicalFounderRite(string Key)
+		{
+			string kind = KingdomZoningRules.KindOf(Key);
+			string name = KingdomZoningRules.NameOf(Key);
+			string canonical = KingdomZoningRules.ComposeKey(KindRite, name);
+			return kind == KindRite && name != null && name.Length <= MaxFounderRiteNameLength &&
+				name.IndexOf(KingdomZoningRules.ListSeparator) < 0 &&
+				canonical != null && string.Equals(canonical, Fold(Key), StringComparison.Ordinal);
+		}
+
+		internal static List<string> CanonicalFounderRites(string Encoded)
+		{
+			List<string> result = new List<string>();
+			if (string.IsNullOrEmpty(Encoded) || Encoded.Length > MaxFounderRiteEncodedLength ||
+				Encoding.UTF8.GetByteCount(Encoded) > MaxFounderRiteEncodedLength * 4)
+			{
+				return result;
+			}
+			int rows = 1;
+			for (int i = 0; i < Encoded.Length; i++)
+			{
+				if (Encoded[i] == KingdomZoningRules.RosterSeparator && ++rows > MaxFounderRites)
+				{
+					return new List<string>();
+				}
+			}
+			foreach (string key in KingdomZoningRules.DecodeRoster(Encoded))
+			{
+				if (IsCanonicalFounderRite(key) && result.Count < MaxFounderRites)
+				{
+					result.Add(key);
+				}
+			}
+			return result;
+		}
+
+		/// <summary>Canonical receipt identity for one concrete source on one node. The source is
+		/// the actual roster key that satisfied an authored requirement, never the requirement's
+		/// alias.</summary>
+		internal static string SeedReceiptKey(string NodeKey, string ConcreteSource)
+		{
+			string node = KingdomZoningRules.ComposeKey(KindNode, NodeKey);
+			string sourceName = KingdomZoningRules.NameOf(ConcreteSource);
+			string sourceKind = KingdomZoningRules.KindOf(ConcreteSource);
+			string source = KingdomZoningRules.ComposeKey(sourceKind, sourceName);
+			if (node == null || source == null ||
+				!string.Equals(source, Fold(ConcreteSource), StringComparison.Ordinal))
+			{
+				return null;
+			}
+			string nodeName = KingdomZoningRules.NameOf(node);
+			if (nodeName.Length > MaxSeedReceiptNodeLength ||
+				source.Length > MaxSeedReceiptSourceLength ||
+				Encoding.UTF8.GetByteCount(nodeName) > MaxSeedReceiptNodeLength * 4 ||
+				Encoding.UTF8.GetByteCount(source) > MaxSeedReceiptSourceLength * 4)
+			{
+				return null;
+			}
+			return KingdomZoningRules.ComposeKey(SeedReceiptKind,
+				nodeName.Length.ToString(CultureInfo.InvariantCulture) + "." + nodeName + "=" + source);
+		}
+
+		/// <summary>How many distinct durable receipts one node owns.</summary>
+		internal static int SeedReceiptCount(string Encoded, string NodeKey)
+		{
+			string node = KingdomZoningRules.ComposeKey(KindNode, NodeKey);
+			List<string> receipts;
+			if (node == null || !TryReadSeedReceiptStore(Encoded, out receipts))
+			{
+				return 0;
+			}
+			string nodeName = KingdomZoningRules.NameOf(node);
+			int count = 0;
+			for (int i = 0; i < receipts.Count; i++)
+			{
+				string receiptNode;
+				string source;
+				if (TryReadSeedReceipt(receipts[i], out receiptNode, out source) &&
+					receiptNode == nodeName && ++count >= MaxSeedSourcesPerNode)
+				{
+					return MaxSeedSourcesPerNode;
+				}
+			}
+			return count;
+		}
+
+		internal static bool SeedReceiptStored(string Encoded, string NodeKey, string ConcreteSource)
+		{
+			string wanted = SeedReceiptKey(NodeKey, ConcreteSource);
+			List<string> receipts;
+			return wanted != null && TryReadSeedReceiptStore(Encoded, out receipts) &&
+				receipts.Contains(wanted);
+		}
+
+		/// <summary>Adds one source receipt without duplication and reports the node's new total.
+		/// Returning true means the encoded state is valid whether or not it changed.</summary>
+		internal static bool TryApplySeedReceipt(string Encoded, string NodeKey,
+			string ConcreteSource, out string Updated, out int SourceCount, out bool Changed)
+		{
+			Updated = Encoded ?? "";
+			SourceCount = 0;
+			Changed = false;
+			string receipt = SeedReceiptKey(NodeKey, ConcreteSource);
+			if (receipt == null)
+			{
+				return false;
+			}
+			List<string> receipts;
+			if (!TryReadSeedReceiptStore(Encoded, out receipts))
+			{
+				return false;
+			}
+			List<string> canonical = new List<string>();
+			for (int i = 0; i < receipts.Count; i++)
+			{
+				string receiptNode;
+				string receiptSource;
+				if (TryReadSeedReceipt(receipts[i], out receiptNode, out receiptSource))
+				{
+					canonical.Add(receipts[i]);
+				}
+			}
+			receipts = canonical;
+			int existingCount = SeedReceiptCount(KingdomZoningRules.EncodeRoster(receipts), NodeKey);
+			if (existingCount >= MaxSeedSourcesPerNode)
+			{
+				Updated = KingdomZoningRules.EncodeRoster(receipts);
+				Changed = !string.Equals(Updated, Encoded ?? "", StringComparison.Ordinal);
+				SourceCount = MaxSeedSourcesPerNode;
+				return true;
+			}
+			if (!receipts.Contains(receipt))
+			{
+				if (receipts.Count >= MaxSeedReceiptRows)
+				{
+					return false;
+				}
+				receipts.Add(receipt);
+			}
+			Updated = KingdomZoningRules.EncodeRoster(receipts);
+			Changed = !string.Equals(Updated, Encoded ?? "", StringComparison.Ordinal);
+			SourceCount = SeedReceiptCount(Updated, NodeKey);
+			return SourceCount > 0;
+		}
+
+		private static bool TryReadSeedReceiptStore(string Encoded, out List<string> Receipts)
+		{
+			Receipts = new List<string>();
+			if (string.IsNullOrEmpty(Encoded))
+			{
+				return true;
+			}
+			if (Encoded.Length > MaxSeedReceiptEncodedLength ||
+				Encoding.UTF8.GetByteCount(Encoded) > MaxSeedReceiptEncodedUtf8Bytes)
+			{
+				return false;
+			}
+			int rows = 1;
+			for (int i = 0; i < Encoded.Length; i++)
+			{
+				if (Encoded[i] == KingdomZoningRules.RosterSeparator && ++rows > MaxSeedReceiptRows)
+				{
+					return false;
+				}
+			}
+			Receipts = KingdomZoningRules.DecodeRoster(Encoded);
+			return Receipts.Count <= MaxSeedReceiptRows;
+		}
+
+		private static bool TryReadSeedReceipt(string Receipt, out string NodeName,
+			out string ConcreteSource)
+		{
+			NodeName = null;
+			ConcreteSource = null;
+			if (KingdomZoningRules.KindOf(Receipt) != SeedReceiptKind)
+			{
+				return false;
+			}
+			string body = KingdomZoningRules.NameOf(Receipt);
+			int dot = (body == null) ? -1 : body.IndexOf('.');
+			int nodeLength;
+			if (dot <= 0 || !int.TryParse(body.Substring(0, dot), NumberStyles.None,
+				CultureInfo.InvariantCulture, out nodeLength) || nodeLength <= 0 ||
+				body.Substring(0, dot) != nodeLength.ToString(CultureInfo.InvariantCulture))
+			{
+				return false;
+			}
+			int nodeStart = dot + 1;
+			long separator = (long)nodeStart + nodeLength;
+			if (separator >= body.Length || body[(int)separator] != '=')
+			{
+				return false;
+			}
+			NodeName = body.Substring(nodeStart, nodeLength);
+			ConcreteSource = body.Substring((int)separator + 1);
+			string canonical = SeedReceiptKey(NodeName, ConcreteSource);
+			if (!string.Equals(canonical, Receipt, StringComparison.Ordinal))
+			{
+				NodeName = null;
+				ConcreteSource = null;
+				return false;
+			}
+			return true;
+		}
+
 		/// <summary>
 		/// The accrual a node stands at after a seed lands on it. Never lowers what is already
 		/// there, never passes <see cref="MaxSeedPercent"/> of the effort, and never completes:
@@ -336,6 +591,33 @@ namespace ThousandAndFirst
 				seeded = ceiling;
 			}
 			return (seeded < Accrued) ? Accrued : seeded;
+		}
+
+		/// <summary>Recoverable seed floor derived from durable distinct-source receipts. Writing a
+		/// receipt before applying this floor is safe: a retry recomputes the same floor instead of
+		/// adding another quarter.</summary>
+		internal static int SeededBySources(int EffortDays, int Accrued, int Sources)
+		{
+			if (Sources <= 0)
+			{
+				return Accrued;
+			}
+			int effort = EffortTicks(EffortDays);
+			long percent = (long)Sources * SeedPercent;
+			if (percent > MaxSeedPercent)
+			{
+				percent = MaxSeedPercent;
+			}
+			int floor = (int)((long)effort * percent / 100L);
+			return (Accrued > floor) ? Accrued : floor;
+		}
+
+		/// <summary>A failed later receipt must not erase the count already durable for this node.
+		/// Counts are monotonic; a successful reread may only preserve or increase them.</summary>
+		internal static int DurableSeedSourceCount(int DurableCount, int AttemptedCount)
+		{
+			int durable = (DurableCount > 0) ? DurableCount : 0;
+			return (AttemptedCount > durable) ? AttemptedCount : durable;
 		}
 
 		// --- The shelf (verdict; §5.4) ---------------------------------------------------------

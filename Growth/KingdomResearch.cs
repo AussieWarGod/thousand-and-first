@@ -21,8 +21,9 @@ namespace ThousandAndFirst
 	/// <para>
 	/// <b>Two ledgers, sited apart on purpose</b> (Addendum 22 B1/B2/B3). Discovery is the
 	/// FOUNDER's: a vanilla <c>JournalObservation</c> per node, revealed when they first hear of
-	/// it, which survives secession, exile and refounding by vanilla's own design. Holding is the
-	/// CITY's: a <c>node:</c> key in that city's own rolls, which leaves with the city when it
+	/// it, plus permanent <c>rite:</c> keys for water they shared, all of which survive secession,
+	/// exile and refounding. Holding is the CITY's: a <c>node:</c> key in that city's own rolls,
+	/// which leaves with the city when it
 	/// secedes and comes home whole when it rejoins. So a founder put out of their realm walks away
 	/// with every lead they ever had and not one finished thing &mdash; doors, never rooms.
 	/// </para>
@@ -587,13 +588,91 @@ namespace ThousandAndFirst
 						roster = KingdomZoning.Roster(System);
 						continue;
 					}
-					string seeded = AnySatisfied(roster, node.SeededBy);
-					if (seeded != null)
+					List<string> seeded = KingdomZoningRules.SatisfyingKeys(roster, node.SeededBy);
+					int sourceCount = SeedSourceCount(System, node.Key);
+					string learnedFrom = null;
+					for (int j = 0; j < seeded.Count; j++)
 					{
-						Seed(System, node.Key, KingdomZoningRules.NameOf(seeded));
+						int nextCount = ApplySeedSourceReceipt(System, node.Key, seeded[j]);
+						if (nextCount < 0)
+						{
+							break;
+						}
+						sourceCount = KingdomResearchRules.DurableSeedSourceCount(sourceCount, nextCount);
+						if (SeedSourceRecorded(System, node.Key, seeded[j]))
+						{
+							learnedFrom = KingdomZoningRules.NameOf(seeded[j]);
+						}
+					}
+					if (sourceCount > 0)
+					{
+						SeedBySources(System, node.Key, learnedFrom ?? System.SeatName, sourceCount);
 					}
 				}
 			});
+		}
+
+		/// <summary>
+		/// Records what the founder was told on the first sharing of water with a faction, then
+		/// applies that source to the seated city's research when one exists. A rite belongs to the
+		/// founder's permanent ledger (Addendum 22 B1/B3), not to one city's rolls: a rite performed
+		/// before founding, between realms, or before city two still opens the same door wherever the
+		/// founder later takes it. The existing <see cref="ApplySources"/> path reveals and seeds only
+		/// matching heads; it never completes one.
+		/// <para>
+		/// The ledger write deliberately does not depend on <see cref="Enabled"/> or on a founded
+		/// realm. Turning the
+		/// research option off must pause the research surface, not make a water ritual that happened
+		/// while it was off cease to have happened; a later keepers' read applies the retained source.
+		/// </para>
+		/// </summary>
+		/// <returns>True when this call added the rite key to the founder's ledger.</returns>
+		internal static bool RememberRite(KingdomSystem System, bool Initial, string Faction)
+		{
+			if (!KingdomResearchRules.MayRememberRite(Initial, Faction) || The.Game == null)
+			{
+				return false;
+			}
+			string key = KingdomZoningRules.ComposeKey(KingdomZoningRules.KindRite, Faction);
+			List<string> rites = FounderRites();
+			bool learned = !rites.Contains(key);
+			if (learned)
+			{
+				if (rites.Count >= KingdomResearchRules.MaxFounderRites)
+				{
+					return false;
+				}
+				rites.Add(key);
+				string encoded = KingdomZoningRules.EncodeRoster(rites);
+				The.Game.SetStringGameState(FounderRiteState, encoded);
+				if (!string.Equals(The.Game.GetStringGameState(FounderRiteState, ""), encoded,
+					StringComparison.Ordinal))
+				{
+					return false;
+				}
+			}
+			// Apply even when the founder already remembers the faction. Vanilla's Initial bit is
+			// per ritualist, not an entitlement to re-run the rite, and this keeps a retained source
+			// useful after a registry reload or an option change without making a second key.
+			if (System != null && System.Founded)
+			{
+				KingdomResearch.ApplySources(System);
+			}
+			return learned;
+		}
+
+		internal const string FounderRiteState = "r_TAF_FounderRites";
+
+		/// <summary>The founder-held permanent rite keys, separate from every city's rolls.</summary>
+		internal static List<string> FounderRites()
+		{
+			List<string> result = new List<string>();
+			if (The.Game == null)
+			{
+				return result;
+			}
+			return KingdomResearchRules.CanonicalFounderRites(
+				The.Game.GetStringGameState(FounderRiteState, ""));
 		}
 
 		// The first token of a source list the city's rolls actually satisfy, or null. Any ONE of
@@ -602,12 +681,70 @@ namespace ThousandAndFirst
 		{
 			foreach (string token in KingdomZoningRules.Tokens(Tokens))
 			{
-				if (KingdomZoningRules.Knows(Roster, token))
+				string concrete = KingdomZoningRules.SatisfyingKey(Roster, token);
+				if (concrete != null)
 				{
-					return token;
+					return concrete;
 				}
 			}
 			return null;
+		}
+
+		private const string SeedReceiptStatePrefix = "r_TAF_ResearchSeedSources:";
+
+		// A SeededBy arm is one source, not a button the keepers' screen may press every time it
+		// opens. Receipts live in game state under the city's immutable id: they follow the city
+		// through a seat swap, secession and reload without widening the serialized settlement wire
+		// format. The source name is folded through the roster's own grammar, so an XML override
+		// that changes only case must not buy another quarter of the same node.
+		private static int ApplySeedSourceReceipt(KingdomSystem System, string NodeKey,
+			string ConcreteSource)
+		{
+			string state = SeedReceiptState(System);
+			if (state == null || The.Game == null)
+			{
+				return -1;
+			}
+			string before = The.Game.GetStringGameState(state, "");
+			string updated;
+			int count;
+			bool changed;
+			if (!KingdomResearchRules.TryApplySeedReceipt(before, NodeKey, ConcreteSource,
+				out updated, out count, out changed))
+			{
+				return -1;
+			}
+			if (changed)
+			{
+				The.Game.SetStringGameState(state, updated);
+				if (!string.Equals(The.Game.GetStringGameState(state, ""), updated,
+					StringComparison.Ordinal))
+				{
+					return -1;
+				}
+			}
+			return count;
+		}
+
+		private static int SeedSourceCount(KingdomSystem System, string NodeKey)
+		{
+			string state = SeedReceiptState(System);
+			return state == null || The.Game == null ? 0 : KingdomResearchRules.SeedReceiptCount(
+				The.Game.GetStringGameState(state, ""), NodeKey);
+		}
+
+		private static bool SeedSourceRecorded(KingdomSystem System, string NodeKey,
+			string ConcreteSource)
+		{
+			string state = SeedReceiptState(System);
+			return state != null && The.Game != null && KingdomResearchRules.SeedReceiptStored(
+				The.Game.GetStringGameState(state, ""), NodeKey, ConcreteSource);
+		}
+
+		private static string SeedReceiptState(KingdomSystem System)
+		{
+			string settlement = (System == null) ? null : System.CurrentSettlementId;
+			return string.IsNullOrEmpty(settlement) ? null : SeedReceiptStatePrefix + settlement;
 		}
 
 		/// <summary>
@@ -902,6 +1039,38 @@ namespace ThousandAndFirst
 		public static bool Seed(KingdomSystem System, string Key, string LearnedFrom,
 			string GovernanceVerb = null)
 		{
+			return SeedCore(System, Key, LearnedFrom, 0, false, GovernanceVerb);
+		}
+
+		/// <summary>
+		/// Seeds from one durable, concrete source. Repeating the same transfer is a no-op; a
+		/// genuinely different source raises the recoverable floor, up to the shared half-way cap.
+		/// The receipt is written first, so a save or exception between the write and the bench
+		/// update is repaired by the next attempt rather than charged twice.
+		/// </summary>
+		internal static bool SeedFromSource(KingdomSystem System, string Key, string ConcreteSource,
+			string LearnedFrom, string GovernanceVerb = null)
+		{
+			ResearchNode node;
+			if (System == null || !System.Founded || !Enabled ||
+				!TryGetNode(Key, out node) || !Admissible(System, node) || Held(System, node.Key))
+			{
+				return false;
+			}
+			int sourceCount = ApplySeedSourceReceipt(System, node.Key, ConcreteSource);
+			return sourceCount > 0 && SeedBySources(System, node.Key, LearnedFrom,
+				sourceCount, GovernanceVerb);
+		}
+
+		private static bool SeedBySources(KingdomSystem System, string Key, string LearnedFrom,
+			int SourceCount, string GovernanceVerb = null)
+		{
+			return SeedCore(System, Key, LearnedFrom, SourceCount, true, GovernanceVerb);
+		}
+
+		private static bool SeedCore(KingdomSystem System, string Key, string LearnedFrom,
+			int SourceCount, bool UseSourceFloor, string GovernanceVerb)
+		{
 			ResearchNode node;
 			if (System == null || !System.Founded || !Enabled || !TryGetNode(Key, out node) || !Admissible(System, node))
 			{
@@ -917,7 +1086,9 @@ namespace ThousandAndFirst
 				MarkGovernance(GovernanceVerb);
 			}
 			int standing = (System.ResearchSubject == node.Key) ? System.ResearchAccrued : Peek(System, node.Key);
-			int seeded = KingdomResearchRules.Seeded(node.Effort, standing);
+			int seeded = UseSourceFloor
+				? KingdomResearchRules.SeededBySources(node.Effort, standing, SourceCount)
+				: KingdomResearchRules.Seeded(node.Effort, standing);
 			if (seeded <= standing)
 			{
 				return revealed;

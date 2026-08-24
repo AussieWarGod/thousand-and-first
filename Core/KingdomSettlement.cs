@@ -380,10 +380,10 @@ namespace ThousandAndFirst
 		/// the container (B6).
 		/// </para>
 		/// <para>
-		/// The founder's own ledger of the world &mdash; which nodes they have HEARD of, and where
-		/// &mdash; is not here and never was: it is the vanilla journal, and it survives secession,
-		/// exile, and refounding by vanilla's own design (B2, B3). Cities keep rolls; the founder
-		/// keeps leads.
+		/// The founder's own ledger of the world is not here: heard-of nodes live in the vanilla
+		/// journal, while permanent <c>rite:</c> sources live in a bounded founder game-state ledger.
+		/// Both survive secession, exile, and refounding (B2, B3). Cities keep rolls; the founder
+		/// keeps leads and remembered covenants.
 		/// </para>
 		/// </summary>
 		public string KeepersRoster;

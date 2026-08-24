@@ -1121,29 +1121,70 @@ namespace ThousandAndFirst
 		/// </summary>
 		public static bool Knows(IEnumerable<string> Roster, string Requirement)
 		{
+			return Fold(Requirement) == null || SatisfyingKey(Roster, Requirement) != null;
+		}
+
+		/// <summary>The canonical concrete roster key that satisfies one authored requirement.
+		/// A bare requirement may match several kinds; the oldest stored key wins, exactly as the
+		/// roster is read. Receipt code must use this concrete key rather than the authored alias,
+		/// or <c>name</c> and <c>rite:name</c> could charge the same knowledge twice.</summary>
+		internal static string SatisfyingKey(IEnumerable<string> Roster, string Requirement)
+		{
+			string required = Fold(Requirement);
+			if (required == null || Roster == null)
+			{
+				return null;
+			}
+			string[] arms = required.Split(RosterSeparator);
+			for (int i = 0; i < arms.Length; i++)
+			{
+				string concrete = SatisfyingLiteralKey(Roster, arms[i]);
+				if (concrete != null)
+				{
+					return concrete;
+				}
+			}
+			return null;
+		}
+
+		private static string SatisfyingLiteralKey(IEnumerable<string> Roster, string Requirement)
+		{
 			string required = Fold(Requirement);
 			if (required == null)
 			{
-				return true;
-			}
-			if (Roster == null)
-			{
-				return false;
+				return null;
 			}
 			bool qualified = required.IndexOf(KindSeparator) >= 0;
 			foreach (string entry in Roster)
 			{
 				string key = Fold(entry);
-				if (key == null)
+				if (key != null && (qualified ? key == required : NameOf(key) == required))
 				{
-					continue;
-				}
-				if (qualified ? (key == required) : (NameOf(key) == required))
-				{
-					return true;
+					return key;
 				}
 			}
-			return false;
+			return null;
+		}
+
+		/// <summary>Every distinct concrete roster key satisfying a comma-list of authored
+		/// alternatives. Aliases that resolve to the same stored key appear once; genuinely distinct
+		/// sources retain author order.</summary>
+		internal static List<string> SatisfyingKeys(IEnumerable<string> Roster, string Requirements)
+		{
+			List<string> result = new List<string>();
+			foreach (string requirement in Tokens(Requirements))
+			{
+				string[] arms = requirement.Split(RosterSeparator);
+				for (int i = 0; i < arms.Length; i++)
+				{
+					string concrete = SatisfyingLiteralKey(Roster, arms[i]);
+					if (concrete != null && !result.Contains(concrete))
+					{
+						result.Add(concrete);
+					}
+				}
+			}
+			return result;
 		}
 
 		/// <summary>Every requirement in a <c>Knowledge</c> list the roster does not satisfy, in

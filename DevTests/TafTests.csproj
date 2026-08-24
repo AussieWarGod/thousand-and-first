@@ -210,6 +210,7 @@
     <Compile Include="KingdomBookRulesTests.cs" />
     <Compile Include="KingdomTechMapRulesTests.cs" />
     <Compile Include="KingdomResearchRulesTests.cs" />
+	<Compile Include="KingdomRiteSeedRulesTests.cs" />
     <Compile Include="KingdomProcedureRulesTests.cs" />
     <Compile Include="KingdomLabRulesTests.cs" />
     <Compile Include="KingdomAnnexeRulesTests.cs" />
