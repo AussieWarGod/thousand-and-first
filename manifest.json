@@ -4,5 +4,6 @@
   "description": "Found a faction through a water rite, plant and govern settlements, build districts, grow food, manage water, trade between cities, answer threats, and optionally leave a legacy across worlds.",
   "version": "0.2.0",
   "author": "AussieWarGod",
-  "tags": "Beta,Faction,Settlement,Script"
+  "tags": "Beta,Faction,Settlement,Script",
+  "PreviewImage": "preview.png"
 }

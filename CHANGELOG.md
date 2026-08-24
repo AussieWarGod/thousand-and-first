@@ -4,12 +4,23 @@ All notable changes to The Thousand and First. Versions are semantic: patch for 
 minor for additive API and content, major for breaking changes. Supported API is defined in
 [docs/API.md](docs/API.md).
 
-## [Unreleased] — 0.2.0 in progress
+## [Unreleased] — 0.2.0 release candidate
 
-Pre-release: the mod has not yet run in a live game. Nothing here is stable until the first
-playtest passes.
+Automated live smoke on 2026-08-25 against Qud 1.0.5/core 2.0.211.51 founded two cities in a
+fresh world, saved and cold-loaded twice, moved the seat between them, passed all 17 in-game
+self-checks, and produced clean mod logs. Runtime code under test was
+`99133f6a1b24f3be652903e16576ddd7bb929230`. Full human playtesting and a private Steam
+subscription/install pass remain before public release.
 
 ### Fixed
+- **Founding and reload now preserve one exact realm identity.** First-founding carry state uses
+  Qud's composite byte-array framing, lifecycle recovery is fail-closed and idempotent, and ruin
+  receipts prevent replay from crediting the same world object twice. Fresh-save, resume, and
+  cold-restart live smoke all kept the founded realm coherent.
+- **Second-city publication is atomic and retry-safe.** Trade identity and carry state publish as
+  a paired operation behind one barrier; water intent precedes drain; site and global reservations
+  reconcile in a fixed order; and partial, stale, or foreign pending state cannot manufacture a
+  city. Cut-point and competing-founder tests cover both routes and cleanup orders.
 - **Release art now uses only verified vanilla references or deliberate civic glyphs.** Fifteen
   pre-release bitmap drafts and their grid compiler are absent from the runtime tree; no game art
   is copied into the mod. The staged XML audit now checks every tile and animation frame against

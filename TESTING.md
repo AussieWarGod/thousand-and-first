@@ -9,6 +9,31 @@ Fresh game launch (never mid-session approval — ghost assembly generations). A
 **The Thousand and First** at the mod prompt, then load any save or start a new game.
 Say when you're launching so the log watch can run alongside.
 
+## Execution index
+
+Pass labels are stable case identifiers, not a numeric running order. Execute the sections in this
+file order; use the table as the top-level checklist.
+
+| Done | Order | Passes | Scope |
+|---|---:|---|---|
+| ☐ | 1 | 0, 1, 2, 3, 3b, 3c, 3d, 3e | Consent, foundation, water, rite, Charter, style, second city, founding boundaries |
+| ☐ | 2 | 5, 6, 6b, 8, 9, 10 | Districts, raids, fortification, homes, return, names and policy |
+| ☐ | 3 | 7, 12, 13, 14 | Trade, intercity water, cultivation, exile and return |
+| ☐ | 4 | 15–29 | Layout through meals and industry, in the section order below |
+| ☐ | 5 | 33, 32, 34, 30, 31, 35 | Identity, receipts, lived day, absence, petitions, style/creed stack |
+| ☐ | 6 | 4 | Final attitudes, save/reload, and persistence sweep |
+
+## Automated release-candidate smoke — recorded, not manual signoff
+
+On 2026-08-25, repository-controlled automation ran Qud 1.0.5/core 2.0.211.51 against runtime
+commit `99133f6a1b24f3be652903e16576ddd7bb929230` in a fresh isolated profile. It founded Kavvat,
+founded Sheol as a refuge on separate ground, proved `cities=2/2` with 109 carried settlement
+fields and no seat mismatch, passed all 17 `kingdom:selftest` checks, saved three times, cold-loaded
+twice, and proved both seat directions after restart. Each captured Player.log passed
+`Tools/check-player-log.sh`. This evidence covers loader and persistence smoke only; it does not
+check any box above or replace human observation, balance, usability, compatibility, or private
+Steam subscription testing.
+
 ## Pass 0 — Cross-run inheritance consent
 
 Use a profile with one promoted, eligible sealed realm. This pass deliberately creates two new

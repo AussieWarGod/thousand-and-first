@@ -66,13 +66,25 @@ palette, contrast, and live in-game readability are reviewed independently.
 
 ## Workshop preview
 
-No Workshop preview image is currently committed. Until one lands, `manifest.json` must not name
-one and Workshop packaging must fail closed. A release preview must be exactly 512 by 512 pixels,
-8-bit RGB or RGBA non-interlaced PNG, and under 1,000,000 bytes.
+The committed root `preview.png` is presentation media captured from the tested mod running in
+Qud. It is not referenced by XML and is not a runtime sprite.
 
-Preferred source is a new in-game screenshot showing this mod's tested settlement UI and map, not
-an extracted game asset or a collage of copied tiles. Record creator/captor, capture date, exact
-Qud marketing/core build, source save or fresh-world procedure, mod commit, original screenshot
-hash, crop/redaction/color-only transformations, output hash, and live readability review. Keep
-the original evidence outside runtime staging. Do not use AI-generated or generative-image-assisted
-material. Do not imply Freehold Games endorsement.
+| Field | Record |
+|---|---|
+| Capture operator | Repository maintainer's Codex-controlled local test automation; all source pixels were rendered by Qud |
+| Captured | 2026-08-25 03:50:19 +10:00 (Australia/Sydney) |
+| Game | Caves of Qud marketing 1.0.5, core 2.0.211.51, Steam build 24626113 |
+| Runtime commit | `99133f6a1b24f3be652903e16576ddd7bb929230` |
+| Procedure | Isolated fresh profile; quickstart; found Kavvat; travel to unclaimed ground; wish `kingdom:found2 Sheol:refuge`; capture the resulting in-game founding popup |
+| Source save | `401ec47e-a410-4e92-b932-d4e9283e48e6` |
+| Source evidence | `09-second-founded.png`, 2560×1440 RGBA PNG, kept outside runtime staging |
+| Source SHA-256 | `3fc76737b80f81dbf95fa6c4fff8173e8aa3c72da2e9a3501bddbac43ebdf0ee` |
+| Transformation | Exact pixel crop only: source rectangle x=1120, y=500, width=512, height=512. No scaling, redaction, overlay, retouching, color change, or generative transformation |
+| Output | `preview.png`, 512×512, 8-bit RGBA, non-interlaced, 122,055 bytes |
+| Output SHA-256 | `498e85d0f6aba0024845bccece31a427b7b84f680087abd1d6588b8b30e00bad` |
+| Verification | Pixel-by-pixel comparison against the source rectangle passed; the final view preserves field context and Qud's complete “Sheol is founded here as Kavvat.” line at native resolution |
+
+No AI-generated or generative-image-assisted imagery was used. Automation sent input, captured
+the game framebuffer, and performed the exact crop. Qud's presentation remains the property of
+Freehold Games; this compatibility screenshot does not imply endorsement and may not be reused as
+a source asset.

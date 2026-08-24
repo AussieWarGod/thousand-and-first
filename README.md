@@ -4,9 +4,12 @@ A kingdom-founding expansion for Caves of Qud. Found a faction with a water rite
 ground, and let a settlement grow through arrivals, thirst, and chronicle — the first
 polity of the post-injunction age.
 
-**Status: pre-release, and not once run in the live game.** It compiles, the pure-logic suite
-is green, and every runtime claim is still inference from decompiled source — the playtest
-protocol in [TESTING.md](TESTING.md) is the outstanding gate.
+**Status: 0.2.0 release candidate.** On 2026-08-25, automated live smoke against Qud 1.0.5
+(core 2.0.211.51) founded two cities in a fresh world, saved and cold-loaded twice, moved the
+seat between cities, passed all 17 in-game self-checks, and produced clean mod logs. Runtime
+code under test is commit `99133f6a1b24f3be652903e16576ddd7bb929230`. The full human protocol
+in [TESTING.md](TESTING.md) and a private Steam subscription/install pass remain release gates;
+automation is not a manual playtest.
 
 Built so far: founding by rite (wish or the founder's basin), territorial claims with adjacency
 including downward, citizen enrollment, the two-ledger reputation mirror, water-gated growth
