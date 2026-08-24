@@ -4,5 +4,6 @@
   "OptionAllowCSMods": "Yes",
   "OptionModernUI": "Yes",
   "OptionShowAdvancedOptions": "Yes",
+  "OptionShowQuickstart": "Yes",
   "r_TAF_OptionDevLog": "Yes"
 }
