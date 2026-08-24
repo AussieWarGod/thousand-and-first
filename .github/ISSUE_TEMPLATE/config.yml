@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Private security or sensitive report
+    url: https://github.com/AussieWarGod/thousand-and-first/security/advisories/new
+    about: Report vulnerabilities, exposed private data, or sensitive conduct without publishing details.

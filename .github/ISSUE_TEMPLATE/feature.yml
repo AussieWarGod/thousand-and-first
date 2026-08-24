@@ -1,0 +1,51 @@
+name: Feature proposal
+description: Propose a player-facing outcome that fits Qud and the mod's depth standard.
+title: "[Feature]: "
+body:
+  - type: textarea
+    id: player_need
+    attributes:
+      label: Player need
+      description: What choice, problem, or story is missing? Describe outcome, not implementation.
+    validations:
+      required: true
+  - type: textarea
+    id: qud_fit
+    attributes:
+      label: Fit with Caves of Qud
+      description: Name existing Qud mechanics or affordances this should reuse. Do not paste game/decompiled source.
+    validations:
+      required: true
+  - type: textarea
+    id: system_fit
+    attributes:
+      label: Fit with existing TAF systems
+      description: Explain physical resource, graduated pressure/recovery, story residue, pure-testable rule, and interlock.
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Smallest complete slice
+      description: What is required for one playable vertical slice, and what should wait?
+    validations:
+      required: true
+  - type: textarea
+    id: compatibility
+    attributes:
+      label: Compatibility and persistence impact
+      description: Identify XML merge, public API, save/wire, identity, transaction, asset, or other-mod implications. Write "none known" only after checking.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: References or prototype evidence
+      description: Link sources you may share. Do not attach copied game assets, DLLs, XML, or decompiled source.
+  - type: checkboxes
+    id: rights
+    attributes:
+      label: Submission check
+      options:
+        - label: This proposal contains no unlicensed third-party or copied game material.
+          required: true

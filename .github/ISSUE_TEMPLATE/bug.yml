@@ -1,0 +1,102 @@
+name: Bug report
+description: Report reproducible incorrect behavior in The Thousand and First.
+title: "[Bug]: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Reproduce with the smallest safe profile you can. Redact personal paths, account names, and unrelated save data. Use a private security advisory for code execution, file-system impact, exposed secrets, or sensitive evidence.
+  - type: input
+    id: qud_version
+    attributes:
+      label: Caves of Qud marketing version
+      description: Version shown by the game or storefront.
+      placeholder: "1.0.5"
+    validations:
+      required: true
+  - type: input
+    id: qud_core_build
+    attributes:
+      label: Caves of Qud core build
+      description: Full internal build when known (shown in logs/version details).
+      placeholder: "2.0.211.51"
+    validations:
+      required: true
+  - type: input
+    id: platform_store
+    attributes:
+      label: Platform and storefront
+      placeholder: "Windows 11 / Steam"
+    validations:
+      required: true
+  - type: input
+    id: taf_version
+    attributes:
+      label: TAF version and commit
+      description: Give manifest version plus commit hash for source builds.
+      placeholder: "0.1.0 / 8c678f6"
+    validations:
+      required: true
+  - type: dropdown
+    id: profile_kind
+    attributes:
+      label: Profile and world state
+      options:
+        - Fresh isolated profile and new world
+        - Normal profile and new world
+        - Existing save created with this TAF version
+        - Existing save upgraded from an older TAF version
+        - Unknown
+    validations:
+      required: true
+  - type: textarea
+    id: mod_order
+    attributes:
+      label: Enabled mods and load order
+      description: List all enabled mods in load order. Say "TAF only" if reproduced in isolation.
+      placeholder: |
+        1. The Thousand and First
+        2. Other mod and version
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Minimal reproduction
+      description: Numbered steps from launch, including Charter actions or wishes used.
+      placeholder: |
+        1. Start a new world...
+        2. Found a settlement...
+        3. Save, quit, and reload...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: Include frequency and whether retry/reload changes it.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Redacted logs and evidence
+      description: Drag a redacted Player.log or screenshot here. Do not upload saves, profiles, DLLs, extracted assets, or decompiled source publicly. State "not available" if none.
+      placeholder: "Attach redacted evidence or explain why unavailable."
+    validations:
+      required: true
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Safety checks
+      options:
+        - label: I removed personal paths, account identifiers, secrets, and unrelated private data.
+          required: true
+        - label: This is not a vulnerability or other report requiring private disclosure.
+          required: true

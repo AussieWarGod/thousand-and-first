@@ -1,0 +1,103 @@
+name: Compatibility report
+description: Report an interaction with a Qud build, platform, storefront, or another mod.
+title: "[Compatibility]: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Test with TAF alone and then with the smallest conflicting load order when practical. Never redistribute game files or another mod's private assets.
+  - type: input
+    id: qud_version
+    attributes:
+      label: Caves of Qud marketing version
+      placeholder: "1.0.5"
+    validations:
+      required: true
+  - type: input
+    id: qud_core_build
+    attributes:
+      label: Caves of Qud core build
+      placeholder: "2.0.211.51"
+    validations:
+      required: true
+  - type: input
+    id: platform_store
+    attributes:
+      label: Platform and storefront
+      placeholder: "Linux / Steam"
+    validations:
+      required: true
+  - type: input
+    id: taf_version
+    attributes:
+      label: TAF version and commit
+      placeholder: "0.1.0 / 8c678f6"
+    validations:
+      required: true
+  - type: dropdown
+    id: profile_kind
+    attributes:
+      label: Profile and world state
+      options:
+        - Fresh isolated profile and new world
+        - Normal profile and new world
+        - Existing save created with this TAF version
+        - Existing save upgraded from an older TAF version
+        - Unknown
+    validations:
+      required: true
+  - type: textarea
+    id: mod_order
+    attributes:
+      label: Exact mod list and load order
+      description: Include mod versions or Workshop IDs. Say whether the issue reproduces with TAF only.
+      placeholder: |
+        TAF only: no
+        1. The Thousand and First 0.1.0
+        2. Other Mod 2.3 (Workshop ID ...)
+    validations:
+      required: true
+  - type: textarea
+    id: matrix
+    attributes:
+      label: Isolation matrix
+      description: State result with TAF only, other mod only, both load orders, and a fresh world where tested.
+      placeholder: |
+        TAF only:
+        Other only:
+        TAF before other:
+        Other before TAF:
+        Fresh world:
+        Existing save:
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Minimal reproduction
+      description: Numbered steps from clean launch.
+    validations:
+      required: true
+  - type: textarea
+    id: behavior
+    attributes:
+      label: Expected and actual behavior
+      description: Explain both, including whether save/reload or mod reordering changes the result.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Redacted logs and evidence
+      description: Attach redacted Player.log/screenshots. Do not upload saves, profiles, DLLs, copied XML/art, or decompiled source publicly. State "not available" if none.
+    validations:
+      required: true
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Safety checks
+      options:
+        - label: I removed personal paths, account identifiers, secrets, and unrelated private data.
+          required: true
+        - label: I identified which tests used a clean profile, new world, and existing save.
+          required: true
