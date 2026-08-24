@@ -1,77 +1,57 @@
-# Session handoff — the working covenant
+# Session handoff — 0.2.0 release candidate
 
-> For the next session continuing this work. Read this + `_notes/BUILDING-CATALOGUE-BRIEF.md`
-> (the ruling record, Addenda 1–20 — THE authority) before doing anything. This file is how the
-> orchestrator behaves; the brief is what has been decided.
+> **Status audit: 2026-08-25.** The old “in flight” and “still queued” wave list was stale and
+> has been removed. Use `README.md` for product status, `TESTING.md` for observed proof, and
+> `docs/RELEASING.md` for the Steam boundary. The design corpus under `_notes/` remains a ruling
+> record, not an instruction to rerun old waves.
 
-## Where the work stands (2026-08-22, HEAD 1a7025d)
+## Current state
 
-- **Everything ships green**: 148 staged sources, **5,343 tests**, gate + both Art checkers +
-  `_notes/balance-sim.py` all clean at every commit. Live install deployed at 168 files
-  (receipt: `Tools/last-deploy-receipt.txt`). Suite grew 3,710 → 5,343 across the session.
-- **Complete and deployed**: the clock rework (P1–P4, Addendum 8 doctrine end to end);
-  coverage waves A–C; grounding waves G1–G3 (water/seeds/meals per Addendum 11); the
-  Addendum 10 wave (brinks, typed wear, ruins); the heart wave (rungs 1–4, ghost survey,
-  yielding); the FULL living-city arc W0–W7 (executor seam, city book, identity registry,
-  materialisation + porters, happenings, engagement + public API v1, production one-accounting,
-  networks); the styles + creed-gate wave.
-- **Design corpus tracked in git** under `_notes/` (gitignore whitelist): the brief,
-  VANILLA-PRODUCTION-TRUTH, LIVING-CITY-ARCHITECTURE, CLOCK-REWORK-CHANGE-MAP,
-  COVERAGE-GAP-MAP, EVOLVING-HEART-RESEARCH, DIVERSITY-AND-TECH-TREES, RESEARCH-SYSTEM-DESIGN,
-  END-STATE-CITIES-RESEARCH, CODEX-ENGINE-TRUTH-BATCH-1, balance-sim.py + output.
+- Runtime candidate: `99133f6a1b24f3be652903e16576ddd7bb929230`.
+- Release/provenance candidate: `ba3e49ed174c243917ecf5865e6c6dc1533d402d`.
+- Exact gates: 6,873 native cases, 171 portable cases, 207 staged sources, 36 shipped IPart
+  ABI classes, 11 art tests, 43 verified vanilla tile paths, and 222 cold-install files.
+- Automated live Qud 1.0.5/core 2.0.211.51 proof: fresh two-city founding, three saves, two cold
+  reloads, seat movement both ways, 109 carried fields, 17/17 in-game checks, and clean logs.
+  A second isolated launch of the release/provenance candidate founded a realm, passed 17/17,
+  saved, and passed resume validation. This is automation, not manual playtesting.
+- A verified private-bootstrap package was produced for the release/provenance candidate. Because
+  `TESTING.md` changed during the final handoff audit, rebuild once from the resulting clean commit
+  before private Workshop upload; record that exact path and receipt in the release run.
+- The normal local Mods copy is an exact empty-diff deployment. Twenty-eight older scanned backup
+  copies were moved intact under `CavesOfQud/TAF-ModBackups/`; none were deleted. The deploy itself
+  made another automatic full backup named in `Tools/last-deploy-receipt.txt`.
+- Art boundary: no bundled runtime raster sprites. All shipped XML art is verified vanilla or an
+  intentional glyph. Root `preview.png` is a pixel-exact, native-resolution gameplay crop with a
+  repository provenance record.
+- Remote publication remains pending: the release-candidate commits have not been pushed to
+  `origin/main`; pushing is an external publication action requiring explicit maintainer authority.
 
-## Open on the author
+## Human-only gates
 
-1. **THE PLAYTEST** — TESTING.md is ~36+ passes; none ever run by the author. The receipts
-   (`[TAF] perf`) are readable in-game. Now doubly urgent: Addendum 22 A1 confirms Design B
-   "for trial with players" — the trial needs a playable build the author has actually seen.
-2. **D2 additions** — the safe-part-class wishlist audit is dispatched; the author adds
-   wanted classes to it after delivery ("i can add later based on player feedback").
-3. Housekeeping: the author's own Creature Control mod shipped a TEMP-DIAG logging block in
-   its 17 Aug Steam update.
+1. Run the observational protocol in `TESTING.md`, especially Pass 36 succession/corpse/seal.
+2. In Qud's signed-in Workshop UI, create the item privately, accept any agreement, and keep the
+   returned `workshop.json`.
+3. Freeze the private package, remove local duplicates, subscribe from Steam, verify installed
+   bytes/logs, and author the truthful release evidence described in `docs/RELEASING.md`.
+4. Only then canonicalize public metadata, tag `v0.2.0`, publish, and subscription-verify public
+   bytes. Never infer a manual or Steam pass from automation.
 
-**Everything else RULED 2026-08-22 — Addendum 22 (the great confirmation): all 26 board
-questions confirmed to recommendation.** Q6 CLOSED (Design B + capital-as-hub + no
-capital stacking + crown-is-a-building). Knowledge siting ruled (registry model, all eight).
-Kingdom Mode ruled (all thirteen incl. C13 seat-cost default, delegated to orchestrator and
-set ON). Lab blocklist sustained; four named procedures confirmed. Int ladder load-bearing
-at top tier; schooling +1 cap. Riders minted work items — see Addendum 22 tail.
+## Deferred after playtest, not release blockers
 
-## Queued waves — autonomous-run state (2026-08-22, second update)
-
-**SHIPPED this run, all verified + deployed (187 files live)**: mirror-gate + strata/deep
-set (40eeae7); QB-19 underground-sky fix (488e691); research system + knowledge siting v7
-(b0dc698); integration remainders (867008f); THE LAB rungs 0–3 + first megastructure
-(80ae42d); yard wear + method consumers (ee858cd); THE BECOMING ANNEXE — the registry
-fiction live, IsTrueKinEvent answered, license points granted (35304da); THE DELVE —
-verticality priced, owned rock earns its reaching (52c263a); THE CAPITAL — crown, hub
-re-key with zero row loss, arcology set, satellites (1dca10b). Suite 5,343 → 6,114.
-
-**In flight (the run's final majors)**: KINGDOM MODE (Addendum 21/22 C-cluster — death
-hook on the Vehicle/Metempsychosis seams, seniority heir, honesty-rule ledger scrub,
-mourning-rite interregnum with news travel, corpse as journal-restore, §8 debts verified
-in-wave) and THE SEAL (DECISIONS.md:109-249 executed — profile-level export before
-Classic's save deletion, four inherited states, no-item law, latest-eligible import).
-
-**Still queued after those**: rite-mint hook (QB-27 provisional: first share); roster wave
-(N cities — 12(j)); heart rungs 5+ + relocation verb; feel-lane remainders (muster hall —
-Swarmer graft waits on it, market, tinker services, trophies); map follow-ups
-(`_notes/CLOCK-REWORK-CHANGE-MAP.md` tail); QB-16 `Sited=` (provisional: leave
-key-matched); the QB-33 lab follow-ups + QB-45 deep-lane bundles; an art wave for the
-six tile-less blueprints.
-
-**The question backlog** (`_notes/QUESTION-BACKLOG.md`) is the author's check-in surface:
-33 entries, every provisional marked.
+The v0 boundary deliberately excludes autonomous rival polities, prior-realm citizens, world-map
+warbands, and offscreen war. Balance/flavour questions still worth real play data include Swarmer
+timing, deep-crop flavour, research gate depth, annexe/removal prices, capital costs, and inherited-
+site discoverability. `_notes/QUESTION-BACKLOG.md` records their history; its provisionals are the
+adopted 0.2 defaults unless a new issue reopens one.
 
 ## The working method (this is the "behaviour and attitude")
 
-- **Wave protocol**: dispatch opus agents (background) with DISJOINT file ownership and
-  spec-first briefs citing the brief's addenda by number; agents return wiring_requests for
-  files they don't own; orchestrator integrates, then INDEPENDENTLY verifies (gate.sh, full
-  suite via `cd /mnt/c && powershell.exe ... DevTests/test.ps1`, both Art checkers,
-  balance-sim) before every commit; explicit-path staging (`git status --porcelain | awk | xargs git add`,
-  NEVER `git add -A` while agents write); commit prose in the repo's own literary voice;
-  `Tools/stage.sh deploy --apply` after each wave.
+- **Wave protocol**: use bounded agents with disjoint ownership and spec-first briefs citing the
+  ruling record; agents return wiring requests for files they do not own. Fan in through an
+  independent review, then run `Tools/gate.sh`, native and portable suites, ABI, art, staging,
+  smoke, and balance checks in proportion to the change. Stage only explicit paths—never
+  `git add -A` in a shared worktree. Deploy only from a clean committed tree after a dry run.
 - **Rulings are pinned IMMEDIATELY** as brief addenda, verbatim-faithful with the author's
   words quoted, then committed. Agents brief FROM the brief. Mid-flight rulings get
   SendMessage-forwarded to running agents.
@@ -102,10 +82,11 @@ six tile-less blueprints.
 
 ## Environment notes
 
-- Suite runs via PowerShell from /mnt/c (WSL). Deploy backs up automatically. `_notes/` is
-  gitignored EXCEPT the whitelist — new research docs get an explicit `!` exception.
-- Reddit: WebFetch/WebSearch are blocked. The author installed a Reddit MCP server — in a new
-  session check ToolSearch for reddit tools and use the MCP route (it was not yet visible in
-  the old session). Do NOT curl-scrape reddit with spoofed User-Agents — the MCP server is the
-  sanctioned route. END-STATE-CITIES-RESEARCH's biggest named gap (Reddit sentiment on the
-  chrome boundary) is the first thing worth re-running through it.
+- Repository: `/home/r/work/thousand-and-first` under WSL. Licensed Qud install:
+  `/mnt/f/SteamLibrary/steamapps/common/Caves of Qud`, marketing 1.0.5, core 2.0.211.51.
+- Native suite runs through Windows PowerShell; portable checks run through the repository tools.
+  Deploy backs up automatically. `_notes/` is ignored except its whitelist, so new tracked design
+  records need an explicit whitelist entry.
+- Engine claims are checked against
+  `/home/r/coq/qud_helper/game_base/decompiled/2.0.211.51-ilspy9.1/`. Revalidate against any newer
+  licensed game build before changing the compatibility claim.

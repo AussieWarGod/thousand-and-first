@@ -20,7 +20,7 @@ file order; use the table as the top-level checklist.
 | ☐ | 2 | 5, 6, 6b, 8, 9, 10 | Districts, raids, fortification, homes, return, names and policy |
 | ☐ | 3 | 7, 12, 13, 14 | Trade, intercity water, cultivation, exile and return |
 | ☐ | 4 | 15–29 | Layout through meals and industry, in the section order below |
-| ☐ | 5 | 33, 32, 34, 30, 31, 35 | Identity, receipts, lived day, absence, petitions, style/creed stack |
+| ☐ | 5 | 33, 32, 34, 30, 31, 35, 36 | Identity, receipts, lived day, absence, petitions, style/creed stack, succession |
 | ☐ | 6 | 4 | Final attitudes, save/reload, and persistence sweep |
 
 ## Automated release-candidate smoke — recorded, not manual signoff
@@ -810,6 +810,28 @@ Steps 129–131 are that case from both sides.
 | 132a | With the same city, now open the Commission list again | The creed-work is gone from the list, and the one that was already staked is still standing in the plan. Those two facts are consistent: one is an offer, the other is a commitment |
 | 133 | Ship a third-party `KingdomBuildings.xml` re-declaring `underbench` with `CreedShare="0"` and nothing else | Only the share changes; every other attribute the base catalogue wrote still stands, and one aligned builder is now enough. Grep the log for the merge note naming `CreedShare` |
 | 134 | Ship one with `Styles="all,!eatr"` (deliberate typo) | The load log notes a style built for that no `<style>` declares. `python3 Art/check_xml_refs.py` catches the same thing before the game ever runs |
+
+## Pass 36 — Succession, founder remains, and the legacy seal
+
+Use disposable profiles: this pass deliberately kills player characters. Run the main branch in
+the **Kingdom** game mode added by this mod; Classic and Roleplay must retain their own death rules.
+
+| Step | Action | Expect |
+|---|---|---|
+| 135 | Start Kingdom mode, found a two-city realm, reveal several forgettable journal notes plus map notes and accomplishments, and admit at least two settlers. Record their arrival order and the cities' research standing; save | The roll gives an unambiguous senior heir. Kingdom mode's description promises character death with realm continuity before play begins |
+| 135a | Die by an ordinary, non-vaporizing cause while standing on claimed ground | The founder's death is chronicled once; word reaches the seat; the mourning rite names the oldest eligible settler; control passes to that exact body instead of a game-over |
+| 135b | Inspect the new player, Charter, roll, city book, research, inventory, and `kingdom:dump` | The heir has their own body, stats, and inventory plus the Charter; they are no longer duplicated on the resident roll. Both cities, claims, structures, stores, chronicles, and city research persist. The founder's kit remains with their corpse or drops; personal recipes, reputation, and rite ledger do not silently become the heir's. Map notes and accomplishments survive succession |
+| 135c | `kingdom:selftest`, then save → quit → reload → repeat it | All 17 checks pass before and after reload. The same heir remains player; no second accession, duplicated resident, or repeated mourning line appears |
+| 135d | Find the founder's generated corpse and use **Read founder's memory**; accept | Only eligible forgettable journal knowledge from that exact founder returns. The popup reports the truthful count; map notes and accomplishments remain intact, and no item, liquid, reputation, research completion, or body state is copied |
+| 135e | Inspect the corpse again, then save/reload and inspect it once more | The read action is spent exactly once and does not return after reload. A different corpse cannot answer this death token |
+| 135f | Repeat in a fresh Kingdom-mode realm with no eligible resident, then die | No substitute body is invented. The dynasty ends through Qud's normal terminal path and an eligible realm is sealed for the profile when its release conditions are met |
+| 135g | From that profile, run Pass 0's opt-out world and then opt-in world | Opt-out consumes nothing. Opt-in imports the one promoted legacy once, with bounded layout/history only and no people, items, liquids, or charge |
+| 135h | In a disposable Classic or Roleplay game, found and then die | No Kingdom-mode body transfer occurs. Qud's original death handling remains in force; the seal coordinator may record an eligible ended realm but never changes who the player controls |
+| 135i | In a separate founded disposable save, open the Charter's chronicle/dynasty chapter and choose **Dynasty and retirement**; cancel the first confirmation | No generation is sealed, no retirement report appears, and the save remains playable and unchanged |
+| 135j | Reopen retirement, accept the first confirmation, then cancel the second confirmation | The irreversible seal still does not occur. The current save remains playable and retirement can still be offered later |
+| 135k | Reopen retirement and confirm both prompts | The success report says the immutable generation was written to the profile while this save continues. The city remains playable; reopening the chapter reports that this generation is already retired |
+| 135l | Save, reload, and reopen retirement; then continue playing long enough to change the current city | The generation remains retired after reload and cannot be sealed again. Later changes remain in the playable save but do not rewrite the already retired generation |
+| 135m | From that profile, run Pass 0's opt-out world and then its opt-in world | Opt-out consumes nothing. Opt-in imports the exact retired snapshot once under Pass 0's bounded inheritance rules |
 
 ## Pass 4 — Attitudes and persistence
 

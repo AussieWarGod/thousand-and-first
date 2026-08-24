@@ -4,11 +4,50 @@
 > in a backlog for me, and work autonomously with your agents until everything in the build and
 > idea backlog is done, i will check in later and go through the question backlog."
 >
-> Format: each entry states the question, the context, the options, and — where work could not
-> wait — the PROVISIONAL the orchestrator proceeded on (marked, reversible). Nothing here is
-> pinned until the author rules it; provisionals are implementation posture, not doctrine.
+> Historical format: each entry states the question, context, options, and the reversible
+> PROVISIONAL used while work continued. The 2026-08-25 release-candidate audit below supersedes
+> the old “nothing is pinned” posture for 0.2: shipped defaults now stand until playtest reopens
+> them.
 
-## Open
+> **Status audit — 2026-08-25, release/provenance candidate `ba3e49e`.** This is now a historical
+> design/decision record. Do not treat “Open,” “in flight,” or “still queued” language below as
+> current implementation status. Shipped provisionals are the adopted 0.2 defaults unless a new
+> playtest issue explicitly reopens them. Current status and release gates live in `README.md`,
+> `TESTING.md`, and `docs/RELEASING.md`.
+
+## Release-candidate human queue
+
+These require observation, taste, or signed-in account authority; none blocks local playtesting.
+
+1. **Whole-play feel:** does uncapped away-time remain legible and fair once food, water, wear,
+   brinks, and subsidence overlap? Record surprise and boredom, not only defects.
+2. **Discovery and density:** can a normal player find founding, the Charter, meals/cultivation,
+   city two, research, and return reports without wishes? Do named citizens remain memorable as
+   workers, guests, and visible porters accumulate?
+3. **Succession:** run `TESTING.md` Pass 36. Judge the mourning cadence, senior heir choice,
+   founder-corpse memory verb, and the no-heir ending as fiction as well as correctness.
+4. **Balance/taste knobs:** revisit Swarmer timing, deep-crop flavour, research access/gate depth,
+   graft-removal and annexe prices, capital costs, and inherited-site discoverability only with
+   play data in hand.
+5. **Post-0.2 world presence:** after the two-city release is understood, decide whether prior
+   realms, successor citizens, emissaries, visible trade routes, warbands, or rival wars earn a
+   later release. The current explicit boundary simulates none of them offscreen.
+6. **Steam authority:** create and test the private Workshop item, retain Qud's `workshop.json`,
+   subscribe-install the frozen bytes, and author release evidence. Follow `docs/RELEASING.md`;
+   automation cannot answer or attest this item.
+
+## Deferred engineering debt — nonblocking for 0.2
+
+- Succession quest relabeling is absent. A quest-location marking helper exists but is unwired;
+  corpse reading restores eligible journal knowledge and currently reports zero quest marks.
+- Third-party housing records can declare roof capacity without a roof-state consistency fault.
+- The keepers' roster heap string is variable rather than hard-capped; current byte tests price the
+  fixed record separately.
+- The annexe keeper uses the first roster name rather than a lodged-savant binding.
+- A vertical itinerary entry still has a west-edge fallback, and later arcology-ground work remains
+  a future extension. None is a shipped silent failure in the current two-city catalogue.
+
+## Historical design record and adopted 0.2 defaults
 
 **QB-1 — Mirror-gate v1 topology.** Addendum 22 A2 confirms the gate network is hubbed at the
 capital — but the capital/crown wave has not shipped yet, so v1 has no capital to hub on.

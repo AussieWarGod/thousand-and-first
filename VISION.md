@@ -125,27 +125,30 @@ is half the simulation.
 
 ## Where it stands
 
-**Built.** Founding by rite. Territory with adjacency. Water: storage, fetching, upkeep,
-thirst, emigration, recovery. Settlers with names, origins, homes, and work. Districts.
-Commissioned construction. Shops that tier as the settlement grows. Provoked raids with three
-answers. Trade charters and caravans. A two-register chronicle. Standing policy. Petitions from
-settlers about real needs. A homecoming report.
+**Built for the 0.2.0 release candidate.** Founding by rite, including ruin reclamation, plus
+covenants with living villages; two distinct cities under one realm; horizontal and vertical claims; roads,
+shafts, districts, plots, commissioned works, typed materials, power, wear, and repair. Water
+and food are physical flows: dedicated vessels, fetching, crops, larders, meals, upkeep,
+and scarcity. Production runs on world time and named labour; trade, porters, conduits, and
+intercity manifests move physical stocks through explicit routes and authority. Settlers have
+origins, homes, posts, creeds, conversations, offices, petitions, rites,
+and funerals. Styles filter the catalogue. Research, certified machinery, laboratories,
+grafts, the becoming annexe, the crown, arcology, and mirror-gates extend the city into Qud's
+adventuring systems. Raids, brinks, dissent, exile and return, succession, and optional
+cross-world inheritance make losses persistent without deleting the realm. The Charter,
+two-register chronicle, city book, asks board, homecoming report, debug wishes, and extension
+API expose the same state rather than parallel summaries.
 
-**Building.** Deeper services the adventurer actually wants; more of the settlement visible in
-the world; richer consequences when things go wrong.
+**The 0.2.0 boundary.** A realm holds at most two cities. Inherited sites restore bounded layout,
+their founder's cairn, and history—not old people, items, liquids, charge, an autonomously
+simulated rival polity, world-map armies, or offscreen war. Those are deliberate release limits,
+not half-wired promises. The exact current list is in [TESTING.md](TESTING.md#known-v0-limits-not-bugs).
 
-**Intended.** Founding by restoring a ruin or chartering a living village. Settlements on more
-than one level, with cellars below and watchtowers above. Walls whose strength depends on what
-you can quarry and what you know how to build. Power — mills, hydraulics, salvaged arrays, and
-a molten-salt store, because the salt is right there. Machinery hauled home from ruins, and the
-work of certifying it fit to join your grid. Cities that outlive the founder. The haulage
-ladder above — vessels, carts, pipes — so a grown city can carry its own water without
-conjuring a dram of it. There are no wells: new water comes only from great technology
-recovered and made trustworthy, from patient collection, from trade, or — early, slowly,
-effortfully — from a salt-pan that gives back a little fresh water and the salt it was
-hiding, because in Qud water is money and nothing mints money quietly. Stages earned by
-demonstrated feed rather than a threshold crossed for an afternoon — and subsidence, district
-into ruin, when the feed fails and stays failed.
+**After 0.2.0.** Further world presence—successor citizens, trade routes seen between tiles,
+emissaries, warbands, and rival or prior kingdoms—must earn its cost from playtest evidence.
+Likewise, deeper balance and flavour tuning follows observed play rather than another speculative
+management layer. This vision remains a quarry for later releases, not a promise that every idea
+ships in the first one.
 
 ## For people who want to build on it
 
