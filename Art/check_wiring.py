@@ -8,11 +8,13 @@ Textures/. This check proves both sides:
   local reference   any ThousandAndFirst/ Tile= is a release failure
   unknown vanilla   any external tile path absent from the installed base XML corpus is a typo
 
-The last test does not unpack or copy game assets. It only checks that Qud itself names the exact
-path somewhere in its XML. Run from the repository root: python3 Art/check_wiring.py
+The last tests do not unpack or copy game assets. They check that Qud names each path in its XML,
+that the exact-cased packed asset key exists, and that every text fallback fits Qud's 256-character
+renderer. Run from the repository root: python3 Art/check_wiring.py
 """
 
 import io
+import mmap
 import os
 import re
 import subprocess
@@ -84,6 +86,44 @@ def referenced_tiles(paths):
                         "%s:%s:%s" % (path, owner or element.tag, attribute)
                     )
     return references
+
+
+def render_string_problems(paths):
+    """Reject glyphs the Unity renderer turns into spaces.
+
+    Render.Initialize converts a multi-character decimal RenderString to one character. A
+    one-character value is already the intended scalar. GameManager's current Unity renderer has
+    only Text_0.bmp through Text_255.bmp and explicitly replaces anything above U+00FF with a
+    space, so both authored forms must resolve into that range.
+    """
+    problems = []
+    for path in paths:
+        root = ET.parse(path).getroot()
+        for element in root.iter():
+            if "RenderString" not in element.attrib:
+                continue
+            value = element.get("RenderString")
+            owner = element.get("DisplayName") or element.get("Name") or element.get("Key")
+            location = "%s:%s:RenderString" % (path, owner or element.tag)
+            if not value:
+                problems.append("empty RenderString cannot produce a glyph: %s" % location)
+                continue
+            if len(value) == 1:
+                scalar = ord(value)
+            else:
+                if not re.fullmatch(r"[0-9]+", value):
+                    problems.append(
+                        "multi-character RenderString is not a decimal scalar: %r (%s)"
+                        % (value, location)
+                    )
+                    continue
+                scalar = int(value, 10)
+            if scalar < 0 or scalar > 255:
+                problems.append(
+                    "RenderString scalar is outside Qud's 0..255 glyph atlas: %r -> U+%04X (%s)"
+                    % (value, scalar, location)
+                )
+    return problems
 
 
 def fixed_farmer_tile_problems(blueprint_path="ObjectBlueprints.xml"):
@@ -160,6 +200,53 @@ def vanilla_tiles(base):
     return paths
 
 
+def packed_asset_key(tile):
+    """Return exact Unity resource name corresponding to a blueprint Tile value."""
+    if tile.lower().startswith("assets_content_textures_"):
+        return tile.replace("/", "_").replace("\\", "_")
+    return "Assets_Content_Textures_" + tile.replace("/", "_").replace("\\", "_")
+
+
+def packed_tile_problems(references, base):
+    """Prove exact-cased tile keys exist in installed resources.assets."""
+    resource_path = os.path.abspath(os.path.join(base, os.pardir, os.pardir, "resources.assets"))
+    if not os.path.isfile(resource_path):
+        return ["installed packed asset database not found: %s" % resource_path]
+    problems = []
+    wanted = {}
+    for tile, owners in sorted(references.items()):
+        if tile.startswith(LOCAL_PREFIX):
+            continue
+        key = packed_asset_key(tile)
+        try:
+            needle = key.encode("ascii")
+        except UnicodeEncodeError:
+            problems.append(
+                "tile path cannot name an ASCII packed asset: %s (%s)"
+                % (tile, ", ".join(owners))
+            )
+            continue
+        wanted[needle] = (tile, key, owners)
+    if not wanted:
+        return problems
+    with open(resource_path, "rb") as handle:
+        packed = mmap.mmap(handle.fileno(), 0, access=mmap.ACCESS_READ)
+        try:
+            pattern = re.compile(
+                b"|".join(re.escape(needle) for needle in sorted(wanted, key=len, reverse=True))
+            )
+            found = {match.group(0) for match in pattern.finditer(packed)}
+        finally:
+            packed.close()
+    for needle, (tile, key, owners) in wanted.items():
+        if needle not in found:
+            problems.append(
+                "exact packed tile asset is missing: %s -> %s (%s)"
+                % (tile, key, ", ".join(owners))
+            )
+    return problems
+
+
 def main():
     base = os.environ.get("TAF_QUD_BASE", DEFAULT_BASE)
     problems = []
@@ -173,6 +260,7 @@ def main():
         references = referenced_tiles(runtime_xml)
         if not references:
             problems.append("staged runtime XML contains no tile references")
+        problems.extend(render_string_problems(runtime_xml))
 
     for path in bundled_rasters():
         problems.append("bundled runtime art is forbidden by release policy: %s" % path)
@@ -190,14 +278,17 @@ def main():
     if known_tiles is None:
         problems.append("installed base ObjectBlueprints directory not found: %s" % base)
     else:
+        known_tiles_folded = {tile.casefold() for tile in known_tiles}
         for tile, owners in sorted(references.items()):
             if tile.startswith(LOCAL_PREFIX):
                 continue
-            if tile not in known_tiles:
+            if tile.casefold() not in known_tiles_folded:
                 problems.append(
                     "tile path is not named by installed base XML: %s (%s)"
                     % (tile, ", ".join(owners))
                 )
+
+    problems.extend(packed_tile_problems(references, base))
 
     if problems:
         print("ART POLICY FAILED")
