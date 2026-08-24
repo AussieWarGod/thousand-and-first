@@ -448,6 +448,39 @@ namespace ThousandAndFirst
 			return held;
 		}
 
+		/// <summary>Current edible units of one exact blueprint across this survey's dedicated
+		/// larders. Used only for inspection; the ration draw remains authoritative.</summary>
+		public int CountFood(string Blueprint)
+		{
+			if (string.IsNullOrEmpty(Blueprint))
+			{
+				return 0;
+			}
+			int held = 0;
+			for (int i = 0; i < Larders.Count; i++)
+			{
+				GameObject container = Larders[i];
+				if (container == null || container.Inventory == null)
+				{
+					continue;
+				}
+				foreach (GameObject item in container.Inventory.Objects)
+				{
+					if (item.Blueprint != Blueprint || (!item.HasPart("Food")
+						&& !item.HasPart("PreparedCookingIngredient")) || item.Count <= 0)
+					{
+						continue;
+					}
+					if (held > int.MaxValue - item.Count)
+					{
+						return int.MaxValue;
+					}
+					held += item.Count;
+				}
+			}
+			return held;
+		}
+
 		/// <summary>
 		/// Servings one container was built to hold, off its blueprint's own
 		/// <see cref="KingdomRules.LarderCapacityTag"/> &mdash; the food side of a vessel's

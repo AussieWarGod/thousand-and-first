@@ -220,6 +220,44 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("Ptoh", KingdomRules.ScrapsNote("Ptoh"));
 		}
 
+		[Test]
+		public void DishStatusLine_MakesTheIngredientKitchenAndOneDayBonusInspectable()
+		{
+			string line = KingdomRules.DishStatusLine("vinewafer matz", "Vinewafer Sheaf", 7,
+				1, KingdomRules.MealVerdict.Favored);
+			StringAssert.Contains("vinewafer matz", line);
+			StringAssert.Contains("Vinewafer Sheaf: 7 stored", line);
+			StringAssert.Contains("kitchen ready", line);
+			StringAssert.Contains("at least half", line);
+			StringAssert.Contains("carries +1 today", line);
+		}
+
+		[Test]
+		public void DishStatusLine_DoesNotPromiseABonusBeforeTheChainActuallyPays()
+		{
+			string plain = KingdomRules.DishStatusLine("starapple porridge",
+				"Starapple Preserves", -4, 0, KingdomRules.MealVerdict.Plain);
+			StringAssert.Contains("0 stored", plain);
+			StringAssert.Contains("no kitchen", plain);
+			StringAssert.Contains("no dish bonus", plain);
+			Assert.IsNull(KingdomRules.DishStatusLine(null, "Vinewafer Sheaf", 20, 1,
+				KingdomRules.MealVerdict.Favored));
+		}
+
+		[Test]
+		public void DishStatusLine_DistinguishesEveryResolvedTable()
+		{
+			string none = KingdomRules.DishStatusLine("mushroom soup", "Pickled Mushrooms", 3,
+				1, KingdomRules.MealVerdict.None);
+			string scraps = KingdomRules.DishStatusLine("mushroom soup", "Pickled Mushrooms", 0,
+				1, KingdomRules.MealVerdict.Scraps);
+			string plain = KingdomRules.DishStatusLine("mushroom soup", "Pickled Mushrooms", 3,
+				1, KingdomRules.MealVerdict.Plain);
+			string favored = KingdomRules.DishStatusLine("mushroom soup", "Pickled Mushrooms", 3,
+				1, KingdomRules.MealVerdict.Favored);
+			CollectionAssert.AllItemsAreUnique(new string[4] { none, scraps, plain, favored });
+		}
+
 		// --- Industry: the mill conserves --------------------------------------------------
 
 		[Test]

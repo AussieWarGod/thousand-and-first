@@ -31,7 +31,10 @@ namespace ThousandAndFirst
 				// people eat, so a founder never has to reverse-engineer a hunger streak.
 				+ "\nFields: " + KingdomGrowth.FoodMadePerDay(survey) + " a day made against "
 				+ KingdomRules.RationsPerDay(System.Population) + " eaten"
-				+ "  {{K|(" + KingdomRules.ForagedRations(KingdomMaterialRules.FreeHands(System.Population, System.AssignedCrew), 1) + " of it foraged)}}";
+				+ "  {{K|(" + KingdomRules.ForagedRations(KingdomMaterialRules.FreeHands(System.Population, System.AssignedCrew), 1) + " of it foraged)}}"
+				+ ((string.IsNullOrEmpty(System.DishName)) ? "" : ("\n" + KingdomRules.DishStatusLine(
+					System.DishName, System.DishStaple, survey.CountFood(System.DishStaple),
+					survey.Kitchens, System.LastMeal)));
 		}
 
 		/// <summary>

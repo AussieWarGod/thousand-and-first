@@ -590,6 +590,44 @@ namespace ThousandAndFirst
 			return "{{r|Nothing came out of the larders at " + Settlement + ". The settlement ate what it could find, and it noticed.}}";
 		}
 
+		/// <summary>
+		/// One inspectable line joining the realm's named dish to the physical chain that earns its
+		/// one-day lift. This reports a snapshot; it does not predict tomorrow's full ration draw.
+		/// </summary>
+		public static string DishStatusLine(string Dish, string Staple, int StapleStored,
+			int Kitchens, MealVerdict LastMeal)
+		{
+			if (string.IsNullOrEmpty(Dish))
+			{
+				return null;
+			}
+			if (StapleStored < 0)
+			{
+				StapleStored = 0;
+			}
+			string staple = string.IsNullOrEmpty(Staple) ? "staple not yet named" : Staple;
+			string kitchen = (Kitchens > 0) ? "kitchen ready" : "{{r|no kitchen}}";
+			string outcome;
+			switch (LastMeal)
+			{
+			case MealVerdict.Favored:
+				outcome = "{{G|Last ration: favorite dish; carries +1 today.}}";
+				break;
+			case MealVerdict.Scraps:
+				outcome = "{{r|Last ration: scraps; no dish bonus.}}";
+				break;
+			case MealVerdict.Plain:
+				outcome = "Last ration: ordinary; no dish bonus.";
+				break;
+			default:
+				outcome = "No ration day has resolved yet.";
+				break;
+			}
+			return "Dish: " + Dish + " — " + staple + ": " + StapleStored + " stored; "
+				+ kitchen + ". Its +1 day needs a kitchen and at least half the ration from that staple. "
+				+ outcome;
+		}
+
 		// --- Industry: what the mill does with a harvest ------------------------------------
 		//
 		// Addendum 11(b)'s other half - food "used by industry to produce things" - and per
