@@ -15,9 +15,10 @@
   reloads, seat movement both ways, 109 carried fields, 17/17 in-game checks, and clean logs.
   A second isolated launch of the release/provenance candidate founded a realm, passed 17/17,
   saved, and passed resume validation. This is automation, not manual playtesting.
-- A verified private-bootstrap package was produced for the release/provenance candidate. Because
-  `TESTING.md` changed during the final handoff audit, rebuild once from the resulting clean commit
-  before private Workshop upload; record that exact path and receipt in the release run.
+- Frozen staged bytes were verified from clean commit `d3ec8d2`: 222 files at
+  `/home/r/work/taf-package.otcUIn/TAF-0.2.0-private-bootstrap-d3ec8d2`, with sibling receipt
+  SHA-256 `9584c89892410eaa4518d7411631932eb756cea3c68bb2a1763fdb6005187eac`.
+  This handoff-only note is excluded from the staged Workshop inventory.
 - The normal local Mods copy is an exact empty-diff deployment. Twenty-eight older scanned backup
   copies were moved intact under `CavesOfQud/TAF-ModBackups/`; none were deleted. The deploy itself
   made another automatic full backup named in `Tools/last-deploy-receipt.txt`.
