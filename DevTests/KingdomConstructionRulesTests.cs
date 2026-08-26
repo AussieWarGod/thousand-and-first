@@ -931,7 +931,7 @@ namespace ThousandAndFirst.Tests
 		public void ConstructionSourceOrdersSocketRemovalAndContainsNoLegacyClearPath()
 		{
 			string root = LocateRepository();
-			string socket = File.ReadAllText(Path.Combine(root, "Growth", "KingdomSocket.cs"));
+			string socket = KingdomSocketLogicalSource.Read();
 			int continuation = socket.IndexOf("private static void ContinueSocketBuild",
 				StringComparison.Ordinal);
 			int intent = socket.IndexOf("KingdomPhysicalPhase.PredecessorRemovalPending",
@@ -1097,7 +1097,7 @@ namespace ThousandAndFirst.Tests
 				"TryGetSpec(Entry.Key, out var spec)");
 			StringAssert.Contains("System.Stage < Entry.MinStage", plot.Substring(prepare));
 
-			string socket = File.ReadAllText(Path.Combine(root, "Growth", "KingdomSocket.cs"));
+			string socket = KingdomSocketLogicalSource.Read();
 			Assert.GreaterOrEqual(CountOf(socket, "KingdomCommission.StageRefusal(System,"), 2,
 				"conversion and vacant-socket builds both need the authored stage gate");
 		}
@@ -1519,7 +1519,7 @@ namespace ThousandAndFirst.Tests
 			string roads = File.ReadAllText(Path.Combine(root, "Growth", "KingdomRoads.cs"));
 			StringAssert.Contains("KingdomPhysicalLookupState FindOurFloor", roads);
 			StringAssert.Contains("floorState == KingdomPhysicalLookupState.Ambiguous", roads);
-			string socket = File.ReadAllText(Path.Combine(root, "Growth", "KingdomSocket.cs"));
+			string socket = KingdomSocketLogicalSource.Read();
 			StringAssert.Contains("ReferenceEquals(accepted, marker)", socket);
 
 			string plot = KingdomPlot2LogicalSource.Read();
@@ -1619,7 +1619,7 @@ namespace ThousandAndFirst.Tests
 			string plan = TestMain.ReadRepositoryText("Growth/KingdomPlanMarker.cs");
 			string upgrade = KingdomUpgradeLogicalSource.Read();
 			string plot = KingdomPlot2LogicalSource.Read();
-			string socket = TestMain.ReadRepositoryText("Growth/KingdomSocket.cs");
+			string socket = KingdomSocketLogicalSource.Read();
 			AssertOrdered(commission, "KingdomConstruction.FreezeBuildTruth(job",
 				"KingdomConstruction.TryFundNew(job");
 			AssertOrdered(plan, "KingdomConstruction.FreezeBuildTruth(job",

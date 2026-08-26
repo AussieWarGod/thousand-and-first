@@ -135,7 +135,7 @@ change** — this family is the mechanical bulk of the wave.
 | **Refining** — `KingdomRefineWorked` (`Growth/KingdomMaterials*.cs`); `RefinedThisPass(Crew, Days, Capability, Refinable)` = `Crew × Days × EffortPerHandPerDay × capability / 100`, capped `MaxRefinedPerPass = 8` (`Growth/KingdomMaterialRules.cs:993,1117`). Staffing-gated at `:1702`. | HB × crew | Uncap `Days`. `MaxRefinedPerPass` becomes a yard's throughput ceiling per *day*, not per pass. | **B** | Medium. **Checkpoint is written at `:1700` before the staffing gate returns at `:1702`** — an unstaffed yard silently burns its day budget. Decide explicitly. |
 | **Striking** — `KingdomStrikeWorked` (`Growth/KingdomMaterials*.cs`); `EffortWorked(Hands, Days)` = `min(hands,6) × Days × 10`. `FreeHands`-gated. | HB × hands | Uncap `Days`. | **B** | Low. |
 | **Clearance** — `r_KingdomClearance.LastWorkedTick` (`Growth/KingdomMaterials*.cs`). Same shape. | HB × hands | Uncap `Days`. | **B** | Low. |
-| **Mending / repair** — `KingdomRepairWorked` (`Growth/KingdomWear.cs:125,378-407`). `FreeHands` + materials gated; one mending settlement-wide at a time. | HB × hands | Uncap `Days`. | **B** | Low. Same checkpoint-before-gate at `:402`. |
+| **Mending / repair** — `KingdomRepairWorked` (`Growth/KingdomWear.03.Activation.cs:37`; advance `Growth/KingdomWear.13.RepairCompletion.cs:16-80`). `FreeHands` + materials gated; one mending settlement-wide at a time. | HB × hands | Uncap `Days`. | **B** | Low. The no-hands checkpoint precedes its return at `Growth/KingdomWear.13.RepairCompletion.cs:29-41`. |
 | **"One gang, one job"** — `Growth/KingdomMaterials*.cs`: one strike *or* one clearance per attended pass, however many days elapsed. | PASS | Under the doctrine the gang works through the absence. Becomes a hands-availability constraint, not a per-pass one. | **B** | Medium — untested (engine-side). |
 | **Road traffic** — `r_TAF_RoadsWalked` zone property (`Growth/KingdomRoads.cs:49,285-303`); `TrafficFor(Walkers, Days, Kind)` (`Growth/KingdomRoadRules.cs:255`). Population- and layout-gated. | HB × walkers | Uncap `Days`. Traffic is already walkers × days — the doctrine's formula. "Wear only ever climbs" stays right. | **B** | Low. `KingdomRoadRules.cs:21-25` asserts *"nothing here subsides"* — correct for ground, needs rewording once subsidence exists. |
 | **Road per-pass bounds** — `MaxRoutesPerPass = 8`, `MaxFloorChangesPerPass = 8`, `MaxTrackedCells = 240`. | PASS | Loop guards, not forgiveness. Keep. | **A** | Low. |
@@ -410,7 +410,7 @@ clause 1, which names osmosis, dissent, and wear-from-running as things that hap
 | `docs/API.md:36, 80, 109, 115, 134, 198, 284-286` | The public modding contract. `:36` already warns the ratchet will move; `:284-286` states the old split. |
 | `MODDING.md:138, 478-480` | "counted in attended passes and never in time". |
 | `TESTING.md:79, 176-177, 197, 239, 262, 305, 316, 347, 380, 396-405` | Steps 16p, 43, 44, 52, 57, 66b, 75a and the *Known v0 limits* block. **66b stays correct** (the grace is still attended-only); **75a and 57 change**; **396-405 is the block that describes the gap this wave closes.** |
-| ~40 code doc comments | The canonical phrasings are `Core/KingdomRules*.cs`, `Growth/KingdomPowerRules*.cs`, `Growth/KingdomRoadRules.cs:21-25` and `:247-249`, `Growth/KingdomWear.cs:92-94`, `Growth/KingdomWearRules.cs:8-12`, `Growth/KingdomMaterials*.cs`, `Growth/KingdomMaterialRules*.cs`, `Core/KingdomConversionRules.cs:112-120`, `Growth/KingdomLodgingRules*.cs`. |
+| ~40 code doc comments | The canonical phrasings are `Core/KingdomRules*.cs`, `Growth/KingdomPowerRules*.cs`, `Growth/KingdomRoadRules.cs:21-25` and `:247-249`, `Growth/KingdomWear.00.r_KingdomWear.cs:257-261`, `Growth/KingdomWearRules.cs:8-12`, `Growth/KingdomMaterials*.cs`, `Growth/KingdomMaterialRules*.cs`, `Core/KingdomConversionRules.cs:112-120`, `Growth/KingdomLodgingRules*.cs`. |
 | `_notes/balance-sim.py:51` | `read_const(RULES_CS, "MaxUpkeepDaysCharged")` raises `SystemExit` when the constant is not found. **Retiring the constant breaks the balance model at import.** |
 | `_notes/STALE-COMMENT-INVENTORY.md` | Re-issue under the doctrine. |
 
@@ -427,7 +427,7 @@ take their narrow slices only after P1 lands.
 **Owns:** `Core/KingdomRules.cs`, `Growth/KingdomGrowth*.cs` (heartbeat, fetch, thirst only),
 `Core/KingdomSystem.cs` (version bump + re-anchor migration), `Growth/KingdomPower.cs`,
 `Growth/KingdomPowerRules.cs`, `Growth/KingdomMaterials*.cs`, `Growth/KingdomMaterialRules.cs`,
-`Growth/KingdomWear.cs`, `Growth/KingdomWearRules.cs`, `Growth/KingdomRoads.cs`,
+`Growth/KingdomWear*.cs`, `Growth/KingdomRoads.cs`,
 `Growth/KingdomRoadRules.cs`, `Growth/KingdomCropRules.cs`, `Growth/KingdomUpgradeRules.cs`
 (reserve only), `Trade/KingdomManifest.cs` (reserve only), `DevTests/TafTests.csproj`.
 

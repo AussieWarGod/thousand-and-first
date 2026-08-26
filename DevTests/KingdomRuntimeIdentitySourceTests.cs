@@ -1760,7 +1760,9 @@ namespace ThousandAndFirst.Tests
 					? KingdomCitizenRiteLogicalSource.Read()
 					: file == Path.Combine("Quests", "KingdomBounty.cs")
 						? KingdomBountyLogicalSource.Read()
-						: Source(file);
+						: file == Path.Combine("Growth", "KingdomWear.cs")
+							? KingdomWearLogicalSource.Read()
+							: Source(file);
 				Assert.IsFalse(source.Contains(
 					"KingdomChronicle.SettlementId(System.KingdomFactionName)"), file);
 				Assert.IsFalse(source.Contains("LegacyOriginIdentity("), file);

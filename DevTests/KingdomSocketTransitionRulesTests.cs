@@ -11,6 +11,43 @@ namespace ThousandAndFirst.Tests
 	public class KingdomSocketTransitionRulesTests
 	{
 		[Test]
+		public void LogicalAuthorityPreservesEnginePartAndNestedDeclarationOrder()
+		{
+			string source = KingdomSocketLogicalSource.Read();
+			Assert.AreEqual(14, KingdomSocketLogicalSource.FileCount);
+			AssertOrdered(source,
+				"[Serializable]",
+				"public class r_KingdomSocket : IPart",
+				"public string LastDesignKey;",
+				"public static partial class KingdomSocket",
+				"internal static void RetryConstruction(",
+				"internal static void InspectConstruction(",
+				"private static KingdomPhysicalLookupState FindSocketResult(",
+				"private static void ContinueSocketBuild(",
+				"private static bool RemoveSocketPredecessor(",
+				"private static bool HasBlockingReceipt(",
+				"private struct ConvertContext",
+				"private sealed class PreparedConvert",
+				"private static bool Validate(",
+				"public static bool AssessConvert(",
+				"private static bool TryPrepareConvert(",
+				"public static bool ExecuteConvert(",
+				"private static bool ExecutePreparedConvert(",
+				"private static bool ProjectConvertOrder(",
+				"internal static bool ResumeStrikeSuccessor(",
+				"private static bool HasStrikePlotParts(",
+				"public static bool OnCleared(",
+				"private static void LeaveSocket(",
+				"private sealed class PreparedSocketBuild",
+				"public static bool BuildOnSocket(",
+				"private static bool ExecuteSocketBuild(",
+				"public static bool Redress(",
+				"public static void OpenConvert(",
+				"public static void OpenRedress(");
+			Assert.IsFalse(source.Contains("partial class r_KingdomSocket"));
+		}
+
+		[Test]
 		public void ParseFreezesDirectionalTypedDelta()
 		{
 			Assert.IsTrue(KingdomSocketTransitionRules.TryParse("shed-to-post", "toolshed",
@@ -143,7 +180,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void TransitionUiPreparesOneSnapshotBeforeConfirmationAndDebit()
 		{
-			string socket = TestMain.ReadRepositoryText("Growth/KingdomSocket.cs");
+			string socket = KingdomSocketLogicalSource.Read();
 			StringAssert.Contains("TryPrepareConvert(System, zone, target, chosen.Key, skinKey", socket);
 			StringAssert.Contains("KingdomArchitecturePreview.TryRenderTransition(conversion.Architecture", socket);
 			StringAssert.Contains("Popup.PickOption(Title: \"Preview exact change:", socket);
@@ -318,6 +355,17 @@ namespace ThousandAndFirst.Tests
 				y++;
 			}
 			return null;
+		}
+
+		private static void AssertOrdered(string Source, params string[] Needles)
+		{
+			int previous = -1;
+			for (int i = 0; i < Needles.Length; i++)
+			{
+				int next = Source.IndexOf(Needles[i], previous + 1, StringComparison.Ordinal);
+				Assert.Greater(next, previous, "missing or out of order: " + Needles[i]);
+				previous = next;
+			}
 		}
 	}
 }

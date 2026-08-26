@@ -20,18 +20,19 @@ python3 Tools/check-structure.py --release
 
 ## Current hardening checkpoint
 
-`Tools/check-structure.py --json` currently reports 1410 staged production C# files and 250,683
-physical lines. Of those, 46 exceed 300 lines, 0 are exactly 300, and therefore 46 fail the strict
-cap; 22 exceed 1,000, 3 exceed 2,000, and 0 exceed 5,000. Exact staged source inventory digest:
-`f46df9b37ad71633925adba335768474d8a9b19acd3b980a03f5281b7d68e675`. The census reports
-544 files with direct `XRL` imports; 43 of those exceed the line limit.
+`Tools/check-structure.py --json` currently reports 1451 staged production C# files and 251,288
+physical lines. Of those, 43 exceed 300 lines, 0 are exactly 300, and therefore 43 fail the strict
+cap; 19 exceed 1,000, 0 exceed 2,000, and 0 exceed 5,000. Exact staged source inventory digest:
+`d8b6483a57ff8ace6b094d0441e1e6f75cb2f8d287d8631d07b97a1303b7e8cc`. The census reports
+583 files with direct `XRL` imports; 40 of those exceed the line limit.
 
-The current hardening sequence semantically decomposed 125 additional oversized authorities,
-bringing the cumulative total to 135. That is six more decompositions since checkpoint `2cb97fc`.
+The current hardening sequence semantically decomposed 128 additional oversized authorities,
+bringing the cumulative total to 138. That is nine more decompositions since checkpoint `2cb97fc`
+and three more than checkpoint `d3fc4b9`.
 [ARCHITECTURE.md](ARCHITECTURE.md#split-authority-map) maps the logical authorities to
 their current source families. Numeric lexical prefixes appear only where the canonical stage's
 filename order must preserve original declaration, reflection, or serialized-metadata order; they
-do not create a second authority. This is measurable progress, not release signoff: 46 line-cap
+do not create a second authority. This is measurable progress, not release signoff: 43 line-cap
 failures and missing `docs/STRUCTURE_REVIEW.json` exact-inventory human review still
 block release. Any staged source change invalidates this digest and requires a new census and
 review binding.

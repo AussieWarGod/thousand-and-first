@@ -1115,7 +1115,7 @@ half of this whole wave and should land first, ahead of any node machinery.
 
 Today a work's output is `min(headcountEff, capabilityEff)` (`KingdomCrewRules.CombinedEffectiveness`,
 `T/Growth/KingdomCrewRules.cs:226-229`) then scaled by wear (`KingdomWearRules.WorkEffectiveness`,
-consumed at `T/Growth/KingdomWear.cs:230-238`). **Method is a third factor, never folded into the
+consumed at `T/Growth/KingdomWear.03.Activation.cs:88-96`). **Method is a third factor, never folded into the
 first two:**
 
 ```

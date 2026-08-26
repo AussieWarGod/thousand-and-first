@@ -14,7 +14,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void ProductionFreezesEveryGraphHopAndRefusesTruncation()
 		{
-			string jobs = Source("KingdomJobRegistry.cs");
+			string jobs = KingdomJobRegistryLogicalSource.Read();
 			string porters = Source("KingdomPorters.cs");
 			StringAssert.Contains("graph.TryPath(destination, source, resolved, out count, out fault)", jobs);
 			StringAssert.Contains("count + 1 > KingdomItineraryRules.MaxLegs", jobs);
@@ -28,7 +28,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void HorizontalAndVerticalHandoffsUseTheirRealConnectionFacts()
 		{
-			string jobs = Source("KingdomJobRegistry.cs");
+			string jobs = KingdomJobRegistryLogicalSource.Read();
 			string porters = Source("KingdomPorters.cs");
 			StringAssert.Contains("KingdomDistanceRules.StepBetween(", jobs);
 			StringAssert.Contains("? KingdomZoneStep.None : step", jobs);

@@ -92,7 +92,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void SocketAndForcedImprovementPreviewTheirPreparedProductionIntent()
 		{
-			string socket = Read("Growth", "KingdomSocket.cs");
+			string socket = KingdomSocketLogicalSource.Read();
 			string menu = Between(socket, "public static void OpenConvert(",
 				"public static void OpenRedress(");
 			AssertOrdered(menu, "TryPrepareSocketBuild(System, zone, target",

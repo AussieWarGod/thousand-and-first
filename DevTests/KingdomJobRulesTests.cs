@@ -716,6 +716,102 @@ namespace ThousandAndFirst.Tests
 			Assert.IsTrue(overrun);
 			Assert.AreEqual(2, KingdomItineraryRules.FailAtProjectedDurationMultiple);
 		}
+
+		[Test]
+		public void RegistryPublicSaveColumnsKeepTheirExactMetadataShapeAndOrder()
+		{
+			Type registry = typeof(KingdomJobRegistry);
+			Assert.AreEqual("ThousandAndFirst.Simulation.City.KingdomJobRegistry",
+				registry.FullName);
+			Assert.IsTrue(registry.IsPublic);
+			Assert.IsTrue(registry.IsDefined(typeof(SerializableAttribute), false));
+			Assert.IsFalse(registry.IsSealed);
+
+			System.Reflection.FieldInfo[] fields = registry.GetFields(
+				System.Reflection.BindingFlags.Instance
+				| System.Reflection.BindingFlags.Public);
+			Array.Sort(fields, delegate(System.Reflection.FieldInfo left,
+				System.Reflection.FieldInfo right)
+			{
+				return left.MetadataToken.CompareTo(right.MetadataToken);
+			});
+			string[] expected = new string[]
+			{
+				"JobCounter", "JobIds", "Kinds", "Cargos", "CargoAmounts",
+				"SourceZoneIds", "DestZoneIds", "StartTicks", "WalkTicksPerCell",
+				"Statuses", "OriginCodes", "DepositLegIndexes", "SubjectIds",
+				"SubjectNames", "TargetNames", "DueTicks", "WaterCosts",
+				"ProvisionCosts", "OutcomeCodes", "DeliverySourceEndpointIds",
+				"DeliverySourceObjectIds", "DeliverySourceXs", "DeliverySourceYs",
+				"DeliveryTargetEndpointIds", "DeliveryTargetObjectIds",
+				"DeliveryTargetXs", "DeliveryTargetYs", "DeliverySourceBeforeAmounts",
+				"DeliveryTripIds", "DeliveryStopOrdinals", "DeliveryPhases",
+				"DeliveryCargoAuthorityKinds", "DeliveryOwnerOperationIds",
+				"DeliveryOwnerManifestVersions", "DeliveryOwnerManifestDigests",
+				"DeliveryOwnerManifestRevisions", "DeliveryManifestSourceStarts",
+				"DeliveryManifestSourceCounts", "DeliveryTargetBeforeAmounts",
+				"DeliveryTargetReceiptStates", "LegCounts", "LegZoneIds",
+				"LegEnterX", "LegEnterY", "LegExitX", "LegExitY", "LegLengths",
+				"LegDepartTicks", "LegArriveTicks"
+			};
+			Assert.AreEqual(expected.Length, fields.Length);
+			for (int i = 0; i < expected.Length; i++)
+				Assert.AreEqual(expected[i], fields[i].Name, "field " + i);
+			Assert.AreEqual(typeof(int), fields[0].FieldType);
+			Assert.AreEqual(typeof(System.Collections.Generic.List<int>),
+				fields[1].FieldType);
+			Assert.AreEqual(typeof(System.Collections.Generic.List<string>),
+				fields[5].FieldType);
+			Assert.AreEqual(typeof(System.Collections.Generic.List<long>),
+				fields[7].FieldType);
+		}
+
+		[Test]
+		public void JobAndDeliveryEnumMetadataRemainAppendOnly()
+		{
+			Assert.AreEqual(typeof(byte), Enum.GetUnderlyingType(typeof(KingdomJobKind)));
+			Assert.AreEqual(0, (int)KingdomJobKind.None);
+			Assert.AreEqual(1, (int)KingdomJobKind.Delivery);
+			Assert.AreEqual(2, (int)KingdomJobKind.Expedition);
+			Assert.AreEqual(typeof(byte), Enum.GetUnderlyingType(typeof(KingdomJobStatus)));
+			Assert.AreEqual(0, (int)KingdomJobStatus.Open);
+			Assert.AreEqual(1, (int)KingdomJobStatus.Delivered);
+			Assert.AreEqual(2, (int)KingdomJobStatus.Failed);
+			Assert.AreEqual(typeof(int), Enum.GetUnderlyingType(typeof(KingdomDeliveryPhase)));
+			CollectionAssert.AreEqual(new int[] { 0, 1, 2, 3, 4, 5 },
+				Array.ConvertAll((KingdomDeliveryPhase[])Enum.GetValues(
+					typeof(KingdomDeliveryPhase)), value => (int)value));
+			Assert.AreEqual(typeof(int), Enum.GetUnderlyingType(
+				typeof(KingdomDeliveryCargoAuthority)));
+			CollectionAssert.AreEqual(new int[] { 0, 1 },
+				Array.ConvertAll((KingdomDeliveryCargoAuthority[])Enum.GetValues(
+					typeof(KingdomDeliveryCargoAuthority)), value => (int)value));
+		}
+
+		[Test]
+		public void LogicalSourceKeepsDeclarationAndMutationOrder()
+		{
+			string source = KingdomJobRegistryLogicalSource.Read();
+			string[] ordered = new string[]
+			{
+				"public enum KingdomJobKind : byte",
+				"internal readonly partial struct KingdomJobRow",
+				"internal static partial class KingdomJobRules",
+				"internal sealed partial class KingdomJobTable",
+				"public partial class KingdomJobRegistry",
+				"public void Normalize()",
+				"internal bool TryRead(out KingdomJobTable table",
+				"internal bool TryPublish(KingdomJobTable table",
+				"internal static class KingdomRealmJobWireFixture"
+			};
+			int prior = -1;
+			for (int i = 0; i < ordered.Length; i++)
+			{
+				int at = source.IndexOf(ordered[i], StringComparison.Ordinal);
+				Assert.Greater(at, prior, ordered[i]);
+				prior = at;
+			}
+		}
 	}
 }
 #endif

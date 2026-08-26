@@ -11,12 +11,12 @@ import xml.etree.ElementTree as ET
 
 
 ROOT = Path(__file__).resolve().parent.parent
-FINAL_SUITE_CASES = "7,700"
+FINAL_SUITE_CASES = "7,705"
 PORTABLE_SUITE_CASES = "173"
 TOOLS_TEST_CASES = "33"
 ART_TEST_CASES = "19"
-HARDENING_DECOMPOSITIONS = "125"
-CUMULATIVE_DECOMPOSITIONS = "135"
+HARDENING_DECOMPOSITIONS = "128"
+CUMULATIVE_DECOMPOSITIONS = "138"
 FOCUSED_SURVEY_CASES = 9
 
 
@@ -407,7 +407,7 @@ def audit_public(problems):
         "Concurrent legacy publication now has one cross-process decision boundary",
         "Linux CI exposed",
         ".legacies.lock",
-        "Six post-`2cb97fc` decompositions",
+		"Nine post-`2cb97fc` decompositions",
     )
     forbid(
         problems,
@@ -478,7 +478,8 @@ def audit_public(problems):
         "Growth/KingdomUpgrade.[0-9][0-9].*.cs",
         "Raids/KingdomRaids.[0-9][0-9].*.cs",
         "World/KingdomInheritanceState.z*.cs",
-        "six more than checkpoint `2cb97fc`",
+		"nine more than checkpoint `2cb97fc`",
+		"three more than checkpoint `d3fc4b9`",
     )
     require(
         problems,

@@ -30,10 +30,13 @@ file order; use the table as the top-level checklist.
 ## Current portable evidence boundary
 
 Nine focused one-survey source-contract cases pass. The final integrated pure/source suite passes
-7,700 / 7,700 cases against the configured licensed Qud base; the portable suite passes 173 / 173.
+7,705 / 7,705 cases against the configured licensed Qud base; the portable suite passes 173 / 173.
 Both recorded runs report zero skipped. The Tools suite passes 33 tests and the Art suite passes 19.
-Baseline and compatibility-symbol staged compiles are clean across 1410 production C# sources; the
-cold-install inventory contains 1434 files. This does not close native behavior or the representative
+Hosted Ubuntu and Windows source suites for checkpoint `d3fc4b9` are green. Its
+repository-audit-only documentation failure came from pre-documentation trailing-blank cleanup
+changing the source census; this refresh corrects that drift. Baseline and compatibility-symbol
+staged compiles are clean across 1451 production C# sources; the cold-install inventory contains
+1475 files. This does not close native behavior or the representative
 compatibility matrix. Public CI without installed Qud data permits exactly three
 named installed-data-only skips instead of fabricating fixtures. TestMain rejects an unexpected or
 missing allowlisted skip, and an explicitly configured incomplete base fails rather than skipping.
@@ -41,7 +44,7 @@ Canonical release `DevTests/test.ps1` forbids every skip, and `Tools/release-che
 exact Qud base.
 `docs/STATUS.md` owns the exact latest receipts. None of this signs native Qud behavior,
 appearance, accessibility, current-revision native/human/compatibility/performance gates, or Steam
-installation. The structural release gate also remains red: 46 staged sources breach the line cap
+installation. The structural release gate also remains red: 43 staged sources breach the line cap
 and `docs/STRUCTURE_REVIEW.json` is missing.
 
 ## Latest retained automated native smoke — partial evidence, not protocol signoff
@@ -1108,8 +1111,9 @@ record resident object id and exact store contents, then save.
   ladders run at once and each says its own sentence, but a failed resolve costs the **worse of
   the two, never their sum** — so a city that is dry *and* starving loses one settler for it, not
   two, and may wear both marks. A pass reporting "it lost two people in one homecoming for one
-  bad year" is a bug worth filing. Trade still carries no food: the only ways into a larder are
-  the fields, the garden, and your own hands.
+  bad year" is a bug worth filing. Trade charters still import no food from outside the realm.
+  Central logistics can route existing physical food between dedicated larders; fields, gardens,
+  and your own hands remain its sources rather than the routing transaction minting it.
 - **Plumbing is declared, and a refusal is the system working.** Two mains carrying different
   liquids that end up beside each other will say so, once, by name — that is the LIQUID LAW, not a
   bug. Lay a crossing piece where two lines are only meant to pass. A tap is what puts a vessel on a

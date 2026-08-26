@@ -25,7 +25,7 @@ namespace ThousandAndFirst.Tests
 
 		private static string Socket()
 		{
-			return TestMain.ReadRepositoryText(Path.Combine("Growth", "KingdomSocket.cs"));
+			return KingdomSocketLogicalSource.Read();
 		}
 
 		private static string Materials()

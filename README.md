@@ -5,10 +5,10 @@ ground, and let a settlement grow through arrivals, thirst, and chronicle — th
 polity of the post-injunction age.
 
 **Status: 0.2.0 work in progress toward a v1.0 test candidate.** Nine focused one-survey cases, the
-final 7,700-case Qud-referenced/source suite, the 173-case portable suite, and static architecture
+final 7,705-case Qud-referenced/source suite, the 173-case portable suite, and static architecture
 gates are green with zero skipped cases in the recorded licensed run. The structural hardening tree
-stages 1410 production C# sources in a 1434-file cold-install inventory and has decomposed 135
-oversized authorities, but 46 files still breach the binding structural release gate and
+stages 1451 production C# sources in a 1475-file cold-install inventory and has decomposed 138
+oversized authorities, but 43 files still breach the binding structural release gate and
 `docs/STRUCTURE_REVIEW.json` is absent. Clean commit
 `19fb8ee` has the latest retained native result: fresh-profile founding, 17/17 self-tests, one
 production architecture sample,

@@ -847,7 +847,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void WearSource_QuarantinesReloadedMutationAndPublishesOnlyAfterExactProof()
 		{
-			string source = ReadRepoSource("Growth/KingdomWear.cs");
+			string source = KingdomWearLogicalSource.Read();
 			StringAssert.Contains("NormalizeSerializedFields", source);
 			StringAssert.Contains("LeakCapacity", source);
 			StringAssert.Contains("TryReadStrictTick", source);
@@ -916,7 +916,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void RepairSource_FreezesOutboxThenInvokesPartRemovedOnceAndDispatchesAfterProof()
 		{
-			string source = ReadRepoSource("Growth/KingdomWear.cs");
+			string source = KingdomWearLogicalSource.Read();
 			Assert.AreEqual(1, Count(source, "Work.RemovePart(WearPart)"));
 			int finish = source.IndexOf("private static bool FinishRepairProjection",
 				StringComparison.Ordinal);
@@ -948,7 +948,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void WearOptionSource_FreezesClocksAndReanchorsWithoutBacklog()
 		{
-			string source = ReadRepoSource("Growth/KingdomWear.cs");
+			string source = KingdomWearLogicalSource.Read();
 			StringAssert.Contains("if (!Enabled)", source);
 			StringAssert.Contains("AnchorDisabledClocks(System, Z, Survey, now)", source);
 			StringAssert.Contains("AnchorReenabledClocks(System, Z, Survey, now)", source);
@@ -956,6 +956,77 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("KingdomMaterials.WriteTick(work, RepairWorkedProperty, Now)",
 				source);
 			StringAssert.Contains("ResolveSafeReceipts(System, Survey, work)", source);
+		}
+
+		[Test]
+		public void WearSource_SplitPreservesPartAbiAndAuthorityOrder()
+		{
+			string source = KingdomWearLogicalSource.Read();
+			Assert.AreEqual(1, Count(source, "[Serializable]"));
+			Assert.AreEqual(1, Count(source, "public class r_KingdomWear : IPart"));
+			Assert.AreEqual(1, Count(source,
+				"public override void Write(GameObject Basis, SerializationWriter Writer)"));
+			Assert.AreEqual(1, Count(source,
+				"public override void Read(GameObject Basis, SerializationReader Reader)"));
+			Assert.AreEqual(1, Count(source, "private sealed class RepairTargetFrame"));
+			Assert.AreEqual(1, Count(source, "private sealed class LeakWorkFrame"));
+			Assert.AreEqual(14, Count(source, "public static partial class KingdomWear"));
+			AssertOrdered(source, new string[]
+			{
+				"public int Wear;",
+				"public int LastCause;",
+				"public bool Held;",
+				"public int RepairEffortLeft;",
+				"public long LastLeakTick;",
+				"public bool LeakAnnounced;",
+				"public int AnnouncedBlock;",
+				"public bool LifecycleQuarantined;",
+				"public string QuarantineReason;",
+				"public string IncidentId;",
+				"public string LastCompletedIncidentId;",
+				"public bool LeakClockInitialized;",
+				"public string LeakIncidentId;",
+				"public string LeakItemAllocations;",
+				"public int LeakLedgerState;",
+				"public int LeakMessageState;",
+				"public override void Write(GameObject Basis, SerializationWriter Writer)",
+				"public override void Read(GameObject Basis, SerializationReader Reader)"
+			});
+			AssertOrdered(source, new string[]
+			{
+				"internal static void RetryConstruction",
+				"internal static void InspectConstruction",
+				"private sealed class RepairTargetFrame",
+				"public static bool CanCarryStableState",
+				"public const string HardRunStreakProperty",
+				"public static void OnZoneActivated",
+				"private static void Resolve(",
+				"private static void RollWear",
+				"public static void OnRaidDamage",
+				"private static bool ApplyDamageIncident",
+				"private static void Leak(",
+				"private sealed class LeakWorkFrame",
+				"private static void ContinueBoundLeak",
+				"private static void ContinueLeakOutputs",
+				"private static void QuarantineLeak",
+				"private static void StartRepair",
+				"private static bool ProjectRepair",
+				"private static void AdvanceRepair",
+				"private static bool FinishRepairProjection",
+				"private static KingdomWearRules.LeakKind LeakKindOf"
+			});
+		}
+
+		private static void AssertOrdered(string Source, string[] Needles)
+		{
+			int previous = -1;
+			for (int i = 0; i < Needles.Length; i++)
+			{
+				int current = Source.IndexOf(Needles[i], previous + 1,
+					StringComparison.Ordinal);
+				Assert.Greater(current, previous, Needles[i]);
+				previous = current;
+			}
 		}
 
 		private static int Count(string Text, string Needle)

@@ -132,7 +132,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("KingdomGatehouseRules.IsNetworkStrike", materials);
 			StringAssert.Contains("KingdomGatehouse.IsOwnedSatellite", materials);
 
-			string socket = Source(Path.Combine("Growth", "KingdomSocket.cs"));
+			string socket = KingdomSocketLogicalSource.Read();
 			string successor = Slice(socket, "internal static bool ResumeStrikeSuccessor(",
 				"private static bool HasStrikePlotParts(");
 			Ordered(successor, "if (!Intent.HasPlot)", "return string.IsNullOrEmpty(Job.OutputId);");

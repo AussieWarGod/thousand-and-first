@@ -60,21 +60,23 @@ re-run or extend an investigation rather than taking its conclusions on trust.
 **The single most important evidence boundary:** portable and installed-assembly compilation,
 pure/source tests, generators, and static architecture checks do not sign native behavior or human
 appearance. The structural hardening revisions have no complete current-revision native protocol receipt.
-Its current full suite passes 7,700 / 7,700 cases locally; the hosted CI rerun is pending. The
+Its current full suite passes 7,705 / 7,705 cases locally. Hosted Ubuntu and Windows source suites
+are green at checkpoint `d3fc4b9`; its repository-audit-only documentation failure came from
+pre-documentation trailing-blank cleanup changing the census, now corrected. The
 portable suite remains 173 / 173 with zero skipped, with 33 passing Python tool tests, 19 passing art
 tests, clean baseline/compatibility compilation, and unchanged
 architecture evidence: 136 buildings, 126 plotted plans, 499 maps, 355 bindings, 403 tiers, 516
 variants, and 2,064 goldens with zero issues plus three expected malformed-vanilla recovery
 warnings. Lot realizations are current at 337 maps / 242 bindings / 277 tiers. Cold-install
-inventory is 1,434 files; IPart ABI is 36 shipped classes / 3 contracts; art policy allowlists 0 local
-tiles and verifies 55 vanilla paths. Its exact 1,410-source/250,683-line structural inventory is
-`f46df9b37ad71633925adba335768474d8a9b19acd3b980a03f5281b7d68e675`: 46 files exceed 300
-physical lines, 0 are exactly 300, 22 exceed 1,000, 3 exceed 2,000, and 0 exceed 5,000; 544 files
-import XRL directly, 43 at or over the line limit. The latest stable batch decomposed 6 more oversized
-authorities, bringing the current hardening sequence to 125 additional families and 135 cumulative.
+inventory is 1,475 files; IPart ABI is 36 shipped classes / 3 contracts; art policy allowlists 0 local
+tiles and verifies 55 vanilla paths. Its exact 1,451-source/251,288-line structural inventory is
+`d8b6483a57ff8ace6b094d0441e1e6f75cb2f8d287d8631d07b97a1303b7e8cc`: 43 files exceed 300
+physical lines, 0 are exactly 300, 19 exceed 1,000, 0 exceed 2,000, and 0 exceed 5,000; 583 files
+import XRL directly, 40 at or over the line limit. Three more oversized authorities were decomposed
+after `d3fc4b9`, bringing the current hardening sequence to 128 additional families and 138 cumulative.
 Fan-in preserved exact logical source bodies, persisted/public ABI, namespace wrappers, and source-reader
 families. Hosted Ubuntu exposed a legacy-publication no-replace race; an exclusive legacy-folder
-publication lock and deterministic contention test repair it, with the CI rerun pending. Exact-inventory
+publication lock and deterministic contention test repair it. Exact-inventory
 semantic review is still open. Clean commit `19fb8ee`
 has the narrow founding/single-gallery/persistence result recorded
 in `../TESTING.md`; the structural tree still needs a native rerun against its exact final commit. An
