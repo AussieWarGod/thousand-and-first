@@ -22,11 +22,13 @@ namespace ThousandAndFirst.Tests
 			};
 			for (int i = 0; i < files.Length; i++)
 			{
-				string source = files[i] == "Growth/KingdomCommission.cs"
-					? KingdomCommissionLogicalSource.Read()
-					: files[i] == "Growth/KingdomPlot2.cs"
-						? KingdomPlot2LogicalSource.Read()
-						: TestMain.ReadRepositoryText(files[i]);
+				string source = files[i] == "Growth/KingdomGrowth.cs"
+					? KingdomGrowthLogicalSource.Read()
+					: files[i] == "Growth/KingdomCommission.cs"
+						? KingdomCommissionLogicalSource.Read()
+						: files[i] == "Growth/KingdomPlot2.cs"
+							? KingdomPlot2LogicalSource.Read()
+							: TestMain.ReadRepositoryText(files[i]);
 				for (int j = 0; j < forbidden.Length; j++)
 					StringAssert.DoesNotContain(forbidden[j], source,
 						files[i] + " uses global semantic selection");
@@ -83,7 +85,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void GrowthCandidateFreezesAllPersonPayloadBeforeCreation()
 		{
-			string growth = TestMain.ReadRepositoryText("Growth/KingdomGrowth.cs");
+			string growth = KingdomGrowthLogicalSource.Read();
 			int prepare = growth.IndexOf("TryPrepareGrowthArrival(system, zone, sequence",
 				global::System.StringComparison.Ordinal);
 			int publish = growth.IndexOf("TryPublishGrowthArrivalCandidate(", prepare,

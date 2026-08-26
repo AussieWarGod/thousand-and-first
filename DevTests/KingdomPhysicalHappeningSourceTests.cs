@@ -118,7 +118,7 @@ namespace ThousandAndFirst.Tests
 
 			string stations = Source(Path.Combine("Simulation", "City", "KingdomStations.cs"));
 			StringAssert.Contains("KingdomPhysicalHappenings.IsStaged", stations);
-			string growth = Source(Path.Combine("Growth", "KingdomGrowth.cs"));
+			string growth = KingdomGrowthLogicalSource.Read();
 			StringAssert.Contains("KingdomPhysicalHappenings.IsStaged", growth);
 			string construction = Source(Path.Combine("Growth",
 				"KingdomConstructionPresence.cs"));

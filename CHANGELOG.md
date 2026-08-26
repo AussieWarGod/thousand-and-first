@@ -14,6 +14,13 @@ native/human protocol and gallery, compatibility testing, structural release gat
 Steam subscription/install pass remain gates before any release-candidate claim is restored.
 
 ### Fixed
+- **Concurrent legacy publication now has one cross-process decision boundary.** Linux CI exposed
+  that two `TryWriteLegacy` writers could both observe an absent generation identity before either
+  atomic install completed. A per-store `.legacies.lock` now covers the existing-record,
+  idempotency, collision, and new-file publication decision; a contending writer refuses while the
+  lock is held, identical durable records remain idempotent, and the lock file is excluded as
+  operational metadata. A blocked-install characterization proves the loser cannot publish or
+  overwrite the winner.
 - **Paid construction now freezes its gameplay truth before the first debit.** Registry v4 stores
   authenticated plot/frontier classification and final defence for commission, plan, plot,
   conversion, and improvement routes; retry and reload never recompute them from a changed
@@ -50,22 +57,23 @@ Steam subscription/install pass remain gates before any release-candidate claim 
   expected skip that does not occur, or an explicitly configured incomplete base fails. The
   canonical `test.ps1` release runner rejects ambient filters, forbids every skip, and runs locked
   restores plus both suites; `release-check.sh` injects the exact Qud base. The recorded licensed
-  hardening run passes 7,695 / 7,695 full cases and 173 / 173 portable cases with zero skipped.
+  hardening run passes 7,700 / 7,700 full cases and 173 / 173 portable cases with zero skipped.
 - **Addendum 9 structural debt is now an executable release blocker instead of a stale census.**
   `Tools/check-structure.py` reads the exact staged production C# inventory, reports strict
   under-300 line debt and direct engine-coupling signals during incremental CI, and fails release
   on any file at or over 300. Because line counts cannot prove ownership or dependency quality,
   release also requires no-exception human evidence for one responsibility and protocols at
-  boundaries, bound to the exact source digest. The hardening sequence adds 119 semantic
-  decompositions to the prior ten, for 129 oversized authorities split without changing public or
-  serialized type identity. The latest 53 decompositions use cohesive declaration/protocol shards;
+  boundaries, bound to the exact source digest. The hardening sequence adds 125 semantic
+  decompositions to the prior ten, for 135 oversized authorities split without changing public or
+  serialized type identity. Six post-`2cb97fc` decompositions use cohesive declaration/protocol shards
+  for growth, materials, procedures, improvements, raids, and inherited-state publication;
   numeric lexical prefixes are used only where canonical compile order must retain declaration or
-  reflection order. Current 1307-file census remains red: 248,807 physical lines; 52 files exceed
-  300, 0 are exactly 300, 28 exceed 1,000, 9 exceed 2,000, and 0 exceed 5,000. Direct `XRL`
-  imports occur in 442 files, 49 of them over the line limit. Its
+  reflection order. Current 1410-file census remains red: 250,683 physical lines; 46 files exceed
+  300, 0 are exactly 300, 22 exceed 1,000, 3 exceed 2,000, and 0 exceed 5,000. Direct `XRL`
+  imports occur in 544 files, 43 of them over the line limit. Its
   exact inventory digest is
-  `9c3713897b2fbf9b7db455247a0ac20d31e75f0eb00edf5f4c57d3a310b10b21`;
-  the corresponding cold-install inventory contains 1331 files. The
+  `f46df9b37ad71633925adba335768474d8a9b19acd3b980a03f5281b7d68e675`;
+  the corresponding cold-install inventory contains 1434 files. The
   `docs/STRUCTURE_REVIEW.json` is still missing, so this is not an enterprise-grade or v1.0 claim.
 - **The deterministic balance gate follows split rule authorities.** The simulator reads the full
   material-rule source family instead of one obsolete monolith path, and a repository test now
@@ -77,7 +85,7 @@ Steam subscription/install pass remain gates before any release-candidate claim 
   committed additions/removals. Residents, construction presence, lab, networks, roads, crops,
   upgrades, visual state, and porters consume the bound index instead of hiding another whole-zone
   walk. Duplicate physical/semantic identity fails closed. Nine focused survey source-contract
-  cases pass; the final integrated pure/source suite passes 7,695 / 7,695 cases. Dense native scan
+  cases pass; the final integrated pure/source suite passes 7,700 / 7,700 cases. Dense native scan
   instrumentation remains a release gate.
 - **Documentation now separates current evidence from historical attack material.** Public status,
   architecture/API/testing/release guides, engineering standards, changelog, private acceptance

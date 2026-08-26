@@ -192,7 +192,7 @@ namespace ThousandAndFirst.Tests
 			string offices = TestMain.ReadRepositoryText(Path.Combine("Experience",
 				"KingdomOffices.cs"));
 			StringAssert.Contains("KingdomResidentIdentity.Forget(system, Citizen)", offices);
-			string growth = TestMain.ReadRepositoryText(Path.Combine("Growth", "KingdomGrowth.cs"));
+			string growth = KingdomGrowthLogicalSource.Read();
 			StringAssert.Contains("KingdomResidentIdentity.Forget(System, leaver)", growth);
 		}
 

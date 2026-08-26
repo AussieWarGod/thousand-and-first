@@ -63,7 +63,7 @@ namespace ThousandAndFirst.Tests
 			string runtime = KingdomCitizenshipLogicalSource.Read();
 			string survey = TestMain.ReadRepositoryText("Growth/KingdomSurvey.cs");
 			string residents = TestMain.ReadRepositoryText("Simulation/City/KingdomResidents.cs");
-			string growth = TestMain.ReadRepositoryText("Growth/KingdomGrowth.cs");
+			string growth = KingdomGrowthLogicalSource.Read();
 			StringAssert.Contains("KingdomCitizenship.BelongsTo(citizenshipSystem, item)", survey);
 			StringAssert.Contains("KingdomCitizenship.BelongsTo(System, Body)", residents);
 			StringAssert.Contains("KingdomCitizenship.CanRemove(System, Body", residents);
@@ -107,7 +107,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void NewArrivalPlanHashesTheExactChainAndPreservesConversation()
 		{
-			string source = TestMain.ReadRepositoryText("Growth/KingdomGrowth.cs");
+			string source = KingdomGrowthLogicalSource.Read();
 			StringAssert.Contains("ArrivalCitizenshipPlanValue = \"base-slot-v1\"", source);
 			StringAssert.Contains("WriteExactAllegianceGraph", source);
 			StringAssert.Contains("WriteExactAllyReason", source);

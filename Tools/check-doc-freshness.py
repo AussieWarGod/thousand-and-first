@@ -11,12 +11,12 @@ import xml.etree.ElementTree as ET
 
 
 ROOT = Path(__file__).resolve().parent.parent
-FINAL_SUITE_CASES = "7,695"
+FINAL_SUITE_CASES = "7,700"
 PORTABLE_SUITE_CASES = "173"
 TOOLS_TEST_CASES = "33"
 ART_TEST_CASES = "19"
-HARDENING_DECOMPOSITIONS = "119"
-CUMULATIVE_DECOMPOSITIONS = "129"
+HARDENING_DECOMPOSITIONS = "125"
+CUMULATIVE_DECOMPOSITIONS = "135"
 FOCUSED_SURVEY_CASES = 9
 
 
@@ -256,6 +256,8 @@ def audit_public(problems):
         "zero warnings/issues",
         "_notes/V1-POLITY-SCOPE.md",
         "final rerun pending",
+        "1307 staged C# files / 248,807 physical lines",
+        "119 additional oversized authorities, 129 cumulative",
     )
 
     require(
@@ -285,6 +287,10 @@ def audit_public(problems):
         "stages 965 production C# sources",
         "decomposed 76 oversized authorities",
         "105 files still breach",
+        "stages 1307 production C# sources",
+        "1331-file cold-install inventory",
+        "decomposed 129 oversized authorities",
+        "52 files still breach",
     )
 
     require(
@@ -346,6 +352,10 @@ def audit_public(problems):
         "portable suite passes 171 / 171",
         "Tools suite passes 31 tests",
         "105 staged sources breach",
+        "7,695 / 7,695 cases against",
+        "across 1307 production C# sources",
+        "cold-install inventory contains 1331 files",
+        "52 staged sources breach",
     )
     audit_testing_labels(problems)
 
@@ -394,6 +404,10 @@ def audit_public(problems):
         "REJECTED",
         "Addendum 9 structural debt is now an executable release blocker",
         "Art/runtime-assets.json",
+        "Concurrent legacy publication now has one cross-process decision boundary",
+        "Linux CI exposed",
+        ".legacies.lock",
+        "Six post-`2cb97fc` decompositions",
     )
     forbid(
         problems,
@@ -408,6 +422,10 @@ def audit_public(problems):
         "171 / 171 portable cases",
         "66 semantic decompositions",
         "for 76 oversized authorities",
+        "Current 1307-file census remains red",
+        "7,695 / 7,695 full cases",
+        "119 semantic decompositions",
+        "for 129 oversized authorities",
     )
 
     require(
@@ -454,6 +472,13 @@ def audit_public(problems):
         f"{CUMULATIVE_DECOMPOSITIONS} oversized authorities",
         "Numeric prefixes",
         "canonical lexical staging order",
+        "Growth/KingdomGrowth.z*.cs",
+        "Growth/KingdomMaterials.[0-9][0-9].*.cs",
+        "Growth/KingdomProcedures.[0-9][0-9].*.cs",
+        "Growth/KingdomUpgrade.[0-9][0-9].*.cs",
+        "Raids/KingdomRaids.[0-9][0-9].*.cs",
+        "World/KingdomInheritanceState.z*.cs",
+        "six more than checkpoint `2cb97fc`",
     )
     require(
         problems,
@@ -508,12 +533,18 @@ def audit_public(problems):
         "105 exceed 300 lines",
         "decomposed 66 additional oversized authorities",
         "cumulative total to 76",
+        "reports 1307 staged production C# files",
+        "52 exceed 300 lines",
+        "decomposed 119 additional oversized authorities",
+        "cumulative total to 129",
     )
     forbid(
         problems,
         "docs/ARCHITECTURE.md",
         "covers 66 additional semantic decompositions",
         "76 oversized authorities have been decomposed",
+        "covers 119 additional semantic decompositions",
+        "129 oversized authorities have been decomposed",
     )
     for relative in (
         "STANDARDS.md",

@@ -125,6 +125,41 @@ namespace ThousandAndFirst.Tests
 			return count;
 		}
 
+		[Test]
+		public void LogicalSourceKeepsOneOrderedPartialAuthority()
+		{
+			string source = KingdomInheritanceStateLogicalSource.Read();
+			Assert.AreEqual(13, Occurrences(source,
+				"public sealed partial class KingdomInheritanceState"));
+			Assert.AreEqual(1, Occurrences(source, "[GameStateSingleton(StateId)]"));
+			Assert.AreEqual(0, Occurrences(source,
+				"public sealed class KingdomInheritanceState"));
+
+			string[] ordered = new[]
+			{
+				"private int SerializationVersion",
+				"public void HandleEvent(EmbarkEvent E)",
+				"internal bool StageSite(",
+				"internal bool TryGroundPaint(",
+				"internal bool PrepareVanillaFallback(",
+				"internal void ResumeAfterLoad(",
+				"private void CommitDurableProof(",
+				"private void RepairLoadedTarget(",
+				"private bool TryProveDirectRepairPrecondition(",
+				"private void ReleaseReservation(",
+				"private bool EnsureReservationLease(",
+				"private bool TryQuarantineExact(",
+				"private bool TryGetReservation("
+			};
+			int previous = -1;
+			for (int i = 0; i < ordered.Length; i++)
+			{
+				int current = source.IndexOf(ordered[i], StringComparison.Ordinal);
+				Assert.Greater(current, previous, "logical member order " + ordered[i]);
+				previous = current;
+			}
+		}
+
 		private static KingdomSealRecord Legacy()
 		{
 			return new KingdomSealRecord
@@ -226,7 +261,7 @@ namespace ThousandAndFirst.Tests
 		public void CrossRunImportRequiresExplicitPreWorldOptInWithoutSpendingDecline()
 		{
 			string options = Source("Options.xml");
-			string state = Source(Path.Combine("World", "KingdomInheritanceState.cs"));
+			string state = KingdomInheritanceStateLogicalSource.Read();
 			string seal = KingdomSealLogicalSource.Read();
 			const string optionId = "r_TAF_OptionLegacyImport";
 			int option = options.IndexOf("<option ID=\"" + optionId + "\"",
@@ -268,8 +303,11 @@ namespace ThousandAndFirst.Tests
 			}
 			Assert.AreEqual(1, productionCalls,
 				"the consent-gated new-world singleton must be the sole production caller");
-			Assert.AreEqual(Path.GetFullPath(Path.Combine(root, "World",
-				"KingdomInheritanceState.cs")), Path.GetFullPath(productionCaller));
+			Assert.AreEqual(Path.GetFullPath(Path.Combine(root, "World")),
+				Path.GetDirectoryName(Path.GetFullPath(productionCaller)));
+			StringAssert.StartsWith("KingdomInheritanceState",
+				Path.GetFileName(productionCaller));
+			StringAssert.EndsWith(".cs", productionCaller);
 			StringAssert.Contains(
 				"Options.GetOption(\"r_TAF_OptionLegacyImport\", \"No\") == \"Yes\"",
 				state);

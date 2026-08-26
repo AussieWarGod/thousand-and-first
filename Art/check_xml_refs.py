@@ -47,6 +47,7 @@ Without --base, vanilla resolution is skipped and only TAF-internal references a
 script still runs somewhere without the game installed.
 """
 
+import glob
 import io
 import os
 import re
@@ -73,6 +74,18 @@ DEFAULT_BASE = (
 def read(path):
     with io.open(path, encoding="utf-8") as handle:
         return handle.read()
+
+
+def source_family_paths(path):
+    """Return one required root and its dot-suffixed C# shards in lexical order."""
+    if not os.path.isfile(path):
+        return []
+    stem, extension = os.path.splitext(path)
+    return [path] + sorted(glob.glob(stem + ".*" + extension))
+
+
+def read_source_family(path):
+    return "\n".join(read(member) for member in source_family_paths(path))
 
 
 def xml_syntax_problems():
@@ -558,16 +571,20 @@ def raising_ceremony_problems():
             if 'SetIntProperty("KingdomBuilt", 1)' in read(path):
                 stampers.add(os.path.normpath(path[2:] if path.startswith("./") else path))
 
-    for path in sorted(stampers - set(RAISING_PATHS) - set(ADOPTING_PATHS)):
+    known_paths = set()
+    for path in RAISING_PATHS + ADOPTING_PATHS:
+        known_paths.update(source_family_paths(path))
+    for path in sorted(stampers - known_paths):
         problems.append(
             "%s finishes a building but is neither a known raising path nor a known adoption "
             "path; if it raises one it must call KingdomCeremony.OnBuildingRaised" % path
         )
     for path in RAISING_PATHS:
-        if not os.path.isfile(path):
+        paths = source_family_paths(path)
+        if not paths:
             problems.append("raising path %s is gone; this check no longer walks anything" % path)
             continue
-        text = read(path)
+        text = read_source_family(path)
         if "KingdomCeremony.OnBuildingRaised(" not in text:
             problems.append(
                 "%s finishes a building without calling KingdomCeremony.OnBuildingRaised, so it "
@@ -580,10 +597,11 @@ def raising_ceremony_problems():
                 "is one grammar for a building rising" % path
             )
     for path in PLAN_PATHS:
-        if not os.path.isfile(path):
+        paths = source_family_paths(path)
+        if not paths:
             problems.append("plan path %s is gone; this check no longer walks anything" % path)
             continue
-        text = read(path)
+        text = read_source_family(path)
         if "PlanQuote(" not in text:
             problems.append(
                 "%s realises a staked plan without carrying the surveyor's words onto what "
@@ -614,7 +632,13 @@ def crop_chain_problems(vanilla):
     nothing will ever look at.
     """
     problems = []
-    rules = read(os.path.join("Growth", "KingdomCropRules.cs"))
+    rules_path = os.path.join("Growth", "KingdomCropRules.cs")
+    rules_paths = source_family_paths(rules_path)
+    if not rules_paths:
+        return [
+            "KingdomCropRules source family is gone; this check no longer walks anything"
+        ]
+    rules = read_source_family(rules_path)
     ours = taf_blueprints()
 
     def pairs(method):

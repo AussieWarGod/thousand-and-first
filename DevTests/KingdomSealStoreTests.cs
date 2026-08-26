@@ -70,6 +70,45 @@ namespace ThousandAndFirst.Tests
 			}
 		}
 
+		private sealed class BlockingMoveNewFileOps : IKingdomSealFileOps
+		{
+			private readonly IKingdomSealFileOps _inner = SystemKingdomSealFileOps.Instance;
+
+			internal readonly ManualResetEventSlim Entered = new ManualResetEventSlim(false);
+
+			internal readonly ManualResetEventSlim Release = new ManualResetEventSlim(false);
+
+			public bool Exists(string path) => _inner.Exists(path);
+
+			public FileAttributes Attributes(string path) => _inner.Attributes(path);
+
+			public long Length(string path) => _inner.Length(path);
+
+			public string ReadAllText(string path) => _inner.ReadAllText(path);
+
+			public void WriteAllTextDurable(string path, string text)
+			{
+				_inner.WriteAllTextDurable(path, text);
+			}
+
+			public void MoveNew(string source, string destination)
+			{
+				Entered.Set();
+				Release.Wait();
+				_inner.MoveNew(source, destination);
+			}
+
+			public void ReplaceAtomic(string source, string destination, string backup)
+			{
+				_inner.ReplaceAtomic(source, destination, backup);
+			}
+
+			public void DeleteIfExists(string path)
+			{
+				_inner.DeleteIfExists(path);
+			}
+		}
+
 		private static KingdomSealRecord StageRecord(string lineage, string legacy, string origin, int generation, int revision)
 		{
 			KingdomSealRecord record = new KingdomSealRecord();
@@ -655,6 +694,7 @@ namespace ThousandAndFirst.Tests
 				KingdomSealStore store = new KingdomSealStore(root);
 				int refused;
 				List<KingdomSealRecord> records = store.ReadLegacies(out refused);
+				Assert.AreEqual(0, refused);
 				Assert.AreEqual(1, records.Count);
 				KingdomSealRecord winner = first ? one : two;
 				string retryFailure;
@@ -664,6 +704,60 @@ namespace ThousandAndFirst.Tests
 			finally
 			{
 				DeleteRoot(root);
+			}
+		}
+
+		[Test]
+		public void LegacyPublicationLockRefusesASecondWriterBeforeInstall()
+		{
+			string root = NewRoot();
+			BlockingMoveNewFileOps blocking = new BlockingMoveNewFileOps();
+			Task<bool> first = null;
+			try
+			{
+				KingdomSealRecord one = PromotedRecord("dynasty", "legacy-gate", "game-one", 1, 1);
+				KingdomSealRecord two = PromotedRecord("dynasty", "legacy-gate", "game-two", 1, 1);
+				first = Task.Run(delegate
+				{
+					string failure;
+					return new KingdomSealStore(root, blocking).TryWriteLegacy(one, out failure);
+				});
+				Assert.IsTrue(blocking.Entered.Wait(TimeSpan.FromSeconds(5)),
+					"first writer never reached its atomic install");
+
+				string secondFailure;
+				Assert.IsFalse(new KingdomSealStore(root).TryWriteLegacy(two, out secondFailure));
+				StringAssert.Contains("publication lock", secondFailure);
+
+				blocking.Release.Set();
+				Assert.IsTrue(first.Wait(TimeSpan.FromSeconds(5)),
+					"first writer did not leave its atomic install");
+				Assert.IsTrue(first.GetAwaiter().GetResult());
+				KingdomSealRecord stored = ReadRecord(
+					new KingdomSealStore(root).LegacyPath("legacy-gate"));
+				Assert.AreEqual(one.OriginGameId, stored.OriginGameId);
+			}
+			finally
+			{
+				blocking.Release.Set();
+				bool writerStopped = first == null || first.IsCompleted;
+				if (!writerStopped)
+				{
+					try
+					{
+						writerStopped = first.Wait(TimeSpan.FromSeconds(5));
+					}
+					catch (AggregateException)
+					{
+						writerStopped = true;
+					}
+				}
+				if (writerStopped)
+				{
+					blocking.Entered.Dispose();
+					blocking.Release.Dispose();
+					DeleteRoot(root);
+				}
 			}
 		}
 

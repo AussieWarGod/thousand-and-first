@@ -1064,7 +1064,7 @@ namespace ThousandAndFirst.Tests
 				"KingdomConstruction.FreezePaidBuild(building, construction)",
 				"KingdomPhysicalPhase.FinalOutputPending");
 
-			string strike = File.ReadAllText(Path.Combine(root, "Growth", "KingdomMaterials.cs"));
+			string strike = KingdomMaterialsLogicalSource.Read();
 			int schema = strike.IndexOf("int paidSchema = Building.GetIntProperty",
 				StringComparison.Ordinal);
 			int legacy = strike.IndexOf("cost = CostFor(key)", schema,
@@ -1118,7 +1118,7 @@ namespace ThousandAndFirst.Tests
 		public void StrikeAndRoadSourcesFreezePhasesBeforePhysicalCallbacksAndCounters()
 		{
 			string root = LocateRepository();
-			string strike = File.ReadAllText(Path.Combine(root, "Growth", "KingdomMaterials.cs"));
+			string strike = KingdomMaterialsLogicalSource.Read();
 			AssertOrdered(strike, "KingdomPhysicalPhase.StrikeStampPending",
 				"SetIntProperty(StrikeEffortProperty", "KingdomPhysicalPhase.StrikeWorking");
 			AssertOrdered(strike, "KingdomPhysicalPhase.StrikeWorkComplete",
@@ -1181,8 +1181,8 @@ namespace ThousandAndFirst.Tests
 					"RemainingTicks", "LastWorkedTick", "ShortfallSaid", "StaffNeeded",
 					"ThresholdManning" });
 			AssertDeclaredPositionalFields(
-				File.ReadAllText(Path.Combine(root, "Growth", "KingdomUpgrade.cs")),
-				"public class r_KingdomImprovement", "public override bool WantEvent",
+				KingdomUpgradeLogicalSource.Read(),
+				"public partial class r_KingdomImprovement", "public override bool WantEvent",
 				new string[] { "SuccessorKey", "SuccessorBlueprint", "Held", "Working",
 					"Scaffold", "WorkCompleteTick", "AnnouncedReason" });
 
@@ -1298,7 +1298,7 @@ namespace ThousandAndFirst.Tests
 		public void ImprovementHandoverUsesNamedReceiptsExactNoStackAndDrainFirstPhases()
 		{
 			string root = LocateRepository();
-			string source = File.ReadAllText(Path.Combine(root, "Growth", "KingdomUpgrade.cs"));
+			string source = KingdomUpgradeLogicalSource.Read();
 			StringAssert.Contains("HandoverPrefix = \"r_TAF_ImprovementHandover:\"", source);
 			StringAssert.Contains("Explicit accessors have no backing fields", source);
 			StringAssert.Contains("NoStack: true", source);
@@ -1450,7 +1450,7 @@ namespace ThousandAndFirst.Tests
 		public void ImprovementItemEscrowRootsBeforeRemovalAndSurvivesEveryAddCut()
 		{
 			string root = LocateRepository();
-			string source = File.ReadAllText(Path.Combine(root, "Growth", "KingdomUpgrade.cs"));
+			string source = KingdomUpgradeLogicalSource.Read();
 			StringAssert.DoesNotContain("GameObject.FindByID", source);
 			StringAssert.Contains("HandoverEscrowPrefix = \"r_TAF_ImprovementItemEscrow:\"", source);
 			StringAssert.Contains("HandoverConstructionReceipt", source);
@@ -1617,7 +1617,7 @@ namespace ThousandAndFirst.Tests
 		{
 			string commission = KingdomCommissionLogicalSource.Read();
 			string plan = TestMain.ReadRepositoryText("Growth/KingdomPlanMarker.cs");
-			string upgrade = TestMain.ReadRepositoryText("Growth/KingdomUpgrade.cs");
+			string upgrade = KingdomUpgradeLogicalSource.Read();
 			string plot = KingdomPlot2LogicalSource.Read();
 			string socket = TestMain.ReadRepositoryText("Growth/KingdomSocket.cs");
 			AssertOrdered(commission, "KingdomConstruction.FreezeBuildTruth(job",

@@ -20,7 +20,7 @@ namespace ThousandAndFirst.Tests
 
 		private static string Upgrade()
 		{
-			return TestMain.ReadRepositoryText(Path.Combine("Growth", "KingdomUpgrade.cs"));
+			return KingdomUpgradeLogicalSource.Read();
 		}
 
 		private static string Socket()
@@ -30,7 +30,7 @@ namespace ThousandAndFirst.Tests
 
 		private static string Materials()
 		{
-			return TestMain.ReadRepositoryText(Path.Combine("Growth", "KingdomMaterials.cs"));
+			return KingdomMaterialsLogicalSource.Read();
 		}
 
 		[Test]

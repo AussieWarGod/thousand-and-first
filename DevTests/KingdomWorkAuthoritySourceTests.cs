@@ -62,7 +62,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void AssignmentStampsTheExactResidentPostConsumedByTheNextReading()
 		{
-			string growth = Source("Growth/KingdomGrowth.cs");
+			string growth = KingdomGrowthLogicalSource.Read();
 			int assign = growth.IndexOf("public static void AssignWork", StringComparison.Ordinal);
 			int emigrate = growth.IndexOf("public static bool Emigrate", assign,
 				StringComparison.Ordinal);

@@ -23,7 +23,7 @@ namespace ThousandAndFirst.Tests
 			Assert.IsFalse(post.Contains("AnimatedMaterialElectric"),
 				"vanilla's electric animation flashes even while this hand-cranked post is empty");
 
-			string growth = TestMain.ReadRepositoryText("Growth/KingdomGrowth.cs");
+			string growth = KingdomGrowthLogicalSource.Read();
 			StringAssert.Contains("if (work.GetIntProperty(\"KingdomHandCranked\") == 1)", growth);
 			StringAssert.Contains("capacitor.Charge = target;", growth);
 		}

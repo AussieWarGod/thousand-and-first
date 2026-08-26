@@ -57,7 +57,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("Survey.PlotWorks", constructionPass);
 			StringAssert.Contains("active.TryLoaded(out Loaded)", construction);
 
-			string upgrade = Source("Growth", "KingdomUpgrade.cs");
+			string upgrade = KingdomUpgradeLogicalSource.Read();
 			string resolve = Between(upgrade, "private static void Resolve(KingdomSystem System",
 				"public static void GiveFirstNotice(");
 			StringAssert.DoesNotContain("Z.GetObjects()", resolve);
@@ -174,7 +174,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void PhysicalMutationSeamsUpdateSameSurveyBeforeLaterDecisions()
 		{
-			string growth = Source("Growth", "KingdomGrowth.cs");
+			string growth = KingdomGrowthLogicalSource.Read();
 			StringAssert.Contains("KingdomSurvey.ObserveAddResultInActive(zone, settler, accepted);",
 				growth);
 			int bind = growth.IndexOf("KingdomResidents.TryEnsureRow", StringComparison.Ordinal);
@@ -200,16 +200,28 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("KingdomSurvey.ObserveRemovedFromActive(Z, exact);", architecture);
 			StringAssert.Contains("KingdomSurvey.ObserveCurrentTopologyInActive(Z, placed);", architecture);
 
-			string upgrade = Source("Growth", "KingdomUpgrade.cs");
+			string upgrade = KingdomUpgradeLogicalSource.Read();
 			string handover = Between(upgrade,
 				"public static void HandOver(GameObject Predecessor",
-				"private static bool ExactCarriedMarks(");
-			int carry = handover.IndexOf("CarryMarks", StringComparison.Ordinal);
-			int successorRefresh = handover.IndexOf("activeSurvey.ObserveChanged(Successor)",
+				"private static bool ExactHandoverEndpointsAfterCallback(");
+			int carryPhase = handover.IndexOf("TryCarryHandoverContents(",
 				StringComparison.Ordinal);
-			int predecessorRemoval = handover.IndexOf("Predecessor.Destroy", StringComparison.Ordinal);
+			int removalPhase = handover.IndexOf("TryRemoveHandoverPredecessor(",
+				StringComparison.Ordinal);
+			Assert.GreaterOrEqual(carryPhase, 0);
+			Assert.Greater(removalPhase, carryPhase);
+			string carryBody = Between(upgrade,
+				"private static bool TryCarryHandoverContents(",
+				"private static bool TryRemoveHandoverPredecessor(");
+			string removalBody = Between(upgrade,
+				"private static bool TryRemoveHandoverPredecessor(",
+				"public partial class r_KingdomImprovement");
+			int carry = carryBody.IndexOf("CarryMarks", StringComparison.Ordinal);
+			int successorRefresh = removalBody.IndexOf("activeSurvey.ObserveChanged(Successor)",
+				StringComparison.Ordinal);
+			int predecessorRemoval = removalBody.IndexOf("Predecessor.Destroy", StringComparison.Ordinal);
 			Assert.GreaterOrEqual(carry, 0);
-			Assert.Greater(successorRefresh, carry);
+			Assert.GreaterOrEqual(successorRefresh, 0);
 			Assert.Greater(predecessorRemoval, successorRefresh);
 
 			string gatehouse = KingdomGatehouseLogicalSource.Read();
@@ -227,7 +239,7 @@ namespace ThousandAndFirst.Tests
 				Source("Growth", "KingdomScaffold.cs"),
 				KingdomPlot2LogicalSource.Read(),
 				Source("Growth", "KingdomRoads.cs"),
-				Source("Growth", "KingdomMaterials.cs"),
+				KingdomMaterialsLogicalSource.Read(),
 				Source("Experience", "KingdomCarryRuntime.cs"),
 				KingdomExpeditionsLogicalSource.Read(),
 				Source("Simulation/City", "KingdomBehaviourRuntime.cs")

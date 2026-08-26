@@ -105,7 +105,7 @@ namespace ThousandAndFirst.Tests
 				"Popup.PickOption(Title: \"Preview exact change:",
 				"ExecutePreparedConvert(System, zone, target, conversion");
 
-			string upgrade = Read("Growth", "KingdomUpgrade.cs");
+			string upgrade = KingdomUpgradeLogicalSource.Read();
 			string held = Between(upgrade, "public static bool OpenHeldOffer(",
 				"/// <summary>\n\t\t/// Moves everything from the old work");
 			AssertOrdered(held, "TryPrepareImprovement(System, Z, Work, A",

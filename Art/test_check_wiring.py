@@ -36,11 +36,26 @@ class ArtPolicyTests(unittest.TestCase):
         references = check_wiring.referenced_tiles([path])
         self.assertIn("ThousandAndFirst/preview.png", references)
 
-    def test_district_reference_check_reads_split_rules_authority(self):
+    def test_reference_checks_read_split_source_authorities(self):
         self.assertEqual(
             {"agrarian", "market", "craft", "shrine", "garrison", "academy"},
             check_xml_refs.known_districts(),
         )
+        self.assertEqual([], check_xml_refs.raising_ceremony_problems())
+        self.assertEqual([], check_xml_refs.crop_chain_problems(None))
+
+        temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        root = os.path.join(temporary.name, "Authority.cs")
+        shard = os.path.join(temporary.name, "Authority.Split.cs")
+        with io.open(root, "w", encoding="utf-8") as stream:
+            stream.write("public static partial class Authority {}\n")
+        with io.open(shard, "w", encoding="utf-8") as stream:
+            stream.write("public static partial class Authority { const int Proof = 1; }\n")
+        self.assertEqual([root, shard], check_xml_refs.source_family_paths(root))
+        self.assertIn("const int Proof = 1", check_xml_refs.read_source_family(root))
+        os.unlink(root)
+        self.assertEqual([], check_xml_refs.source_family_paths(root))
 
     def test_repository_runtime_asset_manifest_is_canonical_and_complete(self):
         records, problems = check_wiring.runtime_asset_records()

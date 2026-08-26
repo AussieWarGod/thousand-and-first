@@ -10,7 +10,33 @@ namespace ThousandAndFirst.Tests
 	{
 		private static string Source(string relative)
 		{
+			if (relative == Path.Combine("Raids", "KingdomRaids.cs"))
+				return KingdomRaidsLogicalSource();
 			return TestMain.ReadRepositoryText(relative);
+		}
+
+		private static string KingdomRaidsLogicalSource()
+		{
+			string[] files =
+			{
+				"KingdomRaids.00.ProvocationAndWake.cs",
+				"KingdomRaids.01.ActivationAndRecovery.cs",
+				"KingdomRaids.02.AnswersAndActors.cs",
+				"KingdomRaids.03.DemandChannel.cs",
+				"KingdomRaids.04.RecoveryAndFortify.cs",
+				"KingdomRaids.05.AttackLaunchAndResume.cs",
+				"KingdomRaids.06.AttackResolutionAndOutbox.cs",
+				"KingdomRaids.07.MigrationAndDefence.cs",
+				"KingdomRaids.08.DemandProjection.cs",
+				"KingdomRaids.09.AttackProjectionAndHelpers.cs",
+				"KingdomRaids.cs",
+				"r_KingdomRaidDemand.cs",
+				"r_KingdomRaiderObjective.cs"
+			};
+			string[] source = new string[files.Length];
+			for (int i = 0; i < files.Length; i++)
+				source[i] = TestMain.ReadRepositoryText(Path.Combine("Raids", files[i]));
+			return string.Join("\n", source);
 		}
 
 		private static string RaidLifecycleSource()

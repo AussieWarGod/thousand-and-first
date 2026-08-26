@@ -81,7 +81,7 @@ Founding again after exile creates a **new** faction while the old one persists 
 ## Q4 — Destructive side effects on the parts our own blueprints carry
 
 Precedent, found this session: `r_KingdomChargingPost` carried a vanilla `Capacitor`, our crew
-code fills it (`Growth/KingdomGrowth.cs:262-268`), and vanilla `Capacitor.HandleEvent(
+code fills it (`Growth/KingdomGrowth*.cs`), and vanilla `Capacitor.HandleEvent(
 BeforeDeathRemovalEvent)` (`XRL/World/Parts/Capacitor.cs:340-347`) detonates for the whole stored
 charge when the object dies — up to 4,000 force inside the settlement, destroying player-placed
 objects the mod is forbidden to touch. Now fixed with `MinimumChargeToExplode="0"`.

@@ -77,7 +77,7 @@ called "arcology tier 4" in the UI.
 ### 0b. The machinery that already ships (so "implementable" is checkable, not asserted)
 
 Read: `Growth/KingdomPlot2.cs`, `Growth/KingdomPlotRules.cs`, `Growth/KingdomLayout.cs`,
-`Growth/KingdomSocket.cs`, `Growth/KingdomUpgrade.cs`, `Growth/KingdomPlanMarker.cs`,
+`Growth/KingdomSocket.cs`, `Growth/KingdomUpgrade*.cs`, `Growth/KingdomPlanMarker.cs`,
 `Growth/KingdomZoningRules.cs`.
 
 | Piece | Where | Why it matters to this question |
@@ -86,7 +86,7 @@ Read: `Growth/KingdomPlot2.cs`, `Growth/KingdomPlotRules.cs`, `Growth/KingdomLay
 | **The rite ground is a zone property, not an object** — `RiteXProperty` / `RiteYProperty` stamped at founding. | `Core/KingdomFounding.cs:69-70,206-207` | The founder's basin marks ground the engine already remembers. Nothing has to be preserved through a rebuild for the ladder to know where the centre began. |
 | **`HeartPull(PlotSize)`** already biases siting: L = 1/cell, XL = 3/cell of distance from the heart; S and M = 0. | `Growth/KingdomPlotRules*.cs`, applied at `:1123-1126` | Big plots already *want* the heart. The brief's own note — "a heart full of early huts is cleared by striking, which is the system working" — is the churn the author is now asking to soften. The tuning surface exists. |
 | **Residents bind to homes by PLOT ID, not by cell or object.** `HomePlotIdProperty = "KingdomLodgingPlotId"`. | `Growth/KingdomLodging.cs:74,280-292,393` | **This is the single most important fact for the relocation verb.** A move that preserves the plot id keeps every resident housed with no re-assignment, no roof brink, no lodging churn. The household walking over with their house is already how the data is shaped. |
-| **Identity carry across a rebuild is already written.** `KingdomPlots.GrowInPlace` copies the plot id, re-stamps the rect, carries the footprint and roof state to the successor; `r_KingdomImprovement` keeps the predecessor **standing and working** for the whole build and hands contents across only when the successor is actually on the ground. | `Growth/KingdomPlot2*.cs` (`GrowInPlace`); `KingdomUpgrade.cs` header + `PollHandover` | A relocate is the same handover with a *different rect*. The "no roof brink on a planned move" promise in the sketch is not new machinery; it is the existing upgrade handover pointed sideways. |
+| **Identity carry across a rebuild is already written.** `KingdomPlots.GrowInPlace` copies the plot id, re-stamps the rect, carries the footprint and roof state to the successor; `r_KingdomImprovement` keeps the predecessor **standing and working** for the whole build and hands contents across only when the successor is actually on the ground. | `Growth/KingdomPlot2*.cs` (`GrowInPlace`); `KingdomUpgrade*.cs` header + `PollHandover` | A relocate is the same handover with a *different rect*. The "no roof brink on a planned move" promise in the sketch is not new machinery; it is the existing upgrade handover pointed sideways. |
 | **`RestakeOnRect` takes an arbitrary rect.** The socket path sweeps the old plot's parts (`SweepPlotParts`, scoped by plot id, protection-law-safe) and re-stakes through the ordinary `KingdomPlots.Stake`. | `KingdomSocket.cs:337-460` | Relocation ≈ `SweepPlotParts(source)` + `RestakeOnRect(destination)` + id/identity carry + a cost rule that spends **no materials**. Most of the verb exists. |
 | **Plan markers cost nothing until affordable** and are realised only on the ordinary settlement pass. | `KingdomPlanMarker.cs:17-50,130` | The "pre-surveyed future ring" can be rendered with the ghost machinery that already ships — visible intent, zero spend. |
 | **Lane reservation is already a rect concept.** `KingdomPlotRules.Reserved(rect)` = rect + `RoadMargin`; `CrowdsExisting` refuses a plot that overlaps any existing plot's reserved rect. | `Growth/KingdomPlotRules*.cs` | The codebase already knows how to say "this ground is spoken for and nothing may crowd it." A reserved ring is the same idea at settlement scale. |
@@ -520,7 +520,7 @@ Without that split, "move" becomes a materials laundry (strike-by-moving-one-cel
 sketch's promise ("no roof brink on a planned move; the household walks over with their house") is
 already implemented for upgrades: `r_KingdomImprovement` keeps the predecessor **standing and
 working** for the entire build and hands contents across only once the successor is on the ground
-(`Growth/KingdomUpgrade.cs`, `PollHandover`). Point that sideways — successor on the *destination*
+(`Growth/KingdomUpgrade*.cs`, `PollHandover`). Point that sideways — successor on the *destination*
 rect — and displacement is structurally zero, which is what makes the verb feel kind rather than
 merely cheap. It also yields a clean, honest refusal when there is no free ground:
 **"there is nowhere to set it down"** (7b).

@@ -257,7 +257,7 @@ ArrivedTick (tenure), HomeWorkId, **JobWorkId + JobRole + DayShape**, standing +
 zone, both brink windows, **CreedToward/CreedChannel**, **KeptCreeds** (creeds held and left,
 Addendum 16). It does *not* carry genotype or stats — those live on the body, which is a real
 GameObject minted from the settler blueprint table (`KingdomGrowth.SettlerBlueprint()`,
-`T/Growth/KingdomGrowth.cs:711-718,769`). **The heir pool is therefore already real: named people
+`T/Growth/KingdomGrowth*.cs`). **The heir pool is therefore already real: named people
 with bodies, jobs, tenures, creeds, and grudges.** One delta succession needs: the binding
 registry's "one identity, at most one body" law (Addendum 12,
 `T/_notes/BUILDING-CATALOGUE-BRIEF.md:613`) means the chosen heir's resident row must be retired

@@ -25,7 +25,8 @@ git cat-file -e "${BASE_REF}^{commit}" 2>/dev/null || {
 #   W|Type                 direct custom Write override exists
 #   R|Type                 direct custom Read override exists
 extract_parts() {
-	awk '
+	local known="${1:-}"
+	awk -v known="$known" '
 	BEGIN { depth=0; inpart=0; pending=0; skip=0; cname="" }
 	{
 		raw=$0
@@ -35,6 +36,12 @@ extract_parts() {
 			cname=m[3]
 			pending=1
 			print "C|" cname
+		} else if (!inpart && match(line,
+			/public (sealed )?partial class[[:space:]]+([A-Za-z0-9_]+)/, m) &&
+			index(known, "|" m[2] "|") != 0) {
+			# A partial continuation owns fields and custom serializers of the same IPart.
+			cname=m[2]
+			pending=1
 		}
 		opens=gsub(/\{/, "{", line)
 		closes=gsub(/\}/, "}", line)
@@ -88,10 +95,20 @@ scan_baseline() {
 }
 
 scan_worktree() {
-	rg -l 'class .*: IPart' --glob '*.cs' --glob '!DevTests/**' |
+	local known
+	known="$({
+		rg -o --no-filename \
+			'public (sealed )?(partial )?class[[:space:]]+[A-Za-z0-9_]+[[:space:]]*:[[:space:]]*IPart' \
+			--glob '*.cs' --glob '!DevTests/**' |
+			sed -E 's/.*class[[:space:]]+([A-Za-z0-9_]+).*/\1/' |
+			LC_ALL=C sort -u | paste -sd'|' -
+	} || true)"
+	[ -n "$known" ] || return 0
+	known="|$known|"
+	rg --files --glob '*.cs' --glob '!DevTests/**' |
 		LC_ALL=C sort |
 		while IFS= read -r file; do
-			extract_parts < "$file"
+			extract_parts "$known" < "$file"
 		done
 }
 

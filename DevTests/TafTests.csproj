@@ -23,6 +23,8 @@
 	<Compile Include="KingdomArchivedSettlementCodecLogicalSource.cs" />
 	<Compile Include="KingdomCharterPartLogicalSource.cs" />
 	<Compile Include="KingdomResearchLogicalSource.cs" />
+	<Compile Include="KingdomProceduresLogicalSource.cs" />
+	<Compile Include="KingdomGrowthLogicalSource.cs" />
 	<Compile Include="KingdomHappeningLifecycleLogicalSource.cs" />
     <Compile Include="KingdomRulesTests.cs" />
 	<Compile Include="..\Core\KingdomStyleStratum.cs" />
@@ -75,6 +77,7 @@
     <Compile Include="KingdomMirrorGateRulesTests.cs" />
 	<Compile Include="KingdomPurposeRulesTests.cs" />
 	<Compile Include="KingdomMaterialDebitLogicalSource.cs" />
+	<Compile Include="KingdomMaterialsLogicalSource.cs" />
 	<Compile Include="KingdomPurposeSourceTests.cs" />
     <Compile Include="KingdomDelveRulesTests.cs" />
 	<Compile Include="KingdomDelveLinkRulesTests.cs" />
@@ -92,7 +95,9 @@
 	<Compile Include="KingdomCreedContentTests.cs" />
     <Compile Include="KingdomZoningRulesTests.cs" />
 	<Compile Include="KingdomCovenantRulesTests.cs" />
+	<Compile Include="KingdomUpgradeLogicalSource.cs" />
     <Compile Include="KingdomUpgradeRulesTests.cs" />
+	<Compile Include="KingdomUpgradeSourceTests.cs" />
     <Compile Include="KingdomDesignRulesTests.cs" />
     <Compile Include="KingdomPlotRulesTests.cs" />
     <Compile Include="KingdomArchitectureRulesTests.cs" />
@@ -1057,8 +1062,9 @@
     <Compile Include="KingdomInheritRulesTests.cs" />
 	<Compile Include="KingdomInheritEngineLogicalSource.cs" />
     <Compile Include="KingdomInheritEngineTests.cs" />
-    <Compile Include="KingdomInheritanceWorldExtensionLogicalSource.cs" />
-    <Compile Include="KingdomInheritanceSiteRulesTests.cs" />
+	<Compile Include="KingdomInheritanceWorldExtensionLogicalSource.cs" />
+	<Compile Include="KingdomInheritanceSiteRulesTests.cs" />
+	<Compile Include="KingdomInheritanceStateLogicalSource.cs" />
     <Compile Include="KingdomInheritanceStateRulesTests.cs" />
 	<Compile Include="KingdomInheritanceSpatialRulesTests.cs" />
 	<Compile Include="KingdomInheritanceSpatialLogicalSource.cs" />

@@ -191,9 +191,8 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void ImprovementRuntimePricesThePredecessorTransitionNotTheSuccessorDesign()
 		{
-			string root = TestMain.RepositoryRoot;
-			string materials = File.ReadAllText(Path.Combine(root, "Growth", "KingdomMaterials.cs"));
-			string upgrade = File.ReadAllText(Path.Combine(root, "Growth", "KingdomUpgrade.cs"));
+			string materials = KingdomMaterialsLogicalSource.Read();
+			string upgrade = KingdomUpgradeLogicalSource.Read();
 			StringAssert.Contains("UpgradeCostFor(PredecessorKey)", materials);
 			StringAssert.Contains("CanPayUpgrade(Z, Predecessor.Key, out _)", upgrade);
 			StringAssert.Contains("ReserveUpgradePayment(Z, A.Key)", upgrade);

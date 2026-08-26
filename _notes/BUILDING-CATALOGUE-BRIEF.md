@@ -176,7 +176,7 @@ a building plan bound to exactly one (type × size). Adopted here:
   overnight (catalogue spread: tent 900 ticks, "a roof by nightfall", to 7200 for the heaviest
   works), and you cannot live in a half-built house — a scaffold carries nothing (no roof, no
   beds, no equilibrium) until its last stage stamps it built, verified at KingdomSurvey.cs:93 and
-  KingdomGrowth.cs:497. Future knob if playtest wants it: crew count shortening builds to a floor;
+  KingdomGrowth*.cs. Future knob if playtest wants it: crew count shortening builds to a floor;
   currently flat per design plus the craft-district discount;
   (b) registry change-detection is NOT adopted — it solved Papyrus quest-scan slowness, and our
   registry is one fast XML parse per load; (c) taste/blacklist curation is PROPORTIONATE, not

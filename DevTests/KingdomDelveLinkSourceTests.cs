@@ -20,7 +20,7 @@ namespace ThousandAndFirst.Tests
 
 		private static string Materials()
 		{
-			return TestMain.ReadRepositoryText(Path.Combine("Growth", "KingdomMaterials.cs"));
+			return KingdomMaterialsLogicalSource.Read();
 		}
 
 		private static string Delve()

@@ -20,18 +20,18 @@ python3 Tools/check-structure.py --release
 
 ## Current hardening checkpoint
 
-`Tools/check-structure.py --json` currently reports 1307 staged production C# files and 248,807
-physical lines. Of those, 52 exceed 300 lines, 0 are exactly 300, and therefore 52 fail the strict
-cap; 28 exceed 1,000, 9 exceed 2,000, and 0 exceed 5,000. Exact staged source inventory digest:
-`9c3713897b2fbf9b7db455247a0ac20d31e75f0eb00edf5f4c57d3a310b10b21`. The census reports
-442 files with direct `XRL` imports; 49 of those exceed the line limit.
+`Tools/check-structure.py --json` currently reports 1410 staged production C# files and 250,683
+physical lines. Of those, 46 exceed 300 lines, 0 are exactly 300, and therefore 46 fail the strict
+cap; 22 exceed 1,000, 3 exceed 2,000, and 0 exceed 5,000. Exact staged source inventory digest:
+`f46df9b37ad71633925adba335768474d8a9b19acd3b980a03f5281b7d68e675`. The census reports
+544 files with direct `XRL` imports; 43 of those exceed the line limit.
 
-The current hardening sequence semantically decomposed 119 additional oversized authorities,
-bringing the cumulative total to 129. That is 53 more decompositions than the prior documented
-checkpoint. [ARCHITECTURE.md](ARCHITECTURE.md#split-authority-map) maps the logical authorities to
+The current hardening sequence semantically decomposed 125 additional oversized authorities,
+bringing the cumulative total to 135. That is six more decompositions since checkpoint `2cb97fc`.
+[ARCHITECTURE.md](ARCHITECTURE.md#split-authority-map) maps the logical authorities to
 their current source families. Numeric lexical prefixes appear only where the canonical stage's
 filename order must preserve original declaration, reflection, or serialized-metadata order; they
-do not create a second authority. This is measurable progress, not release signoff: 52 line-cap
+do not create a second authority. This is measurable progress, not release signoff: 46 line-cap
 failures and missing `docs/STRUCTURE_REVIEW.json` exact-inventory human review still
 block release. Any staged source change invalidates this digest and requires a new census and
 review binding.

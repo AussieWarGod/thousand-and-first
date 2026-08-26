@@ -21,18 +21,64 @@ namespace ThousandAndFirst
 				Failure = "the legacy or lineage is not an identifier this build accepts";
 				return false;
 			}
-			string path = LegacyPath(Record.LegacyId);
-			if (TryWriteSeal(path, Record, false, out Failure))
+			FileStream gate;
+			if (!TryLockLegacies(out gate, out Failure))
 			{
+				return false;
+			}
+			using (gate)
+			{
+				string path = LegacyPath(Record.LegacyId);
+				KingdomSealRecord existing = ReadSlot(path);
+				if (existing != null)
+				{
+					if (existing.LegacyId == Record.LegacyId && SameRecord(existing, Record))
+					{
+						Failure = "";
+						return true;
+					}
+					Failure = "a different durable legacy already owns that generation identity";
+					return false;
+				}
+				return TryWriteSeal(path, Record, false, out Failure);
+			}
+		}
+
+		private bool TryLockLegacies(out FileStream Gate, out string Failure)
+		{
+			Gate = null;
+			Failure = "";
+			try
+			{
+				string folder;
+				bool folderExists;
+				if (!TrySafeFolder(LegaciesFolder, true, out folder, out folderExists, out Failure)
+					|| !folderExists)
+				{
+					return false;
+				}
+				string path = Path.Combine(_root, LegaciesFolder, ".legacies.lock");
+				bool exists;
+				if (!TrySafeLeaf(path, out exists, out Failure))
+				{
+					return false;
+				}
+				Gate = new FileStream(path,
+					FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
+				bool openedExists;
+				if (!TrySafeLeaf(path, out openedExists, out Failure) || !openedExists)
+				{
+					Gate.Dispose();
+					Gate = null;
+					return false;
+				}
 				return true;
 			}
-			KingdomSealRecord existing = ReadSlot(path);
-			if (existing != null && existing.LegacyId == Record.LegacyId && SameRecord(existing, Record))
+			catch (Exception ex)
 			{
-				Failure = "";
-				return true;
+				Failure = "the legacy publication lock is unavailable: " + ex.Message;
+				return false;
 			}
-			return false;
 		}
 
 		internal List<KingdomSealRecord> ReadLegacies(out int Refused)

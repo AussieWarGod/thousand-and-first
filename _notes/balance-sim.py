@@ -3533,7 +3533,7 @@ def meals_and_industry():
     crops = _switch_map(CROP_CS, "CropBlueprintForStyle")
     words = _switch_map(RULES_CS, "CropWordFor")
     blocks = _blueprint_blocks()
-    growth = open(os.path.join(ROOT, "Growth", "KingdomGrowth.cs"), encoding="utf-8-sig").read()
+    growth = read_source(source_family_paths("Growth", "KingdomGrowth"))
 
     print(f"""
 1. THE DISH IS DERIVED, NOT AUTHORED, AND IT IS TOTAL. Addendum 11(b) asks that residents eat

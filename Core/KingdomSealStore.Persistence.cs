@@ -259,6 +259,10 @@ namespace ThousandAndFirst
 
 		private static bool KnownOperationalJunk(string Folder, string Name, string Extension)
 		{
+			if (Folder == LegaciesFolder && Name == ".legacies.lock")
+			{
+				return true;
+			}
 			if (Folder == ReceiptsFolder && Name == ".claims.lock")
 			{
 				return true;

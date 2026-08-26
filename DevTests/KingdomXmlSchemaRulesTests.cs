@@ -65,6 +65,8 @@ namespace ThousandAndFirst.Tests
 				StringComparison.Ordinal) ? KingdomDataLogicalSource.Read()
 				: string.Equals(file, "Growth/KingdomResearch.cs",
 					StringComparison.Ordinal) ? KingdomResearchLogicalSource.Read()
+					: string.Equals(file, "Growth/KingdomProcedures.cs",
+						StringComparison.Ordinal) ? KingdomProceduresLogicalSource.Read()
 					: TestMain.ReadRepositoryText(file);
 			StringAssert.Contains(
 				"KingdomXmlSchema.HandleRoot(xml, ", source.Replace("item, ", "xml, "));

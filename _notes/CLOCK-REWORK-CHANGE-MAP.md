@@ -71,7 +71,7 @@ missing piece is smaller than expected: a summation over `Survey.Works` producin
 
 ### 1.3 The stage ratchet is the only writer of `System.Stage`, and it only climbs.
 
-`Growth/KingdomGrowth.cs:623-626`:
+`Growth/KingdomGrowth*.cs`:
 
 ```csharp
 GrowthStage stage = KingdomRules.StageFor(System.Population, (Survey != null) ? Survey.StorageCapacity : CountStorageCapacity(Z));
@@ -81,11 +81,11 @@ if (stage > System.Stage)
 ```
 
 `KingdomRules.StageFor` (`Core/KingdomRules*.cs`) is a pure population + liquid-storage-capacity
-threshold table with no reference to supports. `KingdomGrowth.cs:626` is the **only** assignment to
+threshold table with no reference to supports. `KingdomGrowth*.cs` is the **only** assignment to
 `System.Stage` in the mod outside the two `= GrowthStage.Camp` field initialisers. `StageFor`
 returning `Camp` for a collapsed settlement is computed and then discarded by the `>` guard.
 
-Population *can* fall (`Emigrate`, `KingdomGrowth.cs:491`), so today a City can hold four people.
+Population *can* fall (`Emigrate`, `KingdomGrowth*.cs`), so today a City can hold four people.
 
 Already known and recorded in three places — `_notes/STALE-COMMENT-INVENTORY.md:242-244`,
 `docs/API.md:36` and `:109`, `_notes/COORDINATION.md:180`. This map does not rediscover it; it
@@ -115,14 +115,14 @@ keyed to an event ordinal · **NONE** = reads no clock.
 
 | System / counter | Today's denominator | Doctrine denominator | Class | Risk |
 |---|---|---|---|---|
-| **Heartbeat / upkeep** — `ResolveHeartbeat` `Growth/KingdomGrowth.cs:149-198`; bill at `:170` via `PolicyUpkeepForElapsed` (`Core/KingdomRules*.cs`). `System.LastHeartbeatTick`. | HB | Full elapsed days drawn against stores. No debt is minted: stores floor at zero and the *level* subsides instead. | **C** | High — this is where "time never mints unchosen debts" is either honoured or broken. |
-| **Fetch clock** — `Growth/KingdomGrowth.cs:43-61`; `FetchableDrams(hands, open, space, days)` = `Hands × FetchDramsPerSettler × Days` (`Core/KingdomRules*.cs`). `System.LastFetchTick`, gated on `System.WaterCrew`. | HB | **Already time × labour.** Uncap `Days`. This is the doctrine's own formula, shipped. | **B** | Medium — becomes the main absence income; must net against uncapped upkeep. Balance re-run. |
-| **Thirst ladder** — `System.DryStreak++` at `Growth/KingdomGrowth.cs:178`, fired **once per failed heartbeat resolve** regardless of whether `days` was 1, 2 or 3. `ResolveThirst` (`Core/KingdomRules*.cs`), `DryIntervalsToEmigrate=2`, `DryIntervalsToWither=3`. | **PASS** (the bill above it is HB — the sharpest denominator mismatch in the codebase: three 1-day visits cost the same drams and three times the ladder of one 3-day absence) | Dry **time**, not dry passes. And `Emigration` is irreversible, so it goes through the brink (§3). | **B** + **C** | High. No test pins the once-per-pass increment. |
-| **Arrivals** — `System.NextArrivalTick`, `ArrivalIntervalTicks = 3600 + 600×Pop`, `MaxArrivalsPerVisit = 3`, catch-up clamp `Growth/KingdomGrowth.cs:104-107` burns every overshoot. | RAW, per-pass capped | Population converging toward E from below (022a). The clamp becomes convergence, not a burn. | **C** | Medium — folds into subsidence; do not build twice. |
-| **Stage ratchet** — `StageFor` (`Core/KingdomRules*.cs`) + `UpdateStage` (`Growth/KingdomGrowth.cs:623-626`), `if (stage > System.Stage)`. | population + storage snapshot, monotone up | Hysteresis both ways against E: promotion on demonstrated feed, demotion on sustained failure, M comfortably larger than N so the reckoning is never a first-visit ambush. | **C** | **Top-three.** Only writer of `System.Stage`; zero tests pin subsidence, so a wrong answer fails silently. |
+| **Heartbeat / upkeep** — `ResolveHeartbeat` `Growth/KingdomGrowth*.cs`; bill at `:170` via `PolicyUpkeepForElapsed` (`Core/KingdomRules*.cs`). `System.LastHeartbeatTick`. | HB | Full elapsed days drawn against stores. No debt is minted: stores floor at zero and the *level* subsides instead. | **C** | High — this is where "time never mints unchosen debts" is either honoured or broken. |
+| **Fetch clock** — `Growth/KingdomGrowth*.cs`; `FetchableDrams(hands, open, space, days)` = `Hands × FetchDramsPerSettler × Days` (`Core/KingdomRules*.cs`). `System.LastFetchTick`, gated on `System.WaterCrew`. | HB | **Already time × labour.** Uncap `Days`. This is the doctrine's own formula, shipped. | **B** | Medium — becomes the main absence income; must net against uncapped upkeep. Balance re-run. |
+| **Thirst ladder** — `System.DryStreak++` at `Growth/KingdomGrowth*.cs`, fired **once per failed heartbeat resolve** regardless of whether `days` was 1, 2 or 3. `ResolveThirst` (`Core/KingdomRules*.cs`), `DryIntervalsToEmigrate=2`, `DryIntervalsToWither=3`. | **PASS** (the bill above it is HB — the sharpest denominator mismatch in the codebase: three 1-day visits cost the same drams and three times the ladder of one 3-day absence) | Dry **time**, not dry passes. And `Emigration` is irreversible, so it goes through the brink (§3). | **B** + **C** | High. No test pins the once-per-pass increment. |
+| **Arrivals** — `System.NextArrivalTick`, `ArrivalIntervalTicks = 3600 + 600×Pop`, `MaxArrivalsPerVisit = 3`, catch-up clamp `Growth/KingdomGrowth*.cs` burns every overshoot. | RAW, per-pass capped | Population converging toward E from below (022a). The clamp becomes convergence, not a burn. | **C** | Medium — folds into subsidence; do not build twice. |
+| **Stage ratchet** — `StageFor` (`Core/KingdomRules*.cs`) + `UpdateStage` (`Growth/KingdomGrowth*.cs`), `if (stage > System.Stage)`. | population + storage snapshot, monotone up | Hysteresis both ways against E: promotion on demonstrated feed, demotion on sustained failure, M comfortably larger than N so the reckoning is never a first-visit ambush. | **C** | **Top-three.** Only writer of `System.Stage`; zero tests pin subsidence, so a wrong answer fails silently. |
 | **Subsidence** — **does not exist.** | — | New: sum `Carries` over standing works → `Equilibrium(w,f,r,lift)`; converge population/stage toward E in closed form over elapsed absence; ruin the overreach via the existing `StandingPercent` machinery; sample the computed curve's breakpoints into dated chronicle entries. Full spec at `_notes/IDEA-INBOX.md:378-400` (022a). | **C** (new build) | **Top-three.** Must ruin overbuilt ground under a protection law that forbids touching anything player-placed. |
 | **Equilibrium arithmetic** — `Growth/KingdomCatalogueRules.cs:247,273,301,312`. Dead code, 6 tests. | n/a (pure) | Keep verbatim. Needs a **consumer**: a supports tally on `KingdomSurvey`. | **A** + consumer | Low. |
-| **`Withered`** — `System.Withered`, set at `Growth/KingdomGrowth.cs:192`, halves sealed vigour (`Core/KingdomRules*.cs`). | derived from `DryStreak` | Reconcile with subsidence: withering is *level loss*, so it should read the same fixed point rather than a parallel flag. | **B** | Medium — duplicate concept. |
+| **`Withered`** — `System.Withered`, set at `Growth/KingdomGrowth*.cs`, halves sealed vigour (`Core/KingdomRules*.cs`). | derived from `DryStreak` | Reconcile with subsidence: withering is *level loss*, so it should read the same fixed point rather than a parallel flag. | **B** | Medium — duplicate concept. |
 
 ### 2c. Labour and production (the `*WorkedProperty` family)
 
@@ -132,18 +132,18 @@ change** — this family is the mechanical bulk of the wave.
 
 | System / counter | Today's denominator | Doctrine denominator | Class | Risk |
 |---|---|---|---|---|
-| **Refining** — `KingdomRefineWorked` (`Growth/KingdomMaterials.cs:1661,1689-1700`); `RefinedThisPass(Crew, Days, Capability, Refinable)` = `Crew × Days × EffortPerHandPerDay × capability / 100`, capped `MaxRefinedPerPass = 8` (`Growth/KingdomMaterialRules.cs:993,1117`). Staffing-gated at `:1702`. | HB × crew | Uncap `Days`. `MaxRefinedPerPass` becomes a yard's throughput ceiling per *day*, not per pass. | **B** | Medium. **Checkpoint is written at `:1700` before the staffing gate returns at `:1702`** — an unstaffed yard silently burns its day budget. Decide explicitly. |
-| **Striking** — `KingdomStrikeWorked` (`Growth/KingdomMaterials.cs:128,1783-1810`); `EffortWorked(Hands, Days)` = `min(hands,6) × Days × 10`. `FreeHands`-gated. | HB × hands | Uncap `Days`. | **B** | Low. |
-| **Clearance** — `r_KingdomClearance.LastWorkedTick` (`Growth/KingdomMaterials.cs:48,1842-1866`). Same shape. | HB × hands | Uncap `Days`. | **B** | Low. |
+| **Refining** — `KingdomRefineWorked` (`Growth/KingdomMaterials*.cs`); `RefinedThisPass(Crew, Days, Capability, Refinable)` = `Crew × Days × EffortPerHandPerDay × capability / 100`, capped `MaxRefinedPerPass = 8` (`Growth/KingdomMaterialRules.cs:993,1117`). Staffing-gated at `:1702`. | HB × crew | Uncap `Days`. `MaxRefinedPerPass` becomes a yard's throughput ceiling per *day*, not per pass. | **B** | Medium. **Checkpoint is written at `:1700` before the staffing gate returns at `:1702`** — an unstaffed yard silently burns its day budget. Decide explicitly. |
+| **Striking** — `KingdomStrikeWorked` (`Growth/KingdomMaterials*.cs`); `EffortWorked(Hands, Days)` = `min(hands,6) × Days × 10`. `FreeHands`-gated. | HB × hands | Uncap `Days`. | **B** | Low. |
+| **Clearance** — `r_KingdomClearance.LastWorkedTick` (`Growth/KingdomMaterials*.cs`). Same shape. | HB × hands | Uncap `Days`. | **B** | Low. |
 | **Mending / repair** — `KingdomRepairWorked` (`Growth/KingdomWear.cs:125,378-407`). `FreeHands` + materials gated; one mending settlement-wide at a time. | HB × hands | Uncap `Days`. | **B** | Low. Same checkpoint-before-gate at `:402`. |
-| **"One gang, one job"** — `Growth/KingdomMaterials.cs:1645-1650`: one strike *or* one clearance per attended pass, however many days elapsed. | PASS | Under the doctrine the gang works through the absence. Becomes a hands-availability constraint, not a per-pass one. | **B** | Medium — untested (engine-side). |
+| **"One gang, one job"** — `Growth/KingdomMaterials*.cs`: one strike *or* one clearance per attended pass, however many days elapsed. | PASS | Under the doctrine the gang works through the absence. Becomes a hands-availability constraint, not a per-pass one. | **B** | Medium — untested (engine-side). |
 | **Road traffic** — `r_TAF_RoadsWalked` zone property (`Growth/KingdomRoads.cs:49,285-303`); `TrafficFor(Walkers, Days, Kind)` (`Growth/KingdomRoadRules.cs:255`). Population- and layout-gated. | HB × walkers | Uncap `Days`. Traffic is already walkers × days — the doctrine's formula. "Wear only ever climbs" stays right. | **B** | Low. `KingdomRoadRules.cs:21-25` asserts *"nothing here subsides"* — correct for ground, needs rewording once subsidence exists. |
 | **Road per-pass bounds** — `MaxRoutesPerPass = 8`, `MaxFloorChangesPerPass = 8`, `MaxTrackedCells = 240`. | PASS | Loop guards, not forgiveness. Keep. | **A** | Low. |
 | **Road rotation** — `RotationStart(TimeTicks, Count)` = `(ticks / TicksPerDay) % Count` (`Growth/KingdomRoadRules*.cs`). | RAW, index only | Already correct — a scheduling index, stable across reloads. | **A** | Low. |
 | **Power works** — `r_KingdomPowerWork.LastResolvedTick`, one-day gate `Growth/KingdomPower.cs:59`, `CreditDays` `:309-317`, `MaxDaysCredited = MaxUpkeepDaysCharged` (`Growth/KingdomPowerRules.cs:98`). Staff- and effectiveness-gated. | HB × staffing | Uncap. Already fully labour-gated. | **B** | Low. |
 | **Wind availability** — `WindAvailabilityPercent(SampledKph, Days)` = `(sampled + typical×(days−1)) / days` (`Growth/KingdomPowerRules.cs:208`). | HB | **The doctrine's exemplar already shipped**: the witnessed day counts at the read gust, unwitnessed days at the typical value. Uncap `Days` and it is finished. | **B** | Low. |
 | **Molten-salt store** — `ThroughputForDays`, `Absorbable`, `Releasable`; `days` is the max across all works and stores. | HB | Uncap. Storage capacity is the natural anti-away-farming cap (022a says so explicitly). | **B** | Low. |
-| **Crew assignment** — `AssignWork` (`Growth/KingdomGrowth.cs:326-364`), recomputed from scratch each pass, carries no clock. | PASS | Correct as-is: it is the labour *input* every rate reads. | **A** | Low. |
+| **Crew assignment** — `AssignWork` (`Growth/KingdomGrowth*.cs`), recomputed from scratch each pass, carries no clock. | PASS | Correct as-is: it is the labour *input* every rate reads. | **A** | Low. |
 
 ### 2d. Construction and crops
 
@@ -151,14 +151,14 @@ change** — this family is the mechanical bulk of the wave.
 |---|---|---|---|---|
 | **Plot stage ratchet** — `StageAt(Elapsed, Total)` (`Growth/KingdomPlotRules*.cs`), driven from `r_KingdomPlotWorks.StartTick`/`TotalTicks` (`Growth/KingdomPlot2.26.Labour.cs:25`). Uncapped, applies every crossed stage in order. | RAW | Already the doctrine's shape — a hundred days finds it finished, one finds it framed. | **A** | Low. |
 | **Scaffold completion** — `r_KingdomScaffold.CompleteTick` (`Growth/KingdomScaffold.cs:22,33-38`), stamped at commission from `CraftBuildTicks` (`Growth/KingdomCommission.cs:133`). `TurnTick` only fires in an active zone, so completion lands on the first attended turn past the deadline. | RAW, **no labour term at all** | **FLAG FOR THE AUTHOR.** Addendum 2's corollary sanctions flat-per-design duration ("currently flat per design plus the craft-district discount"); Addendum 8 clause 2 says rates are never time alone. Today a scaffold in a settlement with zero population still raises itself, while a *mending* in the same settlement does not. That asymmetry is the one place the doctrine and the shipped code disagree in principle rather than in calibration. | **A**-with-flag, or **B** if crew must stand | Medium — a ruling, not a bug. |
-| **`KingdomBuilt` gate** — `Growth/KingdomSurvey.cs:93`, `Growth/KingdomGrowth.cs:599`, set once at `Growth/KingdomScaffold.cs:91`. A scaffold contributes no beds, no crew demand, no defence, no power work, no yard. | boundary, not a clock | Correct and load-bearing. It is what makes "a scaffold carries nothing until built" true, and it is what subsidence must read when summing `Carries`. | **A** | Low — but §2b's summation must respect it. |
+| **`KingdomBuilt` gate** — `Growth/KingdomSurvey.cs:93`, `Growth/KingdomGrowth*.cs`, set once at `Growth/KingdomScaffold.cs:91`. A scaffold contributes no beds, no crew demand, no defence, no power work, no yard. | boundary, not a clock | Correct and load-bearing. It is what makes "a scaffold carries nothing until built" true, and it is what subsidence must read when summing `Carries`. | **A** | Low — but §2b's summation must respect it. |
 | **Crop ripening** — `GrowTicks = 3 days`, `RipenTick`/`HasRipened` (`Growth/KingdomCropRules.cs:33,69,75`); ripen tick anchored at the pass that resolves the planting, never backdated. | RAW, re-anchored per plant | **Sanctioned by Addendum 8 clause 4.** No change. | **A** | Low. |
 | **`MaxCyclesPerVisit = 3`** — `Growth/KingdomPlot.cs:172`. | PASS | A loop guard whose own rationale (a planting cannot be backdated, so extra cycles are unearnable anyway) survives the doctrine intact. Keep. | **A** | Low. |
 | **`MaxPlansPerVisit = 3`** — `Growth/KingdomPlanRules.cs:59`. | PASS | Same shape. Keep, or lift to a materials/hands constraint. | **A**/**B** | Low. |
 | **Crop planting reserve** — `UpkeepDrams(Population) × MaxUpkeepDaysCharged` (`Growth/KingdomCropRules.cs:64`). | cap-as-quantity | Needs a replacement basis when the constant retires. **Also: camp-rate**, while `KingdomUpgradeRules.ReserveDrams` (`:254`) is stage-scaled — at City the crop reserve is 2.2× too small relative to the upgrade one. | **D**-dependency | Medium — a live inconsistency the rework should settle. |
 | **Upgrade reserve** — `ReserveDrams` = `UpkeepDrams(Pop, Stage) × MaxUpkeepDaysCharged` (`Growth/KingdomUpgradeRules*.cs`). | cap-as-quantity | Same. | **D**-dependency | Medium. |
 | **`BuildDays` / `OutputLost` / `AbsorptionMargin`** — `Growth/KingdomUpgradeRules.cs:462,482,497`. Authored design duration, explicitly not the clock; guarded by the reflective test `NoTriggerPathReadsElapsedTimeAsACause` (`DevTests/KingdomUpgradeRulesTests.cs:1118`). | authored duration | Correct. Leave alone. | **A** | Low — but the reflective guard allowlists by exact parameter name; a new clock helper must not leak in. |
-| **Improvement abandon grace** — `AbandonGraceTicks = 2400` (`Growth/KingdomUpgrade.cs:77,139`). | RAW | Give-up timer for a successor that never appeared. Fine. | **A** | Low. |
+| **Improvement abandon grace** — `AbandonGraceTicks = 2400` (`Growth/KingdomUpgrade*.cs`). | RAW | Give-up timer for a successor that never appeared. Fine. | **A** | Low. |
 
 ### 2e. Social and political
 
@@ -187,7 +187,7 @@ change** — this family is the mechanical bulk of the wave.
 | **Manifest reserve** — `ReserveUpkeepDays = 3` (`Trade/KingdomManifest.cs:80`), coupled to `MaxUpkeepDaysCharged` by comment only. | cap-as-quantity | Replacement basis needed. | **D**-dependency | Low. |
 | **Charter deal cycles** — `DealNextTicks`, `BankedCycles`, `MaxBankedCycles = 3` (`Core/KingdomRules*.cs`; `Trade/KingdomTrade.cs:81,99`). The one clock where absence *credits* the player. | RAW, capped at 3 **cycles** (so a different wall-time per charter) | "Absence earns gifts, capped" is a surviving rule. But 022b says the cap should be **storage capacity**, not an arbitrary 3 — "credit then clamp", not "reset the backlog". | **B** | Low-medium. |
 | **Raid cooldown / warning lead** — `RaidCooldownTicks = 8400`, `RaidWarningLeadTicks = 1200` (`Core/KingdomRules.cs:2045,2047`). | RAW due-ticks | Correct. | **A** | Low — both untested. |
-| **Raid re-warn** — `Raids/KingdomRaids.cs:40-47,106-116`. Overshoot ≤ 1 day → the raid fires; > 1 day → re-stamp a fresh warning window, nothing taken. **The only raw-tick clip in the mod that does not go through `HeartbeatDays`** — a hand-rolled `> KingdomRules.TicksPerDay` compared inline. | RAW with an inline grace band | Doctrine-correct in spirit (a raid waits at the gate for a witness), hand-rolled in form. Fold into the shared helper. | **A** / **B** (consolidate) | Low — untested grace band. |
+| **Raid re-warn** — `Raids/KingdomRaids*.cs`. Overshoot ≤ 1 day → the raid fires; > 1 day → re-stamp a fresh warning window, nothing taken. **The only raw-tick clip in the mod that does not go through `HeartbeatDays`** — a hand-rolled `> KingdomRules.TicksPerDay` compared inline. | RAW with an inline grace band | Doctrine-correct in spirit (a raid waits at the gate for a witness), hand-rolled in form. Fold into the shared helper. | **A** / **B** (consolidate) | Low — untested grace band. |
 | **Recent-raid window** — `RecentRaidWindowTicks = 2d` (`Experience/KingdomLocusRules.cs:34`), feeds keeper mood. | RAW | Correct. | **A** | Low. |
 | **Bounty due-ticks** — `TakenTick`/`DueTick`, `WorkDays` (`Quests/KingdomBounty.Take.cs:85`; `Quests/KingdomBountyRules.WorkAndBlocking.cs:60`). Haul 1–5 d, Manning 30 d, Scouting 4 d, **Clearance 0 (no clock — read off the world)**. No expiry, ever. The `Quests/KingdomBounty*.cs` class doctrine remains unchanged. | RAW due-ticks | Correct. | **A** | Low. |
 | **Bounty manning** — `ManOneWork` runs **every attended pass** while `now < DueTick`, then the due-tick ends the season (`Quests/KingdomBounty.WorkAndCarry.cs:14`, `Quests/KingdomBounty.CompletionAndScouting.cs:79`). | **PASS for the labour, RAW for the finish** — mixed denominators inside one case | Labour becomes time × hands like every other work. | **B** | Low. |
@@ -410,7 +410,7 @@ clause 1, which names osmosis, dissent, and wear-from-running as things that hap
 | `docs/API.md:36, 80, 109, 115, 134, 198, 284-286` | The public modding contract. `:36` already warns the ratchet will move; `:284-286` states the old split. |
 | `MODDING.md:138, 478-480` | "counted in attended passes and never in time". |
 | `TESTING.md:79, 176-177, 197, 239, 262, 305, 316, 347, 380, 396-405` | Steps 16p, 43, 44, 52, 57, 66b, 75a and the *Known v0 limits* block. **66b stays correct** (the grace is still attended-only); **75a and 57 change**; **396-405 is the block that describes the gap this wave closes.** |
-| ~40 code doc comments | The canonical phrasings are `Core/KingdomRules*.cs`, `Growth/KingdomPowerRules*.cs`, `Growth/KingdomRoadRules.cs:21-25` and `:247-249`, `Growth/KingdomWear.cs:92-94`, `Growth/KingdomWearRules.cs:8-12`, `Growth/KingdomMaterials.cs:1677-1681`, `Growth/KingdomMaterialRules*.cs`, `Core/KingdomConversionRules.cs:112-120`, `Growth/KingdomLodgingRules*.cs`. |
+| ~40 code doc comments | The canonical phrasings are `Core/KingdomRules*.cs`, `Growth/KingdomPowerRules*.cs`, `Growth/KingdomRoadRules.cs:21-25` and `:247-249`, `Growth/KingdomWear.cs:92-94`, `Growth/KingdomWearRules.cs:8-12`, `Growth/KingdomMaterials*.cs`, `Growth/KingdomMaterialRules*.cs`, `Core/KingdomConversionRules.cs:112-120`, `Growth/KingdomLodgingRules*.cs`. |
 | `_notes/balance-sim.py:51` | `read_const(RULES_CS, "MaxUpkeepDaysCharged")` raises `SystemExit` when the constant is not found. **Retiring the constant breaks the balance model at import.** |
 | `_notes/STALE-COMMENT-INVENTORY.md` | Re-issue under the doctrine. |
 
@@ -419,14 +419,14 @@ clause 1, which names osmosis, dissent, and wear-from-running as things that hap
 ## 7. Work packages
 
 Ownership is disjoint by file. The chokepoints — `Core/KingdomRules.cs`,
-`Growth/KingdomGrowth.cs`, `Core/KingdomSystem.cs` — cannot be shared, so P1 owns them and P2/P3
+`Growth/KingdomGrowth*.cs`, `Core/KingdomSystem.cs` — cannot be shared, so P1 owns them and P2/P3
 take their narrow slices only after P1 lands.
 
 ### P1 — the substrate and the uncapping · **blocks everything** · balance re-run: **YES**
 
-**Owns:** `Core/KingdomRules.cs`, `Growth/KingdomGrowth.cs` (heartbeat, fetch, thirst only),
+**Owns:** `Core/KingdomRules.cs`, `Growth/KingdomGrowth*.cs` (heartbeat, fetch, thirst only),
 `Core/KingdomSystem.cs` (version bump + re-anchor migration), `Growth/KingdomPower.cs`,
-`Growth/KingdomPowerRules.cs`, `Growth/KingdomMaterials.cs`, `Growth/KingdomMaterialRules.cs`,
+`Growth/KingdomPowerRules.cs`, `Growth/KingdomMaterials*.cs`, `Growth/KingdomMaterialRules.cs`,
 `Growth/KingdomWear.cs`, `Growth/KingdomWearRules.cs`, `Growth/KingdomRoads.cs`,
 `Growth/KingdomRoadRules.cs`, `Growth/KingdomCropRules.cs`, `Growth/KingdomUpgradeRules.cs`
 (reserve only), `Trade/KingdomManifest.cs` (reserve only), `DevTests/TafTests.csproj`.
@@ -440,7 +440,7 @@ resolves the checkpoint-before-gate question; ships the version-3 re-anchor.
 
 **Owns:** new `Growth/KingdomSubsidenceRules.cs` + `Growth/KingdomSubsidence.cs`,
 `Growth/KingdomCatalogueRules.cs` (summation helpers only — the existing arithmetic is frozen),
-`Growth/KingdomSurvey.cs`, `Growth/KingdomGrowth.cs` `UpdateStage` **only** (hand-off from P1),
+`Growth/KingdomSurvey.cs`, `Growth/KingdomGrowth*.cs` `UpdateStage` **only** (hand-off from P1),
 `Core/KingdomSettlement.cs` + the mirrored fields on `Core/KingdomSystem.cs` (hand-off from P1),
 `Options.xml`, `KingdomBuildings.xml`.
 
@@ -463,7 +463,7 @@ named window; gives shrine-pull conversion the announce it has never had.
 
 ### P4 — deadline consolidation and the prose sweep · **last** · balance re-run: **NO**
 
-**Owns:** `Raids/KingdomRaids.cs`, `Trade/KingdomTrade.cs`, `Experience/KingdomGuestbook.cs`,
+**Owns:** `Raids/KingdomRaids*.cs`, `Trade/KingdomTrade.cs`, `Experience/KingdomGuestbook.cs`,
 `Experience/KingdomGuestRules.cs`, `Experience/KingdomLocus.cs`,
 `Experience/KingdomLocusRules.cs`, `Quests/KingdomBounty.cs`, `Quests/KingdomPetitions.cs`, and
 every prose surface in §6 including `_notes/balance-sim.py`.

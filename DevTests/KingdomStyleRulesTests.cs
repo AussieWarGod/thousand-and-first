@@ -300,8 +300,8 @@ namespace ThousandAndFirst.Tests
 		public void RuntimeCropAndMaterialConsumersUseOpenStyleRegistry()
 		{
 			string crops = TestMain.ReadRepositoryText(Path.Combine("Growth", "KingdomCrops.cs"));
-			string growth = TestMain.ReadRepositoryText(Path.Combine("Growth", "KingdomGrowth.cs"));
-			string materials = TestMain.ReadRepositoryText(Path.Combine("Growth", "KingdomMaterials.cs"));
+			string growth = KingdomGrowthLogicalSource.Read();
+			string materials = KingdomMaterialsLogicalSource.Read();
 			StringAssert.Contains("KingdomData.CropForStyle", crops);
 			StringAssert.Contains("KingdomData.CropForSeed", crops);
 			StringAssert.Contains("KingdomData.CropForStyle", growth);

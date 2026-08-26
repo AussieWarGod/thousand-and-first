@@ -11,20 +11,22 @@
 - Integrated feature/polish baseline is clean commit `19fb8ee`. Later structural/CI hardening
   changes are not signed by that receipt; preserve them and all later user changes rather than
   substituting an older historical candidate.
-- `Tools/gate.sh`: 1307 staged sources compile clean under baseline and compatibility
-  symbols. The exact inventory contains 1307 production C# files and 248,807 physical lines and has
-  SHA-256 `9c3713897b2fbf9b7db455247a0ac20d31e75f0eb00edf5f4c57d3a310b10b21`.
+- `Tools/gate.sh`: 1410 staged sources compile clean under baseline and compatibility
+  symbols. The exact inventory contains 1410 production C# files and 250,683 physical lines and has
+  SHA-256 `f46df9b37ad71633925adba335768474d8a9b19acd3b980a03f5281b7d68e675`.
 - Architecture: 136 buildings, 126 plotted building plans, 499 maps, 355 bindings, 403 tiers,
   516 variants, and 2,064 variant/pose goldens; generator/checker clean with zero issues plus three
   expected installed-base tolerant-recovery warnings for malformed vanilla Creatures/Furniture/Items XML.
   Lot realizations are current at 337 maps, 242 bindings, and 277 tiers.
-- Nine focused one-survey source-contract cases pass. The final integrated pure/source suite passes
-  7,695 / 7,695 cases with zero skipped; the portable suite passes 173 / 173 with zero skipped; all
-  33 Python tool tests and all 19 art tests pass. Public CI now permits exactly three named
+- Nine focused one-survey source-contract cases pass. The current integrated pure/source suite passes
+  7,700 / 7,700 cases locally; its hosted CI rerun is pending. The portable suite passes 173 / 173 with zero
+  skipped; all 33 Python tool tests and all 19 art tests pass. Hosted Ubuntu exposed a legacy
+  publication no-replace race; an exclusive legacy-folder publication lock plus deterministic
+  contention test repair it. Public CI permits exactly three named
   installed-data skips when no
   Qud base is discoverable; any extra/missing skip or explicit invalid base fails. Release
   execution forbids skips and passes the exact licensed base explicitly.
-- Current inventory gates report 1,331 cold-install files, 36 shipped IPart ABI classes and 3 ABI
+- Current inventory gates report 1,434 cold-install files, 36 shipped IPart ABI classes and 3 ABI
   contracts. Art policy allowlists 0 local tiles and verifies 55 vanilla paths.
 - Current native partial result remains the receipt from clean commit `19fb8ee`: clean deployment,
   fresh isolated profile, Smokehold founding,
@@ -33,12 +35,11 @@
   gallery/lived-city, numbered protocol, accessibility, compatibility, dense-performance, and
   private subscribed-install receipts remain open. Later structural revisions have no native
   receipt and need a compile/load/log rerun against their exact final commit.
-- Structure checkpoint: 52 files exceed 300 physical lines, 0 are exactly 300, 28 exceed 1,000,
-  9 exceed 2,000, and 0 exceed 5,000. Direct XRL imports total 442, with 49 at or over the line
-  limit. The latest wave decomposed 53 more oversized authorities, bringing the current sequence
-  to 119 additional families and 129 cumulative. Latest fan-in preserved exact logical source,
-  persisted/public ABI, deterministic order, and source-reader coverage; staged compilation caught
-  and repaired literal wrapper and namespace defects before checkpoint. The structural release gate remains red until
+- Structure checkpoint: 46 files exceed 300 physical lines, 0 are exactly 300, 22 exceed 1,000,
+  3 exceed 2,000, and 0 exceed 5,000. Direct XRL imports total 544, with 43 at or over the line
+  limit. The latest stable batch decomposed 6 more oversized authorities, bringing the current
+  sequence to 125 additional families and 135 cumulative. Latest fan-in preserved exact logical
+  source, persisted/public ABI, deterministic order, and source-reader coverage. The structural release gate remains red until
   every staged file is strictly under 300 and exact-inventory human semantic review exists in
   `../docs/STRUCTURE_REVIEW.json` with no exceptions.
 - Current focus: checkpoint each green hardening batch, rerun native proof against the exact final

@@ -119,7 +119,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void StrikeFreezesTypedNonPlotSatellitesAndLeavesNoSuccessor()
 		{
-			string materials = Source(Path.Combine("Growth", "KingdomMaterials.cs"));
+			string materials = KingdomMaterialsLogicalSource.Read();
 			string order = Slice(materials, "private static bool OrderStrikeDurable(",
 				"private static bool ResumeStrikeStamp(");
 			Ordered(order,

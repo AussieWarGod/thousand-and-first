@@ -2520,7 +2520,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void RuntimeArrivalOwnsEveryIrreversibleMutationWithFrozenReceipts()
 		{
-			string source = TestMain.ReadRepositoryText("Growth/KingdomGrowth.cs");
+			string source = KingdomGrowthLogicalSource.Read();
 			string pass = Slice(source, "public static void OnZoneActivated",
 				"private static bool ResolveHeartbeat");
 			AssertOrdered(pass, "SynchronizeArrivalAuthority(System, Z, survey",

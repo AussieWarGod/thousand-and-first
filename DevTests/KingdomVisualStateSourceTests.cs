@@ -79,7 +79,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void AssignmentWorksEvenWhenThereAreNoFinishedCrewedWorks()
 		{
-			string growth = Source("Growth/KingdomGrowth.cs");
+			string growth = KingdomGrowthLogicalSource.Read();
 			int method = growth.IndexOf("public static void AssignWork", StringComparison.Ordinal);
 			int end = growth.IndexOf("public static bool Emigrate", method, StringComparison.Ordinal);
 			string assign = growth.Substring(method, end - method);

@@ -68,7 +68,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void EveryLiveMutationAndOfficePathUsesResidentRows()
 		{
-			string growth = TestMain.ReadRepositoryText("Growth/KingdomGrowth.cs");
+			string growth = KingdomGrowthLogicalSource.Read();
 			StringAssert.Contains("KingdomResidents.RollRows(System, true)", growth);
 			StringAssert.Contains("KingdomResidents.TryEnsureRow(system, settler", growth);
 			StringAssert.Contains("KingdomResidents.TryDepart(System, leaver", growth);

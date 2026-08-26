@@ -1915,7 +1915,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains(
 				"KingdomPresentation.Rich(ResidentName)", lodging);
 
-			string growth = Source(Path.Combine("Growth", "KingdomGrowth.cs"));
+			string growth = KingdomGrowthLogicalSource.Read();
 			StringAssert.Contains(
 				"leaver.BaseDisplayNameStripped : former.Name", growth);
 			StringAssert.Contains(
