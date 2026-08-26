@@ -76,7 +76,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.DoesNotContain("GetObjects()", presence);
 			StringAssert.Contains("Survey.ConstructionRoots", presence);
 
-			string lab = Source("Growth", "KingdomLab.cs");
+			string lab = KingdomLabLogicalSource.Read();
 			string labPass = Between(lab, "internal static void OnSemanticStep(",
 				"private static void ManageJob(");
 			StringAssert.DoesNotContain("GetObjects()", labPass);

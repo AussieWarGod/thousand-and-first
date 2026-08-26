@@ -206,16 +206,23 @@ namespace ThousandAndFirst.Tests
 		private static string LocateBase()
 		{
 			string supplied = Environment.GetEnvironmentVariable("TAF_QUD_BASE");
+			if (supplied != null)
+			{
+				if (!string.IsNullOrWhiteSpace(supplied)
+					&& File.Exists(Path.Combine(supplied, "Factions.xml"))) return supplied;
+				throw new InvalidOperationException(
+					"TAF_QUD_BASE is set but does not contain Factions.xml: " + supplied);
+			}
 			string[] candidates = new string[]
 			{
-				supplied,
 				@"F:\SteamLibrary\steamapps\common\Caves of Qud\CoQ_Data\StreamingAssets\Base",
 				"/mnt/f/SteamLibrary/steamapps/common/Caves of Qud/CoQ_Data/StreamingAssets/Base"
 			};
 			for (int i = 0; i < candidates.Length; i++)
 				if (!string.IsNullOrEmpty(candidates[i])
 					&& File.Exists(Path.Combine(candidates[i], "Factions.xml"))) return candidates[i];
-			throw new InvalidOperationException("Creed census requires installed Qud 2.0.211.51 base data.");
+			Assert.Ignore("Creed census requires installed Qud 2.0.211.51 base data.");
+			return null;
 		}
 	}
 }

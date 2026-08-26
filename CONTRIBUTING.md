@@ -50,8 +50,12 @@ dotnet run --project DevTests/PortableTests.csproj --no-restore -v q --nologo
 ```
 
 These suites prove engine-free rules and source contracts; they do not compile or execute the mod
-inside Qud. They use the locked NUnit package and .NET 9. Licensed runtime checks still require a
-local Caves of Qud installation:
+inside Qud. They use the locked NUnit package and .NET 9. When licensed installed data is absent,
+the three installed-data-only cases must match the exact workflow skip allowlist; an extra or
+missing skip fails, as does an explicitly configured incomplete `TAF_QUD_BASE`. Never replace them
+with guessed base content. A release run accepts no skips: `DevTests/test.ps1` sets the zero-skip
+policy, and `Tools/release-check.sh` supplies the exact base. Licensed runtime checks still require
+a local Caves of Qud installation:
 
 ```powershell
 dotnet run --project DevTests/TafTests.csproj -v q --nologo

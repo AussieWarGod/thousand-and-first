@@ -37,7 +37,13 @@ jobs:
           path: ${{ env.NUGET_PACKAGES }}
           key: ${{ runner.os }}-nuget-${{ hashFiles('DevTests/TafTests.csproj', 'DevTests/PortableTests.csproj', 'DevTests/packages.lock.json') }}
       - run: dotnet restore DevTests/TafTests.csproj --locked-mode
-      - run: dotnet run --project DevTests/TafTests.csproj --no-restore -v q --nologo
+      - name: run full source suite with exact licensed-data skip allowlist
+        env:
+          TAF_ALLOWED_SKIPS: >-
+            KingdomCreedContentTests.Installed21151CensusIsAnExactThirtyThreeAndChiliadAddsNone;
+            KingdomGatehouseNativeTests.GateRootRetainsVanillaDoorPartAndOwnsOnlyTopology;
+            KingdomInheritanceSpatialNativeTests.ReconstructedStreetUsesVanillaPassableDirtPath
+        run: dotnet run --project DevTests/TafTests.csproj --no-restore -v q --nologo
       - run: dotnet restore DevTests/PortableTests.csproj --locked-mode
       - run: dotnet run --project DevTests/PortableTests.csproj --no-restore -v q --nologo
 

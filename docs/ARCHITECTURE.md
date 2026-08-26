@@ -39,6 +39,28 @@ refuse a retry safely.
 | `Tools/` | Canonical staging, compile/ABI/release gates, isolated smoke profile, and log checks. |
 | `Art/` | Runtime tile/reference policy and XML cross-reference audits; excluded from staging. |
 
+### Split-authority map
+
+Large logical types keep their public, reflected, and serialized identities while source files are
+split by responsibility. Search these families instead of assuming one monolithic filename:
+
+| Logical authority | Current source family | Boundary owned by the split |
+| --- | --- | --- |
+| Lifecycle state | Lifecycle/carry/growth/raid declaration files under `Experience/`; `Experience/KingdomLifecycleWireCodec*.cs` | Persisted books, operations, receipts, leases, outboxes, declarations, and wire read/write/upgrade lanes. |
+| Lifecycle rules | `Experience/KingdomLifecycleRules.cs`, `Experience/KingdomLifecycle*Rules.cs`, and `Experience/KingdomGrowthLifecycle*Rules.cs` | Validation, normalization, conservation, transitions, recovery, callbacks, and trusted physical observations. |
+| Realm archive | `Core/KingdomRealmArchive.*.cs` plus `Core/KingdomRealmArchivePhase.cs` and `Core/KingdomRealmCallback*.cs` | Capture, authority hash, bounded validation, graph matching, exact clone, callback/job/delivery evidence, and wire registry. |
+| Founding transaction | `Core/KingdomFoundingTransaction.*.cs` | Reservation, staging, first/second-city publication, receipt recovery, faction/chronicle projection, and engine projection. |
+| Laboratory runtime | `Growth/KingdomLab.cs`, `Growth/KingdomLab.*.cs`, and the moved `Growth/r_Kingdom*.cs` laboratory IParts | Candidate selection, funding, commission/application/removal state, vats, governance, recovery, and XML-resolved part identities. |
+| Plot rules | `Growth/KingdomPlotRules.cs`, `Growth/KingdomPlot*Rules.cs`, and `Growth/KingdomPlotDeclarations.cs` | Typed-lot bounds, siting, ground/roof/heart evidence, stages, refusal, transition chain, and codec. |
+| Architecture rules | `Growth/KingdomArchitectureRules.cs`, `Growth/KingdomArchitecture*Rules.cs`, `Growth/KingdomArchitectureEnums.cs`, `Growth/KingdomArchitectureDrafts.cs`, and `Growth/KingdomArchitectureSnapshots.cs` | Selection, validation, compiler/draft, codec/decode, delta, labour, declarations, and snapshots. |
+| Zoning rules | `Growth/KingdomZoningRules.cs`, `Growth/KingdomZoning*Rules.cs`, `Growth/KingdomZoningGateParser.cs`, and declaration/gate files | District, stratum, technology, builder/roster, judgement, refusal text, and gate parsing. |
+| Material rules | `Growth/KingdomMaterialRules.cs`, `Growth/KingdomMaterialRules.*.cs`, and eponymous material/tally declarations | Clearance, walls, refining, capabilities, bits, exotics, infrastructure, wear, and tally state. |
+| Trade rules | `Trade/KingdomTradeRules.cs`, `Trade/KingdomTradeRules.*.cs`, `Trade/KingdomTradeExactLookup.cs`, and `Trade/KingdomTradeOptionAction.cs` | Identity, state, normalization, accounting, exile, lifecycle, authority, proofs, validation, and outbox. |
+
+Each family remains one logical authority only where Qud ABI or transaction identity requires it.
+New behavior belongs in the smallest owning shard; a partial class is not permission to create
+cross-family state or bypass the documented protocol seams.
+
 ## Runtime and authority
 
 `KingdomSystem : IPlayerSystem` is the main player-save authority. It owns realm-wide state and
@@ -83,9 +105,10 @@ candidate fields while retaining v1-v10 shapes. Retry and reload consume frozen 
 re-entering Qud RNG or population generation.
 
 Lifecycle, carry, and growth operations persist plans, resource leases, physical receipts,
-outboxes, and retry state through `Experience/KingdomLifecycleState.cs` and
-`KingdomLifecycleRules.cs`. A retry must prove whether a physical effect happened; a return value
-or intended delta is not proof.
+outboxes, and retry state through the lifecycle declaration/codec family and specialized lifecycle
+rule shards listed above. Public and serialized type names stay unchanged across that source split.
+A retry must prove whether a physical effect happened; a return value or intended delta is not
+proof.
 
 ### One classified active-seat survey
 
@@ -207,7 +230,10 @@ documentation and compatibility tests in the same change; do not silently reinte
    present; `--base` selects another licensed installation.
 2. Full engine-free pure/source-contract suite: `dotnet restore
    DevTests/TafTests.csproj --locked-mode` then `dotnet run --project
-   DevTests/TafTests.csproj --no-restore -v q --nologo`.
+   DevTests/TafTests.csproj --no-restore -v q --nologo`. Hosted CI permits exactly three named
+   installed-data-only skips when no licensed Qud base is discoverable; the workflow pins their
+   labels and TestMain rejects any other/missing skip. An explicitly configured incomplete base is
+   a failure. Release `test.ps1` forbids every skip and `release-check.sh` supplies the exact base.
 3. Portable kernel and repository-locator slice: `dotnet restore
    DevTests/PortableTests.csproj --locked-mode` then `dotnet run --project
    DevTests/PortableTests.csproj --no-restore -v q --nologo`. Neither engine-free lane is a

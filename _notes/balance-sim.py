@@ -74,7 +74,20 @@ from dataclasses import dataclass
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 RULES_CS = os.path.join(ROOT, "Core", "KingdomRules.cs")
 CROP_CS = os.path.join(ROOT, "Growth", "KingdomCropRules.cs")
-MAT_CS = os.path.join(ROOT, "Growth", "KingdomMaterialRules.cs")
+MAT_CS = tuple(
+    os.path.join(ROOT, "Growth", name)
+    for name in (
+        "KingdomMaterialRules.cs",
+        "KingdomMaterialRules.Clearance.cs",
+        "KingdomMaterialRules.Walls.cs",
+        "KingdomMaterialRules.Refining.cs",
+        "KingdomMaterialRules.Capability.cs",
+        "KingdomMaterialRules.Bits.cs",
+        "KingdomMaterialRules.Exotics.cs",
+        "KingdomMaterialRules.Infrastructure.cs",
+        "KingdomMaterialRules.Wear.cs",
+    )
+)
 # The engine-coupled half of the yard, read only to PIN it. The arithmetic this model
 # reproduces for refining is COMPOSED there rather than in the rules file, and QB-29 was
 # exactly a line in there silently disagreeing with the rule it was meant to obey.
@@ -102,11 +115,20 @@ BLUEPRINTS_XML = os.path.join(ROOT, "ObjectBlueprints.xml")
 # --------------------------------------------------------------------------------------
 
 
-def read_const(path: str, name: str) -> int:
-    text = open(path, encoding="utf-8-sig").read()
+def read_source(path: str | tuple[str, ...]) -> str:
+    paths = (path,) if isinstance(path, str) else path
+    return "\n".join(open(item, encoding="utf-8-sig").read() for item in paths)
+
+
+def source_label(path: str | tuple[str, ...]) -> str:
+    return path if isinstance(path, str) else ", ".join(path)
+
+
+def read_const(path: str | tuple[str, ...], name: str) -> int:
+    text = read_source(path)
     m = re.search(r"const\s+(?:int|long)\s+" + name + r"\s*=\s*([0-9]+)", text)
     if not m:
-        raise SystemExit(f"constant {name} not found in {path}")
+        raise SystemExit(f"constant {name} not found in {source_label(path)}")
     return int(m.group(1))
 
 
@@ -330,7 +352,7 @@ _stage_pct = re.search(
 assert _stage_pct, "StageUpkeepPercent table not found"
 STAGE_PERCENT = tuple(int(x) for x in _stage_pct.group(1).split(","))
 
-_mat_text = open(MAT_CS, encoding="utf-8-sig").read()
+_mat_text = read_source(MAT_CS)
 # Widened to long when the yard came off the visit clock: a big crew over a long stretch
 # leaves int behind long before the stock or the rate do.
 assert (

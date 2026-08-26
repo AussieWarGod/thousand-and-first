@@ -837,6 +837,12 @@ namespace ThousandAndFirst.Tests
 				DeleteLink(receiptLeaf);
 
 				string receiptLock = Path.Combine(root, KingdomSealStore.ReceiptsFolder, ".claims.lock");
+				// The preceding claim safely created the ordinary persistent mutex leaf before it
+				// rejected the redirected receipt. Remove that regular test-owned leaf so this
+				// next case can independently replace the same pathname with a hostile link.
+				Assert.IsTrue(File.Exists(receiptLock));
+				Assert.IsFalse((File.GetAttributes(receiptLock) & FileAttributes.ReparsePoint) != 0);
+				File.Delete(receiptLock);
 				Assert.IsTrue(TryFileLink(receiptLock, target));
 				Assert.IsFalse(store.TryClaimReservation(legacy, "target-lock", 1,
 					out receipt, out lease, out failure));

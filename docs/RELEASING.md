@@ -39,6 +39,12 @@ allowlisted runtime raster paths, case-insensitively rejecting every other image
    ./Tools/release-check.sh
    ```
 
+   Hosted/public CI may skip exactly three named installed-data-only cases when licensed Qud data
+   is absent. The workflow binds the labels; any extra or missing skip, or an explicitly configured
+   incomplete base, fails. That is portability evidence, not release evidence. `release-check.sh`
+   injects the exact installed `TAF_QUD_BASE` into the Windows test process, and canonical
+   `DevTests/test.ps1` forbids every skip. Any skipped release case fails the run.
+
    The portable lane reports structural debt without blocking incremental work. The release lane
    ends with the binding [structural release contract](STRUCTURE.md): every staged production C#
    file must be strictly under 300 physical lines, and `docs/STRUCTURE_REVIEW.json` must bind a

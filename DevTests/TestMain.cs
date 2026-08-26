@@ -1,5 +1,6 @@
 #if TAF_TESTS
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -67,9 +68,32 @@ namespace ThousandAndFirst.Tests
 		{
 			int passed = 0;
 			int failed = 0;
+			int skipped = 0;
 			int discovered = 0;
 			int selected = 0;
 			string filter = Environment.GetEnvironmentVariable("TAF_TEST_FILTER");
+			bool forbidSkips = string.Equals(Environment.GetEnvironmentVariable("TAF_FORBID_SKIPS"),
+				"1", StringComparison.Ordinal);
+			string allowedSkipText = Environment.GetEnvironmentVariable("TAF_ALLOWED_SKIPS");
+			HashSet<string> allowedSkips = new HashSet<string>(StringComparer.Ordinal);
+			if (!string.IsNullOrWhiteSpace(allowedSkipText))
+			{
+				foreach (string raw in allowedSkipText.Split(';'))
+				{
+					string label = raw.Trim();
+					if (label.Length == 0 || !allowedSkips.Add(label))
+					{
+						Console.WriteLine("INVALID TAF_ALLOWED_SKIPS: empty or duplicate label");
+						return 2;
+					}
+				}
+			}
+			if (forbidSkips && allowedSkips.Count > 0)
+			{
+				Console.WriteLine("INVALID SKIP POLICY: TAF_FORBID_SKIPS conflicts with TAF_ALLOWED_SKIPS");
+				return 2;
+			}
+			HashSet<string> observedSkips = new HashSet<string>(StringComparer.Ordinal);
 			const BindingFlags testFlags = BindingFlags.Public | BindingFlags.NonPublic
 				| BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly;
 			foreach (Type type in Assembly.GetExecutingAssembly().GetTypes()
@@ -104,10 +128,28 @@ namespace ThousandAndFirst.Tests
 						}
 						catch (Exception ex)
 						{
-							failed++;
 							Exception failure = ex.InnerException ?? ex;
-							Console.WriteLine("FAIL " + label
-								+ "\n     " + failure.Message + "\n     " + failure.StackTrace);
+							if (failure is IgnoreException)
+							{
+								if (!forbidSkips && allowedSkips.Contains(label))
+								{
+									skipped++;
+									observedSkips.Add(label);
+									Console.WriteLine("SKIP " + label + "\n     " + failure.Message);
+								}
+								else
+								{
+									failed++;
+									Console.WriteLine("FAIL " + label
+										+ "\n     unauthorized skip: " + failure.Message);
+								}
+							}
+							else
+							{
+								failed++;
+								Console.WriteLine("FAIL " + label
+									+ "\n     " + failure.Message + "\n     " + failure.StackTrace);
+							}
 						}
 					}
 					else if (test != null && testCases.Length == 0)
@@ -141,10 +183,28 @@ namespace ThousandAndFirst.Tests
 						}
 						catch (Exception ex)
 						{
-							failed++;
 							Exception failure = ex.InnerException ?? ex;
-							Console.WriteLine("FAIL " + label + "\n     " + failure.Message
-								+ "\n     " + failure.StackTrace);
+							if (failure is IgnoreException)
+							{
+								if (!forbidSkips && allowedSkips.Contains(label))
+								{
+									skipped++;
+									observedSkips.Add(label);
+									Console.WriteLine("SKIP " + label + "\n     " + failure.Message);
+								}
+								else
+								{
+									failed++;
+									Console.WriteLine("FAIL " + label
+										+ "\n     unauthorized skip: " + failure.Message);
+								}
+							}
+							else
+							{
+								failed++;
+								Console.WriteLine("FAIL " + label + "\n     " + failure.Message
+									+ "\n     " + failure.StackTrace);
+							}
 						}
 					}
 				}
@@ -158,8 +218,18 @@ namespace ThousandAndFirst.Tests
 				return 2;
 			}
 			Console.WriteLine();
+			string[] missingSkips = allowedSkips.Except(observedSkips)
+				.OrderBy(label => label, StringComparer.Ordinal).ToArray();
+			if (missingSkips.Length > 0)
+			{
+				foreach (string label in missingSkips)
+				{
+					failed++;
+					Console.WriteLine("FAIL expected skip did not occur: " + label);
+				}
+			}
 			Console.WriteLine(failed == 0
-				? $"ALL GREEN: {passed} cases passed ({discovered} discovered)"
+				? $"ALL GREEN: {passed} cases passed, {skipped} skipped ({discovered} discovered)"
 				: $"{passed} passed, {failed} FAILED ({selected} selected; {discovered} discovered)");
 			return failed == 0 ? 0 : 1;
 		}

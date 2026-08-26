@@ -13,14 +13,15 @@ are never inferred from source or static automation.
 
 | Layer | Latest result | Scope |
 |---|---|---|
-| Clean release audit | **PARTIAL PASS** — 10 of 11 automated layers green at committed candidate `19fb8ee`; structural release layer red | Docs/hygiene, ABI, inventory, baseline/compatibility compile, 7,586-case full suite, 171-case portable suite, architecture/XML/art, balance, 43-case smoke harness, Workshop package, and deploy dry-run passed. The binding structure gate below failed as designed. |
-| Staged runtime compile | **PASS** — 308 sources, baseline and compatibility symbols | Exact inventory selected by `Tools/stage.sh`; installed Qud 2.0.211.51 references. |
+| Last clean release audit | **PARTIAL PASS** — 10 of 11 automated layers green at committed candidate `19fb8ee`; structural release layer red | Docs/hygiene, ABI, inventory, baseline/compatibility compile, 7,586-case full suite, 171-case portable suite, architecture/XML/art, balance, 43-case smoke harness, Workshop package, and deploy dry-run passed. This remains a bounded committed receipt, not proof for later structural revisions. |
+| Staged runtime compile | **PASS** — 583 sources, baseline and compatibility symbols | Exact current inventory selected by `Tools/stage.sh`; installed Qud 2.0.211.51 references. Runtime behavior still needs a native pass against the exact final commit. |
 | Architecture generator | **PASS** — 337 generated larger-lot maps, 242 larger-lot bindings, 277 copied predecessor tiers current | Generated larger-lot XML is byte-current. These are the generated subset, not the complete authored registry counted below. |
 | Architecture checker | **PASS** — 136 buildings, 126 plotted buildings, 499 maps, 355 bindings, 403 tiers, 516 variants, 2,064 variant/pose goldens, zero issues; largest exact a2 receipt 6,324 bytes / 8,500 characters; 3 expected installed-base tolerant-recovery warnings | Static topology, entrances, fixtures, palette/material/technology constraints, typed-lot coverage, deterministic snapshots, and an independent mirror of the runtime's 8,192-byte / 11,264-character codec envelope. The warnings are the named recovery path for malformed vanilla `Creatures.xml`, `Furniture.xml`, and `Items.xml`; it does not judge native appearance. |
 | One-survey focused tests | **PASS** — 9 focused source-contract cases | Maintained named indexes, active-pass consumers, mutation observation, and the absence of reachable second whole-zone scans. Dense native scan instrumentation remains open. |
-| Addendum 9 structural census | **RELEASE BLOCKED** — 308 staged C# files; 181 exceed 300 physical lines, 0 are exactly 300 (181 fail strict “under 300”), and 73 exceed 1,000 | `Tools/check-structure.py --report` is a non-blocking development census. Release mode enforces the strict under-300 proxy and exact-inventory human review of responsibility/protocol boundaries. |
-| Full pure/source suite | **PASS** — 7,586 / 7,586 cases | Final integrated engine-free/source tree green. This does not sign native Qud behavior. |
-| Current native smoke | **PARTIAL PASS** — fresh profile, founding, 17/17 checks, one production gallery case, save/cold-load, repeat 17/17, clean log | Clean commit `19fb8ee` deployed against Qud 1.0.5/core 2.0.211.51. This signs loader/founding/single-sample persistence smoke only; it is not the numbered protocol, full visual review, compatibility matrix, or Steam receipt. |
+| Addendum 9 structural census | **RELEASE BLOCKED** — 583 staged C# files / 241,629 physical lines; 171 exceed 300 physical lines, 0 are exactly 300, 63 exceed 1,000, 15 exceed 2,000, and 2 exceed 5,000 | Ten previously oversized authorities are decomposed. Inventory SHA-256: `a48f43ce384de4aa54d341a4e3fb49605730f41cc3753ad43afaf72089d5afba`. `Tools/check-structure.py --report` remains diagnostic; release mode still requires every source strictly under 300 and exact-inventory human review. |
+| Full Qud-referenced/source suite | **PASS** — 7,586 / 7,586 cases, 0 skipped | Final integrated hardening tree green against the configured licensed base. This does not sign native Qud behavior. |
+| Portable suite | **PASS** — 171 / 171 cases, 0 skipped | Repository-only lane green. Public CI has an exact three-label allowlist for installed-data-only skips when licensed Qud data is absent; extra/missing skips and an explicit invalid base fail. Canonical release `test.ps1` forbids skips. |
+| Latest retained native smoke | **PARTIAL PASS** — fresh profile, founding, 17/17 checks, one production gallery case, save/cold-load, repeat 17/17, clean log | Clean commit `19fb8ee` deployed against Qud 1.0.5/core 2.0.211.51. This signs only that commit's loader/founding/single-sample persistence smoke. Later structural revisions have no native compile/load/log receipt and are not covered by this row. |
 
 Reproduce the current static results:
 
@@ -72,8 +73,9 @@ persistent unloaded actors, mass background simulation, and offscreen conquest/l
 - Full pure/source suite green after the final code and documentation set; rerun after every later
   source or source-contract change.
 - Exact release, ABI, XML/reference, architecture, package, and Workshop-package test gates green.
-- Retain the clean `19fb8ee` deployment/native smoke result above, then repeat native compile/load
-  and `Player.log` review after any later runtime change.
+- Retain the clean `19fb8ee` deployment/native smoke as bounded evidence only. Repeat native
+  compile/load and `Player.log` review against the exact final structural commit before claiming its
+  runtime behavior.
 - Numbered [TESTING.md](../TESTING.md) protocol completed for all changed high-risk lanes,
   including cold save/load cuts, dense city, multi-zone carriers, citizenship overlays, master and
   module resume, raids, succession, happenings, inheritance, and external API fixture.
@@ -86,7 +88,8 @@ persistent unloaded actors, mass background simulation, and offscreen conquest/l
   boundary. `AUTHOR-DEFERRED` research/design prose must not be presented as current runtime.
 - Addendum 9 structural release gate green: every staged C# file strictly under 300 physical lines,
   plus exact-inventory human evidence for one responsibility and protocols at boundaries. Current
-  census is red; no enterprise-grade or v1.0 release-quality claim is valid while it remains red.
+  583-file census is red; no enterprise-grade or v1.0 release-quality claim is valid while it
+  remains red.
 
 Detailed current ledgers live in `_notes/BRIEF-IMPLEMENTATION-AUDIT.md` and
 `_notes/CONTRACT-RUNTIME-RECONCILIATION-2026-08-25.md`. Release mechanics live in

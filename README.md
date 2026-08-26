@@ -5,12 +5,15 @@ ground, and let a settlement grow through arrivals, thirst, and chronicle — th
 polity of the post-injunction age.
 
 **Status: 0.2.0 work in progress toward a v1.0 test candidate.** Nine focused one-survey cases, the
-final 7,586-case engine-free/source suite, and static architecture gates are green.
-Clean commit `19fb8ee` also has a narrow current-revision native result covering fresh-profile
-founding, 17/17 self-tests, one production architecture sample, save/cold-load, repeat self-tests,
-and a clean log. The full human protocol and gallery, compatibility checks, structural release
-gate, and private Steam subscription/install pass remain open. This tree is not a release
-candidate. [Current
+final 7,586-case Qud-referenced/source suite, the 171-case portable suite, and static architecture
+gates are green with zero skipped cases in the recorded licensed run. The structural hardening tree
+stages 583 production C# sources and has decomposed ten oversized authorities, but 171 files still
+breach the binding structural release gate. Clean commit `19fb8ee` has the latest retained native
+result: fresh-profile founding, 17/17 self-tests, one production architecture sample,
+save/cold-load, repeat self-tests, and a clean log. That result does not sign the later structural
+changes, which need a fresh native compile/load/log pass against their exact commit. The full human
+protocol and gallery, compatibility checks, structural release gate, and private Steam
+subscription/install pass remain open. This tree is not a release candidate. [Current
 implementation and evidence](docs/STATUS.md) records exact results and remaining gates without
 conflating automation with playtest proof.
 

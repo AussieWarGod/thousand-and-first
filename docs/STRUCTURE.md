@@ -18,6 +18,20 @@ python3 Tools/check-structure.py --report
 python3 Tools/check-structure.py --release
 ```
 
+## Current hardening checkpoint
+
+`Tools/check-structure.py --json` currently reports 583 staged production C# files and 241,629
+physical lines. Of those, 171 exceed 300 lines, 0 are exactly 300, 63 exceed 1,000, 15 exceed
+2,000, and 2 exceed 5,000. Exact staged source inventory digest:
+`a48f43ce384de4aa54d341a4e3fb49605730f41cc3753ad43afaf72089d5afba`.
+
+Ten previously oversized authorities have been decomposed: lifecycle state, lifecycle rules, realm
+archive, founding transaction, laboratory runtime, plot rules, architecture rules, zoning rules,
+material rules, and trade rules. [ARCHITECTURE.md](ARCHITECTURE.md#split-authority-map) maps each
+logical authority to its current source family. This is measurable progress, not release signoff:
+171 line-cap failures and missing exact-inventory human review still block release. Any staged
+source change invalidates this digest and requires a new census and review binding.
+
 Automation cannot decide whether a type owns one coherent responsibility or whether its engine,
 serialization, public-API, and third-party seams use suitable protocols. Release mode therefore
 also requires `docs/STRUCTURE_REVIEW.json`, bound to the exact staged source inventory digest.

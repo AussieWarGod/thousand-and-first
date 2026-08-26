@@ -5,6 +5,7 @@ if (-not [string]::IsNullOrWhiteSpace($env:TAF_TEST_FILTER)) {
     exit 2
 }
 $env:TAF_REPO_ROOT = Split-Path $PSScriptRoot -Parent
+$env:TAF_FORBID_SKIPS = "1"
 $fullProject = Join-Path $PSScriptRoot "TafTests.csproj"
 $portableProject = Join-Path $PSScriptRoot "PortableTests.csproj"
 $dotnetCommand = Get-Command dotnet -CommandType Application -ErrorAction SilentlyContinue

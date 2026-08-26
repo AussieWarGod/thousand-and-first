@@ -8,21 +8,36 @@
 
 ## Current state
 
-- Integrated feature/polish candidate is clean commit `19fb8ee`. Preserve later user changes and
-  do not substitute an older historical candidate.
-- `Tools/gate.sh`: 308 staged sources compile clean under baseline and compatibility symbols.
+- Integrated feature/polish baseline is clean commit `19fb8ee`. Later structural/CI hardening
+  changes are not signed by that receipt; preserve them and all later user changes rather than
+  substituting an older historical candidate.
+- `Tools/gate.sh`: 583 staged sources compile clean under baseline and compatibility
+  symbols. The exact inventory contains 241,629 physical lines and has SHA-256
+  `a48f43ce384de4aa54d341a4e3fb49605730f41cc3753ad43afaf72089d5afba`.
 - Architecture: 136 buildings, 126 plotted building plans, 499 maps, 355 bindings, 403 tiers,
   516 variants, and 2,064 variant/pose goldens; generator/checker clean with zero issues plus three
   expected installed-base tolerant-recovery warnings for malformed vanilla Creatures/Furniture/Items XML.
 - Nine focused one-survey source-contract cases pass. The final integrated pure/source suite passes
-  7,586 / 7,586 cases.
-- Current native partial result: clean deployment, fresh isolated profile, Smokehold founding,
+  7,586 / 7,586 cases with zero skipped; the portable suite passes 171 / 171 with zero skipped; all 31
+  Python tool tests pass. Public CI now permits exactly three named installed-data skips when no
+  Qud base is discoverable; any extra/missing skip or explicit invalid base fails. Release
+  execution forbids skips and passes the exact licensed base explicitly.
+- Current native partial result remains the receipt from clean commit `19fb8ee`: clean deployment,
+  fresh isolated profile, Smokehold founding,
   141 live faction standings, 17/17 self-tests, production gallery case 1/2,064, save/cold-load,
   repeat 17/17, and clean `Player.log`, all against Qud 1.0.5/core 2.0.211.51. Full human
   gallery/lived-city, numbered protocol, accessibility, compatibility, dense-performance, and
-  private subscribed-install receipts remain open.
-- Current focus: publish the committed candidate, observe CI, then continue the binding structure
-  decomposition and remaining human/native/compatibility/Steam gates.
+  private subscribed-install receipts remain open. Later structural revisions have no native
+  receipt and need a compile/load/log rerun against their exact final commit.
+- Structure checkpoint: 171 files exceed 300 physical lines, 0 are exactly 300, 63 exceed 1,000,
+  15 exceed 2,000, and 2 exceed 5,000. Ten oversized authorities are now coherent source families:
+  LifecycleState, LifecycleRules, RealmArchive, FoundingTransaction, Lab, PlotRules,
+  ArchitectureRules, ZoningRules, MaterialRules, and TradeRules. The release gate remains red until
+  every staged file is strictly under 300 and exact-inventory human semantic review exists in
+  `../docs/STRUCTURE_REVIEW.json` with no exceptions.
+- Current focus: checkpoint each green hardening batch, rerun native proof against the exact final
+  commit, observe public CI, then complete binding decomposition and every remaining
+  human/native/compatibility/Steam gate.
 
 ## Historical 0.2.0 candidate evidence
 
@@ -51,12 +66,15 @@
 
 ## Human-only gates
 
-1. Run the observational protocol in `TESTING.md`, especially Pass 36 succession/corpse/seal.
-2. In Qud's signed-in Workshop UI, create the item privately, accept any agreement, and keep the
+1. Finish the strict-under-300 decomposition and complete the exact-inventory human semantic
+   responsibility/protocol review in `docs/STRUCTURE_REVIEW.json`.
+2. Run the observational protocol in `TESTING.md`, especially Pass 36 succession/corpse/seal,
+   plus full gallery, accessibility, dense-performance, and compatibility passes.
+3. In Qud's signed-in Workshop UI, create the item privately, accept any agreement, and keep the
    returned `workshop.json`.
-3. Freeze the private package, remove local duplicates, subscribe from Steam, verify installed
+4. Freeze the private package, remove local duplicates, subscribe from Steam, verify installed
    bytes/logs, and author the truthful release evidence described in `docs/RELEASING.md`.
-4. Only then canonicalize public metadata, tag the exact manifest version, publish, and
+5. Only then canonicalize public metadata, tag the exact manifest version, publish, and
    subscription-verify public bytes. Never infer a manual or Steam pass from automation.
 
 ## Author-deferred polity/world-presence targets

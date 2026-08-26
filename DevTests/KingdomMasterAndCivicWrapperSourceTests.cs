@@ -144,7 +144,9 @@ namespace ThousandAndFirst.Tests
 			};
 			foreach (string path in independentTicks)
 			{
-				string part = TestMain.ReadRepositoryText(path);
+				string part = string.Equals(path, "Growth/KingdomLab.cs",
+					StringComparison.Ordinal) ? KingdomLabLogicalSource.Read()
+					: TestMain.ReadRepositoryText(path);
 				StringAssert.Contains("public override void TurnTick(long TimeTick, int Amount)",
 					part, path);
 				StringAssert.Contains("KingdomMaster.AutomaticWorkAllowed(", part, path);

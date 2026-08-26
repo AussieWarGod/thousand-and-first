@@ -30,10 +30,16 @@ file order; use the table as the top-level checklist.
 ## Current portable evidence boundary
 
 Nine focused one-survey source-contract cases pass. The final integrated pure/source suite passes
-7,586 / 7,586 cases. `docs/STATUS.md` owns the exact latest receipts. None of this signs native Qud behavior,
+7,586 / 7,586 cases against the configured licensed Qud base; the portable suite passes 171 / 171.
+Both recorded runs report zero skipped. Public CI without installed Qud data permits exactly three
+named installed-data-only skips instead of fabricating fixtures. TestMain rejects an unexpected or
+missing allowlisted skip, and an explicitly configured incomplete base fails rather than skipping.
+Canonical release `DevTests/test.ps1` forbids every skip, and `Tools/release-check.sh` injects the
+exact Qud base.
+`docs/STATUS.md` owns the exact latest receipts. None of this signs native Qud behavior,
 appearance, accessibility, compatibility, or Steam installation.
 
-## Current automated native smoke — partial evidence, not protocol signoff
+## Latest retained automated native smoke — partial evidence, not protocol signoff
 
 On 2026-08-27, repository-controlled automation deployed clean commit
 `19fb8ee4f4600d93ff31b2de63e0628a1c0191df` and ran Caves of Qud 1.0.5/core 2.0.211.51 in a
@@ -47,14 +53,15 @@ run saved, returned to the main menu, cold-loaded the same save, retained the ga
 passed the same 17 checks again. Its captured `Player.log` passed `Tools/check-player-log.sh` with
 no Thousand and First warning, error, or exception frame.
 
-The disposable capture files were not committed as release evidence. This is a recorded current
-result, not a durable human-review or release-evidence record.
+The disposable capture files were not committed as release evidence. This is a recorded result for
+commit `19fb8ee`, not a durable human-review or release-evidence record.
 
-This closes only current-commit loader, founding, one production architecture sample,
-save/cold-load, self-test, and log smoke. It does not check any execution-index box. The complete
-native protocol, every other gallery case and reachable visual state, lived-city observation,
-accessibility, representative compatibility stacks, dense performance, and private Steam
-subscription remain unsigned.
+This closes only that commit's loader, founding, one production architecture sample,
+save/cold-load, self-test, and log smoke. Every later structural revision requires a new
+compile/load/log pass against its exact commit and is not native-signed by this receipt. It does not check any
+execution-index box. The complete native protocol, every other gallery case and reachable visual
+state, lived-city observation, accessibility, representative compatibility stacks, dense
+performance, and private Steam subscription remain unsigned.
 
 ## Prior automated smoke — historical evidence, not current signoff
 
@@ -64,7 +71,7 @@ founded Sheol as a refuge on separate ground, proved `cities=2/2` with 109 carri
 fields and no seat mismatch, passed all 17 `kingdom:selftest` checks, saved three times, cold-loaded
 twice, and proved both seat directions after restart. Each captured Player.log passed
 `Tools/check-player-log.sh`. This evidence covers loader and persistence smoke only; it does not
-describe the materially changed working tree, check any box above, or replace current-revision
+describe materially changed later revisions, check any box above, or replace current-revision
 native receipts, human observation, balance, usability, compatibility, or private Steam
 subscription testing.
 

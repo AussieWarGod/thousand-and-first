@@ -30,6 +30,12 @@ def require(problems, relative, *terms):
             problems.append(f"{relative} is missing current contract text: {term}")
 
 
+def require_if_present(problems, relative, *terms):
+    """Audit ignored local research/coordination notes without requiring them in public CI."""
+    if (ROOT / relative).is_file():
+        require(problems, relative, *terms)
+
+
 def forbid(problems, relative, *terms):
     body = normalized(relative)
     for term in terms:
@@ -418,7 +424,7 @@ def audit_private(problems):
         "generative-assisted drafts",
         "AUTHOR-DEFERRED",
     )
-    require(
+    require_if_present(
         problems,
         "_notes/SESSION-LOG.md",
         "Current continuation",
@@ -428,7 +434,7 @@ def audit_private(problems):
         "Nine focused one-survey cases",
         f"{FINAL_SUITE_CASES} / {FINAL_SUITE_CASES} cases",
     )
-    require(
+    require_if_present(
         problems,
         "_notes/COORDINATION.md",
         "Current handoff",
@@ -437,7 +443,7 @@ def audit_private(problems):
         "Codex subagents",
         "Archived Claude inbox — historical",
     )
-    require(
+    require_if_present(
         problems,
         "_notes/RESEARCH.md",
         "historical early snapshot",
@@ -447,7 +453,7 @@ def audit_private(problems):
         "CyberneticsTerminal.cs",
         "CyberneticsTerminal2.cs` does not contain that gate",
     )
-    require(
+    require_if_present(
         problems,
         "_notes/AGENT-PLAYBOOK.md",
         "Correction",
@@ -455,14 +461,14 @@ def audit_private(problems):
         "not `CyberneticsTerminal2.cs`",
         "native reachability remains unverified",
     )
-    require(
+    require_if_present(
         problems,
         "_notes/FOOD-WATER-FINAL-REVIEW.md",
         "historical research disposition, not current implementation truth",
         "physical crop/larder/meal runtime landed",
         "indefinite stocked-food aura",
     )
-    require(
+    require_if_present(
         problems,
         "_notes/IDEA-INBOX.md",
         "historical source/index",
@@ -477,12 +483,9 @@ def audit_private(problems):
         "KingdomPlot2",
         "KingdomExpeditions",
     )
-    for relative in (
-        "_notes/COVERAGE.md",
-        "_notes/COVERAGE-GAP-MAP.md",
-        "_notes/UX-PACING-AUDIT.md",
-    ):
-        require(problems, relative, "Historical")
+    require_if_present(problems, "_notes/COVERAGE.md", "Historical")
+    require(problems, "_notes/COVERAGE-GAP-MAP.md", "Historical")
+    require_if_present(problems, "_notes/UX-PACING-AUDIT.md", "Historical")
 
     require(
         problems,

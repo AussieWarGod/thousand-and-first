@@ -6,11 +6,12 @@ minor for additive API and content, major for breaking changes. Supported API is
 
 ## [Unreleased] — 0.2.0 work in progress
 
-Clean commit `19fb8ee` passed a narrow current loader/founding/single-gallery/save/cold-load smoke
-against Qud 1.0.5/core 2.0.211.51 with repeat 17/17 self-tests and a clean log. An earlier revision's
-two-city loader/persistence smoke remains historical evidence only. The complete native/human
-protocol and gallery, compatibility testing, structural release gate, and private Steam
-subscription/install pass remain gates before any release-candidate claim is restored.
+Clean commit `19fb8ee` passed a narrow loader/founding/single-gallery/save/cold-load smoke against
+Qud 1.0.5/core 2.0.211.51 with repeat 17/17 self-tests and a clean log. The later structural
+hardening tree has source/compile evidence but no replacement native receipt yet. An earlier
+revision's two-city loader/persistence smoke remains historical evidence only. The complete
+native/human protocol and gallery, compatibility testing, structural release gate, and private
+Steam subscription/install pass remain gates before any release-candidate claim is restored.
 
 ### Fixed
 - **Paid construction now freezes its gameplay truth before the first debit.** Registry v4 stores
@@ -43,19 +44,29 @@ subscription/install pass remain gates before any release-candidate claim is res
   after retirement.
 - **The checkout runner now executes the seven non-public lifecycle cases it formerly omitted.**
   Discovery covers attributed public/non-public instance/static and task-returning methods, reports
-  discovered/selected totals, fails unsupported parameterized tests, and fails when a filter
-  selects nothing. The canonical release runner rejects ambient filters and runs locked restores
-  plus both the full and portable suites.
+  discovered/selected/skipped totals, fails unsupported parameterized tests, and fails when a
+  filter selects nothing. Installed-Qud-data cases report explicit skips when a public checkout has
+  no licensed base data. Hosted CI names an exact three-case skip allowlist; an unexpected skip, an
+  expected skip that does not occur, or an explicitly configured incomplete base fails. The
+  canonical `test.ps1` release runner rejects ambient filters, forbids every skip, and runs locked
+  restores plus both suites; `release-check.sh` injects the exact Qud base. The recorded licensed
+  hardening run passes 7,586 / 7,586 full cases and 171 / 171 portable cases with zero skipped.
 - **Addendum 9 structural debt is now an executable release blocker instead of a stale census.**
   `Tools/check-structure.py` reads the exact staged production C# inventory, reports strict
   under-300 line debt and direct engine-coupling signals during incremental CI, and fails release
   on any file at or over 300. Because line counts cannot prove ownership or dependency quality,
   release also requires no-exception human evidence for one responsibility and protocols at
-  boundaries, bound to the exact source digest. The first three ownership-focused batches split
-  public behavior contracts, distance/container records, gatehouse/water-debit declarations, and
-  the registry-office runtime without changing public or serialized type identity. Current
-  308-file census remains red at 181 over-limit files; this is not an enterprise-grade or v1.0
-  claim.
+  boundaries, bound to the exact source digest. Ten ownership-focused decompositions now cover
+  lifecycle state, lifecycle rules, realm archive, founding transaction, laboratory runtime, plot
+  rules, architecture rules, zoning rules, material rules, and trade rules without changing public
+  or serialized type identity. Current 583-file census remains red: 241,629 physical lines; 171
+  files exceed 300, 0 are exactly 300, 63 exceed 1,000, 15 exceed 2,000, and 2 exceed 5,000. Its
+  exact inventory digest is
+  `a48f43ce384de4aa54d341a4e3fb49605730f41cc3753ad43afaf72089d5afba`; this is not an
+  enterprise-grade or v1.0 claim.
+- **The deterministic balance gate follows split rule authorities.** The simulator reads the full
+  material-rule source family instead of one obsolete monolith path, and a repository test now
+  executes every source pin so later decompositions cannot silently break release-check layer 7.
 - **One due settlement pass now owns one maintained zone survey.** `KingdomSurvey` publishes
   named indexes for resident bodies, bindings, transients, plots, plot parts, architecture
   components, gatehouse satellites, delve endpoints, furnishings, heart relics, material

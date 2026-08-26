@@ -539,8 +539,13 @@ class ArchitectureCheckerTests(unittest.TestCase):
         """Runtime codec edits must update independent gate in same change."""
 
         source_repo = CHECKER_PATH.parents[1]
-        runtime = (source_repo / "Growth" / "KingdomArchitectureRules.cs").read_text(
-            encoding="utf-8"
+        runtime = "\n".join(
+            (source_repo / "Growth" / name).read_text(encoding="utf-8")
+            for name in (
+                "KingdomArchitectureRules.cs",
+                "KingdomArchitectureCodecRules.cs",
+                "KingdomArchitectureDecodeRules.cs",
+            )
         )
 
         def runtime_int(name: str) -> int:

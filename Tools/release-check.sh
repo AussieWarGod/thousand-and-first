@@ -14,6 +14,7 @@ else
 	QUD_ROOT="$QUD_ROOT_DEFAULT"
 fi
 BASE="$QUD_ROOT/CoQ_Data/StreamingAssets/Base"
+BASE_WIN="$(wslpath -w "$BASE")"
 GAME_EXE="$QUD_ROOT/CoQ.exe"
 ASSEMBLY_CSHARP_PATH="$QUD_ROOT/CoQ_Data/Managed/Assembly-CSharp.dll"
 [ -d "$BASE" ] || { echo "configured Qud root is incomplete: $BASE" >&2; exit 2; }
@@ -71,7 +72,10 @@ echo "[5/11] pure and source-contract tests"
 TEST_SCRIPT="$(wslpath -w "$REPO/DevTests/test.ps1")"
 (
 	cd /mnt/c
-	powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$TEST_SCRIPT"
+	TAF_TEST_SCRIPT_WIN="$TEST_SCRIPT" TAF_QUD_BASE_WIN="$BASE_WIN" \
+	WSLENV="${WSLENV:+$WSLENV:}TAF_TEST_SCRIPT_WIN:TAF_QUD_BASE_WIN" \
+	powershell.exe -NoProfile -ExecutionPolicy Bypass -Command \
+		'$env:TAF_QUD_BASE = $env:TAF_QUD_BASE_WIN; & $env:TAF_TEST_SCRIPT_WIN; exit $LASTEXITCODE'
 )
 
 echo "[6/11] XML and tile reachability"

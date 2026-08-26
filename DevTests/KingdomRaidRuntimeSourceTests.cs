@@ -13,6 +13,13 @@ namespace ThousandAndFirst.Tests
 			return TestMain.ReadRepositoryText(relative);
 		}
 
+		private static string RaidLifecycleSource()
+		{
+			return string.Join("\n",
+				Source(Path.Combine("Experience", "KingdomLifecycleRaidRuntimeRules.cs")),
+				Source(Path.Combine("Experience", "KingdomLifecycleRaidSinkRules.cs")));
+		}
+
 		private static string Slice(string source, string start, string end)
 		{
 			int at = source.IndexOf(start, StringComparison.Ordinal);
@@ -130,7 +137,7 @@ namespace ThousandAndFirst.Tests
 		public void InterruptedProjectionIntentResumesOnlyFromExactPhysicalEvidence()
 		{
 			string raids = Source(Path.Combine("Raids", "KingdomRaids.cs"));
-			string lifecycle = Source(Path.Combine("Experience", "KingdomLifecycleRules.cs"));
+			string lifecycle = RaidLifecycleSource();
 			string resume = Slice(raids, "private static bool ResumeAttackProjections(",
 				"private static void PrepareRaiderBody(");
 			string reset = Slice(lifecycle, "internal static bool ResetAbsentProjectionIntent(",

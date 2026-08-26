@@ -28,9 +28,16 @@ namespace ThousandAndFirst.Tests
 		private static string LocateBase()
 		{
 			string supplied = Environment.GetEnvironmentVariable("TAF_QUD_BASE");
+			if (supplied != null)
+			{
+				if (!string.IsNullOrWhiteSpace(supplied) && File.Exists(Path.Combine(supplied,
+					"ObjectBlueprints", "ZoneTerrain.xml"))) return supplied;
+				throw new InvalidOperationException(
+					"TAF_QUD_BASE is set but does not contain ObjectBlueprints/ZoneTerrain.xml: "
+					+ supplied);
+			}
 			string[] candidates = new string[]
 			{
-				supplied,
 				@"F:\SteamLibrary\steamapps\common\Caves of Qud\CoQ_Data\StreamingAssets\Base",
 				"/mnt/f/SteamLibrary/steamapps/common/Caves of Qud/CoQ_Data/StreamingAssets/Base"
 			};
@@ -40,8 +47,9 @@ namespace ThousandAndFirst.Tests
 					&& File.Exists(Path.Combine(candidates[i], "ObjectBlueprints", "ZoneTerrain.xml")))
 					return candidates[i];
 			}
-			throw new InvalidOperationException(
+			Assert.Ignore(
 				"Inheritance native test requires TAF_QUD_BASE or the configured Caves of Qud base.");
+			return null;
 		}
 	}
 }

@@ -27,6 +27,70 @@ namespace ThousandAndFirst.Tests
 			return TestMain.ReadRepositoryText(relative);
 		}
 
+		private static string RealmArchiveSource()
+		{
+			string[] files =
+			{
+				"KingdomRealmArchivePhase.cs",
+				"KingdomRealmCallbackPhase.cs",
+				"KingdomRealmCallbackDisposition.cs",
+				"KingdomRealmCallbackScope.cs",
+				"KingdomRealmCallbackReceipt.cs",
+				"KingdomRealmArchive.00Core.cs",
+				"KingdomRealmArchive.01Capture.cs",
+				"KingdomRealmArchive.02AuthorityHash.cs",
+				"KingdomRealmArchive.03Validation.cs",
+				"KingdomRealmArchive.04GraphMatch.cs",
+				"KingdomRealmArchive.05BoundedValidation.cs",
+				"KingdomRealmArchive.06JobValidation.cs",
+				"KingdomRealmArchive.07DeliveryValidation.cs",
+				"KingdomRealmArchive.08Clone.cs",
+				"KingdomRealmArchive.09ExactGraph.cs",
+				"KingdomRealmArchive.10WireEnvelope.cs",
+				"KingdomRealmArchive.11WirePrimitives.cs",
+				"KingdomRealmArchive.12WireRegistry.cs"
+			};
+			string[] source = new string[files.Length];
+			for (int i = 0; i < files.Length; i++)
+				source[i] = Source(Path.Combine("Core", files[i]));
+			return string.Join("\n", source);
+		}
+
+		private static string FoundingTransactionSource()
+		{
+			string[] files =
+			{
+				"KingdomFoundingTransaction.00Core.cs",
+				"KingdomFoundingTransaction.01DebugReset.cs",
+				"KingdomFoundingTransaction.02ResetEvidence.cs",
+				"KingdomFoundingTransaction.03AuthorityProof.cs",
+				"KingdomFoundingTransaction.04DirectSecond.cs",
+				"KingdomFoundingTransaction.05DirectFirst.cs",
+				"KingdomFoundingTransaction.06GlobalReservation.cs",
+				"KingdomFoundingTransaction.07ReservationCleanup.cs",
+				"KingdomFoundingTransaction.08SiteReservation.cs",
+				"KingdomFoundingTransaction.09EntryPoints.cs",
+				"KingdomFoundingTransaction.10Begin.cs",
+				"KingdomFoundingTransaction.10Staging.cs",
+				"KingdomFoundingTransaction.11Run.cs",
+				"KingdomFoundingTransaction.12PublishFirst.cs",
+				"KingdomFoundingTransaction.13PublishSecond.cs",
+				"KingdomFoundingTransaction.14PublishSecondCore.cs",
+				"KingdomFoundingTransaction.15IdentityAndVillage.cs",
+				"KingdomFoundingTransaction.16SecondProjection.cs",
+				"KingdomFoundingTransaction.17ReceiptValidation.cs",
+				"KingdomFoundingTransaction.18ReceiptCompletion.cs",
+				"KingdomFoundingTransaction.19FactionRegistry.cs",
+				"KingdomFoundingTransaction.20Chronicle.cs",
+				"KingdomFoundingTransaction.21EngineProjection.cs",
+				"KingdomFoundingTransaction.22RecoveryHelpers.cs"
+			};
+			string[] source = new string[files.Length];
+			for (int i = 0; i < files.Length; i++)
+				source[i] = Source(Path.Combine("Core", files[i]));
+			return string.Join("\n", source);
+		}
+
 		private static KingdomTradeBook ExactTradeBook()
 		{
 			KingdomTradeBook book = new KingdomTradeBook();
@@ -77,8 +141,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void NewRealmFactionKeyIsNamespacedAndDisplayNameRemainsPresentation()
 		{
-			string transaction = Source(Path.Combine("Core",
-				"KingdomFoundingTransaction.cs"));
+			string transaction = FoundingTransactionSource();
 			string founding = Source(Path.Combine("Core", "KingdomFounding.cs"));
 			string basin = Source(Path.Combine("Founding", "FounderBasin.cs"));
 			StringAssert.Contains("KingdomIdentityRules.TryMintRealm(transaction, out realmFaction",
@@ -97,8 +160,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void EveryFoundingEntryNormalizesPlainNamesAndRichSinksEscapeThem()
 		{
-			string transaction = Source(Path.Combine("Core",
-				"KingdomFoundingTransaction.cs"));
+			string transaction = FoundingTransactionSource();
 			int directSecond = transaction.IndexOf(
 				"private static bool TryFoundSecondWithoutWaterCore", StringComparison.Ordinal);
 			int directFirst = transaction.IndexOf(
@@ -131,7 +193,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void LaterFoundingFreezesSiteAndPendingTupleBeforePairedTopologyCommit()
 		{
-			string founding = Source(Path.Combine("Core", "KingdomFoundingTransaction.cs"));
+			string founding = FoundingTransactionSource();
 			int publish = founding.IndexOf("private static void PublishSecondCore",
 				StringComparison.Ordinal);
 			int callFreeze = founding.IndexOf("TryFreezeSecondIdentity", publish,
@@ -173,35 +235,71 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void SecondCityCutBarriersPrecedeWaterAndTopologyMutations()
 		{
-			string founding = Source(Path.Combine("Core", "KingdomFoundingTransaction.cs"));
+			string founding = FoundingTransactionSource();
 			int begin = founding.IndexOf("private static KingdomFoundingResult Begin(",
 				StringComparison.Ordinal);
-			int prepare = founding.IndexOf("TryPrepareSecondCityTopology", begin,
+			int stageHelper = founding.IndexOf("private static bool TryStageFoundingReceipt",
+				begin, StringComparison.Ordinal);
+			int reservationHelper = founding.IndexOf(
+				"private static bool TryAcquireFoundingReservations", stageHelper,
 				StringComparison.Ordinal);
-			int receipt = founding.IndexOf("Basin.PendingKind = Kind", prepare,
+			int run = founding.IndexOf("private static KingdomFoundingResult Run(",
+				reservationHelper, StringComparison.Ordinal);
+			Assert.Greater(stageHelper, begin);
+			Assert.Greater(reservationHelper, stageHelper);
+			Assert.Greater(run, reservationHelper);
+
+			string beginBody = founding.Substring(begin, stageHelper - begin);
+			int prepare = beginBody.IndexOf("TryPrepareSecondCityTopology",
 				StringComparison.Ordinal);
-			int stageSite = founding.IndexOf("StageSiteReservation", prepare,
+			int receiptCall = beginBody.IndexOf("TryStageFoundingReceipt", prepare,
 				StringComparison.Ordinal);
-			int acquireGlobal = founding.IndexOf("AcquireGlobalReservation", stageSite,
+			int reservationCall = beginBody.IndexOf("TryAcquireFoundingReservations", receiptCall,
 				StringComparison.Ordinal);
-			int waterBarrier = founding.IndexOf(
-				"Basin.PendingPhase = KingdomFoundingPhase.WaterCommitted", acquireGlobal,
+			int waterBarrier = beginBody.IndexOf(
+				"Basin.PendingPhase = KingdomFoundingPhase.WaterCommitted", reservationCall,
 				StringComparison.Ordinal);
-			int drain = founding.IndexOf("KingdomLiquids.Drain", waterBarrier,
+			int drain = beginBody.IndexOf("KingdomLiquids.Drain", waterBarrier,
 				StringComparison.Ordinal);
-			Assert.Greater(prepare, begin);
-			Assert.Greater(receipt, prepare);
-			Assert.Greater(stageSite, prepare);
-			Assert.Greater(acquireGlobal, stageSite);
-			Assert.Greater(waterBarrier, acquireGlobal);
+			Assert.Greater(prepare, 0);
+			Assert.Greater(receiptCall, prepare);
+			Assert.Greater(reservationCall, receiptCall);
+			Assert.Greater(waterBarrier, reservationCall);
 			Assert.Greater(drain, waterBarrier);
+
+			string stageBody = founding.Substring(stageHelper,
+				reservationHelper - stageHelper);
+			int receipt = stageBody.IndexOf("Basin.PendingKind = Kind",
+				StringComparison.Ordinal);
+			int receiptReadback = stageBody.IndexOf(
+				"ValidateReceiptPayload(Basin, null, vessel", receipt,
+				StringComparison.Ordinal);
+			int originalReadback = stageBody.IndexOf("OriginalSnapshotStillExact(Basin, vessel)",
+				receiptReadback, StringComparison.Ordinal);
+			Assert.Greater(receipt, 0);
+			Assert.Greater(receiptReadback, receipt);
+			Assert.Greater(originalReadback, receiptReadback);
+
+			string reservationBody = founding.Substring(reservationHelper,
+				run - reservationHelper);
+			int stageSite = reservationBody.IndexOf("StageSiteReservation",
+				StringComparison.Ordinal);
+			int siteReadback = reservationBody.IndexOf(
+				"ValidateReceiptPayload(Basin, Site, vessel", stageSite,
+				StringComparison.Ordinal);
+			int acquireGlobal = reservationBody.IndexOf("AcquireGlobalReservation", siteReadback,
+				StringComparison.Ordinal);
+			Assert.Greater(stageSite, 0);
+			Assert.Greater(siteReadback, stageSite);
+			Assert.Greater(acquireGlobal, siteReadback);
+			Assert.Greater(acquireGlobal, stageSite);
 			StringAssert.Contains("TryFinishWaterCommit", founding);
 		}
 
 		[Test]
 		public void DirectSecondRouteStagesSiteBeforeGlobalAndReacquiresExactCleanupCut()
 		{
-			string founding = Source(Path.Combine("Core", "KingdomFoundingTransaction.cs"));
+			string founding = FoundingTransactionSource();
 			int direct = founding.IndexOf(
 				"private static bool TryFoundSecondWithoutWaterCore", StringComparison.Ordinal);
 			int next = founding.IndexOf("internal static bool TryFoundFirstWithoutWater",
@@ -241,7 +339,7 @@ namespace ThousandAndFirst.Tests
 			Assert.IsFalse(KingdomFoundingTransactionRules.SecondRecoveryCanProject(
 				2, 2, AwayIsNull: false, TargetIsExactSeat: false,
 				TargetIsExactAway: false, AlreadyPublished: false));
-			string founding = Source(Path.Combine("Core", "KingdomFoundingTransaction.cs"));
+			string founding = FoundingTransactionSource();
 			int direct = founding.IndexOf(
 				"private static bool TryFoundSecondWithoutWaterCore", StringComparison.Ordinal);
 			int next = founding.IndexOf("internal static bool TryFoundFirstWithoutWater",
@@ -274,7 +372,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void PublishedSecondRetryAlwaysSettlesPairedTopologyAndCompletionProvesAbsence()
 		{
-			string founding = Source(Path.Combine("Core", "KingdomFoundingTransaction.cs"));
+			string founding = FoundingTransactionSource();
 			int publish = founding.IndexOf("private static void PublishSecond(",
 				StringComparison.Ordinal);
 			int core = founding.IndexOf("private static void PublishSecondCore", publish,
@@ -339,8 +437,7 @@ namespace ThousandAndFirst.Tests
 				"if (eligible && item.GetIntProperty(\"KingdomBuilt\") == 1) continue;",
 				founding);
 
-			string transaction = Source(Path.Combine("Core",
-				"KingdomFoundingTransaction.cs"));
+			string transaction = FoundingTransactionSource();
 			StringAssert.Contains("KingdomFounding.TryRestoreRuinStructures(Site,",
 				transaction);
 			StringAssert.Contains("realm != currentSystem.RealmId", transaction);
@@ -396,7 +493,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void ArchiveCodecBoundsRawLengthsBeforeAllocation()
 		{
-			string archive = Source(Path.Combine("Core", "KingdomRealmArchive.cs"));
+			string archive = RealmArchiveSource();
 			int readString = archive.IndexOf("private static string ReadString",
 				StringComparison.Ordinal);
 			int stringCap = archive.IndexOf("length < 0 || length > maxBytes", readString,
@@ -655,7 +752,7 @@ namespace ThousandAndFirst.Tests
 		public void CallbackReceiptsFreezeBothGraphsAndNeverReplayUncertainAttempts()
 		{
 			string system = Source(Path.Combine("Core", "KingdomSystem.cs"));
-			string archive = Source(Path.Combine("Core", "KingdomRealmArchive.cs"));
+			string archive = RealmArchiveSource();
 			int prepare = system.IndexOf("private bool PrepareReturnCallback",
 				StringComparison.Ordinal);
 			int settle = system.IndexOf("private bool SettleReturnCallback", prepare,
@@ -737,7 +834,7 @@ namespace ThousandAndFirst.Tests
 		public void ExileAndReturnPublishRecoveryPhasesBeforePiecemealMutation()
 		{
 			string system = Source(Path.Combine("Core", "KingdomSystem.cs"));
-			string archive = Source(Path.Combine("Core", "KingdomRealmArchive.cs"));
+			string archive = RealmArchiveSource();
 			StringAssert.Contains("Resetting = 9", archive);
 			StringAssert.Contains("ReturnCleaning = 10", archive);
 			StringAssert.Contains("MirrorsPublished = 11", archive);
@@ -792,7 +889,7 @@ namespace ThousandAndFirst.Tests
 			var otherLiveRoot = new System.Collections.Generic.List<object> { live };
 			Assert.IsFalse(KingdomArchivedSettlementCodec.DisjointMutableGraphs(
 				new object[0], new object[] { live, otherLiveRoot }, out failure));
-			string archiveSource = Source(Path.Combine("Core", "KingdomRealmArchive.cs"));
+			string archiveSource = RealmArchiveSource();
 			StringAssert.Contains("ChronicleEntries, OutsiderEntries, Haul, CarryBook",
 				archiveSource);
 
@@ -1623,7 +1720,6 @@ namespace ThousandAndFirst.Tests
 				Path.Combine("Growth", "KingdomPlot.cs"),
 				Path.Combine("Growth", "KingdomSubsidence.cs"),
 				Path.Combine("Growth", "KingdomWear.cs"),
-				Path.Combine("Growth", "KingdomLab.cs"),
 				Path.Combine("Simulation", "City", "KingdomHappenings.cs"),
 				Path.Combine("Simulation", "City", "KingdomPorters.cs"),
 				Path.Combine("Quests", "KingdomBounty.cs"),
@@ -1636,11 +1732,14 @@ namespace ThousandAndFirst.Tests
 					"KingdomChronicle.SettlementId(System.KingdomFactionName)"), file);
 				Assert.IsFalse(source.Contains("LegacyOriginIdentity("), file);
 			}
+			string lab = KingdomLabLogicalSource.Read();
+			Assert.IsFalse(lab.Contains(
+				"KingdomChronicle.SettlementId(System.KingdomFactionName)"));
+			Assert.IsFalse(lab.Contains("LegacyOriginIdentity("));
 			string chronicle = Source(files[0]);
 			Assert.IsFalse(chronicle.Contains("SettlementIdPrefix"));
 			Assert.IsFalse(chronicle.Contains("SettlementId(string"));
 			StringAssert.Contains("return System?.CurrentSettlementId", chronicle);
-			string lab = Source(Path.Combine("Growth", "KingdomLab.cs"));
 			StringAssert.Contains("return System?.CurrentRealmId", lab);
 			string guest = Source(Path.Combine("Experience", "KingdomGuestbook.cs"));
 			string carry = Source(Path.Combine("Experience", "KingdomCarryRuntime.cs"));

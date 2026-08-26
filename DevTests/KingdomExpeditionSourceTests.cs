@@ -8,10 +8,39 @@ namespace ThousandAndFirst.Tests
 	[TestFixture]
 	public class KingdomExpeditionSourceTests
 	{
+		private static string RealmArchiveSource()
+		{
+			string[] files =
+			{
+				"KingdomRealmArchivePhase.cs",
+				"KingdomRealmCallbackPhase.cs",
+				"KingdomRealmCallbackDisposition.cs",
+				"KingdomRealmCallbackScope.cs",
+				"KingdomRealmCallbackReceipt.cs",
+				"KingdomRealmArchive.00Core.cs",
+				"KingdomRealmArchive.01Capture.cs",
+				"KingdomRealmArchive.02AuthorityHash.cs",
+				"KingdomRealmArchive.03Validation.cs",
+				"KingdomRealmArchive.04GraphMatch.cs",
+				"KingdomRealmArchive.05BoundedValidation.cs",
+				"KingdomRealmArchive.06JobValidation.cs",
+				"KingdomRealmArchive.07DeliveryValidation.cs",
+				"KingdomRealmArchive.08Clone.cs",
+				"KingdomRealmArchive.09ExactGraph.cs",
+				"KingdomRealmArchive.10WireEnvelope.cs",
+				"KingdomRealmArchive.11WirePrimitives.cs",
+				"KingdomRealmArchive.12WireRegistry.cs"
+			};
+			string[] source = new string[files.Length];
+			for (int i = 0; i < files.Length; i++)
+				source[i] = TestMain.ReadRepositoryText(Path.Combine("Core", files[i]));
+			return string.Join("\n", source);
+		}
+
 		[Test]
 		public void RealmArchiveV4RetainsTheV3MissionEnvelopeAndReadsV2()
 		{
-			string source = TestMain.ReadRepositoryText(Path.Combine("Core", "KingdomRealmArchive.cs"));
+			string source = RealmArchiveSource();
 			StringAssert.Contains("public const int CurrentVersion = 4", source);
 			StringAssert.Contains("internal const int LegacyJobVersion = 2", source);
 			StringAssert.Contains("internal const int MissionJobVersion = 3", source);

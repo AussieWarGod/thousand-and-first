@@ -16,8 +16,13 @@ namespace ThousandAndFirst.Tests
 
 		private static string Rules()
 		{
-			return TestMain.ReadRepositoryText(
-				Path.Combine("Growth", "KingdomArchitectureRules.cs"));
+			return string.Join("\n", new string[]
+			{
+				TestMain.ReadRepositoryText(Path.Combine("Growth", "KingdomArchitectureRules.cs")),
+				TestMain.ReadRepositoryText(Path.Combine("Growth", "KingdomArchitectureCodecRules.cs")),
+				TestMain.ReadRepositoryText(Path.Combine("Growth", "KingdomArchitectureDecodeRules.cs")),
+				TestMain.ReadRepositoryText(Path.Combine("Growth", "KingdomArchitectureDeltaRules.cs"))
+			});
 		}
 
 		private static string Plot()

@@ -137,6 +137,8 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("[Reflection.AssemblyName]::GetAssemblyName", checker);
 			StringAssert.Contains("configured Qud core is", checker);
 			StringAssert.Contains("Assembly-CSharp SHA-256", checker);
+			StringAssert.Contains("TAF_QUD_BASE_WIN", checker);
+			StringAssert.Contains("$env:TAF_QUD_BASE = $env:TAF_QUD_BASE_WIN", checker);
 			StringAssert.Contains("render-qud-refs.py",
 				Source(Path.Combine("Tools", "gate.sh")));
 			StringAssert.Contains("compile_mode baseline",
@@ -147,6 +149,33 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("Get-Command dotnet -CommandType Application", testRunner);
 			StringAssert.Contains("No tests ran", testRunner);
 			StringAssert.Contains("exit 127", testRunner);
+			StringAssert.Contains("TAF_FORBID_SKIPS", testRunner);
+			string testMain = Source(Path.Combine("DevTests", "TestMain.cs"));
+			StringAssert.Contains("failure is IgnoreException", testMain);
+			StringAssert.Contains("TAF_FORBID_SKIPS", testMain);
+			StringAssert.Contains("TAF_ALLOWED_SKIPS", testMain);
+			StringAssert.Contains("unauthorized skip", testMain);
+			StringAssert.Contains("expected skip did not occur", testMain);
+			string workflow = Source(Path.Combine(".github", "workflows", "portable.yml"));
+			StringAssert.Contains("TAF_ALLOWED_SKIPS", workflow);
+			foreach (string label in new[]
+			{
+				"KingdomCreedContentTests.Installed21151CensusIsAnExactThirtyThreeAndChiliadAddsNone",
+				"KingdomGatehouseNativeTests.GateRootRetainsVanillaDoorPartAndOwnsOnlyTopology",
+				"KingdomInheritanceSpatialNativeTests.ReconstructedStreetUsesVanillaPassableDirtPath"
+			})
+			{
+				StringAssert.Contains(label, workflow);
+			}
+			foreach (string installedTest in new[]
+			{
+				"KingdomCreedContentTests.cs", "KingdomGatehouseNativeTests.cs",
+				"KingdomInheritanceSpatialNativeTests.cs"
+			})
+			{
+				StringAssert.Contains("TAF_QUD_BASE is set but",
+					Source(Path.Combine("DevTests", installedTest)));
+			}
 			StringAssert.Contains("gameAssemblySha256",
 				Source(Path.Combine("docs", "RELEASE_EVIDENCE.example.json")));
 		}
