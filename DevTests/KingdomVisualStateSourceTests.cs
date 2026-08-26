@@ -59,7 +59,7 @@ namespace ThousandAndFirst.Tests
 			Assert.IsFalse(presence.Contains("AddObject("));
 
 			string scaffold = Source("Growth/KingdomScaffold.cs");
-			string plot = Source("Growth/KingdomPlot2.cs");
+			string plot = KingdomPlot2LogicalSource.Read();
 			StringAssert.Contains("KingdomConstructionPresence.EffectivenessOf(ParentObject, System",
 				scaffold);
 			StringAssert.Contains("KingdomConstructionPresence.EffectivenessOf(parent, System", plot);
@@ -90,7 +90,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void CompletionReleasesAnchorsWithoutTeleportingOrCloningBodies()
 		{
-			string construction = Source("Growth/KingdomConstruction.cs");
+			string construction = KingdomConstructionLogicalSource.Read();
 			StringAssert.Contains("KingdomConstructionPresence.ReleaseFinished(Z, Survey)", construction);
 			StringAssert.Contains("KingdomVisualState.Refresh(System, Z, Survey)", construction);
 
@@ -108,7 +108,7 @@ namespace ThousandAndFirst.Tests
 			string presence = Source("Growth/KingdomConstructionPresence.cs");
 			StringAssert.Contains("Named properties only", presence);
 			StringAssert.Contains("r_TAF_ConstructionCrewSchema", presence);
-			string plot = Source("Growth/KingdomPlot2.cs");
+			string plot = KingdomPlot2LogicalSource.Read();
 			StringAssert.Contains("public int DoorY;", plot);
 			string scaffold = Source("Growth/KingdomScaffold.cs");
 			Assert.IsFalse(scaffold.Contains("public int ConstructionCrew"));

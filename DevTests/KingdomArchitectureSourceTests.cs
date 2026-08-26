@@ -10,7 +10,54 @@ namespace ThousandAndFirst.Tests
 	{
 		private static string Loader()
 		{
-			return TestMain.ReadRepositoryText(Path.Combine("Growth", "KingdomArchitecture.cs"));
+			return KingdomArchitectureLogicalSource.Read();
+		}
+
+		[Test]
+		public void LogicalLoaderKeepsDeclarationAbiAndAuthorityOrder()
+		{
+			string source = Loader();
+			Assert.AreEqual(1, Occurrences(source,
+				"public sealed class KingdomArchitectureFault"));
+			Assert.AreEqual(1, Occurrences(source,
+				"public sealed class KingdomArchitectureMapping"));
+			Ordered(source,
+				"public sealed class KingdomArchitectureFault",
+				"public string Name { get; private set; }",
+				"public string Message { get; private set; }",
+				"internal KingdomArchitectureFault(string Name, string Message)",
+				"public sealed class KingdomArchitectureMapping",
+				"private readonly string[] variantKeys;",
+				"public string BuildKey { get; private set; }",
+				"public string DefaultPaletteKey { get; private set; }",
+				"internal KingdomArchitectureMapping(",
+				"Array.Sort(variantKeys, StringComparer.Ordinal);",
+				"private class RawRecord",
+				"private sealed class LoadState",
+				"private static LoadState state = new LoadState();",
+				"public static void Reload(",
+				"private static void LoadXml(",
+				"private static void HandlePalette(",
+				"private static RawPalette GetPalette(",
+				"private static void Materialise(",
+				"private static bool TryPalette(",
+				"private static bool TryRecord(",
+				"private static void IndexRecord(",
+				"public static bool TryResolve(",
+				"private static bool Required(",
+				"private static bool TryList(",
+				"private static void AddFault(");
+		}
+
+		private static void Ordered(string source, params string[] terms)
+		{
+			int cursor = -1;
+			for (int i = 0; i < terms.Length; i++)
+			{
+				int next = source.IndexOf(terms[i], cursor + 1, StringComparison.Ordinal);
+				Assert.Greater(next, cursor, terms[i]);
+				cursor = next;
+			}
 		}
 
 		[Test]

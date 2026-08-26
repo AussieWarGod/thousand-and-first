@@ -2330,6 +2330,6 @@ it. But it wants a Pass-31 step of its own, because it is the shape a tester wil
 | `Temporary` is the engine's own tick-stamp catch-up | `D/XRL/World/Parts/Temporary.cs:137-157` |
 | No rain, no spoilage, no plantable seeds, no multi-stage growth, no liquid network | `VANILLA-PRODUCTION-TRUTH.md` §0, §8 |
 | Faction-level favourite dish via `<waterritual Recipe=…/>`, eight shipped | `B/Factions.xml`; `VANILLA-PRODUCTION-TRUTH.md` §2.3 |
-| Charter is at 32/32 hotkeys | `Core/KingdomCharterPart.cs:85` and its comment |
+| Charter is at 32/32 hotkeys | `Core/KingdomCharterMenuRules.cs` (`Root`, `Chapters`, and `ActionOrder`), with uniqueness/coverage pinned by `DevTests/KingdomCharterMenuRulesTests.cs` |
 | Zones per city: Camp/Steading 1 … City 4 | `KingdomZoningRules.ZonesForStage` |
 | Caps: 2 cities, 60 population, 40 buildings, 200 chronicle entries | `KingdomSettlement.MaxSettlements`, `KingdomRules.MaxPopulation`, `MaxBuildings`, `KingdomChronicle.MaxEntries` |

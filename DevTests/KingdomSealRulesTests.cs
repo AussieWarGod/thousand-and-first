@@ -53,6 +53,55 @@ namespace ThousandAndFirst.Tests
 			Assert.AreEqual("", identity.SettlementIdentityLegacyId);
 		}
 
+		[Test]
+		public void SealRecordKeepsExactPersistedFieldOrderAndDefaults()
+		{
+			Assert.AreEqual(typeof(int), Enum.GetUnderlyingType(typeof(KingdomSealStatus)));
+			Assert.AreEqual("0:Living,1:Terminal,2:Retired,3:Promoted",
+				string.Join(",", Array.ConvertAll((KingdomSealStatus[])Enum.GetValues(
+					typeof(KingdomSealStatus)), value => ((int)value) + ":" + value)));
+			Type type = typeof(KingdomSealRecord);
+			Assert.IsTrue(type.IsNotPublic && type.IsSealed);
+			Assert.AreEqual("ThousandAndFirst.KingdomSealRecord", type.FullName);
+			System.Reflection.FieldInfo[] fields = type.GetFields(
+				System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance |
+				System.Reflection.BindingFlags.DeclaredOnly);
+			Assert.AreEqual(
+				"WriterVersion,EngineVersion,Status,LineageId,LegacyId,OriginGameId,Generation,"
+				+ "Revision,WrittenTick,FounderName,CauseText,CauseKind,CauseTurn,RealmName,"
+				+ "SettlementName,SettlementId,RealmId,RealmSettlementIds,RealmSettlementProvenance,"
+				+ "RealmIdentityVersion,RealmIdentityOrigin,RealmIdentityTransactionId,"
+				+ "RealmIdentityLegacyFaction,RealmIdentityFoundedTick,RealmIdentitySeedHigh,"
+				+ "RealmIdentitySeedLow,RealmIdentityFirstClaimedZone,SettlementIdentityVersion,"
+				+ "SettlementIdentityOrigin,SettlementIdentityTransactionId,"
+				+ "SettlementIdentityFoundedTick,SettlementIdentityFirstClaimedZone,"
+				+ "SettlementIdentityLegacyId,Vocation,Style,FoundedTick,GroundZoneId,RegionName,"
+				+ "TerrainBlueprint,Depth,Stage,Population,Defence,StoredWater,Withered,Vigour,"
+				+ "InterregnumRoll,InheritedState,WorkKeys,WorkX,WorkY,WorkConditions,SpatialVersion,"
+				+ "SpatialWidth,SpatialHeight,SpatialEntrySide,SpatialEntryX,SpatialEntryY,"
+				+ "WorkSnapshots,WorkSnapshotHashes,StreetX,StreetY,RollNames,RollOrigins,RollArrived,"
+				+ "OriginKeys,OriginCounts,CreedKeys,CreedCounts,Chronicle,Outsider,DeadNames,DeadCauses",
+				string.Join(",", Array.ConvertAll(fields, field => field.Name)));
+
+			KingdomSealRecord record = new KingdomSealRecord();
+			Assert.AreEqual(5, KingdomSealRecord.CurrentSchema);
+			Assert.AreEqual(4, KingdomSealRecord.FirstSchema);
+			Assert.AreEqual(KingdomSealStatus.Living, record.Status);
+			Assert.AreEqual(-1, record.InterregnumRoll);
+			Assert.AreEqual(-1, record.InheritedState);
+			Assert.AreEqual(KingdomInheritanceSpatialRules.NoEntry, record.SpatialEntrySide);
+			for (int i = 0; i < fields.Length; i++)
+			{
+				object value = fields[i].GetValue(record);
+				if (fields[i].FieldType == typeof(string)) Assert.AreEqual("", value, fields[i].Name);
+				if (typeof(System.Collections.ICollection).IsAssignableFrom(fields[i].FieldType))
+				{
+					Assert.IsNotNull(value, fields[i].Name);
+					Assert.AreEqual(0, ((System.Collections.ICollection)value).Count, fields[i].Name);
+				}
+			}
+		}
+
 		private static string MintRealm()
 		{
 			Assert.IsTrue(KingdomIdentityRules.TryMintRealm(FoundingTransaction,

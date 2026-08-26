@@ -105,7 +105,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void RetiredUnboundCaravanMutationHelpersAreAbsent()
 		{
-			string source = TestMain.ReadRepositoryText("Trade/KingdomTrade.cs");
+			string source = KingdomTradeLogicalSource.Read();
 			StringAssert.DoesNotContain("SpawnCaravan(", source);
 			StringAssert.DoesNotContain("DespawnCaravans(", source);
 		}

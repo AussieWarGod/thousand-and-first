@@ -8,7 +8,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void CaptureWitnessesOnlyLoadedGroundAndFrozenReceipts()
 		{
-			string capture = TestMain.ReadRepositoryText("Core/KingdomInheritanceSpatial.cs");
+			string capture = KingdomInheritanceSpatialLogicalSource.Read();
 			StringAssert.Contains("Active.ZoneID != Record.GroundZoneId", capture);
 			StringAssert.Contains("KingdomArchitectureRuntime.TryRead(root", capture);
 			StringAssert.Contains("KingdomArchitectureStamper.TryVerifyComplete(root, Active", capture);
@@ -24,7 +24,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void AwayFromSeatReusesOnlySameGenerationAndSpatialBasis()
 		{
-			string seal = TestMain.ReadRepositoryText("Core/KingdomSeal.cs");
+			string seal = KingdomSealLogicalSource.Read();
 			StringAssert.Contains("SameSpatialBasis(prior, Record)", seal);
 			StringAssert.Contains("Earlier.LegacyId != Current.LegacyId", seal);
 			StringAssert.Contains("Earlier.GroundZoneId != Current.GroundZoneId", seal);
@@ -34,7 +34,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void ReconstructionUsesSameStamperAndStripsEveryCreatedLayer()
 		{
-			string engine = TestMain.ReadRepositoryText("Core/KingdomInheritEngine.cs");
+			string engine = KingdomInheritEngineLogicalSource.Read();
 			StringAssert.Contains("KingdomArchitectureStamper.TryInitializeOwner", engine);
 			StringAssert.Contains("KingdomArchitectureStamper.TryStageLayer(obj, Zone", engine);
 			StringAssert.Contains("ArchitectureLayer.Ground", engine);
@@ -53,7 +53,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void PreflightUsesFrozenOffCenterRectAndMissingFabricDegradesLocally()
 		{
-			string engine = TestMain.ReadRepositoryText("Core/KingdomInheritEngine.cs");
+			string engine = KingdomInheritEngineLogicalSource.Read();
 			StringAssert.Contains("left = rect.X1", engine);
 			StringAssert.Contains("top = rect.Y1", engine);
 			StringAssert.Contains("int left = spec.FootprintX", engine);
@@ -70,7 +70,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void QuarantinedStamperRollbackUsesRawExactLotAndHash()
 		{
-			string engine = TestMain.ReadRepositoryText("Core/KingdomInheritEngine.cs");
+			string engine = KingdomInheritEngineLogicalSource.Read();
 			StringAssert.Contains("TryStageLayer quarantines a failed owner", engine);
 			StringAssert.Contains("KingdomArchitectureStamper.LotIdProperty", engine);
 			StringAssert.Contains("KingdomArchitectureStamper.HashProperty", engine);
@@ -80,11 +80,11 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void CurrentRecordIsExternalSchemaNotSaveAbiAppend()
 		{
-			string record = TestMain.ReadRepositoryText("Core/KingdomSealRecord.cs");
+			string record = KingdomSealRecordLogicalSource.Read();
 			StringAssert.Contains("CurrentSchema = 5", record);
 			StringAssert.Contains("KeyWorkSnapshot", record);
 			StringAssert.Contains("KeyStreetX", record);
-			string system = TestMain.ReadRepositoryText("Core/KingdomSystem.cs");
+			string system = KingdomSystemLogicalSource.Read();
 			string settlement = TestMain.ReadRepositoryText("Core/KingdomSettlement.cs");
 			StringAssert.DoesNotContain("WorkSnapshots", system);
 			StringAssert.DoesNotContain("WorkSnapshots", settlement);

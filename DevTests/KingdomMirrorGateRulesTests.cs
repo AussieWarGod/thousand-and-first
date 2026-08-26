@@ -10,6 +10,50 @@ namespace ThousandAndFirst.Tests
 		private const string KeyB = "r_TAF_MirrorGate_JoppaWorld.14.19.2.0.10_5,7";
 		private const string KeyC = "r_TAF_MirrorGate_JoppaWorld.09.31.0.2.10_31,4";
 
+		[Test]
+		public void GateDeclarationsKeepTheirWireAbiAndCopyDefaults()
+		{
+			Assert.AreEqual(typeof(byte), System.Enum.GetUnderlyingType(typeof(KingdomGateVerdict)));
+			CollectionAssert.AreEqual(new byte[8] { 0, 1, 2, 3, 4, 5, 6, 7 }, new byte[8]
+			{
+				(byte)KingdomGateVerdict.Offered,
+				(byte)KingdomGateVerdict.Joined,
+				(byte)KingdomGateVerdict.Released,
+				(byte)KingdomGateVerdict.RefusedCityKeyed,
+				(byte)KingdomGateVerdict.RefusedAlreadyKeyed,
+				(byte)KingdomGateVerdict.RefusedUnkeyed,
+				(byte)KingdomGateVerdict.RefusedFull,
+				(byte)KingdomGateVerdict.RefusedNamed
+			});
+			Assert.AreEqual(typeof(byte), System.Enum.GetUnderlyingType(typeof(KingdomGateHold)));
+			CollectionAssert.AreEqual(new byte[3] { 0, 1, 2 }, new byte[3]
+			{
+				(byte)KingdomGateHold.Unchanged,
+				(byte)KingdomGateHold.Held,
+				(byte)KingdomGateHold.Lost
+			});
+
+			Assert.AreEqual("ThousandAndFirst.KingdomGateRow", typeof(KingdomGateRow).FullName);
+			System.Reflection.FieldInfo[] fields = typeof(KingdomGateRow).GetFields(
+				System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+			CollectionAssert.AreEqual(new string[3] { "Key", "City", "Partner" },
+				new string[3] { fields[0].Name, fields[1].Name, fields[2].Name });
+			for (int i = 0; i < fields.Length; i++)
+			{
+				Assert.AreEqual(typeof(string), fields[i].FieldType);
+				Assert.IsTrue(fields[i].IsInitOnly);
+			}
+
+			KingdomGateRow blank = new KingdomGateRow(null, null, null);
+			Assert.AreEqual("", blank.Key);
+			Assert.AreEqual("", blank.City);
+			Assert.AreEqual("", blank.Partner);
+			KingdomGateRow partnered = new KingdomGateRow("key", "city", "first").WithPartner("second");
+			Assert.AreEqual("key", partnered.Key);
+			Assert.AreEqual("city", partnered.City);
+			Assert.AreEqual("second", partnered.Partner);
+		}
+
 		private static KingdomGateRow[] Register(params KingdomGateRow[] rows)
 		{
 			return rows;

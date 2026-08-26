@@ -9,6 +9,38 @@ namespace ThousandAndFirst.Tests
 	/// <summary>Engine-free proof of material receipt planning, accounting and phase laws.</summary>
 	public class KingdomMaterialDebitRulesTests
 	{
+		[Test]
+		public void DebitDeclarationsKeepTheirPersistedAndPublicAbi()
+		{
+			AssertEnum(typeof(KingdomMaterialDebitSourceKind), 0, 1, 2, 3);
+			AssertEnum(typeof(KingdomMaterialDebitOutcome), 0, 1, 2, 3, 4, 5, 6, 7);
+			AssertEnum(typeof(KingdomMaterialDebitFault), 0, 1, 2, 3, 4, 5, 6, 7,
+				8, 9, 10, 11, 12, 13, 14);
+
+			Assert.IsTrue(typeof(KingdomMaterialDebitCost).IsSealed);
+			Assert.IsTrue(typeof(KingdomMaterialDebitSource).IsSealed);
+			Assert.IsTrue(typeof(KingdomMaterialDebitStep).IsSealed);
+			Assert.IsTrue(typeof(KingdomMaterialDebitPlan).IsSealed);
+			Assert.IsTrue(typeof(KingdomMaterialDebitResult).IsSealed);
+			Assert.IsTrue(typeof(KingdomMaterialDebitCost).GetField("Materials").IsInitOnly);
+			Assert.IsTrue(typeof(KingdomMaterialDebitSource).GetField("Source").IsInitOnly);
+			Assert.IsTrue(typeof(KingdomMaterialDebitStep).GetField("Taken").IsInitOnly);
+			Assert.IsTrue(typeof(KingdomMaterialDebitPlan).GetField("Steps").IsInitOnly);
+			Assert.IsTrue(typeof(KingdomMaterialDebitResult).GetField("Outcome").IsInitOnly);
+		}
+
+		private static void AssertEnum(Type type, params int[] expected)
+		{
+			Assert.AreEqual(typeof(byte), Enum.GetUnderlyingType(type), type.FullName);
+			Array values = Enum.GetValues(type);
+			Assert.AreEqual(expected.Length, values.Length, type.FullName);
+			for (int i = 0; i < expected.Length; i++)
+			{
+				Assert.AreEqual(expected[i], Convert.ToInt32(values.GetValue(i)),
+					type.FullName + "[" + i + "]");
+			}
+		}
+
 		private static string ReadRepoSource(string relative)
 		{
 			return TestMain.ReadRepositoryText(relative);
@@ -360,7 +392,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void LiveTerminalPathHasOneDestructiveCallbackAndRunsAfterStackWork()
 		{
-			string source = ReadRepoSource("Growth/KingdomMaterialDebit.cs");
+			string source = KingdomMaterialDebitLogicalSource.Read();
 			Assert.IsFalse(source.Contains("BeforeDestroyObjectEvent.Check"),
 				"Calling Check before Obliterate dispatches destructive callbacks twice.");
 			int obliterate = source.IndexOf("entry.Item.Obliterate", StringComparison.Ordinal);
@@ -372,6 +404,40 @@ namespace ThousandAndFirst.Tests
 				StringComparison.Ordinal);
 			Assert.Greater(terminalWork, stackWork);
 			Assert.Greater(obliterate, terminalWork);
+		}
+
+		[Test]
+		public void LiveDebitLogicalSourceKeepsOneNestedDeclarationSetAndTransactionOrder()
+		{
+			string source = KingdomMaterialDebitLogicalSource.Read();
+			Assert.AreEqual(1, Count(source, "private sealed class HeldWitness"));
+			Assert.AreEqual(1, Count(source, "private sealed class ContainerWitness"));
+			Assert.AreEqual(1, Count(source, "private sealed class Entry"));
+			int reserve = source.IndexOf("internal static KingdomMaterialDebit Reserve(",
+				StringComparison.Ordinal);
+			int commit = source.IndexOf("public KingdomMaterialDebitResult Commit()",
+				StringComparison.Ordinal);
+			int compensate = source.IndexOf("public KingdomMaterialDebitResult Compensate()",
+				StringComparison.Ordinal);
+			int cancel = source.IndexOf("public KingdomMaterialDebitResult Cancel()",
+				StringComparison.Ordinal);
+			int snapshot = source.IndexOf("private List<KingdomMaterialDebitSource> SnapshotSources()",
+				StringComparison.Ordinal);
+			Assert.Greater(commit, reserve);
+			Assert.Greater(compensate, commit);
+			Assert.Greater(cancel, compensate);
+			Assert.Greater(snapshot, cancel);
+		}
+
+		private static int Count(string source, string term)
+		{
+			int count = 0;
+			int cursor = -1;
+			while ((cursor = source.IndexOf(term, cursor + 1, StringComparison.Ordinal)) >= 0)
+			{
+				count++;
+			}
+			return count;
 		}
 
 		[Test]

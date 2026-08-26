@@ -8,6 +8,60 @@ namespace ThousandAndFirst.Tests
 {
 	public class KingdomInheritEngineTests
 	{
+		[Test]
+		public void DeclarationsKeepExactInternalAbiOrdinalsAndFieldOrder()
+		{
+			Assert.AreEqual(typeof(int), Enum.GetUnderlyingType(typeof(KingdomInheritApplyStatus)));
+			Assert.AreEqual("0:Applied,1:AlreadyApplied,2:Refused,3:Failed",
+				string.Join(",", Array.ConvertAll((KingdomInheritApplyStatus[])Enum.GetValues(
+					typeof(KingdomInheritApplyStatus)), value => ((int)value) + ":" + value)));
+			Assert.AreEqual(typeof(int), Enum.GetUnderlyingType(typeof(KingdomInheritApplyFault)));
+			Assert.AreEqual("0:None,1:NullInput,2:LegacyNotPromoted,3:ReceiptNotReserved,"
+				+ "4:ReceiptMismatch,5:TargetGameMismatch,6:TargetZoneMismatch,7:PlanInvalid,"
+				+ "8:WrongZoneSize,9:ApplicationConflict,10:PartialApplication,11:BlueprintMissing,"
+				+ "12:InvalidCell,13:ConnectionCell,14:Terrain,15:Occupied,16:Stairs,"
+				+ "17:EntryToHeartPath,18:ObjectCreation,19:ObjectNotEmpty,20:ObjectPlacement,"
+				+ "21:MarkerWrite",
+				string.Join(",", Array.ConvertAll((KingdomInheritApplyFault[])Enum.GetValues(
+					typeof(KingdomInheritApplyFault)), value => ((int)value) + ":" + value)));
+
+			System.Reflection.BindingFlags fields = System.Reflection.BindingFlags.NonPublic |
+				System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.DeclaredOnly;
+			Type result = typeof(KingdomInheritApplyResult);
+			Assert.IsTrue(result.IsNotPublic && result.IsSealed);
+			System.Reflection.FieldInfo[] resultFields = result.GetFields(fields);
+			Assert.AreEqual("Status,Fault,Detail,ApplicationMarker,PlacedCount,FreshEmptyVerified",
+				string.Join(",", Array.ConvertAll(resultFields, field => field.Name)));
+			for (int i = 0; i < resultFields.Length; i++) Assert.IsTrue(resultFields[i].IsInitOnly);
+			KingdomInheritApplyResult empty = new KingdomInheritApplyResult(
+				KingdomInheritApplyStatus.Applied, KingdomInheritApplyFault.None, null, null, 0, false);
+			Assert.AreEqual("", empty.Detail);
+			Assert.AreEqual("", empty.ApplicationMarker);
+
+			Type facts = typeof(KingdomInheritCellFacts);
+			Assert.IsTrue(facts.IsValueType && !facts.IsEnum);
+			Assert.AreEqual("Exists,Occupied,Terrain,Stairs,Connection,Walkable",
+				string.Join(",", Array.ConvertAll(facts.GetFields(fields), field => field.Name)));
+			Type spec = typeof(KingdomInheritBuildSpec);
+			Assert.IsTrue(spec.IsNotPublic && spec.IsSealed);
+			Assert.AreEqual("Index,Key,Blueprint,X,Y,Condition,State,FootprintWidth,FootprintHeight,"
+				+ "FootprintX,FootprintY,IsArchitecture,IsStreet,ArchitectureSnapshot,ArchitectureHash",
+				string.Join(",", Array.ConvertAll(spec.GetFields(fields), field => field.Name)));
+
+			Type host = typeof(IKingdomInheritEngineHost);
+			Assert.IsTrue(host.IsNotPublic && host.IsInterface);
+			Assert.AreEqual("Width,Height,ZoneId,TargetGameId",
+				string.Join(",", Array.ConvertAll(host.GetProperties(), property => property.Name)));
+			System.Reflection.MethodInfo[] hostMethods = Array.FindAll(host.GetMethods(),
+				method => !method.IsSpecialName);
+			Assert.AreEqual("ReadApplicationMarker,CountApplicationObjects,HasAnyApplicationObjects,"
+				+ "HasExactApplicationObject,HasBlueprint,TryReadCell,TryCreateFresh,IsFreshEmpty,"
+				+ "TryPlace,Discard,TryWriteApplicationMarker,TryRemoveApplicationMarker",
+				string.Join(",", Array.ConvertAll(hostMethods, method => method.Name)));
+			Type engine = typeof(KingdomInheritEngine);
+			Assert.IsTrue(engine.IsNotPublic && engine.IsAbstract && engine.IsSealed);
+		}
+
 		private sealed class FakeObject
 		{
 			internal KingdomInheritBuildSpec Spec;

@@ -1,4 +1,5 @@
 #if TAF_TESTS
+using System;
 using NUnit.Framework;
 using ThousandAndFirst.Simulation.City;
 
@@ -11,6 +12,61 @@ namespace ThousandAndFirst.Tests
 	/// </summary>
 	public class KingdomNetworkRulesTests
 	{
+		private static string DeclaredFields(Type Type, bool RequireReadonly)
+		{
+			System.Reflection.FieldInfo[] fields = Type.GetFields(
+				System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public
+				| System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.DeclaredOnly);
+			Array.Sort(fields, delegate(System.Reflection.FieldInfo A, System.Reflection.FieldInfo B)
+			{
+				return A.MetadataToken.CompareTo(B.MetadataToken);
+			});
+			string[] names = new string[fields.Length];
+			for (int i = 0; i < fields.Length; i++)
+			{
+				names[i] = fields[i].Name;
+				if (RequireReadonly) Assert.IsTrue(fields[i].IsInitOnly, Type.Name + "." + fields[i].Name);
+			}
+			return string.Join("|", names);
+		}
+
+		private static void AssertByteEnum(Type Type, string Names)
+		{
+			Assert.AreEqual(typeof(byte), Enum.GetUnderlyingType(Type), Type.Name);
+			Assert.AreEqual("ThousandAndFirst.Simulation.City." + Type.Name, Type.FullName);
+			Assert.AreEqual(Names, string.Join("|", Enum.GetNames(Type)), Type.Name);
+			Array values = Enum.GetValues(Type);
+			for (int i = 0; i < values.Length; i++)
+			{
+				Assert.AreEqual(i, Convert.ToInt32(values.GetValue(i)), Type.Name + "[" + i + "]");
+			}
+		}
+
+		[Test]
+		public void DecomposedNetworkTypes_PreserveInternalAbiAndFieldLayout()
+		{
+			AssertByteEnum(typeof(KingdomNetworkKind), "Electrical|Hydraulic|Mechanical|Biomechanical|Liquid");
+			AssertByteEnum(typeof(KingdomNetworkRole), "Source|Sink|Store");
+			AssertByteEnum(typeof(KingdomWorkTier), "Industry|Refining|Amenity|Food|Water|Watch");
+			AssertByteEnum(typeof(KingdomJoinVerdict), "Joined|Crossed|RefusedKind|RefusedLiquid|RefusedUntyped");
+
+			Assert.AreEqual("ThousandAndFirst.Simulation.City.KingdomNetworkNode", typeof(KingdomNetworkNode).FullName);
+			Assert.AreEqual("WorkId|Role|Tier|Capacity|RatePerDay", DeclaredFields(typeof(KingdomNetworkNode), true));
+			Assert.AreEqual("ThousandAndFirst.Simulation.City.KingdomNetworkEdge", typeof(KingdomNetworkEdge).FullName);
+			Assert.AreEqual("NodeA|NodeB|CapacityPerDay|ConditionPercent", DeclaredFields(typeof(KingdomNetworkEdge), true));
+
+			Type graph = typeof(KingdomNetworkGraph);
+			Assert.AreEqual("ThousandAndFirst.Simulation.City.KingdomNetworkGraph", graph.FullName);
+			Assert.IsTrue(graph.IsSealed);
+			Assert.IsFalse(graph.IsPublic);
+			Assert.AreEqual("nodes|edges|order|parentEdge|NetworkId|Kind|LiquidId|TopologyStamp",
+				DeclaredFields(graph, true));
+			Type rules = typeof(KingdomNetworkRules);
+			Assert.AreEqual("ThousandAndFirst.Simulation.City.KingdomNetworkRules", rules.FullName);
+			Assert.IsTrue(rules.IsAbstract && rules.IsSealed);
+			Assert.IsFalse(rules.IsPublic);
+		}
+
 		private static KingdomNetworkNode Source(int id, int rate)
 		{
 			return new KingdomNetworkNode(id, KingdomNetworkRole.Source, KingdomWorkTier.Water, 0, rate);

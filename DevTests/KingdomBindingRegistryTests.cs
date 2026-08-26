@@ -1,5 +1,8 @@
 #if TAF_TESTS
+using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Reflection;
 using NUnit.Framework;
 using ThousandAndFirst;
 using ThousandAndFirst.Simulation.City;
@@ -20,6 +23,72 @@ namespace ThousandAndFirst.Tests
 		private const string Here = "taf:zone:here";
 
 		private const string Next = "taf:zone:next";
+
+		[Test]
+		public void RegistryAbiKeepsExactEnumsRowsAndSaveColumns()
+		{
+			AssertEnum(typeof(KingdomBindingKind), new[] { "Resident", "Transient" },
+				new byte[] { 0, 1 });
+			AssertEnum(typeof(KingdomUnbindCause),
+				new[] { "None", "Death", "Departure", "Abroad", "JobClosed", "Dissolved", "Accession", "ZoneHandoff" },
+				new byte[] { 0, 1, 2, 3, 4, 5, 6, 7 });
+			AssertEnum(typeof(KingdomBodyPresence),
+				new[] { "None", "Here", "Elsewhere", "Frozen" }, new byte[] { 0, 1, 2, 3 });
+			AssertEnum(typeof(KingdomBindingVerdict),
+				new[] { "Mint", "Move", "MoveAcross", "Refuse" }, new byte[] { 0, 1, 2, 3 });
+			AssertEnum(typeof(KingdomSweepVerdict),
+				new[] { "NotTransient", "Bound", "Stale" }, new byte[] { 0, 1, 2 });
+
+			Assert.AreEqual("ThousandAndFirst.Simulation.City.KingdomBinding", typeof(KingdomBinding).FullName);
+			Assert.IsFalse(typeof(KingdomBinding).IsPublic);
+			Assert.IsTrue(typeof(KingdomBinding).IsValueType);
+			FieldInfo[] rowFields = typeof(KingdomBinding).GetFields(BindingFlags.Instance | BindingFlags.NonPublic);
+			Array.Sort(rowFields, (a, b) => a.MetadataToken.CompareTo(b.MetadataToken));
+			CollectionAssert.AreEqual(new[] { "BindingKey", "Kind", "ZoneId", "ObjectId", "MintedTick" },
+				Array.ConvertAll(rowFields, field => field.Name));
+			CollectionAssert.AreEqual(new[] { typeof(int), typeof(KingdomBindingKind), typeof(string), typeof(string), typeof(long) },
+				Array.ConvertAll(rowFields, field => field.FieldType));
+			foreach (FieldInfo field in rowFields)
+				Assert.IsTrue(field.IsAssembly && field.IsInitOnly, field.Name);
+
+			Type registryType = typeof(KingdomBindingRegistry);
+			Assert.AreEqual("ThousandAndFirst.Simulation.City.KingdomBindingRegistry", registryType.FullName);
+			Assert.IsTrue(registryType.IsPublic);
+			Assert.IsTrue(Attribute.IsDefined(registryType, typeof(SerializableAttribute)));
+			FieldInfo[] columns = registryType.GetFields(BindingFlags.Instance | BindingFlags.Public);
+			Array.Sort(columns, (a, b) => a.MetadataToken.CompareTo(b.MetadataToken));
+			CollectionAssert.AreEqual(new[] { "Keys", "Kinds", "ZoneIds", "ObjectIds", "MintedTicks" },
+				Array.ConvertAll(columns, field => field.Name));
+			CollectionAssert.AreEqual(new[] { typeof(List<int>), typeof(List<int>), typeof(List<string>), typeof(List<string>), typeof(List<long>) },
+				Array.ConvertAll(columns, field => field.FieldType));
+			foreach (FieldInfo field in columns) Assert.IsFalse(field.IsInitOnly, field.Name);
+			KingdomBindingRegistry registry = new KingdomBindingRegistry();
+			Assert.AreEqual(0, registry.Count);
+			Assert.AreEqual(0, registry.Keys.Count);
+			Assert.AreEqual(0, registry.Kinds.Count);
+			Assert.AreEqual(0, registry.ZoneIds.Count);
+			Assert.AreEqual(0, registry.ObjectIds.Count);
+			Assert.AreEqual(0, registry.MintedTicks.Count);
+		}
+
+		[Test]
+		public void LogicalSourceKeepsTopLevelIdentitiesAndRegistryOrder()
+		{
+			string source = LogicalSource();
+			Assert.AreEqual(1, Count(source, "public enum KingdomBindingKind : byte"));
+			Assert.AreEqual(1, Count(source, "public enum KingdomUnbindCause : byte"));
+			Assert.AreEqual(1, Count(source, "public enum KingdomBodyPresence : byte"));
+			Assert.AreEqual(1, Count(source, "public enum KingdomBindingVerdict : byte"));
+			Assert.AreEqual(1, Count(source, "public enum KingdomSweepVerdict : byte"));
+			Assert.AreEqual(1, Count(source, "internal readonly struct KingdomBinding"));
+			Assert.AreEqual(1, Count(source, "internal static class KingdomBindingRules"));
+			Assert.AreEqual(1, Count(source, "internal sealed class KingdomBindingTable"));
+			Assert.AreEqual(1, Count(source, "public class KingdomBindingRegistry"));
+			Assert.Less(source.IndexOf("internal static KingdomBindingVerdict Judge", StringComparison.Ordinal),
+				source.IndexOf("internal static bool TryCreate", StringComparison.Ordinal));
+			Assert.Less(source.IndexOf("internal static bool TryCreate", StringComparison.Ordinal),
+				source.IndexOf("public void Normalize", StringComparison.Ordinal));
+		}
 
 		private static KingdomBindingTable Bound(int key, KingdomBindingKind kind, string zone)
 		{
@@ -462,6 +531,40 @@ namespace ThousandAndFirst.Tests
 			Assert.IsFalse(registry.TryPublish(null, out fault));
 			Assert.AreEqual(KingdomCityFault.NullArgument, fault);
 			Assert.AreEqual(1, registry.Count, "a refused publish leaves the registry byte-identical");
+		}
+
+		private static void AssertEnum(Type type, string[] names, byte[] values)
+		{
+			Assert.AreEqual(typeof(byte), Enum.GetUnderlyingType(type), type.FullName);
+			Assert.IsTrue(type.IsPublic, type.FullName);
+			CollectionAssert.AreEqual(names, Enum.GetNames(type), type.FullName);
+			Array raw = Enum.GetValues(type);
+			byte[] actual = new byte[raw.Length];
+			for (int i = 0; i < raw.Length; i++) actual[i] = Convert.ToByte(raw.GetValue(i));
+			CollectionAssert.AreEqual(values, actual, type.FullName);
+		}
+
+		private static string LogicalSource()
+		{
+			return string.Join("\n", new[]
+			{
+				TestMain.ReadRepositoryText(Path.Combine("Simulation", "City", "KingdomBindingRegistry.Declarations.cs")),
+				TestMain.ReadRepositoryText(Path.Combine("Simulation", "City", "KingdomBindingRegistry.Rules.cs")),
+				TestMain.ReadRepositoryText(Path.Combine("Simulation", "City", "KingdomBindingRegistry.Table.cs")),
+				TestMain.ReadRepositoryText(Path.Combine("Simulation", "City", "KingdomBindingRegistry.cs"))
+			});
+		}
+
+		private static int Count(string source, string term)
+		{
+			int count = 0;
+			int at = 0;
+			while ((at = source.IndexOf(term, at, StringComparison.Ordinal)) >= 0)
+			{
+				count++;
+				at += term.Length;
+			}
+			return count;
 		}
 	}
 }

@@ -14,6 +14,40 @@ namespace ThousandAndFirst.Tests
 		private const string Stream = "taf:semantic:test:v1";
 
 		[Test]
+		public void SemanticAdapterAndFrozenPersonPlanKeepExactInternalAbiAndDefaults()
+		{
+			string source = KingdomSemanticSelectionLogicalSource.Read();
+			StringAssert.Contains("namespace ThousandAndFirst", source);
+			StringAssert.Contains("internal static partial class KingdomSemanticSelection", source);
+			StringAssert.Contains("internal sealed class KingdomSemanticPersonPlan", source);
+
+			string[] declarations =
+			{
+				"internal int RulesVersion;",
+				"internal long Sequence;",
+				"internal string StreamId;",
+				"internal uint EventKind;",
+				"internal string Blueprint;",
+				"internal string Origin;",
+				"internal string Creed;",
+				"internal string Name;",
+				"internal string Title;",
+				"internal string Arrived;",
+				"internal int X = -1;",
+				"internal int Y = -1;"
+			};
+			int previous = -1;
+			for (int i = 0; i < declarations.Length; i++)
+			{
+				int at = source.IndexOf(declarations[i], StringComparison.Ordinal);
+				Assert.Greater(at, previous, "person plan field order/default " + i);
+				Assert.AreEqual(at, source.LastIndexOf(declarations[i], StringComparison.Ordinal),
+					"person plan field declaration must remain unique: " + declarations[i]);
+				previous = at;
+			}
+		}
+
+		[Test]
 		public void CanonicalCatalogueFoldsDuplicateWeightsAndSortsStableKeys()
 		{
 			List<KingdomSemanticWeightedEntry> input = Rows(

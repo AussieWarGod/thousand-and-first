@@ -31,8 +31,8 @@ extract_parts() {
 		raw=$0
 		line=$0
 		if (!inpart && match(line,
-			/public (sealed )?class[[:space:]]+([A-Za-z0-9_]+)[[:space:]]*:[[:space:]]*IPart/, m)) {
-			cname=m[2]
+			/public (sealed )?(partial )?class[[:space:]]+([A-Za-z0-9_]+)[[:space:]]*:[[:space:]]*IPart/, m)) {
+			cname=m[3]
 			pending=1
 			print "C|" cname
 		}

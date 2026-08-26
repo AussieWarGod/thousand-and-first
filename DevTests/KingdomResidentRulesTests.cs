@@ -1,4 +1,7 @@
 #if TAF_TESTS
+using System;
+using System.IO;
+using System.Reflection;
 using NUnit.Framework;
 using System.Collections.Generic;
 using ThousandAndFirst;
@@ -21,6 +24,62 @@ namespace ThousandAndFirst.Tests
 	internal class KingdomResidentRulesTests
 	{
 		private const string Here = "taf:zone:here";
+
+		[Test]
+		public void ResidentRuleAbiKeepsExactEnumsAndProjectionShapes()
+		{
+			AssertEnum(typeof(KingdomBodyWitness),
+				new[] { "Present", "Led", "Killed", "Missing" }, new byte[] { 0, 1, 2, 3 });
+			AssertEnum(typeof(KingdomAccessionOutcome),
+				new[] { "RefusedClean", "Committed", "RepairRequired" }, new byte[] { 0, 1, 2 });
+			AssertEnum(typeof(KingdomAccessionCarrierState),
+				new[] { "Original", "Committed", "CityAdvanced", "BindingAdvanced", "Unknown" },
+				new byte[] { 0, 1, 2, 3, 4 });
+			Assert.AreEqual("ThousandAndFirst.Simulation.City.KingdomBodyWitness", typeof(KingdomBodyWitness).FullName);
+			Assert.AreEqual("ThousandAndFirst.Simulation.City.KingdomResidentTally", typeof(KingdomResidentTally).FullName);
+			Assert.AreEqual("ThousandAndFirst.Simulation.City.KingdomResidentRollProjection", typeof(KingdomResidentRollProjection).FullName);
+			Assert.AreEqual("ThousandAndFirst.Simulation.City.KingdomAccessionOutcome", typeof(KingdomAccessionOutcome).FullName);
+			Assert.AreEqual("ThousandAndFirst.Simulation.City.KingdomAccessionCarrierState", typeof(KingdomAccessionCarrierState).FullName);
+
+			AssertFields(typeof(KingdomResidentTally), true,
+				new[] { "Resident", "Abroad", "Dead" },
+				new[] { typeof(int), typeof(int), typeof(int) },
+				new[] { true, true, true });
+			AssertFields(typeof(KingdomResidentRollProjection), false,
+				new[] { "ResidentIds", "Names", "Origins", "Arrived", "Population", "Labour" },
+				new[] { typeof(List<int>), typeof(List<string>), typeof(List<string>), typeof(List<string>), typeof(int), typeof(int) },
+				new[] { true, true, true, true, false, false });
+
+			KingdomResidentTally tally = new KingdomResidentTally(2, 3, 4);
+			Assert.AreEqual(5, tally.OnTheRoll);
+			KingdomResidentRollProjection projection = new KingdomResidentRollProjection();
+			Assert.AreEqual(0, projection.ResidentIds.Count);
+			Assert.AreEqual(0, projection.Names.Count);
+			Assert.AreEqual(0, projection.Origins.Count);
+			Assert.AreEqual(0, projection.Arrived.Count);
+			Assert.AreEqual(0, projection.Population);
+			Assert.AreEqual(0, projection.Labour);
+		}
+
+		[Test]
+		public void LogicalSourceKeepsOneOrderedResidentAuthority()
+		{
+			string source = LogicalSource();
+			Assert.AreEqual(5, Count(source, "internal static partial class KingdomResidentRules"));
+			Assert.AreEqual(1, Count(source, "internal enum KingdomBodyWitness : byte"));
+			Assert.AreEqual(1, Count(source, "internal readonly struct KingdomResidentTally"));
+			Assert.AreEqual(1, Count(source, "internal sealed class KingdomResidentRollProjection"));
+			Assert.AreEqual(1, Count(source, "internal enum KingdomAccessionOutcome : byte"));
+			Assert.AreEqual(1, Count(source, "internal enum KingdomAccessionCarrierState : byte"));
+			Assert.Less(source.IndexOf("internal static bool SameCity", StringComparison.Ordinal),
+				source.IndexOf("internal static bool TryProject", StringComparison.Ordinal));
+			Assert.Less(source.IndexOf("internal static bool TryProject", StringComparison.Ordinal),
+				source.IndexOf("internal static bool TryTransition", StringComparison.Ordinal));
+			Assert.Less(source.IndexOf("internal static bool TryTransition", StringComparison.Ordinal),
+				source.IndexOf("internal static bool TryTally", StringComparison.Ordinal));
+			Assert.Less(source.IndexOf("internal static bool TryTally", StringComparison.Ordinal),
+				source.IndexOf("internal static KingdomDayShape DayShapeFor", StringComparison.Ordinal));
+		}
 
 		[TestCase(true, false, true, false, KingdomAccessionCarrierState.Original)]
 		[TestCase(false, true, false, true, KingdomAccessionCarrierState.Committed)]
@@ -644,6 +703,55 @@ namespace ThousandAndFirst.Tests
 			Assert.AreEqual(2, removed.ResidentId);
 			Assert.IsTrue(next.TryResident(0, out KingdomResidentRow kept));
 			Assert.AreEqual(1, kept.ResidentId);
+		}
+
+		private static void AssertEnum(Type type, string[] names, byte[] values)
+		{
+			Assert.AreEqual(typeof(byte), Enum.GetUnderlyingType(type), type.FullName);
+			Assert.IsFalse(type.IsPublic, type.FullName);
+			CollectionAssert.AreEqual(names, Enum.GetNames(type), type.FullName);
+			Array raw = Enum.GetValues(type);
+			byte[] actual = new byte[raw.Length];
+			for (int i = 0; i < raw.Length; i++) actual[i] = Convert.ToByte(raw.GetValue(i));
+			CollectionAssert.AreEqual(values, actual, type.FullName);
+		}
+
+		private static void AssertFields(Type type, bool valueType, string[] names, Type[] types,
+			bool[] readonlyFields)
+		{
+			Assert.IsFalse(type.IsPublic, type.FullName);
+			Assert.AreEqual(valueType, type.IsValueType, type.FullName);
+			FieldInfo[] fields = type.GetFields(BindingFlags.Instance | BindingFlags.NonPublic);
+			Array.Sort(fields, (a, b) => a.MetadataToken.CompareTo(b.MetadataToken));
+			CollectionAssert.AreEqual(names, Array.ConvertAll(fields, field => field.Name), type.FullName);
+			CollectionAssert.AreEqual(types, Array.ConvertAll(fields, field => field.FieldType), type.FullName);
+			CollectionAssert.AreEqual(readonlyFields, Array.ConvertAll(fields, field => field.IsInitOnly), type.FullName);
+			foreach (FieldInfo field in fields) Assert.IsTrue(field.IsAssembly, type.FullName + "." + field.Name);
+		}
+
+		private static string LogicalSource()
+		{
+			return string.Join("\n", new[]
+			{
+				TestMain.ReadRepositoryText(Path.Combine("Simulation", "City", "KingdomResidentRules.Declarations.cs")),
+				TestMain.ReadRepositoryText(Path.Combine("Simulation", "City", "KingdomResidentRules.cs")),
+				TestMain.ReadRepositoryText(Path.Combine("Simulation", "City", "KingdomResidentRules.RosterProjectionAndMutation.cs")),
+				TestMain.ReadRepositoryText(Path.Combine("Simulation", "City", "KingdomResidentRules.StandingTransitions.cs")),
+				TestMain.ReadRepositoryText(Path.Combine("Simulation", "City", "KingdomResidentRules.TallyAndReconcile.cs")),
+				TestMain.ReadRepositoryText(Path.Combine("Simulation", "City", "KingdomResidentRules.DayShapeAndOrigins.cs"))
+			});
+		}
+
+		private static int Count(string source, string term)
+		{
+			int count = 0;
+			int at = 0;
+			while ((at = source.IndexOf(term, at, StringComparison.Ordinal)) >= 0)
+			{
+				count++;
+				at += term.Length;
+			}
+			return count;
 		}
 	}
 }

@@ -8,6 +8,62 @@ namespace ThousandAndFirst.Tests
 {
 	public class KingdomUpgradeRulesTests
 	{
+		private static string DeclaredFieldNames(Type Type)
+		{
+			System.Reflection.FieldInfo[] fields = Type.GetFields(
+				System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public
+				| System.Reflection.BindingFlags.DeclaredOnly);
+			Array.Sort(fields, delegate(System.Reflection.FieldInfo A, System.Reflection.FieldInfo B)
+			{
+				return A.MetadataToken.CompareTo(B.MetadataToken);
+			});
+			string[] names = new string[fields.Length];
+			for (int i = 0; i < fields.Length; i++) names[i] = fields[i].Name;
+			return string.Join("|", names);
+		}
+
+		[Test]
+		public void DecomposedNestedTypes_PreserveIdentityValuesFieldsAndDefaults()
+		{
+			Type verdict = typeof(KingdomUpgradeRules.UpgradeVerdict);
+			Assert.AreEqual("ThousandAndFirst.KingdomUpgradeRules+UpgradeVerdict", verdict.FullName);
+			Assert.AreEqual(typeof(int), Enum.GetUnderlyingType(verdict));
+			Assert.AreEqual("Ready|NoSuccessor|SuccessorUnknown|StyleForbids|NotOurWork|AlreadyWorking|HeldOnThisGround|HeldByFounder|StageTooLow|NotEnoughHands|WouldSpill|NotEnoughWater|WorksElsewhere|NoGroundToGrow|CraftNotMet|NotEnoughMaterial|NoTolerableLodging|HeldOffer",
+				string.Join("|", Enum.GetNames(verdict)));
+			Array verdicts = Enum.GetValues(verdict);
+			for (int i = 0; i < verdicts.Length; i++)
+			{
+				Assert.AreEqual(i, Convert.ToInt32(verdicts.GetValue(i)), "verdict " + i);
+			}
+
+			Type lodging = typeof(KingdomUpgradeRules.LodgingStandard);
+			Assert.AreEqual("ThousandAndFirst.KingdomUpgradeRules+LodgingStandard", lodging.FullName);
+			Assert.AreEqual(typeof(int), Enum.GetUnderlyingType(lodging));
+			Assert.AreEqual("Settler|Notable|Discerning", string.Join("|", Enum.GetNames(lodging)));
+			Assert.AreEqual(0, (int)KingdomUpgradeRules.LodgingStandard.Settler);
+			Assert.AreEqual(1, (int)KingdomUpgradeRules.LodgingStandard.Notable);
+			Assert.AreEqual(2, (int)KingdomUpgradeRules.LodgingStandard.Discerning);
+
+			Type chainType = typeof(KingdomUpgradeRules.UpgradeChain);
+			Assert.AreEqual("ThousandAndFirst.KingdomUpgradeRules+UpgradeChain", chainType.FullName);
+			Assert.AreEqual("SuccessorKey|CostDramsOverride|BuildTicksOverride|CrewOverride|HasMinStageOverride|MinStageOverride",
+				DeclaredFieldNames(chainType));
+			KingdomUpgradeRules.UpgradeChain chain = new KingdomUpgradeRules.UpgradeChain();
+			Assert.AreEqual(KingdomUpgradeRules.Unset, chain.CostDramsOverride);
+			Assert.AreEqual(KingdomUpgradeRules.UnsetTicks, chain.BuildTicksOverride);
+			Assert.AreEqual(KingdomUpgradeRules.Unset, chain.CrewOverride);
+			Assert.IsFalse(chain.HasMinStageOverride);
+			Assert.IsFalse(chain.Defined);
+
+			Type demandType = typeof(KingdomUpgradeRules.AbsorptionDemand);
+			Assert.AreEqual("ThousandAndFirst.KingdomUpgradeRules+AbsorptionDemand", demandType.FullName);
+			Assert.AreEqual("IsHousing|Residents|SpareLodging|OfferedShelter|CurrentShelter|LuxuryCarried|SupportPerDay|BuildTicks|MaterialsInHand|CraftMet|QuartersRefused",
+				DeclaredFieldNames(demandType));
+			Assert.IsTrue(KingdomUpgradeRules.AbsorptionDemand.None.MaterialsInHand);
+			Assert.IsTrue(KingdomUpgradeRules.AbsorptionDemand.None.CraftMet);
+			Assert.IsFalse(KingdomUpgradeRules.AbsorptionDemand.None.QuartersRefused);
+		}
+
 		// --- CostDrams: what an improvement is worth, and the two clamps around it -------------
 
 		[TestCase(16, 4, KingdomUpgradeRules.Unset, 12)]

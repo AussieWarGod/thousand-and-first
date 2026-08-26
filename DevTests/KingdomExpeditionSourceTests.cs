@@ -63,6 +63,89 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void ExpeditionLogicalAuthorityKeepsNestedAbiAndMutationOrder()
+		{
+			string source = KingdomExpeditionsLogicalSource.Read();
+			Assert.AreEqual(9, Occurrences(source,
+				"public static partial class KingdomExpeditions"));
+			Assert.AreEqual(1, Occurrences(source, "private sealed class ResidentChoice"));
+			Assert.AreEqual(1, Occurrences(source, "private sealed class TargetChoice"));
+			Assert.AreEqual(1, Occurrences(source, "private enum BoundBodyState : byte"));
+			AssertOrdered(source,
+				"public const string ResidentJobProperty = \"r_TAF_ExpeditionJob\";",
+				"public const string ProvisionJobProperty = \"r_TAF_ExpeditionProvisionJob\";",
+				"public const string RewardJobProperty = \"r_TAF_ExpeditionRewardJob\";",
+				"public const string DebitReceiptProperty = \"r_TAF_ExpeditionDebitReceipt\";",
+				"public const string WaterJobProperty = \"r_TAF_ExpeditionWaterJob\";",
+				"public const string WaterAfterProperty = \"r_TAF_ExpeditionWaterAfter\";");
+			AssertOrdered(source,
+				"internal KingdomResidentRow Row;", "internal string ZoneId;",
+				"internal JournalMapNote Note;", "internal string ZoneId;",
+				"internal string Name;", "internal KingdomExpeditionQuote Quote;");
+			AssertOrdered(source,
+				"Unreachable = 0,", "Alive = 1,", "Led = 2,", "Dead = 3,",
+				"Missing = 4,", "Ambiguous = 5");
+			AssertOrdered(source,
+				"public static void Open(", "private static void OpenDispatch(",
+				"private static bool TryDispatch(", "public static bool OnSettlementPass(",
+				"internal static bool TryPrepareResidentDeath(",
+				"private static bool TryAdvanceDispatch(",
+				"private static bool TryPublishPhase(", "private static bool TryReadReceipt(",
+				"private static bool TryResolve(",
+				"private static bool TryPublishTerminalResolution(",
+				"private static bool TryResumeTerminalResolution(",
+				"private static bool TellAndClose(",
+				"private static List<ResidentChoice> EligibleResidents(",
+				"private static List<TargetChoice> VisitedTargets(",
+				"private static bool TrySetResident(",
+				"private static BoundBodyState FindBoundBody(",
+				"private static bool MoveExact(", "private static bool EnsureReward(",
+				"private static string ResultLine(",
+				"private static bool TryPrepareDebitReceipt(",
+				"private static bool TryApplyPreparedDebit(",
+				"private static bool TryApplyProvisionReceipt(",
+				"private static bool MarkWaterReceipt(",
+				"private static bool TryApplyWaterReceipt(",
+				"private static void ClearDebitMarkers(");
+
+			int dispatch = source.IndexOf("private static bool TryDispatch(",
+				StringComparison.Ordinal);
+			int pass = source.IndexOf("public static bool OnSettlementPass(", dispatch,
+				StringComparison.Ordinal);
+			Assert.GreaterOrEqual(dispatch, 0);
+			Assert.Greater(pass, dispatch);
+			AssertOrdered(source.Substring(dispatch, pass - dispatch),
+				"Body.RemoveIntProperty(ResidentJobProperty);",
+				"Body.SetStringProperty(DebitReceiptProperty, null, RemoveIfNull: true);",
+				"int jobId = System.Jobs.MintJobId();",
+				"KingdomWaterDebit water = Survey.ReserveExactWater(requoted.WaterDrams);",
+				"TryPrepareDebitReceipt(Survey, water, jobId, SourceZoneId",
+				"KingdomJobRow row = new KingdomJobRow(", "table.TryOpen(row, out opened",
+				"System.Jobs.TryPublish(opened", "TryAdvanceDispatch(System, row, Body");
+
+			int advance = source.IndexOf("private static bool TryAdvanceDispatch(",
+				StringComparison.Ordinal);
+			int publishPhase = source.IndexOf("private static bool TryPublishPhase(", advance,
+				StringComparison.Ordinal);
+			AssertOrdered(source.Substring(advance, publishPhase - advance),
+				"body.SetStringProperty(DebitReceiptProperty, PreparedReceipt);",
+				"TryApplyPreparedDebit(System, row, body, receipt, ReservedWater, out Failure)",
+				"TryPublishPhase(System, row, KingdomExpeditionPhase.Paid",
+				"MoveExact(body, destinationCell)",
+				"KingdomResidents.Bind(System, row.SubjectId, KingdomBindingKind.Resident",
+				"TrySetResident(System, row.SubjectId, KingdomResidentStanding.Expedition",
+				"TryPublishPhase(System, row, KingdomExpeditionPhase.Dispatched");
+			AssertOrdered(source,
+				"Body.SystemLongDistanceMoveTo(Target, 0, forced: true, ignoreCombat: true)",
+				"KingdomSurvey.ObserveRemovedFromActive(before, Body);",
+				"KingdomSurvey.ObserveAddedToActive(Body.CurrentZone, Body);");
+			AssertOrdered(source,
+				"item.SetIntProperty(ProvisionJobProperty, JobId);",
+				"item.Destroy(null, Silent: true);",
+				"KingdomSurvey.ObserveChangedInActive(Source, larder);");
+		}
+
+		[Test]
 		public void PortersExplicitlyIgnoreNamedResidentJobs()
 		{
 			string source = TestMain.ReadRepositoryText(Path.Combine("Simulation", "City",
@@ -73,8 +156,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void PreparedAuthorityAndBodyReceiptPrecedeEveryPhysicalDebit()
 		{
-			string source = TestMain.ReadRepositoryText(Path.Combine("Experience",
-				"KingdomExpeditions.cs"));
+			string source = KingdomExpeditionsLogicalSource.Read();
 			int publish = source.IndexOf("System.Jobs.TryPublish(opened", StringComparison.Ordinal);
 			int advance = source.IndexOf("TryAdvanceDispatch(System, row, Body, encodedReceipt",
 				StringComparison.Ordinal);
@@ -98,8 +180,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void ExactResidentAuthorityUsesObjectIdAndSettlementPassNeverSurveysRemoteGround()
 		{
-			string source = TestMain.ReadRepositoryText(Path.Combine("Experience",
-				"KingdomExpeditions.cs"));
+			string source = KingdomExpeditionsLogicalSource.Read();
 			int duplicate = source.IndexOf("HasExpedition(table, Resident.ResidentId)",
 				StringComparison.Ordinal);
 			int mint = source.IndexOf("System.Jobs.MintJobId()", StringComparison.Ordinal);
@@ -128,8 +209,7 @@ namespace ThousandAndFirst.Tests
 
 		private static void AssertTerminalBodyLossPublishesReceiptBeforeUnbindingAndResumesWithoutBody()
 		{
-			string source = TestMain.ReadRepositoryText(Path.Combine("Experience",
-				"KingdomExpeditions.cs"));
+			string source = KingdomExpeditionsLogicalSource.Read();
 			int settlement = source.IndexOf("public static bool OnSettlementPass",
 				StringComparison.Ordinal);
 			int advance = source.IndexOf("private static bool TryAdvanceDispatch", settlement,
@@ -217,8 +297,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void PersistedExpeditionNamesStayPlainAndEveryRichSinkEscapesThem()
 		{
-			string source = TestMain.ReadRepositoryText(Path.Combine("Experience",
-				"KingdomExpeditions.cs"));
+			string source = KingdomExpeditionsLogicalSource.Read();
 			StringAssert.Contains(
 				"Name = SafeName(ConsoleLib.Console.ColorUtility.StripFormatting(note.Text), zoneId)",
 				source);
@@ -243,6 +322,17 @@ namespace ThousandAndFirst.Tests
 				at += value.Length;
 			}
 			return count;
+		}
+
+		private static void AssertOrdered(string source, params string[] terms)
+		{
+			int at = -1;
+			for (int i = 0; i < terms.Length; i++)
+			{
+				int next = source.IndexOf(terms[i], at + 1, StringComparison.Ordinal);
+				Assert.Greater(next, at, terms[i]);
+				at = next;
+			}
 		}
 	}
 }

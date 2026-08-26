@@ -46,17 +46,17 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void PurposeCommitConsumesOnlyFrozenCargoAndQuarantinesInterruptedDebit()
 		{
-			string plot = Source(Path.Combine("Growth", "KingdomPlot2.cs"));
+			string plot = KingdomPlot2LogicalSource.Read();
 			Ordered(plot, "KingdomPurpose.ResolveCommitCargo", "ReservePaymentWithRequiredItem",
 				"job.PhysicalReceipt = purposeReceipt", "KingdomConstruction.TryFundNew");
 			StringAssert.Contains("Retry remains bound to its exact cargo object", plot);
 
-			string debit = Source(Path.Combine("Growth", "KingdomMaterialDebit.cs"));
+			string debit = KingdomMaterialDebitLogicalSource.Read();
 			StringAssert.Contains("ReferenceEquals(item, RequiredItem)", debit);
 			StringAssert.Contains("RequiredSourceWasConsumed", debit);
 			StringAssert.Contains("RequiredItem.ID != RequiredItemId", debit);
 
-			string construction = Source(Path.Combine("Growth", "KingdomConstruction.cs"));
+			string construction = KingdomConstructionLogicalSource.Read();
 			Ordered(construction, "KingdomPurpose.RequiresExactFunding(job)",
 				"KingdomPurpose.TryRequiredFundingItem", "TryResumeFunding(job, Z, Survey,",
 				"required, out job, out fault)");
@@ -66,7 +66,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void PreviewDisclosesRouteSiteExactIdentityAndRecoveryBeforeCommission()
 		{
-			string charter = Source(Path.Combine("Core", "KingdomCharterPart.cs"));
+			string charter = KingdomCharterPartLogicalSource.Read();
 			Ordered(charter, "KingdomPlots.TryQuoteCommission", "KingdomArchitecturePreview.TryRender",
 				"KingdomPurpose.AppendPreview(preview, quote.PurposeReceipt)",
 				"Commission this exact plan", "KingdomCommission.Commission");

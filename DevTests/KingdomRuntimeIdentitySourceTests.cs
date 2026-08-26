@@ -56,6 +56,31 @@ namespace ThousandAndFirst.Tests
 			return string.Join("\n", source);
 		}
 
+		[Test]
+		public void ArchivedSettlementCodec_KeepsNestedAndStaticMetadata()
+		{
+			Type codec = typeof(KingdomArchivedSettlementCodec);
+			Assert.AreEqual("ThousandAndFirst.KingdomArchivedSettlementCodec", codec.FullName);
+			Assert.IsTrue(codec.IsAbstract);
+			Assert.IsTrue(codec.IsSealed);
+
+			string[] nestedNames = { "Budget", "CappedWriteStream", "ReferenceComparer" };
+			for (int i = 0; i < nestedNames.Length; i++)
+			{
+				Type nested = codec.GetNestedType(nestedNames[i],
+					System.Reflection.BindingFlags.NonPublic);
+				Assert.IsNotNull(nested, nestedNames[i]);
+				Assert.AreEqual(codec.FullName + "+" + nestedNames[i], nested.FullName);
+				Assert.IsTrue(nested.IsNestedPrivate, nestedNames[i]);
+			}
+
+			System.Reflection.BindingFlags fields = System.Reflection.BindingFlags.NonPublic
+				| System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.DeclaredOnly;
+			Assert.AreEqual(typeof(System.Text.UTF8Encoding),
+				codec.GetField("StrictUtf8", fields).FieldType);
+			Assert.AreEqual(typeof(Type[]), codec.GetField("ApprovedObjects", fields).FieldType);
+		}
+
 		private static string FoundingTransactionSource()
 		{
 			string[] files =
@@ -103,7 +128,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void V8BoundaryRefusesUnreadableNamedIdentityAndAllowsOnlyReflectedMigration()
 		{
-			string system = Source(Path.Combine("Core", "KingdomSystem.cs"));
+			string system = KingdomSystemLogicalSource.Read();
 			StringAssert.Contains("private const int CurrentSerializationVersion = 8;", system);
 			StringAssert.Contains("private const int FirstNamedSerializationVersion = 8;", system);
 			int reflected = system.IndexOf("SerializationVersion == LegacyReflectedSerializationVersion",
@@ -387,7 +412,7 @@ namespace ThousandAndFirst.Tests
 			Assert.Greater(settle, seat);
 			StringAssert.Contains("TryProveSettledSecondCityTopology", founding);
 
-			string system = Source(Path.Combine("Core", "KingdomSystem.cs"));
+			string system = KingdomSystemLogicalSource.Read();
 			Assert.IsFalse(system.Contains("ClearPendingSettlementIdentity("));
 			StringAssert.Contains("TryAbortPendingSettlementIdentity", system);
 			StringAssert.Contains("TrySettlePendingSettlementIdentity", system);
@@ -396,7 +421,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void PendingOldCarryCutIsAcceptedBeforeAnyRebindOrQuarantine()
 		{
-			string system = Source(Path.Combine("Core", "KingdomSystem.cs"));
+			string system = KingdomSystemLogicalSource.Read();
 			int method = system.IndexOf("private bool TryBindDormantLifecycleIdentity",
 				StringComparison.Ordinal);
 			int carry = system.IndexOf("if (CarryBook == null)", method,
@@ -446,7 +471,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void TradeNormalizationNeverPromotesOrClearsMutableNameRows()
 		{
-			string system = Source(Path.Combine("Core", "KingdomSystem.cs"));
+			string system = KingdomSystemLogicalSource.Read();
 			int normalize = system.IndexOf("private void NormalizeTradeBook()",
 				StringComparison.Ordinal);
 			string body = system.Substring(normalize);
@@ -473,7 +498,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void ArchiveTransactionBlocksLegacyMirrorNormalization()
 		{
-			string system = Source(Path.Combine("Core", "KingdomSystem.cs"));
+			string system = KingdomSystemLogicalSource.Read();
 			int active = system.IndexOf("bool archiveTransactionActive = ExiledRealmArchive != null",
 				StringComparison.Ordinal);
 			int guard = system.IndexOf("if (!archiveTransactionActive)", active,
@@ -550,7 +575,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void ExileClosesTradeBeforeAnyPersistentCoreOrChronicleMutation()
 		{
-			string system = Source(Path.Combine("Core", "KingdomSystem.cs"));
+			string system = KingdomSystemLogicalSource.Read();
 			int exile = system.IndexOf("public bool Exile(", StringComparison.Ordinal);
 			int topology = system.IndexOf("TryExactSettlementIds", exile,
 				StringComparison.Ordinal);
@@ -616,7 +641,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void TradeExileSeamUsesDetachedReplacementAndOnePublish()
 		{
-			string trade = Source(Path.Combine("Trade", "KingdomTrade.cs"));
+			string trade = KingdomTradeLogicalSource.Read();
 			int method = trade.IndexOf("public static bool TryOnExile(",
 				StringComparison.Ordinal);
 			int freeze = trade.IndexOf("KingdomTradeCodec.EncodePayload(original)", method,
@@ -724,7 +749,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void ReturnRestoresExactArchiveAndReprovesAfterEngineCallbacks()
 		{
-			string system = Source(Path.Combine("Core", "KingdomSystem.cs"));
+			string system = KingdomSystemLogicalSource.Read();
 			int restore = system.IndexOf("private bool RestoreArchivedRealmCore",
 				StringComparison.Ordinal);
 			StringAssert.Contains("TryClone(Archive.Seat", system.Substring(restore));
@@ -751,7 +776,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void CallbackReceiptsFreezeBothGraphsAndNeverReplayUncertainAttempts()
 		{
-			string system = Source(Path.Combine("Core", "KingdomSystem.cs"));
+			string system = KingdomSystemLogicalSource.Read();
 			string archive = RealmArchiveSource();
 			int prepare = system.IndexOf("private bool PrepareReturnCallback",
 				StringComparison.Ordinal);
@@ -804,7 +829,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void CallbackSpecificProofsCoverNonTargetRowsMapsAndOwnerReferences()
 		{
-			string system = Source(Path.Combine("Core", "KingdomSystem.cs"));
+			string system = KingdomSystemLogicalSource.Read();
 			StringAssert.Contains("otherRows.Add(rows[i].Copy())", system);
 			StringAssert.Contains("TryWriteRegistry(otherRows", system);
 			StringAssert.Contains("TryDeclareOnce(this", system);
@@ -833,7 +858,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void ExileAndReturnPublishRecoveryPhasesBeforePiecemealMutation()
 		{
-			string system = Source(Path.Combine("Core", "KingdomSystem.cs"));
+			string system = KingdomSystemLogicalSource.Read();
 			string archive = RealmArchiveSource();
 			StringAssert.Contains("Resetting = 9", archive);
 			StringAssert.Contains("ReturnCleaning = 10", archive);
@@ -1667,7 +1692,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void DormantLifecycleBooksArePersistedAtCityAndRealmScope()
 		{
-			string system = Source(Path.Combine("Core", "KingdomSystem.cs"));
+			string system = KingdomSystemLogicalSource.Read();
 			string settlement = Source(Path.Combine("Core", "KingdomSettlement.cs"));
 			StringAssert.Contains("public KingdomLifecycleBook LifecycleBook", system);
 			StringAssert.Contains("public KingdomLifecycleBook LifecycleBook", settlement);
@@ -1683,7 +1708,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void FirstFoundingCarryIdentityIsBoundAtomicallyBeforeAuthorityCheck()
 		{
-			string system = Source(Path.Combine("Core", "KingdomSystem.cs"));
+			string system = KingdomSystemLogicalSource.Read();
 			int method = system.IndexOf("internal bool TryBindFirstFoundingIdentity",
 				StringComparison.Ordinal);
 			int next = system.IndexOf("internal bool FirstIdentityMatches", method,
@@ -1731,7 +1756,11 @@ namespace ThousandAndFirst.Tests
 			};
 			foreach (string file in files)
 			{
-				string source = Source(file);
+				string source = file == Path.Combine("Experience", "KingdomCitizenRite.cs")
+					? KingdomCitizenRiteLogicalSource.Read()
+					: file == Path.Combine("Quests", "KingdomBounty.cs")
+						? KingdomBountyLogicalSource.Read()
+						: Source(file);
 				Assert.IsFalse(source.Contains(
 					"KingdomChronicle.SettlementId(System.KingdomFactionName)"), file);
 				Assert.IsFalse(source.Contains("LegacyOriginIdentity("), file);
@@ -1753,7 +1782,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("DestinationSettlementId = destinationId", carry);
 			StringAssert.Contains("system.CurrentSettlementId", carry);
 			StringAssert.Contains("System.CurrentSettlementId", guest);
-			string rite = Source(Path.Combine("Experience", "KingdomCitizenRite.cs"));
+			string rite = KingdomCitizenRiteLogicalSource.Read();
 			StringAssert.Contains("System.CurrentRealmId", rite);
 			Assert.IsFalse(rite.Contains("TryTradableSecret(\n\t\t\t\t\tSystem.KingdomFactionName"));
 			string riteRules = Source(Path.Combine("Experience", "KingdomCitizenRiteRules.cs"));
@@ -1818,7 +1847,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void SuccessionSnapshotsStayPlainAndRitePresentationEscapesThem()
 		{
-			string succession = Source(Path.Combine("Experience", "KingdomSuccession.cs"));
+			string succession = KingdomSuccessionLogicalSource.Read();
 			StringAssert.Contains(
 				"string shownHeir = KingdomPresentation.Rich(FormerRow.Name);", succession);
 			StringAssert.Contains(
@@ -1896,8 +1925,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void GuestPetitionBookAndOfficeSnapshotsProjectOnlyAtRenderBoundaries()
 		{
-			string lifecycle = Source(Path.Combine("Experience",
-				"KingdomGuestLifecycle.cs"));
+			string lifecycle = KingdomGuestLifecycleLogicalSource.Read();
 			Assert.GreaterOrEqual(Regex.Matches(lifecycle,
 				@"op\.ObjectName = PlainObjectName\(guest\);").Count, 2);
 			StringAssert.Contains("guest.BaseDisplayNameStripped", lifecycle);
@@ -1918,9 +1946,15 @@ namespace ThousandAndFirst.Tests
 				"string petitioner = KingdomPresentation.Rich(op.ObjectName);", petitions);
 
 			string report = Source(Path.Combine("Simulation", "City",
-				"KingdomBookReport.cs"));
+				"KingdomBookReport.cs")) + "\n" + Source(Path.Combine("Simulation", "City",
+				"KingdomBookReport.WritersAndGround.cs"));
+			Assert.AreEqual(2, Regex.Matches(report,
+				@"public static partial class KingdomBookReport").Count);
+			StringAssert.DoesNotContain("public static class KingdomBookReport", report);
 			StringAssert.Contains(
 				"KingdomNotables.HolderName(System), KingdomPresentation.Rich", report);
+			StringAssert.Contains("private static string Writers()", report);
+			StringAssert.Contains("private static string GroundName(string zoneId)", report);
 
 			string notable = Source(Path.Combine("Experience", "KingdomNotables.cs"));
 			StringAssert.Contains(

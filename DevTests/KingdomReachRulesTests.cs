@@ -17,6 +17,49 @@ namespace ThousandAndFirst.Tests
 	/// </summary>
 	public class KingdomReachRulesTests
 	{
+		[Test]
+		public void ReachDeclarationsKeepTheirPublicAbiAndDefaults()
+		{
+			Assert.AreEqual(typeof(int), System.Enum.GetUnderlyingType(typeof(ReachBand)));
+			CollectionAssert.AreEqual(new int[5] { 0, 1, 2, 3, 4 }, new int[5]
+			{
+				(int)ReachBand.Plot,
+				(int)ReachBand.Quarter,
+				(int)ReachBand.Zone,
+				(int)ReachBand.City,
+				(int)ReachBand.Realm
+			});
+			Assert.AreEqual(typeof(int), System.Enum.GetUnderlyingType(typeof(ReachRelation)));
+			CollectionAssert.AreEqual(new int[6] { 0, 1, 2, 3, 4, 5 }, new int[6]
+			{
+				(int)ReachRelation.Elsewhere,
+				(int)ReachRelation.SameRealm,
+				(int)ReachRelation.SameCity,
+				(int)ReachRelation.SameZone,
+				(int)ReachRelation.SameQuarter,
+				(int)ReachRelation.SamePlot
+			});
+
+			Assert.AreEqual("ThousandAndFirst.GroundCharacter", typeof(GroundCharacter).FullName);
+			Assert.IsTrue(typeof(GroundCharacter).IsPublic);
+			Assert.IsTrue(typeof(GroundCharacter).IsSealed);
+			System.Reflection.FieldInfo[] fields = typeof(GroundCharacter).GetFields();
+			CollectionAssert.AreEqual(new string[4] { "Lifts", "Total", "Dominant", "DominantAmount" },
+				new string[4] { fields[0].Name, fields[1].Name, fields[2].Name, fields[3].Name });
+			CollectionAssert.AreEqual(new System.Type[4]
+			{
+				typeof(List<KindAmount>), typeof(int), typeof(string), typeof(int)
+			}, new System.Type[4]
+			{
+				fields[0].FieldType, fields[1].FieldType, fields[2].FieldType, fields[3].FieldType
+			});
+			GroundCharacter empty = new GroundCharacter();
+			Assert.AreEqual(0, empty.Lifts.Count);
+			Assert.AreEqual(0, empty.Total);
+			Assert.IsNull(empty.Dominant);
+			Assert.AreEqual(0, empty.DominantAmount);
+		}
+
 		private static List<Mark> Marks(params int[] Coordinates)
 		{
 			List<Mark> marks = new List<Mark>();

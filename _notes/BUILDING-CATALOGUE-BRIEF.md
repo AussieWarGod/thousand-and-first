@@ -7,7 +7,7 @@ equilibrium, `5818727` the capability grammar, `78c0bc0` vision verbs/haulage la
 ## Plots are the unit of building
 
 Grounded in vanilla's own village generator (`Village_InitialStructureSegmentation`,
-`PopulationTables.xml:14366`): huts 4–6², common blocks 2–8², large 8–15², rare up to 15–50 ×
+`B/PopulationTables.xml:14366`): huts 4–6², common blocks 2–8², large 8–15², rare up to 15–50 ×
 8–20, `Full` = the whole zone. Wall material per settlement is vanilla's own pattern
 (`Village_StructureWall_*Default`: Fulcrete, Marble, Limestone, Foamcrete, Verdigris,
 BrinestalkWall).

@@ -23,6 +23,48 @@ namespace ThousandAndFirst.Tests
 			return new List<string>(Names);
 		}
 
+		private static void AssertEnumAbi(Type Type, string Names)
+		{
+			Assert.AreEqual(typeof(int), Enum.GetUnderlyingType(Type), Type.Name);
+			Assert.AreEqual("ThousandAndFirst." + Type.Name, Type.FullName);
+			Assert.AreEqual(Names, string.Join("|", Enum.GetNames(Type)), Type.Name);
+			Array values = Enum.GetValues(Type);
+			for (int i = 0; i < values.Length; i++)
+			{
+				Assert.AreEqual(i, Convert.ToInt32(values.GetValue(i)), Type.Name + "[" + i + "]");
+			}
+		}
+
+		[Test]
+		public void PersistedEnumsAndNestedAttemptAbi_RemainExactAfterDecomposition()
+		{
+			AssertEnumAbi(typeof(BountyTask), "Clearance|Fetch|Manning|Scouting");
+			AssertEnumAbi(typeof(BountyBlock), "None|NobodyToTry|NothingStanding|PileEmpty|NowhereToCarry|NoWorks|NoIdleWork|NoFrontier|StoresCannotPay");
+			AssertEnumAbi(typeof(BountyOutcome), "NobodyTried|Refused|Taken");
+			AssertEnumAbi(typeof(BountyTakePhase), "None|Bound|TaskIntent|TaskDone|ChronicleDone|LedgerIntent|LedgerDone|MessageIntent|MessageDone|Complete|Quarantined");
+			AssertEnumAbi(typeof(BountyTransferPhase), "None|Bound|RemoveIntent|Detached|AddIntent|Arrived|Quarantined");
+			AssertEnumAbi(typeof(BountyTransferLocation), "Missing|SourceOnly|Detached|DestinationOnly|Both|Elsewhere");
+			AssertEnumAbi(typeof(BountyTransferAction), "Wait|Bind|Remove|Add|Confirm|Quarantine");
+			AssertEnumAbi(typeof(BountySinkDisposition), "None|Pending|Attempting|Delivered|Skipped|Lost");
+			AssertEnumAbi(typeof(BountyPostPhase), "None|Bound|ChronicleDone|MessageSettled|Complete");
+			AssertEnumAbi(typeof(BountyWithdrawPhase), "None|Bound|MarkCleared|ChronicleDone|MessageSettled|CleanupAttempting|CleanupLost");
+			AssertEnumAbi(typeof(BountyPaymentPhase), "None|Bound|DebitIntent|Debited|Credited|Quarantined");
+			AssertEnumAbi(typeof(BountyPaymentObservation), "Malformed|Original|Debited|Mixed|Uncertain");
+			AssertEnumAbi(typeof(BountyPaymentAction), "Wait|Bind|Debit|Credit|Quarantine");
+			AssertEnumAbi(typeof(BountyTerminalPhase), "None|ChronicleDone|LedgerIntent|LedgerDone|MessageIntent|MessageDone|CleanupAttempting|CleanupLost");
+
+			Type attempt = typeof(KingdomBountyRules.BountyAttempt);
+			Assert.AreEqual("ThousandAndFirst.KingdomBountyRules+BountyAttempt", attempt.FullName);
+			Assert.AreEqual(typeof(bool), attempt.GetField("Determined").FieldType);
+			Assert.AreEqual(typeof(BountyOutcome), attempt.GetField("Outcome").FieldType);
+			Assert.AreEqual(typeof(string), attempt.GetField("Name").FieldType);
+			Assert.AreEqual(typeof(int), attempt.GetField("RosterIndex").FieldType);
+			Assert.AreEqual(typeof(int), attempt.GetField("VirtueIndex").FieldType);
+			Assert.AreEqual(typeof(int), attempt.GetField("FlawIndex").FieldType);
+			Assert.AreEqual(typeof(bool), attempt.GetField("TasteMatched").FieldType);
+			Assert.AreEqual(7, attempt.GetFields().Length);
+		}
+
 		// --- The task tables ------------------------------------------------------------------
 
 		[Test]
@@ -930,9 +972,107 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void BountyLogicalAuthority_PinsNoticeFieldsPublicSurfaceAndNestedIdentities()
+		{
+			string source = KingdomBountyLogicalSource.Read();
+			string notice = ReadRepoSource("Quests/r_KingdomNotice.cs");
+			Assert.AreEqual(16, KingdomBountyLogicalSource.FileCount);
+			Assert.AreEqual(2, Count(source, "public partial class r_KingdomNotice"));
+			Assert.AreEqual(14, Count(source, "public static partial class KingdomBounty"));
+			Assert.AreEqual(1, Count(source, "\t\tprivate sealed class CleanupFrame"));
+			Assert.AreEqual(1, Count(source, "\t\tprivate sealed class InventoryFrame"));
+			Assert.AreEqual(1, Count(source, "\t\tprivate sealed class PaymentFrame"));
+			StringAssert.Contains("[Serializable]\n\tpublic partial class r_KingdomNotice : IPart", notice);
+
+			CollectionAssert.AreEqual(new[]
+			{
+				"int TaskCode", "int Price", "int Paid", "long PostedTick", "int Passes",
+				"int ScheduleVersion", "string EventStreamId", "long NextAttemptTick",
+				"bool AttemptScheduleExhausted", "string WorkerName", "long TakenTick",
+				"long DueTick", "int Magnitude", "bool Done", "int X1", "int Y1", "int X2",
+				"int Y2", "string PileId", "int AnnouncedBlock", "bool StakeFailedAnnounced",
+				"bool RefusalTold", "string LifecycleId", "bool LifecycleQuarantined",
+				"string QuarantineReason", "bool QuarantineTold", "int QuarantineLedgerState",
+				"int QuarantineMessageState", "int PostPhase", "string PostZoneId", "int PostCellX",
+				"int PostCellY", "int PostPileCellX", "int PostPileCellY", "string PostChronicleLine",
+				"string PostMessageLine", "int PostMessageState", "int StakeCleanupState",
+				"int WithdrawPhase", "string WithdrawChronicleLine", "string WithdrawMessageLine",
+				"string WithdrawPileId", "string WithdrawZoneId", "int WithdrawCellX",
+				"int WithdrawCellY", "int WithdrawPileCellX", "int WithdrawPileCellY",
+				"int WithdrawMessageState", "int TakePhase", "long PendingAttemptTick",
+				"string PendingWorkerName", "int PendingWorkerResidentId", "int PendingVirtueIndex",
+				"int PendingFlawIndex", "bool PendingTasteMatched", "bool PendingAttemptConsumed",
+				"int TakeLedgerState", "int TakeMessageState", "int TransferPhase",
+				"string TransferItemId", "string TransferSourceId", "string TransferDestinationId",
+				"int TransferUnits", "int TransferTotalBefore", "int TransferredUnits", "int HaulPhase",
+				"int ScoutPhase", "string ScoutZoneId", "string ScoutGround", "int ScoutDeedState",
+				"int PaymentPhase", "int PaymentAmount", "int PaymentPaidBefore", "int PaymentProved",
+				"string PaymentZoneId", "string PaymentVesselIds", "string PaymentOriginalVolumes",
+				"string PaymentMaxVolumes", "string PaymentAllocations", "int TerminalPhase",
+				"int CompletionPhase", "string CompletionExtra", "int CompletionLedgerState",
+				"int TerminalLedgerState", "int TerminalMessageState"
+			}, PublicFieldRows(notice));
+
+			AssertOrdered(source,
+				"public override void Write(GameObject Basis, SerializationWriter Writer)",
+				"public override void Read(GameObject Basis, SerializationReader Reader)",
+				"public static bool Enabled =>",
+				"public const string NoticeBlueprint = \"r_KingdomNotice\";",
+				"public const string FetchMarkProperty = \"KingdomFetchNotice\";",
+				"public static Func<KingdomSystem, GameObject, string, long, bool> HaulHook;",
+				"public static void OpenNotices(KingdomSystem System, GameObject Founder)",
+				"public static void OnSettlementPass(KingdomSystem System, Zone Z, KingdomSurvey Survey)",
+				"public static List<GameObject> Notices(Zone Z)",
+				"public static List<string> Frontier(KingdomSystem System)");
+		}
+
+		[Test]
+		public void BountyLogicalAuthority_PinsDurableTransactionMutationOrder()
+		{
+			string source = KingdomBountyLogicalSource.Read();
+			AssertOrdered(source,
+				"Data.WithdrawPhase = (int)BountyWithdrawPhase.MarkCleared",
+				"KingdomChronicle.RecordOnce(System, EventId(Data, \"withdrawn\")",
+				"Data.WithdrawPhase = (int)BountyWithdrawPhase.ChronicleDone",
+				"DeliverMessage(ref Data.WithdrawMessageState, Data.WithdrawMessageLine)",
+				"Data.WithdrawPhase = (int)BountyWithdrawPhase.CleanupAttempting",
+				"InvokeCleanupOnce(Notice, false)",
+				"data.PostPhase = (int)BountyPostPhase.Bound",
+				"acceptedNotice = cell.AddObject(notice)",
+				"KingdomGovernanceScope.Commit(\"post bounty\")",
+				"KingdomChronicle.RecordOnce(System, EventId(Data, \"posted\")",
+				"Data.PostPhase = (int)BountyPostPhase.ChronicleDone",
+				"DeliverMessage(ref Data.PostMessageState, Data.PostMessageLine)",
+				"Data.TakePhase = (int)BountyTakePhase.TaskIntent",
+				"Data.TakePhase = (int)BountyTakePhase.TaskDone",
+				"KingdomChronicle.RecordOnce(System, EventId(Data, \"taken\")",
+				"Data.TakePhase = (int)BountyTakePhase.LedgerIntent",
+				"DeliverLedger(System, ref Data.TakeLedgerState",
+				"Data.TakePhase = (int)BountyTakePhase.MessageIntent",
+				"DeliverMessage(ref Data.TakeMessageState",
+				"Data.TransferPhase = (int)BountyTransferPhase.RemoveIntent",
+				"sourceFrame.Part.RemoveObject(item)",
+				"Data.TransferPhase = (int)BountyTransferPhase.Detached",
+				"Data.TransferPhase = (int)BountyTransferPhase.AddIntent",
+				"destinationFrame.Part.AddObject(item, Silent: true, NoStack: true)",
+				"Data.TransferPhase = (int)BountyTransferPhase.Arrived",
+				"Data.PaymentPhase = (int)BountyPaymentPhase.DebitIntent",
+				"bool committed = debit.Commit()",
+				"Data.PaymentPhase = (int)BountyPaymentPhase.Debited",
+				"Data.PaymentPhase = (int)BountyPaymentPhase.Credited",
+				"KingdomChronicle.RecordOnce(System, EventId(Data, \"paid\")",
+				"Data.TerminalPhase = (int)BountyTerminalPhase.LedgerIntent",
+				"DeliverLedger(System, ref Data.TerminalLedgerState",
+				"Data.TerminalPhase = (int)BountyTerminalPhase.MessageIntent",
+				"DeliverMessage(ref Data.TerminalMessageState",
+				"Data.TerminalPhase = (int)BountyTerminalPhase.CleanupAttempting",
+				"InvokeCleanupOnce(Notice, false)");
+		}
+
+		[Test]
 		public void BountySource_WiresLiveFramesBeforeExactPaymentAndOneShotTerminalCleanup()
 		{
-			string source = ReadRepoSource("Quests/KingdomBounty.cs");
+			string source = KingdomBountyLogicalSource.Read();
 			int paymentIntent = source.IndexOf(
 				"Data.PaymentPhase = (int)BountyPaymentPhase.DebitIntent", StringComparison.Ordinal);
 			int paymentCall = source.IndexOf("bool committed = debit.Commit()", paymentIntent,
@@ -1000,6 +1140,33 @@ namespace ThousandAndFirst.Tests
 				if (at < 0) return count;
 				count++;
 				at += Needle.Length;
+			}
+		}
+
+		private static string[] PublicFieldRows(string Source)
+		{
+			List<string> rows = new List<string>();
+			string[] lines = Source.Split('\n');
+			for (int i = 0; i < lines.Length; i++)
+			{
+				string line = lines[i].Trim();
+				if (line.StartsWith("public ", StringComparison.Ordinal)
+					&& line.EndsWith(";", StringComparison.Ordinal) && !line.Contains("("))
+				{
+					rows.Add(line.Substring(7, line.Length - 8));
+				}
+			}
+			return rows.ToArray();
+		}
+
+		private static void AssertOrdered(string Source, params string[] Needles)
+		{
+			int cursor = 0;
+			for (int i = 0; i < Needles.Length; i++)
+			{
+				int next = Source.IndexOf(Needles[i], cursor, StringComparison.Ordinal);
+				Assert.GreaterOrEqual(next, cursor, Needles[i]);
+				cursor = next + Needles[i].Length;
 			}
 		}
 	}

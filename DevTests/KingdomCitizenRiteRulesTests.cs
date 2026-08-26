@@ -1,4 +1,5 @@
 ﻿#if TAF_TESTS
+using System;
 using NUnit.Framework;
 using ThousandAndFirst;
 
@@ -20,6 +21,48 @@ namespace ThousandAndFirst.Tests
 			"taf:realm:v1:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 		private const string RealmB =
 			"taf:realm:v1:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
+
+		[Test]
+		public void LiveRiteLogicalSourceKeepsTallyAndMutationOrder()
+		{
+			string source = KingdomCitizenRiteLogicalSource.Read();
+			Ordered(source,
+				"public sealed class RiteTally",
+				"internal int Hosts;",
+				"internal int Citizens;",
+				"internal CitizenRiteVerdict Worst;",
+				"internal string Liquid;",
+				"public static RiteTally Begin(",
+				"public static void Observe(",
+				"public static void Close(",
+				"private static void Chronicle(",
+				"JournalAPI.GetObservation(id)",
+				"JournalAPI.AddObservation(",
+				"public static CitizenRiteVerdict Host(",
+				"Citizen.AddPart<GivesRep>()",
+				"rep.FillInRelatedFactions(Initial: true);",
+				"Speak(System, Citizen);",
+				"Citizen.SetIntProperty(HostProperty, 1);",
+				"private static void Speak(",
+				"ConversationsAPI.addSimpleConversationToObject",
+				"citizen.SetIntProperty(ConversationProperty, 1);",
+				"citizen.SetIntProperty(GreetingBandProperty, band + 1);");
+			StringAssert.DoesNotContain("internal int Hosts =", source);
+			StringAssert.DoesNotContain("internal int Citizens =", source);
+			StringAssert.DoesNotContain("internal CitizenRiteVerdict Worst =", source);
+			StringAssert.DoesNotContain("internal string Liquid =", source);
+		}
+
+		private static void Ordered(string source, params string[] terms)
+		{
+			int cursor = -1;
+			for (int i = 0; i < terms.Length; i++)
+			{
+				int next = source.IndexOf(terms[i], cursor + 1, StringComparison.Ordinal);
+				Assert.Greater(next, cursor, terms[i]);
+				cursor = next;
+			}
+		}
 
 		/// <summary>Everything true is a host.</summary>
 		[Test]

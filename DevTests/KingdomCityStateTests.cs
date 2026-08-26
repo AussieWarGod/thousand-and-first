@@ -1,5 +1,6 @@
 #if TAF_TESTS
 using System;
+using System.Reflection;
 using NUnit.Framework;
 using ThousandAndFirst.Simulation.City;
 
@@ -13,6 +14,46 @@ namespace ThousandAndFirst.Tests
 	/// </summary>
 	public class KingdomCityStateTests
 	{
+		private const BindingFlags RowFields = BindingFlags.Instance | BindingFlags.Public
+			| BindingFlags.NonPublic | BindingFlags.DeclaredOnly;
+
+		private static void AssertByteEnum(Type type, params string[] expected)
+		{
+			Assert.AreEqual(typeof(byte), Enum.GetUnderlyingType(type), type.Name + " backing type");
+			AssertTopLevelInternal(type);
+			string[] names = Enum.GetNames(type);
+			string[] actual = new string[names.Length];
+			for (int i = 0; i < names.Length; i++)
+			{
+				actual[i] = names[i] + "=" + Convert.ToByte(Enum.Parse(type, names[i]));
+			}
+			CollectionAssert.AreEqual(expected, actual, type.Name + " wire values/order");
+		}
+
+		private static void AssertTopLevelInternal(Type type)
+		{
+			Assert.AreEqual("ThousandAndFirst.Simulation.City." + type.Name, type.FullName);
+			Assert.IsFalse(type.IsNested, type.Name + " became nested");
+			Assert.IsTrue(type.IsNotPublic, type.Name + " accessibility changed");
+		}
+
+		private static void AssertRowShape(Type type, string[] names, Type[] types)
+		{
+			AssertTopLevelInternal(type);
+			Assert.IsTrue(type.IsValueType, type.Name + " stopped being a value type");
+			FieldInfo[] fields = type.GetFields(RowFields);
+			Assert.AreEqual(names.Length, fields.Length, type.Name + " field count");
+			object defaultRow = Activator.CreateInstance(type);
+			for (int i = 0; i < fields.Length; i++)
+			{
+				Assert.AreEqual(names[i], fields[i].Name, type.Name + " field order at " + i);
+				Assert.AreEqual(types[i], fields[i].FieldType, type.Name + "." + fields[i].Name + " type");
+				Assert.IsTrue(fields[i].IsInitOnly, type.Name + "." + fields[i].Name + " stopped being readonly");
+				object expectedDefault = types[i].IsValueType ? Activator.CreateInstance(types[i]) : null;
+				Assert.AreEqual(expectedDefault, fields[i].GetValue(defaultRow), type.Name + "." + fields[i].Name + " default");
+			}
+		}
+
 		private static KingdomStocks Stocks(long water, long food)
 		{
 			return new KingdomStocks(
@@ -56,6 +97,121 @@ namespace ThousandAndFirst.Tests
 			Assert.IsTrue(KingdomCityState.TryCreate(1, 1, "taf:settlement:test", 0L, Stocks(50L, 60L),
 				zoneRows, workRows, residentRows, clockRows, out state, out fault), fault.ToString());
 			return state;
+		}
+
+		[Test]
+		public void PersistedCityEnumsKeepTheirExactByteWireValues()
+		{
+			AssertByteEnum(typeof(KingdomCityFault), "None=0", "NullArgument=1", "RowCapExceeded=2",
+				"InvalidIndex=3", "InvalidTick=4", "ClockRegression=5", "ArithmeticOverflow=6",
+				"InvalidInterval=7", "InvalidRate=8", "InvalidCapacity=9", "InvalidLegOrder=10",
+				"OutsideItinerary=11", "StepBudgetExhausted=12", "DuplicateBinding=13",
+				"UnknownBinding=14", "CauseRequired=15", "TerminalStanding=16");
+			AssertByteEnum(typeof(KingdomStockKind), "Water=0", "Food=1", "Materials=2", "OpaqueManifest=3");
+			AssertByteEnum(typeof(KingdomWorkKind), "Other=0", "Growing=1", "Store=2", "Producer=3",
+				"Refiner=4", "Power=5", "Construction=6");
+			AssertByteEnum(typeof(KingdomDayShape), "Hearth=0", "Field=1", "Yard=2", "Market=3",
+				"Craft=4", "Watch=5", "Shrine=6");
+			AssertByteEnum(typeof(KingdomResidentStanding), "Resident=0", "Abroad=1", "Dead=2", "Expedition=3");
+			AssertByteEnum(typeof(KingdomStandingCause), "None=0", "Unwitnessed=1", "Violence=2", "Raid=3",
+				"Founder=4", "Followed=5", "Taken=6", "Astray=7");
+			AssertByteEnum(typeof(KingdomClockKind), "Harvest=0", "Arrival=1", "Guest=2", "NotableGuest=3",
+				"Festival=4", "MarketDay=5", "Delivery=6", "Raid=7");
+			AssertByteEnum(typeof(KingdomToldKind), "None=0", "Harvest=1", "Delivery=2", "Arrival=3",
+				"Departure=4", "Breakdown=5", "Mending=6", "Raising=7", "Shortfall=8", "Raid=9",
+				"Ceremony=10", "Wedding=11", "Funeral=12", "Festival=13", "Brownout=14");
+		}
+
+		[Test]
+		public void CityRowsKeepExactTopLevelImmutableFieldShapesAndDefaults()
+		{
+			AssertRowShape(typeof(KingdomGroundReading),
+				new[] { "WaterLevel", "WaterCapacity", "FoodLevel", "FoodCapacity", "Defence" },
+				new[] { typeof(long), typeof(long), typeof(long), typeof(long), typeof(int) });
+			AssertRowShape(typeof(KingdomReckonInput),
+				new[] { "State", "ToTick" },
+				new[] { typeof(KingdomCityState), typeof(long) });
+			AssertRowShape(typeof(KingdomStockPair),
+				new[] { "Level", "Capacity" },
+				new[] { typeof(long), typeof(long) });
+			AssertRowShape(typeof(KingdomStocks),
+				new[] { "Water", "Food", "Materials" },
+				new[] { typeof(KingdomStockPair), typeof(KingdomStockPair), typeof(KingdomStockPair) });
+			AssertRowShape(typeof(KingdomWorkTraits),
+				new[] { "Growing", "Construction", "Store", "Power", "Refiner", "Producer" },
+				new[] { typeof(bool), typeof(bool), typeof(bool), typeof(bool), typeof(bool), typeof(bool) });
+			AssertRowShape(typeof(KingdomWorkRunState),
+				new[] { "Kind", "Stage", "Progress", "NextTick" },
+				new[] { typeof(KingdomWorkKind), typeof(byte), typeof(int), typeof(long) });
+			AssertRowShape(typeof(KingdomBrinkWindow),
+				new[] { "Stands", "ReachedTick", "WarnedTick" },
+				new[] { typeof(bool), typeof(long), typeof(long) });
+			AssertRowShape(typeof(KingdomZoneRow),
+				new[] { "ZoneId", "DistrictCode", "LastReadTick", "Stocks", "Roofs", "Defence",
+					"WaterCarry", "FoodCarry", "OwedWater", "OwedFood", "OwedMaterials" },
+				new[] { typeof(string), typeof(int), typeof(long), typeof(KingdomStocks), typeof(int), typeof(int),
+					typeof(int), typeof(int), typeof(int), typeof(int), typeof(int) });
+			AssertRowShape(typeof(KingdomWorkRow),
+				new[] { "WorkId", "ZoneId", "AnchorX", "AnchorY", "DesignKey", "ConditionPercent",
+					"CrewAssigned", "RanThroughTick", "RunState" },
+				new[] { typeof(int), typeof(string), typeof(short), typeof(short), typeof(string), typeof(int),
+					typeof(int), typeof(long), typeof(KingdomWorkRunState) });
+			AssertRowShape(typeof(KingdomResidentRow),
+				new[] { "ResidentId", "Name", "Origin", "OriginCode", "CreedCode", "ArrivedTick", "Arrived",
+					"HomeWorkId", "JobWorkId", "JobRole", "DayShape", "Standing", "Cause", "BoundZoneId",
+					"RoofBrink", "CreedBrink", "CreedToward", "CreedChannel", "KeptCreeds" },
+				new[] { typeof(int), typeof(string), typeof(string), typeof(int), typeof(int), typeof(long), typeof(string),
+					typeof(int), typeof(int), typeof(byte), typeof(KingdomDayShape), typeof(KingdomResidentStanding),
+					typeof(KingdomStandingCause), typeof(string), typeof(KingdomBrinkWindow), typeof(KingdomBrinkWindow),
+					typeof(string), typeof(byte), typeof(string) });
+			AssertRowShape(typeof(KingdomClockRow),
+				new[] { "Kind", "NextDueTick", "Ordinal" },
+				new[] { typeof(KingdomClockKind), typeof(long), typeof(int) });
+			AssertRowShape(typeof(KingdomToldRow),
+				new[] { "Kind", "Tick", "SubjectA", "SubjectB", "PlaceZoneId", "Outcome" },
+				new[] { typeof(KingdomToldKind), typeof(long), typeof(int), typeof(int), typeof(string), typeof(int) });
+		}
+
+		[Test]
+		public void ExtractedAuthoritiesKeepTopLevelInternalTypeIdentity()
+		{
+			AssertTopLevelInternal(typeof(KingdomCityAdvanceable));
+			Assert.IsTrue(typeof(KingdomCityAdvanceable).IsClass
+				&& typeof(KingdomCityAdvanceable).IsSealed);
+			AssertTopLevelInternal(typeof(KingdomReckonJob));
+			Assert.IsTrue(typeof(KingdomReckonJob).IsClass && typeof(KingdomReckonJob).IsSealed);
+			AssertTopLevelInternal(typeof(KingdomCityRules));
+			Assert.IsTrue(typeof(KingdomCityRules).IsAbstract && typeof(KingdomCityRules).IsSealed);
+			AssertTopLevelInternal(typeof(KingdomCityFaults));
+			Assert.IsTrue(typeof(KingdomCityFaults).IsAbstract && typeof(KingdomCityFaults).IsSealed);
+			AssertTopLevelInternal(typeof(KingdomWorkRules));
+			Assert.IsTrue(typeof(KingdomWorkRules).IsAbstract && typeof(KingdomWorkRules).IsSealed);
+			AssertTopLevelInternal(typeof(KingdomCityState));
+			Assert.IsTrue(typeof(KingdomCityState).IsClass && typeof(KingdomCityState).IsSealed);
+		}
+
+		[Test]
+		public void ReplacingTheRosterCopiesItsInputAndLeavesTheOldStateUntouched()
+		{
+			KingdomCityState before = Build(1, 0, 1, 0);
+			KingdomResidentRow replacement = new KingdomResidentRow(9, "replacement", 0, 0, 0L,
+				-1, -1, 0, KingdomDayShape.Hearth, KingdomResidentStanding.Resident,
+				KingdomStandingCause.None, "taf:zone:0", KingdomBrinkWindow.None,
+				KingdomBrinkWindow.None, null, 0);
+			KingdomResidentRow[] input = new[] { replacement };
+			KingdomCityState after;
+			KingdomCityFault fault;
+			Assert.IsTrue(before.TryWithResidents(input, out after, out fault), fault.ToString());
+			input[0] = replacement.WithStanding(KingdomResidentStanding.Abroad, KingdomStandingCause.Followed);
+			KingdomResidentRow oldRow;
+			KingdomResidentRow heldRow;
+			Assert.IsTrue(before.TryResident(0, out oldRow));
+			Assert.IsTrue(after.TryResident(0, out heldRow));
+			Assert.AreEqual(1, oldRow.ResidentId);
+			Assert.AreEqual(KingdomResidentStanding.Resident, oldRow.Standing);
+			Assert.AreEqual(9, heldRow.ResidentId);
+			Assert.AreEqual(KingdomResidentStanding.Resident, heldRow.Standing);
+			Assert.AreNotSame(before, after);
 		}
 
 		[Test]

@@ -8,6 +8,87 @@ namespace ThousandAndFirst.Tests
 {
 	public class KingdomFoundingTransactionRulesTests
 	{
+		private static void AssertByteEnum(Type type, string expected)
+		{
+			Assert.IsTrue(type.IsPublic && type.IsEnum, type.FullName);
+			Assert.AreEqual(typeof(byte), Enum.GetUnderlyingType(type), type.FullName);
+			Array values = Enum.GetValues(type);
+			string[] shape = new string[values.Length];
+			for (int i = 0; i < values.Length; i++)
+			{
+				object value = values.GetValue(i);
+				shape[i] = Convert.ToInt32(value) + ":" + value;
+			}
+			Assert.AreEqual(expected, string.Join(",", shape), type.FullName);
+		}
+
+		private static void AssertPublicFields(Type type, string[] names, Type[] types)
+		{
+			System.Reflection.FieldInfo[] fields = type.GetFields(
+				System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public |
+				System.Reflection.BindingFlags.DeclaredOnly);
+			Assert.AreEqual(names.Length, fields.Length, type.FullName + " field count");
+			for (int i = 0; i < names.Length; i++)
+			{
+				Assert.AreEqual(names[i], fields[i].Name, type.FullName + " field order " + i);
+				Assert.AreEqual(types[i], fields[i].FieldType, type.FullName + "." + names[i]);
+			}
+		}
+
+		[Test]
+		public void FoundingDeclarationsKeepExactPublicAbiValuesAndDefaults()
+		{
+			AssertByteEnum(typeof(KingdomFoundingKind),
+				"0:None,1:FirstCity,2:SecondCity,3:VillageCharter");
+			AssertByteEnum(typeof(KingdomFoundingPhase),
+				"0:None,1:WaterCommitted,2:PublicationCommitted,3:RecoveryRequired,4:Complete");
+			AssertByteEnum(typeof(KingdomFoundingReceiptNormalization),
+				"0:Clean,1:Pending,2:ClearStaged,3:Quarantine");
+			AssertByteEnum(typeof(KingdomFoundingOwnerKind), "0:None,1:Basin,2:Direct");
+			AssertByteEnum(typeof(KingdomFoundingOutcome),
+				"0:Refused,1:CompensatedFailure,2:RecoverableFailure,3:Committed");
+			AssertByteEnum(typeof(KingdomFoundingWaterDisposition),
+				"0:Untouched,1:RestoredExactly,2:HeldForRecovery,3:Spent,4:RestorationFailed");
+			AssertByteEnum(typeof(KingdomFoundingProjection),
+				"0:None,1:Water,2:Identity,3:Claim,4:Seat,5:Ability,6:Placement,7:Seal");
+			AssertByteEnum(typeof(KingdomChronicleDisposition),
+				"0:None,1:Required,2:Inserted,3:Skipped");
+
+			Type rules = typeof(KingdomFoundingTransactionRules);
+			Assert.AreEqual("ThousandAndFirst.KingdomFoundingTransactionRules", rules.FullName);
+			Assert.IsTrue(rules.IsPublic && rules.IsAbstract && rules.IsSealed);
+
+			Type authority = typeof(KingdomFoundingAuthority);
+			Assert.AreEqual("ThousandAndFirst.KingdomFoundingAuthority", authority.FullName);
+			Assert.IsTrue(authority.IsPublic && authority.IsValueType);
+			AssertPublicFields(authority,
+				new[] { "Kind", "TransactionID", "OwnerKind", "OwnerNonce", "RealmFaction",
+					"ZoneID", "RiteX", "RiteY", "PayloadDigest" },
+				new[] { typeof(KingdomFoundingKind), typeof(string),
+					typeof(KingdomFoundingOwnerKind), typeof(string), typeof(string), typeof(string),
+					typeof(int), typeof(int), typeof(string) });
+			KingdomFoundingAuthority emptyAuthority = default(KingdomFoundingAuthority);
+			Assert.AreEqual(KingdomFoundingKind.None, emptyAuthority.Kind);
+			Assert.AreEqual(KingdomFoundingOwnerKind.None, emptyAuthority.OwnerKind);
+			Assert.IsNull(emptyAuthority.TransactionID);
+			Assert.AreEqual(0, emptyAuthority.RiteX);
+
+			Type result = typeof(KingdomFoundingResult);
+			Assert.AreEqual("ThousandAndFirst.KingdomFoundingResult", result.FullName);
+			Assert.IsTrue(result.IsPublic && result.IsValueType);
+			AssertPublicFields(result,
+				new[] { "Outcome", "Water", "Projection", "Failure" },
+				new[] { typeof(KingdomFoundingOutcome), typeof(KingdomFoundingWaterDisposition),
+					typeof(KingdomFoundingProjection), typeof(string) });
+			KingdomFoundingResult emptyResult = default(KingdomFoundingResult);
+			Assert.AreEqual(KingdomFoundingOutcome.Refused, emptyResult.Outcome);
+			Assert.AreEqual(KingdomFoundingWaterDisposition.Untouched, emptyResult.Water);
+			Assert.AreEqual(KingdomFoundingProjection.None, emptyResult.Projection);
+			Assert.IsNull(emptyResult.Failure);
+			Assert.AreEqual("", KingdomFoundingResult.From(KingdomFoundingOutcome.Refused,
+				KingdomFoundingWaterDisposition.Untouched, KingdomFoundingProjection.None).Failure);
+		}
+
 		[Test]
 		public void EveryKindPhasePairHasOneExactPendingMeaning()
 		{

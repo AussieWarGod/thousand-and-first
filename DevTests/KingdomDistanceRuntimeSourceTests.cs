@@ -22,7 +22,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.DoesNotContain("TryApplyTransfer", carry);
 			StringAssert.DoesNotContain("TryPlanTransfer", carry);
 
-			string runtime = Source("KingdomDistanceRuntime.cs");
+			string runtime = RuntimeSource();
 			StringAssert.Contains("cache.TryCompose(source, sourceEndpoint.EndpointId", runtime);
 			StringAssert.Contains("KingdomLogisticsRules.TryNearestHolder", runtime);
 			StringAssert.Contains("KingdomLogisticsRules.TryNoNearerHolder", runtime);
@@ -38,7 +38,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void RenderMeasuresRealWalkabilityRoadCellsAndShaftReceipts()
 		{
-			string runtime = Source("KingdomDistanceRuntime.cs");
+			string runtime = RuntimeSource();
 			StringAssert.Contains("KingdomRoads.Walkable(cell)", runtime);
 			StringAssert.Contains("KingdomRoads.AppliedState(cell) == KingdomRoadRules.WearState.Paved",
 				runtime);
@@ -67,13 +67,16 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void SparseCacheIsBoundedAndAbsentFromSaveWire()
 		{
-			string rules = Source("KingdomDistanceRules.cs");
+			string rules = string.Join("\n",
+				Source("KingdomDistanceRules.cs"),
+				Source("KingdomDistanceMatrix.cs"),
+				Source("KingdomDistanceMatrix.Operations.cs"));
 			StringAssert.Contains("MaxWorkEdgeEntries", rules);
 			StringAssert.Contains("MaxSamePairEntries", rules);
 			StringAssert.Contains("MaxEndpointsForZone(int zoneIndex)", rules);
 			StringAssert.Contains("int[][] endpointIds", rules);
 			StringAssert.DoesNotContain("worksPerZone", rules);
-			string runtime = Source("KingdomDistanceRuntime.cs");
+			string runtime = RuntimeSource();
 			StringAssert.Contains("cache.Matrix.MaxEndpointsForZone(zoneIndex)", runtime);
 			StringAssert.Contains("if (candidates[i].Required)", runtime);
 
@@ -85,6 +88,30 @@ namespace ThousandAndFirst.Tests
 				Source("KingdomDistanceSliceRules.Pathfinding.cs"));
 			StringAssert.DoesNotContain("XRL", slice);
 			StringAssert.DoesNotContain("The.Game", slice);
+		}
+
+		[Test]
+		public void RuntimeSplitKeepsOnePartialAuthorityAndCandidateNested()
+		{
+			string runtime = RuntimeSource();
+			Assert.AreEqual(4, Count(runtime, "internal static partial class KingdomDistanceRuntime"));
+			Assert.AreEqual(1, Count(runtime, "private sealed class Candidate"));
+			StringAssert.Contains("private sealed class Candidate", Source("KingdomDistanceRuntime.cs"));
+			StringAssert.DoesNotContain("private sealed class Candidate",
+				Source("KingdomDistanceRuntime.PlanningAndTransfer.cs"));
+			StringAssert.DoesNotContain("private sealed class Candidate",
+				Source("KingdomDistanceRuntime.CandidatesAndSelection.cs"));
+			StringAssert.DoesNotContain("private sealed class Candidate",
+				Source("KingdomDistanceRuntime.PortalsAndHashing.cs"));
+		}
+
+		private static string RuntimeSource()
+		{
+			return string.Join("\n",
+				Source("KingdomDistanceRuntime.cs"),
+				Source("KingdomDistanceRuntime.PlanningAndTransfer.cs"),
+				Source("KingdomDistanceRuntime.CandidatesAndSelection.cs"),
+				Source("KingdomDistanceRuntime.PortalsAndHashing.cs"));
 		}
 
 		private static string Source(string file)

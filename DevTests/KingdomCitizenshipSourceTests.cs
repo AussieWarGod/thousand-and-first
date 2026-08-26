@@ -10,7 +10,7 @@ namespace ThousandAndFirst.Tests
 		public void EnrollmentNeverReplacesBrainOrTemporaryAllegianceState()
 		{
 			string founding = TestMain.ReadRepositoryText("Core/KingdomFounding.cs");
-			string runtime = TestMain.ReadRepositoryText("Core/KingdomCitizenship.cs");
+			string runtime = KingdomCitizenshipLogicalSource.Read();
 			StringAssert.DoesNotContain("Brain.Factions =", founding);
 			StringAssert.DoesNotContain("Allegiance.Calm =", founding);
 			StringAssert.DoesNotContain("Allegiance.Hostile =", founding);
@@ -26,7 +26,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void ReceiptSurvivesReloadAndDeathOwnsOnlyItsExactCleanup()
 		{
-			string runtime = TestMain.ReadRepositoryText("Core/KingdomCitizenship.cs");
+			string runtime = KingdomCitizenshipLogicalSource.Read();
 			StringAssert.Contains("WriteNamedFields(this, typeof(r_KingdomCitizenship))", runtime);
 			StringAssert.Contains("ReadNamedFields(this, typeof(r_KingdomCitizenship))", runtime);
 			StringAssert.Contains("ID == BeforeDeathRemovalEvent.ID", runtime);
@@ -45,9 +45,22 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void LegacyDeathPartKeepsItsEngineResolvedIdentityAfterFileSplit()
+		{
+			string source = TestMain.ReadRepositoryText(
+				"Experience/r_KingdomCitizenLegacy.cs");
+			StringAssert.Contains("namespace XRL.World.Parts", source);
+			StringAssert.Contains("[Serializable]", source);
+			StringAssert.Contains("public class r_KingdomCitizenLegacy : IPart", source);
+			StringAssert.Contains("ID == BeforeDeathRemovalEvent.ID", source);
+			StringAssert.Contains("KingdomOffices.RecordDeath(ParentObject, E.Killer)", source);
+			StringAssert.DoesNotContain("namespace ThousandAndFirst\n{", source);
+		}
+
+		[Test]
 		public void LifecycleConsumersUseRealmQualifiedAuthorityAndReversibleRemoval()
 		{
-			string runtime = TestMain.ReadRepositoryText("Core/KingdomCitizenship.cs");
+			string runtime = KingdomCitizenshipLogicalSource.Read();
 			string survey = TestMain.ReadRepositoryText("Growth/KingdomSurvey.cs");
 			string residents = TestMain.ReadRepositoryText("Simulation/City/KingdomResidents.cs");
 			string growth = TestMain.ReadRepositoryText("Growth/KingdomGrowth.cs");
@@ -65,7 +78,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void LegacyObservationProvesCurrentFactionBeforeClaimingOwnership()
 		{
-			string runtime = TestMain.ReadRepositoryText("Core/KingdomCitizenship.cs");
+			string runtime = KingdomCitizenshipLogicalSource.Read();
 			string observe = Slice(runtime, "public static bool ObserveLegacy(",
 				"public static bool CanRemove(");
 			int proof = observe.IndexOf("baseSet.TryGetValue(factionId", StringComparison.Ordinal);
@@ -79,7 +92,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void SuccessionPreservesForeignBrainStateExceptVanillaPlayerSlot()
 		{
-			string source = TestMain.ReadRepositoryText("Experience/KingdomSuccession.cs");
+			string source = KingdomSuccessionLogicalSource.Read();
 			string prepare = Slice(source, "private static void PrepareSuccessor(",
 				"private static bool TryResetPersonalKnowledge");
 			StringAssert.Contains("GetBaseAllegiance()", prepare);
@@ -115,7 +128,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void SuccessionReprovesCitizenshipImmediatelyBeforeBodyTransfer()
 		{
-			string source = TestMain.ReadRepositoryText("Experience/KingdomSuccession.cs");
+			string source = KingdomSuccessionLogicalSource.Read();
 			int immediateBoundary = source.IndexOf(
 				"Re-prove exact reversible citizenship immediately before irreversible body transfer.",
 				StringComparison.Ordinal);

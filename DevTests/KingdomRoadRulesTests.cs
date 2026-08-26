@@ -26,6 +26,46 @@ namespace ThousandAndFirst.Tests
 			};
 		}
 
+		[Test]
+		public void NestedRoadDeclarationsKeepTheirPersistedAbi()
+		{
+			Assert.AreEqual(typeof(int), System.Enum.GetUnderlyingType(typeof(KingdomRoadRules.WearState)));
+			CollectionAssert.AreEqual(new int[5] { 0, 1, 2, 3, 4 }, new int[5]
+			{
+				(int)KingdomRoadRules.WearState.Untouched,
+				(int)KingdomRoadRules.WearState.Worn,
+				(int)KingdomRoadRules.WearState.Trodden,
+				(int)KingdomRoadRules.WearState.Path,
+				(int)KingdomRoadRules.WearState.Paved
+			});
+			Assert.AreEqual(typeof(int), System.Enum.GetUnderlyingType(typeof(KingdomRoadRules.RouteKind)));
+			CollectionAssert.AreEqual(new int[4] { 0, 1, 2, 3 }, new int[4]
+			{
+				(int)KingdomRoadRules.RouteKind.HomeToWork,
+				(int)KingdomRoadRules.RouteKind.WorkToHeart,
+				(int)KingdomRoadRules.RouteKind.HeartToGate,
+				(int)KingdomRoadRules.RouteKind.DoorToLane
+			});
+
+			System.Reflection.FieldInfo[] fields = typeof(KingdomRoadRules.WornCell).GetFields();
+			Assert.AreEqual(3, fields.Length);
+			Assert.AreEqual("X", fields[0].Name);
+			Assert.AreEqual("Y", fields[1].Name);
+			Assert.AreEqual("Traffic", fields[2].Name);
+			for (int i = 0; i < fields.Length; i++)
+			{
+				Assert.AreEqual(typeof(int), fields[i].FieldType);
+			}
+
+			KingdomRoadRules.WornCell empty = default(KingdomRoadRules.WornCell);
+			Assert.AreEqual(0, empty.X);
+			Assert.AreEqual(0, empty.Y);
+			Assert.AreEqual(0, empty.Traffic);
+			System.Reflection.MethodInfo invoke = typeof(KingdomRoadRules.CellFilter).GetMethod("Invoke");
+			Assert.AreEqual(typeof(bool), invoke.ReturnType);
+			Assert.AreEqual(2, invoke.GetParameters().Length);
+		}
+
 		// --- The ladder ------------------------------------------------------------------
 
 		[TestCase(-100, KingdomRoadRules.WearState.Untouched)]
@@ -575,6 +615,10 @@ namespace ThousandAndFirst.Tests
 			Assert.IsTrue(KingdomRoadRules.TryDecode(written, out var read, out var error));
 			Assert.IsNull(error);
 			Assert.AreEqual(2, read.Count);
+			Assert.AreEqual(1, read[0].X);
+			Assert.AreEqual(2, read[0].Y);
+			Assert.AreEqual(3, read[1].X);
+			Assert.AreEqual(4, read[1].Y);
 			Assert.AreEqual(50, KingdomRoadRules.TrafficAt(read, 1, 2));
 			Assert.AreEqual(299, KingdomRoadRules.TrafficAt(read, 3, 4));
 		}

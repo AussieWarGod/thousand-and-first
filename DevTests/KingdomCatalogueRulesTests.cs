@@ -1,4 +1,5 @@
 #if TAF_TESTS
+using System;
 using System.Collections.Generic;
 using NUnit.Framework;
 using ThousandAndFirst;
@@ -10,6 +11,60 @@ namespace ThousandAndFirst.Tests
 		// These test the validator and the arithmetic, never the shipped catalogue. A test that
 		// asserted "the tent costs three drams" would fail the next time somebody balanced the
 		// tent, which is not a defect and is not what any of this is for.
+
+		private static string DeclaredFieldNames(Type Type)
+		{
+			System.Reflection.FieldInfo[] fields = Type.GetFields(
+				System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public
+				| System.Reflection.BindingFlags.DeclaredOnly);
+			Array.Sort(fields, delegate(System.Reflection.FieldInfo A, System.Reflection.FieldInfo B)
+			{
+				return A.MetadataToken.CompareTo(B.MetadataToken);
+			});
+			string[] names = new string[fields.Length];
+			for (int i = 0; i < fields.Length; i++) names[i] = fields[i].Name;
+			return string.Join("|", names);
+		}
+
+		[Test]
+		public void DecomposedPublicTypes_PreserveIdentityFieldsAndDefaults()
+		{
+			Assert.AreEqual("ThousandAndFirst.CatalogueSeverity", typeof(CatalogueSeverity).FullName);
+			Assert.AreEqual(typeof(int), Enum.GetUnderlyingType(typeof(CatalogueSeverity)));
+			Assert.AreEqual("Note|Fault", string.Join("|", Enum.GetNames(typeof(CatalogueSeverity))));
+			Assert.AreEqual(0, (int)CatalogueSeverity.Note);
+			Assert.AreEqual(1, (int)CatalogueSeverity.Fault);
+
+			Assert.AreEqual("ThousandAndFirst.CatalogueFinding", typeof(CatalogueFinding).FullName);
+			Assert.AreEqual("Key|Attribute|Severity|Message", DeclaredFieldNames(typeof(CatalogueFinding)));
+			CatalogueFinding finding = new CatalogueFinding("hut", "Plot", CatalogueSeverity.Fault, "bad");
+			Assert.AreEqual("hut", finding.Key);
+			Assert.AreEqual("Plot", finding.Attribute);
+			Assert.AreEqual(CatalogueSeverity.Fault, finding.Severity);
+			Assert.AreEqual("bad", finding.Message);
+
+			Assert.AreEqual("ThousandAndFirst.CatalogueEntry", typeof(CatalogueEntry).FullName);
+			Assert.AreEqual("Key|DisplayName|Category|Styles|MinStage|Plot|Open|Contents|CostDrams|Materials|Carries|Staff|Manning|Defence|SuccessorKey|FootprintWidth|FootprintHeight|Roof|RoofDeclared|RequiresSky|Declarations|Origin",
+				DeclaredFieldNames(typeof(CatalogueEntry)));
+			CatalogueEntry entry = new CatalogueEntry();
+			Assert.AreEqual("civic", entry.Category);
+			Assert.AreEqual("common", entry.Styles);
+			Assert.AreEqual("scaled", entry.Manning);
+			Assert.AreEqual(KingdomPlotRules.RoofState.Walled, entry.Roof);
+			Assert.AreEqual(1, entry.Declarations);
+
+			Assert.AreEqual("ThousandAndFirst.KindAmount", typeof(KindAmount).FullName);
+			Assert.AreEqual("Kind|Amount", DeclaredFieldNames(typeof(KindAmount)));
+			KindAmount amount = new KindAmount("water", 7);
+			Assert.AreEqual("water", amount.Kind);
+			Assert.AreEqual(7, amount.Amount);
+			Assert.IsTrue(typeof(KindAmount).GetField("Kind").IsInitOnly);
+			Assert.IsTrue(typeof(KindAmount).GetField("Amount").IsInitOnly);
+
+			Type tally = typeof(KingdomCatalogueRules.SupportTally);
+			Assert.AreEqual("ThousandAndFirst.KingdomCatalogueRules+SupportTally", tally.FullName);
+			Assert.AreEqual("Water|Food|Roof|Lift|Works", DeclaredFieldNames(tally));
+		}
 
 		private static CatalogueEntry Entry(string Key,
 			KingdomPlotRules.PlotSize Plot = KingdomPlotRules.PlotSize.Small,

@@ -36,7 +36,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void CommissionAuditsAndFreezesAllNineCellsBeforeAnyDebit()
 		{
-			string source = Source(Path.Combine("Growth", "KingdomCommission.cs"));
+			string source = KingdomCommissionLogicalSource.Read();
 			string commission = Slice(source,
 				"public static bool Commission(KingdomSystem System, string Key, string SkinKey, KingdomPlotRules.PlotSize Stake, out string Failure)",
 				"internal static void RetryConstruction(");
@@ -57,7 +57,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void RuntimeRefusesOccupantsAndObstructionsWithoutClearingOrDisplacement()
 		{
-			string source = Source(Path.Combine("Growth", "KingdomGatehouse.cs"));
+			string source = KingdomGatehouseLogicalSource.Read();
 			string audit = Slice(source, "public static bool TryAudit(",
 				"public static bool TryReadPlan(");
 			string cellAudit = Slice(source, "private static bool AuditFootprintCell(",
@@ -78,7 +78,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void ProjectionPublishesSixExactOwnedOutputsAndCommitsSchemaLast()
 		{
-			string source = Source(Path.Combine("Growth", "KingdomGatehouse.cs"));
+			string source = KingdomGatehouseLogicalSource.Read();
 			string materialize = Slice(source,
 				"internal static void MaterializeFromEnteredCell(",
 				"private static bool TryExactSatellites(");
@@ -98,6 +98,22 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("KingdomPlots.StampRect(item", materialize);
 			Assert.IsFalse(materialize.Contains("KingdomPlots.StampRect(Root"),
 				"the non-stakeable Door root must not masquerade as a plot");
+		}
+
+		[Test]
+		public void ProjectionPartKeepsSerializedAbiAndBaseDispatchOrder()
+		{
+			string source = KingdomGatehouseLogicalSource.Read();
+			Ordered(source,
+				"[Serializable]",
+				"public sealed class r_KingdomGatehouse : IPart",
+				"return base.WantEvent(ID, cascade) || ID == EnteredCellEvent.ID;",
+				"KingdomGatehouse.MaterializeFromEnteredCell(ParentObject, E.Cell);",
+				"return base.HandleEvent(E);");
+			Assert.AreEqual(1, source.Split(new[]
+			{
+				"public sealed class r_KingdomGatehouse : IPart"
+			}, StringSplitOptions.None).Length - 1);
 		}
 
 		[Test]

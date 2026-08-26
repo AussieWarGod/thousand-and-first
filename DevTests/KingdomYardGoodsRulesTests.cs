@@ -134,7 +134,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void DeliveryConsumesSharedSurveyAndFreezesAdjustedIncomeBeforeMutation()
 		{
-			string trade = TestMain.ReadRepositoryText("Trade/KingdomTrade.cs");
+			string trade = KingdomTradeLogicalSource.Read();
 			int start = trade.IndexOf("private static bool PrepareCharterDelivery(",
 				StringComparison.Ordinal);
 			int end = trade.IndexOf("private static bool TryProjectionRow(", start,

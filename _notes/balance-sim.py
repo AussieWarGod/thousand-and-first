@@ -131,7 +131,9 @@ MAT_CS = tuple(
 # exactly a line in there silently disagreeing with the rule it was meant to obey.
 YARDIMPL_CS = source_family_paths("Growth", "KingdomMaterials")
 PROD_CS = source_family_paths("Simulation/City", "KingdomProductionRules")
-CITY_CS = source_family_paths("Simulation/City", "KingdomCityRules")
+CITY_CS = source_family_paths("Simulation/City", "KingdomCityRules") + (
+    "Simulation/City/KingdomCityAdvanceable.cs",
+)
 RESEARCH_CS = source_family_paths("Growth", "KingdomResearchRules")
 CAT_CS = source_family_paths("Growth", "KingdomCatalogueRules")
 SUB_CS = source_family_paths("Growth", "KingdomSubsidenceRules")
@@ -2472,7 +2474,17 @@ def w7_networks_and_power():
         os.path.join(ROOT, "Growth", "KingdomPowerOperationsRules.cs"),
     ))
     flow = read_source(source_family_paths("Simulation/City", "KingdomFlowRules"))
-    net = read_source(source_family_paths("Simulation/City", "KingdomNetworkRules"))
+    net = read_source(source_family_paths("Simulation/City", "KingdomNetworkRules") + (
+        "Simulation/City/KingdomNetworkKind.cs",
+        "Simulation/City/KingdomNetworkRole.cs",
+        "Simulation/City/KingdomWorkTier.cs",
+        "Simulation/City/KingdomNetworkNode.cs",
+        "Simulation/City/KingdomNetworkEdge.cs",
+        "Simulation/City/KingdomJoinVerdict.cs",
+        "Simulation/City/KingdomNetworkGraph.cs",
+        "Simulation/City/KingdomNetworkGraph.Build.cs",
+        "Simulation/City/KingdomNetworkGraph.Bottleneck.cs",
+    ))
     memory = read_source(source_family_paths("Simulation/City", "KingdomCityMemoryRules"))
     blueprints = open(os.path.join(ROOT, "ObjectBlueprints.xml"), encoding="utf-8-sig").read()
 

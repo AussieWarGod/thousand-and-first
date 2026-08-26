@@ -851,7 +851,7 @@ The author's ruling says "structures only **the seat of the kingdom** may raise.
 > "Everything above this line describes the seat — **the settlement the founder is currently in** —
 > and every consumer reads those fields directly. The other city waits here, and the two are
 > exchanged by `TrySeat` when the founder walks into its ground."
-> — `Core/KingdomSystem.cs:674-678`
+> — `Core/KingdomSystem.z03.State.Realm.cs:88`
 
 `Seat` is the **hot/cold swap role**, not a political capital: it moves every time the founder walks
 between cities (`KingdomSystem.TrySeat`, `:935`). `FOUNDATION-CONTRACT.md:53-60` reinforces it —
@@ -1002,7 +1002,7 @@ Two independent precedents point the same way and it is a hard requirement, not 
 **Transfer:** a specialised city must be *runnable without visiting it often*. The mod is already
 built for this — the world keeps time whether the founder is in it or not, works run on days and
 labour rather than visits, and a dormant city resolves its whole absence on the next seating
-(`Core/KingdomSystem.cs:680-690`). **That existing design is what makes Design B viable where it
+(`Core/KingdomSystem.z02.State.City.cs:152`, `Itineraries`). **That existing design is what makes Design B viable where it
 made RimWorld's multi-colony play a chore.** It should be stated as a load-bearing reason, not
 assumed.
 
@@ -1391,4 +1391,3 @@ framed as a place that takes on debt reads it correctly.
 §2.3(1) is SOURCE-PROVEN, RUNTIME-UNVERIFIED. `_notes/README.md`'s standing rule holds, and the C2
 correction exists precisely because a precedent claim was once made too fast. It goes in TESTING.md,
 not into an argument.
-

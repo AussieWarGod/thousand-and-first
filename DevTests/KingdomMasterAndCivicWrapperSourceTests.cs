@@ -43,7 +43,7 @@ namespace ThousandAndFirst.Tests
 			Assert.AreEqual("Checkbox", (string)master.Attribute("Type"));
 			Assert.AreEqual("Yes", (string)master.Attribute("Default"));
 
-			string system = TestMain.ReadRepositoryText("Core/KingdomSystem.cs");
+			string system = KingdomSystemLogicalSource.Read();
 			StringAssert.Contains("public KingdomMasterLatchValue MasterOption;", system);
 			StringAssert.Contains("public long MasterOptionTick;", system);
 			StringAssert.Contains("public long MasterResumeToken;", system);
@@ -56,7 +56,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void EveryAutomaticKingdomSystemWakeGatesBeforeItsGuardDelegate()
 		{
-			string source = TestMain.ReadRepositoryText("Core/KingdomSystem.cs");
+			string source = KingdomSystemLogicalSource.Read();
 			AssertBefore(source, "public override bool HandleEvent(EndTurnEvent E)",
 				"KingdomMaster.ObserveAutomaticWake", "Guard(\"pump\"");
 			AssertBefore(source, "public override bool HandleEvent(ZoneThawedEvent E)",
@@ -85,7 +85,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void IndependentAndPublicProducerPathsHaveMasterGates()
 		{
-			string trade = TestMain.ReadRepositoryText("Trade/KingdomTrade.cs");
+			string trade = KingdomTradeLogicalSource.Read();
 			StringAssert.Contains("if (!KingdomMaster.NewWorkAllowed(System))", trade);
 			StringAssert.Contains("if (!KingdomMaster.AutomaticWorkAllowed(System)) return;", trade);
 			string petitions = TestMain.ReadRepositoryText("Quests/KingdomPetitions.cs");
@@ -94,10 +94,10 @@ namespace ThousandAndFirst.Tests
 			string inquiry = TestMain.ReadRepositoryText("Growth/KingdomInquiry.cs");
 			StringAssert.Contains("KingdomMaster.NewWorkAllowed(system)", inquiry);
 			StringAssert.Contains("if (!KingdomMaster.AutomaticWorkAllowed(master))", inquiry);
-			string research = TestMain.ReadRepositoryText("Growth/KingdomResearch.cs");
+			string research = KingdomResearchLogicalSource.Read();
 			StringAssert.Contains("if (!KingdomMaster.AutomaticWorkAllowed(System)) return LabLastWorkedTick;", research);
 			StringAssert.Contains("if (!KingdomMaster.NewWorkAllowed(System))", research);
-			string succession = TestMain.ReadRepositoryText("Experience/KingdomSuccession.cs");
+			string succession = KingdomSuccessionLogicalSource.Read();
 			Assert.GreaterOrEqual(Occurrences(succession,
 				"KingdomMaster.AutomaticWorkAllowed(system)"), 3,
 				"death interception plus load/save recovery must honor master-off");
@@ -110,7 +110,7 @@ namespace ThousandAndFirst.Tests
 			string loader = TestMain.ReadRepositoryText("Core/KingdomLoader.cs");
 			AssertBefore(loader, "public static void RequireKingdomSystem()",
 				"KingdomMaster.AutomaticWorkAllowed(kingdomSystem)", "seal.ReconcileProfile()");
-			string seal = TestMain.ReadRepositoryText("Core/KingdomSeal.cs");
+			string seal = KingdomSealLogicalSource.Read();
 			AssertBefore(seal, "public static bool TryFoundingCompleted",
 				"KingdomMaster.NewWorkAllowed(kingdom)", "TryFlushLiving(\"founding\"");
 			int foundingStart = seal.IndexOf("public static bool TryFoundingCompleted",
@@ -152,6 +152,48 @@ namespace ThousandAndFirst.Tests
 					part, path);
 				StringAssert.Contains("KingdomMaster.AutomaticWorkAllowed(", part, path);
 			}
+		}
+
+		[Test]
+		public void SealCoordinatorKeepsExactSerializedFieldAndProtocolOrder()
+		{
+			string seal = KingdomSealLogicalSource.Read();
+			StringAssert.Contains("[Serializable]", seal);
+			StringAssert.Contains("public sealed partial class KingdomSeal : IPlayerSystem", seal);
+			StringAssert.Contains("private const int SerializationMagic = 1413567315;", seal);
+			StringAssert.Contains("private const int CurrentSerializationVersion = 1;", seal);
+
+			string[] persisted =
+			{
+				"private int SerializationVersion = CurrentSerializationVersion;",
+				"private string LineageId = \"\";",
+				"private string LegacyId = \"\";",
+				"private string OriginGameId = \"\";",
+				"private int Generation;", "private int Revision;", "private long LastPollTick;",
+				"private string SealedLegacyId = \"\";",
+				"private string LastAccessionToken = \"\";",
+				"private string PendingAccessionToken = \"\";", "private bool SealDisabled;"
+			};
+			int prior = seal.IndexOf("public sealed partial class KingdomSeal", StringComparison.Ordinal);
+			for (int i = 0; i < persisted.Length; i++)
+			{
+				int at = seal.IndexOf(persisted[i], prior, StringComparison.Ordinal);
+				Assert.Greater(at, prior, persisted[i]);
+				prior = at;
+			}
+			int firstTransient = seal.IndexOf("[NonSerialized]", prior, StringComparison.Ordinal);
+			Assert.Greater(firstTransient, prior);
+
+			AssertBefore(seal, "public override void Write(SerializationWriter Writer)",
+				"Writer.Write(SerializationMagic)", "Writer.WriteNamedFields(this, typeof(KingdomSeal)");
+			AssertBefore(seal, "public override void Read(SerializationReader Reader)",
+				"Reader.ReadNamedFields(this, typeof(KingdomSeal)", "ValidateSavedState()");
+			AssertBefore(seal, "public static bool TryFoundingCompleted",
+				"seal.MarkDirty(\"founding\")", "seal.TryFlushLiving(\"founding\"");
+			AssertBefore(seal, "private bool TryAdvanceGeneration",
+				"PendingAccessionToken = AccessionToken", "store.TryAdvanceGeneration(previous");
+			AssertBefore(seal, "private bool TryCapture",
+				"SameSpatialBasis(prior, Record)", "KingdomInheritanceSpatial.CopyEvidence");
 		}
 
 		[Test]

@@ -36,7 +36,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void NewPlanFreezesWholeLotMapPriceAndLabourBesideItsStake()
 		{
-			string plot = Read("Growth", "KingdomPlot2.cs");
+			string plot = KingdomPlot2LogicalSource.Read();
 			string quote = Between(plot, "public static bool TryQuotePlan(",
 				"public static bool TryFreezePlan(");
 			AssertOrdered(quote, "new GroundGrid(Z, StakeCell.X, StakeCell.Y)",
@@ -68,7 +68,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void FounderConfirmsPreviewBeforeMarkerCreationOrDebit()
 		{
-			string charter = Read("Core", "KingdomCharterPart.cs");
+			string charter = KingdomCharterPartLogicalSource.Read();
 			string plan = Between(charter, "public void PlaceBuildingPlan(",
 				"public void ManagePlans(");
 			AssertOrdered(plan, "KingdomPlots.TryQuotePlan(",
@@ -118,7 +118,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void FrozenPlanIsReprovedBeforeItsExactFrozenDebit()
 		{
-			string plot = Read("Growth", "KingdomPlot2.cs");
+			string plot = KingdomPlot2LogicalSource.Read();
 			string ready = Between(plot, "private static bool TryFrozenPlanReady(",
 				"public static bool PlanBlocked(");
 			AssertOrdered(ready, "TryReadFrozenPlan(Marker, Entry, true",
@@ -144,7 +144,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void LegacyMarkersRetainDynamicCompatibilityOnlyWhenNoFrozenSchemaExists()
 		{
-			string plot = Read("Growth", "KingdomPlot2.cs");
+			string plot = KingdomPlot2LogicalSource.Read();
 			string price = Between(plot, "internal static bool TryPlanPrice(",
 				"private static bool TryFrozenPlanReady(");
 			StringAssert.Contains("if (!Marker.HasIntProperty(PlanSchemaProperty))", price);

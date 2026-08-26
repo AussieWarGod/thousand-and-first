@@ -61,7 +61,11 @@ namespace ThousandAndFirst.Tests
 		public void EveryPublicRegistryLoaderUsesOneFailClosedSchemaBoundary(
 			string file, string registry)
 		{
-			string source = TestMain.ReadRepositoryText(file);
+			string source = string.Equals(file, "Core/KingdomData.cs",
+				StringComparison.Ordinal) ? KingdomDataLogicalSource.Read()
+				: string.Equals(file, "Growth/KingdomResearch.cs",
+					StringComparison.Ordinal) ? KingdomResearchLogicalSource.Read()
+					: TestMain.ReadRepositoryText(file);
 			StringAssert.Contains(
 				"KingdomXmlSchema.HandleRoot(xml, ", source.Replace("item, ", "xml, "));
 			StringAssert.Contains("\"" + registry + "\"", source);

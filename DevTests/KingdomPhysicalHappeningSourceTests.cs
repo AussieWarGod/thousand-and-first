@@ -101,12 +101,10 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("book.SettlementId", physical);
 			StringAssert.Contains("KingdomPhysicalQueueResult.Busy", physical);
 			StringAssert.Contains("AlreadyCompleted", physical);
-			StringAssert.Contains("PhaseTransition", Source(Path.Combine("Simulation", "City",
-				"KingdomHappeningLifecycleRules.cs")));
-			StringAssert.Contains("SinkTransition", Source(Path.Combine("Simulation", "City",
-				"KingdomHappeningLifecycleRules.cs")));
-			StringAssert.Contains("KingdomPhysicalHappeningKind.Raising", Source(Path.Combine(
-				"Simulation", "City", "KingdomHappeningLifecycleRules.cs")));
+			string lifecycle = KingdomHappeningLifecycleLogicalSource.Read();
+			StringAssert.Contains("PhaseTransition", lifecycle);
+			StringAssert.Contains("SinkTransition", lifecycle);
+			StringAssert.Contains("KingdomPhysicalHappeningKind.Raising", lifecycle);
 			StringAssert.Contains("ActivityCell", physical);
 			StringAssert.Contains("item.Physics.Solid", physical);
 		}
@@ -125,7 +123,7 @@ namespace ThousandAndFirst.Tests
 			string construction = Source(Path.Combine("Growth",
 				"KingdomConstructionPresence.cs"));
 			StringAssert.Contains("KingdomPhysicalHappenings.IsStaged", construction);
-			string expeditions = Source(Path.Combine("Experience", "KingdomExpeditions.cs"));
+			string expeditions = KingdomExpeditionsLogicalSource.Read();
 			StringAssert.Contains("KingdomPhysicalHappenings.IsStaged(Body)", expeditions);
 			StringAssert.Contains("KingdomPhysicalHappenings.IsStaged(body)", expeditions);
 			StringAssert.Contains("KingdomPhysicalHappenings.IsStaged(item)", growth);
@@ -152,7 +150,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void ArchiveV12RetainsBoundedV8HappeningAuthorityAndOlderWritersStayExplicit()
 		{
-			string codec = Source(Path.Combine("Core", "KingdomArchivedSettlementCodec.cs"));
+			string codec = KingdomArchivedSettlementCodecLogicalSource.Read();
 			StringAssert.Contains("public const int BehaviourVersion = 7;", codec);
 			StringAssert.Contains("public const int PhysicalHappeningVersion = 8;", codec);
 			StringAssert.Contains("public const int HappeningCursorVersion = 12;", codec);
@@ -163,7 +161,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("MaxHappeningModelChars", book);
 			StringAssert.Contains("public string HappeningModel", book);
 			StringAssert.Contains("public string ExtensionHappeningCursors", book);
-			string extensionHost = Source(Path.Combine("Api", "KingdomExtensions.cs"));
+			string extensionHost = KingdomExtensionsLogicalSource.Read();
 			StringAssert.Contains("binding.AssemblyName, binding.TypeName", extensionHost);
 			StringAssert.Contains("KingdomHappeningCursorRules.TrySeedLegacy(", extensionHost);
 			StringAssert.Contains("notice.Tick > nowTick || notice.Tick <= sinceTick", extensionHost);

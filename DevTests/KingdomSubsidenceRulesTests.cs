@@ -20,6 +20,50 @@ namespace ThousandAndFirst.Tests
 	{
 		private const int Capacity = 1024;
 
+		private static void AssertPublicFields(System.Type type, string[] expectedNames, System.Type[] expectedTypes)
+		{
+			FieldInfo[] fields = type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly);
+			Assert.AreEqual(expectedNames.Length, fields.Length, type.FullName + " field count changed");
+			for (int i = 0; i < fields.Length; i++)
+			{
+				Assert.AreEqual(expectedNames[i], fields[i].Name, type.FullName + " field order changed");
+				Assert.AreEqual(expectedTypes[i], fields[i].FieldType, type.FullName + "." + fields[i].Name + " type changed");
+			}
+		}
+
+		[Test]
+		public void NestedSaveAndPublicShapesKeepTheirExactAbi()
+		{
+			System.Type rules = typeof(KingdomSubsidenceRules);
+			Assert.AreEqual("ThousandAndFirst.KingdomSubsidenceRules", rules.FullName);
+			Assert.IsTrue(rules.IsAbstract && rules.IsSealed, "rules authority stopped being static");
+
+			System.Type sighting = typeof(KingdomSubsidenceRules.ZoneSighting);
+			System.Type breakpoint = typeof(KingdomSubsidenceRules.Breakpoint);
+			System.Type trajectory = typeof(KingdomSubsidenceRules.Trajectory);
+			System.Type channel = typeof(KingdomSubsidenceRules.SubsidenceChannel);
+			Assert.AreEqual("ThousandAndFirst.KingdomSubsidenceRules+ZoneSighting", sighting.FullName);
+			Assert.AreEqual("ThousandAndFirst.KingdomSubsidenceRules+Breakpoint", breakpoint.FullName);
+			Assert.AreEqual("ThousandAndFirst.KingdomSubsidenceRules+Trajectory", trajectory.FullName);
+			Assert.AreEqual("ThousandAndFirst.KingdomSubsidenceRules+SubsidenceChannel", channel.FullName);
+			Assert.IsTrue(sighting.IsNestedPublic && breakpoint.IsNestedPublic && trajectory.IsNestedPublic && channel.IsNestedPublic);
+
+			AssertPublicFields(sighting,
+				new[] { "Water", "Food", "Roof", "StorageCapacity", "SeenTick" },
+				new[] { typeof(int), typeof(int), typeof(int), typeof(int), typeof(long) });
+			AssertPublicFields(breakpoint,
+				new[] { "Day", "From", "To", "Population" },
+				new[] { typeof(int), typeof(GrowthStage), typeof(GrowthStage), typeof(int) });
+			AssertPublicFields(trajectory,
+				new[] { "Population", "Stage", "Departed", "Steps", "Arrived", "Breakpoints" },
+				new[] { typeof(int), typeof(GrowthStage), typeof(int), typeof(int), typeof(bool),
+					typeof(List<KingdomSubsidenceRules.Breakpoint>) });
+			Assert.AreEqual(typeof(int), System.Enum.GetUnderlyingType(channel));
+			Assert.AreEqual("1:Ruin,2:Severity", string.Join(",", System.Array.ConvertAll(
+				(KingdomSubsidenceRules.SubsidenceChannel[])System.Enum.GetValues(channel),
+				value => ((int)value) + ":" + value)));
+		}
+
 		private static KingdomCatalogueRules.SupportTally Tally(int Water, int Food, int Roof, int Lift = 0, int Works = 1)
 		{
 			KingdomCatalogueRules.SupportTally tally = default(KingdomCatalogueRules.SupportTally);

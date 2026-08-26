@@ -11,7 +11,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void AttendedPassTakesAndBindsExactlyOneSurvey()
 		{
-			string system = Source("Core", "KingdomSystem.cs");
+			string system = KingdomSystemLogicalSource.Read();
 			string pass = Between(system, "private bool AttendSeatedSemantics(Zone Z)",
 				"private bool PrepareSemanticPass(Zone Z, long NowTick)");
 			Assert.AreEqual(1, Count(pass, "KingdomSurvey.Take(Z, this)"));
@@ -49,7 +49,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("Survey.Cairns", offices);
 			StringAssert.Contains("Survey.FindCitizen", offices);
 
-			string construction = Source("Growth", "KingdomConstruction.cs");
+			string construction = KingdomConstructionLogicalSource.Read();
 			string constructionPass = Between(construction,
 				"public static void OnSettlementPass(KingdomSystem System, Zone Z, KingdomSurvey Survey)",
 				"private static void RetryProjection(");
@@ -72,7 +72,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("HomeWorkIds(Survey)", roster);
 			StringAssert.Contains("Witnessed(System, Z, Survey", roster);
 
-			string presence = Source("Growth", "KingdomConstructionPresence.cs");
+			string presence = PresenceSource();
 			StringAssert.DoesNotContain("GetObjects()", presence);
 			StringAssert.Contains("Survey.ConstructionRoots", presence);
 
@@ -106,11 +106,40 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("survey.CropRows", rows);
 			StringAssert.DoesNotContain("Z.GetObjects()", rows);
 
-			string networks = Source("Simulation/City", "KingdomNetworks.cs");
+			string networks = NetworksSource();
 			string compose = Between(networks, "private static KingdomZoneLine[] Compose(Zone Z)",
 				"private static int Find(");
 			StringAssert.Contains("survey.NetworkPieces", compose);
 			StringAssert.DoesNotContain("Z.GetObjects()", compose);
+		}
+
+		[Test]
+		public void NetworkLogicalSourceKeepsOnePartialAuthorityAndZoneLineIdentity()
+		{
+			string networks = NetworksSource();
+			Assert.AreEqual(4, Count(networks, "public static partial class KingdomNetworks"));
+			Assert.AreEqual(1, Count(networks, "internal sealed class KingdomZoneLine"));
+			StringAssert.DoesNotContain("public static class KingdomNetworks", networks);
+			Assert.Less(networks.IndexOf("internal static KingdomCityState Run", StringComparison.Ordinal),
+				networks.IndexOf("public static int Attend", StringComparison.Ordinal));
+			Assert.Less(networks.IndexOf("public static int Attend", StringComparison.Ordinal),
+				networks.IndexOf("private static bool TryComposeGraphs", StringComparison.Ordinal));
+			Assert.Less(networks.IndexOf("private static bool TryComposeGraphs", StringComparison.Ordinal),
+				networks.IndexOf("private static int Through", StringComparison.Ordinal));
+		}
+
+		[Test]
+		public void ConstructionPresenceLogicalSourceKeepsOnePartialAuthority()
+		{
+			string presence = PresenceSource();
+			Assert.AreEqual(2, Count(presence,
+				"public static partial class KingdomConstructionPresence"));
+			StringAssert.DoesNotContain("public static class KingdomConstructionPresence", presence);
+			StringAssert.Contains("public static int Assign", presence);
+			StringAssert.Contains("private static void Reset", presence);
+			StringAssert.Contains("private static bool NeedsLabour", presence);
+			StringAssert.Contains("private static long Started", presence);
+			StringAssert.Contains("private static Zone GroundOf", presence);
 		}
 
 		[Test]
@@ -162,10 +191,10 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("SynchronizeCachedRows();", water);
 			StringAssert.Contains("ReconcilePhysicalRows();", water);
 
-			string guests = Source("Experience", "KingdomGuestLifecycle.cs");
+			string guests = KingdomGuestLifecycleLogicalSource.Read();
 			StringAssert.Contains("KingdomSurvey.ObserveCurrentTopologyInActive(Zone, body);", guests);
 
-			string architecture = Source("Growth", "KingdomArchitectureStamper.cs");
+			string architecture = KingdomArchitectureStamperLogicalSource.Read();
 			StringAssert.Contains("KingdomSurvey.ObserveAddResultInActive(Z, placed, accepted);",
 				architecture);
 			StringAssert.Contains("KingdomSurvey.ObserveRemovedFromActive(Z, exact);", architecture);
@@ -183,7 +212,7 @@ namespace ThousandAndFirst.Tests
 			Assert.Greater(successorRefresh, carry);
 			Assert.Greater(predecessorRemoval, successorRefresh);
 
-			string gatehouse = Source("Growth", "KingdomGatehouse.cs");
+			string gatehouse = KingdomGatehouseLogicalSource.Read();
 			StringAssert.Contains("ObserveCurrentTopologyInActive(Cell.ParentZone, created[i])",
 				gatehouse);
 			StringAssert.DoesNotContain("ObserveRemovedFromActive(Cell.ParentZone, created[i])",
@@ -196,16 +225,16 @@ namespace ThousandAndFirst.Tests
 			foreach (string source in new[]
 			{
 				Source("Growth", "KingdomScaffold.cs"),
-				Source("Growth", "KingdomPlot2.cs"),
+				KingdomPlot2LogicalSource.Read(),
 				Source("Growth", "KingdomRoads.cs"),
 				Source("Growth", "KingdomMaterials.cs"),
 				Source("Experience", "KingdomCarryRuntime.cs"),
-				Source("Experience", "KingdomExpeditions.cs"),
+				KingdomExpeditionsLogicalSource.Read(),
 				Source("Simulation/City", "KingdomBehaviourRuntime.cs")
 			})
 				StringAssert.Contains("ObserveCurrentTopologyInActive", source);
 
-			string trade = Source("Trade", "KingdomTrade.cs");
+			string trade = KingdomTradeLogicalSource.Read();
 			StringAssert.Contains("BoundTradeSurvey(Z)?.ObserveCurrentTopology(witness.Owner);", trade);
 			StringAssert.Contains("BoundTradeSurvey(Z)?.ObserveCurrentTopology(inventory.Owner);", trade);
 			StringAssert.Contains("KingdomSurvey.ObserveAddResultInActive(Z, caravan, added);", trade);
@@ -219,7 +248,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void TradeTopologyUsesOnlyBoundActiveGroundAndMaintainsItsIndex()
 		{
-			string trade = Source("Trade", "KingdomTrade.cs");
+			string trade = KingdomTradeLogicalSource.Read();
 			string capture = Between(trade,
 				"private static LoadedTopologyWitness CaptureLoadedTopology()",
 				"private static bool TryBindTopologyGround(");
@@ -247,7 +276,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void TradeProjectionChoosesOneDeterministicBoundedCell()
 		{
-			string trade = Source("Trade", "KingdomTrade.cs");
+			string trade = KingdomTradeLogicalSource.Read();
 			string settle = Between(trade,
 				"private static void SettleProjection(KingdomTradeOperation Operation",
 				"private static bool TryChooseProjectionCell(");
@@ -264,6 +293,27 @@ namespace ThousandAndFirst.Tests
 		private static string Source(string folder, string file)
 		{
 			return TestMain.ReadRepositoryText(Path.Combine(folder, file));
+		}
+
+		private static string NetworksSource()
+		{
+			return string.Join("\n", new[]
+			{
+				Source("Simulation/City", "KingdomNetworks.Declarations.cs"),
+				Source("Simulation/City", "KingdomNetworks.cs"),
+				Source("Simulation/City", "KingdomNetworks.AttendanceAndStar.cs"),
+				Source("Simulation/City", "KingdomNetworks.GraphComposition.cs"),
+				Source("Simulation/City", "KingdomNetworks.GroundHelpers.cs")
+			});
+		}
+
+		private static string PresenceSource()
+		{
+			return string.Join("\n", new[]
+			{
+				Source("Growth", "KingdomConstructionPresence.cs"),
+				Source("Growth", "KingdomConstructionPresence.Helpers.cs")
+			});
 		}
 
 		private static string Between(string source, string startTerm, string endTerm)

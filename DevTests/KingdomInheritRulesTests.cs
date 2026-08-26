@@ -15,6 +15,15 @@ namespace ThousandAndFirst.Tests
 			return (KingdomRules.InheritedState)Rank;
 		}
 
+		private static void AssertDeclaredFields(Type Type, params string[] Expected)
+		{
+			FieldInfo[] fields = Type.GetFields(BindingFlags.Instance | BindingFlags.Public
+				| BindingFlags.NonPublic | BindingFlags.DeclaredOnly);
+			string[] actual = new string[fields.Length];
+			for (int i = 0; i < fields.Length; i++) actual[i] = fields[i].Name;
+			CollectionAssert.AreEqual(Expected, actual, Type.FullName);
+		}
+
 		private static KingdomInheritPlan Normalize(string[] Keys, int[] X, int[] Y, int[] Conditions)
 		{
 			KingdomInheritPlan plan;
@@ -697,6 +706,44 @@ namespace ThousandAndFirst.Tests
 			Assert.IsFalse(KingdomInheritRules.TryApplyState(source, KingdomRules.InheritedState.Held,
 				InterregnumRoll, out plan, out fault));
 			Assert.AreEqual(KingdomInheritFault.InterregnumRollOutOfRange, fault);
+		}
+
+		[Test]
+		public void PersistedEnumsAndDtoMetadataRemainExactAcrossSourceFamilies()
+		{
+			Assert.AreEqual(typeof(int), Enum.GetUnderlyingType(typeof(KingdomInheritWorkState)));
+			Assert.AreEqual(0, (int)KingdomInheritWorkState.Standing);
+			Assert.AreEqual(1, (int)KingdomInheritWorkState.Derelict);
+			Assert.AreEqual(2, (int)KingdomInheritWorkState.Rubble);
+			Assert.AreEqual(3, (int)KingdomInheritWorkState.Memory);
+
+			Assert.AreEqual(typeof(int), Enum.GetUnderlyingType(typeof(KingdomInheritFault)));
+			int[] faults = new int[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13 };
+			Array faultValues = Enum.GetValues(typeof(KingdomInheritFault));
+			Assert.AreEqual(faults.Length, faultValues.Length);
+			for (int i = 0; i < faults.Length; i++)
+				Assert.AreEqual(faults[i], Convert.ToInt32(faultValues.GetValue(i)));
+
+			Assert.AreEqual(typeof(int), Enum.GetUnderlyingType(typeof(KingdomInheritEngineCheck)));
+			CollectionAssert.AreEqual(new int[] { 0, 1, 2, 4, 8, 16 }, new int[]
+			{
+				(int)KingdomInheritEngineCheck.None,
+				(int)KingdomInheritEngineCheck.ConnectionCell,
+				(int)KingdomInheritEngineCheck.Terrain,
+				(int)KingdomInheritEngineCheck.ExistingObjects,
+				(int)KingdomInheritEngineCheck.Stairs,
+				(int)KingdomInheritEngineCheck.EntryToHeartPath
+			});
+
+			Assert.AreEqual("ThousandAndFirst.KingdomInheritWork", typeof(KingdomInheritWork).FullName);
+			Assert.AreEqual("ThousandAndFirst.KingdomInheritPlan", typeof(KingdomInheritPlan).FullName);
+			Assert.AreEqual("ThousandAndFirst.KingdomInheritPlacement", typeof(KingdomInheritPlacement).FullName);
+			AssertDeclaredFields(typeof(KingdomInheritWork), "Key", "X", "Y", "Condition", "State",
+				"ArchitectureSnapshot", "ArchitectureHash");
+			AssertDeclaredFields(typeof(KingdomInheritPlan), "_works", "Width", "Height");
+			AssertDeclaredFields(typeof(KingdomInheritPlacement), "_works", "EntryX", "EntryY",
+				"CairnX", "CairnY", "HeartX", "HeartY", "RemainingEngineChecks", "_streets",
+				"SpatialVersion");
 		}
 
 		[Test]

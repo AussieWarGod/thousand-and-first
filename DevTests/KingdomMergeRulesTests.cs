@@ -11,6 +11,69 @@ namespace ThousandAndFirst.Tests
 		// asserts what the tent costs; everything here asserts that whatever the tent costs, a
 		// second file that does not mention the cost cannot take it away.
 
+		[Test]
+		public void MergeDeclarationsKeepTheirPublicAbiAndDefaults()
+		{
+			Assert.AreEqual(typeof(int), System.Enum.GetUnderlyingType(typeof(MergeReach)));
+			CollectionAssert.AreEqual(new int[3] { 0, 1, 2 }, new int[3]
+			{
+				(int)MergeReach.Spent,
+				(int)MergeReach.Stamped,
+				(int)MergeReach.Read
+			});
+
+			System.Type[] declarations = new System.Type[4]
+			{
+				typeof(DraftAttribute), typeof(BuildingDraft), typeof(StandingWork), typeof(MergeOffer)
+			};
+			for (int i = 0; i < declarations.Length; i++)
+			{
+				Assert.IsTrue(declarations[i].IsPublic, declarations[i].FullName);
+				Assert.IsTrue(declarations[i].IsSealed, declarations[i].FullName);
+			}
+
+			CollectionAssert.AreEqual(new string[2] { "Name", "Value" },
+				FieldNames(typeof(DraftAttribute)));
+			CollectionAssert.AreEqual(new string[6]
+			{
+				"Key", "Origin", "Declarations", "Attributes", "Skins", "SkinKeysThisPass"
+			}, FieldNames(typeof(BuildingDraft)));
+			CollectionAssert.AreEqual(new string[3] { "Key", "SkinKey", "Raised" },
+				FieldNames(typeof(StandingWork)));
+			CollectionAssert.AreEqual(new string[8]
+			{
+				"Key", "Raised", "DisplayName", "SuccessorKey", "SkinKeys", "WearingSkinKey",
+				"WearingSkinWithdrawn", "Diverged"
+			}, FieldNames(typeof(MergeOffer)));
+
+			BuildingDraft draft = new BuildingDraft();
+			Assert.IsNull(draft.Key);
+			Assert.IsNull(draft.Origin);
+			Assert.AreEqual(1, draft.Declarations);
+			Assert.AreEqual(0, draft.Attributes.Count);
+			Assert.IsNull(draft.Skins);
+			Assert.AreEqual(0, draft.SkinKeysThisPass.Count);
+			MergeOffer offer = new MergeOffer();
+			Assert.AreEqual(0, offer.SkinKeys.Count);
+			Assert.IsFalse(offer.WearingSkinWithdrawn);
+			Assert.AreEqual(0, offer.Diverged.Count);
+
+			System.Reflection.ParameterInfo[] workCtor = typeof(StandingWork).GetConstructor(
+				new System.Type[3] { typeof(string), typeof(BuildingDraft), typeof(string) }).GetParameters();
+			Assert.IsNull(workCtor[2].DefaultValue);
+			System.Reflection.ParameterInfo[] draftCtor = typeof(BuildingDraft).GetConstructor(
+				new System.Type[2] { typeof(string), typeof(string) }).GetParameters();
+			Assert.IsNull(draftCtor[1].DefaultValue);
+		}
+
+		private static string[] FieldNames(System.Type type)
+		{
+			System.Reflection.FieldInfo[] fields = type.GetFields();
+			string[] names = new string[fields.Length];
+			for (int i = 0; i < fields.Length; i++) names[i] = fields[i].Name;
+			return names;
+		}
+
 		private static BuildingDraft Draft(string Key, params string[] Pairs)
 		{
 			BuildingDraft draft = new BuildingDraft(Key);

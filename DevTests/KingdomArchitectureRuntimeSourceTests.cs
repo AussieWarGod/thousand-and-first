@@ -27,7 +27,7 @@ namespace ThousandAndFirst.Tests
 
 		private static string Plot()
 		{
-			return TestMain.ReadRepositoryText(Path.Combine("Growth", "KingdomPlot2.cs"));
+			return KingdomPlot2LogicalSource.Read();
 		}
 
 		private static string Zoning()

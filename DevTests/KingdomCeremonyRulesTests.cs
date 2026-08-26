@@ -1,5 +1,8 @@
 ﻿#if TAF_TESTS
+using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Reflection;
 using NUnit.Framework;
 using ThousandAndFirst;
 
@@ -7,6 +10,58 @@ namespace ThousandAndFirst.Tests
 {
 	public class KingdomCeremonyRulesTests
 	{
+		[Test]
+		public void CeremonyAbiKeepsAuthorityAndNestedPatternDtosExact()
+		{
+			Type authority = typeof(KingdomCeremonyRules);
+			Assert.AreEqual("ThousandAndFirst.KingdomCeremonyRules", authority.FullName);
+			Assert.IsTrue(authority.IsPublic && authority.IsAbstract && authority.IsSealed);
+
+			AssertNestedFields(typeof(KingdomCeremonyRules.BuildingKnowledge),
+				"ThousandAndFirst.KingdomCeremonyRules+BuildingKnowledge",
+				new[] { "Key", "Knowledge", "Label" });
+			AssertNestedFields(typeof(KingdomCeremonyRules.ForeignDesign),
+				"ThousandAndFirst.KingdomCeremonyRules+ForeignDesign",
+				new[] { "BuildingKey", "LearnName", "Label" });
+
+			KingdomCeremonyRules.BuildingKnowledge knowledge = new KingdomCeremonyRules.BuildingKnowledge();
+			Assert.IsNull(knowledge.Key);
+			Assert.IsNull(knowledge.Knowledge);
+			Assert.IsNull(knowledge.Label);
+			KingdomCeremonyRules.ForeignDesign design = new KingdomCeremonyRules.ForeignDesign();
+			Assert.IsNull(design.BuildingKey);
+			Assert.IsNull(design.LearnName);
+			Assert.IsNull(design.Label);
+
+			FieldInfo categories = authority.GetField("TasteCategories",
+				BindingFlags.Public | BindingFlags.Static);
+			Assert.IsNotNull(categories);
+			Assert.AreEqual(typeof(string[]), categories.FieldType);
+			Assert.IsTrue(categories.IsInitOnly);
+			CollectionAssert.AreEqual(new[]
+			{
+				"food", "storage", "civic", "craft", "power", "faith", "memorial",
+				"housing", "defense", "knowledge"
+			}, KingdomCeremonyRules.TasteCategories);
+		}
+
+		[Test]
+		public void LogicalSourceKeepsOneOrderedPartialAuthorityAndNestedDtos()
+		{
+			string source = LogicalSource();
+			Assert.AreEqual(5, Count(source, "public static partial class KingdomCeremonyRules"));
+			Assert.AreEqual(1, Count(source, "public sealed class BuildingKnowledge"));
+			Assert.AreEqual(1, Count(source, "public sealed class ForeignDesign"));
+			Assert.Less(source.IndexOf("public static string SurveyorsPlanText", StringComparison.Ordinal),
+				source.IndexOf("public static bool IsAttended", StringComparison.Ordinal));
+			Assert.Less(source.IndexOf("public static bool IsAttended", StringComparison.Ordinal),
+				source.IndexOf("public static List<int> ChooseTastes", StringComparison.Ordinal));
+			Assert.Less(source.IndexOf("public static List<int> ChooseTastes", StringComparison.Ordinal),
+				source.IndexOf("public static void ChooseLeaderTraits", StringComparison.Ordinal));
+			Assert.Less(source.IndexOf("public static void ChooseLeaderTraits", StringComparison.Ordinal),
+				source.IndexOf("public static List<ForeignDesign> ForeignDesigns", StringComparison.Ordinal));
+		}
+
 		// --- SurveyorsPlanText: one template per family, tier and material slots, honest fallback
 
 		[TestCase("food", "table")]
@@ -656,6 +711,43 @@ namespace ThousandAndFirst.Tests
 			string clause = KingdomCeremonyRules.ShadeClause(3);
 			StringAssert.Contains("+3", clause);
 			StringAssert.Contains("notable", clause);
+		}
+
+		private static void AssertNestedFields(Type type, string fullName, string[] names)
+		{
+			Assert.AreEqual(fullName, type.FullName);
+			Assert.IsTrue(type.IsNestedPublic);
+			Assert.AreEqual(typeof(KingdomCeremonyRules), type.DeclaringType);
+			FieldInfo[] fields = type.GetFields(BindingFlags.Instance | BindingFlags.Public);
+			Array.Sort(fields, (a, b) => a.MetadataToken.CompareTo(b.MetadataToken));
+			CollectionAssert.AreEqual(names, Array.ConvertAll(fields, field => field.Name));
+			CollectionAssert.AreEqual(new[] { typeof(string), typeof(string), typeof(string) },
+				Array.ConvertAll(fields, field => field.FieldType));
+			foreach (FieldInfo field in fields) Assert.IsFalse(field.IsInitOnly, field.Name);
+		}
+
+		private static string LogicalSource()
+		{
+			return string.Join("\n", new[]
+			{
+				TestMain.ReadRepositoryText(Path.Combine("Experience", "KingdomCeremonyRules.cs")),
+				TestMain.ReadRepositoryText(Path.Combine("Experience", "KingdomCeremonyRules.Raising.cs")),
+				TestMain.ReadRepositoryText(Path.Combine("Experience", "KingdomCeremonyRules.Tastes.cs")),
+				TestMain.ReadRepositoryText(Path.Combine("Experience", "KingdomCeremonyRules.LeaderAndShade.cs")),
+				TestMain.ReadRepositoryText(Path.Combine("Experience", "KingdomCeremonyRules.PatternBook.cs"))
+			});
+		}
+
+		private static int Count(string source, string term)
+		{
+			int count = 0;
+			int at = 0;
+			while ((at = source.IndexOf(term, at, StringComparison.Ordinal)) >= 0)
+			{
+				count++;
+				at += term.Length;
+			}
+			return count;
 		}
 	}
 }

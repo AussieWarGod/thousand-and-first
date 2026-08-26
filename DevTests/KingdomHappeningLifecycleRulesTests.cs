@@ -88,6 +88,66 @@ namespace ThousandAndFirst.Tests
 			reader.ReadBytes(count);
 		}
 
+		private static string FieldShape(Type type)
+		{
+			System.Reflection.FieldInfo[] fields = type.GetFields(
+				System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+			string[] shape = new string[fields.Length];
+			for (int i = 0; i < fields.Length; i++)
+			{
+				shape[i] = fields[i].Name + ":" + fields[i].FieldType.Name;
+			}
+			return string.Join(",", shape);
+		}
+
+		[Test]
+		public void DeclarationsKeepExactBackingValuesFieldOrderAndDefaults()
+		{
+			Assert.AreEqual(typeof(byte), Enum.GetUnderlyingType(typeof(KingdomPhysicalHappeningKind)));
+			Assert.AreEqual("0:None,1:Wedding,2:Funeral,3:Feast,4:Raising",
+				string.Join(",", Array.ConvertAll((KingdomPhysicalHappeningKind[])Enum.GetValues(
+					typeof(KingdomPhysicalHappeningKind)), value => ((byte)value) + ":" + value)));
+			Assert.AreEqual(typeof(byte), Enum.GetUnderlyingType(typeof(KingdomHappeningLifecyclePhase)));
+			Assert.AreEqual("0:None,1:Prepared,2:Walking,3:Holding,4:Ready,5:Restoring",
+				string.Join(",", Array.ConvertAll((KingdomHappeningLifecyclePhase[])Enum.GetValues(
+					typeof(KingdomHappeningLifecyclePhase)), value => ((byte)value) + ":" + value)));
+			Assert.AreEqual(typeof(byte), Enum.GetUnderlyingType(typeof(KingdomHappeningSinkState)));
+			Assert.AreEqual("0:Pending,1:Attempting,2:Delivered,3:Skipped,4:Lost",
+				string.Join(",", Array.ConvertAll((KingdomHappeningSinkState[])Enum.GetValues(
+					typeof(KingdomHappeningSinkState)), value => ((byte)value) + ":" + value)));
+			Assert.AreEqual(typeof(byte), Enum.GetUnderlyingType(typeof(KingdomHappeningLifecycleFault)));
+			Assert.AreEqual("0:None,1:Malformed,2:UnsupportedVersion,3:OverBudget,4:Busy,5:WrongOperation,6:WrongPhase,7:SequenceExhausted,8:AlreadyCompleted",
+				string.Join(",", Array.ConvertAll((KingdomHappeningLifecycleFault[])Enum.GetValues(
+					typeof(KingdomHappeningLifecycleFault)), value => ((byte)value) + ":" + value)));
+			Assert.AreEqual(typeof(byte), Enum.GetUnderlyingType(typeof(KingdomHappeningResumeAction)));
+			Assert.AreEqual("0:Refuse,1:PreparePosts,2:WaitForArrival,3:BeginHold,4:WaitHold,5:Publish,6:WaitExternal,7:Restore",
+				string.Join(",", Array.ConvertAll((KingdomHappeningResumeAction[])Enum.GetValues(
+					typeof(KingdomHappeningResumeAction)), value => ((byte)value) + ":" + value)));
+
+			Assert.AreEqual("ResidentId:Int32,ObjectId:String,Name:String,Home:String,Anchor:String,OriginalX:Int32,OriginalY:Int32,TargetX:Int32,TargetY:Int32,PostWorkId:Int32,PostKind:Int32,Wanders:Boolean,WandersRandomly:Boolean,Staying:Boolean,Restored:Boolean",
+				FieldShape(typeof(KingdomHappeningParticipant)));
+			Assert.AreEqual("Kind:KingdomPhysicalHappeningKind,SubjectA:Int32,SubjectB:Int32",
+				FieldShape(typeof(KingdomHappeningSemanticReceipt)));
+			Assert.AreEqual("EventId:String,Kind:KingdomPhysicalHappeningKind,EventTick:Int64,SubjectA:Int32,SubjectB:Int32,Outcome:Int32,SettlementId:String,ZoneId:String,FixtureObjectId:String,FixtureBlueprint:String,FixtureX:Int32,FixtureY:Int32,Physical:Boolean,ExternalSemantic:Boolean,ChronicleAttended:String,ChronicleUnattended:String,LedgerAttended:String,LedgerUnattended:String,MessageAttended:String,MessageUnattended:String,Effect:String,DisplayName:String,PlanQuote:String,Participants:KingdomHappeningParticipant[]",
+				FieldShape(typeof(KingdomHappeningProposal)));
+			Assert.AreEqual("Sequence:Int32,EventId:String,Kind:KingdomPhysicalHappeningKind,Phase:KingdomHappeningLifecyclePhase,EventTick:Int64,StartedTick:Int64,UpdatedTick:Int64,HoldUntilTick:Int64,SubjectA:Int32,SubjectB:Int32,Outcome:Int32,SettlementId:String,ZoneId:String,FixtureObjectId:String,FixtureBlueprint:String,FixtureX:Int32,FixtureY:Int32,Physical:Boolean,ExternalSemantic:Boolean,Attended:Boolean,FixtureRestored:Boolean,ChronicleAttended:String,ChronicleUnattended:String,LedgerAttended:String,LedgerUnattended:String,MessageAttended:String,MessageUnattended:String,Effect:String,DisplayName:String,PlanQuote:String,Participants:KingdomHappeningParticipant[],ChronicleState:KingdomHappeningSinkState,ToldState:KingdomHappeningSinkState,EffectState:KingdomHappeningSinkState,LedgerState:KingdomHappeningSinkState,MessageState:KingdomHappeningSinkState",
+				FieldShape(typeof(KingdomHappeningOperation)));
+			Assert.AreEqual("Sequence:Int32,Active:KingdomHappeningOperation,SemanticReceipts:KingdomHappeningSemanticReceipt[]",
+				FieldShape(typeof(KingdomHappeningLifecycleBook)));
+
+			KingdomHappeningParticipant person = default(KingdomHappeningParticipant);
+			Assert.AreEqual(0, person.ResidentId);
+			Assert.IsNull(person.ObjectId);
+			Assert.IsFalse(person.Restored);
+			KingdomHappeningSemanticReceipt receipt = default(KingdomHappeningSemanticReceipt);
+			Assert.AreEqual(KingdomPhysicalHappeningKind.None, receipt.Kind);
+			Assert.AreEqual(0, receipt.SubjectA);
+			Assert.AreEqual(0, receipt.SubjectB);
+			Assert.AreEqual(0, KingdomHappeningLifecycleBook.Empty.Sequence);
+			Assert.IsNull(KingdomHappeningLifecycleBook.Empty.Active);
+			Assert.AreEqual(0, KingdomHappeningLifecycleBook.Empty.SemanticReceipts.Length);
+		}
+
 		[Test]
 		public void Open_FreezesParticipantsAndRefusesSecondOperation()
 		{

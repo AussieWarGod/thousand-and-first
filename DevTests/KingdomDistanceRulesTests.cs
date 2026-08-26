@@ -13,6 +13,34 @@ namespace ThousandAndFirst.Tests
 	/// </summary>
 	internal class KingdomDistanceRulesTests
 	{
+		[Test]
+		public void SplitDeclarationsPreserveEnumValuesAndNodeFieldOrder()
+		{
+			Assert.AreEqual(0, (int)KingdomZoneStep.North);
+			Assert.AreEqual(1, (int)KingdomZoneStep.South);
+			Assert.AreEqual(2, (int)KingdomZoneStep.East);
+			Assert.AreEqual(3, (int)KingdomZoneStep.West);
+			Assert.AreEqual(4, (int)KingdomZoneStep.Up);
+			Assert.AreEqual(5, (int)KingdomZoneStep.Down);
+			Assert.AreEqual(6, (int)KingdomZoneStep.None);
+
+			System.Reflection.FieldInfo[] fields = typeof(KingdomZoneNode).GetFields(
+				System.Reflection.BindingFlags.Instance
+				| System.Reflection.BindingFlags.NonPublic
+				| System.Reflection.BindingFlags.Public);
+			CollectionAssert.AreEqual(new string[]
+			{
+				"ZoneId", "GlobalX", "GlobalY", "Stratum", "Shaft"
+			}, Array.ConvertAll(fields, field => field.Name));
+
+			KingdomZoneNode node = default(KingdomZoneNode);
+			Assert.IsNull(node.ZoneId);
+			Assert.AreEqual(0, node.GlobalX);
+			Assert.AreEqual(0, node.GlobalY);
+			Assert.AreEqual(0, node.Stratum);
+			Assert.IsFalse(node.Shaft);
+		}
+
 		private static KingdomZoneNode Node(string id, int x, int y, int z)
 		{
 			return new KingdomZoneNode(id, x, y, z);

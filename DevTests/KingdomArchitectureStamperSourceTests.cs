@@ -10,13 +10,12 @@ namespace ThousandAndFirst.Tests
 	{
 		private static string Stamper()
 		{
-			return TestMain.ReadRepositoryText(
-				Path.Combine("Growth", "KingdomArchitectureStamper.cs"));
+			return KingdomArchitectureStamperLogicalSource.Read();
 		}
 
 		private static string Plot()
 		{
-			return TestMain.ReadRepositoryText(Path.Combine("Growth", "KingdomPlot2.cs"));
+			return KingdomPlot2LogicalSource.Read();
 		}
 
 		private static string Upgrade()
@@ -32,6 +31,36 @@ namespace ThousandAndFirst.Tests
 		private static string Materials()
 		{
 			return TestMain.ReadRepositoryText(Path.Combine("Growth", "KingdomMaterials.cs"));
+		}
+
+		[Test]
+		public void LogicalAuthorityKeepsReceiptAbiAndMethodOrder()
+		{
+			string source = Stamper();
+			StringAssert.Contains("public static partial class KingdomArchitectureStamper", source);
+			AssertOrdered(source,
+				"public const int LayoutSchema = 1;",
+				"public const int ComponentSchema = 1;",
+				"public const int MaxFailureChars = 512;",
+				"private const int MaxLotIdChars = 256;",
+				"public const string SchemaProperty = \"r_TAF_LayoutSchema\";",
+				"public const string OutputStatePrefix = \"r_TAF_LayoutOutputState_\";",
+				"public const string ComponentSchemaProperty = \"r_TAF_LayoutComponentSchema\";",
+				"public const int UpgradeSchema = 1;",
+				"public const string UpgradeRetainPrefix = \"r_TAF_LayoutUpgradeRetain_\";");
+			AssertOrdered(source, "public static bool TryPreflight(",
+				"public static bool TryPreflightUpgrade(",
+				"public static bool TryPreflightStrike(",
+				"public static bool TryValidateFrozenUpgrade(",
+				"public static bool TryInitializeOwner(",
+				"public static bool TryStageLayer(",
+				"private static bool TryVerifyLayer(",
+				"private static bool TryPlacementClaim(",
+				"private static bool TryAuthorizedTransition(",
+				"private static bool TryBeginUpgradeReceipt(",
+				"private static bool TryBlueprintPassAudit(",
+				"private static bool TryRollbackNewLayout(",
+				"private static string Bounded(");
 		}
 
 		[Test]

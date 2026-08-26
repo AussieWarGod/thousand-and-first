@@ -44,6 +44,66 @@ namespace ThousandAndFirst.Tests
 			Assert.AreEqual(KingdomExtensionVerdict.RefusedAhead, KingdomApiRules.Judge(Mod, KingdomApiRules.Version + 1, true));
 		}
 
+		[Test]
+		public void RulesAndVerdictKeepExactPublicAbi()
+		{
+			System.Type rules = typeof(KingdomApiRules);
+			Assert.AreEqual("ThousandAndFirst.Api.KingdomApiRules", rules.FullName);
+			Assert.IsTrue(rules.IsPublic && rules.IsAbstract && rules.IsSealed);
+
+			System.Type verdict = typeof(KingdomExtensionVerdict);
+			Assert.AreEqual("ThousandAndFirst.Api.KingdomExtensionVerdict", verdict.FullName);
+			Assert.AreEqual(typeof(byte), System.Enum.GetUnderlyingType(verdict));
+			CollectionAssert.AreEqual(new string[]
+			{
+				"Accepted", "RefusedNoVersion", "RefusedAhead", "RefusedBehind",
+				"RefusedNoContract", "RefusedUnnamed", "RefusedThrew",
+				"RefusedNamespaceCollision"
+			}, System.Enum.GetNames(verdict));
+			System.Array values = System.Enum.GetValues(verdict);
+			for (int i = 0; i < values.Length; i++)
+			{
+				Assert.AreEqual(i, (int)(KingdomExtensionVerdict)values.GetValue(i));
+			}
+
+			System.Reflection.MethodInfo[] methods = rules.GetMethods(
+				System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static |
+				System.Reflection.BindingFlags.DeclaredOnly);
+			string[] actual = new string[methods.Length];
+			for (int i = 0; i < methods.Length; i++)
+			{
+				System.Reflection.ParameterInfo[] parameters = methods[i].GetParameters();
+				string[] parameterTypes = new string[parameters.Length];
+				for (int j = 0; j < parameters.Length; j++)
+				{
+					parameterTypes[j] = parameters[j].ParameterType.FullName;
+				}
+				actual[i] = methods[i].Name + "(" + string.Join(",", parameterTypes) + ")->"
+					+ methods[i].ReturnType.FullName;
+			}
+			string[] expected = new string[]
+			{
+				"BehaviourIdentifier(System.String,System.Boolean)->System.String",
+				"ExtensionKey(System.String,System.String)->System.String",
+				"IdentityAffinity(System.Int32)->System.Int32",
+				"IdentityKey(System.String,System.String)->System.String",
+				"IdentityName(System.String)->System.String",
+				"IdentityWorkKind(System.String)->System.String",
+				"Judge(System.String,System.Int32,System.Boolean)->ThousandAndFirst.Api.KingdomExtensionVerdict",
+				"Judge(System.String,System.Int32,System.Boolean,System.Int32)->ThousandAndFirst.Api.KingdomExtensionVerdict",
+				"Kind(System.String)->System.String",
+				"RefusalLine(ThousandAndFirst.Api.KingdomExtensionVerdict,System.String,System.Int32)->System.String",
+				"RefusalLine(ThousandAndFirst.Api.KingdomExtensionVerdict,System.String,System.Int32,System.Int32)->System.String",
+				"Slug(System.String)->System.String",
+				"Trim(System.String)->System.String",
+				"Trim(System.String,System.Int32)->System.String",
+				"TryStream(System.String,System.String,System.String&)->System.Boolean"
+			};
+			System.Array.Sort(actual, System.StringComparer.Ordinal);
+			System.Array.Sort(expected, System.StringComparer.Ordinal);
+			CollectionAssert.AreEqual(expected, actual);
+		}
+
 		/// <summary>
 		/// Every version in the supported window is admitted, not just the newest. STANDARDS §9
 		/// promises a supported contract keeps working for at least one minor cycle after it

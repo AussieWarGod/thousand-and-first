@@ -1,4 +1,7 @@
 #if TAF_TESTS
+using System;
+using System.IO;
+using System.Reflection;
 using NUnit.Framework;
 using ThousandAndFirst.Simulation.City;
 
@@ -11,6 +14,84 @@ namespace ThousandAndFirst.Tests
 	/// </summary>
 	public class KingdomLogisticsRulesTests
 	{
+		[Test]
+		public void LogisticsAbiKeepsEnumTypesAndReadonlyRowShapes()
+		{
+			Assert.AreEqual(typeof(byte), Enum.GetUnderlyingType(typeof(KingdomScalarReceiptAction)));
+			CollectionAssert.AreEqual(new[] { "Refuse", "Apply", "AlreadyApplied", "ContinueFood", "Interference" },
+				Enum.GetNames(typeof(KingdomScalarReceiptAction)));
+			Assert.AreEqual(0, (byte)KingdomScalarReceiptAction.Refuse);
+			Assert.AreEqual(1, (byte)KingdomScalarReceiptAction.Apply);
+			Assert.AreEqual(2, (byte)KingdomScalarReceiptAction.AlreadyApplied);
+			Assert.AreEqual(3, (byte)KingdomScalarReceiptAction.ContinueFood);
+			Assert.AreEqual(4, (byte)KingdomScalarReceiptAction.Interference);
+			Assert.AreEqual("ThousandAndFirst.Simulation.City.KingdomScalarReceiptAction", typeof(KingdomScalarReceiptAction).FullName);
+			Assert.AreEqual("ThousandAndFirst.Simulation.City.KingdomScalarReceiptRules", typeof(KingdomScalarReceiptRules).FullName);
+			Assert.AreEqual("ThousandAndFirst.Simulation.City.KingdomHolderRow", typeof(KingdomHolderRow).FullName);
+			Assert.AreEqual("ThousandAndFirst.Simulation.City.KingdomTripPlan", typeof(KingdomTripPlan).FullName);
+			Assert.AreEqual("ThousandAndFirst.Simulation.City.KingdomLogisticsRequest", typeof(KingdomLogisticsRequest).FullName);
+			Assert.AreEqual("ThousandAndFirst.Simulation.City.KingdomLogisticsSnapshotPlan", typeof(KingdomLogisticsSnapshotPlan).FullName);
+			Assert.IsFalse(typeof(KingdomScalarReceiptAction).IsPublic);
+			Assert.IsTrue(typeof(KingdomScalarReceiptRules).IsAbstract && typeof(KingdomScalarReceiptRules).IsSealed);
+
+			AssertFields(typeof(KingdomHolderRow), true,
+				new[] { "HolderId", "ZoneIndex", "WorkSlot", "DedicationOrdinal", "Holds", "Amount" },
+				new[] { typeof(int), typeof(int), typeof(int), typeof(int), typeof(KingdomStockKind), typeof(long) });
+			AssertFields(typeof(KingdomTripPlan), true,
+				new[] { "Order", "StopCount", "Cells", "Operations", "Improvements" },
+				new[] { typeof(int[]), typeof(int), typeof(int), typeof(int), typeof(int) });
+			AssertFields(typeof(KingdomLogisticsRequest), true,
+				new[] { "JobId", "SourceEndpointId", "SourceZoneIndex", "DestinationEndpointId", "DestinationZoneIndex", "Cargo", "Load", "SourceToDestinationCells", "ZoneRoute", "ZoneRouteCount", "CargoAuthority", "OwnerOperationId" },
+				new[] { typeof(int), typeof(int), typeof(int), typeof(int), typeof(int), typeof(KingdomStockKind), typeof(int), typeof(int), typeof(int[]), typeof(int), typeof(KingdomDeliveryCargoAuthority), typeof(string) });
+			AssertFields(typeof(KingdomLogisticsSnapshotPlan), false,
+				new[] { "ConsideredCount", "TripCount", "Operations", "TripIndexes", "TripLeaderJobIds", "StopOrdinals", "TripLoads", "TripStops" },
+				new[] { typeof(int), typeof(int), typeof(int), typeof(int[]), typeof(int[]), typeof(int[]), typeof(long[]), typeof(int[]) });
+
+			KingdomLogisticsRequest request = new KingdomLogisticsRequest(1, 2, 3, 4, 5,
+				KingdomStockKind.Water, 6, 7, new[] { 3, 5 }, 2);
+			Assert.AreEqual(KingdomDeliveryCargoAuthority.ScalarStock, request.CargoAuthority);
+			Assert.IsNull(request.OwnerOperationId);
+		}
+
+		[Test]
+		public void ScalarReceiptRecoveryKeepsExactVerdictTransitions()
+		{
+			KingdomScalarReceiptAction action;
+			Assert.IsTrue(KingdomScalarReceiptRules.TryRecover(KingdomStockKind.Water, 10L, 2,
+				10L, true, 0, out action));
+			Assert.AreEqual(KingdomScalarReceiptAction.Apply, action);
+			Assert.IsTrue(KingdomScalarReceiptRules.TryRecover(KingdomStockKind.Water, 10L, 2,
+				12L, true, 0, out action));
+			Assert.AreEqual(KingdomScalarReceiptAction.AlreadyApplied, action);
+			Assert.IsTrue(KingdomScalarReceiptRules.TryRecover(KingdomStockKind.Food, 10L, 3,
+				11L, true, 1, out action));
+			Assert.AreEqual(KingdomScalarReceiptAction.ContinueFood, action);
+			Assert.IsTrue(KingdomScalarReceiptRules.TryRecover(KingdomStockKind.Food, 10L, 3,
+				13L, true, 3, out action));
+			Assert.AreEqual(KingdomScalarReceiptAction.AlreadyApplied, action);
+			Assert.IsTrue(KingdomScalarReceiptRules.TryRecover(KingdomStockKind.Food, 10L, 3,
+				10L, false, 0, out action));
+			Assert.AreEqual(KingdomScalarReceiptAction.Interference, action);
+		}
+
+		[Test]
+		public void LogicalSourceKeepsOneOrderedPlanningAuthority()
+		{
+			string source = LogicalSource();
+			Assert.AreEqual(4, Count(source, "internal static partial class KingdomLogisticsRules"));
+			Assert.AreEqual(1, Count(source, "internal static class KingdomScalarReceiptRules"));
+			Assert.AreEqual(1, Count(source, "internal readonly struct KingdomHolderRow"));
+			Assert.AreEqual(1, Count(source, "internal readonly struct KingdomTripPlan"));
+			Assert.AreEqual(1, Count(source, "internal readonly struct KingdomLogisticsRequest"));
+			Assert.AreEqual(1, Count(source, "internal sealed class KingdomLogisticsSnapshotPlan"));
+			Assert.Less(source.IndexOf("internal static bool TryNearestHolder", StringComparison.Ordinal),
+				source.IndexOf("internal static bool TryPlanSnapshot", StringComparison.Ordinal));
+			Assert.Less(source.IndexOf("internal static bool TryPlanSnapshot", StringComparison.Ordinal),
+				source.IndexOf("internal static bool TryPlanTrip", StringComparison.Ordinal));
+			Assert.Less(source.IndexOf("internal static bool TryPlanTrip", StringComparison.Ordinal),
+				source.IndexOf("private static bool Eligible", StringComparison.Ordinal));
+		}
+
 		private static KingdomHolderRow Holder(int id, int zone, int ordinal, KingdomStockKind kind, long amount)
 		{
 			return new KingdomHolderRow(id, zone, -1, ordinal, kind, amount);
@@ -398,6 +479,43 @@ namespace ThousandAndFirst.Tests
 			Assert.AreEqual(0, plan.StopCount);
 			Assert.AreEqual(0, plan.Cells);
 			Assert.AreEqual(0, plan.Operations);
+		}
+
+		private static void AssertFields(Type type, bool valueType, string[] names, Type[] types)
+		{
+			Assert.IsFalse(type.IsPublic, type.FullName);
+			Assert.AreEqual(valueType, type.IsValueType, type.FullName);
+			FieldInfo[] fields = type.GetFields(BindingFlags.Instance | BindingFlags.NonPublic);
+			Array.Sort(fields, (a, b) => a.MetadataToken.CompareTo(b.MetadataToken));
+			CollectionAssert.AreEqual(names, Array.ConvertAll(fields, field => field.Name), type.FullName);
+			CollectionAssert.AreEqual(types, Array.ConvertAll(fields, field => field.FieldType), type.FullName);
+			foreach (FieldInfo field in fields)
+				Assert.IsTrue(field.IsAssembly && field.IsInitOnly, type.FullName + "." + field.Name);
+		}
+
+		private static string LogicalSource()
+		{
+			return string.Join("\n", new[]
+			{
+				TestMain.ReadRepositoryText(Path.Combine("Simulation", "City", "KingdomLogisticsRules.ScalarReceipt.cs")),
+				TestMain.ReadRepositoryText(Path.Combine("Simulation", "City", "KingdomLogisticsRules.Declarations.cs")),
+				TestMain.ReadRepositoryText(Path.Combine("Simulation", "City", "KingdomLogisticsRules.cs")),
+				TestMain.ReadRepositoryText(Path.Combine("Simulation", "City", "KingdomLogisticsRules.SnapshotPlanning.cs")),
+				TestMain.ReadRepositoryText(Path.Combine("Simulation", "City", "KingdomLogisticsRules.TripPlanningAndAssertions.cs")),
+				TestMain.ReadRepositoryText(Path.Combine("Simulation", "City", "KingdomLogisticsRules.Helpers.cs"))
+			});
+		}
+
+		private static int Count(string source, string term)
+		{
+			int count = 0;
+			int at = 0;
+			while ((at = source.IndexOf(term, at, StringComparison.Ordinal)) >= 0)
+			{
+				count++;
+				at += term.Length;
+			}
+			return count;
 		}
 	}
 }

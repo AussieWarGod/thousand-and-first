@@ -668,15 +668,70 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void ReceiptDeclarationsAndCanonicalWireStayExact()
+		{
+			Assert.AreEqual(typeof(int), Enum.GetUnderlyingType(typeof(KingdomSealReceiptState)));
+			Assert.AreEqual("0:Reserved,1:Committed,2:Declined",
+				string.Join(",", Array.ConvertAll((KingdomSealReceiptState[])Enum.GetValues(
+					typeof(KingdomSealReceiptState)), value => ((int)value) + ":" + value)));
+
+			Type receiptType = typeof(KingdomSealReceipt);
+			Assert.IsTrue(receiptType.IsNotPublic);
+			Assert.IsTrue(receiptType.IsSealed);
+			string[] fields = new string[]
+				{ "LineageId", "LegacyId", "TargetGameId", "State", "WrittenTick" };
+			Type[] fieldTypes = new Type[]
+				{ typeof(string), typeof(string), typeof(string), typeof(KingdomSealReceiptState), typeof(long) };
+			Assert.AreEqual(fields.Length, receiptType.GetFields(
+				System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public).Length);
+			for (int i = 0; i < fields.Length; i++)
+			{
+				System.Reflection.FieldInfo field = receiptType.GetField(fields[i],
+					System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public);
+				Assert.IsNotNull(field, fields[i]);
+				Assert.AreEqual(fieldTypes[i], field.FieldType, fields[i]);
+			}
+
+			KingdomSealReceipt defaults = new KingdomSealReceipt();
+			Assert.AreEqual("", defaults.LineageId);
+			Assert.AreEqual("", defaults.LegacyId);
+			Assert.AreEqual("", defaults.TargetGameId);
+			Assert.AreEqual(KingdomSealReceiptState.Reserved, defaults.State);
+			Assert.AreEqual(0L, defaults.WrittenTick);
+
+			KingdomSealReceipt receipt = new KingdomSealReceipt
+			{
+				LineageId = "dynasty",
+				LegacyId = "legacy",
+				TargetGameId = "target",
+				State = KingdomSealReceiptState.Reserved,
+				WrittenTick = 1
+			};
+			const string expected = "taf-seal 5\nsha256 41e278d968db5766d26f22cdda991100d8c35734eefd1c551922a2c6c23911df\nlength 105\n{\"kind\":\"receipt\",\"lineage\":\"dynasty\",\"legacy\":\"legacy\",\"target\":\"target\",\"state\":\"reserved\",\"written\":1}\n";
+			Assert.AreEqual(expected, receipt.Compose());
+
+			KingdomSealReceipt parsed;
+			Assert.IsTrue(KingdomSealReceipt.TryParse(expected, out parsed));
+			Assert.AreEqual("dynasty", parsed.LineageId);
+			Assert.AreEqual("legacy", parsed.LegacyId);
+			Assert.AreEqual("target", parsed.TargetGameId);
+			Assert.AreEqual(KingdomSealReceiptState.Reserved, parsed.State);
+			Assert.AreEqual(1L, parsed.WrittenTick);
+		}
+
+		[Test]
 		public void ReceiptParserRejectsWrongKindEmptyTargetAndWrongWrittenKind()
 		{
 			KingdomSealBody wrongKind = ReceiptBody("record", "target", false);
 			KingdomSealBody emptyTarget = ReceiptBody("receipt", "", false);
 			KingdomSealBody wrongWritten = ReceiptBody("receipt", "target", true);
 			KingdomSealReceipt receipt;
-			Assert.IsFalse(KingdomSealReceipt.TryParse(KingdomSealFormat.Compose(2, wrongKind), out receipt));
-			Assert.IsFalse(KingdomSealReceipt.TryParse(KingdomSealFormat.Compose(2, emptyTarget), out receipt));
-			Assert.IsFalse(KingdomSealReceipt.TryParse(KingdomSealFormat.Compose(2, wrongWritten), out receipt));
+			Assert.IsFalse(KingdomSealReceipt.TryParse(KingdomSealFormat.Compose(
+				KingdomSealRecord.CurrentSchema, wrongKind), out receipt));
+			Assert.IsFalse(KingdomSealReceipt.TryParse(KingdomSealFormat.Compose(
+				KingdomSealRecord.CurrentSchema, emptyTarget), out receipt));
+			Assert.IsFalse(KingdomSealReceipt.TryParse(KingdomSealFormat.Compose(
+				KingdomSealRecord.CurrentSchema, wrongWritten), out receipt));
 			Assert.IsTrue(KingdomSealReceipt.ValidId("safe-ID_2"));
 			Assert.IsFalse(KingdomSealReceipt.ValidId("unsafe.id"));
 			Assert.IsFalse(KingdomSealReceipt.ValidId("unsafe:id"));

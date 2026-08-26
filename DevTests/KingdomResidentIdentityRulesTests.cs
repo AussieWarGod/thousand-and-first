@@ -186,7 +186,7 @@ namespace ThousandAndFirst.Tests
 			string qol = TestMain.ReadRepositoryText(Path.Combine("Core", "KingdomQolResidents.cs"));
 			StringAssert.Contains("Resident.HasTagOrProperty(\"Gigantic\")", qol);
 
-			string system = TestMain.ReadRepositoryText(Path.Combine("Core", "KingdomSystem.cs"));
+			string system = KingdomSystemLogicalSource.Read();
 			StringAssert.Contains("KingdomResidentIdentity.Reconcile(this, survey.Settlers)", system);
 			StringAssert.Contains("KingdomResearch.ApplySources(this)", system);
 			string offices = TestMain.ReadRepositoryText(Path.Combine("Experience",
@@ -215,7 +215,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void ActiveResearchRechecksLiveDoorsWithoutErasingAccrual()
 		{
-			string source = TestMain.ReadRepositoryText(Path.Combine("Growth", "KingdomResearch.cs"));
+			string source = KingdomResearchLogicalSource.Read();
 			int advance = source.IndexOf("public static long Advance(", StringComparison.Ordinal);
 			int stall = source.IndexOf("private static void Stall(", advance,
 				StringComparison.Ordinal);

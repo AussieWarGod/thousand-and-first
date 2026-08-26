@@ -38,8 +38,8 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void RuntimeHook_RegistersInitialVanillaRiteAndRoutesItThroughResearch()
 		{
-			string source = ReadRepoSource("Core/KingdomSystem.cs");
-			StringAssert.Contains("public class KingdomSystem : IPlayerSystem", source,
+			string source = KingdomSystemLogicalSource.Read();
+			StringAssert.Contains("public partial class KingdomSystem : IPlayerSystem", source,
 				"the ritual event is dispatched to the player body, not to the game");
 			int registration = source.IndexOf("public override void RegisterPlayer", StringComparison.Ordinal);
 			Assert.GreaterOrEqual(registration, 0);
@@ -293,6 +293,48 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void RuntimeSeedReceiptRefusesBeforeWriteAndPublishesBeforeBenchCredit()
+		{
+			string source = ReadRepoSource("Growth/KingdomResearch.cs");
+			int seed = source.IndexOf("internal static bool SeedFromSource(",
+				StringComparison.Ordinal);
+			int seedEnd = source.IndexOf("private static bool SeedBySources(", seed,
+				StringComparison.Ordinal);
+			Assert.GreaterOrEqual(seed, 0);
+			Assert.Greater(seedEnd, seed);
+			string seedBody = source.Substring(seed, seedEnd - seed);
+			int gate = seedBody.IndexOf("!TryGetNode(Key, out node)", StringComparison.Ordinal);
+			int receipt = seedBody.IndexOf("ApplySeedSourceReceipt(System, node.Key, ConcreteSource)",
+				StringComparison.Ordinal);
+			int credit = seedBody.IndexOf("sourceCount > 0 && SeedBySources(",
+				StringComparison.Ordinal);
+			Assert.GreaterOrEqual(gate, 0);
+			Assert.Greater(receipt, gate, "all semantic refusals must precede receipt mutation");
+			Assert.Greater(credit, receipt, "durable receipt must precede bench credit");
+
+			int apply = source.IndexOf("private static int ApplySeedSourceReceipt(",
+				StringComparison.Ordinal);
+			int applyEnd = source.IndexOf("private static int SeedSourceCount(", apply,
+				StringComparison.Ordinal);
+			Assert.GreaterOrEqual(apply, 0);
+			Assert.Greater(applyEnd, apply);
+			string applyBody = source.Substring(apply, applyEnd - apply);
+			int merge = applyBody.IndexOf("KingdomResearchRules.TryApplySeedReceipt(",
+				StringComparison.Ordinal);
+			int changed = applyBody.IndexOf("if (changed)", merge, StringComparison.Ordinal);
+			int write = applyBody.IndexOf("The.Game.SetStringGameState(state, updated)", changed,
+				StringComparison.Ordinal);
+			int reproof = applyBody.IndexOf("The.Game.GetStringGameState(state, \"\")", write,
+				StringComparison.Ordinal);
+			int publish = applyBody.LastIndexOf("return count;", StringComparison.Ordinal);
+			Assert.GreaterOrEqual(merge, 0);
+			Assert.Greater(changed, merge);
+			Assert.Greater(write, changed);
+			Assert.Greater(reproof, write);
+			Assert.Greater(publish, reproof);
+		}
+
+		[Test]
 		public void FounderLedger_ExistsBeforeFoundingAndIsClearedForKingdomSuccession()
 		{
 			string source = ReadRepoSource("Core/KingdomLoader.cs");
@@ -300,7 +342,7 @@ namespace ThousandAndFirst.Tests
 			Assert.GreaterOrEqual(Occurrences(source, "RequireSystem<KingdomSystem>()"), 2,
 				"new games and loaded games must both own the player-scoped rite listener before founding");
 
-			source = ReadRepoSource("Experience/KingdomSuccession.cs");
+			source = KingdomSuccessionLogicalSource.Read();
 			int reset = source.IndexOf("private static bool TryResetPersonalKnowledge", StringComparison.Ordinal);
 			int resetEnd = source.IndexOf("\n\t\tprivate static void RevealRealmGround", reset,
 				StringComparison.Ordinal);
@@ -326,6 +368,8 @@ namespace ThousandAndFirst.Tests
 
 		private static string ReadRepoSource(string relative)
 		{
+			if (string.Equals(relative, "Growth/KingdomResearch.cs", StringComparison.Ordinal))
+				return KingdomResearchLogicalSource.Read();
 			return TestMain.ReadRepositoryText(relative);
 		}
 	}

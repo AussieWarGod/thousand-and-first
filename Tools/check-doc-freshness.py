@@ -11,7 +11,12 @@ import xml.etree.ElementTree as ET
 
 
 ROOT = Path(__file__).resolve().parent.parent
-FINAL_SUITE_CASES = "7,612"
+FINAL_SUITE_CASES = "7,695"
+PORTABLE_SUITE_CASES = "173"
+TOOLS_TEST_CASES = "33"
+ART_TEST_CASES = "19"
+HARDENING_DECOMPOSITIONS = "119"
+CUMULATIVE_DECOMPOSITIONS = "129"
 FOCUSED_SURVEY_CASES = 9
 
 
@@ -55,14 +60,26 @@ def catalogue_counts():
     return len(buildings), sum(bool(row.get("Plot")) for row in buildings), maps, variants
 
 
-def structure_counts():
-    payload = json.loads(
+def structure_report():
+    return json.loads(
         subprocess.check_output(
             [sys.executable, str(ROOT / "Tools" / "check-structure.py"), "--json"],
             cwd=ROOT,
             text=True,
         )
     )
+
+
+def cold_install_count():
+    paths = subprocess.check_output(
+        [str(ROOT / "Tools" / "stage.sh"), "list"], cwd=ROOT, text=True
+    )
+    return len(paths.splitlines())
+
+
+def structure_counts(payload=None):
+    if payload is None:
+        payload = structure_report()
     return (
         payload["files"],
         payload["over300"],
@@ -90,8 +107,51 @@ def audit_testing_labels(problems):
         problems.append("TESTING.md has ambiguous duplicate step IDs: " + "; ".join(details))
 
 
+def audit_source_citations(problems):
+    """Reject local file:line evidence that no longer exists after a source split."""
+    files = [path for path in ROOT.rglob("*") if path.is_file() and ".git" not in path.parts]
+    by_name = {}
+    for path in files:
+        by_name.setdefault(path.name, []).append(path)
+    pattern = re.compile(
+        r"`([^`\n]+?\.(?:cs|md|xml|py|sh|json)):(\d+)(?:-(\d+))?`",
+        re.IGNORECASE,
+    )
+    line_counts = {}
+    for document in (path for path in files if path.suffix.lower() == ".md"):
+        body = document.read_text(encoding="utf-8-sig", errors="replace")
+        for match in pattern.finditer(body):
+            raw = match.group(1).replace("\\", "/")
+            candidate = Path(raw)
+            if candidate.is_absolute():
+                resolved = candidate
+            elif (ROOT / candidate).is_file():
+                resolved = ROOT / candidate
+            elif "/" not in raw and len(by_name.get(raw, ())) == 1:
+                resolved = by_name[raw][0]
+            else:
+                continue
+            if not resolved.is_file():
+                continue
+            if resolved not in line_counts:
+                with resolved.open(encoding="utf-8-sig", errors="replace") as source:
+                    line_counts[resolved] = sum(1 for _ in source)
+            last = int(match.group(3) or match.group(2))
+            if last <= line_counts[resolved]:
+                continue
+            line = body.count("\n", 0, match.start()) + 1
+            relative = document.relative_to(ROOT)
+            problems.append(
+                f"{relative}:{line} has stale source citation {match.group(0)}; "
+                f"{resolved} has {line_counts[resolved]} lines"
+            )
+
+
 def audit_archive_contract(problems):
-    source = text("Core/KingdomArchivedSettlementCodec.cs")
+    source = "\n".join(
+        path.read_text(encoding="utf-8-sig")
+        for path in sorted((ROOT / "Core").glob("KingdomArchivedSettlementCodec*.cs"))
+    )
     expected = (
         "public const int CurrentVersion = HappeningCursorVersion;",
         "TryEncodeLegacyV1ForTests",
@@ -141,12 +201,21 @@ def audit_archive_contract(problems):
 
 def audit_public(problems):
     buildings, plots, maps, variants = catalogue_counts()
-    files, over300, exact300, at_or_over, over1000, over2000, over5000 = structure_counts()
+    report = structure_report()
+    files, over300, exact300, at_or_over, over1000, over2000, over5000 = structure_counts(
+        report
+    )
+    physical_lines = f"{report['physicalLines']:,}"
+    cold_install_files = cold_install_count()
+    direct_xrl = report["directXrlImports"]
+    large_direct_xrl = report["largeDirectXrlImports"]
+    inventory_sha = report["inventorySha256"]
 
     require(
         problems,
         "docs/STATUS.md",
         f"{files} sources, baseline and compatibility symbols",
+        f"{cold_install_files} files",
         f"{buildings} buildings",
         f"{plots} plotted buildings",
         f"{maps} maps",
@@ -158,8 +227,20 @@ def audit_public(problems):
         f"{FINAL_SUITE_CASES} / {FINAL_SUITE_CASES} cases",
         "Native Caves of Qud behavior",
         f"{files} staged C# files",
+        f"{physical_lines} physical lines",
         f"{over300} exceed 300 physical lines",
         "one is exactly 300" if exact300 == 1 else f"{exact300} are exactly 300",
+        f"therefore {at_or_over} fail the strict cap",
+        f"{over1000} exceed 1,000",
+        f"{over2000} exceed 2,000",
+        f"{over5000} exceed 5,000",
+        f"Direct `XRL` imports: {direct_xrl} files, {large_direct_xrl} over the line limit",
+        f"Inventory SHA-256: `{inventory_sha}`",
+        f"{HARDENING_DECOMPOSITIONS} additional oversized authorities",
+        f"{CUMULATIVE_DECOMPOSITIONS} cumulative",
+        f"{PORTABLE_SUITE_CASES} / {PORTABLE_SUITE_CASES} cases",
+        f"{TOOLS_TEST_CASES} tests",
+        f"{ART_TEST_CASES} tests",
         "structural release gate",
         "stock never grants an indefinite passive bonus",
         "VISION.md",
@@ -182,6 +263,11 @@ def audit_public(problems):
         "README.md",
         "Nine focused one-survey cases",
         f"final {FINAL_SUITE_CASES}-case",
+        f"{PORTABLE_SUITE_CASES}-case portable suite",
+        f"stages {files} production C# sources",
+        f"{cold_install_files}-file cold-install inventory",
+        f"decomposed {CUMULATIVE_DECOMPOSITIONS} oversized authorities",
+        f"{at_or_over} files still breach",
         "not a release candidate",
         "Plots are reservations, not buildings",
         "LotId",
@@ -191,6 +277,14 @@ def audit_public(problems):
         "docs/STATUS.md",
         "docs/STRUCTURE.md",
         "structural release gate",
+    )
+    forbid(
+        problems,
+        "README.md",
+        "final 7,635-case",
+        "stages 965 production C# sources",
+        "decomposed 76 oversized authorities",
+        "105 files still breach",
     )
 
     require(
@@ -230,13 +324,29 @@ def audit_public(problems):
         "TESTING.md",
         "Nine focused one-survey source-contract cases pass",
         f"{FINAL_SUITE_CASES} / {FINAL_SUITE_CASES} cases",
+        f"{PORTABLE_SUITE_CASES} / {PORTABLE_SUITE_CASES}",
+        f"Tools suite passes {TOOLS_TEST_CASES} tests",
+        f"Art suite passes {ART_TEST_CASES}",
+        f"across {files} production C# sources",
+        f"cold-install inventory contains {cold_install_files} files",
+        f"{at_or_over} staged sources breach the line cap",
         "one maintained `KingdomSurvey` classification",
         "no second whole-zone scan",
         "Current implementation limits and v1 scope gates",
         "AUTHOR-DEFERRED",
         "VISION.md",
     )
-    forbid(problems, "TESTING.md", "Known v0 limits", "7,537", "5 focused")
+    forbid(
+        problems,
+        "TESTING.md",
+        "Known v0 limits",
+        "7,537",
+        "5 focused",
+        "7,635 / 7,635 cases against",
+        "portable suite passes 171 / 171",
+        "Tools suite passes 31 tests",
+        "105 staged sources breach",
+    )
     audit_testing_labels(problems)
 
     require(
@@ -266,6 +376,17 @@ def audit_public(problems):
         "CHANGELOG.md",
         "One due settlement pass now owns one maintained zone survey",
         f"Current {files}-file census remains red",
+        f"{physical_lines} physical lines",
+        f"{over300} files exceed 300",
+        f"{over1000} exceed 1,000",
+        f"{over2000} exceed 2,000",
+        f"{over5000} exceed 5,000",
+        f"imports occur in {direct_xrl} files, {large_direct_xrl} of them over the line limit",
+        inventory_sha,
+        f"cold-install inventory contains {cold_install_files} files",
+        f"adds {HARDENING_DECOMPOSITIONS} semantic decompositions",
+        f"for {CUMULATIVE_DECOMPOSITIONS} oversized authorities",
+        "numeric lexical prefixes",
         f"{plots} plotted plans over {maps} inspectable authored maps",
         "Nine focused survey source-contract cases pass",
         f"passes {FINAL_SUITE_CASES} / {FINAL_SUITE_CASES} cases",
@@ -282,6 +403,11 @@ def audit_public(problems):
         "rejects local raster paths",
         "7,537",
         "5 focused",
+        "Current 965-file census remains red",
+        "7,635 / 7,635 full cases",
+        "171 / 171 portable cases",
+        "66 semantic decompositions",
+        "for 76 oversized authorities",
     )
 
     require(
@@ -324,6 +450,10 @@ def audit_public(problems):
         "One classified active-seat survey",
         "STATUS.md",
         "structural release contract",
+        f"covers {HARDENING_DECOMPOSITIONS} additional semantic decompositions",
+        f"{CUMULATIVE_DECOMPOSITIONS} oversized authorities",
+        "Numeric prefixes",
+        "canonical lexical staging order",
     )
     require(
         problems,
@@ -346,7 +476,44 @@ def audit_public(problems):
         "Tools/check-structure.py --report",
         "Tools/check-structure.py --release",
         "exact staged source inventory digest",
+        f"{files} staged production C# files",
+        f"{physical_lines} physical lines",
+        f"{over300} exceed 300 lines",
+        f"therefore {at_or_over} fail the strict cap",
+        f"{over1000} exceed 1,000",
+        f"{over2000} exceed 2,000",
+        f"{over5000} exceed 5,000",
+        f"{direct_xrl} files with direct `XRL` imports",
+        f"{large_direct_xrl} of those exceed the line limit",
+        inventory_sha,
+        f"decomposed {HARDENING_DECOMPOSITIONS} additional oversized authorities",
+        f"cumulative total to {CUMULATIVE_DECOMPOSITIONS}",
+        "Numeric lexical prefixes",
         "accepts no exceptions",
+    )
+    forbid(
+        problems,
+        "docs/STATUS.md",
+        "PASS** — 965 sources, baseline",
+        "965 staged C# files / 244,749 physical lines",
+        "7,635 / 7,635 cases",
+        "171 / 171 cases",
+        "PASS** — 31 tests",
+        "965-file census is red",
+    )
+    forbid(
+        problems,
+        "docs/STRUCTURE.md",
+        "reports 965 staged production C# files",
+        "105 exceed 300 lines",
+        "decomposed 66 additional oversized authorities",
+        "cumulative total to 76",
+    )
+    forbid(
+        problems,
+        "docs/ARCHITECTURE.md",
+        "covers 66 additional semantic decompositions",
+        "76 oversized authorities have been decomposed",
     )
     for relative in (
         "STANDARDS.md",
@@ -551,6 +718,7 @@ def main():
     audit_public(problems)
     audit_private(problems)
     audit_archive_contract(problems)
+    audit_source_citations(problems)
     if problems:
         print("DOCUMENTATION FRESHNESS FAILED")
         for problem in problems:

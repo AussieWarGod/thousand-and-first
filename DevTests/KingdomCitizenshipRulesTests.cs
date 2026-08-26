@@ -5,6 +5,35 @@ namespace ThousandAndFirst.Tests
 {
 	public class KingdomCitizenshipRulesTests
 	{
+		[Test]
+		public void CitizenshipPartKeepsExactSerializedFieldAbiAndDefaults()
+		{
+			string source = KingdomCitizenshipLogicalSource.Read();
+			StringAssert.Contains("namespace XRL.World.Parts", source);
+			StringAssert.Contains("[Serializable]", source);
+			StringAssert.Contains("public sealed class r_KingdomCitizenship : IPart", source);
+			StringAssert.Contains("namespace ThousandAndFirst", source);
+			StringAssert.Contains("public static partial class KingdomCitizenship", source);
+			string[] fields =
+			{
+				"public int ReceiptVersion;", "public KingdomCitizenshipPhase Phase;",
+				"public KingdomCitizenshipPriorKind PriorKind;", "public int PriorValue;",
+				"public int AppliedValue;", "public string OwnerRealmId = \"\";",
+				"public string OwnerSettlementId = \"\";", "public string FactionId = \"\";",
+				"public string BodyObjectId = \"\";", "public int EnrollmentReason;",
+				"public int RemovalReason;", "public long AppliedTick;",
+				"public long RemovedTick;", "public bool NoticePublished;",
+				"public string Fault = \"\";"
+			};
+			int prior = -1;
+			for (int i = 0; i < fields.Length; i++)
+			{
+				int at = source.IndexOf(fields[i], System.StringComparison.Ordinal);
+				Assert.Greater(at, prior, "citizenship field order " + i);
+				prior = at;
+			}
+		}
+
 		[TestCase(false, 0)]
 		[TestCase(true, -100)]
 		[TestCase(true, 0)]

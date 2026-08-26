@@ -9,6 +9,30 @@ namespace ThousandAndFirst.Tests
 {
 	public class KingdomInheritanceSpatialRulesTests
 	{
+		[Test]
+		public void NativeSpatialAdapterKeepsExactInternalAndNestedAbi()
+		{
+			string source = KingdomInheritanceSpatialLogicalSource.Read();
+			StringAssert.Contains("internal enum KingdomInheritanceSpatialCaptureResult", source);
+			StringAssert.Contains("Captured = 0", source);
+			StringAssert.Contains("Unavailable = 1", source);
+			StringAssert.Contains("Malformed = 2", source);
+			StringAssert.Contains("internal static partial class KingdomInheritanceSpatial", source);
+			StringAssert.Contains("private sealed class SourceWork", source);
+			string[] fields =
+			{
+				"internal int WorkId;", "internal string Blueprint;", "internal int X;",
+				"internal int Y;"
+			};
+			int prior = -1;
+			for (int i = 0; i < fields.Length; i++)
+			{
+				int at = source.IndexOf(fields[i], StringComparison.Ordinal);
+				Assert.Greater(at, prior, "source-work field order " + i);
+				prior = at;
+			}
+		}
+
 		private static ArchitectureLayoutSnapshot House()
 		{
 			MethodInfo compile = typeof(KingdomArchitectureRulesTests).GetMethod("Compile",

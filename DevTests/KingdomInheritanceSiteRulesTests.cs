@@ -1,4 +1,5 @@
 #if TAF_TESTS
+using System;
 using System.Collections.Generic;
 using NUnit.Framework;
 using ThousandAndFirst;
@@ -123,6 +124,38 @@ namespace ThousandAndFirst.Tests
 			KingdomInheritanceSiteCandidate candidate = Safe("JoppaWorld.2.2.1.1.10",
 				"TerrainSaltdunes", "", 0, 2);
 			Assert.IsFalse(KingdomInheritanceSiteRules.IsSafe(candidate));
+		}
+
+		[Test]
+		public void WorldExtensionLogicalSourceKeepsBuilderAndReservationOrder()
+		{
+			string source = KingdomInheritanceWorldExtensionLogicalSource.Read();
+			string[] ordered = new string[]
+			{
+				"[JoppaWorldBuilderExtension]",
+				"public sealed class KingdomInheritanceWorldExtension : IJoppaWorldBuilderExtension",
+				"state.TrySelectionInputs(out legacyId",
+				"new KingdomInheritanceWorldIndex(",
+				"KingdomInheritanceWorldRuntime.TryCandidate(Builder.WorldZone",
+				"KingdomInheritanceSiteRules.TrySelect(candidates",
+				"Builder.mutableMap.RemoveMutableLocation",
+				"state.StageSite(selected",
+				"internal sealed class KingdomInheritanceWorldIndex",
+				"internal sealed class ParasangFacts",
+				"internal static class KingdomInheritanceWorldRuntime"
+			};
+			int cursor = -1;
+			for (int i = 0; i < ordered.Length; i++)
+			{
+				int next = source.IndexOf(ordered[i], cursor + 1, StringComparison.Ordinal);
+				Assert.Greater(next, cursor, ordered[i]);
+				cursor = next;
+			}
+			StringAssert.Contains(
+				"RestoreRemoved(removedMap, removedX, removedY, removedTerrain);", source);
+			StringAssert.Contains(
+				"MetricsManager.LogError(\"ThousandAndFirst inheritance world extension\", ex);",
+				source);
 		}
 	}
 }

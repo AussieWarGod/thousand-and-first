@@ -1,6 +1,9 @@
 #if TAF_TESTS
 using System;
 using System.IO;
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.RegularExpressions;
 using NUnit.Framework;
 
 namespace ThousandAndFirst.Tests
@@ -24,9 +27,48 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void LogicalSystemPreservesCompletePublicFieldShapeAndAttributeCounts()
+		{
+			string source = KingdomSystemLogicalSource.Read();
+			MatchCollection fields = Regex.Matches(source,
+				@"^\t\tpublic (?!override\b)(?!static\b)([^\n{(]*?(?: = [^;\n]+)?;)\s*$",
+				RegexOptions.Multiline);
+			StringBuilder shape = new StringBuilder();
+			for (int i = 0; i < fields.Count; i++)
+			{
+				if (i > 0) shape.Append('\n');
+				shape.Append("public ").Append(fields[i].Groups[1].Value.Trim());
+			}
+			string hash;
+			using (SHA256 sha = SHA256.Create())
+			{
+				hash = BitConverter.ToString(sha.ComputeHash(
+					Encoding.UTF8.GetBytes(shape.ToString()))).Replace("-", "").ToLowerInvariant();
+			}
+			Assert.AreEqual(186, fields.Count);
+			Assert.AreEqual(
+				"c97a420e8c54abcb6df61a47ceebf59a6e9a4bb3460898511857d2bd6e1a00d0",
+				hash, "public field names, types, defaults, and declaration order are save ABI");
+			Assert.AreEqual(27,
+				Regex.Matches(source, "public partial class KingdomSystem").Count);
+			Assert.AreEqual(1, Regex.Matches(source, @"^\t\[Serializable\]$",
+				RegexOptions.Multiline).Count);
+			Assert.AreEqual(6, Regex.Matches(source, @"^\t\t\[NonSerialized\]$",
+				RegexOptions.Multiline).Count);
+			Assert.AreEqual(4, Regex.Matches(source, @"^\t\t\[Obsolete\(",
+				RegexOptions.Multiline).Count);
+			Assert.AreEqual(1, Regex.Matches(source,
+				@"^\t\tprivate sealed class CharterAbilityObservation$",
+				RegexOptions.Multiline).Count);
+			Assert.AreEqual(1, Regex.Matches(source,
+				@"^\t\tprivate sealed class CharterReferenceSnapshot$",
+				RegexOptions.Multiline).Count);
+		}
+
+		[Test]
 		public void SerializedFieldRemainsObsoleteProjectionAndRefreshesBeforeEverySave()
 		{
-			string source = Source(Path.Combine("Core", "KingdomSystem.cs"));
+			string source = KingdomSystemLogicalSource.Read();
 			int obsolete = source.IndexOf(
 				"[Obsolete(\"Use KingdomTrade.CurrentManifest(KingdomSystem).",
 				StringComparison.Ordinal);
@@ -52,7 +94,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void ColdLoadPreservesOnlyMismatchedOldEvidenceThenAlwaysRefreshesProjection()
 		{
-			string source = Source(Path.Combine("Core", "KingdomSystem.cs"));
+			string source = KingdomSystemLogicalSource.Read();
 			string normalize = Method(source, "private void NormalizeTradeBook()",
 				"internal void SynchronizeLegacyManifestProjection()");
 			StringAssert.Contains(
@@ -75,7 +117,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void LeasePublishesProjectionBeforeUnlockAndTradeHasNoDirectLegacyWrites()
 		{
-			string source = Source(Path.Combine("Trade", "KingdomTrade.cs"));
+			string source = KingdomTradeLogicalSource.Read();
 			string lease = Method(source, "public void Dispose()", "private sealed class TradeExileCoreSeal");
 			int synchronize = lease.IndexOf("System?.SynchronizeLegacyManifestProjection();",
 				StringComparison.Ordinal);
@@ -89,7 +131,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void StrikeDeliveryTurnbackAndLapsePublishAtDomainAndRetirementBoundaries()
 		{
-			string source = Source(Path.Combine("Trade", "KingdomTrade.cs"));
+			string source = KingdomTradeLogicalSource.Read();
 			string load = Method(source,
 				"private static bool TryLoadManifestCore(KingdomSystem System",
 				"public static KingdomManifest ExpireManifestIfStale");
@@ -139,7 +181,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void QuarantinePublishesBeforeCallbacksAndAgainAfterCleanup()
 		{
-			string source = Source(Path.Combine("Trade", "KingdomTrade.cs"));
+			string source = KingdomTradeLogicalSource.Read();
 			string quarantine = Method(source,
 				"private static void FinalizeQuarantine(KingdomSystem System",
 				"private static void SettleOutboxAsLost");
@@ -161,7 +203,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void ProjectionMapsEveryLegacyFieldFromAuthoritativeState()
 		{
-			string source = Source(Path.Combine("Trade", "KingdomTrade.cs"));
+			string source = KingdomTradeLogicalSource.Read();
 			string mapper = Method(source,
 				"internal static KingdomManifest LegacyManifestSnapshot(\n\t\t\tKingdomTradeManifestState Manifest)",
 				"internal static KingdomManifest LegacyManifestSnapshot(KingdomManifest Manifest)");

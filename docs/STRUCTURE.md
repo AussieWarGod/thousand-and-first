@@ -20,16 +20,19 @@ python3 Tools/check-structure.py --release
 
 ## Current hardening checkpoint
 
-`Tools/check-structure.py --json` currently reports 763 staged production C# files and 242,999
-physical lines. Of those, 122 exceed 300 lines, 0 are exactly 300, 56 exceed 1,000, 14 exceed
-2,000, and 2 exceed 5,000. Exact staged source inventory digest:
-`ce7e3de4e59985e4a8f2e12d85a54be89b19111b34e45639145e3159892df591`. The census reports
-191 files with direct `XRL` imports; 82 of those are at or over the line limit.
+`Tools/check-structure.py --json` currently reports 1307 staged production C# files and 248,807
+physical lines. Of those, 52 exceed 300 lines, 0 are exactly 300, and therefore 52 fail the strict
+cap; 28 exceed 1,000, 9 exceed 2,000, and 0 exceed 5,000. Exact staged source inventory digest:
+`9c3713897b2fbf9b7db455247a0ac20d31e75f0eb00edf5f4c57d3a310b10b21`. The census reports
+442 files with direct `XRL` imports; 49 of those exceed the line limit.
 
-The current wave semantically decomposed 49 additional oversized authorities, bringing the
-cumulative total to 59. [ARCHITECTURE.md](ARCHITECTURE.md#split-authority-map) maps the logical
-authorities to their current source families. This is measurable progress, not release signoff:
-122 line-cap failures and missing `docs/STRUCTURE_REVIEW.json` exact-inventory human review still
+The current hardening sequence semantically decomposed 119 additional oversized authorities,
+bringing the cumulative total to 129. That is 53 more decompositions than the prior documented
+checkpoint. [ARCHITECTURE.md](ARCHITECTURE.md#split-authority-map) maps the logical authorities to
+their current source families. Numeric lexical prefixes appear only where the canonical stage's
+filename order must preserve original declaration, reflection, or serialized-metadata order; they
+do not create a second authority. This is measurable progress, not release signoff: 52 line-cap
+failures and missing `docs/STRUCTURE_REVIEW.json` exact-inventory human review still
 block release. Any staged source change invalidates this digest and requires a new census and
 review binding.
 

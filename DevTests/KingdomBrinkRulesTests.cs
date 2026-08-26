@@ -24,6 +24,23 @@ namespace ThousandAndFirst.Tests
 		private const long Day = KingdomRules.TicksPerDay;
 
 		[Test]
+		public void BrinkDeclarationsKeepExactPublicAbiAndPersistedValues()
+		{
+			System.Type kind = typeof(BrinkKind);
+			Assert.AreEqual("ThousandAndFirst.BrinkKind", kind.FullName);
+			Assert.IsTrue(kind.IsPublic && kind.IsEnum);
+			Assert.AreEqual(typeof(int), System.Enum.GetUnderlyingType(kind));
+			Assert.AreEqual(1, (int)BrinkKind.Roof);
+			Assert.AreEqual(2, (int)BrinkKind.Creed);
+			Assert.AreEqual(3, (int)BrinkKind.City);
+			Assert.AreEqual(3, System.Enum.GetValues(kind).Length);
+
+			System.Type rules = typeof(KingdomBrinkRules);
+			Assert.AreEqual("ThousandAndFirst.KingdomBrinkRules", rules.FullName);
+			Assert.IsTrue(rules.IsPublic && rules.IsAbstract && rules.IsSealed);
+		}
+
+		[Test]
 		public void BrinkRecordKeepsPublicReadonlyAbi()
 		{
 			System.Type type = typeof(BrinkRecord);

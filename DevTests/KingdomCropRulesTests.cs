@@ -130,6 +130,21 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void SplitNestedEnumsRetainTheirFrozenNumericContract()
+		{
+			CollectionAssert.AreEqual(new int[] { 0, 1, 2 },
+				Array.ConvertAll((KingdomCropRules.PlotStage[])Enum.GetValues(
+					typeof(KingdomCropRules.PlotStage)), value => (int)value));
+			CollectionAssert.AreEqual(new int[] { 0, 1, 2, 3, 4 },
+				Array.ConvertAll((KingdomCropRules.FieldWant[])Enum.GetValues(
+					typeof(KingdomCropRules.FieldWant)), value => (int)value));
+			CollectionAssert.AreEqual(new int[] { 0, 1, 2, 3, 4, 5, 6 },
+				Array.ConvertAll((KingdomCropRules.SowVerdict[])Enum.GetValues(
+					typeof(KingdomCropRules.SowVerdict)), value => (int)value));
+			Assert.AreEqual(1, (int)KingdomCropRules.CropChannel.SeedReturn);
+		}
+
+		[Test]
 		public void EveryCycleQuantityIsPositive()
 		{
 			Assert.Greater(KingdomCropRules.PlantWaterCostDrams, 0);

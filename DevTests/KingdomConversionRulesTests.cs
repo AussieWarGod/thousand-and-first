@@ -18,6 +18,43 @@ namespace ThousandAndFirst.Tests
 	{
 		private const string City = "taf:settlement:test-city";
 
+		[Test]
+		public void ConversionDeclarationsKeepTheirExactPublicAbi()
+		{
+			System.Type rules = typeof(KingdomConversionRules);
+			Assert.AreEqual("ThousandAndFirst.KingdomConversionRules", rules.FullName);
+			Assert.IsTrue(rules.IsPublic && rules.IsAbstract && rules.IsSealed, "rules authority stopped being public static");
+
+			System.Type channel = typeof(ConversionChannel);
+			Assert.AreEqual("ThousandAndFirst.ConversionChannel", channel.FullName);
+			Assert.IsTrue(channel.IsPublic && channel.IsEnum);
+			Assert.AreEqual(typeof(int), System.Enum.GetUnderlyingType(channel));
+			Assert.AreEqual(1, (int)ConversionChannel.Osmosis);
+			Assert.AreEqual(2, (int)ConversionChannel.Culture);
+			Assert.AreEqual(3, (int)ConversionChannel.Shrine);
+			Assert.AreEqual(4, (int)ConversionChannel.Diplomacy);
+			Assert.AreEqual(4, System.Enum.GetValues(channel).Length, "conversion channel member set changed");
+
+			System.Type progress = typeof(ConversionProgress);
+			Assert.AreEqual("ThousandAndFirst.ConversionProgress", progress.FullName);
+			Assert.IsTrue(progress.IsPublic && progress.IsValueType);
+			Assert.IsNotNull(progress.GetConstructor(new[] { typeof(string), typeof(int) }));
+			System.Reflection.FieldInfo[] fields = progress.GetFields(
+				System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public |
+				System.Reflection.BindingFlags.DeclaredOnly);
+			Assert.AreEqual(2, fields.Length);
+			Assert.AreEqual("Creed", fields[0].Name);
+			Assert.AreEqual(typeof(string), fields[0].FieldType);
+			Assert.IsTrue(fields[0].IsInitOnly);
+			Assert.AreEqual("Shared", fields[1].Name);
+			Assert.AreEqual(typeof(int), fields[1].FieldType);
+			Assert.IsTrue(fields[1].IsInitOnly);
+			ConversionProgress empty = default(ConversionProgress);
+			Assert.IsNull(empty.Creed);
+			Assert.AreEqual(0, empty.Shared);
+			Assert.IsFalse(empty.Any);
+		}
+
 		private static Dictionary<string, int> Counts(params object[] Pairs)
 		{
 			Dictionary<string, int> counts = new Dictionary<string, int>();

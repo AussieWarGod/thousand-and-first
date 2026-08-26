@@ -1,5 +1,7 @@
 #if TAF_TESTS
+using System;
 using System.Collections.Generic;
+using System.Reflection;
 using NUnit.Framework;
 using ThousandAndFirst;
 
@@ -7,6 +9,124 @@ namespace ThousandAndFirst.Tests
 {
 	public class KingdomLabRulesTests
 	{
+		private static void AssertByteEnum(Type Type, string Expected)
+		{
+			Assert.AreEqual(typeof(byte), Enum.GetUnderlyingType(Type), Type.Name);
+			Assert.IsFalse(Type.IsNested, Type.Name);
+			Assert.AreEqual("ThousandAndFirst." + Type.Name, Type.FullName);
+			Assert.AreEqual(Type == typeof(KingdomPurposeVerdict), Type.IsPublic, Type.Name);
+			Array values = Enum.GetValues(Type);
+			List<string> actual = new List<string>();
+			foreach (object value in values)
+			{
+				actual.Add(Convert.ToByte(value) + ":" + Enum.GetName(Type, value));
+			}
+			Assert.AreEqual(Expected, string.Join(",", actual.ToArray()), Type.Name);
+		}
+
+		private static void AssertFields(Type Type, string[] Names, Type[] Types,
+			bool Readonly)
+		{
+			Assert.IsFalse(Type.IsNested, Type.Name);
+			Assert.IsTrue(Type.IsNotPublic, Type.Name);
+			Assert.AreEqual("ThousandAndFirst." + Type.Name, Type.FullName);
+			FieldInfo[] fields = Type.GetFields(BindingFlags.Instance | BindingFlags.Public
+				| BindingFlags.DeclaredOnly);
+			Assert.AreEqual(Names.Length, fields.Length, Type.Name);
+			for (int i = 0; i < Names.Length; i++)
+			{
+				Assert.AreEqual(Names[i], fields[i].Name, Type.Name + " field " + i);
+				Assert.AreEqual(Types[i], fields[i].FieldType, Names[i]);
+				Assert.AreEqual(Readonly, fields[i].IsInitOnly, Names[i]);
+			}
+		}
+
+		[Test]
+		public void ExtractedLabEnumsKeepExactByteAbi()
+		{
+			AssertByteEnum(typeof(KingdomVatSettlement),
+				"0:Wait,1:CreateOutput,2:ConsumeInput,3:CollectOutput,4:ReturnInput,5:Missing");
+			AssertByteEnum(typeof(KingdomVatOutputPhase),
+				"0:None,1:AddIntent,2:Added,3:Quarantined");
+			AssertByteEnum(typeof(KingdomVatRawPhase),
+				"0:Present,1:DestroyIntent,2:Destroyed,3:Quarantined");
+			AssertByteEnum(typeof(KingdomKeptSpendPhase),
+				"0:RefusedClean,1:ApplyCounts,2:Finalize,3:SpentExact,4:Partial");
+			AssertByteEnum(typeof(KingdomLabJobPhase),
+				"0:Funding,1:FundingRecovery,2:Working,3:Ready,4:Applying,5:ApplicationRecovery,6:Complete,7:Cancelled");
+			AssertByteEnum(typeof(KingdomLabRemovalPhase),
+				"0:Funding,1:FundingRecovery,2:Paid,3:Removing,4:RemovalRecovery,5:Removed,6:Complete,7:Quarantined,8:Cancelled");
+			AssertByteEnum(typeof(KingdomLabOwnedTargetState),
+				"0:Present,1:Absent,2:Uncertain");
+			AssertByteEnum(typeof(KingdomLabStandingPhase),
+				"0:Pending,1:Bound,2:Intent,3:Applied,4:Quarantined");
+			AssertByteEnum(typeof(KingdomLabMessagePhase),
+				"0:Pending,1:Intent,2:Delivered,3:Skipped,4:Lost");
+			AssertByteEnum(typeof(KingdomLabRegistryStatus),
+				"0:Active,1:Complete,2:Cancelled,3:Abandoned,4:Quarantined");
+			AssertByteEnum(typeof(KingdomVatOutputDecision),
+				"0:CreateAndFreeze,1:UseExact,2:QuarantineMissing,3:QuarantineMismatch");
+			AssertByteEnum(typeof(KingdomPurposeVerdict),
+				"0:Allowed,1:RefusedKept,2:RefusedUncrowned");
+		}
+
+		[Test]
+		public void ExtractedLabRowsKeepExactTopLevelFieldAbiAndDefaults()
+		{
+			Assert.IsTrue(typeof(KingdomVatAccrual).IsValueType);
+			Assert.IsTrue(typeof(KingdomKeptSpendStep).IsValueType);
+			Assert.IsTrue(typeof(KingdomLabJobAccrual).IsValueType);
+			Assert.IsTrue(typeof(KingdomLabWaterClaim).IsValueType);
+			Assert.IsTrue(typeof(KingdomKeptSpendPlan).IsSealed);
+			Assert.IsTrue(typeof(KingdomLabRegistryEntry).IsSealed);
+			AssertFields(typeof(KingdomVatAccrual),
+				new[] { "NextTick", "RemainingTicks", "WorkedTicks", "Complete" },
+				new[] { typeof(long), typeof(int), typeof(int), typeof(bool) }, true);
+			AssertFields(typeof(KingdomKeptSpendStep),
+				new[] { "Source", "Original", "Taken", "Remaining" },
+				new[] { typeof(int), typeof(int), typeof(int), typeof(int) }, true);
+			AssertFields(typeof(KingdomKeptSpendPlan), new[] { "Owed", "Steps" },
+				new[] { typeof(int), typeof(List<KingdomKeptSpendStep>) }, true);
+			AssertFields(typeof(KingdomLabJobAccrual),
+				new[] { "NextTick", "RemainingTicks", "WorkedTicks", "Phase" },
+				new[] { typeof(long), typeof(int), typeof(int), typeof(KingdomLabJobPhase) }, true);
+			AssertFields(typeof(KingdomLabWaterClaim),
+				new[] { "Paid", "Lost", "Outstanding", "Quarantined", "Settled" },
+				new[] { typeof(int), typeof(int), typeof(int), typeof(bool), typeof(bool) }, true);
+			AssertFields(typeof(KingdomLabRegistryEntry), new[] { "JobId", "BuildingId",
+				"PatientId", "GameId", "RealmId", "RealmFoundedTick", "ContractVersion",
+				"ProcedureKey", "Grants", "Source", "Attach", "Manager", "Detail",
+				"Fingerprint", "Status", "UpdatedTick" }, new[] { typeof(string), typeof(string),
+				typeof(string), typeof(string), typeof(string), typeof(long), typeof(int),
+				typeof(string), typeof(string), typeof(int), typeof(int), typeof(string),
+				typeof(string), typeof(string), typeof(KingdomLabRegistryStatus), typeof(long) },
+				false);
+
+			KingdomLabRegistryEntry row = new KingdomLabRegistryEntry();
+			Assert.AreEqual("", row.JobId);
+			Assert.AreEqual("", row.BuildingId);
+			Assert.AreEqual("", row.PatientId);
+			Assert.AreEqual("", row.GameId);
+			Assert.AreEqual("", row.RealmId);
+			Assert.AreEqual(0L, row.RealmFoundedTick);
+			Assert.AreEqual(0, row.ContractVersion);
+			Assert.AreEqual("", row.ProcedureKey);
+			Assert.AreEqual("", row.Grants);
+			Assert.AreEqual(-1, row.Source);
+			Assert.AreEqual(-1, row.Attach);
+			Assert.AreEqual("", row.Manager);
+			Assert.AreEqual("", row.Detail);
+			Assert.AreEqual("", row.Fingerprint);
+			Assert.AreEqual(KingdomLabRegistryStatus.Active, row.Status);
+			Assert.AreEqual(0L, row.UpdatedTick);
+
+			KingdomKeptSpendStep step = new KingdomKeptSpendStep(2, 7, 3);
+			Assert.AreEqual(2, step.Source);
+			Assert.AreEqual(7, step.Original);
+			Assert.AreEqual(3, step.Taken);
+			Assert.AreEqual(4, step.Remaining);
+		}
+
 		private static LabProcedure Procedure(string key, string cls = "II", string grants = "GasImmunity",
 			string creeds = null, int cost = 30, int staffDays = 8, int preserved = 1, string bits = "002")
 		{
@@ -1023,6 +1143,9 @@ namespace ThousandAndFirst.Tests
 		public void EffectContract_FingerprintFreezesEveryExecutionAxisAndSourceStamp()
 		{
 			KingdomLabRegistryEntry row = RegistryRow("job");
+			Assert.AreEqual("098548483c949f73",
+				KingdomLabRules.ExecutionStampFingerprint("source-stamp"));
+			Assert.AreEqual("d0036e413cbc5fd5", row.Fingerprint);
 			Assert.IsTrue(KingdomLabRules.ValidEffectContract(row.ContractVersion,
 				row.ProcedureKey, row.Grants, row.Source, row.Attach, row.Manager,
 				row.Fingerprint, row.Detail));
@@ -1064,6 +1187,10 @@ namespace ThousandAndFirst.Tests
 			KingdomLabRegistryEntry row = RegistryRow("job");
 			string serialized = KingdomLabRules.FormatRegistry(
 				new List<KingdomLabRegistryEntry> { row });
+			Assert.AreEqual("v1\nam9i|aGFsbC0x|cGF0aWVudC0x|Z2FtZS0x|cmVhbG0tMQ==|44|1|"
+				+ "c3BvcmVnaWxscw==|R2FzSW1tdW5pdHk=|0|0|VEFGOjpMYWI6OnNwb3JlZ2lsbHM=|"
+				+ "c3RhbXA6MDk4NTQ4NDgzYzk0OWY3Mw==|ZDAwMzZlNDEzY2JjNWZkNQ==|0|1",
+				serialized);
 			bool quarantined;
 			List<KingdomLabRegistryEntry> loaded = KingdomLabRules.ParseRegistry(serialized,
 				out quarantined);
@@ -1073,6 +1200,8 @@ namespace ThousandAndFirst.Tests
 				RequireActive: true));
 			Assert.AreEqual(row.Detail, loaded[0].Detail);
 			Assert.AreEqual(row.Fingerprint, loaded[0].Fingerprint);
+			Assert.AreEqual(serialized, KingdomLabRules.FormatRegistry(loaded),
+				"the canonical registry wire must survive decode and re-encode byte-for-byte");
 		}
 
 		[Test]
@@ -1217,6 +1346,32 @@ namespace ThousandAndFirst.Tests
 			bool bad;
 			Assert.IsTrue(KingdomLabRules.ReplayContains("not-a-proof", "old-job", out bad));
 			Assert.IsTrue(bad);
+		}
+
+		[Test]
+		public void ReplayProof_CanonicalWireIsIdempotentForAnExistingIdentity()
+		{
+			string first;
+			Assert.IsTrue(KingdomLabRules.AddReplayProof("", "apply:job-1", out first));
+			StringAssert.StartsWith("v1|1|", first);
+			string[] fields = first.Split('|');
+			Assert.AreEqual(3, fields.Length);
+			byte[] bits = Convert.FromBase64String(fields[2]);
+			Assert.AreEqual(KingdomLabRules.ReplayProofBytes, bits.Length);
+			Assert.AreEqual(32, bits[31]);
+			Assert.AreEqual(128, bits[102]);
+			Assert.AreEqual(64, bits[438]);
+			Assert.AreEqual(16, bits[484]);
+			int nonzero = 0;
+			for (int i = 0; i < bits.Length; i++) if (bits[i] != 0) nonzero++;
+			Assert.AreEqual(4, nonzero, "four salted replay bits define one stable identity");
+			string repeated;
+			Assert.IsTrue(KingdomLabRules.AddReplayProof(first, "apply:job-1", out repeated));
+			Assert.AreEqual(first, repeated);
+			bool malformed;
+			Assert.IsTrue(KingdomLabRules.ReplayContains(repeated, "apply:job-1",
+				out malformed));
+			Assert.IsFalse(malformed);
 		}
 
 		[Test]

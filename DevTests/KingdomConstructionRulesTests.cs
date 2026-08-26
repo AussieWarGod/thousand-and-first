@@ -987,7 +987,7 @@ namespace ThousandAndFirst.Tests
 		public void PlotOutputsAndFurnishingsPublishExactIdsBeforeAddCallbacks()
 		{
 			string root = LocateRepository();
-			string plot = File.ReadAllText(Path.Combine(root, "Growth", "KingdomPlot2.cs"));
+			string plot = KingdomPlot2LogicalSource.Read();
 			AssertOrdered(plot, "works = GameObject.Create", "UpdateOutput(ref Job, works.ID",
 				"cell.AddObject(works)");
 			AssertOrdered(plot, "UpdateFinalOutput(ref construction", "FinalOutputPending",
@@ -1001,10 +1001,35 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void ConstructionLogicalAuthorityKeepsReceiptAbiAndRecoveryOrder()
+		{
+			string source = KingdomConstructionLogicalSource.Read();
+			Assert.AreEqual(7, CountOf(source,
+				"public static partial class KingdomConstruction"));
+			AssertOrdered(source,
+				"public const string RegistryStateKey = \"r_TAF_ConstructionJobs\";",
+				"public const string ReceiptProperty = \"KingdomConstructionReceipt\";",
+				"public const string PaidBuildSchemaProperty = \"r_TAF_PaidBuildSchema\";",
+				"public const string PaidBuildWaterProperty = \"r_TAF_PaidBuildWater\";",
+				"public const string PaidBuildMaterialProperty = \"r_TAF_PaidBuildMaterial\";",
+				"public const string PaidBuildWorkProperty = \"r_TAF_PaidBuildWork\";",
+				"public const int PaidBuildSchema = 1;",
+				"private const int MaxLoadedLookupObjects = 4096;",
+				"private static bool Resolving;");
+			AssertOrdered(source, "public static bool FreezeBuildTruth(",
+				"public static string OwnerOf(", "public static bool TryRead(",
+				"public static KingdomConstructionStartResult TryFundNew(",
+				"public static bool BeginProjection(", "public static void Bind(",
+				"public static void OnSettlementPass(",
+				"private static void RetryProjection(",
+				"private static void InspectProjection(");
+		}
+
+		[Test]
 		public void NewPlotWorksFreezeLabourBeforeProjectionAndLegacyWorksKeepTheirClock()
 		{
 			string root = LocateRepository();
-			string plot = File.ReadAllText(Path.Combine(root, "Growth", "KingdomPlot2.cs"));
+			string plot = KingdomPlot2LogicalSource.Read();
 			AssertOrdered(plot, "works.SetIntProperty(PlotWorkSchemaProperty, PlotWorkSchema)",
 				"SetPlotWorkLong(works, PlotWorkRequiredProperty, part.TotalTicks)",
 				"SetPlotWorkLong(works, PlotWorkRemainingProperty, part.TotalTicks)",
@@ -1024,8 +1049,7 @@ namespace ThousandAndFirst.Tests
 		public void StandingWorksFreezePaidBillsAndStrikeReadsThemBeforeLegacyCatalogueFallback()
 		{
 			string root = LocateRepository();
-			string construction = File.ReadAllText(Path.Combine(root, "Growth",
-				"KingdomConstruction.cs"));
+			string construction = KingdomConstructionLogicalSource.Read();
 			AssertOrdered(construction, "SetStringProperty(PaidBuildMaterialProperty, material)",
 				"SetIntProperty(PaidBuildSchemaProperty, PaidBuildSchema)");
 			StringAssert.Contains("TryPaidBuildReceipt(Job, previous", construction);
@@ -1035,7 +1059,7 @@ namespace ThousandAndFirst.Tests
 				"KingdomConstruction.FreezePaidBuild(Successor, Job",
 				"KingdomDesign.ApplyRenderOverrides");
 
-			string plot = File.ReadAllText(Path.Combine(root, "Growth", "KingdomPlot2.cs"));
+			string plot = KingdomPlot2LogicalSource.Read();
 			AssertOrdered(plot, "PrepareFinalBuilding(building, entry",
 				"KingdomConstruction.FreezePaidBuild(building, construction)",
 				"KingdomPhysicalPhase.FinalOutputPending");
@@ -1058,11 +1082,11 @@ namespace ThousandAndFirst.Tests
 		public void AuthoredMinimumStageIsCheckedByCommitPathsNotOnlyMenus()
 		{
 			string root = LocateRepository();
-			string commission = File.ReadAllText(Path.Combine(root, "Growth", "KingdomCommission.cs"));
+			string commission = KingdomCommissionLogicalSource.Read();
 			AssertOrdered(commission, "Failure = StageRefusal(System, entry)",
 				"KingdomZoning.Permits(System, zone.ZoneID, entry");
 
-			string plot = File.ReadAllText(Path.Combine(root, "Growth", "KingdomPlot2.cs"));
+			string plot = KingdomPlot2LogicalSource.Read();
 			AssertOrdered(plot, "Failure = KingdomCommission.StageRefusal(System, Entry)",
 				"KingdomPlotRules.PlotSize staked = StakedSize");
 			int plan = plot.IndexOf("public static bool PlanBlocked", StringComparison.Ordinal);
@@ -1144,7 +1168,7 @@ namespace ThousandAndFirst.Tests
 		{
 			string root = LocateRepository();
 			AssertDeclaredPositionalFields(
-				File.ReadAllText(Path.Combine(root, "Growth", "KingdomPlot2.cs")),
+				KingdomPlot2LogicalSource.Read(),
 				"public class r_KingdomPlotWorks", "public KingdomPlotRules.PlotRect Rect()",
 				new string[] { "DesignKey", "DisplayName", "X1", "Y1", "X2", "Y2",
 					"StartTick", "TotalTicks", "StageApplied", "Open", "Carved",
@@ -1241,7 +1265,7 @@ namespace ThousandAndFirst.Tests
 		public void AutomaticPlotClearancePaysExactPhysicalStockNotDeadCounters()
 		{
 			string root = LocateRepository();
-			string source = File.ReadAllText(Path.Combine(root, "Growth", "KingdomPlot2.cs"));
+			string source = KingdomPlot2LogicalSource.Read();
 			StringAssert.Contains("ResumeClearPayout", source);
 			StringAssert.Contains("ClearOutputIdProperty = \"r_TAF_PlotClearOutputId\"", source);
 			StringAssert.Contains("ClearOutputMarkerProperty = \"r_TAF_PlotClearOutputMarker\"", source);
@@ -1483,8 +1507,7 @@ namespace ThousandAndFirst.Tests
 		public void ConstructionAuthorityFlagsAndGrowOutputsUseExactDurableProofs()
 		{
 			string root = LocateRepository();
-			string construction = File.ReadAllText(Path.Combine(root, "Growth",
-				"KingdomConstruction.cs"));
+			string construction = KingdomConstructionLogicalSource.Read();
 			StringAssert.Contains("ReferenceEquals(The.Game.RequireSystem<KingdomSystem>(), System)",
 				construction);
 			StringAssert.Contains("System.ClaimedZones.Contains(Z.ZoneID)", construction);
@@ -1499,16 +1522,14 @@ namespace ThousandAndFirst.Tests
 			string socket = File.ReadAllText(Path.Combine(root, "Growth", "KingdomSocket.cs"));
 			StringAssert.Contains("ReferenceEquals(accepted, marker)", socket);
 
-			string plot = File.ReadAllText(Path.Combine(root, "Growth", "KingdomPlot2.cs"));
+			string plot = KingdomPlot2LogicalSource.Read();
 			StringAssert.Contains("if (string.IsNullOrEmpty(receipt)) return false", plot);
 			int grow = plot.IndexOf("public static bool GrowInPlace", StringComparison.Ordinal);
-			int rowClass = plot.IndexOf("private sealed class GrowthRow", grow,
+			int build = plot.IndexOf("private static bool TryBuildGrowthPlan", grow,
 				StringComparison.Ordinal);
-			AssertOrdered(plot.Substring(grow, rowClass - grow), "TryBuildGrowthPlan",
+			AssertOrdered(plot.Substring(grow, build - grow), "TryBuildGrowthPlan",
 				"SetStringProperty(GrowthReceiptProperty", "RequirePart<r_KingdomYielding>",
 				"ApplyGrowthPlan");
-			int build = plot.IndexOf("private static bool TryBuildGrowthPlan", rowClass,
-				StringComparison.Ordinal);
 			int apply = plot.IndexOf("private static bool ApplyGrowthPlan", build,
 				StringComparison.Ordinal);
 			AssertOrdered(plot.Substring(build, apply - build), "Guid.NewGuid().ToString(\"N\")",
@@ -1594,10 +1615,10 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void PaidBuildEffectsFreezeBeforeFundingAndProjectionReadsReceiptOnly()
 		{
-			string commission = TestMain.ReadRepositoryText("Growth/KingdomCommission.cs");
+			string commission = KingdomCommissionLogicalSource.Read();
 			string plan = TestMain.ReadRepositoryText("Growth/KingdomPlanMarker.cs");
 			string upgrade = TestMain.ReadRepositoryText("Growth/KingdomUpgrade.cs");
-			string plot = TestMain.ReadRepositoryText("Growth/KingdomPlot2.cs");
+			string plot = KingdomPlot2LogicalSource.Read();
 			string socket = TestMain.ReadRepositoryText("Growth/KingdomSocket.cs");
 			AssertOrdered(commission, "KingdomConstruction.FreezeBuildTruth(job",
 				"KingdomConstruction.TryFundNew(job");
@@ -1625,7 +1646,7 @@ namespace ThousandAndFirst.Tests
 				StringAssert.DoesNotContain("HasSkill(", body);
 				StringAssert.DoesNotContain("IsPlotDesign(", body);
 			}
-			string construction = TestMain.ReadRepositoryText("Growth/KingdomConstruction.cs");
+			string construction = KingdomConstructionLogicalSource.Read();
 			AssertOrdered(construction, "RequiresBuildTruth(job.Route)",
 				"TryResumeFunding(job, Z, Survey");
 			StringAssert.Contains("LegacyProjectedBuildTruthMatches", commission);

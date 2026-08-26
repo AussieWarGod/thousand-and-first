@@ -225,7 +225,7 @@ realm that exists without the founder's claim": whole `KingdomSettlement` contai
 `ExiledSeat`/`ExiledAway` with their own standings ledger (`T/Core/KingdomSystem.cs:741,744,753`),
 dormant cities needing no clock (`:670-692` doctrine), and a deed-keyed, never time-keyed regard
 ladder. `TryReturn` (`:1067`) already implements *"walk back and it will still be there, with its
-own opinion of you"* (`KingdomExileRules.cs:395`): gates = cast out, not refounded, ground
+own opinion of you"* (`Core/KingdomExileRules*.cs`): gates = cast out, not refounded, ground
 remembered, standing on it, regard above Repudiated (`JudgeReturn`, `:200-223`), and restoration
 floors regard at indifference, never love (`RegardOnReturn`, `:245-248`).
 
@@ -271,8 +271,8 @@ store (mesh condition satisfied):
 
 | The heir knows | Derived from | Cite |
 |---|---|---|
-| the designs of the work they served | JobWorkId → work row → DesignKey → that design's Knowledge keys | `KingdomCityState.cs:581-585`; work rows `:521-548` |
-| their homeland's trades | OriginCode → `origin:` keys | `KingdomResidentRules.cs:365-379`; siting table `T/_notes/RESEARCH-SITING-AND-SECESSION.md:354` |
+| the designs of the work they served | JobWorkId → work row → DesignKey → that design's Knowledge keys | `Simulation/City/KingdomCityState*.cs`; work rows `:521-548` |
+| their homeland's trades | OriginCode → `origin:` keys | `Simulation/City/KingdomResidentRules.DayShapeAndOrigins.cs:49` (`OriginCode`); siting table `T/_notes/RESEARCH-SITING-AND-SECESSION.md:354` |
 | their creed's rites, and the ones they left | CreedCode, KeptCreeds → `creed:`/`kept:` keys | `KingdomCityState.cs:577,629` |
 | what the city held while they lived in it | ArrivedTick against the keepers' roster (city-held holdings) | `RESEARCH-SITING-AND-SECESSION.md:49-55` (holdings are city-held — the heir walks among them) |
 | their own city's ground | re-reveal the realm's own journal secrets only (§5.1) | `IBaseJournalEntry.Reveal`, `D/Qud/API/IBaseJournalEntry.cs:167-191` |
@@ -632,7 +632,7 @@ gate that opens on deeds (`TryReturn` gates, §2.2 — "walk back and it will st
 its own opinion of you" was written for exactly this feeling). The climb's rungs are renderings
 of existing state: serve a work (JobWorkId), hold the office (seniority/notability, §2.6), then
 stand where the basin poured and take the charter up (the `TryReturn`/`EnsureAbility` seam,
-`KingdomSystem.cs:1113`). The regard the realm holds for *the heir* is the same game-scoped
+`Core/KingdomSystem.z04.Identity.Read.cs:80`, `TryCaptureSealIdentity`). The regard the realm holds for *the heir* is the same game-scoped
 reputation cell the exile ladder already reads (§5.1). Delta over B: the charter re-grant must be
 gated on climb progress instead of immediate — a rule-table change in the exile-rules idiom, not
 new machinery. This is the prestige variant: slowest, most Qud-registered ("nobody embraces you.
@@ -690,8 +690,8 @@ The engine's default body swap violates Addendum 21 four ways (§1.6). Per-state
   not the crown's — reset to chargen baseline on succession (re-deriving the initial modifiers
   the heir's own body carries, e.g. `GivesRep`-adjacent part effects — verification debt). **The
   one cell with a better answer than zero: the realm's own faction.** The exile machinery already
-  treats that cell as "how the realm holds the one who leads it" (`FounderRegard`,
-  `KingdomSystem.cs:954`); for an heir it should be *initialized from the heir's own record*
+treats that cell as "how the realm holds the one who leads it" (`FounderRegard`,
+`Core/KingdomSystem.z08.Settlements.cs:74`); for an heir it should be *initialized from the heir's own record*
   (standing, creed alignment with the realm's declared creed, tenure — all on the row, §2.4), and
   the `RegardFloorOnReturn` idiom (`KingdomExileRules.cs:84`, indifference-not-love) is the
   shipped shape for "the gate opens, and nobody smiles." The climb (§4.4) *is* this cell used as
@@ -751,7 +751,7 @@ body-shopping §4.2 flags — one more reason B/C are the honest default configu
 
 The row carries the heir's creed, the creeds they left, and any live creed brink
 (`KingdomCityState.cs:577,601-629`). An heir whose creed is not the realm's declared creed
-(`KingdomSystem.cs:776`), or who once seceded and rejoined (KeptCreeds, Addendum 16), starts with
+(`Core/KingdomSystem.z03.State.Realm.cs:205`, `DeclaredCreed`), or who once seceded and rejoined (KeptCreeds, Addendum 16), starts with
 texture no invented mechanic could buy: the realm's regard initialization (§5.1) can read it, the
 chronicle can say it, and lane 2 of Addendum 13 (the city reacts to what you ARE) renders it. This
 is Rogue Legacy's colorblind knight in Qud's register — the flaw is the characterization (§3.3).

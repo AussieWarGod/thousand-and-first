@@ -11,20 +11,20 @@
 - Integrated feature/polish baseline is clean commit `19fb8ee`. Later structural/CI hardening
   changes are not signed by that receipt; preserve them and all later user changes rather than
   substituting an older historical candidate.
-- `Tools/gate.sh`: 763 staged sources compile clean under baseline and compatibility
-  symbols. The exact inventory contains 763 production C# files and 242,999 physical lines and has
-  SHA-256 `ce7e3de4e59985e4a8f2e12d85a54be89b19111b34e45639145e3159892df591`.
+- `Tools/gate.sh`: 1307 staged sources compile clean under baseline and compatibility
+  symbols. The exact inventory contains 1307 production C# files and 248,807 physical lines and has
+  SHA-256 `9c3713897b2fbf9b7db455247a0ac20d31e75f0eb00edf5f4c57d3a310b10b21`.
 - Architecture: 136 buildings, 126 plotted building plans, 499 maps, 355 bindings, 403 tiers,
   516 variants, and 2,064 variant/pose goldens; generator/checker clean with zero issues plus three
   expected installed-base tolerant-recovery warnings for malformed vanilla Creatures/Furniture/Items XML.
   Lot realizations are current at 337 maps, 242 bindings, and 277 tiers.
 - Nine focused one-survey source-contract cases pass. The final integrated pure/source suite passes
-  7,612 / 7,612 cases with zero skipped; the portable suite passes 171 / 171 with zero skipped; all
-  31 Python tool tests and all 19 art tests pass. Public CI now permits exactly three named
+  7,695 / 7,695 cases with zero skipped; the portable suite passes 173 / 173 with zero skipped; all
+  33 Python tool tests and all 19 art tests pass. Public CI now permits exactly three named
   installed-data skips when no
   Qud base is discoverable; any extra/missing skip or explicit invalid base fails. Release
   execution forbids skips and passes the exact licensed base explicitly.
-- Current inventory gates report 787 cold-install files, 36 shipped IPart ABI classes and 3 ABI
+- Current inventory gates report 1,331 cold-install files, 36 shipped IPart ABI classes and 3 ABI
   contracts. Art policy allowlists 0 local tiles and verifies 55 vanilla paths.
 - Current native partial result remains the receipt from clean commit `19fb8ee`: clean deployment,
   fresh isolated profile, Smokehold founding,
@@ -33,12 +33,12 @@
   gallery/lived-city, numbered protocol, accessibility, compatibility, dense-performance, and
   private subscribed-install receipts remain open. Later structural revisions have no native
   receipt and need a compile/load/log rerun against their exact final commit.
-- Structure checkpoint: 122 files exceed 300 physical lines, 0 are exactly 300, 56 exceed 1,000,
-  14 exceed 2,000, and 2 exceed 5,000. Direct XRL imports total 191, with 82 at or over the line
-  limit. This wave decomposed 49 additional oversized authorities, bringing the cumulative total to
-  59 coherent source families. Fan-in found and repaired a split Itinerary method boundary, missing
-  namespace wrappers in Delve, Brink, Crews, and Stations, and two stale source readers; every defect
-  was caught before checkpoint and the gates are green. The structural release gate remains red until
+- Structure checkpoint: 52 files exceed 300 physical lines, 0 are exactly 300, 28 exceed 1,000,
+  9 exceed 2,000, and 0 exceed 5,000. Direct XRL imports total 442, with 49 at or over the line
+  limit. The latest wave decomposed 53 more oversized authorities, bringing the current sequence
+  to 119 additional families and 129 cumulative. Latest fan-in preserved exact logical source,
+  persisted/public ABI, deterministic order, and source-reader coverage; staged compilation caught
+  and repaired literal wrapper and namespace defects before checkpoint. The structural release gate remains red until
   every staged file is strictly under 300 and exact-inventory human semantic review exists in
   `../docs/STRUCTURE_REVIEW.json` with no exceptions.
 - Current focus: checkpoint each green hardening batch, rerun native proof against the exact final

@@ -111,8 +111,15 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void AdoptedDefensivePlotKeepsDurablePlotIdentityAndReleaseCannotLeaveGhostGround()
 		{
-			string plot = TestMain.ReadRepositoryText("Growth/KingdomPlot2.cs");
-			string adopt = TestMain.ReadRepositoryText("Growth/KingdomAdopt.cs");
+			string plot = KingdomPlot2LogicalSource.Read();
+			string adopt = string.Join("\n", new string[]
+			{
+				TestMain.ReadRepositoryText("Growth/KingdomAdopt.cs"),
+				TestMain.ReadRepositoryText("Growth/KingdomAdopt.Work.cs"),
+				TestMain.ReadRepositoryText("Growth/KingdomAdopt.Release.cs"),
+				TestMain.ReadRepositoryText("Growth/KingdomAdopt.Helpers.cs")
+			});
+			StringAssert.DoesNotContain("public static class KingdomAdopt", adopt);
 			StringAssert.Contains(
 				"public const string AdoptedPlotProperty = \"KingdomAdoptedPlot\";", plot);
 			StringAssert.Contains("string plotId = \"adopted:\" + Adopted.ID;", plot);

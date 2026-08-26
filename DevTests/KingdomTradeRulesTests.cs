@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Security.Cryptography;
+using System.Text;
 using NUnit.Framework;
 using ThousandAndFirst;
 
@@ -1030,7 +1031,7 @@ namespace ThousandAndFirst.Tests
 				StringComparison.Ordinal);
 			Assert.Greater(copy, read);
 
-			string core = ReadRepoSource("Core/KingdomSystem.cs");
+			string core = KingdomSystemLogicalSource.Read();
 			int method = core.IndexOf("private void NormalizeTradeBook()", StringComparison.Ordinal);
 			int end = core.IndexOf("\n\t}\n}", method, StringComparison.Ordinal);
 			string body = core.Substring(method, end - method);
@@ -1677,6 +1678,101 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void LogicalTradeAuthorityPinsNestedIdentityFieldsAndCompleteMethodOrder()
+		{
+			string source = KingdomTradeLogicalSource.Read();
+			string declarations = ReadRepoSource("Trade/KingdomTrade.00.Declarations.cs");
+			Assert.AreEqual(23, KingdomTradeLogicalSource.FileCount);
+			Assert.AreEqual(23, Count(source, "public static partial class KingdomTrade"));
+			CollectionAssert.AreEqual(new[]
+			{
+				"private const string ProjectionProperty = \"KingdomTradeProjectionId\";",
+				"private const string MaterialProperty = \"KingdomTradeMaterialId\";",
+				"private const int MaxProjectionCellProbes = 512;",
+				"private static readonly object InFlightSync = new object();",
+				"private static TradeLease InFlight;"
+			}, TopLevelFieldRows(declarations));
+			CollectionAssert.AreEqual(new[]
+			{
+				"private sealed class TradeLease : IDisposable",
+				"private sealed class TradeExileCoreSeal",
+				"private sealed class TradeLiveFrame",
+				"private sealed class TradePhysicalFrame",
+				"private sealed class WaterWitness",
+				"private sealed class InventoryWitness",
+				"private sealed class MaterialWitness",
+				"private enum LoadedObjectResolution : byte",
+				"private sealed class LoadedTopologyWitness",
+				"private sealed class LoadedZoneWitness",
+				"private sealed class LoadedObjectWitness",
+				"private sealed class CellWitness",
+				"private sealed class ProjectionRowWitness",
+				"private sealed class ManifestWitness",
+				"private sealed class CallbackWitness"
+			}, NestedDeclarationRows(declarations));
+			AssertOrdered(declarations, "private enum LoadedObjectResolution : byte",
+				"Incomplete = 0", "Missing = 1", "ExactUnique = 2", "Ambiguous = 3");
+
+			string[] methods = TopLevelMethodRows(source);
+			Assert.AreEqual(136, methods.Length);
+			Assert.AreEqual("bee1d1159bcc7349ce14e0a16595d17e0d36c47d2a31fb51894f60f9525dae7b",
+				Sha256(string.Join("\n", methods)),
+				"all top-level method signatures and declaration order are metadata contract");
+			CollectionAssert.AreEqual(new[]
+			{
+				"public static KingdomTradeManifestState CurrentManifest(KingdomSystem System)",
+				"public static bool ResetAuthority(KingdomSystem System, out string Failure)",
+				"public static bool StrikeDeal(KingdomSystem System, string DealKey, string FactionName, out string Failure)",
+				"public static void OnZoneActivated(KingdomSystem System, Zone Z, KingdomSurvey Shared = null)",
+				"public static bool TryLoadManifest(KingdomSystem System, Zone Z, int Amount, string OriginName, string DestinationName, out string Failure)",
+				"public static KingdomManifest ExpireManifestIfStale(KingdomSystem System, Zone Here, long Now)",
+				"public static bool TryOnExile(KingdomSystem System, long Now, string ExactRealmId, List<string> ExactSettlementIds, out long SettledTick, out string Failure)",
+				"internal static KingdomManifest LegacyManifestSnapshot( KingdomTradeManifestState Manifest)",
+				"internal static KingdomManifest LegacyManifestSnapshot(KingdomManifest Manifest)",
+				"internal static bool LegacyManifestMatches(KingdomManifest Legacy, KingdomTradeManifestState Authoritative)"
+			}, PublicAndInternalMethods(methods));
+			StringAssert.Contains(
+				"public static bool Enabled => XRL.UI.Options.GetOption(\"r_TAF_OptionTrade\") != \"No\";",
+				source);
+		}
+
+		[Test]
+		public void LogicalTradeAuthorityPinsLifecycleAndSinkTransactionOrder()
+		{
+			string source = KingdomTradeLogicalSource.Read();
+			string continuation = Between(source,
+				"private static void ContinueOperation(KingdomSystem System",
+				"private static bool SettleResources(");
+			AssertOrdered(continuation,
+				"TryBindTopologyGround(System, Z, Survey)",
+				"TryBindFrame(System, Book, operation, Z",
+				"SettleResources(operation, Z, Survey, frame)",
+				"SettleProjection(operation, Z, frame)",
+				"SettleDomain(System, Book, operation, frame)",
+				"BuildOutbox(System, operation)",
+				"DispatchOutbox(System, operation, frame)",
+				"ContinuePatternBook(System, operation, frame)",
+				"ExactPhysicalFrame(frame, operation, Z)",
+				"SettleSchedule(Book, operation, frame)",
+				"operation.Phase = KingdomTradePhase.RetirementReady",
+				"KingdomTradeRules.Retire(Book, operation, disposition, Now, operation.Fault)",
+				"System.SynchronizeLegacyManifestProjection()");
+
+			string outbox = Between(source,
+				"private static bool DispatchOutbox(KingdomSystem System",
+				"private static bool ExactSinkFrame(");
+			AssertOrdered(outbox,
+				"box.ChronicleState = KingdomTradeSinkState.Intent",
+				"KingdomChronicle.RecordOnce(System",
+				"box.LedgerState = KingdomTradeSinkState.Intent",
+				"Frame.Ledger.Delivered = KingdomTradeRules.SaturatingAdd",
+				"box.MessageState = KingdomTradeSinkState.Intent",
+				"MessageQueue.AddPlayerMessage(message)",
+				"box.DeedState = KingdomTradeSinkState.Intent",
+				"System.RecordDeed(deed)");
+		}
+
+		[Test]
 		public void ExileMutationApis_RejectHostileEnumerableByConcreteSignature()
 		{
 			HostileSettlementEnumerable hostile = new HostileSettlementEnumerable();
@@ -1687,7 +1783,7 @@ namespace ThousandAndFirst.Tests
 				null, null, arguments));
 			Assert.AreEqual(0, hostile.Enumerations);
 
-			string source = ReadRepoSource("Trade/KingdomTrade.cs");
+			string source = KingdomTradeLogicalSource.Read();
 			int method = source.IndexOf("public static bool TryOnExile", StringComparison.Ordinal);
 			int end = source.IndexOf("private static KingdomTradeBook EnsureBook", method,
 				StringComparison.Ordinal);
@@ -1820,7 +1916,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void LiveLeaseFailureBranchesReturnBeforeAuthorityMutation()
 		{
-			string source = ReadRepoSource("Trade/KingdomTrade.cs");
+			string source = KingdomTradeLogicalSource.Read();
 			int exile = source.IndexOf("public static bool TryOnExile", StringComparison.Ordinal);
 			int reset = source.IndexOf("public static bool ResetAuthority", StringComparison.Ordinal);
 			int exileEnd = source.IndexOf("private static KingdomTradeBook EnsureBook", exile,
@@ -1845,7 +1941,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void PatternSource_CharterPrepareOwnsFreezeAndExactCityCasBeforeRetirement()
 		{
-			string trade = ReadRepoSource("Trade/KingdomTrade.cs");
+			string trade = KingdomTradeLogicalSource.Read();
 			int prepare = trade.IndexOf("private static bool PrepareCharterDelivery",
 				StringComparison.Ordinal);
 			int prepareEnd = trade.IndexOf("private static bool TryProjectionRow", prepare,
@@ -1899,6 +1995,105 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("MarkLearned", quarantineBody);
 			StringAssert.Contains("MarkConflict", quarantineBody);
 			StringAssert.Contains("KingdomTradePhase.Quarantined", quarantineBody);
+		}
+
+		private static int Count(string Text, string Needle)
+		{
+			int count = 0;
+			for (int at = 0; ; )
+			{
+				at = Text.IndexOf(Needle, at, StringComparison.Ordinal);
+				if (at < 0) return count;
+				count++;
+				at += Needle.Length;
+			}
+		}
+
+		private static string Between(string Source, string Start, string End)
+		{
+			int start = Source.IndexOf(Start, StringComparison.Ordinal);
+			Assert.GreaterOrEqual(start, 0, Start);
+			int end = Source.IndexOf(End, start + Start.Length, StringComparison.Ordinal);
+			Assert.Greater(end, start, End);
+			return Source.Substring(start, end - start);
+		}
+
+		private static string[] TopLevelFieldRows(string Source)
+		{
+			List<string> rows = new List<string>();
+			foreach (string line in Source.Split('\n'))
+			{
+				if (line.StartsWith("\t\tprivate ", StringComparison.Ordinal)
+					&& !line.StartsWith("\t\t\t", StringComparison.Ordinal)
+					&& line.TrimEnd().EndsWith(";", StringComparison.Ordinal))
+					rows.Add(line.Trim());
+			}
+			return rows.ToArray();
+		}
+
+		private static string[] NestedDeclarationRows(string Source)
+		{
+			List<string> rows = new List<string>();
+			foreach (string line in Source.Split('\n'))
+			{
+				if (line.StartsWith("\t\tprivate sealed class ", StringComparison.Ordinal)
+					|| line.StartsWith("\t\tprivate enum ", StringComparison.Ordinal))
+					rows.Add(line.Trim());
+			}
+			return rows.ToArray();
+		}
+
+		private static string[] TopLevelMethodRows(string Source)
+		{
+			List<string> rows = new List<string>();
+			string[] lines = Source.Split('\n');
+			for (int i = 0; i < lines.Length; i++)
+			{
+				string line = lines[i];
+				if (!(line.StartsWith("\t\tpublic static ", StringComparison.Ordinal)
+					|| line.StartsWith("\t\tinternal static ", StringComparison.Ordinal)
+					|| line.StartsWith("\t\tprivate static ", StringComparison.Ordinal))
+					|| !line.Contains("(") || line.Contains(";") || line.Contains("=>")) continue;
+				StringBuilder row = new StringBuilder(line.Trim());
+				while (++i < lines.Length && !lines[i].Contains("{"))
+					row.Append(' ').Append(lines[i].Trim());
+				rows.Add(NormalizeWhitespace(row.ToString()));
+			}
+			return rows.ToArray();
+		}
+
+		private static string[] PublicAndInternalMethods(string[] Methods)
+		{
+			List<string> rows = new List<string>();
+			for (int i = 0; i < Methods.Length; i++)
+				if (Methods[i].StartsWith("public ", StringComparison.Ordinal)
+					|| Methods[i].StartsWith("internal ", StringComparison.Ordinal))
+					rows.Add(Methods[i]);
+			return rows.ToArray();
+		}
+
+		private static string NormalizeWhitespace(string Text)
+		{
+			return string.Join(" ", Text.Split((char[])null,
+				StringSplitOptions.RemoveEmptyEntries));
+		}
+
+		private static string Sha256(string Text)
+		{
+			using (SHA256 sha = SHA256.Create())
+				return BitConverter.ToString(sha.ComputeHash(Encoding.UTF8.GetBytes(Text)))
+					.Replace("-", "").ToLowerInvariant();
+		}
+
+		private static void AssertOrdered(string Source, params string[] Needles)
+		{
+			int cursor = 0;
+			for (int i = 0; i < Needles.Length; i++)
+			{
+				int next = Source.IndexOf(Needles[i], cursor, StringComparison.Ordinal);
+				Assert.GreaterOrEqual(next, cursor, Needles[i]);
+				cursor = next + Needles[i].Length;
+			}
 		}
 	}
 }

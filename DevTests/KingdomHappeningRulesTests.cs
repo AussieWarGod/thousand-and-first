@@ -1,4 +1,7 @@
 #if TAF_TESTS
+using System;
+using System.IO;
+using System.Reflection;
 using NUnit.Framework;
 using ThousandAndFirst;
 using ThousandAndFirst.Simulation.City;
@@ -18,6 +21,68 @@ namespace ThousandAndFirst.Tests
 	internal class KingdomHappeningRulesTests
 	{
 		private const string Here = "taf:zone:here";
+
+		[Test]
+		public void HappeningAbiKeepsExactEnumAndRowMetadata()
+		{
+			Assert.AreEqual(typeof(byte), Enum.GetUnderlyingType(typeof(KingdomHappeningKind)));
+			Assert.AreEqual(typeof(byte), Enum.GetUnderlyingType(typeof(KingdomFestivalAnchor)));
+			CollectionAssert.AreEqual(new[] { "None", "Wedding", "Funeral", "Festival", "Breakdown", "Brownout" },
+				Enum.GetNames(typeof(KingdomHappeningKind)));
+			CollectionAssert.AreEqual(new[] { "None", "Ides", "UtYaraUx" },
+				Enum.GetNames(typeof(KingdomFestivalAnchor)));
+			Assert.AreEqual(0, (byte)KingdomHappeningKind.None);
+			Assert.AreEqual(1, (byte)KingdomHappeningKind.Wedding);
+			Assert.AreEqual(2, (byte)KingdomHappeningKind.Funeral);
+			Assert.AreEqual(3, (byte)KingdomHappeningKind.Festival);
+			Assert.AreEqual(4, (byte)KingdomHappeningKind.Breakdown);
+			Assert.AreEqual(5, (byte)KingdomHappeningKind.Brownout);
+			Assert.AreEqual(0, (byte)KingdomFestivalAnchor.None);
+			Assert.AreEqual(1, (byte)KingdomFestivalAnchor.Ides);
+			Assert.AreEqual(2, (byte)KingdomFestivalAnchor.UtYaraUx);
+
+			Assert.AreEqual("ThousandAndFirst.Simulation.City.KingdomHappeningKind", typeof(KingdomHappeningKind).FullName);
+			Assert.AreEqual("ThousandAndFirst.Simulation.City.KingdomFestivalAnchor", typeof(KingdomFestivalAnchor).FullName);
+			Assert.AreEqual("ThousandAndFirst.Simulation.City.KingdomHappening", typeof(KingdomHappening).FullName);
+			Assert.IsFalse(typeof(KingdomHappeningKind).IsPublic);
+			Assert.IsFalse(typeof(KingdomFestivalAnchor).IsPublic);
+			Assert.IsFalse(typeof(KingdomHappening).IsPublic);
+			Assert.IsTrue(typeof(KingdomHappening).IsValueType);
+
+			FieldInfo[] fields = typeof(KingdomHappening).GetFields(BindingFlags.Instance | BindingFlags.NonPublic);
+			Array.Sort(fields, (a, b) => a.MetadataToken.CompareTo(b.MetadataToken));
+			CollectionAssert.AreEqual(new[] { "Kind", "Tick", "SubjectA", "SubjectB", "PlaceZoneId", "Outcome" },
+				Array.ConvertAll(fields, field => field.Name));
+			CollectionAssert.AreEqual(new[] { typeof(KingdomHappeningKind), typeof(long), typeof(int), typeof(int), typeof(string), typeof(int) },
+				Array.ConvertAll(fields, field => field.FieldType));
+			foreach (FieldInfo field in fields)
+				Assert.IsTrue(field.IsAssembly && field.IsInitOnly, field.Name);
+
+			KingdomHappening none = KingdomHappening.None;
+			Assert.AreEqual(KingdomHappeningKind.None, none.Kind);
+			Assert.AreEqual(0L, none.Tick);
+			Assert.AreEqual(0, none.SubjectA);
+			Assert.AreEqual(0, none.SubjectB);
+			Assert.IsNull(none.PlaceZoneId);
+			Assert.AreEqual(0, none.Outcome);
+			Assert.IsFalse(none.Stands);
+		}
+
+		[Test]
+		public void LogicalSourceKeepsOneDeclarationSetAndOrderedPartialAuthority()
+		{
+			string source = LogicalSource();
+			Assert.AreEqual(4, Count(source, "internal static partial class KingdomHappeningRules"));
+			Assert.AreEqual(1, Count(source, "internal enum KingdomHappeningKind : byte"));
+			Assert.AreEqual(1, Count(source, "internal enum KingdomFestivalAnchor : byte"));
+			Assert.AreEqual(1, Count(source, "internal readonly struct KingdomHappening"));
+			Assert.Less(source.IndexOf("internal static bool TryNextFestival", StringComparison.Ordinal),
+				source.IndexOf("internal static bool WeddingEligible", StringComparison.Ordinal));
+			Assert.Less(source.IndexOf("internal static bool WeddingEligible", StringComparison.Ordinal),
+				source.IndexOf("internal static KingdomHappening Judge", StringComparison.Ordinal));
+			Assert.Less(source.IndexOf("internal static KingdomHappening Judge", StringComparison.Ordinal),
+				source.IndexOf("internal static string AnchorName", StringComparison.Ordinal));
+		}
 
 		private static KingdomResidentRow Settler(int id, int homeWorkId, int creedCode, long arrivedTick, KingdomResidentStanding standing)
 		{
@@ -381,6 +446,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(KingdomHappeningKind.Funeral)]
 		[TestCase(KingdomHappeningKind.Festival)]
 		[TestCase(KingdomHappeningKind.Breakdown)]
+		[TestCase(KingdomHappeningKind.Brownout)]
 		public void ToldKinds_RoundTrip(KingdomHappeningKind kind)
 		{
 			Assert.AreEqual(kind, KingdomHappeningRules.KindOf(KingdomHappeningRules.ToldKindOf(kind)));
@@ -507,6 +573,30 @@ namespace ThousandAndFirst.Tests
 		public void ToldLine_SaysNothingAboutAKindItDoesNotReport()
 		{
 			Assert.AreEqual("", KingdomHappeningRules.ToldLine(KingdomToldKind.Harvest, 3));
+		}
+
+		private static string LogicalSource()
+		{
+			return string.Join("\n", new[]
+			{
+				TestMain.ReadRepositoryText(Path.Combine("Simulation", "City", "KingdomHappeningRules.Declarations.cs")),
+				TestMain.ReadRepositoryText(Path.Combine("Simulation", "City", "KingdomHappeningRules.cs")),
+				TestMain.ReadRepositoryText(Path.Combine("Simulation", "City", "KingdomHappeningRules.WeddingsAndFunerals.cs")),
+				TestMain.ReadRepositoryText(Path.Combine("Simulation", "City", "KingdomHappeningRules.BreakdownsAndToldLog.cs")),
+				TestMain.ReadRepositoryText(Path.Combine("Simulation", "City", "KingdomHappeningRules.Telling.cs"))
+			});
+		}
+
+		private static int Count(string source, string term)
+		{
+			int count = 0;
+			int at = 0;
+			while ((at = source.IndexOf(term, at, StringComparison.Ordinal)) >= 0)
+			{
+				count++;
+				at += term.Length;
+			}
+			return count;
 		}
 	}
 }

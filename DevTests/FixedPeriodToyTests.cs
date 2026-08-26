@@ -1,5 +1,7 @@
 #if TAF_TESTS
 using System;
+using System.IO;
+using System.Reflection;
 using NUnit.Framework;
 using ThousandAndFirst.Simulation.Kernel;
 
@@ -7,6 +9,71 @@ namespace ThousandAndFirst.Tests
 {
 	public class FixedPeriodToyTests
 	{
+		[Test]
+		public void ExtractedToyDeclarationsKeepExactTopLevelAbiAndDefaults()
+		{
+			Assert.AreEqual("ThousandAndFirst.Simulation.Kernel.ToyPulseRange", typeof(ToyPulseRange).FullName);
+			Assert.AreEqual("ThousandAndFirst.Simulation.Kernel.FixedPeriodToyState", typeof(FixedPeriodToyState).FullName);
+			Assert.AreEqual("ThousandAndFirst.Simulation.Kernel.ToyAdvanceResult", typeof(ToyAdvanceResult).FullName);
+			Assert.AreEqual("ThousandAndFirst.Simulation.Kernel.FixedPeriodToyRules", typeof(FixedPeriodToyRules).FullName);
+			Assert.IsTrue(typeof(ToyPulseRange).IsValueType);
+			Assert.IsTrue(typeof(ToyAdvanceResult).IsValueType);
+			Assert.IsTrue(typeof(FixedPeriodToyState).IsClass && typeof(FixedPeriodToyState).IsSealed);
+			Assert.IsTrue(typeof(FixedPeriodToyRules).IsAbstract && typeof(FixedPeriodToyRules).IsSealed);
+			Assert.IsTrue(typeof(ToyPulseRange).IsNotPublic);
+			Assert.IsTrue(typeof(FixedPeriodToyState).IsNotPublic);
+			Assert.IsTrue(typeof(ToyAdvanceResult).IsNotPublic);
+			Assert.IsTrue(typeof(FixedPeriodToyRules).IsNotPublic);
+
+			AssertFields(typeof(ToyPulseRange),
+				new[] { "RulesVersionAtCreation", "EventStreamId", "EventKindCode", "FirstOrdinal", "Count" },
+				new[] { typeof(int), typeof(string), typeof(uint), typeof(ulong), typeof(ulong) });
+			AssertFields(typeof(FixedPeriodToyState),
+				new[] { "SchemaVersion", "RulesVersion", "SimulationSeed", "SettlementId", "ProcessedThroughTick",
+					"ClockScheduled", "NextDueTick", "NextOrdinal", "IntervalTicks", "OptionLatch",
+					"HasEmittedRange", "EmittedRange" },
+				new[] { typeof(int), typeof(int), typeof(KernelSeed128), typeof(string), typeof(long),
+					typeof(bool), typeof(long), typeof(ulong), typeof(long), typeof(OptionLatchState),
+					typeof(bool), typeof(ToyPulseRange) });
+			AssertFields(typeof(ToyAdvanceResult),
+				new[] { "State", "OptionTransition", "Fault" },
+				new[] { typeof(FixedPeriodToyState), typeof(OptionTransitionKind), typeof(KernelFaultCode) });
+
+			ToyPulseRange emptyRange = default(ToyPulseRange);
+			Assert.AreEqual(0, emptyRange.RulesVersionAtCreation);
+			Assert.IsNull(emptyRange.EventStreamId);
+			Assert.AreEqual(0u, emptyRange.EventKindCode);
+			Assert.AreEqual(0uL, emptyRange.FirstOrdinal);
+			Assert.AreEqual(0uL, emptyRange.Count);
+			ToyAdvanceResult emptyResult = default(ToyAdvanceResult);
+			Assert.IsNull(emptyResult.State);
+			Assert.AreEqual(default(OptionTransitionKind), emptyResult.OptionTransition);
+			Assert.AreEqual(default(KernelFaultCode), emptyResult.Fault);
+			Assert.IsFalse(emptyResult.Succeeded);
+		}
+
+		[Test]
+		public void LogicalSourceKeepsOneOrderedPartialAuthority()
+		{
+			string source = LogicalSource();
+			Assert.AreEqual(4, Count(source, "internal static partial class FixedPeriodToyRules"));
+			Assert.AreEqual(1, Count(source, "internal readonly struct ToyPulseRange"));
+			Assert.AreEqual(1, Count(source, "internal sealed class FixedPeriodToyState"));
+			Assert.AreEqual(1, Count(source, "internal readonly struct ToyAdvanceResult"));
+			Assert.Less(source.IndexOf("internal static ToyAdvanceResult Create", StringComparison.Ordinal),
+				source.IndexOf("internal static ToyAdvanceResult ObserveOptionOnLoad", StringComparison.Ordinal));
+			Assert.Less(source.IndexOf("internal static ToyAdvanceResult ObserveOptionOnLoad", StringComparison.Ordinal),
+				source.IndexOf("internal static ToyAdvanceResult AdvanceThrough", StringComparison.Ordinal));
+			Assert.Less(source.IndexOf("internal static ToyAdvanceResult AdvanceThrough", StringComparison.Ordinal),
+				source.IndexOf("internal static bool TryGetEventKey", StringComparison.Ordinal));
+			Assert.Less(source.IndexOf("internal static bool TryGetEventKey", StringComparison.Ordinal),
+				source.IndexOf("internal static bool TryEncodeCanonical", StringComparison.Ordinal));
+			Assert.Less(source.IndexOf("internal static bool TryEncodeCanonical", StringComparison.Ordinal),
+				source.IndexOf("private static bool TryFold", StringComparison.Ordinal));
+			Assert.Less(source.IndexOf("private static bool TryFold", StringComparison.Ordinal),
+				source.IndexOf("private static bool IsCanonical", StringComparison.Ordinal));
+		}
+
 		/// <summary>
 		/// The 183-byte fixture, hard-coded from the card. Created enabled at tick 0 with interval
 		/// 10, then advanced unchanged through tick 25.
@@ -1287,6 +1354,41 @@ namespace ThousandAndFirst.Tests
 			Assert.AreEqual(4000000000uL, advanced.State.NextOrdinal);
 			Assert.AreEqual(4000000000uL, advanced.State.EmittedRange.Count);
 			Assert.AreEqual(4000000001L, advanced.State.NextDueTick);
+		}
+
+		private static void AssertFields(Type type, string[] names, Type[] types)
+		{
+			FieldInfo[] fields = type.GetFields(BindingFlags.Instance | BindingFlags.NonPublic
+				| BindingFlags.DeclaredOnly);
+			Array.Sort(fields, (a, b) => a.MetadataToken.CompareTo(b.MetadataToken));
+			CollectionAssert.AreEqual(names, Array.ConvertAll(fields, field => field.Name), type.Name);
+			CollectionAssert.AreEqual(types, Array.ConvertAll(fields, field => field.FieldType), type.Name);
+			foreach (FieldInfo field in fields)
+				Assert.IsTrue(field.IsAssembly && field.IsInitOnly, type.Name + "." + field.Name);
+		}
+
+		private static string LogicalSource()
+		{
+			return string.Join("\n", new[]
+			{
+				TestMain.ReadRepositoryText(Path.Combine("Simulation", "Kernel", "FixedPeriodToy.Declarations.cs")),
+				TestMain.ReadRepositoryText(Path.Combine("Simulation", "Kernel", "FixedPeriodToy.cs")),
+				TestMain.ReadRepositoryText(Path.Combine("Simulation", "Kernel", "FixedPeriodToy.OptionTransitions.cs")),
+				TestMain.ReadRepositoryText(Path.Combine("Simulation", "Kernel", "FixedPeriodToy.EventAndCodec.cs")),
+				TestMain.ReadRepositoryText(Path.Combine("Simulation", "Kernel", "FixedPeriodToy.ValidationAndFold.cs"))
+			});
+		}
+
+		private static int Count(string source, string term)
+		{
+			int count = 0;
+			int at = 0;
+			while ((at = source.IndexOf(term, at, StringComparison.Ordinal)) >= 0)
+			{
+				count++;
+				at += term.Length;
+			}
+			return count;
 		}
 	}
 }

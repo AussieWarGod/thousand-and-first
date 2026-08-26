@@ -82,21 +82,21 @@ Read: `Growth/KingdomPlot2.cs`, `Growth/KingdomPlotRules.cs`, `Growth/KingdomLay
 
 | Piece | Where | Why it matters to this question |
 |---|---|---|
-| **The heart is already computed, and already drifts.** `KingdomPlotRules.TryHeart` seeds at the rite ground (`RiteHeartWeight = 1`) and averages in every non-Defence mark, so the heart moves toward the built centroid as the city grows. | `KingdomPlotRules.cs:999-1048` | The "heart" is a **derived point**, not an object. A heart ladder can hang a structure *on* it without inventing a locator. |
+| **The heart is already computed, and already drifts.** `KingdomPlotRules.TryHeart` seeds at the rite ground (`RiteHeartWeight = 1`) and averages in every non-Defence mark, so the heart moves toward the built centroid as the city grows. | `Growth/KingdomPlotRules*.cs` | The "heart" is a **derived point**, not an object. A heart ladder can hang a structure *on* it without inventing a locator. |
 | **The rite ground is a zone property, not an object** — `RiteXProperty` / `RiteYProperty` stamped at founding. | `Core/KingdomFounding.cs:69-70,206-207` | The founder's basin marks ground the engine already remembers. Nothing has to be preserved through a rebuild for the ladder to know where the centre began. |
-| **`HeartPull(PlotSize)`** already biases siting: L = 1/cell, XL = 3/cell of distance from the heart; S and M = 0. | `KingdomPlotRules.cs:1056-1067`, applied at `:1123-1126` | Big plots already *want* the heart. The brief's own note — "a heart full of early huts is cleared by striking, which is the system working" — is the churn the author is now asking to soften. The tuning surface exists. |
+| **`HeartPull(PlotSize)`** already biases siting: L = 1/cell, XL = 3/cell of distance from the heart; S and M = 0. | `Growth/KingdomPlotRules*.cs`, applied at `:1123-1126` | Big plots already *want* the heart. The brief's own note — "a heart full of early huts is cleared by striking, which is the system working" — is the churn the author is now asking to soften. The tuning surface exists. |
 | **Residents bind to homes by PLOT ID, not by cell or object.** `HomePlotIdProperty = "KingdomLodgingPlotId"`. | `Growth/KingdomLodging.cs:74,280-292,393` | **This is the single most important fact for the relocation verb.** A move that preserves the plot id keeps every resident housed with no re-assignment, no roof brink, no lodging churn. The household walking over with their house is already how the data is shaped. |
-| **Identity carry across a rebuild is already written.** `KingdomPlots.GrowInPlace` copies the plot id, re-stamps the rect, carries the footprint and roof state to the successor; `r_KingdomImprovement` keeps the predecessor **standing and working** for the whole build and hands contents across only when the successor is actually on the ground. | `KingdomPlot2.cs:1376-1400`; `KingdomUpgrade.cs` header + `PollHandover` | A relocate is the same handover with a *different rect*. The "no roof brink on a planned move" promise in the sketch is not new machinery; it is the existing upgrade handover pointed sideways. |
+| **Identity carry across a rebuild is already written.** `KingdomPlots.GrowInPlace` copies the plot id, re-stamps the rect, carries the footprint and roof state to the successor; `r_KingdomImprovement` keeps the predecessor **standing and working** for the whole build and hands contents across only when the successor is actually on the ground. | `Growth/KingdomPlot2*.cs` (`GrowInPlace`); `KingdomUpgrade.cs` header + `PollHandover` | A relocate is the same handover with a *different rect*. The "no roof brink on a planned move" promise in the sketch is not new machinery; it is the existing upgrade handover pointed sideways. |
 | **`RestakeOnRect` takes an arbitrary rect.** The socket path sweeps the old plot's parts (`SweepPlotParts`, scoped by plot id, protection-law-safe) and re-stakes through the ordinary `KingdomPlots.Stake`. | `KingdomSocket.cs:337-460` | Relocation ≈ `SweepPlotParts(source)` + `RestakeOnRect(destination)` + id/identity carry + a cost rule that spends **no materials**. Most of the verb exists. |
 | **Plan markers cost nothing until affordable** and are realised only on the ordinary settlement pass. | `KingdomPlanMarker.cs:17-50,130` | The "pre-surveyed future ring" can be rendered with the ghost machinery that already ships — visible intent, zero spend. |
-| **Lane reservation is already a rect concept.** `KingdomPlotRules.Reserved(rect)` = rect + `RoadMargin`; `CrowdsExisting` refuses a plot that overlaps any existing plot's reserved rect. | `KingdomPlotRules.cs:919-949` | The codebase already knows how to say "this ground is spoken for and nothing may crowd it." A reserved ring is the same idea at settlement scale. |
+| **Lane reservation is already a rect concept.** `KingdomPlotRules.Reserved(rect)` = rect + `RoadMargin`; `CrowdsExisting` refuses a plot that overlaps any existing plot's reserved rect. | `Growth/KingdomPlotRules*.cs` | The codebase already knows how to say "this ground is spoken for and nothing may crowd it." A reserved ring is the same idea at settlement scale. |
 | **Districts/zoning refuse by name in a fixed order** — `RefusedUnlearned → RefusedTechLevel → RefusedTerritory → RefusedStratum → RefusedDistrict`. | `KingdomZoningRules.cs:26-49` | A ring refusal has an obvious home and an obvious 7b sentence shape. |
 | **There is no research tree and the mod does not want one.** `TechLevel` is *derived*: `TechPointsPerDisk = 1`, `TechPointsPerCertification = 2`, `TechPointsPerOrigin = 0`, thresholds `{0,2,5,9,14}` → hands / salvage / workshop / foundry / arclight. "It rises by playing rather than by spending anything on a research screen. This mod has no research tree and does not want one — a tree is a second job." | `KingdomZoningRules.cs:1-24,211-232` | **The author's "supported by research" must land here.** "Research" in this mod means *data disks taught and machines certified* — a readout of what the settlement has learned and made trustworthy. Any heart-ladder gate that reads as a research screen is a pillar violation. |
 | **Upgrade absorption law (Addendum 3)** already asks displacement-tolerance and output-dependency before auto-acting, and offers 7b-legibly when it cannot absorb. | `KingdomUpgradeRules.cs:499-511,665-744`; brief Addendum 3 | The heart ladder inherits consent-before-cost for free if it is expressed as an upgrade, not as a special case. |
-| **`GrowthStage`**: Camp / Steading / Village / Town / City, plot sizes S/M/L/XL gated by stage. | `Core/KingdomRules.cs:3-10`; `KingdomPlotRules.cs:323-352` | Five stages, four plot sizes — the heart ladder should ride these rungs rather than invent a sixth axis. |
+| **`GrowthStage`**: Camp / Steading / Village / Town / City, plot sizes S/M/L/XL gated by stage. | `Core/KingdomRules.cs:3-10`; `Growth/KingdomPlotRules*.cs` | Five stages, four plot sizes — the heart ladder should ride these rungs rather than invent a sixth axis. |
 
 **One flag found while reading:** `PlotIdProperty` is minted as `Key + "@" + Rect.X1 + "." +
-Rect.Y1 + "." + TimeTicks` (`KingdomPlot2.cs:1038`). It is used purely as an opaque grouping key,
+Rect.Y1 + "." + TimeTicks` (`Growth/KingdomPlot2*.cs`, `PlotIdProperty`). It is used purely as an opaque grouping key,
 so a relocation that keeps the id is correct — but the id would then *describe* coordinates it no
 longer occupies. Cosmetic today; worth minting a coordinate-free id before a move verb ships, so
 nothing later is tempted to parse it.
@@ -630,7 +630,7 @@ from three existing pieces.
 by PLOT, not by ring.**
 
 - **`RiteHeartWeight` becomes tier-scaled.** Today it is the constant `1`
-  (`KingdomPlotRules.cs:999`) — one vote among forty buildings. Make it the heart structure's own
+  (`Growth/KingdomPlotRules*.cs`) — one vote among forty buildings. Make it the heart structure's own
   tier weight (e.g. 1 / 4 / 12 / 40 across the ladder). Consequences: at Camp the heart still
   drifts to where people actually built (correct — a basin on bare ground is not a monument); as
   the great work rises it **pulls the settled centre back onto itself**, and the city visibly
@@ -656,7 +656,7 @@ by PLOT, not by ring.**
   `Core/KingdomFounding.cs:65-71`: founding currently stamps rite coordinates and nothing else, so
   surveying at the rite is an addition to a function that already runs, not a new hook.
 - The **surveyed ring survives only as a soft term in a function that already exists.**
-  `ScoreRect` already receives `HasRite, RiteX, RiteY` (`KingdomPlotRules.cs:1110`) and already
+  `ScoreRect` already receives `HasRite, RiteX, RiteY` (`Growth/KingdomPlotRules*.cs`) and already
   subtracts a heart-distance term. Add one repulsion term for "inside the surveyed future ground":
   the settlement will not *volunteer* to build there while clear ground exists. Not a refusal —
   a preference. The founder's stake still beats the grammar, as ruled.
@@ -845,9 +845,9 @@ needed.** `MinZones` is already a parsed, tested gate (`RefusedTerritory`; catal
 
 ### 3d. The code deltas this actually costs
 
-1. **`RiteHeartWeight` becomes tier-scaled** (`KingdomPlotRules.cs:999`) — one constant becomes one
+1. **`RiteHeartWeight` becomes tier-scaled** (`Growth/KingdomPlotRules*.cs`) — one constant becomes one
    small function. The city re-centres on the monument as it rises.
-2. **One repulsion term in `ScoreRect`** (`KingdomPlotRules.cs:1108-1128`) — it already receives
+2. **One repulsion term in `ScoreRect`** (`Growth/KingdomPlotRules*.cs`) — it already receives
    `HasRite/RiteX/RiteY` and already subtracts a heart-distance term. Surveyed ground becomes a
    preference against, never a refusal.
 3. **A `Relocate` verb in `KingdomSocket`** — `SweepPlotParts(source)` + `RestakeOnRect(destination)`
@@ -862,7 +862,7 @@ needed.** `MinZones` is already a parsed, tested gate (`RefusedTerritory`; catal
    within reach, read off `HeartPull`/reach and the `Carries` vocabulary. No new counters.
 
 Housekeeping found while reading: mint a **coordinate-free plot id** before a move verb ships —
-`PlotIdProperty` is currently `Key@X1.Y1.TimeTicks` (`KingdomPlot2.cs:1038`) and after a move would
+`PlotIdProperty` is currently `Key@X1.Y1.TimeTicks` (`Growth/KingdomPlot2*.cs`, `PlotIdProperty`) and after a move would
 describe coordinates it no longer occupies. Opaque today, a trap tomorrow.
 
 Tests would land in `DevTests/KingdomPlotRulesTests.cs` (weight/repulsion), a new

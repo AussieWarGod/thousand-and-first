@@ -6,6 +6,25 @@ namespace ThousandAndFirst.Tests
 {
 	public class ManifestRulesTests
 	{
+		[Test]
+		public void SplitManifestRecordRetainsPublicFieldOrderAndDefaults()
+		{
+			System.Reflection.FieldInfo[] fields = typeof(KingdomManifest).GetFields(
+				System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public);
+			CollectionAssert.AreEqual(new string[]
+			{
+				"OriginName", "DestinationName", "Drams", "LoadedTick", "DeadlineTick",
+				"TurnedBack"
+			}, System.Array.ConvertAll(fields, field => field.Name));
+			KingdomManifest manifest = new KingdomManifest();
+			Assert.IsNull(manifest.OriginName);
+			Assert.IsNull(manifest.DestinationName);
+			Assert.AreEqual(0, manifest.Drams);
+			Assert.AreEqual(0L, manifest.LoadedTick);
+			Assert.AreEqual(0L, manifest.DeadlineTick);
+			Assert.IsFalse(manifest.TurnedBack);
+		}
+
 		// --- ManifestReserve / ManifestAmount: the size arithmetic ---------------------------
 
 		[TestCase(0)]

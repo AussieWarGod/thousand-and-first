@@ -6,6 +6,58 @@ namespace ThousandAndFirst.Tests
 {
 	public class KingdomGuestRulesTests
 	{
+		[Test]
+		public void GuestRuleDeclarationsKeepExactPublicAndNestedAbi()
+		{
+			System.Type rules = typeof(KingdomGuestRules);
+			Assert.AreEqual("ThousandAndFirst.KingdomGuestRules", rules.FullName);
+			Assert.IsTrue(rules.IsPublic && rules.IsAbstract && rules.IsSealed);
+
+			System.Type hook = typeof(KingdomGuestRules.HookKind);
+			System.Type lodging = typeof(KingdomGuestRules.LodgingVerdict);
+			System.Type plant = typeof(KingdomGuestRules.PlantVerdict);
+			Assert.AreEqual("ThousandAndFirst.KingdomGuestRules+HookKind", hook.FullName);
+			Assert.AreEqual("ThousandAndFirst.KingdomGuestRules+LodgingVerdict", lodging.FullName);
+			Assert.AreEqual("ThousandAndFirst.KingdomGuestRules+PlantVerdict", plant.FullName);
+			Assert.IsTrue(hook.IsNestedPublic && lodging.IsNestedPublic && plant.IsNestedPublic);
+			Assert.AreEqual(typeof(int), System.Enum.GetUnderlyingType(hook));
+			Assert.AreEqual(typeof(int), System.Enum.GetUnderlyingType(lodging));
+			Assert.AreEqual(typeof(int), System.Enum.GetUnderlyingType(plant));
+			Assert.AreEqual("0:Ruin,1:Machine,2:Debt", EnumShape(hook));
+			Assert.AreEqual("0:Lodged,1:NoTier,2:NoRoom,3:NoFineHouse,4:FineHouseOccupied,"
+				+ "5:ShopTooCrude", EnumShape(lodging));
+			Assert.AreEqual("0:Planted,1:NotFounded,2:NothingToCarry,3:NoRoad,4:AlreadyInFlight",
+				EnumShape(plant));
+
+			string[] fields = { "RuinHooks", "MachineHooks", "NamedVillages", "DebtReasons" };
+			for (int i = 0; i < fields.Length; i++)
+			{
+				System.Reflection.FieldInfo field = rules.GetField(fields[i],
+					System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static |
+					System.Reflection.BindingFlags.DeclaredOnly);
+				Assert.IsNotNull(field, fields[i]);
+				Assert.AreEqual(typeof(string[]), field.FieldType, fields[i]);
+				Assert.IsTrue(field.IsInitOnly, fields[i]);
+			}
+			Assert.AreEqual(4, KingdomGuestRules.RuinHooks.Length);
+			Assert.AreEqual(4, KingdomGuestRules.MachineHooks.Length);
+			CollectionAssert.AreEqual(new[] { "Joppa", "Kyakukya", "Ezra" },
+				KingdomGuestRules.NamedVillages);
+			Assert.AreEqual(3, KingdomGuestRules.DebtReasons.Length);
+		}
+
+		private static string EnumShape(System.Type type)
+		{
+			System.Array values = System.Enum.GetValues(type);
+			string[] rows = new string[values.Length];
+			for (int i = 0; i < values.Length; i++)
+			{
+				object value = values.GetValue(i);
+				rows[i] = System.Convert.ToInt32(value) + ":" + value;
+			}
+			return string.Join(",", rows);
+		}
+
 		// ==================================================================================
 		// Guests at the gate
 		// ==================================================================================

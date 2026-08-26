@@ -33,6 +33,10 @@
     <Compile Include="..\Simulation\Kernel\TickMath.cs" />
     <Compile Include="..\Simulation\Kernel\OptionLatch.cs" />
     <Compile Include="..\Simulation\Kernel\JobTransitions.cs" />
+    <Compile Include="..\Simulation\Kernel\FixedPeriodToy.Declarations.cs" />
     <Compile Include="..\Simulation\Kernel\FixedPeriodToy.cs" />
+    <Compile Include="..\Simulation\Kernel\FixedPeriodToy.OptionTransitions.cs" />
+    <Compile Include="..\Simulation\Kernel\FixedPeriodToy.EventAndCodec.cs" />
+    <Compile Include="..\Simulation\Kernel\FixedPeriodToy.ValidationAndFold.cs" />
   </ItemGroup>
 </Project>

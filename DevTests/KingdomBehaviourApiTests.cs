@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System;
 using System.IO;
+using System.Reflection;
 using NUnit.Framework;
 using ThousandAndFirst.Api;
 using ThousandAndFirst.Simulation.City;
@@ -113,6 +114,34 @@ namespace ThousandAndFirst.Tests
 	internal class KingdomBehaviourApiTests
 	{
 		private const string Owner = "External Fixture";
+		private const BindingFlags InstanceFields = BindingFlags.Instance | BindingFlags.Public
+			| BindingFlags.NonPublic | BindingFlags.DeclaredOnly;
+
+		private static void AssertInternalTopLevel(Type type)
+		{
+			Assert.AreEqual("ThousandAndFirst.Api." + type.Name, type.FullName);
+			Assert.IsFalse(type.IsNested, type.Name + " became nested");
+			Assert.IsTrue(type.IsNotPublic, type.Name + " accessibility changed");
+		}
+
+		private static void AssertFields(Type type, string[] names, Type[] types)
+		{
+			FieldInfo[] fields = type.GetFields(InstanceFields);
+			Assert.AreEqual(names.Length, fields.Length, type.Name + " field count");
+			object defaultValue = type.IsValueType ? Activator.CreateInstance(type) : null;
+			for (int i = 0; i < fields.Length; i++)
+			{
+				Assert.AreEqual(names[i], fields[i].Name, type.Name + " field order at " + i);
+				Assert.AreEqual(types[i], fields[i].FieldType, type.Name + "." + fields[i].Name + " type");
+				Assert.IsTrue(fields[i].IsInitOnly, type.Name + "." + fields[i].Name + " stopped being readonly");
+				if (defaultValue != null)
+				{
+					object expected = types[i].IsValueType ? Activator.CreateInstance(types[i]) : null;
+					Assert.AreEqual(expected, fields[i].GetValue(defaultValue),
+						type.Name + "." + fields[i].Name + " default");
+				}
+			}
+		}
 
 		private static KingdomCityReading City(long tick)
 		{
@@ -128,6 +157,73 @@ namespace ThousandAndFirst.Tests
 				},
 				new[] { new KingdomWorkReading(7, "zone-a", "fixture-crusher", 100, 1,
 					KingdomWorkClass.Refiner, 0, 0, tick) }, null);
+		}
+
+		[Test]
+		public void DurableBehaviourRowsKeepExactIdentityFieldsAndStatusWireValues()
+		{
+			Assert.AreEqual(typeof(byte), Enum.GetUnderlyingType(typeof(KingdomExtensionJobStatus)));
+			Assert.AreEqual("ThousandAndFirst.Api.KingdomExtensionJobStatus",
+				typeof(KingdomExtensionJobStatus).FullName);
+			Assert.IsTrue(typeof(KingdomExtensionJobStatus).IsPublic);
+			CollectionAssert.AreEqual(new[] { "Open", "Completed", "Failed" },
+				Enum.GetNames(typeof(KingdomExtensionJobStatus)));
+			CollectionAssert.AreEqual(new byte[] { 0, 1, 2 }, new[]
+			{
+				(byte)KingdomExtensionJobStatus.Open,
+				(byte)KingdomExtensionJobStatus.Completed,
+				(byte)KingdomExtensionJobStatus.Failed
+			});
+
+			AssertInternalTopLevel(typeof(KingdomCarrierKindRow));
+			Assert.IsTrue(typeof(KingdomCarrierKindRow).IsValueType);
+			AssertFields(typeof(KingdomCarrierKindRow),
+				new[] { "Key", "Blueprint", "WalkTicksPerCell", "Capacity" },
+				new[] { typeof(string), typeof(string), typeof(int), typeof(int) });
+
+			AssertInternalTopLevel(typeof(KingdomBehaviourJobRow));
+			Assert.IsTrue(typeof(KingdomBehaviourJobRow).IsClass && typeof(KingdomBehaviourJobRow).IsSealed);
+			AssertFields(typeof(KingdomBehaviourJobRow),
+				new[] { "legs", "completion", "Key", "CarrierKey", "CarrierBlueprint",
+					"WalkTicksPerCell", "CargoResourceKey", "CargoAmount", "StartTick", "DueTick", "Status" },
+				new[] { typeof(KingdomExtensionLeg[]), typeof(KingdomResourceChange[]), typeof(string),
+					typeof(string), typeof(string), typeof(int), typeof(string), typeof(int), typeof(long),
+					typeof(long), typeof(KingdomExtensionJobStatus) });
+
+			AssertInternalTopLevel(typeof(KingdomBehaviourState));
+			Assert.IsTrue(typeof(KingdomBehaviourState).IsClass && typeof(KingdomBehaviourState).IsSealed);
+			AssertFields(typeof(KingdomBehaviourState),
+				new[] { "resources", "jobs", "networks", "works" },
+				new[] { typeof(KingdomResourceReading[]), typeof(KingdomBehaviourJobRow[]),
+					typeof(KingdomExtensionNetworkReading[]), typeof(KingdomWorkBehaviourReading[]) });
+			Assert.AreEqual(0, KingdomBehaviourState.Empty.ResourceCount);
+			Assert.AreEqual(0, KingdomBehaviourState.Empty.JobCount);
+			Assert.AreEqual(0, KingdomBehaviourState.Empty.NetworkCount);
+			Assert.AreEqual(0, KingdomBehaviourState.Empty.WorkCount);
+
+			AssertInternalTopLevel(typeof(KingdomBehaviourRules));
+			Assert.IsTrue(typeof(KingdomBehaviourRules).IsAbstract && typeof(KingdomBehaviourRules).IsSealed);
+		}
+
+		[Test]
+		public void DurableJobConstructorKeepsCanonicalDefaultsAndCopiesPayloads()
+		{
+			KingdomExtensionLeg[] legs = { new KingdomExtensionLeg("zone-a", 1, 2, 3, 4) };
+			KingdomResourceChange[] changes = { new KingdomResourceChange("owner:ore", 5L) };
+			KingdomBehaviourJobRow row = new KingdomBehaviourJobRow(null, null, null, 7, null, 2,
+				10L, 20L, KingdomExtensionJobStatus.Open, legs, changes);
+			legs[0] = new KingdomExtensionLeg("changed", 9, 9, 9, 9);
+			changes[0] = new KingdomResourceChange("owner:changed", 99L);
+			Assert.AreEqual("", row.Key);
+			Assert.AreEqual("", row.CarrierKey);
+			Assert.AreEqual("", row.CarrierBlueprint);
+			Assert.AreEqual("", row.CargoResourceKey);
+			KingdomExtensionLeg heldLeg;
+			KingdomResourceChange heldChange;
+			Assert.IsTrue(row.TryLeg(0, out heldLeg));
+			Assert.IsTrue(row.TryCompletion(0, out heldChange));
+			Assert.AreEqual("zone-a", heldLeg.ZoneId);
+			Assert.AreEqual("owner:ore", heldChange.ResourceKey);
 		}
 
 		[Test]
@@ -522,7 +618,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void RuntimeRegistrationAndEveryBehaviourCallUseTheSharedExecutor()
 		{
-			string registry = TestMain.ReadRepositoryText(Path.Combine("Api", "KingdomExtensions.cs"));
+			string registry = KingdomExtensionsLogicalSource.Read();
 			StringAssert.Contains("extension is IResourceKind", registry);
 			StringAssert.Contains("extension is IJobKind", registry);
 			StringAssert.Contains("extension is ICarrierKind", registry);
@@ -533,8 +629,13 @@ namespace ThousandAndFirst.Tests
 			string runtime = string.Join("\n",
 				TestMain.ReadRepositoryText(Path.Combine("Api", "KingdomBehaviourExtensions.cs")),
 				TestMain.ReadRepositoryText(Path.Combine("Api", "KingdomBehaviourExtensions.Jobs.cs")));
-			string behaviourRules = TestMain.ReadRepositoryText(Path.Combine("Api",
-				"KingdomBehaviourRules.cs"));
+			string behaviourRules = string.Join("\n",
+				TestMain.ReadRepositoryText(Path.Combine("Api", "KingdomBehaviourRules.cs")),
+				TestMain.ReadRepositoryText(Path.Combine("Api", "KingdomBehaviourRules.Jobs.cs")),
+				TestMain.ReadRepositoryText(Path.Combine("Api", "KingdomBehaviourRules.NetworksAndWorks.cs")),
+				TestMain.ReadRepositoryText(Path.Combine("Api", "KingdomBehaviourRules.Codec.cs")),
+				TestMain.ReadRepositoryText(Path.Combine("Api", "KingdomBehaviourRules.PlanningAndNetworkSolve.cs")),
+				TestMain.ReadRepositoryText(Path.Combine("Api", "KingdomBehaviourRules.Helpers.cs")));
 			StringAssert.Contains(
 				"bytes.Length > KingdomApiRules.LegacyBehaviourModelBytes", behaviourRules);
 			StringAssert.Contains("KingdomComputeResult<KingdomResourceDefinition[]>", runtime);

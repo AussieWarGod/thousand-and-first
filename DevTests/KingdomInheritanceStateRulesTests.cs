@@ -9,6 +9,82 @@ namespace ThousandAndFirst.Tests
 {
 	public class KingdomInheritanceStateRulesTests
 	{
+		private static string EnumShape(Type type)
+		{
+			Array values = Enum.GetValues(type);
+			string[] shape = new string[values.Length];
+			for (int i = 0; i < values.Length; i++)
+			{
+				object value = values.GetValue(i);
+				shape[i] = Convert.ToInt32(value) + ":" + value;
+			}
+			return string.Join(",", shape);
+		}
+
+		[Test]
+		public void InheritanceDeclarationsKeepExactInternalAbiAndDefaults()
+		{
+			Assert.AreEqual(typeof(int), Enum.GetUnderlyingType(typeof(KingdomInheritancePhase)));
+			Assert.AreEqual("0:Empty,1:Reserved,2:SiteSelected,3:WorldValidated,4:Installed,"
+				+ "5:AppliedPendingDurability,6:Committed,7:Refused,8:RepairRequired",
+				EnumShape(typeof(KingdomInheritancePhase)));
+			Assert.AreEqual(typeof(int), Enum.GetUnderlyingType(typeof(KingdomInheritanceStartFault)));
+			Assert.AreEqual("0:None,1:MissingStart,2:AlternateWorld,3:TargetIsStart",
+				EnumShape(typeof(KingdomInheritanceStartFault)));
+			Assert.AreEqual(typeof(int), Enum.GetUnderlyingType(typeof(KingdomCommittedRewindAction)));
+			Assert.AreEqual("0:DeferUntilPrimary,1:AdoptDurable,2:AwaitLazyBuilder,"
+				+ "3:ReapplyCleanBuiltTarget,4:RepairRequired",
+				EnumShape(typeof(KingdomCommittedRewindAction)));
+			Assert.AreEqual(typeof(int), Enum.GetUnderlyingType(typeof(KingdomInheritanceLoadKind)));
+			Assert.AreEqual("0:Unknown,1:Primary,2:SameGameRollback",
+				EnumShape(typeof(KingdomInheritanceLoadKind)));
+
+			Type rules = typeof(KingdomInheritanceStateRules);
+			Assert.AreEqual("ThousandAndFirst.KingdomInheritanceStateRules", rules.FullName);
+			Assert.IsTrue(rules.IsNotPublic && rules.IsAbstract && rules.IsSealed);
+			Type flow = typeof(KingdomInheritanceLoadSourceFlow);
+			Type loadSource = flow.GetNestedType("LoadSource",
+				System.Reflection.BindingFlags.NonPublic);
+			Assert.IsNotNull(loadSource);
+			Assert.AreEqual("ThousandAndFirst.KingdomInheritanceLoadSourceFlow+LoadSource",
+				loadSource.FullName);
+			Assert.IsTrue(loadSource.IsNestedPrivate);
+
+			Type saved = typeof(KingdomInheritanceSavedShape);
+			Assert.AreEqual("ThousandAndFirst.KingdomInheritanceSavedShape", saved.FullName);
+			Assert.IsTrue(saved.IsNotPublic && saved.IsClass && saved.IsSealed);
+			System.Reflection.FieldInfo[] fields = saved.GetFields(
+				System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic |
+				System.Reflection.BindingFlags.DeclaredOnly);
+			string[] expected = new[] { "PhaseValue", "LegacyText", "ReceiptText",
+				"CommittedReceiptText", "TargetZoneId", "TargetTerrainBlueprint",
+				"TargetTerrainRank", "SecretId", "SiteName", "ApplyStatus", "ApplyFault",
+				"ApplicationMarker", "ReleasePending", "OwnsSkipTerrainBuilders", "OwnsNoBiomes",
+				"OwnsZoneName", "RecoveryDisabled", "RetryAuthorized" };
+			Assert.AreEqual(expected.Length, fields.Length);
+			for (int i = 0; i < expected.Length; i++)
+			{
+				Assert.AreEqual(expected[i], fields[i].Name, "saved field order " + i);
+			}
+
+			KingdomInheritanceSavedShape empty = new KingdomInheritanceSavedShape();
+			Assert.AreEqual(0, empty.PhaseValue);
+			Assert.AreEqual("", empty.LegacyText);
+			Assert.AreEqual("", empty.ReceiptText);
+			Assert.AreEqual("", empty.CommittedReceiptText);
+			Assert.AreEqual("", empty.TargetZoneId);
+			Assert.AreEqual("", empty.TargetTerrainBlueprint);
+			Assert.AreEqual(-1, empty.TargetTerrainRank);
+			Assert.AreEqual("", empty.SecretId);
+			Assert.AreEqual("", empty.SiteName);
+			Assert.AreEqual(-1, empty.ApplyStatus);
+			Assert.AreEqual(-1, empty.ApplyFault);
+			Assert.AreEqual("", empty.ApplicationMarker);
+			Assert.IsFalse(empty.ReleasePending || empty.OwnsSkipTerrainBuilders
+				|| empty.OwnsNoBiomes || empty.OwnsZoneName || empty.RecoveryDisabled
+				|| empty.RetryAuthorized);
+		}
+
 		private static string WorkspaceRoot()
 		{
 			return TestMain.RepositoryRoot;
@@ -151,7 +227,7 @@ namespace ThousandAndFirst.Tests
 		{
 			string options = Source("Options.xml");
 			string state = Source(Path.Combine("World", "KingdomInheritanceState.cs"));
-			string seal = Source(Path.Combine("Core", "KingdomSeal.cs"));
+			string seal = KingdomSealLogicalSource.Read();
 			const string optionId = "r_TAF_OptionLegacyImport";
 			int option = options.IndexOf("<option ID=\"" + optionId + "\"",
 				StringComparison.Ordinal);

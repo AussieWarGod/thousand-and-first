@@ -1,4 +1,5 @@
 ﻿#if TAF_TESTS
+using System;
 using System.Collections.Generic;
 using NUnit.Framework;
 using ThousandAndFirst;
@@ -7,6 +8,51 @@ namespace ThousandAndFirst.Tests
 {
 	public class KingdomCreedRulesTests
 	{
+		private static void AssertPublicIntEnum(Type type, params string[] expected)
+		{
+			Assert.AreEqual(typeof(int), Enum.GetUnderlyingType(type), type.Name + " backing type");
+			Assert.AreEqual("ThousandAndFirst." + type.Name, type.FullName);
+			Assert.IsTrue(type.IsPublic, type.Name + " accessibility changed");
+			Assert.IsFalse(type.IsNested, type.Name + " became nested");
+			string[] names = Enum.GetNames(type);
+			string[] actual = new string[names.Length];
+			for (int i = 0; i < names.Length; i++)
+				actual[i] = names[i] + "=" + Convert.ToInt32(Enum.Parse(type, names[i]));
+			CollectionAssert.AreEqual(expected, actual, type.Name + " values/order");
+		}
+
+		[Test]
+		public void CreedPublicEnumsAndConstantsKeepExactAbiValues()
+		{
+			AssertPublicIntEnum(typeof(CityTemper), "Concord=0", "Muttering=1", "Quarrel=2",
+				"Rupture=3", "Secession=4");
+			AssertPublicIntEnum(typeof(SecessionVerdict), "Warranted=0", "OneCity=1",
+				"NoClash=2", "DissentHolds=3");
+			AssertPublicIntEnum(typeof(RejoinVerdict), "Allowed=0", "NothingSeceded=1",
+				"RealmIsFull=2", "NotOnTheirGround=3", "ClashStillLive=4", "StandingTooLow=5");
+			Assert.AreEqual("ThousandAndFirst.KingdomCreedRules", typeof(KingdomCreedRules).FullName);
+			Assert.IsTrue(typeof(KingdomCreedRules).IsPublic);
+			Assert.IsTrue(typeof(KingdomCreedRules).IsAbstract && typeof(KingdomCreedRules).IsSealed);
+
+			Assert.AreEqual(100, KingdomCreedRules.OrdinaryWeight);
+			Assert.AreEqual(8, KingdomCreedRules.AffinityPerResident);
+			Assert.AreEqual(60, KingdomCreedRules.DeclaredBonus);
+			Assert.AreEqual(3, KingdomCreedRules.MinBelievers);
+			Assert.AreEqual(33, KingdomCreedRules.DominantSharePercent);
+			Assert.AreEqual(3, KingdomCreedRules.MaxKeptCreeds);
+			Assert.AreEqual('|', KingdomCreedRules.KeptSeparator);
+			Assert.AreEqual(25, KingdomCreedRules.HostilityPerDissentPoint);
+			Assert.AreEqual(100, KingdomCreedRules.DissentBreaking);
+			Assert.AreEqual(70, KingdomCreedRules.DissentRupture);
+			Assert.AreEqual(45, KingdomCreedRules.DissentQuarrel);
+			Assert.AreEqual(20, KingdomCreedRules.DissentMuttering);
+			Assert.AreEqual(3, KingdomCreedRules.RiteCooldownDays);
+			Assert.AreEqual(9, KingdomCreedRules.SecessionWindowDays);
+			Assert.AreEqual(12, KingdomCreedRules.MealEase);
+			Assert.AreEqual(20, KingdomCreedRules.DeclarationShock);
+			Assert.AreEqual(-150, KingdomCreedRules.DeclarationStandingCost);
+		}
+
 		// ---- what pulls a settler toward a creed -------------------------------------------
 
 		// Both sides of every tier boundary. The tiers are vanilla's own reputation thresholds,

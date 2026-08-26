@@ -261,7 +261,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void RuntimeFoundingAndDebugWishUseMergedRegistryNotClosedBaseArray()
 		{
-			string data = TestMain.ReadRepositoryText(Path.Combine("Core", "KingdomData.cs"));
+			string data = KingdomDataLogicalSource.Read();
 			StringAssert.Contains("xml.GetAttribute(\"Terrain\")", data);
 			StringAssert.Contains("xml.GetAttribute(\"Region\")", data);
 			StringAssert.Contains("KingdomStyleRules.Resolve(_styleDefinitions", data);

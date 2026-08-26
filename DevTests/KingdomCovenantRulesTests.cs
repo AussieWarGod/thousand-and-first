@@ -81,7 +81,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void RuntimeLoaderAndCentralJudgementConsumeTheMergedPair()
 		{
-			string data = TestMain.ReadRepositoryText(Path.Combine("Core", "KingdomData.cs"));
+			string data = KingdomDataLogicalSource.Read();
 			StringAssert.Contains("xml.GetAttribute(\"Covenant\")", data);
 			StringAssert.Contains("xml.GetAttribute(\"MinStanding\")", data);
 			StringAssert.Contains("TryParseCovenantAttributes(design.Key", data);

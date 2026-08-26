@@ -76,7 +76,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void PlotFurnitureCannotMultiplyOneCommissionIntoCivicStoreRows()
 		{
-			string plot = Source(Path.Combine("Growth", "KingdomPlot2.cs"));
+			string plot = KingdomPlot2LogicalSource.Read();
 			string durable = Slice(plot, "private static bool FurnishDurable(",
 				"private static bool TryFreezeFurnishPlan(");
 			string legacy = Slice(plot, "private static bool FurnishLegacyDurable(",

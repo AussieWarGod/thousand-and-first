@@ -21,6 +21,55 @@ namespace ThousandAndFirst.Tests
 			return new List<string>(Values);
 		}
 
+		[Test]
+		public void NestedDeclarationsKeepTheirPersistedAndPublicAbi()
+		{
+			Assert.AreEqual(typeof(int), System.Enum.GetUnderlyingType(typeof(Quarters)));
+			CollectionAssert.AreEqual(new int[4] { 0, 1, 2, 3 }, new int[4]
+			{
+				(int)Quarters.Packed,
+				(int)Quarters.Close,
+				(int)Quarters.Roomed,
+				(int)Quarters.Private
+			});
+			Assert.AreEqual(typeof(int), System.Enum.GetUnderlyingType(typeof(Reason)));
+			CollectionAssert.AreEqual(new int[6] { 0, 1, 2, 3, 4, 5 }, new int[6]
+			{
+				(int)Reason.Housed,
+				(int)Reason.NoRoofAtAll,
+				(int)Reason.NeedsUnmet,
+				(int)Reason.Full,
+				(int)Reason.Refused,
+				(int)Reason.Condemned
+			});
+
+			Assert.AreEqual("ThousandAndFirst.KingdomLodgingRules+LodgingCandidate", typeof(Candidate).FullName);
+			System.Reflection.FieldInfo[] candidateFields = typeof(Candidate).GetFields();
+			CollectionAssert.AreEqual(new string[3] { "PlotId", "Capacity", "Occupants" },
+				new string[3] { candidateFields[0].Name, candidateFields[1].Name, candidateFields[2].Name });
+			CollectionAssert.AreEqual(new System.Type[3] { typeof(string), typeof(int), typeof(int) },
+				new System.Type[3] { candidateFields[0].FieldType, candidateFields[1].FieldType, candidateFields[2].FieldType });
+			Assert.IsTrue(candidateFields[0].IsInitOnly && candidateFields[1].IsInitOnly && candidateFields[2].IsInitOnly);
+
+			Assert.AreEqual("ThousandAndFirst.KingdomLodgingRules+ArrivalHome", typeof(KingdomLodgingRules.ArrivalHome).FullName);
+			System.Reflection.FieldInfo[] homeFields = typeof(KingdomLodgingRules.ArrivalHome).GetFields();
+			CollectionAssert.AreEqual(new string[4] { "Provides", "Capacity", "Occupants", "OccupantsRefuse" },
+				new string[4] { homeFields[0].Name, homeFields[1].Name, homeFields[2].Name, homeFields[3].Name });
+			CollectionAssert.AreEqual(new System.Type[4]
+			{
+				typeof(IReadOnlyList<string>), typeof(int), typeof(int), typeof(bool)
+			}, new System.Type[4]
+			{
+				homeFields[0].FieldType, homeFields[1].FieldType, homeFields[2].FieldType, homeFields[3].FieldType
+			});
+			for (int i = 0; i < homeFields.Length; i++) Assert.IsTrue(homeFields[i].IsInitOnly);
+
+			System.Reflection.ParameterInfo[] diagnose = typeof(KingdomLodgingRules).GetMethod("Diagnose").GetParameters();
+			Assert.AreEqual(true, diagnose[4].DefaultValue);
+			System.Reflection.ParameterInfo[] arrivals = typeof(KingdomLodgingRules).GetMethod("AnyWouldTake").GetParameters();
+			Assert.AreEqual(false, arrivals[3].DefaultValue);
+		}
+
 		// --- ParseTags: comma list -> trimmed, non-empty tokens ------------------------------
 
 		[Test]

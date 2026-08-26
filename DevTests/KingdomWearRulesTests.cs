@@ -25,6 +25,33 @@ namespace ThousandAndFirst.Tests
 	{
 		private const string City = "taf:settlement:test-city";
 
+		[Test]
+		public void WearEnumsKeepTheirPersistedNumericAbi()
+		{
+			AssertEnum(typeof(KingdomWearSinkDisposition), 0, 1, 2, 3, 4, 5);
+			AssertEnum(typeof(KingdomWearPassPhase), 0, 1, 2, 3, 4, 5, 6, 7, 8);
+			AssertEnum(typeof(KingdomWearPassAction), 0, 1, 2, 3);
+			AssertEnum(typeof(KingdomWearIncidentPhase), 0, 1, 2, 3, 4, 5, 6, 7, 8);
+			AssertEnum(typeof(KingdomWearLeakPhase), 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
+			AssertEnum(typeof(KingdomWearMutationAction), 0, 1, 2, 3);
+			AssertEnum(typeof(KingdomWearClockAction), 0, 1, 2, 3);
+			AssertEnum(typeof(KingdomWearRules.WearCause), 0, 1, 2, 3);
+			AssertEnum(typeof(KingdomWearRules.WearChannel), 1, 2, 3);
+			AssertEnum(typeof(KingdomWearRules.RepairVerdict), 0, 1, 2, 3, 4);
+			AssertEnum(typeof(KingdomWearRules.LeakKind), 1, 2, 3);
+		}
+
+		private static void AssertEnum(Type type, params int[] expected)
+		{
+			Assert.AreEqual(typeof(int), Enum.GetUnderlyingType(type), type.FullName);
+			Array values = Enum.GetValues(type);
+			Assert.AreEqual(expected.Length, values.Length, type.FullName);
+			for (int i = 0; i < expected.Length; i++)
+			{
+				Assert.AreEqual(expected[i], Convert.ToInt32(values.GetValue(i)), type.FullName + "[" + i + "]");
+			}
+		}
+
 		private static string ReadRepoSource(string relative)
 		{
 			return TestMain.ReadRepositoryText(relative);

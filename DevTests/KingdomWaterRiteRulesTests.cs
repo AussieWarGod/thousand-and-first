@@ -1,4 +1,6 @@
 #if TAF_TESTS
+using System;
+using System.Reflection;
 using NUnit.Framework;
 using ThousandAndFirst;
 
@@ -7,6 +9,68 @@ namespace ThousandAndFirst.Tests
 	public class KingdomWaterRiteRulesTests
 	{
 		private const string Realm = "Barathrumites";
+		private const BindingFlags PublicInstanceFields = BindingFlags.Instance
+			| BindingFlags.Public | BindingFlags.DeclaredOnly;
+
+		private static void AssertPublicIntEnum(Type type, params string[] expected)
+		{
+			Assert.AreEqual(typeof(int), Enum.GetUnderlyingType(type), type.Name + " backing type");
+			Assert.AreEqual("ThousandAndFirst." + type.Name, type.FullName);
+			Assert.IsTrue(type.IsPublic, type.Name + " accessibility changed");
+			Assert.IsFalse(type.IsNested, type.Name + " became nested");
+			string[] names = Enum.GetNames(type);
+			string[] actual = new string[names.Length];
+			for (int i = 0; i < names.Length; i++)
+				actual[i] = names[i] + "=" + Convert.ToInt32(Enum.Parse(type, names[i]));
+			CollectionAssert.AreEqual(expected, actual, type.Name + " values/order");
+		}
+
+		private static void AssertPublicReadonlyStruct(Type type, string[] names, Type[] types)
+		{
+			Assert.AreEqual("ThousandAndFirst." + type.Name, type.FullName);
+			Assert.IsTrue(type.IsPublic && type.IsValueType && !type.IsNested);
+			FieldInfo[] fields = type.GetFields(PublicInstanceFields);
+			Assert.AreEqual(names.Length, fields.Length, type.Name + " field count");
+			object value = Activator.CreateInstance(type);
+			for (int i = 0; i < fields.Length; i++)
+			{
+				Assert.AreEqual(names[i], fields[i].Name, type.Name + " field order at " + i);
+				Assert.AreEqual(types[i], fields[i].FieldType, type.Name + "." + fields[i].Name + " type");
+				Assert.IsTrue(fields[i].IsInitOnly, type.Name + "." + fields[i].Name + " stopped being readonly");
+				object expected = types[i].IsValueType ? Activator.CreateInstance(types[i]) : null;
+				Assert.AreEqual(expected, fields[i].GetValue(value), type.Name + "." + fields[i].Name + " default");
+			}
+		}
+
+		[Test]
+		public void WaterRitePublicAbiKeepsExactEnumsRowsAndConstants()
+		{
+			AssertPublicIntEnum(typeof(WaterRiteBar), "Ready=0", "NotOnOurGround=1",
+				"RealmBelievesNothing=2", "NothingBetweenYou=3", "TheirOffice=4", "NoRoadOut=5",
+				"AskedTooOften=6", "AlreadyAnswered=7", "PouredTooRecently=8", "StoresCannotBear=9");
+			AssertPublicIntEnum(typeof(WaterRiteAnswer), "Accepted=0", "TooNew=1", "RivalShrine=2",
+				"Devout=3", "TooBitter=4", "Steadfast=5");
+			AssertPublicReadonlyStruct(typeof(WaterRiteFacts),
+				new[] { "Hostility", "SharedDays", "HoldsACreed", "RivalShrine", "Devout", "Steadfast", "RealmCreed" },
+				new[] { typeof(int), typeof(int), typeof(bool), typeof(bool), typeof(bool), typeof(bool), typeof(string) });
+			AssertPublicReadonlyStruct(typeof(WaterRiteStamp),
+				new[] { "Answer", "Hostility", "RivalShrine", "Absolute", "NeededDays", "RealmCreed" },
+				new[] { typeof(WaterRiteAnswer), typeof(int), typeof(bool), typeof(bool), typeof(int), typeof(string) });
+			Assert.AreEqual("ThousandAndFirst.KingdomWaterRiteRules", typeof(KingdomWaterRiteRules).FullName);
+			Assert.IsTrue(typeof(KingdomWaterRiteRules).IsPublic);
+			Assert.IsTrue(typeof(KingdomWaterRiteRules).IsAbstract && typeof(KingdomWaterRiteRules).IsSealed);
+			Assert.AreEqual(24, KingdomWaterRiteRules.CovenantDistance);
+			Assert.AreEqual(16, KingdomWaterRiteRules.CreedHeldDistance);
+			Assert.AreEqual(30, KingdomWaterRiteRules.RivalShrineDistance);
+			Assert.AreEqual(20, KingdomWaterRiteRules.DevotionDistance);
+			Assert.AreEqual(4, KingdomWaterRiteRules.ReachPerSharedPass);
+			Assert.AreEqual(140, KingdomWaterRiteRules.ReachCap);
+			Assert.AreEqual(35, KingdomWaterRiteRules.SharedPassesForFullReach);
+			Assert.AreEqual(105, KingdomWaterRiteRules.MaxCountedDays);
+			Assert.AreEqual(4, KingdomWaterRiteRules.DistancePerDram);
+			Assert.AreEqual(3, KingdomWaterRiteRules.RefusalsBeforeAskingCloses);
+			Assert.AreEqual(12, KingdomWaterRiteRules.QuarterRadiusCells);
+		}
 
 		private static WaterRiteFacts Facts(int Hostility = 0, int SharedDays = 0, bool HoldsACreed = true, bool RivalShrine = false, bool Devout = false, bool Steadfast = false, string RealmCreed = Realm)
 		{

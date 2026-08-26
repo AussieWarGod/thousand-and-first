@@ -16,13 +16,13 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void IdentityContractIsRegisteredWithoutRetiringVersionOneSources()
 		{
-			string source = Source(Path.Combine("Api", "KingdomExtensions.cs"));
+			string source = KingdomExtensionsLogicalSource.Read();
 			StringAssert.Contains("extension is IKingdomIdentitySource", source);
 			StringAssert.Contains("return mod.ID ?? \"\";", source);
 			StringAssert.DoesNotContain("mod.DisplayTitleStripped", source);
 			StringAssert.Contains("RefuseNamespaceCollisions(bound, refused);", source);
 			StringAssert.Contains("collidedOwners.Contains(binding.ModName)", source);
-			string rules = Source(Path.Combine("Api", "KingdomApiRules.cs"));
+			string rules = KingdomApiRulesLogicalSource.Read();
 			StringAssert.Contains("public const int Version = 3;", rules);
 			StringAssert.Contains("public const int MinSupportedVersion = 1;", rules);
 		}
@@ -30,7 +30,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void BothIdentityCallsCrossTheExecutorAndFaultOnlyTheirSource()
 		{
-			string source = Source(Path.Combine("Api", "KingdomExtensions.cs"));
+			string source = KingdomExtensionsLogicalSource.Read();
 			StringAssert.Contains(
 				"KingdomComputeResult<string[]> result = KingdomCity.Seam.Submit(Reading, job);",
 				source);
@@ -47,7 +47,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void RuntimeCapsKeysAndClampsAffinityWithoutATierSurface()
 		{
-			string source = Source(Path.Combine("Api", "KingdomExtensions.cs"));
+			string source = KingdomExtensionsLogicalSource.Read();
 			StringAssert.Contains("KingdomApiRules.MaxIdentityKeysPerSource", source);
 			StringAssert.Contains("KingdomApiRules.MaxIdentityKeyCandidatesPerSource", source);
 			StringAssert.Contains("KingdomApiRules.IdentityKey(owner, source[i])", source);

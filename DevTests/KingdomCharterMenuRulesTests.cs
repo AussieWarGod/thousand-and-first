@@ -87,6 +87,49 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void CharterPartKeepsEngineAbiAndExactActionRouteOrder()
+		{
+			string root = Source(Path.Combine("Core", "KingdomCharterPart.cs"));
+			Assert.IsTrue(Regex.IsMatch(root,
+				@"\[Serializable\]\s*public sealed partial class KingdomCharterPart\s*:\s*IPart"));
+			Assert.AreEqual(1, Occurrences(root,
+				"public Guid ActivatedAbilityID = Guid.Empty;"));
+
+			string[] engineOrder = new string[]
+			{
+				"public override void Register(GameObject Object, IEventRegistrar Registrar)",
+				"public override bool FireEvent(Event E)",
+				"public void OpenMenu()"
+			};
+			int cursor = -1;
+			for (int i = 0; i < engineOrder.Length; i++)
+			{
+				int next = root.IndexOf(engineOrder[i], cursor + 1, StringComparison.Ordinal);
+				Assert.Greater(next, cursor, engineOrder[i]);
+				cursor = next;
+			}
+
+			string register = Method(root, engineOrder[0]);
+			Assert.Less(register.IndexOf("Registrar.Register(COMMAND);", StringComparison.Ordinal),
+				register.IndexOf("base.Register(Object, Registrar);", StringComparison.Ordinal));
+			string fire = Method(root, engineOrder[1]);
+			Assert.Less(fire.IndexOf("OpenMenu();", StringComparison.Ordinal),
+				fire.IndexOf("KingdomSeal.TryStageSemanticSnapshot", StringComparison.Ordinal));
+			Assert.Less(fire.IndexOf("KingdomSeal.TryStageSemanticSnapshot", StringComparison.Ordinal),
+				fire.IndexOf("return base.FireEvent(E);", StringComparison.Ordinal));
+
+			string run = Method(root,
+				"private bool RunAction(KingdomSystem System, KingdomCharterAction Action)");
+			MatchCollection cases = Regex.Matches(run,
+				@"case\s+KingdomCharterAction\.(\w+)\s*:");
+			string[] actions = new string[cases.Count];
+			for (int i = 0; i < cases.Count; i++) actions[i] = cases[i].Groups[1].Value;
+			Assert.AreEqual(
+				"HearPetition,Status,Homecoming,ChronicleAndDynasty,OutsiderChronicle,Standings,SettlerRoll,StandingPolicy,DesignateDistrict,CommissionBuilding,AnswerThreat,DedicateStores,StrikeTradeCharter,SendManifest,ShareMeal,CertifyMachine,SetWaterDetail,ManagePlans,AdoptBuilding,ReleaseAdoption,ManageCreed,KeepersKnowledge,WorksAndTrades,NameBuilding,GroundWork,StrikeBuilding,PostPrice,ConvertPlot,RedressBuilding,ConsecrateShrine,ShareWater,ClaimGround,CityBook,TechMap,CityAsks,SalvageExpedition",
+				string.Join(",", actions));
+		}
+
+		[Test]
 		public void RootKeepsStatusFirstAndOffersSevenClearChapters()
 		{
 			KingdomCharterMenuRoute[] root = KingdomCharterMenuRules.RootEntries();
@@ -237,10 +280,9 @@ namespace ThousandAndFirst.Tests
 				{ "SalvageExpedition", "Simulation.City.KingdomExpeditions.Open(System, ParentObject);" }
 			};
 
-			string source = Source(Path.Combine("Core", "KingdomCharterPart.cs"));
-			string run = Between(source,
-				"private bool RunAction(KingdomSystem System, KingdomCharterAction Action)",
-				"private static void OpenChronicleAndDynasty");
+			string source = KingdomCharterPartLogicalSource.Read();
+			string run = Method(source,
+				"private bool RunAction(KingdomSystem System, KingdomCharterAction Action)");
 			MatchCollection cases = Regex.Matches(run,
 				@"case\s+KingdomCharterAction\.(\w+)\s*:\s*(.*?)\s*break\s*;",
 				RegexOptions.Singleline);
@@ -291,7 +333,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void NavigationReturnsBeforeTheOnlyGovernanceAndEnergyPath()
 		{
-			string part = Source(Path.Combine("Core", "KingdomCharterPart.cs"));
+			string part = KingdomCharterPartLogicalSource.Read();
 			string governance = Source(Path.Combine("Core", "KingdomGovernance.cs"));
 			string open = Method(part, "public void OpenMenu()");
 			string chapter = Method(part,

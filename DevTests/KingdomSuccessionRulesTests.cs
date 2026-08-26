@@ -646,8 +646,8 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void RuntimeOrdersRealProcessionAndShrineBeforeBodyBoundary()
 		{
-			string succession = TestMain.ReadRepositoryText("Experience/KingdomSuccession.cs");
-			string rite = TestMain.ReadRepositoryText("Experience/KingdomSuccessionRite.cs");
+			string succession = KingdomSuccessionLogicalSource.Read();
+			string rite = SuccessionRiteSource();
 			string rules = TestMain.ReadRepositoryText("Experience/KingdomSuccessionRules.cs");
 			int freeze = succession.IndexOf("Checkpoint(MourningRiteStage.Frozen)",
 				StringComparison.Ordinal);
@@ -684,9 +684,128 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void SuccessionLogicalSourceKeepsSerializedShapeAndDeathMutationOrder()
+		{
+			string source = KingdomSuccessionLogicalSource.Read();
+			Assert.AreEqual(12, Count(source, "public sealed partial class KingdomSuccession"));
+			Assert.AreEqual(1, Count(source,
+				"public sealed partial class KingdomSuccession : IPlayerSystem"));
+			Assert.AreEqual(1, Count(source, "[Serializable]"));
+			Assert.AreEqual(4, Count(source, "[NonSerialized]"));
+			Assert.AreEqual(1, Count(source, "private sealed class HeirRuntime"));
+			Assert.AreEqual(1, Count(source, "private sealed class JournalSnapshot"));
+			AssertOrdered(source,
+				"private int SerializationVersion = CurrentSerializationVersion;",
+				"private int SuccessionOrdinal;", "private string PendingDeathToken;",
+				"private string CompletedDeathToken;", "private InterregnumPhase PendingPhase;",
+				"private long PendingDueTick;", "private NewsRoad PendingRoad;",
+				"private int PendingDays;", "private string PendingSealAccessionToken;",
+				"private string PendingSealRiteChronicle;",
+				"private bool PendingSealAccessionReady;",
+				"private int PendingAccessionRepairResidentId;",
+				"private string PendingAccessionRepairFounderName;",
+				"private string PendingAccessionRepairHeirName;",
+				"private bool PendingAccessionRepairSeated;",
+				"private long PendingAccessionRepairArrivedTick;",
+				"private string PendingAccessionRepairKeptCreeds;",
+				"private MourningRiteStage PendingRiteStage;",
+				"private string PendingFounderName;", "private string PendingFounderObjectId;",
+				"private string PendingFounderCause;", "private int PendingHeirResidentId;",
+				"private string PendingHeirObjectId;", "private string PendingHeirName;",
+				"private string PendingHeirZoneId;", "private string PendingRiteZoneId;",
+				"private string PendingRiteCityName;",
+				"private string PendingRiteFixtureObjectId;",
+				"private string PendingRiteFixtureName;", "private int PendingShrineX;",
+				"private int PendingShrineY;", "private string PendingRiteAttendeeManifest;",
+				"private string PendingShrineObjectId;", "private string CompletedShrineToken;",
+				"private string CompletedShrineObjectId;", "private string CompletedShrineZoneId;",
+				"private bool LegacyPhysicalRiteUnavailable;", "private bool SuccessionDisabled;",
+				"private bool LoadFailed;", "private bool DeathChroniclePublished;",
+				"private bool AccessionOwnershipCommitted;",
+				"internal static Action<MourningRiteStage> InjectedCheckpoint = null;");
+
+			Assert.AreEqual(1, Count(source, "CarryFounderSuccession(E, game, founder, system"));
+			Assert.AreEqual(1, Count(source, "private void CarryFounderSuccession("));
+			AssertOrdered(source,
+				"private void HandleFounderDeath(AfterDieEvent E)",
+				"KingdomSuccessionRite.TryFreeze(system, heirBook, heirBody, riteCityName",
+				"CarryFounderSuccession(E, game, founder, system",
+				"private void CarryFounderSuccession(AfterDieEvent E");
+
+			int execution = source.IndexOf("private void CarryFounderSuccession(AfterDieEvent E",
+				StringComparison.Ordinal);
+			Assert.GreaterOrEqual(execution, 0);
+			AssertOrdered(source.Substring(execution),
+				"PendingDeathToken = token;", "PendingPhase = InterregnumPhase.WordOnTheRoad;",
+				"Checkpoint(MourningRiteStage.Frozen);", "founder.AddPart(remains);",
+				"game.TimeTicks = dueTick;", "Checkpoint(MourningRiteStage.WordArrived);",
+				"KingdomSuccessionRite.TryHoldProcession(",
+				"Checkpoint(MourningRiteStage.ProcessionComplete);",
+				"KingdomSuccessionRite.TryEnsureFounderShrine(",
+				"PendingShrineObjectId = founderShrine.IDIfAssigned;",
+				"Checkpoint(MourningRiteStage.ShrinePlaced);",
+				"KingdomCitizenship.CanRemove(system, heirBody",
+				"KingdomPlayerBodyTransfer forward = SetPlayerBodyAndRebindAll(game, founder,",
+				"Checkpoint(MourningRiteStage.BodyCrossed);",
+				"accession = KingdomResidents.TryAccede(system, heirBody,",
+				"CompleteAccession(game, system, heirBody, founderName, formerRow, token");
+
+			AssertOrdered(source,
+				"Writer.Write(SerializationMagic);", "Writer.Write(CurrentSerializationVersion);",
+				"Writer.WriteNamedFields(this, typeof(KingdomSuccession)",
+				"int magic = Reader.ReadInt32();", "int version = Reader.ReadInt32();",
+				"Reader.ReadNamedFields(this, typeof(KingdomSuccession)",
+				"MigrateSavedState(version);", "ValidateSavedState();");
+		}
+
+		[Test]
+		public void SuccessionRiteLogicalSourceKeepsNestedAbiAndExactEngineOrder()
+		{
+			string rite = SuccessionRiteSource();
+			Assert.AreEqual(5, Count(rite, "internal static partial class KingdomSuccessionRite"));
+			Assert.AreEqual(1, Count(rite, "internal sealed class Plan"));
+			Assert.AreEqual(1, Count(rite, "private sealed class Walker"));
+			AssertOrdered(rite,
+				"internal string ZoneId;", "internal string CityName;",
+				"internal string FixtureObjectId;", "internal string FixtureName;",
+				"internal int ShrineX;", "internal int ShrineY;", "internal string Manifest;");
+			AssertOrdered(rite,
+				"internal static bool TryFreeze(", "internal static bool TryHoldProcession(",
+				"internal static bool ProcessionEvidence(", "internal static bool TryEnsureFounderShrine(",
+				"private static bool Walk(", "private static bool CanWalk(",
+				"private static void ReturnAll(", "private static bool UnchangedPosts(",
+				"private static string PostReceipt(", "private static bool TryExactResidentsIn(",
+				"private static List<Cell> OpenRiteCells(", "private static GameObject FindFixture(",
+				"private static GameObject FindByAssignedId(", "private static Zone ExactLoadedZone(",
+				"private static bool OwnedGround(", "private sealed class Walker");
+			AssertOrdered(rite,
+				"internal readonly GameObject Body;", "internal readonly KingdomRiteAttendee Row;",
+				"internal readonly Cell RiteCell;", "internal readonly Cell OriginalCell;");
+
+			int tokenReceipt = rite.IndexOf(
+				"fixture.SetStringProperty(\"KingdomLastMourningRiteToken\"", StringComparison.Ordinal);
+			Assert.GreaterOrEqual(tokenReceipt, 0);
+			AssertOrdered(rite.Substring(tokenReceipt),
+				"fixture.SetStringProperty(\"KingdomLastMourningRiteToken\"",
+				"fixture.SetStringProperty(\"KingdomLastMourningAttendees\"",
+				"for (int i = walkers.Count - 1; i >= 1; i--)",
+				"heir = walkers[0].Body;");
+			AssertOrdered(rite,
+				"created = GameObject.Create(ShrineBlueprint);", "part.Stamp(token, founderName",
+				"created.SetIntProperty(\"KingdomFounderShrine\", 1);",
+				"created.SetStringProperty(\"KingdomFounderDeathToken\", token);",
+				"cell.AddObject(created);", "string id = created.ID;");
+			AssertOrdered(rite,
+				"body.Brain.PushGoal(new MoveTo", "FindPath path = new FindPath(",
+				"body.Move(path.Directions[i]", "body.Brain.Goals.Items.Clear();",
+				"body.Brain.Goals.Items.AddRange(goals);", "body.Brain.StartingCell = anchor;",
+				"body.Brain.Staying = staying;");
+		}
+
+		[Test]
 		public void RuntimeInheritsOpenQuestFlavorWithoutChangingQuestState()
 		{
-			string succession = TestMain.ReadRepositoryText("Experience/KingdomSuccession.cs");
+			string succession = KingdomSuccessionLogicalSource.Read();
 			string remains = TestMain.ReadRepositoryText("Experience/KingdomFounderRemains.cs");
 			StringAssert.Contains("TryInheritOpenQuests(Game, System, Token, FounderName)",
 				succession);
@@ -726,6 +845,41 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("Name=\"r_KingdomFounderShrine\"", xml);
 			Assert.IsFalse(xml.Substring(xml.IndexOf("Name=\"r_KingdomFounderShrine\"",
 				StringComparison.Ordinal), 700).Contains("LiquidVolume"));
+		}
+
+		private static string SuccessionRiteSource()
+		{
+			return string.Join("\n", new[]
+			{
+				TestMain.ReadRepositoryText("Experience/KingdomSuccessionRite.cs"),
+				TestMain.ReadRepositoryText("Experience/KingdomSuccessionRite.Procession.cs"),
+				TestMain.ReadRepositoryText("Experience/KingdomSuccessionRite.Shrine.cs"),
+				TestMain.ReadRepositoryText("Experience/KingdomSuccessionRite.Movement.cs"),
+				TestMain.ReadRepositoryText("Experience/KingdomSuccessionRite.Attendance.cs")
+			});
+		}
+
+		private static void AssertOrdered(string source, params string[] terms)
+		{
+			int at = -1;
+			for (int i = 0; i < terms.Length; i++)
+			{
+				int next = source.IndexOf(terms[i], at + 1, StringComparison.Ordinal);
+				Assert.Greater(next, at, terms[i]);
+				at = next;
+			}
+		}
+
+		private static int Count(string source, string term)
+		{
+			int count = 0;
+			int at = 0;
+			while ((at = source.IndexOf(term, at, StringComparison.Ordinal)) >= 0)
+			{
+				count++;
+				at += term.Length;
+			}
+			return count;
 		}
 	}
 }

@@ -20,6 +20,41 @@ SPEC.loader.exec_module(CHECKER)
 
 
 class DocumentationFreshnessTests(unittest.TestCase):
+    def test_stale_resolvable_source_citation_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            original_root = CHECKER.ROOT
+            CHECKER.ROOT = Path(temporary)
+            try:
+                (CHECKER.ROOT / "Source.cs").write_text("one\ntwo\n", encoding="utf-8")
+                (CHECKER.ROOT / "Guide.md").write_text(
+                    "Evidence: `Source.cs:2-3`.\n", encoding="utf-8"
+                )
+                problems = []
+                CHECKER.audit_source_citations(problems)
+                self.assertEqual(1, len(problems))
+                self.assertIn(
+                    "Guide.md:1 has stale source citation `Source.cs:2-3`", problems[0]
+                )
+                self.assertIn("has 2 lines", problems[0])
+            finally:
+                CHECKER.ROOT = original_root
+
+    def test_current_and_external_alias_citations_are_accepted(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            original_root = CHECKER.ROOT
+            CHECKER.ROOT = Path(temporary)
+            try:
+                (CHECKER.ROOT / "Source.cs").write_text("one\ntwo\n", encoding="utf-8")
+                (CHECKER.ROOT / "Guide.md").write_text(
+                    "Local `Source.cs:1-2`; installed `B/Source.cs:999`.\n",
+                    encoding="utf-8",
+                )
+                problems = []
+                CHECKER.audit_source_citations(problems)
+                self.assertEqual([], problems)
+            finally:
+                CHECKER.ROOT = original_root
+
     def test_optional_local_note_is_skipped_when_public_checkout_omits_it(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             original_root = CHECKER.ROOT

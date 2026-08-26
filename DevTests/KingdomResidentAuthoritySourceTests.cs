@@ -30,7 +30,7 @@ namespace ThousandAndFirst.Tests
 			List<string> offenders = new List<string>();
 			foreach (string relative in ProductionSources())
 			{
-				if (LegacyBoundaryFiles.Contains(relative)) continue;
+				if (LegacyBoundaryFiles.Contains(relative) || IsKingdomSystemSource(relative)) continue;
 				string source = TestMain.ReadRepositoryText(relative);
 				if (source.Contains("RosterNames") || source.Contains("RosterOrigins")
 					|| source.Contains("RosterArrived")) offenders.Add(relative);
@@ -46,7 +46,6 @@ namespace ThousandAndFirst.Tests
 			HashSet<string> allowed = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
 			{
 				"Simulation/City/KingdomCityBook.cs",
-				"Simulation/City/KingdomResidentRules.cs",
 				"Simulation/City/KingdomResidents.cs"
 			};
 			string[] tokens =
@@ -57,7 +56,7 @@ namespace ThousandAndFirst.Tests
 			List<string> offenders = new List<string>();
 			foreach (string relative in ProductionSources())
 			{
-				if (allowed.Contains(relative)) continue;
+				if (allowed.Contains(relative) || IsResidentRulesSource(relative)) continue;
 				string source = TestMain.ReadRepositoryText(relative);
 				for (int i = 0; i < tokens.Length; i++)
 					if (source.Contains(tokens[i])) { offenders.Add(relative); break; }
@@ -77,7 +76,7 @@ namespace ThousandAndFirst.Tests
 
 			string guests = TestMain.ReadRepositoryText("Experience/KingdomGuestbook.cs");
 			StringAssert.Contains("KingdomResidents.TryEnsureRow(system, guest", guests);
-			string lifecycle = TestMain.ReadRepositoryText("Experience/KingdomGuestLifecycle.cs");
+			string lifecycle = KingdomGuestLifecycleLogicalSource.Read();
 			StringAssert.Contains("KingdomResidents.OnRollCount(system)", lifecycle);
 
 			string offices = TestMain.ReadRepositoryText("Experience/KingdomOffices.cs");
@@ -92,7 +91,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void ReflectedCompatibilityFieldsAreExplicitlyObsolete()
 		{
-			string system = TestMain.ReadRepositoryText("Core/KingdomSystem.cs");
+			string system = KingdomSystemLogicalSource.Read();
 			string settlement = TestMain.ReadRepositoryText("Core/KingdomSettlement.cs");
 			Assert.AreEqual(3, Count(system, "[Obsolete(\"Compatibility projection only;"));
 			Assert.AreEqual(3, Count(settlement, "[Obsolete(\"Compatibility projection only;"));
@@ -149,6 +148,19 @@ namespace ThousandAndFirst.Tests
 			for (int at = 0; (at = source.IndexOf(token, at, StringComparison.Ordinal)) >= 0;
 				at += token.Length) count++;
 			return count;
+		}
+
+		private static bool IsResidentRulesSource(string relative)
+		{
+			return relative.StartsWith("Simulation/City/KingdomResidentRules",
+				StringComparison.OrdinalIgnoreCase)
+				&& relative.EndsWith(".cs", StringComparison.OrdinalIgnoreCase);
+		}
+
+		private static bool IsKingdomSystemSource(string relative)
+		{
+			return relative.StartsWith("Core/KingdomSystem", StringComparison.OrdinalIgnoreCase)
+				&& relative.EndsWith(".cs", StringComparison.OrdinalIgnoreCase);
 		}
 	}
 }
