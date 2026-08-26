@@ -24,7 +24,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void SurveyBuildsOneBoundedRootSnapshotAndMaintainsItExplicitly()
 		{
-			string survey = Source("Growth", "KingdomSurvey.cs");
+			string survey = KingdomSurveyLogicalSource.Read();
 			string take = Between(survey, "public static KingdomSurvey Take(Zone Z)",
 				"public static IEnumerable<GameObject> ObjectsFor(Zone Z)");
 			Assert.AreEqual(1, Count(take, "Z.GetObjects()"));
@@ -86,7 +86,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void SecondaryClassifiersConsumeNamedMaintainedIndexes()
 		{
-			string survey = Source("Growth", "KingdomSurvey.cs");
+			string survey = KingdomSurveyLogicalSource.Read();
 			foreach (string index in new[] { "ConstructionRoots", "PlotRoots", "LayoutRoots",
 				"CropRows", "NetworkPieces", "LabJobs", "VisualRoots", "PlotParts",
 				"ArchitectureComponents", "GatehouseSatellites", "DelveEndpoints",
@@ -145,7 +145,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void PassReceiptExposesClassificationReuseAndMutationBudget()
 		{
-			string survey = Source("Growth", "KingdomSurvey.cs");
+			string survey = KingdomSurveyLogicalSource.Read();
 			string take = Between(survey, "public static KingdomSurvey Take(Zone Z)",
 				"public static IEnumerable<GameObject> ObjectsFor(Zone Z)");
 			StringAssert.Contains("BoundSurvey.ForeignClassifications++;", take);
@@ -238,7 +238,7 @@ namespace ThousandAndFirst.Tests
 			{
 				Source("Growth", "KingdomScaffold.cs"),
 				KingdomPlot2LogicalSource.Read(),
-				Source("Growth", "KingdomRoads.cs"),
+				KingdomRoadsLogicalSource.Read(),
 				KingdomMaterialsLogicalSource.Read(),
 				Source("Experience", "KingdomCarryRuntime.cs"),
 				KingdomExpeditionsLogicalSource.Read(),

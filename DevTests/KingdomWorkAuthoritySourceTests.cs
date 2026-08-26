@@ -16,7 +16,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void CheckInRefreshesResidentAuthorityBeforeItBuildsWorkRows()
 		{
-			string city = Source("Simulation/City/KingdomCity.cs");
+			string city = KingdomCityLogicalSource.Read();
 			int checkIn = city.IndexOf("public static void CheckIn", StringComparison.Ordinal);
 			int roster = city.IndexOf("state = KingdomResidents.ReadRoster(System, Z, Survey, state, TimeTicks)",
 				checkIn, StringComparison.Ordinal);
@@ -48,7 +48,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("Work.HasPart(\"ItemConvertor\")", stations);
 			StringAssert.Contains("Work.HasPart(\"LiquidProducer\")", stations);
 
-			string city = Source("Simulation/City/KingdomCity.cs");
+			string city = KingdomCityLogicalSource.Read();
 			int runState = city.IndexOf("private static KingdomWorkRunState RunStateOf",
 				StringComparison.Ordinal);
 			int crop = city.IndexOf("private static string CropOf", runState,

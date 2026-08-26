@@ -22,7 +22,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void RoadOptionObservesAndAnchorsBeforeElapsedWear()
 		{
-			string source = TestMain.ReadRepositoryText("Growth/KingdomRoads.cs");
+			string source = KingdomRoadsLogicalSource.Read();
 			StringAssert.Contains("public const string OptionStateProperty = \"r_TAF_RoadsOption_v1\"", source);
 			StringAssert.Contains("public const string OptionOwnerProperty = \"r_TAF_RoadsOptionOwner_v1\"", source);
 			StringAssert.Contains("public const string GlobalOptionStatePrefix = \"r_TAF_RoadsGlobalOption_v1:\"", source);

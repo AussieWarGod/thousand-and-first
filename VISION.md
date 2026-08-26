@@ -176,8 +176,9 @@ Current presentation is vanilla-art/glyph-first. Original art is permitted when 
 not required to make the architecture structurally distinct.
 
 **Food/water availability is physical; city bonuses are earned.** Fresh water sits in dedicated
-vessels. Food begins with seed and authored crop rows, enters physical larders, and is drawn as
-daily rations, a cooked meal, or an industry input. Materials are extracted or found, refined by
+vessels. Cultivation begins with seed and authored crop rows. Food enters through bounded foraging,
+physical crop harvests, or items explicitly placed in dedicated larders, and is drawn as daily
+rations, a cooked meal, or an industry input. Materials are extracted or found, refined by
 staffed works where required, stored as items, and spent from proved custody. Production remains
 labour × infrastructure × availability; knowledge may improve a positive output but never tax an
 abstaining city or multiply a draw. A favoured meal gives one bounded positive settler-equivalent
@@ -223,17 +224,37 @@ and extension API expose the same authority rather than parallel summaries.
 **Open v1 implementation gaps.** Routed construction inputs across zones, described above, are
 not wired. The existing route planner and material debit are real substrate, but their coexistence
 does not prove the missing adapter. The accepted purposeful-megastructure model also remains
-partial: an ordinary city ultimately commits to one purposeful megastructure, and the completed
-portfolio requires each megastructure to consume an exact output another city's megastructure
-produces. Current code implements the theatre and becoming-annexe body-purpose route only, with
-inputs produced by ordinary vat/graft or smelter/charging works; it is a trial slice, not the
-complete portfolio. The broader portfolio remains `SHIP` scope requiring implementation,
-authored content, and human proof.
-This does not promote the separately `AUTHOR-DEFERRED` hosted/zone-spanning arcology ground.
+partial. v1's two-city cap requires a portfolio of compatible pairs, not a three-city dependency
+chain: the first purpose may bootstrap from ordinary works, the second consumes the first's exact
+cargo, and reciprocal cargo activates the first. The exact symmetric five-cycle is Deep-Bore ↔
+Great Foundry ↔ Granary-Colossus ↔ chimeric theatre ↔ becoming annexe ↔ Deep-Bore; there are no
+self-pairs or implied diagonals. Once activated, one exact incoming partner cargo and one local
+debit permit one bounded effect and one outgoing cargo, then the operation token changes sides.
+The detailed recipes, receipts, site gates, and architecture floor are controlled by the
+[current paired-purpose contract](_notes/BUILDING-CATALOGUE-BRIEF.md#current-v1-paired-purpose-contract).
+Current code implements only the theatre/annexe trial from ordinary vat/graft or
+smelter/charging inputs. The paired portfolio remains `SHIP` scope requiring runtime operations,
+authored XL sites, conservation and interruption proof, and human validation.
+Hosted/zone-spanning arcology ground stays separately `AUTHOR-DEFERRED`.
 
-**Open evidence/manual gates.** Current static source, ABI, compile, generator, architecture, and
-local 7,705-case full-suite receipts prove only the current tree at those layers. Hosted Ubuntu and
-Windows source suites belong to checkpoint `d3fc4b9`; the latest retained native founding,
+Charter succession configuration is also an open `SHIP` gap. Current death succession implements
+seniority, but the founder cannot yet declare or change that custom, configure a chosen resident by
+stable identity, or pay the declared seat consequence. A persistent groomed-designee system is a
+different, `AUTHOR-DEFERRED` idea and is not smuggled into this bounded configuration path.
+
+**Deliberate v1 boundaries.** Claiming ground changes realm/zone metadata and never transfers or
+faction-stamps existing object ownership; realm property and theft law are `AUTHOR-DEFERRED`.
+Authored post/home day shape ships while bespoke idle activities remain `AUTHOR-DEFERRED`.
+Within-realm physical food routing ships; external charter food imports do not. Founder memory
+ships through the owned shrine, Chronicle, and corpse-reading surfaces, while public vanilla
+`sultanHistory` rendering remains `AUTHOR-DEFERRED`. The faction dish is the realm's one recipe
+authority: a competing per-creature `TeachesDish` override is `REJECTED`, while a separately
+authored named-cook recipe may be reconsidered only as `AUTHOR-DEFERRED` scope.
+
+**Open evidence/manual gates.** Exact current static and source-suite receipts live in
+[STATUS](docs/STATUS.md) rather than this product contract. The latest retained hosted checkpoint is
+`b049c17`: repository audit, Ubuntu source suite, and Windows source suite are green for those exact
+bytes; later working-tree changes remain unsigned. The latest retained native founding,
 single-gallery, save/reload, and clean-log smoke belongs only to `19fb8ee`. Neither older receipt
 signs the current working tree's native behavior. The current-revision complete building gallery
 and fixture interaction, lived-day/dense-city behavior, multi-zone carrier continuity,
@@ -305,11 +326,11 @@ people run this alongside a hundred other mods.
 ---
 
 *Revision note, 2026-08-27: reconciled reserved evolving lots, architecture/creed/material truth,
-physical food/water availability and bounded city bonuses, current logistics plus the routed
-construction-input gap, bounded prior-realm inheritance, and author-deferred live rival-polity
-scope against [STATUS](docs/STATUS.md), the [brief audit](_notes/BRIEF-IMPLEMENTATION-AUDIT.md),
-and the [contract/runtime reconciliation](_notes/CONTRACT-RUNTIME-RECONCILIATION-2026-08-25.md).
-No deferred research was promoted and no open manual gate was converted into implementation
-evidence.*
+physical food/water availability and bounded city bonuses, current logistics plus routed
+construction, two-city purposeful-pair, and succession-configuration gaps, bounded prior-realm
+inheritance, native ownership preservation, and author-deferred live rival-polity scope against
+[STATUS](docs/STATUS.md), the [brief audit](_notes/BRIEF-IMPLEMENTATION-AUDIT.md), and the
+[contract/runtime reconciliation](_notes/CONTRACT-RUNTIME-RECONCILIATION-2026-08-25.md). No
+deferred research was promoted and no open manual gate was converted into implementation evidence.*
 
 *Live and drink.*

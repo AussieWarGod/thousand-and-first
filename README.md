@@ -5,10 +5,10 @@ ground, and let a settlement grow through arrivals, thirst, and chronicle — th
 polity of the post-injunction age.
 
 **Status: 0.2.0 work in progress toward a v1.0 test candidate.** Nine focused one-survey cases, the
-final 7,705-case Qud-referenced/source suite, the 173-case portable suite, and static architecture
+final 7,714-case Qud-referenced/source suite, the 173-case portable suite, and static architecture
 gates are green with zero skipped cases in the recorded licensed run. The structural hardening tree
-stages 1451 production C# sources in a 1475-file cold-install inventory and has decomposed 138
-oversized authorities, but 43 files still breach the binding structural release gate and
+stages 1481 production C# sources in a 1505-file cold-install inventory and has decomposed 141
+oversized authorities, but 40 files still breach the binding structural release gate and
 `docs/STRUCTURE_REVIEW.json` is absent. Clean commit
 `19fb8ee` has the latest retained native result: fresh-profile founding, 17/17 self-tests, one
 production architecture sample,
@@ -24,7 +24,7 @@ Built so far: founding by rite (wish or the founder's basin), territorial claims
 including downward, citizen enrollment, the two-ledger reputation mirror, water-gated growth
 with a founder-set water detail and upkeep, the thirst ladder (warnings → emigration →
 withering → recovery), settlers with names, origins, homes and work, districts, city style read
-from the ground, commissioned construction in reserved typed lots whose interchangeable plans use
+from the ground, commissioned construction in reserved typed lots whose declared compatible plans use
 authored maps and material/technology-gated tiers, clearance-as-extraction materials, lodging that
 asks who will live beside whom, creeds and the five channels belief moves through, a world that keeps
 time whether you are in it or not — works that run on days and labour rather than on visits, a
@@ -88,7 +88,8 @@ version if that save must remain playable. Maintainers and source-build testers 
   Run `DevTests/build.ps1` and `DevTests/test.ps1`.
 
 Requires Caves of Qud v1.0.5, core build 2.0.211.51. Newer builds are unverified until the
-licensed integration checks pass again. No dependencies; Hearthpyre and Qud Industry are planned
-optional enhancements, never requirements.
+licensed integration checks pass again. No dependencies. Hearthpyre and Qud Industry are optional
+compatibility targets, not v1 dependencies or promised typed bridges; such bridges remain
+`AUTHOR-DEFERRED` until explicitly reopened and proved.
 
 MIT licensed. Caves of Qud is a trademark of Freehold Games, LLC; this is an unofficial community project, not affiliated with or endorsed by Freehold.

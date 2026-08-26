@@ -23,7 +23,7 @@ namespace ThousandAndFirst
 				|| liveRect.X1 != Prepared.Rect.X1 || liveRect.Y1 != Prepared.Rect.Y1
 				|| liveRect.X2 != Prepared.Rect.X2 || liveRect.Y2 != Prepared.Rect.Y2)
 			{
-				Failure = "The previewed cleared plot changed before consent.";
+				Failure = "The previewed cleared lot changed before consent.";
 				return false;
 			}
 			KingdomRules.BuildEntry entry = Prepared.Entry;
@@ -40,7 +40,7 @@ namespace ThousandAndFirst
 				|| liveLabour != Prepared.LabourTicks)
 			{
 				if (Failure == null)
-					Failure = "The cleared plot's labour changed after its preview.";
+					Failure = "The cleared lot's labour changed after its preview.";
 				return false;
 			}
 			Cell mainCell = Z.GetCell(architecture.MainWorldX, architecture.MainWorldY);
@@ -71,7 +71,7 @@ namespace ThousandAndFirst
 			{
 				water.Rollback();
 				materials.Cancel();
-				Failure = "The cleared plot's exact build effects could not be frozen.";
+				Failure = "The cleared lot's exact build effects could not be frozen.";
 				return false;
 			}
 			KingdomConstructionStartResult funding = KingdomConstruction.TryFundNew(job,
@@ -85,14 +85,14 @@ namespace ThousandAndFirst
 			if (funding == KingdomConstructionStartResult.Outstanding)
 			{
 				KingdomGovernanceScope.Commit("build on cleared plot");
-				System.Ledger.Note("{{r|The cleared plot's construction receipt remains outstanding. It will retry without charging any paid claim twice.}}");
+				System.Ledger.Note("{{r|The cleared lot's construction receipt remains outstanding. It will retry without charging any paid claim twice.}}");
 				return true;
 			}
 			ContinueSocketBuild(System, Z, job, true);
 			KingdomGovernanceScope.Commit("build on cleared plot");
 			if (KingdomConstruction.TryFind(job.Id, out var observed)
 				&& observed.Phase == KingdomConstructionPhase.InspectionRequired)
-				System.Ledger.Note("{{r|The cleared plot's exact removal or output receipt needs inspection; it will not retry either callback.}}");
+				System.Ledger.Note("{{r|The cleared lot's exact removal or output receipt needs inspection; it will not retry either callback.}}");
 			KingdomLog.Log("socket: ordered " + entry.Key + " on cleared ground at "
 				+ Prepared.Rect.X1 + "," + Prepared.Rect.Y1);
 			return true;

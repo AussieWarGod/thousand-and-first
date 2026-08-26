@@ -121,6 +121,13 @@ disasters (off-screen loss is a debt).
 
 ## Addendum, 2026-08-21 — layers, sockets, footprints (author-directed)
 
+> **Current model clarification, 2026-08-27.** “Plot” means the reserved typed lot; “plan” means
+> its authored occupant. Only a declared same-set plan transition preserves LotId. Ordinary retype
+> or resize strikes and sites a fresh lot with a new LotId. The rite-owned civic heart is the sole
+> size-changing exception: S basin → M waterstone → L moot → XL court preserves LotId. Heart
+> relocation and hosted arcology plots remain `AUTHOR-DEFERRED`. This clarification controls where
+> the older socket/relocation prose below is broader.
+
 **The layer stack**: plot (ground envelope) / building (what it is: I/O, cost, staff, chain) /
 skin (dress). All three moddable.
 
@@ -175,7 +182,9 @@ a building plan bound to exactly one (type × size). Adopted here:
   **The corollary (author):** labour duration is real and felt — you do not build a stone house
   overnight (catalogue spread: tent 900 ticks, "a roof by nightfall", to 7200 for the heaviest
   works), and you cannot live in a half-built house — a scaffold carries nothing (no roof, no
-  beds, no equilibrium) until its last stage stamps it built, verified at KingdomSurvey.cs:93 and
+  beds, no equilibrium) until its last stage stamps it built, verified by
+  `Growth/KingdomSurvey.01.Capture.cs:213-235` and
+  `Growth/KingdomSurvey.02.IndexMaintenance.cs:19-36`, and
   KingdomGrowth*.cs. Future knob if playtest wants it: crew count shortening builds to a floor;
   currently flat per design plus the craft-district discount;
   (b) registry change-detection is NOT adopted — it solved Papyrus quest-scan slowness, and our
@@ -918,6 +927,10 @@ by creed, genotype, race, and Qud-native traits (ideation dispatched, proposal d
 feature) — endorsed in principle, lands with the tech-tree design; (c) exotic buildings that
 introduce new mechanics and endgame content — per the XL-unlocks-functions ruling.
 
+**Current v1 scope, 2026-08-27:** the heart's S→M→L→XL rungs preserve its one LotId. Yielding-lot
+relocation and hosted/zone-spanning arcology ground are positive `AUTHOR-DEFERRED` directions,
+not v1 implementation gaps. `VISION.md` owns that product boundary.
+
 
 ## Addendum 14, 2026-08-22 — research, ruled (author answer to ideation Q1)
 
@@ -1129,6 +1142,89 @@ RESEARCH-SITING-AND-SECESSION, SUCCESSION-RESEARCH, DIVERSITY §3) carry the ful
 - **A3 — capital may NOT stack both body-megastructures.**
 - **A4 — the crown is a building, movable at real cost** (never named `Seat`).
 
+> **Current v1 portfolio reconciliation, 2026-08-27.** The live realm cap is two cities, so the
+> portfolio cannot require a simultaneous three-city chain. v1 uses a reciprocal choice graph:
+> Deep-Bore, Great Foundry, Granary-Colossus, theatre, and becoming annexe. The first purpose may
+> bootstrap from ordinary precursor works; a compatible second purpose consumes the first's exact
+> cargo; exact reciprocal cargo then activates the first. Incompatible pairs refuse before debit.
+> Each benefit stays conditional on real staffing, local supply, and fresh partner cargo. The
+> Deep-Bore is stone-led extraction around a protected bore head, the Great Foundry is a stone fire
+> hall with worked-metal machinery, and the Granary-Colossus is a raised timber/stone crop-and-mill
+> complex with limited worked metal. All three require fresh XL lots and authored fallback plus
+> lore/creed topologies. This controls older research prose that implies a larger live mesh.
+
+#### Current v1 paired-purpose contract
+
+The compatibility graph is one exact five-cycle. It is symmetric, has no self-edge, and leaves no
+purpose isolated. No other pair is implied:
+
+| Compatible pair | First direction | Reciprocal direction |
+|---|---|---|
+| Deep-Bore ↔ Great Foundry | `deep-ore-assay` | `drill-crown` |
+| Great Foundry ↔ Granary-Colossus | `irrigation-manifold` | `quench-provision-lot` |
+| Granary-Colossus ↔ chimeric theatre | `sterile-culture-mash` | `blightproof-seed-graft` |
+| chimeric theatre ↔ becoming annexe | `living-neural-lattice` | `psybernetic-control-wafer` |
+| becoming annexe ↔ Deep-Bore | `strata-sense-coil` | `conductor-assay` |
+
+The pair transaction is exact. A standing first purpose freezes the other city and one compatible
+second purpose before output. It may perform one bounded bootstrap output without partner cargo.
+The second commission consumes that exact object in addition to its ordinary local bill and, for
+the two body works, their existing casket/register bootstrap. The standing second may then perform
+one bounded return output. Landing and consuming that exact return object activates the pair and
+gives the first work the next-operation token. Thereafter operations strictly alternate: one exact
+incoming partner cargo plus the row's local debit applies one purpose effect and creates one exact
+outgoing cargo. One parent pair receipt, one operation, and one cargo may be outstanding. Cargo has
+no visit deadline, never grants a stock aura, and does not decay merely because the player is away.
+No operation runs automatically; abstention loses no stock and creates no penalty.
+
+The fixed pair-operation recipes are below. `food` means exact physical servings debited from
+dedicated larders. “Embodies” is retained in the cargo object and is consumed with it; it is never
+also booked into civic stock. Remaining inputs are explicit process sinks. A body-purpose operation
+also quotes and debits the selected existing procedure/authorization's own declared cost.
+
+| Source → destination | Exact local debit | Exact cargo content |
+|---|---|---|
+| Deep-Bore → Great Foundry | 12 drams, `stone:6,scrap:2` | `deep-ore-assay`, embodying `scrap:1` |
+| Great Foundry → Deep-Bore | 16 drams, `shapedstone:2,workedmetal:4` | `drill-crown`, embodying `workedmetal:1` |
+| Great Foundry → Granary-Colossus | 16 drams, `shapedtimber:2,workedmetal:3` | `irrigation-manifold`, embodying `workedmetal:1` |
+| Granary-Colossus → Great Foundry | 12 drams, `food:8,shapedtimber:1` | `quench-provision-lot`, carrying 6 food and embodying `shapedtimber:1` |
+| Granary-Colossus → chimeric theatre | 10 drams, `food:8,workedmetal:1` | `sterile-culture-mash`, carrying 6 food and embodying `workedmetal:1` |
+| chimeric theatre → Granary-Colossus | 12 drams, `food:4,brush:4` | `blightproof-seed-graft`, embodying `brush:1` |
+| chimeric theatre → becoming annexe | 16 drams, `food:4,brush:4,workedmetal:1` | `living-neural-lattice`, embodying `workedmetal:1` |
+| becoming annexe → chimeric theatre | 16 drams, `scrap:4,workedmetal:2` | `psybernetic-control-wafer`, embodying `workedmetal:1` |
+| becoming annexe → Deep-Bore | 14 drams, `scrap:4,workedmetal:2` | `strata-sense-coil`, embodying `workedmetal:1` |
+| Deep-Bore → becoming annexe | 10 drams, `stone:4,scrap:2` | `conductor-assay`, embodying `scrap:1` |
+
+Before any physical callback, the operation receipt freezes pair epoch, both purpose/settlement/
+work IDs, direction, next token, exact input object and receipt, source/target stores, route, local
+debits, procedure choice if any, output blueprint/ID, and before values. `requested = spent +
+outstanding`; bootstrap and return exemptions are each one durable bit. A matching retry advances;
+an exact after-state acknowledges; a third state quarantines. Route or staffing loss waits. Pair
+dissolution refuses while any debit, cargo, operation, or activation acknowledgement is unsettled;
+once quiescent it leaves both buildings dormant and unpaired without refund. Secession marks the
+pair orphaned, permits already committed cargo to reach its frozen destination/recovery, and opens
+no new operation. Rejoin may resume the same epoch; a deliberate later re-pair mints a new epoch and
+never reinterprets old cargo.
+
+The three new buildings append `Deep=3`, `Forge=4`, and `Harvest=5` to the existing purpose-kind
+wire; existing `Flesh=1` and `Chrome=2` never change. Their exact catalogue/architecture floor is:
+
+| Key | Fresh-site/precursor gate | Build bill | Required authored ground |
+|---|---|---|---|
+| `deepbore` | XL City lot; proved reciprocal delve and claimed dry deep foot; local `deepcut` or `masonyard`; foundry tech; six staff and one Strength/Tinkering foreman | 150 drams; 18,000 ticks; `stone:100,shapedstone:40,timber:12,scrap:24,workedmetal:12` | 20×14 fallback plus Barathrumites, Daughters, and Cragmensch topologies; protected render-only bore head, spoil/service lane, repair bench, exact input/output stores, drainage, public and service exits |
+| `greatfoundry` | XL City lot; local `masonyard`, `smelter`, `chargingpost`, dedicated fresh quench vessel; foundry tech; six staff and one Intelligence/Tinkering foreman | 160 drams; 18,000 ticks; `stone:96,shapedstone:36,scrap:48,workedmetal:40` | 20×14 fallback plus Mechanimists, Barathrumites, and Templar topologies; stone fire hall, casting floor, safe furnace/forge/anvil/press wrappers, empty quench court, exact stores, slag lane, two wide exits |
+| `realmgranary` | XL City lot; local `granary` and `grange` or `homefarm`; real crop rows, mill, dedicated fresh water; foundry tech; six staff and one harvesting/steward foreman | 140 drams; 16,800 ticks; `timber:80,shapedtimber:36,stone:40,shapedstone:16,workedmetal:8` | 20×14 fallback plus Farmers, YdFreehold, and Chavvah topologies; raised dry store, crop court, mill/threshing floor, empty larders/baskets/cistern, inert irrigation lanes, public and service exits |
+
+Every topology declares reachable `entrance:public`, `entrance:service`, `purpose:operator`,
+`purpose:machine`, `purpose:input`, and `purpose:output` anchors. Founder, citizen, and porter flood
+fills must reach both stores and the operator without crossing a hazard or locked/private fixture.
+Use verified vanilla art through safe render/function wrappers: Spiral Borer/Open Pit imagery for
+the Deep-Bore; Glass Furnace, Forge, and Anvil for the Foundry; Millstone and empty civic store
+imagery for the Granary. Never raw-place Hydraulic Irrigator, Solar Pumping Station, Hydraulic
+Press, populated containers, filled vessels, or any fixture that mints liquid, charge, loot,
+hazards, or uncontrolled work. Static architecture/generator/art/package checks and native tile,
+text, visual-state, damage/repair, pathing, and cold-save galleries all remain binding.
+
 ### B — knowledge siting (all eight, RESEARCH-SITING-AND-SECESSION §5)
 - **B1 — the registry model (D via C's kind-by-kind mapping)**: founder keeps discovery,
   cities keep holdings; stored roster moves onto the settlement container.
@@ -1174,6 +1270,11 @@ RESEARCH-SITING-AND-SECESSION, SUCCESSION-RESEARCH, DIVERSITY §3) carry the ful
   based on feedback." Orchestrator's default, per that delegation: **seat-cost ON by
   default** — choice may be free, consequence is not, which is Qud's own ethos; a sandbox
   toggle may disable it.
+
+> **Current v1 succession status, 2026-08-27.** Seniority death succession is implemented, but C2
+> and C13 still lack their Charter declaration/change and exact chosen-resident/seat-consequence
+> runtime. That bounded path is an open `SHIP` implementation gap. C3's persistent groomed-designee
+> system remains separately `AUTHOR-DEFERRED`; it is not needed to close C2/C13.
 
 ### D — the lab
 - **D1 — blocklist sustained** (self-replication, Invisibility, WallWalker, Metamorphosis

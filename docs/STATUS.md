@@ -14,15 +14,15 @@ are never inferred from source or static automation.
 | Layer | Latest result | Scope |
 |---|---|---|
 | Last clean release audit | **PARTIAL PASS** — 10 of 11 automated layers green at committed candidate `19fb8ee`; structural release layer red | Docs/hygiene, ABI, inventory, baseline/compatibility compile, 7,586-case full suite, 171-case portable suite, architecture/XML/art, balance, 43-case smoke harness, Workshop package, and deploy dry-run passed. This remains a bounded committed receipt, not proof for later structural revisions. |
-| Staged runtime compile | **PASS** — 1451 sources, baseline and compatibility symbols | Exact current inventory selected by `Tools/stage.sh`; installed Qud 2.0.211.51 references. Runtime behavior still needs a native pass against the exact final commit; compile success does not close the compatibility behavior matrix. |
-| Cold-install inventory | **PASS** — 1475 files | Canonical staged package inventory only; package shape does not sign native load, behavior, appearance, or private Steam subscription. |
+| Staged runtime compile | **PASS** — 1481 sources, baseline and compatibility symbols | Exact current inventory selected by `Tools/stage.sh`; installed Qud 2.0.211.51 references. Runtime behavior still needs a native pass against the exact final commit; compile success does not close the compatibility behavior matrix. |
+| Cold-install inventory | **PASS** — 1505 files | Canonical staged package inventory only; package shape does not sign native load, behavior, appearance, or private Steam subscription. |
 | Architecture generator | **PASS** — 337 generated larger-lot maps, 242 larger-lot bindings, 277 copied predecessor tiers current | Generated larger-lot XML is byte-current. These are the generated subset, not the complete authored registry counted below. |
 | Architecture checker | **PASS** — 136 buildings, 126 plotted buildings, 499 maps, 355 bindings, 403 tiers, 516 variants, 2,064 variant/pose goldens, zero issues; largest exact a2 receipt 6,324 bytes / 8,500 characters; 3 expected installed-base tolerant-recovery warnings | Static topology, entrances, fixtures, palette/material/technology constraints, typed-lot coverage, deterministic snapshots, and an independent mirror of the runtime's 8,192-byte / 11,264-character codec envelope. The warnings are the named recovery path for malformed vanilla `Creatures.xml`, `Furniture.xml`, and `Items.xml`; it does not judge native appearance. |
 | One-survey focused tests | **PASS** — 9 focused source-contract cases | Maintained named indexes, active-pass consumers, mutation observation, and the absence of reachable second whole-zone scans. Dense native scan instrumentation remains open. |
-| Addendum 9 structural census | **RELEASE BLOCKED** — 1451 staged C# files / 251,288 physical lines; 43 exceed 300 physical lines, 0 are exactly 300, therefore 43 fail the strict cap; 19 exceed 1,000, 0 exceed 2,000, and 0 exceed 5,000 | The hardening sequence has decomposed 128 additional oversized authorities, 138 cumulative. Direct `XRL` imports: 583 files, 40 over the line limit. Inventory SHA-256: `d8b6483a57ff8ace6b094d0441e1e6f75cb2f8d287d8631d07b97a1303b7e8cc`. Release still requires every source strictly under 300 and the currently missing `docs/STRUCTURE_REVIEW.json` exact-inventory human review. |
-| Full Qud-referenced/source suite | **PASS** — 7,705 / 7,705 cases, 0 skipped | Hosted Ubuntu and Windows source suites are green at checkpoint `d3fc4b9`. Its repository-audit-only documentation failure came from pre-documentation trailing-blank cleanup changing census metrics; this refresh corrects that drift. This does not sign native Qud behavior. |
+| Addendum 9 structural census | **RELEASE BLOCKED** — 1481 staged C# files / 251,704 physical lines; 40 exceed 300 physical lines, 0 are exactly 300, therefore 40 fail the strict cap; 16 exceed 1,000, 0 exceed 2,000, and 0 exceed 5,000 | The hardening sequence has decomposed 131 additional oversized authorities, 141 cumulative. Direct `XRL` imports: 612 files, 37 over the line limit. Inventory SHA-256: `b4019ef667c178c9d46da4e3ad380059ea3dfe114dd69b66c7bb6cb394fbc979`. Release still requires every source strictly under 300 and the currently missing `docs/STRUCTURE_REVIEW.json` exact-inventory human review. |
+| Full Qud-referenced/source suite | **PASS** — 7,714 / 7,714 cases, 0 skipped | Current licensed local source suite. Latest retained hosted checkpoint `b049c17` has green repository-audit, Ubuntu source-suite, and Windows source-suite jobs for its exact bytes; later working-tree changes remain unsigned. This does not sign native Qud behavior. |
 | Portable suite | **PASS** — 173 / 173 cases, 0 skipped | Repository-only lane green. Public CI has an exact three-label allowlist for installed-data-only skips when licensed Qud data is absent; extra/missing skips and an explicit invalid base fail. Canonical release `test.ps1` forbids skips. |
-| Tools tests | **PASS** — 33 tests | Repository tooling checks green. |
+| Tools tests | **PASS** — 34 tests | Repository tooling checks green. |
 | Art tests | **PASS** — 19 tests | Art policy and wiring checks green; native appearance review remains open. |
 | Latest retained native smoke | **PARTIAL PASS** — fresh profile, founding, 17/17 checks, one production gallery case, save/cold-load, repeat 17/17, clean log | Clean commit `19fb8ee` deployed against Qud 1.0.5/core 2.0.211.51. This signs only that commit's loader/founding/single-sample persistence smoke. Later structural revisions have no native compile/load/log receipt and are not covered by this row. |
 
@@ -55,9 +55,37 @@ python3 Tools/check-structure.py --report
   provenance, rights, editable-source, wiring, fallback, package, and independent native-review
   policy in [ASSET_PROVENANCE.md](ASSET_PROVENANCE.md).
 - Food and water are separate physical flows. Dedicated vessels, water details, seeds, authored
-  crop rows, physical larders, daily rations, favoured meals, mills, and cross-zone deliveries are
-  implemented. A favoured meal supplies one bounded positive shade for one day; stock never grants
-  an indefinite passive bonus merely by existing.
+  crop rows, bounded foraging, physical larders, daily rations, favoured meals, mills, and cross-zone
+  deliveries are implemented. A favoured meal supplies one bounded positive shade for one day;
+  stock never grants an indefinite passive bonus merely by existing.
+
+## Accepted v1 implementation gaps
+
+- **Routed construction inputs.** Central routing and nearest-holder proof are shared substrate,
+  but ordinary construction still debits exact local custody and does not mint one centrally owned
+  job for an exact water/material bill from another zone. Until that adapter lands, missing local
+  stock must refuse; remote stock is never permission for direct spending.
+- **Purposeful-megastructure portfolio.** The theatre and becoming annexe implement the two-body
+  trial. v1's two-city cap requires compatible reciprocal pairs across the Deep-Bore, Great
+  Foundry, Granary-Colossus, theatre, and becoming annexe: the first may bootstrap from ordinary
+  works, the second consumes its exact output, and exact return cargo activates the first. The
+  three new XL works, pair operations, conservation, interruption proof, and theatre/annexe graph
+  binding are absent. Hosted, zone-spanning arcology ground remains separately `AUTHOR-DEFERRED`.
+- **Succession configuration.** Seniority death succession is live, but Charter declaration/change
+  of that custom and the bounded chosen-resident/seat-consequence path are absent. A persistent
+  groomed-designee system remains separately `AUTHOR-DEFERRED`.
+
+## Deliberate v1 boundaries
+
+- Ground claims change zone/faction metadata but never rewrite existing objects' native ownership,
+  theft law, inventories, or allegiance. Realm property law is `AUTHOR-DEFERRED`.
+- Authored post/home day shape is implemented; bespoke idle activities are `AUTHOR-DEFERRED`.
+- Within-realm physical food routing is implemented; external charter food imports are
+  `AUTHOR-DEFERRED`.
+- Owned shrine, Chronicle, and corpse-reading founder memory is implemented; public vanilla
+  `sultanHistory` rendering is `AUTHOR-DEFERRED`.
+- The realm faction dish is the sole shipped recipe authority. Competing `TeachesDish` overrides
+  are `REJECTED`; a separate named-cook alternate-recipe feature is `AUTHOR-DEFERRED`.
 
 ## v1 polity/world-presence boundary
 
@@ -91,7 +119,7 @@ persistent unloaded actors, mass background simulation, and offscreen conquest/l
   boundary. `AUTHOR-DEFERRED` research/design prose must not be presented as current runtime.
 - Addendum 9 structural release gate green: every staged C# file strictly under 300 physical lines,
   plus exact-inventory human evidence for one responsibility and protocols at boundaries. Current
-  1451-file census is red and `docs/STRUCTURE_REVIEW.json` is missing; no enterprise-grade or v1.0
+  1481-file census is red and `docs/STRUCTURE_REVIEW.json` is missing; no enterprise-grade or v1.0
   release-quality claim is valid while it
   remains red.
 

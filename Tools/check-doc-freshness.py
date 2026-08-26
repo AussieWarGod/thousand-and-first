@@ -11,13 +11,30 @@ import xml.etree.ElementTree as ET
 
 
 ROOT = Path(__file__).resolve().parent.parent
-FINAL_SUITE_CASES = "7,705"
+FINAL_SUITE_CASES = "7,714"
 PORTABLE_SUITE_CASES = "173"
-TOOLS_TEST_CASES = "33"
+TOOLS_TEST_CASES = "34"
 ART_TEST_CASES = "19"
-HARDENING_DECOMPOSITIONS = "128"
-CUMULATIVE_DECOMPOSITIONS = "138"
+HARDENING_DECOMPOSITIONS = "131"
+CUMULATIVE_DECOMPOSITIONS = "141"
 FOCUSED_SURVEY_CASES = 9
+
+# These notes are immutable attack/research snapshots whose local line citations belong to the
+# pinned tree named in each document. Current authorities remain audited below. Repointing frozen
+# evidence at today's shards would falsify what was inspected; _notes/README.md owns this policy.
+FROZEN_SOURCE_CITATION_DOCUMENTS = frozenset(
+    {
+        "_notes/CLOCK-REWORK-CHANGE-MAP.md",
+        "_notes/CODEX-ENGINE-TRUTH-BATCH-1-ANSWERS.md",
+        "_notes/COVERAGE-GAP-MAP.md",
+        "_notes/ECONOMY-ADVERSARIAL-AUDIT.md",
+        "_notes/ECONOMY-MODEL.md",
+        "_notes/IDEA-INBOX.md",
+        "_notes/THREAT-DIPLOMACY-AUDIT.md",
+        "_notes/UX-PACING-AUDIT.md",
+        "_notes/VANILLA-PRODUCTION-TRUTH.md",
+    }
+)
 
 
 def text(relative):
@@ -119,6 +136,9 @@ def audit_source_citations(problems):
     )
     line_counts = {}
     for document in (path for path in files if path.suffix.lower() == ".md"):
+        relative = document.relative_to(ROOT).as_posix()
+        if relative in FROZEN_SOURCE_CITATION_DOCUMENTS:
+            continue
         body = document.read_text(encoding="utf-8-sig", errors="replace")
         for match in pattern.finditer(body):
             raw = match.group(1).replace("\\", "/")
@@ -407,7 +427,7 @@ def audit_public(problems):
         "Concurrent legacy publication now has one cross-process decision boundary",
         "Linux CI exposed",
         ".legacies.lock",
-		"Nine post-`2cb97fc` decompositions",
+		"Twelve post-`2cb97fc` decompositions",
     )
     forbid(
         problems,
@@ -478,8 +498,9 @@ def audit_public(problems):
         "Growth/KingdomUpgrade.[0-9][0-9].*.cs",
         "Raids/KingdomRaids.[0-9][0-9].*.cs",
         "World/KingdomInheritanceState.z*.cs",
-		"nine more than checkpoint `2cb97fc`",
-		"three more than checkpoint `d3fc4b9`",
+		"12 more than checkpoint `2cb97fc`",
+		"six more than checkpoint `d3fc4b9`",
+		"three more than checkpoint `b049c17`",
     )
     require(
         problems,

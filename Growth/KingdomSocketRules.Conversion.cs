@@ -116,7 +116,7 @@ namespace ThousandAndFirst
 					+ (materials == null ? "" : " and " + materials)
 					+ "}} and takes {{C|" + Quote.WorkTicks + " ticks}}. Nothing is struck or salvaged.";
 			}
-			string verb = (Kind == ChangeKind.SameSet) ? "Changing" : "Re-typing this plot and changing";
+			string verb = (Kind == ChangeKind.SameSet) ? "Changing" : "Restaking this lot and changing";
 			string salvage = Quote.Salvage.Describe();
 			string net = Quote.NetMaterials.Describe();
 			System.Text.StringBuilder text = new System.Text.StringBuilder();

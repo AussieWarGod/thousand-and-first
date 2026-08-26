@@ -56,6 +56,15 @@ These require observation, taste, or signed-in account authority; none blocks lo
   proof remains open; the historical west-edge fallback is forbidden. Later hosted/zone-spanning
   arcology ground remains an explicit later extension, not a substitute for testing current
   two-city transport.
+- Routed construction inputs remain accepted v1 work: ordinary construction must mint one central
+  job for its exact water/material cargo from the nearest lawful holder. Until that adapter lands,
+  exact local custody is required and remote stock cannot be spent directly.
+- The theatre/annexe purpose route is a two-body trial. The accepted v1 portfolio is a reciprocal
+  two-city-compatible choice graph across those works plus the Deep-Bore, Great Foundry, and
+  Granary-Colossus. First-work bootstrap, second-work exact input, reciprocal activation, and the
+  three authored XL sites remain open; a three-city dependency chain is invalid under the live cap.
+- Charter declaration/change of seniority and the bounded chosen-resident/seat-consequence path
+  remain accepted v1 work. Persistent groomed-designee simulation is separately author-deferred.
 
 ## Historical design record and adopted 0.2 defaults
 

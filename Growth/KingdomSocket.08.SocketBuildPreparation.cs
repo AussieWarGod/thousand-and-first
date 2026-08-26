@@ -55,23 +55,23 @@ namespace ThousandAndFirst
 			}
 			if (Z == null || !System.ClaimedZones.Contains(Z.ZoneID))
 			{
-				Failure = "A plot is raised on the kingdom's own ground, not in other people's streets.";
+				Failure = "A building is raised on a reserved lot in the kingdom's own ground, not in other people's streets.";
 				return false;
 			}
 			if (Marker == null || !GameObject.Validate(Marker) || Marker.CurrentZone == null || Marker.CurrentZone.ZoneID != Z.ZoneID || Marker.GetPart<r_KingdomSocket>() == null)
 			{
-				Failure = "There is no cleared plot there to build on.";
+				Failure = "There is no cleared lot there to build on.";
 				return false;
 			}
 			if (HasBlockingReceipt(Marker))
 			{
-				Failure = "That cleared plot already has construction work in hand.";
+				Failure = "That cleared lot already has construction work in hand.";
 				return false;
 			}
 			if (KingdomConstruction.HasActiveSubject(System, Z,
 				KingdomConstructionRoute.SocketBuild, Marker))
 			{
-				Failure = "That cleared plot already has a construction receipt in hand.";
+				Failure = "That cleared lot already has a construction receipt in hand.";
 				return false;
 			}
 			if (!KingdomPlots.TryReadRect(Marker, out KingdomPlotRules.PlotRect rect))
@@ -152,7 +152,7 @@ namespace ThousandAndFirst
 			Failure = null;
 			if (System == null || Z == null || Entry == null || Spec == null)
 			{
-				Failure = "The cleared plot has no exact labour context.";
+				Failure = "The cleared lot has no exact labour context.";
 				return false;
 			}
 			KingdomPlots.GroundGrid grid = new KingdomPlots.GroundGrid(Z);
@@ -165,7 +165,7 @@ namespace ThousandAndFirst
 					System.ZoneDistricts.Values), grid.CellsOf(Rect), footprint,
 				KingdomPlotRules.RoofOnGround(Spec.Roof, carved), carved);
 			if (LabourTicks > 0L) return true;
-			Failure = "The cleared plot's exact labour quote is empty.";
+			Failure = "The cleared lot's exact labour quote is empty.";
 			return false;
 		}
 	}

@@ -169,6 +169,22 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void PlotActionsDescribeReservedLotsAndTheirBuildingsSeparately()
+		{
+			KingdomCharterMenuRoute[] routes = KingdomCharterMenuRules.ChapterEntries(
+				KingdomCharterChapter.PlansAndHoldings);
+			KingdomCharterMenuRoute conversion = Array.Find(routes,
+				row => row.Kind == KingdomCharterRouteKind.Action
+					&& row.Action == KingdomCharterAction.ConvertPlot);
+			Assert.AreEqual("Change what stands on a lot", conversion.Label);
+
+			string source = KingdomSocketLogicalSource.Read();
+			StringAssert.Contains("Change what stands on a lot, at ", source);
+			StringAssert.Contains("Build on the cleared lot", source);
+			StringAssert.DoesNotContain("Change what a plot is", source);
+		}
+
+		[Test]
 		public void EveryPopupHasUniqueHotkeysAndNonblankRows()
 		{
 			AssertMenu(KingdomCharterMenuRules.RootEntries(), ExpectBack: false);

@@ -24,6 +24,21 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void ClaimingGroundPreservesNativeOwnershipForEveryExistingObject()
+		{
+			string founding = TestMain.ReadRepositoryText("Core/KingdomFounding.cs");
+			string claim = Slice(founding, "internal static bool ClaimZone(",
+				"public static bool ZonesAdjacent(");
+			StringAssert.Contains("Z.SetZoneProperty(\"faction\", system.KingdomFactionName)", claim);
+			StringAssert.Contains("faction.HolyPlaces.Add(Z.ZoneID)", claim);
+			StringAssert.DoesNotContain("GetObjects", claim);
+			StringAssert.DoesNotContain("OwnedByPlayer", claim);
+			StringAssert.DoesNotContain("IsOwned(", claim);
+			StringAssert.DoesNotContain("SetFactionMembership", claim);
+			StringAssert.DoesNotContain("Brain.", claim);
+		}
+
+		[Test]
 		public void ReceiptSurvivesReloadAndDeathOwnsOnlyItsExactCleanup()
 		{
 			string runtime = KingdomCitizenshipLogicalSource.Read();
@@ -61,7 +76,7 @@ namespace ThousandAndFirst.Tests
 		public void LifecycleConsumersUseRealmQualifiedAuthorityAndReversibleRemoval()
 		{
 			string runtime = KingdomCitizenshipLogicalSource.Read();
-			string survey = TestMain.ReadRepositoryText("Growth/KingdomSurvey.cs");
+			string survey = KingdomSurveyLogicalSource.Read();
 			string residents = TestMain.ReadRepositoryText("Simulation/City/KingdomResidents.cs");
 			string growth = KingdomGrowthLogicalSource.Read();
 			StringAssert.Contains("KingdomCitizenship.BelongsTo(citizenshipSystem, item)", survey);

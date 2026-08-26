@@ -13,7 +13,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void CarryConsumesExactMeasuredPlanInsteadOfZoneRowProxy()
 		{
-			string city = Source("KingdomCity.cs");
+			string city = KingdomCityLogicalSource.Read();
 			string carry = Between(city, "private static KingdomCityState CarryKind(",
 				"private static KingdomCityState Reconcile(");
 			StringAssert.Contains("KingdomCentralLogistics.TryQueueScalar(System, state", carry);
@@ -51,7 +51,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void ObservationRunsOnlyAtGroundHandoffsAndNeverAtReckon()
 		{
-			string city = Source("KingdomCity.cs");
+			string city = KingdomCityLogicalSource.Read();
 			Assert.AreEqual(2, Count(city, "KingdomDistanceRuntime.Observe("));
 			string checkIn = Between(city, "public static void CheckIn(",
 				"public static void CheckOut(");

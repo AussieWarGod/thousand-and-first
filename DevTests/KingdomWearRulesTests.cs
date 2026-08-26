@@ -886,7 +886,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void SurveySource_ProvesEveryLeakAndSpoilCallbackBeforePublishingCounters()
 		{
-			string survey = ReadRepoSource("Growth/KingdomSurvey.cs");
+			string survey = KingdomSurveyLogicalSource.Read();
 			int spoil = survey.IndexOf("public bool TrySpoilFromExact", StringComparison.Ordinal);
 			int spoilEnd = survey.IndexOf("private bool PublishSpoilCounters", spoil,
 				StringComparison.Ordinal);

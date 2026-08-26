@@ -72,7 +72,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void MatureRoadSolverQueuesEveryPlotAndUsesFrozenAuthoredEntrances()
 		{
-			string source = TestMain.ReadRepositoryText("Growth/KingdomRoads.cs");
+			string source = KingdomRoadsLogicalSource.Read();
 			StringAssert.DoesNotContain("MaxHomesConsidered", source);
 			StringAssert.DoesNotContain("MaxWorksConsidered", source);
 			StringAssert.DoesNotContain("MaxPlotsConsidered", source);

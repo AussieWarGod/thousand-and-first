@@ -85,7 +85,7 @@ namespace ThousandAndFirst
 			}
 			if (Z == null || !System.ClaimedZones.Contains(Z.ZoneID))
 			{
-				Failure = "A plot is changed on the kingdom's own ground, not in other people's streets.";
+				Failure = "A lot can only be replanned on the kingdom's own ground, not in other people's streets.";
 				return false;
 			}
 			if (Building == null || !GameObject.Validate(Building) || Building.CurrentZone == null || Building.CurrentZone.ZoneID != Z.ZoneID)

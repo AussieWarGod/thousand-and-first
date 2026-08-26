@@ -16,8 +16,8 @@ physical-authority, bounded-attention, grievance, conservation, and no-unseen-lo
 
 ## Vocabulary
 
-- **SHIP** — part of the current v1 scope and implemented at the stated boundary. Native/human
-  evidence may still be open, but no absent speculative system is labeled `SHIP`.
+- **SHIP** — accepted, bounded v1 scope. It may be implemented, partial, or an open implementation
+  gap; the runtime verdict says which. `SHIP` never means proved.
 - **AUTHOR-DEFERRED** — deliberately outside v1 until the author explicitly reopens the exact row.
   It must not be implied by UI, Workshop prose, tests, or screenshots.
 - **REJECTED** — incompatible with a controlling law. It is not engineering debt and must not be

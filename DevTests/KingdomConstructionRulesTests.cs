@@ -1126,7 +1126,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("interrupted before exact callback-success proof", strike);
 			StringAssert.Contains("Intent.Targets", strike);
 
-			string road = File.ReadAllText(Path.Combine(root, "Growth", "KingdomRoads.cs"));
+			string road = KingdomRoadsLogicalSource.Read();
 			AssertOrdered(road, "if (!FreezeRoadReceipt", "KingdomPhysicalPhase.RoadPlanFrozen");
 			int create = road.IndexOf("try { floor = GameObject.Create", StringComparison.Ordinal);
 			int remove = road.IndexOf("bool removed;", create, StringComparison.Ordinal);
@@ -1516,7 +1516,7 @@ namespace ThousandAndFirst.Tests
 			string scaffold = File.ReadAllText(Path.Combine(root, "Growth", "KingdomScaffold.cs"));
 			StringAssert.Contains("finalPending != 0 && finalPending != 1", scaffold);
 			StringAssert.Contains("told != 0 && told != 1", scaffold);
-			string roads = File.ReadAllText(Path.Combine(root, "Growth", "KingdomRoads.cs"));
+			string roads = KingdomRoadsLogicalSource.Read();
 			StringAssert.Contains("KingdomPhysicalLookupState FindOurFloor", roads);
 			StringAssert.Contains("floorState == KingdomPhysicalLookupState.Ambiguous", roads);
 			string socket = KingdomSocketLogicalSource.Read();

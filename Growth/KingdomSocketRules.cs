@@ -3,16 +3,16 @@ using System;
 namespace ThousandAndFirst
 {
 	/// <summary>
-	/// Engine-free rules for the plot as a SOCKET (BUILDING-CATALOGUE-BRIEF.md's addendum,
-	/// 2026-08-21): condemning a plot-raised building keeps its ground a re-buildable slot rather
-	/// than turning it into wilderness, "change what this plot is" is one strike-and-rebuild
+	/// Engine-free rules for a reserved lot as a SOCKET (BUILDING-CATALOGUE-BRIEF.md's addendum,
+	/// 2026-08-21): condemning a building keeps its reserved ground as a re-buildable lot rather
+	/// than turning it into wilderness, and changing what stands on the lot is one strike-and-rebuild
 	/// ceremony rather than two separate errands, and re-dressing a standing building in any
 	/// registered skin is a trivial, non-structural act.
 	/// <para>
 	/// Addendum 2 (also 2026-08-21) types the plot by
 	/// (<c>Category</c> &times; <c>KingdomPlotRules.PlotSize</c>) and splits the ceremony into two
 	/// verbs: <em>change the building</em>, cheap and ordinary, when the chosen design shares the
-	/// standing building's own (type, size); and <em>re-type the plot</em>, rare, when it does
+	/// standing building's own (type, size); and <em>restake the lot</em>, rare, when it does
 	/// not. <see cref="ClassifyChange"/> is that split, applied at the socket eligibility layer as
 	/// directed. Same-set changes use only an explicit transition declaration; true retypes use
 	/// the ordinary full strike and fresh-siting bill.
@@ -37,7 +37,7 @@ namespace ThousandAndFirst
 			/// the cheap, ordinary verb.</summary>
 			SameSet = 0,
 
-			/// <summary>A different type, a different size, or both: "re-type the plot", the
+			/// <summary>A different type, a different size, or both: "restake the lot", the
 			/// rare, full ceremony.</summary>
 			Retype = 1
 		}

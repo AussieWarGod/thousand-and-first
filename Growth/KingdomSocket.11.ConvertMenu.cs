@@ -13,7 +13,7 @@ namespace ThousandAndFirst
 	public static partial class KingdomSocket
 	{
 		/// <summary>
-		/// The Charter's "change what a plot is" action. Standing beside a work the settlement
+		/// The Charter's "change what stands on a lot" action. Standing beside a work the settlement
 		/// raised offers a conversion; standing beside a cleared socket offers to build fresh on
 		/// it. Both list only designs a plot may actually be raised as, and a live conversion's
 		/// list is annotated with Addendum 2's own verb (<c>change</c>/<c>re-type</c>) for each
@@ -29,7 +29,7 @@ namespace ThousandAndFirst
 			Cell cell = Founder.CurrentCell;
 			if (zone == null || cell == null || !System.ClaimedZones.Contains(zone.ZoneID))
 			{
-				Popup.Show("A plot is changed on the kingdom's own ground.");
+				Popup.Show("A lot can only be replanned on the kingdom's own ground.");
 				return;
 			}
 			List<GameObject> buildings = new List<GameObject>();
@@ -58,10 +58,10 @@ namespace ThousandAndFirst
 			int socketsStart = targets.Count;
 			for (int i = 0; i < sockets.Count; i++)
 			{
-				options.Add("{{K|a cleared plot}}");
+				options.Add("{{K|a cleared lot}}");
 				targets.Add(sockets[i]);
 			}
-			int picked = Popup.PickOption(Title: "Change what a plot is, at " + KingdomPresentation.Rich(System.SeatName), Options: options.ToArray(), AllowEscape: true);
+			int picked = Popup.PickOption(Title: "Change what stands on a lot, at " + KingdomPresentation.Rich(System.SeatName), Options: options.ToArray(), AllowEscape: true);
 			if (picked < 0)
 			{
 				return;
@@ -149,7 +149,7 @@ namespace ThousandAndFirst
 				designOptions[i] = available[i].DisplayName
 					+ (onSocket ? " {{C|[" + available[i].CostDrams + " drams]}}" : "") + tag;
 			}
-			int designPicked = Popup.PickOption(Title: onSocket ? "Build on the cleared plot" : ("Change the " + target.ShortDisplayName + " into"), Options: designOptions, AllowEscape: true);
+			int designPicked = Popup.PickOption(Title: onSocket ? "Build on the cleared lot" : ("Change the " + target.ShortDisplayName + " into"), Options: designOptions, AllowEscape: true);
 			if (designPicked < 0)
 			{
 				return;

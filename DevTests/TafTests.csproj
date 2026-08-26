@@ -25,6 +25,9 @@
 	<Compile Include="KingdomResearchLogicalSource.cs" />
 	<Compile Include="KingdomProceduresLogicalSource.cs" />
 	<Compile Include="KingdomGrowthLogicalSource.cs" />
+	<Compile Include="KingdomSurveyLogicalSource.cs" />
+	<Compile Include="KingdomRoadsLogicalSource.cs" />
+	<Compile Include="KingdomCityLogicalSource.cs" />
 	<Compile Include="KingdomSocketLogicalSource.cs" />
 	<Compile Include="KingdomWearLogicalSource.cs" />
 	<Compile Include="KingdomJobRegistryLogicalSource.cs" />
@@ -66,6 +69,9 @@
 	<Compile Include="KingdomPlot2LogicalSource.cs" />
 	<Compile Include="KingdomPlot2SourceTests.cs" />
 	<Compile Include="KingdomSurveyRuntimeSourceTests.cs" />
+	<Compile Include="KingdomSurveySourceTests.cs" />
+	<Compile Include="KingdomRoadsSourceTests.cs" />
+	<Compile Include="KingdomCitySourceTests.cs" />
 	<Compile Include="KingdomResidentIdentityRulesTests.cs" />
 	<Compile Include="KingdomIdentityAffinityRulesTests.cs" />
 	<Compile Include="KingdomCitizenRiteLogicalSource.cs" />

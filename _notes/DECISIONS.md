@@ -146,8 +146,8 @@ Four inherited states:
 
 | State | Reads as | Reached by |
 |---|---|---|
-| Held | Populated, trading, an autonomous polity — not automatically yours | A strong seal: a town or city with people, walls, and stores |
-| Faded | Thinner population, some works derelict, stores low, people ambivalent | A middling seal, or a large settlement that was withering when sealed |
+| Held | Largely intact site and a chronicle of a strong polity; no living successor is reconstructed | A strong seal: a town or city with people, walls, and stores when sealed |
+| Faded | Thinner surviving fabric and a chronicle of decline; no living successor is reconstructed | A middling seal, or a large settlement that was withering when sealed |
 | Abandoned | Everything standing, nobody home, doors open, cistern dry | A weak seal, or any seal sealed with nobody left in it |
 | Ruins | Streets still legible under the collapse, something else living there | Little there to begin with, or a hard interregnum on a weak seal |
 
@@ -187,6 +187,10 @@ purpose:
 - wall-clock time is never the default authority;
 - death or deliberate retirement **seals** one immutable condition;
 - a later save applies exactly one fictional intergenerational transition to it.
+
+This is only the inheritance clock ruling. Current-run food, water, work, wear, and subsidence
+still advance through ordinary world time whether or not the founder visits; no separate
+inheritance/languish clock reads visit cadence.
 
 *Why it had to go:* I flagged in the original entry that a languish clock was the mechanic most
 likely to breed babysitting, and that if anyone ever detoured home to reset a timer the
@@ -237,8 +241,9 @@ creature/object continuation is `REJECTED`, including replay of possibly modded 
 `VISION.md` owns this canonical disposition and `V1-POLITY-SCOPE.md` expands its evidence/reopening
 gates; together they supersede generic “current v0” or “later-version” wording elsewhere.
 
-**No item inheritance, ever, and say so up front.** Layout, name, chronicle, and successors
-carry. Loose loot, stored equipment, charge, and water do not. A settlement that returned your
+**No item inheritance, ever, and say so up front.** Layout, name, chronicle, condition, founder
+cairn, and bounded faction identity facts needed by the history carry. No living successor does.
+Loose loot, stored equipment, charge, and water do not. A settlement that returned your
 stash would turn permadeath into a bank and every player into a hoarder who dies on purpose. The
 founding book states this plainly so it is never a surprise discovered too late. Inherited works
 are a real benefit, so their restored condition and any starting civic supplies must be capped —

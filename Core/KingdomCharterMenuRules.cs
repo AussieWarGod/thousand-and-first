@@ -152,7 +152,7 @@ namespace ThousandAndFirst
 				KingdomCharterMenuRoute.ForAction("Adopt a building", 'a', KingdomCharterAction.AdoptBuilding),
 				KingdomCharterMenuRoute.ForAction("Release an adoption", 'r', KingdomCharterAction.ReleaseAdoption),
 				KingdomCharterMenuRoute.ForAction("Post a price at the heart", 'b', KingdomCharterAction.PostPrice),
-				KingdomCharterMenuRoute.ForAction("Change what a plot is", 'c', KingdomCharterAction.ConvertPlot),
+				KingdomCharterMenuRoute.ForAction("Change what stands on a lot", 'c', KingdomCharterAction.ConvertPlot),
 				KingdomCharterMenuRoute.ForAction("Give a building a new look", 'l', KingdomCharterAction.RedressBuilding),
 				KingdomCharterMenuRoute.Back()
 			},

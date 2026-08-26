@@ -25,7 +25,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void RuntimePlansAndSettlesEverySurveyedContainerThenChargesMeasuredSpend()
 		{
-			string source = Source(Path.Combine("Simulation", "City", "KingdomCity.cs"));
+			string source = KingdomCityLogicalSource.Read();
 			string reify = Slice(source, "private static KingdomCityState Reify(",
 				"private static List<GameObject> Posted(");
 			StringAssert.Contains("ContainerGround.Take(Survey)", reify);
@@ -43,7 +43,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void ReceiptUsesPostMutationGroundDemandRatherThanCityKindProxy()
 		{
-			string source = Source(Path.Combine("Simulation", "City", "KingdomCity.cs"));
+			string source = KingdomCityLogicalSource.Read();
 			StringAssert.Contains("Receipt(Z.ZoneID, spend, watch, GroundDemandThirds(Z, survey, written, index))", source);
 			string receipt = Slice(source, "private static int GroundDemandThirds(",
 				"private static KingdomCityState Carry(");
@@ -55,7 +55,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void ExactGroundCallbacksPublishOnlyMeasuredWaterAndFoodDeltas()
 		{
-			string survey = Source(Path.Combine("Growth", "KingdomSurvey.cs"));
+			string survey = KingdomSurveyLogicalSource.Read();
 			string food = Slice(survey, "public int StoreFoodIn(", "private sealed class SpoilFrame");
 			string water = Slice(survey, "public int StoreIn(", "public int DrawFromPools(");
 			StringAssert.Contains("heldAfter != heldBefore + 1", food);
@@ -83,7 +83,7 @@ namespace ThousandAndFirst.Tests
 				"private static bool WriteLegacyFurnishPlan(");
 			Assert.IsFalse(durable.Contains("SetIntProperty(\"KingdomStores\", 1)"));
 			Assert.IsFalse(legacy.Contains("SetIntProperty(\"KingdomStores\", 1)"));
-			string survey = Source(Path.Combine("Growth", "KingdomSurvey.cs"));
+			string survey = KingdomSurveyLogicalSource.Read();
 			StringAssert.Contains("item.GetIntProperty(KingdomPlots.PlotPartProperty) == 1", survey);
 			StringAssert.Contains("item.SetIntProperty(\"KingdomStores\", 0)", survey);
 		}

@@ -133,7 +133,9 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("Pass 37 — Purposeful cities, exact cargo, and the honest arcology foundation", testingWords);
 			StringAssert.Contains("Returning the same object restores the exact preview", testingWords);
 			StringAssert.Contains("an ordinary worked-metal item cannot substitute", testingWords);
-			StringAssert.Contains("present scope is deliberately the two body purposes", testingWords);
+			StringAssert.Contains("five-work Deep-Bore/Great Foundry/", testingWords);
+			StringAssert.Contains("reciprocal-pair portfolio is an open `SHIP` implementation gap", testingWords);
+			StringAssert.Contains("Hosted, zone-spanning arcology ground remains `AUTHOR-DEFERRED`", testingWords);
 
 			string changelog = Source("CHANGELOG.md");
 			StringAssert.Contains("arcology foundation", changelog);

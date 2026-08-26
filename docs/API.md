@@ -266,12 +266,12 @@ water wheel is genuinely driven by it. That part grinds the *mill's own inventor
 standing there, at vanilla's per-crop numbers; the settlement pass grinds the *larders* on the
 settlement's clock. Nothing is counted twice.
 
-**`TeachesDish` — not taken, and why.** The survey lists it as a free carrier (no vanilla
-blueprint uses it). It is a per-*creature* override that sits **above** the faction recipe in
-`WaterRitualCookingRecipe`'s resolution order — so with the faction recipe set, every citizen of
-the realm can already teach the dish, and `TeachesDish` would only let one named cook teach a
-*different* one. That needs the citizen-spawn path and buys nothing this wave asked for. Named
-here as a deliberate omission rather than an oversight.
+**`TeachesDish` — classified, not silently omitted.** The survey lists it as a free carrier (no
+vanilla blueprint uses it). It is a per-*creature* override that sits **above** the faction recipe
+in `WaterRitualCookingRecipe`'s resolution order. The faction recipe is the realm's one shipped dish
+authority, so using `TeachesDish` as a competing realm-dish authority is `REJECTED`. A separately
+authored named cook teaching an alternate recipe is `AUTHOR-DEFERRED`; it needs its own bounded
+identity/spawn/recipe contract if the author later reopens it.
 
 **Spoilage.** `KingdomWearRules.LeakKind.Food` is Addendum 10(b)'s explicitly deferred third kind
 ("food spoilage waits until food is a flow"), now spent: a damaged larder loses servings on world
@@ -981,12 +981,14 @@ weighted spend; `owed` is exact remaining weighted demand after that zone's post
 survey, so 252 same-kind vessels report 252 units rather than one. A
 figure that crosses a §0.0 budget is prefixed `BUDGET` and names the budget it broke.
 
-**What remains deliberately narrow.** Job minting beyond the delivery flow remains outside this
-slice. Per-zone production rates are live: when runtime passes null override arrays,
+**What remains deliberately narrow.** Central routing, nearest-holder proofs, and exact itineraries
+are shared substrate. Existing food, water, carry, and purpose authorities mint their own receipts;
+ordinary construction still lacks its one routed-input adapter and therefore may spend only exact
+local custody. Per-zone production rates are live: when runtime passes null override arrays,
 `KingdomCityAdvanceable` reads each row's measured `WaterCarry` and `FoodCarry`, then applies the
 realm's method factor. Growth no longer credits those same production days; TESTING step 90r guards
-against double billing. Nearest-holder sourcing and capacity-bound batching remain separate W6
-lanes where many jobs compete over many holders.
+against double billing. Capacity-bound batching remains an owning logistics decision where many
+jobs compete over many holders; it does not grant another subsystem cargo authority.
 
 ## The city has a history — happenings, ambience, and what the creeds make of you
 

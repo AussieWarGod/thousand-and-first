@@ -30,13 +30,12 @@ file order; use the table as the top-level checklist.
 ## Current portable evidence boundary
 
 Nine focused one-survey source-contract cases pass. The final integrated pure/source suite passes
-7,705 / 7,705 cases against the configured licensed Qud base; the portable suite passes 173 / 173.
-Both recorded runs report zero skipped. The Tools suite passes 33 tests and the Art suite passes 19.
-Hosted Ubuntu and Windows source suites for checkpoint `d3fc4b9` are green. Its
-repository-audit-only documentation failure came from pre-documentation trailing-blank cleanup
-changing the source census; this refresh corrects that drift. Baseline and compatibility-symbol
-staged compiles are clean across 1451 production C# sources; the cold-install inventory contains
-1475 files. This does not close native behavior or the representative
+7,714 / 7,714 cases against the configured licensed Qud base; the portable suite passes 173 / 173.
+Both recorded runs report zero skipped. The Tools suite passes 34 tests and the Art suite passes 19.
+The latest retained hosted checkpoint is `b049c17`: repository audit, Ubuntu source suite, and
+Windows source suite are green for those exact bytes. Later working-tree changes remain unsigned.
+Baseline and compatibility-symbol staged compiles are clean across 1481 production C# sources; the
+cold-install inventory contains 1505 files. This does not close native behavior or the representative
 compatibility matrix. Public CI without installed Qud data permits exactly three
 named installed-data-only skips instead of fabricating fixtures. TestMain rejects an unexpected or
 missing allowlisted skip, and an explicitly configured incomplete base fails rather than skipping.
@@ -44,7 +43,7 @@ Canonical release `DevTests/test.ps1` forbids every skip, and `Tools/release-che
 exact Qud base.
 `docs/STATUS.md` owns the exact latest receipts. None of this signs native Qud behavior,
 appearance, accessibility, current-revision native/human/compatibility/performance gates, or Steam
-installation. The structural release gate also remains red: 43 staged sources breach the line cap
+installation. The structural release gate also remains red: 40 staged sources breach the line cap
 and `docs/STRUCTURE_REVIEW.json` is missing.
 
 ## Latest retained automated native smoke — partial evidence, not protocol signoff
@@ -534,10 +533,10 @@ capture as the map or copy it into the playtest receipt; automation checks drift
 | 62 | Commission a design whose authored tier map occupies less than its reserved lot | The exact authored entrance fronts the declared heart or road edge and the yard lies behind. Yard = reserved lot minus authored map, recomputed from the next exact tier as it grows |
 | 62a | Let a tier grow onto ground a yard trade occupies | The improvement refuses **by name** — nothing in a yard ever comes down on its own |
 | 62b | Author a tier whose footprint exceeds its plot | Refused at load with both spans named; refused again at improvement: "wants more ground than this plot holds — strike and stake larger, or leave it" |
-| 63 | In a fresh common city, raise a tent; Charter → **Change what a plot is** (`2`) → mud-brick hut. Repeat tent→timber hut in a verdant/fungal/gyre city and tent→block hut in an eater ruin; repeat with tent-row and the matching yard/court | Only the style-applicable declared route appears. The row and confirmation quote only its water, materials, and ticks, all below strike plus fresh target. The popup renders the exact frozen target map and retained/removed/added cell counts. Confirm changes through one durable improvement handover: LotId, rect, facing/pose, founder marks, stable wear/hold state, contents, and retained canvas bed/storage fabric stay exact. No strike or salvage occurs |
+| 63 | In a fresh common city, raise a tent; Charter → **Change what stands on a lot** (`2`) → mud-brick hut. Repeat tent→timber hut in a verdant/fungal/gyre city and tent→block hut in an eater ruin; repeat with tent-row and the matching yard/court | Only the style-applicable declared route appears. The row and confirmation quote only its water, materials, and ticks, all below strike plus fresh target. The popup renders the exact frozen target map and retained/removed/added cell counts. Confirm changes through one durable improvement handover: LotId, rect, facing/pose, founder marks, stable wear/hold state, contents, and retained canvas bed/storage fabric stay exact. No strike or salvage occurs |
 | 63aa | Inspect the same menu for a target with no route; then remove a test declaration, reverse its endpoints without declaring the reverse route, or leave a wear/leak/repair receipt active and call the direct transition seam | No false `[change]` row is listed. Direct/stale attempts refuse before debit, naming the absent transition or unsettled protected-state receipt. No full-price fallback silently substitutes for it |
 | 63ab | Choose a different type, or a design too large for the actual staked rect; inspect the preview, then save/reload once after payment and once after strike | Preview names the full fresh bill, newly frozen valid site and new LotId, and renders that exact target map. The predecessor is fully struck; the successor rises once at the frozen site with the previewed architecture. The old ground is bare, and reload duplicates neither lot, charge, salvage, nor interruption |
-| 63ac | Finish taking down one plot work, choose **Build on this cleared plot**, inspect one target, then confirm | Before payment, the popup renders the exact production target for that socket. Confirm reproves that same frozen variant/pose/cells, charges once, and raises the byte-identical target on the existing cleared rect; no second resolver chooses another variant |
+| 63ac | Finish taking down one plot work, choose **Build on the cleared lot**, inspect one target, then confirm | Before payment, the popup renders the exact production target for that socket. Confirm reproves that same frozen variant/pose/cells, charges once, and raises the byte-identical target on the existing cleared rect; no second resolver chooses another variant |
 | 63ad | At each preview in 63, 63ab, and 63ac, cancel once with controller and once with keyboard/Escape; inspect stores, plot/socket, receipts, Chronicle, ledger, and map | Cancel is mutation-free. No water/material debit, strike, construction/improvement receipt, LotId change, log line, or cell/object mutation occurs. Reopen under unchanged facts and the same exact target is offered |
 | 63ae | From fixture copies, interrupt a paid commission, plotted defensive plan, cleared-socket build, and improvement before projection; save/quit, then alter or remove the target catalogue row and change the founder's tinkering skills before cold-load | Current v4 receipts retain the exact paid plot/frontier classification and final defence shown at commitment; retry never consults the new row or skills, changes the cap charge, or pays/projects twice. An old unprojected v1-v3 affected receipt enters named inspection before another debit or destructive strike. An already-projected legacy scaffold resumes only when its exact durable marks agree |
 | 63a | Charter → **Give a building a new look** (`3`) | Any registered skin — including one a mod added after the building was raised — for a tenth of build cost. No output change |
@@ -1029,6 +1028,9 @@ the **Kingdom** game mode added by this mod; Classic and Roleplay must retain th
 | 135k | Reopen retirement and confirm both prompts | The success report says the immutable generation was written to the profile while this save continues. The city remains playable; reopening the chapter reports that this generation is already retired |
 | 135l | Save, reload, and reopen retirement; then continue playing long enough to change the current city | The generation remains retired after reload and cannot be sealed again. Later changes remain in the playable save but do not rewrite the already retired generation |
 | 135m | From that profile, run Pass 0's opt-out world and then its opt-in world | Opt-out consumes nothing. Opt-in imports the exact retired snapshot once under Pass 0's bounded inheritance rules |
+| 135n | In a fresh Kingdom-mode realm, Charter → chronicle/dynasty → **Set the succession custom**; inspect the default seniority preview, choose a different eligible resident, inspect the seat consequence, then cancel | The picker names people, homes, cities, tenure, and stable resident identity rather than stats alone. Seniority is the default. Cancel changes no law, chosen identity, seat/crown, time, Chronicle, or resident row |
+| 135o | Confirm the chosen-resident custom, save/cold-load, exchange seats twice, and reopen it; then die while that exact resident remains eligible | The same law, resident ID, and enabled seat consequence survive. The exact chosen body—not a same-name or more senior substitute—receives control after the ordinary mourning proof. The seat consequence commits once at accession, never at configuration preview, and retry/reload cannot repeat it |
+| 135p | From copies, make the configured resident dead, departed, duplicated, or unreachable before death; repeat after changing back to seniority | Dead/departed/ambiguous chosen identity cannot be substituted by name. The persisted custom falls back only through its explicitly previewed seniority law, records that the law—not founder choice—selected the heir, and charges no chosen-seat consequence. An unreachable exact selected heir follows the existing honest terminal/refusal path rather than silently choosing a junior. Changing the custom is one confirmed, chronicled act and reload cannot apply it twice |
 
 ## Pass 37 — Purposeful cities, exact cargo, and the honest arcology foundation
 
@@ -1037,8 +1039,23 @@ living-biome founding evidence, a local vat-house or grafting hall, and a lodged
 savant. The other must have ruin founding evidence, a local smelter and charging post,
 Mechanimist/Templar present-or-past reach, and a lodged Intelligence-18 tinker/technician. Give
 both gates current power and each destination ground one dedicated material stockpile. The present
-scope is deliberately the two body purposes; this pass does not claim the deferred drill/foundry/
-granary portfolio or hosted, zone-spanning arcology ground.
+scope currently implements the two body purposes; the five-work Deep-Bore/Great Foundry/
+Granary-Colossus/theatre/annexe reciprocal-pair portfolio is an open `SHIP` implementation gap.
+Hosted, zone-spanning arcology ground remains `AUTHOR-DEFERRED`.
+
+For steps 136k onward, use disposable two-city copies with ordinary precursor works and enough
+staff/water/materials for the three new XL purposes. The authoritative graph, transaction,
+ten directed recipes, receipts, and architecture floor are the **Current v1 paired-purpose
+contract** in `_notes/BUILDING-CATALOGUE-BRIEF.md:1156-1226`; no additional edge, cargo, exemption,
+or passive effect is implied. Exercise all ten compatible ordered directions. The exact graph is:
+
+| Compatible pair | Left → right cargo | Right → left cargo |
+|---|---|---|
+| Deep-Bore ↔ Great Foundry | `deep-ore-assay` | `drill-crown` |
+| Great Foundry ↔ Granary-Colossus | `irrigation-manifold` | `quench-provision-lot` |
+| Granary-Colossus ↔ chimeric theatre | `sterile-culture-mash` | `blightproof-seed-graft` |
+| chimeric theatre ↔ becoming annexe | `living-neural-lattice` | `psybernetic-control-wafer` |
+| becoming annexe ↔ Deep-Bore | `strata-sense-coil` | `conductor-assay` |
 
 | Step | Action | Expect |
 |---|---|---|
@@ -1053,6 +1070,14 @@ granary portfolio or hosted, zone-spanning arcology ground.
 | 136h | In either city after its first body work is funded but before it finishes, attempt to commission the other body work in the **same game tick**; repeat after completion, including in the capital | Refused as that city's already-kept purpose in both cases. A capital may keep its capital-specific foundation and one body purpose, never both theatre and annexe |
 | 136i | With a debugger/fixture copy of the save, interrupt purpose cargo at each durable phase (`CargoOutputPending`, `CargoOutputSettled`, `CargoTransferPending`, `CargoDelivered`) and interrupt purpose-building funding before/after water and material callbacks | Retry either advances the same rooted object and exact economic receipt, rolls that object back to its source on a clean destination refusal, or enters inspection on ambiguity. It never duplicates, reroutes, substitutes, or charges twice; two-city seat order does not change the result |
 | 136j | Commission and examine the capital arcology record, stacked ward, and lamp-terrace | Every menu and object calls the present work an **arcology foundation** or **surface prototype**. Nothing claims hosted streets, interior plots, separate zones, indoor residents, or zone-spanning ground exists yet |
+| 136k | Preview and commission the **Deep-Bore**, **Great Foundry**, and **Granary-Colossus** separately as first purposes; compare every quote and placed root to the exact catalogue floor at `_notes/BUILDING-CATALOGUE-BRIEF.md:1209-1226` | `Deep=3`, `Forge=4`, and `Harvest=5` append without changing `Flesh=1` or `Chrome=2`. Each preview names its exact fresh XL/site/precursor/tech/staff gate, 20×14 authored target, water, material bill, time, and foreman capability. Cancel spends nothing; confirm spends each exact bill once. Deep-Bore is stone-led around a protected bore head; Foundry is a stone fire hall with worked-metal machinery, never a metal shell; Granary is raised timber/stone crop-and-mill ground with limited worked metal |
+| 136l | From each of the five possible first purposes, preview all five possible seconds against the graph above | Exactly the ten ordered directions represented by the five symmetric edges are offered. All five self-pairs and all ten other non-edge directions refuse before debit and name the two lawful partners. A lawful choice freezes the pair epoch, both exact cities/works, directed cargo, stores, route, staffing/supply proof, recipe, and authored target. No third city or inferred edge appears |
+| 136m | For each ordered direction, freeze the second purpose, perform the first work's one partner-free bootstrap output, deliver it, and commission the second; then perform the second's one partner-free return output and deliver it to the first | Bootstrap pays the directed row's local debit and creates exactly one rooted cargo. Second construction consumes that exact cargo in addition to its ordinary local bill and, when the second is a body work, its existing casket/register input. The return exemption creates exactly one reciprocal cargo. Only landing **and consuming** that exact return activates the pair and gives the first work the next-operation token. Both durable exemptions are thereafter spent. A moved, same-kind, wrong-direction, foreign-pair, or old-epoch object never substitutes |
+| 136n | After activation, run two full alternations for each compatible pair. Before every direction, snapshot water, material stock, dedicated larder food, cargo, effect/procedure state, and receipt values; compare the result with all ten exact recipe rows at `_notes/BUILDING-CATALOGUE-BRIEF.md:1180-1201`. Remove each required input in turn and repeat | One current-epoch incoming cargo plus the exact local debit applies one effect and creates one outgoing cargo, then the token reverses. `requested = spent + outstanding` at every cut. Embodied material remains only in the cargo and is not also civic stock; the two provision/culture rows carry exactly six food; all remaining inputs are process sinks; body operations also debit the quoted procedure/authorization cost. Missing staff, power, route, water, local material, dedicated-larder food, exact cargo, or current token refuses before mutation. No aura, free liquid/material/food, multiplier, or background output appears |
+| 136o | Interrupt every ordered direction at pair publication, preview, local debit, exact-input consumption, effect callback, output creation, dispatch, pickup, in-flight leg, landing, reciprocal activation, and acknowledgement; save/cold-load and exchange seats at each cut | Exactly one parent pair receipt, one operation, and one cargo may be outstanding. The receipt retains epoch, both purpose/city/work IDs, direction/token, input identity/receipt, stores, route, debits, optional procedure, output identity, and before-values. Matching retry advances; exact after-state acknowledges; any third state quarantines. Bootstrap/return bits never reset. No cut duplicates, substitutes, reroutes, respends, recreates input, reapplies an effect, or activates early |
+| 136p | Exercise both directions of Granary-Colossus ↔ theatre, theatre ↔ annexe, and annexe ↔ Deep-Bore through 136l-136o | Existing casket/register consignments remain additional body-construction bootstrap, never reciprocal operation cargo. Each body operation also quotes and debits its selected existing procedure/authorization cost. `sterile-culture-mash`/`blightproof-seed-graft`, `living-neural-lattice`/`psybernetic-control-wafer`, and `strata-sense-coil`/`conductor-assay` remain exact, useful, non-substitutable pairs; neither body work remains an unconnected special case |
+| 136q | Force-build the fallback and all three declared lore/creed topologies for each new work; run the architecture, generated-realization, art, reference, and package checks; inspect every map at native tile/text scale, then damage, repair, darken, restaff, save, and cold-load it | All twelve 20×14 maps resolve the exact paid/tech-legal palette and required `entrance:public`, `entrance:service`, `purpose:operator`, `purpose:machine`, `purpose:input`, and `purpose:output` anchors. Founder, citizen, and porter reach both stores and operator without hazards or locked/private fixtures. Safe wrappers use verified vanilla art; no raw Hydraulic Irrigator, Solar Pumping Station, Hydraulic Press, populated container, filled vessel, or fixture mints liquid, charge, loot, hazards, or uncontrolled work. Silhouette, purpose, staffing, power, wear, and repair remain legible after reload |
+| 136r | Leave each active pair and its waiting cargo unvisited for several world-days without invoking an operation; then try dissolution during every unsettled phase and when quiescent. Secede with cargo committed, rejoin, then deliberately dissolve and re-pair | Time and absence neither decay cargo nor run operations, spend stock, create penalties, or grant stock a passive benefit. Dissolution refuses while debit, cargo, operation, or activation acknowledgement is unsettled; quiescent dissolution leaves both shells dormant/unpaired without refund. Secession orphans the epoch, lets committed cargo reach only its frozen destination/recovery, and opens no new operation. Rejoin resumes that same epoch; later deliberate re-pair mints a new epoch and old cargo remains invalid |
 
 ## Pass 38 — Named salvage expedition
 
@@ -1080,9 +1105,24 @@ record resident object id and exact store contents, then save.
 
 ## Current implementation limits and v1 scope gates
 
-- No ownership stamping on claims (can't rob your own city — membership design pending).
-- Settlers use vanilla farmer behavior between posts; the city moves their anchor by the hour and
-  vanilla walks them, so a settler with no post keeps the hearth and looks exactly as they did.
+- Claiming ground changes realm/zone metadata only. It never transfers or faction-stamps existing
+  object ownership, so player, foreign, and native theft law remains intact. Realm-member property
+  law is `AUTHOR-DEFERRED`, not a v1 omission to paper over with blanket stamping.
+- Ordinary construction still requires exact local water and material custody. Central routing and
+  nearest-holder proof exist, but construction does not yet mint the one owning routed-input job
+  needed to move an exact bill from another zone. That adapter is accepted `SHIP` work; remote
+  stock must not be spent directly while it is absent.
+- The theatre and becoming annexe are the implemented two-body purpose trial. The accepted `SHIP`
+  portfolio is a two-city-compatible graph of reciprocal pairs across those works plus the
+  Deep-Bore, Great Foundry, and Granary-Colossus. First-work bootstrap, second-work exact input,
+  reciprocal activation, authored XL sites, and interruption-safe operations remain unimplemented.
+  Hosted, zone-spanning arcology ground remains separately `AUTHOR-DEFERRED`.
+- Seniority death succession is implemented, but Charter declaration/change of that law and the
+  bounded chosen-resident/seat-consequence path are an open `SHIP` gap. A persistent groomed
+  designee remains separately `AUTHOR-DEFERRED`.
+- Settlers use vanilla farmer behavior between authored posts; the city moves their anchor by the
+  hour and vanilla walks them, so a settler with no post keeps the hearth. This post/home day shape
+  is implemented; bespoke idle activities are `AUTHOR-DEFERRED`.
 - Inherited sites currently restore bounded structures, their founder's cairn, and history only.
   Prior people remain historical. Successor/namesake polity callbacks, one legacy rival,
   generalized diplomats/emissaries, visible polity route endpoints, and polity clashes are
@@ -1090,6 +1130,8 @@ record resident object id and exact store contents, then save.
   blockers. Exact old-actor continuation, persistent unloaded armies/caravans, automatic opposition
   war, offscreen conquest/casualties, and mass background simulation are rejected rather than
   missing.
+- Founder memory is implemented through the owned shrine, Chronicle, and corpse-reading surfaces.
+  Publishing it into vanilla `sultanHistory` remains `AUTHOR-DEFERRED`.
 - Stage moves in **both directions** now. It climbs on the reading and falls only on a clear
   shortfall, one rung per reckoning, with Camp an absolute floor. A city that subsides is the
   system working; a city that subsides while it is inside its 20% band is a bug worth filing.
@@ -1111,7 +1153,8 @@ record resident object id and exact store contents, then save.
   ladders run at once and each says its own sentence, but a failed resolve costs the **worse of
   the two, never their sum** — so a city that is dry *and* starving loses one settler for it, not
   two, and may wear both marks. A pass reporting "it lost two people in one homecoming for one
-  bad year" is a bug worth filing. Trade charters still import no food from outside the realm.
+  bad year" is a bug worth filing. External charter food imports are `AUTHOR-DEFERRED`; trade
+  charters therefore import no food from outside the realm in v1.
   Central logistics can route existing physical food between dedicated larders; fields, gardens,
   and your own hands remain its sources rather than the routing transaction minting it.
 - **Plumbing is declared, and a refusal is the system working.** Two mains carrying different

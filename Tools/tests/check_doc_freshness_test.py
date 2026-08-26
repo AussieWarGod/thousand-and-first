@@ -55,6 +55,26 @@ class DocumentationFreshnessTests(unittest.TestCase):
             finally:
                 CHECKER.ROOT = original_root
 
+    def test_frozen_research_citations_are_not_repointed_to_current_sources(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            original_root = CHECKER.ROOT
+            CHECKER.ROOT = Path(temporary)
+            try:
+                (CHECKER.ROOT / "Source.cs").write_text("one\n", encoding="utf-8")
+                frozen = CHECKER.ROOT / "_notes" / "COVERAGE-GAP-MAP.md"
+                frozen.parent.mkdir(parents=True)
+                frozen.write_text("Pinned evidence: `Source.cs:99`.\n", encoding="utf-8")
+                (CHECKER.ROOT / "Current.md").write_text(
+                    "Live evidence: `Source.cs:99`.\n", encoding="utf-8"
+                )
+                problems = []
+                CHECKER.audit_source_citations(problems)
+                self.assertEqual(1, len(problems))
+                self.assertIn("Current.md:1", problems[0])
+                self.assertNotIn("COVERAGE-GAP-MAP", problems[0])
+            finally:
+                CHECKER.ROOT = original_root
+
     def test_optional_local_note_is_skipped_when_public_checkout_omits_it(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             original_root = CHECKER.ROOT

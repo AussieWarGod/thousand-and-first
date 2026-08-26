@@ -4,6 +4,12 @@
 (`BUILDING-CATALOGUE-BRIEF.md`, tail). Research-first, no code. Options + recommendation for the
 author's final ruling.
 
+> **Current v1 supersession, 2026-08-27.** The live realm cap is two cities. Any larger-purpose
+> mesh below is research, not current scope. The controlling v1 model is the reciprocal compatible
+> pair graph in `BUILDING-CATALOGUE-BRIEF.md` and `../VISION.md`: Deep-Bore, Great Foundry,
+> Granary-Colossus, theatre, and becoming annexe; first-work ordinary bootstrap, second-work exact
+> input, and exact return cargo before first-work activation.
+
 **Method:** praise-first, evidence-cited. Every load-bearing claim carries a `file:line`, an exact
 blueprint/attribute name, or a URL. Anything not read directly is marked **INFERRED** or
 **UNVERIFIED**. Runtime behaviour is never asserted from source alone (`_notes/README.md` standing

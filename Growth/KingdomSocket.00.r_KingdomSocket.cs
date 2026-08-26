@@ -15,7 +15,7 @@ using ThousandAndFirst;
 namespace XRL.World.Parts
 {
 	/// <summary>
-	/// A cleared plot: everything the settlement raised on this ground has come down, and the
+	/// A cleared lot: everything the settlement raised on this reserved ground has come down, and the
 	/// rect, its lane, and the ground itself stand ready for whatever the founder chooses next.
 	/// See BUILDING-CATALOGUE-BRIEF.md's 2026-08-21 addendum, "the plot as socket".
 	/// <para>

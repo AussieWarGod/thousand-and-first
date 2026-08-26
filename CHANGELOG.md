@@ -14,10 +14,9 @@ native/human protocol and gallery, compatibility testing, structural release gat
 Steam subscription/install pass remain gates before any release-candidate claim is restored.
 
 ### Fixed
-- **Hosted cross-platform source gates are green at checkpoint `d3fc4b9`.** Ubuntu and Windows
-  source suites pass. The remaining repository-audit-only failure was documentation metric drift
-  caused by pre-documentation trailing-blank cleanup; current structure/package metrics now match
-  the validated census.
+- **Hosted cross-platform source gates are green at checkpoint `b049c17`.** Repository audit,
+  Ubuntu source suite, and Windows source suite pass for those exact bytes. The later working-tree
+  decomposition remains local evidence until its own hosted run.
 - **Concurrent legacy publication now has one cross-process decision boundary.** Linux CI exposed
   that two `TryWriteLegacy` writers could both observe an absent generation identity before either
   atomic install completed. A per-store `.legacies.lock` now covers the existing-record,
@@ -61,25 +60,26 @@ Steam subscription/install pass remain gates before any release-candidate claim 
   expected skip that does not occur, or an explicitly configured incomplete base fails. The
   canonical `test.ps1` release runner rejects ambient filters, forbids every skip, and runs locked
   restores plus both suites; `release-check.sh` injects the exact Qud base. The recorded licensed
-  hardening run passes 7,705 / 7,705 full cases and 173 / 173 portable cases with zero skipped.
+  hardening run passes 7,714 / 7,714 full cases and 173 / 173 portable cases with zero skipped.
 - **Addendum 9 structural debt is now an executable release blocker instead of a stale census.**
   `Tools/check-structure.py` reads the exact staged production C# inventory, reports strict
   under-300 line debt and direct engine-coupling signals during incremental CI, and fails release
   on any file at or over 300. Because line counts cannot prove ownership or dependency quality,
   release also requires no-exception human evidence for one responsibility and protocols at
-  boundaries, bound to the exact source digest. The hardening sequence adds 128 semantic
-  decompositions to the prior ten, for 138 oversized authorities split without changing public or
-  serialized type identity. Nine post-`2cb97fc` decompositions use cohesive declaration/protocol shards
+  boundaries, bound to the exact source digest. The hardening sequence adds 131 semantic
+  decompositions to the prior ten, for 141 oversized authorities split without changing public or
+  serialized type identity. Twelve post-`2cb97fc` decompositions use cohesive declaration/protocol shards
   for growth, materials, procedures, improvements, raids, inherited-state publication, socket
-  workflows, wear transactions, and job-registry state;
+  workflows, wear transactions, job-registry state, one-pass survey indexing, road projection, and
+  city reconciliation;
   numeric lexical prefixes are used only where canonical compile order must retain declaration or
-  reflection order. Three more authorities have been decomposed since checkpoint `d3fc4b9`.
-  Current 1451-file census remains red: 251,288 physical lines; 43 files exceed
-  300, 0 are exactly 300, 19 exceed 1,000, 0 exceed 2,000, and 0 exceed 5,000. Direct `XRL`
-  imports occur in 583 files, 40 of them over the line limit. Its
+  reflection order. Six more authorities have been decomposed since checkpoint `d3fc4b9`, three
+  since checkpoint `b049c17`. Current 1481-file census remains red: 251,704 physical lines; 40 files exceed
+  300, 0 are exactly 300, 16 exceed 1,000, 0 exceed 2,000, and 0 exceed 5,000. Direct `XRL`
+  imports occur in 612 files, 37 of them over the line limit. Its
   exact inventory digest is
-  `d8b6483a57ff8ace6b094d0441e1e6f75cb2f8d287d8631d07b97a1303b7e8cc`;
-  the corresponding cold-install inventory contains 1475 files. The
+  `b4019ef667c178c9d46da4e3ad380059ea3dfe114dd69b66c7bb6cb394fbc979`;
+  the corresponding cold-install inventory contains 1505 files. The
   `docs/STRUCTURE_REVIEW.json` is still missing, so this is not an enterprise-grade or v1.0 claim.
 - **The deterministic balance gate follows split rule authorities.** The simulator reads the full
   material-rule source family instead of one obsolete monolith path, and a repository test now
@@ -91,8 +91,15 @@ Steam subscription/install pass remain gates before any release-candidate claim 
   committed additions/removals. Residents, construction presence, lab, networks, roads, crops,
   upgrades, visual state, and porters consume the bound index instead of hiding another whole-zone
   walk. Duplicate physical/semantic identity fails closed. Nine focused survey source-contract
-  cases pass; the final integrated pure/source suite passes 7,705 / 7,705 cases. Dense native scan
+  cases pass; the final integrated pure/source suite passes 7,714 / 7,714 cases. Dense native scan
   instrumentation remains a release gate.
+- **The canonical vision now classifies every newly audited boundary and one hidden v1 gap.**
+  Claims preserve existing objects' native ownership/theft law; external food charters, bespoke
+  idle activities, public `sultanHistory` founder rendering, and groomed designees are explicitly
+  `AUTHOR-DEFERRED`, while a competing `TeachesDish` realm authority is `REJECTED`. Charter
+  declaration/change of seniority and the bounded chosen-resident/seat-consequence path are an
+  open `SHIP` gap. The purposeful-work target is now a two-city-compatible reciprocal-pair graph,
+  avoiding the impossible three-city dependency chain implied by the earlier shorthand.
 - **Documentation now separates current evidence from historical attack material.** Public status,
   architecture/API/testing/release guides, engineering standards, changelog, private acceptance
   ledgers, decision/question/session/coordination records, and research indexes agree on the latest
@@ -551,9 +558,10 @@ Steam subscription/install pass remain gates before any release-candidate claim 
   footprint never outgrows the plot, refused at load and at improvement by name; sky-needing
   designs refuse walled tiers; underground everything is carved. Growing in place never takes a
   yard trade down without asking.
-- **The plot is a socket.** Change what a plot is within its own type×size set as one ceremony
-  with one disclosed figure; re-dress a standing building with any skin, including one added by a
-  mod after it was raised.
+- **The reserved lot can be reused.** A declared same-set plan transition keeps its LotId through
+  one disclosed ceremony; ordinary retype or resize strikes and restakes a fresh lot with a new
+  LotId. Re-dress a standing building with any skin, including one added by a mod after it was
+  raised.
 - **The upgrade trigger law.** Housing improves itself only when its residents can lodge
   elsewhere *to their own standard* — an ordinary settler takes a bunk, a notable will not take a
   tent. A working building the city leans on is never taken offline automatically: below margin

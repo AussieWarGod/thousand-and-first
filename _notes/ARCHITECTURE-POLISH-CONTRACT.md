@@ -267,8 +267,9 @@ result. Its remaining gate is the native Pass 38 playtest, not another proxy imp
 and reopening gates. Inherited site/history, current causal
 raids, existing bounded parties, caravans, and two-city manifests are `SHIP` only at their
 implemented scope. Successor/namesake people, a bounded legacy rival, diplomats/emissaries,
-generalized visible traffic/correspondence, witnessed polity clashes, a third city, and fully
-hosted zone-spanning arcology ground are positive `AUTHOR-DEFERRED` targets. Exact old actors,
+generalized visible traffic/correspondence, witnessed polity clashes, a third city, heart
+relocation that yields ordinary lots, and fully hosted zone-spanning arcology ground are positive
+`AUTHOR-DEFERRED` targets. Exact old actors,
 automatic ideological war, persistent unloaded parties, mass background simulation, and offscreen
 conquest/loss are `REJECTED`. Current arcology and inheritance surfaces must still be named and
 rendered honestly; deferred prose cannot make their absent expansions look present.

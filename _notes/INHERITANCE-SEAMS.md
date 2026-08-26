@@ -1,5 +1,11 @@
 # Cross-save inheritance — engine seam and safety contract
 
+> **Historical engine-seam research, not current product scope.** The source findings remain
+> pinned to Qud 2.0.211.51. `VISION.md` now supersedes the descendant/autonomous-polity proposals:
+> v1 reconstructs bounded site identity, layout, condition, founder cairn, and apocryphal history
+> only. Living successors, claimants, diplomats, rivals, and cross-save wars are
+> `AUTHOR-DEFERRED`; exact old actors remain `REJECTED`.
+
 Checked against installed Caves of Qud `2.0.211.51`, Steam build `24626113`, DLL SHA-256
 `8c3b0fc371eaffc85e3dc971e8ffcb21dfc6b05fb25b92398fbd474260598000` on
 2026-08-19. `D/` below means a fresh local decompile of that pinned assembly; its filesystem
@@ -236,9 +242,8 @@ Forbidden:
 - loose or contained items, trade goods, bits, cybernetics, relics, water quantities, stored
   charge, temporary effects, player stats/skills/mutations, quests, reputation values, faction
   registry keys, object IDs, `GameObjectReference`, raw zones, or arbitrary mod objects;
-- exact replay of old creatures. Held/Faded inhabitants are safe descendants/successors built
-  from allowlisted provenance; the old named roll remains history. This avoids cloning a
-  modded creature graph into a different generated history.
+- exact replay of old creatures. The old named roll remains history. The descendant/successor
+  construction explored below is future `AUTHOR-DEFERRED` research, not the current v1 contract.
 
 Open design decision: inherited works are a real benefit. Their restored condition, service
 readiness, and any starting civic supplies must be normalized/capped so “no items” cannot be
@@ -254,9 +259,8 @@ circumvented by banking water or stocked machines.
 - Preserve recognizable streets at all states. `Abandoned` is intact/derelict, not explosive.
   `Ruins` uses a purpose-built deterministic transform on the new empty reconstruction canvas,
   never `Ruiner` against a live/frozen authored zone.
-- Held is an autonomous polity, not automatically the successor player's property. Faded,
-  Abandoned, and Ruins each need a different relationship/recovery loop, not merely fewer
-  objects.
+- **AUTHOR-DEFERRED research:** a future Held site might become an autonomous polity, and future
+  Faded/Abandoned/Ruins relationship loops might differ. Current v1 reconstructs no living polity.
 - Use a new namespaced faction/settlement identity in the target history. Never import the old
   registry key or mutate vanilla `PlayerCult`.
 - Add a stable hidden map note and location finder through public APIs. Whether it is revealed
