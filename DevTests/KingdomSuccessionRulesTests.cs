@@ -9,6 +9,38 @@ namespace ThousandAndFirst.Tests
 	public class KingdomSuccessionRulesTests
 	{
 		[Test]
+		public void SaveCarriedSuccessionEnumsKeepIntLayoutAndExactValues()
+		{
+			Assert.AreEqual(typeof(int), Enum.GetUnderlyingType(typeof(InterregnumPhase)));
+			CollectionAssert.AreEqual(new[] { "None", "WordOnTheRoad", "RiteDue", "Reigning" },
+				Enum.GetNames(typeof(InterregnumPhase)));
+			Assert.AreEqual(0, (int)InterregnumPhase.None);
+			Assert.AreEqual(1, (int)InterregnumPhase.WordOnTheRoad);
+			Assert.AreEqual(2, (int)InterregnumPhase.RiteDue);
+			Assert.AreEqual(3, (int)InterregnumPhase.Reigning);
+
+			Assert.AreEqual(typeof(int), Enum.GetUnderlyingType(typeof(NewsRoad)));
+			CollectionAssert.AreEqual(new[] { "Seat", "Road", "Arch", "Rumour" },
+				Enum.GetNames(typeof(NewsRoad)));
+			Assert.AreEqual(0, (int)NewsRoad.Seat);
+			Assert.AreEqual(1, (int)NewsRoad.Road);
+			Assert.AreEqual(2, (int)NewsRoad.Arch);
+			Assert.AreEqual(3, (int)NewsRoad.Rumour);
+
+			Assert.AreEqual(typeof(int), Enum.GetUnderlyingType(typeof(MourningRiteStage)));
+			CollectionAssert.AreEqual(new[] { "None", "Frozen", "WordArrived",
+				"ProcessionComplete", "ShrinePlaced", "BodyCrossed", "Complete" },
+				Enum.GetNames(typeof(MourningRiteStage)));
+			Assert.AreEqual(0, (int)MourningRiteStage.None);
+			Assert.AreEqual(1, (int)MourningRiteStage.Frozen);
+			Assert.AreEqual(2, (int)MourningRiteStage.WordArrived);
+			Assert.AreEqual(3, (int)MourningRiteStage.ProcessionComplete);
+			Assert.AreEqual(4, (int)MourningRiteStage.ShrinePlaced);
+			Assert.AreEqual(5, (int)MourningRiteStage.BodyCrossed);
+			Assert.AreEqual(6, (int)MourningRiteStage.Complete);
+		}
+
+		[Test]
 		public void BodyFlipThenPreEventThrowRestoresFounderWithoutPublishingAccession()
 		{
 			object founder = new object();
@@ -557,8 +589,12 @@ namespace ThousandAndFirst.Tests
 					4, 5, "0/0", "", 21, 11)
 			};
 			string encoded = KingdomSuccessionRules.EncodeRiteManifest(rows);
+			const string golden = "v1|7|Ym9keTo3|QXxzaGE=|Sm9wcGFXb3JsZC4xLjEuMS4xLjEw|2|3|OS80|cGxvdDph|20|11\n"
+				+ "v1|8|Ym9keTo4|QgpyZW4=|Sm9wcGFXb3JsZC4xLjEuMS4xLjEw|4|5|MC8w||21|11";
+			Assert.AreEqual(golden, encoded);
 			KingdomRiteAttendee[] read;
 			Assert.IsTrue(KingdomSuccessionRules.TryDecodeRiteManifest(encoded, out read));
+			Assert.AreEqual(golden, KingdomSuccessionRules.EncodeRiteManifest(read));
 			Assert.AreEqual(2, read.Length);
 			Assert.AreEqual("A|sha", read[0].Name);
 			Assert.AreEqual("plot:a", read[0].Home);

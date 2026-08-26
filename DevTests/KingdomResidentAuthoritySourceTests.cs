@@ -83,9 +83,9 @@ namespace ThousandAndFirst.Tests
 			string offices = TestMain.ReadRepositoryText("Experience/KingdomOffices.cs");
 			StringAssert.Contains("KingdomResidents.TryMarkDead(system, Citizen", offices);
 			StringAssert.Contains("KingdomResidents.TryHead(System, out headRow)", offices);
-			string reports = TestMain.ReadRepositoryText("Core/KingdomReports.cs");
+			string reports = TestMain.ReadRepositoryText("Core/KingdomReportsPeople.cs");
 			StringAssert.Contains("KingdomResidents.TryRoll(System", reports);
-			string archive = TestMain.ReadRepositoryText("Core/KingdomSealRules.cs");
+			string archive = TestMain.ReadRepositoryText("Core/KingdomSealRules.Ground.cs");
 			StringAssert.Contains("KingdomResidentRules.TryProject(state, out roll)", archive);
 		}
 

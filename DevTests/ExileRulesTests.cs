@@ -7,6 +7,38 @@ namespace ThousandAndFirst.Tests
 {
 	public class ExileRulesTests
 	{
+		[Test]
+		public void PublicExileEnumMetadataIsFrozen()
+		{
+			Assert.AreEqual("ThousandAndFirst.RealmRegard", typeof(RealmRegard).FullName);
+			Assert.AreEqual(typeof(int), System.Enum.GetUnderlyingType(typeof(RealmRegard)));
+			Assert.AreEqual(0, (int)RealmRegard.Beloved);
+			Assert.AreEqual(1, (int)RealmRegard.Trusted);
+			Assert.AreEqual(2, (int)RealmRegard.Doubted);
+			Assert.AreEqual(3, (int)RealmRegard.Resented);
+			Assert.AreEqual(4, (int)RealmRegard.Repudiated);
+			Assert.AreEqual("ThousandAndFirst.RegardStep", typeof(RegardStep).FullName);
+			Assert.AreEqual(typeof(int), System.Enum.GetUnderlyingType(typeof(RegardStep)));
+			Assert.AreEqual(0, (int)RegardStep.Nothing);
+			Assert.AreEqual(1, (int)RegardStep.Murmur);
+			Assert.AreEqual(2, (int)RegardStep.Warning);
+			Assert.AreEqual(3, (int)RegardStep.Expulsion);
+			Assert.AreEqual("ThousandAndFirst.ExileVerdict", typeof(ExileVerdict).FullName);
+			Assert.AreEqual(typeof(int), System.Enum.GetUnderlyingType(typeof(ExileVerdict)));
+			Assert.AreEqual(0, (int)ExileVerdict.Warranted);
+			Assert.AreEqual(1, (int)ExileVerdict.NothingFounded);
+			Assert.AreEqual(2, (int)ExileVerdict.AlreadyCastOut);
+			Assert.AreEqual(3, (int)ExileVerdict.RegardHolds);
+			Assert.AreEqual("ThousandAndFirst.ReturnVerdict", typeof(ReturnVerdict).FullName);
+			Assert.AreEqual(typeof(int), System.Enum.GetUnderlyingType(typeof(ReturnVerdict)));
+			Assert.AreEqual(0, (int)ReturnVerdict.Allowed);
+			Assert.AreEqual(1, (int)ReturnVerdict.NeverCastOut);
+			Assert.AreEqual(2, (int)ReturnVerdict.FoundedAgain);
+			Assert.AreEqual(3, (int)ReturnVerdict.NothingRemembered);
+			Assert.AreEqual(4, (int)ReturnVerdict.NotOnTheirGround);
+			Assert.AreEqual(5, (int)ReturnVerdict.RegardTooLow);
+		}
+
 		// Every boundary is tested from both sides. The ladder copies four vanilla reputation
 		// thresholds by value, so an off-by-one here is a silent behaviour change in play; the
 		// live half of the same check (that the copies still equal RuleSettings) is asserted by

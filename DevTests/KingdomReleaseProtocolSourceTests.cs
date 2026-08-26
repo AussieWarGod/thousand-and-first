@@ -71,7 +71,7 @@ namespace ThousandAndFirst.Tests
 		public void TributeLiteralEqualsRuntimeConstant()
 		{
 			string protocol = Source("TESTING.md");
-			string rules = Source(Path.Combine("Core", "KingdomRules.cs"));
+			string rules = KingdomRulesLogicalSource.Read();
 			Match sourceDemand = Regex.Match(rules,
 				@"public\s+const\s+int\s+RaidTributeDrams\s*=\s*(\d+)\s*;",
 				RegexOptions.CultureInvariant);

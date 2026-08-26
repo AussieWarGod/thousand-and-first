@@ -11,7 +11,7 @@ import xml.etree.ElementTree as ET
 
 
 ROOT = Path(__file__).resolve().parent.parent
-FINAL_SUITE_CASES = "7,586"
+FINAL_SUITE_CASES = "7,612"
 FOCUSED_SURVEY_CASES = 9
 
 

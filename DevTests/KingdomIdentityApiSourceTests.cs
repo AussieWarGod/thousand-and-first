@@ -65,7 +65,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void QolReadsExactSpeciesAndFeedsGenericSelfTagLane()
 		{
-			string reader = Source(Path.Combine("Core", "KingdomQol.cs"));
+			string reader = Source(Path.Combine("Core", "KingdomQolResidents.cs"));
 			StringAssert.Contains("truth.Species = Resident.GetSpecies();", reader);
 			string lodging = Source(Path.Combine("Growth", "KingdomLodging.cs"));
 			StringAssert.Contains("KingdomQolRules.SelfTags(Profile)", lodging);

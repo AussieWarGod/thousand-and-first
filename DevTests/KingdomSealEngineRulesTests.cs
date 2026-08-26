@@ -10,6 +10,15 @@ namespace ThousandAndFirst.Tests
 	public class KingdomSealEngineRulesTests
 	{
 		[Test]
+		public void PrimaryProofStateKeepsExactIntValues()
+		{
+			Assert.AreEqual(typeof(int), Enum.GetUnderlyingType(typeof(KingdomSealPrimaryState)));
+			Assert.AreEqual(0, (int)KingdomSealPrimaryState.Unknown);
+			Assert.AreEqual(1, (int)KingdomSealPrimaryState.Absent);
+			Assert.AreEqual(2, (int)KingdomSealPrimaryState.Present);
+		}
+
+		[Test]
 		public void PartialReadDisableRefusesEveryProfileAuthorityAndSurvivesResaveReload()
 		{
 			bool currentReadFailed = true;

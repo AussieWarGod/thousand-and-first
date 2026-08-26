@@ -20,17 +20,18 @@ python3 Tools/check-structure.py --release
 
 ## Current hardening checkpoint
 
-`Tools/check-structure.py --json` currently reports 583 staged production C# files and 241,629
-physical lines. Of those, 171 exceed 300 lines, 0 are exactly 300, 63 exceed 1,000, 15 exceed
+`Tools/check-structure.py --json` currently reports 763 staged production C# files and 242,999
+physical lines. Of those, 122 exceed 300 lines, 0 are exactly 300, 56 exceed 1,000, 14 exceed
 2,000, and 2 exceed 5,000. Exact staged source inventory digest:
-`a48f43ce384de4aa54d341a4e3fb49605730f41cc3753ad43afaf72089d5afba`.
+`ce7e3de4e59985e4a8f2e12d85a54be89b19111b34e45639145e3159892df591`. The census reports
+191 files with direct `XRL` imports; 82 of those are at or over the line limit.
 
-Ten previously oversized authorities have been decomposed: lifecycle state, lifecycle rules, realm
-archive, founding transaction, laboratory runtime, plot rules, architecture rules, zoning rules,
-material rules, and trade rules. [ARCHITECTURE.md](ARCHITECTURE.md#split-authority-map) maps each
-logical authority to its current source family. This is measurable progress, not release signoff:
-171 line-cap failures and missing exact-inventory human review still block release. Any staged
-source change invalidates this digest and requires a new census and review binding.
+The current wave semantically decomposed 49 additional oversized authorities, bringing the
+cumulative total to 59. [ARCHITECTURE.md](ARCHITECTURE.md#split-authority-map) maps the logical
+authorities to their current source families. This is measurable progress, not release signoff:
+122 line-cap failures and missing `docs/STRUCTURE_REVIEW.json` exact-inventory human review still
+block release. Any staged source change invalidates this digest and requires a new census and
+review binding.
 
 Automation cannot decide whether a type owns one coherent responsibility or whether its engine,
 serialization, public-API, and third-party seams use suitable protocols. Release mode therefore

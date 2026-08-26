@@ -56,10 +56,19 @@ split by responsibility. Search these families instead of assuming one monolithi
 | Zoning rules | `Growth/KingdomZoningRules.cs`, `Growth/KingdomZoning*Rules.cs`, `Growth/KingdomZoningGateParser.cs`, and declaration/gate files | District, stratum, technology, builder/roster, judgement, refusal text, and gate parsing. |
 | Material rules | `Growth/KingdomMaterialRules.cs`, `Growth/KingdomMaterialRules.*.cs`, and eponymous material/tally declarations | Clearance, walls, refining, capabilities, bits, exotics, infrastructure, wear, and tally state. |
 | Trade rules | `Trade/KingdomTradeRules.cs`, `Trade/KingdomTradeRules.*.cs`, `Trade/KingdomTradeExactLookup.cs`, and `Trade/KingdomTradeOptionAction.cs` | Identity, state, normalization, accounting, exile, lifecycle, authority, proofs, validation, and outbox. |
+| API readings and behavior extensions | `Api/KingdomBehaviourExtensions*.cs`, `Api/KingdomCityReading.cs`, and the type-named reading declarations beside them | Public reading DTO identity, job projections, standing, stock, work, resident, day/place, and zone surfaces. |
+| Core realm decisions and projections | `Core/KingdomBrink*.cs`, `Core/KingdomExileRules*.cs`, `Core/KingdomIdentityRules*.cs`, `Core/KingdomMaster*.cs`, `Core/KingdomQol*.cs`, `Core/KingdomReports*.cs`, `Core/KingdomRules*.cs`, `Core/KingdomStyleRules*.cs`, and `Core/KingdomTechMap*.cs` | Realm decisions, recovery plans, identity reproof, reports, policy/economy/population/spatial rules, style resolution, and technology-map research. |
+| Seal wire and security | `Core/KingdomSealRules*.cs`, `Core/KingdomSealFormat*.cs`, `Core/KingdomSealEngineRules*.cs`, and type-named seal declarations | Capture and selection, canonical text/bytes, framing and parsing, eligibility, lineage, ground proof, accession, and primary-state projection. |
+| Experience decisions | `Experience/KingdomExpeditionRules*.cs`, `Experience/KingdomFaithRules*.cs`, `Experience/KingdomLocusRules*.cs`, `Experience/KingdomSuccession*.cs`, and `Experience/KingdomVoiceRules*.cs` | Expedition accounting, education, guests, succession identity/state/journal/telling, and bounded voice lines. |
+| Growth authorities | `Growth/KingdomAnnexeRules*.cs`, `Growth/KingdomConstruction*.cs`, `Growth/KingdomCrewRules*.cs`, `Growth/KingdomCrews*.cs`, `Growth/KingdomCrown*.cs`, `Growth/KingdomDelveRules*.cs`, `Growth/KingdomLayoutRules*.cs`, `Growth/KingdomPlot*.cs`, `Growth/KingdomPowerRules*.cs`, `Growth/KingdomProcedureRules*.cs`, `Growth/KingdomPurpose*.cs`, `Growth/KingdomResearchRules*.cs`, `Growth/KingdomResidentIdentityRules*.cs`, `Growth/KingdomSocketRules*.cs`, and `Growth/KingdomYards*.cs` | Construction wire/funding/transitions, crews, crown/delve/annexe judgement, layout, plots, power, procedures, purpose, research, resident receipts, socket conversion, and yard commands/menus. |
+| City and deterministic kernel rules | The `Simulation/City/KingdomAdvanceRules*`, `KingdomBookRules*`, `KingdomBudgetRules*`, `KingdomCatchUpRules*`, `KingdomCityMemoryRules*`, `KingdomDistanceSliceRules*`, `KingdomExecutor*`, `KingdomFlowRules*`, `KingdomItineraryRules*`, and `KingdomStations*` families; `Simulation/Kernel/CounterRandom*.cs` | Arithmetic and clocks, roll/budget declarations, catch-up, memory calculations, distance, execution, flow, itinerary projection, station claims, and deterministic draws. |
+| Quest, trade-pattern, and inherited-site rules | `Quests/KingdomAskRules*.cs`, `Trade/KingdomTradePatternRules*.cs`, and `World/KingdomInheritedSiteBuilder*.cs` | Ask rendering, trade-pattern selection, and inherited-site construction/fallback. |
 
-Each family remains one logical authority only where Qud ABI or transaction identity requires it.
-New behavior belongs in the smallest owning shard; a partial class is not permission to create
-cross-family state or bypass the documented protocol seams.
+The seven grouped rows above cover the current wave's 49 additional semantic decompositions; with
+the prior ten rows, 59 oversized authorities have been decomposed. Each family remains one logical
+authority only where Qud ABI or transaction identity requires it. New behavior belongs in the
+smallest owning shard; a partial class is not permission to create cross-family state or bypass the
+documented protocol seams.
 
 ## Runtime and authority
 

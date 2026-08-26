@@ -7,6 +7,27 @@ namespace ThousandAndFirst.Tests
 	[TestFixture]
 	public class KingdomPurposeRulesTests
 	{
+		[Test]
+		public void PublicPurposeTypeMetadataIsFrozen()
+		{
+			Assert.AreEqual("ThousandAndFirst.KingdomPurposeKind", typeof(KingdomPurposeKind).FullName);
+			Assert.AreEqual(typeof(byte), System.Enum.GetUnderlyingType(typeof(KingdomPurposeKind)));
+			Assert.AreEqual(0, (byte)KingdomPurposeKind.None);
+			Assert.AreEqual(1, (byte)KingdomPurposeKind.Flesh);
+			Assert.AreEqual(2, (byte)KingdomPurposeKind.Chrome);
+			Assert.AreEqual("ThousandAndFirst.KingdomPurposeSite", typeof(KingdomPurposeSite).FullName);
+			Assert.AreEqual(typeof(byte), System.Enum.GetUnderlyingType(typeof(KingdomPurposeSite)));
+			Assert.AreEqual(0, (byte)KingdomPurposeSite.None);
+			Assert.AreEqual(1, (byte)KingdomPurposeSite.LivingSurgery);
+			Assert.AreEqual(2, (byte)KingdomPurposeSite.RuinEnrollment);
+			Assert.AreEqual("ThousandAndFirst.KingdomPurposeDefinition",
+				typeof(KingdomPurposeDefinition).FullName);
+			Assert.AreEqual("ThousandAndFirst.KingdomPurposeManifest",
+				typeof(KingdomPurposeManifest).FullName);
+			Assert.AreEqual("ThousandAndFirst.KingdomPurposeCommitment",
+				typeof(KingdomPurposeCommitment).FullName);
+		}
+
 		private static KingdomPurposeManifest Manifest()
 		{
 			KingdomMaterialTally materials = new KingdomMaterialTally();

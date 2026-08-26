@@ -183,7 +183,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("truth.Aquatic && !truth.Flying", identity);
 			StringAssert.Contains("truth.BroadBodied", identity);
 			StringAssert.Contains("IdentityKeysProperty", identity);
-			string qol = TestMain.ReadRepositoryText(Path.Combine("Core", "KingdomQol.cs"));
+			string qol = TestMain.ReadRepositoryText(Path.Combine("Core", "KingdomQolResidents.cs"));
 			StringAssert.Contains("Resident.HasTagOrProperty(\"Gigantic\")", qol);
 
 			string system = TestMain.ReadRepositoryText(Path.Combine("Core", "KingdomSystem.cs"));

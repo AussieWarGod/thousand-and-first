@@ -69,6 +69,61 @@ namespace ThousandAndFirst.Tests
 			};
 		}
 
+		private static void AssertByteEnum(Type Type, string Expected)
+		{
+			Assert.AreEqual(typeof(byte), Enum.GetUnderlyingType(Type), Type.Name);
+			Array values = Enum.GetValues(Type);
+			List<string> actual = new List<string>();
+			foreach (object value in values)
+			{
+				actual.Add(Convert.ToByte(value) + ":" + Enum.GetName(Type, value));
+			}
+			Assert.AreEqual(Expected, string.Join(",", actual.ToArray()), Type.Name);
+		}
+
+		private static List<KingdomConstructionJob> CanonicalRoundTrip(string Fixture)
+		{
+			List<KingdomConstructionJob> decoded;
+			Assert.IsTrue(KingdomConstructionRules.TryDecode(Fixture, out decoded));
+			string canonical;
+			Assert.IsTrue(KingdomConstructionRules.TryEncode(decoded, out canonical));
+			StringAssert.StartsWith(KingdomConstructionRules.FormatHeader + "\n", canonical);
+			Assert.IsTrue(KingdomConstructionRules.TryDecode(canonical, out decoded));
+			string repeated;
+			Assert.IsTrue(KingdomConstructionRules.TryEncode(decoded, out repeated));
+			Assert.AreEqual(canonical, repeated);
+			return decoded;
+		}
+
+		[Test]
+		public void ConstructionWireEnumsKeepExactByteValues()
+		{
+			AssertByteEnum(typeof(KingdomConstructionRoute),
+				"0:None,1:CommissionScaffold,2:PlanScaffold,3:PlotCommission,4:PlotPlan,5:SocketBuild,6:SocketConvert,7:SocketRedress,8:Improvement,9:RoadPaving,10:WearRepair,11:Strike,12:PurposeConsignment");
+			AssertByteEnum(typeof(KingdomConstructionProjection),
+				"0:None,1:Scaffold,2:PlotWorks,3:StrikeOrder,4:Redress,5:Improvement,6:Paving,7:Repair,8:PurposeConsignment");
+			AssertByteEnum(typeof(KingdomConstructionPhase),
+				"0:Invalid,1:Published,2:WaterPending,3:WaterSettled,4:MaterialPending,5:Funded,6:ProjectionPending,7:Projected,8:Working,9:Outstanding,10:CompensationPending,11:Compensated,12:Complete,13:Cancelled,14:InspectionRequired");
+			AssertByteEnum(typeof(KingdomConstructionResumeAction),
+				"0:None,1:ResumeFunding,2:RetryProjection,3:AdvanceWork,4:Inspect");
+			AssertByteEnum(typeof(KingdomConstructionStartResult),
+				"0:Refused,1:Funded,2:Outstanding");
+			AssertByteEnum(typeof(KingdomScaffoldContinuationAction),
+				"0:None,1:AdvanceWork,2:CreateSuccessor,3:RemovePredecessor,4:CompleteReceipt,5:TellCompletion,6:Quarantine");
+			AssertByteEnum(typeof(KingdomPhysicalPhase),
+				"0:None,1:OutputIntent,2:StrikeOrdered,3:PlotPartRemovalPending,4:PredecessorRemovalPending,5:PredecessorRemoved,6:SalvageAddPending,7:SalvageSettled,8:SuccessorPending,9:SuccessorSettled,10:TellingsPending,11:Settled,12:Quarantined,13:StrikeStampPending,14:StrikeWorking,15:StrikeWorkComplete,16:StrikeCancellationPending,17:FinalOutputPending,18:FinalOutputSettled,19:FurnishingPending,20:FurnishingSettled,21:FinalRemovalPending,22:FinalRemoved,23:EffectsPending,24:EffectsSettled,25:RoadPlanFrozen,26:RoadOutputPending,27:RoadOutputSettled,28:RoadRemovalPending,29:RoadTallyPending,30:RoadTallySettled,31:CargoOutputPending,32:CargoOutputSettled,33:CargoTransferPending,34:CargoDelivered");
+			AssertByteEnum(typeof(KingdomConstructionSinkDisposition),
+				"0:None,1:Pending,2:Attempting,3:Delivered,4:Skipped,5:Lost");
+			AssertByteEnum(typeof(KingdomExactRemovalAction),
+				"1:InvokeOnce,2:ProvedAbsent,3:Quarantine");
+			AssertByteEnum(typeof(KingdomConstructionCasAction),
+				"1:Apply,2:Confirm,3:Quarantine");
+			AssertByteEnum(typeof(KingdomPhysicalLookupState),
+				"0:Absent,1:Exact,2:Ambiguous");
+			AssertByteEnum(typeof(KingdomHandoverItemTopology),
+				"0:Invalid,1:Source,2:Loose,3:EnteringCell,4:DestinationInventory,5:DestinationCell");
+		}
+
 		[Test]
 		public void EveryRouteMapsToOneRequiredPhysicalProjection()
 		{
@@ -739,17 +794,19 @@ namespace ThousandAndFirst.Tests
 			string v4;
 			Assert.IsTrue(KingdomConstructionRules.TryEncode(
 				new List<KingdomConstructionJob> { original }, out v4));
+			List<KingdomConstructionJob> decoded = CanonicalRoundTrip(v4);
+			Assert.AreEqual(KingdomConstructionRules.BuildTruthSchema,
+				decoded[0].BuildTruthSchema);
 			string[] lines = v4.Split('\n');
 			string[] field = lines[1].Split('|');
 			Assert.AreEqual(55, field.Length);
 			string v3 = KingdomConstructionRules.PriorFormatHeader + "\n"
 				+ string.Join("|", field, 0, 51);
-			List<KingdomConstructionJob> decoded;
-			Assert.IsTrue(KingdomConstructionRules.TryDecode(v3, out decoded));
+			decoded = CanonicalRoundTrip(v3);
 			Assert.AreEqual(0, decoded[0].BuildTruthSchema);
 			string v2 = KingdomConstructionRules.OlderFormatHeader + "\n"
 				+ string.Join("|", field, 0, 45);
-			Assert.IsTrue(KingdomConstructionRules.TryDecode(v2, out decoded));
+			decoded = CanonicalRoundTrip(v2);
 			Assert.AreEqual(original.Id, decoded[0].Id);
 			string[] legacy = new string[26];
 			for (int i = 0; i <= 8; i++) legacy[i] = field[i];
@@ -757,11 +814,7 @@ namespace ThousandAndFirst.Tests
 			for (int i = 20; i <= 34; i++) legacy[11 + i - 20] = field[i];
 			string v1 = KingdomConstructionRules.LegacyFormatHeader + "\n"
 				+ string.Join("|", legacy);
-			Assert.IsTrue(KingdomConstructionRules.TryDecode(v1, out decoded));
-			string migrated;
-			Assert.IsTrue(KingdomConstructionRules.TryEncode(decoded, out migrated));
-			StringAssert.StartsWith(KingdomConstructionRules.FormatHeader + "\n", migrated);
-			Assert.IsTrue(KingdomConstructionRules.TryDecode(migrated, out decoded));
+			decoded = CanonicalRoundTrip(v1);
 			Assert.AreEqual(0, decoded[0].BuildTruthSchema,
 				"migration must preserve unknown truth rather than infer it");
 		}

@@ -12,6 +12,24 @@ namespace ThousandAndFirst.Tests
 			return TestMain.ReadRepositoryText(path);
 		}
 
+		private static string Method(string source, string signature)
+		{
+			int start = source.IndexOf(signature, StringComparison.Ordinal);
+			Assert.GreaterOrEqual(start, 0, signature);
+			int open = source.IndexOf('{', start);
+			Assert.Greater(open, start, signature);
+			int depth = 0;
+			for (int i = open; i < source.Length; i++)
+			{
+				if (source[i] == '{') depth++;
+				if (source[i] != '}') continue;
+				depth--;
+				if (depth == 0) return source.Substring(start, i - start + 1);
+			}
+			Assert.Fail("method has no closing brace: " + signature);
+			return "";
+		}
+
 		[Test]
 		public void VisualPartDerivesOnlyFromGameplayStateAndUsesVanillaRenderChannel()
 		{
@@ -46,7 +64,7 @@ namespace ThousandAndFirst.Tests
 				scaffold);
 			StringAssert.Contains("KingdomConstructionPresence.EffectivenessOf(parent, System", plot);
 
-			string crews = Source("Growth/KingdomCrews.cs");
+			string crews = Source("Growth/KingdomCrews.Assignments.cs");
 			int raising = crews.IndexOf("internal static KingdomCrewRules.CrewOutcome AssignRaising",
 				StringComparison.Ordinal);
 			int extension = crews.IndexOf("ExtensionAffinities(demand, Settlers, pool.Length)",
@@ -77,10 +95,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("KingdomVisualState.Refresh(System, Z, Survey)", construction);
 
 			string stations = Source("Simulation/City/KingdomStations.cs");
-			int start = stations.IndexOf("internal static bool Release", StringComparison.Ordinal);
-			int end = stations.IndexOf("private static bool TryReading", start,
-				StringComparison.Ordinal);
-			string release = stations.Substring(start, end - start);
+			string release = Method(stations, "internal static bool Release");
 			StringAssert.Contains("Settler.Brain.Stay(target)", release);
 			StringAssert.Contains("new MoveTo(target, careful: true)", release);
 			Assert.IsFalse(release.Contains("AddObject("));

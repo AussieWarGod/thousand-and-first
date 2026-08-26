@@ -13,6 +13,17 @@ namespace ThousandAndFirst.Tests
 	/// </summary>
 	public class KingdomResearchRulesTests
 	{
+		[Test]
+		public void PublicRecordTypes_KeepTheirPublishedTopLevelIdentities()
+		{
+			Assert.AreEqual("ThousandAndFirst.ResearchEffect", typeof(ResearchEffect).FullName);
+			Assert.AreEqual("ThousandAndFirst.ResearchNode", typeof(ResearchNode).FullName);
+			Assert.AreEqual("ThousandAndFirst.ResearchRow", typeof(ResearchRow).FullName);
+			Assert.IsFalse(typeof(ResearchEffect).IsNested);
+			Assert.IsFalse(typeof(ResearchNode).IsNested);
+			Assert.IsFalse(typeof(ResearchRow).IsNested);
+		}
+
 		// --- The tier ladder: hard at the boundary, soft inside it -----------------------------
 
 		[TestCase(1, 10)]

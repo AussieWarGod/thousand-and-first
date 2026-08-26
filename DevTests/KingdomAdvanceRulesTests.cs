@@ -6,6 +6,19 @@ using ThousandAndFirst.Simulation.Kernel;
 
 namespace ThousandAndFirst.Tests
 {
+	[TestFixture]
+	public class KingdomAdvanceAbiTests
+	{
+		[Test]
+		public void BreakpointKindsKeepExactByteOrder()
+		{
+			Assert.AreEqual(typeof(byte), Enum.GetUnderlyingType(typeof(KingdomBreakpointKind)));
+			Assert.AreEqual("0:None,1:StockEmpty,2:StockFull,3:CropStage,4:ClockDue,5:BrinkExpiry,6:SubsidenceRung,7:StageChange,8:Horizon",
+				string.Join(",", Array.ConvertAll((KingdomBreakpointKind[])Enum.GetValues(
+					typeof(KingdomBreakpointKind)), value => ((byte)value) + ":" + value)));
+		}
+	}
+
 	/// <summary>
 	/// A toy city with exactly two rate sources: one fixed-period clock, folded O(1) the way
 	/// <c>TickMath.TryCountFixedPeriodDue</c>'s own doc-comment demands, and one stock draining at

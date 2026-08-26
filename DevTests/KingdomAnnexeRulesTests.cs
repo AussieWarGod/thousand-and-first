@@ -18,6 +18,22 @@ namespace ThousandAndFirst.Tests
 	/// </summary>
 	public class KingdomAnnexeRulesTests
 	{
+		[Test]
+		public void EnrolVerdictAbiIsFrozen()
+		{
+			Assert.AreEqual("ThousandAndFirst.KingdomEnrolVerdict",
+				typeof(KingdomEnrolVerdict).FullName);
+			Assert.AreEqual(typeof(byte), System.Enum.GetUnderlyingType(typeof(KingdomEnrolVerdict)));
+			Assert.AreEqual(0, (byte)KingdomEnrolVerdict.Allowed);
+			Assert.AreEqual(1, (byte)KingdomEnrolVerdict.Unfounded);
+			Assert.AreEqual(2, (byte)KingdomEnrolVerdict.NoAnnexe);
+			Assert.AreEqual(3, (byte)KingdomEnrolVerdict.Unstaffed);
+			Assert.AreEqual(4, (byte)KingdomEnrolVerdict.NotOurs);
+			Assert.AreEqual(5, (byte)KingdomEnrolVerdict.Kin);
+			Assert.AreEqual(6, (byte)KingdomEnrolVerdict.Enrolled);
+			Assert.AreEqual(7, (byte)KingdomEnrolVerdict.Unpaid);
+		}
+
 		private const string Founder = "41";
 
 		private const string Citizen = "77";

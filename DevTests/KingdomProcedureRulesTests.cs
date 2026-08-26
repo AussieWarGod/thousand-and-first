@@ -7,6 +7,41 @@ namespace ThousandAndFirst.Tests
 {
 	public class KingdomProcedureRulesTests
 	{
+		[Test]
+		public void PublicLabTypes_KeepTheirPublishedMetadata()
+		{
+			Assert.AreEqual("ThousandAndFirst.LabAttach", typeof(LabAttach).FullName);
+			Assert.AreEqual("ThousandAndFirst.LabSource", typeof(LabSource).FullName);
+			Assert.AreEqual("ThousandAndFirst.LabClass", typeof(LabClass).FullName);
+			Assert.AreEqual("ThousandAndFirst.LabVerdict", typeof(LabVerdict).FullName);
+			Assert.AreEqual("ThousandAndFirst.LabSlot", typeof(LabSlot).FullName);
+			Assert.AreEqual("ThousandAndFirst.LabProcedure", typeof(LabProcedure).FullName);
+
+			Assert.AreEqual(typeof(byte), System.Enum.GetUnderlyingType(typeof(LabAttach)));
+			Assert.AreEqual(typeof(byte), System.Enum.GetUnderlyingType(typeof(LabSource)));
+			Assert.AreEqual(typeof(byte), System.Enum.GetUnderlyingType(typeof(LabClass)));
+			Assert.AreEqual(typeof(byte), System.Enum.GetUnderlyingType(typeof(LabVerdict)));
+			Assert.AreEqual(0, (byte)LabAttach.Body);
+			Assert.AreEqual(1, (byte)LabAttach.Weapon);
+			Assert.AreEqual(0, (byte)LabSource.Part);
+			Assert.AreEqual(1, (byte)LabSource.Limb);
+			Assert.AreEqual(2, (byte)LabSource.Mutation);
+			Assert.AreEqual(1, (byte)LabClass.Rider);
+			Assert.AreEqual(2, (byte)LabClass.Defence);
+			Assert.AreEqual(3, (byte)LabClass.Limb);
+			Assert.AreEqual(4, (byte)LabClass.Named);
+			Assert.AreEqual(0, (byte)LabVerdict.Allowed);
+			Assert.AreEqual(1, (byte)LabVerdict.RefusedNoSlot);
+			Assert.AreEqual(2, (byte)LabVerdict.RefusedSlotTaken);
+			Assert.AreEqual(3, (byte)LabVerdict.RefusedCategory);
+			Assert.AreEqual(4, (byte)LabVerdict.RefusedRung);
+			Assert.AreEqual(5, (byte)LabVerdict.RefusedNoWeapon);
+			Assert.AreEqual(6, (byte)LabVerdict.RefusedUnkept);
+			Assert.AreEqual(7, (byte)LabVerdict.RefusedOnceEver);
+			Assert.AreEqual(8, (byte)LabVerdict.RefusedUndiscovered);
+			Assert.AreEqual(9, (byte)LabVerdict.RefusedMagnitude);
+		}
+
 		// --- Helpers ---------------------------------------------------------------------------
 
 		private const int Animal = 1;

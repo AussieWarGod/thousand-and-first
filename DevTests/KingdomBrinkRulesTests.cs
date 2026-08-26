@@ -23,6 +23,28 @@ namespace ThousandAndFirst.Tests
 	{
 		private const long Day = KingdomRules.TicksPerDay;
 
+		[Test]
+		public void BrinkRecordKeepsPublicReadonlyAbi()
+		{
+			System.Type type = typeof(BrinkRecord);
+			Assert.IsTrue(type.IsPublic);
+			Assert.IsTrue(type.IsValueType);
+			Assert.IsNotNull(type.GetConstructor(new System.Type[]
+				{ typeof(bool), typeof(long), typeof(long), typeof(string), typeof(int) }));
+			string[] names = new string[] { "Stands", "ReachedTick", "WarnedTick", "Cause", "Channel" };
+			System.Type[] types = new System.Type[]
+				{ typeof(bool), typeof(long), typeof(long), typeof(string), typeof(int) };
+			for (int i = 0; i < names.Length; i++)
+			{
+				System.Reflection.FieldInfo field = type.GetField(names[i]);
+				Assert.IsNotNull(field, names[i]);
+				Assert.AreEqual(types[i], field.FieldType, names[i]);
+				Assert.IsTrue(field.IsPublic, names[i]);
+				Assert.IsTrue(field.IsInitOnly, names[i]);
+			}
+			Assert.AreEqual(names.Length, type.GetFields().Length);
+		}
+
 		// --- The three windows, and the derivation that produced them ---------------------
 
 		[TestCase(BrinkKind.Roof, KingdomBrinkRules.RoofBrinkWindowDays)]

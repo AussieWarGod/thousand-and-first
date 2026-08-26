@@ -200,6 +200,25 @@ namespace ThousandAndFirst.Tests
 	/// </summary>
 	public class KingdomComputeSeamTests
 	{
+		[Test]
+		public void ComputeOutcomeEnumsKeepByteAbiAndExactValues()
+		{
+			Assert.AreEqual(typeof(byte), Enum.GetUnderlyingType(typeof(KingdomComputeStatus)));
+			CollectionAssert.AreEqual(new[] { "Ok", "Refused", "Faulted", "OverBudget" },
+				Enum.GetNames(typeof(KingdomComputeStatus)));
+			CollectionAssert.AreEqual(new byte[] { 0, 1, 2, 3 },
+				Array.ConvertAll((KingdomComputeStatus[])Enum.GetValues(typeof(KingdomComputeStatus)),
+					value => (byte)value));
+
+			Assert.AreEqual(typeof(byte), Enum.GetUnderlyingType(typeof(KingdomComputeRefusal)));
+			CollectionAssert.AreEqual(new[] { "None", "NullJob", "NullClock", "Threw",
+				"EngineTypeAtBoundary", "MutableField", "MutableStatic", "ClosureTooLarge" },
+				Enum.GetNames(typeof(KingdomComputeRefusal)));
+			CollectionAssert.AreEqual(new byte[] { 0, 1, 2, 3, 4, 5, 6, 7 },
+				Array.ConvertAll((KingdomComputeRefusal[])Enum.GetValues(typeof(KingdomComputeRefusal)),
+					value => (byte)value));
+		}
+
 		private static KingdomExecutor Executor(long[] readings, out KingdomComputeJournalRing journal)
 		{
 			journal = new KingdomComputeJournalRing();

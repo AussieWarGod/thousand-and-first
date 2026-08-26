@@ -125,7 +125,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void OnlyTheTypedGatehouseMayCarryNonPlotTargetBoundsOnV2Wire()
 		{
-			string source = Source(Path.Combine("Growth", "KingdomConstructionRules.cs"));
+			string source = Source(Path.Combine("Growth", "KingdomConstructionRules.PayloadCodec.cs"));
 			string encode = Slice(source, "public static bool TryEncodeStrikeIntent(",
 				"public static bool TryDecodeStrikeIntent(");
 			StringAssert.Contains("KingdomGatehouseRules.IsNetworkStrike(Intent.BuildKey", encode);

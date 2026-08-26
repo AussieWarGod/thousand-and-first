@@ -36,6 +36,12 @@ class ArtPolicyTests(unittest.TestCase):
         references = check_wiring.referenced_tiles([path])
         self.assertIn("ThousandAndFirst/preview.png", references)
 
+    def test_district_reference_check_reads_split_rules_authority(self):
+        self.assertEqual(
+            {"agrarian", "market", "craft", "shrine", "garrison", "academy"},
+            check_xml_refs.known_districts(),
+        )
+
     def test_repository_runtime_asset_manifest_is_canonical_and_complete(self):
         records, problems = check_wiring.runtime_asset_records()
         self.assertEqual([], problems)

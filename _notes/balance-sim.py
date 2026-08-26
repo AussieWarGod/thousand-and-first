@@ -72,8 +72,46 @@ import re
 from dataclasses import dataclass
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-RULES_CS = os.path.join(ROOT, "Core", "KingdomRules.cs")
-CROP_CS = os.path.join(ROOT, "Growth", "KingdomCropRules.cs")
+
+
+def source_family_paths(relative_directory: str, stem: str) -> tuple[str, ...]:
+    """Return one root source plus its dot-named partial shards in stable filename order."""
+    directory = os.path.join(ROOT, relative_directory)
+    names = sorted(
+        name for name in os.listdir(directory)
+        if name == stem + ".cs"
+        or (name.startswith(stem + ".") and name.endswith(".cs"))
+    )
+    if not names:
+        raise SystemExit(f"source family not found: {relative_directory}/{stem}")
+    return tuple(os.path.join(directory, name) for name in names)
+
+
+RULES_CS = tuple(
+    os.path.join(ROOT, "Core", name)
+    for name in (
+        "KingdomRules.cs",
+        "KingdomRules.Dish.cs",
+        "KingdomRules.Meals.cs",
+        "KingdomRules.FoodIndustry.cs",
+        "KingdomRules.Economy.cs",
+        "KingdomRules.Clock.cs",
+        "KingdomRules.Population.cs",
+        "KingdomRules.Policy.cs",
+        "KingdomRules.RaidsAndDefence.cs",
+        "KingdomRules.TradeAndGrowth.cs",
+        "KingdomRules.InheritanceSeal.cs",
+        "KingdomRules.InheritanceResolution.cs",
+        "KingdomRules.Scarcity.cs",
+        "KingdomRules.Districts.cs",
+        "KingdomRules.Catalogue.cs",
+        "KingdomRules.Style.cs",
+        "KingdomRules.RealmConflict.cs",
+        "KingdomRules.Spatial.cs",
+        "KingdomRules.Claims.cs",
+    )
+)
+CROP_CS = source_family_paths("Growth", "KingdomCropRules")
 MAT_CS = tuple(
     os.path.join(ROOT, "Growth", name)
     for name in (
@@ -91,19 +129,19 @@ MAT_CS = tuple(
 # The engine-coupled half of the yard, read only to PIN it. The arithmetic this model
 # reproduces for refining is COMPOSED there rather than in the rules file, and QB-29 was
 # exactly a line in there silently disagreeing with the rule it was meant to obey.
-YARDIMPL_CS = os.path.join(ROOT, "Growth", "KingdomMaterials.cs")
-PROD_CS = os.path.join(ROOT, "Simulation", "City", "KingdomProductionRules.cs")
-CITY_CS = os.path.join(ROOT, "Simulation", "City", "KingdomCityRules.cs")
-RESEARCH_CS = os.path.join(ROOT, "Growth", "KingdomResearchRules.cs")
-CAT_CS = os.path.join(ROOT, "Growth", "KingdomCatalogueRules.cs")
-SUB_CS = os.path.join(ROOT, "Growth", "KingdomSubsidenceRules.cs")
-SUBIMPL_CS = os.path.join(ROOT, "Growth", "KingdomSubsidence.cs")
-WEAR_CS = os.path.join(ROOT, "Growth", "KingdomWearRules.cs")
-LODGE_CS = os.path.join(ROOT, "Growth", "KingdomLodgingRules.cs")
-REACH_CS = os.path.join(ROOT, "Growth", "KingdomReachRules.cs")
-CEREMONY_CS = os.path.join(ROOT, "Experience", "KingdomCeremonyRules.cs")
-QOL_CS = os.path.join(ROOT, "Core", "KingdomQolRules.cs")
-YARD_CS = os.path.join(ROOT, "Growth", "KingdomYardRules.cs")
+YARDIMPL_CS = source_family_paths("Growth", "KingdomMaterials")
+PROD_CS = source_family_paths("Simulation/City", "KingdomProductionRules")
+CITY_CS = source_family_paths("Simulation/City", "KingdomCityRules")
+RESEARCH_CS = source_family_paths("Growth", "KingdomResearchRules")
+CAT_CS = source_family_paths("Growth", "KingdomCatalogueRules")
+SUB_CS = source_family_paths("Growth", "KingdomSubsidenceRules")
+SUBIMPL_CS = source_family_paths("Growth", "KingdomSubsidence")
+WEAR_CS = source_family_paths("Growth", "KingdomWearRules")
+LODGE_CS = source_family_paths("Growth", "KingdomLodgingRules")
+REACH_CS = source_family_paths("Growth", "KingdomReachRules")
+CEREMONY_CS = source_family_paths("Experience", "KingdomCeremonyRules")
+QOL_CS = source_family_paths("Core", "KingdomQolRules")
+YARD_CS = source_family_paths("Growth", "KingdomYardRules")
 YARD_XML = os.path.join(ROOT, "KingdomYardWorks.xml")
 DEALS_XML = os.path.join(ROOT, "KingdomDeals.xml")
 BUILD_XML = os.path.join(ROOT, "KingdomBuildings.xml")
@@ -212,7 +250,7 @@ SRC = {
     "DefaultLarderCapacity": read_const(RULES_CS, "DefaultLarderCapacity"),
 }
 
-_rules_text = open(RULES_CS, encoding="utf-8-sig").read()
+_rules_text = read_source(RULES_CS)
 
 # Method bodies this model reproduces. Pinned so a change to any of them breaks the model
 # loudly instead of quietly invalidating it.
@@ -269,10 +307,10 @@ _PINS = [
 for needle, complaint in _PINS:
     assert needle in _rules_text, complaint
 
-_sub_text = open(SUB_CS, encoding="utf-8-sig").read()
-_cat_text = open(CAT_CS, encoding="utf-8-sig").read()
-_reach_text = open(REACH_CS, encoding="utf-8-sig").read()
-_ceremony_text = open(CEREMONY_CS, encoding="utf-8-sig").read()
+_sub_text = read_source(SUB_CS)
+_cat_text = read_source(CAT_CS)
+_reach_text = read_source(REACH_CS)
+_ceremony_text = read_source(CEREMONY_CS)
 _SUB_PINS = [
     (
         _sub_text,
@@ -373,8 +411,8 @@ assert "long ceiling = (long)MaxRefinedPerDay * Days;" in _mat_text, (
 # `Supports` now folds EVERY work at `KingdomWearRules.WorkEffectiveness`, whose staffless arm
 # is the work's own condition rather than a flat 100. Wear reaches the level through staffless
 # designs now, which is the ruling this model was re-pinned for.
-_wear_text = open(WEAR_CS, encoding="utf-8-sig").read()
-_subimpl_text = open(SUBIMPL_CS, encoding="utf-8-sig").read()
+_wear_text = read_source(WEAR_CS)
+_subimpl_text = read_source(SUBIMPL_CS)
 _FEEDBACK_PINS = [
     (_mat_text, "return 100 - wear;", "ConditionPercent body changed"),
     (
@@ -436,10 +474,10 @@ for text, needle, complaint in _FEEDBACK_PINS:
 # rather than in a rules file, so both are PINNED rather than described: QB-29 was precisely
 # the case of one of these lines disagreeing with the rule it was meant to be obeying, for
 # the whole life of the mod, with nothing anywhere to notice.
-_yardimpl_text = open(YARDIMPL_CS, encoding="utf-8-sig").read()
-_prod_text = open(PROD_CS, encoding="utf-8-sig").read()
-_city_text = open(CITY_CS, encoding="utf-8-sig").read()
-_crop_text = open(CROP_CS, encoding="utf-8-sig").read()
+_yardimpl_text = read_source(YARDIMPL_CS)
+_prod_text = read_source(PROD_CS)
+_city_text = read_source(CITY_CS)
+_crop_text = read_source(CROP_CS)
 _METHOD_PINS = [
     (
         _yardimpl_text,
@@ -502,7 +540,7 @@ assert MAX_METHOD >= BASELINE_METHOD, (
 # reckoning. Derived rather than read, because the source derives it too.
 assert (
     "public const int CondemnedWearPercent = 100 - KingdomRules.RuinStandingCeilingPercent;"
-    in open(LODGE_CS, encoding="utf-8-sig").read()
+    in read_source(LODGE_CS)
 ), "CondemnedWearPercent is no longer the complement of the standing ceiling"
 CONDEMNED_WEAR = 100 - SRC["RuinStandingCeilingPercent"]
 
@@ -2228,24 +2266,13 @@ def w6_production_and_logistics():
     """
     rule("W6  Production on the model, and logistics that never look stupid")
 
-    growth = open(os.path.join(ROOT, "Growth", "KingdomGrowth.cs"), encoding="utf-8-sig").read()
-    city = open(
-        os.path.join(ROOT, "Simulation", "City", "KingdomCity.cs"), encoding="utf-8-sig"
-    ).read()
-    rules = open(
-        os.path.join(ROOT, "Simulation", "City", "KingdomCityRules.cs"), encoding="utf-8-sig"
-    ).read()
-    production = open(
-        os.path.join(ROOT, "Simulation", "City", "KingdomProductionRules.cs"),
-        encoding="utf-8-sig",
-    ).read()
-    budget = open(
-        os.path.join(ROOT, "Simulation", "City", "KingdomBudgetRules.cs"), encoding="utf-8-sig"
-    ).read()
-    logistics = open(
-        os.path.join(ROOT, "Simulation", "City", "KingdomLogisticsRules.cs"),
-        encoding="utf-8-sig",
-    ).read()
+    growth = read_source(source_family_paths("Growth", "KingdomGrowth"))
+    city = read_source(source_family_paths("Simulation/City", "KingdomCity"))
+    rules = read_source(CITY_CS)
+    production = read_source(PROD_CS)
+    budget_family = source_family_paths("Simulation/City", "KingdomBudgetRules")
+    budget = read_source(budget_family)
+    logistics = read_source(source_family_paths("Simulation/City", "KingdomLogisticsRules"))
 
     print("""
 1. NO DAY IS BILLED TWICE, AND IT IS STRUCTURAL RATHER THAN CAREFUL. Two owners of one day is a
@@ -2322,11 +2349,8 @@ def w6_production_and_logistics():
         "I1 BROKEN: the reconcile no longer re-derives the debt, so `level - owed == ground` "
         "stops being true by construction and the audit line stops being exact."
     )
-    reify_units = read_const(
-        os.path.join(ROOT, "Simulation", "City", "KingdomBudgetRules.cs"), "ReifyUnitsPerTurn"
-    )
-    catchup_path = os.path.join(ROOT, "Simulation", "City", "KingdomCatchUpRules.cs")
-    catchup = open(catchup_path, encoding="utf-8-sig").read()
+    reify_units = read_const(budget_family, "ReifyUnitsPerTurn")
+    catchup = read_source(source_family_paths("Simulation/City", "KingdomCatchUpRules"))
     expected_envelope = (
         "KingdomRules.MaxCivicContainersPerZone + KingdomRules.MaxPopulation"
     )
@@ -2335,7 +2359,7 @@ def w6_production_and_logistics():
     )
     stage_cap = re.search(
         r"public static int MaxBuildingsForStage\(.*?default:\s*return\s+([0-9]+);",
-        open(RULES_CS, encoding="utf-8-sig").read(), re.S)
+        read_source(RULES_CS), re.S)
     assert stage_cap, "City building cap not found in MaxBuildingsForStage"
     worst_units = (
         int(stage_cap.group(1))
@@ -2402,7 +2426,7 @@ def w6_production_and_logistics():
    tuning change cannot leave the budget table behind.
 """)
     for name, want in (("PlannerMaxJobs", 16), ("PlannerMaxStops", 8), ("PlannerMaxSwapTests", 50)):
-        got = read_const(os.path.join(ROOT, "Simulation", "City", "KingdomBudgetRules.cs"), name)
+        got = read_const(budget_family, name)
         assert got == want, f"{name} moved to {got}; §3.10(4) prices the slice at {want}"
         print(f"   {name:<22}{got:>5}")
     assert "PlannerMaxDraws = 0" in budget, (
@@ -2442,19 +2466,14 @@ def w7_networks_and_power():
     """
     rule("W7  Networks, the flow solve, and power on one accounting")
 
-    power = open(os.path.join(ROOT, "Growth", "KingdomPower.cs"), encoding="utf-8-sig").read()
-    power_rules = open(
-        os.path.join(ROOT, "Growth", "KingdomPowerRules.cs"), encoding="utf-8-sig"
-    ).read()
-    flow = open(
-        os.path.join(ROOT, "Simulation", "City", "KingdomFlowRules.cs"), encoding="utf-8-sig"
-    ).read()
-    net = open(
-        os.path.join(ROOT, "Simulation", "City", "KingdomNetworkRules.cs"), encoding="utf-8-sig"
-    ).read()
-    memory = open(
-        os.path.join(ROOT, "Simulation", "City", "KingdomCityMemoryRules.cs"), encoding="utf-8-sig"
-    ).read()
+    power = read_source(source_family_paths("Growth", "KingdomPower"))
+    power_rules = read_source((
+        os.path.join(ROOT, "Growth", "KingdomPowerRules.cs"),
+        os.path.join(ROOT, "Growth", "KingdomPowerOperationsRules.cs"),
+    ))
+    flow = read_source(source_family_paths("Simulation/City", "KingdomFlowRules"))
+    net = read_source(source_family_paths("Simulation/City", "KingdomNetworkRules"))
+    memory = read_source(source_family_paths("Simulation/City", "KingdomCityMemoryRules"))
     blueprints = open(os.path.join(ROOT, "ObjectBlueprints.xml"), encoding="utf-8-sig").read()
 
     print("""
@@ -3465,17 +3484,17 @@ def food_invariants():
         print(f"  {name:<9}bill {eats:>3} servings/day; cheapest and grandest plans both clear it")
 
 
-def _switch_map(path: str, function: str) -> dict:
+def _switch_map(path: str | tuple[str, ...], function: str) -> dict:
     """The `case "X": return "Y";` pairs of one C# switch, read straight out of the source.
 
     Every derivation table printed below is read this way rather than restated here, for the
     reason every other number in this file is read out of the source: a table copied into the
     model is a table that drifts from the code the first time somebody retunes one end of it.
     """
-    text = open(path, encoding="utf-8-sig").read()
+    text = read_source(path)
     start = text.find("public static string " + function)
     if start < 0:
-        raise SystemExit(f"{function} not found in {path}")
+        raise SystemExit(f"{function} not found in {source_label(path)}")
     body = text[start : text.find("\n\t\t}", start)]
     out = {}
     for m in re.finditer(r'case\s+"([^"]*)":\s*\n\s*return\s+"([^"]*)";', body):

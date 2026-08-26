@@ -13,6 +13,46 @@ namespace ThousandAndFirst.Tests
 		private static readonly string ExactRealmId = MintRealm();
 		private static readonly string ExactSettlementId = MintSettlement();
 
+		[Test]
+		public void RuleDeclarationsKeepExactMetadataAndDefaults()
+		{
+			Assert.AreEqual(typeof(int), Enum.GetUnderlyingType(typeof(KingdomSealEligibility)));
+			Assert.AreEqual("0:Living,1:Checkpointed,2:Ended,3:Orphaned",
+				string.Join(",", Array.ConvertAll((KingdomSealEligibility[])Enum.GetValues(
+					typeof(KingdomSealEligibility)), value => ((int)value) + ":" + value)));
+			Assert.AreEqual(typeof(int), Enum.GetUnderlyingType(typeof(KingdomImportPolicy)));
+			Assert.AreEqual("0:Off,1:LatestEligible",
+				string.Join(",", Array.ConvertAll((KingdomImportPolicy[])Enum.GetValues(
+					typeof(KingdomImportPolicy)), value => ((int)value) + ":" + value)));
+			Type lineageType = typeof(KingdomSealLineage);
+			Assert.IsTrue(lineageType.IsNotPublic);
+			Assert.IsTrue(lineageType.IsSealed);
+			Assert.AreEqual(5, lineageType.GetFields().Length);
+			Assert.IsNotNull(lineageType.GetConstructor(new Type[]
+				{ typeof(string), typeof(string), typeof(string), typeof(int), typeof(int) }));
+			KingdomSealLineage lineage = new KingdomSealLineage();
+			Assert.AreEqual("", lineage.LineageId);
+			Assert.AreEqual("", lineage.LegacyId);
+			Assert.AreEqual("", lineage.OriginGameId);
+			Assert.AreEqual(0, lineage.Generation);
+			Assert.AreEqual(0, lineage.Revision);
+			Type identityType = typeof(KingdomSealIdentity);
+			Assert.IsTrue(identityType.IsNotPublic);
+			Assert.IsTrue(identityType.IsSealed);
+			Assert.AreEqual(18, identityType.GetFields().Length);
+			KingdomSealIdentity identity = new KingdomSealIdentity();
+			Assert.IsNull(identity.RealmId);
+			Assert.IsNull(identity.SettlementId);
+			Assert.AreEqual(0, identity.SettlementIds.Count);
+			Assert.AreEqual(0, identity.SettlementProvenanceRows.Count);
+			Assert.AreEqual("", identity.RealmIdentityTransactionId);
+			Assert.AreEqual("", identity.RealmIdentityLegacyFaction);
+			Assert.AreEqual("", identity.RealmIdentityFirstClaimedZone);
+			Assert.AreEqual("", identity.SettlementIdentityTransactionId);
+			Assert.AreEqual("", identity.SettlementIdentityFirstClaimedZone);
+			Assert.AreEqual("", identity.SettlementIdentityLegacyId);
+		}
+
 		private static string MintRealm()
 		{
 			Assert.IsTrue(KingdomIdentityRules.TryMintRealm(FoundingTransaction,

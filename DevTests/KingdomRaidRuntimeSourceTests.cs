@@ -270,7 +270,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void RaidRiskUsesTheLockedTwentyFourDramStakeAndDefenceProof()
 		{
-			string rules = Source(Path.Combine("Core", "KingdomRules.cs"));
+			string rules = KingdomRulesLogicalSource.Read();
 			string raids = Source(Path.Combine("Raids", "KingdomRaids.cs"));
 			string testing = Source("TESTING.md");
 			StringAssert.Contains("public const int RaidPlunderDrams = 24;", rules);

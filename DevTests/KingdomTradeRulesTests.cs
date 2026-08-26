@@ -10,6 +10,18 @@ namespace ThousandAndFirst.Tests
 {
 	public class KingdomTradeRulesTests
 	{
+		[Test]
+		public void PatternCasVerdictAbiIsFrozen()
+		{
+			Assert.AreEqual("ThousandAndFirst.KingdomTradePatternCasVerdict",
+				typeof(KingdomTradePatternCasVerdict).FullName);
+			Assert.AreEqual(typeof(byte), Enum.GetUnderlyingType(typeof(KingdomTradePatternCasVerdict)));
+			Assert.AreEqual(0, (byte)KingdomTradePatternCasVerdict.Invalid);
+			Assert.AreEqual(1, (byte)KingdomTradePatternCasVerdict.Apply);
+			Assert.AreEqual(2, (byte)KingdomTradePatternCasVerdict.AlreadyApplied);
+			Assert.AreEqual(3, (byte)KingdomTradePatternCasVerdict.ThirdValue);
+		}
+
 		private static readonly string Realm = new string('a', 64);
 		private static readonly string CityA = new string('b', 64);
 		private static readonly string CityB = new string('c', 64);

@@ -50,20 +50,20 @@ Steam subscription/install pass remain gates before any release-candidate claim 
   expected skip that does not occur, or an explicitly configured incomplete base fails. The
   canonical `test.ps1` release runner rejects ambient filters, forbids every skip, and runs locked
   restores plus both suites; `release-check.sh` injects the exact Qud base. The recorded licensed
-  hardening run passes 7,586 / 7,586 full cases and 171 / 171 portable cases with zero skipped.
+  hardening run passes 7,612 / 7,612 full cases and 171 / 171 portable cases with zero skipped.
 - **Addendum 9 structural debt is now an executable release blocker instead of a stale census.**
   `Tools/check-structure.py` reads the exact staged production C# inventory, reports strict
   under-300 line debt and direct engine-coupling signals during incremental CI, and fails release
   on any file at or over 300. Because line counts cannot prove ownership or dependency quality,
   release also requires no-exception human evidence for one responsibility and protocols at
-  boundaries, bound to the exact source digest. Ten ownership-focused decompositions now cover
-  lifecycle state, lifecycle rules, realm archive, founding transaction, laboratory runtime, plot
-  rules, architecture rules, zoning rules, material rules, and trade rules without changing public
-  or serialized type identity. Current 583-file census remains red: 241,629 physical lines; 171
-  files exceed 300, 0 are exactly 300, 63 exceed 1,000, 15 exceed 2,000, and 2 exceed 5,000. Its
+  boundaries, bound to the exact source digest. This wave adds 49 semantic decompositions to the
+  prior ten, for 59 oversized authorities split without changing public or serialized type
+  identity. Current 763-file census remains red: 242,999 physical lines; 122 files exceed 300, 0
+  are exactly 300, 56 exceed 1,000, 14 exceed 2,000, and 2 exceed 5,000. Direct `XRL` imports occur
+  in 191 files, 82 of them at or over the line limit. Its
   exact inventory digest is
-  `a48f43ce384de4aa54d341a4e3fb49605730f41cc3753ad43afaf72089d5afba`; this is not an
-  enterprise-grade or v1.0 claim.
+  `ce7e3de4e59985e4a8f2e12d85a54be89b19111b34e45639145e3159892df591`;
+  `docs/STRUCTURE_REVIEW.json` is still missing, so this is not an enterprise-grade or v1.0 claim.
 - **The deterministic balance gate follows split rule authorities.** The simulator reads the full
   material-rule source family instead of one obsolete monolith path, and a repository test now
   executes every source pin so later decompositions cannot silently break release-check layer 7.
@@ -74,7 +74,7 @@ Steam subscription/install pass remain gates before any release-candidate claim 
   committed additions/removals. Residents, construction presence, lab, networks, roads, crops,
   upgrades, visual state, and porters consume the bound index instead of hiding another whole-zone
   walk. Duplicate physical/semantic identity fails closed. Nine focused survey source-contract
-  cases pass; the final integrated pure/source suite passes 7,586 / 7,586 cases. Dense native scan
+  cases pass; the final integrated pure/source suite passes 7,612 / 7,612 cases. Dense native scan
   instrumentation remains a release gate.
 - **Documentation now separates current evidence from historical attack material.** Public status,
   architecture/API/testing/release guides, engineering standards, changelog, private acceptance

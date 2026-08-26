@@ -1,4 +1,5 @@
 #if TAF_TESTS
+using System;
 using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
@@ -9,6 +10,33 @@ namespace ThousandAndFirst.Tests
 {
 	public class KingdomSealFormatTests
 	{
+		[Test]
+		public void FormatDeclarationsKeepExactMetadata()
+		{
+			Assert.AreEqual(typeof(int), Enum.GetUnderlyingType(typeof(KingdomSealFault)));
+			Assert.AreEqual("0:None,1:Empty,2:NotASeal,3:UnsupportedSchema,4:MalformedFraming,5:LengthMismatch,6:ChecksumMismatch,7:TrailingData,8:TooLarge,9:Malformed,10:DuplicateKey,11:UnknownKey,12:MissingKey,13:WrongKind,14:OutOfBounds,15:DigestUnavailable",
+				string.Join(",", Array.ConvertAll((KingdomSealFault[])Enum.GetValues(
+					typeof(KingdomSealFault)), value => ((int)value) + ":" + value)));
+			Assert.AreEqual(typeof(int), Enum.GetUnderlyingType(typeof(KingdomSealKind)));
+			Assert.AreEqual("0:Text,1:Number,2:TextList,3:NumberList,4:EmptyList",
+				string.Join(",", Array.ConvertAll((KingdomSealKind[])Enum.GetValues(
+					typeof(KingdomSealKind)), value => ((int)value) + ":" + value)));
+			Type body = typeof(KingdomSealBody);
+			Assert.IsTrue(body.IsNotPublic);
+			Assert.IsTrue(body.IsSealed);
+			string[] fields = new string[]
+				{ "_order", "_kinds", "_text", "_number", "_textList", "_numberList" };
+			Assert.AreEqual(fields.Length, body.GetFields(System.Reflection.BindingFlags.Instance
+				| System.Reflection.BindingFlags.NonPublic).Length);
+			for (int i = 0; i < fields.Length; i++)
+			{
+				System.Reflection.FieldInfo field = body.GetField(fields[i],
+					System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+				Assert.IsNotNull(field, fields[i]);
+				Assert.IsTrue(field.IsInitOnly, fields[i]);
+			}
+		}
+
 		private static string Frame(string payload)
 		{
 			byte[] bytes = new UTF8Encoding(false, true).GetBytes(payload);
@@ -36,6 +64,8 @@ namespace ThousandAndFirst.Tests
 			body.PutList("empty", new string[0]);
 
 			string fileText = KingdomSealFormat.Compose(1, body);
+			Assert.AreEqual("taf-seal 1\nsha256 a6c54b357b6d78cb7c71561797b58fcc6c795402c05d8abf6d417ee5404ecdc8\nlength 83\n{\"name\":\"Kavvat\",\"water\":42,\"origins\":[\"salt\",\"marsh\"],\"counts\":[1,2,3],\"empty\":[]}\n",
+				fileText);
 
 			int schema;
 			KingdomSealBody parsed;

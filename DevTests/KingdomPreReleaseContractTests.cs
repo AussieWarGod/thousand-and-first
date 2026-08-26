@@ -35,7 +35,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void EngineWrapperCannotReopenTheRetiredFlatCohabitationPath()
 		{
-			string source = TestMain.ReadRepositoryText("Core/KingdomQol.cs");
+			string source = TestMain.ReadRepositoryText("Core/KingdomQolQuestions.cs");
 			StringAssert.Contains(
 				"[System.Obsolete(\"Retired before public release; use KingdomLodging", source);
 			Assert.IsFalse(source.Contains("return KingdomQolRules.JudgeCohabitation("));

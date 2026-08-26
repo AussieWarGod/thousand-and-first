@@ -79,7 +79,10 @@ namespace ThousandAndFirst.Tests
 
 			string book = Source("KingdomCityBook.cs");
 			AssertOrdered(book, "[NonSerialized]", "internal KingdomDistanceCache DistanceCache");
-			string slice = Source("KingdomDistanceSliceRules.cs");
+			string slice = string.Join("\n",
+				Source("KingdomDistancePoint.cs"),
+				Source("KingdomDistanceSliceRules.cs"),
+				Source("KingdomDistanceSliceRules.Pathfinding.cs"));
 			StringAssert.DoesNotContain("XRL", slice);
 			StringAssert.DoesNotContain("The.Game", slice);
 		}

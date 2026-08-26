@@ -530,7 +530,9 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("extension is IWorkBehaviour", registry);
 			StringAssert.Contains("KingdomApiRules.BehaviourVersion", registry);
 
-			string runtime = TestMain.ReadRepositoryText(Path.Combine("Api", "KingdomBehaviourExtensions.cs"));
+			string runtime = string.Join("\n",
+				TestMain.ReadRepositoryText(Path.Combine("Api", "KingdomBehaviourExtensions.cs")),
+				TestMain.ReadRepositoryText(Path.Combine("Api", "KingdomBehaviourExtensions.Jobs.cs")));
 			string behaviourRules = TestMain.ReadRepositoryText(Path.Combine("Api",
 				"KingdomBehaviourRules.cs"));
 			StringAssert.Contains(

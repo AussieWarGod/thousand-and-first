@@ -13,6 +13,16 @@ namespace ThousandAndFirst.Tests
 	/// </summary>
 	public class KingdomItineraryRulesTests
 	{
+		[Test]
+		public void ItineraryPhaseKeepsExactByteWireValues()
+		{
+			Assert.AreEqual(typeof(byte), Enum.GetUnderlyingType(typeof(KingdomItineraryPhase)));
+			Assert.AreEqual(0, (byte)KingdomItineraryPhase.Pending);
+			Assert.AreEqual(1, (byte)KingdomItineraryPhase.EnRoute);
+			Assert.AreEqual(2, (byte)KingdomItineraryPhase.Handoff);
+			Assert.AreEqual(3, (byte)KingdomItineraryPhase.Delivered);
+		}
+
 		private static KingdomLeg[] Contiguous()
 		{
 			return new KingdomLeg[3]

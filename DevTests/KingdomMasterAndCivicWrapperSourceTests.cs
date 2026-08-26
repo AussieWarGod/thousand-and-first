@@ -68,7 +68,8 @@ namespace ThousandAndFirst.Tests
 			AssertBefore(source, "public override bool HandleEvent(AfterGameLoadedEvent E)",
 				"KingdomMaster.ObserveAutomaticWake", "Guard(\"feeling re-assert\"");
 
-			string master = TestMain.ReadRepositoryText("Core/KingdomMaster.cs");
+			string master = TestMain.ReadRepositoryText("Core/KingdomMaster.cs") + "\n"
+				+ TestMain.ReadRepositoryText("Core/KingdomMasterSettlementPlan.cs");
 			StringAssert.Contains("if (decision.Transition == KingdomMasterTransition.None)", master);
 			StringAssert.Contains("decision.AutomaticWorkAllowed && decision.ChangedAtTick != now", master);
 			StringAssert.Contains("// Initialization and both real transitions consume this wake.", master);
@@ -138,7 +139,7 @@ namespace ThousandAndFirst.Tests
 				"Growth/KingdomInquiry.cs",
 				"Growth/KingdomLab.cs",
 				"Growth/KingdomMirrorGate.cs",
-				"Growth/KingdomPlot.cs",
+				"Growth/r_KingdomPlot.cs",
 				"Growth/KingdomPower.cs",
 				"Growth/KingdomScaffold.cs"
 			};
@@ -151,6 +152,34 @@ namespace ThousandAndFirst.Tests
 					part, path);
 				StringAssert.Contains("KingdomMaster.AutomaticWorkAllowed(", part, path);
 			}
+		}
+
+		[Test]
+		public void PlotPartKeepsSerializablePositionalFieldAbi()
+		{
+			string part = TestMain.ReadRepositoryText("Growth/r_KingdomPlot.cs");
+			StringAssert.Contains("[Serializable]", part);
+			int type = part.IndexOf("public class r_KingdomPlot : IPart", StringComparison.Ordinal);
+			int fields = part.IndexOf('{', type) + 1;
+			int methods = part.IndexOf("public override bool WantTurnTick()", fields,
+				StringComparison.Ordinal);
+			Assert.GreaterOrEqual(type, 0);
+			Assert.Greater(methods, fields);
+			string layout = part.Substring(fields, methods - fields);
+			Assert.AreEqual(4, Occurrences(layout, "\t\tpublic "));
+			int stage = layout.IndexOf("public KingdomCropRules.PlotStage Stage;",
+				StringComparison.Ordinal);
+			int next = layout.IndexOf("public long NextStageTick;", StringComparison.Ordinal);
+			int crop = layout.IndexOf("public string CropBlueprint;", StringComparison.Ordinal);
+			int announced = layout.IndexOf("public bool NoLarderAnnounced;",
+				StringComparison.Ordinal);
+			Assert.GreaterOrEqual(stage, 0);
+			Assert.GreaterOrEqual(next, 0);
+			Assert.GreaterOrEqual(crop, 0);
+			Assert.GreaterOrEqual(announced, 0);
+			Assert.Less(stage, next);
+			Assert.Less(next, crop);
+			Assert.Less(crop, announced);
 		}
 
 		private static int Occurrences(string source, string value)

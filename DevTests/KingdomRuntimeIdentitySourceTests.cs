@@ -1717,6 +1717,10 @@ namespace ThousandAndFirst.Tests
 				Path.Combine("Experience", "KingdomCitizenRite.cs"),
 				Path.Combine("Experience", "KingdomCitizenRiteRules.cs"),
 				Path.Combine("Core", "KingdomSealRules.cs"),
+				Path.Combine("Core", "KingdomSealRules.Text.cs"),
+				Path.Combine("Core", "KingdomSealRules.Capture.cs"),
+				Path.Combine("Core", "KingdomSealRules.Selection.cs"),
+				Path.Combine("Core", "KingdomSealRules.Ground.cs"),
 				Path.Combine("Growth", "KingdomPlot.cs"),
 				Path.Combine("Growth", "KingdomSubsidence.cs"),
 				Path.Combine("Growth", "KingdomWear.cs"),
@@ -1857,7 +1861,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void ResidentLifecycleNamesStayPlainAndSharedBrinkBoundaryEscapesThem()
 		{
-			string brink = Source(Path.Combine("Core", "KingdomBrink.cs"));
+			string brink = Source(Path.Combine("Core", "KingdomBrink.City.cs"));
 			StringAssert.Contains(
 				"string shownSubject = KingdomPresentation.Rich(Subject);", brink);
 			StringAssert.Contains("? KingdomPresentation.Rich(Cause)", brink);

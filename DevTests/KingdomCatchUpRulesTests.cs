@@ -15,6 +15,18 @@ namespace ThousandAndFirst.Tests
 	{
 		private const long Day = ThousandAndFirst.KingdomRules.TicksPerDay;
 
+		[Test]
+		public void UnitEnumsKeepExactByteWireValues()
+		{
+			Assert.AreEqual(typeof(byte), Enum.GetUnderlyingType(typeof(KingdomUnitWeight)));
+			Assert.AreEqual(0, (byte)KingdomUnitWeight.Heavy);
+			Assert.AreEqual(1, (byte)KingdomUnitWeight.Medium);
+			Assert.AreEqual(2, (byte)KingdomUnitWeight.Light);
+			Assert.AreEqual(typeof(byte), Enum.GetUnderlyingType(typeof(KingdomUnitDirection)));
+			Assert.AreEqual(0, (byte)KingdomUnitDirection.Land);
+			Assert.AreEqual(1, (byte)KingdomUnitDirection.Draw);
+		}
+
 		/// <summary>ZoneRepair's own shape: nothing owed below one unit's worth of elapsed, and the
 		/// floor of the division above it.</summary>
 		[TestCase(0L, 0L, 100L, 0L)]

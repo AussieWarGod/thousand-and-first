@@ -60,18 +60,25 @@ re-run or extend an investigation rather than taking its conclusions on trust.
 **The single most important evidence boundary:** portable and installed-assembly compilation,
 pure/source tests, generators, and static architecture checks do not sign native behavior or human
 appearance. The structural hardening revisions have no complete current-revision native protocol receipt.
-Its current hardening checkpoint has 7,586 / 7,586 full and 171 / 171 portable cases with zero
-skipped, 31 passing Python tool tests, clean baseline/compatibility compilation, and unchanged
+Its current hardening checkpoint has 7,612 / 7,612 full and 171 / 171 portable cases with zero
+skipped, 31 passing Python tool tests, 19 passing art tests, clean baseline/compatibility compilation, and unchanged
 architecture evidence: 136 buildings, 126 plotted plans, 499 maps, 355 bindings, 403 tiers, 516
 variants, and 2,064 goldens with zero issues plus three expected malformed-vanilla recovery
-warnings. Its exact 583-source/241,629-line structural inventory is
-`a48f43ce384de4aa54d341a4e3fb49605730f41cc3753ad43afaf72089d5afba`; 171 files remain above
-the strict line threshold and exact-inventory semantic review is still open. Clean commit `19fb8ee`
+warnings. Lot realizations are current at 337 maps / 242 bindings / 277 tiers. Cold-install
+inventory is 787 files; IPart ABI is 36 shipped classes / 3 contracts; art policy allowlists 0 local
+tiles and verifies 55 vanilla paths. Its exact 763-source/242,999-line structural inventory is
+`ce7e3de4e59985e4a8f2e12d85a54be89b19111b34e45639145e3159892df591`: 122 files exceed 300
+physical lines, 0 are exactly 300, 56 exceed 1,000, 14 exceed 2,000, and 2 exceed 5,000; 191 files
+import XRL directly, 82 at or over the line limit. This wave decomposed 49 additional oversized
+authorities, 59 cumulative. Fan-in repaired the Itinerary method boundary, namespace wrappers in
+Delve, Brink, Crews, and Stations, and two stale source readers before checkpoint. Exact-inventory
+semantic review is still open. Clean commit `19fb8ee`
 has the narrow founding/single-gallery/persistence result recorded
 in `../TESTING.md`; the structural tree still needs a native rerun against its exact final commit. An
 earlier revision also has a historical two-city loader/persistence receipt. None is the complete
 protocol. Human gallery/usability, compatibility, dense-performance, exact-inventory semantic
-review, and Steam subscription gates remain open. `../docs/STATUS.md` owns the exact latest command
+review, structural release, and Steam subscription gates remain open; no
+`../docs/STRUCTURE_REVIEW.json` exists. `../docs/STATUS.md` owns the exact latest command
 results and unsigned gates.
 
 ## Environment

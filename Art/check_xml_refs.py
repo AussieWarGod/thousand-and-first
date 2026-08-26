@@ -223,7 +223,12 @@ def contents_tables():
 def known_districts():
     """The district keys a founder can actually declare, read off the rules rather than copied,
     so this check cannot drift from the menu it is checking against."""
-    source = read(os.path.join("Core", "KingdomRules.cs"))
+    family = sorted(
+        name for name in os.listdir("Core")
+        if name == "KingdomRules.cs"
+        or (name.startswith("KingdomRules.") and name.endswith(".cs"))
+    )
+    source = "\n".join(read(os.path.join("Core", name)) for name in family)
     match = re.search(r"Districts = new string\[\d+\]\s*\{([^}]*)\}", source)
     if not match:
         return set()

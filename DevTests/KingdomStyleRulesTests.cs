@@ -8,6 +8,45 @@ namespace ThousandAndFirst.Tests
 	[TestFixture]
 	public class KingdomStyleRulesTests
 	{
+		private static void AssertPublicDto(System.Type Type, string[] Names,
+			System.Type[] Types)
+		{
+			Assert.IsTrue(Type.IsPublic);
+			Assert.IsTrue(Type.IsSealed);
+			Assert.IsNotNull(Type.GetConstructor(System.Type.EmptyTypes));
+			System.Reflection.FieldInfo[] fields = Type.GetFields();
+			Assert.AreEqual(Names.Length, fields.Length);
+			for (int i = 0; i < Names.Length; i++)
+			{
+				System.Reflection.FieldInfo field = Type.GetField(Names[i]);
+				Assert.IsNotNull(field, Names[i]);
+				Assert.AreEqual(Types[i], field.FieldType, Names[i]);
+				Assert.IsTrue(field.IsPublic, Names[i]);
+				Assert.IsFalse(field.IsInitOnly, Names[i]);
+			}
+		}
+
+		[Test]
+		public void StyleDeclarationsKeepExactPublicAbi()
+		{
+			Assert.AreEqual(typeof(byte), System.Enum.GetUnderlyingType(typeof(KingdomStyleStratum)));
+			Assert.AreEqual(0, (byte)KingdomStyleStratum.Any);
+			Assert.AreEqual(1, (byte)KingdomStyleStratum.Surface);
+			Assert.AreEqual(2, (byte)KingdomStyleStratum.Deep);
+			AssertPublicDto(typeof(KingdomStyleDraft), new string[] { "Name", "Terrain", "Region",
+				"Strata", "Priority", "GroundClause", "Crop", "Seed", "CropRow",
+				"WallMaterial", "TimberWall" }, new System.Type[] { typeof(string), typeof(string),
+				typeof(string), typeof(string), typeof(string), typeof(string), typeof(string),
+				typeof(string), typeof(string), typeof(string), typeof(string) });
+			AssertPublicDto(typeof(KingdomStyleDefinition), new string[] { "Name", "TerrainTokens",
+				"RegionTokens", "Stratum", "Priority", "GroundClause", "CropBlueprint",
+				"SeedBlueprint", "CropRowBlueprint", "HasWallMaterial", "WallMaterial",
+				"TimberWallBlueprint" }, new System.Type[] { typeof(string), typeof(string[]),
+				typeof(string[]), typeof(KingdomStyleStratum), typeof(int), typeof(string),
+				typeof(string), typeof(string), typeof(string), typeof(bool),
+				typeof(KingdomMaterial), typeof(string) });
+		}
+
 		private static KingdomStyleDefinition Style(string name, string terrain = null,
 			string region = null, string strata = null, string priority = null,
 			string clause = null, string crop = null, string seed = null, string row = null,

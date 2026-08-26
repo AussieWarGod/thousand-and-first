@@ -7,6 +7,13 @@ namespace ThousandAndFirst.Tests
 {
 	public class VoiceRulesTests
 	{
+		[Test]
+		public void OccasionTypeMetadataIsFrozen()
+		{
+			Assert.AreEqual("ThousandAndFirst.VoiceOccasion", typeof(VoiceOccasion).FullName);
+			Assert.AreEqual(typeof(int), System.Enum.GetUnderlyingType(typeof(VoiceOccasion)));
+		}
+
 		/// <summary>A settlement id inside the frozen <c>taf:</c> grammar, as
 		/// <c>KingdomChronicle.SettlementId</c> always produces.</summary>
 		private const string Settlement = "taf:settlement:kyakukya";
@@ -329,6 +336,9 @@ namespace ThousandAndFirst.Tests
 		[TestCase(VoiceOccasion.ThirstBroken, 3)]
 		[TestCase(VoiceOccasion.MealShared, 4)]
 		[TestCase(VoiceOccasion.CitizenLost, 5)]
+		[TestCase(VoiceOccasion.Wedding, 6)]
+		[TestCase(VoiceOccasion.Feast, 7)]
+		[TestCase(VoiceOccasion.FounderRegarded, 8)]
 		public void OccasionCodesAreFrozen(VoiceOccasion Occasion, int Expected)
 		{
 			Assert.AreEqual(Expected, (int)Occasion);

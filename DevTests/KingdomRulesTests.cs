@@ -6,6 +6,42 @@ namespace ThousandAndFirst.Tests
 {
 	public class KingdomRulesTests
 	{
+		[Test]
+		public void PublicEnumMetadataRemainsStableAcrossPartialFiles()
+		{
+			Assert.AreEqual("ThousandAndFirst.GrowthStage", typeof(GrowthStage).FullName);
+			Assert.AreEqual(typeof(int), System.Enum.GetUnderlyingType(typeof(GrowthStage)));
+			Assert.AreEqual(0, (int)GrowthStage.Camp);
+			Assert.AreEqual(1, (int)GrowthStage.Steading);
+			Assert.AreEqual(2, (int)GrowthStage.Village);
+			Assert.AreEqual(3, (int)GrowthStage.Town);
+			Assert.AreEqual(4, (int)GrowthStage.City);
+
+			Assert.AreEqual("ThousandAndFirst.KingdomRules+GatePolicy",
+				typeof(KingdomRules.GatePolicy).FullName);
+			Assert.AreEqual(typeof(int), System.Enum.GetUnderlyingType(typeof(KingdomRules.GatePolicy)));
+			Assert.AreEqual(0, (int)KingdomRules.GatePolicy.Open);
+			Assert.AreEqual(1, (int)KingdomRules.GatePolicy.Guarded);
+
+			Assert.AreEqual("ThousandAndFirst.KingdomRules+StoresPolicy",
+				typeof(KingdomRules.StoresPolicy).FullName);
+			Assert.AreEqual(typeof(int), System.Enum.GetUnderlyingType(typeof(KingdomRules.StoresPolicy)));
+			Assert.AreEqual(0, (int)KingdomRules.StoresPolicy.Plenty);
+			Assert.AreEqual(1, (int)KingdomRules.StoresPolicy.Thrift);
+
+			Assert.AreEqual("ThousandAndFirst.KingdomRules+PetitionKind",
+				typeof(KingdomRules.PetitionKind).FullName);
+			Assert.AreEqual(typeof(int), System.Enum.GetUnderlyingType(typeof(KingdomRules.PetitionKind)));
+			Assert.AreEqual(0, (int)KingdomRules.PetitionKind.None);
+			Assert.AreEqual(1, (int)KingdomRules.PetitionKind.Thirst);
+			Assert.AreEqual(2, (int)KingdomRules.PetitionKind.Shelter);
+			Assert.AreEqual(3, (int)KingdomRules.PetitionKind.Craft);
+			Assert.AreEqual(4, (int)KingdomRules.PetitionKind.Peace);
+			Assert.AreEqual(5, (int)KingdomRules.PetitionKind.Memorial);
+			Assert.AreEqual(6, (int)KingdomRules.PetitionKind.Flesh);
+			Assert.AreEqual(7, (int)KingdomRules.PetitionKind.Chrome);
+		}
+
 		[TestCase(GrowthStage.Camp, 50)]
 		[TestCase(GrowthStage.Steading, 40)]
 		[TestCase(GrowthStage.Village, 30)]

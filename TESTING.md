@@ -30,14 +30,18 @@ file order; use the table as the top-level checklist.
 ## Current portable evidence boundary
 
 Nine focused one-survey source-contract cases pass. The final integrated pure/source suite passes
-7,586 / 7,586 cases against the configured licensed Qud base; the portable suite passes 171 / 171.
-Both recorded runs report zero skipped. Public CI without installed Qud data permits exactly three
+7,612 / 7,612 cases against the configured licensed Qud base; the portable suite passes 171 / 171.
+Both recorded runs report zero skipped. The Tools suite passes 31 tests and the Art suite passes 19.
+Baseline and compatibility-symbol staged compiles are clean; this does not close native behavior or
+the representative compatibility matrix. Public CI without installed Qud data permits exactly three
 named installed-data-only skips instead of fabricating fixtures. TestMain rejects an unexpected or
 missing allowlisted skip, and an explicitly configured incomplete base fails rather than skipping.
 Canonical release `DevTests/test.ps1` forbids every skip, and `Tools/release-check.sh` injects the
 exact Qud base.
 `docs/STATUS.md` owns the exact latest receipts. None of this signs native Qud behavior,
-appearance, accessibility, compatibility, or Steam installation.
+appearance, accessibility, current-revision native/human/compatibility/performance gates, or Steam
+installation. The structural release gate also remains red: 122 staged sources breach the line cap
+and `docs/STRUCTURE_REVIEW.json` is missing.
 
 ## Latest retained automated native smoke — partial evidence, not protocol signoff
 

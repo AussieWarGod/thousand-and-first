@@ -1,4 +1,5 @@
 #if TAF_TESTS
+using System;
 using NUnit.Framework;
 using ThousandAndFirst.Api;
 using ThousandAndFirst.Simulation.City;
@@ -16,6 +17,29 @@ namespace ThousandAndFirst.Tests
 	/// </summary>
 	internal class KingdomReadingRulesTests
 	{
+		[Test]
+		public void PublishedReadingEnumsKeepByteAbiAndExactValues()
+		{
+			Assert.AreEqual(typeof(byte), Enum.GetUnderlyingType(typeof(KingdomWorkClass)));
+			CollectionAssert.AreEqual(new[] { "Other", "Growing", "Store", "Producer",
+				"Refiner", "Power", "Construction" }, Enum.GetNames(typeof(KingdomWorkClass)));
+			CollectionAssert.AreEqual(new byte[] { 0, 1, 2, 3, 4, 5, 6 }, Array.ConvertAll(
+				(KingdomWorkClass[])Enum.GetValues(typeof(KingdomWorkClass)), value => (byte)value));
+
+			Assert.AreEqual(typeof(byte), Enum.GetUnderlyingType(typeof(KingdomDayPlace)));
+			CollectionAssert.AreEqual(new[] { "Hearth", "Field", "Yard", "Market", "Craft",
+				"Watch", "Shrine" }, Enum.GetNames(typeof(KingdomDayPlace)));
+			CollectionAssert.AreEqual(new byte[] { 0, 1, 2, 3, 4, 5, 6 }, Array.ConvertAll(
+				(KingdomDayPlace[])Enum.GetValues(typeof(KingdomDayPlace)), value => (byte)value));
+
+			Assert.AreEqual(typeof(byte), Enum.GetUnderlyingType(typeof(KingdomRollStanding)));
+			CollectionAssert.AreEqual(new[] { "Resident", "Abroad", "Dead", "Expedition" },
+				Enum.GetNames(typeof(KingdomRollStanding)));
+			CollectionAssert.AreEqual(new byte[] { 0, 1, 2, 3 }, Array.ConvertAll(
+				(KingdomRollStanding[])Enum.GetValues(typeof(KingdomRollStanding)),
+				value => (byte)value));
+		}
+
 		private const string Here = "taf:zone:here";
 
 		private static KingdomCityState Book(KingdomZoneRow[] zones, KingdomWorkRow[] works, KingdomResidentRow[] residents, KingdomStocks stocks)

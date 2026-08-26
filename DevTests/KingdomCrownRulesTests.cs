@@ -1,4 +1,5 @@
 #if TAF_TESTS
+using System;
 using System.Collections.Generic;
 using NUnit.Framework;
 using ThousandAndFirst;
@@ -17,6 +18,18 @@ namespace ThousandAndFirst.Tests
 	/// </summary>
 	public class KingdomCrownRulesTests
 	{
+		[Test]
+		public void CrownVerdictKeepsByteAbiAndExactValues()
+		{
+			Assert.AreEqual(typeof(byte), Enum.GetUnderlyingType(typeof(KingdomCrownVerdict)));
+			CollectionAssert.AreEqual(new[] { "Crowns", "Moves", "AlreadyHere",
+				"RefusedUnfounded", "RefusedNotOurGround", "RefusedNotOurWork", "RefusedNamed" },
+				Enum.GetNames(typeof(KingdomCrownVerdict)));
+			CollectionAssert.AreEqual(new byte[] { 0, 1, 2, 3, 4, 5, 6 }, Array.ConvertAll(
+				(KingdomCrownVerdict[])Enum.GetValues(typeof(KingdomCrownVerdict)),
+				value => (byte)value));
+		}
+
 		private const string Kavvat = "Kavvat";
 
 		private const string Ozym = "Ozymandia";

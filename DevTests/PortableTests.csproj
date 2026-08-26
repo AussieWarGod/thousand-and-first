@@ -27,7 +27,9 @@
     <Compile Include="KernelPropertyTests.cs" />
     <Compile Include="..\Simulation\Kernel\KernelContracts.cs" />
     <Compile Include="..\Simulation\Kernel\CanonicalBytes.cs" />
+	<Compile Include="..\Simulation\Kernel\SemanticEventIdentity.cs" />
     <Compile Include="..\Simulation\Kernel\CounterRandom.cs" />
+	<Compile Include="..\Simulation\Kernel\KernelDigest.cs" />
     <Compile Include="..\Simulation\Kernel\TickMath.cs" />
     <Compile Include="..\Simulation\Kernel\OptionLatch.cs" />
     <Compile Include="..\Simulation\Kernel\JobTransitions.cs" />
