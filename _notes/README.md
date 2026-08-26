@@ -60,9 +60,10 @@ re-run or extend an investigation rather than taking its conclusions on trust.
 **The single most important evidence boundary:** portable and installed-assembly compilation,
 pure/source tests, generators, and static architecture checks do not sign native behavior or human
 appearance. The current working tree has no complete current-revision native protocol receipt.
-An earlier revision passed the narrow loader/persistence smoke recorded in `../TESTING.md`; that
-receipt is historical only. `../docs/STATUS.md` owns the exact latest command results and unsigned
-gates.
+Clean commit `19fb8ee` has the narrow current founding/single-gallery/persistence result recorded in
+`../TESTING.md`; an earlier revision also has a historical two-city loader/persistence receipt.
+Neither is the complete protocol. `../docs/STATUS.md` owns the exact latest command results and
+unsigned gates.
 
 ## Environment
 

@@ -8,18 +8,21 @@
 
 ## Current state
 
-- Shared working tree is intentionally dirty with the integrated feature/polish wave; preserve all
-  changes and do not treat an older commit as the runtime candidate.
+- Integrated feature/polish candidate is clean commit `19fb8ee`. Preserve later user changes and
+  do not substitute an older historical candidate.
 - `Tools/gate.sh`: 308 staged sources compile clean under baseline and compatibility symbols.
 - Architecture: 136 buildings, 126 plotted building plans, 499 maps, 355 bindings, 403 tiers,
   516 variants, and 2,064 variant/pose goldens; generator/checker clean with zero issues plus three
   expected installed-base tolerant-recovery warnings for malformed vanilla Creatures/Furniture/Items XML.
 - Nine focused one-survey source-contract cases pass. The final integrated pure/source suite passes
   7,586 / 7,586 cases.
-- Current native compile/load, full human visual/lived-city, compatibility, and private subscribed
-  install receipts are open. Do not reuse the historical receipt below for this tree.
-- Current focus: fan in documentation/review changes, then run release/native/gallery/
-  compatibility/package gates.
+- Current native partial result: clean deployment, fresh isolated profile, Smokehold founding,
+  141 live faction standings, 17/17 self-tests, production gallery case 1/2,064, save/cold-load,
+  repeat 17/17, and clean `Player.log`, all against Qud 1.0.5/core 2.0.211.51. Full human
+  gallery/lived-city, numbered protocol, accessibility, compatibility, dense-performance, and
+  private subscribed-install receipts remain open.
+- Current focus: publish the committed candidate, observe CI, then continue the binding structure
+  decomposition and remaining human/native/compatibility/Steam gates.
 
 ## Historical 0.2.0 candidate evidence
 
@@ -41,10 +44,10 @@
   but permits original assets—including disclosed generative-assisted drafts only after pixel-level
   human revision—through the exact provenance, editable-source, wiring, fallback, package, rights,
   and independent native-review contract.
-- Remote publication remains pending: the release-candidate commits have not been pushed to
-  `origin/main`. The maintainer has explicitly authorized push; that authority does not authorize a
-  tag, Steam upload, visibility change, or release claim. The live Mods copy is updated through the
-  verified `Tools/stage.sh deploy` workflow, not by commit or push.
+- Git publication is operational state and must be verified from the remote, not inferred from
+  this note. The maintainer has explicitly authorized push; that authority does not authorize a tag, Steam
+  upload, visibility change, or release claim. The live Mods copy is updated through the verified
+  `Tools/stage.sh deploy` workflow, not by commit or push.
 
 ## Human-only gates
 

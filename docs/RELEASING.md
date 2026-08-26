@@ -48,6 +48,9 @@ allowlisted runtime raster paths, case-insensitively rejecting every other image
 4. Complete the applicable live passes in [TESTING.md](../TESTING.md), including save, quit,
    reload, and current/old-save cases. Record failures as failures; automation is not a manual
    playtest.
+   Intermediate automated native results belong in `TESTING.md` and `docs/STATUS.md` with the
+   exact commit and game build. They never substitute for retained human or subscribed-package
+   evidence.
 5. Commit the bootstrap candidate. Build a new, non-existing private-test directory outside the
    repository. Every existing destination ancestor must be owned by the current user or root;
    group/world-writable ancestors must also be sticky (a normal `/tmp` qualifies). Prefer a

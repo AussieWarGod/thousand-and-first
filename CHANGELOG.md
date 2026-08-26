@@ -6,11 +6,11 @@ minor for additive API and content, major for breaking changes. Supported API is
 
 ## [Unreleased] — 0.2.0 work in progress
 
-An earlier revision passed a narrow two-city loader/persistence smoke against Qud 1.0.5/core
-2.0.211.51. The implementation has materially changed since that receipt. It is historical
-evidence only, not evidence for this working tree. Full human playtesting, current-revision native
-receipts, compatibility testing, and a private Steam subscription/install pass remain gates before
-any release-candidate claim is restored.
+Clean commit `19fb8ee` passed a narrow current loader/founding/single-gallery/save/cold-load smoke
+against Qud 1.0.5/core 2.0.211.51 with repeat 17/17 self-tests and a clean log. An earlier revision's
+two-city loader/persistence smoke remains historical evidence only. The complete native/human
+protocol and gallery, compatibility testing, structural release gate, and private Steam
+subscription/install pass remain gates before any release-candidate claim is restored.
 
 ### Fixed
 - **Paid construction now freezes its gameplay truth before the first debit.** Registry v4 stores
@@ -122,7 +122,8 @@ any release-candidate claim is restored.
 - **Founding and reload now preserve one exact realm identity.** First-founding carry state uses
   Qud's composite byte-array framing, lifecycle recovery is fail-closed and idempotent, and ruin
   receipts prevent replay from crediting the same world object twice. Fresh-save, resume, and
-  cold-restart live smoke all kept the founded realm coherent.
+  cold-restart tests cover the cut paths; the narrow clean-`19fb8ee` single-city native smoke kept
+  the founded realm coherent across its exercised save/cold-load path.
 - **Second-city publication is atomic and retry-safe.** Trade identity and carry state publish as
   a paired operation behind one barrier; water intent precedes drain; site and global reservations
   reconcile in a fixed order; and partial, stale, or foreign pending state cannot manufacture a

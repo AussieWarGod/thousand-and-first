@@ -6,9 +6,11 @@ polity of the post-injunction age.
 
 **Status: 0.2.0 work in progress toward a v1.0 test candidate.** Nine focused one-survey cases, the
 final 7,586-case engine-free/source suite, and static architecture gates are green.
-Current-revision native receipts, the full human
-protocol, compatibility checks, structural release gate, and private Steam
-subscription/install pass remain open. This tree is not a release candidate. [Current
+Clean commit `19fb8ee` also has a narrow current-revision native result covering fresh-profile
+founding, 17/17 self-tests, one production architecture sample, save/cold-load, repeat self-tests,
+and a clean log. The full human protocol and gallery, compatibility checks, structural release
+gate, and private Steam subscription/install pass remain open. This tree is not a release
+candidate. [Current
 implementation and evidence](docs/STATUS.md) records exact results and remaining gates without
 conflating automation with playtest proof.
 

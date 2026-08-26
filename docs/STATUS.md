@@ -5,19 +5,22 @@
 **Current public version:** 0.2.0 work in progress
 
 This file is the canonical short status. A green source, compile, or generator gate proves only
-that layer. Native Caves of Qud behavior, visual quality, accessibility, compatibility, and Steam
-subscription are separate evidence and are never inferred from automation.
+that layer. Native Caves of Qud behavior is signed only for the exact exercised native cases;
+visual quality, accessibility, compatibility, and Steam subscription remain separate evidence and
+are never inferred from source or static automation.
 
 ## Current automated evidence
 
 | Layer | Latest result | Scope |
 |---|---|---|
+| Clean release audit | **PARTIAL PASS** — 10 of 11 automated layers green at committed candidate `19fb8ee`; structural release layer red | Docs/hygiene, ABI, inventory, baseline/compatibility compile, 7,586-case full suite, 171-case portable suite, architecture/XML/art, balance, 43-case smoke harness, Workshop package, and deploy dry-run passed. The binding structure gate below failed as designed. |
 | Staged runtime compile | **PASS** — 308 sources, baseline and compatibility symbols | Exact inventory selected by `Tools/stage.sh`; installed Qud 2.0.211.51 references. |
 | Architecture generator | **PASS** — 337 generated larger-lot maps, 242 larger-lot bindings, 277 copied predecessor tiers current | Generated larger-lot XML is byte-current. These are the generated subset, not the complete authored registry counted below. |
 | Architecture checker | **PASS** — 136 buildings, 126 plotted buildings, 499 maps, 355 bindings, 403 tiers, 516 variants, 2,064 variant/pose goldens, zero issues; largest exact a2 receipt 6,324 bytes / 8,500 characters; 3 expected installed-base tolerant-recovery warnings | Static topology, entrances, fixtures, palette/material/technology constraints, typed-lot coverage, deterministic snapshots, and an independent mirror of the runtime's 8,192-byte / 11,264-character codec envelope. The warnings are the named recovery path for malformed vanilla `Creatures.xml`, `Furniture.xml`, and `Items.xml`; it does not judge native appearance. |
 | One-survey focused tests | **PASS** — 9 focused source-contract cases | Maintained named indexes, active-pass consumers, mutation observation, and the absence of reachable second whole-zone scans. Dense native scan instrumentation remains open. |
 | Addendum 9 structural census | **RELEASE BLOCKED** — 308 staged C# files; 181 exceed 300 physical lines, 0 are exactly 300 (181 fail strict “under 300”), and 73 exceed 1,000 | `Tools/check-structure.py --report` is a non-blocking development census. Release mode enforces the strict under-300 proxy and exact-inventory human review of responsibility/protocol boundaries. |
 | Full pure/source suite | **PASS** — 7,586 / 7,586 cases | Final integrated engine-free/source tree green. This does not sign native Qud behavior. |
+| Current native smoke | **PARTIAL PASS** — fresh profile, founding, 17/17 checks, one production gallery case, save/cold-load, repeat 17/17, clean log | Clean commit `19fb8ee` deployed against Qud 1.0.5/core 2.0.211.51. This signs loader/founding/single-sample persistence smoke only; it is not the numbered protocol, full visual review, compatibility matrix, or Steam receipt. |
 
 Reproduce the current static results:
 
@@ -69,7 +72,8 @@ persistent unloaded actors, mass background simulation, and offscreen conquest/l
 - Full pure/source suite green after the final code and documentation set; rerun after every later
   source or source-contract change.
 - Exact release, ABI, XML/reference, architecture, package, and Workshop-package test gates green.
-- Fresh deployment into Qud; clean native compile/load and `Player.log` review.
+- Retain the clean `19fb8ee` deployment/native smoke result above, then repeat native compile/load
+  and `Player.log` review after any later runtime change.
 - Numbered [TESTING.md](../TESTING.md) protocol completed for all changed high-risk lanes,
   including cold save/load cuts, dense city, multi-zone carriers, citizenship overlays, master and
   module resume, raids, succession, happenings, inheritance, and external API fixture.
