@@ -50,7 +50,7 @@ namespace ThousandAndFirst
 				KingdomSealBody body;
 				KingdomSealFault fault;
 				string detail;
-				if (!KingdomSealFormat.TryParse(FileText, KingdomSealRecord.CurrentSchema,
+				if (!KingdomSealFormat.TryParse(FileText, KingdomSealRecord.FirstSchema,
 					KingdomSealRecord.CurrentSchema, out schema, out body, out fault, out detail))
 				{
 					return false;

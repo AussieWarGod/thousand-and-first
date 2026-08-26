@@ -34,14 +34,13 @@ namespace ThousandAndFirst.Simulation.City
 		/// RanThroughTick 8 + run-state 16 + pad 8. LIVING-CITY-ARCHITECTURE §0.0(c).</summary>
 		internal const int WorkRowBytes = 64;
 
-		/// <summary>The fields only. LIVING-CITY-ARCHITECTURE §0.0(c), as the creed-gate wave
-		/// widened it: the row gained one shared string reference for the creeds this person has
-		/// held and left (Addendum 16's recorded fact), and ninety-six had only five bytes of
-		/// headroom left in it. Eight bytes over the ninety-six §0.0(c) first budgeted, and the
-		/// table carries the same edit — the formula is the contract, not the constant, and this
-		/// is the second time a field bought a widening rather than a widening excusing a field.
+		/// <summary>The fields only. LIVING-CITY-ARCHITECTURE §0.0(c), widened first for creed
+		/// history and again when W2 retired the parallel roster authority: exact origin and frozen
+		/// arrival presentation evidence now ride the row as two shared string references. The row
+		/// declares 115 bytes; 120 buys honest alignment headroom. Strings already existed on the
+		/// compatibility carrier/body and are shared rather than counted as new unique heaps.
 		/// </summary>
-		internal const int ResidentRowStructBytes = 104;
+		internal const int ResidentRowStructBytes = 120;
 
 		/// <summary>One unique heap string per resident. The only heap string in the MODEL: zone ids
 		/// and design keys are shared references. LIVING-CITY-ARCHITECTURE §0.0(c). (The knowledge
@@ -185,17 +184,17 @@ namespace ThousandAndFirst.Simulation.City
 		/// exception the table has ever made is <see cref="ResidentNameBytes"/>, and the composed
 		/// keepers' roster is now a second per-city heap string of the same kind.
 		/// </para>
-		/// <para>
-		/// <b>OPEN, and named rather than quietly omitted:</b> the roster STRING is not priced
-		/// here. The authored tree's own grants compose to about six hundred bytes, and disks,
-		/// machines and patterns add to it without a cap; any width chosen for it moves the realm
-		/// total across or under &sect;0.0's 56 KiB advisory rung, which is a ruling about the
-		/// budget rather than an edit to a row. Until it is ruled the receipt answers for the
-		/// slot and says so, because a lane the receipt cannot see is a lane with no owner and a
-		/// lane it half-sees should at least say which half.
-		/// </para>
+		/// <para>The referenced roster string is priced separately at its enforced UTF-16 payload
+		/// ceiling. Its row, key, character, and UTF-8 caps live on
+		/// <c>KingdomZoningRules</c>; an atomic write beyond any of them is refused.</para>
 		/// </summary>
 		internal const int ResearchHeaderBytes = 48;
+
+		/// <summary>Worst-case managed character payload of one city's keeper roster. Object/header
+		/// padding remains in <see cref="ResearchHeaderBytes"/>; this closes the heap string the old
+		/// receipt named but did not price.</summary>
+		internal const int ResearchRosterHeapBytes =
+			KingdomZoningRules.MaxRosterEncodedChars * sizeof(char);
 
 		/// <summary>One shelved subject: the node key as a shared reference 8 + the labour still
 		/// standing on it 4. The key is shared with the loaded tree, exactly as zone ids and design
@@ -213,7 +212,8 @@ namespace ThousandAndFirst.Simulation.City
 		/// permit today, which is the only way to show that nothing here scales with the city.</summary>
 		internal const int FullParasangZones = 9;
 
-		internal const int FullParasangWorks = 90;
+		internal static readonly int FullParasangWorks = FullParasangZones
+			* KingdomRules.MaxBuildingsForStage(GrowthStage.City);
 
 		internal const int FullParasangResidents = 135;
 
@@ -298,7 +298,8 @@ namespace ThousandAndFirst.Simulation.City
 		}
 
 		/// <summary>
-		/// What the keepers cost, per city: the header's seven fields plus the shelf at its cap.
+		/// What the keepers cost, per city: the header's seven fields, the bounded roster-string
+		/// payload, plus the shelf at its cap.
 		/// <para>
 		/// Its own line rather than a term folded into <see cref="TryCityModelBytes"/>, because the
 		/// state is not in the city's book &mdash; it sits on the settlement container, which is
@@ -313,7 +314,8 @@ namespace ThousandAndFirst.Simulation.City
 			{
 				return false;
 			}
-			bytes = (long)cities * (ResearchHeaderBytes + (long)ResearchShelfRows * ResearchShelfRowBytes);
+			bytes = (long)cities * (ResearchHeaderBytes + ResearchRosterHeapBytes
+				+ (long)ResearchShelfRows * ResearchShelfRowBytes);
 			return true;
 		}
 

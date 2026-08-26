@@ -350,6 +350,7 @@ namespace XRL.World.Parts
 				return FailHandover(Receipt, "Pending liquid receipt is ambiguous before drain.");
 
 			int drained = KingdomLiquids.Drain(source, Receipt.HandoverSourceVolumeBefore);
+			ObserveHandoverMutation(SourceObject, TargetObject, SourceObject.CurrentCell, null);
 			if (drained != Receipt.HandoverSourceVolumeBefore
 				|| !ExactLiquidEndpoint(SourceObject, source, 0, EncodeEmptyLiquid())
 				|| !ExactHandoverObjects(SourceObject, TargetObject, Receipt)
@@ -392,9 +393,11 @@ namespace XRL.World.Parts
 			try { accepted = Target.MixWith(frozen, PouredFrom: SourceObject); }
 			catch (System.Exception ex)
 			{
+				ObserveHandoverMutation(SourceObject, TargetObject, SourceObject.CurrentCell, null);
 				return CompensateLiquid(SourceObject, TargetObject, Receipt, Source, Target,
 					frozen, "Liquid fill threw: " + ex.Message);
 			}
+			ObserveHandoverMutation(SourceObject, TargetObject, SourceObject.CurrentCell, null);
 			if (!ExactHandoverObjects(SourceObject, TargetObject, Receipt)
 				|| !ReferenceEquals(Source, SourceObject.GetPart<LiquidVolume>())
 				|| !ReferenceEquals(Target, TargetObject.GetPart<LiquidVolume>()))
@@ -429,8 +432,10 @@ namespace XRL.World.Parts
 			try { Source.MixWith(Frozen, PouredFrom: TargetObject); }
 			catch (System.Exception ex)
 			{
+				ObserveHandoverMutation(SourceObject, TargetObject, SourceObject.CurrentCell, null);
 				return FailHandover(Receipt, Failure + " Compensation threw: " + ex.Message);
 			}
+			ObserveHandoverMutation(SourceObject, TargetObject, SourceObject.CurrentCell, null);
 			if (!ExactLiquidEndpoint(SourceObject, Source, Receipt.HandoverSourceVolumeBefore,
 					Receipt.HandoverSourceComposition)
 				|| !ExactLiquidEndpoint(TargetObject, Target, Receipt.HandoverTargetVolumeBefore,
@@ -509,6 +514,7 @@ namespace XRL.World.Parts
 					Silent: true, NoStack: true); }
 				catch (System.Exception ex)
 				{
+					ObserveHandoverMutation(Source, Target, Where, item);
 					if (!ReproveEscrowItem(Source, Target, Where, Receipt, item)) return false;
 					if (!ReferenceEquals(sourceInventory, Source.Inventory)
 						|| !ExactHandoverObjects(Source, Target, Receipt))
@@ -532,6 +538,7 @@ namespace XRL.World.Parts
 						"Inventory removal lost, moved, replaced, or restacked its source before throwing: "
 						+ ex.Message);
 				}
+				ObserveHandoverMutation(Source, Target, Where, item);
 				if (!ReproveEscrowItem(Source, Target, Where, Receipt, item)) return false;
 				if (!ReferenceEquals(sourceInventory, Source.Inventory))
 					return FailHandover(Receipt,
@@ -603,6 +610,7 @@ namespace XRL.World.Parts
 			if (ExactEnteringCell(item, Source, Target, Where, Receipt))
 			{
 				item.Physics.CurrentCell = null;
+				ObserveHandoverMutation(Source, Target, Where, item);
 				if (!ExactLooseItem(item, Receipt))
 					return FailHandover(Receipt,
 						"Cell-entry recovery could not restore the exact escrow item to loose state.");
@@ -630,6 +638,9 @@ namespace XRL.World.Parts
 			}
 			catch (System.Exception ex)
 			{
+				ObserveHandoverMutation(Source, Target, Where, Item);
+				KingdomSurvey.ObserveAddResultInActive(Source?.CurrentZone
+					?? Target?.CurrentZone ?? Where?.ParentZone, Item, accepted);
 				if (!ReproveEscrowItem(Source, Target, Where, Receipt, Item)) return false;
 				if (ExactHandoverObjects(Source, Target, Receipt)
 					&& (Receipt.HandoverItemDestinationKind != 1
@@ -639,6 +650,9 @@ namespace XRL.World.Parts
 				return RestoreItem(Source, Target, Where, Receipt, Item,
 					"Inventory AddObject threw: " + ex.Message);
 			}
+			ObserveHandoverMutation(Source, Target, Where, Item);
+			KingdomSurvey.ObserveAddResultInActive(Source?.CurrentZone
+				?? Target?.CurrentZone ?? Where?.ParentZone, Item, accepted);
 			if (!ReproveEscrowItem(Source, Target, Where, Receipt, Item)) return false;
 			if (!ExactHandoverObjects(Source, Target, Receipt))
 				return FailHandover(Receipt, "Inventory endpoint changed during AddObject callback.");
@@ -664,6 +678,7 @@ namespace XRL.World.Parts
 			if (ExactEnteringCell(Item, Source, Target, Where, Receipt))
 			{
 				Item.Physics.CurrentCell = null;
+				ObserveHandoverMutation(Source, Target, Where, Item);
 				if (!ExactLooseItem(Item, Receipt))
 					return FailHandover(Receipt,
 						Failure + " Cell-entry recovery could not prove an exact loose item.");
@@ -675,14 +690,18 @@ namespace XRL.World.Parts
 				if (Source.Inventory == null)
 					return FailHandover(Receipt,
 						Failure + " Exact source inventory no longer exists.");
-				GameObject restored;
+				GameObject restored = null;
 				try { restored = Source.Inventory.AddObject(Item, null,
 					Silent: true, NoStack: true); }
 				catch (System.Exception ex)
 				{
+					ObserveHandoverMutation(Source, Target, Where, Item);
+					KingdomSurvey.ObserveAddResultInActive(Source.CurrentZone, Item, restored);
 					ReproveEscrowItem(Source, Target, Where, Receipt, Item);
 					return FailHandover(Receipt, Failure + " Recovery threw: " + ex.Message);
 				}
+				ObserveHandoverMutation(Source, Target, Where, Item);
+				KingdomSurvey.ObserveAddResultInActive(Source.CurrentZone, Item, restored);
 				if (!ReproveEscrowItem(Source, Target, Where, Receipt, Item)) return false;
 				if (!ReferenceEquals(restored, Item))
 					return FailHandover(Receipt,
@@ -711,6 +730,26 @@ namespace XRL.World.Parts
 				&& BoundedIdentity(Receipt.HandoverTargetId)
 				&& Source.ID == Receipt.HandoverSourceId && Target.ID == Receipt.HandoverTargetId
 				&& ExactHandoverAuthority(Source, Target, Receipt);
+		}
+
+		/// <summary>Reclassifies only the exact roots touched by a durable handover. A loose or
+		/// callback-entering item is deliberately absent from the loaded index; a settled ground
+		/// item becomes its own root, while an inventory item is recovered through its owner branch.</summary>
+		private static void ObserveHandoverMutation(GameObject Source, GameObject Target,
+			Cell Where, GameObject Item)
+		{
+			Zone zone = Source?.CurrentZone ?? Target?.CurrentZone ?? Where?.ParentZone;
+			KingdomSurvey survey = KingdomSurvey.ActiveFor(zone);
+			if (survey == null) return;
+			bool exactGround = GameObject.Validate(Item) && Item.CurrentCell != null
+				&& Item.CurrentCell.ParentZone == zone
+				&& ReferenceCount(Item.CurrentCell.GetObjects(), Item) == 1;
+			if (Item != null && !exactGround) survey.ObserveRemoved(Item);
+			if (GameObject.Validate(Source) && Source.CurrentZone == zone)
+				survey.ObserveChanged(Source);
+			if (!ReferenceEquals(Target, Source) && GameObject.Validate(Target)
+				&& Target.CurrentZone == zone) survey.ObserveChanged(Target);
+			if (exactGround) survey.ObserveChanged(Item);
 		}
 
 		private static bool ExactHandoverAuthority(GameObject Source, GameObject Target,
@@ -873,6 +912,20 @@ namespace XRL.World.Parts
 			Occurrences = 0;
 			ExactOccurrences = 0;
 			if (Zone == null || !BoundedIdentity(Id) || Exact == null) return false;
+			KingdomSurvey active = KingdomSurvey.ActiveFor(Zone);
+			if (active != null)
+			{
+				IList<GameObject> loaded;
+				if (!active.TryLoaded(out loaded)) return false;
+				for (int i = 0; i < loaded.Count; i++)
+				{
+					GameObject item = loaded[i];
+					if (item == null || item.ID != Id) continue;
+					Occurrences++;
+					if (ReferenceEquals(item, Exact)) ExactOccurrences++;
+				}
+				return Occurrences <= 1 && ExactOccurrences <= 1;
+			}
 			List<GameObject> pending = new List<GameObject>(Zone.GetObjects());
 			HashSet<GameObject> expanded = new HashSet<GameObject>();
 			int visited = 0;
@@ -1361,7 +1414,7 @@ namespace ThousandAndFirst
 			}
 			if (improvement != null && improvement.Working)
 			{
-				if (!ExpectedImprovementScaffold(improvement.Scaffold, work.CurrentCell, successor)
+				if (!ExpectedImprovementScaffold(improvement.Scaffold, work.CurrentCell, successor, Job)
 					|| !KingdomConstruction.HasReceipt(improvement.Scaffold, Job))
 				{
 					KingdomConstructionJob ambiguous = Job;
@@ -1456,7 +1509,7 @@ namespace ThousandAndFirst
 			}
 			if (carriedIntent != null && carriedIntent.Working
 				&& GameObject.Validate(carriedIntent.Scaffold)
-				&& (!ExpectedImprovementScaffold(carriedIntent.Scaffold, expectedCell, successor)
+				&& (!ExpectedImprovementScaffold(carriedIntent.Scaffold, expectedCell, successor, Job)
 					|| !KingdomConstruction.HasReceipt(carriedIntent.Scaffold, Job)))
 			{
 				KingdomConstructionJob moved = Job;
@@ -1492,12 +1545,12 @@ namespace ThousandAndFirst
 					scaffoldPart.RetryDurable(System, Z, Job);
 				// Re-read after callbacks: the scaffold may now be gone and its exact successor present.
 				scaffold = carriedIntent != null && carriedIntent.Working
-					&& ExpectedImprovementScaffold(carriedIntent.Scaffold, expectedCell, successor)
+					&& ExpectedImprovementScaffold(carriedIntent.Scaffold, expectedCell, successor, Job)
 					&& KingdomConstruction.HasReceipt(carriedIntent.Scaffold, Job)
 						? carriedIntent.Scaffold : null;
 				if (GameObject.Validate(attemptedScaffold))
 				{
-					if (!ExpectedImprovementScaffold(attemptedScaffold, expectedCell, successor)
+					if (!ExpectedImprovementScaffold(attemptedScaffold, expectedCell, successor, Job)
 						|| !KingdomConstruction.HasReceipt(attemptedScaffold, Job))
 					{
 						KingdomConstruction.Quarantine(ref inspected,
@@ -1813,6 +1866,24 @@ namespace ThousandAndFirst
 			/// <summary>The sentence the founder is owed, or null when the verdict correctly
 			/// says nothing.</summary>
 			public string Reason;
+
+			/// <summary>Explicit same-set plan-change declaration; null for ordinary tier growth.</summary>
+			public KingdomSocketTransition Transition;
+		}
+
+		/// <summary>
+		/// Read-only, exact successor prepared by production preflight. Founder previews and commit
+		/// share this object, so identity/variant selection cannot run twice around consent.
+		/// </summary>
+		public sealed class PreparedImprovement
+		{
+			internal string WorkId;
+			internal string SourceKey;
+			internal string SuccessorKey;
+			internal string Payload;
+			internal bool Legacy;
+			public KingdomArchitectureIntent Architecture;
+			public ArchitectureLayoutDelta Delta;
 		}
 
 		/// <summary>
@@ -1857,7 +1928,8 @@ namespace ThousandAndFirst
 			assessment.Reserve = KingdomUpgradeRules.ReserveDrams(System.Population, System.Stage);
 			assessment.Shortfall = KingdomUpgradeRules.Shortfall(Survey.StoredWater, assessment.CostDrams, assessment.Reserve);
 			// The absorption law (brief, Addendum 3). Measured here, judged in the rules half.
-			assessment.Demand = MeasureAbsorption(System, Z, Work, predecessor, assessment.SuccessorKey, assessment.BuildTicks);
+			assessment.Demand = MeasureAbsorption(System, Z, Work, predecessor,
+				assessment.SuccessorKey, assessment.BuildTicks, Survey);
 			assessment.SupportPerDay = assessment.Demand.SupportPerDay;
 			assessment.OutputLost = KingdomUpgradeRules.OutputLost(assessment.Demand.SupportPerDay, assessment.BuildTicks);
 			assessment.Margin = KingdomUpgradeRules.AbsorptionMargin(Survey.StoredWater, assessment.CostDrams, assessment.Reserve, assessment.OutputLost);
@@ -1944,7 +2016,9 @@ namespace ThousandAndFirst
 		/// <param name="SuccessorKey">Registry key of the design it would become.</param>
 		/// <param name="BuildTicks">The improvement's build time, from
 		/// <c>KingdomUpgradeRules.BuildTicks</c>.</param>
-		public static KingdomUpgradeRules.AbsorptionDemand MeasureAbsorption(KingdomSystem System, Zone Z, GameObject Work, KingdomRules.BuildEntry Predecessor, string SuccessorKey, long BuildTicks)
+		public static KingdomUpgradeRules.AbsorptionDemand MeasureAbsorption(KingdomSystem System,
+			Zone Z, GameObject Work, KingdomRules.BuildEntry Predecessor, string SuccessorKey,
+			long BuildTicks, KingdomSurvey Survey)
 		{
 			KingdomUpgradeRules.AbsorptionDemand demand = KingdomUpgradeRules.AbsorptionDemand.None;
 			demand.BuildTicks = BuildTicks;
@@ -1966,10 +2040,11 @@ namespace ThousandAndFirst
 			int lodgingElsewhere = 0;
 			int bestShelter = 0;
 			string bestKey = null;
-			if (Z != null)
+			if (Survey != null)
 			{
-				foreach (GameObject item in Z.GetObjects())
+				for (int i = 0; i < Survey.Built.Count; i++)
 				{
+					GameObject item = Survey.Built[i];
 					if (item == Work || item.GetIntProperty(BuiltProperty) != 1)
 					{
 						continue;
@@ -2003,8 +2078,9 @@ namespace ThousandAndFirst
 			// live. One citizen with nowhere to charge holds the rebuild exactly as a missing roof
 			// does -- and holds it only: nobody is moved, and the refusal is named by the verdict.
 			demand.QuartersRefused = demand.IsHousing
-				&& KingdomUpgradeRules.QuartersRefused(KingdomQol.OfferOf(bestKey, Z), ResidentProfilesIn(Z), out _);
-			demand.MaterialsInHand = Z == null || KingdomMaterials.CanPayUpgrade(Z, SuccessorKey, out _);
+					&& KingdomUpgradeRules.QuartersRefused(KingdomQol.OfferOf(bestKey, Z),
+						ResidentProfilesIn(Survey), out _);
+			demand.MaterialsInHand = Z == null || KingdomMaterials.CanPayUpgrade(Z, Predecessor.Key, out _);
 			demand.CraftMet = CraftReaches(System, Z, SuccessorKey);
 			return demand;
 		}
@@ -2016,19 +2092,24 @@ namespace ThousandAndFirst
 		/// </summary>
 		/// <returns>Never null; empty for a null zone or a zone with nobody in it, which refuses
 		/// nothing.</returns>
-		private static List<QolProfile> ResidentProfilesIn(Zone Z)
+		public static KingdomUpgradeRules.AbsorptionDemand MeasureAbsorption(KingdomSystem System,
+			Zone Z, GameObject Work, KingdomRules.BuildEntry Predecessor, string SuccessorKey,
+			long BuildTicks)
+		{
+			return MeasureAbsorption(System, Z, Work, Predecessor, SuccessorKey, BuildTicks,
+				Z == null ? null : KingdomSurvey.Take(Z, System));
+		}
+
+		private static List<QolProfile> ResidentProfilesIn(KingdomSurvey Survey)
 		{
 			List<QolProfile> profiles = new List<QolProfile>();
-			if (Z == null)
+			if (Survey == null)
 			{
 				return profiles;
 			}
-			foreach (GameObject item in Z.GetObjects())
+			for (int i = 0; i < Survey.CitizenBodies.Count; i++)
 			{
-				if (item.GetIntProperty("KingdomCitizen") == 1)
-				{
-					profiles.Add(KingdomQol.ProfileOf(item));
-				}
+				profiles.Add(KingdomQol.ProfileOf(Survey.CitizenBodies[i]));
 			}
 			return profiles;
 		}
@@ -2124,14 +2205,12 @@ namespace ThousandAndFirst
 			// The tick is the responsive path; this is the one that cannot be missed, because the
 			// settlement pass runs whenever the founder is standing here and a handover that never
 			// happens leaves the old work standing beside its replacement forever.
-			List<GameObject> pending = new List<GameObject>();
-			foreach (GameObject item in Z.GetObjects())
+			List<GameObject> pending = new List<GameObject>(Survey.Improvements);
+			for (int i = pending.Count - 1; i >= 0; i--)
 			{
+				GameObject item = pending[i];
 				r_KingdomImprovement working = item.GetPart<r_KingdomImprovement>();
-				if (working != null && working.Working)
-				{
-					pending.Add(item);
-				}
+				if (working == null || !working.Working) pending.RemoveAt(i);
 			}
 			for (int i = 0; i < pending.Count; i++)
 			{
@@ -2146,19 +2225,20 @@ namespace ThousandAndFirst
 					working.PollHandover(The.Game.TimeTicks);
 				}
 			}
-			List<GameObject> works = new List<GameObject>();
+			List<GameObject> works = new List<GameObject>(Survey.Built);
 			bool otherWorkUnderway = false;
-			foreach (GameObject item in Z.GetObjects())
+			for (int i = 0; i < Survey.Improvements.Count; i++)
 			{
+				GameObject item = Survey.Improvements[i];
 				r_KingdomImprovement improvement = item.GetPart<r_KingdomImprovement>();
-				if ((improvement != null && improvement.Working) || HasActiveConstruction(item))
+				if (improvement != null && improvement.Working)
 				{
 					otherWorkUnderway = true;
 				}
-				if (item.GetIntProperty(BuiltProperty) == 1)
-				{
-					works.Add(item);
-				}
+			}
+			for (int i = 0; !otherWorkUnderway && i < works.Count; i++)
+			{
+				if (HasActiveConstruction(works[i])) otherWorkUnderway = true;
 			}
 			GameObject readyWork = null;
 			Assessment readyAssessment = default;
@@ -2216,7 +2296,7 @@ namespace ThousandAndFirst
 				return;
 			}
 			The.Game.SetIntGameState(NoticedState, 1);
-			Popup.Show(KingdomUpgradeRules.FirstNoticeLine(System.SeatName));
+			Popup.Show(KingdomUpgradeRules.FirstNoticeLine(KingdomPresentation.Rich(System.SeatName)));
 		}
 
 		/// <summary>
@@ -2234,6 +2314,19 @@ namespace ThousandAndFirst
 		/// spent.</returns>
 		public static bool Begin(KingdomSystem System, Zone Z, GameObject Work, Assessment A, KingdomSurvey Survey)
 		{
+			return BeginCore(System, Z, Work, A, Survey, null);
+		}
+
+		/// <summary>Commits the exact successor already shown to the founder.</summary>
+		public static bool BeginPrepared(KingdomSystem System, Zone Z, GameObject Work,
+			Assessment A, KingdomSurvey Survey, PreparedImprovement Prepared)
+		{
+			return BeginCore(System, Z, Work, A, Survey, Prepared);
+		}
+
+		private static bool BeginCore(KingdomSystem System, Zone Z, GameObject Work,
+			Assessment A, KingdomSurvey Survey, PreparedImprovement Prepared)
+		{
 			if (!A.Valid || !KingdomUpgradeRules.IsReady(A.Verdict) || A.Successor == null)
 			{
 				return false;
@@ -2245,24 +2338,98 @@ namespace ThousandAndFirst
 			{
 				return false;
 			}
+			if (!KingdomZoning.Permits(System, Z.ZoneID, A.Successor,
+				out string zoningFailure))
+			{
+				System.Ledger.Note("{{r|The improvement waits. " + zoningFailure + "}}");
+				return false;
+			}
+			string payload;
+			string architectureFailure;
+			if (Prepared == null
+				? !TryPrepareImprovementPayload(System, Z, Work, A, out payload,
+					out _, out _, out _, out architectureFailure)
+				: !TryReprovePreparedImprovement(System, Z, Work, A, Prepared,
+					out payload, out architectureFailure))
+			{
+				System.Ledger.Note("{{r|The improvement waits. " + architectureFailure + "}}");
+				KingdomLog.Log("architecture: improvement refused before debit: "
+					+ architectureFailure);
+				return false;
+			}
 			KingdomWaterDebit water = Survey.ReserveExactWater(A.CostDrams);
-			KingdomMaterialDebit materials = KingdomMaterials.ReserveUpgradePayment(Z,
-				A.SuccessorKey);
+			KingdomMaterialTally transitionMaterials = A.Transition == null
+				? null : A.Transition.Materials;
+			KingdomMaterialDebit materials;
+			if (A.Transition == null)
+				materials = KingdomMaterials.ReserveUpgradePayment(Z, A.Key);
+			else
+				materials = KingdomMaterials.ReserveTransitionPayment(Z, transitionMaterials);
 			KingdomMaterialDebitCost claim = new KingdomMaterialDebitCost(
-				KingdomMaterials.UpgradeCostFor(A.SuccessorKey));
+				A.Transition == null ? KingdomMaterials.UpgradeCostFor(A.Key)
+					: transitionMaterials);
 			long now = The.Game.TimeTicks;
 			KingdomConstructionJob job = KingdomConstruction.NewJob(System, Z,
-				KingdomConstructionRoute.Improvement, cell, Work, A.SuccessorKey, A.Key,
+				KingdomConstructionRoute.Improvement, cell, Work, A.SuccessorKey, payload,
 				A.CostDrams, claim, now, now + A.BuildTicks);
+			bool hasPlot = KingdomPlots.IsPlotDesign(A.SuccessorKey);
+			if (!KingdomConstruction.FreezeBuildTruth(job, System,
+				A.Successor.Defence, hasPlot))
+			{
+				water.Rollback();
+				materials.Cancel();
+				System.Ledger.Note("{{r|The improvement waits. Its exact build effects could not be frozen.}}");
+				return false;
+			}
+			if (A.Transition != null)
+			{
+				KingdomArchitectureIntent before;
+				KingdomArchitectureIntent after;
+				KingdomPlotRules.PlotRect transitionRect;
+				string transitionSkin;
+				bool legacy;
+				string transitionFailure = null;
+				if (!KingdomArchitectureRuntime.TryRead(Work, out before, out _)
+					|| !KingdomPlots.TryDecodePlotPayload(payload, out transitionRect,
+						out transitionSkin, out after, out legacy, out _)
+					|| legacy || after == null
+					|| !KingdomSocketTransitions.BindReceipt(Work, job, before, after,
+						A.Transition, out transitionFailure))
+				{
+					KingdomSocketTransitions.ClearReceipt(Work);
+					System.Ledger.Note("{{r|The plan change waits. "
+						+ (transitionFailure ?? "Its exact transition receipt could not be frozen.")
+						+ "}}");
+					return false;
+				}
+			}
 			KingdomConstructionStartResult funding = KingdomConstruction.TryFundNew(job,
 				water, materials, out job, out string fundingFailure);
 			if (funding == KingdomConstructionStartResult.Refused)
 			{
+				if (A.Transition != null) KingdomSocketTransitions.ClearReceipt(Work);
 				KingdomLog.Log("improvement refused cleanly: "
 					+ (fundingFailure ?? A.SuccessorKey));
 				return false;
 			}
 			KingdomConstruction.Bind(Work, job);
+			if (A.Transition != null)
+			{
+				KingdomArchitectureIntent before;
+				KingdomArchitectureIntent after;
+				KingdomPlotRules.PlotRect transitionRect;
+				string transitionSkin;
+				bool legacy;
+				if (!KingdomArchitectureRuntime.TryRead(Work, out before, out _)
+					|| !KingdomPlots.TryDecodePlotPayload(payload, out transitionRect,
+						out transitionSkin, out after, out legacy, out _)
+					|| legacy || !KingdomSocketTransitions.Authorizes(Work, before, after))
+				{
+					KingdomConstruction.Quarantine(ref job,
+						"The funded same-set transition lost its frozen endpoint receipt.");
+					return true;
+				}
+			}
 			if (funding == KingdomConstructionStartResult.Outstanding)
 			{
 				System.Ledger.Note("{{r|The improvement receipt remains outstanding. The old work stands while its exact claim retries.}}");
@@ -2279,8 +2446,291 @@ namespace ThousandAndFirst
 			string line = KingdomUpgradeRules.BegunLine(standing, A.Successor.Name, A.CostDrams);
 			MessageQueue.AddPlayerMessage("{{G|" + line + "}}");
 			System.Ledger.Note("{{G|" + line + "}}");
-			KingdomChronicle.Record(System, "the " + standing + " at " + System.KingdomDisplayName + " was set to be raised into " + KingdomUpgradeRules.Article(A.Successor.Name));
+			KingdomChronicle.Record(System, "the " + standing + " at " + KingdomPresentation.Rich(System.KingdomDisplayName) + " was set to be raised into " + KingdomUpgradeRules.Article(A.Successor.Name));
 			KingdomLog.Log("improvement begun: " + A.Key + " -> " + A.SuccessorKey + " cost=" + A.CostDrams + " ticks=" + A.BuildTicks + " at " + cell.X + "," + cell.Y);
+			return true;
+		}
+
+		/// <summary>Runs production successor resolution and protection preflight without mutation.</summary>
+		public static bool TryPrepareImprovement(KingdomSystem System, Zone Z, GameObject Work,
+			Assessment A, out PreparedImprovement Prepared, out string Failure)
+		{
+			Prepared = null;
+			if (!TryPrepareImprovementPayload(System, Z, Work, A, out string payload,
+				out KingdomArchitectureIntent architecture, out ArchitectureLayoutDelta delta,
+				out bool legacy, out Failure)) return false;
+			Prepared = new PreparedImprovement
+			{
+				WorkId = Work?.ID, SourceKey = A.Key, SuccessorKey = A.SuccessorKey,
+				Payload = payload, Legacy = legacy, Architecture = architecture, Delta = delta
+			};
+			return true;
+		}
+
+		private static bool TryPrepareImprovementPayload(KingdomSystem System, Zone Z,
+			GameObject Work, Assessment A, out string Payload,
+			out KingdomArchitectureIntent Architecture, out ArchitectureLayoutDelta Delta,
+			out bool Legacy, out string Failure)
+		{
+			Payload = A.Key;
+			Architecture = null;
+			Delta = null;
+			Legacy = true;
+			Failure = null;
+			bool marker = Work != null
+				&& (Work.HasIntProperty(KingdomArchitectureRuntime.SchemaProperty)
+					|| Work.HasStringProperty(KingdomArchitectureRuntime.SchemaProperty));
+			if (!marker) return true; // save-era plot or single-cell work retains its legacy path.
+			KingdomArchitectureIntent before;
+			if (!KingdomArchitectureRuntime.TryRead(Work, out before, out Failure)) return false;
+			if (!KingdomArchitectureRules.IsCurrentSnapshotEncoding(before.EncodedSnapshot))
+				return true; // a1 remains read-only legacy compatibility.
+			Legacy = false;
+			ArchitectureLayoutSnapshot ignoredBefore;
+			string lot;
+			if (!KingdomArchitectureStamper.TryReadOwner(Work, out before, out ignoredBefore,
+				out lot, out Failure) || Work.GetIntProperty(
+					KingdomArchitectureStamper.NextLayerProperty) != 3)
+				return false;
+			KingdomArchitectureIntent successor;
+			if (A.Transition == null)
+			{
+				if (!KingdomArchitectureRuntime.TryPrepareSuccessor(System, Z, before,
+					A.SuccessorKey, out successor, out Failure)) return false;
+			}
+			else if (!KingdomArchitectureRuntime.TryPreparePlanTransition(System, Z, before,
+				A.SuccessorKey, A.Transition, out successor, out Failure)) return false;
+			KingdomMaterialDebitCost claim = new KingdomMaterialDebitCost(A.Transition == null
+				? KingdomMaterials.UpgradeCostFor(A.Key) : A.Transition.Materials);
+			if (A.Transition == null)
+			{
+				if (!KingdomArchitectureStamper.TryPreflightUpgrade(System, Z, Work, successor,
+					claim, out Delta, out Failure)) return false;
+			}
+			else if (!KingdomArchitectureStamper.TryPreflightPlanTransition(System, Z, Work,
+				successor, A.Transition, claim, out Delta, out Failure)) return false;
+			Architecture = successor;
+			return KingdomPlots.TryEncodePlotPayload(successor.Rect, null, Architecture,
+				out Payload, out Failure);
+		}
+
+		private static bool TryReprovePreparedImprovement(KingdomSystem System, Zone Z,
+			GameObject Work, Assessment A, PreparedImprovement Prepared,
+			out string Payload, out string Failure)
+		{
+			Payload = null;
+			Failure = null;
+			if (Prepared == null || !GameObject.Validate(Work) || Prepared.WorkId != Work.ID
+				|| Prepared.SourceKey != A.Key || Prepared.SuccessorKey != A.SuccessorKey
+				|| string.IsNullOrEmpty(Prepared.Payload))
+			{
+				Failure = "The previewed improvement no longer names this exact work.";
+				return false;
+			}
+			if (Prepared.Legacy)
+			{
+				Payload = Prepared.Payload;
+				return true;
+			}
+			KingdomPlotRules.PlotRect rect;
+			string skin;
+			bool legacy;
+			KingdomArchitectureIntent architecture;
+			if (!KingdomPlots.TryDecodePlotPayload(Prepared.Payload, out rect, out skin,
+				out architecture, out legacy, out Failure) || legacy || architecture == null
+				|| Prepared.Architecture == null
+				|| architecture.EncodedSnapshot != Prepared.Architecture.EncodedSnapshot
+				|| architecture.SnapshotHash != Prepared.Architecture.SnapshotHash
+				|| architecture.MainWorldX != Prepared.Architecture.MainWorldX
+				|| architecture.MainWorldY != Prepared.Architecture.MainWorldY)
+			{
+				if (Failure == null) Failure = "The previewed successor receipt changed before consent.";
+				return false;
+			}
+			KingdomMaterialDebitCost claim = new KingdomMaterialDebitCost(A.Transition == null
+				? KingdomMaterials.UpgradeCostFor(A.Key) : A.Transition.Materials);
+			ArchitectureLayoutDelta delta;
+			bool proved = A.Transition == null
+				? KingdomArchitectureStamper.TryPreflightUpgrade(System, Z, Work, architecture,
+					claim, out delta, out Failure)
+				: KingdomArchitectureStamper.TryPreflightPlanTransition(System, Z, Work,
+					architecture, A.Transition, claim, out delta, out Failure);
+			if (!proved) return false;
+			Prepared.Delta = delta;
+			Payload = Prepared.Payload;
+			return true;
+		}
+
+		/// <summary>Starts one founder-ordered explicit same-set plan change.</summary>
+		public static bool BeginPlanChange(KingdomSystem System, Zone Z, GameObject Work,
+			KingdomRules.BuildEntry Successor, KingdomSocketTransition Transition,
+			out string Failure)
+		{
+			if (!TryPreparePlanChange(System, Z, Work, Successor, Transition,
+				out Assessment assessment, out PreparedImprovement prepared, out Failure))
+				return false;
+			return BeginPreparedPlanChange(System, Z, Work, assessment, prepared, out Failure);
+		}
+
+		/// <summary>Freezes and preflights one declared plan target for preview.</summary>
+		public static bool TryPreparePlanChange(KingdomSystem System, Zone Z, GameObject Work,
+			KingdomRules.BuildEntry Successor, KingdomSocketTransition Transition,
+			out Assessment Assessment, out PreparedImprovement Prepared, out string Failure)
+		{
+			Assessment = default;
+			Prepared = null;
+			Failure = null;
+			if (System == null || Z == null || !GameObject.Validate(Work) || Successor == null
+				|| Transition == null || Transition.ToBuildKey != Successor.Key)
+			{
+				Failure = "The same-set plan change has no exact endpoints.";
+				return false;
+			}
+			if (!ContentsWouldFit(Work, Successor.Blueprint)
+				|| !FounderMarksWouldFit(Work, Successor.Blueprint, out Failure))
+			{
+				if (Failure == null)
+					Failure = "The successor cannot receive everything the standing work holds.";
+				return false;
+			}
+			KingdomSurvey survey = KingdomSurvey.Take(Z, System);
+			if (survey.StoredWater < Transition.WaterDrams)
+			{
+				Failure = "The change wants {{C|" + Transition.WaterDrams
+					+ " drams}}, and the stores cannot bear it.";
+				return false;
+			}
+			if (!KingdomMaterials.CanPayTransition(Z, Transition.Materials, out Failure))
+				return false;
+			Assessment assessment = new Assessment
+			{
+				Valid = true, Verdict = KingdomUpgradeRules.UpgradeVerdict.Ready,
+				Key = Transition.FromBuildKey, SuccessorKey = Transition.ToBuildKey,
+				Successor = Successor, CostDrams = Transition.WaterDrams,
+				BuildTicks = Transition.WorkTicks,
+				CrewNeeded = Math.Max(1, Successor.Staff), Transition = Transition
+			};
+			if (!TryPrepareImprovement(System, Z, Work, assessment, out Prepared, out Failure)
+				|| Prepared.Legacy || Prepared.Architecture == null)
+			{
+				if (Failure == null)
+					Failure = "The declared plan change has no exact authored target to preview.";
+				return false;
+			}
+			Assessment = assessment;
+			return true;
+		}
+
+		/// <summary>Commits only the exact plan target already previewed.</summary>
+		public static bool BeginPreparedPlanChange(KingdomSystem System, Zone Z, GameObject Work,
+			Assessment Assessment, PreparedImprovement Prepared, out string Failure)
+		{
+			Failure = null;
+			if (!Assessment.Valid || Assessment.Transition == null || Prepared == null
+				|| Assessment.Successor == null)
+			{
+				Failure = "The previewed same-set plan change is incomplete.";
+				return false;
+			}
+			if (!ContentsWouldFit(Work, Assessment.Successor.Blueprint)
+				|| !FounderMarksWouldFit(Work, Assessment.Successor.Blueprint, out Failure))
+			{
+				if (Failure == null)
+					Failure = "The successor can no longer receive everything the standing work holds.";
+				return false;
+			}
+			KingdomSurvey survey = KingdomSurvey.Take(Z, System);
+			if (survey.StoredWater < Assessment.CostDrams)
+			{
+				Failure = "The change wants {{C|" + Assessment.CostDrams
+					+ " drams}}, and the stores cannot bear it.";
+				return false;
+			}
+			if (!KingdomMaterials.CanPayTransition(Z, Assessment.Transition.Materials,
+				out Failure)) return false;
+			if (!BeginPrepared(System, Z, Work, Assessment, survey, Prepared))
+			{
+				Failure = "The declared plan change could not raise its exact previewed scaffold.";
+				return false;
+			}
+			return true;
+		}
+
+		private static bool FounderMarksWouldFit(GameObject Work, string SuccessorBlueprint,
+			out string Failure)
+		{
+			Failure = null;
+			GameObjectBlueprint blueprint = string.IsNullOrEmpty(SuccessorBlueprint) ? null
+				: GameObjectFactory.Factory.GetBlueprintIfExists(SuccessorBlueprint);
+			if (blueprint == null)
+			{
+				Failure = "The successor blueprint is absent, so founder state cannot be handed over.";
+				return false;
+			}
+			if (Work.GetIntProperty(KingdomAdopt.LarderProperty) == 1
+				&& !blueprint.HasPart("Inventory"))
+			{
+				Failure = "The successor has no inventory for the founder's larder dedication.";
+				return false;
+			}
+			if (Work.GetIntProperty(KingdomAdopt.StoresProperty) == 1
+				&& !blueprint.HasPart("LiquidVolume"))
+			{
+				Failure = "The successor has no vessel for the founder's stores dedication.";
+				return false;
+			}
+			return true;
+		}
+
+		private static bool TryReadImprovementArchitecture(GameObject Work,
+			KingdomConstructionJob Job, out KingdomArchitectureIntent Intent,
+			out bool Authored, out string Failure)
+		{
+			Intent = null;
+			Authored = false;
+			Failure = null;
+			if (!GameObject.Validate(Work) || Job == null)
+			{
+				Failure = "Improvement architecture endpoints are absent.";
+				return false;
+			}
+			bool v2 = Job.Payload != null
+				&& Job.Payload.StartsWith("v2|", StringComparison.Ordinal);
+			bool schemaMarker = Work.HasIntProperty(KingdomArchitectureRuntime.SchemaProperty)
+				|| Work.HasStringProperty(KingdomArchitectureRuntime.SchemaProperty);
+			if (!v2)
+			{
+				if (schemaMarker)
+				{
+					KingdomArchitectureIntent standing;
+					if (!KingdomArchitectureRuntime.TryRead(Work, out standing, out Failure)) return false;
+					if (KingdomArchitectureRules.IsCurrentSnapshotEncoding(
+						standing.EncodedSnapshot))
+					{
+						Failure = "Current authored predecessor lacks its frozen successor payload.";
+						return false;
+					}
+				}
+				return string.IsNullOrEmpty(Job.Payload)
+					|| Work.GetStringProperty(BuildKeyProperty) == Job.Payload;
+			}
+			KingdomPlotRules.PlotRect rect;
+			string skin;
+			bool legacy;
+			if (!KingdomPlots.TryDecodePlotPayload(Job.Payload, out rect, out skin,
+				out Intent, out legacy, out Failure) || legacy || Intent == null
+				|| !KingdomArchitectureRules.IsCurrentSnapshotEncoding(Intent.EncodedSnapshot)
+				|| Intent.BuildKey != Job.TargetKey || Job.X != Intent.MainWorldX
+				|| Job.Y != Intent.MainWorldY || Work.CurrentZone == null
+				|| !schemaMarker)
+			{
+				if (Failure == null) Failure = "Frozen authored improvement payload is malformed.";
+				return false;
+			}
+			ArchitectureLayoutDelta ignored;
+			if (!KingdomArchitectureStamper.TryValidateFrozenUpgrade(Work, Work.CurrentZone,
+				Intent, out ignored, out Failure)) return false;
+			Authored = true;
 			return true;
 		}
 
@@ -2292,16 +2742,22 @@ namespace ThousandAndFirst
 			Failure = null;
 			Cell cell = Work?.CurrentCell;
 			Zone zone = cell?.ParentZone;
-			if (Successor == null || !EnsureExactImprovementPredecessor(System, zone, Work, Job))
+			KingdomArchitectureIntent architecture = null;
+			bool authored = false;
+			string architectureFailure = null;
+			if (Successor == null || !TryReadImprovementArchitecture(Work, Job,
+				out architecture, out authored, out architectureFailure)
+				|| !EnsureExactImprovementPredecessor(System, zone, Work, Job))
 			{
-				Failure = "The paid predecessor no longer matches its exact recorded identity.";
+				Failure = architectureFailure
+					?? "The paid predecessor no longer matches its exact recorded identity.";
 				KingdomConstruction.Quarantine(ref Updated, Failure);
 				return false;
 			}
 			r_KingdomImprovement existing = Work.GetPart<r_KingdomImprovement>();
 			GameObject exactScaffold;
 			KingdomPhysicalLookupState scaffoldState = FindImprovementScaffold(
-				cell, Successor, Job, out exactScaffold);
+				cell, Successor, Job, architecture, authored, out exactScaffold);
 			if (scaffoldState == KingdomPhysicalLookupState.Ambiguous)
 			{
 				Failure = "The improvement scaffold is duplicated, moved, replaced, or malformed.";
@@ -2322,6 +2778,7 @@ namespace ThousandAndFirst
 				recovered.Scaffold = paidScaffold;
 				recovered.WorkCompleteTick = Job.DueTick;
 				KingdomConstruction.Bind(Work, Job);
+				KingdomSurvey.ObserveChangedInActive(zone, Work);
 				if (!KingdomConstruction.FinishProjection(ref Updated, true, true))
 				{
 					Failure = "The paid improvement scaffold stands, but Working did not persist.";
@@ -2333,6 +2790,12 @@ namespace ThousandAndFirst
 				&& scaffoldState != KingdomPhysicalLookupState.Exact)
 			{
 				Failure = "The linked improvement scaffold lacks exact frozen output identity proof.";
+				KingdomConstruction.Quarantine(ref Updated, Failure);
+				return false;
+			}
+			if (!KingdomConstructionRules.TryReadBuildTruth(Job, out _, out _, out _))
+			{
+				Failure = "The unprojected legacy improvement predates frozen build effects.";
 				KingdomConstruction.Quarantine(ref Updated, Failure);
 				return false;
 			}
@@ -2365,6 +2828,15 @@ namespace ThousandAndFirst
 				KingdomConstruction.Quarantine(ref Updated, Failure);
 				return false;
 			}
+			if (authored && !KingdomArchitectureRuntime.TryFreeze(scaffold, architecture,
+				out string freezeFailure))
+			{
+				RemoveCreatedProjection(scaffold);
+				Failure = "The improvement scaffold could not freeze authored authority: "
+					+ freezeFailure;
+				KingdomConstruction.FinishProjection(ref Updated, false, false, Failure);
+				return false;
+			}
 			if (!KingdomConstruction.UpdateOutput(ref Updated, scaffold.ID))
 			{
 				bool removed = RemoveCreatedProjection(scaffold);
@@ -2382,24 +2854,24 @@ namespace ThousandAndFirst
 				return false;
 			}
 			scaffold.SetStringProperty(BuildKeyProperty, Successor.Key);
+			if (!KingdomConstruction.ApplyBuildTruth(scaffold, Updated))
+			{
+				RemoveCreatedProjection(scaffold);
+				Failure = "The paid improvement has no exact frozen build effects.";
+				KingdomConstruction.Quarantine(ref Updated, Failure);
+				return false;
+			}
 			KingdomConstruction.Bind(scaffold, Updated);
 			part.TargetBlueprint = Successor.Blueprint;
 			part.TargetDisplayName = Successor.Name;
 			part.CompleteTick = Updated.DueTick;
 			part.StaffNeeded = Successor.Staff;
 			part.ThresholdManning = KingdomRules.IsThresholdManning(Successor.Manning);
-			if (Successor.Defence > 0)
-			{
-				bool hasTinkering = The.Player != null && The.Player.HasSkill("Tinkering");
-				bool hasAdvancedTinkering = The.Player != null && The.Player.HasSkill("Tinkering_Tinker1");
-				scaffold.SetIntProperty("KingdomDefencePending", KingdomRules.WallDefence(
-					Successor.Defence, System.FoundingTerrainBlueprint,
-					System.FoundingRegionName, hasTinkering, hasAdvancedTinkering));
-			}
 			GameObject accepted;
 			try
 			{
 				accepted = cell.AddObject(scaffold);
+				KingdomSurvey.ObserveAddResultInActive(zone, scaffold, accepted);
 			}
 			catch (System.Exception ex)
 			{
@@ -2415,7 +2887,8 @@ namespace ThousandAndFirst
 				|| KingdomConstruction.FindExactId(zone, Updated.OutputId, out globalScaffold)
 					!= KingdomPhysicalLookupState.Exact
 				|| !ReferenceEquals(globalScaffold, scaffold)
-				|| !ExpectedImprovementScaffold(scaffold, cell, Successor)
+				|| !ExpectedImprovementScaffold(scaffold, cell, Successor, Updated,
+					architecture, authored)
 				|| !KingdomConstruction.HasReceipt(scaffold, Updated)
 				|| !EnsureExactImprovementPredecessor(System, zone, Work, Updated)
 				|| !KingdomConstruction.IsCurrent(Updated))
@@ -2434,6 +2907,7 @@ namespace ThousandAndFirst
 			improvement.WorkCompleteTick = Updated.DueTick;
 			improvement.AnnouncedReason = 0;
 			KingdomConstruction.Bind(Work, Updated);
+			KingdomSurvey.ObserveChangedInActive(zone, Work);
 			if (!improvement.Working || improvement.Scaffold != scaffold
 				|| !EnsureExactImprovementPredecessor(System, zone, Work, Updated))
 			{
@@ -2450,17 +2924,40 @@ namespace ThousandAndFirst
 		}
 
 		private static bool ExpectedImprovementScaffold(GameObject Scaffold, Cell Cell,
-			KingdomRules.BuildEntry Successor)
+			KingdomRules.BuildEntry Successor, KingdomConstructionJob Job)
+		{
+			return ExpectedImprovementScaffold(Scaffold, Cell, Successor, Job, null, false);
+		}
+
+		private static bool ExpectedImprovementScaffold(GameObject Scaffold, Cell Cell,
+			KingdomRules.BuildEntry Successor, KingdomConstructionJob Job,
+			KingdomArchitectureIntent Architecture,
+			bool Authored)
 		{
 			r_KingdomScaffold part = GameObject.Validate(Scaffold)
 				? Scaffold.GetPart<r_KingdomScaffold>() : null;
 			return part != null && Scaffold.CurrentCell == Cell && Successor != null
 				&& Scaffold.GetStringProperty(BuildKeyProperty) == Successor.Key
-				&& part.TargetBlueprint == Successor.Blueprint;
+				&& part.TargetBlueprint == Successor.Blueprint
+				&& (KingdomConstruction.BuildTruthMatches(Scaffold, Job)
+					|| KingdomConstruction.LegacyProjectedBuildTruthMatchesUnknownPlot(
+						Scaffold, Job))
+				&& (!Authored || Architecture != null
+					&& KingdomArchitectureRuntime.TryRead(Scaffold,
+						out KingdomArchitectureIntent frozen, out _)
+					&& frozen.SnapshotHash == Architecture.SnapshotHash);
 		}
 
 		private static KingdomPhysicalLookupState FindImprovementScaffold(Cell Cell,
 			KingdomRules.BuildEntry Successor, KingdomConstructionJob Job,
+			out GameObject Scaffold)
+		{
+			return FindImprovementScaffold(Cell, Successor, Job, null, false, out Scaffold);
+		}
+
+		private static KingdomPhysicalLookupState FindImprovementScaffold(Cell Cell,
+			KingdomRules.BuildEntry Successor, KingdomConstructionJob Job,
+			KingdomArchitectureIntent Architecture, bool Authored,
 			out GameObject Scaffold)
 		{
 			Scaffold = null;
@@ -2473,7 +2970,8 @@ namespace ThousandAndFirst
 				if (!KingdomConstruction.HasReceipt(item, Job)) continue;
 				count++;
 				if (count > 1 || item.ID != Job.OutputId
-					|| !ExpectedImprovementScaffold(item, Cell, Successor))
+					|| !ExpectedImprovementScaffold(item, Cell, Successor, Job,
+						Architecture, Authored))
 					return KingdomPhysicalLookupState.Ambiguous;
 				found = item;
 			}
@@ -2493,12 +2991,15 @@ namespace ThousandAndFirst
 			GameObject Work, KingdomConstructionJob Job)
 		{
 			Cell cell = Z == null || Job == null ? null : Z.GetCell(Job.X, Job.Y);
+			KingdomArchitectureIntent architecture;
+			bool authored;
+			string architectureFailure;
 			return GameObject.Validate(Work) && cell != null
 				&& KingdomConstruction.Owns(System, Z, Job)
 				&& Work.ID == Job.SubjectId && Work.CurrentZone == Z && Work.CurrentCell == cell
 				&& Work.GetIntProperty(BuiltProperty) == 1
-				&& (string.IsNullOrEmpty(Job.Payload)
-					|| Work.GetStringProperty(BuildKeyProperty) == Job.Payload);
+				&& TryReadImprovementArchitecture(Work, Job, out architecture, out authored,
+					out architectureFailure);
 		}
 
 		private static bool EnsureExactImprovementPredecessor(KingdomSystem System, Zone Z,
@@ -2517,6 +3018,7 @@ namespace ThousandAndFirst
 
 		private static bool RemoveCreatedProjection(GameObject Object)
 		{
+			Zone zone = GameObject.Validate(Object) ? Object.CurrentZone : null;
 			try
 			{
 				return !GameObject.Validate(Object)
@@ -2525,6 +3027,10 @@ namespace ThousandAndFirst
 			catch
 			{
 				return false;
+			}
+			finally
+			{
+				if (zone != null) KingdomSurvey.ObserveCurrentTopologyInActive(zone, Object);
 			}
 		}
 
@@ -2544,13 +3050,21 @@ namespace ThousandAndFirst
 		/// <returns>True once scaffolding is standing and the water is spent.</returns>
 		public static bool Force(KingdomSystem System, Zone Z, GameObject Work, Assessment A, KingdomSurvey Survey)
 		{
+			if (!TryPrepareImprovement(System, Z, Work, A, out PreparedImprovement prepared,
+				out _)) return false;
+			return ForcePrepared(System, Z, Work, A, Survey, prepared);
+		}
+
+		private static bool ForcePrepared(KingdomSystem System, Zone Z, GameObject Work,
+			Assessment A, KingdomSurvey Survey, PreparedImprovement Prepared)
+		{
 			if (!A.Valid || !KingdomUpgradeRules.IsOffer(A.Verdict) || A.Successor == null)
 			{
 				return false;
 			}
 			Assessment consented = A;
 			consented.Verdict = KingdomUpgradeRules.UpgradeVerdict.Ready;
-			if (!Begin(System, Z, Work, consented, Survey))
+			if (!BeginPrepared(System, Z, Work, consented, Survey, Prepared))
 			{
 				return false;
 			}
@@ -2558,7 +3072,7 @@ namespace ThousandAndFirst
 			string forced = KingdomUpgradeRules.ForcedLine(standing, A.Successor.Name, A.Margin);
 			MessageQueue.AddPlayerMessage("{{W|" + forced + "}}");
 			System.Ledger.Note("{{W|" + forced + "}}");
-			KingdomChronicle.Record(System, "the " + standing + " at " + System.KingdomDisplayName + " was set to be raised on the founder's word, and the settlement went into its reserve to do it");
+			KingdomChronicle.Record(System, "the " + standing + " at " + KingdomPresentation.Rich(System.KingdomDisplayName) + " was set to be raised on the founder's word, and the settlement went into its reserve to do it");
 			KingdomLog.Log("improvement forced: " + A.Key + " -> " + A.SuccessorKey + " outage=" + A.OutputLost + " margin=" + A.Margin);
 			return true;
 		}
@@ -2576,16 +3090,27 @@ namespace ThousandAndFirst
 			}
 			string standing = KingdomDesign.ReferenceFor(Work, Work.ShortDisplayName);
 			string successor = (A.Successor != null) ? A.Successor.Name : DisplayNameOf(A.SuccessorKey);
+			if (!TryPrepareImprovement(System, Z, Work, A,
+				out PreparedImprovement prepared, out string prepareFailure)
+				|| prepared.Legacy || prepared.Architecture == null
+				|| !KingdomArchitecturePreview.TryRenderImprovement(prepared.Architecture,
+					A.Successor, A, prepared.Delta, out string preview, out prepareFailure))
+			{
+				Popup.Show(prepareFailure
+					?? "This save-era improvement has no exact successor map to preview.");
+				return false;
+			}
 			int picked = Popup.PickOption(
 				Title: standing,
-				Intro: KingdomUpgradeRules.DipLine(standing, successor, A.SupportPerDay, A.BuildTicks, A.Margin),
+				Intro: preview + "\n" + KingdomUpgradeRules.DipLine(standing, successor,
+					A.SupportPerDay, A.BuildTicks, A.Margin),
 				Options: new string[2] { "Raise it anyway, and go into the reserve", "Leave it as it is for now" },
 				AllowEscape: true);
 			if (picked != 0)
 			{
 				return false;
 			}
-			return Force(System, Z, Work, A, Survey);
+			return ForcePrepared(System, Z, Work, A, Survey, prepared);
 		}
 
 		/// <summary>
@@ -2655,6 +3180,8 @@ namespace ThousandAndFirst
 			else if (intent.HandoverConstructionReceipt != receipt) return;
 			KingdomConstructionJob job = null;
 			KingdomSystem ownerSystem = null;
+			KingdomArchitectureIntent authoredSuccessor = null;
+			bool authoredUpgrade = false;
 			if (!string.IsNullOrEmpty(receipt))
 			{
 				ownerSystem = The.Game == null
@@ -2675,6 +3202,15 @@ namespace ThousandAndFirst
 						Predecessor, job)
 					|| !r_KingdomScaffold.IsExactSuccessor(Successor, Predecessor.CurrentZone,
 						cell, job, intent.SuccessorBlueprint)) return;
+				string authoredFailure;
+				if (!TryReadImprovementArchitecture(Predecessor, job,
+					out authoredSuccessor, out authoredUpgrade, out authoredFailure))
+				{
+					r_KingdomImprovement.FailHandover(intent, authoredFailure
+						?? "The frozen authored successor receipt is invalid.");
+					KingdomConstruction.Quarantine(ref job, intent.HandoverFailure);
+					return;
+				}
 				if (!KingdomConstruction.BeginProjection(ref job, out _)) return;
 				if (job.PhysicalPhase == KingdomPhysicalPhase.FinalRemovalPending)
 				{
@@ -2738,14 +3274,21 @@ namespace ThousandAndFirst
 			}
 			if (!intent.HandoverEffectsDone)
 			{
-				// Grow first: it reads and restamps the predecessor's plot. CarryMarks is the final,
-				// callback-free publication that the successor owns the predecessor's founder marks.
-					try
-					{
-						if (!KingdomPlots.GrowInPlace(Predecessor, Successor, SuccessorKey))
-							throw new InvalidOperationException(
-								"The frozen plot-growth receipt did not settle exactly.");
-					}
+				// Authored plots settle their frozen scenery delta and metadata. Save-era plots retain
+				// their durable procedural growth receipt. CarryMarks is the final publication.
+				try
+				{
+					string layoutFailure = null;
+					bool settled = authoredUpgrade
+						? KingdomArchitectureStamper.TryApplyUpgrade(Predecessor, Successor,
+							Predecessor.CurrentZone, authoredSuccessor, out layoutFailure)
+							&& KingdomPlots.TryStampAuthoredGrowth(Predecessor, Successor,
+								authoredSuccessor, out layoutFailure)
+						: KingdomPlots.GrowInPlace(Predecessor, Successor, SuccessorKey);
+					if (!settled)
+						throw new InvalidOperationException(layoutFailure
+							?? "The frozen plot-growth receipt did not settle exactly.");
+				}
 				catch (System.Exception ex)
 				{
 					r_KingdomImprovement.FailHandover(intent,
@@ -2771,11 +3314,32 @@ namespace ThousandAndFirst
 				}
 				intent.HandoverEffectsDone = true;
 			}
-			else if (!KingdomPlots.GrowInPlace(Predecessor, Successor, SuccessorKey)
-				|| !ExactCarriedMarks(Predecessor, Successor, SuccessorKey))
+			else
+			{
+				string layoutFailure = null;
+				bool settled = authoredUpgrade
+					? KingdomArchitectureStamper.TryApplyUpgrade(Predecessor, Successor,
+						Predecessor.CurrentZone, authoredSuccessor, out layoutFailure)
+						&& KingdomPlots.TryStampAuthoredGrowth(Predecessor, Successor,
+							authoredSuccessor, out layoutFailure)
+					: KingdomPlots.GrowInPlace(Predecessor, Successor, SuccessorKey);
+				if (!settled || !ExactCarriedMarks(Predecessor, Successor, SuccessorKey))
+				{
+					r_KingdomImprovement.FailHandover(intent, layoutFailure
+						?? "Settled founder marks changed before predecessor removal.");
+					if (job != null) KingdomConstruction.Quarantine(ref job, intent.HandoverFailure);
+					return;
+				}
+			}
+			// The successor was indexed when the scaffold first landed it. Plot growth and
+			// CarryMarks happen later and can add plot, larder, stores, yielding, visual, and other
+			// semantic memberships. Refresh the same bound index before any exact removal proof or
+			// the immediate improvement follow-on consumes it.
+			KingdomSurvey activeSurvey = KingdomSurvey.ActiveFor(Successor.CurrentZone);
+			if (activeSurvey != null && !activeSurvey.ObserveChanged(Successor))
 			{
 				r_KingdomImprovement.FailHandover(intent,
-					"Settled founder marks changed before predecessor removal.");
+					"The improved successor could not refresh the active settlement survey.");
 				if (job != null) KingdomConstruction.Quarantine(ref job, intent.HandoverFailure);
 				return;
 			}
@@ -2829,12 +3393,15 @@ namespace ThousandAndFirst
 			}
 			catch (System.Exception ex)
 			{
+				KingdomSurvey.ObserveCurrentTopologyInActive(Successor.CurrentZone, Predecessor);
 				r_KingdomImprovement.FailHandover(intent,
 					"Improvement predecessor removal threw: " + ex.Message);
 				if (job != null)
 					KingdomConstruction.Quarantine(ref job, intent.HandoverFailure);
 				return;
 			}
+			if (removed && !GameObject.Validate(Predecessor))
+				KingdomSurvey.ObserveRemovedFromActive(Successor.CurrentZone, Predecessor);
 			KingdomPhysicalLookupState predecessorState = job == null
 				? (GameObject.Validate(Predecessor) ? KingdomPhysicalLookupState.Exact
 					: KingdomPhysicalLookupState.Absent)
@@ -2971,6 +3538,7 @@ namespace ThousandAndFirst
 				if (!string.IsNullOrEmpty(plot)
 					&& Successor.GetStringProperty(KingdomPlots.PlotIdProperty) != plot) return false;
 			}
+			if (!KingdomWear.SameStableState(Predecessor, Successor)) return false;
 			return Predecessor.GetIntProperty(KingdomPlots.YieldingProperty) != 1
 				|| Successor.GetIntProperty(KingdomPlots.YieldingProperty) == 1;
 		}
@@ -3034,6 +3602,7 @@ namespace ThousandAndFirst
 			{
 				Successor.SetIntProperty(KingdomSalvage.CertifiedProperty, 1);
 			}
+			KingdomWear.TryCarryStableState(Predecessor, Successor);
 			// A name the founder gave is the most personal decision anything in this mod records.
 			// Losing one because the thing it was given to got better would be the same bug as
 			// losing a dedication, so it is carried the same way and for the same reason.
@@ -3103,20 +3672,18 @@ namespace ThousandAndFirst
 				List<Assessment> assessments = new List<Assessment>();
 				List<string> lines = new List<string>();
 				bool otherWorkUnderway = false;
-				foreach (GameObject item in zone.GetObjects())
+				for (int i = 0; i < survey.Improvements.Count; i++)
 				{
+					GameObject item = survey.Improvements[i];
 					r_KingdomImprovement improvement = item.GetPart<r_KingdomImprovement>();
 					if ((improvement != null && improvement.Working) || HasActiveConstruction(item))
 					{
 						otherWorkUnderway = true;
 					}
 				}
-				foreach (GameObject item in zone.GetObjects())
+				for (int i = 0; i < survey.Built.Count; i++)
 				{
-					if (item.GetIntProperty(BuiltProperty) != 1)
-					{
-						continue;
-					}
+					GameObject item = survey.Built[i];
 					Assessment assessment = Assess(System, zone, item, survey, freeHands, otherWorkUnderway);
 					if (!assessment.Valid || assessment.Verdict == KingdomUpgradeRules.UpgradeVerdict.NoSuccessor)
 					{
@@ -3135,7 +3702,7 @@ namespace ThousandAndFirst
 					Popup.Show("Nothing standing here is built to grow into anything else yet.");
 					return;
 				}
-				int picked = Popup.PickOption(Title: "The works of " + System.SeatName, Intro: "Pick a work to leave as it is, or to let grow again.", Options: lines, AllowEscape: true);
+				int picked = Popup.PickOption(Title: "The works of " + KingdomPresentation.Rich(System.SeatName), Intro: "Pick a work to leave as it is, or to let grow again.", Options: lines, AllowEscape: true);
 				if (picked < 0)
 				{
 					return;

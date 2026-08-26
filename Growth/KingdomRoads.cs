@@ -88,6 +88,18 @@ namespace ThousandAndFirst
 		/// because zone properties hold strings and a tick is not one.</summary>
 		public const string WalkedProperty = "r_TAF_RoadsWalked";
 
+		/// <summary>Bounded v1 option observation for this zone's own road clock. It also
+		/// carries the last applied master-resume token, so master-off time cannot become
+		/// walking when the global switch returns.</summary>
+		public const string OptionStateProperty = "r_TAF_RoadsOption_v1";
+
+		/// <summary>Exact immutable settlement owning <see cref="OptionStateProperty"/>.</summary>
+		public const string OptionOwnerProperty = "r_TAF_RoadsOptionOwner_v1";
+
+		/// <summary>Realm-wide option epoch. A transition first seen in one zone is therefore
+		/// still observed as a mismatch when another claimed zone is loaded later.</summary>
+		public const string GlobalOptionStatePrefix = "r_TAF_RoadsGlobalOption_v1:";
+
 		/// <summary>Zone property set once the founder has been told the tally is full, so the
 		/// reason is given once per stall rather than once per visit (STANDARDS 7b). Cleared the
 		/// moment the tally has room again.</summary>
@@ -114,16 +126,6 @@ namespace ThousandAndFirst
 		/// (<c>ZoneTerrain.xml:937</c>) &mdash; the same floor <c>PlaceHut</c> lays inside a
 		/// vanilla village hut.</summary>
 		public const string PathBlueprint = "DirtPath";
-
-		/// <summary>Homes one pass reasons about, so building the errand list stays cheap in a
-		/// city of forty roofs.</summary>
-		public const int MaxHomesConsidered = 12;
-
-		/// <summary>Works one pass reasons about. See <see cref="MaxHomesConsidered"/>.</summary>
-		public const int MaxWorksConsidered = 12;
-
-		/// <summary>Plots one pass reasons about, for the doorway errands.</summary>
-		public const int MaxPlotsConsidered = 12;
 
 		/// <summary>Whether ground wears at all. Its own toggle, because a player who likes the
 		/// grass exactly as the world generator drew it should be able to keep it (STANDARDS 3).
@@ -197,6 +199,73 @@ namespace ThousandAndFirst
 		private static void WriteTick(Zone Z, string Property, long Ticks)
 		{
 			Z?.SetZoneProperty(Property, Ticks.ToString());
+		}
+
+		private static KingdomElapsedOptionDecision ObserveOption(KingdomSystem System,
+			Zone Z, long Now)
+		{
+			string settlementId = KingdomChronicle.SettlementId(System);
+			string realmId = System.CurrentRealmId;
+			if (The.Game == null || !KingdomIdentityRules.IsSettlementId(settlementId)
+				|| !KingdomIdentityRules.IsRealmId(realmId))
+			{
+				return KingdomElapsedOptionRules.Observe(
+					KingdomElapsedOptionRecord.Unobserved, Enabled,
+					System.MasterAppliedResumeToken, Now);
+			}
+
+			string globalKey = GlobalOptionStatePrefix + realmId;
+			KingdomElapsedOptionRecord globalPrior;
+			bool globalDecoded = KingdomElapsedOptionRules.TryDecode(
+				The.Game.GetStringGameState(globalKey, ""), out globalPrior);
+			if (!globalDecoded) globalPrior = KingdomElapsedOptionRecord.Unobserved;
+			KingdomElapsedOptionDecision global = KingdomElapsedOptionRules.Observe(globalPrior,
+				Enabled, System.MasterAppliedResumeToken, Now);
+			if (!global.Valid)
+			{
+				global = KingdomElapsedOptionRules.Observe(
+					KingdomElapsedOptionRecord.Unobserved, Enabled,
+					System.MasterAppliedResumeToken, Now);
+				globalDecoded = false;
+			}
+			string current = global.Valid
+				? KingdomElapsedOptionRules.Encode(global.Record) : null;
+			if (global.Valid && current != null && (!globalDecoded
+				|| global.Transition != KingdomElapsedOptionTransition.None))
+				The.Game.SetStringGameState(globalKey, current);
+
+			bool ownerMatches = global::System.String.Equals(
+				Z.GetZoneProperty(OptionOwnerProperty, null), settlementId,
+				global::System.StringComparison.Ordinal);
+			string encoded = ownerMatches
+				? Z.GetZoneProperty(OptionStateProperty, null) : null;
+			KingdomElapsedOptionRecord prior = KingdomElapsedOptionRecord.Unobserved;
+			bool zoneDecoded = ownerMatches
+				&& KingdomElapsedOptionRules.TryDecode(encoded, out prior);
+			bool zoneMatches = zoneDecoded && global.Valid
+				&& prior.State == global.Record.State
+				&& prior.ObservedTick == global.Record.ObservedTick
+				&& prior.MasterResumeToken == global.Record.MasterResumeToken;
+			if (!zoneMatches && global.Valid && current != null)
+			{
+				return new KingdomElapsedOptionDecision(true, global.Record,
+					global.Transition, Enabled ? KingdomElapsedOptionAction.AnchorEnabled
+						: KingdomElapsedOptionAction.AnchorDisabled);
+			}
+			return global;
+		}
+
+		private static void CommitOption(KingdomSystem System, Zone Z,
+			KingdomElapsedOptionRecord Record)
+		{
+			string settlementId = KingdomChronicle.SettlementId(System);
+			if (Z == null || !KingdomIdentityRules.IsSettlementId(settlementId)) return;
+			string current = KingdomElapsedOptionRules.Encode(Record);
+			if (current == null) return;
+			// The owned clock is written before this helper is called. State then owner:
+			// a cut between these writes leaves a foreign owner and reanchors again.
+			Z.SetZoneProperty(OptionStateProperty, current);
+			Z.SetZoneProperty(OptionOwnerProperty, settlementId);
 		}
 
 		// --- Reading ground ---------------------------------------------------------------
@@ -350,11 +419,22 @@ namespace ThousandAndFirst
 		/// <param name="Z">The activated ground. Does nothing when it is not the kingdom's.</param>
 		public static void OnSettlementPass(KingdomSystem System, Zone Z)
 		{
-			if (!Enabled || System == null || !System.Founded || Z == null || !System.ClaimedZones.Contains(Z.ZoneID))
+			if (System == null || !System.Founded || Z == null || The.Game == null
+				|| !System.ClaimedZones.Contains(Z.ZoneID))
 			{
 				return;
 			}
 			long timeTicks = The.Game.TimeTicks;
+			KingdomElapsedOptionDecision option = ObserveOption(System, Z, timeTicks);
+			if (!option.Valid) return;
+			if (option.Action == KingdomElapsedOptionAction.AnchorDisabled
+				|| option.Action == KingdomElapsedOptionAction.AnchorEnabled)
+			{
+				WriteTick(Z, WalkedProperty, timeTicks);
+				CommitOption(System, Z, option.Record);
+				return;
+			}
+			if (option.Action != KingdomElapsedOptionAction.Run) return;
 			long walked = ReadTick(Z, WalkedProperty);
 			if (walked <= 0L)
 			{
@@ -460,22 +540,22 @@ namespace ThousandAndFirst
 				KingdomLayoutRules.LayoutMark mark = marks[i];
 				if (mark.Purpose == KingdomLayoutRules.LayoutPurpose.Housing)
 				{
-					if (homes.Count < MaxHomesConsidered)
-					{
-						homes.Add(mark);
-					}
+					homes.Add(mark);
 				}
 				else if (mark.Purpose == KingdomLayoutRules.LayoutPurpose.Civic
 					|| mark.Purpose == KingdomLayoutRules.LayoutPurpose.Field
 					|| mark.Purpose == KingdomLayoutRules.LayoutPurpose.Storage
 					|| mark.Purpose == KingdomLayoutRules.LayoutPurpose.Sited)
 				{
-					if (works.Count < MaxWorksConsidered)
-					{
-						works.Add(mark);
-					}
+					works.Add(mark);
 				}
 			}
+			// The route loop below is the bounded work. Its input must still describe the whole
+			// legal city: truncating here made every work and plot after the first twelve invisible
+			// forever rather than queued. Canonical coordinate order also keeps the rotating window
+			// stable when Qud enumerates objects differently after a reload.
+			homes.Sort(CompareMarks);
+			works.Sort(CompareMarks);
 			bool hasRite = KingdomPlots.TryRiteGround(Z, out var riteX, out var riteY);
 			bool hasHeart = KingdomPlotRules.TryHeart(marks, hasRite, riteX, riteY, out var heartX, out var heartY);
 			for (int i = 0; i < homes.Count; i++)
@@ -500,25 +580,143 @@ namespace ThousandAndFirst
 				{
 					errands.Add(new Errand(heartX, heartY, gateX, gateY, KingdomRoadRules.RouteKind.HeartToGate));
 				}
-				if (Plots != null)
-				{
-					int considered = 0;
-					for (int i = 0; i < Plots.Count && considered < MaxPlotsConsidered; i++)
-					{
-						if (!KingdomPlotRules.TryDoor(Plots[i], heartX, heartY, out var doorX, out var doorY))
-						{
-							continue;
-						}
-						if (!KingdomRoadRules.TryLane(Plots[i], doorX, doorY, out var laneX, out var laneY))
-						{
-							continue;
-						}
-						errands.Add(new Errand(doorX, doorY, laneX, laneY, KingdomRoadRules.RouteKind.DoorToLane));
-						considered++;
-					}
-				}
+				AddEntranceErrands(Z, Plots, heartX, heartY, errands);
 			}
 			return errands;
+		}
+
+		private static int CompareMarks(KingdomLayoutRules.LayoutMark A,
+			KingdomLayoutRules.LayoutMark B)
+		{
+			int byY = A.Y.CompareTo(B.Y);
+			if (byY != 0) return byY;
+			int byX = A.X.CompareTo(B.X);
+			if (byX != 0) return byX;
+			return ((int)A.Purpose).CompareTo((int)B.Purpose);
+		}
+
+		/// <summary>
+		/// Adds every current authored public entrance to the road rotation. The immutable
+		/// architecture receipt is authority for a finished current-schema building; inventing a
+		/// heart-facing door from its rectangle can aim the road at a wall. Receipt-less old plots
+		/// retain the deterministic geometric door as their compatibility path. A partial or corrupt
+		/// receipt fails closed instead of silently becoming a different building.
+		/// </summary>
+		private static void AddEntranceErrands(Zone Z, IList<KingdomPlotRules.PlotRect> Plots,
+			int HeartX, int HeartY, IList<Errand> Errands)
+		{
+			if (Z == null || Plots == null || Errands == null) return;
+			Dictionary<string, List<GameObject>> roots =
+				new Dictionary<string, List<GameObject>>(System.StringComparer.Ordinal);
+			KingdomSurvey survey = KingdomSurvey.Take(Z);
+			for (int i = 0; i < survey.PlotRoots.Count; i++)
+			{
+				GameObject item = survey.PlotRoots[i];
+				KingdomPlotRules.PlotRect rect;
+				if (!KingdomPlots.TryReadRect(item, out rect)) continue;
+				string key = RectKey(rect);
+				List<GameObject> objects;
+				if (!roots.TryGetValue(key, out objects))
+				{
+					objects = new List<GameObject>();
+					roots.Add(key, objects);
+				}
+				objects.Add(item);
+			}
+
+			List<KingdomPlotRules.PlotRect> unique = new List<KingdomPlotRules.PlotRect>();
+			HashSet<string> plotKeys = new HashSet<string>(System.StringComparer.Ordinal);
+			for (int i = 0; i < Plots.Count; i++)
+			{
+				string key = RectKey(Plots[i]);
+				if (plotKeys.Add(key)) unique.Add(Plots[i]);
+			}
+			unique.Sort(CompareRects);
+			HashSet<string> routes = new HashSet<string>(System.StringComparer.Ordinal);
+
+			for (int p = 0; p < unique.Count; p++)
+			{
+				KingdomPlotRules.PlotRect rect = unique[p];
+				List<GameObject> objects;
+				bool receiptEvidence = false;
+				bool exactReceipt = false;
+				if (roots.TryGetValue(RectKey(rect), out objects))
+				{
+					for (int o = 0; o < objects.Count; o++)
+					{
+						GameObject root = objects[o];
+						if (HasArchitectureReceiptEvidence(root)) receiptEvidence = true;
+						KingdomArchitectureIntent intent;
+						ArchitectureLayoutSnapshot snapshot;
+						string failure;
+						if (!KingdomArchitectureRuntime.TryRead(root, out intent, out failure)
+							|| !KingdomArchitectureRuntime.TryDecode(intent, out snapshot, out failure))
+							continue;
+						exactReceipt = true;
+						for (int a = 0; a < snapshot.Anchors.Count; a++)
+						{
+							ArchitectureAnchor anchor = snapshot.Anchors[a];
+							if (anchor == null || !(anchor.Key == "entrance:public"
+								|| anchor.Key.StartsWith("entrance:public@",
+									System.StringComparison.Ordinal))) continue;
+							int doorX;
+							int doorY;
+							if (!KingdomArchitectureRuntime.TryWorldAnchor(snapshot, rect, anchor,
+								out doorX, out doorY, out failure)) continue;
+							AddEntranceErrand(rect, doorX, doorY, routes, Errands);
+						}
+					}
+				}
+				if (exactReceipt || receiptEvidence) continue;
+
+				// Pre-schema plots and a currently staked plan have no frozen receipt to read.
+				// Preserve their old deterministic geometry until the real authored receipt exists.
+				int legacyDoorX;
+				int legacyDoorY;
+				if (KingdomPlotRules.TryDoor(rect, HeartX, HeartY,
+					out legacyDoorX, out legacyDoorY))
+					AddEntranceErrand(rect, legacyDoorX, legacyDoorY, routes, Errands);
+			}
+		}
+
+		private static bool HasArchitectureReceiptEvidence(GameObject Object)
+		{
+			return Object != null && (Object.HasIntProperty(KingdomArchitectureRuntime.SchemaProperty)
+				|| Object.HasStringProperty(KingdomArchitectureRuntime.SchemaProperty)
+				|| Object.HasIntProperty(KingdomArchitectureRuntime.BuildKeyProperty)
+				|| Object.HasStringProperty(KingdomArchitectureRuntime.BuildKeyProperty)
+				|| Object.HasIntProperty(KingdomArchitectureRuntime.SnapshotProperty)
+				|| Object.HasStringProperty(KingdomArchitectureRuntime.SnapshotProperty)
+				|| Object.HasIntProperty(KingdomArchitectureRuntime.HashProperty)
+				|| Object.HasStringProperty(KingdomArchitectureRuntime.HashProperty));
+		}
+
+		private static void AddEntranceErrand(KingdomPlotRules.PlotRect Rect, int DoorX,
+			int DoorY, ISet<string> Routes, IList<Errand> Errands)
+		{
+			int laneX;
+			int laneY;
+			if (!KingdomRoadRules.TryLane(Rect, DoorX, DoorY, out laneX, out laneY)) return;
+			string key = DoorX + "," + DoorY + ">" + laneX + "," + laneY;
+			if (!Routes.Add(key)) return;
+			Errands.Add(new Errand(DoorX, DoorY, laneX, laneY,
+				KingdomRoadRules.RouteKind.DoorToLane));
+		}
+
+		private static int CompareRects(KingdomPlotRules.PlotRect A,
+			KingdomPlotRules.PlotRect B)
+		{
+			int byY = A.Y1.CompareTo(B.Y1);
+			if (byY != 0) return byY;
+			int byX = A.X1.CompareTo(B.X1);
+			if (byX != 0) return byX;
+			int byY2 = A.Y2.CompareTo(B.Y2);
+			return byY2 != 0 ? byY2 : A.X2.CompareTo(B.X2);
+		}
+
+		private static string RectKey(KingdomPlotRules.PlotRect Rect)
+		{
+			return Rect.X1 + "," + Rect.Y1 + "," + Rect.X2 + "," + Rect.Y2;
 		}
 
 		private static int Nearest(IList<KingdomLayoutRules.LayoutMark> Marks, int X, int Y)
@@ -665,7 +863,17 @@ namespace ThousandAndFirst
 				}
 				if (existing != null)
 				{
-					for (int i = 0; i < old.Count; i++) old[i].Obliterate(null, Silent: true);
+					for (int i = 0; i < old.Count; i++)
+					{
+						bool removed;
+						try { removed = old[i].Obliterate(null, Silent: true); }
+						finally
+						{
+							KingdomSurvey.ObserveCurrentTopologyInActive(C.ParentZone, old[i]);
+						}
+						if (removed && !GameObject.Validate(old[i]))
+							KingdomSurvey.ObserveRemovedFromActive(C.ParentZone, old[i]);
+					}
 					for (int i = 0; i < old.Count; i++)
 					{
 						if (old[i].CurrentCell == C) return false;
@@ -690,17 +898,28 @@ namespace ThousandAndFirst
 			{
 				KingdomConstruction.Bind(floor, Job);
 			}
-			C.AddObject(floor);
+			GameObject accepted = null;
+			try { accepted = C.AddObject(floor); }
+			finally { KingdomSurvey.ObserveAddResultInActive(C.ParentZone, floor, accepted); }
+			if (!ReferenceEquals(accepted, floor)) return false;
 			if (floor.CurrentCell != C)
 			{
 				// Measured rather than trusted (STANDARDS 1): if the engine declined the cell for
 				// any reason, the ground keeps exactly what it had and nothing is taken up.
-				floor.Obliterate();
+				try { floor.Obliterate(); }
+				finally { KingdomSurvey.ObserveCurrentTopologyInActive(C.ParentZone, floor); }
 				return false;
 			}
 			for (int i = 0; i < previous.Count; i++)
 			{
-				previous[i].Obliterate(null, Silent: true);
+				bool removed;
+				try { removed = previous[i].Obliterate(null, Silent: true); }
+				finally
+				{
+					KingdomSurvey.ObserveCurrentTopologyInActive(C.ParentZone, previous[i]);
+				}
+				if (removed && !GameObject.Validate(previous[i]))
+					KingdomSurvey.ObserveRemovedFromActive(C.ParentZone, previous[i]);
 			}
 			for (int i = 0; i < previous.Count; i++)
 			{
@@ -717,7 +936,7 @@ namespace ThousandAndFirst
 				if (Z.GetZoneProperty(FullSaidProperty, null) != "1")
 				{
 					Z.SetZoneProperty(FullSaidProperty, "1");
-					System.Ledger.Note(KingdomRoadRules.RefuseTallyFull(System.SeatName));
+					System.Ledger.Note(KingdomRoadRules.RefuseTallyFull(KingdomPresentation.Rich(System.SeatName)));
 				}
 			}
 			else if (Tracked < KingdomRoadRules.MaxTrackedCells)
@@ -734,14 +953,14 @@ namespace ThousandAndFirst
 				return;
 			}
 			Z.SetZoneProperty(SaidProperty, ((int)Reached).ToString());
-			string line = KingdomRoadRules.WearLine(Reached, System.SeatName);
+			string line = KingdomRoadRules.WearLine(Reached, KingdomPresentation.Rich(System.SeatName));
 			if (line != null)
 			{
 				System.Ledger.Note(line);
 			}
 			if (Reached == KingdomRoadRules.WearState.Path)
 			{
-				KingdomChronicle.Record(System, "paths showed themselves through " + System.KingdomDisplayName
+				KingdomChronicle.Record(System, "paths showed themselves through " + KingdomPresentation.Rich(System.KingdomDisplayName)
 					+ ", worn by nothing but the going back and forth of the people who live there");
 			}
 		}
@@ -836,7 +1055,7 @@ namespace ThousandAndFirst
 			List<Cell> paths = PathCells(Z, From);
 			if (paths.Count == 0)
 			{
-				Failure = KingdomRoadRules.RefuseNothingWorn(System.SeatName);
+				Failure = KingdomRoadRules.RefuseNothingWorn(KingdomPresentation.Rich(System.SeatName));
 				return false;
 			}
 			string wall = KingdomPlotRules.WallBlueprintFor(System.Style, System.FoundingRegionName);
@@ -848,7 +1067,7 @@ namespace ThousandAndFirst
 			}
 			if (KingdomMaterialRules.FreeHands(System.Population, System.AssignedCrew) <= 0)
 			{
-				Failure = KingdomRoadRules.RefuseHands(System.SeatName);
+				Failure = KingdomRoadRules.RefuseHands(KingdomPresentation.Rich(System.SeatName));
 				return false;
 			}
 			int cells = KingdomRoadRules.PaveCells(paths.Count);
@@ -860,7 +1079,7 @@ namespace ThousandAndFirst
 				Failure = KingdomRoadRules.RefuseMaterial(material, cost, held);
 				return false;
 			}
-			if (Popup.ShowYesNo("Lay " + cells + ((cells == 1) ? " cell" : " cells") + " of worn path at " + System.SeatName
+			if (Popup.ShowYesNo("Lay " + cells + ((cells == 1) ? " cell" : " cells") + " of worn path at " + KingdomPresentation.Rich(System.SeatName)
 				+ " in {{C|" + KingdomMaterialRules.MaterialName(material) + "}}?\n\nIt costs " + cost + " of it, and no water. "
 				+ ((paths.Count > cells) ? ("There is more worn ground than one order covers; " + (paths.Count - cells) + " more will wait for the next.\n\n") : "")
 				+ "Nothing changes about where anyone walks. The settlement only stops pretending it has not decided.") != DialogResult.Yes)
@@ -1091,7 +1310,7 @@ namespace ThousandAndFirst
 					if (!CurrentRoadOwner(Z, Updated) || !ExactRoadOld(old, cell, row)
 						|| FindRoadId(Z, row.NewId, out _) != KingdomPhysicalLookupState.Absent)
 					{
-						RemoveRoadObject(floor);
+						RemoveRoadObject(floor, Z);
 						Failure = "Road endpoints changed during output creation.";
 						KingdomConstruction.Quarantine(ref Updated, Failure);
 						return false;
@@ -1104,14 +1323,18 @@ namespace ThousandAndFirst
 						KingdomPhysicalPhase.RoadOutputPending, i, 0, 0,
 						row.OldId, row.NewId, EncodeRoadReceipt(receipt)))
 					{
-						RemoveRoadObject(floor);
+						RemoveRoadObject(floor, Z);
 						return false;
 					}
 					GameObject accepted;
-					try { accepted = cell.AddObject(floor); }
+					try
+					{
+						accepted = cell.AddObject(floor);
+						KingdomSurvey.ObserveAddResultInActive(Z, floor, accepted);
+					}
 					catch (System.Exception ex)
 					{
-						bool cleaned = RemoveRoadObject(floor);
+						bool cleaned = RemoveRoadObject(floor, Z);
 						Failure = (cleaned ? "Road AddObject threw after output publication: "
 							: "Road AddObject threw and cleanup failed: ") + ex.Message;
 						KingdomConstruction.Quarantine(ref Updated, Failure);
@@ -1137,10 +1360,13 @@ namespace ThousandAndFirst
 				try { removed = old.Obliterate(null, Silent: true); }
 				catch (System.Exception ex)
 				{
+					KingdomSurvey.ObserveCurrentTopologyInActive(Z, old);
 					Failure = "Road predecessor removal threw: " + ex.Message;
 					KingdomConstruction.Quarantine(ref Updated, Failure);
 					return false;
 				}
+				if (removed && !GameObject.Validate(old))
+					KingdomSurvey.ObserveRemovedFromActive(Z, old);
 				KingdomPhysicalLookupState oldAfter = FindRoadId(Z, row.OldId, out var oldReplacement);
 				if (!removed || GameObject.Validate(old)
 					|| oldAfter != KingdomPhysicalLookupState.Absent
@@ -1363,11 +1589,22 @@ namespace ThousandAndFirst
 			return true;
 		}
 
-		private static bool RemoveRoadObject(GameObject Object)
+		private static bool RemoveRoadObject(GameObject Object, Zone Z)
 		{
-			if (!GameObject.Validate(Object)) return true;
-			try { return Object.Obliterate(null, Silent: true) && !GameObject.Validate(Object); }
+			if (!GameObject.Validate(Object))
+			{
+				KingdomSurvey.ObserveRemovedFromActive(Z, Object);
+				return true;
+			}
+			try
+			{
+				return Object.Obliterate(null, Silent: true) && !GameObject.Validate(Object);
+			}
 			catch { return false; }
+			finally
+			{
+				KingdomSurvey.ObserveCurrentTopologyInActive(Z, Object);
+			}
 		}
 
 		private static bool CurrentRoadOwner(Zone Z, KingdomConstructionJob Job)

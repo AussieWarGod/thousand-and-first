@@ -542,9 +542,10 @@ namespace ThousandAndFirst
 			Zone Site, bool Force, FoundingLease Lease, out string Failure)
 		{
 			Failure = "";
-			if (string.IsNullOrEmpty(Name) || Site == null)
+			if (!KingdomPresentationRules.TryNormalizeName(Name, out Name,
+					out string presentationFailure) || Site == null)
 			{
-				Failure = "The second city needs a name and a site.";
+				Failure = Site == null ? "The second city needs a site." : presentationFailure;
 				return false;
 			}
 			KingdomSystem system = The.Game.RequireSystem<KingdomSystem>();
@@ -748,9 +749,10 @@ namespace ThousandAndFirst
 		{
 			Faction = null;
 			Failure = "";
-			if (string.IsNullOrEmpty(Name) || Site == null)
+			if (!KingdomPresentationRules.TryNormalizeName(Name, out Name,
+					out string presentationFailure) || Site == null)
 			{
-				Failure = "The first city needs a name and a site.";
+				Failure = Site == null ? "The first city needs a site." : presentationFailure;
 				return false;
 			}
 			KingdomSystem system = The.Game.RequireSystem<KingdomSystem>();
@@ -759,7 +761,7 @@ namespace ThousandAndFirst
 			int riteY = rite != null && rite.ParentZone == Site ? rite.Y : Site.Height / 2;
 			KingdomFoundingAuthority authority;
 			bool hasSite = HasSiteReservation(Site);
-			Faction reservedFaction = Factions.GetIfExists(Name);
+			Faction reservedFaction = null;
 			if (hasSite)
 			{
 				if (!TryReadSiteReservation(Site, out authority, out var storedName,
@@ -767,32 +769,21 @@ namespace ThousandAndFirst
 					out var storedTick) || authority.OwnerKind != KingdomFoundingOwnerKind.Direct ||
 					authority.Kind != KingdomFoundingKind.FirstCity || storedName != Name ||
 					!string.IsNullOrEmpty(storedVocation) || !string.IsNullOrEmpty(storedVillage) ||
-					!string.IsNullOrEmpty(storedDisplay) || authority.RealmFaction != Name ||
+					!string.IsNullOrEmpty(storedDisplay) ||
+					!KingdomIdentityRules.FirstFactionKeyMatches(authority.RealmFaction,
+						authority.TransactionID, Name, AllowLegacy: true) ||
 					authority.ZoneID != Site.ZoneID || authority.PayloadDigest !=
 						DirectPayloadDigest(authority.Kind, storedName, null, null, null))
 				{
 					Failure = "This ground carries a quarantined or foreign founding reservation.";
 					return false;
 				}
+				reservedFaction = Factions.GetIfExists(authority.RealmFaction);
 				riteX = authority.RiteX;
 				riteY = authority.RiteY;
 			}
-			else if (reservedFaction != null &&
-				reservedFaction.GetIntProperty(PendingFactionProperty) == 1 &&
-				reservedFaction.GetIntProperty("PlayerKingdom") == 1 &&
-				reservedFaction.GetIntProperty("Village") == 1 &&
-				KingdomFoundingTransactionRules.TryParseAuthority(
-					reservedFaction.GetStringProperty(
-						PendingFactionAuthorityProperty, null), out authority) &&
-				authority.OwnerKind == KingdomFoundingOwnerKind.Direct &&
-				authority.Kind == KingdomFoundingKind.FirstCity &&
-				authority.RealmFaction == Name && authority.ZoneID == Site.ZoneID &&
-				authority.TransactionID == reservedFaction.GetStringProperty(
-					PendingFactionTransactionProperty, null) &&
-				authority.PayloadDigest == DirectPayloadDigest(
-					KingdomFoundingKind.FirstCity, Name, null, null, null) &&
-				reservedFaction.GetStringProperty(RealmReservationProperty, null) ==
-					KingdomFoundingTransactionRules.FormatAuthority(authority))
+			else if (TryFindDirectPendingFirstFaction(Name, Site, out reservedFaction,
+				out authority))
 			{
 				// Faction registration is irreversible. If site cleanup was interrupted after
 				// that exact publication, its own durable faction tuple is sufficient to
@@ -807,12 +798,22 @@ namespace ThousandAndFirst
 					Failure = "A realm already stands; only its exact pending first transaction may resume.";
 					return false;
 				}
+				string transaction = Guid.NewGuid().ToString("N");
+				if (!KingdomIdentityRules.TryMintRealm(transaction, out string factionId,
+						out KingdomIdentityFault identityFault) ||
+					!FactionNameAvailable(factionId))
+				{
+					Failure = "The direct founding could not reserve one unique internal realm key (" +
+						identityFault + ").";
+					return false;
+				}
 				authority = NewAuthority(KingdomFoundingKind.FirstCity,
-					KingdomFoundingOwnerKind.Direct, Guid.NewGuid().ToString("N"),
-					Guid.NewGuid().ToString("N"), Name, Site.ZoneID, riteX, riteY,
+					KingdomFoundingOwnerKind.Direct, transaction,
+					Guid.NewGuid().ToString("N"), factionId, Site.ZoneID, riteX, riteY,
 					DirectPayloadDigest(KingdomFoundingKind.FirstCity, Name, null, null, null));
 			}
-			if (system.Founded && (system.KingdomFactionName != Name ||
+			string realmFaction = authority.RealmFaction;
+			if (system.Founded && (system.KingdomFactionName != realmFaction ||
 				reservedFaction == null ||
 				reservedFaction.GetIntProperty(PendingFactionProperty) != 1))
 			{
@@ -827,7 +828,7 @@ namespace ThousandAndFirst
 				return false;
 			}
 			if (encoded == null || !Lease.Bind(encoded, null) ||
-				!AcquireGlobalReservation(encoded, Name, null))
+				!AcquireGlobalReservation(encoded, realmFaction, null))
 			{
 				Failure = "Another founding already holds this realm or site reservation.";
 				return false;
@@ -841,7 +842,7 @@ namespace ThousandAndFirst
 				}
 				bool cleanedSite = ClearStagedSiteSubset(Site, encoded, Name,
 					null, null, null);
-				bool cleanedGlobal = ReleaseGlobalReservation(encoded, Name, null);
+				bool cleanedGlobal = ReleaseGlobalReservation(encoded, realmFaction, null);
 				Failure = cleanedSite && cleanedGlobal
 					? "Another founding already holds this realm or site reservation."
 					: "The direct first-founding reservation remains staged for exact cleanup.";
@@ -856,7 +857,7 @@ namespace ThousandAndFirst
 				PendingOwnerNonce = authority.OwnerNonce,
 				PendingPayloadDigest = authority.PayloadDigest,
 				PendingAuthority = encoded,
-				PendingRealmFaction = Name,
+				PendingRealmFaction = realmFaction,
 				PendingName = Name,
 				PendingZoneID = Site.ZoneID,
 				PendingRiteX = riteX,
@@ -867,7 +868,7 @@ namespace ThousandAndFirst
 			};
 				if (!Lease.Bind(encoded, carrier))
 				{
-					bool cleared = ClearExactReservationSet(Site, encoded, Name, null);
+					bool cleared = ClearExactReservationSet(Site, encoded, realmFaction, null);
 					Failure = "The exact direct founding authority left its synchronous guard." +
 						(cleared ? "" : " Its exact reservation remains pending cleanup.");
 					return false;
@@ -877,8 +878,8 @@ namespace ThousandAndFirst
 				KingdomFoundingProjection projection = KingdomFoundingProjection.Water;
 				PublishFirst(carrier, The.Player, Site, ref projection);
 				carrier.PendingPhase = KingdomFoundingPhase.Complete;
-				Faction = Factions.GetIfExists(Name);
-				if (!ClearExactReservationSet(Site, encoded, Name, null))
+				Faction = Factions.GetIfExists(realmFaction);
+				if (!ClearExactReservationSet(Site, encoded, realmFaction, null))
 				{
 					throw new InvalidOperationException(
 						"The completed first founding could not clear its exact reservation.");
@@ -890,7 +891,7 @@ namespace ThousandAndFirst
 				Failure = Describe(ex);
 				if (!DetectPublication(carrier, Site))
 				{
-					if (!ClearExactReservationSet(Site, encoded, Name, null))
+					if (!ClearExactReservationSet(Site, encoded, realmFaction, null))
 					{
 						Failure += " Exact direct reservation cleanup remains pending.";
 					}
@@ -898,6 +899,43 @@ namespace ThousandAndFirst
 				KingdomLog.Log("first founding remains recoverable: " + Failure);
 				return false;
 			}
+		}
+
+		/// <summary>Finds the one irreversible direct publication when its site marker was the
+		/// interrupted write. Current factions are keyed by realm id, so display-name lookup is
+		/// never authority; every candidate must re-prove its complete transaction tuple.</summary>
+		private static bool TryFindDirectPendingFirstFaction(string DisplayName, Zone Site,
+			out Faction Found, out KingdomFoundingAuthority Authority)
+		{
+			Found = null;
+			Authority = default(KingdomFoundingAuthority);
+			if (string.IsNullOrEmpty(DisplayName) || Site == null) return false;
+			foreach (Faction candidate in Factions.GetList())
+			{
+				if (candidate == null || candidate.DisplayName != DisplayName ||
+					candidate.GetIntProperty(PendingFactionProperty) != 1 ||
+					candidate.GetIntProperty("PlayerKingdom") != 1 ||
+					candidate.GetIntProperty("Village") != 1 ||
+					!KingdomFoundingTransactionRules.TryParseAuthority(
+						candidate.GetStringProperty(PendingFactionAuthorityProperty, null),
+						out KingdomFoundingAuthority parsed) ||
+					parsed.OwnerKind != KingdomFoundingOwnerKind.Direct ||
+					parsed.Kind != KingdomFoundingKind.FirstCity ||
+					parsed.RealmFaction != candidate.Name || parsed.ZoneID != Site.ZoneID ||
+					!KingdomIdentityRules.FirstFactionKeyMatches(candidate.Name,
+						parsed.TransactionID, DisplayName, AllowLegacy: true) ||
+					parsed.TransactionID != candidate.GetStringProperty(
+						PendingFactionTransactionProperty, null) ||
+					parsed.PayloadDigest != DirectPayloadDigest(
+						KingdomFoundingKind.FirstCity, DisplayName, null, null, null) ||
+					candidate.GetStringProperty(RealmReservationProperty, null) !=
+						KingdomFoundingTransactionRules.FormatAuthority(parsed) ||
+					!FactionRegistryCoherent(candidate.Name, candidate)) continue;
+				if (Found != null) return false;
+				Found = candidate;
+				Authority = parsed;
+			}
+			return Found != null;
 		}
 
 		private static void ClearDirectRecovery(Zone Site, string ExpectedTransaction = null)
@@ -1632,6 +1670,15 @@ namespace ThousandAndFirst
 			Zone Site, KingdomFoundingKind Kind, string Name, string Vocation,
 			string VillageFaction, string VillageDisplayName)
 		{
+			if ((Kind == KingdomFoundingKind.FirstCity ||
+				 Kind == KingdomFoundingKind.SecondCity) &&
+				!KingdomPresentationRules.TryNormalizeName(Name, out Name,
+					out string presentationFailure))
+			{
+				return Result(KingdomFoundingOutcome.Refused,
+					KingdomFoundingWaterDisposition.Untouched,
+					KingdomFoundingProjection.None, presentationFailure);
+			}
 			if (Basin == null || Basin.ParentObject == null || Actor == null || Site == null ||
 				Actor.CurrentZone != Site || Actor.CurrentCell == null ||
 				Actor.CurrentCell.ParentZone != Site ||
@@ -1685,20 +1732,13 @@ namespace ThousandAndFirst
 
 			KingdomSystem system = The.Game.RequireSystem<KingdomSystem>();
 			string realmFaction = Kind == KingdomFoundingKind.FirstCity
-				? Name : system.KingdomFactionName;
+				? null : system.KingdomFactionName;
 			if (Kind == KingdomFoundingKind.FirstCity && system.Founded)
 			{
 				return Result(KingdomFoundingOutcome.Refused,
 					KingdomFoundingWaterDisposition.Untouched,
 					KingdomFoundingProjection.None,
 					"A realm already stands; this pour cannot replace it.");
-			}
-			if (Kind == KingdomFoundingKind.FirstCity && !FactionNameAvailable(Name))
-			{
-				return Result(KingdomFoundingOutcome.Refused,
-					KingdomFoundingWaterDisposition.Untouched,
-					KingdomFoundingProjection.None,
-					"That faction name already belongs to something in this world.");
 			}
 			if (Kind == KingdomFoundingKind.SecondCity)
 			{
@@ -1767,6 +1807,17 @@ namespace ThousandAndFirst
 
 			string ownerNonce = Basin.EnsureOwnerNonce();
 			string transaction = Guid.NewGuid().ToString("N");
+			if (Kind == KingdomFoundingKind.FirstCity &&
+				(!KingdomIdentityRules.TryMintRealm(transaction, out realmFaction,
+					out KingdomIdentityFault identityFault) ||
+				 !FactionNameAvailable(realmFaction)))
+			{
+				return Result(KingdomFoundingOutcome.Refused,
+					KingdomFoundingWaterDisposition.Untouched,
+					KingdomFoundingProjection.None,
+					"The founding transaction could not reserve one unique internal realm key (" +
+						identityFault + ").");
+			}
 			Dictionary<string, int> originalComponents = Copy(vessel.ComponentLiquids);
 			Dictionary<string, int> committedComponents = committedVolume == 0
 				? new Dictionary<string, int>() : Copy(vessel.ComponentLiquids);
@@ -2215,7 +2266,7 @@ namespace ThousandAndFirst
 				Site.GetCell(Basin.PendingRiteX, Basin.PendingRiteY),
 				Basin.PendingTransactionID, Basin.PendingAuthority);
 			if (faction == null || !system.Founded ||
-				system.KingdomFactionName != Basin.PendingName ||
+				system.KingdomFactionName != Basin.PendingRealmFaction ||
 				faction.GetIntProperty("PlayerKingdom") != 1 ||
 				faction.GetStringProperty(PendingFactionTransactionProperty, null) !=
 					Basin.PendingTransactionID ||
@@ -2417,9 +2468,10 @@ namespace ThousandAndFirst
 			string verb = ruin ? "reclaimed" : "founded";
 			RecordChronicleOnce(system, chronicleEvent, "you poured again on " +
 				KingdomFounding.StyleGroundClause(system.Style) + ", and " +
-				Basin.PendingName + " was " + verb + " as " +
+				KingdomPresentation.Rich(Basin.PendingName) + " was " + verb + " as " +
 				KingdomSettlement.VocationClause(system.Vocation) + ", the second city of " +
-				system.KingdomDisplayName + KingdomRules.RuinRestorationClause(restored),
+				KingdomPresentation.Rich(system.KingdomDisplayName) +
+				KingdomRules.RuinRestorationClause(restored),
 				Accomplishment: true, MuralText: null,
 				ReadStage: ChronicleStage,
 				WriteStage: stage => Site.SetZoneProperty(
@@ -2707,9 +2759,11 @@ namespace ThousandAndFirst
 			Projection = KingdomFoundingProjection.Identity;
 			RecordChronicleOnce(system, Basin.PendingChronicleEventID,
 				"you asked, and " +
-				(Basin.PendingVillageDisplayName ?? Basin.PendingVillageFaction) +
+				KingdomPresentation.Rich(Basin.PendingVillageDisplayName ??
+					Basin.PendingVillageFaction) +
 				" agreed: their ground stays theirs, and a covenant now stands between them and " +
-				system.KingdomDisplayName, Accomplishment: true, MuralText: null,
+				KingdomPresentation.Rich(system.KingdomDisplayName),
+				Accomplishment: true, MuralText: null,
 				ReadStage: () => Basin.PendingChronicleStage,
 				WriteStage: stage => Basin.PendingChronicleStage = stage,
 				ReadDisposition: () => Basin.TryReadRawChronicleDisposition(out var raw)
@@ -2747,7 +2801,7 @@ namespace ThousandAndFirst
 			switch (Basin.PendingKind)
 			{
 			case KingdomFoundingKind.FirstCity:
-				Faction pendingFaction = Factions.GetIfExists(Basin.PendingName);
+				Faction pendingFaction = Factions.GetIfExists(Basin.PendingRealmFaction);
 				return system.FirstIdentityMatches(Basin.PendingTransactionID, Site.ZoneID) ||
 					(pendingFaction != null &&
 					pendingFaction.GetIntProperty("PlayerKingdom") == 1 &&
@@ -2756,7 +2810,8 @@ namespace ThousandAndFirst
 						Basin.PendingTransactionID &&
 					pendingFaction.GetStringProperty(PendingFactionAuthorityProperty, null) ==
 						Basin.PendingAuthority &&
-					((system.Founded && system.KingdomFactionName == Basin.PendingName) ||
+					((system.Founded && system.KingdomFactionName ==
+						Basin.PendingRealmFaction) ||
 					 pendingFaction.GetIntProperty(PendingFactionProperty) == 1));
 			case KingdomFoundingKind.SecondCity:
 				return SiteReservationMatches(Site, Basin.PendingAuthority) &&
@@ -3047,7 +3102,9 @@ namespace ThousandAndFirst
 			if ((kind == KingdomFoundingKind.FirstCity &&
 					(Basin.HasVocationField || Basin.HasVillageFactionField ||
 					 Basin.HasVillageDisplayField ||
-					 Basin.PendingRealmFaction != Basin.PendingName)) ||
+					 !KingdomIdentityRules.FirstFactionKeyMatches(
+						 Basin.PendingRealmFaction, Basin.PendingTransactionID,
+						 Basin.PendingName, AllowLegacy: true))) ||
 				(kind == KingdomFoundingKind.SecondCity &&
 					(!Basin.HasVocationField ||
 					 !KingdomSettlement.IsKnownVocation(Basin.PendingVocation) ||

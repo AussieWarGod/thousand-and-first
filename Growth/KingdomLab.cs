@@ -89,6 +89,18 @@ namespace XRL.World.Parts
 
 		public override void TurnTick(long TimeTick, int Amount)
 		{
+			KingdomSystem master = The.Game?.GetSystem<KingdomSystem>();
+			if (!KingdomMaster.AutomaticWorkAllowed(master))
+			{
+				base.TurnTick(TimeTick, Amount);
+				return;
+			}
+			if (LastWorkedTick <= master.MasterOptionTick)
+			{
+				LastWorkedTick = TimeTick;
+				base.TurnTick(TimeTick, Amount);
+				return;
+			}
 			if (KingdomLab.HasPending(this))
 			{
 				KingdomSystem.Guard("vat-house work", delegate
@@ -1270,7 +1282,8 @@ namespace ThousandAndFirst
 			int crew = (staffNeeded > 0) ? Vat.ParentObject.GetIntProperty("KingdomEffectiveness") : 100;
 			int wear = KingdomMaterialRules.ConditionPercent(KingdomWear.WearOf(Vat.ParentObject));
 			KingdomVatAccrual accrual = KingdomLabRules.AccrueVat(Vat.LastWorkedTick, TimeTick,
-				input.GetIntProperty(VatRemainingProperty), crew, wear, Settled: false, Cancelled: false);
+				input.GetIntProperty(VatRemainingProperty), crew, wear, Settled: false,
+				Cancelled: false, IdentityAffinity: KingdomCrews.AffinityOf(Vat.ParentObject));
 			Vat.LastWorkedTick = accrual.NextTick;
 			input.SetIntProperty(VatRemainingProperty, accrual.RemainingTicks);
 			if (crew <= 0 || wear <= 0)
@@ -1840,8 +1853,10 @@ namespace ThousandAndFirst
 					return;
 				}
 				int picked = Popup.PickOption(
-					Title: KingdomLabRules.SlateTitle(city),
-					Intro: KingdomLabRules.SlateIntro(SavantAt(system), null, TotalKept(kept)) + ((gap == null) ? "" : ("\n" + gap)),
+					Title: KingdomLabRules.SlateTitle(KingdomPresentation.Rich(city)),
+					Intro: KingdomLabRules.SlateIntro(
+						KingdomPresentation.Rich(SavantAt(system)), null, TotalKept(kept))
+						+ ((gap == null) ? "" : ("\n" + gap)),
 					Options: options, AllowEscape: true, RespectOptionNewlines: true);
 				if (picked < 0)
 				{
@@ -2046,7 +2061,8 @@ namespace ThousandAndFirst
 			KingdomWaterDebit debit;
 			if (survey == null || !survey.TryReserveExactWater(Procedure.Cost, out debit))
 			{
-				Popup.Show("The stores at " + KingdomLabRules.Named(City) + " cannot spare {{C|" + Procedure.Cost
+				Popup.Show("The stores at " + KingdomLabRules.Named(
+					KingdomPresentation.Rich(City)) + " cannot spare {{C|" + Procedure.Cost
 					+ "}} drams. Fill them, and the hall will take the work on.");
 				return;
 			}
@@ -2272,7 +2288,8 @@ namespace ThousandAndFirst
 		internal static void OnSemanticStep(KingdomSystem System, Zone Zone, KingdomSurvey Survey,
 			long BoundaryTick)
 		{
-			List<GameObject> objects = Zone?.GetObjects();
+			List<GameObject> objects = (Survey != null && ReferenceEquals(Survey.Ground, Zone))
+				? Survey.LabJobs : null;
 			for (int i = 0; objects != null && i < objects.Count; i++)
 			{
 				GameObject building = objects[i];
@@ -2291,7 +2308,8 @@ namespace ThousandAndFirst
 					? building.GetIntProperty("KingdomEffectiveness") : 0);
 				int wear = KingdomMaterialRules.ConditionPercent(KingdomWear.WearOf(building));
 				KingdomLabJobAccrual accrual = KingdomLabRules.AccrueJob(job.LastWorkedTick,
-					BoundaryTick, job.RemainingTicks, crew, wear, job.State);
+					BoundaryTick, job.RemainingTicks, crew, wear, job.State,
+					KingdomCrews.AffinityOf(building));
 				job.LastWorkedTick = accrual.NextTick;
 				job.RemainingTicks = accrual.RemainingTicks;
 				job.State = accrual.Phase;
@@ -2302,7 +2320,7 @@ namespace ThousandAndFirst
 					KingdomLabMessagePhase phase = PublishMessage(ref job.ReadyMessagePhase,
 						ref job.ReadyMessageText, job.ReadyMessageEventId,
 						"{{G|The staffed work on " + job.FrozenName + " is ready at "
-							+ KingdomLabRules.Named(job.City)
+							+ KingdomLabRules.Named(KingdomPresentation.Rich(job.City))
 							+ ". Return to the hall to complete the procedure.}}",
 						ShouldPublish: !string.IsNullOrEmpty(job.FrozenName));
 					job.ReadyAnnounced = phase == KingdomLabMessagePhase.Delivered;
@@ -2757,7 +2775,8 @@ namespace ThousandAndFirst
 				try
 				{
 					Job.Chronicled = KingdomChronicle.RecordOnce(System, Job.ChronicleEventId,
-						KingdomLabRules.DoneTelling(Job.FrozenName, Job.City));
+						KingdomLabRules.DoneTelling(Job.FrozenName,
+							KingdomPresentation.Rich(Job.City)));
 				}
 				catch (Exception ex)
 				{
@@ -2791,7 +2810,8 @@ namespace ThousandAndFirst
 			{
 				KingdomLabMessagePhase phase = PublishMessage(ref Job.TerminalMessagePhase,
 					ref Job.TerminalMessageText, Job.AnnounceEventId,
-					KingdomLabRules.DoneLine(Job.FrozenName, Job.City));
+					KingdomLabRules.DoneLine(Job.FrozenName,
+						KingdomPresentation.Rich(Job.City)));
 				Job.Announced = phase == KingdomLabMessagePhase.Delivered;
 			}
 			if (!ExactJobEffectPresent(Actor, Procedure, Job))
@@ -3558,7 +3578,7 @@ namespace ThousandAndFirst
 				{
 					Job.Chronicled = KingdomChronicle.RecordOnce(System,
 						Job.ChronicleEventId, KingdomLabRules.RemovedTelling(
-							Job.FrozenName, Job.City));
+							Job.FrozenName, KingdomPresentation.Rich(Job.City)));
 				}
 				catch (Exception ex)
 				{
@@ -4072,7 +4092,7 @@ namespace ThousandAndFirst
 		/// nobody, exactly as Addendum 6 says a great work never does.</summary>
 		private static string SavantAt(KingdomSystem System)
 		{
-			return (System.RosterNames != null && System.RosterNames.Count > 0) ? System.RosterNames[0] : null;
+			return Simulation.City.KingdomResidents.HeadName(System);
 		}
 	}
 }

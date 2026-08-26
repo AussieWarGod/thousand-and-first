@@ -1,6 +1,8 @@
 ﻿#if TAF_TESTS
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Xml;
 using NUnit.Framework;
 using ThousandAndFirst;
 using ThousandAndFirst.Simulation.City;
@@ -140,6 +142,64 @@ namespace ThousandAndFirst.Tests
 			// Nothing is half-parsed: a bad attribute leaves an empty cost rather than the terms
 			// that happened to come before the bad one.
 			Assert.IsTrue(cost.IsEmpty(), text);
+		}
+
+		[Test]
+		public void ShippedUpgradeMaterialBillsAreTransitionSpecificPhysicalAdditions()
+		{
+			XmlDocument document = new XmlDocument();
+			document.Load(Path.Combine(TestMain.RepositoryRoot, "KingdomBuildings.xml"));
+			Dictionary<string, XmlElement> buildings = new Dictionary<string, XmlElement>(
+				StringComparer.OrdinalIgnoreCase);
+			foreach (XmlElement building in document.GetElementsByTagName("building"))
+			{
+				string key = building.GetAttribute("Key");
+				if (!string.IsNullOrEmpty(key)) buildings[key] = building;
+			}
+			int transitions = 0;
+			foreach (KeyValuePair<string, XmlElement> pair in buildings)
+			{
+				string successorKey = pair.Value.GetAttribute("UpgradesTo");
+				if (string.IsNullOrEmpty(successorKey)) continue;
+				transitions++;
+				Assert.IsTrue(buildings.TryGetValue(successorKey, out XmlElement successor),
+					pair.Key + " names a missing successor");
+				string authored = pair.Value.GetAttribute("UpgradeMaterials");
+				Assert.IsFalse(string.IsNullOrWhiteSpace(authored),
+					pair.Key + " -> " + successorKey + " has no material gate");
+				Assert.IsTrue(KingdomMaterialRules.TryParseMaterialCost(
+					pair.Value.GetAttribute("Materials"), out KingdomMaterialTally before,
+					out string beforeError), pair.Key + ": " + beforeError);
+				Assert.IsTrue(KingdomMaterialRules.TryParseMaterialCost(
+					successor.GetAttribute("Materials"), out KingdomMaterialTally after,
+					out string afterError), successorKey + ": " + afterError);
+				Assert.IsTrue(KingdomMaterialRules.TryParseMaterialCost(authored,
+					out KingdomMaterialTally additions, out string additionsError),
+					pair.Key + ": " + additionsError);
+				for (int i = 0; i < KingdomMaterialRules.MaterialCount; i++)
+				{
+					KingdomMaterial material = (KingdomMaterial)i;
+					int expected = Math.Max(0, after.Get(material) - before.Get(material));
+					Assert.AreEqual(expected, additions.Get(material), pair.Key + " -> "
+						+ successorKey + " must charge only the added "
+						+ KingdomMaterialRules.MaterialKey(material));
+				}
+			}
+			Assert.AreEqual(18, transitions, "new upgrade chains need an authored addition bill");
+		}
+
+		[Test]
+		public void ImprovementRuntimePricesThePredecessorTransitionNotTheSuccessorDesign()
+		{
+			string root = TestMain.RepositoryRoot;
+			string materials = File.ReadAllText(Path.Combine(root, "Growth", "KingdomMaterials.cs"));
+			string upgrade = File.ReadAllText(Path.Combine(root, "Growth", "KingdomUpgrade.cs"));
+			StringAssert.Contains("UpgradeCostFor(PredecessorKey)", materials);
+			StringAssert.Contains("CanPayUpgrade(Z, Predecessor.Key, out _)", upgrade);
+			StringAssert.Contains("ReserveUpgradePayment(Z, A.Key)", upgrade);
+			StringAssert.Contains("ReserveTransitionPayment(Z, transitionMaterials)", upgrade);
+			StringAssert.Contains("UpgradeCostFor(A.Key)", upgrade);
+			StringAssert.DoesNotContain("UpgradeCostFor(A.SuccessorKey)", upgrade);
 		}
 
 		// --- The tally ------------------------------------------------------------------------

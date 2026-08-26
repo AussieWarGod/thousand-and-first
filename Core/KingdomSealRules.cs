@@ -864,6 +864,16 @@ namespace ThousandAndFirst
 			copy.WorkX = new List<int>(Record.WorkX);
 			copy.WorkY = new List<int>(Record.WorkY);
 			copy.WorkConditions = new List<int>(Record.WorkConditions);
+			copy.SpatialVersion = Record.SpatialVersion;
+			copy.SpatialWidth = Record.SpatialWidth;
+			copy.SpatialHeight = Record.SpatialHeight;
+			copy.SpatialEntrySide = Record.SpatialEntrySide;
+			copy.SpatialEntryX = Record.SpatialEntryX;
+			copy.SpatialEntryY = Record.SpatialEntryY;
+			copy.WorkSnapshots = new List<string>(Record.WorkSnapshots);
+			copy.WorkSnapshotHashes = new List<string>(Record.WorkSnapshotHashes);
+			copy.StreetX = new List<int>(Record.StreetX);
+			copy.StreetY = new List<int>(Record.StreetY);
 			copy.RollNames = new List<string>(Record.RollNames);
 			copy.RollOrigins = new List<string>(Record.RollOrigins);
 			copy.RollArrived = new List<string>(Record.RollArrived);
@@ -1000,17 +1010,22 @@ namespace ThousandAndFirst
 
 		private static void CaptureRoll(KingdomSettlement Seat, KingdomSealRecord Record)
 		{
-			int rows = Seat.RosterNames.Count;
+			Simulation.City.KingdomCityState state;
+			Simulation.City.KingdomCityFault fault;
+			Simulation.City.KingdomResidentRollProjection roll;
+			if (Seat?.City == null || !Seat.City.TryRead(out state, out fault)
+				|| !Simulation.City.KingdomResidentRules.TryProject(state, out roll)) return;
+			int rows = roll.Names.Count;
 			for (int i = 0; i < rows && Record.RollNames.Count < KingdomSealRecord.MaxRoll; i++)
 			{
-				string name = SanitizeText(Seat.RosterNames[i], KingdomSealRecord.MaxNameChars);
+				string name = SanitizeText(roll.Names[i], KingdomSealRecord.MaxNameChars);
 				if (name.Length == 0)
 				{
 					continue;
 				}
 				Record.RollNames.Add(name);
-				Record.RollOrigins.Add(SanitizeText((i < Seat.RosterOrigins.Count) ? Seat.RosterOrigins[i] : "", KingdomSealRecord.MaxNameChars));
-				Record.RollArrived.Add(SanitizeText((i < Seat.RosterArrived.Count) ? Seat.RosterArrived[i] : "", KingdomSealRecord.MaxNameChars));
+				Record.RollOrigins.Add(SanitizeText((i < roll.Origins.Count) ? roll.Origins[i] : "", KingdomSealRecord.MaxNameChars));
+				Record.RollArrived.Add(SanitizeText((i < roll.Arrived.Count) ? roll.Arrived[i] : "", KingdomSealRecord.MaxNameChars));
 			}
 		}
 

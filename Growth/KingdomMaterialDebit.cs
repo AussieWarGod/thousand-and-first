@@ -53,6 +53,9 @@ namespace ThousandAndFirst
 		private readonly List<bool> ExactObservations = new List<bool>();
 		private KingdomMaterialDebitPlan Plan;
 		private Zone ReservedZone;
+		private readonly GameObject RequiredItem;
+		private readonly string RequiredItemId;
+		private int RequiredSource = -1;
 		private bool TopologyUncertain;
 		private bool Operating;
 		private bool StockAdjusted;
@@ -76,9 +79,11 @@ namespace ThousandAndFirst
 		}
 
 		private KingdomMaterialDebit(KingdomMaterials.MaterialStock Stock,
-			KingdomMaterialDebitCost Cost)
+			KingdomMaterialDebitCost Cost, GameObject RequiredItem = null)
 		{
 			this.Stock = Stock;
+			this.RequiredItem = RequiredItem;
+			this.RequiredItemId = GameObject.Validate(RequiredItem) ? RequiredItem.ID : null;
 			KingdomMaterialDebitCost requested = (Cost == null)
 				? new KingdomMaterialDebitCost()
 				: Cost.Copy();
@@ -91,7 +96,18 @@ namespace ThousandAndFirst
 		internal static KingdomMaterialDebit Reserve(KingdomMaterials.MaterialStock Stock,
 			KingdomMaterialDebitCost Cost)
 		{
-			KingdomMaterialDebit debit = new KingdomMaterialDebit(Stock, Cost);
+			return Reserve(Stock, Cost, null);
+		}
+
+		/// <summary>
+		/// Reserves the same composite claim while requiring one exact, identity-stable stockpile
+		/// object to answer it. The exact reference is planned first and must be fully consumed; an
+		/// equivalent object of the same material can never substitute for it.
+		/// </summary>
+		internal static KingdomMaterialDebit Reserve(KingdomMaterials.MaterialStock Stock,
+			KingdomMaterialDebitCost Cost, GameObject RequiredItem)
+		{
+			KingdomMaterialDebit debit = new KingdomMaterialDebit(Stock, Cost, RequiredItem);
 			if (Cost == null)
 			{
 				return debit;
@@ -110,6 +126,12 @@ namespace ThousandAndFirst
 				if (!KingdomMaterialDebitRules.TryPlan(Cost, sources, out debit.Plan, out fault))
 				{
 					debit.FailReservation(fault, ReservationFailure(fault));
+					return debit;
+				}
+				if (RequiredItem != null && !debit.RequiredSourceWasConsumed())
+				{
+					debit.FailReservation(KingdomMaterialDebitFault.InvalidSources,
+						"The exact required stockpile item does not answer this material claim.");
 					return debit;
 				}
 				for (int i = 0; i < debit.Plan.Steps.Count; i++)
@@ -363,9 +385,24 @@ namespace ThousandAndFirst
 			List<KingdomMaterialDebitSource> sources = new List<KingdomMaterialDebitSource>();
 			List<GameObject> seenContainers = new List<GameObject>();
 			List<GameObject> seenItems = new List<GameObject>();
+			List<GameObject> ordered = new List<GameObject>();
+			GameObject requiredContainer = GameObject.Validate(RequiredItem)
+				? RequiredItem.InInventory : null;
+			if (RequiredItem != null && (!GameObject.Validate(RequiredItem)
+				|| RequiredItem.Count != 1 || string.IsNullOrEmpty(RequiredItemId)
+				|| RequiredItem.ID != RequiredItemId || !GameObject.Validate(requiredContainer)
+				|| requiredContainer.Inventory == null
+				|| !ContainsReference(requiredContainer.Inventory.Objects, RequiredItem)
+				|| !ContainsReference(Stock.Stockpiles, requiredContainer)))
+				throw new InvalidOperationException(
+					"The exact required item is not a single owned stockpile object.");
+			if (requiredContainer != null) ordered.Add(requiredContainer);
 			for (int i = 0; i < Stock.Stockpiles.Count; i++)
+				if (!ReferenceEquals(Stock.Stockpiles[i], requiredContainer))
+					ordered.Add(Stock.Stockpiles[i]);
+			for (int i = 0; i < ordered.Count; i++)
 			{
-				GameObject container = Stock.Stockpiles[i];
+				GameObject container = ordered[i];
 				if (!ValidContainer(container) || ContainsReference(seenContainers, container))
 				{
 					continue;
@@ -390,38 +427,54 @@ namespace ThousandAndFirst
 					});
 				}
 				Containers.Add(witness);
+				if (ReferenceEquals(container, requiredContainer))
+				{
+					AddSource(container, witness, RequiredItem, seenItems, sources, true);
+				}
 				for (int j = 0; j < held.Count; j++)
 				{
 					GameObject item = held[j];
-					if (!ValidHeld(container, item) || ContainsReference(seenItems, item))
-					{
-						continue;
-					}
-					KingdomMaterialDebitSourceKind kind;
-					int kindIndex;
-					KingdomBitTally unitBits;
-					if (!ClassifySource(item, out kind, out kindIndex, out unitBits))
-					{
-						continue;
-					}
-					seenItems.Add(item);
-					int source = Entries.Count;
-					Entries.Add(new Entry
-					{
-						Container = container,
-						Item = item,
-						Witness = witness,
-						Blueprint = item.Blueprint,
-						OriginalCount = item.Count,
-						Kind = kind,
-						KindIndex = kindIndex,
-						UnitBits = unitBits.Copy()
-					});
-					sources.Add(new KingdomMaterialDebitSource(source, kind, kindIndex,
-						item.Count, unitBits));
+					if (ReferenceEquals(item, RequiredItem)) continue;
+					AddSource(container, witness, item, seenItems, sources, false);
 				}
 			}
+			if (RequiredItem != null && RequiredSource < 0)
+				throw new InvalidOperationException(
+					"The exact required stockpile item is not a material source.");
 			return sources;
+		}
+
+		private void AddSource(GameObject Container, ContainerWitness Witness, GameObject Item,
+			List<GameObject> SeenItems, List<KingdomMaterialDebitSource> Sources, bool Required)
+		{
+			if (!ValidHeld(Container, Item) || ContainsReference(SeenItems, Item)) return;
+			if (!ClassifySource(Item, out KingdomMaterialDebitSourceKind kind,
+				out int kindIndex, out KingdomBitTally unitBits)) return;
+			SeenItems.Add(Item);
+			int source = Entries.Count;
+			Entries.Add(new Entry
+			{
+				Container = Container, Item = Item, Witness = Witness, Blueprint = Item.Blueprint,
+				OriginalCount = Item.Count, Kind = kind, KindIndex = kindIndex,
+				UnitBits = unitBits.Copy()
+			});
+			Sources.Add(new KingdomMaterialDebitSource(source, kind, kindIndex,
+				Item.Count, unitBits));
+			if (Required) RequiredSource = source;
+		}
+
+		private bool RequiredSourceWasConsumed()
+		{
+			if (RequiredItem == null) return true;
+			if (RequiredSource < 0 || Plan == null || RequiredItem.Count != 1
+				|| RequiredItem.ID != RequiredItemId) return false;
+			for (int i = 0; i < Plan.Steps.Count; i++)
+			{
+				KingdomMaterialDebitStep step = Plan.Steps[i];
+				if (step.Source == RequiredSource)
+					return step.Original == 1 && step.Taken == 1 && step.NeedsFinalization;
+			}
+			return false;
 		}
 
 		private bool AllStillReserved()
@@ -468,6 +521,8 @@ namespace ThousandAndFirst
 			{
 				return false;
 			}
+			if (ReferenceEquals(Entry.Item, RequiredItem)
+				&& (Entry.Item.ID != RequiredItemId || Entry.Item.Count != 1)) return false;
 			KingdomMaterialDebitSourceKind kind;
 			int kindIndex;
 			KingdomBitTally bits;

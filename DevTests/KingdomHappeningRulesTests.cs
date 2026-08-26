@@ -319,6 +319,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(100, 0, KingdomWorkKind.Producer, true)]
 		[TestCase(100, 0, KingdomWorkKind.Refiner, true)]
 		[TestCase(100, 0, KingdomWorkKind.Power, true)]
+		[TestCase(100, 0, KingdomWorkKind.Construction, true)]
 		[TestCase(100, 0, KingdomWorkKind.Store, false)]
 		[TestCase(100, 0, KingdomWorkKind.Growing, false)]
 		public void Broken_ReadsWearAndHands(int condition, int crew, KingdomWorkKind kind, bool expected)

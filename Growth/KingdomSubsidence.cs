@@ -59,6 +59,48 @@ namespace ThousandAndFirst
 	{
 		public static bool Enabled => Options.GetOption("r_TAF_OptionSubsidence") != "No";
 
+		/// <summary>Per-settlement bounded option observation. Kept in the already-serialized
+		/// game-state store because subsidence is citywide while a city may own several zones;
+		/// putting this on whichever zone was visited would reinitialize the city clock at every
+		/// boundary.</summary>
+		public const string OptionStatePrefix = "r_TAF_SubsidenceOption_v1:";
+
+		private static KingdomElapsedOptionDecision ObserveOption(KingdomSystem System,
+			long Now)
+		{
+			string settlementId = KingdomChronicle.SettlementId(System);
+			if (The.Game == null || !KingdomIdentityRules.IsSettlementId(settlementId))
+			{
+				return KingdomElapsedOptionRules.Observe(
+					KingdomElapsedOptionRecord.Unobserved, Enabled,
+					System?.MasterAppliedResumeToken ?? 0L, Now);
+			}
+			string key = OptionStatePrefix + settlementId;
+			string encoded = The.Game.GetStringGameState(key, "");
+			KingdomElapsedOptionRecord prior;
+			bool decoded = KingdomElapsedOptionRules.TryDecode(encoded, out prior);
+			if (!decoded) prior = KingdomElapsedOptionRecord.Unobserved;
+			KingdomElapsedOptionDecision decision = KingdomElapsedOptionRules.Observe(prior,
+				Enabled, System.MasterAppliedResumeToken, Now);
+			if (!decision.Valid)
+			{
+				decision = KingdomElapsedOptionRules.Observe(
+					KingdomElapsedOptionRecord.Unobserved, Enabled,
+					System.MasterAppliedResumeToken, Now);
+			}
+			return decision;
+		}
+
+		private static void CommitOption(KingdomSystem System,
+			KingdomElapsedOptionRecord Record)
+		{
+			string settlementId = KingdomChronicle.SettlementId(System);
+			if (The.Game == null || !KingdomIdentityRules.IsSettlementId(settlementId)) return;
+			string next = KingdomElapsedOptionRules.Encode(Record);
+			if (next != null)
+				The.Game.SetStringGameState(OptionStatePrefix + settlementId, next);
+		}
+
 		/// <summary>
 		/// What this settlement's finished works carry between them.
 		/// <para>
@@ -367,10 +409,29 @@ namespace ThousandAndFirst
 		/// <param name="TimeTicks">Now.</param>
 		public static void Reckon(KingdomSystem System, Zone Z, KingdomSurvey Survey, long TimeTicks)
 		{
-			if (System == null || !System.Founded || Z == null || Survey == null)
+			if (System == null || !System.Founded || Z == null || Survey == null
+				|| TimeTicks < 0L)
 			{
 				return;
 			}
+			KingdomElapsedOptionDecision option = ObserveOption(System, TimeTicks);
+			if (!option.Valid) return;
+			if (option.Action == KingdomElapsedOptionAction.AnchorDisabled
+				|| option.Action == KingdomElapsedOptionAction.AnchorEnabled)
+			{
+				System.LastSubsidenceTick = TimeTicks;
+				if (option.Action == KingdomElapsedOptionAction.AnchorDisabled)
+				{
+					// Turning the consequence off cancels its unpaid slide. Do not call Unsay:
+					// disabling is not an earned arrest, reward, chronicle event, or prompt.
+					System.SubsidenceAnnounced = false;
+				}
+				// Commit after the owned clock/cancellation. A cut retries the idempotent
+				// transition instead of licensing old elapsed time.
+				CommitOption(System, option.Record);
+				return;
+			}
+			if (option.Action != KingdomElapsedOptionAction.Run) return;
 			KingdomCatalogueRules.SupportTally here = ScopedSupports(System, Z, Survey);
 			// Written down before it is used, so this zone's own sighting is today's on every
 			// pass and the fold below never counts this ground out of a memory of it.
@@ -380,15 +441,10 @@ namespace ThousandAndFirst
 			int storage = CityStorageCapacity(System, Z, Survey.StorageCapacity);
 			string binding = KingdomSubsidenceRules.BindingSupportFor(supports, System.Stage);
 			int level = KingdomSubsidenceRules.SupportedLevel(supports, System.Stage, System.Shade);
-			// Recorded whether or not the slide is allowed to run: the level is knowledge, and a
-			// founder who has turned subsidence off is still owed the number their works carry.
+			// Recorded on enabled passes before the slide asks whether a consequence is due. An
+			// option transition returned above before this survey work and cannot reach the slide.
 			System.SupportedLevel = level;
 			System.SubsidenceBinding = binding;
-			if (!Enabled)
-			{
-				Unsay(System, level);
-				return;
-			}
 			if (System.LastSubsidenceTick <= 0)
 			{
 				System.LastSubsidenceTick = TimeTicks;
@@ -446,7 +502,7 @@ namespace ThousandAndFirst
 					named++;
 				}
 			}
-			string summary = KingdomSubsidenceRules.SlideDepartureSummary(System.KingdomDisplayName, departed, named, cause);
+			string summary = KingdomSubsidenceRules.SlideDepartureSummary(KingdomPresentation.Rich(System.KingdomDisplayName), departed, named, cause);
 			if (summary != null)
 			{
 				System.Ledger.Note("{{r|" + XRL.Language.Grammar.InitCap(summary) + ".}}");
@@ -505,10 +561,11 @@ namespace ThousandAndFirst
 				return;
 			}
 			System.SubsidenceAnnounced = true;
-			string line = KingdomSubsidenceRules.BeganNote(System.KingdomDisplayName, Binding, Level, System.Population);
+			string realm = KingdomPresentation.Rich(System.KingdomDisplayName);
+			string line = KingdomSubsidenceRules.BeganNote(realm, Binding, Level, System.Population);
 			MessageQueue.AddPlayerMessage("{{r|" + line + "}}");
 			System.Ledger.Note("{{r|" + line + "}}");
-			KingdomChronicle.Record(System, KingdomSubsidenceRules.BeganChronicle(System.KingdomDisplayName, Binding, Level));
+			KingdomChronicle.Record(System, KingdomSubsidenceRules.BeganChronicle(realm, Binding, Level));
 		}
 
 		private static void Unsay(KingdomSystem System, int Level)
@@ -518,10 +575,11 @@ namespace ThousandAndFirst
 				return;
 			}
 			System.SubsidenceAnnounced = false;
-			string line = KingdomSubsidenceRules.ArrestedNote(System.KingdomDisplayName, Level, System.Population);
+			string realm = KingdomPresentation.Rich(System.KingdomDisplayName);
+			string line = KingdomSubsidenceRules.ArrestedNote(realm, Level, System.Population);
 			MessageQueue.AddPlayerMessage("{{G|" + line + "}}");
 			System.Ledger.Note("{{G|" + line + "}}");
-			KingdomChronicle.Record(System, KingdomSubsidenceRules.ArrestedChronicle(System.KingdomDisplayName, Level));
+			KingdomChronicle.Record(System, KingdomSubsidenceRules.ArrestedChronicle(realm, Level));
 		}
 
 		// ==================================================================================
@@ -549,7 +607,7 @@ namespace ThousandAndFirst
 				long at = Anchor + (long)breakpoint.Day * KingdomRules.TicksPerDay;
 				int daysAgo = KingdomRules.ElapsedDays(TimeTicks - at);
 				KingdomChronicle.Record(System, KingdomSubsidenceRules.BreakpointChronicle(
-					System.KingdomDisplayName, breakpoint.From, breakpoint.To, daysAgo));
+					KingdomPresentation.Rich(System.KingdomDisplayName), breakpoint.From, breakpoint.To, daysAgo));
 				Ruin(System, Survey, settlementId, (ulong)((at > 0L) ? at : 0L), at, breakpoint.From);
 			}
 		}
@@ -640,7 +698,7 @@ namespace ThousandAndFirst
 				if (KingdomSubsidenceRules.TellsRuin(ruined - 1))
 				{
 					named++;
-					string line = KingdomSubsidenceRules.RuinedWorkLine(name, System.KingdomDisplayName);
+					string line = KingdomSubsidenceRules.RuinedWorkLine(name, KingdomPresentation.Rich(System.KingdomDisplayName));
 					System.Ledger.Note("{{r|" + XRL.Language.Grammar.InitCap(line) + ".}}");
 					KingdomChronicle.Record(System, line);
 				}
@@ -649,7 +707,7 @@ namespace ThousandAndFirst
 					KingdomLog.Log("subsidence: ruined " + work.Blueprint + " wear=" + wear.Wear + " rung=" + From);
 				}
 			}
-			string summary = KingdomSubsidenceRules.RuinSummary(System.KingdomDisplayName, ruined, named, deepest);
+			string summary = KingdomSubsidenceRules.RuinSummary(KingdomPresentation.Rich(System.KingdomDisplayName), ruined, named, deepest);
 			if (summary != null)
 			{
 				System.Ledger.Note("{{r|" + XRL.Language.Grammar.InitCap(summary) + ".}}");

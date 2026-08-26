@@ -54,7 +54,12 @@ namespace ThousandAndFirst.Simulation.City
 
 		/// <summary>The resident took the charter and became the player. Their real body remains,
 		/// but it is no longer a city-model view and must never be re-minted from the old row.</summary>
-		Accession = 6
+		Accession = 6,
+
+		/// <summary>A transient reached an exact zone boundary or shaft endpoint. Its one live
+		/// rendering is removed while the still-open job remains authority for the next zone to
+		/// render. Never valid for residents and never closes the job.</summary>
+		ZoneHandoff = 7
 	}
 
 	/// <summary>

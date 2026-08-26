@@ -51,7 +51,7 @@
   TWO LADDERS. This tree is NOT the craft ladder. A node is worth zero craft points; craft still
   rises by disks taught and machines certified, exactly as it did before the tree existed.
 -->
-<kingdomresearch>
+<kingdomresearch Schema="1">
 
   <!-- ======================================================================== THE TRUNK ==
     Three nodes everybody walks, and the first of them is the keystone: until somebody here
@@ -103,6 +103,14 @@
         Effort="30" SeededBy="rite:Barathrumites"
         Reveals="node:therolls" />
 
+  <!-- Live identity roads (Addendum 17). Neither is revealed by the common spine: the exact
+       resident source seeds it, and Requires keeps unfinished work dependent on that living
+       source. Completion remains city knowledge after the teachers leave; culture opens a door,
+       it never skips the Intelligence rung. -->
+  <node Key="gearpsalm" DisplayName="the gear-psalm" Branch="foundry" Tier="2"
+        Requires="node:notes,culture:Mechanimist" Grants="node:gearpsalm" Effort="8"
+        SeededBy="culture:Mechanimist" Effect="efficiency:5" />
+
   <!-- The chrome half of the body doctrine (Addendum 22 A1; END-STATE §2.3, §7.4). True Kin
        is a matter of RECORD: this node is the city working out how to keep its own. A Templar
        city never sees it - the visibility law at full strength, same as the vat. -->
@@ -124,6 +132,13 @@
         Requires="node:butchery" Grants="node:vat" Effort="12"
         SeededBy="rite:Oozes,rite:Fungi" Forbidden="creed:Templar"
         Reveals="node:thelongdraught,node:thegraft" />
+
+  <!-- Species answers anatomy, not story. A living snapjaw body lets the vat-workers learn
+       the geometry of a muzzle and its natural weapon; the knowledge remains after the teacher
+       leaves, but cannot begin without a body that actually bears it. -->
+  <node Key="muzzlecraft" DisplayName="muzzle-craft" Branch="flesh" Tier="2"
+        Requires="node:vat,species:snapjaw" Grants="node:muzzlecraft" Effort="8"
+        SeededBy="species:snapjaw" />
 
   <node Key="physic" DisplayName="physic" Branch="flesh" Tier="2"
         Requires="node:butchery,node:apprenticeship" Grants="node:physic" Effort="12"
@@ -154,6 +169,10 @@
   <node Key="thecensus" DisplayName="the census" Branch="choir" Tier="2"
         Requires="node:notes,node:moot" Grants="node:census" Effort="10"
         Effect="recruitreveal:1" />
+
+  <node Key="trailreading" DisplayName="trail-reading" Branch="choir" Tier="1"
+		Requires="node:notes,culture:Snapjaw" Grants="node:trailreading" Effort="6"
+		SeededBy="culture:Snapjaw" Effect="efficiency:5" />
 
   <node Key="schooling" DisplayName="schooling" Branch="choir" Tier="2"
         Requires="node:moot,node:apprenticeship" Grants="node:schooling" Effort="14"

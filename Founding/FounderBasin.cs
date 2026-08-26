@@ -691,7 +691,9 @@ namespace XRL.World.Parts
 			// Judged before the water is measured, so a refusal never costs a dram.
 			if (site != null && system.ExiledRealmHolds(site.ZoneID))
 			{
-				Popup.Show("This ground is {{C|" + system.ExiledDisplayName + "}}'s, and it is not yours to pour on any more. Ask it to take you back, or walk until the ground answers to nobody.");
+				Popup.Show("This ground is {{C|" +
+					KingdomPresentation.Rich(system.ExiledDisplayName) +
+					"}}'s, and it is not yours to pour on any more. Ask it to take you back, or walk until the ground answers to nobody.");
 				return Refused();
 			}
 			bool second = system.Founded;
@@ -701,7 +703,8 @@ namespace XRL.World.Parts
 				KingdomSettlement.SecondFoundingVerdict verdict = KingdomFounding.JudgeSite(system, site);
 				if (verdict != KingdomSettlement.SecondFoundingVerdict.Allowed)
 				{
-					Popup.Show(KingdomSettlement.SecondFoundingRefusal(verdict, system.KingdomDisplayName));
+					Popup.Show(KingdomSettlement.SecondFoundingRefusal(verdict,
+						KingdomPresentation.Rich(system.KingdomDisplayName)));
 					return Refused();
 				}
 			}
@@ -722,21 +725,22 @@ namespace XRL.World.Parts
 				Popup.Show("The rite asks for {{C|" + KingdomRules.FoundingCostDrams + " drams}} of fresh water pooled in the basin." + reason);
 				return Refused();
 			}
-			string name = Popup.AskString(second ? "Name the second city." : "Name the settlement.", "", MaxLength: 30, ReturnNullForEscape: true);
-			if (string.IsNullOrEmpty(name))
+			string name = Popup.AskString(second ? "Name the second city." : "Name the settlement.",
+				"", MaxLength: KingdomPresentationRules.MaxRawCodeUnits,
+				ReturnNullForEscape: true);
+			if (name == null)
 			{
+				return Refused();
+			}
+			if (!KingdomPresentationRules.TryNormalizeName(name, out name,
+				out string nameFailure))
+			{
+				Popup.Show(nameFailure);
 				return Refused();
 			}
 			if (second)
 			{
 				return FoundSecondCity(system, Actor, site, name);
-			}
-			if (Factions.Exists(name))
-			{
-				// A runtime faction is registered forever, so a name once used is used up - most
-				// often the realm that put this founder out, which is still standing.
-				Popup.Show("There is already a {{C|" + name + "}} in the world, and there can only be one of anything named. Nothing has been poured.");
-				return Refused();
 			}
 			KingdomFoundingResult result = KingdomFoundingTransaction.BeginFirst(
 				this, Actor, site, name);
@@ -750,7 +754,8 @@ namespace XRL.World.Parts
 			string openingLine = isRuin
 				? "You pour the first water over ground the world already built, and those who came drink among walls that stood before you."
 				: "You pour the first water, and those gathered drink.";
-			TransientCompletion = openingLine + "\n\n{{C|" + name + "}} is " + verb +
+			TransientCompletion = openingLine + "\n\n{{C|" +
+				KingdomPresentation.Rich(name) + "}} is " + verb +
 				" on " + KingdomFounding.StyleGroundClause(system.Style) +
 				". Your thirst is theirs; their water is yours.\n\nLive and drink.";
 			return result;
@@ -780,17 +785,23 @@ namespace XRL.World.Parts
 			KingdomRules.VillageCharterVerdict verdict = KingdomRules.JudgeVillageCharter(System.Founded, alreadyChartered, reputation);
 			if (verdict != KingdomRules.VillageCharterVerdict.Allowed)
 			{
-				Popup.Show(KingdomRules.VillageCharterRefusal(verdict, villageName));
+				Popup.Show(KingdomRules.VillageCharterRefusal(verdict,
+					KingdomPresentation.Rich(villageName)));
 				return Refused();
 			}
 			LiquidVolume liquidVolume = ParentObject.GetPart<LiquidVolume>();
 			int drams = KingdomLiquids.HasFreshWater(liquidVolume) ? liquidVolume.Volume : 0;
 			if (drams < KingdomRules.FoundingCostDrams)
 			{
-				Popup.Show("Sealing a charter with {{C|" + villageName + "}} asks the same {{C|" + KingdomRules.FoundingCostDrams + " drams}} of fresh water the founding rite does. It holds " + drams + ".");
+				Popup.Show("Sealing a charter with {{C|" +
+					KingdomPresentation.Rich(villageName) +
+					"}} asks the same {{C|" + KingdomRules.FoundingCostDrams +
+					" drams}} of fresh water the founding rite does. It holds " + drams + ".");
 				return Refused();
 			}
-			if (Popup.ShowYesNo("Ask {{C|" + villageName + "}} to stand with {{C|" + System.KingdomDisplayName + "}}? Their ground stays theirs; nothing here is founded, claimed, or taken — only water, and a word kept.") != DialogResult.Yes)
+			if (Popup.ShowYesNo("Ask {{C|" + KingdomPresentation.Rich(villageName) +
+				"}} to stand with {{C|" + KingdomPresentation.Rich(System.KingdomDisplayName) +
+				"}}? Their ground stays theirs; nothing here is founded, claimed, or taken — only water, and a word kept.") != DialogResult.Yes)
 			{
 				return Refused();
 			}
@@ -801,8 +812,9 @@ namespace XRL.World.Parts
 				ShowFailure(result);
 				return result;
 			}
-			TransientCompletion = "You pour, and they drink.\n\n{{C|" + villageName +
-				"}} stands with {{C|" + System.KingdomDisplayName +
+			TransientCompletion = "You pour, and they drink.\n\n{{C|" +
+				KingdomPresentation.Rich(villageName) +
+				"}} stands with {{C|" + KingdomPresentation.Rich(System.KingdomDisplayName) +
 				"}} now — their own place, their own people, and a covenant between you.\n\nLive and drink.";
 			return result;
 		}
@@ -831,10 +843,11 @@ namespace XRL.World.Parts
 			string openingLine = isRuin
 				? "You pour again, a long way from the first pouring, over ground the world already built, and those who walked out with you drink among walls that stood before them."
 				: "You pour again, a long way from the first pouring, and those who walked out with you drink.";
-			TransientCompletion = openingLine + "\n\n{{C|" + Name + "}} is " + verb +
+			TransientCompletion = openingLine + "\n\n{{C|" +
+				KingdomPresentation.Rich(Name) + "}} is " + verb +
 				" on " + KingdomFounding.StyleGroundClause(System.Style) + ", " +
 				KingdomSettlement.VocationClause(vocation) + ".\n\n{{C|" +
-				System.KingdomDisplayName +
+				KingdomPresentation.Rich(System.KingdomDisplayName) +
 				"}} keeps its other ground without you. Come back to it and it will tell you what it did.";
 			return result;
 		}
@@ -875,15 +888,18 @@ namespace XRL.World.Parts
 			{
 			case KingdomFoundingKind.VillageCharter:
 				return "The interrupted covenant is sealed. {{C|" +
-					(VillageDisplayName ?? Name ?? "the village") + "}} stands with {{C|" +
-					System.KingdomDisplayName + "}}.\n\nLive and drink.";
+					KingdomPresentation.Rich(VillageDisplayName ?? Name ?? "the village") +
+					"}} stands with {{C|" +
+					KingdomPresentation.Rich(System.KingdomDisplayName) +
+					"}}.\n\nLive and drink.";
 			case KingdomFoundingKind.SecondCity:
-				return "The interrupted pour takes. {{C|" + (Name ?? System.SeatName) +
+				return "The interrupted pour takes. {{C|" +
+					KingdomPresentation.Rich(Name ?? System.SeatName) +
 					"}} stands as " + KingdomSettlement.VocationClause(Vocation) +
 					", the realm's second city.\n\nLive and drink.";
 			default:
 				return "The interrupted first pour takes. {{C|" +
-					(Name ?? System.KingdomDisplayName) +
+					KingdomPresentation.Rich(Name ?? System.KingdomDisplayName) +
 					"}} stands, claimed and sealed.\n\nLive and drink.";
 			}
 		}
@@ -903,7 +919,8 @@ namespace XRL.World.Parts
 			{
 				options[i] = "{{C|" + vocations[i] + "}} — " + KingdomSettlement.VocationBlurb(vocations[i]);
 			}
-			int picked = Popup.PickOption(Title: "What is " + Name + " for?", Intro: "A city is founded for something. Say it now, and the people who come will know what they came for.", Options: options, AllowEscape: true);
+			int picked = Popup.PickOption(Title: "What is " +
+				KingdomPresentation.Rich(Name) + " for?", Intro: "A city is founded for something. Say it now, and the people who come will know what they came for.", Options: options, AllowEscape: true);
 			if (picked < 0 || picked >= vocations.Length)
 			{
 				return null;

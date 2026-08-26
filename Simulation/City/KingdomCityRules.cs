@@ -368,9 +368,12 @@ namespace ThousandAndFirst.Simulation.City
 		/// own standing flag, and both warned columns are retyped from a flag to the tick the
 		/// window is anchored on. A version-1 book's brink columns cannot answer when a window
 		/// started, which is the one number every consumer of a brink reads.
+		/// Version 3 completes the resident identity row with exact origin and arrival-label
+		/// columns. The origin code and arrival tick remain the catalogue projection and sole clock;
+		/// neither can preserve open guest provenance or an unparseable legacy roll label.
 		/// </para>
 		/// </summary>
-		internal const int SchemaVersion = 2;
+		internal const int SchemaVersion = 3;
 
 		/// <summary>The rules revision the book was last advanced by. Separate from the schema:
 		/// a rules change that does not move a column still wants saying.</summary>
@@ -845,6 +848,41 @@ namespace ThousandAndFirst.Simulation.City
 			}
 			next = current;
 			return true;
+		}
+
+		/// <summary>Posts a physical central-logistics pickup after the exact source callback proved
+		/// the stock left its dedicated holder. Unlike legacy claim-transfer accounting this does not
+		/// add a future draw debt: the ground already changed, and the durable delivery row owns the
+		/// cargo until an exact target receipt lands it.</summary>
+		internal static bool TryApplyPhysicalDebit(KingdomCityState state, int zoneIndex,
+			KingdomStockKind kind, long amount, out KingdomCityState next,
+			out KingdomCityFault fault)
+		{
+			next = state;
+			if (state == null)
+			{
+				fault = KingdomCityFault.NullArgument;
+				return false;
+			}
+			if (zoneIndex < 0 || zoneIndex >= state.ZoneCount || amount <= 0L)
+			{
+				fault = KingdomCityFault.InvalidIndex;
+				return false;
+			}
+			KingdomZoneRow row;
+			KingdomStockPair pair;
+			KingdomStocks lowered;
+			if (!state.TryZone(zoneIndex, out row) || !row.Stocks.TryGet(kind, out pair)
+				|| amount > pair.Level
+				|| !row.Stocks.TryWith(kind,
+					new KingdomStockPair(pair.Level - amount, pair.Capacity), out lowered))
+			{
+				fault = KingdomCityFault.InvalidCapacity;
+				return false;
+			}
+			return state.TryWithZone(zoneIndex,
+				row.WithReading(row.LastReadTick, lowered, row.Roofs, row.Defence,
+					row.WaterCarry, row.FoodCarry), out next, out fault);
 		}
 
 		/// <summary>

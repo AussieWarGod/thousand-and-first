@@ -59,6 +59,8 @@ namespace XRL.World.Parts
 
 		public override void TurnTick(long TimeTick, int Amount)
 		{
+			if (!ThousandAndFirst.KingdomMaster.AutomaticWorkAllowed(
+				XRL.The.Game?.GetSystem<ThousandAndFirst.KingdomSystem>())) return;
 			if (JobId == 0)
 			{
 				return;

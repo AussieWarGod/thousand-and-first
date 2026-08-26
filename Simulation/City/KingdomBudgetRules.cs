@@ -224,12 +224,14 @@ namespace ThousandAndFirst.Simulation.City
 		internal const int HeartbeatToldLinesPerSlice = 1;
 
 		/// <summary>LIVING-CITY-ARCHITECTURE §0.0: the ceiling the model in RAM answers to.</summary>
-		internal const long ModelBytesCeiling = 64L * 1024L;
+		internal const long ModelBytesCeiling = 256L * 1024L;
 
-		/// <summary>LIVING-CITY-ARCHITECTURE §0.0: the advisory rung under that ceiling, raised
-		/// from 48 KiB to 56 KiB in W1 because the formula's own total at today's caps sat above
-		/// the old one and a permanently-lit warning tells a tester nothing.</summary>
-		internal const long ModelBytesWarn = 56L * 1024L;
+		/// <summary>Advisory rung under the model ceiling. Repinned with the pre-release retirement
+		/// of the flat forty-work proxy: the bound now prices every City-stage plot in four zones,
+		/// and the current composed realm remains below this rung. Resident-row authority added two
+		/// shared evidence references per row and moved the honest formula above 192 KiB, so the
+		/// advisory rung moves to 208 KiB; the 256-KiB failure ceiling does not move.</summary>
+		internal const long ModelBytesWarn = 208L * 1024L;
 
 		/// <summary>LIVING-CITY-ARCHITECTURE §3.10: jobs considered by one planning slice.</summary>
 		internal const int PlannerMaxJobs = 16;
@@ -262,20 +264,17 @@ namespace ThousandAndFirst.Simulation.City
 			new KingdomBudgetRow(KingdomBudgetLane.Reify, "reify", 1000L, 2000L, "units", NoLimit, ReifyUnitsPerTurn),
 			// LIVING-CITY-ARCHITECTURE §0.0: > 0.3 ms warns, > 0.5 ms or > 4 steps fails.
 			new KingdomBudgetRow(KingdomBudgetLane.Heartbeat, "slice", 300L, 500L, "steps", NoLimit, HeartbeatStepsPerSlice),
-			// LIVING-CITY-ARCHITECTURE §0.0: ≈ 5 row-visits per turn per city; > 10 warns, > 20 fails.
-			new KingdomBudgetRow(KingdomBudgetLane.HeartbeatAmortised, "slicerate", NoLimit, NoLimit, "rows", 10L, 20L),
-			// LIVING-CITY-ARCHITECTURE §0.0: ≤ 29 turns at 8/turn; > 40 warns; the fail is a
+			// Full four-zone City envelope: 2R/50 is 38 row-visits per turn; > 40 warns, > 80 fails.
+			new KingdomBudgetRow(KingdomBudgetLane.HeartbeatAmortised, "slicerate", NoLimit, NoLimit, "rows", 40L, 80L),
+			// LIVING-CITY-ARCHITECTURE §0.0: ≤ 39 turns at 8/turn; > 40 warns; the fail is a
 			// counter that never reaches zero, which is a shape rather than a number.
 			new KingdomBudgetRow(KingdomBudgetLane.CatchUpDrain, "drain", NoLimit, NoLimit, "turns", 40L, NoLimit),
-			// LIVING-CITY-ARCHITECTURE §0.0: > 56 KiB warns, > 64 KiB fails. The warn rung was 48
-			// KiB in the constitution as first written, and W0's own memory test showed the design
-			// shipping inside its own warn band at today's caps -- the formula composes 53.6 KiB,
-			// which is under the ceiling and over the warn. A warn rung a design is permanently in
-			// is not a warning, it is noise, so §0.0 raised the advisory rung to 56 KiB and left
-			// the CEILING untouched at 64. Warn is advice; the ceiling is the contract.
+			// Full live City envelope across two settlements composes to about 193 KiB. Warn at
+			// 208 KiB, fail at 256 KiB; a permanently-lit warning is noise, not evidence.
 			new KingdomBudgetRow(KingdomBudgetLane.ModelBytes, "model", NoLimit, NoLimit, "bytes", ModelBytesWarn, ModelBytesCeiling),
-			// LIVING-CITY-ARCHITECTURE §0.0: ≈ 20 KiB per realm written; > 32 KiB warns, > 96 KiB fails.
-			new KingdomBudgetRow(KingdomBudgetLane.SaveBytes, "bytes", NoLimit, NoLimit, "bytes", 32L * 1024L, 96L * 1024L),
+			// Named-field save has larger per-row framing than the RAM table: > 256 KiB warns,
+			// > 1 MiB fails at the public baseline.
+			new KingdomBudgetRow(KingdomBudgetLane.SaveBytes, "bytes", NoLimit, NoLimit, "bytes", 256L * 1024L, 1024L * 1024L),
 			// LIVING-CITY-ARCHITECTURE §0.0: ≲ 1,000 int ops; > 2,000 warns. The fail rung of this
 			// lane is a draw, not an op count, and PlannerMaxDraws carries it.
 			new KingdomBudgetRow(KingdomBudgetLane.RoutePlan, "plan", NoLimit, NoLimit, "ops", 2000L, NoLimit),

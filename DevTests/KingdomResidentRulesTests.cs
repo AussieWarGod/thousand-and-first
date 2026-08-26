@@ -1,5 +1,6 @@
 #if TAF_TESTS
 using NUnit.Framework;
+using System.Collections.Generic;
 using ThousandAndFirst;
 using ThousandAndFirst.Simulation.City;
 
@@ -62,6 +63,14 @@ namespace ThousandAndFirst.Tests
 		{
 			return new KingdomResidentRow(id, "Ptoh-" + id, 2, 3, 400L, 0, 0, 0, KingdomDayShape.Hearth,
 				standing, cause, Here, KingdomBrinkWindow.None, KingdomBrinkWindow.None, null, 0);
+		}
+
+		private static KingdomResidentRow Posted(int id, string zoneId, int workId,
+			KingdomResidentStanding standing, KingdomStandingCause cause)
+		{
+			return new KingdomResidentRow(id, "Ptoh-" + id, 2, 3, 400L, 0, workId, 0,
+				KingdomDayShape.Craft, standing, cause, zoneId, KingdomBrinkWindow.None,
+				KingdomBrinkWindow.None, null, 0);
 		}
 
 		private static KingdomCityState Book(params KingdomResidentRow[] rows)
@@ -446,6 +455,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(11, KingdomWorkKind.Producer, KingdomDayShape.Craft)]
 		[TestCase(11, KingdomWorkKind.Refiner, KingdomDayShape.Craft)]
 		[TestCase(11, KingdomWorkKind.Power, KingdomDayShape.Yard)]
+		[TestCase(11, KingdomWorkKind.Construction, KingdomDayShape.Yard)]
 		[TestCase(11, KingdomWorkKind.Other, KingdomDayShape.Hearth)]
 		public void TheDayShapeIsDerivedFromThePostAndNeverAuthored(int jobWorkId, KingdomWorkKind kind, KingdomDayShape expected)
 		{
@@ -495,6 +505,145 @@ namespace ThousandAndFirst.Tests
 			Assert.AreEqual(KingdomCityFault.NullArgument, fault);
 			Assert.IsFalse(KingdomResidentRules.TryReconcile(Book(), null, out tally, out fault));
 			Assert.AreEqual(KingdomCityFault.NullArgument, fault);
+		}
+
+		/// <summary>Crew is an exact resident-row join: same job, same bound ground, and labouring
+		/// standing. Same ids on another zone and non-labouring rows cannot leak into the count.</summary>
+		[Test]
+		public void CrewAssigned_JoinsOnlyLabouringRowsOnExactWorkAndGround()
+		{
+			const string there = "taf:zone:there";
+			KingdomCityState city = Book(
+				Posted(1, Here, 11, KingdomResidentStanding.Resident, KingdomStandingCause.None),
+				Posted(2, Here, 11, KingdomResidentStanding.Resident, KingdomStandingCause.None),
+				Posted(3, Here, 12, KingdomResidentStanding.Resident, KingdomStandingCause.None),
+				Posted(4, there, 11, KingdomResidentStanding.Resident, KingdomStandingCause.None),
+				Posted(5, Here, 11, KingdomResidentStanding.Abroad, KingdomStandingCause.Astray),
+				Posted(6, Here, 11, KingdomResidentStanding.Dead,
+					KingdomStandingCause.Unwitnessed),
+				Posted(7, Here, 11, KingdomResidentStanding.Expedition,
+					KingdomStandingCause.None));
+
+			Assert.AreEqual(2, KingdomResidentRules.CrewAssigned(city, Here, 11));
+			Assert.AreEqual(1, KingdomResidentRules.CrewAssigned(city, Here, 12));
+			Assert.AreEqual(1, KingdomResidentRules.CrewAssigned(city, there, 11));
+			Assert.AreEqual(0, KingdomResidentRules.CrewAssigned(city, Here, 99));
+			Assert.AreEqual(0, KingdomResidentRules.CrewAssigned(null, Here, 11));
+			Assert.AreEqual(0, KingdomResidentRules.CrewAssigned(city, null, 11));
+			Assert.AreEqual(0, KingdomResidentRules.CrewAssigned(city, Here, 0));
+		}
+
+		/// <summary>The count survives the real save carrier and follows the currently selected
+		/// city book. Exchanging seats cannot lend the new city the old city's crew.</summary>
+		[Test]
+		public void CrewAssigned_SurvivesReloadAndDoesNotCrossASeatSwap()
+		{
+			KingdomCityBook oldSeat = new KingdomCityBook();
+			KingdomCityBook newSeat = new KingdomCityBook();
+			KingdomCityFault fault;
+			Assert.IsTrue(oldSeat.TryPublish(Book(
+				Posted(1, Here, 11, KingdomResidentStanding.Resident,
+					KingdomStandingCause.None)), out fault), fault.ToString());
+			Assert.IsTrue(newSeat.TryPublish(Book(
+				Posted(2, Here, 22, KingdomResidentStanding.Resident,
+					KingdomStandingCause.None)), out fault), fault.ToString());
+
+			KingdomCityState oldReloaded;
+			KingdomCityState newReloaded;
+			Assert.IsTrue(oldSeat.TryRead(out oldReloaded, out fault), fault.ToString());
+			Assert.IsTrue(newSeat.TryRead(out newReloaded, out fault), fault.ToString());
+			Assert.AreEqual(1, KingdomResidentRules.CrewAssigned(oldReloaded, Here, 11));
+			Assert.AreEqual(0, KingdomResidentRules.CrewAssigned(newReloaded, Here, 11));
+			Assert.AreEqual(1, KingdomResidentRules.CrewAssigned(newReloaded, Here, 22));
+		}
+
+		[Test]
+		public void ResidentRowsAreTheOnlyLivingRollAuthority()
+		{
+			KingdomResidentRow resident = new KingdomResidentRow(1, "Ari", 0, 0, 100L,
+				0, 0, 0, KingdomDayShape.Hearth, KingdomResidentStanding.Resident,
+				KingdomStandingCause.None, Here, KingdomBrinkWindow.None,
+				KingdomBrinkWindow.None, null, 0, null, "the moon", "3 of Niv, 1000 AR");
+			KingdomResidentRow abroad = new KingdomResidentRow(2, "Bex", 0, 0, 90L,
+				0, 0, 0, KingdomDayShape.Hearth, KingdomResidentStanding.Abroad,
+				KingdomStandingCause.Astray, null, KingdomBrinkWindow.None,
+				KingdomBrinkWindow.None, null, 0, null, "the road", "2 of Niv, 1000 AR");
+			KingdomResidentRow dead = Settler(3, KingdomResidentStanding.Dead,
+				KingdomStandingCause.Unwitnessed);
+			KingdomResidentRollProjection roll;
+
+			Assert.IsTrue(KingdomResidentRules.TryProject(Book(resident, abroad, dead), out roll));
+			Assert.AreEqual(2, roll.Population);
+			Assert.AreEqual(1, roll.Labour);
+			CollectionAssert.AreEqual(new[] { 1, 2 }, roll.ResidentIds);
+			CollectionAssert.AreEqual(new[] { "Ari", "Bex" }, roll.Names);
+			CollectionAssert.AreEqual(new[] { "the moon", "the road" }, roll.Origins);
+			CollectionAssert.AreEqual(new[] { "3 of Niv, 1000 AR", "2 of Niv, 1000 AR" },
+				roll.Arrived);
+		}
+
+		[Test]
+		public void CompleteLegacyRollAdoptsOnceAsNonLabouringClaims()
+		{
+			KingdomCityState adopted;
+			KingdomCityFault fault;
+			int counter;
+			Assert.IsTrue(KingdomResidentRules.TryAdoptLegacy(Book(),
+				new List<string> { "Ari", "Bex" },
+				new List<string> { "salt", "the moon" },
+				new List<string> { "one", "two" }, 40, out adopted, out counter, out fault),
+				fault.ToString());
+			Assert.AreEqual(42, counter);
+			KingdomResidentRollProjection roll;
+			Assert.IsTrue(KingdomResidentRules.TryProject(adopted, out roll));
+			Assert.AreEqual(2, roll.Population);
+			Assert.AreEqual(0, roll.Labour, "migration cannot fabricate bodies or labour");
+			CollectionAssert.AreEqual(new[] { 41, 42 }, roll.ResidentIds);
+			CollectionAssert.AreEqual(new[] { "salt", "the moon" }, roll.Origins);
+			CollectionAssert.AreEqual(new[] { "one", "two" }, roll.Arrived);
+
+			KingdomCityState second;
+			int secondCounter;
+			Assert.IsTrue(KingdomResidentRules.TryAdoptLegacy(adopted,
+				new List<string> { "duplicate" }, new List<string> { "road" },
+				new List<string> { "later" }, counter, out second, out secondCounter, out fault));
+			Assert.AreSame(adopted, second);
+			Assert.AreEqual(counter, secondCounter);
+		}
+
+		[Test]
+		public void RaggedLegacyRollIsRetainedAtMigrationBoundary()
+		{
+			KingdomCityState next;
+			KingdomCityFault fault;
+			int counter;
+			Assert.IsFalse(KingdomResidentRules.TryAdoptLegacy(Book(),
+				new List<string> { "Ari", "unresolved" }, new List<string> { "salt" },
+				new List<string> { "one" }, 8, out next, out counter, out fault));
+			Assert.IsNull(next);
+			Assert.AreEqual(8, counter);
+		}
+
+		[Test]
+		public void RemovalUsesResidentIdAndCannotHitASameNameNeighbour()
+		{
+			KingdomCityState original = Book(
+				new KingdomResidentRow(1, "Ptoh", 1, 0, 1L, 0, 0, 0,
+					KingdomDayShape.Hearth, KingdomResidentStanding.Resident,
+					KingdomStandingCause.None, Here, KingdomBrinkWindow.None,
+					KingdomBrinkWindow.None, null, 0),
+				new KingdomResidentRow(2, "Ptoh", 2, 0, 2L, 0, 0, 0,
+					KingdomDayShape.Hearth, KingdomResidentStanding.Resident,
+					KingdomStandingCause.None, Here, KingdomBrinkWindow.None,
+					KingdomBrinkWindow.None, null, 0));
+			KingdomCityState next;
+			KingdomResidentRow removed;
+			KingdomCityFault fault;
+			Assert.IsTrue(KingdomResidentRules.TryRemove(original, 2, out next, out removed,
+				out fault), fault.ToString());
+			Assert.AreEqual(2, removed.ResidentId);
+			Assert.IsTrue(next.TryResident(0, out KingdomResidentRow kept));
+			Assert.AreEqual(1, kept.ResidentId);
 		}
 	}
 }

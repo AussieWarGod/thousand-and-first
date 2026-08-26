@@ -85,7 +85,9 @@ namespace ThousandAndFirst.Tests
 					{ KingdomConstructionRoute.Improvement, KingdomConstructionProjection.Improvement },
 					{ KingdomConstructionRoute.RoadPaving, KingdomConstructionProjection.Paving },
 					{ KingdomConstructionRoute.WearRepair, KingdomConstructionProjection.Repair },
-					{ KingdomConstructionRoute.Strike, KingdomConstructionProjection.StrikeOrder }
+					{ KingdomConstructionRoute.Strike, KingdomConstructionProjection.StrikeOrder },
+					{ KingdomConstructionRoute.PurposeConsignment,
+						KingdomConstructionProjection.PurposeConsignment }
 				};
 			foreach (KingdomConstructionRoute route in Enum.GetValues(typeof(KingdomConstructionRoute)))
 			{
@@ -194,6 +196,64 @@ namespace ThousandAndFirst.Tests
 			old.Claims.Exact = true;
 			old.Claims.WaterOutstanding = 1;
 			Assert.IsFalse(KingdomConstructionRules.FullyFundedExact(old));
+		}
+
+		[Test]
+		public void PaidBuildReceiptFreezesExactPriceAndAccumulatesImprovement()
+		{
+			KingdomConstructionJob first = Job(KingdomConstructionRoute.PlotCommission,
+				Water: 6, Material: MaterialCost(Timber: 4, Stone: 2));
+			first.Claims.WaterSpent = 6;
+			first.Claims.WaterOutstanding = 0;
+			first.Claims.WaterLost = 6;
+			first.Claims.MaterialSpent = first.Claims.MaterialRequested;
+			first.Claims.MaterialOutstanding = new KingdomMaterialDebitCost().ToClaimString();
+			first.Claims.MaterialLost = first.Claims.MaterialRequested;
+			KingdomPaidBuildReceipt baseReceipt;
+			Assert.IsTrue(KingdomConstructionRules.TryPaidBuildReceipt(first, null,
+				out baseReceipt));
+			Assert.AreEqual(6, baseReceipt.Water);
+			Assert.AreEqual(10L, baseReceipt.WorkTicks);
+			Assert.AreEqual(4, baseReceipt.Material.Materials.Get(KingdomMaterial.Timber));
+
+			KingdomConstructionJob improvement = Job(KingdomConstructionRoute.Improvement,
+				Water: 3, Material: MaterialCost(Stone: 5));
+			improvement.DueTick = 25L;
+			improvement.Claims.WaterSpent = 3;
+			improvement.Claims.WaterOutstanding = 0;
+			improvement.Claims.WaterLost = 3;
+			improvement.Claims.MaterialSpent = improvement.Claims.MaterialRequested;
+			improvement.Claims.MaterialOutstanding = new KingdomMaterialDebitCost().ToClaimString();
+			improvement.Claims.MaterialLost = improvement.Claims.MaterialRequested;
+			KingdomPaidBuildReceipt grown;
+			Assert.IsTrue(KingdomConstructionRules.TryPaidBuildReceipt(improvement,
+				baseReceipt, out grown));
+			Assert.AreEqual(9, grown.Water);
+			Assert.AreEqual(25L, grown.WorkTicks);
+			Assert.AreEqual(4, grown.Material.Materials.Get(KingdomMaterial.Timber));
+			Assert.AreEqual(7, grown.Material.Materials.Get(KingdomMaterial.Stone));
+		}
+
+		[Test]
+		public void PaidBuildReceiptRejectsOutstandingInexactAndOverflow()
+		{
+			KingdomConstructionJob outstanding = Job(KingdomConstructionRoute.PlotCommission,
+				Water: 1, Material: MaterialCost(Timber: 1));
+			KingdomPaidBuildReceipt ignored;
+			Assert.IsFalse(KingdomConstructionRules.TryPaidBuildReceipt(outstanding, null,
+				out ignored));
+			outstanding.Claims.Exact = false;
+			Assert.IsFalse(KingdomConstructionRules.TryPaidBuildReceipt(outstanding, null,
+				out ignored));
+
+			KingdomConstructionJob funded = Job(KingdomConstructionRoute.Improvement,
+				Water: 1);
+			funded.Claims.WaterSpent = 1;
+			funded.Claims.WaterOutstanding = 0;
+			funded.Claims.WaterLost = 1;
+			Assert.IsFalse(KingdomConstructionRules.TryPaidBuildReceipt(funded,
+				new KingdomPaidBuildReceipt(int.MaxValue, 0L, new KingdomMaterialDebitCost()),
+				out ignored), "water accumulation must refuse rather than wrap");
 		}
 
 		[Test]
@@ -441,6 +501,82 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void BuildTruthFreezesRoundTripsAndRefusesContradictions()
+		{
+			KingdomConstructionJob plot = Job(KingdomConstructionRoute.PlotCommission);
+			Assert.IsTrue(KingdomConstructionRules.FreezeBuildTruth(plot, true, 6));
+			Assert.IsFalse(KingdomConstructionRules.FreezeBuildTruth(plot, true, 6),
+				"published truth is write-once");
+			Assert.IsTrue(KingdomConstructionRules.TryReadBuildTruth(plot,
+				out bool hasPlot, out bool frontier, out int defence));
+			Assert.IsTrue(hasPlot);
+			Assert.IsFalse(frontier);
+			Assert.AreEqual(6, defence);
+			string encoded;
+			Assert.IsTrue(KingdomConstructionRules.TryEncode(
+				new List<KingdomConstructionJob> { plot }, out encoded));
+			List<KingdomConstructionJob> decoded;
+			Assert.IsTrue(KingdomConstructionRules.TryDecode(encoded, out decoded));
+			Assert.IsTrue(KingdomConstructionRules.TryReadBuildTruth(decoded[0],
+				out hasPlot, out frontier, out defence));
+			Assert.AreEqual(6, defence);
+
+			KingdomConstructionJob wall = Job(KingdomConstructionRoute.CommissionScaffold);
+			Assert.IsTrue(KingdomConstructionRules.FreezeBuildTruth(wall, false, 9));
+			Assert.IsTrue(KingdomConstructionRules.TryReadBuildTruth(wall,
+				out hasPlot, out frontier, out defence));
+			Assert.IsFalse(hasPlot);
+			Assert.IsTrue(frontier);
+			KingdomConstructionJob contradictory = wall.Copy();
+			contradictory.BuildHasPlot = true;
+			Assert.IsFalse(KingdomConstructionRules.ValidJob(contradictory));
+			contradictory = plot.Copy();
+			contradictory.BuildFrontier = true;
+			Assert.IsFalse(KingdomConstructionRules.ValidJob(contradictory));
+			KingdomConstructionJob wrongShape = Job(KingdomConstructionRoute.SocketConvert);
+			Assert.IsFalse(KingdomConstructionRules.FreezeBuildTruth(wrongShape, false, 5));
+			Assert.AreEqual(0, wrongShape.BuildTruthSchema,
+				"a refused freeze must be atomic");
+			KingdomConstructionJob unrelated = Job(KingdomConstructionRoute.WearRepair);
+			Assert.IsFalse(KingdomConstructionRules.FreezeBuildTruth(unrelated, false, 5));
+			Assert.AreEqual(0, unrelated.BuildTruthSchema);
+			KingdomConstructionJob legacy = Job(KingdomConstructionRoute.Improvement);
+			Assert.IsFalse(KingdomConstructionRules.TryReadBuildTruth(legacy,
+				out hasPlot, out frontier, out defence));
+			legacy.BuildDefence = 1;
+			Assert.IsFalse(KingdomConstructionRules.ValidJob(legacy));
+
+			string[] lines = encoded.Split('\n');
+			string[] fields = lines[1].Split('|');
+			fields[52] = "0";
+			Assert.IsFalse(KingdomConstructionRules.TryDecode(lines[0] + "\n"
+				+ string.Join("|", fields), out decoded),
+				"wire-level route/shape contradiction must fail closed");
+		}
+
+		[Test]
+		public void BuildTruthRequirementNamesOnlyEffectBearingRoutes()
+		{
+			HashSet<KingdomConstructionRoute> required = new HashSet<KingdomConstructionRoute>
+			{
+				KingdomConstructionRoute.CommissionScaffold,
+				KingdomConstructionRoute.PlanScaffold,
+				KingdomConstructionRoute.PlotCommission,
+				KingdomConstructionRoute.PlotPlan,
+				KingdomConstructionRoute.SocketBuild,
+				KingdomConstructionRoute.SocketConvert,
+				KingdomConstructionRoute.Improvement
+			};
+			foreach (KingdomConstructionRoute route in Enum.GetValues(
+				typeof(KingdomConstructionRoute)))
+			{
+				if (route == KingdomConstructionRoute.None) continue;
+				Assert.AreEqual(required.Contains(route),
+					KingdomConstructionRules.RequiresBuildTruth(route), route.ToString());
+			}
+		}
+
+		[Test]
 		public void RegistryRejectsMalformedDuplicateAndOverActiveStateWhole()
 		{
 			KingdomConstructionJob one = Job(KingdomConstructionRoute.CommissionScaffold);
@@ -499,6 +635,34 @@ namespace ThousandAndFirst.Tests
 			normalized[0].CompactHash = new string('0', 64);
 			Assert.IsFalse(KingdomConstructionRules.ValidJob(normalized[0]),
 				"tampered compact proof must fail closed");
+		}
+
+		[Test]
+		public void CurrentCompactProofAuthenticatesBuildTruthWhileLegacyProofStillLoads()
+		{
+			KingdomConstructionJob current = Job(KingdomConstructionRoute.PlotCommission,
+				Phase: KingdomConstructionPhase.Complete);
+			current.Outbox = SettledOutbox(current.Id, "raised");
+			current.PhysicalPhase = KingdomPhysicalPhase.EffectsSettled;
+			Assert.IsTrue(KingdomConstructionRules.FreezeBuildTruth(current, true, 7));
+			List<KingdomConstructionJob> normalized;
+			Assert.IsTrue(KingdomConstructionRules.TryNormalize(
+				new List<KingdomConstructionJob> { current }, out normalized));
+			Assert.IsTrue(normalized[0].Compacted);
+			normalized[0].BuildDefence = 8;
+			Assert.IsFalse(KingdomConstructionRules.ValidJob(normalized[0]));
+
+			KingdomConstructionJob legacy = Job(KingdomConstructionRoute.PlotCommission,
+				Phase: KingdomConstructionPhase.Complete);
+			legacy.Outbox = SettledOutbox(legacy.Id, "raised");
+			legacy.PhysicalPhase = KingdomPhysicalPhase.EffectsSettled;
+			Assert.IsTrue(KingdomConstructionRules.TryNormalize(
+				new List<KingdomConstructionJob> { legacy }, out normalized));
+			string encoded;
+			Assert.IsTrue(KingdomConstructionRules.TryEncode(normalized, out encoded));
+			List<KingdomConstructionJob> decoded;
+			Assert.IsTrue(KingdomConstructionRules.TryDecode(encoded, out decoded));
+			Assert.AreEqual(0, decoded[0].BuildTruthSchema);
 		}
 
 		[Test]
@@ -568,18 +732,23 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void RegistryV1V2V3FixturesMigrateToCanonicalV3()
+		public void RegistryV1V2V3V4FixturesMigrateToCanonicalV4()
 		{
 			KingdomConstructionJob original = Job(KingdomConstructionRoute.PlotCommission);
-			string v3;
+			Assert.IsTrue(KingdomConstructionRules.FreezeBuildTruth(original, true, 4));
+			string v4;
 			Assert.IsTrue(KingdomConstructionRules.TryEncode(
-				new List<KingdomConstructionJob> { original }, out v3));
-			string[] lines = v3.Split('\n');
+				new List<KingdomConstructionJob> { original }, out v4));
+			string[] lines = v4.Split('\n');
 			string[] field = lines[1].Split('|');
-			Assert.AreEqual(51, field.Length);
-			string v2 = KingdomConstructionRules.PriorFormatHeader + "\n"
-				+ string.Join("|", field, 0, 45);
+			Assert.AreEqual(55, field.Length);
+			string v3 = KingdomConstructionRules.PriorFormatHeader + "\n"
+				+ string.Join("|", field, 0, 51);
 			List<KingdomConstructionJob> decoded;
+			Assert.IsTrue(KingdomConstructionRules.TryDecode(v3, out decoded));
+			Assert.AreEqual(0, decoded[0].BuildTruthSchema);
+			string v2 = KingdomConstructionRules.OlderFormatHeader + "\n"
+				+ string.Join("|", field, 0, 45);
 			Assert.IsTrue(KingdomConstructionRules.TryDecode(v2, out decoded));
 			Assert.AreEqual(original.Id, decoded[0].Id);
 			string[] legacy = new string[26];
@@ -593,6 +762,38 @@ namespace ThousandAndFirst.Tests
 			Assert.IsTrue(KingdomConstructionRules.TryEncode(decoded, out migrated));
 			StringAssert.StartsWith(KingdomConstructionRules.FormatHeader + "\n", migrated);
 			Assert.IsTrue(KingdomConstructionRules.TryDecode(migrated, out decoded));
+			Assert.AreEqual(0, decoded[0].BuildTruthSchema,
+				"migration must preserve unknown truth rather than infer it");
+		}
+
+		[Test]
+		public void PurposeConsignmentWireIsAppendOnlyAndCurrentFormatOnly()
+		{
+			KingdomConstructionJob purpose = Job(KingdomConstructionRoute.PurposeConsignment);
+			purpose.PhysicalDestinationId = "destination-stockpile";
+			purpose.PhysicalReceipt = "frozen-purpose-manifest";
+			string current;
+			Assert.IsTrue(KingdomConstructionRules.TryEncode(
+				new List<KingdomConstructionJob> { purpose }, out current));
+			List<KingdomConstructionJob> decoded;
+			Assert.IsTrue(KingdomConstructionRules.TryDecode(current, out decoded));
+			Assert.AreEqual(KingdomConstructionRoute.PurposeConsignment, decoded[0].Route);
+			Assert.AreEqual(KingdomConstructionProjection.PurposeConsignment,
+				decoded[0].Projection);
+
+			string[] field = current.Split('\n')[1].Split('|');
+			string priorRoute = KingdomConstructionRules.OlderFormatHeader + "\n"
+				+ string.Join("|", field, 0, 45);
+			Assert.IsFalse(KingdomConstructionRules.TryDecode(priorRoute, out decoded),
+				"v2 cannot reinterpret the append-only purpose route");
+
+			field[3] = ((int)KingdomConstructionRoute.WearRepair).ToString();
+			field[5] = ((int)KingdomConstructionProjection.Repair).ToString();
+			field[11] = ((int)KingdomPhysicalPhase.CargoDelivered).ToString();
+			string priorPhase = KingdomConstructionRules.OlderFormatHeader + "\n"
+				+ string.Join("|", field, 0, 45);
+			Assert.IsFalse(KingdomConstructionRules.TryDecode(priorPhase, out decoded),
+				"v2 cannot reinterpret an append-only cargo phase");
 		}
 
 		[Test]
@@ -689,7 +890,7 @@ namespace ThousandAndFirst.Tests
 			Assert.Greater(remove, intent);
 			Assert.Greater(project, remove);
 			int legacy = socket.IndexOf("public static bool OnCleared", StringComparison.Ordinal);
-			int legacyEnd = socket.IndexOf("private static void SweepPlotParts", legacy,
+			int legacyEnd = socket.IndexOf("private static bool TrySweepLegacyPlotParts", legacy,
 				StringComparison.Ordinal);
 			string body = socket.Substring(legacy, legacyEnd - legacy);
 			Assert.IsFalse(body.Contains("SweepPlotParts"));
@@ -744,6 +945,96 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("MaxFurnishItems", plot);
 			StringAssert.Contains("FinalRemovalPending", plot);
 			StringAssert.Contains("EffectsSettled", plot);
+		}
+
+		[Test]
+		public void NewPlotWorksFreezeLabourBeforeProjectionAndLegacyWorksKeepTheirClock()
+		{
+			string root = LocateRepository();
+			string plot = File.ReadAllText(Path.Combine(root, "Growth", "KingdomPlot2.cs"));
+			AssertOrdered(plot, "works.SetIntProperty(PlotWorkSchemaProperty, PlotWorkSchema)",
+				"SetPlotWorkLong(works, PlotWorkRequiredProperty, part.TotalTicks)",
+				"SetPlotWorkLong(works, PlotWorkRemainingProperty, part.TotalTicks)",
+				"SetPlotWorkLong(works, PlotWorkLastTickProperty, The.Game.TimeTicks)",
+				"KingdomConstruction.UpdateOutput(ref Job, works.ID)", "cell.AddObject(works)");
+			StringAssert.Contains("if (schema == 0)", plot);
+			StringAssert.Contains("StageAt(TimeTick - Works.StartTick, Works.TotalTicks)", plot);
+			AssertOrdered(plot, "KingdomConstructionPresence.EffectivenessOf(parent, System",
+				"if (selected) SayPlotWorkShortfall",
+				"KingdomArchitectureRules.AdvanceLabour(",
+				"SetPlotWorkLong(parent, PlotWorkLastTickProperty, progress.NextTick)",
+				"SetPlotWorkLong(parent, PlotWorkRemainingProperty, remaining)");
+			StringAssert.Contains("r_KingdomPlotWorks' positional save layout ends at DoorY", plot);
+		}
+
+		[Test]
+		public void StandingWorksFreezePaidBillsAndStrikeReadsThemBeforeLegacyCatalogueFallback()
+		{
+			string root = LocateRepository();
+			string construction = File.ReadAllText(Path.Combine(root, "Growth",
+				"KingdomConstruction.cs"));
+			AssertOrdered(construction, "SetStringProperty(PaidBuildMaterialProperty, material)",
+				"SetIntProperty(PaidBuildSchemaProperty, PaidBuildSchema)");
+			StringAssert.Contains("TryPaidBuildReceipt(Job, previous", construction);
+
+			string scaffold = File.ReadAllText(Path.Combine(root, "Growth", "KingdomScaffold.cs"));
+			AssertOrdered(scaffold, "KingdomConstruction.Bind(Successor, Job)",
+				"KingdomConstruction.FreezePaidBuild(Successor, Job",
+				"KingdomDesign.ApplyRenderOverrides");
+
+			string plot = File.ReadAllText(Path.Combine(root, "Growth", "KingdomPlot2.cs"));
+			AssertOrdered(plot, "PrepareFinalBuilding(building, entry",
+				"KingdomConstruction.FreezePaidBuild(building, construction)",
+				"KingdomPhysicalPhase.FinalOutputPending");
+
+			string strike = File.ReadAllText(Path.Combine(root, "Growth", "KingdomMaterials.cs"));
+			int schema = strike.IndexOf("int paidSchema = Building.GetIntProperty",
+				StringComparison.Ordinal);
+			int legacy = strike.IndexOf("cost = CostFor(key)", schema,
+				StringComparison.Ordinal);
+			int frozen = strike.IndexOf("cost = paid.Material.Materials", legacy,
+				StringComparison.Ordinal);
+			Assert.Greater(schema, 0);
+			Assert.Greater(legacy, schema);
+			Assert.Greater(frozen, legacy);
+			StringAssert.Contains("building's paid construction receipt cannot be read",
+				strike.Substring(schema, frozen - schema));
+		}
+
+		[Test]
+		public void AuthoredMinimumStageIsCheckedByCommitPathsNotOnlyMenus()
+		{
+			string root = LocateRepository();
+			string commission = File.ReadAllText(Path.Combine(root, "Growth", "KingdomCommission.cs"));
+			AssertOrdered(commission, "Failure = StageRefusal(System, entry)",
+				"KingdomZoning.Permits(System, zone.ZoneID, entry");
+
+			string plot = File.ReadAllText(Path.Combine(root, "Growth", "KingdomPlot2.cs"));
+			AssertOrdered(plot, "Failure = KingdomCommission.StageRefusal(System, Entry)",
+				"KingdomPlotRules.PlotSize staked = StakedSize");
+			int plan = plot.IndexOf("public static bool PlanBlocked", StringComparison.Ordinal);
+			int prepare = plot.IndexOf("internal static bool TryPreparePlan", plan,
+				StringComparison.Ordinal);
+			string planBody = plot.Substring(plan, prepare - plan);
+			AssertOrdered(planBody, "KingdomCommission.StageRefusal(System, Entry)",
+				"TryGetSpec(Entry.Key, out var spec)");
+			StringAssert.Contains("System.Stage < Entry.MinStage", plot.Substring(prepare));
+
+			string socket = File.ReadAllText(Path.Combine(root, "Growth", "KingdomSocket.cs"));
+			Assert.GreaterOrEqual(CountOf(socket, "KingdomCommission.StageRefusal(System,"), 2,
+				"conversion and vacant-socket builds both need the authored stage gate");
+		}
+
+		private static int CountOf(string Source, string Needle)
+		{
+			int count = 0;
+			int offset = 0;
+			while ((offset = Source.IndexOf(Needle, offset, StringComparison.Ordinal)) >= 0)
+			{
+				count++;
+				offset += Needle.Length;
+			}
+			return count;
 		}
 
 		[Test]
@@ -894,6 +1185,39 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void AutomaticPlotClearancePaysExactPhysicalStockNotDeadCounters()
+		{
+			string root = LocateRepository();
+			string source = File.ReadAllText(Path.Combine(root, "Growth", "KingdomPlot2.cs"));
+			StringAssert.Contains("ResumeClearPayout", source);
+			StringAssert.Contains("ClearOutputIdProperty = \"r_TAF_PlotClearOutputId\"", source);
+			StringAssert.Contains("ClearOutputMarkerProperty = \"r_TAF_PlotClearOutputMarker\"", source);
+			StringAssert.Contains("ClearDestinationKindProperty", source);
+			StringAssert.Contains("KingdomMaterials.MaterialStock stock = KingdomMaterials.Stock(Z)",
+				source);
+			StringAssert.Contains("KingdomMaterials.BlueprintFor(stockMaterial)", source);
+			StringAssert.Contains("destination.Inventory.AddObject(item, null, Silent: true, NoStack: true)",
+				source);
+			StringAssert.Contains("cell.AddObject(item, NoStack: true, Silent: true)", source);
+			StringAssert.Contains("ReferenceEquals(accepted, item)", source);
+			StringAssert.Contains("ExactClearOutput", source);
+			StringAssert.Contains("KingdomConstructionRules.CounterCasAction", source);
+			StringAssert.Contains("[Obsolete(\"Use KingdomMaterials.Stock(zone).Tally", source);
+			StringAssert.DoesNotContain("MaterialStatePrefix", source);
+			StringAssert.DoesNotContain("ModIntGameState(\"r_TAF_Material_", source);
+
+			int removal = source.IndexOf("ClearInt(Works, ClearRemovedProperty, 1);",
+				StringComparison.Ordinal);
+			int payout = source.IndexOf("PrepareClearOutput(Works, Z, material, amount)",
+				removal, StringComparison.Ordinal);
+			int tally = source.IndexOf("SetClearTally(Works, material", payout,
+				StringComparison.Ordinal);
+			Assert.GreaterOrEqual(removal, 0);
+			Assert.Greater(payout, removal, "source removal must be proved before payout");
+			Assert.Greater(tally, payout, "summary tally must follow exact physical payout");
+		}
+
+		[Test]
 		public void ImprovementHandoverUsesNamedReceiptsExactNoStackAndDrainFirstPhases()
 		{
 			string root = LocateRepository();
@@ -1003,6 +1327,13 @@ namespace ThousandAndFirst.Tests
 				KingdomConstructionPhase.ProjectionPending, 11L);
 			Assert.IsFalse(KingdomConstructionRules.ValidRegistryUpdate(underfunded,
 				falseProjection));
+
+			KingdomConstructionJob frozen = Job(KingdomConstructionRoute.Improvement);
+			Assert.IsTrue(KingdomConstructionRules.FreezeBuildTruth(frozen, false, 5));
+			KingdomConstructionJob changedTruth = KingdomConstructionRules.Transition(frozen,
+				KingdomConstructionPhase.WaterPending, 11L);
+			changedTruth.BuildDefence = 6;
+			Assert.IsFalse(KingdomConstructionRules.ValidRegistryUpdate(frozen, changedTruth));
 		}
 
 		[Test]
@@ -1206,6 +1537,66 @@ namespace ThousandAndFirst.Tests
 			backward.StartedTick = backward.CreatedTick - 1L;
 			Assert.IsFalse(KingdomConstructionRules.ValidJob(backward));
 		}
+
+		[Test]
+		public void PaidBuildEffectsFreezeBeforeFundingAndProjectionReadsReceiptOnly()
+		{
+			string commission = TestMain.ReadRepositoryText("Growth/KingdomCommission.cs");
+			string plan = TestMain.ReadRepositoryText("Growth/KingdomPlanMarker.cs");
+			string upgrade = TestMain.ReadRepositoryText("Growth/KingdomUpgrade.cs");
+			string plot = TestMain.ReadRepositoryText("Growth/KingdomPlot2.cs");
+			string socket = TestMain.ReadRepositoryText("Growth/KingdomSocket.cs");
+			AssertOrdered(commission, "KingdomConstruction.FreezeBuildTruth(job",
+				"KingdomConstruction.TryFundNew(job");
+			AssertOrdered(plan, "KingdomConstruction.FreezeBuildTruth(job",
+				"KingdomConstruction.TryFundNew(job");
+			AssertOrdered(upgrade, "KingdomConstruction.FreezeBuildTruth(job",
+				"KingdomConstruction.TryFundNew(job");
+			AssertOrdered(plot, "KingdomConstruction.FreezeBuildTruth(job",
+				"KingdomConstruction.TryFundNew(job");
+			AssertOrdered(socket, "KingdomConstruction.FreezeBuildTruth(job",
+				"KingdomConstruction.TryFundNew(job");
+
+			string commissionProjection = Between(commission,
+				"private static bool ProjectScaffold(", "private static GameObject FindExpectedScaffold(");
+			string improvementProjection = Between(upgrade,
+				"private static bool ProjectImprovement(",
+				"private static bool ExpectedImprovementScaffold(");
+			string planProjection = Between(plan, "private static bool Realize(",
+				"internal static void RetryConstruction(");
+			foreach (string body in new[] { commissionProjection, improvementProjection,
+				planProjection })
+			{
+				StringAssert.Contains("ApplyBuildTruth", body);
+				StringAssert.DoesNotContain("BuiltDefence(", body);
+				StringAssert.DoesNotContain("HasSkill(", body);
+				StringAssert.DoesNotContain("IsPlotDesign(", body);
+			}
+			string construction = TestMain.ReadRepositoryText("Growth/KingdomConstruction.cs");
+			AssertOrdered(construction, "RequiresBuildTruth(job.Route)",
+				"TryResumeFunding(job, Z, Survey");
+			StringAssert.Contains("LegacyProjectedBuildTruthMatches", commission);
+			StringAssert.Contains("LegacyProjectedBuildTruthMatches", plan);
+			StringAssert.Contains("LegacyProjectedBuildTruthMatchesUnknownPlot", upgrade);
+			StringAssert.Contains("part.DefencePending = defence;", plot);
+			string convertProjection = Between(socket,
+				"private static bool ProjectConvertOrder(",
+				"internal static bool ResumeStrikeSuccessor(");
+			AssertOrdered(convertProjection, "TryReadBuildTruth(Job",
+				"KingdomConstruction.BeginProjection(ref Updated");
+			StringAssert.Contains("The unprojected legacy plot plan predates frozen build effects.",
+				plot);
+		}
+
+		private static string Between(string Source, string Start, string End)
+		{
+			int start = Source.IndexOf(Start, StringComparison.Ordinal);
+			int end = Source.IndexOf(End, start + Start.Length, StringComparison.Ordinal);
+			Assert.GreaterOrEqual(start, 0, Start);
+			Assert.Greater(end, start, End);
+			return Source.Substring(start, end - start);
+		}
+
 	}
 }
 #endif

@@ -28,6 +28,8 @@ namespace XRL.World.Parts
 	[Serializable]
 	public class r_KingdomInquiry : IPart
 	{
+		private const string SetSubjectCommand = "r_SetKingdomResearchSubject";
+
 		/// <summary>What this bench is worth to the pace: a shelf and a copyist at 100, a room built
 		/// to think in at 150, the ancients' own bench understood at 200. Authored as an XML
 		/// parameter on the blueprint; a bench that declares none is a scriptorium.</summary>
@@ -36,6 +38,44 @@ namespace XRL.World.Parts
 		/// <summary>Tick this bench last charged, or 0 before its first look. Its own, so two
 		/// benches in one city each charge their own stretch.</summary>
 		public long LastWorkedTick;
+
+		public override bool WantEvent(int ID, int cascade)
+		{
+			if (!base.WantEvent(ID, cascade) && ID != GetInventoryActionsEvent.ID)
+			{
+				return ID == InventoryActionEvent.ID;
+			}
+			return true;
+		}
+
+		public override bool HandleEvent(GetInventoryActionsEvent E)
+		{
+			if (KingdomResearch.Enabled)
+			{
+				E.AddAction("Study", "set the city's research subject", SetSubjectCommand,
+					null, 's', FireOnActor: false, 5);
+			}
+			return base.HandleEvent(E);
+		}
+
+		public override bool HandleEvent(InventoryActionEvent E)
+		{
+			if (E.Command == SetSubjectCommand && E.Actor != null && E.Actor.IsPlayer())
+			{
+				KingdomSystem system = The.Game?.GetSystem<KingdomSystem>();
+				if (!KingdomMaster.NewWorkAllowed(system))
+				{
+					XRL.UI.Popup.Show("Settlement simulation is paused; the keepers cannot take up a new subject yet.");
+					return true;
+				}
+				KingdomSystem.Guard("research bench subject", delegate
+				{
+					KingdomResearch.OpenBench(ParentObject, E.Actor);
+				});
+				return true;
+			}
+			return base.HandleEvent(E);
+		}
 
 		/// <summary>The staffing pass's own crew-only stamp on a work, 0-100. Read and never
 		/// written, exactly as every other consumer reads it.</summary>
@@ -48,6 +88,18 @@ namespace XRL.World.Parts
 
 		public override void TurnTick(long TimeTick, int Amount)
 		{
+			KingdomSystem master = The.Game?.GetSystem<KingdomSystem>();
+			if (!KingdomMaster.AutomaticWorkAllowed(master))
+			{
+				base.TurnTick(TimeTick, Amount);
+				return;
+			}
+			if (LastWorkedTick <= master.MasterOptionTick)
+			{
+				LastWorkedTick = TimeTick;
+				base.TurnTick(TimeTick, Amount);
+				return;
+			}
 			// One long compare per turn, and no more: research is charged on the settlement's own
 			// day, never on the heartbeat and never per turn. The first look banks the stamp and
 			// charges nothing, exactly as a scaffold's does.
@@ -83,7 +135,7 @@ namespace XRL.World.Parts
 			int condition = KingdomMaterialRules.ConditionPercent(KingdomWear.WearOf(ParentObject));
 			LastWorkedTick = KingdomResearch.Advance(system, TimeTick, LastWorkedTick, crew, condition,
 				(Rung > 0) ? Rung : KingdomResearchRules.ScriptoriumPercent,
-				ParentObject.ShortDisplayName);
+				ParentObject.ShortDisplayName, KingdomCrews.AffinityOf(ParentObject));
 		}
 	}
 }

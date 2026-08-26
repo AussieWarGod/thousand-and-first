@@ -53,14 +53,10 @@ namespace ThousandAndFirst.Tests
 		[TestCase((int)KingdomBudgetLane.Reckon, -1L, 512L)]
 		[TestCase((int)KingdomBudgetLane.Reify, -1L, 8L)]
 		[TestCase((int)KingdomBudgetLane.Heartbeat, -1L, 4L)]
-		[TestCase((int)KingdomBudgetLane.HeartbeatAmortised, 10L, 20L)]
+		[TestCase((int)KingdomBudgetLane.HeartbeatAmortised, 40L, 80L)]
 		[TestCase((int)KingdomBudgetLane.CatchUpDrain, 40L, -1L)]
-		// 56 KiB, not 48: §0.0 raised the ADVISORY rung in W1 because the formula's own total at
-		// today's caps sat above the old one, and a warning a design is permanently inside tells a
-		// tester nothing. The ceiling is untouched at 64 KiB -- warn is advice, the ceiling is the
-		// contract.
-		[TestCase((int)KingdomBudgetLane.ModelBytes, 57344L, 65536L)]
-		[TestCase((int)KingdomBudgetLane.SaveBytes, 32768L, 98304L)]
+		[TestCase((int)KingdomBudgetLane.ModelBytes, 212992L, 262144L)]
+		[TestCase((int)KingdomBudgetLane.SaveBytes, 262144L, 1048576L)]
 		[TestCase((int)KingdomBudgetLane.RoutePlan, 2000L, -1L)]
 		[TestCase((int)KingdomBudgetLane.NetworkSolve, 8000L, 12000L)]
 		[TestCase((int)KingdomBudgetLane.ResidentZones, 1L, 2L)]
@@ -84,7 +80,7 @@ namespace ThousandAndFirst.Tests
 			Assert.AreEqual(50, KingdomBudgetRules.HeartbeatCadenceTicks);
 			Assert.AreEqual(4, KingdomBudgetRules.HeartbeatStepsPerSlice);
 			Assert.AreEqual(1, KingdomBudgetRules.HeartbeatToldLinesPerSlice);
-			Assert.AreEqual(65536L, KingdomBudgetRules.ModelBytesCeiling);
+			Assert.AreEqual(262144L, KingdomBudgetRules.ModelBytesCeiling);
 			Assert.AreEqual(16, KingdomBudgetRules.PlannerMaxJobs);
 			Assert.AreEqual(8, KingdomBudgetRules.PlannerMaxStops);
 			Assert.AreEqual(50, KingdomBudgetRules.PlannerMaxSwapTests);
@@ -148,8 +144,8 @@ namespace ThousandAndFirst.Tests
 		public void TheRowVisitCeilingSurvivesTheCapMoving()
 		{
 			long ceiling;
-			Assert.IsTrue(KingdomBudgetRules.TryMaxRowVisits(116, out ceiling));
-			Assert.AreEqual(14848L, ceiling);
+			Assert.IsTrue(KingdomBudgetRules.TryMaxRowVisits(956, out ceiling));
+			Assert.AreEqual(122368L, ceiling);
 			Assert.IsTrue(KingdomBudgetRules.TryMaxRowVisits(246, out ceiling));
 			Assert.AreEqual(31488L, ceiling);
 			Assert.IsFalse(KingdomBudgetRules.TryMaxRowVisits(-1, out ceiling));

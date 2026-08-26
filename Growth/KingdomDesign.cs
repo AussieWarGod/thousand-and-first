@@ -175,7 +175,9 @@ namespace ThousandAndFirst
 		public static string ReferenceFor(GameObject Target, string GenericLabel)
 		{
 			string given = Target?.GetStringProperty(GivenNameProperty);
-			return KingdomDesignRules.NamedReference(given, GenericLabel);
+			return string.IsNullOrEmpty(given)
+				? GenericLabel
+				: KingdomPresentation.Rich(given);
 		}
 
 		/// <summary>
@@ -213,16 +215,17 @@ namespace ThousandAndFirst
 			}
 			if (candidates.Count == 0)
 			{
-				Popup.Show("Stand beside something " + System.SeatName + " built to give it a name.");
+				Popup.Show("Stand beside something " + KingdomPresentation.Rich(System.SeatName) + " built to give it a name.");
 				return;
 			}
 			string[] options = new string[candidates.Count];
 			for (int i = 0; i < candidates.Count; i++)
 			{
 				string given = candidates[i].GetStringProperty(GivenNameProperty);
-				options[i] = candidates[i].ShortDisplayName + (string.IsNullOrEmpty(given) ? "" : (" {{G|[named " + given + "]}}"));
+				options[i] = candidates[i].ShortDisplayName + (string.IsNullOrEmpty(given) ? "" :
+					(" {{G|[named " + KingdomPresentation.Rich(given) + "]}}"));
 			}
-			int num = Popup.PickOption(Title: "Name a building at " + System.SeatName, Options: options, AllowEscape: true);
+			int num = Popup.PickOption(Title: "Name a building at " + KingdomPresentation.Rich(System.SeatName), Options: options, AllowEscape: true);
 			if (num < 0)
 			{
 				return;
@@ -230,7 +233,7 @@ namespace ThousandAndFirst
 			GameObject target = candidates[num];
 			string existing = target.GetStringProperty(GivenNameProperty);
 			string raw = Popup.AskString("Name this " + target.ShortDisplayNameStripped + ". Leave blank to let go of its name.",
-				existing ?? "", MaxLength: KingdomDesignRules.MaxBuildingNameLength, ReturnNullForEscape: true);
+				existing ?? "", MaxLength: KingdomPresentationRules.MaxRawCodeUnits, ReturnNullForEscape: true);
 			if (raw == null)
 			{
 				return;
@@ -243,7 +246,8 @@ namespace ThousandAndFirst
 				}
 				target.SetStringProperty(GivenNameProperty, null, RemoveIfNull: true);
 				KingdomGovernanceScope.Commit("remove building name");
-				KingdomChronicle.Record(System, existing + " is called that no longer");
+				KingdomChronicle.Record(System,
+					KingdomPresentation.Rich(existing) + " is called that no longer");
 				Popup.Show("The name is let go.");
 				return;
 			}
@@ -254,15 +258,19 @@ namespace ThousandAndFirst
 			}
 			if (string.Equals(existing, cleaned, StringComparison.Ordinal))
 			{
-				Popup.Show("It is already called " + cleaned + ".");
+				Popup.Show("It is already called " + KingdomPresentation.Rich(cleaned) + ".");
 				return;
 			}
 			target.SetStringProperty(GivenNameProperty, cleaned);
 			KingdomGovernanceScope.Commit("name building");
-			System.RecordDeed(cleaned + " was named, at " + System.KingdomDisplayName);
-			KingdomChronicle.Record(System, target.ShortDisplayNameStripped + " at " + System.KingdomDisplayName + " was named " + cleaned);
-			System.Ledger.Note("{{G|" + cleaned + " (" + target.ShortDisplayNameStripped + ") now stands named at " + System.KingdomDisplayName + ".}}");
-			Popup.Show("{{G|" + target.ShortDisplayNameStripped + " is named " + cleaned + ".}}");
+			string safeName = KingdomPresentation.Rich(cleaned);
+			string safeRealm = KingdomPresentation.Rich(System.KingdomDisplayName);
+			System.RecordDeed(safeName + " was named, at " + safeRealm);
+			KingdomChronicle.Record(System, target.ShortDisplayNameStripped + " at " +
+				safeRealm + " was named " + safeName);
+			System.Ledger.Note("{{G|" + safeName + " (" + target.ShortDisplayNameStripped +
+				") now stands named at " + safeRealm + ".}}");
+			Popup.Show("{{G|" + target.ShortDisplayNameStripped + " is named " + safeName + ".}}");
 		}
 
 		private static void CollectBuilt(Cell C, List<GameObject> Into)

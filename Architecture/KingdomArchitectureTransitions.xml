@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Directional early-housing conversions. Each keeps the canvas sleeping/storage fittings already
+  paid for and raises only the style-appropriate permanent shell around them. The M/L/XL records
+  are explicit because actual staked size is part of route identity even though the authored
+  building remains against the same frontage and the extra cells remain yard.
+
+  These are deliberately one-way. Taking a sound hut back to canvas is demolition, not retained
+  craft, and therefore remains an ordinary strike plus fresh commission.
+-->
+<KingdomArchitectureTransitions Schema="1">
+  <!-- Verdant, fungal and gyre: canvas -> wattle/timber. -->
+  <transition Key="tent-to-hut-s" From="tent" To="hut" Type="housing" Size="S"
+              Water="4" Materials="timber:4,mud:2" Ticks="1350" />
+  <transition Key="tent-to-hut-m" From="tent" To="hut" Type="housing" Size="M"
+              Water="4" Materials="timber:4,mud:2" Ticks="1350" />
+  <transition Key="tent-to-hut-l" From="tent" To="hut" Type="housing" Size="L"
+              Water="4" Materials="timber:4,mud:2" Ticks="1350" />
+  <transition Key="tent-to-hut-xl" From="tent" To="hut" Type="housing" Size="XL"
+              Water="4" Materials="timber:4,mud:2" Ticks="1350" />
+  <transition Key="tentrow-to-hutyard-s" From="tentrow" To="hutyard" Type="housing" Size="S"
+              Water="7" Materials="timber:7,stone:2" Ticks="1800" />
+  <transition Key="tentrow-to-hutyard-m" From="tentrow" To="hutyard" Type="housing" Size="M"
+              Water="7" Materials="timber:7,stone:2" Ticks="1800" />
+  <transition Key="tentrow-to-hutyard-l" From="tentrow" To="hutyard" Type="housing" Size="L"
+              Water="7" Materials="timber:7,stone:2" Ticks="1800" />
+  <transition Key="tentrow-to-hutyard-xl" From="tentrow" To="hutyard" Type="housing" Size="XL"
+              Water="7" Materials="timber:7,stone:2" Ticks="1800" />
+
+  <!-- Salt-flat common style: canvas -> sun-dried mud brick. -->
+  <transition Key="tent-to-mudhut-s" From="tent" To="mudhut" Type="housing" Size="S"
+              Water="4" Materials="mud:8" Ticks="1350" />
+  <transition Key="tent-to-mudhut-m" From="tent" To="mudhut" Type="housing" Size="M"
+              Water="4" Materials="mud:8" Ticks="1350" />
+  <transition Key="tent-to-mudhut-l" From="tent" To="mudhut" Type="housing" Size="L"
+              Water="4" Materials="mud:8" Ticks="1350" />
+  <transition Key="tent-to-mudhut-xl" From="tent" To="mudhut" Type="housing" Size="XL"
+              Water="4" Materials="mud:8" Ticks="1350" />
+  <transition Key="tentrow-to-mudhutcourt-s" From="tentrow" To="mudhutcourt" Type="housing" Size="S"
+              Water="7" Materials="mud:12,stone:2" Ticks="1800" />
+  <transition Key="tentrow-to-mudhutcourt-m" From="tentrow" To="mudhutcourt" Type="housing" Size="M"
+              Water="7" Materials="mud:12,stone:2" Ticks="1800" />
+  <transition Key="tentrow-to-mudhutcourt-l" From="tentrow" To="mudhutcourt" Type="housing" Size="L"
+              Water="7" Materials="mud:12,stone:2" Ticks="1800" />
+  <transition Key="tentrow-to-mudhutcourt-xl" From="tentrow" To="mudhutcourt" Type="housing" Size="XL"
+              Water="7" Materials="mud:12,stone:2" Ticks="1800" />
+
+  <!-- Eater-ruin style: canvas -> re-stood block and sparse recovered plate. -->
+  <transition Key="tent-to-blockhut-s" From="tent" To="blockhut" Type="housing" Size="S"
+              Water="4" Materials="scrap:4,stone:3" Ticks="1350" />
+  <transition Key="tent-to-blockhut-m" From="tent" To="blockhut" Type="housing" Size="M"
+              Water="4" Materials="scrap:4,stone:3" Ticks="1350" />
+  <transition Key="tent-to-blockhut-l" From="tent" To="blockhut" Type="housing" Size="L"
+              Water="4" Materials="scrap:4,stone:3" Ticks="1350" />
+  <transition Key="tent-to-blockhut-xl" From="tent" To="blockhut" Type="housing" Size="XL"
+              Water="4" Materials="scrap:4,stone:3" Ticks="1350" />
+  <transition Key="tentrow-to-blockyard-s" From="tentrow" To="blockyard" Type="housing" Size="S"
+              Water="7" Materials="scrap:6,stone:4" Ticks="1800" />
+  <transition Key="tentrow-to-blockyard-m" From="tentrow" To="blockyard" Type="housing" Size="M"
+              Water="7" Materials="scrap:6,stone:4" Ticks="1800" />
+  <transition Key="tentrow-to-blockyard-l" From="tentrow" To="blockyard" Type="housing" Size="L"
+              Water="7" Materials="scrap:6,stone:4" Ticks="1800" />
+  <transition Key="tentrow-to-blockyard-xl" From="tentrow" To="blockyard" Type="housing" Size="XL"
+              Water="7" Materials="scrap:6,stone:4" Ticks="1800" />
+</KingdomArchitectureTransitions>

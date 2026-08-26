@@ -35,11 +35,13 @@ namespace ThousandAndFirst.Tests
 			};
 			KingdomResidentRow[] residents = new KingdomResidentRow[1]
 			{
-				new KingdomResidentRow(9, "Ptoh", 2, 3, 400L, 4242, 4242, 1, KingdomDayShape.Field,
+				new KingdomResidentRow(9, "Ptoh", KingdomResidentRules.OriginCode("the moon"),
+					3, 400L, 4242, 4242, 1, KingdomDayShape.Field,
 					KingdomResidentStanding.Abroad, KingdomStandingCause.Followed, "taf:zone:b",
 					new KingdomBrinkWindow(true, 410L, 415L),
 					new KingdomBrinkWindow(true, 420L, KingdomBrinkRules.Unwarned), "Mechanimists", 1,
-					KingdomCreedRules.EncodeKept(new List<string> { "Joppa", "Barathrumites" }))
+					KingdomCreedRules.EncodeKept(new List<string> { "Joppa", "Barathrumites" }),
+					"the moon", "3 of Niv, 1000 AR")
 			};
 			KingdomClockRow[] clocks = new KingdomClockRow[1]
 			{
@@ -113,6 +115,10 @@ namespace ThousandAndFirst.Tests
 			Assert.AreEqual(personBefore.Cause, personAfter.Cause);
 			Assert.AreEqual(personBefore.DayShape, personAfter.DayShape);
 			Assert.AreEqual(personBefore.BoundZoneId, personAfter.BoundZoneId);
+			Assert.AreEqual("the moon", personAfter.Origin,
+				"arbitrary exact origin must not collapse to its closed code");
+			Assert.AreEqual("3 of Niv, 1000 AR", personAfter.Arrived,
+				"frozen presentation evidence survives save round-trip");
 			// Both brink windows, in full. A carrier that round-tripped "a brink stands" but lost
 			// the tick the window is anchored on would hand every warned settler a fresh deadline
 			// on every save, which is the failure the columns were retyped to make impossible.
@@ -274,6 +280,33 @@ namespace ThousandAndFirst.Tests
 			Assert.AreEqual(1, book.ResidentCount);
 			Assert.IsTrue(book.TryReadBrink(9, BrinkKind.Roof, out stands, out reached, out warned, out toward, out channel));
 			Assert.IsTrue(stands);
+		}
+
+		/// <summary>Schema-v2 saves predate exact origin/arrival presentation columns. Migration
+		/// fills only what the old closed code proves and retains the resident row; it never parses a
+		/// display date into a second clock.</summary>
+		[Test]
+		public void V2ResidentRowsGainPresentationColumnsWithoutBeingDropped()
+		{
+			KingdomCityBook book = new KingdomCityBook();
+			KingdomCityFault fault;
+			Assert.IsTrue(book.TryPublish(Peopled(), out fault), fault.ToString());
+			book.SchemaVersion = 2;
+			book.ResidentOrigins.Clear();
+			book.ResidentArrived.Clear();
+
+			book.Normalize();
+
+			Assert.AreEqual(KingdomCityRules.SchemaVersion, book.SchemaVersion);
+			Assert.AreEqual(1, book.ResidentCount);
+			KingdomCityState state;
+			Assert.IsTrue(book.TryRead(out state, out fault), fault.ToString());
+			Assert.IsTrue(state.TryResident(0, out KingdomResidentRow row));
+			Assert.AreEqual("", row.Origin,
+				"an arbitrary v2 origin cannot be invented from NoOrigin");
+			Assert.AreEqual("", row.Arrived,
+				"v2 stored only the tick; no presentation string may be invented");
+			Assert.AreEqual(400L, row.ArrivedTick);
 		}
 
 		/// <summary>A standing and a cause that disagree are repaired toward the STANDING, because
@@ -443,6 +476,78 @@ namespace ThousandAndFirst.Tests
 			Assert.AreEqual(1, index);
 			Assert.IsFalse(book.TryZoneRow("taf:zone:never", out index));
 			Assert.IsFalse(book.TryZoneRow(null, out index));
+		}
+
+		[Test]
+		public void PilgrimOpportunityNormalizesWithoutLosingItsFrozenIdentity()
+		{
+			KingdomCityBook book = new KingdomCityBook
+			{
+				PilgrimLoudness = 2,
+				PilgrimState = (int)KingdomLocusRules.PilgrimState.Standing,
+				PilgrimSequence = 7,
+				PilgrimCauseTick = 12000L,
+				PilgrimCause = "the Ides feast kept at Tamsketh",
+				PilgrimObjectId = "body:pilgrim:7",
+				PilgrimName = "Aeru",
+				PilgrimPlaceName = "Tamsketh",
+				PilgrimGreeted = 1
+			};
+			book.Normalize();
+			Assert.AreEqual((int)KingdomLocusRules.PilgrimState.Standing, book.PilgrimState);
+			Assert.AreEqual("body:pilgrim:7", book.PilgrimObjectId);
+			Assert.AreEqual("Aeru", book.PilgrimName);
+			Assert.AreEqual("Tamsketh", book.PilgrimPlaceName);
+			Assert.AreEqual(1, book.PilgrimGreeted);
+		}
+
+		[Test]
+		public void MalformedPilgrimOpportunityFailsClosedAndCannotMintADuplicateBody()
+		{
+			KingdomCityBook book = new KingdomCityBook
+			{
+				PilgrimLoudness = int.MaxValue,
+				PilgrimState = 999,
+				PilgrimSequence = -4,
+				PilgrimCauseTick = -1L,
+				PilgrimCause = "invented",
+				PilgrimObjectId = "wrong body",
+				PilgrimName = new string('x', KingdomLocusRules.MaxPilgrimNameChars + 1),
+				PilgrimPlaceName = "wrong place",
+				PilgrimGreeted = 8
+			};
+			book.Normalize();
+			Assert.AreEqual(KingdomLocusRules.PilgrimStoryThreshold - 1,
+				book.PilgrimLoudness);
+			Assert.AreEqual((int)KingdomLocusRules.PilgrimState.None, book.PilgrimState);
+			Assert.AreEqual(0, book.PilgrimSequence);
+			Assert.AreEqual(0L, book.PilgrimCauseTick);
+			Assert.AreEqual("", book.PilgrimCause);
+			Assert.AreEqual("", book.PilgrimObjectId);
+			Assert.AreEqual("", book.PilgrimName);
+			Assert.AreEqual("", book.PilgrimPlaceName);
+			Assert.AreEqual(0, book.PilgrimGreeted);
+		}
+
+		[Test]
+		public void WaitingPilgrimCannotClaimAStaleBodyOrGreetedOutcome()
+		{
+			KingdomCityBook book = new KingdomCityBook
+			{
+				PilgrimState = (int)KingdomLocusRules.PilgrimState.Waiting,
+				PilgrimSequence = 3,
+				PilgrimCauseTick = 9000L,
+				PilgrimCause = "the festival of Ut yara Ux kept at Tamsketh",
+				PilgrimObjectId = "stale body",
+				PilgrimName = "Aeru",
+				PilgrimPlaceName = "Tamsketh",
+				PilgrimGreeted = 1
+			};
+			book.Normalize();
+			Assert.AreEqual("", book.PilgrimObjectId);
+			Assert.AreEqual("Aeru", book.PilgrimName,
+				"placement retry should keep the already-generated identity");
+			Assert.AreEqual(0, book.PilgrimGreeted);
 		}
 	}
 }

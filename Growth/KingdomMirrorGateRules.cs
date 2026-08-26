@@ -204,6 +204,29 @@ namespace ThousandAndFirst
 			return LocationKeyPrefix + zoneId + "_" + x + "," + y;
 		}
 
+		/// <summary>Inverse of <see cref="ComposeLocationKey"/> for physical connection proof.</summary>
+		internal static bool TryParseLocationKey(string Key, out string ZoneId,
+			out int X, out int Y)
+		{
+			ZoneId = null;
+			X = Y = -1;
+			if (string.IsNullOrEmpty(Key)
+				|| !Key.StartsWith(LocationKeyPrefix, StringComparison.Ordinal)) return false;
+			int comma = Key.LastIndexOf(',');
+			int split = comma < 0 ? -1 : Key.LastIndexOf('_', comma);
+			if (split <= LocationKeyPrefix.Length || comma <= split + 1
+				|| comma >= Key.Length - 1) return false;
+			string zone = Key.Substring(LocationKeyPrefix.Length,
+				split - LocationKeyPrefix.Length);
+			if (!int.TryParse(Key.Substring(split + 1, comma - split - 1), out int x)
+				|| !int.TryParse(Key.Substring(comma + 1), out int y) || x < 0 || y < 0
+				|| ComposeLocationKey(zone, x, y) != Key) return false;
+			ZoneId = zone;
+			X = x;
+			Y = y;
+			return true;
+		}
+
 		/// <summary>Whether a name can be stored in the register whole.</summary>
 		internal static bool Storable(string text)
 		{

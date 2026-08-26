@@ -243,6 +243,61 @@ namespace ThousandAndFirst.Tests
 			Assert.IsNull(legs, "a refusal publishes nothing");
 		}
 
+		/// <summary>The level-1 path is frozen whole: both endpoints and every ground crossed between
+		/// them. A four-zone route therefore becomes the destination inbound leg plus four return
+		/// legs; no intermediate zone may disappear behind a direct destination-to-source estimate.</summary>
+		[Test]
+		public void APorterPathKeepsEveryIntermediateZone()
+		{
+			KingdomZoneNode[] nodes = new KingdomZoneNode[4]
+			{
+				new KingdomZoneNode("destination", 0, 0, 10),
+				new KingdomZoneNode("middle-a", 1, 0, 10),
+				new KingdomZoneNode("middle-b", 2, 0, 10),
+				new KingdomZoneNode("source", 3, 0, 10)
+			};
+			KingdomZoneGraph graph;
+			KingdomCityFault fault;
+			Assert.IsTrue(KingdomZoneGraph.TryBuild(nodes, nodes.Length,
+				KingdomDistanceRules.ZoneTransitCells, out graph, out fault));
+			int[] path;
+			int count;
+			Assert.IsTrue(KingdomJobRules.TryPorterPath(graph, "destination", "source",
+				out path, out count, out fault));
+			Assert.AreEqual(4, count);
+			Assert.AreEqual(5, count + 1, "one inbound destination leg plus one leg for every path node");
+			for (int i = 0; i < count; i++)
+			{
+				KingdomZoneNode node;
+				Assert.IsTrue(graph.TryNode(path[i], out node));
+				Assert.AreEqual(nodes[i].ZoneId, node.ZoneId, "path node " + i);
+			}
+		}
+
+		/// <summary>A true six-node path needs seven legs once the destination inbound leg is added.
+		/// The durable row holds six, so the planner refuses the whole journey instead of omitting a
+		/// piece of ground.</summary>
+		[Test]
+		public void APorterPathThatCannotFitItsDurableRowIsRefusedWhole()
+		{
+			KingdomZoneNode[] nodes = new KingdomZoneNode[6];
+			for (int i = 0; i < nodes.Length; i++)
+			{
+				nodes[i] = new KingdomZoneNode("z" + i, i, 0, 10);
+			}
+			KingdomZoneGraph graph;
+			KingdomCityFault fault;
+			Assert.IsTrue(KingdomZoneGraph.TryBuild(nodes, nodes.Length,
+				KingdomDistanceRules.ZoneTransitCells, out graph, out fault));
+			int[] path;
+			int count;
+			Assert.IsFalse(KingdomJobRules.TryPorterPath(graph, "z0", "z5",
+				out path, out count, out fault));
+			Assert.AreEqual(KingdomCityFault.RowCapExceeded, fault);
+			Assert.IsNull(path, "a refusal publishes no shortened path");
+			Assert.AreEqual(0, count);
+		}
+
 		/// <summary>Every mirrored cell lands on the opposite wall of the same row or column, which
 		/// is what makes the handoff a fact rather than a choice.</summary>
 		[TestCase(KingdomZoneStep.West, (short)0, (short)7, (short)79, (short)7)]
@@ -259,9 +314,9 @@ namespace ThousandAndFirst.Tests
 		}
 
 		/// <summary>
-		/// The edge a carrier enters by is a FACT from the two zone ids and never a draw, so it
-		/// cannot disagree with where the founder comes out (§3.7). A source this build cannot place
-		/// still gets a wall, because a carrier has to come in somewhere.
+		/// The edge a carrier enters by is a FACT from two adjacent horizontal zone ids and never a
+		/// draw, so it cannot disagree with where the founder comes out (§3.7). A non-neighbour,
+		/// malformed id, or vertical shaft refuses: inventing a wall would make a false journey.
 		/// </summary>
 		[Test]
 		public void TheEntryEdgeIsAFactAndNeverADraw()
@@ -270,12 +325,14 @@ namespace ThousandAndFirst.Tests
 			Assert.AreEqual(KingdomZoneStep.East, KingdomJobRules.EdgeToward("JoppaWorld.11.22.1.1.10", "JoppaWorld.11.22.2.1.10"));
 			Assert.AreEqual(KingdomZoneStep.North, KingdomJobRules.EdgeToward("JoppaWorld.11.22.1.1.10", "JoppaWorld.11.22.1.0.10"));
 			Assert.AreEqual(KingdomZoneStep.South, KingdomJobRules.EdgeToward("JoppaWorld.11.22.1.1.10", "JoppaWorld.11.22.1.2.10"));
-			// A source two parasangs west is not a neighbour, but west is still the way to it.
-			Assert.AreEqual(KingdomZoneStep.West, KingdomJobRules.EdgeToward("JoppaWorld.11.22.1.1.10", "JoppaWorld.9.22.1.1.10"));
-			Assert.AreEqual(KingdomZoneStep.West, KingdomJobRules.EdgeToward("JoppaWorld.11.22.1.1.10", null));
-			Assert.AreEqual(KingdomZoneStep.West, KingdomJobRules.EdgeToward("nonsense", "JoppaWorld.11.22.0.1.10"));
-			// Straight up or down is a stairwell and not an edge cell.
-			Assert.AreEqual(KingdomZoneStep.West, KingdomJobRules.EdgeToward("JoppaWorld.11.22.1.1.10", "JoppaWorld.11.22.1.1.11"));
+			Assert.AreEqual(KingdomZoneStep.None, KingdomJobRules.EdgeToward("JoppaWorld.11.22.1.1.10", "JoppaWorld.9.22.1.1.10"));
+			Assert.AreEqual(KingdomZoneStep.None, KingdomJobRules.EdgeToward("JoppaWorld.11.22.1.1.10", null));
+			Assert.AreEqual(KingdomZoneStep.None, KingdomJobRules.EdgeToward("nonsense", "JoppaWorld.11.22.0.1.10"));
+			Assert.AreEqual(KingdomZoneStep.None, KingdomJobRules.EdgeToward("JoppaWorld.11.22.1.1.10", "JoppaWorld.11.22.1.1.11"));
+			short mirrorX;
+			short mirrorY;
+			Assert.IsFalse(KingdomJobRules.TryMirror(12, 7, KingdomZoneStep.Up, 80, 25,
+				out mirrorX, out mirrorY), "a shaft uses its authored cell, never a mirrored wall");
 		}
 
 		// ==================================================================================
@@ -365,6 +422,8 @@ namespace ThousandAndFirst.Tests
 			KingdomCityFault fault;
 			Assert.IsFalse(KingdomJobRules.TryDrawEntryCell(seed, "taf:settlement:kavvat", 0, KingdomZoneStep.West, 80, 25, out x, out y, out fault));
 			Assert.IsFalse(KingdomJobRules.TryDrawEntryCell(seed, "taf:settlement:kavvat", 1, KingdomZoneStep.West, 2, 25, out x, out y, out fault));
+			Assert.IsFalse(KingdomJobRules.TryDrawEntryCell(seed, "taf:settlement:kavvat", 1, KingdomZoneStep.None, 80, 25, out x, out y, out fault));
+			Assert.IsFalse(KingdomJobRules.TryDrawEntryCell(seed, "taf:settlement:kavvat", 1, KingdomZoneStep.Down, 80, 25, out x, out y, out fault));
 			Assert.IsFalse(KingdomJobRules.TryDrawOrigin(seed, "taf:settlement:kavvat", 1, 0, out origin, out fault));
 			Assert.AreEqual(KingdomResidentRules.NoOrigin, origin);
 		}

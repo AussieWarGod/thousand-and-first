@@ -81,8 +81,23 @@ namespace XRL.World.Parts
 
 		public override void TurnTick(long TimeTick, int Amount)
 		{
+			KingdomSystem master = The.Game?.GetSystem<KingdomSystem>();
+			if (!KingdomMaster.AutomaticWorkAllowed(master)) return;
 			if (Stage == KingdomCropRules.PlotStage.Dormant)
 			{
+				return;
+			}
+			if (NextStageTick <= master.MasterOptionTick)
+			{
+				// A field remains planted/ripe, but disabled time never becomes free growth or
+				// gathering. The next stage begins strictly in the future from this first wake.
+				if (Stage == KingdomCropRules.PlotStage.Growing)
+				{
+					if (!KingdomMasterRules.TryFutureDeadline(TimeTick,
+						KingdomCropRules.GrowTicks, out long future)) return;
+					NextStageTick = future;
+				}
+				else NextStageTick = TimeTick;
 				return;
 			}
 			if (Stage == KingdomCropRules.PlotStage.Growing)
@@ -241,8 +256,9 @@ namespace ThousandAndFirst
 			// Snapshotted first: gathering spawns crop items into containers in this same zone,
 			// and walking the live object list while that happens throws.
 			List<GameObject> fields = new List<GameObject>();
-			foreach (GameObject item in Z.GetObjects())
+			for (int i = 0; i < Survey.Objects.Count; i++)
 			{
+				GameObject item = Survey.Objects[i];
 				if (KingdomCrops.FieldOf(item) != null)
 				{
 					fields.Add(item);
@@ -270,8 +286,9 @@ namespace ThousandAndFirst
 			int daysAgo = (lastDue > 0L && timeTicks > lastDue) ? KingdomRules.ElapsedDays(timeTicks - lastDue) : 0;
 			System.Ledger.Harvested += delivered + pending;
 			System.Ledger.HarvestLost += lost;
-			System.RecordDeed("the harvest gathered at " + System.KingdomDisplayName);
-			KingdomChronicle.Record(System, KingdomCropRules.HarvestChronicle(cycles, yield, System.KingdomDisplayName, daysAgo));
+			string realm = KingdomPresentation.Rich(System.KingdomDisplayName);
+			System.RecordDeed("the harvest gathered at " + realm);
+			KingdomChronicle.Record(System, KingdomCropRules.HarvestChronicle(cycles, yield, realm, daysAgo));
 			string note = KingdomCropRules.HarvestNote(cycles, yield, delivered, pending, lost);
 			System.Ledger.Note("{{G|" + note + "}}");
 			MessageQueue.AddPlayerMessage("{{G|" + note + "}}");
@@ -405,7 +422,7 @@ namespace ThousandAndFirst
 			string seed = Work.GetStringProperty(KingdomCrops.SeedProperty);
 			if (string.IsNullOrEmpty(seed))
 			{
-				seed = KingdomCropRules.SeedForCrop(Field.CropBlueprint);
+				seed = KingdomData.SeedForCrop(Field.CropBlueprint);
 			}
 			if (string.IsNullOrEmpty(seed) || Survey.Larders.Count == 0)
 			{

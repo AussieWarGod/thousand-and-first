@@ -20,7 +20,32 @@ namespace ThousandAndFirst
 	{
 		public const int Magic = 0x54415331; // TAS1
 		public const int LegacyVersion = 1;
-		public const int CurrentVersion = 2;
+		public const int PreviousVersion = 2;
+		/// <summary>First archive surface carrying the lifecycle raid ledger and its
+		/// appended actions. Kept explicit after later settlement fields are added so a
+		/// v3 archive is not mistaken for the older, pre-ledger v2 contract.</summary>
+		public const int RaidVersion = 3;
+		/// <summary>First archive surface carrying vanilla culture/species tallies.</summary>
+		public const int ResidentIdentityVersion = 4;
+		/// <summary>First archive surface carrying built-in/extension live identity tallies.</summary>
+		public const int ExtensionIdentityVersion = 5;
+		/// <summary>First archive surface carrying causal-pilgrim state and the exact named-settler
+		/// salvage-expedition columns added during the first full brief-completion pass.</summary>
+		public const int SalvageVersion = 6;
+		/// <summary>First archive surface carrying the bounded API-v3 settlement behaviour sidecar.</summary>
+		public const int BehaviourVersion = 7;
+		/// <summary>First archive surface carrying durable physical-happening lifecycle authority.</summary>
+		public const int PhysicalHappeningVersion = 8;
+		/// <summary>First archive surface carrying explicit exact-delivery planner authority.</summary>
+		public const int ExactLogisticsVersion = 9;
+		/// <summary>First archive surface carrying exact defensive WorkId/resident reservations.</summary>
+		public const int DefensiveReservationVersion = 10;
+		/// <summary>First archive surface carrying frozen semantic person plans and stable
+		/// office-holder resident identity.</summary>
+		public const int SemanticSelectionVersion = 11;
+		/// <summary>First archive surface carrying independent extension-happening cursors.</summary>
+		public const int HappeningCursorVersion = 12;
+		public const int CurrentVersion = HappeningCursorVersion;
 		public const int MaxPayloadBytes = 2 * 1024 * 1024;
 		public const int MaxStringBytes = 16 * 1024;
 		public const int MaxByteArrayBytes = 512 * 1024;
@@ -145,6 +170,10 @@ namespace ThousandAndFirst
 			typeof(KingdomLifecycleResourceLease),
 			typeof(KingdomLifecycleResourceRevision),
 			typeof(KingdomLifecycleProof),
+			typeof(KingdomRaidLedger),
+			typeof(KingdomRaidGrievance),
+			typeof(KingdomRaidIncident),
+			typeof(KingdomRaidDefenceReservation),
 			typeof(KingdomGrowthBook),
 			typeof(KingdomGrowthOperation),
 			typeof(KingdomGrowthWaterLeg),
@@ -174,6 +203,11 @@ namespace ThousandAndFirst
 			Failure = null;
 			try
 			{
+				if (Value != null && (Value.LifecycleBook == null
+					|| Value.LifecycleBook.FormatVersion != KingdomLifecycleRules.CurrentFormatVersion
+					|| !KingdomRaidIncidentRules.ValidLedger(Value.LifecycleBook.RaidLedger)))
+					throw new InvalidDataException(
+						"Archived settlement current raid evidence is malformed.");
 				if (!StrictMutableRoot(Value, typeof(KingdomSettlement), out Failure))
 					return false;
 				using (CappedWriteStream stream = new CappedWriteStream(MaxPayloadBytes))
@@ -235,6 +269,356 @@ namespace ThousandAndFirst
 				return false;
 			}
 		}
+
+		/// <summary>Test-only producer for the exact archive-v2 surface. RaidLedger did not
+		/// exist in that schema; action values appended with lifecycle v7 are likewise refused.</summary>
+		internal static bool TryEncodePreviousV2ForTests(KingdomSettlement Value,
+			out byte[] Payload, out string Failure)
+		{
+			Payload = null;
+			Failure = null;
+			try
+			{
+				if (!StrictMutableRoot(Value, typeof(KingdomSettlement), out Failure))
+					return false;
+				using (CappedWriteStream stream = new CappedWriteStream(MaxPayloadBytes))
+				using (BinaryWriter writer = new BinaryWriter(stream, StrictUtf8, true))
+				{
+					writer.Write(Magic);
+					writer.Write(PreviousVersion);
+					WriteString(writer, Shape(typeof(KingdomSettlement), PreviousVersion),
+						MaxShapeBytes);
+					WriteValue(writer, typeof(KingdomSettlement), Value, 0, new Budget(),
+						PreviousVersion);
+					writer.Flush();
+					if (stream.Length > MaxPayloadBytes)
+						throw new InvalidDataException(
+							"Archived settlement v2 payload exceeds cap.");
+					Payload = stream.ToArray();
+					return true;
+				}
+			}
+			catch (Exception ex)
+			{
+				Failure = Bound(ex.Message);
+				Payload = null;
+				return false;
+			}
+		}
+
+		/// <summary>Test-only producer for the exact archive-v3 surface. CultureCounts,
+		/// SpeciesCounts, and built-in/extension IdentityCounts did not exist in that schema; the current
+		/// reader must restore all as empty live facts without reinterpreting older bytes.</summary>
+		internal static bool TryEncodeRaidV3ForTests(KingdomSettlement Value,
+			out byte[] Payload, out string Failure)
+		{
+			Payload = null;
+			Failure = null;
+			try
+			{
+				if (Value != null && (Value.LifecycleBook == null
+					|| Value.LifecycleBook.FormatVersion != KingdomLifecycleRules.CurrentFormatVersion
+					|| !KingdomRaidIncidentRules.ValidLedger(Value.LifecycleBook.RaidLedger)))
+					throw new InvalidDataException(
+						"Archived settlement v3 raid evidence is malformed.");
+				if (!StrictMutableRoot(Value, typeof(KingdomSettlement), out Failure))
+					return false;
+				using (CappedWriteStream stream = new CappedWriteStream(MaxPayloadBytes))
+				using (BinaryWriter writer = new BinaryWriter(stream, StrictUtf8, true))
+				{
+					writer.Write(Magic);
+					writer.Write(RaidVersion);
+					WriteString(writer, Shape(typeof(KingdomSettlement), RaidVersion),
+						MaxShapeBytes);
+					WriteValue(writer, typeof(KingdomSettlement), Value, 0, new Budget(),
+						RaidVersion);
+					writer.Flush();
+					if (stream.Length > MaxPayloadBytes)
+						throw new InvalidDataException(
+							"Archived settlement v3 payload exceeds cap.");
+					Payload = stream.ToArray();
+					return true;
+				}
+			}
+			catch (Exception ex)
+			{
+				Failure = Bound(ex.Message);
+				Payload = null;
+				return false;
+			}
+		}
+
+		/// <summary>Test-only producer for the exact archive-v4 surface. It carries vanilla
+		/// culture/species tallies but predates built-in/extension IdentityCounts.</summary>
+		internal static bool TryEncodeResidentIdentityV4ForTests(KingdomSettlement Value,
+			out byte[] Payload, out string Failure)
+		{
+			Payload = null;
+			Failure = null;
+			try
+			{
+				if (Value != null && (Value.LifecycleBook == null
+					|| Value.LifecycleBook.FormatVersion != KingdomLifecycleRules.CurrentFormatVersion
+					|| !KingdomRaidIncidentRules.ValidLedger(Value.LifecycleBook.RaidLedger)))
+					throw new InvalidDataException(
+						"Archived settlement v4 raid evidence is malformed.");
+				if (!StrictMutableRoot(Value, typeof(KingdomSettlement), out Failure))
+					return false;
+				using (CappedWriteStream stream = new CappedWriteStream(MaxPayloadBytes))
+				using (BinaryWriter writer = new BinaryWriter(stream, StrictUtf8, true))
+				{
+					writer.Write(Magic);
+					writer.Write(ResidentIdentityVersion);
+					WriteString(writer, Shape(typeof(KingdomSettlement), ResidentIdentityVersion),
+						MaxShapeBytes);
+					WriteValue(writer, typeof(KingdomSettlement), Value, 0, new Budget(),
+						ResidentIdentityVersion);
+					writer.Flush();
+					if (stream.Length > MaxPayloadBytes)
+						throw new InvalidDataException(
+							"Archived settlement v4 payload exceeds cap.");
+					Payload = stream.ToArray();
+					return true;
+				}
+			}
+			catch (Exception ex)
+			{
+				Failure = Bound(ex.Message);
+				Payload = null;
+				return false;
+			}
+		}
+
+		/// <summary>Test-only producer for the exact archive-v5 surface. It carries extension
+		/// identity counts but predates causal pilgrims, expedition job columns, and expedition
+		/// homecoming lines. Its golden prevents future additive fields from rewriting old bytes.</summary>
+		internal static bool TryEncodeExtensionIdentityV5ForTests(KingdomSettlement Value,
+			out byte[] Payload, out string Failure)
+		{
+			Payload = null;
+			Failure = null;
+			try
+			{
+				if (Value != null && (Value.LifecycleBook == null
+					|| Value.LifecycleBook.FormatVersion != KingdomLifecycleRules.CurrentFormatVersion
+					|| !KingdomRaidIncidentRules.ValidLedger(Value.LifecycleBook.RaidLedger)))
+					throw new InvalidDataException(
+						"Archived settlement v5 raid evidence is malformed.");
+				if (!StrictMutableRoot(Value, typeof(KingdomSettlement), out Failure))
+					return false;
+				using (CappedWriteStream stream = new CappedWriteStream(MaxPayloadBytes))
+				using (BinaryWriter writer = new BinaryWriter(stream, StrictUtf8, true))
+				{
+					writer.Write(Magic);
+					writer.Write(ExtensionIdentityVersion);
+					WriteString(writer, Shape(typeof(KingdomSettlement),
+						ExtensionIdentityVersion), MaxShapeBytes);
+					WriteValue(writer, typeof(KingdomSettlement), Value, 0, new Budget(),
+						ExtensionIdentityVersion);
+					writer.Flush();
+					if (stream.Length > MaxPayloadBytes)
+						throw new InvalidDataException(
+							"Archived settlement v5 payload exceeds cap.");
+					Payload = stream.ToArray();
+					return true;
+				}
+			}
+			catch (Exception ex)
+			{
+				Failure = Bound(ex.Message);
+				Payload = null;
+				return false;
+			}
+		}
+
+		/// <summary>Test-only producer for the exact archive-v6 surface. It carries causal pilgrims,
+		/// expedition job columns, and homecoming lines, but predates the API-v3 behaviour sidecar.
+		/// Its independent golden prevents future additive fields from rewriting salvage-era bytes.</summary>
+		internal static bool TryEncodeSalvageV6ForTests(KingdomSettlement Value,
+			out byte[] Payload, out string Failure)
+		{
+			Payload = null;
+			Failure = null;
+			try
+			{
+				if (Value != null && (Value.LifecycleBook == null
+					|| Value.LifecycleBook.FormatVersion != KingdomLifecycleRules.CurrentFormatVersion
+					|| !KingdomRaidIncidentRules.ValidLedger(Value.LifecycleBook.RaidLedger)))
+					throw new InvalidDataException(
+						"Archived settlement v6 raid evidence is malformed.");
+				if (!StrictMutableRoot(Value, typeof(KingdomSettlement), out Failure))
+					return false;
+				using (CappedWriteStream stream = new CappedWriteStream(MaxPayloadBytes))
+				using (BinaryWriter writer = new BinaryWriter(stream, StrictUtf8, true))
+				{
+					writer.Write(Magic);
+					writer.Write(SalvageVersion);
+					WriteString(writer, Shape(typeof(KingdomSettlement), SalvageVersion),
+						MaxShapeBytes);
+					WriteValue(writer, typeof(KingdomSettlement), Value, 0, new Budget(),
+						SalvageVersion);
+					writer.Flush();
+					if (stream.Length > MaxPayloadBytes)
+						throw new InvalidDataException(
+							"Archived settlement v6 payload exceeds cap.");
+					Payload = stream.ToArray();
+					return true;
+				}
+			}
+			catch (Exception ex)
+			{
+				Failure = Bound(ex.Message);
+				Payload = null;
+				return false;
+			}
+		}
+
+		/// <summary>Test-only producer for the exact archive-v7 surface. It carries API-v3
+		/// behaviour but predates the physical-happening lifecycle sidecar.</summary>
+		internal static bool TryEncodeBehaviourV7ForTests(KingdomSettlement Value,
+			out byte[] Payload, out string Failure)
+		{
+			Payload = null;
+			Failure = null;
+			try
+			{
+				if (Value != null && (Value.LifecycleBook == null
+					|| Value.LifecycleBook.FormatVersion != KingdomLifecycleRules.CurrentFormatVersion
+					|| !KingdomRaidIncidentRules.ValidLedger(Value.LifecycleBook.RaidLedger)))
+					throw new InvalidDataException(
+						"Archived settlement v7 raid evidence is malformed.");
+				if (!StrictMutableRoot(Value, typeof(KingdomSettlement), out Failure))
+					return false;
+				using (CappedWriteStream stream = new CappedWriteStream(MaxPayloadBytes))
+				using (BinaryWriter writer = new BinaryWriter(stream, StrictUtf8, true))
+				{
+					writer.Write(Magic);
+					writer.Write(BehaviourVersion);
+					WriteString(writer, Shape(typeof(KingdomSettlement), BehaviourVersion),
+						MaxShapeBytes);
+					WriteValue(writer, typeof(KingdomSettlement), Value, 0, new Budget(),
+						BehaviourVersion);
+					writer.Flush();
+					if (stream.Length > MaxPayloadBytes)
+						throw new InvalidDataException(
+							"Archived settlement v7 payload exceeds cap.");
+					Payload = stream.ToArray();
+					return true;
+				}
+			}
+			catch (Exception ex)
+			{
+				Failure = Bound(ex.Message);
+				Payload = null;
+				return false;
+			}
+		}
+
+		/// <summary>Test-only producer for the exact archive-v8 surface. It carries physical
+		/// happening authority but predates exact central-logistics delivery columns.</summary>
+		internal static bool TryEncodePhysicalHappeningV8ForTests(KingdomSettlement Value,
+			out byte[] Payload, out string Failure)
+		{
+			return TryEncodeHistoricalV8ToV11ForTests(Value, PhysicalHappeningVersion,
+				"v8", out Payload, out Failure);
+		}
+
+		/// <summary>Test-only producer for the exact archive-v9 surface. It carries exact
+		/// central-logistics authority but predates defensive WorkId/resident reservations.</summary>
+		internal static bool TryEncodeExactLogisticsV9ForTests(KingdomSettlement Value,
+			out byte[] Payload, out string Failure)
+		{
+			return TryEncodeHistoricalV8ToV11ForTests(Value, ExactLogisticsVersion,
+				"v9", out Payload, out Failure);
+		}
+
+		/// <summary>Test-only producer for the exact archive-v10 surface. It carries defensive
+		/// reservations but predates frozen semantic person plans and stable office identity.</summary>
+		internal static bool TryEncodeDefensiveReservationV10ForTests(KingdomSettlement Value,
+			out byte[] Payload, out string Failure)
+		{
+			return TryEncodeHistoricalV8ToV11ForTests(Value, DefensiveReservationVersion,
+				"v10", out Payload, out Failure);
+		}
+
+		/// <summary>Test-only producer for archive v11, before per-source happening cursors.</summary>
+		internal static bool TryEncodeSemanticSelectionV11ForTests(KingdomSettlement Value,
+			out byte[] Payload, out string Failure)
+		{
+			return TryEncodeHistoricalV8ToV11ForTests(Value, SemanticSelectionVersion,
+				"v11", out Payload, out Failure);
+		}
+
+		private static bool TryEncodeHistoricalV8ToV11ForTests(KingdomSettlement Value,
+			int Version, string Label, out byte[] Payload, out string Failure)
+		{
+			Payload = null;
+			Failure = null;
+			try
+			{
+				if (Version < PhysicalHappeningVersion || Version > SemanticSelectionVersion)
+					throw new ArgumentOutOfRangeException(nameof(Version));
+				if (Value != null && (Value.LifecycleBook == null
+					|| Value.LifecycleBook.FormatVersion != KingdomLifecycleRules.CurrentFormatVersion
+					|| !KingdomRaidIncidentRules.ValidLedger(Value.LifecycleBook.RaidLedger)))
+					throw new InvalidDataException(
+						"Archived settlement " + Label + " raid evidence is malformed.");
+				if (!StrictMutableRoot(Value, typeof(KingdomSettlement), out Failure))
+					return false;
+				using (CappedWriteStream stream = new CappedWriteStream(MaxPayloadBytes))
+				using (BinaryWriter writer = new BinaryWriter(stream, StrictUtf8, true))
+				{
+					writer.Write(Magic);
+					writer.Write(Version);
+					WriteString(writer, Shape(typeof(KingdomSettlement), Version), MaxShapeBytes);
+					WriteValue(writer, typeof(KingdomSettlement), Value, 0, new Budget(), Version);
+					writer.Flush();
+					if (stream.Length > MaxPayloadBytes)
+						throw new InvalidDataException(
+							"Archived settlement " + Label + " payload exceeds cap.");
+					Payload = stream.ToArray();
+					return true;
+				}
+			}
+			catch (Exception ex)
+			{
+				Failure = Bound(ex.Message);
+				Payload = null;
+				return false;
+			}
+		}
+
+		/// <summary>Test-only hostile-envelope producer. It bypasses semantic raid validation
+		/// while retaining all graph and aggregate bounds so the production reader can prove that
+		/// malformed current evidence is rejected rather than normalized into authority.</summary>
+		internal static bool TryEncodeUncheckedCurrentForTests(KingdomSettlement Value,
+			out byte[] Payload, out string Failure)
+		{
+			Payload = null;
+			Failure = null;
+			try
+			{
+				if (!StrictMutableRoot(Value, typeof(KingdomSettlement), out Failure))
+					return false;
+				using (CappedWriteStream stream = new CappedWriteStream(MaxPayloadBytes))
+				using (BinaryWriter writer = new BinaryWriter(stream, StrictUtf8, true))
+				{
+					writer.Write(Magic);
+					writer.Write(CurrentVersion);
+					WriteString(writer, Shape(typeof(KingdomSettlement)), MaxShapeBytes);
+					WriteValue(writer, typeof(KingdomSettlement), Value, 0, new Budget());
+					writer.Flush();
+					Payload = stream.ToArray();
+					return true;
+				}
+			}
+			catch (Exception ex)
+			{
+				Failure = Bound(ex.Message);
+				Payload = null;
+				return false;
+			}
+		}
 #endif
 
 		/// <summary>Returns false for malformed/current-unsupported data. A strictly newer version
@@ -262,22 +646,50 @@ namespace ThousandAndFirst
 						Failure = "Archived settlement uses future version " + version + ".";
 						return false;
 					}
-					if (version != LegacyVersion && version != CurrentVersion)
+					if (version != LegacyVersion && version != PreviousVersion
+						&& version != RaidVersion
+						&& version != ResidentIdentityVersion
+						&& version != ExtensionIdentityVersion
+						&& version != SalvageVersion
+						&& version != BehaviourVersion
+						&& version != PhysicalHappeningVersion
+						&& version != ExactLogisticsVersion
+						&& version != DefensiveReservationVersion
+						&& version != SemanticSelectionVersion
+						&& version != CurrentVersion)
 						throw new InvalidDataException("Archived settlement version is unsupported.");
-					bool legacy = version == LegacyVersion;
 					string shape = ReadString(reader, MaxShapeBytes, Required: true);
-					if (!string.Equals(shape, Shape(typeof(KingdomSettlement), legacy),
+					if (!string.Equals(shape, Shape(typeof(KingdomSettlement), version),
 						StringComparison.Ordinal))
 						throw new InvalidDataException("Archived settlement schema shape is unknown.");
 					object decoded = ReadValue(reader, typeof(KingdomSettlement), 0,
-						new Budget(), legacy);
+						new Budget(), version);
 					if (stream.Position != stream.Length)
 						throw new InvalidDataException("Archived settlement has trailing bytes.");
 					Value = (KingdomSettlement)decoded;
-					if (legacy && Value != null &&
-						!KingdomLifecycleRules.StageLegacyGrowthMigration(Value.LifecycleBook))
+					if (version < SemanticSelectionVersion)
+						StageHistoricalSemanticPlan(Value);
+					if (version == LegacyVersion && Value != null)
+					{
+						if (!KingdomLifecycleRules.StageLegacyGrowthMigration(Value.LifecycleBook))
+							throw new InvalidDataException(
+								"Archived settlement legacy lifecycle could not stage Growth migration.");
+						KingdomLifecycleRules.QuarantineLegacyRaidAuthority(Value.LifecycleBook);
+					}
+					else if (version == PreviousVersion && Value != null
+						&& !KingdomLifecycleRules.StageRaidMigrationFromV6(Value.LifecycleBook))
 						throw new InvalidDataException(
-							"Archived settlement legacy lifecycle could not stage Growth migration.");
+							"Archived settlement v2 lifecycle could not stage raid migration.");
+					else if (version >= RaidVersion && version < CurrentVersion && Value != null
+						&& !KingdomLifecycleWireCodec.UpgradeArchivedRaidLedgerV1(
+							Value.LifecycleBook))
+						throw new InvalidDataException(
+							"Archived settlement historical raid ledger could not migrate.");
+					if (Value != null && (Value.LifecycleBook == null
+						|| Value.LifecycleBook.FormatVersion != KingdomLifecycleRules.CurrentFormatVersion
+						|| !KingdomRaidIncidentRules.ValidLedger(Value.LifecycleBook.RaidLedger)))
+						throw new InvalidDataException(
+							"Archived settlement raid evidence is malformed.");
 					return true;
 				}
 			}
@@ -287,6 +699,32 @@ namespace ThousandAndFirst
 				Value = null;
 				return false;
 			}
+		}
+
+		private static void StageHistoricalSemanticPlan(KingdomSettlement Value)
+		{
+			// Archive v1-v10 wrote the city-v2 carrier and omitted v3's exact resident-origin
+			// and frozen-arrival columns. Normalize that carrier at the decoder boundary so a
+			// successfully decoded historical settlement is immediately readable by current city
+			// rules; callers must not need an unrelated save-load normalization pass to finish the
+			// archive migration.
+			Value?.City?.Normalize();
+			KingdomGrowthBook growth = Value?.LifecycleBook?.Growth;
+			if (growth == null) return;
+			if (growth.FormatVersion == KingdomLifecycleRules.PreviousGrowthFormatVersion)
+				growth.FormatVersion = KingdomLifecycleRules.CurrentGrowthFormatVersion;
+			KingdomGrowthArrivalCandidate candidate = growth.ArrivalCandidate;
+			if (candidate == null) return;
+			candidate.LegacySemanticPlan = true;
+			candidate.SemanticPlanVersion = 0;
+			candidate.SemanticStreamId = null;
+			candidate.SemanticEventKind = 0U;
+			candidate.PlannedOrigin = null;
+			candidate.PlannedCreed = null;
+			candidate.PlannedName = null;
+			candidate.PlannedArrived = null;
+			candidate.ArrivalX = -1;
+			candidate.ArrivalY = -1;
 		}
 
 		public static bool TryClone(KingdomSettlement Source, out KingdomSettlement Clone,
@@ -397,7 +835,38 @@ namespace ThousandAndFirst
 				Jobs.WalkTicksPerCell.Count == 0 && Jobs.Statuses != null &&
 				Jobs.Statuses.Count == 0 && Jobs.OriginCodes != null &&
 				Jobs.OriginCodes.Count == 0 && Jobs.DepositLegIndexes != null &&
-				Jobs.DepositLegIndexes.Count == 0 && Jobs.LegCounts != null &&
+				Jobs.DepositLegIndexes.Count == 0 && Jobs.SubjectIds != null &&
+				Jobs.SubjectIds.Count == 0 && Jobs.SubjectNames != null &&
+				Jobs.SubjectNames.Count == 0 && Jobs.TargetNames != null &&
+				Jobs.TargetNames.Count == 0 && Jobs.DueTicks != null &&
+				Jobs.DueTicks.Count == 0 && Jobs.WaterCosts != null &&
+				Jobs.WaterCosts.Count == 0 && Jobs.ProvisionCosts != null &&
+				Jobs.ProvisionCosts.Count == 0 && Jobs.OutcomeCodes != null &&
+				Jobs.OutcomeCodes.Count == 0 && Jobs.DeliverySourceEndpointIds != null &&
+				Jobs.DeliverySourceEndpointIds.Count == 0 &&
+				Jobs.DeliverySourceObjectIds != null && Jobs.DeliverySourceObjectIds.Count == 0 &&
+				Jobs.DeliverySourceXs != null && Jobs.DeliverySourceXs.Count == 0 &&
+				Jobs.DeliverySourceYs != null && Jobs.DeliverySourceYs.Count == 0 &&
+				Jobs.DeliveryTargetEndpointIds != null &&
+				Jobs.DeliveryTargetEndpointIds.Count == 0 &&
+				Jobs.DeliveryTargetObjectIds != null && Jobs.DeliveryTargetObjectIds.Count == 0 &&
+				Jobs.DeliveryTargetXs != null && Jobs.DeliveryTargetXs.Count == 0 &&
+				Jobs.DeliveryTargetYs != null && Jobs.DeliveryTargetYs.Count == 0 &&
+				Jobs.DeliverySourceBeforeAmounts != null &&
+				Jobs.DeliverySourceBeforeAmounts.Count == 0 && Jobs.DeliveryTripIds != null &&
+				Jobs.DeliveryTripIds.Count == 0 && Jobs.DeliveryStopOrdinals != null &&
+				Jobs.DeliveryStopOrdinals.Count == 0 && Jobs.DeliveryPhases != null &&
+				Jobs.DeliveryPhases.Count == 0 && Jobs.DeliveryCargoAuthorityKinds != null &&
+				Jobs.DeliveryCargoAuthorityKinds.Count == 0 &&
+				Jobs.DeliveryOwnerOperationIds != null && Jobs.DeliveryOwnerOperationIds.Count == 0 &&
+				Jobs.DeliveryOwnerManifestVersions != null && Jobs.DeliveryOwnerManifestVersions.Count == 0 &&
+				Jobs.DeliveryOwnerManifestDigests != null && Jobs.DeliveryOwnerManifestDigests.Count == 0 &&
+				Jobs.DeliveryOwnerManifestRevisions != null && Jobs.DeliveryOwnerManifestRevisions.Count == 0 &&
+				Jobs.DeliveryManifestSourceStarts != null && Jobs.DeliveryManifestSourceStarts.Count == 0 &&
+				Jobs.DeliveryManifestSourceCounts != null && Jobs.DeliveryManifestSourceCounts.Count == 0 &&
+				Jobs.DeliveryTargetBeforeAmounts != null && Jobs.DeliveryTargetBeforeAmounts.Count == 0 &&
+				Jobs.DeliveryTargetReceiptStates != null && Jobs.DeliveryTargetReceiptStates.Count == 0 &&
+				Jobs.LegCounts != null &&
 				Jobs.LegCounts.Count == 0 && Jobs.LegZoneIds != null &&
 				Jobs.LegZoneIds.Count == 0 && Jobs.LegEnterX != null &&
 				Jobs.LegEnterX.Count == 0 && Jobs.LegEnterY != null &&
@@ -655,11 +1124,18 @@ namespace ThousandAndFirst
 		private static void WriteValue(BinaryWriter Writer, Type Type, object Value,
 			int Depth, Budget Budget)
 		{
-			WriteValue(Writer, Type, Value, Depth, Budget, Legacy: false);
+			WriteValue(Writer, Type, Value, Depth, Budget, CurrentVersion);
 		}
 
 		private static void WriteValue(BinaryWriter Writer, Type Type, object Value,
 			int Depth, Budget Budget, bool Legacy)
+		{
+			WriteValue(Writer, Type, Value, Depth, Budget,
+				Legacy ? LegacyVersion : CurrentVersion);
+		}
+
+		private static void WriteValue(BinaryWriter Writer, Type Type, object Value,
+			int Depth, Budget Budget, int SchemaVersion)
 		{
 			if (Depth > MaxDepth) throw new InvalidDataException("Archived settlement graph is too deep.");
 			if (Value != null && !Type.IsValueType && Value.GetType() != Type)
@@ -675,10 +1151,26 @@ namespace ThousandAndFirst
 				long raw = Convert.ToInt64(Value);
 				if (!EnumRawFits(Type, raw) || !Enum.IsDefined(Type, Value))
 					throw new InvalidDataException("Archived settlement enum value is unknown.");
-				if (Legacy && Type == typeof(KingdomLifecycleResourceKind) &&
+				if (SchemaVersion == LegacyVersion
+					&& Type == typeof(KingdomLifecycleResourceKind) &&
 					raw > (long)KingdomLifecycleResourceKind.Raid)
 					throw new InvalidDataException(
 						"Archived settlement v1 resource kind is unknown.");
+				if (SchemaVersion < RaidVersion
+					&& Type == typeof(KingdomLifecycleAction)
+					&& raw > (long)KingdomLifecycleAction.PetitionExpire)
+					throw new InvalidDataException(
+						"Archived settlement historical lifecycle action is unknown.");
+				if (SchemaVersion >= RaidVersion && SchemaVersion < PhysicalHappeningVersion
+					&& Type == typeof(KingdomLifecycleAction)
+					&& raw > (long)KingdomLifecycleAction.RaidResolve)
+					throw new InvalidDataException(
+						"Archived settlement historical raid action is unknown.");
+				if (SchemaVersion < PhysicalHappeningVersion
+					&& Type == typeof(KingdomRaidIncidentState)
+					&& raw > (long)KingdomRaidIncidentState.Queued)
+					throw new InvalidDataException(
+						"Archived settlement historical raid state is unknown.");
 				Writer.Write(raw);
 				return;
 			}
@@ -709,7 +1201,7 @@ namespace ThousandAndFirst
 				Writer.Write(list.Count);
 				Type itemType = Type.GetGenericArguments()[0];
 				for (int i = 0; i < list.Count; i++)
-					WriteValue(Writer, itemType, list[i], Depth + 1, Budget, Legacy);
+					WriteValue(Writer, itemType, list[i], Depth + 1, Budget, SchemaVersion);
 				return;
 			}
 			if (IsDictionary(Type))
@@ -736,7 +1228,7 @@ namespace ThousandAndFirst
 				{
 					WriteString(Writer, keys[i], MaxStringBytes);
 					WriteValue(Writer, arguments[1], dictionary[keys[i]], Depth + 1, Budget,
-						Legacy);
+						SchemaVersion);
 				}
 				return;
 			}
@@ -746,20 +1238,57 @@ namespace ThousandAndFirst
 			if (Value == null) return;
 			if (++Budget.Objects > MaxObjects)
 				throw new InvalidDataException("Archived settlement object count exceeds cap.");
-			FieldInfo[] fields = Fields(Type, Legacy);
+			FieldInfo[] fields = Fields(Type, SchemaVersion);
 			for (int i = 0; i < fields.Length; i++)
-				WriteValue(Writer, fields[i].FieldType, fields[i].GetValue(Value),
-					Depth + 1, Budget, Legacy);
+			{
+				if (Type == typeof(Simulation.City.KingdomCityBook)
+					&& (string.Equals(fields[i].Name, "ExtensionModel", StringComparison.Ordinal)
+						|| string.Equals(fields[i].Name, "HappeningModel", StringComparison.Ordinal)
+						|| string.Equals(fields[i].Name, "ExtensionHappeningCursors", StringComparison.Ordinal)))
+				{
+					int maximum = string.Equals(fields[i].Name, "ExtensionModel",
+						StringComparison.Ordinal)
+						? Simulation.City.KingdomCityBook.MaxExtensionModelChars
+						: string.Equals(fields[i].Name, "HappeningModel", StringComparison.Ordinal)
+							? Simulation.City.KingdomCityBook.MaxHappeningModelChars
+							: Simulation.City.KingdomCityBook.MaxExtensionHappeningCursorChars;
+					WriteString(Writer, (string)fields[i].GetValue(Value), maximum);
+					continue;
+				}
+				object fieldValue = fields[i].GetValue(Value);
+				if (Type == typeof(KingdomLifecycleBook)
+					&& string.Equals(fields[i].Name, "FormatVersion", StringComparison.Ordinal)
+					&& SchemaVersion < DefensiveReservationVersion)
+					fieldValue = SchemaVersion == LegacyVersion
+						? KingdomLifecycleRules.LegacyLifecycleFormatVersion
+						: SchemaVersion == PreviousVersion
+							? KingdomLifecycleRules.PreviousLifecycleFormatVersion
+							: KingdomLifecycleRules.RaidLedgerLifecycleFormatVersion;
+				if (Type == typeof(KingdomRaidLedger)
+					&& string.Equals(fields[i].Name, "Version", StringComparison.Ordinal)
+					&& SchemaVersion < DefensiveReservationVersion)
+					fieldValue = SchemaVersion < PhysicalHappeningVersion ? 1 : 2;
+				if (Type == typeof(Simulation.City.KingdomCityBook)
+					&& string.Equals(fields[i].Name, "SchemaVersion", StringComparison.Ordinal)
+					&& SchemaVersion < SemanticSelectionVersion)
+					fieldValue = 2;
+				if (Type == typeof(KingdomGrowthBook)
+					&& string.Equals(fields[i].Name, "FormatVersion", StringComparison.Ordinal)
+					&& SchemaVersion < SemanticSelectionVersion)
+					fieldValue = KingdomLifecycleRules.PreviousGrowthFormatVersion;
+				WriteValue(Writer, fields[i].FieldType, fieldValue,
+					Depth + 1, Budget, SchemaVersion);
+			}
 		}
 
 		private static object ReadValue(BinaryReader Reader, Type Type, int Depth,
 			Budget Budget)
 		{
-			return ReadValue(Reader, Type, Depth, Budget, Legacy: false);
+			return ReadValue(Reader, Type, Depth, Budget, CurrentVersion);
 		}
 
 		private static object ReadValue(BinaryReader Reader, Type Type, int Depth,
-			Budget Budget, bool Legacy)
+			Budget Budget, int SchemaVersion)
 		{
 			if (Depth > MaxDepth) throw new InvalidDataException("Archived settlement graph is too deep.");
 			if (Type == typeof(string)) return ReadString(Reader, MaxStringBytes, Required: false);
@@ -772,10 +1301,26 @@ namespace ThousandAndFirst
 				object value = Enum.ToObject(Type, raw);
 				if (!Enum.IsDefined(Type, value))
 					throw new InvalidDataException("Archived settlement enum value is unknown.");
-				if (Legacy && Type == typeof(KingdomLifecycleResourceKind) &&
+				if (SchemaVersion == LegacyVersion
+					&& Type == typeof(KingdomLifecycleResourceKind) &&
 					raw > (long)KingdomLifecycleResourceKind.Raid)
 					throw new InvalidDataException(
 						"Archived settlement v1 resource kind is unknown.");
+				if (SchemaVersion < RaidVersion
+					&& Type == typeof(KingdomLifecycleAction)
+					&& raw > (long)KingdomLifecycleAction.PetitionExpire)
+					throw new InvalidDataException(
+						"Archived settlement historical lifecycle action is unknown.");
+				if (SchemaVersion >= RaidVersion && SchemaVersion < PhysicalHappeningVersion
+					&& Type == typeof(KingdomLifecycleAction)
+					&& raw > (long)KingdomLifecycleAction.RaidResolve)
+					throw new InvalidDataException(
+						"Archived settlement historical raid action is unknown.");
+				if (SchemaVersion < PhysicalHappeningVersion
+					&& Type == typeof(KingdomRaidIncidentState)
+					&& raw > (long)KingdomRaidIncidentState.Queued)
+					throw new InvalidDataException(
+						"Archived settlement historical raid state is unknown.");
 				return value;
 			}
 			if (Type == typeof(bool))
@@ -807,7 +1352,7 @@ namespace ThousandAndFirst
 				IList list = (IList)Activator.CreateInstance(Type, count);
 				Type itemType = Type.GetGenericArguments()[0];
 				for (int i = 0; i < count; i++)
-					list.Add(ReadValue(Reader, itemType, Depth + 1, Budget, Legacy));
+					list.Add(ReadValue(Reader, itemType, Depth + 1, Budget, SchemaVersion));
 				return list;
 			}
 			if (IsDictionary(Type))
@@ -825,7 +1370,7 @@ namespace ThousandAndFirst
 					if (previous != null && string.CompareOrdinal(previous, key) >= 0)
 						throw new InvalidDataException("Archived settlement dictionary order is noncanonical.");
 					dictionary.Add(key, ReadValue(Reader, arguments[1], Depth + 1, Budget,
-						Legacy));
+						SchemaVersion));
 					previous = key;
 				}
 				return dictionary;
@@ -838,10 +1383,26 @@ namespace ThousandAndFirst
 			if (++Budget.Objects > MaxObjects)
 				throw new InvalidDataException("Archived settlement object count exceeds cap.");
 			object result = Activator.CreateInstance(Type);
-			FieldInfo[] fields = Fields(Type, Legacy);
+			FieldInfo[] fields = Fields(Type, SchemaVersion);
 			for (int i = 0; i < fields.Length; i++)
+			{
+				if (Type == typeof(Simulation.City.KingdomCityBook)
+					&& (string.Equals(fields[i].Name, "ExtensionModel", StringComparison.Ordinal)
+						|| string.Equals(fields[i].Name, "HappeningModel", StringComparison.Ordinal)
+						|| string.Equals(fields[i].Name, "ExtensionHappeningCursors", StringComparison.Ordinal)))
+				{
+					int maximum = string.Equals(fields[i].Name, "ExtensionModel",
+						StringComparison.Ordinal)
+						? Simulation.City.KingdomCityBook.MaxExtensionModelChars
+						: string.Equals(fields[i].Name, "HappeningModel", StringComparison.Ordinal)
+							? Simulation.City.KingdomCityBook.MaxHappeningModelChars
+							: Simulation.City.KingdomCityBook.MaxExtensionHappeningCursorChars;
+					fields[i].SetValue(result, ReadString(Reader, maximum, Required: false));
+					continue;
+				}
 				fields[i].SetValue(result, ReadValue(Reader, fields[i].FieldType,
-					Depth + 1, Budget, Legacy));
+					Depth + 1, Budget, SchemaVersion));
+			}
 			return result;
 		}
 
@@ -922,16 +1483,16 @@ namespace ThousandAndFirst
 
 		private static FieldInfo[] Fields(Type Type)
 		{
-			return Fields(Type, Legacy: false);
+			return Fields(Type, CurrentVersion);
 		}
 
-		private static FieldInfo[] Fields(Type Type, bool Legacy)
+		private static FieldInfo[] Fields(Type Type, int SchemaVersion)
 		{
 			FieldInfo[] source = Type.GetFields(BindingFlags.Instance | BindingFlags.Public);
 			List<FieldInfo> fields = new List<FieldInfo>(source.Length);
 			for (int i = 0; i < source.Length; i++)
 				if (!source[i].IsDefined(typeof(NonSerializedAttribute), false)
-					&& (!Legacy || LegacyField(Type, source[i].Name)))
+					&& SchemaField(Type, source[i].Name, SchemaVersion))
 					fields.Add(source[i]);
 			fields.Sort(delegate(FieldInfo Left, FieldInfo Right)
 			{
@@ -940,36 +1501,156 @@ namespace ThousandAndFirst
 			return fields.ToArray();
 		}
 
-		/// <summary>Archive v1 reflected the then-public settlement graph. Growth v6 added a
-		/// nested root, so its independent v1 reader retains that exact historical surface.</summary>
-		private static bool LegacyField(Type Type, string Name)
+		/// <summary>Archive v1 predates nested Growth; v2 predates RaidLedger; v3 predates
+		/// resident culture/species tallies; v4 predates extension-identity tallies; v5 predates
+		/// causal pilgrims and expeditions; v6 predates the behaviour sidecar; v7 predates physical
+		/// happenings; v8 predates exact central logistics; v9 predates exact defensive
+		/// WorkId/resident reservations; v10 predates frozen semantic person plans; v11 predates
+		/// independent extension-happening cursors. Historical
+		/// readers retain exactly those surfaces
+		/// rather than interpreting new default fields.</summary>
+		private static bool SchemaField(Type Type, string Name, int SchemaVersion)
 		{
 			if (Type == typeof(KingdomLifecycleBook))
-				return !string.Equals(Name, "Growth", StringComparison.Ordinal);
+			{
+				if (SchemaVersion == LegacyVersion
+					&& string.Equals(Name, "Growth", StringComparison.Ordinal)) return false;
+				if (SchemaVersion < RaidVersion
+					&& string.Equals(Name, "RaidLedger", StringComparison.Ordinal)) return false;
+			}
+			if (Type == typeof(KingdomSettlement))
+			{
+				if (SchemaVersion < ResidentIdentityVersion
+					&& (string.Equals(Name, "CultureCounts", StringComparison.Ordinal)
+						|| string.Equals(Name, "SpeciesCounts", StringComparison.Ordinal))) return false;
+				if (SchemaVersion < ExtensionIdentityVersion
+					&& string.Equals(Name, "IdentityCounts", StringComparison.Ordinal)) return false;
+				if (SchemaVersion < SemanticSelectionVersion
+					&& string.Equals(Name, "OfficeHolderResidentId", StringComparison.Ordinal)) return false;
+			}
+			if (SchemaVersion < SalvageVersion
+				&& Type == typeof(Simulation.City.KingdomCityBook)
+				&& (string.Equals(Name, "PilgrimCause", StringComparison.Ordinal)
+					|| string.Equals(Name, "PilgrimCauseTick", StringComparison.Ordinal)
+					|| string.Equals(Name, "PilgrimGreeted", StringComparison.Ordinal)
+					|| string.Equals(Name, "PilgrimLoudness", StringComparison.Ordinal)
+					|| string.Equals(Name, "PilgrimName", StringComparison.Ordinal)
+					|| string.Equals(Name, "PilgrimObjectId", StringComparison.Ordinal)
+					|| string.Equals(Name, "PilgrimPlaceName", StringComparison.Ordinal)
+					|| string.Equals(Name, "PilgrimSequence", StringComparison.Ordinal)
+					|| string.Equals(Name, "PilgrimState", StringComparison.Ordinal))) return false;
+			if (SchemaVersion < SalvageVersion
+				&& Type == typeof(Simulation.City.KingdomJobRegistry)
+				&& (string.Equals(Name, "SubjectIds", StringComparison.Ordinal)
+					|| string.Equals(Name, "SubjectNames", StringComparison.Ordinal)
+					|| string.Equals(Name, "TargetNames", StringComparison.Ordinal)
+					|| string.Equals(Name, "DueTicks", StringComparison.Ordinal)
+					|| string.Equals(Name, "WaterCosts", StringComparison.Ordinal)
+					|| string.Equals(Name, "ProvisionCosts", StringComparison.Ordinal)
+					|| string.Equals(Name, "OutcomeCodes", StringComparison.Ordinal))) return false;
+			if (SchemaVersion < SalvageVersion && Type == typeof(KingdomLedger)
+				&& string.Equals(Name, "ExpeditionLines", StringComparison.Ordinal)) return false;
+			if (SchemaVersion < BehaviourVersion
+				&& Type == typeof(Simulation.City.KingdomCityBook)
+				&& string.Equals(Name, "ExtensionModel", StringComparison.Ordinal)) return false;
+			if (SchemaVersion < PhysicalHappeningVersion
+				&& Type == typeof(Simulation.City.KingdomCityBook)
+				&& string.Equals(Name, "HappeningModel", StringComparison.Ordinal)) return false;
+			if (SchemaVersion < HappeningCursorVersion
+				&& Type == typeof(Simulation.City.KingdomCityBook)
+				&& string.Equals(Name, "ExtensionHappeningCursors", StringComparison.Ordinal)) return false;
+			if (SchemaVersion < PhysicalHappeningVersion && Type == typeof(KingdomRaidLedger)
+				&& string.Equals(Name, "OpaqueFuturePayload", StringComparison.Ordinal)) return false;
+			if (SchemaVersion < PhysicalHappeningVersion && Type == typeof(KingdomRaidIncident)
+				&& (string.Equals(Name, "AttackOperationId", StringComparison.Ordinal)
+					|| string.Equals(Name, "ChannelRevision", StringComparison.Ordinal)
+					|| string.Equals(Name, "ChannelState", StringComparison.Ordinal)
+					|| string.Equals(Name, "DemandChannelId", StringComparison.Ordinal)
+					|| string.Equals(Name, "DemandLeadTicks", StringComparison.Ordinal)
+					|| string.Equals(Name, "DemandObjectId", StringComparison.Ordinal)
+					|| string.Equals(Name, "FortifyOrderedTick", StringComparison.Ordinal)
+					|| string.Equals(Name, "RecoveryNotice", StringComparison.Ordinal)
+					|| string.Equals(Name, "RecoveryOpenedTick", StringComparison.Ordinal)
+					|| string.Equals(Name, "RecoveryQuestId", StringComparison.Ordinal)
+					|| string.Equals(Name, "RecoveryResolvedTick", StringComparison.Ordinal)
+					|| string.Equals(Name, "RecoveryState", StringComparison.Ordinal)
+					|| string.Equals(Name, "RecoveryStepId", StringComparison.Ordinal)
+					|| string.Equals(Name, "RemainingLeadTicks", StringComparison.Ordinal))) return false;
+			if (SchemaVersion < DefensiveReservationVersion
+				&& Type == typeof(KingdomRaidIncident)
+				&& (string.Equals(Name, "DefenceReservationVersion", StringComparison.Ordinal)
+					|| string.Equals(Name, "DefenceReservations", StringComparison.Ordinal))) return false;
+			if (SchemaVersion < SemanticSelectionVersion
+				&& Type == typeof(KingdomGrowthArrivalCandidate)
+				&& (string.Equals(Name, "LegacySemanticPlan", StringComparison.Ordinal)
+					|| string.Equals(Name, "SemanticPlanVersion", StringComparison.Ordinal)
+					|| string.Equals(Name, "SemanticStreamId", StringComparison.Ordinal)
+					|| string.Equals(Name, "SemanticEventKind", StringComparison.Ordinal)
+					|| string.Equals(Name, "PlannedOrigin", StringComparison.Ordinal)
+					|| string.Equals(Name, "PlannedCreed", StringComparison.Ordinal)
+					|| string.Equals(Name, "PlannedName", StringComparison.Ordinal)
+					|| string.Equals(Name, "PlannedArrived", StringComparison.Ordinal)
+					|| string.Equals(Name, "ArrivalX", StringComparison.Ordinal)
+					|| string.Equals(Name, "ArrivalY", StringComparison.Ordinal))) return false;
+			if (SchemaVersion < SemanticSelectionVersion
+				&& Type == typeof(KingdomRaidDefenceReservation)
+				&& string.Equals(Name, "CrewSemanticIds", StringComparison.Ordinal)) return false;
+			if (SchemaVersion < SemanticSelectionVersion
+				&& Type == typeof(Simulation.City.KingdomCityBook)
+				&& (string.Equals(Name, "ResidentOrigins", StringComparison.Ordinal)
+					|| string.Equals(Name, "ResidentArrived", StringComparison.Ordinal))) return false;
+			if (SchemaVersion < ExactLogisticsVersion
+				&& Type == typeof(Simulation.City.KingdomJobRegistry)
+				&& (string.Equals(Name, "DeliverySourceEndpointIds", StringComparison.Ordinal)
+					|| string.Equals(Name, "DeliverySourceObjectIds", StringComparison.Ordinal)
+					|| string.Equals(Name, "DeliverySourceXs", StringComparison.Ordinal)
+					|| string.Equals(Name, "DeliverySourceYs", StringComparison.Ordinal)
+					|| string.Equals(Name, "DeliveryTargetEndpointIds", StringComparison.Ordinal)
+					|| string.Equals(Name, "DeliveryTargetObjectIds", StringComparison.Ordinal)
+					|| string.Equals(Name, "DeliveryTargetXs", StringComparison.Ordinal)
+					|| string.Equals(Name, "DeliveryTargetYs", StringComparison.Ordinal)
+					|| string.Equals(Name, "DeliverySourceBeforeAmounts", StringComparison.Ordinal)
+					|| string.Equals(Name, "DeliveryTripIds", StringComparison.Ordinal)
+					|| string.Equals(Name, "DeliveryStopOrdinals", StringComparison.Ordinal)
+					|| string.Equals(Name, "DeliveryPhases", StringComparison.Ordinal)
+					|| string.Equals(Name, "DeliveryCargoAuthorityKinds", StringComparison.Ordinal)
+					|| string.Equals(Name, "DeliveryOwnerOperationIds", StringComparison.Ordinal)
+					|| string.Equals(Name, "DeliveryOwnerManifestVersions", StringComparison.Ordinal)
+					|| string.Equals(Name, "DeliveryOwnerManifestDigests", StringComparison.Ordinal)
+					|| string.Equals(Name, "DeliveryOwnerManifestRevisions", StringComparison.Ordinal)
+					|| string.Equals(Name, "DeliveryManifestSourceStarts", StringComparison.Ordinal)
+					|| string.Equals(Name, "DeliveryManifestSourceCounts", StringComparison.Ordinal)
+					|| string.Equals(Name, "DeliveryTargetBeforeAmounts", StringComparison.Ordinal)
+					|| string.Equals(Name, "DeliveryTargetReceiptStates", StringComparison.Ordinal))) return false;
 			return true;
 		}
 
 		private static string Shape(Type Root)
 		{
-			return Shape(Root, Legacy: false);
+			return Shape(Root, CurrentVersion);
 		}
 
 		private static string Shape(Type Root, bool Legacy)
 		{
+			return Shape(Root, Legacy ? LegacyVersion : CurrentVersion);
+		}
+
+		private static string Shape(Type Root, int SchemaVersion)
+		{
 			StringBuilder shape = new StringBuilder();
 			HashSet<Type> visited = new HashSet<Type>();
-			AppendShape(shape, Root, visited, Legacy);
+			AppendShape(shape, Root, visited, SchemaVersion);
 			if (StrictUtf8.GetByteCount(shape.ToString()) > MaxShapeBytes)
 				throw new InvalidDataException("Archived settlement schema shape exceeds cap.");
 			return shape.ToString();
 		}
 
 		private static void AppendShape(StringBuilder Shape, Type Type,
-			HashSet<Type> Visited, bool Legacy)
+			HashSet<Type> Visited, int SchemaVersion)
 		{
 			if (Type.IsEnum)
 			{
-				if (Legacy)
+				if (SchemaVersion == LegacyVersion)
 				{
 					Shape.Append(Type.FullName).Append(';');
 					return;
@@ -984,6 +1665,18 @@ namespace ThousandAndFirst
 				for (int i = 0; i < names.Length; i++)
 				{
 					object value = Enum.Parse(Type, names[i]);
+					if (SchemaVersion < RaidVersion
+						&& Type == typeof(KingdomLifecycleAction)
+						&& Convert.ToInt64(value) > (long)KingdomLifecycleAction.PetitionExpire)
+						continue;
+					if (SchemaVersion >= RaidVersion && SchemaVersion < PhysicalHappeningVersion
+						&& Type == typeof(KingdomLifecycleAction)
+						&& Convert.ToInt64(value) > (long)KingdomLifecycleAction.RaidResolve)
+						continue;
+					if (SchemaVersion < PhysicalHappeningVersion
+						&& Type == typeof(KingdomRaidIncidentState)
+						&& Convert.ToInt64(value) > (long)KingdomRaidIncidentState.Queued)
+						continue;
 					Shape.Append(names[i]).Append('=');
 					if (unsigned)
 						Shape.Append(Convert.ToUInt64(value).ToString(CultureInfo.InvariantCulture));
@@ -1007,24 +1700,24 @@ namespace ThousandAndFirst
 			if (IsList(Type))
 			{
 				Shape.Append("list<"); AppendShape(Shape, Type.GetGenericArguments()[0],
-					Visited, Legacy);
+					Visited, SchemaVersion);
 				Shape.Append(">;"); return;
 			}
 			if (IsDictionary(Type))
 			{
 				Type[] arguments = Type.GetGenericArguments();
-				Shape.Append("map<"); AppendShape(Shape, arguments[0], Visited, Legacy);
-				AppendShape(Shape, arguments[1], Visited, Legacy); Shape.Append(">;"); return;
+				Shape.Append("map<"); AppendShape(Shape, arguments[0], Visited, SchemaVersion);
+				AppendShape(Shape, arguments[1], Visited, SchemaVersion); Shape.Append(">;"); return;
 			}
 			if (!Approved(Type)) throw new InvalidDataException(
 				"Archived settlement schema includes unsupported type " + Type.FullName + ".");
 			if (!Visited.Add(Type)) { Shape.Append("ref:").Append(Type.FullName).Append(';'); return; }
 			Shape.Append("object:").Append(Type.FullName).Append('{');
-			FieldInfo[] fields = Fields(Type, Legacy);
+			FieldInfo[] fields = Fields(Type, SchemaVersion);
 			for (int i = 0; i < fields.Length; i++)
 			{
 				Shape.Append(fields[i].Name).Append(':');
-				AppendShape(Shape, fields[i].FieldType, Visited, Legacy);
+				AppendShape(Shape, fields[i].FieldType, Visited, SchemaVersion);
 			}
 			Shape.Append("};");
 		}

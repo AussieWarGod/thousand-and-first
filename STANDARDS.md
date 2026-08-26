@@ -60,6 +60,12 @@ as polished as the game's flagship features. These rules are binding for every s
 
 ## 2. Structure
 
+- **One responsibility, protocols at boundaries, strict size cap.** A production service stays
+  strictly under 300 physical lines and owns one coherent state machine or transaction. Engine,
+  serialization, public-API, and third-party seams use explicit protocols rather than shared
+  mutable authority. `Tools/check-structure.py --report` is the conservative staged-file census;
+  release mode also requires exact-inventory human semantic review. Its line/XRL signals do not
+  substitute for that review. See `docs/STRUCTURE.md`.
 - **Folder-per-system** (`Core`, `Founding`, `Growth`, `Chronicle`, ... as slices land), matching
   the Creature Control layout. `Debug` holds the wish harness; anything in `Debug` must be
   side-effect-free on ordinary saves (reversible probes only).
@@ -69,6 +75,16 @@ as polished as the game's flagship features. These rules are binding for every s
 - **Data-driven where vanilla is.** Content goes in mergeable XML (`Options`, factions,
   conversations, population tables, embark modules) with our `r_` prefix; C# is for behavior
   only. Never overwrite a vanilla blueprint — merge or patch.
+- **Generated content is concrete and reproducible.** A checked-in generator may expand compact
+  authored truth only when its output is ordinary inspectable mergeable data, the runtime never
+  generates or falls back to it, and a read-only `--check` mode proves byte-for-byte freshness.
+  Generated files name their generator and are never hand-edited. Architecture also needs the
+  independent topology/material/reachability checker over the expanded output.
+- **One semantic survey per due active-seat reconciliation.** The wake boundary classifies the
+  loaded zone once into named, bounded indexes. Every later lane consumes that same survey and
+  observes its own committed additions/removals through the survey mutation seam. A helper may
+  re-prove an exact object or exact cell before a physical commit; it may not hide another
+  whole-zone walk. Reports and explicit recovery outside the pass may take their own survey.
 
 ## 3. Feature gating
 
@@ -97,17 +113,21 @@ as polished as the game's flagship features. These rules are binding for every s
 **An asset is not shipped until something proves it is reachable.** Pre-release tile drafts once
 existed without a `Tile=` attribute in any blueprint. Qud falls back to the text glyph without
 logging anything, so the failure is invisible in play and looks like a deliberate styling choice.
-The public release avoids a second, harder provenance problem as well: it bundles no original
-runtime bitmap sprites. Mod renders either use an intentional glyph or reference an exact tile
-path already named by the installed base game; no game art is copied into this repository.
+Vanilla tiles and intentional glyphs are the default because they already match Qud's palette and
+animation language. A project-authored original runtime bitmap is allowed when vanilla cannot
+communicate the function, but it needs an allowlisted provenance record, exact wiring in both
+directions, a legal editable source, a text fallback, native tile/text-scale review, and an
+independent rights/readability signoff. Copied, extracted, traced, edited, or recolored Qud art is
+never bundled.
 
 The rule generalises past tiles: wherever the mod produces an asset that some other file must
 reference by name to reach — a texture, a blueprint, a population table entry, a conversation
 node, a book ID — a check walks the reference in **both** directions. Unreferenced asset and
 dangling reference are both errors, and neither is detectable by validating either file alone.
-`Art/check_wiring.py` is the instance of this for tiles. It rejects bundled runtime rasters and
-local tile paths, then proves every referenced vanilla path occurs in the installed base XML
-corpus. A misspelling therefore fails before Qud can silently fall back.
+`Art/check_wiring.py` is the instance of this for tiles. It proves each local tile has an exact
+`Art/runtime-assets.json` provenance-manifest entry and staged file, rejects unlisted/local-orphan rasters, and proves every
+referenced vanilla path occurs in the installed base XML corpus. A misspelling or dead asset
+therefore fails before Qud can silently fall back.
 
 `Art/check_xml_refs.py` is the instance for names the game resolves at load or roll time. Writing
 it immediately found the population-table case the paragraph above predicted: an entry merging our
@@ -286,6 +306,13 @@ layouts follow §1 regardless of version.
 **Documentation is part of the change, not after it.** A commit that changes supported API
 updates `docs/API.md` and `CHANGELOG.md` in the same commit; a commit that changes a data
 schema updates `MODDING.md` in the same commit. Documentation drift is treated as breakage.
+
+**Status has one short authority.** `docs/STATUS.md` records exact latest automated evidence and
+unsigned native/human gates. README, release docs, acceptance ledgers, decision records, question
+backlog, research indexes, session handoff, and changelog must link or agree with it. Historical
+audits retain their dated findings but carry an explicit historical/superseded classification;
+they are never silently quoted as current status. Every material implementation wave updates the
+public docs, private acceptance ledgers, tests, and coordination line before it closes.
 
 **Test coverage of the contract.** Every supported public member with logic is covered by a
 `[TestCase]` table or an in-game selftest assertion. Bug fixes land with the test that

@@ -24,10 +24,12 @@ namespace XRL.World.Parts
 	/// save, because no older save has ever seen this part.
 	/// </para>
 	/// <para>
-	/// It ticks on the ordinary turn clock the way <c>r_KingdomScaffold</c> does, and it advances
-	/// by comparing the clock against thresholds rather than by counting ticks it was present for.
-	/// That is what makes a long absence honest: come home after a hundred days and the plot is
-	/// finished; come home after one and it is framed. Presence grants nothing and costs nothing.
+	/// New works advance from the settlement pass by resolving elapsed world time through free
+	/// labour, the same doctrine <c>r_KingdomScaffold</c> uses: a long absence gives an honestly
+	/// crewed plot time to rise, while an empty settlement's frame does not lift itself. The named
+	/// labour receipt lives on the parent object so this part's positional field layout still ends
+	/// at <see cref="DoorY"/>. Works loaded from the pre-receipt save shape keep their old absolute
+	/// clock path for compatibility.
 	/// </para>
 	/// </summary>
 	/// <summary>
@@ -161,8 +163,36 @@ namespace ThousandAndFirst
 	/// did. Plots begin with the next thing built.
 	/// </para>
 	/// </summary>
+	/// <summary>One mutation-free, exact plot quote shown before any water or material moves.</summary>
+	public sealed class KingdomPlotQuote
+	{
+		public KingdomPlotRules.PlotRect Rect;
+		public KingdomPlotRules.PlotSize StakedSize;
+		public KingdomLayoutRules.LayoutOutcome Outcome;
+		public KingdomArchitectureIntent Architecture;
+		public string Payload;
+		public long LabourTicks;
+		public int WaterDrams;
+		public KingdomMaterialDebitCost MaterialClaim;
+		public int MainX;
+		public int MainY;
+		/// <summary>Exact cross-city cargo/site commitment, null for ordinary buildings.</summary>
+		public string PurposeReceipt;
+	}
+
 	public static class KingdomPlots
 	{
+		/// <summary>Durable classification for a free-standing perimeter work. Plot roots use their
+		/// existing PlotId receipt instead; the explicit positive marker prevents a later catalogue
+		/// override from reclassifying an already-built wall.</summary>
+		public const string FrontierWorkProperty = "KingdomFrontierWork";
+
+		/// <summary>Positive ownership receipt for plot geometry stamped by adoption. Commissioned
+		/// plots already carry <see cref="PlotIdProperty"/> from their paid construction receipt;
+		/// adopted rooms need this separate mark so release removes only geometry adoption itself
+		/// authored. It is also the commit marker for the adopted plot ID and rect.</summary>
+		public const string AdoptedPlotProperty = "KingdomAdoptedPlot";
+
 		// --- Registry ---------------------------------------------------------------------
 
 		// Plot specs live beside the catalog rather than inside KingdomRules.BuildEntry, the same
@@ -302,6 +332,15 @@ namespace ThousandAndFirst
 		/// once rather than every settlement pass (STANDARDS 7b).</summary>
 		public const string BlockAnnouncedProperty = "KingdomPlotBlockSaid";
 
+		/// <summary>Named-property plan receipt. Kept off r_KingdomPlanMarker's positional fields
+		/// so old saves retain their exact part layout. Schema is the final commit marker.</summary>
+		public const string PlanSchemaProperty = "r_TAF_PlanPlotSchema";
+		public const string PlanPayloadProperty = "r_TAF_PlanPlotPayload";
+		public const string PlanLabourProperty = "r_TAF_PlanPlotLabour";
+		public const string PlanWaterProperty = "r_TAF_PlanPlotWater";
+		public const string PlanMaterialProperty = "r_TAF_PlanPlotMaterial";
+		public const int PlanSchema = 1;
+
 		/// <summary>Zone property carrying the rite ground's x, written where the rite was
 		/// poured. Absent on a settlement founded before it was recorded, which simply has no
 		/// rite seed for the heart.</summary>
@@ -356,12 +395,6 @@ namespace ThousandAndFirst
 		/// <summary>The founder's basin, kept at the middle of every rung.</summary>
 		public const string HeartRelicBlueprint = "r_KingdomFirstBasin";
 
-		/// <summary>Game-state key prefix the realm's material stock is counted under. A generic,
-		/// already-serialized slot on the game rather than a new field on <c>KingdomSystem</c>,
-		/// exactly as <c>r_KingdomPlanMarker</c>'s ordering counter is &mdash; so clearance can
-		/// earn material without touching any positionally-reflected field layout.</summary>
-		public const string MaterialStatePrefix = "r_TAF_Material_";
-
 		// Transaction state belongs to GameObject's named property maps, never to the shipped
 		// positional r_KingdomPlotWorks layout (which must end at DoorY forever).
 		private const string FinalOutputIdProperty = "r_TAF_PlotFinalOutputId";
@@ -373,8 +406,15 @@ namespace ThousandAndFirst
 		private const string ClearMaterialProperty = "r_TAF_PlotClearMaterial";
 		private const string ClearAmountProperty = "r_TAF_PlotClearAmount";
 		private const string ClearRemovedProperty = "r_TAF_PlotClearRemoved";
-		private const string ClearGlobalBeforeProperty = "r_TAF_PlotClearGlobalBefore";
-		private const string ClearGlobalAfterProperty = "r_TAF_PlotClearGlobalAfter";
+		private const string ClearOutputIdProperty = "r_TAF_PlotClearOutputId";
+		private const string ClearOutputBlueprintProperty = "r_TAF_PlotClearOutputBlueprint";
+		private const string ClearOutputMarkerProperty = "r_TAF_PlotClearOutputMarker";
+		private const string ClearOutputMark = "r_TAF_PlotClearReceipt";
+		private const string ClearDestinationKindProperty = "r_TAF_PlotClearDestinationKind";
+		private const string ClearDestinationIdProperty = "r_TAF_PlotClearDestinationId";
+		private const string ClearDestinationZoneProperty = "r_TAF_PlotClearDestinationZone";
+		private const string ClearDestinationXProperty = "r_TAF_PlotClearDestinationX";
+		private const string ClearDestinationYProperty = "r_TAF_PlotClearDestinationY";
 		private const string ClearTallyBeforeProperty = "r_TAF_PlotClearTallyBefore";
 		private const string ClearTallyAfterProperty = "r_TAF_PlotClearTallyAfter";
 		private const string ClearQuarantinedProperty = "r_TAF_PlotClearQuarantined";
@@ -383,13 +423,27 @@ namespace ThousandAndFirst
 		private const string ClearStoneProperty = "r_TAF_PlotClearStone";
 		private const string ClearMarbleProperty = "r_TAF_PlotClearMarble";
 		private const string ClearScrapProperty = "r_TAF_PlotClearScrap";
-		private const string FurnishReceiptProperty = "r_TAF_ConstructionFurnishReceipt";
+		internal const string FurnishReceiptProperty = "r_TAF_ConstructionFurnishReceipt";
+		private const string LegacyFurnishPlanProperty = "r_TAF_LegacyFurnishPlan";
 		private const string HeartEffectProperty = "r_TAF_ConstructionHeartEffect";
 		private const string DelveEffectProperty = "r_TAF_ConstructionDelveEffect";
 		private const string GrowthReceiptProperty = "r_TAF_ImprovementGrowthReceipt";
 		private const string GrowthEscrowPrefix = "r_TAF_ImprovementGrowthEscrow:";
+		/// <summary>Named-property schema for labour-driven plot works. A missing value is a
+		/// pre-polish legacy plot and deliberately retains its old absolute-clock path.</summary>
+		public const string PlotWorkSchemaProperty = "r_TAF_PlotWorkSchema";
+		public const string PlotWorkRequiredProperty = "r_TAF_PlotWorkRequired";
+		public const string PlotWorkRemainingProperty = "r_TAF_PlotWorkRemaining";
+		public const string PlotWorkLastTickProperty = "r_TAF_PlotWorkLastTick";
+		public const string PlotWorkCompletedTickProperty = "r_TAF_PlotWorkCompletedTick";
+		public const string PlotWorkShortfallSaidProperty = "r_TAF_PlotWorkShortfallSaid";
+		public const string PlotWorkFaultSaidProperty = "r_TAF_PlotWorkFaultSaid";
+		public const int PlotWorkSchema = 2;
 		private const int MaxFurnishItems = 64;
 		private const int MaxGrowthRows = 512;
+		private const int MaxPlotSkinChars = 256;
+		private static readonly System.Text.Encoding StrictPlotUtf8 =
+			new System.Text.UTF8Encoding(false, true);
 
 		/// <summary>The object that stands in a plot while it is being raised.</summary>
 		public const string WorksBlueprint = "r_KingdomPlotWorks";
@@ -561,6 +615,17 @@ namespace ThousandAndFirst
 			private readonly int[] Refusals;
 
 			public GroundGrid(Zone Z)
+				: this(Z, -1, -1)
+			{
+			}
+
+			/// <summary>
+			/// Reads the zone while treating one future plan-stake cell as held. This is a
+			/// mutation-free way to site a reserved lot beside its physical survey stake: the marker
+			/// itself is not created until the production preview has been accepted, and it must never
+			/// become an obstruction inside the map it later authorizes.
+			/// </summary>
+			public GroundGrid(Zone Z, int FutureStakeX, int FutureStakeY)
 			{
 				Width = (Z == null) ? 0 : Z.Width;
 				Height = (Z == null) ? 0 : Z.Height;
@@ -571,7 +636,14 @@ namespace ThousandAndFirst
 				{
 					for (int x = 0; x < Width; x++)
 					{
-						KingdomPlotRules.GroundKind kind = ReadGround(Z.GetCell(x, y), out var blocker);
+						KingdomPlotRules.GroundKind kind;
+						string blocker;
+						if (x == FutureStakeX && y == FutureStakeY)
+						{
+							kind = KingdomPlotRules.GroundKind.Held;
+							blocker = "the plan stake";
+						}
+						else kind = ReadGround(Z.GetCell(x, y), out blocker);
 						Kinds[y * Width + x] = kind;
 						Blockers[y * Width + x] = blocker;
 						Refusals[(y + 1) * (Width + 1) + (x + 1)] =
@@ -686,8 +758,10 @@ namespace ThousandAndFirst
 			{
 				return plots;
 			}
-			foreach (GameObject item in Z.GetObjects())
+			KingdomSurvey survey = KingdomSurvey.Take(Z);
+			for (int i = 0; i < survey.PlotRoots.Count; i++)
 			{
+				GameObject item = survey.PlotRoots[i];
 				if (TryReadRect(item, out var rect))
 				{
 					plots.Add(rect);
@@ -963,7 +1037,9 @@ namespace ThousandAndFirst
 				return;
 			}
 			placed.SetIntProperty(Mark, 1);
-			cell.AddObject(placed);
+			GameObject accepted = null;
+			try { accepted = cell.AddObject(placed); }
+			finally { KingdomSurvey.ObserveAddResultInActive(Z, placed, accepted); }
 		}
 
 		/// <summary>
@@ -1005,7 +1081,21 @@ namespace ThousandAndFirst
 					}
 				}
 			}
-			GameObject works = Stake(System, Z, rect, entry, spec, grid, null, KingdomPlotRules.IsUnderground(Z.Z));
+			if (!KingdomZoning.Permits(System, Z.ZoneID, entry, out string zoningFailure))
+			{
+				MessageQueue.AddPlayerMessage("{{K|" + zoningFailure + "}}");
+				return null;
+			}
+			if (!TryPreparePlotPayload(System, Z, rect, entry.Key, entry.Category, null,
+				out KingdomArchitectureIntent architecture, out _, out string architectureFailure))
+			{
+				MessageQueue.AddPlayerMessage("{{K|" + (architectureFailure
+					?? "No authored architecture fits the heart's exact ground.") + "}}");
+				return null;
+			}
+			KingdomConstructionJob founding = null;
+			GameObject works = Stake(System, Z, rect, entry, spec, grid, null,
+				KingdomPlotRules.IsUnderground(Z.Z), architecture, false, ref founding);
 			if (works != null)
 			{
 				works.SetIntProperty(HeartPlotProperty, 1);
@@ -1153,6 +1243,100 @@ namespace ThousandAndFirst
 			return best;
 		}
 
+		/// <summary>
+		/// Resolves the exact production map, pose, lot, and labour quote a commission will use.
+		/// No resource is reserved and no object/property/zone is changed. Callers may therefore show
+		/// this, escape, and prove cancellation was mutation-free. The commit path resolves again and
+		/// requires byte-identical payload authority before it spends.
+		/// </summary>
+		public static bool TryQuoteCommission(KingdomSystem System, Zone Z,
+			KingdomRules.BuildEntry Entry, string SkinKey, KingdomPlotRules.PlotSize Stake,
+			out KingdomPlotQuote Quote, out string Failure)
+		{
+			Quote = null;
+			Failure = null;
+			if (System == null || Z == null || Entry == null || !TryGetSpec(Entry.Key, out var spec))
+			{
+				Failure = "No such plotted design.";
+				return false;
+			}
+			if (KingdomPlotRules.HeartRungOf(Entry.Key) > 0)
+			{
+				Failure = KingdomPlotRules.RefuseSecondHeart(KingdomPresentation.Rich(System.SeatName));
+				return false;
+			}
+			Failure = KingdomCommission.StageRefusal(System, Entry);
+			if (Failure != null) return false;
+			if (!KingdomZoning.Permits(System, Z.ZoneID, Entry, out Failure)) return false;
+			KingdomPlotRules.PlotSize staked = StakedSize(spec, Stake);
+			if (!KingdomPlotRules.Allows(System.Stage, staked))
+			{
+				Failure = KingdomPlotRules.RefuseStage(staked, KingdomPresentation.Rich(System.SeatName), System.Stage);
+				return false;
+			}
+			Failure = KingdomDelve.Refusal(System, Z.ZoneID, Entry.Key, Entry.Name);
+			if (Failure != null) return false;
+			bool carved = KingdomPlotRules.IsUnderground(Z.Z);
+			if (carved && spec.RequiresSky)
+			{
+				Failure = KingdomPlotRules.RefuseSky(Entry.Name);
+				return false;
+			}
+			if (KingdomPlotRules.RoofRefusesSky(spec))
+			{
+				Failure = KingdomPlotRules.RefuseRoofSky(Entry.Name, spec.Roof);
+				return false;
+			}
+			if (CountBuilt(Z) >= KingdomRules.MaxBuildingsForStage(System.Stage))
+			{
+				Failure = "There is no more room in the plan. " + KingdomPresentation.Rich(System.SeatName)
+					+ " is as built-up as this ground allows, until it grows into something larger.";
+				return false;
+			}
+			if (KingdomPlotRules.WouldExceedBudget(ReadPlots(Z), staked, Z.Width, Z.Height))
+			{
+				Failure = KingdomPlotRules.RefuseBudget(KingdomPresentation.Rich(System.SeatName));
+				return false;
+			}
+			GroundGrid grid = new GroundGrid(Z);
+			if (!TryFindRect(Z, System, Entry, spec, staked, grid, null,
+				out KingdomPlotRules.PlotRect rect, out KingdomLayoutRules.LayoutOutcome outcome,
+				out Failure)) return false;
+			if (!TryPreparePlotPayload(System, Z, rect, Entry.Key, Entry.Category, SkinKey,
+				out KingdomArchitectureIntent architecture, out string payload, out Failure))
+				return false;
+			Cell main = Z.GetCell(architecture.MainWorldX, architecture.MainWorldY);
+			if (main == null || KingdomConstruction.HasActiveAt(System, Z, main))
+			{
+				Failure = main == null
+					? "The authored building's main anchor is outside its plot."
+					: "That ground already has a paid construction receipt in hand.";
+				return false;
+			}
+			long total = KingdomPlotRules.RaiseTicks(
+				KingdomCommission.CraftBuildTicks(Entry.BuildTicks, System.ZoneDistricts.Values),
+				grid.CellsOf(rect), PlannedFootprint(Z, rect, spec),
+				KingdomPlotRules.RoofOnGround(spec.Roof, carved), carved);
+			if (total < 1L)
+			{
+				Failure = "The exact plot labour quote is empty.";
+				return false;
+			}
+			if (!KingdomPurpose.TryQuoteCommit(System, Z, Entry.Key,
+				out string purposeReceipt, out _, out Failure)) return false;
+			Quote = new KingdomPlotQuote
+			{
+				Rect = rect, StakedSize = staked, Outcome = outcome,
+				Architecture = architecture, Payload = payload, LabourTicks = total,
+				WaterDrams = Entry.CostDrams,
+				MaterialClaim = new KingdomMaterialDebitCost(KingdomMaterials.CostFor(Entry.Key),
+					KingdomMaterials.BitCostFor(Entry.Key), KingdomMaterials.ExoticCostFor(Entry.Key)),
+				MainX = architecture.MainWorldX, MainY = architecture.MainWorldY,
+				PurposeReceipt = purposeReceipt
+			};
+			return true;
+		}
+
 		// --- Staking ----------------------------------------------------------------------
 
 		/// <summary>
@@ -1184,6 +1368,17 @@ namespace ThousandAndFirst
 		/// <see cref="KingdomPlotRules.PlotSize.None"/> stakes the design's own.</param>
 		public static bool Commission(KingdomSystem System, Zone Z, KingdomRules.BuildEntry Entry, string SkinKey, KingdomPlotRules.PlotSize Stake, out string Failure)
 		{
+			return Commission(System, Z, Entry, SkinKey, Stake, null, out Failure);
+		}
+
+		/// <summary>
+		/// Commits a plot against an optional exact quote already shown to the founder. A changed
+		/// map, pose, rect, or labour value refuses before debit and asks for a fresh preview.
+		/// </summary>
+		public static bool Commission(KingdomSystem System, Zone Z,
+			KingdomRules.BuildEntry Entry, string SkinKey, KingdomPlotRules.PlotSize Stake,
+			KingdomPlotQuote Expected, out string Failure)
+		{
 			Failure = null;
 			if (System == null || Z == null || Entry == null || !TryGetSpec(Entry.Key, out var spec))
 			{
@@ -1196,13 +1391,23 @@ namespace ThousandAndFirst
 				// every rung above it climbs through the ordinary improvement machinery on the same
 				// ground; a second one ordered across the zone would be a second heart, which is
 				// the one thing this ladder is not.
-				Failure = KingdomPlotRules.RefuseSecondHeart(System.SeatName);
+				Failure = KingdomPlotRules.RefuseSecondHeart(KingdomPresentation.Rich(System.SeatName));
+				return false;
+			}
+			Failure = KingdomCommission.StageRefusal(System, Entry);
+			if (Failure != null)
+			{
+				return false;
+			}
+			if (!KingdomZoning.Permits(System, Z.ZoneID, Entry, out string zoningFailure))
+			{
+				Failure = zoningFailure;
 				return false;
 			}
 			KingdomPlotRules.PlotSize staked = StakedSize(spec, Stake);
 			if (!KingdomPlotRules.Allows(System.Stage, staked))
 			{
-				Failure = KingdomPlotRules.RefuseStage(staked, System.SeatName, System.Stage);
+				Failure = KingdomPlotRules.RefuseStage(staked, KingdomPresentation.Rich(System.SeatName), System.Stage);
 				return false;
 			}
 			// The way down is asked before the weather, and for the same reason the strata gate is
@@ -1227,14 +1432,14 @@ namespace ThousandAndFirst
 				Failure = KingdomPlotRules.RefuseRoofSky(Entry.Name, spec.Roof);
 				return false;
 			}
-			if (Entry.Defence <= 0 && CountBuilt(Z) >= KingdomRules.MaxBuildingsForStage(System.Stage))
+			if (CountBuilt(Z) >= KingdomRules.MaxBuildingsForStage(System.Stage))
 			{
-				Failure = "There is no more room in the plan. " + System.SeatName + " is as built-up as this ground allows, until it grows into something larger.";
+				Failure = "There is no more room in the plan. " + KingdomPresentation.Rich(System.SeatName) + " is as built-up as this ground allows, until it grows into something larger.";
 				return false;
 			}
 			if (KingdomPlotRules.WouldExceedBudget(ReadPlots(Z), staked, Z.Width, Z.Height))
 			{
-				Failure = KingdomPlotRules.RefuseBudget(System.SeatName);
+				Failure = KingdomPlotRules.RefuseBudget(KingdomPresentation.Rich(System.SeatName));
 				return false;
 			}
 			if (KingdomGrowth.CountStoredWater(Z) < Entry.CostDrams)
@@ -1253,8 +1458,20 @@ namespace ThousandAndFirst
 				Failure = refusal;
 				return false;
 			}
-			Cell centre = Z.GetCell(rect.CenterX, rect.CenterY);
-			if (KingdomConstruction.HasActiveAt(System, Z, centre))
+			if (!TryPreparePlotPayload(System, Z, rect, Entry.Key, Entry.Category, SkinKey,
+				out KingdomArchitectureIntent architecture, out string payload,
+				out string architectureFailure))
+			{
+				Failure = architectureFailure ?? "No authored architecture fits that exact plot.";
+				return false;
+			}
+			Cell mainCell = Z.GetCell(architecture.MainWorldX, architecture.MainWorldY);
+			if (mainCell == null)
+			{
+				Failure = "The authored building's main anchor is outside its plot.";
+				return false;
+			}
+			if (KingdomConstruction.HasActiveAt(System, Z, mainCell))
 			{
 				Failure = "That ground already has a paid construction receipt in hand.";
 				return false;
@@ -1265,16 +1482,45 @@ namespace ThousandAndFirst
 			long total = KingdomPlotRules.RaiseTicks(
 				KingdomCommission.CraftBuildTicks(Entry.BuildTicks, System.ZoneDistricts.Values),
 				grid.CellsOf(rect), footprint, roof, carved);
+			if (!KingdomPurpose.TryQuoteCommit(System, Z, Entry.Key,
+				out string purposeReceipt, out _, out Failure)) return false;
+			if (purposeReceipt != null && Expected == null)
+			{
+				Failure = "This city purpose must be commissioned from its exact precommit preview; nothing was spent.";
+				return false;
+			}
+			if (Expected != null && (Expected.Payload != payload
+				|| Expected.LabourTicks != total || !SameRect(Expected.Rect, rect)
+				|| Expected.StakedSize != staked || Expected.MainX != architecture.MainWorldX
+				|| Expected.MainY != architecture.MainWorldY
+				|| Expected.PurposeReceipt != purposeReceipt))
+			{
+				Failure = "The ground or production plan changed after its preview. Review the exact plan again; nothing was spent.";
+				return false;
+			}
+			GameObject purposeCargo = null;
+			if (purposeReceipt != null && !KingdomPurpose.ResolveCommitCargo(Z, Entry.Key,
+				purposeReceipt, out purposeCargo, out Failure)) return false;
 			KingdomSurvey survey = KingdomSurvey.Take(Z, System);
 			KingdomWaterDebit water = survey.ReserveExactWater(Entry.CostDrams);
-			KingdomMaterialDebit materials = KingdomMaterials.ReservePayment(Z, Entry.Key);
+			KingdomMaterialDebit materials = purposeCargo == null
+				? KingdomMaterials.ReservePayment(Z, Entry.Key)
+				: KingdomMaterials.ReservePaymentWithRequiredItem(Z, Entry.Key, purposeCargo);
 			KingdomMaterialDebitCost claim = new KingdomMaterialDebitCost(
 				KingdomMaterials.CostFor(Entry.Key), KingdomMaterials.BitCostFor(Entry.Key),
 				KingdomMaterials.ExoticCostFor(Entry.Key));
 			KingdomConstructionJob job = KingdomConstruction.NewJob(System, Z,
-				KingdomConstructionRoute.PlotCommission, Z.GetCell(rect.CenterX, rect.CenterY),
-				null, Entry.Key, EncodePlotPayload(rect, SkinKey), Entry.CostDrams, claim,
+				KingdomConstructionRoute.PlotCommission, mainCell,
+				null, Entry.Key, payload, Entry.CostDrams, claim,
 				start, start + total);
+			job.PhysicalReceipt = purposeReceipt;
+			if (!KingdomConstruction.FreezeBuildTruth(job, System, Entry.Defence, true))
+			{
+				water.Rollback();
+				materials.Cancel();
+				Failure = "The plot's exact build effects could not be frozen.";
+				return false;
+			}
 			KingdomConstructionStartResult funding = KingdomConstruction.TryFundNew(job,
 				water, materials, out job, out string fundingFailure);
 			if (funding == KingdomConstructionStartResult.Refused)
@@ -1285,7 +1531,9 @@ namespace ThousandAndFirst
 			if (funding == KingdomConstructionStartResult.Outstanding)
 			{
 				KingdomGovernanceScope.Commit("commission building");
-				System.Ledger.Note("{{r|The plot commission has a measured receipt still outstanding. Its ground remains queued and no paid claim will be charged twice.}}");
+				System.Ledger.Note(purposeReceipt == null
+					? "{{r|The plot commission has a measured receipt still outstanding. Its ground remains queued and no paid claim will be charged twice.}}"
+					: "{{r|The purpose commission has a measured receipt outstanding. Retry remains bound to its exact cargo object; if that identity cannot be reproved, the receipt requires inspection rather than substitution.}}");
 				return true;
 			}
 			GameObject works;
@@ -1298,7 +1546,7 @@ namespace ThousandAndFirst
 				return true;
 			}
 			KingdomGovernanceScope.Commit("commission building");
-			KingdomChronicle.Record(System, "ground was staked at " + System.KingdomDisplayName + " for " + XRL.Language.Grammar.A(Entry.Name));
+			KingdomChronicle.Record(System, "ground was staked at " + KingdomPresentation.Rich(System.KingdomDisplayName) + " for " + XRL.Language.Grammar.A(Entry.Name));
 			string clause = KingdomLayoutRules.PlacementClause(KingdomLayout.PurposeOfEntry(Entry), outcome);
 			MessageQueue.AddPlayerMessage("{{G|A " + KingdomPlotRules.SizeName(staked) + " plot is staked for the " + Entry.Name
 				+ ((clause == null) ? "" : (" " + clause)) + ".}}");
@@ -1322,16 +1570,45 @@ namespace ThousandAndFirst
 		/// <returns>The works object, or null when the engine would not create it.</returns>
 		public static GameObject Stake(KingdomSystem System, Zone Z, KingdomPlotRules.PlotRect Rect, KingdomRules.BuildEntry Entry, KingdomPlotRules.PlotSpec Spec, GroundGrid Grid, string SkinKey, bool Carved)
 		{
+			string zoningFailure = null;
+			if (System == null || Z == null || Entry == null
+				|| !KingdomZoning.Permits(System, Z.ZoneID, Entry, out zoningFailure))
+			{
+				KingdomLog.Log("architecture: direct plot stake refused: "
+					+ (zoningFailure ?? "invalid stake authority"));
+				return null;
+			}
+			if (!TryPreparePlotPayload(System, Z, Rect, Entry.Key, Entry.Category, SkinKey,
+				out KingdomArchitectureIntent architecture, out _, out string architectureFailure))
+			{
+				KingdomLog.Log("architecture: direct plot stake refused: "
+					+ (architectureFailure ?? "no authored architecture"));
+				return null;
+			}
 			KingdomConstructionJob legacy = null;
-			return Stake(System, Z, Rect, Entry, Spec, Grid, SkinKey, Carved, ref legacy);
+			return Stake(System, Z, Rect, Entry, Spec, Grid, SkinKey, Carved,
+				architecture, false, ref legacy);
 		}
 
 		private static GameObject Stake(KingdomSystem System, Zone Z,
 			KingdomPlotRules.PlotRect Rect, KingdomRules.BuildEntry Entry,
 			KingdomPlotRules.PlotSpec Spec, GroundGrid Grid, string SkinKey, bool Carved,
+			KingdomArchitectureIntent Architecture, bool LegacyArchitecture,
 			ref KingdomConstructionJob Job)
 		{
-			Cell cell = Z.GetCell(Rect.CenterX, Rect.CenterY);
+			string intentFailure;
+			if (System == null || Z == null || Entry == null || Spec == null || Grid == null
+				|| (LegacyArchitecture && (Architecture != null || Job == null))
+				|| (!LegacyArchitecture && (!KingdomArchitectureRuntime.TryValidate(
+					Architecture, out intentFailure) || Architecture.BuildKey != Entry.Key
+					|| !SameRect(Architecture.Rect, Rect))))
+			{
+				if (Job != null) KingdomConstruction.Quarantine(ref Job,
+					"Plot staking lacks a valid frozen authored intent.");
+				return null;
+			}
+			Cell cell = LegacyArchitecture ? Z.GetCell(Rect.CenterX, Rect.CenterY)
+				: Z.GetCell(Architecture.MainWorldX, Architecture.MainWorldY);
 			if (cell == null)
 			{
 				return null;
@@ -1359,7 +1636,7 @@ namespace ThousandAndFirst
 			if (Job != null && (!KingdomConstruction.Owns(System, Z, Job)
 				|| !KingdomConstruction.IsCurrent(Job)))
 			{
-				RemoveCreatedWorks(works);
+				RemoveCreatedWorks(works, Z);
 				KingdomConstruction.Quarantine(ref Job,
 					"Plot authority changed during works creation.");
 				return null;
@@ -1367,7 +1644,7 @@ namespace ThousandAndFirst
 			r_KingdomPlotWorks part = works.GetPart<r_KingdomPlotWorks>();
 			if (part == null)
 			{
-				bool cleaned = RemoveCreatedWorks(works);
+				bool cleaned = RemoveCreatedWorks(works, Z);
 				if (Job != null && !cleaned) KingdomConstruction.Quarantine(ref Job,
 					"Partless plot works could not be removed exactly.");
 				return null;
@@ -1393,6 +1670,7 @@ namespace ThousandAndFirst
 				Grid.CellsOf(Rect), footprint, roof, Carved);
 			part.TotalTicks = Job != null && Job.DueTick > Job.StartedTick
 				? Job.DueTick - Job.StartedTick : measuredTicks;
+			if (part.TotalTicks < 1L) part.TotalTicks = 1L;
 			part.StageApplied = (int)KingdomPlotRules.PlotStage.Staked;
 			part.Open = Spec.Open;
 			part.Carved = Carved;
@@ -1400,11 +1678,26 @@ namespace ThousandAndFirst
 			part.ContentsTable = Spec.Contents;
 			part.StaffNeeded = Entry.Staff;
 			part.ThresholdManning = KingdomRules.IsThresholdManning(Entry.Manning);
-			if (Entry.Defence > 0)
+			if (Job != null)
+			{
+				if (!KingdomConstructionRules.TryReadBuildTruth(Job,
+					out bool hasPlot, out bool frontier, out int defence)
+					|| !hasPlot || frontier)
+				{
+					RemoveCreatedWorks(works, Z);
+					KingdomConstruction.Quarantine(ref Job,
+						"The paid plot has no exact plotted build effects.");
+					return null;
+				}
+				part.DefencePending = defence;
+			}
+			else if (Entry.Defence > 0)
 			{
 				bool hasTinkering = The.Player != null && The.Player.HasSkill("Tinkering");
 				bool hasAdvancedTinkering = The.Player != null && The.Player.HasSkill("Tinkering_Tinker1");
-				part.DefencePending = KingdomRules.WallDefence(Entry.Defence, System.FoundingTerrainBlueprint, System.FoundingRegionName, hasTinkering, hasAdvancedTinkering);
+				part.DefencePending = KingdomRules.BuiltDefence(Entry.Defence, true,
+					System.FoundingTerrainBlueprint, System.FoundingRegionName,
+					hasTinkering, hasAdvancedTinkering);
 			}
 			bool foundDoor = KingdomPlotRules.TryDoor(footprint, heartX, heartY, out var doorX, out var doorY);
 			part.HasDoor = foundDoor && KingdomPlotRules.Encloses(roof);
@@ -1423,16 +1716,66 @@ namespace ThousandAndFirst
 				works.SetIntProperty(YieldingProperty, 1);
 				works.RequirePart<r_KingdomYielding>();
 			}
-			works.SetStringProperty(PlotIdProperty, Entry.Key + "@" + Rect.X1 + "." + Rect.Y1 + "." + The.Game.TimeTicks);
+			string plotId = Entry.Key + "@" + Rect.X1 + "." + Rect.Y1 + "." + The.Game.TimeTicks;
+			works.SetStringProperty(PlotIdProperty, plotId);
+			// New work is elapsed-time × labour, never elapsed-time alone. Keep the state in
+			// named properties: r_KingdomPlotWorks' positional save layout ends at DoorY.
+			works.SetIntProperty(PlotWorkSchemaProperty, PlotWorkSchema);
+			SetPlotWorkLong(works, PlotWorkRequiredProperty, part.TotalTicks);
+			SetPlotWorkLong(works, PlotWorkRemainingProperty, part.TotalTicks);
+			SetPlotWorkLong(works, PlotWorkLastTickProperty, The.Game.TimeTicks);
+			if (works.GetIntProperty(PlotWorkSchemaProperty) != PlotWorkSchema
+				|| !TryGetPlotWorkLong(works, PlotWorkRequiredProperty, out long frozenRequired)
+				|| !TryGetPlotWorkLong(works, PlotWorkRemainingProperty, out long frozenRemaining)
+				|| !TryGetPlotWorkLong(works, PlotWorkLastTickProperty, out _)
+				|| frozenRequired != part.TotalTicks || frozenRemaining != part.TotalTicks)
+			{
+				bool cleaned = RemoveCreatedWorks(works, Z);
+				if (Job != null) KingdomConstruction.Quarantine(ref Job, cleaned
+					? "Plot labour receipt could not be frozen before projection."
+					: "Plot labour receipt failed and exact cleanup was not possible.");
+				return null;
+			}
 			StampRect(works, Rect);
 			StampFootprint(works, footprint, roof);
 			works.SetStringProperty(KingdomUpgrade.BuildKeyProperty, Entry.Key);
 			KingdomDesign.StageSkin(works, Entry, SkinKey);
+			if (!KingdomPurpose.FreezeOnWork(works, Entry.Key,
+				Job == null ? null : Job.PhysicalReceipt))
+			{
+				bool cleaned = RemoveCreatedWorks(works, Z);
+				if (Job != null) KingdomConstruction.Quarantine(ref Job, cleaned
+					? "The plot could not freeze its exact city-purpose commitment."
+					: "The purpose commitment failed and exact cleanup was not possible.");
+				return null;
+			}
+			if (!LegacyArchitecture && !KingdomArchitectureRuntime.TryFreeze(
+				works, Architecture, out string freezeFailure))
+			{
+				bool cleaned = RemoveCreatedWorks(works, Z);
+				if (Job != null) KingdomConstruction.Quarantine(ref Job, cleaned
+					? "Authored plot receipt could not be frozen before identity publication: "
+						+ freezeFailure
+					: "Authored plot receipt failed and exact cleanup was not possible: "
+						+ freezeFailure);
+				return null;
+			}
+			if (!LegacyArchitecture && !KingdomArchitectureStamper.TryInitializeOwner(
+				works, Architecture, plotId, out string layoutFailure))
+			{
+				bool cleaned = RemoveCreatedWorks(works, Z);
+				if (Job != null) KingdomConstruction.Quarantine(ref Job, cleaned
+					? "Authored layout receipt could not be frozen before identity publication: "
+						+ layoutFailure
+					: "Authored layout receipt failed and exact cleanup was not possible: "
+						+ layoutFailure);
+				return null;
+			}
 			if (Job != null)
 			{
 				if (!KingdomConstruction.UpdateOutput(ref Job, works.ID))
 				{
-					bool cleaned = RemoveCreatedWorks(works);
+					bool cleaned = RemoveCreatedWorks(works, Z);
 					KingdomConstruction.Quarantine(ref Job, cleaned
 						? "Plot-works identity publication failed; exact replacement is forbidden."
 						: "Plot-works identity publication failed and cleanup was not exact.");
@@ -1441,10 +1784,14 @@ namespace ThousandAndFirst
 				KingdomConstruction.Bind(works, Job);
 			}
 			GameObject accepted;
-			try { accepted = cell.AddObject(works); }
+			try
+			{
+				accepted = cell.AddObject(works);
+				KingdomSurvey.ObserveAddResultInActive(Z, works, accepted);
+			}
 			catch (System.Exception ex)
 			{
-				bool cleaned = RemoveCreatedWorks(works);
+				bool cleaned = RemoveCreatedWorks(works, Z);
 				if (Job != null) KingdomConstruction.Quarantine(ref Job,
 					(cleaned ? "Plot-works AddObject threw after identity publication: "
 						: "Plot-works AddObject threw and exact cleanup failed: ") + ex.Message);
@@ -1459,12 +1806,13 @@ namespace ThousandAndFirst
 				|| works.Blueprint != WorksBlueprint
 				|| works.GetPart<r_KingdomPlotWorks>() != part || part.DesignKey != Entry.Key
 				|| works.GetStringProperty(KingdomUpgrade.BuildKeyProperty) != Entry.Key
+				|| !ExpectedWorks(works, cell, Entry.Key, Architecture, LegacyArchitecture, Job)
 				|| (Job != null && (!KingdomConstruction.Owns(System, Z, Job)
 					|| works.ID != Job.OutputId
 					|| !KingdomConstruction.HasReceipt(works, Job)
 					|| !KingdomConstruction.IsCurrent(Job))))
 			{
-				bool cleaned = RemoveCreatedWorks(works);
+				bool cleaned = RemoveCreatedWorks(works, Z);
 				if (Job != null) KingdomConstruction.Quarantine(ref Job, cleaned
 					? "Plot works changed during AddObject; frozen identity was retired."
 					: "Plot works changed during AddObject and exact cleanup failed.");
@@ -1476,15 +1824,23 @@ namespace ThousandAndFirst
 			return works;
 		}
 
-		private static bool RemoveCreatedWorks(GameObject Works)
+		private static bool RemoveCreatedWorks(GameObject Works, Zone ExpectedZone = null)
 		{
-			if (!GameObject.Validate(Works)) return true;
+			Zone zone = GameObject.Validate(Works) ? Works.CurrentZone : ExpectedZone;
+			if (!GameObject.Validate(Works))
+			{
+				KingdomSurvey.ObserveRemovedFromActive(zone, Works);
+				return true;
+			}
 			try
 			{
-				bool removed = Works.Obliterate(null, Silent: true);
-				return removed && !GameObject.Validate(Works);
+				return Works.Obliterate(null, Silent: true) && !GameObject.Validate(Works);
 			}
 			catch { return false; }
+			finally
+			{
+				KingdomSurvey.ObserveCurrentTopologyInActive(zone, Works);
+			}
 		}
 
 		private static bool ProjectPlot(KingdomSystem System, Zone Z,
@@ -1496,16 +1852,33 @@ namespace ThousandAndFirst
 			KingdomConstructionJob current = Job;
 			Updated = current;
 			Failure = null;
+			if (Job == null || !TryDecodePlotPayload(Job.Payload,
+				out KingdomPlotRules.PlotRect paidRect, out string paidSkin,
+				out KingdomArchitectureIntent architecture, out bool legacyArchitecture,
+				out Failure) || !SameRect(paidRect, Rect) || !SamePlotSkin(paidSkin, SkinKey)
+				|| Job.TargetKey != Entry.Key
+				|| (!legacyArchitecture && (architecture == null
+					|| architecture.BuildKey != Entry.Key || Job.X != architecture.MainWorldX
+					|| Job.Y != architecture.MainWorldY))
+				|| (legacyArchitecture && (Job.X != Rect.CenterX || Job.Y != Rect.CenterY)))
+			{
+				if (Failure == null) Failure =
+					"The paid plot payload does not match its exact authored projection.";
+				if (Updated != null) KingdomConstruction.Quarantine(ref Updated, Failure);
+				Works = null;
+				return false;
+			}
 			KingdomPhysicalLookupState worksState = FindConstructionResult(
 				Z, Job, false, out Works);
-			Cell cell = Z?.GetCell(Rect.CenterX, Rect.CenterY);
+			Cell cell = legacyArchitecture ? Z?.GetCell(Rect.CenterX, Rect.CenterY)
+				: Z?.GetCell(architecture.MainWorldX, architecture.MainWorldY);
 			if (worksState == KingdomPhysicalLookupState.Ambiguous)
 			{
 				Failure = "The frozen plot-works ID is duplicated or malformed.";
 				KingdomConstruction.Quarantine(ref Updated, Failure);
 				return false;
 			}
-			if (ExpectedWorks(Works, cell, Entry.Key)
+			if (ExpectedWorks(Works, cell, Entry.Key, architecture, legacyArchitecture, Job)
 				&& Works.ID == (Job.OutputId ?? Job.SubjectId)
 				&& KingdomConstruction.HasReceipt(Works, Job))
 			{
@@ -1514,7 +1887,7 @@ namespace ThousandAndFirst
 			}
 			if (GameObject.Validate(Works)
 				&& (Works.ID != Job.OutputId && Works.ID != Job.SubjectId
-					|| !ExpectedWorks(Works, cell, Entry.Key)
+					|| !ExpectedWorks(Works, cell, Entry.Key, architecture, legacyArchitecture, Job)
 					|| !KingdomConstruction.HasReceipt(Works, Job)))
 			{
 				Failure = "The frozen plot receipt is attached to an unexpected projection.";
@@ -1537,12 +1910,19 @@ namespace ThousandAndFirst
 				KingdomConstruction.Quarantine(ref Updated, Failure);
 				return false;
 			}
+			if (!KingdomConstructionRules.TryReadBuildTruth(Job, out _, out _, out _))
+			{
+				Failure = "The unprojected legacy plot predates frozen build effects.";
+				KingdomConstruction.Quarantine(ref Updated, Failure);
+				return false;
+			}
 			if (cell == null || !KingdomConstruction.BeginProjection(ref Updated, out Failure))
 			{
 				return false;
 			}
-			Works = Stake(System, Z, Rect, Entry, Spec, Grid, SkinKey, Carved, ref Updated);
-			if (!ExpectedWorks(Works, cell, Entry.Key)
+			Works = Stake(System, Z, Rect, Entry, Spec, Grid, SkinKey, Carved,
+				architecture, legacyArchitecture, ref Updated);
+			if (!ExpectedWorks(Works, cell, Entry.Key, architecture, legacyArchitecture, Updated)
 				|| Works.ID != Updated.OutputId || !KingdomConstruction.HasReceipt(Works, Updated))
 			{
 				Failure = "The plot works could not be verified in the staked cell.";
@@ -1570,29 +1950,242 @@ namespace ThousandAndFirst
 				KingdomPlotRules.IsUnderground(Z.Z), Job, out Works, out Updated, out Failure);
 		}
 
-		private static bool ExpectedWorks(GameObject Works, Cell Cell, string Key)
+		private static bool ExpectedWorks(GameObject Works, Cell Cell, string Key,
+			KingdomArchitectureIntent Intent, bool Legacy, KingdomConstructionJob Job = null)
 		{
 			r_KingdomPlotWorks part = GameObject.Validate(Works)
 				? Works.GetPart<r_KingdomPlotWorks>() : null;
-			return part != null && Works.CurrentCell == Cell && part.DesignKey == Key;
+			if (part == null || part.DesignKey != Key) return false;
+			if (Job != null)
+			{
+				if (KingdomConstructionRules.TryReadBuildTruth(Job,
+					out bool hasPlot, out bool frontier, out int defence))
+				{
+					if (!hasPlot || frontier || part.DefencePending != defence) return false;
+				}
+				else if (Job.BuildTruthSchema != 0 || part.DefencePending < 0) return false;
+			}
+			return ExpectedArchitectureReceipt(Works, Cell, Key, Intent, Legacy);
 		}
 
-		internal static string EncodePlotPayload(KingdomPlotRules.PlotRect Rect, string SkinKey)
+		internal static bool ExpectedArchitectureReceipt(GameObject Object, Cell Cell, string Key,
+			KingdomArchitectureIntent Intent, bool Legacy)
 		{
-			string skin = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(SkinKey ?? ""));
-			return "v1|" + Rect.X1.ToString(global::System.Globalization.CultureInfo.InvariantCulture)
-				+ "|" + Rect.Y1.ToString(global::System.Globalization.CultureInfo.InvariantCulture)
-				+ "|" + Rect.X2.ToString(global::System.Globalization.CultureInfo.InvariantCulture)
-				+ "|" + Rect.Y2.ToString(global::System.Globalization.CultureInfo.InvariantCulture)
-				+ "|" + skin;
+			if (!GameObject.Validate(Object) || Cell == null || Object.CurrentCell != Cell
+				|| Object.GetStringProperty(KingdomUpgrade.BuildKeyProperty) != Key) return false;
+			if (Legacy)
+				return Intent == null && !HasArchitectureReceiptEvidence(Object);
+			return Intent != null && Intent.BuildKey == Key
+				&& Object.CurrentCell.X == Intent.MainWorldX
+				&& Object.CurrentCell.Y == Intent.MainWorldY
+				&& KingdomArchitectureRuntime.TryRead(Object,
+					out KingdomArchitectureIntent frozen, out _)
+				&& SameIntent(frozen, Intent)
+				&& (!KingdomArchitectureRules.IsCurrentSnapshotEncoding(Intent.EncodedSnapshot)
+					|| (KingdomArchitectureStamper.TryReadOwner(Object, out _, out _,
+						out string lotId, out _)
+						&& lotId == Object.GetStringProperty(PlotIdProperty)));
 		}
 
+		private static bool HasArchitectureReceiptEvidence(GameObject Object)
+		{
+			return HasArchitectureProperty(Object, KingdomArchitectureRuntime.SchemaProperty)
+				|| HasArchitectureProperty(Object, KingdomArchitectureRuntime.BuildKeyProperty)
+				|| HasArchitectureProperty(Object, KingdomArchitectureRuntime.PlanKeyProperty)
+				|| HasArchitectureProperty(Object, KingdomArchitectureRuntime.BindingKeyProperty)
+				|| HasArchitectureProperty(Object, KingdomArchitectureRuntime.TierKeyProperty)
+				|| HasArchitectureProperty(Object, KingdomArchitectureRuntime.VariantKeyProperty)
+				|| HasArchitectureProperty(Object, KingdomArchitectureRuntime.PaletteKeyProperty)
+				|| HasArchitectureProperty(Object, KingdomArchitectureRuntime.LotTypeProperty)
+				|| HasArchitectureProperty(Object, KingdomArchitectureRuntime.LotSizeProperty)
+				|| HasArchitectureProperty(Object, KingdomArchitectureRuntime.FacingProperty)
+				|| HasArchitectureProperty(Object, KingdomArchitectureRuntime.SnapshotProperty)
+				|| HasArchitectureProperty(Object, KingdomArchitectureRuntime.HashProperty)
+				|| HasArchitectureProperty(Object, KingdomArchitectureRuntime.RectX1Property)
+				|| HasArchitectureProperty(Object, KingdomArchitectureRuntime.RectY1Property)
+				|| HasArchitectureProperty(Object, KingdomArchitectureRuntime.RectX2Property)
+				|| HasArchitectureProperty(Object, KingdomArchitectureRuntime.RectY2Property)
+				|| HasArchitectureProperty(Object, KingdomArchitectureRuntime.MainXProperty)
+				|| HasArchitectureProperty(Object, KingdomArchitectureRuntime.MainYProperty);
+		}
+
+		private static bool HasArchitectureProperty(GameObject Object, string Property)
+		{
+			return Object != null
+				&& (Object.HasIntProperty(Property) || Object.HasStringProperty(Property));
+		}
+
+		/// <summary>
+		/// Resolves and freezes all authored authority needed by a future plot job. Call before any
+		/// water/material reservation or world mutation. The resulting payload is the only authority
+		/// projection and retry consume.
+		/// </summary>
+		internal static bool TryPreparePlotPayload(KingdomSystem System, Zone Z,
+			KingdomPlotRules.PlotRect Rect, string BuildKey, string SkinKey,
+			out KingdomArchitectureIntent Intent, out string Payload, out string Failure)
+		{
+			Intent = null;
+			Payload = null;
+			KingdomRules.BuildEntry entry;
+			if (!KingdomData.TryGetBuilding(BuildKey, out entry))
+			{
+				Failure = "The authored plot design is absent from the merged building catalogue.";
+				return false;
+			}
+			return TryPreparePlotPayload(System, Z, Rect, BuildKey, entry.Category, SkinKey,
+				out Intent, out Payload, out Failure);
+		}
+
+		internal static bool TryPreparePlotPayload(KingdomSystem System, Zone Z,
+			KingdomPlotRules.PlotRect Rect, string BuildKey, string LotType, string SkinKey,
+			out KingdomArchitectureIntent Intent, out string Payload, out string Failure)
+		{
+			Intent = null;
+			Payload = null;
+			if (!KingdomArchitectureRuntime.TryPrepare(System, Z, Rect, BuildKey, LotType,
+				out KingdomArchitectureIntent prepared, out Failure)) return false;
+			KingdomMaterialDebitCost claim = new KingdomMaterialDebitCost(
+				KingdomMaterials.CostFor(BuildKey), KingdomMaterials.BitCostFor(BuildKey),
+				KingdomMaterials.ExoticCostFor(BuildKey));
+			if (!KingdomArchitectureStamper.TryPreflight(System, Z, prepared, claim,
+				out Failure)) return false;
+			KingdomDelveLinkIntent delveLink;
+			if (!KingdomDelveLink.TryPreflight(System, Z, prepared, out delveLink,
+				out Failure)) return false;
+			if (!TryEncodePlotPayload(Rect, SkinKey, prepared, out Payload, out Failure)) return false;
+			Intent = prepared;
+			return true;
+		}
+
+		/// <summary>
+		/// Canonical v2: version, exact rect, canonical UTF-8 skin, the architecture codec's three
+		/// fields, then a SHA-256 over every preceding field. Snapshot is not base64-wrapped again,
+		/// keeping the complete construction payload beneath its 8192-character wire bound.
+		/// </summary>
+		internal static bool TryEncodePlotPayload(KingdomPlotRules.PlotRect Rect, string SkinKey,
+			KingdomArchitectureIntent Intent, out string Payload, out string Failure)
+		{
+			return TryEncodePlotPayloadCore(Rect, SkinKey, Intent, true, out Payload, out Failure);
+		}
+
+		private static bool TryEncodePlotPayloadCore(KingdomPlotRules.PlotRect Rect, string SkinKey,
+			KingdomArchitectureIntent Intent, bool RequireCurrentSnapshot,
+			out string Payload, out string Failure)
+		{
+			Payload = null;
+			Failure = null;
+			if (!TryPlotRect(Rect) || Intent == null
+				|| !KingdomArchitectureRuntime.TryValidate(Intent, out Failure)
+				|| !SameRect(Rect, Intent.Rect))
+			{
+				if (Failure == null) Failure = "The authored plot intent does not match its exact rectangle.";
+				return false;
+			}
+			string skin;
+			if (!TryEncodePlotSkin(SkinKey, out skin))
+			{
+				Failure = "The chosen plot skin is malformed or over the payload bound.";
+				return false;
+			}
+			string snapshot = Intent.EncodedSnapshot;
+			string[] snapshotFields = snapshot == null ? null : snapshot.Split('|');
+			if (snapshotFields == null || snapshotFields.Length != 3
+				|| (snapshotFields[0] != "a1" && snapshotFields[0] != "a2")
+				|| (RequireCurrentSnapshot && snapshotFields[0] != "a2")
+				|| snapshotFields[2] != Intent.SnapshotHash)
+			{
+				Failure = "The authored plot snapshot is not canonical.";
+				return false;
+			}
+			string preimage = "v2|" + PlotCoordinate(Rect.X1) + "|" + PlotCoordinate(Rect.Y1)
+				+ "|" + PlotCoordinate(Rect.X2) + "|" + PlotCoordinate(Rect.Y2) + "|" + skin
+				+ "|" + snapshotFields[0] + "|" + snapshotFields[1] + "|" + snapshotFields[2];
+			string hash = PlotPayloadHash(preimage);
+			string encoded = preimage + "|" + hash;
+			if (hash == null || encoded.Length > KingdomConstructionRules.MaxPayloadChars)
+			{
+				Failure = "The authored plot payload exceeds the construction receipt bound.";
+				return false;
+			}
+			Payload = encoded;
+			return true;
+		}
+
+		/// <summary>
+		/// Reads canonical v2 into a catalogue-independent intent. V1 remains readable only for jobs
+		/// written before authored receipts existed and is explicitly marked legacy; no writer emits it.
+		/// </summary>
 		internal static bool TryDecodePlotPayload(string Payload,
+			out KingdomPlotRules.PlotRect Rect, out string SkinKey,
+			out KingdomArchitectureIntent Intent, out bool Legacy, out string Failure)
+		{
+			Rect = default(KingdomPlotRules.PlotRect);
+			SkinKey = null;
+			Intent = null;
+			Legacy = false;
+			Failure = null;
+			if (string.IsNullOrEmpty(Payload)
+				|| Payload.Length > KingdomConstructionRules.MaxPayloadChars)
+			{
+				Failure = "The plot payload is absent or over the construction receipt bound.";
+				return false;
+			}
+			if (Payload.StartsWith("v1|", StringComparison.Ordinal))
+			{
+				if (!TryDecodeLegacyPlotPayload(Payload, out Rect, out SkinKey))
+				{
+					Failure = "The legacy plot payload is malformed.";
+					return false;
+				}
+				Legacy = true;
+				return true;
+			}
+			string[] fields = Payload.Split('|');
+			int x1;
+			int y1;
+			int x2;
+			int y2;
+			if (fields.Length != 10 || fields[0] != "v2"
+				|| !TryPlotCoordinate(fields[1], out x1) || !TryPlotCoordinate(fields[2], out y1)
+				|| !TryPlotCoordinate(fields[3], out x2) || !TryPlotCoordinate(fields[4], out y2)
+				|| x2 < x1 || y2 < y1
+				|| (fields[6] != "a1" && fields[6] != "a2")
+				|| !CanonicalPlotHash(fields[9]))
+			{
+				Failure = "The authored plot payload shape is malformed or unknown.";
+				return false;
+			}
+			int hashSplit = Payload.LastIndexOf('|');
+			if (hashSplit <= 0 || PlotPayloadHash(Payload.Substring(0, hashSplit)) != fields[9])
+			{
+				Failure = "The authored plot payload hash does not match its contents.";
+				return false;
+			}
+			if (!TryDecodePlotSkin(fields[5], out SkinKey))
+			{
+				Failure = "The authored plot skin is not canonical UTF-8.";
+				return false;
+			}
+			Rect = new KingdomPlotRules.PlotRect(x1, y1, x2, y2);
+			string snapshot = fields[6] + "|" + fields[7] + "|" + fields[8];
+			if (!TryIntentFromSnapshot(Rect, snapshot, out Intent, out Failure)) return false;
+			string canonical;
+			if (!TryEncodePlotPayloadCore(Rect, SkinKey, Intent, false,
+				out canonical, out Failure)
+				|| canonical != Payload)
+			{
+				if (Failure == null) Failure = "The authored plot payload is not canonical.";
+				Intent = null;
+				return false;
+			}
+			return true;
+		}
+
+		private static bool TryDecodeLegacyPlotPayload(string Payload,
 			out KingdomPlotRules.PlotRect Rect, out string SkinKey)
 		{
 			Rect = default(KingdomPlotRules.PlotRect);
 			SkinKey = null;
-			if (string.IsNullOrEmpty(Payload)) return false;
 			string[] fields = Payload.Split('|');
 			int x1;
 			int y1;
@@ -1600,21 +2193,130 @@ namespace ThousandAndFirst
 			int y2;
 			if (fields.Length != 6 || fields[0] != "v1" || !TryPlotCoordinate(fields[1], out x1)
 				|| !TryPlotCoordinate(fields[2], out y1) || !TryPlotCoordinate(fields[3], out x2)
-				|| !TryPlotCoordinate(fields[4], out y2) || x2 < x1 || y2 < y1)
-			{
-				return false;
-			}
+				|| !TryPlotCoordinate(fields[4], out y2) || x2 < x1 || y2 < y1) return false;
 			try
 			{
 				string skin = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(fields[5]));
 				SkinKey = skin.Length == 0 ? null : skin;
 			}
-			catch
-			{
-				return false;
-			}
+			catch { return false; }
 			Rect = new KingdomPlotRules.PlotRect(x1, y1, x2, y2);
 			return true;
+		}
+
+		private static bool TryIntentFromSnapshot(KingdomPlotRules.PlotRect Rect, string Encoded,
+			out KingdomArchitectureIntent Intent, out string Failure)
+		{
+			Intent = null;
+			if (!KingdomArchitectureRules.TryDecodeSnapshot(Encoded,
+				out ArchitectureLayoutSnapshot snapshot, out Failure)) return false;
+			string hash;
+			if (!KingdomArchitectureRules.TryEncodedSnapshotHash(Encoded, out hash, out Failure)) return false;
+			int mainX;
+			int mainY;
+			if (!KingdomArchitectureRules.TryToWorld(Rect.X1, Rect.Y1, snapshot.Width,
+				snapshot.Height, snapshot.Facing, snapshot.MainX, snapshot.MainY,
+				out mainX, out mainY) || !Rect.Contains(mainX, mainY))
+			{
+				Failure = "The authored plot main anchor does not fit its exact rectangle.";
+				return false;
+			}
+			KingdomArchitectureIntent rebuilt = KingdomArchitectureIntent.CreateRaw(
+				KingdomArchitectureRuntime.ReceiptSchema, snapshot.BuildKey, snapshot.PlanKey,
+				snapshot.BindingKey, snapshot.TierKey, snapshot.VariantKey, snapshot.PaletteKey,
+				snapshot.LotType, snapshot.LotSize, snapshot.Facing, Encoded, hash, Rect, mainX, mainY);
+			if (!KingdomArchitectureRuntime.TryValidate(rebuilt, out Failure)) return false;
+			Intent = rebuilt;
+			return true;
+		}
+
+		private static bool TryEncodePlotSkin(string SkinKey, out string Encoded)
+		{
+			Encoded = null;
+			string skin = SkinKey ?? "";
+			if (skin.Length > MaxPlotSkinChars || HasPlotControl(skin)) return false;
+			try { Encoded = Convert.ToBase64String(StrictPlotUtf8.GetBytes(skin)); }
+			catch { return false; }
+			return true;
+		}
+
+		private static bool TryDecodePlotSkin(string Encoded, out string SkinKey)
+		{
+			SkinKey = null;
+			try
+			{
+				byte[] bytes = Convert.FromBase64String(Encoded);
+				if (Convert.ToBase64String(bytes) != Encoded) return false;
+				string skin = StrictPlotUtf8.GetString(bytes);
+				if (skin.Length > MaxPlotSkinChars || HasPlotControl(skin)) return false;
+				SkinKey = skin.Length == 0 ? null : skin;
+				return true;
+			}
+			catch { return false; }
+		}
+
+		private static bool HasPlotControl(string Value)
+		{
+			for (int i = 0; i < Value.Length; i++) if (char.IsControl(Value[i])) return true;
+			return false;
+		}
+
+		private static bool TryPlotRect(KingdomPlotRules.PlotRect Rect)
+		{
+			return Rect.X2 >= Rect.X1 && Rect.Y2 >= Rect.Y1
+				&& TryPlotCoordinate(PlotCoordinate(Rect.X1), out _)
+				&& TryPlotCoordinate(PlotCoordinate(Rect.Y1), out _)
+				&& TryPlotCoordinate(PlotCoordinate(Rect.X2), out _)
+				&& TryPlotCoordinate(PlotCoordinate(Rect.Y2), out _);
+		}
+
+		private static string PlotCoordinate(int Value)
+		{
+			return Value.ToString(global::System.Globalization.CultureInfo.InvariantCulture);
+		}
+
+		private static string PlotPayloadHash(string Text)
+		{
+			try
+			{
+				byte[] bytes = StrictPlotUtf8.GetBytes(Text);
+				byte[] digest;
+				using (System.Security.Cryptography.SHA256 sha =
+					System.Security.Cryptography.SHA256.Create()) digest = sha.ComputeHash(bytes);
+				System.Text.StringBuilder result = new System.Text.StringBuilder(64);
+				for (int i = 0; i < digest.Length; i++) result.Append(digest[i].ToString("x2",
+					global::System.Globalization.CultureInfo.InvariantCulture));
+				return result.ToString();
+			}
+			catch { return null; }
+		}
+
+		private static bool CanonicalPlotHash(string Value)
+		{
+			if (Value == null || Value.Length != 64) return false;
+			for (int i = 0; i < Value.Length; i++)
+				if ((Value[i] < '0' || Value[i] > '9')
+					&& (Value[i] < 'a' || Value[i] > 'f')) return false;
+			return true;
+		}
+
+		private static bool SameRect(KingdomPlotRules.PlotRect A,
+			KingdomPlotRules.PlotRect B)
+		{
+			return A.X1 == B.X1 && A.Y1 == B.Y1 && A.X2 == B.X2 && A.Y2 == B.Y2;
+		}
+
+		private static bool SameIntent(KingdomArchitectureIntent A, KingdomArchitectureIntent B)
+		{
+			return A != null && B != null && A.EncodedSnapshot == B.EncodedSnapshot
+				&& A.SnapshotHash == B.SnapshotHash && SameRect(A.Rect, B.Rect)
+				&& A.MainWorldX == B.MainWorldX && A.MainWorldY == B.MainWorldY;
+		}
+
+		private static bool SamePlotSkin(string A, string B)
+		{
+			return (string.IsNullOrEmpty(A) ? null : A)
+				== (string.IsNullOrEmpty(B) ? null : B);
 		}
 
 		private static bool TryPlotCoordinate(string Text, out int Value)
@@ -1630,12 +2332,23 @@ namespace ThousandAndFirst
 		{
 			if (System == null || Z == null || Job == null
 				|| (Job.Route != KingdomConstructionRoute.PlotCommission
-					&& Job.Route != KingdomConstructionRoute.PlotPlan)
-				|| !KingdomData.TryGetBuilding(Job.TargetKey, out var entry)
-				|| !TryGetSpec(Job.TargetKey, out var spec))
+					&& Job.Route != KingdomConstructionRoute.PlotPlan))
 			{
 				return;
 			}
+			if (!TryDecodePlotPayload(Job.Payload, out var rect, out var skin,
+				out KingdomArchitectureIntent architecture, out bool legacy, out string payloadFailure)
+				|| (!legacy && (architecture == null || architecture.BuildKey != Job.TargetKey
+					|| Job.X != architecture.MainWorldX || Job.Y != architecture.MainWorldY))
+				|| (legacy && (Job.X != rect.CenterX || Job.Y != rect.CenterY)))
+			{
+				KingdomConstructionJob malformed = Job;
+				KingdomConstruction.Quarantine(ref malformed, payloadFailure
+					?? "The plot job no longer matches its frozen authored payload.");
+				return;
+			}
+			if (!KingdomData.TryGetBuilding(Job.TargetKey, out var entry)
+				|| !TryGetSpec(Job.TargetKey, out var spec)) return;
 			if (Job.Route == KingdomConstructionRoute.PlotPlan)
 			{
 				GameObject marker;
@@ -1663,10 +2376,13 @@ namespace ThousandAndFirst
 						try { removed = marker.Destroy(null, Silent: true); }
 						catch (System.Exception ex)
 						{
+							KingdomSurvey.ObserveCurrentTopologyInActive(Z, marker);
 							KingdomConstruction.Quarantine(ref recovered,
 								"Plot plan-marker removal threw: " + ex.Message);
 							return;
 						}
+						if (removed && !GameObject.Validate(marker))
+							KingdomSurvey.ObserveRemovedFromActive(Z, marker);
 						// Destroy moves the exact object to the graveyard with all parts retained.
 						// Callback success plus invalidity is the engine's exact tombstone.
 					if (!KingdomConstruction.Owns(System, Z, recovered)
@@ -1721,10 +2437,13 @@ namespace ThousandAndFirst
 						try { removed = marker.Destroy(null, Silent: true); }
 						catch (System.Exception ex)
 						{
+							KingdomSurvey.ObserveCurrentTopologyInActive(Z, marker);
 							KingdomConstruction.Quarantine(ref recovered,
 								"Plot plan-marker removal threw: " + ex.Message);
 							return;
 						}
+						if (removed && !GameObject.Validate(marker))
+							KingdomSurvey.ObserveRemovedFromActive(Z, marker);
 					if (!KingdomConstruction.Owns(System, Z, recovered)
 						|| KingdomConstructionRules.ExactRemovalAction(true, removed,
 						GameObject.Validate(marker), KingdomConstruction.FindExactId(
@@ -1744,6 +2463,13 @@ namespace ThousandAndFirst
 				if (marker != null && marker.GetPart<r_KingdomPlanMarker>() != null)
 				{
 					KingdomConstructionJob pending = Job;
+					if (!KingdomConstructionRules.TryReadBuildTruth(pending,
+						out _, out _, out _))
+					{
+						KingdomConstruction.Quarantine(ref pending,
+							"The unprojected legacy plot plan predates frozen build effects.");
+						return;
+					}
 					if (KingdomConstruction.BeginProjection(ref pending, out _))
 					{
 						StakeFromPlan(System, marker, entry, pending, out _);
@@ -1751,7 +2477,6 @@ namespace ThousandAndFirst
 				}
 				return;
 			}
-			if (!TryDecodePlotPayload(Job.Payload, out var rect, out var skin)) return;
 			ProjectPlot(System, Z, rect, entry, spec, new GroundGrid(Z), skin,
 				KingdomPlotRules.IsUnderground(Z.Z), Job, out _, out _, out _);
 		}
@@ -1847,6 +2572,21 @@ namespace ThousandAndFirst
 			KingdomConstructionJob Job, bool Final, out GameObject Result)
 		{
 			Result = null;
+			if (Z == null || Job == null || !TryDecodePlotPayload(Job.Payload,
+				out KingdomPlotRules.PlotRect rect, out _,
+				out KingdomArchitectureIntent architecture, out bool legacy, out _)
+				|| (!legacy && (architecture == null || architecture.BuildKey != Job.TargetKey
+					|| Job.X != architecture.MainWorldX || Job.Y != architecture.MainWorldY))
+				|| (legacy && (Job.X != rect.CenterX || Job.Y != rect.CenterY)))
+				return KingdomPhysicalLookupState.Ambiguous;
+			Cell expectedCell = legacy ? Z.GetCell(rect.CenterX, rect.CenterY)
+				: Z.GetCell(architecture.MainWorldX, architecture.MainWorldY);
+			// A paid plan starts with its plan marker in SubjectId and has no output yet. The
+			// marker is authority to project, not plot works; never inspect it as though the
+			// authored works receipt had already crossed the projection boundary.
+			if (!Final && Job.Route == KingdomConstructionRoute.PlotPlan
+				&& string.IsNullOrEmpty(Job.OutputId))
+				return KingdomPhysicalLookupState.Absent;
 			string expectedId = Final ? Job?.OutputId
 				: (!string.IsNullOrEmpty(Job?.OutputId) ? Job.OutputId : Job?.SubjectId);
 			KingdomPhysicalLookupState state = KingdomConstruction.FindExactId(
@@ -1856,14 +2596,22 @@ namespace ThousandAndFirst
 				return KingdomPhysicalLookupState.Ambiguous;
 			if (Final)
 			{
-				if (item.GetIntProperty("KingdomBuilt") != 1
-					|| item.GetStringProperty(KingdomUpgrade.BuildKeyProperty) != Job.TargetKey)
+				if (item.GetIntProperty("KingdomBuilt") != 1)
+				{
+					// OutputId names works until the final root is published. Valid works are
+					// absence of a final, not a malformed final, so callers can inspect works next.
+					if (ExpectedWorks(item, expectedCell, Job.TargetKey, architecture, legacy, Job))
+						return KingdomPhysicalLookupState.Absent;
+					return KingdomPhysicalLookupState.Ambiguous;
+				}
+				if (!ExpectedArchitectureReceipt(item, expectedCell, Job.TargetKey,
+					architecture, legacy)
+					|| !KingdomConstruction.FinalBuildTruthMatches(item, Job))
 					return KingdomPhysicalLookupState.Ambiguous;
 			}
 			else
 			{
-				r_KingdomPlotWorks works = item.GetPart<r_KingdomPlotWorks>();
-				if (works == null || works.DesignKey != Job.TargetKey)
+				if (!ExpectedWorks(item, expectedCell, Job.TargetKey, architecture, legacy, Job))
 					return KingdomPhysicalLookupState.Ambiguous;
 			}
 			Result = item;
@@ -1872,20 +2620,26 @@ namespace ThousandAndFirst
 
 		/// <summary>
 		/// Buildings and scaffolds this zone already carries, by the exact rule
-		/// <c>KingdomCommission.Commission</c> uses for its own cap check: walls are exempt, work
+		/// <c>KingdomCommission.Commission</c> uses for its own cap check: frontier works are exempt, work
 		/// in progress already counts. Plot walls, floors, and furnishings are not counted &mdash;
 		/// the cap counts plots, not the hundred objects one plot is made of.
 		/// </summary>
 		public static int CountBuilt(Zone Z)
 		{
+			return Z == null ? 0 : CountBuilt(Z.GetObjects());
+		}
+
+		/// <summary>Shared cap census over one already-frozen object sequence. A defensive plotted
+		/// building counts once; its scenery never counts; a free-standing frontier segment never
+		/// counts, including while its scaffold is still rising.</summary>
+		public static int CountBuilt(IEnumerable<GameObject> Objects)
+		{
 			int built = 0;
-			if (Z == null)
+			if (Objects == null) return built;
+			foreach (GameObject item in Objects)
 			{
-				return 0;
-			}
-			foreach (GameObject item in Z.GetObjects())
-			{
-				if (item.GetIntProperty("KingdomDefence") > 0 || item.GetIntProperty(PlotPartProperty) == 1)
+				if (item == null || item.GetIntProperty(PlotPartProperty) == 1
+					|| IsFrontierWork(item))
 				{
 					continue;
 				}
@@ -1897,10 +2651,287 @@ namespace ThousandAndFirst
 			return built;
 		}
 
+		/// <summary>Classifies live and legacy objects by the same defence/plot separation used by
+		/// the pure rules. Registry truth wins; plot receipts preserve the distinction if a design
+		/// was later removed; old unreceipted defensive objects remain frontier works.</summary>
+		public static bool IsFrontierWork(GameObject Object)
+		{
+			if (Object == null) return false;
+			if (!string.IsNullOrEmpty(Object.GetStringProperty(PlotIdProperty))
+				|| Object.HasPart("r_KingdomPlotWorks")
+				|| Object.GetIntProperty(AdoptedPlotProperty) == 1) return false;
+			if (Object.GetIntProperty(FrontierWorkProperty) == 1) return true;
+			string key = Object.GetStringProperty(KingdomUpgrade.BuildKeyProperty);
+			if (string.IsNullOrEmpty(key))
+				key = Object.GetStringProperty(KingdomLayout.AdoptedKeyProperty);
+			if (Object.HasPart("r_KingdomScaffold") && !string.IsNullOrEmpty(key)
+				&& KingdomData.TryGetBuilding(key, out var entry))
+				return KingdomRules.IsFrontierWork(entry.Defence, IsPlotDesign(key));
+			return Object.GetIntProperty("KingdomDefence") > 0
+				|| Object.GetIntProperty("KingdomDefencePending") > 0;
+		}
+
 		// --- The plan path ----------------------------------------------------------------
 
 		/// <summary>
-		/// Whether a staked plan for a plot-sized design must wait this pass, and why. Announces
+		/// Resolves a new surveyor's plan at the founder's exact stake. The stake itself remains
+		/// outside the lot, so it can stand visibly without becoming an obstruction the eventual
+		/// authored stamp must clear. The returned quote freezes the whole lot/map/price/labour; no
+		/// resource or world object is changed here.
+		/// </summary>
+		public static bool TryQuotePlan(KingdomSystem System, Zone Z,
+			KingdomRules.BuildEntry Entry, string SkinKey, KingdomPlotRules.PlotSize Stake,
+			Cell StakeCell, out KingdomPlotQuote Quote, out string Failure)
+		{
+			Quote = null;
+			Failure = null;
+			Failure = KingdomPurpose.PlanRefusal(Entry?.Key);
+			if (Failure != null) return false;
+			if (System == null || Z == null || Entry == null || StakeCell == null
+				|| StakeCell.ParentZone != Z || !TryGetSpec(Entry.Key, out var spec))
+			{
+				Failure = "The plan needs an exact plotted design and a survey stake on this ground.";
+				return false;
+			}
+			if (KingdomPlotRules.HeartRungOf(Entry.Key) > 0)
+			{
+				Failure = KingdomPlotRules.RefuseSecondHeart(KingdomPresentation.Rich(System.SeatName));
+				return false;
+			}
+			Failure = KingdomCommission.StageRefusal(System, Entry);
+			if (Failure != null || !KingdomZoning.Permits(System, Z.ZoneID, Entry, out Failure))
+				return false;
+			KingdomPlotRules.PlotSize staked = StakedSize(spec, Stake);
+			if (!KingdomPlotRules.Allows(System.Stage, staked))
+			{
+				Failure = KingdomPlotRules.RefuseStage(staked, KingdomPresentation.Rich(System.SeatName), System.Stage);
+				return false;
+			}
+			Failure = KingdomDelve.Refusal(System, Z.ZoneID, Entry.Key, Entry.Name);
+			if (Failure != null) return false;
+			bool carved = KingdomPlotRules.IsUnderground(Z.Z);
+			if (carved && spec.RequiresSky)
+			{
+				Failure = KingdomPlotRules.RefuseSky(Entry.Name);
+				return false;
+			}
+			if (KingdomPlotRules.RoofRefusesSky(spec))
+			{
+				Failure = KingdomPlotRules.RefuseRoofSky(Entry.Name, spec.Roof);
+				return false;
+			}
+			if (KingdomPlotRules.WouldExceedBudget(ReadPlots(Z), staked, Z.Width, Z.Height))
+			{
+				Failure = KingdomPlotRules.RefuseBudget(KingdomPresentation.Rich(System.SeatName));
+				return false;
+			}
+			GroundGrid grid = new GroundGrid(Z, StakeCell.X, StakeCell.Y);
+			if (!TryFindRect(Z, System, Entry, spec, staked, grid, StakeCell,
+				out KingdomPlotRules.PlotRect rect, out KingdomLayoutRules.LayoutOutcome outcome,
+				out Failure)) return false;
+			if (rect.Contains(StakeCell.X, StakeCell.Y))
+			{
+				Failure = "The survey stake would stand inside its own reserved lot.";
+				return false;
+			}
+			if (!TryPreparePlotPayload(System, Z, rect, Entry.Key, Entry.Category, SkinKey,
+				out KingdomArchitectureIntent architecture, out string payload, out Failure))
+				return false;
+			Cell main = Z.GetCell(architecture.MainWorldX, architecture.MainWorldY);
+			if (main == null || KingdomConstruction.HasActiveAt(System, Z, main))
+			{
+				Failure = main == null
+					? "The authored building's main anchor is outside its reserved lot."
+					: "That lot's authored main ground already has paid construction in hand.";
+				return false;
+			}
+			long total = KingdomPlotRules.RaiseTicks(
+				KingdomCommission.CraftBuildTicks(Entry.BuildTicks, System.ZoneDistricts.Values),
+				grid.CellsOf(rect), PlannedFootprint(Z, rect, spec),
+				KingdomPlotRules.RoofOnGround(spec.Roof, carved), carved);
+			if (total < 1L)
+			{
+				Failure = "The exact plan labour quote is empty.";
+				return false;
+			}
+			Quote = new KingdomPlotQuote
+			{
+				Rect = rect, StakedSize = staked, Outcome = outcome,
+				Architecture = architecture, Payload = payload, LabourTicks = total,
+				WaterDrams = Entry.CostDrams,
+				MaterialClaim = new KingdomMaterialDebitCost(KingdomMaterials.CostFor(Entry.Key),
+					KingdomMaterials.BitCostFor(Entry.Key), KingdomMaterials.ExoticCostFor(Entry.Key)),
+				MainX = architecture.MainWorldX, MainY = architecture.MainWorldY
+			};
+			return true;
+		}
+
+		/// <summary>Freezes a quote onto a detached marker. Schema is written last.</summary>
+		public static bool TryFreezePlan(GameObject Marker, KingdomRules.BuildEntry Entry,
+			KingdomPlotQuote Quote, out string Failure)
+		{
+			Failure = null;
+			if (Marker == null || Entry == null || Quote == null || Quote.Architecture == null
+				|| Quote.WaterDrams < 0 || Quote.LabourTicks < 1L || Quote.MaterialClaim == null
+				|| Quote.Architecture.BuildKey != Entry.Key
+				|| Quote.Payload == null
+				|| !TryDecodePlotPayload(Quote.Payload, out KingdomPlotRules.PlotRect decoded,
+					out _, out KingdomArchitectureIntent architecture, out bool legacy, out Failure)
+				|| legacy || !SameRect(decoded, Quote.Rect)
+				|| !SameIntent(architecture, Quote.Architecture))
+			{
+				if (Failure == null) Failure = "The plan quote is absent, legacy, or internally inconsistent.";
+				return false;
+			}
+			string labour = Quote.LabourTicks.ToString(
+				global::System.Globalization.CultureInfo.InvariantCulture);
+			string material = Quote.MaterialClaim.ToClaimString();
+			try
+			{
+				Marker.RemoveIntProperty(PlanSchemaProperty);
+				StampRect(Marker, Quote.Rect);
+				Marker.SetStringProperty(PlanPayloadProperty, Quote.Payload);
+				Marker.SetStringProperty(PlanLabourProperty, labour);
+				Marker.SetIntProperty(PlanWaterProperty, Quote.WaterDrams);
+				Marker.SetStringProperty(PlanMaterialProperty, material);
+				Marker.SetIntProperty(PlanSchemaProperty, PlanSchema);
+			}
+			catch (Exception exception)
+			{
+				try { Marker.RemoveIntProperty(PlanSchemaProperty); } catch { }
+				Failure = "The plan receipt could not be frozen: " + exception.Message;
+				return false;
+			}
+			return TryReadFrozenPlan(Marker, Entry, false, out _, out _, out _, out _,
+				out _, out Failure);
+		}
+
+		/// <summary>Reads a new frozen plan without consulting current costs or architecture data.</summary>
+		internal static bool TryReadFrozenPlan(GameObject Marker, KingdomRules.BuildEntry Entry,
+			bool RequireWorld, out KingdomPlotRules.PlotRect Rect, out string Payload,
+			out long LabourTicks, out int WaterDrams, out KingdomMaterialDebitCost Material,
+			out string Failure)
+		{
+			Rect = default(KingdomPlotRules.PlotRect);
+			Payload = null;
+			LabourTicks = 0L;
+			WaterDrams = 0;
+			Material = null;
+			Failure = null;
+			if (Marker == null || Entry == null || Marker.HasStringProperty(PlanSchemaProperty)
+				|| !Marker.HasIntProperty(PlanSchemaProperty)
+				|| Marker.GetIntProperty(PlanSchemaProperty) != PlanSchema
+				|| Marker.GetPart<r_KingdomPlanMarker>() == null
+				|| Marker.GetPart<r_KingdomPlanMarker>().DesignKey != Entry.Key
+				|| !TryReadRect(Marker, out Rect))
+			{
+				Failure = "The frozen plan receipt is absent, partial, or unknown.";
+				return false;
+			}
+			Payload = Marker.GetStringProperty(PlanPayloadProperty);
+			if (!TryDecodePlotPayload(Payload, out KingdomPlotRules.PlotRect decoded, out _,
+				out KingdomArchitectureIntent architecture, out bool legacy, out Failure)
+				|| legacy || architecture.BuildKey != Entry.Key || !SameRect(decoded, Rect)
+				|| !KingdomArchitectureRules.IsCurrentSnapshotEncoding(architecture.EncodedSnapshot)
+				|| !long.TryParse(Marker.GetStringProperty(PlanLabourProperty),
+					global::System.Globalization.NumberStyles.None,
+					global::System.Globalization.CultureInfo.InvariantCulture, out LabourTicks)
+				|| LabourTicks < 1L
+				|| !KingdomMaterialDebitCost.TryParseClaim(
+					Marker.GetStringProperty(PlanMaterialProperty), out Material))
+			{
+				if (Failure == null) Failure = "The frozen plan map, price, or labour receipt is malformed.";
+				return false;
+			}
+			WaterDrams = Marker.GetIntProperty(PlanWaterProperty);
+			if (WaterDrams < 0)
+			{
+				Failure = "The frozen plan has a negative water price.";
+				return false;
+			}
+			if (RequireWorld)
+			{
+				Zone zone = Marker.CurrentZone;
+				Cell stake = Marker.CurrentCell;
+				if (zone == null || stake == null || RectOutsideZone(Rect, zone)
+					|| Rect.Contains(stake.X, stake.Y))
+				{
+					Failure = "The frozen plan is not standing beside its exact reserved lot.";
+					return false;
+				}
+			}
+			return true;
+		}
+
+		private static bool RectOutsideZone(KingdomPlotRules.PlotRect Rect, Zone Z)
+		{
+			return Z == null || Rect.X1 < 0 || Rect.Y1 < 0
+				|| Rect.X2 >= Z.Width || Rect.Y2 >= Z.Height;
+		}
+
+		/// <summary>Frozen plan price, with a current-catalogue fallback only for legacy markers.</summary>
+		internal static bool TryPlanPrice(GameObject Marker, KingdomRules.BuildEntry Entry,
+			out int WaterDrams, out KingdomMaterialDebitCost Material)
+		{
+			WaterDrams = Entry == null ? 0 : Entry.CostDrams;
+			Material = Entry == null ? null : new KingdomMaterialDebitCost(
+				KingdomMaterials.CostFor(Entry.Key), KingdomMaterials.BitCostFor(Entry.Key),
+				KingdomMaterials.ExoticCostFor(Entry.Key));
+			if (Marker == null || Entry == null) return false;
+			if (!Marker.HasIntProperty(PlanSchemaProperty)) return Material != null;
+			return TryReadFrozenPlan(Marker, Entry, true, out _, out _, out _,
+				out WaterDrams, out Material, out _);
+		}
+
+		private static bool TryFrozenPlanReady(KingdomSystem System, GameObject Marker,
+			KingdomRules.BuildEntry Entry, out KingdomPlotRules.PlotRect Rect,
+			out string Payload, out long LabourTicks, out KingdomArchitectureIntent Architecture,
+			out string Failure)
+		{
+			Architecture = null;
+			if (Entry == null || !TryGetSpec(Entry.Key, out _))
+			{
+				Rect = default(KingdomPlotRules.PlotRect);
+				Payload = null;
+				LabourTicks = 0L;
+				Failure = "Its design no longer declares the plotted behavior needed to raise it.";
+				return false;
+			}
+			if (!TryReadFrozenPlan(Marker, Entry, true, out Rect, out Payload,
+				out LabourTicks, out _, out KingdomMaterialDebitCost material, out Failure))
+				return false;
+			Zone zone = Marker.CurrentZone;
+			if (!TryDecodePlotPayload(Payload, out _, out _, out Architecture,
+				out bool legacy, out Failure) || legacy)
+				return false;
+			if (!KingdomZoning.Permits(System, zone.ZoneID, Entry, out Failure)) return false;
+			Failure = KingdomDelve.Refusal(System, zone.ZoneID, Entry.Key, Entry.Name);
+			if (Failure != null) return false;
+			GroundGrid grid = new GroundGrid(zone);
+			if (grid.AnyRefusal(Rect))
+			{
+				if (grid.TryFirstRefusal(Rect, out int x, out int y,
+					out KingdomPlotRules.GroundKind kind, out string blocker))
+					Failure = kind == KingdomPlotRules.GroundKind.Liquid
+						? KingdomPlotRules.RefuseLiquid(x, y)
+						: KingdomPlotRules.RefuseObstruction(blocker ?? "something", x, y);
+				else Failure = "Something protected now stands in the reserved lot.";
+				return false;
+			}
+			if (!KingdomArchitectureStamper.TryPreflight(System, zone, Architecture,
+				material, out Failure)) return false;
+			Cell main = zone.GetCell(Architecture.MainWorldX, Architecture.MainWorldY);
+			if (main == null || KingdomConstruction.HasActiveAt(System, zone, main))
+			{
+				Failure = "The reserved lot's authored main ground already has paid construction in hand.";
+				return false;
+			}
+			return true;
+		}
+
+		/// <summary>
+		/// Whether a staked plan must wait this pass, and why. The authored stage gate applies to
+		/// every plan; plot-sized designs then add their ground, weather, and budget gates. Announces
 		/// the reason once on the marker and never again until the block lifts (STANDARDS 7b's
 		/// established idiom, carried on a property rather than a field so no part's serialized
 		/// layout moves).
@@ -1909,13 +2940,19 @@ namespace ThousandAndFirst
 		/// anything: waiting is not failing, and a waiting plan has nothing to refund.
 		/// </para>
 		/// </summary>
-		/// <returns>False for a design that is not a plot at all, which the caller then handles
-		/// exactly as it always has.</returns>
+		/// <returns>False when no current blocker applies.</returns>
 		public static bool PlanBlocked(KingdomSystem System, GameObject Marker, KingdomRules.BuildEntry Entry)
 		{
-			if (System == null || Marker == null || Entry == null || !TryGetSpec(Entry.Key, out var spec))
+			if (System == null || Marker == null || Entry == null)
 			{
 				return false;
+			}
+			string stageRefusal = KingdomCommission.StageRefusal(System, Entry);
+			if (stageRefusal != null)
+			{
+				AnnounceOnce(System, Marker,
+					"The plan staked at " + KingdomPresentation.Rich(System.KingdomDisplayName) + " waits. " + stageRefusal);
+				return true;
 			}
 			Zone zone = Marker.CurrentZone;
 			if (zone == null)
@@ -1923,16 +2960,33 @@ namespace ThousandAndFirst
 				return true;
 			}
 			string refusal = null;
+			if (Marker.HasIntProperty(PlanSchemaProperty))
+			{
+				if (TryFrozenPlanReady(System, Marker, Entry, out _, out _, out _, out _,
+					out refusal))
+				{
+					Marker.SetStringProperty(BlockAnnouncedProperty, null, RemoveIfNull: true);
+					return false;
+				}
+				AnnounceOnce(System, Marker, "The plan staked at " + KingdomPresentation.Rich(System.KingdomDisplayName)
+					+ " waits. " + (refusal ?? "Its frozen production receipt cannot be proved."));
+				return true;
+			}
+			if (!TryGetSpec(Entry.Key, out var spec))
+			{
+				Marker.SetStringProperty(BlockAnnouncedProperty, null, RemoveIfNull: true);
+				return false;
+			}
 			KingdomSystem.Guard("plot plan", delegate
 			{
 				if (KingdomPlotRules.HeartRungOf(Entry.Key) > 0)
 				{
-					refusal = KingdomPlotRules.RefuseSecondHeart(System.SeatName);
+					refusal = KingdomPlotRules.RefuseSecondHeart(KingdomPresentation.Rich(System.SeatName));
 					return;
 				}
 				if (!KingdomPlotRules.Allows(System.Stage, spec.Size))
 				{
-					refusal = KingdomPlotRules.RefuseStage(spec.Size, System.SeatName, System.Stage);
+					refusal = KingdomPlotRules.RefuseStage(spec.Size, KingdomPresentation.Rich(System.SeatName), System.Stage);
 					return;
 				}
 				// Before the weather, because the way down is a fact about the ground and the
@@ -1955,7 +3009,7 @@ namespace ThousandAndFirst
 				}
 				if (KingdomPlotRules.WouldExceedBudget(ReadPlots(zone), spec.Size, zone.Width, zone.Height))
 				{
-					refusal = KingdomPlotRules.RefuseBudget(System.SeatName);
+					refusal = KingdomPlotRules.RefuseBudget(KingdomPresentation.Rich(System.SeatName));
 					return;
 				}
 				if (!TryFindRect(zone, System, Entry, spec, new GroundGrid(zone), Marker.CurrentCell, out _, out _, out var reason))
@@ -1968,27 +3022,75 @@ namespace ThousandAndFirst
 				Marker.SetStringProperty(BlockAnnouncedProperty, null, RemoveIfNull: true);
 				return false;
 			}
-			AnnounceOnce(System, Marker, "The plan staked at " + System.KingdomDisplayName + " waits. " + refusal);
+			AnnounceOnce(System, Marker, "The plan staked at " + KingdomPresentation.Rich(System.KingdomDisplayName) + " waits. " + refusal);
 			return true;
 		}
 
 		internal static bool TryPreparePlan(KingdomSystem System, GameObject Marker,
 			KingdomRules.BuildEntry Entry, out KingdomPlotRules.PlotRect Rect,
-			out string Payload, out long TotalTicks)
+			out string Payload, out long TotalTicks, out int MainX, out int MainY)
 		{
 			Rect = default(KingdomPlotRules.PlotRect);
 			Payload = null;
 			TotalTicks = 0L;
+			MainX = 0;
+			MainY = 0;
 			Zone zone = Marker?.CurrentZone;
 			Cell cell = Marker?.CurrentCell;
 			if (System == null || zone == null || cell == null || Entry == null
-				|| !TryGetSpec(Entry.Key, out var spec))
+				|| System.Stage < Entry.MinStage)
 			{
 				return false;
 			}
-			GroundGrid grid = new GroundGrid(zone);
-			if (!TryFindRect(zone, System, Entry, spec, grid, cell, out Rect, out _, out _))
+			if (Marker.HasIntProperty(PlanSchemaProperty))
 			{
+				if (!TryFrozenPlanReady(System, Marker, Entry, out Rect, out Payload,
+					out TotalTicks, out KingdomArchitectureIntent frozen,
+					out string frozenFailure))
+				{
+					AnnounceOnce(System, Marker, "The plan staked at " + KingdomPresentation.Rich(System.KingdomDisplayName)
+						+ " waits. " + (frozenFailure
+							?? "Its frozen production receipt cannot be proved."));
+					return false;
+				}
+				MainX = frozen.MainWorldX;
+				MainY = frozen.MainWorldY;
+				return true;
+			}
+			if (!TryGetSpec(Entry.Key, out var spec)) return false;
+			if (!KingdomZoning.Permits(System, zone.ZoneID, Entry, out string zoningFailure))
+			{
+				AnnounceOnce(System, Marker,
+					"The plan staked at " + KingdomPresentation.Rich(System.KingdomDisplayName) + " waits. " + zoningFailure);
+				return false;
+			}
+			GroundGrid grid = new GroundGrid(zone);
+			if (!TryFindRect(zone, System, Entry, spec, grid, cell, out Rect, out _,
+				out string sitingFailure))
+			{
+				if (!string.IsNullOrEmpty(sitingFailure)) AnnounceOnce(System, Marker,
+					"The plan staked at " + KingdomPresentation.Rich(System.KingdomDisplayName) + " waits. " + sitingFailure);
+				return false;
+			}
+			string skin = Marker.GetStringProperty(KingdomDesign.PlannedSkinProperty);
+			if (!TryPreparePlotPayload(System, zone, Rect, Entry.Key, Entry.Category, skin,
+				out KingdomArchitectureIntent architecture, out Payload,
+				out string architectureFailure))
+			{
+				AnnounceOnce(System, Marker, "The plan staked at " + KingdomPresentation.Rich(System.KingdomDisplayName)
+					+ " waits. " + (architectureFailure
+						?? "No authored architecture fits its exact ground."));
+				Payload = null;
+				return false;
+			}
+			MainX = architecture.MainWorldX;
+			MainY = architecture.MainWorldY;
+			Cell main = zone.GetCell(MainX, MainY);
+			if (main == null || KingdomConstruction.HasActiveAt(System, zone, main))
+			{
+				AnnounceOnce(System, Marker, "The plan staked at " + KingdomPresentation.Rich(System.KingdomDisplayName)
+					+ " waits. Its authored main ground already has paid construction in hand.");
+				Payload = null;
 				return false;
 			}
 			bool carved = KingdomPlotRules.IsUnderground(zone.Z);
@@ -1996,15 +3098,13 @@ namespace ThousandAndFirst
 				KingdomCommission.CraftBuildTicks(Entry.BuildTicks, System.ZoneDistricts.Values),
 				grid.CellsOf(Rect), PlannedFootprint(zone, Rect, spec),
 				KingdomPlotRules.RoofOnGround(spec.Roof, carved), carved);
-			Payload = EncodePlotPayload(Rect,
-				Marker.GetStringProperty(KingdomDesign.PlannedSkinProperty));
 			return TotalTicks > 0L;
 		}
 
 		/// <summary>
-		/// Turns a staked plan into a staked plot, at the ground the founder chose when they drove
-		/// the stake. The marker's own cell is offered as the plot's centre, so a plan is the
-		/// founder placing a building by hand and the grammar only breaks the tie.
+		/// Turns a staked plan into plotted works. Current markers carry the exact lot, authored map,
+		/// main anchor, price, and labour quoted when the founder drove the adjacent survey stake;
+		/// legacy markers retain their old marker-centred dynamic siting path.
 		/// </summary>
 		/// <returns>False for a design that is not a plot, leaving the caller's own
 		/// scaffold path untouched.</returns>
@@ -2025,6 +3125,12 @@ namespace ThousandAndFirst
 					"The plan no longer names a plotted design.");
 				return false;
 			}
+			string stageRefusal = KingdomCommission.StageRefusal(System, Entry);
+			if (stageRefusal != null)
+			{
+				KingdomConstruction.FinishProjection(ref Updated, false, false, stageRefusal);
+				return false;
+			}
 			Zone zone = Marker.CurrentZone;
 			Cell cell = Marker.CurrentCell;
 			if (zone == null || cell == null)
@@ -2041,14 +3147,21 @@ namespace ThousandAndFirst
 				GroundGrid grid = new GroundGrid(zone);
 				KingdomPlotRules.PlotRect rect;
 				string skinKey;
-				if (!TryDecodePlotPayload(current.Payload, out rect, out skinKey)
-					&& !TryFindRect(zone, System, Entry, spec, grid, cell, out rect, out _, out _))
+				KingdomArchitectureIntent architecture;
+				bool legacyArchitecture;
+				if (!TryDecodePlotPayload(current.Payload, out rect, out skinKey,
+					out architecture, out legacyArchitecture, out string payloadFailure)
+					|| current.TargetKey != Entry.Key
+					|| (!legacyArchitecture && (architecture == null
+						|| architecture.BuildKey != Entry.Key
+						|| current.X != architecture.MainWorldX
+						|| current.Y != architecture.MainWorldY))
+					|| (legacyArchitecture
+						&& (current.X != rect.CenterX || current.Y != rect.CenterY)))
 				{
+					KingdomConstruction.Quarantine(ref current, payloadFailure
+						?? "The paid plot plan has no valid frozen authored payload.");
 					return;
-				}
-				if (skinKey == null)
-				{
-					skinKey = Marker.GetStringProperty(KingdomDesign.PlannedSkinProperty);
 				}
 				// Read before the marker comes down and carried after the works stands, because a
 				// plot measures its rect out of the marker's own cell and cannot leave it standing
@@ -2056,21 +3169,13 @@ namespace ThousandAndFirst
 				// (KingdomPlanMarker.Realize), and it is what lets the chronicle quote a plan for a
 				// house rather than only for a wall.
 				string planQuote = KingdomCeremony.ReadPlanQuote(Marker);
-				long total = KingdomPlotRules.RaiseTicks(
-					KingdomCommission.CraftBuildTicks(Entry.BuildTicks, System.ZoneDistricts.Values),
-					grid.CellsOf(rect), PlannedFootprint(zone, rect, spec),
-					KingdomPlotRules.RoofOnGround(spec.Roof, KingdomPlotRules.IsUnderground(zone.Z)),
-					KingdomPlotRules.IsUnderground(zone.Z));
-				KingdomConstructionJob retimed = current;
-				if (!KingdomConstruction.UpdateTiming(ref retimed, current.StartedTick,
-					current.StartedTick + total))
-				{
-					return;
-				}
-				current = retimed;
 				projected = Stake(System, zone, rect, Entry, spec, grid, skinKey,
-						KingdomPlotRules.IsUnderground(zone.Z), ref current);
-				if (!ExpectedWorks(projected, zone.GetCell(rect.CenterX, rect.CenterY), Entry.Key))
+					KingdomPlotRules.IsUnderground(zone.Z), architecture,
+					legacyArchitecture, ref current);
+				Cell main = legacyArchitecture ? zone.GetCell(rect.CenterX, rect.CenterY)
+					: zone.GetCell(architecture.MainWorldX, architecture.MainWorldY);
+				if (!ExpectedWorks(projected, main, Entry.Key, architecture, legacyArchitecture,
+					current))
 				{
 					return;
 				}
@@ -2080,10 +3185,13 @@ namespace ThousandAndFirst
 				try { markerRemoved = Marker.Destroy(null, Silent: true); }
 				catch (System.Exception ex)
 				{
+					KingdomSurvey.ObserveCurrentTopologyInActive(zone, Marker);
 					KingdomConstruction.Quarantine(ref current,
 						"Plot plan-marker removal threw after works placement: " + ex.Message);
 					return;
 				}
+				if (markerRemoved && !GameObject.Validate(Marker))
+					KingdomSurvey.ObserveRemovedFromActive(zone, Marker);
 				if (KingdomConstructionRules.ExactRemovalAction(true, markerRemoved,
 					GameObject.Validate(Marker), KingdomConstruction.FindExactId(
 						zone, markerId, out _) != KingdomPhysicalLookupState.Absent, true)
@@ -2112,9 +3220,10 @@ namespace ThousandAndFirst
 			if (staked)
 			{
 				KingdomConstruction.FinishProjection(ref Updated, true, true);
-				KingdomChronicle.Record(System, "the ground staked at " + System.KingdomDisplayName + " was measured out for " + XRL.Language.Grammar.A(Entry.Name));
-				System.Ledger.Note("{{G|The plan staked at " + System.KingdomDisplayName + " is under way: the ground for the " + Entry.Name + " is measured out.}}");
-				MessageQueue.AddPlayerMessage("{{G|The plan staked at " + System.KingdomDisplayName + " is under way. The ground for the " + Entry.Name + " is measured out.}}");
+				string realm = KingdomPresentation.Rich(System.KingdomDisplayName);
+				KingdomChronicle.Record(System, "the ground staked at " + realm + " was measured out for " + XRL.Language.Grammar.A(Entry.Name));
+				System.Ledger.Note("{{G|The plan staked at " + realm + " is under way: the ground for the " + Entry.Name + " is measured out.}}");
+				MessageQueue.AddPlayerMessage("{{G|The plan staked at " + realm + " is under way. The ground for the " + Entry.Name + " is measured out.}}");
 				SayYielding(System, yielding, Entry.Name);
 			}
 			else
@@ -2153,8 +3262,50 @@ namespace ThousandAndFirst
 			KingdomPlotRules.PlotRect rect = new KingdomPlotRules.PlotRect(
 				cell.X - (width - 1) / 2, cell.Y - (height - 1) / 2,
 				cell.X - (width - 1) / 2 + width - 1, cell.Y - (height - 1) / 2 + height - 1);
-			StampRect(Adopted, rect);
-			return true;
+			string plotId = "adopted:" + Adopted.ID;
+			try
+			{
+				// Schema/ownership marker last: a reader never treats partial geometry as an
+				// adoption-owned plot, and release never clears somebody else's coordinates.
+				Adopted.RemoveIntProperty(AdoptedPlotProperty);
+				StampRect(Adopted, rect);
+				Adopted.SetStringProperty(PlotIdProperty, plotId);
+				Adopted.SetIntProperty(AdoptedPlotProperty, 1);
+			}
+			catch
+			{
+				try
+				{
+					Adopted.RemoveIntProperty(PlotX2Property);
+					Adopted.RemoveIntProperty(PlotX1Property);
+					Adopted.RemoveIntProperty(PlotY1Property);
+					Adopted.RemoveIntProperty(PlotY2Property);
+					Adopted.RemoveStringProperty(PlotIdProperty);
+					Adopted.RemoveIntProperty(AdoptedPlotProperty);
+				}
+				catch { }
+				return false;
+			}
+			bool exact = Adopted.GetIntProperty(AdoptedPlotProperty) == 1
+				&& Adopted.GetStringProperty(PlotIdProperty) == plotId
+				&& TryReadRect(Adopted, out var observed) && SameRect(observed, rect);
+			if (!exact) ReleaseAdoptedPlot(Adopted);
+			return exact;
+		}
+
+		/// <summary>Releases only plot geometry minted by <see cref="StampAdopted"/>. The positive
+		/// ownership marker prevents release from erasing coordinates another system or mod owns.
+		/// The rect's presence field is removed first and the ownership marker last, so partial
+		/// cleanup cannot leave a ghost reservation and remains recognisably adoption-owned.</summary>
+		public static void ReleaseAdoptedPlot(GameObject Adopted)
+		{
+			if (Adopted == null || Adopted.GetIntProperty(AdoptedPlotProperty) != 1) return;
+			Adopted.RemoveIntProperty(PlotX2Property);
+			Adopted.RemoveIntProperty(PlotX1Property);
+			Adopted.RemoveIntProperty(PlotY1Property);
+			Adopted.RemoveIntProperty(PlotY2Property);
+			Adopted.RemoveStringProperty(PlotIdProperty);
+			Adopted.RemoveIntProperty(AdoptedPlotProperty);
 		}
 
 		// --- Staking foresight ------------------------------------------------------------
@@ -2214,7 +3365,39 @@ namespace ThousandAndFirst
 			{
 				return new List<KingdomPlotRules.PlotSize>();
 			}
-			return KingdomPlotRules.StakeableSizes(spec.Size, System.Stage, ChainOf(Entry));
+			List<KingdomPlotRules.PlotSize> sizes = KingdomPlotRules.StakeableSizes(
+				spec.Size, System.Stage, ChainOf(Entry));
+			// A size shown in the picker is a promise of one exact typed plan. Missing exact-size
+			// architecture is never offered and never falls back to the design's minimum map.
+			for (int i = sizes.Count - 1; i >= 0; i--)
+			{
+				ArchitectureLotSize architectureSize;
+				switch (sizes[i])
+				{
+				case KingdomPlotRules.PlotSize.Small:
+					architectureSize = ArchitectureLotSize.Small;
+					break;
+				case KingdomPlotRules.PlotSize.Medium:
+					architectureSize = ArchitectureLotSize.Medium;
+					break;
+				case KingdomPlotRules.PlotSize.Large:
+					architectureSize = ArchitectureLotSize.Large;
+					break;
+				case KingdomPlotRules.PlotSize.Huge:
+					architectureSize = ArchitectureLotSize.Huge;
+					break;
+				default:
+					sizes.RemoveAt(i);
+					continue;
+				}
+				KingdomArchitectureMapping mapping;
+				if (!KingdomArchitecture.TryGetMapping(
+					Entry.Key, Entry.Category, architectureSize, out mapping))
+				{
+					sizes.RemoveAt(i);
+				}
+			}
+			return sizes;
 		}
 
 		/// <summary>What the founder reads before choosing how much ground to stake: this plot's
@@ -2230,6 +3413,86 @@ namespace ThousandAndFirst
 		}
 
 		// --- Growing in place -------------------------------------------------------------
+
+		/// <summary>
+		/// Restamps plot metadata from a frozen authored successor after its exact scenery delta has
+		/// settled. It never reads the current building catalogue and never runs procedural growth.
+		/// </summary>
+		internal static bool TryStampAuthoredGrowth(GameObject Predecessor,
+			GameObject Successor, KingdomArchitectureIntent Intent, out string Failure)
+		{
+			Failure = null;
+			ArchitectureLayoutSnapshot snapshot;
+			KingdomArchitectureIntent frozen;
+			string plotId = Predecessor == null ? null
+				: Predecessor.GetStringProperty(PlotIdProperty);
+			if (!GameObject.Validate(Predecessor) || !GameObject.Validate(Successor)
+				|| Predecessor.CurrentZone == null
+				|| string.IsNullOrEmpty(plotId)
+				|| !KingdomArchitectureRuntime.TryDecode(Intent, out snapshot, out Failure)
+				|| !KingdomArchitectureRules.IsCurrentSnapshotEncoding(Intent.EncodedSnapshot)
+				|| !KingdomArchitectureRuntime.TryRead(Successor, out frozen, out Failure)
+				|| frozen.SnapshotHash != Intent.SnapshotHash
+				|| Successor.CurrentZone != Predecessor.CurrentZone
+				|| Successor.CurrentCell != Predecessor.CurrentZone.GetCell(
+					Intent.MainWorldX, Intent.MainWorldY))
+			{
+				if (Failure == null) Failure = "Authored plot growth lacks exact frozen endpoints.";
+				return false;
+			}
+			Zone zone = Successor.CurrentZone;
+			bool coveredOnly = false;
+			for (int i = 0; i < snapshot.Cells.Count; i++)
+				if (snapshot.Cells[i].Claim && snapshot.Cells[i].Cover != ArchitectureCover.Open)
+				{
+					coveredOnly = true;
+					break;
+				}
+			int x1 = int.MaxValue;
+			int y1 = int.MaxValue;
+			int x2 = int.MinValue;
+			int y2 = int.MinValue;
+			KingdomPlotRules.RoofState roof = KingdomPlotRules.RoofState.Open;
+			for (int i = 0; i < snapshot.Cells.Count; i++)
+			{
+				ArchitectureCellState cell = snapshot.Cells[i];
+				if (!cell.Claim || (coveredOnly && cell.Cover == ArchitectureCover.Open)) continue;
+				int x;
+				int y;
+				if (!KingdomArchitectureRuntime.TryWorldCell(snapshot, Intent.Rect, cell,
+					out x, out y, out Failure)) return false;
+				if (x < x1) x1 = x;
+				if (y < y1) y1 = y;
+				if (x > x2) x2 = x;
+				if (y > y2) y2 = y;
+				if (cell.Cover == ArchitectureCover.Natural)
+					roof = KingdomPlotRules.RoofState.Carved;
+				else if (cell.Cover == ArchitectureCover.Walled
+					&& roof != KingdomPlotRules.RoofState.Carved)
+					roof = KingdomPlotRules.RoofState.Walled;
+				else if (cell.Cover == ArchitectureCover.Soft
+					&& roof == KingdomPlotRules.RoofState.Open)
+					roof = KingdomPlotRules.RoofState.Soft;
+			}
+			if (x1 == int.MaxValue)
+			{
+				Failure = "Authored successor has no claimed plot ground.";
+				return false;
+			}
+			KingdomPlotRules.PlotRect footprint = new KingdomPlotRules.PlotRect(x1, y1, x2, y2);
+			StampRect(Successor, Intent.Rect);
+			StampFootprint(Successor, footprint, roof);
+			Successor.SetStringProperty(PlotIdProperty, plotId);
+			if (IsHeartPlot(Predecessor)) Successor.SetIntProperty(HeartPlotProperty, 1);
+			KingdomPlotRules.PlotRect checkedRect;
+			KingdomPlotRules.PlotRect checkedFootprint;
+			return TryReadRect(Successor, out checkedRect) && SameRect(checkedRect, Intent.Rect)
+				&& TryReadFootprint(Successor, out checkedFootprint)
+				&& SameRect(checkedFootprint, footprint) && RoofOf(Successor) == roof
+				&& Successor.GetStringProperty(PlotIdProperty) == plotId
+				&& (!IsHeartPlot(Predecessor)
+					|| Successor.GetIntProperty(HeartPlotProperty) == 1);
+		}
 
 		/// <summary>
 		/// Whether the next tier has room on the ground this one was staked on, and what the
@@ -2344,8 +3607,10 @@ namespace ThousandAndFirst
 			{
 				return found;
 			}
-			foreach (GameObject item in Z.GetObjects())
+			KingdomSurvey survey = KingdomSurvey.ActiveFor(Z) ?? KingdomSurvey.Take(Z);
+			for (int i = 0; i < survey.PlotRoots.Count; i++)
 			{
+				GameObject item = survey.PlotRoots[i];
 				if (IsYielding(item) && TryReadRect(item, out _))
 				{
 					found.Add(item);
@@ -2390,8 +3655,10 @@ namespace ThousandAndFirst
 				return true;
 			}
 			string id = Work.GetStringProperty(PlotIdProperty);
-			foreach (GameObject item in Z.GetObjects())
+			KingdomSurvey survey = KingdomSurvey.ActiveFor(Z) ?? KingdomSurvey.Take(Z);
+			for (int i = 0; i < survey.PlotRoots.Count; i++)
 			{
+				GameObject item = survey.PlotRoots[i];
 				if (item == null || item == Work || !TryReadRect(item, out var laid))
 				{
 					continue;
@@ -2460,6 +3727,13 @@ namespace ThousandAndFirst
 		{
 			if (!GameObject.Validate(Predecessor) || !GameObject.Validate(Successor))
 			{
+				return false;
+			}
+			KingdomArchitectureIntent authored;
+			if (KingdomArchitectureRuntime.TryRead(Predecessor, out authored, out _)
+				&& KingdomArchitectureRules.IsCurrentSnapshotEncoding(authored.EncodedSnapshot))
+			{
+				// Current authored plots may only change through the exact frozen layout delta.
 				return false;
 			}
 			if (!TryReadRect(Predecessor, out var plot)) return true;
@@ -2686,7 +3960,13 @@ namespace ThousandAndFirst
 					if (!PublishGrowthPlan(Predecessor, Plan)) return false;
 					bool removed;
 					try { removed = exact.Destroy(null, Silent: true); }
-					catch { return false; }
+					catch
+					{
+						KingdomSurvey.ObserveCurrentTopologyInActive(Z, exact);
+						return false;
+					}
+					if (removed && !GameObject.Validate(exact))
+						KingdomSurvey.ObserveRemovedFromActive(Z, exact);
 					if (!removed || GameObject.Validate(exact)
 						|| KingdomConstruction.FindExactId(Z, row.Id, out _)
 							!= KingdomPhysicalLookupState.Absent
@@ -2729,12 +4009,19 @@ namespace ThousandAndFirst
 				row.State = 1;
 				if (!PublishGrowthPlan(Predecessor, Plan)) return false;
 				GameObject accepted = null;
-				try { accepted = Z.GetCell(row.X, row.Y).AddObject(placed); }
+				try
+				{
+					accepted = Z.GetCell(row.X, row.Y).AddObject(placed);
+				}
 				catch
 				{
 					if (!TrySettleGrowthAddAfterCallback(Z, Predecessor, Successor,
 						Plan, row, placed)) return false;
 					continue;
+				}
+				finally
+				{
+					KingdomSurvey.ObserveAddResultInActive(Z, placed, accepted);
 				}
 				if (!ReferenceEquals(accepted, placed)
 					|| !TrySettleGrowthAddAfterCallback(Z, Predecessor, Successor,
@@ -3210,24 +4497,45 @@ namespace ThousandAndFirst
 			{
 				placed.SetStringProperty(PlotIdProperty, Id);
 			}
-			C.AddObject(placed);
+			GameObject accepted = null;
+			try { accepted = C.AddObject(placed); }
+			finally { KingdomSurvey.ObserveAddResultInActive(C.ParentZone, placed, accepted); }
+			if (!ReferenceEquals(accepted, placed)) return null;
 			return placed;
 		}
 
 		// --- The stamp --------------------------------------------------------------------
 
 		/// <summary>
-		/// Advances one plot to whatever stage the clock has honestly bought, applying every stage
-		/// it crossed in order. Called from the works part's own turn tick, so it wraps its work
-		/// rather than let a bad cell break the tick loop (STANDARDS 9).
+		/// Advances one plot to whatever stage its crew's labour has honestly bought, applying every
+		/// stage crossed in order. New works consume elapsed intervals through their exact stamped
+		/// gang; only the oldest active raising receives one, an empty settlement raises nothing,
+		/// and idle or queued intervals never bank. A works object without the named schema is from
+		/// the pre-polish save shape and retains its absolute-clock path unchanged.
 		/// </summary>
-		public static void Advance(r_KingdomPlotWorks Works, long TimeTick)
+		public static void Advance(r_KingdomPlotWorks Works, KingdomSystem System, long TimeTick)
 		{
 			if (Works == null || Works.DesignKey == null)
 			{
 				return;
 			}
-			KingdomPlotRules.PlotStage target = KingdomPlotRules.StageAt(TimeTick - Works.StartTick, Works.TotalTicks);
+			KingdomPlotRules.PlotStage target;
+			GameObject parent = Works.ParentObject;
+			int schema = parent == null ? 0 : parent.GetIntProperty(PlotWorkSchemaProperty);
+			if (schema == 0)
+			{
+				// Compatibility only. New Stake always writes schema 2.
+				target = KingdomPlotRules.StageAt(TimeTick - Works.StartTick, Works.TotalTicks);
+			}
+			else if (schema != PlotWorkSchema
+				|| !TryAdvancePlotLabour(Works, System, TimeTick, out target))
+			{
+				if (schema != PlotWorkSchema)
+				{
+					SayPlotWorkFault(System, parent, "The plot work has an unknown labour receipt and cannot advance safely.");
+				}
+				return;
+			}
 			if ((int)target <= Works.StageApplied)
 			{
 				return;
@@ -3250,6 +4558,84 @@ namespace ThousandAndFirst
 			});
 		}
 
+		private static bool TryAdvancePlotLabour(r_KingdomPlotWorks Works,
+			KingdomSystem System, long TimeTick, out KingdomPlotRules.PlotStage Target)
+		{
+			Target = (KingdomPlotRules.PlotStage)Works.StageApplied;
+			GameObject parent = Works.ParentObject;
+			if (parent == null
+				|| !TryGetPlotWorkLong(parent, PlotWorkRequiredProperty, out long required)
+				|| !TryGetPlotWorkLong(parent, PlotWorkRemainingProperty, out long remaining)
+				|| !TryGetPlotWorkLong(parent, PlotWorkLastTickProperty, out long last)
+				|| required < 1L || remaining < 0L || remaining > required || last < 0L)
+			{
+				SayPlotWorkFault(System, parent,
+					"The plot work's labour receipt is incomplete or contradictory; it has been left unchanged.");
+				return false;
+			}
+
+			long completed = required - remaining;
+			Target = KingdomPlotRules.StageAt(completed, required);
+			if (remaining == 0L || TimeTick <= last)
+			{
+				return true;
+			}
+
+			// Spend the interval before sampling work. No hands means no progress, but the same
+			// empty interval can never be claimed after hands arrive. Craft-district infrastructure
+			// is already frozen into required duration; authored layout infrastructure joins the
+			// second percentage when the architecture receipt supplies it.
+			int effectiveness = KingdomConstructionPresence.EffectivenessOf(parent, System,
+				out int freeHands, out bool selected);
+			if (selected) SayPlotWorkShortfall(System, parent, Works.DisplayName, freeHands);
+			ArchitectureLabourProgress progress = KingdomArchitectureRules.AdvanceLabour(
+				last, TimeTick, remaining, effectiveness, 100);
+			SetPlotWorkLong(parent, PlotWorkLastTickProperty, progress.NextTick);
+			remaining = progress.RemainingTicks;
+			SetPlotWorkLong(parent, PlotWorkRemainingProperty, remaining);
+			if (progress.Complete)
+				SetPlotWorkLong(parent, PlotWorkCompletedTickProperty, progress.CompletionTick);
+			Target = KingdomPlotRules.StageAt(required - remaining, required);
+			return true;
+		}
+
+		private static void SayPlotWorkShortfall(KingdomSystem System, GameObject Works,
+			string DisplayName, int FreeHands)
+		{
+			if (System == null || !System.Founded || Works == null) return;
+			string line = KingdomRules.RaisingShortfallLine(DisplayName ?? "structure", FreeHands);
+			if (line == null)
+			{
+				Works.SetIntProperty(PlotWorkShortfallSaidProperty, 0);
+				return;
+			}
+			if (Works.GetIntProperty(PlotWorkShortfallSaidProperty) == 1) return;
+			Works.SetIntProperty(PlotWorkShortfallSaidProperty, 1);
+			System.Ledger.Note("{{r|" + line + "}}");
+		}
+
+		private static void SayPlotWorkFault(KingdomSystem System, GameObject Works, string Failure)
+		{
+			if (Works != null && Works.GetIntProperty(PlotWorkFaultSaidProperty) == 1) return;
+			if (Works != null) Works.SetIntProperty(PlotWorkFaultSaidProperty, 1);
+			KingdomLog.Log("plot labour: " + Failure);
+			if (System != null && System.Founded) System.Ledger.Note("{{r|" + Failure + "}}");
+		}
+
+		private static void SetPlotWorkLong(GameObject Object, string Property, long Value)
+		{
+			Object?.SetStringProperty(Property, Value.ToString(
+				global::System.Globalization.CultureInfo.InvariantCulture));
+		}
+
+		private static bool TryGetPlotWorkLong(GameObject Object, string Property, out long Value)
+		{
+			Value = 0L;
+			return Object != null && long.TryParse(Object.GetStringProperty(Property),
+				global::System.Globalization.NumberStyles.Integer,
+				global::System.Globalization.CultureInfo.InvariantCulture, out Value);
+		}
+
 		private static bool Apply(r_KingdomPlotWorks Works, KingdomPlotRules.PlotStage Stage)
 		{
 			GameObject parent = Works.ParentObject;
@@ -3261,18 +4647,77 @@ namespace ThousandAndFirst
 			KingdomPlotRules.PlotRect plot = Works.Rect();
 			KingdomPlotRules.PlotRect footprint = TryReadFootprint(parent, out var stamped) ? stamped : plot;
 			KingdomPlotRules.RoofState roof = RoofOf(parent);
+			KingdomArchitectureIntent authored = null;
+			bool currentAuthored = false;
+			if (HasArchitectureReceiptEvidence(parent))
+			{
+				if (!KingdomArchitectureRuntime.TryRead(parent, out authored,
+					out string receiptFailure))
+				{
+					KingdomLog.Log("architecture: plot stage refused: " + receiptFailure);
+					return false;
+				}
+				currentAuthored = KingdomArchitectureRules.IsCurrentSnapshotEncoding(
+					authored.EncodedSnapshot);
+				if (currentAuthored && (!KingdomArchitectureStamper.TryReadOwner(parent,
+					out _, out _, out string lot, out receiptFailure)
+					|| lot != parent.GetStringProperty(PlotIdProperty)))
+				{
+					KingdomLog.Log("architecture: plot layout receipt refused: " + receiptFailure);
+					return false;
+				}
+			}
 			switch (Stage)
 			{
 				case KingdomPlotRules.PlotStage.Cleared:
-					if (!ClearGround(Works, zone, plot, footprint, roof)) return false;
+					HashSet<int> managed = null;
+					if (currentAuthored && !KingdomArchitectureStamper.TryManagedCells(authored,
+						zone, out managed, out string managedFailure))
+					{
+						KingdomLog.Log("architecture: authored clearance refused: " + managedFailure);
+						return false;
+					}
+					if (!ClearGround(Works, zone, plot, footprint, roof, managed)) return false;
+					if (currentAuthored && !KingdomArchitectureStamper.TryStageLayer(parent,
+						zone, ArchitectureLayer.Ground, out string groundFailure))
+					{
+						KingdomLog.Log("architecture: ground layer refused: " + groundFailure);
+						return false;
+					}
 					break;
 				case KingdomPlotRules.PlotStage.Frame:
-					RaiseFrame(Works, zone, footprint, roof);
+					if (currentAuthored)
+					{
+						if (!KingdomArchitectureStamper.TryStageLayer(parent, zone,
+							ArchitectureLayer.Structure, out string structureFailure))
+						{
+							KingdomLog.Log("architecture: structure layer refused: "
+								+ structureFailure);
+							return false;
+						}
+					}
+					else RaiseFrame(Works, zone, footprint, roof);
 					break;
 				case KingdomPlotRules.PlotStage.Walls:
-					RaiseWalls(Works, zone, footprint, roof);
+					if (currentAuthored)
+					{
+						if (!KingdomArchitectureStamper.TryStageLayer(parent, zone,
+							ArchitectureLayer.Object, out string objectFailure))
+						{
+							KingdomLog.Log("architecture: object layer refused: " + objectFailure);
+							return false;
+						}
+					}
+					else RaiseWalls(Works, zone, footprint, roof);
 					break;
 				case KingdomPlotRules.PlotStage.Done:
+					if (currentAuthored && !KingdomArchitectureStamper.TryVerifyComplete(
+						parent, zone, out string completeFailure))
+					{
+						KingdomLog.Log("architecture: incomplete authored plot refused: "
+							+ completeFailure);
+						return false;
+					}
 					return Finish(Works, zone, plot, footprint, roof);
 			}
 			string line = KingdomPlotRules.StageLine(Stage, Works.DisplayName ?? "work");
@@ -3325,7 +4770,8 @@ namespace ThousandAndFirst
 		private static bool ExactFinalBuilding(GameObject Building, Zone Z, Cell Cell,
 			KingdomRules.BuildEntry Entry, string Receipt, string PlotId,
 			KingdomPlotRules.PlotRect Rect, KingdomPlotRules.PlotRect Footprint,
-			KingdomPlotRules.RoofState Roof, KingdomConstructionJob Job)
+			KingdomPlotRules.RoofState Roof, KingdomArchitectureIntent Architecture,
+			bool LegacyArchitecture, KingdomConstructionJob Job)
 		{
 			if (!GameObject.Validate(Building) || Building.CurrentZone != Z
 				|| Building.CurrentCell != Cell || Building.Blueprint != Entry.Blueprint
@@ -3334,6 +4780,7 @@ namespace ThousandAndFirst
 				|| Building.GetStringProperty(PlotIdProperty) != PlotId
 				|| (Job != null && (Building.ID != Job.OutputId
 					|| !KingdomConstruction.HasReceipt(Building, Job)
+					|| !KingdomConstruction.PaidBuildMatches(Building, Job)
 					|| !KingdomConstruction.IsCurrent(Job)))
 				|| (!string.IsNullOrEmpty(Receipt)
 					&& Building.GetStringProperty(KingdomConstruction.ReceiptProperty) != Receipt)
@@ -3343,7 +4790,13 @@ namespace ThousandAndFirst
 				|| !TryReadFootprint(Building, out var foot)
 				|| foot.X1 != Footprint.X1 || foot.Y1 != Footprint.Y1
 				|| foot.X2 != Footprint.X2 || foot.Y2 != Footprint.Y2
-				|| RoofOf(Building) != Roof) return false;
+				|| RoofOf(Building) != Roof
+				|| !ExpectedArchitectureReceipt(Building, Cell, Entry.Key,
+					Architecture, LegacyArchitecture)) return false;
+			if (Architecture != null
+				&& KingdomArchitectureRules.IsCurrentSnapshotEncoding(
+					Architecture.EncodedSnapshot)
+				&& !KingdomArchitectureStamper.TryVerifyComplete(Building, Z, out _)) return false;
 			GameObject exact;
 			if (KingdomConstruction.FindExactId(Z, Building.ID, out exact)
 				!= KingdomPhysicalLookupState.Exact || !ReferenceEquals(exact, Building)) return false;
@@ -3362,23 +4815,26 @@ namespace ThousandAndFirst
 		/// </summary>
 		private static bool ClearGround(r_KingdomPlotWorks Works, Zone Z,
 			KingdomPlotRules.PlotRect Plot, KingdomPlotRules.PlotRect Footprint,
-			KingdomPlotRules.RoofState Roof)
+			KingdomPlotRules.RoofState Roof, HashSet<int> AuthoredCells = null)
 		{
 			if (ClearInt(Works, ClearQuarantinedProperty) == 1) return false;
 			if (ClearInt(Works, ClearPhaseProperty) != 0)
 			{
-				if (!ResumeClearCredit(Works, Z)) return false;
+				if (!ResumeClearPayout(Works, Z)) return false;
 			}
 			// Carving cuts the room, not the hill. Everything on the building's own edge is left
 			// exactly where it stands, because underground that rock IS the enclosure -- which is
 			// the whole of the bargain that makes the doubled clearing cost worth paying. Only the
 			// doorway is cut through it. The yard around it is cleared like any other ground, and
 			// pays in stone for being cut out of rock.
-			bool carveOnly = Roof == KingdomPlotRules.RoofState.Carved && Footprint.Width > 2 && Footprint.Height > 2;
+			bool carveOnly = AuthoredCells == null && Roof == KingdomPlotRules.RoofState.Carved
+				&& Footprint.Width > 2 && Footprint.Height > 2;
 			for (int y = Plot.Y1; y <= Plot.Y2; y++)
 			{
 				for (int x = Plot.X1; x <= Plot.X2; x++)
 				{
+					if (AuthoredCells != null && !AuthoredCells.Contains(y * Z.Width + x))
+						continue;
 					if (carveOnly && Footprint.IsBorder(x, y) && !(Works.HasDoor && x == Works.DoorX && y == Works.DoorY))
 					{
 						continue;
@@ -3421,6 +4877,7 @@ namespace ThousandAndFirst
 							try { removed = item.Destroy(null, Silent: true); }
 							catch (System.Exception ex)
 							{
+								KingdomSurvey.ObserveCurrentTopologyInActive(Z, item);
 								return QuarantineClear(Works,
 									"Clearance removal threw: " + ex.Message);
 							}
@@ -3428,9 +4885,10 @@ namespace ThousandAndFirst
 								GameObject.FindByID(ClearString(Works, ClearIdProperty))))
 								return QuarantineClear(Works,
 									"Clearance removal was vetoed, moved, or replaced its exact source.");
+							KingdomSurvey.ObserveRemovedFromActive(Z, item);
 							ClearInt(Works, ClearRemovedProperty, 1);
 							ClearInt(Works, ClearPhaseProperty, 2);
-							if (!ResumeClearCredit(Works, Z)) return false;
+							if (!ResumeClearPayout(Works, Z)) return false;
 						}
 				}
 			}
@@ -3439,11 +4897,11 @@ namespace ThousandAndFirst
 			// the raising time). Nothing is added on top of what came out: the compensation for
 			// the doubled effort is that the rock the carving left is the enclosure, and no wall
 			// is ever raised down here.
-			CreditMaterials(new int[5]
+			TellClearMaterials(new int[5]
 			{
 					0, ClearInt(Works, ClearTimberProperty), ClearInt(Works, ClearStoneProperty),
 					ClearInt(Works, ClearMarbleProperty), ClearInt(Works, ClearScrapProperty)
-			}, Works.DisplayName, false);
+			}, Works.DisplayName);
 			return true;
 		}
 
@@ -3463,7 +4921,7 @@ namespace ThousandAndFirst
 				&& measured == Amount;
 		}
 
-		private static bool ResumeClearCredit(r_KingdomPlotWorks Works, Zone Z)
+		private static bool ResumeClearPayout(r_KingdomPlotWorks Works, Zone Z)
 		{
 			int phase = ClearInt(Works, ClearPhaseProperty);
 			string sourceId = ClearString(Works, ClearIdProperty);
@@ -3471,14 +4929,39 @@ namespace ThousandAndFirst
 			int amount = ClearInt(Works, ClearAmountProperty);
 			if (phase == 1)
 			{
-				// FindByID searches loaded zones only. Recovery requires the callback-success
-				// tombstone written after Destroy returned true; null alone is never global absence.
+				// A save taken after intent but before Destroy is replayable because the exact source
+				// still stands on the frozen cell. Absence without our callback-success tombstone is
+				// ambiguous across engine callbacks and is never guessed into a second removal.
 				if (ClearInt(Works, ClearRemovedProperty) != 1)
-					return QuarantineClear(Works,
-						"Interrupted clearance lacks a successful removal tombstone; no absence was guessed across unloaded zones.");
+				{
+					GameObject exact;
+					KingdomPhysicalLookupState source = KingdomConstruction.FindExactId(Z,
+						sourceId, out exact);
+					KingdomPlotRules.Material material = (KingdomPlotRules.Material)materialCode;
+					Cell cell = Z?.GetCell(ClearInt(Works, ClearXProperty),
+						ClearInt(Works, ClearYProperty));
+					if (source != KingdomPhysicalLookupState.Exact || cell == null
+						|| !ExactClearSource(Works, Z, exact, cell, material, amount))
+						return QuarantineClear(Works,
+							"Interrupted clearance cannot prove its exact still-standing source.");
+					bool removed;
+					try { removed = exact.Destroy(null, Silent: true); }
+					catch (System.Exception ex)
+					{
+						KingdomSurvey.ObserveCurrentTopologyInActive(Z, exact);
+						return QuarantineClear(Works,
+							"Resumed clearance removal threw: " + ex.Message);
+					}
+					if (!removed || GameObject.Validate(exact)
+						|| GameObject.Validate(GameObject.FindByID(sourceId)))
+						return QuarantineClear(Works,
+							"Resumed clearance removal was vetoed, moved, or replaced its source.");
+					KingdomSurvey.ObserveRemovedFromActive(Z, exact);
+					ClearInt(Works, ClearRemovedProperty, 1);
+				}
 				if (GameObject.Validate(GameObject.FindByID(sourceId)))
 					return QuarantineClear(Works,
-						"Interrupted clearance still resolves its exact source; it will not remove it twice.");
+						"Removed clearance source reappeared before payout.");
 				phase = 2;
 				ClearInt(Works, ClearPhaseProperty, phase);
 			}
@@ -3492,45 +4975,36 @@ namespace ThousandAndFirst
 			{
 				KingdomPlotRules.Material material =
 					(KingdomPlotRules.Material)materialCode;
-				string state = MaterialStatePrefix + material;
 				if (phase == 2)
 				{
-					int globalBefore = The.Game.GetIntGameState(state);
-					if (!KingdomConstructionRules.TryCounterAfter(globalBefore, amount,
-						out int globalAfter))
-						return QuarantineClear(Works, "Clearance global credit would overflow.");
-					int tallyBefore = ClearTally(Works, material);
-					if (!KingdomConstructionRules.TryCounterAfter(tallyBefore, amount,
-						out int tallyAfter))
-						return QuarantineClear(Works, "Clearance settlement tally would overflow.");
-					ClearInt(Works, ClearGlobalBeforeProperty, globalBefore);
-					ClearInt(Works, ClearGlobalAfterProperty, globalAfter);
-					ClearInt(Works, ClearTallyBeforeProperty, tallyBefore);
-					ClearInt(Works, ClearTallyAfterProperty, tallyAfter);
-					phase = 3;
-					ClearInt(Works, ClearPhaseProperty, phase);
+					if (!PrepareClearOutput(Works, Z, material, amount)) return false;
+					phase = ClearInt(Works, ClearPhaseProperty);
 				}
 				if (phase == 3)
 				{
-					KingdomConstructionCasAction action = KingdomConstructionRules.CounterCasAction(
-						The.Game.GetIntGameState(state), ClearInt(Works, ClearGlobalBeforeProperty),
-						ClearInt(Works, ClearGlobalAfterProperty));
-					if (action == KingdomConstructionCasAction.Quarantine)
-						return QuarantineClear(Works, "Clearance global credit has a third value.");
-					if (action == KingdomConstructionCasAction.Apply)
-						The.Game.ModIntGameState(state, amount);
-					if (The.Game.GetIntGameState(state) != ClearInt(Works, ClearGlobalAfterProperty))
-						return QuarantineClear(Works, "Clearance global credit could not be proved.");
+					if (!PlaceOrProveClearOutput(Works, Z, material, amount)) return false;
 					phase = 4;
 					ClearInt(Works, ClearPhaseProperty, phase);
 				}
 				if (phase == 4)
 				{
+					if (!ExactClearOutput(Works, Z, material, amount, out _))
+						return QuarantineClear(Works,
+							"Clearance payout changed before its settlement tally was prepared.");
+					int tallyBefore = ClearTally(Works, material);
+					if (!KingdomConstructionRules.TryCounterAfter(tallyBefore, amount,
+						out int tallyAfter))
+						return QuarantineClear(Works, "Clearance settlement tally would overflow.");
+					ClearInt(Works, ClearTallyBeforeProperty, tallyBefore);
+					ClearInt(Works, ClearTallyAfterProperty, tallyAfter);
 					phase = 5;
 					ClearInt(Works, ClearPhaseProperty, phase);
 				}
 				if (phase == 5)
 				{
+					if (!ExactClearOutput(Works, Z, material, amount, out _))
+						return QuarantineClear(Works,
+							"Clearance payout changed before its settlement tally committed.");
 					KingdomConstructionCasAction action = KingdomConstructionRules.CounterCasAction(
 						ClearTally(Works, material), ClearInt(Works, ClearTallyBeforeProperty),
 						ClearInt(Works, ClearTallyAfterProperty));
@@ -3542,6 +5016,16 @@ namespace ThousandAndFirst
 						return QuarantineClear(Works, "Clearance settlement tally could not be proved.");
 					phase = 6;
 					ClearInt(Works, ClearPhaseProperty, phase);
+				}
+				if (phase == 6)
+				{
+					if (!ExactClearOutput(Works, Z, material, amount, out GameObject paid))
+						return QuarantineClear(Works,
+							"Clearance payout changed before its receipt could close.");
+					paid.SetStringProperty(ClearOutputMark, null, RemoveIfNull: true);
+					if (paid.GetStringProperty(ClearOutputMark) != null)
+						return QuarantineClear(Works,
+							"Clearance payout marker could not be retired.");
 				}
 			}
 			catch (System.Exception ex)
@@ -3556,11 +5040,254 @@ namespace ThousandAndFirst
 			ClearInt(Works, ClearMaterialProperty, 0);
 			ClearInt(Works, ClearAmountProperty, 0);
 			ClearInt(Works, ClearRemovedProperty, 0);
-			ClearInt(Works, ClearGlobalBeforeProperty, 0);
-			ClearInt(Works, ClearGlobalAfterProperty, 0);
+			ClearString(Works, ClearOutputIdProperty, null);
+			ClearString(Works, ClearOutputBlueprintProperty, null);
+			ClearString(Works, ClearOutputMarkerProperty, null);
+			ClearInt(Works, ClearDestinationKindProperty, 0);
+			ClearString(Works, ClearDestinationIdProperty, null);
+			ClearString(Works, ClearDestinationZoneProperty, null);
+			ClearInt(Works, ClearDestinationXProperty, 0);
+			ClearInt(Works, ClearDestinationYProperty, 0);
 			ClearInt(Works, ClearTallyBeforeProperty, 0);
 			ClearInt(Works, ClearTallyAfterProperty, 0);
 			return true;
+		}
+
+		/// <summary>
+		/// Freezes one real material output and its exact destination before the AddObject
+		/// callback. Nothing is credited in an integer ledger: the receipt closes only around a
+		/// takeable Qud object in a dedicated stockpile, or on the works cell when none exists.
+		/// </summary>
+		private static bool PrepareClearOutput(r_KingdomPlotWorks Works, Zone Z,
+			KingdomPlotRules.Material Material, int Amount)
+		{
+			if (Works?.ParentObject == null || Z == null || Amount <= 0
+				|| Works.ParentObject.CurrentZone != Z)
+				return QuarantineClear(Works, "Clearance payout has no exact settlement ground.");
+			KingdomMaterial stockMaterial = StockMaterial(Material);
+			string blueprint = KingdomMaterials.BlueprintFor(stockMaterial);
+			if (string.IsNullOrEmpty(blueprint))
+				return QuarantineClear(Works, "Clearance payout has no physical material blueprint.");
+
+			KingdomMaterials.MaterialStock stock = KingdomMaterials.Stock(Z);
+			GameObject destination = null;
+			for (int i = 0; i < stock.Stockpiles.Count; i++)
+			{
+				GameObject candidate = stock.Stockpiles[i];
+				if (GameObject.Validate(candidate) && candidate.CurrentZone == Z
+					&& candidate.Inventory != null
+					&& candidate.GetIntProperty(KingdomMaterials.StockpileProperty) == 1)
+				{
+					destination = candidate;
+					break;
+				}
+			}
+			Cell fallback = Works.ParentObject.CurrentCell;
+			if (destination == null && (fallback == null || fallback.ParentZone != Z))
+				return QuarantineClear(Works,
+					"Clearance payout has neither a stockpile nor a ground cell.");
+
+			string marker = "plot-clear:" + Works.ParentObject.ID + ":"
+				+ ClearString(Works, ClearIdProperty);
+			if (marker.Length > 1024)
+				return QuarantineClear(Works, "Clearance payout identity is too long.");
+			ClearString(Works, ClearOutputBlueprintProperty, blueprint);
+			ClearString(Works, ClearOutputMarkerProperty, marker);
+			ClearString(Works, ClearDestinationZoneProperty, Z.ZoneID);
+			if (destination != null)
+			{
+				ClearInt(Works, ClearDestinationKindProperty, 1);
+				ClearString(Works, ClearDestinationIdProperty, destination.ID);
+			}
+			else
+			{
+				ClearInt(Works, ClearDestinationKindProperty, 2);
+				ClearInt(Works, ClearDestinationXProperty, fallback.X);
+				ClearInt(Works, ClearDestinationYProperty, fallback.Y);
+			}
+			if (CountClearOutputs(Z, marker) != 0)
+				return QuarantineClear(Works,
+					"Clearance payout marker already names a rooted object before creation.");
+
+			GameObject item = GameObject.Create(blueprint);
+			if (!GameObject.Validate(item) || string.IsNullOrEmpty(item.ID)
+				|| item.Blueprint != blueprint || item.Physics == null || !item.Physics.Takeable)
+				return QuarantineClear(Works, "Clearance material object could not be created exactly.");
+			item.Count = Amount;
+			item.SetStringProperty(ClearOutputMark, marker);
+			ClearString(Works, ClearOutputIdProperty, item.ID);
+			ClearInt(Works, ClearPhaseProperty, 3);
+			return PlaceOrProveClearOutput(Works, Z, Material, Amount, item);
+		}
+
+		private static bool PlaceOrProveClearOutput(r_KingdomPlotWorks Works, Zone Z,
+			KingdomPlotRules.Material Material, int Amount, GameObject Created = null)
+		{
+			if (ExactClearOutput(Works, Z, Material, Amount, out _)) return true;
+			string outputId = ClearString(Works, ClearOutputIdProperty);
+			string blueprint = ClearString(Works, ClearOutputBlueprintProperty);
+			string marker = ClearString(Works, ClearOutputMarkerProperty);
+			GameObject item = Created;
+			if (!GameObject.Validate(item) || item.ID != outputId)
+			{
+				GameObject globally = GameObject.FindByID(outputId);
+				if (GameObject.Validate(globally)) item = globally;
+			}
+			if (!GameObject.Validate(item))
+			{
+				// A detached create-intent is not serialized. Exact absence of both its ID and its
+				// marker means no spendable object exists, so cold-load recovery may recreate it.
+				if (CountClearOutputs(Z, marker) != 0)
+					return QuarantineClear(Works,
+						"Clearance output identity is absent but its marker is not.");
+				item = GameObject.Create(blueprint);
+				if (!GameObject.Validate(item) || string.IsNullOrEmpty(item.ID)
+					|| item.Blueprint != blueprint || item.Physics == null || !item.Physics.Takeable)
+					return QuarantineClear(Works,
+						"Clearance output could not be recovered from a detached create-intent.");
+				item.Count = Amount;
+				item.SetStringProperty(ClearOutputMark, marker);
+				ClearString(Works, ClearOutputIdProperty, item.ID);
+				outputId = item.ID;
+			}
+			if (item.Blueprint != blueprint || item.Count != Amount
+				|| item.GetStringProperty(ClearOutputMark) != marker
+				|| item.InInventory != null || item.CurrentCell != null)
+				return QuarantineClear(Works,
+					"Clearance output changed before its exact AddObject callback.");
+
+			GameObject accepted = null;
+			int kind = ClearInt(Works, ClearDestinationKindProperty);
+			if (kind == 1)
+			{
+				GameObject destination;
+				if (KingdomConstruction.FindExactId(Z,
+					ClearString(Works, ClearDestinationIdProperty), out destination)
+					!= KingdomPhysicalLookupState.Exact || destination.Inventory == null
+					|| destination.GetIntProperty(KingdomMaterials.StockpileProperty) != 1)
+					return QuarantineClear(Works,
+						"Clearance payout's exact stockpile disappeared before placement.");
+				try { accepted = destination.Inventory.AddObject(item, null, Silent: true, NoStack: true); }
+				finally
+				{
+					KingdomSurvey.ObserveCurrentTopologyInActive(Z, destination);
+					KingdomSurvey.ObserveAddResultInActive(Z, item, accepted);
+				}
+			}
+			else if (kind == 2)
+			{
+				Cell cell = ExactClearDestinationCell(Works, Z);
+				if (cell == null)
+					return QuarantineClear(Works,
+						"Clearance payout's exact ground cell disappeared before placement.");
+				try { accepted = cell.AddObject(item, NoStack: true, Silent: true); }
+				finally { KingdomSurvey.ObserveAddResultInActive(Z, item, accepted); }
+			}
+			else return QuarantineClear(Works, "Clearance payout destination is malformed.");
+			if (!ReferenceEquals(accepted, item)
+				|| !ExactClearOutput(Works, Z, Material, Amount, out GameObject exact)
+				|| !ReferenceEquals(exact, item))
+				return QuarantineClear(Works,
+					"Clearance AddObject callback did not leave one exact no-stack output.");
+			return true;
+		}
+
+		private static bool ExactClearOutput(r_KingdomPlotWorks Works, Zone Z,
+			KingdomPlotRules.Material Material, int Amount, out GameObject Exact)
+		{
+			Exact = null;
+			if (Works?.ParentObject == null || Z == null || Amount <= 0
+				|| (int)StockMaterial(Material) < 0
+				|| ClearString(Works, ClearDestinationZoneProperty) != Z.ZoneID)
+				return false;
+			string id = ClearString(Works, ClearOutputIdProperty);
+			string blueprint = ClearString(Works, ClearOutputBlueprintProperty);
+			string marker = ClearString(Works, ClearOutputMarkerProperty);
+			if (KingdomConstruction.FindExactId(Z, id, out GameObject item)
+				!= KingdomPhysicalLookupState.Exact || item.Blueprint != blueprint
+				|| item.Count != Amount || item.GetStringProperty(ClearOutputMark) != marker
+				|| CountClearOutputs(Z, marker) != 1) return false;
+			int kind = ClearInt(Works, ClearDestinationKindProperty);
+			if (kind == 1)
+			{
+				GameObject destination;
+				if (KingdomConstruction.FindExactId(Z,
+					ClearString(Works, ClearDestinationIdProperty), out destination)
+					!= KingdomPhysicalLookupState.Exact || destination.Inventory == null
+					|| destination.GetIntProperty(KingdomMaterials.StockpileProperty) != 1
+					|| item.InInventory != destination
+					|| ReferenceCount(destination.Inventory.Objects, item) != 1) return false;
+			}
+			else if (kind == 2)
+			{
+				Cell cell = ExactClearDestinationCell(Works, Z);
+				if (cell == null || item.InInventory != null || item.CurrentCell != cell
+					|| ReferenceCount(cell.GetObjects(), item) != 1) return false;
+			}
+			else return false;
+			Exact = item;
+			return true;
+		}
+
+		private static Cell ExactClearDestinationCell(r_KingdomPlotWorks Works, Zone Z)
+		{
+			if (Z == null || ClearString(Works, ClearDestinationZoneProperty) != Z.ZoneID)
+				return null;
+			return Z.GetCell(ClearInt(Works, ClearDestinationXProperty),
+				ClearInt(Works, ClearDestinationYProperty));
+		}
+
+		private static int CountClearOutputs(Zone Z, string Marker)
+		{
+			if (Z == null || string.IsNullOrEmpty(Marker)) return int.MaxValue;
+			KingdomSurvey active = KingdomSurvey.ActiveFor(Z);
+			if (active != null)
+			{
+				IList<GameObject> loaded;
+				if (!active.TryLoaded(out loaded)) return int.MaxValue;
+				int indexedCount = 0;
+				for (int i = 0; i < loaded.Count; i++)
+					if (GameObject.Validate(loaded[i])
+						&& loaded[i].GetStringProperty(ClearOutputMark) == Marker) indexedCount++;
+				return indexedCount;
+			}
+			List<GameObject> pending = new List<GameObject>(Z.GetObjects());
+			HashSet<GameObject> seen = new HashSet<GameObject>();
+			int count = 0;
+			while (pending.Count > 0)
+			{
+				int last = pending.Count - 1;
+				GameObject item = pending[last];
+				pending.RemoveAt(last);
+				if (!GameObject.Validate(item)) continue;
+				if (!seen.Add(item) || seen.Count > 4096) return int.MaxValue;
+				if (item.GetStringProperty(ClearOutputMark) == Marker) count++;
+				if (item.Inventory == null) continue;
+				for (int i = 0; i < item.Inventory.Objects.Count; i++)
+					pending.Add(item.Inventory.Objects[i]);
+			}
+			return count;
+		}
+
+		private static int ReferenceCount(IList<GameObject> Objects, GameObject Target)
+		{
+			if (Objects == null || Target == null) return 0;
+			int count = 0;
+			for (int i = 0; i < Objects.Count; i++)
+				if (ReferenceEquals(Objects[i], Target)) count++;
+			return count;
+		}
+
+		private static KingdomMaterial StockMaterial(KingdomPlotRules.Material Material)
+		{
+			switch (Material)
+			{
+			case KingdomPlotRules.Material.Timber: return KingdomMaterial.Timber;
+			case KingdomPlotRules.Material.Stone: return KingdomMaterial.Stone;
+			case KingdomPlotRules.Material.Marble: return KingdomMaterial.Marble;
+			case KingdomPlotRules.Material.Scrap: return KingdomMaterial.Scrap;
+			default: return (KingdomMaterial)(-1);
+			}
 		}
 
 		private static int ClearTally(r_KingdomPlotWorks Works,
@@ -3621,7 +5348,7 @@ namespace ThousandAndFirst
 			Works.ParentObject.SetStringProperty(Property, Value, RemoveIfNull: true);
 		}
 
-		private static void CreditMaterials(int[] Yields, string Name, bool Credit = true)
+		private static void TellClearMaterials(int[] Yields, string Name)
 		{
 			System.Text.StringBuilder earned = new System.Text.StringBuilder();
 			for (int i = 1; i < Yields.Length; i++)
@@ -3631,7 +5358,6 @@ namespace ThousandAndFirst
 					continue;
 				}
 				KingdomPlotRules.Material material = (KingdomPlotRules.Material)i;
-				if (Credit) The.Game.ModIntGameState(MaterialStatePrefix + material, Yields[i]);
 				if (earned.Length > 0)
 				{
 					earned.Append(", ");
@@ -3644,16 +5370,19 @@ namespace ThousandAndFirst
 			}
 		}
 
-		/// <summary>How much of a material the realm holds. Counted in a generic game-state slot
-		/// until a stockpile with a dedicated mark of its own exists; nothing is ever minted, and
-		/// nothing but clearance, salvage, or trade adds to it.</summary>
+		/// <summary>Compatibility reading for old add-ons which asked this class for the stock on
+		/// the founder's current ground. The authority is now, and always should have been, the
+		/// physical contents of dedicated stockpiles.</summary>
+		[Obsolete("Use KingdomMaterials.Stock(zone).Tally; material authority is physical and zone-local.")]
 		public static int MaterialsHeld(KingdomPlotRules.Material Of)
 		{
-			if (Of == KingdomPlotRules.Material.None)
+			KingdomMaterial material = StockMaterial(Of);
+			Zone zone = The.Player?.CurrentZone;
+			if ((int)material < 0 || zone == null)
 			{
 				return 0;
 			}
-			return The.Game.GetIntGameState(MaterialStatePrefix + Of);
+			return KingdomMaterials.Stock(zone).Tally.Get(material);
 		}
 
 		private static void RaiseFrame(r_KingdomPlotWorks Works, Zone Z, KingdomPlotRules.PlotRect Rect, KingdomPlotRules.RoofState Roof)
@@ -3729,7 +5458,14 @@ namespace ThousandAndFirst
 						if (standing[i] != null && standing[i].Blueprint == FrameBlueprint
 							&& standing[i].GetStringProperty(PlotIdProperty) == id)
 						{
-							standing[i].Destroy(null, Silent: true);
+							bool removed;
+							try { removed = standing[i].Destroy(null, Silent: true); }
+							finally
+							{
+								KingdomSurvey.ObserveCurrentTopologyInActive(Z, standing[i]);
+							}
+							if (removed && !GameObject.Validate(standing[i]))
+								KingdomSurvey.ObserveRemovedFromActive(Z, standing[i]);
 						}
 					}
 				}
@@ -3754,6 +5490,28 @@ namespace ThousandAndFirst
 			{
 				return false;
 			}
+			bool architectureMarker = HasArchitectureReceiptEvidence(parent);
+			KingdomArchitectureIntent architecture = null;
+			bool legacyArchitecture = !architectureMarker;
+			if (architectureMarker
+				&& (!KingdomArchitectureRuntime.TryRead(parent, out architecture,
+					out string architectureFailure)
+					|| architecture.BuildKey != Works.DesignKey || !SameRect(architecture.Rect, Rect)
+					|| cell.X != architecture.MainWorldX || cell.Y != architecture.MainWorldY))
+			{
+				KingdomLog.Log("architecture: completed plot receipt refused: "
+					+ (architectureFailure ?? "receipt identity or main anchor changed"));
+				return false;
+			}
+			bool currentAuthored = architecture != null
+				&& KingdomArchitectureRules.IsCurrentSnapshotEncoding(
+					architecture.EncodedSnapshot);
+			if (currentAuthored && !KingdomArchitectureStamper.TryVerifyComplete(parent, Z,
+				out string layoutFailure))
+			{
+				KingdomLog.Log("architecture: completed plot layout refused: " + layoutFailure);
+				return false;
+			}
 			string id = parent.GetStringProperty(PlotIdProperty);
 			string skinColorString = parent.GetStringProperty(KingdomDesign.StagedColorStringProperty);
 			string skinDetailColor = parent.GetStringProperty(KingdomDesign.StagedDetailColorProperty);
@@ -3771,7 +5529,12 @@ namespace ThousandAndFirst
 			// thing to read from. The plan quote and the due tick are the raising ceremony's own
 			// two facts, and they are read here for exactly the same reason.
 			string planQuote = KingdomCeremony.ReadPlanQuote(parent);
-			long completeTick = Works.StartTick + Works.TotalTicks;
+			long completeTick;
+			if (!TryGetPlotWorkLong(parent, PlotWorkCompletedTickProperty, out completeTick))
+			{
+				// Legacy plot works have no labour receipt and preserve their old nominal tick.
+				completeTick = Works.StartTick + Works.TotalTicks;
+			}
 			string receipt = parent.GetStringProperty(KingdomConstruction.ReceiptProperty);
 			KingdomConstructionJob construction = null;
 			if (!string.IsNullOrEmpty(receipt))
@@ -3784,6 +5547,20 @@ namespace ThousandAndFirst
 					|| (construction.Phase != KingdomConstructionPhase.ProjectionPending
 						&& !KingdomConstruction.BeginProjection(ref construction, out _)))
 				{
+					return false;
+				}
+				if (!TryDecodePlotPayload(construction.Payload, out var paidRect, out _,
+					out KingdomArchitectureIntent paidArchitecture, out bool legacyPayload,
+					out string payloadFailure) || !SameRect(paidRect, Rect)
+					|| legacyPayload != legacyArchitecture
+					|| (!legacyPayload && (!SameIntent(paidArchitecture, architecture)
+						|| construction.X != architecture.MainWorldX
+						|| construction.Y != architecture.MainWorldY))
+					|| (legacyPayload
+						&& (construction.X != Rect.CenterX || construction.Y != Rect.CenterY)))
+				{
+					KingdomConstruction.Quarantine(ref construction, payloadFailure
+						?? "The plot works disagree with their frozen authored payload.");
 					return false;
 				}
 			}
@@ -3818,6 +5595,30 @@ namespace ThousandAndFirst
 			{
 				return false;
 			}
+			if (created && !legacyArchitecture)
+			{
+				string copyFailure;
+				bool copied = currentAuthored
+					? KingdomArchitectureStamper.TryCopyFrozenOwner(parent, building,
+						out copyFailure)
+					: KingdomArchitectureRuntime.TryCopyFrozen(parent, building,
+						out copyFailure);
+				if (!copied)
+				{
+					RemoveCreatedWorks(building, Z);
+					if (construction != null) KingdomConstruction.Quarantine(ref construction,
+						"The final plot could not inherit its frozen authored receipt: "
+							+ copyFailure);
+					return false;
+				}
+			}
+			if (created && !KingdomPurpose.CopyCommit(parent, building))
+			{
+				RemoveCreatedWorks(building, Z);
+				if (construction != null) KingdomConstruction.Quarantine(ref construction,
+					"The final building could not inherit its frozen city-purpose commitment.");
+				return false;
+			}
 			if (created)
 			{
 				if (construction != null)
@@ -3825,7 +5626,7 @@ namespace ThousandAndFirst
 					if (!KingdomConstruction.UpdateFinalOutput(ref construction,
 						parent.ID, building.ID))
 					{
-						RemoveCreatedWorks(building);
+						RemoveCreatedWorks(building, Z);
 						return false;
 					}
 				}
@@ -3836,20 +5637,33 @@ namespace ThousandAndFirst
 				PrepareFinalBuilding(building, entry, receipt, id, Rect, Footprint, Roof,
 					skinColorString, skinDetailColor, skinRenderString, skinTile, displayName,
 					completeTick, planQuote, heart, yielding, defence, staff, threshold);
+				if (construction != null
+					&& !KingdomConstruction.FreezePaidBuild(building, construction))
+				{
+					RemoveCreatedWorks(building, Z);
+					KingdomConstruction.Quarantine(ref construction,
+						"The exact paid plot receipt could not be frozen on its final output.");
+					return false;
+				}
 				if (construction != null && !KingdomConstruction.UpdatePhysical(ref construction,
 					KingdomPhysicalPhase.FinalOutputPending, construction.PhysicalIndex,
 					construction.PhysicalAmount,
 					construction.PhysicalSpilled, parent.ID, building.ID,
 					construction.PhysicalReceipt))
 				{
-					RemoveCreatedWorks(building);
+					RemoveCreatedWorks(building, Z);
 					return false;
 				}
 				GameObject accepted;
-				try { accepted = cell.AddObject(building); building.MakeActive(); }
+				try
+				{
+					accepted = cell.AddObject(building);
+					building.MakeActive();
+					KingdomSurvey.ObserveAddResultInActive(Z, building, accepted);
+				}
 				catch (System.Exception ex)
 				{
-					bool cleaned = RemoveCreatedWorks(building);
+					bool cleaned = RemoveCreatedWorks(building, Z);
 					if (construction != null) KingdomConstruction.Quarantine(ref construction,
 						(cleaned ? "Final plot AddObject threw after identity publication: "
 							: "Final plot AddObject threw and cleanup failed: ") + ex.Message);
@@ -3863,7 +5677,7 @@ namespace ThousandAndFirst
 				}
 			}
 			if (!ExactFinalBuilding(building, Z, cell, entry, receipt, id, Rect,
-				Footprint, Roof, construction))
+				Footprint, Roof, architecture, legacyArchitecture, construction))
 			{
 				if (construction != null) KingdomConstruction.Quarantine(ref construction,
 					"The exact final plot output changed across AddObject.");
@@ -3882,17 +5696,39 @@ namespace ThousandAndFirst
 				|| building.GetStringProperty(KingdomUpgrade.BuildKeyProperty) != entry.Key
 				|| (!string.IsNullOrEmpty(receipt)
 					&& building.GetStringProperty(KingdomConstruction.ReceiptProperty) != receipt)
-				|| (construction != null && !KingdomConstruction.IsCurrent(construction)))
+				|| (construction != null && (!KingdomConstruction.IsCurrent(construction)
+					|| !KingdomConstruction.PaidBuildMatches(building, construction))))
 			{
-				if (created) building.Obliterate(null, Silent: true);
+				if (created) RemoveCreatedWorks(building, Z);
 				return false;
 			}
 			if (construction != null)
 			{
-				if (!FurnishDurable(Z, Footprint, contents, id, entry.Key,
+				if (currentAuthored)
+				{
+					if (construction.PhysicalPhase == KingdomPhysicalPhase.FinalOutputSettled
+						&& !KingdomConstruction.UpdatePhysical(ref construction,
+							KingdomPhysicalPhase.FurnishingSettled,
+							construction.PhysicalIndex, construction.PhysicalAmount,
+							construction.PhysicalSpilled, construction.PhysicalItemId,
+							construction.PhysicalDestinationId,
+							construction.PhysicalReceipt)) return false;
+					if (construction.PhysicalPhase != KingdomPhysicalPhase.FurnishingSettled
+						&& construction.PhysicalPhase != KingdomPhysicalPhase.FinalRemovalPending
+						&& construction.PhysicalPhase != KingdomPhysicalPhase.FinalRemoved
+						&& construction.PhysicalPhase != KingdomPhysicalPhase.EffectsPending
+						&& construction.PhysicalPhase != KingdomPhysicalPhase.EffectsSettled)
+					{
+						KingdomConstruction.Quarantine(ref construction,
+							"The authored plot finalization carries an impossible layout phase.");
+						return false;
+					}
+				}
+				else if (!FurnishDurable(Z, Footprint, contents, id, entry.Key,
 					ref construction)) return false;
 			}
-			else if (created) Furnish(Z, Footprint, contents, id, entry.Key);
+			else if (!currentAuthored && !FurnishLegacyDurable(building, Z, Footprint,
+				contents, id, entry.Key)) return false;
 			// Final projection proved before predecessor removal. Keep DesignKey intact until the
 			// vetoable callback has actually invalidated the exact predecessor, so a retry remains live.
 			string predecessorId = parent.ID;
@@ -3915,10 +5751,13 @@ namespace ThousandAndFirst
 			try { removed = parent.Destroy(null, Silent: true); }
 			catch (System.Exception ex)
 			{
+				KingdomSurvey.ObserveCurrentTopologyInActive(Z, parent);
 				if (construction != null) KingdomConstruction.Quarantine(ref construction,
 					"Plot predecessor removal threw: " + ex.Message);
 				return false;
 			}
+			if (removed && !GameObject.Validate(parent))
+				KingdomSurvey.ObserveRemovedFromActive(Z, parent);
 			KingdomPhysicalLookupState predecessorState = construction == null
 				? (GameObject.Validate(parent) ? KingdomPhysicalLookupState.Exact
 					: KingdomPhysicalLookupState.Absent)
@@ -3939,7 +5778,9 @@ namespace ThousandAndFirst
 				|| building.GetIntProperty("KingdomBuilt") != 1
 				|| building.GetStringProperty(KingdomUpgrade.BuildKeyProperty) != entry.Key
 				|| (!string.IsNullOrEmpty(receipt)
-					&& building.GetStringProperty(KingdomConstruction.ReceiptProperty) != receipt))
+					&& building.GetStringProperty(KingdomConstruction.ReceiptProperty) != receipt)
+				|| (construction != null
+					&& !KingdomConstruction.PaidBuildMatches(building, construction)))
 			{
 				if (construction != null)
 					KingdomConstruction.Quarantine(ref construction,
@@ -3956,6 +5797,17 @@ namespace ThousandAndFirst
 			{
 				if (construction != null) KingdomConstruction.Quarantine(ref construction,
 					"The completed plot did not retain exact works-removal proof.");
+				return false;
+			}
+			// Physical verticality settles after every authored piece and exact final root exist,
+			// but before the construction job can become terminal. Retry reads only the frozen root.
+			if (currentAuthored && KingdomDelveRules.IsDelve(entry.Key)
+				&& !KingdomDelveLink.TrySettle(building, Z, out string delveLinkFailure))
+			{
+				KingdomLog.Log("delve link: finalization waits: " + delveLinkFailure);
+				if (construction != null && !string.IsNullOrEmpty(
+					building.GetStringProperty(KingdomDelveLink.FaultProperty)))
+					KingdomConstruction.Quarantine(ref construction, delveLinkFailure);
 				return false;
 			}
 			if (construction != null && !KingdomConstruction.Complete(ref construction))
@@ -3983,7 +5835,7 @@ namespace ThousandAndFirst
 					// could not do yesterday has to say so (STANDARDS 7b). Nothing else about a
 					// finished shaft looks different from any other roof on the skyline.
 					KingdomDelve.RecordShaft(Z.ZoneID);
-					string opened = KingdomDelveRules.ShaftOpens(system.SeatName);
+					string opened = KingdomDelveRules.ShaftOpens(KingdomPresentation.Rich(system.SeatName));
 					system.Ledger.Note("{{G|" + opened + "}}");
 					MessageQueue.AddPlayerMessage("{{G|" + opened + "}}");
 				}
@@ -4051,6 +5903,11 @@ namespace ThousandAndFirst
 			}
 			if (KingdomDelveRules.IsDelve(Job.TargetKey))
 			{
+				if (!KingdomDelveLink.TrySettle(Building, Z, out string linkFailure))
+				{
+					KingdomLog.Log("delve link: effects wait: " + linkFailure);
+					return false;
+				}
 				KingdomDelve.RecordShaft(Z.ZoneID);
 				if (!KingdomDelve.ShaftStands(Z.ZoneID)) return false;
 				int state = Building.GetIntProperty(DelveEffectProperty);
@@ -4059,7 +5916,7 @@ namespace ThousandAndFirst
 				{
 					Building.SetIntProperty(DelveEffectProperty, 1);
 					if (Building.GetIntProperty(DelveEffectProperty) != 1) return false;
-					string opened = KingdomDelveRules.ShaftOpens(System.SeatName);
+					string opened = KingdomDelveRules.ShaftOpens(KingdomPresentation.Rich(System.SeatName));
 					System.Ledger.Note("{{G|" + opened + "}}");
 					MessageQueue.AddPlayerMessage("{{G|" + opened + "}}");
 					if (!ExactPlotEffectEndpoint(System, Z, Building, Job)) return false;
@@ -4111,7 +5968,13 @@ namespace ThousandAndFirst
 			List<FurnishRow> rows;
 			if (Job.PhysicalPhase == KingdomPhysicalPhase.FinalOutputSettled)
 			{
-				if (!TryFreezeFurnishPlan(Z, Rect, Table, Key, out rows))
+				KingdomSystem semanticSystem = The.Game == null
+					? null : The.Game.RequireSystem<KingdomSystem>();
+				string streamId;
+				if (!Simulation.Kernel.KingdomSemanticSelectionRules.TryOwnerStreamId(
+					"furnish", Job.Id, out streamId)
+					|| !TryFreezeFurnishPlan(semanticSystem, Z, Rect, Table, Key,
+						streamId, out rows))
 				{
 					KingdomConstruction.Quarantine(ref Job,
 						"The bounded furnishing plan could not be frozen.");
@@ -4202,25 +6065,33 @@ namespace ThousandAndFirst
 				placed.SetIntProperty(PlotPartProperty, 1);
 				if (!string.IsNullOrEmpty(PlotId)) placed.SetStringProperty(PlotIdProperty, PlotId);
 				placed.SetStringProperty(FurnishReceiptProperty, Job.Id);
-				if (placed.GetPart<LiquidVolume>() != null) placed.SetIntProperty("KingdomStores", 1);
+				// Furnishings belong to their plot but are not extra civic accounts. Root works and
+				// explicit player dedication own that authority; multiplying it by up to sixty-four
+				// population results per plot makes the catch-up envelope unbounded by the plot rail.
 				if (!KingdomConstruction.UpdatePhysical(ref Job,
 					KingdomPhysicalPhase.FurnishingPending, i, Job.PhysicalAmount,
 					Job.PhysicalSpilled,
 					Job.SubjectId, Job.OutputId, EncodeFurnish(rows)))
 				{
-					RemoveCreatedWorks(placed);
+					RemoveCreatedWorks(placed, Z);
 					return false;
 				}
-				try { cell.AddObject(placed); }
+				GameObject accepted = null;
+				try
+				{
+					accepted = cell.AddObject(placed);
+					KingdomSurvey.ObserveAddResultInActive(Z, placed, accepted);
+				}
 				catch (System.Exception ex)
 				{
-					bool cleaned = RemoveCreatedWorks(placed);
+					bool cleaned = RemoveCreatedWorks(placed, Z);
 					KingdomConstruction.Quarantine(ref Job, (cleaned
 						? "Furnishing AddObject threw after output publication: "
 						: "Furnishing AddObject threw and cleanup failed: ") + ex.Message);
 					return false;
 				}
-				if (!ExactFurnishing(placed, Z, row, PlotId, Job.Id))
+				if (!ReferenceEquals(accepted, placed)
+					|| !ExactFurnishing(placed, Z, row, PlotId, Job.Id))
 				{
 					KingdomConstruction.Quarantine(ref Job,
 						"Furnishing changed during AddObject.");
@@ -4232,7 +6103,8 @@ namespace ThousandAndFirst
 					Job.PhysicalSpilled,
 					Job.SubjectId, Job.OutputId, EncodeFurnish(rows))) return false;
 			}
-			foreach (GameObject item in Z.GetObjects())
+			KingdomSurvey survey = KingdomSurvey.ActiveFor(Z) ?? KingdomSurvey.Take(Z);
+			foreach (GameObject item in survey.Furnishings)
 			{
 				if (!GameObject.Validate(item)
 					|| item.GetStringProperty(FurnishReceiptProperty) != Job.Id) continue;
@@ -4250,8 +6122,9 @@ namespace ThousandAndFirst
 				Job.PhysicalSpilled, Job.SubjectId, Job.OutputId, EncodeFurnish(rows));
 		}
 
-		private static bool TryFreezeFurnishPlan(Zone Z, KingdomPlotRules.PlotRect Rect,
-			string Table, string Key, out List<FurnishRow> Rows)
+		private static bool TryFreezeFurnishPlan(KingdomSystem System, Zone Z,
+			KingdomPlotRules.PlotRect Rect, string Table, string Key, string StreamId,
+			out List<FurnishRow> Rows)
 		{
 			Rows = new List<FurnishRow>();
 			if (string.IsNullOrEmpty(Table) || Rect.Width <= 2 || Rect.Height <= 2) return true;
@@ -4265,23 +6138,29 @@ namespace ThousandAndFirst
 				}
 			int rolls = KingdomPlotRules.ContentsRolls(spec.Size);
 			for (int roll = 0; roll < rolls && open.Count > 0; roll++)
-				foreach (PopulationResult result in PopulationManager.Generate(Table,
-					"zonetier", Z.NewTier.ToString()))
-					for (int n = 0; n < result.Number && open.Count > 0; n++)
-					{
-						if (Rows.Count >= MaxFurnishItems) return false;
-						Cell cell = open[0]; open.RemoveAt(0);
-						if (string.IsNullOrEmpty(result.Blueprint)) return false;
-						Rows.Add(new FurnishRow
-							{ Blueprint = result.Blueprint, X = cell.X, Y = cell.Y });
-					}
+			{
+				string blueprint;
+				string failure;
+				if (!KingdomSemanticSelection.TryChoosePopulationBlueprint(System, Table,
+					null, StreamId, KingdomSemanticSelection.FurnishEventKind, 0UL,
+					(uint)roll, out blueprint, out failure))
+				{
+					KingdomLog.Log("furnishing semantic plan refused: " + failure);
+					return false;
+				}
+				if (Rows.Count >= MaxFurnishItems) return false;
+				Cell cell = open[0]; open.RemoveAt(0);
+				Rows.Add(new FurnishRow { Blueprint = blueprint, X = cell.X, Y = cell.Y });
+			}
 			return true;
 		}
 
-		private static string EncodeFurnish(List<FurnishRow> Rows)
+		private static string EncodeFurnish(List<FurnishRow> Rows, int Version = 2)
 		{
-			if (Rows == null || Rows.Count > MaxFurnishItems) return null;
-			System.Text.StringBuilder text = new System.Text.StringBuilder("f1");
+			if (Rows == null || Rows.Count > MaxFurnishItems
+				|| (Version != 1 && Version != 2)) return null;
+			System.Text.StringBuilder text = new System.Text.StringBuilder(
+				Version == 1 ? "f1" : "f2");
 			for (int i = 0; i < Rows.Count; i++)
 			{
 				FurnishRow row = Rows[i];
@@ -4303,7 +6182,8 @@ namespace ThousandAndFirst
 			if (string.IsNullOrEmpty(Receipt)
 				|| Receipt.Length > KingdomConstructionRules.MaxPhysicalReceiptChars) return false;
 			string[] terms = Receipt.Split(';');
-			if (terms[0] != "f1" || terms.Length - 1 > MaxFurnishItems) return false;
+			int version = terms[0] == "f1" ? 1 : terms[0] == "f2" ? 2 : 0;
+			if (version == 0 || terms.Length - 1 > MaxFurnishItems) return false;
 			List<FurnishRow> parsed = new List<FurnishRow>();
 			try
 			{
@@ -4323,7 +6203,7 @@ namespace ThousandAndFirst
 				}
 			}
 			catch { return false; }
-			if (EncodeFurnish(parsed) != Receipt) return false;
+			if (EncodeFurnish(parsed, version) != Receipt) return false;
 			Rows = parsed;
 			return true;
 		}
@@ -4338,55 +6218,103 @@ namespace ThousandAndFirst
 				&& Item.GetStringProperty(FurnishReceiptProperty) == Receipt;
 		}
 
-		private static void Furnish(Zone Z, KingdomPlotRules.PlotRect Rect, string Table, string Id, string Key)
+		private static bool FurnishLegacyDurable(GameObject Building, Zone Z,
+			KingdomPlotRules.PlotRect Rect, string Table, string Id, string Key)
 		{
 			if (string.IsNullOrEmpty(Table) || Rect.Width <= 2 || Rect.Height <= 2)
 			{
-				return;
+				return true;
 			}
-			if (!TryGetSpec(Key, out var spec))
+			if (!GameObject.Validate(Building) || Z == null || !TryGetSpec(Key, out _))
 			{
-				return;
+				return false;
 			}
-			List<Cell> open = new List<Cell>();
-			for (int y = Rect.Y1 + 1; y <= Rect.Y2 - 1; y++)
+			KingdomSystem system = The.Game == null
+				? null : The.Game.RequireSystem<KingdomSystem>();
+			string streamId;
+			if (!Simulation.Kernel.KingdomSemanticSelectionRules.TryOwnerStreamId(
+				"furnish-legacy", Id ?? (Key + ":" + Rect.X1 + ":" + Rect.Y1),
+				out streamId)) return false;
+			string encoded = Building.GetStringProperty(LegacyFurnishPlanProperty);
+			List<FurnishRow> rows;
+			if (string.IsNullOrEmpty(encoded))
 			{
-				for (int x = Rect.X1 + 1; x <= Rect.X2 - 1; x++)
+				if (!TryFreezeFurnishPlan(system, Z, Rect, Table, Key, streamId, out rows))
+					return false;
+				encoded = EncodeFurnish(rows);
+				if (encoded == null) return false;
+				Building.SetStringProperty(LegacyFurnishPlanProperty, encoded);
+				if (!string.Equals(Building.GetStringProperty(LegacyFurnishPlanProperty),
+					encoded, StringComparison.Ordinal)) return false;
+			}
+			if (!TryDecodeFurnish(encoded, out rows)) return false;
+			for (int i = 0; i < rows.Count; i++)
+			{
+				FurnishRow row = rows[i];
+				GameObject exact;
+				KingdomPhysicalLookupState state = KingdomConstruction.FindExactId(Z,
+					row.Id, out exact);
+				if (state == KingdomPhysicalLookupState.Ambiguous) return false;
+				if (row.Settled)
 				{
-					Cell cell = Z.GetCell(x, y);
-					if (cell != null && cell.IsEmpty() && cell.IsPassable())
-					{
-						open.Add(cell);
-					}
+					if (state != KingdomPhysicalLookupState.Exact
+						|| !ExactFurnishing(exact, Z, row, Id, streamId)) return false;
+					continue;
 				}
-			}
-			int rolls = KingdomPlotRules.ContentsRolls(spec.Size);
-			for (int roll = 0; roll < rolls && open.Count > 0; roll++)
-			{
-				foreach (PopulationResult item in PopulationManager.Generate(Table, "zonetier", Z.NewTier.ToString()))
+				if (!string.IsNullOrEmpty(row.Id))
 				{
-					for (int n = 0; n < item.Number && open.Count > 0; n++)
-					{
-						Cell cell = open[0];
-						open.RemoveAt(0);
-						GameObject placed = GameObject.Create(item.Blueprint);
-						if (placed == null)
-						{
-							continue;
-						}
-						placed.SetIntProperty(PlotPartProperty, 1);
-						if (!string.IsNullOrEmpty(Id))
-						{
-							placed.SetStringProperty(PlotIdProperty, Id);
-						}
-						cell.AddObject(placed);
-						if (placed.GetPart<LiquidVolume>() != null)
-						{
-							placed.SetIntProperty("KingdomStores", 1);
-						}
-					}
+					if (state != KingdomPhysicalLookupState.Exact
+						|| !ExactFurnishing(exact, Z, row, Id, streamId)) return false;
+					row.Settled = true;
+					if (!WriteLegacyFurnishPlan(Building, rows)) return false;
+					continue;
 				}
+				Cell cell = Z.GetCell(row.X, row.Y);
+				if (cell == null || !cell.IsEmpty() || !cell.IsPassable()) return false;
+				GameObject placed;
+				try { placed = GameObject.Create(row.Blueprint); }
+				catch { return false; }
+				if (!GameObject.Validate(placed)) return false;
+				row.Id = placed.ID;
+				placed.SetIntProperty(PlotPartProperty, 1);
+				if (!string.IsNullOrEmpty(Id)) placed.SetStringProperty(PlotIdProperty, Id);
+				placed.SetStringProperty(FurnishReceiptProperty, streamId);
+				if (!WriteLegacyFurnishPlan(Building, rows))
+				{
+					RemoveCreatedWorks(placed, Z);
+					return false;
+				}
+				GameObject accepted = null;
+				try
+				{
+					accepted = cell.AddObject(placed);
+					KingdomSurvey.ObserveAddResultInActive(Z, placed, accepted);
+				}
+				catch
+				{
+					if (RemoveCreatedWorks(placed, Z))
+					{
+						row.Id = null;
+						WriteLegacyFurnishPlan(Building, rows);
+					}
+					return false;
+				}
+				if (!ReferenceEquals(accepted, placed)
+					|| !ExactFurnishing(placed, Z, row, Id, streamId)) return false;
+				row.Settled = true;
+				if (!WriteLegacyFurnishPlan(Building, rows)) return false;
 			}
+			return true;
+		}
+
+		private static bool WriteLegacyFurnishPlan(GameObject Building,
+			List<FurnishRow> Rows)
+		{
+			string encoded = EncodeFurnish(Rows);
+			if (encoded == null || !GameObject.Validate(Building)) return false;
+			Building.SetStringProperty(LegacyFurnishPlanProperty, encoded);
+			return string.Equals(Building.GetStringProperty(LegacyFurnishPlanProperty),
+				encoded, StringComparison.Ordinal);
 		}
 
 		// --- Saying so --------------------------------------------------------------------

@@ -576,6 +576,7 @@ namespace ThousandAndFirst
 		{
 			public string Key;
 			public string Knowledge;
+			public string Label;
 		}
 
 		/// <summary>One design still reachable only through the pattern-book.</summary>
@@ -583,6 +584,7 @@ namespace ThousandAndFirst
 		{
 			public string BuildingKey;
 			public string LearnName;
+			public string Label;
 		}
 
 		/// <summary>
@@ -621,15 +623,20 @@ namespace ThousandAndFirst
 						continue;
 					}
 					seen.Add(name);
-					found.Add(new ForeignDesign { BuildingKey = entry.Key, LearnName = name });
+					found.Add(new ForeignDesign
+					{
+						BuildingKey = entry.Key,
+						LearnName = name,
+						Label = entry.Label
+					});
 				}
 			}
 			found.Sort((a, b) => string.CompareOrdinal(a.LearnName, b.LearnName));
 			return found;
 		}
 
-		/// <summary>Whether this caravan arrival opens the pattern-book. Deterministic in
-		/// <paramref name="SettlementId"/> and <paramref name="Ordinal"/>; fails closed (no
+		/// <summary>Whether this CharterDelivery opens the pattern-book. Deterministic in
+		/// <paramref name="SettlementId"/> and its operation-sequence <paramref name="Ordinal"/>; fails closed (no
 		/// offer) if the kernel refuses, which is never a loss &mdash; the base catalogue never
 		/// depended on this draw.</summary>
 		public static bool ShouldOfferPattern(string SettlementId, ulong Ordinal)

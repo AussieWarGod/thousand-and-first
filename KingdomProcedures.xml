@@ -68,7 +68,7 @@
   loudly on the day it ships rather than quietly on the day somebody clicks. Boundary powers arrive
   as named procedures, one ruling each, or they do not arrive (Addendum 22 D1).
 -->
-<kingdomprocedures>
+<kingdomprocedures Schema="1">
 
   <!-- ==================================================================== CLASS I ==
     Riders. The hall's ordinary work: your attacks do a second thing. Every one of them is
@@ -172,7 +172,7 @@
   -->
   <procedure Key="vintnersfang" DisplayName="the vintner's fang"
              Class="I" Grants="DrunkOnHit"
-             Slots="Hand,Face,Arm"
+			 Slots="Hand,Arm"
              SlotCategories="Animal,Arthropod"
              Source="part" Attach="weapon"
              MinRung="2" Knowledge="node:graft"
@@ -181,6 +181,26 @@
              Creeds="-Templar">
     <discloses Text="what your own claws open gets a mouthful of wine it did not ask for" />
     <discloses Text="it rides the limb's own weapon, so it wants a limb that already bites" />
+  </procedure>
+
+  <!--
+    The same audited weapon rider, but seated on a muzzle rather than a hand. This is the
+    body-shaped half of Addendum 17: a city learns it only while a living snapjaw body can teach
+    its vat-workers how a face-borne natural weapon is joined. Culture opens trail-reading;
+    species opens anatomy, and the two facts never stand in for one another.
+  -->
+  <procedure Key="moonfang" DisplayName="the moon-vintner's fang"
+             Class="I" Grants="DrunkOnHit"
+             Slots="Face"
+             SlotCategories="Animal"
+             Source="part" Attach="weapon"
+             MinRung="2" Knowledge="node:muzzlecraft"
+             Cost="20" Bits="002" StaffDays="5"
+             Preserved="1"
+             Creeds="-Templar">
+    <discloses Text="the city learned the joining from a living snapjaw muzzle, not from a tale about one" />
+    <discloses Text="what your own bite opens gets a mouthful of wine it did not ask for" />
+    <discloses Text="it wants a face that already bears a natural weapon" />
   </procedure>
 
   <!-- =================================================================== CLASS II ==

@@ -39,9 +39,13 @@ namespace ThousandAndFirst
 				string settlementId = KingdomChronicle.SettlementId(System);
 				if (!KingdomIdentityRules.IsSettlementId(settlementId))
 					return KingdomVoiceRules.Speaker.None;
+				Simulation.City.KingdomCityState state;
+				Simulation.City.KingdomResidentRollProjection roll;
+				if (!Simulation.City.KingdomResidents.TryRoll(System, out state, out roll))
+					return KingdomVoiceRules.Speaker.None;
 				return KingdomVoiceRules.ChooseSpeaker(
-					System.RosterNames,
-					System.RosterOrigins,
+					roll.Names,
+					roll.Origins,
 					settlementId,
 					Occasion,
 					CurrentOrdinal());

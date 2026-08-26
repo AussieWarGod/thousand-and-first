@@ -44,7 +44,7 @@ namespace ThousandAndFirst
 			}
 			if (!Enabled)
 			{
-				return "The gates are off. Every design in the catalogue is open to " + System.SeatName
+				return "The gates are off. Every design in the catalogue is open to " + KingdomPresentation.Rich(System.SeatName)
 					+ ", so there is no map to draw.";
 			}
 			StringBuilder builder = new StringBuilder();
@@ -56,14 +56,14 @@ namespace ThousandAndFirst
 				// same way everything else in this mod does: by doing something in the world.
 				if (!KingdomResearch.KeepsNotes(System))
 				{
-					builder.Append(KingdomResearchRules.NothingWrittenDown(System.SeatName));
+					builder.Append(KingdomResearchRules.NothingWrittenDown(KingdomPresentation.Rich(System.SeatName)));
 					return;
 				}
 				List<string> roster = KingdomZoning.Roster(System);
 				int points = KingdomZoningRules.TechPoints(roster);
 				TechLevel level = KingdomZoningRules.LevelForPoints(points);
 				int toNext = KingdomZoningRules.PointsToNext(points);
-				builder.Append(KingdomTechMapRules.Header(System.SeatName, points,
+				builder.Append(KingdomTechMapRules.Header(KingdomPresentation.Rich(System.SeatName), points,
 					KingdomZoningRules.TechName(level),
 					toNext,
 					KingdomZoningRules.TechName((TechLevel)((int)level + 1))));
@@ -85,7 +85,7 @@ namespace ThousandAndFirst
 			// mod being broken rather than as one report having failed. STANDARDS §7b.
 			return (builder.Length > 0)
 				? builder.ToString()
-				: ("The keepers' map of " + System.SeatName + " could not be drawn. Nothing has been lost; what they know is still on the keepers' own screen.");
+				: ("The keepers' map of " + KingdomPresentation.Rich(System.SeatName) + " could not be drawn. Nothing has been lost; what they know is still on the keepers' own screen.");
 		}
 
 		// ==================================================================================

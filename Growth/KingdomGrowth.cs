@@ -22,6 +22,8 @@ namespace ThousandAndFirst
 		private const string ArrivalCreedPlanProperty = "r_TAF_GrowthArrivalCreedPlan";
 		private const string ArrivalNamePlanProperty = "r_TAF_GrowthArrivalNamePlan";
 		private const string ArrivalDatePlanProperty = "r_TAF_GrowthArrivalDatePlan";
+		private const string ArrivalCitizenshipPlanProperty = "r_TAF_GrowthCitizenshipPlan";
+		private const string ArrivalCitizenshipPlanValue = "base-slot-v1";
 		private const string ArrivalEnrollmentReceiptProperty = "r_TAF_GrowthArrivalEnrollment";
 		private const string ArrivalRosterReceiptProperty = "r_TAF_GrowthArrivalRoster";
 		private const string ArrivalCreedReceiptProperty = "r_TAF_GrowthArrivalCreed";
@@ -78,6 +80,7 @@ namespace ThousandAndFirst
 
 		public static void OnZoneActivated(KingdomSystem System, Zone Z, KingdomSurvey Shared = null)
 		{
+			if (!KingdomMaster.AutomaticWorkAllowed(System)) return;
 			if (System == null || !System.Founded || Z == null
 				|| !System.ClaimedZones.Contains(Z.ZoneID))
 			{
@@ -95,7 +98,10 @@ namespace ThousandAndFirst
 			{
 				return;
 			}
-			if (!Enabled) return;
+			// The Growth option owns arrivals only. Support, food/water, staffing, plots,
+			// lodging, power, materials, and roads remain independent modules and must still
+			// reconcile when arrivals are disabled.
+			bool arrivalsEnabled = Enabled;
 			if (KingdomLog.Enabled)
 			{
 				KingdomLog.Log("growth pass " + Z.ZoneID + " tick=" + timeTicks + " next=" + System.NextArrivalTick + " pop=" + System.Population + " stage=" + System.Stage + " stored=" + survey.StoredWater + " open=" + survey.OpenWater + " space=" + survey.StorageSpace + " cap=" + survey.StorageCapacity + " dry=" + System.DryStreak + " withered=" + System.Withered + " food=" + survey.FoodStored + "/" + survey.FoodCapacity + " hunger=" + System.HungerStreak + " famished=" + System.Famished);
@@ -211,7 +217,7 @@ namespace ThousandAndFirst
 			// off the same checkpoint, which is why grownDays is read once and used twice.
 			GrindHarvest(System, survey, grownDays);
 			int arrivals = reconciledArrivals;
-			while (heartbeatHealthy && timeTicks >= System.NextArrivalTick
+			while (arrivalsEnabled && heartbeatHealthy && timeTicks >= System.NextArrivalTick
 				&& arrivals < KingdomRules.MaxArrivalsPerVisit)
 			{
 				// Addendum 4b: the arrival gate is assignment-level, not a bed tally. A settler
@@ -255,18 +261,18 @@ namespace ThousandAndFirst
 			// Right after the plot, so a house finished raising this very pass is already a
 			// candidate: who sleeps where, spending neither water nor hands. This is the ONE
 			// attended pass Addendum 4b's grace is counted in.
-			KingdomLodging.OnSettlementPass(System, Z);
+			KingdomLodging.OnSettlementPass(System, Z, survey);
 			// Immediately after lodging, and never before it: who shares a roof this pass is the
 			// whole input to osmosis (Addendum 5). Spends no water and no hands -- shared living is
 			// the only thing it counts, and it counts it in attended passes, so a founder who is
 			// away converts nobody and walks nobody out of town.
-			KingdomConversion.OnSettlementPass(System, Z);
+			KingdomConversion.OnSettlementPass(System, Z, survey);
 			// Shared living WITH THE SETTLEMENT, counted in attended passes and at most one day
 			// apiece: the input the water rite reads for how much of this place a settler has
 			// actually lived. Not the same quantity as KingdomConversion's shared living TOWARD ONE
 			// CREED, which is household-scoped and closeness-scaled; both are attended-pass
 			// denominated, and neither reads a clock that could advance while nobody is here.
-			KingdomWaterRite.OnSettlementPass(System, Z);
+			KingdomWaterRite.OnSettlementPass(System, Z, survey);
 			// After the plot, for the same reason: a staked plan only ever spends what the
 			// plot's own draw left behind.
 			KingdomPlanMarker.OnSettlementPass(System, Z, survey);
@@ -277,7 +283,7 @@ namespace ThousandAndFirst
 			// Last of all, and it spends no water at any point: clearing ground and striking a
 			// building spend hands, and only the hands the water detail and the staffing pass have
 			// already finished with (KingdomSystem.AssignedCrew, set by AssignWork above).
-			KingdomMaterials.OnSettlementPass(System, Z);
+			KingdomMaterials.OnSettlementPass(System, Z, survey);
 			// Last of all, and it spends neither water nor hands: a path is only what is left
 			// behind by people walking to the work the staffing pass already put them on. It runs
 			// after the plot and the plan so that a building raised this pass is already somewhere
@@ -352,13 +358,13 @@ namespace ThousandAndFirst
 			if (verdict.Withering && !System.Withered)
 			{
 				System.Withered = true;
-				KingdomChronicle.Record(System, System.KingdomDisplayName + " withered in the long thirst");
+				KingdomChronicle.Record(System, KingdomPresentation.Rich(System.KingdomDisplayName) + " withered in the long thirst");
 				System.Ledger.Note("{{R|The settlement is withering in the long thirst.}}");
 			}
 			if (verdict.Famishing && !System.Famished)
 			{
 				System.Famished = true;
-				KingdomChronicle.Record(System, System.KingdomDisplayName + " famished in the long hunger");
+				KingdomChronicle.Record(System, KingdomPresentation.Rich(System.KingdomDisplayName) + " famished in the long hunger");
 				System.Ledger.Note("{{R|The settlement is famishing. The fields are not feeding it.}}");
 			}
 			return verdict.Healthy;
@@ -382,7 +388,7 @@ namespace ThousandAndFirst
 				return KingdomRules.ThirstOutcome.Sustained;
 			}
 			System.DryStreak++;
-			KingdomChronicle.Record(System, "the stores ran low, and " + System.KingdomDisplayName + " thirsted");
+			KingdomChronicle.Record(System, "the stores ran low, and " + KingdomPresentation.Rich(System.KingdomDisplayName) + " thirsted");
 			System.Ledger.Note("{{r|The cistern ran dry. Settlers will leave if the water does not return.}}");
 			if (KingdomLog.Enabled) KingdomLog.Log("thirst: days=" + Days + " upkeep=" + paid + "/" + upkeep + " streak=" + System.DryStreak);
 			return KingdomRules.ResolveThirst(System.DryStreak, System.Stage, System.Population);
@@ -432,7 +438,7 @@ namespace ThousandAndFirst
 				return KingdomRules.HungerOutcome.Fed;
 			}
 			System.HungerStreak++;
-			KingdomChronicle.Record(System, "the larders ran empty, and " + System.KingdomDisplayName + " went hungry");
+			KingdomChronicle.Record(System, "the larders ran empty, and " + KingdomPresentation.Rich(System.KingdomDisplayName) + " went hungry");
 			System.Ledger.Note("{{r|The larders are empty. Settlers will leave if the fields do not feed them.}}");
 			if (KingdomLog.Enabled) KingdomLog.Log("hunger: days=" + Days + " rations=" + (fromWild + eaten) + "/" + owed + " foraged=" + fromWild + " streak=" + System.HungerStreak);
 			return KingdomRules.ResolveHunger(System.HungerStreak, System.Stage, System.Population);
@@ -458,7 +464,7 @@ namespace ThousandAndFirst
 			System.MealShade = KingdomRules.MealShadeFor(Verdict);
 			if (Verdict == KingdomRules.MealVerdict.Favored)
 			{
-				string note = KingdomRules.FavoredMealNote(System.KingdomDisplayName, System.DishName);
+				string note = KingdomRules.FavoredMealNote(KingdomPresentation.Rich(System.KingdomDisplayName), System.DishName);
 				if (note != null)
 				{
 					System.Ledger.Note(note);
@@ -476,8 +482,9 @@ namespace ThousandAndFirst
 				return;
 			}
 			System.ScrapsAnnounced = true;
-			System.Ledger.Note(KingdomRules.ScrapsNote(System.KingdomDisplayName));
-			KingdomChronicle.Record(System, "the larders of " + System.KingdomDisplayName + " gave nothing, and the settlement ate what it could find");
+			string realm = KingdomPresentation.Rich(System.KingdomDisplayName);
+			System.Ledger.Note(KingdomRules.ScrapsNote(realm));
+			KingdomChronicle.Record(System, "the larders of " + realm + " gave nothing, and the settlement ate what it could find");
 		}
 
 		private static void RecoverFromThirst(KingdomSystem System)
@@ -486,7 +493,7 @@ namespace ThousandAndFirst
 			if (System.Withered)
 			{
 				System.Withered = false;
-				KingdomChronicle.Record(System, "the water returned, and " + System.KingdomDisplayName + " drank deep and recovered");
+				KingdomChronicle.Record(System, "the water returned, and " + KingdomPresentation.Rich(System.KingdomDisplayName) + " drank deep and recovered");
 				System.Ledger.Note(KingdomVoices.Say(System, VoiceOccasion.ThirstBroken, "{{G|The water returned, and the settlement recovered.}}"));
 			}
 		}
@@ -500,7 +507,7 @@ namespace ThousandAndFirst
 			if (System.Famished)
 			{
 				System.Famished = false;
-				KingdomChronicle.Record(System, "the harvest came in, and " + System.KingdomDisplayName + " ate its fill again");
+				KingdomChronicle.Record(System, "the harvest came in, and " + KingdomPresentation.Rich(System.KingdomDisplayName) + " ate its fill again");
 				System.Ledger.Note("{{G|The harvest came in, and the settlement ate its fill again.}}");
 			}
 		}
@@ -579,6 +586,7 @@ namespace ThousandAndFirst
 		/// <returns>What actually reached a larder.</returns>
 		public static int StoreHarvest(KingdomSystem System, KingdomSurvey Survey, int Amount)
 		{
+			if (!KingdomMaster.NewWorkAllowed(System)) return 0;
 			if (Amount <= 0)
 			{
 				// Nothing made, so nothing was lost. If there is room now the block is over
@@ -591,7 +599,7 @@ namespace ThousandAndFirst
 				}
 				return 0;
 			}
-			int stored = Survey.StoreFood(Amount, KingdomCropRules.CropBlueprintForStyle(System.Style));
+			int stored = Survey.StoreFood(Amount, KingdomData.CropForStyle(System.Style));
 			System.Ledger.Harvested += stored;
 			int lost = Amount - stored;
 			if (lost <= 0)
@@ -611,9 +619,10 @@ namespace ThousandAndFirst
 			// for which shape the block currently has. A founder who fixes the first by
 			// dedicating a chest and then fills it hears the line once more only after the room
 			// they made ran out and was found again.
+			string realm = KingdomPresentation.Rich(System.KingdomDisplayName);
 			string line = (Survey.FoodCapacity <= 0)
-				? ("The fields of " + System.KingdomDisplayName + " brought in a harvest and there was nowhere to put it. Dedicate a larder, or commission one, and it will be kept.")
-				: ("The larders of " + System.KingdomDisplayName + " are full, and " + lost + " of the harvest was left in the field. A granary is what makes a good year last into a bad one.");
+				? ("The fields of " + realm + " brought in a harvest and there was nowhere to put it. Dedicate a larder, or commission one, and it will be kept.")
+				: ("The larders of " + realm + " are full, and " + lost + " of the harvest was left in the field. A granary is what makes a good year last into a bad one.");
 			System.Ledger.Note("{{r|" + line + "}}");
 			MessageQueue.AddPlayerMessage("{{r|" + line + "}}");
 			if (KingdomLog.Enabled) KingdomLog.Log("harvest: made=" + Amount + " stored=" + stored + " lost=" + lost + " cap=" + Survey.FoodCapacity);
@@ -664,7 +673,7 @@ namespace ThousandAndFirst
 			{
 				return;
 			}
-			string crop = KingdomCropRules.CropBlueprintForStyle(System.Style);
+			string crop = KingdomData.CropForStyle(System.Style);
 			string staple = KingdomCrops.StapleFor(crop);
 			if (string.IsNullOrEmpty(staple))
 			{
@@ -741,22 +750,17 @@ namespace ThousandAndFirst
 		/// settlement whose arrivals all look alike.
 		/// </para>
 		/// </summary>
+		[Obsolete("Blueprint selection requires a persisted arrival event coordinate.")]
 		public static string SettlerBlueprint()
 		{
-			try
-			{
-				PopulationResult result = PopulationManager.RollOneFrom("r_KingdomSettlers");
-				if (result != null && !string.IsNullOrEmpty(result.Blueprint) && GameObjectFactory.Factory.HasBlueprint(result.Blueprint))
-				{
-					return result.Blueprint;
-				}
-			}
-			catch (Exception error)
-			{
-				MetricsManager.LogError("ThousandAndFirst settler roll", error);
-			}
-			return "r_KingdomSettler";
+			// Compatibility-only surface. The live path uses KingdomSemanticSelection and freezes
+			// the selected merged-table row in its candidate before object creation.
+			return DefaultSettlerBlueprint;
 		}
+
+		/// <summary>The neutral body used for non-resident civic transients. Arrivals must instead
+		/// use their frozen semantic selection coordinate.</summary>
+		internal const string DefaultSettlerBlueprint = "r_KingdomSettler";
 
 		/// <summary>
 		/// Why an arrival did not join, when one did not. Addendum 4b splits the one old "no
@@ -789,6 +793,7 @@ namespace ThousandAndFirst
 		public static bool SpawnSettler(KingdomSystem System, Zone Z, KingdomSurvey Survey, out ArrivalRefusal Refusal)
 		{
 			Refusal = default(ArrivalRefusal);
+			if (!KingdomMaster.NewWorkAllowed(System)) return false;
 			if (System == null || Z == null || The.Game == null
 				|| System.ClaimedZones == null || !System.ClaimedZones.Contains(Z.ZoneID)) return false;
 			KingdomSurvey survey = Survey ?? KingdomSurvey.Take(Z, System);
@@ -943,23 +948,36 @@ namespace ThousandAndFirst
 			if (survey == null || survey.StoredWater < KingdomRules.DramsPerArrival)
 				return StartSimpleArrival(system, zone, tick,
 					KingdomGrowthArrivalDisposition.WaterUnavailable);
-			Cell cell = ChooseArrivalCell(zone);
-			if (cell == null)
-				return StartSimpleArrival(system, zone, tick,
-					KingdomGrowthArrivalDisposition.NoGround);
 			long sequence = growth.ArrivalCandidateNextSequence;
+			KingdomSemanticPersonPlan person;
+			string semanticFailure;
+			if (!KingdomSemanticSelection.TryPrepareGrowthArrival(system, zone, sequence,
+				tick, out person, out semanticFailure))
+			{
+				if (string.Equals(semanticFailure,
+					KingdomSemanticSelection.NoArrivalGroundFailure, StringComparison.Ordinal))
+					return StartSimpleArrival(system, zone, tick,
+						KingdomGrowthArrivalDisposition.NoGround);
+				KingdomLog.Log("growth arrival semantic plan refused: " + semanticFailure);
+				return ArrivalResult.Failed;
+			}
+			Cell cell = zone.GetCell(person.X, person.Y);
+			if (cell == null) return ArrivalResult.Failed;
 			string id = KingdomLifecycleRules.GrowthArrivalCandidateId(growth.SettlementId,
 				sequence);
 			string marker = StableId("arrival-marker", id);
 			string escrow = "r_TAF_GrowthArrivalEscrow:" + StableId("arrival-escrow", id);
-			string blueprint = SettlerBlueprint();
+			string blueprint = person.Blueprint;
 			string beforeOwner = HashText("arrival-create-owner-before", escrow, zone.ZoneID);
 			string beforeObject = HashText("arrival-create-object-before", marker, blueprint);
 			string beforeTopology = ArrivalZoneIdentityHash(zone, null, marker, escrow,
 				KingdomGrowthLocationKind.Absent, -1, -1);
 			KingdomGrowthArrivalCandidate candidate =
 				KingdomLifecycleRules.PrepareGrowthArrivalCandidate(growth, marker, blueprint,
-					escrow, zone.ZoneID, tick, beforeOwner, beforeObject, beforeTopology);
+					escrow, zone.ZoneID, tick, beforeOwner, beforeObject, beforeTopology,
+					person.RulesVersion, person.StreamId, person.EventKind, person.Origin,
+					string.IsNullOrEmpty(person.Creed) ? "-" : person.Creed, person.Name,
+					person.Arrived, person.X, person.Y);
 			if (candidate == null || !KingdomLifecycleRules.TryPublishGrowthArrivalCandidate(
 				growth, candidate)) return ArrivalResult.Failed;
 			return ReconcileArrival(system, zone, survey, tick, out refusal, cell);
@@ -976,7 +994,7 @@ namespace ThousandAndFirst
 			if (disposition == KingdomGrowthArrivalDisposition.NoGround
 				&& !system.NoRoomAnnounced
 				&& !AppendArrivalOutbox(system, operation, "no-ground",
-					"a settler reached " + system.KingdomDisplayName
+					"a settler reached " + KingdomPresentation.Rich(system.KingdomDisplayName)
 						+ " and found nowhere to stand",
 					"{{r|A settler came and found nowhere to stand. There is no open ground left here.}}"))
 				return ArrivalResult.Failed;
@@ -1010,6 +1028,19 @@ namespace ThousandAndFirst
 						candidate, zone.ZoneID, tick))
 					return CandidateFault(growth, candidate,
 						"historical candidate origin zone could not bind");
+				if (candidate.LegacySemanticPlan)
+				{
+					string migrationFailure;
+					if (!TryMigrateArrivalSemanticPlan(system, zone, growth, candidate, tick,
+						out migrationFailure))
+					{
+						if (string.Equals(migrationFailure,
+							KingdomSemanticSelection.NoArrivalGroundFailure,
+							StringComparison.Ordinal)) return ArrivalResult.Deferred;
+						return CandidateFault(growth, candidate,
+							migrationFailure ?? "historical semantic plan could not migrate");
+					}
+				}
 				if (!string.Equals(candidate.LodgingZoneId, zone.ZoneID,
 					StringComparison.Ordinal)) return ArrivalResult.Deferred;
 				GameObject settler = null;
@@ -1060,10 +1091,9 @@ namespace ThousandAndFirst
 						"candidate person plan or creation endpoint changed after receipt");
 				if (candidate.Phase == KingdomGrowthArrivalCandidatePhase.Escrowed)
 				{
-					Cell cell = preferred ?? ChooseArrivalCell(zone);
-					if (cell == null)
-						return CandidateFault(growth, candidate,
-							"candidate was escrowed but its lodging cell disappeared");
+					Cell cell = zone.GetCell(candidate.ArrivalX, candidate.ArrivalY);
+					if (cell == null || !cell.IsEmpty() || !cell.IsPassable()
+						|| cell.HasObjectWithPart("LiquidVolume")) return ArrivalResult.Deferred;
 					KingdomLodgingRules.UnhousedReason ignoredReason;
 					string before;
 					KingdomLodging.ObservePreparedArrival(system, zone, settler,
@@ -1151,7 +1181,7 @@ namespace ThousandAndFirst
 					LodgingRefusalReason(candidate.RefusalReason);
 				if (!system.NoRoomAnnounced && !AppendArrivalOutbox(system, operation,
 					"lodging-refusal", KingdomLodgingRules.ArrivalRefusedChronicle(
-						system.KingdomDisplayName, reason), "{{r|"
+						KingdomPresentation.Rich(system.KingdomDisplayName), reason), "{{r|"
 						+ KingdomLodgingRules.ArrivalRefusedNote(reason) + "}}")) return false;
 				return KingdomLifecycleRules.TryPublishGrowth(growth, operation);
 			}
@@ -1177,7 +1207,8 @@ namespace ThousandAndFirst
 			string reasonText = KingdomRules.ArrivalReason(system.LastDeed,
 				tick - system.LastDeedTick, origin);
 			if (!AppendArrivalOutbox(system, operation, "joined",
-				reasonText + ", and a settler came to " + system.KingdomDisplayName
+				reasonText + ", and a settler came to "
+					+ KingdomPresentation.Rich(system.KingdomDisplayName)
 					+ " and drank of the shared water",
 				"{{G|" + XRL.Language.Grammar.InitCap(reasonText)
 					+ " - a settler has come.}}")) return false;
@@ -1188,41 +1219,65 @@ namespace ThousandAndFirst
 			KingdomGrowthArrivalCandidate candidate)
 		{
 			if (!ExactFreshEscrowedCandidate(candidate, settler)
-				&& !ExactEscrowedCandidate(candidate, settler)) return false;
-			string origin = settler.GetStringProperty(ArrivalOriginPlanProperty);
-			if (string.IsNullOrEmpty(origin))
+				&& !ExactEscrowedCandidate(candidate, settler) || candidate.LegacySemanticPlan
+				|| settler.GetIntProperty("KingdomCitizen") != 0
+				|| settler.GetPart<r_KingdomCitizenship>() != null)
+				return false;
+			return FreezePersonProperty(settler, ArrivalOriginPlanProperty,
+				candidate.PlannedOrigin)
+				&& FreezePersonProperty(settler, ArrivalCreedPlanProperty,
+					candidate.PlannedCreed)
+				&& FreezePersonProperty(settler, ArrivalNamePlanProperty,
+					candidate.PlannedName)
+				&& FreezePersonProperty(settler, ArrivalDatePlanProperty,
+					candidate.PlannedArrived)
+				&& FreezePersonProperty(settler, ArrivalCitizenshipPlanProperty,
+					ArrivalCitizenshipPlanValue);
+		}
+
+		private static bool FreezePersonProperty(GameObject person, string property,
+			string frozen)
+		{
+			if (!GameObject.Validate(person) || string.IsNullOrEmpty(property)
+				|| string.IsNullOrEmpty(frozen)) return false;
+			string current = person.GetStringProperty(property);
+			if (string.IsNullOrEmpty(current)) person.SetStringProperty(property, frozen);
+			return string.Equals(person.GetStringProperty(property), frozen,
+				StringComparison.Ordinal);
+		}
+
+		private static bool TryMigrateArrivalSemanticPlan(KingdomSystem system, Zone zone,
+			KingdomGrowthBook growth, KingdomGrowthArrivalCandidate candidate, long tick,
+			out string failure)
+		{
+			failure = null;
+			KingdomSemanticPersonPlan plan;
+			if (!KingdomSemanticSelection.TryPrepareGrowthArrivalForFrozenBlueprint(system,
+				zone, candidate.Sequence, candidate.CreatedTick, candidate.Blueprint,
+				out plan, out failure)) return false;
+			GameObject existing;
+			if (TryExactArrivalRoot(candidate, out existing) && GameObject.Validate(existing))
 			{
-				origin = KingdomRules.Origins[Stat.Random(0, KingdomRules.Origins.Length - 1)];
-				settler.SetStringProperty(ArrivalOriginPlanProperty, origin);
+				string origin = existing.GetStringProperty(ArrivalOriginPlanProperty);
+				string creed = existing.GetStringProperty(ArrivalCreedPlanProperty);
+				string name = existing.GetStringProperty(ArrivalNamePlanProperty);
+				string arrived = existing.GetStringProperty(ArrivalDatePlanProperty);
+				if (!string.IsNullOrEmpty(origin)) plan.Origin = origin;
+				if (!string.IsNullOrEmpty(creed)) plan.Creed = creed;
+				if (!string.IsNullOrEmpty(name)) plan.Name = name;
+				if (!string.IsNullOrEmpty(arrived)) plan.Arrived = arrived;
 			}
-			string creed = settler.GetStringProperty(ArrivalCreedPlanProperty);
-			if (string.IsNullOrEmpty(creed))
-			{
-				creed = KingdomCreed.Draw(system) ?? "";
-				if (creed.Length == 0) creed = "-";
-				settler.SetStringProperty(ArrivalCreedPlanProperty, creed);
-			}
-			string given = settler.GetStringProperty(ArrivalNamePlanProperty);
-			if (string.IsNullOrEmpty(given))
-			{
-				given = XRL.Names.NameMaker.MakeName(settler, null, null, "human", null,
-					system.KingdomFactionName, null, null, null, null, null, null, null,
-					FailureOkay: true);
-				if (string.IsNullOrEmpty(given)) given = "Settler "
-					+ candidate.Sequence.ToString(CultureInfo.InvariantCulture);
-				settler.SetStringProperty(ArrivalNamePlanProperty, given);
-			}
-			string arrived = settler.GetStringProperty(ArrivalDatePlanProperty);
-			if (string.IsNullOrEmpty(arrived))
-			{
-				arrived = XRL.World.Calendar.GetDay() + " of " + XRL.World.Calendar.GetMonth()
-					+ ", " + XRL.World.Calendar.GetYear() + " AR";
-				settler.SetStringProperty(ArrivalDatePlanProperty, arrived);
-			}
-			return settler.GetStringProperty(ArrivalOriginPlanProperty) == origin
-				&& settler.GetStringProperty(ArrivalCreedPlanProperty) == creed
-				&& settler.GetStringProperty(ArrivalNamePlanProperty) == given
-				&& settler.GetStringProperty(ArrivalDatePlanProperty) == arrived;
+			if (string.IsNullOrEmpty(plan.Creed)) plan.Creed = "-";
+			return KingdomLifecycleRules.UpgradeLegacyGrowthArrivalSemanticPlan(growth,
+				candidate, plan.RulesVersion, plan.StreamId, plan.EventKind, plan.Origin,
+				plan.Creed, plan.Name, plan.Arrived, plan.X, plan.Y, tick)
+				|| Fail("historical semantic payload publication refused", out failure);
+		}
+
+		private static bool Fail(string reason, out string failure)
+		{
+			failure = reason;
+			return false;
 		}
 
 		private static bool PrepareArrivalWaterLegs(KingdomGrowthBook growth,
@@ -1309,8 +1364,10 @@ namespace ThousandAndFirst
 				callback, settler.ID, kind == KingdomGrowthDomainStepKind.Population
 					? growth.SettlementId : settler.ID, before, after,
 				ArrivalDomainBodyHash(system, operation, settler, kind),
-				PersonDomainHash(system, settler, kind, false, operation.Id),
-				PersonDomainHash(system, settler, kind, true, operation.Id),
+				PersonDomainHash(system, settler, kind, false, operation.Id,
+					frozenAppliedTick: operation.CreatedTick),
+				PersonDomainHash(system, settler, kind, true, operation.Id,
+					frozenAppliedTick: operation.CreatedTick),
 				PersonDomainMapHash(system, settler, kind, false, operation.Id),
 				PersonDomainMapHash(system, settler, kind, true, operation.Id));
 		}
@@ -1369,6 +1426,26 @@ namespace ThousandAndFirst
 				if (!KingdomLifecycleRules.AdvanceGrowthPhase(growth, operation,
 					KingdomGrowthPhase.DomainSettled, tick))
 					return OperationFault(growth, operation, "arrival domain settlement did not publish");
+			}
+			if (operation.Phase == KingdomGrowthPhase.DomainSettled
+				&& operation.ArrivalDisposition == KingdomGrowthArrivalDisposition.Joined)
+			{
+				GameObject settler;
+				Simulation.City.KingdomCityBook residentBook;
+				int residentId;
+				if (candidate == null || !TryArrivalObject(candidate, zone, out settler)
+					|| !Simulation.City.KingdomResidents.TryEnsureRow(system, settler,
+						settler.GetStringProperty(ArrivalOriginPlanProperty),
+						settler.GetStringProperty(ArrivalDatePlanProperty), operation.CreatedTick,
+						out residentBook, out residentId))
+					return OperationFault(growth, operation,
+						"accepted arrival did not publish one resident row and binding");
+				// The body entered the cell while it was still an un-enrolled candidate. Domain
+				// settlement and resident binding change every civic index that later lanes consume;
+				// publish that final identity before AssignWork, lodging, offices, or faith read it.
+				if (survey == null || !survey.ObserveChanged(settler))
+					return OperationFault(growth, operation,
+						"accepted arrival could not refresh the active civic survey");
 			}
 			if (operation.Phase == KingdomGrowthPhase.DomainSettled
 				&& !KingdomLifecycleRules.AdvanceGrowthPhase(growth, operation,
@@ -1503,13 +1580,22 @@ namespace ThousandAndFirst
 				if (!ArrivalCellIsStillOpen(zone?.GetCell(candidate.LodgingX,
 					candidate.LodgingY))) return false;
 				Cell cell = zone?.GetCell(candidate.LodgingX, candidate.LodgingY);
-				GameObject accepted = cell.AddObject(settler, NoStack: true, Silent: true);
+				GameObject accepted = null;
+				try
+				{
+					accepted = cell.AddObject(settler, NoStack: true, Silent: true);
+				}
+				finally
+				{
+					KingdomSurvey.ObserveAddResultInActive(zone, settler, accepted);
+				}
 				if (!ReferenceEquals(accepted, settler)) return false;
 				settler.MakeActive();
 			}
 			else if (beforeEndpoint)
 			{
-				settler.Obliterate();
+				try { settler.Obliterate(); }
+				finally { KingdomSurvey.ObserveCurrentTopologyInActive(zone, settler); }
 			}
 			if (!ExactDispositionEndpoint(candidate, settler, zone, step, true)) return false;
 			string callbackReference = joined
@@ -1578,6 +1664,17 @@ namespace ThousandAndFirst
 		{
 			if (kind == KingdomGrowthDomainStepKind.Accounting)
 				return HashText("arrival-domain-body", operation?.Id, "accounting");
+			if (kind == KingdomGrowthDomainStepKind.Enrollment && !legacyV1
+				&& ExactCitizenshipPlan(settler))
+			{
+				return HashText("arrival-domain-body:v3", operation?.Id, kind.ToString(),
+					settler?.GetStringProperty(ArrivalOriginPlanProperty),
+					settler?.GetStringProperty(ArrivalCreedPlanProperty),
+					settler?.GetStringProperty(ArrivalNamePlanProperty),
+					settler?.GetStringProperty(ArrivalDatePlanProperty),
+					ArrivalCitizenshipPlanValue, system?.KingdomFactionName,
+					"base-slot=100", "receipt=v1", "conversation=preserved");
+			}
 			return kind == KingdomGrowthDomainStepKind.Enrollment && !legacyV1
 				? HashText("arrival-domain-body:v2", operation?.Id, kind.ToString(),
 					settler?.GetStringProperty(ArrivalOriginPlanProperty),
@@ -1601,31 +1698,28 @@ namespace ThousandAndFirst
 			switch (step.Kind)
 			{
 			case KingdomGrowthDomainStepKind.Enrollment:
-				if (!KingdomFounding.EnrollCitizen(settler))
+				// Old v1/v2 operations expected destructive Brain replacement. Do not silently
+				// reinterpret them: quarantine before touching the body. New operations freeze this
+				// explicit plan marker before their expected graph hashes are published.
+				if (!ExactCitizenshipPlan(settler))
+					throw new InvalidOperationException(
+						"legacy destructive citizenship plan requires visible quarantine");
+				if (!KingdomFounding.EnrollCitizen(settler,
+					KingdomCitizenshipEnrollmentReason.Arrival, operation.CreatedTick))
 					throw new InvalidOperationException("citizen enrollment callback refused");
 				settler.SetIntProperty("KingdomBorn", 1);
 				string origin = settler.GetStringProperty(ArrivalOriginPlanProperty);
 				settler.SetStringProperty("KingdomOrigin", origin);
 				system.OriginCounts.TryGetValue(origin, out int origins);
 				system.OriginCounts[origin] = origins + 1;
-				if (settler.GetStringProperty(ArrivalConversationReceiptProperty) != operation.Id)
-				{
-					Qud.API.ConversationsAPI.addSimpleConversationToObject(settler,
-						ArrivalConversationText, ArrivalConversationGoodbye,
-						Question: ArrivalConversationQuestion,
-						Answer: ArrivalConversationAnswerPrefix + origin
-							+ ArrivalConversationAnswerSuffix);
-					settler.SetStringProperty(ArrivalConversationReceiptProperty, operation.Id);
-				}
+				// ConversationScript is native/foreign lifecycle state. Citizenship never removes,
+				// appends to, or replaces it; Qud's helper would do all three through a shared graph.
 				settler.SetStringProperty(ArrivalEnrollmentReceiptProperty, operation.Id);
 				break;
 			case KingdomGrowthDomainStepKind.Roster:
 				string given = settler.GetStringProperty(ArrivalNamePlanProperty);
-				settler.DisplayName = given;
+				settler.GiveProperName(given, Force: true);
 				settler.SetStringProperty("KingdomName", given);
-				system.RosterNames.Add(given);
-				system.RosterOrigins.Add(settler.GetStringProperty(ArrivalOriginPlanProperty));
-				system.RosterArrived.Add(settler.GetStringProperty(ArrivalDatePlanProperty));
 				settler.SetStringProperty(ArrivalRosterReceiptProperty, operation.Id);
 				break;
 			case KingdomGrowthDomainStepKind.Creed:
@@ -1643,6 +1737,13 @@ namespace ThousandAndFirst
 			default:
 				throw new InvalidOperationException("unexpected arrival domain " + step.Kind);
 			}
+		}
+
+		private static bool ExactCitizenshipPlan(GameObject settler)
+		{
+			return settler != null && string.Equals(
+				settler.GetStringProperty(ArrivalCitizenshipPlanProperty),
+				ArrivalCitizenshipPlanValue, StringComparison.Ordinal);
 		}
 
 		private static bool ReconcileArrivalClock(KingdomSystem system, KingdomGrowthBook growth,
@@ -1852,14 +1953,6 @@ namespace ThousandAndFirst
 			return true;
 		}
 
-		private static Cell ChooseArrivalCell(Zone zone)
-		{
-			if (zone == null) return null;
-			List<Cell> cells = zone.GetEmptyCells((Cell c) => c.IsPassable()
-				&& !c.HasObjectWithPart("LiquidVolume"));
-			return cells == null || cells.Count == 0 ? null : cells.GetRandomElement();
-		}
-
 		private static bool RootArrivalCandidate(KingdomGrowthArrivalCandidate candidate,
 			GameObject settler)
 		{
@@ -2011,7 +2104,7 @@ namespace ThousandAndFirst
 		{
 			if (zone == null || string.IsNullOrEmpty(marker)) return -1;
 			int count = 0;
-			foreach (GameObject item in zone.GetObjects())
+			foreach (GameObject item in KingdomSurvey.ObjectsFor(zone))
 				if (item.GetStringProperty(ArrivalMarkerProperty) == marker) count++;
 			return count;
 		}
@@ -2153,9 +2246,17 @@ namespace ThousandAndFirst
 
 		private static string PersonDomainHash(KingdomSystem system, GameObject settler,
 			KingdomGrowthDomainStepKind kind, bool projectedAfter, string operationId,
-			bool legacyV1 = false)
+			bool legacyV1 = false, long frozenAppliedTick = 0L)
 		{
-			if (kind == KingdomGrowthDomainStepKind.Enrollment && !legacyV1)
+			bool exactCitizenship = kind == KingdomGrowthDomainStepKind.Enrollment
+				&& !legacyV1 && ExactCitizenshipPlan(settler);
+			if (exactCitizenship)
+			{
+				if (!ArrivalAllegianceAcyclic(settler?.Brain?.Allegiance)) return null;
+				ConversationScript exactConversation = settler?.GetPart<ConversationScript>();
+				if (!ArrivalConversationAcyclic(exactConversation?.Blueprint)) return null;
+			}
+			else if (kind == KingdomGrowthDomainStepKind.Enrollment && !legacyV1)
 			{
 				if (!ArrivalAllegianceRepresentable(settler?.Brain?.Allegiance)) return null;
 				ConversationScript actual = projectedAfter
@@ -2198,6 +2299,29 @@ namespace ThousandAndFirst
 							: settler.GetStringProperty(ArrivalConversationReceiptProperty));
 						writer.Write(projectedAfter
 							|| settler != null && settler.HasPart<ConversationScript>());
+						break;
+					}
+					if (exactCitizenship)
+					{
+						WriteExactAllegianceGraph(writer, settler?.Brain?.Allegiance,
+							projectedAfter, system?.KingdomFactionName);
+						writer.Write(projectedAfter ? 1
+							: settler.GetIntProperty("KingdomCitizen"));
+						writer.Write(projectedAfter ? 1
+							: settler.GetIntProperty("KingdomBorn"));
+						string exactOrigin = projectedAfter
+							? settler.GetStringProperty(ArrivalOriginPlanProperty)
+							: settler.GetStringProperty("KingdomOrigin");
+						WriteString(writer, exactOrigin);
+						WriteString(writer, projectedAfter ? operationId
+							: settler.GetStringProperty(ArrivalEnrollmentReceiptProperty));
+						// This legacy property and the full native conversation are projections of
+						// themselves: the exact citizenship callback does not touch either.
+						WriteString(writer,
+							settler.GetStringProperty(ArrivalConversationReceiptProperty));
+						WriteArrivalConversationGraph(writer, settler, false, exactOrigin);
+						WriteCitizenshipReceiptGraph(writer, system, settler,
+							projectedAfter, frozenAppliedTick);
 						break;
 					}
 					bool baseReplaced = false;
@@ -2262,6 +2386,19 @@ namespace ThousandAndFirst
 			return true;
 		}
 
+		private static bool ArrivalAllegianceAcyclic(AllegianceSet allegiance)
+		{
+			HashSet<AllegianceSet> seen = new HashSet<AllegianceSet>();
+			bool foundBase = false;
+			while (allegiance != null)
+			{
+				if (!seen.Add(allegiance)) return false;
+				if (allegiance.SourceID == 0) foundBase = true;
+				allegiance = allegiance.Previous;
+			}
+			return foundBase;
+		}
+
 		private static bool ArrivalAllyReasonRepresentable(IAllyReason reason)
 		{
 			if (reason == null) return true;
@@ -2319,6 +2456,125 @@ namespace ThousandAndFirst
 						ref remaining, lineage)) return false;
 			lineage.RemoveAt(lineage.Count - 1);
 			return true;
+		}
+
+		private static bool ArrivalConversationAcyclic(ConversationXMLBlueprint blueprint)
+		{
+			return ArrivalConversationAcyclic(blueprint,
+				new HashSet<ConversationXMLBlueprint>());
+		}
+
+		private static bool ArrivalConversationAcyclic(ConversationXMLBlueprint blueprint,
+			HashSet<ConversationXMLBlueprint> lineage)
+		{
+			if (blueprint == null) return true;
+			if (!lineage.Add(blueprint)) return false;
+			if (blueprint.Children != null)
+				for (int i = 0; i < blueprint.Children.Count; i++)
+					if (!ArrivalConversationAcyclic(blueprint.Children[i], lineage)) return false;
+			lineage.Remove(blueprint);
+			return true;
+		}
+
+		private static void WriteExactAllegianceGraph(BinaryWriter writer,
+			AllegianceSet allegiance, bool projectedAfter, string kingdomFaction)
+		{
+			List<AllegianceSet> chain = new List<AllegianceSet>();
+			for (AllegianceSet cursor = allegiance; cursor != null; cursor = cursor.Previous)
+				chain.Add(cursor);
+			writer.Write(chain.Count);
+			bool projectedBase = false;
+			for (int layer = 0; layer < chain.Count; layer++)
+			{
+				AllegianceSet current = chain[layer];
+				writer.Write(current.SourceID);
+				writer.Write(current.Flags);
+				WriteExactAllyReason(writer, current.Reason);
+				Dictionary<string, int> memberships =
+					new Dictionary<string, int>(StringComparer.Ordinal);
+				foreach (KeyValuePair<string, int> membership in current)
+					memberships[membership.Key] = membership.Value;
+				if (projectedAfter && !projectedBase && current.SourceID == 0)
+				{
+					memberships[kingdomFaction] = KingdomCitizenshipRules.RealmMembership;
+					projectedBase = true;
+				}
+				List<string> keys = new List<string>(memberships.Keys);
+				keys.Sort(StringComparer.Ordinal);
+				writer.Write(keys.Count);
+				for (int i = 0; i < keys.Count; i++)
+				{
+					WriteString(writer, keys[i]);
+					writer.Write(memberships[keys[i]]);
+				}
+			}
+		}
+
+		private static void WriteExactAllyReason(BinaryWriter writer, IAllyReason reason)
+		{
+			if (reason == null) { writer.Write(-1); return; }
+			SerializationWriter exact = SerializationWriter.Get();
+			try
+			{
+				exact.Write(reason);
+				byte[] bytes = exact.ToArray();
+				WriteString(writer, reason.GetType().AssemblyQualifiedName);
+				writer.Write(bytes.Length);
+				writer.Write(bytes);
+			}
+			finally
+			{
+				SerializationWriter.Release(exact);
+			}
+		}
+
+		private static void WriteCitizenshipReceiptGraph(BinaryWriter writer,
+			KingdomSystem system, GameObject settler, bool projectedAfter,
+			long frozenAppliedTick)
+		{
+			r_KingdomCitizenship receipt = projectedAfter
+				? null : settler?.GetPart<r_KingdomCitizenship>();
+			writer.Write(projectedAfter || receipt != null);
+			if (!projectedAfter && receipt == null) return;
+			if (projectedAfter)
+			{
+				AllegianceSet baseSet = settler?.Brain?.GetBaseAllegiance();
+				int priorValue = 0;
+				bool priorPresent = baseSet != null
+					&& baseSet.TryGetValue(system.KingdomFactionName, out priorValue);
+				writer.Write(KingdomCitizenshipRules.CurrentReceiptVersion);
+				writer.Write((int)KingdomCitizenshipPhase.Applied);
+				writer.Write((int)(priorPresent ? KingdomCitizenshipPriorKind.Present
+					: KingdomCitizenshipPriorKind.Absent));
+				writer.Write(priorPresent ? priorValue : 0);
+				writer.Write(KingdomCitizenshipRules.RealmMembership);
+				WriteString(writer, system.CurrentRealmId);
+				WriteString(writer, system.CurrentSettlementId);
+				WriteString(writer, system.KingdomFactionName);
+				WriteString(writer, settler?.IDIfAssigned);
+				writer.Write((int)KingdomCitizenshipEnrollmentReason.Arrival);
+				writer.Write(0);
+				writer.Write(frozenAppliedTick);
+				writer.Write(0L);
+				writer.Write(false);
+				WriteString(writer, "");
+				return;
+			}
+			writer.Write(receipt.ReceiptVersion);
+			writer.Write((int)receipt.Phase);
+			writer.Write((int)receipt.PriorKind);
+			writer.Write(receipt.PriorValue);
+			writer.Write(receipt.AppliedValue);
+			WriteString(writer, receipt.OwnerRealmId);
+			WriteString(writer, receipt.OwnerSettlementId);
+			WriteString(writer, receipt.FactionId);
+			WriteString(writer, receipt.BodyObjectId);
+			writer.Write(receipt.EnrollmentReason);
+			writer.Write(receipt.RemovalReason);
+			writer.Write(receipt.AppliedTick);
+			writer.Write(receipt.RemovedTick);
+			writer.Write(receipt.NoticePublished);
+			WriteString(writer, receipt.Fault);
 		}
 
 		private static void WriteAllegianceGraph(BinaryWriter writer, AllegianceSet allegiance,
@@ -2460,12 +2716,10 @@ namespace ThousandAndFirst
 						projectedAfter ? 1 : 0);
 					break;
 				case KingdomGrowthDomainStepKind.Roster:
-					WriteList(writer, system.RosterNames, projectedAfter
-						? settler.GetStringProperty(ArrivalNamePlanProperty) : null);
-					WriteList(writer, system.RosterOrigins, projectedAfter
-						? settler.GetStringProperty(ArrivalOriginPlanProperty) : null);
-					WriteList(writer, system.RosterArrived, projectedAfter
-						? settler.GetStringProperty(ArrivalDatePlanProperty) : null);
+					// Roster callback owns only body naming plus its receipt. Resident rows publish
+					// once all person-domain callbacks prove, before the arrival clock advances.
+					WriteString(writer, projectedAfter ? operationId
+						: settler.GetStringProperty(ArrivalRosterReceiptProperty));
 					break;
 				case KingdomGrowthDomainStepKind.Creed:
 					WriteDictionary(writer, system.CreedCounts,
@@ -2537,6 +2791,13 @@ namespace ThousandAndFirst
 				WriteString(writer, settler?.GetStringProperty(ArrivalCreedPlanProperty));
 				WriteString(writer, settler?.GetStringProperty(ArrivalNamePlanProperty));
 				WriteString(writer, settler?.GetStringProperty(ArrivalDatePlanProperty));
+				string citizenshipPlan =
+					settler?.GetStringProperty(ArrivalCitizenshipPlanProperty);
+				if (!string.IsNullOrEmpty(citizenshipPlan))
+				{
+					WriteString(writer, ArrivalCitizenshipPlanProperty);
+					WriteString(writer, citizenshipPlan);
+				}
 			});
 		}
 
@@ -2719,29 +2980,39 @@ namespace ThousandAndFirst
 		/// </summary>
 		public static void AssignWork(KingdomSystem System, KingdomSurvey Survey)
 		{
-			if (Survey.Works.Count == 0)
-			{
-				return;
-			}
+			if (!KingdomMaster.NewWorkAllowed(System)) return;
 			int[] demands = new int[Survey.Works.Count];
 			for (int i = 0; i < Survey.Works.Count; i++)
 			{
 				demands[i] = Survey.Works[i].GetIntProperty("KingdomStaffNeeded");
 			}
-			// The water detail is spent before the works are: a settler carrying buckets is not
-			// also turning a mill.
-			int forWorks = System.Population - System.WaterCrew;
-			if (forWorks < 0)
+			// Resident rows choose who may labour. Survey bodies are only execution endpoints;
+			// a body absent from the authoritative roll cannot acquire a post.
+			Dictionary<int, GameObject> grounded = new Dictionary<int, GameObject>();
+			for (int i = 0; i < Survey.Settlers.Count; i++)
 			{
-				forWorks = 0;
+				GameObject settler = Survey.Settlers[i];
+				int residentId = Simulation.City.KingdomResidents.IdOf(settler);
+				if (residentId > 0 && !Simulation.City.KingdomPhysicalHappenings.IsStaged(settler)
+					&& !grounded.ContainsKey(residentId)) grounded.Add(residentId, settler);
 			}
+			List<Simulation.City.KingdomResidentRow> labour =
+				Simulation.City.KingdomResidents.RollRows(System, true);
+			List<GameObject> available = new List<GameObject>();
+			for (int i = 0; i < labour.Count; i++)
+				if (grounded.TryGetValue(labour[i].ResidentId, out GameObject settler))
+					available.Add(settler);
+			// Water hands are spent before works: one resident cannot carry and mill at once.
+			int forWorks = Math.Max(0, available.Count - System.WaterCrew);
 			// Addendum 7: capability-aware, ablest-first, deterministic (KingdomCrewRules /
 			// KingdomCrews). The pool is exactly the forWorks-many settlers hands-spent-once has
 			// left for these works; who is capable of what is read off them, never assigned by the
 			// founder. Threshold manning is read per work inside AssignWorks, off the same
 			// KingdomThresholdManning property the old int[] path passed along beside it.
-			KingdomCrewRules.SettlerCapability[] pool = KingdomCrews.CapabilitiesOf(Survey.Settlers, forWorks);
-			KingdomCrewRules.CrewOutcome[] outcomes = KingdomCrews.AssignWorks(Survey.Works, pool);
+			KingdomCrewRules.SettlerCapability[] pool = KingdomCrews.CapabilitiesOf(available,
+				forWorks);
+			KingdomCrewRules.CrewOutcome[] outcomes = KingdomCrews.AssignWorks(Survey.Works, pool,
+				available);
 			int idle = 0;
 			int shorthanded = 0;
 			// LIVING-CITY-ARCHITECTURE §3.2(b) needs a settler's day to be a fact about the PERSON,
@@ -2749,9 +3020,10 @@ namespace ThousandAndFirst
 			// read JobWorkId = 0 and every day shape derived honestly, and uselessly, to the hearth.
 			// The stamp is cleared for everybody first so that a settler taken off a mill this pass
 			// does not keep walking to it.
-			for (int i = 0; i < Survey.Settlers.Count; i++)
+			for (int i = 0; i < available.Count; i++)
 			{
-				Simulation.City.KingdomStations.Post(Survey.Settlers[i], 0, Simulation.City.KingdomWorkKind.Other);
+				Simulation.City.KingdomStations.Post(available[i], 0,
+					Simulation.City.KingdomWorkKind.Other);
 			}
 			for (int j = 0; j < Survey.Works.Count; j++)
 			{
@@ -2764,9 +3036,9 @@ namespace ThousandAndFirst
 				for (int k = 0; outcome.SettlerIndices != null && k < outcome.SettlerIndices.Length; k++)
 				{
 					int at = outcome.SettlerIndices[k];
-					if (at >= 0 && at < Survey.Settlers.Count)
+					if (at >= 0 && at < available.Count)
 					{
-						Simulation.City.KingdomStations.Post(Survey.Settlers[at], postId, postKind);
+						Simulation.City.KingdomStations.Post(available[at], postId, postKind);
 					}
 				}
 				int headcountEffectiveness = KingdomRules.CrewEffectiveness(outcome.Assigned, demands[j]);
@@ -2774,6 +3046,8 @@ namespace ThousandAndFirst
 				int effectiveness = KingdomCrewRules.CombinedEffectiveness(headcountEffectiveness, capabilityEffectiveness);
 				work.SetIntProperty("KingdomStaffed", (effectiveness > 0) ? 1 : 0);
 				work.SetIntProperty("KingdomEffectiveness", effectiveness);
+				work.SetIntProperty(KingdomCrews.IdentityAffinityProperty,
+					outcome.IdentityAffinity);
 				if (effectiveness <= 0)
 				{
 					idle++;
@@ -2812,17 +3086,19 @@ namespace ThousandAndFirst
 			System.IdleWorks = idle;
 			// Hands are spent once. Whatever is crewing a work this pass is not available to walk
 			// to the water next pass, which is what turns staffing into a real choice rather than
-			// a free bonus.
+			// a free bonus. ConstructionPresence then draws one real, named raising gang from the
+			// bodies whose posts remain empty and adds that gang to the same spent-hands mirror.
 			int crewed = 0;
 			for (int i = 0; i < outcomes.Length; i++)
 			{
 				crewed += outcomes[i].Assigned;
 			}
 			System.AssignedCrew = crewed + System.WaterCrew;
+			KingdomConstructionPresence.Assign(System, Survey);
 			if (idle > 0 && !System.IdleWorksAnnounced)
 			{
 				System.IdleWorksAnnounced = true;
-				MessageQueue.AddPlayerMessage("{{r|" + idle + " of the works of " + System.KingdomDisplayName + " stand idle for want of hands.}}");
+				MessageQueue.AddPlayerMessage("{{r|" + idle + " of the works of " + KingdomPresentation.Rich(System.KingdomDisplayName) + " stand idle for want of hands.}}");
 			}
 			else if (idle == 0)
 			{
@@ -2851,7 +3127,10 @@ namespace ThousandAndFirst
 		/// what every caller written before the two registers wanted different lengths passed.</param>
 		public static bool Emigrate(KingdomSystem System, Zone Z, KingdomSurvey Survey = null, GameObject Leaver = null, string Cause = null, bool Chronicled = true, string Note = null)
 		{
-			if (System.Population <= KingdomRules.LoyalCoreSettlers)
+			if (!KingdomMaster.NewWorkAllowed(System)) return false;
+			if (Survey == null) Survey = KingdomSurvey.ActiveFor(Z);
+			if (Simulation.City.KingdomResidents.OnRollCount(System)
+				<= KingdomRules.LoyalCoreSettlers)
 			{
 				return false;
 			}
@@ -2861,16 +3140,22 @@ namespace ThousandAndFirst
 				// A named departure still answers to the same law as any other: the settlement
 				// never empties itself, and a settler the machinery would not take is one who
 				// stays and is asked again next pass.
-				if (Leaver.GetIntProperty("KingdomBorn") == 1 && Leaver.GetIntProperty("VillageMerchant") == 0 && !Leaver.IsPlayer() && !Leaver.IsPlayerLed())
+				if (KingdomCitizenship.BelongsTo(System, Leaver)
+					&& Leaver.GetIntProperty("KingdomBorn") == 1 && Leaver.GetIntProperty("VillageMerchant") == 0 && !Leaver.IsPlayer() && !Leaver.IsPlayerLed()
+					&& !Simulation.City.KingdomPhysicalHappenings.IsStaged(Leaver))
 				{
 					leaver = Leaver;
 				}
 			}
 			else
 			{
-				foreach (GameObject item in Z.GetObjects())
+				IEnumerable<GameObject> candidates = Survey != null
+					? (IEnumerable<GameObject>)Survey.Settlers : KingdomSurvey.ObjectsFor(Z);
+				foreach (GameObject item in candidates)
 				{
-					if (item.GetIntProperty("KingdomBorn") == 1 && item.GetIntProperty("VillageMerchant") == 0 && !item.IsPlayer() && !item.IsPlayerLed())
+					if (KingdomCitizenship.BelongsTo(System, item)
+						&& item.GetIntProperty("KingdomBorn") == 1 && item.GetIntProperty("VillageMerchant") == 0 && !item.IsPlayer() && !item.IsPlayerLed()
+						&& !Simulation.City.KingdomPhysicalHappenings.IsStaged(item))
 					{
 						leaver = item;
 						break;
@@ -2881,36 +3166,44 @@ namespace ThousandAndFirst
 			{
 				return false;
 			}
-			string name = leaver.ShortDisplayName;
-			string origin = leaver.GetStringProperty("KingdomOrigin");
-			if (!string.IsNullOrEmpty(origin))
+			string citizenshipFailure;
+			if (!KingdomCitizenship.CanRemove(System, leaver, out citizenshipFailure))
 			{
-				System.OriginCounts.TryGetValue(origin, out var count);
-				if (count > 0)
-				{
-					System.OriginCounts[origin] = count - 1;
-				}
+				KingdomLog.Log("emigrate: exact citizenship removal refused ("
+					+ (citizenshipFailure ?? "unknown failure") + ")");
+				return false;
 			}
-			string roll = leaver.GetStringProperty("KingdomName");
-			if (!string.IsNullOrEmpty(roll))
+			if (!KingdomCitizenship.TryRemove(System, leaver,
+				KingdomCitizenshipRemovalReason.Emigration, out citizenshipFailure))
 			{
-				int at = System.RosterNames.IndexOf(roll);
-				if (at >= 0)
-				{
-					System.RosterNames.RemoveAt(at);
-					if (at < System.RosterOrigins.Count)
-					{
-						System.RosterOrigins.RemoveAt(at);
-					}
-					if (at < System.RosterArrived.Count)
-					{
-						System.RosterArrived.RemoveAt(at);
-					}
-				}
+				KingdomLog.Log("emigrate: exact citizenship removal did not commit ("
+					+ (citizenshipFailure ?? "unknown failure") + ")");
+				return false;
 			}
+			Simulation.City.KingdomResidentRow former;
+			if (!Simulation.City.KingdomResidents.TryDepart(System, leaver, out former))
+			{
+				Simulation.City.KingdomCityBook stillBook;
+				int stillResidentId;
+				if (Simulation.City.KingdomResidents.TryLocate(System, leaver,
+					out stillBook, out stillResidentId))
+				{
+					KingdomCitizenship.TryRestoreEmigrationAfterCleanRefusal(System, leaver,
+						out citizenshipFailure);
+				}
+				else
+				{
+					KingdomLog.Log("emigrate: resident carriers need repair after citizenship "
+						+ "committed; the body remains alive and is not obliterated");
+				}
+				return false;
+			}
+			string name = string.IsNullOrEmpty(former.Name) ? leaver.BaseDisplayNameStripped : former.Name;
+			string origin = former.Origin;
+			KingdomResidentIdentity.Forget(System, leaver);
 			KingdomCreed.Forget(System, leaver);
-			leaver.Obliterate();
-			System.Population--;
+			try { leaver.Obliterate(); }
+			finally { Survey?.ObserveCurrentTopology(leaver); }
 			// Both registers name the person and the cause. The default clause is the drought's,
 			// word for word as it always read; a caller that hands one in replaces it in both
 			// places at once, so the chronicle and the ledger can never disagree about why
@@ -2922,8 +3215,13 @@ namespace ThousandAndFirst
 			System.Ledger.Departures++;
 			if (Chronicled)
 			{
-				KingdomChronicle.Record(System, XRL.Language.Grammar.A(name) + " left " + System.KingdomDisplayName + " " + chronicled);
-				System.Ledger.Note(KingdomVoices.Say(System, VoiceOccasion.CitizenLost, "{{R|" + XRL.Language.Grammar.A(name, Capitalize: true) + " left " + System.KingdomDisplayName + " " + noted + ".}}"));
+				string realm = KingdomPresentation.Rich(System.KingdomDisplayName);
+				string named = KingdomPresentation.Rich(XRL.Language.Grammar.A(name));
+				string namedAtStart = KingdomPresentation.Rich(
+					XRL.Language.Grammar.A(name, Capitalize: true));
+				KingdomChronicle.Record(System, named + " left " + realm + " " + chronicled);
+				System.Ledger.Note(KingdomVoices.Say(System, VoiceOccasion.CitizenLost,
+					"{{R|" + namedAtStart + " left " + realm + " " + noted + ".}}"));
 			}
 			if (KingdomLog.Enabled) KingdomLog.Log("emigrate: pop now " + System.Population + " origin=" + (origin ?? "-") + " cause=" + (Cause ?? "drought"));
 			return true;
@@ -2931,8 +3229,10 @@ namespace ThousandAndFirst
 
 		public static int CountStoredWater(Zone Z)
 		{
+			KingdomSurvey active = KingdomSurvey.ActiveFor(Z);
+			if (active != null) return active.StoredWater;
 			int total = 0;
-			foreach (GameObject item in Z.GetObjects())
+			foreach (GameObject item in KingdomSurvey.ObjectsFor(Z))
 			{
 				LiquidVolume part = item.GetPart<LiquidVolume>();
 				if (part != null && part.MaxVolume > 0 && item.GetIntProperty("KingdomStores") == 1 && KingdomLiquids.HasFreshWater(part))
@@ -2945,8 +3245,10 @@ namespace ThousandAndFirst
 
 		public static int CountOpenWater(Zone Z)
 		{
+			KingdomSurvey active = KingdomSurvey.ActiveFor(Z);
+			if (active != null) return active.OpenWater;
 			int total = 0;
-			foreach (GameObject item in Z.GetObjects())
+			foreach (GameObject item in KingdomSurvey.ObjectsFor(Z))
 			{
 				LiquidVolume part = item.GetPart<LiquidVolume>();
 				if (part != null && part.MaxVolume < 0 && KingdomLiquids.HasFreshWater(part))
@@ -2959,8 +3261,10 @@ namespace ThousandAndFirst
 
 		public static int CountStorageSpace(Zone Z)
 		{
+			KingdomSurvey active = KingdomSurvey.ActiveFor(Z);
+			if (active != null) return active.StorageSpace;
 			int total = 0;
-			foreach (GameObject item in Z.GetObjects())
+			foreach (GameObject item in KingdomSurvey.ObjectsFor(Z))
 			{
 				LiquidVolume part = item.GetPart<LiquidVolume>();
 				if (part != null && part.MaxVolume > 0 && item.GetIntProperty("KingdomStores") == 1 && part.Volume < part.MaxVolume && KingdomLiquids.CanReceiveFreshWater(part))
@@ -2973,8 +3277,10 @@ namespace ThousandAndFirst
 
 		public static int ConsumeStoredWater(Zone Z, int Drams)
 		{
+			KingdomSurvey active = KingdomSurvey.ActiveFor(Z);
+			if (active != null) return active.Consume(Drams);
 			int remaining = Drams;
-			foreach (GameObject item in Z.GetObjects())
+			foreach (GameObject item in KingdomSurvey.ObjectsFor(Z))
 			{
 				if (remaining <= 0)
 				{
@@ -2993,7 +3299,7 @@ namespace ThousandAndFirst
 		public static int CountDedicatedVessels(Zone Z)
 		{
 			int total = 0;
-			foreach (GameObject item in Z.GetObjects())
+			foreach (GameObject item in KingdomSurvey.ObjectsFor(Z))
 			{
 				if (item.GetIntProperty("KingdomStores") == 1)
 				{
@@ -3007,7 +3313,7 @@ namespace ThousandAndFirst
 		public static int CountDedicatedLarders(Zone Z)
 		{
 			int total = 0;
-			foreach (GameObject item in Z.GetObjects())
+			foreach (GameObject item in KingdomSurvey.ObjectsFor(Z))
 			{
 				if (item.GetIntProperty("KingdomLarder") == 1)
 				{
@@ -3020,8 +3326,10 @@ namespace ThousandAndFirst
 		/// <summary>Counts beds the settlement built. These are the population ceiling.</summary>
 		public static int CountBeds(Zone Z)
 		{
+			KingdomSurvey active = KingdomSurvey.ActiveFor(Z);
+			if (active != null) return active.Beds * KingdomRules.BedsPerBunk;
 			int total = 0;
-			foreach (GameObject item in Z.GetObjects())
+			foreach (GameObject item in KingdomSurvey.ObjectsFor(Z))
 			{
 				if (item.GetIntProperty("KingdomBuilt") == 1 && item.HasPart("Bed"))
 				{
@@ -3033,8 +3341,10 @@ namespace ThousandAndFirst
 
 		public static int CountStorageCapacity(Zone Z)
 		{
+			KingdomSurvey active = KingdomSurvey.ActiveFor(Z);
+			if (active != null) return active.StorageCapacity;
 			int total = 0;
-			foreach (GameObject item in Z.GetObjects())
+			foreach (GameObject item in KingdomSurvey.ObjectsFor(Z))
 			{
 				LiquidVolume part = item.GetPart<LiquidVolume>();
 				if (part != null && part.MaxVolume > 0 && item.GetIntProperty("KingdomStores") == 1)
@@ -3075,6 +3385,7 @@ namespace ThousandAndFirst
 		/// </summary>
 		public static void UpdateStage(KingdomSystem System, Zone Z, KingdomSurvey Survey = null)
 		{
+			if (!KingdomMaster.NewWorkAllowed(System)) return;
 			int zoneCapacity = (Survey != null) ? Survey.StorageCapacity : CountStorageCapacity(Z);
 			KingdomSubsidence.Reckon(System, Z, Survey, The.Game.TimeTicks);
 			// Read AFTER Reckon, which writes this zone's own sighting. The ladder measures the
@@ -3084,8 +3395,9 @@ namespace ThousandAndFirst
 			if (stage > System.Stage)
 			{
 				System.Stage = stage;
-				string text = System.KingdomDisplayName + " has grown into a " + stage.ToString().ToLower();
-				System.RecordDeed("the growth of " + System.KingdomDisplayName + "");
+				string realm = KingdomPresentation.Rich(System.KingdomDisplayName);
+				string text = realm + " has grown into a " + stage.ToString().ToLower();
+				System.RecordDeed("the growth of " + realm);
 				KingdomChronicle.Record(System, text, Accomplishment: true);
 				Popup.Show(KingdomVoices.Say(System, VoiceOccasion.StageUp, "{{C|" + text + ".}}"));
 			}
@@ -3098,7 +3410,9 @@ namespace ThousandAndFirst
 				// belongs.
 				GrowthStage lost = System.Stage;
 				System.Stage = stage;
-				string text = System.KingdomDisplayName + " is a " + stage.ToString().ToLower() + " again, and no longer a " + lost.ToString().ToLower();
+				string text = KingdomPresentation.Rich(System.KingdomDisplayName) + " is a "
+					+ stage.ToString().ToLower() + " again, and no longer a "
+					+ lost.ToString().ToLower();
 				KingdomChronicle.Record(System, text);
 				System.Ledger.Note("{{r|" + XRL.Language.Grammar.InitCap(text) + ".}}");
 			}
@@ -3106,7 +3420,7 @@ namespace ThousandAndFirst
 			{
 				// The survey already answered this in its single pass; only a call site with
 				// no survey (a direct wish, say) needs the fallback scan.
-				bool stillTrading = (Survey != null) ? Survey.HasTradePost : StillHasTradePost(Z);
+				bool stillTrading = (Survey != null) ? Survey.HasTradePost : StillHasTradePost(System, Z);
 				if (!stillTrading)
 				{
 					System.HasShopkeeper = false;
@@ -3126,11 +3440,12 @@ namespace ThousandAndFirst
 			}
 		}
 
-		private static bool StillHasTradePost(Zone Z)
+		private static bool StillHasTradePost(KingdomSystem System, Zone Z)
 		{
-			foreach (GameObject item in Z.GetObjects())
+			foreach (GameObject item in KingdomSurvey.ObjectsFor(Z))
 			{
-				if (item.GetIntProperty("VillageMerchant") == 1 && item.GetIntProperty("KingdomCitizen") == 1)
+				if (item.GetIntProperty("VillageMerchant") == 1
+					&& KingdomCitizenship.BelongsTo(System, item))
 				{
 					return true;
 				}
@@ -3145,10 +3460,12 @@ namespace ThousandAndFirst
 		/// </summary>
 		public static void RestockShops(KingdomSystem System, Zone Z, int Tier)
 		{
+			if (!KingdomMaster.NewWorkAllowed(System)) return;
 			int raised = 0;
-			foreach (GameObject item in Z.GetObjects())
+			foreach (GameObject item in KingdomSurvey.ObjectsFor(Z))
 			{
-				if (item.GetIntProperty("VillageMerchant") != 1 || item.GetIntProperty("KingdomCitizen") != 1)
+				if (item.GetIntProperty("VillageMerchant") != 1
+					|| !KingdomCitizenship.BelongsTo(System, item))
 				{
 					continue;
 				}
@@ -3162,23 +3479,27 @@ namespace ThousandAndFirst
 				restocker.Chance = 100;
 				item.SetIntProperty("InventoryTier", Tier);
 				restocker.PerformRestock(Silent: true);
+				KingdomSurvey.ObserveChangedInActive(Z, item);
 				raised++;
 			}
 			if (raised > 0)
 			{
 				System.ShopTier = Tier;
-				KingdomChronicle.Record(System, "the stalls of " + System.KingdomDisplayName + " began carrying finer goods");
-				MessageQueue.AddPlayerMessage("{{G|The traders of " + System.KingdomDisplayName + " have better wares to show you.}}");
+				string realm = KingdomPresentation.Rich(System.KingdomDisplayName);
+				KingdomChronicle.Record(System, "the stalls of " + realm + " began carrying finer goods");
+				MessageQueue.AddPlayerMessage("{{G|The traders of " + realm + " have better wares to show you.}}");
 				if (KingdomLog.Enabled) KingdomLog.Log("shops raised to tier " + Tier + " (" + raised + " traders)");
 			}
 		}
 
 		public static void PromoteShopkeeper(KingdomSystem System, Zone Z)
 		{
+			if (!KingdomMaster.NewWorkAllowed(System)) return;
 			GameObject citizen = null;
-			foreach (GameObject item in Z.GetObjects())
+			foreach (GameObject item in KingdomSurvey.ObjectsFor(Z))
 			{
-				if (item.GetIntProperty("KingdomCitizen") == 1 && item.GetIntProperty("VillageMerchant") == 0 && !item.IsPlayer())
+				if (KingdomCitizenship.BelongsTo(System, item)
+					&& item.GetIntProperty("VillageMerchant") == 0 && !item.IsPlayer())
 				{
 					citizen = item;
 					break;
@@ -3194,10 +3515,12 @@ namespace ThousandAndFirst
 			restocker.Chance = 100;
 			restocker.PerformRestock(Silent: true);
 			citizen.SetIntProperty("VillageMerchant", 1);
+			KingdomSurvey.ObserveChangedInActive(Z, citizen);
 			TakeOnRoleEvent.Send(citizen, "Merchant");
 			System.HasShopkeeper = true;
-			KingdomChronicle.Record(System, "a settler took up the trade, and the first stall opened at " + System.KingdomDisplayName);
-			MessageQueue.AddPlayerMessage("{{G|A settler has taken up the trade. The first stall of " + System.KingdomDisplayName + " is open.}}");
+			string realm = KingdomPresentation.Rich(System.KingdomDisplayName);
+			KingdomChronicle.Record(System, "a settler took up the trade, and the first stall opened at " + realm);
+			MessageQueue.AddPlayerMessage("{{G|A settler has taken up the trade. The first stall of " + realm + " is open.}}");
 		}
 	}
 }

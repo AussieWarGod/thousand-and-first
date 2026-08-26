@@ -16,7 +16,10 @@ namespace ThousandAndFirst
 			{
 				The.Player.RequirePart<KingdomCharterPart>().EnsureAbility();
 			}
-			seal?.ReconcileProfile();
+			if (seal != null && KingdomMaster.AutomaticWorkAllowed(kingdomSystem))
+			{
+				seal.ReconcileProfile();
+			}
 		}
 	}
 

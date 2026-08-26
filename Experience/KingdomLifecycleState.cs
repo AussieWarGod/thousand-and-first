@@ -36,7 +36,20 @@ namespace ThousandAndFirst
 		PetitionAccept = 13,
 		PetitionDecline = 14,
 		PetitionResolve = 15,
-		PetitionExpire = 16
+		PetitionExpire = 16,
+		RaidFight = 17,
+		RaidFortify = 18,
+		RaidResolve = 19,
+		RaidDeliverDemand = 20,
+		RaidAcknowledgeDemand = 21,
+		RaidLoseChannel = 22,
+		RaidDeadline = 23,
+		RaidFortifyOrder = 24,
+		RaidFortifyFailure = 25,
+		RaidRecoveryAccept = 26,
+		RaidRecoveryReady = 27,
+		RaidRecoveryResolve = 28,
+		RaidRecoveryDecline = 29
 	}
 
 	public enum KingdomLifecyclePhase : byte
@@ -100,6 +113,23 @@ namespace ThousandAndFirst
 		Inventory = 2
 	}
 
+	/// <summary>Which physical contract owns one carry operation. Value zero is the exact
+	/// historical v5 remove/project graph and may only be decoded and reconciled. New carry-sign
+	/// work always publishes <see cref="ExactManifest"/>.</summary>
+	public enum KingdomCarryAuthorityKind : byte
+	{
+		LegacyMaterialProjection = 0,
+		ExactManifest = 1
+	}
+
+	public enum KingdomCarryTransferKind : byte
+	{
+		None = 0,
+		Pickup = 1,
+		Delivery = 2,
+		RoadLoss = 3
+	}
+
 	public enum KingdomLifecycleResourceKind : byte
 	{
 		None = 0,
@@ -134,6 +164,185 @@ namespace ThousandAndFirst
 		Intent = 2,
 		Proved = 3,
 		Skipped = 4
+	}
+
+	// Numeric values are append-only raid-domain wire contracts. Relationship standing is not a
+	// grievance and none of these values may be inferred from it.
+	public enum KingdomRaidGrievanceStatus : byte
+	{
+		None = 0,
+		Available = 1,
+		Reserved = 2,
+		Consumed = 3,
+		Waived = 4,
+		Quarantined = 5
+	}
+
+	public enum KingdomRaidIncidentState : byte
+	{
+		None = 0,
+		Warned = 1,
+		ConfrontationReady = 2,
+		FightCommitted = 3,
+		Fortified = 4,
+		Active = 5,
+		Resolved = 6,
+		Cancelled = 7,
+		Quarantined = 8,
+		Queued = 9,
+		Rumored = 10,
+		FortifyOrdered = 11
+	}
+
+	public enum KingdomRaidChannelState : byte
+	{
+		None = 0,
+		AwaitingDelivery = 1,
+		Issued = 2,
+		Acknowledged = 3,
+		RedeliveryQueued = 4,
+		Closed = 5
+	}
+
+	public enum KingdomRaidRecoveryState : byte
+	{
+		None = 0,
+		Offered = 1,
+		Active = 2,
+		Ready = 3,
+		Resolved = 4,
+		Declined = 5,
+		LegacyUnavailable = 6,
+		CoveredByExisting = 7
+	}
+
+	public enum KingdomRaidResponse : byte
+	{
+		None = 0,
+		Tribute = 1,
+		Talk = 2,
+		Fight = 3,
+		Fortify = 4
+	}
+
+	public enum KingdomRaidResolution : byte
+	{
+		None = 0,
+		TributePaid = 1,
+		TalkedDownWithObligation = 2,
+		Repelled = 3,
+		StoresPlundered = 4,
+		RaidersDefeated = 5,
+		ObjectiveLost = 6,
+		SourceInvalid = 7,
+		OptionDisabled = 8,
+		LegacyWarningDispersed = 9,
+		NoValidObjective = 10
+	}
+
+	[Serializable]
+	public sealed class KingdomRaidGrievance
+	{
+		public string Id;
+		public string IssuerFactionId;
+		public string TargetSettlementId;
+		public string TargetZoneId;
+		public string CauseCode;
+		public string SourceEventId;
+		public long SourceTick;
+		public string SourceZoneId;
+		public int Severity;
+		public string EvidenceText;
+		public KingdomRaidGrievanceStatus Status;
+		public string ResolutionId;
+	}
+
+	[Serializable]
+	public sealed class KingdomRaidDefenceReservation
+	{
+		/// <summary>Stable FNV identity of the exact built work. This is the same WorkId used by
+		/// city rows and settler posts; object-list position and a display name are not authority.</summary>
+		public int WorkId;
+		public int FrozenScore;
+		/// <summary>Exact resident-row identities reserved at this work. Whole people, globally
+		/// exclusive within the muster; empty only for a work whose design needs no crew.</summary>
+		public List<int> CrewSemanticIds = new List<int>();
+	}
+
+	[Serializable]
+	public sealed class KingdomRaidIncident
+	{
+		public string Id;
+		public string GrievanceId;
+		public string CauseSnapshot;
+		public string SettlementId;
+		public string TargetZoneId;
+		public string AttackerFactionId;
+		public string SourceKind;
+		public string SourceLocator;
+		public string ReachRule;
+		public KingdomRaidIncidentState State;
+		public long Seed;
+		public long RumorTick;
+		public long DeliveredTick;
+		public long DueTick;
+		public long DemandLeadTicks;
+		public long RemainingLeadTicks;
+		public string DemandChannelId;
+		public string DemandObjectId;
+		public KingdomRaidChannelState ChannelState;
+		public int ChannelRevision;
+		public KingdomRaidResponse Response;
+		public int DisclosedStake;
+		public int MaximumPlunder;
+		public string ForceProfileId;
+		public int DefenceEstimate;
+		public string ObjectiveCode;
+		public string ObjectiveObjectId;
+		public int ObjectiveX = -1;
+		public int ObjectiveY = -1;
+		public int PlannedPartySize;
+		public int SpawnedPartySize;
+		public int PlunderProved;
+		public string DefenceCommitment;
+		public int DefenceReservationVersion;
+		public List<KingdomRaidDefenceReservation> DefenceReservations =
+			new List<KingdomRaidDefenceReservation>();
+		public long FortifyOrderedTick;
+		public bool TalkObligation;
+		public string TalkObligationDischargedBy;
+		public string LastNotice;
+		public KingdomRaidResolution Resolution;
+		public string AttackOperationId;
+		public string ResolutionOperationId;
+		public long ResolvedTick;
+		public KingdomRaidRecoveryState RecoveryState;
+		public string RecoveryQuestId;
+		public string RecoveryStepId;
+		public long RecoveryOpenedTick;
+		public long RecoveryResolvedTick;
+		public string RecoveryNotice;
+	}
+
+	[Serializable]
+	public sealed class KingdomRaidLedger
+	{
+		public const int CurrentVersion = 3;
+		public int Version = CurrentVersion;
+		public long StateRevision;
+		public long ScheduleRevision;
+		public List<KingdomRaidGrievance> Grievances = new List<KingdomRaidGrievance>();
+		public List<KingdomRaidIncident> Incidents = new List<KingdomRaidIncident>();
+		public string ActiveIncidentId;
+		public bool LegacyEvidenceArchived;
+		public int LegacyRaidState;
+		public string LegacyFaction;
+		public long LegacyDueTick;
+		public long LegacyLastTick;
+		public int LegacyTimesDeferred;
+		// Version 2+ ledgers are framed. A newer framed body stays byte-exact and read-only so an
+		// older TAF build can save unrelated realm state without destroying future raid authority.
+		public byte[] OpaqueFuturePayload;
 	}
 
 	// Numeric values are append-only nested Growth wire contracts.
@@ -369,12 +578,10 @@ namespace ThousandAndFirst
 		public KingdomLifecyclePhysicalState ReceiptState;
 		public KingdomLifecyclePhysicalState State;
 
-		#if TAF_TESTS
-		// Opaque reference retained only by the trusted-world proof harness. Runtime authority
-		// is established from engine observations at the shell and never stored in the save DTO.
+		// Opaque reference retained only during one live trusted-world pass. Runtime authority
+		// is re-established from engine observations and never stored in the save DTO.
 		[NonSerialized]
 		internal object LiveAuthority;
-		#endif
 	}
 
 	[Serializable]
@@ -408,12 +615,10 @@ namespace ThousandAndFirst
 		public string ReceiptProofId;
 		public KingdomLifecyclePhysicalState ReceiptState;
 
-		#if TAF_TESTS
-		// Opaque reference retained only by the trusted-world proof harness. Runtime authority
-		// is established from engine observations at the shell and never stored in the save DTO.
+		// Opaque reference retained only during one live trusted-world pass. Runtime authority
+		// is re-established from engine observations and never stored in the save DTO.
 		[NonSerialized]
 		internal object LiveAuthority;
-		#endif
 	}
 
 	[Serializable]
@@ -736,6 +941,18 @@ namespace ThousandAndFirst
 		/// origin zone. This compatibility state grants no starter authority; the first claimed
 		/// zone must bind it transactionally before reconciliation can continue.</summary>
 		public bool LegacyGrowthV1UnboundZone;
+		/// <summary>Growth-v1/v2 or compatibility-prepared candidate whose person payload has
+		/// not yet been adopted into the versioned semantic plan.</summary>
+		public bool LegacySemanticPlan;
+		public int SemanticPlanVersion;
+		public string SemanticStreamId;
+		public uint SemanticEventKind;
+		public string PlannedOrigin;
+		public string PlannedCreed;
+		public string PlannedName;
+		public string PlannedArrived;
+		public int ArrivalX = -1;
+		public int ArrivalY = -1;
 		public KingdomGrowthArrivalDisposition Disposition;
 		public KingdomGrowthArrivalRefusalReason RefusalReason;
 		public string ObjectId;
@@ -1222,6 +1439,7 @@ namespace ThousandAndFirst
 		public List<KingdomLifecycleResourceRevision> Resources =
 			new List<KingdomLifecycleResourceRevision>();
 		public List<KingdomLifecycleProof> RecentProofs = new List<KingdomLifecycleProof>();
+		public KingdomRaidLedger RaidLedger = new KingdomRaidLedger();
 		public KingdomGrowthBook Growth = new KingdomGrowthBook();
 
 		[NonSerialized]
@@ -1251,6 +1469,7 @@ namespace ThousandAndFirst
 				Petition = null;
 				Resources = new List<KingdomLifecycleResourceRevision>();
 				RecentProofs = new List<KingdomLifecycleProof>();
+				RaidLedger = new KingdomRaidLedger();
 				throw;
 			}
 		}
@@ -1290,6 +1509,24 @@ namespace ThousandAndFirst
 		public int ReceiptChainCount;
 		public KingdomLifecyclePhysicalState ReceiptState;
 		public KingdomLifecyclePhysicalState State;
+
+		// Carry-v6 exact-manifest progress. A source is one whole GameObject/stack: every count is
+		// either zero or PlannedCount and the same object reference moves between these topologies.
+		public int LoadedCount;
+		public int DeliveredCount;
+		public int LostCount;
+		public int CurrentTripId;
+		public KingdomLifecycleTopology CurrentTopology;
+		public string CurrentOwnerId;
+		public string CurrentZoneId;
+		public int CurrentX = -1;
+		public int CurrentY = -1;
+		public KingdomCarryTransferKind PendingTransfer;
+		public KingdomLifecycleTopology PendingTopology;
+		public string PendingOwnerId;
+		public string PendingZoneId;
+		public int PendingX = -1;
+		public int PendingY = -1;
 
 		[NonSerialized]
 		internal object LiveAuthority;
@@ -1359,6 +1596,39 @@ namespace ThousandAndFirst
 		public KingdomLifecycleOutbox Outbox;
 		public string Fault;
 
+		// Carry-v6 exact-manifest authority. ManifestDigest freezes only immutable source facts;
+		// ManifestRevision advances after proved sign/pickup/deposit callbacks. Job and trip ids
+		// bind this lifecycle to the one central logistics registry rather than a second planner.
+		public KingdomCarryAuthorityKind AuthorityKind;
+		public int ManifestVersion;
+		public string ManifestDigest;
+		public long ManifestRevision;
+		public List<int> JobIds = new List<int>();
+		public List<int> TripIds = new List<int>();
+
+		public string SignObjectId;
+		public string SignBlueprint;
+		public KingdomLifecycleTopology SignTopology;
+		public string SignOwnerId;
+		public string SignZoneId;
+		public int SignX = -1;
+		public int SignY = -1;
+		public int SignCount;
+		public string SignReceiptId;
+		public int SignReceiptBeforeMatches = -1;
+		public int SignReceiptAfterMatches = -1;
+		public int SignReceiptBeforeCount = -1;
+		public int SignReceiptAfterCount = -1;
+		public bool SignReceiptSameReference;
+		public string SignReceiptProofId;
+		public KingdomLifecyclePhysicalState SignReceiptState;
+
+		public bool DestinationSafetyWaiting;
+		public long DestinationSafetyWaitTick;
+		public string SpillZoneId;
+		public int SpillX = -1;
+		public int SpillY = -1;
+
 		[NonSerialized]
 		public object LiveAuthority;
 	}
@@ -1384,6 +1654,8 @@ namespace ThousandAndFirst
 		public List<KingdomLifecycleResourceRevision> Resources =
 			new List<KingdomLifecycleResourceRevision>();
 		public List<KingdomLifecycleProof> RecentProofs = new List<KingdomLifecycleProof>();
+		public int OpaqueWireVersion;
+		public byte[] OpaquePayload;
 
 		[NonSerialized]
 		public bool WireRejected;
@@ -1515,6 +1787,66 @@ namespace ThousandAndFirst
 			WriteLifecycleCore(Writer, Book, KingdomLifecycleRules.LegacyLifecycleFormatVersion,
 				IncludeGrowth: false);
 		}
+
+		internal static void WriteLifecycleV6Fixture(BinaryWriter Writer,
+			KingdomLifecycleBook Book)
+		{
+			WriteLifecycleCore(Writer, Book, KingdomLifecycleRules.PreviousLifecycleFormatVersion,
+				IncludeGrowth: true);
+		}
+
+		internal static void WriteLifecycleV7Fixture(BinaryWriter Writer,
+			KingdomLifecycleBook Book)
+		{
+			WriteLifecycleCore(Writer, Book,
+				KingdomLifecycleRules.RaidLedgerLifecycleFormatVersion, IncludeGrowth: true);
+		}
+
+		internal static byte[] WriteRaidLedgerV1Fixture(KingdomRaidLedger ledger)
+		{
+			if (!KingdomRaidIncidentRules.ValidLedger(ledger))
+				throw new InvalidDataException("raid fixture is malformed");
+			using (MemoryStream stream = new MemoryStream())
+			using (BinaryWriter writer = new BinaryWriter(stream, StrictUtf8, true))
+			{
+				writer.Write(1); WriteRaidLedgerV1Body(writer, ledger); writer.Flush();
+				return stream.ToArray();
+			}
+		}
+
+		internal static byte[] WriteRaidLedgerV2Fixture(KingdomRaidLedger ledger)
+		{
+			if (!KingdomRaidIncidentRules.ValidLedger(ledger))
+				throw new InvalidDataException("raid fixture is malformed");
+			using (MemoryStream stream = new MemoryStream())
+			using (BinaryWriter writer = new BinaryWriter(stream, StrictUtf8, true))
+			{
+				WriteRaidLedgerV2(writer, ledger); writer.Flush(); return stream.ToArray();
+			}
+		}
+
+		internal static byte[] WriteRaidLedgerFixture(KingdomRaidLedger ledger)
+		{
+			if (!KingdomRaidIncidentRules.ValidLedger(ledger))
+				throw new InvalidDataException("raid fixture is malformed");
+			using (MemoryStream stream = new MemoryStream())
+			using (BinaryWriter writer = new BinaryWriter(stream, StrictUtf8, true))
+			{
+				WriteRaidLedger(writer, ledger); writer.Flush(); return stream.ToArray();
+			}
+		}
+
+		internal static KingdomRaidLedger ReadRaidLedgerFixture(byte[] bytes)
+		{
+			using (MemoryStream stream = new MemoryStream(bytes ?? throw new ArgumentNullException("bytes"), false))
+			using (BinaryReader reader = new BinaryReader(stream, StrictUtf8, true))
+			{
+				KingdomRaidLedger ledger = ReadRaidLedger(reader);
+				if (stream.Position != stream.Length || !KingdomRaidIncidentRules.ValidLedger(ledger))
+					throw new InvalidDataException("raid fixture has trailing or invalid state");
+				return ledger;
+			}
+		}
 		#endif
 
 		private static void WriteLifecycleCore(BinaryWriter Writer, KingdomLifecycleBook Book,
@@ -1525,6 +1857,8 @@ namespace ThousandAndFirst
 				throw new InvalidDataException("lifecycle authority is not writable");
 			EnsureCount(Book.Resources, KingdomLifecycleRules.MaxResourceRows, "resource rows");
 			EnsureCount(Book.RecentProofs, KingdomLifecycleRules.MaxRecentProofs, "proof rows");
+			if (!KingdomRaidIncidentRules.ValidLedger(Book.RaidLedger))
+				throw new InvalidDataException("raid ledger is malformed");
 			EnsureOuterResourceKinds(Book.Resources, Book.PlainGuest, Book.NotableGuest,
 				Book.Raid, Book.Petition);
 			Writer.Write(LifecycleMagic);
@@ -1548,14 +1882,18 @@ namespace ThousandAndFirst
 			WriteOption(Writer, Book.NotableOption, Book.NotableOptionTick);
 			WriteOption(Writer, Book.RaidOption, Book.RaidOptionTick);
 			WriteOption(Writer, Book.PetitionOption, Book.PetitionOptionTick);
-			WriteOperation(Writer, Book.PlainGuest);
-			WriteOperation(Writer, Book.NotableGuest);
-			WriteOperation(Writer, Book.Raid);
-			WriteOperation(Writer, Book.Petition);
+			WriteOperation(Writer, Book.PlainGuest, WireVersion);
+			WriteOperation(Writer, Book.NotableGuest, WireVersion);
+			WriteOperation(Writer, Book.Raid, WireVersion);
+			WriteOperation(Writer, Book.Petition, WireVersion);
 			Writer.Write(Book.Resources.Count);
 			for (int i = 0; i < Book.Resources.Count; i++) WriteResource(Writer, Book.Resources[i]);
 			Writer.Write(Book.RecentProofs.Count);
 			for (int i = 0; i < Book.RecentProofs.Count; i++) WriteProof(Writer, Book.RecentProofs[i]);
+			if (WireVersion >= KingdomLifecycleRules.CurrentFormatVersion)
+				WriteRaidLedger(Writer, Book.RaidLedger);
+			else if (WireVersion >= KingdomLifecycleRules.RaidLedgerLifecycleFormatVersion)
+				WriteRaidLedgerV2(Writer, Book.RaidLedger);
 			if (IncludeGrowth)
 			{
 				byte[] payload = GrowthPayloadForWrite(Book.Growth);
@@ -1579,6 +1917,8 @@ namespace ThousandAndFirst
 				int version = Reader.ReadInt32();
 				Target.FormatVersion = version;
 				if (version != KingdomLifecycleRules.CurrentFormatVersion &&
+					version != KingdomLifecycleRules.RaidLedgerLifecycleFormatVersion &&
+					version != KingdomLifecycleRules.PreviousLifecycleFormatVersion &&
 					version != KingdomLifecycleRules.LegacyLifecycleFormatVersion)
 					Reject(Target, "unsupported lifecycle version");
 				KingdomLifecycleBook value = new KingdomLifecycleBook();
@@ -1603,10 +1943,10 @@ namespace ThousandAndFirst
 				ReadOption(Reader, out value.RaidOption, out value.RaidOptionTick);
 				ReadOption(Reader, out value.PetitionOption, out value.PetitionOptionTick);
 				bool legacyWire = version == KingdomLifecycleRules.LegacyLifecycleFormatVersion;
-				value.PlainGuest = ReadOperation(Reader, legacyWire);
-				value.NotableGuest = ReadOperation(Reader, legacyWire);
-				value.Raid = ReadOperation(Reader, legacyWire);
-				value.Petition = ReadOperation(Reader, legacyWire);
+				value.PlainGuest = ReadOperation(Reader, version);
+				value.NotableGuest = ReadOperation(Reader, version);
+				value.Raid = ReadOperation(Reader, version);
+				value.Petition = ReadOperation(Reader, version);
 				int resources = ReadCount(Reader, KingdomLifecycleRules.MaxResourceRows);
 				value.Resources = new List<KingdomLifecycleResourceRevision>(resources);
 				for (int i = 0; i < resources; i++)
@@ -1614,6 +1954,8 @@ namespace ThousandAndFirst
 				int proofs = ReadCount(Reader, KingdomLifecycleRules.MaxRecentProofs);
 				value.RecentProofs = new List<KingdomLifecycleProof>(proofs);
 				for (int i = 0; i < proofs; i++) value.RecentProofs.Add(ReadProof(Reader));
+				value.RaidLedger = version >= KingdomLifecycleRules.RaidLedgerLifecycleFormatVersion
+					? ReadRaidLedger(Reader) : new KingdomRaidLedger();
 				if (version == KingdomLifecycleRules.LegacyLifecycleFormatVersion)
 				{
 					if (!KingdomLifecycleRules.TryStageGrowthMigrationFromV5(value,
@@ -1625,12 +1967,24 @@ namespace ThousandAndFirst
 					{
 						KingdomGrowthMigrationResult migrated =
 							KingdomLifecycleRules.ApplyGrowthMigration(value, Migration);
-						if (!migrated.Valid ||
-							!KingdomLifecycleRules.TryPublishGrowthMigration(value, migrated))
-							throw new InvalidDataException(migrated.Failure);
+							if (!migrated.Valid ||
+								!KingdomLifecycleRules.TryPublishGrowthMigration(value, migrated))
+								throw new InvalidDataException(migrated.Failure);
+						}
+						KingdomLifecycleRules.QuarantineLegacyRaidAuthority(value);
 					}
-				}
-				else value.Growth = ReadGrowthSection(Reader);
+					else
+					{
+						value.Growth = ReadGrowthSection(Reader);
+						if (version == KingdomLifecycleRules.PreviousLifecycleFormatVersion)
+						{
+							if (!KingdomLifecycleRules.StageRaidMigrationFromV6(value))
+								throw new InvalidDataException(
+									"lifecycle v6 raid migration was rejected");
+						}
+						else if (version == KingdomLifecycleRules.RaidLedgerLifecycleFormatVersion)
+							value.FormatVersion = KingdomLifecycleRules.CurrentFormatVersion;
+					}
 				KingdomLifecycleRules.Normalize(value);
 				Copy(value, Target);
 			}
@@ -1680,6 +2034,27 @@ namespace ThousandAndFirst
 			using (BinaryWriter writer = new BinaryWriter(stream, StrictUtf8, true))
 			{
 				WriteGrowth(writer, fixture, KingdomLifecycleRules.LegacyGrowthFormatVersion);
+				writer.Flush(); return stream.ToArray();
+			}
+		}
+
+		/// <summary>Exact Growth-v2 fixture. Semantic person payloads did not exist in v2, so
+		/// only a null or explicitly legacy candidate is representable.</summary>
+		internal static byte[] GrowthV2PayloadFixture(KingdomGrowthBook Book)
+		{
+			if (Book == null || Book.OpaquePayload != null
+				|| !KingdomLifecycleRules.GrowthEnvelopeWritable(Book))
+				throw new InvalidDataException("growth v2 fixture source is malformed");
+			KingdomGrowthBook fixture = ReadGrowthPayload(GrowthPayloadForWrite(Book));
+			if (fixture == null || fixture.Quarantined || fixture.OpaquePayload != null
+				|| fixture.ArrivalCandidate != null
+					&& !fixture.ArrivalCandidate.LegacySemanticPlan)
+				throw new InvalidDataException("growth v2 cannot encode a semantic person plan");
+			using (GrowthCappedWriteStream stream =
+				new GrowthCappedWriteStream(KingdomLifecycleRules.MaxGrowthSectionBytes))
+			using (BinaryWriter writer = new BinaryWriter(stream, StrictUtf8, true))
+			{
+				WriteGrowth(writer, fixture, KingdomLifecycleRules.PreviousGrowthFormatVersion);
 				writer.Flush(); return stream.ToArray();
 			}
 		}
@@ -1765,6 +2140,7 @@ namespace ThousandAndFirst
 						return OpaqueGrowth(Payload, version,
 							"future growth payload preserved as opaque evidence");
 					if (version != KingdomLifecycleRules.CurrentGrowthFormatVersion
+						&& version != KingdomLifecycleRules.PreviousGrowthFormatVersion
 						&& version != KingdomLifecycleRules.LegacyGrowthFormatVersion)
 						return OpaqueGrowth(Payload, version,
 							"growth payload version is unsupported");
@@ -1804,6 +2180,7 @@ namespace ThousandAndFirst
 		private static void WriteGrowth(BinaryWriter w, KingdomGrowthBook b, int wireVersion)
 		{
 			if (wireVersion != KingdomLifecycleRules.CurrentGrowthFormatVersion
+				&& wireVersion != KingdomLifecycleRules.PreviousGrowthFormatVersion
 				&& wireVersion != KingdomLifecycleRules.LegacyGrowthFormatVersion)
 				throw new InvalidDataException("unsupported growth fixture version");
 			EnsureCount(b.FieldOps, KingdomLifecycleRules.MaxGrowthFields, "growth field slots");
@@ -1919,7 +2296,7 @@ namespace ThousandAndFirst
 			EnsureCount(o.OutboxEvents, KingdomLifecycleRules.MaxGrowthOutboxEvents,
 				"growth outbox events");
 			w.Write(o.Sequence); S(w, o.Id, true); S(w, o.PlanHash, true);
-			if (wireVersion >= KingdomLifecycleRules.CurrentGrowthFormatVersion)
+			if (wireVersion >= KingdomLifecycleRules.PreviousGrowthFormatVersion)
 				w.Write(o.LegacyGrowthV1Plan);
 			w.Write((byte)o.Action); w.Write((byte)o.Phase); w.Write(o.CreatedTick);
 			w.Write(o.UpdatedTick); S(w, o.SettlementId, true); S(w, o.FieldId, true);
@@ -2451,7 +2828,7 @@ namespace ThousandAndFirst
 			w.Write(x.ChronicleDeclaredAfterCount); w.Write(x.ChronicleObservedCount);
 			S(w, x.ChronicleBeforeHash, true); S(w, x.ChronicleDeclaredAfterHash, true);
 			S(w, x.ChronicleObservedHash, true);
-			if (wireVersion >= KingdomLifecycleRules.CurrentGrowthFormatVersion)
+			if (wireVersion >= KingdomLifecycleRules.PreviousGrowthFormatVersion)
 			{
 				w.Write(x.LegacySingleRegisterChronicle); w.Write(x.OutsiderBeforeCount);
 				w.Write(x.OutsiderDeclaredAfterCount); w.Write(x.OutsiderObservedCount);
@@ -2514,6 +2891,14 @@ namespace ThousandAndFirst
 			w.Write((byte)x.Phase); w.Write((byte)x.EvidencePhase);
 			if (wireVersion != KingdomLifecycleRules.LegacyGrowthFormatVersion)
 				w.Write(x.LegacyGrowthV1UnboundZone);
+			if (wireVersion >= KingdomLifecycleRules.CurrentGrowthFormatVersion)
+			{
+				w.Write(x.LegacySemanticPlan); w.Write(x.SemanticPlanVersion);
+				S(w, x.SemanticStreamId, true); w.Write(x.SemanticEventKind);
+				S(w, x.PlannedOrigin, false); S(w, x.PlannedCreed, false);
+				S(w, x.PlannedName, false); S(w, x.PlannedArrived, false);
+				w.Write(x.ArrivalX); w.Write(x.ArrivalY);
+			}
 			w.Write((byte)x.Disposition); w.Write((byte)x.RefusalReason); S(w, x.ObjectId, true);
 			S(w, x.Marker, true); S(w, x.Blueprint, false); S(w, x.EscrowKey, true);
 			WriteLease(w, x.CandidateLease); WriteLease(w, x.LodgingLease);
@@ -2532,6 +2917,8 @@ namespace ThousandAndFirst
 			int wireVersion)
 		{
 			if (!ReadExactBoolean(r)) return null;
+			bool currentSemantic = wireVersion >=
+				KingdomLifecycleRules.CurrentGrowthFormatVersion;
 			KingdomGrowthArrivalCandidate result = new KingdomGrowthArrivalCandidate
 			{
 				Sequence = r.ReadInt64(), Id = S(r, true), PlanHash = S(r, true),
@@ -2540,6 +2927,16 @@ namespace ThousandAndFirst
 				EvidencePhase = (KingdomGrowthArrivalCandidatePhase)r.ReadByte(),
 				LegacyGrowthV1UnboundZone = wireVersion ==
 					KingdomLifecycleRules.LegacyGrowthFormatVersion ? false : ReadExactBoolean(r),
+				LegacySemanticPlan = !currentSemantic || ReadExactBoolean(r),
+				SemanticPlanVersion = currentSemantic ? r.ReadInt32() : 0,
+				SemanticStreamId = currentSemantic ? S(r, true) : null,
+				SemanticEventKind = currentSemantic ? r.ReadUInt32() : 0U,
+				PlannedOrigin = currentSemantic ? S(r, false) : null,
+				PlannedCreed = currentSemantic ? S(r, false) : null,
+				PlannedName = currentSemantic ? S(r, false) : null,
+				PlannedArrived = currentSemantic ? S(r, false) : null,
+				ArrivalX = currentSemantic ? r.ReadInt32() : -1,
+				ArrivalY = currentSemantic ? r.ReadInt32() : -1,
 				Disposition = (KingdomGrowthArrivalDisposition)r.ReadByte(),
 				RefusalReason = (KingdomGrowthArrivalRefusalReason)r.ReadByte(),
 				ObjectId = S(r, true),
@@ -2612,6 +3009,46 @@ namespace ThousandAndFirst
 			if (Writer == null || Book == null || Book.WireRejected
 				|| Book.FormatVersion != KingdomLifecycleRules.CurrentCarryFormatVersion)
 				throw new InvalidDataException("carry authority is not writable");
+			if (Book.OpaquePayload != null)
+			{
+				if (!Book.Quarantined || Book.OpaqueWireVersion <=
+					KingdomLifecycleRules.CurrentCarryFormatVersion
+					|| Book.OpaquePayload.Length > KingdomLifecycleRules.MaxCarrySectionBytes)
+					throw new InvalidDataException("opaque carry evidence is malformed");
+				Writer.Write(CarryMagic); Writer.Write(Book.OpaqueWireVersion);
+				Writer.Write(Book.OpaquePayload.Length);
+				Writer.Write(Book.OpaquePayload, 0, Book.OpaquePayload.Length);
+				return;
+			}
+			using (GrowthCappedWriteStream stream =
+				new GrowthCappedWriteStream(KingdomLifecycleRules.MaxCarrySectionBytes))
+			using (BinaryWriter body = new BinaryWriter(stream, StrictUtf8, true))
+			{
+				WriteCarryBody(body, Book, true); body.Flush();
+				byte[] payload = stream.ToArray();
+				Writer.Write(CarryMagic);
+				Writer.Write(KingdomLifecycleRules.CurrentCarryFormatVersion);
+				Writer.Write(payload.Length);
+				Writer.Write(payload, 0, payload.Length);
+			}
+		}
+
+		/// <summary>Exact historical carry-v5 writer used only by migration and byte fixtures.</summary>
+		internal static void WriteCarryV5Fixture(BinaryWriter Writer, KingdomCarryBook Book)
+		{
+			if (Writer == null || Book == null || Book.WireRejected || Book.OpaquePayload != null
+				|| Book.FormatVersion != KingdomLifecycleRules.CurrentCarryFormatVersion
+				|| (Book.Open != null && Book.Open.AuthorityKind !=
+					KingdomCarryAuthorityKind.LegacyMaterialProjection))
+				throw new InvalidDataException("carry authority is not representable as v5");
+			Writer.Write(CarryMagic);
+			Writer.Write(KingdomLifecycleRules.LegacyCarryFormatVersion);
+			WriteCarryBody(Writer, Book, false);
+		}
+
+		private static void WriteCarryBody(BinaryWriter Writer, KingdomCarryBook Book,
+			bool IncludeV6)
+		{
 			EnsureCount(Book.SettlementIds, KingdomLifecycleRules.MaxSettlementIds,
 				"settlement ids");
 			EnsureCount(Book.Resources, KingdomLifecycleRules.MaxResourceRows, "resource rows");
@@ -2620,8 +3057,6 @@ namespace ThousandAndFirst
 			if (Book.Open != null && Book.Open.ScheduleLease != null &&
 				(byte)Book.Open.ScheduleLease.Kind > (byte)KingdomLifecycleResourceKind.Raid)
 				throw new InvalidDataException("carry lease kind exceeds v5 contract");
-			Writer.Write(CarryMagic);
-			Writer.Write(KingdomLifecycleRules.CurrentCarryFormatVersion);
 			Writer.Write(Book.LegacyIdentity);
 			WriteString(Writer, Book.LegacyMigrationKey, KingdomLifecycleRules.MaxIdBytes);
 			Writer.Write(Book.Quarantined);
@@ -2634,7 +3069,7 @@ namespace ThousandAndFirst
 			WriteString(Writer, Book.IdentityProof, KingdomLifecycleRules.MaxIdBytes);
 			Writer.Write(Book.NextSequence);
 			Writer.Write(Book.RetiredThrough);
-			WriteCarryOperation(Writer, Book.Open);
+			WriteCarryOperation(Writer, Book.Open, IncludeV6);
 			Writer.Write(Book.Resources.Count);
 			for (int i = 0; i < Book.Resources.Count; i++) WriteResource(Writer, Book.Resources[i]);
 			Writer.Write(Book.RecentProofs.Count);
@@ -2649,10 +3084,47 @@ namespace ThousandAndFirst
 				if (Reader.ReadInt32() != CarryMagic) Reject(Target, "invalid carry framing");
 				int version = Reader.ReadInt32();
 				Target.FormatVersion = version;
-				if (version != KingdomLifecycleRules.CurrentCarryFormatVersion)
+				if (version == KingdomLifecycleRules.LegacyCarryFormatVersion)
+				{
+					KingdomCarryBook legacy = ReadCarryBody(Reader, false);
+					legacy.FormatVersion = KingdomLifecycleRules.CurrentCarryFormatVersion;
+					KingdomLifecycleRules.Normalize(legacy);
+					Copy(legacy, Target);
+					return;
+				}
+				if (version < KingdomLifecycleRules.CurrentCarryFormatVersion)
 					Reject(Target, "unsupported carry version");
-				KingdomCarryBook value = new KingdomCarryBook();
-				value.FormatVersion = version;
+				int length = ReadCount(Reader, KingdomLifecycleRules.MaxCarrySectionBytes);
+				byte[] payload = Reader.ReadBytes(length);
+				if (payload.Length != length) throw new EndOfStreamException("carry payload is truncated");
+				if (version > KingdomLifecycleRules.CurrentCarryFormatVersion)
+				{
+					Copy(OpaqueCarry(payload, version,
+						"future carry payload preserved as opaque evidence"), Target);
+					return;
+				}
+				KingdomCarryBook value;
+				using (MemoryStream stream = new MemoryStream(payload, false))
+				using (BinaryReader body = new BinaryReader(stream, StrictUtf8, true))
+				{
+					value = ReadCarryBody(body, true);
+					if (stream.Position != stream.Length)
+						throw new InvalidDataException("carry payload has trailing bytes");
+				}
+				value.FormatVersion = KingdomLifecycleRules.CurrentCarryFormatVersion;
+				KingdomLifecycleRules.Normalize(value);
+				Copy(value, Target);
+			}
+			catch (Exception)
+			{
+				Poison(Target, "malformed carry wire was rejected");
+				throw;
+			}
+		}
+
+		private static KingdomCarryBook ReadCarryBody(BinaryReader Reader, bool IncludeV6)
+		{
+			KingdomCarryBook value = new KingdomCarryBook();
 				value.LegacyIdentity = ReadExactBoolean(Reader);
 				value.LegacyMigrationKey = ReadString(Reader, KingdomLifecycleRules.MaxIdBytes);
 				value.Quarantined = ReadExactBoolean(Reader);
@@ -2666,21 +3138,26 @@ namespace ThousandAndFirst
 				value.IdentityProof = ReadString(Reader, KingdomLifecycleRules.MaxIdBytes);
 				value.NextSequence = Reader.ReadInt64();
 				value.RetiredThrough = Reader.ReadInt64();
-				value.Open = ReadCarryOperation(Reader);
+				value.Open = ReadCarryOperation(Reader, IncludeV6);
 				int resources = ReadCount(Reader, KingdomLifecycleRules.MaxResourceRows);
 				value.Resources = new List<KingdomLifecycleResourceRevision>(resources);
 				for (int i = 0; i < resources; i++) value.Resources.Add(ReadResource(Reader, true));
 				int proofs = ReadCount(Reader, KingdomLifecycleRules.MaxRecentProofs);
 				value.RecentProofs = new List<KingdomLifecycleProof>(proofs);
 				for (int i = 0; i < proofs; i++) value.RecentProofs.Add(ReadProof(Reader));
-				KingdomLifecycleRules.Normalize(value);
-				Copy(value, Target);
-			}
-			catch (Exception)
+			return value;
+		}
+
+		private static KingdomCarryBook OpaqueCarry(byte[] Payload, int WireVersion, string Fault)
+		{
+			return new KingdomCarryBook
 			{
-				Poison(Target, "malformed carry wire was rejected");
-				throw;
-			}
+				FormatVersion = KingdomLifecycleRules.CurrentCarryFormatVersion,
+				Quarantined = true,
+				Fault = Fault,
+				OpaqueWireVersion = WireVersion,
+				OpaquePayload = Payload == null ? null : (byte[])Payload.Clone()
+			};
 		}
 
 		public static int ReadCount(BinaryReader Reader, int Maximum)
@@ -2724,10 +3201,15 @@ namespace ThousandAndFirst
 			Writer.Write(bytes, 0, bytes.Length);
 		}
 
-		private static void WriteOperation(BinaryWriter w, KingdomLifecycleOperation o)
+		private static void WriteOperation(BinaryWriter w, KingdomLifecycleOperation o,
+			int wireVersion)
 		{
 			w.Write(o != null);
 			if (o == null) return;
+			if (wireVersion < KingdomLifecycleRules.RaidLedgerLifecycleFormatVersion
+				&& (byte)o.Action > (byte)KingdomLifecycleAction.PetitionExpire)
+				throw new InvalidDataException(
+					"historical lifecycle wire cannot encode appended raid action");
 			EnsureCount(o.WaterLegs, KingdomLifecycleRules.MaxWaterLegs, "water legs");
 			EnsureCount(o.Projections, KingdomLifecycleRules.MaxProjections, "projections");
 			EnsureCount(o.ResourceLeases, KingdomLifecycleRules.MaxResourceLeases, "resource leases");
@@ -2760,10 +3242,10 @@ namespace ThousandAndFirst
 
 		private static KingdomLifecycleOperation ReadOperation(BinaryReader r)
 		{
-			return ReadOperation(r, false);
+			return ReadOperation(r, KingdomLifecycleRules.CurrentFormatVersion);
 		}
 
-		private static KingdomLifecycleOperation ReadOperation(BinaryReader r, bool legacyWire)
+		private static KingdomLifecycleOperation ReadOperation(BinaryReader r, int wireVersion)
 		{
 			if (!ReadExactBoolean(r)) return null;
 			KingdomLifecycleOperation o = new KingdomLifecycleOperation();
@@ -2771,6 +3253,10 @@ namespace ThousandAndFirst
 			o.Id = S(r, true); o.PlanHash = S(r, true);
 			o.Lane = (KingdomLifecycleLane)r.ReadByte();
 			o.Action = (KingdomLifecycleAction)r.ReadByte();
+			if (wireVersion < KingdomLifecycleRules.RaidLedgerLifecycleFormatVersion
+				&& (byte)o.Action > (byte)KingdomLifecycleAction.PetitionExpire)
+				throw new InvalidDataException(
+					"historical lifecycle wire contains appended raid action");
 			o.Phase = (KingdomLifecyclePhase)r.ReadByte();
 			o.CreatedTick = r.ReadInt64(); o.UpdatedTick = r.ReadInt64();
 			o.SettlementId = S(r, true); o.ZoneId = S(r, false); o.ObjectId = S(r, true);
@@ -2796,7 +3282,8 @@ namespace ThousandAndFirst
 			o.EffectState = (KingdomLifecyclePhysicalState)r.ReadByte();
 			int leases = ReadCount(r, KingdomLifecycleRules.MaxResourceLeases);
 			o.ResourceLeases = new List<KingdomLifecycleResourceLease>(leases);
-			for (int i = 0; i < leases; i++) o.ResourceLeases.Add(ReadLease(r, legacyWire));
+			for (int i = 0; i < leases; i++) o.ResourceLeases.Add(ReadLease(r,
+				wireVersion == KingdomLifecycleRules.LegacyLifecycleFormatVersion));
 			o.Defence = r.ReadInt32(); o.PartySize = r.ReadInt32(); o.Spawned = r.ReadInt32();
 			o.PlunderRequested = r.ReadInt32(); o.PlunderProved = r.ReadInt32();
 			o.ArrivalText = S(r, false, true); o.Outbox = ReadOutbox(r); o.Fault = S(r, false, true);
@@ -3043,7 +3530,432 @@ namespace ThousandAndFirst
 			};
 		}
 
-		private static void WriteCarryOperation(BinaryWriter w, KingdomCarryOperation o)
+		private static void WriteRaidLedger(BinaryWriter w, KingdomRaidLedger x)
+		{
+			if (x == null) throw new InvalidDataException("raid ledger is absent");
+			if (x.Version > KingdomRaidLedger.CurrentVersion)
+			{
+				if (x.OpaqueFuturePayload == null
+					|| x.OpaqueFuturePayload.Length > KingdomLifecycleRules.MaxRaidLedgerBytes)
+					throw new InvalidDataException("future raid ledger envelope is malformed");
+				w.Write(x.Version); w.Write(x.OpaqueFuturePayload.Length);
+				w.Write(x.OpaqueFuturePayload, 0, x.OpaqueFuturePayload.Length);
+				return;
+			}
+			if (x.Version != KingdomRaidLedger.CurrentVersion || x.OpaqueFuturePayload != null)
+				throw new InvalidDataException("raid ledger version is not writable");
+			byte[] payload;
+			using (MemoryStream stream = new MemoryStream())
+			using (BinaryWriter body = new BinaryWriter(stream, StrictUtf8, true))
+			{
+				WriteRaidLedgerV3Body(body, x);
+				body.Flush();
+				if (stream.Length > KingdomLifecycleRules.MaxRaidLedgerBytes)
+					throw new InvalidDataException("raid ledger payload exceeds its cap");
+				payload = stream.ToArray();
+			}
+			w.Write(x.Version); w.Write(payload.Length); w.Write(payload, 0, payload.Length);
+		}
+
+		private static void WriteRaidLedgerV2(BinaryWriter w, KingdomRaidLedger x)
+		{
+			if (x == null || x.Version != KingdomRaidLedger.CurrentVersion
+				|| x.OpaqueFuturePayload != null)
+				throw new InvalidDataException("raid v2 fixture requires current authority");
+			byte[] payload;
+			using (MemoryStream stream = new MemoryStream())
+			using (BinaryWriter body = new BinaryWriter(stream, StrictUtf8, true))
+			{
+				WriteRaidLedgerV2Body(body, x); body.Flush();
+				if (stream.Length > KingdomLifecycleRules.MaxRaidLedgerBytes)
+					throw new InvalidDataException("raid ledger payload exceeds its cap");
+				payload = stream.ToArray();
+			}
+			w.Write(2); w.Write(payload.Length); w.Write(payload, 0, payload.Length);
+		}
+
+		/// <summary>Raid v3 is v2 byte-for-byte followed by a typed reservation appendix. Keeping
+		/// the old body intact makes the previous writer a frozen fixture rather than a conditional
+		/// view of today's object graph.</summary>
+		private static void WriteRaidLedgerV3Body(BinaryWriter w, KingdomRaidLedger x)
+		{
+			WriteRaidLedgerV2Body(w, x);
+			w.Write(x.Incidents.Count);
+			for (int i = 0; i < x.Incidents.Count; i++)
+			{
+				KingdomRaidIncident q = x.Incidents[i];
+				w.Write(q.DefenceReservationVersion);
+				EnsureCount(q.DefenceReservations, KingdomRaidIncidentRules.MaxDefenceWorks,
+					"raid defence reservations");
+				w.Write(q.DefenceReservations.Count);
+				for (int j = 0; j < q.DefenceReservations.Count; j++)
+				{
+					KingdomRaidDefenceReservation row = q.DefenceReservations[j];
+					if (row == null) throw new InvalidDataException("null raid defence reservation");
+					w.Write(row.WorkId); w.Write(row.FrozenScore);
+					EnsureCount(row.CrewSemanticIds, KingdomRaidIncidentRules.MaxDefenceCrew,
+						"raid defence crew reservations");
+					w.Write(row.CrewSemanticIds.Count);
+					for (int k = 0; k < row.CrewSemanticIds.Count; k++)
+						w.Write(row.CrewSemanticIds[k]);
+				}
+			}
+		}
+
+		private static void WriteRaidLedgerV2Body(BinaryWriter w, KingdomRaidLedger x)
+		{
+			EnsureCount(x.Grievances, KingdomLifecycleRules.MaxRaidGrievances,
+				"raid grievances");
+			EnsureCount(x.Incidents, KingdomLifecycleRules.MaxRaidIncidents,
+				"raid incidents");
+			w.Write(x.StateRevision); w.Write(x.ScheduleRevision);
+			S(w, x.ActiveIncidentId, true); w.Write(x.LegacyEvidenceArchived);
+			w.Write(x.LegacyRaidState); S(w, x.LegacyFaction, false);
+			w.Write(x.LegacyDueTick); w.Write(x.LegacyLastTick); w.Write(x.LegacyTimesDeferred);
+			w.Write(x.Grievances.Count);
+			for (int i = 0; i < x.Grievances.Count; i++)
+			{
+				KingdomRaidGrievance g = x.Grievances[i];
+				if (g == null) throw new InvalidDataException("null raid grievance");
+				S(w, g.Id, true); S(w, g.IssuerFactionId, false);
+				S(w, g.TargetSettlementId, true); S(w, g.TargetZoneId, false);
+				S(w, g.CauseCode, false); S(w, g.SourceEventId, true); w.Write(g.SourceTick);
+				S(w, g.SourceZoneId, false); w.Write(g.Severity);
+				S(w, g.EvidenceText, false, true); w.Write((byte)g.Status);
+				S(w, g.ResolutionId, true);
+			}
+			w.Write(x.Incidents.Count);
+			for (int i = 0; i < x.Incidents.Count; i++)
+			{
+				KingdomRaidIncident q = x.Incidents[i];
+				if (q == null) throw new InvalidDataException("null raid incident");
+				S(w, q.Id, true); S(w, q.GrievanceId, true); S(w, q.CauseSnapshot, false, true);
+				S(w, q.SettlementId, true); S(w, q.TargetZoneId, false);
+				S(w, q.AttackerFactionId, false); S(w, q.SourceKind, false);
+				S(w, q.SourceLocator, false); S(w, q.ReachRule, false);
+				w.Write((byte)q.State); w.Write(q.Seed); w.Write(q.RumorTick);
+				w.Write(q.DeliveredTick); w.Write(q.DueTick); w.Write((byte)q.Response);
+				w.Write(q.DisclosedStake); w.Write(q.MaximumPlunder);
+				S(w, q.ForceProfileId, false);
+				w.Write(q.DefenceEstimate); S(w, q.ObjectiveCode, false);
+				S(w, q.ObjectiveObjectId, true); w.Write(q.ObjectiveX); w.Write(q.ObjectiveY);
+				w.Write(q.PlannedPartySize); w.Write(q.SpawnedPartySize); w.Write(q.PlunderProved);
+				S(w, q.DefenceCommitment, false, true); w.Write(q.TalkObligation);
+				S(w, q.TalkObligationDischargedBy, true);
+				S(w, q.LastNotice, false, true); w.Write((byte)q.Resolution);
+				S(w, q.ResolutionOperationId, true); w.Write(q.ResolvedTick);
+				w.Write(q.DemandLeadTicks); w.Write(q.RemainingLeadTicks);
+				S(w, q.DemandChannelId, true); S(w, q.DemandObjectId, true);
+				w.Write((byte)q.ChannelState); w.Write(q.ChannelRevision);
+				w.Write(q.FortifyOrderedTick); S(w, q.AttackOperationId, true);
+				w.Write((byte)q.RecoveryState); S(w, q.RecoveryQuestId, true);
+				S(w, q.RecoveryStepId, true); w.Write(q.RecoveryOpenedTick);
+				w.Write(q.RecoveryResolvedTick); S(w, q.RecoveryNotice, false, true);
+			}
+		}
+
+		private static void WriteRaidLedgerV1Body(BinaryWriter w, KingdomRaidLedger x)
+		{
+			EnsureCount(x.Grievances, KingdomLifecycleRules.MaxRaidGrievances,
+				"raid grievances");
+			EnsureCount(x.Incidents, KingdomLifecycleRules.MaxRaidIncidents,
+				"raid incidents");
+			w.Write(x.StateRevision); w.Write(x.ScheduleRevision);
+			S(w, x.ActiveIncidentId, true); w.Write(x.LegacyEvidenceArchived);
+			w.Write(x.LegacyRaidState); S(w, x.LegacyFaction, false);
+			w.Write(x.LegacyDueTick); w.Write(x.LegacyLastTick); w.Write(x.LegacyTimesDeferred);
+			w.Write(x.Grievances.Count);
+			for (int i = 0; i < x.Grievances.Count; i++)
+			{
+				KingdomRaidGrievance g = x.Grievances[i];
+				if (g == null) throw new InvalidDataException("null raid grievance");
+				S(w, g.Id, true); S(w, g.IssuerFactionId, false);
+				S(w, g.TargetSettlementId, true); S(w, g.TargetZoneId, false);
+				S(w, g.CauseCode, false); S(w, g.SourceEventId, true); w.Write(g.SourceTick);
+				S(w, g.SourceZoneId, false); w.Write(g.Severity);
+				S(w, g.EvidenceText, false, true); w.Write((byte)g.Status);
+				S(w, g.ResolutionId, true);
+			}
+			w.Write(x.Incidents.Count);
+			for (int i = 0; i < x.Incidents.Count; i++)
+			{
+				KingdomRaidIncident q = x.Incidents[i];
+				if (q == null) throw new InvalidDataException("null raid incident");
+				S(w, q.Id, true); S(w, q.GrievanceId, true); S(w, q.CauseSnapshot, false, true);
+				S(w, q.SettlementId, true); S(w, q.TargetZoneId, false);
+				S(w, q.AttackerFactionId, false); S(w, q.SourceKind, false);
+				S(w, q.SourceLocator, false); S(w, q.ReachRule, false);
+				w.Write((byte)q.State); w.Write(q.Seed); w.Write(q.RumorTick);
+				w.Write(q.DeliveredTick); w.Write(q.DueTick); w.Write((byte)q.Response);
+				w.Write(q.DisclosedStake); w.Write(q.MaximumPlunder);
+				S(w, q.ForceProfileId, false); w.Write(q.DefenceEstimate);
+				S(w, q.ObjectiveCode, false); S(w, q.ObjectiveObjectId, true);
+				w.Write(q.ObjectiveX); w.Write(q.ObjectiveY); w.Write(q.PlannedPartySize);
+				w.Write(q.SpawnedPartySize); w.Write(q.PlunderProved);
+				S(w, q.DefenceCommitment, false, true); w.Write(q.TalkObligation);
+				S(w, q.TalkObligationDischargedBy, true); S(w, q.LastNotice, false, true);
+				w.Write((byte)q.Resolution); S(w, q.ResolutionOperationId, true);
+				w.Write(q.ResolvedTick);
+			}
+		}
+
+		private static KingdomRaidLedger ReadRaidLedger(BinaryReader r)
+		{
+			int version = r.ReadInt32();
+			if (version == 1) return UpgradeRaidLedgerV1(ReadRaidLedgerV1Body(r));
+			if (version < 2) throw new InvalidDataException("unsupported raid ledger version");
+			int length = ReadCount(r, KingdomLifecycleRules.MaxRaidLedgerBytes);
+			byte[] payload = r.ReadBytes(length);
+			if (payload.Length != length) throw new EndOfStreamException("raid ledger is truncated");
+			if (version > KingdomRaidLedger.CurrentVersion)
+				return new KingdomRaidLedger { Version = version, OpaqueFuturePayload = payload };
+			using (MemoryStream stream = new MemoryStream(payload, false))
+			using (BinaryReader body = new BinaryReader(stream, StrictUtf8, true))
+			{
+				KingdomRaidLedger value = version == 2
+					? UpgradeRaidLedgerV2(ReadRaidLedgerV2Body(body))
+					: ReadRaidLedgerV3Body(body);
+				if (stream.Position != stream.Length)
+					throw new InvalidDataException("raid ledger has trailing bytes");
+				return value;
+			}
+		}
+
+		private static KingdomRaidLedger ReadRaidLedgerV3Body(BinaryReader r)
+		{
+			KingdomRaidLedger x = ReadRaidLedgerV2Body(r);
+			int incidents = ReadCount(r, KingdomLifecycleRules.MaxRaidIncidents);
+			if (incidents != x.Incidents.Count)
+				throw new InvalidDataException("raid defence appendix does not match incidents");
+			for (int i = 0; i < incidents; i++)
+			{
+				KingdomRaidIncident q = x.Incidents[i];
+				q.DefenceReservationVersion = r.ReadInt32();
+				int rows = ReadCount(r, KingdomRaidIncidentRules.MaxDefenceWorks);
+				q.DefenceReservations = new List<KingdomRaidDefenceReservation>(rows);
+				for (int j = 0; j < rows; j++)
+				{
+					KingdomRaidDefenceReservation row = new KingdomRaidDefenceReservation
+					{
+						WorkId = r.ReadInt32(),
+						FrozenScore = r.ReadInt32()
+					};
+					int crew = ReadCount(r, KingdomRaidIncidentRules.MaxDefenceCrew);
+					row.CrewSemanticIds = new List<int>(crew);
+					for (int k = 0; k < crew; k++) row.CrewSemanticIds.Add(r.ReadInt32());
+					q.DefenceReservations.Add(row);
+				}
+			}
+			x.Version = KingdomRaidLedger.CurrentVersion;
+			return x;
+		}
+
+		private static KingdomRaidLedger ReadRaidLedgerV2Body(BinaryReader r)
+		{
+			KingdomRaidLedger x = new KingdomRaidLedger
+			{
+				Version = 2, StateRevision = r.ReadInt64(),
+				ScheduleRevision = r.ReadInt64(), ActiveIncidentId = S(r, true),
+				LegacyEvidenceArchived = ReadExactBoolean(r), LegacyRaidState = r.ReadInt32(),
+				LegacyFaction = S(r, false), LegacyDueTick = r.ReadInt64(),
+				LegacyLastTick = r.ReadInt64(), LegacyTimesDeferred = r.ReadInt32()
+			};
+			int grievances = ReadCount(r, KingdomLifecycleRules.MaxRaidGrievances);
+			x.Grievances = new List<KingdomRaidGrievance>(grievances);
+			for (int i = 0; i < grievances; i++)
+				x.Grievances.Add(new KingdomRaidGrievance
+				{
+					Id = S(r, true), IssuerFactionId = S(r, false),
+					TargetSettlementId = S(r, true), TargetZoneId = S(r, false),
+					CauseCode = S(r, false), SourceEventId = S(r, true),
+					SourceTick = r.ReadInt64(), SourceZoneId = S(r, false),
+					Severity = r.ReadInt32(), EvidenceText = S(r, false, true),
+					Status = (KingdomRaidGrievanceStatus)r.ReadByte(), ResolutionId = S(r, true)
+				});
+			int incidents = ReadCount(r, KingdomLifecycleRules.MaxRaidIncidents);
+			x.Incidents = new List<KingdomRaidIncident>(incidents);
+			for (int i = 0; i < incidents; i++)
+			{
+				KingdomRaidIncident q = new KingdomRaidIncident
+				{
+					Id = S(r, true), GrievanceId = S(r, true), CauseSnapshot = S(r, false, true),
+					SettlementId = S(r, true), TargetZoneId = S(r, false),
+					AttackerFactionId = S(r, false), SourceKind = S(r, false),
+					SourceLocator = S(r, false), ReachRule = S(r, false),
+					State = (KingdomRaidIncidentState)r.ReadByte(), Seed = r.ReadInt64(),
+					RumorTick = r.ReadInt64(), DeliveredTick = r.ReadInt64(), DueTick = r.ReadInt64(),
+					Response = (KingdomRaidResponse)r.ReadByte(), DisclosedStake = r.ReadInt32(),
+					MaximumPlunder = r.ReadInt32(),
+					ForceProfileId = S(r, false), DefenceEstimate = r.ReadInt32(),
+					ObjectiveCode = S(r, false), ObjectiveObjectId = S(r, true),
+					ObjectiveX = r.ReadInt32(), ObjectiveY = r.ReadInt32(),
+					PlannedPartySize = r.ReadInt32(), SpawnedPartySize = r.ReadInt32(),
+					PlunderProved = r.ReadInt32(), DefenceCommitment = S(r, false, true),
+					TalkObligation = ReadExactBoolean(r),
+					TalkObligationDischargedBy = S(r, true),
+					LastNotice = S(r, false, true),
+					Resolution = (KingdomRaidResolution)r.ReadByte(),
+					ResolutionOperationId = S(r, true), ResolvedTick = r.ReadInt64()
+				};
+				q.DemandLeadTicks = r.ReadInt64(); q.RemainingLeadTicks = r.ReadInt64();
+				q.DemandChannelId = S(r, true); q.DemandObjectId = S(r, true);
+				q.ChannelState = (KingdomRaidChannelState)r.ReadByte();
+				q.ChannelRevision = r.ReadInt32(); q.FortifyOrderedTick = r.ReadInt64();
+				q.AttackOperationId = S(r, true);
+				q.RecoveryState = (KingdomRaidRecoveryState)r.ReadByte();
+				q.RecoveryQuestId = S(r, true); q.RecoveryStepId = S(r, true);
+				q.RecoveryOpenedTick = r.ReadInt64(); q.RecoveryResolvedTick = r.ReadInt64();
+				q.RecoveryNotice = S(r, false, true);
+				x.Incidents.Add(q);
+			}
+			return x;
+		}
+
+		private static KingdomRaidLedger ReadRaidLedgerV1Body(BinaryReader r)
+		{
+			KingdomRaidLedger x = new KingdomRaidLedger
+			{
+				Version = 1, StateRevision = r.ReadInt64(), ScheduleRevision = r.ReadInt64(),
+				ActiveIncidentId = S(r, true), LegacyEvidenceArchived = ReadExactBoolean(r),
+				LegacyRaidState = r.ReadInt32(), LegacyFaction = S(r, false),
+				LegacyDueTick = r.ReadInt64(), LegacyLastTick = r.ReadInt64(),
+				LegacyTimesDeferred = r.ReadInt32()
+			};
+			int grievances = ReadCount(r, KingdomLifecycleRules.MaxRaidGrievances);
+			for (int i = 0; i < grievances; i++)
+				x.Grievances.Add(new KingdomRaidGrievance
+				{
+					Id = S(r, true), IssuerFactionId = S(r, false), TargetSettlementId = S(r, true),
+					TargetZoneId = S(r, false), CauseCode = S(r, false), SourceEventId = S(r, true),
+					SourceTick = r.ReadInt64(), SourceZoneId = S(r, false), Severity = r.ReadInt32(),
+					EvidenceText = S(r, false, true), Status = (KingdomRaidGrievanceStatus)r.ReadByte(),
+					ResolutionId = S(r, true)
+				});
+			int incidents = ReadCount(r, KingdomLifecycleRules.MaxRaidIncidents);
+			for (int i = 0; i < incidents; i++)
+				x.Incidents.Add(ReadRaidIncidentV1(r));
+			return x;
+		}
+
+		private static KingdomRaidIncident ReadRaidIncidentV1(BinaryReader r)
+		{
+			return new KingdomRaidIncident
+			{
+				Id = S(r, true), GrievanceId = S(r, true), CauseSnapshot = S(r, false, true),
+				SettlementId = S(r, true), TargetZoneId = S(r, false),
+				AttackerFactionId = S(r, false), SourceKind = S(r, false),
+				SourceLocator = S(r, false), ReachRule = S(r, false),
+				State = (KingdomRaidIncidentState)r.ReadByte(), Seed = r.ReadInt64(),
+				RumorTick = r.ReadInt64(), DeliveredTick = r.ReadInt64(), DueTick = r.ReadInt64(),
+				Response = (KingdomRaidResponse)r.ReadByte(), DisclosedStake = r.ReadInt32(),
+				MaximumPlunder = r.ReadInt32(), ForceProfileId = S(r, false),
+				DefenceEstimate = r.ReadInt32(), ObjectiveCode = S(r, false),
+				ObjectiveObjectId = S(r, true), ObjectiveX = r.ReadInt32(),
+				ObjectiveY = r.ReadInt32(), PlannedPartySize = r.ReadInt32(),
+				SpawnedPartySize = r.ReadInt32(), PlunderProved = r.ReadInt32(),
+				DefenceCommitment = S(r, false, true), TalkObligation = ReadExactBoolean(r),
+				TalkObligationDischargedBy = S(r, true), LastNotice = S(r, false, true),
+				Resolution = (KingdomRaidResolution)r.ReadByte(),
+				ResolutionOperationId = S(r, true), ResolvedTick = r.ReadInt64()
+			};
+		}
+
+		private static KingdomRaidLedger UpgradeRaidLedgerV1(KingdomRaidLedger x)
+		{
+			x.Version = 2;
+			for (int i = 0; i < x.Incidents.Count; i++)
+			{
+				KingdomRaidIncident q = x.Incidents[i];
+				long lead = q.DueTick > q.DeliveredTick ? q.DueTick - q.DeliveredTick : 1L;
+				q.DemandLeadTicks = lead;
+				q.DemandChannelId = KingdomLifecycleRules.ChildId(q.Id, "demand-channel", 0);
+				if (q.State == KingdomRaidIncidentState.Queued)
+				{
+					q.DeliveredTick = 0L; q.DueTick = 0L; q.RemainingLeadTicks = lead;
+					q.ChannelState = KingdomRaidChannelState.None;
+				}
+				else if (q.State == KingdomRaidIncidentState.Warned
+					|| q.State == KingdomRaidIncidentState.ConfrontationReady)
+				{
+					q.DueTick = 0L; q.RemainingLeadTicks = q.State == KingdomRaidIncidentState.Warned
+						? lead : 0L;
+					q.ChannelState = KingdomRaidChannelState.RedeliveryQueued;
+				}
+				else q.ChannelState = KingdomRaidChannelState.Closed;
+				if (q.ObjectiveObjectId != null && q.AttackOperationId == null)
+					q.AttackOperationId = KingdomLifecycleRules.ChildId(q.Id, "legacy-attack", 0);
+				if (q.State == KingdomRaidIncidentState.Resolved
+					&& q.Resolution == KingdomRaidResolution.StoresPlundered)
+				{
+					q.RecoveryState = KingdomRaidRecoveryState.LegacyUnavailable;
+					q.RecoveryResolvedTick = q.ResolvedTick;
+					q.RecoveryNotice = "This raid predates the recovery contract; no recovery was fabricated.";
+				}
+			}
+			return UpgradeRaidLedgerV2(x);
+		}
+
+		private static KingdomRaidLedger UpgradeRaidLedgerV2(KingdomRaidLedger x)
+		{
+			if (x == null || x.Version != 2) return x;
+			x.Version = KingdomRaidLedger.CurrentVersion;
+			for (int i = 0; x.Incidents != null && i < x.Incidents.Count; i++)
+			{
+				KingdomRaidIncident q = x.Incidents[i];
+				if (q == null) continue;
+				q.DefenceReservationVersion = 0;
+				q.DefenceReservations = new List<KingdomRaidDefenceReservation>();
+				if (q.State == KingdomRaidIncidentState.Fortified)
+				{
+					// V2 froze only object-id=score text. It cannot prove the resident rows,
+					// bodies or posts that supplied that score, so reopen every answer without
+					// silently reserving substitute people on load.
+					q.Response = KingdomRaidResponse.None;
+					q.State = KingdomRaidIncidentState.ConfrontationReady;
+					q.DueTick = 0L;
+					q.RemainingLeadTicks = 0L;
+					q.DefenceEstimate = 0;
+					q.DefenceCommitment = null;
+					q.FortifyOrderedTick = 0L;
+					q.LastNotice = "This older muster named works but not exact resident-row crews. "
+						+ "Every answer is open again; nothing was spent or inferred.";
+				}
+				else if (q.Response == KingdomRaidResponse.Fortify
+					&& (q.State == KingdomRaidIncidentState.Active
+						|| q.State == KingdomRaidIncidentState.Resolved
+						|| q.State == KingdomRaidIncidentState.Cancelled
+						|| q.State == KingdomRaidIncidentState.Quarantined))
+				{
+					// The physical raid/result already owns causality. Retain no actionable
+					// unproved commitment in the upgraded incident.
+					q.DefenceEstimate = 0;
+					q.DefenceCommitment = null;
+				}
+			}
+			return x;
+		}
+
+		/// <summary>Archive v3-v7 reflected the exact unframed raid-v1 object graph. Keep that
+		/// historical archive surface byte-frozen, then migrate it through the same decoder-owned
+		/// upgrade used by the lifecycle wire. No caller may reinterpret a partial v2 graph.</summary>
+		internal static bool UpgradeArchivedRaidLedgerV1(KingdomLifecycleBook book)
+		{
+			if (book == null || book.RaidLedger == null) return false;
+			if (book.FormatVersion == KingdomLifecycleRules.RaidLedgerLifecycleFormatVersion)
+				book.FormatVersion = KingdomLifecycleRules.CurrentFormatVersion;
+			else if (book.FormatVersion != KingdomLifecycleRules.CurrentFormatVersion) return false;
+			if (book.RaidLedger.Version == KingdomRaidLedger.CurrentVersion)
+				return KingdomRaidIncidentRules.ValidLedger(book.RaidLedger);
+			if (book.RaidLedger.Version == 1)
+				book.RaidLedger = UpgradeRaidLedgerV1(book.RaidLedger);
+			else if (book.RaidLedger.Version == 2)
+				book.RaidLedger = UpgradeRaidLedgerV2(book.RaidLedger);
+			else return false;
+			return KingdomRaidIncidentRules.ValidLedger(book.RaidLedger);
+		}
+
+		private static void WriteCarryOperation(BinaryWriter w, KingdomCarryOperation o,
+			bool IncludeV6)
 		{
 			w.Write(o != null);
 			if (o == null) return;
@@ -3069,7 +3981,8 @@ namespace ThousandAndFirst
 			w.Write(o.ScheduleSameReference); S(w, o.ScheduleProofId, false);
 			w.Write((byte)o.ScheduleReceiptState);
 			w.Write(o.Sources.Count);
-			for (int i = 0; i < o.Sources.Count; i++) WriteCarrySource(w, o.Sources[i]);
+			for (int i = 0; i < o.Sources.Count; i++)
+				WriteCarrySource(w, o.Sources[i], IncludeV6);
 			w.Write(o.Outputs.Count);
 			for (int i = 0; i < o.Outputs.Count; i++) WriteProjection(w, o.Outputs[i]);
 			WriteSix(w, o.Mud, o.Brush, o.Timber, o.Stone, o.Marble, o.Scrap);
@@ -3079,9 +3992,28 @@ namespace ThousandAndFirst
 				o.DeliveredMarble, o.DeliveredScrap);
 			WriteSix(w, o.LostMud, o.LostBrush, o.LostTimber, o.LostStone, o.LostMarble, o.LostScrap);
 			WriteOutbox(w, o.Outbox); S(w, o.Fault, false, true);
+			if (IncludeV6)
+			{
+				EnsureCount(o.JobIds, KingdomLifecycleRules.MaxCarryJobIds, "carry job ids");
+				EnsureCount(o.TripIds, KingdomLifecycleRules.MaxCarryTripIds, "carry trip ids");
+				w.Write((byte)o.AuthorityKind); w.Write(o.ManifestVersion);
+				S(w, o.ManifestDigest, true); w.Write(o.ManifestRevision);
+				w.Write(o.JobIds.Count); for (int i = 0; i < o.JobIds.Count; i++) w.Write(o.JobIds[i]);
+				w.Write(o.TripIds.Count); for (int i = 0; i < o.TripIds.Count; i++) w.Write(o.TripIds[i]);
+				S(w, o.SignObjectId, true); S(w, o.SignBlueprint, false);
+				w.Write((byte)o.SignTopology); S(w, o.SignOwnerId, true); S(w, o.SignZoneId, false);
+				w.Write(o.SignX); w.Write(o.SignY); w.Write(o.SignCount);
+				S(w, o.SignReceiptId, true); w.Write(o.SignReceiptBeforeMatches);
+				w.Write(o.SignReceiptAfterMatches); w.Write(o.SignReceiptBeforeCount);
+				w.Write(o.SignReceiptAfterCount);
+				w.Write(o.SignReceiptSameReference); S(w, o.SignReceiptProofId, true);
+				w.Write((byte)o.SignReceiptState); w.Write(o.DestinationSafetyWaiting);
+				w.Write(o.DestinationSafetyWaitTick); S(w, o.SpillZoneId, false);
+				w.Write(o.SpillX); w.Write(o.SpillY);
+			}
 		}
 
-		private static KingdomCarryOperation ReadCarryOperation(BinaryReader r)
+		private static KingdomCarryOperation ReadCarryOperation(BinaryReader r, bool IncludeV6)
 		{
 			if (!ReadExactBoolean(r)) return null;
 			KingdomCarryOperation o = new KingdomCarryOperation();
@@ -3109,7 +4041,7 @@ namespace ThousandAndFirst
 			o.ScheduleReceiptState = (KingdomLifecyclePhysicalState)r.ReadByte();
 			int sources = ReadCount(r, KingdomLifecycleRules.MaxCarrySources);
 			o.Sources = new List<KingdomCarrySource>(sources);
-			for (int i = 0; i < sources; i++) o.Sources.Add(ReadCarrySource(r));
+			for (int i = 0; i < sources; i++) o.Sources.Add(ReadCarrySource(r, IncludeV6));
 			int outputs = ReadCount(r, KingdomLifecycleRules.MaxCarryOutputs);
 			o.Outputs = new List<KingdomLifecycleProjection>(outputs);
 			for (int i = 0; i < outputs; i++) o.Outputs.Add(ReadProjection(r));
@@ -3121,10 +4053,36 @@ namespace ThousandAndFirst
 			ReadSix(r, out o.LostMud, out o.LostBrush, out o.LostTimber, out o.LostStone,
 				out o.LostMarble, out o.LostScrap);
 			o.Outbox = ReadOutbox(r); o.Fault = S(r, false, true);
+			if (IncludeV6)
+			{
+				o.AuthorityKind = (KingdomCarryAuthorityKind)r.ReadByte();
+				o.ManifestVersion = r.ReadInt32(); o.ManifestDigest = S(r, true);
+				o.ManifestRevision = r.ReadInt64();
+				int jobs = ReadCount(r, KingdomLifecycleRules.MaxCarryJobIds);
+				o.JobIds = new List<int>(jobs);
+				for (int i = 0; i < jobs; i++) o.JobIds.Add(r.ReadInt32());
+				int trips = ReadCount(r, KingdomLifecycleRules.MaxCarryTripIds);
+				o.TripIds = new List<int>(trips);
+				for (int i = 0; i < trips; i++) o.TripIds.Add(r.ReadInt32());
+				o.SignObjectId = S(r, true); o.SignBlueprint = S(r, false);
+				o.SignTopology = (KingdomLifecycleTopology)r.ReadByte();
+				o.SignOwnerId = S(r, true); o.SignZoneId = S(r, false);
+				o.SignX = r.ReadInt32(); o.SignY = r.ReadInt32(); o.SignCount = r.ReadInt32();
+				o.SignReceiptId = S(r, true); o.SignReceiptBeforeMatches = r.ReadInt32();
+				o.SignReceiptAfterMatches = r.ReadInt32();
+				o.SignReceiptBeforeCount = r.ReadInt32();
+				o.SignReceiptAfterCount = r.ReadInt32();
+				o.SignReceiptSameReference = ReadExactBoolean(r);
+				o.SignReceiptProofId = S(r, true);
+				o.SignReceiptState = (KingdomLifecyclePhysicalState)r.ReadByte();
+				o.DestinationSafetyWaiting = ReadExactBoolean(r);
+				o.DestinationSafetyWaitTick = r.ReadInt64(); o.SpillZoneId = S(r, false);
+				o.SpillX = r.ReadInt32(); o.SpillY = r.ReadInt32();
+			}
 			return o;
 		}
 
-		private static void WriteCarrySource(BinaryWriter w, KingdomCarrySource x)
+		private static void WriteCarrySource(BinaryWriter w, KingdomCarrySource x, bool IncludeV6)
 		{
 			if (x == null) throw new InvalidDataException("null carry source");
 			S(w, x.OperationId, true); S(w, x.SourceEventId, true); S(w, x.ObjectId, true);
@@ -3138,11 +4096,21 @@ namespace ThousandAndFirst
 			w.Write(x.ReceiptSameReference); S(w, x.ReceiptProofId, false);
 			S(w, x.ReceiptChainId, false); w.Write(x.ReceiptChainCount);
 			w.Write((byte)x.ReceiptState); w.Write((byte)x.State);
+			if (IncludeV6)
+			{
+				w.Write(x.LoadedCount); w.Write(x.DeliveredCount); w.Write(x.LostCount);
+				w.Write(x.CurrentTripId); w.Write((byte)x.CurrentTopology);
+				S(w, x.CurrentOwnerId, true); S(w, x.CurrentZoneId, false);
+				w.Write(x.CurrentX); w.Write(x.CurrentY);
+				w.Write((byte)x.PendingTransfer); w.Write((byte)x.PendingTopology);
+				S(w, x.PendingOwnerId, true); S(w, x.PendingZoneId, false);
+				w.Write(x.PendingX); w.Write(x.PendingY);
+			}
 		}
 
-		private static KingdomCarrySource ReadCarrySource(BinaryReader r)
+		private static KingdomCarrySource ReadCarrySource(BinaryReader r, bool IncludeV6)
 		{
-			return new KingdomCarrySource
+			KingdomCarrySource source = new KingdomCarrySource
 			{
 				OperationId = S(r, true), SourceEventId = S(r, true), ObjectId = S(r, true),
 				Blueprint = S(r, false), Topology = (KingdomLifecycleTopology)r.ReadByte(),
@@ -3159,6 +4127,19 @@ namespace ThousandAndFirst
 				ReceiptState = (KingdomLifecyclePhysicalState)r.ReadByte(),
 				State = (KingdomLifecyclePhysicalState)r.ReadByte()
 			};
+			if (IncludeV6)
+			{
+				source.LoadedCount = r.ReadInt32(); source.DeliveredCount = r.ReadInt32();
+				source.LostCount = r.ReadInt32(); source.CurrentTripId = r.ReadInt32();
+				source.CurrentTopology = (KingdomLifecycleTopology)r.ReadByte();
+				source.CurrentOwnerId = S(r, true); source.CurrentZoneId = S(r, false);
+				source.CurrentX = r.ReadInt32(); source.CurrentY = r.ReadInt32();
+				source.PendingTransfer = (KingdomCarryTransferKind)r.ReadByte();
+				source.PendingTopology = (KingdomLifecycleTopology)r.ReadByte();
+				source.PendingOwnerId = S(r, true); source.PendingZoneId = S(r, false);
+				source.PendingX = r.ReadInt32(); source.PendingY = r.ReadInt32();
+			}
+			return source;
 		}
 
 		private static void WriteOption(BinaryWriter w, KingdomLifecycleOptionState s, long tick)
@@ -3245,6 +4226,7 @@ namespace ThousandAndFirst
 			target.Petition = null;
 			target.Resources = new List<KingdomLifecycleResourceRevision>();
 			target.RecentProofs = new List<KingdomLifecycleProof>();
+			target.RaidLedger = new KingdomRaidLedger();
 			target.Growth = PoisonGrowth("enclosing lifecycle wire was rejected");
 		}
 
@@ -3257,6 +4239,8 @@ namespace ThousandAndFirst
 			target.SettlementIds = new List<string>();
 			target.Resources = new List<KingdomLifecycleResourceRevision>();
 			target.RecentProofs = new List<KingdomLifecycleProof>();
+			target.OpaqueWireVersion = 0;
+			target.OpaquePayload = null;
 		}
 
 		private static void Copy(KingdomLifecycleBook a, KingdomLifecycleBook b)
@@ -3279,6 +4263,7 @@ namespace ThousandAndFirst
 			b.PlainGuest = a.PlainGuest; b.NotableGuest = a.NotableGuest;
 			b.Raid = a.Raid; b.Petition = a.Petition;
 			b.Resources = a.Resources; b.RecentProofs = a.RecentProofs;
+			b.RaidLedger = a.RaidLedger;
 			b.Growth = a.Growth; b.WireRejected = false;
 		}
 
@@ -3290,7 +4275,9 @@ namespace ThousandAndFirst
 			b.IdentityBound = a.IdentityBound; b.IdentityProof = a.IdentityProof;
 			b.NextSequence = a.NextSequence;
 			b.RetiredThrough = a.RetiredThrough; b.Open = a.Open;
-			b.Resources = a.Resources; b.RecentProofs = a.RecentProofs; b.WireRejected = false;
+			b.Resources = a.Resources; b.RecentProofs = a.RecentProofs;
+			b.OpaqueWireVersion = a.OpaqueWireVersion; b.OpaquePayload = a.OpaquePayload;
+			b.WireRejected = false;
 		}
 	}
 }

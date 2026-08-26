@@ -121,7 +121,7 @@ namespace ThousandAndFirst
 					"kingdomresearch",
 					delegate(XmlDataHelper xml)
 					{
-						xml.HandleNodes(handlers);
+						KingdomXmlSchema.HandleRoot(xml, handlers, "KingdomResearch");
 					}
 				},
 				{ "node", HandleNode }
@@ -245,7 +245,9 @@ namespace ThousandAndFirst
 				return false;
 			}
 			string id = NoteId(Key);
-			if (id == null || !JournalAPI.TryRevealNote(id, LearnedFrom))
+			if (id == null || !JournalAPI.TryRevealNote(id,
+				string.IsNullOrEmpty(LearnedFrom) ? LearnedFrom
+					: KingdomPresentation.Rich(LearnedFrom)))
 			{
 				return false;
 			}
@@ -400,6 +402,59 @@ namespace ThousandAndFirst
 		// Setting the subject, and the reasons a subject cannot be set
 		// ==================================================================================
 
+		/// <summary>The one pressable research surface: a real inquiry bench on the seated city's
+		/// claimed ground. The Charter and technology map remain readings. Selecting here mutates the
+		/// exact city whose work the founder is touching, which is RESEARCH-SYSTEM-DESIGN §0(3), not
+		/// a remote realm command disguised as a report.</summary>
+		public static void OpenBench(GameObject Bench, GameObject Actor)
+		{
+			KingdomSystem system = The.Game?.RequireSystem<KingdomSystem>();
+			if (!KingdomMaster.NewWorkAllowed(system))
+			{
+				Popup.Show("Settlement simulation is paused; the keepers cannot take up a new subject yet.");
+				return;
+			}
+			Zone zone = Bench?.CurrentZone;
+			if (!Enabled || system == null || !system.Founded || zone == null
+				|| Actor == null || !Actor.IsPlayer() || Actor.CurrentZone != zone
+				|| system.ClaimedZones == null || !system.ClaimedZones.Contains(zone.ZoneID)
+				|| !GameObject.Validate(Bench)
+				|| !Bench.HasPart<XRL.World.Parts.r_KingdomInquiry>())
+			{
+				Popup.Show("Research is set at a staffed inquiry bench on the seated city's own ground.");
+				return;
+			}
+			RevealRoots(system);
+			ApplySources(system);
+			List<ResearchNode> subjects = Offerable(system);
+			if (subjects.Count == 0)
+			{
+				Popup.Show("There is nothing this city's keepers have heard of and not worked out.");
+				return;
+			}
+			List<string> options = new List<string>();
+			for (int i = 0; i < subjects.Count; i++)
+			{
+				string refusal;
+				bool can = CanTakeUp(system, subjects[i], out refusal);
+				options.Add(subjects[i].Named + (can ? "" : " {{K|[" + refusal + "]}}"));
+			}
+			int chosen = Popup.PickOption(Title: "What shall they work out at "
+				+ Bench.ShortDisplayName + "?",
+				Intro: "One thing at a time. Setting a new subject aside keeps whatever work already stands on it.",
+				Options: options, AllowEscape: true, RespectOptionNewlines: true);
+			if (chosen < 0 || chosen >= subjects.Count) return;
+			string failure;
+			if (!TakeUp(system, subjects[chosen].Key, out failure,
+				"set research subject at " + Bench.ShortDisplayName))
+			{
+				Popup.Show(failure);
+				return;
+			}
+			Popup.Show("{{G|The keepers of " + KingdomPresentation.Rich(system.SeatName) + " take up "
+				+ subjects[chosen].Named + ".}} What comes of it comes of their own work, in their own time.");
+		}
+
 		/// <summary>
 		/// Whether the seated city may take up this subject, with the whole sentence when it may
 		/// not. Every refusal names the lack AND what would lift it, because a gate that only says
@@ -413,7 +468,7 @@ namespace ThousandAndFirst
 				Refusal = "You rule nothing yet.";
 				return false;
 			}
-			string seat = System.SeatName;
+			string seat = KingdomPresentation.Rich(System.SeatName);
 			if (Held(System, Node.Key))
 			{
 				Refusal = "The keepers of " + seat + " already have " + Node.Named + " written down.";
@@ -459,6 +514,11 @@ namespace ThousandAndFirst
 		{
 			ResearchNode node;
 			Refusal = null;
+			if (!KingdomMaster.NewWorkAllowed(System))
+			{
+				Refusal = "Settlement simulation is paused; the keepers cannot take up a new subject yet.";
+				return false;
+			}
 			if (!TryGetNode(Key, out node) || !Admissible(System, node))
 			{
 				Refusal = "Nobody here has heard of that.";
@@ -498,7 +558,7 @@ namespace ThousandAndFirst
 					System.ResearchShelf.Remove(crowded);
 					MarkGovernance(GovernanceVerb);
 					ResearchNode dropped;
-					System.Ledger.Note("{{K|" + KingdomResearchRules.ForgottenLine(System.SeatName,
+					System.Ledger.Note("{{K|" + KingdomResearchRules.ForgottenLine(KingdomPresentation.Rich(System.SeatName),
 						TryGetNode(crowded, out dropped) ? dropped.Named : crowded) + "}}");
 				}
 			}
@@ -643,7 +703,8 @@ namespace ThousandAndFirst
 					return false;
 				}
 				rites.Add(key);
-				string encoded = KingdomZoningRules.EncodeRoster(rites);
+				string encoded;
+				if (!KingdomResearchRules.TryEncodeFounderRites(rites, out encoded)) return false;
 				The.Game.SetStringGameState(FounderRiteState, encoded);
 				if (!string.Equals(The.Game.GetStringGameState(FounderRiteState, ""), encoded,
 					StringComparison.Ordinal))
@@ -925,8 +986,10 @@ namespace ThousandAndFirst
 		/// <returns>The lab's new stamp, which the caller stores. Always
 		/// <paramref name="TimeTick"/> once a look has happened.</returns>
 		public static long Advance(KingdomSystem System, long TimeTick, long LabLastWorkedTick, int CrewEffectiveness,
-			int WearEffectiveness, int LabPercent, string LabName)
+			int WearEffectiveness, int LabPercent, string LabName,
+			int IdentityAffinity = KingdomIdentityAffinityRules.NeutralPercent)
 		{
+			if (!KingdomMaster.AutomaticWorkAllowed(System)) return LabLastWorkedTick;
 			KingdomSystem.Guard("research", delegate
 			{
 				if (!Enabled || System == null || !System.Founded)
@@ -936,7 +999,25 @@ namespace ThousandAndFirst
 				ResearchNode node;
 				if (string.IsNullOrEmpty(System.ResearchSubject) || !TryGetNode(System.ResearchSubject, out node))
 				{
-					Stall(System, KingdomResearchRules.NoSubjectLine(LabName, System.SeatName));
+					Stall(System, KingdomResearchRules.NoSubjectLine(LabName, KingdomPresentation.Rich(System.SeatName)));
+					return;
+				}
+				// Addendum 17's culture/species holdings are live. Taking a subject proves the
+				// door was open then, not forever: if a forbidding identity arrives, hide the
+				// reason; if a required bearer leaves, name the missing source and keep all paid
+				// labour. Returning the source resumes from that exact accrual.
+				if (!Admissible(System, node))
+				{
+					Stall(System, KingdomResearchRules.ClosedSubjectLine(LabName, KingdomPresentation.Rich(System.SeatName)));
+					return;
+				}
+				List<string> roster = KingdomZoning.Roster(System);
+				List<string> missing = KingdomZoningRules.MissingKnowledge(roster, node.Requires);
+				if (missing.Count > 0)
+				{
+					Stall(System, KingdomResearchRules.MissingSourceLine(LabName, node.Named,
+						KingdomPresentation.Rich(System.SeatName), KingdomZoningRules.JoinAnd(
+							KingdomZoningRules.DescribeKeys(missing))));
 					return;
 				}
 				long from = (LabLastWorkedTick > System.ResearchTakenUpTick) ? LabLastWorkedTick : System.ResearchTakenUpTick;
@@ -947,7 +1028,8 @@ namespace ThousandAndFirst
 				}
 				int mind = BestMind(System);
 				int bonus = KingdomResearchRules.TierBonus(mind, node.Tier);
-				int rate = KingdomResearchRules.InquiryRate(CrewEffectiveness, WearEffectiveness, bonus, LabPercent);
+				int rate = KingdomResearchRules.InquiryRate(CrewEffectiveness,
+					WearEffectiveness, bonus, LabPercent, IdentityAffinity);
 				if (rate <= 0)
 				{
 					Stall(System, KingdomResearchRules.StallLine(LabName, node.Named, CrewEffectiveness, WearEffectiveness,
@@ -1001,6 +1083,7 @@ namespace ThousandAndFirst
 		/// <returns>True when this call is what held it.</returns>
 		public static bool Complete(KingdomSystem System, ResearchNode Node, string LearnedFrom)
 		{
+			if (!KingdomMaster.AutomaticWorkAllowed(System)) return false;
 			if (System == null || !System.Founded || Node == null || Held(System, Node.Key))
 			{
 				return false;
@@ -1022,9 +1105,10 @@ namespace ThousandAndFirst
 					Reveal(opened.Key, System.SeatName);
 				}
 			}
-			XRL.Messages.MessageQueue.AddPlayerMessage("{{G|The keepers of " + System.SeatName + " have worked out " + Node.Named + ".}}");
-			KingdomChronicle.Record(System, "the keepers of " + System.SeatName + " worked out " + Node.Named);
-			System.RecordDeed("set the keepers of " + System.SeatName + " to work out " + Node.Named);
+			string seat = KingdomPresentation.Rich(System.SeatName);
+			XRL.Messages.MessageQueue.AddPlayerMessage("{{G|The keepers of " + seat + " have worked out " + Node.Named + ".}}");
+			KingdomChronicle.Record(System, "the keepers of " + seat + " worked out " + Node.Named);
+			System.RecordDeed("set the keepers of " + seat + " to work out " + Node.Named);
 			KingdomLog.Log("research: " + System.SeatName + " completed " + Node.Key);
 			return true;
 		}
@@ -1039,6 +1123,7 @@ namespace ThousandAndFirst
 		public static bool Seed(KingdomSystem System, string Key, string LearnedFrom,
 			string GovernanceVerb = null)
 		{
+			if (!KingdomMaster.NewWorkAllowed(System)) return false;
 			return SeedCore(System, Key, LearnedFrom, 0, false, GovernanceVerb);
 		}
 
@@ -1051,6 +1136,7 @@ namespace ThousandAndFirst
 		internal static bool SeedFromSource(KingdomSystem System, string Key, string ConcreteSource,
 			string LearnedFrom, string GovernanceVerb = null)
 		{
+			if (!KingdomMaster.NewWorkAllowed(System)) return false;
 			ResearchNode node;
 			if (System == null || !System.Founded || !Enabled ||
 				!TryGetNode(Key, out node) || !Admissible(System, node) || Held(System, node.Key))
@@ -1265,6 +1351,7 @@ namespace ThousandAndFirst
 		/// <returns>True when the citizen is one point better than they were.</returns>
 		public static bool Train(KingdomSystem System, GameObject Citizen, string Stat)
 		{
+			if (!KingdomMaster.NewWorkAllowed(System)) return false;
 			bool taught = false;
 			KingdomSystem.Guard("research training", delegate
 			{

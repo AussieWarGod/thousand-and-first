@@ -20,7 +20,7 @@ namespace ThousandAndFirst
 			KingdomSystem system = The.Game.RequireSystem<KingdomSystem>();
 			if (system.Founded)
 			{
-				Popup.Show("The kingdom of {{C|" + system.KingdomDisplayName +
+				Popup.Show("The kingdom of {{C|" + KingdomPresentation.Rich(system.KingdomDisplayName) +
 					"}} is already founded. ({{W|kingdom:found2 NAME:VOCATION}} founds the second city here.)");
 				return;
 			}
@@ -82,12 +82,12 @@ namespace ThousandAndFirst
 				Popup.Show(RefusalOrDefault(system, zone) + "\n\nKnown vocations: " + string.Join(", ", KingdomSettlement.Vocations) + ".");
 				return;
 			}
-			Popup.Show("{{C|" + name + "}} is founded here as " + KingdomSettlement.VocationClause(vocation) + ", the second city of {{C|" + system.KingdomDisplayName + "}}.\n\nSeated: " + system.Capture().Describe() + "\nAway: " + system.Away.Describe());
+			Popup.Show("{{C|" + KingdomPresentation.Rich(name) + "}} is founded here as " + KingdomSettlement.VocationClause(vocation) + ", the second city of {{C|" + KingdomPresentation.Rich(system.KingdomDisplayName) + "}}.\n\nSeated: " + system.Capture().Describe() + "\nAway: " + system.Away.Describe());
 		}
 
 		private static string RefusalOrDefault(KingdomSystem System, Zone Site)
 		{
-			string refusal = KingdomSettlement.SecondFoundingRefusal(KingdomFounding.JudgeSite(System, Site), System.KingdomDisplayName);
+			string refusal = KingdomSettlement.SecondFoundingRefusal(KingdomFounding.JudgeSite(System, Site), KingdomPresentation.Rich(System.KingdomDisplayName));
 			return string.IsNullOrEmpty(refusal) ? "The founding was refused; stand in a zone the realm does not already hold." : refusal;
 		}
 
@@ -117,7 +117,7 @@ namespace ThousandAndFirst
 				KingdomSettlement wasSeated = system.Capture();
 				system.Restore(system.Away);
 				system.Away = wasSeated;
-				Popup.Show("Seat forced to {{C|" + system.SeatName + "}}.\n\n" + SeatReport(system) + "\n\n{{K|Debug probe: the flat fields now describe a city you are not standing in. Walk into either city's ground and the ordinary swap corrects it.}}");
+				Popup.Show("Seat forced to {{C|" + KingdomPresentation.Rich(system.SeatName) + "}}.\n\n" + SeatReport(system) + "\n\n{{K|Debug probe: the flat fields now describe a city you are not standing in. Walk into either city's ground and the ordinary swap corrects it.}}");
 				return;
 			}
 			Popup.Show(SeatReport(system));
@@ -127,14 +127,14 @@ namespace ThousandAndFirst
 		/// do not. Prefixed to reports that would otherwise read as if the realm had one city.</summary>
 		private static string SeatLine(KingdomSystem System)
 		{
-			return "{{C|" + System.SeatName + "}}" + KingdomSettlement.VocationSuffix(System.Vocation)
-				+ ((System.Away != null) ? ("  {{K|(away: " + (System.Away.SettlementName ?? "(unnamed)") + ")}}") : "");
+			return "{{C|" + KingdomPresentation.Rich(System.SeatName) + "}}" + KingdomSettlement.VocationSuffix(System.Vocation)
+				+ ((System.Away != null) ? ("  {{K|(away: " + KingdomPresentation.Rich(System.Away.SettlementName ?? "(unnamed)") + ")}}") : "");
 		}
 
 		private static string SeatReport(KingdomSystem System)
 		{
 			StringBuilder sb = new StringBuilder();
-			sb.Append("{{C|Realm}}: ").Append(System.KingdomFactionName ?? "-").Append(" / ").Append(System.KingdomDisplayName ?? "-")
+			sb.Append("{{C|Realm}}: ").Append(System.KingdomFactionName ?? "-").Append(" / ").Append(KingdomPresentation.Rich(System.KingdomDisplayName ?? "-"))
 				.Append("  cities=").Append(System.SettlementCount).Append("/").Append(KingdomSettlement.MaxSettlements);
 			sb.Append("\n{{C|Seated}}: ").Append(System.Capture().Describe());
 			sb.Append("\n{{C|Away}}: ").Append((System.Away != null) ? System.Away.Describe() : "(none)");
@@ -172,14 +172,14 @@ namespace ThousandAndFirst
 				Popup.Show(StyleReport(system));
 				return;
 			}
-			string style = Parameter.Trim().ToLowerInvariant();
-			if (!KingdomRules.IsKnownStyle(style))
+			string style = Parameter.Trim();
+			if (!KingdomData.TryGetStyle(style, out string canonical))
 			{
-				Popup.Show("Unknown style {{W|" + style + "}}. Known styles: " + string.Join(", ", KingdomRules.Styles) + ".");
+				Popup.Show("Unknown style {{W|" + style + "}}. Known styles: " + string.Join(", ", KingdomData.Styles) + ".");
 				return;
 			}
-			system.Style = style;
-			Popup.Show("Style forced to {{C|" + style + "}} (" + KingdomFounding.StyleGroundClause(style) + ").\n\n" + StyleReport(system));
+			system.Style = canonical;
+			Popup.Show("Style forced to {{C|" + canonical + "}} (" + KingdomFounding.StyleGroundClause(canonical) + ").\n\n" + StyleReport(system));
 		}
 
 		private static string StyleReport(KingdomSystem System)
@@ -188,7 +188,7 @@ namespace ThousandAndFirst
 				+ "\nFounding terrain: blueprint=" + (System.FoundingTerrainBlueprint ?? "(none)")
 				+ " region=" + (System.FoundingRegionName ?? "(none)")
 				+ " z=" + System.FoundingZLevel
-				+ "\nKnown styles: " + string.Join(", ", KingdomRules.Styles);
+				+ "\nKnown styles: " + string.Join(", ", KingdomData.Styles);
 		}
 
 		/// <summary>
@@ -287,7 +287,7 @@ namespace ThousandAndFirst
 			}
 			StringBuilder sb = new StringBuilder();
 			int regard = System.ExiledRealmRegard();
-			sb.Append("{{C|Exiled from}}: ").Append(System.ExiledFactionName).Append(" / ").Append(System.ExiledDisplayName)
+			sb.Append("{{C|Exiled from}}: ").Append(System.ExiledFactionName).Append(" / ").Append(KingdomPresentation.Rich(System.ExiledDisplayName))
 				.Append("  cities=").Append(System.ExiledSettlementCount)
 				.Append("  standings=").Append(System.ExiledStandings.Count)
 				.Append("  tick=").Append(System.ExiledTick);
@@ -342,7 +342,7 @@ namespace ThousandAndFirst
 			Zone zone = The.Player?.CurrentZone;
 			StringBuilder sb = new StringBuilder();
 			sb.Append("{{C|KINGDOM STATE DUMP}} tick ").Append(The.Game.TimeTicks);
-			sb.Append("\nFounded: ").Append(system.Founded ? (system.KingdomFactionName + " / " + system.KingdomDisplayName) : "no");
+			sb.Append("\nFounded: ").Append(system.Founded ? (system.KingdomFactionName + " / " + KingdomPresentation.Rich(system.KingdomDisplayName)) : "no");
 			if (system.Founded)
 			{
 				// The seat is the whole of the multi-city surface: which city the flat fields
@@ -406,6 +406,43 @@ namespace ThousandAndFirst
 			Popup.Show(text);
 		}
 
+		/// <summary>Read-only proof of one physical paired delve. Parameter is an optional head
+		/// zone id; absent uses the zone under the player. The probe never generates a zone.</summary>
+		[WishCommand("kingdom:delvelink", null)]
+		public static void DelveLinkWish(string Parameter)
+		{
+			string head = string.IsNullOrWhiteSpace(Parameter)
+				? The.Player?.CurrentZone?.ZoneID : Parameter.Trim();
+			if (string.IsNullOrEmpty(head) || head.Length > KingdomDelveLinkRules.MaxZoneChars)
+			{
+				Popup.Show("Use {{W|kingdom:delvelink}} in a shaft head zone, or pass its exact zone id.");
+				return;
+			}
+			string foot;
+			bool canonicalFoot = KingdomDelveRules.TryFootZoneId(head, out foot);
+			string state = The.Game?.GetStringGameState(KingdomDelveLink.LinkState + head, null);
+			KingdomDelveLinkReceipt receipt;
+			bool canonicalReceipt = KingdomDelveLink.TryReadPhysicalReceipt(head, out receipt);
+			bool physical = KingdomDelveLink.PhysicalLinkStands(head);
+			StringBuilder report = new StringBuilder();
+			report.Append("{{C|Delve physical-link proof}}\nHead: ").Append(head)
+				.Append("\nFoot: ").Append(canonicalFoot ? foot : "(no canonical foot)")
+				.Append("\nState: ").Append(state == null ? "absent (legacy lane)"
+					: state == KingdomDelveLink.Tombstone ? "struck/tombstoned"
+					: canonicalReceipt ? "canonical" : "corrupt or partial")
+				.Append("\nLegacy int: ").Append(The.Game == null ? 0
+					: The.Game.GetIntGameState(KingdomDelve.ShaftState + head))
+				.Append("\nPhysical proof: ").Append(physical ? "{{G|STANDS}}" : "{{R|FAILS}}");
+			if (canonicalReceipt)
+			{
+				report.Append("\nCell: ").Append(receipt.X).Append(',').Append(receipt.Y)
+					.Append("\nRoot: ").Append(receipt.RootId)
+					.Append("\nDown: ").Append(receipt.HeadEndpointId)
+					.Append("\nUp: ").Append(receipt.FootEndpointId);
+			}
+			Popup.Show(report.ToString());
+		}
+
 		[WishCommand("kingdom:raid", null)]
 		public static void RaidWish()
 		{
@@ -416,18 +453,28 @@ namespace ThousandAndFirst
 				Popup.Show("Stand in a claimed zone first.");
 				return;
 			}
-			if (system.RaidState == 0)
+			KingdomRaids.OnZoneActivated(system, zone);
+			if (KingdomRaidIncidentRules.Active(system.LifecycleBook?.RaidLedger) == null)
 			{
-				system.RaidState = 1;
-				system.RaidFactionName = "Snapjaws";
-				system.RaidDueTick = The.Game.TimeTicks;
-				Popup.Show("Raid forced: snapjaw warning issued, due now. Trigger it with {{W|kingdom:raid}} again (or move a turn), or pay tribute via the Charter.");
+				string source = KingdomLifecycleRules.ChildId(system.LifecycleBook.SettlementId,
+					"debug-raid-" + system.LifecycleBook.RaidNextSequence, 0);
+				if (!KingdomRaids.RecordProvocation(system, "Snapjaws", "debug-test-provocation",
+					source, "the debug wish explicitly challenged a snapjaw scout", zone.ZoneID, 1))
+				{
+					Popup.Show("The explicit test grievance could not be minted; inspect the raid lifecycle fault.");
+					return;
+				}
+				Popup.Show("An explicit snapjaw test grievance was minted. It has a stable source and target, but remains only rumor: no demand has been delivered and no clock is running. Wake once to receive the physical demand, then read it to acknowledge and start its answer window.");
 			}
 			else
 			{
-				system.RaidDueTick = The.Game.TimeTicks;
 				KingdomRaids.OnZoneActivated(system, zone);
-				Popup.Show("Raid executed. Population " + system.Population + ", check the field.");
+				KingdomRaidIncident incident = KingdomRaidIncidentRules.Active(system.LifecycleBook.RaidLedger);
+				Popup.Show(incident == null ? "The explicit test incident is resolved."
+					: ("Test incident " + incident.Id + " is " + incident.State
+						+ ", channel " + incident.ChannelState + ", due "
+						+ (incident.DueTick == 0L ? "not running" : incident.DueTick.ToString())
+						+ ", target " + incident.TargetZoneId + "."));
 			}
 		}
 
@@ -440,8 +487,8 @@ namespace ThousandAndFirst
 				Popup.Show("Nothing to reset.");
 				return;
 			}
-			string held = system.Founded ? ("{{C|" + system.KingdomDisplayName + "}}, all " + system.SettlementCount + " of its cities") : "the realm you hold (none)";
-			string remembered = system.Exiled ? (", and {{C|" + system.ExiledDisplayName + "}}, which put you out") : "";
+			string held = system.Founded ? ("{{C|" + KingdomPresentation.Rich(system.KingdomDisplayName) + "}}, all " + system.SettlementCount + " of its cities") : "the realm you hold (none)";
+			string remembered = system.Exiled ? (", and {{C|" + KingdomPresentation.Rich(system.ExiledDisplayName) + "}}, which put you out") : "";
 			if (Popup.ShowYesNo("Dissolve " + held + remembered + ", and wipe all kingdom state? (Debug only; claimed-zone properties in unvisited zones are left behind.)") != DialogResult.Yes)
 			{
 				return;
@@ -509,7 +556,7 @@ namespace ThousandAndFirst
 			system.ChronicleEntries.Clear();
 			system.OutsiderEntries.Clear();
 			system.Standings.Clear();
-				system.Manifest = null;
+			system.SynchronizeLegacyManifestProjection();
 			Popup.Show("Both cities are dissolved. The ground forgets; the chronicle does not survive it.");
 		}
 

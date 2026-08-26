@@ -49,8 +49,8 @@ namespace ThousandAndFirst
 			return Z != null && The.Player != null && The.Player.CurrentZone == Z;
 		}
 
-		/// <summary>The name to put on word that came from elsewhere: the city it is about, or the
-		/// seat when the caller has nothing better.</summary>
+		/// <summary>The plain semantic city name for word that came from elsewhere. Presentation
+		/// callers escape it at the rich-text boundary; state callers may persist it unchanged.</summary>
 		public static string CityName(KingdomSystem System, string Named)
 		{
 			if (!string.IsNullOrEmpty(Named))
@@ -149,7 +149,8 @@ namespace ThousandAndFirst
 			{
 				return;
 			}
-			string said = Here ? Line : KingdomBrinkRules.WordFrom(CityName(System, From), Line);
+			string said = Here ? Line : KingdomBrinkRules.WordFrom(
+				KingdomPresentation.Rich(CityName(System, From)), Line);
 			MessageQueue.AddPlayerMessage(said);
 			KingdomLog.Log("word: " + (Here ? "here " : "away ") + said);
 		}

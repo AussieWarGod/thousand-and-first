@@ -9,8 +9,9 @@ namespace ThousandAndFirst.Tests
 	/// <summary>
 	/// <b>The measured worst case, printed and pinned.</b>
 	/// <para>
-	/// LIVING-CITY-ARCHITECTURE &sect;6.5, Pass 32 step 90: <i>"Found a City, hold 4 zones, 40
-	/// works, 60 settlers. Leave for a season. Come home."</i> W6 is the wave that finally gives the
+	/// LIVING-CITY-ARCHITECTURE &sect;6.5, Pass 32 step 90, corrected at the pre-release boundary:
+	/// found a City, hold 4 zones, every plot those zones admit, and 60 settlers; leave for a
+	/// season; come home. W6 is the wave that finally gives the
 	/// model a producing rate, which is the wave in which that scenario stops being free — a rate is
 	/// the first thing that can make a reckoning cost more the longer you were away. So this is the
 	/// receipt: the whole scenario, at W6's rates, with a full backlog standing, with every figure
@@ -27,7 +28,7 @@ namespace ThousandAndFirst.Tests
 		/// <summary>Pass 32 step 90's city, exactly.</summary>
 		private const int Zones = 4;
 
-		private const int Works = 40;
+		private static readonly int Works = KingdomCityState.MaxWorks;
 
 		private const int Residents = 60;
 

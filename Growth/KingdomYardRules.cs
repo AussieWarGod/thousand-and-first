@@ -171,6 +171,11 @@ namespace ThousandAndFirst
 				Error = "yard work " + Key + " shades " + total + ", more than the " + MaxShadePerWork + " a single yard work may add";
 				return false;
 			}
+			if (goods && shades.Count != 0)
+			{
+				Error = "yard work " + Key + " declares both Goods and Shades; caravan goods are instead of equilibrium support";
+				return false;
+			}
 			Spec = new YardWorkSpec
 			{
 				Key = Key.Trim(),
@@ -189,7 +194,7 @@ namespace ThousandAndFirst
 		{
 			if (Spec.FeedsGoods)
 			{
-				return "feeds goods a caravan can carry";
+				return KingdomYardGoodsRules.EffectSummary();
 			}
 			if (Spec.Shades == null || Spec.Shades.Count == 0)
 			{

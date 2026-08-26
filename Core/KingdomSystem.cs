@@ -83,6 +83,27 @@ namespace ThousandAndFirst
 
 		public int SerializationVersion = CurrentSerializationVersion;
 
+		/// <summary>Persisted realm-wide master-option observation. Unknown is the additive-save
+		/// default; first observation initializes it without inventing an offline transition.</summary>
+		public KingdomMasterLatchValue MasterOption;
+
+		/// <summary>Tick of the last observed master transition.</summary>
+		public long MasterOptionTick;
+
+		/// <summary>Monotone resume identity issued only for Disabled -&gt; Enabled.</summary>
+		public long MasterResumeToken;
+
+		/// <summary>Last resume whose module reanchors all published successfully.</summary>
+		public long MasterAppliedResumeToken;
+
+		/// <summary>One latest successful load whose inheritance recovery waits for the master
+		/// transition and its consumed wake. Named fields make this additive and reload-safe.</summary>
+		public bool InheritanceResumePending;
+
+		public int InheritancePendingLoadKindValue;
+
+		public string InheritancePendingLoadSourceFailure;
+
 		/// <summary>
 		/// Set when <see cref="Read"/> could not interpret the saved state. Not serialized: it
 		/// describes this load, not the kingdom. Cleared once the founder has been told.
@@ -402,10 +423,17 @@ namespace ThousandAndFirst
 
 		public int RaidTimesDeferred;
 
+		/// <summary>Obsolete save-ABI projection of the seated city's resident rows. Runtime code
+		/// must read <c>KingdomResidents</c>; only load migration and one-way projection write this.</summary>
+		[Obsolete("Compatibility projection only; use KingdomResidents resident-row APIs.", false)]
 		public List<string> RosterNames = new List<string>();
 
+		/// <summary>Obsolete compatibility column parallel to <see cref="RosterNames"/>.</summary>
+		[Obsolete("Compatibility projection only; use KingdomResidents resident-row APIs.", false)]
 		public List<string> RosterOrigins = new List<string>();
 
+		/// <summary>Obsolete compatibility column parallel to <see cref="RosterNames"/>.</summary>
+		[Obsolete("Compatibility projection only; use KingdomResidents resident-row APIs.", false)]
 		public List<string> RosterArrived = new List<string>();
 
 		public KingdomRules.PetitionKind PetitionKind = KingdomRules.PetitionKind.None;
@@ -441,7 +469,7 @@ namespace ThousandAndFirst
 
 		/// <summary>
 		/// Every settler this settlement has lost, oldest first. Permanent: unlike
-		/// <see cref="RosterNames"/> this roll is never trimmed, because a memorial does not stop
+		/// the living resident-row projection this roll is never trimmed, because a memorial does not stop
 		/// being true once a cairn is finally raised for it. Written only by
 		/// <c>KingdomOffices.RecordDeath</c>, from the engine's own death event &mdash; never from
 		/// a census, which could not tell a dead settler from one who simply wandered to another
@@ -453,7 +481,7 @@ namespace ThousandAndFirst
 		public List<string> DeadOrigins = new List<string>();
 
 		/// <summary>Parallel to <see cref="DeadNames"/>: the day each one arrived, carried over
-		/// from <see cref="RosterArrived"/> at the moment of death.</summary>
+		/// from the exact resident row at the moment of death.</summary>
 		public List<string> DeadArrived = new List<string>();
 
 		/// <summary>Parallel to <see cref="DeadNames"/>: how each death is told, from
@@ -470,12 +498,16 @@ namespace ThousandAndFirst
 		/// <summary>
 		/// The settler currently named for the settlement's one office (see
 		/// <c>KingdomOfficeRules</c>), or null when nobody is. The office itself is never chosen
-		/// and stored here &mdash; it is always whoever heads <see cref="RosterNames"/>, the
-		/// settler who has served longest. This field exists only so a change in who that is can
+		/// and stored here &mdash; it is always the oldest on-roll resident row, with ResidentId as
+		/// deterministic tie-break. This field exists only so a change in who that is can
 		/// be noticed and announced once, rather than every time the settlement's ground is
 		/// walked onto.
 		/// </summary>
 		public string OfficeHolderName;
+
+		/// <summary>Stable identity of <see cref="OfficeHolderName"/>. Zero is the old-save
+		/// migration boundary; the next office pass adopts the exact matching head row silently.</summary>
+		public int OfficeHolderResidentId;
 
 		/// <summary>
 		/// Free space in the seated city's stores as of this pass. Carried with the settlement,
@@ -743,9 +775,9 @@ namespace ThousandAndFirst
 		public List<long> DealNextTicks = new List<long>();
 
 		/// <summary>
-		/// Realm trade authority. The three lists above and <see cref="Manifest"/> are retained
-		/// only as bounded legacy evidence. Identity v8 never converts or clears their mutable-name
-		/// authority; any nonempty row quarantines Trade for inspection.
+		/// Realm trade authority. The three lists above and <see cref="LegacyManifestEvidence"/>
+		/// retain bounded legacy evidence. <see cref="Manifest"/> is now only the serialized public
+		/// compatibility projection of this book's manifest.
 		/// </summary>
 		public KingdomTradeBook TradeBook = new KingdomTradeBook();
 
@@ -754,6 +786,20 @@ namespace ThousandAndFirst
 		public List<string> OutsiderEntries = new List<string>();
 
 		public Dictionary<string, int> OriginCounts = new Dictionary<string, int>();
+
+		/// <summary>Vanilla cultures carried by living citizens of the seated city, read through
+		/// <c>GameObject.GetCulture()</c>. Live access, not learned stock: the last bearer leaving
+		/// removes the corresponding <c>culture:</c> source. Carried by seat exchange.</summary>
+		public Dictionary<string, int> CultureCounts = new Dictionary<string, int>();
+
+		/// <summary>Vanilla species carried by living citizen bodies of the seated city, read through
+		/// <c>GameObject.GetSpecies()</c>. Separate from culture by Addendum 17.</summary>
+		public Dictionary<string, int> SpeciesCounts = new Dictionary<string, int>();
+
+		/// <summary>Live genotype/body and extension-owned roster keys carried by resident bodies.
+		/// Keys remain in their namespaces and leave when the last exact body receipt leaves. Per-city
+		/// and carried by seat exchange beside culture/species.</summary>
+		public Dictionary<string, int> IdentityCounts = new Dictionary<string, int>();
 
 		/// <summary>The seated city's own tally of settler creeds. See <see cref="KingdomCreed"/>.
 		/// Per-city and swapped with the seat exactly like <see cref="OriginCounts"/> &mdash; the
@@ -829,13 +875,23 @@ namespace ThousandAndFirst
 		public KingdomSettlement Away;
 
 		/// <summary>
-		/// The realm's one in-flight water manifest, or null when none is en route. Realm-level
-		/// and never swapped: it addresses cities by settlement name rather than by seat/Away
-		/// role, because those roles exchange on <see cref="TrySeat"/> and a manifest is
-		/// addressed to a place, not a role. A save written before this field existed arrives
-		/// with it null, which is exactly "no manifest in flight".
+		/// Serialized compatibility projection of <see cref="KingdomTradeBook.Manifest"/>.
+		/// <para>
+		/// This remains a field because this system opts out of engine field reflection and writes
+		/// named fields explicitly; replacing it with a forwarding property would silently omit the
+		/// old wire name and break existing saves. Runtime code never treats it as authority. Every
+		/// Trade lease and cold-load normalization replaces it with a fresh value snapshot.
+		/// </para>
 		/// </summary>
+		[Obsolete("Use KingdomTrade.CurrentManifest(KingdomSystem). This field is a serialized compatibility projection.")]
 		public KingdomManifest Manifest;
+
+		/// <summary>
+		/// Mismatched pre-projection contents formerly stored in <see cref="Manifest"/>. Preserved
+		/// separately before the public field is refreshed so old ambiguous name-based evidence still
+		/// quarantines Trade instead of being promoted or discarded.
+		/// </summary>
+		public KingdomManifest LegacyManifestEvidence;
 
 		/// <summary>The realm's one carry-sign haul in flight, or null when none is en route.
 		/// Realm-level and never swapped, for the same reason <see cref="Manifest"/> is: it
@@ -2124,7 +2180,8 @@ namespace ThousandAndFirst
 				return false;
 			}
 			KingdomLog.Log("exile: " + ExiledFactionName + " (" + cities + " cities, " + ExiledStandings.Count + " standings) put the founder out at regard " + ExiledRealmRegard() + "; deed=" + deed);
-			Popup.Show(KingdomExileRules.ExileNotice(realmName, deed, cities));
+			Popup.Show(KingdomExileRules.ExileNotice(
+				KingdomPresentation.Rich(realmName), deed, cities));
 			return true;
 		}
 
@@ -2209,7 +2266,8 @@ namespace ThousandAndFirst
 			out string Refusal)
 		{
 			string eventId = "taf:realm:exile:v1:" + Archive.RealmId;
-			string telling = KingdomExileRules.ExileTelling(Archive.DisplayName,
+			string telling = KingdomExileRules.ExileTelling(
+				KingdomPresentation.Rich(Archive.DisplayName),
 				Archive.ExileDeed);
 			return DispatchRealmChronicle(Archive, Archive.ExileChronicle, eventId, telling,
 				"exile", out Refusal);
@@ -2702,7 +2760,9 @@ namespace ThousandAndFirst
 			ReturnVerdict verdict = KingdomExileRules.JudgeReturn(Exiled, Founded, ExiledRealmKeptGround, Site != null && ExiledRealmHolds(Site.ZoneID), regard);
 			if (verdict != ReturnVerdict.Allowed)
 			{
-				Refusal = KingdomExileRules.ReturnRefusal(verdict, ExiledDisplayName, KingdomDisplayName);
+				Refusal = KingdomExileRules.ReturnRefusal(verdict,
+					KingdomPresentation.Rich(ExiledDisplayName),
+					KingdomPresentation.Rich(KingdomDisplayName));
 				return false;
 			}
 			KingdomRealmArchive archive = ExiledRealmArchive;
@@ -2823,7 +2883,9 @@ namespace ThousandAndFirst
 			ExiledRealmArchive = null;
 			KingdomLog.Log("return: " + FactionName + " took the founder back -> " + Restored
 				+ "; seated " + SeatNameValue);
-			Popup.Show(KingdomExileRules.ReturnNotice(DisplayName, SeatNameValue));
+			Popup.Show(KingdomExileRules.ReturnNotice(
+				KingdomPresentation.Rich(DisplayName),
+				KingdomPresentation.Rich(SeatNameValue)));
 			return true;
 		}
 
@@ -3826,7 +3888,8 @@ namespace ThousandAndFirst
 			out string Refusal)
 		{
 			string eventId = "taf:realm:return:v1:" + Archive.RealmId;
-			string telling = KingdomExileRules.ReturnTelling(Archive.DisplayName);
+			string telling = KingdomExileRules.ReturnTelling(
+				KingdomPresentation.Rich(Archive.DisplayName));
 			return DispatchRealmChronicle(Archive, Archive.ReturnChronicle, eventId, telling,
 				"return", out Refusal);
 		}
@@ -4388,9 +4451,9 @@ namespace ThousandAndFirst
 			case ExileVerdict.NothingFounded:
 				return "You hold no realm. Nobody can put you out of ground that was never yours.";
 			case ExileVerdict.AlreadyCastOut:
-				return "{{C|" + (ExiledDisplayName ?? "The realm") + "}} has already put you out. It cannot do it twice.";
+				return "{{C|" + KingdomPresentation.Rich(ExiledDisplayName ?? "The realm") + "}} has already put you out. It cannot do it twice.";
 			case ExileVerdict.RegardHolds:
-				return "{{C|" + (KingdomDisplayName ?? "The realm") + "}} holds you " + KingdomExileRules.RegardName(KingdomExileRules.ClassifyRegard(FounderRegard())) + ". Nobody there is calling for the gate to be shut behind you.";
+				return "{{C|" + KingdomPresentation.Rich(KingdomDisplayName ?? "The realm") + "}} holds you " + KingdomExileRules.RegardName(KingdomExileRules.ClassifyRegard(FounderRegard())) + ". Nobody there is calling for the gate to be shut behind you.";
 			default:
 				return "";
 			}
@@ -4418,8 +4481,10 @@ namespace ThousandAndFirst
 				return;
 			}
 			// Nonmodal on purpose: this is the city talking about you, not the city stopping you.
-			XRL.Messages.MessageQueue.AddPlayerMessage(KingdomExileRules.RegardSpeech(step, SeatName));
-			KingdomChronicle.Record(this, KingdomExileRules.RegardChronicle(step, SeatName));
+			XRL.Messages.MessageQueue.AddPlayerMessage(KingdomExileRules.RegardSpeech(step,
+				KingdomPresentation.Rich(SeatName)));
+			KingdomChronicle.Record(this, KingdomExileRules.RegardChronicle(step,
+				KingdomPresentation.Rich(SeatName)));
 		}
 
 		/// <summary>
@@ -4439,7 +4504,9 @@ namespace ThousandAndFirst
 				if (!DoorClosedTold)
 				{
 					DoorClosedTold = true;
-					XRL.Messages.MessageQueue.AddPlayerMessage(KingdomExileRules.DoorClosedLine(ExiledDisplayName, KingdomDisplayName));
+					XRL.Messages.MessageQueue.AddPlayerMessage(KingdomExileRules.DoorClosedLine(
+						KingdomPresentation.Rich(ExiledDisplayName),
+						KingdomPresentation.Rich(KingdomDisplayName)));
 				}
 				return;
 			}
@@ -4455,10 +4522,12 @@ namespace ThousandAndFirst
 			ReturnVerdict verdict = KingdomExileRules.JudgeReturn(Exiled, Founded, ExiledRealmKeptGround, true, regard);
 			if (verdict != ReturnVerdict.Allowed)
 			{
-				XRL.Messages.MessageQueue.AddPlayerMessage(KingdomExileRules.ReturnRefusal(verdict, ExiledDisplayName, KingdomDisplayName));
+				XRL.Messages.MessageQueue.AddPlayerMessage(KingdomExileRules.ReturnRefusal(verdict,
+					KingdomPresentation.Rich(ExiledDisplayName),
+					KingdomPresentation.Rich(KingdomDisplayName)));
 				return;
 			}
-			if (Popup.ShowYesNo("You are standing in {{C|" + ExiledDisplayName + "}}, which put you out.\n\nAsk to be taken back?") != DialogResult.Yes)
+			if (Popup.ShowYesNo("You are standing in {{C|" + KingdomPresentation.Rich(ExiledDisplayName) + "}}, which put you out.\n\nAsk to be taken back?") != DialogResult.Yes)
 			{
 				XRL.Messages.MessageQueue.AddPlayerMessage("You say nothing, and nobody asks you to.");
 				return;
@@ -4489,6 +4558,9 @@ namespace ThousandAndFirst
 		public override void Write(SerializationWriter Writer)
 		{
 			SerializationVersion = CurrentSerializationVersion;
+			// Named-field serializer writes compatibility field as stored data, not a property.
+			// Refresh immediately before every save, including a save cut through an open receipt.
+			SynchronizeLegacyManifestProjection();
 			Writer.Write(SerializationMagic);
 			Writer.Write(CurrentSerializationVersion);
 			Writer.WriteNamedFields(this, typeof(KingdomSystem));
@@ -4567,6 +4639,12 @@ namespace ThousandAndFirst
 			// verdicts and believe its journal notes were already filed.
 			KingdomResearch.Reload();
 			NormalizeState(AllowLegacyIdentityMigration: false);
+			// AfterGameLoadedEvent owns option observation. Until then, configured master-off load is
+			// decode/validation only: do not continue an external/profile or physical transition.
+			if (!KingdomMaster.AutomaticWorkAllowed(this))
+			{
+				return;
+			}
 			if (ExiledRealmArchive != null &&
 				(ExiledRealmArchive.Phase == KingdomRealmArchivePhase.Prepared ||
 				 ExiledRealmArchive.Phase == KingdomRealmArchivePhase.TradeClosed ||
@@ -4622,6 +4700,7 @@ namespace ThousandAndFirst
 		/// </summary>
 		public override bool HandleEvent(WaterRitualStartEvent E)
 		{
+			if (!KingdomMaster.NewWorkAllowed(this)) return base.HandleEvent(E);
 			Guard("rite seed", delegate
 			{
 				// The record freezes the faction whose ritual actually paid reputation. Re-reading
@@ -4639,6 +4718,7 @@ namespace ThousandAndFirst
 		/// </summary>
 		public override bool HandleEvent(QuestFinishedEvent E)
 		{
+			if (!KingdomMaster.AutomaticWorkAllowed(this)) return base.HandleEvent(E);
 			Guard("quest", delegate
 			{
 				KingdomResearch.ForgetQuests();
@@ -4652,6 +4732,9 @@ namespace ThousandAndFirst
 		/// </summary>
 		public override bool HandleEvent(EndTurnEvent E)
 		{
+			XRLGame game = The.Game;
+			if (game == null || !KingdomMaster.ObserveAutomaticWake(this, game.TimeTicks))
+				return base.HandleEvent(E);
 			Guard("pump", delegate
 			{
 				Simulation.City.KingdomHeartbeat.OnEndTurn(this, AttendSeatedSemantics);
@@ -4666,6 +4749,9 @@ namespace ThousandAndFirst
 		/// </summary>
 		public override bool HandleEvent(ZoneThawedEvent E)
 		{
+			XRLGame game = The.Game;
+			if (game == null || !KingdomMaster.ObserveAutomaticWake(this, game.TimeTicks))
+				return base.HandleEvent(E);
 			Guard("thaw", delegate
 			{
 				Simulation.City.KingdomHeartbeat.OnThawed(this, E.Zone, E.TicksFrozen);
@@ -4675,6 +4761,9 @@ namespace ThousandAndFirst
 
 		public override bool HandleEvent(SuspendingEvent E)
 		{
+			XRLGame game = The.Game;
+			if (game == null || !KingdomMaster.ObserveAutomaticWake(this, game.TimeTicks))
+				return base.HandleEvent(E);
 			Guard("check-out", delegate
 			{
 				Simulation.City.KingdomCity.OnSuspending(this, E.Zone);
@@ -4697,6 +4786,9 @@ namespace ThousandAndFirst
 
 		public override bool HandleEvent(ZoneActivatedEvent E)
 		{
+			XRLGame game = The.Game;
+			if (game == null || !KingdomMaster.ObserveAutomaticWake(this, game.TimeTicks))
+				return base.HandleEvent(E);
 			// The seat moves first. A second city's ground belongs to Away, not to ClaimedZones,
 			// so a swap tested after the guard below could never fire: walking into your own
 			// second city would read as walking into a stranger's zone.
@@ -4704,7 +4796,7 @@ namespace ThousandAndFirst
 			{
 				if (TrySeat(E.Zone))
 				{
-					XRL.Messages.MessageQueue.AddPlayerMessage("You are in {{C|" + SeatName + "}}" + KingdomSettlement.VocationSuffix(Vocation) + ".");
+					XRL.Messages.MessageQueue.AddPlayerMessage("You are in {{C|" + KingdomPresentation.Rich(SeatName) + "}}" + KingdomSettlement.VocationSuffix(Vocation) + ".");
 				}
 			});
 			// Before the claim guard, for the same reason the seat is: a realm that put the
@@ -4757,8 +4849,9 @@ namespace ThousandAndFirst
 		private const long SemanticStepSeal = 1L << 17;
 		private const long SemanticStepLab = 1L << 18;
 		private const long SemanticStepConstruction = 1L << 19;
+		private const long SemanticStepExpeditions = 1L << 20;
 
-		private const long SemanticRequiredMask = (1L << 20) - 1L;
+		private const long SemanticRequiredMask = (1L << 21) - 1L;
 
 		private bool AttendSeatedSemantics(Zone Z)
 		{
@@ -4781,6 +4874,8 @@ namespace ThousandAndFirst
 			{
 				return false;
 			}
+			using (KingdomSurvey.PassScope surveyScope = survey.BindPass())
+			{
 			// The ledger is an unread report, not one pass's scratch buffer. It is cleared only
 			// after the founder opens the report in the Charter; stationary daily reconciliation
 			// therefore appends instead of erasing yesterday's news.
@@ -4792,6 +4887,13 @@ namespace ThousandAndFirst
 			if (!TrySemanticStep(SemanticStepCheckIn, "check-in", delegate
 			{
 				Simulation.City.KingdomCity.CheckIn(this, Z, survey, The.Game.TimeTicks);
+				// Addendum 17 reads culture/species from the same real bodies this pass
+				// witnessed. Body-side receipts make retries idempotent; a changed live source
+				// is offered to research only after the city's ground has checked in.
+				if (KingdomResidentIdentity.Reconcile(this, survey.Settlers))
+				{
+					KingdomResearch.ApplySources(this);
+				}
 				// What this city has room for, remembered for as long as the founder is away from it.
 				LastKnownStorageSpace = survey.StorageSpace;
 			}))
@@ -4868,7 +4970,7 @@ namespace ThousandAndFirst
 			})) return false;
 			if (!TrySemanticStep(SemanticStepOffices, "offices", delegate
 			{
-				KingdomOffices.OnZoneActivated(this, Z);
+				KingdomOffices.OnZoneActivated(this, Z, survey);
 			})) return false;
 			// A great work is an office SEAT (Addendum 6), so the settlement's own office settles
 			// first and the faith pass below can already ask what reaches whom.
@@ -4892,7 +4994,15 @@ namespace ThousandAndFirst
 			{
 				KingdomFaith.OnZoneActivated(this, Z, survey);
 			})) return false;
-			// W4. After faith, and last of the resolvers, because a happening is a RENDERING of
+			// Named salvage is last resolver. Every upkeep/luxury lane has already spent from this
+			// pass's stores; happenings therefore see returns and dated failures immediately without
+			// letting a recovered dispatch steal goods promised to an earlier lane. A prepared receipt
+			// can debit this active ground, so refresh its survey before check-out publishes ground truth.
+			if (!TrySemanticStep(SemanticStepExpeditions, "salvage expeditions", delegate
+			{
+				Simulation.City.KingdomExpeditions.OnSettlementPass(this, Z, survey);
+			})) return false;
+			// W4. After faith and salvage, and last of the renderers, because a happening is a RENDERING of
 			// what the pass has already settled: the creed the city holds with, the works that are
 			// still turning, and who is left on the roll. Running it earlier would tell the founder
 			// about a city one step out of date.
@@ -4933,7 +5043,7 @@ namespace ThousandAndFirst
 				{
 					// Nonmodal on purpose. You come home to a report, not an inspection: the
 					// settlement says it has news and waits to be asked, in the Charter.
-					XRL.Messages.MessageQueue.AddPlayerMessage("{{C|" + SeatName + "}} has news of the "
+					XRL.Messages.MessageQueue.AddPlayerMessage("{{C|" + KingdomPresentation.Rich(SeatName) + "}} has news of the "
 						+ ((HomecomingDays == 1) ? "day" : HomecomingDays + " days") + " you were away. {{K|(Charter: what happened while you were away)}}");
 				}
 			})) return false;
@@ -4950,6 +5060,7 @@ namespace ThousandAndFirst
 				}
 			})) return false;
 			return (SemanticPassCompletedMask & SemanticRequiredMask) == SemanticRequiredMask;
+			}
 		}
 
 		/// <summary>Starts a new durable pass only after the previous receipt was published. An
@@ -5026,6 +5137,7 @@ namespace ThousandAndFirst
 
 		public override bool HandleEvent(AfterReputationChangeEvent E)
 		{
+			if (!KingdomMaster.AutomaticWorkAllowed(this)) return base.HandleEvent(E);
 			// The realm's own faction is excluded from the mirror below — a polity does not hold a
 			// standing with itself — but it is the one faction whose reputation cell says what the
 			// realm thinks of its founder, so it is read here instead of ignored.
@@ -5054,6 +5166,9 @@ namespace ThousandAndFirst
 			{
 				Guard("load failure report", ReportLoadFailure);
 			}
+			XRLGame game = The.Game;
+			if (game == null || !KingdomMaster.ObserveAutomaticWake(this, game.TimeTicks))
+				return base.HandleEvent(E);
 			Guard("feeling re-assert", ReassertFeelings);
 			return base.HandleEvent(E);
 		}
@@ -5168,6 +5283,23 @@ namespace ThousandAndFirst
 
 		private void NormalizeState(bool AllowLegacyIdentityMigration)
 		{
+			if (!KingdomMasterRules.WellFormed(MasterOption, MasterOptionTick,
+				MasterResumeToken, MasterAppliedResumeToken))
+			{
+				// Corrupt transition evidence is fail-closed. The player can re-enable from this
+				// canonical disabled latch; no module clock is guessed during load normalization.
+				MasterOption = KingdomMasterLatchValue.Disabled;
+				MasterOptionTick = 0L;
+				MasterResumeToken = 0L;
+				MasterAppliedResumeToken = 0L;
+			}
+			// Preserve bounded valid bytes across capture/restore. The roster reader exposes a
+			// canonical view; normalization owns only the hard heap bound.
+			List<string> boundedKeepers;
+			if (!KingdomZoningRules.TryDecodeRoster(KeepersRoster, out boundedKeepers))
+			{
+				KeepersRoster = "";
+			}
 			if (!Enum.IsDefined(typeof(GrowthStage), Stage))
 			{
 				Stage = GrowthStage.Camp;
@@ -5378,6 +5510,8 @@ namespace ThousandAndFirst
 			{
 				RegardSpoken = (int)RealmRegard.Beloved;
 			}
+			// Frozen positional roster columns are touched only at the load-normalization bridge.
+#pragma warning disable 618
 			if (RosterNames == null)
 			{
 				RosterNames = new List<string>();
@@ -5390,6 +5524,7 @@ namespace ThousandAndFirst
 			{
 				RosterArrived = new List<string>();
 			}
+#pragma warning restore 618
 			if (DeadNames == null)
 			{
 				DeadNames = new List<string>();
@@ -5406,8 +5541,9 @@ namespace ThousandAndFirst
 			{
 				DeadCauses = new List<string>();
 			}
-			KingdomSettlement.TruncateParallelRows(
-				RosterNames, RosterOrigins, RosterArrived);
+			// Complete legacy rolls seed an empty resident book once; existing rows always win and
+			// rewrite these reflected fields as compatibility projections. Ragged evidence is retained.
+			Simulation.City.KingdomResidents.AdoptLegacyAuthority(this);
 			KingdomSettlement.TruncateParallelRows(
 				DeadNames, DeadOrigins, DeadArrived, DeadCauses);
 			if (Ledger == null)
@@ -5448,6 +5584,18 @@ namespace ThousandAndFirst
 			if (OriginCounts == null)
 			{
 				OriginCounts = new Dictionary<string, int>();
+			}
+			if (CultureCounts == null)
+			{
+				CultureCounts = new Dictionary<string, int>();
+			}
+			if (SpeciesCounts == null)
+			{
+				SpeciesCounts = new Dictionary<string, int>();
+			}
+			if (IdentityCounts == null)
+			{
+				IdentityCounts = new Dictionary<string, int>();
 			}
 			if (CreedPastCounts == null)
 			{
@@ -5682,63 +5830,90 @@ namespace ThousandAndFirst
 		/// remain quarantined evidence and are never promoted into live charter/manifest authority.</summary>
 		private void NormalizeTradeBook()
 		{
-			if (TradeBook == null)
+			try
 			{
-				TradeBook = new KingdomTradeBook();
-			}
-			bool hasLegacyTrade = ActiveDealKeys.Count > 0 || ActiveDealFactions.Count > 0
-				|| DealNextTicks.Count > 0 || Manifest != null;
-			// Detect the dual graph before Trade recovery can settle or retire anything. Both
-			// source graphs remain present as quarantined evidence; neither may be normalized
-			// into authority first.
-			if (hasLegacyTrade)
-			{
-				if (TradeBook.FormatVersion == KingdomTradeRules.CurrentFormatVersion &&
-					TradeBook.SchemaState == KingdomTradeSchemaState.Compatible)
-					KingdomTradeRules.QuarantineBook(TradeBook,
-						"legacy name-based trade rows were preserved but cannot become live authority");
-				return;
-			}
-			KingdomTradeRules.Normalize(TradeBook);
-			// Unknown-future and quarantined books are evidence, not authority this build may
-			// reinterpret. Preserve both the named-field graph and the legacy source rows.
-			if (TradeBook.FormatVersion != KingdomTradeRules.CurrentFormatVersion ||
-				TradeBook.SchemaState != KingdomTradeSchemaState.Compatible)
-			{
-				return;
-			}
-			if (ExiledRealmArchive != null &&
-				ExiledRealmArchive.Phase != KingdomRealmArchivePhase.None) return;
-			if (!Founded || !string.IsNullOrEmpty(IdentityFault)) return;
-			if (!PendingSettlementIdentityAbsent())
-			{
-				// Paired second-city coordinator owns all pending topology changes. Load-time
-				// normalization may recover Trade receipts, but never expand or contract Trade
-				// alone across a save cut.
-				return;
-			}
-			List<string> exact;
-			string failure;
-			if (!TryRetainedSettlementIds(RequirePublishedClaims: true,
-				IncludePending: false, out exact, out failure)) return;
-			if (!TradeBook.IdentityBound)
-			{
-				// Trade may be one callback ahead of Core after atomically closing exile.
-				// Preserve that exact unbound receipt for Exile recovery; any malformed or
-				// wrong-topology archive evidence is quarantine, never fresh bind authority.
-				if (TradeBook.Archives != null && TradeBook.Archives.Count > 0)
+				if (TradeBook == null)
 				{
-					if (KingdomTradeRules.TryAuthenticateExactExileClosedTick(TradeBook,
-						RealmId, exact, out long ignoredClosedTick, out failure)) return;
-					KingdomTradeRules.QuarantineBook(TradeBook,
-						failure ?? "unbound Trade exile receipt cannot be authenticated");
+					TradeBook = new KingdomTradeBook();
+				}
+				// Builds before Manifest became a derived API projection could save a distinct
+				// mutable-name row here. Move only a mismatch into its own evidence slot before
+				// refreshing the public field; exact projections must not quarantine their authority.
+				// Manifest is a frozen save-wire projection. Reading it here is the one migration
+				// boundary that compares old bytes with current Trade authority.
+#pragma warning disable 618
+				if (Manifest != null && LegacyManifestEvidence == null
+					&& !KingdomTrade.LegacyManifestMatches(Manifest, TradeBook.Manifest))
+				{
+					LegacyManifestEvidence = KingdomTrade.LegacyManifestSnapshot(Manifest);
+				}
+#pragma warning restore 618
+				bool hasLegacyTrade = ActiveDealKeys.Count > 0 || ActiveDealFactions.Count > 0
+					|| DealNextTicks.Count > 0 || LegacyManifestEvidence != null;
+				// Detect the dual graph before Trade recovery can settle or retire anything. Both
+				// source graphs remain present as quarantined evidence; neither may be normalized
+				// into authority first.
+				if (hasLegacyTrade)
+				{
+					if (TradeBook.FormatVersion == KingdomTradeRules.CurrentFormatVersion &&
+						TradeBook.SchemaState == KingdomTradeSchemaState.Compatible)
+						KingdomTradeRules.QuarantineBook(TradeBook,
+							"legacy name-based trade rows were preserved but cannot become live authority");
 					return;
 				}
-				if (!KingdomTradeRules.BindExactIdentity(TradeBook, RealmId, exact,
-					out failure)) return;
+				KingdomTradeRules.Normalize(TradeBook);
+				// Unknown-future and quarantined books are evidence, not authority this build may
+				// reinterpret. Preserve both the named-field graph and the legacy source rows.
+				if (TradeBook.FormatVersion != KingdomTradeRules.CurrentFormatVersion ||
+					TradeBook.SchemaState != KingdomTradeSchemaState.Compatible)
+				{
+					return;
+				}
+				if (ExiledRealmArchive != null &&
+					ExiledRealmArchive.Phase != KingdomRealmArchivePhase.None) return;
+				if (!Founded || !string.IsNullOrEmpty(IdentityFault)) return;
+				if (!PendingSettlementIdentityAbsent())
+				{
+					// Paired second-city coordinator owns all pending topology changes. Load-time
+					// normalization may recover Trade receipts, but never expand or contract Trade
+					// alone across a save cut.
+					return;
+				}
+				List<string> exact;
+				string failure;
+				if (!TryRetainedSettlementIds(RequirePublishedClaims: true,
+					IncludePending: false, out exact, out failure)) return;
+				if (!TradeBook.IdentityBound)
+				{
+					// Trade may be one callback ahead of Core after atomically closing exile.
+					// Preserve that exact unbound receipt for Exile recovery; any malformed or
+					// wrong-topology archive evidence is quarantine, never fresh bind authority.
+					if (TradeBook.Archives != null && TradeBook.Archives.Count > 0)
+					{
+						if (KingdomTradeRules.TryAuthenticateExactExileClosedTick(TradeBook,
+							RealmId, exact, out long ignoredClosedTick, out failure)) return;
+						KingdomTradeRules.QuarantineBook(TradeBook,
+							failure ?? "unbound Trade exile receipt cannot be authenticated");
+						return;
+					}
+					if (!KingdomTradeRules.BindExactIdentity(TradeBook, RealmId, exact,
+						out failure)) return;
+				}
+				KingdomTradeRules.BindExactIdentity(TradeBook, RealmId, exact,
+					out failure);
 			}
-			KingdomTradeRules.BindExactIdentity(TradeBook, RealmId, exact,
-				out failure);
+			finally
+			{
+				SynchronizeLegacyManifestProjection();
+			}
+		}
+
+		/// <summary>Refreshes obsolete serialized API surface from exact Trade authority.</summary>
+		internal void SynchronizeLegacyManifestProjection()
+		{
+#pragma warning disable 618
+			Manifest = KingdomTrade.LegacyManifestSnapshot(TradeBook?.Manifest);
+#pragma warning restore 618
 		}
 
 	}

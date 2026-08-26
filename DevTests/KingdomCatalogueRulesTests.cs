@@ -521,16 +521,17 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void Validate_FaultsADesignThatWantsBothAPlotAndAPlaceOnTheWall()
+		public void Validate_AllowsAPlottedBuildingToCarryDefenceWithoutLosingItsLot()
 		{
-			// A Defence rating overrides the category at siting time, so this design goes on the
-			// frontier line and the large plot it asked for is never laid.
+			// Defence is an effect. Plot geometry still owns the whole authored lot; only a defensive
+			// design with no plot is a frontier segment.
 			List<CatalogueEntry> entries = new List<CatalogueEntry>
 			{
 				Entry("keep", KingdomPlotRules.PlotSize.Large, GrowthStage.Town, "defense", "order:4", 40, Defence: 8)
 			};
 			List<CatalogueFinding> findings = KingdomCatalogueRules.Validate(entries, null);
-			Assert.IsTrue(Has(findings, "keep", "Defence", CatalogueSeverity.Fault));
+			Assert.IsFalse(Has(findings, "keep", "Defence", CatalogueSeverity.Fault));
+			Assert.AreEqual(0, Count(findings, CatalogueSeverity.Fault));
 		}
 
 		[Test]
@@ -613,6 +614,56 @@ namespace ThousandAndFirst.Tests
 			};
 			List<CatalogueFinding> findings = KingdomCatalogueRules.Validate(entries, null);
 			Assert.IsTrue(Has(findings, "folly", "Carries", CatalogueSeverity.Note));
+		}
+
+		[Test]
+		public void Validate_FaultsRoofCapacityOnEffectiveOpenGroundEvenWithoutRoofAttribute()
+		{
+			CatalogueEntry open = Entry("open-bunks", Category: "craft", Carries: "roof:3",
+				Open: true);
+			open.Roof = KingdomPlotRules.RoofState.Open;
+			open.RoofDeclared = false;
+			List<CatalogueFinding> findings = KingdomCatalogueRules.Validate(
+				new List<CatalogueEntry> { open }, null);
+			Assert.IsTrue(Has(findings, "open-bunks", "Carries", CatalogueSeverity.Fault));
+			StringAssert.Contains("effective roof is open", FirstMessage(findings));
+		}
+
+		[Test]
+		public void Validate_FaultsHousingCategoryWithNoRoofCapacityAndOpenGround()
+		{
+			CatalogueEntry open = Entry("empty-court", Category: "housing", Carries: null,
+				Open: true);
+			open.Roof = KingdomPlotRules.RoofState.Open;
+			List<CatalogueFinding> findings = KingdomCatalogueRules.Validate(
+				new List<CatalogueEntry> { open }, null);
+			Assert.IsTrue(Has(findings, "empty-court", "Roof", CatalogueSeverity.Fault));
+		}
+
+		[TestCase(KingdomPlotRules.RoofState.Soft)]
+		[TestCase(KingdomPlotRules.RoofState.Walled)]
+		[TestCase(KingdomPlotRules.RoofState.Carved)]
+		public void Validate_AcceptsRoofCapacityUnderRealShelter(
+			KingdomPlotRules.RoofState Roof)
+		{
+			CatalogueEntry sheltered = Entry("shelter", Category: "housing", Carries: "roof:3");
+			sheltered.Roof = Roof;
+			sheltered.RoofDeclared = true;
+			List<CatalogueFinding> findings = KingdomCatalogueRules.Validate(
+				new List<CatalogueEntry> { sheltered }, null);
+			Assert.IsFalse(Has(findings, "shelter", "Carries", CatalogueSeverity.Fault));
+			Assert.IsFalse(Has(findings, "shelter", "Roof", CatalogueSeverity.Fault));
+		}
+
+		[Test]
+		public void Validate_AcceptsOpenNonHousingWithoutRoofCapacity()
+		{
+			CatalogueEntry field = Entry("field", Category: "food", Carries: "food:3", Open: true);
+			field.Roof = KingdomPlotRules.RoofState.Open;
+			List<CatalogueFinding> findings = KingdomCatalogueRules.Validate(
+				new List<CatalogueEntry> { field }, null);
+			Assert.IsFalse(Has(findings, "field", "Carries", CatalogueSeverity.Fault));
+			Assert.IsFalse(Has(findings, "field", "Roof", CatalogueSeverity.Fault));
 		}
 
 		[Test]

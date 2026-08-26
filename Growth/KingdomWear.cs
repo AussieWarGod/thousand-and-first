@@ -600,6 +600,61 @@ namespace ThousandAndFirst
 
 		public static bool Enabled => Options.GetOption("r_TAF_OptionWear") != "No";
 
+		/// <summary>Refuses a handover while a wear mutation has identity bound to this object.</summary>
+		public static bool CanCarryStableState(GameObject Source, out string Failure)
+		{
+			Failure = null;
+			r_KingdomWear wear = GameObject.Validate(Source)
+				? Source.GetPart<r_KingdomWear>() : null;
+			if (wear == null) return true;
+			if (wear.LifecycleQuarantined
+				|| (KingdomWearIncidentPhase)wear.IncidentPhase != KingdomWearIncidentPhase.None
+				|| (KingdomWearLeakPhase)wear.LeakPhase != KingdomWearLeakPhase.None
+				|| wear.RepairEffortLeft != 0)
+			{
+				Failure = "That work has a wear, leak, or repair receipt in hand; settle it before changing the plan.";
+				return false;
+			}
+			return true;
+		}
+
+		/// <summary>Carries stable founder-visible wear state across an in-place handover.</summary>
+		public static bool TryCarryStableState(GameObject Source, GameObject Target)
+		{
+			if (!GameObject.Validate(Source) || !GameObject.Validate(Target)
+				|| !CanCarryStableState(Source, out _)) return false;
+			r_KingdomWear before = Source.GetPart<r_KingdomWear>();
+			if (before == null) return Target.GetPart<r_KingdomWear>() == null;
+			r_KingdomWear after = Target.RequirePart<r_KingdomWear>();
+			after.Wear = before.Wear;
+			after.LastCause = before.LastCause;
+			after.Held = before.Held;
+			after.RepairEffortLeft = before.RepairEffortLeft;
+			after.LastLeakTick = before.LastLeakTick;
+			after.LeakAnnounced = before.LeakAnnounced;
+			after.AnnouncedBlock = before.AnnouncedBlock;
+			after.LastCompletedIncidentId = before.LastCompletedIncidentId;
+			after.LeakClockInitialized = before.LeakClockInitialized;
+			return SameStableState(Source, Target);
+		}
+
+		public static bool SameStableState(GameObject Source, GameObject Target)
+		{
+			r_KingdomWear before = GameObject.Validate(Source)
+				? Source.GetPart<r_KingdomWear>() : null;
+			r_KingdomWear after = GameObject.Validate(Target)
+				? Target.GetPart<r_KingdomWear>() : null;
+			if (before == null) return after == null;
+			return after != null && before.Wear == after.Wear
+				&& before.LastCause == after.LastCause && before.Held == after.Held
+				&& before.RepairEffortLeft == after.RepairEffortLeft
+				&& before.LastLeakTick == after.LastLeakTick
+				&& before.LeakAnnounced == after.LeakAnnounced
+				&& before.AnnouncedBlock == after.AnnouncedBlock
+				&& before.LastCompletedIncidentId == after.LastCompletedIncidentId
+				&& before.LeakClockInitialized == after.LeakClockInitialized;
+		}
+
 		/// <summary>Consecutive full-stretch attended passes a work carries right now. A plain
 		/// property rather than a part field: every crewed work implicitly carries this at zero,
 		/// the same way it implicitly carries <c>KingdomEffectiveness</c> at zero, and giving a
@@ -678,8 +733,9 @@ namespace ThousandAndFirst
 			{
 				return 0;
 			}
-			return KingdomWearRules.WorkEffectiveness(
+			int crewAndCondition = KingdomWearRules.WorkEffectiveness(
 				Work.GetIntProperty(StaffNeededProperty), Work.GetIntProperty(EffectivenessProperty), WearOf(Work));
+			return KingdomCrews.ApplyAffinity(Work, crewAndCondition);
 		}
 
 		public static void OnZoneActivated(KingdomSystem System, Zone Z, KingdomSurvey Survey)

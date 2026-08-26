@@ -316,6 +316,17 @@ namespace ThousandAndFirst
 
 		public const string AttrMinTech = "MinTech";
 
+		/// <summary>The engine faction whose covenant opens this design. Written together with
+		/// <see cref="AttrMinStanding"/>; one without the other is malformed. A live gate, so it
+		/// is deliberately absent from <see cref="SpentAttributes"/> and
+		/// <see cref="StampedAttributes"/>.</summary>
+		public const string AttrCovenant = "Covenant";
+
+		/// <summary>The realm standing required with <see cref="AttrCovenant"/> before this
+		/// design may be commissioned. This is the kingdom's standing, not the founder's personal
+		/// reputation, and is re-read whenever the design is judged.</summary>
+		public const string AttrMinStanding = "MinStanding";
+
 		/// <summary>Who must be living here for the design to be raised at all (Addendum 16
 		/// clause 1): a comma list in the <c>kind:name</c> language <see cref="AttrKnowledge"/>
 		/// already uses, optionally with a count. Deliberately absent from
@@ -462,16 +473,53 @@ namespace ThousandAndFirst
 		/// </summary>
 		public const string AttrRefines = "Refines";
 
+		/// <summary>Frozen city purpose of a body megastructure: <c>flesh</c> or
+		/// <c>chrome</c>. Optional and mergeable; absence leaves an ordinary building.</summary>
+		public const string AttrPurpose = "Purpose";
+
+		/// <summary>Distinct physical site predicate committed with <see cref="AttrPurpose"/>.</summary>
+		public const string AttrPurposeSite = "PurposeSite";
+
+		/// <summary>Stable typed consignment key produced by another city.</summary>
+		public const string AttrPurposeCargoKey = "PurposeCargoKey";
+
+		/// <summary>Founder-facing physical name of the exact consignment item.</summary>
+		public const string AttrPurposeCargoName = "PurposeCargoName";
+
+		/// <summary>Material identity conserved inside the consignment item.</summary>
+		public const string AttrPurposeCargoMaterial = "PurposeCargoMaterial";
+
+		/// <summary>Water spent by the producing city before dispatch.</summary>
+		public const string AttrPurposeCargoWater = "PurposeCargoWater";
+
+		/// <summary>Physical material claim spent by the producing city before dispatch.</summary>
+		public const string AttrPurposeCargoCost = "PurposeCargoCost";
+
+		/// <summary>Physical source-city works required to produce the consignment.</summary>
+		public const string AttrPurposeProducers = "PurposeProducers";
+
+		/// <summary>Honest existing runtime effect disclosed before purpose commitment.</summary>
+		public const string AttrPurposeEffect = "PurposeEffect";
+
 		/// <summary>What <c>KingdomRules.TryParseBuildAttributes</c> refuses an entry for the want
 		/// of. A later file may omit every one of them &mdash; that is a merge &mdash; but the
 		/// design as a whole must end up with all four.</summary>
 		public static readonly string[] RequiredAttributes = new string[4] { AttrDisplayName, AttrBlueprint, AttrCost, AttrTicks };
 
 		/// <summary>Attributes whose value was paid out when the work went up.</summary>
-		public static readonly string[] SpentAttributes = new string[5] { AttrCost, AttrTicks, AttrMaterials, AttrBits, AttrExotics };
+		public static readonly string[] SpentAttributes = new string[7]
+		{
+			AttrCost, AttrTicks, AttrMaterials, AttrBits, AttrExotics,
+			AttrPurposeCargoWater, AttrPurposeCargoCost
+		};
 
 		/// <summary>Attributes whose value is cut into the ground the work stands on.</summary>
-		public static readonly string[] StampedAttributes = new string[6] { AttrBlueprint, AttrPlot, AttrFootprint, AttrRoof, AttrOpen, AttrContents };
+		public static readonly string[] StampedAttributes = new string[13]
+		{
+			AttrBlueprint, AttrPlot, AttrFootprint, AttrRoof, AttrOpen, AttrContents,
+			AttrPurpose, AttrPurposeSite, AttrPurposeCargoKey, AttrPurposeCargoName,
+			AttrPurposeCargoMaterial, AttrPurposeProducers, AttrPurposeEffect
+		};
 
 		/// <summary>
 		/// How far a change to this attribute reaches. Anything this file does not name reads

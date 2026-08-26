@@ -13,7 +13,8 @@ Usage:
   --copy     print the canonical Qud Workshop fields; write nothing
   --test     build a private-test package (default); workshop.json may be absent
   --release  require an annotated v<version> tag at HEAD, public workshop.json,
-             release evidence, and the committed private-package receipt copy
+             release evidence, the committed private-package receipt copy, and
+             the exact-inventory structural release review
 
 DESTINATION and its sibling DESTINATION.sha256 must not exist. Packaging accepts
 only clean, regular staged files whose bytes are tracked by HEAD.
@@ -94,6 +95,34 @@ require_release_tag() {
 	[ "$(git rev-parse "$TAG_REF^{commit}")" = "$HEAD_COMMIT" ] || {
 		echo "release package requires annotated tag v$VERSION at HEAD" >&2; exit 3; }
 }
+
+require_release_structure() {
+	local gate_path gate_entry gate_metadata gate_tracked_path gate_mode gate_kind gate_blob
+	gate_path="Tools/check-structure.py"
+	gate_entry="$(git -c core.quotePath=false ls-tree "$HEAD_COMMIT" -- "$gate_path")"
+	[ -n "$gate_entry" ] || {
+		echo "release package requires $gate_path in HEAD" >&2; return 1; }
+	gate_metadata="${gate_entry%%$'\t'*}"
+	gate_tracked_path="${gate_entry#*$'\t'}"
+	read -r gate_mode gate_kind gate_blob <<< "$gate_metadata"
+	[ "$gate_tracked_path" = "$gate_path" ] && [ "$gate_kind" = "blob" ] \
+		&& { [ "$gate_mode" = "100644" ] || [ "$gate_mode" = "100755" ]; } || {
+		echo "structural release gate is not an ordinary file in HEAD: $gate_path" >&2
+		return 1
+	}
+	[ -f "$REPO/$gate_path" ] && [ ! -L "$REPO/$gate_path" ] \
+		&& [ "$(git hash-object -- "$REPO/$gate_path")" = "$gate_blob" ] || {
+		echo "structural release gate does not match HEAD: $gate_path" >&2
+		return 1
+	}
+	# Clean checks around the binding gate make its stage inventory, source bytes, and
+	# semantic-review ledger evidence from this exact committed checkout.
+	require_clean_head
+	PYTHONDONTWRITEBYTECODE=1 python3 "$REPO/$gate_path" --repo-root "$REPO" --release
+	require_clean_head
+}
+
+[ "$MODE" != "release" ] || require_release_structure
 
 SCRATCH_DIR=""
 SCRATCH_ID=""
@@ -755,18 +784,33 @@ FORBIDDEN_FILE="$(find -P "$BUILD_DIR" -type f \( \
 [ -z "$FORBIDDEN_FILE" ] || {
 	echo "forbidden package file: ${FORBIDDEN_FILE#"$BUILD_DIR/"}" >&2; exit 4; }
 
-RASTER_FILE=""
-while IFS= read -r -d '' raster_path; do
-	[ "$raster_path" != "$BUILD_DIR/preview.png" ] || continue
-	RASTER_FILE="$raster_path"
-	break
-done < <(find -P "$BUILD_DIR" -type f \( \
-	-iname '*.png' -o -iname '*.bmp' -o -iname '*.gif' -o -iname '*.jpg' \
-	-o -iname '*.jpeg' -o -iname '*.webp' -o -iname '*.tga' \
-	-o -iname '*.tif' -o -iname '*.tiff' -o -iname '*.dds' \
-	\) -print0)
-[ -z "$RASTER_FILE" ] || {
-	echo "forbidden runtime raster: ${RASTER_FILE#"$BUILD_DIR/"}" >&2; exit 4; }
+PYTHONDONTWRITEBYTECODE=1 python3 - "$BUILD_DIR" <<'PY'
+import os
+import sys
+
+from Art import check_wiring
+
+build = os.path.abspath(sys.argv[1])
+records, problems = check_wiring.runtime_asset_records()
+if problems:
+    raise SystemExit("runtime asset provenance failed: " + "; ".join(problems))
+allowed = {"preview.png"}
+allowed.update(row["path"] for row in records.values())
+extensions = check_wiring.RASTER_EXTENSIONS
+found = set()
+for root, _dirs, files in os.walk(build):
+    for name in files:
+        path = os.path.join(root, name)
+        relative = os.path.relpath(path, build).replace(os.sep, "/")
+        if name.lower().endswith(extensions):
+            found.add(relative)
+extras = sorted(found - allowed, key=str.casefold)
+missing = sorted((allowed - {"preview.png"}) - found, key=str.casefold)
+if extras:
+    raise SystemExit("forbidden runtime raster: " + extras[0])
+if missing:
+    raise SystemExit("allowlisted runtime raster missing from package: " + missing[0])
+PY
 
 # Metadata is authoritative only after HEAD blobs have been materialised. Never accept a mutable
 # worktree manifest, preview, Workshop record, release claim, or evidence file as release proof.

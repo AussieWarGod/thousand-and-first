@@ -36,9 +36,9 @@ namespace ThousandAndFirst.Simulation.City
 		public const string ResidentIdProperty = "KingdomResidentId";
 
 		/// <summary>
-		/// The job a transient body is the rendering of. Nothing mints one until W3; the property
-		/// is named here because the stale-transient sweep is keyed on it and a sweep that learned
-		/// its key a wave later would be a sweep with a wave of bodies it could not judge.
+		/// The exact job a transient body renders. Production porters and other carriers stamp it
+		/// only after durable job publication; the stale-transient sweep reads it before rendering
+		/// so a closed model job and a leftover body cannot expose the same cargo twice.
 		/// </summary>
 		public const string JobIdProperty = "KingdomJobId";
 
@@ -66,6 +66,218 @@ namespace ThousandAndFirst.Simulation.City
 			System.ResidentCounter++;
 			Body.SetIntProperty(ResidentIdProperty, System.ResidentCounter);
 			return System.ResidentCounter;
+		}
+
+		// ==================================================================================
+		// The resident-row authority
+		// ==================================================================================
+
+		/// <summary>Reads the seated city's bounded living roll. This is the only production bridge
+		/// from a realm to resident rows; the three historical parallel lists are projections only.</summary>
+		internal static bool TryRoll(KingdomSystem System, out KingdomCityState State,
+			out KingdomResidentRollProjection Roll)
+		{
+			State = null;
+			Roll = null;
+			KingdomCityFault fault;
+			return System != null && System.City != null
+				&& System.City.TryRead(out State, out fault)
+				&& KingdomResidentRules.TryProject(State, out Roll);
+		}
+
+		internal static int OnRollCount(KingdomSystem System)
+		{
+			KingdomCityState state;
+			KingdomResidentRollProjection roll;
+			return TryRoll(System, out state, out roll) ? roll.Population : 0;
+		}
+
+		internal static int LabourCount(KingdomSystem System)
+		{
+			KingdomCityState state;
+			KingdomResidentRollProjection roll;
+			return TryRoll(System, out state, out roll) ? roll.Labour : 0;
+		}
+
+		internal static List<KingdomResidentRow> RollRows(KingdomSystem System,
+			bool LabourOnly = false)
+		{
+			List<KingdomResidentRow> rows = new List<KingdomResidentRow>();
+			KingdomCityState state;
+			KingdomResidentRollProjection ignored;
+			if (!TryRoll(System, out state, out ignored)) return rows;
+			for (int i = 0; i < state.ResidentCount; i++)
+			{
+				KingdomResidentRow row;
+				if (!state.TryResident(i, out row)) break;
+				if (LabourOnly ? KingdomResidentRules.Labours(row)
+					: KingdomResidentRules.OnTheRoll(row)) rows.Add(row);
+			}
+			return rows;
+		}
+
+		internal static bool TryFindByName(KingdomSystem System, string Name,
+			out KingdomResidentRow Row)
+		{
+			Row = default(KingdomResidentRow);
+			if (string.IsNullOrEmpty(Name)) return false;
+			List<KingdomResidentRow> rows = RollRows(System);
+			for (int i = 0; i < rows.Count; i++)
+			{
+				if (string.Equals(rows[i].Name, Name, StringComparison.Ordinal))
+				{
+					Row = rows[i];
+					return true;
+				}
+			}
+			return false;
+		}
+
+		internal static bool TryHead(KingdomSystem System, out KingdomResidentRow Row)
+		{
+			Row = default(KingdomResidentRow);
+			List<KingdomResidentRow> rows = RollRows(System);
+			if (rows.Count == 0) return false;
+			KingdomResidentRow head = rows[0];
+			for (int i = 1; i < rows.Count; i++)
+			{
+				KingdomResidentRow candidate = rows[i];
+				// Unknown legacy arrival (zero) remains senior to dated rows. ResidentId breaks ties
+				// without depending on the order a zone happened to be surveyed.
+				if (candidate.ArrivedTick < head.ArrivedTick
+					|| candidate.ArrivedTick == head.ArrivedTick
+					&& candidate.ResidentId < head.ResidentId) head = candidate;
+			}
+			Row = head;
+			return true;
+		}
+
+		internal static string HeadName(KingdomSystem System)
+		{
+			KingdomResidentRow head;
+			return TryHead(System, out head) ? head.Name : null;
+		}
+
+		/// <summary>One-way compatibility projection after a row publish. Population is a cache of
+		/// the on-roll count; the three public lists remain for save ABI/reflection only.</summary>
+		// The parallel roster fields are frozen save ABI, not live authority. This adapter is
+		// the sole deliberate internal user; keep its obsolete-warning scope narrow and visible.
+#pragma warning disable 618
+		internal static bool ProjectCompatibility(KingdomSystem System)
+		{
+			if (System == null) return false;
+			bool unresolvedSeat = System.City != null && System.City.ResidentCount == 0
+				&& (System.RosterNames?.Count > 0 || System.RosterOrigins?.Count > 0
+					|| System.RosterArrived?.Count > 0);
+			KingdomResidentRollProjection seatRoll = null;
+			bool seat = !unresolvedSeat && ProjectCompatibility(System.City, out seatRoll);
+			if (seat)
+			{
+				System.RosterNames = seatRoll.Names;
+				System.RosterOrigins = seatRoll.Origins;
+				System.RosterArrived = seatRoll.Arrived;
+				System.Population = seatRoll.Population;
+				System.WaterCrew = Math.Min(System.WaterCrew, seatRoll.Labour);
+				System.AssignedCrew = Math.Min(System.AssignedCrew, seatRoll.Labour);
+				System.OriginCounts = Counts(seatRoll.Origins);
+			}
+			if (System.Away != null)
+			{
+				bool unresolvedAway = System.Away.City != null && System.Away.City.ResidentCount == 0
+					&& (System.Away.RosterNames?.Count > 0 || System.Away.RosterOrigins?.Count > 0
+						|| System.Away.RosterArrived?.Count > 0);
+				if (!unresolvedAway) ProjectCompatibility(System.Away);
+			}
+			return seat;
+		}
+
+		internal static bool ProjectCompatibility(KingdomSettlement Settlement)
+		{
+			if (Settlement == null || !ProjectCompatibility(Settlement.City,
+				out KingdomResidentRollProjection roll)) return false;
+			Settlement.RosterNames = roll.Names;
+			Settlement.RosterOrigins = roll.Origins;
+			Settlement.RosterArrived = roll.Arrived;
+			Settlement.Population = roll.Population;
+			Settlement.WaterCrew = Math.Min(Settlement.WaterCrew, roll.Labour);
+			Settlement.AssignedCrew = Math.Min(Settlement.AssignedCrew, roll.Labour);
+			Settlement.OriginCounts = Counts(roll.Origins);
+			return true;
+		}
+
+		internal static bool ProjectCompatibility(KingdomCityBook Book,
+			out KingdomResidentRollProjection Roll)
+		{
+			Roll = null;
+			KingdomCityState state;
+			KingdomCityFault fault;
+			return Book != null && Book.TryRead(out state, out fault)
+				&& KingdomResidentRules.TryProject(state, out Roll);
+		}
+
+		/// <summary>Load boundary. A complete old parallel roll seeds an empty book exactly once as
+		/// Abroad claims; a real body later adopts the claim's id. Existing rows always win and are
+		/// projected outward. Ragged evidence is retained and logged.</summary>
+		internal static void AdoptLegacyAuthority(KingdomSystem System)
+		{
+			if (System == null) return;
+			int counter = Math.Max(0, System.ResidentCounter);
+			counter = Math.Max(counter, MaxResidentId(System.City));
+			counter = Math.Max(counter, MaxResidentId(System.Away?.City));
+			System.ResidentCounter = counter;
+			Adopt(System.City, System.RosterNames, System.RosterOrigins, System.RosterArrived,
+				ref System.ResidentCounter, "seat");
+			if (System.Away != null)
+			{
+				Adopt(System.Away.City, System.Away.RosterNames, System.Away.RosterOrigins,
+					System.Away.RosterArrived, ref System.ResidentCounter, "away");
+			}
+			ProjectCompatibility(System);
+		}
+#pragma warning restore 618
+
+		private static void Adopt(KingdomCityBook Book, List<string> Names,
+			List<string> Origins, List<string> Arrived, ref int Counter, string Label)
+		{
+			KingdomCityState state;
+			KingdomCityState next;
+			KingdomCityFault fault;
+			int nextCounter;
+			if (Book == null || !Book.TryRead(out state, out fault)) return;
+			if (!KingdomResidentRules.TryAdoptLegacy(state, Names, Origins, Arrived, Counter,
+				out next, out nextCounter, out fault))
+			{
+				KingdomLog.Log("resident: " + Label + " legacy roll retained unresolved (" + fault + ")");
+				return;
+			}
+			if (!ReferenceEquals(next, state) && !Book.TryPublish(next, out fault))
+			{
+				KingdomLog.Log("resident: " + Label + " legacy adoption refused (" + fault + ")");
+				return;
+			}
+			Counter = nextCounter;
+		}
+
+		private static int MaxResidentId(KingdomCityBook Book)
+		{
+			if (Book == null) return 0;
+			Book.Normalize();
+			int max = 0;
+			for (int i = 0; i < Book.ResidentIds.Count; i++)
+				if (Book.ResidentIds[i] > max) max = Book.ResidentIds[i];
+			return max;
+		}
+
+		private static Dictionary<string, int> Counts(List<string> Values)
+		{
+			Dictionary<string, int> counts = new Dictionary<string, int>();
+			for (int i = 0; Values != null && i < Values.Count; i++)
+			{
+				string value = Values[i] ?? "";
+				counts.TryGetValue(value, out int count);
+				counts[value] = count + 1;
+			}
+			return counts;
 		}
 
 		// ==================================================================================
@@ -141,7 +353,9 @@ namespace ThousandAndFirst.Simulation.City
 
 		/// <summary>
 		/// Resolves the exact body named by one resident binding, optionally thawing its recorded
-		/// zone. Never mints, substitutes, or accepts a second body carrying the same resident id.
+		/// zone. Never mints or substitutes. Resolution follows the engine object-id index and then
+		/// re-proves binding kind/key, ground, citizenship, and resident-row authority; it never walks
+		/// every object in a cached remote zone.
 		/// This is the preflight for accession: a caller may move player identity only after this
 		/// method has proved the row, binding, object id, zone and body are the same fact.
 		/// </summary>
@@ -175,7 +389,7 @@ namespace ThousandAndFirst.Simulation.City
 				}
 				catch (Exception ex)
 				{
-					KingdomLog.Log("binding: accession could not thaw " + binding.ZoneId + " ("
+					KingdomLog.Log("binding: resident resolution could not thaw " + binding.ZoneId + " ("
 						+ ex.GetType().Name + ")");
 					return false;
 				}
@@ -186,31 +400,25 @@ namespace ThousandAndFirst.Simulation.City
 			}
 
 			GameObject exact = null;
-			int residentBodies = 0;
-			foreach (GameObject candidate in zone.GetObjects())
+			KingdomSurvey active = KingdomSurvey.ActiveFor(zone);
+			if (active != null)
 			{
-				if (candidate.GetIntProperty(ResidentIdProperty) == residentId)
-				{
-					residentBodies++;
-				}
-				// ID is a mutating getter in Qud: reading it assigns BaseID and an `id`
-				// property. Death-time heir preflight must not stamp every object in a thawed
-				// zone merely to find the one body whose binding already names an assigned ID.
-				if (string.Equals(candidate.IDIfAssigned, binding.ObjectId,
-					StringComparison.Ordinal))
-				{
-					if (exact != null)
-					{
-						return false;
-					}
-					exact = candidate;
-				}
+				exact = active.FindBoundBody(binding.ObjectId, KingdomBindingKind.Resident);
+				KingdomBodyWitness witness;
+				if (!active.TryWitnessResident(residentId, out witness)
+					|| witness != KingdomBodyWitness.Present) return false;
 			}
-			if (residentBodies != 1 || !GameObject.Validate(exact) || !exact.IsAlive
+			else
+			{
+				exact = FindExactBindingObject(binding);
+			}
+			if (!GameObject.Validate(exact) || !exact.IsAlive
 				|| exact.IsPlayer() || exact.IsPlayerLed()
+				|| !string.Equals(exact.IDIfAssigned, binding.ObjectId, StringComparison.Ordinal)
 				|| exact.GetIntProperty(ResidentIdProperty) != residentId
-				|| exact.GetIntProperty("KingdomCitizen") != 1
+				|| !KingdomCitizenship.BelongsTo(System, exact)
 				|| exact.GetIntProperty("KingdomBorn") != 1
+				|| exact.CurrentCell == null || !ReferenceEquals(exact.CurrentZone, zone)
 				|| !string.Equals(exact.CurrentZone?.ZoneID, binding.ZoneId, StringComparison.Ordinal))
 			{
 				return false;
@@ -226,7 +434,8 @@ namespace ThousandAndFirst.Simulation.City
 				|| book == null || !book.TryRead(out state, out fault)
 				|| !state.TryResidentIndex(residentId, out rowIndex)
 				|| !state.TryResident(rowIndex, out row)
-				|| row.Standing != KingdomResidentStanding.Resident
+				|| (row.Standing != KingdomResidentStanding.Resident
+					&& row.Standing != KingdomResidentStanding.Expedition)
 				|| (!string.IsNullOrEmpty(row.BoundZoneId)
 					&& !string.Equals(row.BoundZoneId, binding.ZoneId, StringComparison.Ordinal)))
 			{
@@ -235,6 +444,23 @@ namespace ThousandAndFirst.Simulation.City
 			Body = exact;
 			ZoneId = binding.ZoneId;
 			return true;
+		}
+
+		/// <summary>Exact engine-index lookup for one binding. This deliberately proves only object
+		/// identity and binding kind/key. Transaction owners may additionally accept a narrowly
+		/// specified in-flight zone before their copy-on-write binding publish catches up.</summary>
+		internal static GameObject FindExactBindingObject(KingdomBinding Binding)
+		{
+			if (string.IsNullOrEmpty(Binding.ObjectId) || Binding.BindingKey <= 0) return null;
+			GameObject exact = GameObject.FindByID(Binding.ObjectId);
+			if (!GameObject.Validate(exact)
+				|| !string.Equals(exact.IDIfAssigned, Binding.ObjectId, StringComparison.Ordinal))
+				return null;
+			if (Binding.Kind == KingdomBindingKind.Resident)
+				return IdOf(exact) == Binding.BindingKey ? exact : null;
+			if (Binding.Kind == KingdomBindingKind.Transient)
+				return exact.GetIntProperty(JobIdProperty) == Binding.BindingKey ? exact : null;
+			return null;
 		}
 
 		/// <summary>
@@ -364,16 +590,13 @@ namespace ThousandAndFirst.Simulation.City
 		/// with it.
 		/// <para>
 		/// Every settler standing in this zone gets an id and a row; every row the book already had
-		/// bound to this zone and NOT found on the ground is witnessed and transitioned. Rows bound
+		/// bound to this zone and NOT found on the ground is witnessed and transitioned, except an
+		/// expedition row whose realm job owns that named absence and exact binding. Rows bound
 		/// to the city's other zones are carried untouched, because this pass has no honest word
 		/// about ground it is not standing in — that is the sighting doctrine, unchanged.
 		/// </para>
-		/// <para>
-		/// <b>The roll, lodging and creed consumers are not re-plumbed by this.</b> They keep their
-		/// own reads, and the book is a second honest record beside them until a later wave makes it
-		/// primary. What W2 changes for them is only where a BRINK is stored — see
-		/// <c>KingdomBrink</c>.
-		/// </para>
+		/// <para>The book is the roll authority. Legacy parallel lists are rewritten from the rows
+		/// after publication and are never consulted here except at the one load migration boundary.</para>
 		/// </summary>
 		internal static KingdomCityState ReadRoster(KingdomSystem System, Zone Z, KingdomSurvey Survey, KingdomCityState state, long TimeTicks)
 		{
@@ -381,19 +604,35 @@ namespace ThousandAndFirst.Simulation.City
 			{
 				return state;
 			}
-			Dictionary<string, int> homes = HomeWorkIds(Z);
+			Dictionary<string, int> homes = HomeWorkIds(Survey);
 			List<KingdomResidentRow> rows = new List<KingdomResidentRow>();
 			HashSet<int> onTheGround = new HashSet<int>();
 			for (int i = 0; i < Survey.Settlers.Count; i++)
 			{
 				GameObject settler = Survey.Settlers[i];
-				int id = EnsureId(System, settler);
-				if (id == 0 || !onTheGround.Add(id))
+				int id = IdOf(settler);
+				if (id == 0)
+				{
+					id = ClaimIdFor(state, settler, onTheGround);
+					if (id > 0)
+					{
+						settler.SetIntProperty(ResidentIdProperty, id);
+						if (id > System.ResidentCounter) System.ResidentCounter = id;
+					}
+					else id = EnsureId(System, settler);
+				}
+				if (id == 0 || onTheGround.Contains(id))
 				{
 					continue;
 				}
+				// A Resident row without its matching binding violates the city model. Refuse
+				// this reading when the registry cannot accept it; never publish half of the pair.
+				if (!Bind(System, id, KingdomBindingKind.Resident, Z.ZoneID, settler, TimeTicks))
+				{
+					continue;
+				}
+				onTheGround.Add(id);
 				rows.Add(RowFor(state, id, settler, Z.ZoneID, homes, TimeTicks));
-				Bind(System, id, KingdomBindingKind.Resident, Z.ZoneID, settler, TimeTicks);
 			}
 			for (int i = 0; i < state.ResidentCount; i++)
 			{
@@ -407,7 +646,7 @@ namespace ThousandAndFirst.Simulation.City
 					rows.Add(row);
 					continue;
 				}
-				rows.Add(Witnessed(System, Z, row, TimeTicks));
+				rows.Add(Witnessed(System, Z, Survey, row, TimeTicks));
 			}
 			if (rows.Count > KingdomCityState.MaxResidents)
 			{
@@ -424,6 +663,27 @@ namespace ThousandAndFirst.Simulation.City
 				return state;
 			}
 			return written;
+		}
+
+		/// <summary>Adopts one body into an unresolved migrated claim without minting a second
+		/// resident. Exact name and origin disambiguate same-name claims; a bound or already-seen id
+		/// cannot be adopted twice.</summary>
+		private static int ClaimIdFor(KingdomCityState State, GameObject Body,
+			HashSet<int> AlreadySeen)
+		{
+			if (State == null || !GameObject.Validate(Body)) return 0;
+			string name = NameOf(Body, null);
+			string origin = Body.GetStringProperty("KingdomOrigin") ?? "";
+			for (int i = 0; i < State.ResidentCount; i++)
+			{
+				KingdomResidentRow row;
+				if (!State.TryResident(i, out row) || row.Standing != KingdomResidentStanding.Abroad
+					|| row.ArrivedTick != 0L || AlreadySeen.Contains(row.ResidentId)
+					|| !string.Equals(row.Name, name, StringComparison.Ordinal)
+					|| !string.Equals(row.Origin ?? "", origin, StringComparison.Ordinal)) continue;
+				return row.ResidentId;
+			}
+			return 0;
 		}
 
 		/// <summary>
@@ -463,13 +723,24 @@ namespace ThousandAndFirst.Simulation.City
 		/// </summary>
 		public static bool TryEnsureRow(KingdomSystem System, GameObject Body, out KingdomCityBook book, out int residentId)
 		{
+			long tick = (The.Game != null) ? The.Game.TimeTicks : 0L;
+			return TryEnsureRow(System, Body, Body?.GetStringProperty("KingdomOrigin"), null,
+				tick, out book, out residentId);
+		}
+
+		/// <summary>Enrols one accepted body with the exact provenance/date frozen by its owning
+		/// transaction. The tick is the sole clock; <paramref name="Arrived"/> is presentation
+		/// evidence and may be a legacy label.</summary>
+		internal static bool TryEnsureRow(KingdomSystem System, GameObject Body, string Origin,
+			string Arrived, long ArrivedTick, out KingdomCityBook book, out int residentId)
+		{
 			if (TryLocate(System, Body, out book, out residentId))
 			{
 				return true;
 			}
 			book = null;
 			residentId = 0;
-			if (System == null || System.City == null || !Enrollable(Body))
+			if (System == null || System.City == null || !Enrollable(System, Body))
 			{
 				return false;
 			}
@@ -502,18 +773,102 @@ namespace ThousandAndFirst.Simulation.City
 				Refuse("enrol", KingdomCityFault.RowCapExceeded);
 				return false;
 			}
-			long tick = (The.Game != null) ? The.Game.TimeTicks : 0L;
-			rows.Add(RowFor(state, id, Body, zoneId, HomeWorkIds(zone), tick));
+			long tick = ArrivedTick > 0L ? ArrivedTick
+				: ((The.Game != null) ? The.Game.TimeTicks : 0L);
+			rows.Add(RowFor(state, id, Body, zoneId,
+				HomeWorkIds(zone == null ? null : KingdomSurvey.Take(zone, System)),
+				tick, Origin, Arrived));
 			KingdomCityState written;
 			if (!state.TryWithResidents(rows.ToArray(), out written, out fault) || !seated.TryPublish(written, out fault))
 			{
 				Refuse("enrol", fault);
 				return false;
 			}
-			Bind(System, id, KingdomBindingKind.Resident, zoneId, Body, tick);
+			if (!Bind(System, id, KingdomBindingKind.Resident, zoneId, Body, tick))
+			{
+				SafePublish(seated, state, "enrol rollback");
+				Body.RemoveIntProperty(ResidentIdProperty);
+				return false;
+			}
 			book = seated;
 			residentId = id;
+			ProjectCompatibility(System);
 			return true;
+		}
+
+		/// <summary>Marks one exact resident dead in the row before memorial/report projections are
+		/// written. The body is never removed; only its live binding is retired.</summary>
+		internal static bool TryMarkDead(KingdomSystem System, GameObject Body,
+			KingdomStandingCause Cause, out KingdomResidentRow FormerRow)
+		{
+			FormerRow = default(KingdomResidentRow);
+			KingdomCityBook book;
+			int residentId;
+			if (!TryLocate(System, Body, out book, out residentId))
+			{
+				KingdomCityBook enrolled;
+				int enrolledId;
+				if (!TryEnsureRow(System, Body, out enrolled, out enrolledId)
+					|| !TryLocate(System, Body, out book, out residentId)) return false;
+			}
+			KingdomCityState state;
+			KingdomCityFault fault;
+			int index;
+			KingdomResidentRow after;
+			KingdomCityState next;
+			if (!book.TryRead(out state, out fault)
+				|| !state.TryResidentIndex(residentId, out index)
+				|| !state.TryResident(index, out FormerRow)) return false;
+			// Second death callbacks are ordinary engine noise. False means no new memorial row
+			// may be appended; the first callback already committed the terminal transition.
+			if (FormerRow.Standing == KingdomResidentStanding.Dead) return false;
+			if (!KingdomResidentRules.TryTransition(FormerRow, KingdomBodyWitness.Killed, Cause,
+				out after, out fault) || !state.TryWithResident(index, after, out next, out fault))
+				return false;
+			if (!PublishRowAndUnbind(System, book, state, next, residentId,
+				KingdomUnbindCause.Death)) return false;
+			ProjectCompatibility(System);
+			return true;
+		}
+
+		/// <summary>Removes one exact emigrant by ResidentId. Same-name neighbours cannot be struck
+		/// accidentally.</summary>
+		internal static bool TryDepart(KingdomSystem System, GameObject Body,
+			out KingdomResidentRow FormerRow)
+		{
+			FormerRow = default(KingdomResidentRow);
+			KingdomCityBook book;
+			int residentId;
+			KingdomCityState state;
+			KingdomCityState next;
+			KingdomCityFault fault;
+			if (!TryLocate(System, Body, out book, out residentId) || book == null
+				|| !book.TryRead(out state, out fault)
+				|| !KingdomResidentRules.TryRemove(state, residentId, out next, out FormerRow,
+					out fault)) return false;
+			if (!PublishRowAndUnbind(System, book, state, next, residentId,
+				KingdomUnbindCause.Abroad)) return false;
+			Body.RemoveIntProperty(ResidentIdProperty);
+			ProjectCompatibility(System);
+			return true;
+		}
+
+		private static bool PublishRowAndUnbind(KingdomSystem System, KingdomCityBook Book,
+			KingdomCityState Original, KingdomCityState Advanced, int ResidentId,
+			KingdomUnbindCause Cause)
+		{
+			KingdomBindingTable bindings;
+			KingdomCityFault fault;
+			if (!TryTable(System, out bindings)) return false;
+			KingdomBinding held;
+			if (!bindings.TryGet(ResidentId, KingdomBindingKind.Resident, out held))
+				return SafePublish(Book, Advanced, "resident row transition");
+			KingdomBindingTable nextBindings;
+			KingdomBinding evicted;
+			if (!bindings.TryUnbind(ResidentId, KingdomBindingKind.Resident, Cause,
+				out nextBindings, out evicted, out fault)) return false;
+			return PublishAccessionCarriers(Book, System.Bindings, Original, Advanced,
+				bindings, nextBindings) == KingdomAccessionOutcome.Committed;
 		}
 
 		/// <summary>
@@ -571,59 +926,39 @@ namespace ThousandAndFirst.Simulation.City
 				return KingdomAccessionOutcome.RefusedClean;
 			}
 
-			// The city book is primary, but the seated/away settlement still carries the legacy
-			// population, roll and creed tallies used by the rest of the mod. Build their complete
-			// replacement before publishing either durable carrier. Accession is not emigration or
-			// death, but the heir is no longer a citizen the city may count, crew, render or mint.
+			// Accession is keyed on the row and binding only. Compatibility projections are rebuilt
+			// after both durable carriers commit; they never veto or identify the heir.
 			Seated = ReferenceEquals(book, System.City);
 			KingdomSettlement away = (!Seated && System.Away != null
 				&& ReferenceEquals(book, System.Away.City)) ? System.Away : null;
-			int population = Seated ? System.Population : ((away != null) ? away.Population : 0);
-			List<string> names = Seated ? System.RosterNames : away?.RosterNames;
-			List<string> origins = Seated ? System.RosterOrigins : away?.RosterOrigins;
-			List<string> arrived = Seated ? System.RosterArrived : away?.RosterArrived;
-			Dictionary<string, int> originCounts = Seated ? System.OriginCounts : away?.OriginCounts;
 			Dictionary<string, int> creedCounts = Seated ? System.CreedCounts : away?.CreedCounts;
 			Dictionary<string, int> creedPastCounts = Seated ? System.CreedPastCounts : away?.CreedPastCounts;
-			if ((!Seated && away == null) || population <= 0 || names == null || origins == null
-				|| arrived == null || originCounts == null || creedCounts == null || creedPastCounts == null)
+			if ((!Seated && away == null) || creedCounts == null || creedPastCounts == null)
 			{
 				KingdomLog.Log("binding: accession refused; the chosen resident's settlement tallies are unreadable");
 				formerRow = default(KingdomResidentRow);
 				return KingdomAccessionOutcome.RefusedClean;
 			}
-			List<string> nextNames = new List<string>(names);
-			List<string> nextOrigins = new List<string>(origins);
-			List<string> nextArrived = new List<string>(arrived);
-			Dictionary<string, int> nextOriginCounts = new Dictionary<string, int>(originCounts);
 			Dictionary<string, int> nextCreedCounts = new Dictionary<string, int>(creedCounts);
 			Dictionary<string, int> nextCreedPastCounts = new Dictionary<string, int>(creedPastCounts);
 			string rollName = Body.GetStringProperty("KingdomName");
 			string origin = Body.GetStringProperty("KingdomOrigin") ?? "";
 			if (string.IsNullOrEmpty(rollName)
-				|| !string.Equals(rollName, formerRow.Name, StringComparison.Ordinal))
+				|| !string.Equals(rollName, formerRow.Name, StringComparison.Ordinal)
+				|| !string.Equals(origin, formerRow.Origin ?? "", StringComparison.Ordinal))
 			{
-				KingdomLog.Log("binding: accession refused; city row and living roll disagree about the heir's name");
+				KingdomLog.Log("binding: accession refused; city row and living body disagree about the heir");
 				formerRow = default(KingdomResidentRow);
 				return KingdomAccessionOutcome.RefusedClean;
 			}
-			int legacyIndex = ExactRollIndex(nextNames, nextOrigins, rollName, origin);
-			if (legacyIndex < 0)
+			string citizenshipFailure;
+			if (!KingdomCitizenship.CanRemove(System, Body, out citizenshipFailure))
 			{
-				KingdomLog.Log("binding: accession refused; the chosen resident is absent from the living roll");
+				KingdomLog.Log("binding: accession refused; citizenship cannot be removed exactly ("
+					+ (citizenshipFailure ?? "unknown failure") + ")");
 				formerRow = default(KingdomResidentRow);
 				return KingdomAccessionOutcome.RefusedClean;
 			}
-			nextNames.RemoveAt(legacyIndex);
-			if (legacyIndex < nextOrigins.Count)
-			{
-				nextOrigins.RemoveAt(legacyIndex);
-			}
-			if (legacyIndex < nextArrived.Count)
-			{
-				nextArrived.RemoveAt(legacyIndex);
-			}
-			DropCount(nextOriginCounts, origin);
 			DropCount(nextCreedCounts, Body.GetStringProperty(KingdomCreed.CreedProperty));
 			List<string> pastCreeds = KingdomCreedRules.DecodeKept(
 				Body.GetStringProperty(KingdomCreed.CreedPastProperty));
@@ -632,24 +967,12 @@ namespace ThousandAndFirst.Simulation.City
 				DropCount(nextCreedPastCounts, pastCreeds[i]);
 			}
 
-			KingdomResidentRow[] kept = new KingdomResidentRow[current.ResidentCount - 1];
-			for (int read = 0, write = 0; read < current.ResidentCount; read++)
-			{
-				KingdomResidentRow row;
-				if (!current.TryResident(read, out row))
-				{
-					formerRow = default(KingdomResidentRow);
-					return KingdomAccessionOutcome.RefusedClean;
-				}
-				if (read != rowIndex)
-				{
-					kept[write++] = row;
-				}
-			}
 			KingdomCityState nextCity;
 			KingdomBindingTable nextBindings;
 			KingdomBinding evicted;
-			if (!current.TryWithResidents(kept, out nextCity, out fault)
+			KingdomResidentRow removed;
+			if (!KingdomResidentRules.TryRemove(current, residentId, out nextCity, out removed,
+					out fault)
 				|| !bindings.TryUnbind(residentId, KingdomBindingKind.Resident,
 					KingdomUnbindCause.Accession, out nextBindings, out evicted, out fault))
 			{
@@ -668,9 +991,24 @@ namespace ThousandAndFirst.Simulation.City
 				}
 				return outcome;
 			}
-			ApplyAccessionTallies(System, away, Seated, population - 1,
-				nextNames, nextOrigins, nextArrived, nextOriginCounts,
-				nextCreedCounts, nextCreedPastCounts);
+			if (Seated)
+			{
+				System.CreedCounts = nextCreedCounts;
+				System.CreedPastCounts = nextCreedPastCounts;
+			}
+			else
+			{
+				away.CreedCounts = nextCreedCounts;
+				away.CreedPastCounts = nextCreedPastCounts;
+			}
+			ProjectCompatibility(System);
+			if (!KingdomCitizenship.TryRemove(System, Body,
+				KingdomCitizenshipRemovalReason.Accession, out citizenshipFailure))
+			{
+				KingdomLog.Log("binding: accession citizenship completion requires repair ("
+					+ (citizenshipFailure ?? "unknown failure") + ")");
+				return KingdomAccessionOutcome.RepairRequired;
+			}
 			FinishAccessionBody(Body, formerRow, residentId);
 			return KingdomAccessionOutcome.Committed;
 		}
@@ -725,35 +1063,26 @@ namespace ThousandAndFirst.Simulation.City
 				return KingdomAccessionOutcome.RepairRequired;
 			}
 
-			int population = Seated ? System.Population : (away == null ? 0 : away.Population);
-			List<string> names = Seated ? System.RosterNames : away?.RosterNames;
-			List<string> origins = Seated ? System.RosterOrigins : away?.RosterOrigins;
-			List<string> arrived = Seated ? System.RosterArrived : away?.RosterArrived;
-			Dictionary<string, int> originCounts = Seated ? System.OriginCounts : away?.OriginCounts;
 			Dictionary<string, int> creedCounts = Seated ? System.CreedCounts : away?.CreedCounts;
 			Dictionary<string, int> creedPastCounts = Seated ? System.CreedPastCounts : away?.CreedPastCounts;
-			if (population <= 0 || names == null || origins == null || arrived == null
-				|| originCounts == null || creedCounts == null || creedPastCounts == null)
+			if ((!Seated && away == null) || creedCounts == null || creedPastCounts == null)
 			{
 				return KingdomAccessionOutcome.RepairRequired;
 			}
-			List<string> nextNames = new List<string>(names);
-			List<string> nextOrigins = new List<string>(origins);
-			List<string> nextArrived = new List<string>(arrived);
-			Dictionary<string, int> nextOriginCounts = new Dictionary<string, int>(originCounts);
 			Dictionary<string, int> nextCreedCounts = new Dictionary<string, int>(creedCounts);
 			Dictionary<string, int> nextCreedPastCounts = new Dictionary<string, int>(creedPastCounts);
 			string rollName = Body.GetStringProperty("KingdomName");
-			string origin = Body.GetStringProperty("KingdomOrigin") ?? "";
-			int legacyIndex = ExactRollIndex(nextNames, nextOrigins, rollName, origin);
-			if (rollName != Name || legacyIndex < 0)
+			if (rollName != Name)
 			{
 				return KingdomAccessionOutcome.RepairRequired;
 			}
-			nextNames.RemoveAt(legacyIndex);
-			if (legacyIndex < nextOrigins.Count) nextOrigins.RemoveAt(legacyIndex);
-			if (legacyIndex < nextArrived.Count) nextArrived.RemoveAt(legacyIndex);
-			DropCount(nextOriginCounts, origin);
+			string citizenshipFailure;
+			if (!KingdomCitizenship.CanRemove(System, Body, out citizenshipFailure))
+			{
+				KingdomLog.Log("binding: accession repair cannot remove citizenship exactly ("
+					+ (citizenshipFailure ?? "unknown failure") + ")");
+				return KingdomAccessionOutcome.RepairRequired;
+			}
 			DropCount(nextCreedCounts, Body.GetStringProperty(KingdomCreed.CreedProperty));
 			List<string> pastCreeds = KingdomCreedRules.DecodeKept(
 				Body.GetStringProperty(KingdomCreed.CreedPastProperty));
@@ -761,15 +1090,10 @@ namespace ThousandAndFirst.Simulation.City
 
 			if (hasRow)
 			{
-				KingdomResidentRow[] kept = new KingdomResidentRow[city.ResidentCount - 1];
-				for (int read = 0, write = 0; read < city.ResidentCount; read++)
-				{
-					KingdomResidentRow row;
-					if (!city.TryResident(read, out row)) return KingdomAccessionOutcome.RepairRequired;
-					if (read != rowIndex) kept[write++] = row;
-				}
 				KingdomCityState nextCity;
-				if (!city.TryWithResidents(kept, out nextCity, out fault)
+				KingdomResidentRow removed;
+				if (!KingdomResidentRules.TryRemove(city, ResidentId, out nextCity, out removed,
+						out fault)
 					|| !SafePublish(book, nextCity, "accession repair city"))
 				{
 					return KingdomAccessionOutcome.RepairRequired;
@@ -790,9 +1114,24 @@ namespace ThousandAndFirst.Simulation.City
 			{
 				return KingdomAccessionOutcome.RepairRequired;
 			}
-			ApplyAccessionTallies(System, away, Seated, population - 1,
-				nextNames, nextOrigins, nextArrived, nextOriginCounts,
-				nextCreedCounts, nextCreedPastCounts);
+			if (Seated)
+			{
+				System.CreedCounts = nextCreedCounts;
+				System.CreedPastCounts = nextCreedPastCounts;
+			}
+			else
+			{
+				away.CreedCounts = nextCreedCounts;
+				away.CreedPastCounts = nextCreedPastCounts;
+			}
+			ProjectCompatibility(System);
+			if (!KingdomCitizenship.TryRemove(System, Body,
+				KingdomCitizenshipRemovalReason.Accession, out citizenshipFailure))
+			{
+				KingdomLog.Log("binding: accession repair left citizenship pending ("
+					+ (citizenshipFailure ?? "unknown failure") + ")");
+				return KingdomAccessionOutcome.RepairRequired;
+			}
 			FinishAccessionBody(Body, FormerRow, ResidentId);
 			return KingdomAccessionOutcome.Committed;
 		}
@@ -900,35 +1239,6 @@ namespace ThousandAndFirst.Simulation.City
 			return false;
 		}
 
-		private static void ApplyAccessionTallies(KingdomSystem System, KingdomSettlement Away,
-			bool Seated, int Population, List<string> Names, List<string> Origins,
-			List<string> Arrived, Dictionary<string, int> OriginCounts,
-			Dictionary<string, int> CreedCounts, Dictionary<string, int> CreedPastCounts)
-		{
-			if (Seated)
-			{
-				System.Population = Population;
-				System.WaterCrew = Math.Min(System.WaterCrew, Population);
-				System.AssignedCrew = Math.Min(System.AssignedCrew, Population);
-				System.RosterNames = Names;
-				System.RosterOrigins = Origins;
-				System.RosterArrived = Arrived;
-				System.OriginCounts = OriginCounts;
-				System.CreedCounts = CreedCounts;
-				System.CreedPastCounts = CreedPastCounts;
-				return;
-			}
-			Away.Population = Population;
-			Away.WaterCrew = Math.Min(Away.WaterCrew, Population);
-			Away.AssignedCrew = Math.Min(Away.AssignedCrew, Population);
-			Away.RosterNames = Names;
-			Away.RosterOrigins = Origins;
-			Away.RosterArrived = Arrived;
-			Away.OriginCounts = OriginCounts;
-			Away.CreedCounts = CreedCounts;
-			Away.CreedPastCounts = CreedPastCounts;
-		}
-
 		private static void FinishAccessionBody(GameObject Body, KingdomResidentRow FormerRow,
 			int ResidentId)
 		{
@@ -964,30 +1274,6 @@ namespace ThousandAndFirst.Simulation.City
 			return true;
 		}
 
-		/// <summary>The exact parallel-roll row for a named resident. Origin disambiguates the
-		/// ordinary same-name case; an older save with a short origin roll still degrades to the
-		/// same name-only behaviour its departure paths used.</summary>
-		private static int ExactRollIndex(List<string> Names, List<string> Origins, string Name, string Origin)
-		{
-			int nameOnly = -1;
-			for (int i = 0; i < Names.Count; i++)
-			{
-				if (!string.Equals(Names[i], Name, StringComparison.Ordinal))
-				{
-					continue;
-				}
-				if (i < Origins.Count && string.Equals(Origins[i] ?? "", Origin ?? "", StringComparison.Ordinal))
-				{
-					return i;
-				}
-				if (i >= Origins.Count && nameOnly < 0)
-				{
-					nameOnly = i;
-				}
-			}
-			return nameOnly;
-		}
-
 		/// <summary>Removes one person from a per-city tally without leaving zero rows behind.</summary>
 		private static void DropCount(Dictionary<string, int> Counts, string Key)
 		{
@@ -1014,7 +1300,9 @@ namespace ThousandAndFirst.Simulation.City
 		/// they hold with, and the roof over them. An existing row keeps its arrival tick and its
 		/// brink windows — those are facts about a person and not readings off a zone.
 		/// </summary>
-		private static KingdomResidentRow RowFor(KingdomCityState state, int id, GameObject settler, string zoneId, Dictionary<string, int> homes, long TimeTicks)
+		private static KingdomResidentRow RowFor(KingdomCityState state, int id, GameObject settler,
+			string zoneId, Dictionary<string, int> homes, long TimeTicks, string Origin = null,
+			string Arrived = null)
 		{
 			int homeWorkId = 0;
 			string plotId = settler.GetStringProperty(KingdomLodging.HomePlotIdProperty);
@@ -1022,7 +1310,8 @@ namespace ThousandAndFirst.Simulation.City
 			{
 				homes.TryGetValue(plotId, out homeWorkId);
 			}
-			int originCode = KingdomResidentRules.OriginCode(settler.GetStringProperty("KingdomOrigin"));
+			string origin = Origin ?? settler.GetStringProperty("KingdomOrigin") ?? "";
+			int originCode = KingdomResidentRules.OriginCode(origin);
 			int creedCode = KingdomCityRules.StableId(settler.GetStringProperty(KingdomCreed.CreedProperty));
 			// Addendum 16's recorded fact, read off the person the same way their present creed is.
 			// The row keeps the very string the settler carries, so the column costs a reference and
@@ -1041,15 +1330,26 @@ namespace ThousandAndFirst.Simulation.City
 			if (state.TryResidentIndex(id, out index) && state.TryResident(index, out existing))
 			{
 				return existing
-					.WithReading(NameOf(settler, existing.Name), originCode, creedCode, homeWorkId, jobWorkId, 0, dayShape)
+					.WithReading(NameOf(settler, existing.Name), origin, originCode, creedCode,
+						homeWorkId, jobWorkId, 0, dayShape)
 					.WithKeptCreeds(keptCreeds)
 					.WithBoundZone(zoneId)
-					.WithStanding(KingdomResidentStanding.Resident, KingdomStandingCause.None);
+					.WithStanding(existing.Standing == KingdomResidentStanding.Expedition
+						? KingdomResidentStanding.Expedition : KingdomResidentStanding.Resident,
+						KingdomStandingCause.None);
 			}
 			return new KingdomResidentRow(id, NameOf(settler, null), originCode, creedCode,
 				(TimeTicks > 0L) ? TimeTicks : 0L, homeWorkId, jobWorkId, 0, dayShape,
 				KingdomResidentStanding.Resident, KingdomStandingCause.None, zoneId,
-				KingdomBrinkWindow.None, KingdomBrinkWindow.None, null, 0, keptCreeds);
+				KingdomBrinkWindow.None, KingdomBrinkWindow.None, null, 0, keptCreeds, origin,
+				string.IsNullOrEmpty(Arrived) ? DateAt(TimeTicks) : Arrived);
+		}
+
+		private static string DateAt(long Tick)
+		{
+			if (Tick <= 0L) return "";
+			return Calendar.GetDay(Tick) + " of " + Calendar.GetMonth(Tick) + ", "
+				+ Calendar.GetYear(Tick) + " AR";
 		}
 
 		/// <summary>
@@ -1068,9 +1368,23 @@ namespace ThousandAndFirst.Simulation.City
 		/// states and <c>KingdomResidentRules.TryReconcile</c> checks.
 		/// </para>
 		/// </summary>
-		private static KingdomResidentRow Witnessed(KingdomSystem System, Zone Z, KingdomResidentRow row, long TimeTicks)
+		private static KingdomResidentRow Witnessed(KingdomSystem System, Zone Z,
+			KingdomSurvey Survey, KingdomResidentRow row, long TimeTicks)
 		{
-			KingdomBodyWitness witness = Standing(Z, row.ResidentId);
+			if (row.Standing == KingdomResidentStanding.Expedition)
+			{
+				// The expedition job owns this named absence, exact binding, and body marker.
+				// Check-in must not release the evidence its later semantic lane needs to tell
+				// dead/missing/followed apart or to forward-recover an interrupted dispatch.
+				return row;
+			}
+			KingdomBodyWitness witness;
+			if (Survey == null || !Survey.TryWitnessResident(row.ResidentId, out witness))
+			{
+				KingdomLog.Log("resident: duplicate body evidence for " + row.ResidentId
+					+ " in " + (Z?.ZoneID ?? "-") + "; row was not changed");
+				return row;
+			}
 			KingdomResidentRow next;
 			KingdomCityFault fault;
 			if (!KingdomResidentRules.TryTransition(row, witness, KingdomStandingCause.Unwitnessed, out next, out fault))
@@ -1088,36 +1402,19 @@ namespace ThousandAndFirst.Simulation.City
 			return next;
 		}
 
-		/// <summary>What the ground says about one id, in a zone the founder is standing in.</summary>
-		private static KingdomBodyWitness Standing(Zone Z, int residentId)
-		{
-			foreach (GameObject item in Z.GetObjects())
-			{
-				if (item.GetIntProperty(ResidentIdProperty) != residentId)
-				{
-					continue;
-				}
-				if (item.IsPlayerLed() || item.IsPlayer())
-				{
-					return KingdomBodyWitness.Led;
-				}
-				return item.IsAlive ? KingdomBodyWitness.Present : KingdomBodyWitness.Killed;
-			}
-			return KingdomBodyWitness.Missing;
-		}
-
 		/// <summary>Every home plot standing in this zone, by the work row id of the object that
 		/// carries it — so a row's home is the same id a work row is keyed on rather than a second
 		/// identifier for the same building.</summary>
-		private static Dictionary<string, int> HomeWorkIds(Zone Z)
+		private static Dictionary<string, int> HomeWorkIds(KingdomSurvey Survey)
 		{
 			Dictionary<string, int> homes = new Dictionary<string, int>();
-			if (Z == null)
+			if (Survey == null)
 			{
 				return homes;
 			}
-			foreach (GameObject item in Z.GetObjects())
+			for (int i = 0; i < Survey.PlotRoots.Count; i++)
 			{
+				GameObject item = Survey.PlotRoots[i];
 				string plotId = item.GetStringProperty(KingdomPlots.PlotIdProperty);
 				if (!string.IsNullOrEmpty(plotId) && !homes.ContainsKey(plotId))
 				{
@@ -1138,10 +1435,10 @@ namespace ThousandAndFirst.Simulation.City
 		/// brink stops being able to.
 		/// </para>
 		/// </summary>
-		private static bool Enrollable(GameObject Body)
+		private static bool Enrollable(KingdomSystem System, GameObject Body)
 		{
 			return GameObject.Validate(Body)
-				&& Body.GetIntProperty("KingdomCitizen") == 1
+				&& KingdomCitizenship.BelongsTo(System, Body)
 				&& Body.GetIntProperty("KingdomBorn") == 1
 				&& !Body.IsPlayer()
 				&& !Body.IsPlayerLed();
@@ -1165,31 +1462,12 @@ namespace ThousandAndFirst.Simulation.City
 			{
 				return KingdomBodyPresence.Frozen;
 			}
-			// CachedZones and never GetZone: asking the manager for a zone THAWS it, and a rule
-			// whose job is to notice that a body is on disk must not be the thing that takes it off
-			// disk. A zone absent from the cache is a zone on disk, which is the whole case §3.8
-			// was written for.
-			Zone zone = null;
-			if (The.ZoneManager == null || The.ZoneManager.CachedZones == null
-				|| !The.ZoneManager.CachedZones.TryGetValue(binding.ZoneId, out zone) || zone == null)
-			{
-				return KingdomBodyPresence.Frozen;
-			}
-			bool live = false;
-			foreach (GameObject item in zone.GetObjects())
-			{
-				if (string.Equals(item.IDIfAssigned, binding.ObjectId,
-					StringComparison.Ordinal))
-				{
-					live = true;
-					break;
-				}
-			}
-			if (!live)
-			{
-				return KingdomBodyPresence.Frozen;
-			}
-			return string.Equals(binding.ZoneId, zoneId, StringComparison.Ordinal)
+			// FindByID asks Qud's exact object-id index over already resident ground and never thaws a
+			// zone. Absence therefore remains the durable Frozen verdict; no remote classification is
+			// performed merely to answer check-before-mint.
+			GameObject exact = FindExactBindingObject(binding);
+			if (!GameObject.Validate(exact) || exact.CurrentZone == null) return KingdomBodyPresence.Frozen;
+			return string.Equals(exact.CurrentZone.ZoneID, zoneId, StringComparison.Ordinal)
 				? KingdomBodyPresence.Here
 				: KingdomBodyPresence.Elsewhere;
 		}

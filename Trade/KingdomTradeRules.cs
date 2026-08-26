@@ -45,7 +45,7 @@ namespace ThousandAndFirst
 			}
 		}
 
-		public const int CurrentFormatVersion = 4;
+		public const int CurrentFormatVersion = 5;
 		private const string IdentityNamespace = "taf.trade.identity.v2";
 		public const int MaxCharters = 8;
 		public const int MaxWaterLegs = 24;
@@ -1053,10 +1053,12 @@ namespace ThousandAndFirst
 				Phase = KingdomTradePhase.Prepared,
 				CreatedTick = Tick,
 				UpdatedTick = Tick,
-				ProjectionState = KingdomTradePhysicalState.None,
-				PriorCleanupState = KingdomTradePhysicalState.None,
-				WaterLegs = new List<KingdomTradeWaterLeg>(),
-				MaterialOutputs = new List<KingdomTradeMaterialOutput>()
+					ProjectionState = KingdomTradePhysicalState.None,
+					PriorCleanupState = KingdomTradePhysicalState.None,
+					WaterLegs = new List<KingdomTradeWaterLeg>(),
+					MaterialOutputs = new List<KingdomTradeMaterialOutput>(),
+					Pattern = Kind == KingdomTradeOperationKind.CharterDelivery
+						? KingdomTradePatternRules.PriorWireDefault() : null
 			};
 			Book.OpenOperation = operation;
 			return operation;
@@ -1179,7 +1181,8 @@ namespace ThousandAndFirst
 			if (Operation.Kind == KingdomTradeOperationKind.ManifestLapse
 				&& Operation.RetainedState != KingdomTradePhysicalState.Proved) return true;
 			if (Operation.Kind == KingdomTradeOperationKind.CharterDelivery
-				&& Operation.ProvedWater != Operation.RequestedWater) return true;
+				&& (Operation.ProvedWater != Operation.RequestedWater
+					|| !KingdomTradePatternRules.Terminal(Operation.Pattern))) return true;
 			if (Operation.Kind == KingdomTradeOperationKind.ManifestLoad
 				&& Operation.ProvedWater != Operation.RequestedWater) return true;
 			if (Operation.WaterLegs == null) return true;
@@ -1439,6 +1442,52 @@ namespace ThousandAndFirst
 				return CanonicalId("operation-proof", Operation.Sequence, Operation.Id, inner);
 			}
 			catch { return null; }
+		}
+
+		private static string OperationEvidenceDigestV3(KingdomTradeOperation Operation)
+		{
+			try
+			{
+				KingdomTradeBook evidence = new KingdomTradeBook
+				{
+					FormatVersion = 4,
+					OpenOperation = Operation
+				};
+				byte[] bytes = KingdomTradeCodec.EncodePayloadV3ForMigration(evidence);
+				string inner;
+				using (SHA256 sha = SHA256.Create()) inner = Hex(sha.ComputeHash(bytes));
+				return CanonicalId("operation-proof", Operation.Sequence, Operation.Id, inner);
+			}
+			catch { return null; }
+		}
+
+		/// <summary>Exact wire-v3/format-4 adoption; no current writer calls this seam.</summary>
+		internal static void MigrateWireV3(KingdomTradeBook Book)
+		{
+			if (Book == null || Book.FormatVersion != 4) return;
+			KingdomTradeOperation operation = Book.OpenOperation;
+			KingdomTradeProof pending = Book.PendingRetirement;
+			// The frozen v3 writer ignores this additive field, so establish a terminal
+			// migration value before either success or quarantine can expose the book.
+			if (operation != null && operation.Kind == KingdomTradeOperationKind.CharterDelivery
+				&& operation.Pattern == null)
+				operation.Pattern = KingdomTradePatternRules.PriorWireDefault();
+			bool migratePending = operation != null && pending != null;
+			if (migratePending)
+			{
+				string oldDigest = OperationEvidenceDigestV3(operation);
+				if (!ValidId(oldDigest) || !string.Equals(pending.OperationEvidenceHash,
+					oldDigest, StringComparison.Ordinal))
+				{
+					Book.FormatVersion = CurrentFormatVersion;
+					QuarantineBook(Book,
+						"wire-v3 pending retirement did not authenticate its exact prior operation");
+					return;
+				}
+			}
+			Book.FormatVersion = CurrentFormatVersion;
+			if (migratePending)
+				pending.OperationEvidenceHash = OperationEvidenceDigest(operation);
 		}
 
 		private static bool CompletePendingRetirement(KingdomTradeBook Book)
@@ -2016,6 +2065,8 @@ namespace ThousandAndFirst
 			NormalizeOutbox(operation.Outbox, ref malformed);
 			if (operation.Kind == KingdomTradeOperationKind.CharterDelivery)
 			{
+				if (operation.Pattern == null
+					|| !KingdomTradePatternRules.Normalize(operation.Pattern)) malformed = true;
 				bool terminalLane = operation.Phase == KingdomTradePhase.ScheduleIntent
 					|| operation.Phase == KingdomTradePhase.RetirementReady
 					|| operation.Phase == KingdomTradePhase.Terminal;
@@ -2032,6 +2083,7 @@ namespace ThousandAndFirst
 						|| (terminalLane && !TerminalCharterOutboxExact(operation))) malformed = true;
 				}
 			}
+			else if (operation.Pattern != null) malformed = true;
 			if (operation.Outbox != null && (operation.Outbox.ChronicleState == KingdomTradeSinkState.Lost
 				|| operation.Outbox.LedgerState == KingdomTradeSinkState.Lost
 				|| operation.Outbox.MessageState == KingdomTradeSinkState.Lost

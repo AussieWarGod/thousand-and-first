@@ -10,7 +10,7 @@ namespace ThousandAndFirst
 {
 	/// <summary>
 	/// The engine-coupled half of the settlement's zoning: what a founder may commission, and on
-	/// which ground. Reads the four optional gates a <c>&lt;building&gt;</c> entry may declare
+	/// which ground. Reads the optional gates a <c>&lt;building&gt;</c> entry may declare
 	/// (see <see cref="KingdomZoningRules"/> for the arithmetic and MODDING.md for the schema),
 	/// keeps the roster of designs the keepers have been taught, and composes every refusal so
 	/// that it names both what is missing and what would fix it.
@@ -194,23 +194,39 @@ namespace ThousandAndFirst
 					roster.Add(rite);
 				}
 			}
-			if (System.OriginCounts == null)
-			{
-				return roster;
-			}
-			foreach (KeyValuePair<string, int> people in System.OriginCounts)
+			AppendTallyKeys(roster, System.OriginCounts, KingdomZoningRules.KindOrigin);
+			AppendKeys(roster, KingdomResidentIdentityRules.RosterKeys(System.CultureCounts,
+				KingdomZoningRules.KindCulture));
+			AppendKeys(roster, KingdomResidentIdentityRules.RosterKeys(System.SpeciesCounts,
+				KingdomZoningRules.KindSpecies));
+			AppendKeys(roster,
+				KingdomResidentIdentityRules.IdentityRosterKeys(System.IdentityCounts));
+			return roster;
+		}
+
+		private static void AppendTallyKeys(List<string> Roster,
+			IDictionary<string, int> Tallies, string Kind)
+		{
+			if (Roster == null || Tallies == null) return;
+			foreach (KeyValuePair<string, int> people in Tallies)
 			{
 				if (people.Value <= 0)
 				{
 					continue;
 				}
-				string key = KingdomZoningRules.ComposeKey(KingdomZoningRules.KindOrigin, people.Key);
-				if (key != null && !roster.Contains(key))
+				string key = KingdomZoningRules.ComposeKey(Kind, people.Key);
+				if (key != null && !Roster.Contains(key))
 				{
-					roster.Add(key);
+					Roster.Add(key);
 				}
 			}
-			return roster;
+		}
+
+		private static void AppendKeys(List<string> Roster, IList<string> Keys)
+		{
+			if (Roster == null || Keys == null) return;
+			for (int i = 0; i < Keys.Count; i++)
+				if (!Roster.Contains(Keys[i])) Roster.Add(Keys[i]);
 		}
 
 		/// <summary>
@@ -222,22 +238,17 @@ namespace ThousandAndFirst
 		public static List<string> RosterOf(KingdomSettlement City)
 		{
 			List<string> roster = KingdomZoningRules.DecodeRoster((City == null) ? null : City.KeepersRoster);
-			if (City == null || City.OriginCounts == null)
+			if (City == null)
 			{
 				return roster;
 			}
-			foreach (KeyValuePair<string, int> people in City.OriginCounts)
-			{
-				if (people.Value <= 0)
-				{
-					continue;
-				}
-				string key = KingdomZoningRules.ComposeKey(KingdomZoningRules.KindOrigin, people.Key);
-				if (key != null && !roster.Contains(key))
-				{
-					roster.Add(key);
-				}
-			}
+			AppendTallyKeys(roster, City.OriginCounts, KingdomZoningRules.KindOrigin);
+			AppendKeys(roster, KingdomResidentIdentityRules.RosterKeys(City.CultureCounts,
+				KingdomZoningRules.KindCulture));
+			AppendKeys(roster, KingdomResidentIdentityRules.RosterKeys(City.SpeciesCounts,
+				KingdomZoningRules.KindSpecies));
+			AppendKeys(roster,
+				KingdomResidentIdentityRules.IdentityRosterKeys(City.IdentityCounts));
 			return roster;
 		}
 
@@ -271,7 +282,13 @@ namespace ThousandAndFirst
 			}
 			TechLevel before = KingdomZoningRules.LevelForPoints(KingdomZoningRules.TechPoints(stored));
 			stored.Add(key);
-			Store(System, KingdomZoningRules.EncodeRoster(stored));
+			string encoded;
+			if (!KingdomZoningRules.TryEncodeRoster(stored, out encoded))
+			{
+				KingdomLog.Log("zoning: the keepers' permanent roster is full; refused " + key);
+				return false;
+			}
+			Store(System, encoded);
 			if (!string.IsNullOrEmpty(GovernanceVerb) && !KingdomGovernanceScope.HasCommitted)
 			{
 				KingdomGovernanceScope.Commit(GovernanceVerb);
@@ -280,8 +297,8 @@ namespace ThousandAndFirst
 			KingdomLog.Log("zoning: learned " + key + " (" + before + " -> " + after + ")");
 			if (after > before && System != null && System.Founded)
 			{
-				MessageQueue.AddPlayerMessage("{{G|" + System.SeatName + " now builds at the level of " + KingdomZoningRules.TechName(after) + ".}}");
-				KingdomChronicle.Record(System, "the keepers of " + System.KingdomDisplayName + " reached the level of " + KingdomZoningRules.TechName(after));
+				MessageQueue.AddPlayerMessage("{{G|" + KingdomPresentation.Rich(System.SeatName) + " now builds at the level of " + KingdomZoningRules.TechName(after) + ".}}");
+				KingdomChronicle.Record(System, "the keepers of " + KingdomPresentation.Rich(System.KingdomDisplayName) + " reached the level of " + KingdomZoningRules.TechName(after));
 			}
 			return true;
 		}
@@ -389,6 +406,12 @@ namespace ThousandAndFirst
 		public static bool Offered(KingdomSystem System, KingdomRules.BuildEntry Entry)
 		{
 			if (System == null || Entry == null)
+			{
+				return false;
+			}
+			// The four civic-heart records are rite-owned internal growth rungs. They are never
+			// commissions: the founding rite lays the basin and improvement accretes the rest.
+			if (KingdomPlotRules.HeartRungOf(Entry.Key) > 0)
 			{
 				return false;
 			}
@@ -560,7 +583,9 @@ namespace ThousandAndFirst
 
 		/// <summary>
 		/// The keepers' own screen: what the settlement's craft stands at, everything it has been
-		/// taught, and the one action that teaches it more. Owns its whole interaction the way
+		/// taught, and the acts that teach or carry evidence. Research subjects are deliberately
+		/// absent: the technology map is a reading and the one pressable research surface is the
+		/// physical inquiry bench. Owns its whole interaction the way
 		/// <c>KingdomLarder</c> and <c>KingdomSalvage</c> do, so the Charter needs one line to
 		/// reach it.
 		/// </summary>
@@ -585,7 +610,6 @@ namespace ThousandAndFirst
 					// per-turn inventory walk is a cost this design refuses to pay.
 					KingdomResearch.RevealFromCarried(System, CarriedKeys(disks));
 					KingdomResearch.ApplySources(System);
-					List<ResearchNode> subjects = KingdomResearch.Offerable(System);
 					List<ResearchNode> carried = KingdomResearch.CarriedFromAway(System);
 					List<string> options = new List<string>();
 					List<char> hotkeys = new List<char>();
@@ -595,10 +619,6 @@ namespace ThousandAndFirst
 					hotkeys.Add('t');
 					if (KingdomResearch.Enabled)
 					{
-						options.Add((subjects.Count > 0)
-							? "{{W|Set the keepers a thing to work out}}"
-							: "{{K|There is nothing here the keepers have heard of and not worked out}}");
-						hotkeys.Add('w');
 						if (carried.Count > 0)
 						{
 							options.Add("{{W|Set down what the keepers of " + AwayName(System) + " worked out}}");
@@ -607,7 +627,7 @@ namespace ThousandAndFirst
 					}
 					options.Add("Close");
 					hotkeys.Add('z');
-					int chosen = Popup.PickOption(Title: "What the keepers of " + System.SeatName + " know", Intro: KeepersIntro(System), Options: options, Hotkeys: hotkeys, AllowEscape: true);
+					int chosen = Popup.PickOption(Title: "What the keepers of " + KingdomPresentation.Rich(System.SeatName) + " know", Intro: KeepersIntro(System), Options: options, Hotkeys: hotkeys, AllowEscape: true);
 					if (chosen < 0 || chosen >= hotkeys.Count || hotkeys[chosen] == 'z')
 					{
 						return;
@@ -618,12 +638,6 @@ namespace ThousandAndFirst
 						if (disks.Count > 0)
 						{
 							TeachFromDisk(System, disks);
-						}
-						break;
-					case 'w':
-						if (subjects.Count > 0)
-						{
-							SetSubject(System, subjects);
 						}
 						break;
 					case 's':
@@ -658,6 +672,13 @@ namespace ThousandAndFirst
 			{
 				return ZoningJudgement.Allowed;
 			}
+			ZoningJudgement covenant = KingdomZoningRules.JudgeCovenant(
+				new CovenantGate(Entry.CovenantFaction, Entry.CovenantMinStanding),
+				string.IsNullOrEmpty(Entry.CovenantFaction) ? 0 : System.GetStanding(Entry.CovenantFaction));
+			if (!covenant.Permitted)
+			{
+				return covenant;
+			}
 			int claimed = (System.ClaimedZones != null) ? System.ClaimedZones.Count : 0;
 			// The capital's two lanes are read here rather than inside the rules, because both need
 			// the realm's books and the rules class has no engine. Both are cheap on this path for
@@ -671,11 +692,9 @@ namespace ThousandAndFirst
 				satellite, satelliteDetail);
 		}
 
-		// One entry, keyed by the ground and the tick it was read on. The purpose gate is asked once
-		// per catalogue row per menu redraw -- LockoutWarning alone asks it twice for every design in
-		// the game -- so the read has to be cheap or it is a stutter every time a founder opens the
-		// commission list. It is invalidated by the tick moving, which is the coarsest correct key:
-		// a megastructure cannot appear without time passing.
+		// Retained only as loader-reset compatibility for older source integrations. The answer is no
+		// longer read from this cache: two commissions can publish on the same game tick, so a tick
+		// cache could authorize both body works before either had appeared in the city book.
 		private static string KeptCacheZone;
 
 		private static long KeptCacheTick = -1L;
@@ -723,10 +742,6 @@ namespace ThousandAndFirst
 			Zone active = The.ZoneManager?.ActiveZone;
 			string here = (active != null) ? active.ZoneID : "";
 			long now = (The.Game != null) ? The.Game.TimeTicks : 0L;
-			if (KeptCacheTick == now && string.Equals(KeptCacheZone, here))
-			{
-				return KeptCacheValue;
-			}
 			// Gathered once and searched against, rather than walking the whole catalogue for every
 			// stored work: a city's book can carry forty work rows and the catalogue eighty designs,
 			// and the megastructures among them are — by the rule this enforces — almost always one.
@@ -754,8 +769,11 @@ namespace ThousandAndFirst
 				}
 				if (kept == null && active != null)
 				{
-					foreach (GameObject work in active.GetObjects())
+					KingdomSurvey survey = KingdomSurvey.ActiveFor(active)
+						?? KingdomSurvey.Take(active);
+					for (int i = 0; i < survey.Built.Count; i++)
 					{
+						GameObject work = survey.Built[i];
 						if (work == null || work.GetIntProperty("KingdomBuilt") != 1)
 						{
 							continue;
@@ -765,6 +783,25 @@ namespace ThousandAndFirst
 						{
 							break;
 						}
+					}
+				}
+				// A published plot job spends the slot immediately. Waiting for the works object or the
+				// next city-book pass leaves a same-tick window in which the capital can fund both the
+				// theatre and annexe. Only physical plot routes count: a cargo consignment names its
+				// destination purpose but belongs to the producer city and must not spend that city's slot.
+				if (kept == null && KingdomConstruction.TryRead(
+					out List<KingdomConstructionJob> jobs, out _))
+				{
+					string owner = KingdomConstruction.OwnerOf(System);
+					for (int i = 0; i < jobs.Count && kept == null; i++)
+					{
+						KingdomConstructionJob job = jobs[i];
+						if (job.OwnerKey != owner || System.ClaimedZones == null
+							|| !System.ClaimedZones.Contains(job.ZoneId)
+							|| KingdomConstructionRules.IsTerminal(job.Phase)
+							|| (job.Route != KingdomConstructionRoute.PlotCommission
+								&& job.Route != KingdomConstructionRoute.PlotPlan)) continue;
+						kept = MegastructureKeyOf(job.TargetKey, keys, blueprints);
 					}
 				}
 			}
@@ -884,39 +921,29 @@ namespace ThousandAndFirst
 				// The Detail is already a CITY, so nothing is looked up: a city's name is the
 				// founder's own word for it.
 				return KingdomLabRules.UncrownedRefusalLine(Judgement.Detail);
+			case ZoningVerdict.RefusedCovenantStanding:
+			{
+				int standing = (System == null || string.IsNullOrEmpty(Judgement.Detail))
+					? 0 : System.GetStanding(Judgement.Detail);
+				int wanted = (Entry == null) ? 0 : Entry.CovenantMinStanding;
+				return XRL.Language.Grammar.A(name) + " is opened by covenant with {{C|"
+					+ CovenantName(Judgement.Detail) + "}}. " + seat + " holds {{C|" + standing
+					+ "}} standing with them and needs {{C|" + wanted
+					+ "}}. Keep their charter, answer their petitions, and improve the realm's standing before asking again.";
+			}
 			default:
 				return XRL.Language.Grammar.A(name) + " cannot be raised here.";
 			}
 		}
 
-		// The stand-in for the lab building's own action, and named one. Verdict 3 rules that the
-		// one pressable thing is the building in the world; until the laboratory is raised, the
-		// keepers' own screen is where a subject is taken up, and this whole method moves onto the
-		// lab the day it exists. Nothing else about the loop changes when it does.
-		private static void SetSubject(KingdomSystem System, List<ResearchNode> Subjects)
+		private static string CovenantName(string FactionName)
 		{
-			List<string> options = new List<string>();
-			for (int i = 0; i < Subjects.Count; i++)
+			if (string.IsNullOrEmpty(FactionName))
 			{
-				string refusal;
-				bool can = KingdomResearch.CanTakeUp(System, Subjects[i], out refusal);
-				options.Add(Subjects[i].Named + (can ? "" : " {{K|[not yet]}}"));
+				return "that covenant";
 			}
-			int chosen = Popup.PickOption(Title: "What shall they work out?",
-				Intro: "One thing at a time, and nothing else moves while they do it. Setting a new subject aside keeps whatever work already stands on it.",
-				Options: options, AllowEscape: true);
-			if (chosen < 0)
-			{
-				return;
-			}
-			string failure;
-			if (!KingdomResearch.TakeUp(System, Subjects[chosen].Key, out failure,
-				"set research subject"))
-			{
-				Popup.Show(failure);
-				return;
-			}
-			Popup.Show("{{G|The keepers of " + System.SeatName + " take up " + Subjects[chosen].Named + ".}} What comes of it comes of their own work, in their own time.");
+			Faction faction = Factions.GetIfExists(FactionName);
+			return (faction == null) ? FactionName : faction.GetFormattedName();
 		}
 
 		// The teaching act (Addendum 22 B4). What crosses between two of the founder's cities is a
@@ -946,8 +973,8 @@ namespace ThousandAndFirst
 				return;
 			}
 			Popup.Show("{{G|You set it down for them: " + KingdomZoningRules.JoinAnd(named) + ".}} The keepers of "
-				+ System.SeatName + " have the shape of it now. The rest of the walking is theirs.");
-			KingdomChronicle.Record(System, "what the keepers of " + away + " knew was set down at " + System.SeatName);
+				+ KingdomPresentation.Rich(System.SeatName) + " have the shape of it now. The rest of the walking is theirs.");
+			KingdomChronicle.Record(System, "what the keepers of " + KingdomPresentation.Rich(away) + " knew was set down at " + KingdomPresentation.Rich(System.SeatName));
 		}
 
 		private static string AwayName(KingdomSystem System)
@@ -964,7 +991,7 @@ namespace ThousandAndFirst
 			TechLevel level = KingdomZoningRules.LevelForPoints(points);
 			int wanted = KingdomZoningRules.PointsToNext(points);
 			StringBuilder text = new StringBuilder();
-			text.Append(System.SeatName).Append(" builds at the level of {{C|").Append(KingdomZoningRules.TechName(level)).Append("}}.");
+			text.Append(KingdomPresentation.Rich(System.SeatName)).Append(" builds at the level of {{C|").Append(KingdomZoningRules.TechName(level)).Append("}}.");
 			text.Append(wanted <= 0
 				? "\n{{K|The keepers have learned everything this settlement can teach itself.}}"
 				: ("\n{{K|" + wanted + " more toward " + KingdomZoningRules.TechName((TechLevel)((int)level + 1))
@@ -1076,12 +1103,13 @@ namespace ThousandAndFirst
 			string design = DiskName(Disks[chosen].GetPart<DataDisk>());
 			if (!Learn(System, KingdomZoningRules.KindDisk, design, "teach keeper design"))
 			{
-				Popup.Show("The keepers of " + System.SeatName + " already have that one written down.");
+				Popup.Show("The keepers of " + KingdomPresentation.Rich(System.SeatName) + " already have that one written down.");
 				return;
 			}
-			KingdomChronicle.Record(System, "the keepers of " + System.KingdomDisplayName + " were taught to build " + design);
-			System.RecordDeed("taught the keepers of " + System.KingdomDisplayName + " to build " + design);
-			Popup.Show("{{G|The keepers copy it out and hand the disk back.}} " + System.SeatName + " can raise " + XRL.Language.Grammar.A(design) + " when the ground and the stores allow.");
+			string realm = KingdomPresentation.Rich(System.KingdomDisplayName);
+			KingdomChronicle.Record(System, "the keepers of " + realm + " were taught to build " + design);
+			System.RecordDeed("taught the keepers of " + realm + " to build " + design);
+			Popup.Show("{{G|The keepers copy it out and hand the disk back.}} " + KingdomPresentation.Rich(System.SeatName) + " can raise " + XRL.Language.Grammar.A(design) + " when the ground and the stores allow.");
 			// A roll changed, so a node somebody had already answered may now be answered here.
 			KingdomResearch.ApplySources(System);
 		}
@@ -1103,10 +1131,16 @@ namespace ThousandAndFirst
 			string legacy = The.Game?.GetStringGameState(RosterState, "") ?? "";
 			if (legacy.Length > 0)
 			{
-				if (string.IsNullOrEmpty(System.KeepersRoster))
+				string canonical;
+				if (string.IsNullOrEmpty(System.KeepersRoster)
+					&& KingdomZoningRules.TryCanonicalRoster(legacy, out canonical))
 				{
-					System.KeepersRoster = legacy;
+					System.KeepersRoster = canonical;
 					KingdomLog.Log("zoning: folded the old game-held roster into " + System.SeatName + " and retired the key");
+				}
+				else if (string.IsNullOrEmpty(System.KeepersRoster))
+				{
+					MetricsManager.LogError("ThousandAndFirst zoning: old keeper roster exceeds its hard bound; it was not imported");
 				}
 				The.Game?.SetStringGameState(RosterState, "");
 			}
@@ -1119,7 +1153,13 @@ namespace ThousandAndFirst
 			{
 				return;
 			}
-			System.KeepersRoster = Roster ?? "";
+			string canonical;
+			if (!KingdomZoningRules.TryCanonicalRoster(Roster, out canonical))
+			{
+				MetricsManager.LogError("ThousandAndFirst zoning: refused an unbounded keeper roster write");
+				return;
+			}
+			System.KeepersRoster = canonical;
 		}
 	}
 }

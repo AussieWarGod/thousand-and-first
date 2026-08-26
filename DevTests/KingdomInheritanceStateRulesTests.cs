@@ -547,6 +547,50 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void DeferredLoadResumeWaitsThenConsumesExactlyOnce()
+		{
+			KingdomInheritanceLoadKind kind;
+			string failure;
+			KingdomMasterDecision disabled = KingdomMasterRules.Observe(
+				KingdomMasterLatchValue.Enabled, 1L, 0L, 0L, false, 10L);
+			KingdomMasterDecision staged = KingdomMasterRules.Observe(disabled.State,
+				disabled.ChangedAtTick, disabled.ResumeToken, disabled.AppliedResumeToken,
+				true, 20L);
+			Assert.IsFalse(KingdomInheritanceResumeRules.TryConsume(true,
+				(int)KingdomInheritanceLoadKind.Primary, "", staged.AutomaticWorkAllowed,
+				out kind, out failure),
+				"master-off and the transition wake must retain the serialized slot");
+			KingdomMasterDecision applied = KingdomMasterRules.ApplyResume(staged);
+			bool transitionBoundaryAllowed = applied.AutomaticWorkAllowed
+				&& applied.ChangedAtTick != 20L;
+			Assert.IsFalse(transitionBoundaryAllowed,
+				"publishing the resume token still consumes its equal-tick wake");
+			KingdomMasterDecision next = KingdomMasterRules.Observe(applied.State,
+				applied.ChangedAtTick, applied.ResumeToken, applied.AppliedResumeToken,
+				true, 21L);
+			Assert.IsTrue(KingdomInheritanceResumeRules.TryConsume(true,
+				(int)KingdomInheritanceLoadKind.Primary, "",
+				next.AutomaticWorkAllowed && next.ChangedAtTick != 21L,
+				out kind, out failure));
+			Assert.AreEqual(KingdomInheritanceLoadKind.Primary, kind);
+			Assert.AreEqual("", failure);
+			Assert.IsFalse(KingdomInheritanceResumeRules.TryConsume(false,
+				(int)KingdomInheritanceLoadKind.Primary, "", true, out kind, out failure),
+				"a retired slot must not form a backlog or duplicate recovery");
+		}
+
+		[Test]
+		public void DeferredLoadResumeFailsClosedForMalformedSavedKind()
+		{
+			KingdomInheritanceLoadKind kind;
+			string failure;
+			Assert.IsTrue(KingdomInheritanceResumeRules.TryConsume(true, 99,
+				"stale", true, out kind, out failure));
+			Assert.AreEqual(KingdomInheritanceLoadKind.Unknown, kind);
+			Assert.AreEqual("the saved deferred inheritance load kind was invalid", failure);
+		}
+
+		[Test]
 		public void ZoneNameAndReachabilityProofsAreExact()
 		{
 			Assert.IsTrue(KingdomInheritanceStateRules.IsExactZoneNameFootprint("Old Seat",

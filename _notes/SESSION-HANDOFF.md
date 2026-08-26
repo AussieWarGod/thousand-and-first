@@ -1,20 +1,35 @@
-# Session handoff — 0.2.0 release candidate
+# Session handoff — current v1.0 test-candidate work
 
-> **Status audit: 2026-08-25.** The old “in flight” and “still queued” wave list was stale and
-> has been removed. Use `README.md` for product status, `TESTING.md` for observed proof, and
-> `docs/RELEASING.md` for the Steam boundary. The design corpus under `_notes/` remains a ruling
-> record, not an instruction to rerun old waves.
+> **Status audit: 2026-08-27.** Use `../docs/STATUS.md` for exact current evidence,
+> `BRIEF-IMPLEMENTATION-AUDIT.md` and
+> `CONTRACT-RUNTIME-RECONCILIATION-2026-08-25.md` for open contract gates,
+> `../TESTING.md` for native/human proof, and `../docs/RELEASING.md` for Steam. Historical
+> candidate receipts below prove only their frozen bytes.
 
 ## Current state
 
+- Shared working tree is intentionally dirty with the integrated feature/polish wave; preserve all
+  changes and do not treat an older commit as the runtime candidate.
+- `Tools/gate.sh`: 308 staged sources compile clean under baseline and compatibility symbols.
+- Architecture: 136 buildings, 126 plotted building plans, 499 maps, 355 bindings, 403 tiers,
+  516 variants, and 2,064 variant/pose goldens; generator/checker clean with zero issues plus three
+  expected installed-base tolerant-recovery warnings for malformed vanilla Creatures/Furniture/Items XML.
+- Nine focused one-survey source-contract cases pass. The final integrated pure/source suite passes
+  7,586 / 7,586 cases.
+- Current native compile/load, full human visual/lived-city, compatibility, and private subscribed
+  install receipts are open. Do not reuse the historical receipt below for this tree.
+- Current focus: fan in documentation/review changes, then run release/native/gallery/
+  compatibility/package gates.
+
+## Historical 0.2.0 candidate evidence
+
 - Runtime candidate: `99133f6a1b24f3be652903e16576ddd7bb929230`.
 - Release/provenance candidate: `ba3e49ed174c243917ecf5865e6c6dc1533d402d`.
-- Exact gates: 6,873 native cases, 171 portable cases, 207 staged sources, 36 shipped IPart
-  ABI classes, 11 art tests, 43 verified vanilla tile paths, and 222 cold-install files.
-- Automated live Qud 1.0.5/core 2.0.211.51 proof: fresh two-city founding, three saves, two cold
-  reloads, seat movement both ways, 109 carried fields, 17/17 in-game checks, and clean logs.
-  A second isolated launch of the release/provenance candidate founded a realm, passed 17/17,
-  saved, and passed resume validation. This is automation, not manual playtesting.
+- Exact historical gates: 6,873 native cases, 171 portable cases, 207 staged sources, 36 shipped
+  IPart ABI classes, 11 art tests, 43 verified vanilla tile paths, and 222 cold-install files.
+- Automated live Qud proof covered fresh two-city founding, three saves, two cold reloads, seat
+  movement both ways, 109 carried fields, 17/17 checks, and clean logs. It predates material code
+  and content changes and signs no current behavior or appearance.
 - Frozen staged bytes were verified from clean commit `d3ec8d2`: 222 files at
   `/home/r/work/taf-package.otcUIn/TAF-0.2.0-private-bootstrap-d3ec8d2`, with sibling receipt
   SHA-256 `9584c89892410eaa4518d7411631932eb756cea3c68bb2a1763fdb6005187eac`.
@@ -22,11 +37,14 @@
 - The normal local Mods copy is an exact empty-diff deployment. Twenty-eight older scanned backup
   copies were moved intact under `CavesOfQud/TAF-ModBackups/`; none were deleted. The deploy itself
   made another automatic full backup named in `Tools/last-deploy-receipt.txt`.
-- Art boundary: no bundled runtime raster sprites. All shipped XML art is verified vanilla or an
-  intentional glyph. Root `preview.png` is a pixel-exact, native-resolution gameplay crop with a
-  repository provenance record.
+- Historical art boundary used no bundled runtime raster sprites. Current law remains vanilla-first
+  but permits original assets—including disclosed generative-assisted drafts only after pixel-level
+  human revision—through the exact provenance, editable-source, wiring, fallback, package, rights,
+  and independent native-review contract.
 - Remote publication remains pending: the release-candidate commits have not been pushed to
-  `origin/main`; pushing is an external publication action requiring explicit maintainer authority.
+  `origin/main`. The maintainer has explicitly authorized push; that authority does not authorize a
+  tag, Steam upload, visibility change, or release claim. The live Mods copy is updated through the
+  verified `Tools/stage.sh deploy` workflow, not by commit or push.
 
 ## Human-only gates
 
@@ -35,16 +53,20 @@
    returned `workshop.json`.
 3. Freeze the private package, remove local duplicates, subscribe from Steam, verify installed
    bytes/logs, and author the truthful release evidence described in `docs/RELEASING.md`.
-4. Only then canonicalize public metadata, tag `v0.2.0`, publish, and subscription-verify public
-   bytes. Never infer a manual or Steam pass from automation.
+4. Only then canonicalize public metadata, tag the exact manifest version, publish, and
+   subscription-verify public bytes. Never infer a manual or Steam pass from automation.
 
-## Deferred after playtest, not release blockers
+## Author-deferred polity/world-presence targets
 
-The v0 boundary deliberately excludes autonomous rival polities, prior-realm citizens, world-map
-warbands, and offscreen war. Balance/flavour questions still worth real play data include Swarmer
-timing, deep-crop flavour, research gate depth, annexe/removal prices, capital costs, and inherited-
-site discoverability. `_notes/QUESTION-BACKLOG.md` records their history; its provisionals are the
-adopted 0.2 defaults unless a new issue reopens one.
+`VISION.md` owns the canonical public matrix; `V1-POLITY-SCOPE.md` is its expanded private
+worksheet. Existing inherited ruins/history, causal raids, bounded current
+parties, caravans, and two-city manifests ship at their implemented scope. Successor/namesake
+polities, any legacy rival, generalized diplomats/emissaries, visible polity traffic, route
+correspondence, and polity clashes are positive `AUTHOR-DEFERRED` targets needing explicit
+reopening and owning adapters. Exact old actors, automatic ideological war, persistent unloaded
+actors, mass background simulation, and offscreen conquest/loss are rejected. Balance/flavour
+questions still worth real play data include Swarmer timing, deep-crop flavour, research gate
+depth, annexe/removal prices, capital costs, and inherited-site discoverability.
 
 ## The working method (this is the "behaviour and attitude")
 

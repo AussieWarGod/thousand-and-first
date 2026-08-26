@@ -1,0 +1,838 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Authored civic, faith, knowledge, defense, trade, and memorial architecture.
+
+  Dots remain unclaimed. Catalogue roots own building behavior. Supporting containers are empty,
+  water vessels start empty, and every stateful fixture has one stable semantic anchor. Heart maps
+  deliberately grow toward new ground while retaining the first basin, main, and founder ingress.
+-->
+<KingdomArchitectures Schema="1">
+
+  <!-- Civic palettes. -->
+  <palette Key="civic-fire-hands">
+    <slot Key="ground" Blueprint="DirtFloor" Role="gathering-ground" Material="mud" MinTech="hands" Natural="yes" />
+    <slot Key="path" Blueprint="DirtPath" Role="fire-ring-path" Material="mud" MinTech="hands" Natural="yes" />
+  </palette>
+
+  <palette Key="civic-oven-hands">
+    <slot Key="ground" Blueprint="DirtFloor" Role="ground" Material="mud" MinTech="hands" Natural="yes" />
+    <slot Key="path" Blueprint="DirtPath" Role="kitchen-floor" Material="mud" MinTech="hands" Natural="yes" />
+    <slot Key="stone" Blueprint="r_KingdomStructureHalfStone" Role="oven-wall" Material="stone" MinTech="hands" Natural="no" />
+    <slot Key="screen" Blueprint="r_KingdomStructureBrinestalkWall" Role="timber-screen" Material="timber" MinTech="hands" Natural="no" />
+    <slot Key="door" Blueprint="r_KingdomFixtureDoorTimber" Role="door" Material="timber" MinTech="hands" Natural="no" />
+  </palette>
+
+  <palette Key="civic-gathering-hands">
+    <slot Key="ground" Blueprint="DirtFloor" Role="gathering-ground" Material="mud" MinTech="hands" Natural="yes" />
+    <slot Key="path" Blueprint="DirtPath" Role="circulation" Material="mud" MinTech="hands" Natural="yes" />
+    <slot Key="bench" Blueprint="r_KingdomFixtureBenchTimber" Role="empty-seating" Material="timber" MinTech="hands" Natural="no" />
+  </palette>
+
+  <palette Key="civic-hall-hands">
+    <slot Key="ground" Blueprint="DirtFloor" Role="ground" Material="mud" MinTech="hands" Natural="yes" />
+    <slot Key="floor" Blueprint="WoodFloor" Role="hall-floor" Material="timber" MinTech="hands" Natural="no" />
+    <slot Key="wall" Blueprint="r_KingdomStructureBrinestalkWall" Role="timber-wall" Material="timber" MinTech="hands" Natural="no" />
+    <slot Key="stone" Blueprint="r_KingdomStructureSandstone" Role="stone-wall" Material="stone" MinTech="hands" Natural="no" />
+    <slot Key="door" Blueprint="r_KingdomFixtureDoorTimber" Role="door" Material="timber" MinTech="hands" Natural="no" />
+    <slot Key="bench" Blueprint="r_KingdomFixtureBenchTimber" Role="empty-seating" Material="timber" MinTech="hands" Natural="no" />
+    <slot Key="archive" Blueprint="r_KingdomFixtureShelfTimber" Role="empty-archive" Material="timber" MinTech="hands" Natural="no" />
+  </palette>
+
+  <palette Key="civic-hall-eater">
+    <slot Key="ground" Blueprint="DirtFloor" Role="ground" Material="mud" MinTech="hands" Natural="yes" />
+    <slot Key="floor" Blueprint="DirtPath" Role="reused-floor" Material="mud" MinTech="hands" Natural="yes" />
+    <slot Key="wall" Blueprint="Rubble" Role="restood-wall" Material="stone" MinTech="hands" Natural="no" />
+    <slot Key="timber" Blueprint="r_KingdomStructureWornWoodWall" Role="recovered-screen" Material="timber" MinTech="hands" Natural="no" />
+    <slot Key="door" Blueprint="Archway" Role="open-portal" Material="stone" MinTech="hands" Natural="no" />
+    <slot Key="bench" Blueprint="r_KingdomFixtureBenchTimber" Role="empty-seating" Material="timber" MinTech="hands" Natural="no" />
+    <slot Key="archive" Blueprint="r_KingdomFixtureShelfTimber" Role="empty-archive" Material="timber" MinTech="hands" Natural="no" />
+  </palette>
+
+  <palette Key="civic-market-hands">
+    <slot Key="ground" Blueprint="DirtFloor" Role="market-ground" Material="mud" MinTech="hands" Natural="yes" />
+    <slot Key="path" Blueprint="DirtPath" Role="market-lane" Material="mud" MinTech="hands" Natural="yes" />
+    <slot Key="awning" Blueprint="r_KingdomStructureBrinestalkWall" Role="awning-frame" Material="timber" MinTech="hands" Natural="no" />
+    <slot Key="counter" Blueprint="r_KingdomStructureHalfStone" Role="stall-counter" Material="stone" MinTech="hands" Natural="no" />
+    <slot Key="table" Blueprint="r_KingdomFixtureTableTimber" Role="empty-stall-table" Material="timber" MinTech="hands" Natural="no" />
+    <slot Key="storage" Blueprint="r_KingdomFixtureBasketEmpty" Role="empty-stock-storage" Material="timber" MinTech="hands" Natural="no" />
+  </palette>
+
+  <palette Key="civic-bath-workshop">
+    <slot Key="ground" Blueprint="DirtFloor" Role="ground" Material="mud" MinTech="hands" Natural="yes" />
+    <slot Key="stonefloor" Blueprint="BrickWalkway" Role="dressed-floor" Material="shapedstone" MinTech="workshop" Natural="no" />
+    <slot Key="marble" Blueprint="MarbleFloor" Role="bath-floor" Material="marble" MinTech="workshop" Natural="no" />
+    <slot Key="wall" Blueprint="r_KingdomStructureSandstone" Role="stone-wall" Material="stone" MinTech="hands" Natural="no" />
+    <slot Key="partition" Blueprint="r_KingdomStructureBrickWall" Role="dressed-partition" Material="shapedstone" MinTech="workshop" Natural="no" />
+    <slot Key="service" Blueprint="r_KingdomStructureRustedMetalWall" Role="recovered-heater-jacket" Material="scrap" MinTech="salvage" Natural="no" />
+    <slot Key="door" Blueprint="Archway" Role="door" Material="stone" MinTech="hands" Natural="no" />
+    <slot Key="basin" Blueprint="r_KingdomFixtureBasinStone" Role="empty-bath-basin" Material="stone" MinTech="hands" Natural="no" />
+  </palette>
+
+  <!-- Heart palettes. -->
+  <palette Key="civic-heart-natural">
+    <slot Key="ground" Blueprint="DirtFloor" Role="rite-ground" Material="mud" MinTech="hands" Natural="yes" />
+    <slot Key="path" Blueprint="DirtPath" Role="trodden-ring" Material="mud" MinTech="hands" Natural="yes" />
+    <!-- The basin is founding equipment already fixed at the rite coordinate. It is retained,
+         not fabricated by this zero-material tier; the stamper must bind it, never duplicate it. -->
+    <slot Key="basin" Blueprint="r_KingdomFirstBasin" Role="first-basin" Material="scrap" MinTech="hands" Natural="no" />
+  </palette>
+
+  <palette Key="civic-heart-stone">
+    <slot Key="ground" Blueprint="DirtFloor" Role="rite-ground" Material="mud" MinTech="hands" Natural="yes" />
+    <slot Key="path" Blueprint="DirtPath" Role="queue-path" Material="mud" MinTech="hands" Natural="yes" />
+    <slot Key="kerb" Blueprint="r_KingdomStructureHalfStone" Role="waterstone-kerb" Material="stone" MinTech="hands" Natural="no" />
+    <slot Key="basin" Blueprint="r_KingdomFirstBasin" Role="first-basin" Material="scrap" MinTech="hands" Natural="no" />
+  </palette>
+
+  <palette Key="civic-heart-moot">
+    <slot Key="ground" Blueprint="DirtFloor" Role="ground" Material="mud" MinTech="hands" Natural="yes" />
+    <slot Key="path" Blueprint="DirtPath" Role="yard-path" Material="mud" MinTech="hands" Natural="yes" />
+    <slot Key="floor" Blueprint="WoodFloor" Role="raised-moot-floor" Material="shapedtimber" MinTech="workshop" Natural="no" />
+    <slot Key="kerb" Blueprint="r_KingdomStructureHalfStone" Role="retained-kerb" Material="stone" MinTech="hands" Natural="no" />
+    <slot Key="wall" Blueprint="r_KingdomStructureBrinestalkWall" Role="roof-frame" Material="timber" MinTech="hands" Natural="no" />
+    <slot Key="door" Blueprint="r_KingdomFixtureDoorTimber" Role="door" Material="timber" MinTech="hands" Natural="no" />
+    <slot Key="seat" Blueprint="r_KingdomFixtureBenchTimber" Role="moot-bench" Material="timber" MinTech="hands" Natural="no" />
+    <slot Key="basin" Blueprint="r_KingdomFirstBasin" Role="first-basin" Material="scrap" MinTech="hands" Natural="no" />
+  </palette>
+
+  <palette Key="civic-heart-court">
+    <slot Key="ground" Blueprint="DirtFloor" Role="ground" Material="mud" MinTech="hands" Natural="yes" />
+    <slot Key="path" Blueprint="DirtPath" Role="retained-rite-path" Material="mud" MinTech="hands" Natural="yes" />
+    <slot Key="kerb" Blueprint="r_KingdomStructureHalfStone" Role="retained-waterstone-kerb" Material="stone" MinTech="hands" Natural="no" />
+    <slot Key="mootfloor" Blueprint="WoodFloor" Role="retained-moot-floor" Material="shapedtimber" MinTech="workshop" Natural="no" />
+    <slot Key="mootwall" Blueprint="r_KingdomStructureBrinestalkWall" Role="retained-moot-frame" Material="timber" MinTech="hands" Natural="no" />
+    <slot Key="mootdoor" Blueprint="r_KingdomFixtureDoorTimber" Role="retained-moot-door" Material="timber" MinTech="hands" Natural="no" />
+    <slot Key="seat" Blueprint="r_KingdomFixtureBenchTimber" Role="retained-moot-bench" Material="timber" MinTech="hands" Natural="no" />
+    <slot Key="floor" Blueprint="BrickWalkway" Role="colonnade-floor" Material="shapedstone" MinTech="workshop" Natural="no" />
+    <slot Key="marble" Blueprint="MarbleFloor" Role="court-axis" Material="marble" MinTech="workshop" Natural="no" />
+    <slot Key="wall" Blueprint="r_KingdomStructureSandstone" Role="stone-shell" Material="stone" MinTech="hands" Natural="no" />
+    <slot Key="column" Blueprint="r_KingdomStructureBrickWall" Role="dressed-column" Material="shapedstone" MinTech="workshop" Natural="no" />
+    <slot Key="door" Blueprint="r_KingdomFixtureDoorMetal" Role="worked-gate" Material="workedmetal" MinTech="foundry" Natural="no" />
+    <slot Key="basin" Blueprint="r_KingdomFirstBasin" Role="first-basin" Material="scrap" MinTech="hands" Natural="no" />
+  </palette>
+
+  <!-- Faith and knowledge palettes. -->
+  <palette Key="faith-shrine-hands">
+    <slot Key="ground" Blueprint="DirtFloor" Role="ground" Material="mud" MinTech="hands" Natural="yes" />
+    <slot Key="path" Blueprint="DirtPath" Role="offering-path" Material="mud" MinTech="hands" Natural="yes" />
+    <slot Key="wall" Blueprint="r_KingdomStructureHalfStone" Role="garth-wall" Material="stone" MinTech="hands" Natural="no" />
+    <slot Key="kerb" Blueprint="r_KingdomStructureHalfStone" Role="shrine-kerb" Material="stone" MinTech="hands" Natural="no" />
+    <slot Key="door" Blueprint="Archway" Role="open-gate" Material="stone" MinTech="hands" Natural="no" />
+  </palette>
+
+  <palette Key="faith-temple-workshop">
+    <slot Key="ground" Blueprint="DirtFloor" Role="ground" Material="mud" MinTech="hands" Natural="yes" />
+    <slot Key="floor" Blueprint="BrickWalkway" Role="processional-floor" Material="shapedstone" MinTech="workshop" Natural="no" />
+    <slot Key="marble" Blueprint="MarbleFloor" Role="sanctum-floor" Material="marble" MinTech="workshop" Natural="no" />
+    <slot Key="wall" Blueprint="r_KingdomStructureSandstone" Role="stone-shell" Material="stone" MinTech="hands" Natural="no" />
+    <slot Key="dressed" Blueprint="r_KingdomStructureBrickWall" Role="dressed-wall" Material="shapedstone" MinTech="workshop" Natural="no" />
+    <slot Key="seat" Blueprint="r_KingdomStructureHalfStone" Role="stone-seat" Material="stone" MinTech="hands" Natural="no" />
+    <slot Key="door" Blueprint="Archway" Role="open-portal" Material="stone" MinTech="hands" Natural="no" />
+  </palette>
+
+  <palette Key="faith-temple-fungal">
+    <slot Key="ground" Blueprint="DirtPath" Role="damp-ambulatory" Material="mud" MinTech="hands" Natural="yes" />
+    <slot Key="marble" Blueprint="MarbleFloor" Role="sanctum-floor" Material="marble" MinTech="workshop" Natural="no" />
+    <slot Key="fungus" Blueprint="r_KingdomStructureMushroomWall" Role="trimmed-fruiting-wall" Material="mud" MinTech="hands" Natural="yes" />
+    <slot Key="dressed" Blueprint="r_KingdomStructureBrickWall" Role="dressed-shrine-wall" Material="shapedstone" MinTech="workshop" Natural="no" />
+    <slot Key="seat" Blueprint="r_KingdomStructureHalfStone" Role="stone-seat" Material="stone" MinTech="hands" Natural="no" />
+    <slot Key="door" Blueprint="Archway" Role="open-portal" Material="stone" MinTech="hands" Natural="no" />
+  </palette>
+
+  <palette Key="knowledge-keeper-hands">
+    <slot Key="ground" Blueprint="DirtFloor" Role="ground" Material="mud" MinTech="hands" Natural="yes" />
+    <slot Key="floor" Blueprint="DirtPath" Role="reading-floor" Material="mud" MinTech="hands" Natural="yes" />
+    <slot Key="wall" Blueprint="r_KingdomStructureBrinestalkWall" Role="timber-screen" Material="timber" MinTech="hands" Natural="no" />
+    <slot Key="bench" Blueprint="r_KingdomFixtureBenchTimber" Role="empty-reading-seat" Material="timber" MinTech="hands" Natural="no" />
+    <slot Key="table" Blueprint="r_KingdomFixtureTableTimber" Role="empty-copy-table" Material="timber" MinTech="hands" Natural="no" />
+  </palette>
+
+  <palette Key="knowledge-scriptorium-hands">
+    <slot Key="ground" Blueprint="DirtFloor" Role="ground" Material="mud" MinTech="hands" Natural="yes" />
+    <slot Key="floor" Blueprint="DirtPath" Role="reading-floor" Material="mud" MinTech="hands" Natural="yes" />
+    <slot Key="wall" Blueprint="r_KingdomStructureBrinestalkWall" Role="timber-wall" Material="timber" MinTech="hands" Natural="no" />
+    <slot Key="stone" Blueprint="r_KingdomStructureSandstone" Role="stone-wall" Material="stone" MinTech="hands" Natural="no" />
+    <slot Key="door" Blueprint="r_KingdomFixtureDoorTimber" Role="door" Material="timber" MinTech="hands" Natural="no" />
+    <slot Key="shelf" Blueprint="r_KingdomFixtureShelfTimber" Role="empty-register-shelf" Material="timber" MinTech="hands" Natural="no" />
+    <slot Key="table" Blueprint="r_KingdomFixtureTableTimber" Role="empty-copy-table" Material="timber" MinTech="hands" Natural="no" />
+  </palette>
+
+  <!-- Defense, trade, and memorial palettes. -->
+  <palette Key="defense-barracks-workshop">
+    <slot Key="ground" Blueprint="DirtFloor" Role="ground" Material="mud" MinTech="hands" Natural="yes" />
+    <slot Key="floor" Blueprint="WoodFloor" Role="raised-floor" Material="shapedtimber" MinTech="workshop" Natural="no" />
+    <slot Key="wall" Blueprint="r_KingdomStructureSandstone" Role="defensive-wall" Material="stone" MinTech="hands" Natural="no" />
+    <slot Key="partition" Blueprint="r_KingdomStructureBrinestalkWall" Role="timber-partition" Material="timber" MinTech="hands" Natural="no" />
+    <slot Key="door" Blueprint="r_KingdomFixtureDoorTimber" Role="door" Material="timber" MinTech="hands" Natural="no" />
+    <slot Key="bed" Blueprint="r_KingdomFixtureBedTimber" Role="bunk" Material="timber" MinTech="hands" Natural="no" />
+    <slot Key="table" Blueprint="r_KingdomFixtureTableTimber" Role="mess-table" Material="timber" MinTech="hands" Natural="no" />
+    <slot Key="storage" Blueprint="r_KingdomFixtureBasketEmpty" Role="empty-watch-storage" Material="timber" MinTech="hands" Natural="no" />
+  </palette>
+
+  <palette Key="memorial-cairn-hands">
+    <slot Key="ground" Blueprint="DirtFloor" Role="ground" Material="mud" MinTech="hands" Natural="yes" />
+    <slot Key="path" Blueprint="DirtPath" Role="memorial-path" Material="mud" MinTech="hands" Natural="yes" />
+    <slot Key="marker" Blueprint="r_KingdomStructureHalfStone" Role="fieldstone-marker" Material="stone" MinTech="hands" Natural="no" />
+  </palette>
+
+  <palette Key="memorial-grove-hands">
+    <slot Key="soil" Blueprint="DirtFloor" Role="planted-soil" Material="mud" MinTech="hands" Natural="no" />
+    <slot Key="path" Blueprint="DirtPath" Role="grove-path" Material="mud" MinTech="hands" Natural="no" />
+    <slot Key="stake" Blueprint="r_KingdomStructureBrinestalkWall" Role="sapling-stake" Material="timber" MinTech="hands" Natural="no" />
+  </palette>
+
+  <palette Key="trade-caravan-hands">
+    <slot Key="ground" Blueprint="SaltPath" Role="caravan-ground" Material="stone" MinTech="hands" Natural="yes" />
+    <slot Key="path" Blueprint="DirtPath" Role="court-lane" Material="mud" MinTech="hands" Natural="yes" />
+    <slot Key="wall" Blueprint="r_KingdomStructureSandstone" Role="wind-wall" Material="stone" MinTech="hands" Natural="no" />
+    <slot Key="awning" Blueprint="r_KingdomStructureCanvasWall" Role="canvas-awning" Material="canvas" MinTech="hands" Natural="no" />
+    <slot Key="door" Blueprint="Archway" Role="wide-gate" Material="stone" MinTech="hands" Natural="no" />
+    <slot Key="counter" Blueprint="r_KingdomStructureHalfStone" Role="stall-counter" Material="stone" MinTech="hands" Natural="no" />
+    <slot Key="table" Blueprint="r_KingdomFixtureTableTimber" Role="empty-stall-table" Material="timber" MinTech="hands" Natural="no" />
+    <slot Key="storage" Blueprint="r_KingdomFixtureBasketEmpty" Role="empty-caravan-storage" Material="timber" MinTech="hands" Natural="no" />
+  </palette>
+
+  <palette Key="faith-sacrament-marble">
+    <slot Key="ground" Blueprint="DirtFloor" Role="ground" Material="mud" MinTech="hands" Natural="yes" />
+    <slot Key="path" Blueprint="DirtPath" Role="approach" Material="mud" MinTech="hands" Natural="yes" />
+    <slot Key="marble" Blueprint="MarbleFloor" Role="sacrament-floor" Material="marble" MinTech="workshop" Natural="no" />
+    <slot Key="wall" Blueprint="r_KingdomStructureHalfStone" Role="stone-colonnade" Material="stone" MinTech="hands" Natural="no" />
+    <slot Key="kerb" Blueprint="r_KingdomStructureHalfStone" Role="pouring-kerb" Material="stone" MinTech="hands" Natural="no" />
+    <slot Key="door" Blueprint="Archway" Role="open-portal" Material="stone" MinTech="hands" Natural="no" />
+    <slot Key="basin" Blueprint="r_KingdomFixtureBasinStone" Role="empty-sacrament-basin" Material="stone" MinTech="hands" Natural="no" />
+  </palette>
+
+  <!-- Civic maps. -->
+  <map Key="civic-fire-s0" Width="5" Height="4" DefaultCover="open">
+    <glyph Char="C" Ground="$path" Claim="yard" Pass="walk" Cover="open" Anchors="hazard:clearance" />
+    <glyph Char="P" Ground="$path" Claim="yard" Pass="walk" Cover="open" />
+    <glyph Char="@" Ground="$ground" Object="$building" Claim="yard" Pass="adjacent" Cover="open" Anchors="main,function:cooking" Stateful="yes" />
+    <glyph Char="E" Ground="$path" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
+    <row Cells="....." />
+    <row Cells=".C@C." />
+    <row Cells=".PPP." />
+    <row Cells="..E.." />
+  </map>
+
+  <map Key="civic-oven-s1" Width="5" Height="4" DefaultCover="soft">
+    <glyph Char="S" Ground="$ground" Structure="$stone" Claim="building" Pass="blocked" Cover="soft" />
+    <glyph Char="W" Ground="$ground" Structure="$screen" Claim="building" Pass="blocked" Cover="soft" />
+    <glyph Char="C" Ground="$path" Claim="building" Pass="walk" Cover="soft" Anchors="hazard:clearance" />
+    <glyph Char="P" Ground="$path" Claim="building" Pass="walk" Cover="soft" />
+    <glyph Char="A" Ground="$path" Claim="building" Pass="walk" Cover="soft" Anchors="fixture:oven-apron" />
+    <glyph Char="@" Ground="$path" Object="$building" Claim="building" Pass="adjacent" Cover="soft" Anchors="main,function:cooking" Stateful="yes" />
+    <glyph Char="E" Ground="$path" Structure="$door" Claim="building" Pass="walk" Cover="soft" Anchors="entrance:public" />
+    <row Cells="SSWSS" />
+    <row Cells="SC@CS" />
+    <row Cells="SPAPS" />
+    <row Cells="S.E.S" />
+  </map>
+
+  <map Key="civic-bench-s0" Width="5" Height="4" DefaultCover="open">
+    <glyph Char="P" Ground="$path" Claim="yard" Pass="walk" Cover="open" />
+    <glyph Char="B" Ground="$ground" Object="$bench" Claim="yard" Pass="adjacent" Cover="open" Anchors="seat:argument" Stateful="yes" />
+    <glyph Char="@" Ground="$ground" Object="$building" Claim="yard" Pass="adjacent" Cover="open" Anchors="main,function:gathering" Stateful="yes" />
+    <glyph Char="E" Ground="$path" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
+    <row Cells=".B.B." />
+    <row Cells=".P@P." />
+    <row Cells=".PPP." />
+    <row Cells="..E.." />
+  </map>
+
+  <map Key="civic-hall-m0" Width="8" Height="6" DefaultCover="walled">
+    <glyph Char="S" Ground="$ground" Structure="$stone" Claim="building" Pass="blocked" Cover="walled" />
+    <glyph Char="W" Ground="$ground" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
+    <glyph Char="P" Ground="$floor" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="C" Ground="$floor" Claim="building" Pass="walk" Cover="walled" Anchors="fixture:charter" />
+    <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="adjacent" Cover="walled" Anchors="main,function:moot" Stateful="yes" />
+    <glyph Char="B" Ground="$floor" Object="$bench" Claim="building" Pass="adjacent" Cover="walled" Anchors="seat:moot" Stateful="yes" />
+    <glyph Char="H" Ground="$floor" Object="$archive" Claim="building" Pass="adjacent" Cover="walled" Anchors="archive:charter" Stateful="yes" />
+    <glyph Char="E" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" Anchors="entrance:public" />
+    <row Cells="SSWWWSS." />
+    <row Cells="SWH@PPS." />
+    <row Cells="SBPPPBS." />
+    <row Cells="SPPCPPS." />
+    <row Cells="SSSPSSS." />
+    <row Cells="...E...." />
+  </map>
+
+  <map Key="civic-hall-eater-m0" Width="8" Height="6" DefaultCover="soft">
+    <glyph Char="R" Ground="$ground" Structure="$wall" Claim="building" Pass="blocked" Cover="soft" />
+    <glyph Char="W" Ground="$ground" Structure="$timber" Claim="building" Pass="blocked" Cover="soft" />
+    <glyph Char="P" Ground="$floor" Claim="building" Pass="walk" Cover="soft" />
+    <glyph Char="C" Ground="$floor" Claim="building" Pass="walk" Cover="soft" Anchors="fixture:charter,function:ruin-memory" />
+    <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="adjacent" Cover="soft" Anchors="main,function:moot" Stateful="yes" />
+    <glyph Char="B" Ground="$floor" Object="$bench" Claim="building" Pass="adjacent" Cover="soft" Anchors="seat:moot" Stateful="yes" />
+    <glyph Char="H" Ground="$floor" Object="$archive" Claim="building" Pass="adjacent" Cover="soft" Anchors="archive:charter" Stateful="yes" />
+    <glyph Char="E" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="soft" Anchors="entrance:public" />
+    <row Cells="RRR.RW.." />
+    <row Cells="RPH@PR.." />
+    <row Cells="RPPPPBR." />
+    <row Cells=".PPCPPB." />
+    <row Cells=".RPPPR.." />
+    <row Cells="...E...." />
+  </map>
+
+  <map Key="civic-bazaar-m0" Width="8" Height="6" DefaultCover="open">
+    <glyph Char="A" Ground="$ground" Structure="$awning" Claim="yard" Pass="blocked" Cover="soft" />
+    <glyph Char="P" Ground="$path" Claim="yard" Pass="walk" Cover="open" />
+    <glyph Char="S" Ground="$ground" Structure="$counter" Claim="yard" Pass="adjacent" Cover="soft" Anchors="stall:counter" />
+    <glyph Char="T" Ground="$ground" Object="$table" Claim="yard" Pass="adjacent" Cover="soft" Anchors="stall:table" Stateful="yes" />
+    <glyph Char="B" Ground="$ground" Object="$storage" Claim="yard" Pass="adjacent" Cover="soft" Anchors="storage:stock" Stateful="yes" />
+    <glyph Char="@" Ground="$path" Object="$building" Claim="yard" Pass="adjacent" Cover="open" Anchors="main,function:market" Stateful="yes" />
+    <glyph Char="E" Ground="$path" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
+    <row Cells="AA.EAA.." />
+    <row Cells="TPTPTP.." />
+    <row Cells="BPP@PPB." />
+    <row Cells="PPPPPPPP" />
+    <row Cells="SPSPSPSP" />
+    <row Cells="...E...E" />
+  </map>
+
+  <map Key="civic-bathhouse-l0" Width="12" Height="9" DefaultCover="walled">
+    <glyph Char="S" Ground="$ground" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
+    <glyph Char="W" Ground="$stonefloor" Structure="$partition" Claim="building" Pass="blocked" Cover="walled" />
+    <glyph Char="M" Ground="$marble" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="P" Ground="$stonefloor" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="X" Ground="$marble" Claim="building" Pass="walk" Cover="walled" Anchors="function:changing" />
+    <glyph Char="@" Ground="$marble" Object="$building" Claim="building" Pass="adjacent" Cover="walled" Anchors="main,function:bathing" Stateful="yes" />
+    <glyph Char="C" Ground="$marble" Object="$basin" Claim="building" Pass="adjacent" Cover="walled" Anchors="liquid:cold-basin" Stateful="yes" />
+    <glyph Char="H" Ground="$marble" Object="$basin" Claim="building" Pass="adjacent" Cover="walled" Anchors="liquid:hot-basin" Stateful="yes" />
+    <glyph Char="R" Ground="$stonefloor" Structure="$service" Claim="building" Pass="adjacent" Cover="walled" Anchors="service:heat" />
+    <glyph Char="D" Ground="$stonefloor" Structure="$door" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="Q" Ground="$stonefloor" Structure="$door" Claim="building" Pass="walk" Cover="walled" Anchors="entrance:service,service:loading" />
+    <glyph Char="E" Ground="$stonefloor" Structure="$door" Claim="building" Pass="walk" Cover="walled" Anchors="entrance:public" />
+    <row Cells="SSSSSSSSSSSS" />
+    <row Cells="SMM@MPPMMMMS" />
+    <row Cells="SMMMMWPMMMMS" />
+    <row Cells="SMCMMDPMHMMS" />
+    <row Cells="SMMMMWPMMMMS" />
+    <row Cells="SPPPPPPPPPPS" />
+    <row Cells="SXPPPPPRPPPQ" />
+    <row Cells="SSSSSPPSSSSS" />
+    <row Cells=".....EE....." />
+  </map>
+
+  <!-- Heart maps. The rite is the immutable geometry. Centred plot origins put the first basin
+       at S(2,1), M(3,2), L(5,4), XL(9,6); main stays one world-cell north at every rung.
+       Every later map repeats all earlier scenery at the same world offsets, then adds fabric. -->
+  <map Key="civic-heartbasin-s0" Width="5" Height="4" DefaultCover="open">
+    <glyph Char="P" Ground="$path" Claim="yard" Pass="walk" Cover="open" />
+    <glyph Char="@" Ground="$ground" Object="$building" Claim="yard" Pass="adjacent" Cover="open" Anchors="main,function:settlement-heart" Stateful="yes" />
+    <glyph Char="B" Ground="$path" Object="$basin" Claim="yard" Pass="walk" Cover="open" Anchors="fixture:first-basin" Stateful="yes" />
+    <glyph Char="E" Ground="$path" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
+    <row Cells="PP@PP" />
+    <row Cells="PPBPP" />
+    <row Cells="PPPPP" />
+    <row Cells="..E.." />
+  </map>
+
+  <map Key="civic-heartwaterstone-m1" Width="8" Height="6" DefaultCover="open">
+    <glyph Char="K" Ground="$ground" Structure="$kerb" Claim="yard" Pass="blocked" Cover="open" />
+    <glyph Char="P" Ground="$path" Claim="yard" Pass="walk" Cover="open" />
+    <glyph Char="@" Ground="$ground" Object="$building" Claim="yard" Pass="adjacent" Cover="open" Anchors="main,function:settlement-heart" Stateful="yes" />
+    <glyph Char="B" Ground="$path" Object="$basin" Claim="yard" Pass="walk" Cover="open" Anchors="fixture:first-basin" Stateful="yes" />
+    <glyph Char="Q" Ground="$path" Claim="yard" Pass="walk" Cover="open" Anchors="function:water-queue" />
+    <glyph Char="E" Ground="$path" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
+    <row Cells=".KK.KK.." />
+    <row Cells="KPP@PPK." />
+    <row Cells="KPPBPPK." />
+    <row Cells="KPPQPPK." />
+    <row Cells="K..E..K." />
+    <row Cells=".KK.KK.." />
+  </map>
+
+  <map Key="civic-heartmoot-l2" Width="12" Height="9" DefaultCover="walled">
+    <glyph Char="J" Ground="$ground" Structure="$kerb" Object="$wall" Claim="building" Pass="blocked" Cover="walled" />
+    <glyph Char="P" Ground="$path" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="I" Ground="$floor" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="X" Ground="$floor" Object="$seat" Claim="building" Pass="adjacent" Cover="walled" Anchors="seat:moot1" Stateful="yes" />
+    <glyph Char="Y" Ground="$floor" Object="$seat" Claim="building" Pass="adjacent" Cover="walled" Anchors="seat:moot2" Stateful="yes" />
+    <glyph Char="Q" Ground="$path" Claim="building" Pass="walk" Cover="walled" Anchors="function:water-queue" />
+    <glyph Char="@" Ground="$ground" Object="$building" Claim="building" Pass="adjacent" Cover="walled" Anchors="main,function:settlement-heart" Stateful="yes" />
+    <glyph Char="B" Ground="$path" Object="$basin" Claim="building" Pass="walk" Cover="walled" Anchors="fixture:first-basin" Stateful="yes" />
+    <glyph Char="D" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" Anchors="entrance:public" />
+    <glyph Char="E" Ground="$path" Claim="building" Pass="walk" Cover="walled" Anchors="threshold:founder-ingress" />
+    <row Cells="............" />
+    <row Cells="............" />
+    <row Cells="...JJDJJ...." />
+    <row Cells="..JPP@PPJ..." />
+    <row Cells="..JPPBPPJ..." />
+    <row Cells="..JPPQPPJ..." />
+    <row Cells="..JXIEIYJ..." />
+    <row Cells="...JJDJJ...." />
+    <row Cells="............" />
+  </map>
+
+  <map Key="civic-heartcourt-xl3" Width="20" Height="14" DefaultCover="walled">
+    <glyph Char="#" Ground="$ground" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
+    <glyph Char="s" Ground="$floor" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="m" Ground="$marble" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="c" Ground="$floor" Structure="$column" Claim="building" Pass="blocked" Cover="walled" />
+    <glyph Char="+" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" Anchors="entrance:public" />
+    <glyph Char="J" Ground="$ground" Structure="$kerb" Object="$mootwall" Claim="building" Pass="blocked" Cover="walled" />
+    <glyph Char="P" Ground="$path" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="I" Ground="$mootfloor" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="X" Ground="$mootfloor" Object="$seat" Claim="building" Pass="adjacent" Cover="walled" Anchors="seat:moot1" Stateful="yes" />
+    <glyph Char="Y" Ground="$mootfloor" Object="$seat" Claim="building" Pass="adjacent" Cover="walled" Anchors="seat:moot2" Stateful="yes" />
+    <glyph Char="Q" Ground="$path" Claim="building" Pass="walk" Cover="walled" Anchors="function:water-queue" />
+    <glyph Char="@" Ground="$ground" Object="$building" Claim="building" Pass="adjacent" Cover="walled" Anchors="main,function:settlement-heart" Stateful="yes" />
+    <glyph Char="B" Ground="$path" Object="$basin" Claim="building" Pass="walk" Cover="walled" Anchors="fixture:first-basin" Stateful="yes" />
+    <glyph Char="D" Ground="$mootfloor" Structure="$mootdoor" Claim="building" Pass="walk" Cover="walled" Anchors="threshold:retained-moot-door" />
+    <glyph Char="E" Ground="$path" Claim="building" Pass="walk" Cover="walled" Anchors="threshold:founder-ingress" />
+    <row Cells="...................." />
+    <row Cells="...................." />
+    <row Cells="..################.." />
+    <row Cells="..#ssscssmmsscsss#.." />
+    <row Cells="..#scssJJDJJssscs#.." />
+    <row Cells="..#sssJPP@PPJssss#.." />
+    <row Cells="..#scsJPPBPPJsscs#.." />
+    <row Cells="..#sssJPPQPPJssss#.." />
+    <row Cells="..#scsJXIEIYJsscs#.." />
+    <row Cells="..#ssssJJDJJsssss#.." />
+    <row Cells="..#scsssssssssscs#.." />
+    <row Cells="..#ssscssmmsscsss#.." />
+    <row Cells="..#######++#######.." />
+    <row Cells="...................." />
+  </map>
+
+  <!-- Faith maps. -->
+  <map Key="faith-shrine-s0" Width="5" Height="4" DefaultCover="open">
+    <glyph Char="S" Ground="$ground" Structure="$kerb" Claim="yard" Pass="blocked" Cover="open" />
+    <glyph Char="P" Ground="$path" Claim="yard" Pass="walk" Cover="open" />
+    <glyph Char="O" Ground="$path" Claim="yard" Pass="walk" Cover="open" Anchors="ritual:offering" />
+    <glyph Char="@" Ground="$ground" Object="$building" Claim="yard" Pass="adjacent" Cover="open" Anchors="main,function:shrine" Stateful="yes" />
+    <glyph Char="E" Ground="$path" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
+    <row Cells="..S.." />
+    <row Cells=".P@P." />
+    <row Cells=".POP." />
+    <row Cells="..E.." />
+  </map>
+
+  <map Key="faith-shrinegarth-s1" Width="5" Height="4" DefaultCover="open">
+    <glyph Char="S" Ground="$ground" Structure="$wall" Claim="yard" Pass="blocked" Cover="open" />
+    <glyph Char="P" Ground="$path" Claim="yard" Pass="walk" Cover="open" />
+    <glyph Char="O" Ground="$path" Claim="yard" Pass="walk" Cover="open" Anchors="ritual:offering" />
+    <glyph Char="@" Ground="$ground" Object="$building" Claim="yard" Pass="adjacent" Cover="open" Anchors="main,function:shrine" Stateful="yes" />
+    <glyph Char="E" Ground="$path" Structure="$door" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
+    <row Cells="SSSSS" />
+    <row Cells="SP@PS" />
+    <row Cells="SPOPS" />
+    <row Cells="S.E.S" />
+  </map>
+
+  <map Key="faith-temple-l0" Width="12" Height="9" DefaultCover="walled">
+    <glyph Char="S" Ground="$ground" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
+    <glyph Char="D" Ground="$floor" Structure="$dressed" Claim="building" Pass="blocked" Cover="walled" />
+    <glyph Char="M" Ground="$marble" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="P" Ground="$floor" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="L" Ground="$marble" Claim="building" Pass="walk" Cover="walled" Anchors="learning:teaching" />
+    <glyph Char="X" Ground="$floor" Claim="building" Pass="walk" Cover="walled" Anchors="ritual:procession" />
+    <glyph Char="B" Ground="$floor" Structure="$seat" Claim="building" Pass="adjacent" Cover="walled" Anchors="seat:nave" />
+    <glyph Char="@" Ground="$marble" Object="$building" Claim="building" Pass="adjacent" Cover="walled" Anchors="main,function:shrine" Stateful="yes" />
+    <glyph Char="E" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" Anchors="entrance:public" />
+    <row Cells="SSSSSDDSSSSS" />
+    <row Cells="SMMMP@PMMMMS" />
+    <row Cells="SMMMPLPMMMMS" />
+    <row Cells="SMBMPPMPBMMS" />
+    <row Cells="SMPPPXPPPMMS" />
+    <row Cells="SMBMPPMPBMMS" />
+    <row Cells="SMMMMMMMMMMS" />
+    <row Cells="SSSSSPPSSSSS" />
+    <row Cells=".....EE....." />
+  </map>
+
+  <map Key="faith-temple-fungal-l0" Width="12" Height="9" DefaultCover="walled">
+    <glyph Char="N" Ground="$ground" Structure="$fungus" Claim="building" Pass="blocked" Cover="walled" />
+    <glyph Char="D" Ground="$ground" Structure="$dressed" Claim="building" Pass="blocked" Cover="walled" />
+    <glyph Char="F" Ground="$ground" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="M" Ground="$marble" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="L" Ground="$marble" Claim="building" Pass="walk" Cover="walled" Anchors="learning:teaching" />
+    <glyph Char="X" Ground="$ground" Claim="building" Pass="walk" Cover="walled" Anchors="ritual:procession,ritual:dark-ambulatory" />
+    <glyph Char="B" Ground="$ground" Structure="$seat" Claim="building" Pass="adjacent" Cover="walled" Anchors="seat:nave" />
+    <glyph Char="@" Ground="$marble" Object="$building" Claim="building" Pass="adjacent" Cover="walled" Anchors="main,function:shrine" Stateful="yes" />
+    <glyph Char="E" Ground="$ground" Structure="$door" Claim="building" Pass="walk" Cover="walled" Anchors="entrance:public" />
+    <row Cells="..NNNDDNNN.." />
+    <row Cells=".NNFM@MFNNN." />
+    <row Cells=".NFFFLFFFFN." />
+    <row Cells="NFFBFXFBFFN." />
+    <row Cells="NFFFFFFFFFFN" />
+    <row Cells=".NFFBFFFBFN." />
+    <row Cells=".NNFFFFFFFF." />
+    <row Cells="..NNNFFNNN.." />
+    <row Cells=".....EE....." />
+  </map>
+
+  <!-- Knowledge, defense, trade, and memorial maps. -->
+  <map Key="knowledge-bookshelf-s0" Width="5" Height="4" DefaultCover="soft">
+    <glyph Char="W" Ground="$ground" Structure="$wall" Claim="building" Pass="blocked" Cover="soft" />
+    <glyph Char="P" Ground="$floor" Claim="building" Pass="walk" Cover="soft" />
+    <glyph Char="B" Ground="$floor" Object="$bench" Claim="building" Pass="adjacent" Cover="soft" Anchors="seat:reader" Stateful="yes" />
+    <glyph Char="T" Ground="$floor" Object="$table" Claim="building" Pass="adjacent" Cover="soft" Anchors="work:copy" Stateful="yes" />
+    <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="adjacent" Cover="soft" Anchors="main,function:archive" Stateful="yes" />
+    <glyph Char="E" Ground="$floor" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
+    <row Cells=".WWW." />
+    <row Cells=".B@T." />
+    <row Cells=".PPP." />
+    <row Cells="..E.." />
+  </map>
+
+  <map Key="knowledge-scriptorium-m0" Width="8" Height="6" DefaultCover="walled">
+    <glyph Char="W" Ground="$ground" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
+    <glyph Char="S" Ground="$ground" Structure="$stone" Claim="building" Pass="blocked" Cover="walled" />
+    <glyph Char="P" Ground="$floor" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="adjacent" Cover="walled" Anchors="main,function:inquiry" Stateful="yes" />
+    <glyph Char="A" Ground="$floor" Object="$shelf" Claim="building" Pass="adjacent" Cover="walled" Anchors="register:first" Stateful="yes" />
+    <glyph Char="B" Ground="$floor" Object="$shelf" Claim="building" Pass="adjacent" Cover="walled" Anchors="register:second" Stateful="yes" />
+    <glyph Char="T" Ground="$floor" Object="$table" Claim="building" Pass="adjacent" Cover="walled" Anchors="work:copy" Stateful="yes" />
+    <glyph Char="D" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="E" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" Anchors="entrance:public" />
+    <row Cells="WWSSSSW." />
+    <row Cells="WAP@PBW." />
+    <row Cells="WPPPPPW." />
+    <row Cells="WTPPPTW." />
+    <row Cells="WWDPPPW." />
+    <row Cells="..E....." />
+  </map>
+
+  <map Key="defense-barracks-l0" Width="12" Height="9" DefaultCover="walled">
+    <glyph Char="S" Ground="$ground" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
+    <glyph Char="W" Ground="$floor" Structure="$partition" Claim="building" Pass="blocked" Cover="walled" />
+    <glyph Char="P" Ground="$floor" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="adjacent" Cover="walled" Anchors="main,function:garrison" Stateful="yes" />
+    <glyph Char="B" Ground="$floor" Object="$bed" Claim="building" Pass="adjacent" Cover="walled" Anchors="sleep:bunk" Stateful="yes" />
+    <glyph Char="T" Ground="$floor" Object="$table" Claim="building" Pass="adjacent" Cover="walled" Anchors="fixture:mess" Stateful="yes" />
+    <glyph Char="A" Ground="$floor" Object="$storage" Claim="building" Pass="adjacent" Cover="walled" Anchors="storage:watch" Stateful="yes" />
+    <glyph Char="D" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="Q" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" Anchors="entrance:service,service:muster" />
+    <glyph Char="E" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" Anchors="entrance:public" />
+    <row Cells="SSSSSSSSSSSS" />
+    <row Cells="SPBPP@PPBPPS" />
+    <row Cells="SPPPPPPPPPPS" />
+    <row Cells="SPBPWWPPBPPS" />
+    <row Cells="SPPPDDPPPPPQ" />
+    <row Cells="SPPTPPAPPPPS" />
+    <row Cells="SPPPPPPPPPPS" />
+    <row Cells="SSSSSPPSSSSS" />
+    <row Cells=".....EE....." />
+  </map>
+
+  <map Key="memorial-cairn-s0" Width="5" Height="4" DefaultCover="open">
+    <glyph Char="S" Ground="$ground" Structure="$marker" Claim="yard" Pass="blocked" Cover="open" />
+    <glyph Char="P" Ground="$path" Claim="yard" Pass="walk" Cover="open" />
+    <glyph Char="@" Ground="$ground" Object="$building" Claim="yard" Pass="adjacent" Cover="open" Anchors="main,function:memorial" Stateful="yes" />
+    <glyph Char="E" Ground="$path" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
+    <row Cells=".S.S." />
+    <row Cells=".P@P." />
+    <row Cells=".PPP." />
+    <row Cells="..E.." />
+  </map>
+
+  <map Key="memorial-gravegrove-s0" Width="5" Height="4" DefaultCover="open">
+    <glyph Char="F" Ground="$soil" Structure="$stake" Claim="yard" Pass="blocked" Cover="open" />
+    <glyph Char="P" Ground="$path" Claim="yard" Pass="walk" Cover="open" />
+    <glyph Char="G" Ground="$soil" Claim="yard" Pass="walk" Cover="open" Anchors="memorial:planting" />
+    <glyph Char="@" Ground="$soil" Object="$building" Claim="yard" Pass="adjacent" Cover="open" Anchors="main,function:grave-grove" Stateful="yes" />
+    <glyph Char="E" Ground="$path" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
+    <row Cells="F...F" />
+    <row Cells="GP@PG" />
+    <row Cells="PPPPP" />
+    <row Cells="..E.." />
+  </map>
+
+  <map Key="trade-caravanserai-l0" Width="12" Height="9" DefaultCover="walled">
+    <glyph Char="S" Ground="$ground" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
+    <glyph Char="C" Ground="$ground" Structure="$awning" Claim="building" Pass="blocked" Cover="soft" />
+    <glyph Char="P" Ground="$path" Claim="yard" Pass="walk" Cover="open" />
+    <glyph Char="H" Ground="$ground" Structure="$counter" Claim="yard" Pass="adjacent" Cover="open" Anchors="fixture:trough" />
+    <glyph Char="T" Ground="$ground" Object="$table" Claim="yard" Pass="adjacent" Cover="soft" Anchors="stall:table" Stateful="yes" />
+    <glyph Char="B" Ground="$ground" Object="$storage" Claim="yard" Pass="adjacent" Cover="soft" Anchors="storage:caravan" Stateful="yes" />
+    <glyph Char="@" Ground="$path" Object="$building" Claim="yard" Pass="adjacent" Cover="open" Anchors="main,function:caravan-court" Stateful="yes" />
+    <glyph Char="Q" Ground="$path" Structure="$door" Claim="building" Pass="walk" Cover="walled" Anchors="entrance:service,service:loading" />
+    <glyph Char="E" Ground="$path" Structure="$door" Claim="building" Pass="walk" Cover="walled" Anchors="entrance:public" />
+    <row Cells="SSSSSSSSSSSS" />
+    <row Cells="SCTPP@PPTBCS" />
+    <row Cells="SCPPPPPPPPPS" />
+    <row Cells="SBPTPPPTPBCS" />
+    <row Cells="SPPPPPPPPPPS" />
+    <row Cells="SCPPPHPPPPCS" />
+    <row Cells="SPPPPPPPPPPQ" />
+    <row Cells="SSSSSPPSSSSS" />
+    <row Cells=".....EE....." />
+  </map>
+
+  <map Key="faith-sacramentcourt-l0" Width="12" Height="9" DefaultCover="open">
+    <glyph Char="S" Ground="$ground" Structure="$wall" Claim="yard" Pass="blocked" Cover="soft" />
+    <glyph Char="M" Ground="$marble" Claim="yard" Pass="walk" Cover="open" />
+    <glyph Char="P" Ground="$path" Claim="yard" Pass="walk" Cover="open" />
+    <glyph Char="X" Ground="$marble" Claim="yard" Pass="walk" Cover="open" Anchors="ritual:procession" />
+    <glyph Char="K" Ground="$marble" Structure="$kerb" Claim="yard" Pass="adjacent" Cover="open" Anchors="ritual:pouring-kerb" />
+    <glyph Char="C" Ground="$marble" Object="$basin" Claim="yard" Pass="adjacent" Cover="open" Anchors="liquid:sacrament-basin1" Stateful="yes" />
+    <glyph Char="H" Ground="$marble" Object="$basin" Claim="yard" Pass="adjacent" Cover="open" Anchors="liquid:sacrament-basin2" Stateful="yes" />
+    <glyph Char="@" Ground="$marble" Object="$building" Claim="yard" Pass="adjacent" Cover="open" Anchors="main,function:sacrament" Stateful="yes" />
+    <glyph Char="E" Ground="$path" Structure="$door" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
+    <row Cells=".SSSSSSSSSS." />
+    <row Cells=".SMMMP@PMMS." />
+    <row Cells=".SMMMMMMMMS." />
+    <row Cells=".SMCMMXMMHS." />
+    <row Cells=".SMMMMKMMMS." />
+    <row Cells=".SMMMPPMMMS." />
+    <row Cells=".SSSMPPMSSS." />
+    <row Cells="....MPPM...." />
+    <row Cells=".....EE....." />
+  </map>
+
+  <!-- Plan families and exact catalogue bindings. -->
+  <plan Key="civic-kitchen">
+    <binding Key="civic-s-kitchen" Type="civic" Size="S" Facing="heart">
+      <tier Key="fire" BuildKey="fire" Level="0" Map="civic-fire-s0" Palette="civic-fire-hands">
+        <require Role="main" Min="1" />
+        <require Role="entrance:public" Min="1" />
+        <require Role="function:cooking" Min="1" />
+        <require Role="hazard:clearance" Min="2" />
+        <variant Key="fallback" Priority="0" />
+      </tier>
+      <tier Key="oven" BuildKey="oven" Level="1" Map="civic-oven-s1" Palette="civic-oven-hands">
+        <require Role="main" Min="1" />
+        <require Role="entrance:public" Min="1" />
+        <require Role="function:cooking" Min="1" />
+        <require Role="hazard:clearance" Min="2" />
+        <require Role="fixture:oven-apron" Min="1" />
+        <variant Key="fallback" Priority="0" />
+      </tier>
+    </binding>
+  </plan>
+
+  <plan Key="civic-gathering">
+    <binding Key="civic-s-gathering" Type="civic" Size="S" Facing="heart">
+      <tier Key="bench" BuildKey="bench" Level="0" Map="civic-bench-s0" Palette="civic-gathering-hands">
+        <require Role="main" Min="1" />
+        <require Role="entrance:public" Min="1" />
+        <require Role="function:gathering" Min="1" />
+        <require Role="seat" Min="2" />
+        <variant Key="fallback" Priority="0" />
+      </tier>
+    </binding>
+  </plan>
+
+  <plan Key="civic-moot-hall">
+    <binding Key="civic-m-hall" Type="civic" Size="M" Facing="heart">
+      <tier Key="hall" BuildKey="hall" Level="0" Map="civic-hall-m0" Palette="civic-hall-hands">
+        <require Role="main" Min="1" />
+        <require Role="entrance:public" Min="1" />
+        <require Role="function:moot" Min="1" />
+        <require Role="fixture:charter" Min="1" />
+        <require Role="seat" Min="2" />
+        <require Role="archive:charter" Min="1" />
+        <variant Key="fallback" Priority="0" />
+        <variant Key="eater-layered" Priority="30" Styles="eater" Map="civic-hall-eater-m0" Palette="civic-hall-eater" />
+      </tier>
+    </binding>
+  </plan>
+
+  <plan Key="civic-bazaar">
+    <binding Key="civic-m-bazaar" Type="civic" Size="M" Facing="heart">
+      <tier Key="bazaar" BuildKey="bazaar" Level="0" Map="civic-bazaar-m0" Palette="civic-market-hands">
+        <require Role="main" Min="1" />
+        <require Role="entrance:public" Min="2" />
+        <require Role="function:market" Min="1" />
+        <require Role="stall:table" Min="3" />
+        <require Role="stall:counter" Min="4" />
+        <require Role="storage:stock" Min="2" />
+        <variant Key="fallback" Priority="0" />
+      </tier>
+    </binding>
+  </plan>
+
+  <plan Key="civic-bathhouse">
+    <binding Key="civic-l-bathhouse" Type="civic" Size="L" Facing="heart">
+      <tier Key="bathhouse" BuildKey="bathhouse" Level="0" Map="civic-bathhouse-l0" Palette="civic-bath-workshop">
+        <require Role="main" Min="1" />
+        <require Role="entrance:public" Min="2" />
+        <require Role="function:bathing" Min="1" />
+        <require Role="function:changing" Min="1" />
+        <require Role="liquid:cold-basin" Min="1" />
+        <require Role="liquid:hot-basin" Min="1" />
+        <require Role="service:heat" Min="1" />
+        <require Role="service:loading" Min="1" />
+        <variant Key="fallback" Priority="0" />
+      </tier>
+    </binding>
+  </plan>
+
+  <plan Key="civic-heart">
+    <binding Key="civic-s-heart" Type="civic" Size="S" Facing="heart">
+      <tier Key="heartbasin" BuildKey="heartbasin" Level="0" Map="civic-heartbasin-s0" Palette="civic-heart-natural">
+        <require Role="main" Min="1" />
+        <require Role="entrance:public" Min="1" />
+        <require Role="function:settlement-heart" Min="1" />
+        <require Role="fixture:first-basin" Min="1" />
+        <variant Key="fallback" Priority="0" />
+      </tier>
+    </binding>
+    <binding Key="civic-m-heart" Type="civic" Size="M" Facing="heart">
+      <tier Key="heartwaterstone" BuildKey="heartwaterstone" Level="1" Map="civic-heartwaterstone-m1" Palette="civic-heart-stone">
+        <require Role="main" Min="1" />
+        <require Role="entrance:public" Min="1" />
+        <require Role="function:settlement-heart" Min="1" />
+        <require Role="fixture:first-basin" Min="1" />
+        <require Role="function:water-queue" Min="1" />
+        <variant Key="fallback" Priority="0" />
+      </tier>
+    </binding>
+    <binding Key="civic-l-heart" Type="civic" Size="L" Facing="heart">
+      <tier Key="heartmoot" BuildKey="heartmoot" Level="2" Map="civic-heartmoot-l2" Palette="civic-heart-moot">
+        <require Role="main" Min="1" />
+        <require Role="entrance:public" Min="2" />
+        <require Role="function:settlement-heart" Min="1" />
+        <require Role="fixture:first-basin" Min="1" />
+        <require Role="function:water-queue" Min="1" />
+        <require Role="seat:moot1" Min="1" />
+        <require Role="seat:moot2" Min="1" />
+        <variant Key="fallback" Priority="0" />
+      </tier>
+    </binding>
+    <binding Key="civic-xl-heart" Type="civic" Size="XL" Facing="heart">
+      <tier Key="heartcourt" BuildKey="heartcourt" Level="3" Map="civic-heartcourt-xl3" Palette="civic-heart-court">
+        <require Role="main" Min="1" />
+        <require Role="entrance:public" Min="2" />
+        <require Role="function:settlement-heart" Min="1" />
+        <require Role="fixture:first-basin" Min="1" />
+        <require Role="function:water-queue" Min="1" />
+        <require Role="seat:moot1" Min="1" />
+        <require Role="seat:moot2" Min="1" />
+        <variant Key="fallback" Priority="0" />
+      </tier>
+    </binding>
+  </plan>
+
+  <plan Key="faith-shrine">
+    <binding Key="faith-s-shrine" Type="faith" Size="S" Facing="heart">
+      <tier Key="shrine" BuildKey="shrine" Level="0" Map="faith-shrine-s0" Palette="faith-shrine-hands">
+        <require Role="main" Min="1" />
+        <require Role="entrance:public" Min="1" />
+        <require Role="function:shrine" Min="1" />
+        <require Role="ritual:offering" Min="1" />
+        <variant Key="fallback" Priority="0" />
+      </tier>
+      <tier Key="shrinegarth" BuildKey="shrinegarth" Level="1" Map="faith-shrinegarth-s1" Palette="faith-shrine-hands">
+        <require Role="main" Min="1" />
+        <require Role="entrance:public" Min="1" />
+        <require Role="function:shrine" Min="1" />
+        <require Role="ritual:offering" Min="1" />
+        <variant Key="fallback" Priority="0" />
+      </tier>
+    </binding>
+  </plan>
+
+  <plan Key="faith-temple">
+    <binding Key="faith-l-temple" Type="faith" Size="L" Facing="heart">
+      <tier Key="temple" BuildKey="temple" Level="0" Map="faith-temple-l0" Palette="faith-temple-workshop">
+        <require Role="main" Min="1" />
+        <require Role="entrance:public" Min="2" />
+        <require Role="function:shrine" Min="1" />
+        <require Role="ritual:procession" Min="1" />
+        <require Role="learning:teaching" Min="1" />
+        <require Role="seat:nave" Min="4" />
+        <variant Key="fallback" Priority="0" />
+        <variant Key="fungal-sanctum" Priority="30" Styles="fungal" Map="faith-temple-fungal-l0" Palette="faith-temple-fungal" />
+      </tier>
+    </binding>
+  </plan>
+
+  <plan Key="knowledge-keeper">
+    <binding Key="knowledge-s-keeper" Type="knowledge" Size="S" Facing="heart">
+      <tier Key="bookshelf" BuildKey="bookshelf" Level="0" Map="knowledge-bookshelf-s0" Palette="knowledge-keeper-hands">
+        <require Role="main" Min="1" />
+        <require Role="entrance:public" Min="1" />
+        <require Role="function:archive" Min="1" />
+        <require Role="seat:reader" Min="1" />
+        <require Role="work:copy" Min="1" />
+        <variant Key="fallback" Priority="0" />
+      </tier>
+    </binding>
+  </plan>
+
+  <plan Key="knowledge-scriptorium">
+    <binding Key="knowledge-m-scriptorium" Type="knowledge" Size="M" Facing="heart">
+      <tier Key="scriptorium" BuildKey="scriptorium" Level="0" Map="knowledge-scriptorium-m0" Palette="knowledge-scriptorium-hands">
+        <require Role="main" Min="1" />
+        <require Role="entrance:public" Min="1" />
+        <require Role="function:inquiry" Min="1" />
+        <require Role="register:first" Min="1" />
+        <require Role="register:second" Min="1" />
+        <require Role="work:copy" Min="2" />
+        <variant Key="fallback" Priority="0" />
+      </tier>
+    </binding>
+  </plan>
+
+  <plan Key="defense-barracks">
+    <binding Key="defense-l-barracks" Type="defense" Size="L" Facing="heart">
+      <tier Key="barracks" BuildKey="barracks" Level="0" Map="defense-barracks-l0" Palette="defense-barracks-workshop">
+        <require Role="main" Min="1" />
+        <require Role="entrance:public" Min="2" />
+        <require Role="function:garrison" Min="1" />
+        <require Role="sleep:bunk" Min="4" />
+        <require Role="fixture:mess" Min="1" />
+        <require Role="storage:watch" Min="1" />
+        <require Role="service:muster" Min="1" />
+        <variant Key="fallback" Priority="0" />
+      </tier>
+    </binding>
+  </plan>
+
+  <plan Key="memorial-cairn">
+    <binding Key="memorial-s-cairn" Type="memorial" Size="S" Facing="heart">
+      <tier Key="cairn" BuildKey="cairn" Level="0" Map="memorial-cairn-s0" Palette="memorial-cairn-hands">
+        <require Role="main" Min="1" />
+        <require Role="entrance:public" Min="1" />
+        <require Role="function:memorial" Min="1" />
+        <variant Key="fallback" Priority="0" />
+      </tier>
+    </binding>
+  </plan>
+
+  <plan Key="trade-caravanserai">
+    <binding Key="civic-l-caravanserai" Type="civic" Size="L" Facing="heart">
+      <tier Key="caravanserai" BuildKey="caravanserai" Level="0" Map="trade-caravanserai-l0" Palette="trade-caravan-hands">
+        <require Role="main" Min="1" />
+        <require Role="entrance:public" Min="2" />
+        <require Role="function:caravan-court" Min="1" />
+        <require Role="stall:table" Min="3" />
+        <require Role="storage:caravan" Min="3" />
+        <require Role="fixture:trough" Min="1" />
+        <require Role="service:loading" Min="1" />
+        <variant Key="fallback" Priority="0" />
+      </tier>
+    </binding>
+  </plan>
+
+  <plan Key="memorial-grave-grove">
+    <binding Key="memorial-s-grave-grove" Type="memorial" Size="S" Facing="heart">
+      <tier Key="gravegrove" BuildKey="gravegrove" Level="0" Map="memorial-gravegrove-s0" Palette="memorial-grove-hands">
+        <require Role="main" Min="1" />
+        <require Role="entrance:public" Min="1" />
+        <require Role="function:grave-grove" Min="1" />
+        <require Role="memorial:planting" Min="2" />
+        <variant Key="fallback" Priority="0" />
+      </tier>
+    </binding>
+  </plan>
+
+  <plan Key="faith-sacrament-court">
+    <binding Key="civic-l-sacrament-court" Type="civic" Size="L" Facing="heart">
+      <tier Key="sacramentcourt" BuildKey="sacramentcourt" Level="0" Map="faith-sacramentcourt-l0" Palette="faith-sacrament-marble">
+        <require Role="main" Min="1" />
+        <require Role="entrance:public" Min="2" />
+        <require Role="function:sacrament" Min="1" />
+        <require Role="ritual:procession" Min="1" />
+        <require Role="ritual:pouring-kerb" Min="1" />
+        <require Role="liquid:sacrament-basin1" Min="1" />
+        <require Role="liquid:sacrament-basin2" Min="1" />
+        <variant Key="fallback" Priority="0" />
+      </tier>
+    </binding>
+  </plan>
+
+</KingdomArchitectures>

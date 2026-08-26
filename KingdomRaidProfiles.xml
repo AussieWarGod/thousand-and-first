@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Mergeable by faction. Repeated body names are deliberate weights. Later stage bands use
+     faction-native equipment/mutations; no generic humanoids are silently recoloured. -->
+<kingdomraidprofiles Schema="1">
+  <profile Key="snapjaw-foragers" Faction="Snapjaws" Reach="salt-road scouts"
+           Causes="creed-declaration-slight,debug-test-provocation,snapjaw-guarded-gate-road-claim"
+           ChannelBlueprint="r_KingdomSnapjawDemand"
+           Grievance="denied salt-road passage" Tactic="foragers advance under hide shields"
+           Objective="stores" Demand="water" Recovery="watch-disarray"
+           NaturalTrigger="guarded-gate" NaturalCause="snapjaw-guarded-gate-road-claim"
+           NaturalEvidence="the guarded gate denied a local snapjaw foraging band its customary salt-road passage"
+           Steading="Snapjaw Scavenger,Snapjaw Scavenger,Snapjaw Hunter"
+           Village="Snapjaw Hunter,Snapjaw Warrior,Snapjaw Warrior"
+           Town="Snapjaw Warrior,Snapjaw Shotgunner,Snapjaw Brute"
+           City="Snapjaw Brute,Snapjaw Warrior,Snapjaw Warlord" />
+  <profile Key="baboon-troop" Faction="Baboons" Reach="troop spoor"
+           Causes="creed-declaration-slight,debug-test-provocation"
+           ChannelBlueprint="r_KingdomBaboonDemand"
+           Grievance="a troop custom was slighted" Tactic="the troop closes in by spoor and height"
+           Objective="stores" Demand="water" Recovery="watch-disarray"
+           Steading="Baboon,Baboon,Hulking Baboon"
+           Village="Baboon,Hulking Baboon,Shrewd Baboon"
+           Town="Hulking Baboon,Shrewd Baboon"
+           City="Hulking Baboon,Shrewd Baboon" />
+  <profile Key="goatfolk-warband" Faction="Goatfolk" Reach="jungle war-horns"
+           Causes="creed-declaration-slight,debug-test-provocation"
+           ChannelBlueprint="r_KingdomGoatfolkDemand"
+           Grievance="a jungle custom was slighted" Tactic="war-horns hold the band to one charge"
+           Objective="stores" Demand="water" Recovery="watch-disarray"
+           Steading="Goatfolk Bully,Goatfolk Bully,Goatfolk Hornblower"
+           Village="Goatfolk Bully,Goatfolk Sower,Goatfolk Hornblower"
+           Town="Goatfolk Sower,Goatfolk Yurtwarden,Goatfolk Hornblower"
+           City="Goatfolk Yurtwarden,Goatfolk Shaman,Goatfolk Hornblower" />
+  <profile Key="cannibal-band" Faction="Cannibals" Reach="pilgrim-road rumour"
+           Causes="creed-declaration-slight,debug-test-provocation"
+           ChannelBlueprint="r_KingdomCannibalDemand"
+           Grievance="a pilgrim-road custom was slighted" Tactic="the band follows rumor to the stores"
+           Objective="stores" Demand="water" Recovery="watch-disarray"
+           Steading="Cannibal,Cannibal,Juicing Cannibal"
+           Village="Cannibal,Juicing Cannibal"
+           Town="Juicing Cannibal,Missile Cannibal"
+           City="Juicing Cannibal,Missile Cannibal" />
+  <profile Key="issachari-raiders" Faction="Issachari" Reach="desert riders"
+           Causes="creed-declaration-slight,debug-test-provocation"
+           ChannelBlueprint="r_KingdomIssachariDemand"
+           Grievance="a desert compact was slighted" Tactic="riflers cover a measured advance"
+           Objective="stores" Demand="water" Recovery="watch-disarray"
+           Steading="Issachari Raider,Issachari Raider,Issachari Rifler"
+           Village="Issachari Raider,Issachari Rifler"
+           Town="Issachari Rifler,Issachari Raider"
+           City="Issachari Rifler,Issachari Raider" />
+</kingdomraidprofiles>

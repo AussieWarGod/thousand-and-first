@@ -82,27 +82,16 @@ namespace ThousandAndFirst.Simulation.City
 			{
 				return KingdomWorkKind.Other;
 			}
-			if (KingdomCrops.FieldOf(Work) != null)
-			{
-				return KingdomWorkKind.Growing;
-			}
-			if (Work.GetIntProperty(KingdomAdopt.StoresProperty) == 1 || Work.GetIntProperty(KingdomAdopt.LarderProperty) == 1)
-			{
-				return KingdomWorkKind.Store;
-			}
-			if (Work.HasPart("SolarArray") || Work.HasPart("Capacitor") || Work.HasPart("Generator"))
-			{
-				return KingdomWorkKind.Power;
-			}
-			if (Work.HasPart("ItemConvertor") || Work.HasPart("Mill") || Work.HasPart("FoodProcessor"))
-			{
-				return KingdomWorkKind.Refiner;
-			}
-			if (Work.HasPart("LiquidProducer"))
-			{
-				return KingdomWorkKind.Producer;
-			}
-			return KingdomWorkKind.Other;
+			return KingdomWorkRules.Classify(new KingdomWorkTraits(
+				KingdomCrops.FieldOf(Work) != null,
+				Work.GetIntProperty(KingdomConstructionPresence.ActiveProperty) == 1,
+				Work.GetIntProperty(KingdomAdopt.StoresProperty) == 1
+					|| Work.GetIntProperty(KingdomAdopt.LarderProperty) == 1,
+				Work.HasPart("SolarArray") || Work.HasPart("Capacitor")
+					|| Work.HasPart("Generator"),
+				Work.HasPart("ItemConvertor") || Work.HasPart("Mill")
+					|| Work.HasPart("FoodProcessor"),
+				Work.HasPart("LiquidProducer")));
 		}
 
 		/// <summary>
@@ -189,13 +178,35 @@ namespace ThousandAndFirst.Simulation.City
 			return true;
 		}
 
+		/// <summary>Ends a temporary construction post and restores a home anchor. The body keeps
+		/// its identity and schedule; vanilla MoveTo walks it home, and no cell placement occurs.</summary>
+		internal static bool Release(Zone Z, GameObject Settler)
+		{
+			if (Z == null || !GameObject.Validate(Settler) || Settler.Brain == null
+				|| KingdomPhysicalHappenings.IsStaged(Settler)
+				|| Settler.IsPlayerLed() || Settler.IsPlayer())
+			{
+				return false;
+			}
+			Post(Settler, 0, KingdomWorkKind.Other);
+			Cell target = Hearth(Z, Settler);
+			if (target == null) return false;
+			Settler.Brain.Wanders = false;
+			Settler.Brain.WandersRandomly = false;
+			Settler.Brain.Stay(target);
+			Settler.Brain.PushGoal(new MoveTo(target, careful: true));
+			return true;
+		}
+
 		/// <summary>What the model says about one settler right now: where the hour wants them, and
 		/// which cell their post stands on. False when this person is not ours to move.</summary>
 		private static bool TryReading(GameObject Settler, Zone Z, long NowTick, Dictionary<int, GameObject> Index, out KingdomPost wanted, out Cell post)
 		{
 			wanted = KingdomPost.Hearth;
 			post = null;
-			if (!GameObject.Validate(Settler) || Settler.Brain == null || Z == null || Settler.IsPlayerLed() || Settler.IsPlayer())
+			if (!GameObject.Validate(Settler) || Settler.Brain == null || Z == null
+				|| KingdomPhysicalHappenings.IsStaged(Settler)
+				|| Settler.IsPlayerLed() || Settler.IsPlayer())
 			{
 				// A settler the founder charmed or recruited is Abroad, not posted: the model says
 				// where they are, it does not take them back (§8.3).
@@ -261,7 +272,8 @@ namespace ThousandAndFirst.Simulation.City
 		/// </summary>
 		internal static bool Claim(GameObject Work, r_KingdomStation Station, GameObject Actor, long NowTick)
 		{
-			if (!GameObject.Validate(Work) || !GameObject.Validate(Actor) || Actor.Brain == null || Actor == Work
+			if (!GameObject.Validate(Work) || !GameObject.Validate(Actor) || Actor.Brain == null
+				|| KingdomPhysicalHappenings.IsStaged(Actor) || Actor == Work
 				|| Actor.IsPlayer() || Actor.IsPlayerLed())
 			{
 				return false;

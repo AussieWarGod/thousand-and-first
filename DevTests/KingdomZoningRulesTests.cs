@@ -279,6 +279,59 @@ namespace ThousandAndFirst.Tests
 			Assert.AreEqual(encoded, KingdomZoningRules.EncodeRoster(decoded));
 		}
 
+		[Test]
+		public void Roster_AcceptsItsExactCharacterCeilingAndRefusesOnePastAtomically()
+		{
+			List<string> exact = new List<string>();
+			for (int i = 0; i < 15; i++)
+			{
+				string prefix = "k" + i.ToString("D2") + ":";
+				exact.Add(prefix + new string('x', KingdomZoningRules.MaxRosterKeyChars
+					- prefix.Length));
+			}
+			string lastPrefix = "last:";
+			int lastLength = KingdomZoningRules.MaxRosterEncodedChars - 15
+				- 15 * KingdomZoningRules.MaxRosterKeyChars;
+			exact.Add(lastPrefix + new string('y', lastLength - lastPrefix.Length));
+			string encoded;
+			Assert.IsTrue(KingdomZoningRules.TryEncodeRoster(exact, out encoded));
+			Assert.AreEqual(KingdomZoningRules.MaxRosterEncodedChars, encoded.Length);
+
+			exact[exact.Count - 1] += "z";
+			Assert.IsFalse(KingdomZoningRules.TryEncodeRoster(exact, out encoded));
+			Assert.IsNull(encoded, "overflow must not publish a truncated prefix");
+		}
+
+		[Test]
+		public void Roster_RefusesRowKeyAndUtf8OverflowBeforeAllocationCanGrowUnbounded()
+		{
+			List<string> tooMany = new List<string>();
+			for (int i = 0; i <= KingdomZoningRules.MaxRosterRows; i++)
+				tooMany.Add("node:" + i);
+			string encoded;
+			Assert.IsFalse(KingdomZoningRules.TryEncodeRoster(tooMany, out encoded));
+
+			Assert.IsNull(KingdomZoningRules.ComposeKey("disk",
+				new string('x', KingdomZoningRules.MaxRosterKeyChars)));
+			List<string> utf8 = new List<string>();
+			for (int i = 0; i < 17; i++)
+				utf8.Add("k" + i + ":" + new string('界', 335));
+			Assert.IsFalse(KingdomZoningRules.TryEncodeRoster(utf8, out encoded));
+		}
+
+		[Test]
+		public void Roster_DecoderRejectsOversizedAggregateWithoutReturningAPartialCity()
+		{
+			string oversized = new string('x', KingdomZoningRules.MaxRosterEncodedChars + 1);
+			List<string> decoded;
+			Assert.IsFalse(KingdomZoningRules.TryDecodeRoster(oversized, out decoded));
+			Assert.AreEqual(0, decoded.Count);
+			Assert.AreEqual(0, KingdomZoningRules.DecodeRoster(oversized).Count);
+			string canonical;
+			Assert.IsFalse(KingdomZoningRules.TryCanonicalRoster(oversized, out canonical));
+			Assert.IsNull(canonical);
+		}
+
 		[TestCase((string)null)]
 		[TestCase("")]
 		[TestCase("|")]

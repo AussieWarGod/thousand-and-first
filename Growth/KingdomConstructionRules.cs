@@ -20,7 +20,9 @@ namespace ThousandAndFirst
 		Improvement = 8,
 		RoadPaving = 9,
 		WearRepair = 10,
-		Strike = 11
+		Strike = 11,
+		/// <summary>Exact other-city purpose cargo carried through a live mirror pair.</summary>
+		PurposeConsignment = 12
 	}
 
 	/// <summary>The physical fact a route must prove before it may finish.</summary>
@@ -33,7 +35,8 @@ namespace ThousandAndFirst
 		Redress = 4,
 		Improvement = 5,
 		Paving = 6,
-		Repair = 7
+		Repair = 7,
+		PurposeConsignment = 8
 	}
 
 	/// <summary>
@@ -123,7 +126,11 @@ namespace ThousandAndFirst
 		RoadOutputSettled = 27,
 		RoadRemovalPending = 28,
 		RoadTallyPending = 29,
-		RoadTallySettled = 30
+		RoadTallySettled = 30,
+		CargoOutputPending = 31,
+		CargoOutputSettled = 32,
+		CargoTransferPending = 33,
+		CargoDelivered = 34
 	}
 
 	/// <summary>One durable sink disposition. Attempting is retried only for inspectable sinks.</summary>
@@ -286,6 +293,27 @@ namespace ThousandAndFirst
 		}
 	}
 
+	/// <summary>
+	/// Immutable cumulative price of the standing work, copied onto the physical successor before
+	/// it enters the zone. It is deliberately separate from the operation receipt: terminal job
+	/// compaction may discard payload detail, while strike and salvage must keep answering from
+	/// what this exact building consumed rather than a later catalogue merge.
+	/// </summary>
+	public sealed class KingdomPaidBuildReceipt
+	{
+		public readonly int Water;
+		public readonly long WorkTicks;
+		public readonly KingdomMaterialDebitCost Material;
+
+		public KingdomPaidBuildReceipt(int Water, long WorkTicks,
+			KingdomMaterialDebitCost Material)
+		{
+			this.Water = Water;
+			this.WorkTicks = WorkTicks;
+			this.Material = (Material ?? new KingdomMaterialDebitCost()).Copy();
+		}
+	}
+
 	/// <summary>One copy-on-write durable construction job.</summary>
 	public sealed class KingdomConstructionJob
 	{
@@ -311,6 +339,13 @@ namespace ThousandAndFirst
 		public string PhysicalReceipt;
 		public string TargetKey;
 		public string Payload;
+		/// <summary>Version of immutable paid build-effect truth. Zero is a legacy receipt;
+		/// it must never be completed from live catalogue data.</summary>
+		public int BuildTruthSchema;
+		public bool BuildHasPlot;
+		public bool BuildFrontier;
+		/// <summary>Final defence, including every bonus known at receipt publication.</summary>
+		public int BuildDefence;
 		public long CreatedTick;
 		public long StartedTick;
 		public long DueTick;
@@ -350,6 +385,10 @@ namespace ThousandAndFirst
 				PhysicalReceipt = PhysicalReceipt,
 				TargetKey = TargetKey,
 				Payload = Payload,
+				BuildTruthSchema = BuildTruthSchema,
+				BuildHasPlot = BuildHasPlot,
+				BuildFrontier = BuildFrontier,
+				BuildDefence = BuildDefence,
 				CreatedTick = CreatedTick,
 				StartedTick = StartedTick,
 				DueTick = DueTick,
@@ -367,9 +406,11 @@ namespace ThousandAndFirst
 	/// <summary>Pure phase, claim, owner, route and registry format laws.</summary>
 	public static class KingdomConstructionRules
 	{
-		public const string FormatHeader = "TAF-CONSTRUCTION-3";
-		public const string PriorFormatHeader = "TAF-CONSTRUCTION-2";
+		public const string FormatHeader = "TAF-CONSTRUCTION-4";
+		public const string PriorFormatHeader = "TAF-CONSTRUCTION-3";
+		public const string OlderFormatHeader = "TAF-CONSTRUCTION-2";
 		public const string LegacyFormatHeader = "TAF-CONSTRUCTION-1";
+		public const int BuildTruthSchema = 1;
 		public const int MaxRows = 4096;
 		public const int MaxActiveRows = 128;
 		public const int MaxRegistryChars = 4194304;
@@ -476,6 +517,8 @@ namespace ThousandAndFirst
 				return KingdomConstructionProjection.Repair;
 			case KingdomConstructionRoute.Strike:
 				return KingdomConstructionProjection.StrikeOrder;
+			case KingdomConstructionRoute.PurposeConsignment:
+				return KingdomConstructionProjection.PurposeConsignment;
 			default:
 				return KingdomConstructionProjection.None;
 			}
@@ -538,6 +581,7 @@ namespace ThousandAndFirst
 				case KingdomConstructionRoute.RoadPaving: suffix = "paved"; break;
 				case KingdomConstructionRoute.WearRepair: suffix = "mended"; break;
 				case KingdomConstructionRoute.Strike: suffix = "strike"; break;
+				case KingdomConstructionRoute.PurposeConsignment: suffix = "delivered"; break;
 				default: suffix = "raised"; break;
 				}
 			}
@@ -550,6 +594,8 @@ namespace ThousandAndFirst
 			case KingdomConstructionRoute.WearRepair:
 			case KingdomConstructionRoute.Strike:
 				return Job.PhysicalPhase == KingdomPhysicalPhase.Settled;
+			case KingdomConstructionRoute.PurposeConsignment:
+				return Job.PhysicalPhase == KingdomPhysicalPhase.CargoDelivered;
 			default:
 				return Job.PhysicalPhase == KingdomPhysicalPhase.EffectsSettled;
 			}
@@ -579,7 +625,7 @@ namespace ThousandAndFirst
 		public static bool ValidOutbox(KingdomConstructionOutbox Outbox)
 		{
 			if (Outbox == null) return true;
-			if (!TextLength(Outbox.EventId, 1, 256) || Outbox.Mode < 1 || Outbox.Mode > 3
+			if (!TextLength(Outbox.EventId, 1, 256) || Outbox.Mode < 1 || Outbox.Mode > 4
 				|| !TextLength(Outbox.Chronicle, 0, MaxOutboxTextChars)
 				|| !TextLength(Outbox.Ledger, 0, MaxOutboxTextChars)
 				|| !TextLength(Outbox.Message, 0, MaxOutboxTextChars)
@@ -743,6 +789,71 @@ namespace ThousandAndFirst
 			};
 		}
 
+		/// <summary>Freezes complete build effect before a job is first published.</summary>
+		public static bool FreezeBuildTruth(KingdomConstructionJob Job, bool HasPlot,
+			int FinalDefence)
+		{
+			if (Job == null || Job.BuildTruthSchema != 0 || Job.BuildHasPlot
+				|| Job.BuildFrontier || Job.BuildDefence != 0 || FinalDefence < 0) return false;
+			KingdomConstructionJob candidate = Job.Copy();
+			candidate.BuildTruthSchema = BuildTruthSchema;
+			candidate.BuildHasPlot = HasPlot;
+			candidate.BuildFrontier = KingdomRules.IsFrontierWork(FinalDefence, HasPlot);
+			candidate.BuildDefence = FinalDefence;
+			if (!ValidBuildTruth(candidate)) return false;
+			Job.BuildTruthSchema = candidate.BuildTruthSchema;
+			Job.BuildHasPlot = candidate.BuildHasPlot;
+			Job.BuildFrontier = candidate.BuildFrontier;
+			Job.BuildDefence = candidate.BuildDefence;
+			return true;
+		}
+
+		/// <summary>Reads persisted truth only. Schema zero never authorizes inference.</summary>
+		public static bool TryReadBuildTruth(KingdomConstructionJob Job, out bool HasPlot,
+			out bool Frontier, out int Defence)
+		{
+			HasPlot = false;
+			Frontier = false;
+			Defence = 0;
+			if (!ValidBuildTruth(Job) || Job.BuildTruthSchema != BuildTruthSchema) return false;
+			HasPlot = Job.BuildHasPlot;
+			Frontier = Job.BuildFrontier;
+			Defence = Job.BuildDefence;
+			return true;
+		}
+
+		public static bool RequiresBuildTruth(KingdomConstructionRoute Route)
+		{
+			return Route == KingdomConstructionRoute.CommissionScaffold
+				|| Route == KingdomConstructionRoute.PlanScaffold
+				|| Route == KingdomConstructionRoute.PlotCommission
+				|| Route == KingdomConstructionRoute.PlotPlan
+				|| Route == KingdomConstructionRoute.SocketBuild
+				|| Route == KingdomConstructionRoute.SocketConvert
+				|| Route == KingdomConstructionRoute.Improvement;
+		}
+
+		private static bool ValidBuildTruth(KingdomConstructionJob Job)
+		{
+			if (Job == null) return false;
+			if (Job.BuildTruthSchema == 0)
+				return !Job.BuildHasPlot && !Job.BuildFrontier && Job.BuildDefence == 0;
+			if (!RequiresBuildTruth(Job.Route)) return false;
+			if (Job.Route == KingdomConstructionRoute.CommissionScaffold
+				|| Job.Route == KingdomConstructionRoute.PlanScaffold)
+			{
+				if (Job.BuildHasPlot) return false;
+			}
+			else if ((Job.Route == KingdomConstructionRoute.PlotCommission
+				|| Job.Route == KingdomConstructionRoute.PlotPlan
+				|| Job.Route == KingdomConstructionRoute.SocketBuild
+				|| Job.Route == KingdomConstructionRoute.SocketConvert) && !Job.BuildHasPlot)
+				return false;
+			return Job.BuildTruthSchema == BuildTruthSchema && Job.BuildDefence >= 0
+				&& Job.BuildFrontier == KingdomRules.IsFrontierWork(
+					Job.BuildDefence, Job.BuildHasPlot);
+		}
+
 		public static bool FullyFundedExact(KingdomConstructionJob Job)
 		{
 			KingdomMaterialDebitCost outstanding;
@@ -751,6 +862,36 @@ namespace ThousandAndFirst
 				&& Job.Claims.WaterOutstanding == 0
 				&& KingdomMaterialDebitCost.TryParseClaim(Job.Claims.MaterialOutstanding,
 					out outstanding) && outstanding.IsEmpty;
+		}
+
+		/// <summary>
+		/// Freezes the exact funded claim of one building operation, optionally adding the cumulative
+		/// receipt of the predecessor retained by an in-place improvement. Refuses overflow and every
+		/// inexact or outstanding claim; a price is never inferred from the live catalogue here.
+		/// </summary>
+		public static bool TryPaidBuildReceipt(KingdomConstructionJob Job,
+			KingdomPaidBuildReceipt Previous, out KingdomPaidBuildReceipt Receipt)
+		{
+			Receipt = null;
+			if (!FullyFundedExact(Job) || Job.DueTick < Job.StartedTick
+				|| Job.Claims == null || !KingdomMaterialDebitCost.TryParseClaim(
+					Job.Claims.MaterialRequested, out KingdomMaterialDebitCost current)) return false;
+			long water = Job.Claims.WaterRequested;
+			long work = Job.DueTick - Job.StartedTick;
+			KingdomMaterialDebitCost material = current;
+			if (Previous != null)
+			{
+				if (Previous.Water < 0 || Previous.WorkTicks < 0 || Previous.Material == null)
+					return false;
+				water += Previous.Water;
+				if (water > int.MaxValue) return false;
+				if (long.MaxValue - work < Previous.WorkTicks) return false;
+				work += Previous.WorkTicks;
+				if (!TryAddPaidCost(Previous.Material, current, out material)) return false;
+			}
+			if (water < 0 || water > int.MaxValue || work < 0) return false;
+			Receipt = new KingdomPaidBuildReceipt((int)water, work, material);
+			return true;
 		}
 
 		public static KingdomConstructionClaims ApplyWaterCommit(KingdomConstructionClaims Claims,
@@ -864,6 +1005,10 @@ namespace ThousandAndFirst
 				|| Current.Route != Next.Route || Current.Projection != Next.Projection
 				|| Current.X != Next.X || Current.Y != Next.Y
 				|| Current.TargetKey != Next.TargetKey
+				|| Current.BuildTruthSchema != Next.BuildTruthSchema
+				|| Current.BuildHasPlot != Next.BuildHasPlot
+				|| Current.BuildFrontier != Next.BuildFrontier
+				|| Current.BuildDefence != Next.BuildDefence
 				|| Current.CreatedTick != Next.CreatedTick
 				|| Next.UpdatedTick < Current.UpdatedTick
 				|| (RequiresFullFunding(Next.Phase) && !FullyFundedExact(Next))
@@ -976,7 +1121,7 @@ namespace ThousandAndFirst
 			if (Job == null || !Guid.TryParseExact(Job.Id, "N", out ignored)
 				|| !TextLength(Job.OwnerKey, 1, MaxOwnerChars)
 				|| !TextLength(Job.ZoneId, 1, MaxZoneChars)
-				|| Job.Route <= KingdomConstructionRoute.None || Job.Route > KingdomConstructionRoute.Strike
+				|| Job.Route <= KingdomConstructionRoute.None || Job.Route > KingdomConstructionRoute.PurposeConsignment
 				|| Job.Phase <= KingdomConstructionPhase.Invalid || Job.Phase > KingdomConstructionPhase.InspectionRequired
 				|| Job.Projection != ProjectionFor(Job.Route)
 				|| Job.X < -1 || Job.X > 1023 || Job.Y < -1 || Job.Y > 1023
@@ -984,7 +1129,7 @@ namespace ThousandAndFirst
 				|| !TextLength(Job.SourceId, 0, MaxSubjectChars)
 				|| !TextLength(Job.OutputId, 0, MaxSubjectChars)
 				|| Job.PhysicalPhase < KingdomPhysicalPhase.None
-				|| Job.PhysicalPhase > KingdomPhysicalPhase.RoadTallySettled
+				|| Job.PhysicalPhase > KingdomPhysicalPhase.CargoDelivered
 				|| Job.PhysicalIndex < 0 || Job.PhysicalIndex > 4096
 				|| Job.PhysicalAmount < 0 || Job.PhysicalSpilled < 0
 				|| !TextLength(Job.PhysicalItemId, 0, MaxSubjectChars)
@@ -992,6 +1137,7 @@ namespace ThousandAndFirst
 				|| !TextLength(Job.PhysicalReceipt, 0, MaxPhysicalReceiptChars)
 				|| !TextLength(Job.TargetKey, 0, MaxTargetChars)
 				|| !TextLength(Job.Payload, 0, MaxPayloadChars)
+				|| !ValidBuildTruth(Job)
 				|| !TextLength(Job.Failure, 0, MaxFailureChars)
 				|| Job.CreatedTick < 0L || Job.StartedTick < Job.CreatedTick
 				|| Job.DueTick < Job.StartedTick
@@ -1085,7 +1231,11 @@ namespace ThousandAndFirst
 					.Append(box == null ? -1 : box.LedgerAfterCount).Append('|')
 					.Append(EncodeText(box == null ? null : box.LedgerAfterHash)).Append('|')
 					.Append(row.Compacted ? '1' : '0').Append('|')
-					.Append(EncodeText(row.CompactHash));
+					.Append(EncodeText(row.CompactHash)).Append('|')
+					.Append(row.BuildTruthSchema).Append('|')
+					.Append(row.BuildHasPlot ? '1' : '0').Append('|')
+					.Append(row.BuildFrontier ? '1' : '0').Append('|')
+					.Append(row.BuildDefence.ToString(CultureInfo.InvariantCulture));
 				if (output.Length > MaxRegistryChars)
 				{
 					return false;
@@ -1104,8 +1254,9 @@ namespace ThousandAndFirst
 			}
 			string[] lines = Text.Split('\n');
 			bool legacy = lines.Length > 0 && lines[0] == LegacyFormatHeader;
+			bool older = lines.Length > 0 && lines[0] == OlderFormatHeader;
 			bool prior = lines.Length > 0 && lines[0] == PriorFormatHeader;
-			if (lines.Length == 0 || (!legacy && !prior && lines[0] != FormatHeader)
+			if (lines.Length == 0 || (!legacy && !older && !prior && lines[0] != FormatHeader)
 				|| lines.Length - 1 > MaxRows)
 			{
 				return false;
@@ -1119,7 +1270,7 @@ namespace ThousandAndFirst
 					return false;
 				}
 				KingdomConstructionJob row;
-				if (!TryDecodeRow(lines[i], legacy, prior, out row) || !ids.Add(row.Id))
+				if (!TryDecodeRow(lines[i], legacy, older, prior, out row) || !ids.Add(row.Id))
 				{
 					return false;
 				}
@@ -1220,15 +1371,18 @@ namespace ThousandAndFirst
 			{
 				return false;
 			}
+			bool networkStrike = KingdomGatehouseRules.IsNetworkStrike(Intent.BuildKey,
+				Intent.HasPlot, Intent.X1, Intent.Y1, Intent.X2, Intent.Y2, Intent.PlotId,
+				Intent.Targets.Count);
 			if (Intent.HasPlot)
 			{
 				if (Intent.X1 < 0 || Intent.X1 > Intent.X2 || Intent.X2 > 1023
 					|| Intent.Y1 < 0 || Intent.Y1 > Intent.Y2 || Intent.Y2 > 1023
 					|| string.IsNullOrEmpty(Intent.PlotId)) return false;
 			}
-			else if (Intent.X1 != -1 || Intent.Y1 != -1 || Intent.X2 != -1
+			else if (!networkStrike && (Intent.X1 != -1 || Intent.Y1 != -1 || Intent.X2 != -1
 				|| Intent.Y2 != -1 || !string.IsNullOrEmpty(Intent.PlotId)
-				|| Intent.Targets.Count != 0) return false;
+				|| Intent.Targets.Count != 0)) return false;
 			List<KingdomStrikeTarget> targets = new List<KingdomStrikeTarget>(Intent.Targets);
 			targets.Sort(delegate(KingdomStrikeTarget a, KingdomStrikeTarget b)
 			{
@@ -1367,13 +1521,13 @@ namespace ThousandAndFirst
 			return true;
 		}
 
-		private static bool TryDecodeRow(string Line, bool Legacy, bool Prior,
+		private static bool TryDecodeRow(string Line, bool Legacy, bool Older, bool Prior,
 			out KingdomConstructionJob Row)
 		{
 			if (Legacy) return TryDecodeLegacyRow(Line, out Row);
 			Row = null;
 			string[] f = Line.Split('|');
-			if (f.Length != (Prior ? 45 : 51)) return false;
+			if (f.Length != (Older ? 45 : Prior ? 51 : 55)) return false;
 			string owner, zone, subject, source, output, physicalItem, physicalDestination;
 			string physicalReceipt, target, payload, requested, spent, outstanding, lost, failure;
 			string eventId, chronicle, ledger, message, deed;
@@ -1382,18 +1536,23 @@ namespace ThousandAndFirst
 			int mode, chronicleState, ledgerState, messageState, deedState;
 			long created, started, due, updated;
 			int ledgerBeforeCount = -1, ledgerAfterCount = -1;
+			int buildTruthSchema = 0, buildDefence = 0;
+			bool buildHasPlot = false, buildFrontier = false;
 			string ledgerBeforeHash = null, ledgerAfterHash = null, proofHash = null;
 			bool compacted = false;
 			if (!TryDecodeText(f[1], MaxOwnerChars, out owner)
 				|| !TryDecodeText(f[2], MaxZoneChars, out zone)
-				|| !TryInt(f[3], 1, (int)KingdomConstructionRoute.Strike, out route)
+				|| !TryInt(f[3], 1, (int)(Older
+					? KingdomConstructionRoute.Strike : KingdomConstructionRoute.PurposeConsignment), out route)
 				|| !TryInt(f[4], 1, (int)KingdomConstructionPhase.InspectionRequired, out phase)
-				|| !TryInt(f[5], 1, (int)KingdomConstructionProjection.Repair, out projection)
+				|| !TryInt(f[5], 1, (int)(Older
+					? KingdomConstructionProjection.Repair : KingdomConstructionProjection.PurposeConsignment), out projection)
 				|| !TryInt(f[6], -1, 1023, out x) || !TryInt(f[7], -1, 1023, out y)
 				|| !TryDecodeText(f[8], MaxSubjectChars, out subject)
 				|| !TryDecodeText(f[9], MaxSubjectChars, out source)
 				|| !TryDecodeText(f[10], MaxSubjectChars, out output)
-				|| !TryInt(f[11], 0, (int)KingdomPhysicalPhase.RoadTallySettled, out physicalPhase)
+				|| !TryInt(f[11], 0, (int)(Older
+					? KingdomPhysicalPhase.RoadTallySettled : KingdomPhysicalPhase.CargoDelivered), out physicalPhase)
 				|| !TryInt(f[12], 0, 4096, out physicalIndex)
 				|| !TryInt(f[13], 0, int.MaxValue, out physicalAmount)
 				|| !TryInt(f[14], 0, int.MaxValue, out physicalSpilled)
@@ -1424,13 +1583,22 @@ namespace ThousandAndFirst
 				|| !TryInt(f[42], 0, (int)KingdomConstructionSinkDisposition.Lost, out messageState)
 				|| !TryDecodeText(f[43], MaxOutboxTextChars, out deed)
 				|| !TryInt(f[44], 0, (int)KingdomConstructionSinkDisposition.Lost, out deedState)) return false;
-			if (!Prior && (!TryInt(f[45], -1, MaxLedgerNotes - 1, out ledgerBeforeCount)
+			if (!Older && (!TryInt(f[45], -1, MaxLedgerNotes - 1, out ledgerBeforeCount)
 				|| !TryDecodeText(f[46], 64, out ledgerBeforeHash)
 				|| !TryInt(f[47], -1, MaxLedgerNotes, out ledgerAfterCount)
 				|| !TryDecodeText(f[48], 64, out ledgerAfterHash)
 				|| (f[49] != "0" && f[49] != "1")
 				|| !TryDecodeText(f[50], 64, out proofHash))) return false;
-			if (!Prior) compacted = f[49] == "1";
+			if (!Older) compacted = f[49] == "1";
+			if (!Older && !Prior && (!TryInt(f[51], 0, BuildTruthSchema, out buildTruthSchema)
+				|| (f[52] != "0" && f[52] != "1")
+				|| (f[53] != "0" && f[53] != "1")
+				|| !TryInt(f[54], 0, int.MaxValue, out buildDefence))) return false;
+			if (!Older && !Prior)
+			{
+				buildHasPlot = f[52] == "1";
+				buildFrontier = f[53] == "1";
+			}
 			KingdomConstructionOutbox box = null;
 			if (!string.IsNullOrEmpty(eventId) || mode != 0 || chronicleState != 0
 				|| ledgerState != 0 || messageState != 0 || deedState != 0)
@@ -1446,7 +1614,7 @@ namespace ThousandAndFirst
 					Deed = deed, DeedState = (KingdomConstructionSinkDisposition)deedState
 				};
 				// V2 could publish an uninspectable ledger attempt. Never invoke it again.
-				if (Prior && box.LedgerState == KingdomConstructionSinkDisposition.Attempting)
+				if (Older && box.LedgerState == KingdomConstructionSinkDisposition.Attempting)
 					box.LedgerState = KingdomConstructionSinkDisposition.Lost;
 			}
 			Row = new KingdomConstructionJob
@@ -1460,7 +1628,10 @@ namespace ThousandAndFirst
 				PhysicalIndex = physicalIndex, PhysicalAmount = physicalAmount,
 				PhysicalSpilled = physicalSpilled, PhysicalItemId = physicalItem,
 				PhysicalDestinationId = physicalDestination, PhysicalReceipt = physicalReceipt,
-				TargetKey = target, Payload = payload, CreatedTick = created,
+				TargetKey = target, Payload = payload,
+				BuildTruthSchema = buildTruthSchema, BuildHasPlot = buildHasPlot,
+				BuildFrontier = buildFrontier, BuildDefence = buildDefence,
+				CreatedTick = created,
 				StartedTick = started, DueTick = due, UpdatedTick = updated, Revision = revision,
 				Claims = new KingdomConstructionClaims
 				{
@@ -1588,6 +1759,38 @@ namespace ThousandAndFirst
 			return new KingdomMaterialDebitCost(materials, bits, exotics);
 		}
 
+		private static bool TryAddPaidCost(KingdomMaterialDebitCost A,
+			KingdomMaterialDebitCost B, out KingdomMaterialDebitCost Sum)
+		{
+			Sum = null;
+			if (A == null || B == null) return false;
+			KingdomMaterialTally materials = new KingdomMaterialTally();
+			KingdomBitTally bits = new KingdomBitTally();
+			KingdomExoticTally exotics = new KingdomExoticTally();
+			for (int i = 0; i < KingdomMaterialRules.MaterialCount; i++)
+			{
+				KingdomMaterial kind = (KingdomMaterial)i;
+				long value = (long)A.Materials.Get(kind) + B.Materials.Get(kind);
+				if (value > int.MaxValue) return false;
+				materials.Set(kind, (int)value);
+			}
+			for (int i = 0; i < KingdomMaterialRules.BitTierCount; i++)
+			{
+				long value = (long)A.Bits.Get(i) + B.Bits.Get(i);
+				if (value > int.MaxValue) return false;
+				bits.Set(i, (int)value);
+			}
+			for (int i = 0; i < KingdomMaterialRules.ExoticCount; i++)
+			{
+				KingdomExotic kind = (KingdomExotic)i;
+				long value = (long)A.Exotics.Get(kind) + B.Exotics.Get(kind);
+				if (value > int.MaxValue) return false;
+				exotics.Set(kind, (int)value);
+			}
+			Sum = new KingdomMaterialDebitCost(materials, bits, exotics);
+			return true;
+		}
+
 		private static bool SameCost(KingdomMaterialDebitCost A, KingdomMaterialDebitCost B)
 		{
 			return SumMatches(A, B, new KingdomMaterialDebitCost());
@@ -1663,7 +1866,9 @@ namespace ThousandAndFirst
 		private static string CompactIdentityHash(KingdomConstructionJob Job)
 		{
 			if (Job == null || Job.Claims == null) return null;
-			StringBuilder text = new StringBuilder("TAF-CONSTRUCTION-PROOF-1");
+			bool buildTruth = Job.BuildTruthSchema == BuildTruthSchema;
+			StringBuilder text = new StringBuilder(buildTruth
+				? "TAF-CONSTRUCTION-PROOF-2" : "TAF-CONSTRUCTION-PROOF-1");
 			text.Append('|').Append(Job.Id)
 				.Append('|').Append(EncodeText(Job.OwnerKey)).Append('|').Append(EncodeText(Job.ZoneId))
 				.Append('|').Append((int)Job.Route).Append('|').Append((int)Job.Phase)
@@ -1682,6 +1887,11 @@ namespace ThousandAndFirst
 				.Append('|').Append(EncodeText(Job.Claims.MaterialSpent))
 				.Append('|').Append(EncodeText(Job.Claims.MaterialOutstanding))
 				.Append('|').Append(EncodeText(Job.Claims.MaterialLost));
+			if (buildTruth)
+				text.Append('|').Append(Job.BuildTruthSchema)
+					.Append('|').Append(Job.BuildHasPlot ? '1' : '0')
+					.Append('|').Append(Job.BuildFrontier ? '1' : '0')
+					.Append('|').Append(Job.BuildDefence);
 			return Sha256(text.ToString());
 		}
 

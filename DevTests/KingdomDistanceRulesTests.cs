@@ -337,24 +337,25 @@ namespace ThousandAndFirst.Tests
 			KingdomDistanceMatrix matrix;
 			KingdomCityFault fault;
 			Assert.IsTrue(KingdomZoneGraph.TryBuild(nodes, 2, KingdomDistanceRules.ZoneTransitCells, out graph, out fault));
-			Assert.IsTrue(KingdomDistanceMatrix.TryCreate(graph, 4, out matrix, out fault));
+			Assert.IsTrue(KingdomDistanceMatrix.TryCreate(graph, out matrix, out fault));
 			Assert.IsTrue(matrix.IsDirty(0), "a new slice is dirty until the ground has been read");
 
+			int[] ids = new int[4] { 101, 102, 103, 104 };
 			ushort[] edges = new ushort[4 * KingdomDistanceRules.EdgesPerZone];
 			ushort[] pairs = new ushort[KingdomDistanceRules.PairSlots(4)];
 			for (int i = 0; i < edges.Length; i++) { edges[i] = 7; }
 			for (int i = 0; i < pairs.Length; i++) { pairs[i] = 3; }
-			Assert.IsTrue(matrix.TryWriteZone(0, edges, pairs, out fault));
-			Assert.IsTrue(matrix.TryWriteZone(1, edges, pairs, out fault));
+			Assert.IsTrue(matrix.TryWriteZone(0, ids, edges, pairs, out fault));
+			Assert.IsTrue(matrix.TryWriteZone(1, ids, edges, pairs, out fault));
 			Assert.IsFalse(matrix.IsDirty(0));
 
 			int cells;
-			Assert.IsTrue(matrix.TryCompose(0, 0, 1, 2, out cells, out fault));
+			Assert.IsTrue(matrix.TryCompose(0, 101, 1, 103, out cells, out fault));
 			Assert.AreEqual(7 + KingdomDistanceRules.ZoneTransitCells + 7, cells);
 
-			Assert.IsTrue(matrix.TryCompose(0, 0, 0, 1, out cells, out fault));
+			Assert.IsTrue(matrix.TryCompose(0, 101, 0, 102, out cells, out fault));
 			Assert.AreEqual(3, cells, "a same-zone pair is read straight out of the triangular slice");
-			Assert.IsTrue(matrix.TryCompose(0, 2, 0, 2, out cells, out fault));
+			Assert.IsTrue(matrix.TryCompose(0, 103, 0, 103, out cells, out fault));
 			Assert.AreEqual(0, cells, "a work stands no distance from itself");
 		}
 
@@ -371,22 +372,23 @@ namespace ThousandAndFirst.Tests
 			KingdomDistanceMatrix matrix;
 			KingdomCityFault fault;
 			Assert.IsTrue(KingdomZoneGraph.TryBuild(nodes, 2, KingdomDistanceRules.ZoneTransitCells, out graph, out fault));
-			Assert.IsTrue(KingdomDistanceMatrix.TryCreate(graph, 2, out matrix, out fault));
+			Assert.IsTrue(KingdomDistanceMatrix.TryCreate(graph, out matrix, out fault));
+			int[] ids = new int[2] { 201, 202 };
 			ushort[] edges = new ushort[2 * KingdomDistanceRules.EdgesPerZone];
 			ushort[] pairs = new ushort[KingdomDistanceRules.PairSlots(2)];
 			for (int i = 0; i < edges.Length; i++) { edges[i] = 5; }
 			for (int i = 0; i < pairs.Length; i++) { pairs[i] = 5; }
-			Assert.IsTrue(matrix.TryWriteZone(0, edges, pairs, out fault));
-			Assert.IsTrue(matrix.TryWriteZone(1, edges, pairs, out fault));
+			Assert.IsTrue(matrix.TryWriteZone(0, ids, edges, pairs, out fault));
+			Assert.IsTrue(matrix.TryWriteZone(1, ids, edges, pairs, out fault));
 			int cells;
-			Assert.IsTrue(matrix.TryCompose(0, 0, 1, 1, out cells, out fault));
+			Assert.IsTrue(matrix.TryCompose(0, 201, 1, 202, out cells, out fault));
 
 			matrix.MarkDirty("b");
 			Assert.IsTrue(matrix.IsDirty(1));
-			Assert.IsFalse(matrix.TryCompose(0, 0, 1, 1, out cells, out fault),
+			Assert.IsFalse(matrix.TryCompose(0, 201, 1, 202, out cells, out fault),
 				"a work placed or a road laid makes the slice unbelievable until it is read again");
-			Assert.IsTrue(matrix.TryWriteZone(1, edges, pairs, out fault));
-			Assert.IsTrue(matrix.TryCompose(0, 0, 1, 1, out cells, out fault));
+			Assert.IsTrue(matrix.TryWriteZone(1, ids, edges, pairs, out fault));
+			Assert.IsTrue(matrix.TryCompose(0, 201, 1, 202, out cells, out fault));
 		}
 
 		/// <summary>
@@ -394,21 +396,42 @@ namespace ThousandAndFirst.Tests
 		/// be the regression the table exists to catch, so it refuses instead.
 		/// </summary>
 		[Test]
-		public void TheMatrixRefusesToAllocatePastItsOwnBudget()
+		public void TheSparseMatrixFitsFourLegalTwoHundredAndTwentyWorkZonesWithoutCachingWorksSquared()
 		{
-			KingdomZoneNode[] nodes = new KingdomZoneNode[9];
-			for (int i = 0; i < 9; i++)
+			KingdomZoneNode[] nodes = new KingdomZoneNode[4];
+			for (int i = 0; i < nodes.Length; i++)
 			{
-				nodes[i] = Node("z" + i, i % 3, i / 3, 10);
+				nodes[i] = Node("z" + i, i, 0, 10);
 			}
 			KingdomZoneGraph graph;
 			KingdomDistanceMatrix matrix;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomZoneGraph.TryBuild(nodes, 9, KingdomDistanceRules.ZoneTransitCells, out graph, out fault));
-			Assert.IsTrue(KingdomDistanceMatrix.TryCreate(graph, 10, out matrix, out fault));
-			Assert.IsTrue(matrix.Entries <= KingdomDistanceRules.MaxWorkEdgeEntries + KingdomDistanceRules.MaxSamePairEntries
-				+ KingdomDistanceRules.MaxNodes * KingdomDistanceRules.MaxNodes);
-			Assert.IsFalse(KingdomDistanceMatrix.TryCreate(graph, 1000, out matrix, out fault));
+			Assert.IsTrue(KingdomZoneGraph.TryBuild(nodes, nodes.Length, KingdomDistanceRules.ZoneTransitCells, out graph, out fault));
+			Assert.IsTrue(KingdomDistanceMatrix.TryCreate(graph, out matrix, out fault));
+			Assert.AreEqual(21, KingdomDistanceMatrix.EndpointShare(4),
+				"sparse endpoint share is derived from both entry caps, not the legal work count");
+			for (int zone = 0; zone < nodes.Length; zone++)
+			{
+				// This zone may legally contain 220 works. Only the 21 endpoints named by the
+				// frozen logistics snapshot occupy the cache; the other 199 are ordinary model
+				// rows, never silently discarded and never multiplied into works-squared.
+				int count = KingdomDistanceMatrix.EndpointShare(nodes.Length);
+				int[] ids = new int[count];
+				ushort[] edges = new ushort[count * KingdomDistanceRules.EdgesPerZone];
+				ushort[] pairs = new ushort[KingdomDistanceRules.PairSlots(count)];
+				for (int i = 0; i < count; i++) ids[i] = zone * 1000 + i + 1;
+				Assert.IsTrue(matrix.TryWriteZone(zone, ids, edges, pairs, out fault), fault.ToString());
+			}
+			Assert.AreEqual(4 * 21 * KingdomDistanceRules.EdgesPerZone, matrix.WorkEdgeEntries);
+			Assert.AreEqual(4 * KingdomDistanceRules.PairSlots(21), matrix.SamePairEntries);
+			Assert.LessOrEqual(matrix.WorkEdgeEntries, KingdomDistanceRules.MaxWorkEdgeEntries);
+			Assert.LessOrEqual(matrix.SamePairEntries, KingdomDistanceRules.MaxSamePairEntries);
+
+			int[] tooMany = new int[91];
+			for (int i = 0; i < tooMany.Length; i++) tooMany[i] = i + 1;
+			Assert.IsFalse(matrix.TryWriteZone(0, tooMany,
+				new ushort[tooMany.Length * KingdomDistanceRules.EdgesPerZone],
+				new ushort[KingdomDistanceRules.PairSlots(tooMany.Length)], out fault));
 			Assert.AreEqual(KingdomCityFault.RowCapExceeded, fault);
 		}
 
@@ -425,6 +448,97 @@ namespace ThousandAndFirst.Tests
 			KingdomZoneGraph graph;
 			KingdomCityFault fault;
 			Assert.IsFalse(KingdomZoneGraph.TryBuild(nodes, nodes.Length, KingdomDistanceRules.ZoneTransitCells, out graph, out fault));
+			Assert.AreEqual(KingdomCityFault.InvalidIndex, fault);
+		}
+
+		/// <summary>Level-2 values come from live passability, not coordinate distance. A wall
+		/// forces the measured same-zone route around its real opening.</summary>
+		[Test]
+		public void ALevelTwoSliceMeasuresTheWalkAroundRealWalls()
+		{
+			const int Width = 5;
+			const int Height = 5;
+			bool[] passable = new bool[Width * Height];
+			bool[] paved = new bool[passable.Length];
+			for (int i = 0; i < passable.Length; i++) passable[i] = true;
+			for (int y = 0; y < Height - 1; y++) passable[y * Width + 2] = false;
+			KingdomDistancePoint[] points = new KingdomDistancePoint[2]
+			{
+				new KingdomDistancePoint(1, 0, 0), new KingdomDistancePoint(2, 4, 0)
+			};
+			ushort[] edges;
+			ushort[] pairs;
+			long operations;
+			KingdomCityFault fault;
+			Assert.IsTrue(KingdomDistanceSliceRules.TryMeasure(passable, paved, Width, Height,
+				points, points.Length, -1, -1, -1, -1,
+				out edges, out pairs, out operations, out fault), fault.ToString());
+			Assert.AreEqual(1, pairs.Length);
+			Assert.Greater(pairs[0], 4, "Chebyshev would be four; real wall must make it longer");
+			Assert.Greater(operations, 0L);
+		}
+
+		/// <summary>Road weight participates in the measured path. Four paved steps cost 2.4 cells
+		/// and round up to three; same unpaved walk costs four.</summary>
+		[Test]
+		public void PavingShortensTheMeasuredSliceWithTheNamedSixtyPercent()
+		{
+			bool[] passable = new bool[5] { true, true, true, true, true };
+			bool[] plain = new bool[5];
+			bool[] paved = new bool[5] { true, true, true, true, true };
+			KingdomDistancePoint[] points = new KingdomDistancePoint[2]
+			{
+				new KingdomDistancePoint(11, 0, 0), new KingdomDistancePoint(12, 4, 0)
+			};
+			ushort[] edgePlain;
+			ushort[] pairPlain;
+			ushort[] edgePaved;
+			ushort[] pairPaved;
+			long operations;
+			KingdomCityFault fault;
+			Assert.IsTrue(KingdomDistanceSliceRules.TryMeasure(passable, plain, 5, 1,
+				points, 2, -1, -1, -1, -1, out edgePlain, out pairPlain,
+				out operations, out fault));
+			Assert.IsTrue(KingdomDistanceSliceRules.TryMeasure(passable, paved, 5, 1,
+				points, 2, -1, -1, -1, -1, out edgePaved, out pairPaved,
+				out operations, out fault));
+			Assert.AreEqual(4, pairPlain[0]);
+			Assert.AreEqual(3, pairPaved[0]);
+			Assert.Less(pairPaved[0], pairPlain[0]);
+		}
+
+		/// <summary>Vertical entries are exact shaft cells supplied by physical receipts. With no
+		/// receipt, up/down remain NoRoute rather than using a zone centre proxy.</summary>
+		[Test]
+		public void VerticalEdgeUsesOnlyTheExactSuppliedShaftCell()
+		{
+			bool[] passable = new bool[15];
+			bool[] paved = new bool[15];
+			for (int i = 0; i < passable.Length; i++) passable[i] = true;
+			KingdomDistancePoint[] points = new KingdomDistancePoint[1]
+			{
+				new KingdomDistancePoint(21, 0, 1)
+			};
+			ushort[] edges;
+			long operations;
+			KingdomCityFault fault;
+			Assert.IsTrue(KingdomDistanceSliceRules.TryMeasureEdges(passable, paved, 5, 3,
+				points, 1, 4, 1, -1, -1, out edges, out operations, out fault));
+			Assert.AreEqual(4, edges[(int)KingdomZoneStep.Up]);
+			Assert.AreEqual(KingdomDistanceRules.NoRoute, edges[(int)KingdomZoneStep.Down]);
+		}
+
+		[Test]
+		public void RenderCandidateMeasurementIsBoundedBeforeItAllocates()
+		{
+			KingdomDistancePoint[] points = new KingdomDistancePoint[
+				KingdomDistanceSliceRules.MaxCandidateEndpoints + 1];
+			ushort[] edges;
+			long operations;
+			KingdomCityFault fault;
+			Assert.IsFalse(KingdomDistanceSliceRules.TryMeasureEdges(new bool[1] { true },
+				new bool[1], 1, 1, points, points.Length, -1, -1, -1, -1,
+				out edges, out operations, out fault));
 			Assert.AreEqual(KingdomCityFault.InvalidIndex, fault);
 		}
 	}

@@ -252,16 +252,12 @@ namespace ThousandAndFirst.Tests
 
 		[TestCase("Bright { Hollow")]
 		[TestCase("Bright } Hollow")]
-		[TestCase("{{r|EVIL}}")]
-		public void TryValidateBuildingName_RejectsCurlyBraces(string raw)
+		[TestCase("{{r|Not markup here}}")]
+		public void TryValidateBuildingName_KeepsPlainCurlyBracesForBoundaryEscaping(string raw)
 		{
-			// A name is spliced verbatim into "{{C|" + name + "}}"-style chronicle and ledger
-			// markup elsewhere in this mod; a brace here could close that markup early and start
-			// writing arbitrary trailing text into the founder's own reports.
 			bool ok = KingdomDesignRules.TryValidateBuildingName(raw, out string cleaned, out string error);
-			Assert.IsFalse(ok);
-			Assert.IsNull(cleaned);
-			Assert.IsNotNull(error);
+			Assert.IsTrue(ok, error);
+			Assert.AreEqual(raw, cleaned);
 		}
 
 		[TestCase("Bright\nHollow")]

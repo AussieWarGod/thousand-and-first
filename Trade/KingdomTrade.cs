@@ -14,18 +14,26 @@ namespace ThousandAndFirst
 	{
 		private const string ProjectionProperty = "KingdomTradeProjectionId";
 		private const string MaterialProperty = "KingdomTradeMaterialId";
+		private const int MaxProjectionCellProbes = 512;
 		private static readonly object InFlightSync = new object();
 		private static TradeLease InFlight;
 
 		private sealed class TradeLease : IDisposable
 		{
 			internal KingdomSystem System;
+			internal Zone Zone;
+			internal KingdomSurvey Survey;
 
 			public void Dispose()
 			{
 				lock (InFlightSync)
 				{
-					if (ReferenceEquals(InFlight, this)) InFlight = null;
+					if (!ReferenceEquals(InFlight, this)) return;
+					// Keep old serialized API field coherent before another caller can observe
+					// or mutate Trade authority. Properties are not safe here: KingdomSystem writes
+					// engine named fields explicitly and must retain old field wire name.
+					System?.SynchronizeLegacyManifestProjection();
+					InFlight = null;
 				}
 			}
 		}
@@ -59,6 +67,7 @@ namespace ThousandAndFirst
 			internal Zone Zone;
 			internal string SettlementId;
 			internal string SettlementName;
+			internal string KeepersRoster;
 			internal Simulation.City.KingdomCityBook City;
 			internal KingdomLedger Ledger;
 			internal List<string> LedgerNotes;
@@ -140,10 +149,9 @@ namespace ThousandAndFirst
 		private sealed class LoadedTopologyWitness
 		{
 			internal ZoneManager Manager;
-			internal Dictionary<string, Zone> Cache;
+			internal KingdomSurvey Survey;
 			internal Zone Active;
-			internal string[] CacheKeys;
-			internal Zone[] CacheZones;
+			internal List<GameObject> RootList;
 			internal readonly List<LoadedZoneWitness> Zones = new List<LoadedZoneWitness>();
 			internal readonly List<LoadedObjectWitness> Objects = new List<LoadedObjectWitness>();
 		}
@@ -293,8 +301,9 @@ namespace ThousandAndFirst
 				Zone = Z,
 				SettlementId = Operation == null ? System.City.SettlementId
 					: Operation.SettlementId,
-				SettlementName = Operation == null ? System.SeatName
-					: Operation.SettlementName,
+					SettlementName = Operation == null ? System.SeatName
+						: Operation.SettlementName,
+					KeepersRoster = System.KeepersRoster ?? "",
 				City = System.City,
 				Ledger = System.Ledger,
 				LedgerNotes = System.Ledger.Notes,
@@ -337,8 +346,10 @@ namespace ThousandAndFirst
 				&& ReferenceEquals(system.Standings, Frame.Standings)
 				&& ExactDictionary(Frame.Standings, Frame.StandingRows)
 				&& ExactLedger(Frame)
-				&& string.Equals(system.SeatName, Frame.SettlementName,
-					StringComparison.Ordinal)
+					&& string.Equals(system.SeatName, Frame.SettlementName,
+						StringComparison.Ordinal)
+					&& string.Equals(system.KeepersRoster ?? "", Frame.KeepersRoster,
+						StringComparison.Ordinal)
 				&& string.Equals(Frame.City.SettlementId, Frame.SettlementId,
 					StringComparison.Ordinal);
 			if (!common || Frame.Operation == null) return common;
@@ -603,51 +614,96 @@ namespace ThousandAndFirst
 			catch { Roots = null; return false; }
 		}
 
+		/// <summary>
+		/// Freezes only the exact active settlement ground already indexed for this trade lease.
+		/// Cached zones are not transaction participants: scanning them made one local delivery
+		/// proportional to every zone the player had visited and silently created foreign surveys
+		/// inside the bound semantic pass. A caller standing on unavailable or non-active ground
+		/// receives no witness and therefore defers without touching physical authority.
+		/// </summary>
 		private static LoadedTopologyWitness CaptureLoadedTopology()
 		{
 			try
 			{
-				ZoneManager manager = The.ZoneManager;
-				if (manager == null || manager.ActiveZone == null || manager.CachedZones == null)
-					return null;
-				List<string> keys = new List<string>(manager.CachedZones.Keys);
-				keys.Sort(StringComparer.Ordinal);
+				ZoneManager manager;
+				Zone zone;
+				KingdomSurvey survey;
+				if (!TryBoundTopologyGround(out manager, out zone, out survey)) return null;
+				IList<GameObject> indexed;
+				if (!survey.TryLoaded(out indexed) || indexed == null) return null;
 				LoadedTopologyWitness witness = new LoadedTopologyWitness
 				{
 					Manager = manager,
-					Cache = manager.CachedZones,
-					Active = manager.ActiveZone,
-					CacheKeys = keys.ToArray(),
-					CacheZones = new Zone[keys.Count]
+					Survey = survey,
+					Active = zone,
+					RootList = survey.Objects
 				};
-				List<Zone> zones = new List<Zone> { manager.ActiveZone };
-				for (int i = 0; i < keys.Count; i++)
+				LoadedZoneWitness zoneWitness = new LoadedZoneWitness
 				{
-					Zone zone;
-					if (!manager.CachedZones.TryGetValue(keys[i], out zone) || zone == null
-						|| !string.Equals(zone.ZoneID, keys[i], StringComparison.Ordinal)) return null;
-					witness.CacheZones[i] = zone;
-					if (!ContainsZoneReference(zones, zone)) zones.Add(zone);
-				}
+					Zone = zone,
+					Roots = survey.Objects.ToArray()
+				};
+				witness.Zones.Add(zoneWitness);
 				HashSet<GameObject> visited = new HashSet<GameObject>();
-				for (int i = 0; i < zones.Count; i++)
-				{
-					Zone zone = zones[i];
-					List<GameObject> roots = zone.GetObjects();
-					if (roots == null) return null;
-					LoadedZoneWitness zoneWitness = new LoadedZoneWitness
-					{
-						Zone = zone,
-						Roots = roots.ToArray()
-					};
-					witness.Zones.Add(zoneWitness);
-					for (int j = 0; j < zoneWitness.Roots.Length; j++)
-						if (!CaptureLoadedObject(witness, zoneWitness.Roots[j],
-							zoneWitness.Roots[j], zone, visited)) return null;
-				}
+				for (int i = 0; i < zoneWitness.Roots.Length; i++)
+					if (!CaptureLoadedObject(witness, zoneWitness.Roots[i],
+						zoneWitness.Roots[i], zone, visited)) return null;
 				return witness;
 			}
 			catch { return null; }
+		}
+
+		private static bool TryBindTopologyGround(KingdomSystem System, Zone Z,
+			KingdomSurvey Survey)
+		{
+			try
+			{
+				ZoneManager manager = The.ZoneManager;
+				KingdomSurvey active = KingdomSurvey.ActiveFor(Z);
+				if (System == null || Z == null || Survey == null || manager == null
+					|| !ReferenceEquals(manager.ActiveZone, Z)
+					|| !ReferenceEquals(Survey.Ground, Z)
+					|| (active != null && !ReferenceEquals(active, Survey))
+					|| !Survey.TryLoaded(out IList<GameObject> loaded) || loaded == null)
+					return false;
+				lock (InFlightSync)
+				{
+					if (InFlight == null || !ReferenceEquals(InFlight.System, System)) return false;
+					InFlight.Zone = Z;
+					InFlight.Survey = Survey;
+				}
+				return true;
+			}
+			catch { return false; }
+		}
+
+		private static bool TryBoundTopologyGround(out ZoneManager Manager,
+			out Zone Z, out KingdomSurvey Survey)
+		{
+			Manager = null;
+			Z = null;
+			Survey = null;
+			lock (InFlightSync)
+			{
+				if (InFlight == null) return false;
+				Z = InFlight.Zone;
+				Survey = InFlight.Survey;
+			}
+			Manager = The.ZoneManager;
+			KingdomSurvey active = KingdomSurvey.ActiveFor(Z);
+			return Manager != null && Z != null && Survey != null
+				&& ReferenceEquals(Manager.ActiveZone, Z)
+				&& ReferenceEquals(Survey.Ground, Z)
+				&& (active == null || ReferenceEquals(active, Survey));
+		}
+
+		private static KingdomSurvey BoundTradeSurvey(Zone Z)
+		{
+			ZoneManager manager;
+			Zone ground;
+			KingdomSurvey survey;
+			return TryBoundTopologyGround(out manager, out ground, out survey)
+				&& ReferenceEquals(ground, Z) ? survey : null;
 		}
 
 		private static bool CaptureLoadedObject(LoadedTopologyWitness Topology,
@@ -686,13 +742,6 @@ namespace ThousandAndFirst
 			return true;
 		}
 
-		private static bool ContainsZoneReference(List<Zone> Values, Zone Value)
-		{
-			for (int i = 0; i < Values.Count; i++)
-				if (ReferenceEquals(Values[i], Value)) return true;
-			return false;
-		}
-
 		private static bool ContainsObjectReference(IList<GameObject> Values, GameObject Value)
 		{
 			if (Values == null) return false;
@@ -706,13 +755,10 @@ namespace ThousandAndFirst
 		{
 			if (Expected == null || Current == null
 				|| !ReferenceEquals(Expected.Manager, Current.Manager)
-				|| !ReferenceEquals(Expected.Cache, Current.Cache)
+				|| !ReferenceEquals(Expected.Survey, Current.Survey)
 				|| !ReferenceEquals(Expected.Active, Current.Active)
-				|| Expected.CacheKeys.Length != Current.CacheKeys.Length
+				|| !ReferenceEquals(Expected.RootList, Current.RootList)
 				|| Expected.Zones.Count != Current.Zones.Count) return false;
-			for (int i = 0; i < Expected.CacheKeys.Length; i++)
-				if (!string.Equals(Expected.CacheKeys[i], Current.CacheKeys[i], StringComparison.Ordinal)
-					|| !ReferenceEquals(Expected.CacheZones[i], Current.CacheZones[i])) return false;
 			for (int i = 0; i < Expected.Zones.Count; i++)
 				if (!ReferenceEquals(Expected.Zones[i].Zone, Current.Zones[i].Zone)) return false;
 			return true;
@@ -1120,6 +1166,7 @@ namespace ThousandAndFirst
 			if (official != null && !ReferenceEquals(official, original))
 				KingdomTradeRules.RecordIncident(official, now, Fault, original);
 			KingdomTradeRules.QuarantineBook(official, Fault);
+			system?.SynchronizeLegacyManifestProjection();
 			return false;
 		}
 
@@ -1152,6 +1199,11 @@ namespace ThousandAndFirst
 		public static bool StrikeDeal(KingdomSystem System, string DealKey,
 			string FactionName, out string Failure)
 		{
+			if (!KingdomMaster.NewWorkAllowed(System))
+			{
+				Failure = "Settlement simulation is paused; no new trade charter was struck.";
+				return false;
+			}
 			TradeLease lease;
 			if (!TryEnter(System, out lease))
 			{
@@ -1307,7 +1359,7 @@ namespace ThousandAndFirst
 				return false;
 			}
 			bool recorded = KingdomChronicle.RecordOnce(System, eventId,
-				System.KingdomDisplayName + " struck "
+				KingdomPresentation.Rich(System.KingdomDisplayName) + " struck "
 				+ XRL.Language.Grammar.A(KingdomRules.StripParenthetical(deal.DisplayName))
 				+ " with " + Faction.GetFormattedName(FactionName), Accomplishment: true);
 			if (!recorded || !ExactCallbackWitness(frame, callback)
@@ -1370,6 +1422,7 @@ namespace ThousandAndFirst
 		public static void OnZoneActivated(KingdomSystem System, Zone Z,
 			KingdomSurvey Shared = null)
 		{
+			if (!KingdomMaster.AutomaticWorkAllowed(System)) return;
 			TradeLease lease;
 			if (!TryEnter(System, out lease)) return;
 			using (lease)
@@ -1426,7 +1479,8 @@ namespace ThousandAndFirst
 			}
 
 			int due = KingdomTradeRules.DueCharterIndex(book, now);
-			if (due >= 0 && PrepareCharterDelivery(System, book, book.Charters[due], Z, now))
+			if (due >= 0 && PrepareCharterDelivery(System, book, book.Charters[due], Z,
+				survey, now))
 			{
 				ContinueOperation(System, book, Z, survey, now);
 			}
@@ -1436,6 +1490,11 @@ namespace ThousandAndFirst
 		public static bool TryLoadManifest(KingdomSystem System, Zone Z, int Amount,
 			string OriginName, string DestinationName, out string Failure)
 		{
+			if (!KingdomMaster.NewWorkAllowed(System))
+			{
+				Failure = "Settlement simulation is paused; no new manifest was loaded.";
+				return false;
+			}
 			TradeLease lease;
 			if (!TryEnter(System, out lease))
 			{
@@ -1548,6 +1607,7 @@ namespace ThousandAndFirst
 		public static KingdomManifest ExpireManifestIfStale(KingdomSystem System,
 			Zone Here, long Now)
 		{
+			if (!KingdomMaster.AutomaticWorkAllowed(System)) return null;
 			TradeLease lease;
 			if (!TryEnter(System, out lease)) return null;
 			using (lease)
@@ -1565,7 +1625,7 @@ namespace ThousandAndFirst
 				|| !KingdomManifestRules.ManifestExpired(Now, manifest.DeadlineTick)) return null;
 			if (book.OpenOperation != null) return null;
 			bool lapse = manifest.TurnedBack;
-			KingdomManifest answer = lapse ? LegacyManifest(manifest) : null;
+			KingdomManifest answer = lapse ? LegacyManifestSnapshot(manifest) : null;
 			PrepareManifestClockOperation(System, book, manifest, Here, Now);
 			ContinueOperation(System, book, Here, Here == null ? null : KingdomSurvey.Take(Here, System), Now);
 			return answer;
@@ -1743,7 +1803,8 @@ namespace ThousandAndFirst
 		}
 
 		private static bool PrepareCharterDelivery(KingdomSystem System,
-			KingdomTradeBook Book, KingdomTradeCharter Charter, Zone Z, long Now)
+			KingdomTradeBook Book, KingdomTradeCharter Charter, Zone Z,
+			KingdomSurvey Survey, long Now)
 		{
 			if (Charter == null || Charter.Quarantined || Book.OpenOperation != null) return false;
 			if (!KingdomData.TryGetDeal(Charter.DealKey, out KingdomRules.DealEntry deal)
@@ -1755,7 +1816,10 @@ namespace ThousandAndFirst
 			}
 			int cycles = KingdomRules.BankedCycles(Now, Charter.NextTick, deal.IntervalTicks);
 			if (cycles <= 0) return false;
-			int water = KingdomTradeRules.SaturatingMultiply(deal.IncomeDrams, cycles);
+			int goodsHouseholds = KingdomYardGoods.ExactStandingHouseholds(Survey);
+			int incomePerCycle = KingdomYardGoodsRules.IncomePerCycle(
+				deal.IncomeDrams, goodsHouseholds);
+			int water = KingdomTradeRules.SaturatingMultiply(incomePerCycle, cycles);
 			if (water > KingdomTradeRules.MaxOperationWater) return false;
 			KingdomTradeOperation operation = KingdomTradeRules.NewOperation(Book,
 				KingdomTradeOperationKind.CharterDelivery, Now);
@@ -1770,7 +1834,9 @@ namespace ThousandAndFirst
 			operation.DealDisplayName = deal.DisplayName;
 			operation.Faction = Charter.Faction;
 			operation.Cycles = cycles;
-			operation.IncomePerCycle = deal.IncomeDrams;
+			// Frozen adjusted income is durable authority. Later release, registry merge, or reload
+			// cannot change this already-open exchange or apply its household goods twice.
+			operation.IncomePerCycle = incomePerCycle;
 			operation.IntervalTicks = deal.IntervalTicks;
 			operation.DueBefore = Charter.NextTick;
 			operation.DueAfter = KingdomTradeRules.SaturatingAdd(Now, deal.IntervalTicks);
@@ -1818,6 +1884,13 @@ namespace ThousandAndFirst
 				After = (int)after,
 				State = KingdomTradePhysicalState.Prepared
 			};
+			operation.Pattern = KingdomCeremony.FreezePatternBook(System,
+				operation.SettlementId, operation.Sequence);
+			if (!KingdomTradePatternRules.Valid(operation.Pattern))
+			{
+				Quarantine(operation,
+					"The charter's pattern-book offer could not be frozen within its bounds.");
+			}
 			return true;
 		}
 
@@ -1903,6 +1976,12 @@ namespace ThousandAndFirst
 		{
 			KingdomTradeOperation operation = Book.OpenOperation;
 			if (operation == null) return;
+			if (!TryBindTopologyGround(System, Z, Survey))
+			{
+				KingdomLog.Log("trade: open receipt " + (operation.Id ?? "?")
+					+ " deferred; exact active settlement ground is unavailable");
+				return;
+			}
 			TradeLiveFrame frame;
 			if (!TryBindFrame(System, Book, operation, Z, out frame))
 			{
@@ -1999,6 +2078,13 @@ namespace ThousandAndFirst
 			}
 			if (operation.Phase == KingdomTradePhase.ScheduleIntent)
 			{
+				if (operation.Kind == KingdomTradeOperationKind.CharterDelivery
+					&& !ContinuePatternBook(System, operation, frame))
+				{
+					if (operation.Phase == KingdomTradePhase.Quarantined)
+						FinalizeQuarantine(System, Book, operation, Now, frame);
+					return;
+				}
 				if (!ExactPhysicalFrame(frame, operation, Z))
 				{
 					ReconcilePhysicalFailure(frame, operation, Z,
@@ -2012,10 +2098,11 @@ namespace ThousandAndFirst
 					FinalizeQuarantine(System, Book, operation, Now, frame);
 					return;
 				}
-					KingdomTradePhase disposition = string.IsNullOrEmpty(operation.Fault)
-						? KingdomTradePhase.Terminal : KingdomTradePhase.Quarantined;
-					operation.Phase = KingdomTradePhase.RetirementReady;
-					KingdomTradeRules.Retire(Book, operation, disposition, Now, operation.Fault);
+				KingdomTradePhase disposition = string.IsNullOrEmpty(operation.Fault)
+					? KingdomTradePhase.Terminal : KingdomTradePhase.Quarantined;
+				operation.Phase = KingdomTradePhase.RetirementReady;
+				KingdomTradeRules.Retire(Book, operation, disposition, Now, operation.Fault);
+				System.SynchronizeLegacyManifestProjection();
 			}
 		}
 
@@ -2125,7 +2212,7 @@ namespace ThousandAndFirst
 						!= LoadedObjectResolution.ExactUnique
 						|| !ReferenceEquals(resolvedOwner, owner))
 					{
-						Quarantine(Operation, "A source vessel owner id was not exact-unique in loaded topology.");
+						Quarantine(Operation, "A source vessel owner id was not exact-unique on active settlement ground.");
 						return false;
 					}
 					WaterWitness witness = CaptureWaterWitness(leg, owner, vessel);
@@ -2169,9 +2256,19 @@ namespace ThousandAndFirst
 					Quarantine(Operation, "A water callback frame could not be frozen before mutation.");
 					return false;
 				}
-				int changed = Operation.WaterDirection == KingdomTradeWaterDirection.Debit
-					? KingdomLiquids.Drain(witness.Vessel, witness.Delta)
-					: KingdomLiquids.Fill(witness.Vessel, "water", witness.Delta);
+				int changed;
+				try
+				{
+					changed = Operation.WaterDirection == KingdomTradeWaterDirection.Debit
+						? KingdomLiquids.Drain(witness.Vessel, witness.Delta)
+						: KingdomLiquids.Fill(witness.Vessel, "water", witness.Delta);
+				}
+				finally
+				{
+					// Liquid callbacks may commit before throwing. Reclassify the exact owner
+					// while this attended survey remains the later-pass authority.
+					BoundTradeSurvey(Z)?.ObserveCurrentTopology(witness.Owner);
+				}
 				if (!ExactCallbackWitness(Frame, callback)
 					|| !ExactAuthority(Frame, KingdomTradePhase.ResourceIntent))
 				{
@@ -2200,10 +2297,12 @@ namespace ThousandAndFirst
 			if (Physical == null || Physical.Survey == null || Physical.StoreList == null) return;
 			int stored = 0;
 			int room = 0;
+			HashSet<GameObject> owners = new HashSet<GameObject>();
 			for (int i = 0; i < Physical.StoreList.Count; i++)
 			{
 				LiquidVolume vessel = Physical.StoreList[i];
 				if (vessel == null) continue;
+				if (GameObject.Validate(vessel.ParentObject)) owners.Add(vessel.ParentObject);
 				if (KingdomLiquids.HasFreshWater(vessel))
 					stored = KingdomTradeRules.SaturatingAdd(stored, vessel.Volume);
 				if (KingdomLiquids.CanReceiveFreshWater(vessel) && vessel.MaxVolume >= vessel.Volume)
@@ -2211,6 +2310,10 @@ namespace ThousandAndFirst
 			}
 			Physical.Survey.StoredWater = stored;
 			Physical.Survey.StorageSpace = room;
+			// Aggregate was published from the frozen store list; align every cached row
+			// without applying those same deltas twice.
+			foreach (GameObject owner in owners)
+				Physical.Survey.SynchronizeReceiptObject(owner);
 		}
 
 		private static bool ExactWaterWitness(WaterWitness Witness, Zone Z, bool After)
@@ -2382,9 +2485,17 @@ namespace ThousandAndFirst
 					Quarantine(Operation, "A resumed water callback frame could not be frozen before mutation.");
 					return false;
 				}
-				int changed = Operation.WaterDirection == KingdomTradeWaterDirection.Debit
-					? KingdomLiquids.Drain(witness.Vessel, witness.Delta)
-					: KingdomLiquids.Fill(witness.Vessel, "water", witness.Delta);
+				int changed;
+				try
+				{
+					changed = Operation.WaterDirection == KingdomTradeWaterDirection.Debit
+						? KingdomLiquids.Drain(witness.Vessel, witness.Delta)
+						: KingdomLiquids.Fill(witness.Vessel, "water", witness.Delta);
+				}
+				finally
+				{
+					BoundTradeSurvey(Z)?.ObserveCurrentTopology(witness.Owner);
+				}
 				if (!ExactCallbackWitness(Frame, callback)
 					|| !ExactAuthority(Frame, KingdomTradePhase.ResourceIntent))
 					return FailDetachedAuthority(Frame,
@@ -2569,7 +2680,7 @@ namespace ThousandAndFirst
 				out destinationTopology) != LoadedObjectResolution.ExactUnique
 				|| !ReferenceEquals(resolvedDestination, destination))
 				return QuarantineFalse(Operation,
-					"The material destination id was not exact-unique in complete loaded topology.");
+					"The material destination id was not exact-unique on active settlement ground.");
 			if (Frame.Physical == null) Frame.Physical = new TradePhysicalFrame();
 			InventoryWitness inventory;
 			if (!TryCaptureInventory(Frame.Physical, destination, Z, out inventory))
@@ -2682,7 +2793,16 @@ namespace ThousandAndFirst
 					output.State = KingdomTradePhysicalState.Lost;
 					return QuarantineFalse(Operation, "Material AddObject frame could not be frozen.");
 				}
-				GameObject added = inventory.Inventory.AddObject(item, null, Silent: true);
+				GameObject added = null;
+				try
+				{
+					added = inventory.Inventory.AddObject(item, null, Silent: true);
+				}
+				finally
+				{
+					BoundTradeSurvey(Z)?.ObserveCurrentTopology(inventory.Owner);
+					KingdomSurvey.ObserveAddResultInActive(Z, item, added);
+				}
 				if (!ExactCallbackWitness(Frame, callback)
 					|| !ExactAuthority(Frame, KingdomTradePhase.ResourceIntent)
 					|| !ExactLoadedTopologyWithDelta(addTopology, item, null,
@@ -2919,7 +3039,15 @@ namespace ThousandAndFirst
 					exact = false;
 					continue;
 				}
-				item.Obliterate();
+				try
+				{
+					item.Obliterate();
+				}
+				finally
+				{
+					BoundTradeSurvey(Z)?.ObserveCurrentTopology(witness.Inventory?.Owner);
+					BoundTradeSurvey(Z)?.ObserveCurrentTopology(item);
+				}
 				if (!ExactCallbackWitness(Frame, callback)
 					|| !ExactAuthority(Frame, KingdomTradePhase.ResourceIntent)
 					|| !ExactLoadedTopology(cleanupTopology))
@@ -2953,11 +3081,14 @@ namespace ThousandAndFirst
 		private static int CountMarker(Zone Z, string Marker)
 		{
 			if (Z == null || string.IsNullOrEmpty(Marker)) return 0;
-			LoadedTopologyWitness topology = CaptureLoadedTopology();
-			if (topology == null) return int.MaxValue;
+			KingdomSurvey survey = BoundTradeSurvey(Z);
+			IList<GameObject> objects;
+			if (survey == null || !survey.TryLoaded(out objects) || objects == null)
+				return int.MaxValue;
 			int count = 0;
-			for (int i = 0; i < topology.Objects.Count; i++)
-				if (string.Equals(topology.Objects[i].Object.GetStringProperty(MaterialProperty),
+			for (int i = 0; i < objects.Count; i++)
+				if (GameObject.Validate(objects[i]) && string.Equals(
+					objects[i].GetStringProperty(MaterialProperty),
 					Marker, StringComparison.Ordinal)) count++;
 			return count;
 		}
@@ -3011,10 +3142,9 @@ namespace ThousandAndFirst
 				ReconcileProjection(Operation, Z, Frame);
 				return;
 			}
-			List<Cell> cells = Z?.GetEmptyCells((Cell c) => c.X == 0 || c.X == Z.Width - 1
-				|| c.Y == 0 || c.Y == Z.Height - 1);
-			if (cells == null || cells.Count == 0) cells = Z?.GetEmptyCells();
-			if (cells == null || cells.Count == 0 || string.IsNullOrEmpty(Operation.CaravanBlueprint))
+			Cell cell;
+			if (!TryChooseProjectionCell(Z, out cell)
+				|| string.IsNullOrEmpty(Operation.CaravanBlueprint))
 			{
 				Operation.ProjectionState = KingdomTradePhysicalState.Skipped;
 				Operation.PriorCleanupState = KingdomTradePhysicalState.Skipped;
@@ -3064,7 +3194,6 @@ namespace ThousandAndFirst
 					"The frozen caravan blueprint did not create an exact projection.");
 				return;
 			}
-			Cell cell = cells[0];
 			CellWitness cellWitness;
 			if (!TryCaptureCell(cell, Z, out cellWitness)
 				|| cellWitness.Rows.Length != 0)
@@ -3098,7 +3227,15 @@ namespace ThousandAndFirst
 				Quarantine(Operation, "Caravan AddObject frame could not be frozen.");
 				return;
 			}
-			GameObject added = cell.AddObject(caravan);
+			GameObject added = null;
+			try
+			{
+				added = cell.AddObject(caravan);
+			}
+			finally
+			{
+				KingdomSurvey.ObserveAddResultInActive(Z, caravan, added);
+			}
 			if (!ExactCallbackWitness(Frame, callback)
 				|| !ExactAuthority(Frame, KingdomTradePhase.ProjectionIntent)
 				|| !ExactLoadedTopologyWithDelta(addTopology, caravan, null, null, true))
@@ -3128,6 +3265,52 @@ namespace ThousandAndFirst
 			SettlePriorProjection(Operation, Z, Frame);
 			if (Operation.Phase != KingdomTradePhase.Quarantined)
 				Operation.Phase = KingdomTradePhase.ProjectionSettled;
+		}
+
+		/// <summary>Finds one exact object-rack-empty caravan berth without allocating or
+		/// traversing Qud's full empty-cell list. Boundary cells retain first priority; a bounded
+		/// row-major interior probe is deterministic across save/resume and fails closed when the
+		/// settlement is too crowded.</summary>
+		private static bool TryChooseProjectionCell(Zone Z, out Cell Cell)
+		{
+			Cell = null;
+			if (Z == null || Z.Width <= 0 || Z.Height <= 0) return false;
+			int probes = 0;
+			for (int y = 0; y < Z.Height && probes < MaxProjectionCellProbes; y++)
+			{
+				for (int x = 0; x < Z.Width && probes < MaxProjectionCellProbes; x++)
+				{
+					if (x != 0 && x != Z.Width - 1 && y != 0 && y != Z.Height - 1)
+						continue;
+					probes++;
+					Cell candidate = Z.GetCell(x, y);
+					if (ExactEmptyProjectionCell(candidate, Z))
+					{
+						Cell = candidate;
+						return true;
+					}
+				}
+			}
+			for (int y = 1; y < Z.Height - 1 && probes < MaxProjectionCellProbes; y++)
+			{
+				for (int x = 1; x < Z.Width - 1 && probes < MaxProjectionCellProbes; x++)
+				{
+					probes++;
+					Cell candidate = Z.GetCell(x, y);
+					if (ExactEmptyProjectionCell(candidate, Z))
+					{
+						Cell = candidate;
+						return true;
+					}
+				}
+			}
+			return false;
+		}
+
+		private static bool ExactEmptyProjectionCell(Cell Cell, Zone Z)
+		{
+			return Cell != null && ReferenceEquals(Cell.ParentZone, Z)
+				&& Cell.Objects != null && Cell.Objects.Count == 0 && Cell.IsEmpty();
 		}
 
 		private static void ReconcileProjection(KingdomTradeOperation Operation, Zone Z,
@@ -3188,7 +3371,7 @@ namespace ThousandAndFirst
 			if (CountProjection(Z, Operation.PriorProjectionId) != 1)
 			{
 				Operation.PriorCleanupState = KingdomTradePhysicalState.Lost;
-				Quarantine(Operation, "Old projection identity was not globally unique.");
+				Quarantine(Operation, "Old projection identity was not unique on active settlement ground.");
 				return;
 			}
 			CellWitness oldCell;
@@ -3208,7 +3391,14 @@ namespace ThousandAndFirst
 				Quarantine(Operation, "Old projection cleanup frame could not be frozen.");
 				return;
 			}
-			old.Obliterate();
+			try
+			{
+				old.Obliterate();
+			}
+			finally
+			{
+				BoundTradeSurvey(Z)?.ObserveCurrentTopology(old);
+			}
 			if (!ExactCallbackWitness(Frame, callback)
 				|| !ExactAuthority(Frame, KingdomTradePhase.ProjectionIntent)
 				|| !ExactLoadedTopologyWithDelta(oldTopology, null, old, null, true))
@@ -3329,12 +3519,15 @@ namespace ThousandAndFirst
 
 		private static int CountProjection(Zone Z, string ProjectionId)
 		{
-			if (Z == null) return 0;
-			LoadedTopologyWitness topology = CaptureLoadedTopology();
-			if (topology == null) return int.MaxValue;
+			if (Z == null || string.IsNullOrEmpty(ProjectionId)) return 0;
+			KingdomSurvey survey = BoundTradeSurvey(Z);
+			IList<GameObject> objects;
+			if (survey == null || !survey.TryLoaded(out objects) || objects == null)
+				return int.MaxValue;
 			int count = 0;
-			for (int i = 0; i < topology.Objects.Count; i++)
-				if (string.Equals(topology.Objects[i].Object.GetStringProperty(ProjectionProperty), ProjectionId,
+			for (int i = 0; i < objects.Count; i++)
+				if (GameObject.Validate(objects[i]) && string.Equals(
+					objects[i].GetStringProperty(ProjectionProperty), ProjectionId,
 					StringComparison.Ordinal)) count++;
 			return count;
 		}
@@ -3411,6 +3604,9 @@ namespace ThousandAndFirst
 				break;
 			}
 			RefreshBookDomain(Frame);
+			// Domain state is now externally visible to outbox callbacks. Publish compatibility
+			// projection before any callback can read documented legacy API.
+			System.SynchronizeLegacyManifestProjection();
 			if (!ExactAuthority(Frame, KingdomTradePhase.DomainIntent)
 				|| !ExactPhysicalFrame(Frame, Operation, Frame.Zone))
 				return QuarantineFalse(Operation,
@@ -3591,6 +3787,9 @@ namespace ThousandAndFirst
 		private static void BuildOutbox(KingdomSystem System, KingdomTradeOperation Operation)
 		{
 			if (Operation.Outbox != null) return;
+			string realm = KingdomPresentation.Rich(System.KingdomDisplayName);
+			string origin = KingdomPresentation.Rich(Operation.OriginName);
+			string destination = KingdomPresentation.Rich(Operation.DestinationName);
 			string chronicle = null;
 			string ledger = null;
 			string message = null;
@@ -3600,39 +3799,39 @@ namespace ThousandAndFirst
 			case KingdomTradeOperationKind.CharterDelivery:
 				string faction = FactionDisplay(Operation.Faction);
 				chronicle = ((Operation.Cycles > 1) ? Operation.Cycles + " caravans of " : "a caravan of ")
-					+ faction + " came to " + System.KingdomDisplayName + " and delivered "
+					+ faction + " came to " + realm + " and delivered "
 					+ Operation.ProvedWater + " drams under charter";
 				ledger = "{{G|" + ((Operation.Cycles > 1) ? Operation.Cycles + " caravans of " : "A caravan of ")
 					+ faction + " came under charter: " + Operation.ProvedWater + " drams"
 					+ (Operation.ProvedWater < Operation.RequestedWater ? ", with the unplaced water retained by the caravan" : "")
 					+ (Operation.MaterialRequested > Operation.MaterialProved ? "; some material remained quarantined" : "") + ".}}";
 				message = "{{G|A chartered caravan of " + faction + " arrived.}}";
-				deed = "the caravans that come to " + System.KingdomDisplayName;
+				deed = "the caravans that come to " + realm;
 				break;
 			case KingdomTradeOperationKind.ManifestLoad:
-				chronicle = "the water-keepers of " + Operation.OriginName + " sent "
-					+ Operation.ProvedWater + " drams toward " + Operation.DestinationName;
-				ledger = "{{G|" + Operation.ProvedWater + " drams left " + Operation.OriginName
+				chronicle = "the water-keepers of " + origin + " sent "
+					+ Operation.ProvedWater + " drams toward " + destination;
+				ledger = "{{G|" + Operation.ProvedWater + " drams left " + origin
 					+ " under exact manifest " + Operation.ManifestId + ".}}";
 				message = "{{G|" + Operation.ProvedWater + " drams leave the stores of "
-					+ Operation.OriginName + ", bound for " + Operation.DestinationName
+					+ origin + ", bound for " + destination
 					+ ".}} The road is given " + KingdomManifestRules.ManifestWindowDays
 					+ " days; only exact proved placement can reduce its escrow.";
 				break;
 			case KingdomTradeOperationKind.ManifestDelivery:
-				chronicle = Operation.ProvedWater > 0 ? "water sent from " + Operation.OriginName
-					+ " reached " + Operation.DestinationName + ": " + Operation.ProvedWater
+				chronicle = Operation.ProvedWater > 0 ? "water sent from " + origin
+					+ " reached " + destination + ": " + Operation.ProvedWater
 					+ " drams entered its exact stores" : null;
-				ledger = Operation.ProvedWater > 0 ? "{{G|A manifest from " + Operation.OriginName
+				ledger = Operation.ProvedWater > 0 ? "{{G|A manifest from " + origin
 					+ " delivered " + Operation.ProvedWater + " drams; "
 					+ (Operation.RequestedWater - Operation.ProvedWater) + " remain in escrow.}}" : null;
 				message = Operation.ProvedWater > 0 ? "{{G|The manifest carters have arrived.}}" : null;
 				deed = Operation.ProvedWater > 0 ? "the water that reached "
-					+ Operation.DestinationName + " from " + Operation.OriginName : null;
+					+ destination + " from " + origin : null;
 				break;
 			case KingdomTradeOperationKind.ManifestTurnback:
-				chronicle = KingdomManifestRules.ManifestTurnedBackDeed(Operation.OriginName,
-					Operation.DestinationName, Operation.RequestedWater);
+				chronicle = KingdomManifestRules.ManifestTurnedBackDeed(origin,
+					destination, Operation.RequestedWater);
 				ledger = "{{y|" + chronicle + ".}}";
 				message = "{{y|The manifest turns back with all " + Operation.RequestedWater
 					+ " escrowed drams still on its carts.}}";
@@ -3799,6 +3998,181 @@ namespace ThousandAndFirst
 				&& KingdomTradeRules.SinkSettled(Outbox.DeedState);
 		}
 
+		private static bool ContinuePatternBook(KingdomSystem System,
+			KingdomTradeOperation Operation, TradeLiveFrame Frame)
+		{
+			KingdomTradePatternReceipt receipt = Operation?.Pattern;
+			if (Operation == null || Operation.Kind != KingdomTradeOperationKind.CharterDelivery
+				|| receipt == null || !KingdomTradePatternRules.Valid(receipt))
+				return QuarantineFalse(Operation,
+					"The CharterDelivery pattern receipt was missing or malformed before retirement.");
+			if (KingdomTradePatternRules.Terminal(receipt)) return true;
+
+			if (receipt.State == KingdomTradePatternState.Offered
+				|| receipt.State == KingdomTradePatternState.ChoiceIntent)
+			{
+				if (!KingdomTradePatternRules.BeginChoice(receipt)
+					|| !ExactAuthority(Frame, KingdomTradePhase.ScheduleIntent)
+					|| !ExactPhysicalFrame(Frame, Operation, Frame.Zone))
+					return QuarantineFalse(Operation,
+						"The pattern-book choice lost its exact settlement frame.");
+				CallbackWitness callback = CaptureCallbackWitness(Frame);
+				if (callback == null) return QuarantineFalse(Operation,
+					"The pattern-book choice callback could not be frozen.");
+				int pick = KingdomCeremony.PickPatternBook(receipt);
+				if (!ExactCallbackWitness(Frame, callback)
+					|| !ExactAuthority(Frame, KingdomTradePhase.ScheduleIntent)
+					|| !ExactPhysicalFrame(Frame, Operation, Frame.Zone))
+					return FailDetachedAuthority(Frame,
+						"The pattern-book UI callback changed its exact trade authority or city.");
+				if (pick < 0 || pick >= receipt.Offers.Count)
+				{
+					if (!KingdomTradePatternRules.Decline(receipt))
+						return QuarantineFalse(Operation,
+							"The pattern-book decline did not match its choice intent.");
+					return true;
+				}
+				string failure;
+				if (!KingdomTradePatternRules.TrySelect(receipt, pick,
+					Frame.KeepersRoster, KingdomPresentation.Rich(Operation.SettlementName), out failure))
+				{
+					KingdomTradePatternRules.MarkConflict(receipt, failure);
+					KingdomLog.Log("trade: pattern-book selection refused: " + failure);
+					return true;
+				}
+			}
+
+			if (receipt.State == KingdomTradePatternState.Selected
+				|| receipt.State == KingdomTradePatternState.RosterIntent)
+			{
+				KingdomTradePatternCasVerdict verdict =
+					KingdomTradePatternRules.InspectRoster(receipt, System.KeepersRoster);
+				if (verdict == KingdomTradePatternCasVerdict.ThirdValue)
+				{
+					KingdomTradePatternRules.MarkConflict(receipt,
+						"The seated city's stored roster was neither the frozen before nor after value; it was not overwritten.");
+					return true;
+				}
+				if (verdict == KingdomTradePatternCasVerdict.Invalid)
+					return QuarantineFalse(Operation,
+						"The pattern-book roster CAS evidence was malformed.");
+				if (verdict == KingdomTradePatternCasVerdict.Apply)
+				{
+					if (!KingdomTradePatternRules.MarkRosterIntent(receipt)
+						|| !ExactAuthority(Frame, KingdomTradePhase.ScheduleIntent)
+						|| !string.Equals(System.KeepersRoster ?? "", receipt.RosterBefore,
+							StringComparison.Ordinal))
+						return QuarantineFalse(Operation,
+							"The pattern-book roster changed before its exact CAS.");
+					System.KeepersRoster = receipt.RosterAfter;
+					Frame.KeepersRoster = receipt.RosterAfter;
+					if (!ExactAuthority(Frame, KingdomTradePhase.ScheduleIntent)
+						|| !string.Equals(System.City?.SettlementId, Operation.SettlementId,
+							StringComparison.Ordinal)
+						|| KingdomTradePatternRules.InspectRoster(receipt,
+							System.KeepersRoster) != KingdomTradePatternCasVerdict.AlreadyApplied)
+						return FailDetachedAuthority(Frame,
+							"The exact city-roster CAS did not publish its frozen after value.");
+				}
+				if (!KingdomTradePatternRules.MarkLearned(receipt))
+					return QuarantineFalse(Operation,
+						"The pattern-book roster proof could not settle as learned.");
+			}
+
+			if (receipt.State == KingdomTradePatternState.Learned
+				&& !DispatchPatternSinks(System, Operation, Frame,
+					KingdomTradePhase.ScheduleIntent)) return false;
+			return KingdomTradePatternRules.Terminal(receipt);
+		}
+
+		private static bool DispatchPatternSinks(KingdomSystem System,
+			KingdomTradeOperation Operation, TradeLiveFrame Frame,
+			KingdomTradePhase ExpectedPhase)
+		{
+			KingdomTradePatternReceipt receipt = Operation?.Pattern;
+			if (receipt == null || receipt.State != KingdomTradePatternState.Learned
+				|| !KingdomTradePatternRules.Valid(receipt)) return false;
+			if (receipt.ChronicleState == KingdomTradeSinkState.Pending
+				|| receipt.ChronicleState == KingdomTradeSinkState.Intent)
+			{
+				receipt.ChronicleState = KingdomTradeSinkState.Intent;
+				CallbackWitness callback = CaptureCallbackWitness(Frame);
+				if (callback == null) return false;
+				bool settled = KingdomChronicle.RecordOnce(System,
+					Operation.Id + ":pattern:chronicle", receipt.Chronicle);
+				if (!ExactCallbackWitness(Frame, callback)
+					|| !ExactAuthority(Frame, ExpectedPhase)
+					|| receipt.ChronicleState != KingdomTradeSinkState.Intent)
+					return FailDetachedAuthority(Frame,
+						"The pattern-book chronicle callback changed its exact receipt.");
+				if (!settled) return false;
+				receipt.ChronicleState = KingdomTradeSinkState.Delivered;
+			}
+			// MessageQueue has no receipt lookup. Intent on re-entry is conservatively lost,
+			// while Pending gets exactly one callback attempt in this process.
+			if (receipt.MessageState == KingdomTradeSinkState.Intent)
+				receipt.MessageState = KingdomTradeSinkState.Lost;
+			if (receipt.MessageState == KingdomTradeSinkState.Pending)
+			{
+				receipt.MessageState = KingdomTradeSinkState.Intent;
+				CallbackWitness callback = CaptureCallbackWitness(Frame);
+				if (callback == null) return false;
+				MessageQueue.AddPlayerMessage(receipt.Message);
+				if (!ExactCallbackWitness(Frame, callback)
+					|| !ExactAuthority(Frame, ExpectedPhase)
+					|| receipt.MessageState != KingdomTradeSinkState.Intent)
+					return FailDetachedAuthority(Frame,
+						"The pattern-book message callback changed its exact receipt.");
+				receipt.MessageState = KingdomTradeSinkState.Delivered;
+			}
+			return KingdomTradePatternRules.Terminal(receipt);
+		}
+
+		private static bool SettlePatternForQuarantine(KingdomSystem System,
+			KingdomTradeOperation Operation, TradeLiveFrame Frame)
+		{
+			if (Operation.Kind != KingdomTradeOperationKind.CharterDelivery) return true;
+			KingdomTradePatternReceipt receipt = Operation.Pattern;
+			if (receipt == null || !KingdomTradePatternRules.Valid(receipt))
+			{
+				Operation.Pattern = KingdomTradePatternRules.Conflict(
+					"The quarantined charter had no valid frozen pattern-book receipt.");
+				return true;
+			}
+			if (KingdomTradePatternRules.Terminal(receipt)) return true;
+			if (receipt.State == KingdomTradePatternState.Offered
+				|| receipt.State == KingdomTradePatternState.ChoiceIntent)
+			{
+				KingdomTradePatternRules.MarkConflict(receipt,
+					"The charter was quarantined before its frozen pattern-book choice settled.");
+				return true;
+			}
+			if (receipt.State == KingdomTradePatternState.Selected
+				|| receipt.State == KingdomTradePatternState.RosterIntent)
+			{
+				KingdomTradePatternCasVerdict verdict =
+					KingdomTradePatternRules.InspectRoster(receipt, System.KeepersRoster);
+				bool exactCity = string.Equals(System.City?.SettlementId,
+					Operation.SettlementId, StringComparison.Ordinal);
+				if (exactCity && verdict == KingdomTradePatternCasVerdict.AlreadyApplied)
+				{
+					if (!KingdomTradePatternRules.MarkLearned(receipt)) return false;
+				}
+				else
+				{
+					KingdomTradePatternRules.MarkConflict(receipt,
+						"The charter was quarantined before its exact city-roster CAS could be proved applied.");
+					return true;
+				}
+			}
+			if (receipt.State == KingdomTradePatternState.Learned)
+				return DispatchPatternSinks(System, Operation, Frame,
+					KingdomTradePhase.Quarantined);
+			Operation.Pattern = KingdomTradePatternRules.Conflict(
+				"The quarantined charter had an unrecognized pattern-book continuation state.");
+			return true;
+		}
+
 		private static bool SettleSchedule(KingdomTradeBook Book,
 			KingdomTradeOperation Operation, TradeLiveFrame Frame)
 		{
@@ -3907,6 +4281,7 @@ namespace ThousandAndFirst
 				Book.Manifest.Fault = Operation.Fault;
 			}
 			RefreshBookDomain(Frame);
+			System.SynchronizeLegacyManifestProjection();
 			if (Operation.Outbox == null)
 			{
 				Operation.Outbox = new KingdomTradeOutbox
@@ -3930,6 +4305,7 @@ namespace ThousandAndFirst
 					"The malformed Charter outbox was retained and no external sink was called.");
 				return;
 			}
+			if (!SettlePatternForQuarantine(System, Operation, Frame)) return;
 			DispatchOutbox(System, Operation, Frame);
 			if (!OutboxSettled(Operation.Outbox)) SettleOutboxAsLost(Operation);
 			if (Operation.Kind == KingdomTradeOperationKind.CharterDelivery)
@@ -3939,6 +4315,7 @@ namespace ThousandAndFirst
 			}
 			KingdomTradeRules.Retire(Book, Operation, KingdomTradePhase.Quarantined,
 				Now, Operation.Fault);
+			System.SynchronizeLegacyManifestProjection();
 		}
 
 		private static void SettleOutboxAsLost(KingdomTradeOperation Operation)
@@ -3986,8 +4363,10 @@ namespace ThousandAndFirst
 				: Faction.GetFormattedName(FactionName);
 		}
 
-		private static KingdomManifest LegacyManifest(KingdomTradeManifestState Manifest)
+		internal static KingdomManifest LegacyManifestSnapshot(
+			KingdomTradeManifestState Manifest)
 		{
+			if (Manifest == null) return null;
 			return new KingdomManifest
 			{
 				OriginName = Manifest.OriginName,
@@ -3999,8 +4378,34 @@ namespace ThousandAndFirst
 			};
 		}
 
-		// Compatibility helpers: only receipt-bound projection cleanup now mutates the zone.
-		public static void SpawnCaravan(Zone Z, string Blueprint) { }
-		public static void DespawnCaravans(Zone Z) { }
+		internal static KingdomManifest LegacyManifestSnapshot(KingdomManifest Manifest)
+		{
+			if (Manifest == null) return null;
+			return new KingdomManifest
+			{
+				OriginName = Manifest.OriginName,
+				DestinationName = Manifest.DestinationName,
+				Drams = Manifest.Drams,
+				LoadedTick = Manifest.LoadedTick,
+				DeadlineTick = Manifest.DeadlineTick,
+				TurnedBack = Manifest.TurnedBack
+			};
+		}
+
+		internal static bool LegacyManifestMatches(KingdomManifest Legacy,
+			KingdomTradeManifestState Authoritative)
+		{
+			if (Legacy == null || Authoritative == null)
+				return Legacy == null && Authoritative == null;
+			return string.Equals(Legacy.OriginName, Authoritative.OriginName,
+				StringComparison.Ordinal)
+				&& string.Equals(Legacy.DestinationName, Authoritative.DestinationName,
+					StringComparison.Ordinal)
+				&& Legacy.Drams == Authoritative.EscrowDrams
+				&& Legacy.LoadedTick == Authoritative.LoadedTick
+				&& Legacy.DeadlineTick == Authoritative.DeadlineTick
+				&& Legacy.TurnedBack == Authoritative.TurnedBack;
+		}
+
 	}
 }

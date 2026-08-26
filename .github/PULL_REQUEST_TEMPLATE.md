@@ -47,8 +47,10 @@ as applicable. State “not applicable” with reason; do not leave blank.
 ## Assets and provenance
 
 For any visual change, give exact vanilla tile path or glyph/color values, source/rights record,
-live readability evidence, and `Art/check_wiring.py` result. No copied/extracted game art or
-AI-generated/generative-image-assisted raster art.
+live readability evidence, and `Art/check_wiring.py` result. No copied/extracted game art.
+Generative-assisted originals must follow `docs/ASSET_PROVENANCE.md`: disclose method and lawful
+inputs, retain editable source, complete pixel-level human revision, and obtain independent native
+review. A generated draft or prompt alone is not acceptable evidence.
 
 ## Rights attestation
 

@@ -12,11 +12,11 @@
 
 Two kinds of claim appear below and they are marked differently.
 
-- **`D/…`** — the Caves of Qud decompile at
-  `/home/r/coq/qud_helper/game_base/decompiled/2.0.211.51-ilspy9.1/`, cited `file:line`. Every
+- **`D/…`** — a local decompile of the pinned Caves of Qud 2.0.211.51 assembly, cited
+  `file:line`. Its filesystem location is contributor-specific. Every
   vanilla mechanic asserted here was read there. Where a claim is *inference* from the code rather
   than a quotation, it says so.
-- **`T/…`** — this mod's own tree at `/home/r/work/thousand-and-first/`, cited `file:line`.
+- **`T/…`** — this repository root, cited `file:line`.
 
 Design proposals carry no citation because they are not claims about the world. Numbers are
 illustrative until `_notes/balance-sim.py` has run them.

@@ -1,7 +1,7 @@
 using System.Collections.Generic;
+using ThousandAndFirst.Simulation.Kernel;
 using XRL;
 using XRL.Messages;
-using XRL.Rules;
 using XRL.UI;
 using XRL.World;
 
@@ -89,15 +89,10 @@ namespace ThousandAndFirst
 		/// <param name="Candidate">A faction. Null reads as unsuitable.</param>
 		public static bool CanBeCreed(Faction Candidate)
 		{
-			if (Candidate == null || !Candidate.Visible || Candidate.HatesPlayer || string.IsNullOrEmpty(Candidate.Name))
-			{
-				return false;
-			}
-			if (Candidate.Name.StartsWith("SultanCult"))
-			{
-				return false;
-			}
-			return !Candidate.Old || Candidate.HistoricalSignificance >= CreedSignificance || Candidate.FormatWithArticle;
+			return Candidate != null && KingdomCreedContentRules.CanBeCreed(
+				new CreedFactionFacts(Candidate.Name, Candidate.Visible, Candidate.HatesPlayer,
+					Candidate.Old, Candidate.HistoricalSignificance, Candidate.FormatWithArticle),
+				CreedSignificance);
 		}
 
 		/// <summary>
@@ -202,16 +197,27 @@ namespace ThousandAndFirst
 		/// </summary>
 		/// <param name="System">The kingdom. Unfounded returns empty.</param>
 		/// <returns>A faction name, or empty for an ordinary settler.</returns>
+		[System.Obsolete("Use the event-owned counter-RNG overload.")]
 		public static string Draw(KingdomSystem System)
 		{
+			// The old signature has no event stream or ordinal. Guessing one would make a public
+			// helper capable of rerolling on retry, so it now fails closed to the ordinary creed.
+			return "";
+		}
+
+		/// <summary>Draws one creed on an already-admitted semantic event coordinate.</summary>
+		internal static bool TryDraw(KingdomSystem System, KernelSeed128 Seed,
+			SemanticEventKey Key, uint DrawIndex, out string Creed)
+		{
+			Creed = "";
 			if (!Enabled || System == null || !System.Founded)
 			{
-				return "";
+				return true;
 			}
 			List<string> candidates = Candidates(System);
 			if (candidates.Count == 0)
 			{
-				return "";
+				return true;
 			}
 			int[] weights = new int[candidates.Count];
 			for (int i = 0; i < candidates.Count; i++)
@@ -219,8 +225,14 @@ namespace ThousandAndFirst
 				System.CreedCounts.TryGetValue(candidates[i], out var here);
 				weights[i] = KingdomCreedRules.CreedWeight(System.GetStanding(candidates[i]), here, candidates[i] == System.DeclaredCreed);
 			}
-			int drawn = KingdomCreedRules.DrawCreed(weights, Stat.Random(0, KingdomCreedRules.TotalWeight(weights) - 1));
-			return (drawn < 0) ? "" : candidates[drawn];
+			int total = KingdomCreedRules.TotalWeight(weights);
+			ulong roll;
+			KernelFaultCode fault;
+			if (total <= 0 || !CounterRandom.TryDrawBelow(Seed, Key, DrawIndex,
+				(ulong)total, out roll, out fault)) return false;
+			int drawn = KingdomCreedRules.DrawCreed(weights, (int)roll);
+			Creed = drawn < 0 ? "" : candidates[drawn];
+			return true;
 		}
 
 		/// <summary>
@@ -503,7 +515,8 @@ namespace ThousandAndFirst
 			if (Secede(System, Forced: false, out var _))
 			{
 				KingdomWord.Aftermath(System, leaver, StandsInLeaver(System, Z, leaver),
-					KingdomBrinkRules.FiredNote(BrinkKind.City, leaver, ago));
+					KingdomBrinkRules.FiredNote(BrinkKind.City,
+						KingdomPresentation.Rich(leaver), ago));
 				KingdomBrink.LiftCity(System, NowTick);
 				return;
 			}
@@ -625,8 +638,8 @@ namespace ThousandAndFirst
 			KingdomGovernanceScope.Commit("hold shared rite");
 			System.Dissent = KingdomCreedRules.ApplyDissent(System.Dissent, -KingdomCreedRules.RiteEase(temper));
 			string awayName = (System.Away != null) ? System.Away.SettlementName : null;
-			KingdomChronicle.Record(System, KingdomCreedRules.RiteTelling(System.SeatName, awayName, cost));
-			Popup.Show(KingdomCreedRules.RiteNotice(Temper(System), awayName));
+			KingdomChronicle.Record(System, KingdomCreedRules.RiteTelling(KingdomPresentation.Rich(System.SeatName), KingdomPresentation.Rich(awayName), cost));
+			Popup.Show(KingdomCreedRules.RiteNotice(Temper(System), KingdomPresentation.Rich(awayName)));
 			Rearm(System);
 			return true;
 		}
@@ -694,7 +707,7 @@ namespace ThousandAndFirst
 				}
 				System.DeclaredCreed = null;
 				KingdomGovernanceScope.Commit("recant creed");
-				KingdomChronicle.Record(System, KingdomCreedRules.RecantTelling(System.KingdomDisplayName));
+				KingdomChronicle.Record(System, KingdomCreedRules.RecantTelling(KingdomPresentation.Rich(System.KingdomDisplayName)));
 				Popup.Show("You unsay it. The roads go back to carrying whoever they were carrying before, and nobody is owed an explanation.");
 				return true;
 			}
@@ -722,9 +735,15 @@ namespace ThousandAndFirst
 			if (!string.IsNullOrEmpty(slighted))
 			{
 				System.AdjustStanding(slighted, KingdomCreedRules.DeclarationStandingCost);
+				string provocation = KingdomLifecycleRules.ChildId(System.LifecycleBook.SettlementId,
+					"creed-declaration-" + The.Game.TimeTicks + "-" + slighted + "-" + CreedFactionName, 0);
+				KingdomRaids.RecordProvocation(System, slighted, "creed-declaration-slight",
+					provocation, KingdomPresentation.Rich(System.KingdomDisplayName) + " publicly declared for "
+						+ CreedName(CreedFactionName) + " over " + CreedName(slighted),
+					The.Player?.CurrentZone?.ZoneID, 1);
 				System.Dissent = KingdomCreedRules.ApplyDissent(System.Dissent, KingdomCreedRules.DeclarationShock);
 			}
-			KingdomChronicle.Record(System, KingdomCreedRules.DeclarationTelling(System.KingdomDisplayName, CreedName(CreedFactionName)));
+			KingdomChronicle.Record(System, KingdomCreedRules.DeclarationTelling(KingdomPresentation.Rich(System.KingdomDisplayName), CreedName(CreedFactionName)));
 			Popup.Show(KingdomCreedRules.DeclarationNotice(CreedName(CreedFactionName), CreedName(slighted)));
 			return true;
 		}
@@ -819,9 +838,9 @@ namespace ThousandAndFirst
 			KingdomBrink.LiftCity(System, The.Game.TimeTicks);
 			System.LastDissentTick = The.Game.TimeTicks;
 			KingdomChronicle.RecordDisputed(System,
-				KingdomCreedRules.SecessionTelling(leaverName, keptName, leaverCreed),
-				KingdomCreedRules.SecessionRumour(leaverName, KingdomChronicle.FounderName()));
-			Popup.Show(KingdomCreedRules.SecessionNotice(leaverName, keptName, leaverCreed, leaverPopulation));
+				KingdomCreedRules.SecessionTelling(KingdomPresentation.Rich(leaverName), KingdomPresentation.Rich(keptName), leaverCreed),
+				KingdomCreedRules.SecessionRumour(KingdomPresentation.Rich(leaverName), KingdomPresentation.Rich(KingdomChronicle.FounderName())));
+			Popup.Show(KingdomCreedRules.SecessionNotice(KingdomPresentation.Rich(leaverName), KingdomPresentation.Rich(keptName), leaverCreed, leaverPopulation));
 			KingdomLog.Log("secession: " + (leaverName ?? "-") + " left; realm keeps " + (keptName ?? "-"));
 			return true;
 		}
@@ -864,7 +883,7 @@ namespace ThousandAndFirst
 			string leaverName = (System.Seceded != null) ? System.Seceded.SettlementName : null;
 			if (verdict != RejoinVerdict.Allowed)
 			{
-				Refusal = KingdomCreedRules.RejoinRefusal(verdict, leaverName, CreedName(leaverCreed));
+				Refusal = KingdomCreedRules.RejoinRefusal(verdict, KingdomPresentation.Rich(leaverName), CreedName(leaverCreed));
 				return false;
 			}
 			System.Away = System.Seceded;
@@ -881,9 +900,9 @@ namespace ThousandAndFirst
 			// than a second one invented here.
 			System.TrySeat(Site);
 			KingdomChronicle.RecordDisputed(System,
-				KingdomCreedRules.RejoinTelling(leaverName),
-				KingdomCreedRules.RejoinRumour(leaverName, KingdomChronicle.FounderName()));
-			Popup.Show(KingdomCreedRules.RejoinNotice(leaverName, System.KingdomDisplayName));
+				KingdomCreedRules.RejoinTelling(KingdomPresentation.Rich(leaverName)),
+				KingdomCreedRules.RejoinRumour(KingdomPresentation.Rich(leaverName), KingdomPresentation.Rich(KingdomChronicle.FounderName())));
+			Popup.Show(KingdomCreedRules.RejoinNotice(KingdomPresentation.Rich(leaverName), KingdomPresentation.Rich(System.KingdomDisplayName)));
 			KingdomLog.Log("rejoin: " + (leaverName ?? "-") + " came back");
 			return true;
 		}
@@ -916,17 +935,17 @@ namespace ThousandAndFirst
 			}
 			if (System.Seceded != null)
 			{
-				return "{{C|" + (System.Seceded.SettlementName ?? "One of your cities") + "}} left the realm and has not come back. It is "
+				return "{{C|" + KingdomPresentation.Rich(System.Seceded.SettlementName ?? "One of your cities") + "}} left the realm and has not come back. It is "
 					+ KingdomCreedRules.CreedClause(CreedName(CreedOf(System.Seceded))) + ", and it still keeps everything it kept.\n\n"
 					+ "Stand on their ground and ask, when what split you is no longer true.";
 			}
 			if (System.SettlementCount < KingdomSettlement.MaxSettlements)
 			{
-				return "{{C|" + System.SeatName + "}} is " + KingdomCreedRules.CreedClause(CreedName(SeatCreed(System)))
+				return "{{C|" + KingdomPresentation.Rich(System.SeatName) + "}} is " + KingdomCreedRules.CreedClause(CreedName(SeatCreed(System)))
 					+ ".\n\nOne city cannot fall out with itself. Nothing here needs watching.";
 			}
-			string report = KingdomCreedRules.TemperReport(Temper(System), System.Dissent, System.SeatName,
-				(System.Away != null) ? System.Away.SettlementName : null,
+			string report = KingdomCreedRules.TemperReport(Temper(System), System.Dissent, KingdomPresentation.Rich(System.SeatName),
+				(System.Away != null) ? KingdomPresentation.Rich(System.Away.SettlementName) : null,
 				CreedName(SeatCreed(System)), CreedName(AwayCreed(System)));
 			if (!string.IsNullOrEmpty(System.DeclaredCreed))
 			{
@@ -959,6 +978,7 @@ namespace ThousandAndFirst
 				}
 			}
 			Consider(System, candidates, System.DeclaredCreed);
+			candidates.Sort(global::System.StringComparer.Ordinal);
 			return candidates;
 		}
 
@@ -990,12 +1010,12 @@ namespace ThousandAndFirst
 				return;
 			}
 			string awayName = (System.Away != null) ? System.Away.SettlementName : null;
-			string speech = KingdomCreedRules.TemperSpeech(temper, System.SeatName, awayName);
+			string speech = KingdomCreedRules.TemperSpeech(temper, KingdomPresentation.Rich(System.SeatName), KingdomPresentation.Rich(awayName));
 			if (!string.IsNullOrEmpty(speech))
 			{
 				MessageQueue.AddPlayerMessage(speech + " {{K|(Charter: how your cities hold each other)}}");
 			}
-			string entry = KingdomCreedRules.TemperChronicle(temper, System.SeatName, awayName);
+			string entry = KingdomCreedRules.TemperChronicle(temper, KingdomPresentation.Rich(System.SeatName), KingdomPresentation.Rich(awayName));
 			if (!string.IsNullOrEmpty(entry))
 			{
 				KingdomChronicle.Record(System, entry);
@@ -1117,7 +1137,7 @@ namespace ThousandAndFirst
 		private static string OtherCityName(KingdomSystem System)
 		{
 			string name = (System.Away != null) ? System.Away.SettlementName : null;
-			return string.IsNullOrEmpty(name) ? "your other city" : ("{{C|" + name + "}}");
+			return string.IsNullOrEmpty(name) ? "your other city" : ("{{C|" + KingdomPresentation.Rich(name) + "}}");
 		}
 
 		private static string SecessionRefusal(SecessionVerdict Verdict)

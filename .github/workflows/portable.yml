@@ -13,7 +13,7 @@ concurrency:
 
 jobs:
   portable-tests:
-    name: portable kernel + locator tests (${{ matrix.os }})
+    name: full pure + portable tests (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     timeout-minutes: 10
     strategy:
@@ -22,7 +22,9 @@ jobs:
         os: [ubuntu-latest, windows-latest]
     env:
       TAF_REPO_ROOT: ${{ github.workspace }}
-      NUGET_PACKAGES: ${{ runner.temp }}/taf-nuget-packages
+      # runner.temp is unavailable while GitHub parses job-level env. Keep the
+      # cache checkout-local so this workflow is valid on both matrix runners.
+      NUGET_PACKAGES: ${{ github.workspace }}/.nuget/packages
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
         with:
@@ -33,7 +35,9 @@ jobs:
       - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: ${{ env.NUGET_PACKAGES }}
-          key: ${{ runner.os }}-nuget-${{ hashFiles('DevTests/PortableTests.csproj', 'DevTests/packages.lock.json') }}
+          key: ${{ runner.os }}-nuget-${{ hashFiles('DevTests/TafTests.csproj', 'DevTests/PortableTests.csproj', 'DevTests/packages.lock.json') }}
+      - run: dotnet restore DevTests/TafTests.csproj --locked-mode
+      - run: dotnet run --project DevTests/TafTests.csproj --no-restore -v q --nologo
       - run: dotnet restore DevTests/PortableTests.csproj --locked-mode
       - run: dotnet run --project DevTests/PortableTests.csproj --no-restore -v q --nologo
 

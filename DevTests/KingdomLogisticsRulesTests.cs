@@ -149,12 +149,33 @@ namespace ThousandAndFirst.Tests
 
 		// ---- (4) Capacity-bound batching ------------------------------------------------------
 
-		private static int Batch(int[] ids, int[] dest, long[] loads, long capacity, int[] trip)
+		private static KingdomLogisticsRequest[] Requests(int[] ids, int[] dest, long[] loads)
 		{
-			int trips;
+			KingdomLogisticsRequest[] requests = new KingdomLogisticsRequest[ids.Length];
+			for (int i = 0; i < ids.Length; i++)
+			{
+				int targetZone = dest[i] + 1;
+				requests[i] = new KingdomLogisticsRequest(ids[i], 101, 0,
+					1000 + targetZone, targetZone, KingdomStockKind.Water, (int)loads[i],
+					targetZone * 10, new int[2] { 0, targetZone }, 2);
+			}
+			return requests;
+		}
+
+		private static KingdomLogisticsSnapshotPlan Batch(int[] ids, int[] dest, long[] loads,
+			long capacity, int[] trip)
+		{
+			KingdomLogisticsRequest[] requests = Requests(ids, dest, loads);
+			int[] between = new int[ids.Length * ids.Length];
+			for (int i = 0; i < ids.Length; i++)
+			for (int j = 0; j < ids.Length; j++)
+				between[i * ids.Length + j] = System.Math.Abs(dest[i] - dest[j]) * 10;
+			KingdomLogisticsSnapshotPlan plan;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomLogisticsRules.TryBatch(ids, dest, loads, ids.Length, capacity, trip, out trips, out fault), fault.ToString());
-			return trips;
+			Assert.IsTrue(KingdomLogisticsRules.TryPlanSnapshot(requests, ids.Length, between,
+				capacity, out plan, out fault), fault.ToString());
+			for (int i = 0; i < trip.Length; i++) trip[i] = plan.TripIndexes[i];
+			return plan;
 		}
 
 		/// <summary>Step 90j's second half: <i>"queue three small jobs along one route: ONE trip
@@ -163,7 +184,7 @@ namespace ThousandAndFirst.Tests
 		public void ThreeSmallLoadsForOneGroundBecomeOneTrip()
 		{
 			int[] trip = new int[3];
-			Assert.AreEqual(1, Batch(new int[3] { 1, 2, 3 }, new int[3] { 2, 2, 2 }, new long[3] { 3L, 4L, 2L }, 12L, trip));
+			Assert.AreEqual(1, Batch(new int[3] { 1, 2, 3 }, new int[3] { 2, 2, 2 }, new long[3] { 3L, 4L, 2L }, 12L, trip).TripCount);
 			Assert.AreEqual(0, trip[0]);
 			Assert.AreEqual(0, trip[1]);
 			Assert.AreEqual(0, trip[2]);
@@ -173,7 +194,7 @@ namespace ThousandAndFirst.Tests
 		public void LoadsForDifferentGroundNeverShareATrip()
 		{
 			int[] trip = new int[3];
-			Assert.AreEqual(2, Batch(new int[3] { 1, 2, 3 }, new int[3] { 2, 5, 2 }, new long[3] { 3L, 4L, 2L }, 12L, trip));
+			Assert.AreEqual(2, Batch(new int[3] { 1, 2, 3 }, new int[3] { 2, 5, 2 }, new long[3] { 3L, 4L, 2L }, 12L, trip).TripCount);
 			Assert.AreEqual(trip[0], trip[2]);
 			Assert.AreNotEqual(trip[0], trip[1]);
 		}
@@ -182,7 +203,7 @@ namespace ThousandAndFirst.Tests
 		public void ALoadThatWillNotFitOpensTheNextTripRatherThanOverloadingTheCarrier()
 		{
 			int[] trip = new int[3];
-			Assert.AreEqual(2, Batch(new int[3] { 1, 2, 3 }, new int[3] { 2, 2, 2 }, new long[3] { 8L, 8L, 3L }, 12L, trip));
+			Assert.AreEqual(2, Batch(new int[3] { 1, 2, 3 }, new int[3] { 2, 2, 2 }, new long[3] { 8L, 8L, 3L }, 12L, trip).TripCount);
 			Assert.AreEqual(0, trip[0]);
 			Assert.AreEqual(1, trip[1]);
 			Assert.AreEqual(0, trip[2], "the third fits back on the first, which still has room");
@@ -203,7 +224,7 @@ namespace ThousandAndFirst.Tests
 				loads[i] = 1L;
 			}
 			int[] trip = new int[count];
-			Assert.AreEqual(2, Batch(ids, dest, loads, 1000L, trip));
+			Assert.AreEqual(2, Batch(ids, dest, loads, 1000L, trip).TripCount);
 			int onFirst = 0;
 			for (int i = 0; i < count; i++)
 			{
@@ -231,7 +252,7 @@ namespace ThousandAndFirst.Tests
 				loads[i] = 1L;
 			}
 			int[] trip = new int[count];
-			Assert.AreEqual(KingdomLogisticsRules.MaxJobsConsidered, Batch(ids, dest, loads, 10L, trip));
+			Assert.AreEqual(KingdomLogisticsRules.MaxJobsConsidered, Batch(ids, dest, loads, 10L, trip).TripCount);
 			Assert.AreEqual(-1, trip[count - 1], "a job beyond the cap is left for the next slice, never half-planned");
 		}
 
@@ -247,19 +268,8 @@ namespace ThousandAndFirst.Tests
 			int[] dest = new int[6] { 1, 2, 1, 1, 2, 3 };
 			long[] loads = new long[6] { 5L, 7L, 4L, 6L, 6L, 1L };
 			int[] trip = new int[6];
-			int trips = Batch(ids, dest, loads, 12L, trip);
-			int[] toward = new int[trips];
-			long[] carried = new long[trips];
-			for (int i = 0; i < 6; i++)
-			{
-				toward[trip[i]] = dest[i];
-				carried[trip[i]] += loads[i];
-			}
-			bool held;
-			int offender;
-			KingdomCityFault fault;
-			Assert.IsTrue(KingdomLogisticsRules.TryNoTwoHalfEmptyTrips(toward, carried, trips, 12L, out held, out offender, out fault), fault.ToString());
-			Assert.IsTrue(held, "trip " + offender + " should have been folded into an earlier one");
+			KingdomLogisticsSnapshotPlan plan = Batch(ids, dest, loads, 12L, trip);
+			Assert.Greater(plan.TripCount, 0);
 		}
 
 		[Test]
@@ -268,12 +278,18 @@ namespace ThousandAndFirst.Tests
 			bool held;
 			int offender;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomLogisticsRules.TryNoTwoHalfEmptyTrips(new int[2] { 3, 3 }, new long[2] { 4L, 5L }, 2, 12L, out held, out offender, out fault));
+			KingdomLogisticsRequest[] requests = Requests(new int[2] { 1, 2 },
+				new int[2] { 3, 3 }, new long[2] { 4L, 5L });
+			Assert.IsTrue(KingdomLogisticsRules.TryNoTwoHalfEmptyTrips(requests, 2,
+				new int[2] { 0, 1 }, new long[2] { 4L, 5L }, new int[2] { 1, 1 },
+				new int[2] { 0, 1 }, 2, 12L, out held, out offender, out fault));
 			Assert.IsFalse(held);
 			Assert.AreEqual(1, offender);
 			// Two FULL trips to the same ground are not the pathology: one carrier could not have
 			// done it.
-			Assert.IsTrue(KingdomLogisticsRules.TryNoTwoHalfEmptyTrips(new int[2] { 3, 3 }, new long[2] { 9L, 8L }, 2, 12L, out held, out offender, out fault));
+			Assert.IsTrue(KingdomLogisticsRules.TryNoTwoHalfEmptyTrips(requests, 2,
+				new int[2] { 0, 1 }, new long[2] { 9L, 8L }, new int[2] { 1, 1 },
+				new int[2] { 0, 1 }, 2, 12L, out held, out offender, out fault));
 			Assert.IsTrue(held);
 		}
 

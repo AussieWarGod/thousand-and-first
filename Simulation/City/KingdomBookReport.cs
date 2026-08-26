@@ -45,11 +45,11 @@ namespace ThousandAndFirst.Simulation.City
 				{
 					// STANDARDS §7b. An unreadable book is a fault the founder must be told about
 					// plainly, and never one that degrades into a page of zeroes.
-					Popup.Show("{{r|The book of " + System.SeatName + " cannot be read.}}\n\nNothing has been lost — the city goes on keeping itself — but nothing about it can be shown until the book reads again. The log names the fault.");
+					Popup.Show("{{r|The book of " + KingdomPresentation.Rich(System.SeatName) + " cannot be read.}}\n\nNothing has been lost — the city goes on keeping itself — but nothing about it can be shown until the book reads again. The log names the fault.");
 					return;
 				}
 				int num = Popup.PickOption(
-					Title: "The book of " + System.SeatName,
+					Title: "The book of " + KingdomPresentation.Rich(System.SeatName),
 					Intro: Headline(System, reading),
 					Options: new string[6]
 					{
@@ -68,14 +68,17 @@ namespace ThousandAndFirst.Simulation.City
 				switch (num)
 				{
 				case 0:
-					Popup.Show(KingdomBookRules.Stores(reading, GroundName));
+					Popup.Show(KingdomBookRules.Stores(reading, GroundName,
+						KingdomPresentation.Rich));
 					break;
 				case 1:
-					Popup.Show(KingdomBookRules.Works(reading, KingdomAsks.DisplayNameOf, GroundName));
+					Popup.Show(KingdomBookRules.Works(reading, KingdomAsks.DisplayNameOf,
+						GroundName, KingdomPresentation.Rich));
 					break;
 				case 2:
 					Popup.Show(KingdomBookRules.Roll(reading,
-						KingdomOfficeRules.ChooseTitle(System.SeatName), KingdomNotables.HolderName(System))
+						KingdomOfficeRules.ChooseTitle(System.SeatName),
+						KingdomNotables.HolderName(System), KingdomPresentation.Rich)
 						+ Rite(System));
 					break;
 				case 3:
@@ -104,7 +107,8 @@ namespace ThousandAndFirst.Simulation.City
 				KingdomCityFault fault;
 				if (System.City != null && System.City.TryRead(out state, out fault))
 				{
-					reading = KingdomReadingRules.Project(System.SeatName, state);
+					reading = KingdomReadingRules.Project(KingdomPresentation.Rich(System.SeatName), state,
+						System.City.ExtensionModel);
 				}
 			});
 			return reading;
@@ -157,7 +161,7 @@ namespace ThousandAndFirst.Simulation.City
 				string dish = (System.DishName ?? "").Trim();
 				builder.Append(string.IsNullOrEmpty(dish)
 					? "\n{{K|The kitchens have not settled on what the city is known for yet.}}"
-					: ("\n{{K|" + System.SeatName + " keeps it with " + dish + ".}}"));
+					: ("\n{{K|" + KingdomPresentation.Rich(System.SeatName) + " keeps it with " + dish + ".}}"));
 				builder.Append("\n{{K|Stand in the city on the day and you will hear it kept; be elsewhere and you will read about it.}}");
 			}
 			int rung = Rung(System);
@@ -240,7 +244,7 @@ namespace ThousandAndFirst.Simulation.City
 			}
 			long now = (The.Game == null) ? 0L : The.Game.TimeTicks;
 			StringBuilder builder = new StringBuilder();
-			builder.Append("The last ").Append(state.ToldCount).Append(" things ").Append(System.SeatName).Append(" remembers:");
+			builder.Append("The last ").Append(state.ToldCount).Append(" things ").Append(KingdomPresentation.Rich(System.SeatName)).Append(" remembers:");
 			for (int kind = 0; kind < counts.Length; kind++)
 			{
 				string line = KingdomHappeningRules.ToldLine((KingdomToldKind)kind, counts[kind]);

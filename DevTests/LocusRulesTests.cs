@@ -244,6 +244,105 @@ namespace ThousandAndFirst.Tests
 			Assert.AreEqual(KingdomLocusRules.GuestLedgerNote("Aeru"), KingdomLocusRules.GuestLedgerNote("Aeru", -5));
 			StringAssert.Contains("a day before you saw it", KingdomLocusRules.GuestLedgerNote("Aeru", 1));
 		}
+
+		// ---- Pilgrims of the told story: typed cause, one opportunity, one heart ----
+
+		[Test]
+		public void ThreeQualifyingStoriesMintExactlyOneCausalOpportunity()
+		{
+			KingdomLocusRules.PilgrimAccrual one = KingdomLocusRules.AccruePilgrim(
+				0, KingdomLocusRules.PilgrimState.None);
+			Assert.AreEqual(1, one.Loudness);
+			Assert.AreEqual(KingdomLocusRules.PilgrimState.None, one.State);
+			Assert.IsFalse(one.Minted);
+
+			KingdomLocusRules.PilgrimAccrual two = KingdomLocusRules.AccruePilgrim(
+				one.Loudness, one.State);
+			Assert.AreEqual(2, two.Loudness);
+			Assert.IsFalse(two.Minted);
+
+			KingdomLocusRules.PilgrimAccrual three = KingdomLocusRules.AccruePilgrim(
+				two.Loudness, two.State);
+			Assert.AreEqual(0, three.Loudness);
+			Assert.AreEqual(KingdomLocusRules.PilgrimState.Waiting, three.State);
+			Assert.IsTrue(three.Minted);
+		}
+
+		[TestCase(KingdomLocusRules.PilgrimState.Waiting)]
+		[TestCase(KingdomLocusRules.PilgrimState.Standing)]
+		public void AnOpenPilgrimIsNeverOverwrittenByLaterHistory(
+			KingdomLocusRules.PilgrimState state)
+		{
+			KingdomLocusRules.PilgrimAccrual result = KingdomLocusRules.AccruePilgrim(2, state);
+			Assert.AreEqual(state, result.State);
+			Assert.AreEqual(2, result.Loudness);
+			Assert.IsFalse(result.Minted);
+		}
+
+		[Test]
+		public void PilgrimWindowHasTravelThenOneExactPatienceSpan()
+		{
+			long cause = 5000L;
+			Assert.IsTrue(KingdomLocusRules.TryPilgrimWindow(cause,
+				out long arrival, out long depart));
+			Assert.AreEqual(cause + KingdomLocusRules.PilgrimTravelTicks, arrival);
+			Assert.AreEqual(arrival + KingdomLocusRules.GuestPatienceTicks, depart);
+			Assert.IsFalse(KingdomLocusRules.TryPilgrimWindow(0L, out _, out _));
+			Assert.IsFalse(KingdomLocusRules.TryPilgrimWindow(long.MaxValue, out _, out _));
+		}
+
+		[Test]
+		public void PilgrimCauseIsNamedBoundedAndSafeForOneLine()
+		{
+			string cause = KingdomLocusRules.PilgrimCause("Ides\nof Nivvun Ut", "Tamsketh",
+				new string('q', KingdomLocusRules.MaxPilgrimCauseChars * 2));
+			StringAssert.Contains("Ides of Nivvun Ut", cause);
+			StringAssert.Contains("Tamsketh", cause);
+			Assert.LessOrEqual(cause.Length, KingdomLocusRules.MaxPilgrimCauseChars);
+			Assert.IsFalse(cause.Contains("\n"));
+			Assert.IsNull(KingdomLocusRules.PilgrimCause(null, "Tamsketh", "starapple"));
+		}
+
+		[Test]
+		public void PilgrimTellingCarriesTheFrozenCauseAndOutcome()
+		{
+			string cause = "the Ides feast kept at Tamsketh over starapple jam";
+			string greeted = KingdomLocusRules.PilgrimChronicleLine("Aeru", "Tamsketh",
+				cause, true);
+			string missed = KingdomLocusRules.PilgrimChronicleLine("Aeru", "Tamsketh",
+				cause, false);
+			StringAssert.Contains("Aeru", greeted);
+			StringAssert.Contains(cause, greeted);
+			StringAssert.Contains("given water", greeted);
+			StringAssert.Contains("unmet", missed);
+			Assert.AreNotEqual(greeted, missed);
+		}
+
+		[Test]
+		public void ProductionPilgrimIsCausalAndHeartBoundNotAGenericRoll()
+		{
+			string populations = TestMain.ReadRepositoryText("PopulationTables.xml");
+			StringAssert.DoesNotContain("Blueprint=\"r_KingdomGuestPilgrim\"", populations);
+
+			string happenings = TestMain.ReadRepositoryText(
+				"Simulation/City/KingdomHappenings.cs");
+			StringAssert.Contains("RecordDisputed", happenings);
+			StringAssert.Contains("KingdomLocusRules.PilgrimCause", happenings);
+			string physical = TestMain.ReadRepositoryText(
+				"Simulation/City/KingdomPhysicalHappenings.cs");
+			StringAssert.Contains("KingdomHappenings.AccruePilgrim", physical);
+			StringAssert.Contains("BeginUninspectable(book, operation.EventId, SinkLane.Effect",
+				physical);
+
+			string locus = TestMain.ReadRepositoryText("Experience/KingdomLocus.cs");
+			StringAssert.Contains("RunPilgrimPass", locus);
+			StringAssert.Contains("KingdomPlots.TryRiteGround", locus);
+			StringAssert.Contains("HeartArrivalCell", locus);
+			StringAssert.Contains("KingdomGuestLifecycle.PublishSpawn", locus);
+			StringAssert.Contains("KingdomGuestLifecycle.PublishMissedCausal", locus);
+			StringAssert.Contains("KingdomGuestLifecycle.PublishOfferWater", locus);
+			StringAssert.DoesNotContain("GetEmptyCells", locus);
+		}
 	}
 }
 #endif

@@ -134,6 +134,10 @@ namespace ThousandAndFirst
 		/// <summary>Blueprint of the marker a clearance order stands as.</summary>
 		public const string ClearanceStakeBlueprint = "r_KingdomClearanceStake";
 
+		/// <summary>Property-backed ground-yield commit phase: 0 unsent, 1 callback pending,
+		/// 2 settled. Kept off the shipped serialized part so old saves retain field layout.</summary>
+		public const string ClearanceGroundPhaseProperty = "KingdomClearanceGroundPhase";
+
 		/// <summary>
 		/// Item blueprints the settlement stores each material as, indexed by
 		/// <see cref="KingdomMaterial"/>. Scrap is vanilla's own <c>Scrap Metal</c>, because scrap
@@ -377,8 +381,10 @@ namespace ThousandAndFirst
 			return _empty;
 		}
 
-		/// <summary>What improving a work into the design named by Key costs in material. Never
-		/// null.</summary>
+		/// <summary>What improving the standing design named by Key into its declared successor
+		/// costs in material. The price belongs to the transition source, because two different
+		/// predecessors may reach the same successor without retaining the same fabric. Never null.
+		/// </summary>
 		public static KingdomMaterialTally UpgradeCostFor(string Key)
 		{
 			KingdomData.EnsureBuildings();
@@ -417,7 +423,7 @@ namespace ThousandAndFirst
 			{
 				return 0;
 			}
-			foreach (GameObject item in Z.GetObjects())
+			foreach (GameObject item in KingdomSurvey.ObjectsFor(Z))
 			{
 				if (IsStockpile(item))
 				{
@@ -627,6 +633,7 @@ namespace ThousandAndFirst
 					// Snapshot first: destroying an item below removes it from this same
 					// Inventory list, and mutating a collection mid-foreach throws.
 					List<GameObject> held = new List<GameObject>(container.Inventory.Objects);
+					bool changed = false;
 					for (int j = 0; j < held.Count && remaining > 0; j++)
 					{
 						GameObject item = held[j];
@@ -642,14 +649,21 @@ namespace ThousandAndFirst
 						while (remaining > 0 && GameObject.Validate(item))
 						{
 							int before = item.Count;
-							item.Destroy(null, Silent: true);
+							try { item.Destroy(null, Silent: true); }
+							catch
+							{
+								KingdomSurvey.ObserveCurrentTopologyInActive(Zone, container);
+								throw;
+							}
 							if (GameObject.Validate(item) && item.Count >= before)
 							{
 								break;
 							}
+							changed = true;
 							remaining--;
 						}
 					}
+					if (changed) KingdomSurvey.ObserveChangedInActive(Zone, container);
 				}
 				int taken = Units - remaining;
 				Tally.Add(Material, -taken);
@@ -766,12 +780,28 @@ namespace ThousandAndFirst
 					}
 					if (container != null)
 					{
-						container.Inventory.AddObject(item);
+						GameObject accepted = null;
+						try { accepted = container.Inventory.AddObject(item); }
+						catch
+						{
+							KingdomSurvey.ObserveCurrentTopologyInActive(Zone, container);
+							KingdomSurvey.ObserveAddResultInActive(Zone, item, accepted);
+							throw;
+						}
+						KingdomSurvey.ObserveChangedInActive(Zone, container);
+						KingdomSurvey.ObserveAddResultInActive(Zone, item, accepted);
 						placed += batch;
 					}
 					else if (Fallback != null)
 					{
-						Fallback.AddObject(item);
+						GameObject accepted;
+						try { accepted = Fallback.AddObject(item); }
+						catch
+						{
+							KingdomSurvey.ObserveAddResultInActive(Zone, item, null);
+							throw;
+						}
+						KingdomSurvey.ObserveAddResultInActive(Zone, item, accepted);
 						spilled += batch;
 					}
 					else
@@ -812,8 +842,11 @@ namespace ThousandAndFirst
 				return stock;
 			}
 			stock.Zone = Z;
-			foreach (GameObject item in Z.GetObjects())
+			KingdomSurvey survey = KingdomSurvey.ActiveFor(Z) ?? KingdomSurvey.Take(Z);
+			List<GameObject> candidates = survey.MaterialStockpiles;
+			for (int i = 0; i < candidates.Count; i++)
 			{
+				GameObject item = candidates[i];
 				if (!IsStockpile(item) || item.Inventory == null)
 				{
 					continue;
@@ -898,7 +931,7 @@ namespace ThousandAndFirst
 				return false;
 			}
 			Container.SetIntProperty(StockpileProperty, 1);
-			MessageQueue.AddPlayerMessage("The " + Container.ShortDisplayName + " is a stockpile of " + System.SeatName + " now. What is in it is counted, and still yours.");
+			MessageQueue.AddPlayerMessage("The " + Container.ShortDisplayName + " is a stockpile of " + KingdomPresentation.Rich(System.SeatName) + " now. What is in it is counted, and still yours.");
 			KingdomLog.Log("materials: stockpile dedicated at " + System.SeatName);
 			return true;
 		}
@@ -940,6 +973,15 @@ namespace ThousandAndFirst
 			return KingdomMaterialDebit.Reserve(Stock(Z), Cost);
 		}
 
+		/// <summary>Reserves an arbitrary outstanding claim while requiring the same exact object
+		/// named by its durable operation receipt. Used only where the route already froze identity;
+		/// it never chooses a same-kind replacement.</summary>
+		public static KingdomMaterialDebit ReserveCompositeWithRequiredItem(Zone Z,
+			KingdomMaterialDebitCost Cost, GameObject RequiredItem)
+		{
+			return KingdomMaterialDebit.Reserve(Stock(Z), Cost, RequiredItem);
+		}
+
 		/// <summary>Read-only exact reservation of a catalogue design's full composite price.</summary>
 		public static KingdomMaterialDebit ReservePayment(Zone Z, string Key)
 		{
@@ -948,14 +990,49 @@ namespace ThousandAndFirst
 		}
 
 		/// <summary>
+		/// Read-only exact reservation that requires one particular delivered consignment object to
+		/// answer the design's ordinary material price. The item is not an extra token cost: it is
+		/// one physically produced unit already present in that price.
+		/// </summary>
+		public static KingdomMaterialDebit ReservePaymentWithRequiredItem(Zone Z, string Key,
+			GameObject RequiredItem)
+		{
+			return KingdomMaterialDebit.Reserve(Stock(Z), new KingdomMaterialDebitCost(
+				CostFor(Key), BitCostFor(Key), ExoticCostFor(Key)), RequiredItem);
+		}
+
+		/// <summary>
 		/// Read-only exact reservation of an improvement's registered price. The present catalogue
 		/// authors upgrade material separately and declares no upgrade-only bit or exotic attributes,
 		/// so those two lanes are empty until that data contract is extended explicitly.
 		/// </summary>
-		public static KingdomMaterialDebit ReserveUpgradePayment(Zone Z, string SuccessorKey)
+		public static KingdomMaterialDebit ReserveUpgradePayment(Zone Z, string PredecessorKey)
 		{
 			return ReserveComposite(Z, new KingdomMaterialDebitCost(
-				UpgradeCostFor(SuccessorKey), null, null));
+				UpgradeCostFor(PredecessorKey), null, null));
+		}
+
+		/// <summary>Read-only exact reservation of one authored same-set transition price.</summary>
+		public static KingdomMaterialDebit ReserveTransitionPayment(Zone Z,
+			KingdomMaterialTally Materials)
+		{
+			return ReserveComposite(Z, new KingdomMaterialDebitCost(Materials, null, null));
+		}
+
+		/// <summary>Whether dedicated stockpiles cover one authored same-set transition.</summary>
+		public static bool CanPayTransition(Zone Z, KingdomMaterialTally Cost,
+			out string Failure)
+		{
+			Failure = null;
+			KingdomMaterialTally cost = Cost ?? new KingdomMaterialTally();
+			if (cost.IsEmpty()) return true;
+			MaterialStock stock = Stock(Z);
+			if (KingdomMaterialRules.Covers(stock.Tally, cost)) return true;
+			string missing = KingdomMaterialRules.Missing(stock.Tally, cost).Describe();
+			Failure = "The change wants {{C|" + cost.Describe()
+				+ "}}, and the stockpiles are short "
+				+ (missing == null ? "of it" : "{{C|" + missing + "}}") + ".";
+			return false;
 		}
 
 		/// <summary>Read-only exact reservation of an arbitrary bit price, including a lab record.</summary>
@@ -1068,8 +1145,11 @@ namespace ThousandAndFirst
 			bool[] standing = new bool[KingdomMaterialRules.YardCount];
 			bool[] staffed = new bool[KingdomMaterialRules.YardCount];
 			bool[] headed = new bool[KingdomMaterialRules.YardCount];
-			foreach (GameObject item in Z.GetObjects())
+			KingdomSurvey survey = KingdomSurvey.ActiveFor(Z) ?? KingdomSurvey.Take(Z);
+			List<GameObject> candidates = survey.Built;
+			for (int i = 0; i < candidates.Count; i++)
 			{
+				GameObject item = candidates[i];
 				if (item.GetIntProperty("KingdomBuilt") != 1)
 				{
 					continue;
@@ -1146,13 +1226,14 @@ namespace ThousandAndFirst
 		/// at the moment <see cref="PayUpgrade"/> would have taken the cost.
 		/// </summary>
 		/// <param name="Z">Ground the work stands on.</param>
-		/// <param name="SuccessorKey">Registry key of the design it would become.</param>
+		/// <param name="PredecessorKey">Registry key of the standing design whose transition is
+		/// being paid.</param>
 		/// <param name="Missing">What the stockpiles are short of, or null when they cover it.
 		/// </param>
-		public static bool CanPayUpgrade(Zone Z, string SuccessorKey, out string Missing)
+		public static bool CanPayUpgrade(Zone Z, string PredecessorKey, out string Missing)
 		{
 			Missing = null;
-			KingdomMaterialTally cost = UpgradeCostFor(SuccessorKey);
+			KingdomMaterialTally cost = UpgradeCostFor(PredecessorKey);
 			if (cost.IsEmpty())
 			{
 				return true;
@@ -1172,14 +1253,14 @@ namespace ThousandAndFirst
 		/// reason goes in the ledger where the homecoming report will read it out. STANDARDS 7b.
 		/// </summary>
 		/// <returns>True only for an exact receipt. Partial outcomes are named in the ledger.</returns>
-		public static bool PayUpgrade(KingdomSystem System, Zone Z, string SuccessorKey)
+		public static bool PayUpgrade(KingdomSystem System, Zone Z, string PredecessorKey)
 		{
-			KingdomMaterialTally cost = UpgradeCostFor(SuccessorKey);
+			KingdomMaterialTally cost = UpgradeCostFor(PredecessorKey);
 			if (cost.IsEmpty())
 			{
 				return true;
 			}
-			KingdomMaterialDebit debit = ReserveUpgradePayment(Z, SuccessorKey);
+			KingdomMaterialDebit debit = ReserveUpgradePayment(Z, PredecessorKey);
 			KingdomMaterialDebitResult result = debit.Commit();
 			if (result.Exact)
 			{
@@ -1346,8 +1427,11 @@ namespace ThousandAndFirst
 				Failure = assessment.Refusal;
 				return false;
 			}
-			foreach (GameObject item in Z.GetObjects())
+			KingdomSurvey survey = KingdomSurvey.ActiveFor(Z) ?? KingdomSurvey.Take(Z);
+			List<GameObject> candidates = survey.Clearances;
+			for (int i = 0; i < candidates.Count; i++)
 			{
+				GameObject item = candidates[i];
 				r_KingdomClearance existing = item.GetPart<r_KingdomClearance>();
 				if (existing != null && Overlaps(existing, X1, Y1, X2, Y2))
 				{
@@ -1382,17 +1466,20 @@ namespace ThousandAndFirst
 			order.EffortLeft = assessment.Effort;
 			order.LastWorkedTick = The.Game.TimeTicks;
 			stake.DisplayName = "ground ordered cleared";
-			cell.AddObject(stake);
+			GameObject accepted = cell.AddObject(stake);
+			KingdomSurvey.ObserveAddResultInActive(Z, stake, accepted);
 			stake.MakeActive();
 			if (stake.CurrentCell != cell)
 			{
-				stake.Obliterate(null, Silent: true);
+				bool removed = stake.Obliterate(null, Silent: true);
+				if (removed || !GameObject.Validate(stake))
+					KingdomSurvey.ObserveRemovedFromActive(Z, stake);
 				Failure = "The stake could not be driven.";
 				return false;
 			}
 			KingdomGovernanceScope.Commit("clear ground");
 			string yield = assessment.Yield.Describe();
-			KingdomChronicle.Record(System, System.KingdomDisplayName + " set its people to clearing " + assessment.Cells + " paces of ground");
+			KingdomChronicle.Record(System, KingdomPresentation.Rich(System.KingdomDisplayName) + " set its people to clearing " + assessment.Cells + " paces of ground");
 			int days = KingdomMaterialRules.DaysForOneHand(assessment.Effort);
 			MessageQueue.AddPlayerMessage("{{G|The ground is staked for clearing.}} " + assessment.Cells + " paces, "
 				+ days + ((days == 1) ? " day" : " days") + " of work for a single pair of hands"
@@ -1542,9 +1629,42 @@ namespace ThousandAndFirst
 				Updated = carried;
 				return true;
 			}
+			bool architectureMarker = Building.HasIntProperty(
+				KingdomArchitectureRuntime.SchemaProperty)
+				|| Building.HasStringProperty(KingdomArchitectureRuntime.SchemaProperty);
+			if (architectureMarker)
+			{
+				KingdomArchitectureIntent authored;
+				if (!KingdomArchitectureRuntime.TryRead(Building, out authored, out Failure))
+					return false;
+				if (KingdomArchitectureRules.IsCurrentSnapshotEncoding(authored.EncodedSnapshot)
+					&& (!KingdomArchitectureStamper.TryPreflightStrike(Building, Z, out Failure)
+						|| !KingdomDelveLink.TryPreflightStrike(Building, Z, out Failure))) return false;
+			}
 			string key = Building.GetStringProperty(KingdomUpgrade.BuildKeyProperty);
-			KingdomMaterialTally cost = CostFor(key);
-			int drams = (KingdomData.TryGetBuilding(key, out var entry) ? entry.CostDrams : 0);
+			KingdomMaterialTally cost;
+			int drams;
+			int paidSchema = Building.GetIntProperty(
+				KingdomConstruction.PaidBuildSchemaProperty);
+			if (paidSchema == 0)
+			{
+				// Explicit compatibility lane for a standing work raised before paid receipts.
+				// New work never enters here; its own frozen bill is authoritative below.
+				cost = CostFor(key);
+				drams = KingdomData.TryGetBuilding(key, out var entry) ? entry.CostDrams : 0;
+			}
+			else if (paidSchema != KingdomConstruction.PaidBuildSchema
+				|| !KingdomConstruction.TryReadPaidBuild(Building,
+					out KingdomPaidBuildReceipt paid))
+			{
+				Failure = "That building's paid construction receipt cannot be read; it was left standing.";
+				return false;
+			}
+			else
+			{
+				cost = paid.Material.Materials;
+				drams = paid.Water;
+			}
 			int effort = KingdomMaterialRules.StrikeEffort(cost.Total(), drams);
 			KingdomMaterialTally salvageTally = KingdomMaterialRules.StrikeSalvage(cost);
 			if (salvageTally.Total() > 4096)
@@ -1554,7 +1674,7 @@ namespace ThousandAndFirst
 			}
 			KingdomStrikeIntent intent = new KingdomStrikeIntent
 			{
-				DisplayName = Building.ShortDisplayName,
+				DisplayName = Building.BaseDisplayNameStripped,
 				BuildKey = key,
 				TargetDisplayName = activeStrike
 					&& carried.Route == KingdomConstructionRoute.SocketConvert
@@ -1565,7 +1685,24 @@ namespace ThousandAndFirst
 				Targets = new List<KingdomStrikeTarget>(),
 				X1 = -1, Y1 = -1, X2 = -1, Y2 = -1
 			};
-			if (KingdomPlots.TryReadRect(Building, out KingdomPlotRules.PlotRect plotRect))
+			bool gatehouseMarker = Building.HasIntProperty(KingdomGatehouse.SchemaProperty)
+				|| Building.HasStringProperty(KingdomGatehouse.SchemaProperty);
+			if (gatehouseMarker)
+			{
+				// A gatehouse reserves a rectangle for overlap, but remains a typed network,
+				// never a plot. Freeze its six exact owned stone/timber outputs while HasPlot
+				// stays false; Socket therefore cannot mint a cleared-plot successor.
+				if (!KingdomGatehouse.TryFreezeStrikeTargets(Building, Z,
+					out KingdomGatehousePlan gatePlan,
+					out List<KingdomStrikeTarget> gateTargets, out Failure)) return false;
+				intent.X1 = gatePlan.X1;
+				intent.Y1 = gatePlan.Y1;
+				intent.X2 = gatePlan.X2;
+				intent.Y2 = gatePlan.Y2;
+				intent.PlotId = Building.ID; // bounded v2 field is the typed network owner ID
+				intent.Targets = gateTargets;
+			}
+			else if (KingdomPlots.TryReadRect(Building, out KingdomPlotRules.PlotRect plotRect))
 			{
 				intent.HasPlot = true;
 				intent.X1 = plotRect.X1;
@@ -1632,7 +1769,7 @@ namespace ThousandAndFirst
 			if (Announce)
 			{
 				string salvage = salvageTally.Describe();
-				KingdomChronicle.Record(System, "the " + Building.ShortDisplayName + " of " + System.KingdomDisplayName + " was condemned, and the crew set to taking it down");
+				KingdomChronicle.Record(System, "the " + Building.ShortDisplayName + " of " + KingdomPresentation.Rich(System.KingdomDisplayName) + " was condemned, and the crew set to taking it down");
 				int days = KingdomMaterialRules.DaysForOneHand(effort);
 				MessageQueue.AddPlayerMessage("{{W|The " + Building.ShortDisplayName + " is condemned.}} The crew will take it down over "
 					+ days + ((days == 1) ? " day" : " days") + " of work for a single pair of hands"
@@ -1732,9 +1869,10 @@ namespace ThousandAndFirst
 		/// </summary>
 		/// <param name="System">The kingdom. Does nothing when unfounded.</param>
 		/// <param name="Z">The activated ground. Does nothing when it is not the kingdom's.</param>
-		public static void OnSettlementPass(KingdomSystem System, Zone Z)
+		public static void OnSettlementPass(KingdomSystem System, Zone Z, KingdomSurvey Survey)
 		{
-			if (!Enabled || System == null || !System.Founded || Z == null || !System.ClaimedZones.Contains(Z.ZoneID))
+			if (!Enabled || System == null || !System.Founded || Z == null || Survey == null
+				|| !System.ClaimedZones.Contains(Z.ZoneID))
 			{
 				return;
 			}
@@ -1746,34 +1884,32 @@ namespace ThousandAndFirst
 			List<GameObject> yards = new List<GameObject>();
 			List<int> strength = new List<int>();
 			List<int> intelligence = new List<int>();
-			foreach (GameObject item in Z.GetObjects())
+			for (int i = 0; i < Survey.Built.Count; i++)
 			{
+				GameObject item = Survey.Built[i];
 				if (strike == null && (item.GetIntProperty(StrikeEffortProperty) > 0
 					|| HasActiveStrikeReceipt(System, Z, item)))
 				{
 					strike = item;
 				}
-				if (stake == null)
-				{
-					r_KingdomClearance order = item.GetPart<r_KingdomClearance>();
-					if (order != null)
-					{
-						stake = order;
-						stakeObject = item;
-					}
-				}
 				if (item.GetIntProperty("KingdomBuilt") == 1 && TryRefineryOf(item.GetStringProperty(KingdomUpgrade.BuildKeyProperty), out _))
 				{
 					yards.Add(item);
 				}
-				else if (item.GetIntProperty("KingdomBorn") == 1 && !item.IsPlayer())
-				{
-					// Who the settlement's people actually are. Read, never assigned: the founder
-					// does not pick who stands in the yard, and a city of strong backs dresses
-					// stone faster than a city of scribes whether anybody planned it that way.
-					strength.Add(StatOf(item, "Strength"));
-					intelligence.Add(StatOf(item, "Intelligence"));
-				}
+			}
+			if (Survey.Clearances.Count > 0)
+			{
+				stakeObject = Survey.Clearances[0];
+				stake = stakeObject?.GetPart<r_KingdomClearance>();
+			}
+			for (int i = 0; i < Survey.Settlers.Count; i++)
+			{
+				GameObject item = Survey.Settlers[i];
+				// Who the settlement's people actually are. Read, never assigned: the founder
+				// does not pick who stands in the yard, and a city of strong backs dresses
+				// stone faster than a city of scribes whether anybody planned it that way.
+				strength.Add(StatOf(item, "Strength"));
+				intelligence.Add(StatOf(item, "Intelligence"));
 			}
 			// The yards first and unconditionally: they are staffed works, and the staffing pass
 			// spent their crews before this ran. Refining takes no hand the clearing gang was ever
@@ -1908,7 +2044,7 @@ namespace ThousandAndFirst
 				if (Yard.GetIntProperty(said) != 1)
 				{
 					Yard.SetIntProperty(said, 1);
-					System.Ledger.Note("{{r|" + KingdomMaterialRules.YardStallLine(stall, kind, System.SeatName) + "}}");
+					System.Ledger.Note("{{r|" + KingdomMaterialRules.YardStallLine(stall, kind, KingdomPresentation.Rich(System.SeatName)) + "}}");
 				}
 				return;
 			}
@@ -1971,9 +2107,10 @@ namespace ThousandAndFirst
 			if (Yard.GetIntProperty(RefineOpenedProperty) != 1)
 			{
 				Yard.SetIntProperty(RefineOpenedProperty, 1);
-				KingdomChronicle.Record(System, "the " + KingdomMaterialRules.YardName(kind) + " of " + System.KingdomDisplayName
+				string realm = KingdomPresentation.Rich(System.KingdomDisplayName);
+				KingdomChronicle.Record(System, "the " + KingdomMaterialRules.YardName(kind) + " of " + realm
 					+ " ran for the first time, and " + madeLine + " came off it");
-				System.RecordDeed("the first work off the " + KingdomMaterialRules.YardName(kind) + " at " + System.KingdomDisplayName);
+				System.RecordDeed("the first work off the " + KingdomMaterialRules.YardName(kind) + " at " + realm);
 				MessageQueue.AddPlayerMessage("{{G|The " + KingdomMaterialRules.YardName(kind) + " is working.}} The first "
 					+ madeLine + " is stacked where anyone walking past can see it, and the crew is "
 					+ KingdomMaterialRules.CapabilityWord(capability) + " at the work.");
@@ -2158,6 +2295,15 @@ namespace ThousandAndFirst
 						if (Job.PhysicalPhase != KingdomPhysicalPhase.StrikeWorkComplete) return;
 						continue;
 					}
+					if (!KingdomDelveLink.TryFinishStrike(Building, Z,
+						out string linkFailure))
+					{
+						if (!string.IsNullOrEmpty(Building.GetStringProperty(
+							KingdomDelveLink.FaultProperty)))
+							QuarantineStrike(Job, linkFailure);
+						else KingdomLog.Log("delve link: strike waits: " + linkFailure);
+						return;
+					}
 					RemoveStrikePredecessor(Z, Building, ref Job);
 					if (Job.PhysicalPhase != KingdomPhysicalPhase.PredecessorRemoved) return;
 				}
@@ -2229,7 +2375,10 @@ namespace ThousandAndFirst
 				Failure = "The frozen strike target index is invalid.";
 				return false;
 			}
-			if (!Intent.HasPlot)
+			bool networkStrike = KingdomGatehouseRules.IsNetworkStrike(Intent.BuildKey,
+				Intent.HasPlot, Intent.X1, Intent.Y1, Intent.X2, Intent.Y2,
+				Intent.PlotId, Intent.Targets.Count);
+			if (!Intent.HasPlot && !networkStrike)
 			{
 				if (Intent.Targets.Count == 0 && Index == 0) return true;
 				Failure = "A non-plot strike carries plot-part targets.";
@@ -2249,24 +2398,38 @@ namespace ThousandAndFirst
 					}
 					continue;
 				}
+				bool exactTarget = networkStrike
+					? KingdomGatehouse.IsOwnedSatellite(exact, Intent.PlotId,
+						target.Blueprint, target.X, target.Y, Z)
+					: GameObject.Validate(exact) && exact.ID != SourceId
+						&& exact.CurrentZone == Z
+						&& exact.CurrentCell == Z.GetCell(target.X, target.Y)
+						&& exact.Blueprint == target.Blueprint
+						&& exact.GetIntProperty(KingdomPlots.PlotPartProperty) == 1
+						&& exact.GetStringProperty(KingdomPlots.PlotIdProperty) == Intent.PlotId;
 				if (!remaining.Add(target.Id) || !GameObject.Validate(exact)
 					|| exact.ID == SourceId || exact.CurrentZone != Z
 					|| exact.CurrentCell != Z.GetCell(target.X, target.Y)
 					|| exact.Blueprint != target.Blueprint
-					|| exact.GetIntProperty(KingdomPlots.PlotPartProperty) != 1
-					|| exact.GetStringProperty(KingdomPlots.PlotIdProperty) != Intent.PlotId)
+					|| !exactTarget)
 				{
 					Failure = "A frozen strike target was removed, moved, replaced, or changed.";
 					return false;
 				}
 				if (i == Index) Current = exact;
 			}
-			foreach (GameObject item in Z.GetObjects())
+			KingdomSurvey survey = KingdomSurvey.ActiveFor(Z) ?? KingdomSurvey.Take(Z);
+			List<GameObject> candidates = networkStrike
+				? survey.GatehouseSatellites : survey.PlotParts;
+			for (int i = 0; i < candidates.Count; i++)
 			{
-				if (GameObject.Validate(item) && item.ID != SourceId
-					&& item.GetIntProperty(KingdomPlots.PlotPartProperty) == 1
-					&& item.GetStringProperty(KingdomPlots.PlotIdProperty) == Intent.PlotId
-					&& !remaining.Contains(item.ID))
+				GameObject item = candidates[i];
+				bool owned = networkStrike
+					? KingdomGatehouse.IsOwnedSatellite(item, Intent.PlotId)
+					: GameObject.Validate(item) && item.ID != SourceId
+						&& item.GetIntProperty(KingdomPlots.PlotPartProperty) == 1
+						&& item.GetStringProperty(KingdomPlots.PlotIdProperty) == Intent.PlotId;
+				if (owned && !remaining.Contains(item.ID))
 				{
 					Failure = "A new or replacement plot part entered the frozen strike footprint.";
 					return false;
@@ -2278,9 +2441,22 @@ namespace ThousandAndFirst
 		private static void RemoveStrikePlotPart(Zone Z, KingdomStrikeIntent Intent,
 			GameObject Part, ref KingdomConstructionJob Job)
 		{
-			if (!GameObject.Validate(Part) || Part.CurrentZone != Z || Part.ID == Job.SourceId
-				|| Part.GetIntProperty(KingdomPlots.PlotPartProperty) != 1
-				|| Part.GetStringProperty(KingdomPlots.PlotIdProperty) != Intent.PlotId
+			KingdomStrikeTarget frozen = Intent != null && Intent.Targets != null
+				&& Job.PhysicalIndex >= 0 && Job.PhysicalIndex < Intent.Targets.Count
+				? Intent.Targets[Job.PhysicalIndex] : null;
+			bool networkStrike = KingdomGatehouseRules.IsNetworkStrike(Intent.BuildKey,
+				Intent.HasPlot, Intent.X1, Intent.Y1, Intent.X2, Intent.Y2,
+				Intent.PlotId, Intent.Targets.Count);
+			bool owned = networkStrike
+				? KingdomGatehouse.IsOwnedSatellite(Part, Intent.PlotId)
+				: GameObject.Validate(Part)
+					&& Part.GetIntProperty(KingdomPlots.PlotPartProperty) == 1
+					&& Part.GetStringProperty(KingdomPlots.PlotIdProperty) == Intent.PlotId;
+			if (frozen == null || !GameObject.Validate(Part) || Part.ID != frozen.Id
+				|| Part.Blueprint != frozen.Blueprint
+				|| Part.CurrentCell != Z.GetCell(frozen.X, frozen.Y)
+				|| Part.CurrentZone != Z || Part.ID == Job.SourceId
+				|| !owned
 				|| !ReferenceEquals(ExactObject(Part.ID), Part))
 			{
 				QuarantineStrike(Job, "A plot part changed before exact removal intent published.");
@@ -2294,9 +2470,12 @@ namespace ThousandAndFirst
 			try { removed = Part.Obliterate(null, Silent: true); }
 			catch (Exception ex)
 			{
+				KingdomSurvey.ObserveCurrentTopologyInActive(Z, Part);
 				QuarantineStrike(Job, "Plot-part removal threw: " + ex.Message);
 				return;
 			}
+			if (removed || !GameObject.Validate(Part))
+				KingdomSurvey.ObserveRemovedFromActive(Z, Part);
 			if (!removed || GameObject.Validate(Part) || ExactObject(id) != null)
 			{
 				QuarantineStrike(Job, "Plot-part removal was vetoed, moved, or replaced.");
@@ -2326,9 +2505,12 @@ namespace ThousandAndFirst
 			try { removed = source.Obliterate(null, Silent: true); }
 			catch (Exception ex)
 			{
+				KingdomSurvey.ObserveCurrentTopologyInActive(Z, source);
 				QuarantineStrike(Job, "Strike predecessor removal threw: " + ex.Message);
 				return;
 			}
+			if (removed || !GameObject.Validate(source))
+				KingdomSurvey.ObserveRemovedFromActive(Z, source);
 			if (!removed || GameObject.Validate(source) || ExactObject(Job.SourceId) != null)
 			{
 				QuarantineStrike(Job, "Strike predecessor removal was vetoed, moved, or replaced.");
@@ -2402,11 +2584,24 @@ namespace ThousandAndFirst
 			}
 			try
 			{
-				if (destination != null) destination.Inventory.AddObject(item, null, Silent: true);
-				else Z.GetCell(Job.X, Job.Y)?.AddObject(item);
+				if (destination != null)
+				{
+					GameObject accepted = destination.Inventory.AddObject(item, null, Silent: true);
+					KingdomSurvey.ObserveChangedInActive(Z, destination);
+					KingdomSurvey.ObserveAddResultInActive(Z, item, accepted);
+				}
+				else
+				{
+					GameObject accepted = Z.GetCell(Job.X, Job.Y)?.AddObject(item);
+					KingdomSurvey.ObserveAddResultInActive(Z, item, accepted);
+				}
 			}
 			catch (Exception ex)
 			{
+				if (destination != null)
+					KingdomSurvey.ObserveChangedInActive(Z, destination);
+				else if (GameObject.Validate(item) && item.CurrentZone == Z)
+					KingdomSurvey.ObserveChangedInActive(Z, item);
 				QuarantineStrike(Job, "Strike salvage insertion threw: " + ex.Message);
 				return false;
 			}
@@ -2469,29 +2664,33 @@ namespace ThousandAndFirst
 				if (KingdomMaterialDebitCost.TryParseClaim(Intent.SalvageClaim,
 					out KingdomMaterialDebitCost salvage)) returned = salvage.Materials.Describe();
 				string target = Intent.TargetDisplayName ?? Job.TargetKey ?? "the new work";
+				string standing = KingdomPresentation.Rich(Intent.DisplayName);
+				string realm = KingdomPresentation.Rich(System.KingdomDisplayName);
+				string newWork = KingdomPresentation.Rich(XRL.Language.Grammar.A(target));
 				KingdomConstructionOutbox box = new KingdomConstructionOutbox
 				{
 					EventId = "construction:" + Job.Id + ":strike",
 					Mode = converted ? 2 : 1,
 					Chronicle = converted
-						? "the " + Intent.DisplayName + " of " + System.KingdomDisplayName
-							+ " came down, and " + XRL.Language.Grammar.A(target)
+						? "the " + standing + " of " + realm
+							+ " came down, and " + newWork
 							+ " rose on its ground"
-						: "the " + Intent.DisplayName + " of " + System.KingdomDisplayName
+						: "the " + standing + " of " + realm
 							+ " was struck, and the crew stood in the gap where it had been",
 					ChronicleState = KingdomConstructionSinkDisposition.Pending,
 					LedgerState = KingdomConstructionSinkDisposition.Skipped,
 					Message = converted
-						? "{{W|The " + Intent.DisplayName + " comes down,}} {{G|and the ground is already rising into "
-							+ XRL.Language.Grammar.A(target) + ".}}"
-						: "{{W|The " + Intent.DisplayName + " comes down.}} "
+						? "{{W|The " + standing
+							+ " comes down,}} {{G|and the ground is already rising into "
+							+ newWork + ".}}"
+						: "{{W|The " + standing + " comes down.}} "
 							+ (returned == null ? "Nothing of it was worth keeping."
 								: returned + " is carried to the stockpiles.")
 							+ (Job.PhysicalSpilled > 0
 								? " Some of it went on the ground for want of a stockpile." : ""),
 					MessageState = KingdomConstructionSinkDisposition.Pending,
-					Deed = converted ? null : "the striking of the " + Intent.DisplayName
-						+ " at " + System.KingdomDisplayName,
+					Deed = converted ? null : "the striking of the " + standing
+						+ " at " + realm,
 					DeedState = converted ? KingdomConstructionSinkDisposition.Skipped
 						: KingdomConstructionSinkDisposition.Pending
 				};
@@ -2541,7 +2740,7 @@ namespace ThousandAndFirst
 				if (!Order.NoHandsAnnounced)
 				{
 					Order.NoHandsAnnounced = true;
-					System.Ledger.Note("{{r|Ground stands staked for clearing at " + System.SeatName + ", and there is nobody free to swing at it. Stand a settler down off the water or a work.}}");
+					System.Ledger.Note("{{r|Ground stands staked for clearing at " + KingdomPresentation.Rich(System.SeatName) + ", and there is nobody free to swing at it. Stand a settler down off the water or a work.}}");
 				}
 				Order.LastWorkedTick = KingdomRules.AdvanceCheckpoint(Order.LastWorkedTick, TimeTicks);
 				return;
@@ -2570,9 +2769,10 @@ namespace ThousandAndFirst
 				}
 				return;
 			}
-			Order.BlockedAnnounced = false;
 			KingdomMaterialTally yield = new KingdomMaterialTally();
 			int removed = 0;
+			bool vetoed = false;
+			string vetoedName = null;
 			for (int y = Order.Y1; y <= Order.Y2; y++)
 			{
 				for (int x = Order.X1; x <= Order.X2; x++)
@@ -2582,7 +2782,7 @@ namespace ThousandAndFirst
 					{
 						continue;
 					}
-					List<GameObject> standing = cell.GetObjects();
+					List<GameObject> standing = new List<GameObject>(cell.GetObjects());
 					for (int i = 0; i < standing.Count; i++)
 					{
 						GameObject item = standing[i];
@@ -2590,20 +2790,81 @@ namespace ThousandAndFirst
 						{
 							continue;
 						}
-						yield.Add(KingdomMaterialRules.YieldMaterial(kind), KingdomMaterialRules.YieldUnits(kind));
-						item.Obliterate();
-						removed++;
+						bool gone = false;
+						try { gone = item.Obliterate(null, Silent: true); }
+						catch { }
+						if (gone || !GameObject.Validate(item))
+						{
+							KingdomSurvey.ObserveRemovedFromActive(Z, item);
+							yield.Add(KingdomMaterialRules.YieldMaterial(kind),
+								KingdomMaterialRules.YieldUnits(kind));
+							removed++;
+						}
+						else
+						{
+							vetoed = true;
+							vetoedName = item.ShortDisplayNameStripped;
+						}
 					}
 				}
 			}
-			yield.Add(KingdomMaterial.Mud, KingdomMaterialRules.GroundMud(assessment.Cells));
 			Cell stakeCell = StakeObject.CurrentCell;
 			MaterialStock stock = Stock(Z);
 			int spilled = stock.PutAll(yield, stakeCell);
-			StakeObject.Obliterate();
+			if (vetoed)
+			{
+				if (!Order.BlockedAnnounced)
+				{
+					Order.BlockedAnnounced = true;
+					System.Ledger.Note("{{r|The " + (vetoedName ?? "ground")
+						+ " refused the clearing callback. " + removed
+						+ (removed == 1 ? " removable thing was" : " removable things were")
+						+ " honestly returned; the stake waits on the remainder.}}");
+				}
+				return;
+			}
+			int groundPhase = StakeObject.GetIntProperty(ClearanceGroundPhaseProperty);
+			if (groundPhase == 1)
+			{
+				Order.BlockedAnnounced = true;
+				System.Ledger.Note("{{r|The clearance ground-yield callback was interrupted. The stake is held for inspection rather than issuing mud twice.}}");
+				return;
+			}
+			if (groundPhase != 0 && groundPhase != 2)
+			{
+				Order.BlockedAnnounced = true;
+				System.Ledger.Note("{{r|The clearance ground-yield receipt is malformed. The stake is held for inspection.}}");
+				return;
+			}
+			if (groundPhase == 0)
+			{
+				int mud = KingdomMaterialRules.GroundMud(assessment.Cells);
+				StakeObject.SetIntProperty(ClearanceGroundPhaseProperty, 1);
+				yield.Add(KingdomMaterial.Mud, mud);
+				try { spilled += stock.Put(KingdomMaterial.Mud, mud, stakeCell); }
+				catch
+				{
+					Order.BlockedAnnounced = true;
+					System.Ledger.Note("{{r|The clearance ground-yield callback threw. The stake is held for inspection rather than issuing mud twice.}}");
+					return;
+				}
+				StakeObject.SetIntProperty(ClearanceGroundPhaseProperty, 2);
+			}
+			bool stakeRemoved;
+			try { stakeRemoved = StakeObject.Obliterate(null, Silent: true); }
+			finally { KingdomSurvey.ObserveCurrentTopologyInActive(Z, StakeObject); }
+			if (stakeRemoved || !GameObject.Validate(StakeObject))
+				KingdomSurvey.ObserveRemovedFromActive(Z, StakeObject);
+			if (!stakeRemoved || GameObject.Validate(StakeObject))
+			{
+				Order.BlockedAnnounced = true;
+				System.Ledger.Note("{{r|The cleared ground remains marked because its stake refused removal. No ground yield will be issued again.}}");
+				return;
+			}
 			string carried = yield.Describe();
-			KingdomChronicle.Record(System, assessment.Cells + " paces of ground were cleared at " + System.KingdomDisplayName + ", and " + ((carried == null) ? "nothing came of it but turned earth" : ("the settlement was the richer by " + carried)));
-			System.RecordDeed("the ground cleared at " + System.KingdomDisplayName);
+			string realm = KingdomPresentation.Rich(System.KingdomDisplayName);
+			KingdomChronicle.Record(System, assessment.Cells + " paces of ground were cleared at " + realm + ", and " + ((carried == null) ? "nothing came of it but turned earth" : ("the settlement was the richer by " + carried)));
+			System.RecordDeed("the ground cleared at " + realm);
 			MessageQueue.AddPlayerMessage("{{G|The ground is clear.}} " + removed + ((removed == 1) ? " thing came down" : " things came down")
 				+ ((carried == null) ? "." : (", and " + carried + " went to the stockpiles."))
 				+ ((spilled > 0) ? " Some of it lies on the ground for want of a stockpile." : ""));
@@ -2808,7 +3069,11 @@ namespace ThousandAndFirst
 		/// <param name="Z">The ground whose stockpiles are read. Null reads as empty.</param>
 		public static KingdomMaterial WallMaterialFor(KingdomSystem System, Zone Z)
 		{
-			return KingdomMaterialRules.WallMaterialFor(Stock(Z).Tally, (System != null) ? System.Style : null);
+			KingdomMaterial preferred = KingdomMaterial.Mud;
+			bool hasPreference = System != null
+				&& KingdomData.TryStyleWallMaterial(System.Style, out preferred);
+			return KingdomMaterialRules.WallMaterialFor(Stock(Z).Tally,
+				hasPreference, preferred);
 		}
 
 		/// <summary>
@@ -2841,15 +3106,7 @@ namespace ThousandAndFirst
 			case KingdomMaterial.Scrap:
 				return "Verdigris";
 			case KingdomMaterial.Timber:
-				if (Style == "fungal")
-				{
-					return "MushroomWall-White";
-				}
-				if (Style == "verdant")
-				{
-					return "PlantWall";
-				}
-				return "BrinestalkWall";
+				return KingdomData.TimberWallForStyle(Style);
 			case KingdomMaterial.Brush:
 				return "CanvasWall";
 			default:

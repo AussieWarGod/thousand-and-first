@@ -4,15 +4,121 @@ All notable changes to The Thousand and First. Versions are semantic: patch for 
 minor for additive API and content, major for breaking changes. Supported API is defined in
 [docs/API.md](docs/API.md).
 
-## [Unreleased] — 0.2.0 release candidate
+## [Unreleased] — 0.2.0 work in progress
 
-Automated live smoke on 2026-08-25 against Qud 1.0.5/core 2.0.211.51 founded two cities in a
-fresh world, saved and cold-loaded twice, moved the seat between them, passed all 17 in-game
-self-checks, and produced clean mod logs. Runtime code under test was
-`99133f6a1b24f3be652903e16576ddd7bb929230`. Full human playtesting and a private Steam
-subscription/install pass remain before public release.
+An earlier revision passed a narrow two-city loader/persistence smoke against Qud 1.0.5/core
+2.0.211.51. The implementation has materially changed since that receipt. It is historical
+evidence only, not evidence for this working tree. Full human playtesting, current-revision native
+receipts, compatibility testing, and a private Steam subscription/install pass remain gates before
+any release-candidate claim is restored.
 
 ### Fixed
+- **Paid construction now freezes its gameplay truth before the first debit.** Registry v4 stores
+  authenticated plot/frontier classification and final defence for commission, plan, plot,
+  conversion, and improvement routes; retry and reload never recompute them from a changed
+  catalogue or current player skills. Explicit v1-v3 readers retain old compact proofs. Exact
+  already-projected legacy work resumes from durable object marks, while unreconstructable
+  unprojected work quarantines before another charge or destructive strike.
+- **Master resume now consumes deferred inheritance without another load.** A successful load is
+  retained in one overwrite-only named-field slot before the master gate. Re-enable gives the
+  transition wake precedence, then the first safe turn retires and attempts that exact slot once;
+  save/reload, repeated wakes, and malformed legacy kinds cannot queue or duplicate it.
+- **Native architecture loading now agrees with the static gate.** The independent checker mirrors
+  the canonical a2 binary codec for every tier/variant and reports the measured maximum; all 516
+  variants fit the bounded 8 KiB payload envelope, including the five dense XL designs previously
+  rejected only after Qud loaded them. Defence is now an effect distinct from frontier siting:
+  defensive plotted creed buildings retain and raise their complete authored lots, count once,
+  and contribute base defence, while only unplotted perimeter works are cap-exempt and receive
+  ground/knowledge wall bonuses.
+- **Published extension state is now owner-exact, independently durable, and failure-isolated.**
+  Registration derives owners from immutable manifest IDs and refuses every mod in a bounded-slug
+  collision instead of letting load order transfer rows or draw streams. Each v1 happening source
+  owns a bounded manifest/assembly/type cursor, receives zero on its actual first logical call, and
+  cannot move or replay another source's window; v12 seeds already-running v11 sources from their
+  retained aggregate receipt instead of replaying them from zero. API-v3
+  callback results pass an individual final-size transaction, so one oversized owner cannot roll
+  back host-completed jobs or a preceding owner's accepted state. Current sidecar bound includes
+  exact headroom for all generation receipts appended by wire v2, so every valid 16 KiB v1 carrier
+  remains rewritable. Terminal job keys are explicitly bounded receipts and may never be recycled
+  after retirement.
+- **The checkout runner now executes the seven non-public lifecycle cases it formerly omitted.**
+  Discovery covers attributed public/non-public instance/static and task-returning methods, reports
+  discovered/selected totals, fails unsupported parameterized tests, and fails when a filter
+  selects nothing. The canonical release runner rejects ambient filters and runs locked restores
+  plus both the full and portable suites.
+- **Addendum 9 structural debt is now an executable release blocker instead of a stale census.**
+  `Tools/check-structure.py` reads the exact staged production C# inventory, reports strict
+  under-300 line debt and direct engine-coupling signals during incremental CI, and fails release
+  on any file at or over 300. Because line counts cannot prove ownership or dependency quality,
+  release also requires no-exception human evidence for one responsibility and protocols at
+  boundaries, bound to the exact source digest. The first three ownership-focused batches split
+  public behavior contracts, distance/container records, gatehouse/water-debit declarations, and
+  the registry-office runtime without changing public or serialized type identity. Current
+  308-file census remains red at 181 over-limit files; this is not an enterprise-grade or v1.0
+  claim.
+- **One due settlement pass now owns one maintained zone survey.** `KingdomSurvey` publishes
+  named indexes for resident bodies, bindings, transients, plots, plot parts, architecture
+  components, gatehouse satellites, delve endpoints, furnishings, heart relics, material
+  stockpiles, construction, layout, crops, networks, lab jobs, and visual roots, and observes
+  committed additions/removals. Residents, construction presence, lab, networks, roads, crops,
+  upgrades, visual state, and porters consume the bound index instead of hiding another whole-zone
+  walk. Duplicate physical/semantic identity fails closed. Nine focused survey source-contract
+  cases pass; the final integrated pure/source suite passes 7,586 / 7,586 cases. Dense native scan
+  instrumentation remains a release gate.
+- **Documentation now separates current evidence from historical attack material.** Public status,
+  architecture/API/testing/release guides, engineering standards, changelog, private acceptance
+  ledgers, decision/question/session/coordination records, and research indexes agree on the latest
+  static evidence and unsigned native/human gates. Historical audits retain dated findings but are
+  explicitly non-current.
+- **The v1 polity/world-presence scope is now explicit without turning brainstorming into a
+  commitment.** Existing inherited ruins/history, grievance-first raids, bounded named/unnamed
+  bodies, caravans, and conserved two-city manifests remain `SHIP` at their actual runtime
+  boundary. Successor polities, one legacy rival, diplomats/emissaries, generalized visible
+  traffic, and polity clashes are positive `AUTHOR-DEFERRED` targets with reopening/evidence
+  owners. Exact old-actor continuation, automatic ideological war, persistent unloaded actors,
+  offscreen conquest/loss, and mass world simulation remain `REJECTED`.
+- **The realm master option is now a reversible, backlog-free pause.** Automatic system wakes,
+  independently ticking civic parts, and public trade/petition/growth/guest/research producers gate
+  before scans, delegates, RNG, prompts, or mutation. Disable preserves state; resume consumes its
+  edge first, applies one durable token, re-anchors city/module/object clocks, and leaves committed
+  recovery readable. Campfire, bookshelf, torchpost, and hookah placements now route through
+  stable civic wrappers that retain vanilla art/function while removing destructive merge-added
+  lifetime, push/mirror, pickup, random orientation, free contents, dice, and tinkering behavior.
+- **Dense-city catch-up now prices physical containers instead of stock-kind proxies.** A surveyed
+  debt spanning 252 vessels is 252 medium units, ordered visible-first then by stored dedication
+  and stable id, and one turn may use all eight units across that same kind. Debt and budget clear
+  only after measured deltas; blocked/callback-failed quantities survive save/reload, and food
+  landing no longer duplicates harvest-loss effects. Plot furnishings no longer multiply one
+  commission into up to 64 civic accounts; legacy marks are released without moving contents or
+  clearing debt. Live worst derives 220 root containers + 24 water + 8 food manual dedications +
+  sixty bodies = 312 units = 39 turns inside Qud's forty-turn grace; receipts report exact demand.
+- **Guests now use the lifecycle authority that already serialized their lanes.** Plain traffic,
+  notable traffic, and caused pilgrims publish projection/removal, dedicated water, roster/domain,
+  named sinks, and schedule receipts before mutation and retire last. Open work resumes while its
+  option is disabled; re-enable restamps instead of inventing disabled-time backlog; foreign seats
+  cannot spend the receipt. Pilgrims carry exact cause/name/place/sequence in the PlainGuest
+  operation, and malformed legacy evidence is retained under quarantine. Legendary lodging also
+  freezes and rechecks the exact vacant fine house and merchant tier, with an idempotent body/roster
+  receipt across interruption.
+- **Plot conversion now obeys typed-lot identity.** Explicit same-set plan changes keep the exact
+  lot, rectangle, pose, and architecture-owned fabric while charging only their declared delta;
+  undeclared changes are absent from the picker and refuse before debit through the direct seam.
+  Twenty-four directional early-housing routes now cover tent/tent-row into each style's permanent
+  hut/yard at every actual size, with retained-material bills below fresh rebuild and no guessed
+  reverse. Same-set, fresh-site retype, cleared-socket build, and founder-forced held improvement
+  now preview one exact frozen production map and actual economics before confirmation; commit
+  reproves that same intent instead of resolving a variant twice, and cancel is mutation-free. A
+  true type/size change freezes an ordinary fresh site, strikes the predecessor, and raises a newly
+  identified lot there instead of reusing the old rect.
+- **The city model no longer forgets every work after the fortieth.** Its work-row bound now
+  prices the full four-zone City envelope (`4 × 220 = 880`) and the model/save budgets and
+  worst-case receipts scale with that live bound. The superseded flat `MaxBuildings` constant,
+  flat cohabitation floor/judges, and pre-merge `TryAddSkin` helper are compile-error obsolete
+  binary adapters only; live code uses stage caps, the closeness ladder, and keyed skin merge.
+- **Every public XML registry now has an explicit schema boundary.** Buildings, deals, yard works,
+  research, procedures, and raid profiles ship `Schema="1"`; unversioned pre-boundary files remain
+  readable, while malformed or future-schema streams are rejected whole before any child can
+  half-register. Pure and source tests pin both the compatibility matrix and all six loaders.
 - **Founding and reload now preserve one exact realm identity.** First-founding carry state uses
   Qud's composite byte-array framing, lifecycle recovery is fail-closed and idempotent, and ruin
   receipts prevent replay from crediting the same world object twice. Fresh-save, resume, and
@@ -21,11 +127,13 @@ subscription/install pass remain before public release.
   a paired operation behind one barrier; water intent precedes drain; site and global reservations
   reconcile in a fixed order; and partial, stale, or foreign pending state cannot manufacture a
   city. Cut-point and competing-founder tests cover both routes and cleanup orders.
-- **Release art now uses only verified vanilla references or deliberate civic glyphs.** Fifteen
-  pre-release bitmap drafts and their grid compiler are absent from the runtime tree; no game art
-  is copied into the mod. The staged XML audit now checks every tile and animation frame against
-  the installed base corpus, rejects local raster paths, and prevents `BaseFarmer.RandomTile`
-  from silently replacing fixed settler and guest silhouettes.
+- **Current release art uses verified vanilla references or deliberate civic glyphs, with an
+  enforceable original-art route.** Fifteen poor pre-release bitmap drafts and their grid compiler
+  are absent from the runtime tree; no game art is copied into the mod. The staged XML audit checks
+  every vanilla tile and animation frame against the installed base corpus, while
+  `Art/runtime-assets.json` makes any original runtime raster an exact rights/source/fallback/hash
+  allowlist with bidirectional wiring and package checks. This also prevents
+  `BaseFarmer.RandomTile` from silently replacing fixed settler and guest silhouettes.
 - **New worlds no longer silently import a prior kingdom.** Cross-run realm import now defaults
   off, and its option says it must be enabled before world creation. Off exits before any legacy
   reservation and writes no decline, so latest eligible seal remains available for a later opted-in
@@ -41,8 +149,98 @@ subscription/install pass remain before public release.
   a stratum now); lodging assignment, the upgrade absorption read, and the settling notable's
   shade-taste all thread the ground through. Surface behaviour is unchanged, and the test
   that would have caught the defect lands with the fix.
+- **Every offered plot size now has an exact authored realization.** The merged catalogue currently
+  contains 126 plotted plans over 499 inspectable authored maps; generated larger-lot data adds
+  337 concrete maps, 242 exact bindings, and 277 predecessor tiers. Larger stakes retain
+  the authored footprint and expose the remainder as yard. The picker filters against the exact
+  typed map index, the loader/checker census every reachable pair, and road-facing entrances now
+  reach exterior road evidence in all four poses. Civic-heart rungs remain rite-owned growth and
+  no longer leak into the commission list.
+- **Architecture identity now uses identity facts, not faction-name proxies.** Hindren housing
+  selects from live `GetCulture()`/`GetSpecies()` tallies rather than pretending Hindren is a
+  creed; Kyakukya remains a creed. Existing architecture variants also accept bounded live
+  culture, species, genotype, and vanilla-derived body sets. Shipped topology overlays add broad
+  housing access, robot charging service lanes, wet-body reservoir circulation, and a True Kin
+  annexe registry axis while inheriting the exact paid palette. Selection freezes into the normal
+  architecture snapshot and never repaints standing work.
 
 ### Added
+- **Weddings, funerals, feasts, and raisings now happen on the ground when they are attended.**
+  One bounded per-city lifecycle freezes exact already-bound named bodies, an authored functional
+  bench/shrine/campfire-or-oven/first-basin locus, reachable activity cells, former schedules,
+  and independent semantic receipts. Citizens walk by vanilla pathing, call the fixture's real
+  chair/shrine/campfire/liquid service, hold there, and return to their exact prior cell and
+  post/home/anchor state before restoration is acknowledged; no proxy, clone, summon, substitution, or
+  teleport can stand in for an attendee. Phase, fixture-use, and sink receipts survive reload and
+  interruption. Missing bodies, coherent ground, path, or fixture produce a dated report only,
+  while the existing chronicle/told/message or construction-outbox owner still publishes once.
+  Canonical bounded tombstones keep weddings, funerals, and construction raisings once-only after
+  the 32-line told ring turns over; a full tombstone store refuses before leasing any body.
+- **Every creed the installed game can presently make a creed now has its own work.** Qud
+  2.0.211.51 admits 33 base factions under the open `CanBeCreed` facts; all 33 now own one
+  lore-, material-, function-, and topology-specific creed-gated design, including exact larger
+  lot realizations. Thirty new authored plans join the three existing works. The census is derived
+  at runtime by `kingdom:creedcontent`, not held in a faction switch, so third-party factions still
+  extend the same ordinary building/blueprint/architecture data lane. Culture and species facts
+  also enter real research/anatomy and existing crew-assignment lanes without replacing raw stats
+  or inventing a parallel identity model.
+- **Public behaviour API v3 now covers all five adopted model dimensions.** External mods can add
+  owner-qualified resources, paired carrier/job kinds, bounded network graphs, durable work
+  behaviours with physical outputs, and canonical happening generators through frozen public
+  values. Every callback crosses the shared executor with deterministic draw, candidate, owner,
+  city, and encoded-size bounds; version drift and faults refuse loudly without blocking later
+  owners. Resource levels, in-flight jobs, network solves, work states, and owed objects persist in
+  one canonical city sidecar. Host check-in/heartbeat consumes it, jobs finish from frozen receipts
+  even after an owner is disabled. Attended work materialisation uses a durable monotonic generation
+  and exact-cell receipt: interruption after landing reconciles that object before another can be
+  minted, while a stale marker cannot settle later output. An external-shaped fixture proves registration/version, throw,
+  over-budget, malformed, cap, atomicity, persistence, and replay gates. V1 ask/happening and v2
+  identity sources remain admitted.
+- **Named salvage expeditions are real realm jobs.** Stores & routes can commission one exact
+  local resident body to one founder-visited journal destination for a previewed water, food, and
+  world-time price. Prepared authority and a bounded body receipt precede every physical callback;
+  partial vessel/stack cuts resume by exact before/after CAS, seat exchange cannot strand the job,
+  and one deterministic return or dated bodily cause reaches Chronicle and homecoming. Cancellation
+  cannot mint a resident, refund a second copy, or redraw salvage.
+- **City-style behavior is now data, not five hard-coded crop/material switches.** A merged
+  `<style>` declaration owns its crop, seed, standing row, preferred paid wall material, and
+  timber-wall blueprint beside its terrain selectors. Crop triples are atomic and reversible;
+  conflicting, unknown, or behavior-incompatible blueprints refuse by style name. Fields, dishes, stores, porters, and
+  building walls consume the open registry, while selector-only legacy styles inherit `common`.
+- **Construction now has bodies, and work state reads on the map.** One deterministic oldest
+  raising receives a bounded gang of real named settlers left after water and running works;
+  concurrent frames queue instead of spending the same abstract hands twice, and builders walk to
+  safe adjacent posts before returning to ordinary schedules. Plot/scaffold pace now uses that
+  root's exact headcount, capability, built-in identity, and API-v2 affinity. Stateless,
+  color-independent map signs derive from real construction, salvage, repair, wear, deprivation,
+  brownout, and staffing state using verified vanilla silhouettes or distinct glyphs. Versioned
+  legend/audit receipts and deterministic tests accompany the still-required native visual and
+  lived-city pass; this implementation adds no custom bitmap, cosmetic authority, overlay object,
+  or loot. Original human-authored art remains allowed when the vanilla-first provenance and
+  native-readability gates justify it.
+- **Pilgrims now come because the city did something worth travelling for.** Three disputed city
+  feasts freeze one dated cause in that city's book; after a day's travel, one named pilgrim waits
+  at the rite ground and cites the exact feast, place, and dish. Quiet history creates none,
+  blockage defers the body, and a visit missed wholly during absence becomes one dated report
+  instead of a late random spawn. Pilgrims are absent from the generic traveller table, and both
+  caused and ordinary visitors use the heart approach rather than arbitrary empty cells.
+- **The nested settlement archive is version 8.** Salvage and causal-pilgrim fields remain the
+  version-6 boundary, and API-v3 behaviour remains the version-7 boundary. Frozen v6 and v7
+  writers/goldens prove each later sidecar absent from its bytes; the physical-happening lifecycle
+  defaults empty under the v8 reader and then survives current rewrite and a second cold read.
+  Every older frozen writer and golden remains unchanged.
+- **Legendary dromad traders now cash out the luxury lane.** One can appear through the mergeable
+  notable table, receives Qud's own merchant title without HeroMaker's combat/mutation side
+  effects, and settles only into an exact wholly vacant M-or-larger fine house when a staffed
+  tier-3 shop warrants the move. Success binds the resident to that LotId and creates a real
+  current-tier merchant; manors, generic large roofs, and aggregate spare beds do not substitute.
+- **Identity extension API v2.** Mods can now answer extra live roster keys and bounded 70–130
+  work affinity from a frozen culture/species/creed/genotype reading. Calls cross the existing
+  executor independently, faults fail closed to no keys or neutral affinity, foreign namespaces
+  cannot be minted, candidate inspection is capped, affinity composition is order-independent,
+  and v1 ask/happening sources remain admitted. Species also enters the existing
+  QoL cohabitation vocabulary as the generic `species:<GetSpecies()>` self-tag; no species table or
+  per-species building catalogue was added.
 - **The Charter is now a navigable book instead of a thirty-five-line wall.** Its root leads with
   status and the next need, then seven short chapters with local hotkeys, explicit Back, and
   controller cancel. Navigation spends no turn; every old action remains reachable exactly once;
@@ -63,7 +261,8 @@ subscription/install pass remain before public release.
   for politics: the cost of the move is that your crossings now land somewhere else, told
   before consent. Capital-specific works arrive on their own cardinality lane (`Capital=`,
   which never spends the city's purpose slot — the capital may still be the flesh-city or
-  the chrome-city): the arcology and its first two interior records open the set. And the
+  the chrome-city): the arcology foundation and its first two surface-prototype records open
+  the set; hosted interior and zone-spanning ground remain deferred. And the
   great works project outward: the hall's surgery and the registry office are cheap
   one-per-city satellites carrying the lower rungs only — the top rungs and the once-ever
   ceremonies stay where the colossus stands.
@@ -389,8 +588,10 @@ subscription/install pass remain before public release.
   shaped, worked by real crews at speeds read off who they are. Large works need the yard
   standing and staffed; grand ones need it headed. High-craft designs are priced partly in
   vanilla's own tinkering bits; great works may want a rare find.
-- **Crews have capability**, derived from settler stats. A shortfall builds slower and names
-  itself — never a silent stall.
+- **Crews have capability**, derived from settler stats and exact vanilla skill presence. Named
+  tinkers, field hands, scribes, physickers, and wayfarers now change who a work selects and how
+  fast it runs; they are no longer cosmetic population-table variants. A shortfall builds slower
+  and names itself — never a silent stall.
 - **Wear is event-driven, never calendar**: raid damage, hard running, temperamental salvage —
   bounded, named, running reduced, never destroyed. Mending is a visible, holdable job costed
   from the chain. Idleness wears nothing — a work standing unused is as sound in a year as it is
@@ -818,6 +1019,11 @@ only pure water — so the fix mints not one dram.
 - **A household's yard trade feeds the settlement.** A vine lattice's `food:1`, a hide rack's
   `craft:1` and a vellum press's `learning:1` now reach the level. They were parsed, capped, listed
   in the Charter's own menu, and consumed by nothing.
+- **A dye vat now reaches the caravan it promised.** `Goods="Yes"` is no longer a parsed prose
+  flag: each exact built household paired to its standing yard fixture adds one dram to each due
+  charter cycle, capped at four per caravan and frozen in the existing durable delivery receipt.
+  Missing or ambiguous physical evidence adds nothing; goods and equilibrium `Shades` cannot be
+  declared together.
 - **Lifts land where they reach (Addendum 6).** Craft, faith, learning, order and luxury now lift
   the settlement in proportion to the roofs their work actually covers, instead of counting
   citywide off the catalogue. Water, food and roofs are unchanged — they are drawn and carried, so

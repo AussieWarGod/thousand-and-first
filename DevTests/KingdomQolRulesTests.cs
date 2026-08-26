@@ -156,6 +156,58 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void Derive_CarriesExactSpeciesIntoTheExistingProfile()
+		{
+			ResidentTruth truth = ResidentTruth.Person;
+			truth.Species = "Mopango";
+			QolProfile profile = KingdomQolRules.Derive(truth);
+			Assert.AreEqual("Mopango", profile.Species);
+		}
+
+		[TestCase("Mopango", "species:mopango")]
+		[TestCase("  Ooze  ", "species:ooze")]
+		[TestCase("", null)]
+		[TestCase(null, null)]
+		[TestCase("bad|species", null)]
+		public void SpeciesTag_IsOpenFoldedAndRosterSafe(string species, string expected)
+		{
+			Assert.AreEqual(expected, KingdomQolRules.SpeciesTag(species));
+		}
+
+		[Test]
+		public void SpeciesTag_DropsOverlongIdentityWithoutTruncating()
+		{
+			Assert.IsNull(KingdomQolRules.SpeciesTag(
+				new string('s', KingdomQolRules.MaxSpeciesLength + 1)));
+		}
+
+		[Test]
+		public void SelfTags_AddsSpeciesWithoutAClosedSpeciesTable()
+		{
+			ResidentTruth truth = ResidentTruth.Person;
+			truth.Species = "a species from another mod";
+			QolProfile profile = KingdomQolRules.Derive(truth);
+			Assert.IsTrue(Holds(KingdomQolRules.SelfTags(profile),
+				"species:a species from another mod"));
+		}
+
+		[Test]
+		public void SpeciesRefusalUsesTheExistingCohabitationJudgment()
+		{
+			QolProfile newcomer = Profile(null, null,
+				new string[1] { "species:ooze" });
+			ResidentTruth truth = ResidentTruth.Person;
+			truth.Species = "Ooze";
+			QolProfile ooze = KingdomQolRules.Derive(truth);
+			Assert.IsTrue(KingdomLodgingRules.Conflicts(
+				newcomer.Refuses, KingdomQolRules.SelfTags(newcomer),
+				ooze.Refuses, KingdomQolRules.SelfTags(ooze), 0,
+				KingdomLodgingRules.Closeness.Packed));
+			Assert.IsTrue(KingdomLodgingRules.Intersects(newcomer.Refuses,
+				KingdomQolRules.SelfTags(ooze)));
+		}
+
+		[Test]
 		public void Derive_ARobotNeedsCharge()
 		{
 			ResidentTruth truth = ResidentTruth.Person;
@@ -295,6 +347,16 @@ namespace ThousandAndFirst.Tests
 			QolProfile profile = KingdomQolRules.Refine(KingdomQolRules.Derive(truth), "taf:quiet", "taf:dark", "taf:damp");
 			Assert.IsFalse(profile.EatsFood);
 			Assert.IsFalse(profile.DrinksWater);
+		}
+
+		[Test]
+		public void Refine_CarriesTheDerivedSpeciesThrough()
+		{
+			ResidentTruth truth = ResidentTruth.Person;
+			truth.Species = "Mopango";
+			QolProfile profile = KingdomQolRules.Refine(
+				KingdomQolRules.Derive(truth), "taf:quiet", null, null);
+			Assert.AreEqual("Mopango", profile.Species);
 		}
 
 		[Test]
@@ -711,60 +773,6 @@ namespace ThousandAndFirst.Tests
 			int third = KingdomQolRules.PreferShade(offer, profile);
 			Assert.AreEqual(first, second);
 			Assert.AreEqual(second, third);
-		}
-
-		// --- Cohabitation -----------------------------------------------------------------------
-
-		[Test]
-		public void JudgeCohabitation_TheGamesOwnFlatFaultLineRefusesAndNamesNoTag()
-		{
-			string tag;
-			QolVerdict verdict = KingdomQolRules.JudgeCohabitation(
-				Profile(null, null, null), KingdomQolRules.NoTags, KingdomQolRules.CohabitHostility, out tag);
-			Assert.AreEqual(QolVerdict.Refused, verdict);
-			Assert.AreEqual("", tag);
-		}
-
-		[Test]
-		public void JudgeCohabitation_OrdinaryDislikeIsNotEnoughToBreakAHousehold()
-		{
-			string tag;
-			QolVerdict verdict = KingdomQolRules.JudgeCohabitation(
-				Profile(null, null, null), KingdomQolRules.NoTags, KingdomQolRules.CohabitHostility - 1, out tag);
-			Assert.AreEqual(QolVerdict.Match, verdict);
-		}
-
-		[Test]
-		public void JudgeCohabitation_ARefusedTagInTheHouseholdRefusesAndNamesIt()
-		{
-			string tag;
-			QolVerdict verdict = KingdomQolRules.JudgeCohabitation(
-				Profile(null, null, new string[1] { KingdomQolRules.TagDamp }),
-				new string[1] { KingdomQolRules.TagDamp }, 0, out tag);
-			Assert.AreEqual(QolVerdict.Refused, verdict);
-			Assert.AreEqual(KingdomQolRules.TagDamp, tag);
-		}
-
-		[Test]
-		public void JudgeCohabitation_ANeighbourIsNotALandlordSoAnUnmetNeedIsNotARefusal()
-		{
-			string tag;
-			QolVerdict verdict = KingdomQolRules.JudgeCohabitation(
-				Profile(new string[1] { KingdomQolRules.TagCharge }, null, null),
-				KingdomQolRules.NoTags, 0, out tag);
-			Assert.AreEqual(QolVerdict.Match, verdict);
-			Assert.AreEqual("", tag);
-		}
-
-		[Test]
-		public void JudgeCohabitation_ACreedClashOutranksEverythingElse()
-		{
-			string tag;
-			QolVerdict verdict = KingdomQolRules.JudgeCohabitation(
-				Profile(null, null, new string[1] { KingdomQolRules.TagDamp }),
-				new string[1] { KingdomQolRules.TagDamp }, KingdomQolRules.CohabitHostility, out tag);
-			Assert.AreEqual(QolVerdict.Refused, verdict);
-			Assert.AreEqual("", tag);
 		}
 
 		// --- Saying so (STANDARDS 7b) -------------------------------------------------------------

@@ -737,6 +737,14 @@ namespace ThousandAndFirst
 			int RemainingTicks, int CrewEffectiveness, int WearEffectiveness,
 			KingdomLabJobPhase Phase)
 		{
+			return AccrueJob(LastTick, TimeTick, RemainingTicks, CrewEffectiveness,
+				WearEffectiveness, Phase, KingdomIdentityAffinityRules.NeutralPercent);
+		}
+
+		internal static KingdomLabJobAccrual AccrueJob(long LastTick, long TimeTick,
+			int RemainingTicks, int CrewEffectiveness, int WearEffectiveness,
+			KingdomLabJobPhase Phase, int IdentityAffinity)
+		{
 			int remaining = (RemainingTicks > 0) ? RemainingTicks : 0;
 			if (Phase != KingdomLabJobPhase.Working)
 			{
@@ -760,7 +768,7 @@ namespace ThousandAndFirst
 					KingdomLabJobPhase.Working);
 			}
 			int worked = KingdomProcedureRules.VatWorked(TimeTick - LastTick,
-				CrewEffectiveness, WearEffectiveness);
+				CrewEffectiveness, WearEffectiveness, IdentityAffinity);
 			if (worked <= 0)
 			{
 				return new KingdomLabJobAccrual(TimeTick, remaining, 0,
@@ -974,6 +982,15 @@ namespace ThousandAndFirst
 		internal static KingdomVatAccrual AccrueVat(long LastTick, long TimeTick, int RemainingTicks,
 			int CrewEffectiveness, int WearEffectiveness, bool Settled, bool Cancelled)
 		{
+			return AccrueVat(LastTick, TimeTick, RemainingTicks, CrewEffectiveness,
+				WearEffectiveness, Settled, Cancelled,
+				KingdomIdentityAffinityRules.NeutralPercent);
+		}
+
+		internal static KingdomVatAccrual AccrueVat(long LastTick, long TimeTick,
+			int RemainingTicks, int CrewEffectiveness, int WearEffectiveness, bool Settled,
+			bool Cancelled, int IdentityAffinity)
+		{
 			int remaining = (RemainingTicks > 0) ? RemainingTicks : 0;
 			if (Settled || Cancelled)
 			{
@@ -994,7 +1011,8 @@ namespace ThousandAndFirst
 			{
 				return new KingdomVatAccrual(LastTick, remaining, 0, Complete: false);
 			}
-			int worked = KingdomProcedureRules.VatWorked(TimeTick - LastTick, CrewEffectiveness, WearEffectiveness);
+			int worked = KingdomProcedureRules.VatWorked(TimeTick - LastTick,
+				CrewEffectiveness, WearEffectiveness, IdentityAffinity);
 			if (worked <= 0)
 			{
 				return new KingdomVatAccrual(TimeTick, remaining, 0, Complete: false);

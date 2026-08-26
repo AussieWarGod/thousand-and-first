@@ -64,6 +64,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(KingdomWorkClass.Power, 0, true)]
 		[TestCase(KingdomWorkClass.Store, 0, false)]
 		[TestCase(KingdomWorkClass.Growing, 0, false)]
+		[TestCase(KingdomWorkClass.Construction, 0, true)]
 		[TestCase(KingdomWorkClass.Other, 0, false)]
 		[TestCase(KingdomWorkClass.Producer, 2, false)]
 		public void Waiting_AgreesWithTheBreakdownNews(KingdomWorkClass workClass, int crew, bool waiting)
@@ -101,6 +102,8 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("44 charge", KingdomBookRules.Doing(Work(100, 1, KingdomWorkClass.Power)));
 			Assert.AreEqual("Idle.", KingdomBookRules.Doing(Work(100, 0, KingdomWorkClass.Producer)));
 			Assert.AreEqual("Making.", KingdomBookRules.Doing(Work(100, 2, KingdomWorkClass.Producer)));
+			Assert.AreEqual("Being raised.", KingdomBookRules.Doing(
+				Work(100, 2, KingdomWorkClass.Construction)));
 		}
 
 		/// <summary>Hands are counted, and none of them is said plainly rather than as "0".</summary>

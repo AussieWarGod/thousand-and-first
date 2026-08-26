@@ -71,8 +71,8 @@ namespace ThousandAndFirst
 		}
 
 		/// <summary>
-		/// The purpose a design is sited by: whatever its <c>Category</c> names, unless it
-		/// carries a defence rating, which makes it a wall whatever else it is filed under.
+		/// The purpose a design is sited by. A free-standing defensive work belongs on the frontier;
+		/// a defensive building on a reserved plot keeps the purpose named by its category.
 		/// </summary>
 		public static KingdomLayoutRules.LayoutPurpose PurposeOfEntry(KingdomRules.BuildEntry Entry)
 		{
@@ -80,7 +80,8 @@ namespace ThousandAndFirst
 			{
 				return KingdomLayoutRules.LayoutPurpose.Unknown;
 			}
-			if (Entry.Defence > 0)
+			if (KingdomRules.IsFrontierWork(Entry.Defence,
+				KingdomPlots.IsPlotDesign(Entry.Key)))
 			{
 				return KingdomLayoutRules.LayoutPurpose.Defence;
 			}
@@ -107,11 +108,11 @@ namespace ThousandAndFirst
 			{
 				// A commission already standing is part of the shape before it finishes, so two
 				// commissions in a row do not both aim at the same empty quarter.
-				purpose = (Object.GetIntProperty("KingdomDefencePending") > 0)
+				purpose = KingdomPlots.IsFrontierWork(Object)
 					? KingdomLayoutRules.LayoutPurpose.Defence
 					: PurposeOfBlueprint(scaffold.TargetBlueprint);
 			}
-			else if (Object.GetIntProperty("KingdomDefence") > 0)
+			else if (KingdomPlots.IsFrontierWork(Object))
 			{
 				purpose = KingdomLayoutRules.LayoutPurpose.Defence;
 			}
@@ -149,8 +150,10 @@ namespace ThousandAndFirst
 			{
 				return marks;
 			}
-			foreach (GameObject item in Z.GetObjects())
+			KingdomSurvey survey = KingdomSurvey.Take(Z);
+			for (int i = 0; i < survey.LayoutRoots.Count; i++)
 			{
+				GameObject item = survey.LayoutRoots[i];
 				if (TryReadMark(item, out var mark))
 				{
 					marks.Add(mark);
@@ -165,9 +168,9 @@ namespace ThousandAndFirst
 		/// <param name="Z">The zone to build in.</param>
 		/// <param name="System">The realm, for its claim, which is what makes an edge a
 		/// frontier. Null sites as though the zone were surrounded by the realm's own ground.</param>
-		/// <param name="Entry">The design being raised; its <c>Category</c> is the purpose and
-		/// its <c>Defence</c> overrides that, because a thing with a defence rating is a wall
-		/// whatever else it is filed under.</param>
+		/// <param name="Entry">The design being raised; its <c>Category</c> is the purpose. Only
+		/// a defensive design with no plot is a frontier work; a plotted building may contribute
+		/// defence without surrendering its authored lot or category.</param>
 		/// <param name="Outcome">Whether the plan chose, the founder's own ground won, or the
 		/// plan had nothing to say.</param>
 		/// <returns>The cell, or null when the plan deferred or found no clear ground &mdash; in

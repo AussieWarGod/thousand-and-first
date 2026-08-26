@@ -1,19 +1,24 @@
-"""Enforce the release art boundary and validate every vanilla tile reference.
+"""Enforce the release art boundary and validate every tile reference.
 
-The public package contains no original runtime bitmap sprites. `Tile=` values may point at the
-base game's packed assets, but no copy of those assets and no retired custom draft belongs under
-Textures/. This check proves both sides:
+Vanilla references are preferred and verified against the installed game. Original local art is
+allowed only when an exact record in Art/runtime-assets.json proves its file hash, source,
+creator, license, fallback, and human review. This check proves both sides:
 
-  bundled art       any runtime PNG/BMP in Textures is a release failure
-  local reference   any ThousandAndFirst/ Tile= is a release failure
+  bundled art       every runtime raster is allowlisted and hash/provenance exact
+  local reference   every ThousandAndFirst/ Tile= resolves to that allowlist
   unknown vanilla   any external tile path absent from the installed base XML corpus is a typo
 
 The last tests do not unpack or copy game assets. They check that Qud names each path in its XML,
-that the exact-cased packed asset key exists, and that every text fallback fits Qud's 256-character
-renderer. Run from the repository root: python3 Art/check_wiring.py
+that the engine-normalized packed asset key exists, and that every text fallback fits Qud's
+256-character renderer. Qud's `SpriteManager` replaces path separators and lower-cases the whole
+lookup key before resolving it, so requiring source-case equality would reject vanilla's own
+`tiles/sw_torch_nofire.png` reference. Run from the repository root:
+python3 Art/check_wiring.py
 """
 
+import hashlib
 import io
+import json
 import mmap
 import os
 import re
@@ -24,8 +29,16 @@ import xml.etree.ElementTree as ET
 
 DEFAULT_BASE = "/mnt/f/SteamLibrary/steamapps/common/Caves of Qud/CoQ_Data/StreamingAssets/Base"
 STAGE_TOOL = os.path.join("Tools", "stage.sh")
-RASTER_EXTENSIONS = (".bmp", ".gif", ".jpeg", ".jpg", ".png", ".tga", ".webp")
+RASTER_EXTENSIONS = (
+    ".bmp", ".dds", ".gif", ".jpeg", ".jpg", ".png", ".tga", ".tif", ".tiff", ".webp",
+)
 LOCAL_PREFIX = "ThousandAndFirst/"
+RUNTIME_ASSET_MANIFEST = os.path.join("Art", "runtime-assets.json")
+TEXTURE_ROOT = "Textures"
+REQUIRED_ASSET_FIELDS = (
+    "tile", "path", "sha256", "creator", "created", "license", "source", "method",
+    "fallback", "review",
+)
 
 
 def read(path):
@@ -181,6 +194,91 @@ def bundled_rasters():
     return sorted(found)
 
 
+def _safe_relative(path):
+    if not isinstance(path, str) or not path or "\\" in path or path.startswith("/"):
+        return False
+    parts = path.split("/")
+    return all(part not in ("", ".", "..") for part in parts)
+
+
+def runtime_asset_records(manifest_path=RUNTIME_ASSET_MANIFEST):
+    """Return exact local-tile records and all self-contained provenance problems."""
+    problems = []
+    records = {}
+    try:
+        with io.open(manifest_path, encoding="utf-8") as handle:
+            document = json.load(handle)
+    except (OSError, ValueError) as error:
+        return records, ["runtime asset manifest cannot be read: %s" % error]
+    if not isinstance(document, dict) or document.get("schema") != 1:
+        return records, ["runtime asset manifest must be an object with schema 1"]
+    if set(document) != {"schema", "assets"} or not isinstance(document.get("assets"), list):
+        return records, ["runtime asset manifest must contain only schema and an assets array"]
+
+    paths = {}
+    tiles_folded = {}
+    paths_folded = {}
+    for index, row in enumerate(document["assets"]):
+        where = "runtime asset record %d" % index
+        if not isinstance(row, dict) or set(row) != set(REQUIRED_ASSET_FIELDS):
+            problems.append(
+                "%s must contain exactly: %s" % (where, ", ".join(REQUIRED_ASSET_FIELDS))
+            )
+            continue
+        if any(not isinstance(row[field], str) or not row[field].strip()
+               for field in REQUIRED_ASSET_FIELDS):
+            problems.append("%s has an empty or non-string field" % where)
+            continue
+        tile = row["tile"]
+        path = row["path"]
+        source = row["source"]
+        expected_path = TEXTURE_ROOT + "/" + tile[len(LOCAL_PREFIX):]
+        if (not tile.startswith(LOCAL_PREFIX) or not _safe_relative(tile)
+                or not tile.lower().endswith(RASTER_EXTENSIONS)):
+            problems.append("%s has an invalid local tile path: %s" % (where, tile))
+            continue
+        if not _safe_relative(path) or path != expected_path:
+            problems.append(
+                "%s path must be the exact staged mapping %s" % (where, expected_path)
+            )
+            continue
+        if not _safe_relative(source) or source.startswith(TEXTURE_ROOT + "/"):
+            problems.append("%s source must be a safe non-runtime repository path" % where)
+            continue
+        digest = row["sha256"]
+        if not re.fullmatch(r"[0-9a-f]{64}", digest):
+            problems.append("%s sha256 must be 64 lowercase hexadecimal characters" % where)
+            continue
+        tile_key = tile.casefold()
+        path_key = path.casefold()
+        if tile_key in tiles_folded:
+            problems.append("local tile collision: %s and %s" % (tiles_folded[tile_key], tile))
+            continue
+        if path_key in paths_folded:
+            problems.append("runtime asset path collision: %s and %s" % (paths_folded[path_key], path))
+            continue
+        tiles_folded[tile_key] = tile
+        paths_folded[path_key] = path
+        if not os.path.isfile(path) or os.path.islink(path):
+            problems.append("allowlisted runtime asset is missing or linked: %s" % path)
+            continue
+        if not os.path.isfile(source) or os.path.islink(source):
+            problems.append("allowlisted editable source is missing or linked: %s" % source)
+            continue
+        with open(path, "rb") as stream:
+            actual = hashlib.sha256(stream.read()).hexdigest()
+        if actual != digest:
+            problems.append("runtime asset hash differs from manifest: %s" % path)
+            continue
+        records[tile] = row
+        paths[path] = tile
+
+    for path in bundled_rasters():
+        if path not in paths:
+            problems.append("bundled runtime art is absent from provenance manifest: %s" % path)
+    return records, problems
+
+
 def vanilla_tiles(base):
     folder = os.path.join(base, "ObjectBlueprints")
     if not os.path.isdir(folder):
@@ -208,7 +306,12 @@ def packed_asset_key(tile):
 
 
 def packed_tile_problems(references, base):
-    """Prove exact-cased tile keys exist in installed resources.assets."""
+    """Prove Qud's normalized tile keys exist in installed resources.assets.
+
+    `Kobold.SpriteManager` performs `Replace('\\', '_').Replace('/', '_').ToLower()`
+    before lookup. Mirror that native boundary exactly instead of imposing a casing rule the
+    installed base XML itself does not satisfy.
+    """
     resource_path = os.path.abspath(os.path.join(base, os.pardir, os.pardir, "resources.assets"))
     if not os.path.isfile(resource_path):
         return ["installed packed asset database not found: %s" % resource_path]
@@ -217,7 +320,7 @@ def packed_tile_problems(references, base):
     for tile, owners in sorted(references.items()):
         if tile.startswith(LOCAL_PREFIX):
             continue
-        key = packed_asset_key(tile)
+        key = packed_asset_key(tile).lower()
         try:
             needle = key.encode("ascii")
         except UnicodeEncodeError:
@@ -241,7 +344,7 @@ def packed_tile_problems(references, base):
     for needle, (tile, key, owners) in wanted.items():
         if needle not in found:
             problems.append(
-                "exact packed tile asset is missing: %s -> %s (%s)"
+                "engine-normalized packed tile asset is missing: %s -> %s (%s)"
                 % (tile, key, ", ".join(owners))
             )
     return problems
@@ -262,16 +365,24 @@ def main():
             problems.append("staged runtime XML contains no tile references")
         problems.extend(render_string_problems(runtime_xml))
 
-    for path in bundled_rasters():
-        problems.append("bundled runtime art is forbidden by release policy: %s" % path)
+    local_assets, asset_problems = runtime_asset_records()
+    problems.extend(asset_problems)
 
     problems.extend(fixed_farmer_tile_problems())
 
     for tile, owners in sorted(references.items()):
-        if tile.startswith(LOCAL_PREFIX):
+        if tile.startswith(LOCAL_PREFIX) and tile not in local_assets:
             problems.append(
-                "local tile reference is forbidden by release policy: %s (%s)"
+                "local tile reference has no exact provenance record: %s (%s)"
                 % (tile, ", ".join(owners))
+            )
+
+    referenced_local = {tile for tile in references if tile.startswith(LOCAL_PREFIX)}
+    for tile, row in sorted(local_assets.items()):
+        if tile not in referenced_local:
+            problems.append(
+                "allowlisted runtime asset is not referenced by staged XML: %s (%s)"
+                % (tile, row["path"])
             )
 
     known_tiles = vanilla_tiles(base)
@@ -297,8 +408,8 @@ def main():
         return 1
 
     print(
-        "ART POLICY CLEAN: 0 bundled runtime rasters; %d vanilla tile paths verified"
-        % len(references)
+        "ART POLICY CLEAN: %d allowlisted local tile paths; %d vanilla tile paths verified"
+        % (len(local_assets), len(references) - len(referenced_local))
     )
     return 0
 

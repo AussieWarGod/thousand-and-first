@@ -1,5 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
+using XRL;
+using XRL.Messages;
 using XRL.World;
 using XRL.World.Parts;
 
@@ -11,10 +14,215 @@ namespace ThousandAndFirst
 	/// and pass it down; the alternative is a full-zone scan per question, and there are
 	/// twenty questions.
 	/// </summary>
-	/// <remarks>A survey is a snapshot. Consuming or adding water and food through the survey
-	/// keeps its counters correct; spawning or destroying objects invalidates its lists.</remarks>
+	/// <remarks>A survey is a maintained transaction index. Physical commits must call
+	/// <see cref="ObserveAdded"/>, <see cref="ObserveChanged"/>, or <see cref="ObserveRemoved"/>
+	/// before a later pass step reads it. A bound pass reuses this exact instance; no helper may
+	/// silently mix in a second whole-zone snapshot.</remarks>
 	public class KingdomSurvey
 	{
+		private const int MaxIndexedObjects = 16384;
+
+		private sealed class ReferenceComparer : IEqualityComparer<GameObject>
+		{
+			internal static readonly ReferenceComparer Instance = new ReferenceComparer();
+
+			public bool Equals(GameObject X, GameObject Y)
+			{
+				return ReferenceEquals(X, Y);
+			}
+
+			public int GetHashCode(GameObject Item)
+			{
+				return RuntimeHelpers.GetHashCode(Item);
+			}
+		}
+
+		private sealed class IndexedRow
+		{
+			internal GameObject Item;
+			internal long Order;
+			internal bool Citizen;
+			internal bool Settler;
+			internal bool TradePost;
+			internal bool Built;
+			internal bool Bed;
+			internal bool Kitchen;
+			internal bool Work;
+			internal bool Defence;
+			internal bool Larder;
+			internal bool Pool;
+			internal bool Store;
+			internal bool Raider;
+			internal bool Cairn;
+			internal bool PlotWorks;
+			internal bool Improvement;
+			internal bool Notice;
+			internal bool Shrine;
+			internal bool Guest;
+			internal bool NotableGuest;
+			internal bool CausalPilgrim;
+			internal bool Clearance;
+			internal bool ConstructionRoot;
+			internal bool PlotRoot;
+			internal bool LayoutRoot;
+			internal bool CropRow;
+			internal bool NetworkPiece;
+			internal bool LabJob;
+			internal bool VisualRoot;
+			internal bool PlotPart;
+			internal bool ArchitectureComponent;
+			internal bool GatehouseSatellite;
+			internal bool DelveEndpoint;
+			internal bool Furnishing;
+			internal bool HeartRelic;
+			internal bool MaterialStockpile;
+			internal bool Transient;
+			internal int ResidentId;
+			internal int FoodStored;
+			internal int FoodCapacity;
+			internal int StoredWater;
+			internal int OpenWater;
+			internal int StorageSpace;
+			internal int StorageCapacity;
+			internal LiquidVolume Liquid;
+			internal readonly List<GameObject> Loaded = new List<GameObject>();
+		}
+
+		[ThreadStatic]
+		private static KingdomSurvey BoundSurvey;
+
+		[ThreadStatic]
+		private static int BoundDepth;
+
+		private readonly Dictionary<GameObject, IndexedRow> Rows =
+			new Dictionary<GameObject, IndexedRow>(ReferenceComparer.Instance);
+
+		private readonly HashSet<GameObject> LoadedSet =
+			new HashSet<GameObject>(ReferenceComparer.Instance);
+
+		private long NextOrder;
+
+		private int ClassificationPasses;
+
+		private int ClassifiedRoots;
+
+		private int ActiveReuses;
+
+		private int ForeignClassifications;
+
+		private int AddedMutations;
+
+		private int ChangedMutations;
+
+		private int RemovedMutations;
+
+		private int TradePosts;
+
+		private bool LoadedIndexComplete = true;
+
+		/// <summary>One zone-root snapshot in Qud's deterministic cell/object order. New roots are
+		/// appended only by <see cref="ObserveAdded"/>; callers must never mutate this list.</summary>
+		public readonly List<GameObject> Objects = new List<GameObject>();
+
+		/// <summary>Roots plus their recursively held objects, bounded once for exact receipt lookup.</summary>
+		internal readonly List<GameObject> LoadedObjects = new List<GameObject>();
+
+		/// <summary>Every exact civic body, including merchants and non-born enrolled citizens.</summary>
+		public readonly List<GameObject> CitizenBodies = new List<GameObject>();
+
+		public readonly List<GameObject> Raiders = new List<GameObject>();
+
+		public readonly List<GameObject> Cairns = new List<GameObject>();
+
+		public readonly List<GameObject> PlotWorks = new List<GameObject>();
+
+		public readonly List<GameObject> Improvements = new List<GameObject>();
+
+		public readonly List<GameObject> Notices = new List<GameObject>();
+
+		public readonly List<GameObject> Shrines = new List<GameObject>();
+
+		public readonly List<GameObject> Guests = new List<GameObject>();
+
+		public readonly List<GameObject> NotableGuests = new List<GameObject>();
+
+		public readonly List<GameObject> CausalPilgrims = new List<GameObject>();
+
+		public readonly List<GameObject> Clearances = new List<GameObject>();
+
+		/// <summary>Every raising root, plot root, layout root, crop row, declared liquid-line
+		/// piece, active/persisted lab, visual-state candidate, resident-id body, and transient
+		/// body classified during the one root walk. These are deliberately separate indexes:
+		/// a semantic helper iterating <see cref="Objects"/> and reclassifying every root would
+		/// still be a second whole-zone pass even though it avoided a second GetObjects call.</summary>
+		public readonly List<GameObject> ConstructionRoots = new List<GameObject>();
+
+		public readonly List<GameObject> PlotRoots = new List<GameObject>();
+
+		public readonly List<GameObject> LayoutRoots = new List<GameObject>();
+
+		public readonly List<GameObject> CropRows = new List<GameObject>();
+
+		public readonly List<GameObject> NetworkPieces = new List<GameObject>();
+
+		public readonly List<GameObject> LabJobs = new List<GameObject>();
+
+		public readonly List<GameObject> VisualRoots = new List<GameObject>();
+
+		/// <summary>Specialized physical-receipt indexes. Transaction validators consume these
+		/// bounded subsets instead of walking every root after the survey has classified it.</summary>
+		public readonly List<GameObject> PlotParts = new List<GameObject>();
+
+		public readonly List<GameObject> ArchitectureComponents = new List<GameObject>();
+
+		public readonly List<GameObject> GatehouseSatellites = new List<GameObject>();
+
+		public readonly List<GameObject> DelveEndpoints = new List<GameObject>();
+
+		public readonly List<GameObject> Furnishings = new List<GameObject>();
+
+		public readonly List<GameObject> HeartRelics = new List<GameObject>();
+
+		public readonly List<GameObject> MaterialStockpiles = new List<GameObject>();
+
+		public readonly List<GameObject> ResidentBodies = new List<GameObject>();
+
+		public readonly List<GameObject> Transients = new List<GameObject>();
+
+		/// <summary>Synchronous pass binding. Nested helpers may re-enter only for the same survey.</summary>
+		public sealed class PassScope : IDisposable
+		{
+			private readonly KingdomSurvey Survey;
+			private bool Closed;
+
+			internal PassScope(KingdomSurvey survey)
+			{
+				Survey = survey;
+				if (BoundSurvey != null && !ReferenceEquals(BoundSurvey, survey))
+					throw new InvalidOperationException("A second zone survey cannot enter an active settlement pass.");
+				BoundSurvey = survey;
+				BoundDepth++;
+			}
+
+			public void Dispose()
+			{
+				if (Closed) return;
+				Closed = true;
+				if (!ReferenceEquals(BoundSurvey, Survey) || BoundDepth <= 0)
+					throw new InvalidOperationException("The active zone survey scope was replaced.");
+				BoundDepth--;
+				if (BoundDepth == 0)
+				{
+					BoundSurvey = null;
+					Survey.EmitPassReceipt();
+				}
+			}
+		}
+		/// <summary>The exact zone this snapshot was taken from. Runtime-only; surveys are never
+		/// serialized. Construction presence needs the ground even when it contains no finished
+		/// work yet, which cannot be recovered honestly from a population counter.</summary>
+		public Zone Ground;
+
 		public int StoredWater;
 
 		public int OpenWater;
@@ -25,7 +233,7 @@ namespace ThousandAndFirst
 
 		public int Citizens;
 
-		public bool HasTradePost;
+		public bool HasTradePost => TradePosts > 0;
 
 		/// <summary>
 		/// Kingdom-wide defence bonus from garrison districts, folded in by
@@ -114,98 +322,541 @@ namespace ThousandAndFirst
 		/// <param name="Z">Zone to survey. Null yields an empty survey.</param>
 		public static KingdomSurvey Take(Zone Z)
 		{
+			KingdomSurvey bound = ActiveFor(Z);
+			if (bound != null)
+			{
+				bound.ActiveReuses++;
+				return bound;
+			}
+			// A remote snapshot during a bound settlement transaction is not invisible: its
+			// classification belongs to the active pass receipt even though the returned index
+			// remains scoped to the remote zone. Native acceptance requires this to stay zero.
+			if (BoundSurvey != null && Z != null
+				&& !ReferenceEquals(BoundSurvey.Ground, Z))
+				BoundSurvey.ForeignClassifications++;
 			KingdomSurvey survey = new KingdomSurvey();
+			survey.Ground = Z;
+			KingdomSystem citizenshipSystem = The.Game?.GetSystem<KingdomSystem>();
 			if (Z == null)
 			{
 				return survey;
 			}
-			foreach (GameObject item in Z.GetObjects())
+			int releasedLegacyFurnishings = 0;
+			survey.ClassificationPasses++;
+			List<GameObject> roots = Z.GetObjects();
+			survey.ClassifiedRoots = roots.Count;
+			for (int i = 0; i < roots.Count; i++)
 			{
-				if (item.GetIntProperty("KingdomCitizen") == 1)
+				GameObject item = roots[i];
+				// Old population-furnished plots marked every liquid prop as a separate civic store.
+				// That multiplied one legal plot into up to sixty-four accounting rows. Current
+				// authored components never carry this authority; migrate old non-root plot pieces by
+				// releasing the mark only. Vessel and water remain physically untouched, while any
+				// standing signed debt remains on the city row for real civic roots to settle.
+				if (item.GetIntProperty(KingdomPlots.PlotPartProperty) == 1
+					&& item.GetIntProperty("KingdomBuilt") != 1
+					&& item.GetIntProperty("KingdomStores") == 1)
 				{
-					survey.Citizens++;
-					if (item.GetIntProperty("VillageMerchant") == 1)
-					{
-						survey.HasTradePost = true;
-					}
-					else if (item.GetIntProperty("KingdomBorn") == 1 && !item.IsPlayer() && !item.IsPlayerLed())
-					{
-						survey.Settlers.Add(item);
-					}
+					item.SetIntProperty("KingdomStores", 0);
+					releasedLegacyFurnishings++;
 				}
-				if (item.GetIntProperty("KingdomBuilt") == 1)
+				if (item.GetIntProperty("KingdomCitizen") == 1
+					&& item.GetPart<r_KingdomCitizenship>() == null
+					&& citizenshipSystem != null)
 				{
-					survey.Built.Add(item);
-					if (item.HasPart("Bed"))
-					{
-						survey.Beds++;
-					}
-					// Somewhere to cook, counted off vanilla's own cooking part rather than
-					// off a catalogue key: Campfire IS the entire cooking system in Qud
-					// (D/XRL/World/Parts/Campfire.cs), so the communal fire has always been a
-					// real cooking site and nothing in this mod said so until now. An oven is
-					// the same part with the settlement's own dish set on its PresetMeals.
-					// Addendum 11(c)'s first clause, read literally: extend the machine that
-					// already does the thing.
-					if (item.HasPart("Campfire"))
-					{
-						survey.Kitchens++;
-					}
-					// A field with no seed in it asks for nobody (Addendum 11(b)). It stays in
-					// Built, so it is still measured, still worn, still mended and still struck -
-					// what it stops being is somewhere the staffing pass sends people. Without
-					// this, bare ground took the four hands the home farm's crew wants and turned
-					// them into nothing, and those are exactly the hands that would otherwise be
-					// out foraging: the seed gate would have quietly cost a settlement its meal
-					// as well as its harvest.
-					if (item.GetIntProperty("KingdomStaffNeeded") > 0 && (KingdomCrops.FieldOf(item) == null || KingdomCrops.IsSown(item)))
-					{
-						survey.Works.Add(item);
-					}
-					if (item.GetIntProperty("KingdomDefence") > 0)
-					{
-						survey.Defences.Add(item);
-					}
+					// Old saves carried only a global marker. Bind their explicit legacy-unknown
+					// receipt during this same one-pass scan; never count the marker by itself.
+					string legacyFailure;
+					KingdomCitizenship.ObserveLegacy(citizenshipSystem, item, out legacyFailure);
 				}
-				// Larders, not vessels. "KingdomStores" only ever marks liquid containers — the
-				// dedication flow filters on LiquidVolume — so counting food there would read
-				// zero forever. Food lives in what the founder dedicated as a larder.
-				if (item.GetIntProperty("KingdomLarder") == 1 && item.Inventory != null)
-				{
-					survey.Larders.Add(item);
-					survey.FoodCapacity += CapacityOf(item);
-					survey.FoodStored += HeldIn(item);
-				}
-				LiquidVolume part = item.GetPart<LiquidVolume>();
-				if (part == null || part.Volume < 0)
-				{
-					continue;
-				}
-				bool isFreshWater = KingdomLiquids.HasFreshWater(part);
-				if (part.MaxVolume < 0)
-				{
-					if (isFreshWater)
-					{
-						survey.Pools.Add(part);
-						survey.OpenWater += part.Volume;
-					}
-				}
-				else if (item.GetIntProperty("KingdomStores") == 1)
-				{
-					survey.Stores.Add(part);
-					survey.StorageCapacity += part.MaxVolume;
-					if (isFreshWater)
-					{
-						survey.StoredWater += part.Volume;
-					}
-					if (part.Volume < part.MaxVolume && KingdomLiquids.CanReceiveFreshWater(part))
-					{
-						survey.StorageSpace += part.MaxVolume - part.Volume;
-					}
-				}
+				survey.AddRoot(item, citizenshipSystem);
+			}
+			if (releasedLegacyFurnishings > 0)
+			{
+				string line = releasedLegacyFurnishings
+					+ " old plot furnishing" + (releasedLegacyFurnishings == 1 ? " is" : "s are")
+					+ " personal capacity now. Nothing in them was moved or lost.";
+				KingdomLog.Log("stores: " + line);
+				if (Z.IsActive()) MessageQueue.AddPlayerMessage("{{W|" + line + "}}");
 			}
 			survey.FoodAbundance = KingdomRules.ClassifyPantry(survey.FoodStored);
 			return survey;
+		}
+
+		/// <summary>Returns the already-bound roots during a semantic pass. Outside one, this takes
+		/// one ordinary classified survey rather than exposing a second unclassified scan.</summary>
+		public static IEnumerable<GameObject> ObjectsFor(Zone Z)
+		{
+			KingdomSurvey survey = ActiveFor(Z);
+			if (survey != null)
+			{
+				survey.ActiveReuses++;
+				return survey.Objects;
+			}
+			return Take(Z).Objects;
+		}
+
+		public static KingdomSurvey ActiveFor(Zone Z)
+		{
+			return BoundSurvey != null && Z != null && ReferenceEquals(BoundSurvey.Ground, Z)
+				? BoundSurvey : null;
+		}
+
+		public PassScope BindPass()
+		{
+			if (Ground == null) throw new InvalidOperationException("A groundless survey cannot bind a pass.");
+			return new PassScope(this);
+		}
+
+		private void AddRoot(GameObject Item, KingdomSystem System)
+		{
+			if (!GameObject.Validate(Item) || Rows.ContainsKey(Item)) return;
+			IndexedRow row = Capture(Item, System, NextOrder++);
+			Rows.Add(Item, row);
+			Objects.Add(Item);
+			Publish(row, true);
+			IndexLoadedBranch(row);
+		}
+
+		private IndexedRow Capture(GameObject Item, KingdomSystem System, long Order)
+		{
+			IndexedRow row = new IndexedRow { Item = Item, Order = Order };
+			row.Citizen = BelongsToRealm(System, Item);
+			row.TradePost = row.Citizen && Item.GetIntProperty("VillageMerchant") == 1;
+			row.Settler = row.Citizen && !row.TradePost
+				&& Item.GetIntProperty("KingdomBorn") == 1 && !Item.IsPlayer() && !Item.IsPlayerLed();
+			// A led, dead, or allegiance-diverged body still witnesses the resident id it carries.
+			// Citizenship controls the civic lists, never whether the one ground scan can find that
+			// exact body for the roster's Present/Led/Killed/Missing judgement.
+			row.ResidentId = Simulation.City.KingdomResidents.IdOf(Item);
+			row.Built = Item.GetIntProperty("KingdomBuilt") == 1;
+			row.Bed = row.Built && Item.HasPart("Bed");
+			row.Kitchen = row.Built && Item.HasPart("Campfire");
+			row.Work = row.Built && Item.GetIntProperty("KingdomStaffNeeded") > 0
+				&& (KingdomCrops.FieldOf(Item) == null || KingdomCrops.IsSown(Item));
+			row.Defence = row.Built && Item.GetIntProperty("KingdomDefence") > 0;
+			row.Larder = Item.GetIntProperty("KingdomLarder") == 1 && Item.Inventory != null;
+			if (row.Larder)
+			{
+				row.FoodCapacity = CapacityOf(Item);
+				row.FoodStored = HeldIn(Item);
+			}
+			row.Liquid = Item.GetPart<LiquidVolume>();
+			if (row.Liquid != null && row.Liquid.Volume >= 0)
+			{
+				bool fresh = KingdomLiquids.HasFreshWater(row.Liquid);
+				row.Pool = row.Liquid.MaxVolume < 0 && fresh;
+				if (row.Pool) row.OpenWater = row.Liquid.Volume;
+				row.Store = row.Liquid.MaxVolume >= 0
+					&& Item.GetIntProperty("KingdomStores") == 1;
+				if (row.Store)
+				{
+					row.StorageCapacity = row.Liquid.MaxVolume;
+					if (fresh) row.StoredWater = row.Liquid.Volume;
+					if (row.Liquid.Volume < row.Liquid.MaxVolume
+						&& KingdomLiquids.CanReceiveFreshWater(row.Liquid))
+						row.StorageSpace = row.Liquid.MaxVolume - row.Liquid.Volume;
+				}
+			}
+			row.Raider = Item.GetIntProperty("KingdomRaider") == 1;
+			row.Cairn = row.Built && string.Equals(Item.Blueprint, "r_KingdomCairn",
+				StringComparison.Ordinal);
+			row.PlotWorks = Item.GetPart<r_KingdomPlotWorks>() != null;
+			row.Improvement = Item.GetPart<r_KingdomImprovement>() != null;
+			row.Notice = Item.GetPart<r_KingdomNotice>() != null;
+			row.Shrine = row.Built && Item.HasPart("Shrine");
+			row.Guest = Item.GetIntProperty("KingdomGuest") == 1;
+			row.NotableGuest = Item.GetIntProperty("KingdomNotableGuest") == 1;
+			row.CausalPilgrim = Item.GetIntProperty(KingdomLocus.CausalPilgrimProperty) == 1;
+			row.Clearance = Item.GetPart<r_KingdomClearance>() != null;
+			row.ConstructionRoot = Item.GetPart<r_KingdomPlotWorks>() != null
+				|| Item.GetPart<r_KingdomScaffold>() != null;
+			row.PlotRoot = KingdomPlots.TryReadRect(Item, out _);
+			row.LayoutRoot = KingdomLayout.TryReadMark(Item, out _);
+			row.CropRow = Item.GetIntProperty(KingdomCrops.RowProperty) == 1
+				&& !string.IsNullOrEmpty(Item.GetStringProperty(KingdomCrops.RowFieldProperty));
+			row.NetworkPiece = (row.Built || Item.GetIntProperty("KingdomGrid") == 1)
+				&& (Item.GetPart<r_KingdomLiquidConduit>() != null
+					|| Item.GetPart<r_KingdomLiquidTap>() != null
+					|| Item.GetPart<r_KingdomLiquidCrossover>() != null);
+			row.LabJob = Item.GetPart<r_KingdomLabJob>() != null;
+			row.VisualRoot = row.Built || row.ConstructionRoot
+				|| Item.GetIntProperty(KingdomPlots.HeartPlotProperty) == 1
+				|| Item.GetIntProperty(KingdomPlots.HeartRelicProperty) == 1;
+			row.PlotPart = Item.GetIntProperty(KingdomPlots.PlotPartProperty) == 1;
+			row.ArchitectureComponent = Item.GetIntProperty(
+				KingdomArchitectureStamper.ComponentSchemaProperty)
+				== KingdomArchitectureStamper.ComponentSchema;
+			row.GatehouseSatellite = Item.GetIntProperty(
+				KingdomGatehouse.SatelliteProperty) == 1;
+			row.DelveEndpoint = Item.GetIntProperty(
+				KingdomDelveLink.EndpointSchemaProperty) == KingdomDelveLink.EndpointSchema;
+			row.Furnishing = !string.IsNullOrEmpty(Item.GetStringProperty(
+				KingdomPlots.FurnishReceiptProperty));
+			row.HeartRelic = Item.GetIntProperty(KingdomPlots.HeartRelicProperty) == 1;
+			row.MaterialStockpile = KingdomMaterials.IsStockpile(Item) && Item.Inventory != null;
+			row.Transient = Item.GetIntProperty(Simulation.City.KingdomResidents.JobIdProperty) > 0;
+			return row;
+		}
+
+		private static bool BelongsToRealm(KingdomSystem citizenshipSystem, GameObject item)
+		{
+			return KingdomCitizenship.BelongsTo(citizenshipSystem, item);
+		}
+
+		private void Publish(IndexedRow Row, bool Add)
+		{
+			int sign = Add ? 1 : -1;
+			Citizens += sign * (Row.Citizen ? 1 : 0);
+			TradePosts += sign * (Row.TradePost ? 1 : 0);
+			Beds += sign * (Row.Bed ? 1 : 0);
+			Kitchens += sign * (Row.Kitchen ? 1 : 0);
+			FoodStored += sign * Row.FoodStored;
+			FoodCapacity += sign * Row.FoodCapacity;
+			StoredWater += sign * Row.StoredWater;
+			OpenWater += sign * Row.OpenWater;
+			StorageSpace += sign * Row.StorageSpace;
+			StorageCapacity += sign * Row.StorageCapacity;
+			Publish(CitizenBodies, Row, Row.Citizen, Add);
+			Publish(Settlers, Row, Row.Settler, Add);
+			Publish(Built, Row, Row.Built, Add);
+			Publish(Works, Row, Row.Work, Add);
+			Publish(Defences, Row, Row.Defence, Add);
+			Publish(Larders, Row, Row.Larder, Add);
+			Publish(Raiders, Row, Row.Raider, Add);
+			Publish(Cairns, Row, Row.Cairn, Add);
+			Publish(PlotWorks, Row, Row.PlotWorks, Add);
+			Publish(Improvements, Row, Row.Improvement, Add);
+			Publish(Notices, Row, Row.Notice, Add);
+			Publish(Shrines, Row, Row.Shrine, Add);
+			Publish(Guests, Row, Row.Guest, Add);
+			Publish(NotableGuests, Row, Row.NotableGuest, Add);
+			Publish(CausalPilgrims, Row, Row.CausalPilgrim, Add);
+			Publish(Clearances, Row, Row.Clearance, Add);
+			Publish(ConstructionRoots, Row, Row.ConstructionRoot, Add);
+			Publish(PlotRoots, Row, Row.PlotRoot, Add);
+			Publish(LayoutRoots, Row, Row.LayoutRoot, Add);
+			Publish(CropRows, Row, Row.CropRow, Add);
+			Publish(NetworkPieces, Row, Row.NetworkPiece, Add);
+			Publish(LabJobs, Row, Row.LabJob, Add);
+			Publish(VisualRoots, Row, Row.VisualRoot, Add);
+			Publish(PlotParts, Row, Row.PlotPart, Add);
+			Publish(ArchitectureComponents, Row, Row.ArchitectureComponent, Add);
+			Publish(GatehouseSatellites, Row, Row.GatehouseSatellite, Add);
+			Publish(DelveEndpoints, Row, Row.DelveEndpoint, Add);
+			Publish(Furnishings, Row, Row.Furnishing, Add);
+			Publish(HeartRelics, Row, Row.HeartRelic, Add);
+			Publish(MaterialStockpiles, Row, Row.MaterialStockpile, Add);
+			Publish(ResidentBodies, Row, Row.ResidentId > 0, Add);
+			Publish(Transients, Row, Row.Transient, Add);
+			Publish(Stores, Row, Row.Store, Add);
+			Publish(Pools, Row, Row.Pool, Add);
+			FoodAbundance = KingdomRules.ClassifyPantry(FoodStored);
+		}
+
+		private void Publish(List<GameObject> List, IndexedRow Row, bool Member, bool Add)
+		{
+			if (!Member) return;
+			if (!Add)
+			{
+				List.Remove(Row.Item);
+				return;
+			}
+			int low = 0;
+			int high = List.Count;
+			while (low < high)
+			{
+				int middle = low + ((high - low) / 2);
+				IndexedRow existing;
+				if (!Rows.TryGetValue(List[middle], out existing)
+					|| KingdomSurveyIndexRules.ComesBeforeOrEqual(existing.Order, Row.Order)) low = middle + 1;
+				else high = middle;
+			}
+			List.Insert(low, Row.Item);
+		}
+
+		private void Publish(List<LiquidVolume> List, IndexedRow Row, bool Member, bool Add)
+		{
+			if (!Member || Row.Liquid == null) return;
+			if (!Add)
+			{
+				List.Remove(Row.Liquid);
+				return;
+			}
+			int low = 0;
+			int high = List.Count;
+			while (low < high)
+			{
+				int middle = low + ((high - low) / 2);
+				IndexedRow existing;
+				GameObject owner = List[middle]?.ParentObject;
+				if (owner == null || !Rows.TryGetValue(owner, out existing)
+					|| KingdomSurveyIndexRules.ComesBeforeOrEqual(existing.Order, Row.Order)) low = middle + 1;
+				else high = middle;
+			}
+			List.Insert(low, Row.Liquid);
+		}
+
+		private void IndexLoadedBranch(IndexedRow Row)
+		{
+			List<GameObject> pending = new List<GameObject> { Row.Item };
+			for (int cursor = 0; cursor < pending.Count; cursor++)
+			{
+				GameObject item = pending[cursor];
+				if (!GameObject.Validate(item) || !LoadedSet.Add(item))
+				{
+					LoadedIndexComplete = false;
+					continue;
+				}
+				if (LoadedObjects.Count >= MaxIndexedObjects)
+				{
+					LoadedIndexComplete = false;
+					LoadedSet.Remove(item);
+					continue;
+				}
+				LoadedObjects.Add(item);
+				Row.Loaded.Add(item);
+				Inventory inventory = item.Inventory;
+				if (inventory == null || inventory.Objects == null) continue;
+				for (int i = 0; i < inventory.Objects.Count; i++) pending.Add(inventory.Objects[i]);
+			}
+		}
+
+		private void RemoveLoadedBranch(IndexedRow Row)
+		{
+			for (int i = 0; i < Row.Loaded.Count; i++)
+			{
+				LoadedSet.Remove(Row.Loaded[i]);
+				LoadedObjects.Remove(Row.Loaded[i]);
+			}
+			Row.Loaded.Clear();
+		}
+
+		/// <summary>Publishes one new root into every index. Unknown off-ground objects are refused.</summary>
+		public bool ObserveAdded(GameObject Item)
+		{
+			bool known = Item != null && Rows.ContainsKey(Item);
+			bool valid = GameObject.Validate(Item);
+			bool here = valid && Ground != null && ReferenceEquals(Item.CurrentZone, Ground)
+				&& Item.CurrentCell != null && ReferenceEquals(Item.CurrentCell.ParentZone, Ground);
+			KingdomSurveyIndexRules.Mutation action = KingdomSurveyIndexRules.Classify(known, valid, here);
+			if (action == KingdomSurveyIndexRules.Mutation.Refresh) return ObserveChanged(Item);
+			if (action != KingdomSurveyIndexRules.Mutation.Add) return false;
+			AddRoot(Item, The.Game?.GetSystem<KingdomSystem>());
+			bool added = Rows.ContainsKey(Item);
+			if (added) AddedMutations++;
+			return added;
+		}
+
+		/// <summary>Reclassifies one exact known root after a physical/property commit.</summary>
+		public bool ObserveChanged(GameObject Item)
+		{
+			IndexedRow old = null;
+			bool known = Item != null && Rows.TryGetValue(Item, out old);
+			bool valid = GameObject.Validate(Item);
+			bool here = valid && Ground != null && ReferenceEquals(Item.CurrentZone, Ground)
+				&& Item.CurrentCell != null && ReferenceEquals(Item.CurrentCell.ParentZone, Ground);
+			KingdomSurveyIndexRules.Mutation action = KingdomSurveyIndexRules.Classify(known, valid, here);
+			if (action == KingdomSurveyIndexRules.Mutation.Remove) return ObserveRemoved(Item);
+			if (action == KingdomSurveyIndexRules.Mutation.Add) return ObserveAdded(Item);
+			if (action != KingdomSurveyIndexRules.Mutation.Refresh) return false;
+			Publish(old, false);
+			RemoveLoadedBranch(old);
+			IndexedRow fresh = Capture(Item, The.Game?.GetSystem<KingdomSystem>(), old.Order);
+			Rows[Item] = fresh;
+			Publish(fresh, true);
+			IndexLoadedBranch(fresh);
+			ChangedMutations++;
+			return true;
+		}
+
+		/// <summary>Re-proves the actual topology after an engine callback threw. Qud callbacks may
+		/// apply their physical effect before raising: a known survivor refreshes, a known absence
+		/// removes, and an unknown object that actually landed on this ground is added.</summary>
+		public bool ObserveCurrentTopology(GameObject Item)
+		{
+			return ObserveChanged(Item);
+		}
+
+		/// <summary>Removes one known root after its exact destruction/move commits.</summary>
+		public bool ObserveRemoved(GameObject Item)
+		{
+			IndexedRow row;
+			if (Item == null || !Rows.TryGetValue(Item, out row)) return false;
+			Publish(row, false);
+			RemoveLoadedBranch(row);
+			Rows.Remove(Item);
+			Objects.Remove(Item);
+			RemovedMutations++;
+			return true;
+		}
+
+		/// <summary>Updates a receipt-bound object's cached contribution after the caller already
+		/// published the exact aggregate delta. Category changes are refused as mixed evidence.</summary>
+		internal bool SynchronizeReceiptObject(GameObject Item)
+		{
+			IndexedRow old;
+			if (Item == null || !Rows.TryGetValue(Item, out old) || !GameObject.Validate(Item)) return false;
+			IndexedRow fresh = Capture(Item, The.Game?.GetSystem<KingdomSystem>(), old.Order);
+			if (!SameShape(old, fresh)) return false;
+			RemoveLoadedBranch(old);
+			Rows[Item] = fresh;
+			IndexLoadedBranch(fresh);
+			return true;
+		}
+
+		private static bool SameShape(IndexedRow A, IndexedRow B)
+		{
+			return A.Citizen == B.Citizen && A.Settler == B.Settler
+				&& A.TradePost == B.TradePost && A.Built == B.Built && A.Bed == B.Bed
+				&& A.Kitchen == B.Kitchen && A.Work == B.Work && A.Defence == B.Defence
+				&& A.Larder == B.Larder && A.Pool == B.Pool && A.Store == B.Store
+				&& A.Raider == B.Raider && A.Cairn == B.Cairn && A.PlotWorks == B.PlotWorks
+				&& A.Improvement == B.Improvement && A.Notice == B.Notice
+				&& A.Shrine == B.Shrine && A.Guest == B.Guest
+				&& A.NotableGuest == B.NotableGuest && A.CausalPilgrim == B.CausalPilgrim
+				&& A.Clearance == B.Clearance && A.ConstructionRoot == B.ConstructionRoot
+				&& A.PlotRoot == B.PlotRoot && A.LayoutRoot == B.LayoutRoot
+				&& A.CropRow == B.CropRow && A.NetworkPiece == B.NetworkPiece
+				&& A.LabJob == B.LabJob && A.VisualRoot == B.VisualRoot
+				&& A.PlotPart == B.PlotPart
+				&& A.ArchitectureComponent == B.ArchitectureComponent
+				&& A.GatehouseSatellite == B.GatehouseSatellite
+				&& A.DelveEndpoint == B.DelveEndpoint
+				&& A.Furnishing == B.Furnishing && A.HeartRelic == B.HeartRelic
+				&& A.MaterialStockpile == B.MaterialStockpile
+				&& A.Transient == B.Transient && A.ResidentId == B.ResidentId
+				&& ReferenceEquals(A.Liquid, B.Liquid);
+		}
+
+		internal bool TryLoaded(out IList<GameObject> Loaded)
+		{
+			Loaded = LoadedObjects;
+			return LoadedIndexComplete;
+		}
+
+		private void EmitPassReceipt()
+		{
+			if (!KingdomLog.Enabled) return;
+			KingdomLog.Log("survey: zone=" + (Ground?.ZoneID ?? "<none>")
+				+ " classifications=" + ClassificationPasses
+				+ " foreign=" + ForeignClassifications
+				+ " roots=" + ClassifiedRoots + " indexed=" + Objects.Count
+				+ " reuses=" + ActiveReuses + " added=" + AddedMutations
+				+ " changed=" + ChangedMutations + " removed=" + RemovedMutations);
+		}
+
+		public GameObject FindCitizen(int ResidentId)
+		{
+			if (ResidentId <= 0) return null;
+			GameObject found = null;
+			for (int i = 0; i < CitizenBodies.Count; i++)
+			{
+				GameObject item = CitizenBodies[i];
+				IndexedRow row;
+				if (!Rows.TryGetValue(item, out row) || row.ResidentId != ResidentId) continue;
+				if (found != null) return null;
+				found = item;
+			}
+			return found;
+		}
+
+		/// <summary>Exact resident-body witness from the maintained id index. Duplicate id bodies
+		/// fail closed as Missing; publishing a transition from ambiguous physical evidence would
+		/// conceal the very duplication the binding invariant exists to expose.</summary>
+		internal bool TryWitnessResident(int ResidentId,
+			out Simulation.City.KingdomBodyWitness Witness)
+		{
+			Witness = Simulation.City.KingdomBodyWitness.Missing;
+			GameObject found = null;
+			for (int i = 0; i < ResidentBodies.Count; i++)
+			{
+				GameObject item = ResidentBodies[i];
+				if (!GameObject.Validate(item)
+					|| Simulation.City.KingdomResidents.IdOf(item) != ResidentId) continue;
+				if (found != null) return false;
+				found = item;
+			}
+			if (found == null) return true;
+			if (found.IsPlayerLed() || found.IsPlayer())
+				Witness = Simulation.City.KingdomBodyWitness.Led;
+			else Witness = found.IsAlive ? Simulation.City.KingdomBodyWitness.Present
+				: Simulation.City.KingdomBodyWitness.Killed;
+			return true;
+		}
+
+		/// <summary>One exact live body for a persisted engine id, restricted to the binding kind's
+		/// already-classified subset. Null means absent or ambiguous.</summary>
+		internal GameObject FindBoundBody(string ObjectId,
+			Simulation.City.KingdomBindingKind Kind)
+		{
+			if (string.IsNullOrEmpty(ObjectId)) return null;
+			List<GameObject> candidates = Kind == Simulation.City.KingdomBindingKind.Resident
+				? ResidentBodies : Transients;
+			GameObject found = null;
+			for (int i = 0; i < candidates.Count; i++)
+			{
+				GameObject item = candidates[i];
+				if (!GameObject.Validate(item)
+					|| !string.Equals(item.IDIfAssigned, ObjectId, StringComparison.Ordinal)) continue;
+				if (found != null) return null;
+				found = item;
+			}
+			return found;
+		}
+
+		internal GameObject FindTransient(int JobId)
+		{
+			if (JobId <= 0) return null;
+			GameObject found = null;
+			for (int i = 0; i < Transients.Count; i++)
+			{
+				GameObject item = Transients[i];
+				if (!GameObject.Validate(item)
+					|| item.GetIntProperty(Simulation.City.KingdomResidents.JobIdProperty) != JobId)
+					continue;
+				if (found != null) return null;
+				found = item;
+			}
+			return found;
+		}
+
+		public static bool ObserveAddedToActive(Zone Z, GameObject Item)
+		{
+			KingdomSurvey survey = ActiveFor(Z);
+			return survey != null && survey.ObserveAdded(Item);
+		}
+
+		public static bool ObserveChangedInActive(Zone Z, GameObject Item)
+		{
+			KingdomSurvey survey = ActiveFor(Z);
+			return survey != null && survey.ObserveChanged(Item);
+		}
+
+		/// <summary>Callback-failure seam: publish what physically exists, not what the callback
+		/// returned or threw, into the one bound survey.</summary>
+		public static bool ObserveCurrentTopologyInActive(Zone Z, GameObject Item)
+		{
+			KingdomSurvey survey = ActiveFor(Z);
+			return survey != null && survey.ObserveCurrentTopology(Item);
+		}
+
+		/// <summary>AddObject may stack into or replace the attempted object. Re-prove both
+		/// identities so a landed replacement refreshes instead of remaining stale.</summary>
+		public static void ObserveAddResultInActive(Zone Z, GameObject Attempted,
+			GameObject Accepted)
+		{
+			KingdomSurvey survey = ActiveFor(Z);
+			if (survey == null) return;
+			survey.ObserveCurrentTopology(Attempted);
+			if (!ReferenceEquals(Accepted, Attempted))
+				survey.ObserveCurrentTopology(Accepted);
+		}
+
+		public static bool ObserveRemovedFromActive(Zone Z, GameObject Item)
+		{
+			KingdomSurvey survey = ActiveFor(Z);
+			return survey != null && survey.ObserveRemoved(Item);
 		}
 
 		/// <summary>
@@ -238,6 +889,7 @@ namespace ThousandAndFirst
 				GameObject work = Defences[i];
 				int need = work.GetIntProperty("KingdomStaffNeeded");
 				int effectiveness = (need > 0) ? work.GetIntProperty("KingdomEffectiveness") : 100;
+				effectiveness = KingdomCrews.ApplyAffinity(work, effectiveness);
 				total += work.GetIntProperty("KingdomDefence") * effectiveness / 100;
 			}
 			return total + DistrictDefenceBonus;
@@ -262,6 +914,7 @@ namespace ThousandAndFirst
 					remaining -= removed;
 					StoredWater -= removed;
 					StorageSpace += removed;
+					SynchronizeReceiptObject(store.ParentObject);
 				}
 			}
 			return Drams - remaining;
@@ -345,6 +998,7 @@ namespace ThousandAndFirst
 				FoodStored = 0;
 			}
 			FoodAbundance = KingdomRules.ClassifyPantry(FoodStored);
+			SynchronizeLarders();
 			return spent;
 		}
 
@@ -421,6 +1075,7 @@ namespace ThousandAndFirst
 				FoodStored = 0;
 			}
 			FoodAbundance = KingdomRules.ClassifyPantry(FoodStored);
+			SynchronizeLarders();
 			return took;
 		}
 
@@ -525,10 +1180,17 @@ namespace ThousandAndFirst
 				return false;
 			}
 			Work.SetIntProperty("KingdomLarder", 1);
-			Larders.Add(Work);
-			FoodCapacity += CapacityOf(Work);
-			FoodStored += HeldIn(Work);
-			FoodAbundance = KingdomRules.ClassifyPantry(FoodStored);
+			if (Rows.ContainsKey(Work))
+			{
+				ObserveChanged(Work);
+			}
+			else
+			{
+				Larders.Add(Work);
+				FoodCapacity += CapacityOf(Work);
+				FoodStored += HeldIn(Work);
+				FoodAbundance = KingdomRules.ClassifyPantry(FoodStored);
+			}
 			return true;
 		}
 
@@ -545,7 +1207,7 @@ namespace ThousandAndFirst
 		/// </summary>
 		/// <param name="Amount">Servings offered.</param>
 		/// <param name="Blueprint">What the food physically is &mdash; the settlement's own crop,
-		/// from <c>KingdomCropRules.CropBlueprintForStyle</c>, so a fungal city's granary fills
+		/// from <c>KingdomData.CropForStyle</c>, so a fungal city's granary fills
 		/// with mushrooms. An unknown blueprint stores nothing rather than minting a null.</param>
 		/// <returns>Servings actually stored; the remainder had nowhere to go.</returns>
 		public int StoreFood(int Amount, string Blueprint)
@@ -593,7 +1255,63 @@ namespace ThousandAndFirst
 			int stored = Amount - remaining;
 			FoodStored += stored;
 			FoodAbundance = KingdomRules.ClassifyPantry(FoodStored);
+			SynchronizeLarders();
 			return stored;
+		}
+
+		/// <summary>
+		/// Puts food into one exact dedicated larder and returns the measured inventory delta.
+		/// Catch-up prices one container touch as one medium unit, so its runtime may not call the
+		/// broad <see cref="StoreFood"/> loop and then pretend only one larder was touched.
+		/// A callback exception is judged by the physical before/after count; deferred food is not
+		/// harvest loss and this method deliberately does not write the settlement ledger.
+		/// </summary>
+		public int StoreFoodIn(GameObject Container, int Amount, string Blueprint)
+		{
+			if (!GameObject.Validate(Container) || Container.Inventory == null
+				|| !Larders.Contains(Container) || Amount <= 0 || string.IsNullOrEmpty(Blueprint))
+			{
+				return 0;
+			}
+			int before = HeldIn(Container);
+			int room = CapacityOf(Container) - before;
+			int wanted = (Amount < room) ? Amount : room;
+			if (wanted <= 0) return 0;
+			int accepted = 0;
+			for (int i = 0; i < wanted; i++)
+			{
+				int heldBefore = HeldIn(Container);
+				GameObject food = null;
+				try
+				{
+					food = GameObject.Create(Blueprint);
+					if (!GameObject.Validate(food)
+						|| (!food.HasPart("Food") && !food.HasPart("PreparedCookingIngredient")))
+					{
+						if (GameObject.Validate(food)) food.Obliterate();
+						break;
+					}
+					Container.Inventory.AddObject(food, Silent: true);
+				}
+				catch
+				{
+					// Measured inventory delta below decides whether callback completed.
+				}
+				int heldAfter = HeldIn(Container);
+				if (heldAfter != heldBefore + 1)
+				{
+					if (GameObject.Validate(food) && food.InInventory != Container) food.Obliterate();
+					break;
+				}
+				accepted++;
+			}
+			if (accepted > 0)
+			{
+				FoodStored += accepted;
+				FoodAbundance = KingdomRules.ClassifyPantry(FoodStored);
+				SynchronizeReceiptObject(Container);
+			}
+			return accepted;
 		}
 
 		/// <summary>
@@ -691,8 +1409,9 @@ namespace ThousandAndFirst
 				|| FoodAbundance != Frame.FoodAbundance) return false;
 			if (Lost > 0)
 			{
-				FoodStored = Frame.FoodStored - Lost;
-				FoodAbundance = KingdomRules.ClassifyPantry(FoodStored);
+					FoodStored = Frame.FoodStored - Lost;
+					FoodAbundance = KingdomRules.ClassifyPantry(FoodStored);
+					SynchronizeReceiptObject(Frame.Container);
 			}
 			return true;
 		}
@@ -851,6 +1570,7 @@ namespace ThousandAndFirst
 			catch (OverflowException) { return false; }
 			StoredWater = oldStored - Drams;
 			StorageSpace = newSpace;
+			SynchronizeReceiptObject(owner);
 			Lost = Drams;
 			return true;
 		}
@@ -893,9 +1613,38 @@ namespace ThousandAndFirst
 					remaining -= added;
 					StoredWater += added;
 					StorageSpace -= added;
+					SynchronizeReceiptObject(store.ParentObject);
 				}
 			}
 			return Drams - remaining;
+		}
+
+		/// <summary>
+		/// Pours into one exact dedicated vessel. The physical volume delta, including a callback
+		/// that completed and then threw, is the only amount published to survey counters.
+		/// </summary>
+		public int StoreIn(LiquidVolume Store, int Drams)
+		{
+			if (Store == null || Drams <= 0 || !Stores.Contains(Store)
+				|| Store.MaxVolume < 0 || Store.Volume < 0 || Store.Volume >= Store.MaxVolume
+				|| !KingdomLiquids.CanReceiveFreshWater(Store)) return 0;
+			int before = Store.Volume;
+			int wanted = Store.MaxVolume - before;
+			if (wanted > Drams) wanted = Drams;
+			try
+			{
+				KingdomLiquids.Fill(Store, "water", wanted);
+			}
+			catch
+			{
+				// Measured volume delta below decides whether callback completed.
+			}
+			int added = Store.Volume - before;
+			if (added <= 0 || added > wanted) return 0;
+			StoredWater += added;
+			StorageSpace -= added;
+			SynchronizeReceiptObject(Store.ParentObject);
+			return added;
 		}
 
 		/// <summary>Drains open water sources, updating the survey's counters.</summary>
@@ -916,9 +1665,15 @@ namespace ThousandAndFirst
 				{
 					remaining -= removed;
 					OpenWater -= removed;
+					SynchronizeReceiptObject(pool.ParentObject);
 				}
 			}
 			return Drams - remaining;
+		}
+
+		private void SynchronizeLarders()
+		{
+			for (int i = 0; i < Larders.Count; i++) SynchronizeReceiptObject(Larders[i]);
 		}
 	}
 }

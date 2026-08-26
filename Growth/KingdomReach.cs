@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using XRL;
 using XRL.Messages;
 using XRL.World;
@@ -292,12 +293,9 @@ namespace ThousandAndFirst
 			}
 			List<KindAmount> shaded = new List<KindAmount>();
 			List<KindAmount> realm = new List<KindAmount>();
-			foreach (GameObject item in Z.GetObjects())
+			for (int i = 0; i < Survey.Built.Count; i++)
 			{
-				if (item.GetIntProperty(KingdomUpgrade.BuiltProperty) != 1)
-				{
-					continue;
-				}
+				GameObject item = Survey.Built[i];
 				KingdomRules.BuildEntry entry;
 				string key = KingdomUpgrade.DesignKeyOf(item);
 				if (string.IsNullOrEmpty(key) || !KingdomData.TryGetBuilding(key, out entry))
@@ -329,7 +327,9 @@ namespace ThousandAndFirst
 			// out of the settlement: the seat is empty however far away their object may still be
 			// standing. A holder the roster keeps but who is not in this zone this pass keeps the
 			// seat, exactly as the settlement's own office does.
-			if (!string.IsNullOrEmpty(held) && !System.RosterNames.Contains(held))
+			Simulation.City.KingdomResidentRow heldRow;
+			if (!string.IsNullOrEmpty(held)
+				&& !Simulation.City.KingdomResidents.TryFindByName(System, held, out heldRow))
 			{
 				Vacate(System, Work, Entry, held);
 				held = null;
@@ -445,8 +445,11 @@ namespace ThousandAndFirst
 			{
 				return int.MaxValue;
 			}
-			int at = System.RosterNames.IndexOf(Name);
-			return (at < 0) ? int.MaxValue : at;
+			List<Simulation.City.KingdomResidentRow> rows =
+				Simulation.City.KingdomResidents.RollRows(System);
+			for (int i = 0; i < rows.Count; i++)
+				if (string.Equals(rows[i].Name, Name, StringComparison.Ordinal)) return i;
+			return int.MaxValue;
 		}
 
 		private static string NameOf(GameObject Settler)
@@ -574,7 +577,7 @@ namespace ThousandAndFirst
 			if (Z != null)
 			{
 				List<KingdomLayoutRules.LayoutMark> marks = MarksOf(Z);
-				foreach (GameObject item in Z.GetObjects())
+				foreach (GameObject item in KingdomSurvey.ObjectsFor(Z))
 				{
 					if (item.GetIntProperty(KingdomUpgrade.BuiltProperty) != 1)
 					{

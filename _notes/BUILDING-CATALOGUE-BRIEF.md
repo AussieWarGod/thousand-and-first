@@ -729,11 +729,24 @@ machinery. A lane that cannot be built as a rendering returns as a design questi
    didn't order from growth you did. (Rides: distance matrix traffic counts + road machinery.
    W6.)
 8. **The adventurer loop closes** — citizens as companions, tinker services, a market in real
-   goods, trophies/relics displayed, petitions as quests. (Rides: petitions, bounties, sockets,
+   goods, trophies/relics displayed, petitions as custom lifecycle undertakings (not vanilla
+   journal quests). (Rides: petitions, bounties, sockets,
    lodging roles; largest lane, staged across W5+.)
 
 Favoured-dish meals (G3, in flight) are lane 1/3 groundwork. Lane-to-wave mapping is advisory;
 the mesh condition is not.
+
+**Runtime reconciliation, 2026-08-25.** Weddings, funerals, feasts, and raisings now use one
+bounded city-book lifecycle receipt to render an attended occasion. It freezes the exact named
+resident bodies, authored functional fixture, reachable activity cells, former work/home/AI
+state, fixture-use proof, and the existing chronicle/told/message dispositions. Residents walk by
+vanilla `MoveTo`; no attendee is cloned, summoned, substituted, or teleported. The functional
+chair, shrine, campfire, or first-basin liquid part receives a real part-level action before Ready.
+The receipt survives save/reload, restores the exact prior cell and ordinary schedule last, and
+owns no domain outcome beyond staging. Bounded canonical once-only tombstones retain identity but
+no prose or outcome after wedding, funeral, and construction-raising delivery.
+If the real bodies, coherent owned ground, or fixture are absent, the occasion remains a dated
+report only. A report must never claim a gathering the player could not have witnessed.
 
 **(j) N-city scaling doctrine** (author question, 2026-08-22 — "does the kingdom need to cap
 the number of cities of certain sizes to make this viable, or are we pretty free to scale"):

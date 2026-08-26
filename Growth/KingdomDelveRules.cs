@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Globalization;
 
 namespace ThousandAndFirst
 {
@@ -90,6 +92,49 @@ namespace ThousandAndFirst
 			}
 			return headWorld == footWorld && headX == footX && headY == footY
 				&& ShaftJoinsStrata(headZ, footZ, ShaftStands: true);
+		}
+
+		/// <summary>
+		/// Derives the sole canonical foot zone id without consulting or loading the world. Qud's
+		/// ordinary zone ids have six dot-separated fields; a delve preserves the first five and
+		/// advances only Z. Non-canonical numeric spellings refuse so a durable receipt never gains
+		/// two names for one zone.
+		/// </summary>
+		public static bool TryFootZoneId(string HeadZoneId, out string FootZoneId)
+		{
+			FootZoneId = null;
+			if (string.IsNullOrEmpty(HeadZoneId) || HeadZoneId.Length > 256)
+			{
+				return false;
+			}
+			string[] fields = HeadZoneId.Split('.');
+			if (fields.Length != 6 || string.IsNullOrEmpty(fields[0]))
+			{
+				return false;
+			}
+			int value;
+			for (int i = 1; i < fields.Length; i++)
+			{
+				if (!int.TryParse(fields[i], NumberStyles.Integer, CultureInfo.InvariantCulture,
+					out value) || value.ToString(CultureInfo.InvariantCulture) != fields[i])
+				{
+					return false;
+				}
+			}
+			int z;
+			if (!int.TryParse(fields[5], NumberStyles.Integer, CultureInfo.InvariantCulture, out z)
+				|| z == int.MaxValue)
+			{
+				return false;
+			}
+			fields[5] = (z + 1).ToString(CultureInfo.InvariantCulture);
+			string foot = string.Join(".", fields);
+			if (foot.Length > 256 || !IsShaftPair(HeadZoneId, foot))
+			{
+				return false;
+			}
+			FootZoneId = foot;
+			return true;
 		}
 
 		/// <summary>

@@ -66,10 +66,166 @@ namespace ThousandAndFirst
 		/// shrine argued at somebody are counted once however many passes resolve them.</summary>
 		public const string ShrinePullTickProperty = "KingdomShrinePullTick";
 
+		/// <summary>Bounded v1 option observation for this zone's faith clocks.</summary>
+		public const string OptionStateProperty = "r_TAF_FaithOption_v1";
+
+		/// <summary>Exact immutable settlement owning <see cref="OptionStateProperty"/>.</summary>
+		public const string OptionOwnerProperty = "r_TAF_FaithOptionOwner_v1";
+
+		/// <summary>Realm-wide option epoch. Every city/zone compares its local anchor against
+		/// this so a transition first observed elsewhere cannot be billed here later.</summary>
+		public const string GlobalOptionStatePrefix = "r_TAF_FaithGlobalOption_v1:";
+
+		/// <summary>
+		/// Later of a shrine brink's original warning and a master-resume observation. Master-off
+		/// preserves the warned brink, while this anchor gives it a complete future window rather
+		/// than billing the disabled span into a conversion.
+		/// </summary>
+		public const string ShrineWindowAnchorProperty = "KingdomShrineWindowOptionAnchor";
+
+		/// <summary>One-bit receipt that this resident had unpaid shrine pressure when the
+		/// module was disabled. Resume uses it once to plant a new full future pull interval.</summary>
+		public const string ShrineDisabledActiveProperty = "KingdomShrineOptionWasActive";
+
 		/// <summary>Raw property name AssignWork stamps on every crewed work. No public const
 		/// exists for it yet anywhere in the mod (<c>KingdomLocus</c> reads the same literal
 		/// directly); this file follows that precedent rather than inventing a second one.</summary>
 		private const string StaffedProperty = "KingdomStaffed";
+
+		private static KingdomElapsedOptionDecision ObserveOption(KingdomSystem System,
+			Zone Z, long Now)
+		{
+			string settlementId = KingdomChronicle.SettlementId(System);
+			string realmId = System.CurrentRealmId;
+			if (The.Game == null || !KingdomIdentityRules.IsSettlementId(settlementId)
+				|| !KingdomIdentityRules.IsRealmId(realmId))
+			{
+				return KingdomElapsedOptionRules.Observe(
+					KingdomElapsedOptionRecord.Unobserved, Enabled,
+					System.MasterAppliedResumeToken, Now);
+			}
+
+			string globalKey = GlobalOptionStatePrefix + realmId;
+			KingdomElapsedOptionRecord globalPrior;
+			bool globalDecoded = KingdomElapsedOptionRules.TryDecode(
+				The.Game.GetStringGameState(globalKey, ""), out globalPrior);
+			if (!globalDecoded) globalPrior = KingdomElapsedOptionRecord.Unobserved;
+			KingdomElapsedOptionDecision global = KingdomElapsedOptionRules.Observe(globalPrior,
+				Enabled, System.MasterAppliedResumeToken, Now);
+			if (!global.Valid)
+			{
+				global = KingdomElapsedOptionRules.Observe(
+					KingdomElapsedOptionRecord.Unobserved, Enabled,
+					System.MasterAppliedResumeToken, Now);
+				globalDecoded = false;
+			}
+			string current = global.Valid
+				? KingdomElapsedOptionRules.Encode(global.Record) : null;
+			if (global.Valid && current != null && (!globalDecoded
+				|| global.Transition != KingdomElapsedOptionTransition.None))
+				The.Game.SetStringGameState(globalKey, current);
+
+			string priorOwner = Z.GetZoneProperty(OptionOwnerProperty, null);
+			bool ownerMatches = global::System.String.Equals(
+				priorOwner, settlementId,
+				global::System.StringComparison.Ordinal);
+			string encoded = ownerMatches
+				? Z.GetZoneProperty(OptionStateProperty, null) : null;
+			KingdomElapsedOptionRecord prior = KingdomElapsedOptionRecord.Unobserved;
+			bool zoneDecoded = ownerMatches
+				&& KingdomElapsedOptionRules.TryDecode(encoded, out prior);
+			bool zoneMatches = zoneDecoded && global.Valid
+				&& prior.State == global.Record.State
+				&& prior.ObservedTick == global.Record.ObservedTick
+				&& prior.MasterResumeToken == global.Record.MasterResumeToken;
+			if (!zoneMatches && global.Valid && current != null)
+			{
+				KingdomElapsedOptionTransition transition =
+					KingdomElapsedOptionRules.LocalTransition(Enabled,
+						!string.IsNullOrEmpty(priorOwner) && !ownerMatches,
+						zoneDecoded, prior, global.Record);
+				return new KingdomElapsedOptionDecision(true, global.Record, transition,
+					Enabled ? KingdomElapsedOptionAction.AnchorEnabled
+						: KingdomElapsedOptionAction.AnchorDisabled);
+			}
+			return global;
+		}
+
+		private static void CommitOption(KingdomSystem System, Zone Z,
+			KingdomElapsedOptionRecord Record)
+		{
+			string settlementId = KingdomChronicle.SettlementId(System);
+			if (Z == null || !KingdomIdentityRules.IsSettlementId(settlementId)) return;
+			string current = KingdomElapsedOptionRules.Encode(Record);
+			if (current == null) return;
+			// Semantic cancellation/anchoring is complete before this helper. State then
+			// owner makes a cut with a foreign owner retry safely.
+			Z.SetZoneProperty(OptionStateProperty, current);
+			Z.SetZoneProperty(OptionOwnerProperty, settlementId);
+		}
+
+		/// <summary>Module-off cancels only unpaid shrine pressure. Consecration, buildings,
+		/// resident creed, education, and every non-shrine brink remain byte-for-byte.</summary>
+		private static void CancelUncommittedFaith(KingdomSurvey Survey)
+		{
+			for (int i = 0; i < Survey.Settlers.Count; i++)
+			{
+				GameObject settler = Survey.Settlers[i];
+				if (!GameObject.Validate(settler)) continue;
+				BrinkRecord brink = KingdomBrink.Of(settler, BrinkKind.Creed);
+				bool shrineBrink = brink.Stands
+					&& brink.Channel == (int)ConversionChannel.Shrine;
+				if (settler.GetIntProperty(ShrinePullProperty) != 0
+					|| settler.GetLongProperty(ShrinePullTickProperty) != 0L
+					|| shrineBrink)
+					settler.SetIntProperty(ShrineDisabledActiveProperty, 1);
+				if (settler.GetIntProperty(ShrinePullProperty) != 0)
+					settler.SetIntProperty(ShrinePullProperty, 0);
+				if (settler.GetLongProperty(ShrinePullTickProperty) != 0L)
+					settler.SetLongProperty(ShrinePullTickProperty, 0L);
+				if (settler.GetLongProperty(ShrineWindowAnchorProperty) != 0L)
+					settler.SetLongProperty(ShrineWindowAnchorProperty, 0L);
+				if (shrineBrink)
+				{
+					// No per-resident green reward/push: this is option cancellation, not an
+					// in-world arrest authored by player action.
+					KingdomBrink.Lift(settler, BrinkKind.Creed);
+				}
+			}
+		}
+
+		private static void ResumeCanceledFaith(KingdomSurvey Survey, long Now)
+		{
+			// Also cancel stale pressure on a body not present for the disable transition, then
+			// consume the one-bit receipt into a fresh clock. Nothing converts on this wake.
+			CancelUncommittedFaith(Survey);
+			for (int i = 0; i < Survey.Settlers.Count; i++)
+			{
+				GameObject settler = Survey.Settlers[i];
+				if (!GameObject.Validate(settler)
+					|| settler.GetIntProperty(ShrineDisabledActiveProperty) != 1) continue;
+				settler.SetIntProperty(ShrineDisabledActiveProperty, 0);
+				settler.SetLongProperty(ShrinePullTickProperty, Now);
+			}
+		}
+
+		private static void AnchorPreservedFaith(KingdomSurvey Survey, long Now)
+		{
+			for (int i = 0; i < Survey.Settlers.Count; i++)
+			{
+				GameObject settler = Survey.Settlers[i];
+				if (!GameObject.Validate(settler)) continue;
+				if (settler.GetIntProperty(ShrinePullProperty) != 0
+					|| settler.GetLongProperty(ShrinePullTickProperty) != 0L)
+					settler.SetLongProperty(ShrinePullTickProperty, Now);
+				BrinkRecord brink = KingdomBrink.Of(settler, BrinkKind.Creed);
+				if (brink.Stands && brink.Channel == (int)ConversionChannel.Shrine
+					&& brink.Warned)
+					settler.SetLongProperty(ShrineWindowAnchorProperty, Now);
+				else if (settler.GetLongProperty(ShrineWindowAnchorProperty) != 0L)
+					settler.SetLongProperty(ShrineWindowAnchorProperty, 0L);
+			}
+		}
 
 		// ==================================================================================
 		// The attended pass: shrine conversion, and both channels' 7b lapse lines.
@@ -89,10 +245,32 @@ namespace ThousandAndFirst
 		/// <c>Settlers</c> lists.</param>
 		public static void OnZoneActivated(KingdomSystem System, Zone Z, KingdomSurvey Survey)
 		{
-			if (!Enabled || System == null || !System.Founded || Z == null || Survey == null || !System.ClaimedZones.Contains(Z.ZoneID))
+			if (System == null || !System.Founded || Z == null || Survey == null
+				|| The.Game == null || !System.ClaimedZones.Contains(Z.ZoneID))
 			{
 				return;
 			}
+			long now = The.Game.TimeTicks;
+			KingdomElapsedOptionDecision option = ObserveOption(System, Z, now);
+			if (!option.Valid) return;
+			if (option.Action == KingdomElapsedOptionAction.AnchorDisabled)
+			{
+				if (option.Transition == KingdomElapsedOptionTransition.Disabled
+					|| option.Transition == KingdomElapsedOptionTransition.InitializedDisabled)
+					CancelUncommittedFaith(Survey);
+				CommitOption(System, Z, option.Record);
+				return;
+			}
+			if (option.Action == KingdomElapsedOptionAction.AnchorEnabled)
+			{
+				if (option.Transition == KingdomElapsedOptionTransition.Enabled)
+					ResumeCanceledFaith(Survey, now);
+				else
+					AnchorPreservedFaith(Survey, now);
+				CommitOption(System, Z, option.Record);
+				return;
+			}
+			if (option.Action != KingdomElapsedOptionAction.Run) return;
 			HashSet<GameObject> claimed = new HashSet<GameObject>();
 			for (int i = 0; i < Survey.Works.Count; i++)
 			{
@@ -133,8 +311,13 @@ namespace ThousandAndFirst
 				if (settler.GetIntProperty(ShrinePullProperty) != 0)
 				{
 					settler.SetIntProperty(ShrinePullProperty, 0);
-					settler.SetLongProperty(ShrinePullTickProperty, 0L);
 				}
+				if (settler.GetLongProperty(ShrinePullTickProperty) != 0L)
+					settler.SetLongProperty(ShrinePullTickProperty, 0L);
+				if (settler.GetIntProperty(ShrineDisabledActiveProperty) != 0)
+					settler.SetIntProperty(ShrineDisabledActiveProperty, 0);
+				if (settler.GetLongProperty(ShrineWindowAnchorProperty) != 0L)
+					settler.SetLongProperty(ShrineWindowAnchorProperty, 0L);
 			}
 		}
 
@@ -145,10 +328,13 @@ namespace ThousandAndFirst
 			BrinkRecord brink = KingdomBrink.Of(Settler, BrinkKind.Creed);
 			if (!brink.Stands || brink.Channel != (int)ConversionChannel.Shrine)
 			{
+				if (Settler != null && Settler.GetLongProperty(ShrineWindowAnchorProperty) != 0L)
+					Settler.SetLongProperty(ShrineWindowAnchorProperty, 0L);
 				return false;
 			}
 			bool wasWarned = brink.Warned;
 			KingdomBrink.Lift(Settler, BrinkKind.Creed);
+			Settler.SetLongProperty(ShrineWindowAnchorProperty, 0L);
 			if (wasWarned)
 			{
 				// Only what was actually said is unsaid.
@@ -220,8 +406,13 @@ namespace ThousandAndFirst
 			if (Settler.GetIntProperty(ShrinePullProperty) != 0)
 			{
 				Settler.SetIntProperty(ShrinePullProperty, 0);
-				Settler.SetLongProperty(ShrinePullTickProperty, 0L);
 			}
+			if (Settler.GetLongProperty(ShrinePullTickProperty) != 0L)
+				Settler.SetLongProperty(ShrinePullTickProperty, 0L);
+			if (Settler.GetIntProperty(ShrineDisabledActiveProperty) != 0)
+				Settler.SetIntProperty(ShrineDisabledActiveProperty, 0);
+			if (Settler.GetLongProperty(ShrineWindowAnchorProperty) != 0L)
+				Settler.SetLongProperty(ShrineWindowAnchorProperty, 0L);
 		}
 
 		/// <summary>
@@ -263,6 +454,8 @@ namespace ThousandAndFirst
 				// and nothing accrues past a brink in any case.
 				return;
 			}
+			if (Settler.GetLongProperty(ShrineWindowAnchorProperty) != 0L)
+				Settler.SetLongProperty(ShrineWindowAnchorProperty, 0L);
 			long last = Settler.GetLongProperty(ShrinePullTickProperty);
 			if (last <= 0L || now <= 0L)
 			{
@@ -311,11 +504,14 @@ namespace ThousandAndFirst
 					KingdomBrink.Of(Settler, BrinkKind.Creed), now, KingdomWord.StandsIn(Z), System.SeatName, null);
 				return;
 			}
-			if (!KingdomBrinkRules.WindowSpent(BrinkKind.Creed, Brink.WarnedTick, now))
+			long windowStart = KingdomFaithRules.EffectiveWindowStart(Brink.WarnedTick,
+				Settler.GetLongProperty(ShrineWindowAnchorProperty), now);
+			if (!KingdomBrinkRules.WindowSpent(BrinkKind.Creed, windowStart, now))
 			{
 				return;
 			}
-			int ago = KingdomBrinkRules.DaysStood(KingdomBrinkRules.ExpiryTick(BrinkKind.Creed, Brink.WarnedTick), now);
+			int ago = KingdomBrinkRules.DaysStood(
+				KingdomBrinkRules.ExpiryTick(BrinkKind.Creed, windowStart), now);
 			string residentName = NameOf(Settler);
 			int roads = Settler.GetIntProperty(KingdomConversion.RoadsWalkedProperty);
 			string settlementId = KingdomChronicle.SettlementId(System);
@@ -327,6 +523,7 @@ namespace ThousandAndFirst
 			KingdomBrink.Lift(Settler, BrinkKind.Creed);
 			Settler.SetIntProperty(ShrinePullProperty, 0);
 			Settler.SetLongProperty(ShrinePullTickProperty, 0L);
+			Settler.SetLongProperty(ShrineWindowAnchorProperty, 0L);
 			if (!turns)
 			{
 				// The shrine argued a whole season and it did not take. Said, because the founder
@@ -344,7 +541,8 @@ namespace ThousandAndFirst
 				return;
 			}
 			string creedName = KingdomCreed.CreedName(ShrineCreed);
-			MessageQueue.AddPlayerMessage(KingdomFaithRules.ConversionMessage(residentName, creedName)
+			MessageQueue.AddPlayerMessage(KingdomFaithRules.ConversionMessage(
+				KingdomPresentation.Rich(residentName), creedName)
 				+ KingdomBrinkRules.FiredClause(ago));
 			KingdomLog.Log("faith: conversion " + residentName + " -> " + ShrineCreed + " at " + (Z?.ZoneID ?? "-"));
 		}
@@ -392,7 +590,7 @@ namespace ThousandAndFirst
 			{
 				return name;
 			}
-			return (Resident == null) ? "a settler" : Resident.ShortDisplayName;
+			return (Resident == null) ? "a settler" : Resident.BaseDisplayNameStripped;
 		}
 
 		// ==================================================================================
@@ -410,7 +608,8 @@ namespace ThousandAndFirst
 			{
 				return false;
 			}
-			foreach (GameObject item in Z.GetObjects())
+			KingdomSurvey survey = KingdomSurvey.ActiveFor(Z) ?? KingdomSurvey.Take(Z);
+			foreach (GameObject item in survey.Built)
 			{
 				if (item.GetIntProperty(KingdomUpgrade.BuiltProperty) != 1 || item.GetIntProperty(StaffedProperty) != 1)
 				{
@@ -489,7 +688,7 @@ namespace ThousandAndFirst
 				string held = shrines[i].GetStringProperty(ShrineCreedProperty);
 				shrineOptions[i] = shrines[i].ShortDisplayName + (string.IsNullOrEmpty(held) ? "" : (" {{C|[" + KingdomCreed.CreedName(held) + "]}}"));
 			}
-			int picked = Popup.PickOption(Title: "Consecrate a shrine, at " + System.SeatName, Options: shrineOptions, AllowEscape: true);
+			int picked = Popup.PickOption(Title: "Consecrate a shrine, at " + KingdomPresentation.Rich(System.SeatName), Options: shrineOptions, AllowEscape: true);
 			if (picked < 0)
 			{
 				return;
@@ -528,7 +727,7 @@ namespace ThousandAndFirst
 			target.SetStringProperty(ShrineCreedProperty, chosenCreed);
 			KingdomGovernanceScope.Commit("consecrate shrine");
 			target.SetIntProperty(ShrineLapsedAnnouncedProperty, 0);
-			KingdomChronicle.Record(System, KingdomFaithRules.ConsecrationChronicle(target.ShortDisplayName, System.SeatName, creedDisplay, reconsecration));
+			KingdomChronicle.Record(System, KingdomFaithRules.ConsecrationChronicle(target.ShortDisplayName, KingdomPresentation.Rich(System.SeatName), creedDisplay, reconsecration));
 			Popup.Show(KingdomFaithRules.ConsecrationNotice(target.ShortDisplayName, creedDisplay, reconsecration, neverStaffable));
 			KingdomLog.Log("faith: consecrated " + target.ShortDisplayName + " to " + chosenCreed + " reconsecration=" + reconsecration);
 		}
@@ -536,7 +735,8 @@ namespace ThousandAndFirst
 		private static List<GameObject> FaithBuildingsIn(Zone Z)
 		{
 			List<GameObject> found = new List<GameObject>();
-			foreach (GameObject item in Z.GetObjects())
+			KingdomSurvey survey = KingdomSurvey.ActiveFor(Z) ?? KingdomSurvey.Take(Z);
+			foreach (GameObject item in survey.Built)
 			{
 				if (item.GetIntProperty(KingdomUpgrade.BuiltProperty) != 1)
 				{

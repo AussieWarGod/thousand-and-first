@@ -80,13 +80,14 @@ namespace ThousandAndFirst.Tests
 
 		/// <summary>
 		/// The figures §0.0(b) actually argues with: a farm's eighty plants in four turns, a
-		/// Joppa-scale three hundred in thirteen, and the worst backlog a zone can owe — 232
-		/// weighted units — in twenty-nine, still inside the forty turns vanilla keeps a departed
+		/// Joppa-scale three hundred in thirteen, and the live worst backlog a zone can owe — 220
+		/// root containers plus the 24+8 manual allowances and sixty bodies — in thirty-nine,
+		/// inside vanilla's forty-turn
 		/// zone live.
 		/// </summary>
 		[TestCase(0, 0, 80, 4)]
 		[TestCase(0, 0, 300, 13)]
-		[TestCase(232, 0, 0, 29)]
+		[TestCase(312, 0, 0, 39)]
 		[TestCase(0, 8, 0, 1)]
 		[TestCase(0, 9, 0, 2)]
 		[TestCase(0, 0, 0, 0)]
@@ -108,7 +109,7 @@ namespace ThousandAndFirst.Tests
 			KingdomCityFault fault;
 			Assert.IsTrue(KingdomCatchUpRules.TryWeigh(KingdomCatchUpRules.WorstBacklogUnits, 0, 0, out thirds, out fault));
 			Assert.IsTrue(KingdomCatchUpRules.TryTurnsToDrain(thirds, out turns, out fault));
-			Assert.AreEqual(29, turns);
+			Assert.AreEqual(39, turns);
 			Assert.Less(turns, KingdomCatchUpRules.GraceWindowTurns, "the worst backlog outlived vanilla's own grace window");
 			Assert.AreEqual(KingdomBudgetVerdict.Within, KingdomBudgetRules.JudgeCount(KingdomBudgetLane.CatchUpDrain, turns));
 			Assert.AreEqual(KingdomBudgetVerdict.Warn, KingdomBudgetRules.JudgeCount(KingdomBudgetLane.CatchUpDrain, 41L));

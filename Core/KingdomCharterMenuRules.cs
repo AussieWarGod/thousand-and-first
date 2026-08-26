@@ -39,7 +39,8 @@ namespace ThousandAndFirst
 		ClaimGround = 31,
 		CityBook = 32,
 		TechMap = 33,
-		CityAsks = 34
+		CityAsks = 34,
+		SalvageExpedition = 35
 	}
 
 	public enum KingdomCharterChapter
@@ -160,6 +161,7 @@ namespace ThousandAndFirst
 				KingdomCharterMenuRoute.ForAction("Dedicate a vessel, larder, or stockpile", 'd', KingdomCharterAction.DedicateStores),
 				KingdomCharterMenuRoute.ForAction("Strike a trade charter", 't', KingdomCharterAction.StrikeTradeCharter),
 				KingdomCharterMenuRoute.ForAction("Send a water manifest", 'm', KingdomCharterAction.SendManifest),
+				KingdomCharterMenuRoute.ForAction("Commission a salvage expedition", 'e', KingdomCharterAction.SalvageExpedition),
 				KingdomCharterMenuRoute.ForAction("Set the water detail", 'w', KingdomCharterAction.SetWaterDetail),
 				KingdomCharterMenuRoute.Back()
 			},
@@ -213,6 +215,32 @@ namespace ThousandAndFirst
 			case KingdomCharterChapter.DynastyAndLegacy: return "Dynasty & legacy";
 			case KingdomCharterChapter.CityReadings: return "The city in full";
 			default: return "Charter";
+			}
+		}
+
+		/// <summary>
+		/// Reports and already-committed threat/petition recovery remain reachable while the realm
+		/// master is paused. Every other verb can create work, spend value, or change governance and
+		/// is therefore unavailable until resume.
+		/// </summary>
+		public static bool AvailableWhileSimulationPaused(KingdomCharterAction Action)
+		{
+			switch (Action)
+			{
+			case KingdomCharterAction.HearPetition:
+			case KingdomCharterAction.Status:
+			case KingdomCharterAction.Homecoming:
+			case KingdomCharterAction.ChronicleAndDynasty:
+			case KingdomCharterAction.OutsiderChronicle:
+			case KingdomCharterAction.Standings:
+			case KingdomCharterAction.SettlerRoll:
+			case KingdomCharterAction.AnswerThreat:
+			case KingdomCharterAction.CityBook:
+			case KingdomCharterAction.TechMap:
+			case KingdomCharterAction.CityAsks:
+				return true;
+			default:
+				return false;
 			}
 		}
 

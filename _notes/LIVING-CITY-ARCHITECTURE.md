@@ -6,11 +6,24 @@ continuity, logistics locality, networks, and the executor seam — composing wi
 time doctrine), 10 (brink moderation, typed wear consequences, ruins), and 11 (grounded production,
 the harvest cycle, extend-the-real-machines). Head at writing: `4b128cb`.
 
+> **Current-bound correction (2026-08-25).** This document was costed against the retired flat
+> forty-work proxy. The live City envelope is four zones times 220 plots: `W=880`, `R=956`, and
+> `64 × 2R = 122,368` maximum reckon row-visits. The composed current-realm model estimate is
+> 197,796 bytes after the resident-authority carrier correction; current advisory/ceiling rungs
+> are 208/256 KiB. Every later `40 works`, `R=116`,
+> `14,848`, 56/64-KiB, or flat-`MaxBuildings` figure in this historical design is superseded by
+> those bounds and `KingdomCityMemoryRules`. Catch-up is now re-derived from 220 legal physical
+> root containers, the 24+8 manual dedication allowances, and sixty bodies: **312 weighted units,
+> 39 turns at 8/turn**. Runtime
+> demand is counted per eligible surveyed container, not once per stock kind. Fixed distance
+> slices and native/human dense-city receipts remain open gates.
+
 **Performance is not an appendix to this design; it is §0.0, and every later section is answerable
 to its table.**
 
-Status: **design, not a build card.** Nothing here is implemented. The wave plan in §7 is the
-order the build cards should be cut in. No code was edited to write this.
+Status: **adopted design with later implementation; current proof remains incomplete.** The wave
+plan in §7 records the original order. Current code/tests, `TESTING.md`, and
+`BRIEF-IMPLEMENTATION-AUDIT.md` own implementation and evidence status.
 
 > The author's ask, in one line: *a larger city is a SIMULATION, not a set of decorated zones —
 > it produces and consumes items, fires events, hosts activities, carries meaning and engagement,
@@ -34,7 +47,7 @@ sentiment, it is a set of budgets, and they are written here as numbers so that 
 | **Reify** — per turn, while a debt stands | **8 units**, of which **≤ 4 body mints**, visible cells first | > 1 ms | > 2 ms, or over budget at all | the per-turn spend (§3.5) |
 | **Heartbeat** — one micro-reckon slice, every 50 ticks | ≤ 4 breakpoint steps, ≤ 2R row-visits, ≤ 1 told line | > 0.3 ms | > 0.5 ms, or > 4 steps | the slice (§3.6) |
 | **Heartbeat, amortised** | ≤ 2R/50 ≈ **5 row-visits per turn per city** | > 10 | > 20 | the slice (§3.6) |
-| **Catch-up drain** | worst backlog ≤ 232 **weighted** units (§0.0(b)) → **≤ 29 turns** at 8/turn | > 40 turns | never reaches zero | the counter (§3.5) |
+| **Catch-up drain** | worst backlog ≤ 312 **weighted** units (§0.0(b)) → **≤ 39 turns** at 8/turn | > 40 turns | never reaches zero | ground-survey demand (§3.5) |
 | **Model in RAM** | model + registry + itineraries + distance matrix → **≤ 64 KiB per realm** at today's caps (≈ 88 KiB at nine zones — **the formula is the contract, not the constant**, §0.0(f)) | > 56 KiB | > 64 KiB, or over the formula | `kingdom:selftest` (§6.5) |
 | **Model in the save** | ≈ 20 KiB per realm | > 32 KiB | > 96 KiB | the write path (§6.5) |
 | **Route planning** — per slice | ≤ 16 open jobs, ≤ 8 stops a trip, 2-opt ≤ 50 swap tests → ≲ 1,000 int ops, **zero draws** | > 2,000 int ops | any draw in the planner | the planner (§3.10) |
@@ -95,9 +108,14 @@ than a guess:
   city's worth of props is a few hundred. At ⅓ each, twenty-four a turn: a farm materialises in
   ⌈80/24⌉ = **4 turns**, a Joppa-scale 300-object backlog in **13**.
 
-  So the largest backlog one zone can owe is works + residents + a capped item tail + ≤ 300 light
-  objects ≈ **232 weighted units**, and ⌈232/8⌉ = **29 turns** — still inside the 40 turns vanilla
-  keeps a departed zone live (§0.1). A founder who walks in and stands still watches the city
+  The live construction rail permits 220 commissioned works on one City zone. Every root may be a
+  civic container; 24 water plus eight food vessels may be manually dedicated before those roots
+  are raised; sixty residents may need bodies moved: **312 weighted units**. Plot furnishings are
+  not extra civic accounts: authored components never carry store authority; legacy population
+  furnishings have their mark released without moving/destroying vessel or contents. Ground survey
+  counts exact eligible vessels/larders needed by room or contents; one stock kind spread over 252
+  containers is 252 units, not one. ⌈312/8⌉ = **39 turns** — inside vanilla's 40-turn
+  grace (§0.1). A founder who walks in and stands still watches the city
   finish catching up before the engine would even have suspended the zone they came from.
 
 **(c) Memory — `KingdomCityState`, byte by byte.** Every row is a `readonly struct` in a flat
@@ -108,19 +126,19 @@ resident, and zone ids and design keys are shared references.
 |---|---|---|---|
 | Zone | id ref 8 + district 4 + `LastReadTick` 8 + 6 stock/capacity longs 48 + roofs 4 + defence 4 + water carry 4 + food carry 4 + 3 signed owed figures 12 = **96** | 4 | 384 |
 | Work | id 4 + zone ref 8 + anchor 4 + design ref 8 + condition 4 + crew 4 + `RanThroughTick` 8 + run-state 16 + pad 8 = **64** | 40 | 2,560 |
-| Resident | 104 of fields (ids, ticks, enums, refs, two brink windows, the creed history ref) + one unique name string ~64 = **168** | 60 | 10,080 |
+| Resident | 120 of fields (ids, ticks, enums, refs, two brink windows, creed history, exact origin and frozen arrival refs) + one unique name string ~64 = **184** | 60 | 11,040 |
 | Clock | kind 4 + `NextDueTick` 8 + ordinal 4 = **16** | 12 | 192 |
 | Told-log | kind 4 + tick 8 + 2 subject ids 8 + place ref 8 + outcome 4 = **32** | 32 | 1,024 |
 | Arrays + carrier headers | — | — | 256 |
-| **Per city** | | | **14,496 B ≈ 14.2 KiB** |
-| **Per realm** (2 cities) | | | **28,992 B ≈ 28.3 KiB** |
+| **Per city** | | | **15,456 B ≈ 15.1 KiB** |
+| **Per realm** (2 cities) | | | **30,912 B ≈ 30.2 KiB** |
 | Binding registry, realm-scope (§3.8) | key 4 + kind 1 + zone ref 8 + object ref 8 + minted tick 8 + pad 3 = **32** | 120 residents + ≤ 16 open jobs + headers | 4,480 B ≈ 4.4 KiB |
 | Job rows with itineraries (§3.7) | header 64 + ≤ 6 legs x (zone ref 8 + enter 4 + exit 4 + length 4 + depart 8 + arrive 8 = 36) = **280** | ≤ 16 open jobs, realm-wide | 4,480 B ≈ 4.4 KiB |
 | Distance matrix (§3.10) | `ushort` per entry = **2** | works→edges ≤ 540 + same-zone pairs ≤ 900 + zone all-pairs ≤ 81, **per city** | 2 x 1,521 ≈ 3.0 KiB per city, 6.0 KiB per realm |
 | Network graphs (§3.11) | node 16 + edge 16 + **traversal 2/node**; per network 32 x 16 + 48 x 16 + 32 x 2 + header **64** = **1,408** | ≤ 4 networks per city | 5,632 B ≈ 5.5 KiB per city, 11.0 KiB per realm |
 | The keepers' state (research, Addendum 22 B1) | header = the seven named settlement fields, **measured off the type, budget 48** | per city | 48 B per city |
 | Research shelf | key 4 + accrued 8 = **12** | ≤ 8 per city (`KingdomResearchRules.ShelfRows`) | 96 B per city |
-| **Per realm, all of it** | | | **55,588 B ≈ 54.3 KiB** — warn **56 KiB**, ceiling **64 KiB** |
+| **Per realm, all of it** | | | **57,508 B ≈ 56.2 KiB** in the historical envelope; current live envelope and 208/256-KiB rungs are authoritative |
 | *the same, at nine zones and caps scaled with them* | | | *92,948 B ≈ 90.8 KiB — over today's ceiling by design, still under a tenth of a megabyte* |
 
 **Seven corrections and one ruling, from the four waves that had to evaluate this table.**
@@ -166,7 +184,8 @@ the thing that is wrong:
    most 47, and 255 is free as the no-parent sentinel — against 162 for a full adjacency index.
    **The realm total moves 768 bytes and stays under the advisory rung; the ceiling has not moved.**
 
-7. **The resident row is 104 bytes, not 96.** BUILDING-CATALOGUE-BRIEF Addendum 16 makes a
+7. **The resident row first became 104 bytes, then 120 when the parallel roster authority was
+   retired.** BUILDING-CATALOGUE-BRIEF Addendum 16 makes a
    settler's creed HISTORY a recorded fact — the ALIGNMENT gate is satisfied by a builder who
    holds a creed *or has previously held it*, which no tally of present belief can answer. The
    record is bounded (`KingdomCreedRules.MaxKeptCreeds`, and it never rotates: first in wins, so a
@@ -175,7 +194,12 @@ the thing that is wrong:
    nothing and the row grows by eight. Ninety-one declared plus eight is ninety-nine, and
    ninety-six had five bytes of headroom, so the budget moved with the field rather than the field
    being squeezed to fit a number. **The realm total moves 960 bytes to 55,300 B ≈ 54.0 KiB, still
-   under the 56 KiB advisory rung; the ceiling has not moved.**
+   under the then-current 56 KiB advisory rung. W2 authority reconciliation then required exact
+   open origin and frozen arrival presentation evidence to survive without consulting
+   `RosterOrigins`/`RosterArrived`. Those two shared references bring the declared row to 115
+   bytes and its budget to 120. The current 208/256-KiB rungs in the correction above absorb the
+   1,920-byte realm increase; no unique second string heaps are created because carriers, body
+   properties, and compatibility projections share the same values.**
 
 Serialized it is smaller: no references, `WriteOptimizedString` dedupes zone ids and design keys
 across every row, ticks go out optimized — **≈ 5.2 KiB per city, ≈ 10.4 KiB per realm**, plus
@@ -452,11 +476,17 @@ does not change at all — it simply stops reading a dictionary of ints.
 the ruins rule), `DesignKey`, `Condition` (the wear percent `KingdomWear` already owns),
 `CrewAssigned`, `RanThroughTick`, and one small discriminated slot for kind-specific run-state:
 
+`CrewAssigned` is derived on check-in from authoritative resident rows whose exact `JobWorkId`
+and `BoundZoneId` match the work. Object staffing flags and legacy roster projections are not crew
+authority; a seat exchange therefore cannot lend one city's hands to another.
+
 - growing ground → `PlotStage` + `NextStageTick` + `CropBlueprint` (today's `r_KingdomPlot` fields,
   moved off the object);
 - store → nothing beyond condition (the leak rule is already a function of condition and days);
 - producer / refiner → `ProgressTicks` and the output kind;
 - power → charge.
+- active construction → the construction kind and resident-derived crew only; its durable
+  construction receipt remains the sole owner of progress.
 
 The rule that makes this bounded and honest: **a work's row carries state the engine cannot carry
 for it, and nothing else.** Appearance, name, tile, contents stay on the `GameObject`. The row is
@@ -912,6 +942,12 @@ resident zone is entered with no thaw, and a game load activates with no thaw. S
    so a save and reload mid-catch-up resumes in exactly the same place.
 3. **Stop at the budget.** Not at the debt.
 
+For container debt, these are literal physical rows: visible containers first, then stored
+dedication ordinal and stable object id. One unit touches one container and may move only that
+container's measured room/contents. Up to all eight medium units may therefore drain eight vessels
+of the same stock kind in one turn. Mutation callbacks are measured before debt and budget move;
+failure leaves the unpaid quantity on the serialized zone row.
+
 **What happens if the founder leaves before catch-up finishes.** Nothing special, and that is the
 whole point.
 
@@ -1051,6 +1087,18 @@ by making the **model** answer the question — never the body.
 
 **Where the state lives: on the job row**, in `KingdomCityState`, bounded by the same ≤ 16 open
 jobs the registry caps (§3.8):
+
+**Named-resident specialization — salvage expeditions.** An expedition is not a transient porter
+or an offscreen menu roll. Its realm job row names one resident, one exact bound body, one
+founder-visited journal destination, the quoted water/provisions, the frozen due world-tick and the
+frozen bounded result. The prepared row publishes before any physical debit; an exact per-object
+receipt on that body makes each water and provision leg resumable by compare-and-set after any save
+cut. Paid and dispatched are monotone phases on the same job. The binding moves with the same body
+and an unresolved or ambiguous binding is always a refusal to mint or charge. At due time the same
+body returns once; a real death, disappearance, or decision to follow the founder instead closes as
+a dated cause, while mere zone unavailability leaves the job open. Chronicle, homecoming line and
+salvage are keyed by job id, so absence, seat exchange and reload cannot redraw or duplicate them.
+This is the permanent-resident form of I2 and I5, not a second journey simulator.
 
 ```
 Job = (JobId, Kind, Cargo, SourceWorkId, DestWorkId, StartTick, WalkTicksPerCell, Status,
@@ -1213,7 +1261,9 @@ closes a real gap:
 
 **So the counter is signed.** A catch-up unit is either `+land` — crops into the larder, water into
 the cistern — or `−draw`: a season's drinking taken out of the vessels it was actually drunk from.
-Same budget, same visible-first ordering, same invariant; §3.5 needs no amendment beyond the sign.
+Same budget, same visible-first ordering, same invariant. Food landing during reify records only
+what physically reached a named larder; deferred/failed portions remain debt and are never counted
+again as harvest or harvest loss.
 The founder who opens the cistern after a season finds **exactly the model's remainder**, and the
 larder holds **exactly the crops nobody ate**.
 
@@ -1549,6 +1599,19 @@ The rule that keeps this from sprawling: **a happening kind may not own state.**
 model, draws, and writes an outcome through an existing system's one true path. If a kind needs a
 new field, that field belongs to the system that owns the concept, not to the happenings layer.
 
+The physical rendering does need **temporary authority**, which is not domain state. One bounded
+`HappeningModel` operation freezes an exact authored fixture and up to four already-bound named
+resident bodies, their reachable cells and their former post/home/AI state. It advances through
+Prepared → Walking → Holding → Ready → Restoring, with monotonic sink receipts, and survives a
+save or an interrupted callback. Bodies move only through vanilla `MoveTo`; the runtime never
+mints, substitutes, clones, summons, or teleports an attendee. Ready is the durable evidence that
+the exact bodies arrived and the functional fixture accepted both its real vanilla-part action and
+its use receipt. The operation then publishes through the existing owner and restores each body to
+its exact prior cell and schedule before acknowledging restoration. Clearing retains only bounded,
+canonical delivery tombstones for once-only weddings, funerals, and construction raisings. They
+carry no prose, outcome, body, fixture, or second domain history; they exist because the 32-line
+told ring is not permanent authority.
+
 ### 4.2 The budget
 
 A season away can generate a hundred happenings. The register holds 200 entries total. So the
@@ -1570,6 +1633,12 @@ about a dozen. Everything else is in the ring, in the counters, and in the state
 
 ### 4.3 Surfacing
 
+- **Physical attendance** — while the founder stands on coherent owned ground, wedding, funeral,
+  feast, and raising surfaces wait for exact named bodies to reach a functional authored locus.
+  Only the Ready receipt may call the existing semantic owner. Losing the founder, a body, the
+  path, or the fixture before Ready restores the temporary posts and degrades to a dated report;
+  it never replaces a person or stages a UI-only ceremony. A wholly unattended occasion starts as
+  that dated report and acquires no body/fixture receipts.
 - **Ledger digest** (pull) — the homecoming report, brink lane first. Unchanged shape.
 - **`KingdomWord`** (push) — brinks and irreversibles, wherever the founder is standing, framed by
   whether they are in the city the news is about. Unchanged contract.
@@ -1982,7 +2051,14 @@ receipt begins where reckon begins); and the 1-day-vs-90-day equality assertion 
 fills and empties, and the cistern you open holds exactly what the model says. Pass 26 gains "the
 other zone's stores moved while you were in this one."*
 
-**W2 — Residents become rows.** Roster → typed resident records; brink windows move off
+**W2 — Residents become rows.** **Implemented authority cut (2026-08-25):** roster reports,
+arrivals, notable guest lodging, work assignment, emigration, death/offices, conversion pruning,
+reach, bounties, salvage, lab naming, and seal archives now consume resident rows through the
+bounded `KingdomResidents`/`KingdomResidentRules` façade. `RosterNames`, `RosterOrigins`, and
+`RosterArrived` remain public only as obsolete save-ABI projections: complete old rolls seed an
+empty city book once as non-labouring `Abroad` claims; ragged evidence is retained rather than
+cross-zipped; every successful row mutation projects outward one way. Roster → typed resident
+records; brink windows move off
 `GameObject` properties; `AssignWork` reads the roster; bodies bound by `ResidentId`; check-in
 rebinds, reads back deaths and departures. **Constitution addition: the `KingdomBindingRegistry`
 ships here in full** (§3.8) — residents *and* the transient-by-`JobId` contract, plus
@@ -2072,7 +2148,7 @@ past a nearer store.*
 >   `KingdomLogisticsRules`, so the tests and the runtime ask one implementation.
 > - **The receipt.** `KingdomWorstCaseReceiptTests` runs step 90's own city — 4 zones, 40 works, 60
 >   settlers, a season away, a standing backlog — and pins every count against its §0.0 lane. Measured:
->   `R=104 steps=9 rows=1872/13312 planops=148 graphops=64 worstdrain=29turns model=13824B
+>   `R=104 steps=9 rows=1872/13312 planops=148 graphops=64 worstdrain=39turns model=13824B
 >   realm=53572B`, and a year and a decade cost the same reckoning as the season.
 > - **Deliberately not shipped, with the reason.** A second job *kind*. §7.4's own rule applies: the
 >   refined-materials lane has no cross-zone flow to carry yet (stockpiles are per zone and nothing

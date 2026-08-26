@@ -4,6 +4,11 @@ Every significant call, why it was made, and what would reverse it. Commit messa
 detail; this is the index. Where a decision was later **overturned**, that is recorded rather
 than edited away.
 
+**Authority note (2026-08-25).** This ledger is chronological, not a shortcut around later
+rulings. Direct author corrections and later approved addenda in
+`BUILDING-CATALOGUE-BRIEF.md` supersede an older entry here. An older decision that has changed
+must say **OVERTURNED** beside the original text; silently treating it as current is a defect.
+
 ---
 
 ## Framing
@@ -29,11 +34,21 @@ and "loved founder, hated ministry" is where half the stories live.
 **Lazy catch-up, never background simulation.** The engine's own idiom (`ZoneRepair`), and
 forced anyway: only one zone is ever active. Confirmed by the power investigation.
 
-**Witnessed-only accounting.** Consequences accrue only while the player is present, capped at
-three days. This is the anti-Kingmaker guard and it is non-negotiable.
+**Witnessed-only accounting — OVERTURNED by Addenda 8 and 10(a).** The original rule accrued
+consequences only while the player was present and capped them at three days. Current authority
+uses world-time, pushes one warning at the brink wherever the founder is, names the arrest action,
+then permits the warned consequence to fire in absence after its fair world-day window. Ordinary
+production and consumption likewise reckon full elapsed world-time. Awareness controls warning
+and telling; visit cadence is never the simulation clock.
 
-**One survey per activation.** Was ~20 full-zone scans; now a single classifying pass shared by
-growth, trade and raids. Forced by the performance audit.
+**One survey per due active-seat reconciliation.** Was ~20 full-zone scans; now
+`KingdomSurvey` binds one maintained classifying index shared by city, growth, trade, construction,
+petitions, upgrades, raids, wear, lab, offices, reach, guests, faith, roads, crops, networks,
+visual state, residents, and transient jobs. Physical commits observe additions/removals into that
+same index. Exact-cell/object reproof is allowed; a second whole-zone helper scan is not. Reports
+and explicit recovery outside the bound pass may take their own survey. Static repair is tracked in
+`CONTRACT-RUNTIME-RECONCILIATION-2026-08-25.md`; dense native instrumentation remains the closing
+evidence. Forced by the performance audit and Foundation's bounded-wake law.
 
 **Errors never escape into the engine.** Every entry point wrapped in `Guard`. Vindicated
 immediately: the shopkeeper NRE would otherwise have silently killed trade and raids forever.
@@ -56,16 +71,22 @@ withdrawn; capacity must be built.
 **Consumption scales with elapsed time, not event cadence.** Upkeep was charged per arrival
 interval, which grows with population — a City checked in monthly and thirst evaporated.
 
-**Failure has a floor.** Emigration stops at a loyal core of two; stages never regress; the
-withered state suspends prosperity without erasing the title.
+**Failure keeps a loyal floor, but stage ratcheting was OVERTURNED by Addendum 8.** Emigration
+still stops at a loyal core of two and Camp remains the absolute stage floor. Above Camp, supported
+level and stage may subside toward what standing infrastructure, supply, labour, and social shade
+can sustain. Subsidence leaves owned ruins and never erases the title; it is not silent regression.
 
 ## Player experience
 
 **Invitation, never obligation.** Per-module toggles; a player who never founds anything sees
 one rumour and one ruin.
 
-**Absence accrues, never decays.** Caravan cycles bank (capped at three); the homecoming digest
-is a gift-opening, not an inspection. *Fixed late — the code discarded missed cycles.*
+**Absence is world-time, not visit cadence — REFINED by Addenda 8, 10, 11 and 12.** Missed work is
+reckoned from durable world ticks and told through bounded receipts/homecoming summaries; it is
+never recomputed from how often the founder visits. Gains crystallise when due. Warned brinks may
+resolve in absence after their fair window. Module-specific caps bound stored evidence or physical
+rendering, not the elapsed simulation itself. The homecoming digest remains a gift-opening, not an
+inspection or a backlog replay.
 
 **Growth must name its cause.** Arrivals cite the deed that drew them. Uncaused arrivals are
 what "feels drip-fed".
@@ -81,6 +102,13 @@ model I had shipped* — a half-crewed crank still turns, but there is no half a
 
 **Petitions, not a quest board.** Generated from real state, spoken by a named settler, always
 declinable, one at a time, silent when the settlement is content.
+
+**Petitions remain a custom, city-carried lifecycle, not vanilla journal quests.** Closed by the
+engine-truth audit in `CODEX-ENGINE-TRUTH-BATCH-1-ANSWERS.md` Q6 and
+`QUEST-HANDLING-RESEARCH.md`: vanilla starts force a blocking modal, expose no abandon verb, and
+route failure through global finished-quest state and completion gates. The petition book instead
+freezes the real requester's body and words, survives succession with its city, and keeps decline,
+option pause, expiry, and completion under its own receipts.
 
 ## Content
 
@@ -137,12 +165,14 @@ four rungs rather than collapsing into two, not enough to claim more than that.
 | withered town | yes | 45 | Faded 28%, Abandoned 49%, Ruins 23% |
 | great city | **no — theoretical** | 100 | Held 100% |
 
-**City is not currently reachable, and an earlier version of this table quietly assumed it
-was.** `MaxBuildings` is 40 and arrivals stop once population equals beds, so even if every
-single work were a bunk the population would top out at 40 — while City needs 50, and 1024 of
-storage besides, which costs works that would otherwise be beds. The best a settlement can
-presently become is a Town. The City row is kept as the arithmetic's ceiling, marked as such, so
-the top of the ladder is documented without pretending anyone can stand on it.
+**City was not reachable under the flat forty-work cap — OVERTURNED before public release.** The
+original proof remains useful: forty one-bed bunks could not reach population 50, still less carry
+1024 storage. The building pass now budgets plots by stage (`MaxBuildingsForStage`: 40 / 70 / 110 /
+160 / 220 per zone), bunks carry four beds, and the city model prices all 880 possible work rows
+across four City zones. `MaxBuildings` survives only as an `[Obsolete(..., true)]` binary adapter;
+it is not live authority. Reachability now depends on the staged resource/crew/ground gates, not
+the disproved flat ceiling. This correction does not claim human playtest evidence for reaching
+City; it removes the arithmetic impossibility and the forty-row simulation truncation.
 
 The draw matters most in the middle and not at all at the ends, which is the intent: a walled
 town is rarely lost to bad luck, a dying camp is never saved by good luck, and everything
@@ -198,12 +228,14 @@ imports the old faction registry key and never touches vanilla `PlayerCult`. Wha
 character finds is a local account of a place, which is also the honest fiction: Qud is full of
 records that disagree with each other.
 
-**The people are descendants, not the old roll walking around.** Held and Faded settlements are
-populated by successors built from allowlisted provenance — culture, origin, trade — and the
-named roll crosses as *history* to be read, not as creatures to be respawned. Replaying the old
-inhabitants would clone a possibly-modded creature graph into a world with a different generated
-history, which is both a compatibility hazard and worse fiction: a generation passed, and it
-should show.
+**The people are not the old roll walking around.** The named roll crosses as *history* and must
+never be respawned as the same creatures. Current v1 scope ships the inherited site, layout, works,
+condition, cairn, and readable history only. A successor, namesake, claimant, or envoy is a positive
+`AUTHOR-DEFERRED` target requiring explicit reopening; whether such a person is a descendant,
+namesake, institutional successor, or apocryphal claimant is still an author lore ruling. Exact old
+creature/object continuation is `REJECTED`, including replay of possibly modded creature graphs.
+`VISION.md` owns this canonical disposition and `V1-POLITY-SCOPE.md` expands its evidence/reopening
+gates; together they supersede generic “current v0” or “later-version” wording elsewhere.
 
 **No item inheritance, ever, and say so up front.** Layout, name, chronicle, and successors
 carry. Loose loot, stored equipment, charge, and water do not. A settlement that returned your
@@ -241,12 +273,13 @@ damage whatever else the new world had already placed there.
 The floor exists because a ruin has to stay readable as a *place*. Recognising where you once
 lived is the entire payload of inheriting a ruin; undifferentiated rubble delivers none of it.
 
-*Engine seams: resolved.* Cross-run storage exists (`DataManager.SyncedPath` + `Blob` JSON),
-final death is distinguishable from a checkpoint save, import can run before world generation,
-and Joppa has a supported extension point with a remaining-site allocator. Codex's
-`INHERITANCE-SEAMS.md` holds the evidence and the safety contract. That is a feasibility
-verdict, not permission to build: the storage schema, ownership behaviour, and reconstruction
-grammar still need joint design, and nothing connects to storage or worldgen yet.
+*Engine seams and the v0 transaction are implemented; native evidence remains.* Cross-run storage
+uses `DataManager.SyncedPath`; terminal sealing, promotion, reservation, worldgen application,
+durability proof, and release are separate monotonic receipts. Joppa's supported extension point
+uses the remaining-site allocator, and authored spatial snapshots reconstruct through the same
+architecture stamper while excluding items, liquids, and charge. `INHERITANCE-SEAMS.md` remains
+the engine evidence and safety contract. Current cold-save, interruption, subscribed-install, and
+human spatial-fidelity protocols still gate release; implementation is not a signed receipt.
 
 ## Known-wrong things we corrected in our own standards
 
@@ -265,7 +298,8 @@ grammar still need joint design, and nothing connects to storage or worldgen yet
 
 ## Open decisions
 
-- Should petitions graduate to real `Quests.xml` journal quests?
 - Does the design doc (vision/roadmap) belong in the public repo? See `EXPOSURE.md`.
-- Dynasty persistence mechanism across permadeath — designed, unbuilt, mechanism unverified.
+- Dynasty persistence is implemented through seal/promotion/reservation/application receipts;
+  current native succession, cold-save, and subscribed-install evidence remains unsigned. Treat
+  this as a release gate, not an unbuilt design question.
 - Whether to keep the WSL clone or work directly on the Windows path over `/mnt/c`.

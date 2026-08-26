@@ -3,6 +3,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 using NUnit.Framework;
 
 namespace ThousandAndFirst.Tests
@@ -66,47 +67,100 @@ namespace ThousandAndFirst.Tests
 		{
 			int passed = 0;
 			int failed = 0;
+			int discovered = 0;
+			int selected = 0;
+			string filter = Environment.GetEnvironmentVariable("TAF_TEST_FILTER");
+			const BindingFlags testFlags = BindingFlags.Public | BindingFlags.NonPublic
+				| BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly;
 			foreach (Type type in Assembly.GetExecutingAssembly().GetTypes()
-				.Where(t => t.Name.EndsWith("Tests"))
+				.Where(t => t.GetMethods(testFlags).Any(m =>
+					m.GetCustomAttribute<TestAttribute>() != null
+					|| m.GetCustomAttributes<TestCaseAttribute>().Any()))
 				.OrderBy(t => t.FullName, StringComparer.Ordinal))
 			{
-				object instance = Activator.CreateInstance(type);
-				foreach (MethodInfo method in type.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)
+				object instance = null;
+				foreach (MethodInfo method in type.GetMethods(testFlags)
 					.OrderBy(m => m.Name, StringComparer.Ordinal)
 					.ThenBy(m => m.ToString(), StringComparer.Ordinal))
 				{
-					if (method.GetCustomAttribute<TestAttribute>() != null && method.GetParameters().Length == 0)
+					TestAttribute test = method.GetCustomAttribute<TestAttribute>();
+					TestCaseAttribute[] testCases = method.GetCustomAttributes<TestCaseAttribute>()
+						.OrderBy(t => string.Join("\u001f", t.Arguments.Select(a => a?.ToString() ?? "null")), StringComparer.Ordinal)
+						.ToArray();
+					if (test != null && method.GetParameters().Length == 0)
 					{
+						discovered++;
+						string label = type.Name + "." + method.Name;
+						if (!string.IsNullOrEmpty(filter)
+							&& label.IndexOf(filter, StringComparison.OrdinalIgnoreCase) < 0) continue;
+						selected++;
 						try
 						{
-							method.Invoke(instance, null);
+							object result = method.Invoke(method.IsStatic ? null
+								: (instance ?? (instance = Activator.CreateInstance(type, true))), null);
+							Task task = result as Task;
+							if (task != null) task.GetAwaiter().GetResult();
 							passed++;
 						}
 						catch (Exception ex)
 						{
 							failed++;
-							Console.WriteLine("FAIL " + type.Name + "." + method.Name + "\n     " + (ex.InnerException ?? ex).Message);
+							Exception failure = ex.InnerException ?? ex;
+							Console.WriteLine("FAIL " + label
+								+ "\n     " + failure.Message + "\n     " + failure.StackTrace);
 						}
 					}
-					foreach (TestCaseAttribute testCase in method.GetCustomAttributes<TestCaseAttribute>()
-						.OrderBy(t => string.Join("\u001f", t.Arguments.Select(a => a?.ToString() ?? "null")), StringComparer.Ordinal))
+					else if (test != null && testCases.Length == 0)
 					{
+						discovered++;
+						string label = type.Name + "." + method.Name;
+						if (string.IsNullOrEmpty(filter)
+							|| label.IndexOf(filter, StringComparison.OrdinalIgnoreCase) >= 0)
+						{
+							selected++;
+							failed++;
+							Console.WriteLine("FAIL " + label
+								+ "\n     [Test] methods with parameters require explicit [TestCase] rows");
+						}
+					}
+					foreach (TestCaseAttribute testCase in testCases)
+					{
+						discovered++;
 						string label = type.Name + "." + method.Name + "(" + string.Join(", ", testCase.Arguments.Select(a => a?.ToString() ?? "null")) + ")";
+						if (!string.IsNullOrEmpty(filter)
+							&& label.IndexOf(filter, StringComparison.OrdinalIgnoreCase) < 0) continue;
+						selected++;
 						try
 						{
-							method.Invoke(instance, testCase.Arguments);
+							object result = method.Invoke(method.IsStatic ? null
+								: (instance ?? (instance = Activator.CreateInstance(type, true))),
+								testCase.Arguments);
+							Task task = result as Task;
+							if (task != null) task.GetAwaiter().GetResult();
 							passed++;
 						}
 						catch (Exception ex)
 						{
 							failed++;
-							Console.WriteLine("FAIL " + label + "\n     " + (ex.InnerException ?? ex).Message);
+							Exception failure = ex.InnerException ?? ex;
+							Console.WriteLine("FAIL " + label + "\n     " + failure.Message
+								+ "\n     " + failure.StackTrace);
 						}
 					}
 				}
 			}
+			if (selected == 0)
+			{
+				Console.WriteLine();
+				Console.WriteLine(string.IsNullOrEmpty(filter)
+					? "NO TESTS DISCOVERED"
+					: "NO TESTS MATCHED TAF_TEST_FILTER=" + filter);
+				return 2;
+			}
 			Console.WriteLine();
-			Console.WriteLine(failed == 0 ? $"ALL GREEN: {passed} cases passed" : $"{passed} passed, {failed} FAILED");
+			Console.WriteLine(failed == 0
+				? $"ALL GREEN: {passed} cases passed ({discovered} discovered)"
+				: $"{passed} passed, {failed} FAILED ({selected} selected; {discovered} discovered)");
 			return failed == 0 ? 0 : 1;
 		}
 	}

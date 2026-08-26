@@ -54,10 +54,11 @@ namespace ThousandAndFirst
 				{
 					Z.SetZoneProperty(KingdomPlots.HeartRungProperty, rung.ToString());
 				}
-				string line = KingdomCeremonyHeartRules.ChronicleLine(rung, System.KingdomDisplayName);
+				string realm = KingdomPresentation.Rich(System.KingdomDisplayName);
+				string line = KingdomCeremonyHeartRules.ChronicleLine(rung, realm);
 				KingdomChronicle.Record(System, line, Accomplishment: KingdomCeremonyHeartRules.IsAccomplishment(rung));
-				System.Ledger.Note("{{G|" + KingdomCeremonyHeartRules.MessageLine(rung, System.KingdomDisplayName) + "}}");
-				MessageQueue.AddPlayerMessage("{{G|" + KingdomCeremonyHeartRules.MessageLine(rung, System.KingdomDisplayName) + "}}");
+				System.Ledger.Note("{{G|" + KingdomCeremonyHeartRules.MessageLine(rung, realm) + "}}");
+				MessageQueue.AddPlayerMessage("{{G|" + KingdomCeremonyHeartRules.MessageLine(rung, realm) + "}}");
 				KingdomLog.Log("heart rung raised: " + rung + " (" + Key + ")");
 			});
 		}

@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace ThousandAndFirst
@@ -58,7 +60,7 @@ namespace ThousandAndFirst
 	/// <summary>The road the word took, for the telling. Never a number on screen.</summary>
 	public enum NewsRoad
 	{
-		/// <summary>The founder died on the realm's own seated ground. Nobody had to be told.</summary>
+		/// <summary>The founder died on either city's owned ground. Nobody had to be told.</summary>
 		Seat,
 
 		/// <summary>Overland, at a rider's pace, through however much rock stood in the way.</summary>
@@ -111,6 +113,58 @@ namespace ThousandAndFirst
 
 		/// <summary>The proposed token cannot identify a death.</summary>
 		Invalid
+	}
+
+	/// <summary>Durable checkpoints inside the death-time mourning rite. These are physical
+	/// checkpoints, not claims that Qud yielded a turn between them: <c>GameObject.Die</c> invokes
+	/// <c>AfterDieEvent</c> and immediately rechecks <c>IsPlayer()</c>.</summary>
+	public enum MourningRiteStage
+	{
+		None,
+		Frozen,
+		WordArrived,
+		ProcessionComplete,
+		ShrinePlaced,
+		BodyCrossed,
+		Complete
+	}
+
+	/// <summary>What an exact shrine receipt and its frozen cell permit.</summary>
+	public enum FounderShrinePlacementVerdict
+	{
+		Create,
+		AdoptExact,
+		Refuse
+	}
+
+	/// <summary>One real, already-bound resident frozen into the mourning procession.</summary>
+	public readonly struct KingdomRiteAttendee
+	{
+		public readonly int ResidentId;
+		public readonly string ObjectId;
+		public readonly string Name;
+		public readonly string ZoneId;
+		public readonly int OriginalX;
+		public readonly int OriginalY;
+		public readonly string Post;
+		public readonly string Home;
+		public readonly int RiteX;
+		public readonly int RiteY;
+
+		public KingdomRiteAttendee(int residentId, string objectId, string name, string zoneId,
+			int originalX, int originalY, string post, string home, int riteX, int riteY)
+		{
+			ResidentId = residentId;
+			ObjectId = objectId ?? "";
+			Name = name ?? "";
+			ZoneId = zoneId ?? "";
+			OriginalX = originalX;
+			OriginalY = originalY;
+			Post = post ?? "";
+			Home = home ?? "";
+			RiteX = riteX;
+			RiteY = riteY;
+		}
 	}
 
 	/// <summary>The exact outcome of one player-body assignment and its mandatory global
@@ -215,6 +269,154 @@ namespace ThousandAndFirst
 	public static class KingdomSuccessionRules
 	{
 		internal const int MaxDeathTokenChars = 512;
+		/// <summary>The mourning rite is not an ordinary four-person happening. Every living
+		/// resident whose exact bound body already stands in the rite zone is evidence, up to the
+		/// city's legal population envelope.</summary>
+		internal const int MaxRiteAttendees = KingdomRules.MaxPopulation;
+
+		/// <summary>Worst-case canonical base64 for sixty admitted rows at the per-field bounds
+		/// enforced by <see cref="ValidRiteAttendee"/>. This state normally exists for one
+		/// synchronous callback, but injected/cold-load checkpoints must retain it whole.</summary>
+		internal const int MaxRiteManifestChars = 1024 * 1024;
+
+		/// <summary>Only forward, adjacent rite checkpoints are legal. Repeating the current
+		/// checkpoint is the exact-once retry; skipping physical evidence is never legal.</summary>
+		public static bool MayAdvanceRite(MourningRiteStage Current, MourningRiteStage Next)
+		{
+			if (!Enum.IsDefined(typeof(MourningRiteStage), Current)
+				|| !Enum.IsDefined(typeof(MourningRiteStage), Next))
+			{
+				return false;
+			}
+			return Next == Current || (int)Next == (int)Current + 1;
+		}
+
+		/// <summary>Check-before-mint for the in-run founder shrine.</summary>
+		public static FounderShrinePlacementVerdict JudgeFounderShrinePlacement(
+			bool HasReceipt, bool ExactObjectMatches, bool CellPassable, int CellObjectCount)
+		{
+			if (HasReceipt)
+			{
+				return ExactObjectMatches ? FounderShrinePlacementVerdict.AdoptExact
+					: FounderShrinePlacementVerdict.Refuse;
+			}
+			return CellPassable && CellObjectCount == 0
+				? FounderShrinePlacementVerdict.Create : FounderShrinePlacementVerdict.Refuse;
+		}
+
+		/// <summary>Canonical, bounded receipt for the real bodies assigned to the procession.
+		/// Text fields are base64 so names, object ids and zone ids cannot alter row topology.</summary>
+		public static string EncodeRiteManifest(KingdomRiteAttendee[] Attendees)
+		{
+			if (Attendees == null || Attendees.Length == 0
+				|| Attendees.Length > MaxRiteAttendees)
+			{
+				return "";
+			}
+			StringBuilder encoded = new StringBuilder();
+			HashSet<int> residentIds = new HashSet<int>();
+			HashSet<string> objectIds = new HashSet<string>(StringComparer.Ordinal);
+			for (int i = 0; i < Attendees.Length; i++)
+			{
+				KingdomRiteAttendee row = Attendees[i];
+				if (!ValidRiteAttendee(row) || !residentIds.Add(row.ResidentId)
+					|| !objectIds.Add(row.ObjectId))
+				{
+					return "";
+				}
+				if (i > 0) encoded.Append('\n');
+				encoded.Append("v1|").Append(row.ResidentId.ToString(CultureInfo.InvariantCulture))
+					.Append('|').Append(ToBase64(row.ObjectId))
+					.Append('|').Append(ToBase64(row.Name))
+					.Append('|').Append(ToBase64(row.ZoneId))
+					.Append('|').Append(row.OriginalX.ToString(CultureInfo.InvariantCulture))
+					.Append('|').Append(row.OriginalY.ToString(CultureInfo.InvariantCulture))
+					.Append('|').Append(ToBase64(row.Post))
+					.Append('|').Append(ToBase64(row.Home))
+					.Append('|').Append(row.RiteX.ToString(CultureInfo.InvariantCulture))
+					.Append('|').Append(row.RiteY.ToString(CultureInfo.InvariantCulture));
+				if (encoded.Length > MaxRiteManifestChars) return "";
+			}
+			return encoded.ToString();
+		}
+
+		public static bool TryDecodeRiteManifest(string Manifest,
+			out KingdomRiteAttendee[] Attendees)
+		{
+			Attendees = Array.Empty<KingdomRiteAttendee>();
+			if (string.IsNullOrEmpty(Manifest) || Manifest.Length > MaxRiteManifestChars)
+			{
+				return false;
+			}
+			string[] lines = Manifest.Split('\n');
+			if (lines.Length == 0 || lines.Length > MaxRiteAttendees) return false;
+			KingdomRiteAttendee[] rows = new KingdomRiteAttendee[lines.Length];
+			HashSet<int> residentIds = new HashSet<int>();
+			HashSet<string> objectIds = new HashSet<string>(StringComparer.Ordinal);
+			for (int i = 0; i < lines.Length; i++)
+			{
+				string[] p = lines[i].Split('|');
+				int id, ox, oy, rx, ry;
+				string objectId, name, zone, post, home;
+				if (p.Length != 11 || p[0] != "v1"
+					|| !int.TryParse(p[1], NumberStyles.None, CultureInfo.InvariantCulture, out id)
+					|| !TryFromBase64(p[2], out objectId)
+					|| !TryFromBase64(p[3], out name)
+					|| !TryFromBase64(p[4], out zone)
+					|| !int.TryParse(p[5], NumberStyles.None, CultureInfo.InvariantCulture, out ox)
+					|| !int.TryParse(p[6], NumberStyles.None, CultureInfo.InvariantCulture, out oy)
+					|| !TryFromBase64(p[7], out post)
+					|| !TryFromBase64(p[8], out home)
+					|| !int.TryParse(p[9], NumberStyles.None, CultureInfo.InvariantCulture, out rx)
+					|| !int.TryParse(p[10], NumberStyles.None, CultureInfo.InvariantCulture, out ry))
+				{
+					return false;
+				}
+				rows[i] = new KingdomRiteAttendee(id, objectId, name, zone, ox, oy,
+					post, home, rx, ry);
+				if (!ValidRiteAttendee(rows[i]) || !residentIds.Add(id)
+					|| !objectIds.Add(objectId)) return false;
+			}
+			if (!string.Equals(EncodeRiteManifest(rows), Manifest, StringComparison.Ordinal))
+			{
+				return false;
+			}
+			Attendees = rows;
+			return true;
+		}
+
+		private static bool ValidRiteAttendee(KingdomRiteAttendee Row)
+		{
+			return Row.ResidentId > 0 && !string.IsNullOrEmpty(Row.ObjectId)
+				&& !string.IsNullOrEmpty(Row.Name) && !string.IsNullOrEmpty(Row.ZoneId)
+				&& Row.OriginalX >= 0 && Row.OriginalX <= 4096
+				&& Row.OriginalY >= 0 && Row.OriginalY <= 4096
+				&& Row.RiteX >= 0 && Row.RiteX <= 4096
+				&& Row.RiteY >= 0 && Row.RiteY <= 4096
+				&& Row.ObjectId.Length <= 512 && Row.Name.Length <= 512
+				&& Row.ZoneId.Length <= 1024 && Row.Post.Length <= 1024
+				&& Row.Home.Length <= 1024;
+		}
+
+		private static string ToBase64(string Text)
+		{
+			return Convert.ToBase64String(Encoding.UTF8.GetBytes(Text ?? ""));
+		}
+
+		private static bool TryFromBase64(string Encoded, out string Text)
+		{
+			Text = "";
+			try
+			{
+				byte[] bytes = Convert.FromBase64String(Encoded ?? "");
+				Text = new UTF8Encoding(false, true).GetString(bytes);
+				return Convert.ToBase64String(bytes) == Encoded;
+			}
+			catch
+			{
+				return false;
+			}
+		}
 
 		/// <summary>
 		/// Runs one engine body transfer and then repairs every player-system registration from
@@ -889,6 +1091,133 @@ namespace ThousandAndFirst
 		/// (<c>D/XRL/World/Parts/Mutation/Amnesia.cs:61-75</c>), so this rides a shipped surface.</summary>
 		public const string FounderAttributePrefix = "taf:founder:";
 
+		/// <summary>Quest metadata belongs to Qud's game-scoped ledger. Succession never moves,
+		/// fails, completes, hides, or rewrites that state; these keys support only the v1.5
+		/// flavor layer settled in QUEST-HANDLING-RESEARCH.md.</summary>
+		public const string InheritedQuestMarker = "taf:succession:inherited:v1";
+		public const string InheritedQuestSuffix = " (inherited)";
+		public const string QuestOriginAttribute = "taf:succession:quest-origin:v1";
+		public const int MaxQuestIdentityChars = 1024;
+		public const int MaxQuestTellingLabelChars = 512;
+
+		private static readonly HashSet<string> PersonalQuestIds = new HashSet<string>(
+			StringComparer.Ordinal)
+		{
+			"Fetch Argyve a Knickknack",
+			"Fetch Argyve Another Knickknack",
+			"Weirdwire Conduit... Eureka!",
+			"A Canticle for Barathrum",
+			"A Signal in the Noise",
+			"O Glorious Shekhinah!",
+			"The Assessment",
+			"Pax Klanq, I Presume?",
+			"Petals on the Wind",
+			"Find Eskhind",
+			"Love and Fear",
+			"Kith and Kin",
+			"If, Then, Else"
+		};
+
+		/// <summary>Whether an open vanilla quest is one of the documented person-tinted class-B
+		/// undertakings. ID is authoritative; name is only the compatibility fallback for a
+		/// synthetic or older quest record with no ID.</summary>
+		public static bool PersonalQuest(string QuestId, string QuestName)
+		{
+			string identity = string.IsNullOrEmpty(QuestId) ? WithoutInheritedSuffix(QuestName)
+				: QuestId;
+			return !string.IsNullOrEmpty(identity) && PersonalQuestIds.Contains(identity);
+		}
+
+		/// <summary>Live-name precedent from Reclamation, applied idempotently. This is display
+		/// flavor only; the quest ID, steps, system, giver, completion, and rewards stay untouched.</summary>
+		public static string InheritedQuestName(string QuestName)
+		{
+			if (string.IsNullOrEmpty(QuestName) || QuestName.EndsWith(InheritedQuestSuffix,
+				StringComparison.Ordinal)) return QuestName;
+			return QuestName + InheritedQuestSuffix;
+		}
+
+		public static string WithoutInheritedSuffix(string QuestName)
+		{
+			if (string.IsNullOrEmpty(QuestName) || !QuestName.EndsWith(InheritedQuestSuffix,
+				StringComparison.Ordinal)) return QuestName;
+			return QuestName.Substring(0, QuestName.Length - InheritedQuestSuffix.Length);
+		}
+
+		/// <summary>One exact open-quest telling for the succession chronicle.</summary>
+		public static string InheritedQuestChronicle(string FounderName, string QuestName)
+		{
+			string founder = BoundQuestLabel(FounderName, "the founder");
+			string quest = BoundQuestLabel(WithoutInheritedSuffix(QuestName), "an undertaking");
+			return founder + " died with " + quest + " undone, and the heir inherited the undertaking";
+		}
+
+		/// <summary>Permanent Chronicle identity for one death and one open quest.</summary>
+		public static string InheritedQuestEventId(string DeathToken, string QuestId)
+		{
+			string hash = SuccessionQuestHash("unfinished", DeathToken, QuestId);
+			return hash == null ? null : "taf:succession:unfinished:v1:" + hash;
+		}
+
+		/// <summary>Permanent Chronicle identity for the accession rite owned by one exact founder
+		/// death. The bounded digest lets the retry receipt survive a cut after either Chronicle
+		/// list sink without carrying an arbitrary object-id token into the receipt key.</summary>
+		public static string AccessionRiteEventId(string DeathToken)
+		{
+			string hash = SuccessionQuestHash("accession-rite", DeathToken, "rite");
+			return hash == null ? null : "taf:succession:accession-rite:v1:" + hash;
+		}
+
+		/// <summary>Journal secret identity for one founder-death/quest-giver origin. A bounded
+		/// cryptographic digest prevents arbitrary third-party quest IDs from bloating the save and
+		/// prevents field-boundary aliases.</summary>
+		public static string QuestOriginSecretId(string DeathToken, string QuestId)
+		{
+			string hash = SuccessionQuestHash("quest-origin", DeathToken, QuestId);
+			return hash == null ? null : "taf:succession:quest-origin:v1:" + hash;
+		}
+
+		private static string BoundQuestLabel(string Value, string Fallback)
+		{
+			string value = string.IsNullOrWhiteSpace(Value) ? Fallback : Value.Trim();
+			if (value.Length <= MaxQuestTellingLabelChars) return value;
+			return value.Substring(0, MaxQuestTellingLabelChars - 1) + "…";
+		}
+
+		private static string SuccessionQuestHash(string Domain, string DeathToken, string QuestId)
+		{
+			if (string.IsNullOrEmpty(Domain) || string.IsNullOrEmpty(DeathToken)
+				|| DeathToken.Length > MaxDeathTokenChars || string.IsNullOrEmpty(QuestId)
+				|| QuestId.Length > MaxQuestIdentityChars) return null;
+			try
+			{
+				byte[] bytes;
+				using (MemoryStream stream = new MemoryStream())
+				using (BinaryWriter writer = new BinaryWriter(stream, new UTF8Encoding(false, true), true))
+				{
+					writer.Write("TAF-SUCCESSION-QUEST-V1");
+					writer.Write(Domain);
+					writer.Write(DeathToken);
+					writer.Write(QuestId);
+					writer.Flush();
+					bytes = stream.ToArray();
+				}
+				using (SHA256 sha = SHA256.Create())
+				{
+					if (sha == null) return null;
+					byte[] digest = sha.ComputeHash(bytes);
+					StringBuilder text = new StringBuilder(digest.Length * 2);
+					for (int i = 0; i < digest.Length; i++)
+						text.Append(digest[i].ToString("x2", CultureInfo.InvariantCulture));
+					return text.ToString();
+				}
+			}
+			catch
+			{
+				return null;
+			}
+		}
+
 		/// <summary>Stable, exact identity for one founder death. The object id is encoded whole rather
 		/// than hashed, so two founders can never alias through a collision.</summary>
 		public static string FounderDeathToken(int Succession, long DeathTick, string FounderId)
@@ -1028,6 +1357,23 @@ namespace ThousandAndFirst
 				+ " — and held the mourning rite, and put the charter into the hands of " + heir;
 		}
 
+		/// <summary>The one semantic chronicle row for a successful succession: exact death,
+		/// priced news, physical rite, in-run shrine, and accession.</summary>
+		public static string SuccessionChronicle(string SeatName, string FounderName,
+			string CauseClause, string HeirName, NewsRoad Road, int Days, string FixtureName)
+		{
+			string where = string.IsNullOrEmpty(SeatName) ? "the settlement" : SeatName;
+			string founder = string.IsNullOrEmpty(FounderName) ? "the founder" : FounderName;
+			string heir = string.IsNullOrEmpty(HeirName) ? "one of its own" : HeirName;
+			string cause = string.IsNullOrEmpty(CauseClause)
+				? "died, and no one living can say how" : CauseClause;
+			string fixture = string.IsNullOrEmpty(FixtureName) ? "the rite ground" : FixtureName;
+			return founder + ", who founded " + where + ", " + cause + "; "
+				+ RoadClause(Road, Days) + ", so its named residents present walked to " + fixture
+				+ ", held the mourning rite, raised the founder's shrine-marker, and put the charter into the hands of "
+				+ heir;
+		}
+
 		/// <summary>The modal the heir reads when the rite is held with them standing in it.</summary>
 		public static string RiteAttendedPopup(string SeatName, string FounderName, string HeirName, NewsRoad Road, int Days)
 		{
@@ -1081,12 +1427,13 @@ namespace ThousandAndFirst
 		/// where the founder took the errand on.</summary>
 		public static string QuestMarkNote(string QuestName, string GiverName)
 		{
-			string quest = string.IsNullOrEmpty(QuestName) ? "an undertaking" : QuestName;
+			string quest = BoundQuestLabel(WithoutInheritedSuffix(QuestName), "an undertaking");
 			if (string.IsNullOrEmpty(GiverName))
 			{
 				return "the founder's journal marks where " + quest + " began";
 			}
-			return "the founder's journal marks where " + quest + " began, and names " + GiverName;
+			return "the founder's journal marks where " + quest + " began, and names "
+				+ BoundQuestLabel(GiverName, "the quest-giver");
 		}
 
 		/// <summary>What the founder is told when the line ends with them. The honest ending, in

@@ -61,8 +61,11 @@ namespace ThousandAndFirst.Api
 		/// <param name="Low">Inclusive lower bound.</param>
 		/// <param name="High">Inclusive upper bound.</param>
 		/// <param name="Value">The draw, or <paramref name="Low"/> when this returns false.</param>
-		/// <returns>False when the lane will not fit the kernel's identifier grammar or the bounds
-		/// are inverted. A refused draw is never quietly replaced by a different one.</returns>
+		/// <returns>False when the lane will not fit the kernel's identifier grammar, the bounds are
+		/// inverted, or this callback has attempted more than
+		/// <c>KingdomApiRules.MaxDrawsPerSourceCall</c> draws. Invalid attempts consume that cap; the
+		/// first over-cap attempt marks the whole callback over-budget, so it publishes no result. A
+		/// refused draw is never quietly replaced by a different one.</returns>
 		bool TryBetween(string Lane, uint Ordinal, int Low, int High, out int Value);
 	}
 
@@ -219,5 +222,48 @@ namespace ThousandAndFirst.Api
 		/// </para>
 		/// </summary>
 		KingdomNotice[] Happen(KingdomCityReading City, long SinceTick, IKingdomDraws Draws);
+	}
+
+	/// <summary>
+	/// Answers identity questions for a modded culture or species without giving third-party code a
+	/// creature or a city to mutate. Each call crosses the executor seam independently: a source
+	/// that throws or overruns contributes no keys, or a neutral affinity, while every other source
+	/// and the city continue.
+	/// <para>
+	/// This contract never touches research tiers. Extra keys may satisfy ordinary node or design
+	/// requirements and affinity may shade existing work, but Intelligence remains the sole tier
+	/// gate (BUILDING-CATALOGUE-BRIEF Addendum 17).
+	/// </para>
+	/// </summary>
+	public interface IKingdomIdentitySource : IKingdomExtension
+	{
+		/// <summary>
+		/// Returns extra live roster keys this identity carries, or null for none.
+		/// <para>
+		/// Preconditions: none; <paramref name="Identity"/> is a bounded frozen value. Side effects
+		/// are not permitted. Failure mode: throw, and this source contributes no keys for this
+		/// identity. At most <c>KingdomApiRules.MaxIdentityKeysPerSource</c> valid distinct keys are
+		/// kept. Unqualified keys are filed under the owning mod's slug; a qualified key in another
+		/// namespace is dropped, so an extension cannot mint somebody else's knowledge.
+		/// </para>
+		/// </summary>
+		/// <param name="Identity">The bounded frozen identity. Never contains an engine object.</param>
+		/// <returns>Proposed extra keys, or null for none.</returns>
+		string[] Keys(KingdomIdentityReading Identity);
+
+		/// <summary>
+		/// Returns this identity's percentage affinity for one existing work kind. One hundred means
+		/// no opinion. The host clamps every answer and the composed result to
+		/// <c>[KingdomApiRules.MinIdentityAffinity, KingdomApiRules.MaxIdentityAffinity]</c>.
+		/// <para>
+		/// Preconditions: <paramref name="WorkKind"/> is a bounded canonical slug and may be empty.
+		/// Side effects are not permitted. Failure mode: throw, and this source contributes the
+		/// neutral 100 for this call.
+		/// </para>
+		/// </summary>
+		/// <param name="Identity">The bounded frozen identity. Never contains an engine object.</param>
+		/// <param name="WorkKind">The canonical existing work-kind slug; it may be empty.</param>
+		/// <returns>A percentage affinity. One hundred is neutral.</returns>
+		int Affinity(KingdomIdentityReading Identity, string WorkKind);
 	}
 }

@@ -198,10 +198,10 @@ namespace ThousandAndFirst
 				}
 				while (true)
 				{
-					List<GameObject> people = CandidatesIn(zone);
+					List<GameObject> people = CandidatesIn(System, zone);
 					if (people.Count == 0)
 					{
-						Popup.Show("There is nobody standing in " + System.SeatName + " whose name the roll carries. Water is shared with a person, and a person has a name.");
+						Popup.Show("There is nobody standing in " + KingdomPresentation.Rich(System.SeatName) + " whose name the roll carries. Water is shared with a person, and a person has a name.");
 						return;
 					}
 					int stored = KingdomGrowth.CountStoredWater(zone);
@@ -212,15 +212,15 @@ namespace ThousandAndFirst
 						RiteOffer offer = OfferFor(System, zone, people[i], realmCreed, stored);
 						offers.Add(offer);
 						options[i] = KingdomWaterRiteRules.RowLabel(
-							NameOf(people[i]),
+							KingdomPresentation.Rich(NameOf(people[i])),
 							KingdomCreed.CreedName(people[i].GetStringProperty(KingdomCreed.CreedProperty)),
 							offer.Drams,
 							offer.Bar,
 							KingdomWaterRiteRules.AskedTooOften(people[i].GetIntProperty(RefusalsProperty)));
 					}
 					int picked = Popup.PickOption(
-						Title: "Share water, at " + System.SeatName,
-						Intro: "The stores hold {{C|" + stored + " drams}}. " + System.SeatName + " holds with {{C|"
+						Title: "Share water, at " + KingdomPresentation.Rich(System.SeatName),
+						Intro: "The stores hold {{C|" + stored + " drams}}. " + KingdomPresentation.Rich(System.SeatName) + " holds with {{C|"
 							+ KingdomCreed.CreedName(realmCreed) + "}}.\n\nYou are asking one person, and you are asking them once.",
 						Options: options,
 						AllowEscape: true);
@@ -231,7 +231,9 @@ namespace ThousandAndFirst
 					RiteOffer chosen = offers[picked];
 					if (chosen.Bar != WaterRiteBar.Ready)
 					{
-						Popup.Show(KingdomWaterRiteRules.BarLine(chosen.Bar, NameOf(people[picked]), KingdomCreed.CreedName(realmCreed), chosen.Drams, stored));
+						Popup.Show(KingdomWaterRiteRules.BarLine(chosen.Bar,
+							KingdomPresentation.Rich(NameOf(people[picked])),
+							KingdomCreed.CreedName(realmCreed), chosen.Drams, stored));
 						continue;
 					}
 					Hold(System, zone, people[picked], realmCreed, chosen);
@@ -264,10 +266,10 @@ namespace ThousandAndFirst
 		/// likely to be accepted &mdash; so this counter carries no brink of its own.
 		/// </para>
 		/// </summary>
-		public static void OnSettlementPass(KingdomSystem System, Zone Z)
+		public static void OnSettlementPass(KingdomSystem System, Zone Z, KingdomSurvey Survey)
 		{
 			if (System == null || !System.Founded || Z == null || System.ClaimedZones == null
-				|| !System.ClaimedZones.Contains(Z.ZoneID))
+				|| Survey == null || !System.ClaimedZones.Contains(Z.ZoneID))
 			{
 				return;
 			}
@@ -288,12 +290,9 @@ namespace ThousandAndFirst
 				Register();
 			}
 			long now = (The.Game != null) ? The.Game.TimeTicks : 0L;
-			foreach (GameObject item in Z.GetObjects())
+			for (int i = 0; i < Survey.CitizenBodies.Count; i++)
 			{
-				if (item.GetIntProperty("KingdomCitizen") != 1)
-				{
-					continue;
-				}
+				GameObject item = Survey.CitizenBodies[i];
 				if (shared)
 				{
 					// Counted BEFORE the rite observes them, so a settler who crossed into a
@@ -349,9 +348,9 @@ namespace ThousandAndFirst
 			int here = 0;
 			int total = 0;
 			List<string> closed = new List<string>();
-			foreach (GameObject item in Z.GetObjects())
+			foreach (GameObject item in KingdomSurvey.ObjectsFor(Z))
 			{
-				if (item.GetIntProperty("KingdomCitizen") != 1)
+				if (!KingdomCitizenship.BelongsTo(System, item))
 				{
 					continue;
 				}
@@ -360,7 +359,7 @@ namespace ThousandAndFirst
 				string creed = item.GetStringProperty(AskedTooOftenCreedProperty);
 				if (!string.IsNullOrEmpty(creed))
 				{
-					closed.Add(NameOf(item) + " (" + creed + ")");
+					closed.Add(KingdomPresentation.Rich(NameOf(item)) + " (" + creed + ")");
 				}
 			}
 			if (here == 0)
@@ -383,17 +382,18 @@ namespace ThousandAndFirst
 		private static void Hold(KingdomSystem System, Zone Z, GameObject Resident, string RealmCreed, RiteOffer Offer)
 		{
 			string name = NameOf(Resident);
+			string shownName = KingdomPresentation.Rich(name);
 			bool closing = KingdomWaterRiteRules.AskedTooOften(Resident.GetIntProperty(RefusalsProperty));
 			bool takesTheRoad = KingdomConversionRules.Resents(Offer.Facts.Hostility);
 			string prompt = KingdomWaterRiteRules.OfferPrompt(
-				name,
+				shownName,
 				KingdomCreed.CreedName(Resident.GetStringProperty(KingdomCreed.CreedProperty)),
 				KingdomCreed.CreedName(RealmCreed),
-				System.SeatName,
+				KingdomPresentation.Rich(System.SeatName),
 				Offer.Drams);
 			if (closing)
 			{
-				prompt += KingdomWaterRiteRules.PressedWarning(name, takesTheRoad);
+				prompt += KingdomWaterRiteRules.PressedWarning(shownName, takesTheRoad);
 			}
 			if (Popup.ShowYesNo(prompt) != DialogResult.Yes)
 			{
@@ -423,13 +423,13 @@ namespace ThousandAndFirst
 			}
 			if (closing)
 			{
-				Close(System, Resident, RealmCreed, name, takesTheRoad);
+				Close(System, Resident, RealmCreed, name, shownName, takesTheRoad);
 				System.LastSoulRiteTick = (The.Game != null) ? The.Game.TimeTicks : 0L;
 				return;
 			}
 			if (KingdomWaterRiteRules.Converted(answer))
 			{
-				if (!Accept(System, Z, Resident, RealmCreed, name))
+				if (!Accept(System, Z, Resident, RealmCreed, shownName))
 				{
 					bool returned = debit.Rollback();
 					if (!returned)
@@ -446,7 +446,7 @@ namespace ThousandAndFirst
 				System.LastSoulRiteTick = (The.Game != null) ? The.Game.TimeTicks : 0L;
 				return;
 			}
-			Refuse(System, Resident, RealmCreed, Offer, answer, name);
+			Refuse(System, Resident, RealmCreed, Offer, answer, shownName);
 			LogRite(name, answer, Offer);
 			System.LastSoulRiteTick = (The.Game != null) ? The.Game.TimeTicks : 0L;
 		}
@@ -483,8 +483,8 @@ namespace ThousandAndFirst
 			Resident.SetIntProperty(RefusalsProperty, KingdomWaterRiteRules.RefusalsAfter(Resident.GetIntProperty(RefusalsProperty)));
 			Chronicle(System,
 				Offer.Facts.Hostility,
-				KingdomWaterRiteRules.RefusalTelling(Answer, Name, System.SeatName),
-				KingdomWaterRiteRules.RefusalRumour(Name, System.SeatName, KingdomChronicle.FounderName()));
+				KingdomWaterRiteRules.RefusalTelling(Answer, Name, KingdomPresentation.Rich(System.SeatName)),
+				KingdomWaterRiteRules.RefusalRumour(Name, KingdomPresentation.Rich(System.SeatName), KingdomPresentation.Rich(KingdomChronicle.FounderName())));
 			Popup.Show(KingdomWaterRiteRules.RefusalNotice(
 				Answer,
 				Name,
@@ -497,16 +497,19 @@ namespace ThousandAndFirst
 		// this creed, and RepeatedAsking reports it to KingdomConversion, whose own machinery
 		// decides whether this person minds enough to take the road -- and, if they do, names them,
 		// graces them and chronicles them exactly as every other resented creed is.
-		private static void Close(KingdomSystem System, GameObject Resident, string RealmCreed, string Name, bool TakesTheRoad)
+		private static void Close(KingdomSystem System, GameObject Resident, string RealmCreed,
+			string Name, string ShownName, bool TakesTheRoad)
 		{
 			Resident.SetStringProperty(AskedTooOftenCreedProperty, RealmCreed);
 			KingdomGovernanceScope.Commit("share water rite");
 			Chronicle(System,
 				KingdomConversionRules.ContestedHostility,
-				KingdomWaterRiteRules.ClosedTelling(Name, System.SeatName),
-				KingdomWaterRiteRules.ClosedRumour(Name, System.SeatName, KingdomChronicle.FounderName()));
-			System.Ledger.Note("{{r|" + KingdomWaterRiteRules.ClosedNote(Name, KingdomCreed.CreedName(RealmCreed)) + "}}");
-			Popup.Show(KingdomWaterRiteRules.ClosedNotice(Name, System.SeatName, TakesTheRoad));
+				KingdomWaterRiteRules.ClosedTelling(ShownName, KingdomPresentation.Rich(System.SeatName)),
+				KingdomWaterRiteRules.ClosedRumour(ShownName, KingdomPresentation.Rich(System.SeatName), KingdomPresentation.Rich(KingdomChronicle.FounderName())));
+			System.Ledger.Note("{{r|" + KingdomWaterRiteRules.ClosedNote(ShownName,
+				KingdomCreed.CreedName(RealmCreed)) + "}}");
+			Popup.Show(KingdomWaterRiteRules.ClosedNotice(ShownName,
+				KingdomPresentation.Rich(System.SeatName), TakesTheRoad));
 			KingdomLog.Log("water rite: " + Name + " asked too often about " + (RealmCreed ?? "-") + " road=" + TakesTheRoad);
 		}
 
@@ -579,8 +582,9 @@ namespace ThousandAndFirst
 			{
 				return WaterRiteBar.NothingBetweenYou;
 			}
-			string roll = Resident.GetStringProperty("KingdomName");
-			if (!string.IsNullOrEmpty(roll) && roll == System.OfficeHolderName)
+			if (Simulation.City.KingdomResidents.IdOf(Resident) > 0
+				&& Simulation.City.KingdomResidents.IdOf(Resident)
+					== System.OfficeHolderResidentId)
 			{
 				return WaterRiteBar.TheirOffice;
 			}
@@ -631,7 +635,7 @@ namespace ThousandAndFirst
 			{
 				return null;
 			}
-			foreach (GameObject item in Z.GetObjects())
+			foreach (GameObject item in KingdomSurvey.ObjectsFor(Z))
 			{
 				if (item.GetIntProperty(KingdomUpgrade.BuiltProperty) != 1)
 				{
@@ -664,7 +668,7 @@ namespace ThousandAndFirst
 			string plotId = Resident.GetStringProperty(KingdomLodging.HomePlotIdProperty);
 			if (!string.IsNullOrEmpty(plotId))
 			{
-				foreach (GameObject item in Z.GetObjects())
+				foreach (GameObject item in KingdomSurvey.ObjectsFor(Z))
 				{
 					if (item.GetIntProperty(KingdomUpgrade.BuiltProperty) == 1 && item.GetStringProperty(KingdomPlots.PlotIdProperty) == plotId)
 					{
@@ -733,12 +737,13 @@ namespace ThousandAndFirst
 		// Everyone the rite could be put to: a citizen of this settlement whom the roll carries
 		// under a name, because water is shared with a person and a person has a name. Sorted by
 		// that name, so the same settlement always offers the same list in the same order.
-		private static List<GameObject> CandidatesIn(Zone Z)
+		private static List<GameObject> CandidatesIn(KingdomSystem System, Zone Z)
 		{
 			List<GameObject> people = new List<GameObject>();
-			foreach (GameObject item in Z.GetObjects())
+			foreach (GameObject item in KingdomSurvey.ObjectsFor(Z))
 			{
-				if (item.GetIntProperty("KingdomCitizen") == 1 && !string.IsNullOrEmpty(item.GetStringProperty("KingdomName")))
+				if (KingdomCitizenship.BelongsTo(System, item)
+					&& !string.IsNullOrEmpty(item.GetStringProperty("KingdomName")))
 				{
 					people.Add(item);
 				}
@@ -754,7 +759,7 @@ namespace ThousandAndFirst
 				return "";
 			}
 			string name = Resident.GetStringProperty("KingdomName");
-			return string.IsNullOrEmpty(name) ? Resident.ShortDisplayName : name;
+			return string.IsNullOrEmpty(name) ? Resident.BaseDisplayNameStripped : name;
 		}
 	}
 }

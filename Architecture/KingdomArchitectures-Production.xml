@@ -1,0 +1,928 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Authored food, craft, and power architecture, schema wave A.
+
+  Each map is the permanent result inside a typed reserved lot. Dots stay unclaimed. The
+  catalogue root owns production behavior; supporting vanilla furniture is deterministic and
+  empty. Machinery clearances, crop rows, loading faces, and service points are semantic anchors.
+  No populated container, filled vessel, decorative pipe, power line, or duplicate machine is
+  placed by this file.
+-->
+<KingdomArchitectures Schema="1">
+
+  <!-- Production palettes. -->
+  <palette Key="production-larder-timber">
+    <slot Key="ground" Blueprint="DirtFloor" Role="ground" Material="mud" MinTech="hands" Natural="yes" />
+    <slot Key="floor" Blueprint="DirtPath" Role="floor" Material="mud" MinTech="hands" Natural="yes" />
+    <slot Key="slat" Blueprint="r_KingdomStructureBrinestalkWall" Role="slatted-wall" Material="timber" MinTech="hands" Natural="no" />
+    <slot Key="vent" Blueprint="r_KingdomStructureWornWoodWall" Role="vented-wall" Material="timber" MinTech="hands" Natural="no" />
+    <slot Key="door" Blueprint="r_KingdomFixtureDoorTimber" Role="door" Material="timber" MinTech="hands" Natural="no" />
+  </palette>
+
+  <palette Key="production-garden-hands">
+    <slot Key="soil" Blueprint="DirtFloor" Role="cultivated-soil" Material="mud" MinTech="hands" Natural="no" />
+    <slot Key="path" Blueprint="DirtPath" Role="garden-path" Material="mud" MinTech="hands" Natural="no" />
+    <slot Key="stake" Blueprint="r_KingdomStructureBrinestalkWall" Role="row-stake" Material="timber" MinTech="hands" Natural="no" />
+  </palette>
+
+  <palette Key="production-field-hands">
+    <slot Key="soil" Blueprint="DirtFloor" Role="field-soil" Material="mud" MinTech="hands" Natural="yes" />
+    <slot Key="path" Blueprint="DirtPath" Role="field-path" Material="mud" MinTech="hands" Natural="yes" />
+    <slot Key="fence" Blueprint="r_KingdomStructureBrinestalkWall" Role="field-fence" Material="timber" MinTech="hands" Natural="no" />
+    <slot Key="marker" Blueprint="r_KingdomStructureHalfStone" Role="field-marker" Material="stone" MinTech="hands" Natural="no" />
+  </palette>
+
+  <palette Key="production-granary-hands">
+    <slot Key="ground" Blueprint="DirtFloor" Role="ground" Material="mud" MinTech="hands" Natural="yes" />
+    <slot Key="floor" Blueprint="DirtPath" Role="dry-floor" Material="mud" MinTech="hands" Natural="yes" />
+    <slot Key="wall" Blueprint="r_KingdomStructureBrinestalkWall" Role="wall" Material="timber" MinTech="hands" Natural="no" />
+    <slot Key="door" Blueprint="r_KingdomFixtureDoorTimber" Role="door" Material="timber" MinTech="hands" Natural="no" />
+    <slot Key="staddle" Blueprint="r_KingdomStructureHalfStone" Role="staddle" Material="stone" MinTech="hands" Natural="no" />
+    <slot Key="storage" Blueprint="r_KingdomFixtureBasketEmpty" Role="empty-storage" Material="timber" MinTech="hands" Natural="no" />
+  </palette>
+
+  <palette Key="production-grange-workshop">
+    <slot Key="soil" Blueprint="DirtFloor" Role="field-soil" Material="mud" MinTech="hands" Natural="yes" />
+    <slot Key="path" Blueprint="DirtPath" Role="field-path" Material="mud" MinTech="hands" Natural="yes" />
+    <slot Key="floor" Blueprint="WoodFloor" Role="threshing-floor" Material="shapedtimber" MinTech="workshop" Natural="no" />
+    <slot Key="wall" Blueprint="r_KingdomStructureBrinestalkWall" Role="barn-wall" Material="timber" MinTech="hands" Natural="no" />
+    <slot Key="door" Blueprint="r_KingdomFixtureDoorTimber" Role="barn-door" Material="timber" MinTech="hands" Natural="no" />
+    <slot Key="stone" Blueprint="r_KingdomStructureHalfStone" Role="staddle" Material="stone" MinTech="hands" Natural="no" />
+    <slot Key="storage" Blueprint="r_KingdomFixtureBasketEmpty" Role="empty-storage" Material="timber" MinTech="hands" Natural="no" />
+  </palette>
+
+  <palette Key="production-homefarm-foundry">
+    <slot Key="soil" Blueprint="DirtFloor" Role="field-soil" Material="mud" MinTech="hands" Natural="yes" />
+    <slot Key="path" Blueprint="DirtPath" Role="service-road" Material="mud" MinTech="hands" Natural="yes" />
+    <slot Key="fence" Blueprint="r_KingdomStructureBrinestalkWall" Role="field-fence" Material="timber" MinTech="hands" Natural="no" />
+    <slot Key="wall" Blueprint="r_KingdomStructureSandstone" Role="granary-wall" Material="stone" MinTech="hands" Natural="no" />
+    <slot Key="door" Blueprint="r_KingdomFixtureDoorTimber" Role="door" Material="timber" MinTech="hands" Natural="no" />
+    <slot Key="floor" Blueprint="WoodFloor" Role="raised-floor" Material="shapedtimber" MinTech="workshop" Natural="no" />
+    <slot Key="scrap" Blueprint="r_KingdomStructureRustedMetalWall" Role="recovered-brace" Material="scrap" MinTech="salvage" Natural="no" />
+    <slot Key="metal" Blueprint="r_KingdomStructureMetalWall" Role="mill-frame" Material="workedmetal" MinTech="foundry" Natural="no" />
+    <slot Key="storage" Blueprint="r_KingdomFixtureBasketEmpty" Role="empty-storage" Material="timber" MinTech="hands" Natural="no" />
+    <slot Key="table" Blueprint="r_KingdomFixtureTableShapedTimber" Role="grading-table" Material="shapedtimber" MinTech="workshop" Natural="no" />
+  </palette>
+
+  <palette Key="production-tools-hands">
+    <slot Key="ground" Blueprint="DirtFloor" Role="ground" Material="mud" MinTech="hands" Natural="yes" />
+    <slot Key="floor" Blueprint="DirtPath" Role="floor" Material="mud" MinTech="hands" Natural="yes" />
+    <slot Key="wall" Blueprint="r_KingdomStructureBrinestalkWall" Role="wall" Material="timber" MinTech="hands" Natural="no" />
+    <slot Key="bench" Blueprint="r_KingdomFixtureTableTimber" Role="empty-work-surface" Material="timber" MinTech="hands" Natural="no" />
+    <slot Key="storage" Blueprint="r_KingdomFixtureBasketEmpty" Role="empty-storage" Material="timber" MinTech="hands" Natural="no" />
+  </palette>
+
+  <palette Key="production-charging-salvage">
+    <slot Key="ground" Blueprint="DirtFloor" Role="ground" Material="mud" MinTech="hands" Natural="yes" />
+    <slot Key="floor" Blueprint="DirtPath" Role="service-floor" Material="mud" MinTech="hands" Natural="yes" />
+    <slot Key="frame" Blueprint="r_KingdomStructureRustedMetalWall" Role="recovered-frame" Material="scrap" MinTech="salvage" Natural="no" />
+  </palette>
+
+  <palette Key="production-smith-salvage">
+    <slot Key="ground" Blueprint="DirtFloor" Role="ground" Material="mud" MinTech="hands" Natural="yes" />
+    <slot Key="floor" Blueprint="DirtPath" Role="work-floor" Material="mud" MinTech="hands" Natural="yes" />
+    <slot Key="wall" Blueprint="r_KingdomStructureSandstone" Role="stone-wall" Material="stone" MinTech="hands" Natural="no" />
+    <slot Key="shield" Blueprint="r_KingdomStructureRustedMetalWall" Role="recovered-heat-shield" Material="scrap" MinTech="salvage" Natural="no" />
+    <slot Key="hearth" Blueprint="r_KingdomStructureHalfStone" Role="hearth-curb" Material="stone" MinTech="hands" Natural="no" />
+    <slot Key="door" Blueprint="Archway" Role="door" Material="stone" MinTech="hands" Natural="no" />
+    <slot Key="anvil" Blueprint="Anvil" Role="stone-anvil" Material="stone" MinTech="hands" Natural="no" />
+  </palette>
+
+  <palette Key="production-grind-hands">
+    <slot Key="ground" Blueprint="DirtFloor" Role="ground" Material="mud" MinTech="hands" Natural="yes" />
+    <slot Key="floor" Blueprint="DirtPath" Role="mill-floor" Material="mud" MinTech="hands" Natural="yes" />
+    <slot Key="wall" Blueprint="r_KingdomStructureBrinestalkWall" Role="wall" Material="timber" MinTech="hands" Natural="no" />
+    <slot Key="door" Blueprint="r_KingdomFixtureDoorTimber" Role="door" Material="timber" MinTech="hands" Natural="no" />
+    <slot Key="curb" Blueprint="r_KingdomStructureHalfStone" Role="stone-curb" Material="stone" MinTech="hands" Natural="no" />
+    <slot Key="storage" Blueprint="r_KingdomFixtureBasketEmpty" Role="empty-storage" Material="timber" MinTech="hands" Natural="no" />
+  </palette>
+
+  <palette Key="production-workshop-salvage">
+    <slot Key="ground" Blueprint="DirtFloor" Role="ground" Material="mud" MinTech="hands" Natural="yes" />
+    <slot Key="floor" Blueprint="DirtPath" Role="work-floor" Material="mud" MinTech="hands" Natural="yes" />
+    <slot Key="wall" Blueprint="r_KingdomStructureBrinestalkWall" Role="timber-wall" Material="timber" MinTech="hands" Natural="no" />
+    <slot Key="stone" Blueprint="r_KingdomStructureSandstone" Role="stone-bay" Material="stone" MinTech="hands" Natural="no" />
+    <slot Key="scrap" Blueprint="r_KingdomStructureRustedMetalWall" Role="recovered-brace" Material="scrap" MinTech="salvage" Natural="no" />
+    <slot Key="door" Blueprint="r_KingdomFixtureDoorTimber" Role="door" Material="timber" MinTech="hands" Natural="no" />
+    <slot Key="bench" Blueprint="r_KingdomFixtureTableTimber" Role="empty-work-surface" Material="timber" MinTech="hands" Natural="no" />
+    <slot Key="storage" Blueprint="r_KingdomFixtureBasketEmpty" Role="empty-storage" Material="timber" MinTech="hands" Natural="no" />
+  </palette>
+
+  <palette Key="production-yard-hands">
+    <slot Key="ground" Blueprint="DirtFloor" Role="yard-ground" Material="mud" MinTech="hands" Natural="yes" />
+    <slot Key="path" Blueprint="DirtPath" Role="yard-path" Material="mud" MinTech="hands" Natural="yes" />
+    <slot Key="timber" Blueprint="r_KingdomStructureWornWoodWall" Role="seasoning-rack" Material="timber" MinTech="hands" Natural="no" />
+    <slot Key="fence" Blueprint="r_KingdomStructureBrinestalkWall" Role="yard-fence" Material="timber" MinTech="hands" Natural="no" />
+    <slot Key="banker" Blueprint="r_KingdomStructureHalfStone" Role="stone-banker" Material="stone" MinTech="hands" Natural="no" />
+    <slot Key="spoil" Blueprint="Rubble" Role="stone-spoil" Material="stone" MinTech="hands" Natural="no" />
+  </palette>
+
+  <palette Key="production-smelter-salvage">
+    <slot Key="ground" Blueprint="DirtFloor" Role="ground" Material="mud" MinTech="hands" Natural="yes" />
+    <slot Key="floor" Blueprint="DirtPath" Role="work-floor" Material="mud" MinTech="hands" Natural="yes" />
+    <slot Key="wall" Blueprint="r_KingdomStructureSandstone" Role="stone-wall" Material="stone" MinTech="hands" Natural="no" />
+    <slot Key="shield" Blueprint="r_KingdomStructureRustedMetalWall" Role="recovered-furnace-jacket" Material="scrap" MinTech="salvage" Natural="no" />
+    <slot Key="curb" Blueprint="r_KingdomStructureHalfStone" Role="hot-curb" Material="stone" MinTech="hands" Natural="no" />
+    <slot Key="door" Blueprint="Archway" Role="door" Material="stone" MinTech="hands" Natural="no" />
+  </palette>
+
+  <palette Key="production-mill-hands">
+    <slot Key="ground" Blueprint="DirtFloor" Role="ground" Material="mud" MinTech="hands" Natural="yes" />
+    <slot Key="floor" Blueprint="DirtPath" Role="walking-floor" Material="mud" MinTech="hands" Natural="yes" />
+    <slot Key="wall" Blueprint="r_KingdomStructureBrinestalkWall" Role="timber-screen" Material="timber" MinTech="hands" Natural="no" />
+  </palette>
+
+  <palette Key="production-waterwheel-hands">
+    <slot Key="ground" Blueprint="DirtFloor" Role="ground" Material="mud" MinTech="hands" Natural="yes" />
+    <slot Key="path" Blueprint="DirtPath" Role="service-path" Material="mud" MinTech="hands" Natural="yes" />
+    <slot Key="race" Blueprint="SaltPath" Role="dry-millrace-marker" Material="mud" MinTech="hands" Natural="yes" />
+    <slot Key="support" Blueprint="r_KingdomStructureBrinestalkWall" Role="wheel-support" Material="timber" MinTech="hands" Natural="no" />
+    <slot Key="bearing" Blueprint="r_KingdomStructureRustedMetalWall" Role="recovered-bearing" Material="scrap" MinTech="salvage" Natural="no" />
+  </palette>
+
+  <palette Key="production-sailvane-salvage">
+    <slot Key="ground" Blueprint="DirtFloor" Role="ground" Material="mud" MinTech="hands" Natural="yes" />
+    <slot Key="path" Blueprint="DirtPath" Role="sweep-floor" Material="mud" MinTech="hands" Natural="yes" />
+    <slot Key="guy" Blueprint="r_KingdomStructureBrinestalkWall" Role="guy-stake" Material="timber" MinTech="hands" Natural="no" />
+    <slot Key="bearing" Blueprint="r_KingdomStructureRustedMetalWall" Role="recovered-bearing" Material="scrap" MinTech="salvage" Natural="no" />
+  </palette>
+
+  <palette Key="production-saltstore-workshop">
+    <slot Key="ground" Blueprint="DirtFloor" Role="ground" Material="mud" MinTech="hands" Natural="yes" />
+    <slot Key="floor" Blueprint="DirtPath" Role="service-floor" Material="mud" MinTech="hands" Natural="yes" />
+    <slot Key="wall" Blueprint="r_KingdomStructureSandstone" Role="stone-wall" Material="stone" MinTech="hands" Natural="no" />
+    <slot Key="shield" Blueprint="r_KingdomStructureRustedMetalWall" Role="recovered-heat-shield" Material="scrap" MinTech="salvage" Natural="no" />
+    <slot Key="curb" Blueprint="r_KingdomStructureHalfStone" Role="salt-bed-curb" Material="stone" MinTech="hands" Natural="no" />
+    <slot Key="door" Blueprint="Archway" Role="door" Material="stone" MinTech="hands" Natural="no" />
+  </palette>
+
+  <palette Key="production-weavehall-hindren">
+    <slot Key="ground" Blueprint="DirtFloor" Role="ground" Material="mud" MinTech="hands" Natural="yes" />
+    <slot Key="floor" Blueprint="DirtPath" Role="treadle-lane" Material="mud" MinTech="hands" Natural="yes" />
+    <slot Key="wall" Blueprint="r_KingdomStructureSandstone" Role="stone-wall" Material="stone" MinTech="hands" Natural="no" />
+    <slot Key="loom" Blueprint="r_KingdomStructureRustedMetalWall" Role="recovered-loom-frame" Material="scrap" MinTech="salvage" Natural="no" />
+    <slot Key="door" Blueprint="Archway" Role="door" Material="stone" MinTech="hands" Natural="no" />
+  </palette>
+
+  <palette Key="production-sporecellar-fungal">
+    <slot Key="floor" Blueprint="FungalTrailBrick" Role="damp-floor" Material="mud" MinTech="hands" Natural="yes" />
+    <slot Key="rock" Blueprint="r_KingdomStructureLimestone" Role="natural-rock" Material="stone" MinTech="hands" Natural="yes" />
+    <slot Key="lid" Blueprint="r_KingdomStructureHalfStone" Role="cut-stone-lid" Material="stone" MinTech="hands" Natural="no" />
+    <slot Key="door" Blueprint="Archway" Role="cut-entry" Material="stone" MinTech="hands" Natural="no" />
+    <slot Key="storage" Blueprint="r_KingdomFixtureBasketEmpty" Role="empty-storage" Material="timber" MinTech="hands" Natural="no" />
+  </palette>
+
+  <palette Key="production-butcher-salvage">
+    <slot Key="ground" Blueprint="DirtFloor" Role="ground" Material="mud" MinTech="hands" Natural="yes" />
+    <slot Key="floor" Blueprint="DirtPath" Role="washable-path" Material="mud" MinTech="hands" Natural="yes" />
+    <slot Key="screen" Blueprint="r_KingdomStructureBrinestalkWall" Role="timber-screen" Material="timber" MinTech="hands" Natural="no" />
+    <slot Key="rail" Blueprint="r_KingdomStructureWornWoodWall" Role="hook-rail" Material="timber" MinTech="hands" Natural="no" />
+    <slot Key="gutter" Blueprint="r_KingdomStructureStoneGutter" Role="stone-gutter" Material="stone" MinTech="hands" Natural="no" />
+  </palette>
+
+  <!-- Food and storage maps. -->
+  <map Key="production-larder-s0" Width="5" Height="4" DefaultCover="walled">
+    <glyph Char="W" Ground="$ground" Structure="$slat" Claim="building" Pass="blocked" Cover="walled" />
+    <glyph Char="V" Ground="$ground" Structure="$vent" Claim="building" Pass="blocked" Cover="soft" />
+    <glyph Char="P" Ground="$floor" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="adjacent" Cover="walled" Anchors="main,function:dry-storage" Stateful="yes" />
+    <glyph Char="L" Ground="$floor" Claim="yard" Pass="walk" Cover="open" Anchors="service:loading" />
+    <glyph Char="E" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" Anchors="entrance:public" />
+    <row Cells="WVWV." />
+    <row Cells="V@PV." />
+    <row Cells="WPPW." />
+    <row Cells="LEP.." />
+  </map>
+
+  <map Key="production-plot-s0" Width="5" Height="4" DefaultCover="open">
+    <glyph Char="a" Ground="$soil" Claim="yard" Pass="walk" Cover="open" Anchors="crop:row1" />
+    <glyph Char="b" Ground="$soil" Claim="yard" Pass="walk" Cover="open" Anchors="crop:row2" />
+    <glyph Char="P" Ground="$path" Claim="yard" Pass="walk" Cover="open" />
+    <glyph Char="@" Ground="$soil" Object="$building" Claim="yard" Pass="adjacent" Cover="open" Anchors="main,function:garden" Stateful="yes" />
+    <glyph Char="E" Ground="$path" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
+    <row Cells="....." />
+    <row Cells="aP@Pb" />
+    <row Cells="PPPPP" />
+    <row Cells="..E.." />
+  </map>
+
+  <map Key="production-plotrows-s1" Width="5" Height="4" DefaultCover="open">
+    <glyph Char="f" Ground="$soil" Structure="$stake" Claim="yard" Pass="blocked" Cover="open" />
+    <glyph Char="a" Ground="$soil" Claim="yard" Pass="walk" Cover="open" Anchors="crop:row1" />
+    <glyph Char="b" Ground="$soil" Claim="yard" Pass="walk" Cover="open" Anchors="crop:row2" />
+    <glyph Char="c" Ground="$soil" Claim="yard" Pass="walk" Cover="open" Anchors="crop:row3" />
+    <glyph Char="d" Ground="$soil" Claim="yard" Pass="walk" Cover="open" Anchors="crop:row4" />
+    <glyph Char="P" Ground="$path" Claim="yard" Pass="walk" Cover="open" />
+    <glyph Char="@" Ground="$soil" Object="$building" Claim="yard" Pass="adjacent" Cover="open" Anchors="main,function:garden" Stateful="yes" />
+    <glyph Char="E" Ground="$path" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
+    <row Cells="f.f.f" />
+    <row Cells="aP@Pb" />
+    <row Cells="cPPPd" />
+    <row Cells="..E.." />
+  </map>
+
+  <map Key="production-field-m0" Width="8" Height="6" DefaultCover="open">
+    <glyph Char="f" Ground="$soil" Structure="$fence" Claim="yard" Pass="blocked" Cover="open" />
+    <glyph Char="s" Ground="$soil" Structure="$marker" Claim="yard" Pass="blocked" Cover="open" />
+    <glyph Char="r" Ground="$soil" Claim="yard" Pass="walk" Cover="open" />
+    <glyph Char="a" Ground="$soil" Claim="yard" Pass="walk" Cover="open" Anchors="crop:row1" />
+    <glyph Char="c" Ground="$soil" Claim="yard" Pass="walk" Cover="open" Anchors="crop:row2" />
+    <glyph Char="P" Ground="$path" Claim="yard" Pass="walk" Cover="open" />
+    <glyph Char="@" Ground="$path" Object="$building" Claim="yard" Pass="adjacent" Cover="open" Anchors="main,function:field" Stateful="yes" />
+    <glyph Char="E" Ground="$path" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
+    <row Cells=".fs....." />
+    <row Cells=".arrrr.." />
+    <row Cells=".PP@PP.." />
+    <row Cells=".crrrr.." />
+    <row Cells=".PPPPPPP" />
+    <row Cells="...E...." />
+  </map>
+
+  <map Key="production-fieldrows-m1" Width="8" Height="6" DefaultCover="open">
+    <glyph Char="f" Ground="$soil" Structure="$fence" Claim="yard" Pass="blocked" Cover="open" />
+    <glyph Char="s" Ground="$soil" Structure="$marker" Claim="yard" Pass="blocked" Cover="open" />
+    <glyph Char="r" Ground="$soil" Claim="yard" Pass="walk" Cover="open" />
+    <glyph Char="a" Ground="$soil" Claim="yard" Pass="walk" Cover="open" Anchors="crop:row1" />
+    <glyph Char="c" Ground="$soil" Claim="yard" Pass="walk" Cover="open" Anchors="crop:row2" />
+    <glyph Char="e" Ground="$soil" Claim="yard" Pass="walk" Cover="open" Anchors="crop:row3" />
+    <glyph Char="P" Ground="$path" Claim="yard" Pass="walk" Cover="open" />
+    <glyph Char="@" Ground="$path" Object="$building" Claim="yard" Pass="adjacent" Cover="open" Anchors="main,function:field" Stateful="yes" />
+    <glyph Char="E" Ground="$path" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
+    <row Cells="ferrrrsf" />
+    <row Cells="farrrrrf" />
+    <row Cells="fPP@PPPf" />
+    <row Cells="fcrrrrrf" />
+    <row Cells="fPPPPPPf" />
+    <row Cells="f..E...f" />
+  </map>
+
+  <map Key="production-granary-m0" Width="8" Height="6" DefaultCover="walled">
+    <glyph Char="S" Ground="$ground" Structure="$staddle" Claim="building" Pass="blocked" Cover="soft" />
+    <glyph Char="W" Ground="$ground" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
+    <glyph Char="P" Ground="$floor" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="adjacent" Cover="walled" Anchors="main,function:grain-storage" Stateful="yes" />
+    <glyph Char="B" Ground="$floor" Object="$storage" Claim="building" Pass="adjacent" Cover="walled" Anchors="storage:incoming" Stateful="yes" />
+    <glyph Char="L" Ground="$floor" Claim="yard" Pass="walk" Cover="open" Anchors="service:loading" />
+    <glyph Char="E" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" Anchors="entrance:public" />
+    <row Cells=".SSSSS.." />
+    <row Cells=".W@BPW.." />
+    <row Cells=".WPPPW.." />
+    <row Cells=".WPPPW.." />
+    <row Cells=".WWPWW.." />
+    <row Cells="..LEL..." />
+  </map>
+
+  <map Key="production-grange-l0" Width="12" Height="9" DefaultCover="open">
+    <glyph Char="r" Ground="$soil" Claim="yard" Pass="walk" Cover="open" />
+    <glyph Char="a" Ground="$soil" Claim="yard" Pass="walk" Cover="open" Anchors="crop:row1" />
+    <glyph Char="c" Ground="$soil" Claim="yard" Pass="walk" Cover="open" Anchors="crop:row2" />
+    <glyph Char="e" Ground="$soil" Claim="yard" Pass="walk" Cover="open" Anchors="crop:row3" />
+    <glyph Char="g" Ground="$soil" Claim="yard" Pass="walk" Cover="open" Anchors="crop:row4" />
+    <glyph Char="P" Ground="$path" Claim="yard" Pass="walk" Cover="open" />
+    <glyph Char="L" Ground="$path" Claim="yard" Pass="walk" Cover="open" Anchors="service:loading" />
+    <glyph Char="W" Ground="$soil" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
+    <glyph Char="I" Ground="$floor" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="D" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="adjacent" Cover="walled" Anchors="main,function:grange" Stateful="yes" />
+    <glyph Char="B" Ground="$floor" Object="$storage" Claim="building" Pass="adjacent" Cover="walled" Anchors="storage:grain" Stateful="yes" />
+    <glyph Char="E" Ground="$path" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
+    <row Cells=".......WWWWW" />
+    <row Cells="arrrrrrW@BPW" />
+    <row Cells="PPPPPPPWIIIW" />
+    <row Cells="crrrrrrDIIWW" />
+    <row Cells="PPPPPPPPPPPL" />
+    <row Cells="errrrrrPPPPP" />
+    <row Cells="PPPPPPPPPPPP" />
+    <row Cells="grrrrrrPPPPP" />
+    <row Cells=".....E......" />
+  </map>
+
+  <map Key="production-homefarm-xl0" Width="20" Height="14" DefaultCover="open">
+    <glyph Char="F" Ground="$soil" Structure="$fence" Claim="yard" Pass="blocked" Cover="open" />
+    <glyph Char="r" Ground="$soil" Claim="yard" Pass="walk" Cover="open" />
+    <glyph Char="a" Ground="$soil" Claim="yard" Pass="walk" Cover="open" Anchors="crop:row1" />
+    <glyph Char="c" Ground="$soil" Claim="yard" Pass="walk" Cover="open" Anchors="crop:row2" />
+    <glyph Char="e" Ground="$soil" Claim="yard" Pass="walk" Cover="open" Anchors="crop:row3" />
+    <glyph Char="g" Ground="$soil" Claim="yard" Pass="walk" Cover="open" Anchors="crop:row4" />
+    <glyph Char="h" Ground="$soil" Claim="yard" Pass="walk" Cover="open" Anchors="crop:row5" />
+    <glyph Char="j" Ground="$soil" Claim="yard" Pass="walk" Cover="open" Anchors="crop:row6" />
+    <glyph Char="P" Ground="$path" Claim="yard" Pass="walk" Cover="open" />
+    <glyph Char="L" Ground="$path" Claim="yard" Pass="walk" Cover="open" Anchors="service:road" />
+    <glyph Char="Q" Ground="$path" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public,service:loading" />
+    <glyph Char="W" Ground="$soil" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
+    <glyph Char="R" Ground="$floor" Structure="$scrap" Claim="building" Pass="blocked" Cover="walled" />
+    <glyph Char="M" Ground="$floor" Structure="$metal" Claim="building" Pass="blocked" Cover="walled" />
+    <glyph Char="I" Ground="$floor" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="D" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="adjacent" Cover="walled" Anchors="main,function:home-farm,work:mill" Stateful="yes" />
+    <glyph Char="B" Ground="$floor" Object="$storage" Claim="building" Pass="adjacent" Cover="walled" Anchors="storage:grain" Stateful="yes" />
+    <glyph Char="T" Ground="$floor" Object="$table" Claim="building" Pass="adjacent" Cover="walled" Anchors="work:grading" Stateful="yes" />
+    <glyph Char="E" Ground="$path" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
+    <row Cells="FFFFFFFFFFFFPPWWWWWW" />
+    <row Cells="FarrrrrrrrrFPPW@BIPW" />
+    <row Cells="FPPPPPPPPPPFPPWIIIIW" />
+    <row Cells="FcrrrrrrrrrFPPDIIIIW" />
+    <row Cells="FPPPPPPPPPPFPPWIIIIW" />
+    <row Cells="FerrrrrrrrrFPPLLLLLQ" />
+    <row Cells="FPPPPPPPPPPFPPRRRRRR" />
+    <row Cells="FgrrrrrrrrrFPPWWWWWW" />
+    <row Cells="FPPPPPPPPPPFPPWTIIMW" />
+    <row Cells="FhrrrrrrrrrFPPWIBIIW" />
+    <row Cells="FPPPPPPPPPPFPPDIIIIW" />
+    <row Cells="FjrrrrrrrrrFPPWWWWWW" />
+    <row Cells="FPPPPPPPPPPFPPPPPPPP" />
+    <row Cells="......E.....PP......" />
+  </map>
+
+  <!-- Craft maps. -->
+  <map Key="production-toolshed-s0" Width="5" Height="4" DefaultCover="soft">
+    <glyph Char="W" Ground="$ground" Structure="$wall" Claim="building" Pass="blocked" Cover="soft" />
+    <glyph Char="P" Ground="$floor" Claim="building" Pass="walk" Cover="soft" />
+    <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="adjacent" Cover="soft" Anchors="main,function:tool-care" Stateful="yes" />
+    <glyph Char="T" Ground="$floor" Object="$bench" Claim="building" Pass="adjacent" Cover="soft" Anchors="work:bench" Stateful="yes" />
+    <glyph Char="B" Ground="$floor" Object="$storage" Claim="building" Pass="adjacent" Cover="soft" Anchors="storage:tools" Stateful="yes" />
+    <glyph Char="E" Ground="$floor" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public,service:loading" />
+    <row Cells="WWW.." />
+    <row Cells="W@P.." />
+    <row Cells="WTPB." />
+    <row Cells="..E.." />
+  </map>
+
+  <map Key="production-chargingpost-s0" Width="5" Height="4" DefaultCover="open">
+    <glyph Char="R" Ground="$ground" Structure="$frame" Claim="yard" Pass="blocked" Cover="open" />
+    <glyph Char="C" Ground="$floor" Claim="yard" Pass="walk" Cover="open" Anchors="service:crank-clearance" />
+    <glyph Char="Q" Ground="$floor" Claim="yard" Pass="walk" Cover="open" Anchors="service:cell-queue" />
+    <glyph Char="@" Ground="$floor" Object="$building" Claim="yard" Pass="adjacent" Cover="open" Anchors="main,function:charging" Stateful="yes" />
+    <glyph Char="E" Ground="$floor" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
+    <row Cells=".RRR." />
+    <row Cells=".R@R." />
+    <row Cells=".CQC." />
+    <row Cells=".E..." />
+  </map>
+
+  <!-- Robot service overlay opens two full approach lanes around a paired bay. Same recovered
+       frame and dirt service floor: body access does not mint foundry metal or extra charge. -->
+  <map Key="production-chargingpost-robot-s0" Width="5" Height="4" DefaultCover="open">
+    <glyph Char="R" Ground="$ground" Structure="$frame" Claim="yard" Pass="blocked" Cover="open" />
+    <glyph Char="C" Ground="$floor" Claim="yard" Pass="walk" Cover="open" Anchors="service:crank-clearance" />
+    <glyph Char="Q" Ground="$floor" Claim="yard" Pass="walk" Cover="open" Anchors="service:cell-queue" />
+    <glyph Char="B" Ground="$floor" Claim="yard" Pass="walk" Cover="open" Anchors="service:robot-bay" />
+    <glyph Char="@" Ground="$floor" Object="$building" Claim="yard" Pass="adjacent" Cover="open" Anchors="main,function:charging" Stateful="yes" />
+    <glyph Char="E" Ground="$floor" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
+    <row Cells=".R@R." />
+    <row Cells=".CBC." />
+    <row Cells=".QBQ." />
+    <row Cells=".E.E." />
+  </map>
+
+  <map Key="production-smithy-m0" Width="8" Height="6" DefaultCover="walled">
+    <glyph Char="S" Ground="$ground" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
+    <glyph Char="R" Ground="$floor" Structure="$shield" Claim="building" Pass="blocked" Cover="walled" />
+    <glyph Char="P" Ground="$floor" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="C" Ground="$floor" Claim="building" Pass="walk" Cover="walled" Anchors="hazard:clearance" />
+    <glyph Char="H" Ground="$floor" Structure="$hearth" Claim="building" Pass="adjacent" Cover="walled" Anchors="hazard:hot-zone" />
+    <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="adjacent" Cover="walled" Anchors="main,function:smithing" Stateful="yes" />
+    <glyph Char="A" Ground="$floor" Object="$anvil" Claim="building" Pass="adjacent" Cover="walled" Anchors="work:anvil" Stateful="yes" />
+    <glyph Char="D" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="L" Ground="$floor" Claim="yard" Pass="walk" Cover="open" Anchors="service:loading" />
+    <glyph Char="E" Ground="$floor" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
+    <row Cells=".SSSSS.." />
+    <row Cells=".SHCPS.." />
+    <row Cells=".SP@PA.." />
+    <row Cells=".SPPPS.." />
+    <row Cells=".SSDPPPL" />
+    <row Cells="...E...." />
+  </map>
+
+  <map Key="production-forge-m1" Width="8" Height="6" DefaultCover="walled">
+    <glyph Char="S" Ground="$ground" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
+    <glyph Char="R" Ground="$floor" Structure="$shield" Claim="building" Pass="blocked" Cover="walled" />
+    <glyph Char="P" Ground="$floor" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="C" Ground="$floor" Claim="building" Pass="walk" Cover="walled" Anchors="hazard:clearance" />
+    <glyph Char="H" Ground="$floor" Structure="$hearth" Claim="building" Pass="adjacent" Cover="walled" Anchors="hazard:hot-zone" />
+    <glyph Char="Q" Ground="$floor" Claim="building" Pass="walk" Cover="walled" Anchors="work:bloom" />
+    <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="adjacent" Cover="walled" Anchors="main,function:smithing" Stateful="yes" />
+    <glyph Char="A" Ground="$floor" Object="$anvil" Claim="building" Pass="adjacent" Cover="walled" Anchors="work:anvil" Stateful="yes" />
+    <glyph Char="D" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="L" Ground="$floor" Claim="yard" Pass="walk" Cover="open" Anchors="service:loading" />
+    <glyph Char="E" Ground="$floor" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
+    <row Cells=".SSSSSS." />
+    <row Cells=".SHCCHS." />
+    <row Cells=".SP@PAS." />
+    <row Cells=".SPQPSP." />
+    <row Cells=".SSDPPPL" />
+    <row Cells="...E...." />
+  </map>
+
+  <map Key="production-grindmill-m0" Width="8" Height="6" DefaultCover="walled">
+    <glyph Char="W" Ground="$ground" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
+    <glyph Char="P" Ground="$floor" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="Q" Ground="$floor" Claim="building" Pass="walk" Cover="walled" Anchors="power:input" />
+    <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="adjacent" Cover="walled" Anchors="main,function:grinding" Stateful="yes" />
+    <glyph Char="B" Ground="$floor" Object="$storage" Claim="building" Pass="adjacent" Cover="walled" Anchors="storage:input" Stateful="yes" />
+    <glyph Char="C" Ground="$floor" Object="$storage" Claim="building" Pass="adjacent" Cover="walled" Anchors="storage:output" Stateful="yes" />
+    <glyph Char="D" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="L" Ground="$floor" Claim="yard" Pass="walk" Cover="open" Anchors="service:loading" />
+    <glyph Char="E" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" Anchors="entrance:public" />
+    <row Cells="WWWWWW.." />
+    <row Cells="WBP@QW.." />
+    <row Cells="WPPPPW.." />
+    <row Cells="WPPPCW.." />
+    <row Cells="WWDPPDLL" />
+    <row Cells="..E....." />
+  </map>
+
+  <map Key="production-workshop-m0" Width="8" Height="6" DefaultCover="walled">
+    <glyph Char="W" Ground="$ground" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
+    <glyph Char="S" Ground="$ground" Structure="$stone" Claim="building" Pass="blocked" Cover="walled" />
+    <glyph Char="R" Ground="$floor" Structure="$scrap" Claim="building" Pass="blocked" Cover="walled" />
+    <glyph Char="P" Ground="$floor" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="H" Ground="$floor" Claim="building" Pass="walk" Cover="walled" Anchors="hazard:clearance" />
+    <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="adjacent" Cover="walled" Anchors="main,function:workshop" Stateful="yes" />
+    <glyph Char="T" Ground="$floor" Object="$bench" Claim="building" Pass="adjacent" Cover="walled" Anchors="work:bench" Stateful="yes" />
+    <glyph Char="B" Ground="$floor" Object="$storage" Claim="building" Pass="adjacent" Cover="walled" Anchors="storage:input" Stateful="yes" />
+    <glyph Char="C" Ground="$floor" Object="$storage" Claim="building" Pass="adjacent" Cover="walled" Anchors="storage:output" Stateful="yes" />
+    <glyph Char="Q" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" Anchors="entrance:service,service:loading" />
+    <glyph Char="E" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" Anchors="entrance:public" />
+    <row Cells="WWSSRRWW" />
+    <row Cells="WTP@PBTW" />
+    <row Cells="WPPHPPPW" />
+    <row Cells="WCPPPPPW" />
+    <row Cells="WPPPPPPQ" />
+    <row Cells="WWWEWW.." />
+  </map>
+
+  <map Key="production-sawyeryard-m0" Width="8" Height="6" DefaultCover="open">
+    <glyph Char="R" Ground="$ground" Structure="$timber" Claim="yard" Pass="blocked" Cover="open" />
+    <glyph Char="F" Ground="$ground" Structure="$fence" Claim="yard" Pass="blocked" Cover="open" />
+    <glyph Char="P" Ground="$path" Claim="yard" Pass="walk" Cover="open" />
+    <glyph Char="H" Ground="$ground" Structure="$banker" Claim="yard" Pass="adjacent" Cover="open" Anchors="hazard:saw-pit" />
+    <glyph Char="@" Ground="$path" Object="$building" Claim="yard" Pass="adjacent" Cover="open" Anchors="main,function:sawing" Stateful="yes" />
+    <glyph Char="L" Ground="$path" Claim="yard" Pass="walk" Cover="open" Anchors="service:loading" />
+    <glyph Char="E" Ground="$path" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
+    <row Cells="RRRR...." />
+    <row Cells="RPPPPRR." />
+    <row Cells="RP@PPRR." />
+    <row Cells="RPHPPRR." />
+    <row Cells="RPPPPPPP" />
+    <row Cells="...E...L" />
+  </map>
+
+  <map Key="production-masonyard-m0" Width="8" Height="6" DefaultCover="open">
+    <glyph Char="R" Ground="$ground" Structure="$spoil" Claim="yard" Pass="blocked" Cover="open" />
+    <glyph Char="H" Ground="$ground" Structure="$spoil" Claim="yard" Pass="adjacent" Cover="open" Anchors="hazard:spoil" />
+    <glyph Char="W" Ground="$ground" Structure="$timber" Claim="yard" Pass="blocked" Cover="soft" />
+    <glyph Char="B" Ground="$ground" Structure="$banker" Claim="yard" Pass="adjacent" Cover="open" Anchors="work:banker" />
+    <glyph Char="P" Ground="$path" Claim="yard" Pass="walk" Cover="open" />
+    <glyph Char="@" Ground="$path" Object="$building" Claim="yard" Pass="adjacent" Cover="open" Anchors="main,function:masonry" Stateful="yes" />
+    <glyph Char="L" Ground="$path" Claim="yard" Pass="walk" Cover="open" Anchors="service:loading" />
+    <glyph Char="E" Ground="$path" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
+    <row Cells="RRH....." />
+    <row Cells="RBPBWWW." />
+    <row Cells="RPP@PPW." />
+    <row Cells="RRPPPPW." />
+    <row Cells="..PPPPPL" />
+    <row Cells="...E...L" />
+  </map>
+
+  <map Key="production-smelter-m0" Width="8" Height="6" DefaultCover="walled">
+    <glyph Char="S" Ground="$ground" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
+    <glyph Char="R" Ground="$floor" Structure="$shield" Claim="building" Pass="blocked" Cover="walled" />
+    <glyph Char="P" Ground="$floor" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="C" Ground="$floor" Claim="building" Pass="walk" Cover="walled" Anchors="hazard:clearance" />
+    <glyph Char="H" Ground="$floor" Structure="$curb" Claim="building" Pass="adjacent" Cover="walled" Anchors="hazard:hot-zone" />
+    <glyph Char="Z" Ground="$floor" Structure="$curb" Claim="building" Pass="adjacent" Cover="walled" Anchors="hazard:slag" />
+    <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="adjacent" Cover="walled" Anchors="main,function:smelting" Stateful="yes" />
+    <glyph Char="D" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="L" Ground="$floor" Claim="yard" Pass="walk" Cover="open" Anchors="service:loading" />
+    <glyph Char="E" Ground="$floor" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
+    <row Cells=".SSRSSS." />
+    <row Cells=".SHCPS.." />
+    <row Cells=".SP@PPS." />
+    <row Cells=".SPPPZS." />
+    <row Cells=".SDPPPPL" />
+    <row Cells="..E....L" />
+  </map>
+
+  <!-- Power and specialist maps. -->
+  <map Key="production-mill-s0" Width="5" Height="4" DefaultCover="soft">
+    <glyph Char="W" Ground="$ground" Structure="$wall" Claim="building" Pass="blocked" Cover="soft" />
+    <glyph Char="C" Ground="$floor" Claim="yard" Pass="walk" Cover="open" Anchors="work:walking-bar" />
+    <glyph Char="P" Ground="$floor" Claim="yard" Pass="walk" Cover="open" />
+    <glyph Char="@" Ground="$floor" Object="$building" Claim="yard" Pass="adjacent" Cover="soft" Anchors="main,function:hand-power" Stateful="yes" />
+    <glyph Char="E" Ground="$floor" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
+    <row Cells=".WWW." />
+    <row Cells=".C@C." />
+    <row Cells=".PPP." />
+    <row Cells="..E.." />
+  </map>
+
+  <map Key="production-waterwheel-s0" Width="5" Height="4" DefaultCover="open">
+    <glyph Char="S" Ground="$ground" Structure="$support" Claim="yard" Pass="blocked" Cover="open" />
+    <glyph Char="B" Ground="$ground" Structure="$bearing" Claim="yard" Pass="blocked" Cover="open" />
+    <glyph Char="r" Ground="$race" Claim="yard" Pass="walk" Cover="open" />
+    <glyph Char="R" Ground="$race" Claim="yard" Pass="walk" Cover="open" Anchors="water:millrace" />
+    <glyph Char="C" Ground="$path" Claim="yard" Pass="walk" Cover="open" Anchors="service:wheel-clearance" />
+    <glyph Char="P" Ground="$path" Claim="yard" Pass="walk" Cover="open" />
+    <glyph Char="@" Ground="$race" Object="$building" Claim="yard" Pass="adjacent" Cover="open" Anchors="main,function:water-power" Stateful="yes" />
+    <glyph Char="E" Ground="$path" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
+    <row Cells="....." />
+    <row Cells="S@B.." />
+    <row Cells="rCPR." />
+    <row Cells=".E.r." />
+  </map>
+
+  <map Key="production-sailvane-s0" Width="5" Height="4" DefaultCover="open">
+    <glyph Char="G" Ground="$ground" Structure="$guy" Claim="yard" Pass="blocked" Cover="open" />
+    <glyph Char="B" Ground="$ground" Structure="$bearing" Claim="yard" Pass="blocked" Cover="open" />
+    <glyph Char="C" Ground="$path" Claim="yard" Pass="walk" Cover="open" Anchors="clearance:sweep" />
+    <glyph Char="P" Ground="$path" Claim="yard" Pass="walk" Cover="open" />
+    <glyph Char="@" Ground="$path" Object="$building" Claim="yard" Pass="adjacent" Cover="open" Anchors="main,function:wind-power" Stateful="yes" />
+    <glyph Char="E" Ground="$path" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
+    <row Cells="G.B.G" />
+    <row Cells="CC@CC" />
+    <row Cells="PPPPP" />
+    <row Cells="..E.." />
+  </map>
+
+  <map Key="production-saltstore-m0" Width="8" Height="6" DefaultCover="walled">
+    <glyph Char="S" Ground="$ground" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
+    <glyph Char="R" Ground="$floor" Structure="$shield" Claim="building" Pass="blocked" Cover="walled" />
+    <glyph Char="P" Ground="$floor" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="C" Ground="$floor" Claim="building" Pass="walk" Cover="walled" Anchors="hazard:clearance" />
+    <glyph Char="H" Ground="$floor" Structure="$curb" Claim="building" Pass="adjacent" Cover="walled" Anchors="hazard:hot-salt" />
+    <glyph Char="T" Ground="$floor" Claim="building" Pass="walk" Cover="walled" Anchors="power:tap" />
+    <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="adjacent" Cover="walled" Anchors="main,function:power-storage" Stateful="yes" />
+    <glyph Char="D" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="L" Ground="$floor" Claim="yard" Pass="walk" Cover="open" Anchors="service:loading" />
+    <glyph Char="E" Ground="$floor" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
+    <row Cells=".SSSSS.." />
+    <row Cells=".SHRRS.." />
+    <row Cells=".SC@TS.." />
+    <row Cells=".SPCPS.." />
+    <row Cells=".SSDPPPL" />
+    <row Cells="...E...L" />
+  </map>
+
+  <map Key="production-weavehall-m0" Width="8" Height="6" DefaultCover="soft">
+    <glyph Char="S" Ground="$ground" Structure="$wall" Claim="building" Pass="blocked" Cover="soft" />
+    <glyph Char="R" Ground="$floor" Structure="$loom" Claim="building" Pass="blocked" Cover="soft" />
+    <glyph Char="P" Ground="$floor" Claim="building" Pass="walk" Cover="soft" />
+    <glyph Char="A" Ground="$floor" Claim="building" Pass="walk" Cover="soft" Anchors="work:loom1" />
+    <glyph Char="B" Ground="$floor" Claim="building" Pass="walk" Cover="soft" Anchors="work:loom2" />
+    <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="adjacent" Cover="soft" Anchors="main,function:weaving" Stateful="yes" />
+    <glyph Char="D" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="soft" />
+    <glyph Char="L" Ground="$floor" Claim="yard" Pass="walk" Cover="open" Anchors="service:loading" />
+    <glyph Char="E" Ground="$floor" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
+    <row Cells=".SSSSSS." />
+    <row Cells=".SRAPRS." />
+    <row Cells=".SP@PPS." />
+    <row Cells=".SPBRPS." />
+    <row Cells=".SDPPPPL" />
+    <row Cells="..E....L" />
+  </map>
+
+  <map Key="production-sporecellar-m0" Width="8" Height="6" DefaultCover="natural">
+    <glyph Char="N" Ground="$floor" Structure="$rock" Claim="building" Pass="blocked" Cover="natural" />
+    <glyph Char="S" Ground="$floor" Structure="$lid" Claim="building" Pass="blocked" Cover="natural" />
+    <glyph Char="P" Ground="$floor" Claim="building" Pass="walk" Cover="natural" />
+    <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="adjacent" Cover="natural" Anchors="main,function:spore-storage" Stateful="yes" />
+    <glyph Char="B" Ground="$floor" Object="$storage" Claim="building" Pass="adjacent" Cover="natural" Anchors="storage:spore" Stateful="yes" />
+    <glyph Char="D" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="natural" />
+    <glyph Char="E" Ground="$floor" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
+    <row Cells="..NSSN.." />
+    <row Cells=".NN@BNN." />
+    <row Cells=".NPPP.N." />
+    <row Cells=".NNPPNN." />
+    <row Cells="..NDP..." />
+    <row Cells="...E...." />
+  </map>
+
+  <map Key="production-butcherslab-s0" Width="5" Height="4" DefaultCover="soft">
+    <glyph Char="W" Ground="$ground" Structure="$screen" Claim="building" Pass="blocked" Cover="soft" />
+    <glyph Char="H" Ground="$floor" Structure="$rail" Claim="building" Pass="adjacent" Cover="soft" Anchors="work:hook-rail" />
+    <glyph Char="G" Ground="$floor" Structure="$gutter" Claim="yard" Pass="walk" Cover="open" Anchors="waste:gutter" />
+    <glyph Char="C" Ground="$floor" Claim="yard" Pass="walk" Cover="open" Anchors="hazard:clean-clearance" />
+    <glyph Char="P" Ground="$floor" Claim="building" Pass="walk" Cover="soft" />
+    <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="adjacent" Cover="soft" Anchors="main,function:butchery" Stateful="yes" />
+    <glyph Char="E" Ground="$floor" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public,service:loading" />
+    <row Cells=".HWW." />
+    <row Cells=".P@W." />
+    <row Cells=".GCP." />
+    <row Cells="..E.." />
+  </map>
+
+  <!-- Plan families and exact catalogue bindings. -->
+  <plan Key="production-larder">
+    <binding Key="storage-s-larder" Type="storage" Size="S" Facing="heart">
+      <tier Key="larder" BuildKey="larder" Level="0" Map="production-larder-s0" Palette="production-larder-timber">
+        <require Role="main" Min="1" />
+        <require Role="entrance:public" Min="1" />
+        <require Role="function:dry-storage" Min="1" />
+        <require Role="service:loading" Min="1" />
+        <variant Key="fallback" Priority="0" />
+      </tier>
+    </binding>
+  </plan>
+
+  <plan Key="production-garden">
+    <binding Key="food-s-garden" Type="food" Size="S" Facing="heart">
+      <tier Key="plot" BuildKey="plot" Level="0" Map="production-plot-s0" Palette="production-garden-hands">
+        <require Role="main" Min="1" />
+        <require Role="entrance:public" Min="1" />
+        <require Role="function:garden" Min="1" />
+        <require Role="crop" Min="2" />
+        <variant Key="fallback" Priority="0" />
+      </tier>
+      <tier Key="plotrows" BuildKey="plotrows" Level="1" Map="production-plotrows-s1" Palette="production-garden-hands">
+        <require Role="main" Min="1" />
+        <require Role="entrance:public" Min="1" />
+        <require Role="function:garden" Min="1" />
+        <require Role="crop" Min="4" />
+        <variant Key="fallback" Priority="0" />
+      </tier>
+    </binding>
+  </plan>
+
+  <plan Key="production-field">
+    <binding Key="food-m-field" Type="food" Size="M" Facing="heart">
+      <tier Key="field" BuildKey="field" Level="0" Map="production-field-m0" Palette="production-field-hands">
+        <require Role="main" Min="1" />
+        <require Role="entrance:public" Min="1" />
+        <require Role="function:field" Min="1" />
+        <require Role="crop" Min="2" />
+        <variant Key="fallback" Priority="0" />
+      </tier>
+      <tier Key="fieldrows" BuildKey="fieldrows" Level="1" Map="production-fieldrows-m1" Palette="production-field-hands">
+        <require Role="main" Min="1" />
+        <require Role="entrance:public" Min="1" />
+        <require Role="function:field" Min="1" />
+        <require Role="crop" Min="3" />
+        <variant Key="fallback" Priority="0" />
+      </tier>
+    </binding>
+  </plan>
+
+  <plan Key="production-granary">
+    <binding Key="food-m-granary" Type="food" Size="M" Facing="heart">
+      <tier Key="granary" BuildKey="granary" Level="0" Map="production-granary-m0" Palette="production-granary-hands">
+        <require Role="main" Min="1" />
+        <require Role="entrance:public" Min="1" />
+        <require Role="function:grain-storage" Min="1" />
+        <require Role="storage:incoming" Min="1" />
+        <require Role="service:loading" Min="1" />
+        <variant Key="fallback" Priority="0" />
+      </tier>
+    </binding>
+  </plan>
+
+  <plan Key="production-grange">
+    <binding Key="food-l-grange" Type="food" Size="L" Facing="heart">
+      <tier Key="grange" BuildKey="grange" Level="0" Map="production-grange-l0" Palette="production-grange-workshop">
+        <require Role="main" Min="1" />
+        <require Role="entrance:public" Min="1" />
+        <require Role="function:grange" Min="1" />
+        <require Role="crop" Min="4" />
+        <require Role="storage:grain" Min="1" />
+        <require Role="service:loading" Min="1" />
+        <variant Key="fallback" Priority="0" />
+      </tier>
+    </binding>
+  </plan>
+
+  <plan Key="production-homefarm">
+    <binding Key="food-xl-homefarm" Type="food" Size="XL" Facing="heart">
+      <tier Key="homefarm" BuildKey="homefarm" Level="0" Map="production-homefarm-xl0" Palette="production-homefarm-foundry">
+        <require Role="main" Min="1" />
+        <require Role="entrance:public" Min="2" />
+        <require Role="function:home-farm" Min="1" />
+        <require Role="crop" Min="6" />
+        <require Role="work:mill" Min="1" />
+        <require Role="storage:grain" Min="1" />
+        <require Role="work:grading" Min="1" />
+        <require Role="service:loading" Min="1" />
+        <variant Key="fallback" Priority="0" />
+      </tier>
+    </binding>
+  </plan>
+
+  <plan Key="production-toolshed">
+    <binding Key="craft-s-toolshed" Type="craft" Size="S" Facing="heart">
+      <tier Key="toolshed" BuildKey="toolshed" Level="0" Map="production-toolshed-s0" Palette="production-tools-hands">
+        <require Role="main" Min="1" />
+        <require Role="entrance:public" Min="1" />
+        <require Role="function:tool-care" Min="1" />
+        <require Role="work:bench" Min="1" />
+        <require Role="storage:tools" Min="1" />
+        <variant Key="fallback" Priority="0" />
+      </tier>
+    </binding>
+  </plan>
+
+  <plan Key="production-chargingpost">
+    <binding Key="craft-s-chargingpost" Type="craft" Size="S" Facing="heart">
+      <tier Key="chargingpost" BuildKey="chargingpost" Level="0" Map="production-chargingpost-s0" Palette="production-charging-salvage">
+        <require Role="main" Min="1" />
+        <require Role="entrance:public" Min="1" />
+        <require Role="function:charging" Min="1" />
+        <require Role="service:crank-clearance" Min="1" />
+        <require Role="service:cell-queue" Min="1" />
+        <variant Key="fallback" Priority="0" />
+        <variant Key="robot-service" Priority="60" Bodies="robot" Map="production-chargingpost-robot-s0" />
+      </tier>
+    </binding>
+  </plan>
+
+  <plan Key="production-smithing">
+    <binding Key="craft-m-smithing" Type="craft" Size="M" Facing="heart">
+      <tier Key="smithy" BuildKey="smithy" Level="0" Map="production-smithy-m0" Palette="production-smith-salvage">
+        <require Role="main" Min="1" />
+        <require Role="entrance:public" Min="1" />
+        <require Role="function:smithing" Min="1" />
+        <require Role="work:anvil" Min="1" />
+        <require Role="hazard:hot-zone" Min="1" />
+        <require Role="hazard:clearance" Min="1" />
+        <require Role="service:loading" Min="1" />
+        <variant Key="fallback" Priority="0" />
+      </tier>
+      <tier Key="forge" BuildKey="forge" Level="1" Map="production-forge-m1" Palette="production-smith-salvage">
+        <require Role="main" Min="1" />
+        <require Role="entrance:public" Min="1" />
+        <require Role="function:smithing" Min="1" />
+        <require Role="work:anvil" Min="1" />
+        <require Role="work:bloom" Min="1" />
+        <require Role="hazard:hot-zone" Min="2" />
+        <require Role="hazard:clearance" Min="2" />
+        <require Role="service:loading" Min="1" />
+        <variant Key="fallback" Priority="0" />
+      </tier>
+    </binding>
+  </plan>
+
+  <plan Key="production-grindmill">
+    <binding Key="craft-m-grindmill" Type="craft" Size="M" Facing="heart">
+      <tier Key="grindmill" BuildKey="grindmill" Level="0" Map="production-grindmill-m0" Palette="production-grind-hands">
+        <require Role="main" Min="1" />
+        <require Role="entrance:public" Min="1" />
+        <require Role="function:grinding" Min="1" />
+        <require Role="power:input" Min="1" />
+        <require Role="storage:input" Min="1" />
+        <require Role="storage:output" Min="1" />
+        <require Role="service:loading" Min="1" />
+        <variant Key="fallback" Priority="0" />
+      </tier>
+    </binding>
+  </plan>
+
+  <plan Key="production-workshop">
+    <binding Key="craft-m-workshop" Type="craft" Size="M" Facing="heart">
+      <tier Key="workshop" BuildKey="workshop" Level="0" Map="production-workshop-m0" Palette="production-workshop-salvage">
+        <require Role="main" Min="1" />
+        <require Role="entrance:public" Min="1" />
+        <require Role="function:workshop" Min="1" />
+        <require Role="work:bench" Min="2" />
+        <require Role="storage:input" Min="1" />
+        <require Role="storage:output" Min="1" />
+        <require Role="hazard:clearance" Min="1" />
+        <require Role="service:loading" Min="1" />
+        <variant Key="fallback" Priority="0" />
+      </tier>
+    </binding>
+  </plan>
+
+  <plan Key="production-sawyeryard">
+    <binding Key="craft-m-sawyeryard" Type="craft" Size="M" Facing="heart">
+      <tier Key="sawyeryard" BuildKey="sawyeryard" Level="0" Map="production-sawyeryard-m0" Palette="production-yard-hands">
+        <require Role="main" Min="1" />
+        <require Role="entrance:public" Min="1" />
+        <require Role="function:sawing" Min="1" />
+        <require Role="hazard:saw-pit" Min="1" />
+        <require Role="service:loading" Min="1" />
+        <variant Key="fallback" Priority="0" />
+      </tier>
+    </binding>
+  </plan>
+
+  <plan Key="production-masonyard">
+    <binding Key="craft-m-masonyard" Type="craft" Size="M" Facing="heart">
+      <tier Key="masonyard" BuildKey="masonyard" Level="0" Map="production-masonyard-m0" Palette="production-yard-hands">
+        <require Role="main" Min="1" />
+        <require Role="entrance:public" Min="1" />
+        <require Role="function:masonry" Min="1" />
+        <require Role="work:banker" Min="2" />
+        <require Role="hazard:spoil" Min="1" />
+        <require Role="service:loading" Min="1" />
+        <variant Key="fallback" Priority="0" />
+      </tier>
+    </binding>
+  </plan>
+
+  <plan Key="production-smelter">
+    <binding Key="craft-m-smelter" Type="craft" Size="M" Facing="heart">
+      <tier Key="smelter" BuildKey="smelter" Level="0" Map="production-smelter-m0" Palette="production-smelter-salvage">
+        <require Role="main" Min="1" />
+        <require Role="entrance:public" Min="1" />
+        <require Role="function:smelting" Min="1" />
+        <require Role="hazard:hot-zone" Min="1" />
+        <require Role="hazard:slag" Min="1" />
+        <require Role="hazard:clearance" Min="1" />
+        <require Role="service:loading" Min="1" />
+        <variant Key="fallback" Priority="0" />
+      </tier>
+    </binding>
+  </plan>
+
+  <plan Key="production-mill">
+    <binding Key="power-s-mill" Type="power" Size="S" Facing="heart">
+      <tier Key="mill" BuildKey="mill" Level="0" Map="production-mill-s0" Palette="production-mill-hands">
+        <require Role="main" Min="1" />
+        <require Role="entrance:public" Min="1" />
+        <require Role="function:hand-power" Min="1" />
+        <require Role="work:walking-bar" Min="2" />
+        <variant Key="fallback" Priority="0" />
+      </tier>
+    </binding>
+  </plan>
+
+  <plan Key="production-waterwheel">
+    <binding Key="power-s-waterwheel" Type="power" Size="S" Facing="heart">
+      <tier Key="waterwheel" BuildKey="waterwheel" Level="0" Map="production-waterwheel-s0" Palette="production-waterwheel-hands">
+        <require Role="main" Min="1" />
+        <require Role="entrance:public" Min="1" />
+        <require Role="function:water-power" Min="1" />
+        <require Role="water:millrace" Min="1" />
+        <require Role="service:wheel-clearance" Min="1" />
+        <variant Key="fallback" Priority="0" />
+      </tier>
+    </binding>
+  </plan>
+
+  <plan Key="production-sailvane">
+    <binding Key="power-s-sailvane" Type="power" Size="S" Facing="heart">
+      <tier Key="sailvane" BuildKey="sailvane" Level="0" Map="production-sailvane-s0" Palette="production-sailvane-salvage">
+        <require Role="main" Min="1" />
+        <require Role="entrance:public" Min="1" />
+        <require Role="function:wind-power" Min="1" />
+        <require Role="clearance:sweep" Min="4" />
+        <variant Key="fallback" Priority="0" />
+      </tier>
+    </binding>
+  </plan>
+
+  <plan Key="production-saltstore">
+    <binding Key="power-m-saltstore" Type="power" Size="M" Facing="heart">
+      <tier Key="saltstore" BuildKey="saltstore" Level="0" Map="production-saltstore-m0" Palette="production-saltstore-workshop">
+        <require Role="main" Min="1" />
+        <require Role="entrance:public" Min="1" />
+        <require Role="function:power-storage" Min="1" />
+        <require Role="power:tap" Min="1" />
+        <require Role="hazard:hot-salt" Min="1" />
+        <require Role="hazard:clearance" Min="1" />
+        <require Role="service:loading" Min="1" />
+        <variant Key="fallback" Priority="0" />
+      </tier>
+    </binding>
+  </plan>
+
+  <plan Key="production-hindren-weavehall">
+    <binding Key="craft-m-hindren-weavehall" Type="craft" Size="M" Facing="heart">
+      <tier Key="hindrenweavehall" BuildKey="hindrenweavehall" Level="0" Map="production-weavehall-m0" Palette="production-weavehall-hindren">
+        <require Role="main" Min="1" />
+        <require Role="entrance:public" Min="1" />
+        <require Role="function:weaving" Min="1" />
+        <require Role="work:loom1" Min="1" />
+        <require Role="work:loom2" Min="1" />
+        <require Role="service:loading" Min="1" />
+        <variant Key="fallback" Priority="0" />
+      </tier>
+    </binding>
+  </plan>
+
+  <plan Key="production-sporecellar">
+    <binding Key="food-m-sporecellar" Type="food" Size="M" Facing="heart">
+      <tier Key="sporecellar" BuildKey="sporecellar" Level="0" Map="production-sporecellar-m0" Palette="production-sporecellar-fungal">
+        <require Role="main" Min="1" />
+        <require Role="entrance:public" Min="1" />
+        <require Role="function:spore-storage" Min="1" />
+        <require Role="storage:spore" Min="1" />
+        <variant Key="fallback" Priority="0" />
+      </tier>
+    </binding>
+  </plan>
+
+  <plan Key="production-butcherslab">
+    <binding Key="craft-s-butcherslab" Type="craft" Size="S" Facing="heart">
+      <tier Key="butcherslab" BuildKey="butcherslab" Level="0" Map="production-butcherslab-s0" Palette="production-butcher-salvage">
+        <require Role="main" Min="1" />
+        <require Role="entrance:public" Min="1" />
+        <require Role="function:butchery" Min="1" />
+        <require Role="work:hook-rail" Min="1" />
+        <require Role="waste:gutter" Min="1" />
+        <require Role="hazard:clean-clearance" Min="1" />
+        <require Role="service:loading" Min="1" />
+        <variant Key="fallback" Priority="0" />
+      </tier>
+    </binding>
+  </plan>
+
+</KingdomArchitectures>

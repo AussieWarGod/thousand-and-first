@@ -23,43 +23,68 @@ for required_file in "$GAME_EXE" "$ASSEMBLY_CSHARP_PATH"; do
 done
 GAME_EXE_WIN="$(wslpath -w "$GAME_EXE")"
 ASSEMBLY_CSHARP_WIN="$(wslpath -w "$ASSEMBLY_CSHARP_PATH")"
-REF_ASSEMBLY_CSHARP="$(sed -n 's/^-r:"\(.*Assembly-CSharp\.dll\)"$/\1/p' "$REPO/DevTests/refs.rsp")"
-[ "$REF_ASSEMBLY_CSHARP" = "$ASSEMBLY_CSHARP_WIN" ] || {
-	echo "configured Qud root diverges from DevTests/refs.rsp: $ASSEMBLY_CSHARP_WIN" >&2
+EXPECTED_CORE_BUILD="$(python3 - "$REPO" <<'PY'
+import sys
+
+sys.path.insert(0, sys.argv[1])
+from Tools.workshop_metadata import GAME_CORE_BUILD
+
+print(GAME_CORE_BUILD)
+PY
+)"
+ACTUAL_CORE_BUILD="$(
+	TAF_ASSEMBLY_PATH_WIN="$ASSEMBLY_CSHARP_WIN" \
+	WSLENV="${WSLENV:+$WSLENV:}TAF_ASSEMBLY_PATH_WIN" \
+	powershell.exe -NoProfile -Command \
+		'[Reflection.AssemblyName]::GetAssemblyName($env:TAF_ASSEMBLY_PATH_WIN).Version.ToString()' \
+		| tr -d '\r'
+)"
+[ "$ACTUAL_CORE_BUILD" = "$EXPECTED_CORE_BUILD" ] || {
+	echo "configured Qud core is $ACTUAL_CORE_BUILD; release target is $EXPECTED_CORE_BUILD" >&2
 	exit 2
 }
+EXPECTED_BUILD_SYMBOL="BUILD_$(printf '%s' "$EXPECTED_CORE_BUILD" | cut -d. -f1-3 | tr . _)"
+grep -q -- ";$EXPECTED_BUILD_SYMBOL;" "$REPO/DevTests/refs.rsp" || {
+	echo "DevTests/refs.rsp lacks installed compiler symbol $EXPECTED_BUILD_SYMBOL" >&2
+	exit 2
+}
+echo "Configured Qud core: $ACTUAL_CORE_BUILD"
+echo "Assembly-CSharp SHA-256: $(sha256sum "$ASSEMBLY_CSHARP_PATH" | cut -d' ' -f1)"
 
 cd "$REPO"
 
-echo "[1/10] patch hygiene"
+echo "[1/11] patch hygiene"
 git diff --check
+python3 Tools/check-doc-freshness.py
 
-echo "[2/10] shipped IPart save ABI"
+echo "[2/11] shipped IPart save ABI"
 ./Tools/check-ipart-abi.sh
 
-echo "[3/10] cold-install inventory"
+echo "[3/11] cold-install inventory"
 cmp <(./Tools/stage.sh list-head HEAD) <(./Tools/stage.sh list)
 ./Tools/stage.sh verify
 
-echo "[4/10] exact staged compile"
+echo "[4/11] exact staged compile"
 ./Tools/gate.sh
 
-echo "[5/10] pure and source-contract tests"
+echo "[5/11] pure and source-contract tests"
 TEST_SCRIPT="$(wslpath -w "$REPO/DevTests/test.ps1")"
 (
 	cd /mnt/c
 	powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$TEST_SCRIPT"
 )
 
-echo "[6/10] XML and tile reachability"
+echo "[6/11] XML and tile reachability"
+python3 Tools/generate-lot-realizations.py --check
+python3 Tools/check-architecture.py --repo-root . --qud-base "$BASE"
 python3 Art/check_xml_refs.py --base "$BASE"
 python3 -m unittest Art.test_check_wiring
 TAF_QUD_BASE="$BASE" python3 Art/check_wiring.py
 
-echo "[7/10] deterministic balance model"
+echo "[7/11] deterministic balance model"
 python3 _notes/balance-sim.py
 
-echo "[8/10] executable isolated prepare/launcher harness"
+echo "[8/11] executable isolated prepare/launcher harness"
 SMOKE_SCRIPT="$(wslpath -w "$REPO/Tools/run-smoke.ps1")"
 SMOKE_TEST="$(wslpath -w "$REPO/Tools/test-run-smoke.ps1")"
 
@@ -179,16 +204,19 @@ if [ -n "${TAF_KNOWN_GOOD_SAVE_FIXTURE:-}" ]; then
 fi
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$SMOKE_TEST" "${smoke_args[@]}"
 
-echo "[9/10] Workshop metadata and package boundary"
+echo "[9/11] Workshop metadata and package boundary"
 readarray -t workshop_fields < <(python3 Tools/workshop_metadata.py fields manifest.json)
 [ "${#workshop_fields[@]}" -eq 3 ]
 python3 Tools/workshop_metadata.py preview "${workshop_fields[2]}"
 python3 Tools/workshop_metadata.py workshop test manifest.json workshop.json
 ./Tools/test-workshop-package.sh
 
-echo "[10/10] deployment boundary and dry run"
+echo "[10/11] deployment boundary and dry run"
 ./Tools/test-stage-safety.sh
 ./Tools/stage.sh deploy
+
+echo "[11/11] Addendum 9 structural release contract"
+python3 Tools/check-structure.py --release
 
 echo "AUTOMATED RELEASE PRECHECK CLEAN"
 echo "After the isolated in-game run: Tools/check-player-log.sh PLAYER_LOG"

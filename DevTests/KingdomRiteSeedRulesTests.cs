@@ -211,7 +211,8 @@ namespace ThousandAndFirst.Tests
 			{
 				rows.Add(KingdomResearchRules.SeedReceiptKey("node" + i, "rite:faction" + i));
 			}
-			string oversized = KingdomZoningRules.EncodeRoster(rows);
+			string oversized = string.Join(KingdomZoningRules.RosterSeparator.ToString(),
+				rows.ToArray());
 			Assert.AreEqual(0, KingdomResearchRules.SeedReceiptCount(oversized, "node0"));
 
 			string updated;

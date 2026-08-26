@@ -3,7 +3,8 @@
 The Thousand and First welcomes bug reports, compatibility evidence, documentation,
 tests, and carefully scoped code or XML changes. Read [STANDARDS.md](STANDARDS.md)
 before changing behavior and [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) before
-changing state.
+changing state. [docs/STATUS.md](docs/STATUS.md) is the current evidence/gap boundary; do not infer
+release status from an older audit or test count.
 
 ## Set up a checkout
 
@@ -38,18 +39,19 @@ python3 Art/check_xml_refs.py
 
 `Tools/stage.sh verify` is checkout-only. `Art/check_xml_refs.py` always checks internal XML; it
 also verifies vanilla references when the script's default Qud install is present or `--base` is
-given. Public contributors can also run the locked, checkout-only portable kernel and repository
-locator slice (currently 171 cases):
+given. Public contributors can run the locked, engine-free full pure/source suite plus the small
+repository-locator slice without owning or installing Qud:
 
 ```bash
+dotnet restore DevTests/TafTests.csproj --locked-mode
+dotnet run --project DevTests/TafTests.csproj --no-restore -v q --nologo
 dotnet restore DevTests/PortableTests.csproj --locked-mode
 dotnet run --project DevTests/PortableTests.csproj --no-restore -v q --nologo
 ```
 
-This is a deliberately small subset, not a claim that the full native suite is portable or that it
-compiles the mod runtime. `DevTests/TafTests.csproj` still references Qud's copy of
-`nunit.framework.dll` at the configured Windows install. Running the full suite therefore requires
-a licensed local Caves of Qud installation and .NET 9:
+These suites prove engine-free rules and source contracts; they do not compile or execute the mod
+inside Qud. They use the locked NUnit package and .NET 9. Licensed runtime checks still require a
+local Caves of Qud installation:
 
 ```powershell
 dotnet run --project DevTests/TafTests.csproj -v q --nologo
@@ -62,10 +64,13 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass \
   -File "$(wslpath -w "$PWD/DevTests/test.ps1")"
 ```
 
-Current compile and integration tooling assumes WSL plus Windows PowerShell, .NET SDK
-`9.0.306`, and Caves of Qud at
-`F:\SteamLibrary\steamapps\common\Caves of Qud`. Those paths are presently encoded in
-`DevTests/refs.rsp` and `DevTests/TafTests.csproj`.
+Current compile and integration tooling assumes WSL plus Windows PowerShell and .NET SDK
+`9.0.306`. It defaults to Caves of Qud at
+`F:\SteamLibrary\steamapps\common\Caves of Qud`; set `TAF_QUD_ROOT` to another licensed install
+root before running native/release tools.
+`Tools/stage.sh` derives the default Windows account's local Mods path when WSL interop is
+available. Set `TAF_LIVE_MOD` to the exact existing mod directory for a custom profile or any
+non-default location; deploy dry runs and applies fail closed when that target cannot be proved.
 
 ```bash
 ./Tools/gate.sh
@@ -73,10 +78,17 @@ TAF_QUD_BASE="/path/to/CoQ_Data/StreamingAssets/Base" \
   python3 Art/check_wiring.py
 python3 Art/check_xml_refs.py \
   --base "/path/to/CoQ_Data/StreamingAssets/Base"
+python3 Tools/check-structure.py --report
 ```
 
+Structure report is diagnostic during incremental work. Binding Addendum 9 remains a release
+gate: every staged production C# file must be strictly under 300 physical lines, and a human must
+review one-responsibility and protocol boundaries against the exact inventory. See
+[docs/STRUCTURE.md](docs/STRUCTURE.md). Do not add exceptions or relabel debt to make the number
+green.
+
 Full release-candidate check, including exact staged compile, test suite, asset/reference
-audits, smoke-launcher harness, and deploy dry run:
+audits, smoke-launcher harness, deploy dry run, and structural release contract:
 
 ```bash
 ./Tools/release-check.sh
@@ -114,10 +126,21 @@ minimal compatibility reproduction, or document a verified game-build difference
   evidence, but do not copy decompiled source, comments, identifiers in bulk, or XML into a
   contribution.
 - Extend content through mergeable root XML registries. Never overwrite a vanilla blueprint.
+- A plotted building needs both catalogue metadata and authored architecture. Supply exact maps,
+  palettes, plans, bindings, tiers, functional anchors, and every actual size you intend to offer;
+  a plot declaration alone is only a reserved lot. Follow the [complete extension
+  example](MODDING.md#complete-minimal-authored-plot-extension) and run
+  `python3 Tools/check-architecture.py --repo-root .`.
 - Preserve `r_` prefixes, deterministic ordering, bounded collections, and explicit failure
   reporting.
 - Write player-facing text in Qud's register and use the established grammar/color helpers.
-- Follow [docs/ASSET_PROVENANCE.md](docs/ASSET_PROVENANCE.md) for every visual reference.
+- Follow [docs/ASSET_PROVENANCE.md](docs/ASSET_PROVENANCE.md) for every visual reference. Vanilla
+  is preferred; original art needs an editable source, exact manifest/hash/fallback, rights, and
+  independent native readability review before it is wired.
+- Generative-image assistance is neither silently accepted nor categorically banned. Disclose the
+  tool and lawful inputs in `method`; retain editable source; complete pixel-level human revision;
+  and obtain independent native tile/text-scale review. A prompt or generated draft is not
+  provenance, authorship evidence, or a quality receipt.
 
 ## Rights and inbound license
 

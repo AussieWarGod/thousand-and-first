@@ -116,7 +116,7 @@ namespace ThousandAndFirst
 		/// Kept here rather than on the system so the recipe class has one thing to ask.</summary>
 		public static string CropOf(KingdomSystem System)
 		{
-			return (System == null) ? null : KingdomCropRules.CropBlueprintForStyle(System.Style);
+			return (System == null) ? null : KingdomData.CropForStyle(System.Style);
 		}
 
 		/// <summary>
@@ -155,8 +155,9 @@ namespace ThousandAndFirst
 			faction.WaterRitualRecipeText = dish.Text;
 			if (changed && Announce)
 			{
-				KingdomChronicle.Record(System, "the kitchens of " + System.KingdomDisplayName + " changed their minds, and " + dish.Name + " became what the settlement is known for");
-				System.Ledger.Note("{{W|" + XRL.Language.Grammar.InitCap(dish.Name) + " is what " + System.KingdomDisplayName + " cooks now.}}");
+				string realm = KingdomPresentation.Rich(System.KingdomDisplayName);
+				KingdomChronicle.Record(System, "the kitchens of " + realm + " changed their minds, and " + dish.Name + " became what the settlement is known for");
+				System.Ledger.Note("{{W|" + XRL.Language.Grammar.InitCap(dish.Name) + " is what " + realm + " cooks now.}}");
 			}
 			if (KingdomLog.Enabled && (changed || first))
 			{

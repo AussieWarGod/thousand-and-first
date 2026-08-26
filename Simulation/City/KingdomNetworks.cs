@@ -492,8 +492,10 @@ namespace ThousandAndFirst.Simulation.City
 		{
 			List<GameObject> pieces = new List<GameObject>();
 			Dictionary<int, int> atCell = new Dictionary<int, int>();
-			foreach (GameObject item in Z.GetObjects())
+			KingdomSurvey survey = KingdomSurvey.Take(Z);
+			for (int indexed = 0; indexed < survey.NetworkPieces.Count; indexed++)
 			{
+				GameObject item = survey.NetworkPieces[indexed];
 				// The founder's designation is the whole of a line's membership, exactly as it is
 				// the whole of the power grid's: nothing the player merely left lying about is ever
 				// read, moved or drained (the protection law).

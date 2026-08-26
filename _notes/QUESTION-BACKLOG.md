@@ -9,11 +9,12 @@
 > the old “nothing is pinned” posture for 0.2: shipped defaults now stand until playtest reopens
 > them.
 
-> **Status audit — 2026-08-25, release/provenance candidate `ba3e49e`.** This is now a historical
+> **Status audit — updated 2026-08-27.** This is primarily a historical
 > design/decision record. Do not treat “Open,” “in flight,” or “still queued” language below as
-> current implementation status. Shipped provisionals are the adopted 0.2 defaults unless a new
+> current implementation status. Shipped provisionals are the adopted defaults unless a new
 > playtest issue explicitly reopens them. Current status and release gates live in `README.md`,
-> `TESTING.md`, and `docs/RELEASING.md`.
+> `docs/STATUS.md`, `TESTING.md`, and `docs/RELEASING.md`. `VISION.md` owns the canonical public
+> polity disposition; `V1-POLITY-SCOPE.md` is its expanded evidence/reopening worksheet.
 
 ## Release-candidate human queue
 
@@ -29,23 +30,32 @@ These require observation, taste, or signed-in account authority; none blocks lo
 4. **Balance/taste knobs:** revisit Swarmer timing, deep-crop flavour, research access/gate depth,
    graft-removal and annexe prices, capital costs, and inherited-site discoverability only with
    play data in hand.
-5. **Post-0.2 world presence:** after the two-city release is understood, decide whether prior
-   realms, successor citizens, emissaries, visible trade routes, warbands, or rival wars earn a
-   later release. The current explicit boundary simulates none of them offscreen.
+5. **Author-deferred world presence:** `V1-POLITY-SCOPE.md` preserves successor/namesake people,
+   one bounded legacy rival, diplomats/emissaries, visible endpoint traffic/correspondence, and
+   witnessed polity clashes as positive targets outside v1. Reopen only an exact row after current
+   inheritance, raid, two-city routing, recognition, and native-performance gates close; then rule
+   its lore premise, owning adapter, attention/body caps, and empirical acceptance study. Exact old
+   actors, automatic ideological war, persistent unloaded parties, mass background simulation,
+   and offscreen conquest/loss remain rejected rather than queued engineering work.
 6. **Steam authority:** create and test the private Workshop item, retain Qud's `workshop.json`,
    subscribe-install the frozen bytes, and author release evidence. Follow `docs/RELEASING.md`;
    automation cannot answer or attest this item.
 
-## Deferred engineering debt — nonblocking for 0.2
+## Tracked current debt and later extensions
 
-- Succession quest relabeling is absent. A quest-location marking helper exists but is unwired;
-  corpse reading restores eligible journal knowledge and currently reports zero quest marks.
-- Third-party housing records can declare roof capacity without a roof-state consistency fault.
-- The keepers' roster heap string is variable rather than hard-capped; current byte tests price the
-  fixed record separately.
-- The annexe keeper uses the first roster name rather than a lodged-savant binding.
-- A vertical itinerary entry still has a west-edge fallback, and later arcology-ground work remains
-  a future extension. None is a shipped silent failure in the current two-city catalogue.
+- Succession quest relabeling and giver-location marks are wired at accession, and corpse reading
+  reports restored eligible journal knowledge and quest marks. Native Pass 36 remains the gate.
+- Third-party housing roof consistency is repaired: effective open ground carrying roof capacity
+  is a catalogue fault even when `Roof` was omitted, and open housing without capacity faults too.
+- The keepers' knowledge heap is bounded atomically at 512 rows, 8,192 encoded characters, and
+  16,384 UTF-8 bytes; the city memory budget prices that full bound.
+- The annexe keeper is a real citizen lodged in this city whose body and skills satisfy the
+  psyberneticist contract; a roster name is not staffing proof.
+- Exact multi-zone and vertical porter itineraries are implemented through the measured sparse
+  distance cache and central logistics authority. Native three-plus-zone follow/save/obstruction
+  proof remains open; the historical west-edge fallback is forbidden. Later hosted/zone-spanning
+  arcology ground remains an explicit later extension, not a substitute for testing current
+  two-city transport.
 
 ## Historical design record and adopted 0.2 defaults
 
@@ -128,11 +138,11 @@ keeps the register at one row per city, which is what makes the hub re-key trivi
 **PROVISIONAL: keep.** If the capital wave wants a capital with several arches, the rule
 relaxes to "one arch per (city, partner)" with no schema change.
 
-**QB-16 — `Sited="gate"` is its own small wave, not strata vocabulary.** It turned out to be
-a *placement* rule already sketched in `KingdomRoadRules.cs:544-556` (site the gatehouse at
-the frontier gate cell astride the road; today a hardcoded key match). Ship the authored
-attribute as its own one-line-plus-schema wave, or leave the gatehouse key-matched?
-**PROVISIONAL: leave key-matched; the attribute waits for a second design that wants it.**
+**QB-16 — CLOSED: gatehouse siting is a typed network rule, not strata vocabulary.**
+`KingdomGatehouse` binds the exact `HeartToGate` frontier endpoint and road axis, refuses
+obstruction, and stamps the traversable native-Door topology. The single current gatehouse remains
+key-matched; introduce a public `Sited=` schema only when a second independently useful design
+needs the same placement contract. Native traversal remains a test gate, not a design question.
 
 **QB-17 — Deep crops key on style, not stratum.** `KingdomCropRules.CropBlueprintForStyle`
 reads style only, so a common-style city's fungal vault grows **Starapple in the dark**.
@@ -153,12 +163,9 @@ separate-records instead. **Recorded so the want has a number when it arrives.**
 alone. Zero live callers today, so no Zone overloads were minted (no speculative API). The day
 one is called from a deep zone it will be wrong. Recorded so the decision is visible.
 
-**QB-21 — LATENT: the housing/beds invariant is stated twice and enforced nowhere.** The
-catalogue check flags "housing with nothing over it" only as a Note and only when a roof was
-declared; `KingdomLodging.RoofCapacity` derives capacity from `Carries` roof amount, not roof
-state. An `Open="yes"` housing design with `Carries="roof:N"` would house people under the
-open sky. Nothing shipped does this; a third-party record could. Candidate: promote to a
-catalogue Fault.
+**QB-21 — CLOSED: the housing/beds invariant is enforced at catalogue load.** Effective open
+ground carrying `roof:N` is a Fault even when the author omitted the `Roof` attribute; open
+housing with no roof capacity faults too. Sheltered housing and open non-housing remain valid.
 
 **QB-22 — The node-gate data pass over the shipped catalogue.** The tree mints 21 keys and
 almost nothing gates on them yet. Applied now (safe, Village+): smelter ← `node:cruciblesteel`,
@@ -202,13 +209,10 @@ Implemented on the player-scoped `WaterRitualStartEvent.Initial` edge. The bound
 works before founding and across exile/refounding; per-city canonical receipts make retries
 idempotent and keep city progress sited with the city.
 
-**QB-28 — The keepers' roster string is unpriced in the byte budget.** The receipt prices the
-seven reference slots; the roster is a composed per-city heap string (the tree's own 21 grants
-= 598 B, uncapped above that by disks/machines/patterns). Any width chosen moves the realm
-total across or under the 56 KiB advisory rung: 640 B/city → 56,868 (under); 1,024 B/city →
-57,636 (over, flipping the pinned verdict). Marked OPEN in the source. **PROVISIONAL: none —
-the budget verdict is yours to re-pin; the advisory rung is not a ceiling and nothing breaks
-meanwhile.**
+**QB-28 — CLOSED: the keepers' roster string is bounded and priced.** One city's aggregate
+admits at most 512 rows, 8,192 encoded characters, and 16,384 UTF-8 bytes. Decode fails closed;
+encode fails atomically rather than truncating knowledge. `KingdomCityMemoryRules` prices the
+full 16,384-byte heap and the tests pin that number.
 
 **QB-34 — The enrolment answer is a blanket across ~30 vanilla systems.** `IsTrueKinEvent`
 carries no asker context, so the enrolled mutant also gets True Kin tonic dosages, five
@@ -228,9 +232,9 @@ wants a slower door.**
 door and never reaches into a body — verified: no vanilla path re-checks `IsTrueKin` for a
 fitted implant. **PROVISIONAL: confirmed shape, pin at check-in.**
 
-**QB-38 — The annexe's keeper staffing** is `RosterNames[0]`, the grafting hall's own
-crudeness. Wants the lodged-savant binding (a psyberneticist), not a global guest-table
-entry. Rides the QB-33 follow-ups bundle.
+**QB-38 — CLOSED: the annexe's keeper is a lodged psyberneticist.** Staffing resolves a real
+citizen in the annexe's zone, with a real home and the required intelligence, technical skill,
+and body truth. `RosterNames[0]` is not accepted as staffing proof.
 
 **QB-39 — Cosmetic mismatch**: tonic RULES text reads raw genotype, so an enrolled mutant
 gets True Kin effects with mutant blurbs. Fixing means writing the `Genotype` property —
@@ -287,18 +291,11 @@ on `node:measuredwork` (survey before you sink — honest, Village-reachable, no
 the delve should sit behind a stone lane instead, the tree needs a new node. **PROVISIONAL:
 measuredwork.**
 
-**QB-45 — Deep-lane follow-ups bundle** (recorded, none blocking): a deep zone has no
-frontier edges, so no gate road ever wears there — the shaft foot IS its gate, wants a
-delve-aware companion; `EdgeToward` still routes vertical hauls through the West wall (its
-own comment concedes it; the shaft head is the honest entry cell); porters hardcode ≤3 legs
-so multi-hop vertical haulage is unmodelled; `ShaftHopMultiplier = 3` is a design number
-wanting a balance eye; wear on a delve — a ruined shaft still opens the deep at full
-effectiveness; `KingdomReachRules` is stratum-blind (a shrine's spirit reaches through rock
-— probably correct, belief is not haulage, but it should be a decision); the city-book zone
-row carries no shaft field, so the delved set is recomputed per carry (≤9 game-state reads —
-cheap, but the book could hold it if the byte budget is ever re-pinned); and
-`KingdomDistanceMatrix` remains fully implemented with zero runtime callers — its Up/Down
-slots now, at last, mean something.
+**QB-45 — Deep-lane follow-ups bundle.** Exact multi-zone/vertical routing, honest shaft
+endpoints, and runtime use of the distance matrix are an active release repair and are not
+accepted as nonblocking debt. The remaining design questions stay historical: tune the shaft
+hop multiplier with play data; decide whether a ruined delve disables access; and whether civic
+reach through rock is desirable. Hosted/zone-spanning arcology ground is separately deferred.
 
 **QB-46 — Capital numbers are tabled and untuned** (crown 110/13200; the arcology set), same
 shape as QB-36. And a struck crown does NOT auto-promote a former crown hall — the realm

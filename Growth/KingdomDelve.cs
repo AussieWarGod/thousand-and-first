@@ -34,8 +34,15 @@ namespace ThousandAndFirst
 		/// <param name="ZoneId">The head zone's id.</param>
 		public static bool ShaftStands(string ZoneId)
 		{
-			return !string.IsNullOrEmpty(ZoneId) && The.Game != null
-				&& The.Game.GetIntGameState(ShaftState + ZoneId) == 1;
+			if (string.IsNullOrEmpty(ZoneId) || The.Game == null) return false;
+			// Presence of any new-format key is authoritative. Corrupt/partial/tombstoned physical
+			// evidence fails closed and never falls through to a stale legacy integer.
+			if (KingdomDelveLink.HasPhysicalState(ZoneId))
+			{
+				return KingdomDelveLink.PhysicalLinkStands(ZoneId);
+			}
+			// Old saves remain readable until that exact shaft is struck or restaked.
+			return The.Game.GetIntGameState(ShaftState + ZoneId) == 1;
 		}
 
 		/// <summary>
@@ -67,7 +74,15 @@ namespace ThousandAndFirst
 		{
 			if (KingdomDelveRules.IsDelve(Key) && !string.IsNullOrEmpty(ZoneId) && The.Game != null)
 			{
-				The.Game.SetIntGameState(ShaftState + ZoneId, 0);
+				// New links are cleared only by KingdomDelveLink after both endpoints and both native
+				// connections are proved absent. This legacy callback must never turn active physical
+				// authority into a boolean-only success. Tombstones may mirror their cleared int.
+				if (!KingdomDelveLink.HasPhysicalState(ZoneId)
+					|| The.Game.GetStringGameState(KingdomDelveLink.LinkState + ZoneId, null)
+						== KingdomDelveLink.Tombstone)
+				{
+					The.Game.SetIntGameState(ShaftState + ZoneId, 0);
+				}
 			}
 		}
 
@@ -147,7 +162,7 @@ namespace ThousandAndFirst
 					System.ClaimedZones, delved);
 				return (verdict == KingdomDelveRules.DelveVerdict.Allowed)
 					? null
-					: KingdomDelveRules.DelveRefusal(verdict, System.SeatName);
+					: KingdomDelveRules.DelveRefusal(verdict, KingdomPresentation.Rich(System.SeatName));
 			}
 			if (KingdomDelveRules.Reaches(ZoneId, System.ClaimedZones, delved))
 			{
@@ -162,7 +177,7 @@ namespace ThousandAndFirst
 			{
 				return null;
 			}
-			return KingdomDelveRules.RefuseUnreached(System.SeatName, Name);
+			return KingdomDelveRules.RefuseUnreached(KingdomPresentation.Rich(System.SeatName), Name);
 		}
 
 		/// <summary>
@@ -177,7 +192,7 @@ namespace ThousandAndFirst
 			{
 				return null;
 			}
-			return KingdomDelveRules.UnreachedNote(System.SeatName,
+			return KingdomDelveRules.UnreachedNote(KingdomPresentation.Rich(System.SeatName),
 				KingdomDelveRules.UnreachedZones(System.ClaimedZones, DelvedZones(System.ClaimedZones)).Count);
 		}
 	}

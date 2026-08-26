@@ -44,6 +44,29 @@ namespace ThousandAndFirst.Tests
 			Assert.AreNotEqual(sameSet, retype);
 		}
 
+		[TestCase(5, 4, KingdomPlotRules.PlotSize.Small)]
+		[TestCase(4, 5, KingdomPlotRules.PlotSize.Small)]
+		[TestCase(8, 6, KingdomPlotRules.PlotSize.Medium)]
+		[TestCase(9, 12, KingdomPlotRules.PlotSize.Large)]
+		[TestCase(20, 14, KingdomPlotRules.PlotSize.Huge)]
+		public void ActualSizeComesFromStakedRectangleNotDesignMinimum(int width,
+			int height, KingdomPlotRules.PlotSize expected)
+		{
+			Assert.IsTrue(KingdomSocketRules.TryActualSize(width, height, out var actual));
+			Assert.AreEqual(expected, actual);
+		}
+
+		[Test]
+		public void SameSetMayUseLargerActualLotButNeverSmallerOne()
+		{
+			Assert.IsTrue(KingdomSocketRules.FitsSameSet("craft",
+				KingdomPlotRules.PlotSize.Large, "CRAFT", KingdomPlotRules.PlotSize.Small));
+			Assert.IsFalse(KingdomSocketRules.FitsSameSet("craft",
+				KingdomPlotRules.PlotSize.Small, "craft", KingdomPlotRules.PlotSize.Medium));
+			Assert.IsFalse(KingdomSocketRules.FitsSameSet("craft",
+				KingdomPlotRules.PlotSize.Large, "civic", KingdomPlotRules.PlotSize.Small));
+		}
+
 		// --- FootprintFits: "footprint <= plot", applied a second time at the socket -----------
 
 		[TestCase(5, 4, 5, 4, true)]

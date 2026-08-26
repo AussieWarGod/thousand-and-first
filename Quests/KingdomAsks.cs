@@ -54,7 +54,7 @@ namespace ThousandAndFirst
 			{
 				return "You rule nothing yet.";
 			}
-			builder.Append("{{C|").Append(System.SeatName).Append("}} is asking for the following.");
+			builder.Append("{{C|").Append(KingdomPresentation.Rich(System.SeatName)).Append("}} is asking for the following.");
 			if (!Enabled)
 			{
 				// STANDARDS §7b: applicable but blocked. A board that silently showed nothing
@@ -119,7 +119,8 @@ namespace ThousandAndFirst
 					return;
 				}
 				read = true;
-				KingdomCityReading reading = KingdomReadingRules.Project(System.SeatName, state);
+				KingdomCityReading reading = KingdomReadingRules.Project(System.SeatName, state,
+					System.City.ExtensionModel);
 				asks.AddRange(KingdomExtensions.Run(System, reading, Own, System.SeatName, true, Stalled));
 				asks.AddRange(KingdomExtensions.Asks(System, reading, Stalled));
 				// Ordered once, over the whole board. Gathering ours first is about isolation, not
@@ -149,7 +150,7 @@ namespace ThousandAndFirst
 			builder.Append("\n\n{{r|Not everything writing in this book answered: ");
 			for (int i = 0; i < stalled.Count; i++)
 			{
-				builder.Append((i == 0) ? "" : ", ").Append(stalled[i]);
+				builder.Append((i == 0) ? "" : ", ").Append(KingdomPresentation.Rich(stalled[i]));
 			}
 			builder.Append(" stalled this reading. The city is unaffected, and the log names the fault.}}");
 		}
@@ -183,21 +184,21 @@ namespace ThousandAndFirst
 			}
 			if (state == PetitionLifecycle.Accepted)
 			{
-				builder.Append("\n\n{{G|Petition accepted: ").Append(System.PetitionPetitioner)
+				builder.Append("\n\n{{G|Petition accepted: ").Append(KingdomPresentation.Rich(System.PetitionPetitioner))
 					.Append("}} — about ").Append(KingdomPetitions.Subject(System.PetitionKind))
 					.Append(".\n  {{K|Your word stands. Review the exact request at the Charter; the city checks it on its daily settlement pass.}}");
 				return;
 			}
-			builder.Append("\n\n{{W|").Append(System.PetitionPetitioner).Append(" is waiting to speak}} — about ")
+			builder.Append("\n\n{{W|").Append(KingdomPresentation.Rich(System.PetitionPetitioner)).Append(" is waiting to speak}} — about ")
 				.Append(KingdomPetitions.Subject(System.PetitionKind)).Append(".\n  {{K|Hear them at the Charter.}}");
 		}
 
 		private static void Line(KingdomSystem System, KingdomAsk ask, StringBuilder builder)
 		{
-			builder.Append("\n\n").Append(Mark(ask.Weight)).Append(" ").Append(ask.Title);
+			builder.Append("\n\n").Append(Mark(ask.Weight)).Append(" ").Append(KingdomPresentation.Rich(ask.Title));
 			if (!string.IsNullOrEmpty(ask.Want))
 			{
-				builder.Append("\n  {{K|").Append(ask.Want).Append("}}");
+				builder.Append("\n  {{K|").Append(KingdomPresentation.Rich(ask.Want)).Append("}}");
 			}
 			string where = Where(System, ask.ZoneId);
 			if (!string.IsNullOrEmpty(where))
@@ -225,7 +226,7 @@ namespace ThousandAndFirst
 			// resident, and a reading surface that materialises a parasang to write one line of
 			// prose would be the most expensive sentence in the mod.
 			string name = (The.ZoneManager == null) ? null : The.ZoneManager.GetZoneDisplayName(ZoneId, WithIndefiniteArticle: true);
-			return string.IsNullOrEmpty(name) ? "" : ("At " + name + ".");
+			return string.IsNullOrEmpty(name) ? "" : ("At " + KingdomPresentation.Rich(name) + ".");
 		}
 
 		private static string Mark(KingdomAskWeight weight)

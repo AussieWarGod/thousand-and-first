@@ -288,11 +288,12 @@ namespace ThousandAndFirst
 		/// <summary>Says the one sentence a founder whose nooks stopped opening is owed, once.</summary>
 		internal static void AnnounceLapse(string City)
 		{
-			MessageQueue.AddPlayerMessage(KingdomAnnexeRules.LapseLine(City));
+			string shownCity = KingdomPresentation.Rich(City);
+			MessageQueue.AddPlayerMessage(KingdomAnnexeRules.LapseLine(shownCity));
 			KingdomSystem realm = The.Game?.RequireSystem<KingdomSystem>();
 			if (realm != null && realm.Founded)
 			{
-				KingdomChronicle.Record(realm, KingdomAnnexeRules.LapseTelling(City));
+				KingdomChronicle.Record(realm, KingdomAnnexeRules.LapseTelling(shownCity));
 			}
 			KingdomLog.Log("annexe: roll lapsed (" + City + ")");
 		}
@@ -345,6 +346,7 @@ namespace ThousandAndFirst
 			// rather than that it is an outpost (Addendum 22 A2; END-STATE §5.5).
 			bool enrols = Building != null && Building.HasPart("r_KingdomBecomingAnnexe");
 			string city = CityAt(realm, Building);
+			string shownCity = KingdomPresentation.Rich(city);
 			while (true)
 			{
 				List<string> rolls = KingdomAnnexeRules.Rolls(KingdomZoning.Roster(realm));
@@ -353,7 +355,8 @@ namespace ThousandAndFirst
 				List<GameObject> targets = new List<GameObject>();
 				for (int i = 0; i < candidates.Count; i++)
 				{
-					options.Add("{{W|Enter " + candidates[i].DisplayNameOnly + " on the rolls}}");
+					options.Add("{{W|Enter " + KingdomPresentation.Rich(PlainName(candidates[i]))
+						+ " on the rolls}}");
 					targets.Add(candidates[i]);
 				}
 				if (options.Count == 0)
@@ -369,14 +372,16 @@ namespace ThousandAndFirst
 				List<string> names = RollNames(Building, rolls);
 				for (int i = 0; i < names.Count; i++)
 				{
-					options.Add(KingdomAnnexeRules.RegisterRow(names[i], Held: true));
+					options.Add(KingdomAnnexeRules.RegisterRow(
+						KingdomPresentation.Rich(names[i]), Held: true));
 					targets.Add(null);
 				}
 				options.Add("Close");
 				targets.Add(null);
 				int picked = Popup.PickOption(
-					Title: KingdomAnnexeRules.RegisterTitle(city),
-					Intro: KingdomAnnexeRules.RegisterIntro(KeeperAt(realm), rolls.Count),
+					Title: KingdomAnnexeRules.RegisterTitle(shownCity),
+					Intro: KingdomAnnexeRules.RegisterIntro(
+						KingdomPresentation.Rich(KeeperAt(realm, Building)), rolls.Count),
 					Options: options, AllowEscape: true, RespectOptionNewlines: true);
 				if (picked < 0 || picked >= targets.Count || targets[picked] == null)
 				{
@@ -394,16 +399,19 @@ namespace ThousandAndFirst
 		private static void Offer(KingdomSystem Realm, GameObject Building, GameObject Actor, GameObject Who)
 		{
 			string city = Realm.SeatName;
-			string named = Who.DisplayNameOnly;
+			string named = PlainName(Who);
+			string shownCity = KingdomPresentation.Rich(city);
+			string shownName = KingdomPresentation.Rich(named);
 			KingdomEnrolVerdict verdict = JudgeFor(Realm, Building, Who);
 			if (verdict != KingdomEnrolVerdict.Allowed)
 			{
-				Popup.Show(KingdomAnnexeRules.RefusalLine(verdict, named, city, StoredWater(Realm, Building)));
+				Popup.Show(KingdomAnnexeRules.RefusalLine(verdict, shownName, shownCity,
+					StoredWater(Realm, Building)));
 				return;
 			}
 			int consent = Popup.PickOption(
-				Title: "Enter " + named + " on the rolls of " + city,
-				Intro: KingdomAnnexeRules.DisclosureLines(city),
+				Title: "Enter " + shownName + " on the rolls of " + shownCity,
+				Intro: KingdomAnnexeRules.DisclosureLines(shownCity),
 				Options: KingdomAnnexeRules.ConsentOptions, AllowEscape: true, RespectOptionNewlines: true);
 			if (consent != 0)
 			{
@@ -425,11 +433,14 @@ namespace ThousandAndFirst
 		private static void Enrol(KingdomSystem Realm, GameObject Building, GameObject Who)
 		{
 			string city = Realm.SeatName;
-			string named = Who.DisplayNameOnly;
+			string named = PlainName(Who);
+			string shownCity = KingdomPresentation.Rich(city);
+			string shownName = KingdomPresentation.Rich(named);
 			KingdomEnrolVerdict verdict = JudgeFor(Realm, Building, Who);
 			if (verdict != KingdomEnrolVerdict.Allowed)
 			{
-				Popup.Show(KingdomAnnexeRules.RefusalLine(verdict, named, city, StoredWater(Realm, Building)));
+				Popup.Show(KingdomAnnexeRules.RefusalLine(verdict, shownName, shownCity,
+					StoredWater(Realm, Building)));
 				return;
 			}
 			string id = Who.GeneID;
@@ -438,7 +449,8 @@ namespace ThousandAndFirst
 				// Hostile-input discipline (STANDARDS 9): an identity that could not survive the
 				// store disables one enrolment and says so, rather than writing a key that would
 				// corrupt the city's whole roster.
-				Popup.Show("The register cannot get a clean hand on " + named + ". Nothing was written and nothing was spent.");
+				Popup.Show("The register cannot get a clean hand on " + shownName
+					+ ". Nothing was written and nothing was spent.");
 				return;
 			}
 			Zone zone = Building?.CurrentZone;
@@ -446,7 +458,8 @@ namespace ThousandAndFirst
 			KingdomWaterDebit debit;
 			if (survey == null || !survey.TryReserveExactWater(KingdomAnnexeRules.EnrolmentDrams, out debit))
 			{
-				Popup.Show(KingdomAnnexeRules.RefusalLine(KingdomEnrolVerdict.Unpaid, named, city, StoredWater(Realm, Building)));
+				Popup.Show(KingdomAnnexeRules.RefusalLine(KingdomEnrolVerdict.Unpaid,
+					shownName, shownCity, StoredWater(Realm, Building)));
 				return;
 			}
 
@@ -461,6 +474,16 @@ namespace ThousandAndFirst
 			List<string> roster = KingdomZoningRules.DecodeRoster(Realm.KeepersRoster);
 			string roll = KingdomAnnexeRules.EnrolmentKey(id);
 			string oldRoster = Realm.KeepersRoster;
+			List<string> proposedRoster = new List<string>(roster);
+			proposedRoster.Add(roll);
+			string proposedEncodedRoster;
+			if (roll == null || roster.Contains(roll)
+				|| !KingdomZoningRules.TryEncodeRoster(proposedRoster, out proposedEncodedRoster))
+			{
+				Popup.Show("The keepers' permanent register has no bounded room for another name. "
+					+ "Nothing was written and nothing was spent.");
+				return;
+			}
 			r_KingdomEnrolled oldRecord = Who.GetPart<r_KingdomEnrolled>();
 			string oldWho = (oldRecord == null) ? null : oldRecord.Who;
 			string oldNamed = (oldRecord == null) ? null : oldRecord.Named;
@@ -482,7 +505,8 @@ namespace ThousandAndFirst
 			{
 				if (!debit.Commit())
 				{
-					Popup.Show(KingdomAnnexeRules.RefusalLine(KingdomEnrolVerdict.Unpaid, named, city,
+					Popup.Show(KingdomAnnexeRules.RefusalLine(KingdomEnrolVerdict.Unpaid,
+						shownName, shownCity,
 						KingdomSurvey.Take(zone, Realm).StoredWater));
 					return;
 				}
@@ -491,8 +515,7 @@ namespace ThousandAndFirst
 				{
 					throw new InvalidOperationException("The roll changed before it could be written.");
 				}
-				roster.Add(roll);
-				Realm.KeepersRoster = KingdomZoningRules.EncodeRoster(roster);
+				Realm.KeepersRoster = proposedEncodedRoster;
 				if (!KingdomAnnexeRules.Enrolled(KingdomZoning.Roster(Realm), id))
 				{
 					throw new InvalidOperationException("The register did not retain the enrolment.");
@@ -560,9 +583,10 @@ namespace ThousandAndFirst
 			{
 				Realm.MirrorFeeling(standing[i].Key);
 			}
-			MessageQueue.AddPlayerMessage(KingdomAnnexeRules.DoneLine(named, city));
-			KingdomChronicle.Record(Realm, KingdomAnnexeRules.DoneTelling(named, city), Accomplishment: true);
-			Realm.RecordDeed(KingdomAnnexeRules.DoneTelling(named, city));
+			MessageQueue.AddPlayerMessage(KingdomAnnexeRules.DoneLine(shownName, shownCity));
+			KingdomChronicle.Record(Realm,
+				KingdomAnnexeRules.DoneTelling(shownName, shownCity), Accomplishment: true);
+			Realm.RecordDeed(KingdomAnnexeRules.DoneTelling(shownName, shownCity));
 			KingdomLog.Log("annexe: enrolled " + id + " (" + named + ") at " + city);
 			Speak(Realm);
 		}
@@ -662,7 +686,7 @@ namespace ThousandAndFirst
 			{
 				return false;
 			}
-			if (!Who.IsPlayer() && Who.GetIntProperty("KingdomCitizen") != 1)
+			if (!Who.IsPlayer() && !KingdomCitizenship.BelongsTo(Realm, Who))
 			{
 				return false;
 			}
@@ -671,11 +695,12 @@ namespace ThousandAndFirst
 
 		private static KingdomEnrolVerdict JudgeFor(KingdomSystem Realm, GameObject Building, GameObject Who)
 		{
-			bool ours = Who != null && (Who.IsPlayer() || Who.GetIntProperty("KingdomCitizen") == 1);
+			bool ours = Who != null && (Who.IsPlayer()
+				|| KingdomCitizenship.BelongsTo(Realm, Who));
 			return KingdomAnnexeRules.Judge(
 				Founded: Realm != null && Realm.Founded,
 				Annexe: Building != null && Building.HasPart("r_KingdomBecomingAnnexe"),
-				Staffed: !string.IsNullOrEmpty(KeeperAt(Realm)),
+				Staffed: !string.IsNullOrEmpty(KeeperAt(Realm, Building)),
 				Ours: ours,
 				AlreadyKin: KinByBirth(Who),
 				AlreadyEnrolled: Who != null && HeldBy(Realm, Who.GeneID),
@@ -711,9 +736,33 @@ namespace ThousandAndFirst
 		/// machinery already placed &mdash; the annexe assigns nobody, exactly as Addendum 6 says
 		/// a great work never does, and exactly as the grafting hall's savant is read.
 		/// </summary>
-		private static string KeeperAt(KingdomSystem Realm)
+		private static string KeeperAt(KingdomSystem Realm, GameObject Building)
 		{
-			return (Realm != null && Realm.RosterNames != null && Realm.RosterNames.Count > 0) ? Realm.RosterNames[0] : null;
+			Zone zone = Building?.CurrentZone;
+			if (Realm == null || !Realm.Founded || zone == null) return null;
+			GameObject best = null;
+			string bestId = null;
+			KingdomSurvey survey = KingdomSurvey.Take(zone, Realm);
+			for (int i = 0; survey != null && survey.Settlers != null
+				&& i < survey.Settlers.Count; i++)
+			{
+				GameObject candidate = survey.Settlers[i];
+				if (!KingdomPurpose.IsLodgedSpecialist(zone, candidate,
+					Psyberneticist: true)) continue;
+				string id = candidate.ID;
+				if (best == null || string.CompareOrdinal(id, bestId) < 0)
+				{
+					best = candidate;
+					bestId = id;
+				}
+			}
+			return GameObject.Validate(best) ? PlainName(best) : null;
+		}
+
+		/// <summary>One plain persisted/display snapshot; Qud formatting enters only at a sink.</summary>
+		private static string PlainName(GameObject Who)
+		{
+			return GameObject.Validate(Who) ? (Who.BaseDisplayNameStripped ?? "") : "";
 		}
 
 		/// <summary>
@@ -732,7 +781,8 @@ namespace ThousandAndFirst
 					r_KingdomEnrolled record = (item == null) ? null : item.GetPart<r_KingdomEnrolled>();
 					if (record != null && !string.IsNullOrEmpty(record.Who) && !known.ContainsKey(record.Who))
 					{
-						known[record.Who] = string.IsNullOrEmpty(record.Named) ? item.DisplayNameOnly : record.Named;
+						known[record.Who] = string.IsNullOrEmpty(record.Named)
+							? PlainName(item) : record.Named;
 					}
 				}
 			}

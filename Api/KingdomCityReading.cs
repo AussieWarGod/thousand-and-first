@@ -47,7 +47,10 @@ namespace ThousandAndFirst.Api
 		Refiner = 4,
 
 		/// <summary>Something that carries charge.</summary>
-		Power = 5
+		Power = 5,
+
+		/// <summary>A plot or scaffold actively being raised.</summary>
+		Construction = 6
 	}
 
 	/// <summary>Where a person's day puts them. Derived, never authored per settler.</summary>
@@ -85,7 +88,10 @@ namespace ThousandAndFirst.Api
 		Abroad = 1,
 
 		/// <summary>Off the roll.</summary>
-		Dead = 2
+		Dead = 2,
+
+		/// <summary>On a dated civic expedition, still bound to one body and doing no city work.</summary>
+		Expedition = 3
 	}
 
 	/// <summary>One claimed zone as the model last read it.</summary>
@@ -248,6 +254,8 @@ namespace ThousandAndFirst.Api
 
 		private readonly KingdomResidentReading[] residents;
 
+		private readonly KingdomBehaviourReading behaviour;
+
 		/// <summary>The city's display name, as the founder knows it.</summary>
 		public readonly string CityName;
 
@@ -281,6 +289,24 @@ namespace ThousandAndFirst.Api
 			KingdomZoneReading[] Zones,
 			KingdomWorkReading[] Works,
 			KingdomResidentReading[] Residents)
+			: this(CityName, SettlementId, ProcessedThroughTick, Water, Food, Materials,
+				Zones, Works, Residents, null)
+		{
+		}
+
+		/// <summary>Builds a reading with the API-v3 durable behaviour projection. This overload is
+		/// additive: the original constructor remains binary-compatible for v1/v2 sources.</summary>
+		public KingdomCityReading(
+			string CityName,
+			string SettlementId,
+			long ProcessedThroughTick,
+			KingdomStockReading Water,
+			KingdomStockReading Food,
+			KingdomStockReading Materials,
+			KingdomZoneReading[] Zones,
+			KingdomWorkReading[] Works,
+			KingdomResidentReading[] Residents,
+			KingdomBehaviourReading Behaviour)
 		{
 			this.CityName = CityName ?? "";
 			this.SettlementId = SettlementId ?? "";
@@ -291,6 +317,13 @@ namespace ThousandAndFirst.Api
 			zones = Copy(Zones);
 			works = Copy(Works);
 			residents = Copy(Residents);
+			behaviour = Behaviour ?? new KingdomBehaviourReading(null, null, null, null);
+		}
+
+		/// <summary>Frozen API-v3 resource/job/network/work sidecar. Never null.</summary>
+		public KingdomBehaviourReading Behaviour
+		{
+			get { return behaviour; }
 		}
 
 		/// <summary>Claimed zones the model holds a row for.</summary>

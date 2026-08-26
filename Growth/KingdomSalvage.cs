@@ -119,7 +119,7 @@ namespace ThousandAndFirst
 			{
 				Machine.SetIntProperty(CertifiedProperty, 0);
 				KingdomGovernanceScope.Commit("certify machine");
-				MessageQueue.AddPlayerMessage("{{K|" + Machine.ShortDisplayName + " is taken off the grid of " + System.SeatName + ".}} It stands exactly where it stood.");
+				MessageQueue.AddPlayerMessage("{{K|" + Machine.ShortDisplayName + " is taken off the grid of " + KingdomPresentation.Rich(System.SeatName) + ".}} It stands exactly where it stood.");
 				KingdomLog.Log("salvage: decommissioned " + Machine.ShortDisplayName + " at " + System.SeatName);
 				return true;
 			}
@@ -131,18 +131,39 @@ namespace ThousandAndFirst
 				Failure = RefusalMessage(verdict, Machine, System, waterCost, handsRequired, survey.StoredWater);
 				return false;
 			}
+			// Player-visible semantic content is chosen from the frozen resident roll before
+			// water, machine state, knowledge, chronicle, or deed mutation.
+			string settler = FrozenSignatory(System);
 			survey.Consume(waterCost);
 			Machine.SetIntProperty(CertifiedProperty, 1);
 			KingdomGovernanceScope.Commit("certify machine");
 			// Certifying teaches. Taking the machine back off the grid above does not unteach:
 			// the keepers took it apart once and the knowledge is theirs now.
 			KingdomZoning.RecordCertification(System, Machine);
-			string settler = (System.RosterNames.Count > 0) ? System.RosterNames.GetRandomElement() : "a settler";
-			MessageQueue.AddPlayerMessage("{{G|" + Machine.ShortDisplayName + " is certified fit for the grid of " + System.SeatName + ".}} " + settler + " signs off on it.");
-			KingdomChronicle.Record(System, Machine.ShortDisplayName + " was certified fit for the grid at " + System.KingdomDisplayName);
-			System.RecordDeed(Machine.ShortDisplayName + " certified fit for the grid at " + System.KingdomDisplayName);
+			string seat = KingdomPresentation.Rich(System.SeatName);
+			string realm = KingdomPresentation.Rich(System.KingdomDisplayName);
+			MessageQueue.AddPlayerMessage("{{G|" + Machine.ShortDisplayName + " is certified fit for the grid of " + seat + ".}} " + settler + " signs off on it.");
+			KingdomChronicle.Record(System, Machine.ShortDisplayName + " was certified fit for the grid at " + realm);
+			System.RecordDeed(Machine.ShortDisplayName + " certified fit for the grid at " + realm);
 			KingdomLog.Log("salvage: certified " + Machine.ShortDisplayName + " cost=" + waterCost + " hands=" + handsRequired + " at " + System.SeatName);
 			return true;
+		}
+
+		private static string FrozenSignatory(KingdomSystem System)
+		{
+			Simulation.City.KingdomCityState state;
+			Simulation.City.KingdomResidentRollProjection roll;
+			if (!Simulation.City.KingdomResidents.TryRoll(System, out state, out roll)
+				|| roll.Names == null) return "a settler";
+			string chosen = null;
+			for (int i = 0; i < roll.Names.Count; i++)
+			{
+				string name = roll.Names[i];
+				if (!string.IsNullOrEmpty(name)
+					&& (chosen == null || string.CompareOrdinal(name, chosen) < 0))
+					chosen = name;
+			}
+			return chosen ?? "a settler";
 		}
 
 		/// <summary>
@@ -184,11 +205,11 @@ namespace ThousandAndFirst
 			case KingdomSalvageRules.SalvageVerdict.RefusedRusted:
 				return name + " has rusted through and won't answer power the way it is. Scour it clean first.";
 			case KingdomSalvageRules.SalvageVerdict.RefusedNotUnderstood:
-				return "Nobody at " + System.SeatName + " knows what " + name + " does yet. Have it identified before the keepers will vouch for it.";
+				return "Nobody at " + KingdomPresentation.Rich(System.SeatName) + " knows what " + name + " does yet. Have it identified before the keepers will vouch for it.";
 			case KingdomSalvageRules.SalvageVerdict.RefusedCannotAfford:
 				return "Certifying " + name + " would cost {{C|" + WaterCost + "}} drams, and the stores hold only " + StoredWater + ". Bring more water, or dedicate what you have, and ask again.";
 			case KingdomSalvageRules.SalvageVerdict.RefusedNoHands:
-				return "Certifying " + name + " wants " + HandsRequired + " hands free to test it properly, and " + System.SeatName + " doesn't have them to spare yet.";
+				return "Certifying " + name + " wants " + HandsRequired + " hands free to test it properly, and " + KingdomPresentation.Rich(System.SeatName) + " doesn't have them to spare yet.";
 			default:
 				return name + " cannot be certified right now.";
 			}

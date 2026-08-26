@@ -141,8 +141,9 @@ namespace ThousandAndFirst
 		/// house. Call once per zone activation, after <c>KingdomPlot.OnSettlementPass</c> so a
 		/// building finished raising this very pass is already a candidate.
 		/// </summary>
-		public static void OnSettlementPass(KingdomSystem System, Zone Z)
+		public static void OnSettlementPass(KingdomSystem System, Zone Z, KingdomSurvey Survey)
 		{
+			if (Survey == null) return;
 			Settle(System, Z, RunBrink: true);
 		}
 
@@ -417,7 +418,9 @@ namespace ThousandAndFirst
 				KingdomRules.BuildEntry winEntry;
 				TryGetBuiltEntry(winningHome, out winEntry);
 				string matched = KingdomLodgingRules.MatchedTag(needs, (winEntry == null) ? null : new List<string>(KingdomQol.OfferOf(winEntry.Key, Z)));
-				string line = residentName + " found shelter: " + KingdomLodgingRules.HomeSuffix((winEntry != null) ? winEntry.Name : null, matched) + ".";
+				string line = KingdomPresentation.Rich(residentName) + " found shelter: "
+					+ KingdomLodgingRules.HomeSuffix((winEntry != null) ? winEntry.Name : null,
+						matched) + ".";
 				KingdomChronicle.Record(System, line);
 			}
 		}
@@ -530,7 +533,9 @@ namespace ThousandAndFirst
 				return;
 			}
 			long went = KingdomBrinkRules.ExpiryTick(BrinkKind.Roof, brink.WarnedTick);
-			string leaving = KingdomLodgingRules.LeavingLine(ResidentName, KingdomBrinkRules.DaysStood(brink.ReachedTick, went))
+			string leaving = KingdomLodgingRules.LeavingLine(
+				KingdomPresentation.Rich(ResidentName),
+				KingdomBrinkRules.DaysStood(brink.ReachedTick, went))
 				+ KingdomBrinkRules.FiredClause(KingdomBrinkRules.DaysStood(went, now));
 			if (KingdomGrowth.Emigrate(System, Z, null, Resident, KingdomLodgingRules.DepartureCause))
 			{
@@ -555,14 +560,7 @@ namespace ThousandAndFirst
 
 		private static List<string> SelfTagsOf(QolProfile Profile)
 		{
-			List<string> tags = new List<string>();
-			if (Profile == null)
-			{
-				return tags;
-			}
-			tags.AddRange(Profile.Needs);
-			tags.AddRange(Profile.Prefers);
-			return tags;
+			return new List<string>(KingdomQolRules.SelfTags(Profile));
 		}
 
 		/// <summary>Purely projects the ordinary settlement pass: standing assignments keep
@@ -702,7 +700,8 @@ namespace ThousandAndFirst
 			Resident.SetIntProperty(UnhousedAnnouncedProperty, 1);
 			// Addendum 4c names the quarters, so a founder hearing this once (7b) hears what to
 			// build rather than only that somebody is outside.
-			string line = KingdomLodgingRules.UnhousedLine(ResidentName, Reason, RoomiestRefused);
+			string line = KingdomLodgingRules.UnhousedLine(
+				KingdomPresentation.Rich(ResidentName), Reason, RoomiestRefused);
 			KingdomChronicle.Record(System, line);
 			System.Ledger.Note("{{r|" + line + "}}");
 		}
@@ -734,15 +733,16 @@ namespace ThousandAndFirst
 			{
 				return name;
 			}
-			return (Resident == null) ? "" : Resident.ShortDisplayName;
+			return (Resident == null) ? "" : Resident.BaseDisplayNameStripped;
 		}
 
 		private static List<GameObject> ResidentsIn(Zone Z)
 		{
 			List<GameObject> list = new List<GameObject>();
-			foreach (GameObject item in Z.GetObjects())
+			KingdomSystem system = The.Game?.GetSystem<KingdomSystem>();
+			foreach (GameObject item in KingdomSurvey.ObjectsFor(Z))
 			{
-				if (item.GetIntProperty("KingdomCitizen") == 1)
+				if (KingdomCitizenship.BelongsTo(system, item))
 				{
 					list.Add(item);
 				}
@@ -787,9 +787,11 @@ namespace ThousandAndFirst
 			{
 				return list;
 			}
-			foreach (GameObject item in Z.GetObjects())
+			KingdomSystem system = The.Game?.GetSystem<KingdomSystem>();
+			foreach (GameObject item in KingdomSurvey.ObjectsFor(Z))
 			{
-				if (item.GetIntProperty("KingdomCitizen") == 1 && item.GetStringProperty(HomePlotIdProperty) == plotId)
+				if (KingdomCitizenship.BelongsTo(system, item)
+					&& item.GetStringProperty(HomePlotIdProperty) == plotId)
 				{
 					list.Add(item);
 				}
@@ -846,7 +848,7 @@ namespace ThousandAndFirst
 		private static List<GameObject> HousingIn(Zone Z)
 		{
 			List<GameObject> list = new List<GameObject>();
-			foreach (GameObject item in Z.GetObjects())
+			foreach (GameObject item in KingdomSurvey.ObjectsFor(Z))
 			{
 				if (item.GetIntProperty(KingdomUpgrade.BuiltProperty) != 1)
 				{
@@ -919,9 +921,11 @@ namespace ThousandAndFirst
 			{
 				return null;
 			}
-			foreach (GameObject item in Z.GetObjects())
+			KingdomSystem system = The.Game?.GetSystem<KingdomSystem>();
+			foreach (GameObject item in KingdomSurvey.ObjectsFor(Z))
 			{
-				if (item.GetIntProperty("KingdomCitizen") == 1 && item.GetStringProperty("KingdomName") == ResidentName)
+				if (KingdomCitizenship.BelongsTo(system, item)
+					&& item.GetStringProperty("KingdomName") == ResidentName)
 				{
 					return item;
 				}
@@ -940,7 +944,7 @@ namespace ThousandAndFirst
 			{
 				return null;
 			}
-			foreach (GameObject item in Z.GetObjects())
+			foreach (GameObject item in KingdomSurvey.ObjectsFor(Z))
 			{
 				if (item.GetStringProperty(KingdomPlots.PlotIdProperty) == plotId && item.GetIntProperty(KingdomUpgrade.BuiltProperty) == 1)
 				{
@@ -998,7 +1002,7 @@ namespace ThousandAndFirst
 					housed++;
 					continue;
 				}
-				string name = NameOf(resident);
+				string name = KingdomPresentation.Rich(NameOf(resident));
 				BrinkRecord brink = KingdomBrink.Of(resident, BrinkKind.Roof);
 				if (brink.Stands)
 				{

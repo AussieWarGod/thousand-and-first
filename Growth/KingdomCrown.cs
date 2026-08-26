@@ -275,8 +275,8 @@ namespace ThousandAndFirst
 				return;
 			}
 			string prompt = (verdict == KingdomCrownVerdict.Crowns)
-				? KingdomCrownRules.CrownPrompt(here)
-				: KingdomCrownRules.MovePrompt(capital, here);
+				? KingdomCrownRules.CrownPrompt(KingdomPresentation.Rich(here))
+				: KingdomCrownRules.MovePrompt(KingdomPresentation.Rich(capital), KingdomPresentation.Rich(here));
 			if (Popup.ShowYesNo(prompt) != DialogResult.Yes)
 			{
 				return;
@@ -284,18 +284,20 @@ namespace ThousandAndFirst
 			Anchor(Hall);
 			Write(here, Hall.GetStringProperty(HallKeyProperty, ""));
 			ClearCache();
+			string shownHere = KingdomPresentation.Rich(here);
+			string shownCapital = KingdomPresentation.Rich(capital);
 			if (verdict == KingdomCrownVerdict.Crowns)
 			{
-				Tell(system, KingdomCrownRules.CrownedLine(here));
-				system.RecordDeed("the crown was set down at " + here);
-				KingdomChronicle.Record(system, KingdomCrownRules.CrownedTelling(here, system.KingdomDisplayName), Accomplishment: true);
+				Tell(system, KingdomCrownRules.CrownedLine(shownHere));
+				system.RecordDeed("the crown was set down at " + shownHere);
+				KingdomChronicle.Record(system, KingdomCrownRules.CrownedTelling(shownHere, KingdomPresentation.Rich(system.KingdomDisplayName)), Accomplishment: true);
 			}
 			else
 			{
-				Tell(system, KingdomCrownRules.MovedLine(capital, here));
-				Tell(system, KingdomCrownRules.FormerCrownLine(capital));
-				system.RecordDeed("the crown moved from " + capital + " to " + here);
-				KingdomChronicle.Record(system, KingdomCrownRules.MovedTelling(capital, here), Accomplishment: true);
+				Tell(system, KingdomCrownRules.MovedLine(shownCapital, shownHere));
+				Tell(system, KingdomCrownRules.FormerCrownLine(shownCapital));
+				system.RecordDeed("the crown moved from " + shownCapital + " to " + shownHere);
+				KingdomChronicle.Record(system, KingdomCrownRules.MovedTelling(shownCapital, shownHere), Accomplishment: true);
 			}
 			// Addendum 22 A2: the network hubs at the capital. Done in the same breath as the
 			// crowning, because a realm whose arches answered the old capital for a day would be a
@@ -391,8 +393,11 @@ namespace ThousandAndFirst
 				string city = CityOf(System, Active.ZoneID);
 				if (city != null && !Holding(found, city))
 				{
-					foreach (GameObject work in Active.GetObjects())
+					KingdomSurvey survey = KingdomSurvey.ActiveFor(Active)
+						?? KingdomSurvey.Take(Active);
+					for (int i = 0; i < survey.Built.Count; i++)
 					{
+						GameObject work = survey.Built[i];
 						if (work != null && work.GetIntProperty("KingdomBuilt") == 1
 							&& string.Equals(KingdomUpgrade.DesignKeyOf(work), KingdomCrownRules.CrownKey, StringComparison.OrdinalIgnoreCase))
 						{
@@ -487,4 +492,3 @@ namespace ThousandAndFirst
 		}
 	}
 }
-

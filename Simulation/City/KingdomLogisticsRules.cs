@@ -1,5 +1,57 @@
 namespace ThousandAndFirst.Simulation.City
 {
+	internal enum KingdomScalarReceiptAction : byte
+	{
+		Refuse = 0,
+		Apply = 1,
+		AlreadyApplied = 2,
+		ContinueFood = 3,
+		Interference = 4
+	}
+
+	/// <summary>Pure recovery verdict for scalar target callbacks. Amount equality alone is never
+	/// authority: the exact target must still carry this job's marker, and food additionally proves
+	/// how many exact marked objects the callback created. Any unrelated target change cuts the
+	/// transaction and quarantines instead of being mistaken for our receipt.</summary>
+	internal static class KingdomScalarReceiptRules
+	{
+		internal static bool TryRecover(KingdomStockKind kind, long before, int amount,
+			long observed, bool markerMatches, int markedFoodObjects,
+			out KingdomScalarReceiptAction action)
+		{
+			action = KingdomScalarReceiptAction.Refuse;
+			if ((kind != KingdomStockKind.Water && kind != KingdomStockKind.Food)
+				|| before < 0L || amount <= 0 || observed < 0L || markedFoodObjects < 0
+				|| markedFoodObjects > amount) return false;
+			if (!markerMatches)
+			{
+				action = KingdomScalarReceiptAction.Interference;
+				return true;
+			}
+			if (kind == KingdomStockKind.Water)
+			{
+				if (markedFoodObjects != 0)
+				{
+					action = KingdomScalarReceiptAction.Interference;
+					return true;
+				}
+				action = observed == before ? KingdomScalarReceiptAction.Apply
+					: (observed == before + amount ? KingdomScalarReceiptAction.AlreadyApplied
+						: KingdomScalarReceiptAction.Interference);
+				return true;
+			}
+			if (observed != before + markedFoodObjects)
+			{
+				action = KingdomScalarReceiptAction.Interference;
+				return true;
+			}
+			action = markedFoodObjects == 0 ? KingdomScalarReceiptAction.Apply
+				: (markedFoodObjects == amount ? KingdomScalarReceiptAction.AlreadyApplied
+					: KingdomScalarReceiptAction.ContinueFood);
+			return true;
+		}
+	}
+
 	/// <summary>
 	/// One container the city knows is holding something, as the planner sees it.
 	/// <para>
@@ -69,6 +121,87 @@ namespace ThousandAndFirst.Simulation.City
 		}
 	}
 
+	/// <summary>One exact, frozen delivery demand handed to the central planner. Endpoint ids are
+	/// stable hashes of engine object ids; the runtime also persists the unhashed object ids and
+	/// refuses a hash collision before a request reaches this rules layer. <see cref="ZoneRoute"/>
+	/// is the complete level-1 route, source and destination included.</summary>
+	internal readonly struct KingdomLogisticsRequest
+	{
+		internal readonly int JobId;
+		internal readonly int SourceEndpointId;
+		internal readonly int SourceZoneIndex;
+		internal readonly int DestinationEndpointId;
+		internal readonly int DestinationZoneIndex;
+		internal readonly KingdomStockKind Cargo;
+		internal readonly int Load;
+		internal readonly int SourceToDestinationCells;
+		internal readonly int[] ZoneRoute;
+		internal readonly int ZoneRouteCount;
+
+		internal readonly KingdomDeliveryCargoAuthority CargoAuthority;
+
+		internal readonly string OwnerOperationId;
+
+		internal KingdomLogisticsRequest(int jobId, int sourceEndpointId, int sourceZoneIndex,
+			int destinationEndpointId, int destinationZoneIndex, KingdomStockKind cargo,
+			int load, int sourceToDestinationCells, int[] zoneRoute, int zoneRouteCount)
+		{
+			JobId = jobId;
+			SourceEndpointId = sourceEndpointId;
+			SourceZoneIndex = sourceZoneIndex;
+			DestinationEndpointId = destinationEndpointId;
+			DestinationZoneIndex = destinationZoneIndex;
+			Cargo = cargo;
+			Load = load;
+			SourceToDestinationCells = sourceToDestinationCells;
+			ZoneRoute = zoneRoute;
+			ZoneRouteCount = zoneRouteCount;
+			CargoAuthority = KingdomDeliveryCargoAuthority.ScalarStock;
+			OwnerOperationId = null;
+		}
+
+		internal KingdomLogisticsRequest(int jobId, int sourceEndpointId, int sourceZoneIndex,
+			int destinationEndpointId, int destinationZoneIndex, KingdomStockKind cargo,
+			int load, int sourceToDestinationCells, int[] zoneRoute, int zoneRouteCount,
+			KingdomDeliveryCargoAuthority cargoAuthority, string ownerOperationId)
+			: this(jobId, sourceEndpointId, sourceZoneIndex, destinationEndpointId,
+				destinationZoneIndex, cargo, load, sourceToDestinationCells, zoneRoute,
+				zoneRouteCount)
+		{
+			CargoAuthority = cargoAuthority;
+			OwnerOperationId = ownerOperationId;
+		}
+	}
+
+	/// <summary>Complete bounded answer for one frozen logistics slice. Request-indexed arrays
+	/// preserve which exact source, stop, route and cargo the caller supplied; only trip grouping
+	/// and ordered stop numbers are decided here.</summary>
+	internal sealed class KingdomLogisticsSnapshotPlan
+	{
+		internal readonly int ConsideredCount;
+		internal readonly int TripCount;
+		internal readonly int Operations;
+		internal readonly int[] TripIndexes;
+		internal readonly int[] TripLeaderJobIds;
+		internal readonly int[] StopOrdinals;
+		internal readonly long[] TripLoads;
+		internal readonly int[] TripStops;
+
+		internal KingdomLogisticsSnapshotPlan(int consideredCount, int tripCount, int operations,
+			int[] tripIndexes, int[] tripLeaderJobIds, int[] stopOrdinals,
+			long[] tripLoads, int[] tripStops)
+		{
+			ConsideredCount = consideredCount;
+			TripCount = tripCount;
+			Operations = operations;
+			TripIndexes = tripIndexes;
+			TripLeaderJobIds = tripLeaderJobIds;
+			StopOrdinals = stopOrdinals;
+			TripLoads = tripLoads;
+			TripStops = tripStops;
+		}
+	}
+
 	/// <summary>
 	/// Central batch planning, not agent AI. LIVING-CITY-ARCHITECTURE &sect;3.10, items 1 and 4.
 	/// <para>
@@ -104,6 +237,10 @@ namespace ThousandAndFirst.Simulation.City
 
 		/// <summary>2-opt swap tests one plan may spend. &sect;3.10(4).</summary>
 		internal const int MaxSwapTests = KingdomBudgetRules.PlannerMaxSwapTests;
+
+		/// <summary>One visible carrier's physical load, in drams or food units. Capacity belongs to
+		/// planner rules, not renderer budget: every persisted trip and every body use this value.</summary>
+		internal const int CarrierCapacity = 12;
 
 		/// <summary>No route to this holder. Same sentinel the distance stores use.</summary>
 		internal const int NoRoute = KingdomDistanceRules.NoRoute;
@@ -246,33 +383,23 @@ namespace ThousandAndFirst.Simulation.City
 		// (4) Capacity-bound batching
 		// ==================================================================================
 
-		/// <summary>
-		/// Groups open jobs into trips: same destination, inside one carrier's capacity, inside
-		/// the stop cap.
-		/// <para>
-		/// &sect;3.10(4)'s <i>"group by carrier capacity and route overlap"</i>. Route overlap is
-		/// taken at the honest granularity the model has, which is the ground: two loads bound for
-		/// the same zone share a road for the whole of it, and a third bound elsewhere does not.
-		/// Jobs are walked in ascending id so the grouping is seeded exactly where the
-		/// nearest-neighbour construction below is seeded, and a load that fits no open trip opens
-		/// the next one.
-		/// </para>
-		/// </summary>
-		/// <param name="jobIds">Open job ids, ascending. The caller's order is the seed order.</param>
-		/// <param name="destZone">Each job's destination zone index.</param>
-		/// <param name="loads">Each job's load.</param>
-		/// <param name="capacity">One carrier's capacity.</param>
-		/// <param name="trip">Filled with the trip index each job was put on.</param>
-		/// <param name="tripCount">How many trips the slice needs.</param>
-		internal static bool TryBatch(int[] jobIds, int[] destZone, long[] loads, int count, long capacity, int[] trip, out int tripCount, out KingdomCityFault fault)
+		/// <summary>Plans one production slice over an immutable request snapshot. Batching requires
+		/// one exact pickup holder, one cargo kind, spare capacity, spare stop count, and a genuine
+		/// shared graph-route prefix (same first level-1 edge). Destination equality is neither
+		/// required nor sufficient. Each trip is then ordered by the bounded nearest-neighbour plus
+		/// fixed 2-opt planner below.</summary>
+		internal static bool TryPlanSnapshot(KingdomLogisticsRequest[] requests, int count,
+			int[] betweenDestinations, long capacity, out KingdomLogisticsSnapshotPlan plan,
+			out KingdomCityFault fault)
 		{
-			tripCount = 0;
-			if (jobIds == null || destZone == null || loads == null || trip == null)
+			plan = null;
+			if (requests == null || betweenDestinations == null)
 			{
 				fault = KingdomCityFault.NullArgument;
 				return false;
 			}
-			if (count < 0 || count > jobIds.Length || count > destZone.Length || count > loads.Length || count > trip.Length)
+			if (count < 0 || count > requests.Length
+				|| betweenDestinations.Length < count * count)
 			{
 				fault = KingdomCityFault.InvalidIndex;
 				return false;
@@ -282,25 +409,62 @@ namespace ThousandAndFirst.Simulation.City
 				fault = KingdomCityFault.InvalidCapacity;
 				return false;
 			}
-			fault = KingdomCityFault.None;
 			int considered = (count < MaxJobsConsidered) ? count : MaxJobsConsidered;
-			for (int i = 0; i < count; i++)
-			{
-				trip[i] = -1;
-			}
-			long[] carried = new long[considered];
-			int[] stops = new int[considered];
-			int[] toward = new int[considered];
+			int[] tripIndexes = new int[count];
+			int[] leaders = new int[count];
+			int[] ordinals = new int[count];
+			for (int i = 0; i < count; i++) tripIndexes[i] = -1;
 			for (int i = 0; i < considered; i++)
 			{
-				if (loads[i] <= 0L)
+				KingdomLogisticsRequest row = requests[i];
+				if (row.JobId <= 0 || (i > 0 && row.JobId <= requests[i - 1].JobId)
+					|| row.SourceEndpointId <= 0 || row.DestinationEndpointId <= 0
+					|| row.SourceZoneIndex < 0 || row.DestinationZoneIndex < 0
+					|| (row.CargoAuthority != KingdomDeliveryCargoAuthority.ScalarStock
+						&& row.CargoAuthority != KingdomDeliveryCargoAuthority.CarryBookManifest)
+					|| (row.CargoAuthority == KingdomDeliveryCargoAuthority.ScalarStock
+						&& (row.Cargo != KingdomStockKind.Water && row.Cargo != KingdomStockKind.Food
+							|| !string.IsNullOrEmpty(row.OwnerOperationId)))
+					|| (row.CargoAuthority == KingdomDeliveryCargoAuthority.CarryBookManifest
+						&& (row.Cargo != KingdomStockKind.OpaqueManifest
+							|| string.IsNullOrEmpty(row.OwnerOperationId)))
+					|| row.Load <= 0 || row.Load > capacity
+					|| row.SourceToDestinationCells < 0
+					|| row.SourceToDestinationCells >= NoRoute
+					|| row.ZoneRoute == null || row.ZoneRouteCount < 2
+					|| row.ZoneRouteCount > row.ZoneRoute.Length
+					|| row.ZoneRouteCount > KingdomDistanceRules.MaxNodes
+					|| row.ZoneRoute[0] != row.SourceZoneIndex
+					|| row.ZoneRoute[row.ZoneRouteCount - 1] != row.DestinationZoneIndex)
 				{
-					continue;
+					fault = KingdomCityFault.InvalidIndex;
+					return false;
 				}
+				for (int j = 0; j < considered; j++)
+				{
+					int cells = betweenDestinations[i * count + j];
+					if (cells < 0 || cells >= NoRoute)
+					{
+						fault = KingdomCityFault.OutsideItinerary;
+						return false;
+					}
+				}
+			}
+
+			long[] tripLoads = new long[considered];
+			int[] tripStops = new int[considered];
+			int[] tripSeeds = new int[considered];
+			int tripCount = 0;
+			int operations = 0;
+			for (int i = 0; i < considered; i++)
+			{
 				int found = -1;
 				for (int t = 0; t < tripCount; t++)
 				{
-					if (toward[t] == destZone[i] && stops[t] < MaxStopsPerTrip && carried[t] + loads[i] <= capacity)
+					operations++;
+					if (tripStops[t] < MaxStopsPerTrip
+						&& tripLoads[t] + requests[i].Load <= capacity
+						&& SharesRoutePrefix(requests[tripSeeds[t]], requests[i]))
 					{
 						found = t;
 						break;
@@ -309,14 +473,54 @@ namespace ThousandAndFirst.Simulation.City
 				if (found < 0)
 				{
 					found = tripCount++;
-					toward[found] = destZone[i];
-					carried[found] = 0L;
-					stops[found] = 0;
+					tripSeeds[found] = i;
 				}
-				trip[i] = found;
-				carried[found] += loads[i];
-				stops[found]++;
+				tripIndexes[i] = found;
+				tripLoads[found] += requests[i].Load;
+				tripStops[found]++;
 			}
+
+			for (int t = 0; t < tripCount; t++)
+			{
+				int stopCount = tripStops[t];
+				int[] members = new int[stopCount];
+				int memberCount = 0;
+				for (int i = 0; i < considered; i++)
+					if (tripIndexes[i] == t) members[memberCount++] = i;
+				int nodes = stopCount + 1;
+				int[] local = new int[nodes * nodes];
+				for (int i = 0; i < stopCount; i++)
+				{
+					int request = members[i];
+					local[i + 1] = requests[request].SourceToDestinationCells;
+					local[(i + 1) * nodes] = requests[request].SourceToDestinationCells;
+					for (int j = 0; j < stopCount; j++)
+						local[(i + 1) * nodes + j + 1]
+							= betweenDestinations[request * count + members[j]];
+				}
+				KingdomTripPlan route;
+				if (!TryPlanTrip(local, stopCount, out route, out fault)) return false;
+				operations += route.Operations;
+				int leader = requests[members[0]].JobId;
+				for (int stop = 0; stop < route.StopCount; stop++)
+				{
+					int request = members[route.Order[stop]];
+					leaders[request] = leader;
+					ordinals[request] = stop + 1;
+				}
+			}
+			bool held;
+			int offender;
+			if (!TryNoTwoHalfEmptyTrips(requests, considered, tripIndexes, tripLoads,
+				tripStops, tripSeeds, tripCount, capacity, out held, out offender, out fault)
+				|| !held)
+			{
+				fault = KingdomCityFault.OutsideItinerary;
+				return false;
+			}
+			plan = new KingdomLogisticsSnapshotPlan(considered, tripCount, operations,
+				tripIndexes, leaders, ordinals, tripLoads, tripStops);
+			fault = KingdomCityFault.None;
 			return true;
 		}
 
@@ -363,8 +567,12 @@ namespace ThousandAndFirst.Simulation.City
 			int[] order = new int[count];
 			bool[] taken = new bool[count];
 			int ops = 0;
-			int at = 0;
-			for (int filled = 0; filled < count; filled++)
+			// Input is ascending JobId. Stop zero is therefore the named seed, and 2-opt below
+			// never moves it: "nearest-neighbour seeded from the lowest JobId" is literal.
+			order[0] = 0;
+			taken[0] = true;
+			int at = 1;
+			for (int filled = 1; filled < count; filled++)
 			{
 				int best = -1;
 				int bestCells = 0;
@@ -397,7 +605,7 @@ namespace ThousandAndFirst.Simulation.City
 			while (improved && tests < MaxSwapTests)
 			{
 				improved = false;
-				for (int i = 0; i < count - 1 && tests < MaxSwapTests; i++)
+				for (int i = 1; i < count - 1 && tests < MaxSwapTests; i++)
 				{
 					for (int j = i + 1; j < count && tests < MaxSwapTests; j++)
 					{
@@ -417,28 +625,26 @@ namespace ThousandAndFirst.Simulation.City
 			return true;
 		}
 
-		/// <summary>
-		/// <b>Assertion 2 of &sect;3.10</b>: no two half-empty trips where one would do.
-		/// <para>
-		/// No two trips planned in the same slice share a route prefix while both run under
-		/// capacity. The prefix is taken as the destination the trip is bound for, which is what
-		/// <see cref="TryBatch"/> groups on: two carriers walking to the same ground with room to
-		/// spare between them is precisely the second trip the batcher was supposed to have
-		/// absorbed.
-		/// </para>
-		/// </summary>
-		/// <param name="offender">The trip index that should have been folded into an earlier one,
-		/// or <c>-1</c> when the check passes.</param>
-		internal static bool TryNoTwoHalfEmptyTrips(int[] toward, long[] carried, int tripCount, long capacity, out bool held, out int offender, out KingdomCityFault fault)
+		/// <summary><b>Assertion 2 of &sect;3.10</b>, on real graph-route prefixes. Two trips
+		/// from one exact holder carrying one kind may not remain separate when their combined cargo
+		/// and stops fit one carrier and their frozen routes share the first edge.</summary>
+		internal static bool TryNoTwoHalfEmptyTrips(KingdomLogisticsRequest[] requests,
+			int requestCount, int[] tripIndexes, long[] carried, int[] stops, int[] seeds,
+			int tripCount, long capacity, out bool held, out int offender,
+			out KingdomCityFault fault)
 		{
 			held = false;
 			offender = -1;
-			if (toward == null || carried == null)
+			if (requests == null || tripIndexes == null || carried == null
+				|| stops == null || seeds == null)
 			{
 				fault = KingdomCityFault.NullArgument;
 				return false;
 			}
-			if (tripCount < 0 || tripCount > toward.Length || tripCount > carried.Length)
+			if (requestCount < 0 || requestCount > requests.Length
+				|| requestCount > tripIndexes.Length || tripCount < 0
+				|| tripCount > carried.Length || tripCount > stops.Length
+				|| tripCount > seeds.Length)
 			{
 				fault = KingdomCityFault.InvalidIndex;
 				return false;
@@ -453,15 +659,14 @@ namespace ThousandAndFirst.Simulation.City
 			{
 				for (int b = a + 1; b < tripCount; b++)
 				{
-					if (toward[a] != toward[b])
+					if (carried[a] + carried[b] > capacity
+						|| stops[a] + stops[b] > MaxStopsPerTrip
+						|| !SharesRoutePrefix(requests[seeds[a]], requests[seeds[b]]))
 					{
 						continue;
 					}
-					if (carried[a] + carried[b] <= capacity)
-					{
-						offender = b;
-						return true;
-					}
+					offender = b;
+					return true;
 				}
 			}
 			held = true;
@@ -475,6 +680,22 @@ namespace ThousandAndFirst.Simulation.City
 		private static bool Eligible(KingdomHolderRow holder, int distance, KingdomStockKind kind)
 		{
 			return holder.Holds == kind && holder.Amount > 0L && distance >= 0 && distance < NoRoute;
+		}
+
+		private static bool SharesRoutePrefix(KingdomLogisticsRequest left,
+			KingdomLogisticsRequest right)
+		{
+			return left.SourceEndpointId == right.SourceEndpointId
+				&& left.SourceZoneIndex == right.SourceZoneIndex
+				&& left.Cargo == right.Cargo
+				&& left.CargoAuthority == right.CargoAuthority
+				&& (left.CargoAuthority != KingdomDeliveryCargoAuthority.CarryBookManifest
+					|| string.Equals(left.OwnerOperationId, right.OwnerOperationId,
+						System.StringComparison.Ordinal))
+				&& left.ZoneRoute != null && right.ZoneRoute != null
+				&& left.ZoneRouteCount >= 2 && right.ZoneRouteCount >= 2
+				&& left.ZoneRoute[0] == right.ZoneRoute[0]
+				&& left.ZoneRoute[1] == right.ZoneRoute[1];
 		}
 
 		/// <summary>The frozen order of &sect;3.10(1): distance, then holder id, then dedication.

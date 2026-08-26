@@ -17,12 +17,13 @@ namespace ThousandAndFirst.Simulation.City
 	/// key, the clock, and the surfaces the founder actually reads.
 	/// </para>
 	/// <para>
-	/// <b>The mesh condition, as a list of things this file does not have</b>
-	/// (BUILDING-CATALOGUE-BRIEF Addendum 13). No event queue. No happening table. No second
-	/// message channel: pushes go through <c>KingdomWord</c>, which the brink lane already owns,
-	/// and the book gets its lines through <c>KingdomChronicle</c>, which already writes both
-	/// registers &mdash; so a feast reaching the outsider register (lane 6) costs nothing but
-	/// recording the feast. No second announce-once ledger: the told-log ring is asked.
+	/// <b>The mesh condition</b> (BUILDING-CATALOGUE-BRIEF Addendum 13). Domain outcomes still
+	/// belong to the city rows that generated them. A bounded lifecycle sidecar holds only the
+	/// temporary authority required to stage exact resident bodies at an authored locus, resume
+	/// across a save, restore their ordinary schedules, and deliver the existing surfaces once.
+	/// It is not a second happening history or message channel: pushes go through
+	/// <c>KingdomWord</c>, the book goes through <c>KingdomChronicle</c>, and the told-log ring is
+	/// still the announce-once authority.
 	/// </para>
 	/// <para>
 	/// <b>The budget.</b> Recording is unbudgeted, because the chronicle and the ring are PULL
@@ -124,21 +125,25 @@ namespace ThousandAndFirst.Simulation.City
 		/// <returns>How many lines were pushed.</returns>
 		internal static int Reckon(KingdomSystem System, KingdomCityBook book, string label, bool here, long nowTick, int pushBudget)
 		{
-			if (!Enabled || System == null || !System.Founded || book == null || nowTick <= 0L)
+			if (System == null || !System.Founded || book == null || nowTick <= 0L)
 			{
 				return 0;
 			}
+			// Lifecycle recovery is independent of the option gate. Turning happenings off cannot
+			// strand a resident's post receipt or leave a completed rite half-published.
+			int pushed = KingdomPhysicalHappenings.Drive(System, book, label, here, nowTick,
+				pushBudget);
+			if (!Enabled) return pushed;
 			KingdomCityState state;
 			KingdomCityFault fault;
 			if (!book.TryRead(out state, out fault))
 			{
 				return 0;
 			}
-			int pushed = 0;
 			KingdomCityState opened = state;
 			state = Festivals(System, book, state, label, here, nowTick, ref pushed, pushBudget);
-			state = Funerals(System, state, label, here, nowTick, ref pushed, pushBudget);
-			state = Weddings(System, state, label, here, nowTick, ref pushed, pushBudget);
+			state = Funerals(System, book, state, label, here, nowTick, ref pushed, pushBudget);
+			state = Weddings(System, book, state, label, here, nowTick, ref pushed, pushBudget);
 			state = Breakdowns(System, state, label, here, nowTick, ref pushed, pushBudget);
 			// Publish only when the ring actually gained a line. Every transition here is
 			// copy-on-write (§1.3), so an unchanged book is the SAME reference — and a slice that
@@ -163,7 +168,7 @@ namespace ThousandAndFirst.Simulation.City
 		/// </summary>
 		public static void OnZoneActivated(KingdomSystem System, Zone Z)
 		{
-			if (!Enabled || System == null || !System.Founded || Z == null || The.Game == null
+			if (System == null || !System.Founded || Z == null || The.Game == null
 				|| System.ClaimedZones == null || !System.ClaimedZones.Contains(Z.ZoneID))
 			{
 				return;
@@ -188,8 +193,8 @@ namespace ThousandAndFirst.Simulation.City
 		/// Asks every registered happening source what has happened since it was last asked, and
 		/// surfaces the answers through the city's own surfaces.
 		/// <para>
-		/// Preconditions: a founded realm with a book. Side effects: advances
-		/// <c>KingdomCityBook.LastExtensionTick</c>, records to the chronicle, and pushes at most
+		/// Preconditions: a founded realm with a book. Side effects: advances each source's bounded
+		/// <c>KingdomCityBook.ExtensionHappeningCursors</c> receipt, records to the chronicle, and pushes at most
 		/// <paramref name="spare"/> spoken lines. Failure mode: a source that throws or runs long
 		/// stalls itself; the cursor still advances, because a source that cannot answer for a
 		/// window is not owed that window forever.
@@ -199,13 +204,6 @@ namespace ThousandAndFirst.Simulation.City
 		{
 			if (book == null || nowTick <= 0L || !Api.KingdomExtensions.AnyHappeningSource())
 			{
-				return 0;
-			}
-			if (book.LastExtensionTick <= 0L)
-			{
-				// Never asked. Stamp and keep nothing, exactly as the festival cursor does: an
-				// extension installed today did not miss last year.
-				book.LastExtensionTick = nowTick;
 				return 0;
 			}
 			KingdomCityState state;
@@ -219,10 +217,16 @@ namespace ThousandAndFirst.Simulation.City
 				KingdomLog.Log("city: the extension lane found the book unreadable (" + fault + ")");
 				return 0;
 			}
-			long since = book.LastExtensionTick;
+			// Retain the legacy aggregate clock for old diagnostics and snapshots. An absent v12
+			// cursor uses its previous value once to seed exact active-source receipts; after that it
+			// never authorizes a source window.
+			long legacySinceTick = book.LastExtensionTick;
 			book.LastExtensionTick = nowTick;
 			return Api.KingdomExtensions.Happenings(System,
-				KingdomReadingRules.Project(label, state), label, here, since, nowTick, (spare > 0) ? spare : 0);
+				KingdomReadingRules.Project(label, state, book.ExtensionModel), label, here,
+				book.ExtensionHappeningCursors,
+				delegate(string replacement) { book.ExtensionHappeningCursors = replacement; },
+				legacySinceTick, nowTick, (spare > 0) ? spare : 0);
 		}
 
 		/// <summary>Told lines the settlement pass may push about happenings. Two, and the
@@ -250,9 +254,12 @@ namespace ThousandAndFirst.Simulation.City
 				&& KingdomHappeningRules.TryNextFestival(cursor, out due, out anchor)
 				&& due <= nowTick)
 			{
+				KingdomCityState next;
+				if (!KeepFeast(System, book, state, label, here, due, anchor, ref pushed,
+					pushBudget, out next)) break;
+				state = next;
 				cursor = due;
 				kept++;
-				state = KeepFeast(System, state, label, here, due, anchor, ref pushed, pushBudget);
 			}
 			if (kept >= MaxFestivalScan)
 			{
@@ -269,35 +276,78 @@ namespace ThousandAndFirst.Simulation.City
 			return state;
 		}
 
-		private static KingdomCityState KeepFeast(KingdomSystem System, KingdomCityState state, string label, bool here, long tick, KingdomFestivalAnchor anchor, ref int pushed, int pushBudget)
+		private static bool KeepFeast(KingdomSystem System, KingdomCityBook book,
+			KingdomCityState state, string label, bool here, long tick, KingdomFestivalAnchor anchor,
+			ref int pushed, int pushBudget, out KingdomCityState next)
 		{
+			next = state;
+			if (HasTold(state, KingdomToldKind.Festival, tick, 0, 0, (int)anchor)) return true;
 			int mouths = OnTheRoll(state);
 			string dish = (System.DishName ?? "").Trim();
-			string telling = KingdomHappeningRules.FestivalTelling(anchor, KingdomWord.CityName(System, label), dish, mouths);
-			// RecordDisputed, not Record: a feast is exactly the kind of thing the roads hear a
-			// different version of, and the outsider register is what lane 6 asks us to feed. The
-			// clause is already third person, so no founder's voice gets into the rumour.
-			KingdomChronicle.RecordDisputed(System, telling, KingdomHappeningRules.AnchorName(anchor)
-				+ " was kept at " + KingdomWord.CityName(System, label) + ", and there was enough of it to talk about");
-			state = Tell(state, new KingdomHappening(KingdomHappeningKind.Festival, tick, 0, 0, null, (int)anchor));
-			if (pushed < pushBudget)
+			string place = KingdomWord.CityName(System, label);
+			string shownDish = KingdomPresentation.Rich(dish);
+			string shownPlace = KingdomPresentation.Rich(place);
+			string telling = KingdomHappeningRules.FestivalTelling(anchor, shownPlace,
+				shownDish, mouths);
+			// Former RecordDisputed semantics still reach outsider history through RecordOnce's
+			// canonical outsider sink; lifecycle identity now makes retries safe as well.
+			Zone zone = here ? The.Player?.CurrentZone : null;
+			KingdomPhysicalQueueResult result = KingdomPhysicalHappenings.QueueGeneric(System,
+				book, KingdomPhysicalHappeningKind.Feast, tick, 0, 0, (int)anchor, zone, null,
+				telling, DatedReport(tick, telling), "", "",
+				KingdomVoices.Say(System, VoiceOccasion.Feast,
+					KingdomHappeningRules.FestivalNotice(anchor, shownPlace, shownDish)), "",
+				KingdomLocusRules.PilgrimCause(KingdomHappeningRules.AnchorName(anchor), place,
+					dish) + "\n" + place, KingdomHappeningRules.AnchorName(anchor), CurrentTick(tick));
+			next = Refresh(book, state);
+			bool told = HasTold(next, KingdomToldKind.Festival, tick, 0, 0, (int)anchor);
+			if (told) KingdomLog.Log("happening: feast " + anchor + " at " + label
+				+ " physical=" + (result == KingdomPhysicalQueueResult.AttendedReady));
+			return told;
+		}
+
+		/// <summary>The typed history-to-body seam. A feast increments one city-owned loudness
+		/// counter; only the threshold transition freezes a cause. The Locus later renders that
+		/// exact opportunity at the rite ground.</summary>
+		internal static bool AccruePilgrim(KingdomCityBook book, string cause,
+			string place, long tick)
+		{
+			if (book == null || string.IsNullOrEmpty(cause) || string.IsNullOrWhiteSpace(place)
+				|| place.Length > KingdomLocusRules.MaxPilgrimPlaceChars || tick <= 0L) return false;
+			book.Normalize();
+			KingdomLocusRules.PilgrimState state =
+				(KingdomLocusRules.PilgrimState)book.PilgrimState;
+			KingdomLocusRules.PilgrimAccrual accrual =
+				KingdomLocusRules.AccruePilgrim(book.PilgrimLoudness, state);
+			book.PilgrimLoudness = accrual.Loudness;
+			if (!accrual.Minted) return true;
+			if (book.PilgrimSequence == int.MaxValue)
 			{
-				// In a settler's mouth, through the voice machinery that already wraps the
-				// settlement's announcements: the news is the same, and somebody who lives there
-				// says it.
-				KingdomWord.Ambient(System, label, here, KingdomVoices.Say(System, VoiceOccasion.Feast,
-					KingdomHappeningRules.FestivalNotice(anchor, KingdomWord.CityName(System, label), dish)));
-				pushed++;
+				// Fail closed rather than reuse a receipt identity. Retain two stories so one may
+				// mint if a future migration safely widens the counter.
+				book.PilgrimLoudness = KingdomLocusRules.PilgrimStoryThreshold - 1;
+				return true;
 			}
-			KingdomLog.Log("happening: feast " + anchor + " at " + label + " dish=" + (string.IsNullOrEmpty(dish) ? "-" : dish) + " mouths=" + mouths);
-			return state;
+			book.PilgrimSequence++;
+			book.PilgrimState = (int)KingdomLocusRules.PilgrimState.Waiting;
+			book.PilgrimCauseTick = tick;
+			book.PilgrimCause = cause;
+			book.PilgrimObjectId = "";
+			book.PilgrimName = "";
+			book.PilgrimPlaceName = place;
+			book.PilgrimGreeted = 0;
+			KingdomLog.Log("pilgrim: opportunity " + book.PilgrimSequence + " at "
+				+ book.SettlementId + " caused by " + cause);
+			return true;
 		}
 
 		// ==================================================================================
 		// Weddings — two rows that already share a roof
 		// ==================================================================================
 
-		private static KingdomCityState Weddings(KingdomSystem System, KingdomCityState state, string label, bool here, long nowTick, ref int pushed, int pushBudget)
+		private static KingdomCityState Weddings(KingdomSystem System, KingdomCityBook book,
+			KingdomCityState state, string label, bool here, long nowTick, ref int pushed,
+			int pushBudget)
 		{
 			int draws = 0;
 			int found = 0;
@@ -325,7 +375,9 @@ namespace ThousandAndFirst.Simulation.City
 					int first;
 					int second;
 					KingdomHappeningRules.PairOrder(a.ResidentId, b.ResidentId, out first, out second);
-					if (KingdomHappeningRules.AlreadyTold(state, KingdomHappeningKind.Wedding, first, second))
+					if (KingdomHappeningRules.AlreadyTold(state, KingdomHappeningKind.Wedding, first, second)
+						|| KingdomPhysicalHappenings.AlreadyCompleted(book,
+							KingdomPhysicalHappeningKind.Wedding, first, second, nowTick))
 					{
 						continue;
 					}
@@ -335,35 +387,40 @@ namespace ThousandAndFirst.Simulation.City
 					// marry the whole city inside a week. One roll a day per pair is the honest
 					// reading of "a chance per pair per reckoning", and it is still reload-stable:
 					// the same day and the same pair always draw the same answer.
-					if (!Drawn(System, WeddingStreamId, WeddingEventKind, WeddingDrawIndex,
+					if (!Drawn(book.SettlementId, WeddingStreamId, WeddingEventKind, WeddingDrawIndex,
 						unchecked((ulong)(((long)first << 20) ^ second ^ (KingdomAmbientRules.DayOrdinal(nowTick) << 40))),
 						KingdomHappeningRules.WeddingChancePercent))
 					{
 						continue;
 					}
 					found++;
-					state = Marry(System, state, label, here, nowTick, a, b, first, second, ref pushed, pushBudget);
+					state = Marry(System, book, state, label, here, nowTick, a, b, first,
+						second, ref pushed, pushBudget);
 				}
 			}
 			return state;
 		}
 
-		private static KingdomCityState Marry(KingdomSystem System, KingdomCityState state, string label, bool here, long nowTick, KingdomResidentRow a, KingdomResidentRow b, int first, int second, ref int pushed, int pushBudget)
+		private static KingdomCityState Marry(KingdomSystem System, KingdomCityBook book,
+			KingdomCityState state, string label, bool here, long nowTick, KingdomResidentRow a,
+			KingdomResidentRow b, int first, int second, ref int pushed, int pushBudget)
 		{
 			string one = Named(a.Name);
 			string other = Named(b.Name);
-			KingdomChronicle.Record(System, KingdomHappeningRules.WeddingTelling(one, other, KingdomWord.CityName(System, label)));
-			// Lower id first, always: the ring is what answers "have we already said this", and a
-			// pair stored one way round and asked the other way round would be a second wedding.
-			state = Tell(state, new KingdomHappening(KingdomHappeningKind.Wedding, nowTick, first, second, a.BoundZoneId, 0));
-			if (pushed < pushBudget)
-			{
-				KingdomWord.Ambient(System, label, here, KingdomVoices.Say(System, VoiceOccasion.Wedding,
-					KingdomHappeningRules.WeddingNotice(one, other)));
-				pushed++;
-			}
-			KingdomLog.Log("happening: wedding " + one + " + " + other + " at " + label);
-			return state;
+			string telling = KingdomHappeningRules.WeddingTelling(one, other,
+				KingdomPresentation.Rich(KingdomWord.CityName(System, label)));
+			Zone zone = here ? The.Player?.CurrentZone : null;
+			KingdomPhysicalQueueResult result = KingdomPhysicalHappenings.QueueGeneric(System,
+				book, KingdomPhysicalHappeningKind.Wedding, nowTick, first, second, 0, zone,
+				new[] { first, second }, telling, DatedReport(nowTick, telling), "", "",
+				KingdomVoices.Say(System, VoiceOccasion.Wedding,
+				KingdomHappeningRules.WeddingNotice(one, other)), "", "",
+				"shared-water bench", CurrentTick(nowTick));
+			KingdomCityState next = Refresh(book, state);
+			if (KingdomHappeningRules.AlreadyTold(next, KingdomHappeningKind.Wedding, first,
+				second)) KingdomLog.Log("happening: wedding " + one + " + " + other + " at "
+				+ label + " physical=" + (result == KingdomPhysicalQueueResult.AttendedReady));
+			return next;
 		}
 
 		// ==================================================================================
@@ -388,13 +445,19 @@ namespace ThousandAndFirst.Simulation.City
 				found++;
 				bool broken = !KingdomHappeningRules.IsMending(happening.Outcome);
 				string name = KingdomUpgrade.DisplayNameOf(row.DesignKey);
+				string shownName = KingdomPresentation.Rich(name);
 				state = Tell(state, happening);
 				if (broken)
 				{
-					KingdomChronicle.Record(System, KingdomHappeningRules.BreakdownTelling(name, KingdomWord.CityName(System, label), row.ConditionPercent));
+					KingdomChronicle.Record(System,
+						KingdomHappeningRules.BreakdownTelling(shownName,
+							KingdomPresentation.Rich(KingdomWord.CityName(System, label)),
+							row.ConditionPercent));
 					if (pushed < pushBudget)
 					{
-						KingdomWord.Ambient(System, label, here, KingdomHappeningRules.BreakdownNotice(name, row.ConditionPercent));
+						KingdomWord.Ambient(System, label, here,
+							KingdomHappeningRules.BreakdownNotice(shownName,
+								row.ConditionPercent));
 						pushed++;
 					}
 				}
@@ -404,7 +467,8 @@ namespace ThousandAndFirst.Simulation.City
 					// distance that their mill had stopped is owed the withdrawal from the same
 					// distance. Not a chronicle entry - the book records what happened, and a
 					// thing that stopped happening is news for the report.
-					KingdomWord.Unsay(System, label, here, KingdomHappeningRules.MendedNotice(name, row.ConditionPercent));
+					KingdomWord.Unsay(System, label, here,
+						KingdomHappeningRules.MendedNotice(shownName, row.ConditionPercent));
 					pushed++;
 				}
 				KingdomLog.Log("happening: " + (broken ? "breakdown " : "mended ") + name + " work=" + row.WorkId + " condition=" + row.ConditionPercent);
@@ -442,17 +506,8 @@ namespace ThousandAndFirst.Simulation.City
 		// ==================================================================================
 
 		/// <summary>
-		/// The rite clause the settlement's own death telling carries, and the told-log row that
-		/// goes with it.
-		/// <para>
-		/// <b>Called from <c>KingdomOffices.RecordDeath</c> and from nowhere else</b>, which is
-		/// what makes "one telling per death, never double" structural rather than guarded:
-		/// <c>RecordDeath</c> is already the single place a settler leaves the living roll, it is
-		/// already the single place the chronicle and the message queue hear about it, and this
-		/// adds a clause to that line instead of a line beside it. There is no second code path
-		/// that can speak about a death, because there is no second code path that knows about
-		/// one.
-		/// </para>
+		/// Compatibility prose helper. Physical publication is owned by
+		/// <see cref="OwnDeathTelling"/>; this method never publishes by itself.
 		/// </summary>
 		/// <param name="System">The realm.</param>
 		/// <param name="Name">The settler who died, as the roll carried them.</param>
@@ -468,11 +523,39 @@ namespace ThousandAndFirst.Simulation.City
 			}
 			// The office holder as the city knows them, epithet and all (lane 5): the names lane 5
 			// mints are the names the happenings use, which is the whole point of minting them.
-			string clause = KingdomHappeningRules.FuneralClause(
+			return KingdomHappeningRules.FuneralClause(
 				KingdomOfficeRules.ChooseTitle(System.SeatName),
-				KingdomNotables.HolderName(System));
-			RecordFuneral(System, Name, Cause, Z);
-			return clause;
+				KingdomPresentation.Rich(KingdomNotables.HolderName(System)));
+		}
+
+		/// <summary>
+		/// Takes ownership of one death's only semantic telling. A witnessed death stages living,
+		/// named mourners at a functional shrine. Missing bodies, ground, or shrine produce only a
+		/// dated report. The lifecycle sidecar owns chronicle/told/message dispositions in both cases.
+		/// </summary>
+		internal static bool OwnDeathTelling(KingdomSystem System, string Name, string Origin,
+			KingdomOfficeRules.DeathCause Cause, Zone Z, long Tick)
+		{
+			if (!Enabled || System == null || !System.Founded || string.IsNullOrEmpty(Name))
+				return false;
+			if (System.City == null || Tick <= 0L) return false;
+			KingdomCityState state;
+			KingdomCityFault fault;
+			if (!System.City.TryRead(out state, out fault))
+			{
+				KingdomLog.Log("happening: funeral book refused (" + fault + ") for " + Name);
+				return false;
+			}
+			int residentId = ResidentIdOf(state, Name);
+			if (residentId <= 0) return false;
+			if (KingdomHappeningRules.AlreadyTold(state, KingdomHappeningKind.Funeral,
+				residentId, 0)) return true;
+			if (KingdomPhysicalHappenings.AlreadyCompleted(System.City,
+				KingdomPhysicalHappeningKind.Funeral, residentId, 0, Tick)) return true;
+			QueueFuneral(System, System.City, state, System.SeatName, Tick, residentId, Name,
+				Origin, Cause, Z, out KingdomPhysicalQueueResult result);
+			return result != KingdomPhysicalQueueResult.Refused
+				&& result != KingdomPhysicalQueueResult.Busy;
 		}
 
 		/// <summary>
@@ -487,13 +570,15 @@ namespace ThousandAndFirst.Simulation.City
 		/// <para>
 		/// <b>It cannot double-tell.</b> Two independent guards have to both fail before a second
 		/// telling is possible: the told-log ring already carries a <c>Funeral</c> line for this
-		/// resident (written by <see cref="RecordFuneral"/> in the same call that announced the
-		/// death), and the dead roll already carries the name. The roll is the stronger of the two
+		/// resident (written by the physical/report-only funeral lifecycle that owns the death's
+		/// telling), and the dead roll already carries the name. The roll is the stronger of the two
 		/// because it is unbounded where the ring is thirty-two lines, and it is
 		/// <c>KingdomOffices</c>' own record rather than a copy of it.
 		/// </para>
 		/// </summary>
-		private static KingdomCityState Funerals(KingdomSystem System, KingdomCityState state, string label, bool here, long nowTick, ref int pushed, int pushBudget)
+		private static KingdomCityState Funerals(KingdomSystem System, KingdomCityBook book,
+			KingdomCityState state, string label, bool here, long nowTick, ref int pushed,
+			int pushBudget)
 		{
 			for (int i = 0; i < state.ResidentCount; i++)
 			{
@@ -502,8 +587,11 @@ namespace ThousandAndFirst.Simulation.City
 				{
 					continue;
 				}
-				if (KingdomHappeningRules.AlreadyTold(state, KingdomHappeningKind.Funeral, row.ResidentId, 0)
-					|| (System.DeadNames != null && System.DeadNames.Contains(row.Name)))
+				if (KingdomHappeningRules.AlreadyTold(state, KingdomHappeningKind.Funeral,
+					row.ResidentId, 0)
+					|| KingdomPhysicalHappenings.AlreadyCompleted(book,
+						KingdomPhysicalHappeningKind.Funeral, row.ResidentId, 0, nowTick)
+					|| System.DeadNames.Contains(row.Name))
 				{
 					continue;
 				}
@@ -511,19 +599,9 @@ namespace ThousandAndFirst.Simulation.City
 				KingdomOfficeRules.DeathCause cause = KingdomResidentRules.TryDeathCauseOrdinal(row.Cause, out ordinal)
 					? (KingdomOfficeRules.DeathCause)ordinal
 					: KingdomOfficeRules.DeathCause.Unknown;
-				string name = Named(row.Name);
-				string rite = KingdomHappeningRules.FuneralClause(
-					KingdomOfficeRules.ChooseTitle(System.SeatName),
-					KingdomNotables.HolderName(System));
-				KingdomChronicle.Record(System, KingdomOfficeRules.MourningChronicle(name, "", KingdomWord.CityName(System, label), cause) + rite);
-				state = Tell(state, new KingdomHappening(KingdomHappeningKind.Funeral, nowTick, row.ResidentId, 0, row.BoundZoneId, (int)cause));
-				if (pushed < pushBudget)
-				{
-					KingdomWord.Ambient(System, label, here, KingdomVoices.Say(System, VoiceOccasion.CitizenLost,
-						KingdomOfficeRules.MourningMessage(name, cause)));
-					pushed++;
-				}
-				KingdomLog.Log("happening: funeral " + name + " cause=" + cause + " at " + label + " (the roll never heard of this death)");
+				Zone zone = here ? The.Player?.CurrentZone : null;
+				state = QueueFuneral(System, book, state, label, nowTick, row.ResidentId,
+					Named(row.Name), "", cause, zone);
 				// One a pass, the same discipline KingdomOffices uses for cairns: a city that lost
 				// several people off-screen tells them one visit at a time rather than all at once.
 				return state;
@@ -531,30 +609,41 @@ namespace ThousandAndFirst.Simulation.City
 			return state;
 		}
 
-		private static void RecordFuneral(KingdomSystem System, string Name, KingdomOfficeRules.DeathCause Cause, Zone Z)
+		private static KingdomCityState QueueFuneral(KingdomSystem System, KingdomCityBook book,
+			KingdomCityState state, string label, long tick, int residentId, string name,
+			string origin, KingdomOfficeRules.DeathCause cause, Zone zone)
 		{
-			if (System.City == null || The.Game == null)
-			{
-				return;
-			}
-			KingdomCityState state;
-			KingdomCityFault fault;
-			if (!System.City.TryRead(out state, out fault))
-			{
-				return;
-			}
-			int residentId = ResidentIdOf(state, Name);
-			state = Tell(state, new KingdomHappening(
-				KingdomHappeningKind.Funeral,
-				The.Game.TimeTicks,
-				residentId,
-				0,
-				(Z == null) ? null : Z.ZoneID,
-				(int)Cause));
-			if (!System.City.TryPublish(state, out fault))
-			{
-				KingdomLog.Log("city: funeral refused (" + fault + "); the book is unchanged");
-			}
+			return QueueFuneral(System, book, state, label, tick, residentId, name, origin,
+				cause, zone, out KingdomPhysicalQueueResult ignored);
+		}
+
+		private static KingdomCityState QueueFuneral(KingdomSystem System, KingdomCityBook book,
+			KingdomCityState state, string label, long tick, int residentId, string name,
+			string origin, KingdomOfficeRules.DeathCause cause, Zone zone,
+			out KingdomPhysicalQueueResult result)
+		{
+			result = KingdomPhysicalQueueResult.Refused;
+			if (state == null || residentId <= 0 || string.IsNullOrEmpty(name)) return state;
+			if (KingdomHappeningRules.AlreadyTold(state, KingdomHappeningKind.Funeral,
+				residentId, 0)) return state;
+			string place = KingdomPresentation.Rich(KingdomWord.CityName(System, label));
+			string mourning = KingdomOfficeRules.MourningChronicle(name,
+				KingdomPresentation.Rich(origin), place, cause);
+			string rite = KingdomHappeningRules.FuneralClause(
+				KingdomOfficeRules.ChooseTitle(System.SeatName),
+				KingdomPresentation.Rich(KingdomNotables.HolderName(System)));
+			result = KingdomPhysicalHappenings.QueueGeneric(System,
+				book, KingdomPhysicalHappeningKind.Funeral, tick, residentId, 0, (int)cause,
+				zone, null, mourning + rite, DatedReport(tick, mourning), "", "",
+				KingdomVoices.Say(System, VoiceOccasion.CitizenLost,
+					"{{r|" + KingdomOfficeRules.MourningMessage(name, cause) + "}}"), "", "",
+				"water-speaking shrine", CurrentTick(tick));
+			KingdomCityState next = Refresh(book, state);
+			if (KingdomHappeningRules.AlreadyTold(next, KingdomHappeningKind.Funeral,
+				residentId, 0)) KingdomLog.Log("happening: funeral " + name + " cause=" + cause
+				+ " at " + label + " physical="
+				+ (result == KingdomPhysicalQueueResult.AttendedReady));
+			return next;
 		}
 
 		// ==================================================================================
@@ -651,6 +740,37 @@ namespace ThousandAndFirst.Simulation.City
 		// Shared plumbing
 		// ==================================================================================
 
+		private static KingdomCityState Refresh(KingdomCityBook book,
+			KingdomCityState fallback)
+		{
+			return book != null && book.TryRead(out KingdomCityState current,
+				out KingdomCityFault ignored) ? current : fallback;
+		}
+
+		private static bool HasTold(KingdomCityState state, KingdomToldKind kind, long tick,
+			int subjectA, int subjectB, int outcome)
+		{
+			if (state == null) return false;
+			for (int i = 0; i < state.ToldCount; i++)
+				if (state.TryTold(i, out KingdomToldRow row) && row.Kind == kind
+					&& row.Tick == tick && row.SubjectA == subjectA && row.SubjectB == subjectB
+					&& row.Outcome == outcome) return true;
+			return false;
+		}
+
+		private static string DatedReport(long tick, string line)
+		{
+			long safe = tick < 0L ? 0L : tick;
+			return "a dated report for the " + Calendar.GetDay(safe) + " of "
+				+ Calendar.GetMonth(safe) + ", " + Calendar.GetYear(safe) + " AR said that "
+				+ line;
+		}
+
+		private static long CurrentTick(long fallback)
+		{
+			return The.Game != null && The.Game.TimeTicks > 0L ? The.Game.TimeTicks : fallback;
+		}
+
 		/// <summary>
 		/// Writes a brownout into the city's ring.
 		/// <para>
@@ -700,12 +820,14 @@ namespace ThousandAndFirst.Simulation.City
 		/// One draw, keyed so a reload never re-rolls a happening the founder has already read
 		/// about. LIVING-CITY-ARCHITECTURE &sect;2.4.
 		/// </summary>
-		private static bool Drawn(KingdomSystem System, string stream, uint kind, uint index, ulong ordinal, int chancePercent)
+		private static bool Drawn(string settlementId, string stream, uint kind, uint index,
+			ulong ordinal, int chancePercent)
 		{
 			SemanticEventKey key;
 			KernelFaultCode fault;
 			ulong value;
-			if (SemanticEventKey.TryCreate(HappeningRulesVersion, KingdomChronicle.SettlementId(System), stream, kind, ordinal, out key, out fault)
+			if (SemanticEventKey.TryCreate(HappeningRulesVersion, settlementId, stream, kind,
+				ordinal, out key, out fault)
 				&& CounterRandom.TryDrawBelow(HappeningSeed, key, index, 100uL, out value, out fault))
 			{
 				return (int)value < chancePercent;
@@ -747,7 +869,7 @@ namespace ThousandAndFirst.Simulation.City
 
 		private static string Named(string name)
 		{
-			return string.IsNullOrEmpty(name) ? "a settler" : name;
+			return string.IsNullOrEmpty(name) ? "a settler" : KingdomPresentation.Rich(name);
 		}
 	}
 }

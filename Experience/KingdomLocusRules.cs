@@ -11,6 +11,139 @@ namespace ThousandAndFirst
 	/// </summary>
 	public static class KingdomLocusRules
 	{
+		/// <summary>Durable state of one history-caused pilgrim opportunity. The opportunity is
+		/// carried by the city book; the body is only its attended rendering.</summary>
+		public enum PilgrimState
+		{
+			None = 0,
+			Waiting = 1,
+			Standing = 2
+		}
+
+		/// <summary>Typed result of adding one outsider-worthy city story.</summary>
+		public readonly struct PilgrimAccrual
+		{
+			public readonly int Loudness;
+			public readonly PilgrimState State;
+			public readonly bool Minted;
+
+			public PilgrimAccrual(int Loudness, PilgrimState State, bool Minted)
+			{
+				this.Loudness = Loudness;
+				this.State = State;
+				this.Minted = Minted;
+			}
+		}
+
+		/// <summary>How many disputed, city-owned stories make the road loud enough to send one
+		/// pilgrim. Three makes the visit earned without turning every calendar feast into traffic.</summary>
+		public const int PilgrimStoryThreshold = 3;
+
+		/// <summary>Bound on the exact cause frozen into the city book and the pilgrim body.</summary>
+		public const int MaxPilgrimCauseChars = 384;
+
+		/// <summary>Bound on a generated display identity retained for receipt recovery.</summary>
+		public const int MaxPilgrimNameChars = 128;
+
+		/// <summary>Bound on the city display name frozen with the caused visit.</summary>
+		public const int MaxPilgrimPlaceChars = 256;
+
+		/// <summary>World time for a road story to become a body at the heart.</summary>
+		public const long PilgrimTravelTicks = KingdomRules.TicksPerDay;
+
+		/// <summary>
+		/// Adds one typed qualifying story. A live opportunity is never overwritten: later stories
+		/// can make the road loud again only after the exact standing pilgrim has resolved.
+		/// </summary>
+		public static PilgrimAccrual AccruePilgrim(int Loudness, PilgrimState State)
+		{
+			int loudness = Loudness < 0 ? 0 : (Loudness >= PilgrimStoryThreshold
+				? PilgrimStoryThreshold - 1 : Loudness);
+			if (State == PilgrimState.Waiting || State == PilgrimState.Standing)
+			{
+				return new PilgrimAccrual(loudness, State, false);
+			}
+			loudness++;
+			if (loudness < PilgrimStoryThreshold)
+			{
+				return new PilgrimAccrual(loudness, PilgrimState.None, false);
+			}
+			return new PilgrimAccrual(0, PilgrimState.Waiting, true);
+		}
+
+		public static bool KnownPilgrimState(int State)
+		{
+			return State >= (int)PilgrimState.None && State <= (int)PilgrimState.Standing;
+		}
+
+		/// <summary>Exact arrival and patience window priced from the frozen cause tick.</summary>
+		public static bool TryPilgrimWindow(long CauseTick, out long ArrivalTick,
+			out long DepartTick)
+		{
+			ArrivalTick = 0L;
+			DepartTick = 0L;
+			if (CauseTick <= 0L || CauseTick > long.MaxValue - PilgrimTravelTicks) return false;
+			ArrivalTick = CauseTick + PilgrimTravelTicks;
+			if (ArrivalTick > long.MaxValue - GuestPatienceTicks)
+			{
+				ArrivalTick = 0L;
+				return false;
+			}
+			DepartTick = ArrivalTick + GuestPatienceTicks;
+			return true;
+		}
+
+		/// <summary>Freezes a bounded plain-language cause. Null means the event cannot authorize a
+		/// pilgrim opportunity.</summary>
+		public static string PilgrimCause(string FeastName, string SettlementName, string DishName)
+		{
+			string feast = CleanCausePart(FeastName);
+			string settlement = CleanCausePart(SettlementName);
+			string dish = CleanCausePart(DishName);
+			if (string.IsNullOrEmpty(feast) || string.IsNullOrEmpty(settlement)) return null;
+			string cause = "the " + feast + " feast kept at " + settlement;
+			if (!string.IsNullOrEmpty(dish)) cause += " over " + dish;
+			return cause.Length <= MaxPilgrimCauseChars
+				? cause : cause.Substring(0, MaxPilgrimCauseChars).TrimEnd();
+		}
+
+		public static string PilgrimGreeting(string Cause)
+		{
+			return "Live and drink. I came because the roads remember "
+				+ (CleanCausePart(Cause) ?? "what was done here") + ".";
+		}
+
+		public static string PilgrimChronicleLine(string Name, string SettlementName,
+			string Cause, bool Greeted)
+		{
+			string name = CleanCausePart(Name) ?? "a pilgrim";
+			string settlement = CleanCausePart(SettlementName) ?? "the settlement";
+			string cause = CleanCausePart(Cause) ?? "a story told on the road";
+			return Greeted
+				? name + " came to the heart of " + settlement + " because of " + cause
+					+ ", was given water, and carried the story onward"
+				: name + " came to the heart of " + settlement + " because of " + cause
+					+ ", waited there, and went on unmet";
+		}
+
+		public static string PilgrimLedgerNote(string Name, string Cause, int DaysAgo)
+		{
+			string when = DaysAgo <= 0 ? "today" : (DaysAgo == 1
+				? "a day before you saw it" : DaysAgo + " days before you saw it");
+			return "{{K|" + (CleanCausePart(Name) ?? "A pilgrim") + " came to the heart because of "
+				+ (CleanCausePart(Cause) ?? "a story told on the road") + ", waited, and went on "
+				+ when + ". Nothing was lost.}}";
+		}
+
+		private static string CleanCausePart(string Value)
+		{
+			if (string.IsNullOrWhiteSpace(Value)) return null;
+			string value = Value.Trim().Replace('\r', ' ').Replace('\n', ' ');
+			while (value.IndexOf("  ", System.StringComparison.Ordinal) >= 0)
+				value = value.Replace("  ", " ");
+			return value.Length == 0 ? null : value;
+		}
+
 		/// <summary>
 		/// What the keeper is minding today. Read worst-first by <see cref="ClassifyMood"/>: a
 		/// settlement can be thirsty and growing in the same breath, and the keeper leads with

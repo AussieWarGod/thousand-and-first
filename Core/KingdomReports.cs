@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using ThousandAndFirst.Simulation.City;
 using XRL;
 using XRL.World;
 
@@ -71,7 +72,7 @@ namespace ThousandAndFirst
 			bool currentClaimed = currentZone != null && System.ClaimedZones.Contains(currentZone.ZoneID);
 			long now = The.Game.TimeTicks;
 			StringBuilder stringBuilder = new StringBuilder();
-			stringBuilder.Append("{{C|").Append(System.SeatName).Append("}}").Append(KingdomSettlement.VocationSuffix(System.Vocation)).Append(", ")
+			stringBuilder.Append("{{C|").Append(KingdomPresentation.Rich(System.SeatName)).Append("}}").Append(KingdomSettlement.VocationSuffix(System.Vocation)).Append(", ")
 				.Append(KingdomCharterMenuRules.FoundedWhen(System.FoundedTick, now,
 					KingdomRules.TicksPerDay))
 				.Append("\nStage: ")
@@ -90,7 +91,7 @@ namespace ThousandAndFirst
 			// standing in one should be told the other is still out there, keeping itself.
 			if (System.Away != null)
 			{
-				stringBuilder.Append("\n{{K|").Append(System.KingdomDisplayName).Append(" also holds ").Append(System.Away.SettlementName)
+				stringBuilder.Append("\n{{K|").Append(KingdomPresentation.Rich(System.KingdomDisplayName)).Append(" also holds ").Append(KingdomPresentation.Rich(System.Away.SettlementName))
 					.Append(KingdomSettlement.VocationSuffix(System.Away.Vocation)).Append(", which keeps itself until you stand in it.}}");
 			}
 			if (System.OriginCounts.Count > 0)
@@ -98,7 +99,7 @@ namespace ThousandAndFirst
 				stringBuilder.Append("\nPeoples:");
 				foreach (System.Collections.Generic.KeyValuePair<string, int> originCount in System.OriginCounts)
 				{
-					stringBuilder.Append(" ").Append(originCount.Value).Append(" of ").Append(originCount.Key).Append(";");
+					stringBuilder.Append(" ").Append(originCount.Value).Append(" of ").Append(KingdomPresentation.Rich(originCount.Key)).Append(";");
 				}
 			}
 			// Rock the realm poured water on and never opened reads as a claim like any other, so
@@ -174,8 +175,8 @@ namespace ThousandAndFirst
 			if (book.Manifest != null)
 				text.Append("; water manifest ").Append(ManifestStatus(book.Manifest.Status))
 					.Append(" with ").Append(book.Manifest.EscrowDrams).Append(" drams from ")
-					.Append(book.Manifest.OriginName ?? "an unknown city").Append(" to ")
-					.Append(book.Manifest.DestinationName ?? "an unknown city");
+					.Append(KingdomPresentation.Rich(book.Manifest.OriginName ?? "an unknown city")).Append(" to ")
+					.Append(KingdomPresentation.Rich(book.Manifest.DestinationName ?? "an unknown city"));
 			if (book.OpenOperation != null)
 				text.Append("; {{W|one trade change is still being settled}}");
 			if (book.RetainedEscrowDrams > 0)
@@ -238,8 +239,8 @@ namespace ThousandAndFirst
 			if (book.Manifest != null)
 				text.Append("; manifest ").Append(book.Manifest.Status).Append(" ")
 					.Append(book.Manifest.EscrowDrams).Append(" drams ")
-					.Append(book.Manifest.OriginName ?? "?").Append("→")
-					.Append(book.Manifest.DestinationName ?? "?");
+					.Append(KingdomPresentation.Rich(book.Manifest.OriginName ?? "?")).Append("→")
+					.Append(KingdomPresentation.Rich(book.Manifest.DestinationName ?? "?"));
 			if (book.OpenOperation != null)
 				text.Append("; receipt ").Append(book.OpenOperation.Sequence).Append("/")
 					.Append(book.OpenOperation.Phase);
@@ -275,7 +276,7 @@ namespace ThousandAndFirst
 		{
 			if (Text == null || string.IsNullOrEmpty(Value) || Limit <= 0) return;
 			int count = Math.Min(Value.Length, Limit);
-			Text.Append(Value, 0, count);
+			Text.Append(KingdomPresentation.Rich(Value.Substring(0, count)));
 			if (count < Value.Length) Text.Append("...");
 		}
 
@@ -349,29 +350,31 @@ namespace ThousandAndFirst
 		public static string Roll(KingdomSystem System, int Limit = 30)
 		{
 			StringBuilder stringBuilder = new StringBuilder();
-			stringBuilder.Append("{{C|The roll of ").Append(System.SeatName).Append("}}\n");
-			if (System.RosterNames.Count == 0)
+			stringBuilder.Append("{{C|The roll of ").Append(KingdomPresentation.Rich(System.SeatName)).Append("}}\n");
+			KingdomCityState state;
+			KingdomResidentRollProjection roll;
+			if (!KingdomResidents.TryRoll(System, out state, out roll) || roll.Population == 0)
 			{
 				stringBuilder.Append("\nNo one has come yet. Water and a bed will change that.");
 				return stringBuilder.ToString();
 			}
 			Zone currentZone = The.Player?.CurrentZone;
 			bool hereIsOurs = currentZone != null && System.ClaimedZones.Contains(currentZone.ZoneID);
-			int start = (System.RosterNames.Count > Limit) ? (System.RosterNames.Count - Limit) : 0;
-			for (int i = start; i < System.RosterNames.Count; i++)
+			int start = (roll.Names.Count > Limit) ? (roll.Names.Count - Limit) : 0;
+			for (int i = start; i < roll.Names.Count; i++)
 			{
-				stringBuilder.Append("\n").Append(System.RosterNames[i]);
-				if (i < System.RosterOrigins.Count)
+				stringBuilder.Append("\n").Append(KingdomPresentation.Rich(roll.Names[i]));
+				if (i < roll.Origins.Count)
 				{
-					stringBuilder.Append(", of ").Append(System.RosterOrigins[i]);
+					stringBuilder.Append(", of ").Append(KingdomPresentation.Rich(roll.Origins[i]));
 				}
-				if (i < System.RosterArrived.Count)
+				if (i < roll.Arrived.Count)
 				{
-					stringBuilder.Append(" {{K|(came the ").Append(System.RosterArrived[i]).Append(")}}");
+					stringBuilder.Append(" {{K|(came the ").Append(roll.Arrived[i]).Append(")}}");
 				}
 				if (hereIsOurs)
 				{
-					stringBuilder.Append(KingdomLodging.RollLine(currentZone, System.RosterNames[i]));
+					stringBuilder.Append(KingdomLodging.RollLine(currentZone, roll.Names[i]));
 				}
 			}
 			if (hereIsOurs)
@@ -386,7 +389,8 @@ namespace ThousandAndFirst
 					}
 				}
 			}
-			stringBuilder.Append("\n\n{{K|").Append(System.RosterNames.Count).Append(" named; ").Append(System.Population).Append(" living in the settlement.}}");
+			stringBuilder.Append("\n\n{{K|").Append(roll.Names.Count).Append(" named; ")
+				.Append(roll.Population).Append(" living in the settlement.}}");
 			stringBuilder.Append(KingdomGuestbook.RollAppendix(System));
 			return stringBuilder.ToString();
 		}
@@ -394,7 +398,7 @@ namespace ThousandAndFirst
 		public static string Standings(KingdomSystem System, int Limit = 18)
 		{
 			StringBuilder stringBuilder = new StringBuilder();
-			stringBuilder.Append("{{C|Standings of ").Append(System.KingdomDisplayName).Append("}}\n");
+			stringBuilder.Append("{{C|Standings of ").Append(KingdomPresentation.Rich(System.KingdomDisplayName)).Append("}}\n");
 			int shown = 0;
 			foreach (Faction faction in Factions.Loop())
 			{
@@ -406,7 +410,7 @@ namespace ThousandAndFirst
 				if (standing != 0)
 				{
 					faction.FactionFeeling.TryGetValue(System.KingdomFactionName, out var feeling);
-					stringBuilder.Append("\n").Append(faction.DisplayName).Append(": standing ")
+					stringBuilder.Append("\n").Append(KingdomPresentation.Rich(faction.DisplayName)).Append(": standing ")
 						.Append(standing)
 						.Append(", their feeling toward us ")
 						.Append(feeling);
@@ -429,7 +433,7 @@ namespace ThousandAndFirst
 		{
 			System.Collections.Generic.List<string> entries = Outsider ? System.OutsiderEntries : System.ChronicleEntries;
 			StringBuilder stringBuilder = new StringBuilder();
-			stringBuilder.Append(Outsider ? "{{r|As others tell it}}" : ("{{C|The Chronicle of " + System.KingdomDisplayName + "}}")).Append("\n");
+			stringBuilder.Append(Outsider ? "{{r|As others tell it}}" : ("{{C|The Chronicle of " + KingdomPresentation.Rich(System.KingdomDisplayName) + "}}")).Append("\n");
 			if (entries.Count == 0)
 			{
 				stringBuilder.Append("\nNothing is written yet.");

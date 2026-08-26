@@ -2,11 +2,12 @@
 
 ## Current release boundary
 
-Current runtime asset trees contain no mod-authored bitmap sprites. Every `Tile=` value in shipped
-XML is a path to art supplied by Caves of Qud; the referenced game art is not copied into this
-repository or Workshop package. Objects may instead use an intentional text glyph. A separately
-reviewed root `preview.png` may enter a release only as Workshop presentation media; XML may never
-reference it and it is not a runtime sprite-policy exception.
+Current runtime asset trees contain zero project-authored bitmap sprites: all 55 shipped `Tile=`
+paths presently resolve to art supplied by Caves of Qud, and the game art is not copied into this
+repository or Workshop package. Objects may instead use an intentional text glyph. This is the
+current inventory, not a permanent ban. A project-authored runtime sprite may ship only through
+the allowlisted provenance contract below. A separately reviewed root `preview.png` is Workshop
+presentation media; XML may never reference it.
 
 Retired custom sprite drafts and their generated PNGs are absent from current source/runtime
 inventory. Older private or Git history may contain drafts; history is not provenance for a new
@@ -17,26 +18,27 @@ Verify current boundary from repository root:
 ```bash
 TAF_QUD_BASE="/path/to/CoQ_Data/StreamingAssets/Base" \
   python3 Art/check_wiring.py
-./Tools/stage.sh list | grep -Ei '\.(png|bmp|gif|jpe?g|webp|tga|tiff?|dds)$' \
-  | grep -vx 'preview.png' && exit 1 || true
 ```
 
-`Art/check_wiring.py` proves there are no bundled runtime rasters or local tile paths and that
-each referenced vanilla path is named by installed base-game XML. It reads local installation
-metadata; it does not extract or redistribute art.
+`Art/check_wiring.py` proves every local tile/file/source/hash/provenance row is exact and wired in
+both directions, and that each referenced vanilla path is named by installed base-game XML. It
+reads local installation metadata; it does not extract or redistribute art. Workshop packaging
+independently permits only `preview.png` plus exact allowlisted runtime paths.
 
 ## Contributions
 
-Current policy accepts:
+Policy accepts:
 
 - a verified vanilla `Tile=` path already supplied by Qud, referenced as text only; or
-- an intentional `RenderString`/color treatment consistent with vanilla behavior.
+- an intentional `RenderString`/color treatment consistent with vanilla behavior; or
+- an original project-owned raster whose need, provenance, editable source, exact bytes, fallback,
+  wiring, native readability, and rights have all been reviewed.
 
 Do not submit copied, traced, recolored, edited, upscaled, or extracted Qud art. Do not submit
-third-party art without an explicit compatible license and source record. Do not submit
-AI-generated or generative-image-assisted raster art. Current release policy rejects bundled
-runtime bitmap sprites even when independently authored; propose any policy change before making
-assets.
+third-party art without an explicit compatible license and source record. Generative-image-assisted
+work is not silently represented as hand-drawn: disclose the tool and complete transformation in
+`method`, retain a lawful editable source, and require pixel-level human revision plus independent
+native review. A prompt is never provenance or quality evidence.
 
 When adding or changing a vanilla reference, record in the pull request:
 
@@ -53,16 +55,26 @@ Workshop preview is the sole release exception: it may be a purpose-captured scr
 mod running in Qud, with the capture/build/save/crop record below. It may not be repurposed as a
 sprite or general source asset.
 
-## Future original assets
+## Original runtime asset manifest
 
-If maintainers first approve changing the no-bitmap policy, each original asset must have a
-reviewable record naming creator, creation date, tools, editable source, licenses for every input,
-reference material, transformations, output path, and contributor's rights attestation. Generated
-output must be reproducible where practical. “Made by contributor” or a prompt alone is not a
-provenance record.
+`Art/runtime-assets.json` is schema 1. Its `assets` array is empty while the vanilla set remains
+sufficient. Each future row has exactly these nonempty string fields:
 
-No original or third-party asset may land until licensing, source, runtime wiring, dimensions,
-palette, contrast, and live in-game readability are reviewed independently.
+| Field | Contract |
+|---|---|
+| `tile` | Exact staged XML path under `ThousandAndFirst/`. |
+| `path` | Exact matching repository path under `Textures/`; no alternate mapping. |
+| `sha256` | Lowercase SHA-256 of the shipped raster. |
+| `creator`, `created`, `license` | Rights holder, ISO date, and compatible license. |
+| `source` | Existing non-runtime editable source path in the repository. |
+| `method` | Tools, lawful inputs/references, and all transformations; disclose assistance. |
+| `fallback` | Intentional one-byte Qud text glyph used when tile rendering is unavailable. |
+| `review` | Human reviewer, native game/build, tile/text scales, contrast/palette/function verdict, and evidence reference. |
+
+Every manifest asset must be referenced by staged XML; every raster under `Textures/` must be in
+the manifest; names are case-collision-safe; file and editable source must be regular non-links;
+and the hash must match. No original or third-party asset may land until licensing, source,
+dimensions, palette, contrast, function, and live in-game readability are independently reviewed.
 
 ## Workshop preview
 

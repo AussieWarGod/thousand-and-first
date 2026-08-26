@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Text;
 
 namespace ThousandAndFirst
 {
@@ -121,7 +122,14 @@ namespace ThousandAndFirst
 		/// &mdash; which are two different sentences and one verdict, because the ACT the founder
 		/// is being pointed at is the same one either way.
 		/// </summary>
-		RefusedUncrowned = 12
+		RefusedUncrowned = 12,
+
+		/// <summary>
+		/// The design belongs to a covenant whose standing threshold the realm has not reached.
+		/// Checked before the ground and knowledge gates because no choice of plot can lift it.
+		/// <see cref="ZoningJudgement.Detail"/> carries the faction key.
+		/// </summary>
+		RefusedCovenantStanding = 13
 	}
 
 	/// <summary>
@@ -418,12 +426,35 @@ namespace ThousandAndFirst
 	}
 
 	/// <summary>
+	/// One building-side covenant gate. Both values are authored together; the faction key is
+	/// resolved against Qud's live registry by the engine-coupled loader, while this value and its
+	/// parser remain deterministic and testable without the engine.
+	/// </summary>
+	public readonly struct CovenantGate
+	{
+		public readonly string Faction;
+
+		public readonly int MinStanding;
+
+		public CovenantGate(string Faction, int MinStanding)
+		{
+			this.Faction = Faction;
+			this.MinStanding = MinStanding;
+		}
+
+		public bool IsOpen => string.IsNullOrEmpty(Faction);
+
+		public static CovenantGate Open => default(CovenantGate);
+	}
+
+	/// <summary>
 	/// Engine-free rules for what a founder may commission and where. Four gates sat on top of
 	/// the city style and growth stage <c>KingdomRules</c> already applies: the district the
 	/// ground carries, how much ground the realm holds, which designs the keepers have learned,
 	/// and how far the settlement's own craft has come. Addendum 16 added the three creed gates
 	/// and Addendum 15 added <c>Strata</c> &mdash; which set of the catalogue a design lives in,
-	/// and which strata it may stand in besides.
+	/// and which strata it may stand in besides. The catalogue brief's covenant axis is the live
+	/// kingdom-standing gate parsed at the head of this class and judged before this ground stack.
 	/// <para>
 	/// Every one of them is an OPTIONAL attribute on a <c>&lt;building&gt;</c> entry and an absent
 	/// attribute gates nothing, which is what keeps every entry written before this existed
@@ -445,6 +476,81 @@ namespace ThousandAndFirst
 	/// </summary>
 	public static class KingdomZoningRules
 	{
+		/// <summary>Hard bounds for one city's permanent keeper-knowledge heap. The roster is a
+		/// save string rather than a row reference in reality, so both its decoded shape and both
+		/// common encodings are bounded. These caps are also priced by KingdomCityMemoryRules.</summary>
+		public const int MaxRosterRows = 512;
+		public const int MaxRosterKeyChars = 512;
+		public const int MaxRosterKeyUtf8Bytes = 1024;
+		public const int MaxRosterEncodedChars = 8192;
+		public const int MaxRosterEncodedUtf8Bytes = 16384;
+		/// <summary>Accepted authored range on Qud's ordinary reputation scale. Runtime standing
+		/// may move outside it; catalogue thresholds may not, because an unreachable typo must fail
+		/// during load rather than masquerade as a permanent gate.</summary>
+		public const int CovenantStandingFloor = -1000;
+
+		public const int CovenantStandingCeiling = 1000;
+
+		public const int CovenantFactionMaxLength = 128;
+
+		/// <summary>
+		/// Parses the paired <c>Covenant</c>/<c>MinStanding</c> building attributes. Both blank is
+		/// the open legacy behaviour; exactly one, a control character, an oversized faction key,
+		/// or an out-of-scale threshold is malformed and fails loudly.
+		/// </summary>
+		public static bool TryParseCovenantAttributes(string Key, string Covenant, string MinStanding,
+			out CovenantGate Gate, out string Error)
+		{
+			Gate = CovenantGate.Open;
+			Error = null;
+			string faction = string.IsNullOrWhiteSpace(Covenant) ? null : Covenant.Trim();
+			string standing = string.IsNullOrWhiteSpace(MinStanding) ? null : MinStanding.Trim();
+			string named = string.IsNullOrWhiteSpace(Key) ? "building" : ("building " + Key);
+			if (faction == null && standing == null)
+			{
+				return true;
+			}
+			if (faction == null || standing == null)
+			{
+				Error = named + " must name Covenant and MinStanding together";
+				return false;
+			}
+			if (faction.Length > CovenantFactionMaxLength)
+			{
+				Error = named + " has an overlong Covenant faction key";
+				return false;
+			}
+			for (int i = 0; i < faction.Length; i++)
+			{
+				if (char.IsControl(faction[i]))
+				{
+					Error = named + " has a control character in Covenant";
+					return false;
+				}
+			}
+			if (!int.TryParse(standing, out int threshold)
+				|| threshold < CovenantStandingFloor || threshold > CovenantStandingCeiling)
+			{
+				Error = named + " has a bad MinStanding (expected " + CovenantStandingFloor
+					+ " to " + CovenantStandingCeiling + ")";
+				return false;
+			}
+			Gate = new CovenantGate(faction, threshold);
+			return true;
+		}
+
+		/// <summary>Judges one already-validated covenant gate against the realm's current
+		/// standing. Open gates always permit; a refusal names both the faction and threshold in its
+		/// short menu note.</summary>
+		public static ZoningJudgement JudgeCovenant(CovenantGate Gate, int Standing)
+		{
+			if (Gate.IsOpen || Standing >= Gate.MinStanding)
+			{
+				return ZoningJudgement.Allowed;
+			}
+			return new ZoningJudgement(ZoningVerdict.RefusedCovenantStanding, Gate.Faction,
+				"wants " + Gate.MinStanding + " standing with " + Gate.Faction);
+		}
 		/// <summary>Token an author writes in a <c>Districts</c> list to mean "ground that has
 		/// been given no district", so a design can name both a district and open ground.</summary>
 		public const string UndistrictedToken = "none";
@@ -513,13 +619,12 @@ namespace ThousandAndFirst
 		/// <see cref="KindOrigin"/>: the holding lapses when they leave and returns with them.</summary>
 		public const string KindSavant = "savant";
 
-		/// <summary>What a people KNOWS (Addendum 17). Declared here so a node or a third party's
-		/// design can gate on it; nothing in this build mints one yet, and an unminted kind is a
-		/// gate that stays shut rather than a load error.</summary>
+		/// <summary>What a people KNOWS (Addendum 17). Projected live from resident bodies'
+		/// vanilla culture, so nodes and third-party designs share the ordinary roster gate.</summary>
 		public const string KindCulture = "culture";
 
-		/// <summary>What a body IS (Addendum 17). Declared and unminted, as
-		/// <see cref="KindCulture"/> is.</summary>
+		/// <summary>What a body IS (Addendum 17). Projected live from vanilla species and kept
+		/// separate from culture because anatomy and practice are not synonyms.</summary>
 		public const string KindSpecies = "species";
 
 		/// <summary>
@@ -1031,6 +1136,8 @@ namespace ThousandAndFirst
 		/// <param name="Name">Blueprint name, origin, or trade. Case is folded away.</param>
 		public static string ComposeKey(string Kind, string Name)
 		{
+			if ((Kind != null && Kind.Length > MaxRosterKeyChars)
+				|| (Name != null && Name.Length > MaxRosterKeyChars)) return null;
 			string kind = Fold(Kind);
 			string name = Fold(Name);
 			if (kind == null || name == null)
@@ -1041,7 +1148,8 @@ namespace ThousandAndFirst
 			{
 				return null;
 			}
-			return kind + KindSeparator + name;
+			string key = kind + KindSeparator + name;
+			return ValidRosterKey(key) ? key : null;
 		}
 
 		/// <summary>The kind half of a roster key, or null when the key carries no kind.</summary>
@@ -1070,46 +1178,95 @@ namespace ThousandAndFirst
 
 		/// <summary>
 		/// Reads the settlement's stored roster. Order is preserved (oldest learning first, which
-		/// is how the keepers' screen reads), duplicates and unusable keys are dropped, and a
-		/// store that is null, empty, or complete nonsense yields an empty roster rather than
-		/// throwing &mdash; an unreadable roster must never be able to cost a founder a building.
+		/// is how the keepers' screen reads), duplicates and blank rows are dropped, and a store
+		/// that is null, empty, malformed, or outside any hard bound yields an empty roster rather
+		/// than throwing or returning a misleading partial prefix &mdash; an unreadable roster must
+		/// never be able to cost a founder a building.
 		/// </summary>
 		public static List<string> DecodeRoster(string Encoded)
 		{
-			List<string> roster = new List<string>();
-			if (string.IsNullOrEmpty(Encoded))
-			{
-				return roster;
-			}
+			List<string> roster;
+			if (!TryDecodeRoster(Encoded, out roster)) roster = new List<string>();
+			return roster;
+		}
+
+		/// <summary>Total bounded decoder. False means the aggregate is outside the permanent
+		/// knowledge contract; no partial prefix is returned as if it were the city.</summary>
+		public static bool TryDecodeRoster(string Encoded, out List<string> Roster)
+		{
+			Roster = new List<string>();
+			if (string.IsNullOrEmpty(Encoded)) return true;
+			if (Encoded.Length > MaxRosterEncodedChars
+				|| Encoding.UTF8.GetByteCount(Encoded) > MaxRosterEncodedUtf8Bytes) return false;
+			int rows = 1;
+			for (int i = 0; i < Encoded.Length; i++)
+				if (Encoded[i] == RosterSeparator && ++rows > MaxRosterRows) return false;
 			string[] parts = Encoded.Split(RosterSeparator);
+			HashSet<string> seen = new HashSet<string>();
 			for (int i = 0; i < parts.Length; i++)
 			{
+				if (parts[i] != null && parts[i].Length > MaxRosterKeyChars) return false;
 				string key = Fold(parts[i]);
-				if (key != null && !roster.Contains(key))
-				{
-					roster.Add(key);
-				}
+				if (key == null) continue;
+				if (!ValidRosterKey(key)) return false;
+				if (seen.Add(key)) Roster.Add(key);
 			}
-			return roster;
+			return Roster.Count <= MaxRosterRows;
 		}
 
 		/// <summary>Writes a roster back to its stored form. Round-trips
 		/// <see cref="DecodeRoster"/> exactly, including the de-duplication.</summary>
 		public static string EncodeRoster(IEnumerable<string> Roster)
 		{
+			string encoded;
+			return TryEncodeRoster(Roster, out encoded) ? encoded : null;
+		}
+
+		/// <summary>Atomic bounded encoder. It never truncates knowledge to make it fit.</summary>
+		public static bool TryEncodeRoster(IEnumerable<string> Roster, out string Encoded)
+		{
+			Encoded = null;
 			List<string> keys = new List<string>();
+			HashSet<string> seen = new HashSet<string>();
+			int chars = 0;
+			int utf8 = 0;
 			if (Roster != null)
 			{
 				foreach (string entry in Roster)
 				{
+					if (entry != null && entry.Length > MaxRosterKeyChars) return false;
 					string key = Fold(entry);
-					if (key != null && key.IndexOf(RosterSeparator) < 0 && !keys.Contains(key))
+					if (key == null) continue;
+					if (!ValidRosterKey(key)) return false;
+					if (seen.Add(key))
 					{
+						if (keys.Count >= MaxRosterRows) return false;
+						int separator = keys.Count == 0 ? 0 : 1;
+						chars += separator + key.Length;
+						utf8 += separator + Encoding.UTF8.GetByteCount(key);
+						if (chars > MaxRosterEncodedChars
+							|| utf8 > MaxRosterEncodedUtf8Bytes) return false;
 						keys.Add(key);
 					}
 				}
 			}
-			return string.Join(RosterSeparator.ToString(), keys.ToArray());
+			Encoded = string.Join(RosterSeparator.ToString(), keys.ToArray());
+			return true;
+		}
+
+		/// <summary>Validates and canonicalizes a persisted aggregate in one bounded pass.</summary>
+		public static bool TryCanonicalRoster(string Stored, out string Canonical)
+		{
+			Canonical = null;
+			List<string> rows;
+			return TryDecodeRoster(Stored, out rows) && TryEncodeRoster(rows, out Canonical);
+		}
+
+		private static bool ValidRosterKey(string Key)
+		{
+			return !string.IsNullOrEmpty(Key) && Key.Length <= MaxRosterKeyChars
+				&& Key.IndexOf(RosterSeparator) < 0
+				&& Encoding.UTF8.GetByteCount(Key) <= MaxRosterKeyUtf8Bytes;
 		}
 
 		/// <summary>

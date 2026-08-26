@@ -552,25 +552,22 @@ namespace ThousandAndFirst
 		/// <see cref="SitesAtGate"/> when the schema grows one.
 		/// </para>
 		/// </summary>
-		public const string GatehouseKey = "gatehouse";
+		public const string GatehouseKey = KingdomGatehouseRules.BuildKey;
 
 		/// <summary>Whether a design is sited at the gate rather than anywhere along the wall.
 		/// Case-folded, so a third-party file spelling the key differently still lands.</summary>
 		public static bool SitesAtGate(string Key)
 		{
-			return !string.IsNullOrEmpty(Key) && Key.Trim().ToLowerInvariant() == GatehouseKey;
+			return KingdomGatehouseRules.IsGatehouse(Key);
 		}
 
 		/// <summary>
-		/// Which of the offered cells the gate design takes: the one nearest the gate cell, ties
-		/// broken northmost then westmost, so the same settlement puts its gatehouse in the same
-		/// place every time it is asked.
+		/// Legacy deterministic ranking of offered frontier cells around a road endpoint.
+		/// The multi-cell gatehouse no longer uses this fallback: its frozen topology is astride
+		/// the exact <see cref="TryGate"/> cell and refuses if any owned/path cell is obstructed.
 		/// <para>
-		/// Nearest rather than exactly-the-gate deliberately. The gate cell may be occupied, and
-		/// the protection law forbids taking ground that holds anything (STANDARDS 7) &mdash; so
-		/// the rule aims at the way out and settles for the nearest ground beside it, which is
-		/// still the wall astride the road. Handed an empty list it answers -1 and the caller
-		/// falls back to its own placement, exactly as it does when the plan has no opinion.
+		/// Retained as a pure coordinate helper for compatibility tests and third-party callers;
+		/// handed an empty list it answers -1.
 		/// </para>
 		/// </summary>
 		/// <param name="Xs">Candidate cell xs, already filtered to buildable frontier ground.</param>

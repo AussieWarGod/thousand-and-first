@@ -183,9 +183,11 @@ namespace ThousandAndFirst
 				return truth;
 			}
 			truth.Robot = Resident.HasPart<Robot>() || Resident.HasTagOrProperty("Robot");
+			truth.Species = Resident.GetSpecies();
 			Brain brain = Resident.GetPart<Brain>();
 			truth.Aquatic = Resident.HasPart<Aquatic>() || (brain != null && brain.Aquatic);
 			truth.Flying = Resident.IsFlying;
+			truth.BroadBodied = Resident.HasTagOrProperty("Gigantic");
 			truth.Fungal = Resident.HasTagOrProperty("LiveFungus");
 			truth.Photosynthetic = Resident.HasPart<PhotosyntheticSkin>();
 			truth.Inorganic = Resident.HasPart<Inorganic>() || !Resident.IsOrganic;
@@ -361,6 +363,7 @@ namespace ThousandAndFirst
 		/// <param name="Newcomer">The person moving in.</param>
 		/// <param name="Resident">The person already there.</param>
 		/// <param name="Tag">The tag refused, or empty when the creeds decided it.</param>
+		[System.Obsolete("Retired before public release; use KingdomLodging with the home's explicit closeness rung.", true)]
 		public static QolVerdict JudgeCohabitation(GameObject Newcomer, GameObject Resident, out string Tag)
 		{
 			int hostility = 0;
@@ -370,14 +373,38 @@ namespace ThousandAndFirst
 					Newcomer.GetStringProperty(KingdomCreed.CreedProperty),
 					Resident.GetStringProperty(KingdomCreed.CreedProperty));
 			}
-			return KingdomQolRules.JudgeCohabitation(ProfileOf(Newcomer), HouseholdOf(Resident), hostility, out Tag);
+			Tag = "";
+			if (hostility >= 100)
+			{
+				return QolVerdict.Refused;
+			}
+			QolVerdict verdict = KingdomQolRules.Judge(HouseholdOf(Resident),
+				ProfileOf(Newcomer), out Tag);
+			if (verdict == QolVerdict.NeedUnmet)
+			{
+				Tag = "";
+				return QolVerdict.Match;
+			}
+			return verdict;
 		}
 
 		/// <summary>The plain yes-or-no for cohabitation.</summary>
+		[System.Obsolete("Retired before public release; use KingdomLodging with the home's explicit closeness rung.", true)]
 		public static bool CanCohabit(GameObject Newcomer, GameObject Resident)
 		{
-			string tag;
-			return KingdomQolRules.IsMatch(JudgeCohabitation(Newcomer, Resident, out tag));
+			int hostility = 0;
+			if (Newcomer != null && Resident != null && KingdomCreed.Enabled)
+			{
+				hostility = KingdomCreed.HostilityBetween(
+					Newcomer.GetStringProperty(KingdomCreed.CreedProperty),
+					Resident.GetStringProperty(KingdomCreed.CreedProperty));
+			}
+			QolProfile newcomer = ProfileOf(Newcomer);
+			QolProfile resident = ProfileOf(Resident);
+			return !KingdomLodgingRules.Conflicts(newcomer.Refuses,
+				KingdomQolRules.SelfTags(newcomer), resident.Refuses,
+				KingdomQolRules.SelfTags(resident), hostility,
+				KingdomLodgingRules.Closeness.Packed);
 		}
 
 		/// <summary>

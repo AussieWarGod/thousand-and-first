@@ -1,15 +1,14 @@
 # Art policy and provenance
 
-The release build ships **no original runtime bitmap sprites**. Every `Tile=` in this mod
-references an asset already supplied by Caves of Qud; the game art itself is never copied into
-this repository or the Workshop package. Objects without a tile use an intentional text glyph,
-as many vanilla objects do.
+The current build uses verified vanilla tiles and intentional glyphs; it contains zero custom
+runtime rasters. Vanilla-first is a quality choice, not a blanket ban. A future original sprite
+must be listed in `runtime-assets.json` with exact creator/date/license/source/method/fallback/
+review metadata and SHA-256, wired from staged XML, packaged at the exact path, and independently
+reviewed in Qud at tile and text scale. Copied, extracted, traced, or edited Qud art never ships.
 
-This is a hard release boundary, not a claim about old commits. Pre-release history contains
-custom sprite drafts made during assisted development. Those source grids and compiled PNGs were
-retired before public packaging and are absent from the staged inventory. `check_wiring.py`
-enforces that boundary and also proves every vanilla path occurs in the installed base game's XML
-corpus, catching misspellings without unpacking or redistributing its art.
+Pre-release history contains custom drafts which failed the present quality/provenance boundary.
+They remain retired. `check_wiring.py` enforces both the local allowlist and vanilla reference
+corpus without unpacking or redistributing game art.
 
 Run the audit from the repository root:
 

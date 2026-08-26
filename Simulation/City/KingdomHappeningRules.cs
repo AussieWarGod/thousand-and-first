@@ -569,14 +569,14 @@ namespace ThousandAndFirst.Simulation.City
 		}
 
 		/// <summary>
-		/// Whether a work of this kind stops when nobody is on it. A producer, a refiner and a
-		/// power work are all a pair of hands away from silence; a store and a growing ground are
-		/// not, and <c>Other</c> is not claimed either way because the model does not know what it
-		/// is.
+		/// Whether a work of this kind stops when nobody is on it. A producer, refiner, power work
+		/// and active raising are all a pair of hands away from silence; a store and a growing ground
+		/// are not, and <c>Other</c> is not claimed either way because the model does not know it.
 		/// </summary>
 		internal static bool NeedsHands(KingdomWorkKind kind)
 		{
-			return kind == KingdomWorkKind.Producer || kind == KingdomWorkKind.Refiner || kind == KingdomWorkKind.Power;
+			return kind == KingdomWorkKind.Producer || kind == KingdomWorkKind.Refiner
+				|| kind == KingdomWorkKind.Power || kind == KingdomWorkKind.Construction;
 		}
 
 		/// <summary>Whether an outcome written by <see cref="JudgeWork"/> is the unsaying rather

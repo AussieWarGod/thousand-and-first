@@ -442,6 +442,68 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void QuestInheritanceIsFlavorOnlyAndClassifiesTheDocumentedPersonalSet()
+		{
+			Assert.IsTrue(KingdomSuccessionRules.PersonalQuest(
+				"Fetch Argyve a Knickknack", "renamed by another display layer"));
+			Assert.IsTrue(KingdomSuccessionRules.PersonalQuest(null,
+				"Pax Klanq, I Presume? (inherited)"));
+			Assert.IsTrue(KingdomSuccessionRules.PersonalQuest(
+				"If, Then, Else", "If, Then, Else"));
+			Assert.IsFalse(KingdomSuccessionRules.PersonalQuest(
+				"What's Eating the Watervine?", "What's Eating the Watervine?"));
+			Assert.IsFalse(KingdomSuccessionRules.PersonalQuest(
+				"Tomb of the Eaters", "Tomb of the Eaters"));
+			Assert.IsFalse(KingdomSuccessionRules.PersonalQuest(
+				"dynamic village quest:1", "Find a snapjaw fort"));
+
+			string inherited = KingdomSuccessionRules.InheritedQuestName("The Assessment");
+			Assert.AreEqual("The Assessment (inherited)", inherited);
+			Assert.AreEqual(inherited, KingdomSuccessionRules.InheritedQuestName(inherited));
+			Assert.AreEqual("The Assessment",
+				KingdomSuccessionRules.WithoutInheritedSuffix(inherited));
+		}
+
+		[Test]
+		public void QuestInheritanceIdsAreBoundedStableAndDomainSeparated()
+		{
+			string death = KingdomSuccessionRules.FounderDeathToken(2, 12345L, "founder:id");
+			string chronicle = KingdomSuccessionRules.InheritedQuestEventId(death,
+				"The Assessment");
+			string same = KingdomSuccessionRules.InheritedQuestEventId(death,
+				"The Assessment");
+			string map = KingdomSuccessionRules.QuestOriginSecretId(death,
+				"The Assessment");
+			string other = KingdomSuccessionRules.InheritedQuestEventId(death,
+				"A Signal in the Noise");
+			string accession = KingdomSuccessionRules.AccessionRiteEventId(death);
+
+			Assert.AreEqual(chronicle, same);
+			Assert.AreNotEqual(chronicle, map);
+			Assert.AreNotEqual(chronicle, other);
+			Assert.AreNotEqual(chronicle, accession);
+			Assert.Less(chronicle.Length, 128);
+			Assert.Less(accession.Length, 128);
+			StringAssert.StartsWith("taf:succession:unfinished:v1:", chronicle);
+			StringAssert.StartsWith("taf:succession:quest-origin:v1:", map);
+			StringAssert.StartsWith("taf:succession:accession-rite:v1:", accession);
+			Assert.IsNull(KingdomSuccessionRules.InheritedQuestEventId(death,
+				new string('q', KingdomSuccessionRules.MaxQuestIdentityChars + 1)));
+		}
+
+		[Test]
+		public void QuestInheritanceTellingsStripDisplaySuffixAndBoundThirdPartyText()
+		{
+			string line = KingdomSuccessionRules.InheritedQuestChronicle("Nara",
+				"The Assessment (inherited)");
+			Assert.AreEqual("Nara died with The Assessment undone, and the heir inherited the undertaking",
+				line);
+			Assert.IsFalse(line.Contains("(inherited)"));
+			Assert.Less(KingdomSuccessionRules.QuestMarkNote(
+				new string('x', 5000), new string('y', 5000)).Length, 1100);
+		}
+
+		[Test]
 		public void AttemptGatePreventsEveryDuplicateAndConflictingReplay()
 		{
 			Assert.AreEqual(SuccessionAttemptVerdict.Invalid,
@@ -462,6 +524,172 @@ namespace ThousandAndFirst.Tests
 			Assert.IsTrue(KingdomSuccessionRules.CostsTheSeat(HeirChoice.Chosen, true));
 			Assert.IsFalse(KingdomSuccessionRules.CostsTheSeat(HeirChoice.Law, true));
 			Assert.IsFalse(KingdomSuccessionRules.CostsTheSeat(HeirChoice.Chosen, false));
+		}
+
+		[Test]
+		public void MourningRiteCheckpointsRetryButNeverSkipPhysicalEvidence()
+		{
+			for (int i = 0; i <= (int)MourningRiteStage.Complete; i++)
+			{
+				MourningRiteStage stage = (MourningRiteStage)i;
+				Assert.IsTrue(KingdomSuccessionRules.MayAdvanceRite(stage, stage));
+				if (i < (int)MourningRiteStage.Complete)
+				{
+					Assert.IsTrue(KingdomSuccessionRules.MayAdvanceRite(stage,
+						(MourningRiteStage)(i + 1)));
+				}
+				if (i + 2 <= (int)MourningRiteStage.Complete)
+				{
+					Assert.IsFalse(KingdomSuccessionRules.MayAdvanceRite(stage,
+						(MourningRiteStage)(i + 2)));
+				}
+			}
+		}
+
+		[Test]
+		public void RiteManifestRoundTripsExactBodiesHomesPostsAndCells()
+		{
+			KingdomRiteAttendee[] rows =
+			{
+				new KingdomRiteAttendee(7, "body:7", "A|sha", "JoppaWorld.1.1.1.1.10",
+					2, 3, "9/4", "plot:a", 20, 11),
+				new KingdomRiteAttendee(8, "body:8", "B\nren", "JoppaWorld.1.1.1.1.10",
+					4, 5, "0/0", "", 21, 11)
+			};
+			string encoded = KingdomSuccessionRules.EncodeRiteManifest(rows);
+			KingdomRiteAttendee[] read;
+			Assert.IsTrue(KingdomSuccessionRules.TryDecodeRiteManifest(encoded, out read));
+			Assert.AreEqual(2, read.Length);
+			Assert.AreEqual("A|sha", read[0].Name);
+			Assert.AreEqual("plot:a", read[0].Home);
+			Assert.AreEqual(21, read[1].RiteX);
+			Assert.IsFalse(KingdomSuccessionRules.TryDecodeRiteManifest(
+				encoded + "\n" + encoded.Split('\n')[0], out read),
+				"a duplicate resident/body row must never be accepted after a cut");
+		}
+
+		[Test]
+		public void RiteManifestAdmitsEveryResidentInALegalFullCityAndNoSixtyFirst()
+		{
+			Assert.AreEqual(KingdomRules.MaxPopulation,
+				KingdomSuccessionRules.MaxRiteAttendees);
+			KingdomRiteAttendee[] full = new KingdomRiteAttendee[KingdomRules.MaxPopulation];
+			for (int i = 0; i < full.Length; i++)
+			{
+				full[i] = new KingdomRiteAttendee(i + 1, "body:" + (i + 1),
+					"resident " + (i + 1), "JoppaWorld.1.1.1.1.10", i % 80,
+					i % 25, i + "/1", "plot:" + i, (i + 10) % 80, (i + 5) % 25);
+			}
+			string encoded = KingdomSuccessionRules.EncodeRiteManifest(full);
+			Assert.IsNotEmpty(encoded);
+			Assert.LessOrEqual(encoded.Length, KingdomSuccessionRules.MaxRiteManifestChars);
+			Assert.IsTrue(KingdomSuccessionRules.TryDecodeRiteManifest(encoded,
+				out KingdomRiteAttendee[] decoded));
+			Assert.AreEqual(KingdomRules.MaxPopulation, decoded.Length);
+
+			KingdomRiteAttendee[] tooMany = new KingdomRiteAttendee[full.Length + 1];
+			Array.Copy(full, tooMany, full.Length);
+			tooMany[full.Length] = new KingdomRiteAttendee(1000, "body:1000", "extra",
+				"JoppaWorld.1.1.1.1.10", 1, 1, "0/0", "plot:extra", 2, 2);
+			Assert.AreEqual("", KingdomSuccessionRules.EncodeRiteManifest(tooMany));
+		}
+
+		[Test]
+		public void FounderShrinePlacementIsStrictCheckBeforeMint()
+		{
+			Assert.AreEqual(FounderShrinePlacementVerdict.Create,
+				KingdomSuccessionRules.JudgeFounderShrinePlacement(false, false, true, 0));
+			Assert.AreEqual(FounderShrinePlacementVerdict.AdoptExact,
+				KingdomSuccessionRules.JudgeFounderShrinePlacement(true, true, false, 4));
+			Assert.AreEqual(FounderShrinePlacementVerdict.Refuse,
+				KingdomSuccessionRules.JudgeFounderShrinePlacement(true, false, true, 0));
+			Assert.AreEqual(FounderShrinePlacementVerdict.Refuse,
+				KingdomSuccessionRules.JudgeFounderShrinePlacement(false, false, true, 1));
+		}
+
+		[Test]
+		public void RuntimeOrdersRealProcessionAndShrineBeforeBodyBoundary()
+		{
+			string succession = TestMain.ReadRepositoryText("Experience/KingdomSuccession.cs");
+			string rite = TestMain.ReadRepositoryText("Experience/KingdomSuccessionRite.cs");
+			string rules = TestMain.ReadRepositoryText("Experience/KingdomSuccessionRules.cs");
+			int freeze = succession.IndexOf("Checkpoint(MourningRiteStage.Frozen)",
+				StringComparison.Ordinal);
+			int time = succession.IndexOf("game.TimeTicks = dueTick", freeze,
+				StringComparison.Ordinal);
+			int procession = succession.IndexOf("TryHoldProcession", time,
+				StringComparison.Ordinal);
+			int shrine = succession.IndexOf("TryEnsureFounderShrine", procession,
+				StringComparison.Ordinal);
+			int body = succession.IndexOf("SetPlayerBodyAndRebindAll(game, founder", shrine,
+				StringComparison.Ordinal);
+			Assert.Greater(time, freeze);
+			Assert.Greater(procession, time);
+			Assert.Greater(shrine, procession);
+			Assert.Greater(body, shrine);
+			StringAssert.Contains("InjectedCheckpoint?.Invoke(Stage)", succession);
+			StringAssert.Contains("System.Away?.ClaimedZones", succession,
+				"either owned city's ground must be immediate local news");
+			Assert.IsFalse(succession.Contains("MessageQueue.AddPlayerMessage"),
+				"the rite popup is the one successful semantic message");
+			StringAssert.Contains("Brain.PushGoal(new MoveTo", rite);
+			StringAssert.Contains("body.Move(path.Directions[i]", rite);
+			StringAssert.Contains("UnchangedPosts", rite);
+			StringAssert.Contains("MaxRiteAttendees = KingdomRules.MaxPopulation", rules);
+			StringAssert.Contains("for (int i = 0; i < bodies.Count; i++)", rite);
+			StringAssert.Contains("state.ResidentCount", rite);
+			StringAssert.Contains("result.Count >= needed", rite);
+			Assert.IsFalse(rite.Contains("radius <= 3"));
+			Assert.IsFalse(rite.Contains(
+				"rows.Count < KingdomSuccessionRules.MaxRiteAttendees"));
+			Assert.IsFalse(rite.Contains("SystemLongDistanceMoveTo"));
+			Assert.IsFalse(rite.Contains("Teleport"));
+			Assert.IsFalse(rite.Contains("CreateObject(\"Creature"));
+		}
+
+		[Test]
+		public void RuntimeInheritsOpenQuestFlavorWithoutChangingQuestState()
+		{
+			string succession = TestMain.ReadRepositoryText("Experience/KingdomSuccession.cs");
+			string remains = TestMain.ReadRepositoryText("Experience/KingdomFounderRemains.cs");
+			StringAssert.Contains("TryInheritOpenQuests(Game, System, Token, FounderName)",
+				succession);
+			StringAssert.Contains("KingdomChronicle.RecordOnce", succession);
+			StringAssert.Contains("quest.QuestGiverLocationZoneID", succession);
+			StringAssert.Contains("JournalAPI.AddMapNote", succession);
+			StringAssert.Contains("QuestOriginSecretId", succession);
+			int pending = succession.IndexOf("private bool TryPublishPendingAccessionRite",
+				StringComparison.Ordinal);
+			int bound = succession.IndexOf("private static string BoundPendingRite", pending,
+				StringComparison.Ordinal);
+			string pendingRite = succession.Substring(pending, bound - pending);
+			StringAssert.Contains("AccessionRiteEventId", pendingRite);
+			StringAssert.Contains("KingdomChronicle.RecordOnce", pendingRite);
+			StringAssert.DoesNotContain("KingdomChronicle.Record(system", pendingRite);
+			StringAssert.Contains("quest.SetProperty(KingdomSuccessionRules.InheritedQuestMarker",
+				succession);
+			StringAssert.Contains("out revealed, out questMarks", remains);
+			StringAssert.Contains("revealed, questMarks", remains);
+			Assert.IsFalse(succession.Contains("FailQuest("));
+			Assert.IsFalse(succession.Contains("FinishQuest("));
+			Assert.IsFalse(succession.Contains("Quests.Remove("));
+			Assert.IsFalse(succession.Contains("FinishedQuests.Add("));
+		}
+
+		[Test]
+		public void FounderShrineIsDistinctVersionedHistoryWithoutResourceParts()
+		{
+			string part = TestMain.ReadRepositoryText("Experience/KingdomFounderShrine.cs");
+			string xml = TestMain.ReadRepositoryText("ObjectBlueprints.xml");
+			StringAssert.Contains("CurrentSerializationVersion = 1", part);
+			StringAssert.Contains("DeathToken", part);
+			StringAssert.Contains("FounderName", part);
+			StringAssert.Contains("DeathTick", part);
+			StringAssert.Contains("Cause", part);
+			StringAssert.Contains("History", part);
+			StringAssert.Contains("Name=\"r_KingdomFounderShrine\"", xml);
+			Assert.IsFalse(xml.Substring(xml.IndexOf("Name=\"r_KingdomFounderShrine\"",
+				StringComparison.Ordinal), 700).Contains("LiquidVolume"));
 		}
 	}
 }

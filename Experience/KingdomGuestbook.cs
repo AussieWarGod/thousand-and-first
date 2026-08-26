@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Text;
 using XRL;
 using XRL.Messages;
-using XRL.Rules;
 using XRL.UI;
 using XRL.World;
 using XRL.World.Parts;
@@ -25,10 +24,8 @@ namespace ThousandAndFirst
 	/// </para>
 	/// <para>
 	/// <b>The carry-sign</b> marks a container or pile the founder owns anywhere in the world for
-	/// porters to fetch. Mirrors <c>KingdomManifest</c>'s own precedent exactly: one haul in
-	/// flight at a time, the goods drawn from their origin the moment the sign is planted (escrow,
-	/// not a promise — the same idiom <c>KingdomManifest.Drams</c> documents), and delivery
-	/// resolved only on an attended pass of the destination settlement.
+	/// porters to fetch. CarryBook freezes each whole GameObject and central logistics carries that
+	/// same reference; the legacy aggregate haul below is decode/reconciliation only.
 	/// </para>
 	/// </summary>
 	public static class KingdomGuestbook
@@ -42,26 +39,43 @@ namespace ThousandAndFirst
 		/// this property, and a notable never carries <c>KingdomGuest</c>.</summary>
 		public const string NotableGuestProperty = "KingdomNotableGuest";
 
-		private const string HookKindProperty = "KingdomGuestHookKind";
+		/// <summary>Open blueprint tag for the luxury-lane arrival. A third-party guest may opt
+		/// into the same exact fine-house/shop contract without replacing this class.</summary>
+		public const string LegendaryTraderTag = "r_TAF_LegendaryTrader";
 
-		private const string HookTextProperty = "KingdomGuestHookText";
+		/// <summary>Durable resident marker after the visitor settles. The exact home is the
+		/// ordinary <c>KingdomLodgingPlotId</c>, so save/reload and every lodging reader share one
+		/// authority rather than a parallel guest-only reservation.</summary>
+		public const string LegendaryTraderResidentProperty = "KingdomLegendaryTrader";
+
+		internal const string HookKindProperty = "KingdomGuestHookKind";
+
+		internal const string HookTextProperty = "KingdomGuestHookText";
+
+		internal const string LodgeReceiptProperty = "r_TAF_NotableLodgeReceipt";
 
 		private const string OriginProperty = "KingdomOrigin";
 
 		public static void OnZoneActivated(KingdomSystem System, Zone Z, KingdomSurvey Survey)
 		{
+			if (!KingdomMaster.AutomaticWorkAllowed(System)) return;
 			if (System == null || !System.Founded || Z == null || Survey == null || !System.ClaimedZones.Contains(Z.ZoneID))
 			{
 				return;
 			}
 			long timeTicks = The.Game.TimeTicks;
-			if (GuestsEnabled)
+			if (KingdomGuestLifecycle.ObserveOption(System,
+				KingdomLifecycleLane.NotableGuest, GuestsEnabled, timeTicks, out bool allowNew))
 			{
-				RunNotableGuestPass(System, Z, timeTicks);
+				if (KingdomGuestLifecycle.Open(System, KingdomLifecycleLane.NotableGuest) != null)
+					KingdomGuestLifecycle.Drive(System, Z, KingdomLifecycleLane.NotableGuest);
+				if (allowNew && KingdomGuestLifecycle.Open(System,
+					KingdomLifecycleLane.NotableGuest) == null) RunNotableGuestPass(System, Z, Survey, timeTicks);
 			}
 			if (CarrySignEnabled)
 			{
-				ResolveHaulIfDue(System, Z, timeTicks);
+				KingdomCarryRuntime.Drive(System, Z, timeTicks);
+				ResolveLegacyHaulIfDue(System, Z, Survey, timeTicks);
 			}
 		}
 
@@ -82,9 +96,10 @@ namespace ThousandAndFirst
 		/// <c>NotableGuestIntervalTicks</c>, not by a live object blocking the spawn.
 		/// </para>
 		/// </summary>
-		private static void RunNotableGuestPass(KingdomSystem System, Zone Z, long TimeTicks)
+		private static void RunNotableGuestPass(KingdomSystem System, Zone Z,
+			KingdomSurvey Survey, long TimeTicks)
 		{
-			GameObject guest = FindNotableGuest(Z);
+			GameObject guest = FindNotableGuest(Survey);
 			if (guest != null)
 			{
 				if (KingdomGuestRules.ShouldDepartUnattended(TimeTicks, System.NotableGuestDepartTick))
@@ -93,20 +108,29 @@ namespace ThousandAndFirst
 				}
 				return;
 			}
-			if (System.NextNotableGuestTick <= 0)
-			{
-				// First eligible pass ever: defer rather than draw on the spot, the same way
-				// KingdomLocus seeds its own NextGuestTick. A settlement gets a moment to exist
-				// before word of anything notable reaches the road.
-				System.NextNotableGuestTick = KingdomGuestRules.NextDueTick(TimeTicks);
-				return;
-			}
+			long effectiveDue = KingdomGuestLifecycle.EffectiveDue(System,
+				KingdomLifecycleLane.NotableGuest, KingdomGuestRules.NotableGuestIntervalTicks);
+			if (effectiveDue <= 0L || TimeTicks < effectiveDue) return;
 			KingdomRules.Passages passages = KingdomRules.PassagesThrough(
-				System.NextNotableGuestTick, TimeTicks, KingdomGuestRules.NotableGuestIntervalTicks, KingdomGuestRules.NotableGuestPatienceTicks);
-			// Advanced BEFORE the telling and before the spawn, so a run of passages can never be
-			// told twice however the spawn goes.
-			System.NextNotableGuestTick = passages.NextDueTick;
-			TellPassed(System, passages, TimeTicks);
+				effectiveDue, TimeTicks, KingdomGuestRules.NotableGuestIntervalTicks,
+				KingdomGuestRules.NotableGuestPatienceTicks);
+			Cell standingCell = passages.StandingSince > 0L ? KingdomLocus.HeartArrivalCell(Z) : null;
+			long before = System.NextNotableGuestTick > 0L ? System.NextNotableGuestTick : 0L;
+			long after = passages.StandingSince > 0L && standingCell == null
+				? passages.StandingSince : passages.NextDueTick;
+			int daysAgo = passages.Departed > 0
+				? KingdomRules.ElapsedDays(TimeTicks - passages.LastDepartedTick) : 0;
+			string chronicle = passages.Departed > 0
+				? KingdomGuestRules.PassedChronicleLine(passages.Departed, KingdomPresentation.Rich(System.SeatName), daysAgo)
+				: null;
+			string ledger = passages.Departed > 0
+				? KingdomGuestRules.PassedLedgerNote(passages.Departed, daysAgo) : null;
+			string guestbook = passages.Departed > 0
+				? KingdomGuestRules.PassedGuestbookLine(passages.Departed, daysAgo) : null;
+			if (!KingdomGuestLifecycle.PublishPassages(System, Z,
+				KingdomLifecycleLane.NotableGuest, TimeTicks, before, after, passages.Departed,
+				passages.LastDepartedTick, passages.StandingSince, chronicle, ledger, guestbook))
+				return;
 			if (passages.StandingSince <= 0L)
 			{
 				return;
@@ -114,160 +138,100 @@ namespace ThousandAndFirst
 			// Spawned at the tick they actually walked up: their patience is already partly spent,
 			// their hook is drawn on their own arrival ordinal, and they leave when they were
 			// always going to leave.
-			if (!SpawnNotableGuest(System, Z, passages.StandingSince))
-			{
-				// Nowhere to stand them this pass. Their arrival stands rather than being spent,
-				// so the next pass tries again -- and if their patience has run out by then, they
-				// are told about as somebody who came and went.
-				System.NextNotableGuestTick = passages.StandingSince;
-			}
+			if (standingCell != null)
+				SpawnNotableGuest(System, Z, standingCell, passages.StandingSince);
 		}
 
-		/// <summary>The dated trace a run of unmet notables leaves: one chronicle entry in both
-		/// registers, one ledger note, one guestbook line. Nothing at all when nobody came, which
-		/// is 7b's "not applicable" case rather than a stall.</summary>
-		private static void TellPassed(KingdomSystem System, KingdomRules.Passages Passages, long TimeTicks)
+		private static GameObject FindNotableGuest(KingdomSurvey Survey)
 		{
-			if (Passages.Departed <= 0)
-			{
-				return;
-			}
-			int daysAgo = KingdomRules.ElapsedDays(TimeTicks - Passages.LastDepartedTick);
-			KingdomChronicle.RecordDisputed(
-				System,
-				KingdomGuestRules.PassedChronicleLine(Passages.Departed, System.SeatName, daysAgo),
-				KingdomGuestRules.PassedOutsiderRumor(Passages.Departed, System.SeatName, daysAgo));
-			System.Ledger.Note(KingdomGuestRules.PassedLedgerNote(Passages.Departed, daysAgo));
-			AppendGuestbookLine(System, KingdomGuestRules.PassedGuestbookLine(Passages.Departed, daysAgo));
-			KingdomLog.Log("guestbook: " + Passages.Departed + " notables passed unmet, last " + daysAgo + "d ago");
-		}
-
-		private static GameObject FindNotableGuest(Zone Z)
-		{
-			foreach (GameObject item in Z.GetObjects())
-			{
-				if (item.GetIntProperty(NotableGuestProperty) == 1)
-				{
-					return item;
-				}
-			}
-			return null;
-		}
-
-		/// <summary>
-		/// Picks which notable guest blueprint is walking up the road, the same way
-		/// <c>KingdomLocus.GuestBlueprint</c> does: rolled from a population table other mods can
-		/// merge into, with a hard fallback if the table is missing or empty.
-		/// </summary>
-		private static string NotableGuestBlueprint()
-		{
-			try
-			{
-				PopulationResult result = PopulationManager.RollOneFrom("r_KingdomNotableGuests");
-				if (result != null && !string.IsNullOrEmpty(result.Blueprint) && GameObjectFactory.Factory.HasBlueprint(result.Blueprint))
-				{
-					return result.Blueprint;
-				}
-			}
-			catch (Exception error)
-			{
-				MetricsManager.LogError("ThousandAndFirst notable guest roll", error);
-			}
-			return "r_KingdomNotableGuest";
+			return Survey != null && Survey.NotableGuests.Count > 0
+				? Survey.NotableGuests[0] : null;
 		}
 
 		/// <summary>Puts one notable on the ground at the tick they walked up. False when there
 		/// was nowhere to stand them, which is the caller's signal to leave their arrival unspent
 		/// rather than losing them.</summary>
-		private static bool SpawnNotableGuest(KingdomSystem System, Zone Z, long ArrivalTick)
+		private static bool SpawnNotableGuest(KingdomSystem System, Zone Z, Cell cell,
+			long ArrivalTick)
 		{
-			List<Cell> emptyCells = Z.GetEmptyCells((Cell c) => c.IsPassable() && !c.HasObjectWithPart("LiquidVolume"));
-			if (emptyCells == null || emptyCells.Count == 0)
+			if (cell == null) return false;
+			KingdomSemanticPersonPlan plan;
+			string planFailure;
+			if (!KingdomGuestLifecycle.TryPrepareSpawnPlan(System,
+				KingdomLifecycleLane.NotableGuest, "r_KingdomNotableGuests",
+				"r_KingdomNotableGuest", out plan, out planFailure))
 			{
-				emptyCells = Z.GetEmptyCells();
-			}
-			if (emptyCells == null || emptyCells.Count == 0)
-			{
-				// No open ground this pass. Try again next pass — a missed notable for want of
-				// room is the same "no penalty" case KingdomLocus already accepts for its own
-				// travellers.
+				KingdomLog.Log("notable guest waits: " + planFailure);
 				return false;
 			}
-			Cell cell = emptyCells.GetRandomElement();
-			GameObject guest = GameObject.Create(NotableGuestBlueprint());
-			if (guest == null)
-			{
-				return false;
-			}
-			cell.AddObject(guest);
-			guest.MakeActive();
-			guest.SetIntProperty(NotableGuestProperty, 1);
 			KingdomGuestRules.HookKind kind;
 			string hookText;
 			// Drawn on the tick they arrived on, not the tick the founder walked in: the hook is
 			// this guest's own fact, and keying it to the arrival ordinal means a reload asks the
 			// same question and gets the same answer.
-			DrawHook(System, ArrivalTick, out kind, out hookText);
-			guest.SetIntProperty(HookKindProperty, (int)kind);
-			guest.SetStringProperty(HookTextProperty, hookText);
-			string origin = KingdomRules.Origins[Stat.Random(0, KingdomRules.Origins.Length - 1)];
-			guest.SetStringProperty(OriginProperty, origin);
-			string given = XRL.Names.NameMaker.MakeName(guest, null, null, "human", null, null, null, null, null, null, null, null, null, FailureOkay: true);
-			if (!string.IsNullOrEmpty(given))
-			{
-				guest.DisplayName = given;
-			}
-			Qud.API.ConversationsAPI.addSimpleConversationToObject(
-				guest,
-				KingdomGuestRules.ArrivalGreeting(kind),
-				"Live and drink.",
-				Question: "What are you really here for?",
-				Answer: "There's " + hookText + ", if I ever get around to it. For now I'm only walking.");
-			System.NotableGuestDepartTick = KingdomGuestRules.DepartTickFor(ArrivalTick);
-			KingdomChronicle.Record(System, KingdomGuestRules.ArrivalChronicleLine(guest.ShortDisplayName, System.SeatName));
-			KingdomLog.Log("guestbook: notable arrived kind=" + kind + " depart=" + System.NotableGuestDepartTick);
-			return true;
+			if (!DrawHook(System, plan, out kind, out hookText)) return false;
+			long depart = KingdomGuestRules.DepartTickFor(ArrivalTick);
+			string shownName = KingdomPresentation.Rich(plan.Name);
+			string shownHook = KingdomPresentation.Rich(hookText);
+			string chronicle = KingdomGuestRules.ArrivalChronicleLine(shownName,
+				KingdomPresentation.Rich(System.SeatName));
+			string ledger = shownName + " is waiting at the rite ground with word of "
+				+ shownHook + ".";
+			string message = "{{C|" + shownName
+				+ " has arrived at the rite ground as a notable guest.}}";
+			string guestbook = shownName + ", waiting at the rite ground with word of "
+				+ shownHook + " {{K|(standing)}}";
+			return KingdomGuestLifecycle.PublishSpawn(System, Z,
+				KingdomLifecycleLane.NotableGuest, cell, The.Game.TimeTicks, depart,
+				plan.Blueprint, plan.Name, plan.Origin, (int)kind, 0, hookText, null, null,
+				chronicle, ledger, message, guestbook, semanticPlan: plan);
 		}
 
-		private static void DrawHook(KingdomSystem System, long TimeTicks, out KingdomGuestRules.HookKind Kind, out string HookText)
+		private static bool DrawHook(KingdomSystem System, KingdomSemanticPersonPlan Plan,
+			out KingdomGuestRules.HookKind Kind, out string HookText)
 		{
-			string settlementId = KingdomChronicle.SettlementId(System);
-			ulong ordinal = (ulong)TimeTicks;
 			SemanticEventKey key;
 			KernelFaultCode fault;
 			ulong kindRoll;
 			ulong flavorRoll;
-			if (SemanticEventKey.TryCreate(1, settlementId, "taf:guest:hook:v1", 1u, ordinal, out key, out fault)
-				&& CounterRandom.TryDrawBelow(default(KernelSeed128), key, 0u, (ulong)KingdomGuestRules.HookKindCount, out kindRoll, out fault)
-				&& CounterRandom.TryDrawBelow(default(KernelSeed128), key, 1u, 1000uL, out flavorRoll, out fault))
+			if (System != null && Plan != null && Plan.Sequence > 0L
+				&& SemanticEventKey.TryCreate(KingdomSemanticSelectionRules.RulesVersion,
+					System.CurrentSettlementId, KingdomSemanticSelection.NotableGuestStream,
+					KingdomSemanticSelection.HookEventKind, (ulong)Plan.Sequence,
+					out key, out fault)
+				&& CounterRandom.TryDrawBelow(System.SimulationSeed, key, 0u,
+					(ulong)KingdomGuestRules.HookKindCount, out kindRoll, out fault)
+				&& CounterRandom.TryDrawBelow(System.SimulationSeed, key, 1u, 1000uL,
+					out flavorRoll, out fault))
 			{
 				Kind = KingdomGuestRules.PickHookKind(kindRoll);
 				HookText = KingdomGuestRules.HookText(Kind, flavorRoll);
-				return;
+				return true;
 			}
-			// No immutable subject means no mutable random fallback. The guest still arrives with
-			// the stable first authored hook; later identity repair cannot rewrite that choice.
+			// No immutable subject means no mutable fallback and therefore no published guest.
 			Kind = KingdomGuestRules.PickHookKind(0UL);
 			HookText = KingdomGuestRules.HookText(Kind, 0UL);
+			return false;
 		}
 
 		private static void DepartUnattended(KingdomSystem System, GameObject Guest)
 		{
-			string name = Guest.ShortDisplayName;
+			string name = PlainGuestName(Guest);
+			string shownName = KingdomPresentation.Rich(name);
 			KingdomGuestRules.HookKind kind = (KingdomGuestRules.HookKind)Guest.GetIntProperty(HookKindProperty);
 			string hookText = Guest.GetStringProperty(HookTextProperty) ?? "";
-			KingdomChronicle.RecordDisputed(
-				System,
-				KingdomGuestRules.DepartedChronicleLine(name, System.SeatName),
-				KingdomGuestRules.DepartedOutsiderRumor(name, kind, hookText));
-			// Dated against the day their patience actually ran out, which may be well before the
-			// pass that noticed it.
-			System.Ledger.Note(KingdomGuestRules.DepartedLedgerNote(
-				name, KingdomRules.ElapsedDays(The.Game.TimeTicks - System.NotableGuestDepartTick)));
-			AppendGuestbookLine(System, KingdomGuestRules.GuestbookLine(name, kind, hookText, Lodged: false));
-			System.NextNotableGuestTick = KingdomGuestRules.NextDueTick(The.Game.TimeTicks);
-			System.NotableGuestDepartTick = 0L;
-			Guest.Obliterate();
+			string shownHook = KingdomPresentation.Rich(hookText);
+			string chronicle = KingdomGuestRules.DepartedChronicleLine(shownName,
+				KingdomPresentation.Rich(System.SeatName)) + "; others said "
+				+ KingdomGuestRules.DepartedOutsiderRumor(shownName, kind, shownHook);
+			string ledger = KingdomGuestRules.DepartedLedgerNote(shownName,
+				KingdomRules.ElapsedDays(The.Game.TimeTicks - System.NotableGuestDepartTick));
+			string guestbook = KingdomGuestRules.GuestbookLine(shownName, kind, shownHook,
+				Lodged: false);
+			KingdomGuestLifecycle.PublishDeparture(System, Guest,
+				KingdomLifecycleLane.NotableGuest, The.Game.TimeTicks,
+				KingdomGuestRules.NextDueTick(The.Game.TimeTicks), greeted: false,
+				chronicle, ledger, null, guestbook);
 		}
 
 		/// <summary>
@@ -284,106 +248,76 @@ namespace ThousandAndFirst
 			}
 			Zone zone = Guest.CurrentZone;
 			KingdomSystem system = The.Game.RequireSystem<KingdomSystem>();
+			if (!KingdomMaster.NewWorkAllowed(system))
+			{
+				Popup.Show("Settlement simulation is paused; this guest cannot be lodged yet.");
+				return;
+			}
 			if (zone == null || !system.Founded || !system.ClaimedZones.Contains(zone.ZoneID))
 			{
 				return;
 			}
 			KingdomGuestRules.HookKind kind = (KingdomGuestRules.HookKind)Guest.GetIntProperty(HookKindProperty);
 			string hookText = Guest.GetStringProperty(HookTextProperty) ?? "";
-			KingdomPlotRules.PlotSize bestTier = BestHousingTier(zone);
+			string shownHook = KingdomPresentation.Rich(hookText);
+			bool legendaryTrader = Guest.HasTag(LegendaryTraderTag);
+			GameObject fineHouse = null;
+			KingdomPlotRules.PlotSize fineHouseTier = KingdomPlotRules.PlotSize.None;
 			// A guest is judged by the raw bed count against population, on the same live survey,
 			// and deliberately NOT by the settlers' own assignment-level gate: brief Addendum 4b
 			// binds housing for people who JOIN the settlement, and says guests are unchanged
 			// because they never stay without lodging anyway. A visitor is not assigned a home,
 			// spends nobody's grace, and never leaves for want of one.
 			KingdomSurvey survey = KingdomSurvey.Take(zone);
-			bool hasRoom = KingdomRules.HasRoomToHouse(system.Population, survey.Beds);
-			bool hasTier = bestTier != KingdomPlotRules.PlotSize.None && bestTier >= KingdomGuestRules.RequiredTier(kind);
-			KingdomGuestRules.LodgingVerdict verdict = KingdomGuestRules.AssessLodging(hasTier, hasRoom);
+			KingdomGuestRules.LodgingVerdict verdict;
+			if (legendaryTrader)
+			{
+				bool hasFineHouse;
+				fineHouse = FindVacantFineHouse(zone, out hasFineHouse, out fineHouseTier);
+				int liveShopTier = system.HasShopkeeper ? system.ShopTier : 0;
+				verdict = KingdomGuestRules.AssessLegendaryTraderLodging(hasFineHouse,
+					fineHouseTier, fineHouse != null, liveShopTier);
+			}
+			else
+			{
+				KingdomPlotRules.PlotSize bestTier = BestHousingTier(zone);
+				bool hasRoom = KingdomRules.HasRoomToHouse(system.Population, survey.Beds);
+				bool hasTier = bestTier != KingdomPlotRules.PlotSize.None
+					&& bestTier >= KingdomGuestRules.RequiredTier(kind);
+				verdict = KingdomGuestRules.AssessLodging(hasTier, hasRoom);
+			}
 			if (verdict != KingdomGuestRules.LodgingVerdict.Lodged)
 			{
-				Popup.Show(verdict == KingdomGuestRules.LodgingVerdict.NoTier
-					? KingdomGuestRules.NoTierRefusal(kind)
-					: KingdomGuestRules.NoRoomRefusal());
+				Popup.Show(legendaryTrader
+					? KingdomGuestRules.LegendaryTraderRefusal(verdict)
+					: (verdict == KingdomGuestRules.LodgingVerdict.NoTier
+						? KingdomGuestRules.NoTierRefusal(kind)
+						: KingdomGuestRules.NoRoomRefusal()));
 				return;
 			}
 			int arrivalCost = KingdomRules.DramsPerArrival;
-			KingdomWaterDebit debit;
-			if (!survey.TryReserveExactWater(arrivalCost, out debit))
+			if (survey.StoredWater < arrivalCost)
 			{
-				Popup.Show("Lodging " + Guest.ShortDisplayName + " requires exactly {{C|"
+				Popup.Show("Lodging " + KingdomPresentation.Rich(PlainGuestName(Guest))
+					+ " requires exactly {{C|"
 					+ arrivalCost + " drams}} from the dedicated stores, and they cannot provide it.");
 				return;
 			}
-			// Visitor becomes an arrival at EnrollCitizen. Commit immediately before that boundary:
-			// no roster, allegiance, creed or population mutation can happen on a short debit.
-			if (!debit.Commit())
-			{
-				Popup.Show("The dedicated stores could not yield exactly {{C|" + arrivalCost
-					+ " drams}}. " + Guest.ShortDisplayName + " was not lodged.");
-				return;
-			}
-			bool enrolled;
-			try
-			{
-				enrolled = KingdomFounding.EnrollCitizen(Guest);
-			}
-			catch (Exception error)
-			{
-				bool returned = debit.Rollback();
-				MetricsManager.LogError("ThousandAndFirst notable guest enrolment", error);
-				if (!returned)
-				{
-					MetricsManager.LogError("ThousandAndFirst notable guest enrolment: the exact "
-						+ arrivalCost + "-dram debit could not be restored: " + (debit.Failure ?? "unknown failure"));
-				}
-				Popup.Show(returned
-					? "The lodging was interrupted. Exactly {{C|" + arrivalCost + " drams}} were returned to the same stores."
-					: "The lodging was interrupted, and the stores could not be restored exactly. See the game log.");
-				return;
-			}
-			if (!enrolled)
-			{
-				bool returned = debit.Rollback();
-				if (!returned)
-				{
-					MetricsManager.LogError("ThousandAndFirst notable guest enrolment: rejected arrival and the exact "
-						+ arrivalCost + "-dram debit could not be restored: " + (debit.Failure ?? "unknown failure"));
-				}
-				Popup.Show(returned
-					? Guest.ShortDisplayName + " could not be enrolled. Exactly {{C|" + arrivalCost + " drams}} were returned to the same stores."
-					: Guest.ShortDisplayName + " could not be enrolled, and the stores could not be restored exactly. See the game log.");
-				return;
-			}
-			Guest.SetIntProperty("KingdomBorn", 1);
-			Guest.SetIntProperty(NotableGuestProperty, 0);
-			string name = Guest.ShortDisplayName;
-			string origin = Guest.GetStringProperty(OriginProperty) ?? "";
-			system.RosterNames.Add(name);
-			system.RosterOrigins.Add(origin);
-			system.RosterArrived.Add(XRL.World.Calendar.GetDay() + " of " + XRL.World.Calendar.GetMonth() + ", " + XRL.World.Calendar.GetYear() + " AR");
-			system.OriginCounts.TryGetValue(origin, out int originCount);
-			system.OriginCounts[origin] = originCount + 1;
-			KingdomCreed.Record(system, Guest, KingdomCreed.Draw(system));
-			Qud.API.ConversationsAPI.addSimpleConversationToObject(
-				Guest,
-				"Live and drink. I mean to stay this time.",
-				"Live and drink.",
-				Question: "What were you bound for, before?",
-				Answer: KingdomGuestRules.LodgedConversationAnswer(kind, hookText));
-			system.Population++;
+			string name = PlainGuestName(Guest);
+			string shownName = KingdomPresentation.Rich(name);
 			bool milestone = !system.FirstNotableGuestLodged;
-			KingdomChronicle.Record(system, KingdomGuestRules.LodgedChronicleLine(name, system.SeatName, kind), Accomplishment: milestone);
-			if (milestone)
-			{
-				system.FirstNotableGuestLodged = true;
-				MessageQueue.AddPlayerMessage("{{C|" + system.KingdomDisplayName + " has lodged its first notable guest.}}");
-			}
-			MessageQueue.AddPlayerMessage(KingdomGuestRules.LodgedMessage(name, kind));
-			AppendGuestbookLine(system, KingdomGuestRules.GuestbookLine(name, kind, hookText, Lodged: true));
-			system.NextNotableGuestTick = KingdomGuestRules.NextDueTick(The.Game.TimeTicks);
-			system.NotableGuestDepartTick = 0L;
-			KingdomLog.Log("guestbook: lodged " + name + " kind=" + kind);
+			string chronicle = KingdomGuestRules.LodgedChronicleLine(shownName,
+				KingdomPresentation.Rich(system.SeatName), kind, legendaryTrader);
+			string ledger = shownName + " joined the settlement from "
+				+ KingdomPresentation.Rich(Guest.GetStringProperty(OriginProperty)
+					?? "the road") + ".";
+			string message = KingdomGuestRules.LodgedMessage(shownName, kind, legendaryTrader);
+			string line = KingdomGuestRules.GuestbookLine(shownName, kind, shownHook,
+				Lodged: true, LegendaryTrader: legendaryTrader);
+			if (!KingdomGuestLifecycle.PublishLodge(system, Guest, fineHouse,
+				The.Game.TimeTicks, KingdomGuestRules.NextDueTick(The.Game.TimeTicks),
+				arrivalCost, chronicle, ledger, message, line, milestone))
+				Popup.Show("Lodging could not complete. Its exact lifecycle receipt remains open; no second lodging can begin.");
 		}
 
 		/// <summary>
@@ -396,7 +330,7 @@ namespace ThousandAndFirst
 		private static KingdomPlotRules.PlotSize BestHousingTier(Zone Z)
 		{
 			KingdomPlotRules.PlotSize best = KingdomPlotRules.PlotSize.None;
-			foreach (GameObject item in Z.GetObjects())
+			foreach (GameObject item in KingdomSurvey.ObjectsFor(Z))
 			{
 				if (item.GetIntProperty("KingdomBuilt") != 1 || !item.HasPart("Bed"))
 				{
@@ -415,7 +349,80 @@ namespace ThousandAndFirst
 			return best;
 		}
 
-		private static void AppendGuestbookLine(KingdomSystem System, string Line)
+		/// <summary>One plain semantic guest name; output callers escape it separately.</summary>
+		private static string PlainGuestName(GameObject guest)
+		{
+			if (!GameObject.Validate(guest)) return "a guest";
+			string named = guest.GetStringProperty("KingdomName");
+			if (string.IsNullOrEmpty(named)) named = guest.BaseDisplayNameStripped;
+			return string.IsNullOrEmpty(named) ? "a guest" : named;
+		}
+
+		/// <summary>Finds one exact, sound, wholly vacant fine house. A manor, terrace, or large
+		/// generic roof never aliases the named luxury good. The lowest stable LotId wins when
+		/// several qualify; the returned tier is that vacant home's actual staked size, or the best
+		/// exact fine-house tier seen when every one is occupied so the refusal remains exact.</summary>
+		private static GameObject FindVacantFineHouse(Zone Z, out bool HasFineHouse,
+			out KingdomPlotRules.PlotSize Tier)
+		{
+			HasFineHouse = false;
+			Tier = KingdomPlotRules.PlotSize.None;
+			GameObject chosen = null;
+			string chosenPlot = null;
+			KingdomPlotRules.PlotSize chosenTier = KingdomPlotRules.PlotSize.None;
+			foreach (GameObject item in KingdomSurvey.ObjectsFor(Z))
+			{
+				if (item.GetIntProperty(KingdomUpgrade.BuiltProperty) != 1
+					|| !string.Equals(KingdomUpgrade.DesignKeyOf(item), "finehouse",
+						StringComparison.Ordinal)
+					|| KingdomLodging.IsCondemned(item))
+					continue;
+				string plotId = item.GetStringProperty(KingdomPlots.PlotIdProperty);
+				if (string.IsNullOrEmpty(plotId)) continue;
+				HasFineHouse = true;
+				KingdomPlotRules.PlotSize actual = KingdomPlotRules.PlotSize.Medium;
+				if (KingdomPlots.TryReadRect(item, out KingdomPlotRules.PlotRect rect))
+					actual = KingdomGuestRules.ClassifyRectTier(rect.Width, rect.Height);
+				if (actual > Tier) Tier = actual;
+				if (actual < KingdomGuestRules.LegendaryTraderFineHouseTier
+					|| KingdomLodging.ResidentsOf(Z, item).Count != 0)
+					continue;
+				if (chosen == null || string.CompareOrdinal(plotId, chosenPlot) < 0)
+				{
+					chosen = item;
+					chosenPlot = plotId;
+					chosenTier = actual;
+				}
+			}
+			if (chosen != null) Tier = chosenTier;
+			return chosen;
+		}
+
+		private static bool ConfigureLegendaryTraderShop(GameObject Trader, int Tier)
+		{
+			if (!GameObject.Validate(Trader)
+				|| Tier < KingdomGuestRules.LegendaryTraderMinimumShopTier)
+				return false;
+			GenericInventoryRestocker restocker = Trader.GetPart<GenericInventoryRestocker>();
+			if (restocker == null)
+			{
+				MetricsManager.LogError("ThousandAndFirst legendary trader has no inventory restocker; "
+					+ Trader.Blueprint + " remains a citizen but cannot publish a shop.");
+				return false;
+			}
+			restocker.Clear();
+			restocker.AddTable("Tier" + Tier + "Wares");
+			restocker.Chance = 100;
+			Trader.SetIntProperty("InventoryTier", Tier);
+			Trader.SetIntProperty("VillageMerchant", 1);
+			KingdomSystem.Guard("legendary trader restock", delegate
+			{
+				restocker.PerformRestock(Silent: true);
+			});
+			return true;
+		}
+
+		internal static void AppendGuestbookLine(KingdomSystem System, string Line)
 		{
 			if (System.GuestbookLines == null)
 			{
@@ -426,6 +433,154 @@ namespace ThousandAndFirst
 			{
 				System.GuestbookLines.RemoveAt(0);
 			}
+		}
+
+		internal static void AppendLifecycleLine(KingdomSystem System, string Line)
+		{
+			if (!string.IsNullOrEmpty(Line)) AppendGuestbookLine(System, Line);
+		}
+
+		/// <summary>Creates an unplaced notable from one frozen lifecycle plan.</summary>
+		internal static GameObject CreateLifecycleNotable(KingdomLifecycleOperation op,
+			KingdomLifecycleProjection projection)
+		{
+			if (op == null || projection == null || op.Lane != KingdomLifecycleLane.NotableGuest
+				|| op.Action != KingdomLifecycleAction.Spawn) return null;
+			GameObject guest;
+			try { guest = GameObject.Create(projection.Blueprint); }
+			catch { return null; }
+			if (!GameObject.Validate(guest)) return null;
+			guest.SetIntProperty(NotableGuestProperty, 1);
+			guest.SetIntProperty(HookKindProperty, op.Kind);
+			guest.SetStringProperty(HookTextProperty, op.Detail ?? "a road still unwalked");
+			guest.SetStringProperty(OriginProperty, op.Origin ?? "the road");
+			if (!string.IsNullOrEmpty(op.ObjectName))
+				guest.GiveProperName(op.ObjectName, Force: true);
+			if (guest.HasTag(LegendaryTraderTag))
+			{
+				string title = op.DisplayFaction;
+				if (!string.IsNullOrEmpty(title)) guest.RequirePart<Titles>().AddTitle(title, -40);
+			}
+			KingdomGuestRules.HookKind kind = (KingdomGuestRules.HookKind)op.Kind;
+			// A third-party notable blueprint may already own a quest or conversation graph.
+			// Qud's helper removes that part by default, so use it only on a genuinely blank body.
+			if (guest.GetPart<ConversationScript>() == null)
+			{
+				Qud.API.ConversationsAPI.addSimpleConversationToObject(guest,
+					KingdomGuestRules.ArrivalGreeting(kind), "Live and drink.",
+					Question: "What are you really here for?", Answer: "There's " + op.Detail
+						+ ", if I ever get around to it. For now I'm only walking.");
+			}
+			return guest;
+		}
+
+		/// <summary>One resident-row mutation enclosed by Lodge's domain lease. Re-entry recognizes
+		/// exact already-enrolled evidence; it never adds a second row or consults compatibility lists.</summary>
+		internal static bool ApplyLifecycleLodge(KingdomSystem system, GameObject guest,
+			KingdomLifecycleOperation op)
+		{
+			if (system == null || op == null || !GameObject.Validate(guest)
+				|| guest.ID != op.ObjectId || guest.Blueprint != op.Blueprint) return false;
+			KingdomLifecycleResourceLease roster = op.ResourceLeases.Find(l =>
+				l != null && l.Kind == KingdomLifecycleResourceKind.Roster);
+			if (roster == null || roster.Before < 0L || roster.Before > int.MaxValue
+				|| roster.After != roster.Before + 1L) return false;
+			int before = (int)roster.Before;
+			int onRoll = Simulation.City.KingdomResidents.OnRollCount(system);
+			if (onRoll != before && onRoll != roster.After) return false;
+			GameObject fineHouse = null;
+			if (op.Target == 1)
+			{
+				fineHouse = string.IsNullOrEmpty(op.ObjectMarker)
+					? null : GameObject.FindByID(op.ObjectMarker);
+				if (!GameObject.Validate(fineHouse)
+					|| fineHouse.CurrentZone == null || fineHouse.CurrentZone != guest.CurrentZone
+					|| !string.Equals(KingdomUpgrade.DesignKeyOf(fineHouse), "finehouse",
+						StringComparison.Ordinal)
+					|| KingdomLodging.IsCondemned(fineHouse)
+					|| !KingdomPlots.TryReadRect(fineHouse, out KingdomPlotRules.PlotRect rect)
+					|| KingdomGuestRules.ClassifyRectTier(rect.Width, rect.Height)
+						< KingdomGuestRules.LegendaryTraderFineHouseTier
+					|| op.PlunderRequested < KingdomGuestRules.LegendaryTraderMinimumShopTier) return false;
+				List<GameObject> residents = KingdomLodging.ResidentsOf(fineHouse.CurrentZone, fineHouse);
+				for (int i = 0; i < residents.Count; i++)
+					if (residents[i] != guest) return false;
+			}
+			string intent = "intent:" + op.Id;
+			string receipt = guest.GetStringProperty(LodgeReceiptProperty);
+			if (receipt != op.Id && receipt != intent)
+			{
+				if (guest.GetIntProperty(NotableGuestProperty) != 1) return false;
+				guest.SetStringProperty(LodgeReceiptProperty, intent);
+			}
+			if (!string.IsNullOrEmpty(op.Creed))
+			{
+				string held = guest.GetStringProperty(KingdomCreed.CreedProperty);
+				system.CreedCounts.TryGetValue(op.Creed, out int currentCreed);
+				if (currentCreed != op.Count && currentCreed != op.Count + 1) return false;
+				if (!string.IsNullOrEmpty(held)
+					&& !string.Equals(held, op.Creed, StringComparison.Ordinal)) return false;
+				guest.SetStringProperty(KingdomCreed.CreedProperty, op.Creed);
+				if (currentCreed == op.Count) system.CreedCounts[op.Creed] = currentCreed + 1;
+			}
+			if (!KingdomFounding.EnrollCitizen(guest,
+				KingdomCitizenshipEnrollmentReason.GuestAdoption,
+				op.CreatedTick)) return false;
+			guest.SetIntProperty("KingdomBorn", 1);
+			guest.DisplayName = KingdomPresentation.Rich(op.ObjectName);
+			guest.SetStringProperty("KingdomName", op.ObjectName);
+			guest.SetStringProperty("KingdomOrigin", op.Origin ?? "");
+			guest.SetIntProperty(NotableGuestProperty, 0);
+			if (op.Target == 1)
+			{
+				guest.SetIntProperty(LegendaryTraderResidentProperty, 1);
+				guest.SetStringProperty(KingdomLodging.HomePlotIdProperty,
+					fineHouse.GetStringProperty(KingdomPlots.PlotIdProperty));
+				if (!ConfigureLegendaryTraderShop(guest, op.PlunderRequested)) return false;
+			}
+			Simulation.City.KingdomCityBook residentBook;
+			int residentId;
+			if (!Simulation.City.KingdomResidents.TryEnsureRow(system, guest, op.Origin,
+				op.Faction, op.CreatedTick, out residentBook, out residentId)) return false;
+			guest.SetStringProperty(LodgeReceiptProperty, op.Id);
+			// Lodging changes civic status, not the guest's native/owned conversation graph.
+			if (op.Outbox != null && op.Outbox.ChronicleAccomplishment)
+				system.FirstNotableGuestLodged = true;
+			return true;
+		}
+
+		internal static bool LifecycleLodgeComplete(KingdomSystem system, GameObject guest,
+			KingdomLifecycleOperation op)
+		{
+			GameObject fineHouse = op == null || string.IsNullOrEmpty(op.ObjectMarker)
+				? null : GameObject.FindByID(op.ObjectMarker);
+			Simulation.City.KingdomCityBook residentBook;
+			int residentId;
+			Simulation.City.KingdomCityState state;
+			Simulation.City.KingdomCityFault fault;
+			int rowIndex;
+			Simulation.City.KingdomResidentRow row;
+			bool exactRow = system != null && GameObject.Validate(guest)
+				&& Simulation.City.KingdomResidents.TryLocate(system, guest, out residentBook,
+					out residentId)
+				&& residentBook.TryRead(out state, out fault)
+				&& state.TryResidentIndex(residentId, out rowIndex)
+				&& state.TryResident(rowIndex, out row)
+				&& Simulation.City.KingdomResidentRules.OnTheRoll(row)
+				&& string.Equals(row.Name, op?.ObjectName, StringComparison.Ordinal)
+				&& string.Equals(row.Origin, op?.Origin ?? "", StringComparison.Ordinal)
+				&& string.Equals(row.Arrived, op?.Faction ?? "", StringComparison.Ordinal);
+			return system != null && op != null && GameObject.Validate(guest)
+				&& guest.ID == op.ObjectId
+				&& guest.GetStringProperty(LodgeReceiptProperty) == op.Id
+				&& exactRow
+				&& Simulation.City.KingdomResidents.OnRollCount(system) == op.Defence + 1
+				&& (op.Target != 1 || (guest.GetIntProperty(LegendaryTraderResidentProperty) == 1
+					&& GameObject.Validate(fineHouse)
+					&& guest.GetStringProperty(KingdomLodging.HomePlotIdProperty)
+						== fineHouse.GetStringProperty(KingdomPlots.PlotIdProperty)
+					&& guest.GetIntProperty("VillageMerchant") == 1
+					&& guest.GetIntProperty("InventoryTier") == op.PlunderRequested));
 		}
 
 		/// <summary>
@@ -464,6 +619,11 @@ namespace ThousandAndFirst
 				return;
 			}
 			KingdomSystem system = The.Game.RequireSystem<KingdomSystem>();
+			if (!KingdomMaster.NewWorkAllowed(system))
+			{
+				Popup.Show("Settlement simulation is paused; no new haul can be marked.");
+				return;
+			}
 			Cell cell = Actor.CurrentCell;
 			Zone zone = Actor.CurrentZone;
 			if (cell == null || zone == null)
@@ -471,158 +631,36 @@ namespace ThousandAndFirst
 				Popup.Show("There is no ground here to plant a sign on.");
 				return;
 			}
-			bool hasRoad = false;
-			int distance = 0;
-			if (KingdomRules.TryParseZoneID(zone.ZoneID, out string world, out int gx, out int gy, out int z))
+			KingdomCarryRuntime.PlantPlan plan;
+			string failure;
+			long now = The.Game.TimeTicks;
+			if (!KingdomCarryRuntime.TryPreparePlant(system, Actor, Sign, zone, cell, now,
+				out plan, out failure))
 			{
-				hasRoad = NearestClaimedDistance(system, world, gx, gy, z, out distance);
-			}
-			GameObject container;
-			KingdomMaterialTally manifest = ScanManifest(cell, out container);
-			int total = manifest.Total();
-			KingdomGuestRules.PlantVerdict verdict = KingdomGuestRules.AssessPlant(system.Founded, system.Haul != null, hasRoad, total);
-			if (verdict != KingdomGuestRules.PlantVerdict.Planted)
-			{
-				Popup.Show(KingdomGuestRules.PlantRefusal(verdict));
+				Popup.Show(failure);
 				return;
 			}
-			int days = KingdomGuestRules.HaulDays(distance);
-			string description = manifest.Describe() ?? "nothing";
-			// Consent before cost: the founder sees the exact manifest and the exact wait before
-			// anything is swept. Nothing here is reversible once confirmed.
-			if (Popup.ShowYesNo(KingdomGuestRules.PlantConfirm(description, days)) != DialogResult.Yes)
+			// Consent precedes reservation and every physical callback. The prompt names every
+			// whole object/stack and the distance-scaled wait frozen by the draft plan.
+			if (Popup.ShowYesNo(KingdomGuestRules.PlantConfirm(plan.Description, plan.Days))
+				!= DialogResult.Yes)
 			{
 				return;
 			}
-			string destinationId = system.CurrentSettlementId;
-			if (!KingdomIdentityRules.IsSettlementId(destinationId))
+			if (!KingdomCarryRuntime.PublishPlant(plan, out failure))
 			{
-				Popup.Show("The city's immutable identity cannot be proved. The load was not moved.");
+				Popup.Show(failure);
 				return;
 			}
-			RemoveManifestItems(cell, container);
-			long plantedTick = The.Game.TimeTicks;
-			KingdomCarryHaul haul = new KingdomCarryHaul
-			{
-				OriginZoneID = zone.ZoneID,
-				OriginX = cell.X,
-				OriginY = cell.Y,
-				DestinationSettlementId = destinationId,
-				DestinationSettlementName = system.SeatName,
-				PlantedTick = plantedTick,
-				DueTick = KingdomGuestRules.HaulDueTick(plantedTick, days),
-				Mud = manifest.Get(KingdomMaterial.Mud),
-				Brush = manifest.Get(KingdomMaterial.Brush),
-				Timber = manifest.Get(KingdomMaterial.Timber),
-				Stone = manifest.Get(KingdomMaterial.Stone),
-				Marble = manifest.Get(KingdomMaterial.Marble),
-				Scrap = manifest.Get(KingdomMaterial.Scrap)
-			};
-			system.Haul = haul;
-			Sign.Obliterate();
-			KingdomChronicle.Record(system, KingdomGuestRules.PlantedChronicleLine(system.SeatName, description, days));
-			MessageQueue.AddPlayerMessage(KingdomGuestRules.PlantedMessage(days));
-			KingdomLog.Log("carry-sign: planted days=" + days + " manifest=" + description);
+			MessageQueue.AddPlayerMessage(KingdomGuestRules.PlantedMessage(plan.Days));
+			KingdomLog.Log("carry-sign: exact manifest planted days=" + plan.Days
+				+ " objects=" + plan.Sources.Count);
 		}
 
-		/// <summary>The shortest same-world zone-grid distance from (<paramref name="GX"/>,
-		/// <paramref name="GY"/>, <paramref name="Z"/>) to any of the realm's claimed zones.</summary>
-		/// <returns>False when no claimed zone shares the given world &mdash; there is no road
-		/// to compute a distance along.</returns>
-		private static bool NearestClaimedDistance(KingdomSystem System, string World, int GX, int GY, int Z, out int Distance)
-		{
-			Distance = int.MaxValue;
-			bool found = false;
-			foreach (string zoneId in System.ClaimedZones)
-			{
-				if (!KingdomRules.TryParseZoneID(zoneId, out string otherWorld, out int ogx, out int ogy, out int oz) || otherWorld != World)
-				{
-					continue;
-				}
-				int d = KingdomGuestRules.ZoneGridDistance(GX, GY, Z, ogx, ogy, oz);
-				if (!found || d < Distance)
-				{
-					Distance = d;
-					found = true;
-				}
-			}
-			return found;
-		}
-
-		/// <summary>
-		/// Reads what a carry-sign would take from <paramref name="CellAt"/>: everything held in
-		/// the first container found there, or — with no container — everything recognized lying
-		/// directly on the ground. Nothing is removed; see <see cref="RemoveManifestItems"/> for
-		/// the half that actually takes it.
-		/// </summary>
-		private static KingdomMaterialTally ScanManifest(Cell CellAt, out GameObject Container)
-		{
-			KingdomMaterialTally tally = new KingdomMaterialTally();
-			Container = null;
-			if (CellAt == null)
-			{
-				return tally;
-			}
-			foreach (GameObject item in CellAt.GetObjects())
-			{
-				if (item.Inventory != null && !item.IsCreature && !item.IsPlayer())
-				{
-					Container = item;
-					break;
-				}
-			}
-			if (Container != null)
-			{
-				foreach (GameObject held in Container.Inventory.Objects)
-				{
-					if (KingdomMaterials.TryMaterialOf(held, out KingdomMaterial material))
-					{
-						tally.Add(material, held.Count);
-					}
-				}
-				return tally;
-			}
-			foreach (GameObject item in CellAt.GetObjects())
-			{
-				if (KingdomMaterials.TryMaterialOf(item, out KingdomMaterial material))
-				{
-					tally.Add(material, item.Count);
-				}
-			}
-			return tally;
-		}
-
-		/// <summary>
-		/// Actually takes what <see cref="ScanManifest"/> counted, stack-aware
-		/// (<c>GameObject.Destroy</c> on a stack decrements it by one and only removes the object
-		/// on the last unit — the same idiom <c>KingdomMaterials.MaterialStock.Take</c> uses, and
-		/// for the same reason: never trust that a call removed what was asked without measuring
-		/// the count before and after, STANDARDS.md &sect;1).
-		/// </summary>
-		private static void RemoveManifestItems(Cell CellAt, GameObject Container)
-		{
-			List<GameObject> snapshot = (Container != null)
-				? new List<GameObject>(Container.Inventory.Objects)
-				: new List<GameObject>(CellAt.GetObjects());
-			foreach (GameObject item in snapshot)
-			{
-				if (!KingdomMaterials.TryMaterialOf(item, out _))
-				{
-					continue;
-				}
-				while (GameObject.Validate(item))
-				{
-					int before = item.Count;
-					item.Destroy(null, Silent: true);
-					if (GameObject.Validate(item) && item.Count >= before)
-					{
-						break;
-					}
-				}
-			}
-		}
-
-		private static void ResolveHaulIfDue(KingdomSystem System, Zone Z, long TimeTicks)
+		/// <summary>Compatibility resolver for v5 saves only. New work never enters this scalar
+		/// destroy/mint lane; a zero-material System.Haul is the v6 schedule projection.</summary>
+		private static void ResolveLegacyHaulIfDue(KingdomSystem System, Zone Z,
+			KingdomSurvey Survey, long TimeTicks)
 		{
 			KingdomCarryHaul haul = System.Haul;
 			if (haul == null || !string.Equals(System.CurrentSettlementId,
@@ -639,17 +677,10 @@ namespace ThousandAndFirst
 			manifest.Set(KingdomMaterial.Stone, haul.Stone);
 			manifest.Set(KingdomMaterial.Marble, haul.Marble);
 			manifest.Set(KingdomMaterial.Scrap, haul.Scrap);
+			if (manifest.Total() <= 0) return;
 			string description = manifest.Describe() ?? "the load";
 			bool raidActive = System.RaidState == 1;
-			bool raidersPresent = false;
-			foreach (GameObject item in Z.GetObjects())
-			{
-				if (GameObject.Validate(item) && item.GetIntProperty("KingdomRaider") == 1)
-				{
-					raidersPresent = true;
-					break;
-				}
-			}
+			bool raidersPresent = Survey != null && Survey.Raiders.Count > 0;
 			if (KingdomGuestRules.HaulWaitsForSafety(raidActive, raidersPresent))
 			{
 				KingdomLog.Log("carry-sign: due haul retained while threat stands manifest="
@@ -658,7 +689,7 @@ namespace ThousandAndFirst
 			}
 			System.Haul = null;
 			int spilled = KingdomMaterials.Deliver(System, Z, manifest);
-			KingdomChronicle.Record(System, KingdomGuestRules.DeliveredChronicleLine(System.SeatName, description));
+			KingdomChronicle.Record(System, KingdomGuestRules.DeliveredChronicleLine(KingdomPresentation.Rich(System.SeatName), description));
 			System.Ledger.Note(KingdomGuestRules.DeliveredLedgerNote(description));
 			KingdomLog.Log("carry-sign: delivered manifest=" + description + " spilled=" + spilled);
 		}

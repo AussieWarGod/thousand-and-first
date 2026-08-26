@@ -228,6 +228,23 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void FirstFactionKeyIsTheRealmIdAndLegacyNameNeedsExplicitAdmission()
+		{
+			string realm;
+			KingdomIdentityFault fault;
+			Assert.That(KingdomIdentityRules.TryMintRealm(First, out realm, out fault),
+				Is.True);
+			Assert.That(KingdomIdentityRules.FirstFactionKeyMatches(realm, First,
+				"Kavvat", AllowLegacy: false), Is.True);
+			Assert.That(KingdomIdentityRules.FirstFactionKeyMatches("Kavvat", First,
+				"Kavvat", AllowLegacy: false), Is.False);
+			Assert.That(KingdomIdentityRules.FirstFactionKeyMatches("Kavvat", First,
+				"Kavvat", AllowLegacy: true), Is.True);
+			Assert.That(KingdomIdentityRules.FirstFactionKeyMatches("another", First,
+				"Kavvat", AllowLegacy: true), Is.False);
+		}
+
+		[Test]
 		public void FoundedTopology_RequiresRealmAndAtLeastOneExactCity()
 		{
 			KingdomIdentityFault fault;

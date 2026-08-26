@@ -38,15 +38,37 @@ namespace ThousandAndFirst
 		/// <summary>Certified tech: a work a mind has to understand before it runs right.</summary>
 		public const string KindIntelligence = "intelligence";
 
+		/// <summary>Open skill-capability kinds. They are thresholds on skills real settlers carry,
+		/// not research keys and never substitutes for Intelligence tier gates.</summary>
+		public const string KindTinkering = "skill.tinkering";
+		public const string KindHarvestry = "skill.harvestry";
+		public const string KindCustoms = "skill.customs";
+		public const string KindPhysic = "skill.physic";
+		public const string KindWayfaring = "skill.wayfaring";
+
 		/// <summary>Every capability kind this file itself answers for, in the order a design's
 		/// <c>CrewNeeds</c> is read: the first kind a design names a positive threshold for is the
 		/// one its crew is measured against (<see cref="KingdomCrews.AssignWorks"/>). Not
 		/// restricted to this list on the parsing side &mdash; a kind nobody's stats answer to yet
 		/// is somebody else's vocabulary and is logged, not refused (STANDARDS 9).</summary>
-		public static readonly string[] KnownKinds = new string[2] { KindStrength, KindIntelligence };
+		public static readonly string[] KnownKinds = new string[7]
+		{
+			KindStrength, KindIntelligence, KindTinkering, KindHarvestry, KindCustoms,
+			KindPhysic, KindWayfaring
+		};
 
-		/// <summary>The vanilla <c>Statistics</c> key a known kind reads, or null for a kind this
-		/// file does not (yet) know how to read off a <c>GameObject</c>.</summary>
+		public static bool IsKnownKind(string Kind)
+		{
+			if (string.IsNullOrEmpty(Kind)) return false;
+			for (int i = 0; i < KnownKinds.Length; i++)
+				if (string.Equals(KnownKinds[i], Kind, System.StringComparison.OrdinalIgnoreCase))
+					return true;
+			return false;
+		}
+
+		/// <summary>The vanilla <c>Statistics</c> key an attribute kind reads. Skill kinds return
+		/// null because <see cref="WorkerSkills"/> reads them through <c>HasSkill</c>; an unknown kind
+		/// also returns null.</summary>
 		public static string StatNameFor(string Kind)
 		{
 			switch (Kind)
@@ -57,6 +79,41 @@ namespace ThousandAndFirst
 				return "Intelligence";
 			default:
 				return null;
+			}
+		}
+
+		/// <summary>Frozen vanilla skill facts for one person. Values are 0/1 because the catalogue
+		/// asks whether a practiced hand is present; attribute magnitude remains the separate
+		/// Strength/Intelligence lane.</summary>
+		public readonly struct WorkerSkills
+		{
+			public readonly int Tinkering;
+			public readonly int Harvestry;
+			public readonly int Customs;
+			public readonly int Physic;
+			public readonly int Wayfaring;
+
+			public WorkerSkills(bool Tinkering, bool Harvestry, bool Customs, bool Physic,
+				bool Wayfaring)
+			{
+				this.Tinkering = Tinkering ? 1 : 0;
+				this.Harvestry = Harvestry ? 1 : 0;
+				this.Customs = Customs ? 1 : 0;
+				this.Physic = Physic ? 1 : 0;
+				this.Wayfaring = Wayfaring ? 1 : 0;
+			}
+
+			public int ValueOf(string Kind)
+			{
+				switch (Kind)
+				{
+				case KindTinkering: return Tinkering;
+				case KindHarvestry: return Harvestry;
+				case KindCustoms: return Customs;
+				case KindPhysic: return Physic;
+				case KindWayfaring: return Wayfaring;
+				default: return 0;
+				}
 			}
 		}
 
@@ -90,11 +147,35 @@ namespace ThousandAndFirst
 			/// certified.</summary>
 			public readonly bool Tireless;
 
+			/// <summary>Addendum 17's one identity field: open culture/species strings plus
+			/// vanilla-authored activity evidence. It affects assignment and the separate
+			/// affinity factor, never the Intelligence tier read performed by <see cref="ValueOf"/>.</summary>
+			public readonly KingdomIdentityAffinityRules.WorkerIdentity Identity;
+
+			/// <summary>The skill half of Addendum 17's full capability tuple, read from vanilla
+			/// <c>HasSkill</c> and consumed by the same ablest-first assignment.</summary>
+			public readonly WorkerSkills Skills;
+
 			public SettlerCapability(int Strength, int Intelligence, bool Tireless)
+				: this(Strength, Intelligence, Tireless,
+					default(KingdomIdentityAffinityRules.WorkerIdentity), default(WorkerSkills))
+			{
+			}
+
+			public SettlerCapability(int Strength, int Intelligence, bool Tireless,
+				KingdomIdentityAffinityRules.WorkerIdentity Identity)
+				: this(Strength, Intelligence, Tireless, Identity, default(WorkerSkills))
+			{
+			}
+
+			public SettlerCapability(int Strength, int Intelligence, bool Tireless,
+				KingdomIdentityAffinityRules.WorkerIdentity Identity, WorkerSkills Skills)
 			{
 				this.Strength = Strength;
 				this.Intelligence = Intelligence;
 				this.Tireless = Tireless;
+				this.Identity = Identity;
+				this.Skills = Skills;
 			}
 
 			/// <summary>The value this settler brings to one capability kind. Zero for a kind
@@ -109,8 +190,29 @@ namespace ThousandAndFirst
 				case KindIntelligence:
 					return Intelligence;
 				default:
-					return 0;
+					return Skills.ValueOf(Kind);
 				}
+			}
+
+			/// <summary>Per-person work affinity. Kept separate from the raw stat so culture
+			/// cannot satisfy or skip a research Intelligence tier.</summary>
+			public int Affinity(string WorkKind)
+			{
+				return Identity.Affinity(WorkKind);
+			}
+
+			internal int RankedValue(string CapabilityKind, string WorkKind)
+			{
+				return RankedValue(CapabilityKind, WorkKind,
+					KingdomIdentityAffinityRules.NeutralPercent);
+			}
+
+			internal int RankedValue(string CapabilityKind, string WorkKind,
+				int ExtensionAffinity)
+			{
+				int raw = string.IsNullOrEmpty(CapabilityKind) ? 100 : ValueOf(CapabilityKind);
+				return KingdomIdentityAffinityRules.Apply(raw,
+					KingdomIdentityAffinityRules.Compose(Affinity(WorkKind), ExtensionAffinity));
 			}
 		}
 
@@ -128,12 +230,23 @@ namespace ThousandAndFirst
 
 			public readonly int CapabilityThreshold;
 
+			/// <summary>The building's open catalogue category. Null keeps the pre-identity
+			/// assignment exactly neutral.</summary>
+			public readonly string WorkKind;
+
 			public CrewDemand(int Headcount, bool Threshold, string CapabilityKind, int CapabilityThreshold)
+				: this(Headcount, Threshold, CapabilityKind, CapabilityThreshold, null)
+			{
+			}
+
+			public CrewDemand(int Headcount, bool Threshold, string CapabilityKind,
+				int CapabilityThreshold, string WorkKind)
 			{
 				this.Headcount = Headcount;
 				this.Threshold = Threshold;
 				this.CapabilityKind = CapabilityKind;
 				this.CapabilityThreshold = CapabilityThreshold;
+				this.WorkKind = WorkKind;
 			}
 		}
 
@@ -154,17 +267,32 @@ namespace ThousandAndFirst
 			/// kind &mdash; never a partial credit for anyone left out.</summary>
 			public readonly int BestCapability;
 
+			/// <summary>Average affinity of the hands actually assigned, 70-130. A separate
+			/// factor from headcount/capability and condition; neutral when nobody was assigned.</summary>
+			public readonly int IdentityAffinity;
+
+			public readonly string WorkKind;
+
 			/// <summary>Indices into the pool <see cref="AssignCrew"/> was called with, ablest
 			/// first. Empty, never null, when nobody was assigned.</summary>
 			public readonly int[] SettlerIndices;
 
 			public CrewOutcome(int Assigned, string CapabilityKind, int CapabilityThreshold, int BestCapability, int[] SettlerIndices)
+				: this(Assigned, CapabilityKind, CapabilityThreshold, BestCapability,
+					SettlerIndices, KingdomIdentityAffinityRules.NeutralPercent, null)
+			{
+			}
+
+			public CrewOutcome(int Assigned, string CapabilityKind, int CapabilityThreshold,
+				int BestCapability, int[] SettlerIndices, int IdentityAffinity, string WorkKind)
 			{
 				this.Assigned = Assigned;
 				this.CapabilityKind = CapabilityKind;
 				this.CapabilityThreshold = CapabilityThreshold;
 				this.BestCapability = BestCapability;
 				this.SettlerIndices = SettlerIndices;
+				this.IdentityAffinity = KingdomIdentityAffinityRules.Clamp(IdentityAffinity);
+				this.WorkKind = WorkKind;
 			}
 		}
 
@@ -247,6 +375,15 @@ namespace ThousandAndFirst
 		/// <returns>One outcome per demand, same order, same length. Never null.</returns>
 		public static CrewOutcome[] AssignCrew(SettlerCapability[] Pool, CrewDemand[] Demands)
 		{
+			return AssignCrew(Pool, Demands, null);
+		}
+
+		/// <summary>The same deterministic assignment with a frozen extension-affinity matrix. Rows
+		/// are demands, columns are pool settlers. Missing/malformed cells are neutral; no extension
+		/// code runs inside this pure allocation.</summary>
+		public static CrewOutcome[] AssignCrew(SettlerCapability[] Pool, CrewDemand[] Demands,
+			int[,] ExtensionAffinities)
+		{
 			if (Demands == null || Demands.Length == 0)
 			{
 				return new CrewOutcome[0];
@@ -260,13 +397,17 @@ namespace ThousandAndFirst
 				int need = (demand.Headcount > 0) ? demand.Headcount : 0;
 				if (need == 0)
 				{
-					result[i] = new CrewOutcome(0, demand.CapabilityKind, demand.CapabilityThreshold, 0, EmptyIndices);
+					result[i] = new CrewOutcome(0, demand.CapabilityKind,
+						demand.CapabilityThreshold, 0, EmptyIndices,
+						KingdomIdentityAffinityRules.NeutralPercent, demand.WorkKind);
 					continue;
 				}
-				int[] order = RankCandidates(pool, taken, demand.CapabilityKind);
+				int[] order = RankCandidates(pool, taken, demand.CapabilityKind,
+					demand.WorkKind, ExtensionAffinities, i);
 				int give = (need <= order.Length) ? need : (demand.Threshold ? 0 : order.Length);
 				int[] chosen = new int[give];
 				int best = 0;
+				int affinity = 0;
 				for (int k = 0; k < give; k++)
 				{
 					int idx = order[k];
@@ -277,8 +418,15 @@ namespace ThousandAndFirst
 					{
 						best = value;
 					}
+					affinity += KingdomIdentityAffinityRules.Compose(
+						pool[idx].Affinity(demand.WorkKind),
+						ExtensionAffinityOf(ExtensionAffinities, i, idx));
 				}
-				result[i] = new CrewOutcome(give, demand.CapabilityKind, demand.CapabilityThreshold, (demand.CapabilityKind != null) ? best : 0, chosen);
+				int averageAffinity = give > 0 ? affinity / give
+					: KingdomIdentityAffinityRules.NeutralPercent;
+				result[i] = new CrewOutcome(give, demand.CapabilityKind,
+					demand.CapabilityThreshold, (demand.CapabilityKind != null) ? best : 0,
+					chosen, averageAffinity, demand.WorkKind);
 			}
 			return result;
 		}
@@ -287,7 +435,9 @@ namespace ThousandAndFirst
 		// stable ascending index, so equal settlers are always drawn in the same order and the
 		// assignment never depends on the sort's own implementation), plain arrival order when it
 		// is not -- identical to what plain headcount allocation already drew from.
-		private static int[] RankCandidates(SettlerCapability[] Pool, bool[] Taken, string CapabilityKind)
+		private static int[] RankCandidates(SettlerCapability[] Pool, bool[] Taken,
+			string CapabilityKind, string WorkKind, int[,] ExtensionAffinities,
+			int DemandIndex)
 		{
 			List<int> candidates = new List<int>();
 			for (int i = 0; i < Pool.Length; i++)
@@ -297,15 +447,30 @@ namespace ThousandAndFirst
 					candidates.Add(i);
 				}
 			}
-			if (!string.IsNullOrEmpty(CapabilityKind))
+			if (!string.IsNullOrEmpty(CapabilityKind) || !string.IsNullOrEmpty(WorkKind))
 			{
 				candidates.Sort(delegate(int a, int b)
 				{
-					int byValue = Pool[b].ValueOf(CapabilityKind).CompareTo(Pool[a].ValueOf(CapabilityKind));
+					int byValue = Pool[b].RankedValue(CapabilityKind, WorkKind,
+						ExtensionAffinityOf(ExtensionAffinities, DemandIndex, b))
+						.CompareTo(Pool[a].RankedValue(CapabilityKind, WorkKind,
+							ExtensionAffinityOf(ExtensionAffinities, DemandIndex, a)));
 					return (byValue != 0) ? byValue : a.CompareTo(b);
 				});
 			}
 			return candidates.ToArray();
+		}
+
+		private static int ExtensionAffinityOf(int[,] Affinities, int Demand, int Settler)
+		{
+			if (Affinities == null || Demand < 0 || Settler < 0
+				|| Demand >= Affinities.GetLength(0) || Settler >= Affinities.GetLength(1))
+			{
+				return KingdomIdentityAffinityRules.NeutralPercent;
+			}
+			int value = Affinities[Demand, Settler];
+			return value == 0 ? KingdomIdentityAffinityRules.NeutralPercent
+				: KingdomIdentityAffinityRules.Clamp(value);
 		}
 
 		// --- Naming the shortfall (STANDARDS 7b) ----------------------------------------------
@@ -319,6 +484,16 @@ namespace ThousandAndFirst
 				return "strength";
 			case KindIntelligence:
 				return "a certified mind";
+			case KindTinkering:
+				return "a practiced tinker";
+			case KindHarvestry:
+				return "a practiced harvester";
+			case KindCustoms:
+				return "a keeper versed in customs";
+			case KindPhysic:
+				return "a practiced physicker";
+			case KindWayfaring:
+				return "a practiced wayfarer";
 			default:
 				return string.IsNullOrEmpty(Kind) ? "capability" : Kind;
 			}

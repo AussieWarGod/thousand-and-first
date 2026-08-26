@@ -279,6 +279,9 @@ namespace ThousandAndFirst
 			string name = Adopted.ShortDisplayName;
 			Adopted.SetIntProperty(BuiltProperty, 0);
 			KingdomGovernanceScope.Commit("release adoption");
+			// Plot receipt owns several properties. Retire it while AdoptedProperty still makes
+			// an interrupted release retryable; only then publish the general adoption removal.
+			KingdomPlots.ReleaseAdoptedPlot(Adopted);
 			Adopted.SetIntProperty(AdoptedProperty, 0);
 			Adopted.SetStringProperty(AdoptedKeyProperty, null, RemoveIfNull: true);
 			Adopted.SetStringProperty(AdoptedMarkProperty, null, RemoveIfNull: true);
@@ -298,7 +301,7 @@ namespace ThousandAndFirst
 				// anything the founder made.
 				Adopted.Destroy(null, Silent: true);
 			}
-			MessageQueue.AddPlayerMessage("{{K|" + name + " is released" + (wasMarker ? "." : " from " + System.SeatName + "'s standing.") + "}}"
+			MessageQueue.AddPlayerMessage("{{K|" + name + " is released" + (wasMarker ? "." : " from " + KingdomPresentation.Rich(System.SeatName) + "'s standing.") + "}}"
 				+ (wasMarker ? "" : " It stands exactly where it stood."));
 			KingdomLog.Log("adopt: released " + name + " (" + key + ") at " + System.SeatName);
 			return true;
@@ -332,9 +335,11 @@ namespace ThousandAndFirst
 
 		private static void AnnounceAdoption(KingdomSystem System, KingdomRules.BuildEntry Entry, GameObject Target)
 		{
-			MessageQueue.AddPlayerMessage("{{G|" + Target.ShortDisplayName + " is adopted into " + System.SeatName + " as " + XRL.Language.Grammar.A(Entry.Name) + ".}}");
-			KingdomChronicle.Record(System, Target.ShortDisplayName + " was adopted into " + System.KingdomDisplayName + " as " + XRL.Language.Grammar.A(Entry.Name));
-			System.RecordDeed(Target.ShortDisplayName + " adopted into " + System.KingdomDisplayName + " as " + XRL.Language.Grammar.A(Entry.Name));
+			string seat = KingdomPresentation.Rich(System.SeatName);
+			string realm = KingdomPresentation.Rich(System.KingdomDisplayName);
+			MessageQueue.AddPlayerMessage("{{G|" + Target.ShortDisplayName + " is adopted into " + seat + " as " + XRL.Language.Grammar.A(Entry.Name) + ".}}");
+			KingdomChronicle.Record(System, Target.ShortDisplayName + " was adopted into " + realm + " as " + XRL.Language.Grammar.A(Entry.Name));
+			System.RecordDeed(Target.ShortDisplayName + " adopted into " + realm + " as " + XRL.Language.Grammar.A(Entry.Name));
 			KingdomLog.Log("adopt: " + Target.ShortDisplayName + " as " + Entry.Key + " at " + System.SeatName);
 		}
 
@@ -390,9 +395,9 @@ namespace ThousandAndFirst
 			switch (Verdict)
 			{
 			case KingdomAdoptRules.AdoptionVerdict.RefusedAlreadyServing:
-				return ((Candidate != null) ? Candidate.ShortDisplayName : "Something here") + " already stands for " + System.SeatName + ". Release it before adopting it again.";
+				return ((Candidate != null) ? Candidate.ShortDisplayName : "Something here") + " already stands for " + KingdomPresentation.Rich(System.SeatName) + ". Release it before adopting it again.";
 			case KingdomAdoptRules.AdoptionVerdict.RefusedBelowStage:
-				return System.SeatName + " hasn't grown enough yet to keep a " + name + " standing. Come back once it has.";
+				return KingdomPresentation.Rich(System.SeatName) + " hasn't grown enough yet to keep a " + name + " standing. Come back once it has.";
 			case KingdomAdoptRules.AdoptionVerdict.RefusedNoBed:
 				return "It wants a bed, and there is none here.";
 			case KingdomAdoptRules.AdoptionVerdict.RefusedNotStorageCapable:

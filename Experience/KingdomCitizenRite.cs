@@ -152,7 +152,7 @@ namespace ThousandAndFirst
 			Chronicle(System);
 			string line = (Tally.Hosts > 0 || Tally.Citizens <= 0)
 				? ""
-				: KingdomCitizenRiteRules.BlockedLine(Tally.Worst, System.SeatName, Tally.Liquid);
+				: KingdomCitizenRiteRules.BlockedLine(Tally.Worst, KingdomPresentation.Rich(System.SeatName), Tally.Liquid);
 			if (string.IsNullOrEmpty(line))
 			{
 				// The block lifted, or there never was one. Clearing the flag is what makes the
@@ -251,7 +251,8 @@ namespace ThousandAndFirst
 		{
 			Liquid = null;
 			bool founded = System != null && System.Founded;
-			bool citizen = Citizen != null && Citizen.GetIntProperty("KingdomCitizen") == 1 && !Citizen.IsPlayer();
+			bool citizen = Citizen != null && KingdomCitizenship.BelongsTo(System, Citizen)
+				&& !Citizen.IsPlayer();
 			bool body = Citizen != null && Citizen.Brain != null;
 			string faction = (citizen && body) ? Citizen.GetPrimaryFaction(Base: true) : null;
 			bool known = !string.IsNullOrEmpty(faction) && Factions.Exists(faction);
@@ -300,7 +301,7 @@ namespace ThousandAndFirst
 			int citizens = 0;
 			foreach (GameObject item in Z.GetObjects())
 			{
-				if (item.GetIntProperty("KingdomCitizen") != 1)
+				if (!KingdomCitizenship.BelongsTo(System, item))
 				{
 					continue;
 				}
@@ -334,7 +335,7 @@ namespace ThousandAndFirst
 				return;
 			}
 			ConversationsAPI.addSimpleConversationToObject(citizen,
-				KingdomCitizenRiteRules.Greeting(system.SeatName, KingdomWaterRite.SharedDaysOf(citizen)),
+				KingdomCitizenRiteRules.Greeting(KingdomPresentation.Rich(system.SeatName), KingdomWaterRite.SharedDaysOf(citizen)),
 				KingdomCitizenRiteRules.Farewell());
 			citizen.SetIntProperty(ConversationProperty, 1);
 			citizen.SetIntProperty(GreetingBandProperty, band + 1);

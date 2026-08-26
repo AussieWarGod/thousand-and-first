@@ -2,8 +2,8 @@
 
 Checked against installed Caves of Qud `2.0.211.51`, Steam build `24626113`, DLL SHA-256
 `8c3b0fc371eaffc85e3dc971e8ffcb21dfc6b05fb25b92398fbd474260598000` on
-2026-08-19. `D/` below means the fresh decompile at
-`/mnt/c/Users/Reegan/AppData/Local/Temp/taf-ilspy-nested.MrS8jE`.
+2026-08-19. `D/` below means a fresh local decompile of that pinned assembly; its filesystem
+location is deliberately contributor-specific.
 
 ## Ruling and verdict
 
@@ -328,4 +328,3 @@ Do not connect storage or world generation until all are true:
 - one-seat reconstruction schema is frozen;
 - user-facing import/retirement/normalization choices are decided;
 - exact-engine compile plus the automated gates pass in an isolated branch.
-

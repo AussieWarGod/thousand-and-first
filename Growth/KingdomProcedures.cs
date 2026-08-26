@@ -212,7 +212,7 @@ namespace ThousandAndFirst
 					"kingdomprocedures",
 					delegate(XmlDataHelper xml)
 					{
-						xml.HandleNodes(handlers);
+						KingdomXmlSchema.HandleRoot(xml, handlers, "KingdomProcedures");
 					}
 				},
 				{ "procedure", HandleProcedure }

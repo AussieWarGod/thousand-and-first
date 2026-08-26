@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "inventorySha256": "SHA256_PRINTED_BY_TOOLS_CHECK_STRUCTURE",
+  "exceptions": [],
+  "reviewedBy": "HUMAN_REVIEWER_NAME_OR_ALIAS",
+  "completedUtc": "YYYY-MM-DDTHH:MM:SSZ",
+  "oneResponsibility": {
+    "status": "passed",
+    "notes": "NAME_THE_FILE_BY_FILE_OWNERSHIP_REVIEW_AND_RETAINED_EVIDENCE"
+  },
+  "protocolsAtBoundaries": {
+    "status": "passed",
+    "notes": "NAME_THE_ENGINE_SERIALIZATION_API_AND_EXTENSION_BOUNDARY_REVIEW"
+  }
+}

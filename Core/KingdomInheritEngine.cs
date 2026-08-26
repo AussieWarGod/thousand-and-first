@@ -128,8 +128,20 @@ namespace ThousandAndFirst
 
 		internal readonly int FootprintHeight;
 
+		internal readonly int FootprintX;
+
+		internal readonly int FootprintY;
+
+		internal readonly bool IsArchitecture;
+
+		internal readonly bool IsStreet;
+
+		internal readonly string ArchitectureSnapshot;
+
+		internal readonly string ArchitectureHash;
+
 		internal KingdomInheritBuildSpec(int Index, KingdomInheritWork Work, string Blueprint,
-			int FootprintWidth, int FootprintHeight)
+			int FootprintX, int FootprintY, int FootprintWidth, int FootprintHeight)
 		{
 			this.Index = Index;
 			Key = Work.Key;
@@ -140,6 +152,31 @@ namespace ThousandAndFirst
 			State = Work.State;
 			this.FootprintWidth = FootprintWidth;
 			this.FootprintHeight = FootprintHeight;
+			this.FootprintX = FootprintX;
+			this.FootprintY = FootprintY;
+			IsArchitecture = Work.ArchitectureSnapshot.Length > 0;
+			IsStreet = false;
+			ArchitectureSnapshot = Work.ArchitectureSnapshot;
+			ArchitectureHash = Work.ArchitectureHash;
+		}
+
+		internal KingdomInheritBuildSpec(int Index, int X, int Y)
+		{
+			this.Index = Index;
+			Key = "inherit.street";
+			Blueprint = "DirtPath";
+			this.X = X;
+			this.Y = Y;
+			Condition = 0;
+			State = KingdomInheritWorkState.Memory;
+			FootprintWidth = 1;
+			FootprintHeight = 1;
+			FootprintX = X;
+			FootprintY = Y;
+			IsArchitecture = false;
+			IsStreet = true;
+			ArchitectureSnapshot = "";
+			ArchitectureHash = "";
 		}
 	}
 
@@ -190,7 +227,9 @@ namespace ThousandAndFirst
 	/// </summary>
 	internal static class KingdomInheritEngine
 	{
-		internal const int ReconstructionVersion = 1;
+		internal const int LegacyReconstructionVersion = 1;
+
+		internal const int ReconstructionVersion = 3;
 
 		internal const string ZoneMarkerProperty = "ThousandAndFirst.Inherit.Application";
 
@@ -205,6 +244,12 @@ namespace ThousandAndFirst
 		internal const string ObjectStateProperty = "ThousandAndFirst.Inherit.State";
 
 		internal const string ObjectConditionProperty = "ThousandAndFirst.Inherit.Condition";
+
+		internal const string ObjectDegradedHashProperty =
+			"ThousandAndFirst.Inherit.DegradedArchitectureHash";
+
+		internal const string ObjectAuthorityMemoryProperty =
+			"ThousandAndFirst.Inherit.FoundingAuthorityMemory";
 
 		private const int MaxCairnChars = 24000;
 
@@ -508,8 +553,8 @@ namespace ThousandAndFirst
 
 			KingdomInheritPlacement placement;
 			KingdomInheritFault inheritFault;
-			if (!KingdomInheritRules.TryPrepare(canonical.WorkKeys, canonical.WorkX, canonical.WorkY,
-				canonical.WorkConditions, (KingdomRules.InheritedState)canonical.InheritedState,
+			if (!KingdomInheritRules.TryPrepare(canonical,
+				(KingdomRules.InheritedState)canonical.InheritedState,
 				canonical.InterregnumRoll, out placement, out inheritFault) || placement == null)
 			{
 				Failure = Failed(KingdomInheritApplyFault.PlanInvalid,
@@ -517,7 +562,8 @@ namespace ThousandAndFirst
 				return false;
 			}
 
-			KingdomInheritBuildSpec[] specs = new KingdomInheritBuildSpec[placement.Count];
+			KingdomInheritBuildSpec[] specs = new KingdomInheritBuildSpec[
+				placement.Count + placement.StreetCount];
 			int cairns = 0;
 			for (int i = 0; i < placement.Count; i++)
 			{
@@ -525,20 +571,54 @@ namespace ThousandAndFirst
 				string blueprint;
 				int width;
 				int height;
-				if (work == null || !KingdomInheritRules.TryResolveBlueprint(work.Key, out blueprint)
-					|| !KingdomInheritRules.TryFootprint(work.Key, out width, out height))
+				int left;
+				int top;
+				if (work == null || !KingdomInheritRules.TryResolveBlueprint(work.Key, out blueprint))
 				{
 					Failure = Failed(KingdomInheritApplyFault.PlanInvalid,
 						"the prepared plan contains a semantic key this build cannot resolve", "");
 					return false;
 				}
-				specs[i] = new KingdomInheritBuildSpec(i, work, blueprint, width, height);
+				if (work.ArchitectureSnapshot.Length > 0)
+				{
+					ArchitectureLayoutSnapshot snapshot;
+					KingdomInheritanceSpatialRules.Rect rect;
+					if (!KingdomArchitectureRules.TryDecodeSnapshot(work.ArchitectureSnapshot,
+						out snapshot, out _)
+						|| !KingdomInheritanceSpatialRules.TrySnapshotRect(snapshot,
+							work.X, work.Y, out rect))
+					{
+						Failure = Failed(KingdomInheritApplyFault.PlanInvalid,
+							"the prepared authored work no longer decodes", "");
+						return false;
+					}
+					width = rect.X2 - rect.X1 + 1;
+					height = rect.Y2 - rect.Y1 + 1;
+					left = rect.X1;
+					top = rect.Y1;
+				}
+				else if (!KingdomInheritRules.TryFootprint(work.Key, out width, out height))
+				{
+					Failure = Failed(KingdomInheritApplyFault.PlanInvalid,
+						"the prepared plan contains an unknown footprint", "");
+					return false;
+				}
+				else
+				{
+					left = work.X - (width - 1) / 2;
+					top = work.Y - (height - 1) / 2;
+				}
+				specs[i] = new KingdomInheritBuildSpec(i, work, blueprint, left, top,
+					width, height);
 				if (work.Key == KingdomInheritRules.FounderCairnKey
 					&& work.X == placement.CairnX && work.Y == placement.CairnY)
 				{
 					cairns++;
 				}
 			}
+			for (int i = 0; i < placement.StreetCount; i++)
+				specs[placement.Count + i] = new KingdomInheritBuildSpec(placement.Count + i,
+					placement.StreetXAt(i), placement.StreetYAt(i));
 			if (cairns != 1)
 			{
 				Failure = Failed(KingdomInheritApplyFault.PlanInvalid,
@@ -547,8 +627,11 @@ namespace ThousandAndFirst
 			}
 
 			string marker;
+			int reconstruction = placement.SpatialVersion ==
+				KingdomInheritanceSpatialRules.SpatialVersion ? ReconstructionVersion
+				: LegacyReconstructionVersion;
 			if (!KingdomInheritanceStateRules.TryComposeApplicationMarker(canonical, Receipt,
-				TargetZoneId, ReconstructionVersion, out marker))
+				TargetZoneId, reconstruction, out marker))
 			{
 				Failure = Failed(KingdomInheritApplyFault.ReceiptMismatch,
 					"the exact reservation could not form its deterministic application marker", "");
@@ -606,12 +689,44 @@ namespace ThousandAndFirst
 			{
 				try
 				{
+					bool missingArchitecture = false;
 					if (!Host.HasBlueprint(Prepared.Specs[i].Blueprint))
 					{
-						Failure = Failed(KingdomInheritApplyFault.BlueprintMissing,
-							"an allowlisted inherited object is not installed: "
-							+ Prepared.Specs[i].Blueprint, Prepared.Marker);
-						return false;
+						if (!Prepared.Specs[i].IsArchitecture)
+						{
+							Failure = Failed(KingdomInheritApplyFault.BlueprintMissing,
+								"an allowlisted inherited object is not installed: "
+								+ Prepared.Specs[i].Blueprint, Prepared.Marker);
+							return false;
+						}
+						missingArchitecture = true;
+					}
+					if (Prepared.Specs[i].IsArchitecture)
+					{
+						ArchitectureLayoutSnapshot snapshot;
+						if (!KingdomArchitectureRules.TryDecodeSnapshot(
+							Prepared.Specs[i].ArchitectureSnapshot, out snapshot, out _))
+						{
+							Failure = Failed(KingdomInheritApplyFault.PlanInvalid,
+								"a frozen inherited architecture snapshot no longer decodes",
+								Prepared.Marker);
+							return false;
+						}
+						for (int p = 0; p < snapshot.Placements.Count; p++)
+						{
+							if (!Host.HasBlueprint(snapshot.Placements[p].Blueprint))
+							{
+								missingArchitecture = true;
+							}
+						}
+						if (missingArchitecture
+							&& !Host.HasBlueprint("r_KingdomCairn"))
+						{
+							Failure = Failed(KingdomInheritApplyFault.BlueprintMissing,
+								"frozen architecture is incomplete and its bounded memory marker is absent",
+								Prepared.Marker);
+							return false;
+						}
 					}
 				}
 				catch (Exception ex)
@@ -651,8 +766,8 @@ namespace ThousandAndFirst
 			for (int i = 0; i < Prepared.Specs.Length; i++)
 			{
 				KingdomInheritBuildSpec spec = Prepared.Specs[i];
-				int left = spec.X - (spec.FootprintWidth - 1) / 2;
-				int top = spec.Y - (spec.FootprintHeight - 1) / 2;
+				int left = spec.FootprintX;
+				int top = spec.FootprintY;
 				for (int y = top; y < top + spec.FootprintHeight; y++)
 				{
 					for (int x = left; x < left + spec.FootprintWidth; x++)
@@ -664,7 +779,7 @@ namespace ThousandAndFirst
 							return false;
 						}
 						KingdomInheritCellFacts facts = site.Cells[x, y];
-						if (facts.Connection)
+						if (facts.Connection && !spec.IsStreet)
 						{
 							Failure = Refused(KingdomInheritApplyFault.ConnectionCell,
 								"an inherited footprint crosses a zone connection", Prepared.Marker);
@@ -688,7 +803,7 @@ namespace ThousandAndFirst
 								"an inherited footprint crosses invalid terrain", Prepared.Marker);
 							return false;
 						}
-						site.Claimed[x, y] = true;
+						if (!spec.IsStreet) site.Claimed[x, y] = true;
 					}
 				}
 			}
@@ -738,8 +853,8 @@ namespace ThousandAndFirst
 				return false;
 			}
 
-			int heartLeft = heart.X - (heart.FootprintWidth - 1) / 2;
-			int heartTop = heart.Y - (heart.FootprintHeight - 1) / 2;
+			int heartLeft = heart.FootprintX;
+			int heartTop = heart.FootprintY;
 			int heartRight = heartLeft + heart.FootprintWidth - 1;
 			int heartBottom = heartTop + heart.FootprintHeight - 1;
 			int width = Site.Cells.GetLength(0);
@@ -826,6 +941,31 @@ namespace ThousandAndFirst
 					AppendBounded(sb, "- ", MaxCairnChars);
 					AppendBounded(sb, CairnText(Legacy.Chronicle[i], KingdomSealRecord.MaxLineChars),
 						MaxCairnChars);
+					AppendBounded(sb, "\n", MaxCairnChars);
+				}
+			}
+			if (Legacy.RollNames != null && Legacy.RollNames.Count > 0)
+			{
+				AppendBounded(sb, "\n\nRemembered settlers:\n", MaxCairnChars);
+				for (int i = 0; i < Legacy.RollNames.Count; i++)
+				{
+					AppendBounded(sb, "- ", MaxCairnChars);
+					AppendBounded(sb, CairnText(Legacy.RollNames[i],
+						KingdomSealRecord.MaxNameChars), MaxCairnChars);
+					if (Legacy.RollOrigins != null && i < Legacy.RollOrigins.Count
+						&& !string.IsNullOrEmpty(Legacy.RollOrigins[i]))
+					{
+						AppendBounded(sb, ", from ", MaxCairnChars);
+						AppendBounded(sb, CairnText(Legacy.RollOrigins[i],
+							KingdomSealRecord.MaxNameChars), MaxCairnChars);
+					}
+					if (Legacy.RollArrived != null && i < Legacy.RollArrived.Count
+						&& !string.IsNullOrEmpty(Legacy.RollArrived[i]))
+					{
+						AppendBounded(sb, " — ", MaxCairnChars);
+						AppendBounded(sb, CairnText(Legacy.RollArrived[i],
+							KingdomSealRecord.MaxNameChars), MaxCairnChars);
+					}
 					AppendBounded(sb, "\n", MaxCairnChars);
 				}
 			}
@@ -988,13 +1128,22 @@ namespace ThousandAndFirst
 				for (int i = 0; i < cell.Objects.Count; i++)
 				{
 					GameObject obj = cell.Objects[i];
-					if (obj.Blueprint == Spec.Blueprint
+					bool degraded = Spec.IsArchitecture && obj.Blueprint == "r_KingdomCairn"
+						&& obj.GetStringProperty(ObjectDegradedHashProperty, "")
+							== Spec.ArchitectureHash;
+					bool authorityMemory = KingdomInheritRules.IsFoundingHeartKey(Spec.Key)
+						&& obj.Blueprint == "r_KingdomCairn"
+						&& obj.GetIntProperty(ObjectAuthorityMemoryProperty) == 1;
+					if ((obj.Blueprint == Spec.Blueprint || degraded || authorityMemory)
 						&& obj.GetStringProperty(ObjectMarkerProperty, "") == Marker
 						&& obj.GetStringProperty(ObjectKeyProperty, "") == Spec.Key
 						&& obj.GetIntProperty(ObjectIndexProperty, -1) == Spec.Index
 						&& obj.GetIntProperty(ObjectStateProperty, -1) == (int)Spec.State
 						&& obj.GetIntProperty(ObjectConditionProperty, -1) == Spec.Condition
 						&& obj.GetIntProperty(ObjectFreshEmptyProperty, 0) == 1
+						&& (!Spec.IsStreet || obj.GetIntProperty(KingdomRoads.PathStateProperty)
+							== (int)KingdomRoadRules.WearState.Path)
+						&& (!Spec.IsArchitecture || degraded || ExactArchitecture(obj, Spec))
 						&& (Spec.Key != KingdomInheritRules.FounderCairnKey
 							|| (obj.GetPart<Description>() != null
 								&& obj.GetPart<Description>()._Short == CairnText)))
@@ -1034,8 +1183,29 @@ namespace ThousandAndFirst
 				Handle = null;
 				Failure = "";
 				string resolved;
-				if (Spec == null || !KingdomInheritRules.TryResolveBlueprint(Spec.Key, out resolved)
-					|| resolved != Spec.Blueprint || !GameObjectFactory.Factory.HasBlueprint(resolved))
+				bool degradedArchitecture = false;
+				bool authorityMemory = false;
+				if (Spec == null)
+				{
+					Failure = "the inherited build row is absent";
+					return false;
+				}
+				if (Spec.IsStreet)
+					resolved = "DirtPath";
+				else if (!Spec.IsArchitecture && KingdomInheritRules.IsFoundingHeartKey(Spec.Key))
+				{
+					resolved = "r_KingdomCairn";
+					authorityMemory = true;
+				}
+				else if (Spec.IsArchitecture && !CanStampArchitecture(Spec))
+				{
+					resolved = "r_KingdomCairn";
+					degradedArchitecture = true;
+				}
+				else if (!KingdomInheritRules.TryResolveBlueprint(Spec.Key, out resolved))
+					resolved = null;
+				if ((!degradedArchitecture && !authorityMemory && resolved != Spec.Blueprint)
+					|| !GameObjectFactory.Factory.HasBlueprint(resolved))
 				{
 					Failure = "the inherited semantic key is not allowlisted by this build";
 					return false;
@@ -1047,35 +1217,31 @@ namespace ThousandAndFirst
 					return false;
 				}
 				Handle = obj;
-				obj.StripContents(KeepNatural: false, Silent: true);
-				LiquidVolume liquid = obj.GetPart<LiquidVolume>();
-				if (liquid != null && !liquid.IsEmpty())
-				{
-					liquid.Empty();
-				}
-				Capacitor capacitor = obj.GetPart<Capacitor>();
-				if (capacitor != null)
-				{
-					capacitor.Charge = 0;
-				}
-				Clockwork clockwork = obj.GetPart<Clockwork>();
-				if (clockwork != null)
-				{
-					clockwork.Charge = 0;
-				}
-				Circuitry circuitry = obj.GetPart<Circuitry>();
-				if (circuitry != null)
-				{
-					circuitry.Charge = 0;
-					circuitry.IncomingCharge = 0;
-				}
+				Scrub(obj);
 
 				obj.SetStringProperty(ObjectMarkerProperty, Marker);
 				obj.SetStringProperty(ObjectKeyProperty, Spec.Key);
 				obj.SetIntProperty(ObjectIndexProperty, Spec.Index);
-				obj.SetIntProperty(ObjectStateProperty, (int)Spec.State);
-				obj.SetIntProperty(ObjectConditionProperty, Spec.Condition);
-				obj.SetIntProperty(ObjectFreshEmptyProperty, 1);
+					obj.SetIntProperty(ObjectStateProperty, (int)Spec.State);
+					obj.SetIntProperty(ObjectConditionProperty, Spec.Condition);
+					obj.SetIntProperty(ObjectFreshEmptyProperty, 1);
+					int inheritedWear = KingdomInheritanceFabricRules.WearFor(
+						Spec.State, Spec.Condition);
+					if (inheritedWear > 0) obj.RequirePart<r_KingdomInheritedFabric>();
+				if (degradedArchitecture)
+					obj.SetStringProperty(ObjectDegradedHashProperty, Spec.ArchitectureHash);
+				if (authorityMemory) obj.SetIntProperty(ObjectAuthorityMemoryProperty, 1);
+				if (Spec.IsStreet)
+					obj.SetIntProperty(KingdomRoads.PathStateProperty,
+						(int)KingdomRoadRules.WearState.Path);
+				if (Spec.IsArchitecture && !degradedArchitecture)
+				{
+					KingdomArchitectureIntent intent;
+					if (!TryArchitectureIntent(Spec, out intent, out Failure)
+						|| !KingdomArchitectureRuntime.TryFreeze(obj, intent, out Failure)
+						|| !KingdomArchitectureStamper.TryInitializeOwner(obj, intent,
+							LotFor(Spec), out Failure)) return false;
+				}
 				if (Spec.State == KingdomInheritWorkState.Standing
 					|| Spec.State == KingdomInheritWorkState.Derelict)
 				{
@@ -1085,13 +1251,24 @@ namespace ThousandAndFirst
 						obj.hitpoints = Math.Max(1, baseHp * Spec.Condition / 100);
 					}
 				}
-				Description description = obj.RequirePart<Description>();
-				if (Spec.Key == KingdomInheritRules.FounderCairnKey)
+				if (authorityMemory)
 				{
+					Description description = obj.RequirePart<Description>();
+					description._Short = "A bounded marker remembers the old settlement's founding heart without claiming its immutable basin in this world.";
+				}
+				else if (degradedArchitecture)
+				{
+					Description description = obj.RequirePart<Description>();
+					description._Short = "A bounded marker remembers an authored work whose frozen fabric is not installed in this world.";
+				}
+				else if (Spec.Key == KingdomInheritRules.FounderCairnKey)
+				{
+					Description description = obj.RequirePart<Description>();
 					description._Short = CairnText;
 				}
 				else if (Spec.State == KingdomInheritWorkState.Derelict)
 				{
+					Description description = obj.RequirePart<Description>();
 					description._Short = (description._Short ?? "").TrimEnd()
 						+ " It stands intact but derelict, with no stores or household left inside.";
 				}
@@ -1105,7 +1282,10 @@ namespace ThousandAndFirst
 
 			public bool IsFreshEmpty(object Handle)
 			{
-				return IsEmptyObject(Handle as GameObject);
+				GameObject obj = Handle as GameObject;
+				if (!IsEmptyObject(obj)) return false;
+				return obj == null || !obj.HasIntProperty(KingdomArchitectureStamper.SchemaProperty)
+					|| obj.CurrentCell == null || EmptyArchitecture(obj);
 			}
 
 			public bool TryPlace(object Handle, int X, int Y, out string Failure)
@@ -1125,6 +1305,18 @@ namespace ThousandAndFirst
 					Failure = "the inherited object was rejected by its prepared cell";
 					return false;
 				}
+				if (obj.HasIntProperty(KingdomArchitectureStamper.SchemaProperty))
+				{
+					if (!KingdomArchitectureStamper.TryStageLayer(obj, Zone,
+						ArchitectureLayer.Ground, out Failure)
+						|| !KingdomArchitectureStamper.TryStageLayer(obj, Zone,
+							ArchitectureLayer.Structure, out Failure)
+						|| !KingdomArchitectureStamper.TryStageLayer(obj, Zone,
+							ArchitectureLayer.Object, out Failure)
+						|| !ScrubArchitecture(obj, out Failure)
+						|| !KingdomArchitectureStamper.TryVerifyComplete(obj, Zone, out Failure))
+						return false;
+				}
 				return true;
 			}
 
@@ -1135,8 +1327,9 @@ namespace ThousandAndFirst
 				{
 					return true;
 				}
+				bool architectureClean = DiscardArchitecture(obj);
 				obj.Obliterate(null, Silent: true);
-				return obj.CurrentCell == null;
+				return architectureClean && obj.CurrentCell == null;
 			}
 
 			public bool TryWriteApplicationMarker(string Marker, out string Failure)
@@ -1198,6 +1391,183 @@ namespace ThousandAndFirst
 					&& (capacitor == null || capacitor.Charge == 0)
 					&& (clockwork == null || clockwork.Charge == 0)
 					&& (circuitry == null || (circuitry.Charge == 0 && circuitry.IncomingCharge == 0));
+			}
+
+			private static void Scrub(GameObject Object)
+			{
+				if (Object == null) return;
+				Object.StripContents(KeepNatural: false, Silent: true);
+				LiquidVolume liquid = Object.GetPart<LiquidVolume>();
+				if (liquid != null && !liquid.IsEmpty()) liquid.Empty();
+				Capacitor capacitor = Object.GetPart<Capacitor>();
+				if (capacitor != null) capacitor.Charge = 0;
+				Clockwork clockwork = Object.GetPart<Clockwork>();
+				if (clockwork != null) clockwork.Charge = 0;
+				Circuitry circuitry = Object.GetPart<Circuitry>();
+				if (circuitry != null)
+				{
+					circuitry.Charge = 0;
+					circuitry.IncomingCharge = 0;
+				}
+			}
+
+			private static string LotFor(KingdomInheritBuildSpec Spec)
+			{
+				return "inherit-" + Spec.Index.ToString(CultureInfo.InvariantCulture) + "-"
+					+ Spec.ArchitectureHash.Substring(0, 16);
+			}
+
+			private static bool CanStampArchitecture(KingdomInheritBuildSpec Spec)
+			{
+				if (Spec == null || !Spec.IsArchitecture
+					|| !SafeInheritedBlueprint(Spec.Blueprint)) return false;
+				ArchitectureLayoutSnapshot snapshot;
+				if (!KingdomArchitectureRules.TryDecodeSnapshot(Spec.ArchitectureSnapshot,
+					out snapshot, out _)) return false;
+				for (int i = 0; i < snapshot.Placements.Count; i++)
+					if (!SafeInheritedBlueprint(snapshot.Placements[i].Blueprint))
+						return false;
+				return true;
+			}
+
+			private static bool SafeInheritedBlueprint(string Blueprint)
+			{
+				GameObjectBlueprint blueprint = GameObjectFactory.Factory.GetBlueprintIfExists(
+					Blueprint);
+				return blueprint != null && !blueprint.HasPart("Brain")
+					&& (!blueprint.HasPart("Physics")
+						|| !blueprint.GetPartParameter("Physics", "Takeable", false));
+			}
+
+			private static bool TryArchitectureIntent(KingdomInheritBuildSpec Spec,
+				out KingdomArchitectureIntent Intent, out string Failure)
+			{
+				Intent = null;
+				Failure = "";
+				ArchitectureLayoutSnapshot snapshot;
+				KingdomInheritanceSpatialRules.Rect rect;
+				if (Spec == null || !Spec.IsArchitecture
+					|| !KingdomArchitectureRules.TryDecodeSnapshot(Spec.ArchitectureSnapshot,
+						out snapshot, out Failure)
+					|| !KingdomInheritanceSpatialRules.TrySnapshotRect(snapshot, Spec.X, Spec.Y,
+						out rect)) return false;
+				Intent = KingdomArchitectureIntent.CreateRaw(KingdomArchitectureRuntime.ReceiptSchema,
+					snapshot.BuildKey, snapshot.PlanKey, snapshot.BindingKey, snapshot.TierKey,
+					snapshot.VariantKey, snapshot.PaletteKey, snapshot.LotType, snapshot.LotSize,
+					snapshot.Facing, Spec.ArchitectureSnapshot, Spec.ArchitectureHash,
+					new KingdomPlotRules.PlotRect(rect.X1, rect.Y1, rect.X2, rect.Y2),
+					Spec.X, Spec.Y);
+				return KingdomArchitectureRuntime.TryValidate(Intent, out Failure);
+			}
+
+			private bool ExactArchitecture(GameObject Root, KingdomInheritBuildSpec Spec)
+			{
+				KingdomArchitectureIntent intent;
+				ArchitectureLayoutSnapshot snapshot;
+				string lot;
+				return KingdomArchitectureStamper.TryReadOwner(Root, out intent, out snapshot,
+					out lot, out _) && intent.EncodedSnapshot == Spec.ArchitectureSnapshot
+					&& intent.SnapshotHash == Spec.ArchitectureHash && lot == LotFor(Spec)
+					&& KingdomArchitectureStamper.TryVerifyComplete(Root, Zone, out _);
+			}
+
+				private bool ScrubArchitecture(GameObject Root, out string Failure)
+			{
+				Failure = "";
+				KingdomArchitectureIntent intent;
+				ArchitectureLayoutSnapshot snapshot;
+				string lot;
+				if (!KingdomArchitectureStamper.TryReadOwner(Root, out intent, out snapshot,
+					out lot, out Failure)) return false;
+					KingdomInheritWorkState state = (KingdomInheritWorkState)Root.GetIntProperty(
+						ObjectStateProperty, -1);
+					int condition = Root.GetIntProperty(ObjectConditionProperty, -1);
+					int count = 0;
+				List<GameObject> objects = Zone.GetObjects();
+				for (int i = 0; i < objects.Count; i++)
+				{
+					GameObject item = objects[i];
+					if (!GameObject.Validate(item)
+						|| item.GetStringProperty(KingdomPlots.PlotIdProperty) != lot
+						|| item.GetIntProperty(KingdomArchitectureStamper.ComponentSchemaProperty)
+							!= KingdomArchitectureStamper.ComponentSchema) continue;
+						Scrub(item);
+						item.SetIntProperty(ObjectStateProperty, (int)state);
+						item.SetIntProperty(ObjectConditionProperty, condition);
+						item.SetIntProperty(ObjectFreshEmptyProperty, 1);
+						if (item.baseHitpoints > 0)
+							item.hitpoints = Math.Max(1, item.baseHitpoints * condition / 100);
+						ArchitectureLayer layer = (ArchitectureLayer)item.GetIntProperty(
+							KingdomArchitectureStamper.ComponentLayerProperty, -1);
+						if (KingdomInheritanceFabricRules.MarksComponent(state, condition, layer,
+							intent.SnapshotHash, item.GetStringProperty(
+								KingdomArchitectureStamper.ComponentSlotProperty)))
+							item.RequirePart<r_KingdomInheritedFabric>();
+						count++;
+				}
+				if (count != snapshot.Placements.Count)
+				{
+					Failure = "the same stamper did not publish every frozen inherited component";
+					return false;
+				}
+				return true;
+			}
+
+			private bool EmptyArchitecture(GameObject Root)
+			{
+				KingdomArchitectureIntent intent;
+				ArchitectureLayoutSnapshot snapshot;
+				string lot;
+				if (!KingdomArchitectureStamper.TryReadOwner(Root, out intent, out snapshot,
+					out lot, out _) || !KingdomArchitectureStamper.TryVerifyComplete(Root, Zone,
+						out _)) return false;
+				int count = 0;
+				List<GameObject> objects = Zone.GetObjects();
+				for (int i = 0; i < objects.Count; i++)
+				{
+					GameObject item = objects[i];
+					if (!GameObject.Validate(item)
+						|| item.GetStringProperty(KingdomPlots.PlotIdProperty) != lot
+						|| item.GetIntProperty(KingdomArchitectureStamper.ComponentSchemaProperty)
+							!= KingdomArchitectureStamper.ComponentSchema) continue;
+					if (item.GetIntProperty(ObjectFreshEmptyProperty) != 1
+						|| !IsEmptyObject(item)) return false;
+					count++;
+				}
+				return count == snapshot.Placements.Count;
+			}
+
+			private bool DiscardArchitecture(GameObject Root)
+			{
+				if (Root == null || !Root.HasIntProperty(KingdomArchitectureStamper.SchemaProperty))
+					return true;
+				// TryStageLayer quarantines a failed owner, so its strict reader deliberately
+				// refuses it. Rollback still uses the schema-first raw lot/hash pair written while
+				// detached; both are unique to this inherited spec and every component repeats them.
+				string lot = Root.GetStringProperty(KingdomArchitectureStamper.LotIdProperty);
+				string hash = Root.GetStringProperty(KingdomArchitectureStamper.HashProperty);
+				if (string.IsNullOrEmpty(lot) || string.IsNullOrEmpty(hash)) return false;
+				List<GameObject> owned = new List<GameObject>();
+				List<GameObject> objects = Zone.GetObjects();
+				for (int i = 0; i < objects.Count; i++)
+					if (GameObject.Validate(objects[i])
+						&& objects[i].GetStringProperty(KingdomPlots.PlotIdProperty) == lot
+						&& objects[i].GetIntProperty(KingdomArchitectureStamper.ComponentSchemaProperty)
+							== KingdomArchitectureStamper.ComponentSchema
+						&& objects[i].GetStringProperty(KingdomArchitectureStamper.ComponentHashProperty)
+							== hash) owned.Add(objects[i]);
+				for (int i = owned.Count - 1; i >= 0; i--)
+					owned[i].Obliterate(null, Silent: true);
+				objects = Zone.GetObjects();
+				for (int i = 0; i < objects.Count; i++)
+					if (GameObject.Validate(objects[i])
+						&& objects[i].GetStringProperty(KingdomPlots.PlotIdProperty) == lot
+						&& objects[i].GetIntProperty(
+							KingdomArchitectureStamper.ComponentSchemaProperty)
+							== KingdomArchitectureStamper.ComponentSchema
+						&& objects[i].GetStringProperty(
+							KingdomArchitectureStamper.ComponentHashProperty) == hash) return false;
+				return true;
 			}
 		}
 #endif

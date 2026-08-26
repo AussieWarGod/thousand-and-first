@@ -7,10 +7,12 @@ import argparse
 import hashlib
 import json
 import os
+import posixpath
 import re
 import struct
 import sys
 import tempfile
+import unicodedata
 import zlib
 from pathlib import Path
 
@@ -20,8 +22,21 @@ TITLE = "The Thousand and First"
 AUTHOR = "AussieWarGod"
 TAGS = ("Beta", "Faction", "Settlement", "Script")
 PREVIEW = "preview.png"
+GAME_MARKETING_VERSION = "1.0.5"
+GAME_CORE_BUILD = "2.0.211.51"
+RELEASE_EVIDENCE_SCHEMA = 3
+VERIFICATION_PASS_IDS = {
+    "nativeCompileLoad": "native-compile-load",
+    "architectureGallery": "architecture-gallery",
+    "controllerAndColor": "controller-color-accessibility",
+    "denseCityPerformance": "dense-city-performance",
+    "oneSurveyReceipt": "one-survey-receipt",
+    "compatibilityMatrix": "compatibility-matrix",
+}
 MAX_WORKSHOP_ID = (1 << 64) - 1
 MAX_PREVIEW_BYTES = 1_000_000  # Steam says under 1 MB; use the conservative decimal bound.
+EVIDENCE_ARTIFACT_ROOT = "docs/release-evidence"
+MAX_EVIDENCE_ARTIFACT_BYTES = 512 * 1024 * 1024
 
 
 class ValidationError(ValueError):
@@ -91,7 +106,8 @@ def load_manifest(path: Path, require_preview: bool = True) -> dict:
 
 def canonical_description(manifest: dict) -> str:
     return (
-        "Pre-release playtest build for Caves of Qud v1.0.5 (core 2.0.211.51).\n\n"
+        f"Pre-release playtest build for Caves of Qud v{GAME_MARKETING_VERSION} "
+        f"(core {GAME_CORE_BUILD}).\n\n"
         + manifest["description"]
         + "\n\nBack up your saves before testing. Report issues at "
         "https://github.com/AussieWarGod/thousand-and-first/issues. "
@@ -214,24 +230,36 @@ def validate_release_evidence(manifest: dict, preview_path: Path, workshop_path:
     evidence = _load_json(evidence_path)
     top_keys = {
         "schemaVersion", "releaseVersion", "candidateCommit", "gameMarketingVersion",
-        "gameCoreBuild", "workshopId", "previewSha256", "privatePackageReceiptSha256",
-        "privateSubscription",
+        "gameCoreBuild", "gameAssemblySha256", "workshopId", "previewSha256",
+        "privatePackageReceiptSha256", "privateSubscription", "verification",
     }
     errors: list[str] = []
     if set(evidence) != top_keys:
-        errors.append("release evidence fields must exactly match schema version 1")
-    if type(evidence.get("schemaVersion")) is not int or evidence.get("schemaVersion") != 1:
-        errors.append("release evidence schemaVersion must be 1")
+        errors.append(
+            f"release evidence fields must exactly match schema version {RELEASE_EVIDENCE_SCHEMA}"
+        )
+    if (type(evidence.get("schemaVersion")) is not int
+            or evidence.get("schemaVersion") != RELEASE_EVIDENCE_SCHEMA):
+        errors.append(
+            f"release evidence schemaVersion must be {RELEASE_EVIDENCE_SCHEMA}"
+        )
     if evidence.get("releaseVersion") != manifest.get("version"):
         errors.append("release evidence version must match manifest version")
     candidate = evidence.get("candidateCommit")
     if not isinstance(candidate, str) or re.fullmatch(r"[0-9a-f]{40}", candidate) is None:
         errors.append("release evidence candidateCommit must be a lowercase full Git commit")
         candidate = ""
-    if evidence.get("gameMarketingVersion") != "1.0.5":
-        errors.append("release evidence gameMarketingVersion must be 1.0.5")
-    if evidence.get("gameCoreBuild") != "2.0.211.51":
-        errors.append("release evidence gameCoreBuild must be 2.0.211.51")
+    if evidence.get("gameMarketingVersion") != GAME_MARKETING_VERSION:
+        errors.append(
+            f"release evidence gameMarketingVersion must be {GAME_MARKETING_VERSION}"
+        )
+    if evidence.get("gameCoreBuild") != GAME_CORE_BUILD:
+        errors.append(f"release evidence gameCoreBuild must be {GAME_CORE_BUILD}")
+    assembly_hash = evidence.get("gameAssemblySha256")
+    if (not isinstance(assembly_hash, str)
+            or re.fullmatch(r"[0-9a-f]{64}", assembly_hash) is None
+            or assembly_hash == "0" * 64):
+        errors.append("release evidence gameAssemblySha256 must be a nonzero lowercase SHA-256")
 
     try:
         workshop_id = _workshop_id(_load_json(workshop_path))
@@ -254,6 +282,89 @@ def validate_release_evidence(manifest: dict, preview_path: Path, workshop_path:
             or receipt_hash == "0" * 64):
         errors.append("release evidence privatePackageReceiptSha256 must be a nonzero lowercase SHA-256")
 
+    verification = evidence.get("verification")
+    repository_root = Path(__file__).resolve().parent.parent
+    verification_keys = set(VERIFICATION_PASS_IDS) | {"numberedProtocols"}
+    if not isinstance(verification, dict) or set(verification) != verification_keys:
+        errors.append(
+            "release evidence verification fields must exactly match schema version "
+            f"{RELEASE_EVIDENCE_SCHEMA}"
+        )
+    else:
+        for lane, pass_id in VERIFICATION_PASS_IDS.items():
+            _validate_artifact_binding(verification.get(lane),
+                                       f"verification.{lane}", errors,
+                                       repository_root,
+                                       expected_pass_id=pass_id)
+        _validate_assembly_receipt(verification.get("nativeCompileLoad"),
+                                   assembly_hash, errors, repository_root)
+        protocols = verification.get("numberedProtocols")
+        if not isinstance(protocols, dict) or set(protocols) != {
+                "artifactRef", "artifactSha256", "passIds"}:
+            errors.append(
+                "release evidence verification.numberedProtocols fields must be "
+                "artifactRef, artifactSha256, and passIds"
+            )
+        else:
+            _validate_artifact_binding(protocols,
+                                       "verification.numberedProtocols", errors,
+                                       repository_root,
+                                       include_pass_id=False,
+                                       extra_keys={"passIds"})
+            pass_ids = protocols.get("passIds")
+            if (not isinstance(pass_ids, list) or not pass_ids
+                    or len(pass_ids) > 1024):
+                errors.append(
+                    "release evidence verification.numberedProtocols.passIds must be "
+                    "a nonempty bounded list"
+                )
+            else:
+                seen: set[str] = set()
+                for pass_id in pass_ids:
+                    if (not isinstance(pass_id, str)
+                            or re.fullmatch(r"[0-9]+[a-z]*[0-9]*", pass_id) is None):
+                        errors.append(
+                            "release evidence verification.numberedProtocols.passIds "
+                            "must contain exact individual TESTING.md IDs"
+                        )
+                        break
+                    if pass_id in seen:
+                        errors.append(
+                            "release evidence verification.numberedProtocols.passIds "
+                            "must not contain duplicates"
+                        )
+                        break
+                    seen.add(pass_id)
+                if len(seen) == len(pass_ids):
+                    protocol_path = Path(__file__).resolve().parent.parent / "TESTING.md"
+                    try:
+                        protocol_text = protocol_path.read_text(encoding="utf-8-sig")
+                    except (OSError, UnicodeError) as error:
+                        errors.append(
+                            "release evidence cannot read the authoritative TESTING.md: "
+                            f"{error}"
+                        )
+                    else:
+                        defined_rows = re.findall(
+                            r"^\| ([0-9]+[a-z]*[0-9]*) \|", protocol_text, re.MULTILINE
+                        )
+                        defined = set(defined_rows)
+                        missing = sorted(seen - defined)
+                        if missing:
+                            errors.append(
+                                "release evidence verification.numberedProtocols.passIds "
+                                "are absent from TESTING.md: " + ", ".join(missing)
+                            )
+                        ambiguous = sorted(
+                            pass_id for pass_id in seen
+                            if defined_rows.count(pass_id) != 1
+                        )
+                        if ambiguous:
+                            errors.append(
+                                "release evidence verification.numberedProtocols.passIds "
+                                "are not unique in TESTING.md: " + ", ".join(ambiguous)
+                            )
+
     private = evidence.get("privateSubscription")
     private_keys = {
         "source", "inventory", "receipt", "loader", "newGame", "saveReload", "oldSave",
@@ -261,7 +372,10 @@ def validate_release_evidence(manifest: dict, preview_path: Path, workshop_path:
         "testedBy", "completedUtc",
     }
     if not isinstance(private, dict) or set(private) != private_keys:
-        errors.append("release evidence privateSubscription fields must exactly match schema version 1")
+        errors.append(
+            "release evidence privateSubscription fields must exactly match schema version "
+            f"{RELEASE_EVIDENCE_SCHEMA}"
+        )
     else:
         expected = {
             "source": "steam-subscription",
@@ -298,6 +412,126 @@ def validate_release_evidence(manifest: dict, preview_path: Path, workshop_path:
     if errors:
         raise ValidationError("release evidence is invalid; " + "; ".join(errors))
     return candidate
+
+
+def _validate_artifact_binding(value: object, label: str, errors: list[str],
+                               repository_root: Path,
+                               expected_pass_id: str | None = None,
+                               include_pass_id: bool = True,
+                               extra_keys: set[str] | None = None) -> None:
+    keys = {"artifactRef", "artifactSha256"}
+    if include_pass_id:
+        keys.add("passId")
+    if extra_keys:
+        keys.update(extra_keys)
+    if not isinstance(value, dict) or set(value) != keys:
+        errors.append(f"release evidence {label} fields must be "
+                      + ", ".join(sorted(keys)))
+        return
+    if include_pass_id and value.get("passId") != expected_pass_id:
+        errors.append(f"release evidence {label}.passId must be {expected_pass_id!r}")
+    artifact_ref = value.get("artifactRef")
+    if (not isinstance(artifact_ref, str) or artifact_ref != artifact_ref.strip()
+            or not 3 <= len(artifact_ref) <= 512
+            or artifact_ref.casefold() in {"todo", "tbd", "unknown", "n/a"}
+            or "placeholder" in artifact_ref.casefold()
+            or "artifact_reference" in artifact_ref.casefold()
+            or _qud_text_error(artifact_ref) is not None
+            or not _safe_evidence_artifact_ref(artifact_ref)):
+        errors.append(f"release evidence {label}.artifactRef must identify the retained artifact")
+        artifact_ref = None
+    artifact_hash = value.get("artifactSha256")
+    if (not isinstance(artifact_hash, str)
+            or re.fullmatch(r"[0-9a-f]{64}", artifact_hash) is None
+            or artifact_hash == "0" * 64):
+        errors.append(
+            f"release evidence {label}.artifactSha256 must be a nonzero lowercase SHA-256"
+        )
+        artifact_hash = None
+    if artifact_ref is not None and artifact_hash is not None:
+        try:
+            artifact_path = repository_root.joinpath(*artifact_ref.split("/"))
+            resolved = artifact_path.resolve(strict=True)
+            resolved.relative_to(repository_root)
+            current = repository_root
+            for component in artifact_ref.split("/"):
+                current = current / component
+                if current.is_symlink():
+                    raise OSError("artifact path contains a symbolic link")
+            if not resolved.is_file():
+                raise OSError("artifact is not a regular file")
+            if resolved.stat().st_size > MAX_EVIDENCE_ARTIFACT_BYTES:
+                raise OSError("artifact exceeds the evidence size cap")
+            digest = hashlib.sha256()
+            with resolved.open("rb") as stream:
+                for block in iter(lambda: stream.read(1024 * 1024), b""):
+                    digest.update(block)
+        except (OSError, RuntimeError, ValueError) as error:
+            errors.append(
+                f"release evidence {label}.artifactRef cannot read retained artifact: {error}"
+            )
+        else:
+            if digest.hexdigest() != artifact_hash:
+                errors.append(
+                    f"release evidence {label}.artifactSha256 must match retained artifact"
+                )
+
+
+def _validate_assembly_receipt(value: object, expected_hash: object,
+                               errors: list[str], repository_root: Path) -> None:
+    """Bind the declared licensed game binary to the retained native transcript."""
+    if (not isinstance(value, dict) or not isinstance(value.get("artifactRef"), str)
+            or not isinstance(expected_hash, str)
+            or re.fullmatch(r"[0-9a-f]{64}", expected_hash) is None):
+        return
+    artifact_ref = value["artifactRef"]
+    if not _safe_evidence_artifact_ref(artifact_ref):
+        return
+    try:
+        path = repository_root.joinpath(*artifact_ref.split("/"))
+        resolved = path.resolve(strict=True)
+        resolved.relative_to(repository_root)
+        if path.is_symlink() or not resolved.is_file():
+            raise OSError("artifact is not a regular file")
+        text = resolved.read_text(encoding="utf-8-sig")
+    except (OSError, UnicodeError, ValueError) as error:
+        errors.append(
+            "release evidence verification.nativeCompileLoad cannot read assembly receipt: "
+            + str(error)
+        )
+        return
+    receipts = []
+    for line in text.splitlines():
+        match = re.fullmatch(r"Assembly-CSharp SHA-256: ([0-9a-f]{64})", line)
+        if match is not None:
+            receipts.append(match.group(1))
+    if receipts != [expected_hash]:
+        errors.append(
+            "release evidence gameAssemblySha256 must match the unique "
+            "Assembly-CSharp SHA-256 receipt in verification.nativeCompileLoad"
+        )
+
+
+def _safe_evidence_artifact_ref(value: str) -> bool:
+    prefix = EVIDENCE_ARTIFACT_ROOT + "/"
+    if not value.startswith(prefix) or value.startswith("/") or "\\" in value:
+        return False
+    components = value.split("/")
+    if (posixpath.normpath(value) != value
+            or any(component in ("", ".", "..") for component in components)
+            or any(unicodedata.category(character).startswith("C") for character in value)):
+        return False
+    reserved = re.compile(
+        r"^(?:CON|PRN|AUX|NUL|CONIN\$|CONOUT\$|"
+        r"COM[1-9\u00b9\u00b2\u00b3]|LPT[1-9\u00b9\u00b2\u00b3])$",
+        re.IGNORECASE,
+    )
+    for component in components:
+        if (any(character in '<>:"|?*' for character in component)
+                or component.endswith((".", " "))
+                or reserved.fullmatch(component.rstrip(". ").split(".", 1)[0])):
+            return False
+    return True
 
 
 def validate_workshop(path: Path, manifest: dict, mode: str) -> dict | None:

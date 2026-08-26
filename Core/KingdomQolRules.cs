@@ -20,8 +20,8 @@ namespace ThousandAndFirst
 
 	/// <summary>
 	/// What one resident asks of the place they are put: the tags they cannot do without, the tags
-	/// that would please them, and the tags they will not live beside. Plus the two derived facts
-	/// the settlement's own food and water accounting wants to know about them.
+	/// that would please them, and the tags they will not live beside. Plus vanilla species and the
+	/// two derived facts the settlement's own food and water accounting wants to know about them.
 	/// <para>
 	/// Every list is a set of folded tag strings and is never null. Nothing here is a level, a
 	/// meter, or a score: a profile is a set of <em>placement constraints</em>, read fresh every
@@ -30,6 +30,10 @@ namespace ThousandAndFirst
 	/// </summary>
 	public sealed class QolProfile
 	{
+		/// <summary>The resident's vanilla species. Kept beside the placement tags so the existing
+		/// QoL/cohabitation lane can expose <c>species:&lt;name&gt;</c> without a species table.</summary>
+		public string Species;
+
 		/// <summary>Hard. A place that does not provide all of these is not a place this resident
 		/// moves into, and no job there is theirs either.</summary>
 		public string[] Needs;
@@ -57,6 +61,7 @@ namespace ThousandAndFirst
 			{
 				return new QolProfile
 				{
+					Species = "",
 					Needs = KingdomQolRules.NoTags,
 					Prefers = KingdomQolRules.NoTags,
 					Refuses = KingdomQolRules.NoTags,
@@ -80,6 +85,10 @@ namespace ThousandAndFirst
 	/// </summary>
 	public struct ResidentTruth
 	{
+		/// <summary><c>GameObject.GetSpecies()</c>. Qud guarantees a fallback to the stripped short
+		/// display name, so every real creature supplies an open, mod-extensible body identity.</summary>
+		public string Species;
+
 		/// <summary><c>HasPart&lt;Robot&gt;()</c> or the <c>Robot</c> tag/property. Vanilla reads
 		/// both: <c>Stomach.IsFamished()</c> short-circuits on <c>HasPropertyOrTag("Robot")</c>,
 		/// <c>Effects/Asleep.cs</c> on <c>HasTag("Robot")</c>, and a dozen Sifrah and damage paths
@@ -96,6 +105,11 @@ namespace ThousandAndFirst
 		/// <c>Brain.LimitToAquatic()</c> returns false for a flier, so a flying aquatic creature is
 		/// not water-bound and must not be housed as if it were.</summary>
 		public bool Flying;
+
+		/// <summary><c>HasTagOrProperty("Gigantic")</c>. Vanilla's body/equipment scale signal makes
+		/// broad portals and turning clearance appropriate. It is a capability condition, not a
+		/// species whitelist.</summary>
+		public bool BroadBodied;
 
 		/// <summary><c>HasTagOrProperty("LiveFungus")</c> &mdash; vanilla's own fungal read, used
 		/// by <c>GameObject.IsAlive</c> and <c>BodyPartCategory</c>, and carried by
@@ -234,6 +248,12 @@ namespace ThousandAndFirst
 		/// <see cref="Derive"/>.</summary>
 		public const char RemovePrefix = '-';
 
+		/// <summary>Roster/QoL namespace for Qud's open species vocabulary.</summary>
+		public const string SpeciesNamespace = "species:";
+
+		/// <summary>Longest species identity carried by this lane. Matches the live roster receipt.</summary>
+		public const int MaxSpeciesLength = 128;
+
 		// --- Folding and parsing --------------------------------------------------------------
 
 		/// <summary>
@@ -355,6 +375,50 @@ namespace ThousandAndFirst
 			return (merged.Count == 0) ? NoTags : merged.ToArray();
 		}
 
+		/// <summary>
+		/// One species as an open QoL self-tag. No species is enumerated: a vanilla or modded value
+		/// becomes <c>species:&lt;folded value&gt;</c> on first read. Blank, over-long, or roster-breaking
+		/// values yield null rather than a malformed tag.
+		/// </summary>
+		/// <param name="Species">The exact open value from <c>GameObject.GetSpecies()</c>.</param>
+		/// <returns>The folded species self-tag, or null when the value is unsafe.</returns>
+		public static string SpeciesTag(string Species)
+		{
+			string species = Fold(Species);
+			if (species == null || species.Length == 0 || species.Length > MaxSpeciesLength
+				|| species.IndexOf('|') >= 0)
+			{
+				return null;
+			}
+			for (int i = 0; i < species.Length; i++)
+			{
+				if (char.IsControl(species[i]))
+				{
+					return null;
+				}
+			}
+			return SpeciesNamespace + species;
+		}
+
+		/// <summary>
+		/// Tags this resident presents to a housemate: the same Needs and Prefers the QoL lane has
+		/// always read, plus their exact vanilla species. This makes an authored
+		/// <c>r_TAF_Refuses="species:..."</c> immediately useful for any modded species without a
+		/// second catalogue or a hardcoded compatibility table.
+		/// </summary>
+		/// <param name="Profile">The resident's fresh QoL profile. Null presents nothing.</param>
+		/// <returns>A fresh tag set. Never null.</returns>
+		public static string[] SelfTags(QolProfile Profile)
+		{
+			if (Profile == null)
+			{
+				return NoTags;
+			}
+			string[] tags = Merge(Profile.Needs, Profile.Prefers);
+			string species = SpeciesTag(Profile.Species);
+			return (species == null) ? tags : Merge(tags, new string[1] { species });
+		}
+
 		// --- Derive before authoring ----------------------------------------------------------
 
 		/// <summary>
@@ -385,8 +449,8 @@ namespace ThousandAndFirst
 		/// Nothing here derives a <c>Refuses</c>. A refusal is a person's own line and is either
 		/// authored on the blueprint or, for the ideological cases, read off the engine's faction
 		/// feelings (<c>KingdomLodgingRules.Conflicts</c> against
-		/// <c>KingdomLodgingRules.RefusalHostility</c> &mdash; the ladder, not the superseded flat
-		/// floor <see cref="JudgeCohabitation"/> still applies) &mdash; it is not something a body
+		/// <c>KingdomLodgingRules.RefusalHostility</c> &mdash; the ladder, not the retired flat
+		/// compatibility adapter) &mdash; it is not something a body
 		/// plan implies.
 		/// </para>
 		/// </summary>
@@ -417,6 +481,7 @@ namespace ThousandAndFirst
 			bool feeds = Truth.HasStomach && !Truth.Robot && !Truth.Inorganic;
 			return new QolProfile
 			{
+				Species = (Truth.Species ?? "").Trim(),
 				Needs = (needs.Count == 0) ? NoTags : needs.ToArray(),
 				Prefers = (prefers.Count == 0) ? NoTags : prefers.ToArray(),
 				Refuses = NoTags,
@@ -448,6 +513,7 @@ namespace ThousandAndFirst
 			QolProfile derived = Derived ?? QolProfile.Ordinary;
 			return new QolProfile
 			{
+				Species = derived.Species ?? "",
 				Needs = Merge(derived.Needs, ParseTags(Needs)),
 				Prefers = Merge(derived.Prefers, ParseTags(Prefers)),
 				Refuses = Merge(derived.Refuses, ParseTags(Refuses)),
@@ -470,7 +536,7 @@ namespace ThousandAndFirst
 		/// the same way everything else refines: adds, and removes with the prefix.</param>
 		public static string[] HouseholdProvides(QolProfile Profile, string Authored = null)
 		{
-			string[] derived = (Profile == null) ? NoTags : Profile.Needs;
+			string[] derived = SelfTags(Profile);
 			return Merge(derived, ParseTags(Authored));
 		}
 
@@ -667,6 +733,7 @@ namespace ThousandAndFirst
 		/// Everything milder is texture, and texture is what <c>Refuses</c> tags are for.
 		/// </para>
 		/// </summary>
+		[System.Obsolete("Retired before public release; use KingdomLodgingRules.RefusalHostility(quarters).", true)]
 		public const int CohabitHostility = 100;
 
 		/// <summary>
@@ -686,10 +753,11 @@ namespace ThousandAndFirst
 		/// </param>
 		/// <returns><see cref="QolVerdict.Refused"/> for a creed clash, so the caller can tell the
 		/// two cases apart by <paramref name="Tag"/> being empty.</returns>
+		[System.Obsolete("Retired before public release; use KingdomLodgingRules.Conflicts with an explicit closeness rung.", true)]
 		public static QolVerdict JudgeCohabitation(QolProfile Profile, string[] TheirHousehold, int CreedHostility, out string Tag)
 		{
 			Tag = "";
-			if (CreedHostility >= CohabitHostility)
+			if (CreedHostility >= 100)
 			{
 				return QolVerdict.Refused;
 			}

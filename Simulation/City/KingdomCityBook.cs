@@ -35,6 +35,12 @@ namespace ThousandAndFirst.Simulation.City
 		: IComposite
 #endif
 	{
+		/// <summary>Runtime-only §3.10 geometry/holder cache. Ground-derived, deliberately absent
+		/// from saves, and rebuilt per dirty zone on render. A cold load starts with no trusted
+		/// distances rather than serializing a stale answer.</summary>
+		[NonSerialized]
+		internal KingdomDistanceCache DistanceCache;
+
 		public int SchemaVersion = KingdomCityRules.SchemaVersion;
 
 		public int RulesVersion = KingdomCityRules.RulesVersion;
@@ -124,6 +130,9 @@ namespace ThousandAndFirst.Simulation.City
 
 		public List<string> ResidentNames = new List<string>();
 
+		/// <summary>Exact open provenance; the code column is only its built-in catalogue view.</summary>
+		public List<string> ResidentOrigins = new List<string>();
+
 		public List<int> ResidentOriginCodes = new List<int>();
 
 		public List<int> ResidentCreedCodes = new List<int>();
@@ -135,6 +144,9 @@ namespace ThousandAndFirst.Simulation.City
 		public List<string> ResidentKeptCreeds = new List<string>();
 
 		public List<long> ResidentArrivedTicks = new List<long>();
+
+		/// <summary>Frozen dated label. This is presentation evidence, never a second clock.</summary>
+		public List<string> ResidentArrived = new List<string>();
 
 		public List<int> ResidentHomeWorkIds = new List<int>();
 
@@ -237,6 +249,37 @@ namespace ThousandAndFirst.Simulation.City
 		/// </summary>
 		public long LastFestivalTick;
 
+		/// <summary>Qualifying disputed stories accumulated toward the next pilgrim. This is a
+		/// city fact, not the realm-wide outsider register's current length.</summary>
+		public int PilgrimLoudness;
+
+		/// <summary><see cref="ThousandAndFirst.KingdomLocusRules.PilgrimState"/> stored as an int
+		/// for named-field compatibility.</summary>
+		public int PilgrimState;
+
+		/// <summary>Monotonic city-local identity for causal pilgrim receipts.</summary>
+		public int PilgrimSequence;
+
+		/// <summary>Exact dated history which authorized the open opportunity.</summary>
+		public long PilgrimCauseTick;
+
+		public string PilgrimCause = "";
+
+		/// <summary>Exact live body's engine id while the pilgrim stands at the heart.</summary>
+		public string PilgrimObjectId = "";
+
+		/// <summary>Frozen display identity once the opportunity first becomes a body. Keeping it
+		/// in the city book makes a Chronicle receipt retry byte-identical after that body has left.</summary>
+		public string PilgrimName = "";
+
+		/// <summary>City display name at the causing history tick. Names may change; a pending
+		/// receipt may not, so the visit tells the place it actually heard about.</summary>
+		public string PilgrimPlaceName = "";
+
+		/// <summary>One when the exact visitor received water. This outcome survives a partial
+		/// Chronicle publication so recovery cannot rewrite a greeted visit as an unattended one.</summary>
+		public int PilgrimGreeted;
+
 		/// <summary>
 		/// The epithet the city knows its office holder by, minted through vanilla's own
 		/// <c>NameMaker</c> (<c>KingdomNotables</c>). Remembered here rather than only on the
@@ -246,17 +289,53 @@ namespace ThousandAndFirst.Simulation.City
 		public string OfficeEpithet = "";
 
 		/// <summary>
-		/// The tick the published extension lane was last asked what happened
-		/// (<c>KingdomExtensions.Happenings</c>). Not a column of the model &mdash; nothing in
-		/// <c>KingdomCityState</c> reads it &mdash; and carried here for the reason
-		/// <see cref="LastFestivalTick"/> is: it is a fact about this city's book, and a fact about
-		/// a city belongs in the city's book.
+		/// Legacy aggregate tick for the published extension lane. Current source windows use
+		/// <see cref="ExtensionHappeningCursors"/>; this value remains for old diagnostics and seeds
+		/// exact active-source receipts once when an upgraded save has no per-source wire.
 		/// <para>
-		/// Zero means "never asked", which the lane answers by stamping the current tick and
-		/// keeping nothing: an extension installed today did not miss last year.
+		/// Zero means the retired aggregate lane never ran. A nonzero value never overrides a
+		/// nonempty current wire.
 		/// </para>
 		/// </summary>
 		public long LastExtensionTick;
+
+		/// <summary>Bounded per-source last-ask receipts for the published happening API. Each row is
+		/// keyed by immutable manifest ID plus exact assembly/type, so installing or faulting one
+		/// source cannot move another source's window. Empty is fresh unless the retired aggregate
+		/// receipt proves an upgrade; malformed non-empty data is retained and refused loudly rather
+		/// than reset.</summary>
+		public string ExtensionHappeningCursors = "";
+
+		/// <summary>Largest canonical cursor wire accepted by the per-source codec.</summary>
+		public const int MaxExtensionHappeningCursorChars =
+			ThousandAndFirst.Api.KingdomHappeningCursorRules.MaxChars;
+
+		/// <summary>
+		/// Canonical API-v3 behaviour sidecar. The ordinary city model remains closed and frozen;
+		/// extension resources, jobs, networks, and work run-state persist here as one bounded,
+		/// versioned wire owned by <c>KingdomBehaviourRules</c>.
+		/// <para>
+		/// The carrier deliberately does not decode or repair this value. A malformed wire must be
+		/// retained and refused loudly by the behaviour host, not silently converted into an empty
+		/// city. Empty means no extension behaviour has ever been admitted for this settlement.
+		/// </para>
+		/// </summary>
+		public string ExtensionModel = "";
+
+		/// <summary>Largest canonical base64 carrier for the decoded sidecar cap.</summary>
+		public const int MaxExtensionModelChars =
+			((ThousandAndFirst.Api.KingdomApiRules.MaxBehaviourModelBytes + 2) / 3) * 4;
+
+		/// <summary>
+		/// Bounded lifecycle authority for one physically staged city happening. Resident and
+		/// fixture properties are projections of this wire: deleting a fixture or interrupting a
+		/// walk therefore degrades to a dated unattended report and schedule restoration rather
+		/// than losing the semantic event or leaving a body posted forever.
+		/// </summary>
+		public string HappeningModel = "";
+
+		/// <summary>Largest canonical base64 carrier for the physical-happening sidecar.</summary>
+		public const int MaxHappeningModelChars = KingdomHappeningLifecycleRules.MaxWireChars;
 
 		/// <summary>
 		/// The blocking verdict the citizen rite last reported, plus one, so that zero &mdash; what
@@ -303,6 +382,20 @@ namespace ThousandAndFirst.Simulation.City
 		/// </summary>
 		public void Normalize()
 		{
+			// Null is an absent named field from a pre-v3 save. Non-empty data, including malformed
+			// data, is retained for the behaviour host to diagnose rather than repaired here.
+			if (ExtensionModel == null)
+			{
+				ExtensionModel = "";
+			}
+			if (ExtensionHappeningCursors == null)
+			{
+				ExtensionHappeningCursors = "";
+			}
+			if (HappeningModel == null)
+			{
+				HappeningModel = "";
+			}
 			ZoneIds = Repair(ZoneIds);
 			ZoneDistrictCodes = Repair(ZoneDistrictCodes);
 			ZoneLastReadTicks = Repair(ZoneLastReadTicks);
@@ -385,9 +478,11 @@ namespace ThousandAndFirst.Simulation.City
 
 			ResidentIds = Repair(ResidentIds);
 			ResidentNames = Repair(ResidentNames);
+			ResidentOrigins = Repair(ResidentOrigins);
 			ResidentOriginCodes = Repair(ResidentOriginCodes);
 			ResidentCreedCodes = Repair(ResidentCreedCodes);
 			ResidentArrivedTicks = Repair(ResidentArrivedTicks);
+			ResidentArrived = Repair(ResidentArrived);
 			ResidentHomeWorkIds = Repair(ResidentHomeWorkIds);
 			ResidentJobWorkIds = Repair(ResidentJobWorkIds);
 			ResidentJobRoles = Repair(ResidentJobRoles);
@@ -404,10 +499,34 @@ namespace ThousandAndFirst.Simulation.City
 			ResidentCreedToward = Repair(ResidentCreedToward);
 			ResidentCreedChannels = Repair(ResidentCreedChannels);
 			ResidentKeptCreeds = Repair(ResidentKeptCreeds);
-			int residents = Shortest(new int[21]
+			// V2 had the exact origin only as a closed code and no frozen arrival label. Fill the two
+			// new V3 presentation columns from what V2 can prove before the ordinary square-column
+			// normalization runs. No tick is parsed or invented.
+			if (SchemaVersion < 3)
 			{
-				ResidentIds.Count, ResidentNames.Count, ResidentOriginCodes.Count,
-				ResidentCreedCodes.Count, ResidentArrivedTicks.Count, ResidentHomeWorkIds.Count,
+				int oldRows = Shortest(new int[21]
+				{
+					ResidentIds.Count, ResidentNames.Count, ResidentOriginCodes.Count,
+					ResidentCreedCodes.Count, ResidentArrivedTicks.Count, ResidentHomeWorkIds.Count,
+					ResidentJobWorkIds.Count, ResidentJobRoles.Count, ResidentDayShapes.Count,
+					ResidentStandings.Count, ResidentCauses.Count, ResidentBoundZoneIds.Count,
+					ResidentRoofStanding.Count, ResidentRoofTicks.Count, ResidentRoofWarnedTicks.Count,
+					ResidentCreedStanding.Count, ResidentCreedTicks.Count, ResidentCreedWarnedTicks.Count,
+					ResidentCreedToward.Count, ResidentCreedChannels.Count, ResidentKeptCreeds.Count
+				});
+				while (ResidentOrigins.Count < oldRows)
+				{
+					ResidentOrigins.Add(KingdomResidentRules.OriginKey(
+						ResidentOriginCodes[ResidentOrigins.Count]) ?? "");
+				}
+				while (ResidentArrived.Count < oldRows) ResidentArrived.Add("");
+				SchemaVersion = KingdomCityRules.SchemaVersion;
+			}
+			int residents = Shortest(new int[23]
+			{
+				ResidentIds.Count, ResidentNames.Count, ResidentOrigins.Count,
+				ResidentOriginCodes.Count, ResidentCreedCodes.Count, ResidentArrivedTicks.Count,
+				ResidentArrived.Count, ResidentHomeWorkIds.Count,
 				ResidentJobWorkIds.Count, ResidentJobRoles.Count, ResidentDayShapes.Count,
 				ResidentStandings.Count, ResidentCauses.Count, ResidentBoundZoneIds.Count,
 				ResidentRoofStanding.Count, ResidentRoofTicks.Count, ResidentRoofWarnedTicks.Count,
@@ -420,9 +539,11 @@ namespace ThousandAndFirst.Simulation.City
 			}
 			Trim(ResidentIds, residents);
 			Trim(ResidentNames, residents);
+			Trim(ResidentOrigins, residents);
 			Trim(ResidentOriginCodes, residents);
 			Trim(ResidentCreedCodes, residents);
 			Trim(ResidentArrivedTicks, residents);
+			Trim(ResidentArrived, residents);
 			Trim(ResidentHomeWorkIds, residents);
 			Trim(ResidentJobWorkIds, residents);
 			Trim(ResidentJobRoles, residents);
@@ -445,6 +566,8 @@ namespace ThousandAndFirst.Simulation.City
 				{
 					ResidentNames[i] = "";
 				}
+				if (ResidentOrigins[i] == null) ResidentOrigins[i] = "";
+				if (ResidentArrived[i] == null) ResidentArrived[i] = "";
 				if (ResidentBoundZoneIds[i] == null)
 				{
 					ResidentBoundZoneIds[i] = "";
@@ -504,6 +627,64 @@ namespace ThousandAndFirst.Simulation.City
 			{
 				SettlementId = "";
 			}
+			if (PilgrimLoudness < 0)
+			{
+				PilgrimLoudness = 0;
+			}
+			else if (PilgrimLoudness >= ThousandAndFirst.KingdomLocusRules.PilgrimStoryThreshold)
+			{
+				PilgrimLoudness = ThousandAndFirst.KingdomLocusRules.PilgrimStoryThreshold - 1;
+			}
+			if (PilgrimSequence < 0)
+			{
+				PilgrimSequence = 0;
+			}
+			if (PilgrimCauseTick < 0L)
+			{
+				PilgrimCauseTick = 0L;
+			}
+			PilgrimCause = PilgrimCause ?? "";
+			PilgrimObjectId = PilgrimObjectId ?? "";
+			PilgrimName = PilgrimName ?? "";
+			if (PilgrimName.Length > ThousandAndFirst.KingdomLocusRules.MaxPilgrimNameChars)
+			{
+				PilgrimName = "";
+			}
+			PilgrimPlaceName = PilgrimPlaceName ?? "";
+			if (PilgrimPlaceName.Length > ThousandAndFirst.KingdomLocusRules.MaxPilgrimPlaceChars)
+			{
+				PilgrimPlaceName = "";
+			}
+			PilgrimGreeted = PilgrimGreeted == 1 ? 1 : 0;
+			if (!ThousandAndFirst.KingdomLocusRules.KnownPilgrimState(PilgrimState)
+				|| PilgrimCause.Length > ThousandAndFirst.KingdomLocusRules.MaxPilgrimCauseChars
+				|| (PilgrimState != (int)ThousandAndFirst.KingdomLocusRules.PilgrimState.None
+					&& (PilgrimSequence <= 0 || PilgrimCauseTick <= 0L
+						|| string.IsNullOrWhiteSpace(PilgrimCause)
+						|| string.IsNullOrWhiteSpace(PilgrimPlaceName))))
+			{
+				PilgrimState = (int)ThousandAndFirst.KingdomLocusRules.PilgrimState.None;
+				PilgrimCauseTick = 0L;
+				PilgrimCause = "";
+				PilgrimObjectId = "";
+				PilgrimName = "";
+				PilgrimPlaceName = "";
+				PilgrimGreeted = 0;
+			}
+			else if (PilgrimState == (int)ThousandAndFirst.KingdomLocusRules.PilgrimState.None)
+			{
+				PilgrimCauseTick = 0L;
+				PilgrimCause = "";
+				PilgrimObjectId = "";
+				PilgrimName = "";
+				PilgrimPlaceName = "";
+				PilgrimGreeted = 0;
+			}
+			else if (PilgrimState == (int)ThousandAndFirst.KingdomLocusRules.PilgrimState.Waiting)
+			{
+				PilgrimObjectId = "";
+				PilgrimGreeted = 0;
+			}
 			// A stamp below zero is a corrupt reading and not a model in debt: the book fails
 			// closed to "nothing reckoned yet" rather than refusing to load a whole city.
 			if (ProcessedThroughTick < 0L)
@@ -531,8 +712,10 @@ namespace ThousandAndFirst.Simulation.City
 			// answers -1 for one so the comparison below can never be true.
 			int count = Rows(ResidentIds);
 			if (count >= 0
-				&& Rows(ResidentNames) == count && Rows(ResidentOriginCodes) == count && Rows(ResidentCreedCodes) == count
-				&& Rows(ResidentArrivedTicks) == count && Rows(ResidentHomeWorkIds) == count
+				&& Rows(ResidentNames) == count && Rows(ResidentOrigins) == count
+				&& Rows(ResidentOriginCodes) == count && Rows(ResidentCreedCodes) == count
+				&& Rows(ResidentArrivedTicks) == count && Rows(ResidentArrived) == count
+				&& Rows(ResidentHomeWorkIds) == count
 				&& Rows(ResidentJobWorkIds) == count && Rows(ResidentJobRoles) == count
 				&& Rows(ResidentDayShapes) == count && Rows(ResidentStandings) == count
 				&& Rows(ResidentCauses) == count && Rows(ResidentBoundZoneIds) == count
@@ -757,7 +940,9 @@ namespace ThousandAndFirst.Simulation.City
 					new KingdomBrinkWindow(ResidentCreedStanding[i] != 0, ResidentCreedTicks[i], ResidentCreedWarnedTicks[i]),
 					ResidentCreedToward[i],
 					(byte)ResidentCreedChannels[i],
-					ResidentKeptCreeds[i]);
+					ResidentKeptCreeds[i],
+					ResidentOrigins[i],
+					ResidentArrived[i]);
 			}
 			KingdomClockRow[] clocks = new KingdomClockRow[ClockKinds.Count];
 			for (int i = 0; i < clocks.Length; i++)
@@ -879,9 +1064,11 @@ namespace ThousandAndFirst.Simulation.City
 				}
 				ResidentIds.Add(row.ResidentId);
 				ResidentNames.Add(row.Name ?? "");
+				ResidentOrigins.Add(row.Origin ?? "");
 				ResidentOriginCodes.Add(row.OriginCode);
 				ResidentCreedCodes.Add(row.CreedCode);
 				ResidentArrivedTicks.Add(row.ArrivedTick);
+				ResidentArrived.Add(row.Arrived ?? "");
 				ResidentHomeWorkIds.Add(row.HomeWorkId);
 				ResidentJobWorkIds.Add(row.JobWorkId);
 				ResidentJobRoles.Add(row.JobRole);
@@ -962,9 +1149,11 @@ namespace ThousandAndFirst.Simulation.City
 			WorkNextTicks.Clear();
 			ResidentIds.Clear();
 			ResidentNames.Clear();
+			ResidentOrigins.Clear();
 			ResidentOriginCodes.Clear();
 			ResidentCreedCodes.Clear();
 			ResidentArrivedTicks.Clear();
+			ResidentArrived.Clear();
 			ResidentHomeWorkIds.Clear();
 			ResidentJobWorkIds.Clear();
 			ResidentJobRoles.Clear();

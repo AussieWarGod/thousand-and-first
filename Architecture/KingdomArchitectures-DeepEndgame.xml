@@ -1,0 +1,1032 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Authored deep, body-institution, creed, capital, and endgame architecture.
+
+  Each tier below is one exact catalogue BuildKey. Deep work retains and marks natural rock;
+  arclight work uses coherent masonry/metal services; creed works express doctrine in circulation
+  and use, not colour. The mirror-gate and crown-hall skins therefore select different maps while
+  keeping the catalogue's paid material bill. Delves author one owned Down head; runtime proves and
+  places its paired Up endpoint in the already-built zone exactly one stratum below.
+-->
+<KingdomArchitectures Schema="1">
+
+  <!-- Workshop flesh rooms: cut stone, paid shaped stone, and sparse recovered plate. -->
+  <palette Key="deepend-vat-workshop">
+    <slot Key="ground" Blueprint="DirtFloor" Role="ground" Material="mud" MinTech="hands" Natural="yes" />
+    <slot Key="floor" Blueprint="BrickWalkway" Role="washable-floor" Material="shapedstone" MinTech="workshop" Natural="no" />
+    <slot Key="wall" Blueprint="r_KingdomStructureSandstone" Role="stone-wall" Material="stone" MinTech="hands" Natural="no" />
+    <slot Key="screen" Blueprint="r_KingdomStructureRustedMetalWall" Role="recovered-screen" Material="scrap" MinTech="salvage" Natural="no" />
+    <slot Key="door" Blueprint="Archway" Role="cut-entry" Material="stone" MinTech="hands" Natural="no" />
+    <slot Key="vat" Blueprint="r_KingdomFixtureBasinScrap" Role="empty-brine-vat" Material="scrap" MinTech="workshop" Natural="no" />
+    <slot Key="table" Blueprint="r_KingdomFixtureTableStone" Role="stone-work-table" Material="shapedstone" MinTech="workshop" Natural="no" />
+    <slot Key="light" Blueprint="r_KingdomCivicTorchpost" Role="shielded-work-light" Material="scrap" MinTech="workshop" Natural="no" />
+  </palette>
+
+  <palette Key="deepend-graft-foundry">
+    <slot Key="ground" Blueprint="DirtFloor" Role="ground" Material="mud" MinTech="hands" Natural="yes" />
+    <slot Key="floor" Blueprint="BrickWalkway" Role="washable-floor" Material="shapedstone" MinTech="workshop" Natural="no" />
+    <slot Key="wall" Blueprint="r_KingdomStructureSandstone" Role="stone-shell" Material="stone" MinTech="hands" Natural="no" />
+    <slot Key="partition" Blueprint="r_KingdomStructureMetalWall" Role="clean-partition" Material="workedmetal" MinTech="foundry" Natural="no" />
+    <slot Key="door" Blueprint="r_KingdomFixtureDoorMetal" Role="clean-door" Material="workedmetal" MinTech="foundry" Natural="no" />
+    <slot Key="table" Blueprint="r_KingdomFixtureTableStone" Role="dressed-stone-table" Material="shapedstone" MinTech="workshop" Natural="no" />
+    <slot Key="light" Blueprint="r_KingdomCivicTorchpost" Role="fixed-work-light" Material="workedmetal" MinTech="workshop" Natural="no" />
+    <slot Key="storage" Blueprint="r_KingdomFixtureShelfMetal" Role="procedure-storage" Material="workedmetal" MinTech="foundry" Natural="no" />
+  </palette>
+
+  <palette Key="deepend-chimeric-arclight">
+    <slot Key="ground" Blueprint="DirtFloor" Role="ground" Material="mud" MinTech="hands" Natural="yes" />
+    <slot Key="floor" Blueprint="SmallHexFloor" Role="service-floor" Material="workedmetal" MinTech="foundry" Natural="no" />
+    <slot Key="aisle" Blueprint="MarbleFloor" Role="theatre-aisle" Material="marble" MinTech="hands" Natural="no" />
+    <slot Key="wall" Blueprint="r_KingdomStructureConcreteWall" Role="structural-wall" Material="shapedstone" MinTech="foundry" Natural="no" />
+    <slot Key="stone" Blueprint="r_KingdomStructureSandstone" Role="stone-backing" Material="stone" MinTech="hands" Natural="no" />
+    <slot Key="scrap" Blueprint="r_KingdomStructureRustedMetalWall" Role="recovered-service-bank" Material="scrap" MinTech="salvage" Natural="no" />
+    <slot Key="metal" Blueprint="r_KingdomStructureMetalWall" Role="clean-screen" Material="workedmetal" MinTech="foundry" Natural="no" />
+    <slot Key="door" Blueprint="r_KingdomFixtureDoorSecurity" Role="controlled-door" Material="workedmetal" MinTech="arclight" Natural="no" />
+    <slot Key="table" Blueprint="r_KingdomFixtureTableMarble" Role="marble-operation-table" Material="marble" MinTech="foundry" Natural="no" />
+    <slot Key="seat" Blueprint="r_KingdomFixtureChairMetal" Role="audience-seat" Material="workedmetal" MinTech="foundry" Natural="no" />
+    <slot Key="vat" Blueprint="r_KingdomFixtureBasinScrap" Role="empty-preservation-vat" Material="scrap" MinTech="workshop" Natural="no" />
+    <slot Key="light" Blueprint="Techlight1" Role="surgical-light" Material="workedmetal" MinTech="arclight" Natural="no" />
+  </palette>
+
+  <palette Key="deepend-annexe-arclight">
+    <slot Key="ground" Blueprint="DirtFloor" Role="ground" Material="mud" MinTech="hands" Natural="yes" />
+    <slot Key="floor" Blueprint="SmallHexFloor" Role="service-floor" Material="workedmetal" MinTech="foundry" Natural="no" />
+    <slot Key="clean" Blueprint="MarbleFloor" Role="clean-floor" Material="marble" MinTech="hands" Natural="no" />
+    <slot Key="wall" Blueprint="r_KingdomStructureConcreteWall" Role="structural-wall" Material="shapedstone" MinTech="foundry" Natural="no" />
+    <slot Key="stone" Blueprint="r_KingdomStructureSandstone" Role="stone-backing" Material="stone" MinTech="hands" Natural="no" />
+    <slot Key="scrap" Blueprint="r_KingdomStructureRustedMetalWall" Role="recovered-service-bank" Material="scrap" MinTech="salvage" Natural="no" />
+    <slot Key="metal" Blueprint="r_KingdomStructureMetalWall" Role="clean-screen" Material="workedmetal" MinTech="foundry" Natural="no" />
+    <slot Key="door" Blueprint="r_KingdomFixtureDoorSecurity" Role="controlled-door" Material="workedmetal" MinTech="arclight" Natural="no" />
+    <slot Key="desk" Blueprint="r_KingdomFixtureTableMarble" Role="marble-registry-desk" Material="marble" MinTech="foundry" Natural="no" />
+    <slot Key="chair" Blueprint="r_KingdomFixtureChairMetal" Role="becoming-chair" Material="workedmetal" MinTech="arclight" Natural="no" />
+    <slot Key="book" Blueprint="r_KingdomFixtureShelfMetal" Role="sealed-rolls" Material="workedmetal" MinTech="arclight" Natural="no" />
+    <slot Key="light" Blueprint="Techlight1" Role="clean-light" Material="workedmetal" MinTech="arclight" Natural="no" />
+  </palette>
+
+  <palette Key="deepend-mirror-arclight">
+    <slot Key="ground" Blueprint="DirtFloor" Role="ground" Material="mud" MinTech="hands" Natural="yes" />
+    <slot Key="floor" Blueprint="MarbleFloor" Role="levelled-gate-floor" Material="marble" MinTech="hands" Natural="no" />
+    <slot Key="service" Blueprint="SmallHexFloor" Role="gate-service-floor" Material="workedmetal" MinTech="foundry" Natural="no" />
+    <slot Key="wall" Blueprint="r_KingdomStructureConcreteWall" Role="structural-wall" Material="shapedstone" MinTech="foundry" Natural="no" />
+    <slot Key="stone" Blueprint="r_KingdomStructureSandstone" Role="stone-backing" Material="stone" MinTech="hands" Natural="no" />
+    <slot Key="ring" Blueprint="r_KingdomStructureMetalRingArch" Role="open-gate-ring-brace" Material="workedmetal" MinTech="foundry" Natural="no" />
+    <slot Key="scrap" Blueprint="r_KingdomFixtureServiceBankScrap" Role="empty-recovered-service-bank" Material="scrap" MinTech="salvage" Natural="no" />
+    <slot Key="door" Blueprint="r_KingdomFixtureDoorSecurity" Role="service-door" Material="workedmetal" MinTech="arclight" Natural="no" />
+    <slot Key="light" Blueprint="Techlight1" Role="keying-light" Material="workedmetal" MinTech="arclight" Natural="no" />
+  </palette>
+
+  <palette Key="deepend-crown-foundry">
+    <slot Key="ground" Blueprint="DirtFloor" Role="ground" Material="mud" MinTech="hands" Natural="yes" />
+    <slot Key="floor" Blueprint="MarbleFloor" Role="processional-floor" Material="marble" MinTech="hands" Natural="no" />
+    <slot Key="service" Blueprint="BrickWalkway" Role="service-floor" Material="shapedstone" MinTech="workshop" Natural="no" />
+    <slot Key="wall" Blueprint="r_KingdomStructureSandstone" Role="stone-shell" Material="stone" MinTech="hands" Natural="no" />
+    <slot Key="masonry" Blueprint="r_KingdomStructureBrickWall" Role="dressed-partition" Material="shapedstone" MinTech="workshop" Natural="no" />
+    <slot Key="metal" Blueprint="r_KingdomStructureLowMetalScreen" Role="low-crown-screen" Material="workedmetal" MinTech="foundry" Natural="no" />
+    <slot Key="door" Blueprint="r_KingdomFixtureDoorMetal" Role="hall-door" Material="workedmetal" MinTech="foundry" Natural="no" />
+    <slot Key="seat" Blueprint="r_KingdomFixtureChairMarble" Role="witness-seat" Material="marble" MinTech="hands" Natural="no" />
+    <slot Key="light" Blueprint="r_KingdomCivicTorchpost" Role="hall-light" Material="workedmetal" MinTech="workshop" Natural="no" />
+  </palette>
+
+  <palette Key="deepend-arcology-arclight">
+    <slot Key="soil" Blueprint="DirtFloor" Role="carried-soil" Material="mud" MinTech="hands" Natural="no" />
+    <slot Key="walk" Blueprint="SmallHexFloor" Role="hanging-walk" Material="workedmetal" MinTech="foundry" Natural="no" />
+    <slot Key="curb" Blueprint="r_KingdomStructureLowConcrete" Role="terrace-curb" Material="shapedstone" MinTech="foundry" Natural="no" />
+    <slot Key="stone" Blueprint="r_KingdomStructureSandstone" Role="stone-ballast" Material="stone" MinTech="hands" Natural="no" />
+    <slot Key="light" Blueprint="Techlight1" Role="growth-light" Material="workedmetal" MinTech="arclight" Natural="no" />
+  </palette>
+
+  <palette Key="deepend-registry-workshop">
+    <slot Key="ground" Blueprint="DirtFloor" Role="ground" Material="mud" MinTech="hands" Natural="yes" />
+    <slot Key="floor" Blueprint="DirtPath" Role="office-floor" Material="stone" MinTech="hands" Natural="no" />
+    <slot Key="wall" Blueprint="r_KingdomStructureSandstone" Role="stone-wall" Material="stone" MinTech="hands" Natural="no" />
+    <slot Key="door" Blueprint="r_KingdomFixtureDoorTimber" Role="timber-door" Material="timber" MinTech="hands" Natural="no" />
+    <slot Key="desk" Blueprint="r_KingdomFixtureTableTimber" Role="registry-desk" Material="timber" MinTech="hands" Natural="no" />
+    <slot Key="book" Blueprint="r_KingdomFixtureShelfTimber" Role="copied-rolls" Material="timber" MinTech="hands" Natural="no" />
+    <slot Key="box" Blueprint="r_KingdomFixtureBasketEmpty" Role="sealed-record-box" Material="timber" MinTech="hands" Natural="no" />
+    <slot Key="light" Blueprint="r_KingdomCivicTorchpost" Role="clerk-light" Material="workedmetal" MinTech="workshop" Natural="no" />
+  </palette>
+
+  <palette Key="deepend-fungal-natural">
+    <slot Key="floor" Blueprint="FungalTrailBrick" Role="damp-run" Material="mud" MinTech="hands" Natural="yes" />
+    <slot Key="rock" Blueprint="r_KingdomStructureLimestone" Role="retained-rock" Material="stone" MinTech="hands" Natural="yes" />
+    <slot Key="cut" Blueprint="r_KingdomStructureSandstone" Role="cut-rock" Material="stone" MinTech="hands" Natural="no" />
+    <slot Key="door" Blueprint="Archway" Role="cut-entry" Material="stone" MinTech="hands" Natural="no" />
+  </palette>
+
+  <palette Key="deepend-gallery-workshop">
+    <slot Key="floor" Blueprint="FungalTrailBrick" Role="damp-run" Material="mud" MinTech="hands" Natural="yes" />
+    <slot Key="walk" Blueprint="BrickWalkway" Role="drained-walk" Material="shapedstone" MinTech="workshop" Natural="no" />
+    <slot Key="rock" Blueprint="r_KingdomStructureLimestone" Role="retained-rock" Material="stone" MinTech="hands" Natural="yes" />
+    <slot Key="prop" Blueprint="r_KingdomStructureBrickWall" Role="dressed-prop" Material="shapedstone" MinTech="workshop" Natural="no" />
+    <slot Key="door" Blueprint="Archway" Role="cut-entry" Material="stone" MinTech="hands" Natural="no" />
+    <slot Key="light" Blueprint="r_KingdomCivicTorchpost" Role="low-gallery-light" Material="shapedstone" MinTech="workshop" Natural="no" />
+  </palette>
+
+  <palette Key="deepend-cut-natural">
+    <slot Key="floor" Blueprint="DirtPath" Role="cut-floor" Material="stone" MinTech="hands" Natural="yes" />
+    <slot Key="rock" Blueprint="r_KingdomStructureLimestone" Role="retained-work-face" Material="stone" MinTech="hands" Natural="yes" />
+    <slot Key="support" Blueprint="r_KingdomStructureHalfStone" Role="roof-support" Material="stone" MinTech="hands" Natural="no" />
+    <slot Key="spoil" Blueprint="Rubble" Role="packed-spoil" Material="stone" MinTech="hands" Natural="no" />
+    <slot Key="light" Blueprint="r_KingdomCivicTorchpost" Role="face-light" Material="stone" MinTech="hands" Natural="no" />
+  </palette>
+
+  <palette Key="deepend-delve-workshop">
+    <slot Key="floor" Blueprint="DirtPath" Role="landing-floor" Material="stone" MinTech="hands" Natural="yes" />
+    <slot Key="rock" Blueprint="r_KingdomStructureLimestone" Role="retained-rock" Material="stone" MinTech="hands" Natural="yes" />
+    <slot Key="cut" Blueprint="BrickWalkway" Role="dressed-landing" Material="shapedstone" MinTech="workshop" Natural="no" />
+    <slot Key="support" Blueprint="r_KingdomStructureHalfStone" Role="shaft-support" Material="stone" MinTech="hands" Natural="no" />
+    <slot Key="spoil" Blueprint="Rubble" Role="shaft-spoil" Material="stone" MinTech="hands" Natural="no" />
+    <slot Key="down" Blueprint="r_KingdomDelveDown" Role="vertical-down" Material="shapedstone" MinTech="workshop" Natural="no" />
+    <slot Key="light" Blueprint="r_KingdomCivicTorchpost" Role="landing-light" Material="shapedstone" MinTech="workshop" Natural="no" />
+  </palette>
+
+  <palette Key="deepend-underbench-workshop">
+    <slot Key="ground" Blueprint="DirtFloor" Role="ground" Material="mud" MinTech="hands" Natural="yes" />
+    <slot Key="floor" Blueprint="DirtPath" Role="practical-floor" Material="stone" MinTech="hands" Natural="no" />
+    <slot Key="wall" Blueprint="r_KingdomStructureSandstone" Role="stone-wall" Material="stone" MinTech="hands" Natural="no" />
+    <slot Key="scrap" Blueprint="r_KingdomStructureRustedMetalWall" Role="exposed-recovered-service" Material="scrap" MinTech="salvage" Natural="no" />
+    <slot Key="metal" Blueprint="r_KingdomStructureRustedMetalWall" Role="recovered-bulkhead-bench" Material="scrap" MinTech="salvage" Natural="no" />
+    <slot Key="locker" Blueprint="r_KingdomFixtureLockerScrap" Role="empty-parts-locker" Material="scrap" MinTech="salvage" Natural="no" />
+    <slot Key="door" Blueprint="r_KingdomFixtureDoorMetal" Role="work-door" Material="workedmetal" MinTech="workshop" Natural="no" />
+    <slot Key="light" Blueprint="r_KingdomCivicTorchpost" Role="low-work-light" Material="workedmetal" MinTech="workshop" Natural="no" />
+  </palette>
+
+  <palette Key="deepend-reliquary-salvage">
+    <slot Key="ground" Blueprint="DirtFloor" Role="ground" Material="mud" MinTech="hands" Natural="yes" />
+    <slot Key="floor" Blueprint="BrickWalkway" Role="processional-floor" Material="shapedstone" MinTech="workshop" Natural="no" />
+    <slot Key="wall" Blueprint="r_KingdomStructureSandstone" Role="stone-shell" Material="stone" MinTech="hands" Natural="no" />
+    <slot Key="case" Blueprint="r_KingdomStructureRustedMetalWall" Role="recovered-relic-case" Material="scrap" MinTech="salvage" Natural="no" />
+    <slot Key="relic" Blueprint="r_KingdomStructureRustedMetalWall" Role="retained-machine-relic" Material="scrap" MinTech="salvage" Natural="no" />
+    <slot Key="door" Blueprint="Archway" Role="stone-entry" Material="stone" MinTech="hands" Natural="no" />
+    <slot Key="seat" Blueprint="r_KingdomFixtureChairStone" Role="witness-seat" Material="shapedstone" MinTech="workshop" Natural="no" />
+    <slot Key="light" Blueprint="r_KingdomCivicTorchpost" Role="relic-light" Material="workedmetal" MinTech="workshop" Natural="no" />
+  </palette>
+
+  <palette Key="deepend-factor-hands">
+    <slot Key="ground" Blueprint="DirtFloor" Role="ground" Material="mud" MinTech="hands" Natural="yes" />
+    <slot Key="floor" Blueprint="MarbleFloor" Role="counting-floor" Material="marble" MinTech="hands" Natural="no" />
+    <slot Key="wall" Blueprint="r_KingdomStructureSandstone" Role="stone-wall" Material="stone" MinTech="hands" Natural="no" />
+    <slot Key="door" Blueprint="r_KingdomFixtureDoorTimber" Role="timber-door" Material="timber" MinTech="hands" Natural="no" />
+    <slot Key="desk" Blueprint="r_KingdomFixtureTableTimber" Role="counting-desk" Material="timber" MinTech="hands" Natural="no" />
+    <slot Key="book" Blueprint="r_KingdomFixtureShelfTimber" Role="price-ledger" Material="timber" MinTech="hands" Natural="no" />
+    <slot Key="box" Blueprint="r_KingdomFixtureBasketEmpty" Role="strongbox" Material="timber" MinTech="hands" Natural="no" />
+    <slot Key="seat" Blueprint="r_KingdomFixtureChairTimber" Role="petition-seat" Material="timber" MinTech="hands" Natural="no" />
+  </palette>
+
+  <!-- Flesh ladder and its capital outpost. -->
+  <map Key="deepend-vathouse-m0" Width="8" Height="6" DefaultCover="walled">
+    <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
+    <glyph Char="+" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" Anchors="entrance:public,service:loading" />
+    <glyph Char="i" Ground="$floor" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="v" Ground="$floor" Object="$vat" Claim="building" Pass="adjacent" Cover="walled" Anchors="process:brine-vat" Stateful="yes" />
+    <glyph Char="s" Ground="$floor" Object="$vat" Claim="building" Pass="adjacent" Cover="walled" Anchors="storage:preserved" Stateful="yes" />
+    <glyph Char="t" Ground="$floor" Object="$table" Claim="building" Pass="adjacent" Cover="walled" Anchors="work:preservation" Stateful="yes" />
+    <glyph Char="l" Ground="$floor" Object="$light" Claim="building" Pass="adjacent" Cover="walled" Anchors="light:work" Stateful="yes" />
+    <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="walled" Anchors="main,function:preservation" Stateful="yes" />
+    <row Cells="........" />
+    <row Cells="........" />
+    <row Cells=".######." />
+    <row Cells=".#vlt##." />
+    <row Cells=".#i@i##." />
+    <row Cells=".#+is##." />
+  </map>
+
+  <map Key="deepend-graftinghall-l0" Width="12" Height="9" DefaultCover="walled">
+    <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
+    <glyph Char="+" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" Anchors="entrance:public" />
+    <glyph Char="d" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="i" Ground="$floor" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="t" Ground="$floor" Object="$table" Claim="building" Pass="adjacent" Cover="walled" Anchors="work:preparation" Stateful="yes" />
+    <glyph Char="g" Ground="$floor" Object="$table" Claim="building" Pass="adjacent" Cover="walled" Anchors="work:grafting-table" Stateful="yes" />
+    <glyph Char="l" Ground="$floor" Object="$light" Claim="building" Pass="adjacent" Cover="walled" Anchors="light:surgical" Stateful="yes" />
+    <glyph Char="s" Ground="$floor" Object="$storage" Claim="building" Pass="adjacent" Cover="walled" Anchors="storage:procedure" Stateful="yes" />
+    <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="walled" Anchors="main,function:grafting" Stateful="yes" />
+    <row Cells="............" />
+    <row Cells="............" />
+    <row Cells=".##########." />
+    <row Cells=".#l#tt#l###." />
+    <row Cells=".#i#ii#i###." />
+    <row Cells=".#didgidi##." />
+    <row Cells=".#i#@i#is##." />
+    <row Cells=".#diiiiid##." />
+    <row Cells=".##+####+##." />
+  </map>
+
+  <map Key="deepend-chimerictheatre-xl0" Width="20" Height="14" DefaultCover="walled">
+    <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
+    <glyph Char="+" Ground="$aisle" Structure="$door" Claim="building" Pass="walk" Cover="walled" Anchors="entrance:public" />
+    <glyph Char="d" Ground="$aisle" Structure="$door" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="i" Ground="$aisle" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="q" Ground="$aisle" Object="$seat" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="Q" Ground="$aisle" Object="$seat" Claim="building" Pass="walk" Cover="walled" Anchors="seat:audience" Stateful="yes" />
+    <glyph Char="T" Ground="$floor" Object="$table" Claim="building" Pass="adjacent" Cover="walled" Anchors="work:chimeric-table" Stateful="yes" />
+    <glyph Char="l" Ground="$floor" Object="$light" Claim="building" Pass="adjacent" Cover="walled" Anchors="light:theatre" Stateful="yes" />
+    <glyph Char="v" Ground="$floor" Object="$vat" Claim="building" Pass="adjacent" Cover="walled" Anchors="storage:preserved" Stateful="yes" />
+    <glyph Char="s" Ground="$floor" Structure="$scrap" Claim="building" Pass="adjacent" Cover="walled" Anchors="service:sterile-bank" />
+    <glyph Char="c" Ground="$floor" Claim="building" Pass="walk" Cover="walled" Anchors="hazard:clean-clearance" />
+    <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="walled" Anchors="main,function:chimeric-theatre" Stateful="yes" />
+    <row Cells="...................." />
+    <row Cells="...................." />
+    <row Cells=".##################." />
+    <row Cells=".#QqqqqqiiiiqqqqqQ#." />
+    <row Cells=".#qqqqqqiiiiqqqqqq#." />
+    <row Cells=".#iiiiidiiiiidiiii#." />
+    <row Cells=".#qqqiiiTTiiiqqqqq#." />
+    <row Cells=".#qqqiii@Tiiqqqqqq#." />
+    <row Cells=".#qqqiiiTTiiiqqqqq#." />
+    <row Cells=".#iiiiidiiiiidiiii#." />
+    <row Cells=".#lll#vvvv#ssssiii#." />
+    <row Cells=".#iidiiiiidiiiiiii#." />
+    <row Cells=".#iiiiicciiiiiiiii#." />
+    <row Cells=".####+########+####." />
+  </map>
+
+  <map Key="deepend-becomingannexe-xl0" Width="20" Height="14" DefaultCover="walled">
+    <glyph Char="#" Ground="$clean" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
+    <glyph Char="+" Ground="$clean" Structure="$door" Claim="building" Pass="walk" Cover="walled" Anchors="entrance:public" />
+    <glyph Char="d" Ground="$clean" Structure="$door" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="i" Ground="$clean" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="p" Ground="$clean" Object="$chair" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="r" Ground="$clean" Claim="building" Pass="walk" Cover="walled" Anchors="hazard:restraint-clearance" />
+    <glyph Char="t" Ground="$clean" Object="$desk" Claim="building" Pass="adjacent" Cover="walled" Anchors="work:body-template" Stateful="yes" />
+    <glyph Char="g" Ground="$floor" Object="$chair" Claim="building" Pass="walk" Cover="walled" Anchors="work:becoming-chair" Stateful="yes" />
+    <glyph Char="s" Ground="$floor" Structure="$scrap" Claim="building" Pass="adjacent" Cover="walled" Anchors="power:charge-bank" />
+    <glyph Char="b" Ground="$clean" Object="$book" Claim="building" Pass="adjacent" Cover="walled" Anchors="registry:sealed-rolls" Stateful="yes" />
+    <glyph Char="l" Ground="$clean" Object="$light" Claim="building" Pass="walk" Cover="walled" Anchors="light:clean-room" Stateful="yes" />
+    <glyph Char="@" Ground="$clean" Object="$building" Claim="building" Pass="walk" Cover="walled" Anchors="main,function:becoming-annexe" Stateful="yes" />
+    <row Cells="...................." />
+    <row Cells="...................." />
+    <row Cells=".##################." />
+    <row Cells=".#pppppp#iiiiiiiii#." />
+    <row Cells=".#pppppp#iiiiiiiii#." />
+    <row Cells=".#iiiiidiiiiiiiiii#." />
+    <row Cells=".#rrr#iiii#lllllll#." />
+    <row Cells=".#rrr#i@ii#llbllll#." />
+    <row Cells=".#rrr#iiii#lllllll#." />
+    <row Cells=".#iiidiiiiidiiiiii#." />
+    <row Cells=".#tttt#gggg#ssssss#." />
+    <row Cells=".#iiiiidiiiiidiiii#." />
+    <row Cells=".#iiiiiiiiiiiiiiii#." />
+    <row Cells=".####+########+####." />
+  </map>
+
+  <!-- True Kin registry layout: two waiting wings converge on a clean lineage-scan axis before
+       restraint, template, chair, and rolls stations. Uses annexe's already-paid arclight fabric. -->
+  <map Key="deepend-becomingannexe-truekin-xl0" Width="20" Height="14" DefaultCover="walled">
+    <glyph Char="#" Ground="$clean" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
+    <glyph Char="+" Ground="$clean" Structure="$door" Claim="building" Pass="walk" Cover="walled" Anchors="entrance:public" />
+    <glyph Char="d" Ground="$clean" Structure="$door" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="i" Ground="$clean" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="k" Ground="$clean" Claim="building" Pass="walk" Cover="walled" Anchors="service:lineage-scan" />
+    <glyph Char="p" Ground="$clean" Object="$chair" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="r" Ground="$clean" Claim="building" Pass="walk" Cover="walled" Anchors="hazard:restraint-clearance" />
+    <glyph Char="t" Ground="$clean" Object="$desk" Claim="building" Pass="adjacent" Cover="walled" Anchors="work:body-template" Stateful="yes" />
+    <glyph Char="g" Ground="$floor" Object="$chair" Claim="building" Pass="walk" Cover="walled" Anchors="work:becoming-chair" Stateful="yes" />
+    <glyph Char="s" Ground="$floor" Structure="$scrap" Claim="building" Pass="adjacent" Cover="walled" Anchors="power:charge-bank" />
+    <glyph Char="b" Ground="$clean" Object="$book" Claim="building" Pass="adjacent" Cover="walled" Anchors="registry:sealed-rolls" Stateful="yes" />
+    <glyph Char="l" Ground="$clean" Object="$light" Claim="building" Pass="walk" Cover="walled" Anchors="light:clean-room" Stateful="yes" />
+    <glyph Char="@" Ground="$clean" Object="$building" Claim="building" Pass="walk" Cover="walled" Anchors="main,function:becoming-annexe" Stateful="yes" />
+    <row Cells="...................." />
+    <row Cells="...................." />
+    <row Cells=".##################." />
+    <row Cells=".#pppp#iiiiii#pppp#." />
+    <row Cells=".#pppp#ikkkki#pppp#." />
+    <row Cells=".#iiiidiiiiidiiiii#." />
+    <row Cells=".#rrrr#iiiiii#llll#." />
+    <row Cells=".#rrrr#ii@ibi#llll#." />
+    <row Cells=".#rrrr#iiiiii#llll#." />
+    <row Cells=".#iiiidiiiiidiiiii#." />
+    <row Cells=".#tttt#gggg#ssssss#." />
+    <row Cells=".#iiiidiiiiidiiiii#." />
+    <row Cells=".#iiiiiiiiiiiiiiii#." />
+    <row Cells=".####+########+####." />
+  </map>
+
+  <map Key="deepend-hallsurgery-m0" Width="8" Height="6" DefaultCover="walled">
+    <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
+    <glyph Char="+" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" Anchors="entrance:public,service:loading" />
+    <glyph Char="d" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="i" Ground="$floor" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="s" Ground="$floor" Object="$table" Claim="building" Pass="adjacent" Cover="walled" Anchors="work:slab" Stateful="yes" />
+    <glyph Char="v" Ground="$floor" Object="$vat" Claim="building" Pass="adjacent" Cover="walled" Anchors="process:brine-vat" Stateful="yes" />
+    <glyph Char="h" Ground="$floor" Structure="$screen" Claim="building" Pass="adjacent" Cover="walled" Anchors="work:hook-rail" />
+    <glyph Char="g" Ground="$floor" Claim="building" Pass="walk" Cover="walled" Anchors="waste:gutter" />
+    <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="walled" Anchors="main,function:hall-surgery" Stateful="yes" />
+    <row Cells="........" />
+    <row Cells="..####.." />
+    <row Cells=".##s###." />
+    <row Cells=".#v@ii#." />
+    <row Cells=".#gdiih#" />
+    <row Cells=".##+####" />
+  </map>
+
+  <map Key="deepend-registryoffice-m0" Width="8" Height="6" DefaultCover="walled">
+    <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
+    <glyph Char="+" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" Anchors="entrance:public" />
+    <glyph Char="i" Ground="$floor" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="d" Ground="$floor" Object="$desk" Claim="building" Pass="walk" Cover="walled" Anchors="work:registry-desk" Stateful="yes" />
+    <glyph Char="b" Ground="$floor" Object="$book" Claim="building" Pass="walk" Cover="walled" Anchors="registry:copied-rolls" Stateful="yes" />
+    <glyph Char="s" Ground="$floor" Object="$box" Claim="building" Pass="walk" Cover="walled" Anchors="storage:sealed-records" Stateful="yes" />
+    <glyph Char="l" Ground="$floor" Object="$light" Claim="building" Pass="adjacent" Cover="walled" Anchors="light:clerk" Stateful="yes" />
+    <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="walled" Anchors="main,function:registry-office" Stateful="yes" />
+    <row Cells="........" />
+    <row Cells="........" />
+    <row Cells=".######." />
+    <row Cells=".#b#li#." />
+    <row Cells=".#sdi@#." />
+    <row Cells=".##+###." />
+  </map>
+
+  <!-- Capital arcology interior: carried soil in two reachable beds around a lit service walk. -->
+  <map Key="deepend-arcologyterrace-m0" Width="8" Height="6" DefaultCover="walled">
+    <glyph Char="c" Ground="$walk" Structure="$curb" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="+" Ground="$walk" Structure="$curb" Claim="building" Pass="walk" Cover="walled" Anchors="entrance:public,service:loading" />
+    <glyph Char="i" Ground="$walk" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="a" Ground="$soil" Claim="building" Pass="adjacent" Cover="walled" Anchors="crop:upper-bed" />
+    <glyph Char="b" Ground="$soil" Claim="building" Pass="adjacent" Cover="walled" Anchors="crop:lower-bed" />
+    <glyph Char="l" Ground="$walk" Object="$light" Claim="building" Pass="adjacent" Cover="walled" Anchors="light:growth" Stateful="yes" />
+    <glyph Char="@" Ground="$walk" Object="$building" Claim="building" Pass="walk" Cover="walled" Anchors="main,function:hanging-terrace" Stateful="yes" />
+    <row Cells="cccccc.." />
+    <row Cells="caaaac.." />
+    <row Cells="+i@ilc.." />
+    <row Cells="cbbbbc.." />
+    <row Cells="cccccc.." />
+    <row Cells="........" />
+  </map>
+
+  <!-- Deep food, craft, memorial, and actual vertical travel. -->
+  <map Key="deepend-fungalvault-m0" Width="8" Height="6" DefaultCover="natural">
+    <glyph Char="#" Ground="$floor" Structure="$rock" Claim="building" Pass="blocked" Cover="natural" />
+    <glyph Char="+" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="natural" Anchors="entrance:public,service:landing" />
+    <glyph Char="i" Ground="$floor" Claim="building" Pass="walk" Cover="natural" />
+    <glyph Char="f" Ground="$floor" Claim="building" Pass="walk" Cover="natural" Anchors="crop:spawn-run" />
+    <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="natural" Anchors="main,function:fungal-vault" Stateful="yes" />
+    <row Cells="########" />
+    <row Cells="##ffff##" />
+    <row Cells="#ffiff##" />
+    <row Cells="#ff@fff#" />
+    <row Cells="##iiff##" />
+    <row Cells="###+####" />
+  </map>
+
+  <map Key="deepend-vaultgalleries-l0" Width="12" Height="9" DefaultCover="natural">
+    <glyph Char="#" Ground="$floor" Structure="$rock" Claim="building" Pass="blocked" Cover="natural" />
+    <glyph Char="+" Ground="$walk" Structure="$door" Claim="building" Pass="walk" Cover="natural" Anchors="entrance:public,service:landing" />
+    <glyph Char="d" Ground="$walk" Structure="$door" Claim="building" Pass="walk" Cover="natural" />
+    <glyph Char="i" Ground="$walk" Claim="building" Pass="walk" Cover="natural" />
+    <glyph Char="f" Ground="$floor" Claim="building" Pass="walk" Cover="natural" Anchors="crop:spawn-run" />
+    <glyph Char="l" Ground="$walk" Object="$light" Claim="building" Pass="walk" Cover="natural" Anchors="light:gallery" Stateful="yes" />
+    <glyph Char="@" Ground="$walk" Object="$building" Claim="building" Pass="walk" Cover="natural" Anchors="main,function:vault-galleries" Stateful="yes" />
+    <row Cells="############" />
+    <row Cells="#fff#fff#ff#" />
+    <row Cells="#fff#fff#ff#" />
+    <row Cells="#iiidiiidii#" />
+    <row Cells="#fff#l#fff##" />
+    <row Cells="#fff#@#fff##" />
+    <row Cells="#iiidiiidii#" />
+    <row Cells="#iiiiiiiiii#" />
+    <row Cells="#####+######" />
+  </map>
+
+  <map Key="deepend-deepcut-m0" Width="8" Height="6" DefaultCover="natural">
+    <glyph Char="#" Ground="$floor" Structure="$rock" Claim="building" Pass="blocked" Cover="natural" />
+    <glyph Char="R" Ground="$floor" Structure="$rock" Claim="building" Pass="blocked" Cover="natural" />
+    <glyph Char="r" Ground="$floor" Structure="$rock" Claim="building" Pass="adjacent" Cover="natural" Anchors="work:cut-face" />
+    <glyph Char="s" Ground="$floor" Structure="$support" Claim="building" Pass="adjacent" Cover="natural" Anchors="support:roof" />
+    <glyph Char="p" Ground="$floor" Object="$spoil" Claim="building" Pass="adjacent" Cover="natural" Anchors="hazard:spoil" Stateful="yes" />
+    <glyph Char="l" Ground="$floor" Object="$light" Claim="building" Pass="adjacent" Cover="natural" Anchors="light:work-face" Stateful="yes" />
+    <glyph Char="i" Ground="$floor" Claim="building" Pass="walk" Cover="natural" />
+    <glyph Char="+" Ground="$floor" Claim="building" Pass="walk" Cover="natural" Anchors="entrance:public,service:loading" />
+    <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="natural" Anchors="main,function:deep-cut" Stateful="yes" />
+    <row Cells="########" />
+    <row Cells="#RRRsi##" />
+    <row Cells="#Rrrsi##" />
+    <row Cells="#Ri@ii##" />
+    <row Cells="#liipi##" />
+    <row Cells="#####+##" />
+  </map>
+
+  <map Key="deepend-nichetomb-s0" Width="5" Height="4" DefaultCover="natural">
+    <glyph Char="#" Ground="$floor" Structure="$rock" Claim="building" Pass="blocked" Cover="natural" />
+    <glyph Char="n" Ground="$floor" Structure="$cut" Claim="building" Pass="adjacent" Cover="natural" Anchors="memorial:niche" />
+    <glyph Char="i" Ground="$floor" Claim="building" Pass="walk" Cover="natural" />
+    <glyph Char="+" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="natural" Anchors="entrance:public" />
+    <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="natural" Anchors="main,function:niche-tomb" Stateful="yes" />
+    <row Cells="#####" />
+    <row Cells="#n@i#" />
+    <row Cells="#iii#" />
+    <row Cells="###+#" />
+  </map>
+
+  <map Key="deepend-delve-surface-m0" Width="8" Height="6" DefaultCover="walled">
+    <glyph Char="r" Ground="$floor" Structure="$support" Claim="building" Pass="blocked" Cover="walled" />
+    <glyph Char="+" Ground="$cut" Claim="building" Pass="walk" Cover="walled" Anchors="entrance:public,service:landing" />
+    <glyph Char="i" Ground="$cut" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="d" Ground="$cut" Object="$down" Claim="building" Pass="walk" Cover="walled" Anchors="travel:down" Stateful="yes" />
+    <glyph Char="s" Ground="$floor" Structure="$support" Claim="building" Pass="adjacent" Cover="walled" Anchors="support:shaft" />
+    <glyph Char="p" Ground="$floor" Object="$spoil" Claim="building" Pass="adjacent" Cover="walled" Anchors="hazard:spoil" Stateful="yes" />
+    <glyph Char="l" Ground="$floor" Object="$light" Claim="building" Pass="adjacent" Cover="walled" Anchors="light:landing" Stateful="yes" />
+    <glyph Char="@" Ground="$cut" Object="$building" Claim="building" Pass="walk" Cover="walled" Anchors="main,function:vertical-core" Stateful="yes" />
+    <row Cells="........" />
+    <row Cells="........" />
+    <row Cells=".rrrrr.." />
+    <row Cells=".rdiir.." />
+    <row Cells=".rs@lr.." />
+    <row Cells=".rp+rr.." />
+  </map>
+
+  <map Key="deepend-delve-deep-m0" Width="8" Height="6" DefaultCover="natural">
+    <glyph Char="r" Ground="$floor" Structure="$rock" Claim="building" Pass="blocked" Cover="natural" />
+    <glyph Char="+" Ground="$cut" Claim="building" Pass="walk" Cover="natural" Anchors="entrance:public,service:landing" />
+    <glyph Char="i" Ground="$cut" Claim="building" Pass="walk" Cover="natural" />
+    <glyph Char="v" Ground="$cut" Claim="building" Pass="walk" Cover="natural" Anchors="service:work-landing" />
+    <glyph Char="d" Ground="$cut" Object="$down" Claim="building" Pass="walk" Cover="natural" Anchors="travel:down" Stateful="yes" />
+    <glyph Char="w" Ground="$floor" Structure="$rock" Claim="building" Pass="adjacent" Cover="natural" Anchors="work:cut-face" />
+    <glyph Char="s" Ground="$floor" Structure="$support" Claim="building" Pass="adjacent" Cover="natural" Anchors="support:roof" />
+    <glyph Char="p" Ground="$floor" Object="$spoil" Claim="building" Pass="adjacent" Cover="natural" Anchors="hazard:spoil" Stateful="yes" />
+    <glyph Char="l" Ground="$floor" Object="$light" Claim="building" Pass="adjacent" Cover="natural" Anchors="light:landing" Stateful="yes" />
+    <glyph Char="@" Ground="$cut" Object="$building" Claim="building" Pass="walk" Cover="natural" Anchors="main,function:vertical-core" Stateful="yes" />
+    <row Cells="rrr+rrrr" />
+    <row Cells="rrriirrr" />
+    <row Cells="rrdiiirr" />
+    <row Cells="rwis@irr" />
+    <row Cells="rrpvilrr" />
+    <row Cells="rrrrrrrr" />
+  </map>
+
+  <!-- Creed-unique rooms. -->
+  <map Key="deepend-underbench-m0" Width="8" Height="6" DefaultCover="walled">
+    <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
+    <glyph Char="+" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" Anchors="entrance:public,service:loading" />
+    <glyph Char="i" Ground="$floor" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="b" Ground="$floor" Object="$metal" Claim="building" Pass="adjacent" Cover="walled" Anchors="work:bulkhead-bench" Stateful="yes" />
+    <glyph Char="w" Ground="$floor" Structure="$scrap" Claim="building" Pass="adjacent" Cover="walled" Anchors="service:exposed-wire" />
+    <glyph Char="s" Ground="$floor" Object="$locker" Claim="building" Pass="walk" Cover="walled" Anchors="storage:parts-locker" Stateful="yes" />
+    <glyph Char="l" Ground="$floor" Object="$light" Claim="building" Pass="walk" Cover="walled" Anchors="light:low-bench" Stateful="yes" />
+    <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="walled" Anchors="main,function:under-bench" Stateful="yes" />
+    <row Cells="........" />
+    <row Cells=".######." />
+    <row Cells=".#bwl##." />
+    <row Cells=".#i@si#." />
+    <row Cells=".#iii##." />
+    <row Cells=".##+##.." />
+  </map>
+
+  <map Key="deepend-reliquary-l0" Width="12" Height="9" DefaultCover="walled">
+    <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
+    <glyph Char="+" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" Anchors="entrance:public" />
+    <glyph Char="i" Ground="$floor" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="c" Ground="$floor" Structure="$case" Claim="building" Pass="adjacent" Cover="walled" Anchors="shrine:relic-case" />
+    <glyph Char="r" Ground="$floor" Object="$relic" Claim="building" Pass="adjacent" Cover="walled" Anchors="shrine:machine-relic" Stateful="yes" />
+    <glyph Char="q" Ground="$floor" Object="$seat" Claim="building" Pass="walk" Cover="walled" Anchors="seat:witness" Stateful="yes" />
+    <glyph Char="l" Ground="$floor" Object="$light" Claim="building" Pass="adjacent" Cover="walled" Anchors="light:relic" Stateful="yes" />
+    <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="walled" Anchors="main,function:reliquary" Stateful="yes" />
+    <row Cells="............" />
+    <row Cells="..########.." />
+    <row Cells=".##iiiiii##." />
+    <row Cells=".#iiccciii#." />
+    <row Cells=".#iqcrciqi#." />
+    <row Cells=".#iiiiliii#." />
+    <row Cells=".###i@ii###." />
+    <row Cells="...##++##..." />
+    <row Cells="............" />
+  </map>
+
+  <map Key="deepend-factorhouse-m0" Width="8" Height="6" DefaultCover="walled">
+    <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
+    <glyph Char="+" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" Anchors="entrance:public" />
+    <glyph Char="i" Ground="$floor" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="d" Ground="$floor" Object="$desk" Claim="building" Pass="walk" Cover="walled" Anchors="work:counting-desk" Stateful="yes" />
+    <glyph Char="b" Ground="$floor" Object="$book" Claim="building" Pass="adjacent" Cover="walled" Anchors="registry:prices" Stateful="yes" />
+    <glyph Char="s" Ground="$floor" Object="$box" Claim="building" Pass="adjacent" Cover="walled" Anchors="storage:strongbox" Stateful="yes" />
+    <glyph Char="q" Ground="$floor" Object="$seat" Claim="building" Pass="walk" Cover="walled" Anchors="seat:petitioner" Stateful="yes" />
+    <glyph Char="t" Ground="$floor" Object="$desk" Claim="building" Pass="walk" Cover="walled" Anchors="work:price-counter" Stateful="yes" />
+    <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="walled" Anchors="main,function:factor-house" Stateful="yes" />
+    <row Cells="........" />
+    <row Cells="........" />
+    <row Cells=".######." />
+    <row Cells=".#bsi##." />
+    <row Cells=".#qdt@#." />
+    <row Cells=".##+###." />
+  </map>
+
+  <!-- Mirror-gate: one 11x8 paid footprint, five materially equal but topologically distinct
+       civic readings. All keep a three-wide public throat and a reachable keying/service ring. -->
+  <map Key="deepend-mirrorgate-xl0" Width="20" Height="14" DefaultCover="walled">
+    <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
+    <glyph Char="R" Ground="$floor" Structure="$ring" Claim="building" Pass="walk" Cover="walled" Anchors="gate:ring" />
+    <glyph Char="S" Ground="$service" Structure="$scrap" Claim="building" Pass="walk" Cover="walled" Anchors="service:gate-bank" />
+    <glyph Char="i" Ground="$floor" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="+" Ground="$service" Claim="building" Pass="walk" Cover="walled" Anchors="entrance:public" />
+    <glyph Char="l" Ground="$service" Object="$light" Claim="building" Pass="adjacent" Cover="walled" Anchors="light:keying" Stateful="yes" />
+    <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="walled" Anchors="main,function:mirror-gate" Stateful="yes" />
+    <row Cells="...................." />
+    <row Cells="...................." />
+    <row Cells="...................." />
+    <row Cells="...................." />
+    <row Cells="...................." />
+    <row Cells="...................." />
+    <row Cells="....###########....." />
+    <row Cells="....#iiiiiiiii#....." />
+    <row Cells="....#iiRiiiRii#....." />
+    <row Cells="....#iiRi@iRii#....." />
+    <row Cells="....#iiRiiiRii#....." />
+    <row Cells="....#SiiiliiiS#....." />
+    <row Cells="....####iii####....." />
+    <row Cells="........+++........." />
+  </map>
+
+  <map Key="deepend-mirrorgate-verdant-xl0" Width="20" Height="14" DefaultCover="walled">
+    <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
+    <glyph Char="R" Ground="$floor" Structure="$ring" Claim="building" Pass="walk" Cover="walled" Anchors="gate:ring" />
+    <glyph Char="S" Ground="$service" Structure="$scrap" Claim="building" Pass="walk" Cover="walled" Anchors="service:gate-bank" />
+    <glyph Char="i" Ground="$floor" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="v" Ground="$floor" Claim="yard" Pass="walk" Cover="open" Anchors="style:verdant-court" />
+    <glyph Char="+" Ground="$service" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
+    <glyph Char="l" Ground="$service" Object="$light" Claim="building" Pass="adjacent" Cover="walled" Anchors="light:keying" Stateful="yes" />
+    <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="walled" Anchors="main,function:mirror-gate" Stateful="yes" />
+    <row Cells="...................." />
+    <row Cells="...................." />
+    <row Cells="...................." />
+    <row Cells="...................." />
+    <row Cells="...................." />
+    <row Cells="...................." />
+    <row Cells="......#######......." />
+    <row Cells=".....##vvvvv##......" />
+    <row Cells="....##viiiiiv##....." />
+    <row Cells="....#viiR@Riiv#....." />
+    <row Cells="....##viiRiiv##....." />
+    <row Cells=".....##vvlvv##......" />
+    <row Cells="......##iii##......." />
+    <row Cells="........+++........." />
+  </map>
+
+  <map Key="deepend-mirrorgate-fungal-xl0" Width="20" Height="14" DefaultCover="walled">
+    <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
+    <glyph Char="R" Ground="$floor" Structure="$ring" Claim="building" Pass="walk" Cover="walled" Anchors="gate:ring" />
+    <glyph Char="f" Ground="$floor" Claim="yard" Pass="walk" Cover="soft" Anchors="style:damp-circulation" />
+    <glyph Char="i" Ground="$service" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="+" Ground="$service" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
+    <glyph Char="l" Ground="$service" Object="$light" Claim="building" Pass="adjacent" Cover="walled" Anchors="light:keying" Stateful="yes" />
+    <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="walled" Anchors="main,function:mirror-gate" Stateful="yes" />
+    <row Cells="...................." />
+    <row Cells="...................." />
+    <row Cells="...................." />
+    <row Cells="...................." />
+    <row Cells="...................." />
+    <row Cells="...................." />
+    <row Cells="......#######......." />
+    <row Cells="....###fffff###....." />
+    <row Cells="....#ffRfffRff#....." />
+    <row Cells="....#ffRi@iRff#....." />
+    <row Cells="....#ffRfffRff#....." />
+    <row Cells="....###fflff###....." />
+    <row Cells="......##iii##......." />
+    <row Cells="........+++........." />
+  </map>
+
+  <map Key="deepend-mirrorgate-gyre-xl0" Width="20" Height="14" DefaultCover="walled">
+    <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
+    <glyph Char="R" Ground="$floor" Structure="$ring" Claim="building" Pass="walk" Cover="walled" Anchors="gate:ring" />
+    <glyph Char="S" Ground="$service" Structure="$scrap" Claim="building" Pass="walk" Cover="walled" Anchors="service:gate-bank" />
+    <glyph Char="i" Ground="$floor" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="y" Ground="$floor" Claim="yard" Pass="walk" Cover="open" Anchors="style:ritual-asymmetry" />
+    <glyph Char="+" Ground="$service" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
+    <glyph Char="l" Ground="$service" Object="$light" Claim="building" Pass="adjacent" Cover="walled" Anchors="light:keying" Stateful="yes" />
+    <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="walled" Anchors="main,function:mirror-gate" Stateful="yes" />
+    <row Cells="...................." />
+    <row Cells="...................." />
+    <row Cells="...................." />
+    <row Cells="...................." />
+    <row Cells="...................." />
+    <row Cells="...................." />
+    <row Cells="....###########....." />
+    <row Cells="....#yyiiRiiii#....." />
+    <row Cells="....#yiiRiiRii#....." />
+    <row Cells="....#yi@RiiRii#....." />
+    <row Cells="....#yyyiiRiii#....." />
+    <row Cells="....#SiiiiliSy#....." />
+    <row Cells="....#####ii####....." />
+    <row Cells=".........++........." />
+  </map>
+
+  <map Key="deepend-mirrorgate-eater-xl0" Width="20" Height="14" DefaultCover="walled">
+    <glyph Char="#" Ground="$floor" Structure="$stone" Claim="building" Pass="blocked" Cover="walled" />
+    <glyph Char="R" Ground="$floor" Structure="$ring" Claim="building" Pass="walk" Cover="walled" Anchors="gate:ring" />
+    <glyph Char="S" Ground="$service" Structure="$scrap" Claim="building" Pass="walk" Cover="walled" Anchors="service:retained-bank" />
+    <glyph Char="i" Ground="$service" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="+" Ground="$service" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
+    <glyph Char="l" Ground="$service" Object="$light" Claim="building" Pass="adjacent" Cover="walled" Anchors="light:keying" Stateful="yes" />
+    <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="walled" Anchors="main,function:mirror-gate" Stateful="yes" />
+    <row Cells="...................." />
+    <row Cells="...................." />
+    <row Cells="...................." />
+    <row Cells="...................." />
+    <row Cells="...................." />
+    <row Cells="...................." />
+    <row Cells="....###########....." />
+    <row Cells="....#SSiiiiSSi#....." />
+    <row Cells="....#SiRiiiRiS#....." />
+    <row Cells="....#iiRi@iRii#....." />
+    <row Cells="....#SiRiiiRiS#....." />
+    <row Cells="....#SSiilSSii#....." />
+    <row Cells="....###ii######....." />
+    <row Cells=".......++..........." />
+  </map>
+
+  <!-- Crown hall: the root is the crown/dais. Variants recompose witness access and focal axis. -->
+  <map Key="deepend-crownhall-xl0" Width="20" Height="14" DefaultCover="walled">
+    <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
+    <glyph Char="m" Ground="$floor" Structure="$masonry" Claim="building" Pass="adjacent" Cover="walled" Anchors="dais:rail" />
+    <glyph Char="S" Ground="$service" Structure="$metal" Claim="building" Pass="adjacent" Cover="walled" Anchors="service:crown-screen" />
+    <glyph Char="i" Ground="$floor" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="q" Ground="$floor" Object="$seat" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="Q" Ground="$floor" Object="$seat" Claim="building" Pass="walk" Cover="walled" Anchors="seat:witness" Stateful="yes" />
+    <glyph Char="l" Ground="$service" Object="$light" Claim="building" Pass="adjacent" Cover="walled" Anchors="light:hall" Stateful="yes" />
+    <glyph Char="+" Ground="$service" Structure="$door" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
+    <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="walled" Anchors="main,function:crown-hall,dais:crown" Stateful="yes" />
+    <row Cells="...................." />
+    <row Cells="...................." />
+    <row Cells="...##############..." />
+    <row Cells="...#iiiii@iiiiii#..." />
+    <row Cells="...#iiiimmmiiiii#..." />
+    <row Cells="...#QqqiiiiiiqqQ#..." />
+    <row Cells="...#qqqiiiiiiqqq#..." />
+    <row Cells="...#QqqiiiiiiqqQ#..." />
+    <row Cells="...#liiiiiiiiiil#..." />
+    <row Cells="...#SiiiiiiiiiiS#..." />
+    <row Cells="...#####iiii#####..." />
+    <row Cells=".......++++........." />
+    <row Cells="...................." />
+    <row Cells="...................." />
+  </map>
+
+  <map Key="deepend-crownhall-verdant-xl0" Width="20" Height="14" DefaultCover="walled">
+    <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
+    <glyph Char="m" Ground="$floor" Structure="$masonry" Claim="building" Pass="adjacent" Cover="walled" Anchors="dais:rail" />
+    <glyph Char="i" Ground="$floor" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="v" Ground="$floor" Claim="yard" Pass="walk" Cover="open" Anchors="style:verdant-court" />
+    <glyph Char="Q" Ground="$floor" Object="$seat" Claim="building" Pass="walk" Cover="walled" Anchors="seat:witness" Stateful="yes" />
+    <glyph Char="l" Ground="$service" Object="$light" Claim="building" Pass="adjacent" Cover="walled" Anchors="light:hall" Stateful="yes" />
+    <glyph Char="+" Ground="$service" Structure="$door" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
+    <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="walled" Anchors="main,function:crown-hall,dais:crown" Stateful="yes" />
+    <row Cells="...................." />
+    <row Cells="...................." />
+    <row Cells=".....##########....." />
+    <row Cells="....##iiiiiiii##...." />
+    <row Cells="...##iiii@iiiii##..." />
+    <row Cells="...#vviimmmiiivv#..." />
+    <row Cells="...#vvQiiiiiiQvv#..." />
+    <row Cells="....##vviiii##......" />
+    <row Cells=".....##viilv##......" />
+    <row Cells="......##ii##........" />
+    <row Cells=".......iiii........." />
+    <row Cells=".......++++........." />
+    <row Cells="...................." />
+    <row Cells="...................." />
+  </map>
+
+  <map Key="deepend-crownhall-fungal-xl0" Width="20" Height="14" DefaultCover="walled">
+    <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
+    <glyph Char="m" Ground="$floor" Structure="$masonry" Claim="building" Pass="adjacent" Cover="walled" Anchors="dais:rail" />
+    <glyph Char="i" Ground="$floor" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="f" Ground="$floor" Claim="yard" Pass="walk" Cover="soft" Anchors="style:damp-circulation" />
+    <glyph Char="Q" Ground="$floor" Object="$seat" Claim="building" Pass="walk" Cover="walled" Anchors="seat:witness" Stateful="yes" />
+    <glyph Char="l" Ground="$service" Object="$light" Claim="building" Pass="adjacent" Cover="walled" Anchors="light:hall" Stateful="yes" />
+    <glyph Char="+" Ground="$service" Structure="$door" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
+    <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="walled" Anchors="main,function:crown-hall,dais:crown" Stateful="yes" />
+    <row Cells="...................." />
+    <row Cells="...................." />
+    <row Cells=".....##########....." />
+    <row Cells="....##ffff@fff##...." />
+    <row Cells="...##ffiimiiiff##..." />
+    <row Cells="...#ffimmmiiifff#..." />
+    <row Cells="...#fQfiiiiiiQff#..." />
+    <row Cells="...#fffiiiiiffff#..." />
+    <row Cells="....##ffiilf##......" />
+    <row Cells=".....###ii###......." />
+    <row Cells=".......iiii........." />
+    <row Cells=".......++++........." />
+    <row Cells="...................." />
+    <row Cells="...................." />
+  </map>
+
+  <map Key="deepend-crownhall-gyre-xl0" Width="20" Height="14" DefaultCover="walled">
+    <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
+    <glyph Char="m" Ground="$floor" Structure="$masonry" Claim="building" Pass="adjacent" Cover="walled" Anchors="dais:rail" />
+    <glyph Char="S" Ground="$service" Structure="$metal" Claim="building" Pass="adjacent" Cover="walled" Anchors="service:crown-screen" />
+    <glyph Char="i" Ground="$floor" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="y" Ground="$floor" Claim="yard" Pass="walk" Cover="open" Anchors="style:ritual-asymmetry" />
+    <glyph Char="Q" Ground="$floor" Object="$seat" Claim="building" Pass="walk" Cover="walled" Anchors="seat:witness" Stateful="yes" />
+    <glyph Char="l" Ground="$service" Object="$light" Claim="building" Pass="adjacent" Cover="walled" Anchors="light:hall" Stateful="yes" />
+    <glyph Char="+" Ground="$service" Structure="$door" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
+    <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="walled" Anchors="main,function:crown-hall,dais:crown" Stateful="yes" />
+    <row Cells="...................." />
+    <row Cells="...................." />
+    <row Cells="...##############..." />
+    <row Cells="...#ii@iiiiiiiii#..." />
+    <row Cells="...#iimmmiiiiiii#..." />
+    <row Cells="...#yQyiiiiiQiii#..." />
+    <row Cells="...#yyyiiiiiiiii#..." />
+    <row Cells="...#iyQiiiiQiiii#..." />
+    <row Cells="...#SiiiiliiiiiS#..." />
+    <row Cells="...#yyyiiiiiiiii#..." />
+    <row Cells="...###ii#########..." />
+    <row Cells=".....++............." />
+    <row Cells="...................." />
+    <row Cells="...................." />
+  </map>
+
+  <map Key="deepend-crownhall-eater-xl0" Width="20" Height="14" DefaultCover="walled">
+    <glyph Char="#" Ground="$service" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
+    <glyph Char="m" Ground="$floor" Structure="$masonry" Claim="building" Pass="adjacent" Cover="walled" Anchors="dais:rail" />
+    <glyph Char="S" Ground="$service" Structure="$metal" Claim="building" Pass="walk" Cover="walled" Anchors="service:retained-layer" />
+    <glyph Char="i" Ground="$service" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="Q" Ground="$floor" Object="$seat" Claim="building" Pass="walk" Cover="walled" Anchors="seat:witness" Stateful="yes" />
+    <glyph Char="l" Ground="$service" Object="$light" Claim="building" Pass="adjacent" Cover="walled" Anchors="light:hall" Stateful="yes" />
+    <glyph Char="+" Ground="$service" Structure="$door" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
+    <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="walled" Anchors="main,function:crown-hall,dais:crown" Stateful="yes" />
+    <row Cells="...................." />
+    <row Cells="...................." />
+    <row Cells="...##############..." />
+    <row Cells="...#SSiii@iiiSSi#..." />
+    <row Cells="...#SiimmmiiiiiS#..." />
+    <row Cells="...#iQiiiiiiiQii#..." />
+    <row Cells="...#SSiiiiiiiiiS#..." />
+    <row Cells="...#iQiiiiiiiQii#..." />
+    <row Cells="...#SiiiiliiiiiS#..." />
+    <row Cells="...#SSiiiiiiiSSi#..." />
+    <row Cells="...######ii######..." />
+    <row Cells="........++.........." />
+    <row Cells="...................." />
+    <row Cells="...................." />
+  </map>
+
+  <!-- Exact bindings. Catalogue gates own stage, knowledge, creed, tech, materials, and strata;
+       selectors here only choose authored topology after those gates have admitted the design. -->
+  <plan Key="deepend-vathouse">
+    <binding Key="craft-m-vathouse" Type="craft" Size="M" Facing="road">
+      <tier Key="vathouse" BuildKey="vathouse" Level="0" Map="deepend-vathouse-m0" Palette="deepend-vat-workshop">
+        <require Role="main" Min="1" Max="1" />
+        <require Role="entrance:public" Min="1" />
+        <require Role="function:preservation" Min="1" />
+        <require Role="process:brine-vat" Min="1" />
+        <require Role="work:preservation" Min="1" />
+        <require Role="storage:preserved" Min="1" />
+        <require Role="light:work" Min="1" />
+        <require Role="service:loading" Min="1" />
+        <variant Key="fallback" Priority="0" />
+      </tier>
+    </binding>
+  </plan>
+
+  <plan Key="deepend-graftinghall">
+    <binding Key="craft-l-graftinghall" Type="craft" Size="L" Facing="road">
+      <tier Key="graftinghall" BuildKey="graftinghall" Level="0" Map="deepend-graftinghall-l0" Palette="deepend-graft-foundry">
+        <require Role="main" Min="1" Max="1" />
+        <require Role="entrance:public" Min="2" />
+        <require Role="function:grafting" Min="1" />
+        <require Role="work:grafting-table" Min="1" />
+        <require Role="work:preparation" Min="2" />
+        <require Role="light:surgical" Min="2" />
+        <require Role="storage:procedure" Min="1" />
+        <variant Key="fallback" Priority="0" />
+      </tier>
+    </binding>
+  </plan>
+
+  <plan Key="deepend-chimerictheatre">
+    <binding Key="craft-xl-chimerictheatre" Type="craft" Size="XL" Facing="road">
+      <tier Key="chimerictheatre" BuildKey="chimerictheatre" Level="0" Map="deepend-chimerictheatre-xl0" Palette="deepend-chimeric-arclight">
+        <require Role="main" Min="1" Max="1" />
+        <require Role="entrance:public" Min="2" />
+        <require Role="function:chimeric-theatre" Min="1" />
+        <require Role="work:chimeric-table" Min="4" />
+        <require Role="seat:audience" Min="2" />
+        <require Role="storage:preserved" Min="4" />
+        <require Role="hazard:clean-clearance" Min="2" />
+        <require Role="service:sterile-bank" Min="4" />
+        <variant Key="fallback" Priority="0" />
+      </tier>
+    </binding>
+  </plan>
+
+  <plan Key="deepend-becomingannexe">
+    <binding Key="craft-xl-becomingannexe" Type="craft" Size="XL" Facing="road">
+      <tier Key="becomingannexe" BuildKey="becomingannexe" Level="0" Map="deepend-becomingannexe-xl0" Palette="deepend-annexe-arclight">
+        <require Role="main" Min="1" Max="1" />
+        <require Role="entrance:public" Min="2" />
+        <require Role="function:becoming-annexe" Min="1" />
+        <require Role="work:body-template" Min="4" />
+        <require Role="work:becoming-chair" Min="4" />
+        <require Role="registry:sealed-rolls" Min="1" />
+        <require Role="power:charge-bank" Min="6" />
+        <require Role="hazard:restraint-clearance" Min="4" />
+        <variant Key="fallback" Priority="0" />
+        <variant Key="true-kin-registry" Priority="60" Genotypes="True Kin" Map="deepend-becomingannexe-truekin-xl0" />
+      </tier>
+    </binding>
+  </plan>
+
+  <plan Key="deepend-mirrorgate">
+    <binding Key="craft-xl-mirrorgate" Type="craft" Size="XL" Facing="road">
+      <tier Key="mirrorgate" BuildKey="mirrorgate" Level="0" Map="deepend-mirrorgate-xl0" Palette="deepend-mirror-arclight">
+        <require Role="main" Min="1" Max="1" />
+        <require Role="entrance:public" Min="2" />
+        <require Role="function:mirror-gate" Min="1" />
+        <require Role="gate:ring" Min="2" />
+        <require Role="light:keying" Min="1" />
+        <variant Key="fallback" Priority="0" />
+        <variant Key="verdant" Priority="20" Styles="verdant" Map="deepend-mirrorgate-verdant-xl0" />
+        <variant Key="fungal" Priority="20" Styles="fungal" Map="deepend-mirrorgate-fungal-xl0" />
+        <variant Key="gyre" Priority="20" Styles="gyre" Map="deepend-mirrorgate-gyre-xl0" />
+        <variant Key="eater" Priority="20" Styles="eater" Map="deepend-mirrorgate-eater-xl0" />
+      </tier>
+    </binding>
+  </plan>
+
+  <plan Key="deepend-crownhall">
+    <binding Key="civic-xl-crownhall" Type="civic" Size="XL" Facing="heart">
+      <tier Key="crownhall" BuildKey="crownhall" Level="0" Map="deepend-crownhall-xl0" Palette="deepend-crown-foundry">
+        <require Role="main" Min="1" Max="1" />
+        <require Role="entrance:public" Min="2" />
+        <require Role="function:crown-hall" Min="1" />
+        <require Role="dais:crown" Min="1" />
+        <require Role="dais:rail" Min="2" />
+        <require Role="seat:witness" Min="2" />
+        <require Role="light:hall" Min="1" />
+        <variant Key="fallback" Priority="0" />
+        <variant Key="verdant" Priority="20" Styles="verdant" Map="deepend-crownhall-verdant-xl0" />
+        <variant Key="fungal" Priority="20" Styles="fungal" Map="deepend-crownhall-fungal-xl0" />
+        <variant Key="gyre" Priority="20" Styles="gyre" Map="deepend-crownhall-gyre-xl0" />
+        <variant Key="eater" Priority="20" Styles="eater" Map="deepend-crownhall-eater-xl0" />
+      </tier>
+    </binding>
+  </plan>
+
+  <plan Key="deepend-arcologyterrace">
+    <binding Key="food-m-arcologyterrace" Type="food" Size="M" Facing="road">
+      <tier Key="arcologyterrace" BuildKey="arcologyterrace" Level="0" Map="deepend-arcologyterrace-m0" Palette="deepend-arcology-arclight">
+        <require Role="main" Min="1" Max="1" />
+        <require Role="entrance:public" Min="1" />
+        <require Role="function:hanging-terrace" Min="1" />
+        <require Role="crop:upper-bed" Min="4" />
+        <require Role="crop:lower-bed" Min="4" />
+        <require Role="light:growth" Min="1" />
+        <require Role="service:loading" Min="1" />
+        <variant Key="fallback" Priority="0" />
+      </tier>
+    </binding>
+  </plan>
+
+  <plan Key="deepend-hallsurgery">
+    <binding Key="craft-m-hallsurgery" Type="craft" Size="M" Facing="road">
+      <tier Key="hallsurgery" BuildKey="hallsurgery" Level="0" Map="deepend-hallsurgery-m0" Palette="deepend-vat-workshop">
+        <require Role="main" Min="1" Max="1" />
+        <require Role="entrance:public" Min="1" />
+        <require Role="function:hall-surgery" Min="1" />
+        <require Role="work:slab" Min="1" />
+        <require Role="process:brine-vat" Min="1" />
+        <require Role="work:hook-rail" Min="1" />
+        <require Role="waste:gutter" Min="1" />
+        <require Role="service:loading" Min="1" />
+        <variant Key="fallback" Priority="0" />
+      </tier>
+    </binding>
+  </plan>
+
+  <plan Key="deepend-registryoffice">
+    <binding Key="civic-m-registryoffice" Type="civic" Size="M" Facing="road">
+      <tier Key="registryoffice" BuildKey="registryoffice" Level="0" Map="deepend-registryoffice-m0" Palette="deepend-registry-workshop">
+        <require Role="main" Min="1" Max="1" />
+        <require Role="entrance:public" Min="1" />
+        <require Role="function:registry-office" Min="1" />
+        <require Role="work:registry-desk" Min="1" />
+        <require Role="registry:copied-rolls" Min="1" />
+        <require Role="storage:sealed-records" Min="1" />
+        <require Role="light:clerk" Min="1" />
+        <variant Key="fallback" Priority="0" />
+      </tier>
+    </binding>
+  </plan>
+
+  <plan Key="deepend-fungalvault">
+    <binding Key="food-m-fungalvault" Type="food" Size="M" Facing="road">
+      <tier Key="fungalvault" BuildKey="fungalvault" Level="0" Map="deepend-fungalvault-m0" Palette="deepend-fungal-natural">
+        <require Role="main" Min="1" Max="1" />
+        <require Role="entrance:public" Min="1" />
+        <require Role="function:fungal-vault" Min="1" />
+        <require Role="crop:spawn-run" Min="12" />
+        <require Role="service:landing" Min="1" />
+        <variant Key="fallback" Priority="0" />
+      </tier>
+    </binding>
+  </plan>
+
+  <plan Key="deepend-vaultgalleries">
+    <binding Key="food-l-vaultgalleries" Type="food" Size="L" Facing="road">
+      <tier Key="vaultgalleries" BuildKey="vaultgalleries" Level="0" Map="deepend-vaultgalleries-l0" Palette="deepend-gallery-workshop">
+        <require Role="main" Min="1" Max="1" />
+        <require Role="entrance:public" Min="1" />
+        <require Role="function:vault-galleries" Min="1" />
+        <require Role="crop:spawn-run" Min="20" />
+        <require Role="light:gallery" Min="1" />
+        <require Role="service:landing" Min="1" />
+        <variant Key="fallback" Priority="0" />
+      </tier>
+    </binding>
+  </plan>
+
+  <plan Key="deepend-deepcut">
+    <binding Key="craft-m-deepcut" Type="craft" Size="M" Facing="road">
+      <tier Key="deepcut" BuildKey="deepcut" Level="0" Map="deepend-deepcut-m0" Palette="deepend-cut-natural">
+        <require Role="main" Min="1" Max="1" />
+        <require Role="entrance:public" Min="1" />
+        <require Role="function:deep-cut" Min="1" />
+        <require Role="work:cut-face" Min="2" />
+        <require Role="support:roof" Min="2" />
+        <require Role="hazard:spoil" Min="1" />
+        <require Role="light:work-face" Min="1" />
+        <require Role="service:loading" Min="1" />
+        <variant Key="fallback" Priority="0" />
+      </tier>
+    </binding>
+  </plan>
+
+  <plan Key="deepend-nichetomb">
+    <binding Key="memorial-s-nichetomb" Type="memorial" Size="S" Facing="road">
+      <tier Key="nichetomb" BuildKey="nichetomb" Level="0" Map="deepend-nichetomb-s0" Palette="deepend-fungal-natural">
+        <require Role="main" Min="1" Max="1" />
+        <require Role="entrance:public" Min="1" />
+        <require Role="function:niche-tomb" Min="1" />
+        <require Role="memorial:niche" Min="1" />
+        <variant Key="fallback" Priority="0" />
+      </tier>
+    </binding>
+  </plan>
+
+  <plan Key="deepend-delve">
+    <binding Key="craft-m-delve" Type="craft" Size="M" Facing="road">
+      <tier Key="delve" BuildKey="delve" Level="0" Map="deepend-delve-surface-m0" Palette="deepend-delve-workshop">
+        <require Role="main" Min="1" Max="1" />
+        <require Role="entrance:public" Min="1" />
+        <require Role="function:vertical-core" Min="1" />
+        <require Role="travel:down" Min="1" Max="1" />
+        <require Role="support" Min="1" />
+        <require Role="hazard:spoil" Min="1" />
+        <require Role="light:landing" Min="1" />
+        <require Role="service:landing" Min="1" />
+        <variant Key="fallback" Priority="0" />
+        <variant Key="deep" Priority="30" Strata="deep" Map="deepend-delve-deep-m0" />
+      </tier>
+    </binding>
+  </plan>
+
+  <plan Key="deepend-underbench">
+    <binding Key="craft-m-underbench" Type="craft" Size="M" Facing="road">
+      <tier Key="underbench" BuildKey="underbench" Level="0" Map="deepend-underbench-m0" Palette="deepend-underbench-workshop">
+        <require Role="main" Min="1" Max="1" />
+        <require Role="entrance:public" Min="1" />
+        <require Role="function:under-bench" Min="1" />
+        <require Role="work:bulkhead-bench" Min="1" />
+        <require Role="service:exposed-wire" Min="1" />
+        <require Role="storage:parts-locker" Min="1" />
+        <require Role="light:low-bench" Min="1" />
+        <require Role="service:loading" Min="1" />
+        <variant Key="fallback" Priority="0" />
+      </tier>
+    </binding>
+  </plan>
+
+  <plan Key="deepend-reliquary">
+    <binding Key="faith-l-reliquary" Type="faith" Size="L" Facing="heart">
+      <tier Key="reliquary" BuildKey="reliquary" Level="0" Map="deepend-reliquary-l0" Palette="deepend-reliquary-salvage">
+        <require Role="main" Min="1" Max="1" />
+        <require Role="entrance:public" Min="2" />
+        <require Role="function:reliquary" Min="1" />
+        <require Role="shrine:machine-relic" Min="1" />
+        <require Role="shrine:relic-case" Min="3" />
+        <require Role="seat:witness" Min="2" />
+        <require Role="light:relic" Min="1" />
+        <variant Key="fallback" Priority="0" />
+      </tier>
+    </binding>
+  </plan>
+
+  <plan Key="deepend-factorhouse">
+    <binding Key="civic-m-factorhouse" Type="civic" Size="M" Facing="road">
+      <tier Key="factorhouse" BuildKey="factorhouse" Level="0" Map="deepend-factorhouse-m0" Palette="deepend-factor-hands">
+        <require Role="main" Min="1" Max="1" />
+        <require Role="entrance:public" Min="1" />
+        <require Role="function:factor-house" Min="1" />
+        <require Role="work:counting-desk" Min="1" />
+        <require Role="work:price-counter" Min="1" />
+        <require Role="registry:prices" Min="1" />
+        <require Role="storage:strongbox" Min="1" />
+        <require Role="seat:petitioner" Min="1" />
+        <variant Key="fallback" Priority="0" />
+      </tier>
+    </binding>
+  </plan>
+
+</KingdomArchitectures>

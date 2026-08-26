@@ -88,6 +88,65 @@ namespace ThousandAndFirst.Tests
 			Assert.GreaterOrEqual(KingdomRules.WallDefence(baseDefence, "TerrainRuins", "Ruins", true, true), baseDefence);
 		}
 
+		[TestCase(0, false, false)]
+		[TestCase(3, true, false)]
+		[TestCase(3, false, true)]
+		public void FrontierWorkRequiresDefenceAndNoReservedPlot(int defence, bool hasPlot,
+			bool expected)
+		{
+			Assert.AreEqual(expected, KingdomRules.IsFrontierWork(defence, hasPlot));
+		}
+
+		[Test]
+		public void DefensivePlotKeepsBaseRatingWhileFrontierWorkEarnsWallBonuses()
+		{
+			Assert.AreEqual(6, KingdomRules.BuiltDefence(6, true,
+				"TerrainRuins", "Ruins", true, true),
+				"a plotted arsenal is a building, not four abstract wall bonuses");
+			Assert.AreEqual(10, KingdomRules.BuiltDefence(6, false,
+				"TerrainRuins", "Ruins", true, true),
+				"the same unplotted design is a perimeter work and earns wall bonuses");
+		}
+
+		[Test]
+		public void AdoptedDefensivePlotKeepsDurablePlotIdentityAndReleaseCannotLeaveGhostGround()
+		{
+			string plot = TestMain.ReadRepositoryText("Growth/KingdomPlot2.cs");
+			string adopt = TestMain.ReadRepositoryText("Growth/KingdomAdopt.cs");
+			StringAssert.Contains(
+				"public const string AdoptedPlotProperty = \"KingdomAdoptedPlot\";", plot);
+			StringAssert.Contains("string plotId = \"adopted:\" + Adopted.ID;", plot);
+			StringAssert.Contains("Adopted.SetStringProperty(PlotIdProperty, plotId);", plot);
+			StringAssert.Contains("Adopted.SetIntProperty(AdoptedPlotProperty, 1);", plot);
+
+			int classify = plot.IndexOf("public static bool IsFrontierWork(GameObject Object)");
+			int legacyFallback = plot.IndexOf(
+				"return Object.GetIntProperty(\"KingdomDefence\") > 0", classify);
+			int adoptedReceipt = plot.IndexOf(
+				"Object.GetIntProperty(AdoptedPlotProperty) == 1", classify);
+			Assert.Greater(adoptedReceipt, classify);
+			Assert.Greater(legacyFallback, adoptedReceipt,
+				"durable adopted-plot truth must win before legacy Defence fallback");
+
+			int release = plot.IndexOf("public static void ReleaseAdoptedPlot(");
+			int removePresence = plot.IndexOf("Adopted.RemoveIntProperty(PlotX2Property);", release);
+			int removeIdentity = plot.IndexOf("Adopted.RemoveStringProperty(PlotIdProperty);", release);
+			int removeOwner = plot.IndexOf("Adopted.RemoveIntProperty(AdoptedPlotProperty);", release);
+			Assert.Greater(removePresence, release);
+			Assert.Greater(removeIdentity, removePresence);
+			Assert.Greater(removeOwner, removeIdentity,
+				"rect presence must disappear before adoption ownership commits its release");
+
+			int releaseAdoption = adopt.IndexOf("public static bool Release(");
+			int clearPlot = adopt.IndexOf("KingdomPlots.ReleaseAdoptedPlot(Adopted);",
+				releaseAdoption);
+			int clearAdoption = adopt.IndexOf("Adopted.SetIntProperty(AdoptedProperty, 0);",
+				releaseAdoption);
+			Assert.Greater(clearPlot, releaseAdoption);
+			Assert.Greater(clearAdoption, clearPlot,
+				"plot receipt must retire while interrupted release is still retryable");
+		}
+
 		// --- The frontier: where a wall belongs when a camp becomes a city ----------------
 
 		private const string Home = "JoppaWorld.5.5.1.1.10";

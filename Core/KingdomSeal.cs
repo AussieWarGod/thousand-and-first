@@ -102,6 +102,11 @@ namespace ThousandAndFirst
 		{
 			try
 			{
+				KingdomSystem kingdom = The.Game?.GetSystem<KingdomSystem>();
+				if (!KingdomMaster.AutomaticWorkAllowed(kingdom))
+				{
+					return base.HandleEvent(E);
+				}
 				if (!SealEnabled())
 				{
 					return base.HandleEvent(E);
@@ -132,7 +137,9 @@ namespace ThousandAndFirst
 			try
 			{
 				XRLGame game = The.Game;
-				if (game == null || !AuthorityEnabled || !SealEnabled()
+				KingdomSystem kingdom = game?.GetSystem<KingdomSystem>();
+				if (game == null || !KingdomMaster.AutomaticWorkAllowed(kingdom)
+					|| !AuthorityEnabled || !SealEnabled()
 					|| !KingdomSealEngineRules.PollDue(LastPollTick, game.TimeTicks, Calendar.TurnsPerDay))
 				{
 					return base.HandleEvent(E);
@@ -160,7 +167,8 @@ namespace ThousandAndFirst
 				GameObject dying = E?.Dying;
 				KingdomSystem kingdom = game?.GetSystem<KingdomSystem>();
 				bool kingdomMode = IsKingdomMode(game);
-				if (game != null && AuthorityEnabled && SealEnabled() && dying != null
+				if (game != null && KingdomMaster.AutomaticWorkAllowed(kingdom)
+					&& AuthorityEnabled && SealEnabled() && dying != null
 					&& ReferenceEquals(The.Player, dying)
 					&& KingdomSealEngineRules.ObserveDeathDirectly(kingdomMode,
 						kingdom != null && kingdom.Founded, IsGenerationSealed))
@@ -186,7 +194,9 @@ namespace ThousandAndFirst
 			try
 			{
 				string failure;
-				if (SealEnabled() && AuthorityEnabled
+				KingdomSystem kingdom = The.Game?.GetSystem<KingdomSystem>();
+				if (KingdomMaster.AutomaticWorkAllowed(kingdom)
+					&& SealEnabled() && AuthorityEnabled
 					&& !TryFlushLiving("BeforeSave", ProbeEvenIfClean: true, out failure))
 				{
 					ReportFailure("BeforeSave stage", failure);
@@ -267,7 +277,8 @@ namespace ThousandAndFirst
 		{
 			try
 			{
-				if (!SealEnabled())
+				KingdomSystem kingdom = The.Game?.GetSystem<KingdomSystem>();
+				if (!KingdomMaster.NewWorkAllowed(kingdom) || !SealEnabled())
 				{
 					return;
 				}
@@ -296,7 +307,8 @@ namespace ThousandAndFirst
 			Failure = "";
 			try
 			{
-				if (!SealEnabled())
+				KingdomSystem kingdom = The.Game?.GetSystem<KingdomSystem>();
+				if (!KingdomMaster.NewWorkAllowed(kingdom) || !SealEnabled())
 				{
 					return true;
 				}
@@ -328,7 +340,8 @@ namespace ThousandAndFirst
 			Failure = "";
 			try
 			{
-				if (!SealEnabled())
+				KingdomSystem kingdom = The.Game?.GetSystem<KingdomSystem>();
+				if (!KingdomMaster.NewWorkAllowed(kingdom) || !SealEnabled())
 				{
 					return true;
 				}
@@ -380,6 +393,11 @@ namespace ThousandAndFirst
 					Failure = "the seal coordinator is not loaded";
 					return false;
 				}
+				if (!KingdomMaster.AutomaticWorkAllowed(kingdom))
+				{
+					Failure = "realm simulation is paused by the master option";
+					return false;
+				}
 				if (!seal.TryRequireAuthority(out Failure))
 				{
 					return false;
@@ -415,11 +433,18 @@ namespace ThousandAndFirst
 			Failure = "";
 			try
 			{
+				XRLGame game = The.Game;
+				KingdomSystem kingdom = game?.GetSystem<KingdomSystem>();
+				if (!KingdomMaster.AutomaticWorkAllowed(kingdom))
+				{
+					Failure = "realm simulation is paused by the master option";
+					return false;
+				}
 				if (!SealEnabled())
 				{
 					return true;
 				}
-				KingdomSeal seal = The.Game?.GetSystem<KingdomSeal>();
+				KingdomSeal seal = game?.GetSystem<KingdomSeal>();
 				if (seal == null)
 				{
 					Failure = "the seal coordinator is not loaded";
@@ -451,6 +476,12 @@ namespace ThousandAndFirst
 			Failure = "";
 			try
 			{
+				KingdomSystem kingdom = The.Game?.GetSystem<KingdomSystem>();
+				if (!KingdomMaster.NewWorkAllowed(kingdom))
+				{
+					Failure = "realm simulation is paused by the master option";
+					return false;
+				}
 				if (!SealEnabled())
 				{
 					Failure = "realm sealing is disabled in the options";
@@ -735,6 +766,11 @@ namespace ThousandAndFirst
 		/// <summary>Loader/import hook for bounded later-boot reconciliation.</summary>
 		internal void ReconcileProfile()
 		{
+			KingdomSystem kingdom = The.Game?.GetSystem<KingdomSystem>();
+			if (!KingdomMaster.AutomaticWorkAllowed(kingdom))
+			{
+				return;
+			}
 			string authorityFailure;
 			if (!TryRequireAuthority(out authorityFailure))
 			{
@@ -1438,11 +1474,29 @@ namespace ThousandAndFirst
 					}
 					Record = KingdomSealRules.Capture(seat, identity,
 						new KingdomSealLineage(LineageId, CaptureLegacyId, OriginGameId,
-						CaptureGeneration, CaptureRevision),
+							CaptureGeneration, CaptureRevision),
 					Kingdom.KingdomDisplayName, founder, Kingdom.ChronicleEntries,
 					Kingdom.OutsiderEntries, WrittenTick);
 					Record.WriterVersion = VersionOf(typeof(KingdomSeal).Assembly);
 					Record.EngineVersion = VersionOf(typeof(XRLGame).Assembly);
+					KingdomInheritanceSpatialCaptureResult spatial =
+						KingdomInheritanceSpatial.TryCapture(seat.City, Record,
+							The.ZoneManager?.ActiveZone, out string spatialFailure);
+					if (spatial == KingdomInheritanceSpatialCaptureResult.Malformed)
+					{
+						Failure = spatialFailure;
+						Record = null;
+						return false;
+					}
+					if (spatial == KingdomInheritanceSpatialCaptureResult.Unavailable)
+					{
+						// Captures may happen away from the one inherited seat. Reuse only an exact
+						// prior geometry basis for this generation; otherwise retain the explicit
+						// schema-4 spatial-v0 proxy until the seat is witnessed.
+						KingdomSealRecord prior = GetStore().ReadStage(OriginGameId);
+						if (SameSpatialBasis(prior, Record))
+							KingdomInheritanceSpatial.CopyEvidence(prior, Record);
+					}
 					if (!Kingdom.SealIdentityStillMatches(identity))
 					{
 						Failure = "the immutable realm topology changed before seal storage";
@@ -1467,6 +1521,24 @@ namespace ThousandAndFirst
 				Failure = ex.Message;
 				return false;
 			}
+		}
+
+		private static bool SameSpatialBasis(KingdomSealRecord Earlier,
+			KingdomSealRecord Current)
+		{
+			if (Earlier == null || Current == null || Earlier.LineageId != Current.LineageId
+				|| Earlier.LegacyId != Current.LegacyId
+				|| Earlier.OriginGameId != Current.OriginGameId
+				|| Earlier.Generation != Current.Generation
+				|| Earlier.GroundZoneId != Current.GroundZoneId
+				|| Earlier.WorkKeys.Count != Current.WorkKeys.Count
+				|| Earlier.WorkX.Count != Current.WorkX.Count
+				|| Earlier.WorkY.Count != Current.WorkY.Count) return false;
+			for (int i = 0; i < Current.WorkKeys.Count; i++)
+				if (Earlier.WorkKeys[i] != Current.WorkKeys[i]
+					|| Earlier.WorkX[i] != Current.WorkX[i]
+					|| Earlier.WorkY[i] != Current.WorkY[i]) return false;
+			return true;
 		}
 
 		private void TryReconcileProfile(string Reason)

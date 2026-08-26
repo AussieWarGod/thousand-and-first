@@ -1,5 +1,19 @@
 # Coverage gap map — what the building-catalogue brief promised versus what the code delivers
 
+> **Historical audit, not current status.** Every verdict below is frozen to commit `3f7f9d1` on
+> 2026-08-21. Gatehouse siting, raisings, subsidence, physical materials, authored architecture,
+> delve links, inheritance spatial receipts, and other named gaps have since changed. Use
+> `BRIEF-IMPLEMENTATION-AUDIT.md`, `CONTRACT-RUNTIME-RECONCILIATION-2026-08-25.md`, and
+> `../docs/STATUS.md` for current disposition. The old rows remain intact as reproducible attack
+> history and must not be quoted as present implementation truth.
+>
+> **DO NOT TRIAGE THESE ROWS AS CURRENT GAPS.** They intentionally preserve findings from the old
+> commit. For example, this snapshot says the raising ceremony had only one caller and the salvage
+> expedition was missing; the current tree has the bound `KingdomPlot2` caller and
+> `Experience/KingdomExpeditions`. Re-proving hundreds of historical source-line claims would erase
+> the audit's reproducibility rather than improve freshness. Use the current acceptance ledgers
+> above, and use `V1-POLITY-SCOPE.md` for polity/world-presence disposition.
+
 Date: 2026-08-21. Scope: `_notes/BUILDING-CATALOGUE-BRIEF.md` (main brief + Addenda 1–10 + BACKLOG)
 audited line-by-line against HEAD `3f7f9d1` (96 staged sources, 4149 test declarations green).
 Read-only pass; no code was changed.
@@ -157,7 +171,7 @@ one habit, not six bugs, and it is the cheapest thing in this map to fix.
 | The surveyor's plan | PARTIAL | Real lookable object `ObjectBlueprints.xml:448-455`; the finished building's description written as intention `Experience/KingdomCeremony.cs:43-55` | **"The chronicle later quotes it" fires for 4 of 57 designs.** The quote only reaches the chronicle by riding the single-cell scaffold (`TransferPlanQuote` `Growth/KingdomPlanMarker.cs:207`). Any design with a `Plot=` attribute short-circuits at `Growth/KingdomPlanMarker.cs:194` into `StakeFromPlan`, which destroys the marker at `Growth/KingdomPlot2.cs:1113` without transferring the quote |
 | Visible construction | PARTIAL | All five stages real and landing real world changes: `Staked/Cleared/Frame/Walls/Done` `Growth/KingdomPlotRules.cs:56-68`, applied `Growth/KingdomPlot2.cs:1586-1616` via `ClearGround`/`RaiseFrame`/`RaiseWalls`/`Finish`; honest lazy catch-up `:1557-1583`; announcements only when attended `:1610`; presence grants nothing | **"Crew standing at the plot while attended" does not exist.** No crew objects are created or moved. The only crew is the headcount integer `KingdomSystem.AssignedCrew` (`Core/KingdomSystem.cs:122`) |
 | **The raising ceremony** | **PARTIAL — worst call-site gap in the mod** | Fully built and tested: gathers up to three named settlers `Experience/KingdomCeremony.cs:136-160`, shares water `:118`, chronicles those present `:120`, unattended defers to the homecoming `:125` | **`OnBuildingRaised` has exactly one caller: `Growth/KingdomScaffold.cs:252`, the single-cell scaffold.** The plot path — 53 of 57 designs — finishes at `Growth/KingdomPlot2.cs:1868-1874` with a bare `RecordDeed` + `KingdomChronicle.Record`. No house, work, larder or temple ever gathers a crew or shares water; only `palisade`/`rampart`/`watchtower`/`gatehouse` do |
-| The pattern-book | BUILT | `Experience/KingdomCeremony.cs:267-329` on a chartered caravan's delivery (`Trade/KingdomTrade.cs:102`); pick-1-of-3 `:295-310`; learned `:322`; both foreign designs exist `KingdomBuildings.xml:526-535`; **never gates the base catalogue** — `pattern:` is satisfiable by no other roster kind, test `DevTests/KingdomCeremonyRulesTests.cs:485` | — |
+| The pattern-book | BUILT | `Trade/KingdomTrade.cs` freezes the optional offer in `PrepareCharterDelivery` from exact `operation.SettlementId + operation.Sequence`, then `ContinuePatternBook` owns choice, stored-roster before/after CAS, idempotent chronicle, message disposition, quarantine recovery, and retirement ordering. `Trade/KingdomTradePatternRules.cs` bounds/detaches at most three exact keys/labels; `Trade/KingdomTradeState.cs` persists it in format 5/wire 4, reads exact wire 3, and preserves other/future wires opaque. `Experience/KingdomCeremony.cs` is now only the seated-roster/catalogue producer and frozen-offer UI; the unreachable tick-owned arrival path is gone. `DevTests/KingdomTradeRulesTests.cs` covers chance/no candidates, deterministic picks, decline, every mutation/sink reload cut, already-known/third-value CAS, bounds, immutable v3 golden, future opacity, seat/source wiring. **Never gates the base catalogue** — `pattern:` remains additive-only. | Native baseline + compatibility compile clean; ordinary in-game 55j playtest still required for presentation/feel |
 | **The salvage commission** | **MISSING** | Neither `Growth/KingdomCommission.cs` (building commission) nor `Growth/KingdomSalvage.cs` (machine certification) dispatches anybody. Repo-wide grep for expedition/provision/dispatch/party returns nothing. No Charter entry among the 31; no `Options.xml` toggle | The whole idea: naming settlers, provisioning them, a destination the founder has personally seen, resolution into the homecoming report |
 | **Pilgrims of the told story** | **MISSING** | The only artifact is a cosmetic guest blueprint `ObjectBlueprints.xml:47-49` at weight 25 in the ordinary traveller table (`PopulationTables.xml:19-22`). Guests spawn on a fixed interval onto a **random empty cell** (`Experience/KingdomLocus.cs:192-233`, `:291-333`) — not the heart | Nothing anywhere reads the outsider register's volume. `OutsiderEntries` is consumed only by reports, the chronicle and debug |
 

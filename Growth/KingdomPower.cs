@@ -57,6 +57,13 @@ namespace XRL.World.Parts
 
 		public override void TurnTick(long TimeTick, int Amount)
 		{
+			KingdomSystem master = The.Game?.GetSystem<KingdomSystem>();
+			if (!KingdomMaster.AutomaticWorkAllowed(master)) return;
+			if (LastResolvedTick <= master.MasterOptionTick)
+			{
+				LastResolvedTick = TimeTick;
+				return;
+			}
 			if (LastResolvedTick <= 0 || TimeTick < LastResolvedTick + KingdomRules.TicksPerDay)
 			{
 				return;
@@ -147,7 +154,7 @@ namespace ThousandAndFirst
 			List<GameObject> works = new List<GameObject>();
 			List<GameObject> stores = new List<GameObject>();
 			List<GameObject> sinks = new List<GameObject>();
-			Gather(Z, works, stores, sinks);
+			Gather(Survey.Objects, works, stores, sinks);
 			if (works.Count == 0 && stores.Count == 0)
 			{
 				return;
@@ -225,7 +232,7 @@ namespace ThousandAndFirst
 			Brownouts(System, Z, sinks, demands, order, solution.Stopped, timeTicks);
 			if (delivered > 0)
 			{
-				System.Ledger.Note("{{c|The works of " + System.KingdomDisplayName + " made " + delivered + " charge, and it went where it was wanted.}}");
+				System.Ledger.Note("{{c|The works of " + KingdomPresentation.Rich(System.KingdomDisplayName) + " made " + delivered + " charge, and it went where it was wanted.}}");
 			}
 			if (KingdomLog.Enabled) KingdomLog.Log("power pass " + Z.ZoneID + " days=" + days + " works=" + works.Count
 				+ " generated=" + solution.Generated + " demanded=" + solution.Demanded + " delivered=" + delivered
@@ -481,7 +488,7 @@ namespace ThousandAndFirst
 				sink.SetIntProperty("KingdomBrownout", 1);
 				string named = KingdomDesign.ReferenceFor(sink, sink.ShortDisplayName);
 				System.Ledger.Note("{{r|" + KingdomFlowRules.BrownoutNotice(named) + "}}");
-				KingdomChronicle.Record(System, KingdomFlowRules.BrownoutTelling(named, System.KingdomDisplayName));
+				KingdomChronicle.Record(System, KingdomFlowRules.BrownoutTelling(named, KingdomPresentation.Rich(System.KingdomDisplayName)));
 				Simulation.City.KingdomHappenings.TellBrownout(System, Demands[i].WorkId, (int)Demands[i].Tier, Z.ZoneID, TimeTicks);
 			}
 		}
@@ -510,7 +517,7 @@ namespace ThousandAndFirst
 			List<GameObject> works = new List<GameObject>();
 			List<GameObject> stores = new List<GameObject>();
 			List<GameObject> sinks = new List<GameObject>();
-			Gather(Z, works, stores, sinks);
+			Gather(KingdomSurvey.ObjectsFor(Z), works, stores, sinks);
 			int perDay = 0;
 			string reason = KingdomPowerRules.IdleNoWorks;
 			for (int i = 0; i < works.Count; i++)
@@ -529,9 +536,10 @@ namespace ThousandAndFirst
 			return KingdomPowerRules.SupplyLine(tier, perDay, Held(stores), Capacity(stores), reason);
 		}
 
-		private static void Gather(Zone Z, List<GameObject> Works, List<GameObject> Stores, List<GameObject> Sinks)
+		private static void Gather(IEnumerable<GameObject> Objects, List<GameObject> Works,
+			List<GameObject> Stores, List<GameObject> Sinks)
 		{
-			foreach (GameObject item in Z.GetObjects())
+			foreach (GameObject item in Objects)
 			{
 				// The founder's designation is the whole of the grid's membership: what the
 				// settlement raised, plus anything explicitly dedicated to it. Nothing the
@@ -716,9 +724,10 @@ namespace ThousandAndFirst
 				{
 					sink.SetIntProperty("KingdomPowered", 1);
 					string drawing = KingdomDesign.ReferenceFor(sink, sink.ShortDisplayName);
-					System.RecordDeed("the " + drawing + " of " + System.KingdomDisplayName + " drawing its first charge");
-					KingdomChronicle.Record(System, "the works turned at " + System.KingdomDisplayName + ", and " + XRL.Language.Grammar.A(drawing) + " drew its first charge from hands and weather alone", Accomplishment: true);
-					MessageQueue.AddPlayerMessage("{{G|The works of " + System.KingdomDisplayName + " are turning. The " + drawing + " draws from them.}}");
+					string realm = KingdomPresentation.Rich(System.KingdomDisplayName);
+					System.RecordDeed("the " + drawing + " of " + realm + " drawing its first charge");
+					KingdomChronicle.Record(System, "the works turned at " + realm + ", and " + XRL.Language.Grammar.A(drawing) + " drew its first charge from hands and weather alone", Accomplishment: true);
+					MessageQueue.AddPlayerMessage("{{G|The works of " + realm + " are turning. The " + drawing + " draws from them.}}");
 				}
 			}
 			return offered - remaining;
@@ -818,7 +827,7 @@ namespace ThousandAndFirst
 					continue;
 				}
 				store.EverFilled = true;
-				KingdomChronicle.Record(System, "the salt at " + System.KingdomDisplayName + " ran full and bright, and the settlement kept its first whole night of light");
+				KingdomChronicle.Record(System, "the salt at " + KingdomPresentation.Rich(System.KingdomDisplayName) + " ran full and bright, and the settlement kept its first whole night of light");
 				System.Ledger.Note("{{G|The molten-salt store is full. The settlement keeps the night now.}}");
 				// One telling per pass, however many beds of salt the settlement keeps.
 				return;

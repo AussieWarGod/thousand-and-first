@@ -9,31 +9,71 @@
     <tag Name="SleepOnBed" />
   </object>
   <!--
-    Settler variants. These inherit everything - tag, brain, idle behaviour - and
-    override appearance only, so the people who arrive look like a mixed road
-    rather than a uniform. All the tiles are the game's own; a settler needs no
-    art of its own when the world is already full of ordinary people.
+	    Most settler variants inherit everything and override appearance only. The two
+	    people-variants below instead inherit a vanilla body whole, then add the same
+	    settler behaviour explicitly: culture/species, anatomy, mutations, stats, natural
+	    weapons, TextFragments, and vanilla art stay true rather than being painted onto a
+	    BaseFarmer. Enrolment replaces allegiance at the exact arrival commit.
     Rolled from the r_KingdomSettlers population table, which other mods merge into.
   -->
   <object Name="r_KingdomSettlerHand" Inherits="r_KingdomSettler">
-    <removebuilder Name="RandomTile" />
-    <part Name="Render" DisplayName="settler" Tile="Creatures/farmer_convert.bmp" ColorString="&amp;w" />
+	<removebuilder Name="RandomTile" />
+	<part Name="Render" DisplayName="settler" Tile="Creatures/farmer_convert.bmp" ColorString="&amp;w" />
+	<part Name="Description" Short="Field mud has dried in the seams of practiced hands. Seed, stalk, and harvest are read here as a calendar rather than a guess." />
+	<skill Name="CookingAndGathering" />
+	<skill Name="CookingAndGathering_Harvestry" />
   </object>
   <object Name="r_KingdomSettlerDrifter" Inherits="r_KingdomSettler">
-    <removebuilder Name="RandomTile" />
-    <part Name="Render" DisplayName="settler" Tile="Creatures/caste_23.bmp" ColorString="&amp;w" />
+	<removebuilder Name="RandomTile" />
+	<part Name="Render" DisplayName="settler" Tile="Creatures/caste_23.bmp" ColorString="&amp;w" />
+	<part Name="Description" Short="Road dust lies in layers on a coat mended at a dozen fires. The way between water, shelter, and trouble has become a practiced thing." />
+	<skill Name="Survival" />
+	<skill Name="Survival_Camp" />
   </object>
   <object Name="r_KingdomSettlerTinker" Inherits="r_KingdomSettler">
-    <removebuilder Name="RandomTile" />
-    <part Name="Render" DisplayName="settler" Tile="Creatures/caste_21.bmp" ColorString="&amp;w" />
+	<removebuilder Name="RandomTile" />
+	<part Name="Render" DisplayName="settler" Tile="Creatures/caste_21.bmp" ColorString="&amp;w" />
+	<part Name="Description" Short="Bit pouches click beneath a patched apron. Every broken hinge and quiet capacitor is inspected with the calm of somebody who expects it to answer." />
+	<skill Name="Tinkering" />
+	<skill Name="Tinkering_Repair" />
+	<skill Name="Tinkering_Tinker1" />
   </object>
   <object Name="r_KingdomSettlerScribe" Inherits="r_KingdomSettler">
-    <removebuilder Name="RandomTile" />
-    <part Name="Render" DisplayName="settler" Tile="Creatures/caste_20.bmp" ColorString="&amp;w" />
+	<removebuilder Name="RandomTile" />
+	<part Name="Render" DisplayName="settler" Tile="Creatures/caste_20.bmp" ColorString="&amp;w" />
+	<part Name="Description" Short="A reed case, two registers, and an ear trained for the difference between a custom and an insult travel together." />
+	<skill Name="Customs" />
+	<skill Name="Customs_Tactful" />
   </object>
   <object Name="r_KingdomSettlerYoung" Inherits="r_KingdomSettler">
     <removebuilder Name="RandomTile" />
     <part Name="Render" DisplayName="settler" Tile="Creatures/sw_appledaughter.bmp" ColorString="&amp;w" />
+  </object>
+  <object Name="r_KingdomSettlerPhysicker" Inherits="r_KingdomSettler">
+	<removebuilder Name="RandomTile" />
+	<part Name="Render" DisplayName="physicker settler" Tile="Creatures/caste_15.bmp" ColorString="&amp;w" />
+	<part Name="Description" Short="Bandage rolls, bitter powders, and a bone saw are packed separately and checked twice. They have done this before, which matters more than saying so." />
+	<skill Name="Physic" />
+	<skill Name="Physic_StaunchWounds" />
+	<skill Name="Physic_Nostrums" />
+  </object>
+  <object Name="r_KingdomSettlerMechanimist" Inherits="Mechanimist">
+    <removepart Name="ConversationScript" />
+    <part Name="Render" DisplayName="mechanimist settler" />
+    <part Name="Description" Short="Road dust pales a robe kept by patient mending. The machine-prayers are a culture carried in the hands now, not an allegiance owed to anyone here." />
+    <part Name="Brain" Wanders="true" Hostile="false" />
+    <tag Name="r_KingdomSettler" />
+    <tag Name="AllowIdleBehavior" />
+    <tag Name="SleepOnBed" />
+  </object>
+  <object Name="r_KingdomSettlerSnapjaw" Inherits="Snapjaw">
+    <removepart Name="ConversationScript" />
+    <part Name="Render" DisplayName="snapjaw settler" />
+    <part Name="Description" Short="A bedroll is lashed between twitching shoulders, and old tribeskin has been patched with cloth from half a dozen roads. A keen nose tests the settlement's smoke, stores, and strangers." />
+    <part Name="Brain" Wanders="true" Hostile="false" />
+    <tag Name="r_KingdomSettler" />
+    <tag Name="AllowIdleBehavior" />
+    <tag Name="SleepOnBed" />
   </object>
   <!--
     Guests: travellers who are not settling. They roll from r_KingdomGuests (mergeable by other
@@ -51,7 +91,8 @@
   </object>
   <object Name="r_KingdomGuestPilgrim" Inherits="r_KingdomGuest">
     <removebuilder Name="RandomTile" />
-    <part Name="Render" DisplayName="traveller" Tile="Creatures/caste_18.bmp" ColorString="&amp;w" />
+    <part Name="Render" DisplayName="pilgrim" Tile="Creatures/caste_18.bmp" ColorString="&amp;w" />
+    <part Name="Description" Short="Road dust is worked into ceremonial folds. This traveller has come for a story and the place where it happened." />
   </object>
   <object Name="r_KingdomGuestNomad" Inherits="r_KingdomGuest">
     <removebuilder Name="RandomTile" />
@@ -79,6 +120,402 @@
   <object Name="r_KingdomNotableGuestTinker" Inherits="r_KingdomNotableGuest">
     <removebuilder Name="RandomTile" />
     <part Name="Render" DisplayName="notable traveller" Tile="Creatures/caste_21.bmp" ColorString="&amp;W" />
+  </object>
+  <object Name="r_KingdomNotableGuestTrader" Inherits="DromadTrader1">
+    <part Name="Render" DisplayName="legendary dromad trader" ColorString="&amp;Y" DetailColor="W" />
+    <part Name="Description" Short="A camelfolk merchant whose ledgers name roads beyond Qud. They have enough wares for another journey and are looking, improbably, for a door worth closing behind them." />
+    <part Name="Brain" Wanders="false" Hostile="false" />
+    <part Name="Interesting" />
+    <part Name="r_KingdomNotableGuest" />
+    <removepart Name="DromadCaravan" />
+    <tag Name="r_KingdomNotableGuest" />
+    <tag Name="r_TAF_LegendaryTrader" />
+    <tag Name="AllowIdleBehavior" />
+  </object>
+
+  <!--
+    Authored-plan fixtures. A vanilla furniture blueprint is often a population recipe rather
+    than a stable architectural component: Bed/Chair/Bench/Low Table can roll Animated, Bookshelf
+    and Floor Cushion roll a tile, and Bedroll/Catchbasin can be picked up. An authored map needs
+    the opposite contract. These wrappers retain vanilla art and mechanics while fixing identity,
+    keeping civic fixtures in place, and making paid stone/marble/metal read as those materials.
+
+    Storage remains empty. The basin variants retain Catchbasin's StartVolume=0 and Collector;
+    they add real, empty, paid capacity and never arrive carrying free water. None declares an
+    inventory population, liquid filler, DeployWith, or creation builder.
+  -->
+  <!--
+    Durable civic wrappers. The raw vanilla names below are common merge targets in the Qud
+    ecosystem. Civic construction therefore inherits their final merged appearance/behaviour,
+    then reasserts only the capabilities the settlement contract owns: permanence, authored art,
+    and no manufactured contents. Harmless additions such as sound or flame particles survive;
+    destructive lifetime, pushing, mirroring, pickup, dice, and tinkering additions do not.
+  -->
+  <object Name="r_KingdomCivicCampfire" Inherits="Campfire">
+    <removepart Name="Temporary2" />
+    <part Name="Render" Tile="Items/sw_campfire_noflame.png" DisplayName="campfire" RenderString="249" ColorString="&amp;R" DetailColor="w" Occluding="false" RenderIfDark="true" RenderLayer="9" />
+    <part Name="Physics" Weight="30" Takeable="false" FlameTemperature="10000" Organic="true" />
+    <part Name="Campfire" ExtinguishBlueprint="Campfire Remains" />
+  </object>
+  <object Name="r_KingdomCivicBookshelf" Inherits="Bookshelf">
+    <removebuilder Name="RandomTile" />
+    <removepart Name="PackagePush2" />
+    <removepart Name="PackageMirror" />
+    <removepart Name="randomMirror" />
+    <tag Name="InventoryPopulationTable" Value="*delete" />
+    <part Name="Render" DisplayName="wooden bookshelf" Tile="Items/sw_bookshelf1.bmp" DetailColor="W" ColorString="&amp;w" RenderString="182" />
+    <part Name="Physics" Organic="true" Weight="50" Takeable="false" Solid="false" />
+  </object>
+  <object Name="r_KingdomCivicTorchpost" Inherits="Torchpost">
+    <removebuilder Name="RandomTile" />
+    <removepart Name="PackagePush2" />
+    <removepart Name="PackageMirror" />
+    <removepart Name="randomMirror" />
+    <part Name="Render" DisplayName="torch sconce" RenderString="249" ColorString="&amp;R" DetailColor="w" Tile="tiles/sw_torch_nofire.png" RenderLayer="6" Occluding="false" />
+    <part Name="Physics" Weight="13" Takeable="false" Solid="false" />
+  </object>
+  <object Name="r_KingdomCivicHookah" Inherits="Hookah">
+    <removebuilder Name="RandomTile" />
+    <removepart Name="PackagePush2" />
+    <removepart Name="PackageMirror" />
+    <removepart Name="randomMirror" />
+    <removepart Name="TinkerItem" />
+    <removepart Name="RulesDescription" />
+    <removepart Name="DiceRollGame" />
+    <part Name="Render" DisplayName="hookah" ColorString="&amp;R" DetailColor="w" RenderString="227" Tile="Items/sw_hookah.bmp" Occluding="false" RenderIfDark="false" />
+    <part Name="Physics" Weight="10" Takeable="false" Solid="false" />
+    <part Name="LiquidVolume" MaxVolume="8" Volume="0" StartVolume="0" InitialLiquid="" ManualSeal="true" LiquidVisibleWhenSealed="true" />
+  </object>
+  <object Name="r_KingdomFixtureBedrollCanvas" Inherits="Bedroll">
+    <part Name="Physics" Takeable="false" />
+  </object>
+  <object Name="r_KingdomFixtureBedTimber" Inherits="Bed">
+    <removebuilder Name="Animated" />
+    <removetag Name="NamingTag" />
+    <removetag Name="Animatable" />
+    <removetag Name="DynamicObjectsTable:AnimatableFurniture" />
+    <removetag Name="Mods" />
+  </object>
+  <object Name="r_KingdomFixtureCushionCanvas" Inherits="Floor Cushion">
+    <removebuilder Name="Animated" />
+    <removebuilder Name="RandomTile" />
+    <removetag Name="NamingTag" />
+    <removetag Name="Animatable" />
+    <removetag Name="DynamicObjectsTable:AnimatableFurniture" />
+    <removetag Name="Mods" />
+    <part Name="Render" Tile="Items/sw_cushion1.bmp" />
+  </object>
+  <object Name="r_KingdomFixtureChairTimber" Inherits="Chair">
+    <removebuilder Name="Animated" />
+    <removetag Name="NamingTag" />
+    <removetag Name="Animatable" />
+    <removetag Name="DynamicObjectsTable:AnimatableFurniture" />
+    <removetag Name="Mods" />
+  </object>
+  <object Name="r_KingdomFixtureBenchTimber" Inherits="Bench">
+    <removebuilder Name="Animated" />
+    <removetag Name="NamingTag" />
+    <removetag Name="Animatable" />
+    <removetag Name="DynamicObjectsTable:AnimatableFurniture" />
+    <removetag Name="Mods" />
+  </object>
+  <object Name="r_KingdomFixtureTableTimber" Inherits="Low Table">
+    <removebuilder Name="Animated" />
+    <removetag Name="NamingTag" />
+    <removetag Name="Animatable" />
+    <removetag Name="DynamicObjectsTable:AnimatableFurniture" />
+    <tag Name="InventoryPopulationTable" Value="*delete" />
+  </object>
+  <object Name="r_KingdomFixtureTableShapedTimber" Inherits="r_KingdomFixtureTableTimber">
+    <part Name="Render" DisplayName="joiner's low table" ColorString="&amp;Y" DetailColor="W" />
+  </object>
+  <object Name="r_KingdomFixtureShelfTimber" Inherits="r_KingdomCivicBookshelf">
+    <tag Name="InventoryPopulationTable" Value="*delete" />
+    <part Name="Render" Tile="Items/sw_bookshelf1.bmp" />
+  </object>
+  <object Name="r_KingdomFixtureBasketEmpty" Inherits="Woven Basket">
+    <tag Name="InventoryPopulationTable" Value="*delete" />
+  </object>
+
+  <object Name="r_KingdomFixtureDoorTimber" Inherits="Door">
+    <removebuilder Name="Animated" />
+    <removetag Name="NamingTag" />
+    <removetag Name="Animatable" />
+    <removetag Name="DynamicObjectsTable:AnimatableFurniture" />
+  </object>
+  <object Name="r_KingdomFixtureDoorWindowed" Inherits="Windowed Door">
+    <removebuilder Name="Animated" />
+    <removetag Name="NamingTag" />
+    <removetag Name="Animatable" />
+    <removetag Name="DynamicObjectsTable:AnimatableFurniture" />
+  </object>
+  <object Name="r_KingdomFixtureDoorStriped" Inherits="Striped Door">
+    <removebuilder Name="Animated" />
+    <removetag Name="NamingTag" />
+    <removetag Name="Animatable" />
+    <removetag Name="DynamicObjectsTable:AnimatableFurniture" />
+  </object>
+  <object Name="r_KingdomFixtureDoorMetal" Inherits="Metal Door">
+    <removebuilder Name="Animated" />
+    <removetag Name="NamingTag" />
+    <removetag Name="Animatable" />
+    <removetag Name="DynamicObjectsTable:AnimatableFurniture" />
+  </object>
+  <object Name="r_KingdomFixtureDoorSecurity" Inherits="Security Door">
+    <removebuilder Name="Animated" />
+    <removetag Name="NamingTag" />
+    <removetag Name="Animatable" />
+    <removetag Name="DynamicObjectsTable:AnimatableFurniture" />
+  </object>
+  <object Name="r_KingdomFixtureGateBrinestalk" Inherits="Brinestalk Gate">
+    <removebuilder Name="Animated" />
+    <removetag Name="NamingTag" />
+    <removetag Name="Animatable" />
+    <removetag Name="DynamicObjectsTable:AnimatableFurniture" />
+  </object>
+
+  <!-- Authored structural pieces never roll a wall creature or creation-time graffiti. Their
+       painted-wall adjacency still uses vanilla's connected tiles; only non-receipted chance is
+       removed. Retained-site variation belongs in an explicit map/palette, not ObjectFactory. -->
+  <object Name="r_KingdomStructureMudWall" Inherits="BaseWallMud">
+    <removebuilder Name="Animated" />
+    <removetag Name="NamingTag" />
+    <removetag Name="Animatable" />
+    <removetag Name="DynamicObjectsTable:AnimatableFurniture" />
+    <removepart Name="Graffitied" />
+  </object>
+  <object Name="r_KingdomStructureBrickWall" Inherits="BrickWall">
+    <removebuilder Name="Animated" />
+    <removetag Name="NamingTag" />
+    <removetag Name="Animatable" />
+    <removetag Name="DynamicObjectsTable:AnimatableFurniture" />
+    <removepart Name="Graffitied" />
+  </object>
+  <object Name="r_KingdomStructureBrinestalkWall" Inherits="BrinestalkWall">
+    <removebuilder Name="Animated" />
+    <removetag Name="NamingTag" />
+    <removetag Name="Animatable" />
+    <removetag Name="DynamicObjectsTable:AnimatableFurniture" />
+    <removepart Name="Graffitied" />
+  </object>
+  <object Name="r_KingdomStructureCanvasWall" Inherits="CanvasWall">
+    <removebuilder Name="Animated" />
+    <removetag Name="NamingTag" />
+    <removetag Name="Animatable" />
+    <removetag Name="DynamicObjectsTable:AnimatableFurniture" />
+    <removepart Name="Graffitied" />
+  </object>
+  <object Name="r_KingdomStructureConcreteWall" Inherits="Concrete">
+    <removebuilder Name="Animated" />
+    <removetag Name="NamingTag" />
+    <removetag Name="Animatable" />
+    <removetag Name="DynamicObjectsTable:AnimatableFurniture" />
+    <removetag Name="Mods" />
+    <removepart Name="Graffitied" />
+  </object>
+  <object Name="r_KingdomStructureLimestone" Inherits="Limestone">
+    <removebuilder Name="Animated" />
+    <removetag Name="NamingTag" />
+    <removetag Name="Animatable" />
+    <removetag Name="DynamicObjectsTable:AnimatableFurniture" />
+    <removepart Name="Graffitied" />
+  </object>
+  <object Name="r_KingdomStructureSandstone" Inherits="Sandstone">
+    <removebuilder Name="Animated" />
+    <removetag Name="NamingTag" />
+    <removetag Name="Animatable" />
+    <removetag Name="DynamicObjectsTable:AnimatableFurniture" />
+    <removepart Name="Graffitied" />
+  </object>
+  <object Name="r_KingdomStructureHalfStone" Inherits="StoneHalfWall">
+    <removebuilder Name="Animated" />
+    <removetag Name="NamingTag" />
+    <removetag Name="Animatable" />
+    <removetag Name="DynamicObjectsTable:AnimatableFurniture" />
+    <removepart Name="Graffitied" />
+  </object>
+  <!-- Low installed edges are deliberately non-solid. They use vanilla connected low-wall art,
+       but unlike a full wall their authored Pass=walk contract is true in the live zone. -->
+  <object Name="r_KingdomStructureLowConcrete" Inherits="HalfWall">
+    <removebuilder Name="Animated" />
+    <removetag Name="NamingTag" />
+    <removetag Name="Animatable" />
+    <removetag Name="DynamicObjectsTable:AnimatableFurniture" />
+    <removepart Name="Graffitied" />
+    <part Name="Render" DisplayName="low concrete terrace curb" ColorString="&amp;y^c" TileColor="&amp;y" DetailColor="c" Occluding="false" />
+    <part Name="Description" Short="A knee-high lip of bonded pebble and cement keeps carried soil on the terrace without barring the service walk." />
+    <part Name="Physics" Weight="900" Takeable="false" Solid="false" />
+    <stat Name="AV" Value="8" />
+    <stat Name="Hitpoints" Value="600" />
+  </object>
+  <object Name="r_KingdomStructureStoneGutter" Inherits="LowSandstoneWall">
+    <removebuilder Name="Animated" />
+    <removetag Name="NamingTag" />
+    <removetag Name="Animatable" />
+    <removetag Name="DynamicObjectsTable:AnimatableFurniture" />
+    <removepart Name="Graffitied" />
+    <part Name="Render" DisplayName="cut-stone wash gutter" Occluding="false" />
+    <part Name="Description" Short="A shallow runnel cut through low sandstone carries wash-water away from the slab. Boots cross it without climbing." />
+    <part Name="Physics" Weight="700" Takeable="false" Solid="false" />
+  </object>
+  <object Name="r_KingdomStructureMetalRingArch" Inherits="Archway">
+    <part Name="Render" DisplayName="worked-metal ring brace" Tile="Tiles/sw_arch.png" ColorString="&amp;c" TileColor="&amp;c" DetailColor="C" Occluding="false" />
+    <part Name="Description" Short="A bent metal rib describes part of the mirror-ring without closing its processional throat." />
+    <part Name="Physics" Organic="false" Weight="260" Takeable="false" Solid="false" />
+    <part Name="Metal" />
+  </object>
+  <object Name="r_KingdomStructureLowMetalScreen" Inherits="HalfWall">
+    <removebuilder Name="Animated" />
+    <removetag Name="NamingTag" />
+    <removetag Name="Animatable" />
+    <removetag Name="DynamicObjectsTable:AnimatableFurniture" />
+    <removetag Name="Mods" />
+    <removepart Name="Graffitied" />
+    <part Name="Render" DisplayName="low worked-metal processional screen" ColorString="&amp;c^k" TileColor="&amp;c" DetailColor="C" Occluding="false" />
+    <part Name="Description" Short="A low fret of riveted metal separates ceremonial layers while leaving the old processional route open." />
+    <part Name="Physics" Organic="false" Weight="380" Takeable="false" Solid="false" />
+    <part Name="Metal" />
+    <stat Name="AV" Value="10" />
+    <stat Name="Hitpoints" Value="900" />
+  </object>
+  <object Name="r_KingdomStructureMetalWall" Inherits="MetalWall">
+    <removebuilder Name="Animated" />
+    <removetag Name="NamingTag" />
+    <removetag Name="Animatable" />
+    <removetag Name="DynamicObjectsTable:AnimatableFurniture" />
+    <removetag Name="Mods" />
+    <removepart Name="Graffitied" />
+  </object>
+  <object Name="r_KingdomStructureRustedMetalWall" Inherits="RustedMetalWall">
+    <removebuilder Name="Animated" />
+    <removetag Name="NamingTag" />
+    <removetag Name="Animatable" />
+    <removetag Name="DynamicObjectsTable:AnimatableFurniture" />
+    <removetag Name="Mods" />
+    <removepart Name="Graffitied" />
+  </object>
+  <object Name="r_KingdomStructureMushroomWall" Inherits="MushroomWall-White">
+    <removebuilder Name="Animated" />
+    <removetag Name="NamingTag" />
+    <removetag Name="Animatable" />
+    <removetag Name="DynamicObjectsTable:AnimatableFurniture" />
+    <removepart Name="Graffitied" />
+    <removepart Name="RandomColors" />
+  </object>
+  <object Name="r_KingdomStructurePetalWall" Inherits="Petal-Strewn WoodWall">
+    <removebuilder Name="Animated" />
+    <removetag Name="NamingTag" />
+    <removetag Name="Animatable" />
+    <removetag Name="DynamicObjectsTable:AnimatableFurniture" />
+    <removepart Name="Graffitied" />
+    <removepart Name="RandomColors" />
+  </object>
+  <object Name="r_KingdomStructureWornWoodWall" Inherits="WornWoodWall">
+    <removebuilder Name="Animated" />
+    <removetag Name="NamingTag" />
+    <removetag Name="Animatable" />
+    <removetag Name="DynamicObjectsTable:AnimatableFurniture" />
+    <removepart Name="Graffitied" />
+  </object>
+
+  <object Name="r_KingdomFixtureChairStone" Inherits="BaseChair">
+    <removebuilder Name="Animated" />
+    <removetag Name="NamingTag" />
+    <removetag Name="Animatable" />
+    <removetag Name="DynamicObjectsTable:AnimatableFurniture" />
+    <removetag Name="Mods" />
+    <part Name="Render" DisplayName="stone witness bench" Tile="Items/sw_bench.bmp" ColorString="&amp;K" TileColor="&amp;w" DetailColor="W" />
+    <part Name="Description" Short="A low seat dressed from one block, broad enough for a witness who means to stay until the answer is given." />
+    <part Name="Physics" Organic="false" Weight="180" Takeable="false" />
+  </object>
+  <object Name="r_KingdomFixtureChairMarble" Inherits="r_KingdomFixtureChairStone">
+    <part Name="Render" DisplayName="marble witness bench" ColorString="&amp;W" TileColor="&amp;W" DetailColor="Y" />
+    <part Name="Description" Short="A marble seat with its front edge polished by petitioners and its back left cold for ceremony." />
+    <part Name="Physics" Weight="260" />
+  </object>
+  <object Name="r_KingdomFixtureChairMetal" Inherits="BaseChair">
+    <removebuilder Name="Animated" />
+    <removetag Name="NamingTag" />
+    <removetag Name="Animatable" />
+    <removetag Name="DynamicObjectsTable:AnimatableFurniture" />
+    <removetag Name="Mods" />
+    <part Name="Render" DisplayName="worked-metal chair" Tile="Items/sw_folding_chair.bmp" ColorString="&amp;c" TileColor="&amp;c" DetailColor="C" />
+    <part Name="Description" Short="Bent tubes and a riveted seat make a chair that can be scrubbed clean and cannot be mistaken for comfort." />
+    <part Name="Physics" Organic="false" Weight="40" Takeable="false" />
+    <part Name="Metal" />
+  </object>
+  <object Name="r_KingdomFixtureBedMetal" Inherits="BaseBed">
+    <removebuilder Name="Animated" />
+    <removetag Name="NamingTag" />
+    <removetag Name="Animatable" />
+    <removetag Name="DynamicObjectsTable:AnimatableFurniture" />
+    <removetag Name="Mods" />
+    <part Name="Render" DisplayName="worked-metal frame bed" Tile="Items/sw_folding_cot.bmp" ColorString="&amp;c" TileColor="&amp;c" DetailColor="C" />
+    <part Name="Description" Short="A riveted frame holds a narrow sleeping sling clear of the service floor." />
+    <part Name="Physics" Organic="false" Weight="180" Takeable="false" />
+    <part Name="Metal" />
+  </object>
+  <object Name="r_KingdomFixtureTableStone" Inherits="Low Table">
+    <removebuilder Name="Animated" />
+    <removetag Name="NamingTag" />
+    <removetag Name="Animatable" />
+    <removetag Name="DynamicObjectsTable:AnimatableFurniture" />
+    <tag Name="InventoryPopulationTable" Value="*delete" />
+    <part Name="Render" DisplayName="dressed-stone work table" ColorString="&amp;K" TileColor="&amp;w" DetailColor="W" />
+    <part Name="Description" Short="A broad stone slab dressed level and left bare for work that would scar timber." />
+    <part Name="Physics" Organic="false" Weight="300" Takeable="false" />
+  </object>
+  <object Name="r_KingdomFixtureTableMarble" Inherits="r_KingdomFixtureTableStone">
+    <part Name="Render" DisplayName="marble work table" ColorString="&amp;W" TileColor="&amp;W" DetailColor="Y" />
+    <part Name="Description" Short="A pale marble slab whose dressed edges turn a work surface into an assertion of office." />
+    <part Name="Physics" Weight="420" />
+  </object>
+  <object Name="r_KingdomFixtureShelfMetal" Inherits="BaseBookshelf">
+    <tag Name="InventoryPopulationTable" Value="*delete" />
+    <part Name="Render" DisplayName="worked-metal record rack" Tile="Items/sw_bookshelf1.bmp" ColorString="&amp;c" TileColor="&amp;c" DetailColor="C" />
+    <part Name="Description" Short="Shallow metal shelves hold sealed rolls and procedure books where damp hands cannot reach them." />
+    <part Name="Physics" Organic="false" Weight="160" Takeable="false" />
+    <part Name="Metal" />
+  </object>
+  <object Name="r_KingdomFixtureLockerScrap" Inherits="RustLocker">
+    <tag Name="InventoryPopulationTable" Value="*delete" />
+    <part Name="Inventory" />
+    <part Name="Render" DisplayName="recovered-parts locker" ColorString="&amp;r" DetailColor="y" />
+    <part Name="Description" Short="A rust-chewed locker bolted beneath the bench. Its labelled drawers are real storage, but construction leaves them empty." />
+    <part Name="Physics" Organic="false" Weight="120" Takeable="false" Solid="false" />
+    <part Name="Metal" />
+  </object>
+  <object Name="r_KingdomFixtureServiceBankScrap" Inherits="Multicabinet">
+    <removebuilder Name="RandomTile" />
+    <tag Name="InventoryPopulationTable" Value="*delete" />
+    <part Name="Inventory" />
+    <part Name="Render" DisplayName="recovered mirror service bank" Tile="Items/sw_multi_cabinet_1.bmp" ColorString="&amp;r" TileColor="&amp;y" DetailColor="c" Occluding="false" />
+    <part Name="Description" Short="Recovered drawers and open relay housings line the gate route. The cabinets are usable storage, empty when commissioned, and low enough to pass." />
+    <part Name="Physics" Organic="false" Weight="180" Takeable="false" Solid="false" />
+    <part Name="Metal" />
+  </object>
+
+  <object Name="r_KingdomFixtureBasinStone" Inherits="Catchbasin">
+    <removetag Name="Mods" />
+    <part Name="LiquidVolume" StartVolume="0" Volume="0" MaxVolume="64" Collector="true" />
+    <part Name="Render" DisplayName="fixed stone catch basin" ColorString="&amp;w" TileColor="&amp;w" DetailColor="B" />
+    <part Name="Physics" Organic="false" Weight="80" Takeable="false" />
+  </object>
+  <object Name="r_KingdomFixtureBasinScrap" Inherits="Catchbasin">
+    <removetag Name="Mods" />
+    <part Name="LiquidVolume" StartVolume="0" Volume="0" MaxVolume="64" Collector="true" />
+    <part Name="Render" DisplayName="riveted catch basin" ColorString="&amp;y" TileColor="&amp;y" DetailColor="w" />
+    <part Name="Description" Short="Recovered sheets, hammered flat and riveted into a vessel. It begins empty and catches only what reaches it." />
+    <part Name="Physics" Organic="false" Weight="55" Takeable="false" />
+    <part Name="Metal" />
+  </object>
+  <object Name="r_KingdomFixtureBasinMetal" Inherits="Catchbasin">
+    <removetag Name="Mods" />
+    <part Name="LiquidVolume" StartVolume="0" Volume="0" MaxVolume="64" Collector="true" />
+    <part Name="Render" DisplayName="worked-metal catch basin" ColorString="&amp;c" TileColor="&amp;c" DetailColor="C" />
+    <part Name="Description" Short="A folded and welded basin with a clean lip, empty until a gutter, pipe, or careful hand fills it." />
+    <part Name="Physics" Organic="false" Weight="90" Takeable="false" />
+    <part Name="Metal" />
   </object>
   <object Name="r_KingdomScaffold" Inherits="Furniture">
     <!-- Vanilla's open brinestalk gate is a spare timber frame at this scale. Referencing it
@@ -659,6 +1096,7 @@
     <part Name="Render" DisplayName="the first basin" RenderString="009" ColorString="&amp;B" DetailColor="C" />
     <part Name="Description" Short="The basin the first water was poured from, set down where it was emptied and never taken up again. Whatever the settlement raises here is raised around it." />
     <part Name="Physics" Solid="false" Takeable="false" Weight="400" />
+    <part Name="LiquidVolume" MaxVolume="16" Volume="0" />
     <stat Name="Hitpoints" Value="60" />
   </object>
   <!-- A survey stake. Inherits Sign and owes no Tile, for the same reason r_KingdomPlanMarker
@@ -713,11 +1151,19 @@
     <part Name="Physics" Takeable="false" Weight="5000" />
     <stat Name="Hitpoints" Value="320" />
   </object>
-  <object Name="r_KingdomGatehouse" Inherits="Furniture">
+  <!-- A typed boundary/network work, not a plot object. Vanilla Door owns solidity, opening,
+       closing, smart-use and save/reload state; r_KingdomGatehouse owns only the exact 3x3
+       stone/timber guard topology frozen by the paid construction receipt. -->
+  <object Name="r_KingdomGatehouse" Inherits="Door">
+	<removebuilder Name="Animated" />
+	<removetag Name="NamingTag" />
+	<removetag Name="Animatable" />
+	<removetag Name="DynamicObjectsTable:AnimatableFurniture" />
     <stag Name="Contemporary" />
-    <part Name="Render" DisplayName="gatehouse" RenderString="178" ColorString="&amp;W" DetailColor="y" Occluding="true" />
-    <part Name="Description" Short="Where the wall gives way, and the only place it does. Shut at dusk by somebody who has to be talked into opening it." />
-    <part Name="Physics" Solid="true" Takeable="false" Weight="9000" />
+    <part Name="Render" DisplayName="gatehouse gate" RenderString="+" ColorString="&amp;W" DetailColor="y" />
+    <part Name="Description" Short="A stone-throated frontier gate with timber watch benches set around the road. Its hinges carry the settlement's scrap, and its open centerline remains the way through." />
+    <part Name="Physics" Organic="false" Takeable="false" Weight="9000" />
+    <part Name="r_KingdomGatehouse" />
     <stat Name="Hitpoints" Value="600" />
     <stat Name="AV" Value="12" />
   </object>
@@ -810,6 +1256,17 @@
     <part Name="Physics" Takeable="false" Weight="1400" />
     <stat Name="Hitpoints" Value="150" />
   </object>
+  <!-- C12's in-run founder history. Not r_KingdomCairn: that generic civic memorial and the
+       cross-run inheritance cairn have different authority. This object owns no inventory,
+       liquid, charge, commerce or resource part, so placing history cannot mint value. -->
+  <object Name="r_KingdomFounderShrine" Inherits="Furniture">
+    <stag Name="Contemporary" />
+    <part Name="Render" DisplayName="founder's shrine-marker" RenderString="013" ColorString="&amp;W" DetailColor="y" />
+    <part Name="Description" Short="A low marker raised where the settlement named its first dead founder and passed the charter on." />
+    <part Name="Physics" Solid="false" Takeable="false" Weight="1800" />
+    <part Name="r_KingdomFounderShrine" />
+    <stat Name="Hitpoints" Value="180" />
+  </object>
 
   <!-- ======================================================================== THE LAB ==
     The four rooms of the flesh doctrine, and one merge on a vanilla creature. -->
@@ -865,16 +1322,16 @@
   </object>
   <object Name="r_KingdomArcology" Inherits="Furniture">
     <stag Name="Contemporary" />
-    <part Name="Render" DisplayName="the arcology" RenderString="178" ColorString="&amp;Y" Tile="Terrain/sw_historic_houses.bmp" TileColor="&amp;Y" DetailColor="c" />
-    <part Name="Description" Short="It went up in one piece and it has weather of its own. Somewhere near the bottom is a street that has never seen the sun, and somewhere near the top is a window nobody has opened. People are born in here who do not go outside for a season and do not think of it as strange." />
+    <part Name="Render" DisplayName="arcology foundation" RenderString="178" ColorString="&amp;Y" Tile="Terrain/sw_historic_houses.bmp" TileColor="&amp;Y" DetailColor="c" />
+    <part Name="Description" Short="A monumental inhabited shell has been founded here, but its promised streets are still drawings and numbered voids. This is one surface building: it hosts no interior plots, separate zones, or city-scale population yet." />
     <part Name="Bed" />
     <part Name="Physics" Takeable="false" Weight="200000" />
     <stat Name="Hitpoints" Value="2400" />
   </object>
   <object Name="r_KingdomArcologyWard" Inherits="Furniture">
     <stag Name="Contemporary" />
-    <part Name="Render" DisplayName="stacked ward" RenderString="177" ColorString="&amp;y" DetailColor="c" />
-    <part Name="Description" Short="Dwellings over dwellings over dwellings, and a stair doing the work a street would do. Everyone's ceiling is somebody's floor and everyone knows whose." />
+    <part Name="Render" DisplayName="stacked surface ward" RenderString="177" ColorString="&amp;y" DetailColor="c" />
+    <part Name="Description" Short="A dense surface prototype raised beside the arcology foundation. Its dwellings share stairs and walls, but they do not stand inside a hosted arcology zone." />
     <part Name="Bed" />
     <part Name="Physics" Takeable="false" Weight="60000" />
     <stat Name="Hitpoints" Value="1200" />
@@ -884,8 +1341,8 @@
        28 rows for food:14. The sim's food invariant is what caught this blueprint shipping
        as bare furniture, and the rows are the answer it demanded. -->
   <object Name="r_KingdomArcologyTerrace" Inherits="r_KingdomField">
-    <part Name="Render" DisplayName="hanging terrace" RenderString="247" ColorString="&amp;G" DetailColor="g" />
-    <part Name="Description" Short="Soil carried up a hundred feet a basket at a time, and it grows anyway. The lamps run all day because there is nothing above this but more building." />
+    <part Name="Render" DisplayName="raised surface lamp-terrace" RenderString="247" ColorString="&amp;G" DetailColor="g" />
+    <part Name="Description" Short="A raised surface prototype beside the arcology foundation. Lamps lengthen its growing day; no hosted ceiling or interior arcology ground is claimed here." />
     <part Name="Physics" Solid="false" Takeable="false" Organic="true" Weight="20000" />
     <tag Name="r_KingdomCropRows" Value="28" />
     <stat Name="Hitpoints" Value="400" />
@@ -965,6 +1422,17 @@
     <part Name="Physics" Takeable="false" Weight="8000" />
     <stat Name="Hitpoints" Value="340" />
   </object>
+	<!-- Architecture owns only the shaft head. KingdomDelveLink places and receipts the matching
+	     Up in an already-built zone below; these reciprocal ConnectionObject values are Qud's
+	     vanilla paired-stair idiom, not cosmetic travel tags. -->
+	<object Name="r_KingdomDelveDown" Inherits="StairsDown">
+		<part Name="StairsDown" ConnectionObject="r_KingdomDelveUp" />
+		<tag Name="ExcludeFromDynamicEncounters" />
+	</object>
+	<object Name="r_KingdomDelveUp" Inherits="StairsUp">
+		<part Name="StairsUp" ConnectionObject="r_KingdomDelveDown" />
+		<tag Name="ExcludeFromDynamicEncounters" />
+	</object>
 
   <object Name="r_KingdomChargingPost" Inherits="Furniture">
     <stag Name="Contemporary" />
@@ -1354,15 +1822,16 @@
        owns. Inherits vanilla "Sign" wholesale rather than declaring a Tile of our own, for the
        same reason r_KingdomPlanMarker and r_KingdomClearanceStake do: STANDARDS.md requires
        shipped art for anything carrying a Tile attribute, and a plain marker owes none.
-       Takeable="true" because this one is carried and planted, not left standing — it is
-       consumed the instant it is planted (ThousandAndFirst.KingdomGuestbook.AttemptPlantCarrySign
-       obliterates it; there is never a lingering world object to place art on). -->
+       Takeable="true" because this one is carried and planted, not left standing. Exact carry
+       authority freezes its object ID before consuming one sign unit. Tier-1 tinkering makes the
+       brief's "crafted marker" literal while the merged wares entries remain an early alternative. -->
   <object Name="r_KingdomCarrySign" Inherits="Sign">
     <part Name="Render" DisplayName="carry-sign" ColorString="&amp;y" />
     <part Name="Description" Short="A short stake and a strip of cloth, the kind porters are trained to look for. Plant it on what you mean to have carried home, and walk on." />
     <part Name="r_KingdomCarrySign" />
     <part Name="Physics" Solid="false" Takeable="true" Weight="2" />
     <part Name="Commerce" Value="5" />
+    <part Name="TinkerItem" Bits="00" CanDisassemble="false" CanBuild="true" BuildTier="1" NumberMade="1" />
     <stat Name="Hitpoints" Value="10" />
   </object>
 <!-- ============================================================================ SEEDS ==
@@ -1678,6 +2147,197 @@
     <part Name="Description" Short="A counting room, a strongbox, and a ledger of what every cask in this settlement is worth today against what it was worth last season. Water is money and this is where the money is written down." />
     <part Name="Physics" Weight="9000" />
     <stat Name="Hitpoints" Value="440" />
+  </object>
+
+  <object Name="r_KingdomJoppaSeedHouse" Inherits="r_KingdomGranary">
+    <part Name="Render" DisplayName="Joppa seed-house" ColorString="&amp;g" DetailColor="Y" />
+    <part Name="Description" Short="Apple pips and watervine cuttings lie in separate cool bins, each marked with the season and the field that bore it. Joppa survives by knowing what to put back in the earth." />
+    <part Name="Physics" Solid="false" />
+  </object>
+  <object Name="r_KingdomKyakukyaSpiceHearth" Inherits="r_KingdomLarder">
+    <part Name="Render" DisplayName="Kyakukya spice-hearth" ColorString="&amp;G" DetailColor="R" />
+    <part Name="Description" Short="A low smoking hearth stands between drying screens and stoppered jars. Nothing here is merely stored; smoke, brine, and good leaf turn one harvest into another season's suppers." />
+    <part Name="Physics" Solid="false" />
+    <tag Name="r_KingdomLarderCapacity" Value="96" />
+  </object>
+  <object Name="r_KingdomEzraWheelShade" Inherits="r_KingdomWorkshop">
+    <part Name="Render" DisplayName="Ezra wheel-shade" ColorString="&amp;g" DetailColor="w" />
+    <part Name="Description" Short="A spindle turns beneath a broad shade while fibre dries on curved racks. The wheel is small, but every hand at it learns the patient lesson of the great tree." />
+    <part Name="Physics" Solid="false" />
+  </object>
+  <object Name="r_KingdomSnapjawTrailDen" Inherits="r_KingdomRampart">
+    <part Name="Render" DisplayName="snapjaw trail-den" ColorString="&amp;y" DetailColor="r" />
+    <part Name="Description" Short="Low hide screens shelter spoor boards and butchered trail meat. Every passage bends toward open ground; nobody who keeps watch here agrees to be cornered." />
+    <part Name="Container" />
+    <part Name="Inventory" />
+    <part Name="Physics" Solid="false" />
+    <property Name="DontWarnOnOpen" Value="true" />
+    <tag Name="r_KingdomLarderCapacity" Value="64" />
+  </object>
+  <object Name="r_KingdomCragmenschStoneGarden" Inherits="r_KingdomCairn">
+    <part Name="Render" DisplayName="cragmensch stone-garden" ColorString="&amp;w" DetailColor="K" />
+    <part Name="Description" Short="Warm slabs are set far enough apart for a great mineral body to rest among them. Their courses carry footsteps through the ground long before a voice reaches the court." />
+    <part Name="Physics" Solid="false" />
+  </object>
+  <object Name="r_KingdomRobotChargeBay" Inherits="r_KingdomChargingPost">
+    <part Name="Render" DisplayName="robot charge-bay" ColorString="&amp;C" DetailColor="c" />
+    <part Name="Description" Short="Dry contacts run beside a grounded turning rail. The bay is built to admit a metal body, service it without ceremony, and send it back out under its own charge." />
+    <part Name="Physics" Solid="false" />
+  </object>
+  <object Name="r_KingdomBaetylOfferingFrame" Inherits="r_KingdomTemple">
+    <part Name="Render" DisplayName="baetyl offering-frame" ColorString="&amp;W" DetailColor="C" />
+    <part Name="Description" Short="A measured gantry holds requested objects on one side and recorded answers on the other. The empty centre belongs to the baetyl, whether one is present or not." />
+    <part Name="Physics" Solid="false" />
+  </object>
+  <object Name="r_KingdomDromadCaravanShade" Inherits="r_KingdomHall">
+    <part Name="Render" DisplayName="dromad caravan-shade" ColorString="&amp;Y" DetailColor="C" />
+    <part Name="Description" Short="A broad awning covers sample racks, water measures, and enough turning room for a laden beast. No wall closes the road; a market that cannot leave is only a storehouse." />
+    <part Name="Physics" Solid="false" />
+  </object>
+  <object Name="r_KingdomEntropyBlind" Inherits="r_KingdomWorkshop">
+    <part Name="Render" DisplayName="entropy blind" ColorString="&amp;M" DetailColor="K" />
+    <part Name="Description" Short="Offset stone and cloth baffles surround a witness plate scored by warm static. The arrangement does not master disorder. It lets careful minds stand near it long enough to write." />
+    <part Name="Physics" Solid="false" />
+  </object>
+  <object Name="r_KingdomGoatfolkHornMoot" Inherits="r_KingdomHall">
+    <part Name="Render" DisplayName="goatfolk horn-moot" ColorString="&amp;y" DetailColor="W" />
+    <part Name="Description" Short="Horn posts mark a ring whose centre remains bare for challenge, dancing, and judgment. A decision made here has been heard from every side before it leaves." />
+    <part Name="Physics" Solid="false" />
+  </object>
+  <object Name="r_KingdomSvardymBrineNursery" Inherits="r_KingdomField">
+    <part Name="Render" DisplayName="svardym brine-nursery" ColorString="&amp;c" DetailColor="b" />
+    <part Name="Description" Short="Shallow cool basins join through a wet crawl, with feeding shelves kept just above the waterline. It is nursery, pantry, and comfortable ground to bodies the dry air punishes." />
+    <part Name="Physics" Solid="false" />
+    <tag Name="r_KingdomCropRows" Value="8" />
+  </object>
+  <object Name="r_KingdomNaphtaaliScrapAltar" Inherits="r_KingdomTemple">
+    <part Name="Render" DisplayName="Naphtaali scrap-altar" ColorString="&amp;C" DetailColor="Y" />
+    <part Name="Description" Short="Bright fragments are wired around a guarded niche, not repaired and not mistaken for refuse. Offerings enter by the narrow way and leave, if they leave, under witness." />
+    <part Name="Physics" Solid="false" />
+  </object>
+  <object Name="r_KingdomTrollBridgeCourt" Inherits="r_KingdomHall">
+    <part Name="Render" DisplayName="troll bridge-court" ColorString="&amp;w" DetailColor="y" />
+    <part Name="Description" Short="Three heavy spans meet at a toll-stone. Each will bear a troll's weight, and each forces a visitor to choose which approach they mean before they reach the middle." />
+    <part Name="Physics" Solid="false" />
+  </object>
+  <object Name="r_KingdomIssachariRiflePorch" Inherits="r_KingdomRampart">
+    <part Name="Render" DisplayName="Issachari rifle-porch" ColorString="&amp;y" DetailColor="R" />
+    <part Name="Description" Short="A shaded rest braces a long gun toward the road. Its flanks are screened against glare and gossip alike; the one clear sightline is the one that matters." />
+    <part Name="Physics" Solid="false" />
+  </object>
+  <object Name="r_KingdomStrangersGuestScreen" Inherits="r_KingdomHut">
+    <part Name="Render" DisplayName="strangers' guest-screen" ColorString="&amp;K" DetailColor="W" />
+    <part Name="Description" Short="Two private alcoves share a small vestibule and no register. The door keeps weather out, asks no name, and opens back onto the road without passing another bed." />
+    <part Name="Physics" Solid="false" />
+  </object>
+  <object Name="r_KingdomHindrenMoonCourt" Inherits="r_KingdomHall">
+    <part Name="Render" DisplayName="hindren moon-court" ColorString="&amp;W" DetailColor="b" />
+    <part Name="Description" Short="Pale stones ring a clear place for dancing, testimony, and judgment beneath the moon. The entries face one another so nobody takes the court without being seen." />
+    <part Name="Physics" Solid="false" />
+  </object>
+  <object Name="r_KingdomMopangoRefugeKitchen" Inherits="r_KingdomLarder">
+    <part Name="Render" DisplayName="mopango refuge-kitchen" ColorString="&amp;y" DetailColor="g" />
+    <part Name="Description" Short="Two hearths crouch behind a windbreak, one cooking while the other keeps yesterday's pot warm. The serving gap faces inward, where a hidden camp becomes a household." />
+    <part Name="Physics" Solid="false" />
+    <tag Name="r_KingdomLarderCapacity" Value="128" />
+  </object>
+  <object Name="r_KingdomGirshRotChapel" Inherits="r_KingdomTemple">
+    <part Name="Render" DisplayName="Girsh rot-chapel" ColorString="&amp;m" DetailColor="r" />
+    <part Name="Description" Short="Six dressed drains descend toward a vessel sealed in old metal. What gathers there is kept as sacrament and specimen together, and the dry walk never crosses its course." />
+    <part Name="Physics" Solid="false" />
+  </object>
+  <object Name="r_KingdomTemplarPurityArsenal" Inherits="r_KingdomRampart">
+    <part Name="Render" DisplayName="Templar purity-arsenal" ColorString="&amp;W" DetailColor="R" />
+    <part Name="Description" Short="Whitewashed racks stand behind one narrow inspection lane. Arms pass from unclean entry to ordered issue without either path touching the other." />
+    <part Name="Physics" Solid="false" />
+  </object>
+  <object Name="r_KingdomGyreWightAshCourt" Inherits="r_KingdomTemple">
+    <part Name="Render" DisplayName="Gyre-wight ash-court" ColorString="&amp;K" DetailColor="m" />
+    <part Name="Description" Short="A crooked procession winds among four cold braziers and returns nowhere near where it began. Ash marks the path more reliably than stone." />
+    <part Name="Physics" Solid="false" />
+  </object>
+  <object Name="r_KingdomMamonTitheCistern" Inherits="r_KingdomTemple">
+    <part Name="Render" DisplayName="Mamon tithe-cistern" ColorString="&amp;r" DetailColor="R" />
+    <part Name="Description" Short="A red-sealed basin lies beyond a counting shelf and below a dry witness step. The gift descends. The record does not." />
+    <part Name="Physics" Solid="false" />
+  </object>
+  <object Name="r_KingdomSeekersQuietCell" Inherits="r_KingdomWorkshop">
+    <part Name="Render" DisplayName="Seekers' quiet cell" ColorString="&amp;b" DetailColor="M" />
+    <part Name="Description" Short="Thick stone and hanging cloth baffles turn every passage before it reaches one unadorned seat. A mind working here hears itself before it hears the street." />
+    <part Name="Physics" Solid="false" />
+  </object>
+  <object Name="r_KingdomWardensWatchLodge" Inherits="r_KingdomRampart">
+    <part Name="Render" DisplayName="Wardens' watch-lodge" ColorString="&amp;G" DetailColor="W" />
+    <part Name="Description" Short="A public bench faces the visitor while a clear side passage faces the road. Hospitality and vigilance occupy the same room without pretending to be the same duty." />
+    <part Name="Physics" Solid="false" />
+  </object>
+  <object Name="r_KingdomWaterBaronsGaugeHouse" Inherits="r_KingdomCaskRack">
+    <part Name="Render" DisplayName="water-baron gauge-house" ColorString="&amp;B" DetailColor="Y" />
+    <part Name="Description" Short="Sealed measures hang beside witness marks cut into stone. The sluice has one lock, the register has another, and neither can be opened unseen from the gauging step." />
+    <part Name="Physics" Solid="false" />
+  </object>
+  <object Name="r_KingdomMerchantWeighingHouse" Inherits="r_KingdomHall">
+    <part Name="Render" DisplayName="merchant weighing-house" ColorString="&amp;Y" DetailColor="W" />
+    <part Name="Description" Short="Two scales face a public price board while three seals wait at the clerk's table. Buyer, seller, and guild can each see where a measure changed hands." />
+    <part Name="Physics" Solid="false" />
+  </object>
+  <object Name="r_KingdomFarmersSeedCommons" Inherits="r_KingdomGranary">
+    <part Name="Render" DisplayName="farmers' seed-commons" ColorString="&amp;g" DetailColor="y" />
+    <part Name="Description" Short="Labelled bins surround a threshing floor held in common. Seed enters by crop and season, and leaves only after the next field has been named." />
+    <part Name="Physics" Solid="false" />
+  </object>
+  <object Name="r_KingdomReshephHospice" Inherits="r_KingdomBathhouse">
+    <part Name="Render" DisplayName="Resheph's hospice" ColorString="&amp;W" DetailColor="G" />
+    <part Name="Description" Short="Clean pallets face an open basin and no door is barred. The room is ordered for tending rather than worship, which is how its devotion is shown." />
+    <part Name="Physics" Solid="false" />
+  </object>
+  <object Name="r_KingdomDaughtersRepairLodge" Inherits="r_KingdomWorkshop">
+    <part Name="Render" DisplayName="Daughters' repair-lodge" ColorString="&amp;C" DetailColor="R" />
+    <part Name="Description" Short="Broken tools enter at the stripping bench, cross a rack of named parts, and leave by the fitting bench. The route teaches repair by making every failure visible." />
+    <part Name="Physics" Solid="false" />
+  </object>
+  <object Name="r_KingdomYdVineBower" Inherits="r_KingdomField">
+    <part Name="Render" DisplayName="Yd vine-bower" ColorString="&amp;g" DetailColor="M" />
+    <part Name="Description" Short="Fruiting trellises turn around a table left open to travellers. Shade, food, and talk arrive by the same paths and none is kept behind a wall." />
+    <part Name="Physics" Solid="false" />
+    <tag Name="r_KingdomCropRows" Value="6" />
+  </object>
+  <object Name="r_KingdomChavvahBoughSchool" Inherits="r_KingdomWorkshop">
+    <part Name="Render" DisplayName="Chavvah bough-school" ColorString="&amp;g" DetailColor="W" />
+    <part Name="Description" Short="Low desks stand in living shade, every aisle curving around the trunk at the centre. Teaching bends to the life already there instead of cutting through it." />
+    <part Name="Physics" Solid="false" />
+  </object>
+
+  <!-- Physical raid-demand channels. Central incident state owns authority; these unstackable,
+       valueless witnesses only deliver/read/respond and become inert if copied or superseded. -->
+  <object Name="r_KingdomRaidDemand" Inherits="Object">
+    <part Name="Render" DisplayName="faction demand" RenderString="=" RenderLayer="5" Tile="Items/sw_unfurled_scroll2.bmp" ColorString="&amp;w" TileColor="&amp;w" DetailColor="r" />
+    <part Name="Physics" Takeable="true" Weight="0" />
+    <part Name="Commerce" Value="0" />
+    <part Name="Description" Short="A witnessed demand carried from a named grievance. Its marks mean nothing without the living incident recorded behind them." />
+    <part Name="r_KingdomRaidDemand" />
+    <part Name="Unreplicable" />
+    <tag Name="NoStack" Value="1" />
+  </object>
+  <object Name="r_KingdomSnapjawDemand" Inherits="r_KingdomRaidDemand">
+    <part Name="Render" DisplayName="knotted snapjaw demand-cord" ColorString="&amp;y" DetailColor="r" />
+    <part Name="Description" Short="Salt-stiff cord knots hide tabs, tooth nicks, and one red thread into a snapjaw road-claim. Reading it means acknowledging the demand; carrying it keeps the answer-road open." />
+  </object>
+  <object Name="r_KingdomBaboonDemand" Inherits="r_KingdomRaidDemand">
+    <part Name="Render" DisplayName="tooth-marked troop writ" ColorString="&amp;Y" DetailColor="b" />
+    <part Name="Description" Short="Barkcloth bears ranked tooth marks and a charcoal path-sign. The troop's grievance can be answered wherever this exact writ is carried." />
+  </object>
+  <object Name="r_KingdomGoatfolkDemand" Inherits="r_KingdomRaidDemand">
+    <part Name="Render" DisplayName="horn-sealed goatfolk demand" ColorString="&amp;g" DetailColor="R" />
+    <part Name="Description" Short="Cured hide is scored in the cadence of distant war-horns and sealed with a horn shaving. It names water, ground, and the band expecting an answer." />
+  </object>
+  <object Name="r_KingdomCannibalDemand" Inherits="r_KingdomRaidDemand">
+    <part Name="Render" DisplayName="pilgrim-road bone tally" ColorString="&amp;w" DetailColor="r" />
+    <part Name="Description" Short="A thin bone tally is wrapped in roadcloth, its cuts matched by a short inked demand. It is unpleasant, legible, and exact." />
+  </object>
+  <object Name="r_KingdomIssachariDemand" Inherits="r_KingdomRaidDemand">
+    <part Name="Render" DisplayName="riflecloth demand-writ" ColorString="&amp;y" DetailColor="R" />
+    <part Name="Description" Short="A clean strip of riflecloth carries a measured desert claim in oil-black script. The answering terms are aligned like sights along its edge." />
   </object>
 
 </objects>

@@ -21,8 +21,30 @@
 set -euo pipefail
 
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-LIVE_DEFAULT="/mnt/c/Users/Reegan/AppData/LocalLow/Freehold Games/CavesOfQud/Mods/ThousandAndFirst"
-LIVE="${TAF_LIVE_MOD:-$LIVE_DEFAULT}"
+default_live_mod() {
+	# Deployment is WSL/Windows-only, but inventory checks also run on Linux CI. Derive the
+	# interactive Windows account when interop exists; never bake a maintainer name into the tool.
+	command -v powershell.exe >/dev/null 2>&1 || return 0
+	command -v wslpath >/dev/null 2>&1 || return 0
+	local windows_profile wsl_profile
+	windows_profile="$(powershell.exe -NoProfile -Command \
+		"[Environment]::GetFolderPath('UserProfile')" 2>/dev/null | tr -d '\r' | tail -n 1)"
+	[ -n "$windows_profile" ] || return 0
+	wsl_profile="$(wslpath -u "$windows_profile" 2>/dev/null)" || return 0
+	[ -n "$wsl_profile" ] || return 0
+	printf '%s\n' "$wsl_profile/AppData/LocalLow/Freehold Games/CavesOfQud/Mods/ThousandAndFirst"
+}
+
+LIVE="${TAF_LIVE_MOD:-}"
+
+resolve_live_mod() {
+	[ -z "$LIVE" ] || return 0
+	LIVE="$(default_live_mod)"
+	[ -n "$LIVE" ] || {
+		echo "cannot derive the live mod folder; set TAF_LIVE_MOD explicitly" >&2
+		return 2
+	}
+}
 
 # The runtime set, stated as an EXCLUSION rather than a list of blessed directories.
 #
@@ -36,7 +58,7 @@ LIVE="${TAF_LIVE_MOD:-$LIVE_DEFAULT}"
 # live folder or the Workshop.
 EXCLUDE_DIRS=(.git _notes DevTests Art docs Tools .ruff_cache __pycache__ .agent-handoff)
 # Metadata that is harmless in a mod folder and wanted on the Workshop.
-ROOT_META=(README.md LICENSE CHANGELOG.md manifest.json modconfig.json preview.png workshop.json)
+ROOT_META=(README.md LICENSE NOTICE CHANGELOG.md manifest.json modconfig.json preview.png workshop.json)
 # Asset trees copied whole.
 ASSET_DIRS=(Textures)
 
@@ -384,6 +406,7 @@ live_list() {
 # Core/Foo.cs through a linked Core/ would leave the live root while still writing elsewhere.
 validate_live_target() {
 	local live_lex live_real repo_real linked special hardlink boundary overlap
+	resolve_live_mod || exit $?
 	[ -n "$LIVE" ] || { echo "live mod folder is empty" >&2; exit 2; }
 	live_lex="$(realpath -ms -- "$LIVE")"
 	repo_real="$(realpath -e -- "$REPO")"
@@ -505,6 +528,7 @@ cmd_diff() (
 	# Keep cleanup scoped to this diff invocation.  A RETURN trap installed in
 	# a function leaks into its caller on this Bash path; once cmd_diff returns,
 	# its local tmp is gone and the caller's RETURN trips `set -u`.
+	resolve_live_mod || exit $?
 	local tmp; tmp="$(mktemp -d)"
 	trap 'rm -rf -- "$tmp"' EXIT
 	sorted_list > "$tmp/staged"

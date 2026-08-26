@@ -17,14 +17,11 @@ buildings that introduce new mechanics, new ways to play, and new endgame conten
 Same rigour as `_notes/VANILLA-PRODUCTION-TRUTH.md` and `_notes/EVOLVING-HEART-RESEARCH.md`.
 Ground truth:
 
-- **`D/`** — decompile of build 2.0.211.51 at
-  `/home/r/coq/qud_helper/game_base/decompiled/2.0.211.51-ilspy9.1/`.
-- **`B/`** — shipped game data at `/home/r/coq/qud_helper/game_base/Base/`.
-- **`T/`** — this mod's own source at `/home/r/work/thousand-and-first/`.
-- **`W/`** — the installed Steam Workshop tree at
-  `/mnt/f/SteamLibrary/steamapps/workshop/content/333640/`.
-- **`M/`** — local mods at
-  `/mnt/c/Users/Reegan/AppData/LocalLow/Freehold Games/CavesOfQud/Mods/`.
+- **`D/`** — a local decompile of the pinned build 2.0.211.51 assembly.
+- **`B/`** — the licensed installation's shipped game-data root.
+- **`T/`** — this repository root.
+- **`W/`** — that contributor's installed Steam Workshop tree for app 333640.
+- **`M/`** — that contributor's local Caves of Qud Mods root.
 
 Every load-bearing claim cites `file:line` or an exact blueprint/attribute name. Anything not read
 directly is marked **INFERRED** or **UNVERIFIED**. Runtime behaviour is never asserted from source
@@ -158,7 +155,7 @@ inert if nothing supplies them:
 | `rite:` | a technique learned at a water ritual | the founder's own `<waterritual>` grants, mirrored | **never** — a thing you learned is learned |
 | `machine:` | *shipped* — a certified salvage | *shipped* | never (already one-way, `T/Growth/KingdomZoning.cs:173-183`) |
 | `disk:` | *shipped* — a taught recipe | *shipped* | never |
-| `pattern:` | *shipped by convention* — a foreign design | the pattern-book ceremony (`T/Experience/KingdomCeremonyRules.cs:560-594`) | never |
+| `pattern:` | *shipped by convention* — a foreign design | additive pattern-book knowledge frozen and settled by its CharterDelivery receipt (`Trade/KingdomTradePatternRules.cs`, produced by `Experience/KingdomCeremony.FreezePatternBook`) | never |
 
 The distinction between kinds that **leave with the people** and kinds that **stay** is the whole
 of the design's honesty, and it is already the shipped rule, stated in the source:

@@ -140,10 +140,32 @@ namespace ThousandAndFirst.Tests
 		[TestCase(KingdomWorkKind.Producer, KingdomWorkClass.Producer)]
 		[TestCase(KingdomWorkKind.Refiner, KingdomWorkClass.Refiner)]
 		[TestCase(KingdomWorkKind.Power, KingdomWorkClass.Power)]
+		[TestCase(KingdomWorkKind.Construction, KingdomWorkClass.Construction)]
 		public void Class_MapsBothWays(KingdomWorkKind kind, KingdomWorkClass expected)
 		{
 			Assert.AreEqual(expected, KingdomReadingRules.Class(kind));
 			Assert.AreEqual(kind, KingdomReadingRules.Kind(expected));
+		}
+
+		/// <summary>Rows and posts share this exact pure priority table. Each engine-supported work
+		/// class reaches a distinct row kind; mixed traits resolve deterministically.</summary>
+		[TestCase(false, false, false, false, false, false, KingdomWorkKind.Other)]
+		[TestCase(true, false, false, false, false, false, KingdomWorkKind.Growing)]
+		[TestCase(false, true, false, false, false, false, KingdomWorkKind.Construction)]
+		[TestCase(false, false, true, false, false, false, KingdomWorkKind.Store)]
+		[TestCase(false, false, false, true, false, false, KingdomWorkKind.Power)]
+		[TestCase(false, false, false, false, true, false, KingdomWorkKind.Refiner)]
+		[TestCase(false, false, false, false, false, true, KingdomWorkKind.Producer)]
+		[TestCase(true, true, true, true, true, true, KingdomWorkKind.Growing)]
+		[TestCase(false, true, true, true, true, true, KingdomWorkKind.Construction)]
+		[TestCase(false, false, false, true, true, true, KingdomWorkKind.Power)]
+		[TestCase(false, false, false, false, true, true, KingdomWorkKind.Refiner)]
+		public void Classifier_MapsEveryActualTraitThroughOnePriorityTable(bool growing,
+			bool construction, bool store, bool power, bool refiner, bool producer,
+			KingdomWorkKind expected)
+		{
+			Assert.AreEqual(expected, KingdomWorkRules.Classify(new KingdomWorkTraits(growing,
+				construction, store, power, refiner, producer)));
 		}
 
 		/// <summary>A model kind the published vocabulary has never heard of reads as Other rather

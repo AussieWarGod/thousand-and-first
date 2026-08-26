@@ -74,15 +74,65 @@ from pathlib import Path
 root = Path(sys.argv[1])
 candidate = sys.argv[2]
 private_receipt = root / "docs/PRIVATE_PACKAGE_RECEIPT.sha256"
+artifact_root = root / "docs/release-evidence"
+artifact_root.mkdir(parents=True, exist_ok=True)
+def retain(filename: str, payload: bytes) -> tuple[str, str]:
+    path = artifact_root / filename
+    path.write_bytes(payload)
+    return (
+        "docs/release-evidence/" + filename,
+        hashlib.sha256(payload).hexdigest(),
+    )
+
+def binding(pass_id: str, filename: str, payload=None) -> dict:
+    if payload is None:
+        payload = (pass_id + "\n").encode("utf-8")
+    artifact, digest = retain(filename, payload)
+    return {
+        "passId": pass_id,
+        "artifactRef": artifact,
+        "artifactSha256": digest,
+    }
+
+protocol_ref, protocol_digest = retain(
+    "numbered-protocols.txt", b"0a passed\n55f3 passed\n124i passed\n"
+)
+
 evidence = {
-    "schemaVersion": 1,
+    "schemaVersion": 3,
     "releaseVersion": "0.2.0",
     "candidateCommit": candidate,
     "gameMarketingVersion": "1.0.5",
     "gameCoreBuild": "2.0.211.51",
+    "gameAssemblySha256": "a" * 64,
     "workshopId": 123456789,
     "previewSha256": hashlib.sha256((root / "preview.png").read_bytes()).hexdigest(),
     "privatePackageReceiptSha256": hashlib.sha256(private_receipt.read_bytes()).hexdigest(),
+    "verification": {
+        "nativeCompileLoad": binding(
+            "native-compile-load",
+            "native-compile-load.txt",
+            (
+                "native-compile-load\n"
+                + "Assembly-CSharp SHA-256: " + "a" * 64 + "\n"
+            ).encode("utf-8"),
+        ),
+        "architectureGallery": binding(
+            "architecture-gallery", "architecture-gallery.txt"),
+        "controllerAndColor": binding(
+            "controller-color-accessibility", "controller-color.txt"),
+        "denseCityPerformance": binding(
+            "dense-city-performance", "dense-city-performance.csv"),
+        "oneSurveyReceipt": binding(
+            "one-survey-receipt", "one-survey-receipt.txt"),
+        "compatibilityMatrix": binding(
+            "compatibility-matrix", "compatibility-matrix.csv"),
+        "numberedProtocols": {
+            "artifactRef": protocol_ref,
+            "artifactSha256": protocol_digest,
+            "passIds": ["0a", "55f3", "124i"],
+        },
+    },
     "privateSubscription": {
         "source": "steam-subscription",
         "inventory": "clean",
@@ -154,18 +204,56 @@ from pathlib import Path
 
 path = Path(sys.argv[1])
 text = path.read_text(encoding="utf-8")
-old = "ROOT_META=(README.md LICENSE CHANGELOG.md manifest.json modconfig.json preview.png workshop.json)"
-new = "ROOT_META=(README.md LICENSE CHANGELOG.md manifest.json modconfig.json preview.png workshop.json Dormant.dat)"
+old = "ROOT_META=(README.md LICENSE NOTICE CHANGELOG.md manifest.json modconfig.json preview.png workshop.json)"
+new = "ROOT_META=(README.md LICENSE NOTICE CHANGELOG.md manifest.json modconfig.json preview.png workshop.json Dormant.dat)"
 if text.count(old) != 1:
     raise SystemExit("stage-rule drift fixture could not find ROOT_META")
 path.write_text(text.replace(old, new), encoding="utf-8")
 PY
 }
 
-mkdir -p "$BASE/Tools" "$BASE/Core"
+write_structure_review() {
+	local repo="$1" inventory_sha
+	inventory_sha="$(
+		PYTHONDONTWRITEBYTECODE=1 python3 "$repo/Tools/check-structure.py" \
+			--repo-root "$repo" --json \
+			| python3 -c 'import json, sys; print(json.load(sys.stdin)["inventorySha256"])'
+	)"
+	mkdir -p -- "$repo/docs"
+	python3 - "$repo/docs/STRUCTURE_REVIEW.json" "$inventory_sha" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+path = Path(sys.argv[1])
+inventory_sha = sys.argv[2]
+payload = {
+    "schemaVersion": 1,
+    "inventorySha256": inventory_sha,
+    "exceptions": [],
+    "reviewedBy": "TAF package harness",
+    "completedUtc": "2026-08-27T00:00:00Z",
+    "oneResponsibility": {
+        "status": "passed",
+        "notes": "Fixture review: Core/Test.cs is one one-line runtime declaration.",
+    },
+    "protocolsAtBoundaries": {
+        "status": "passed",
+        "notes": "Fixture review: Core/Test.cs has no engine, serialization, API, or extension boundary.",
+    },
+}
+path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+PY
+}
+
+mkdir -p "$BASE/Tools" "$BASE/Core" "$BASE/Art"
 cp -- "$SOURCE_REPO/Tools/stage.sh" "$BASE/Tools/stage.sh"
 cp -- "$SOURCE_REPO/Tools/workshop-package.sh" "$BASE/Tools/workshop-package.sh"
 cp -- "$SOURCE_REPO/Tools/workshop_metadata.py" "$BASE/Tools/workshop_metadata.py"
+cp -- "$SOURCE_REPO/Tools/check-structure.py" "$BASE/Tools/check-structure.py"
+cp -- "$SOURCE_REPO/Art/check_wiring.py" "$BASE/Art/check_wiring.py"
+cp -- "$SOURCE_REPO/Art/runtime-assets.json" "$BASE/Art/runtime-assets.json"
+cp -- "$SOURCE_REPO/TESTING.md" "$BASE/TESTING.md"
 chmod +x "$BASE/Tools/stage.sh" "$BASE/Tools/workshop-package.sh" "$BASE/Tools/workshop_metadata.py"
 printf '%s\n' '// fixture runtime' > "$BASE/Core/Test.cs"
 printf '%s\n' '<objects />' > "$BASE/ObjectBlueprints.xml"
@@ -209,6 +297,8 @@ png = (
 )
 (root / "preview.png").write_bytes(png)
 PY
+
+write_structure_review "$BASE"
 
 git -C "$BASE" init -q
 git -C "$BASE" config user.name "TAF package harness"
@@ -721,8 +811,46 @@ runtime_raster="$(clone_case runtime-raster)"
 mkdir "$runtime_raster/Textures"
 cp "$runtime_raster/preview.png" "$runtime_raster/Textures/forbidden.PnG"
 commit_all "$runtime_raster" "add case-variant runtime raster"
-expect_fail "case-insensitive runtime raster" "forbidden runtime raster: Textures/forbidden.PnG" \
+expect_fail "case-insensitive runtime raster" \
+	"bundled runtime art is absent from provenance manifest: Textures/forbidden.PnG" \
 	"$runtime_raster/Tools/workshop-package.sh" --test "$FIXTURE_ROOT/runtime-raster-package"
+
+allowlisted_raster="$(clone_case allowlisted-runtime-raster)"
+mkdir -p "$allowlisted_raster/Textures" "$allowlisted_raster/Art/Sources"
+cp "$allowlisted_raster/preview.png" "$allowlisted_raster/Textures/fixture.png"
+cp "$allowlisted_raster/preview.png" "$allowlisted_raster/Art/Sources/fixture.png"
+python3 - "$allowlisted_raster" <<'PY'
+import hashlib
+import json
+import sys
+from pathlib import Path
+
+root = Path(sys.argv[1])
+runtime = root / "Textures/fixture.png"
+manifest = {
+    "schema": 1,
+    "assets": [{
+        "tile": "ThousandAndFirst/fixture.png",
+        "path": "Textures/fixture.png",
+        "sha256": hashlib.sha256(runtime.read_bytes()).hexdigest(),
+        "creator": "TAF package harness",
+        "created": "2026-08-26",
+        "license": "test fixture only",
+        "source": "Art/Sources/fixture.png",
+        "method": "copied deterministic fixture bytes",
+        "fallback": "tiles/sw_wall.bmp",
+        "review": "approved by the package harness",
+    }],
+}
+(root / "Art/runtime-assets.json").write_text(
+    json.dumps(manifest, indent=2) + "\n", encoding="utf-8"
+)
+PY
+commit_all "$allowlisted_raster" "add allowlisted runtime raster"
+allowlisted_dest="$FIXTURE_ROOT/allowlisted-runtime-raster-package"
+"$allowlisted_raster/Tools/workshop-package.sh" --test "$allowlisted_dest" >/dev/null
+[ -f "$allowlisted_dest/Textures/fixture.png" ]
+"$allowlisted_raster/Tools/stage.sh" verify "$allowlisted_dest" >/dev/null
 
 oversized="$(clone_case oversized-description)"
 python3 - "$oversized/manifest.json" <<'PY'
@@ -855,13 +983,33 @@ from pathlib import Path
 
 path = Path(sys.argv[1])
 data = json.loads(path.read_text(encoding="utf-8"))
-data["schemaVersion"] = 1.0
+data["schemaVersion"] = 3.0
 path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
 PY
 commit_all "$numeric_evidence" "numeric evidence types"
-expect_fail "floating-point release evidence" "schemaVersion must be 1" \
+expect_fail "floating-point release evidence" "schemaVersion must be 3" \
 	"$numeric_evidence/Tools/workshop-package.sh" --release \
 	"$FIXTURE_ROOT/numeric-evidence-package"
+
+assembly_mismatch="$(clone_case mismatched-game-assembly-receipt)"
+assembly_mismatch_candidate="$(freeze_private_candidate "$assembly_mismatch")"
+write_workshop "$assembly_mismatch" 2
+write_evidence "$assembly_mismatch" "$assembly_mismatch_candidate"
+python3 - "$assembly_mismatch/docs/RELEASE_EVIDENCE.json" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+path = Path(sys.argv[1])
+data = json.loads(path.read_text(encoding="utf-8"))
+data["gameAssemblySha256"] = "b" * 64
+path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+PY
+commit_all "$assembly_mismatch" "mismatch game assembly receipt"
+expect_fail "mismatched game assembly receipt" \
+	"gameAssemblySha256 must match the unique Assembly-CSharp SHA-256 receipt in verification.nativeCompileLoad" \
+	"$assembly_mismatch/Tools/workshop-package.sh" --release \
+	"$FIXTURE_ROOT/assembly-mismatch-package"
 
 numeric_id_evidence="$(clone_case numeric-workshop-id-evidence)"
 numeric_id_candidate="$(freeze_private_candidate "$numeric_id_evidence")"
@@ -903,6 +1051,150 @@ expect_fail "numeric release evidence booleans" \
 	"$boolean_evidence/Tools/workshop-package.sh" --release \
 	"$FIXTURE_ROOT/boolean-evidence-package"
 
+missing_verification="$(clone_case missing-verification-lane)"
+missing_verification_candidate="$(freeze_private_candidate "$missing_verification")"
+write_workshop "$missing_verification" 2
+write_evidence "$missing_verification" "$missing_verification_candidate"
+python3 - "$missing_verification/docs/RELEASE_EVIDENCE.json" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+path = Path(sys.argv[1])
+data = json.loads(path.read_text(encoding="utf-8"))
+del data["verification"]["oneSurveyReceipt"]
+path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+PY
+commit_all "$missing_verification" "missing verification lane"
+expect_fail "missing verification lane" \
+	"verification fields must exactly match schema version 3" \
+	"$missing_verification/Tools/workshop-package.sh" --release \
+	"$FIXTURE_ROOT/missing-verification-package"
+
+bad_artifact="$(clone_case invalid-verification-artifact)"
+bad_artifact_candidate="$(freeze_private_candidate "$bad_artifact")"
+write_workshop "$bad_artifact" 2
+write_evidence "$bad_artifact" "$bad_artifact_candidate"
+python3 - "$bad_artifact/docs/RELEASE_EVIDENCE.json" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+path = Path(sys.argv[1])
+data = json.loads(path.read_text(encoding="utf-8"))
+data["verification"]["architectureGallery"]["artifactSha256"] = "0" * 64
+path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+PY
+commit_all "$bad_artifact" "invalid verification artifact hash"
+expect_fail "invalid verification artifact hash" \
+	"verification.architectureGallery.artifactSha256 must be a nonzero lowercase SHA-256" \
+	"$bad_artifact/Tools/workshop-package.sh" --release \
+	"$FIXTURE_ROOT/bad-artifact-package"
+
+drifted_artifact="$(clone_case drifted-verification-artifact)"
+drifted_artifact_candidate="$(freeze_private_candidate "$drifted_artifact")"
+write_workshop "$drifted_artifact" 2
+write_evidence "$drifted_artifact" "$drifted_artifact_candidate"
+printf '%s\n' 'changed after the recorded pass' > \
+	"$drifted_artifact/docs/release-evidence/architecture-gallery.txt"
+commit_all "$drifted_artifact" "drift retained verification artifact"
+expect_fail "drifted verification artifact" \
+	"verification.architectureGallery.artifactSha256 must match retained artifact" \
+	"$drifted_artifact/Tools/workshop-package.sh" --release \
+	"$FIXTURE_ROOT/drifted-artifact-package"
+
+bad_pass_id="$(clone_case invalid-verification-pass-id)"
+bad_pass_id_candidate="$(freeze_private_candidate "$bad_pass_id")"
+write_workshop "$bad_pass_id" 2
+write_evidence "$bad_pass_id" "$bad_pass_id_candidate"
+python3 - "$bad_pass_id/docs/RELEASE_EVIDENCE.json" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+path = Path(sys.argv[1])
+data = json.loads(path.read_text(encoding="utf-8"))
+data["verification"]["denseCityPerformance"]["passId"] = "performance"
+path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+PY
+commit_all "$bad_pass_id" "invalid verification pass id"
+expect_fail "invalid verification pass id" \
+	"verification.denseCityPerformance.passId must be 'dense-city-performance'" \
+	"$bad_pass_id/Tools/workshop-package.sh" --release \
+	"$FIXTURE_ROOT/bad-pass-id-package"
+
+protocol_range="$(clone_case ranged-protocol-evidence)"
+protocol_range_candidate="$(freeze_private_candidate "$protocol_range")"
+write_workshop "$protocol_range" 2
+write_evidence "$protocol_range" "$protocol_range_candidate"
+python3 - "$protocol_range/docs/RELEASE_EVIDENCE.json" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+path = Path(sys.argv[1])
+data = json.loads(path.read_text(encoding="utf-8"))
+data["verification"]["numberedProtocols"]["passIds"] = ["55f3-55f8"]
+path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+PY
+commit_all "$protocol_range" "ranged protocol evidence"
+expect_fail "ranged protocol evidence" \
+	"passIds must contain exact individual TESTING.md IDs" \
+	"$protocol_range/Tools/workshop-package.sh" --release \
+	"$FIXTURE_ROOT/protocol-range-package"
+
+unknown_protocol="$(clone_case unknown-protocol-evidence)"
+unknown_protocol_candidate="$(freeze_private_candidate "$unknown_protocol")"
+write_workshop "$unknown_protocol" 2
+write_evidence "$unknown_protocol" "$unknown_protocol_candidate"
+python3 - "$unknown_protocol/docs/RELEASE_EVIDENCE.json" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+path = Path(sys.argv[1])
+data = json.loads(path.read_text(encoding="utf-8"))
+data["verification"]["numberedProtocols"]["passIds"] = ["999z9"]
+path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+PY
+commit_all "$unknown_protocol" "unknown protocol evidence"
+expect_fail "unknown protocol evidence" \
+	"passIds are absent from TESTING.md: 999z9" \
+	"$unknown_protocol/Tools/workshop-package.sh" --release \
+	"$FIXTURE_ROOT/unknown-protocol-package"
+
+missing_structure="$(clone_case missing-structure-review)"
+missing_structure_candidate="$(freeze_private_candidate "$missing_structure")"
+write_workshop "$missing_structure" 2
+write_evidence "$missing_structure" "$missing_structure_candidate"
+rm -- "$missing_structure/docs/STRUCTURE_REVIEW.json"
+commit_all "$missing_structure" "remove structural review"
+git -C "$missing_structure" tag -a v0.2.0 -m "fixture release"
+expect_fail "missing structural review" "exact-inventory semantic review is missing" \
+	"$missing_structure/Tools/workshop-package.sh" --release \
+	"$FIXTURE_ROOT/missing-structure-package"
+
+stale_structure="$(clone_case stale-structure-review)"
+stale_structure_candidate="$(freeze_private_candidate "$stale_structure")"
+write_workshop "$stale_structure" 2
+write_evidence "$stale_structure" "$stale_structure_candidate"
+python3 - "$stale_structure/docs/STRUCTURE_REVIEW.json" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+path = Path(sys.argv[1])
+data = json.loads(path.read_text(encoding="utf-8"))
+data["inventorySha256"] = "0" * 64
+path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+PY
+commit_all "$stale_structure" "stale structural review"
+git -C "$stale_structure" tag -a v0.2.0 -m "fixture release"
+expect_fail "stale structural review" \
+	"semantic review does not bind the current staged C# inventory" \
+	"$stale_structure/Tools/workshop-package.sh" --release \
+	"$FIXTURE_ROOT/stale-structure-package"
+
 branch_only="$(clone_case branch-only-tag)"
 branch_candidate="$(freeze_private_candidate "$branch_only")"
 write_workshop "$branch_only" 2
@@ -941,6 +1233,7 @@ mutated_candidate="$(freeze_private_candidate "$mutated")"
 write_workshop "$mutated" 2
 write_evidence "$mutated" "$mutated_candidate"
 printf '%s\n' '// changed after subscribed private evidence' >> "$mutated/Core/Test.cs"
+write_structure_review "$mutated"
 commit_all "$mutated" "change runtime after private test"
 expect_fail "runtime changed after private subscription" \
 	"release runtime differs from subscribed private candidate: Core/Test.cs" \

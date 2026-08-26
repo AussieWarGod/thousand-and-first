@@ -116,7 +116,7 @@ namespace ThousandAndFirst.Tests
 			}
 
 			Array actions = Enum.GetValues(typeof(KingdomCharterAction));
-			Assert.AreEqual(35, actions.Length, "the routing contract must account for all original verbs");
+			Assert.AreEqual(36, actions.Length, "the routing contract must account for every shipped verb");
 			Assert.AreEqual(actions.Length, counts.Count);
 			foreach (KingdomCharterAction action in actions)
 			{
@@ -195,8 +195,8 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void RunActionPinsEveryPreChapterHandlerAndArgumentExactlyOnce()
 		{
-			// Hardcoded from HEAD's 35-way flat switch. Do not derive this oracle from the
-			// new enum or routing table: it exists to catch a self-consistent wrong rewire.
+			// Hardcoded handler oracle. Do not derive it from the enum or routing table: it exists
+			// to catch a self-consistent wrong rewire, including additive Charter verbs.
 			Dictionary<string, string> expected = new Dictionary<string, string>
 			{
 				{ "HearPetition", "HearPetition(System);" },
@@ -233,7 +233,8 @@ namespace ThousandAndFirst.Tests
 				{ "ClaimGround", "ClaimGround(System);" },
 				{ "CityBook", "Simulation.City.KingdomBookReport.Open(System);" },
 				{ "TechMap", "Popup.Show(KingdomTechMap.Draw(System));" },
-				{ "CityAsks", "Popup.Show(KingdomAsks.Board(System));" }
+				{ "CityAsks", "Popup.Show(KingdomAsks.Board(System));" },
+				{ "SalvageExpedition", "Simulation.City.KingdomExpeditions.Open(System, ParentObject);" }
 			};
 
 			string source = Source(Path.Combine("Core", "KingdomCharterPart.cs"));
@@ -243,7 +244,7 @@ namespace ThousandAndFirst.Tests
 			MatchCollection cases = Regex.Matches(run,
 				@"case\s+KingdomCharterAction\.(\w+)\s*:\s*(.*?)\s*break\s*;",
 				RegexOptions.Singleline);
-			Assert.AreEqual(35, expected.Count);
+			Assert.AreEqual(36, expected.Count);
 			Assert.AreEqual(expected.Count, cases.Count, "RunAction case count");
 
 			HashSet<string> seen = new HashSet<string>(StringComparer.Ordinal);
@@ -277,14 +278,14 @@ namespace ThousandAndFirst.Tests
 			for (int i = innerCases.Count - 1; i >= 0; i--)
 				switchInner = switchInner.Remove(innerCases[i].Index, innerCases[i].Length);
 			Assert.AreEqual("", Normalize(switchInner),
-				"switch may contain only the 35 pinned case bodies");
+				"switch may contain only the 36 pinned case bodies");
 
 			string skeleton = run.Remove(switchOpen, switchBlock.Length)
 				.Insert(switchOpen, "{ CASES }");
 			Assert.AreEqual(
-				"private bool RunAction(KingdomSystem System, KingdomCharterAction Action) { KingdomGovernanceScope action = KingdomGovernanceScope.Begin(ParentObject); try { switch (Action) { CASES } } finally { action.Dispose(); } return action.Committed; }",
+				"private bool RunAction(KingdomSystem System, KingdomCharterAction Action) { if (!KingdomMaster.NewWorkAllowed(System) && !KingdomCharterMenuRules.AvailableWhileSimulationPaused(Action)) { Popup.Show(\"Settlement simulation is paused by the master option. Records and committed recovery remain available; resume the realm before ordering new work.\"); return false; } KingdomGovernanceScope action = KingdomGovernanceScope.Begin(ParentObject); try { switch (Action) { CASES } } finally { action.Dispose(); } return action.Committed; }",
 				Normalize(skeleton),
-				"no executable dispatch may sit outside the pinned switch");
+				"only the zero-energy master gate may sit outside the pinned switch");
 		}
 
 		[Test]
@@ -301,10 +302,10 @@ namespace ThousandAndFirst.Tests
 			// Complete, accepted routing methods. These are intentionally independent pins:
 			// a pre-loop root return or pre-cancel energy call must change this contract.
 			Assert.AreEqual(
-				"66b166b909a55fabb139cfa0c043a6b0998d2e27528a672eff0c608ae0c195c9",
+				"c51c37ef71100d06291aa5a66498d05db5fbca79472a65abf81552d98b90ca69",
 				Sha256(Normalize(open)), "complete OpenMenu routing contract");
 			Assert.AreEqual(
-				"e3cf2d328f86b0d9612667f54d9f136f6a6ed7bdeef8afa70abc3eaf3f512310",
+				"044e867e93e7e460e50f50aa882094f09027b3413caf3ffd4249163609c7fec9",
 				Sha256(Normalize(chapter)), "complete OpenChapter routing contract");
 
 			Assert.AreEqual(1, Occurrences(part, "KingdomGovernanceScope.Begin("),
@@ -392,10 +393,10 @@ namespace ThousandAndFirst.Tests
 			Assert.Greater(humanBook, branch, "Detailed must branch before player wording");
 			Assert.AreEqual(1, Occurrences(player, "TradeDiagnosticStatus(System)"));
 
-			// SHA is over complete whitespace-normalized diagnostic method copied from
-			// HEAD's old Detailed branch. Deleting or changing any diagnostic row must fail.
+			// SHA is over the complete whitespace-normalized wish-only diagnostic method,
+			// including its rich-text escaping boundary. Deleting or changing a row must fail.
 			Assert.AreEqual(
-				"8459fc2dcea3e4763dba5ceb2b8d1f475de2bc6f4a48cc15ef3980c85753906a",
+				"567da419746866e04f49df509a9c3e16a3f26468b0bf00b53445e00afe214d98",
 				Sha256(Normalize(diagnostic)), "complete old Detailed diagnostic body");
 
 			Regex detailedCaller = new Regex(

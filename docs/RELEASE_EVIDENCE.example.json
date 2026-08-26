@@ -1,12 +1,54 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "releaseVersion": "0.2.0",
   "candidateCommit": "FULL_LOWERCASE_PRIVATE_CANDIDATE_COMMIT",
   "gameMarketingVersion": "1.0.5",
   "gameCoreBuild": "2.0.211.51",
+  "gameAssemblySha256": "SHA256_OF_TESTED_ASSEMBLY_CSHARP_DLL",
   "workshopId": 0,
   "previewSha256": "SHA256_OF_PREVIEW_PNG",
   "privatePackageReceiptSha256": "SHA256_OF_PRIVATE_PACKAGE_RECEIPT_FILE",
+  "verification": {
+    "nativeCompileLoad": {
+      "passId": "native-compile-load",
+      "artifactRef": "docs/release-evidence/native-compile-load.log",
+      "artifactSha256": "SHA256_OF_NATIVE_COMPILE_AND_LOAD_LOG_CONTAINING_THE_EXACT_ASSEMBLY_RECEIPT_LINE"
+    },
+    "architectureGallery": {
+      "passId": "architecture-gallery",
+      "artifactRef": "docs/release-evidence/architecture-gallery.zip",
+      "artifactSha256": "SHA256_OF_COMPLETE_NATIVE_GALLERY_ARTIFACT"
+    },
+    "controllerAndColor": {
+      "passId": "controller-color-accessibility",
+      "artifactRef": "docs/release-evidence/controller-color-accessibility.txt",
+      "artifactSha256": "SHA256_OF_CONTROLLER_KEYBOARD_AND_COLOR_REVIEW"
+    },
+    "denseCityPerformance": {
+      "passId": "dense-city-performance",
+      "artifactRef": "docs/release-evidence/dense-city-performance.csv",
+      "artifactSha256": "SHA256_OF_DENSE_CITY_PERFORMANCE_RECEIPT"
+    },
+    "oneSurveyReceipt": {
+      "passId": "one-survey-receipt",
+      "artifactRef": "docs/release-evidence/one-survey-receipt.txt",
+      "artifactSha256": "SHA256_OF_ONE_SURVEY_INSTRUMENTATION_RECEIPT"
+    },
+    "compatibilityMatrix": {
+      "passId": "compatibility-matrix",
+      "artifactRef": "docs/release-evidence/compatibility-matrix.csv",
+      "artifactSha256": "SHA256_OF_EXACT_MOD_VERSION_MATRIX"
+    },
+    "numberedProtocols": {
+      "artifactRef": "docs/release-evidence/numbered-protocols.txt",
+      "artifactSha256": "SHA256_OF_NUMBERED_TESTING_TRANSCRIPT",
+      "passIds": [
+        "0a",
+        "55f3",
+        "124i"
+      ]
+    }
+  },
   "privateSubscription": {
     "source": "steam-subscription",
     "inventory": "clean",

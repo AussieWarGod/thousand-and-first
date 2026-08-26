@@ -74,7 +74,7 @@ namespace ThousandAndFirst
 		/// (<c>Popup.AskString(..., MaxLength: 30, ...)</c>), so a building's name and a city's
 		/// name are held to the same bar.
 		/// </summary>
-		public const int MaxBuildingNameLength = 30;
+		public const int MaxBuildingNameLength = KingdomPresentationRules.MaxNameTextElements;
 
 		/// <summary>
 		/// Validates one <c>&lt;skin&gt;</c> node's raw attributes into a <see cref="SkinEntry"/>.
@@ -177,42 +177,17 @@ namespace ThousandAndFirst
 		}
 
 		/// <summary>
-		/// Validates and trims a founder-typed building name. Rejects a blank name (call <see
-		/// cref="IsBlank"/> first to tell "declined" apart from "invalid"), a name over <see
-		/// cref="MaxBuildingNameLength"/> characters after trimming, and any control character or
-		/// curly brace &mdash; a name is spliced verbatim into <c>{{C|...}}</c>-style
-		/// chronicle and ledger markup elsewhere in this mod, and a brace could close that markup
-		/// early and inject arbitrary trailing text into the founder's own reports.
+		/// Validates and NFC-normalizes a founder-typed building name through the shared Foundation
+		/// presentation contract. Call <see cref="IsBlank"/> first only when blank means "clear the
+		/// existing name" in the UI. Accepted text remains plain data; engine-facing prose must
+		/// escape it at the rich-text boundary.
 		/// </summary>
 		/// <param name="Raw">The founder's typed text.</param>
 		/// <param name="Cleaned">The trimmed, accepted name, or null on failure.</param>
 		/// <param name="Error">A founder-facing reason, or null on success.</param>
 		public static bool TryValidateBuildingName(string Raw, out string Cleaned, out string Error)
 		{
-			Cleaned = null;
-			Error = null;
-			if (IsBlank(Raw))
-			{
-				Error = "a name needs at least one character";
-				return false;
-			}
-			string trimmed = Raw.Trim();
-			if (trimmed.Length > MaxBuildingNameLength)
-			{
-				Error = "a name can be at most " + MaxBuildingNameLength + " characters";
-				return false;
-			}
-			for (int i = 0; i < trimmed.Length; i++)
-			{
-				char c = trimmed[i];
-				if (char.IsControl(c) || c == '{' || c == '}')
-				{
-					Error = "a name cannot use control characters or { }";
-					return false;
-				}
-			}
-			Cleaned = trimmed;
-			return true;
+			return KingdomPresentationRules.TryNormalizeName(Raw, out Cleaned, out Error);
 		}
 
 		/// <summary>

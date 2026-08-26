@@ -20,10 +20,10 @@ namespace XRL.World.Parts
 	/// <b>It rises on labour, not on the calendar</b> (BUILDING-CATALOGUE-BRIEF.md Addendum 8
 	/// clause 2, and the author's ruling that a scaffold nobody works on does not rise). The
 	/// duration a design authors in <c>BuildTicks</c> is what a properly-crewed settlement takes
-	/// &mdash; <see cref="KingdomRules.RaisingHandsWanted"/> free pairs of hands &mdash; and it
+	/// &mdash; its bounded named gang of <see cref="KingdomRules.RaisingHandsWanted"/> hands &mdash; and it
 	/// is banked once into <see cref="RemainingTicks"/> the first time this frame is looked at.
-	/// After that, every stretch of elapsed time buys labour ticks at the pace the settlement's
-	/// spare hands can actually manage (<see cref="KingdomRules.RaisingEffectiveness"/>), and a
+	/// After that, every stretch of elapsed time buys labour ticks at the pace this root's stamped
+	/// gang can actually manage (<see cref="KingdomRules.RaisingEffectiveness"/>), and a
 	/// settlement with nobody free raises nothing at all, however long the founder is away.
 	/// </para>
 	/// <para>
@@ -88,6 +88,18 @@ namespace XRL.World.Parts
 
 		public override void TurnTick(long TimeTick, int Amount)
 		{
+			KingdomSystem master = The.Game?.GetSystem<KingdomSystem>();
+			if (!KingdomMaster.AutomaticWorkAllowed(master))
+			{
+				base.TurnTick(TimeTick, Amount);
+				return;
+			}
+			if (LastWorkedTick <= master.MasterOptionTick)
+			{
+				LastWorkedTick = TimeTick;
+				base.TurnTick(TimeTick, Amount);
+				return;
+			}
 			// Receipt-bearing work advances only from KingdomConstruction.OnSettlementPass.
 			// Receiptless scaffolds from old saves retain their legacy turn-tick path.
 			if (TargetBlueprint != null && string.IsNullOrEmpty(
@@ -99,8 +111,8 @@ namespace XRL.World.Parts
 		}
 
 		/// <summary>
-		/// Charges the labour the settlement's spare hands did on this frame since it was last
-		/// looked at, and finishes it when the work runs out.
+		/// Charges the labour this frame's exact assigned raising gang did since it was last looked
+		/// at, and finishes it when the work runs out.
 		/// <para>
 		/// A turn tick only fires in an active zone, so an absence arrives here as one long
 		/// stretch resolved at the moment of awareness &mdash; the lazy catch-up the whole mod
@@ -125,8 +137,10 @@ namespace XRL.World.Parts
 				return false;
 			}
 			LastWorkedTick = TimeTick;
-			int effectiveness = EffectivenessOf(out var freeHands, out var system);
-			Say(system, freeHands);
+			int effectiveness = EffectivenessOf(out var freeHands, out var system,
+				out var selected);
+			if (selected) Say(system, freeHands);
+			else ShortfallSaid = false;
 			long worked = KingdomRules.LabouredTicks(elapsed, effectiveness);
 			if (worked <= 0 || RemainingTicks <= 0)
 			{
@@ -245,14 +259,14 @@ namespace XRL.World.Parts
 				}
 				if (successor.Blueprint != blueprint)
 				{
-					QuarantineOrRetryAfterAdd(ref current, successor,
+					QuarantineOrRetryAfterAdd(ref current, successor, Z,
 						"The final blueprint created an unexpected successor.");
 					return;
 				}
 				if (!KingdomConstruction.UpdateFinalOutput(ref current,
 					predecessorId, successor.ID))
 				{
-						QuarantineOrRetryAfterAdd(ref current, successor,
+						QuarantineOrRetryAfterAdd(ref current, successor, Z,
 							"The final successor identity could not be published before AddObject.");
 						return;
 				}
@@ -262,24 +276,36 @@ namespace XRL.World.Parts
 				}
 				catch (Exception ex)
 				{
-					QuarantineOrRetryAfterAdd(ref current, successor,
+					QuarantineOrRetryAfterAdd(ref current, successor, Z,
 						"The final successor threw while it was staged: " + ex.Message);
 					return;
 				}
+				GameObject accepted = null;
 				try
 				{
-					cell.AddObject(successor);
+					accepted = cell.AddObject(successor);
 					successor.MakeActive();
 				}
 				catch (Exception ex)
 				{
-					QuarantineOrRetryAfterAdd(ref current, successor,
+					QuarantineOrRetryAfterAdd(ref current, successor, Z,
 						"The final successor threw while entering its cell: " + ex.Message);
 					return;
 				}
-				if (!IsExactSuccessor(successor, Z, cell, current, blueprint))
+				finally
 				{
-					QuarantineOrRetryAfterAdd(ref current, successor,
+					KingdomSurvey.ObserveAddResultInActive(Z, successor, accepted);
+				}
+				if (!ReferenceEquals(accepted, successor))
+				{
+					QuarantineOrRetryAfterAdd(ref current, successor, Z,
+						"The final successor AddObject replaced its exact return identity.");
+					return;
+				}
+				if (!IsExactSuccessor(successor, Z, cell, current, blueprint,
+					current.Route == KingdomConstructionRoute.Improvement ? ParentObject : null))
+				{
+					QuarantineOrRetryAfterAdd(ref current, successor, Z,
 						"The final successor could not be observed exactly after AddObject.");
 					return;
 				}
@@ -288,7 +314,8 @@ namespace XRL.World.Parts
 			// AddObject and MakeActive are callbacks. Re-read both endpoints before removal.
 			if (!ExactPredecessor(System, Z, current) || ParentObject.CurrentCell != cell
 				|| TargetBlueprint != blueprint
-				|| !IsExactSuccessor(successor, Z, cell, current, blueprint)
+				|| !IsExactSuccessor(successor, Z, cell, current, blueprint,
+					current.Route == KingdomConstructionRoute.Improvement ? ParentObject : null)
 				|| !KingdomConstruction.IsCurrent(current))
 			{
 				KingdomConstruction.Quarantine(ref current,
@@ -302,6 +329,7 @@ namespace XRL.World.Parts
 			}
 			catch (Exception ex)
 			{
+				KingdomSurvey.ObserveCurrentTopologyInActive(Z, ParentObject);
 				KingdomConstruction.Quarantine(ref current,
 					"The scaffold threw during predecessor removal: " + ex.Message);
 				return;
@@ -321,6 +349,7 @@ namespace XRL.World.Parts
 				}
 				return;
 			}
+			KingdomSurvey.ObserveRemovedFromActive(Z, ParentObject);
 			KingdomPhysicalLookupState predecessorState = KingdomConstruction.FindExactId(
 				Z, predecessorId, out _);
 			if (!KingdomConstruction.Owns(System, Z, current)
@@ -356,6 +385,10 @@ namespace XRL.World.Parts
 		{
 			string displayName = TargetDisplayName ?? "structure";
 			KingdomConstruction.Bind(Successor, Job);
+			if (!KingdomConstruction.FreezePaidBuild(Successor, Job,
+				Job.Route == KingdomConstructionRoute.Improvement ? ParentObject : null))
+				throw new InvalidOperationException(
+					"The exact paid construction receipt could not be frozen on its successor.");
 			KingdomDesign.ApplyRenderOverrides(Successor,
 				ParentObject.GetStringProperty(KingdomDesign.StagedColorStringProperty),
 				ParentObject.GetStringProperty(KingdomDesign.StagedDetailColorProperty),
@@ -373,6 +406,8 @@ namespace XRL.World.Parts
 			Successor.SetStringProperty(KingdomUpgrade.BuildKeyProperty, Job.TargetKey);
 			int defence = ParentObject.GetIntProperty("KingdomDefencePending");
 			if (defence > 0) Successor.SetIntProperty("KingdomDefence", defence);
+			if (ParentObject.GetIntProperty(KingdomPlots.FrontierWorkProperty) == 1)
+				Successor.SetIntProperty(KingdomPlots.FrontierWorkProperty, 1);
 			if (StaffNeeded > 0)
 			{
 				Successor.SetIntProperty("KingdomStaffNeeded", StaffNeeded);
@@ -388,7 +423,7 @@ namespace XRL.World.Parts
 		}
 
 		private static void QuarantineOrRetryAfterAdd(ref KingdomConstructionJob Job,
-			GameObject Successor, string Failure)
+			GameObject Successor, Zone Z, string Failure)
 		{
 			bool removed = false;
 			try
@@ -400,8 +435,10 @@ namespace XRL.World.Parts
 			{
 				removed = false;
 			}
+			KingdomSurvey.ObserveCurrentTopologyInActive(Z, Successor);
 			if (removed)
 			{
+				KingdomSurvey.ObserveRemovedFromActive(Z, Successor);
 				KingdomConstruction.Quarantine(ref Job,
 					Failure + " The frozen successor identity was retired and cannot be replaced.");
 			}
@@ -474,10 +511,19 @@ namespace XRL.World.Parts
 		}
 
 		public static bool IsExactSuccessor(GameObject Successor, Zone Z, Cell Cell,
-			KingdomConstructionJob Job, string Blueprint)
+			KingdomConstructionJob Job, string Blueprint,
+			GameObject ImprovementPredecessor = null)
 		{
-			return IsMarkedSuccessor(Successor, Z, Cell, Job, Blueprint)
-				&& !string.IsNullOrEmpty(Job.OutputId) && Successor.ID == Job.OutputId;
+			if (!IsMarkedSuccessor(Successor, Z, Cell, Job, Blueprint)
+				|| string.IsNullOrEmpty(Job.OutputId) || Successor.ID != Job.OutputId) return false;
+			if (Job.Route != KingdomConstructionRoute.Improvement)
+				return KingdomConstruction.PaidBuildMatches(Successor, Job);
+			if (GameObject.Validate(ImprovementPredecessor))
+				return KingdomConstruction.PaidBuildMatches(Successor, Job,
+					ImprovementPredecessor);
+			int schema = Successor.GetIntProperty(KingdomConstruction.PaidBuildSchemaProperty);
+			return schema == 0 || (schema == KingdomConstruction.PaidBuildSchema
+				&& KingdomConstruction.TryReadPaidBuild(Successor, out _));
 		}
 
 		private static bool IsMarkedSuccessor(GameObject Successor, Zone Z, Cell Cell,
@@ -489,6 +535,7 @@ namespace XRL.World.Parts
 				&& Successor.CurrentCell == Cell && Successor.Blueprint == Blueprint
 				&& Successor.GetIntProperty("KingdomBuilt") == 1
 				&& Successor.GetStringProperty(KingdomUpgrade.BuildKeyProperty) == Job.TargetKey
+				&& KingdomConstruction.FinalBuildTruthMatches(Successor, Job)
 				&& KingdomConstruction.HasReceipt(Successor, Job);
 		}
 
@@ -572,16 +619,14 @@ namespace XRL.World.Parts
 		/// read off the settlement &mdash; whoever the water detail and the works left over.
 		/// </para>
 		/// </summary>
-		private int EffectivenessOf(out int FreeHands, out KingdomSystem System)
+		private int EffectivenessOf(out int FreeHands, out KingdomSystem System,
+			out bool Selected)
 		{
 			FreeHands = 0;
+			Selected = false;
 			System = The.Game.RequireSystem<KingdomSystem>();
-			if (System == null || !System.Founded)
-			{
-				return 100;
-			}
-			FreeHands = KingdomMaterialRules.FreeHands(System.Population, System.AssignedCrew);
-			return KingdomRules.RaisingEffectiveness(FreeHands);
+			return KingdomConstructionPresence.EffectivenessOf(ParentObject, System,
+				out FreeHands, out Selected);
 		}
 
 		/// <summary>Names a short-handed raising once, and unsays it the moment the crew is
@@ -655,7 +700,13 @@ namespace XRL.World.Parts
 				gameObject = GameObject.Create(blueprint);
 				if (gameObject == null) return;
 				ParentObject.SetStringProperty(LegacySuccessorIdProperty, gameObject.ID);
-				cell.AddObject(gameObject);
+				GameObject accepted = null;
+				try { accepted = cell.AddObject(gameObject); }
+				finally
+				{
+					KingdomSurvey.ObserveAddResultInActive(cell.ParentZone, gameObject, accepted);
+				}
+				if (!ReferenceEquals(accepted, gameObject)) return;
 			}
 			if (gameObject.CurrentCell != cell || gameObject.Blueprint != blueprint)
 			{
@@ -683,6 +734,8 @@ namespace XRL.World.Parts
 			{
 				gameObject.SetIntProperty("KingdomDefence", defence);
 			}
+			if (ParentObject.GetIntProperty(KingdomPlots.FrontierWorkProperty) == 1)
+				gameObject.SetIntProperty(KingdomPlots.FrontierWorkProperty, 1);
 			if (StaffNeeded > 0)
 			{
 				gameObject.SetIntProperty("KingdomStaffNeeded", StaffNeeded);
@@ -698,7 +751,10 @@ namespace XRL.World.Parts
 			gameObject.MakeActive();
 			if (gameObject.CurrentCell != cell || gameObject.Blueprint != blueprint
 				|| gameObject.GetIntProperty("KingdomBuilt") != 1) return;
-			bool removed = ParentObject.Destroy(null, Silent: true);
+			KingdomSurvey.ObserveChangedInActive(cell.ParentZone, gameObject);
+			bool removed;
+			try { removed = ParentObject.Destroy(null, Silent: true); }
+			finally { KingdomSurvey.ObserveCurrentTopologyInActive(cell.ParentZone, ParentObject); }
 			if (!removed || GameObject.Validate(ParentObject)) return;
 			TargetBlueprint = null;
 			KingdomLog.Log("scaffold complete: " + displayName + " (" + blueprint + ") at " + cell.X + "," + cell.Y);

@@ -19,6 +19,25 @@ namespace ThousandAndFirst.Tests
 	/// </summary>
 	public class KingdomKnowledgeSitingTests
 	{
+		[Test]
+		public void NormalizePreservesBoundedRosterBytesAndClearsUnboundedHeapState()
+		{
+			KingdomSettlement city = new KingdomSettlement
+			{
+				KeepersRoster = " NODE:Arclight |node:arclight| disk:Chem Cell "
+			};
+			city.Normalize();
+			Assert.AreEqual(" NODE:Arclight |node:arclight| disk:Chem Cell ", city.KeepersRoster,
+				"capture and restore preserve valid extension bytes exactly");
+			CollectionAssert.AreEqual(new[] { "node:arclight", "disk:chem cell" },
+				KingdomZoningRules.DecodeRoster(city.KeepersRoster));
+
+			city.KeepersRoster = new string('x', KingdomZoningRules.MaxRosterEncodedChars + 1);
+			city.Normalize();
+			Assert.AreEqual("", city.KeepersRoster,
+				"load normalization must release an unbounded permanent heap string");
+		}
+
 		private const string FoundryRolls = "disk:smelter|machine:glass furnace|node:kiln|node:cruciblesteel";
 
 		private const string TrunkRolls = "disk:tent|node:notes";

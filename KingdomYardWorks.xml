@@ -17,9 +17,11 @@
                  (KingdomYardRules.MaxShadePerWork) — a household's sideline never competes
                  with a purpose-built work.
     Goods        Yes for a trade whose output is a caravan good rather than anything the
-                 settlement's own equilibrium reads. The dye vat's own case.
+                 settlement's own equilibrium reads. Each exact standing household adds one
+                 dram to every due charter cycle, up to four households per caravan. Goods and
+                 Shades are mutually exclusive. The dye vat's own case.
 -->
-<kingdomyardworks>
+<kingdomyardworks Schema="1">
   <yardwork Key="vinelattice" DisplayName="vine lattice" Blueprint="r_KingdomVineLattice"
             Trade="tending the vine" Shades="food:1" />
   <yardwork Key="hiderack" DisplayName="hide rack" Blueprint="r_KingdomHideRack"

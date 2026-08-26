@@ -359,7 +359,7 @@ namespace ThousandAndFirst
 						lines.Add(houseName + " - take up a yard trade");
 					}
 				}
-				int picked = Popup.PickOption(Title: "Yard trades of " + System.SeatName, Intro: "A small or middling house with room in its own yard can take up one trade. The household takes it up; letting one go is free and returns nothing.", Options: lines, AllowEscape: true);
+				int picked = Popup.PickOption(Title: "Yard trades of " + KingdomPresentation.Rich(System.SeatName), Intro: "A small or middling house with room in its own yard can take up one trade. The household takes it up; letting one go is free and returns nothing.", Options: lines, AllowEscape: true);
 				if (picked < 0 || picked >= houses.Count)
 				{
 					return;

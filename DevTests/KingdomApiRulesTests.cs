@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using NUnit.Framework;
 using ThousandAndFirst.Api;
+using ThousandAndFirst.Simulation.City;
 
 namespace ThousandAndFirst.Tests
 {
@@ -17,25 +18,28 @@ namespace ThousandAndFirst.Tests
 	{
 		private const string Mod = "Someone Else's Mod";
 
-		/// <summary>The exact version admits, and only the exact version. Both directions of drift
-		/// are distinct refusals, because the fix differs: one updates them, the other updates
-		/// us.</summary>
+		/// <summary>The supported v1-v2 window admits. Later versions refuse; absent versions do
+		/// not silently enter.</summary>
 		[TestCase(1, KingdomExtensionVerdict.Accepted)]
-		[TestCase(2, KingdomExtensionVerdict.RefusedAhead)]
+		[TestCase(2, KingdomExtensionVerdict.Accepted)]
+		[TestCase(3, KingdomExtensionVerdict.Accepted)]
+		[TestCase(4, KingdomExtensionVerdict.RefusedAhead)]
 		[TestCase(99, KingdomExtensionVerdict.RefusedAhead)]
 		[TestCase(0, KingdomExtensionVerdict.RefusedNoVersion)]
 		[TestCase(-4, KingdomExtensionVerdict.RefusedNoVersion)]
-		public void Judge_AdmitsOnlyTheExactPublishedVersion(int declared, KingdomExtensionVerdict expected)
+		public void Judge_AdmitsThePublishedCompatibilityWindow(int declared, KingdomExtensionVerdict expected)
 		{
 			Assert.AreEqual(expected, KingdomApiRules.Judge(Mod, declared, true));
 		}
 
-		/// <summary>The published version is 1 and this test says so out loud: a bump that forgets
+		/// <summary>The published version is 2 and this test says so out loud: a bump that forgets
 		/// to think about every consumer fails here first.</summary>
 		[Test]
-		public void Version_IsOne()
+		public void Version_IsThreeAndOlderSourcesRemainSupported()
 		{
-			Assert.AreEqual(1, KingdomApiRules.Version);
+			Assert.AreEqual(3, KingdomApiRules.Version);
+			Assert.AreEqual(1, KingdomApiRules.MinSupportedVersion);
+			Assert.AreEqual(KingdomExtensionVerdict.Accepted, KingdomApiRules.Judge(Mod, 1, true));
 			Assert.AreEqual(KingdomExtensionVerdict.Accepted, KingdomApiRules.Judge(Mod, KingdomApiRules.Version, true));
 			Assert.AreEqual(KingdomExtensionVerdict.RefusedAhead, KingdomApiRules.Judge(Mod, KingdomApiRules.Version + 1, true));
 		}
@@ -75,6 +79,10 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains(Mod, line);
 			StringAssert.Contains("threw", line);
 			StringAssert.DoesNotContain("declares no API version", line);
+			string collision = KingdomApiRules.RefusalLine(
+				KingdomExtensionVerdict.RefusedNamespaceCollision, Mod, 0);
+			StringAssert.Contains(Mod, collision);
+			StringAssert.Contains("Both owners are refused", collision);
 		}
 
 		/// <summary>Nameless first, then contract, then version. A refusal that cannot name its
@@ -129,6 +137,44 @@ namespace ThousandAndFirst.Tests
 			string stream;
 			Assert.IsTrue(KingdomApiRules.TryStream("Their Mod", "weather", out stream));
 			Assert.AreEqual("taf:ext:their-mod:weather", stream);
+
+			string firstKey, secondKey;
+			Assert.IsTrue(KingdomHappeningCursorRules.TrySourceKey(
+				"their-manifest", "Their.Assembly", "Their.FirstSource", out firstKey));
+			Assert.IsTrue(KingdomHappeningCursorRules.TrySourceKey(
+				"their-manifest", "Their.Assembly", "Their.SecondSource", out secondKey));
+			Assert.AreNotEqual(firstKey, secondKey);
+			string otherAssemblyKey;
+			Assert.IsTrue(KingdomHappeningCursorRules.TrySourceKey(
+				"their-manifest", "Other.Assembly", "Their.FirstSource", out otherAssemblyKey));
+			Assert.AreNotEqual(firstKey, otherAssemblyKey,
+				"same full type name in two assemblies must own distinct receipts");
+			string cursors;
+			Assert.IsTrue(KingdomHappeningCursorRules.TryRetain("",
+				new[] { firstKey, secondKey }, out cursors));
+			long since;
+			Assert.IsTrue(KingdomHappeningCursorRules.TryAdvance(cursors, firstKey, 100L,
+				out since, out cursors));
+			Assert.AreEqual(0L, since, "the first exact source call must receive zero");
+			Assert.IsTrue(KingdomHappeningCursorRules.TryAdvance(cursors, secondKey, 100L,
+				out since, out cursors));
+			Assert.AreEqual(0L, since, "another source must not inherit the first source's cursor");
+			Assert.IsTrue(KingdomHappeningCursorRules.TryAdvance(cursors, firstKey, 200L,
+				out since, out cursors));
+			Assert.AreEqual(100L, since, "cold wire must retain the exact source window");
+			Assert.IsFalse(KingdomHappeningCursorRules.TryAdvance("malformed", firstKey, 300L,
+				out since, out cursors));
+
+			Assert.IsTrue(KingdomHappeningCursorRules.TrySeedLegacy(
+				new[] { firstKey, secondKey }, 250L, out cursors));
+			Assert.IsTrue(KingdomHappeningCursorRules.TryAdvance(cursors, firstKey, 300L,
+				out since, out cursors));
+			Assert.AreEqual(250L, since,
+				"v11 global receipt must prevent replay from zero after cursor migration");
+			Assert.IsFalse(KingdomHappeningCursorRules.TrySeedLegacy(
+				new[] { firstKey, firstKey }, 250L, out cursors));
+			Assert.IsFalse(KingdomHappeningCursorRules.TrySeedLegacy(
+				new[] { firstKey }, 0L, out cursors));
 		}
 
 		/// <summary>A stream that will not fit the kernel's identifier is refused outright, never
@@ -198,6 +244,90 @@ namespace ThousandAndFirst.Tests
 		public void Kind_ClampsRatherThanRefusing()
 		{
 			Assert.AreEqual(KingdomApiRules.MaxKindLength, KingdomApiRules.Kind(new string('k', 90)).Length);
+		}
+
+		[TestCase("trade", "someone-else-s-mod:trade")]
+		[TestCase("someone-else-s-mod:trade", "someone-else-s-mod:trade")]
+		[TestCase("culture:mopango", null)]
+		[TestCase("another-mod:trade", null)]
+		[TestCase("", null)]
+		[TestCase("bad|key", null)]
+		public void IdentityKey_FilesOnlyOwnedBoundedKeys(string source, string expected)
+		{
+			Assert.AreEqual(expected, KingdomApiRules.IdentityKey(Mod, source));
+		}
+
+		[Test]
+		public void IdentityKey_DropsInsteadOfTruncatingAtTheCollisionBoundary()
+		{
+			Assert.IsNull(KingdomApiRules.IdentityKey(Mod,
+				new string('x', KingdomApiRules.MaxIdentityKeyLength + 1)));
+		}
+
+		[TestCase(20, 70)]
+		[TestCase(70, 70)]
+		[TestCase(100, 100)]
+		[TestCase(130, 130)]
+		[TestCase(900, 130)]
+		public void IdentityAffinity_ClampsToTheDoctrineBand(int offered, int expected)
+		{
+			Assert.AreEqual(expected, KingdomApiRules.IdentityAffinity(offered));
+		}
+
+		[TestCase(0L, 100)]
+		[TestCase(10L, 110)]
+		[TestCase(40L, 130)]
+		[TestCase(-40L, 70)]
+		[TestCase(30L, 130)]
+		[TestCase(-30L, 70)]
+		public void IdentityAffinityFromDelta_ClampsOnlyTheFinalSum(long delta, int expected)
+		{
+			Assert.AreEqual(expected, KingdomApiRules.IdentityAffinityFromDelta(delta));
+		}
+
+		[Test]
+		public void IdentityAffinityComposition_IsOrderIndependentAcrossEarlySaturation()
+		{
+			long forward = (KingdomApiRules.IdentityAffinity(130) - 100L)
+				+ (KingdomApiRules.IdentityAffinity(130) - 100L)
+				+ (KingdomApiRules.IdentityAffinity(70) - 100L);
+			long reverse = (KingdomApiRules.IdentityAffinity(70) - 100L)
+				+ (KingdomApiRules.IdentityAffinity(130) - 100L)
+				+ (KingdomApiRules.IdentityAffinity(130) - 100L);
+			Assert.AreEqual(130, KingdomApiRules.IdentityAffinityFromDelta(forward));
+			Assert.AreEqual(KingdomApiRules.IdentityAffinityFromDelta(forward),
+				KingdomApiRules.IdentityAffinityFromDelta(reverse));
+		}
+
+		[Test]
+		public void IdentityReading_IsFrozenBoundedAndControlFree()
+		{
+			KingdomIdentityReading reading = new KingdomIdentityReading(
+				"  Mopango\nfolk  ", new string('s', 200), null, "Mutated Human");
+			Assert.AreEqual("Mopango folk", reading.Culture);
+			Assert.AreEqual(KingdomApiRules.MaxIdentityNameLength, reading.Species.Length);
+			Assert.AreEqual("", reading.Creed);
+			Assert.AreEqual("Mutated Human", reading.Genotype);
+		}
+
+		[Test]
+		public void IdentityBoundariesAreFrozenAndContainNoEngineType()
+		{
+			KingdomComputeRefusal refusal;
+			string offender;
+			Assert.IsTrue(KingdomComputeSeam.TryValidateType(
+				typeof(KingdomIdentityReading), out refusal, out offender), offender);
+			Assert.IsTrue(KingdomComputeSeam.TryValidateType(
+				typeof(KingdomIdentityWorkReading), out refusal, out offender), offender);
+		}
+
+		[Test]
+		public void IdentityContractPublishesOnlyKeysAndAffinity()
+		{
+			System.Reflection.MethodInfo[] methods = typeof(IKingdomIdentitySource).GetMethods();
+			Assert.AreEqual(2, methods.Length);
+			CollectionAssert.AreEquivalent(new string[2] { "Keys", "Affinity" },
+				new string[2] { methods[0].Name, methods[1].Name });
 		}
 	}
 }

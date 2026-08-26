@@ -40,6 +40,27 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void TheCanonicalFootChangesOnlyTheStratum()
+		{
+			string foot;
+			Assert.IsTrue(KingdomDelveRules.TryFootZoneId(Zone(1, 1, 10), out foot));
+			Assert.AreEqual(Zone(1, 1, 11), foot);
+			Assert.IsTrue(KingdomDelveRules.IsShaftPair(Zone(1, 1, 10), foot));
+		}
+
+		[TestCase("JoppaWorld.11.22.1.1.010")]
+		[TestCase("JoppaWorld.11.22.1.1.9")]
+		[TestCase("JoppaWorld.11.22.1.1.2147483647")]
+		[TestCase("JoppaWorld.11.22.1.1.10.extra")]
+		[TestCase(null)]
+		public void AFootIdIsNeverGuessed(string head)
+		{
+			string foot;
+			Assert.IsFalse(KingdomDelveRules.TryFootZoneId(head, out foot));
+			Assert.IsNull(foot);
+		}
+
+		[Test]
 		public void AShaftNeverSkipsAStratum()
 		{
 			Assert.IsFalse(KingdomDelveRules.IsShaftPair(Zone(1, 1, 10), Zone(1, 1, 12)),

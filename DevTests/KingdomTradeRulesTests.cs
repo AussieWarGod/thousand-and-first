@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Security.Cryptography;
 using NUnit.Framework;
 using ThousandAndFirst;
 
@@ -12,6 +13,7 @@ namespace ThousandAndFirst.Tests
 		private static readonly string Realm = new string('a', 64);
 		private static readonly string CityA = new string('b', 64);
 		private static readonly string CityB = new string('c', 64);
+		private const string PatternCity = "taf:settlement:pattern-city";
 
 		private static KingdomTradeBook Book()
 		{
@@ -210,6 +212,55 @@ namespace ThousandAndFirst.Tests
 		private static string ReadRepoSource(string relative)
 		{
 			return TestMain.ReadRepositoryText(relative);
+		}
+
+		private static List<KingdomTradePatternDesign> PatternCandidates()
+		{
+			return new List<KingdomTradePatternDesign>
+			{
+				new KingdomTradePatternDesign { BuildingKey = "yd-roof", LearnName = "yd roofline", Label = "Yd freehold roofline" },
+				new KingdomTradePatternDesign { BuildingKey = "hindren-hall", LearnName = "hindren weave", Label = "hindren weave-hall" },
+				new KingdomTradePatternDesign { BuildingKey = "salt-vault", LearnName = "salt vault", Label = "salt-vault" },
+				new KingdomTradePatternDesign { BuildingKey = "glass-court", LearnName = "glass court", Label = "glass court" }
+			};
+		}
+
+		private static long PatternSequence(bool offered)
+		{
+			for (long sequence = 1L; sequence < 10000L; sequence++)
+				if (KingdomCeremonyRules.ShouldOfferPattern(PatternCity,
+					(ulong)sequence) == offered)
+					return sequence;
+			Assert.Fail("No deterministic pattern sequence found for requested chance branch.");
+			return 0L;
+		}
+
+		private static KingdomTradePatternReceipt OfferedPattern()
+		{
+			KingdomTradePatternReceipt receipt = KingdomTradePatternRules.Freeze(PatternCity,
+				PatternSequence(true), PatternCandidates());
+			Assert.AreEqual(KingdomTradePatternState.Offered, receipt.State);
+			return receipt;
+		}
+
+		private static KingdomTradePatternReceipt RoundTripPattern(
+			KingdomTradePatternReceipt receipt, bool normalize = false)
+		{
+			KingdomTradeBook book = Book();
+			KingdomTradeOperation operation = CharterOperation(book);
+			operation.Pattern = receipt;
+			KingdomTradeBook decoded = KingdomTradeCodec.DecodeEnvelope(
+				KingdomTradeCodec.EncodeEnvelope(book));
+			if (normalize) KingdomTradeRules.Normalize(decoded);
+			Assert.NotNull(decoded.OpenOperation);
+			return decoded.OpenOperation.Pattern;
+		}
+
+		private static string RawSha256(byte[] Bytes)
+		{
+			using (SHA256 sha = SHA256.Create())
+				return BitConverter.ToString(sha.ComputeHash(Bytes)).Replace("-", "")
+					.ToLowerInvariant();
 		}
 
 		[Test]
@@ -445,9 +496,9 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void Codec_PriorBoundedWireStaysOpaqueButUnsafeV1IsRefused()
+		public void Codec_UnrecognizedPriorBoundedWireStaysOpaqueButUnsafeV1IsRefused()
 		{
-			byte[] prior = Envelope(KingdomTradeCodec.CurrentWireVersion - 1,
+			byte[] prior = Envelope(KingdomTradeCodec.PriorWireVersion - 1,
 				new byte[] { 4, 3, 2, 1 });
 			KingdomTradeBook book = KingdomTradeCodec.DecodeEnvelope(prior);
 			Assert.AreEqual(KingdomTradeSchemaState.Unknown, book.SchemaState);
@@ -468,6 +519,220 @@ namespace ThousandAndFirst.Tests
 			Assert.AreEqual(2, decoded.FormatVersion);
 			Assert.AreEqual("old evidence", decoded.SchemaFault);
 			Assert.IsFalse(KingdomTradeRules.BookUsable(decoded));
+		}
+
+		[Test]
+		public void PatternFreeze_NoCandidatesAndChanceMissAreDistinctTerminalReceipts()
+		{
+			KingdomTradePatternReceipt empty = KingdomTradePatternRules.Freeze(CityA, 1L,
+				new KingdomTradePatternDesign[0]);
+			Assert.AreEqual(KingdomTradePatternState.NoCandidates, empty.State);
+			Assert.IsTrue(KingdomTradePatternRules.Terminal(empty));
+
+			KingdomTradePatternReceipt miss = KingdomTradePatternRules.Freeze(PatternCity,
+				PatternSequence(false), PatternCandidates());
+			Assert.AreEqual(KingdomTradePatternState.ChanceMiss, miss.State);
+			Assert.IsTrue(KingdomTradePatternRules.Terminal(miss));
+		}
+
+		[Test]
+		public void PatternFreeze_OperationSequenceDeterministicallyPicksUpToThreeDetachedRows()
+		{
+			long sequence = PatternSequence(true);
+			List<KingdomTradePatternDesign> source = PatternCandidates();
+			KingdomTradePatternReceipt first = KingdomTradePatternRules.Freeze(PatternCity,
+				sequence, source);
+			KingdomTradePatternReceipt second = KingdomTradePatternRules.Freeze(PatternCity,
+				sequence, PatternCandidates());
+			Assert.AreEqual(3, first.Offers.Count);
+			for (int i = 0; i < first.Offers.Count; i++)
+			{
+				Assert.AreEqual(first.Offers[i].BuildingKey, second.Offers[i].BuildingKey);
+				Assert.AreEqual(first.Offers[i].LearnName, second.Offers[i].LearnName);
+				Assert.AreEqual(first.Offers[i].Label, second.Offers[i].Label);
+			}
+			string frozenKey = first.Offers[0].BuildingKey;
+			string frozenLabel = first.Offers[0].Label;
+			source[0].BuildingKey = "catalogue-drift";
+			source[0].Label = "catalogue drift";
+			Assert.AreEqual(frozenKey, first.Offers[0].BuildingKey);
+			Assert.AreEqual(frozenLabel, first.Offers[0].Label);
+		}
+
+		[Test]
+		public void PatternChoice_CancelPersistsWithoutRosterOrSinkMutation()
+		{
+			KingdomTradePatternReceipt receipt = OfferedPattern();
+			Assert.IsTrue(KingdomTradePatternRules.BeginChoice(receipt));
+			Assert.IsTrue(KingdomTradePatternRules.Decline(receipt));
+			Assert.AreEqual(KingdomTradePatternState.Declined, receipt.State);
+			Assert.IsTrue(KingdomTradePatternRules.Terminal(receipt));
+			KingdomTradePatternReceipt reloaded = RoundTripPattern(receipt, true);
+			Assert.AreEqual(KingdomTradePatternState.Declined, reloaded.State);
+			Assert.IsTrue(KingdomTradePatternRules.Terminal(reloaded));
+		}
+
+		[Test]
+		public void PatternChoice_ExactBeforeAfterCasSurvivesEveryMutationCut()
+		{
+			KingdomTradePatternReceipt receipt = OfferedPattern();
+			Assert.IsTrue(KingdomTradePatternRules.BeginChoice(receipt));
+			string failure;
+			Assert.IsTrue(KingdomTradePatternRules.TrySelect(receipt, 0,
+				"disk:water", "City A", out failure), failure);
+			Assert.AreEqual(KingdomTradePatternState.Selected, receipt.State);
+			Assert.AreEqual(KingdomTradePatternCasVerdict.Apply,
+				KingdomTradePatternRules.InspectRoster(receipt, receipt.RosterBefore));
+
+			KingdomTradePatternReceipt selected = RoundTripPattern(receipt, true);
+			Assert.AreEqual(KingdomTradePatternState.Selected, selected.State);
+			Assert.IsTrue(KingdomTradePatternRules.MarkRosterIntent(selected));
+			KingdomTradePatternReceipt intent = RoundTripPattern(selected, true);
+			Assert.AreEqual(KingdomTradePatternState.RosterIntent, intent.State);
+			Assert.AreEqual(KingdomTradePatternCasVerdict.Apply,
+				KingdomTradePatternRules.InspectRoster(intent, intent.RosterBefore));
+			Assert.AreEqual(KingdomTradePatternCasVerdict.AlreadyApplied,
+				KingdomTradePatternRules.InspectRoster(intent, intent.RosterAfter));
+			Assert.IsTrue(KingdomTradePatternRules.MarkLearned(intent));
+			intent.ChronicleState = KingdomTradeSinkState.Delivered;
+			intent.MessageState = KingdomTradeSinkState.Delivered;
+			KingdomTradePatternReceipt learned = RoundTripPattern(intent, true);
+			Assert.AreEqual(KingdomTradePatternState.Learned, learned.State);
+			Assert.IsTrue(KingdomTradePatternRules.Terminal(learned));
+		}
+
+		[Test]
+		public void PatternChoice_AlreadyKnownAndCasThirdValueNeverOverwrite()
+		{
+			KingdomTradePatternReceipt known = OfferedPattern();
+			string selectedKey = KingdomZoningRules.ComposeKey(
+				KingdomCeremonyRules.PatternKnowledgeKind, known.Offers[0].LearnName);
+			string failure;
+			Assert.IsTrue(KingdomTradePatternRules.TrySelect(known, 0, selectedKey,
+				"City A", out failure), failure);
+			Assert.AreEqual(KingdomTradePatternState.AlreadyKnown, known.State);
+			Assert.IsTrue(KingdomTradePatternRules.Terminal(known));
+
+			KingdomTradePatternReceipt conflict = OfferedPattern();
+			Assert.IsTrue(KingdomTradePatternRules.TrySelect(conflict, 0, "disk:water",
+				"City A", out failure), failure);
+			Assert.AreEqual(KingdomTradePatternCasVerdict.ThirdValue,
+				KingdomTradePatternRules.InspectRoster(conflict, "disk:water|disk:third"));
+			KingdomTradePatternRules.MarkConflict(conflict, "third value");
+			Assert.IsTrue(KingdomTradePatternRules.Terminal(conflict));
+		}
+
+		[Test]
+		public void PatternReload_ChoiceAndSinkIntentUseTheirExactReplayPolicies()
+		{
+			KingdomTradePatternReceipt choice = OfferedPattern();
+			Assert.IsTrue(KingdomTradePatternRules.BeginChoice(choice));
+			choice = RoundTripPattern(choice, true);
+			Assert.AreEqual(KingdomTradePatternState.Offered, choice.State,
+				"UI intent has no durable effect and is safely re-offered");
+
+			string failure;
+			Assert.IsTrue(KingdomTradePatternRules.TrySelect(choice, 0, "", "City A",
+				out failure), failure);
+			Assert.IsTrue(KingdomTradePatternRules.MarkRosterIntent(choice));
+			Assert.IsTrue(KingdomTradePatternRules.MarkLearned(choice));
+			choice.ChronicleState = KingdomTradeSinkState.Intent;
+			choice.MessageState = KingdomTradeSinkState.Intent;
+			choice = RoundTripPattern(choice, true);
+			Assert.AreEqual(KingdomTradeSinkState.Intent, choice.ChronicleState,
+				"RecordOnce owns retry/reconciliation");
+			Assert.AreEqual(KingdomTradeSinkState.Lost, choice.MessageState,
+				"uninspectable player messages never repeat after an intent cut");
+		}
+
+		[Test]
+		public void PatternCodec_RejectsHostileStateCountAndAlreadyKnownProof()
+		{
+			KingdomTradePatternReceipt offered = OfferedPattern();
+			byte[] exact = KingdomTradeCodec.EncodePatternFixture(offered);
+			byte[] badState = (byte[])exact.Clone();
+			badState[0] = byte.MaxValue;
+			Assert.Throws<InvalidDataException>(() =>
+				KingdomTradeCodec.DecodePatternFixture(badState));
+
+			byte[] badCount = (byte[])exact.Clone();
+			Buffer.BlockCopy(BitConverter.GetBytes(KingdomTradePatternRules.MaxOffers + 1),
+				0, badCount, 1, 4);
+			Assert.Throws<InvalidDataException>(() =>
+				KingdomTradeCodec.DecodePatternFixture(badCount));
+
+			offered.Offers.Add(new KingdomTradePatternDesign
+				{ BuildingKey = "fourth", LearnName = "fourth", Label = "fourth" });
+			Assert.Throws<InvalidDataException>(() =>
+				KingdomTradeCodec.EncodePatternFixture(offered));
+
+			KingdomTradePatternReceipt known = OfferedPattern();
+			string key = KingdomZoningRules.ComposeKey(
+				KingdomCeremonyRules.PatternKnowledgeKind, known.Offers[0].LearnName);
+			string failure;
+			Assert.IsTrue(KingdomTradePatternRules.TrySelect(known, 0, key,
+				"City A", out failure), failure);
+			known.RosterBefore = known.RosterAfter = "";
+			Assert.IsFalse(KingdomTradePatternRules.Valid(known),
+				"AlreadyKnown must prove the selected exact key is in the frozen roster");
+		}
+
+		[Test]
+		public void Codec_WireV3FixtureMigratesToFormat5AndCurrentRewrite()
+		{
+			KingdomTradeBook prior = Book();
+			prior.FormatVersion = 4;
+			byte[] wire3 = KingdomTradeCodec.EncodeEnvelopeV3Fixture(prior);
+			Assert.AreEqual(KingdomTradeCodec.PriorWireVersion,
+				BitConverter.ToInt32(wire3, 4));
+			KingdomTradeBook migrated = KingdomTradeCodec.DecodeEnvelope(wire3);
+			Assert.AreEqual(KingdomTradeRules.CurrentFormatVersion, migrated.FormatVersion);
+			Assert.IsTrue(KingdomTradeRules.BookUsable(migrated));
+			byte[] current = KingdomTradeCodec.EncodeEnvelope(migrated);
+			Assert.AreEqual(KingdomTradeCodec.CurrentWireVersion,
+				BitConverter.ToInt32(current, 4));
+			KingdomTradeBook again = KingdomTradeCodec.DecodeEnvelope(current);
+			Assert.IsTrue(KingdomTradeRules.BookUsable(again));
+		}
+
+		[Test]
+		public void Codec_WireV3FixtureHasImmutableIndependentGolden()
+		{
+			KingdomTradeBook prior = Book();
+			prior.FormatVersion = 4;
+			byte[] wire3 = KingdomTradeCodec.EncodeEnvelopeV3Fixture(prior);
+			Assert.AreEqual(
+				"328:21ec3e3bb3b41346e72e9509f9452aa0b09b663c1a01acff188d6c013009f280",
+				wire3.Length + ":" + RawSha256(wire3));
+		}
+
+		[Test]
+		public void Codec_ProductionWriterCannotRouteThroughFrozenV3Writer()
+		{
+			string source = ReadRepoSource("Trade/KingdomTradeState.cs");
+			int current = source.IndexOf("public static byte[] EncodePayload(",
+				StringComparison.Ordinal);
+			int prior = source.IndexOf("internal static byte[] EncodePayloadV3ForMigration(",
+				current, StringComparison.Ordinal);
+			string currentWriter = source.Substring(current, prior - current);
+			StringAssert.Contains("WriteOperation)", currentWriter);
+			Assert.IsFalse(currentWriter.Contains("WriteOperationV3"));
+		}
+
+		[Test]
+		public void Codec_WireV3OpenCharterDefaultsPatternLaneWithoutReroll()
+		{
+			KingdomTradeBook prior = Book();
+			KingdomTradeOperation operation = CharterOperation(prior);
+			operation.Pattern = null;
+			prior.FormatVersion = 4;
+			KingdomTradeBook migrated = KingdomTradeCodec.DecodeEnvelope(
+				KingdomTradeCodec.EncodeEnvelopeV3Fixture(prior));
+			Assert.NotNull(migrated.OpenOperation.Pattern);
+			Assert.AreEqual(KingdomTradePatternState.None,
+				migrated.OpenOperation.Pattern.State);
+			Assert.IsTrue(KingdomTradePatternRules.Terminal(
+				migrated.OpenOperation.Pattern));
 		}
 
 		[Test]
@@ -1563,6 +1828,65 @@ namespace ThousandAndFirst.Tests
 			Assert.IsFalse(resetBranch.Contains("System.TradeBook ="));
 			Assert.Greater(source.IndexOf("System.TradeBook = new KingdomTradeBook()", resetUsing,
 				StringComparison.Ordinal), resetUsing);
+		}
+
+		[Test]
+		public void PatternSource_CharterPrepareOwnsFreezeAndExactCityCasBeforeRetirement()
+		{
+			string trade = ReadRepoSource("Trade/KingdomTrade.cs");
+			int prepare = trade.IndexOf("private static bool PrepareCharterDelivery",
+				StringComparison.Ordinal);
+			int prepareEnd = trade.IndexOf("private static bool TryProjectionRow", prepare,
+				StringComparison.Ordinal);
+			string prepareBody = trade.Substring(prepare, prepareEnd - prepare);
+			StringAssert.Contains("KingdomCeremony.FreezePatternBook(System", prepareBody);
+			StringAssert.Contains("operation.SettlementId, operation.Sequence", prepareBody);
+
+			int continuation = trade.IndexOf("private static bool ContinuePatternBook",
+				StringComparison.Ordinal);
+			int schedule = trade.IndexOf("private static bool SettleSchedule", continuation,
+				StringComparison.Ordinal);
+			string patternBody = trade.Substring(continuation, schedule - continuation);
+			StringAssert.Contains("System.KeepersRoster = receipt.RosterAfter", patternBody);
+			StringAssert.Contains("System.City?.SettlementId, Operation.SettlementId", patternBody);
+			StringAssert.Contains("KingdomChronicle.RecordOnce", patternBody);
+			Assert.IsFalse(patternBody.Contains("KingdomZoning.Learn"));
+
+			int schedulePhase = trade.IndexOf(
+				"if (operation.Phase == KingdomTradePhase.ScheduleIntent)",
+				StringComparison.Ordinal);
+			int patternCall = trade.IndexOf("ContinuePatternBook(System, operation, frame)",
+				schedulePhase, StringComparison.Ordinal);
+			int retire = trade.IndexOf("KingdomTradeRules.Retire", patternCall,
+				StringComparison.Ordinal);
+			Assert.Greater(patternCall, schedulePhase);
+			Assert.Greater(retire, patternCall);
+
+			string ceremony = ReadRepoSource("Experience/KingdomCeremony.cs");
+			StringAssert.Contains("DecodeRoster(System.KeepersRoster)", ceremony);
+			Assert.IsFalse(ceremony.Contains("OnCaravanArrived"),
+				"unreachable tick-owned ceremony must not remain as parallel authority");
+			StringAssert.Contains("System.City.SettlementId", ceremony);
+
+			int exactSettlement = trade.IndexOf("private static bool ExactSettlement",
+				StringComparison.Ordinal);
+			int exactLedger = trade.IndexOf("private static bool ExactLedger", exactSettlement,
+				StringComparison.Ordinal);
+			string exactSeat = trade.Substring(exactSettlement, exactLedger - exactSettlement);
+			StringAssert.Contains("Frame.City.SettlementId, Frame.SettlementId", exactSeat);
+			StringAssert.Contains("Frame.Operation.SettlementId, Frame.SettlementId", exactSeat);
+			StringAssert.Contains("system.KeepersRoster ?? \"\", Frame.KeepersRoster", exactSeat);
+
+			int quarantine = trade.IndexOf("private static bool SettlePatternForQuarantine",
+				StringComparison.Ordinal);
+			int settleSchedule = trade.IndexOf("private static bool SettleSchedule", quarantine,
+				StringComparison.Ordinal);
+			string quarantineBody = trade.Substring(quarantine,
+				settleSchedule - quarantine);
+			StringAssert.Contains("AlreadyApplied", quarantineBody);
+			StringAssert.Contains("MarkLearned", quarantineBody);
+			StringAssert.Contains("MarkConflict", quarantineBody);
+			StringAssert.Contains("KingdomTradePhase.Quarantined", quarantineBody);
 		}
 	}
 }

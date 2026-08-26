@@ -166,8 +166,8 @@ namespace ThousandAndFirst
 		// always bears on whether they can live together; how much it bears is the quarters.
 		// You cannot jam five different believers into one bunkhouse and have it be fine, and
 		// the same five in a street of stone houses are neighbours who nod. The one
-		// CohabitHostility floor the vocabulary shipped with is not deleted but PROMOTED: it is
-		// now the Private rung of a four-rung ladder, and the three tighter rungs are what a
+		// old flat floor's VALUE is promoted into the ladder while its public name is retired:
+		// the live Private rung and the three tighter rungs are what a
 		// tent, a hut and a house always should have asked for.
 		//
 		// WHY THIS READS THE SAME FEELINGS AS CITY DISSENT AND ANSWERS DIFFERENTLY.

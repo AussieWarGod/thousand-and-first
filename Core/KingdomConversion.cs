@@ -154,13 +154,14 @@ namespace ThousandAndFirst
 		/// <c>KingdomGrowth.Emigrate</c>. Failure mode: returns having done nothing.
 		/// </para>
 		/// </summary>
-		public static void OnSettlementPass(KingdomSystem System, Zone Z)
+		public static void OnSettlementPass(KingdomSystem System, Zone Z, KingdomSurvey Survey)
 		{
-			if (!Enabled || System == null || !System.Founded || Z == null || !System.ClaimedZones.Contains(Z.ZoneID))
+			if (!Enabled || System == null || !System.Founded || Z == null || Survey == null
+				|| !System.ClaimedZones.Contains(Z.ZoneID))
 			{
 				return;
 			}
-			List<GameObject> residents = ResidentsIn(Z);
+			List<GameObject> residents = new List<GameObject>(Survey.CitizenBodies);
 			if (residents.Count == 0)
 			{
 				return;
@@ -209,7 +210,7 @@ namespace ThousandAndFirst
 			{
 				return;
 			}
-			List<GameObject> attendees = ResidentsIn(Z);
+			List<GameObject> attendees = ResidentsIn(System, Z);
 			if (attendees.Count == 0)
 			{
 				return;
@@ -324,7 +325,7 @@ namespace ThousandAndFirst
 				return false;
 			}
 			string roll = RollNameOf(Settler);
-			string named = string.IsNullOrEmpty(roll) ? Settler.ShortDisplayName : roll;
+			string named = string.IsNullOrEmpty(roll) ? Settler.BaseDisplayNameStripped : roll;
 			int hostility = KingdomCreed.HostilityBetween(was, Creed);
 			// The existing surfaces, in the only order that keeps the tally honest: the old creed
 			// is read off the settler by Forget, so it must go before Record overwrites it.
@@ -358,16 +359,17 @@ namespace ThousandAndFirst
 			// night "holds what they held".
 			KingdomBrink.Lift(Settler, BrinkKind.Creed);
 			string creedName = KingdomCreed.CreedName(Creed);
-			string telling = KingdomConversionRules.ConversionTelling(Channel, named, creedName);
+			string shownName = KingdomPresentation.Rich(named);
+			string telling = KingdomConversionRules.ConversionTelling(Channel, shownName, creedName);
 			if (KingdomConversionRules.Contested(hostility))
 			{
-				KingdomChronicle.RecordDisputed(System, telling, KingdomConversionRules.ConversionRumour(Channel, named, creedName));
+				KingdomChronicle.RecordDisputed(System, telling, KingdomConversionRules.ConversionRumour(Channel, shownName, creedName));
 			}
 			else
 			{
 				KingdomChronicle.Record(System, telling);
 			}
-			System.Ledger.Note("{{G|" + KingdomConversionRules.ConversionNote(named, creedName) + "}}");
+			System.Ledger.Note("{{G|" + KingdomConversionRules.ConversionNote(shownName, creedName) + "}}");
 			KingdomLog.Log("conversion: " + named + " " + (string.IsNullOrEmpty(was) ? "(none)" : was) + " -> " + Creed + " via " + Channel + " hostility=" + hostility);
 			return true;
 		}
@@ -391,7 +393,7 @@ namespace ThousandAndFirst
 				pulled.Add(entry.Key + "->" + (toward ?? "-") + " " + entry.Value + "/" + KingdomConversionRules.SharedLivingForConversion);
 			}
 			List<string> atTheEnd = new List<string>();
-			List<GameObject> residents = ResidentsIn(Z);
+			List<GameObject> residents = ResidentsIn(System, Z);
 			for (int i = 0; i < residents.Count; i++)
 			{
 				BrinkRecord brink = KingdomBrink.Of(residents[i], BrinkKind.Creed);
@@ -657,7 +659,9 @@ namespace ThousandAndFirst
 				// Convert clears the brink and both maps and writes its own two registers. All
 				// that is owed here is the date: the founder was told this was coming, and this is
 				// the day it came.
-				KingdomWord.Aftermath(System, System.SeatName, here, KingdomBrinkRules.FiredNote(BrinkKind.Creed, Roll, ago));
+				KingdomWord.Aftermath(System, System.SeatName, here,
+					KingdomBrinkRules.FiredNote(BrinkKind.Creed,
+						KingdomPresentation.Rich(Roll), ago));
 				return;
 			}
 			// It did not take. The brink is lifted rather than left standing, and the road starts
@@ -723,7 +727,8 @@ namespace ThousandAndFirst
 				if (had && wasWarnedOn > KingdomConversionRules.NotWarned)
 				{
 					KingdomWord.Unsay(System, System.SeatName, KingdomWord.StandsIn(Z),
-						KingdomBrinkRules.LiftedNote(BrinkKind.Creed, roll));
+						KingdomBrinkRules.LiftedNote(BrinkKind.Creed,
+							KingdomPresentation.Rich(roll)));
 				}
 				return;
 			}
@@ -741,7 +746,8 @@ namespace ThousandAndFirst
 				return;
 			}
 			long went = (long)(warned + KingdomConversionRules.ResentedWindowDays) * KingdomRules.TicksPerDay;
-			string leaving = KingdomConversionRules.LeavingLine(roll)
+			string leaving = KingdomConversionRules.LeavingLine(
+				KingdomPresentation.Rich(roll))
 				+ KingdomBrinkRules.FiredClause(KingdomBrinkRules.DaysStood(went, Now));
 			if (KingdomGrowth.Emigrate(System, Z, null, Resident, KingdomConversionRules.DepartureCause))
 			{
@@ -805,9 +811,10 @@ namespace ThousandAndFirst
 		private static void Announce(KingdomSystem System, Zone Z, string Roll, string Pressing, int DaysLeft)
 		{
 			string creedName = KingdomCreed.CreedName(Pressing);
+			string shownRoll = KingdomPresentation.Rich(Roll);
 			KingdomWord.Warn(System, System.SeatName, KingdomWord.StandsIn(Z),
-				KingdomConversionRules.PressureNote(Roll, creedName) + " " + KingdomBrinkRules.WindowPhrase(DaysLeft),
-				KingdomConversionRules.PressureTelling(Roll, creedName),
+				KingdomConversionRules.PressureNote(shownRoll, creedName) + " " + KingdomBrinkRules.WindowPhrase(DaysLeft),
+				KingdomConversionRules.PressureTelling(shownRoll, creedName),
 				null);
 		}
 
@@ -816,8 +823,12 @@ namespace ThousandAndFirst
 		// so both maps stay the size of the city rather than of its history.
 		private static void ForgetDeparted(KingdomSystem System)
 		{
-			Prune(System.ConversionShared, System.RosterNames);
-			Prune(System.ConversionResented, System.RosterNames);
+			Simulation.City.KingdomCityState state;
+			Simulation.City.KingdomResidentRollProjection roll;
+			List<string> living = Simulation.City.KingdomResidents.TryRoll(System, out state,
+				out roll) ? roll.Names : new List<string>();
+			Prune(System.ConversionShared, living);
+			Prune(System.ConversionResented, living);
 			List<string> stale = null;
 			foreach (KeyValuePair<string, string> entry in System.ConversionToward)
 			{
@@ -931,12 +942,12 @@ namespace ThousandAndFirst
 			return counts;
 		}
 
-		private static List<GameObject> ResidentsIn(Zone Z)
+		private static List<GameObject> ResidentsIn(KingdomSystem System, Zone Z)
 		{
 			List<GameObject> list = new List<GameObject>();
-			foreach (GameObject item in Z.GetObjects())
+			foreach (GameObject item in KingdomSurvey.ObjectsFor(Z))
 			{
-				if (item.GetIntProperty("KingdomCitizen") == 1)
+				if (KingdomCitizenship.BelongsTo(System, item))
 				{
 					list.Add(item);
 				}

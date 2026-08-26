@@ -809,11 +809,22 @@ namespace ThousandAndFirst
 		/// than by a special case.</returns>
 		public static int VatWorked(long ElapsedTicks, int CrewEffectiveness, int WearEffectiveness)
 		{
+			return VatWorked(ElapsedTicks, CrewEffectiveness, WearEffectiveness,
+				KingdomIdentityAffinityRules.NeutralPercent);
+		}
+
+		/// <summary>The same paid labour with Addendum 17's identity affinity as its own
+		/// multiplicative factor. It never supplies hands: zero crew remains zero.</summary>
+		public static int VatWorked(long ElapsedTicks, int CrewEffectiveness,
+			int WearEffectiveness, int IdentityAffinity)
+		{
 			if (ElapsedTicks <= 0L || CrewEffectiveness <= 0 || WearEffectiveness <= 0)
 			{
 				return 0;
 			}
-			long rate = (long)Clamp(CrewEffectiveness, 0, 100) * Clamp(WearEffectiveness, 0, 100) / 100L;
+			long rate = (long)Clamp(CrewEffectiveness, 0, 100)
+				* Clamp(WearEffectiveness, 0, 100)
+				* KingdomIdentityAffinityRules.Clamp(IdentityAffinity) / 10000L;
 			long worked = KingdomRules.LabouredTicks(ElapsedTicks, (int)rate);
 			return (worked > int.MaxValue) ? int.MaxValue : (int)worked;
 		}

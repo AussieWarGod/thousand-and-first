@@ -9,14 +9,13 @@ namespace ThousandAndFirst
 	/// ceremony rather than two separate errands, and re-dressing a standing building in any
 	/// registered skin is a trivial, non-structural act.
 	/// <para>
-	/// Addendum 2 (also 2026-08-21, marked PENDING a further architecture pass) types the plot by
+	/// Addendum 2 (also 2026-08-21) types the plot by
 	/// (<c>Category</c> &times; <c>KingdomPlotRules.PlotSize</c>) and splits the ceremony into two
 	/// verbs: <em>change the building</em>, cheap and ordinary, when the chosen design shares the
 	/// standing building's own (type, size); and <em>re-type the plot</em>, rare, when it does
 	/// not. <see cref="ClassifyChange"/> is that split, applied at the socket eligibility layer as
-	/// directed. No differentiated cost formula for the two verbs has been authored yet &mdash;
-	/// see <see cref="AssessConversion"/> &mdash; so both currently cost the same, and a future
-	/// pass that wants "change the building" cheaper has one place to add it.
+	/// directed. Same-set changes use only an explicit transition declaration; true retypes use
+	/// the ordinary full strike and fresh-siting bill.
 	/// </para>
 	/// <para>
 	/// Nothing here touches <c>XRL</c>. The engine-coupled half &mdash; reading a real plot's
@@ -28,9 +27,9 @@ namespace ThousandAndFirst
 	{
 		/// <summary>
 		/// Which of the two Addendum-2 verbs a change is. Classification only: nothing here
-		/// decides eligibility or cost by it yet (<see cref="AssessConversion"/>'s remarks), only
-		/// which menu a founder-facing caller should file the choice under and which word the
-		/// confirmation uses.
+		/// decides eligibility by classification alone. A same-set choice also needs an exact,
+		/// directional <see cref="KingdomSocketTransition"/> for the standing actual size; a
+		/// retype uses the ordinary fresh-siting and full-build path.
 		/// </summary>
 		public enum ChangeKind
 		{
@@ -68,6 +67,40 @@ namespace ThousandAndFirst
 				return ChangeKind.Retype;
 			}
 			return (Fold(CurrentCategory) == Fold(TargetCategory)) ? ChangeKind.SameSet : ChangeKind.Retype;
+		}
+
+		/// <summary>Recovers the actual staked tier, accepting a quarter-turned rectangle.</summary>
+		public static bool TryActualSize(int Width, int Height,
+			out KingdomPlotRules.PlotSize Size)
+		{
+			Size = KingdomPlotRules.PlotSize.None;
+			for (int i = (int)KingdomPlotRules.PlotSize.Small;
+				i <= (int)KingdomPlotRules.PlotSize.Huge; i++)
+			{
+				KingdomPlotRules.PlotSize candidate = (KingdomPlotRules.PlotSize)i;
+				int width;
+				int height;
+				if (KingdomPlotRules.TryDimensions(candidate, out width, out height)
+					&& ((Width == width && Height == height)
+						|| (Width == height && Height == width)))
+				{
+					Size = candidate;
+					return true;
+				}
+			}
+			return false;
+		}
+
+		/// <summary>Whether the target can inhabit the standing typed lot without resizing it.</summary>
+		public static bool FitsSameSet(string CurrentCategory,
+			KingdomPlotRules.PlotSize ActualSize, string TargetCategory,
+			KingdomPlotRules.PlotSize TargetMinimum)
+		{
+			return ActualSize != KingdomPlotRules.PlotSize.None
+				&& TargetMinimum != KingdomPlotRules.PlotSize.None
+				&& ActualSize >= TargetMinimum
+				&& Fold(CurrentCategory) != ""
+				&& Fold(CurrentCategory) == Fold(TargetCategory);
 		}
 
 		/// <summary>The word a confirmation or a chronicle line uses for a <see cref="ChangeKind"/>.</summary>
@@ -194,12 +227,10 @@ namespace ThousandAndFirst
 		/// the addendum asks be disclosed once, before anything moves &mdash; not a second,
 		/// discounted payment mechanism sitting beside the first.
 		/// </para>
-		/// <para>
-		/// Addendum 2 does not yet author a cheaper formula for a "change the building" (<see
-		/// cref="ChangeKind.SameSet"/>) ceremony than for a "re-type the plot" (<see
-		/// cref="ChangeKind.Retype"/>) one, so both are assessed identically here. A future pass
-		/// that wants the ordinary verb cheaper has exactly this function to change.
-		/// </para>
+		/// <para>This full strike-and-rebuild quote belongs only to <see
+		/// cref="ChangeKind.Retype"/>. Same-set changes are priced by
+		/// <see cref="AssessPlanChange"/> from their exact authored route and perform neither
+		/// strike nor salvage.</para>
 		/// </summary>
 		public struct ConversionQuote
 		{
@@ -226,6 +257,22 @@ namespace ThousandAndFirst
 			/// credited against it, per material, floored at zero. Never null. The figure the
 			/// founder is actually told the conversion "nets to" in material.</summary>
 			public KingdomMaterialTally NetMaterials;
+
+			/// <summary>Exact authored work duration; zero for ordinary strike/rebuild quotes.</summary>
+			public long WorkTicks;
+		}
+
+		/// <summary>Quotes only an explicitly authored same-set transition delta.</summary>
+		public static ConversionQuote AssessPlanChange(KingdomSocketTransition Transition)
+		{
+			ConversionQuote quote = default(ConversionQuote);
+			quote.Salvage = new KingdomMaterialTally();
+			quote.NewDrams = Transition == null ? 0 : Transition.WaterDrams;
+			quote.NewMaterials = Transition == null || Transition.Materials == null
+				? new KingdomMaterialTally() : Transition.Materials;
+			quote.NetMaterials = quote.NewMaterials.Copy();
+			quote.WorkTicks = Transition == null ? 0L : Transition.WorkTicks;
+			return quote;
 		}
 
 		/// <summary>
@@ -266,6 +313,15 @@ namespace ThousandAndFirst
 		/// </summary>
 		public static string DescribeConversion(string OldName, string NewName, ChangeKind Kind, ConversionQuote Quote)
 		{
+			if (Kind == ChangeKind.SameSet)
+			{
+				string materials = Quote.NetMaterials.Describe();
+				return "Changing the " + OldName + " into a " + NewName
+					+ " keeps its exact lot, facing, and standing fabric. The declared change costs {{C|"
+					+ Quote.NewDrams + " drams"
+					+ (materials == null ? "" : " and " + materials)
+					+ "}} and takes {{C|" + Quote.WorkTicks + " ticks}}. Nothing is struck or salvaged.";
+			}
 			string verb = (Kind == ChangeKind.SameSet) ? "Changing" : "Re-typing this plot and changing";
 			string salvage = Quote.Salvage.Describe();
 			string net = Quote.NetMaterials.Describe();

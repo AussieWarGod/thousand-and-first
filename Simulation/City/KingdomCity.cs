@@ -136,7 +136,21 @@ namespace ThousandAndFirst.Simulation.City
 			}
 			KingdomReifySpend spend;
 			state = Reify(System, Z, Survey, state, index, TimeTicks, true, out spend);
+			if (!KingdomDistanceRuntime.Observe(System, Z, Survey, state, out fault))
+			{
+				// No invented locality. A missing/stale live-ground slice pauses remote carry;
+				// the rest of check-in remains authoritative and continues normally.
+				Refuse("distance observe", fault);
+			}
+			// Central logistics owns every physical cross-zone transfer. Recover a source
+			// callback before opening new work, settle only exact marked receipts that have
+			// reached this ground, then start planned loads whose exact source is here.
+			KingdomCentralLogistics.SweepReceiptMarkers(System, Survey);
+			KingdomCentralLogistics.RecoverPreparedSources(System, Z, Survey);
+			KingdomCentralLogistics.SettleScalarArrivals(System, Z, Survey, TimeTicks,
+				CropOf(System));
 			state = Carry(System, Z, Survey, state, TimeTicks);
+			KingdomCentralLogistics.StartPlanned(System, Z, Survey, TimeTicks);
 			// W7 repair: the audit that CAN be false. The one at the foot of this method reports an
 			// identity the reconcile it follows has just constructed by re-deriving the debt -- it
 			// proves the reconcile ran and is evidence about nothing else. This one asks the same
@@ -150,27 +164,32 @@ namespace ThousandAndFirst.Simulation.City
 				KingdomLog.Log("city: check-in read " + drift);
 			}
 			state = Reconcile(System, Z, Survey, state, index, TimeTicks);
-			state = ReadWorks(state, Z, Survey);
-			// After the works, because a resident row's home is named by the work row that stands
-			// over it, and a home read before the works were rebuilt would name last pass's id.
+			// Home and post ids come from the live objects' own stable ids, not from last pass's work
+			// rows. Read residents first: their JobWorkId is the sole authority from which ReadWorks
+			// may derive CrewAssigned on this same check-in.
 			// This is where the roster becomes rows and where the binding registry learns who is
 			// standing in this ground (LIVING-CITY-ARCHITECTURE §8.3, §3.8): every settler here gets
 			// a stable id and a row, and every row bound HERE whose body is not here reads back as
 			// Abroad or Dead, with the cause.
 			state = KingdomResidents.ReadRoster(System, Z, Survey, state, TimeTicks);
+			state = ReadWorks(state, Z, Survey);
 			Publish(System, state);
+			// API-v3 is a real model lane, not a registration-only surface. It advances beside the
+			// closed city state and keeps its one bounded wire on this exact city book.
+			KingdomBehaviourRuntime.Reckon(System, System.City, System.SeatName);
 			// The hour's placement, and the carriers who are mid-journey through this ground. Both
 			// are renderings of what the book already says (§3.2(b), §3.7): the station gives
 			// vanilla's own idle hook something to claim a settler with, and Render puts every open
 			// job's carrier at At(job, now) - the same answer every other zone would give.
 			KingdomStations.Attend(System, Z, Survey);
+			KingdomBehaviourRuntime.Materialise(System, System.City, Z, TimeTicks);
 			// Before anything is minted: a body carrying a job id the model already closed is the
 			// one instant the goods could exist twice (§3.8 t3). ZoneThawedEvent is the hook the
 			// architecture names, and it is not enough on its own — a suspended-but-resident zone is
 			// entered with no thaw at all (§3.5), so the sweep runs on the entry path too. It is
 			// idempotent: absence from the registry is what makes a body stale, and a swept zone
 			// has none left.
-			KingdomPorters.Sweep(System, Z);
+			KingdomPorters.Sweep(System, Z, Survey);
 			KingdomPorters.Render(System, Z, TimeTicks);
 			Audit(System, Z, Survey, "check-in");
 		}
@@ -255,6 +274,10 @@ namespace ThousandAndFirst.Simulation.City
 			{
 				Refuse("check-out", fault);
 				return;
+			}
+			if (!KingdomDistanceRuntime.Observe(System, Z, Survey, written, out fault))
+			{
+				Refuse("distance observe", fault);
 			}
 			Publish(System, written);
 		}
@@ -573,7 +596,7 @@ namespace ThousandAndFirst.Simulation.City
 			KingdomCityState written = Reify(System, Z, survey, state, index, TimeTicks, false, out spend);
 			watch.Stop();
 			Publish(System, written);
-			Receipt(Z.ZoneID, spend, watch, OwedThirds(System));
+			Receipt(Z.ZoneID, spend, watch, GroundDemandThirds(Z, survey, written, index));
 			if (spend.Units == 0)
 			{
 				// Nothing moved: the ground cannot serve this debt yet. Buy an hour of quiet rather
@@ -609,103 +632,103 @@ namespace ThousandAndFirst.Simulation.City
 			{
 				return state;
 			}
-			// A unit is only worth spending on a kind the containers can actually move. A cistern
-			// with nothing in it cannot pay a draw and a full larder cannot take a landing, and
-			// spending a unit a turn to discover that again is both a wasted budget and — because
-			// the shortfall wants telling — a homecoming report full of the same line.
-			bool waterOwed = row.OwedWater != 0 && CanMoveWater(Survey, row.OwedWater);
-			bool foodOwed = row.OwedFood != 0 && CanMoveFood(Survey, row.OwedFood);
+			ContainerGround ground = ContainerGround.Take(Survey);
+			KingdomContainerDemandReceipt measured;
+			KingdomCityFault fault;
+			if (!KingdomContainerCatchUpRules.TryMeasure(ground.Rows, ground.Rows.Length,
+				row.OwedWater, row.OwedFood, row.OwedMaterials, out measured, out fault))
+			{
+				Refuse("reify containers", fault);
+				return state;
+			}
 			if (announce)
 			{
-				// Said once, at the pass, in the founder's own register: what the containers could
-				// not cover stays on the row and is never silently forgiven (§3.9).
+				// Capacity beyond every real eligible container is named once and remains on the row.
 				Tell(System, 0, 0,
-					(row.OwedWater != 0 && !waterOwed) ? row.OwedWater : 0,
-					(row.OwedFood != 0 && !foodOwed) ? row.OwedFood : 0);
+					SignedRemainder(row.OwedWater, measured.WaterBlocked),
+					SignedRemainder(row.OwedFood, measured.FoodBlocked));
 			}
-			bool waterSeen = waterOwed && Visible(WaterCell(Survey));
-			bool foodSeen = foodOwed && Visible(FoodCell(Survey));
 			Dictionary<int, GameObject> stations = KingdomStations.Index(Z);
 			List<GameObject> posted = Posted(Z, Survey, stations);
 			int visibleHeavyWanted = VisibleCount(posted);
 			KingdomReifyDemand demand = new KingdomReifyDemand(
 				visibleHeavyWanted,
-				(waterSeen ? 1 : 0) + (foodSeen ? 1 : 0),
+				measured.VisibleUnits,
 				0,
 				posted.Count - visibleHeavyWanted,
-				(waterOwed && !waterSeen ? 1 : 0) + (foodOwed && !foodSeen ? 1 : 0),
+				measured.RestUnits,
 				0);
 			if (demand.IsEmpty)
 			{
 				return state;
 			}
-			KingdomCityFault fault;
-			if (!KingdomCatchUpRules.TryPlanTurn(demand, Allowance(System, TimeTicks), HeavyAllowance(System, TimeTicks), out spend, out fault))
+			KingdomReifySpend planned;
+			if (!KingdomCatchUpRules.TryPlanTurn(demand, Allowance(System, TimeTicks), HeavyAllowance(System, TimeTicks), out planned, out fault))
 			{
 				Refuse("reify", fault);
 				return state;
 			}
+			int heavyVisible = (planned.Heavy < demand.VisibleHeavy) ? planned.Heavy : demand.VisibleHeavy;
+			int mediumVisible = (planned.Medium < demand.VisibleMedium) ? planned.Medium : demand.VisibleMedium;
+			int visibleHeavySpent = Anchor(Z, posted, stations, heavyVisible, 0, TimeTicks);
+			int restHeavySpent = 0;
+			KingdomContainerSettlement apply = delegate(int source, KingdomStockKind kind,
+				KingdomUnitDirection direction, int offered, out int applied)
+			{
+				return SettleContainer(System, Survey, ground, source, kind, direction, offered, out applied);
+			};
+			KingdomContainerSettlementReceipt visibleSettlement;
+			if (!KingdomContainerCatchUpRules.TrySettle(ground.Rows, ground.Rows.Length,
+				row.OwedWater, row.OwedFood, row.OwedMaterials,
+				mediumVisible, 0, apply, out visibleSettlement, out fault))
+			{
+				Refuse("reify visible containers", fault);
+				return state;
+			}
+			int heavyRest = planned.Heavy - heavyVisible;
+			if (!visibleSettlement.CallbackFailed)
+			{
+				restHeavySpent = Anchor(Z, posted, stations, 0, heavyRest, TimeTicks);
+			}
+			KingdomContainerSettlementReceipt restSettlement = visibleSettlement;
+			if (!visibleSettlement.CallbackFailed
+				&& !KingdomContainerCatchUpRules.TrySettle(ground.Rows, ground.Rows.Length,
+					visibleSettlement.OwedWater, visibleSettlement.OwedFood,
+					visibleSettlement.OwedMaterials, 0, planned.Medium - mediumVisible,
+					apply, out restSettlement, out fault))
+			{
+				Refuse("reify containers", fault);
+				return state;
+			}
+			int mediumSpent = visibleSettlement.UnitsSpent + restSettlement.UnitsSpent;
+			// The second receipt is for its own call only; when it ran, replace rather than add the
+			// first call's carried debt but add both measured unit counts.
+			if (visibleSettlement.CallbackFailed)
+			{
+				restSettlement = visibleSettlement;
+				mediumSpent = visibleSettlement.UnitsSpent;
+			}
+			int heavySpent = visibleHeavySpent + restHeavySpent;
+			int visibleSpent = visibleHeavySpent + visibleSettlement.VisibleSpent;
+			spend = new KingdomReifySpend(heavySpent, mediumSpent, 0, visibleSpent,
+				(heavySpent + mediumSpent) * KingdomCatchUpRules.ThirdsPerUnit);
 			Charge(System, TimeTicks, spend);
-			// The budget's own order, reconstructed rather than re-decided: TryPlanTurn takes the
-			// visible half of a tier before the rest of it, so this split is a minimum against the
-			// plan and never a second opinion about precedence.
-			int heavyVisible = (spend.Heavy < demand.VisibleHeavy) ? spend.Heavy : demand.VisibleHeavy;
-			int mediumVisible = (spend.Medium < demand.VisibleMedium) ? spend.Medium : demand.VisibleMedium;
-			Anchor(Z, posted, stations, heavyVisible, spend.Heavy - heavyVisible, TimeTicks);
-			int water = row.OwedWater;
-			int food = row.OwedFood;
-			int seen = mediumVisible;
-			int rest = spend.Medium - mediumVisible;
-			bool waterSpent = waterOwed && Spendable(waterSeen, ref seen, ref rest);
-			if (waterSpent)
-			{
-				water = SettleWater(Survey, water);
-				// The city's own works, arriving in the founder's report where the settlement
-				// pass's clocked credit used to put them (W6). Only a LANDING is fetched water; a
-				// draw is upkeep and is counted by the step that drew it.
-				if (row.OwedWater > water)
-				{
-					System.Ledger.Fetched += row.OwedWater - water;
-				}
-			}
-			bool foodSpent = foodOwed && Spendable(foodSeen, ref seen, ref rest);
-			if (foodSpent)
-			{
-				food = SettleFood(System, Survey, food);
-			}
+			int water = restSettlement.OwedWater;
+			int food = restSettlement.OwedFood;
+			int materials = restSettlement.OwedMaterials;
+			int fetched = row.OwedWater - water;
+			if (fetched > 0) System.Ledger.Fetched += fetched;
 			KingdomCityState written;
-			if (!state.TryWithZone(index, row.WithOwed(water, food, row.OwedMaterials), out written, out fault))
+			if (!state.TryWithZone(index, row.WithOwed(water, food, materials), out written, out fault))
 			{
 				Refuse("reify", fault);
 				return state;
 			}
-			// A debt that is DRAINING is not a shortfall, and saying so on each of the twenty-nine
+			// A debt that is DRAINING is not a shortfall, and saying so on each of the thirty-nine
 			// turns a full backlog takes would fill the founder's report with the sound of the
 			// thing working (STANDARDS 7b). What could not be covered was already said above, once.
-			Tell(System, waterSpent ? (row.OwedWater - water) : 0, foodSpent ? (row.OwedFood - food) : 0, 0, 0);
+			Tell(System, row.OwedWater - water, row.OwedFood - food, 0, 0);
 			return written;
-		}
-
-		/// <summary>Whether this unit is inside the half of the plan its visibility belongs to,
-		/// and spends it if it is. A visible unit may never be paid for out of the rest's
-		/// allowance, or "visible first" would be a preference instead of an order.</summary>
-		private static bool Spendable(bool visible, ref int seen, ref int rest)
-		{
-			if (visible)
-			{
-				if (seen <= 0)
-				{
-					return false;
-				}
-				seen--;
-				return true;
-			}
-			if (rest <= 0)
-			{
-				return false;
-			}
-			rest--;
-			return true;
 		}
 
 		/// <summary>
@@ -730,7 +753,7 @@ namespace ThousandAndFirst.Simulation.City
 
 		/// <summary>Moves as many anchors as the budget bought, the visible ones first. Vanilla
 		/// walks them the rest of the way (&sect;3.2(b)).</summary>
-		private static void Anchor(Zone Z, List<GameObject> posted, Dictionary<int, GameObject> stations, int visible, int rest, long TimeTicks)
+		private static int Anchor(Zone Z, List<GameObject> posted, Dictionary<int, GameObject> stations, int visible, int rest, long TimeTicks)
 		{
 			int spentVisible = 0;
 			int spentRest = 0;
@@ -751,6 +774,7 @@ namespace ThousandAndFirst.Simulation.City
 				}
 				if (seen) { spentVisible++; } else { spentRest++; }
 			}
+			return spentVisible + spentRest;
 		}
 
 		private static int VisibleCount(List<GameObject> bodies)
@@ -774,170 +798,89 @@ namespace ThousandAndFirst.Simulation.City
 			return at != null && at.IsVisible();
 		}
 
-		private static Cell WaterCell(KingdomSurvey Survey)
+		private sealed class ContainerGround
 		{
-			List<LiquidVolume> vessels = Ordered(Survey.Stores);
-			for (int i = 0; i < vessels.Count; i++)
+			internal KingdomContainerCatchUpRow[] Rows;
+			internal LiquidVolume[] Water;
+			internal GameObject[] Food;
+
+			internal static ContainerGround Take(KingdomSurvey survey)
 			{
-				GameObject parent = vessels[i].ParentObject;
-				if (GameObject.Validate(parent) && parent.CurrentCell != null)
+				int waterCount = (survey == null) ? 0 : survey.Stores.Count;
+				int foodCount = (survey == null) ? 0 : survey.Larders.Count;
+				ContainerGround ground = new ContainerGround();
+				ground.Rows = new KingdomContainerCatchUpRow[waterCount + foodCount];
+				ground.Water = new LiquidVolume[waterCount + foodCount];
+				ground.Food = new GameObject[waterCount + foodCount];
+				for (int i = 0; i < waterCount; i++)
 				{
-					return parent.CurrentCell;
+					LiquidVolume store = survey.Stores[i];
+					GameObject owner = (store == null) ? null : store.ParentObject;
+					int room = (store != null && store.MaxVolume >= 0
+						&& store.Volume < store.MaxVolume && KingdomLiquids.CanReceiveFreshWater(store))
+						? store.MaxVolume - store.Volume : 0;
+					int contents = KingdomLiquids.HasFreshWater(store) ? store.Volume : 0;
+					ground.Rows[i] = new KingdomContainerCatchUpRow(
+						KingdomCityRules.StableId(GameObject.Validate(owner) ? owner.ID : ""),
+						OrdinalOf(owner), KingdomStockKind.Water,
+						GameObject.Validate(owner) && Visible(owner.CurrentCell), room, contents);
+					ground.Water[i] = store;
 				}
+				for (int i = 0; i < foodCount; i++)
+				{
+					int index = waterCount + i;
+					GameObject larder = survey.Larders[i];
+					int contents = GameObject.Validate(larder) ? KingdomSurvey.HeldIn(larder) : 0;
+					int room = GameObject.Validate(larder)
+						? KingdomSurvey.CapacityOf(larder) - contents : 0;
+					if (room < 0) room = 0;
+					ground.Rows[index] = new KingdomContainerCatchUpRow(
+						KingdomCityRules.StableId(GameObject.Validate(larder) ? larder.ID : ""),
+						OrdinalOf(larder), KingdomStockKind.Food,
+						GameObject.Validate(larder) && Visible(larder.CurrentCell), room, contents);
+					ground.Food[index] = larder;
+				}
+				return ground;
 			}
-			return null;
 		}
 
-		private static Cell FoodCell(KingdomSurvey Survey)
+		private static bool SettleContainer(KingdomSystem System, KingdomSurvey Survey,
+			ContainerGround ground, int source, KingdomStockKind kind,
+			KingdomUnitDirection direction, int offered, out int applied)
 		{
-			List<GameObject> larders = Ordered(Survey.Larders);
-			for (int i = 0; i < larders.Count; i++)
+			applied = 0;
+			if (ground == null || source < 0 || source >= ground.Rows.Length || offered <= 0
+				|| ground.Rows[source].Kind != kind) return false;
+			if (kind == KingdomStockKind.Water)
 			{
-				if (GameObject.Validate(larders[i]) && larders[i].CurrentCell != null)
+				LiquidVolume store = ground.Water[source];
+				if (direction == KingdomUnitDirection.Land)
 				{
-					return larders[i].CurrentCell;
+					applied = Survey.StoreIn(store, offered);
+					return applied == offered;
 				}
+				return Survey.TryLeakFromExact(store, offered, out applied);
 			}
-			return null;
-		}
-
-		/// <summary>
-		/// One medium unit of water: at most one vessel's worth, landed or drawn.
-		/// LIVING-CITY-ARCHITECTURE &sect;0.0(b) prices a unit at <i>one item stack into one
-		/// container</i>, so a debt bigger than one vessel takes more than one turn &mdash; which is
-		/// the amortisation working, not a shortfall.
-		/// </summary>
-		private static int SettleWater(KingdomSurvey Survey, int owed)
-		{
-			if (owed > 0)
+			if (kind == KingdomStockKind.Food)
 			{
-				int room = FirstWaterRoom(Survey);
-				int offer = (owed < room) ? owed : room;
-				return (offer <= 0) ? owed : (owed - Survey.Store(offer));
-			}
-			if (owed >= 0)
-			{
-				return 0;
-			}
-			List<LiquidVolume> vessels = Ordered(Survey.Stores);
-			int remaining = -owed;
-			for (int i = 0; i < vessels.Count && remaining > 0; i++)
-			{
-				// Fresh water only: a drain may never launder brine into the books (STANDARDS §1).
-				// The delta is measured rather than assumed, which is what LeakFrom does and the
-				// only reason this does not call UseDrams itself.
-				if (!KingdomLiquids.HasFreshWater(vessels[i]))
+				GameObject larder = ground.Food[source];
+				if (direction == KingdomUnitDirection.Land)
 				{
-					continue;
+					applied = Survey.StoreFoodIn(larder, offered, CropOf(System));
+					if (applied > 0) System.Ledger.Harvested += applied;
+					return applied == offered;
 				}
-				// One vessel is one unit. The oldest dedication pays first and the next one waits
-				// for the next turn, which is what makes a season's drinking arrive as an amortised
-				// drain rather than as one activation's spike.
-				remaining -= Survey.LeakFrom(vessels[i], remaining);
-				break;
+				return Survey.TrySpoilFromExact(larder, offered, out applied);
 			}
-			return -remaining;
-		}
-
-		/// <summary>One medium unit of food: at most one larder's worth, landed or drawn, in
-		/// dedication order.</summary>
-		private static int SettleFood(KingdomSystem System, KingdomSurvey Survey, int owed)
-		{
-			if (owed > 0)
-			{
-				int room = FirstFoodRoom(Survey);
-				int offer = (owed < room) ? owed : room;
-				// KingdomGrowth's own landing, called rather than re-implemented: it keeps the
-				// harvest ledger and the once-per-block "nowhere to put it" sentence, which the
-				// settlement pass used to reach through the clocked make and W6 moved onto the
-				// model. One rule for "put food away and say what was lost", one home for it.
-				return (offer <= 0) ? owed : (owed - KingdomGrowth.StoreHarvest(System, Survey, offer));
-			}
-			if (owed >= 0)
-			{
-				return 0;
-			}
-			List<GameObject> larders = Ordered(Survey.Larders);
-			int remaining = -owed;
-			if (larders.Count > 0 && remaining > 0)
-			{
-				// SpoilFrom is the survey's own "take this many servings out of THIS container and
-				// keep the counters right". Reusing it is deliberate: a second implementation of
-				// how a food stack comes apart would be a second answer to the same question.
-				remaining -= Survey.SpoilFrom(larders[0], remaining);
-			}
-			return -remaining;
-		}
-
-		/// <summary>Whether this zone's vessels can move a dram in the direction the row owes. A
-		/// landing needs room; a draw needs fresh water actually standing in something.</summary>
-		private static bool CanMoveWater(KingdomSurvey Survey, int owed)
-		{
-			if (owed > 0)
-			{
-				return FirstWaterRoom(Survey) > 0;
-			}
-			for (int i = 0; i < Survey.Stores.Count; i++)
-			{
-				if (Survey.Stores[i].Volume > 0 && KingdomLiquids.HasFreshWater(Survey.Stores[i]))
-				{
-					return true;
-				}
-			}
+			// Materials do not yet have a civic-container ground adapter. Their signed debt remains
+			// honest and measured as blocked rather than being silently cleared by a proxy.
 			return false;
 		}
 
-		/// <summary>The food half of <see cref="CanMoveWater"/>.</summary>
-		private static bool CanMoveFood(KingdomSurvey Survey, int owed)
+		private static int SignedRemainder(int owed, int magnitude)
 		{
-			if (owed > 0)
-			{
-				return FirstFoodRoom(Survey) > 0;
-			}
-			for (int i = 0; i < Survey.Larders.Count; i++)
-			{
-				if (GameObject.Validate(Survey.Larders[i]) && KingdomSurvey.HeldIn(Survey.Larders[i]) > 0)
-				{
-					return true;
-				}
-			}
-			return false;
-		}
-
-		/// <summary>Room in the first vessel that can take fresh water: the size of one landing
-		/// unit.</summary>
-		private static int FirstWaterRoom(KingdomSurvey Survey)
-		{
-			for (int i = 0; i < Survey.Stores.Count; i++)
-			{
-				LiquidVolume store = Survey.Stores[i];
-				if (store.Volume >= store.MaxVolume || !KingdomLiquids.CanReceiveFreshWater(store))
-				{
-					continue;
-				}
-				return store.MaxVolume - store.Volume;
-			}
-			return 0;
-		}
-
-		/// <summary>Room in the first larder that can take a stack: the size of one landing
-		/// unit.</summary>
-		private static int FirstFoodRoom(KingdomSurvey Survey)
-		{
-			for (int i = 0; i < Survey.Larders.Count; i++)
-			{
-				GameObject container = Survey.Larders[i];
-				if (!GameObject.Validate(container) || container.Inventory == null)
-				{
-					continue;
-				}
-				int room = KingdomSurvey.CapacityOf(container) - KingdomSurvey.HeldIn(container);
-				if (room > 0)
-				{
-					return room;
-				}
-			}
-			return 0;
+			if (magnitude <= 0 || owed == 0) return 0;
+			return (owed < 0) ? -magnitude : magnitude;
 		}
 
 		/// <summary>
@@ -1042,6 +985,32 @@ namespace ThousandAndFirst.Simulation.City
 		}
 
 		/// <summary>
+		/// Exact remaining weighted demand in this surveyed zone. Performance receipts may not use
+		/// the per-kind book marker: 220 half-filled vessels are 220 physical units, not one.
+		/// </summary>
+		private static int GroundDemandThirds(Zone Z, KingdomSurvey Survey,
+			KingdomCityState state, int index)
+		{
+			KingdomZoneRow row;
+			if (Z == null || Survey == null || state == null || !state.TryZone(index, out row))
+			{
+				return 0;
+			}
+			ContainerGround ground = ContainerGround.Take(Survey);
+			KingdomContainerDemandReceipt measured;
+			KingdomCityFault fault;
+			if (!KingdomContainerCatchUpRules.TryMeasure(ground.Rows, ground.Rows.Length,
+				row.OwedWater, row.OwedFood, row.OwedMaterials, out measured, out fault))
+			{
+				return 0;
+			}
+			Dictionary<int, GameObject> stations = KingdomStations.Index(Z);
+			int bodies = Posted(Z, Survey, stations).Count;
+			return measured.OwedThirds
+				+ bodies * KingdomCatchUpRules.WeightThirds(KingdomUnitWeight.Heavy);
+		}
+
+		/// <summary>
 		/// Consumption anywhere draws on the same rows (&sect;1.2(a)), but a dram is drunk out of a
 		/// particular urn (&sect;3.9). So when the seated zone cannot cover the day the settlement
 		/// is about to be billed for, the city's own water and food are carried in from the zones
@@ -1064,53 +1033,36 @@ namespace ThousandAndFirst.Simulation.City
 			current = CarryKind(System, Z, current, KingdomStockKind.Water,
 				KingdomRules.PolicyUpkeepForElapsed(System.Population, elapsed, System.Stores, System.Stage) - Survey.StoredWater,
 				Survey.StorageSpace,
-				Survey);
+				TimeTicks);
 			current = CarryKind(System, Z, current, KingdomStockKind.Food,
 				KingdomRules.RationsForElapsed(System.Population, elapsed) - Survey.FoodStored,
 				Survey.FoodSpace,
-				Survey);
+				TimeTicks);
 			return current;
 		}
 
-		private static KingdomCityState CarryKind(KingdomSystem System, Zone Z, KingdomCityState state, KingdomStockKind kind, long demand, long room, KingdomSurvey Survey)
+		private static KingdomCityState CarryKind(KingdomSystem System, Zone Z,
+			KingdomCityState state, KingdomStockKind kind, long demand, long room,
+			long TimeTicks)
 		{
 			if (demand <= 0L || room <= 0L)
 			{
 				return state;
 			}
-			long[] moved = new long[state.ZoneCount];
-			long total;
 			KingdomCityFault fault;
-			// The shafts are read here because this is the last place that may touch the ground:
-			// the nearest-first apportionment is over the ZONE GRAPH, and rock with nothing cut
-			// down to it is not a place a carrier can be sent (KingdomDelveRules).
-			string[] shafts = KingdomDelve.DelvedZones(System.ClaimedZones).ToArray();
-			if (!KingdomCityRules.TryPlanTransfer(state, Z.ZoneID, kind, demand, room, shafts, moved, out total, out fault))
+			int queued;
+			if (!KingdomCentralLogistics.TryQueueScalar(System, state, Z.ZoneID, kind,
+				demand, room, TimeTicks, out queued, out fault))
 			{
-				Refuse("carry", fault);
+				Refuse("carry queue", fault);
 				return state;
 			}
-			if (total <= 0L)
+			if (queued <= 0)
 			{
 				return state;
 			}
-			int landed = (kind == KingdomStockKind.Water)
-				? Survey.Store((int)Clamp(total))
-				: Survey.StoreFood((int)Clamp(total), CropOf(System));
-			if (landed <= 0)
-			{
-				return state;
-			}
-			KingdomCityState current;
-			long applied;
-			if (!KingdomCityRules.TryApplyTransfer(state, kind, moved, landed, out current, out applied, out fault))
-			{
-				Refuse("carry", fault);
-				return state;
-			}
-			System.Ledger.Note("{{C|" + KingdomCityRules.CarryNote(kind, applied, System.KingdomDisplayName) + "}}");
-			KingdomLog.Log("city: carried " + applied + " " + kind + " to " + Z.ZoneID + " from the city's other quarters");
-			return current;
+			KingdomLog.Log("city: queued " + queued + " " + kind + " to " + Z.ZoneID);
+			return state;
 		}
 
 		/// <summary>
@@ -1253,19 +1205,21 @@ namespace ThousandAndFirst.Simulation.City
 					continue;
 				}
 				Cell at = work.CurrentCell;
+				int workId = KingdomCityRules.StableId(work.ID);
 				kept.Add(new KingdomWorkRow(
 					// The object's own persistent id, folded by a written-out hash rather than the
 					// runtime's: a runtime hash is not stable across processes, and a work id that
 					// changes when the game restarts is not an id.
-					KingdomCityRules.StableId(work.ID),
+					workId,
 					Z.ZoneID,
 					(short)((at != null) ? at.X : 0),
 					(short)((at != null) ? at.Y : 0),
 					work.Blueprint ?? "",
 					100 - KingdomWear.WearOf(work),
-					// Crew is a roster fact and the roster becomes rows in W2; until it does, the
-					// column is honestly empty rather than filled with a proxy for it.
-					0,
+					// Exact resident rows, refreshed before this method, are the only live crew
+					// authority. Bound ground is part of the match so stable-id collisions between
+					// zones cannot lend a work somebody else's hands.
+					KingdomResidentRules.CrewAssigned(state, Z.ZoneID, workId),
 					(The.Game != null) ? The.Game.TimeTicks : 0L,
 					RunStateOf(work)));
 			}
@@ -1345,8 +1299,11 @@ namespace ThousandAndFirst.Simulation.City
 			}
 		}
 
-		/// <summary>Everything the city still owes the ground, in weighted thirds. The figure the
-		/// receipt reports as <c>owed</c>.</summary>
+		/// <summary>
+		/// Cheap city-wide debt-presence marker for thaw/prefetch. Numeric performance receipts use
+		/// <see cref="GroundDemandThirds"/> after a real survey; this model-only figure cannot know
+		/// how many physical containers a quantity spans.
+		/// </summary>
 		public static int OwedThirds(KingdomSystem System)
 		{
 			KingdomCityBook book = (System == null) ? null : System.City;
@@ -1484,7 +1441,9 @@ namespace ThousandAndFirst.Simulation.City
 			if (!System.City.TryPublish(totalled, out fault))
 			{
 				Refuse("publish", fault);
+				return;
 			}
+			KingdomResidents.ProjectCompatibility(System);
 		}
 
 		private static KingdomStocks Ground(KingdomSurvey Survey, KingdomZoneRow row)
@@ -1589,21 +1548,24 @@ namespace ThousandAndFirst.Simulation.City
 
 		private static KingdomWorkRunState RunStateOf(GameObject work)
 		{
-			r_KingdomPlot field = KingdomCrops.FieldOf(work);
-			if (field != null)
+			KingdomWorkKind kind = KingdomStations.KindOf(work);
+			if (kind == KingdomWorkKind.Growing)
 			{
-				return new KingdomWorkRunState(KingdomWorkKind.Growing, (byte)field.Stage, 0, field.NextStageTick);
+				r_KingdomPlot field = KingdomCrops.FieldOf(work);
+				if (field != null)
+				{
+					return new KingdomWorkRunState(kind, (byte)field.Stage, 0,
+						field.NextStageTick);
+				}
 			}
-			if (work.GetIntProperty("KingdomStores") == 1 || work.GetIntProperty("KingdomLarder") == 1)
-			{
-				return new KingdomWorkRunState(KingdomWorkKind.Store, 0, 0, 0L);
-			}
-			return new KingdomWorkRunState(KingdomWorkKind.Other, 0, 0, 0L);
+			// Every other owner still keeps its progress on its own receipt/object. Publish the
+			// shared kind, but do not invent progress for a work row that has no authority for it.
+			return new KingdomWorkRunState(kind, 0, 0, 0L);
 		}
 
 		private static string CropOf(KingdomSystem System)
 		{
-			return KingdomCropRules.CropBlueprintForStyle(System.Style);
+			return KingdomData.CropForStyle(System.Style);
 		}
 
 		/// <summary>

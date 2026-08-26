@@ -16,11 +16,12 @@ Every selected path must also have one unambiguous Windows spelling: the stage g
 reserved names, invalid Win32 characters, trailing dots/spaces, and case-fold collisions before
 copying or packaging anything.
 
-Current art policy is stricter than the package format: the runtime tree contains no mod-authored
-bitmap sprites. Shipped XML names verified vanilla tile paths or intentional text glyphs. See
+Current content uses verified vanilla tile paths or intentional text glyphs and presently contains
+no project-authored runtime raster. Original runtime art is permitted only through the exact
+allowlist, editable-source, rights, fallback, wiring, hash, package, and native-review contract in
 [ASSET_PROVENANCE.md](ASSET_PROVENANCE.md). `preview.png` is presentation media, not a runtime
-sprite; it still needs its own rights and review record. Packaging rejects raster extensions
-case-insensitively everywhere except the exact root path `preview.png`.
+sprite; it needs its own rights/review record. Packaging accepts only that preview and exact
+allowlisted runtime raster paths, case-insensitively rejecting every other image.
 
 ## 1. Build the private bootstrap
 
@@ -38,6 +39,12 @@ case-insensitively everywhere except the exact root path `preview.png`.
    ./Tools/release-check.sh
    ```
 
+   The portable lane reports structural debt without blocking incremental work. The release lane
+   ends with the binding [structural release contract](STRUCTURE.md): every staged production C#
+   file must be strictly under 300 physical lines, and `docs/STRUCTURE_REVIEW.json` must bind a
+   completed human responsibility/protocol review to the exact inventory. Missing or stale review
+   evidence is a failed release, not a waivable warning.
+
 4. Complete the applicable live passes in [TESTING.md](../TESTING.md), including save, quit,
    reload, and current/old-save cases. Record failures as failures; automation is not a manual
    playtest.
@@ -53,8 +60,8 @@ case-insensitively everywhere except the exact root path `preview.png`.
 The script refuses a dirty tree, materialises only committed blobs, then validates the manifest,
 preview, and Workshop metadata from those HEAD-derived bytes. In release mode it also extracts
 the evidence record from `HEAD` and validates it against the materialised release documents. It
-rejects development files, links, Windows-ambiguous paths, and runtime rasters, and writes a
-sibling `.sha256` inventory. The canonical title must be under 129 UTF-8 bytes and the canonical
+   rejects development files, links, Windows-ambiguous paths, and unlisted runtime rasters, and
+   writes a sibling `.sha256` inventory. The canonical title must be under 129 UTF-8 bytes and the canonical
 description under 8000 even when a private bootstrap has no `workshop.json`. It does not make an
 archive because Qud's uploader consumes a folder. This first package is only a bootstrap: it
 intentionally has no `workshop.json` yet and therefore cannot be the receipt used to prove the
@@ -167,7 +174,18 @@ not prove that content uploaded or loads. The bootstrap receipt is now obsolete 
    record. Copy `docs/RELEASE_EVIDENCE.example.json` to the exact path
    `docs/RELEASE_EVIDENCE.json`; replace every placeholder with observed values. Set
    `candidateCommit` to the full receipt-binding commit printed above and
-   `privatePackageReceiptSha256` to the SHA-256 of its committed receipt. Update
+   `privatePackageReceiptSha256` to the SHA-256 of its committed receipt. Set
+   `gameAssemblySha256` to the SHA-256 of the exact licensed
+   `CoQ_Data/Managed/Assembly-CSharp.dll` used for every native/private pass; core versions can
+   remain unchanged across different binaries, so the DLL receipt is load-bearing. The retained
+   `nativeCompileLoad` transcript must contain exactly one line in the machine receipt form
+   `Assembly-CSharp SHA-256: <64 lowercase hex characters>` and the evidence validator requires it
+   to equal `gameAssemblySha256`; a plausible-looking standalone hash is refused. Retain each
+   verification transcript, screenshot bundle, performance receipt, survey receipt, and matrix
+   under `docs/release-evidence/`; every `artifactRef` is an exact safe repo-relative path below
+   that directory and every `artifactSha256` must match the referenced regular non-link file.
+   Commit those artifacts with the evidence record; they remain outside the runtime package, while
+   the release packager's clean-HEAD boundary proves the validator read committed bytes. Update
    README/CHANGELOG so they no longer say live evidence is pending, then run:
 
    ```bash

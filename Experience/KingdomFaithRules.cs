@@ -178,6 +178,24 @@ namespace ThousandAndFirst
 			return Pull >= ConversionPullThreshold;
 		}
 
+		/// <summary>
+		/// Effective start of a warned shrine window after a master-option pause. The warning
+		/// remains the same committed record; a later valid option anchor restarts its full future
+		/// window. Future/corrupt anchors and clock regression fail safe at <paramref name="NowTick"/>
+		/// so they cannot turn into an immediate conversion.
+		/// </summary>
+		public static long EffectiveWindowStart(long WarnedTick, long OptionAnchorTick,
+			long NowTick)
+		{
+			if (WarnedTick <= 0L) return WarnedTick;
+			if (NowTick <= 0L) return WarnedTick;
+			long start = WarnedTick;
+			if (OptionAnchorTick > start)
+				start = (OptionAnchorTick <= NowTick) ? OptionAnchorTick : NowTick;
+			if (start > NowTick) start = NowTick;
+			return start;
+		}
+
 		/// <summary>The chronicle line for a shrine's own consecration or reconsecration. Lower
 		/// case, no trailing period, per <c>KingdomChronicle.Record</c>.</summary>
 		/// <param name="BuildingName">The shrine's own display name.</param>

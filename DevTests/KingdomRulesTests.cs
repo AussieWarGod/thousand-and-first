@@ -1081,12 +1081,12 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void BedsPerBunk_MakesTheCityStageReachableAtAll()
 		{
-			// City wants 50 settlers and 1024 storage. At one bed per bunk that is 50 bunks plus
-			// four great cisterns - 54 buildings against a cap of 40, so the top of the ladder
-			// could never be reached. Four to a bunk brings it inside the cap.
+			// City wants 50 settlers and 1024 storage. Four to a bunk leaves its staged plot budget
+			// mostly free for the works that make it a city.
 			int bunks = (50 + KingdomRules.BedsPerBunk - 1) / KingdomRules.BedsPerBunk;
 			int cisterns = 1024 / 256;
-			Assert.LessOrEqual(bunks + cisterns, KingdomRules.MaxBuildings,
+			Assert.LessOrEqual(bunks + cisterns,
+				KingdomRules.MaxBuildingsForStage(GrowthStage.City),
 				"a City still cannot be built within the building cap");
 		}
 

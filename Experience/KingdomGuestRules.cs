@@ -17,6 +17,17 @@ namespace ThousandAndFirst
 	/// </summary>
 	public static class KingdomGuestRules
 	{
+		/// <summary>Earliest real shop stock at which a legendary trader considers the city a
+		/// market rather than a camp stall. This is the Village rung returned by
+		/// <c>KingdomRules.ShopTierForStage</c>; a market district may improve it, but cannot replace
+		/// the exact vacant fine-house requirement.</summary>
+		public const int LegendaryTraderMinimumShopTier = 3;
+
+		/// <summary>The smallest actual lot a fine house may occupy for the luxury invitation.
+		/// Matches the shipped fine house's declared M binding.</summary>
+		public const KingdomPlotRules.PlotSize LegendaryTraderFineHouseTier =
+			KingdomPlotRules.PlotSize.Medium;
+
 		// ==================================================================================
 		// Guests at the gate
 		// ==================================================================================
@@ -176,7 +187,10 @@ namespace ThousandAndFirst
 		{
 			Lodged,
 			NoTier,
-			NoRoom
+			NoRoom,
+			NoFineHouse,
+			FineHouseOccupied,
+			ShopTooCrude
 		}
 
 		public static LodgingVerdict AssessLodging(bool HasSufficientTier, bool HasRoom)
@@ -190,6 +204,56 @@ namespace ThousandAndFirst
 				return LodgingVerdict.NoRoom;
 			}
 			return LodgingVerdict.Lodged;
+		}
+
+		/// <summary>The luxury-lane conjunction from the catalogue brief. A legendary trader is
+		/// not a generic notable with a large-area check: the building must be an exact fine-house
+		/// offer, its actual lot must meet the declared tier, that one house must be wholly vacant,
+		/// and the city's live staffed shop tier must warrant the wares. Checked in founder-facing
+		/// order so every refusal names the next concrete repair.</summary>
+		public static LodgingVerdict AssessLegendaryTraderLodging(bool HasFineHouse,
+			KingdomPlotRules.PlotSize FineHouseTier, bool FineHouseVacant, int ShopTier)
+		{
+			if (!HasFineHouse)
+			{
+				return LodgingVerdict.NoFineHouse;
+			}
+			if (FineHouseTier < LegendaryTraderFineHouseTier)
+			{
+				return LodgingVerdict.NoTier;
+			}
+			if (!FineHouseVacant)
+			{
+				return LodgingVerdict.FineHouseOccupied;
+			}
+			if (ShopTier < LegendaryTraderMinimumShopTier)
+			{
+				return LodgingVerdict.ShopTooCrude;
+			}
+			return LodgingVerdict.Lodged;
+		}
+
+		public static string LegendaryTraderRefusal(LodgingVerdict Verdict)
+		{
+			switch (Verdict)
+			{
+			case LodgingVerdict.NoFineHouse:
+				return "This trader will settle only into a fine house, not a manor or an ordinary large home. Raise one and leave it empty.";
+			case LodgingVerdict.NoTier:
+				return "The fine house is too small for this trader's household. It must stand on at least a medium lot.";
+			case LodgingVerdict.FineHouseOccupied:
+				return "Every suitable fine house is already somebody's home. This trader requires one wholly vacant.";
+			case LodgingVerdict.ShopTooCrude:
+				return "The stalls do not yet carry goods worthy of this trader. A staffed shop of tier "
+					+ LegendaryTraderMinimumShopTier + " or better must be trading first.";
+			default:
+				return "";
+			}
+		}
+
+		public static string SettledTradeNoun(HookKind Kind, bool LegendaryTrader)
+		{
+			return LegendaryTrader ? "legendary trader" : TradeNoun(Kind);
 		}
 
 		public static string ArrivalChronicleLine(string GuestName, string SettlementName)
@@ -233,15 +297,19 @@ namespace ThousandAndFirst
 			return (c == 'a' || c == 'e' || c == 'i' || c == 'o' || c == 'u') ? "an" : "a";
 		}
 
-		public static string LodgedChronicleLine(string GuestName, string SettlementName, HookKind Kind)
+		public static string LodgedChronicleLine(string GuestName, string SettlementName, HookKind Kind,
+			bool LegendaryTrader = false)
 		{
-			return GuestName + " took a bed at " + SettlementName + " and set up as " + ArticleFor(TradeNoun(Kind)) + " " + TradeNoun(Kind)
+			string trade = SettledTradeNoun(Kind, LegendaryTrader);
+			return GuestName + " took a bed at " + SettlementName + " and set up as " + ArticleFor(trade) + " " + trade
 				+ ", the road behind them finally worth having walked";
 		}
 
-		public static string LodgedMessage(string GuestName, HookKind Kind)
+		public static string LodgedMessage(string GuestName, HookKind Kind,
+			bool LegendaryTrader = false)
 		{
-			return "{{G|" + GuestName + " settles in as " + ArticleFor(TradeNoun(Kind)) + " " + TradeNoun(Kind) + ".}}";
+			string trade = SettledTradeNoun(Kind, LegendaryTrader);
+			return "{{G|" + GuestName + " settles in as " + ArticleFor(trade) + " " + trade + ".}}";
 		}
 
 		public static string LodgedConversationAnswer(HookKind Kind, string HookText)
@@ -268,11 +336,13 @@ namespace ThousandAndFirst
 
 		/// <summary>One line of the guestbook: what a notable guest did, in the past tense,
 		/// suitable for the roll-of-settlers appendix.</summary>
-		public static string GuestbookLine(string GuestName, HookKind Kind, string HookText, bool Lodged)
+		public static string GuestbookLine(string GuestName, HookKind Kind, string HookText, bool Lodged,
+			bool LegendaryTrader = false)
 		{
 			if (Lodged)
 			{
-				return GuestName + ", " + ArticleFor(TradeNoun(Kind)) + " " + TradeNoun(Kind) + " who once meant to chase " + HookText + " {{K|(lodged)}}";
+				string trade = SettledTradeNoun(Kind, LegendaryTrader);
+				return GuestName + ", " + ArticleFor(trade) + " " + trade + " who once meant to chase " + HookText + " {{K|(lodged)}}";
 			}
 			return GuestName + ", who left word of " + HookText + " {{K|(departed; a rumor now)}}";
 		}

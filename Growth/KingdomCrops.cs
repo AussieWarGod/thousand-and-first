@@ -344,8 +344,8 @@ namespace ThousandAndFirst
 			KingdomSystem system = The.Game.RequireSystem<KingdomSystem>();
 			Cell cell = Actor.CurrentCell;
 			Zone zone = Actor.CurrentZone;
-			string crop = KingdomCropRules.CropForSeed(Seed.Blueprint);
-			string row = KingdomCropRules.RowForCrop(crop);
+			string crop = KingdomData.CropForSeed(Seed.Blueprint);
+			string row = KingdomData.RowForCrop(crop);
 			GameObject work = FieldUnder(zone, cell);
 			r_KingdomPlot field = FieldOf(work);
 			KingdomSurvey survey = (zone == null) ? null : KingdomSurvey.Take(zone, system);
@@ -468,8 +468,14 @@ namespace ThousandAndFirst
 					List<GameObject> rowsAfter = RowsOf(zone, work);
 					for (int i = 0; i < rowsAfter.Count; i++)
 					{
-						if (!rowsBefore.Contains(rowsAfter[i])
-							&& !rowsAfter[i].Obliterate(null, Silent: true))
+						if (rowsBefore.Contains(rowsAfter[i])) continue;
+						bool removed = false;
+						try { removed = rowsAfter[i].Obliterate(null, Silent: true); }
+						finally
+						{
+							KingdomSurvey.ObserveCurrentTopologyInActive(zone, rowsAfter[i]);
+						}
+						if (!removed)
 						{
 							fieldRestored = false;
 						}
@@ -504,8 +510,9 @@ namespace ThousandAndFirst
 			// new field carries no crew stamp and would read as "sown and nobody working it" to a
 			// founder who sowed and then stood still for a week without a zone activation.
 			KingdomGrowth.AssignWork(system, KingdomSurvey.Take(zone, system));
-			system.RecordDeed("the " + fieldName + " you sowed at " + system.KingdomDisplayName);
-			KingdomChronicle.Record(system, KingdomCropRules.SownChronicle(CropName(crop), fieldName, system.KingdomDisplayName));
+			string realm = KingdomPresentation.Rich(system.KingdomDisplayName);
+			system.RecordDeed("the " + fieldName + " you sowed at " + realm);
+			KingdomChronicle.Record(system, KingdomCropRules.SownChronicle(CropName(crop), fieldName, realm));
 			system.Ledger.Note("{{G|The " + fieldName + " is sown with " + CropName(crop) + ": " + laid
 				+ ((laid == 1) ? " row" : " rows") + " in the ground, ripe in " + KingdomCropRules.CropDays + " days.}}");
 			if (laid < rows)
@@ -555,7 +562,7 @@ namespace ThousandAndFirst
 			string seed = Work.GetStringProperty(SeedProperty);
 			if (string.IsNullOrEmpty(seed))
 			{
-				seed = KingdomCropRules.SeedForCrop(crop);
+				seed = KingdomData.SeedForCrop(crop);
 			}
 			if (Popup.ShowYesNo("Take the seed back out of the " + fieldName + "?\n\nThe rows come up, and it grows nothing until you sow it again.") != DialogResult.Yes)
 			{
@@ -578,8 +585,9 @@ namespace ThousandAndFirst
 					Actor.ReceiveObject(returned);
 				}
 			}
-			system.Ledger.Note("{{K|" + KingdomCropRules.WithdrawnNote(CropName(crop), fieldName, system.KingdomDisplayName) + "}}");
-			MessageQueue.AddPlayerMessage("{{K|" + KingdomCropRules.WithdrawnNote(CropName(crop), fieldName, system.KingdomDisplayName) + "}}");
+			string realm = KingdomPresentation.Rich(system.KingdomDisplayName);
+			system.Ledger.Note("{{K|" + KingdomCropRules.WithdrawnNote(CropName(crop), fieldName, realm) + "}}");
+			MessageQueue.AddPlayerMessage("{{K|" + KingdomCropRules.WithdrawnNote(CropName(crop), fieldName, realm) + "}}");
 		}
 
 		/// <summary>
@@ -717,8 +725,10 @@ namespace ThousandAndFirst
 			{
 				plant.SetStringProperty(KingdomPlots.PlotIdProperty, PlotId);
 			}
-			C.AddObject(plant);
-			return true;
+			GameObject accepted = null;
+			try { accepted = C.AddObject(plant); }
+			finally { KingdomSurvey.ObserveAddResultInActive(C.ParentZone, plant, accepted); }
+			return ReferenceEquals(accepted, plant) && ReferenceEquals(plant.CurrentCell, C);
 		}
 
 		/// <summary>Rows standing ripe right now &mdash; what a gathering is actually owed, and
@@ -746,8 +756,10 @@ namespace ThousandAndFirst
 				return rows;
 			}
 			string id = Work.ID;
-			foreach (GameObject item in Z.GetObjects())
+			KingdomSurvey survey = KingdomSurvey.Take(Z);
+			for (int i = 0; i < survey.CropRows.Count; i++)
 			{
+				GameObject item = survey.CropRows[i];
 				if (item.GetIntProperty(RowProperty) == 1 && item.GetStringProperty(RowFieldProperty) == id)
 				{
 					rows.Add(item);
@@ -763,7 +775,8 @@ namespace ThousandAndFirst
 			List<GameObject> rows = RowsOf(Z, Work);
 			for (int i = 0; i < rows.Count; i++)
 			{
-				rows[i].Obliterate();
+				try { rows[i].Obliterate(); }
+				finally { KingdomSurvey.ObserveCurrentTopologyInActive(Z, rows[i]); }
 			}
 		}
 
@@ -870,7 +883,7 @@ namespace ThousandAndFirst
 			string blueprint = System.PendingCropBlueprint;
 			if (string.IsNullOrEmpty(blueprint))
 			{
-				blueprint = KingdomCropRules.CropBlueprintForStyle(System.Style);
+				blueprint = KingdomData.CropForStyle(System.Style);
 			}
 			if (Z != null)
 			{
@@ -908,8 +921,9 @@ namespace ThousandAndFirst
 				System.PendingCropBlueprint = null;
 				System.PendingCropZoneId = null;
 			}
-			System.Ledger.Note("{{G|" + KingdomCropRules.DeliveryNote(delivered, System.KingdomDisplayName) + "}}");
-			MessageQueue.AddPlayerMessage("{{G|" + KingdomCropRules.DeliveryNote(delivered, System.KingdomDisplayName) + "}}");
+			string realm = KingdomPresentation.Rich(System.KingdomDisplayName);
+			System.Ledger.Note("{{G|" + KingdomCropRules.DeliveryNote(delivered, realm) + "}}");
+			MessageQueue.AddPlayerMessage("{{G|" + KingdomCropRules.DeliveryNote(delivered, realm) + "}}");
 			if (KingdomLog.Enabled) KingdomLog.Log("crop: delivered " + delivered + " pending=" + System.PendingCrop);
 		}
 
@@ -1032,7 +1046,7 @@ namespace ThousandAndFirst
 				return;
 			}
 			Work.SetIntProperty(SaidProperty, (int)Want);
-			string line = KingdomCropRules.WantNote(Want, Work.ShortDisplayName, System.KingdomDisplayName);
+			string line = KingdomCropRules.WantNote(Want, Work.ShortDisplayName, KingdomPresentation.Rich(System.KingdomDisplayName));
 			System.Ledger.Note("{{r|" + line + "}}");
 			MessageQueue.AddPlayerMessage("{{r|" + line + "}}");
 		}

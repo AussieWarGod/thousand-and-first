@@ -289,7 +289,7 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void NormalizeTruncatesParallelRosterRowsWithoutCrossZipping()
+		public void NormalizeRetainsRaggedLegacyRosterEvidenceForSystemMigration()
 		{
 			KingdomSettlement settlement = new KingdomSettlement
 			{
@@ -302,14 +302,15 @@ namespace ThousandAndFirst.Tests
 				DeadCauses = new List<string> { "age", "stale" }
 			};
 			settlement.Normalize();
-			Assert.AreEqual(2, settlement.RosterNames.Count);
+			Assert.AreEqual(3, settlement.RosterNames.Count);
 			Assert.AreEqual(2, settlement.RosterOrigins.Count);
-			Assert.AreEqual(2, settlement.RosterArrived.Count);
+			Assert.AreEqual(4, settlement.RosterArrived.Count);
 			Assert.AreEqual("Ptoh", settlement.RosterNames[0]);
 			Assert.AreEqual("Ptoh", settlement.RosterNames[1],
 				"duplicate names are legitimate rows, not a normalization key");
 			Assert.AreEqual("reef", settlement.RosterOrigins[1]);
-			Assert.AreEqual("two", settlement.RosterArrived[1]);
+			Assert.AreEqual("staler", settlement.RosterArrived[3],
+				"settlement normalization cannot destroy unresolved old-save evidence; realm migration owns it");
 			Assert.AreEqual(1, settlement.DeadNames.Count);
 			Assert.AreEqual(1, settlement.DeadOrigins.Count);
 			Assert.AreEqual(1, settlement.DeadArrived.Count);
@@ -603,6 +604,19 @@ namespace ThousandAndFirst.Tests
 			Assert.IsFalse(capturedSeat.City.TryResidentRow(9, out index), "one city's roll must never appear on the other's");
 			Assert.IsTrue(nowSeated.City.TryResidentRow(9, out index));
 			Assert.IsFalse(nowSeated.City.TryResidentRow(7, out index));
+			ThousandAndFirst.Simulation.City.KingdomCityState capturedState;
+			ThousandAndFirst.Simulation.City.KingdomCityState seatedState;
+			ThousandAndFirst.Simulation.City.KingdomCityFault fault;
+			Assert.IsTrue(capturedSeat.City.TryRead(out capturedState, out fault), fault.ToString());
+			Assert.IsTrue(nowSeated.City.TryRead(out seatedState, out fault), fault.ToString());
+			Assert.IsTrue(capturedState.TryResident(0,
+				out ThousandAndFirst.Simulation.City.KingdomResidentRow captured));
+			Assert.IsTrue(seatedState.TryResident(0,
+				out ThousandAndFirst.Simulation.City.KingdomResidentRow seated));
+			Assert.AreEqual("origin-7", captured.Origin);
+			Assert.AreEqual("arrival-7", captured.Arrived);
+			Assert.AreEqual("origin-9", seated.Origin);
+			Assert.AreEqual("arrival-9", seated.Arrived);
 		}
 
 		/// <summary>Writes one settler onto a city's book through its only publisher, so the
@@ -621,7 +635,8 @@ namespace ThousandAndFirst.Tests
 					ThousandAndFirst.Simulation.City.KingdomResidentStanding.Resident,
 					ThousandAndFirst.Simulation.City.KingdomStandingCause.None, "JoppaWorld.11.22.1.1.10",
 					ThousandAndFirst.Simulation.City.KingdomBrinkWindow.None,
-					ThousandAndFirst.Simulation.City.KingdomBrinkWindow.None, null, 0)
+						ThousandAndFirst.Simulation.City.KingdomBrinkWindow.None, null, 0, null,
+						"origin-" + residentId, "arrival-" + residentId)
 			}, out peopled, out fault), fault.ToString());
 			Assert.IsTrue(city.City.TryPublish(peopled, out fault), fault.ToString());
 		}

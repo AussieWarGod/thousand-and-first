@@ -11,6 +11,10 @@ namespace ThousandAndFirst
 
 		private static List<string> _styles;
 
+		private static List<KingdomStyleDraft> _styleDrafts;
+
+		private static List<KingdomStyleDefinition> _styleDefinitions;
+
 		private static List<KingdomRules.DealEntry> _deals;
 
 		public static List<KingdomRules.DealEntry> Deals
@@ -55,10 +59,85 @@ namespace ThousandAndFirst
 			}
 		}
 
+		/// <summary>Canonicalizes a style against the merged registry.</summary>
+		public static bool TryGetStyle(string Name, out string Canonical)
+		{
+			EnsureLoaded();
+			return KingdomStyleRules.TryCanonical(_styleDefinitions, Name, out Canonical);
+		}
+
+		/// <summary>Resolves founding terrain against all merged style selectors. Exact terrain
+		/// blueprint evidence outranks region evidence; priority then declaration order break ties.</summary>
+		public static string StyleForSite(string TerrainBlueprint, string RegionName, int ZLevel)
+		{
+			EnsureLoaded();
+			return KingdomStyleRules.Resolve(_styleDefinitions, TerrainBlueprint, RegionName,
+				ZLevel, KingdomRules.SurfaceZLevel);
+		}
+
+		public static string StyleGroundClause(string Style)
+		{
+			EnsureLoaded();
+			return KingdomStyleRules.DescribeGround(_styleDefinitions, Style);
+		}
+
+		/// <summary>Behavior declarations live on the same merged style row as founding. These
+		/// lookups keep third-party styles out of closed switches while retaining total common-style
+		/// fallbacks for old files that declared only a name.</summary>
+		public static string CropForStyle(string Style)
+		{
+			EnsureLoaded();
+			return KingdomStyleRules.CropForStyle(_styleDefinitions, Style);
+		}
+
+		public static string SeedForStyle(string Style)
+		{
+			EnsureLoaded();
+			return KingdomStyleRules.SeedForStyle(_styleDefinitions, Style);
+		}
+
+		public static string CropRowForStyle(string Style)
+		{
+			EnsureLoaded();
+			return KingdomStyleRules.CropRowForStyle(_styleDefinitions, Style);
+		}
+
+		public static string CropForSeed(string SeedBlueprint)
+		{
+			EnsureLoaded();
+			return KingdomStyleRules.CropForSeed(_styleDefinitions, SeedBlueprint);
+		}
+
+		public static string SeedForCrop(string CropBlueprint)
+		{
+			EnsureLoaded();
+			return KingdomStyleRules.SeedForCrop(_styleDefinitions, CropBlueprint);
+		}
+
+		public static string RowForCrop(string CropBlueprint)
+		{
+			EnsureLoaded();
+			return KingdomStyleRules.RowForCrop(_styleDefinitions, CropBlueprint);
+		}
+
+		public static bool TryStyleWallMaterial(string Style, out KingdomMaterial Material)
+		{
+			EnsureLoaded();
+			return KingdomStyleRules.TryWallMaterial(_styleDefinitions, Style, out Material);
+		}
+
+		public static string TimberWallForStyle(string Style)
+		{
+			EnsureLoaded();
+			return KingdomStyleRules.TimberWallForStyle(_styleDefinitions, Style);
+		}
+
 		public static void Reload()
 		{
 			_buildings = null;
 			_styles = null;
+			_styleDrafts = null;
+			_styleDefinitions = null;
 			_deals = null;
 			EnsureLoaded();
 		}
@@ -96,7 +175,9 @@ namespace ThousandAndFirst
 				return;
 			}
 			_buildings = new List<KingdomRules.BuildEntry>();
-			_styles = new List<string> { "common" };
+			_styles = new List<string>();
+			_styleDrafts = new List<KingdomStyleDraft>();
+			_styleDefinitions = new List<KingdomStyleDefinition>();
 			// Everything keyed by a building Key but held outside the entry is emptied here and
 			// refilled by HandleBuilding, in this one pass. A second pass over the same streams
 			// would read the same file twice and make the engine's own unused-attribute check warn
@@ -111,6 +192,7 @@ namespace ThousandAndFirst
 			KingdomLodging.ClearCloseness();
 			KingdomReach.ClearReach();
 			KingdomCrews.ClearCrewNeeds();
+			KingdomPurpose.ClearDefinitions();
 			Dictionary<string, Action<XmlDataHelper>> handlers = null;
 			handlers = new Dictionary<string, Action<XmlDataHelper>>
 			{
@@ -118,7 +200,7 @@ namespace ThousandAndFirst
 					"kingdombuildings",
 					delegate(XmlDataHelper xml)
 					{
-						xml.HandleNodes(handlers);
+						KingdomXmlSchema.HandleRoot(xml, handlers, "KingdomBuildings");
 					}
 				},
 				{ "building", HandleBuilding },
@@ -128,6 +210,11 @@ namespace ThousandAndFirst
 			{
 				item.HandleNodes(handlers);
 			}
+			// Architecture freezes this complete merged building/spec view, then performs its own
+			// keyed multi-stream transaction. It must run after every building declaration has
+			// registered its plot spec and before any caller can commission from the catalogue.
+			KingdomArchitecture.Reload(_buildings);
+			KingdomSocketTransitions.Reload();
 			ReportCatalogueFindings();
 			_deals = new List<KingdomRules.DealEntry>();
 			Dictionary<string, Action<XmlDataHelper>> dealHandlers = null;
@@ -137,7 +224,7 @@ namespace ThousandAndFirst
 					"kingdomdeals",
 					delegate(XmlDataHelper xml)
 					{
-						xml.HandleNodes(dealHandlers);
+						KingdomXmlSchema.HandleRoot(xml, dealHandlers, "KingdomDeals");
 					}
 				},
 				{ "deal", HandleDeal }
@@ -153,7 +240,7 @@ namespace ThousandAndFirst
 					"kingdomyardworks",
 					delegate(XmlDataHelper xml)
 					{
-						xml.HandleNodes(yardWorkHandlers);
+						KingdomXmlSchema.HandleRoot(xml, yardWorkHandlers, "KingdomYardWorks");
 					}
 				},
 				{ "yardwork", HandleYardWork }
@@ -225,6 +312,8 @@ namespace ThousandAndFirst
 			declared.Set(KingdomMergeRules.AttrMinZones, xml.GetAttribute("MinZones"));
 			declared.Set(KingdomMergeRules.AttrKnowledge, xml.GetAttribute("Knowledge"));
 			declared.Set(KingdomMergeRules.AttrMinTech, xml.GetAttribute("MinTech"));
+			declared.Set(KingdomMergeRules.AttrCovenant, xml.GetAttribute("Covenant"));
+			declared.Set(KingdomMergeRules.AttrMinStanding, xml.GetAttribute("MinStanding"));
 			declared.Set(KingdomMergeRules.AttrBuilders, xml.GetAttribute("Builders"));
 			declared.Set(KingdomMergeRules.AttrCreed, xml.GetAttribute("Creed"));
 			declared.Set(KingdomMergeRules.AttrCreedShare, xml.GetAttribute("CreedShare"));
@@ -251,6 +340,15 @@ namespace ThousandAndFirst
 			declared.Set(KingdomMergeRules.AttrBits, xml.GetAttribute("Bits"));
 			declared.Set(KingdomMergeRules.AttrExotics, xml.GetAttribute("Exotics"));
 			declared.Set(KingdomMergeRules.AttrRefines, xml.GetAttribute("Refines"));
+			declared.Set(KingdomMergeRules.AttrPurpose, xml.GetAttribute("Purpose"));
+			declared.Set(KingdomMergeRules.AttrPurposeSite, xml.GetAttribute("PurposeSite"));
+			declared.Set(KingdomMergeRules.AttrPurposeCargoKey, xml.GetAttribute("PurposeCargoKey"));
+			declared.Set(KingdomMergeRules.AttrPurposeCargoName, xml.GetAttribute("PurposeCargoName"));
+			declared.Set(KingdomMergeRules.AttrPurposeCargoMaterial, xml.GetAttribute("PurposeCargoMaterial"));
+			declared.Set(KingdomMergeRules.AttrPurposeCargoWater, xml.GetAttribute("PurposeCargoWater"));
+			declared.Set(KingdomMergeRules.AttrPurposeCargoCost, xml.GetAttribute("PurposeCargoCost"));
+			declared.Set(KingdomMergeRules.AttrPurposeProducers, xml.GetAttribute("PurposeProducers"));
+			declared.Set(KingdomMergeRules.AttrPurposeEffect, xml.GetAttribute("PurposeEffect"));
 			BuildingDraft design = KingdomMergeRules.Absorb(declared);
 			if (!KingdomRules.TryParseBuildAttributes(design.Key, design.Get(KingdomMergeRules.AttrDisplayName), design.Get(KingdomMergeRules.AttrBlueprint), design.Get(KingdomMergeRules.AttrCost), design.Get(KingdomMergeRules.AttrTicks), design.Get(KingdomMergeRules.AttrStyles), design.Get(KingdomMergeRules.AttrCategory), design.Get(KingdomMergeRules.AttrMinStage), design.Get(KingdomMergeRules.AttrStaff), design.Get(KingdomMergeRules.AttrManning), design.Get(KingdomMergeRules.AttrDefence), out var entry, out var error))
 			{
@@ -262,9 +360,26 @@ namespace ThousandAndFirst
 				SkipChildren(xml);
 				return;
 			}
+			if (!KingdomZoningRules.TryParseCovenantAttributes(design.Key,
+				design.Get(KingdomMergeRules.AttrCovenant), design.Get(KingdomMergeRules.AttrMinStanding),
+				out CovenantGate covenant, out string covenantError))
+			{
+				MetricsManager.LogError("ThousandAndFirst KingdomBuildings: " + covenantError);
+				SkipChildren(xml);
+				return;
+			}
+			if (!covenant.IsOpen && Factions.GetIfExists(covenant.Faction) == null)
+			{
+				MetricsManager.LogError("ThousandAndFirst KingdomBuildings: building " + design.Key
+					+ " names unknown Covenant faction " + covenant.Faction);
+				SkipChildren(xml);
+				return;
+			}
 			entry.Carries = design.Get(KingdomMergeRules.AttrCarries);
 			entry.Materials = design.Get(KingdomMergeRules.AttrMaterials);
 			entry.Skins = design.Skins;
+			entry.CovenantFaction = covenant.Faction;
+			entry.CovenantMinStanding = covenant.MinStanding;
 			KingdomZoning.RegisterGate(entry.Key, design.Get(KingdomMergeRules.AttrDistricts), design.Get(KingdomMergeRules.AttrMinZones), design.Get(KingdomMergeRules.AttrKnowledge), design.Get(KingdomMergeRules.AttrMinTech),
 				design.Get(KingdomMergeRules.AttrBuilders), design.Get(KingdomMergeRules.AttrCreed), design.Get(KingdomMergeRules.AttrCreedShare), design.Get(KingdomMergeRules.AttrStrata),
 				design.Get(KingdomMergeRules.AttrMegastructure), design.Get(KingdomMergeRules.AttrCapital));
@@ -280,6 +395,16 @@ namespace ThousandAndFirst
 			// What makes a building a yard, and the whole of it: a third party's own sawmill is a
 			// sawyer's yard the moment it declares Refines, and the build gate counts it like ours.
 			KingdomMaterials.RegisterRefinery(entry.Key, design.Get(KingdomMergeRules.AttrRefines));
+			KingdomPurpose.RegisterDefinition(entry.Key,
+				design.Get(KingdomMergeRules.AttrPurpose),
+				design.Get(KingdomMergeRules.AttrPurposeSite),
+				design.Get(KingdomMergeRules.AttrPurposeCargoKey),
+				design.Get(KingdomMergeRules.AttrPurposeCargoName),
+				design.Get(KingdomMergeRules.AttrPurposeCargoMaterial),
+				design.Get(KingdomMergeRules.AttrPurposeCargoWater),
+				design.Get(KingdomMergeRules.AttrPurposeCargoCost),
+				design.Get(KingdomMergeRules.AttrPurposeProducers),
+				design.Get(KingdomMergeRules.AttrPurposeEffect));
 			// The footprint and roof are registered post-merge like everything else: a file that
 			// shrinks the plot and a file that declares the footprint are two files, and only the
 			// merged pair is the design the validator can check.
@@ -426,12 +551,129 @@ namespace ThousandAndFirst
 
 		private static void HandleStyle(XmlDataHelper xml)
 		{
-			string attribute = xml.GetAttribute("Name");
-			if (!string.IsNullOrEmpty(attribute) && !_styles.Contains(attribute))
+			KingdomStyleDraft declared = new KingdomStyleDraft
 			{
-				_styles.Add(attribute);
+				Name = xml.GetAttribute("Name"),
+				Terrain = xml.GetAttribute("Terrain"),
+				Region = xml.GetAttribute("Region"),
+				Strata = xml.GetAttribute("Strata"),
+				Priority = xml.GetAttribute("Priority"),
+				GroundClause = xml.GetAttribute("GroundClause"),
+				Crop = xml.GetAttribute("Crop"),
+				Seed = xml.GetAttribute("Seed"),
+				CropRow = xml.GetAttribute("CropRow"),
+				WallMaterial = xml.GetAttribute("WallMaterial"),
+				TimberWall = xml.GetAttribute("TimberWall")
+			};
+			if (!KingdomStyleRules.ValidName(declared.Name))
+			{
+				MetricsManager.LogError("ThousandAndFirst KingdomBuildings: style needs a valid Name");
+				xml.DoneWithElement();
+				return;
+			}
+			declared.Name = declared.Name.Trim();
+			int found = -1;
+			for (int i = 0; i < _styleDrafts.Count; i++)
+			{
+				if (string.Equals(_styleDrafts[i].Name, declared.Name,
+					StringComparison.OrdinalIgnoreCase))
+				{
+					found = i;
+					break;
+				}
+			}
+			KingdomStyleDraft merged = (found < 0) ? declared.Copy()
+				: KingdomStyleRules.Merge(_styleDrafts[found], declared);
+			if (!KingdomStyleRules.TryParse(merged, out KingdomStyleDefinition parsed,
+				out string error))
+			{
+				MetricsManager.LogError("ThousandAndFirst KingdomBuildings: " + error);
+				xml.DoneWithElement();
+				return;
+			}
+			if (!KingdomStyleRules.TryValidateBehavior(_styleDefinitions, parsed, found,
+				out error))
+			{
+				MetricsManager.LogError("ThousandAndFirst KingdomBuildings: " + error);
+				xml.DoneWithElement();
+				return;
+			}
+			if (!StyleBlueprintsValid(parsed, out string behaviorError))
+			{
+				MetricsManager.LogError("ThousandAndFirst KingdomBuildings: style " + parsed.Name
+					+ " has invalid behavior: " + behaviorError);
+				xml.DoneWithElement();
+				return;
+			}
+			if (found < 0)
+			{
+				if (_styleDrafts.Count >= KingdomStyleRules.MaxStyles)
+				{
+					MetricsManager.LogError("ThousandAndFirst KingdomBuildings: too many styles; "
+						+ declared.Name + " was refused");
+				}
+				else
+				{
+					_styleDrafts.Add(merged);
+					_styleDefinitions.Add(parsed);
+					_styles.Add(parsed.Name);
+				}
+			}
+			else
+			{
+				_styleDrafts[found] = merged;
+				_styleDefinitions[found] = parsed;
+				_styles[found] = parsed.Name;
 			}
 			xml.DoneWithElement();
+		}
+
+		private static bool StyleBlueprintsValid(KingdomStyleDefinition Definition,
+			out string Error)
+		{
+			Error = null;
+			if (Definition == null) return false;
+			string[] names = new string[]
+			{
+				Definition.CropBlueprint, Definition.SeedBlueprint,
+				Definition.CropRowBlueprint, Definition.TimberWallBlueprint
+			};
+			GameObjectBlueprint[] blueprints = new GameObjectBlueprint[names.Length];
+			for (int i = 0; i < names.Length; i++)
+			{
+				if (string.IsNullOrEmpty(names[i])) continue;
+				try { blueprints[i] = GameObjectFactory.Factory.GetBlueprintIfExists(names[i]); }
+				catch { blueprints[i] = null; }
+				if (blueprints[i] == null)
+				{
+					Error = "unknown blueprint " + names[i];
+					return false;
+				}
+			}
+			if (blueprints[0] != null && !blueprints[0].HasPart("Food")
+				&& !blueprints[0].HasPart("PreparedCookingIngredient"))
+			{
+				Error = "Crop " + names[0] + " is not food";
+				return false;
+			}
+			if (blueprints[1] != null && !blueprints[1].HasPart("r_KingdomSeed"))
+			{
+				Error = "Seed " + names[1] + " has no r_KingdomSeed part";
+				return false;
+			}
+			if (blueprints[2] != null && (!blueprints[2].InheritsFrom("Plant")
+				|| !blueprints[2].HasPart("Harvestable")))
+			{
+				Error = "CropRow " + names[2] + " is not a harvestable Plant";
+				return false;
+			}
+			if (blueprints[3] != null
+				&& !blueprints[3].GetPartParameter("Physics", "Solid", false))
+			{
+				Error = "TimberWall " + names[3] + " is not solid";
+				return false;
+			}
+			return true;
 		}
 	}
 }

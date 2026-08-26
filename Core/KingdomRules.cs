@@ -45,9 +45,8 @@ namespace ThousandAndFirst
 
 		public const int MaxPopulation = 60;
 
-		/// <summary>The superseded flat cap. Kept only as the Camp rung's value and as the figure
-		/// the stage table is asserted against; every runtime call goes through
-		/// <see cref="MaxBuildingsForStage"/>. Retire it when the test moves.</summary>
+		/// <summary>Retired flat cap. Binary compatibility only; no live caller reads it.</summary>
+		[System.Obsolete("Retired before public release; use MaxBuildingsForStage(stage).", true)]
 		public const int MaxBuildings = 40;
 
 		/// <summary>
@@ -105,6 +104,16 @@ namespace ThousandAndFirst
 		/// and the two are accounted by different people for different reasons.
 		/// </summary>
 		public const int MaxDedicatedLarders = 8;
+
+		/// <summary>
+		/// True worst civic-container envelope on one zone. A City may commission 220 plot roots;
+		/// every root may itself be one vessel/larder. A founder can also dedicate the 24+8 manual
+		/// allowances before those roots are raised. Plot furnishings are not separate civic stores:
+		/// current authored components never carried the marks, and legacy population furnishings
+		/// are normalized back to personal vessels by <c>KingdomSurvey</c>.
+		/// </summary>
+		public static readonly int MaxCivicContainersPerZone =
+			MaxBuildingsForStage(GrowthStage.City) + MaxDedicatedVessels + MaxDedicatedLarders;
 
 		/// <summary>
 		/// A ladder, not a bar. The Status report reads a settlement's dedicated food this way,
@@ -364,7 +373,7 @@ namespace ThousandAndFirst
 		/// What the settlement's own crop is called when it is an ingredient rather than a plant.
 		/// The dish's body: the ground a realm was founded on is what its dish is made of.
 		/// </summary>
-		/// <param name="Crop">A crop blueprint, from <c>KingdomCropRules.CropBlueprintForStyle</c>.
+		/// <param name="Crop">A crop blueprint, from the merged <c>KingdomData</c> style row.
 		/// An unknown blueprint is named as itself, lower case, so a third party's crop still
 		/// makes a readable dish.</param>
 		public static string CropWordFor(string Crop)
@@ -452,7 +461,7 @@ namespace ThousandAndFirst
 		/// <param name="CreedRecipe">The dominant creed faction's own <c>WaterRitualRecipe</c>,
 		/// or null for a realm of mixed people.</param>
 		/// <param name="Crop">The crop the founding ground grows, from
-		/// <c>KingdomCropRules.CropBlueprintForStyle</c>.</param>
+		/// <c>KingdomData.CropForStyle</c>.</param>
 		public static FavoredDish DeriveDish(string Realm, string CreedRecipe, string Crop)
 		{
 			FavoredDish dish = default(FavoredDish);
@@ -1378,7 +1387,7 @@ namespace ThousandAndFirst
 		public static readonly string[] GatePolicyBlurbs = new string[2]
 		{
 			"Word travels and strangers are welcome. Settlers come sooner; so does trouble.",
-			"The watch turns away what it does not know. Fewer settlers, fewer raids."
+			"The watch turns away what it does not know. Fewer settlers and routine troubles; at a steading, denying passage may provoke one local snapjaw salt-road claim."
 		};
 
 		public static readonly string[] StoresPolicyNames = new string[2] { "open stores", "thrift" };
@@ -1745,6 +1754,31 @@ namespace ThousandAndFirst
 				return BaseDefence;
 			}
 			return BaseDefence + GroundWallBonus(TerrainBlueprint, RegionName) + KnowledgeWallBonus(HasTinkering, HasAdvancedTinkering);
+		}
+
+		/// <summary>Whether a defensive design is a free-standing perimeter work rather than a
+		/// building on a reserved plot. Defence is an effect; plot ownership is geometry. Keeping
+		/// those facts separate lets a watch-lodge or guarded shrine defend the settlement without
+		/// turning its whole authored building into one wall-line cell.</summary>
+		public static bool IsFrontierWork(int Defence, bool HasPlot)
+		{
+			return Defence > 0 && !HasPlot;
+		}
+
+		/// <summary>Defence frozen onto a completed work. Only free-standing perimeter works receive
+		/// quarry-ground and founder-knowledge wall bonuses; a defensive plotted building carries its
+		/// authored rating exactly.</summary>
+		public static int BuiltDefence(int BaseDefence, bool HasPlot, string TerrainBlueprint,
+			string RegionName, bool HasTinkering, bool HasAdvancedTinkering)
+		{
+			if (BaseDefence <= 0)
+			{
+				return BaseDefence;
+			}
+			return IsFrontierWork(BaseDefence, HasPlot)
+				? WallDefence(BaseDefence, TerrainBlueprint, RegionName,
+					HasTinkering, HasAdvancedTinkering)
+				: BaseDefence;
 		}
 
 		/// <summary>The drams a thirst petition asks the stores to reach.</summary>
@@ -2821,6 +2855,15 @@ namespace ThousandAndFirst
 
 			public int Defence;
 
+			/// <summary>Faction key of the optional covenant that opens this design. Null means no
+			/// covenant gate. The key is validated against Qud's faction registry while the merged
+			/// catalogue is loaded.</summary>
+			public string CovenantFaction;
+
+			/// <summary>Kingdom standing required with <see cref="CovenantFaction"/>. Meaningful
+			/// only when that field is non-null.</summary>
+			public int CovenantMinStanding;
+
 			/// <summary>
 			/// Raw <c>Carries</c> attribute: what this design adds to the settlement's SUSTAINABLE
 			/// LEVEL, as a comma list of <c>support:settlers</c>. Read through
@@ -2861,6 +2904,7 @@ namespace ThousandAndFirst
 		/// <param name="Error">Null on success, else a log-facing reason. The skin is not added.
 		/// </param>
 		/// <returns>False when the skin was refused.</returns>
+		[System.Obsolete("Retired before public release; use KingdomMergeRules.TryMergeSkin on the keyed draft.", true)]
 		public static bool TryAddSkin(BuildEntry Entry, KingdomDesignRules.SkinEntry Skin, out string Error)
 		{
 			Error = null;
@@ -2986,16 +3030,14 @@ namespace ThousandAndFirst
 		}
 
 		/// <summary>
-		/// The city styles the rules themselves can resolve: a style themes what a settlement may
-		/// build (<see cref="StyleAllows"/>) and how its founding reads on the page. Third-party
-		/// building entries may name styles beyond these &mdash; <c>KingdomData.Styles</c> is the
-		/// registry's live union &mdash; but only a style in this array is ever chosen by
-		/// <see cref="StyleForSite"/>.
+		/// The five built-in city styles and the compatibility terrain resolver's answer set.
+		/// The live open registry is <c>KingdomData.Styles</c>; founding uses its data-driven
+		/// selector before this compatibility surface, so third-party styles are not closed out.
 		/// </summary>
 		public static readonly string[] Styles = new string[5] { "common", "verdant", "fungal", "gyre", "eater" };
 
-		/// <summary>Whether a string names a style these rules resolve. Case-sensitive: style keys
-		/// are data, not prose. Null and empty are not known styles.</summary>
+		/// <summary>Whether a string names one of the five built-in compatibility styles. Engine
+		/// callers that need the open registry use <c>KingdomData.TryGetStyle</c>.</summary>
 		public static bool IsKnownStyle(string Style)
 		{
 			for (int i = 0; i < Styles.Length; i++)

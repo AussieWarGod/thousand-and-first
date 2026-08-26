@@ -462,6 +462,30 @@ namespace ThousandAndFirst.Simulation.City
 			step = KingdomDistanceRules.StepBetween(nodes[from], nodes[to]);
 			return step != KingdomZoneStep.None;
 		}
+
+		/// <summary>The two endpoint-facing steps of a complete route, without materialising its
+		/// node list. <paramref name="leaving"/> faces from the source toward its first hop;
+		/// <paramref name="arriving"/> faces from the destination back toward its last hop. Those
+		/// are exactly the two work-to-edge columns §3.10 composes around the level-1 distance.
+		/// Constant time and allocation-free.</summary>
+		internal bool TryRouteSteps(int from, int to, out KingdomZoneStep leaving, out KingdomZoneStep arriving)
+		{
+			leaving = KingdomZoneStep.None;
+			arriving = KingdomZoneStep.None;
+			if (from < 0 || to < 0 || from >= count || to >= count || from == to)
+			{
+				return false;
+			}
+			int first = nextHop[from * count + to];
+			int last = nextHop[to * count + from];
+			if (first < 0 || last < 0)
+			{
+				return false;
+			}
+			leaving = KingdomDistanceRules.StepBetween(nodes[from], nodes[first]);
+			arriving = KingdomDistanceRules.StepBetween(nodes[to], nodes[last]);
+			return leaving != KingdomZoneStep.None && arriving != KingdomZoneStep.None;
+		}
 	}
 
 	/// <summary>
@@ -479,18 +503,26 @@ namespace ThousandAndFirst.Simulation.City
 	{
 		private readonly KingdomZoneGraph graph;
 
-		private readonly int worksPerZone;
+		/// <summary>Stable endpoint ids per zone. Legal works are not matrix rows: only endpoints
+		/// named by an open logistics snapshot are cached. This is the sparse/cache ruling required
+		/// by the live 880-work envelope.</summary>
+		private readonly int[][] endpointIds;
 
-		private readonly ushort[] workEdge;
+		private readonly ushort[][] workEdge;
 
-		private readonly ushort[] samePair;
+		private readonly ushort[][] samePair;
 
 		private readonly bool[] dirty;
 
-		private KingdomDistanceMatrix(KingdomZoneGraph graph, int worksPerZone, ushort[] workEdge, ushort[] samePair, bool[] dirty)
+		private int workEdgeEntries;
+
+		private int samePairEntries;
+
+		private KingdomDistanceMatrix(KingdomZoneGraph graph, int[][] endpointIds,
+			ushort[][] workEdge, ushort[][] samePair, bool[] dirty)
 		{
 			this.graph = graph;
-			this.worksPerZone = worksPerZone;
+			this.endpointIds = endpointIds;
 			this.workEdge = workEdge;
 			this.samePair = samePair;
 			this.dirty = dirty;
@@ -506,25 +538,69 @@ namespace ThousandAndFirst.Simulation.City
 			get { return graph.Count; }
 		}
 
-		internal int WorksPerZone
-		{
-			get { return worksPerZone; }
-		}
-
 		/// <summary>Entries the two level-2 slices actually occupy. The figure &sect;0.0(c)'s
 		/// memory row is measured against, reported rather than asserted.</summary>
 		internal int Entries
 		{
-			get { return workEdge.Length + samePair.Length + graph.Count * graph.Count; }
+			get { return workEdgeEntries + samePairEntries + graph.Count * graph.Count; }
+		}
+
+		internal int WorkEdgeEntries
+		{
+			get { return workEdgeEntries; }
+		}
+
+		internal int SamePairEntries
+		{
+			get { return samePairEntries; }
+		}
+
+		internal int EndpointCount(int zoneIndex)
+		{
+			return (zoneIndex < 0 || zoneIndex >= endpointIds.Length) ? 0 : endpointIds[zoneIndex].Length;
+		}
+
+		/// <summary>Conservative equal-share cap a render can use when every zone wants a slice.
+		/// The matrix itself admits uneven slices up to the two city-wide entry caps.</summary>
+		internal static int EndpointShare(int zoneCount)
+		{
+			if (zoneCount <= 0 || zoneCount > KingdomDistanceRules.MaxNodes)
+			{
+				return 0;
+			}
+			int byEdges = KingdomDistanceRules.MaxWorkEdgeEntries
+				/ (zoneCount * KingdomDistanceRules.EdgesPerZone);
+			int byPairs = 0;
+			while (KingdomDistanceRules.PairSlots(byPairs + 1) * zoneCount
+				<= KingdomDistanceRules.MaxSamePairEntries)
+			{
+				byPairs++;
+			}
+			return (byEdges < byPairs) ? byEdges : byPairs;
+		}
+
+		/// <summary>Actual remaining city budget for one slice. Legal catalogue/job counts are
+		/// uneven across zones; an equal-share fiction may not silently discard a live endpoint.</summary>
+		internal int MaxEndpointsForZone(int zoneIndex)
+		{
+			if (zoneIndex < 0 || zoneIndex >= endpointIds.Length) return 0;
+			int baseEdges = workEdgeEntries - workEdge[zoneIndex].Length;
+			int basePairs = samePairEntries - samePair[zoneIndex].Length;
+			int count = 0;
+			while (count < KingdomDistanceSliceRules.MaxCandidateEndpoints
+				&& baseEdges + (count + 1) * KingdomDistanceRules.EdgesPerZone
+					<= KingdomDistanceRules.MaxWorkEdgeEntries
+				&& basePairs + KingdomDistanceRules.PairSlots(count + 1)
+					<= KingdomDistanceRules.MaxSamePairEntries) count++;
+			return count;
 		}
 
 		/// <summary>
-		/// An empty matrix over these zones, with every zone dirty. Refuses a shape that would
-		/// break &sect;0.0(c)'s entry budget rather than allocating past it &mdash; the budget is
-		/// the contract and an allocation that quietly exceeds it is the regression the table
-		/// exists to catch.
+		/// An empty matrix over these zones, with every zone dirty. Legal catalogue work rows are
+		/// not preallocated here: each rendered zone later publishes one bounded sparse endpoint
+		/// slice, and <see cref="TryWriteZone"/> enforces the city-wide entry budgets.
 		/// </summary>
-		internal static bool TryCreate(KingdomZoneGraph graph, int worksPerZone, out KingdomDistanceMatrix matrix, out KingdomCityFault fault)
+		internal static bool TryCreate(KingdomZoneGraph graph, out KingdomDistanceMatrix matrix, out KingdomCityFault fault)
 		{
 			matrix = null;
 			if (graph == null)
@@ -532,34 +608,18 @@ namespace ThousandAndFirst.Simulation.City
 				fault = KingdomCityFault.NullArgument;
 				return false;
 			}
-			if (worksPerZone < 0)
-			{
-				fault = KingdomCityFault.InvalidIndex;
-				return false;
-			}
-			int edgeEntries = graph.Count * worksPerZone * KingdomDistanceRules.EdgesPerZone;
-			int pairEntries = graph.Count * KingdomDistanceRules.PairSlots(worksPerZone);
-			if (edgeEntries > KingdomDistanceRules.MaxWorkEdgeEntries || pairEntries > KingdomDistanceRules.MaxSamePairEntries)
-			{
-				fault = KingdomCityFault.RowCapExceeded;
-				return false;
-			}
-			ushort[] edges = new ushort[edgeEntries];
-			ushort[] pairs = new ushort[pairEntries];
-			for (int i = 0; i < edges.Length; i++)
-			{
-				edges[i] = (ushort)KingdomDistanceRules.NoRoute;
-			}
-			for (int i = 0; i < pairs.Length; i++)
-			{
-				pairs[i] = (ushort)KingdomDistanceRules.NoRoute;
-			}
+			int[][] ids = new int[graph.Count][];
+			ushort[][] edges = new ushort[graph.Count][];
+			ushort[][] pairs = new ushort[graph.Count][];
 			bool[] flags = new bool[graph.Count];
 			for (int i = 0; i < flags.Length; i++)
 			{
+				ids[i] = new int[0];
+				edges[i] = new ushort[0];
+				pairs[i] = new ushort[0];
 				flags[i] = true;
 			}
-			matrix = new KingdomDistanceMatrix(graph, worksPerZone, edges, pairs, flags);
+			matrix = new KingdomDistanceMatrix(graph, ids, edges, pairs, flags);
 			fault = KingdomCityFault.None;
 			return true;
 		}
@@ -588,38 +648,68 @@ namespace ThousandAndFirst.Simulation.City
 		/// <summary>Writes one zone's whole level-2 slice and clears its flag. All of it or none of
 		/// it: a half-written slice is a matrix that answers some pairs from this pass and some
 		/// from the one before.</summary>
-		internal bool TryWriteZone(int zoneIndex, ushort[] edges, ushort[] pairs, out KingdomCityFault fault)
+		internal bool TryWriteZone(int zoneIndex, int[] ids, ushort[] edges, ushort[] pairs, out KingdomCityFault fault)
 		{
 			if (zoneIndex < 0 || zoneIndex >= graph.Count)
 			{
 				fault = KingdomCityFault.InvalidIndex;
 				return false;
 			}
-			int edgeStride = worksPerZone * KingdomDistanceRules.EdgesPerZone;
-			int pairStride = KingdomDistanceRules.PairSlots(worksPerZone);
-			if (edges == null || pairs == null || edges.Length != edgeStride || pairs.Length != pairStride)
+			if (ids == null || edges == null || pairs == null
+				|| edges.Length != ids.Length * KingdomDistanceRules.EdgesPerZone
+				|| pairs.Length != KingdomDistanceRules.PairSlots(ids.Length))
 			{
 				fault = KingdomCityFault.InvalidIndex;
 				return false;
 			}
-			Array.Copy(edges, 0, workEdge, zoneIndex * edgeStride, edgeStride);
-			Array.Copy(pairs, 0, samePair, zoneIndex * pairStride, pairStride);
+			for (int i = 0; i < ids.Length; i++)
+			{
+				if (ids[i] <= 0)
+				{
+					fault = KingdomCityFault.InvalidIndex;
+					return false;
+				}
+				for (int j = 0; j < i; j++)
+				{
+					if (ids[j] == ids[i])
+					{
+						fault = KingdomCityFault.InvalidIndex;
+						return false;
+					}
+				}
+			}
+			int nextEdges = workEdgeEntries - workEdge[zoneIndex].Length + edges.Length;
+			int nextPairs = samePairEntries - samePair[zoneIndex].Length + pairs.Length;
+			if (nextEdges > KingdomDistanceRules.MaxWorkEdgeEntries
+				|| nextPairs > KingdomDistanceRules.MaxSamePairEntries)
+			{
+				fault = KingdomCityFault.RowCapExceeded;
+				return false;
+			}
+			endpointIds[zoneIndex] = (int[])ids.Clone();
+			workEdge[zoneIndex] = (ushort[])edges.Clone();
+			samePair[zoneIndex] = (ushort[])pairs.Clone();
+			workEdgeEntries = nextEdges;
+			samePairEntries = nextPairs;
 			dirty[zoneIndex] = false;
 			fault = KingdomCityFault.None;
 			return true;
 		}
 
-		/// <summary>How far one work stands from one of its zone's six edges, in cells.</summary>
-		internal bool TryWorkToEdge(int zoneIndex, int workSlot, KingdomZoneStep step, out int cells)
+		/// <summary>How far one sparse endpoint stands from one of its zone's six edges, in cells.</summary>
+		internal bool TryWorkToEdge(int zoneIndex, int endpointId, KingdomZoneStep step, out int cells)
 		{
 			cells = 0;
-			if (zoneIndex < 0 || zoneIndex >= graph.Count || workSlot < 0 || workSlot >= worksPerZone
-				|| step == KingdomZoneStep.None)
+			int slot;
+			int direction = (int)step;
+			if (zoneIndex < 0 || zoneIndex >= graph.Count || direction < 0
+				|| direction >= KingdomDistanceRules.EdgesPerZone
+				|| !TrySlot(zoneIndex, endpointId, out slot))
 			{
 				return false;
 			}
-			int at = (zoneIndex * worksPerZone + workSlot) * KingdomDistanceRules.EdgesPerZone + (int)step;
-			int value = workEdge[at];
+			int at = slot * KingdomDistanceRules.EdgesPerZone + direction;
+			int value = workEdge[zoneIndex][at];
 			if (value >= KingdomDistanceRules.NoRoute)
 			{
 				return false;
@@ -629,24 +719,31 @@ namespace ThousandAndFirst.Simulation.City
 		}
 
 		/// <summary>How far two works in the same zone stand from each other, in cells.</summary>
-		internal bool TrySameZone(int zoneIndex, int slotA, int slotB, out int cells)
+		internal bool TrySameZone(int zoneIndex, int endpointA, int endpointB, out int cells)
 		{
 			cells = 0;
 			if (zoneIndex < 0 || zoneIndex >= graph.Count)
 			{
 				return false;
 			}
-			if (slotA == slotB)
+			if (endpointA == endpointB && endpointA > 0)
 			{
-				return true;
+				int standing;
+				return TrySlot(zoneIndex, endpointA, out standing);
 			}
-			int index;
-			KingdomCityFault fault;
-			if (!KingdomDistanceRules.TryPairIndex(slotA, slotB, worksPerZone, out index, out fault))
+			int slotA;
+			int slotB;
+			if (!TrySlot(zoneIndex, endpointA, out slotA) || !TrySlot(zoneIndex, endpointB, out slotB))
 			{
 				return false;
 			}
-			int value = samePair[zoneIndex * KingdomDistanceRules.PairSlots(worksPerZone) + index];
+			int index;
+			KingdomCityFault fault;
+			if (!KingdomDistanceRules.TryPairIndex(slotA, slotB, endpointIds[zoneIndex].Length, out index, out fault))
+			{
+				return false;
+			}
+			int value = samePair[zoneIndex][index];
 			if (value >= KingdomDistanceRules.NoRoute)
 			{
 				return false;
@@ -661,7 +758,7 @@ namespace ThousandAndFirst.Simulation.City
 		/// slice the city knows is stale is worse than no distance, because a route planned on one
 		/// is a carrier walking past a nearer holder (I6).
 		/// </summary>
-		internal bool TryCompose(int fromZone, int fromSlot, int toZone, int toSlot, out int cells, out KingdomCityFault fault)
+		internal bool TryCompose(int fromZone, int fromEndpoint, int toZone, int toEndpoint, out int cells, out KingdomCityFault fault)
 		{
 			cells = 0;
 			if (IsDirty(fromZone) || IsDirty(toZone))
@@ -671,7 +768,7 @@ namespace ThousandAndFirst.Simulation.City
 			}
 			if (fromZone == toZone)
 			{
-				if (!TrySameZone(fromZone, fromSlot, toSlot, out cells))
+				if (!TrySameZone(fromZone, fromEndpoint, toEndpoint, out cells))
 				{
 					fault = KingdomCityFault.OutsideItinerary;
 					return false;
@@ -682,19 +779,16 @@ namespace ThousandAndFirst.Simulation.City
 			KingdomZoneStep out_;
 			KingdomZoneStep in_;
 			int between;
-			int[] path = new int[KingdomDistanceRules.MaxNodes];
-			int length;
-			if (!graph.TryPath(fromZone, toZone, path, out length, out fault) || length < 2
-				|| !graph.TryDistance(fromZone, toZone, out between)
-				|| !graph.TryStep(path[0], path[1], out out_)
-				|| !graph.TryStep(path[length - 1], path[length - 2], out in_))
+			if (!graph.TryDistance(fromZone, toZone, out between)
+				|| !graph.TryRouteSteps(fromZone, toZone, out out_, out in_))
 			{
 				fault = KingdomCityFault.OutsideItinerary;
 				return false;
 			}
 			int leaving;
 			int arriving;
-			if (!TryWorkToEdge(fromZone, fromSlot, out_, out leaving) || !TryWorkToEdge(toZone, toSlot, in_, out arriving))
+			if (!TryWorkToEdge(fromZone, fromEndpoint, out_, out leaving)
+				|| !TryWorkToEdge(toZone, toEndpoint, in_, out arriving))
 			{
 				fault = KingdomCityFault.OutsideItinerary;
 				return false;
@@ -708,6 +802,25 @@ namespace ThousandAndFirst.Simulation.City
 			cells = (int)total;
 			fault = KingdomCityFault.None;
 			return true;
+		}
+
+		private bool TrySlot(int zoneIndex, int endpointId, out int slot)
+		{
+			slot = -1;
+			if (zoneIndex < 0 || zoneIndex >= endpointIds.Length || endpointId <= 0)
+			{
+				return false;
+			}
+			int[] ids = endpointIds[zoneIndex];
+			for (int i = 0; i < ids.Length; i++)
+			{
+				if (ids[i] == endpointId)
+				{
+					slot = i;
+					return true;
+				}
+			}
+			return false;
 		}
 	}
 }

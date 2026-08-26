@@ -930,9 +930,20 @@ namespace ThousandAndFirst
 		/// <param name="Style">The city's style key, or null.</param>
 		public static KingdomMaterial WallMaterialFor(KingdomMaterialTally Stock, string Style)
 		{
-			if (TryStylePreference(Style, out var preferred) && HasWallMaterial(Stock, preferred))
+			KingdomMaterial preferred;
+			bool hasPreference = TryStylePreference(Style, out preferred);
+			return WallMaterialFor(Stock, hasPreference, preferred);
+		}
+
+		/// <summary>Open-registry form of wall selection. The caller supplies a validated style
+		/// preference; stock still remains authoritative, so data can express taste but cannot
+		/// conjure a material the settlement has not earned.</summary>
+		public static KingdomMaterial WallMaterialFor(KingdomMaterialTally Stock,
+			bool HasPreference, KingdomMaterial Preferred)
+		{
+			if (HasPreference && HasWallMaterial(Stock, Preferred))
 			{
-				return preferred;
+				return Preferred;
 			}
 			for (int i = 0; i < WallMaterialPreference.Length; i++)
 			{

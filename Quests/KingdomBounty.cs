@@ -510,7 +510,7 @@ namespace ThousandAndFirst
 					? ("{{K|" + KingdomBountyRules.MaxNotices + " notices already stand here}}")
 					: "{{W|Post a new notice}}");
 				int pick = Popup.PickOption(
-					Title: "The notice board of " + System.SeatName,
+					Title: "The notice board of " + KingdomPresentation.Rich(System.SeatName),
 					Intro: "Nothing here is set aside. A price leaves the stores the day the work is done, and not before.",
 					Options: options, AllowEscape: true);
 				if (pick < 0)
@@ -586,9 +586,10 @@ namespace ThousandAndFirst
 				Data.WithdrawPileCellY = (withdrawPile != null && withdrawPile.CurrentCell != null)
 					? withdrawPile.CurrentCell.Y : 0;
 				Data.WithdrawChronicleLine = KingdomBountyRules.WithdrawnChronicle(
-					System.SeatName, task, claimed, Data.WorkerName);
+					KingdomPresentation.Rich(System.SeatName), task, claimed,
+					KingdomPresentation.Rich(Data.WorkerName));
 				Data.WithdrawMessageLine = "{{K|The notice comes off the stake.}} " + (claimed
-					? ("Word will reach " + Data.WorkerName
+					? ("Word will reach " + KingdomPresentation.Rich(Data.WorkerName)
 						+ " that the settlement has changed its mind. Nothing is asked back.")
 					: "Nobody had taken it, and nothing was spent.");
 				Data.WithdrawMessageState = (int)BountySinkDisposition.Pending;
@@ -792,7 +793,8 @@ namespace ThousandAndFirst
 			data.Y1 = y1;
 			data.X2 = x2;
 			data.Y2 = y2;
-			data.PostChronicleLine = KingdomBountyRules.PostedChronicle(System.SeatName, Task, price);
+			data.PostChronicleLine = KingdomBountyRules.PostedChronicle(
+				KingdomPresentation.Rich(System.SeatName), Task, price);
 			data.PostMessageLine = "{{G|The notice is up.}} "
 				+ KingdomBountyRules.NoticeText(Task, price, null);
 			data.PostZoneId = Z.ZoneID;
@@ -805,10 +807,12 @@ namespace ThousandAndFirst
 			string oldPileMark = (pile == null) ? null : pile.GetStringProperty(FetchMarkProperty);
 			Cell pileCell = (pile == null) ? null : pile.CurrentCell;
 			bool inserted = false;
+			GameObject acceptedNotice = null;
 			try
 			{
-				cell.AddObject(notice);
-				inserted = NoticeBindingExact(notice, data, Z, cell);
+				acceptedNotice = cell.AddObject(notice);
+				inserted = ReferenceEquals(acceptedNotice, notice)
+					&& NoticeBindingExact(notice, data, Z, cell);
 				if (!inserted) throw new InvalidOperationException(
 					"The notice insertion callback changed its exact object, part, cell, or zone binding.");
 				notice.MakeActive();
@@ -856,6 +860,10 @@ namespace ThousandAndFirst
 					? "The stake could not be driven cleanly; its one cleanup attempt removed it."
 					: "The stake crossed an uncertain callback seam. It is quarantined and cleanup was not repeated.");
 				return;
+			}
+			finally
+			{
+				KingdomSurvey.ObserveAddResultInActive(Z, notice, acceptedNotice);
 			}
 			// The notice, its active schedule, and any protected fetch mark are now durable.
 			// Telling and description may fail without turning that completed publication free.
@@ -1012,7 +1020,7 @@ namespace ThousandAndFirst
 			{
 				return;
 			}
-			List<GameObject> notices = Notices(Z);
+			List<GameObject> notices = new List<GameObject>(Survey.Notices);
 			for (int i = 0; i < notices.Count; i++)
 			{
 				GameObject notice = notices[i];
@@ -1106,13 +1114,17 @@ namespace ThousandAndFirst
 			int presented = 0;
 			int omittedRefusals = 0;
 			string settlementId = KingdomChronicle.SettlementId(System);
+			Simulation.City.KingdomCityState residentState;
+			Simulation.City.KingdomResidentRollProjection roll;
+			List<string> residentNames = Simulation.City.KingdomResidents.TryRoll(System,
+				out residentState, out roll) ? roll.Names : new List<string>();
 			for (int i = 0; i < due && string.IsNullOrEmpty(Data.WorkerName)
 				&& !Data.AttemptScheduleExhausted
 				&& Data.Passes < KingdomBountyRules.MaxPasses; i++)
 			{
 				long scheduledTick = Data.NextAttemptTick;
 				KingdomBountyRules.BountyAttempt attempt = KingdomBountyRules.ResolveScheduled(
-					settlementId, Data.EventStreamId, scheduledTick, System.RosterNames, task, Data.Price);
+					settlementId, Data.EventStreamId, scheduledTick, residentNames, task, Data.Price);
 				if (!attempt.Determined)
 				{
 					// Kernel failure has no outcome. Keep this exact scheduled event at the cursor;
@@ -1360,7 +1372,10 @@ namespace ThousandAndFirst
 		/// <summary>The only destructive bounty call site. Attempting recovery never enters it.</summary>
 		private static bool InvokeCleanupOnce(GameObject Target, bool Silent)
 		{
-			return Target == null || !GameObject.Validate(Target) || Target.Obliterate(null, Silent);
+			if (Target == null || !GameObject.Validate(Target)) return true;
+			Zone zone = Target.CurrentZone;
+			try { return Target.Obliterate(null, Silent); }
+			finally { KingdomSurvey.ObserveCurrentTopologyInActive(zone, Target); }
 		}
 
 		private static string EventId(r_KingdomNotice Data, string Suffix)
@@ -1494,7 +1509,7 @@ namespace ThousandAndFirst
 						if (!Data.StakeFailedAnnounced)
 						{
 							Data.StakeFailedAnnounced = true;
-							System.Ledger.Note("{{r|" + Data.PendingWorkerName
+						System.Ledger.Note("{{r|" + KingdomPresentation.Rich(Data.PendingWorkerName)
 								+ " would have taken the clearance notice, and could not: "
 								+ failure + "}}");
 						}
@@ -1515,7 +1530,8 @@ namespace ThousandAndFirst
 				Data.DueTick = KingdomBountyRules.WorkDueTick(Data.TakenTick,
 					KingdomBountyRules.WorkDays(task, Data.Magnitude));
 				if (!KingdomChronicle.RecordOnce(System, EventId(Data, "taken"),
-					KingdomBountyRules.TakenChronicle(Data.PendingWorkerName, task,
+					KingdomBountyRules.TakenChronicle(
+						KingdomPresentation.Rich(Data.PendingWorkerName), task,
 						Data.PendingVirtueIndex, Data.PendingTasteMatched)))
 				{
 					return;
@@ -1528,7 +1544,7 @@ namespace ThousandAndFirst
 				if (Data.TakeLedgerState == (int)BountySinkDisposition.None)
 					Data.TakeLedgerState = (int)BountySinkDisposition.Pending;
 				Data.TakePhase = (int)BountyTakePhase.LedgerIntent;
-				DeliverLedger(System, ref Data.TakeLedgerState, "{{G|" + Data.PendingWorkerName
+				DeliverLedger(System, ref Data.TakeLedgerState, "{{G|" + KingdomPresentation.Rich(Data.PendingWorkerName)
 					+ " took the notice offering water to " + KingdomBountyRules.TaskName(task) + ".}}");
 				Data.TakePhase = (int)BountyTakePhase.LedgerDone;
 				phase = BountyTakePhase.LedgerDone;
@@ -1547,7 +1563,7 @@ namespace ThousandAndFirst
 				if (Data.TakeMessageState == (int)BountySinkDisposition.None)
 					Data.TakeMessageState = (int)BountySinkDisposition.Pending;
 				Data.TakePhase = (int)BountyTakePhase.MessageIntent;
-				DeliverMessage(ref Data.TakeMessageState, "{{G|" + Data.PendingWorkerName
+				DeliverMessage(ref Data.TakeMessageState, "{{G|" + KingdomPresentation.Rich(Data.PendingWorkerName)
 					+ " takes the posted notice.}}");
 				Data.TakePhase = (int)BountyTakePhase.MessageDone;
 				phase = BountyTakePhase.MessageDone;
@@ -1595,20 +1611,23 @@ namespace ThousandAndFirst
 
 		private static int ResidentIdFor(KingdomSystem System, int Index, string Name)
 		{
-			if (System == null || System.City == null || System.City.ResidentIds == null
-				|| System.City.ResidentNames == null || Index < 0
-				|| Index >= System.City.ResidentIds.Count || Index >= System.City.ResidentNames.Count
-				|| !string.Equals(System.City.ResidentNames[Index], Name, StringComparison.Ordinal))
+			List<Simulation.City.KingdomResidentRow> rows =
+				Simulation.City.KingdomResidents.RollRows(System);
+			if (Index < 0 || Index >= rows.Count
+				|| !string.Equals(rows[Index].Name, Name, StringComparison.Ordinal))
 			{
 				return 0;
 			}
-			return (System.City.ResidentIds[Index] > 0) ? System.City.ResidentIds[Index] : 0;
+			return rows[Index].ResidentId;
 		}
 
 		private static bool HasMatchingClearance(Zone Z, r_KingdomNotice Data)
 		{
 			if (Z == null) return false;
-			foreach (GameObject item in Z.GetObjects())
+			KingdomSurvey survey = KingdomSurvey.ActiveFor(Z);
+			IEnumerable<GameObject> clearances = survey != null
+				? (IEnumerable<GameObject>)survey.Clearances : KingdomSurvey.ObjectsFor(Z);
+			foreach (GameObject item in clearances)
 			{
 				r_KingdomClearance order = item.GetPart<r_KingdomClearance>();
 				if (order != null && order.X1 == Data.X1 && order.Y1 == Data.Y1
@@ -1934,6 +1953,7 @@ namespace ThousandAndFirst
 			{
 				MetricsManager.LogError("ThousandAndFirst bounty fetch removal", error);
 			}
+			KingdomSurvey.ObserveCurrentTopologyInActive(Z, sourceFrame.Owner);
 			if (!TransferReceiptExact(Data, BountyTransferPhase.RemoveIntent, itemId,
 				sourceId, destinationId, units, totalBefore, creditedBefore)
 				|| item.ID != itemId
@@ -1947,14 +1967,17 @@ namespace ThousandAndFirst
 			}
 			Data.TransferPhase = (int)BountyTransferPhase.Detached;
 			Data.TransferPhase = (int)BountyTransferPhase.AddIntent;
+			GameObject accepted = null;
 			try
 			{
-				destinationFrame.Part.AddObject(item, Silent: true, NoStack: true);
+				accepted = destinationFrame.Part.AddObject(item, Silent: true, NoStack: true);
 			}
 			catch (Exception error)
 			{
 				MetricsManager.LogError("ThousandAndFirst bounty fetch addition", error);
 			}
+			KingdomSurvey.ObserveCurrentTopologyInActive(Z, destinationFrame.Owner);
+			KingdomSurvey.ObserveAddResultInActive(Z, item, accepted);
 			if (!TransferReceiptExact(Data, BountyTransferPhase.AddIntent, itemId,
 				sourceId, destinationId, units, totalBefore, creditedBefore)
 				|| item.ID != itemId
@@ -2019,8 +2042,10 @@ namespace ThousandAndFirst
 			if (Data.ScoutPhase == 1)
 			{
 				if (!KingdomChronicle.RecordOnce(System, EventId(Data, "scout"),
-					KingdomBountyRules.ScoutChronicle(Data.WorkerName, System.SeatName,
-						Data.ScoutGround))) return;
+					KingdomBountyRules.ScoutChronicle(
+						KingdomPresentation.Rich(Data.WorkerName),
+						KingdomPresentation.Rich(System.SeatName),
+						KingdomPresentation.Rich(Data.ScoutGround)))) return;
 				Data.ScoutPhase = 2;
 			}
 			if (Data.ScoutPhase == 2)
@@ -2029,7 +2054,8 @@ namespace ThousandAndFirst
 					Data.ScoutDeedState = (int)BountySinkDisposition.Pending;
 				Data.ScoutPhase = 3;
 				Data.ScoutDeedState = (int)BountySinkDisposition.Attempting;
-				System.RecordDeed(KingdomBountyRules.ScoutDeed(System.SeatName));
+				System.RecordDeed(KingdomBountyRules.ScoutDeed(
+					KingdomPresentation.Rich(System.SeatName)));
 				Data.ScoutDeedState = (int)BountySinkDisposition.Delivered;
 				Data.ScoutPhase = 4;
 			}
@@ -2060,6 +2086,10 @@ namespace ThousandAndFirst
 				}
 				work.SetIntProperty("KingdomStaffed", 1);
 				work.SetIntProperty("KingdomEffectiveness", 100);
+				// The hired hand is not a witnessed resident identity. Neutral is the only
+				// honest factor; retaining yesterday's crew would lend their culture to a stranger.
+				work.SetIntProperty(KingdomCrews.IdentityAffinityProperty,
+					KingdomIdentityAffinityRules.NeutralPercent);
 				if (System.IdleWorks > 0)
 				{
 					System.IdleWorks--;
@@ -2140,7 +2170,9 @@ namespace ThousandAndFirst
 					if (Data.AnnouncedBlock != (int)BountyBlock.StoresCannotPay)
 					{
 						KingdomChronicle.RecordOnce(System, EventId(Data, "owed"),
-							KingdomBountyRules.OwedChronicle(Data.WorkerName, System.SeatName,
+							KingdomBountyRules.OwedChronicle(
+								KingdomPresentation.Rich(Data.WorkerName),
+								KingdomPresentation.Rich(System.SeatName),
 								Data.Paid, Data.Price - Data.Paid));
 					}
 					Announce(System, Data, BountyBlock.StoresCannotPay);
@@ -2563,7 +2595,9 @@ namespace ThousandAndFirst
 			if (phase == BountyTerminalPhase.None)
 			{
 				if (!KingdomChronicle.RecordOnce(System, EventId(Data, "paid"),
-					KingdomBountyRules.PaidChronicle(Data.WorkerName, System.SeatName,
+					KingdomBountyRules.PaidChronicle(
+						KingdomPresentation.Rich(Data.WorkerName),
+						KingdomPresentation.Rich(System.SeatName),
 						(BountyTask)Data.TaskCode, Data.Paid))) return;
 				Data.TerminalPhase = (int)BountyTerminalPhase.ChronicleDone;
 				phase = BountyTerminalPhase.ChronicleDone;
@@ -2574,7 +2608,7 @@ namespace ThousandAndFirst
 					Data.TerminalLedgerState = (int)BountySinkDisposition.Pending;
 				Data.TerminalPhase = (int)BountyTerminalPhase.LedgerIntent;
 				DeliverLedger(System, ref Data.TerminalLedgerState,
-					"{{G|" + Data.WorkerName + " was paid " + Data.Paid
+					"{{G|" + KingdomPresentation.Rich(Data.WorkerName) + " was paid " + Data.Paid
 					+ ((Data.Paid == 1) ? " dram" : " drams") + " off the notice board.}}");
 				Data.TerminalPhase = (int)BountyTerminalPhase.LedgerDone;
 				phase = BountyTerminalPhase.LedgerDone;
@@ -2596,7 +2630,7 @@ namespace ThousandAndFirst
 				DeliverMessage(ref Data.TerminalMessageState,
 					"{{G|The notice is claimed and paid.}} "
 					+ Data.Paid + ((Data.Paid == 1) ? " dram goes" : " drams go")
-					+ " to " + Data.WorkerName + ".");
+					+ " to " + KingdomPresentation.Rich(Data.WorkerName) + ".");
 				Data.TerminalPhase = (int)BountyTerminalPhase.MessageDone;
 				phase = BountyTerminalPhase.MessageDone;
 			}
@@ -2642,7 +2676,7 @@ namespace ThousandAndFirst
 
 		private static BountyBlock Blocking(KingdomSystem System, Zone Z, KingdomSurvey Survey, r_KingdomNotice Data)
 		{
-			if (System.RosterNames.Count == 0)
+			if (Simulation.City.KingdomResidents.OnRollCount(System) == 0)
 			{
 				return BountyBlock.NobodyToTry;
 			}
@@ -2699,7 +2733,8 @@ namespace ThousandAndFirst
 				return;
 			}
 			Data.AnnouncedBlock = (int)Block;
-			string reason = KingdomBountyRules.BlockReason(Block, (BountyTask)Data.TaskCode, System.SeatName);
+			string reason = KingdomBountyRules.BlockReason(Block, (BountyTask)Data.TaskCode,
+				KingdomPresentation.Rich(System.SeatName));
 			if (reason != null)
 			{
 				System.Ledger.Note("{{r|" + reason + "}}");
@@ -2720,7 +2755,7 @@ namespace ThousandAndFirst
 			{
 				return found;
 			}
-			foreach (GameObject item in Z.GetObjects())
+			foreach (GameObject item in KingdomSurvey.ObjectsFor(Z))
 			{
 				if (item.HasPart(typeof(r_KingdomNotice)))
 				{
@@ -2920,20 +2955,21 @@ namespace ThousandAndFirst
 			}
 			if (string.IsNullOrEmpty(Data.WorkerName))
 			{
-				string reason = KingdomBountyRules.BlockReason((BountyBlock)Data.AnnouncedBlock, (BountyTask)Data.TaskCode, System.SeatName);
+				string reason = KingdomBountyRules.BlockReason((BountyBlock)Data.AnnouncedBlock,
+					(BountyTask)Data.TaskCode, KingdomPresentation.Rich(System.SeatName));
 				return (reason == null) ? "{{K|Nobody has taken it yet.}}" : ("{{r|" + reason + "}}");
 			}
 			if (Data.DueTick <= 0L)
 			{
-				return "{{W|" + Data.WorkerName + " has it, and is at it now.}}";
+				return "{{W|" + KingdomPresentation.Rich(Data.WorkerName) + " has it, and is at it now.}}";
 			}
 			long left = Data.DueTick - The.Game.TimeTicks;
 			int days = (int)((left + KingdomRules.TicksPerDay - 1L) / KingdomRules.TicksPerDay);
 			if (days <= 0)
 			{
-				return "{{W|" + Data.WorkerName + " has it, and is due back.}}";
+				return "{{W|" + KingdomPresentation.Rich(Data.WorkerName) + " has it, and is due back.}}";
 			}
-			return "{{W|" + Data.WorkerName + " has it. " + days + ((days == 1) ? " day" : " days") + " left of it.}}";
+			return "{{W|" + KingdomPresentation.Rich(Data.WorkerName) + " has it. " + days + ((days == 1) ? " day" : " days") + " left of it.}}";
 		}
 
 		private static string StatusLine(KingdomSystem System, GameObject Notice)

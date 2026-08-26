@@ -698,15 +698,9 @@ namespace ThousandAndFirst
 
 		private static void ValidateEntry(CatalogueEntry Entry, Dictionary<string, CatalogueEntry> ByKey, List<CatalogueFinding> Findings)
 		{
-			// A Defence rating overrides the category at siting time: the layout puts anything that
-			// carries one on the frontier line, whatever else it is filed under. A design that also
-			// claims a plot is therefore asking for two mutually exclusive pieces of ground, and
-			// the plot is the one that never gets laid.
-			if (Entry.Defence > 0 && Entry.Plot != KingdomPlotRules.PlotSize.None)
-			{
-				Findings.Add(new CatalogueFinding(Entry.Key, "Defence", CatalogueSeverity.Fault,
-					"building " + Entry.Key + " claims " + PlotWord(Entry.Plot) + " and a defence rating; it will be sited on the wall line and its plot never laid"));
-			}
+			// Defence is an output, not a siting override. A plotted watch-lodge keeps its whole
+			// authored lot and contributes its base rating; only a defensive design with no plot is
+			// a frontier work. KingdomRules.IsFrontierWork is the shared runtime law.
 			if (Entry.Open && !string.IsNullOrEmpty(Entry.Contents))
 			{
 				// An open plot has no interior, so the table would furnish the weather.
@@ -772,11 +766,17 @@ namespace ThousandAndFirst
 					"building " + Entry.Key + " needs weather and declares a tier that is " + KingdomPlotRules.RoofWord(Entry.Roof)
 					+ "; it would be refused wherever it was raised" + Layered(Entry)));
 			}
-			if (Entry.Plot != KingdomPlotRules.PlotSize.None && Entry.RoofDeclared
-				&& !KingdomPlotRules.HoldsBeds(Entry.Roof) && Fold(Entry.Category) == "housing")
+			int roofCapacity = AmountOf(carries, SupportRoof);
+			bool claimsHousing = Fold(Entry.Category) == "housing" || roofCapacity > 0;
+			if (Entry.Plot != KingdomPlotRules.PlotSize.None && claimsHousing
+				&& !KingdomPlotRules.HoldsBeds(Entry.Roof))
 			{
-				Findings.Add(new CatalogueFinding(Entry.Key, "Roof", CatalogueSeverity.Note,
-					"building " + Entry.Key + " is housing with nothing over it; nobody sleeps in the open" + Layered(Entry)));
+				Findings.Add(new CatalogueFinding(Entry.Key,
+					roofCapacity > 0 ? "Carries" : "Roof", CatalogueSeverity.Fault,
+					"building " + Entry.Key + (roofCapacity > 0
+						? " carries roof capacity " + roofCapacity : " is filed as housing")
+						+ " but its effective roof is " + KingdomPlotRules.RoofWord(Entry.Roof)
+						+ "; nobody sleeps in the open" + Layered(Entry)));
 			}
 			ValidateChain(Entry, ByKey, Findings);
 		}

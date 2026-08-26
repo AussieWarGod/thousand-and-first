@@ -1,4 +1,8 @@
-﻿# The Thousand and First — Test Session Protocol (v0.2.0)
+﻿# The Thousand and First — Working-tree / v1.0 Test-Candidate Protocol
+
+The manifest remains `0.2.0` while this protocol is unfinished. A v1.0 test-candidate claim requires
+the current working tree—not the historical 0.2 receipt—to pass every applicable automated,
+native, human, compatibility, structure, and subscribed-package gate named here.
 
 **Dev diagnostics are OFF by default** in the release build. Enable **The Thousand and First:
 write diagnostic lines to Player.log** in Options for a test session; the isolated smoke profile
@@ -20,19 +24,57 @@ file order; use the table as the top-level checklist.
 | ☐ | 2 | 5, 6, 6b, 8, 9, 10 | Districts, raids, fortification, homes, return, names and policy |
 | ☐ | 3 | 7, 12, 13, 14 | Trade, intercity water, cultivation, exile and return |
 | ☐ | 4 | 15–29 | Layout through meals and industry, in the section order below |
-| ☐ | 5 | 33, 32, 34, 30, 31, 35, 36 | Identity, receipts, lived day, absence, petitions, style/creed stack, succession |
+| ☐ | 5 | 33, 32, 34, 30, 31, 35, 36, 38 | Identity, receipts, lived day, absence, petitions, style/creed stack, succession, expeditions |
 | ☐ | 6 | 4 | Final attitudes, save/reload, and persistence sweep |
 
-## Automated release-candidate smoke — recorded, not manual signoff
+## Current portable evidence boundary
 
-On 2026-08-25, repository-controlled automation ran Qud 1.0.5/core 2.0.211.51 against runtime
-commit `99133f6a1b24f3be652903e16576ddd7bb929230` in a fresh isolated profile. It founded Kavvat,
+Nine focused one-survey source-contract cases pass. The final integrated pure/source suite passes
+7,586 / 7,586 cases. `docs/STATUS.md` owns the exact latest receipts. None of this signs native Qud behavior,
+appearance, accessibility, compatibility, or Steam installation.
+
+## Prior automated smoke — historical evidence, not current signoff
+
+On 2026-08-25, repository-controlled automation ran Qud 1.0.5/core 2.0.211.51 against an earlier
+runtime revision in a fresh isolated profile. It founded Kavvat,
 founded Sheol as a refuge on separate ground, proved `cities=2/2` with 109 carried settlement
 fields and no seat mismatch, passed all 17 `kingdom:selftest` checks, saved three times, cold-loaded
 twice, and proved both seat directions after restart. Each captured Player.log passed
 `Tools/check-player-log.sh`. This evidence covers loader and persistence smoke only; it does not
-check any box above or replace human observation, balance, usability, compatibility, or private
-Steam subscription testing.
+describe the materially changed working tree, check any box above, or replace current-revision
+native receipts, human observation, balance, usability, compatibility, or private Steam
+subscription testing.
+
+## Save-migration harness contract
+
+Every durable schema bump keeps a test-only writer for the exact prior field envelope. A migration
+test must write that frozen shape independently, decode it with the current reader, assert the
+semantic projection or explicit quarantine, encode the current shape, decode it again, and prove
+the second read is stable. Rewriting only a version integer on current bytes is hostile-input
+coverage, not a migration fixture. Future, malformed, oversized, noncanonical, aliased, and
+partially applied evidence must fail before publishing authority.
+
+The current settlement-archive reader is **v12**. Independently frozen portable writers cover
+archive v1-v11; current-reader tests exercise every historical field envelope, its version-specific
+defaults, and stable v12 rewrite. Rewriting only the current version integer is still not a
+migration fixture. Settlement v9 is an independently frozen **epoch marker** over the same reachable
+field envelope as v8; it proves exact-version decode/rewrite, not central-logistics payload
+migration. Exact job/logistics payload authority lives in `KingdomRealmArchive`, whose independent
+realm Jobs v3/v4 fixtures own that proof. Lifecycle v6→v7 and staged legacy-growth transitions have
+separate fixtures. Settlement v11 predates per-source happening cursors; its retained aggregate
+tick seeds exact active-source receipts once, so an upgrade neither replays all history nor grants
+one source another source's later window.
+The engine-owned `KingdomSystem` named-field root begins at v8 and still needs a frozen native v8
+save fixture before its first post-public schema bump. Keep that fixture outside the current writer,
+cold-load it in Qud, save as current, cold-load again, compare identity/cities/receipts/registries,
+and retain it with release evidence.
+
+Before a native architecture session, run `python3 Tools/generate-lot-realizations.py --check`
+and `python3 Tools/check-architecture.py --repo-root .`. The first proves the checked-in concrete
+larger-lot records match their authored sources. The second exhaustively proves every
+commissionable `(BuildKey, type, size)`, exact dimensions, topology, material/technology palette,
+and all four poses, including exterior road ingress. These gates do not replace looking at the
+buildings in Qud.
 
 ## Pass 0 — Cross-run inheritance consent
 
@@ -43,7 +85,10 @@ worlds; option is sampled during world creation, not changed retroactively insid
 |---|---|---|
 | 0a | In Options, leave **import the latest eligible sealed realm** unchecked (its default), then create a new non-Tutorial, non-Daily world | No inherited-realm map note or site is installed. World creation never asks for or reserves a legacy |
 | 0b | Quit, enable that option **before** creating another new world, then create it | Latest eligible realm now appears as inherited map note/site. Its appearance proves step 0a left seal eligible rather than silently declining or consuming it |
-| 0c | Visit the inherited site; inspect every restored structure, container, liquid vessel, and powered object | Old layout/history may return; no citizen, old item, water/liquid, charge, or player inventory returns. Save, quit, reload, revisit: site exists once, never duplicates |
+| 0c | Before retiring a current-schema realm, sketch the seated 80x25 ground: each authored work's exact lot, main cell and public entrance, plus the connected street cells from its boundary entry. Seal while standing on that ground, import, and compare | The inherited ground uses those frozen authored receipts through the normal architecture stamper. Whole lots, main cells, entrances, relative street graph, cairn and history match the witnessed seal; streets remain traversable from the boundary to every public entrance. It does not substitute whatever the current catalogue would choose |
+| 0d | Repeat 0c with inheritance states **Held**, **Faded**, **Abandoned**, and **Ruins** (controlled test seals are acceptable) | Held keeps every evidenced whole work standing. Faded deterministically leaves some whole works derelict. Abandoned keeps every evidenced whole work intact and derelict. Ruins deterministically keeps 25–60% as whole derelict works and reduces the rest to memory/rubble; no state invents intact cells absent from the seal. The first basin is never copied or relocated |
+| 0e | Inspect every restored root, component, container, liquid vessel and powered object, then walk the complete street graph. Save, quit, cold-load, and revisit twice | No citizen, old item, water/liquid, charge, or player inventory returns. Frozen structure and street geometry, vanilla passability, empty fixtures, cairn/history, and the single reconstruction marker survive reload; site and components exist once and never duplicate |
+| 0f | Import a known schema-4 seal made before spatial receipts, then try a current-schema seal whose snapshot/hash or street graph was deliberately malformed | The schema-4 seal remains eligible and uses the bounded legacy proxy. Malformed current evidence is rejected/quarantined before placement; it is never repaired from today's catalogue or partially stamped |
 
 ## Pass 1 — Foundation (wishes)
 
@@ -56,6 +101,12 @@ worlds; option is sampled during world creation, not changed retroactively insid
 | 5 | `kingdom:claim` | Zone claimed; chronicle line with the zone's prosaic name |
 | 6 | `kingdom:citizen` (stand next to a creature) | It joins; message names it |
 | 7 | `kingdom:selftest` | All checks PASS in one popup |
+| 7a | Save, note every due clock/report and a planted crop or running work, then disable **enable settlement simulation and new civic work** in Options | Realm, citizens, items, liquids, charge, clocks, open receipts, and reports remain. Repeated turns, zone exits/entries, world-map travel, save and cold-load create no civic prompt, scan-side effect, crop/power/research/lab progress, new petition/trade/guest/raid work, or physical commit |
+| 7b | While paused, open every Charter chapter and inspect status, homecoming, chronicle, standings, roll, city book, technology map, asks, an accepted petition, and an existing threat answer | Readings and committed recovery remain available and clearly paused. New orders are labelled `[paused]`, refuse before governance/energy charging, and spend no stock |
+| 7c | Re-enable on the exact tick immediately before, at, and immediately after a known due clock (three save copies), then take one wake | The transition itself wins in all three copies: no due work or physical effect runs on that wake. Every new automatic deadline is strictly future and the same resume token is applied once |
+| 7d | Cold-load once while disabled, once with a resume pending, and once after resume was applied; revisit both cities | Disabled bytes stay stable. Pending resume applies once. Applied resume does not reapply or duplicate. Open receipt-backed recovery retains its exact identity; disabled time never becomes a catch-up burst |
+| 7e | With the compatibility mods named in the release evidence enabled, commission/preview every placement that uses a campfire, bookshelf, torchpost, or hookah | Every placement resolves to the `r_KingdomCivic*` wrapper. Fire still cooks and extinguishes to vanilla remains; fixtures keep authored orientation and cannot be picked up/pushed/mirrored or turned into dice/tinker objects; bookshelf is not auto-stocked and hookah begins empty. Harmless merged sound/particle behavior may remain |
+| 7f | Save/cold-load the four civic wrappers, extinguish the fire, use the bookshelf/container and hookah normally, then regenerate the same architecture previews | Final capabilities and stable vanilla tiles survive reload; no wrapper duplicates, changes material tier, adds free contents, or breaks ordinary vanilla interaction |
 
 ## Pass 2 — Growth, water, and thirst
 
@@ -98,7 +149,7 @@ worlds; option is sampled during world creation, not changed retroactively insid
 
 | Step | Action | Expect |
 |---|---|---|
-| 16f | Found on an ordinary overworld site (rite or wish) | The founding popup and the chronicle line name the ground — "founded on common ground", or a style clause if the site earned one. Founding never throws, whatever the terrain |
+| 16f1 | Found on an ordinary overworld site (rite or wish) | The founding popup and the chronicle line name the ground — "founded on common ground", or a style clause if the site earned one. Founding never throws, whatever the terrain |
 | 16g | `kingdom:dump` | `Style:` shows the style and its clause; `Founding terrain:` shows the blueprint, region, and z the style was read from — the evidence, not just the conclusion |
 | 16h | `kingdom:style` with no argument | Reports the current style, the recorded founding terrain, and every known style |
 | 16i | `kingdom:style verdant`, then Charter → Commission | The design list changes to that style's catalogue. The recorded founding terrain is unchanged — forcing a style is a probe, not a rewrite of history |
@@ -156,24 +207,36 @@ time — the one you are standing in — and the other keeps itself until you wa
 | 21e | Designate **shrine**, then wait for petitions | Petitions come at 75% of the usual interval |
 | 21f | Designate **academy**, then Charter → As others tell it | The outsider register embellishes less often than the true chronicle — most tellings now end plainly |
 | 21g | Designate two zones the same district | The percent effects do **not** stack: a second vinelands feeds the same city, not twice. Only garrison defence is additive |
-| 22 | Charter → **Commission a building** → cask rack (4 drams in stores needed) | Stores −4; scaffolding appears nearby; chronicle line |
-| 23 | Wait ~1200 ticks (or explore and return) | Scaffold becomes the cask rack; completion message + chronicle |
-| 24 | Commission the great cistern (16 drams) | Same cycle; stored capacity +256 when done |
+| 21h | Dedicate a chest as a stockpile, Charter → **Clear ground** (`q`), mark enough tree cells for 3 timber, and let the work finish | Three real timber items reach the stockpile; clearing spends no water |
+| 22 | Charter → **Commission a building** → larder shed (Key `larder`; 4 drams and 3 timber available) | Stores −4 and stockpile −3 timber; scaffolding appears nearby; chronicle line |
+| 23 | Wait 1200 ticks (or explore and return) | Scaffold becomes the larder shed; completion message + chronicle |
+| 24 | At Steading+, commission the cistern court (Key `cistern`; 16 drams) and wait 3600 ticks | Stored capacity +256 when done; completion message + chronicle |
 | 25 | Commission a communal bunk; watch settlers at night | A settler eventually sleeps in it (vanilla bed behavior) |
 | 25a | On first reaching Steading | "A settler has taken up the trade" — the first stall opens; trade with them shows tier-1 stock |
-| 25c | Charter → Commission | The design list is loaded from KingdomBuildings.xml (13 entries); third-party mods shipping their own `<kingdombuildings>` file extend it automatically |
+| 25c | Charter → Commission | The design list is the merged, data-driven view of every loaded `<kingdombuildings>` stream. Base designs appear without a pinned count; third-party streams extend or override them by key automatically |
+| 25d | Load one tiny third-party building stream with `Schema="1"`, then the same stream with the `Schema` attribute absent | Both versions contribute the entry. The absent form is the explicit pre-versioning compatibility path; neither logs a schema fault |
+| 25e | Load otherwise-valid fixture streams with `Schema="2"`, `Schema="01"`, and `Schema="future"`; put a unique valid entry before a malformed entry in each | Each whole stream is ignored and logs one registry/schema fault. The early valid entry never appears: unsupported input cannot half-register |
 | 25b | Browse vanilla tier-1 merchants elsewhere | The founder's basin occasionally appears for sale (8% per restock) — the legitimate acquisition path |
 
 ## Pass 6 — Raids and tribute
 
 | Step | Action | Expect |
 |---|---|---|
-| 26 | Reach Steading; `kingdom:standing Snapjaws:-300`; leave and re-enter the claimed zone | Warning: snapjaw scouts seen; chronicle line (needs raid cooldown elapsed — or use `kingdom:raid` to force) |
-| 27 | Charter → **Pay tribute** (12 drams in stores) | Raid averted; snapjaw standing +50; chronicle line |
-| 28 | Force again via `kingdom:raid`, don't pay, wait out the lead (or `kingdom:raid` again) | 2+ snapjaws spawn at the zone edge and attack citizens; chronicle records the raid |
-| 29 | After the fight: `kingdom:status`, `kingdom:chronicle` | State coherent; raid recorded in both registers |
-| 29g | `kingdom:standing Baboons:-300` (also try Goatfolk, Cannibals, Issachari) | Any of the five provokable factions can raid you — the warning, tribute, parley and chronicle lines all name the faction that is actually angry, not Snapjaws |
-| 29h | Provoke two factions at once | The angriest one comes. The other stays provoked and waits its turn |
+| 26 | Reach Steading; `kingdom:standing Snapjaws:-300`; leave and re-enter the claimed zone | **No raid warning appears.** Raw negative standing is not a grievance and cannot start a raid |
+| 26a | In a claimed zone, enter `kingdom:raid` once | The wish explicitly mints one snapjaw **test grievance**. This first notice is only rumor: it freezes stable source, authored cause, target zone, 6-dram remedy, up-to-24-dram raid stake, and force profile, but has no delivered demand or due tick |
+| 26b | Enter `kingdom:raid` again before answering; inspect inventory | It reports the same incident, delivers one faction-authored physical demand, and still shows no running due tick. No duplicate grievance or demand object exists |
+| 26c | Use the demand's **Read and acknowledge** inventory action | Only now does the incident become Warned and show a future due tick. Escaping the answer menu chooses nothing and spends no governance action |
+| 26d | Carry the acknowledged demand away from the seat, drop/destroy it, and take a wake; then take one more wake | Channel loss pauses the clock without choosing a default or removing an answer. One higher-revision physical replacement is delivered; read it to resume only the remaining answer window |
+| 26e | After resolving the test incident, set guarded gates at Steading and take ordinary wakes | One natural snapjaw grievance may arise from denying local salt-road passage. It has a stable settlement source and cannot repeat after consumption; raw standing remains irrelevant |
+| 27 | Through the carried live demand, **Pay tribute** (6 drams) while away from the seat; repeat locally using an exactly provable dedicated store | Remote tribute removes exactly 6 drams of pure water from loose, unsealed vessels directly carried by the player. Local tribute removes exactly 6 from dedicated stores. Each incident, chronicle, and ledger agree; standing does not change |
+| 27a | Mint another `kingdom:raid`; set `kingdom:standing Snapjaws:250`; Charter → **Answer a threat** → **Send an envoy** | No water changes hands. The incident resolves with an obligation; the next explicit snapjaw grievance demands 12 drams, then discharges that obligation |
+| 28 | Resolve any open test incident; enter `kingdom:raid`; Charter → **Answer a threat** → **Refuse and meet the warband**; remain here until its displayed due tick | The frozen profile spawns marked snapjaws only on passable zone-edge cells that have a path to the frozen named store. Spawn itself takes **no water** |
+| 28a | Watch the marked raiders approach; compare dedicated water before contact and after one reaches the named store | Water stays unchanged until physical adjacency. At contact, at most the frozen raid stake (up to 24 drams, reduced by proved defence) leaves that exact fresh-water store and the incident records the proved amount |
+| 28b | Repeat the fight and defeat every marked raider before any reaches the store | The death of the final marked raider resolves **RaidersDefeated** with zero plunder; raid bodies grant no XP |
+| 28c | After a physically proved store plunder, Charter → raid recovery → **Accept** | One plain base-game quest appears with no custom manager, reward, reputation, or XP. The settlement watch is exactly one defence point weaker until recovery resolves |
+| 28d | Defeat every surviving body marked for that exact raid, return to the exact seat, then Charter → raid recovery → **Turn in** | The quest becomes ready only after the exact band is gone and completes only at explicit seat turn-in. The one-point wound clears; save/reload neither duplicates nor auto-completes it |
+| 28e | On a later proved plunder, decline recovery, then suffer another proved plunder | Decline leaves one persistent one-point scar with no expiry. Later losses do not compound it or mint a second concurrent recovery offer |
+| 29 | After either outcome: `kingdom:chronicle`; save/reload and enter `kingdom:raid` | Chronicle and raid popup agree on the retired answer. Reload does not recreate the consumed source or duplicate the incident |
 
 ## Pass 6b — Fortification
 
@@ -183,16 +246,19 @@ step here is done standing in the settlement.
 
 | Step | Action | Expect |
 |---|---|---|
-| 29a | With no defences built, `kingdom:raid`, wait out the warning lead without leaving | The whole band spawns at the zone edge; drams are carried off |
+| 29a | With no defences built, `kingdom:raid`; Charter → Answer a threat → **Refuse and meet the warband**; wait to the frozen due tick | The whole surviving band enters from reachable edge cells. Nothing is taken until a marked raider physically reaches the named store |
 | 29b | Charter → Commission → **thorn palisade**; wait out the build; `kingdom:status` | Status shows the settlement's defence at 3, and the palisade stands on an edge of the zone that **faces ground you do not hold** — not in the middle of your own settlement |
 | 29b1 | Raise several walls, then claim the zone that edge faces | The old line is not torn down or moved. It is an inner wall now, and the frontier has moved outward — new walls go on the new outer edge |
 | 29b2 | Claim on every side until a zone is fully surrounded by your own ground, then commission a wall there | It has no frontier left, so the wall is raised where you stand instead. A zone in the middle of a city has no outward edge to defend |
-| 29c | `kingdom:raid` again, wait it out | The message says the watch turns back some of them at the wall; fewer raiders spawn than in 29a, and fewer drams are lost |
+| 29c | Resolve 29a; `kingdom:raid`; Charter → Answer a threat → **Muster named defensive works**; note every named work and assigned resident; save, cold-load, then wait to the due tick | The same work IDs, posts, resident semantic IDs, bound bodies, and defence scores are rechecked at arrival. No resident is reserved for two works. The watch turns back some of the band before entry; fewer raiders spawn than in 29a |
+| 29c1 | Repeat 29c, but dismiss, kill, unbind, or move one reserved resident off the frozen work before the due tick | Muster fails safely instead of substituting another resident or retaining stale defence. No invisible fortification benefit applies |
+| 29c2 | Repeat 29c, but remove, rebuild, or replace one frozen defensive work before the due tick | A replacement with the same display name does not satisfy the frozen work ID. Muster fails safely; raid remains physically resolvable |
+| 29c3 | Load an old save whose Fortified incident predates exact work/crew reservations | The incident reopens at confrontation-ready with all four answers; migration invents no crew, applies no penalty, and does not silently resolve |
 | 29d | Commission a **watchtower** with nobody spare to man it; `kingdom:status` | Defence unchanged: an unmanned tower is a platform |
 | 29e | Grow the population until the watch is crewed; `kingdom:status` | Defence rises as the crew fills; a half crew gives half the tower's defence |
-| 29f | Reach defence 12+ (palisade + crewed watchtower + rampart at Village); `kingdom:raid` | "They break on the walls. The watch holds." Nothing spawns, nothing is taken, the chronicle records it as an accomplishment, and the walls appear under deeds in `kingdom:status` |
-| 29i | At high defence, raid repeatedly | Even a very strong wall never turns back more than 60% of a band that is not fully repelled — someone always climbs over. Being well-walled is not being spared |
-| 29j | Provoke a raid, then leave for several days and return | **Nothing was resolved while you were gone.** The chronicle says raiders came and found no one to answer them; nothing was taken, nobody was lost, and the threat is still live with a fresh window to pay, parley, or fight |
+| 29f | Reach defence 12+ (palisade + crewed watchtower + rampart at Village); `kingdom:raid`; choose **Muster named defensive works** | If the frozen, revalidated works fully repel this band: "They break on the walls. The watch holds." Nothing spawns or is taken; chronicle records the exact result |
+| 29i | At high defence, repeat: resolve, `kingdom:raid`, choose **Muster named defensive works**, wait to due | A band not fully repelled still sends survivors over the wall; defence never converts an entered body into invisible plunder |
+| 29j | `kingdom:raid`, give no answer, leave past the displayed due tick, then return to the named zone | **Nothing resolves while absent.** The incident becomes confrontation-ready, takes nothing, and opens a fresh displayed answer window; it remains the same incident/source |
 
 ## Pass 8 — Homes, work, and the first service
 
@@ -212,20 +278,20 @@ step here is done standing in the settlement.
 |---|---|---|
 | 41 | Found, claim, dedicate water, commission a bunk. Leave the zone, travel a day or more, return | **One nonmodal message line**, not a popup: the settlement "has news of the N days you were away", pointing at the Charter. Nothing interrupts the walk home |
 | 41b | Charter → What happened while you were away | The report opens on request: the events as past-tense lines, and a ledger of drams drawn, delivered, drunk and lost — not a scroll of separate messages |
-| 42 | Read an arrival line | It names the cause: "Word of the cask rack raised at Kavvat reached the hills — a settler has come." Founding, stage-ups, commissions, caravans and tribute all set the cause |
+| 42 | Read an arrival line | It names the cause: "Word of the larder shed raised at Kavvat reached the hills — a settler has come." Founding, stage-ups, commissions, caravans and tribute all set the cause |
 | 43 | Strike a charter, then stay away for several caravan intervals | Missed deliveries **bank**: "3 caravans of the villagers of Joppa came under charter: 18 drams." A caravan that came while the gate was shut is news, not a loss — and the banking cap is a cap on how much one homecoming can hand over at once, never a clock that forgives the rest |
 | 44 | Return after a short walk (under a day) | No news line — the homecoming is for absences, not for stepping outside. The Charter entry still opens and says nothing has happened |
 | 45 | Charter → Dedicate a vessel or larder → **Dedicate everything here** | All undedicated vessels join the stores in one action, up to the cap |
 | 45a | Stand beside a chest or footlocker with food in it and dedicate it as a larder | It is marked a larder of the settlement. Nothing moves and nothing is taken — dedication is a mark, not a transfer |
 | 45b | `kingdom:dump` | The pantry reads the food in dedicated larders only, as a count and a tier (Empty / Scant / Modest / Ample). Food in your own undedicated pack is never counted |
 | 45c | Release the larder | The count drops back. What was inside is untouched |
-| 45d | Commission a **civic larder** (Charter → Commission), then put food in it | It counts as a larder without needing a chest of your own, and holds 64 servings |
+| 45d | Commission a **larder shed** (Key `larder`; Charter → Commission), then put food in it | It counts as a larder without needing a chest of your own, and holds 64 servings |
 | 45e | With the larder Scant or better, Charter → **Share a meal from the larder** | It **asks first**, naming what the meal will take and what the larders hold. Answer yes and the settlement eats: food is spent from the dedicated larders only, a settler from the roll speaks, and the chronicle records it. Word travels — the meal becomes the settlement's deed, so it draws settlers the way any deed does |
 | 45f | With an empty larder, Charter → Share a meal | Refused plainly, and nothing is lost. The meal itself is still a bonus for engaging and never a penalty for abstaining |
 | 45g | Check your own pack and any undedicated container after a meal | Untouched. Only dedicated food is ever spent |
 | 45h | Found a camp, dedicate nothing, commission nothing, and let days pass | It **does not starve**. Free hands forage up to four rations a day off the ground and eat them hand to mouth, which is exactly a camp of four — the food mirror of "half a camp on the water detail covers a camp's drinking". Put a third hand on the water detail and it still forages four: the wild has a ceiling, not a pool |
 | 45i | Grow past a camp with no field standing | Foraging stays at four a day however many people there are, so the shortfall is real and the ledger says so: "The larders are empty. Settlers will leave if the fields do not feed them." Commission a kitchen garden or a field and it stops |
-| 45j | Commission a **granary**, then `kingdom:status` | It dedicates itself — the same law that auto-flags a commissioned cask rack. `Larder:` reads its capacity (288) in the denominator, and the `Fields:` line names what the works make against what the people eat |
+| 45j | Commission a **granary**, then `kingdom:status` | It dedicates itself — the same law that auto-flags a commissioned larder shed. `Larder:` reads its capacity (288) in the denominator, and the `Fields:` line names what the works make against what the people eat |
 | 45k | Let the fields make more than the larders can hold | Said once, by name, and never again until there is room: "The larders of X are full, and N of the harvest was left in the field." The homecoming ledger carries the same figure |
 | 45l | Let a settlement be dry **and** hungry across the same homecoming | **One** settler leaves, not two, and the line names both reasons: "left X for water and bread both, and this place had neither." Both `(withered)` and `(famished)` may show on the Status stage line — a mark is a state, a departure is a cost, and only the cost is capped |
 | 45m | Damage a granary (a raid, or a lost rung) and leave it unmended | It spoils what it holds on world days, exactly as a holed cistern leaks drams: announced once by name, unsaid when it is mended. It can never be the reason the settlement goes hungry — spoilage is drawn after the day's eating, never before |
@@ -236,11 +302,12 @@ step here is done standing in the settlement.
 | Step | Action | Expect |
 |---|---|---|
 | 47 | Let settlers arrive, then Charter → **The roll of settlers** | Real generated names, each with origin and the date they came. Look at a settler in the world — it carries that name |
-| 48 | Charter → **Standing policy** → toggle gates to guarded | Chronicle line; arrivals slow (~40%) and raids come less often. Toggle stores to thrift: upkeep drops a quarter, arrivals slow further |
-| 49 | Provoke a raid (`kingdom:standing Snapjaws:-300`, `kingdom:raid`), then Charter → **Answer a threat** | Three exits offered: pay (with the current demand), send word (only if their standing ≥250 and you haven't stalled), or let them come |
-| 50 | Choose "let them come", then face the next warning | The demand has grown by half. Stall again and it grows again, up to four times |
-| 51 | Raise Snapjaw standing to 250+, force a fresh warning, choose **send word** | Raid averted with no water paid, chronicled as an accomplishment — goodwill spent instead of drams |
-| 52 | Force a warning, then leave the area past the due tick and return | **No ambush at the gate, and no loss in the dark.** The raiders came, found no one to answer them, and waited: nothing taken, nobody lost, the threat unchanged. The homecoming re-stamps the deadline by the same lead the first warning used, so you get a fresh window to pay, parley, or stand there. The chronicle records that they came |
+| 48 | Charter → **Standing policy** → toggle gates to guarded, then stores to thrift | Chronicle lines; arrival and upkeep policy effects change. Neither toggle fabricates, cancels, or silently resolves a raid grievance |
+| 49r | Set `kingdom:standing Snapjaws:-300` and verify silence; then enter `kingdom:raid`; Charter → **Answer a threat** | The explicit wish—not standing—mints the cause. Four answers appear: exact tribute, envoy (standing-gated), physical fight, or named-work muster. Title freezes cause, target, due tick, 6-dram remedy, and up-to-24-dram store stake |
+| 50x | Choose **Refuse and meet the warband**; wait to the frozen due tick | The committed answer survives save/reload. Reachable-edge bodies use the frozen faction/tier roster, take nothing on spawn, and can plunder only after physical contact with the frozen store |
+| 50x1 | On a fresh explicit grievance choose **Muster named defensive works**; remove or uncrew one named work before due | The exact commitment is revalidated. Missing/uncrewed proof contributes nothing; surviving works reduce or fully repel entry without inventing invisible damage or plunder |
+| 51r | Raise Snapjaw standing to 250+, mint a fresh `kingdom:raid`, choose **Send an envoy** | No water or standing is spent. The incident resolves with one explicit obligation; the next authored snapjaw grievance demands 12 drams and discharges it instead of recursively minting raids |
+| 52r | Mint `kingdom:raid`, give no answer, leave past the displayed due tick, then return | **No ambush at the gate, and no loss in the dark.** The same incident becomes confrontation-ready and receives one fresh answer window; source, cause, faction, target, objective, and stake remain frozen |
 
 ## Pass 7 — Trade charters and caravans
 
@@ -257,7 +324,7 @@ The one thing a realm of two cities can do that a realm of one cannot.
 
 | Step | Action | Expect |
 |---|---|---|
-| 48 | With only one city, Charter → **Send a water manifest** | Refused: there is nowhere to send it |
+| 48w | With only one city, Charter → **Send a water manifest** | Refused: there is nowhere to send it |
 | 48a | With two cities, standing in one with water to spare, send a manifest | The load is sized to what the **other city had room for when you last stood there** — never more. It **asks first**, naming the drams and the window. Answer no and nothing moves. Answer yes and a capped amount, only ever above a three-day reserve, leaves **this city's** stores now |
 | 48b | Immediately try to send another | Refused, naming the one already on the road: origin, destination, drams, days left |
 | 48c | Walk to the destination city | The water arrives on entry, into that city's stores, with a chronicle line and a ledger note. It arrives when you get there, not on a background clock |
@@ -328,7 +395,7 @@ anyone.
 | Step | Action | Expect |
 |---|---|---|
 | 51 | On empty ground, commission anything | It rises beside you, plainly. The plan has no opinion yet — your first building is the seed everything later is read against |
-| 51a | Walk well away from your dedicated vessels and commission a cask rack | It rises **by the water**, not where you stand. The message names the ground it chose |
+| 51a | Walk well away from your dedicated vessels and commission a larder shed | As a storage design it rises **beside the stores**, not where you stand. The message names the ground it chose |
 | 51b | Commission a bunk while standing on the wall line | The plan overrules you: people do not sleep on the wall |
 | 51c | Commission a bunk a few cells from other bunks | You win. Within about four cells of the plan's best, your spot is the spot |
 | 51d | Commission several walls along one edge | Each closes a gap in the line before extending an end. A wall grows into a wall |
@@ -345,8 +412,8 @@ anyone.
 |---|---|---|
 | 54 | Hold one city only | You never encounter any of this. Not a message, not a menu entry that does anything |
 | 54a | Hold two cities and let settlers arrive | Most believe nothing in particular. Once a third of a city shares a creed, the Charter names what that city is |
-| 54b | Settle a zealous creed in one city and its opposite in the other | Dissent begins — and only on days you were **there**. Four warnings arrive well before anything is lost |
-| 54c | Leave for a season with dissent running | It has not moved. A realm cannot fall apart because nobody was playing |
+| 54b | Settle a zealous creed in one city and its opposite in the other | Dissent begins and follows world-days whether you attend or travel. Its warning ladder remains legible before the breaking brink |
+| 54c | Leave for a season with dissent running, then return to either city | It has accrued for every elapsed world-day and clamps at the breaking brink. One warning names the actual crossing day and starts the full nine-world-day response window; absence before that warning cannot make the city leave |
 | 54d | Pour a rite of shared water; call a shared meal | Dissent gives ground, slowly. These are levers, not decoration |
 | 54e | Charter → declare the realm's creed | **It asks first**, naming what it will cost: every later settler leans that way, and those who stand against them hold it against the whole realm, everywhere |
 | 54f | Let dissent run to the end | The unhappier city leaves — keeping its ground, its people, its buildings, its stores and its book. Nothing burns. Both registers record the day and **disagree about it** |
@@ -356,20 +423,51 @@ anyone.
 
 | Step | Action | Expect |
 |---|---|---|
-| 55 | Commission a plot-sized design (a tent, a timber hut) | The settlement stakes a **rectangle**, not a cell: staked → cleared → framed → walled → done, watchable, door cut toward the heart. The surveyor's plan on the stakes reads as the finished building's description, framed as intention |
+| 55 | Commission a plot-sized design (a tent, a timber hut) | The settlement reserves a **typed lot**, not a generic rectangle: staked → cleared → framed → walled → done, watchable. The reserved typed lot is occupied by the design's exact authored map and authored tier; its authored entrance faces the declared frontage, authored fixtures occupy their named cells, and its material palette supplies the exact surfaces. There is never a row-major furnishing fallback. The surveyor's plan on the stakes reads as the finished building's description, framed as intention |
 | 55a | Watch the clearing stage | Clearing **earns**: trees give timber, rock gives stone, ruin walls give scrap — carried to a stockpile you dedicated. No stockpile, and it says so once |
 | 55b | Try to stake a plot over your own dropped gear, or open water | Refused, naming the cell and the thing standing on it. Nothing player-placed is ever cleared |
 | 55c | Charter → **Clear ground** (`q`) | Spare hands work the rect down over days; the yield is itemised in the ledger |
 | 55d | Charter → **Take down a building** (`z`) on something the settlement built | Condemned: crew works it off, half its material returns to the stockpiles, the plot frees, no water refunds, chronicled both ways |
 | 55e | Check building costs in the commission list | Water **and** materials. A design naming no materials costs water alone |
 | 55f | Reach Steading, then Town | M then L plots unlock — the city literally builds bigger as it grows. XL waits for City |
-| 55g | Claim one stratum down and commission there | The plot is **carved**: double clearing, paid back in stone, no walls — the rock is the wall. A weather-dependent design refuses underground by name |
+| 55f1 | At Camp, Steading, Town, and City, preview every size shown for one S design; repeat with one M and one L design | Every displayed S/M/L/XL choice resolves before payment to a distinct exact-size preview. Added cells read as yard, the authored building remains against its frontage, and confirm places the byte-identical preview. No shown choice ends in a missing-map refusal |
+| 55f2 | Put durable road evidence against each side of a clear lot and preview a road-facing design at every offered size | Every accepted pose has each authored public entrance on the lot edge with road immediately outside it. Removing all road evidence refuses before debit; no pose reaches inward across yard or chooses a nearest road |
+| 55f3 | In a controlled city, reconcile one Hindren-culture/hindren-species citizen while no Hindren creed is dominant; preview hut, house, and fine house | Floral Hindren topology appears from live culture/species fact alone. `kingdom:dump` need not report a Hindren creed. Remove the final matching body, reconcile, and preview a new work: fallback returns; anything already frozen remains unchanged |
+| 55f4 | Make Kyakukya the dominant seat creed in that non-broad city, then preview the same housing | Kyakukya's market/courtyard plan wins by declared priority. Culture was not silently stored as creed, and neither identity change repaints a standing snapshot |
+| 55f5 | Reconcile a robot citizen and preview/raise a charging post at every offered size | Two exterior approaches reach the crank/queue lanes and the paired robot-service bay; palette remains the paid salvage frame and dirt floor. Selection adds no charge, worked metal, liquid, or loose object. Save/reload preserves exact map and anchors |
+| 55f6 | Reconcile a non-flying aquatic citizen and preview/raise L and XL reservoirs | Several exterior approaches join one continuous water-edge circulation loop and reach main/tap. No liquid or free drams appear—the reservoir's real behavior/stores remain sole water authority. A flying aquatic does not select this overlay |
+| 55f7 | Reconcile a vanilla-`Gigantic` citizen and preview/raise M/L/XL house, housecourt, and fine house | Paired portals and a clear two-by-two turn are visible and traversable in every pose; sleep/storage/hearth/table requirements still work. S shelters honestly remain fallback rather than pretending a 5x4 lot contains broad turning room |
+| 55f8 | With a developer fixture citizen carrying `Genotype="True Kin"`, preview/raise the becoming annexe | Two waiting wings converge on the lineage-scan axis before restraint, template, chair, power, and sealed-roll stations. Ordinary genotype-empty NPC cities use fallback. Capture native-scale screenshots of all 55f3–55f8 cases; automation proves topology, not visual quality |
+| 55g | Visit and claim the zone one stratum down, return to the exact zone above, then try to commission an ordinary deep building before cutting a delve | Refused by name: claimed rock is owned but unreachable. No water/material is reserved. A crew can climb a cave stair; it cannot carry a civic work down one |
+| 55g1 | At Steading+, connect a road to a clear M lot in the head zone and commission **delve** | Preview shows one authored Down landing, never an Up beside it. If the exact cell below contains a wall, liquid, creature, dropped item, container, existing stair, or other state, commission refuses before debit and names the lower landing |
+| 55g2 | Finish the delve, then wish `kingdom:delvelink` in its head zone | `State: canonical`, `Physical proof: STANDS`; one root ID, one Down ID, one Up ID, and one shared x,y are printed. Descend: player arrives on the printed x,y in the claimed foot zone. Ascend: player returns to the same x,y in the head |
+| 55g3 | Save during delve construction, quit fully, reload, and finish; then save at the foot, quit/reload, climb both ways | Exactly one Down and one Up after every reload. No same-map stair pair, duplicate endpoint, newly generated lower zone, moved landing, or boolean-only reach. An underground plot now uses its authored carved map: retained rock, paid supports/fixtures, and no generic shell |
+| 55g4 | Empty both landing cells, order the delve struck, save/quit/reload once during removal and once after | Strike removes only the owned Down/Up pair and their two native connection records. `kingdom:delvelink HEAD_ZONE_ID` reports `struck/tombstoned` and `Physical proof: FAILS`; lower rock returns to owned-but-unreachable. Floors, nearby objects, containers, liquids, and third-party property remain untouched |
 | 55h | Raise a building while standing there — a **house or a field**, not only a wall | The raising ceremony: crew gathers, water is shared, the chronicle names those present. Raised while away, the homecoming tells it plainly. Every design closes this way, whether it rose on a scaffold or as a staged plot |
 | 55h2 | Stake a **plan** for a plot-sized design and let the settlement realise it | When it rises, the chronicle's raising line **quotes the plan** staked for it. A design commissioned directly has no plan and is chronicled without one |
-| 55i | Order a house | It comes **furnished** — bunks, torchpost, hookah arrive as contents. Nobody commissions a hookah one at a time |
-| 55j | Check a chartered caravan after several visits | Occasionally it carries a **pattern-book**: one foreign design chosen from three, merged into what the keepers know. The base catalogue is never gated on the draw |
+| 55i | Order a house | It comes **furnished** — bunks, torchpost, and hookah occupy the exact fixture cells authored in that tier's map. Nobody commissions a hookah one at a time, and furnishings are never spread row-major |
+| 55j | Check each completed charter delivery over several visits; when a **pattern-book** appears, inspect all choices, then Escape once | The offer contains at most three exact foreign designs. Escape declines this delivery without changing keeper knowledge, spending stock, or hiding any base-catalogue design |
+| 55j1 | On a later offer, choose one pattern and inspect Charter → Teach/what the keepers know | That exact labelled pattern is merged once into the **currently seated delivery city's stored keeper roster**. Another city does not learn it; an already-known choice does not duplicate it |
+| 55j2 | Save/quit/reload after a declined delivery and after a learned delivery; complete further charter visits | Neither offer rerolls or repeats. Learned knowledge, chronicle, and message dispositions remain settled; catalogue edits in a newer build cannot change the label/key frozen by an older open receipt |
 | 55k | Appoint an office holder; read their description | One virtue, one flaw, and one or two stated **tastes**. Met tastes shade the settlement up; unmet means their default, never a penalty |
 | 55k2 | Charter → Status after an office is filled | The level's own line carries **"+N for what its notable finds here"**, and the level is that much higher. Never negative, and never past half the binding level |
+
+## Pass 17a — Named raising gangs and readable work state
+
+Use native tiles first, then repeat the glyph checks in text mode. `kingdom:visuallegend` prints the
+mod/Qud versions, canonical state rows, and the expected legend hash. Keep that popup in the same
+capture as the map or copy it into the playtest receipt; automation checks drift, not readability.
+
+| Step | Action | Expect |
+|---|---|---|
+| 55v1 | With at least two otherwise-free settlers, commission two plot/scaffold works before the first finishes | Only the oldest raising receives the bounded named gang. Those exact settlers walk to passable ground at or beside its frame; the newer work alternates to `=` and says once that the same hands cannot stand at two frames. Its labour stage does not rise while queued |
+| 55v2 | Put all available hands on water or running works, let one construction interval pass, then release one hand | The selected frame alternates to `_`, says its real hands shortfall once, and banks no idle interval. After release it changes to `/`, names any real `CrewNeeds` shortfall, and advances only at its stamped headcount/capability/identity pace |
+| 55v3 | Save and cold-load with both works active; leave the zone for a meaningful span and return; then let the oldest finish | Selection remains oldest-by-start/ground/id, no settler or state-reader object duplicates, and absence produces no invisible second gang. If elapsed labour completes the old frame on return, homecoming tells it instead of staging a fake ceremony. Otherwise the same named bodies are visible. The gang next takes the queued work; released builders walk to a normal post or hearth, never teleport |
+| 55v4 | Improve a standing plotted work through one authored tier while watching | The old authored tier changes through its real staged construction, carries the `/`, `_`, or `=` sign matching assignment, and finishes as the exact previewed successor tier. The sign disappears on completion; no calendar-only tier jump or permanent scaffold remains |
+| 55v5 | Produce real battered, half-ruined, and ruined works through damage/subsidence; begin mending one and condemn another | The three wear rungs alternate to distinct `\`, `%`, and `#` rubble silhouettes; active mending is `+`/toolbox and active salvage is `x`/broken-arrow. Examine text names the same state. Ruin remains owned, mendable or salvageable, and no cue replaces the building, mints rubble loot, or clears protected contents |
+| 55v6 | Create one unstaffed work, one genuinely shorthanded work, and one powered sink in a real brownout; then restore hands/power | Idle `-`, shorthanded `?`, and dark `o`/power-cut are distinguishable without color or Status. Each clears immediately when its exact `KingdomEffectiveness`/`KingdomBrownout` fact recovers; an ever-powered or merely inactive machine does not fake a brownout |
+| 55v7 | Let the city become withered, famished, and then both; inspect its exact heart marker after each state and after recovery | The heart alone shows `;`, `:`, then `!`, with matching examine labels. Ordinary works do not inherit a settlement-wide distress wallpaper. Recovery removes each sign from the same object |
+| 55v8 | Run `kingdom:visualaudit`, capture the actual map and popup, save/quit/reload, and repeat | Receipt names mod version, Qud core version, zone, legend SHA-256, ground coordinates, work name, resolved state, glyph, and vanilla tile. Rows stay ground-order deterministic. Record a human pass/fail for native tiles and text mode; no automated green substitutes |
 
 ## Pass 18 — The posted price, worn ground, yard trades, and guests
 
@@ -381,8 +479,12 @@ anyone.
 | 57a | Charter → ground work (`q`) → pave a worn path | Asked first, priced per cell, paid in stone from the stockpiles. Refused by name with no stone, no worn ground, or nobody free |
 | 57b | Check cells under your dropped gear | Never worn, never paved. Wearing only touches open ground |
 | 58 | Charter → your works (`y`) → give a small house a yard trade | Vine lattice, hide rack, dye vat, or vellum press. The house's description and the roll of settlers say the household took up the trade. Letting it go is free |
+| 58a | Strike a 6-dram charter; run one due delivery with one exact dye-vat household, then five; repeat after releasing one vat and after save/cold-load just before due | The receipt delivers 7 drams per due cycle with one and 10 with five: only four exact households count. Releasing one of the four counted vats removes one dram from the **next** prepared delivery, never an already-open one. A missing/moved/mismatched/duplicate fixture adds nothing; reload neither reprices nor repeats a delivery. Chronicle and ledger still report the exact total actually placed |
 | 59 | Return within a notable's 2-day patience of their arrival, and read the roll | **Guests**: the notable is still standing at the gate, logged with one hook — a ruin, a machine, a debt in a named village. Lodge them in a bed of the right tier and they settle with a trade; ignore them and they leave a letter and the hook becomes a rumor — never lost |
 | 59a | Leave long enough that a notable's 2 days of patience (a third of a day, for an ordinary traveller) has run out before you return | Nobody is standing at the gate — the roll instead reads one dated ledger note, "N notables came to the gate while you were away and found no bed offered", naming how many and how long ago the last of them stood there. Their hooks are rumor now, same as an ignored one, never lost |
+| 59b | Meet a legendary dromad trader; try a manor, an ordinary large home, an occupied fine house, and a vacant fine house while shops are below/at tier 3 | Only the exact vacant fine house at M or larger qualifies, and only once a staffed tier-3 shop exists. On success the named trader binds to that exact LotId, becomes a real merchant with current-tier wares, and remains bound after save/reload. No generic large roof or settlement-wide spare-bed count substitutes |
+| 59c | With one ordinary guest and then one notable open, save/quit/reload before arrival placement, after placement, before/after unattended removal, and after the dated sinks but before the next clock | The same serialized PlainGuest/NotableGuest receipt resumes. One body appears or leaves, dedicated water changes once, Chronicle/ledger/message/guestbook each publish at most once, the next due tick advances once, and the operation retires. Leave the zone for several intervals and repeat: passages are one dated aggregate plus at most one still-patient body, never a return-time queue |
+| 59d | While 59c or legendary lodging is open, disable its option, exchange the seated city, save/reload, return, then re-enable | Open work reconciles under its owning settlement while disabled; the other seat cannot spend its receipt. Disabled absence creates no backlog, and re-enable restamps a fresh interval. For the trader, the frozen body, exact fine-house root/LotId, shop tier, roster row, merchant inventory function, water debit, and guestbook line survive without duplication |
 | 60 | Buy a carry-sign from a merchant; plant it on a pile you own out in the world | Confirms exactly what it will take, then porters haul it home over distance-scaled days, one haul in flight. It lands in the stockpiles and is chronicled. If a raid warning or live raiders stand at the destination, the exact haul waits without loss and arrives on the first later safe settlement pass |
 
 ## Pass 19 — Layered catalogues, footprints, sockets, and the trigger law
@@ -391,13 +493,18 @@ anyone.
 |---|---|---|
 | 61 | Ship a tiny second mod file re-declaring `<building Key="tent">` with just a new cost and a new skin | The tent keeps its place in the list, costs the new figure, offers the new skin. Attributes the file omitted survive. A standing tent is untouched — what was spent and cut into the ground never follows a mod update; what the settlement re-reads (name, gates, skins) does |
 | 61a | Blank an attribute (`Contents=""`) vs omitting it | Blank erases; omitted keeps. The modder contract in MODDING.md says so |
-| 62 | Commission a design whose tier declares a footprint smaller than its plot | The building fronts the heart, the yard lies behind. Yard = plot minus footprint, recomputed as tiers grow |
+| 62 | Commission a design whose authored tier map occupies less than its reserved lot | The exact authored entrance fronts the declared heart or road edge and the yard lies behind. Yard = reserved lot minus authored map, recomputed from the next exact tier as it grows |
 | 62a | Let a tier grow onto ground a yard trade occupies | The improvement refuses **by name** — nothing in a yard ever comes down on its own |
 | 62b | Author a tier whose footprint exceeds its plot | Refused at load with both spans named; refused again at improvement: "wants more ground than this plot holds — strike and stake larger, or leave it" |
-| 63 | Charter → **Change what a plot is** (`2`) | Within the plot's own type×size set: cheap, one ceremony, one disclosed figure (strike effort + new cost − salvage). Re-typing is the full strike-and-re-stake |
+| 63 | In a fresh common city, raise a tent; Charter → **Change what a plot is** (`2`) → mud-brick hut. Repeat tent→timber hut in a verdant/fungal/gyre city and tent→block hut in an eater ruin; repeat with tent-row and the matching yard/court | Only the style-applicable declared route appears. The row and confirmation quote only its water, materials, and ticks, all below strike plus fresh target. The popup renders the exact frozen target map and retained/removed/added cell counts. Confirm changes through one durable improvement handover: LotId, rect, facing/pose, founder marks, stable wear/hold state, contents, and retained canvas bed/storage fabric stay exact. No strike or salvage occurs |
+| 63aa | Inspect the same menu for a target with no route; then remove a test declaration, reverse its endpoints without declaring the reverse route, or leave a wear/leak/repair receipt active and call the direct transition seam | No false `[change]` row is listed. Direct/stale attempts refuse before debit, naming the absent transition or unsettled protected-state receipt. No full-price fallback silently substitutes for it |
+| 63ab | Choose a different type, or a design too large for the actual staked rect; inspect the preview, then save/reload once after payment and once after strike | Preview names the full fresh bill, newly frozen valid site and new LotId, and renders that exact target map. The predecessor is fully struck; the successor rises once at the frozen site with the previewed architecture. The old ground is bare, and reload duplicates neither lot, charge, salvage, nor interruption |
+| 63ac | Finish taking down one plot work, choose **Build on this cleared plot**, inspect one target, then confirm | Before payment, the popup renders the exact production target for that socket. Confirm reproves that same frozen variant/pose/cells, charges once, and raises the byte-identical target on the existing cleared rect; no second resolver chooses another variant |
+| 63ad | At each preview in 63, 63ab, and 63ac, cancel once with controller and once with keyboard/Escape; inspect stores, plot/socket, receipts, Chronicle, ledger, and map | Cancel is mutation-free. No water/material debit, strike, construction/improvement receipt, LotId change, log line, or cell/object mutation occurs. Reopen under unchanged facts and the same exact target is offered |
+| 63ae | From fixture copies, interrupt a paid commission, plotted defensive plan, cleared-socket build, and improvement before projection; save/quit, then alter or remove the target catalogue row and change the founder's tinkering skills before cold-load | Current v4 receipts retain the exact paid plot/frontier classification and final defence shown at commitment; retry never consults the new row or skills, changes the cap charge, or pays/projects twice. An old unprojected v1-v3 affected receipt enters named inspection before another debit or destructive strike. An already-projected legacy scaffold resumes only when its exact durable marks agree |
 | 63a | Charter → **Give a building a new look** (`3`) | Any registered skin — including one a mod added after the building was raised — for a tenth of build cost. No output change |
 | 64 | Grow a house until its upgrade is earned, with residents and spare tolerable beds | It upgrades by itself: residents lodge to their own standard during the rebuild. An ordinary settler takes a bunk; the notable in the fine house will not take a tent — and the upgrade **waits** until lodging they'd accept exists |
-| 64a | Earn an upgrade on a water work the city leans on | **Held, not taken**: "ready to improve, and held — the city leans on it." Nothing acts. Force it from the works screen and the dip is disclosed before your consent |
+| 64a | Earn an upgrade on a water work the city leans on; force it from the works screen, read the popup, cancel once, then repeat and confirm | **Held, not taken**: "ready to improve, and held — the city leans on it." The force popup renders the exact frozen successor map and actual cell delta, materials, water, ticks, assigned crew, output outage, and reserve margin before mutation. Cancel leaves stores/state/map unchanged. Confirm commits that same successor intent; completion matches the preview. Automatic unheld upgrades remain automatic and status names their target |
 | 64b | Read the held offer, walk away for a season, return | Still held, unchanged. No trigger anywhere reads elapsed time as a cause |
 
 ## Pass 20 — Who lives where, and what they will accept
@@ -442,8 +549,9 @@ anyone.
 | 72c | Give a house a **yard trade** and watch the level | A vine lattice's `food:1` reaches the settlement's own pool; a hide rack's `craft:1` reaches the lift. Letting the trade go takes it back |
 | 73 | Commission an L design with no mason's yard | Refused: "there is no mason's yard." Build one and leave it unstaffed: **"the mason's yard stands idle"** — the two refusals read differently |
 | 73a | Run a yard | Two loads of raw become one of shaped, worked by whoever the staffing pass left, chronicled the first day the saws run. Crew speed reads off who they are — Strength at the saw-pit, a mind at the furnace |
+| 73a2 | Compare a grange with and without a real harvestry-skilled field hand, then compare a workshop with and without a real tinkering-skilled tinker | The matching specialist is assigned first and satisfies `skill.harvestry:1` or `skill.tinkering:1`; an unskilled body still works at the visible shortfall floor. Sprite or display name alone grants nothing |
 | 73b | Check a high-craft design's price | Denominated partly in **vanilla tinkering bits**, drawn from the stockpiles — donate by putting scrap in. Great works may also want a rare find, and say so |
-| 74 | Crew a demanding work with weak hands | It builds **slower and says so once** — floors at a quarter pace, never stalls. The ablest available hands go to demanding works first, deterministically |
+| 74 | Crew a demanding work with weak or unpractised hands | It builds **slower and says so once** — floors at a quarter pace, never stalls. The ablest or correctly skilled available hands go to demanding works first, deterministically |
 | 75 | Let raiders past the wall | A work may stand damaged — bounded, named once, running reduced, never destroyed. Player-placed objects untouched, ever |
 | 75a | Run a mill at full stretch for many days, including days you are not there | Hard running may wear it, and a mill that ran hard through an absence wore for it — the streak is counted in **activity-days**, not in visits. A mill standing idle never wears, however long the calendar runs: **idleness wears nothing** |
 | 75b | Watch a damaged work | Mending auto-queues like an improvement — visible on the work, holdable, one mending at a time — and costs shaped stone or worked metal and bits from the chain |
@@ -532,8 +640,11 @@ to exercise it — this is the verb that reaches it.
 | 82a1 | Read what IS offered down there instead | The **weep-tap** and the **weep gallery** — the underground water lane, cut into a damp seam rather than hung under the sky — plus the salt-pan, which goes anywhere. A stratum down is a different water game, not a poorer one |
 | 82b | Commission an **Open**-declared design underground instead (a tended plot, a salt-pan terrace) | It stays open: no walls, no door, no floor — a field cut into the rock, not a sealed chamber. It does not count as housing |
 | 82c | Commission a design that declares no `Roof` (defaults Walled) underground | Still carved, exactly as before: the rock is the wall, no wall is raised, clearing costs double, paid back in stone |
-| 83 | Reach **Town**, Charter → Commission → **gatehouse** | It rises astride the road: the buildable frontier cell nearest the settlement's own way out — the same cell `KingdomRoads` already walks a `HeartToGate` errand at — not a random gap in the wall line the way an ordinary wall segment sites |
-| 83a | Strike it and commission another | It returns to the same cell, reload after reload — ties break north-then-west, so the same settlement always puts its gatehouse in the same place |
+| 83 | Reach **Town**, Charter → Commission → **gatehouse** | It rises on the exact `HeartToGate` frontier endpoint, not a random wall cell: a 3×3 road-aligned guard work with four sandstone walls, two usable timber watch benches, and an open three-cell centerline through its vanilla gate |
+| 83a | Before commissioning, put the founder, a citizen, a loose item, a liquid, or another work on each kind of footprint cell in turn; record water/materials before and after | Each attempt refuses with the exact blocked coordinate and blocker **before any debit**. Nothing is cleared, moved, destroyed, or displaced. Removing the blocker permits the same deterministic footprint |
+| 83b | Walk the founder through it in both directions; send a citizen and a porter across the same frontier route | All three traverse the outside approach, gate, guard throat, and inward approach. Walls and benches never occupy the centerline, and the gatehouse cannot seal the settlement's road graph |
+| 83c | Close the gate with vanilla interaction, save/quit/reload, inspect it, then open and repeat | Closed stays closed and blocks until opened; open stays open and passes. Vanilla Door smart-use, render, sound, and state survive reload; the six owned guard pieces neither duplicate nor regenerate |
+| 83d | Strike it, save/reload during the work and again after completion, then commission another | The frozen receipt removes the exact four stone walls, two benches, and Door root once. It leaves **no cleared plot/socket** because the gatehouse is a typed network, not a stakeable plot. The replacement returns to the same road endpoint and orientation |
 
 ## Pass 28 — The water lane, re-grounded
 
@@ -569,8 +680,8 @@ water lane, the point is that what you can watch and what the ledger counts are 
 | 89 | Found a realm, then run `kingdom:dump` | The realm has a **dish** — a name in Qud's own register, derived from your people and your ground: `starapple stew` on ordinary ground with nobody's creed dominant, `vinewafer matz` in a marsh once Joppa's people are the majority |
 | 89a | Water-ritual with any citizen of your own realm | The dish is offered for reputation, in vanilla's own sentence: *"Would you teach me to cook &lt;realm&gt;'s favorite dish?"* Accepting adds a real recipe note to your journal |
 | 89b | Let the roll drift until a different creed dominates, then walk back in | The kitchens change their minds. One line in the ledger and one in the chronicle, said once; the dish's name changes, and the old recipe you already learned is still yours |
-| 90 | Reach **Village** and commission the **settlement oven** (it upgrades from the communal fire) | A real vanilla `Oven`. Walk up and cook at it: **Eat &lt;your dish&gt;** is at the top of the menu, alongside whip-up, cook-from-recipe, preserve, and the nostrum treatments — all of it vanilla's, none of it re-implemented |
-| 90a | Cook at the plain **communal fire** instead | Every cooking action still works. It always did — the fire's blueprint has been vanilla's `Campfire` since it shipped, and what changed this wave is that the settlement *counts* it as a kitchen |
+| 89c | Reach **Village** and commission the **settlement oven** (it upgrades from the communal fire) | A real vanilla `Oven`. Walk up and cook at it: **Eat &lt;your dish&gt;** is at the top of the menu, alongside whip-up, cook-from-recipe, preserve, and the nostrum treatments — all of it vanilla's, none of it re-implemented |
+| 89d | Cook at the plain **communal fire** instead | Every cooking action still works. It always did — the fire's blueprint has been vanilla's `Campfire` since it shipped, and what changed this wave is that the settlement *counts* it as a kitchen |
 | 91 | Put a stack of your settlement's **preserved staple** in a dedicated larder (vinewafer sheaves, starapple jam, pickled mushrooms…), then leave for a few days | The ration draw reaches for the staple **first**. `kingdom:status` names the day: the settlement ate its own dish, and the ledger says so with the dish by name |
 | 91a | Read `kingdom:dump` on that visit | `MealShade` is 1 and the supported level is one settler higher. Come back a day later with no staple left and it is 0 again — a settlement is well fed for the day it ate and no longer |
 | 91b | At a Village or above, empty the larders completely and leave for a week | One line, once: the larders gave nothing and the settlement ate what it could find. Fill them and it is unsaid. Do the same at a **Camp** and nothing is said at all — living off the land is what a camp is |
@@ -613,7 +724,8 @@ every wave; these are the steps the city book's own wave can be read against.
 zones + works + settlers + clocks), `ms` is wall time. Four lanes write lines: `reckon` (one city,
 one pass), `slice` (one micro-reckon, about one an in-game hour), `reify` (one turn's amortised
 spend — there `rows` counts the units that were visible-cells-first, `thirds` is the weighted spend,
-`units` is the figure judged against the budget of 8, and `owed=` rides in the label), and `thaw`
+`units` is the figure judged against the budget of 8, and `owed=` is exact post-survey physical
+demand, not one proxy unit per stock kind), and `thaw`
 (one prefetch, timed and budgeted nowhere). **A count is a contract and a timing is
 hardware**: on a slow machine `ms` will be larger and `steps`/`rows` will not. A figure that crossed
 a budget is prefixed `BUDGET` and names the budget it broke — `[TAF] perf BUDGET reckon … over=8`.
@@ -622,18 +734,21 @@ a budget is prefixed `BUDGET` and names the budget it broke — `[TAF] perf BUDG
 | Step | Action | Expect |
 |---|---|---|
 | 90 | Found a city, hold two zones, raise works in both. Leave for a season. Come home and read the log | One `perf reckon` line for the pass. `ms` under 2. Nothing stutters as you walk in |
+| 90u | On a dense City seat, make every semantic lane applicable at once: resident arrival/departure, two construction roots, plots/roads/crops, lab work, networks, visual damage, a porter, guest/faith/office work, and an upgrade. Enable diagnostics, cross the due boundary once, and retain the survey receipt plus `Player.log` | The due pass reports one maintained `KingdomSurvey` classification for that zone. Every later lane consumes its named index, and committed additions/removals are visible to later lanes in the same pass. There is no second whole-zone scan; only bounded exact-cell/object reproof appears. Repeat after save/cold-load and with duplicate resident/binding evidence: scan count stays one and ambiguity refuses without choosing by enumeration order |
 | 90a | Do the same, but leave for **one day** | `steps` and `rows` are **identical to 90's**. Only the wall time differs. If they scale with the absence, a lane is charging per day and it is the lane that is wrong |
 | 90b | Cross between your two zones several times in one session | One `perf reckon` line per crossing, each the same size. Nothing accumulates |
 | 90g | Open the cistern and the larder in a zone the city drew from while you were elsewhere | The cistern holds **exactly** the book's remainder — not a full vessel and a ledger note. Reload and repeat: the **same** vessel drained first |
 | 90m | Grep the log for `city: check-in audit` | `model=` minus `debt=` equals `ground=` for both water and food after an attended pass, and no line says `MISMATCH`. `debt=` is what this quarter's works have made that nobody has poured into a vessel yet; it is not drift, and it is why the two totals may legitimately differ. A mismatch is not a crash and is not repaired — it is named, and it is what you report |
-| 90b | Watch the turns after a homecoming that owed something | `perf reify` lines, at most one a turn per zone, `units` never above 8, and the `owed=` figure in the label falling **monotonically** to zero. What you can **see** fills in first; the rest arrives behind you as you walk |
+| 90v | Watch the turns after a homecoming that owed something | `perf reify` lines, at most one a turn per zone, `units` never above 8, and the `owed=` figure in the label falling **monotonically** to zero. What you can **see** fills in first; the rest arrives behind you as you walk |
+| 90n | Fill at least nine separately dedicated cisterns/larders, create a same-kind draw/landing across all of them, keep some visible, then return | First turn touches up to eight containers under the shared allowance. Every visible eligible container precedes every hidden one; within each half oldest dedication goes first. `owed=` counts actual remaining container units |
+| 90o | Save after a partial 90n drain, reload, and continue; repeat once with one oldest container blocked/full/empty for the owed direction | Already-paid containers never move twice. Blocked quantity remains on the book and is named; later containers do not leapfrog a callback failure. Food harvest/loss totals change once by exact physical deltas |
 | 90c | Walk out while `owed=` is still above zero, wander a week, come back | `owed=` resumes at the number it left at. Nothing lost, nothing landed twice, no harvest counted twice (**I1**) |
 | 90d | **The porter.** Stand in a zone of your city that has a larder with room, while a farm in another of its zones finishes harvesting and the load goes on the road | A porter walks in **at the edge nearest that farm**, crosses to the larder beside you, puts the **real crop items** in it, says so once, and leaves by the edge they came in by. The homecoming report does **not** tell you about it afterwards (**I2**) |
 | 90d2 | **Follow the porter.** Do 90d, then walk out of the zone *behind* them, following | You come out beside them, and they are just inside the entry edge, **a cell or two along** — not at the far wall and not standing on the boundary. Cross faster and you catch them at the edge; dawdle and they are further on. No pop, no teleport (**I5**) |
 | 90d3 | Stand in the porter's way and keep them from the larder | They keep trying. Block them long enough — past twice the journey's projected length — and the job **fails**, is named in the register, and the crop is real items lying where they stood. Nothing is silently restored |
 | 90e | Do 90d, then walk out mid-carry, wander until the model closes the job, and come back | The goods are in the city's books **once**. The porter is gone. No second load anywhere, and the ledger says the load you left on the road reached the store by another hand (**I3**) |
-| 90h | Cross repeatedly between two zones of your own city | No reckoning at all inside vanilla's grace window. With `r_TAF_OptionPrefetch` off (its default, and there is no checkbox for it yet) there are **no** `perf thaw` lines at all; nothing is held, and a crossing costs the plain vanilla thaw it always did |
-| 90n | Grep the log for `perf slice` | One line about every fifty ticks while you are in a city, with `steps` at 1 or 2 and never above 4. It appears whether you are walking, resting or standing still, and **not** during world-map travel — a founder on the world map is standing in no city zone and is owed no reification |
+| 90h | Cross repeatedly between two zones of your own city | No reckoning at all inside vanilla's grace window. With the experimental neighbouring-zone prefetch checkbox off (`r_TAF_OptionPrefetch`, its default) there are **no** `perf thaw` lines at all; nothing is held, and a crossing costs the plain vanilla thaw it always did |
+| 90w | Grep the log for `perf slice` | One line about every fifty ticks while you are in a city, with `steps` at 1 or 2 and never above 4. It appears whether you are walking, resting or standing still, and **not** during world-map travel — a founder on the world map is standing in no city zone and is owed no reification |
 | 90p | Grep the log for `binding:` and `porter:` after a session with deliveries | Every `porter: job N carries` has exactly one closing line for the same N. No job id appears twice as open, and `city: check-in bindings` never appears at all |
 
 **W6 — the works produce, and the carriers stop looking stupid.** These are the steps the
@@ -642,7 +757,7 @@ settlement's whole daily make was whatever the seated ground happened to carry.
 
 | Step | Action | Expect |
 |---|---|---|
-| 90q | Raise a reservoir in zone B. Stand in zone A for several days, never entering B. Then walk into B and open its cistern | It has been filling the whole time, at exactly the drams its `Carries` promises times the days you were away — not a full vessel, not an empty one, and not a ledger note. Amortised: the first turns after you walk in pour a vessel at a time (`perf reify`), and `owed=` falls to zero |
+| 90q | Raise an air-well field in zone B and dedicate a cistern there. Stand in zone A for several days, never entering B. Then walk into B and open its cistern | It has been filling the whole time, at exactly the drams the air-well field's `Carries` promises times the days you were away — not a full vessel, not an empty one, and not a ledger note. Amortised: the first turns after you walk in pour a vessel at a time (`perf reify`), and `owed=` falls to zero |
 | 90q2 | Do 90q, then grep for `city: check-in audit` on entering B | No `MISMATCH`. While `owed=` is still above zero the line shows `debt=` covering the difference exactly. This is invariant **I1** with a rate running, which is the case that did not exist before W6 |
 | 90q3 | Leave a whole four-zone city for a season and read the `perf reckon` line | `steps` no higher than `2 × zones + 1` and `rows` far under `64 × 2R`, however long you were gone. A season and a year cost the same reckoning; only the wall time differs |
 | 90q4 | Fill one quarter's granary to the brim, then leave for a month | The granary is full and no fuller, and the log says `city: reconcile … spilled food=N`. The harvest that had nowhere to go was **left in the field**, exactly as it always was when you were standing there — not banked, not queued |
@@ -678,8 +793,8 @@ own cuts: **The Shallows / Harvest Dawn** (rising, 151–450), **Salt Sun** (at 
 
 The happenings layer. `_notes/LIVING-CITY-ARCHITECTURE.md` §7.4 W4 and
 `_notes/BUILDING-CATALOGUE-BRIEF.md` Addendum 13. Four things happen in a city and every one of
-them is a **rendering of a row** — nothing here has a table of its own, and nothing here opens a
-message channel of its own.
+them is a **rendering of a row**. A bounded `HappeningModel` receipt may temporarily stage real
+bodies and a fixture, but owns no parallel domain history and opens no message channel of its own.
 
 **Read the calendar off the status bar, not off this file.** Festivals are anchored to Qud's own
 days: the **Ides** (the fifteenth of any numbered month — the one day the game declines to number,
@@ -693,16 +808,31 @@ calls the 14th or the 16th is the bug this pass exists to catch. A new character
 | 110 | Found a city, house two settlers **in the same building**, and let ~18 world-days pass with both of them on the roll | Some pass, a wedding: one message in a named settler's mouth, one chronicle line naming both, and an outsider-register line. It never repeats for the same pair |
 | 110a | Read `kingdom:chronicle` and then the outsider register | Both carry the wedding. The outsider version is third person and hedged — the founder's voice is never in it (**lane 6**) |
 | 110b | House two settlers of **different declared creeds** together and wait | No wedding. A creed code is one-way, so the model can prove agreement and never disagreement, and it declines rather than guessing. Not a stall: nothing was blocked, there was simply nothing to say |
+| 110c | Put the eligible pair and an authored bench/chair on owned ground, attend the wedding, and inspect both bodies before, during, and after | Those exact resident/object IDs walk by vanilla pathing to distinct reachable cells around the exact functional fixture, and one really sits through the chair part. While staged they carry `r_TAF_HappeningToken`, former-post/home/anchor and target/fixture receipts; the fixture carries the matching locus/use token. After the hold, both reach their exact former cells with the same home, post, anchor, wander/stay flags, name, equipment, and body ID before the durable restoration acknowledgements clear, and every temporary receipt is gone. One Chronicle/told/message occurrence, never an empty ledger note |
+| 110d | Repeat 110c with the bench absent, a principal absent, every approach obstructed, the fixture removed while walking, and the founder leaving before Ready | No replacement body, clone, summon, teleport, or late UI ceremony appears. Before Ready, loss restores every body it can still resolve and produces only one Calendar-dated report; wholly absent evidence starts as that report without touching any body or fixture. Re-entry and repeated heartbeats do not restage or retell it |
 | 111 | `advanceticks` until the status bar reads **Ides** of any month | The city keeps the feast: one line naming the day and the realm's dish, one chronicle entry, one outsider line. **Once** — the same Ides never fires twice |
 | 111a | Advance past **Ut yara Ux** | The greater feast, named as such. Vanilla's only canonical festival, and the only two anchors that exist |
 | 111b | Found a city in Tebet Ux and immediately `kingdom:dump` | **No backlog of feasts.** A city stamps the current tick the first time it looks: it did not miss the Ides of Nivvun Ut, it did not exist for them |
 | 111c | Leave for a full in-game year and come home | The feasts are in the chronicle, feast by feast, and the homecoming note counts them. Grep the log for `happening: feast` — there is one line per feast and never one per day |
 | 111d | Leave for **several** in-game years | The same shape and no worse: past sixteen feasts the catch-up jumps closed-form instead of walking. If the return took visibly longer than a one-season return, that is the §0.0(a) regression this step is for |
+| 111e | In a fresh city, inspect generic travellers before three city feasts have been recorded | **No pilgrim.** Ordinary travellers and nomads may approach, but the ceremonial pilgrim never comes from the fixed guest clock. They stand at the rite-ground approach, not on a random distant cell |
+| 111f | Keep the third qualifying feast while attending the city, advance one world-day, and return to the rite ground during the following patience window | Exactly **one named pilgrim** stands at or immediately around the heart. Their description and conversation cite that exact feast, city, and dish. Save before arrival, reload, cross the arrival tick twice, and revisit: the same sequence makes one body, never two |
+| 111g | Repeat 111f with every passable cell in the rite cell's three-cell ring occupied or blocked, then clear one | No body is spent or placed in a wall. The opportunity waits. Clearing one coherent approach places the one pilgrim there; generic traffic never steps over the pending cause |
+| 111h | Cause a pilgrim, leave for longer than travel plus patience without entering the heart zone, then return | No freshly manufactured pilgrim is waiting. One dated homecoming/chronicle line says a pilgrim came because of the frozen feast and went on unmet. Save/reload before return and open the city twice: one line, no body, no duplicate. Offering water during an attended visit records the greeted wording instead |
+| 111i | Attend the next feast with an authored `r_KingdomOven` or other authored `Campfire`; save/cold-load once in Prepared, Walking, Holding, Ready, and Restoring | Up to four exact named residents path to distinct cells around the oven (preferred over another campfire), the exact fixture records use, and the semantic feast/pilgrim accrual happens only after Ready. Every load resumes the same event ID, bodies, fixture and cells. Chronicle, told ring, pilgrim effect, and optional push each settle once; schedules restore last |
+| 111j | Repeat 111i without a functional campfire/oven or while away | One dated feast report and its ordinary feast effect; no body or fixture receives a staging property, no arrival is claimed, and returning later does not manufacture the missed gathering |
 | 112 | Let a manned mill wear past 60% condition, or unstaff it, and stand somewhere else | One line, once: "The mill has stopped", with the condition. Not a line an hour — grep for `happening: breakdown` and count |
 | 112a | Come home and mend it | The **unsaying**, in green, in the same lane the brink withdrawals use: "The mill turns again, at N parts in a hundred" |
 | 112b | Leave it broken and cross zones for a while | Silence. The city said it once and does not nag |
 | 113 | Kill one of your own settlers | **One** telling, not two: the mourning line as before, now carrying the rite — who spoke the water over them. No separate "funeral" message anywhere |
 | 113a | Read the chronicle for that death | One entry. If there are two entries for one death, that is the bug this step exists to catch |
+| 113b | Kill one resident while at least one other exact named resident and an authored functional `Shrine` remain on owned ground | Only living mourners walk to the shrine. The deceased body is never recreated, moved, or counted as an attendee. After the hold, one death/funeral Chronicle row and told receipt exist, the mourners restore their exact former schedules, and the dead roll still owns the same name/cause |
+| 113c | Repeat 113b with no living bound mourner, no shrine, or during absence | The death still receives exactly one Calendar-dated report. No proxy mourner or late staged funeral appears when the ground is next loaded, and the safety-net scan cannot add a second semantic entry |
+| 113d | Complete a building while its exact construction gang and the functional `r_KingdomFirstBasin` are present; inspect completion/outbox before and after Ready | The real builders path to the basin, whose real `LiquidVolume` and fixture-use receipt make it a functional raising locus. Construction's mode-4 outbox stays pending until exact Ready evidence, then its existing deed/Chronicle/ledger/message owner runs once and acknowledges the same event before restoration. The ceremony never substitutes nearby names |
+| 113e | For wedding, feast, funeral, and raising, inject a save/quit after post attachment, after partial arrival, after fixture-use, before each sink acknowledgement, and during restoration; also remove the fixture or one body at each pre-Ready cut | Cold-load keeps one bounded operation and monotonic sequence. Inspectable Chronicle/told receipts retry safely; an interrupted uninspectable effect/ledger/message is marked lost rather than replayed. Ready evidence is not reinterpreted after later departure. Every living body reaches its exact former cell and schedule before its restoration acknowledgement; a body is treated as gone only after both its binding and resident row prove death. Repeating the heartbeat clears no unrelated post and emits no second semantic event |
+| 113f | Let more than 32 other told events turn over after one wedding and one funeral, save/cold-load, then revisit the same pair/dead row; also leave a mode-4 raising at Ready for more than one world-day before resuming construction | The bounded permanent identity receipts still refuse the wedding, funeral, and raising before any body or fixture is leased. The expired external Ready degrades safely into the construction owner's one unattended telling; it never restages a late ceremony or strands the job |
+| 113g | Keep one physical event active in each of two settlements, stand in the second, and let both heartbeat slices run; then kill another resident while that city's lifecycle is busy | Each city reconciles only tokens carrying its exact settlement prefix; the other city's body/fixture receipts survive. The busy death uses the original non-physical mourning fallback exactly once and does not steal, clear, or overwrite the active event |
+| 113h | Block a participant's exact original cell only after Ready, then advance beyond half a world-day and reload; unblock it later | Restoration keeps the durable body receipt and uses vanilla pathing; timeout never authorizes a false return acknowledgement. Unblocking lets the same body reach the exact cell, restores its old post/anchor/AI flags, then and only then clears the lifecycle |
 | 114 | Stand in the city through a whole day and watch the message log | At most one ambient line an in-game hour, and never the same line twice in one day. The mill's clatter at rising, bread-smell after something cooked, the shrine at Hindsun, the hearths at dusk |
 | 114a | Stop every work in the zone and wait | The silence line outranks all of them — "Something has stopped turning. You can hear the water going past it." A texture line that beat it would bury the one thing you can act on |
 | 114b | Drain the cisterns dry | "The cisterns knock hollow when somebody walks past them", before any hour-texture line |
@@ -739,7 +869,8 @@ bitten this file before — step 119 exists solely to catch it.
 | 120 | Charter → The city in full (`c`) → The book of the city (`b`) | Six chapters, and a headline naming the tick the model is carried through and how many days behind now that is. A city that has just been reckoned reads `(current)` |
 | 120a | Read *the stores, and what holds them* with two zones claimed and a granary in the far one | The far zone's food is a real number, without walking there. A city that has dedicated no vessels reads **"nothing dedicated"**, never `0 of 0` — those are different sentences |
 | 120b | Leave for a season, come home, and open the same chapter **before** walking to the far zone | A "the count and the vessels have not been squared here" clause with a signed figure. Walk there, come back, and it is gone. That is Addendum 12(d)'s debt, told rather than silently repaired |
-| 120c | Read *the works, and what they are waiting on* | Every work in the **city**, not the zone. The count of "waiting on you" matches the works that actually are: a worn-past-the-line one, and a producer/refiner/power work with no hands. A larder or a field with nobody on it is **not** waiting |
+| 120c | Read *the works, and what they are waiting on* | Every work in the **city**, not the zone. The count of "waiting on you" matches the works that actually are: a worn-past-the-line one, and a producer/refiner/power/active-construction work with no hands. A larder or a field with nobody on it is **not** waiting |
+| 120c1 | Crew two works, save and cold-load, then exchange the seat to a second city and read both books | Each work reports the exact number of resident rows posted to its stable id on its bound zone. The count survives reload. The second city never borrows the first city's crew. An active frame reads as **construction**, while producer, refiner, power, store and growing works retain their own classes |
 | 120d | Unstaff a mill and read both this chapter and the breakdown message from Pass 30 step 112 | They agree. The board and the news share one definition of stopped; if one calls it stopped and the other does not, that is the bug this step exists for |
 | 120e | Read *the people, and where their day puts them* | Living, away-with-you, and buried counted apart; the day-shape spread; the office holder named **with their epithet**; and a closing line counting how many citizens here will share water |
 | 120f | Read *the turn of the year* | Today's date as the status bar gives it, the next feast and how many days off, the realm's dish, and the heart's rung when you are standing on the rite ground |
@@ -753,14 +884,21 @@ bitten this file before — step 119 exists solely to catch it.
 | 122a | Empty the cisterns to exactly zero, then put one dram back | The thirst ask appears and then goes. One dram is not an ask — the board fires on empty, never on "low", because it is forbidden a balance number of its own |
 | 122b | Dedicate no vessels at all | **No** thirst ask. The city has no cisterns, which is a different thing, and the book's stores chapter says so on its own line |
 | 122c | Fill one zone's larder to the lid while another zone has room | A haulage ask naming the full one. Empty the other larder's ceiling too (or claim only one zone) and it goes: a city with nowhere to put anything is asking for a larder, not for haulage |
-| 122d | Have a settler waiting to speak (Pass 10) and open the board | The petition is the **first** line, and it points at the Charter to hear them. The board does not hear it — it is a reading |
+| 122d | Have a settler waiting to speak and open the board | The petition is the **first** line, and it points at the Charter to hear them. The board does not hear it — it is a reading |
+| 122d1 | Before hearing that petition, satisfy its displayed condition; run another settlement pass | It remains **Offered** by the same named body, with the same words, origin, target and event. No deed, accomplishment, petition-met increment or resolution is minted before explicit acceptance |
+| 122d2 | Save, quit and cold-load while it is Offered; hear it at the Charter and accept; save/cold-load again; satisfy the frozen target; cross several passes and reopen the Charter | The exact requester body/name, source city, cause, target and event survive both loads. Acceptance is a separate durable action. Resolution, petition-met increment, deed, chronicle, ledger and message each occur exactly once |
+| 122d3 | On a fresh offer choose Decline, then revisit the Charter and cross several passes short of the documented interval | The unanswered petition closes without penalty and cannot be reopened by reading it. No replacement appears before the interval; a later eligible offer has a new event and a real current-city requester |
+| 122d4 | With one fresh petition Offered, turn `r_TAF_OptionPetitions` off and run a pass; turn it on again | The unaccepted offer closes. Re-enabling starts a future offer clock; it does not resurrect the closed event or emit its sinks again |
+| 122d5 | Accept a fresh petition, note its remaining window, turn petitions off, wait beyond that duration, then turn them on | The accepted promise is paused, not declined, resolved or expired. Re-enabling resumes the same frozen undertaking with its saved remaining duration measured from now; it expires only after that future deadline |
+| 122d6 | With two cities, accept a petition in the first, walk to the second and satisfy the first city's condition there, then return | The second city's state cannot fulfil, replace or reinterpret the first city's petition. Returning restores the first city's same requester/body/cause/target/event and only evidence on its own seated ground may resolve it |
+| 122d7 | Load one pre-lifecycle save with a complete active petition, then one fixture with a missing/ambiguous requester or malformed origin/cause/target/event | Complete evidence adopts once as Offered or Accepted exactly as saved. Malformed evidence is visibly quarantined and retained for diagnosis; no field is cleared, repaired from current state or turned into a reward |
 | 122e | Post notices at the heart and re-open | A closing count of your own notices. Nothing on the board takes them up |
 | 122e2 | Install several ask sources and open the board | Never more than eight lines, worst first. The cap is a promise about the **screen**; ten installed mods must not turn it into a spreadsheet |
 | 122f | Bring the city to full health — stores held, roofs enough, every work crewed | "Nothing else. The stores hold, the roofs are enough, and every work that wants hands has them" |
 | 123 | Talk to one of your own settlers | A conversation, and **"share your water"** in it. Before W5 a settler could not be talked to at all |
 | 123a | Share water with them | Vanilla's own ritual, for **your realm's faction**: the reputation, and the settlement's own favoured dish taught as a cooking recipe. That recipe has existed since the food lane and until now no creature in Qud belonged to the faction to hand it over |
 | 123b | Cook the dish afterwards | It is the one the Charter's status names. If the ritual taught a different recipe, the faction stamp and the report disagree |
-| 123c | Look for secret or gossip trading in the ritual | **There is none, and that is correct for now.** The realm faction declares no interests, so vanilla weighs every note at zero and hides those choices. The city trades no secret it does not have — the chronicle-as-tradable-secret half is named as remainder, not shipped |
+| 123c | After the outsider register gains a telling, share water with a faction interested in `gossip` or `settlement` and inspect secret trading; repeat with an uninterested faction and after save/reload | Vanilla offers the latest outsider telling for the founder to **sell** where that faction's own interests give it weight. It is never offered for the founder to buy back, because the observation is already revealed. An uninterested faction may show no row. Reload, seat exchange, and re-filing the same telling create no duplicate observation or second payment record |
 | 123d | Talk to a settler another mod gave a conversation to | Their own conversation, unreplaced, with the water ritual choice in it (an XML conversation inherits it already). Taking away somebody else's content to add something already there would be the failure |
 | 123e | Turn `r_TAF_OptionCitizenRite` off, then on, and let a pass run | Off, no new settler becomes a host; on, the next pass makes them one. Existing hosts are not stripped — nothing this mod added to a creature is taken back off it |
 | 123f2 | Talk to a settler on the day they arrive, then again after a month of world-time in the city | The greeting **changes** — newcomer, then settling in, then settled. A conversation is a fixed string on the object, so a settler stamped once on arrival and never re-read would greet you as a stranger forever and two of the three lines would be dead. Only conversations this mod built are ever rebuilt |
@@ -768,6 +906,7 @@ bitten this file before — step 119 exists solely to catch it.
 | 123g | Kill one of your own settlers **after** W5 has made them a host | Your standing with **your own realm** drops, by vanilla's own legendary-kill arithmetic, and one to three factions the realm has feelings about move with it. This is new in W5 and it is deliberate: `GivesRep` is what opens the ritual, and it is also what makes murdering your own citizen cost something. Bounded to the realm and its related factions — it is **not** a world-wide penalty |
 | 123h | Share water with a settler and then kill them | The **water-ritual curse**: vanilla's own covenant violation, rep with every visible non-hostile faction. The exile lane already has prose for this deed (`WaterRitualCurse`), which is how you can tell it was expected rather than stumbled into |
 | 123i | Share water with a vanilla **Barathrumite**, then Charter → **What the keepers know** | The founder's ledger now remembers `rite:barathrumites`; `arclight discipline` is visible and **begun** at one quarter in the seated city, never completed. Share water with another Barathrumite or reopen the same ritual: no second key and no extra quarter. A distinct matching source may bring a node only as far as its existing 50% cap. Save/reload, then repeat with a ritual performed **before founding**, after exile/refounding, and in city two: the rite follows this founder, while each city's seed receipt/progress remains its own. In Kingdom Mode, complete succession: the heir keeps the city's research standing but does **not** inherit the dead founder's rite ledger; a later body change still receives new ritual events exactly once. |
+| 123j | From Charter → **What the keepers know**, try to change the current research subject; then walk to the seated city's staffed scriptorium/inquiry bench, interact with it, and choose one visible subject | The Charter remains a reading and offers no remote subject verb. The physical bench offers **set the city's research subject**, names every exact blocker, and the accepted subject belongs to the city whose claimed ground and bench the founder is touching. Repeat in city two: each city's subject and accrued work remain separate. |
 | 124 | With no other mod installed, read *who else writes in this book* (the book's sixth chapter) | "Nothing is extending it. The city is entirely its own", and the API version |
 | 124a | Install a mod with a `[KingdomExtension]` class built against **the wrong version** | It is **refused by mod name**, on screen and in the log, naming the version it wanted and the version we publish. It is never silently skipped. The refusal is listed in this chapter |
 | 124b | Install one whose extension class **throws** in its constructor or in `Ask` | Only that one is lost. Every other extension still runs, the board still opens, the turn is unaffected, and the log names the mod. A constructor that throws is refused as **"threw"**, never as "declares no API version" — the two send a modder to different lines |
@@ -776,8 +915,19 @@ bitten this file before — step 119 exists solely to catch it.
 | 124d | Install a happening source and let a settlement pass run | Its chronicle line lands; its spoken line is heard **only** if the city had nothing more pressing to say. Grep for `extension happening:` — the count matches |
 | 124e | With the same happening source, note a spoken line, reload the save, and repeat the pass | The same draw and the same result. An extension's chance is as replayable as ours or the city is unfalsifiable |
 | 124f | Enable two extension mods, then reorder them in the mod list | The same behaviour and the same draws. Registration is sorted by mod name, never left in scan order |
+| 124f2 | Install a v1 ask/happening extension and a v2 identity source beside the API-v3 behaviour fixture | All three admit. The registry reports API 3 with minimum supported 1; the version bump does not retire genuine older-contract extensions. Change only the fixture's declaration to v2: its five durable lanes are refused together as requiring version 3, never half-loaded |
+| 124f3 | Give the v2 source one owned key, one foreign `culture:` key, nine more keys, and affinity outside 70–130; then return 32 malformed keys, compose positive and negative sources in both orders, and make each method throw on a later call | Only the first eight distinct owned keys can enter the live roster; the foreign key never does; no slot beyond the first 32 is inspected. Mixed affinities give the same answer in either order and remain in 70–130. On the throwing calls that source contributes no keys and neutral affinity, every other source and the city continue, the log names the mod plus `identity keys` or `identity affinity`, and one on-screen warning appears per mod and faulted lane rather than every pass |
+| 124f4 | Use two residents with different `GetSpecies()` values; give one blueprint `r_TAF_Refuses="species:<the other>"`; attempt shared housing, then remove the refusal | The exact species appears as a generic self-tag and blocks only the existing cohabitation match. Removing the authored refusal restores normal lodging. No species catalogue, hidden penalty, or research-tier change occurs |
 | 124g | Turn `r_TAF_OptionExtensions` off | No third-party C# runs, and the chapter says so. Buildings, deals and settlers those mods merged by XML are **unaffected** |
 | 124h | Corrupt or clear the city book (or catch a real fault) and open both the book and the asks board | Both say the book could not be read, in as many words. Neither shows a page of zeroes, and the asks board does **not** print "the stores hold, the roofs are enough" — reporting an unreadable book as a contented city is the report telling you the opposite of the truth |
+| 124i | Cold-install a separate extension assembly implementing `IResourceKind`, `ICarrierKind`, `IJobKind`, `INetworkKind`, `IWorkBehaviour`, and `IHappeningGenerator`, referencing only `ThousandAndFirst.Api` | It registers by mod name at API 3. Its own reading/log shows one owner-qualified resource, paired carrier/job, network, work state, and happening. No core type, zone, object, clock, or mutable city row crosses a callback boundary |
+| 124j | Let the fixture open one cargo job over a held-zone leg, save before due, reload, and pass its due tick | Cargo debits once at opening. Carrier blueprint, pace, route-derived due tick, and completion survive reload. All completion resource changes publish once together; repeating the stable job key does not reopen it |
+| 124k | Give the fixture one source and two priority-ordered sinks behind bounded capacity, then advance one whole day twice from the same save | Both runs report identical flow and brownout. Lower-numbered priority is served first; only whole-day source surplus enters the owned resource and capacity clamps it. Reordering mods changes neither result nor draw |
+| 124l | Bind the fixture work behaviour to one existing attended work and owe one takeable object, then obstruct its exact cell, reload, and clear it | Obstruction/creation failure leaves the same debt and mints no substitute. Once clear, one exact blueprint lands on the exact work cell and only then debt falls by one. Revisit/reload cannot duplicate it; creature or untakeable blueprints are refused |
+| 124m | With resource/job/network/work rows live, exchange the seat or archive/exile the settlement, save, reload, and return | Current nested archive v12 restores canonical behavior, happenings, defensive reservations, semantic selections, and exact per-source happening cursors, while the realm archive restores exact job/logistics payload: level, frozen job receipt, network solve, work state, owed object, reserved work/resident identities, and office/person plan match. Settlement v6 defaults behavior empty; v7 retains behavior while defaulting later sidecars; v8 retains physical happenings; v9 independently decodes/re-writes the same reachable envelope as its required epoch marker; v10 retains defensive reservations; v11 retains semantic selections and migrates its aggregate happening tick into exact active-source receipts. Realm Jobs v3/v4 independently prove logistics migration. Every older shape rewrites stably, and every salvage/pilgrim/expedition field remains intact |
+| 124n | Make each v3 callback throw in turn while a second extension remains healthy | Only that callback publishes nothing. Later owners and later phases continue, the existing sidecar is retained, and the log/on-screen fault names owner plus resource/carrier/job/network/work lane. An in-flight frozen job still settles without calling its disabled owner |
+| 124o | In separate runs, attempt a thirty-third draw; return 32 malformed rows followed by a valid one; exceed each owner/city cap; use a foreign namespace; and include one invalid change in a multi-change work/job result | Thirty-third draw is `OverBudget` and publishes no callback result. Slot 32 is never inspected; malformed slots consume the bound. Caps stop new rows without disturbing old ones. Foreign rows and whole malformed atomic results publish nothing; another owner remains unaffected |
+| 124p | Disable the fixture after one job opens, pass due, then re-enable it and repeat the original start-tick proposal | Frozen job completes or fails/restores cargo exactly once while disabled. No new proposal runs while off. Re-enable does not revive the retired start-tick receipt or duplicate its completion; four terminal receipts rotate without permanently closing the owner's job lane |
 | 125 | Grep the log for `perf` through a season with extensions installed | Extension jobs appear on the reckon lane with a `ext:` label. Nothing else moved: the receipt is the regression test |
 
 ## Pass 35 — Styles that mean something, and the creed-gate stack
@@ -810,6 +960,9 @@ Steps 129–131 are that case from both sides.
 | 132a | With the same city, now open the Commission list again | The creed-work is gone from the list, and the one that was already staked is still standing in the plan. Those two facts are consistent: one is an offer, the other is a commitment |
 | 133 | Ship a third-party `KingdomBuildings.xml` re-declaring `underbench` with `CreedShare="0"` and nothing else | Only the share changes; every other attribute the base catalogue wrote still stands, and one aligned builder is now enough. Grep the log for the merge note naming `CreedShare` |
 | 134 | Ship one with `Styles="all,!eatr"` (deliberate typo) | The load log notes a style built for that no `<style>` declares. `python3 Art/check_xml_refs.py` catches the same thing before the game ever runs |
+| 134a | On installed Qud 2.0.211.51, run `kingdom:creedcontent` | It derives **33 admitted creeds, 33 covered creed keys, 128 creed-work exact mappings**, then passes every one as mapped and behavior-bearing. It does not compare against a C# faction list. Chiliad adds no admitted creed under the same facts rule |
+| 134b | In disposable cities, align enough builders with each name printed by 134a; reveal the work's other declared gates and preview it at every offered lot size | Every creed reveals one lore-specific, behavior-bearing design with a distinct usable topology and truthful bill. Every shown size resolves exactly. No entry is a palette/name-only rectangle, and a city with no live or past path to that creed still sees nothing |
+| 134c | Add a third-party faction whose ordinary faction facts pass `CanBeCreed`, plus one ordinary creed-gated building, blueprint and architecture record; rerun 134a | Census and coverage rise together without recompiling core. Removing any of those data records produces a named runtime fault; it never silently borrows another creed's plan |
 
 ## Pass 36 — Succession, founder remains, and the legacy seal
 
@@ -819,7 +972,13 @@ the **Kingdom** game mode added by this mod; Classic and Roleplay must retain th
 | Step | Action | Expect |
 |---|---|---|
 | 135 | Start Kingdom mode, found a two-city realm, reveal several forgettable journal notes plus map notes and accomplishments, and admit at least two settlers. Record their arrival order and the cities' research standing; save | The roll gives an unambiguous senior heir. Kingdom mode's description promises character death with realm continuity before play begins |
-| 135a | Die by an ordinary, non-vaporizing cause while standing on claimed ground | The founder's death is chronicled once; word reaches the seat; the mourning rite names the oldest eligible settler; control passes to that exact body instead of a game-over |
+| 135a | Die by an ordinary, non-vaporizing cause while standing on claimed ground; watch the heir's city rather than dismissing the result as a popup | The world clock reaches the exact due tick; **every** named, already-bound living resident whose exact body is present in the rite zone physically walks to the city's extant first basin/court/rite-ground/shrine fixture and the non-heirs walk back. There is no representative cap; residents physically standing in another quarter remain there and are not claimed as attendees. Their object ids, work posts, home plot ids, AI anchors, and prior goals are unchanged. A new non-takeable **shrine-marker of NAME** stands on frozen open ground. Only after that evidence exists does control pass to the exact senior body. One combined Chronicle row tells death, priced road, rite, marker, and accession; no earlier “word” message duplicates it |
+| 135a1 | Before death, record the senior body's object id, cell, inventory, post/home properties and fixture id; after accession inspect them and `kingdom:dump` | The player is that exact object—not a clone or substitute—and stands at the rite cell beside that exact fixture. The fixture records this death token and attendee manifest. No attendee, inventory item, liquid, charge, food, water, or material was created by the ceremony |
+| 135a2 | Repeat from an ordinary same-world remote zone at known global-zone/depth distance, then from claimed ground | Remote word costs `ceil((max(dx,dy)+shaft-multiplier*dz)/2)` world-days, capped by the authored 14-day rumour road; claimed ground costs zero. The clock changes before the procession; the body changes after it. No simulated NPC/world turns are claimed during the synchronous death callback |
+| 135a3 | Repeat with a lit reciprocal mirror gate at the death locus answering the seat; then darken/break the answer and repeat from a disposable copy | Lit answering arch is same-hour `Arch`; broken/dark/non-answering arch pays the actual road or other-world rumour. Merely owning a gate elsewhere does not waive time |
+| 135a4 | Inspect the founder marker before/after save → quit → reload | Its dedicated `r_KingdomFounderShrine` part retains exact founder name, death tick, cause clause, death token, city, fixture id, and epitaph/rite history. It is distinct from the cross-run cairn and remains exactly one object on the same cell |
+| 135a5 | With the native-test harness, set `KingdomSuccession.InjectedCheckpoint` to snapshot at `Frozen`, `WordArrived`, `ProcessionComplete`, `ShrinePlaced`, and `BodyCrossed`; cold-load each snapshot, then run `kingdom:selftest` | Each load re-proves the frozen founder/heir/body/zone/fixture/attendees/post/home/shrine evidence and resumes the next adjacent checkpoint. A marker placed before the cut is adopted by token/object/cell, never placed twice; a crossed body publishes/repairs the same resident accession, never crosses again. Chronicle, modal, seal handoff, and marker remain exact-once |
+| 135a6 | From copies, remove the exact heir, destroy every valid fixture, block the frozen rite/marker cells, duplicate a resident id/body, and corrupt one saved manifest/receipt field | Every case fails closed before any substitute or body crossover. Pre-placement failures make no marker; an already-proved marker is never silently destroyed. Ambiguous/corrupt cold-load state quarantines succession for that save and mints no replacement object or resource |
 | 135b | Inspect the new player, Charter, roll, city book, research, inventory, and `kingdom:dump` | The heir has their own body, stats, and inventory plus the Charter; they are no longer duplicated on the resident roll. Both cities, claims, structures, stores, chronicles, and city research persist. The founder's kit remains with their corpse or drops; personal recipes, reputation, and rite ledger do not silently become the heir's. Map notes and accomplishments survive succession |
 | 135c | `kingdom:selftest`, then save → quit → reload → repeat it | All 17 checks pass before and after reload. The same heir remains player; no second accession, duplicated resident, or repeated mourning line appears |
 | 135d | Find the founder's generated corpse and use **Read founder's memory**; accept | Only eligible forgettable journal knowledge from that exact founder returns. The popup reports the truthful count; map notes and accomplishments remain intact, and no item, liquid, reputation, research completion, or body state is copied |
@@ -833,6 +992,46 @@ the **Kingdom** game mode added by this mod; Classic and Roleplay must retain th
 | 135l | Save, reload, and reopen retirement; then continue playing long enough to change the current city | The generation remains retired after reload and cannot be sealed again. Later changes remain in the playable save but do not rewrite the already retired generation |
 | 135m | From that profile, run Pass 0's opt-out world and then its opt-in world | Opt-out consumes nothing. Opt-in imports the exact retired snapshot once under Pass 0's bounded inheritance rules |
 
+## Pass 37 — Purposeful cities, exact cargo, and the honest arcology foundation
+
+Set up two City-stage settlements joined by a reciprocal mirror-gate pair. One city must have
+living-biome founding evidence, a local vat-house or grafting hall, and a lodged Intelligence-18
+savant. The other must have ruin founding evidence, a local smelter and charging post,
+Mechanimist/Templar present-or-past reach, and a lodged Intelligence-18 tinker/technician. Give
+both gates current power and each destination ground one dedicated material stockpile. The present
+scope is deliberately the two body purposes; this pass does not claim the deferred drill/foundry/
+granary portfolio or hosted, zone-spanning arcology ground.
+
+| Step | Action | Expect |
+|---|---|---|
+| 136 | Try to quote either body-megastructure before building/keying the mirror pair; then repeat with one arch dark and with one arch not visited for a world-day | Every attempt refuses before debit and names the repair: build/key the reciprocal pair, restore charge, or visit both arches to refresh their honest readings. Raw research or an away-city boolean never substitutes |
+| 136a | At the ruin city's gate, choose **dispatch a purpose consignment** → graft-stock casket; read the confirmation, then cancel | It names exactly one casket, producing city and `vathouse/graftinghall` proof, destination city and stockpile, live route, 12 drams plus `brush:4,workedmetal:1`, use, and exact-object retry/inspection consequence. Cancel spends nothing and creates no cargo/job |
+| 136b | Accept 136a; save/reload once before leaving either city, then inspect the destination stockpile | One non-stackable **sealed graft-stock casket** arrives, carrying one worked-metal unit and one stable consignment identity/provenance. Source stock and water pay once. Reload cannot mint a second object, switch destination, or charge again |
+| 136c | At the living city's gate, dispatch an arclight roll-register to the ruin city in the same way | It requires **both** local smelter and charging post, costs exactly 16 drams plus `scrap:6,workedmetal:1`, and delivers one exact sealed register to the frozen ruin-city stockpile. Removing either producer before confirmation makes the second proof refuse without debit |
+| 136d | In the living city, preview the chimeric theatre | The preview visibly freezes **flesh-city**, the exact casket object/consignment and producer city, live mirror route, living-biome + damp/offal site, lodged named savant, authored procedure output, ordinary build bill/time/map, and recovery rule before the confirmation choice |
+| 136e | Cancel 136d; move the casket out of its dedicated stockpile; try again; return that exact object; try again | Cancel changes nothing. The moved object refuses by identity and says to return it; an ordinary worked-metal item cannot substitute. Returning the same object restores the exact preview |
+| 136f | Confirm 136d and let construction finish, checking the material stock immediately after commitment | The exact casket is consumed as one already-declared worked-metal unit of the ordinary theatre bill—not an extra token—and no other same-kind item answers for it. The standing theatre retains its frozen purpose receipt and performs the existing authored chimeric procedures |
+| 136g | In the ruin city, preview and commission the becoming annexe from its exact roll-register | Its proof is genuinely different: ruin evidence, smelter + charging post, Mechanimist/Templar reach, and a lodged named psyberneticist. The exact register is consumed once; the finished annexe performs the existing authored enrollment/becoming authorization |
+| 136h | In either city after its first body work is funded but before it finishes, attempt to commission the other body work in the **same game tick**; repeat after completion, including in the capital | Refused as that city's already-kept purpose in both cases. A capital may keep its capital-specific foundation and one body purpose, never both theatre and annexe |
+| 136i | With a debugger/fixture copy of the save, interrupt purpose cargo at each durable phase (`CargoOutputPending`, `CargoOutputSettled`, `CargoTransferPending`, `CargoDelivered`) and interrupt purpose-building funding before/after water and material callbacks | Retry either advances the same rooted object and exact economic receipt, rolls that object back to its source on a clean destination refusal, or enters inspection on ambiguity. It never duplicates, reroutes, substitutes, or charges twice; two-city seat order does not change the result |
+| 136j | Commission and examine the capital arcology record, stacked ward, and lamp-terrace | Every menu and object calls the present work an **arcology foundation** or **surface prototype**. Nothing claims hosted streets, interior plots, separate zones, indoor residents, or zone-spanning ground exists yet |
+
+## Pass 38 — Named salvage expedition
+
+Use one city with a named resident bound to a visible body, dedicated fresh-water vessels, and
+physical food in dedicated larders. Personally visit an unclaimed map destination, return home,
+record resident object id and exact store contents, then save.
+
+| Step | Action | Expect |
+|---|---|---|
+| 137 | Charter → Stores & routes → **Commission a salvage expedition**; select resident and visited destination, read preview, then cancel | Preview names exact resident/site, drams, provisions, world days, and due date. Cancel changes no body, job, water, food, Chronicle, or ledger |
+| 137a | Reopen and confirm | Exactly quoted water and food leave dedicated stores once. Same object id moves to destination; roll says **on expedition**; realm job status/recall names resident, destination, and due world-time |
+| 137b | Save/quit/reload immediately; exchange city seats twice; inspect both rolls and Charter | One job and one body exist. Job remains realm-wide and home city remains source; no second job can select that resident and no cost repeats |
+| 137c | In debugger fixture, cut after prepared row publication, after body-receipt attachment, and after each partial food/water callback; cold-load each | Pre-receipt cut reconstructs only while no debit marker exists. Every partial count/volume continues from frozen before/after range. Unreachable body leaves same open row and performs no new charge; third physical values refuse inspection rather than guessing |
+| 137d | Recall before due; repeat from pre-save and instead let world clock pass due while adventuring | Recall returns same body once and does not refund or recharge route stores. Due branch returns same body with frozen 0–4 vanilla scrap exactly once; picked-clean is cargo-free, never random offscreen death |
+| 137e | For separate fixtures, kill exact body on recorded ground, remove it from that ground, and make it follow founder; for each, cold-save after the resident standing/binding changes but before the next settlement pass, then advance | Each real condition produces its own dated dead/astray/followed result. Engine death freezes terminal job authority before the death hook releases the binding; a prior/same-pass typed dead/astray/followed row with proved binding absence also resumes. Reload preserves the exact terminal date, ground, outcome, and any known death cause; no substitute body, arbitrary random death, duplicate telling, or reward appears |
+| 137f | Read homecoming and Chronicle, save/reload, revisit/seat-swap, then commission same returned resident again | First result appears once on both surfaces and reward marker has one stack. Closed-job markers do not block second commission; second job has new id/receipt/outcome authority |
+
 ## Pass 4 — Attitudes and persistence
 
 | Step | Action | Expect |
@@ -841,18 +1040,23 @@ the **Kingdom** game mode added by this mod; Classic and Roleplay must retain th
 | 18 | Save → quit to menu → reload | `kingdom:status` + `kingdom:chronicle` intact; selftest still all-PASS |
 | 19 | Player.log | No "Bad event bind", no exceptions from ThousandAndFirst |
 
-## Known v0 limits (not bugs)
+## Current implementation limits and v1 scope gates
 
 - No ownership stamping on claims (can't rob your own city — membership design pending).
 - Settlers use vanilla farmer behavior between posts; the city moves their anchor by the hour and
   vanilla walks them, so a settler with no post keeps the hearth and looks exactly as they did.
-- Inherited sites restore bounded structures, their founder's cairn, and history only. Prior
-  people remain historical: this release adds no successor citizens, autonomous rival polity,
-  world-map warbands, or offscreen clashes.
+- Inherited sites currently restore bounded structures, their founder's cairn, and history only.
+  Prior people remain historical. Successor/namesake polity callbacks, one legacy rival,
+  generalized diplomats/emissaries, visible polity route endpoints, and polity clashes are
+  positive `AUTHOR-DEFERRED` targets in `VISION.md`'s canonical polity scope matrix, not current runtime or v1
+  blockers. Exact old-actor continuation, persistent unloaded armies/caravans, automatic opposition
+  war, offscreen conquest/casualties, and mass background simulation are rejected rather than
+  missing.
 - Stage moves in **both directions** now. It climbs on the reading and falls only on a clear
   shortfall, one rung per reckoning, with Camp an absolute floor. A city that subsides is the
   system working; a city that subsides while it is inside its 20% band is a bug worth filing.
-  The withered overlay is still designed and not yet built.
+  The heart's color-independent withered/famished signs are live and tested in steps 55v7-55v8;
+  a deprivation sign appearing on an ordinary work is a bug.
 - **What time does and does not move.** Everything on the world clock moves whether you are
   there or not — crops, yards, scaffolds, wear from hard *running*, osmosis, dissent, the slide
   toward the supported level. Every one of them is gated on **labour**, so a pass asserting

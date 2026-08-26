@@ -5,6 +5,26 @@ using XRL.World.Parts;
 
 namespace ThousandAndFirst
 {
+	/// <summary>Read-only identity and CAS range exported by an exact reservation before commit.
+	/// Callers may persist these facts as their own durable transaction receipt; no live part or
+	/// rollback object belongs in save state.</summary>
+	internal readonly struct KingdomWaterDebitLeg
+	{
+		internal readonly GameObject Owner;
+		internal readonly int BeforeVolume;
+		internal readonly int AfterVolume;
+		internal readonly int MaxVolume;
+
+		internal KingdomWaterDebitLeg(GameObject owner, int beforeVolume, int afterVolume,
+			int maxVolume)
+		{
+			Owner = owner;
+			BeforeVolume = beforeVolume;
+			AfterVolume = afterVolume;
+			MaxVolume = maxVolume;
+		}
+	}
+
 	/// <summary>
 	/// An all-or-nothing debit bound to the exact dedicated vessels measured by one
 	/// <see cref="KingdomSurvey"/>. Reservation is read-only. Commit validates every vessel before
@@ -19,6 +39,8 @@ namespace ThousandAndFirst
 			internal LiquidVolume Vessel;
 			internal GameObject Owner;
 			internal Zone OriginalZone;
+			internal GameObject Carrier;
+			internal bool Dedicated;
 			internal int OriginalVolume;
 			internal int OriginalMaxVolume;
 			internal int Allocation;
@@ -78,7 +100,59 @@ namespace ThousandAndFirst
 			Fault = KingdomWaterDebitFault.None;
 		}
 
+		/// <summary>Reserves exact pure water from loose vessels directly carried by one actor.
+		/// Nested containers, sealed vessels, stores on the ground, and cached surveys are excluded.</summary>
+		internal static KingdomWaterDebit ReserveCarried(GameObject carrier, int amount)
+		{
+			KingdomSurvey survey = new KingdomSurvey();
+			if (!GameObject.Validate(carrier) || carrier.Inventory == null
+				|| carrier.Inventory.Objects == null)
+				return new KingdomWaterDebit(survey, amount).FailReservation(
+					KingdomWaterDebitFault.InvalidSurvey, "The carrier has no exact inventory.");
+			for (int i = 0; i < carrier.Inventory.Objects.Count; i++)
+			{
+				GameObject owner = carrier.Inventory.Objects[i];
+				LiquidVolume vessel = owner?.GetPart<LiquidVolume>();
+				if (!GameObject.Validate(owner) || vessel == null || vessel.Sealed) continue;
+				survey.Stores.Add(vessel);
+				survey.StoredWater += vessel.Volume;
+				survey.StorageCapacity += Math.Max(0, vessel.MaxVolume);
+				survey.StorageSpace += Math.Max(0, vessel.MaxVolume - vessel.Volume);
+			}
+			return Reserve(survey, amount, carrier);
+		}
+
+		/// <summary>Copies exact vessel identities and before/after ranges while reservation is
+		/// still pristine. Export is read-only and bounded by requested drams: every retained entry
+		/// spends at least one.</summary>
+		internal bool TryDescribe(out KingdomWaterDebitLeg[] legs)
+		{
+			legs = null;
+			if (State != KingdomWaterDebitState.Reserved || Amount <= 0 || Entries.Count <= 0
+				|| Entries.Count > Amount) return false;
+			KingdomWaterDebitLeg[] copy = new KingdomWaterDebitLeg[Entries.Count];
+			int total = 0;
+			for (int i = 0; i < Entries.Count; i++)
+			{
+				Entry entry = Entries[i];
+				if (!BindingMatches(entry) || entry.Allocation <= 0
+					|| entry.Allocation > entry.OriginalVolume) return false;
+				copy[i] = new KingdomWaterDebitLeg(entry.Owner, entry.OriginalVolume,
+					entry.OriginalVolume - entry.Allocation, entry.OriginalMaxVolume);
+				total += entry.Allocation;
+			}
+			if (total != Amount) return false;
+			legs = copy;
+			return true;
+		}
+
 		internal static KingdomWaterDebit Reserve(KingdomSurvey Survey, int Amount)
+		{
+			return Reserve(Survey, Amount, null);
+		}
+
+		private static KingdomWaterDebit Reserve(KingdomSurvey Survey, int Amount,
+			GameObject Carrier)
 		{
 			KingdomWaterDebit debit = new KingdomWaterDebit(Survey, Amount);
 			if (Survey == null)
@@ -111,7 +185,9 @@ namespace ThousandAndFirst
 					owners[i] = owner;
 					volumes[i] = vessel.Volume;
 					pure[i] = KingdomLiquids.HasFreshWater(vessel);
-					dedicated[i] = OwnsVessel(owner, vessel) && owner.GetIntProperty("KingdomStores") == 1;
+					dedicated[i] = OwnsVessel(owner, vessel) && (Carrier == null
+						? owner.GetIntProperty("KingdomStores") == 1
+						: DirectlyCarried(Carrier, owner) && !vessel.Sealed);
 				}
 
 				int[] allocations;
@@ -131,7 +207,9 @@ namespace ThousandAndFirst
 					}
 					LiquidVolume vessel = vessels[i];
 					GameObject owner = owners[i];
-					if (!OwnsVessel(owner, vessel) || owner.GetIntProperty("KingdomStores") != 1 ||
+					if (!OwnsVessel(owner, vessel)
+						|| (Carrier == null ? owner.GetIntProperty("KingdomStores") != 1
+							: !DirectlyCarried(Carrier, owner) || vessel.Sealed) ||
 						vessel.Volume != volumes[i] || !KingdomLiquids.HasFreshWater(vessel) || vessel.MaxVolume < 0)
 					{
 						return debit.FailReservation(KingdomWaterDebitFault.VesselChanged,
@@ -141,7 +219,8 @@ namespace ThousandAndFirst
 					{
 						Vessel = vessel,
 						Owner = owner,
-						OriginalZone = owner.CurrentZone,
+						OriginalZone = Carrier == null ? owner.CurrentZone : Carrier.CurrentZone,
+						Carrier = Carrier, Dedicated = Carrier == null,
 						OriginalVolume = vessel.Volume,
 						OriginalMaxVolume = vessel.MaxVolume,
 						Allocation = allocations[i],
@@ -262,6 +341,7 @@ namespace ThousandAndFirst
 				}
 				Survey.StoredWater = newStored;
 				Survey.StorageSpace = newSpace;
+				SynchronizeCachedRows();
 				State = KingdomWaterDebitState.Committed;
 				SetCommittedClaim();
 				Fault = KingdomWaterDebitFault.None;
@@ -286,6 +366,7 @@ namespace ThousandAndFirst
 			}
 			finally
 			{
+				if (State == KingdomWaterDebitState.Failed) ReconcilePhysicalRows();
 				Operating = false;
 			}
 		}
@@ -359,6 +440,7 @@ namespace ThousandAndFirst
 				}
 				Survey.StoredWater = newStored;
 				Survey.StorageSpace = newSpace;
+				SynchronizeCachedRows();
 				SetCleanClaim();
 				if (!notificationClean)
 				{
@@ -391,6 +473,7 @@ namespace ThousandAndFirst
 				{
 					Survey.StoredWater = newStored;
 					Survey.StorageSpace = newSpace;
+					SynchronizeCachedRows();
 				}
 				if (exact)
 				{
@@ -405,8 +488,21 @@ namespace ThousandAndFirst
 			}
 			finally
 			{
+				if (State == KingdomWaterDebitState.Failed) ReconcilePhysicalRows();
 				Operating = false;
 			}
+		}
+
+		private void SynchronizeCachedRows()
+		{
+			for (int i = 0; i < Entries.Count; i++)
+				Survey.SynchronizeReceiptObject(Entries[i].Owner);
+		}
+
+		private void ReconcilePhysicalRows()
+		{
+			for (int i = 0; i < Entries.Count; i++)
+				Survey.ObserveChanged(Entries[i].Owner);
 		}
 
 		private bool AllStillReserved()
@@ -422,7 +518,7 @@ namespace ThousandAndFirst
 					IsDedicated(entry),
 					OwnsVessel(entry.Owner, entry.Vessel),
 					entry.Vessel != null && entry.Vessel.MaxVolume == entry.OriginalMaxVolume,
-					entry.Owner != null && ReferenceEquals(entry.Owner.CurrentZone, entry.OriginalZone),
+					LocationMatches(entry),
 					entry.Vessel != null && ReferenceEquals(entry.Vessel.ComponentLiquids,
 						entry.ComponentIdentity) && ComponentsMatch(entry.Vessel.ComponentLiquids,
 						entry.OriginalComponents)))
@@ -449,7 +545,7 @@ namespace ThousandAndFirst
 					IsDedicated(entry),
 					OwnsVessel(entry.Owner, entry.Vessel),
 					entry.Vessel != null && entry.Vessel.MaxVolume == entry.OriginalMaxVolume,
-					entry.Owner != null && ReferenceEquals(entry.Owner.CurrentZone, entry.OriginalZone),
+					LocationMatches(entry),
 					entry.Vessel != null && ReferenceEquals(entry.Vessel.ComponentLiquids,
 						entry.ComponentIdentity) && CompositionMatches(entry, volume)))
 				{
@@ -677,9 +773,8 @@ namespace ThousandAndFirst
 		{
 			try
 			{
-				return Entry != null && OwnsVessel(Entry.Owner, Entry.Vessel) &&
-					ReferenceEquals(Entry.Owner.CurrentZone, Entry.OriginalZone) &&
-					Entry.Owner.GetIntProperty("KingdomStores") == 1 &&
+				return Entry != null && OwnsVessel(Entry.Owner, Entry.Vessel)
+					&& LocationMatches(Entry) && IsDedicated(Entry) &&
 					Entry.Vessel.MaxVolume == Entry.OriginalMaxVolume &&
 					Entry.ComponentIdentity != null &&
 					ReferenceEquals(Entry.Vessel.ComponentLiquids, Entry.ComponentIdentity);
@@ -721,7 +816,27 @@ namespace ThousandAndFirst
 
 		private static bool IsDedicated(Entry Entry)
 		{
-			return Entry != null && Entry.Owner != null && Entry.Owner.GetIntProperty("KingdomStores") == 1;
+			return Entry != null && Entry.Owner != null && (Entry.Dedicated
+				? Entry.Owner.GetIntProperty("KingdomStores") == 1
+				: DirectlyCarried(Entry.Carrier, Entry.Owner)
+					&& Entry.Vessel != null && !Entry.Vessel.Sealed);
+		}
+
+		private static bool LocationMatches(Entry entry)
+		{
+			return entry != null && (entry.Dedicated
+				? entry.Owner != null && ReferenceEquals(entry.Owner.CurrentZone, entry.OriginalZone)
+				: GameObject.Validate(entry.Carrier)
+					&& ReferenceEquals(entry.Carrier.CurrentZone, entry.OriginalZone)
+					&& DirectlyCarried(entry.Carrier, entry.Owner));
+		}
+
+		private static bool DirectlyCarried(GameObject carrier, GameObject item)
+		{
+			return GameObject.Validate(carrier) && GameObject.Validate(item)
+				&& carrier.Inventory != null && carrier.Inventory.Objects != null
+				&& ReferenceEquals(item.InInventory, carrier)
+				&& carrier.Inventory.Objects.Contains(item);
 		}
 
 		private static bool SeenEarlier(LiquidVolume[] Vessels, int Count, LiquidVolume Candidate)

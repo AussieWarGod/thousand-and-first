@@ -78,6 +78,43 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void CarriedSkillsEnterTheExistingCapabilityThresholdWithoutChangingStats()
+		{
+			KingdomCrewRules.WorkerSkills practiced = new KingdomCrewRules.WorkerSkills(
+				Tinkering: true, Harvestry: false, Customs: false, Physic: false,
+				Wayfaring: false);
+			Capability tinker = new Capability(8, 12, false,
+				default(KingdomIdentityAffinityRules.WorkerIdentity), practiced);
+			Capability willing = Cap(18, 18);
+			Assert.AreEqual(1, tinker.ValueOf(KingdomCrewRules.KindTinkering));
+			Assert.AreEqual(0, willing.ValueOf(KingdomCrewRules.KindTinkering));
+			Assert.AreEqual(12, tinker.ValueOf(KingdomCrewRules.KindIntelligence));
+
+			Outcome[] outcome = KingdomCrewRules.AssignCrew(new[] { willing, tinker },
+				new[] { new Demand(1, false, KingdomCrewRules.KindTinkering, 1, "craft") });
+			Assert.AreEqual(1, outcome[0].SettlerIndices[0]);
+			Assert.AreEqual(1, outcome[0].BestCapability);
+		}
+
+		[Test]
+		public void ShippedNamedSettlersCarryTheSkillsTheirWorksAskFor()
+		{
+			string objects = TestMain.ReadRepositoryText("ObjectBlueprints.xml");
+			StringAssert.Contains("Name=\"r_KingdomSettlerTinker\"", objects);
+			StringAssert.Contains("Name=\"Tinkering_Tinker1\"", objects);
+			StringAssert.Contains("Name=\"CookingAndGathering_Harvestry\"", objects);
+			StringAssert.Contains("Name=\"Customs_Tactful\"", objects);
+			StringAssert.Contains("Name=\"r_KingdomSettlerPhysicker\"", objects);
+			StringAssert.Contains("Name=\"Physic_Nostrums\"", objects);
+
+			string catalogue = TestMain.ReadRepositoryText("KingdomBuildings.xml");
+			StringAssert.Contains("CrewNeeds=\"skill.tinkering:1\"", catalogue);
+			StringAssert.Contains("CrewNeeds=\"skill.harvestry:1\"", catalogue);
+			StringAssert.Contains("CrewNeeds=\"skill.customs:1\"", catalogue);
+			StringAssert.Contains("CrewNeeds=\"skill.physic:1\"", catalogue);
+		}
+
+		[Test]
 		public void UnknownCapabilityKindReadsZero()
 		{
 			Capability c = Cap(30, 30);
@@ -300,9 +337,15 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void KnownKindsListsBothInAssignWorksPriorityOrder()
+		public void KnownKindsListsAttributesThenSkillsInAssignWorksPriorityOrder()
 		{
-			CollectionAssert.AreEqual(new string[] { KingdomCrewRules.KindStrength, KingdomCrewRules.KindIntelligence }, KingdomCrewRules.KnownKinds);
+			CollectionAssert.AreEqual(new string[]
+			{
+				KingdomCrewRules.KindStrength, KingdomCrewRules.KindIntelligence,
+				KingdomCrewRules.KindTinkering, KingdomCrewRules.KindHarvestry,
+				KingdomCrewRules.KindCustoms, KingdomCrewRules.KindPhysic,
+				KingdomCrewRules.KindWayfaring
+			}, KingdomCrewRules.KnownKinds);
 		}
 	}
 }

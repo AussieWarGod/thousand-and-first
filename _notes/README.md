@@ -1,0 +1,77 @@
+# _notes — private working knowledge base
+
+**Gitignored. Not published.** This is the reasoning behind the repo: research digests, ruling
+records, current acceptance ledgers, historical attacks, and session handoffs. Public-facing docs
+live in the repo root and `docs/`.
+
+## Freshness and authority
+
+Read current status in this order:
+
+1. `../README.md` and `../docs/STATUS.md` — public scope, exact automated evidence, and open gates.
+2. `../VISION.md` § “Canonical v1 polity scope matrix” — publishable `SHIP` /
+   `AUTHOR-DEFERRED` / `REJECTED` disposition; `V1-POLITY-SCOPE.md` is its expanded private
+   evidence/reopening worksheet.
+3. `BRIEF-IMPLEMENTATION-AUDIT.md` — current brief-to-runtime acceptance matrix.
+4. `CONTRACT-RUNTIME-RECONCILIATION-2026-08-25.md` — current high-risk runtime closure ledger.
+5. `ARCHITECTURE-POLISH-CONTRACT.md` and `../TESTING.md` — visual/building law and executable
+   native acceptance protocol.
+6. `COORDINATION.md` — only the present work lane and handoff.
+
+Files explicitly labelled **historical**, **research**, **review**, **draft**, **plan**, or
+**superseded** retain the claims and line references that were true when written. They are attack
+material, not current implementation status. Never repair history by rewriting its original
+finding; add a current disposition to one of the ledgers above and link it. Undated status language
+in an authoritative/current document is a defect.
+
+## Contents
+
+| File | What it is |
+|---|---|
+| `COORDINATION.md` | **Read first.** Claude ↔ Codex handoff: lanes, work in flight, open questions, recent exchanges |
+| `BUILDING-CATALOGUE-BRIEF.md` | **The ruling record.** Author-approved design law for plots, materials, the catalogue, and every addendum since (layers/sockets, typed plots, the upgrade trigger law, the QoL vocabulary, housing binds, the closeness ladder and fault-line ceiling, creed conversion, reach, the material chain) plus the BACKLOG. Where it and an older note disagree, it wins. |
+| `ARCHITECTURE-POLISH-CONTRACT.md` | Current authored-lot, architecture, material, furnishing, visual-state, gallery, and native acceptance law. |
+| `V1-POLITY-SCOPE.md` | Expanded evidence/reopening worksheet for `../VISION.md`'s canonical public polity matrix. Every prior-kingdom, successor, rival, war, party, route, clash, and food/relationship idea retains an explicit disposition and owner. |
+| `BRIEF-IMPLEMENTATION-AUDIT.md` | Current player-visible promise-to-code matrix. A code/content repair remains separate from native/human acceptance. |
+| `CONTRACT-RUNTIME-RECONCILIATION-2026-08-25.md` | Current high-risk foundation/runtime gap ledger and remaining evidence gates. |
+| `LIVING-CITY-ARCHITECTURE.md` | Adopted city-state, boundedness, physical-authority, happening, logistics, and extension architecture. |
+| `CODEX-VALIDATION.md` | Codex's audit ledger and the pinned engine provenance (DLL hash, build ID) |
+| `SESSION-LOG.md` | Blow-by-blow rundown of what was done, in order, with checkpoints to verify |
+| `DECISIONS.md` | The decision ledger: every significant call, why, and what would reverse it |
+| `QUESTION-BACKLOG.md` | Decisions still needing human taste/account authority plus historical provisionals; current engineering state belongs in the acceptance ledgers. |
+| `RESEARCH.md` | Historical early research digest; useful hypotheses and engine notes, not current status or final comparable authority. |
+| `RESEARCH-RERUN.md` and `COMPARABLES-RERUN.md` | Later corrections and rerun evidence. Read these before relying on an early comparable claim. |
+| `POLITY-RECONCILIATION-FINAL-R3.md` and `POLITY-EXPANSION-RECONCILIATION.md` | Polity discovery/reconciliation inputs; `V1-POLITY-SCOPE.md` owns the current implementation disposition. |
+| `FOOD-WATER-FINAL-REVIEW.md` | Historical research disposition; later author Addendum 11, current API/TESTING, and the brief audit own the shipped food/water mechanism. |
+| `AGENT-PLAYBOOK.md` | Every investigation run, with prompts to repeat or extend them |
+| `EXPOSURE.md` | What is public vs private, and why |
+| `design/thousand-and-first.html` | The full design document (also published as a private artifact) |
+| `design/skeleton.md` | The original pre-research design skeleton |
+
+## For a reviewing model
+
+Start with `COORDINATION.md` — it tells you what the other agent is touching right now, so you
+don't spend a pass rediscovering a fix that landed an hour ago. Then `SESSION-LOG.md` (what
+happened), `DECISIONS.md` (why), then the code.
+`RESEARCH.md` is the early digest. Read its correction header, then the named reruns and current
+scope/acceptance ledgers before treating a finding as authoritative. `AGENT-PLAYBOOK.md` lets you
+re-run or extend an investigation rather than taking its conclusions on trust.
+
+**The single most important evidence boundary:** portable and installed-assembly compilation,
+pure/source tests, generators, and static architecture checks do not sign native behavior or human
+appearance. The current working tree has no complete current-revision native protocol receipt.
+An earlier revision passed the narrow loader/persistence smoke recorded in `../TESTING.md`; that
+receipt is historical only. `../docs/STATUS.md` owns the exact latest command results and unsigned
+gates.
+
+## Environment
+
+- **Live mod (the game loads this):** `C:\Users\Reegan\AppData\LocalLow\Freehold Games\CavesOfQud\Mods\ThousandAndFirst`
+- **WSL clone (editing):** `/home/r/work/thousand-and-first` — not auto-synced. Use the verified
+  `Tools/stage.sh deploy` workflow to update the live Mods copy; `git push` updates only the public
+  remote and never deploys into Qud.
+- **Public repo:** https://github.com/AussieWarGod/thousand-and-first
+- **Decompiled game source (ground truth):** `/home/r/coq/qud_helper/game_base/decompiled/2.0.211.51-ilspy9.1/` — the durable archive (5,437 files; `PROVENANCE.md` inside records the DLL SHA and decompiler). **Cite this path, not a scratchpad copy.** The sibling `6000.0.41.4645959` tree is older (5,368 files) and must not be cited for 2.0.211.51 claims.
+- **Game data XML:** `F:\SteamLibrary\steamapps\common\Caves of Qud\CoQ_Data\StreamingAssets\Base`
+- **Session transcript:** `C:\Users\Reegan\.claude\projects\C--Users-Reegan\3843e46d-4eb8-42bc-8816-206a195ad8f5.jsonl` (~14 MB)
+- **Build gate:** `DevTests/build.ps1` · **Tests:** `DevTests/test.ps1` (both Windows-side; they need the game's Managed DLLs)

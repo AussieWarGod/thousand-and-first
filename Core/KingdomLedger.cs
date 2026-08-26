@@ -73,6 +73,11 @@ namespace ThousandAndFirst
 		/// </summary>
 		public List<string> BrinkLines = new List<string>();
 
+		/// <summary>Bounded, must-tell homecomings from named commissions. Separate from the
+		/// twelve ordinary notes so routine housekeeping cannot crowd a resident's return out of
+		/// the report the Charter promised.</summary>
+		public List<string> ExpeditionLines = new List<string>();
+
 #if !TAF_TESTS
 		public bool WantFieldReflection => false;
 
@@ -98,6 +103,10 @@ namespace ThousandAndFirst
 			{
 				BrinkLines = new List<string>();
 			}
+			if (ExpeditionLines == null)
+			{
+				ExpeditionLines = new List<string>();
+			}
 		}
 
 		public bool Any
@@ -106,7 +115,7 @@ namespace ThousandAndFirst
 			{
 				return Fetched > 0 || UpkeepDrawn > 0 || ArrivalCost > 0 || Delivered > 0 || Plundered > 0 || Arrivals > 0 || Departures > 0
 					|| Harvested > 0 || Foraged > 0 || RationsDrawn > 0 || HarvestLost > 0 || Milled > 0
-					|| Notes.Count > 0 || BrinkLines.Count > 0;
+					|| Notes.Count > 0 || BrinkLines.Count > 0 || ExpeditionLines.Count > 0;
 			}
 		}
 
@@ -126,6 +135,7 @@ namespace ThousandAndFirst
 			Departures = 0;
 			Notes.Clear();
 			BrinkLines.Clear();
+			ExpeditionLines.Clear();
 		}
 
 		public void Note(string Line)
@@ -133,6 +143,17 @@ namespace ThousandAndFirst
 			if (!string.IsNullOrEmpty(Line) && Notes.Count < 12)
 			{
 				Notes.Add(Line);
+			}
+		}
+
+		/// <summary>At most the realm-wide open-job cap can resolve before a founder reads. Exact
+		/// text dedupes a retry cut between homecoming publication and job eviction.</summary>
+		public void NoteExpedition(string Line)
+		{
+			if (!string.IsNullOrEmpty(Line) && !ExpeditionLines.Contains(Line)
+				&& ExpeditionLines.Count < Simulation.City.KingdomJobRules.MaxOpenJobs)
+			{
+				ExpeditionLines.Add(Line);
 			}
 		}
 
@@ -176,7 +197,7 @@ namespace ThousandAndFirst
 		public string Digest(string Name, int Days)
 		{
 			StringBuilder sb = new StringBuilder();
-			sb.Append("{{C|").Append(Name).Append("}}, while you were away");
+			sb.Append("{{C|").Append(KingdomPresentation.Rich(Name)).Append("}}, while you were away");
 			if (Days > 0)
 			{
 				sb.Append(" (").Append(Days).Append((Days == 1) ? " day" : " days").Append(" accounted)");
@@ -188,6 +209,10 @@ namespace ThousandAndFirst
 			for (int i = 0; i < BrinkLines.Count; i++)
 			{
 				sb.Append("\n").Append(BrinkLines[i]);
+			}
+			for (int i = 0; i < ExpeditionLines.Count; i++)
+			{
+				sb.Append("\n").Append(ExpeditionLines[i]);
 			}
 			for (int i = 0; i < Notes.Count; i++)
 			{

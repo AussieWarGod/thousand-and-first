@@ -43,14 +43,15 @@ namespace ThousandAndFirst.Simulation.City
 		/// </summary>
 		/// <param name="City">The published reading.</param>
 		/// <param name="ZoneName">Turns a zone id into ground a founder recognises, or null.</param>
-		internal static string Stores(KingdomCityReading City, Func<string, string> ZoneName)
+		internal static string Stores(KingdomCityReading City, Func<string, string> ZoneName,
+			Func<string, string> PresentName = null)
 		{
 			StringBuilder builder = new StringBuilder();
 			if (City == null)
 			{
 				return "There is no book to read.";
 			}
-			builder.Append("{{C|").Append(City.CityName).Append("}} holds:")
+			builder.Append("{{C|").Append(Shown(City.CityName, PresentName)).Append("}} holds:")
 				.Append("\n  Water      ").Append(Pair(City.Water))
 				.Append("\n  Food       ").Append(Pair(City.Food))
 				.Append("\n  Materials  ").Append(Pair(City.Materials));
@@ -121,7 +122,8 @@ namespace ThousandAndFirst.Simulation.City
 		/// Every work in the CITY, not in the zone: what it is, how worn, who is on it, and what
 		/// it is waiting on.
 		/// </summary>
-		internal static string Works(KingdomCityReading City, Func<string, string> WorkName, Func<string, string> ZoneName)
+		internal static string Works(KingdomCityReading City, Func<string, string> WorkName,
+			Func<string, string> ZoneName, Func<string, string> PresentName = null)
 		{
 			if (City == null || City.WorkCount <= 0)
 			{
@@ -137,7 +139,8 @@ namespace ThousandAndFirst.Simulation.City
 				}
 			}
 			StringBuilder builder = new StringBuilder();
-			builder.Append("{{C|").Append(City.CityName).Append("}} keeps ").Append(City.WorkCount)
+			builder.Append("{{C|").Append(Shown(City.CityName, PresentName))
+				.Append("}} keeps ").Append(City.WorkCount)
 				.Append((City.WorkCount == 1) ? " work" : " works")
 				.Append((stopped > 0) ? (", and {{W|" + stopped + " of them " + ((stopped == 1) ? "is" : "are") + " waiting on you}}.") : ", and none of them is waiting on you.");
 			int listed = 0;
@@ -201,6 +204,8 @@ namespace ThousandAndFirst.Simulation.City
 				return (Work.CrewAssigned > 0) ? "Refining." : "Idle.";
 			case KingdomWorkClass.Power:
 				return "Carrying " + Work.Progress + " charge.";
+			case KingdomWorkClass.Construction:
+				return (Work.CrewAssigned > 0) ? "Being raised." : "Idle.";
 			default:
 				return "Standing.";
 			}
@@ -231,7 +236,8 @@ namespace ThousandAndFirst.Simulation.City
 		/// <param name="City">The published reading.</param>
 		/// <param name="OfficeTitle">The settlement's title for its office, or empty.</param>
 		/// <param name="OfficeHolder">Who holds it, with their epithet, or empty.</param>
-		internal static string Roll(KingdomCityReading City, string OfficeTitle, string OfficeHolder)
+		internal static string Roll(KingdomCityReading City, string OfficeTitle,
+			string OfficeHolder, Func<string, string> PresentName = null)
 		{
 			if (City == null || City.ResidentCount <= 0)
 			{
@@ -239,6 +245,7 @@ namespace ThousandAndFirst.Simulation.City
 			}
 			int living = 0;
 			int abroad = 0;
+			int expedition = 0;
 			int dead = 0;
 			int[] byDay = new int[7];
 			for (int i = 0; i < City.ResidentCount; i++)
@@ -250,6 +257,9 @@ namespace ThousandAndFirst.Simulation.City
 				}
 				switch (row.Standing)
 				{
+				case KingdomRollStanding.Expedition:
+					expedition++;
+					continue;
 				case KingdomRollStanding.Abroad:
 					abroad++;
 					continue;
@@ -265,14 +275,16 @@ namespace ThousandAndFirst.Simulation.City
 				}
 			}
 			StringBuilder builder = new StringBuilder();
-			builder.Append("{{C|").Append(City.CityName).Append("}}: ").Append(living)
+			builder.Append("{{C|").Append(Shown(City.CityName, PresentName))
+				.Append("}}: ").Append(living)
 				.Append((living == 1) ? " lives here" : " live here")
+				.Append((expedition > 0) ? (", " + expedition + " on expedition") : "")
 				.Append((abroad > 0) ? (", " + abroad + " away with you") : "")
 				.Append((dead > 0) ? (", " + dead + " buried") : "")
 				.Append(".");
 			if (!string.IsNullOrEmpty(OfficeHolder))
 			{
-				builder.Append("\n\n{{W|").Append(OfficeHolder).Append("}}")
+				builder.Append("\n\n{{W|").Append(Shown(OfficeHolder, PresentName)).Append("}}")
 					.Append(string.IsNullOrEmpty(OfficeTitle) ? "" : (", " + OfficeTitle)).Append(".");
 			}
 			string spread = Spread(byDay);
@@ -281,21 +293,34 @@ namespace ThousandAndFirst.Simulation.City
 				builder.Append("\n\nBy day: ").Append(spread).Append(".");
 			}
 			int named = 0;
+			int namedLiving = 0;
 			for (int i = 0; i < City.ResidentCount && named < MaxNamesListed; i++)
 			{
 				KingdomResidentReading row;
-				if (!City.TryResident(i, out row) || row.Standing != KingdomRollStanding.Resident || string.IsNullOrEmpty(row.Name))
+				if (!City.TryResident(i, out row)
+					|| (row.Standing != KingdomRollStanding.Resident
+						&& row.Standing != KingdomRollStanding.Expedition)
+					|| string.IsNullOrEmpty(row.Name))
 				{
 					continue;
 				}
 				named++;
-				builder.Append("\n  ").Append(row.Name).Append(" {{K|— ").Append(Where(row.Day)).Append("}}");
+				if (row.Standing == KingdomRollStanding.Resident) namedLiving++;
+				builder.Append("\n  ").Append(Shown(row.Name, PresentName)).Append(" {{K|— ")
+					.Append(row.Standing == KingdomRollStanding.Expedition
+						? "on expedition" : Where(row.Day)).Append("}}");
 			}
-			if (living > named)
+			if (living > namedLiving)
 			{
-				builder.Append("\n  {{K|and ").Append(living - named).Append(" more}}");
+				builder.Append("\n  {{K|and ").Append(living - namedLiving).Append(" more}}");
 			}
 			return builder.ToString();
+		}
+
+		/// <summary>Optional runtime-only rich projection; pure tests leave names unchanged.</summary>
+		private static string Shown(string plain, Func<string, string> present)
+		{
+			return present == null ? (plain ?? "") : (present(plain) ?? "");
 		}
 
 		/// <summary>Where a day shape puts somebody, in the founder's words.</summary>

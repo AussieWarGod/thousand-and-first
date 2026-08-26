@@ -83,6 +83,50 @@ namespace ThousandAndFirst
 		Lost = 5
 	}
 
+	/// <summary>Durable pattern-book lane inside one CharterDelivery receipt.</summary>
+	public enum KingdomTradePatternState : byte
+	{
+		None = 0,
+		NoCandidates = 1,
+		ChanceMiss = 2,
+		Offered = 3,
+		ChoiceIntent = 4,
+		Declined = 5,
+		Selected = 6,
+		RosterIntent = 7,
+		Learned = 8,
+		AlreadyKnown = 9,
+		Conflict = 10
+	}
+
+	/// <summary>One exact catalogue row frozen before a caravan mutates anything.</summary>
+	[Serializable]
+	public sealed class KingdomTradePatternDesign
+	{
+		public string BuildingKey;
+		public string LearnName;
+		public string Label;
+	}
+
+	/// <summary>
+	/// Optional pattern-book work owned by its CharterDelivery operation. The offer, choice,
+	/// knowledge CAS, and both external sinks have no parallel GameState authority.
+	/// </summary>
+	[Serializable]
+	public sealed class KingdomTradePatternReceipt
+	{
+		public KingdomTradePatternState State;
+		public List<KingdomTradePatternDesign> Offers = new List<KingdomTradePatternDesign>();
+		public int SelectedIndex = -1;
+		public string RosterBefore;
+		public string RosterAfter;
+		public string Chronicle;
+		public KingdomTradeSinkState ChronicleState = KingdomTradeSinkState.Skipped;
+		public string Message;
+		public KingdomTradeSinkState MessageState = KingdomTradeSinkState.Skipped;
+		public string Fault;
+	}
+
 	public enum KingdomTradeManifestStatus : byte
 	{
 		None = 0,
@@ -253,6 +297,7 @@ namespace ThousandAndFirst
 		public KingdomTradePhysicalState RetainedState;
 		public KingdomTradeStandingCas Standing;
 		public KingdomTradeOutbox Outbox;
+		public KingdomTradePatternReceipt Pattern;
 		public string Fault;
 
 	}
@@ -443,7 +488,8 @@ namespace ThousandAndFirst
 	public static class KingdomTradeCodec
 	{
 		public const int Magic = 0x54414654;
-		public const int CurrentWireVersion = 3;
+		public const int PriorWireVersion = 3;
+		public const int CurrentWireVersion = 4;
 		public const int MaxEnvelopeBytes = 1024 * 1024;
 		public const int MaxStringBytes = 65536;
 		private static readonly UTF8Encoding StrictUtf8 = new UTF8Encoding(false, true);
@@ -502,6 +548,8 @@ namespace ThousandAndFirst
 				if (payload.Length != length) throw new EndOfStreamException("Truncated Trade payload.");
 				if (wire == 1)
 					throw new InvalidDataException("Unsafe pre-release Trade wire v1 migration refused.");
+				if (wire == PriorWireVersion)
+					return DecodePayloadV3(payload);
 				if (wire != CurrentWireVersion)
 				{
 					if (wire <= 0) throw new InvalidDataException("Invalid Trade wire version.");
@@ -562,6 +610,91 @@ namespace ThousandAndFirst
 			}
 		}
 
+		/// <summary>Frozen wire-v3 payload writer used only to authenticate migration evidence.</summary>
+		internal static byte[] EncodePayloadV3ForMigration(KingdomTradeBook Book)
+		{
+			if (Book == null) throw new ArgumentNullException(nameof(Book));
+			using (MemoryStream stream = new MemoryStream())
+			using (BinaryWriter writer = new BinaryWriter(stream))
+			{
+				writer.Write(Book.FormatVersion);
+				writer.Write((byte)Book.SchemaState);
+				WriteString(writer, Book.SchemaFault);
+				writer.Write(Book.LegacyMigrated);
+				writer.Write(Book.LegacyRejected);
+				WriteString(writer, Book.RealmId);
+				writer.Write(Book.IdentityBound);
+				WriteStringList(writer, Book.SettlementIds, KingdomTradeRules.MaxSettlementIds);
+				writer.Write((byte)Book.OptionState);
+				writer.Write(Book.OptionObservedTick);
+				writer.Write(Book.OptionEpoch);
+				writer.Write(Book.RestampPending);
+				writer.Write(Book.NextCharterSequence);
+				writer.Write(Book.NextOperationSequence);
+				writer.Write(Book.RetiredThrough);
+				WriteList(writer, Book.Charters, KingdomTradeRules.MaxCharters, WriteCharter);
+				WriteNullable(writer, Book.Manifest, WriteManifest);
+				WriteNullable(writer, Book.OpenOperation, WriteOperationV3);
+				WriteNullable(writer, Book.PendingRetirement, WriteProof);
+				WriteList(writer, Book.RecentProofs, KingdomTradeRules.MaxRecentProofs, WriteProof);
+				WriteList(writer, Book.CompactedProofs, KingdomTradeRules.MaxCompactedProofs,
+					WriteProofCompaction);
+				WriteString(writer, Book.ActiveProjectionId);
+				WriteString(writer, Book.ActiveProjectionObjectId);
+				WriteList(writer, Book.Projections, KingdomTradeRules.MaxProjectionRows, WriteProjection);
+				writer.Write(Book.RetainedEscrowDrams);
+				writer.Write(Book.UnattributedArchivedEscrowDrams);
+				WriteList(writer, Book.Archives, KingdomTradeRules.MaxArchives, WriteArchive);
+				WriteList(writer, Book.Incidents, KingdomTradeRules.MaxIncidents, WriteIncident);
+				writer.Flush();
+				if (stream.Length > MaxEnvelopeBytes - 12)
+					throw new InvalidDataException("Trade v3 payload exceeds hard bound.");
+				return stream.ToArray();
+			}
+		}
+
+#if TAF_TESTS
+		/// <summary>Fixture-only exact prior writer; production saves always use current wire.</summary>
+		public static byte[] EncodeEnvelopeV3Fixture(KingdomTradeBook Book)
+		{
+			byte[] payload = EncodePayloadV3ForMigration(Book);
+			using (MemoryStream stream = new MemoryStream(12 + payload.Length))
+			using (BinaryWriter writer = new BinaryWriter(stream))
+			{
+				writer.Write(Magic); writer.Write(PriorWireVersion); writer.Write(payload.Length);
+				writer.Write(payload, 0, payload.Length);
+				return stream.ToArray();
+			}
+		}
+
+		/// <summary>Fixture-only current nested receipt framing for hostile-bound tests.</summary>
+		public static byte[] EncodePatternFixture(KingdomTradePatternReceipt Receipt)
+		{
+			using (MemoryStream stream = new MemoryStream())
+			using (BinaryWriter writer = new BinaryWriter(stream))
+			{
+				WritePattern(writer, Receipt);
+				writer.Flush();
+				return stream.ToArray();
+			}
+		}
+
+		/// <summary>Fixture-only current nested receipt decoder; trailing bytes are corrupt.</summary>
+		public static KingdomTradePatternReceipt DecodePatternFixture(byte[] Payload)
+		{
+			if (Payload == null || Payload.Length > MaxEnvelopeBytes - 12)
+				throw new InvalidDataException("Pattern fixture length is invalid.");
+			using (MemoryStream stream = new MemoryStream(Payload, false))
+			using (BinaryReader reader = new BinaryReader(stream))
+			{
+				KingdomTradePatternReceipt receipt = ReadPattern(reader);
+				if (stream.Position != stream.Length)
+					throw new InvalidDataException("Trailing pattern fixture bytes.");
+				return receipt;
+			}
+		}
+#endif
+
 		private static KingdomTradeBook DecodePayload(byte[] Payload)
 		{
 			using (MemoryStream stream = new MemoryStream(Payload, false))
@@ -600,6 +733,50 @@ namespace ThousandAndFirst
 					Incidents = ReadList(reader, KingdomTradeRules.MaxIncidents, ReadIncident)
 				};
 				if (stream.Position != stream.Length) throw new InvalidDataException("Trailing Trade payload bytes.");
+				return book;
+			}
+		}
+
+		private static KingdomTradeBook DecodePayloadV3(byte[] Payload)
+		{
+			using (MemoryStream stream = new MemoryStream(Payload, false))
+			using (BinaryReader reader = new BinaryReader(stream))
+			{
+				KingdomTradeBook book = new KingdomTradeBook
+				{
+					FormatVersion = reader.ReadInt32(),
+					SchemaState = (KingdomTradeSchemaState)reader.ReadByte(),
+					SchemaFault = ReadString(reader),
+					LegacyMigrated = ReadExactBoolean(reader),
+					LegacyRejected = reader.ReadInt32(),
+					RealmId = ReadString(reader),
+					IdentityBound = ReadExactBoolean(reader),
+					SettlementIds = ReadStringList(reader, KingdomTradeRules.MaxSettlementIds),
+					OptionState = (KingdomTradeOptionState)reader.ReadByte(),
+					OptionObservedTick = reader.ReadInt64(),
+					OptionEpoch = reader.ReadInt64(),
+					RestampPending = ReadExactBoolean(reader),
+					NextCharterSequence = reader.ReadInt64(),
+					NextOperationSequence = reader.ReadInt64(),
+					RetiredThrough = reader.ReadInt64(),
+					Charters = ReadList(reader, KingdomTradeRules.MaxCharters, ReadCharter),
+					Manifest = ReadNullable(reader, ReadManifest),
+					OpenOperation = ReadNullable(reader, ReadOperationV3),
+					PendingRetirement = ReadNullable(reader, ReadProof),
+					RecentProofs = ReadList(reader, KingdomTradeRules.MaxRecentProofs, ReadProof),
+					CompactedProofs = ReadList(reader, KingdomTradeRules.MaxCompactedProofs,
+						ReadProofCompaction),
+					ActiveProjectionId = ReadString(reader),
+					ActiveProjectionObjectId = ReadString(reader),
+					Projections = ReadList(reader, KingdomTradeRules.MaxProjectionRows, ReadProjection),
+					RetainedEscrowDrams = reader.ReadInt64(),
+					UnattributedArchivedEscrowDrams = reader.ReadInt64(),
+					Archives = ReadList(reader, KingdomTradeRules.MaxArchives, ReadArchive),
+					Incidents = ReadList(reader, KingdomTradeRules.MaxIncidents, ReadIncident)
+				};
+				if (stream.Position != stream.Length)
+					throw new InvalidDataException("Trailing Trade wire-v3 payload bytes.");
+				KingdomTradeRules.MigrateWireV3(book);
 				return book;
 			}
 		}
@@ -795,8 +972,52 @@ namespace ThousandAndFirst
 				Quarantined = ReadExactBoolean(r), Fault = ReadString(r) };
 		}
 
+		private static void WritePatternDesign(BinaryWriter w, KingdomTradePatternDesign x)
+		{
+			WriteString(w, x.BuildingKey); WriteString(w, x.LearnName); WriteString(w, x.Label);
+		}
+
+		private static KingdomTradePatternDesign ReadPatternDesign(BinaryReader r)
+		{
+			return new KingdomTradePatternDesign
+			{
+				BuildingKey = ReadString(r), LearnName = ReadString(r), Label = ReadString(r)
+			};
+		}
+
+		private static void WritePattern(BinaryWriter w, KingdomTradePatternReceipt x)
+		{
+			if (!KingdomTradePatternRules.Valid(x))
+				throw new InvalidDataException("Pattern receipt is malformed or exceeds bounds.");
+			w.Write((byte)x.State);
+			WriteList(w, x.Offers, KingdomTradePatternRules.MaxOffers, WritePatternDesign);
+			w.Write(x.SelectedIndex); WriteString(w, x.RosterBefore); WriteString(w, x.RosterAfter);
+			WriteString(w, x.Chronicle); w.Write((byte)x.ChronicleState);
+			WriteString(w, x.Message); w.Write((byte)x.MessageState); WriteString(w, x.Fault);
+		}
+
+		private static KingdomTradePatternReceipt ReadPattern(BinaryReader r)
+		{
+			KingdomTradePatternReceipt receipt = new KingdomTradePatternReceipt
+			{
+				State = (KingdomTradePatternState)r.ReadByte(),
+				Offers = ReadList(r, KingdomTradePatternRules.MaxOffers, ReadPatternDesign),
+				SelectedIndex = r.ReadInt32(), RosterBefore = ReadString(r),
+				RosterAfter = ReadString(r), Chronicle = ReadString(r),
+				ChronicleState = (KingdomTradeSinkState)r.ReadByte(),
+				Message = ReadString(r), MessageState = (KingdomTradeSinkState)r.ReadByte(),
+				Fault = ReadString(r)
+			};
+			if (!KingdomTradePatternRules.Valid(receipt))
+				throw new InvalidDataException("Pattern receipt is malformed or exceeds bounds.");
+			return receipt;
+		}
+
 		private static void WriteOperation(BinaryWriter w, KingdomTradeOperation x)
 		{
+			if (x == null || (x.Kind == KingdomTradeOperationKind.CharterDelivery)
+				!= (x.Pattern != null))
+				throw new InvalidDataException("Trade operation pattern lane does not match its kind.");
 			w.Write(x.Sequence); WriteString(w, x.Id); w.Write((byte)x.Kind); w.Write((byte)x.Phase);
 			w.Write(x.CreatedTick); w.Write(x.UpdatedTick); WriteString(w, x.ZoneId); WriteString(w, x.SettlementId);
 			WriteString(w, x.SettlementName); WriteString(w, x.CharterId); WriteString(w, x.ManifestId);
@@ -816,7 +1037,8 @@ namespace ThousandAndFirst
 			w.Write(x.ManifestEscrowBefore); w.Write(x.ManifestEscrowDebit); w.Write(x.ManifestEscrowAfter);
 			w.Write((byte)x.ManifestEscrowState); w.Write(x.RetainedBefore); w.Write(x.RetainedDelta);
 			w.Write(x.RetainedAfter); w.Write((byte)x.RetainedState);
-			WriteNullable(w, x.Standing, WriteStanding); WriteNullable(w, x.Outbox, WriteOutbox); WriteString(w, x.Fault);
+			WriteNullable(w, x.Standing, WriteStanding); WriteNullable(w, x.Outbox, WriteOutbox);
+			WriteNullable(w, x.Pattern, WritePattern); WriteString(w, x.Fault);
 		}
 
 		private static KingdomTradeOperation ReadOperation(BinaryReader r)
@@ -845,7 +1067,67 @@ namespace ThousandAndFirst
 			x.ManifestEscrowState = (KingdomTradePhysicalState)r.ReadByte(); x.RetainedBefore = r.ReadInt64();
 			x.RetainedDelta = r.ReadInt64(); x.RetainedAfter = r.ReadInt64();
 			x.RetainedState = (KingdomTradePhysicalState)r.ReadByte();
-			x.Standing = ReadNullable(r, ReadStanding); x.Outbox = ReadNullable(r, ReadOutbox); x.Fault = ReadString(r);
+			x.Standing = ReadNullable(r, ReadStanding); x.Outbox = ReadNullable(r, ReadOutbox);
+			x.Pattern = ReadNullable(r, ReadPattern); x.Fault = ReadString(r);
+			if ((x.Kind == KingdomTradeOperationKind.CharterDelivery) != (x.Pattern != null))
+				throw new InvalidDataException("Trade operation pattern lane does not match its kind.");
+			return x;
+		}
+
+		// Frozen wire-v3 operation layout. Do not route this through the current writer.
+		private static void WriteOperationV3(BinaryWriter w, KingdomTradeOperation x)
+		{
+			w.Write(x.Sequence); WriteString(w, x.Id); w.Write((byte)x.Kind); w.Write((byte)x.Phase);
+			w.Write(x.CreatedTick); w.Write(x.UpdatedTick); WriteString(w, x.ZoneId); WriteString(w, x.SettlementId);
+			WriteString(w, x.SettlementName); WriteString(w, x.CharterId); WriteString(w, x.ManifestId);
+			WriteString(w, x.DealKey); WriteString(w, x.DealDisplayName); WriteString(w, x.Faction);
+			w.Write(x.Cycles); w.Write(x.IncomePerCycle); w.Write(x.IntervalTicks); w.Write(x.DueBefore);
+			w.Write(x.DueAfter); WriteString(w, x.CaravanBlueprint); WriteString(w, x.ProjectionId);
+			WriteString(w, x.ProjectionObjectId); w.Write(x.ProjectionX); w.Write(x.ProjectionY);
+			WriteString(w, x.PriorProjectionId); WriteString(w, x.PriorProjectionObjectId);
+			WriteString(w, x.PriorProjectionZoneId); w.Write((byte)x.ProjectionState);
+			w.Write((byte)x.PriorCleanupState); w.Write((byte)x.WaterDirection); w.Write(x.RequestedWater);
+			w.Write(x.ProvedWater); w.Write(x.AmbiguousWater);
+			WriteList(w, x.WaterLegs, KingdomTradeRules.MaxWaterLegs, WriteWater);
+			WriteString(w, x.MaterialClaim); w.Write(x.MaterialRequested); w.Write(x.MaterialProved);
+			WriteList(w, x.MaterialOutputs, KingdomTradeRules.MaxMaterialOutputs, WriteMaterial);
+			WriteString(w, x.OriginId); WriteString(w, x.OriginName); WriteString(w, x.DestinationId);
+			WriteString(w, x.DestinationName); w.Write(x.ManifestLoadedTick); w.Write(x.ManifestDeadlineTick);
+			w.Write(x.ManifestEscrowBefore); w.Write(x.ManifestEscrowDebit); w.Write(x.ManifestEscrowAfter);
+			w.Write((byte)x.ManifestEscrowState); w.Write(x.RetainedBefore); w.Write(x.RetainedDelta);
+			w.Write(x.RetainedAfter); w.Write((byte)x.RetainedState);
+			WriteNullable(w, x.Standing, WriteStanding); WriteNullable(w, x.Outbox, WriteOutbox);
+			WriteString(w, x.Fault);
+		}
+
+		private static KingdomTradeOperation ReadOperationV3(BinaryReader r)
+		{
+			KingdomTradeOperation x = new KingdomTradeOperation();
+			x.Sequence = r.ReadInt64(); x.Id = ReadString(r); x.Kind = (KingdomTradeOperationKind)r.ReadByte();
+			x.Phase = (KingdomTradePhase)r.ReadByte(); x.CreatedTick = r.ReadInt64(); x.UpdatedTick = r.ReadInt64();
+			x.ZoneId = ReadString(r); x.SettlementId = ReadString(r); x.SettlementName = ReadString(r);
+			x.CharterId = ReadString(r); x.ManifestId = ReadString(r); x.DealKey = ReadString(r);
+			x.DealDisplayName = ReadString(r); x.Faction = ReadString(r); x.Cycles = r.ReadInt32();
+			x.IncomePerCycle = r.ReadInt32(); x.IntervalTicks = r.ReadInt64(); x.DueBefore = r.ReadInt64();
+			x.DueAfter = r.ReadInt64(); x.CaravanBlueprint = ReadString(r); x.ProjectionId = ReadString(r);
+			x.ProjectionObjectId = ReadString(r); x.ProjectionX = r.ReadInt32(); x.ProjectionY = r.ReadInt32();
+			x.PriorProjectionId = ReadString(r); x.PriorProjectionObjectId = ReadString(r);
+			x.PriorProjectionZoneId = ReadString(r); x.ProjectionState = (KingdomTradePhysicalState)r.ReadByte();
+			x.PriorCleanupState = (KingdomTradePhysicalState)r.ReadByte();
+			x.WaterDirection = (KingdomTradeWaterDirection)r.ReadByte(); x.RequestedWater = r.ReadInt32();
+			x.ProvedWater = r.ReadInt32(); x.AmbiguousWater = r.ReadInt32();
+			x.WaterLegs = ReadList(r, KingdomTradeRules.MaxWaterLegs, ReadWater); x.MaterialClaim = ReadString(r);
+			x.MaterialRequested = r.ReadInt32(); x.MaterialProved = r.ReadInt32();
+			x.MaterialOutputs = ReadList(r, KingdomTradeRules.MaxMaterialOutputs, ReadMaterial);
+			x.OriginId = ReadString(r); x.OriginName = ReadString(r); x.DestinationId = ReadString(r);
+			x.DestinationName = ReadString(r); x.ManifestLoadedTick = r.ReadInt64();
+			x.ManifestDeadlineTick = r.ReadInt64(); x.ManifestEscrowBefore = r.ReadInt32();
+			x.ManifestEscrowDebit = r.ReadInt32(); x.ManifestEscrowAfter = r.ReadInt32();
+			x.ManifestEscrowState = (KingdomTradePhysicalState)r.ReadByte(); x.RetainedBefore = r.ReadInt64();
+			x.RetainedDelta = r.ReadInt64(); x.RetainedAfter = r.ReadInt64();
+			x.RetainedState = (KingdomTradePhysicalState)r.ReadByte();
+			x.Standing = ReadNullable(r, ReadStanding); x.Outbox = ReadNullable(r, ReadOutbox);
+			x.Fault = ReadString(r);
 			return x;
 		}
 

@@ -89,20 +89,21 @@ namespace ThousandAndFirst
 			string honorific = NameMaker.MakeHonorific(Holder, Special: OfficeNameScope, SpecialFaildown: true);
 			string epithet = NameMaker.MakeEpithet(Holder, Special: OfficeNameScope, SpecialFaildown: true,
 				HasHonorific: !string.IsNullOrEmpty(honorific));
+			string plainEpithet = ConsoleLib.Console.ColorUtility.StripFormatting(epithet);
 			if (!string.IsNullOrEmpty(honorific))
 			{
 				Holder.RequirePart<Honorifics>().AddHonorific(honorific, HonorificOrder);
 			}
-			if (string.IsNullOrEmpty(epithet))
+			if (string.IsNullOrEmpty(epithet) || string.IsNullOrEmpty(plainEpithet))
 			{
 				return "";
 			}
 			Holder.RequirePart<Epithets>().AddEpithet(epithet, PrimaryOrder);
-			Holder.SetStringProperty(EpithetProperty, epithet);
-			Remember(System, epithet);
-			KingdomLog.Log("notable: " + Holder.GetStringProperty("KingdomName") + " epithet=\"" + epithet
+			Holder.SetStringProperty(EpithetProperty, plainEpithet);
+			Remember(System, plainEpithet);
+			KingdomLog.Log("notable: " + Holder.GetStringProperty("KingdomName") + " epithet=\"" + plainEpithet
 				+ "\" honorific=\"" + (honorific ?? "") + "\"");
-			return epithet;
+			return plainEpithet;
 		}
 
 		/// <summary>

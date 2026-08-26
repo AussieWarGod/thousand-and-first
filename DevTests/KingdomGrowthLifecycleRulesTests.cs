@@ -371,7 +371,8 @@ namespace ThousandAndFirst.Tests
 			byte[] bytes;
 			using (MemoryStream stream = new MemoryStream())
 			{
-				KingdomLifecycleWireCodec.WriteCarry(new BinaryWriter(stream), new KingdomCarryBook());
+				KingdomLifecycleWireCodec.WriteCarryV5Fixture(
+					new BinaryWriter(stream), new KingdomCarryBook());
 				bytes = stream.ToArray();
 			}
 			Assert.AreEqual("c9d79728032c2f2f427241cf4a4097df7c18a6c711ec0c79fbac0b71ee994e52",
@@ -1403,14 +1404,14 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void LifecycleV6GrowthV2RichWireGoldenPinsAllPreparedBranches()
+		public void LifecycleV6GrowthV3RichWireGoldenPinsAllPreparedBranches()
 		{
 			KingdomLifecycleBook parent = MigratedParent("city-rich-golden", 100L, true, true, 20L);
 			Assert.IsTrue(KingdomLifecycleRules.TryRegisterGrowthField(parent.Growth, "field-a"));
 			KingdomGrowthOperation op = RichSow(parent.Growth, "field-a", 121L, true);
 			Assert.IsTrue(KingdomLifecycleRules.TryPublishGrowth(parent.Growth, op));
 			byte[] nested = KingdomLifecycleWireCodec.GrowthPayloadForWrite(parent.Growth);
-			byte[] wrapper = WriteLifecycle(parent);
+			byte[] wrapper = WriteV6(parent);
 			KingdomLifecycleBook independent = MigratedParent("city-rich-golden", 100L,
 				true, true, 20L);
 			Assert.IsTrue(KingdomLifecycleRules.TryRegisterGrowthField(independent.Growth,
@@ -1421,12 +1422,12 @@ namespace ThousandAndFirst.Tests
 				independentOp));
 			byte[] independentNested =
 				KingdomLifecycleWireCodec.GrowthPayloadForWrite(independent.Growth);
-			byte[] independentWrapper = WriteLifecycle(independent);
+			byte[] independentWrapper = WriteV6(independent);
 			CollectionAssert.AreEqual(nested, independentNested,
 				"independent semantic producer emits exact same nested bytes");
 			CollectionAssert.AreEqual(wrapper, independentWrapper,
 				"independent semantic producer emits exact same wrapper bytes");
-			Console.WriteLine("[TAF] growth-v2-rich nested={0} sha={1} wrapper={2} sha={3}",
+			Console.WriteLine("[TAF] growth-v3-rich nested={0} sha={1} wrapper={2} sha={3}",
 				nested.Length, Sha256(nested), wrapper.Length, Sha256(wrapper));
 			int lengthOffset = wrapper.Length - nested.Length - 4;
 			byte[] extractedNested = new byte[nested.Length];
@@ -1435,7 +1436,7 @@ namespace ThousandAndFirst.Tests
 				"independent wrapper framing extraction reproduces nested bytes");
 			Assert.AreEqual(KingdomLifecycleWireCodec.LifecycleMagic,
 				BitConverter.ToInt32(wrapper, 0));
-			Assert.AreEqual(KingdomLifecycleRules.CurrentFormatVersion,
+			Assert.AreEqual(KingdomLifecycleRules.PreviousLifecycleFormatVersion,
 				BitConverter.ToInt32(wrapper, 4));
 			Assert.AreEqual(nested.Length, BitConverter.ToInt32(wrapper, lengthOffset));
 			Assert.AreEqual(KingdomLifecycleWireCodec.GrowthMagic,
@@ -1443,14 +1444,14 @@ namespace ThousandAndFirst.Tests
 			Assert.AreEqual(KingdomLifecycleRules.CurrentGrowthFormatVersion,
 				BitConverter.ToInt32(nested, 4));
 			Assert.AreEqual(10699, nested.Length);
-			Assert.AreEqual("9a33f3e44cc00a1436b219e8cd84bd6a9bb3ecfcb8cfccf8fdc3c140af8bbd38",
+			Assert.AreEqual("0d6b0c056cf2e07ecc9de69bee2d1afb1dd3bf6b27b25bc1e37f333feef6c29d",
 				Sha256(nested));
 			Assert.AreEqual(10944, wrapper.Length);
-			Assert.AreEqual("3b8eb25ea3aaeaffecc827d6b0e0408665cb09854354b2b1851aea055d24003d",
+			Assert.AreEqual("ef7c1f6d4d1e34d0da2d605f7b54ae2322676707489d3f0a250b72c88bb1bcc5",
 				Sha256(wrapper));
 
-			// Growth v1 stays byte-exact and readable. V2 adds the explicit compatibility
-			// bit and dual Chronicle registers; only new writes use that honest receipt shape.
+			// Growth v1 stays byte-exact and readable. V2 added the compatibility bit and dual
+			// Chronicle registers; v3 adds semantic-person fields only when a candidate exists.
 			byte[] legacyNested = KingdomLifecycleWireCodec.GrowthV1PayloadFixture(parent.Growth);
 			Assert.AreEqual(KingdomLifecycleRules.LegacyGrowthFormatVersion,
 				BitConverter.ToInt32(legacyNested, 4));
@@ -1481,6 +1482,9 @@ namespace ThousandAndFirst.Tests
 			Assert.IsFalse(KingdomLifecycleWireCodec.ReadGrowthPayload(rewritten).Quarantined);
 
 			KingdomLifecycleBook loaded = ReadLifecycle(wrapper);
+			Assert.AreEqual(KingdomLifecycleRules.CurrentFormatVersion, loaded.FormatVersion);
+			Assert.IsTrue(KingdomRaidIncidentRules.ValidLedger(loaded.RaidLedger));
+			Assert.AreEqual(0, loaded.RaidLedger.Grievances.Count);
 			KingdomGrowthOperation loadedOp = loaded.Growth.FieldOps[0].Operation;
 			Assert.AreEqual(KingdomGrowthPhase.Prepared, loadedOp.Phase);
 			Assert.AreEqual(1, loadedOp.WaterLegs.Count);
@@ -1491,7 +1495,10 @@ namespace ThousandAndFirst.Tests
 			Assert.IsFalse(loadedOp.WaterLegs[0].ReceiptSameReference);
 			Assert.IsNull(loadedOp.Outputs[0].ReceiptCallbackObjectId);
 			Assert.IsFalse(loadedOp.Outputs[0].ReceiptSameReference);
-			CollectionAssert.AreEqual(wrapper, WriteLifecycle(loaded));
+			byte[] currentWrapper = WriteLifecycle(loaded);
+			Assert.AreEqual(KingdomLifecycleRules.CurrentFormatVersion,
+				BitConverter.ToInt32(currentWrapper, 4));
+			Assert.Greater(currentWrapper.Length, wrapper.Length);
 		}
 
 		[Test]
@@ -2053,6 +2060,66 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void HistoricalV2ArrivalSemanticPlanUpgradesOnceAcrossEveryPreCreateSaveCut()
+		{
+			foreach (KingdomGrowthArrivalCandidatePhase phase in new[]
+			{
+				KingdomGrowthArrivalCandidatePhase.Prepared,
+				KingdomGrowthArrivalCandidatePhase.CreateIntent,
+				KingdomGrowthArrivalCandidatePhase.Escrowed
+			})
+			{
+				KingdomGrowthBook growth = Migrated("city-v2-semantic-" + phase,
+					100L, true, true, 20L);
+				KingdomGrowthArrivalCandidate candidate =
+					KingdomLifecycleRules.PrepareGrowthArrivalCandidate(growth,
+						"v2-semantic-marker-" + phase, "Settler",
+						"v2-semantic-escrow-" + phase, "zone-a", 120L,
+						Digest('1'), Digest('2'), Digest('3'));
+				Assert.IsTrue(KingdomLifecycleRules.TryPublishGrowthArrivalCandidate(
+					growth, candidate));
+				if ((byte)phase >= (byte)KingdomGrowthArrivalCandidatePhase.CreateIntent)
+					Assert.IsTrue(KingdomLifecycleRules.BeginGrowthArrivalCandidateCreate(
+						growth, candidate, 121L));
+				if (phase == KingdomGrowthArrivalCandidatePhase.Escrowed)
+					Assert.IsTrue(KingdomLifecycleRules.CommitGrowthArrivalCandidateCreate(
+						growth, candidate, "v2-semantic-object", Digest('4'), Digest('5'),
+						Digest('6'), Digest('7'), true, 122L));
+
+				byte[] historical = KingdomLifecycleWireCodec.GrowthV2PayloadFixture(growth);
+				KingdomGrowthBook loaded = KingdomLifecycleWireCodec.ReadGrowthPayload(historical);
+				candidate = loaded.ArrivalCandidate;
+				Assert.IsTrue(candidate.LegacySemanticPlan, phase.ToString());
+				string legacyHash = candidate.PlanHash;
+				Assert.IsTrue(KingdomLifecycleRules.UpgradeLegacyGrowthArrivalSemanticPlan(
+					loaded, candidate, 1, "taf:semantic:growth-arrival:v1", 1U,
+					"the salt dunes", "hospitality", "Abar", "1st of Nivvun Ut, 1001 AR",
+					4, 5, 130L), phase.ToString());
+				Assert.IsFalse(candidate.LegacySemanticPlan);
+				Assert.AreEqual("Settler", candidate.Blueprint);
+				Assert.AreEqual("Abar", candidate.PlannedName);
+				Assert.AreEqual(4, candidate.ArrivalX);
+				Assert.AreEqual(5, candidate.ArrivalY);
+				Assert.AreNotEqual(legacyHash, candidate.PlanHash);
+				Assert.IsTrue(KingdomLifecycleRules.CanOwnGrowthAuthority(loaded,
+					loaded.SettlementId));
+
+				loaded = RoundTripGrowth(loaded);
+				candidate = loaded.ArrivalCandidate;
+				byte[] beforeRetry = KingdomLifecycleWireCodec.GrowthPayloadForWrite(loaded);
+				Assert.IsFalse(KingdomLifecycleRules.UpgradeLegacyGrowthArrivalSemanticPlan(
+					loaded, candidate, 1, "taf:semantic:growth-arrival:v1", 1U,
+					"the salt dunes", "hospitality", "Other", "2nd of Nivvun Ut, 1001 AR",
+					6, 7, 131L));
+				CollectionAssert.AreEqual(beforeRetry,
+					KingdomLifecycleWireCodec.GrowthPayloadForWrite(loaded));
+				candidate.PlannedName = "Other";
+				Assert.IsFalse(KingdomLifecycleRules.CanOwnGrowthAuthority(loaded,
+					loaded.SettlementId), "frozen semantic payload enters candidate authority");
+			}
+		}
+
+		[Test]
 		public void HistoricalV1PreLodgingCandidatesBindOnceToTheirFirstClaimedZone()
 		{
 			foreach (KingdomGrowthArrivalCandidatePhase phase in new[]
@@ -2547,7 +2614,9 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("operation.LegacyGrowthV1Plan", domains);
 			string apply = Slice(source, "private static void ApplyArrivalDomain",
 				"private static bool ReconcileArrivalClock");
-			StringAssert.Contains("EnrollCitizen(settler)", apply);
+			StringAssert.Contains("KingdomCitizenshipEnrollmentReason.Arrival", apply);
+			StringAssert.Contains("operation.CreatedTick", apply);
+			StringAssert.DoesNotContain("addSimpleConversationToObject", apply);
 			StringAssert.Contains("system.Population++", apply);
 			StringAssert.Contains("system.Ledger.ArrivalCost += KingdomRules.DramsPerArrival", apply);
 			string personGraph = Slice(source, "private static string PersonDomainHash",
@@ -2615,6 +2684,13 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("System.ClaimedZones.Contains(Z.ZoneID)", publicSpawn);
 			AssertOrdered(publicSpawn, "reconciledResult != ArrivalResult.Deferred",
 				"if (!Enabled)", "ResolveOrStartArrival(System, Z, survey");
+			string attended = Slice(source,
+				"public static void OnZoneActivated(KingdomSystem System, Zone Z, KingdomSurvey Shared = null)",
+				"private static bool ResolveHeartbeat");
+			StringAssert.Contains("bool arrivalsEnabled = Enabled", attended);
+			StringAssert.Contains("while (arrivalsEnabled && heartbeatHealthy", attended);
+			StringAssert.DoesNotContain("if (!Enabled) return;", attended,
+				"the arrivals checkbox must not disable unrelated settlement modules");
 			string synchronize = Slice(source,
 				"private static bool SynchronizeArrivalAuthority", "private static bool TryMigrateArrivalAuthority");
 			StringAssert.Contains("lastObservedHealthy", synchronize);
@@ -3633,6 +3709,16 @@ namespace ThousandAndFirst.Tests
 			using (MemoryStream stream = new MemoryStream())
 			{
 				KingdomLifecycleWireCodec.WriteLifecycle(new BinaryWriter(stream), book);
+				return stream.ToArray();
+			}
+		}
+
+		private static byte[] WriteV6(KingdomLifecycleBook book)
+		{
+			using (MemoryStream stream = new MemoryStream())
+			{
+				KingdomLifecycleWireCodec.WriteLifecycleV6Fixture(
+					new BinaryWriter(stream), book);
 				return stream.ToArray();
 			}
 		}

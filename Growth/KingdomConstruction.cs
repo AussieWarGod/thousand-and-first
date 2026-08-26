@@ -16,9 +16,180 @@ namespace ThousandAndFirst
 	{
 		public const string RegistryStateKey = "r_TAF_ConstructionJobs";
 		public const string ReceiptProperty = "KingdomConstructionReceipt";
+		public const string PaidBuildSchemaProperty = "r_TAF_PaidBuildSchema";
+		public const string PaidBuildWaterProperty = "r_TAF_PaidBuildWater";
+		public const string PaidBuildMaterialProperty = "r_TAF_PaidBuildMaterial";
+		public const string PaidBuildWorkProperty = "r_TAF_PaidBuildWork";
+		public const int PaidBuildSchema = 1;
 		private const int MaxLoadedLookupObjects = 4096;
 
 		private static bool Resolving;
+
+		/// <summary>Computes build effects once, before first publication/debit.</summary>
+		public static bool FreezeBuildTruth(KingdomConstructionJob Job,
+			KingdomSystem System, int BaseDefence, bool HasPlot)
+		{
+			bool tinkering = The.Player != null && The.Player.HasSkill("Tinkering");
+			bool advanced = The.Player != null && The.Player.HasSkill("Tinkering_Tinker1");
+			int defence = KingdomRules.BuiltDefence(BaseDefence, HasPlot,
+				System == null ? null : System.FoundingTerrainBlueprint,
+				System == null ? null : System.FoundingRegionName, tinkering, advanced);
+			return KingdomConstructionRules.FreezeBuildTruth(Job, HasPlot, defence);
+		}
+
+		/// <summary>Stages only frozen receipt truth onto a new projection.</summary>
+		public static bool ApplyBuildTruth(GameObject Object, KingdomConstructionJob Job)
+		{
+			if (!GameObject.Validate(Object)
+				|| !KingdomConstructionRules.TryReadBuildTruth(Job, out _,
+					out bool frontier, out int defence)) return false;
+			if (frontier) Object.SetIntProperty(KingdomPlots.FrontierWorkProperty, 1);
+			else Object.RemoveIntProperty(KingdomPlots.FrontierWorkProperty);
+			if (defence > 0) Object.SetIntProperty("KingdomDefencePending", defence);
+			else Object.RemoveIntProperty("KingdomDefencePending");
+			return BuildTruthMatches(Object, Job);
+		}
+
+		/// <summary>Authenticates a projection against current receipt truth.</summary>
+		public static bool BuildTruthMatches(GameObject Object, KingdomConstructionJob Job)
+		{
+			if (!GameObject.Validate(Object)
+				|| !KingdomConstructionRules.TryReadBuildTruth(Job, out _,
+					out bool frontier, out int defence)) return false;
+			int frontierMark = Object.GetIntProperty(KingdomPlots.FrontierWorkProperty);
+			return (frontierMark == 0 || frontierMark == 1)
+				&& (frontierMark == 1) == frontier
+				&& Object.GetIntProperty("KingdomDefencePending") == defence;
+		}
+
+		/// <summary>Legacy projected work may continue from its durable physical marks. Caller must
+		/// independently prove exact object/receipt identity. Unprojected legacy work has no truth.</summary>
+		public static bool LegacyProjectedBuildTruthMatches(GameObject Object,
+			KingdomConstructionJob Job, bool HasPlot)
+		{
+			if (!GameObject.Validate(Object) || Job == null || Job.BuildTruthSchema != 0)
+				return false;
+			int frontier = Object.GetIntProperty(KingdomPlots.FrontierWorkProperty);
+			int defence = Object.GetIntProperty("KingdomDefencePending");
+			return (frontier == 0 || frontier == 1) && defence >= 0
+				&& (frontier == 1) == KingdomRules.IsFrontierWork(defence, HasPlot);
+		}
+
+		/// <summary>Legacy improvement payloads did not always distinguish plotted from
+		/// single-cell work. Their durable marks still prove every effect that can be applied.</summary>
+		public static bool LegacyProjectedBuildTruthMatchesUnknownPlot(GameObject Object,
+			KingdomConstructionJob Job)
+		{
+			if (!GameObject.Validate(Object) || Job == null || Job.BuildTruthSchema != 0)
+				return false;
+			int frontier = Object.GetIntProperty(KingdomPlots.FrontierWorkProperty);
+			int defence = Object.GetIntProperty("KingdomDefencePending");
+			return (frontier == 0 || frontier == 1) && defence >= 0
+				&& (frontier == 0 || defence > 0);
+		}
+
+		/// <summary>Authenticates effects after scaffold/works handover.</summary>
+		public static bool FinalBuildTruthMatches(GameObject Object, KingdomConstructionJob Job)
+		{
+			if (!GameObject.Validate(Object) || Job == null) return false;
+			int frontierMark = Object.GetIntProperty(KingdomPlots.FrontierWorkProperty);
+			int defenceMark = Object.GetIntProperty("KingdomDefence");
+			if (frontierMark != 0 && frontierMark != 1 || defenceMark < 0) return false;
+			if (KingdomConstructionRules.TryReadBuildTruth(Job, out _,
+				out bool frontier, out int defence))
+				return (frontierMark == 1) == frontier && defenceMark == defence;
+			if (Job.BuildTruthSchema != 0) return false;
+			if (Job.Route == KingdomConstructionRoute.CommissionScaffold
+				|| Job.Route == KingdomConstructionRoute.PlanScaffold)
+				return (frontierMark == 1) == KingdomRules.IsFrontierWork(defenceMark, false);
+			if (Job.Route == KingdomConstructionRoute.PlotCommission
+				|| Job.Route == KingdomConstructionRoute.PlotPlan
+				|| Job.Route == KingdomConstructionRoute.SocketBuild
+				|| Job.Route == KingdomConstructionRoute.SocketConvert)
+				return (frontierMark == 1) == KingdomRules.IsFrontierWork(defenceMark, true);
+			return Job.Route == KingdomConstructionRoute.Improvement
+				&& (frontierMark == 0 || defenceMark > 0);
+		}
+
+		/// <summary>
+		/// Copies a fully funded operation price onto its exact physical successor before AddObject.
+		/// An in-place improvement adds the predecessor's already-frozen cumulative receipt. A
+		/// predecessor from before this schema remains explicitly legacy; it is not assigned a price
+		/// invented from the current catalogue.
+		/// </summary>
+		public static bool FreezePaidBuild(GameObject Successor, KingdomConstructionJob Job,
+			GameObject ImprovementPredecessor = null)
+		{
+			if (!GameObject.Validate(Successor) || Job == null) return false;
+			KingdomPaidBuildReceipt previous = null;
+			if (GameObject.Validate(ImprovementPredecessor))
+			{
+				int schema = ImprovementPredecessor.GetIntProperty(PaidBuildSchemaProperty);
+				if (schema == 0)
+				{
+					// A pre-receipt standing work stays legacy through its first improvement. The
+					// strike path retains the old compatibility fallback instead of fabricating history.
+					Successor.RemoveIntProperty(PaidBuildSchemaProperty);
+					Successor.RemoveIntProperty(PaidBuildWaterProperty);
+					Successor.RemoveStringProperty(PaidBuildMaterialProperty);
+					Successor.RemoveStringProperty(PaidBuildWorkProperty);
+					return Successor.GetIntProperty(PaidBuildSchemaProperty) == 0;
+				}
+				if (schema != PaidBuildSchema
+					|| !TryReadPaidBuild(ImprovementPredecessor, out previous)) return false;
+			}
+			if (!KingdomConstructionRules.TryPaidBuildReceipt(Job, previous,
+				out KingdomPaidBuildReceipt paid)) return false;
+			string material = paid.Material.ToClaimString();
+			string work = paid.WorkTicks.ToString(
+				global::System.Globalization.CultureInfo.InvariantCulture);
+			Successor.SetIntProperty(PaidBuildWaterProperty, paid.Water);
+			Successor.SetStringProperty(PaidBuildMaterialProperty, material);
+			Successor.SetStringProperty(PaidBuildWorkProperty, work);
+			Successor.SetIntProperty(PaidBuildSchemaProperty, PaidBuildSchema);
+			return PaidBuildMatches(Successor, Job, ImprovementPredecessor);
+		}
+
+		/// <summary>Re-proves the frozen bill after callback-bearing engine operations.</summary>
+		public static bool PaidBuildMatches(GameObject Successor, KingdomConstructionJob Job,
+			GameObject ImprovementPredecessor = null)
+		{
+			if (!GameObject.Validate(Successor) || Job == null) return false;
+			KingdomPaidBuildReceipt previous = null;
+			if (GameObject.Validate(ImprovementPredecessor))
+			{
+				int schema = ImprovementPredecessor.GetIntProperty(PaidBuildSchemaProperty);
+				if (schema == 0)
+					return Successor.GetIntProperty(PaidBuildSchemaProperty) == 0;
+				if (schema != PaidBuildSchema
+					|| !TryReadPaidBuild(ImprovementPredecessor, out previous)) return false;
+			}
+			if (!KingdomConstructionRules.TryPaidBuildReceipt(Job, previous,
+				out KingdomPaidBuildReceipt expected)
+				|| !TryReadPaidBuild(Successor, out KingdomPaidBuildReceipt actual)) return false;
+			return actual.Water == expected.Water && actual.WorkTicks == expected.WorkTicks
+				&& actual.Material.ToClaimString() == expected.Material.ToClaimString();
+		}
+
+		/// <summary>Reads only the building's frozen receipt; never consults a catalogue.</summary>
+		public static bool TryReadPaidBuild(GameObject Building,
+			out KingdomPaidBuildReceipt Receipt)
+		{
+			Receipt = null;
+			if (!GameObject.Validate(Building)
+				|| Building.GetIntProperty(PaidBuildSchemaProperty) != PaidBuildSchema
+				|| !KingdomMaterialDebitCost.TryParseClaim(
+					Building.GetStringProperty(PaidBuildMaterialProperty),
+					out KingdomMaterialDebitCost material)
+				|| !long.TryParse(Building.GetStringProperty(PaidBuildWorkProperty),
+					global::System.Globalization.NumberStyles.None,
+					global::System.Globalization.CultureInfo.InvariantCulture, out long work)
+				|| work < 0L) return false;
+			int water = Building.GetIntProperty(PaidBuildWaterProperty);
+			if (water < 0) return false;
+			Receipt = new KingdomPaidBuildReceipt(water, work, material);
+			return true;
+		}
 
 		public static string OwnerOf(KingdomSystem System)
 		{
@@ -170,7 +341,11 @@ namespace ThousandAndFirst
 				&& observed.Phase == Job.Phase && observed.SubjectId == Job.SubjectId
 				&& observed.SourceId == Job.SourceId && observed.OutputId == Job.OutputId
 				&& observed.PhysicalPhase == Job.PhysicalPhase
-				&& observed.TargetKey == Job.TargetKey;
+				&& observed.TargetKey == Job.TargetKey
+				&& observed.BuildTruthSchema == Job.BuildTruthSchema
+				&& observed.BuildHasPlot == Job.BuildHasPlot
+				&& observed.BuildFrontier == Job.BuildFrontier
+				&& observed.BuildDefence == Job.BuildDefence;
 		}
 
 		/// <summary>Exact realm, founding, settlement and zone ownership for one registry row.</summary>
@@ -327,6 +502,13 @@ namespace ThousandAndFirst
 		public static KingdomConstructionStartResult TryResumeFunding(KingdomConstructionJob Job,
 			Zone Z, KingdomSurvey Survey, out KingdomConstructionJob Updated, out string Failure)
 		{
+			return TryResumeFunding(Job, Z, Survey, null, out Updated, out Failure);
+		}
+
+		internal static KingdomConstructionStartResult TryResumeFunding(KingdomConstructionJob Job,
+			Zone Z, KingdomSurvey Survey, GameObject RequiredItem,
+			out KingdomConstructionJob Updated, out string Failure)
+		{
 			Updated = Job;
 			Failure = null;
 			if (Job == null || Z == null || Survey == null || Job.Claims == null || !Job.Claims.Exact
@@ -342,7 +524,9 @@ namespace ThousandAndFirst
 				return KingdomConstructionStartResult.Outstanding;
 			}
 			KingdomWaterDebit water = Survey.ReserveExactWater(Job.Claims.WaterOutstanding);
-			KingdomMaterialDebit material = KingdomMaterials.ReserveComposite(Z, outstanding);
+			KingdomMaterialDebit material = RequiredItem == null
+				? KingdomMaterials.ReserveComposite(Z, outstanding)
+				: KingdomMaterials.ReserveCompositeWithRequiredItem(Z, outstanding, RequiredItem);
 			if (water.State != KingdomWaterDebitState.Reserved
 				|| material.Reservation.Outcome != KingdomMaterialDebitOutcome.Reserved)
 			{
@@ -677,7 +861,7 @@ namespace ThousandAndFirst
 		{
 			Exact = null;
 			if (Z == null || string.IsNullOrEmpty(Id)) return KingdomPhysicalLookupState.Absent;
-			List<GameObject> loaded;
+			IList<GameObject> loaded;
 			if (!TryLoadedZoneObjects(Z, out loaded)) return KingdomPhysicalLookupState.Ambiguous;
 			int count = 0;
 			for (int i = 0; i < loaded.Count; i++)
@@ -698,7 +882,7 @@ namespace ThousandAndFirst
 		{
 			Exact = null;
 			if (Z == null || Job == null) return KingdomPhysicalLookupState.Absent;
-			List<GameObject> loaded;
+			IList<GameObject> loaded;
 			if (!TryLoadedZoneObjects(Z, out loaded)) return KingdomPhysicalLookupState.Ambiguous;
 			int count = 0;
 			for (int i = 0; i < loaded.Count; i++)
@@ -714,10 +898,12 @@ namespace ThousandAndFirst
 			return state;
 		}
 
-		private static bool TryLoadedZoneObjects(Zone Z, out List<GameObject> Loaded)
+		private static bool TryLoadedZoneObjects(Zone Z, out IList<GameObject> Loaded)
 		{
 			Loaded = null;
 			if (Z == null) return false;
+			KingdomSurvey active = KingdomSurvey.ActiveFor(Z);
+			if (active != null) return active.TryLoaded(out Loaded);
 			List<GameObject> pending = new List<GameObject>();
 			foreach (GameObject root in Z.GetObjects())
 			{
@@ -772,6 +958,10 @@ namespace ThousandAndFirst
 			Resolving = true;
 			try
 			{
+				// Freeze one real, named raising gang before any labour clock is read. Every
+				// active root below consumes its own stamp; only the oldest selected root can
+				// therefore spend these bodies in this pass.
+				KingdomConstructionPresence.Assign(System, Survey);
 				List<KingdomConstructionJob> jobs;
 				string fault;
 				if (!TryRead(out jobs, out fault))
@@ -780,11 +970,7 @@ namespace ThousandAndFirst
 					return;
 				}
 				string owner = OwnerOf(System);
-				List<GameObject> plots = new List<GameObject>();
-				foreach (GameObject item in Z.GetObjects())
-				{
-					if (item.GetPart<r_KingdomPlotWorks>() != null) plots.Add(item);
-				}
+				List<GameObject> plots = new List<GameObject>(Survey.PlotWorks);
 				for (int i = 0; i < plots.Count; i++)
 				{
 					GameObject plot = plots[i];
@@ -799,7 +985,7 @@ namespace ThousandAndFirst
 							&& carried.ZoneId == Z.ZoneID
 							&& !KingdomConstructionRules.IsTerminal(carried.Phase);
 					}
-					if (mayAdvance) KingdomPlots.Advance(works, The.Game.TimeTicks);
+					if (mayAdvance) KingdomPlots.Advance(works, System, The.Game.TimeTicks);
 				}
 
 				// Plot completion may have updated a row. Never dispatch the stale pre-advance copy.
@@ -836,7 +1022,24 @@ namespace ThousandAndFirst
 					KingdomConstructionResumeAction action = KingdomConstructionRules.ResumeAction(job);
 					if (action == KingdomConstructionResumeAction.ResumeFunding)
 					{
-						KingdomConstructionStartResult resumed = TryResumeFunding(job, Z, Survey, out job, out fault);
+						if (KingdomConstructionRules.RequiresBuildTruth(job.Route)
+							&& !KingdomConstructionRules.TryReadBuildTruth(job,
+								out _, out _, out _))
+						{
+							Quarantine(ref job,
+								"This legacy construction receipt predates frozen build effects; its original catalogue and founder-skill truth cannot be reconstructed.");
+							continue;
+						}
+						GameObject required = null;
+						if (KingdomPurpose.RequiresExactFunding(job)
+							&& !KingdomPurpose.TryRequiredFundingItem(Z, job, out required, out fault))
+						{
+							Quarantine(ref job, fault
+								?? "The exact city-purpose cargo cannot be reproved for funding retry.");
+							continue;
+						}
+						KingdomConstructionStartResult resumed = TryResumeFunding(job, Z, Survey,
+							required, out job, out fault);
 						if (resumed != KingdomConstructionStartResult.Funded) continue;
 						action = KingdomConstructionResumeAction.RetryProjection;
 					}
@@ -863,6 +1066,8 @@ namespace ThousandAndFirst
 			finally
 			{
 				Resolving = false;
+				KingdomConstructionPresence.ReleaseFinished(Z, Survey);
+				KingdomVisualState.Refresh(System, Z, Survey);
 			}
 		}
 
@@ -896,6 +1101,9 @@ namespace ThousandAndFirst
 				break;
 			case KingdomConstructionRoute.Strike:
 				KingdomMaterials.RetryConstruction(System, Z, Job);
+				break;
+			case KingdomConstructionRoute.PurposeConsignment:
+				KingdomPurpose.RetryConstruction(System, Z, Job);
 				break;
 			}
 		}
@@ -931,6 +1139,9 @@ namespace ThousandAndFirst
 				break;
 			case KingdomConstructionRoute.Strike:
 				KingdomMaterials.InspectConstruction(System, Z, Job);
+				break;
+			case KingdomConstructionRoute.PurposeConsignment:
+				KingdomPurpose.InspectConstruction(System, Z, Job);
 				break;
 			}
 		}

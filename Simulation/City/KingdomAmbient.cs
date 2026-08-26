@@ -154,12 +154,14 @@ namespace ThousandAndFirst.Simulation.City
 			}
 			book.RegardKey = key;
 			string creed = KingdomCreed.CreedName(creedFactionName);
-			string line = KingdomNatureRules.RegardLine(nature, creed, KingdomWord.CityName(System, label));
+			string city = KingdomPresentation.Rich(KingdomWord.CityName(System, label));
+			string line = KingdomNatureRules.RegardLine(nature, creed, city);
 			if (string.IsNullOrEmpty(line))
 			{
 				return 0;
 			}
-			string telling = KingdomNatureRules.RegardTelling(nature, creed, KingdomWord.CityName(System, label), KingdomChronicle.FounderName());
+			string telling = KingdomNatureRules.RegardTelling(nature, creed, city,
+				KingdomPresentation.Rich(KingdomChronicle.FounderName()));
 			if (!string.IsNullOrEmpty(telling))
 			{
 				KingdomChronicle.Record(System, telling);

@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using ThousandAndFirst.Api;
 using XRL.Messages;
 using XRL.World;
 
@@ -30,6 +32,23 @@ namespace ThousandAndFirst
 	/// </summary>
 	public static class KingdomCrews
 	{
+		/// <summary>The separate Addendum 17 factor stamped beside crew effectiveness. Absent
+		/// means neutral for every work built by an older save.</summary>
+		public const string IdentityAffinityProperty = "KingdomIdentityAffinity";
+
+		public static int AffinityOf(GameObject Work)
+		{
+			if (!GameObject.Validate(Work)) return KingdomIdentityAffinityRules.NeutralPercent;
+			int stored = Work.GetIntProperty(IdentityAffinityProperty);
+			return stored == 0 ? KingdomIdentityAffinityRules.NeutralPercent
+				: KingdomIdentityAffinityRules.Clamp(stored);
+		}
+
+		public static int ApplyAffinity(GameObject Work, int Value)
+		{
+			return KingdomIdentityAffinityRules.Apply(Value, AffinityOf(Work));
+		}
+
 		// Keyed by building Key like KingdomQol's own Declared registry (STANDARDS 6): a later
 		// file re-using a key owns that design's whole CrewNeeds, and a re-declaration that names
 		// no CrewNeeds at all correctly leaves it with none.
@@ -79,7 +98,7 @@ namespace ThousandAndFirst
 			Declared[Key] = CrewNeeds;
 			for (int i = 0; i < needs.Count; i++)
 			{
-				if (KingdomCrewRules.StatNameFor(needs[i].Kind) == null)
+				if (!KingdomCrewRules.IsKnownKind(needs[i].Kind))
 				{
 					// A note, never a fault, exactly as KingdomQol logs an un-namespaced Provides
 					// tag: a kind no stat answers to yet in THIS build may be read by a later wave
@@ -144,7 +163,38 @@ namespace ThousandAndFirst
 			int strength = Settler.GetStatValue("Strength");
 			int intelligence = Settler.GetStatValue("Intelligence");
 			bool tireless = KingdomQol.TruthOf(Settler).Robot;
-			return new KingdomCrewRules.SettlerCapability(strength, intelligence, tireless);
+			GameObjectBlueprint blueprint = GameObjectFactory.Factory.GetBlueprintIfExists(
+				Settler.Blueprint);
+			KingdomIdentityAffinityRules.WorkerIdentity identity =
+				new KingdomIdentityAffinityRules.WorkerIdentity(Settler.GetCulture(),
+					Settler.GetSpecies(), Fragment(blueprint, "Activity"),
+					Fragment(blueprint, "VillageActivity"), Fragment(blueprint, "ValuedOre"),
+					Fragment(blueprint, "SacredThing"), Fragment(blueprint, "ArableLand"));
+			KingdomCrewRules.WorkerSkills skills = new KingdomCrewRules.WorkerSkills(
+				HasAnySkill(Settler, "Tinkering", "Tinkering_GadgetInspector",
+					"Tinkering_Repair", "Tinkering_Tinker1", "Tinkering_Tinker2",
+					"Tinkering_Tinker3"),
+				HasAnySkill(Settler, "CookingAndGathering",
+					"CookingAndGathering_Harvestry"),
+				HasAnySkill(Settler, "Customs", "Customs_Tactful"),
+				HasAnySkill(Settler, "Physic", "Physic_StaunchWounds", "Physic_Nostrums",
+					"Physic_AmputateLimb", "Physic_Apothecary"),
+				HasAnySkill(Settler, "Survival", "Survival_Camp", "Survival_Trailblazer"));
+			return new KingdomCrewRules.SettlerCapability(strength, intelligence, tireless,
+				identity, skills);
+		}
+
+		private static bool HasAnySkill(GameObject Settler, params string[] Skills)
+		{
+			if (Settler == null || Skills == null) return false;
+			for (int i = 0; i < Skills.Length; i++)
+				if (Settler.HasSkill(Skills[i])) return true;
+			return false;
+		}
+
+		private static string Fragment(GameObjectBlueprint Blueprint, string Name)
+		{
+			return Blueprint?.GetxTag("TextFragments", Name, null);
 		}
 
 		/// <summary>The first <paramref name="Count"/> settlers of <paramref name="Settlers"/>,
@@ -183,7 +233,8 @@ namespace ThousandAndFirst
 		/// <param name="Pool">The capability pool for this pass, e.g. <see cref="CapabilitiesOf"/>
 		/// already reduced by the water detail.</param>
 		/// <returns>One outcome per work, same order, same length. Never null.</returns>
-		public static KingdomCrewRules.CrewOutcome[] AssignWorks(IList<GameObject> Works, KingdomCrewRules.SettlerCapability[] Pool)
+		public static KingdomCrewRules.CrewOutcome[] AssignWorks(IList<GameObject> Works,
+			KingdomCrewRules.SettlerCapability[] Pool, IList<GameObject> Settlers = null)
 		{
 			int n = (Works != null) ? Works.Count : 0;
 			KingdomCrewRules.CrewDemand[] demands = new KingdomCrewRules.CrewDemand[n];
@@ -194,6 +245,12 @@ namespace ThousandAndFirst
 				bool threshold = work.GetIntProperty("KingdomThresholdManning") == 1;
 				List<KindAmount> needs = NeedsOf(work);
 				string kind = null;
+				string workKind = null;
+				string buildKey = work.GetStringProperty(KingdomUpgrade.BuildKeyProperty);
+				if (KingdomData.TryGetBuilding(buildKey, out KingdomRules.BuildEntry entry))
+				{
+					workKind = entry.Category;
+				}
 				int capabilityThreshold = 0;
 				for (int k = 0; k < KingdomCrewRules.KnownKinds.Length; k++)
 				{
@@ -205,9 +262,85 @@ namespace ThousandAndFirst
 						break;
 					}
 				}
-				demands[i] = new KingdomCrewRules.CrewDemand(headcount, threshold, kind, capabilityThreshold);
+				demands[i] = new KingdomCrewRules.CrewDemand(headcount, threshold, kind,
+					capabilityThreshold, workKind);
 			}
-			return KingdomCrewRules.AssignCrew(Pool, demands);
+			int[,] extensionAffinities = ExtensionAffinities(demands, Settlers,
+				Pool == null ? 0 : Pool.Length);
+			return KingdomCrewRules.AssignCrew(Pool, demands, extensionAffinities);
+		}
+
+		/// <summary>Draws one temporary raising gang through the same capability, identity, and
+		/// extension-affinity lane as a finished work. Construction differs only in headcount: it
+		/// wants the bounded settlement gang rather than the finished design's running staff.</summary>
+		internal static KingdomCrewRules.CrewOutcome AssignRaising(GameObject Work,
+			IList<GameObject> Settlers, int WantedHands)
+		{
+			int count = Settlers == null ? 0 : Settlers.Count;
+			KingdomCrewRules.SettlerCapability[] pool = CapabilitiesOf(Settlers, count);
+			List<KindAmount> needs = NeedsOf(Work);
+			string kind = null;
+			int capabilityThreshold = 0;
+			for (int k = 0; k < KingdomCrewRules.KnownKinds.Length; k++)
+			{
+				int need = KingdomCrewRules.ThresholdOf(needs,
+					KingdomCrewRules.KnownKinds[k]);
+				if (need <= 0) continue;
+				kind = KingdomCrewRules.KnownKinds[k];
+				capabilityThreshold = need;
+				break;
+			}
+			string workKind = null;
+			string buildKey = GameObject.Validate(Work)
+				? Work.GetStringProperty(KingdomUpgrade.BuildKeyProperty) : null;
+			if (KingdomData.TryGetBuilding(buildKey, out KingdomRules.BuildEntry entry))
+				workKind = entry.Category;
+			KingdomCrewRules.CrewDemand[] demand = new KingdomCrewRules.CrewDemand[1]
+			{
+				new KingdomCrewRules.CrewDemand(WantedHands, false, kind,
+					capabilityThreshold, workKind)
+			};
+			int[,] extensionAffinities = ExtensionAffinities(demand, Settlers, pool.Length);
+			return KingdomCrewRules.AssignCrew(pool, demand, extensionAffinities)[0];
+		}
+
+		/// <summary>Freezes every third-party affinity before pure assignment begins. One source is
+		/// asked once per (person, canonical work kind) in this pass, even when several works share a
+		/// category; no mutable body crosses the extension seam.</summary>
+		private static int[,] ExtensionAffinities(KingdomCrewRules.CrewDemand[] Demands,
+			IList<GameObject> Settlers, int PoolCount)
+		{
+			if (Demands == null || Demands.Length == 0 || Settlers == null || PoolCount <= 0)
+			{
+				return null;
+			}
+			int count = PoolCount < Settlers.Count ? PoolCount : Settlers.Count;
+			if (count <= 0)
+			{
+				return null;
+			}
+			int[,] result = new int[Demands.Length, PoolCount];
+			Dictionary<string, int> cache = new Dictionary<string, int>(StringComparer.Ordinal);
+			for (int i = 0; i < Demands.Length; i++)
+			{
+				string workKind = KingdomApiRules.IdentityWorkKind(Demands[i].WorkKind);
+				if (string.IsNullOrEmpty(workKind)) continue;
+				for (int j = 0; j < count; j++)
+				{
+					GameObject settler = Settlers[j];
+					if (!GameObject.Validate(settler)) continue;
+					string cacheKey = j.ToString(System.Globalization.CultureInfo.InvariantCulture)
+						+ "|" + workKind;
+					if (!cache.TryGetValue(cacheKey, out int affinity))
+					{
+						affinity = KingdomExtensions.IdentityAffinity(
+							KingdomIdentity.Read(settler), workKind);
+						cache[cacheKey] = affinity;
+					}
+					result[i, j] = affinity;
+				}
+			}
+			return result;
 		}
 
 		// --- Announcing a shortfall once per work (STANDARDS 7b) -------------------------------

@@ -161,13 +161,12 @@ namespace ThousandAndFirst
 		/// when they go &mdash; access withdrawn, nothing erased.</summary>
 		public const string KindSavant = "savant";
 
-		/// <summary>A roster kind (Addendum 17): what a people KNOWS. Declared here so a node and a
-		/// modder's design can gate on it today; nothing in this build MINTS one yet, and an
-		/// unminted kind is a gate that stays shut rather than a load error.</summary>
+		/// <summary>A live roster kind (Addendum 17): what a resident people KNOWS, read from
+		/// vanilla culture rather than persisted as learned city knowledge.</summary>
 		public const string KindCulture = "culture";
 
-		/// <summary>A roster kind (Addendum 17): what a body IS. Declared, unminted, exactly as
-		/// <see cref="KindCulture"/> is.</summary>
+		/// <summary>A live roster kind (Addendum 17): what a resident body IS, read from vanilla
+		/// species separately from culture.</summary>
 		public const string KindSpecies = "species";
 
 		/// <summary>Effect kind: a named rung on the realm-wide worker-method lane.</summary>
@@ -276,6 +275,15 @@ namespace ThousandAndFirst
 		/// <param name="LabPercent">The bench's own rung.</param>
 		public static int InquiryRate(int CrewEffectiveness, int WearEffectiveness, int TierBonus, int LabPercent)
 		{
+			return InquiryRate(CrewEffectiveness, WearEffectiveness, TierBonus, LabPercent,
+				KingdomIdentityAffinityRules.NeutralPercent);
+		}
+
+		/// <summary>The same lane with Addendum 17's per-crew identity factor kept distinct.
+		/// Raw Intelligence still owns the tier gate; affinity changes pace only.</summary>
+		public static int InquiryRate(int CrewEffectiveness, int WearEffectiveness,
+			int TierBonus, int LabPercent, int IdentityAffinity)
+		{
 			if (CrewEffectiveness <= 0 || WearEffectiveness <= 0 || TierBonus <= 0 || LabPercent <= 0)
 			{
 				return 0;
@@ -283,6 +291,7 @@ namespace ThousandAndFirst
 			long rate = (long)Clamp(CrewEffectiveness, 0, 100) * Clamp(WearEffectiveness, 0, 100);
 			rate = rate * TierBonus / 10000L;
 			rate = rate * LabPercent / 100L;
+			rate = rate * KingdomIdentityAffinityRules.Clamp(IdentityAffinity) / 100L;
 			return (rate > int.MaxValue) ? int.MaxValue : (int)rate;
 		}
 
@@ -331,8 +340,11 @@ namespace ThousandAndFirst
 
 		internal const int MaxSeedReceiptSourceLength = 512;
 
+		internal const int MaxSeedReceiptRowLength =
+			MaxSeedReceiptNodeLength + MaxSeedReceiptSourceLength + 32;
+
 		internal const int MaxSeedReceiptEncodedLength = MaxSeedReceiptRows *
-			(MaxSeedReceiptNodeLength + MaxSeedReceiptSourceLength + 32);
+			MaxSeedReceiptRowLength;
 
 		internal const int MaxSeedReceiptEncodedUtf8Bytes = MaxSeedReceiptEncodedLength * 4;
 
@@ -395,14 +407,47 @@ namespace ThousandAndFirst
 					return new List<string>();
 				}
 			}
-			foreach (string key in KingdomZoningRules.DecodeRoster(Encoded))
+			HashSet<string> seen = new HashSet<string>();
+			string[] rowsRead = Encoded.Split(KingdomZoningRules.RosterSeparator);
+			for (int i = 0; i < rowsRead.Length; i++)
 			{
-				if (IsCanonicalFounderRite(key) && result.Count < MaxFounderRites)
+				string key = Fold(rowsRead[i]);
+				if (key != null && seen.Add(key) && IsCanonicalFounderRite(key)
+					&& result.Count < MaxFounderRites)
 				{
 					result.Add(key);
 				}
 			}
 			return result;
+		}
+
+		/// <summary>Writes the founder-wide rite ledger under its own receipt bounds. This is not a
+		/// keeper roster: sharing its delimiter does not make the roster's smaller heap ceiling its
+		/// authority.</summary>
+		internal static bool TryEncodeFounderRites(IEnumerable<string> Rites, out string Encoded)
+		{
+			Encoded = null;
+			List<string> canonical = new List<string>();
+			HashSet<string> seen = new HashSet<string>();
+			if (Rites != null)
+			{
+				foreach (string raw in Rites)
+				{
+					string key = Fold(raw);
+					if (!IsCanonicalFounderRite(key)) return false;
+					if (seen.Add(key))
+					{
+						if (canonical.Count >= MaxFounderRites) return false;
+						canonical.Add(key);
+					}
+				}
+			}
+			string value = string.Join(KingdomZoningRules.RosterSeparator.ToString(),
+				canonical.ToArray());
+			if (value.Length > MaxFounderRiteEncodedLength
+				|| Encoding.UTF8.GetByteCount(value) > MaxFounderRiteEncodedLength * 4) return false;
+			Encoded = value;
+			return true;
 		}
 
 		/// <summary>Canonical receipt identity for one concrete source on one node. The source is
@@ -427,8 +472,13 @@ namespace ThousandAndFirst
 			{
 				return null;
 			}
-			return KingdomZoningRules.ComposeKey(SeedReceiptKind,
-				nodeName.Length.ToString(CultureInfo.InvariantCulture) + "." + nodeName + "=" + source);
+			string body = nodeName.Length.ToString(CultureInfo.InvariantCulture) + "."
+				+ nodeName + "=" + source;
+			string receipt = SeedReceiptKind + KingdomZoningRules.KindSeparator + body;
+			return receipt.Length <= MaxSeedReceiptRowLength
+				&& receipt.IndexOf(KingdomZoningRules.RosterSeparator) < 0
+				&& Encoding.UTF8.GetByteCount(receipt) <= MaxSeedReceiptRowLength * 4
+				? receipt : null;
 		}
 
 		/// <summary>How many distinct durable receipts one node owns.</summary>
@@ -492,10 +542,12 @@ namespace ThousandAndFirst
 				}
 			}
 			receipts = canonical;
-			int existingCount = SeedReceiptCount(KingdomZoningRules.EncodeRoster(receipts), NodeKey);
+			string canonicalStore;
+			if (!TryEncodeSeedReceiptStore(receipts, out canonicalStore)) return false;
+			int existingCount = SeedReceiptCount(canonicalStore, NodeKey);
 			if (existingCount >= MaxSeedSourcesPerNode)
 			{
-				Updated = KingdomZoningRules.EncodeRoster(receipts);
+				Updated = canonicalStore;
 				Changed = !string.Equals(Updated, Encoded ?? "", StringComparison.Ordinal);
 				SourceCount = MaxSeedSourcesPerNode;
 				return true;
@@ -508,7 +560,7 @@ namespace ThousandAndFirst
 				}
 				receipts.Add(receipt);
 			}
-			Updated = KingdomZoningRules.EncodeRoster(receipts);
+			if (!TryEncodeSeedReceiptStore(receipts, out Updated)) return false;
 			Changed = !string.Equals(Updated, Encoded ?? "", StringComparison.Ordinal);
 			SourceCount = SeedReceiptCount(Updated, NodeKey);
 			return SourceCount > 0;
@@ -534,8 +586,48 @@ namespace ThousandAndFirst
 					return false;
 				}
 			}
-			Receipts = KingdomZoningRules.DecodeRoster(Encoded);
+			string[] parts = Encoded.Split(KingdomZoningRules.RosterSeparator);
+			HashSet<string> seen = new HashSet<string>();
+			for (int i = 0; i < parts.Length; i++)
+			{
+				if (parts[i] != null && (parts[i].Length > MaxSeedReceiptRowLength
+					|| Encoding.UTF8.GetByteCount(parts[i]) > MaxSeedReceiptRowLength * 4))
+				{
+					Receipts.Clear();
+					return false;
+				}
+				string row = Fold(parts[i]);
+				if (row != null && seen.Add(row)) Receipts.Add(row);
+			}
 			return Receipts.Count <= MaxSeedReceiptRows;
+		}
+
+		private static bool TryEncodeSeedReceiptStore(IEnumerable<string> Receipts,
+			out string Encoded)
+		{
+			Encoded = null;
+			List<string> rows = new List<string>();
+			HashSet<string> seen = new HashSet<string>();
+			if (Receipts != null)
+			{
+				foreach (string raw in Receipts)
+				{
+					string row = Fold(raw);
+					string node;
+					string source;
+					if (!TryReadSeedReceipt(row, out node, out source)) return false;
+					if (seen.Add(row))
+					{
+						if (rows.Count >= MaxSeedReceiptRows) return false;
+						rows.Add(row);
+					}
+				}
+			}
+			string value = string.Join(KingdomZoningRules.RosterSeparator.ToString(), rows.ToArray());
+			if (value.Length > MaxSeedReceiptEncodedLength
+				|| Encoding.UTF8.GetByteCount(value) > MaxSeedReceiptEncodedUtf8Bytes) return false;
+			Encoded = value;
+			return true;
 		}
 
 		private static bool TryReadSeedReceipt(string Receipt, out string NodeName,
@@ -1127,6 +1219,30 @@ namespace ThousandAndFirst
 			return (string.IsNullOrEmpty(LabName) ? "The bench" : ("The " + LabName)) + " at "
 				+ (string.IsNullOrEmpty(CityName) ? "the city" : CityName)
 				+ " stands over nothing. Nobody has been set anything to work out.";
+		}
+
+		/// <summary>A subject that has become inadmissible after it was taken up. Deliberately
+		/// does not name the hidden/forbidding fact: the research visibility law still applies
+		/// while the saved labour waits on the shelf.</summary>
+		public static string ClosedSubjectLine(string LabName, string CityName)
+		{
+			string lab = string.IsNullOrEmpty(LabName) ? "The bench" : ("The " + LabName);
+			string city = string.IsNullOrEmpty(CityName) ? "the city" : CityName;
+			return lab + " at " + city
+				+ " has set this work aside. Its road is no longer open to this city; choose another subject or change who the city has become.";
+		}
+
+		/// <summary>A live prerequisite left after work began. Names the missing source and the
+		/// repair, as STANDARDS 7b requires, without erasing already-paid thought.</summary>
+		public static string MissingSourceLine(string LabName, string Named, string CityName,
+			string Missing)
+		{
+			string lab = string.IsNullOrEmpty(LabName) ? "The bench" : ("The " + LabName);
+			string named = string.IsNullOrEmpty(Named) ? "the work" : Named;
+			string city = string.IsNullOrEmpty(CityName) ? "the city" : CityName;
+			string missing = string.IsNullOrEmpty(Missing) ? "a source it requires" : Missing;
+			return lab + " at " + city + " has set " + named + " aside. Nobody there still holds {{C|"
+				+ missing + "}}. Bring that living source back, or take up another subject; the work already done is kept.";
 		}
 
 		/// <summary>

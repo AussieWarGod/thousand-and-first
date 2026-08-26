@@ -162,13 +162,16 @@ namespace XRL.World.Parts
 			{
 				ThousandAndFirst.KingdomSuccession succession = The.Game?.GetSystem<ThousandAndFirst.KingdomSuccession>();
 				int revealed;
-				if (succession == null || !succession.TryRestoreFounderKnowledge(DeathToken, FounderName, out revealed))
+				int questMarks;
+				if (succession == null || !succession.TryRestoreFounderKnowledge(DeathToken,
+					FounderName, out revealed, out questMarks))
 				{
 					Popup.Show("The remains answer no succession record. Nothing changes.");
 					return false;
 				}
 				Used = true;
-				Popup.Show(ThousandAndFirst.KingdomSuccessionRules.CorpseReadLine(revealed, 0));
+				Popup.Show(ThousandAndFirst.KingdomSuccessionRules.CorpseReadLine(
+					revealed, questMarks));
 				E.RequestInterfaceExit();
 			}
 			catch (Exception ex)

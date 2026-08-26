@@ -48,7 +48,7 @@ namespace ThousandAndFirst
 	internal sealed class KingdomSealRecord
 	{
 		/// <summary>The only schema this build writes.</summary>
-		public const int CurrentSchema = 4;
+		public const int CurrentSchema = 5;
 
 		/// <summary>The oldest schema this build reads. Pre-release schemas through 3 lacked
 		/// per-member immutable topology provenance and are deliberately refused.</summary>
@@ -138,6 +138,16 @@ namespace ThousandAndFirst
 		private const string KeyWorkX = "work_x";
 		private const string KeyWorkY = "work_y";
 		private const string KeyWorkCondition = "work_condition";
+		private const string KeySpatialVersion = "spatial_version";
+		private const string KeySpatialWidth = "spatial_width";
+		private const string KeySpatialHeight = "spatial_height";
+		private const string KeySpatialEntrySide = "spatial_entry_side";
+		private const string KeySpatialEntryX = "spatial_entry_x";
+		private const string KeySpatialEntryY = "spatial_entry_y";
+		private const string KeyWorkSnapshot = "work_snapshot";
+		private const string KeyWorkSnapshotHash = "work_snapshot_hash";
+		private const string KeyStreetX = "street_x";
+		private const string KeyStreetY = "street_y";
 		private const string KeyRollName = "roll_name";
 		private const string KeyRollOrigin = "roll_origin";
 		private const string KeyRollArrived = "roll_arrived";
@@ -174,7 +184,7 @@ namespace ThousandAndFirst
 			KeyChronicle, KeyOutsider, KeyDeadName, KeyDeadCause
 		};
 
-		private static readonly string[] CanonicalKeys = new string[]
+		private static readonly string[] CanonicalKeysV4 = new string[]
 		{
 			KeyKind, KeyWriter, KeyEngine, KeyStatus, KeyLineage, KeyLegacy, KeyOrigin,
 			KeyGeneration, KeyRevision, KeyWritten, KeyFounder, KeyCause, KeyCauseKind,
@@ -191,6 +201,27 @@ namespace ThousandAndFirst
 			KeyWorkX, KeyWorkY, KeyWorkCondition, KeyRollName, KeyRollOrigin, KeyRollArrived,
 			KeyOriginKey, KeyOriginCount, KeyCreedKey, KeyCreedCount, KeyChronicle,
 			KeyOutsider, KeyDeadName, KeyDeadCause
+		};
+
+		private static readonly string[] CanonicalKeys = new string[]
+		{
+			KeyKind, KeyWriter, KeyEngine, KeyStatus, KeyLineage, KeyLegacy, KeyOrigin,
+			KeyGeneration, KeyRevision, KeyWritten, KeyFounder, KeyCause, KeyCauseKind,
+			KeyCauseTurn, KeyRealm, KeyRealmId, KeyRealmSettlementId,
+			KeyRealmSettlementProvenance,
+			KeyRealmIdentityVersion, KeyRealmIdentityOrigin, KeyRealmIdentityTransaction,
+			KeyRealmIdentityLegacy, KeyRealmIdentityFounded, KeyRealmSeedHigh, KeyRealmSeedLow,
+			KeyRealmIdentityZone, KeySettlement, KeySettlementId,
+			KeySettlementIdentityVersion, KeySettlementIdentityOrigin,
+			KeySettlementIdentityTransaction, KeySettlementIdentityFounded,
+			KeySettlementIdentityZone, KeySettlementIdentityLegacy, KeyVocation, KeyStyle,
+			KeyFounded, KeyGround, KeyRegion, KeyTerrain, KeyDepth, KeyStage, KeyPeople,
+			KeyDefence, KeyWater, KeyWithered, KeyVigour, KeyRoll, KeyState, KeyWorkKey,
+			KeyWorkX, KeyWorkY, KeyWorkCondition, KeySpatialVersion, KeySpatialWidth,
+			KeySpatialHeight, KeySpatialEntrySide, KeySpatialEntryX, KeySpatialEntryY,
+			KeyWorkSnapshot, KeyWorkSnapshotHash, KeyStreetX, KeyStreetY,
+			KeyRollName, KeyRollOrigin, KeyRollArrived, KeyOriginKey, KeyOriginCount,
+			KeyCreedKey, KeyCreedCount, KeyChronicle, KeyOutsider, KeyDeadName, KeyDeadCause
 		};
 
 		private static readonly string[] StatusNames = new string[4] { "living", "terminal", "retired", "promoted" };
@@ -307,6 +338,28 @@ namespace ThousandAndFirst
 		public List<int> WorkY = new List<int>();
 
 		public List<int> WorkConditions = new List<int>();
+
+		/// <summary>Zero is a schema-4 compatible anchor proxy. One freezes exact authored
+		/// architecture and a zone-relative street graph.</summary>
+		public int SpatialVersion;
+
+		public int SpatialWidth;
+
+		public int SpatialHeight;
+
+		public int SpatialEntrySide = KingdomInheritanceSpatialRules.NoEntry;
+
+		public int SpatialEntryX;
+
+		public int SpatialEntryY;
+
+		public List<string> WorkSnapshots = new List<string>();
+
+		public List<string> WorkSnapshotHashes = new List<string>();
+
+		public List<int> StreetX = new List<int>();
+
+		public List<int> StreetY = new List<int>();
 
 		public List<string> RollNames = new List<string>();
 
@@ -434,6 +487,16 @@ namespace ThousandAndFirst
 			body.PutList(KeyWorkX, Widen(WorkX));
 			body.PutList(KeyWorkY, Widen(WorkY));
 			body.PutList(KeyWorkCondition, Widen(WorkConditions));
+			body.Put(KeySpatialVersion, SpatialVersion);
+			body.Put(KeySpatialWidth, SpatialWidth);
+			body.Put(KeySpatialHeight, SpatialHeight);
+			body.Put(KeySpatialEntrySide, SpatialEntrySide);
+			body.Put(KeySpatialEntryX, SpatialEntryX);
+			body.Put(KeySpatialEntryY, SpatialEntryY);
+			body.PutList(KeyWorkSnapshot, WorkSnapshots);
+			body.PutList(KeyWorkSnapshotHash, WorkSnapshotHashes);
+			body.PutList(KeyStreetX, Widen(StreetX));
+			body.PutList(KeyStreetY, Widen(StreetY));
 			body.PutList(KeyRollName, RollNames);
 			body.PutList(KeyRollOrigin, RollOrigins);
 			body.PutList(KeyRollArrived, RollArrived);
@@ -454,7 +517,7 @@ namespace ThousandAndFirst
 			Fault = KingdomSealFault.None;
 			Detail = "";
 			string[] canonical = (Schema == 1) ? CanonicalKeysV1 :
-				(Schema == 2 ? CanonicalKeysV2 : CanonicalKeys);
+				(Schema == 2 ? CanonicalKeysV2 : (Schema == 4 ? CanonicalKeysV4 : CanonicalKeys));
 			HashSet<string> known = new HashSet<string>(canonical);
 			for (int i = 0; i < Body.Keys.Count; i++)
 			{
@@ -687,6 +750,69 @@ namespace ThousandAndFirst
 				|| !ReadTexts(Body, KeyDeadCause, MaxDead, MaxLineChars, out record.DeadCauses, ref Fault, ref Detail))
 			{
 				return false;
+			}
+			if (Schema >= 5)
+			{
+				if (!ReadInt(Body, KeySpatialVersion, 0,
+					KingdomInheritanceSpatialRules.SpatialVersion, out record.SpatialVersion,
+					ref Fault, ref Detail)
+					|| !ReadInt(Body, KeySpatialWidth, 0,
+						KingdomInheritanceSpatialRules.Width, out record.SpatialWidth,
+						ref Fault, ref Detail)
+					|| !ReadInt(Body, KeySpatialHeight, 0,
+						KingdomInheritanceSpatialRules.Height, out record.SpatialHeight,
+						ref Fault, ref Detail)
+					|| !ReadInt(Body, KeySpatialEntrySide,
+						KingdomInheritanceSpatialRules.NoEntry, KingdomInheritanceSpatialRules.West,
+						out record.SpatialEntrySide, ref Fault, ref Detail)
+					|| !ReadInt(Body, KeySpatialEntryX, 0,
+						KingdomInheritanceSpatialRules.Width - 1, out record.SpatialEntryX,
+						ref Fault, ref Detail)
+					|| !ReadInt(Body, KeySpatialEntryY, 0,
+						KingdomInheritanceSpatialRules.Height - 1, out record.SpatialEntryY,
+						ref Fault, ref Detail)
+					|| !ReadTexts(Body, KeyWorkSnapshot, MaxWorks,
+						KingdomInheritanceSpatialRules.MaxSnapshotChars, out record.WorkSnapshots,
+						ref Fault, ref Detail)
+					|| !ReadTokens(Body, KeyWorkSnapshotHash, MaxWorks,
+						out record.WorkSnapshotHashes, ref Fault, ref Detail)
+					|| !ReadInts(Body, KeyStreetX, KingdomInheritanceSpatialRules.MaxStreetCells,
+						0, KingdomInheritanceSpatialRules.Width - 1, out record.StreetX,
+						ref Fault, ref Detail)
+					|| !ReadInts(Body, KeyStreetY, KingdomInheritanceSpatialRules.MaxStreetCells,
+						0, KingdomInheritanceSpatialRules.Height - 1, out record.StreetY,
+						ref Fault, ref Detail))
+				{
+					return false;
+				}
+				if (record.SpatialVersion == 0)
+				{
+					if (record.SpatialWidth != 0 || record.SpatialHeight != 0
+						|| record.SpatialEntrySide != KingdomInheritanceSpatialRules.NoEntry
+						|| record.SpatialEntryX != 0 || record.SpatialEntryY != 0
+						|| record.WorkSnapshots.Count != 0 || record.WorkSnapshotHashes.Count != 0
+						|| record.StreetX.Count != 0 || record.StreetY.Count != 0)
+					{
+						Fault = KingdomSealFault.OutOfBounds;
+						Detail = "the legacy spatial proxy carries partial current geometry";
+						return false;
+					}
+				}
+				else
+				{
+					KingdomInheritanceSpatialFault spatialFault;
+					if (!KingdomInheritanceSpatialRules.TryValidate(record.WorkKeys, record.WorkX,
+						record.WorkY, record.WorkConditions, record.WorkSnapshots,
+						record.WorkSnapshotHashes, record.SpatialWidth, record.SpatialHeight,
+						record.SpatialEntrySide, record.SpatialEntryX, record.SpatialEntryY,
+						record.StreetX, record.StreetY, out spatialFault))
+					{
+						Fault = KingdomSealFault.OutOfBounds;
+						Detail = "the sealed architecture or street graph is malformed: "
+							+ spatialFault;
+						return false;
+					}
+				}
 			}
 
 			// Parallel columns are a row or they are nothing. A reader that trusted the longest

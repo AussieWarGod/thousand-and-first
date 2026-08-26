@@ -3,28 +3,33 @@
   <!--
     Who actually turns up. A settlement of identical figures reads as a barracks,
     so arrivals roll from this table rather than from one blueprint. Every entry
-    inherits r_KingdomSettler, where all settler behaviour lives, and overrides
-    nothing but appearance - so another mod can put its own people on the road by
-    merging one line here, and they will still house themselves, take work, and
-    answer to the charter.
+	    Most entries inherit r_KingdomSettler. A creature-bodied entry may instead inherit
+	    its vanilla body and explicitly carry r_KingdomSettler, AllowIdleBehavior, SleepOnBed,
+	    and a calm wandering Brain; this keeps culture, species, anatomy, stats, equipment,
+	    mutations, and TextFragments honest. Other mods merge either shape here.
   -->
-  <population Name="r_KingdomSettlers" Load="Merge">
-    <object Blueprint="r_KingdomSettler" Number="1" Weight="40" />
+  <population Name="r_KingdomSettlers" Load="Merge" Style="pickone">
+	    <object Blueprint="r_KingdomSettler" Number="1" Weight="25" />
     <object Blueprint="r_KingdomSettlerHand" Number="1" Weight="20" />
     <object Blueprint="r_KingdomSettlerDrifter" Number="1" Weight="14" />
     <object Blueprint="r_KingdomSettlerTinker" Number="1" Weight="10" />
     <object Blueprint="r_KingdomSettlerScribe" Number="1" Weight="8" />
     <object Blueprint="r_KingdomSettlerYoung" Number="1" Weight="8" />
+	    <object Blueprint="r_KingdomSettlerPhysicker" Number="1" Weight="5" />
+	    <object Blueprint="r_KingdomSettlerMechanimist" Number="1" Weight="5" />
+	    <object Blueprint="r_KingdomSettlerSnapjaw" Number="1" Weight="5" />
   </population>
-  <population Name="r_KingdomGuests" Load="Merge">
+  <population Name="r_KingdomGuests" Load="Merge" Style="pickone">
+    <!-- Pilgrims are not generic traffic. KingdomHappenings freezes one from a qualifying
+         city history and KingdomLocus brings that exact cause to the rite ground. -->
     <object Blueprint="r_KingdomGuest" Number="1" Weight="50" />
-    <object Blueprint="r_KingdomGuestPilgrim" Number="1" Weight="25" />
-    <object Blueprint="r_KingdomGuestNomad" Number="1" Weight="25" />
+    <object Blueprint="r_KingdomGuestNomad" Number="1" Weight="50" />
   </population>
-  <population Name="r_KingdomNotableGuests" Load="Merge">
-    <object Blueprint="r_KingdomNotableGuest" Number="1" Weight="50" />
+  <population Name="r_KingdomNotableGuests" Load="Merge" Style="pickone">
+    <object Blueprint="r_KingdomNotableGuest" Number="1" Weight="40" />
     <object Blueprint="r_KingdomNotableGuestScribe" Number="1" Weight="25" />
     <object Blueprint="r_KingdomNotableGuestTinker" Number="1" Weight="25" />
+    <object Blueprint="r_KingdomNotableGuestTrader" Number="1" Weight="10" />
   </population>
   <population Name="Tier1Wares" Load="Merge">
     <object Blueprint="r_FounderBasin" Number="1" Chance="25" />
@@ -85,14 +90,17 @@
   -->
   <!--
     Furnishings. The single-cell civic objects that used to be commissioned one at a time are now
-    what a finished plot is furnished WITH, populated the way a vanilla hut is. The blueprints did
+    what a finished plot is furnished WITH, populated the way a vanilla hut is. Semantic callers
+    admit only direct Number=1 object rows with fixed positive weights; groups, calls, builders,
+    chances, counted rows, and Dynamic tables fail closed before any object is created. The
+    blueprints did
     not change and nothing was deleted; what changed is that a founder orders a house and gets the
     bunk, rather than ordering the bunk. Each table is a weighted single pick, rolled
     KingdomPlotRules.ContentsRolls(Size) times per finished plot.
   -->
-  <population Name="r_KingdomFurnishings_Dwelling">
+  <population Name="r_KingdomFurnishings_Dwelling" Style="pickone">
     <object Blueprint="r_KingdomBunk" Number="1" Weight="60" />
-    <object Blueprint="Torchpost" Number="1" Weight="25" />
+    <object Blueprint="r_KingdomCivicTorchpost" Number="1" Weight="25" />
     <object Blueprint="r_KingdomBench" Number="1" Weight="15" />
   </population>
   <!--
@@ -109,24 +117,24 @@
     so every roll would arrive holding free fresh water. A vessel that arrives full is a
     producer wearing a vessel's name.
   -->
-  <population Name="r_KingdomFurnishings_Water">
+  <population Name="r_KingdomFurnishings_Water" Style="pickone">
     <object Blueprint="r_KingdomCaskRack" Number="1" Weight="55" />
     <object Blueprint="Catchbasin" Number="1" Weight="30" />
-    <object Blueprint="Torchpost" Number="1" Weight="15" />
+    <object Blueprint="r_KingdomCivicTorchpost" Number="1" Weight="15" />
   </population>
-  <population Name="r_KingdomFurnishings_Civic">
+  <population Name="r_KingdomFurnishings_Civic" Style="pickone">
     <object Blueprint="r_KingdomBench" Number="1" Weight="55" />
-    <object Blueprint="Torchpost" Number="1" Weight="30" />
-    <object Blueprint="Bookshelf" Number="1" Weight="15" />
+    <object Blueprint="r_KingdomCivicTorchpost" Number="1" Weight="30" />
+    <object Blueprint="r_KingdomCivicBookshelf" Number="1" Weight="15" />
   </population>
-  <population Name="r_KingdomFurnishings_Comfort">
-    <object Blueprint="Hookah" Number="1" Weight="40" />
+  <population Name="r_KingdomFurnishings_Comfort" Style="pickone">
+    <object Blueprint="r_KingdomCivicHookah" Number="1" Weight="40" />
     <object Blueprint="r_KingdomBench" Number="1" Weight="35" />
-    <object Blueprint="Torchpost" Number="1" Weight="25" />
+    <object Blueprint="r_KingdomCivicTorchpost" Number="1" Weight="25" />
   </population>
-  <population Name="r_KingdomFurnishings_Learning">
-    <object Blueprint="Bookshelf" Number="1" Weight="60" />
+  <population Name="r_KingdomFurnishings_Learning" Style="pickone">
+    <object Blueprint="r_KingdomCivicBookshelf" Number="1" Weight="60" />
     <object Blueprint="r_KingdomBench" Number="1" Weight="25" />
-    <object Blueprint="Torchpost" Number="1" Weight="15" />
+    <object Blueprint="r_KingdomCivicTorchpost" Number="1" Weight="15" />
   </population>
 </populations>

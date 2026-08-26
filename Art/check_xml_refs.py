@@ -99,6 +99,59 @@ def taf_blueprints():
     return names
 
 
+def blueprint_inheritance_problems(path="ObjectBlueprints.xml", vanilla=None):
+    """Reject unresolved or cyclic local inheritance before Qud reaches its loader.
+
+    ``Blueprint=`` references are not the only names the game resolves.  ``Inherits=`` is
+    resolved while the object factory is being built, and a typo there rejects the blueprint
+    itself.  With an installed base, every parent must exist in either corpus.  Repository-only
+    runs can still prove local ``r_`` parents and all-local cycle freedom without pretending to
+    know vanilla's inventory.
+    """
+    root = ET.parse(path).getroot()
+    parents = {}
+    problems = []
+    for obj in root.iter("object"):
+        name = obj.get("Name")
+        if not name:
+            continue
+        parent = obj.get("Inherits")
+        parents[name] = parent
+
+    ours = set(parents)
+    known_vanilla = None if vanilla is None else set(vanilla)
+    for name, parent in sorted(parents.items()):
+        if not parent or parent in ours:
+            continue
+        if known_vanilla is not None:
+            if parent not in known_vanilla:
+                problems.append(
+                    "blueprint %s inherits %s, which neither TAF nor the installed base defines"
+                    % (name, parent)
+                )
+        elif parent.startswith("r_"):
+            problems.append(
+                "blueprint %s inherits missing TAF blueprint %s" % (name, parent)
+            )
+
+    reported = set()
+    for start in sorted(ours):
+        order = []
+        positions = {}
+        at = start
+        while at in ours and at not in positions:
+            positions[at] = len(order)
+            order.append(at)
+            at = parents.get(at)
+        if at in positions:
+            cycle = order[positions[at]:] + [at]
+            canonical = tuple(sorted(cycle[:-1]))
+            if canonical not in reported:
+                reported.add(canonical)
+                problems.append("blueprint inheritance loops: %s" % " -> ".join(cycle))
+    return problems
+
+
 def taf_referenced_blueprints():
     """Every Blueprint= across our XML, with the file that mentions it."""
     refs = {}
@@ -388,10 +441,11 @@ def building_reference_problems():
             tile = merged[key]["skins"][skin_key].get("Tile")
             if not tile or not tile.startswith("ThousandAndFirst/"):
                 continue
-            if not os.path.isfile(os.path.join("Textures", tile)):
+            local_path = os.path.join("Textures", tile[len("ThousandAndFirst/"):])
+            if not os.path.isfile(local_path):
                 problems.append(
-                    "building %s skin %s names the tile %s, which is not in Textures/"
-                    % (key, skin_key, tile)
+                    "building %s skin %s names the tile %s, which is not at %s"
+                    % (key, skin_key, tile, local_path)
                 )
 
     # A style is a TAG (Addendum 16) and the tag set is OPEN, so a token naming a style nothing
@@ -978,7 +1032,15 @@ def main():
     ours = taf_blueprints()
     theirs = vanilla_blueprints(base) if base else set()
 
-    # 1. Every referenced blueprint resolves.
+    # 1. A blueprint's own parent is a load-time reference too.  A bad parent rejects the
+    #    blueprint before any later Blueprint= consumer can be checked.
+    problems.extend(
+        blueprint_inheritance_problems(
+            vanilla=theirs if base else None,
+        )
+    )
+
+    # 2. Every referenced blueprint resolves.
     for name, sources in sorted(taf_referenced_blueprints().items()):
         if name in ours:
             continue

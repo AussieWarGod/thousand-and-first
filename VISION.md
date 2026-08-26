@@ -125,30 +125,55 @@ is half the simulation.
 
 ## Where it stands
 
-**Built for the 0.2.0 release candidate.** Founding by rite, including ruin reclamation, plus
-covenants with living villages; two distinct cities under one realm; horizontal and vertical claims; roads,
-shafts, districts, plots, commissioned works, typed materials, power, wear, and repair. Water
-and food are physical flows: dedicated vessels, fetching, crops, larders, meals, upkeep,
-and scarcity. Production runs on world time and named labour; trade, porters, conduits, and
-intercity manifests move physical stocks through explicit routes and authority. Settlers have
-origins, homes, posts, creeds, conversations, offices, petitions, rites,
-and funerals. Styles filter the catalogue. Research, certified machinery, laboratories,
-grafts, the becoming annexe, the crown, arcology, and mirror-gates extend the city into Qud's
-adventuring systems. Raids, brinks, dissent, exile and return, succession, and optional
-cross-world inheritance make losses persistent without deleting the realm. The Charter,
-two-register chronicle, city book, asks board, homecoming report, debug wishes, and extension
-API expose the same state rather than parallel summaries.
+**Implemented in the current working tree.** Founding by rite, including ruin reclamation, plus
+covenants with living villages; two distinct cities under one realm; horizontal and vertical
+claims; roads, shafts, districts, reserved typed lots, authored interchangeable building plans,
+typed materials, power, wear, and repair. Water and food are physical flows: dedicated vessels,
+fetching, seeds, crops, larders, meals, industry, upkeep, and scarcity. Production runs on world
+time and named labour; trade, porters, conduits, and intercity manifests move physical stocks
+through explicit routes and authority. Settlers have origins, homes, posts, creeds,
+conversations, offices, petitions, rites, and funerals. Styles filter the catalogue. Research,
+certified machinery, laboratories, grafts, the becoming annexe, the crown, arcology foundation,
+and mirror-gates extend the city into Qud's adventuring systems. Raids, brinks, dissent, exile and
+return, succession, and optional cross-world inheritance make losses persistent without deleting
+the realm. The Charter, two-register chronicle, city book, asks board, homecoming report, debug
+wishes, and extension API expose the same state rather than parallel summaries. Implementation is
+not native/human acceptance; [current evidence](docs/STATUS.md) says which gates remain unsigned.
 
-**The 0.2.0 boundary.** A realm holds at most two cities. Inherited sites restore bounded layout,
-their founder's cairn, and history—not old people, items, liquids, charge, an autonomously
-simulated rival polity, world-map armies, or offscreen war. Those are deliberate release limits,
-not half-wired promises. The exact current list is in [TESTING.md](TESTING.md#known-v0-limits-not-bugs).
+### Canonical v1 polity scope matrix
 
-**After 0.2.0.** Further world presence—successor citizens, trade routes seen between tiles,
-emissaries, warbands, and rival or prior kingdoms—must earn its cost from playtest evidence.
-Likewise, deeper balance and flavour tuning follows observed play rather than another speculative
-management layer. This vision remains a quarry for later releases, not a promise that every idea
-ships in the first one.
+`SHIP` means the stated bounded surface is implemented for v1, though its named native/human gate
+may remain open. `AUTHOR-DEFERRED` preserves a positive direction without making it a v1 promise.
+`REJECTED` is an incompatible implementation shape, not hidden engineering debt.
+
+| Idea | v1 disposition and exact boundary | Current evidence owner |
+|---|---|---|
+| Prior kingdoms recur | `SHIP`: one opted-in sealed realm may return as bounded inherited site, layout, condition, cairn, and apocryphal history. `AUTHOR-DEFERRED`: living successor polity. | Inheritance seal/archive/site protocol in [TESTING.md](TESTING.md#pass-0--cross-run-inheritance-consent). |
+| Prior NPC appears | `AUTHOR-DEFERRED`: one successor, namesake, claimant, or envoy. `REJECTED`: exact old creature/object continuation. | Old-actor exclusion belongs to inheritance tests; no living adapter exists. |
+| Rival kingdom | `AUTHOR-DEFERRED`: at most one legacy-derived rival/partner as first experiment. | Future polity identity/profile contract; current raids and ruins are not rivals. |
+| War between opposites | `SHIP`: current settlement raids require authored grievance, remedies, and witnessed contact. `AUTHOR-DEFERRED`: polity conflict. `REJECTED`: creed/standing/opposition alone starts war. | Threat/raid lifecycle and native raid protocol. |
+| Polity-shaped NPC levels, bodies, mutations, skills, gear, and relationships | `SHIP`: current residents keep provenance/role identity and authored raid profiles bind roster/tactics/equipment. `AUTHOR-DEFERRED`: one reusable successor/rival phenotype revision. | Resident identity and raid-profile registry; native identity/raid cases. |
+| Scarce named people | `SHIP`: bounded named residents, notables, office holders, causal guests, and defenders. `AUTHOR-DEFERRED`: external-polity anchor/promotion budget. | Resident/office/guest identity plus dense-city human recall protocol. |
+| Unnamed guards, parties, diplomats, or armies | `SHIP`: existing purpose-specific raid bands, merchants/caravans, plain guests, and porters on separate bounded lifecycles. `AUTHOR-DEFERRED`: generalized guards/patrols, diplomats/emissaries, and route cohorts. `REJECTED`: persistent strategic armies. | Raid/trade/guest/porter lifecycle, cleanup, and cap tests. |
+| Actual trade across tiles | `SHIP`: trade charters/caravans and the two-city water manifest conserve custody between stable endpoints. `AUTHOR-DEFERRED`: prior/rival route graph, correspondence, and visible endpoint parties. `REJECTED`: actors walk unloaded tiles. | Trade/manifest/job registry; conservation, save, and native routing protocol. |
+| Kingdoms clash | `SHIP`: current raid waits for fresh physical contact. `AUTHOR-DEFERRED`: prior/rival/current polity clash. `REJECTED`: offscreen conquest or casualties. | Threat/raid no-pre-contact-plunder and witness evidence. |
+| Population without naming a crowd | `SHIP`: named citizens coexist with bounded unnamed/transient bodies that never enter citizen memorial authority. `AUTHOR-DEFERRED`: unified external-polity population presentation. | Existing body caps/cleanup plus dense-city recognition protocol. |
+| Multiple-settlement traffic | `SHIP`: two-city cap, conserved water manifest, city-local porters, and caravans. `AUTHOR-DEFERRED`: anonymous visible intercity traffic and correspondence. | Manifest/porter/trade isolation, routing, save, and performance gates. |
+| Food and water | `SHIP`: separate physical water custody plus seeds, authored crops, larders, daily ration/meal transactions, and industry. `AUTHOR-DEFERRED`: an exact meal or consignment expressing a polity relationship after that transaction exists. `REJECTED`: indefinite passive bonus merely because ingredients remain stocked. | Food/water acceptance in [TESTING.md](TESTING.md) and [API.md](docs/API.md). |
+
+Moving an `AUTHOR-DEFERRED` row into v1 requires an explicit author ruling, an owning
+contract/adapter, bounded tests, a numbered native protocol, and current-build human evidence.
+Existing ruins, raids, caravans, or manifests never silently prove their deferred expansions.
+
+**Not the v1 model.** Exact old creatures, inventories, faction keys, or quests never cross saves.
+Ideological opposition alone never creates war. TAF does not keep armies or caravans walking
+unloaded tiles, resolve conquest/casualties unseen, simulate a Dwarf-Fortress-scale background
+world, or pool every settlement's stores. Those shapes are rejected because they violate Qud's
+physical authority, bounded attention, causal grievance, and no-unseen-loss laws—not because they
+are unfinished shortcuts. Successor/namesake polities, any legacy rival, diplomats/emissaries,
+generalized visible traffic, polity clashes, a third owned city, and fully hosted zone-spanning
+arcology ground remain author-deferred until separately reopened. The current implementation-limit list is in
+[TESTING.md](TESTING.md#current-implementation-limits-and-v1-scope-gates).
 
 ## For people who want to build on it
 

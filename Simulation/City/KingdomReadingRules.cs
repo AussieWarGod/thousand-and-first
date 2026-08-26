@@ -33,11 +33,23 @@ namespace ThousandAndFirst.Simulation.City
 		/// <param name="State">The frozen book.</param>
 		internal static KingdomCityReading Project(string CityName, KingdomCityState State)
 		{
+			return Project(CityName, State, null);
+		}
+
+		/// <summary>Projects the ordinary frozen city plus its API-v3 durable behaviour sidecar.
+		/// Malformed sidecar input yields an empty behaviour reading; authority retains and reports
+		/// that wire elsewhere rather than letting presentation repair it silently.</summary>
+		internal static KingdomCityReading Project(string CityName, KingdomCityState State,
+			string ExtensionModel)
+		{
+			KingdomBehaviourState behaviourState;
+			KingdomBehaviourReading behaviour = KingdomBehaviourRules.TryDecode(ExtensionModel,
+				out behaviourState) ? behaviourState.Reading() : KingdomBehaviourState.Empty.Reading();
 			if (State == null)
 			{
 				return new KingdomCityReading(CityName, "", 0L,
 					default(KingdomStockReading), default(KingdomStockReading), default(KingdomStockReading),
-					null, null, null);
+					null, null, null, behaviour);
 			}
 			KingdomZoneReading[] zones = new KingdomZoneReading[State.ZoneCount];
 			for (int i = 0; i < State.ZoneCount; i++)
@@ -105,7 +117,8 @@ namespace ThousandAndFirst.Simulation.City
 				Stock(State.Stocks.Materials),
 				zones,
 				works,
-				residents);
+				residents,
+				behaviour);
 		}
 
 		/// <summary>One stock pair, projected.</summary>
@@ -137,6 +150,8 @@ namespace ThousandAndFirst.Simulation.City
 				return KingdomWorkClass.Refiner;
 			case KingdomWorkKind.Power:
 				return KingdomWorkClass.Power;
+			case KingdomWorkKind.Construction:
+				return KingdomWorkClass.Construction;
 			default:
 				return KingdomWorkClass.Other;
 			}
@@ -162,6 +177,8 @@ namespace ThousandAndFirst.Simulation.City
 				return KingdomWorkKind.Refiner;
 			case KingdomWorkClass.Power:
 				return KingdomWorkKind.Power;
+			case KingdomWorkClass.Construction:
+				return KingdomWorkKind.Construction;
 			default:
 				return KingdomWorkKind.Other;
 			}
@@ -195,6 +212,8 @@ namespace ThousandAndFirst.Simulation.City
 		{
 			switch (standing)
 			{
+			case KingdomResidentStanding.Expedition:
+				return KingdomRollStanding.Expedition;
 			case KingdomResidentStanding.Abroad:
 				return KingdomRollStanding.Abroad;
 			case KingdomResidentStanding.Dead:

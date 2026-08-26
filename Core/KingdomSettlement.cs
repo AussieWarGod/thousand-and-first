@@ -250,13 +250,30 @@ namespace ThousandAndFirst
 
 		public int RaidTimesDeferred;
 
+		/// <summary>Obsolete save-ABI projection of this city's resident rows.</summary>
+		[Obsolete("Compatibility projection only; use resident-row authority.", false)]
 		public List<string> RosterNames = new List<string>();
 
+		[Obsolete("Compatibility projection only; use resident-row authority.", false)]
 		public List<string> RosterOrigins = new List<string>();
 
+		[Obsolete("Compatibility projection only; use resident-row authority.", false)]
 		public List<string> RosterArrived = new List<string>();
 
 		public Dictionary<string, int> OriginCounts = new Dictionary<string, int>();
+
+		/// <summary>Live vanilla cultures borne by this city's citizens. Stored on the settlement
+		/// so seat swap, secession, exile, return, and archive carry access with the people.</summary>
+		public Dictionary<string, int> CultureCounts = new Dictionary<string, int>();
+
+		/// <summary>Live vanilla species borne by this city's citizen bodies. Deliberately distinct
+		/// from <see cref="CultureCounts"/>: culture says what a people knows; species what a body is.</summary>
+		public Dictionary<string, int> SpeciesCounts = new Dictionary<string, int>();
+
+		/// <summary>Live genotype/body and extension-owned identity keys carried by this city's
+		/// resident bodies. Stored with the city so an away/seceded/archive roster answers without
+		/// loading bodies.</summary>
+		public Dictionary<string, int> IdentityCounts = new Dictionary<string, int>();
 
 		/// <summary>This city's own tally of settler creeds. See <see cref="KingdomCreed"/>.
 		/// Per-city, so it is carried by the seat swap like <see cref="OriginCounts"/>; the realm's
@@ -326,6 +343,9 @@ namespace ThousandAndFirst
 
 		/// <summary>See <see cref="KingdomSystem.OfficeHolderName"/>.</summary>
 		public string OfficeHolderName;
+
+		/// <summary>See <see cref="KingdomSystem.OfficeHolderResidentId"/>.</summary>
+		public int OfficeHolderResidentId;
 
 		/// <summary>
 		/// Free space in this city's dedicated stores as of the last attended pass. Knowledge,
@@ -440,8 +460,10 @@ namespace ThousandAndFirst
 		/// <summary>The retired pre-identity city label, retained only as migration evidence.</summary>
 		public string SettlementIdentityLegacyId;
 
-		/// <summary>Dormant lifecycle authority carried with this exact city. No lane executes
-		/// from it until the engine adapters are wired in a later wave.</summary>
+		/// <summary>Durable lifecycle authority carried with this exact city. Plain/notable guests,
+		/// petitions, raids, and carry work publish and resume through their lane here; legacy
+		/// scalars are migration/projection evidence only. Seat exchange moves this book with its
+		/// settlement, never with the currently displayed city name.</summary>
 		public KingdomLifecycleBook LifecycleBook = new KingdomLifecycleBook();
 
 		/// <summary>
@@ -482,6 +504,14 @@ namespace ThousandAndFirst
 		/// </summary>
 		public void Normalize()
 		{
+			// Carry bounded valid bytes exactly. Readers fold/dedupe their view, while an exact
+			// settlement capture must not rewrite an extension's spelling merely by moving the city.
+			// Only an aggregate outside the permanent heap contract is discarded on load.
+			List<string> boundedKeepers;
+			if (!KingdomZoningRules.TryDecodeRoster(KeepersRoster, out boundedKeepers))
+			{
+				KeepersRoster = "";
+			}
 			if (!Enum.IsDefined(typeof(GrowthStage), Stage))
 			{
 				Stage = GrowthStage.Camp;
@@ -517,6 +547,10 @@ namespace ThousandAndFirst
 				RaidFactionName = null;
 				RaidDueTick = 0L;
 			}
+			// These three fields are frozen save-wire compatibility projections. Normalization is
+			// their owning migration boundary, so the obsolete API warning is intentionally scoped
+			// to this exact bridge rather than suppressed for the file or build.
+#pragma warning disable 618
 			if (RosterNames == null)
 			{
 				RosterNames = new List<string>();
@@ -529,6 +563,7 @@ namespace ThousandAndFirst
 			{
 				RosterArrived = new List<string>();
 			}
+#pragma warning restore 618
 			if (DeadNames == null)
 			{
 				DeadNames = new List<string>();
@@ -545,11 +580,24 @@ namespace ThousandAndFirst
 			{
 				DeadCauses = new List<string>();
 			}
-			TruncateParallelRows(RosterNames, RosterOrigins, RosterArrived);
+			// Do not zip/truncate legacy living-roll evidence here. KingdomSystem owns the realm id
+			// counter and performs the one-time adoption after both city books are available.
 			TruncateParallelRows(DeadNames, DeadOrigins, DeadArrived, DeadCauses);
 			if (OriginCounts == null)
 			{
 				OriginCounts = new Dictionary<string, int>();
+			}
+			if (CultureCounts == null)
+			{
+				CultureCounts = new Dictionary<string, int>();
+			}
+			if (SpeciesCounts == null)
+			{
+				SpeciesCounts = new Dictionary<string, int>();
+			}
+			if (IdentityCounts == null)
+			{
+				IdentityCounts = new Dictionary<string, int>();
 			}
 			if (CreedCounts == null)
 			{

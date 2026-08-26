@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Reflection;
 using Qud.API;
 using XRL;
-using XRL.Messages;
 using XRL.UI;
 using XRL.World;
+using XRL.World.AI;
 using XRL.World.Parts;
 using XRL.World.Tinkering;
 using ThousandAndFirst.Simulation.City;
@@ -15,14 +15,15 @@ namespace ThousandAndFirst
 	/// <summary>
 	/// Kingdom Mode's one death-time crossover. It is an <see cref="IPlayerSystem"/> so the
 	/// <see cref="AfterDieEvent"/> registration follows whichever real body is the player, and it
-	/// does all interregnum work synchronously before <c>GameObject.Die</c> asks <c>IsPlayer</c>
-	/// again.
+	/// stages the priced interregnum and physical mourning procession synchronously before
+	/// <c>GameObject.Die</c> asks <c>IsPlayer</c> again. Qud exposes no cancellable later seam: this
+	/// is a checkpointed physical ceremony inside one death callback, not simulated async turns.
 	/// </summary>
 	[Serializable]
 	public sealed class KingdomSuccession : IPlayerSystem
 	{
 		private const int SerializationMagic = 1414746963;
-		private const int CurrentSerializationVersion = 1;
+		private const int CurrentSerializationVersion = 2;
 		private const int MaxSealAccessionTokenChars = KingdomSuccessionRules.MaxDeathTokenChars;
 		private const int MaxPendingRiteChronicleChars = 2048;
 		private const int MaxPendingRepairCreedsChars = 1024;
@@ -44,6 +45,26 @@ namespace ThousandAndFirst
 		private bool PendingAccessionRepairSeated;
 		private long PendingAccessionRepairArrivedTick;
 		private string PendingAccessionRepairKeptCreeds;
+		private MourningRiteStage PendingRiteStage;
+		private string PendingFounderName;
+		private string PendingFounderObjectId;
+		private string PendingFounderCause;
+		private int PendingHeirResidentId;
+		private string PendingHeirObjectId;
+		private string PendingHeirName;
+		private string PendingHeirZoneId;
+		private string PendingRiteZoneId;
+		private string PendingRiteCityName;
+		private string PendingRiteFixtureObjectId;
+		private string PendingRiteFixtureName;
+		private int PendingShrineX;
+		private int PendingShrineY;
+		private string PendingRiteAttendeeManifest;
+		private string PendingShrineObjectId;
+		private string CompletedShrineToken;
+		private string CompletedShrineObjectId;
+		private string CompletedShrineZoneId;
+		private bool LegacyPhysicalRiteUnavailable;
 		private bool SuccessionDisabled;
 
 		[NonSerialized]
@@ -54,6 +75,11 @@ namespace ThousandAndFirst
 
 		[NonSerialized]
 		private bool AccessionOwnershipCommitted;
+
+		/// <summary>Native-test seam: a harness may snapshot/save at an exact durable checkpoint.
+		/// It must not mutate runtime authority; production leaves it null.</summary>
+		[NonSerialized]
+		internal static Action<MourningRiteStage> InjectedCheckpoint = null;
 
 		public override bool WantFieldReflection => false;
 
@@ -69,6 +95,11 @@ namespace ThousandAndFirst
 
 		public override bool HandleEvent(AfterDieEvent E)
 		{
+			KingdomSystem system = The.Game?.GetSystem<KingdomSystem>();
+			if (!KingdomMaster.AutomaticWorkAllowed(system))
+			{
+				return base.HandleEvent(E);
+			}
 			DeathChroniclePublished = false;
 			AccessionOwnershipCommitted = false;
 			try
@@ -108,6 +139,10 @@ namespace ThousandAndFirst
 			}
 			else
 			{
+				KingdomSystem system = The.Game?.GetSystem<KingdomSystem>();
+				if (!KingdomMaster.AutomaticWorkAllowed(system))
+					return base.HandleEvent(E);
+				TryResumePendingRite("game load");
 				TryCompletePendingAccessionRepair("game load");
 				TryCompletePendingSealAccession("game load");
 			}
@@ -116,7 +151,9 @@ namespace ThousandAndFirst
 
 		public override void BeforeSave()
 		{
-			if (KingdomSuccessionRules.SuccessionEnabled(LoadFailed, SuccessionDisabled))
+			KingdomSystem system = The.Game?.GetSystem<KingdomSystem>();
+			if (KingdomMaster.AutomaticWorkAllowed(system)
+				&& KingdomSuccessionRules.SuccessionEnabled(LoadFailed, SuccessionDisabled))
 			{
 				TryCompletePendingAccessionRepair("BeforeSave");
 				TryCompletePendingSealAccession("BeforeSave");
@@ -143,16 +180,18 @@ namespace ThousandAndFirst
 			{
 				int magic = Reader.ReadInt32();
 				int version = Reader.ReadInt32();
-				if (magic != SerializationMagic || version != CurrentSerializationVersion)
+				if (magic != SerializationMagic || version < 1
+					|| version > CurrentSerializationVersion)
 				{
 					throw new InvalidOperationException("Unsupported ThousandAndFirst succession save block.");
 				}
 				Reader.ReadNamedFields(this, typeof(KingdomSuccession),
 					BindingFlags.Instance | BindingFlags.NonPublic);
-				if (SerializationVersion != CurrentSerializationVersion)
+				if (SerializationVersion != version)
 				{
 					throw new InvalidOperationException("Unsupported ThousandAndFirst succession named-field version.");
 				}
+				MigrateSavedState(version);
 				SerializationVersion = CurrentSerializationVersion;
 				ValidateSavedState();
 			}
@@ -164,11 +203,14 @@ namespace ThousandAndFirst
 			}
 		}
 
-		/// <summary>Reveals only notes stamped by one exact founder death. Called by the corpse part;
-		/// quests and every unstamped journal entry are outside this method by construction.</summary>
-		internal bool TryRestoreFounderKnowledge(string DeathToken, string FounderName, out int Revealed)
+		/// <summary>Reveals only notes stamped by one exact founder death, then adds one exact,
+		/// deduplicated giver-location note for each still-open quest. Quest state remains entirely
+		/// game-scoped and untouched; the corpse contributes memory and navigation only.</summary>
+		internal bool TryRestoreFounderKnowledge(string DeathToken, string FounderName,
+			out int Revealed, out int QuestMarks)
 		{
 			Revealed = 0;
+			QuestMarks = 0;
 			if (string.IsNullOrEmpty(DeathToken))
 			{
 				return false;
@@ -187,14 +229,76 @@ namespace ThousandAndFirst
 					Revealed++;
 				}
 			}
+			QuestMarks = RestoreQuestOriginMarks(DeathToken, FounderName);
 			return true;
+		}
+
+		private static int RestoreQuestOriginMarks(string DeathToken, string FounderName)
+		{
+			XRLGame game = The.Game;
+			if (game == null || game.Quests == null) return 0;
+			int marked = 0;
+			foreach (KeyValuePair<string, Quest> pair in game.Quests)
+			{
+				Quest quest = pair.Value;
+				if (quest == null || quest.Finished
+					|| string.IsNullOrEmpty(quest.QuestGiverLocationZoneID)) continue;
+				string questId = string.IsNullOrEmpty(quest.ID) ? pair.Key : quest.ID;
+				if (string.IsNullOrEmpty(questId)) questId = quest.Name;
+				string secretId = KingdomSuccessionRules.QuestOriginSecretId(
+					DeathToken, questId);
+				if (string.IsNullOrEmpty(secretId))
+				{
+					KingdomLog.Log("succession: an open quest origin exceeded its identity bound");
+					continue;
+				}
+				try
+				{
+					JournalMapNote note = JournalAPI.GetMapNote(secretId);
+					if (note == null)
+					{
+						JournalAPI.AddMapNote(quest.QuestGiverLocationZoneID,
+							KingdomSuccessionRules.QuestMarkNote(quest.Name,
+								quest.QuestGiverName), "general",
+							new string[]
+							{
+								KingdomSuccessionRules.FounderAttribute(DeathToken),
+								KingdomSuccessionRules.QuestOriginAttribute
+							}, secretId, revealed: true, sold: false, time: -1L, silent: true);
+						note = JournalAPI.GetMapNote(secretId);
+					}
+					if (note == null || !string.Equals(note.ZoneID,
+						quest.QuestGiverLocationZoneID, StringComparison.Ordinal)
+						|| note.Attributes == null
+						|| !note.Attributes.Contains(KingdomSuccessionRules.QuestOriginAttribute))
+					{
+						KingdomLog.Log("succession: a quest-origin secret identity conflicted; the existing note was left untouched");
+						continue;
+					}
+					if (!note.Revealed)
+					{
+						note.Reveal("the remains of " + (string.IsNullOrEmpty(FounderName)
+							? "the founder" : FounderName), Silent: true);
+					}
+					if (note.Revealed) marked++;
+				}
+				catch (Exception ex)
+				{
+					MetricsManager.LogError("ThousandAndFirst: quest-origin map note failed", ex);
+					KingdomLog.Log("succession: one quest-origin map note failed ("
+						+ ex.GetType().Name + ")");
+				}
+			}
+			return marked;
 		}
 
 		private void HandleFounderDeath(AfterDieEvent E)
 		{
 			XRLGame game = The.Game;
 			GameObject founder = E?.Dying;
+			KingdomSystem system = game?.GetSystem<KingdomSystem>();
 			if (game == null || founder == null
+				|| !KingdomMaster.AutomaticWorkAllowed(system)
 				|| !KingdomSuccessionRules.SuccessionEnabled(LoadFailed, SuccessionDisabled)
 				|| !ReferenceEquals(The.Player, founder))
 			{
@@ -206,13 +310,22 @@ namespace ThousandAndFirst
 			{
 				return;
 			}
-			KingdomSystem system = game.GetSystem<KingdomSystem>();
 			if (system == null || !system.Founded)
 			{
 				return;
 			}
 
 			string founderName = founder.BaseDisplayNameStripped;
+			string founderCause = DeathCause(E);
+			if (string.IsNullOrEmpty(founderName)
+				|| founderName.Length > KingdomSealRecord.MaxNameChars
+				|| string.IsNullOrEmpty(founderCause)
+				|| founderCause.Length > MaxPendingRiteChronicleChars)
+			{
+				KingdomLog.Log("succession: exact founder name/cause exceeded its persistence bound");
+				EndDynasty(system, founderName, SuccessionVerdict.HeirUnreachable, E);
+				return;
+			}
 			if (PendingAccessionRepairResidentId != 0)
 			{
 				TryCompletePendingAccessionRepair("before another death");
@@ -311,7 +424,35 @@ namespace ThousandAndFirst
 				EndDynasty(system, founderName, SuccessionVerdict.HeirUnreachable, E);
 				return;
 			}
+			string citizenshipFailure;
+			if (!KingdomCitizenship.CanRemove(system, heirBody, out citizenshipFailure))
+			{
+				KingdomLog.Log("succession: exact heir has no reversible citizenship boundary ("
+					+ (citizenshipFailure ?? "unknown failure") + ")");
+				PublishFounderDeath(system, founderName, E);
+				EndDynasty(system, founderName, SuccessionVerdict.HeirUnreachable, E);
+				return;
+			}
 			bool heirWasSeated = ReferenceEquals(heirBook, system.City);
+			string riteCityName = heirWasSeated ? system.SeatName
+				: (system.Away?.SettlementName ?? system.SeatName);
+			KingdomSuccessionRite.Plan ritePlan;
+			string riteFailure;
+			if (!KingdomSuccessionRite.TryFreeze(system, heirBook, heirBody, riteCityName,
+				out ritePlan, out riteFailure))
+			{
+				KingdomLog.Log("succession: physical rite preflight refused (" + riteFailure + ")");
+				PublishFounderDeath(system, founderName, E);
+				EndDynasty(system, founderName, SuccessionVerdict.HeirUnreachable, E);
+				return;
+			}
+			if ((ritePlan.CityName ?? "").Length > KingdomSealRecord.MaxNameChars
+				|| (ritePlan.FixtureName ?? "").Length > KingdomSealRecord.MaxNameChars)
+			{
+				KingdomLog.Log("succession: exact rite locus names exceeded their persistence bound");
+				EndDynasty(system, founderName, SuccessionVerdict.HeirUnreachable, E);
+				return;
+			}
 
 			int newsDays;
 			NewsRoad newsRoad;
@@ -325,11 +466,25 @@ namespace ThousandAndFirst
 			PendingDueTick = dueTick;
 			PendingRoad = newsRoad;
 			PendingDays = newsDays;
+			LegacyPhysicalRiteUnavailable = false;
+			PendingFounderName = founderName;
+			PendingFounderObjectId = founder.IDIfAssigned;
+			PendingFounderCause = founderCause;
+			PendingHeirResidentId = chosen.Rule.ResidentId;
+			PendingHeirObjectId = heirBody.IDIfAssigned;
+			PendingHeirName = chosen.Rule.Name;
+			PendingHeirZoneId = heirZoneId;
+			PendingRiteZoneId = ritePlan.ZoneId;
+			PendingRiteCityName = ritePlan.CityName;
+			PendingRiteFixtureObjectId = ritePlan.FixtureObjectId;
+			PendingRiteFixtureName = ritePlan.FixtureName;
+			PendingShrineX = ritePlan.ShrineX;
+			PendingShrineY = ritePlan.ShrineY;
+			PendingRiteAttendeeManifest = ritePlan.Manifest;
+			PendingShrineObjectId = "";
+			Checkpoint(MourningRiteStage.Frozen);
 			r_KingdomFounderRemains remains = new r_KingdomFounderRemains(token, founderName);
 			founder.AddPart(remains);
-			PublishFounderDeath(system, founderName, E);
-			MessageQueue.AddPlayerMessage("Word of " + founderName + "'s death is on the road to {{C|"
-				+ (system.SeatName ?? "the settlement") + "}}.");
 
 			long advance = KingdomSuccessionRules.WorldTicksUntilDue(game.TimeTicks, dueTick);
 			if (advance > 0L)
@@ -337,6 +492,51 @@ namespace ThousandAndFirst
 				game.TimeTicks = dueTick;
 			}
 			PendingPhase = InterregnumPhase.RiteDue;
+			Checkpoint(MourningRiteStage.WordArrived);
+
+			GameObject walkedHeir;
+			if (!KingdomSuccessionRite.TryHoldProcession(system, token, PendingRiteZoneId,
+				PendingRiteFixtureObjectId, PendingRiteAttendeeManifest,
+				out walkedHeir, out riteFailure)
+				|| !ReferenceEquals(walkedHeir, heirBody)
+				|| walkedHeir.GetIntProperty(KingdomResidents.ResidentIdProperty)
+					!= PendingHeirResidentId
+				|| !string.Equals(walkedHeir.IDIfAssigned, PendingHeirObjectId,
+					StringComparison.Ordinal))
+			{
+				KingdomLog.Log("succession: physical procession refused (" + riteFailure + ")");
+				AbortPendingBeforeTransfer(founder, remains);
+				PublishFounderDeath(system, founderName, E);
+				EndDynasty(system, founderName, SuccessionVerdict.HeirUnreachable, E);
+				return;
+			}
+			Checkpoint(MourningRiteStage.ProcessionComplete);
+
+			string shrineHistory = KingdomSuccessionRules.FounderEpitaph(
+				KingdomPresentation.Rich(founderName),
+				KingdomPresentation.Rich(PendingRiteCityName),
+				KingdomPresentation.Rich(system.FoundingRegionName),
+				KingdomPresentation.Rich(PendingFounderCause))
+				+ " The named residents present walked to "
+				+ KingdomPresentation.Rich(PendingRiteFixtureName)
+				+ " and held the mourning rite here.";
+			GameObject founderShrine;
+			if (!KingdomSuccessionRite.TryEnsureFounderShrine(token, founderName, deathTick,
+				PendingFounderCause, shrineHistory, PendingRiteCityName, PendingRiteZoneId,
+				PendingRiteFixtureObjectId, PendingShrineX, PendingShrineY,
+				PendingShrineObjectId, out founderShrine, out riteFailure))
+			{
+				KingdomLog.Log("succession: founder shrine refused (" + riteFailure + ")");
+				AbortPendingBeforeTransfer(founder, remains);
+				PublishFounderDeath(system, founderName, E);
+				EndDynasty(system, founderName, SuccessionVerdict.HeirUnreachable, E);
+				return;
+			}
+			PendingShrineObjectId = founderShrine.IDIfAssigned;
+			CompletedShrineToken = token;
+			CompletedShrineObjectId = PendingShrineObjectId;
+			CompletedShrineZoneId = PendingRiteZoneId;
+			Checkpoint(MourningRiteStage.ShrinePlaced);
 
 			// After SetBody returns and the explicit global player-system sweep succeeds, no mod
 			// action dispatches or yields before the prebuilt resident snapshots are published.
@@ -348,8 +548,23 @@ namespace ThousandAndFirst
 			bool accessionSeated = heirWasSeated;
 			bool founderRestored = false;
 			bool heirContinuationRegistrationsExact = false;
+			// Procession and shrine callbacks can advance world state after early preflight.
+			// Re-prove exact reversible citizenship immediately before irreversible body transfer.
+			if (!KingdomCitizenship.CanRemove(system, heirBody, out citizenshipFailure))
+			{
+				KingdomLog.Log("succession: exact heir citizenship changed before body transfer ("
+					+ (citizenshipFailure ?? "unknown failure") + ")");
+				AbortPendingBeforeTransfer(founder, remains);
+				PublishFounderDeath(system, founderName, E);
+				EndDynasty(system, founderName, SuccessionVerdict.HeirUnreachable, E);
+				return;
+			}
 			KingdomPlayerBodyTransfer forward = SetPlayerBodyAndRebindAll(game, founder,
 				heirBody, "accession");
+			if (forward.TargetControls)
+			{
+				Checkpoint(MourningRiteStage.BodyCrossed);
+			}
 			if (forward.MayPublishAccession)
 			{
 				heirContinuationRegistrationsExact = true;
@@ -439,17 +654,7 @@ namespace ThousandAndFirst
 					TryTellFailure("Control passed from the founder, but the resident accession record could not be published or rolled back. The line remains open and requires repair.");
 					return;
 				}
-				try
-				{
-					founder.RemovePart(remains);
-				}
-				catch (Exception ex)
-				{
-					MetricsManager.LogError("ThousandAndFirst: founder-remains rollback failed", ex);
-				}
-				PendingDeathToken = null;
-				PendingPhase = InterregnumPhase.None;
-				PendingDueTick = 0L;
+				AbortPendingBeforeTransfer(founder, remains);
 				EndDynasty(system, founderName, SuccessionVerdict.HeirUnreachable, E);
 				return;
 			}
@@ -477,6 +682,7 @@ namespace ThousandAndFirst
 			PendingAccessionRepairSeated = false;
 			PendingAccessionRepairArrivedTick = 0L;
 			PendingAccessionRepairKeptCreeds = "";
+			ClearPendingRiteIdentity();
 			try
 			{
 				Founder?.RemovePart(Remains);
@@ -489,7 +695,7 @@ namespace ThousandAndFirst
 			try
 			{
 				KingdomChronicle.Record(System,
-					KingdomSuccessionRules.DynastyEndChronicle(System.SeatName, FounderName));
+					KingdomSuccessionRules.DynastyEndChronicle(KingdomPresentation.Rich(System.SeatName), KingdomPresentation.Rich(FounderName)));
 			}
 			catch (Exception ex)
 			{
@@ -511,6 +717,241 @@ namespace ThousandAndFirst
 			KingdomLog.Log("succession: CATASTROPHIC body-transfer refusal; succession disabled ("
 				+ Reason + ")");
 			TryTellFailure("The body transfer ended in an unproved controller state. The dynasty has ended, succession is disabled for this save, and no resident identity was applied to the uncontrolled body.");
+		}
+
+		private void AbortPendingBeforeTransfer(GameObject Founder,
+			r_KingdomFounderRemains Remains)
+		{
+			try
+			{
+				Founder?.RemovePart(Remains);
+			}
+			catch (Exception ex)
+			{
+				MetricsManager.LogError("ThousandAndFirst: founder-remains rollback failed", ex);
+			}
+			PendingDeathToken = "";
+			PendingPhase = InterregnumPhase.None;
+			PendingDueTick = 0L;
+			PendingRoad = NewsRoad.Seat;
+			PendingDays = 0;
+			ClearPendingRiteIdentity();
+		}
+
+		private void ClearPendingRiteIdentity()
+		{
+			PendingRiteStage = MourningRiteStage.None;
+			PendingFounderName = "";
+			PendingFounderObjectId = "";
+			PendingFounderCause = "";
+			PendingHeirResidentId = 0;
+			PendingHeirObjectId = "";
+			PendingHeirName = "";
+			PendingHeirZoneId = "";
+			PendingRiteZoneId = "";
+			PendingRiteCityName = "";
+			PendingRiteFixtureObjectId = "";
+			PendingRiteFixtureName = "";
+			PendingShrineX = 0;
+			PendingShrineY = 0;
+			PendingRiteAttendeeManifest = "";
+			PendingShrineObjectId = "";
+		}
+
+		private void Checkpoint(MourningRiteStage Stage)
+		{
+			if (!KingdomSuccessionRules.MayAdvanceRite(PendingRiteStage, Stage))
+			{
+				throw new InvalidOperationException("The mourning rite attempted to skip a physical checkpoint.");
+			}
+			PendingRiteStage = Stage;
+			InjectedCheckpoint?.Invoke(Stage);
+		}
+
+		/// <summary>Cold-load recovery exists for debugger/injected saves only. Native Qud cannot
+		/// save between AfterDie and Die's immediate IsPlayer recheck, but a checkpoint that does
+		/// exist must either re-prove exact physical evidence or remain fail-closed.</summary>
+		private void TryResumePendingRite(string Context)
+		{
+			if (string.IsNullOrEmpty(PendingDeathToken)
+				|| PendingRiteStage == MourningRiteStage.None
+				|| PendingAccessionRepairResidentId != 0)
+			{
+				return;
+			}
+			try
+			{
+				XRLGame game = The.Game;
+				KingdomSystem system = game?.GetSystem<KingdomSystem>();
+				bool alreadyCrossed = PendingRiteStage == MourningRiteStage.BodyCrossed;
+				GameObject founder = alreadyCrossed ? null : The.Player;
+				if (game == null || system == null || (!alreadyCrossed && (founder == null
+					|| !string.Equals(founder.IDIfAssigned, PendingFounderObjectId,
+						StringComparison.Ordinal))))
+				{
+					QuarantinePendingRite(Context, "the exact controlled founder is absent");
+					return;
+				}
+				GameObject heir = alreadyCrossed ? The.Player : null;
+				string boundZone;
+				bool heirExact = alreadyCrossed
+					? GameObject.Validate(heir) && heir.IsPlayer()
+						&& heir.GetIntProperty(KingdomResidents.ResidentIdProperty) == PendingHeirResidentId
+						&& string.Equals(heir.IDIfAssigned, PendingHeirObjectId, StringComparison.Ordinal)
+						&& string.Equals(heir.CurrentZone?.ZoneID, PendingHeirZoneId, StringComparison.Ordinal)
+					: KingdomResidents.TryResolveBoundBody(system, PendingHeirResidentId, true,
+						out heir, out boundZone)
+						&& string.Equals(heir.IDIfAssigned, PendingHeirObjectId, StringComparison.Ordinal)
+						&& string.Equals(boundZone, PendingHeirZoneId, StringComparison.Ordinal);
+				if (!heirExact)
+				{
+					QuarantinePendingRite(Context, "the exact frozen heir is absent");
+					return;
+				}
+
+				if (PendingRiteStage == MourningRiteStage.Frozen)
+				{
+					if (KingdomSuccessionRules.WorldTicksUntilDue(game.TimeTicks, PendingDueTick) > 0L)
+					{
+						game.TimeTicks = PendingDueTick;
+					}
+					PendingPhase = InterregnumPhase.RiteDue;
+					Checkpoint(MourningRiteStage.WordArrived);
+				}
+				if (PendingRiteStage == MourningRiteStage.WordArrived)
+				{
+					GameObject walked;
+					string failure;
+					if (!KingdomSuccessionRite.ProcessionEvidence(system, PendingDeathToken,
+						PendingRiteZoneId, PendingRiteFixtureObjectId,
+						PendingRiteAttendeeManifest, out walked)
+						&& !KingdomSuccessionRite.TryHoldProcession(system, PendingDeathToken,
+							PendingRiteZoneId, PendingRiteFixtureObjectId,
+							PendingRiteAttendeeManifest, out walked, out failure))
+					{
+						QuarantinePendingRite(Context, failure);
+						return;
+					}
+					if (!ReferenceEquals(walked, heir))
+					{
+						QuarantinePendingRite(Context, "procession evidence names another body");
+						return;
+					}
+					Checkpoint(MourningRiteStage.ProcessionComplete);
+				}
+				if (PendingRiteStage == MourningRiteStage.ProcessionComplete)
+				{
+					GameObject proved;
+					if (!KingdomSuccessionRite.ProcessionEvidence(system, PendingDeathToken,
+						PendingRiteZoneId, PendingRiteFixtureObjectId,
+						PendingRiteAttendeeManifest, out proved)
+						|| !ReferenceEquals(proved, heir))
+					{
+						QuarantinePendingRite(Context, "completed procession evidence is absent");
+						return;
+					}
+					int ordinal;
+					long deathTick;
+					KingdomSuccessionRules.TryReadDeathToken(PendingDeathToken,
+						out ordinal, out deathTick);
+					string history = KingdomSuccessionRules.FounderEpitaph(
+						KingdomPresentation.Rich(PendingFounderName),
+						KingdomPresentation.Rich(PendingRiteCityName),
+						KingdomPresentation.Rich(system.FoundingRegionName),
+						KingdomPresentation.Rich(PendingFounderCause))
+						+ " The named residents walked to "
+						+ KingdomPresentation.Rich(PendingRiteFixtureName)
+						+ " and held the mourning rite here.";
+					GameObject shrine;
+					string failure;
+					if (!KingdomSuccessionRite.TryEnsureFounderShrine(PendingDeathToken,
+						PendingFounderName, deathTick, PendingFounderCause, history,
+						PendingRiteCityName, PendingRiteZoneId, PendingRiteFixtureObjectId,
+						PendingShrineX, PendingShrineY, PendingShrineObjectId,
+						out shrine, out failure))
+					{
+						QuarantinePendingRite(Context, failure);
+						return;
+					}
+					PendingShrineObjectId = shrine.IDIfAssigned;
+					CompletedShrineToken = PendingDeathToken;
+					CompletedShrineObjectId = PendingShrineObjectId;
+					CompletedShrineZoneId = PendingRiteZoneId;
+					Checkpoint(MourningRiteStage.ShrinePlaced);
+				}
+
+				KingdomCityBook book;
+				int residentId;
+				KingdomCityState city;
+				KingdomResidentRow row;
+				int rowIndex;
+				KingdomCityFault cityFault;
+				if ((PendingRiteStage != MourningRiteStage.ShrinePlaced
+						&& PendingRiteStage != MourningRiteStage.BodyCrossed)
+					|| !KingdomResidents.TryLocate(system, heir, out book, out residentId)
+					|| residentId != PendingHeirResidentId || !book.TryRead(out city, out cityFault)
+					|| !city.TryResidentIndex(residentId, out rowIndex)
+					|| !city.TryResident(rowIndex, out row))
+				{
+					QuarantinePendingRite(Context, "the frozen resident row cannot cross the rite boundary");
+					return;
+				}
+				int officeId = ReferenceEquals(book, system.City)
+					? system.OfficeHolderResidentId : system.Away?.OfficeHolderResidentId ?? 0;
+				string legacyOffice = ReferenceEquals(book, system.City)
+					? system.OfficeHolderName : system.Away?.OfficeHolderName;
+				bool heldOffice = officeId > 0 ? officeId == row.ResidentId
+					: string.Equals(legacyOffice, row.Name, StringComparison.Ordinal);
+				string heirCreed = heir.GetStringProperty(KingdomCreed.CreedProperty);
+				if (!alreadyCrossed)
+				{
+					string citizenshipFailure;
+					if (!KingdomCitizenship.CanRemove(system, heir, out citizenshipFailure))
+					{
+						QuarantinePendingRite(Context,
+							"citizenship preflight failed: " + citizenshipFailure);
+						return;
+					}
+					KingdomPlayerBodyTransfer transfer = SetPlayerBodyAndRebindAll(game, founder,
+						heir, "cold-load accession");
+					if (!transfer.MayPublishAccession)
+					{
+						SetPlayerBodyAndRebindAll(game, heir, founder, "cold-load rollback");
+						QuarantinePendingRite(Context, "body transfer was not exact");
+						return;
+					}
+					Checkpoint(MourningRiteStage.BodyCrossed);
+				}
+				KingdomResidentRow former;
+				bool seated;
+				KingdomAccessionOutcome outcome = KingdomResidents.TryAccede(system, heir,
+					out former, out seated);
+				if (outcome != KingdomAccessionOutcome.Committed)
+				{
+					AccessionOwnershipCommitted = true;
+					QueueAccessionRepair(new KingdomHeir(row.Name, row.ArrivedTick, null,
+						row.KeptCreeds, true, heldOffice, row.BoundZoneId, row.ResidentId),
+						PendingFounderName, ReferenceEquals(book, system.City));
+					TryPrepareRepairableHeir(heir);
+					return;
+				}
+				CompleteAccession(game, system, heir, PendingFounderName, former,
+					PendingDeathToken, PendingRoad, PendingDays, heldOffice, heirCreed,
+					PendingHeirZoneId, "cold-load accession " + Context);
+			}
+			catch (Exception ex)
+			{
+				MetricsManager.LogError("ThousandAndFirst: cold-load rite recovery failed", ex);
+				QuarantinePendingRite(Context, ex.GetType().Name);
+			}
+		}
+
+		private void QuarantinePendingRite(string Context, string Failure)
+		{
+			SuccessionDisabled = true;
+			KingdomLog.Log("succession: pending rite quarantined during " + Context + " ("
+				+ (string.IsNullOrEmpty(Failure) ? "unproved physical evidence" : Failure) + ")");
+			TryTellFailure("The saved mourning rite cannot prove its exact heir, residents, fixture, and shrine. Succession is disabled for this save; nothing was substituted or minted.");
 		}
 
 		private KingdomPlayerBodyTransfer SetPlayerBodyAndRebindAll(XRLGame Game,
@@ -596,8 +1037,10 @@ namespace ThousandAndFirst
 				string founderName = string.IsNullOrEmpty(PendingAccessionRepairFounderName)
 					? "the founder" : PendingAccessionRepairFounderName;
 				string token = PendingDeathToken ?? "";
-				bool heldOffice = string.Equals(system.OfficeHolderName, formerRow.Name,
-					StringComparison.Ordinal);
+				bool heldOffice = system.OfficeHolderResidentId > 0
+					? system.OfficeHolderResidentId == formerRow.ResidentId
+					: string.Equals(system.OfficeHolderName, formerRow.Name,
+						StringComparison.Ordinal);
 				string heirCreed = heir.GetStringProperty(KingdomCreed.CreedProperty);
 				CompleteAccession(game, system, heir, founderName, formerRow, token,
 					PendingRoad, PendingDays, heldOffice, heirCreed,
@@ -623,12 +1066,20 @@ namespace ThousandAndFirst
 			SuccessionOrdinal++;
 			PendingSealAccessionToken = Token;
 			PendingSealAccessionReady = false;
-			PendingSealRiteChronicle = BoundPendingRite("the charter passed from " + FounderName
-				+ " to " + FormerRow.Name + " at " + (System.SeatName ?? "the settlement") + ".");
+			string shownHeir = KingdomPresentation.Rich(FormerRow.Name);
+			PendingSealRiteChronicle = BoundPendingRite("the charter passed from "
+				+ KingdomPresentation.Rich(FounderName) + " to " + shownHeir + " at "
+				+ KingdomPresentation.Rich(PendingRiteCityName
+					?? System.SeatName ?? "the settlement") + ".");
 			try
 			{
-				PendingSealRiteChronicle = BoundPendingRite(KingdomSuccessionRules.RiteChronicle(
-					System.SeatName, FounderName, FormerRow.Name, Road, Days));
+				PendingSealRiteChronicle = BoundPendingRite(LegacyPhysicalRiteUnavailable
+					? KingdomSuccessionRules.RiteChronicle(KingdomPresentation.Rich(System.SeatName), KingdomPresentation.Rich(FounderName),
+						shownHeir, Road, Days)
+					: KingdomSuccessionRules.SuccessionChronicle(KingdomPresentation.Rich(PendingRiteCityName),
+						KingdomPresentation.Rich(FounderName),
+						KingdomPresentation.Rich(PendingFounderCause), shownHeir, Road, Days,
+						KingdomPresentation.Rich(PendingRiteFixtureName)));
 			}
 			catch (Exception ex)
 			{
@@ -643,6 +1094,8 @@ namespace ThousandAndFirst
 			PendingAccessionRepairSeated = false;
 			PendingAccessionRepairArrivedTick = 0L;
 			PendingAccessionRepairKeptCreeds = "";
+			PendingRiteStage = MourningRiteStage.Complete;
+			ClearPendingRiteIdentity();
 
 			TryFinishAccessionBodyCleanup(Heir);
 			TryPrepareRepairableHeir(Heir);
@@ -670,10 +1123,12 @@ namespace ThousandAndFirst
 			}
 
 			TryCompletePendingSealAccession(Context);
+			TryInheritOpenQuests(Game, System, Token, FounderName);
 			try
 			{
 				TryTell(KingdomSuccessionRules.RiteAttendedPopup(
-					System.SeatName, FounderName, FormerRow.Name, Road, Days));
+					KingdomPresentation.Rich(System.SeatName),
+					KingdomPresentation.Rich(FounderName), shownHeir, Road, Days));
 				KingdomLog.Log("succession: " + FounderName + " -> " + FormerRow.Name + " token="
 					+ Token + " heirZone=" + HeirZoneId + " road=" + Road + " days=" + Days
 					+ " regard=" + regard);
@@ -681,6 +1136,51 @@ namespace ThousandAndFirst
 			catch (Exception ex)
 			{
 				MetricsManager.LogError("ThousandAndFirst: accession telling failed after commit", ex);
+			}
+		}
+
+		private static void TryInheritOpenQuests(XRLGame Game, KingdomSystem System,
+			string DeathToken, string FounderName)
+		{
+			if (Game == null || Game.Quests == null || System == null) return;
+			foreach (KeyValuePair<string, Quest> pair in Game.Quests)
+			{
+				Quest quest = pair.Value;
+				if (quest == null || quest.Finished) continue;
+				string questId = string.IsNullOrEmpty(quest.ID) ? pair.Key : quest.ID;
+				if (string.IsNullOrEmpty(questId)) questId = quest.Name;
+				try
+				{
+					string eventId = KingdomSuccessionRules.InheritedQuestEventId(
+						DeathToken, questId);
+					if (string.IsNullOrEmpty(eventId) || !KingdomChronicle.RecordOnce(System,
+						eventId, KingdomSuccessionRules.InheritedQuestChronicle(
+							FounderName, quest.Name)))
+					{
+						KingdomLog.Log("succession: one inherited undertaking could not settle its Chronicle receipt");
+					}
+				}
+				catch (Exception ex)
+				{
+					MetricsManager.LogError("ThousandAndFirst: inherited quest Chronicle failed", ex);
+					KingdomLog.Log("succession: one inherited undertaking lacked its Chronicle line ("
+						+ ex.GetType().Name + ")");
+				}
+				try
+				{
+					if (KingdomSuccessionRules.PersonalQuest(questId, quest.Name)
+						&& !quest.HasProperty(KingdomSuccessionRules.InheritedQuestMarker))
+					{
+						quest.Name = KingdomSuccessionRules.InheritedQuestName(quest.Name);
+						quest.SetProperty(KingdomSuccessionRules.InheritedQuestMarker, "1");
+					}
+				}
+				catch (Exception ex)
+				{
+					MetricsManager.LogError("ThousandAndFirst: inherited quest label failed", ex);
+					KingdomLog.Log("succession: one personal undertaking remained unlabelled ("
+						+ ex.GetType().Name + ")");
+				}
 			}
 		}
 
@@ -712,12 +1212,21 @@ namespace ThousandAndFirst
 		{
 			try
 			{
+				KingdomSystem system = The.Game?.GetSystem<KingdomSystem>();
+				string citizenshipFailure;
+				if (!KingdomCitizenship.TryRemove(system, Heir,
+					KingdomCitizenshipRemovalReason.Accession, out citizenshipFailure))
+				{
+					KingdomLog.Log("succession: exact citizenship cleanup remains pending ("
+						+ (citizenshipFailure ?? "unknown failure") + ")");
+					return;
+				}
 				KingdomStations.Post(Heir, 0, KingdomWorkKind.Other);
 				Heir.RemoveIntProperty(KingdomResidents.ResidentIdProperty);
-				Heir.RemoveIntProperty("KingdomCitizen");
 				Heir.RemoveIntProperty("KingdomBorn");
 				Heir.RemoveStringProperty("KingdomName");
 				Heir.RemoveStringProperty(KingdomLodging.HomePlotIdProperty);
+				Heir.RemovePart<r_KingdomCitizenLegacy>();
 			}
 			catch (Exception ex)
 			{
@@ -742,13 +1251,15 @@ namespace ThousandAndFirst
 		private static bool TryReadHeirs(KingdomSystem System, out List<HeirRuntime> Result)
 		{
 			Result = new List<HeirRuntime>();
-			if (!ReadHeirs(System.City, System.OfficeHolderName, Result))
+			if (!ReadHeirs(System.City, System.OfficeHolderResidentId,
+				System.OfficeHolderName, Result))
 			{
 				return false;
 			}
 			if (System.Away != null)
 			{
-				if (!ReadHeirs(System.Away.City, System.Away.OfficeHolderName, Result))
+				if (!ReadHeirs(System.Away.City, System.Away.OfficeHolderResidentId,
+					System.Away.OfficeHolderName, Result))
 				{
 					return false;
 				}
@@ -756,7 +1267,8 @@ namespace ThousandAndFirst
 			return true;
 		}
 
-		private static bool ReadHeirs(KingdomCityBook Book, string OfficeHolder, List<HeirRuntime> Result)
+		private static bool ReadHeirs(KingdomCityBook Book, int OfficeHolderResidentId,
+			string LegacyOfficeHolder, List<HeirRuntime> Result)
 		{
 			KingdomCityState state;
 			KingdomCityFault fault = default(KingdomCityFault);
@@ -774,8 +1286,11 @@ namespace ThousandAndFirst
 				}
 				KingdomHeir rule = new KingdomHeir(row.Name, row.ArrivedTick, null, row.KeptCreeds,
 					onTheRoll: true,
-					holdsOffice: !string.IsNullOrEmpty(OfficeHolder)
-						&& string.Equals(row.Name, OfficeHolder, StringComparison.Ordinal),
+					holdsOffice: OfficeHolderResidentId > 0
+						? row.ResidentId == OfficeHolderResidentId
+						: !string.IsNullOrEmpty(LegacyOfficeHolder)
+							&& string.Equals(row.Name, LegacyOfficeHolder,
+								StringComparison.Ordinal),
 					row.BoundZoneId, row.ResidentId);
 				Result.Add(new HeirRuntime(rule));
 			}
@@ -803,14 +1318,16 @@ namespace ThousandAndFirst
 				out deathWorld, out dwx, out dwy, out dzx, out dzy, out dz);
 			bool seatParsed = TryParseZone(seatZoneId,
 				out seatWorld, out swx, out swy, out szx, out szy, out sz);
-			bool onSeatedGround = !string.IsNullOrEmpty(deathZoneId)
-				&& System.ClaimedZones != null && System.ClaimedZones.Contains(deathZoneId);
-			bool sameWorld = onSeatedGround || (deathParsed && seatParsed
+			bool onOwnedGround = !string.IsNullOrEmpty(deathZoneId)
+				&& ((System.ClaimedZones != null && System.ClaimedZones.Contains(deathZoneId))
+					|| (System.Away?.ClaimedZones != null
+						&& System.Away.ClaimedZones.Contains(deathZoneId)));
+			bool sameWorld = onOwnedGround || (deathParsed && seatParsed
 				&& string.Equals(deathWorld, seatWorld, StringComparison.Ordinal));
 			int dx = 0;
 			int dy = 0;
 			int depth = 0;
-			if (sameWorld && !onSeatedGround)
+			if (sameWorld && !onOwnedGround)
 			{
 				dx = SaturatedDifference((long)dwx * 3L + dzx, (long)swx * 3L + szx);
 				dy = SaturatedDifference((long)dwy * 3L + dzy, (long)swy * 3L + szy);
@@ -894,11 +1411,18 @@ namespace ThousandAndFirst
 
 		private static void RecordFounderDeath(KingdomSystem System, string FounderName, AfterDieEvent E)
 		{
-			string cause = !string.IsNullOrEmpty(E.ThirdPersonReason) ? E.ThirdPersonReason
-				: (!string.IsNullOrEmpty(E.Reason) ? E.Reason : "died, and no one living can say how");
+			string cause = KingdomPresentation.Rich(DeathCause(E));
 			KingdomChronicle.RecordDisputed(System,
-				KingdomSuccessionRules.FallenChronicle(FounderName, System.SeatName, cause),
-				KingdomSuccessionRules.FallenRumour(FounderName, System.SeatName));
+				KingdomSuccessionRules.FallenChronicle(KingdomPresentation.Rich(FounderName), KingdomPresentation.Rich(System.SeatName), cause),
+				KingdomSuccessionRules.FallenRumour(KingdomPresentation.Rich(FounderName), KingdomPresentation.Rich(System.SeatName)));
+		}
+
+		private static string DeathCause(AfterDieEvent E)
+		{
+			string cause = !string.IsNullOrEmpty(E?.ThirdPersonReason) ? E.ThirdPersonReason
+				: (!string.IsNullOrEmpty(E?.Reason) ? E.Reason
+					: "died, and no one living can say how");
+			return ConsoleLib.Console.ColorUtility.StripFormatting(cause);
 		}
 
 		private void PublishFounderDeath(KingdomSystem System, string FounderName, AfterDieEvent E)
@@ -919,14 +1443,14 @@ namespace ThousandAndFirst
 		{
 			PublishFounderDeath(System, FounderName, Death);
 			KingdomChronicle.Record(System,
-				KingdomSuccessionRules.DynastyEndChronicle(System.SeatName, FounderName));
+				KingdomSuccessionRules.DynastyEndChronicle(KingdomPresentation.Rich(System.SeatName), KingdomPresentation.Rich(FounderName)));
 			string sealFailure;
 			if (!KingdomSeal.TryTerminalFromSuccession(Death, LineEnded: true, out sealFailure))
 			{
 				KingdomLog.Log("succession: terminal seal attempt failed closed ("
 					+ (string.IsNullOrEmpty(sealFailure) ? "unknown failure" : sealFailure) + ")");
 			}
-			Popup.Show(KingdomSuccessionRules.DynastyEndPopup(System.SeatName, Verdict));
+			Popup.Show(KingdomSuccessionRules.DynastyEndPopup(KingdomPresentation.Rich(System.SeatName), Verdict));
 			KingdomLog.Log("succession: terminal verdict " + Verdict + "; player body unchanged");
 		}
 
@@ -964,15 +1488,14 @@ namespace ThousandAndFirst
 			Heir.SetIntProperty("Renamed", 1);
 			if (Heir.Brain != null)
 			{
-				Heir.Brain.PartyLeader = null;
-				Heir.Brain.Goals.Clear();
-				Heir.Brain.Factions = "";
-				Heir.Brain.Allegiance.Clear();
-				Heir.Brain.Allegiance["Player"] = 100;
-				Heir.Brain.FactionFeelings.Clear();
+				// GamePlayer.SetBody owns the control transition and clears active AI goals itself.
+				// Add only vanilla's player membership to the base set. Native memberships, every
+				// temporary layer/reason/flag, leader, feeling, conversation and ownership survive.
+				AllegianceSet baseSet = Heir.Brain.GetBaseAllegiance();
+				if (baseSet == null)
+					throw new InvalidOperationException("successor Brain has no base allegiance");
+				baseSet["Player"] = 100;
 			}
-			Heir.RemovePart<GivesRep>();
-			Heir.RemovePart<r_KingdomCitizenLegacy>();
 		}
 
 		private static bool TryResetPersonalKnowledge(KingdomSystem System, string Token, int RealmRegard)
@@ -1149,7 +1672,15 @@ namespace ThousandAndFirst
 			}
 			try
 			{
-				KingdomChronicle.Record(system, PendingSealRiteChronicle);
+				string eventId = KingdomSuccessionRules.AccessionRiteEventId(
+					PendingSealAccessionToken);
+				if (string.IsNullOrEmpty(eventId) || !KingdomChronicle.RecordOnce(system, eventId,
+					PendingSealRiteChronicle))
+				{
+					KingdomLog.Log("succession: pending accession Chronicle receipt remains after "
+						+ Context);
+					return false;
+				}
 				PendingSealRiteChronicle = "";
 				PendingSealAccessionReady = true;
 				return true;
@@ -1171,6 +1702,25 @@ namespace ThousandAndFirst
 				? value : value.Substring(0, MaxPendingRiteChronicleChars);
 		}
 
+		private void MigrateSavedState(int Version)
+		{
+			if (Version >= 2) return;
+			LegacyPhysicalRiteUnavailable = true;
+			ClearPendingRiteIdentity();
+			CompletedShrineToken = "";
+			CompletedShrineObjectId = "";
+			CompletedShrineZoneId = "";
+			if (!string.IsNullOrEmpty(PendingDeathToken)
+				&& PendingAccessionRepairResidentId == 0)
+			{
+				// Version 1 could describe a clock jump but had no frozen body/locus/fixture
+				// proof. It cannot be upgraded by inventing those facts. Quarantine only this
+				// system so the enclosing save remains loadable.
+				SuccessionDisabled = true;
+				ClearDisabledSavedState();
+			}
+		}
+
 		private void ValidateSavedState()
 		{
 			if (SuccessionDisabled)
@@ -1181,6 +1731,21 @@ namespace ThousandAndFirst
 			PendingDeathToken = PendingDeathToken ?? "";
 			CompletedDeathToken = CompletedDeathToken ?? "";
 			PendingSealAccessionToken = PendingSealAccessionToken ?? "";
+			PendingFounderName = PendingFounderName ?? "";
+			PendingFounderObjectId = PendingFounderObjectId ?? "";
+			PendingFounderCause = PendingFounderCause ?? "";
+			PendingHeirObjectId = PendingHeirObjectId ?? "";
+			PendingHeirName = PendingHeirName ?? "";
+			PendingHeirZoneId = PendingHeirZoneId ?? "";
+			PendingRiteZoneId = PendingRiteZoneId ?? "";
+			PendingRiteCityName = PendingRiteCityName ?? "";
+			PendingRiteFixtureObjectId = PendingRiteFixtureObjectId ?? "";
+			PendingRiteFixtureName = PendingRiteFixtureName ?? "";
+			PendingRiteAttendeeManifest = PendingRiteAttendeeManifest ?? "";
+			PendingShrineObjectId = PendingShrineObjectId ?? "";
+			CompletedShrineToken = CompletedShrineToken ?? "";
+			CompletedShrineObjectId = CompletedShrineObjectId ?? "";
+			CompletedShrineZoneId = CompletedShrineZoneId ?? "";
 			string stateFailure;
 			if (!KingdomSuccessionRules.TryValidateSavedState(SuccessionOrdinal,
 				PendingDeathToken, CompletedDeathToken, PendingPhase, PendingDueTick,
@@ -1238,6 +1803,82 @@ namespace ThousandAndFirst
 			{
 				PendingSealRiteChronicle = "";
 			}
+
+			bool hasPending = !string.IsNullOrEmpty(PendingDeathToken);
+			if (!Enum.IsDefined(typeof(MourningRiteStage), PendingRiteStage))
+			{
+				throw new InvalidOperationException("The saved mourning-rite stage is invalid.");
+			}
+			if (!hasPending)
+			{
+				if (PendingRiteStage != MourningRiteStage.None)
+				{
+					throw new InvalidOperationException("An idle succession carries a mourning-rite stage.");
+				}
+				ClearPendingRiteIdentity();
+			}
+			else if (!LegacyPhysicalRiteUnavailable)
+			{
+				KingdomRiteAttendee[] attendees;
+				if (PendingRiteStage < MourningRiteStage.Frozen
+					|| PendingRiteStage > MourningRiteStage.BodyCrossed
+					|| PendingHeirResidentId <= 0 || string.IsNullOrEmpty(PendingFounderName)
+					|| string.IsNullOrEmpty(PendingFounderObjectId)
+					|| string.IsNullOrEmpty(PendingFounderCause)
+					|| string.IsNullOrEmpty(PendingHeirObjectId)
+					|| string.IsNullOrEmpty(PendingHeirName)
+					|| string.IsNullOrEmpty(PendingHeirZoneId)
+					|| string.IsNullOrEmpty(PendingRiteZoneId)
+					|| string.IsNullOrEmpty(PendingRiteCityName)
+					|| string.IsNullOrEmpty(PendingRiteFixtureObjectId)
+					|| string.IsNullOrEmpty(PendingRiteFixtureName)
+					|| PendingFounderName.Length > KingdomSealRecord.MaxNameChars
+					|| PendingHeirName.Length > KingdomSealRecord.MaxNameChars
+					|| PendingRiteCityName.Length > KingdomSealRecord.MaxNameChars
+					|| PendingRiteFixtureName.Length > KingdomSealRecord.MaxNameChars
+					|| PendingFounderCause.Length > MaxPendingRiteChronicleChars
+					|| PendingFounderObjectId.Length > 512
+					|| PendingHeirObjectId.Length > 512
+					|| PendingRiteFixtureObjectId.Length > 512
+					|| PendingShrineObjectId.Length > 512
+					|| PendingHeirZoneId.Length > 1024 || PendingRiteZoneId.Length > 1024
+					|| PendingShrineX < 0 || PendingShrineX > 4096
+					|| PendingShrineY < 0 || PendingShrineY > 4096
+					|| !KingdomSuccessionRules.TryDecodeRiteManifest(
+						PendingRiteAttendeeManifest, out attendees)
+					|| attendees.Length == 0
+					|| attendees[0].ResidentId != PendingHeirResidentId
+					|| !string.Equals(attendees[0].ObjectId, PendingHeirObjectId,
+						StringComparison.Ordinal)
+					|| !string.Equals(attendees[0].ZoneId, PendingRiteZoneId,
+						StringComparison.Ordinal)
+					|| (PendingRiteStage >= MourningRiteStage.ShrinePlaced
+						&& string.IsNullOrEmpty(PendingShrineObjectId))
+					|| (PendingAccessionRepairResidentId != 0
+						&& PendingRiteStage != MourningRiteStage.BodyCrossed))
+				{
+					throw new InvalidOperationException("The saved physical mourning-rite identity is invalid.");
+				}
+			}
+
+			bool anyShrineReceipt = CompletedShrineToken.Length > 0
+				|| CompletedShrineObjectId.Length > 0 || CompletedShrineZoneId.Length > 0;
+			bool wholeShrineReceipt = CompletedShrineToken.Length > 0
+				&& CompletedShrineObjectId.Length > 0 && CompletedShrineZoneId.Length > 0;
+			if (anyShrineReceipt && !wholeShrineReceipt)
+			{
+				throw new InvalidOperationException("The in-run founder-shrine receipt is torn.");
+			}
+			int shrineOrdinal;
+			long shrineTick;
+			if (CompletedShrineToken.Length > 0
+				&& (!KingdomSuccessionRules.TryReadDeathToken(CompletedShrineToken,
+					out shrineOrdinal, out shrineTick)
+					|| CompletedShrineObjectId.Length > 512
+					|| CompletedShrineZoneId.Length > 1024))
+			{
+				throw new InvalidOperationException("The in-run founder-shrine receipt is invalid.");
+			}
 		}
 
 		private void ClearDisabledSavedState()
@@ -1269,6 +1910,18 @@ namespace ThousandAndFirst
 			PendingAccessionRepairSeated = false;
 			PendingAccessionRepairArrivedTick = 0L;
 			PendingAccessionRepairKeptCreeds = "";
+			ClearPendingRiteIdentity();
+			int shrineOrdinal;
+			long shrineTick;
+			if (!KingdomSuccessionRules.TryReadDeathToken(CompletedShrineToken,
+				out shrineOrdinal, out shrineTick)
+				|| string.IsNullOrEmpty(CompletedShrineObjectId)
+				|| string.IsNullOrEmpty(CompletedShrineZoneId))
+			{
+				CompletedShrineToken = "";
+				CompletedShrineObjectId = "";
+				CompletedShrineZoneId = "";
+			}
 		}
 
 		private static void TryTellFailure(string Text)

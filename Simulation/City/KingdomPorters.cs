@@ -100,7 +100,7 @@ namespace ThousandAndFirst.Simulation.City
 			// minted to walk the same road half empty. That is assertion 2 of §3.10 made true by
 			// construction rather than checked afterwards — KingdomLogisticsRules.TryNoTwoHalfEmptyTrips
 			// is the same rule written as a predicate, and the tests hold this path to it.
-			int folded = Fold(System, Z, table, Blueprint, Amount, TimeTicks);
+			int folded = Fold(System, Z, Survey, table, Blueprint, Amount, TimeTicks);
 			if (folded > 0)
 			{
 				return folded;
@@ -113,16 +113,10 @@ namespace ThousandAndFirst.Simulation.City
 			}
 			int load = (Amount < LoadPerTrip) ? Amount : LoadPerTrip;
 			int jobId = System.Jobs.MintJobId();
-			KingdomZoneStep edge = KingdomJobRules.EdgeToward(Z.ZoneID, SourceZoneId);
 			int width = (Z.Width > 2) ? Z.Width : KingdomJobRules.ZoneWidth;
 			int height = (Z.Height > 2) ? Z.Height : KingdomJobRules.ZoneHeight;
 			short entryX;
 			short entryY;
-			if (!KingdomJobRules.TryDrawEntryCell(System.SimulationSeed, SeedLabel(System), jobId, edge, width, height, out entryX, out entryY, out fault))
-			{
-				Refuse("entry", fault);
-				return 0;
-			}
 			int originCode;
 			if (!KingdomJobRules.TryDrawOrigin(System.SimulationSeed, SeedLabel(System), jobId, KingdomRules.Origins.Length, out originCode, out fault))
 			{
@@ -130,7 +124,10 @@ namespace ThousandAndFirst.Simulation.City
 			}
 			KingdomLeg[] legs;
 			int legCount;
-			if (!TryPlan(System, Z, entryX, entryY, (short)destination.X, (short)destination.Y, edge, TimeTicks, SourceZoneId, out legs, out legCount, out fault))
+			KingdomZoneStep arrival;
+			if (!TryPlan(System, Z, jobId, (short)destination.X, (short)destination.Y,
+				TimeTicks, SourceZoneId, out entryX, out entryY, out arrival,
+				out legs, out legCount, out fault))
 			{
 				Refuse("plan", fault);
 				return 0;
@@ -175,7 +172,9 @@ namespace ThousandAndFirst.Simulation.City
 			part.ExitY = entryY;
 			Walk(body, Z, destination.X, destination.Y);
 			KingdomLog.Log("porter: job " + jobId + " carries " + carried + " into " + Z.ZoneID
-				+ " by the " + edge + " edge, " + legCount + " legs");
+				+ ((arrival == KingdomZoneStep.Up || arrival == KingdomZoneStep.Down)
+					? " by the paired shaft, " : (" by the " + arrival + " edge, "))
+				+ legCount + " legs");
 			return carried;
 		}
 
@@ -195,16 +194,14 @@ namespace ThousandAndFirst.Simulation.City
 		/// deposited is passed over — its cargo is zero and it is on its way out.
 		/// </para>
 		/// </summary>
-		private static int Fold(KingdomSystem System, Zone Z, KingdomJobTable table, string Blueprint, int Amount, long TimeTicks)
+		private static int Fold(KingdomSystem System, Zone Z, KingdomSurvey Survey,
+			KingdomJobTable table, string Blueprint, int Amount, long TimeTicks)
 		{
-			// One walk of the ground, not one per candidate: the job cap is sixteen and a zone is
-			// hundreds of objects, so a lookup inside the loop would be the expensive part of a
-			// step that exists to make the pass cheaper.
-			List<GameObject> standing = null;
 			for (int i = 0; i < table.Count; i++)
 			{
 				KingdomJobRow row;
 				if (!table.TryAt(i, out row)
+					|| row.Kind != KingdomJobKind.Delivery
 					|| row.Status != KingdomJobStatus.Open
 					|| row.Cargo != KingdomStockKind.Food
 					|| row.CargoAmount <= 0
@@ -214,11 +211,7 @@ namespace ThousandAndFirst.Simulation.City
 				{
 					continue;
 				}
-				if (standing == null)
-				{
-					standing = Z.GetObjects();
-				}
-				GameObject body = Carrier(standing, row.JobId);
+				GameObject body = Survey.FindTransient(row.JobId);
 				if (body == null)
 				{
 					continue;
@@ -242,27 +235,6 @@ namespace ThousandAndFirst.Simulation.City
 				return added;
 			}
 			return 0;
-		}
-
-		/// <summary>The body walking one job in this ground, or null. The registry owns minting and
-		/// this only finds what it already minted, so there is still exactly one path to a
-		/// body.</summary>
-		private static GameObject Carrier(List<GameObject> found, int JobId)
-		{
-			for (int i = 0; found != null && i < found.Count; i++)
-			{
-				GameObject body = found[i];
-				if (!GameObject.Validate(body))
-				{
-					continue;
-				}
-				r_KingdomPorter part = body.GetPart<r_KingdomPorter>();
-				if (part != null && part.JobId == JobId)
-				{
-					return body;
-				}
-			}
-			return null;
 		}
 
 		// ==================================================================================
@@ -292,12 +264,21 @@ namespace ThousandAndFirst.Simulation.City
 			for (int i = 0; i < table.Count; i++)
 			{
 				KingdomJobRow row;
-				if (!table.TryAt(i, out row))
+				if (!table.TryAt(i, out row) || row.Kind != KingdomJobKind.Delivery)
 				{
 					continue;
 				}
 				KingdomItineraryFix fix;
-				if (!KingdomItineraryRules.TryAt(row.Legs(), row.LegCount, TimeTicks, out fix, out fault))
+				int bindingId = row.JobId;
+				bool central = KingdomJobRules.IsCentralDelivery(row);
+				if (central)
+				{
+					if (row.JobId != row.DeliveryTripId
+						|| !TryActiveTripRow(table, row.DeliveryTripId, TimeTicks, out row, out fix))
+						continue;
+					bindingId = row.DeliveryTripId;
+				}
+				else if (!KingdomItineraryRules.TryAt(row.Legs(), row.LegCount, TimeTicks, out fix, out fault))
 				{
 					continue;
 				}
@@ -307,7 +288,7 @@ namespace ThousandAndFirst.Simulation.City
 				{
 					continue;
 				}
-				Place(System, Z, row, fix, TimeTicks);
+				Place(System, Z, row, fix, TimeTicks, bindingId, central);
 			}
 		}
 
@@ -337,11 +318,26 @@ namespace ThousandAndFirst.Simulation.City
 				return;
 			}
 			KingdomJobRow row;
-			if (!table.TryGet(Part.JobId, out row))
+			if (!table.TryGet(Part.JobId, out row) || row.Kind != KingdomJobKind.Delivery)
 			{
 				// The model closed this job while the ground was elsewhere. The sweep is the place
 				// that removes the body; a turn tick is not, because a body that deleted itself
 				// mid-turn is a body the engine is still iterating over.
+				return;
+			}
+			if (KingdomJobRules.IsCentralDelivery(row))
+			{
+				KingdomItineraryFix centralFix;
+				KingdomJobRow active;
+				if (!TryActiveTripRow(table, Part.JobId, TimeTick, out active, out centralFix)) return;
+				if (Near(Body, Part.DestX, Part.DestY))
+				{
+					if (active.DeliveryCargoAuthority == KingdomDeliveryCargoAuthority.ScalarStock)
+						KingdomCentralLogistics.SettleScalarArrivals(system, zone,
+							KingdomSurvey.Take(zone, system), TimeTick,
+							KingdomData.CropForStyle(system.Style));
+					HandoffCentral(system, Part.JobId, Body, active, centralFix, TimeTick);
+				}
 				return;
 			}
 			if (row.CargoAmount > 0 && Near(Body, Part.DestX, Part.DestY))
@@ -351,7 +347,17 @@ namespace ThousandAndFirst.Simulation.City
 			}
 			if (row.CargoAmount <= 0 && Near(Body, Part.ExitX, Part.ExitY))
 			{
-				Close(system, Part.JobId, "the load reached the store and the carrier went back the way they came");
+				KingdomLeg final;
+				if (row.TryLeg(row.LegCount - 1, out final)
+					&& string.Equals(final.ZoneId, zone.ZoneID, StringComparison.Ordinal))
+				{
+					Close(system, Part.JobId,
+						"the load reached the store and the carrier went back the way they came");
+				}
+				else
+				{
+					Handoff(system, Part.JobId, Body, zone.ZoneID);
+				}
 				return;
 			}
 			bool overrun;
@@ -380,13 +386,14 @@ namespace ThousandAndFirst.Simulation.City
 		/// because the sweep is keyed on a job id and a person does not have one.
 		/// </para>
 		/// </summary>
-		public static int Sweep(KingdomSystem System, Zone Z)
+		public static int Sweep(KingdomSystem System, Zone Z, KingdomSurvey Survey = null)
 		{
 			if (System == null || !System.Founded || Z == null)
 			{
 				return 0;
 			}
-			List<GameObject> found = Z.GetObjects();
+			KingdomSurvey survey = Survey ?? KingdomSurvey.Take(Z, System);
+			List<GameObject> found = new List<GameObject>(survey.Transients);
 			int swept = 0;
 			for (int i = 0; found != null && i < found.Count; i++)
 			{
@@ -399,6 +406,7 @@ namespace ThousandAndFirst.Simulation.City
 				KingdomLog.Log("porter: swept a stale carrier out of " + Z.ZoneID + " (job "
 					+ body.GetIntProperty(KingdomResidents.JobIdProperty) + ")");
 				body.Obliterate();
+				survey.ObserveRemoved(body);
 				swept++;
 			}
 			if (swept > 0)
@@ -435,8 +443,14 @@ namespace ThousandAndFirst.Simulation.City
 			for (int i = 0; i < ids.Length; i++)
 			{
 				KingdomJobRow row;
-				if (!table.TryGet(ids[i], out row))
+				if (!table.TryGet(ids[i], out row) || row.Kind != KingdomJobKind.Delivery)
 				{
+					continue;
+				}
+				if (KingdomJobRules.IsCentralDelivery(row))
+				{
+					// Exact central cargo is never proxy-closed off-screen. Its persisted receipt or
+					// opaque owner must settle it on trusted ground.
 					continue;
 				}
 				KingdomItineraryFix fix;
@@ -482,7 +496,7 @@ namespace ThousandAndFirst.Simulation.City
 			{
 				return null;
 			}
-			GameObject body = GameObject.Create(KingdomGrowth.SettlerBlueprint());
+			GameObject body = GameObject.Create(KingdomGrowth.DefaultSettlerBlueprint);
 			if (body == null)
 			{
 				return null;
@@ -505,14 +519,17 @@ namespace ThousandAndFirst.Simulation.City
 				render.DisplayName = "porter";
 			}
 			KingdomResidents.Bind(System, jobId, KingdomBindingKind.Transient, Z.ZoneID, body, TimeTicks);
+			KingdomSurvey.ObserveAddedToActive(Z, body);
 			return body;
 		}
 
 		/// <summary>Puts a carrier where the model says they are, minting one if the registry says
 		/// there is none and moving the one there is if there is.</summary>
-		private static void Place(KingdomSystem System, Zone Z, KingdomJobRow row, KingdomItineraryFix fix, long TimeTicks)
+		private static void Place(KingdomSystem System, Zone Z, KingdomJobRow row,
+			KingdomItineraryFix fix, long TimeTicks, int bindingId, bool central)
 		{
-			KingdomBindingVerdict verdict = KingdomResidents.Judge(System, row.JobId, KingdomBindingKind.Transient, Z.ZoneID);
+			KingdomBindingVerdict verdict = KingdomResidents.Judge(System, bindingId,
+				KingdomBindingKind.Transient, Z.ZoneID);
 			if (verdict == KingdomBindingVerdict.Refuse)
 			{
 				return;
@@ -522,20 +539,20 @@ namespace ThousandAndFirst.Simulation.City
 				// Already standing here and already walking. The model's answer and the ground's
 				// may have drifted while the founder was in the room, so this is where the ground
 				// wins and the remainder of the itinerary shifts to match it (§3.7).
-				Reproject(System, Z, row, fix, TimeTicks);
+				Reproject(System, Z, row, fix, TimeTicks, bindingId);
 				return;
 			}
-			GameObject body = Mint(System, Z, row.JobId, fix.X, fix.Y, row.OriginCode, TimeTicks);
+			GameObject body = Mint(System, Z, bindingId, fix.X, fix.Y, row.OriginCode, TimeTicks);
 			if (body == null)
 			{
 				return;
 			}
-			if (row.CargoAmount > 0)
+			if (!central && row.CargoAmount > 0)
 			{
-				Load(body, KingdomCropRules.CropBlueprintForStyle(System.Style), row.CargoAmount);
+				Load(body, KingdomData.CropForStyle(System.Style), row.CargoAmount);
 			}
 			r_KingdomPorter part = body.RequirePart<r_KingdomPorter>();
-			part.JobId = row.JobId;
+			part.JobId = bindingId;
 			KingdomLeg leg;
 			if (row.TryLeg((fix.LegIndex < 0) ? 0 : fix.LegIndex, out leg))
 			{
@@ -558,7 +575,8 @@ namespace ThousandAndFirst.Simulation.City
 				part.ExitY = last.ExitY;
 				Walk(body, Z, leg.ExitX, leg.ExitY);
 			}
-			KingdomLog.Log("porter: job " + row.JobId + " walks into " + Z.ZoneID + " at " + fix.X + "," + fix.Y);
+			KingdomLog.Log("porter: trip " + bindingId + " walks into " + Z.ZoneID
+				+ " at " + fix.X + "," + fix.Y);
 		}
 
 		/// <summary>
@@ -577,9 +595,10 @@ namespace ThousandAndFirst.Simulation.City
 		/// doorway forever produces a story and not an unbounded job set.
 		/// </para>
 		/// </summary>
-		private static void Reproject(KingdomSystem System, Zone Z, KingdomJobRow row, KingdomItineraryFix fix, long TimeTicks)
+		private static void Reproject(KingdomSystem System, Zone Z, KingdomJobRow row,
+			KingdomItineraryFix fix, long TimeTicks, int bindingId)
 		{
-			GameObject body = Resolve(row.JobId);
+			GameObject body = Resolve(bindingId);
 			r_KingdomPorter part = (body == null) ? null : body.GetPart<r_KingdomPorter>();
 			Cell at = (body == null) ? null : body.CurrentCell;
 			if (part == null || at == null || fix.LegIndex < 0 || part.ReprojectedLeg == fix.LegIndex + 1)
@@ -682,7 +701,7 @@ namespace ThousandAndFirst.Simulation.City
 				System.PendingCrop += closed.CargoAmount;
 				if (string.IsNullOrEmpty(System.PendingCropBlueprint))
 				{
-					System.PendingCropBlueprint = KingdomCropRules.CropBlueprintForStyle(System.Style);
+					System.PendingCropBlueprint = KingdomData.CropForStyle(System.Style);
 				}
 			}
 			Release(System, jobId, standing, KingdomUnbindCause.JobClosed);
@@ -779,9 +798,118 @@ namespace ThousandAndFirst.Simulation.City
 			KingdomResidents.Unbind(System, jobId, KingdomBindingKind.Transient, cause);
 			if (GameObject.Validate(Body))
 			{
+				Zone zone = Body.CurrentZone;
 				Spill(Body);
 				Body.Obliterate();
+				KingdomSurvey.ObserveRemovedFromActive(zone, Body);
 			}
+		}
+
+		/// <summary>Closes central trip's one physical projection after its exact destination
+		/// receipt has already published. Any unrelated protected inventory spills before removal.</summary>
+		internal static void RetireCentralCarrier(KingdomSystem system, int tripId)
+		{
+			if (system == null || tripId <= 0) return;
+			Release(system, tripId, Resolve(tripId), KingdomUnbindCause.JobClosed);
+		}
+
+		/// <summary>Completes one exact zone leg without closing its job. The job row remains the
+		/// sole route authority; removing this rendering before unbinding means the next zone may
+		/// mint exactly one body and a stale copy can never survive both sides of the handoff.</summary>
+		private static void Handoff(KingdomSystem System, int jobId, GameObject Body, string ZoneId)
+		{
+			if (!GameObject.Validate(Body)) return;
+			// Publish the licence to mint the next rendering before removing this one. If the
+			// registry refuses, leave the live body in place: a visible delayed handoff is repairable;
+			// a deleted body behind an open binding would refuse every later rendering forever.
+			if (!KingdomResidents.Unbind(System, jobId, KingdomBindingKind.Transient,
+				KingdomUnbindCause.ZoneHandoff)) return;
+			Zone zone = Body.CurrentZone;
+			Spill(Body);
+			Body.Obliterate();
+			KingdomSurvey.ObserveRemovedFromActive(zone, Body);
+			KingdomLog.Log("porter: job " + jobId + " handed off at the exact exit from " + ZoneId);
+		}
+
+		/// <summary>Central trips keep one physical body and its exact manifest inventory across
+		/// zones. Long-distance movement transfers that same GameObject to the next frozen leg; it
+		/// never spills, deletes, or re-mints cargo at a boundary.</summary>
+		private static void HandoffCentral(KingdomSystem system, int tripId, GameObject body,
+			KingdomJobRow standing, KingdomItineraryFix standingFix, long now)
+		{
+			if (!GameObject.Validate(body) || system == null || system.Jobs == null) return;
+			if (standingFix.LegIndex >= 0)
+			{
+				KingdomLeg leg;
+				if (standing.TryLeg(standingFix.LegIndex, out leg) && now < leg.ArriveTick) return;
+			}
+			KingdomJobTable table;
+			KingdomCityFault fault;
+			KingdomJobRow nextRow;
+			KingdomItineraryFix nextFix;
+			if (!system.Jobs.TryRead(out table, out fault)
+				|| !TryActiveTripRow(table, tripId, now, out nextRow, out nextFix)) return;
+			if (nextRow.JobId == standing.JobId && nextRow.CargoAmount > 0
+				&& nextFix.Phase == KingdomItineraryPhase.Delivered) return;
+			Zone nextZone;
+			try { nextZone = The.ZoneManager == null ? null : The.ZoneManager.GetZone(nextFix.ZoneId); }
+			catch { return; }
+			Cell nextCell = nextZone == null ? null : Standing(nextZone, nextFix.X, nextFix.Y);
+			if (nextCell == null) return;
+			if (!ReferenceEquals(body.CurrentCell, nextCell))
+			{
+				try
+				{
+					if (!body.SystemLongDistanceMoveTo(nextCell, 0, forced: true,
+						ignoreCombat: true) || !ReferenceEquals(body.CurrentCell, nextCell)) return;
+				}
+				catch { return; }
+			}
+			if (!KingdomResidents.Bind(system, tripId, KingdomBindingKind.Transient,
+				nextZone.ZoneID, body, now)) return;
+			r_KingdomPorter part = body.RequirePart<r_KingdomPorter>();
+			part.JobId = tripId;
+			KingdomLeg nextLeg;
+			if (nextRow.TryLeg(nextFix.LegIndex < 0 ? 0 : nextFix.LegIndex, out nextLeg))
+			{
+				part.DestX = nextLeg.ExitX; part.DestY = nextLeg.ExitY;
+				part.ExitX = nextLeg.ExitX; part.ExitY = nextLeg.ExitY;
+				Walk(body, nextZone, nextLeg.ExitX, nextLeg.ExitY);
+			}
+			KingdomLog.Log("porter: trip " + tripId + " moved the same body and cargo into "
+				+ nextZone.ZoneID);
+		}
+
+		private static bool TryActiveTripRow(KingdomJobTable table, int tripId, long now,
+			out KingdomJobRow row, out KingdomItineraryFix fix)
+		{
+			row = default(KingdomJobRow);
+			fix = default(KingdomItineraryFix);
+			List<KingdomJobRow> group = new List<KingdomJobRow>();
+			for (int i = 0; table != null && i < table.Count; i++)
+			{
+				KingdomJobRow candidate;
+				if (table.TryAt(i, out candidate) && candidate.DeliveryTripId == tripId
+					&& KingdomJobRules.IsCentralDelivery(candidate)
+					&& (candidate.DeliveryPhase == KingdomDeliveryPhase.SourceDebitPrepared
+						|| candidate.DeliveryPhase == KingdomDeliveryPhase.InFlight))
+					group.Add(candidate);
+			}
+			group.Sort(delegate(KingdomJobRow a, KingdomJobRow b)
+			{
+				return a.DeliveryStopOrdinal.CompareTo(b.DeliveryStopOrdinal);
+			});
+			KingdomCityFault fault;
+			for (int i = 0; i < group.Count; i++)
+			{
+				if (group[i].DeliveryCargoAuthority == KingdomDeliveryCargoAuthority.ScalarStock
+					&& group[i].CargoAmount <= 0) continue;
+				if (!KingdomItineraryRules.TryAt(group[i].Legs(), group[i].LegCount, now,
+					out fix, out fault)) return false;
+				row = group[i];
+				return true;
+			}
+			return false;
 		}
 
 		/// <summary>
@@ -813,32 +941,149 @@ namespace ThousandAndFirst.Simulation.City
 			}
 		}
 
-		/// <summary>The legs: in by the edge to the store, back out by the same edge, and on into
-		/// the ground the load came from when that ground is the city's own.</summary>
-		private static bool TryPlan(KingdomSystem System, Zone Z, short entryX, short entryY, short destX, short destY, KingdomZoneStep edge, long TimeTicks, string sourceZoneId, out KingdomLeg[] legs, out int count, out KingdomCityFault fault)
+		/// <summary>Freezes the complete destination-to-source graph path. Every intermediate
+		/// claimed zone becomes one dated leg; horizontal transitions use the engine's mirrored
+		/// boundary cell and vertical transitions use the canonical paired-shaft coordinate.</summary>
+		private static bool TryPlan(KingdomSystem System, Zone Z, int jobId, short destX,
+			short destY, long TimeTicks, string sourceZoneId, out short entryX,
+			out short entryY, out KingdomZoneStep arrival, out KingdomLeg[] legs,
+			out int count, out KingdomCityFault fault)
 		{
-			int sinuosity = KingdomItineraryRules.SinuosityBuiltPercent;
-			int road = Paved(Z) ? KingdomItineraryRules.RoadDiscountPercent : KingdomItineraryRules.NoRoadDiscountPercent;
-			List<KingdomLegPlan> plans = new List<KingdomLegPlan>();
-			plans.Add(new KingdomLegPlan(Z.ZoneID, entryX, entryY, destX, destY, sinuosity, road));
-			plans.Add(new KingdomLegPlan(Z.ZoneID, destX, destY, entryX, entryY, sinuosity, road));
-			if (!string.IsNullOrEmpty(sourceZoneId)
-				&& !string.Equals(sourceZoneId, Z.ZoneID, StringComparison.Ordinal)
-				&& System.ClaimedZones.Contains(sourceZoneId)
-				&& edge != KingdomZoneStep.None)
+			entryX = 0;
+			entryY = 0;
+			arrival = KingdomZoneStep.None;
+			legs = null;
+			count = 0;
+			fault = KingdomCityFault.NullArgument;
+			KingdomCityState state;
+			KingdomZoneGraph graph;
+			if (System == null || System.City == null
+				|| !System.City.TryRead(out state, out fault)
+				|| !KingdomCityRules.TryZoneGraph(state,
+					KingdomDelve.DelvedZones(System.ClaimedZones).ToArray(), out graph, out fault))
 			{
-				// The onward leg is what makes following one across an edge work: the founder who
-				// walks out behind a porter comes out beside them, because the model already had an
-				// answer for where they would be (I5).
-				short mirrorX;
-				short mirrorY;
-				KingdomJobRules.Mirror(entryX, entryY, edge, Z.Width, Z.Height, out mirrorX, out mirrorY);
-				plans.Add(new KingdomLegPlan(sourceZoneId, mirrorX, mirrorY,
-					(short)(Z.Width / 2), (short)(Z.Height / 2),
-					KingdomItineraryRules.SinuosityOpenPercent, KingdomItineraryRules.NoRoadDiscountPercent));
+				return false;
+			}
+			int[] path;
+			int pathCount;
+			if (!KingdomJobRules.TryPorterPath(graph, Z.ZoneID, sourceZoneId,
+				out path, out pathCount, out fault))
+			{
+				return false;
+			}
+			if (pathCount < 2)
+			{
+				fault = KingdomCityFault.OutsideItinerary;
+				return false;
+			}
+			short nextEnterX;
+			short nextEnterY;
+			if (!TryPassage(System, graph, path[0], path[1], jobId, Z.Width, Z.Height,
+				out entryX, out entryY, out nextEnterX, out nextEnterY, out arrival,
+				out fault)) return false;
+
+			List<KingdomLegPlan> plans = new List<KingdomLegPlan>();
+			int inboundRoad = RoadDiscount(Z, entryX, entryY, destX, destY);
+			int outboundRoad = RoadDiscount(Z, destX, destY, entryX, entryY);
+			plans.Add(new KingdomLegPlan(Z.ZoneID, entryX, entryY, destX, destY,
+				KingdomItineraryRules.SinuosityBuiltPercent, inboundRoad));
+			plans.Add(new KingdomLegPlan(Z.ZoneID, destX, destY, entryX, entryY,
+				KingdomItineraryRules.SinuosityBuiltPercent, outboundRoad));
+			short sourceX;
+			short sourceY;
+			SourceAnchor(state, sourceZoneId, out sourceX, out sourceY);
+			for (int i = 1; i < pathCount; i++)
+			{
+				KingdomZoneNode node;
+				if (!graph.TryNode(path[i], out node))
+				{
+					fault = KingdomCityFault.InvalidIndex;
+					return false;
+				}
+				short exitX;
+				short exitY;
+				short followingX = 0;
+				short followingY = 0;
+				if (i == pathCount - 1)
+				{
+					exitX = sourceX;
+					exitY = sourceY;
+				}
+				else
+				{
+					KingdomZoneStep ignored;
+					if (!TryPassage(System, graph, path[i], path[i + 1], jobId,
+						KingdomJobRules.ZoneWidth, KingdomJobRules.ZoneHeight,
+						out exitX, out exitY, out followingX, out followingY,
+						out ignored, out fault)) return false;
+				}
+				Zone resident = ResidentZone(node.ZoneId, Z);
+				plans.Add(new KingdomLegPlan(node.ZoneId, nextEnterX, nextEnterY, exitX, exitY,
+					KingdomItineraryRules.SinuosityOpenPercent,
+					RoadDiscount(resident, nextEnterX, nextEnterY, exitX, exitY)));
+				nextEnterX = followingX;
+				nextEnterY = followingY;
 			}
 			count = plans.Count;
-			return KingdomJobRules.TryBuildLegs(plans.ToArray(), count, TimeTicks, KingdomItineraryRules.WalkTicksPerCellDefault, out legs, out fault);
+			return KingdomJobRules.TryBuildLegs(plans.ToArray(), count, TimeTicks,
+				KingdomItineraryRules.WalkTicksPerCellDefault, out legs, out fault);
+		}
+
+		private static bool TryPassage(KingdomSystem System, KingdomZoneGraph Graph,
+			int From, int To, int JobId, int Width, int Height, out short ExitX,
+			out short ExitY, out short EnterX, out short EnterY,
+			out KingdomZoneStep Step, out KingdomCityFault Fault)
+		{
+			ExitX = ExitY = EnterX = EnterY = 0;
+			Step = KingdomZoneStep.None;
+			KingdomZoneNode from;
+			KingdomZoneNode to;
+			if (Graph == null || !Graph.TryNode(From, out from) || !Graph.TryNode(To, out to)
+				|| !Graph.TryStep(From, To, out Step))
+			{
+				Fault = KingdomCityFault.OutsideItinerary;
+				return false;
+			}
+			if (Step != KingdomZoneStep.Up && Step != KingdomZoneStep.Down)
+			{
+				if (!KingdomJobRules.TryDrawEntryCell(System.SimulationSeed, SeedLabel(System),
+					JobId, Step, Width, Height, out ExitX, out ExitY, out Fault)
+					|| !KingdomJobRules.TryMirror(ExitX, ExitY, Step, Width, Height,
+						out EnterX, out EnterY)) return false;
+				return true;
+			}
+			KingdomZoneNode head = (from.Stratum < to.Stratum) ? from : to;
+			KingdomZoneNode foot = (from.Stratum < to.Stratum) ? to : from;
+			KingdomDelveLinkReceipt receipt;
+			if (!KingdomDelveLink.TryReadPhysicalReceipt(head.ZoneId, out receipt)
+				|| receipt.FootZoneId != foot.ZoneId || receipt.X < 0 || receipt.Y < 0
+				|| receipt.X >= Width || receipt.Y >= Height)
+			{
+				Fault = KingdomCityFault.OutsideItinerary;
+				return false;
+			}
+			ExitX = EnterX = (short)receipt.X;
+			ExitY = EnterY = (short)receipt.Y;
+			Fault = KingdomCityFault.None;
+			return true;
+		}
+
+		private static void SourceAnchor(KingdomCityState State, string ZoneId,
+			out short X, out short Y)
+		{
+			X = (short)(KingdomJobRules.ZoneWidth / 2);
+			Y = (short)(KingdomJobRules.ZoneHeight / 2);
+			int best = int.MaxValue;
+			for (int i = 0; State != null && i < State.WorkCount; i++)
+			{
+				KingdomWorkRow work;
+				if (!State.TryWork(i, out work) || work.WorkId >= best
+					|| !string.Equals(work.ZoneId, ZoneId, StringComparison.Ordinal)
+					|| work.RunState.Kind != KingdomWorkKind.Growing) continue;
+				best = work.WorkId;
+				X = work.AnchorX;
+				Y = work.AnchorY;
+			}
 		}
 
 		/// <summary>
@@ -851,14 +1096,41 @@ namespace ThousandAndFirst.Simulation.City
 		/// clause that keeps a road from making the estimate and the measurement diverge.
 		/// </para>
 		/// </summary>
-		private static bool Paved(Zone Z)
+		private static int RoadDiscount(Zone Z, int FromX, int FromY, int ToX, int ToY)
 		{
-			if (!KingdomRoads.Enabled)
+			if (!KingdomRoads.Enabled || Z == null)
 			{
-				return false;
+				return KingdomItineraryRules.NoRoadDiscountPercent;
 			}
-			List<KingdomRoadRules.WornCell> laid = KingdomRoads.ReadTally(Z);
-			return laid != null && laid.Count > 0;
+			List<int> route = new List<int>();
+			KingdomRoadRules.CellFilter passable = delegate(int x, int y)
+			{
+				Cell cell = Z.GetCell(x, y);
+				return cell != null && cell.IsPassable();
+			};
+			if (!KingdomRoadRules.TryTrace(passable, Z.Width, Z.Height, FromX, FromY,
+				ToX, ToY, KingdomRoadRules.MaxRouteCells, KingdomRoadRules.MaxExploreCells,
+				route) || route.Count == 0) return KingdomItineraryRules.NoRoadDiscountPercent;
+			int paved = 0;
+			for (int i = 0; i < route.Count; i++)
+			{
+				Cell cell = Z.GetCell(KingdomRoadRules.UnpackX(route[i], Z.Width),
+					KingdomRoadRules.UnpackY(route[i], Z.Width));
+				if (KingdomRoads.AppliedState(cell) == KingdomRoadRules.WearState.Paved) paved++;
+			}
+			if (paved <= 0) return KingdomItineraryRules.NoRoadDiscountPercent;
+			long weighted = (long)paved * KingdomItineraryRules.RoadDiscountPercent
+				+ (long)(route.Count - paved) * KingdomItineraryRules.NoRoadDiscountPercent;
+			return (int)((weighted + route.Count - 1L) / route.Count);
+		}
+
+		private static Zone ResidentZone(string ZoneId, Zone Current)
+		{
+			if (Current != null && string.Equals(Current.ZoneID, ZoneId, StringComparison.Ordinal))
+				return Current;
+			if (The.ZoneManager == null || string.IsNullOrEmpty(ZoneId)
+				|| !The.ZoneManager.CachedZonesContains(ZoneId)) return null;
+			return The.ZoneManager.GetZone(ZoneId);
 		}
 
 		/// <summary>The larder with room that the city dedicated first. A stored fact and not a
@@ -976,18 +1248,27 @@ namespace ThousandAndFirst.Simulation.City
 			{
 				return at;
 			}
-			List<Cell> open = Z.GetEmptyCells(delegate(Cell c) { return c.IsPassable(); });
-			for (int i = 0; open != null && i < open.Count; i++)
+			// Visit each coordinate at most once in deterministic Chebyshev rings. This finds the
+			// nearest viable stand without allocating/scanning the engine's whole empty-cell list.
+			int farthest = Math.Max(Z.Width, Z.Height);
+			for (int radius = 1; radius < farthest; radius++)
 			{
-				// Stable and undrawn: the first passable cell nearest the drawn one, scanned in the
-				// zone's own order, so two runs of the same delivery put the carrier in the same
-				// place.
-				if (Near(open[i], x, y))
+				int y1 = Math.Max(0, y - radius);
+				int y2 = Math.Min(Z.Height - 1, y + radius);
+				int x1 = Math.Max(0, x - radius);
+				int x2 = Math.Min(Z.Width - 1, x + radius);
+				for (int cy = y1; cy <= y2; cy++)
 				{
-					return open[i];
+					for (int cx = x1; cx <= x2; cx++)
+					{
+						if (Math.Max(Math.Abs(cx - x), Math.Abs(cy - y)) != radius) continue;
+						Cell candidate = Z.GetCell(cx, cy);
+						if (candidate != null && candidate.IsPassable()
+							&& candidate.IsEmptyOfSolid()) return candidate;
+					}
 				}
 			}
-			return (open != null && open.Count > 0) ? open[0] : null;
+			return null;
 		}
 
 		private static bool Near(Cell at, int x, int y)
@@ -1005,6 +1286,8 @@ namespace ThousandAndFirst.Simulation.City
 		private static GameObject Resolve(int jobId)
 		{
 			Zone zone = (The.Player == null) ? null : The.Player.CurrentZone;
+			KingdomSurvey survey = KingdomSurvey.ActiveFor(zone);
+			if (survey != null) return survey.FindTransient(jobId);
 			List<GameObject> found = (zone == null) ? null : zone.GetObjects();
 			for (int i = 0; found != null && i < found.Count; i++)
 			{

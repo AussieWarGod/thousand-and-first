@@ -267,11 +267,11 @@ namespace ThousandAndFirst
 
 		internal const int MaxFramingLineChars = 128;
 
-		internal const int MaxKeys = 64;
+		internal const int MaxKeys = 96;
 
 		internal const int MaxKeyChars = 64;
 
-		internal const int MaxValueChars = 4096;
+		internal const int MaxValueChars = KingdomArchitectureRules.MaxSnapshotChars;
 
 		internal const int MaxArrayItems = 128;
 

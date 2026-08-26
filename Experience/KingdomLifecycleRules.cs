@@ -61,7 +61,6 @@ namespace ThousandAndFirst
 		Quarantine = 3
 	}
 
-	#if TAF_TESTS
 	/// <summary>
 	/// Runtime trust boundary. Implementations must expose opaque live engine references and derive
 	/// every field from a bounded scan of the real Qud object graph. They must never wrap a
@@ -99,10 +98,13 @@ namespace ThousandAndFirst
 		object InvokeWater(object VesselReference, int Amount);
 		object InvokeSchedule(object ScheduleReference, long DueTick, string OperationId);
 		object InvokeCarryRemoval(object SourceReference, int Count, string UnitEventId);
+		object InvokeCarrySignRemoval(object SignReference, int Count, string ReceiptId);
+		object InvokeCarryMove(object SourceReference, int TripId,
+			KingdomLifecycleTopology TargetTopology, string TargetOwnerId,
+			string TargetZoneId, int TargetX, int TargetY, string ReceiptId);
 		object InvokeLifecycleProjection(KingdomLifecycleProjection Projection);
 		object InvokeLifecycleRemoval(object ObjectReference, int Count, string OperationId);
 	}
-	#endif
 
 	[Flags]
 	public enum KingdomLifecycleSinkMask : byte
@@ -119,10 +121,20 @@ namespace ThousandAndFirst
 	public static class KingdomLifecycleRules
 	{
 		public const int LegacyLifecycleFormatVersion = 5;
-		public const int CurrentFormatVersion = 6;
-		public const int CurrentCarryFormatVersion = 5;
+		public const int PreviousLifecycleFormatVersion = 6;
+		public const int RaidLedgerLifecycleFormatVersion = 7;
+		public const int CurrentFormatVersion = 8;
+		public const int MaxRaidGrievances = 64;
+		public const int MaxRaidIncidents = 64;
+		public const int LegacyCarryFormatVersion = 5;
+		public const int CurrentCarryFormatVersion = 6;
+		public const int CurrentCarryManifestVersion = 1;
+		public const int MaxCarryJobIds = 16;
+		public const int MaxCarryTripIds = 16;
+		public const int MaxCarrySectionBytes = 512 * 1024;
 		public const int LegacyGrowthFormatVersion = 1;
-		public const int CurrentGrowthFormatVersion = 2;
+		public const int PreviousGrowthFormatVersion = 2;
+		public const int CurrentGrowthFormatVersion = 3;
 		public const int MaxGrowthFields = 8;
 		public const int MaxGrowthSources = 64;
 		public const int MaxGrowthOutputs = 96;
@@ -130,6 +142,7 @@ namespace ThousandAndFirst
 		public const int MaxGrowthObjectCallbacks = 4;
 		public const int MaxGrowthCropRows = 96;
 		public const int MaxGrowthSectionBytes = 512 * 1024;
+		public const int MaxRaidLedgerBytes = 256 * 1024;
 		public const int MaxRecentProofs = 64;
 		public const int MaxWaterLegs = 24;
 		public const int MaxProjections = 64;
@@ -161,6 +174,7 @@ namespace ThousandAndFirst
 		public static bool CanOwnAuthority(KingdomCarryBook Book)
 		{
 			return Book != null && !Book.WireRejected && !Book.Quarantined
+				&& Book.OpaqueWireVersion == 0 && Book.OpaquePayload == null
 				&& Book.FormatVersion == CurrentCarryFormatVersion && ValidRootId(Book.RealmId)
 				&& Book.IdentityBound && ExactCarryIdentityProof(Book)
 				&& CarryBookShape(Book);
@@ -353,7 +367,6 @@ namespace ThousandAndFirst
 			return false;
 		}
 
-		#if TAF_TESTS
 		/// <summary>
 		/// Only the runtime shell may call this seam. Receipt constructors stay private and all
 		/// observations are re-derived from the same opaque world before and after its callback.
@@ -473,6 +486,301 @@ namespace ThousandAndFirst
 				source.ReceiptProofId = CarrySourceReceiptProof(operation, source, sourceIndex);
 				source.ReceiptState = KingdomLifecyclePhysicalState.Proved;
 				return ConfirmCarryUnitCore(book, operation, source);
+			}
+
+			/// <summary>Consumes exactly one unit from the frozen sign object. Intent is durable
+			/// before the callback; an interrupted callback is recovered only from the same unique
+			/// object id at its exact before/after count.</summary>
+			internal static bool ProveExactCarrySign(KingdomCarryBook book,
+				KingdomCarryOperation operation, IKingdomLifecycleTrustedWorld world)
+			{
+				if (!ExactCarryAuthority(book, operation)
+					|| operation.AuthorityKind != KingdomCarryAuthorityKind.ExactManifest
+					|| operation.Phase != KingdomLifecyclePhase.Prepared) return false;
+				int matches;
+				Snapshot observed = ExactObservation(world, delegate(Snapshot value)
+				{
+					return string.Equals(value.ObjectId, operation.SignObjectId,
+						StringComparison.Ordinal);
+				}, out matches);
+				if (operation.SignReceiptState == KingdomLifecyclePhysicalState.Proved)
+					return ExactSignAfter(observed, matches, operation)
+						&& ExactCarryAuthority(book, operation);
+				if (operation.SignReceiptState == KingdomLifecyclePhysicalState.Prepared)
+				{
+					if (matches != 1 || !ExactSignBefore(observed, operation)
+						|| operation.ManifestRevision == long.MaxValue) return false;
+					operation.SignReceiptBeforeMatches = 1;
+					operation.SignReceiptBeforeCount = observed.Count;
+					operation.SignReceiptState = KingdomLifecyclePhysicalState.Intent;
+					operation.LiveAuthority = observed.Reference;
+					if (!ExactCarryAuthority(book, operation)) return false;
+				}
+				else if (operation.SignReceiptState != KingdomLifecyclePhysicalState.Intent)
+					return false;
+
+				int expectedAfter = operation.SignCount - 1;
+				bool atBefore = matches == 1 && ExactSignBefore(observed, operation);
+				bool atAfter = ExactSignAfter(observed, matches, operation);
+				if (!atBefore && !atAfter) return false;
+				if (atBefore)
+				{
+					object returned;
+					try
+					{
+						returned = world.InvokeCarrySignRemoval(observed.Reference, 1,
+							operation.SignReceiptId);
+					}
+					catch (Exception) { return false; }
+					if (returned == null || !ReferenceEquals(observed.Reference, returned))
+						return false;
+					observed = ExactObservation(world, delegate(Snapshot value)
+					{
+						return string.Equals(value.ObjectId, operation.SignObjectId,
+							StringComparison.Ordinal);
+					}, out matches);
+					if (!ExactSignAfter(observed, matches, operation)) return false;
+				}
+				operation.SignReceiptAfterMatches = expectedAfter == 0 ? 0 : 1;
+				operation.SignReceiptAfterCount = expectedAfter;
+				operation.SignReceiptSameReference = true;
+				operation.SignReceiptProofId = ExactCarrySignProof(operation);
+				operation.SignReceiptState = KingdomLifecyclePhysicalState.Proved;
+				operation.ManifestRevision++;
+				return ExactCarryAuthority(book, operation);
+			}
+
+			/// <summary>Moves one whole frozen source object onto its central trip's exact carrier.
+			/// No stack unit is removed and no replacement object may satisfy the receipt.</summary>
+			internal static bool ProveExactCarryPickup(KingdomCarryBook book,
+				KingdomCarryOperation operation, KingdomCarrySource source, int tripId,
+				string carrierObjectId, string carrierZoneId,
+				IKingdomLifecycleTrustedWorld world)
+			{
+				int ordinal = IndexOfSource(operation, source);
+				if (!ExactCarryAuthority(book, operation)
+					|| operation.AuthorityKind != KingdomCarryAuthorityKind.ExactManifest
+					|| operation.Phase != KingdomLifecyclePhase.RemovalIntent
+					|| ordinal < 0 || ordinal != operation.SourceIndex
+					|| !TripMember(operation, tripId) || !ValidRootId(carrierObjectId)
+					|| !ValidName(carrierZoneId)) return false;
+				int matches;
+				Snapshot observed = ExactObservation(world, delegate(Snapshot value)
+				{
+					return string.Equals(value.ObjectId, source.ObjectId, StringComparison.Ordinal);
+				}, out matches);
+				if (source.LoadedCount == source.PlannedCount)
+					return matches == 1 && ExactCurrentSource(observed, source)
+						&& source.CurrentTripId == tripId
+						&& string.Equals(source.CurrentOwnerId, carrierObjectId,
+							StringComparison.Ordinal);
+				if (source.UnitState == KingdomLifecyclePhysicalState.Prepared)
+				{
+					if (matches != 1 || !ExactCurrentSource(observed, source)
+						|| operation.ManifestRevision == long.MaxValue) return false;
+					string pickupTopology = TopologyId(KingdomLifecycleTopology.Inventory,
+						carrierObjectId, carrierZoneId, -1, -1);
+					if (pickupTopology == null) return false;
+					source.CurrentTripId = tripId;
+					source.PendingTransfer = KingdomCarryTransferKind.Pickup;
+					source.PendingTopology = KingdomLifecycleTopology.Inventory;
+					source.PendingOwnerId = carrierObjectId;
+					source.PendingZoneId = carrierZoneId;
+					source.PendingX = -1; source.PendingY = -1;
+					source.ReceiptBeforeIdMatches = 1;
+					source.ReceiptBeforeCount = source.OriginalCount;
+					// Exact manifests do not use the legacy per-unit receipt chain. Reuse its
+					// already-versioned columns as immutable pickup-topology evidence so the
+					// pickup proof remains verifiable after Current* moves on to delivery.
+					source.ReceiptChainId = pickupTopology;
+					source.ReceiptChainCount = tripId;
+					source.ReceiptState = KingdomLifecyclePhysicalState.Intent;
+					source.UnitState = KingdomLifecyclePhysicalState.Intent;
+					source.LiveAuthority = observed.Reference;
+					if (!ExactCarryAuthority(book, operation)) return false;
+				}
+				else if (source.UnitState != KingdomLifecyclePhysicalState.Intent
+					|| source.ReceiptState != KingdomLifecyclePhysicalState.Intent
+					|| source.CurrentTripId != tripId
+					|| source.PendingTransfer != KingdomCarryTransferKind.Pickup
+					|| source.PendingTopology != KingdomLifecycleTopology.Inventory
+					|| !string.Equals(source.PendingOwnerId, carrierObjectId,
+						StringComparison.Ordinal)
+					|| !string.Equals(source.PendingZoneId, carrierZoneId,
+						StringComparison.Ordinal)) return false;
+
+				bool atBefore = matches == 1 && ExactCurrentSource(observed, source);
+				bool atAfter = matches == 1 && ExactSourceAt(observed, source,
+					source.PendingTopology, source.PendingOwnerId, source.PendingZoneId,
+					source.PendingX, source.PendingY);
+				if (!atBefore && !atAfter) return false;
+				if (atBefore)
+				{
+					object returned;
+					try
+					{
+						returned = world.InvokeCarryMove(observed.Reference, tripId,
+							source.PendingTopology, source.PendingOwnerId, source.PendingZoneId,
+							source.PendingX, source.PendingY, source.ReceiptId);
+					}
+					catch (Exception) { return false; }
+					if (returned == null || !ReferenceEquals(observed.Reference, returned))
+						return false;
+					observed = ExactObservation(world, delegate(Snapshot value)
+					{
+						return string.Equals(value.ObjectId, source.ObjectId,
+							StringComparison.Ordinal);
+					}, out matches);
+					if (matches != 1 || !ReferenceEquals(observed.Reference, returned)
+						|| !ExactSourceAt(observed, source, source.PendingTopology,
+							source.PendingOwnerId, source.PendingZoneId,
+							source.PendingX, source.PendingY)) return false;
+				}
+			if (operation.ManifestRevision == long.MaxValue)
+				return false;
+				source.CurrentTopology = source.PendingTopology;
+				source.CurrentOwnerId = source.PendingOwnerId;
+				source.CurrentZoneId = source.PendingZoneId;
+				source.CurrentX = source.PendingX; source.CurrentY = source.PendingY;
+				ClearPendingTransfer(source);
+				source.LoadedCount = source.PlannedCount;
+				source.ReceiptAfterIdMatches = 1;
+				source.ReceiptAfterCount = source.PlannedCount;
+				source.ReceiptSameReference = true;
+				source.ReceiptProofId = ExactCarryPickupProof(operation, source, ordinal);
+				source.ReceiptState = KingdomLifecyclePhysicalState.Proved;
+				source.UnitState = KingdomLifecyclePhysicalState.Proved;
+				source.State = KingdomLifecyclePhysicalState.Proved;
+			operation.SourceIndex = FirstIncompleteSource(operation);
+				operation.ManifestRevision++;
+				return ExactCarryAuthority(book, operation);
+			}
+
+			/// <summary>Moves the same loaded object to its frozen destination/store, frozen spill,
+			/// or a central road-loss cell. Delivery never creates, destroys, splits, or stacks it.</summary>
+			internal static bool ProveExactCarryDestination(KingdomCarryBook book,
+				KingdomCarryOperation operation, KingdomCarrySource source,
+				KingdomLifecycleProjection output, bool lost,
+				KingdomLifecycleTopology targetTopology, string targetOwnerId,
+				string targetZoneId, int targetX, int targetY,
+				IKingdomLifecycleTrustedWorld world)
+			{
+				int ordinal = IndexOfSource(operation, source);
+				if (!ExactCarryAuthority(book, operation)
+					|| operation.AuthorityKind != KingdomCarryAuthorityKind.ExactManifest
+					|| operation.Phase != KingdomLifecyclePhase.ProjectionIntent
+					|| operation.DestinationSafetyWaiting || ordinal < 0
+					|| ordinal != operation.OutputIndex || operation.Outputs == null
+					|| ordinal >= operation.Outputs.Count
+					|| !ReferenceEquals(operation.Outputs[ordinal], output)
+					|| source.LoadedCount != source.PlannedCount
+					|| source.DeliveredCount != 0 || source.LostCount != 0
+					|| source.CurrentTripId <= 0 || !TripMember(operation, source.CurrentTripId)
+					|| !ValidCarryDestinationTarget(operation, output, lost, targetTopology,
+						targetOwnerId, targetZoneId, targetX, targetY)) return false;
+
+				int matches;
+				Snapshot observed = ExactObservation(world, delegate(Snapshot value)
+				{
+					return string.Equals(value.ObjectId, source.ObjectId, StringComparison.Ordinal);
+				}, out matches);
+				KingdomCarryTransferKind transfer = lost
+					? KingdomCarryTransferKind.RoadLoss : KingdomCarryTransferKind.Delivery;
+				if (output.State == KingdomLifecyclePhysicalState.Prepared)
+				{
+					if (matches != 1 || !ExactCurrentSource(observed, source)
+						|| operation.ManifestRevision == long.MaxValue) return false;
+					source.PendingTransfer = transfer;
+					source.PendingTopology = targetTopology;
+					source.PendingOwnerId = targetOwnerId;
+					source.PendingZoneId = targetZoneId;
+					source.PendingX = targetX; source.PendingY = targetY;
+					output.ReceiptBeforeIdMatches = 1;
+					output.ReceiptBeforeMarkerMatches = 0;
+					output.ReceiptBeforeCount = source.PlannedCount;
+					output.ReceiptState = KingdomLifecyclePhysicalState.Intent;
+					output.State = KingdomLifecyclePhysicalState.Intent;
+					if (lost) operation.LostOnRoad = true;
+					source.LiveAuthority = observed.Reference;
+					if (!ExactCarryAuthority(book, operation)) return false;
+				}
+				else if (output.State != KingdomLifecyclePhysicalState.Intent
+					|| output.ReceiptState != KingdomLifecyclePhysicalState.Intent
+					|| source.PendingTransfer != transfer
+					|| source.PendingTopology != targetTopology
+					|| !string.Equals(source.PendingOwnerId, targetOwnerId,
+						StringComparison.Ordinal)
+					|| !string.Equals(source.PendingZoneId, targetZoneId,
+						StringComparison.Ordinal)
+					|| source.PendingX != targetX || source.PendingY != targetY) return false;
+
+				bool atBefore = matches == 1 && ExactCurrentSource(observed, source);
+				bool atAfter = matches == 1 && ExactSourceAt(observed, source,
+					source.PendingTopology, source.PendingOwnerId, source.PendingZoneId,
+					source.PendingX, source.PendingY);
+				if (!atBefore && !atAfter) return false;
+				if (atBefore)
+				{
+					object returned;
+					try
+					{
+						returned = world.InvokeCarryMove(observed.Reference, source.CurrentTripId,
+							source.PendingTopology, source.PendingOwnerId, source.PendingZoneId,
+							source.PendingX, source.PendingY, output.ReceiptId);
+					}
+					catch (Exception) { return false; }
+					if (returned == null || !ReferenceEquals(observed.Reference, returned))
+						return false;
+					observed = ExactObservation(world, delegate(Snapshot value)
+					{
+						return string.Equals(value.ObjectId, source.ObjectId,
+							StringComparison.Ordinal);
+					}, out matches);
+					if (matches != 1 || !ReferenceEquals(observed.Reference, returned)
+						|| !ExactSourceAt(observed, source, source.PendingTopology,
+							source.PendingOwnerId, source.PendingZoneId,
+							source.PendingX, source.PendingY)) return false;
+				}
+
+				KingdomLifecycleTopology settledTopology = source.PendingTopology;
+				string settledOwner = source.PendingOwnerId;
+				string settledZone = source.PendingZoneId;
+				int settledX = source.PendingX;
+				int settledY = source.PendingY;
+				source.CurrentTopology = settledTopology; source.CurrentOwnerId = settledOwner;
+				source.CurrentZoneId = settledZone; source.CurrentX = settledX;
+				source.CurrentY = settledY; ClearPendingTransfer(source);
+				if (lost) source.LostCount = source.PlannedCount;
+				else source.DeliveredCount = source.PlannedCount;
+				output.ReceiptAfterIdMatches = 1;
+				output.ReceiptAfterMarkerMatches = 0;
+				output.ReceiptAfterCount = source.PlannedCount;
+				output.ReceiptSameReference = true;
+				output.ReceiptProofId = ExactCarryDestinationProof(operation, source,
+					output, ordinal, lost);
+				output.ReceiptState = lost ? KingdomLifecyclePhysicalState.Lost
+					: KingdomLifecyclePhysicalState.Proved;
+				output.State = output.ReceiptState;
+				operation.OutputIndex++;
+				operation.ManifestRevision++;
+				return ExactCarryAuthority(book, operation);
+			}
+
+			internal static bool SetExactCarryDestinationSafety(KingdomCarryBook book,
+				KingdomCarryOperation operation, bool waiting, long tick)
+			{
+				if (!ExactCarryAuthority(book, operation)
+					|| operation.AuthorityKind != KingdomCarryAuthorityKind.ExactManifest
+					|| operation.Phase != KingdomLifecyclePhase.ProjectionIntent
+					|| tick < operation.UpdatedTick || operation.OutputIndex != 0) return false;
+				for (int i = 0; i < operation.Outputs.Count; i++)
+					if (operation.Outputs[i] == null
+						|| operation.Outputs[i].State != KingdomLifecyclePhysicalState.Prepared)
+						return false;
+				operation.DestinationSafetyWaiting = waiting;
+				operation.DestinationSafetyWaitTick = waiting ? tick : 0L;
+				operation.UpdatedTick = tick;
+				return ExactCarryAuthority(book, operation);
 			}
 
 			internal static bool ProveLifecycleProjection(KingdomLifecycleBook book,
@@ -651,10 +959,42 @@ namespace ThousandAndFirst
 			{
 				if (!ExactCarryAuthority(book, operation) || operation.ScheduleLease == null
 					|| operation.Phase != KingdomLifecyclePhase.ScheduleIntent
-					|| operation.ScheduleReceiptState != KingdomLifecyclePhysicalState.Prepared)
+					|| (operation.ScheduleReceiptState != KingdomLifecyclePhysicalState.Prepared
+						&& operation.ScheduleReceiptState != KingdomLifecyclePhysicalState.Intent))
 					return false;
 				KingdomLifecycleResourceLease lease = operation.ScheduleLease;
 				KingdomLifecycleResourceRevision resource = FindResource(book, lease.Key);
+				if (operation.ScheduleReceiptState == KingdomLifecyclePhysicalState.Intent)
+				{
+					int recoveredMatches;
+					Snapshot recovered = ExactScheduleObservation(world, operation, lease.After,
+						lease.AfterRevision, operation.Id, out recoveredMatches);
+					if (recoveredMatches == 1 && recovered != null && recovered.Reference != null
+						&& ExactScheduleFields(recovered, operation, lease.After,
+							lease.AfterRevision, operation.Id))
+					{
+						if (!CommitCarryScheduleCore(book, operation, lease, recovered.Value))
+							return false;
+						operation.ScheduleAfterMatches = 1;
+						operation.ScheduleSameReference = true;
+						operation.ScheduleProofId = CarryScheduleReceiptProof(operation);
+						operation.ScheduleReceiptState = KingdomLifecyclePhysicalState.Proved;
+						return CarryScheduleReceiptShape(operation, false);
+					}
+					int unchangedMatches;
+					Snapshot unchanged = ExactScheduleObservation(world, operation, lease.Before,
+						lease.BeforeRevision, resource == null ? null : resource.LastOperationId,
+						out unchangedMatches);
+					if (unchangedMatches != 1 || unchanged == null || unchanged.Reference == null
+						|| !ExactScheduleFields(unchanged, operation, lease.Before,
+							lease.BeforeRevision, resource == null ? null : resource.LastOperationId))
+						return false;
+					// The callback had no externally visible effect. Returning to Prepared is safe:
+					// no book revision or last-operation witness was committed.
+					lease.State = KingdomLifecycleLeaseState.Prepared;
+					operation.ScheduleBeforeMatches = -1;
+					operation.ScheduleReceiptState = KingdomLifecyclePhysicalState.Prepared;
+				}
 				int beforeMatches;
 				Snapshot before = ExactScheduleObservation(world,
 					operation, lease.Before, lease.BeforeRevision,
@@ -918,6 +1258,74 @@ namespace ThousandAndFirst
 						source.ZoneId, source.X, source.Y);
 			}
 
+			private static bool ExactSignBefore(Snapshot x, KingdomCarryOperation operation)
+			{
+				return x != null && operation != null
+					&& string.Equals(x.ObjectId, operation.SignObjectId, StringComparison.Ordinal)
+					&& string.Equals(x.Blueprint, operation.SignBlueprint, StringComparison.Ordinal)
+					&& x.Count == operation.SignCount && ExactTopology(x,
+						operation.SignTopology, operation.SignOwnerId, operation.SignZoneId,
+						operation.SignX, operation.SignY);
+			}
+
+			private static bool ExactSignAfter(Snapshot x, int matches,
+				KingdomCarryOperation operation)
+			{
+				if (operation == null || operation.SignCount <= 0) return false;
+				int after = operation.SignCount - 1;
+				return after == 0 ? matches == 0 && x == null
+					: matches == 1 && x != null
+						&& string.Equals(x.ObjectId, operation.SignObjectId,
+							StringComparison.Ordinal)
+						&& string.Equals(x.Blueprint, operation.SignBlueprint,
+							StringComparison.Ordinal)
+						&& x.Count == after && ExactTopology(x, operation.SignTopology,
+							operation.SignOwnerId, operation.SignZoneId,
+							operation.SignX, operation.SignY);
+			}
+
+			private static bool ExactCurrentSource(Snapshot x, KingdomCarrySource source)
+			{
+				return source != null && ExactSourceAt(x, source, source.CurrentTopology,
+					source.CurrentOwnerId, source.CurrentZoneId, source.CurrentX, source.CurrentY);
+			}
+
+			private static bool ExactSourceAt(Snapshot x, KingdomCarrySource source,
+				KingdomLifecycleTopology topology, string ownerId, string zoneId, int px, int py)
+			{
+				return x != null && source != null
+					&& string.Equals(x.ObjectId, source.ObjectId, StringComparison.Ordinal)
+					&& string.Equals(x.Blueprint, source.Blueprint, StringComparison.Ordinal)
+					&& x.Count == source.PlannedCount
+					&& ExactTopology(x, topology, ownerId, zoneId, px, py);
+			}
+
+			private static void ClearPendingTransfer(KingdomCarrySource source)
+			{
+				if (source == null) return;
+				source.PendingTransfer = KingdomCarryTransferKind.None;
+				source.PendingTopology = KingdomLifecycleTopology.None;
+				source.PendingOwnerId = null; source.PendingZoneId = null;
+				source.PendingX = -1; source.PendingY = -1;
+			}
+
+			private static bool ValidCarryDestinationTarget(KingdomCarryOperation operation,
+				KingdomLifecycleProjection output, bool lost,
+				KingdomLifecycleTopology topology, string ownerId, string zoneId, int px, int py)
+			{
+				if (operation == null || output == null
+					|| !TopologyValid(topology, ownerId, zoneId, px, py)) return false;
+				if (lost) return topology == KingdomLifecycleTopology.Cell;
+				bool target = topology == output.Topology
+					&& string.Equals(ownerId, output.OwnerId, StringComparison.Ordinal)
+					&& string.Equals(zoneId, output.ZoneId, StringComparison.Ordinal)
+					&& px == output.X && py == output.Y;
+				bool spill = topology == KingdomLifecycleTopology.Cell && ownerId == null
+					&& string.Equals(zoneId, operation.SpillZoneId, StringComparison.Ordinal)
+					&& px == operation.SpillX && py == operation.SpillY;
+				return target || spill;
+			}
+
 			private static bool ExactLifecycleObjectFields(Snapshot x,
 				KingdomLifecycleOperation operation, int count)
 			{
@@ -939,7 +1347,830 @@ namespace ThousandAndFirst
 					&& string.Equals(x.Composition, leg.Composition, StringComparison.Ordinal);
 			}
 		}
-		#endif
+
+		/// <summary>Plan/recovery seam for plain and notable guest production shells. Physical
+		/// mutations still require <see cref="TrustedAdapter"/> observations.</summary>
+		internal static class GuestRuntimeAdapter
+		{
+			internal static bool PrepareSchedule(KingdomLifecycleBook book,
+				KingdomLifecycleOperation operation, string zoneId, long before, long after)
+			{
+				long delta;
+				if (!CanOwnAuthority(book) || operation == null
+					|| operation.Phase != KingdomLifecyclePhase.Prepared
+					|| !ActionAllowedInLane(operation.Action, operation.Lane)
+					|| (operation.Lane != KingdomLifecycleLane.PlainGuest
+						&& operation.Lane != KingdomLifecycleLane.NotableGuest)
+					|| string.IsNullOrEmpty(zoneId) || before < 0L || after < 0L
+					|| !CheckedAdd(after, -before, out delta) || delta == 0L) return false;
+				string subject = ScheduleSubjectId(book.SettlementId, operation.Lane);
+				KingdomLifecycleResourceLease lease = PrepareLeaseCore(book, operation,
+					KingdomLifecycleResourceKind.Schedule, book.SettlementId, subject,
+					before, delta);
+				if (lease == null) return false;
+				operation.ZoneId = zoneId;
+				operation.DueBefore = before;
+				operation.DueAfter = after;
+				operation.ResourceLeases.Add(lease);
+				return true;
+			}
+
+			internal static KingdomLifecycleProjection PrepareProjection(
+				KingdomLifecycleBook book, KingdomLifecycleOperation operation,
+				string objectId, string blueprint, string zoneId, int x, int y)
+			{
+				if (!CanOwnAuthority(book) || operation == null
+					|| operation.Action != KingdomLifecycleAction.Spawn
+					|| operation.Phase != KingdomLifecyclePhase.Prepared
+					|| operation.Projections.Count != 0 || !ValidRootId(objectId)
+					|| !ValidName(blueprint)
+					|| !TopologyValid(KingdomLifecycleTopology.Cell, null, zoneId, x, y))
+					return null;
+				KingdomLifecycleProjection projection = new KingdomLifecycleProjection
+				{
+					OperationId = operation.Id,
+					EventId = ChildId(operation.Id, "projection", 0),
+					ObjectId = objectId,
+					Marker = ChildId(operation.Id, "marker", 0),
+					Blueprint = blueprint,
+					ZoneId = zoneId,
+					Topology = KingdomLifecycleTopology.Cell,
+					X = x,
+					Y = y,
+					Material = -1,
+					Count = 1,
+					NoStack = true,
+					State = KingdomLifecyclePhysicalState.Prepared
+				};
+				string topology = TopologyId(projection.Topology, projection.OwnerId,
+					projection.ZoneId, projection.X, projection.Y);
+				KingdomLifecycleResourceLease lease = PrepareLeaseCore(book, operation,
+					KingdomLifecycleResourceKind.Projection, topology, objectId, 0L, 1L);
+				if (lease == null) return null;
+				operation.PartySize = 1;
+				operation.Projections.Add(projection);
+				operation.ResourceLeases.Add(lease);
+				return projection;
+			}
+
+			internal static bool PrepareRemoval(KingdomLifecycleBook book,
+				KingdomLifecycleOperation operation, string objectId, string blueprint,
+				string zoneId, int x, int y)
+			{
+				if (!CanOwnAuthority(book) || operation == null
+					|| (operation.Action != KingdomLifecycleAction.Depart
+						&& operation.Action != KingdomLifecycleAction.OfferWater)
+					|| operation.Phase != KingdomLifecyclePhase.Prepared
+					|| !ValidRootId(objectId) || !ValidName(blueprint)
+					|| !TopologyValid(KingdomLifecycleTopology.Cell, null, zoneId, x, y))
+					return false;
+				string topology = TopologyId(KingdomLifecycleTopology.Cell, null, zoneId, x, y);
+				KingdomLifecycleResourceLease lease = PrepareLeaseCore(book, operation,
+					KingdomLifecycleResourceKind.Object, topology, objectId, 1L, -1L);
+				if (lease == null) return false;
+				operation.ObjectId = objectId;
+				operation.Blueprint = blueprint;
+				operation.ZoneId = zoneId;
+				operation.ObjectTopology = KingdomLifecycleTopology.Cell;
+				operation.ObjectX = x;
+				operation.ObjectY = y;
+				operation.Count = 1;
+				operation.RemovalState = KingdomLifecyclePhysicalState.Prepared;
+				operation.ResourceLeases.Add(lease);
+				return true;
+			}
+
+			internal static KingdomLifecycleWaterLeg PrepareWater(
+				KingdomLifecycleBook book, KingdomLifecycleOperation operation, int ordinal,
+				string ownerId, string blueprint, string zoneId, int capacity, int before,
+				int amount, string composition)
+			{
+				if (!CanOwnAuthority(book) || operation == null
+					|| (operation.Action != KingdomLifecycleAction.OfferWater
+						&& operation.Action != KingdomLifecycleAction.Lodge)
+					|| ordinal != operation.WaterLegs.Count || ordinal < 0
+					|| ordinal >= MaxWaterLegs || !ValidRootId(ownerId)
+					|| !ValidName(blueprint) || string.IsNullOrEmpty(zoneId)
+					|| capacity < 0 || before <= 0 || amount <= 0 || amount > before
+					|| TooLong(composition, MaxTextChars)) return null;
+				KingdomLifecycleResourceLease lease = PrepareLeaseCore(book, operation,
+					KingdomLifecycleResourceKind.WaterVessel, zoneId, ownerId, before, -amount);
+				if (lease == null) return null;
+				KingdomLifecycleWaterLeg leg = new KingdomLifecycleWaterLeg
+				{
+					OperationId = operation.Id, LeaseKey = lease.Key, OwnerId = ownerId,
+					Blueprint = blueprint, ZoneId = zoneId, Capacity = capacity,
+					Before = before, Delta = amount, After = before - amount,
+					Composition = composition,
+					ReceiptId = ChildId(operation.Id, "water-receipt", ordinal),
+					ReceiptState = KingdomLifecyclePhysicalState.Prepared,
+					State = KingdomLifecyclePhysicalState.Prepared
+				};
+				operation.ResourceLeases.Add(lease);
+				operation.WaterLegs.Add(leg);
+				operation.WaterRequested += amount;
+				operation.WaterOutstanding += amount;
+				operation.WaterState = KingdomLifecyclePhysicalState.Prepared;
+				return leg;
+			}
+
+			internal static bool PrepareDomain(KingdomLifecycleBook book,
+				KingdomLifecycleOperation operation, long before)
+			{
+				KingdomLifecycleResourceKind kind;
+				long delta;
+				if (!CanOwnAuthority(book) || operation == null || before < 0L
+					|| !TryRequiredDomain(operation, out kind, out delta)) return false;
+				KingdomLifecycleResourceLease lease = PrepareLeaseCore(book, operation, kind,
+					operation.SettlementId, operation.SettlementId, before, delta);
+				if (lease == null || lease.After < 0L) return false;
+				operation.ResourceLeases.Add(lease);
+				return true;
+			}
+
+			internal static bool ProveDomain(KingdomLifecycleBook book,
+				KingdomLifecycleOperation operation, long before, long after)
+			{
+				if (!ExactOperationAuthority(book, operation)
+					|| operation.Phase != KingdomLifecyclePhase.DomainIntent) return false;
+				KingdomLifecycleResourceLease lease = RequiredDomainLease(operation);
+				if (lease == null || before != lease.Before || after != lease.After
+					|| !BeginLeaseCore(book, lease, before)) return false;
+				return CommitLeaseWitnessCore(book, operation, lease,
+					FindResource(book, lease.Key), after);
+			}
+
+			/// <summary>Closes a guest conceptual lease only from the exact physical receipts
+			/// already proved by the preceding phase. Callers cannot mint the domain witness from
+			/// an unobserved population/standing scalar.</summary>
+			internal static bool ProvePhysicalDomain(KingdomLifecycleBook book,
+				KingdomLifecycleOperation operation)
+			{
+				if (!ExactOperationAuthority(book, operation)
+					|| operation.Phase != KingdomLifecyclePhase.DomainIntent
+					|| (operation.Lane != KingdomLifecycleLane.PlainGuest
+						&& operation.Lane != KingdomLifecycleLane.NotableGuest)) return false;
+				bool physical;
+				switch (operation.Action)
+				{
+				case KingdomLifecycleAction.Spawn:
+					physical = operation.Projections.Count == 1
+						&& operation.Projections[0].State == KingdomLifecyclePhysicalState.Proved
+						&& operation.Spawned == operation.PartySize && operation.PartySize == 1;
+					break;
+				case KingdomLifecycleAction.Depart:
+					physical = operation.RemovalState == KingdomLifecyclePhysicalState.Proved;
+					break;
+				case KingdomLifecycleAction.OfferWater:
+					physical = operation.RemovalState == KingdomLifecyclePhysicalState.Proved
+						&& operation.WaterState == KingdomLifecyclePhysicalState.Proved
+						&& operation.WaterOutstanding == 0
+						&& operation.WaterProved == operation.WaterRequested;
+					break;
+				default:
+					return false;
+				}
+				if (!physical) return false;
+				KingdomLifecycleResourceLease lease = RequiredDomainLease(operation);
+				if (lease == null) return false;
+				if (lease.State == KingdomLifecycleLeaseState.Intent)
+					return RecoverDomainIntent(book, operation, lease.After);
+				return BeginLeaseCore(book, lease, lease.Before)
+					&& CommitLeaseWitnessCore(book, operation, lease,
+						FindResource(book, lease.Key), lease.After);
+			}
+
+			internal static bool BeginDomain(KingdomLifecycleBook book,
+				KingdomLifecycleOperation operation, long before)
+			{
+				KingdomLifecycleResourceLease lease = RequiredDomainLease(operation);
+				return ExactOperationAuthority(book, operation)
+					&& operation.Phase == KingdomLifecyclePhase.DomainIntent && lease != null
+					&& before == lease.Before && BeginLeaseCore(book, lease, before);
+			}
+
+			internal static bool CommitDomain(KingdomLifecycleBook book,
+				KingdomLifecycleOperation operation, long after)
+			{
+				KingdomLifecycleResourceLease lease = RequiredDomainLease(operation);
+				return ExactOperationAuthority(book, operation)
+					&& operation.Phase == KingdomLifecyclePhase.DomainIntent && lease != null
+					&& after == lease.After && CommitLeaseWitnessCore(book, operation, lease,
+						FindResource(book, lease.Key), after);
+			}
+
+			internal static bool RecoverDomainIntent(KingdomLifecycleBook book,
+				KingdomLifecycleOperation operation, long after)
+			{
+				KingdomLifecycleResourceLease lease = RequiredDomainLease(operation);
+				return ExactOperationAuthority(book, operation)
+					&& operation.Phase == KingdomLifecyclePhase.DomainIntent && lease != null
+					&& lease.State == KingdomLifecycleLeaseState.Intent && after == lease.After
+					&& CommitLeaseWitnessCore(book, operation, lease,
+						FindResource(book, lease.Key), after);
+			}
+
+			internal static bool ResetDomainIntent(KingdomLifecycleBook book,
+				KingdomLifecycleOperation operation, long before)
+			{
+				KingdomLifecycleResourceLease lease = RequiredDomainLease(operation);
+				KingdomLifecycleResourceRevision row = lease == null ? null : FindResource(book, lease.Key);
+				if (!ExactOperationAuthority(book, operation)
+					|| operation.Phase != KingdomLifecyclePhase.DomainIntent || lease == null
+					|| lease.State != KingdomLifecycleLeaseState.Intent || before != lease.Before
+					|| row == null || row.Revision != lease.BeforeRevision
+					|| string.Equals(row.LastOperationId, operation.Id, StringComparison.Ordinal)) return false;
+				lease.State = KingdomLifecycleLeaseState.Prepared;
+				return ExactOperationAuthority(book, operation);
+			}
+
+			internal static bool RecoverScheduleIntent(KingdomLifecycleBook book,
+				KingdomLifecycleOperation operation, long after)
+			{
+				string subject = ScheduleSubjectId(operation.SettlementId, operation.Lane);
+				KingdomLifecycleResourceLease lease = FindLease(operation, ResourceKey(
+					KingdomLifecycleResourceKind.Schedule, operation.SettlementId, subject));
+				return ExactOperationAuthority(book, operation)
+					&& operation.Phase == KingdomLifecyclePhase.ScheduleIntent && lease != null
+					&& lease.State == KingdomLifecycleLeaseState.Intent && after == lease.After
+					&& CommitLeaseWitnessCore(book, operation, lease,
+						FindResource(book, lease.Key), after);
+			}
+
+			internal static bool RecoverRemovalIntent(KingdomLifecycleBook book,
+				KingdomLifecycleOperation operation, bool exactAbsent)
+			{
+				if (!ExactOperationAuthority(book, operation) || !exactAbsent
+					|| operation.Phase != KingdomLifecyclePhase.RemovalIntent
+					|| operation.RemovalState != KingdomLifecyclePhysicalState.Intent) return false;
+				string topology = TopologyId(operation.ObjectTopology, operation.ObjectOwnerId,
+					operation.ZoneId, operation.ObjectX, operation.ObjectY);
+				KingdomLifecycleResourceLease lease = FindLease(operation, ResourceKey(
+					KingdomLifecycleResourceKind.Object, topology, operation.ObjectId));
+				if (lease == null || lease.State != KingdomLifecycleLeaseState.Intent
+					|| !CommitLeaseWitnessCore(book, operation, lease,
+						FindResource(book, lease.Key), lease.After)) return false;
+				operation.RemovalState = KingdomLifecyclePhysicalState.Proved;
+				return ExactOperationAuthority(book, operation);
+			}
+
+			internal static bool RecoverProjectionIntent(KingdomLifecycleBook book,
+				KingdomLifecycleOperation operation, KingdomLifecycleProjection projection,
+				bool exactPresent, bool exactAbsent)
+			{
+				if (!ExactOperationAuthority(book, operation) || projection == null
+					|| operation.Phase != KingdomLifecyclePhase.ProjectionIntent
+					|| projection.State != KingdomLifecyclePhysicalState.Intent
+					|| exactPresent == exactAbsent) return false;
+				string topology = TopologyId(projection.Topology, projection.OwnerId,
+					projection.ZoneId, projection.X, projection.Y);
+				KingdomLifecycleResourceLease lease = FindLease(operation, ResourceKey(
+					KingdomLifecycleResourceKind.Projection, topology, projection.ObjectId));
+				KingdomLifecycleResourceRevision row = lease == null ? null : FindResource(book, lease.Key);
+				if (lease == null || row == null || lease.State != KingdomLifecycleLeaseState.Intent)
+					return false;
+				if (exactAbsent)
+				{
+					if (row.Revision != lease.BeforeRevision
+						|| string.Equals(row.LastOperationId, operation.Id, StringComparison.Ordinal))
+						return false;
+					lease.State = KingdomLifecycleLeaseState.Prepared;
+					projection.State = KingdomLifecyclePhysicalState.Prepared;
+					return ExactOperationAuthority(book, operation);
+				}
+				int spawned;
+				if (!CheckedAdd(operation.Spawned, projection.Count, out spawned)
+					|| !CommitLeaseWitnessCore(book, operation, lease, row, lease.After)) return false;
+				projection.State = KingdomLifecyclePhysicalState.Proved;
+				operation.Spawned = spawned;
+				return ExactOperationAuthority(book, operation);
+			}
+
+			internal static bool ResetWaterIntent(KingdomLifecycleBook book,
+				KingdomLifecycleOperation operation, KingdomLifecycleWaterLeg leg, long before)
+			{
+				KingdomLifecycleResourceLease lease = leg == null ? null : FindLease(operation, leg.LeaseKey);
+				KingdomLifecycleResourceRevision row = lease == null ? null : FindResource(book, lease.Key);
+				if (!ExactOperationAuthority(book, operation)
+					|| operation.Phase != KingdomLifecyclePhase.WaterIntent || leg == null
+					|| leg.State != KingdomLifecyclePhysicalState.Intent
+					|| leg.ReceiptState != KingdomLifecyclePhysicalState.Intent || before != leg.Before
+					|| lease == null || lease.State != KingdomLifecycleLeaseState.Intent || row == null
+					|| row.Revision != lease.BeforeRevision
+					|| string.Equals(row.LastOperationId, operation.Id, StringComparison.Ordinal)) return false;
+				lease.State = KingdomLifecycleLeaseState.Prepared;
+				leg.State = KingdomLifecyclePhysicalState.Prepared;
+				leg.ReceiptState = KingdomLifecyclePhysicalState.Prepared;
+				return ExactOperationAuthority(book, operation);
+			}
+
+			internal static bool RecoverWaterIntent(KingdomLifecycleBook book,
+				KingdomLifecycleOperation operation, KingdomLifecycleResourceLease lease,
+				KingdomLifecycleWaterLeg leg, long after)
+			{
+				if (!ExactOperationAuthority(book, operation)
+					|| operation.Phase != KingdomLifecyclePhase.WaterIntent || lease == null
+					|| leg == null || leg.State != KingdomLifecyclePhysicalState.Intent
+					|| leg.ReceiptState != KingdomLifecyclePhysicalState.Intent
+					|| after != leg.After || lease.State != KingdomLifecycleLeaseState.Intent
+					|| !ConfirmWaterLeaseCore(book, lease, leg, after)) return false;
+				leg.ReceiptAfterMatches = 1;
+				leg.ReceiptSameReference = true;
+				leg.ReceiptProofId = WaterReceiptProof(operation, lease, leg);
+				leg.ReceiptState = KingdomLifecyclePhysicalState.Proved;
+				return ExactWaterReceipt(operation, lease, leg);
+			}
+		}
+
+		/// <summary>Production raid shell adapter. Every method rechecks the open operation and
+		/// commits against the two scalars owned by RaidLedger; callers cannot substitute standing.</summary>
+		internal static class RaidRuntimeAdapter
+		{
+			internal static bool PrepareLeases(KingdomLifecycleBook book,
+				KingdomLifecycleOperation operation)
+			{
+				if (!CanOwnAuthority(book) || operation == null
+					|| operation.Lane != KingdomLifecycleLane.Raid
+					|| operation.Phase != KingdomLifecyclePhase.Prepared
+					|| operation.ResourceLeases == null || HasDomainLease(operation)
+					|| HasLease(operation, KingdomLifecycleResourceKind.Schedule)
+					|| !KingdomRaidIncidentRules.CanPublish(book.RaidLedger, operation)
+					|| book.RaidLedger.ScheduleRevision == long.MaxValue) return false;
+				operation.DueBefore = book.RaidLedger.ScheduleRevision;
+				operation.DueAfter = book.RaidLedger.ScheduleRevision + 1L;
+				KingdomLifecycleResourceLease domain = PrepareLeaseCore(book, operation,
+					KingdomLifecycleResourceKind.Raid, operation.SettlementId,
+					operation.SettlementId, book.RaidLedger.StateRevision, 1L);
+				string scheduleSubject = ScheduleSubjectId(operation.SettlementId,
+					KingdomLifecycleLane.Raid);
+				KingdomLifecycleResourceLease schedule = PrepareLeaseCore(book, operation,
+					KingdomLifecycleResourceKind.Schedule, operation.SettlementId,
+					scheduleSubject, operation.DueBefore, 1L);
+				if (domain == null || schedule == null) return false;
+				operation.ResourceLeases.Add(domain);
+				operation.ResourceLeases.Add(schedule);
+				return true;
+			}
+
+			internal static KingdomLifecycleProjection PrepareProjection(
+				KingdomLifecycleBook book, KingdomLifecycleOperation operation, int ordinal,
+				string objectId, string blueprint, string zoneId, int x, int y)
+			{
+				if (!CanOwnAuthority(book) || operation == null
+					|| operation.Action != KingdomLifecycleAction.RaidAttack
+					|| operation.Phase != KingdomLifecyclePhase.Prepared
+					|| ordinal != operation.Projections.Count || ordinal < 0
+					|| ordinal >= MaxProjections || !ValidRootId(objectId) || !ValidName(blueprint)
+					|| !TopologyValid(KingdomLifecycleTopology.Cell, null, zoneId, x, y)) return null;
+				KingdomLifecycleProjection projection = new KingdomLifecycleProjection
+				{
+					OperationId = operation.Id,
+					EventId = ChildId(operation.Id, "projection", ordinal),
+					ObjectId = objectId,
+					Marker = ChildId(operation.Id, "marker", ordinal),
+					Blueprint = blueprint, ZoneId = zoneId,
+					Topology = KingdomLifecycleTopology.Cell, X = x, Y = y,
+					Material = -1, Count = 1, NoStack = true,
+					State = KingdomLifecyclePhysicalState.Prepared
+				};
+				string topology = TopologyId(projection.Topology, projection.OwnerId,
+					projection.ZoneId, projection.X, projection.Y);
+				KingdomLifecycleResourceLease lease = PrepareLeaseCore(book, operation,
+					KingdomLifecycleResourceKind.Projection, topology, projection.ObjectId, 0L, 1L);
+				if (lease == null) return null;
+				operation.Projections.Add(projection);
+				operation.ResourceLeases.Add(lease);
+				return projection;
+			}
+
+			internal static KingdomLifecycleProjection PrepareInventoryProjection(
+				KingdomLifecycleBook book, KingdomLifecycleOperation operation, int ordinal,
+				string objectId, string blueprint, string ownerId, string zoneId)
+			{
+				if (!CanOwnAuthority(book) || operation == null
+					|| operation.Action != KingdomLifecycleAction.RaidDeliverDemand
+					|| operation.Phase != KingdomLifecyclePhase.Prepared
+					|| ordinal != 0 || ordinal != operation.Projections.Count
+					|| operation.PartySize != 0 || operation.Spawned != 0
+					|| ordinal >= MaxProjections || !ValidRootId(objectId) || !ValidName(blueprint)
+					|| !TopologyValid(KingdomLifecycleTopology.Inventory, ownerId, zoneId, -1, -1))
+					return null;
+				KingdomLifecycleProjection projection = new KingdomLifecycleProjection
+				{
+					OperationId = operation.Id, EventId = ChildId(operation.Id, "projection", ordinal),
+					ObjectId = objectId, Marker = ChildId(operation.Id, "marker", ordinal),
+					Blueprint = blueprint, OwnerId = ownerId, ZoneId = zoneId,
+					Topology = KingdomLifecycleTopology.Inventory, X = -1, Y = -1,
+					Material = -1, Count = 1, NoStack = true,
+					State = KingdomLifecyclePhysicalState.Prepared
+				};
+				string topology = TopologyId(projection.Topology, projection.OwnerId,
+					projection.ZoneId, projection.X, projection.Y);
+				KingdomLifecycleResourceLease lease = PrepareLeaseCore(book, operation,
+					KingdomLifecycleResourceKind.Projection, topology, projection.ObjectId, 0L, 1L);
+				if (lease == null) return null;
+				operation.Projections.Add(projection); operation.ResourceLeases.Add(lease);
+				operation.PartySize = 1;
+				return projection;
+			}
+
+			internal static bool PrepareCommittedTribute(KingdomLifecycleOperation operation,
+				int requested, int spent, int outstanding, int physicalDeficit,
+				bool measurementExact)
+			{
+				if (operation == null || operation.Action != KingdomLifecycleAction.RaidTribute
+					|| operation.Phase != KingdomLifecyclePhase.Prepared || requested <= 0
+					|| requested != spent || outstanding != 0 || physicalDeficit != requested
+					|| !measurementExact || operation.WaterLegs == null
+					|| operation.WaterLegs.Count != 0) return false;
+				operation.ObjectMarker = ChildId(operation.Id, "raid-tribute-receipt", 0);
+				operation.WaterRequested = requested;
+				operation.WaterProved = requested;
+				operation.WaterOutstanding = 0;
+				operation.WaterLost = 0;
+				operation.WaterAmbiguous = 0;
+				operation.WaterState = KingdomLifecyclePhysicalState.Proved;
+				return ExternalRaidTributeReceipt(operation);
+			}
+
+			internal static bool ProveDomain(KingdomLifecycleBook book,
+				KingdomLifecycleOperation operation)
+			{
+				if (!ExactOperationAuthority(book, operation)
+					|| operation.Lane != KingdomLifecycleLane.Raid
+					|| operation.Phase != KingdomLifecyclePhase.DomainIntent) return false;
+				KingdomLifecycleResourceLease lease = RequiredDomainLease(operation);
+				KingdomLifecycleResourceRevision row = lease == null ? null : FindResource(book, lease.Key);
+				KingdomRaidLedger next;
+				if (lease == null || row == null || lease.Kind != KingdomLifecycleResourceKind.Raid
+					|| lease.Before != book.RaidLedger.StateRevision
+					|| !KingdomRaidIncidentRules.TryApply(book.RaidLedger, operation, out next)
+					|| next.StateRevision != lease.After
+					|| !BeginLeaseCore(book, lease, book.RaidLedger.StateRevision)) return false;
+				KingdomRaidLedger prior = book.RaidLedger;
+				book.RaidLedger = next;
+				if (CommitLeaseWitnessCore(book, operation, lease, row, next.StateRevision)) return true;
+				book.RaidLedger = prior;
+				lease.State = KingdomLifecycleLeaseState.Prepared;
+				return false;
+			}
+
+			internal static bool ProveSchedule(KingdomLifecycleBook book,
+				KingdomLifecycleOperation operation)
+			{
+				if (!ExactOperationAuthority(book, operation)
+					|| operation.Lane != KingdomLifecycleLane.Raid
+					|| operation.Phase != KingdomLifecyclePhase.ScheduleIntent) return false;
+				string subject = ScheduleSubjectId(operation.SettlementId, operation.Lane);
+				KingdomLifecycleResourceLease lease = FindLease(operation, ResourceKey(
+					KingdomLifecycleResourceKind.Schedule, operation.SettlementId, subject));
+				KingdomLifecycleResourceRevision row = lease == null ? null : FindResource(book, lease.Key);
+				if (lease == null || row == null || lease.Before != book.RaidLedger.ScheduleRevision
+					|| lease.After != lease.Before + 1L
+					|| !BeginLeaseCore(book, lease, book.RaidLedger.ScheduleRevision)) return false;
+				KingdomRaidLedger prior = book.RaidLedger;
+				KingdomRaidLedger next = KingdomRaidIncidentRules.Copy(prior);
+				next.ScheduleRevision++;
+				book.RaidLedger = next;
+				if (CommitLeaseWitnessCore(book, operation, lease, row, next.ScheduleRevision)) return true;
+				book.RaidLedger = prior;
+				lease.State = KingdomLifecycleLeaseState.Prepared;
+				return false;
+			}
+
+			internal static bool BeginProjection(KingdomLifecycleBook book,
+				KingdomLifecycleOperation operation, KingdomLifecycleProjection projection,
+				int idMatches, int markerMatches)
+			{
+				if (!ExactOperationAuthority(book, operation) || projection == null
+					|| operation.Phase != KingdomLifecyclePhase.ProjectionIntent
+					|| projection.State != KingdomLifecyclePhysicalState.Prepared
+					|| idMatches != 0 || markerMatches != 0) return false;
+				string topology = TopologyId(projection.Topology, projection.OwnerId,
+					projection.ZoneId, projection.X, projection.Y);
+				KingdomLifecycleResourceLease lease = FindLease(operation, ResourceKey(
+					KingdomLifecycleResourceKind.Projection, topology, projection.ObjectId));
+				if (lease == null || !ReferenceEquals(ProjectionForLease(operation, lease), projection)
+					|| !BeginLeaseCore(book, lease, 0L)) return false;
+				projection.State = KingdomLifecyclePhysicalState.Intent;
+				return ExactOperationAuthority(book, operation);
+			}
+
+			internal static bool CommitProjection(KingdomLifecycleBook book,
+				KingdomLifecycleOperation operation, KingdomLifecycleProjection projection,
+				int idMatches, int markerMatches, string blueprint, string zoneId, int x, int y)
+			{
+				return CommitProjection(book, operation, projection, idMatches, markerMatches,
+					blueprint, null, zoneId, x, y);
+			}
+
+			internal static bool CommitProjection(KingdomLifecycleBook book,
+				KingdomLifecycleOperation operation, KingdomLifecycleProjection projection,
+				int idMatches, int markerMatches, string blueprint, string ownerId,
+				string zoneId, int x, int y)
+			{
+				if (!ExactOperationAuthority(book, operation) || projection == null
+					|| operation.Phase != KingdomLifecyclePhase.ProjectionIntent
+					|| projection.State != KingdomLifecyclePhysicalState.Intent
+					|| idMatches != 1 || markerMatches != 1
+					|| !string.Equals(blueprint, projection.Blueprint, StringComparison.Ordinal)
+					|| !string.Equals(ownerId, projection.OwnerId, StringComparison.Ordinal)
+					|| !string.Equals(zoneId, projection.ZoneId, StringComparison.Ordinal)
+					|| x != projection.X || y != projection.Y) return false;
+				string topology = TopologyId(projection.Topology, projection.OwnerId,
+					projection.ZoneId, projection.X, projection.Y);
+				KingdomLifecycleResourceLease lease = FindLease(operation, ResourceKey(
+					KingdomLifecycleResourceKind.Projection, topology, projection.ObjectId));
+				KingdomLifecycleResourceRevision row = lease == null ? null : FindResource(book, lease.Key);
+				int spawned;
+				if (lease == null || row == null || !CheckedAdd(operation.Spawned, projection.Count,
+					out spawned) || !CommitLeaseWitnessCore(book, operation, lease, row, lease.After))
+					return false;
+				projection.State = KingdomLifecyclePhysicalState.Proved;
+				operation.Spawned = spawned;
+				return ExactOperationAuthority(book, operation);
+			}
+
+			/// <summary>An interrupted add with exact post-observation of zero bodies may be
+			/// retried. No resource revision or world object was committed, so this returns only
+			/// the projection lease and receipt to their prepared states.</summary>
+			internal static bool ResetAbsentProjectionIntent(KingdomLifecycleBook book,
+				KingdomLifecycleOperation operation, KingdomLifecycleProjection projection,
+				int idMatches, int markerMatches)
+			{
+				if (!ExactOperationAuthority(book, operation) || projection == null
+					|| (operation.Action != KingdomLifecycleAction.RaidAttack
+						&& operation.Action != KingdomLifecycleAction.RaidDeliverDemand)
+					|| operation.Phase != KingdomLifecyclePhase.ProjectionIntent
+					|| projection.State != KingdomLifecyclePhysicalState.Intent
+					|| idMatches != 0 || markerMatches != 0) return false;
+				string topology = TopologyId(projection.Topology, projection.OwnerId,
+					projection.ZoneId, projection.X, projection.Y);
+				KingdomLifecycleResourceLease lease = FindLease(operation, ResourceKey(
+					KingdomLifecycleResourceKind.Projection, topology, projection.ObjectId));
+				KingdomLifecycleResourceRevision row = lease == null ? null : FindResource(book, lease.Key);
+				if (lease == null || row == null || lease.State != KingdomLifecycleLeaseState.Intent
+					|| row.Revision != lease.BeforeRevision
+					|| !string.Equals(row.ActiveOperationId, operation.Id, StringComparison.Ordinal)
+					|| string.Equals(row.LastOperationId, operation.Id, StringComparison.Ordinal)) return false;
+				lease.State = KingdomLifecycleLeaseState.Prepared;
+				projection.State = KingdomLifecyclePhysicalState.Prepared;
+				return ExactOperationAuthority(book, operation);
+			}
+
+			internal static bool BeginEffect(KingdomLifecycleBook book,
+				KingdomLifecycleOperation operation, bool exactContact)
+			{
+				if (!ExactOperationAuthority(book, operation)
+					|| operation.Action != KingdomLifecycleAction.RaidAttack
+					|| operation.Phase != KingdomLifecyclePhase.EffectIntent
+					|| operation.EffectState != KingdomLifecyclePhysicalState.Prepared
+					|| !exactContact) return false;
+				operation.EffectState = KingdomLifecyclePhysicalState.Intent;
+				return ExactOperationAuthority(book, operation);
+			}
+
+			internal static bool CommitEffect(KingdomLifecycleBook book,
+				KingdomLifecycleOperation operation, bool exactContact, int plunderProved)
+			{
+				if (!ExactOperationAuthority(book, operation) || !exactContact
+					|| operation.Action != KingdomLifecycleAction.RaidAttack
+					|| operation.Phase != KingdomLifecyclePhase.EffectIntent
+					|| operation.EffectState != KingdomLifecyclePhysicalState.Intent
+					|| plunderProved < 0 || plunderProved > operation.PlunderRequested) return false;
+				operation.PlunderProved = plunderProved;
+				operation.EffectState = KingdomLifecyclePhysicalState.Proved;
+				return ExactOperationAuthority(book, operation);
+			}
+
+			internal static bool SkipEffectWithoutContact(KingdomLifecycleBook book,
+				KingdomLifecycleOperation operation)
+			{
+				if (!ExactOperationAuthority(book, operation)
+					|| operation.Action != KingdomLifecycleAction.RaidAttack
+					|| operation.Phase != KingdomLifecyclePhase.EffectIntent
+					|| operation.EffectState != KingdomLifecyclePhysicalState.Prepared
+					|| operation.PlunderProved != 0) return false;
+				operation.EffectState = KingdomLifecyclePhysicalState.Skipped;
+				return ExactOperationAuthority(book, operation);
+			}
+
+			internal static bool BeginSink(KingdomLifecycleBook book,
+				KingdomLifecycleOperation operation, KingdomLifecycleSinkMask sink)
+			{
+				KingdomLifecycleSinkState state;
+				if (!ExactOperationAuthority(book, operation)
+					|| operation.Phase != KingdomLifecyclePhase.Sinks
+					|| !SingleSink(sink) || !GetSink(operation.Outbox, sink, out state)
+					|| state != KingdomLifecycleSinkState.Pending) return false;
+				SetSink(operation.Outbox, sink, KingdomLifecycleSinkState.Intent);
+				return ExactOperationAuthority(book, operation);
+			}
+
+			internal static bool CommitSink(KingdomLifecycleBook book,
+				KingdomLifecycleOperation operation, KingdomLifecycleSinkMask sink)
+			{
+				KingdomLifecycleSinkState state;
+				if (!ExactOperationAuthority(book, operation)
+					|| operation.Phase != KingdomLifecyclePhase.Sinks
+					|| !SingleSink(sink) || !GetSink(operation.Outbox, sink, out state)
+					|| state != KingdomLifecycleSinkState.Intent) return false;
+				SetSink(operation.Outbox, sink, KingdomLifecycleSinkState.Delivered);
+				return ExactOperationAuthority(book, operation);
+			}
+
+			private static bool SingleSink(KingdomLifecycleSinkMask sink)
+			{
+				byte value = (byte)sink;
+				return value != 0 && (value & (value - 1)) == 0;
+			}
+
+			private static bool GetSink(KingdomLifecycleOutbox box,
+				KingdomLifecycleSinkMask sink, out KingdomLifecycleSinkState state)
+			{
+				state = KingdomLifecycleSinkState.None;
+				if (box == null) return false;
+				switch (sink)
+				{
+				case KingdomLifecycleSinkMask.Chronicle: state = box.ChronicleState; return true;
+				case KingdomLifecycleSinkMask.Ledger: state = box.LedgerState; return true;
+				case KingdomLifecycleSinkMask.Message: state = box.MessageState; return true;
+				case KingdomLifecycleSinkMask.Deed: state = box.DeedState; return true;
+				case KingdomLifecycleSinkMask.Guestbook: state = box.GuestbookState; return true;
+				default: return false;
+				}
+			}
+
+			private static void SetSink(KingdomLifecycleOutbox box,
+				KingdomLifecycleSinkMask sink, KingdomLifecycleSinkState state)
+			{
+				switch (sink)
+				{
+				case KingdomLifecycleSinkMask.Chronicle: box.ChronicleState = state; break;
+				case KingdomLifecycleSinkMask.Ledger: box.LedgerState = state; break;
+				case KingdomLifecycleSinkMask.Message: box.MessageState = state; break;
+				case KingdomLifecycleSinkMask.Deed: box.DeedState = state; break;
+				case KingdomLifecycleSinkMask.Guestbook: box.GuestbookState = state; break;
+				}
+			}
+		}
+
+		/// <summary>Production petition shell adapter. Petition semantics live in the retained
+		/// operation; these two revision rows fence domain publication and its clock callback.</summary>
+		internal static class PetitionRuntimeAdapter
+		{
+			internal static bool PrepareLeases(KingdomLifecycleBook book,
+				KingdomLifecycleOperation operation)
+			{
+				if (!CanOwnAuthority(book) || operation == null
+					|| operation.Lane != KingdomLifecycleLane.Petition
+					|| operation.Phase != KingdomLifecyclePhase.Prepared
+					|| !KingdomPetitionRules.FrozenSnapshotValid(operation)
+					|| operation.Sequence <= 0L || operation.ResourceLeases == null
+					|| operation.ResourceLeases.Count != 0) return false;
+				long before = operation.Sequence - 1L;
+				operation.DueBefore = before;
+				operation.DueAfter = operation.Sequence;
+				KingdomLifecycleResourceLease domain = PrepareLeaseCore(book, operation,
+					KingdomLifecycleResourceKind.Petition, operation.SettlementId,
+					operation.SettlementId, before, 1L);
+				string subject = ScheduleSubjectId(operation.SettlementId,
+					KingdomLifecycleLane.Petition);
+				KingdomLifecycleResourceLease schedule = PrepareLeaseCore(book, operation,
+					KingdomLifecycleResourceKind.Schedule, operation.SettlementId,
+					subject, before, 1L);
+				if (domain == null || schedule == null) return false;
+				operation.ResourceLeases.Add(domain);
+				operation.ResourceLeases.Add(schedule);
+				return true;
+			}
+
+			internal static KingdomLifecycleLeaseState DomainState(KingdomLifecycleBook book,
+				KingdomLifecycleOperation operation)
+			{
+				KingdomLifecycleResourceLease lease = RequiredDomainLease(operation);
+				return ExactOperationAuthority(book, operation) && lease != null
+					? lease.State : KingdomLifecycleLeaseState.None;
+			}
+
+			internal static bool BeginDomain(KingdomLifecycleBook book,
+				KingdomLifecycleOperation operation)
+			{
+				KingdomLifecycleResourceLease lease = RequiredDomainLease(operation);
+				return ExactPetitionPhase(book, operation, KingdomLifecyclePhase.DomainIntent)
+					&& lease != null && lease.Kind == KingdomLifecycleResourceKind.Petition
+					&& lease.Before == operation.Sequence - 1L
+					&& lease.After == operation.Sequence
+					&& BeginLeaseCore(book, lease, lease.Before);
+			}
+
+			internal static bool CommitDomain(KingdomLifecycleBook book,
+				KingdomLifecycleOperation operation)
+			{
+				KingdomLifecycleResourceLease lease = RequiredDomainLease(operation);
+				KingdomLifecycleResourceRevision row = lease == null ? null
+					: FindResource(book, lease.Key);
+				return ExactPetitionPhase(book, operation, KingdomLifecyclePhase.DomainIntent)
+					&& lease != null && lease.State == KingdomLifecycleLeaseState.Intent
+					&& CommitLeaseWitnessCore(book, operation, lease, row, lease.After);
+			}
+
+			internal static bool ProveDomain(KingdomLifecycleBook book,
+				KingdomLifecycleOperation operation)
+			{
+				KingdomLifecycleLeaseState state = DomainState(book, operation);
+				if (state == KingdomLifecycleLeaseState.Proved) return true;
+				if (state == KingdomLifecycleLeaseState.Prepared && !BeginDomain(book, operation))
+					return false;
+				return CommitDomain(book, operation);
+			}
+
+			internal static bool ProveSchedule(KingdomLifecycleBook book,
+				KingdomLifecycleOperation operation)
+			{
+				if (!ExactPetitionPhase(book, operation, KingdomLifecyclePhase.ScheduleIntent))
+					return false;
+				string subject = ScheduleSubjectId(operation.SettlementId, operation.Lane);
+				KingdomLifecycleResourceLease lease = FindLease(operation, ResourceKey(
+					KingdomLifecycleResourceKind.Schedule, operation.SettlementId, subject));
+				KingdomLifecycleResourceRevision row = lease == null ? null
+					: FindResource(book, lease.Key);
+				if (lease == null || row == null || lease.Before != operation.Sequence - 1L
+					|| lease.After != operation.Sequence) return false;
+				if (lease.State == KingdomLifecycleLeaseState.Proved)
+					return ResourceWitnessMatches(row, lease);
+				if (lease.State == KingdomLifecycleLeaseState.Prepared
+					&& !BeginLeaseCore(book, lease, lease.Before)) return false;
+				return lease.State == KingdomLifecycleLeaseState.Intent
+					&& CommitLeaseWitnessCore(book, operation, lease, row, lease.After);
+			}
+
+			internal static bool BeginSink(KingdomLifecycleBook book,
+				KingdomLifecycleOperation operation, KingdomLifecycleSinkMask sink)
+			{
+				KingdomLifecycleSinkState state;
+				if (!ExactPetitionPhase(book, operation, KingdomLifecyclePhase.Sinks)
+					|| !SingleSink(sink) || !GetSink(operation.Outbox, sink, out state)
+					|| state != KingdomLifecycleSinkState.Pending) return false;
+				SetSink(operation.Outbox, sink, KingdomLifecycleSinkState.Intent);
+				return ExactOperationAuthority(book, operation);
+			}
+
+			internal static bool CommitSink(KingdomLifecycleBook book,
+				KingdomLifecycleOperation operation, KingdomLifecycleSinkMask sink)
+			{
+				KingdomLifecycleSinkState state;
+				if (!ExactPetitionPhase(book, operation, KingdomLifecyclePhase.Sinks)
+					|| !SingleSink(sink) || !GetSink(operation.Outbox, sink, out state)
+					|| state != KingdomLifecycleSinkState.Intent) return false;
+				SetSink(operation.Outbox, sink, KingdomLifecycleSinkState.Delivered);
+				return ExactOperationAuthority(book, operation);
+			}
+
+			private static bool ExactPetitionPhase(KingdomLifecycleBook book,
+				KingdomLifecycleOperation operation, KingdomLifecyclePhase phase)
+			{
+				return ExactOperationAuthority(book, operation)
+					&& operation.Lane == KingdomLifecycleLane.Petition
+					&& operation.Phase == phase
+					&& KingdomPetitionRules.FrozenSnapshotValid(operation);
+			}
+
+			private static bool SingleSink(KingdomLifecycleSinkMask sink)
+			{
+				byte value = (byte)sink;
+				return value != 0 && (value & (value - 1)) == 0;
+			}
+
+			private static bool GetSink(KingdomLifecycleOutbox box,
+				KingdomLifecycleSinkMask sink, out KingdomLifecycleSinkState state)
+			{
+				state = KingdomLifecycleSinkState.None;
+				if (box == null) return false;
+				switch (sink)
+				{
+				case KingdomLifecycleSinkMask.Chronicle: state = box.ChronicleState; return true;
+				case KingdomLifecycleSinkMask.Ledger: state = box.LedgerState; return true;
+				case KingdomLifecycleSinkMask.Message: state = box.MessageState; return true;
+				case KingdomLifecycleSinkMask.Deed: state = box.DeedState; return true;
+				case KingdomLifecycleSinkMask.Guestbook: state = box.GuestbookState; return true;
+				default: return false;
+				}
+			}
+
+			private static void SetSink(KingdomLifecycleOutbox box,
+				KingdomLifecycleSinkMask sink, KingdomLifecycleSinkState state)
+			{
+				switch (sink)
+				{
+				case KingdomLifecycleSinkMask.Chronicle: box.ChronicleState = state; break;
+				case KingdomLifecycleSinkMask.Ledger: box.LedgerState = state; break;
+				case KingdomLifecycleSinkMask.Message: box.MessageState = state; break;
+				case KingdomLifecycleSinkMask.Deed: box.DeedState = state; break;
+				case KingdomLifecycleSinkMask.Guestbook: box.GuestbookState = state; break;
+				}
+			}
+		}
 
 		public static string OperationId(string SettlementId, KingdomLifecycleLane Lane,
 			long Sequence)
@@ -1015,7 +2246,8 @@ namespace ThousandAndFirst
 			switch (Action)
 			{
 			case KingdomLifecycleAction.Passages:
-				return Lane == KingdomLifecycleLane.PlainGuest;
+				return Lane == KingdomLifecycleLane.PlainGuest
+					|| Lane == KingdomLifecycleLane.NotableGuest;
 			case KingdomLifecycleAction.Spawn:
 			case KingdomLifecycleAction.Depart:
 			case KingdomLifecycleAction.OfferWater:
@@ -1029,6 +2261,19 @@ namespace ThousandAndFirst
 			case KingdomLifecycleAction.RaidTalkDown:
 			case KingdomLifecycleAction.RaidAttack:
 			case KingdomLifecycleAction.RaidCancel:
+			case KingdomLifecycleAction.RaidFight:
+			case KingdomLifecycleAction.RaidFortify:
+			case KingdomLifecycleAction.RaidResolve:
+			case KingdomLifecycleAction.RaidDeliverDemand:
+			case KingdomLifecycleAction.RaidAcknowledgeDemand:
+			case KingdomLifecycleAction.RaidLoseChannel:
+			case KingdomLifecycleAction.RaidDeadline:
+			case KingdomLifecycleAction.RaidFortifyOrder:
+			case KingdomLifecycleAction.RaidFortifyFailure:
+			case KingdomLifecycleAction.RaidRecoveryAccept:
+			case KingdomLifecycleAction.RaidRecoveryReady:
+			case KingdomLifecycleAction.RaidRecoveryResolve:
+			case KingdomLifecycleAction.RaidRecoveryDecline:
 				return Lane == KingdomLifecycleLane.Raid;
 			case KingdomLifecycleAction.PetitionOffer:
 			case KingdomLifecycleAction.PetitionAccept:
@@ -1143,6 +2388,8 @@ namespace ThousandAndFirst
 				|| Operation.Sequence == long.MaxValue
 				|| !CanonicalOperationId(Operation)
 				|| Operation.Phase != KingdomLifecyclePhase.Prepared
+				|| (Operation.Lane == KingdomLifecycleLane.Raid
+					&& !KingdomRaidIncidentRules.CanPublish(Book.RaidLedger, Operation))
 				|| !PublicationPlanValid(Operation)) return false;
 
 			string expectedHash;
@@ -1476,6 +2723,71 @@ namespace ThousandAndFirst
 			return ExactCarryAuthority(Book, Operation);
 		}
 
+		/// <summary>Publishes one carry outbox intent before the engine sink callback. Carry has
+		/// its own realm authority and cannot borrow a settlement lifecycle operation merely to
+		/// deliver a chronicle or ledger line.</summary>
+		public static bool BeginCarrySink(KingdomCarryBook Book,
+			KingdomCarryOperation Operation, KingdomLifecycleSinkMask Sink)
+		{
+			KingdomLifecycleSinkState state;
+			if (!ExactCarryAuthority(Book, Operation)
+				|| Operation.Phase != KingdomLifecyclePhase.Sinks
+				|| !SingleCarrySink(Sink) || !TryCarrySink(Operation.Outbox, Sink, out state)
+				|| state != KingdomLifecycleSinkState.Pending) return false;
+			SetCarrySink(Operation.Outbox, Sink, KingdomLifecycleSinkState.Intent);
+			return ExactCarryAuthority(Book, Operation);
+		}
+
+		/// <summary>Commits only after the named sink callback returned. An interrupted intent is
+		/// first normalized by <see cref="RecoverCarryOutbox"/>, so non-idempotent sinks are never
+		/// guessed delivered.</summary>
+		public static bool CommitCarrySink(KingdomCarryBook Book,
+			KingdomCarryOperation Operation, KingdomLifecycleSinkMask Sink)
+		{
+			KingdomLifecycleSinkState state;
+			if (!ExactCarryAuthority(Book, Operation)
+				|| Operation.Phase != KingdomLifecyclePhase.Sinks
+				|| !SingleCarrySink(Sink) || !TryCarrySink(Operation.Outbox, Sink, out state)
+				|| state != KingdomLifecycleSinkState.Intent) return false;
+			SetCarrySink(Operation.Outbox, Sink, KingdomLifecycleSinkState.Delivered);
+			return ExactCarryAuthority(Book, Operation);
+		}
+
+		private static bool SingleCarrySink(KingdomLifecycleSinkMask Sink)
+		{
+			byte value = (byte)Sink;
+			return value != 0 && (value & (value - 1)) == 0;
+		}
+
+		private static bool TryCarrySink(KingdomLifecycleOutbox Box,
+			KingdomLifecycleSinkMask Sink, out KingdomLifecycleSinkState State)
+		{
+			State = KingdomLifecycleSinkState.None;
+			if (Box == null) return false;
+			switch (Sink)
+			{
+			case KingdomLifecycleSinkMask.Chronicle: State = Box.ChronicleState; return true;
+			case KingdomLifecycleSinkMask.Ledger: State = Box.LedgerState; return true;
+			case KingdomLifecycleSinkMask.Message: State = Box.MessageState; return true;
+			case KingdomLifecycleSinkMask.Deed: State = Box.DeedState; return true;
+			case KingdomLifecycleSinkMask.Guestbook: State = Box.GuestbookState; return true;
+			default: return false;
+			}
+		}
+
+		private static void SetCarrySink(KingdomLifecycleOutbox Box,
+			KingdomLifecycleSinkMask Sink, KingdomLifecycleSinkState State)
+		{
+			switch (Sink)
+			{
+			case KingdomLifecycleSinkMask.Chronicle: Box.ChronicleState = State; break;
+			case KingdomLifecycleSinkMask.Ledger: Box.LedgerState = State; break;
+			case KingdomLifecycleSinkMask.Message: Box.MessageState = State; break;
+			case KingdomLifecycleSinkMask.Deed: Box.DeedState = State; break;
+			case KingdomLifecycleSinkMask.Guestbook: Box.GuestbookState = State; break;
+			}
+		}
+
 		public static KingdomLifecycleOptionDecision ObserveOption(
 			KingdomLifecycleOptionState Prior, long PriorTick, bool Enabled,
 			long Now, bool HasOpenOperation)
@@ -1538,6 +2850,139 @@ namespace ThousandAndFirst
 					RealmTopologyHash = RealmTopologyDigest(Book.RealmId, Book.SettlementIds),
 					RiskFrozen = true
 			};
+		}
+
+		/// <summary>Prepares the only carry authority new runtime work may publish. The caller
+		/// freezes common route/destination fields, whole-stack sources and same-identity outputs,
+		/// then calls <see cref="FreezeExactCarryManifest"/> before publication.</summary>
+		public static KingdomCarryOperation PrepareExactCarry(KingdomCarryBook Book, long Tick)
+		{
+			KingdomCarryOperation operation = PrepareCarry(Book, Tick);
+			if (operation == null) return null;
+			operation.AuthorityKind = KingdomCarryAuthorityKind.ExactManifest;
+			operation.ManifestVersion = CurrentCarryManifestVersion;
+			operation.JobIds = new List<int>();
+			operation.TripIds = new List<int>();
+			return operation;
+		}
+
+		/// <summary>One exact manifest atom is one whole GameObject/stack. Partial-stack plans are
+		/// refused because Qud can only split them by minting another object identity.</summary>
+		public static KingdomCarrySource PrepareExactCarrySource(KingdomCarryOperation Operation,
+			int SourceOrdinal, string ObjectId, string Blueprint,
+			KingdomLifecycleTopology Topology, string OwnerId, string ZoneId,
+			int X, int Y, int WholeCount)
+		{
+			if (Operation == null || Operation.AuthorityKind != KingdomCarryAuthorityKind.ExactManifest
+				|| Operation.Phase != KingdomLifecyclePhase.Prepared
+				|| !string.IsNullOrEmpty(Operation.ManifestDigest)
+				|| Operation.Sources == null || SourceOrdinal != Operation.Sources.Count)
+				return null;
+			if (SourceOrdinal < 0 || SourceOrdinal >= MaxCarrySources
+				|| !ValidRootId(ObjectId) || !ValidName(Blueprint)
+				|| !TopologyValid(Topology, OwnerId, ZoneId, X, Y)
+				|| WholeCount <= 0 || WholeCount > MaxPhysicalCount) return null;
+			return new KingdomCarrySource
+			{
+				OperationId = Operation.Id,
+				SourceEventId = ChildId(Operation.Id, "source", SourceOrdinal),
+				ObjectId = ObjectId, Blueprint = Blueprint, Topology = Topology,
+				OwnerId = OwnerId, ZoneId = ZoneId, X = X, Y = Y, Material = -1,
+				OriginalCount = WholeCount, PlannedCount = WholeCount,
+				UnitBefore = WholeCount, UnitAfter = WholeCount,
+				UnitEventId = ChildId(Operation.Id,
+					"source-unit-" + SourceOrdinal.ToString(CultureInfo.InvariantCulture), 0),
+				UnitState = KingdomLifecyclePhysicalState.Prepared,
+				ReceiptId = ChildId(Operation.Id, "source-receipt-" +
+					SourceOrdinal.ToString(CultureInfo.InvariantCulture), 0),
+				ReceiptTopologyId = TopologyId(Topology, OwnerId, ZoneId, X, Y),
+				ReceiptState = KingdomLifecyclePhysicalState.Prepared,
+				State = KingdomLifecyclePhysicalState.Prepared,
+				CurrentTopology = Topology, CurrentOwnerId = OwnerId,
+				CurrentZoneId = ZoneId, CurrentX = X, CurrentY = Y,
+				PendingX = -1, PendingY = -1
+			};
+		}
+
+		/// <summary>Freezes the destination intent for one exact source. Output identity and count
+		/// deliberately equal the source; this is movement, never projection.</summary>
+		public static KingdomLifecycleProjection PrepareExactCarryOutput(
+			KingdomCarryOperation Operation, int OutputOrdinal, KingdomCarrySource Source,
+			KingdomLifecycleTopology Topology, string OwnerId, string ZoneId, int X, int Y)
+		{
+			if (Operation == null || Operation.AuthorityKind != KingdomCarryAuthorityKind.ExactManifest
+				|| Operation.Phase != KingdomLifecyclePhase.Prepared
+				|| !string.IsNullOrEmpty(Operation.ManifestDigest)
+				|| Operation.Outputs == null || OutputOrdinal != Operation.Outputs.Count
+				|| Source == null || Source.OperationId != Operation.Id) return null;
+			if (OutputOrdinal < 0 || OutputOrdinal >= MaxCarryOutputs
+				|| !TopologyValid(Topology, OwnerId, ZoneId, X, Y)) return null;
+			return new KingdomLifecycleProjection
+			{
+				OperationId = Operation.Id,
+				EventId = ChildId(Operation.Id, "projection", OutputOrdinal),
+				ObjectId = Source.ObjectId,
+				Marker = ChildId(Operation.Id, "marker", OutputOrdinal),
+				Blueprint = Source.Blueprint, Topology = Topology, OwnerId = OwnerId,
+				ZoneId = ZoneId, X = X, Y = Y, Material = -1,
+				Count = Source.PlannedCount, NoStack = true,
+				State = KingdomLifecyclePhysicalState.Prepared,
+				ReceiptId = ChildId(Operation.Id, "output-receipt", OutputOrdinal),
+				ReceiptTopologyId = TopologyId(Topology, OwnerId, ZoneId, X, Y),
+				ReceiptState = KingdomLifecyclePhysicalState.Prepared
+			};
+		}
+
+		/// <summary>Freezes the exact consumed sign and the central job/trip keys before either
+		/// authority is published. Collections are copied and must already be canonical ascending
+		/// unique ids; routing order remains owned by the central rows.</summary>
+		public static bool FreezeExactCarryManifest(KingdomCarryOperation Operation,
+			string SignObjectId, string SignBlueprint, KingdomLifecycleTopology SignTopology,
+			string SignOwnerId, string SignZoneId, int SignX, int SignY, int SignCount,
+			ICollection<int> JobIds, ICollection<int> TripIds)
+		{
+			if (Operation == null || Operation.AuthorityKind != KingdomCarryAuthorityKind.ExactManifest
+				|| Operation.Phase != KingdomLifecyclePhase.Prepared
+				|| Operation.ManifestVersion != CurrentCarryManifestVersion
+				|| Operation.ManifestRevision != 0L || !string.IsNullOrEmpty(Operation.ManifestDigest)
+				|| !ValidRootId(SignObjectId) || !ValidName(SignBlueprint) || SignCount <= 0
+				|| SignCount > MaxPhysicalCount
+				|| !TopologyValid(SignTopology, SignOwnerId, SignZoneId, SignX, SignY)
+				|| Operation.Sources == null || Operation.Outputs == null
+				|| Operation.Sources.Count == 0
+				|| Operation.Sources.Count != Operation.Outputs.Count) return false;
+			List<int> jobs;
+			List<int> trips;
+			if (!TryFrozenPositiveIds(JobIds, MaxCarryJobIds, out jobs)
+				|| !TryFrozenPositiveIds(TripIds, MaxCarryTripIds, out trips)
+				|| jobs.Count == 0 || trips.Count == 0) return false;
+			for (int i = 0; i < Operation.Sources.Count; i++)
+			{
+				KingdomCarrySource source = Operation.Sources[i];
+				KingdomLifecycleProjection output = Operation.Outputs[i];
+				if (!ExactManifestSourcePrepared(source, Operation, i)
+					|| output == null || !string.Equals(output.ObjectId, source.ObjectId,
+						StringComparison.Ordinal)
+					|| !string.Equals(output.Blueprint, source.Blueprint, StringComparison.Ordinal)
+					|| output.Material != source.Material || output.Count != source.PlannedCount)
+					return false;
+			}
+			Operation.SignObjectId = SignObjectId;
+			Operation.SignBlueprint = SignBlueprint;
+			Operation.SignTopology = SignTopology;
+			Operation.SignOwnerId = SignOwnerId;
+			Operation.SignZoneId = SignZoneId;
+			Operation.SignX = SignX;
+			Operation.SignY = SignY;
+			Operation.SignCount = SignCount;
+			Operation.SignReceiptId = ChildId(Operation.Id, "sign-receipt", 0);
+			Operation.SignReceiptState = KingdomLifecyclePhysicalState.Prepared;
+			Operation.JobIds = jobs;
+			Operation.TripIds = trips;
+			string digest;
+			if (!TryCarryManifestDigest(Operation, out digest)) return false;
+			Operation.ManifestDigest = digest;
+			return true;
 		}
 
 		private static KingdomLifecycleResourceLease PrepareCarryScheduleLeaseCore(
@@ -1917,11 +3362,16 @@ namespace ThousandAndFirst
 		{
 			if (!ExactCarryAuthority(Book, Operation) || Tick < Operation.UpdatedTick
 				|| !CanTransitionCarry(Operation.Phase, To)) return false;
-			if (To == KingdomLifecyclePhase.Removed && !AllSourcesProved(Operation)) return false;
+			bool exact = Operation.AuthorityKind == KingdomCarryAuthorityKind.ExactManifest;
+			if (To == KingdomLifecyclePhase.RemovalIntent && exact
+				&& Operation.SignReceiptState != KingdomLifecyclePhysicalState.Proved) return false;
+			if (To == KingdomLifecyclePhase.Removed
+				&& !(exact ? AllExactSourcesLoaded(Operation) : AllSourcesProved(Operation))) return false;
 			if (To == KingdomLifecyclePhase.ProjectionIntent
 				&& !CarryScheduleProved(Book, Operation)) return false;
 			if (To == KingdomLifecyclePhase.Projected
-				&& (!OutputsSettledForRoad(Operation) || CarryEscrow(Operation) != 0
+				&& (!(exact ? ExactOutputsSettled(Operation) : OutputsSettledForRoad(Operation))
+					|| CarryEscrow(Operation) != 0
 					|| !CarryConserved(Operation))) return false;
 			if (To == KingdomLifecyclePhase.Terminal && !CarryTerminalComponentsSettled(Operation))
 				return false;
@@ -1970,6 +3420,19 @@ namespace ThousandAndFirst
 
 		public static int CarryEscrow(KingdomCarryOperation Operation)
 		{
+			if (Operation != null
+				&& Operation.AuthorityKind == KingdomCarryAuthorityKind.ExactManifest)
+			{
+				long exact = 0L;
+				for (int i = 0; Operation.Sources != null && i < Operation.Sources.Count; i++)
+				{
+					KingdomCarrySource source = Operation.Sources[i];
+					if (source == null) return -1;
+					exact += (long)source.LoadedCount - source.DeliveredCount - source.LostCount;
+					if (exact < 0L || exact > int.MaxValue) return -1;
+				}
+				return (int)exact;
+			}
 			long value = Operation == null ? -1L : SumSix(Operation.EscrowMud,
 				Operation.EscrowBrush, Operation.EscrowTimber, Operation.EscrowStone,
 				Operation.EscrowMarble, Operation.EscrowScrap);
@@ -1978,6 +3441,9 @@ namespace ThousandAndFirst
 
 		public static bool CarryConserved(KingdomCarryOperation Operation)
 		{
+			if (Operation != null
+				&& Operation.AuthorityKind == KingdomCarryAuthorityKind.ExactManifest)
+				return ExactCarryConserved(Operation);
 			if (Operation == null || !CarryCountsValid(Operation) || Operation.Sources == null) return false;
 			long[] planned = new long[6];
 			long[] removed = new long[6];
@@ -2021,12 +3487,44 @@ namespace ThousandAndFirst
 			return true;
 		}
 
+		private static bool ExactCarryConserved(KingdomCarryOperation operation)
+		{
+			if (operation == null || operation.AuthorityKind != KingdomCarryAuthorityKind.ExactManifest
+				|| !CarryCountsValid(operation) || operation.Sources == null
+				|| operation.Outputs == null || operation.Sources.Count != operation.Outputs.Count)
+				return false;
+			int firstSource = operation.Sources.Count;
+			int firstOutput = operation.Outputs.Count;
+			for (int i = 0; i < operation.Sources.Count; i++)
+			{
+				KingdomCarrySource source = operation.Sources[i];
+				if (source == null || source.Material != -1
+					|| source.PlannedCount != source.OriginalCount
+					|| (source.LoadedCount != 0 && source.LoadedCount != source.PlannedCount)
+					|| (source.DeliveredCount != 0
+						&& source.DeliveredCount != source.PlannedCount)
+					|| (source.LostCount != 0 && source.LostCount != source.PlannedCount)
+					|| source.DeliveredCount + source.LostCount > source.LoadedCount) return false;
+				if (firstSource == operation.Sources.Count && source.LoadedCount == 0) firstSource = i;
+				if (firstOutput == operation.Outputs.Count
+					&& source.DeliveredCount == 0 && source.LostCount == 0) firstOutput = i;
+			}
+			if (operation.SourceIndex != firstSource || operation.OutputIndex != firstOutput) return false;
+			for (int material = 0; material < 6; material++)
+				if (MaterialValue(operation, material, 0) != 0
+					|| MaterialValue(operation, material, 1) != 0
+					|| MaterialValue(operation, material, 2) != 0
+					|| MaterialValue(operation, material, 3) != 0) return false;
+			return true;
+		}
+
 		public static bool WaterConserved(KingdomLifecycleOperation Operation, bool Terminal)
 		{
 			if (Operation == null || !ValidCount(Operation.WaterRequested)
 				|| !ValidCount(Operation.WaterProved) || !ValidCount(Operation.WaterOutstanding)
 				|| !ValidCount(Operation.WaterLost) || !ValidCount(Operation.WaterAmbiguous)
 				|| Operation.WaterLegs == null || Operation.WaterLegs.Count > MaxWaterLegs) return false;
+			if (ExternalRaidTributeReceipt(Operation)) return true;
 			long planned = 0L;
 			long proved = 0L;
 			for (int i = 0; i < Operation.WaterLegs.Count; i++)
@@ -2046,6 +3544,20 @@ namespace ThousandAndFirst
 			return true;
 		}
 
+		private static bool ExternalRaidTributeReceipt(KingdomLifecycleOperation operation)
+		{
+			return operation != null
+				&& operation.Action == KingdomLifecycleAction.RaidTribute
+				&& operation.WaterRequested > 0
+				&& operation.WaterProved == operation.WaterRequested
+				&& operation.WaterOutstanding == 0 && operation.WaterLost == 0
+				&& operation.WaterAmbiguous == 0
+				&& operation.WaterState == KingdomLifecyclePhysicalState.Proved
+				&& operation.WaterLegs != null && operation.WaterLegs.Count == 0
+				&& string.Equals(operation.ObjectMarker,
+					ChildId(operation.Id, "raid-tribute-receipt", 0), StringComparison.Ordinal);
+		}
+
 		private static bool LifecycleBookShape(KingdomLifecycleBook book)
 		{
 			return book != null
@@ -2057,6 +3569,7 @@ namespace ThousandAndFirst
 				&& book.LocusOptionTick >= 0L && book.NotableOptionTick >= 0L
 				&& book.RaidOptionTick >= 0L && book.PetitionOptionTick >= 0L
 				&& ResourceRegistryValid(book) && ProofListValid(book)
+				&& KingdomRaidIncidentRules.ValidLedger(book.RaidLedger)
 				&& LaneAuthorityValid(book, KingdomLifecycleLane.PlainGuest, book.PlainGuest)
 				&& LaneAuthorityValid(book, KingdomLifecycleLane.NotableGuest, book.NotableGuest)
 				&& LaneAuthorityValid(book, KingdomLifecycleLane.Raid, book.Raid)
@@ -2131,6 +3644,8 @@ namespace ThousandAndFirst
 		{
 			if (operation == null) return false;
 			if (operation.Phase == KingdomLifecyclePhase.Quarantined) return true;
+			if (operation.AuthorityKind == KingdomCarryAuthorityKind.ExactManifest)
+				return ExactCarryPhaseProgressValid(operation);
 			bool sourcesDone = AllSourcesProved(operation);
 			bool outputsDone = OutputsSettledForRoad(operation);
 			bool outputsPrepared = operation.OutputIndex == 0;
@@ -2175,6 +3690,67 @@ namespace ThousandAndFirst
 				return sourcesDone && schedule == KingdomLifecycleLeaseState.Proved
 					&& outputsDone && CarryEscrow(operation) == 0
 					&& CarryOutboxTerminal(operation);
+			default:
+				return false;
+			}
+		}
+
+		private static bool ExactCarryPhaseProgressValid(KingdomCarryOperation operation)
+		{
+			if (operation == null || operation.Outputs == null || operation.Sources == null)
+				return false;
+			bool sourcesPrepared = operation.SourceIndex == 0;
+			for (int i = 0; i < operation.Sources.Count; i++)
+				if (operation.Sources[i] == null || operation.Sources[i].LoadedCount != 0
+					|| operation.Sources[i].State != KingdomLifecyclePhysicalState.Prepared)
+					sourcesPrepared = false;
+			bool outputsPrepared = operation.OutputIndex == 0;
+			for (int i = 0; i < operation.Outputs.Count; i++)
+				if (operation.Outputs[i] == null
+					|| operation.Outputs[i].State != KingdomLifecyclePhysicalState.Prepared)
+					outputsPrepared = false;
+			bool signProved = operation.SignReceiptState == KingdomLifecyclePhysicalState.Proved;
+			bool sourcesDone = AllExactSourcesLoaded(operation);
+			bool outputsDone = ExactOutputsSettled(operation);
+			KingdomLifecycleLeaseState schedule = operation.ScheduleLease == null
+				? KingdomLifecycleLeaseState.None : operation.ScheduleLease.State;
+			switch (operation.Phase)
+			{
+			case KingdomLifecyclePhase.Prepared:
+				return sourcesPrepared && outputsPrepared
+					&& schedule == KingdomLifecycleLeaseState.Prepared
+					&& CarryEscrow(operation) == 0 && OutboxInitial(operation.Outbox);
+			case KingdomLifecyclePhase.RemovalIntent:
+				return signProved && outputsPrepared
+					&& schedule == KingdomLifecycleLeaseState.Prepared
+					&& MaterialDisposition(operation) == 0 && OutboxInitial(operation.Outbox);
+			case KingdomLifecyclePhase.Removed:
+				return signProved && sourcesDone && outputsPrepared
+					&& schedule == KingdomLifecycleLeaseState.Prepared
+					&& MaterialDisposition(operation) == 0 && OutboxInitial(operation.Outbox);
+			case KingdomLifecyclePhase.ScheduleIntent:
+				return signProved && sourcesDone && outputsPrepared
+					&& (schedule == KingdomLifecycleLeaseState.Prepared
+						|| schedule == KingdomLifecycleLeaseState.Intent
+						|| schedule == KingdomLifecycleLeaseState.Proved)
+					&& MaterialDisposition(operation) == 0 && OutboxInitial(operation.Outbox);
+			case KingdomLifecyclePhase.ProjectionIntent:
+				return signProved && sourcesDone && schedule == KingdomLifecycleLeaseState.Proved
+					&& OutboxInitial(operation.Outbox)
+					&& (!operation.DestinationSafetyWaiting
+						|| operation.OutputIndex == 0 && outputsPrepared);
+			case KingdomLifecyclePhase.Projected:
+				return signProved && sourcesDone && schedule == KingdomLifecycleLeaseState.Proved
+					&& outputsDone && CarryEscrow(operation) == 0
+					&& !operation.DestinationSafetyWaiting && OutboxInitial(operation.Outbox);
+			case KingdomLifecyclePhase.Sinks:
+				return signProved && sourcesDone && schedule == KingdomLifecycleLeaseState.Proved
+					&& outputsDone && CarryEscrow(operation) == 0
+					&& !operation.DestinationSafetyWaiting;
+			case KingdomLifecyclePhase.Terminal:
+				return signProved && sourcesDone && schedule == KingdomLifecycleLeaseState.Proved
+					&& outputsDone && CarryEscrow(operation) == 0
+					&& !operation.DestinationSafetyWaiting && CarryOutboxTerminal(operation);
 			default:
 				return false;
 			}
@@ -2338,7 +3914,9 @@ namespace ThousandAndFirst
 
 			if (operation.WaterRequested > 0)
 			{
-				if (!PhysicalProgressValid(operation, KingdomLifecyclePhase.WaterIntent,
+				bool externalRaidTribute = ExternalRaidTributeReceipt(operation);
+				if (!externalRaidTribute && !PhysicalProgressValid(operation,
+					KingdomLifecyclePhase.WaterIntent,
 					KingdomLifecyclePhase.WaterSettled, operation.WaterState, false)) return false;
 				for (int i = 0; i < operation.WaterLegs.Count; i++)
 					if (!PhysicalProgressValid(operation, KingdomLifecyclePhase.WaterIntent,
@@ -2346,7 +3924,7 @@ namespace ThousandAndFirst
 						return false;
 				int waterIntent = PhaseOrdinal(operation.Action, KingdomLifecyclePhase.WaterIntent);
 				int waterSettled = PhaseOrdinal(operation.Action, KingdomLifecyclePhase.WaterSettled);
-				if (current < waterIntent && (operation.WaterProved != 0
+				if (!externalRaidTribute && current < waterIntent && (operation.WaterProved != 0
 					|| operation.WaterOutstanding != operation.WaterRequested
 					|| operation.WaterLost != 0 || operation.WaterAmbiguous != 0)) return false;
 				if (current >= waterSettled && !WaterConserved(operation, true)) return false;
@@ -2489,7 +4067,8 @@ namespace ThousandAndFirst
 				|| Book.RaidOptionTick < 0L || Book.PetitionOptionTick < 0L
 				|| TooLong(Book.Fault, MaxTextChars)
 				|| Book.Resources == null || Book.Resources.Count > MaxResourceRows
-				|| Book.RecentProofs == null || Book.RecentProofs.Count > MaxRecentProofs;
+				|| Book.RecentProofs == null || Book.RecentProofs.Count > MaxRecentProofs
+				|| !KingdomRaidIncidentRules.ValidLedger(Book.RaidLedger);
 
 			HashSet<string> resourceKeys = new HashSet<string>(StringComparer.Ordinal);
 			if (Book.Resources != null && Book.Resources.Count <= MaxResourceRows)
@@ -2517,6 +4096,15 @@ namespace ThousandAndFirst
 		public static void Normalize(KingdomCarryBook Book)
 		{
 			if (Book == null) return;
+			if (Book.OpaquePayload != null)
+			{
+				if (Book.FormatVersion == CurrentCarryFormatVersion && !Book.WireRejected
+					&& Book.Quarantined && Book.OpaqueWireVersion > CurrentCarryFormatVersion
+					&& Book.OpaquePayload.Length <= MaxCarrySectionBytes
+					&& !string.IsNullOrEmpty(Book.Fault) && !TooLong(Book.Fault, MaxTextChars)) return;
+				Deny(Book, "malformed opaque carry evidence was quarantined");
+				return;
+			}
 			if (PristineCarryBook(Book)) return;
 			if (Book.FormatVersion != CurrentCarryFormatVersion)
 			{
@@ -2671,7 +4259,8 @@ namespace ThousandAndFirst
 			if (needsWater)
 			{
 				if (op.WaterRequested <= 0 || !WaterConserved(op, false)) return false;
-				if (Publication && (op.WaterProved != 0 || op.WaterOutstanding != op.WaterRequested
+				if (Publication && !ExternalRaidTributeReceipt(op)
+					&& (op.WaterProved != 0 || op.WaterOutstanding != op.WaterRequested
 					|| op.WaterLost != 0 || op.WaterAmbiguous != 0
 					|| op.WaterState != KingdomLifecyclePhysicalState.Prepared)) return false;
 			}
@@ -2681,7 +4270,8 @@ namespace ThousandAndFirst
 			if (waterLeases != op.WaterLegs.Count) return false;
 
 			bool needsProjection = op.Action == KingdomLifecycleAction.Spawn
-				|| op.Action == KingdomLifecycleAction.RaidAttack;
+				|| op.Action == KingdomLifecycleAction.RaidAttack
+				|| op.Action == KingdomLifecycleAction.RaidDeliverDemand;
 			if (needsProjection && op.Projections.Count == 0) return false;
 			if (!needsProjection && op.Projections.Count != 0) return false;
 			if (projectionLeases != op.Projections.Count) return false;
@@ -2793,7 +4383,8 @@ namespace ThousandAndFirst
 		private static bool ProjectionConserved(KingdomLifecycleOperation op, bool terminal)
 		{
 			bool projects = op.Action == KingdomLifecycleAction.Spawn
-				|| op.Action == KingdomLifecycleAction.RaidAttack;
+				|| op.Action == KingdomLifecycleAction.RaidAttack
+				|| op.Action == KingdomLifecycleAction.RaidDeliverDemand;
 			if (!projects) return op.Spawned == 0 && op.PartySize == 0;
 			long planned = 0L;
 			long proved = 0L;
@@ -2815,6 +4406,9 @@ namespace ThousandAndFirst
 			switch (Action)
 			{
 			case KingdomLifecycleAction.Passages:
+				// An absence with no traffic is explicitly not news. Plans may still carry the
+				// dated aggregate when Count > 0; no empty sink is mandatory.
+				return KingdomLifecycleSinkMask.None;
 			case KingdomLifecycleAction.Depart:
 				return common | (Lane == KingdomLifecycleLane.NotableGuest
 					? KingdomLifecycleSinkMask.Guestbook : KingdomLifecycleSinkMask.None);
@@ -2822,15 +4416,29 @@ namespace ThousandAndFirst
 				return common | KingdomLifecycleSinkMask.Message
 					| KingdomLifecycleSinkMask.Guestbook;
 			case KingdomLifecycleAction.Spawn:
-				return common | KingdomLifecycleSinkMask.Message
-					| (Lane == KingdomLifecycleLane.NotableGuest
-						? KingdomLifecycleSinkMask.Guestbook : KingdomLifecycleSinkMask.None);
+				return Lane == KingdomLifecycleLane.NotableGuest
+					? common | KingdomLifecycleSinkMask.Message
+						| KingdomLifecycleSinkMask.Guestbook
+					: KingdomLifecycleSinkMask.None;
 			case KingdomLifecycleAction.OfferWater:
 			case KingdomLifecycleAction.RaidWarning:
 			case KingdomLifecycleAction.RaidRewarning:
 			case KingdomLifecycleAction.RaidTribute:
 			case KingdomLifecycleAction.RaidTalkDown:
 			case KingdomLifecycleAction.RaidCancel:
+			case KingdomLifecycleAction.RaidFight:
+			case KingdomLifecycleAction.RaidFortify:
+			case KingdomLifecycleAction.RaidResolve:
+			case KingdomLifecycleAction.RaidDeliverDemand:
+			case KingdomLifecycleAction.RaidAcknowledgeDemand:
+			case KingdomLifecycleAction.RaidLoseChannel:
+			case KingdomLifecycleAction.RaidDeadline:
+			case KingdomLifecycleAction.RaidFortifyOrder:
+			case KingdomLifecycleAction.RaidFortifyFailure:
+			case KingdomLifecycleAction.RaidRecoveryAccept:
+			case KingdomLifecycleAction.RaidRecoveryReady:
+			case KingdomLifecycleAction.RaidRecoveryResolve:
+			case KingdomLifecycleAction.RaidRecoveryDecline:
 			case KingdomLifecycleAction.PetitionOffer:
 			case KingdomLifecycleAction.PetitionAccept:
 			case KingdomLifecycleAction.PetitionDecline:
@@ -2927,7 +4535,9 @@ namespace ThousandAndFirst
 			case KingdomLifecyclePhase.Prepared:
 				if (Action == KingdomLifecycleAction.Passages) To = KingdomLifecyclePhase.Sinks;
 				else if (Action == KingdomLifecycleAction.Spawn
-					|| Action == KingdomLifecycleAction.RaidAttack) To = KingdomLifecyclePhase.ProjectionIntent;
+					|| Action == KingdomLifecycleAction.RaidAttack
+					|| Action == KingdomLifecycleAction.RaidDeliverDemand)
+					To = KingdomLifecyclePhase.ProjectionIntent;
 				else if (Action == KingdomLifecycleAction.OfferWater
 					|| Action == KingdomLifecycleAction.Lodge
 					|| Action == KingdomLifecycleAction.RaidTribute) To = KingdomLifecyclePhase.WaterIntent;
@@ -2985,6 +4595,7 @@ namespace ThousandAndFirst
 				if (op.WaterRequested == 0) return op.WaterState == KingdomLifecyclePhysicalState.Skipped;
 				if (op.WaterState != KingdomLifecyclePhysicalState.Proved
 					|| !WaterConserved(op, true)) return false;
+				if (ExternalRaidTributeReceipt(op)) return true;
 				for (int i = 0; i < op.WaterLegs.Count; i++)
 					if (op.WaterLegs[i].State != KingdomLifecyclePhysicalState.Proved) return false;
 				return LeaseKindsProved(book, op, KingdomLifecycleResourceKind.WaterVessel);
@@ -3166,7 +4777,8 @@ namespace ThousandAndFirst
 				&& source.ReceiptAfterCount == -1 && !source.ReceiptSameReference
 				&& string.IsNullOrEmpty(source.ReceiptProofId)
 				&& source.ReceiptState == KingdomLifecyclePhysicalState.Intent
-				&& ExactCarrySourceChain(source);
+				&& (source.Material == -1
+					? ExactManifestPickupChain(source) : ExactCarrySourceChain(source));
 		}
 
 		private static bool ExactCarrySourceReceipt(KingdomCarryOperation operation,
@@ -3436,7 +5048,11 @@ namespace ThousandAndFirst
 
 		private static bool CarryPlanShape(KingdomCarryOperation op, bool Publication)
 		{
-			if (op == null || op.Sequence <= 0L || !ValidGeneratedId(op.Id)
+			if (op != null && op.AuthorityKind == KingdomCarryAuthorityKind.ExactManifest)
+				return ExactCarryPlanShape(op, Publication);
+			if (op == null || op.AuthorityKind != KingdomCarryAuthorityKind.LegacyMaterialProjection
+				|| !LegacyCarryExtensionNeutral(op)) return false;
+			if (op.Sequence <= 0L || !ValidGeneratedId(op.Id)
 				|| op.CreatedTick < 0L || op.UpdatedTick < op.CreatedTick
 				|| !FrozenSettlementSetValid(op.SettlementIds)
 				|| !ValidHashNamespace(op.RealmTopologyHash, "carry-realm-topology")
@@ -3508,6 +5124,105 @@ namespace ThousandAndFirst
 			return true;
 		}
 
+		private static bool LegacyCarryExtensionNeutral(KingdomCarryOperation op)
+		{
+			if (op == null || op.ManifestVersion != 0 || !string.IsNullOrEmpty(op.ManifestDigest)
+				|| op.ManifestRevision != 0L || op.JobIds == null || op.JobIds.Count != 0
+				|| op.TripIds == null || op.TripIds.Count != 0
+				|| !string.IsNullOrEmpty(op.SignObjectId) || !string.IsNullOrEmpty(op.SignBlueprint)
+				|| op.SignTopology != KingdomLifecycleTopology.None
+				|| !string.IsNullOrEmpty(op.SignOwnerId) || !string.IsNullOrEmpty(op.SignZoneId)
+				|| op.SignX != -1 || op.SignY != -1 || op.SignCount != 0
+				|| !string.IsNullOrEmpty(op.SignReceiptId) || op.SignReceiptBeforeMatches != -1
+				|| op.SignReceiptAfterMatches != -1 || op.SignReceiptBeforeCount != -1
+				|| op.SignReceiptAfterCount != -1
+				|| op.SignReceiptSameReference || !string.IsNullOrEmpty(op.SignReceiptProofId)
+				|| op.SignReceiptState != KingdomLifecyclePhysicalState.None
+				|| op.DestinationSafetyWaiting || op.DestinationSafetyWaitTick != 0L
+				|| !string.IsNullOrEmpty(op.SpillZoneId) || op.SpillX != -1 || op.SpillY != -1)
+				return false;
+			for (int i = 0; op.Sources != null && i < op.Sources.Count; i++)
+			{
+				KingdomCarrySource source = op.Sources[i];
+				if (source == null || source.LoadedCount != 0 || source.DeliveredCount != 0
+					|| source.LostCount != 0 || source.CurrentTripId != 0
+					|| source.CurrentTopology != KingdomLifecycleTopology.None
+					|| !string.IsNullOrEmpty(source.CurrentOwnerId)
+					|| !string.IsNullOrEmpty(source.CurrentZoneId)
+					|| source.CurrentX != -1 || source.CurrentY != -1
+					|| source.PendingTransfer != KingdomCarryTransferKind.None
+					|| source.PendingTopology != KingdomLifecycleTopology.None
+					|| !string.IsNullOrEmpty(source.PendingOwnerId)
+					|| !string.IsNullOrEmpty(source.PendingZoneId)
+					|| source.PendingX != -1 || source.PendingY != -1) return false;
+			}
+			return true;
+		}
+
+		private static bool ExactCarryPlanShape(KingdomCarryOperation op, bool publication)
+		{
+			if (op == null || op.Sequence <= 0L || !ValidGeneratedId(op.Id)
+				|| op.CreatedTick < 0L || op.UpdatedTick < op.CreatedTick
+				|| !FrozenSettlementSetValid(op.SettlementIds)
+				|| !ValidHashNamespace(op.RealmTopologyHash, "carry-realm-topology")
+				|| !ValidRootId(op.OriginSettlementId)
+				|| op.SettlementIds.BinarySearch(op.OriginSettlementId,
+					StringComparer.Ordinal) < 0
+				|| !ValidName(op.OriginZoneId) || op.OriginX < 0 || op.OriginX > MaxCoordinate
+				|| op.OriginY < 0 || op.OriginY > MaxCoordinate
+				|| !ValidRootId(op.DestinationSettlementId)
+				|| op.SettlementIds.BinarySearch(op.DestinationSettlementId,
+					StringComparer.Ordinal) < 0
+				|| !ValidName(op.DestinationSettlementName)
+				|| !TopologyValid(op.DestinationTopology, op.DestinationOwnerId,
+					op.DestinationZoneId, op.DestinationX, op.DestinationY)
+				|| !ValidName(op.SpillZoneId) || op.SpillX < 0 || op.SpillX > MaxCoordinate
+				|| op.SpillY < 0 || op.SpillY > MaxCoordinate
+				|| !string.Equals(op.SpillZoneId, op.DestinationZoneId, StringComparison.Ordinal)
+				|| op.DueTick < 0L || !op.RiskFrozen || op.SourceIndex < 0 || op.OutputIndex < 0
+				|| op.Sources == null || op.Sources.Count == 0
+				|| op.Sources.Count > MaxCarrySources || op.Outputs == null
+				|| op.Outputs.Count != op.Sources.Count || op.Outputs.Count > MaxCarryOutputs
+				|| op.SourceIndex > op.Sources.Count || op.OutputIndex > op.Outputs.Count
+				|| TooLong(op.Fault, MaxTextChars) || !CarryCountsValid(op)
+				|| op.ManifestVersion != CurrentCarryManifestVersion
+				|| !ValidHashNamespace(op.ManifestDigest, "carry-manifest")
+				|| op.ManifestRevision < 0L || !FrozenPositiveIdsValid(op.JobIds, MaxCarryJobIds)
+				|| !FrozenPositiveIdsValid(op.TripIds, MaxCarryTripIds)
+				|| !ExactCarrySignShape(op, publication)
+				|| (op.DestinationSafetyWaiting
+					? op.DestinationSafetyWaitTick < op.CreatedTick : op.DestinationSafetyWaitTick != 0L)
+				|| !LeaseShape(op.ScheduleLease, op.Id, publication)
+				|| op.ScheduleLease.Kind != KingdomLifecycleResourceKind.Schedule
+				|| !string.Equals(op.ScheduleLease.SubjectId, op.DestinationSettlementId,
+					StringComparison.Ordinal)
+				|| op.ScheduleLease.After != op.DueTick
+				|| !CarryScheduleReceiptShape(op, publication)
+				|| !CarryOutboxShape(op, publication)) return false;
+			string digest;
+			if (!TryCarryManifestDigest(op, out digest)
+				|| !string.Equals(op.ManifestDigest, digest, StringComparison.Ordinal)) return false;
+			HashSet<string> ids = new HashSet<string>(StringComparer.Ordinal);
+			for (int i = 0; i < op.Sources.Count; i++)
+			{
+				KingdomCarrySource source = op.Sources[i];
+				KingdomLifecycleProjection output = op.Outputs[i];
+				if (!ExactManifestSourceShape(source, op, i, publication)
+					|| !ids.Add(source.ObjectId)
+					|| !ExactManifestOutputShape(output, source, op, i, publication)
+					|| !ExactCarryTransferCoupling(source, output, op, i)) return false;
+			}
+			for (int material = 0; material < 6; material++)
+				if (MaterialValue(op, material, 0) != 0
+					|| MaterialValue(op, material, 1) != 0
+					|| MaterialValue(op, material, 2) != 0
+					|| MaterialValue(op, material, 3) != 0) return false;
+			if (op.ManifestRevision != ExactCarryProvedRevision(op)) return false;
+			if (publication && (op.SourceIndex != 0 || op.OutputIndex != 0
+				|| op.ManifestRevision != 0L || op.DestinationSafetyWaiting)) return false;
+			return ExactCarryConserved(op);
+		}
+
 		private static bool CarrySourceShape(KingdomCarrySource source,
 			KingdomCarryOperation op, int ordinal, bool Publication)
 		{
@@ -3558,6 +5273,327 @@ namespace ThousandAndFirst
 				&& CarrySourceReceiptPrepared(source, op, ordinal));
 		}
 
+		private static bool ExactManifestSourcePrepared(KingdomCarrySource source,
+			KingdomCarryOperation op, int ordinal)
+		{
+			return source != null && op != null
+				&& string.Equals(source.OperationId, op.Id, StringComparison.Ordinal)
+				&& string.Equals(source.SourceEventId, ChildId(op.Id, "source", ordinal),
+					StringComparison.Ordinal)
+				&& source.PlannedCount == source.OriginalCount && source.Removed == 0
+				&& source.UnitCursor == 0 && source.UnitBefore == source.OriginalCount
+				&& source.UnitAfter == source.OriginalCount
+				&& source.LoadedCount == 0 && source.DeliveredCount == 0 && source.LostCount == 0
+				&& source.CurrentTripId == 0
+				&& source.CurrentTopology == source.Topology
+				&& string.Equals(source.CurrentOwnerId, source.OwnerId, StringComparison.Ordinal)
+				&& string.Equals(source.CurrentZoneId, source.ZoneId, StringComparison.Ordinal)
+				&& source.CurrentX == source.X && source.CurrentY == source.Y
+				&& ExactCarryPendingNeutral(source)
+				&& source.UnitState == KingdomLifecyclePhysicalState.Prepared
+				&& source.State == KingdomLifecyclePhysicalState.Prepared
+				&& CarrySourceReceiptPrepared(source, op, ordinal);
+		}
+
+		private static bool ExactManifestSourceShape(KingdomCarrySource source,
+			KingdomCarryOperation op, int ordinal, bool publication)
+		{
+			if (source == null || op == null
+				|| !string.Equals(source.OperationId, op.Id, StringComparison.Ordinal)
+				|| !string.Equals(source.SourceEventId, ChildId(op.Id, "source", ordinal),
+					StringComparison.Ordinal)
+				|| !ValidRootId(source.ObjectId) || !ValidName(source.Blueprint)
+				|| !TopologyValid(source.Topology, source.OwnerId, source.ZoneId, source.X, source.Y)
+				|| source.Material != -1 || source.OriginalCount <= 0
+				|| source.OriginalCount > MaxPhysicalCount
+				|| source.PlannedCount != source.OriginalCount || source.Removed != 0
+				|| source.UnitCursor != 0 || source.UnitBefore != source.OriginalCount
+				|| source.UnitAfter != source.OriginalCount
+				|| !string.Equals(source.UnitEventId, ChildId(op.Id,
+					"source-unit-" + ordinal.ToString(CultureInfo.InvariantCulture), 0),
+					StringComparison.Ordinal)
+				|| source.LoadedCount < 0 || source.DeliveredCount < 0 || source.LostCount < 0
+				|| (source.LoadedCount != 0 && source.LoadedCount != source.PlannedCount)
+				|| (source.DeliveredCount != 0 && source.DeliveredCount != source.PlannedCount)
+				|| (source.LostCount != 0 && source.LostCount != source.PlannedCount)
+				|| source.DeliveredCount + source.LostCount > source.LoadedCount
+				|| !TopologyValid(source.CurrentTopology, source.CurrentOwnerId,
+					source.CurrentZoneId, source.CurrentX, source.CurrentY)) return false;
+
+			bool atOrigin = source.CurrentTopology == source.Topology
+				&& string.Equals(source.CurrentOwnerId, source.OwnerId, StringComparison.Ordinal)
+				&& string.Equals(source.CurrentZoneId, source.ZoneId, StringComparison.Ordinal)
+				&& source.CurrentX == source.X && source.CurrentY == source.Y;
+			bool prepared = source.LoadedCount == 0 && source.DeliveredCount == 0
+				&& source.LostCount == 0 && source.CurrentTripId == 0 && atOrigin
+				&& ExactCarryPendingNeutral(source)
+				&& source.State == KingdomLifecyclePhysicalState.Prepared
+				&& source.UnitState == KingdomLifecyclePhysicalState.Prepared
+				&& CarrySourceReceiptPrepared(source, op, ordinal);
+			if (publication || prepared) return prepared;
+			if (source.LoadedCount == 0)
+				return source.DeliveredCount == 0 && source.LostCount == 0
+					&& source.CurrentTripId > 0 && TripMember(op, source.CurrentTripId) && atOrigin
+					&& source.PendingTransfer == KingdomCarryTransferKind.Pickup
+					&& TopologyValid(source.PendingTopology, source.PendingOwnerId,
+						source.PendingZoneId, source.PendingX, source.PendingY)
+					&& source.State == KingdomLifecyclePhysicalState.Prepared
+					&& source.UnitState == KingdomLifecyclePhysicalState.Intent
+					&& CarrySourceReceiptIntent(source, op, ordinal);
+			if (source.CurrentTripId <= 0 || !TripMember(op, source.CurrentTripId)
+				|| !ExactManifestPickupChain(source)
+				|| source.State != KingdomLifecyclePhysicalState.Proved
+				|| source.UnitState != KingdomLifecyclePhysicalState.Proved
+				|| source.ReceiptState != KingdomLifecyclePhysicalState.Proved
+				|| source.ReceiptBeforeIdMatches != 1 || source.ReceiptAfterIdMatches != 1
+				|| source.ReceiptBeforeCount != source.OriginalCount
+				|| source.ReceiptAfterCount != source.OriginalCount
+				|| !source.ReceiptSameReference
+				|| !string.Equals(source.ReceiptProofId,
+					ExactCarryPickupProof(op, source, ordinal), StringComparison.Ordinal)) return false;
+			if (source.DeliveredCount == 0 && source.LostCount == 0)
+			{
+				if (source.CurrentTopology != KingdomLifecycleTopology.Inventory
+					|| !ValidRootId(source.CurrentOwnerId)) return false;
+				if (ExactCarryPendingNeutral(source)) return true;
+				return (source.PendingTransfer == KingdomCarryTransferKind.Delivery
+					|| source.PendingTransfer == KingdomCarryTransferKind.RoadLoss)
+					&& TopologyValid(source.PendingTopology, source.PendingOwnerId,
+						source.PendingZoneId, source.PendingX, source.PendingY);
+			}
+			if (source.DeliveredCount == source.PlannedCount)
+				return ExactCarryPendingNeutral(source)
+					&& ExactCarryDeliveredTopology(op, source, ordinal);
+			return source.LostCount == source.PlannedCount
+				&& source.CurrentTopology == KingdomLifecycleTopology.Cell
+				&& ExactCarryPendingNeutral(source);
+		}
+
+		private static bool ExactCarryPendingNeutral(KingdomCarrySource source)
+		{
+			return source != null && source.PendingTransfer == KingdomCarryTransferKind.None
+				&& source.PendingTopology == KingdomLifecycleTopology.None
+				&& source.PendingOwnerId == null && source.PendingZoneId == null
+				&& source.PendingX == -1 && source.PendingY == -1;
+		}
+
+		/// <summary>Frozen carrier topology for exact-manifest pickup. While cargo is still on
+		/// the carrier the token must match live durable Current* state; after terminal movement
+		/// it remains bounded evidence tied to the same central trip.</summary>
+		private static bool ExactManifestPickupChain(KingdomCarrySource source)
+		{
+			if (source == null || source.CurrentTripId <= 0
+				|| source.ReceiptChainCount != source.CurrentTripId
+				|| !ValidHashNamespace(source.ReceiptChainId, "topology")) return false;
+			if (source.LoadedCount == 0)
+				return source.PendingTransfer == KingdomCarryTransferKind.Pickup
+					&& string.Equals(source.ReceiptChainId, TopologyId(source.PendingTopology,
+						source.PendingOwnerId, source.PendingZoneId, source.PendingX,
+						source.PendingY), StringComparison.Ordinal);
+			if (source.DeliveredCount == 0 && source.LostCount == 0)
+				return string.Equals(source.ReceiptChainId, TopologyId(source.CurrentTopology,
+					source.CurrentOwnerId, source.CurrentZoneId, source.CurrentX,
+					source.CurrentY), StringComparison.Ordinal);
+			return source.DeliveredCount == source.PlannedCount
+				|| source.LostCount == source.PlannedCount;
+		}
+
+		private static bool ExactCarryTransferCoupling(KingdomCarrySource source,
+			KingdomLifecycleProjection output, KingdomCarryOperation op, int ordinal)
+		{
+			if (source == null || output == null || op == null) return false;
+			if (source.PendingTransfer == KingdomCarryTransferKind.None)
+				return output.State != KingdomLifecyclePhysicalState.Intent
+					&& output.ReceiptState != KingdomLifecyclePhysicalState.Intent;
+			if (source.PendingTransfer == KingdomCarryTransferKind.Pickup)
+				return source.LoadedCount == 0
+					&& output.State == KingdomLifecyclePhysicalState.Prepared
+					&& output.ReceiptState == KingdomLifecyclePhysicalState.Prepared;
+			if (source.LoadedCount != source.PlannedCount
+				|| source.DeliveredCount != 0 || source.LostCount != 0
+				|| ordinal != op.OutputIndex
+				|| output.State != KingdomLifecyclePhysicalState.Intent
+				|| output.ReceiptState != KingdomLifecyclePhysicalState.Intent) return false;
+			if (source.PendingTransfer == KingdomCarryTransferKind.RoadLoss)
+				return source.PendingTopology == KingdomLifecycleTopology.Cell;
+			if (source.PendingTransfer != KingdomCarryTransferKind.Delivery) return false;
+			bool target = source.PendingTopology == output.Topology
+				&& string.Equals(source.PendingOwnerId, output.OwnerId, StringComparison.Ordinal)
+				&& string.Equals(source.PendingZoneId, output.ZoneId, StringComparison.Ordinal)
+				&& source.PendingX == output.X && source.PendingY == output.Y;
+			bool spill = source.PendingTopology == KingdomLifecycleTopology.Cell
+				&& source.PendingOwnerId == null
+				&& string.Equals(source.PendingZoneId, op.SpillZoneId, StringComparison.Ordinal)
+				&& source.PendingX == op.SpillX && source.PendingY == op.SpillY;
+			return target || spill;
+		}
+
+		private static long ExactCarryProvedRevision(KingdomCarryOperation op)
+		{
+			if (op == null || op.Sources == null || op.Outputs == null) return -1L;
+			long value = op.SignReceiptState == KingdomLifecyclePhysicalState.Proved ? 1L : 0L;
+			for (int i = 0; i < op.Sources.Count; i++)
+				if (op.Sources[i] != null
+					&& op.Sources[i].LoadedCount == op.Sources[i].PlannedCount) value++;
+			for (int i = 0; i < op.Outputs.Count; i++)
+				if (op.Outputs[i] != null
+					&& (op.Outputs[i].State == KingdomLifecyclePhysicalState.Proved
+						|| op.Outputs[i].State == KingdomLifecyclePhysicalState.Lost)) value++;
+			return value;
+		}
+
+		private static bool ExactManifestOutputShape(KingdomLifecycleProjection output,
+			KingdomCarrySource source, KingdomCarryOperation op, int ordinal, bool publication)
+		{
+			if (output == null || source == null || op == null
+				|| !string.Equals(output.OperationId, op.Id, StringComparison.Ordinal)
+				|| !string.Equals(output.EventId, ChildId(op.Id, "projection", ordinal),
+					StringComparison.Ordinal)
+				|| !string.Equals(output.ObjectId, source.ObjectId, StringComparison.Ordinal)
+				|| !string.Equals(output.Marker, ChildId(op.Id, "marker", ordinal),
+					StringComparison.Ordinal)
+				|| !string.Equals(output.Blueprint, source.Blueprint, StringComparison.Ordinal)
+				|| !TopologyValid(output.Topology, output.OwnerId, output.ZoneId, output.X, output.Y)
+				|| !string.Equals(output.ZoneId, op.DestinationZoneId, StringComparison.Ordinal)
+				|| output.Material != -1 || output.Count != source.PlannedCount
+				|| !output.NoStack
+				|| !string.Equals(output.ReceiptId, ChildId(op.Id, "output-receipt", ordinal),
+					StringComparison.Ordinal)
+				|| !string.Equals(output.ReceiptTopologyId, TopologyId(output.Topology,
+					output.OwnerId, output.ZoneId, output.X, output.Y), StringComparison.Ordinal)) return false;
+			bool prepared = output.State == KingdomLifecyclePhysicalState.Prepared
+				&& output.ReceiptState == KingdomLifecyclePhysicalState.Prepared
+				&& output.ReceiptBeforeIdMatches == -1 && output.ReceiptBeforeMarkerMatches == -1
+				&& output.ReceiptBeforeCount == -1 && output.ReceiptAfterIdMatches == -1
+				&& output.ReceiptAfterMarkerMatches == -1 && output.ReceiptAfterCount == -1
+				&& !output.ReceiptSameReference && string.IsNullOrEmpty(output.ReceiptProofId);
+			if (publication || prepared) return prepared;
+			if (output.State == KingdomLifecyclePhysicalState.Intent
+				&& output.ReceiptState == KingdomLifecyclePhysicalState.Intent)
+				return output.ReceiptBeforeIdMatches == 1
+					&& output.ReceiptBeforeMarkerMatches == 0
+					&& output.ReceiptBeforeCount == source.PlannedCount
+					&& output.ReceiptAfterIdMatches == -1
+					&& output.ReceiptAfterMarkerMatches == -1
+					&& output.ReceiptAfterCount == -1 && !output.ReceiptSameReference
+					&& string.IsNullOrEmpty(output.ReceiptProofId);
+			bool delivered = output.State == KingdomLifecyclePhysicalState.Proved
+				&& output.ReceiptState == KingdomLifecyclePhysicalState.Proved
+				&& source.DeliveredCount == source.PlannedCount && source.LostCount == 0;
+			bool lost = output.State == KingdomLifecyclePhysicalState.Lost
+				&& output.ReceiptState == KingdomLifecyclePhysicalState.Lost
+				&& source.LostCount == source.PlannedCount && source.DeliveredCount == 0;
+			return (delivered || lost) && output.ReceiptBeforeIdMatches == 1
+				&& output.ReceiptBeforeMarkerMatches == 0
+				&& output.ReceiptBeforeCount == source.PlannedCount
+				&& output.ReceiptAfterIdMatches == 1 && output.ReceiptAfterMarkerMatches == 0
+				&& output.ReceiptAfterCount == source.PlannedCount
+				&& output.ReceiptSameReference
+				&& string.Equals(output.ReceiptProofId,
+					ExactCarryDestinationProof(op, source, output, ordinal, lost),
+					StringComparison.Ordinal);
+		}
+
+		private static bool ExactCarrySignShape(KingdomCarryOperation op, bool publication)
+		{
+			if (op == null || !ValidRootId(op.SignObjectId) || !ValidName(op.SignBlueprint)
+				|| !TopologyValid(op.SignTopology, op.SignOwnerId, op.SignZoneId, op.SignX, op.SignY)
+				|| op.SignCount <= 0 || op.SignCount > MaxPhysicalCount
+				|| !string.Equals(op.SignReceiptId, ChildId(op.Id, "sign-receipt", 0),
+					StringComparison.Ordinal)) return false;
+			bool prepared = op.SignReceiptState == KingdomLifecyclePhysicalState.Prepared
+				&& op.SignReceiptBeforeMatches == -1 && op.SignReceiptAfterMatches == -1
+				&& op.SignReceiptBeforeCount == -1 && op.SignReceiptAfterCount == -1
+				&& !op.SignReceiptSameReference
+				&& string.IsNullOrEmpty(op.SignReceiptProofId);
+			if (publication || prepared) return prepared;
+			if (op.SignReceiptState == KingdomLifecyclePhysicalState.Intent)
+				return op.SignReceiptBeforeMatches == 1 && op.SignReceiptAfterMatches == -1
+					&& op.SignReceiptBeforeCount == op.SignCount
+					&& op.SignReceiptAfterCount == -1 && !op.SignReceiptSameReference
+					&& string.IsNullOrEmpty(op.SignReceiptProofId);
+			return op.SignReceiptState == KingdomLifecyclePhysicalState.Proved
+				&& op.SignReceiptBeforeMatches == 1
+				&& op.SignReceiptAfterMatches == (op.SignCount == 1 ? 0 : 1)
+				&& op.SignReceiptBeforeCount == op.SignCount
+				&& op.SignReceiptAfterCount == op.SignCount - 1
+				&& op.SignReceiptSameReference
+				&& string.Equals(op.SignReceiptProofId, ExactCarrySignProof(op),
+					StringComparison.Ordinal);
+		}
+
+		private static bool ExactCarryDeliveredTopology(KingdomCarryOperation op,
+			KingdomCarrySource source, int ordinal)
+		{
+			if (op == null || source == null || op.Outputs == null
+				|| ordinal < 0 || ordinal >= op.Outputs.Count) return false;
+			KingdomLifecycleProjection output = op.Outputs[ordinal];
+			bool target = output != null && source.CurrentTopology == output.Topology
+				&& string.Equals(source.CurrentOwnerId, output.OwnerId, StringComparison.Ordinal)
+				&& string.Equals(source.CurrentZoneId, output.ZoneId, StringComparison.Ordinal)
+				&& source.CurrentX == output.X && source.CurrentY == output.Y;
+			bool spill = source.CurrentTopology == KingdomLifecycleTopology.Cell
+				&& source.CurrentOwnerId == null
+				&& string.Equals(source.CurrentZoneId, op.SpillZoneId, StringComparison.Ordinal)
+				&& source.CurrentX == op.SpillX && source.CurrentY == op.SpillY;
+			return target || spill;
+		}
+
+		private static bool TripMember(KingdomCarryOperation op, int tripId)
+		{
+			if (op == null || op.TripIds == null || tripId <= 0) return false;
+			return op.TripIds.BinarySearch(tripId) >= 0;
+		}
+
+		private static string ExactCarryPickupProof(KingdomCarryOperation op,
+			KingdomCarrySource source, int ordinal)
+		{
+			return HashId("carry-exact-pickup", delegate(BinaryWriter w)
+			{
+				CanonicalString(w, op == null ? null : op.Id); w.Write(ordinal);
+				CanonicalString(w, source == null ? null : source.ObjectId);
+				CanonicalString(w, source == null ? null : source.ReceiptId);
+				w.Write(source == null ? 0 : source.CurrentTripId);
+				CanonicalString(w, source == null ? null : source.ReceiptChainId);
+				w.Write(source == null ? 0 : source.ReceiptChainCount);
+				w.Write(source == null ? -1 : source.ReceiptBeforeCount);
+				w.Write(source == null ? -1 : source.ReceiptAfterCount);
+				w.Write(source != null && source.ReceiptSameReference);
+			});
+		}
+
+		private static string ExactCarryDestinationProof(KingdomCarryOperation op,
+			KingdomCarrySource source, KingdomLifecycleProjection output, int ordinal, bool lost)
+		{
+			return HashId("carry-exact-destination", delegate(BinaryWriter w)
+			{
+				CanonicalString(w, op == null ? null : op.Id); w.Write(ordinal); w.Write(lost);
+				CanonicalString(w, source == null ? null : source.ObjectId);
+				w.Write(source == null ? (byte)0 : (byte)source.CurrentTopology);
+				CanonicalString(w, source == null ? null : source.CurrentOwnerId);
+				CanonicalString(w, source == null ? null : source.CurrentZoneId);
+				w.Write(source == null ? -1 : source.CurrentX);
+				w.Write(source == null ? -1 : source.CurrentY);
+				CanonicalString(w, output == null ? null : output.ReceiptId);
+				w.Write(output == null ? -1 : output.ReceiptBeforeCount);
+				w.Write(output == null ? -1 : output.ReceiptAfterCount);
+				w.Write(output != null && output.ReceiptSameReference);
+			});
+		}
+
+		private static string ExactCarrySignProof(KingdomCarryOperation op)
+		{
+			return HashId("carry-exact-sign", delegate(BinaryWriter w)
+			{
+				CanonicalString(w, op == null ? null : op.Id);
+				CanonicalString(w, op == null ? null : op.SignObjectId);
+				CanonicalString(w, op == null ? null : op.SignReceiptId);
+				w.Write(op == null ? -1 : op.SignReceiptBeforeCount);
+				w.Write(op == null ? -1 : op.SignReceiptAfterCount);
+				w.Write(op != null && op.SignReceiptSameReference);
+			});
+		}
+
 		private static bool CarryOutboxShape(KingdomCarryOperation op, bool Publication)
 		{
 			KingdomLifecycleOutbox b = op.Outbox;
@@ -3591,12 +5627,49 @@ namespace ThousandAndFirst
 		private static bool CarryTerminalComponentsSettled(KingdomCarryOperation op)
 		{
 			if (op == null || !CarryPlanShape(op, false) || !CarryConserved(op)
-				|| !AllSourcesProved(op) || !OutputsSettledForRoad(op)
+				|| !(op.AuthorityKind == KingdomCarryAuthorityKind.ExactManifest
+					? AllExactSourcesLoaded(op) : AllSourcesProved(op))
+				|| !(op.AuthorityKind == KingdomCarryAuthorityKind.ExactManifest
+					? ExactOutputsSettled(op) : OutputsSettledForRoad(op))
 				|| CarryEscrow(op) != 0 || !CarryOutboxTerminal(op)) return false;
 			for (int material = 0; material < 6; material++)
 				if (MaterialValue(op, material, 0) != MaterialValue(op, material, 2)
 					+ MaterialValue(op, material, 3)) return false;
 			return true;
+		}
+
+		private static bool AllExactSourcesLoaded(KingdomCarryOperation op)
+		{
+			if (op == null || op.Sources == null || op.SourceIndex != op.Sources.Count) return false;
+			for (int i = 0; i < op.Sources.Count; i++)
+				if (op.Sources[i] == null
+					|| op.Sources[i].LoadedCount != op.Sources[i].PlannedCount
+					|| op.Sources[i].State != KingdomLifecyclePhysicalState.Proved) return false;
+			return true;
+		}
+
+		private static bool ExactOutputsSettled(KingdomCarryOperation op)
+		{
+			if (op == null || op.Sources == null || op.Outputs == null
+				|| op.Sources.Count != op.Outputs.Count || op.OutputIndex != op.Outputs.Count)
+				return false;
+			bool anyLost = false;
+			for (int i = 0; i < op.Sources.Count; i++)
+			{
+				KingdomCarrySource source = op.Sources[i];
+				KingdomLifecycleProjection output = op.Outputs[i];
+				bool delivered = source != null && output != null
+					&& source.DeliveredCount == source.PlannedCount && source.LostCount == 0
+					&& output.State == KingdomLifecyclePhysicalState.Proved
+					&& output.ReceiptState == KingdomLifecyclePhysicalState.Proved;
+				bool lost = source != null && output != null
+					&& source.LostCount == source.PlannedCount && source.DeliveredCount == 0
+					&& output.State == KingdomLifecyclePhysicalState.Lost
+					&& output.ReceiptState == KingdomLifecyclePhysicalState.Lost;
+				if (!delivered && !lost) return false;
+				anyLost |= lost;
+			}
+			return op.LostOnRoad == anyLost;
 		}
 
 		private static bool AllSourcesProved(KingdomCarryOperation op)
@@ -3780,7 +5853,9 @@ namespace ThousandAndFirst
 					CanonicalString(w, op.DestinationZoneId); w.Write((byte)op.DestinationTopology);
 					CanonicalString(w, op.DestinationOwnerId); w.Write(op.DestinationX);
 					w.Write(op.DestinationY); w.Write(op.DueTick);
-					w.Write(op.RiskFrozen); w.Write(op.LostOnRoad);
+					w.Write(op.RiskFrozen);
+					w.Write(op.AuthorityKind == KingdomCarryAuthorityKind.ExactManifest
+						? false : op.LostOnRoad);
 					WriteLeasePlan(w, op.ScheduleLease);
 					CanonicalString(w, op.ScheduleReceiptId);
 					CanonicalString(w, op.ScheduleTopologyId);
@@ -3800,8 +5875,75 @@ namespace ThousandAndFirst
 					for (int material = 0; material < 6; material++)
 						w.Write(MaterialValue(op, material, 0));
 					WriteOutboxPlan(w, op.Outbox);
+					if (op.AuthorityKind == KingdomCarryAuthorityKind.ExactManifest)
+					{
+						w.Write((byte)op.AuthorityKind); w.Write(op.ManifestVersion);
+						CanonicalString(w, op.ManifestDigest);
+						CanonicalString(w, op.SignObjectId); CanonicalString(w, op.SignBlueprint);
+						w.Write((byte)op.SignTopology); CanonicalString(w, op.SignOwnerId);
+						CanonicalString(w, op.SignZoneId); w.Write(op.SignX); w.Write(op.SignY);
+						w.Write(op.SignCount); CanonicalString(w, op.SignReceiptId);
+						w.Write(op.JobIds == null ? -1 : op.JobIds.Count);
+						if (op.JobIds != null) for (int i = 0; i < op.JobIds.Count; i++)
+							w.Write(op.JobIds[i]);
+						w.Write(op.TripIds == null ? -1 : op.TripIds.Count);
+						if (op.TripIds != null) for (int i = 0; i < op.TripIds.Count; i++)
+							w.Write(op.TripIds[i]);
+						CanonicalString(w, op.SpillZoneId); w.Write(op.SpillX); w.Write(op.SpillY);
+					}
 				});
 				return ValidHashNamespace(Hash, "carry-plan");
+			}
+			catch (Exception)
+			{
+				Hash = null;
+				return false;
+			}
+		}
+
+		/// <summary>Canonical immutable digest consumed by the central logistics rows. It freezes
+		/// ordered whole source objects only; callback progress and carrier assignment cannot change
+		/// it.</summary>
+		public static bool TryCarryManifestDigest(KingdomCarryOperation op, out string Hash)
+		{
+			Hash = null;
+			if (op == null || op.AuthorityKind != KingdomCarryAuthorityKind.ExactManifest
+				|| op.ManifestVersion != CurrentCarryManifestVersion || op.Sources == null
+				|| op.Sources.Count == 0 || op.Sources.Count > MaxCarrySources) return false;
+			HashSet<string> ids = new HashSet<string>(StringComparer.Ordinal);
+			for (int i = 0; i < op.Sources.Count; i++)
+			{
+				KingdomCarrySource source = op.Sources[i];
+				if (source == null || !string.Equals(source.OperationId, op.Id,
+						StringComparison.Ordinal)
+					|| !string.Equals(source.SourceEventId, ChildId(op.Id, "source", i),
+						StringComparison.Ordinal)
+					|| !ValidRootId(source.ObjectId) || !ids.Add(source.ObjectId)
+					|| !ValidName(source.Blueprint)
+					|| !TopologyValid(source.Topology, source.OwnerId, source.ZoneId,
+						source.X, source.Y)
+					|| source.Material != -1
+					|| source.OriginalCount <= 0 || source.OriginalCount > MaxPhysicalCount
+					|| source.PlannedCount != source.OriginalCount) return false;
+			}
+			try
+			{
+				Hash = HashId("carry-manifest", delegate(BinaryWriter w)
+				{
+					w.Write(op.ManifestVersion); CanonicalString(w, op.Id);
+					w.Write(op.Sources.Count);
+					for (int i = 0; i < op.Sources.Count; i++)
+					{
+						KingdomCarrySource source = op.Sources[i];
+						w.Write(i); CanonicalString(w, source.SourceEventId);
+						CanonicalString(w, source.ObjectId); CanonicalString(w, source.Blueprint);
+						w.Write((byte)source.Topology); CanonicalString(w, source.OwnerId);
+						CanonicalString(w, source.ZoneId); w.Write(source.X); w.Write(source.Y);
+						w.Write(source.Material); w.Write(source.OriginalCount);
+						w.Write(source.PlannedCount);
+					}
+				});
+				return ValidHashNamespace(Hash, "carry-manifest");
 			}
 			catch (Exception)
 			{
@@ -4092,6 +6234,19 @@ namespace ThousandAndFirst
 			case KingdomLifecycleAction.RaidTalkDown:
 			case KingdomLifecycleAction.RaidAttack:
 			case KingdomLifecycleAction.RaidCancel:
+			case KingdomLifecycleAction.RaidFight:
+			case KingdomLifecycleAction.RaidFortify:
+			case KingdomLifecycleAction.RaidResolve:
+			case KingdomLifecycleAction.RaidDeliverDemand:
+			case KingdomLifecycleAction.RaidAcknowledgeDemand:
+			case KingdomLifecycleAction.RaidLoseChannel:
+			case KingdomLifecycleAction.RaidDeadline:
+			case KingdomLifecycleAction.RaidFortifyOrder:
+			case KingdomLifecycleAction.RaidFortifyFailure:
+			case KingdomLifecycleAction.RaidRecoveryAccept:
+			case KingdomLifecycleAction.RaidRecoveryReady:
+			case KingdomLifecycleAction.RaidRecoveryResolve:
+			case KingdomLifecycleAction.RaidRecoveryDecline:
 				kind = KingdomLifecycleResourceKind.Raid; delta = 1L; break;
 			case KingdomLifecycleAction.PetitionOffer:
 			case KingdomLifecycleAction.PetitionAccept:
@@ -4350,6 +6505,30 @@ namespace ThousandAndFirst
 			Book.FormatVersion = CurrentFormatVersion;
 			Book.Growth = staged;
 			return true;
+		}
+
+		/// <summary>Lifecycle v6 had no causal raid ledger. Its old open raid operation is
+		/// retained as raw evidence but quarantined; it is never promoted from standing or faction
+		/// fields into a grievance. Authority-free v6 books receive one empty v7 ledger.</summary>
+		internal static bool StageRaidMigrationFromV6(KingdomLifecycleBook Book)
+		{
+			if (Book == null || Book.FormatVersion != PreviousLifecycleFormatVersion
+				|| Book.WireRejected) return false;
+			Book.RaidLedger = new KingdomRaidLedger();
+			Book.FormatVersion = CurrentFormatVersion;
+			QuarantineLegacyRaidAuthority(Book);
+			Normalize(Book);
+			return PristineLifecycleBook(Book) || CanonicalLifecycleQuarantine(Book)
+				|| CanOwnAuthority(Book);
+		}
+
+		/// <summary>Preserves an old open raid plan without allowing it to mutate the world.</summary>
+		internal static void QuarantineLegacyRaidAuthority(KingdomLifecycleBook Book)
+		{
+			if (Book == null || Book.Raid == null) return;
+			Book.Quarantined = true;
+			if (string.IsNullOrEmpty(Book.Fault))
+				Book.Fault = "legacy raid authority retained without causal grievance";
 		}
 
 		public static KingdomGrowthMigrationResult ApplyGrowthMigration(
@@ -4722,17 +6901,19 @@ namespace ThousandAndFirst
 		private static bool TryGrowthArrivalCandidateBasePlanHash(
 			KingdomGrowthArrivalCandidate Candidate, out string Hash)
 		{
-			return TryGrowthArrivalCandidateBasePlanHashCore(Candidate, true, out Hash);
+			return TryGrowthArrivalCandidateBasePlanHashCore(Candidate, true,
+				Candidate != null && !Candidate.LegacySemanticPlan, out Hash);
 		}
 
 		private static bool TryLegacyGrowthArrivalCandidateBasePlanHash(
 			KingdomGrowthArrivalCandidate Candidate, out string Hash)
 		{
-			return TryGrowthArrivalCandidateBasePlanHashCore(Candidate, false, out Hash);
+			return TryGrowthArrivalCandidateBasePlanHashCore(Candidate, false, false, out Hash);
 		}
 
 		private static bool TryGrowthArrivalCandidateBasePlanHashCore(
-			KingdomGrowthArrivalCandidate Candidate, bool IncludeZone, out string Hash)
+			KingdomGrowthArrivalCandidate Candidate, bool IncludeZone, bool IncludeSemantic,
+			out string Hash)
 		{
 			Hash = null;
 			if (Candidate == null || Candidate.CreateStep == null) return false;
@@ -4745,6 +6926,18 @@ namespace ThousandAndFirst
 					CanonicalString(w, Candidate.Marker); CanonicalString(w, Candidate.Blueprint);
 					CanonicalString(w, Candidate.EscrowKey);
 					if (IncludeZone) CanonicalString(w, Candidate.LodgingZoneId);
+					if (IncludeSemantic)
+					{
+						CanonicalString(w, "semantic-person-plan");
+						w.Write(Candidate.SemanticPlanVersion);
+						CanonicalString(w, Candidate.SemanticStreamId);
+						w.Write(Candidate.SemanticEventKind);
+						CanonicalString(w, Candidate.PlannedOrigin);
+						CanonicalString(w, Candidate.PlannedCreed);
+						CanonicalString(w, Candidate.PlannedName);
+						CanonicalString(w, Candidate.PlannedArrived);
+						w.Write(Candidate.ArrivalX); w.Write(Candidate.ArrivalY);
+					}
 					WriteLeasePlan(w, Candidate.CandidateLease);
 					WriteLeasePlan(w, Candidate.LodgingLease);
 					WriteLeasePlan(w, Candidate.EscrowLease);
@@ -4886,6 +7079,62 @@ namespace ThousandAndFirst
 			return false;
 		}
 
+		internal static bool UpgradeLegacyGrowthArrivalSemanticPlan(KingdomGrowthBook Book,
+			KingdomGrowthArrivalCandidate Candidate, int PlanVersion, string StreamId,
+			uint EventKind, string Origin, string Creed, string Name, string Arrived,
+			int ArrivalX, int ArrivalY, long Tick)
+		{
+			if (!ExactGrowthArrivalCandidateAuthority(Book, Candidate)
+				|| Candidate.Phase == KingdomGrowthArrivalCandidatePhase.Quarantined
+				|| !Candidate.LegacySemanticPlan || Candidate.LegacyGrowthV1UnboundZone
+				|| Tick < Candidate.UpdatedTick) return false;
+			KingdomGrowthArrivalCandidatePhase phase = Candidate.Phase;
+			if (phase != KingdomGrowthArrivalCandidatePhase.Prepared
+				&& phase != KingdomGrowthArrivalCandidatePhase.CreateIntent
+				&& phase != KingdomGrowthArrivalCandidatePhase.Escrowed) return false;
+
+			string oldHash = Candidate.PlanHash;
+			long oldTick = Candidate.UpdatedTick;
+			string oldProof = Candidate.CreateStep == null
+				? null : Candidate.CreateStep.ReceiptProofId;
+			Candidate.LegacySemanticPlan = false;
+			Candidate.SemanticPlanVersion = PlanVersion;
+			Candidate.SemanticStreamId = StreamId;
+			Candidate.SemanticEventKind = EventKind;
+			Candidate.PlannedOrigin = Origin;
+			Candidate.PlannedCreed = Creed;
+			Candidate.PlannedName = Name;
+			Candidate.PlannedArrived = Arrived;
+			Candidate.ArrivalX = ArrivalX;
+			Candidate.ArrivalY = ArrivalY;
+			string hash;
+			if (GrowthArrivalSemanticPlanShape(Candidate)
+				&& TryGrowthArrivalCandidatePlanHash(Candidate, out hash))
+			{
+				Candidate.PlanHash = hash;
+				if (Candidate.CreateStep != null && Candidate.CreateStep.State ==
+					KingdomLifecyclePhysicalState.Proved)
+					Candidate.CreateStep.ReceiptProofId = GrowthArrivalCandidateCallbackProof(
+						Candidate, Candidate.CreateStep, 0);
+				Candidate.UpdatedTick = Tick;
+				if (ExactGrowthArrivalCandidateAuthority(Book, Candidate)) return true;
+			}
+			Candidate.LegacySemanticPlan = true;
+			Candidate.SemanticPlanVersion = 0;
+			Candidate.SemanticStreamId = null;
+			Candidate.SemanticEventKind = 0U;
+			Candidate.PlannedOrigin = null;
+			Candidate.PlannedCreed = null;
+			Candidate.PlannedName = null;
+			Candidate.PlannedArrived = null;
+			Candidate.ArrivalX = -1;
+			Candidate.ArrivalY = -1;
+			Candidate.PlanHash = oldHash;
+			Candidate.UpdatedTick = oldTick;
+			if (Candidate.CreateStep != null) Candidate.CreateStep.ReceiptProofId = oldProof;
+			return false;
+		}
+
 		internal static bool DowngradeGrowthArrivalCandidateForV1Fixture(
 			KingdomGrowthArrivalCandidate Candidate)
 		{
@@ -4913,6 +7162,16 @@ namespace ThousandAndFirst
 				Candidate.LodgingZoneId = null;
 				Candidate.LegacyGrowthV1UnboundZone = true;
 			}
+			Candidate.LegacySemanticPlan = true;
+			Candidate.SemanticPlanVersion = 0;
+			Candidate.SemanticStreamId = null;
+			Candidate.SemanticEventKind = 0U;
+			Candidate.PlannedOrigin = null;
+			Candidate.PlannedCreed = null;
+			Candidate.PlannedName = null;
+			Candidate.PlannedArrived = null;
+			Candidate.ArrivalX = -1;
+			Candidate.ArrivalY = -1;
 			Candidate.PlanHash = legacyBaseHash;
 			KingdomGrowthObjectCallbackStep create = Candidate.CreateStep;
 			if (create != null && create.State == KingdomLifecyclePhysicalState.Proved)
@@ -4930,6 +7189,19 @@ namespace ThousandAndFirst
 			KingdomGrowthBook Book, string Marker, string Blueprint, string EscrowKey, string ZoneId,
 			long Tick, string BeforeOwnerGraphHash, string BeforeObjectGraphHash,
 			string BeforeTopologyHash)
+		{
+			return PrepareGrowthArrivalCandidate(Book, Marker, Blueprint, EscrowKey, ZoneId,
+				Tick, BeforeOwnerGraphHash, BeforeObjectGraphHash, BeforeTopologyHash,
+				0, null, 0U, null, null, null, null, -1, -1, true);
+		}
+
+		public static KingdomGrowthArrivalCandidate PrepareGrowthArrivalCandidate(
+			KingdomGrowthBook Book, string Marker, string Blueprint, string EscrowKey, string ZoneId,
+			long Tick, string BeforeOwnerGraphHash, string BeforeObjectGraphHash,
+			string BeforeTopologyHash, int SemanticPlanVersion, string SemanticStreamId,
+			uint SemanticEventKind, string PlannedOrigin, string PlannedCreed,
+			string PlannedName, string PlannedArrived, int ArrivalX, int ArrivalY,
+			bool LegacySemanticPlan = false)
 		{
 			if (!CanOwnGrowthAuthority(Book, Book == null ? null : Book.SettlementId)
 				|| Book.ArrivalCandidate != null || Book.ArrivalCandidateNextSequence == long.MaxValue
@@ -4968,6 +7240,16 @@ namespace ThousandAndFirst
 				Phase = KingdomGrowthArrivalCandidatePhase.Prepared,
 				Marker = Marker, Blueprint = Blueprint, EscrowKey = EscrowKey,
 				LodgingZoneId = ZoneId,
+				LegacySemanticPlan = LegacySemanticPlan,
+				SemanticPlanVersion = SemanticPlanVersion,
+				SemanticStreamId = SemanticStreamId,
+				SemanticEventKind = SemanticEventKind,
+				PlannedOrigin = PlannedOrigin,
+				PlannedCreed = PlannedCreed,
+				PlannedName = PlannedName,
+				PlannedArrived = PlannedArrived,
+				ArrivalX = ArrivalX,
+				ArrivalY = ArrivalY,
 				CandidateLease = new KingdomLifecycleResourceLease
 				{
 					OperationId = id, Kind = KingdomLifecycleResourceKind.GrowthArrivalCandidate,
@@ -8535,6 +10817,7 @@ namespace ThousandAndFirst
 				|| !Enum.IsDefined(typeof(KingdomGrowthArrivalDisposition), candidate.Disposition)
 				|| !ValidRootId(candidate.Marker) || !ValidName(candidate.Blueprint)
 				|| !ValidRootId(candidate.EscrowKey)
+				|| !GrowthArrivalSemanticPlanShape(candidate)
 				|| candidate.CandidateLease == null || candidate.LodgingLease == null
 				|| candidate.EscrowLease == null
 				|| !GrowthLeaseShape(candidate.CandidateLease, candidate.Id, publication)
@@ -8622,6 +10905,25 @@ namespace ThousandAndFirst
 					GrowthOperationId(candidate.SettlementId, KingdomGrowthSlotKind.Arrival,
 						null, candidate.ConsumingOperationSequence), StringComparison.Ordinal)
 				&& GrowthArrivalDispositionStepShape(candidate, true);
+		}
+
+		private static bool GrowthArrivalSemanticPlanShape(
+			KingdomGrowthArrivalCandidate candidate)
+		{
+			if (candidate == null) return false;
+			if (candidate.LegacySemanticPlan)
+				return candidate.SemanticPlanVersion == 0 && candidate.SemanticStreamId == null
+					&& candidate.SemanticEventKind == 0U && candidate.PlannedOrigin == null
+					&& candidate.PlannedCreed == null && candidate.PlannedName == null
+					&& candidate.PlannedArrived == null && candidate.ArrivalX == -1
+					&& candidate.ArrivalY == -1;
+			return candidate.SemanticPlanVersion == 1
+				&& ValidRootId(candidate.SemanticStreamId)
+				&& candidate.SemanticEventKind > 0U && ValidName(candidate.PlannedOrigin)
+				&& ValidName(candidate.PlannedCreed) && ValidName(candidate.PlannedName)
+				&& ValidName(candidate.PlannedArrived) && candidate.ArrivalX >= 0
+				&& candidate.ArrivalX <= MaxCoordinate && candidate.ArrivalY >= 0
+				&& candidate.ArrivalY <= MaxCoordinate;
 		}
 
 		private static bool GrowthArrivalCandidateLeaseStates(
@@ -11990,6 +14292,13 @@ namespace ThousandAndFirst
 				&& book.Raid == null && book.Petition == null
 				&& book.Resources != null && book.Resources.Count == 0
 				&& book.RecentProofs != null && book.RecentProofs.Count == 0
+				&& KingdomRaidIncidentRules.ValidLedger(book.RaidLedger)
+				&& book.RaidLedger.StateRevision == 0L
+				&& book.RaidLedger.ScheduleRevision == 0L
+				&& book.RaidLedger.Grievances.Count == 0
+				&& book.RaidLedger.Incidents.Count == 0
+				&& book.RaidLedger.ActiveIncidentId == null
+				&& !book.RaidLedger.LegacyEvidenceArchived
 				&& PristineGrowthBook(book.Growth);
 		}
 
@@ -12010,6 +14319,7 @@ namespace ThousandAndFirst
 		{
 			return book != null && book.FormatVersion == CurrentCarryFormatVersion
 				&& !book.WireRejected && !book.Quarantined && string.IsNullOrEmpty(book.Fault)
+				&& book.OpaqueWireVersion == 0 && book.OpaquePayload == null
 				&& string.IsNullOrEmpty(book.RealmId) && !book.IdentityBound
 				&& string.IsNullOrEmpty(book.IdentityProof) && !book.LegacyIdentity
 				&& string.IsNullOrEmpty(book.LegacyMigrationKey)
@@ -12093,6 +14403,40 @@ namespace ThousandAndFirst
 				frozen = null;
 				return false;
 			}
+		}
+
+		private static bool TryFrozenPositiveIds(ICollection<int> source, int maximum,
+			out List<int> frozen)
+		{
+			frozen = null;
+			try
+			{
+				if (source == null || source.Count <= 0 || source.Count > maximum) return false;
+				List<int> value = new List<int>(source.Count);
+				int prior = 0;
+				foreach (int id in source)
+				{
+					if (id <= prior) return false;
+					value.Add(id);
+					prior = id;
+				}
+				if (value.Count != source.Count) return false;
+				frozen = value;
+				return true;
+			}
+			catch (Exception)
+			{
+				frozen = null;
+				return false;
+			}
+		}
+
+		private static bool FrozenPositiveIdsValid(List<int> ids, int maximum)
+		{
+			if (ids == null || ids.Count <= 0 || ids.Count > maximum) return false;
+			for (int i = 0; i < ids.Count; i++)
+				if (ids[i] <= 0 || (i > 0 && ids[i - 1] >= ids[i])) return false;
+			return true;
 		}
 
 		private static bool ExistingIdsExclude(ICollection<string> source, string exactId)

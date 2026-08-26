@@ -2288,7 +2288,7 @@ def w6_production_and_logistics():
    unbounded claim, because production is clamped by the room the model believes the zone has and
    the overflow is SPILLED - the same loss a harvest with a full larder has always taken. That is
    what makes the amortised landing finite: the worst debt a quarter can present is its own
-   capacity, and §0.0(b) prices draining a full backlog at 29 turns.
+   capacity, and §0.0(b) prices draining a full backlog inside the 40-turn grace window.
 """)
     assert "long room = (wanted > 0L) ? (capacity - level) : level;" in production, (
         "UNBOUNDED CLAIM: production is no longer clamped by the room the containers have."
@@ -2303,8 +2303,23 @@ def w6_production_and_logistics():
     reify_units = read_const(
         os.path.join(ROOT, "Simulation", "City", "KingdomBudgetRules.cs"), "ReifyUnitsPerTurn"
     )
-    worst_units = read_const(
-        os.path.join(ROOT, "Simulation", "City", "KingdomCatchUpRules.cs"), "WorstBacklogUnits"
+    catchup_path = os.path.join(ROOT, "Simulation", "City", "KingdomCatchUpRules.cs")
+    catchup = open(catchup_path, encoding="utf-8-sig").read()
+    expected_envelope = (
+        "KingdomRules.MaxCivicContainersPerZone + KingdomRules.MaxPopulation"
+    )
+    assert expected_envelope in catchup, (
+        "WorstBacklogUnits no longer derives from the live container and population rails."
+    )
+    stage_cap = re.search(
+        r"public static int MaxBuildingsForStage\(.*?default:\s*return\s+([0-9]+);",
+        open(RULES_CS, encoding="utf-8-sig").read(), re.S)
+    assert stage_cap, "City building cap not found in MaxBuildingsForStage"
+    worst_units = (
+        int(stage_cap.group(1))
+        + read_const(RULES_CS, "MaxDedicatedVessels")
+        + read_const(RULES_CS, "MaxDedicatedLarders")
+        + read_const(RULES_CS, "MaxPopulation")
     )
     drain_turns = -(-worst_units // reify_units)
     print(f"   reify budget:      {reify_units} units a turn")

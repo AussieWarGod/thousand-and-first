@@ -20,8 +20,10 @@ namespace XRL.World.Parts
 	/// to decide it can be afforded. Carries no <c>WantTurnTick</c> and never will &mdash; a plan
 	/// is realised only from the settlement's ordinary <c>ZoneActivatedEvent</c> pass, the same
 	/// clock every other absence-resolving system in this mod reads from. Nothing here is spent
-	/// or moved until <see cref="ThousandAndFirst.KingdomPlanMarker.OnSettlementPass"/> replaces
-	/// this exact object, in this exact cell, with an <c>r_KingdomScaffold</c>.
+	/// or moved until <see cref="ThousandAndFirst.KingdomPlanMarker.OnSettlementPass"/> proves its
+	/// frozen receipt. Legacy single-cell plans replace this object with a scaffold; current plotted
+	/// plans reserve an exact authored lot beside the survey stake and raise their works at the
+	/// frozen main anchor.
 	/// </summary>
 	[Serializable]
 	public class r_KingdomPlanMarker : IPart
@@ -107,8 +109,11 @@ namespace ThousandAndFirst
 			List<GameObject> markers = new List<GameObject>();
 			List<KingdomRules.BuildEntry> entries = new List<KingdomRules.BuildEntry>();
 			List<KingdomPendingPlan> pending = new List<KingdomPendingPlan>();
-			foreach (GameObject item in Z.GetObjects())
+			List<int> waterPrices = new List<int>();
+			List<KingdomMaterialDebitCost> materialClaims = new List<KingdomMaterialDebitCost>();
+			for (int i = 0; i < Survey.Objects.Count; i++)
 			{
+				GameObject item = Survey.Objects[i];
 				r_KingdomPlanMarker marker = item.GetPart<r_KingdomPlanMarker>();
 				if (marker == null || string.IsNullOrEmpty(marker.DesignKey))
 				{
@@ -147,15 +152,28 @@ namespace ThousandAndFirst
 				{
 					continue;
 				}
+				if (!KingdomPlots.TryPlanPrice(item, entry,
+					out int waterPrice, out KingdomMaterialDebitCost materialClaim))
+				{
+					// A current frozen receipt which cannot name its exact price is a real blocker,
+					// not an affordability miss. Announce it through the same once-only path before
+					// leaving the plan untouched; malformed plans must never fail silently.
+					KingdomPlots.PlanBlocked(System, item, entry);
+					continue;
+				}
 				markers.Add(item);
 				entries.Add(entry);
-				pending.Add(new KingdomPendingPlan(marker.PlacedTick, marker.PlacedOrder, entry.CostDrams, entry.Defence > 0));
+				waterPrices.Add(waterPrice);
+				materialClaims.Add(materialClaim);
+				pending.Add(new KingdomPendingPlan(marker.PlacedTick, marker.PlacedOrder,
+					waterPrice, KingdomRules.IsFrontierWork(entry.Defence,
+						KingdomPlots.IsPlotDesign(entry.Key))));
 			}
 			if (pending.Count == 0)
 			{
 				return;
 			}
-			int built = CountBuilt(Z);
+			int built = CountBuilt(Survey);
 			int cap = KingdomRules.MaxBuildingsForStage(System.Stage);
 			foreach (int index in KingdomPlanRules.PlansToRealize(pending, Survey.StoredWater, built, cap))
 			{
@@ -173,17 +191,17 @@ namespace ThousandAndFirst
 				{
 					continue;
 				}
-				string materialRefusal;
-				if (!KingdomMaterials.CanPay(Z, entry.Key, out materialRefusal))
+				if (!KingdomZoning.Permits(System, Z.ZoneID, entry, out _))
 				{
 					continue;
 				}
-				KingdomWaterDebit water = Survey.ReserveExactWater(entry.CostDrams);
-				KingdomMaterialDebit materials = KingdomMaterials.ReservePayment(Z, entry.Key);
-				KingdomMaterialDebitCost claim = new KingdomMaterialDebitCost(
-					KingdomMaterials.CostFor(entry.Key), KingdomMaterials.BitCostFor(entry.Key),
-					KingdomMaterials.ExoticCostFor(entry.Key));
-				KingdomConstructionRoute route = KingdomPlots.IsPlotDesign(entry.Key)
+				string materialRefusal;
+				if (!KingdomMaterials.AllowsInfrastructure(Z, entry.Key, out materialRefusal))
+				{
+					continue;
+				}
+				bool frozenPlot = markerObject.HasIntProperty(KingdomPlots.PlanSchemaProperty);
+				KingdomConstructionRoute route = frozenPlot || KingdomPlots.IsPlotDesign(entry.Key)
 					? KingdomConstructionRoute.PlotPlan : KingdomConstructionRoute.PlanScaffold;
 				string payload = markerObject.GetStringProperty(KingdomDesign.PlannedSkinProperty);
 				long duration = KingdomCommission.CraftBuildTicks(entry.BuildTicks,
@@ -192,16 +210,28 @@ namespace ThousandAndFirst
 				{
 					KingdomPlotRules.PlotRect plannedRect;
 					if (!KingdomPlots.TryPreparePlan(System, markerObject, entry,
-						out plannedRect, out payload, out duration))
+						out plannedRect, out payload, out duration,
+						out int mainX, out int mainY))
 					{
 						continue;
 					}
-					cell = Z.GetCell(plannedRect.CenterX, plannedRect.CenterY);
+					cell = Z.GetCell(mainX, mainY);
+					if (cell == null) continue;
 				}
+				int waterPrice = waterPrices[index];
+				KingdomMaterialDebitCost claim = materialClaims[index];
 				long due = The.Game.TimeTicks + duration;
 				KingdomConstructionJob job = KingdomConstruction.NewJob(System, Z, route, cell,
 					markerObject, entry.Key, payload,
-					entry.CostDrams, claim, The.Game.TimeTicks, due);
+					waterPrice, claim, The.Game.TimeTicks, due);
+				bool hasPlot = route == KingdomConstructionRoute.PlotPlan;
+				if (!KingdomConstruction.FreezeBuildTruth(job, System, entry.Defence, hasPlot))
+				{
+					KingdomLog.Log("construction: plan build effects could not be frozen");
+					continue;
+				}
+				KingdomWaterDebit water = Survey.ReserveExactWater(waterPrice);
+				KingdomMaterialDebit materials = KingdomMaterials.ReserveComposite(Z, claim);
 				KingdomConstructionStartResult funding = KingdomConstruction.TryFundNew(job,
 					water, materials, out job, out string fundingFailure);
 				if (funding == KingdomConstructionStartResult.Refused)
@@ -225,21 +255,9 @@ namespace ThousandAndFirst
 		/// and a founder-issued commission must compete for one shared allowance rather than each
 		/// getting their own.
 		/// </summary>
-		private static int CountBuilt(Zone Z)
+		private static int CountBuilt(KingdomSurvey Survey)
 		{
-			int built = 0;
-			foreach (GameObject item in Z.GetObjects())
-			{
-				if (item.GetIntProperty("KingdomDefence") > 0 || item.GetIntProperty(KingdomPlots.PlotPartProperty) == 1)
-				{
-					continue;
-				}
-				if (item.GetIntProperty("KingdomBuilt") == 1 || item.HasPart("r_KingdomScaffold") || item.HasPart("r_KingdomPlotWorks"))
-				{
-					built++;
-				}
-			}
-			return built;
+			return Survey == null ? 0 : KingdomPlots.CountBuilt(Survey.Objects);
 		}
 
 		/// <summary>
@@ -259,7 +277,9 @@ namespace ThousandAndFirst
 			{
 				r_KingdomPlanMarker plotMarker = GameObject.Validate(MarkerObject)
 					? MarkerObject.GetPart<r_KingdomPlanMarker>() : null;
-				if (Entry == null || cell == null || !KingdomPlots.IsPlotDesign(Entry.Key)
+				if (!KingdomConstructionRules.TryReadBuildTruth(Job,
+						out bool hasPlot, out bool frontier, out _)
+					|| !hasPlot || frontier || Entry == null || cell == null
 					|| !KingdomConstruction.Owns(System, zone, Job)
 					|| MarkerObject.ID != (Job.SourceId ?? Job.SubjectId) || plotMarker == null
 					|| plotMarker.DesignKey != Entry.Key || !KingdomConstruction.IsCurrent(Job))
@@ -292,6 +312,12 @@ namespace ThousandAndFirst
 			{
 				KingdomConstruction.Quarantine(ref Updated,
 					"The paid plan marker no longer matches its exact recorded ground and design.");
+				return false;
+			}
+			if (!KingdomConstructionRules.TryReadBuildTruth(Job, out _, out _, out _))
+			{
+				KingdomConstruction.Quarantine(ref Updated,
+					"The unprojected legacy plan predates frozen build effects.");
 				return false;
 			}
 			if (!KingdomConstruction.BeginProjection(ref Updated, out _))
@@ -327,7 +353,7 @@ namespace ThousandAndFirst
 				|| !KingdomConstruction.IsCurrent(Updated)
 				|| !IsExactPlanMarker(MarkerObject, zone, expected, Updated, Entry, true))
 			{
-				RemoveCreated(scaffold);
+				RemoveCreated(scaffold, zone);
 				KingdomConstruction.Quarantine(ref Updated,
 					"Plan authority or predecessor changed during scaffold creation.");
 				return false;
@@ -335,13 +361,20 @@ namespace ThousandAndFirst
 			// Read off the marker before it is taken down: the look the founder chose when they
 			// staked the plan rides on the marker exactly as it rides on a scaffold.
 			scaffold.SetStringProperty(KingdomUpgrade.BuildKeyProperty, Entry.Key);
+			if (!KingdomConstruction.ApplyBuildTruth(scaffold, Updated))
+			{
+				RemoveCreated(scaffold, zone);
+				KingdomConstruction.Quarantine(ref Updated,
+					"The paid plan has no exact frozen build effects.");
+				return false;
+			}
 			KingdomDesign.StageSkin(scaffold, Entry, MarkerObject.GetStringProperty(KingdomDesign.PlannedSkinProperty));
 			KingdomCeremony.TransferPlanQuote(MarkerObject, scaffold);
 			KingdomConstruction.Bind(scaffold, Updated);
 			r_KingdomScaffold part = scaffold.GetPart<r_KingdomScaffold>();
 			if (part == null)
 			{
-				bool removed = RemoveCreated(scaffold);
+				bool removed = RemoveCreated(scaffold, zone);
 				if (removed)
 					KingdomConstruction.FinishProjection(ref Updated, false, false,
 						"The plan's scaffold carries no raising capability.");
@@ -357,20 +390,9 @@ namespace ThousandAndFirst
 				part.CompleteTick = Updated.DueTick;
 				part.StaffNeeded = Entry.Staff;
 				part.ThresholdManning = KingdomRules.IsThresholdManning(Entry.Manning);
-				if (Entry.Defence > 0)
-				{
-					// The founder need not be standing at this exact cell for a plan to resolve
-					// (only in the same active zone), but the skill the wall math reads is the
-					// founder's own, not a property of where they are standing -- so it is read
-					// exactly as KingdomCommission.Commission reads it.
-					bool hasTinkering = The.Player != null && The.Player.HasSkill("Tinkering");
-					bool hasAdvancedTinkering = The.Player != null && The.Player.HasSkill("Tinkering_Tinker1");
-					int defence = KingdomRules.WallDefence(Entry.Defence, System.FoundingTerrainBlueprint, System.FoundingRegionName, hasTinkering, hasAdvancedTinkering);
-					scaffold.SetIntProperty("KingdomDefencePending", defence);
-				}
 				if (!KingdomConstruction.UpdateOutput(ref Updated, scaffold.ID))
 				{
-					bool removed = RemoveCreated(scaffold);
+					bool removed = RemoveCreated(scaffold, zone);
 					KingdomConstruction.Quarantine(ref Updated, removed
 						? "The plan scaffold identity conflicted before AddObject."
 						: "The plan scaffold identity conflicted and exact cleanup failed.");
@@ -381,10 +403,11 @@ namespace ThousandAndFirst
 			try
 			{
 				accepted = cell.AddObject(scaffold);
+				KingdomSurvey.ObserveAddResultInActive(zone, scaffold, accepted);
 			}
 			catch (System.Exception ex)
 			{
-				bool removed = RemoveCreated(scaffold);
+				bool removed = RemoveCreated(scaffold, zone);
 				KingdomConstruction.Quarantine(ref Updated, (removed
 					? "The plan scaffold threw after its identity was published: "
 					: "The plan scaffold threw and could not be removed exactly: ") + ex.Message);
@@ -404,7 +427,7 @@ namespace ThousandAndFirst
 				|| !KingdomConstruction.IsCurrent(Updated)
 				|| !IsExactPlanMarker(MarkerObject, zone, expected, Updated, Entry, true))
 			{
-				bool removed = RemoveCreated(scaffold);
+				bool removed = RemoveCreated(scaffold, zone);
 				KingdomConstruction.Quarantine(ref Updated, removed
 					? "The published plan scaffold changed during AddObject."
 					: "The published plan scaffold changed and could not be removed exactly.");
@@ -418,10 +441,13 @@ namespace ThousandAndFirst
 			}
 			catch (System.Exception ex)
 			{
+				KingdomSurvey.ObserveCurrentTopologyInActive(zone, MarkerObject);
 				KingdomConstruction.Quarantine(ref Updated,
 					"Plan-marker removal threw after scaffold placement: " + ex.Message);
 				return false;
 			}
+			if (markerRemoved && !GameObject.Validate(MarkerObject))
+				KingdomSurvey.ObserveRemovedFromActive(zone, MarkerObject);
 			if (KingdomConstructionRules.ExactRemovalAction(true, markerRemoved,
 				GameObject.Validate(MarkerObject), KingdomConstruction.FindExactId(
 					zone, markerId, out _) != KingdomPhysicalLookupState.Absent, true)
@@ -455,9 +481,10 @@ namespace ThousandAndFirst
 				return false;
 			}
 			if (!KingdomConstruction.FinishProjection(ref Updated, true, true)) return false;
-			KingdomChronicle.Record(System, XRL.Language.Grammar.A(Entry.Name) + " began to rise at " + System.KingdomDisplayName + ", true to the plan staked there");
-			System.Ledger.Note("{{G|The plan staked at " + System.KingdomDisplayName + " is under way: the " + Entry.Name + " rises.}}");
-			MessageQueue.AddPlayerMessage("{{G|The plan staked at " + System.KingdomDisplayName + " is under way. The " + Entry.Name + " rises.}}");
+			string realm = KingdomPresentation.Rich(System.KingdomDisplayName);
+			KingdomChronicle.Record(System, XRL.Language.Grammar.A(Entry.Name) + " began to rise at " + realm + ", true to the plan staked there");
+			System.Ledger.Note("{{G|The plan staked at " + realm + " is under way: the " + Entry.Name + " rises.}}");
+			MessageQueue.AddPlayerMessage("{{G|The plan staked at " + realm + " is under way. The " + Entry.Name + " rises.}}");
 			return true;
 		}
 
@@ -514,10 +541,13 @@ namespace ThousandAndFirst
 					}
 					catch (System.Exception ex)
 					{
+						KingdomSurvey.ObserveCurrentTopologyInActive(Z, marker);
 						KingdomConstruction.Quarantine(ref complete,
 							"Plan-marker retry threw during removal: " + ex.Message);
 						return;
 					}
+					if (removed && !GameObject.Validate(marker))
+						KingdomSurvey.ObserveRemovedFromActive(Z, marker);
 					if (KingdomConstructionRules.ExactRemovalAction(true, removed,
 						GameObject.Validate(marker), KingdomConstruction.FindExactId(
 							Z, markerId, out _) != KingdomPhysicalLookupState.Absent, true)
@@ -757,7 +787,10 @@ namespace ThousandAndFirst
 				|| Scaffold.GetStringProperty(KingdomUpgrade.BuildKeyProperty) != Entry.Key
 				|| !KingdomConstruction.HasReceipt(Scaffold, Job)) return false;
 			r_KingdomScaffold scaffold = Scaffold.GetPart<r_KingdomScaffold>();
-			return scaffold != null && scaffold.TargetBlueprint == Entry.Blueprint;
+			return scaffold != null && scaffold.TargetBlueprint == Entry.Blueprint
+				&& (KingdomConstruction.BuildTruthMatches(Scaffold, Job)
+					|| KingdomConstruction.LegacyProjectedBuildTruthMatches(
+						Scaffold, Job, false));
 		}
 
 		private static GameObject FindPlanScaffold(Zone Z, KingdomConstructionJob Job,
@@ -771,11 +804,7 @@ namespace ThousandAndFirst
 			int count = 0;
 			foreach (GameObject item in cell.GetObjects())
 			{
-				r_KingdomScaffold scaffold = item.GetPart<r_KingdomScaffold>();
-				if (scaffold != null && item.CurrentCell == cell
-					&& scaffold.TargetBlueprint == Entry.Blueprint
-					&& item.GetStringProperty(KingdomUpgrade.BuildKeyProperty) == Entry.Key
-					&& KingdomConstruction.HasReceipt(item, Job))
+				if (IsExactPlanScaffold(item, Z, cell, Job, Entry))
 				{
 					count++;
 					if (found == null) found = item;
@@ -789,7 +818,7 @@ namespace ThousandAndFirst
 				&& ReferenceEquals(global, exact) ? exact : null;
 		}
 
-		private static bool RemoveCreated(GameObject Object)
+		private static bool RemoveCreated(GameObject Object, Zone Z)
 		{
 			try
 			{
@@ -799,6 +828,10 @@ namespace ThousandAndFirst
 			catch
 			{
 				return false;
+			}
+			finally
+			{
+				KingdomSurvey.ObserveCurrentTopologyInActive(Z, Object);
 			}
 		}
 
@@ -811,10 +844,7 @@ namespace ThousandAndFirst
 			int count = 0;
 			foreach (GameObject item in cell.GetObjects())
 			{
-				r_KingdomScaffold scaffold = item.GetPart<r_KingdomScaffold>();
-				if (scaffold != null && scaffold.TargetBlueprint == Entry.Blueprint
-					&& item.GetStringProperty(KingdomUpgrade.BuildKeyProperty) == Entry.Key
-						&& KingdomConstruction.HasReceipt(item, Job))
+				if (IsExactPlanScaffold(item, Z, cell, Job, Entry))
 					{
 						if (item.ID != Job.OutputId && item.ID != Job.SubjectId) return 2;
 						count++;
@@ -831,7 +861,7 @@ namespace ThousandAndFirst
 			{
 				return found;
 			}
-			foreach (GameObject item in Z.GetObjects())
+			foreach (GameObject item in KingdomSurvey.ObjectsFor(Z))
 			{
 				if (item.HasPart("r_KingdomPlanMarker"))
 				{
@@ -871,7 +901,10 @@ namespace ThousandAndFirst
 		/// </summary>
 		public static void Cancel(GameObject Marker)
 		{
-			Marker?.Destroy(null, Silent: true);
+			Zone zone = Marker?.CurrentZone;
+			bool removed = Marker != null && Marker.Destroy(null, Silent: true);
+			if (removed && !GameObject.Validate(Marker))
+				KingdomSurvey.ObserveRemovedFromActive(zone, Marker);
 		}
 	}
 }

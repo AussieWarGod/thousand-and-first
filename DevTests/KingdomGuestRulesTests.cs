@@ -127,6 +127,42 @@ namespace ThousandAndFirst.Tests
 			Assert.AreEqual(expected, KingdomGuestRules.AssessLodging(hasTier, hasRoom));
 		}
 
+		[TestCase(false, KingdomPlotRules.PlotSize.None, false, 0,
+			KingdomGuestRules.LodgingVerdict.NoFineHouse)]
+		[TestCase(true, KingdomPlotRules.PlotSize.Small, true, 7,
+			KingdomGuestRules.LodgingVerdict.NoTier)]
+		[TestCase(true, KingdomPlotRules.PlotSize.Medium, false, 7,
+			KingdomGuestRules.LodgingVerdict.FineHouseOccupied)]
+		[TestCase(true, KingdomPlotRules.PlotSize.Medium, true, 2,
+			KingdomGuestRules.LodgingVerdict.ShopTooCrude)]
+		[TestCase(true, KingdomPlotRules.PlotSize.Medium, true, 3,
+			KingdomGuestRules.LodgingVerdict.Lodged)]
+		public void LegendaryTraderRequiresEveryLuxuryLaneClause(bool hasFineHouse,
+			KingdomPlotRules.PlotSize tier, bool vacant, int shopTier,
+			KingdomGuestRules.LodgingVerdict expected)
+		{
+			Assert.AreEqual(expected, KingdomGuestRules.AssessLegendaryTraderLodging(
+				hasFineHouse, tier, vacant, shopTier));
+		}
+
+		[TestCase(KingdomGuestRules.LodgingVerdict.NoFineHouse, "fine house")]
+		[TestCase(KingdomGuestRules.LodgingVerdict.FineHouseOccupied, "vacant")]
+		[TestCase(KingdomGuestRules.LodgingVerdict.ShopTooCrude, "tier 3")]
+		public void LegendaryTraderRefusalNamesActionableMissingClause(
+			KingdomGuestRules.LodgingVerdict verdict, string phrase)
+		{
+			StringAssert.Contains(phrase, KingdomGuestRules.LegendaryTraderRefusal(verdict));
+		}
+
+		[Test]
+		public void LegendaryTraderIsANamedShopRoleNotAHookAlias()
+		{
+			Assert.AreEqual("legendary trader", KingdomGuestRules.SettledTradeNoun(
+				KingdomGuestRules.HookKind.Ruin, LegendaryTrader: true));
+			Assert.AreEqual("scavenger", KingdomGuestRules.SettledTradeNoun(
+				KingdomGuestRules.HookKind.Ruin, LegendaryTrader: false));
+		}
+
 		[Test]
 		public void NoTierRefusal_NamesTheRequiredTierWord()
 		{
@@ -138,6 +174,26 @@ namespace ThousandAndFirst.Tests
 		public void NoRoomRefusal_IsNeverEmpty()
 		{
 			Assert.IsFalse(string.IsNullOrEmpty(KingdomGuestRules.NoRoomRefusal()));
+		}
+
+		[Test]
+		public void ProductionLegendaryTraderUsesExactFineHouseHomeAndLiveShop()
+		{
+			string runtime = TestMain.ReadRepositoryText("Experience/KingdomGuestbook.cs");
+			StringAssert.Contains("KingdomUpgrade.DesignKeyOf(item), \"finehouse\"", runtime);
+			StringAssert.Contains("KingdomLodging.ResidentsOf(Z, item).Count != 0", runtime);
+			StringAssert.Contains("KingdomLodging.HomePlotIdProperty", runtime);
+			StringAssert.Contains("system.HasShopkeeper ? system.ShopTier : 0", runtime);
+			StringAssert.Contains("Trader.SetIntProperty(\"VillageMerchant\", 1)", runtime);
+			StringAssert.Contains("op.PlunderRequested", runtime);
+			StringAssert.Contains("LodgeReceiptProperty", runtime);
+
+			string blueprints = TestMain.ReadRepositoryText("ObjectBlueprints.xml");
+			StringAssert.Contains("Name=\"r_KingdomNotableGuestTrader\" Inherits=\"DromadTrader1\"",
+				blueprints);
+			StringAssert.Contains("Name=\"r_TAF_LegendaryTrader\"", blueprints);
+			string populations = TestMain.ReadRepositoryText("PopulationTables.xml");
+			StringAssert.Contains("Blueprint=\"r_KingdomNotableGuestTrader\"", populations);
 		}
 
 		// ---- Prose: names the guest and the settlement, distinct by outcome ----

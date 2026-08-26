@@ -1,4 +1,5 @@
 ﻿#if TAF_TESTS
+using System;
 using NUnit.Framework;
 using ThousandAndFirst;
 
@@ -6,6 +7,27 @@ namespace ThousandAndFirst.Tests
 {
 	public class KingdomPowerRulesTests
 	{
+		[Test]
+		public void ChargingPost_KeepsItsLoadBearingStoreSafeAndItsIdleStateHonest()
+		{
+			string xml = TestMain.ReadRepositoryText("ObjectBlueprints.xml");
+			int start = xml.IndexOf("<object Name=\"r_KingdomChargingPost\"", StringComparison.Ordinal);
+			Assert.GreaterOrEqual(start, 0);
+			int end = xml.IndexOf("</object>", start, StringComparison.Ordinal);
+			Assert.Greater(end, start);
+			string post = xml.Substring(start, end - start);
+			StringAssert.Contains(
+				"<part Name=\"Capacitor\" MaxCharge=\"4000\" ChargeRate=\"0\" MinimumChargeToExplode=\"0\" />",
+				post, "the hand-cranked charger needs storage, but civic furniture must not become a bomb");
+			StringAssert.Contains("<part Name=\"UniversalCharger\" ChargeRate=\"150\" />", post);
+			Assert.IsFalse(post.Contains("AnimatedMaterialElectric"),
+				"vanilla's electric animation flashes even while this hand-cranked post is empty");
+
+			string growth = TestMain.ReadRepositoryText("Growth/KingdomGrowth.cs");
+			StringAssert.Contains("if (work.GetIntProperty(\"KingdomHandCranked\") == 1)", growth);
+			StringAssert.Contains("capacitor.Charge = target;", growth);
+		}
+
 		// --- RatedChargePerDay: each kind of work is worth its own day's labour ---------------
 
 		[TestCase(KingdomPowerRules.PowerSource.Hands, KingdomPowerRules.MillChargePerDay)]

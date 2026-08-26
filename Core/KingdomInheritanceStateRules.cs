@@ -42,6 +42,29 @@ namespace ThousandAndFirst
 		SameGameRollback = 2
 	}
 
+	/// <summary>Pure durable-slot rule for load recovery deferred by the realm master switch.
+	/// One successful load replaces the slot; only an allowed later wake consumes it.</summary>
+	internal static class KingdomInheritanceResumeRules
+	{
+		internal static bool TryConsume(bool Pending, int LoadKindValue,
+			string SourceFailure, bool AutomaticWorkAllowed,
+			out KingdomInheritanceLoadKind LoadKind, out string Failure)
+		{
+			LoadKind = KingdomInheritanceLoadKind.Unknown;
+			Failure = SourceFailure ?? "";
+			if (!Pending || !AutomaticWorkAllowed) return false;
+			if (Enum.IsDefined(typeof(KingdomInheritanceLoadKind), LoadKindValue))
+			{
+				LoadKind = (KingdomInheritanceLoadKind)LoadKindValue;
+			}
+			else
+			{
+				Failure = "the saved deferred inheritance load kind was invalid";
+			}
+			return true;
+		}
+	}
+
 	/// <summary>Serialization-only projection. Runtime cleanup authority is valid only if this
 	/// entire shape validates as one canonical state.</summary>
 	internal sealed class KingdomInheritanceSavedShape

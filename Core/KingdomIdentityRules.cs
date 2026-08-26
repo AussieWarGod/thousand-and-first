@@ -67,6 +67,21 @@ namespace ThousandAndFirst
 			return IsHashedId(Value, SettlementPrefix);
 		}
 
+		/// <summary>
+		/// Proves the engine faction key carried by a first-founding receipt. Current receipts use
+		/// the realm id itself: a namespaced immutable key derived only from the transaction. The
+		/// display-name equality is admitted solely for interrupted pre-contract receipts and old
+		/// saves, whose registered faction key can never be renamed or removed safely.
+		/// </summary>
+		public static bool FirstFactionKeyMatches(string FactionKey, string TransactionId,
+			string LegacyDisplayName, bool AllowLegacy)
+		{
+			if (TryMintRealm(TransactionId, out string expected, out KingdomIdentityFault fault) &&
+				string.Equals(FactionKey, expected, StringComparison.Ordinal)) return true;
+			return AllowLegacy && !string.IsNullOrEmpty(LegacyDisplayName) &&
+				string.Equals(FactionKey, LegacyDisplayName, StringComparison.Ordinal);
+		}
+
 		public static bool IsFoundingTransaction(string Value)
 		{
 			if (Value == null || Value.Length != NonceChars) return false;

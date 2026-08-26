@@ -61,16 +61,16 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void RowCountIsTheLiveRTheReceiptChecksAgainst()
 		{
-			// LIVING-CITY-ARCHITECTURE §0.0(a): 4 zone rows + 40 work rows + 60 resident rows + 12
-			// clocks = 116. The told-log is not in R -- a told line is what an integration left
+			// Live bound: 4 zone rows + 880 work rows + 60 resident rows + 12
+			// clocks = 956. The told-log is not in R -- a told line is what an integration left
 			// behind, never a row that proposes or integrates.
-			KingdomCityState state = Build(4, 40, 60, 12);
-			Assert.AreEqual(116, state.RowCount);
+			KingdomCityState state = Build(4, KingdomCityState.MaxWorks, 60, 12);
+			Assert.AreEqual(956, state.RowCount);
 			Assert.AreEqual(0, state.ToldCount);
 		}
 
 		[TestCase(5, 0, 0, 0)]
-		[TestCase(0, 41, 0, 0)]
+		[TestCase(0, 881, 0, 0)]
 		[TestCase(0, 0, 61, 0)]
 		[TestCase(0, 0, 0, 13)]
 		public void EveryDimensionIsCappedAndAnOverflowPublishesNothing(int zones, int works, int residents, int clocks)

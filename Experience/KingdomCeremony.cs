@@ -1,9 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using XRL;
 using XRL.Messages;
 using XRL.UI;
 using XRL.World;
 using XRL.World.Parts;
+using ThousandAndFirst.Simulation.City;
 
 namespace ThousandAndFirst
 {
@@ -102,9 +104,10 @@ namespace ThousandAndFirst
 		// ==================================================================================
 
 		/// <summary>
-		/// Closes construction: while attended, gathers whichever settlers are standing in the
-		/// zone, names a shared ceremonial cup without debiting stores, and chronicles who was there; while unattended,
-		/// leaves a plainer chronicle line and a homecoming note instead. Replaces the deed and
+		/// Closes construction: while attended, freezes exact already-bound builders, walks them by
+		/// vanilla pathing to the functional first basin, and lets the durable construction outbox
+		/// name only those whose Ready receipt proves arrival. While unattended, it touches no body
+		/// or fixture and leaves a plainer dated chronicle line and homecoming note instead. Replaces the deed and
 		/// chronicle a completion used to write directly, and is called from <b>both</b> paths
 		/// that raise a building &mdash; <c>r_KingdomScaffold.Complete</c> for a single-cell
 		/// design and <c>KingdomPlots.Finish</c> for a plot one &mdash; because a house is not a
@@ -126,30 +129,34 @@ namespace ThousandAndFirst
 			}
 			KingdomSystem.Guard("ceremony: raising", delegate
 			{
-				System.RecordDeed("the " + DisplayName + " raised at " + System.KingdomDisplayName);
+				System.RecordDeed("the " + DisplayName + " raised at " + KingdomPresentation.Rich(System.KingdomDisplayName));
 				if (!Enabled)
 				{
-					KingdomChronicle.Record(System, "the " + DisplayName + " was raised at " + System.KingdomDisplayName);
+					KingdomChronicle.Record(System, "the " + DisplayName + " was raised at " + KingdomPresentation.Rich(System.KingdomDisplayName));
 					MessageQueue.AddPlayerMessage("{{G|The " + DisplayName + " is complete.}}");
 					return;
 				}
 				Zone zone = (Cell != null) ? Cell.ParentZone : null;
-				bool attended = KingdomCeremonyRules.IsAttended(CompleteTick, CurrentTicks());
-				if (attended)
-				{
-					List<string> present = NearbyCitizenNames(zone);
-					// The shared cup is ceremony flavour, not a hidden post-completion price.
-					// Construction has already reached its durable Complete boundary here.
-					KingdomChronicle.Record(System, KingdomCeremonyRules.RaisingAttendedChronicle(DisplayName, System.SeatName, present, PlanQuote));
-					MessageQueue.AddPlayerMessage(KingdomCeremonyRules.RaisingAttendedMessage(DisplayName, present));
-				}
-				else
-				{
-					KingdomChronicle.Record(System, KingdomCeremonyRules.RaisingUnattendedChronicle(DisplayName, System.SeatName, PlanQuote));
-					System.Ledger.Note(KingdomCeremonyRules.RaisingLedgerNote(DisplayName));
-					MessageQueue.AddPlayerMessage("{{G|The " + DisplayName + " is complete.}}");
-				}
-				KingdomLog.Log("ceremony: raised " + DisplayName + " attended=" + attended);
+				bool window = KingdomCeremonyRules.IsAttended(CompleteTick, CurrentTicks());
+				Zone physicalZone = window ? zone : null;
+				string unattended = KingdomCeremonyRules.RaisingUnattendedChronicle(DisplayName,
+					KingdomPresentation.Rich(System.SeatName), PlanQuote);
+				long safe = CompleteTick > 0L ? CompleteTick : CurrentTicks();
+				string dated = "a dated report for the " + Calendar.GetDay(safe) + " of "
+					+ Calendar.GetMonth(safe) + ", " + Calendar.GetYear(safe)
+					+ " AR said that " + unattended;
+				// Legacy completions lack a construction outbox, but not physical truth. The
+				// generic lifecycle freezes exact attendees and owns one RecordOnce chronicle.
+				KingdomPhysicalQueueResult result = KingdomPhysicalHappenings.QueueGeneric(System,
+					System.City, KingdomPhysicalHappeningKind.Raising, safe,
+					KingdomCityRules.StableId(DisplayName + ":" + safe), 0, 0, physicalZone, null,
+					KingdomCeremonyRules.RaisingAttendedChronicle(DisplayName, KingdomPresentation.Rich(System.SeatName),
+						new List<string>(), PlanQuote), dated, "",
+					KingdomCeremonyRules.RaisingLedgerNote(DisplayName),
+					"{{G|The " + DisplayName + " is complete.}}", "", "", DisplayName,
+					CurrentTicks());
+				KingdomLog.Log("ceremony: legacy raised " + DisplayName + " physical="
+					+ (result == KingdomPhysicalQueueResult.AttendedReady));
 			});
 		}
 
@@ -176,11 +183,21 @@ namespace ThousandAndFirst
 			if (Job.Outbox == null)
 			{
 				bool enabled = Enabled;
-				bool attended = enabled && KingdomCeremonyRules.IsAttended(CompleteTick,
+				bool attendedWindow = enabled && KingdomCeremonyRules.IsAttended(CompleteTick,
 					CurrentTicks());
-				List<string> present = attended
-					? NearbyCitizenNames(Cell == null ? null : Cell.ParentZone)
-					: new List<string>();
+				bool attended = false;
+				List<string> present = new List<string>();
+				if (attendedWindow)
+				{
+					KingdomPhysicalQueueResult physical = KingdomPhysicalHappenings.QueueRaising(
+						System, System.City, Job.Id, CompleteTick,
+						Cell == null ? null : Cell.ParentZone, DisplayName, PlanQuote,
+						CurrentTicks(), out string ignoredEventId, out string[] physicalNames);
+					if (physical == KingdomPhysicalQueueResult.Pending) return false;
+					if (physical == KingdomPhysicalQueueResult.Refused) return false;
+					attended = physical == KingdomPhysicalQueueResult.AttendedReady;
+					if (attended) present.AddRange(physicalNames);
+				}
 				string chronicle;
 				string ledger = null;
 				string message;
@@ -189,21 +206,24 @@ namespace ThousandAndFirst
 				{
 					mode = 1;
 					chronicle = "the " + DisplayName + " was raised at "
-						+ System.KingdomDisplayName;
+						+ KingdomPresentation.Rich(System.KingdomDisplayName);
 					message = "{{G|The " + DisplayName + " is complete.}}";
 				}
 				else if (attended)
 				{
-					mode = 2;
+					// Mode 4 appends physical-attendance authority to legacy modes 1-3. It prevents
+					// generic outbox recovery from publishing an attended raising without exact
+					// Ready proof in the city sidecar.
+					mode = 4;
 					chronicle = KingdomCeremonyRules.RaisingAttendedChronicle(DisplayName,
-						System.SeatName, present, PlanQuote);
+						KingdomPresentation.Rich(System.SeatName), present, PlanQuote);
 					message = KingdomCeremonyRules.RaisingAttendedMessage(DisplayName, present);
 				}
 				else
 				{
 					mode = 3;
 					chronicle = KingdomCeremonyRules.RaisingUnattendedChronicle(DisplayName,
-						System.SeatName, PlanQuote);
+						KingdomPresentation.Rich(System.SeatName), PlanQuote);
 					ledger = KingdomCeremonyRules.RaisingLedgerNote(DisplayName);
 					message = "{{G|The " + DisplayName + " is complete.}}";
 				}
@@ -219,7 +239,7 @@ namespace ThousandAndFirst
 						: KingdomConstructionSinkDisposition.Pending,
 					Message = message,
 					MessageState = KingdomConstructionSinkDisposition.Pending,
-					Deed = "the " + DisplayName + " raised at " + System.KingdomDisplayName,
+					Deed = "the " + DisplayName + " raised at " + KingdomPresentation.Rich(System.KingdomDisplayName),
 					DeedState = KingdomConstructionSinkDisposition.Pending
 				};
 				if (!KingdomConstruction.UpdateOutbox(ref Job, box)) return false;
@@ -230,14 +250,31 @@ namespace ThousandAndFirst
 					"The construction telling carries another event identity.");
 				return false;
 			}
+			if (Job.Outbox.Mode == 4)
+			{
+				if (!Dispatch(System, ref Job)) return false;
+				if (KingdomPhysicalHappenings.TryReadyRaising(System.City, Job.Id,
+					CurrentTicks(), out string physicalEventId, out string[] ignoredNames))
+					return KingdomPhysicalHappenings.AcknowledgeRaising(System, System.City,
+						physicalEventId, CurrentTicks());
+				return KingdomPhysicalHappenings.ReconcileSettledRaising(System, System.City,
+					Job.Id, CurrentTicks());
+			}
 			return Dispatch(System, ref Job);
 		}
 
 		/// <summary>Resumes a published terminal outbox without recomputing option or content.</summary>
 		public static bool DispatchPending(KingdomSystem System, ref KingdomConstructionJob Job)
 		{
-			return System != null && Job != null && Job.Outbox != null
-				&& Dispatch(System, ref Job);
+			if (System == null || Job == null || Job.Outbox == null) return false;
+			if (Job.Outbox.Mode != 4) return Dispatch(System, ref Job);
+			if (!Dispatch(System, ref Job)) return false;
+			if (KingdomPhysicalHappenings.TryReadyRaising(System.City, Job.Id,
+				CurrentTicks(), out string eventId, out string[] ignoredNames))
+				return KingdomPhysicalHappenings.AcknowledgeRaising(System, System.City, eventId,
+					CurrentTicks());
+			return KingdomPhysicalHappenings.ReconcileSettledRaising(System, System.City,
+				Job.Id, CurrentTicks());
 		}
 
 		public static bool EnsureRoadPaved(KingdomSystem System, int Cells,
@@ -245,9 +282,9 @@ namespace ThousandAndFirst
 		{
 			if (System == null || Cells <= 0) return false;
 			return EnsureRouteOutbox(System, "paved",
-				KingdomRoadRules.PavedRecord(Cells, Material, System.KingdomDisplayName), null,
-				KingdomRoadRules.PavedLine(Cells, Material, System.SeatName),
-				"the paving of the ways at " + System.SeatName, ref Job);
+				KingdomRoadRules.PavedRecord(Cells, Material, KingdomPresentation.Rich(System.KingdomDisplayName)), null,
+				KingdomRoadRules.PavedLine(Cells, Material, KingdomPresentation.Rich(System.SeatName)),
+				"the paving of the ways at " + KingdomPresentation.Rich(System.SeatName), ref Job);
 		}
 
 		public static bool EnsureRoadPavedFromReceipt(KingdomSystem System,
@@ -320,7 +357,7 @@ namespace ThousandAndFirst
 			if (System == null || string.IsNullOrEmpty(DisplayName)
 				|| string.IsNullOrEmpty(SkinKey)) return false;
 			return EnsureRouteOutbox(System, "redressed",
-				"the " + DisplayName + " at " + System.KingdomDisplayName
+				"the " + DisplayName + " at " + KingdomPresentation.Rich(System.KingdomDisplayName)
 					+ " was given a new coat, dressed as " + SkinKey,
 				null, "{{G|The " + DisplayName + " is re-dressed.}}", null, ref Job);
 		}
@@ -331,7 +368,7 @@ namespace ThousandAndFirst
 			if (System == null || string.IsNullOrEmpty(DisplayName)
 				|| string.IsNullOrEmpty(SkinKey)) return false;
 			return PublishRouteOutbox(System, "redressed",
-				"the " + DisplayName + " at " + System.KingdomDisplayName
+				"the " + DisplayName + " at " + KingdomPresentation.Rich(System.KingdomDisplayName)
 					+ " was given a new coat, dressed as " + SkinKey,
 				null, "{{G|The " + DisplayName + " is re-dressed.}}", null, ref Job);
 		}
@@ -341,7 +378,7 @@ namespace ThousandAndFirst
 		{
 			if (System == null || string.IsNullOrEmpty(DisplayName)) return false;
 			return PublishRouteOutbox(System, "socket-staked",
-				"the cleared ground at " + System.KingdomDisplayName + " was staked again for "
+				"the cleared ground at " + KingdomPresentation.Rich(System.KingdomDisplayName) + " was staked again for "
 					+ XRL.Language.Grammar.A(DisplayName), null,
 				"{{G|The cleared plot is staked for " + XRL.Language.Grammar.A(DisplayName) + ".}}",
 				null, ref Job) && Dispatch(System, ref Job);
@@ -499,35 +536,6 @@ namespace ThousandAndFirst
 			return KingdomConstructionRules.OutboxSettled(Job.Outbox);
 		}
 
-		/// <summary>Up to three named settlers standing in Z, for the raising ceremony's roll
-		/// call. Not distance-scoped &mdash; the same zone-wide scope every other attended pass
-		/// in this mod already uses (<c>KingdomOffices</c>, <c>KingdomLocus</c>).</summary>
-		private static List<string> NearbyCitizenNames(Zone Z)
-		{
-			List<string> names = new List<string>();
-			if (Z == null)
-			{
-				return names;
-			}
-			foreach (GameObject item in Z.GetObjects())
-			{
-				if (names.Count >= 3)
-				{
-					break;
-				}
-				if (item.GetIntProperty("KingdomBorn") != 1)
-				{
-					continue;
-				}
-				string name = item.GetStringProperty("KingdomName");
-				if (!string.IsNullOrEmpty(name))
-				{
-					names.Add(name);
-				}
-			}
-			return names;
-		}
-
 		// ==================================================================================
 		// Notable tastes and leader traits
 		// ==================================================================================
@@ -567,12 +575,15 @@ namespace ThousandAndFirst
 				int virtueIndex;
 				int flawIndex;
 				KingdomCeremonyRules.ChooseLeaderTraits(settlementId, ordinal, out virtueIndex, out flawIndex);
-				KingdomChronicle.Record(System, KingdomCeremonyRules.LeaderTraitChronicle(Title, HolderName, System.SeatName, virtueIndex, flawIndex));
+				string shownHolder = KingdomPresentation.Rich(HolderName);
+				KingdomChronicle.Record(System, KingdomCeremonyRules.LeaderTraitChronicle(
+					Title, shownHolder, KingdomPresentation.Rich(System.SeatName), virtueIndex,
+					flawIndex));
 				KingdomLog.Log("ceremony: leader traits " + HolderName + " virtue=" + virtueIndex + " flaw=" + flawIndex);
 
 				List<int> tastes = KingdomCeremonyRules.ChooseTastes(settlementId, ordinal);
 				List<bool> met = KingdomCeremonyRules.TastesMet(tastes, TasteOfferIn(Z));
-				string tasteLine = KingdomCeremonyRules.TasteChronicle(HolderName, tastes, met);
+				string tasteLine = KingdomCeremonyRules.TasteChronicle(shownHolder, tastes, met);
 				KingdomChronicle.Record(System, tasteLine);
 				MessageQueue.AddPlayerMessage("{{W|" + XRL.Language.Grammar.InitCap(tasteLine) + ".}}");
 				// Addendum 4 routes a resident's met Prefers through this same machinery rather than
@@ -605,7 +616,8 @@ namespace ThousandAndFirst
 				return KingdomQolRules.NoTags;
 			}
 			List<string> offer = new List<string>();
-			foreach (GameObject item in Z.GetObjects())
+			KingdomSurvey survey = KingdomSurvey.ActiveFor(Z) ?? KingdomSurvey.Take(Z);
+			foreach (GameObject item in survey.Built)
 			{
 				if (item.GetIntProperty("KingdomBuilt") != 1)
 				{
@@ -635,87 +647,58 @@ namespace ThousandAndFirst
 		// ==================================================================================
 
 		/// <summary>
-		/// Offers the founder a choice of one foreign design out of up to three, if this
-		/// caravan's arrival happens to carry one. Call once per zone-activation pass that
-		/// delivered under an active trade charter, after the deal loop. A no-op whenever there
-		/// is no undiscovered pattern-book design to offer, so it never costs anything to check.
+		/// Freezes the optional offer into its owning CharterDelivery before that operation mutates
+		/// resources. Only the seated city's stored keeper roster participates; catalogue rows are
+		/// copied now, so reload and later catalogue drift cannot reroll labels or keys.
 		/// </summary>
-		/// <param name="System">The realm.</param>
-		/// <param name="Z">The activated zone, for nothing but the popup's context; the offer
-		/// itself is realm-wide.</param>
-		public static void OnCaravanArrived(KingdomSystem System, Zone Z)
+		public static KingdomTradePatternReceipt FreezePatternBook(KingdomSystem System,
+			string SettlementId, long OperationSequence)
 		{
-			if (!Enabled || System == null || !System.Founded)
+			List<KingdomTradePatternDesign> frozen = new List<KingdomTradePatternDesign>();
+			if (Enabled && System != null && System.Founded
+				&& System.City != null && string.Equals(System.City.SettlementId,
+					SettlementId, StringComparison.Ordinal))
 			{
-				return;
-			}
-			KingdomSystem.Guard("ceremony: pattern-book", delegate
-			{
-				List<KingdomCeremonyRules.BuildingKnowledge> knowledge = new List<KingdomCeremonyRules.BuildingKnowledge>();
+				List<KingdomCeremonyRules.BuildingKnowledge> knowledge =
+					new List<KingdomCeremonyRules.BuildingKnowledge>();
 				foreach (KingdomRules.BuildEntry entry in KingdomData.Buildings)
 				{
 					knowledge.Add(new KingdomCeremonyRules.BuildingKnowledge
 					{
 						Key = entry.Key,
-						Knowledge = KingdomZoning.GateFor(entry.Key).Knowledge
+						Knowledge = KingdomZoning.GateFor(entry.Key).Knowledge,
+						Label = entry.Name
 					});
 				}
-				List<KingdomCeremonyRules.ForeignDesign> candidates = KingdomCeremonyRules.ForeignDesigns(knowledge, KingdomZoning.Roster(System));
-				if (candidates.Count == 0)
+				List<string> stored = KingdomZoningRules.DecodeRoster(System.KeepersRoster);
+				List<KingdomCeremonyRules.ForeignDesign> candidates =
+					KingdomCeremonyRules.ForeignDesigns(knowledge, stored);
+				for (int i = 0; i < candidates.Count; i++)
 				{
-					return;
-				}
-				string settlementId = KingdomChronicle.SettlementId(System);
-				if (!KingdomIdentityRules.IsSettlementId(settlementId)) return;
-				ulong ordinal = CurrentOrdinal();
-				if (!KingdomCeremonyRules.ShouldOfferPattern(settlementId, ordinal))
-				{
-					return;
-				}
-				List<KingdomCeremonyRules.ForeignDesign> remaining = new List<KingdomCeremonyRules.ForeignDesign>(candidates);
-				List<KingdomCeremonyRules.ForeignDesign> offer = new List<KingdomCeremonyRules.ForeignDesign>();
-				for (int step = 0; step < 3 && remaining.Count > 0; step++)
-				{
-					int index = KingdomCeremonyRules.PickPatternIndex(settlementId, ordinal, step, remaining.Count);
-					if (index < 0 || index >= remaining.Count)
+					KingdomCeremonyRules.ForeignDesign candidate = candidates[i];
+					frozen.Add(new KingdomTradePatternDesign
 					{
-						index = 0;
-					}
-					offer.Add(remaining[index]);
-					remaining.RemoveAt(index);
+						BuildingKey = candidate.BuildingKey,
+						LearnName = candidate.LearnName,
+						Label = string.IsNullOrEmpty(candidate.Label)
+							? candidate.LearnName : candidate.Label
+					});
 				}
-				if (offer.Count == 0)
-				{
-					return;
-				}
-				string[] options = new string[offer.Count];
-				for (int i = 0; i < offer.Count; i++)
-				{
-					options[i] = "{{W|" + PatternLabel(offer[i]) + "}} {{K|(a foreign pattern)}}";
-				}
-				int pick = Popup.PickOption(Title: "A pattern-book, offered", Intro: "A caravan's driver spreads three foreign patterns and offers the settlement its pick of one. Nothing carried is spent, and the settlement's own catalogue loses nothing either way.", Options: options, AllowEscape: true);
-				if (pick < 0 || pick >= offer.Count)
-				{
-					return;
-				}
-				string label = PatternLabel(offer[pick]);
-				if (KingdomZoning.Learn(System, KingdomCeremonyRules.PatternKnowledgeKind, offer[pick].LearnName))
-				{
-					KingdomChronicle.Record(System, "the keepers of " + System.KingdomDisplayName + " learned " + XRL.Language.Grammar.A(label) + " from a caravan's pattern-book");
-					MessageQueue.AddPlayerMessage("{{G|The pattern for " + label + " is learned.}}");
-					KingdomLog.Log("ceremony: pattern learned " + offer[pick].LearnName + " for " + System.KingdomFactionName);
-				}
-			});
+			}
+			return KingdomTradePatternRules.Freeze(SettlementId, OperationSequence, frozen);
 		}
 
-		private static string PatternLabel(KingdomCeremonyRules.ForeignDesign Design)
+		/// <summary>One UI callback over the already-frozen operation-owned offer.</summary>
+		public static int PickPatternBook(KingdomTradePatternReceipt Receipt)
 		{
-			KingdomRules.BuildEntry entry;
-			if (Design != null && KingdomData.TryGetBuilding(Design.BuildingKey, out entry))
-			{
-				return entry.Name;
-			}
-			return (Design != null) ? Design.LearnName : "a pattern";
+			if (Receipt?.Offers == null || Receipt.Offers.Count == 0) return -1;
+			string[] options = new string[Receipt.Offers.Count];
+			for (int i = 0; i < Receipt.Offers.Count; i++)
+				options[i] = "{{W|" + Receipt.Offers[i].Label
+					+ "}} {{K|(a foreign pattern)}}";
+			return Popup.PickOption(Title: "A pattern-book, offered",
+				Intro: "A caravan's driver spreads up to three foreign patterns and offers this settlement its pick of one. Nothing carried is spent, and the settlement's own catalogue loses nothing either way.",
+				Options: options, AllowEscape: true);
 		}
 
 		private static ulong CurrentOrdinal()

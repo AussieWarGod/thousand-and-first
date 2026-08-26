@@ -162,24 +162,21 @@ namespace ThousandAndFirst.Tests
 		}
 
 		/// <summary>
-		/// §0.0's own row: the heartbeat amortises to about five row-visits a turn per city, and it
-		/// warns at ten. A cadence that made the amortised figure cross its own warn rung would be
+		/// The heartbeat amortises the full live row envelope without crossing its own warn rung. A
+		/// cadence that made the amortised figure cross that rung would be
 		/// a design shipping inside its own warning, which W0 already refused once.
 		/// </summary>
 		[Test]
 		public void TheAmortisedSliceStaysUnderItsOwnWarnRung()
 		{
-			// R for the City as the rules cap it today: 4 zones + 40 works + 60 residents + 12 clocks.
-			const int Rows = 4 + 40 + 60 + 12;
-			long perSlice = 2L * Rows;
+			int rows = KingdomCityState.MaxZones + KingdomCityState.MaxWorks
+				+ KingdomCityState.MaxResidents + KingdomCityState.MaxClocks;
+			long perSlice = 2L * rows;
 			long perTurn = perSlice / KingdomBudgetRules.HeartbeatCadenceTicks;
-			// §3.6 quotes "≈ 5 row-visits per turn per city"; the exact integer at today's caps is
-			// 232/50 = 4, and the point of the figure is the rung it sits under rather than the
-			// rounding it was written with.
-			Assert.AreEqual(4L, perTurn);
-			Assert.IsTrue(perTurn <= 5L);
+			Assert.AreEqual(38L, perTurn);
+			Assert.LessOrEqual(perTurn, 40L);
 			Assert.AreEqual(KingdomBudgetVerdict.Within, KingdomBudgetRules.JudgeCount(KingdomBudgetLane.HeartbeatAmortised, perTurn));
-			Assert.AreEqual(KingdomBudgetVerdict.Over, KingdomBudgetRules.JudgeCount(KingdomBudgetLane.HeartbeatAmortised, 21L));
+			Assert.AreEqual(KingdomBudgetVerdict.Over, KingdomBudgetRules.JudgeCount(KingdomBudgetLane.HeartbeatAmortised, 81L));
 		}
 	}
 }

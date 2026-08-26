@@ -193,6 +193,16 @@ namespace ThousandAndFirst.Tests
 			Assert.AreEqual(0, spec.Shades.Count);
 		}
 
+		[Test]
+		public void GoodsAreInsteadOfEquilibriumSupportNotAlongsideIt()
+		{
+			Assert.IsFalse(KingdomYardRules.TryParseYardWorkAttributes("double",
+				"double work", "bp", "double dealing", "food:1", "yes",
+				out var spec, out var error));
+			Assert.IsNull(spec);
+			StringAssert.Contains("both Goods and Shades", error);
+		}
+
 		// --- Prose: nothing stalls in silence -----------------------------------------------
 
 		[Test]

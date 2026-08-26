@@ -338,9 +338,15 @@ namespace ThousandAndFirst
 			}
 			int days = KingdomBrinkRules.DaysStood(Record.ReachedTick, NowTick);
 			int left = KingdomBrinkRules.DaysLeft(Kind, Record.WarnedTick, NowTick);
+			// Subjects are semantic resident/settlement names. Creed causes are already the
+			// engine's formatted faction display name; city causes are semantic names too.
+			string shownSubject = KingdomPresentation.Rich(Subject);
+			string shownCause = Kind == BrinkKind.City
+				? KingdomPresentation.Rich(Cause)
+				: Cause;
 			KingdomWord.Warn(System, From, Here,
-				KingdomBrinkRules.AnnounceNote(Kind, Subject, Cause, days, left),
-				KingdomBrinkRules.AnnounceTelling(Kind, Subject, Cause, days),
+				KingdomBrinkRules.AnnounceNote(Kind, shownSubject, shownCause, days, left),
+				KingdomBrinkRules.AnnounceTelling(Kind, shownSubject, shownCause, days),
 				Spoken);
 			KingdomLog.Log("brink: " + Kind + " " + (Subject ?? "-") + " cause=" + (Cause ?? "-")
 				+ " days=" + days + " left=" + left);
@@ -353,7 +359,8 @@ namespace ThousandAndFirst
 		/// </summary>
 		public static void Unsay(KingdomSystem System, BrinkKind Kind, string Subject, bool Here, string From)
 		{
-			KingdomWord.Unsay(System, From, Here, KingdomBrinkRules.LiftedNote(Kind, Subject));
+			KingdomWord.Unsay(System, From, Here,
+				KingdomBrinkRules.LiftedNote(Kind, KingdomPresentation.Rich(Subject)));
 		}
 
 		// --- Where the record is kept --------------------------------------------------------

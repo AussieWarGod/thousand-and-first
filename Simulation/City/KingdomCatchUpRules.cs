@@ -162,9 +162,13 @@ namespace ThousandAndFirst.Simulation.City
 		/// <summary>LIVING-CITY-ARCHITECTURE §0.0(b): eight units a turn.</summary>
 		internal const int BudgetThirdsPerTurn = KingdomBudgetRules.ReifyUnitsPerTurn * ThirdsPerUnit;
 
-		/// <summary>LIVING-CITY-ARCHITECTURE §0.0(b): the largest backlog one zone can owe —
-		/// works + residents + a capped item tail + up to 300 light objects.</summary>
-		internal const int WorstBacklogUnits = 232;
+		/// <summary>
+		/// LIVING-CITY-ARCHITECTURE §0.0(b): one legal City zone can hold 220 commissioned
+		/// root containers plus 24 water and eight food vessels dedicated before them, and sixty
+		/// resident bodies. Derived from live rails, not the retired forty-work envelope.
+		/// </summary>
+		internal static readonly int WorstBacklogUnits =
+			KingdomRules.MaxCivicContainersPerZone + KingdomRules.MaxPopulation;
 
 		/// <summary>LIVING-CITY-ARCHITECTURE §0.1 / §0.0(b): the grace window vanilla keeps a
 		/// departed zone live for. The worst backlog must drain inside it.</summary>
@@ -239,8 +243,8 @@ namespace ThousandAndFirst.Simulation.City
 
 		/// <summary>
 		/// Turns to drain a weighted backlog at the per-turn budget. LIVING-CITY-ARCHITECTURE
-		/// &sect;0.0(b): 232 weighted units is 29 turns, still inside the 40 turns vanilla keeps a
-		/// departed zone live.
+		/// &sect;0.0(b): the live 312-unit envelope is 39 turns, still inside the 40 turns vanilla
+		/// keeps a departed zone live.
 		/// </summary>
 		internal static bool TryTurnsToDrain(int owedThirds, out int turns, out KingdomCityFault fault)
 		{

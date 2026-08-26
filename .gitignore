@@ -3,6 +3,7 @@ DevTests/obj/
 Tools/PortableOutput/
 DevTests/out/
 DevTests/build-generated.rsp
+.nuget/
 *.dll
 # _notes/ is scratch by default, but the research corpus and the ruling record are
 # load-bearing engineering artifacts and stay tracked (author, 2026-08-21).
@@ -20,11 +21,16 @@ _notes/*
 !_notes/RESEARCH-SITING-AND-SECESSION.md
 !_notes/SUCCESSION-RESEARCH.md
 !_notes/QUESTION-BACKLOG.md
+!_notes/README.md
 !_notes/QUEST-HANDLING-RESEARCH.md
 !_notes/LAB-CLASS-AUDIT.md
 !_notes/DECISIONS.md
 !_notes/INHERITANCE-SEAMS.md
 !_notes/SESSION-HANDOFF.md
+!_notes/ARCHITECTURE-POLISH-CONTRACT.md
+!_notes/BRIEF-IMPLEMENTATION-AUDIT.md
+!_notes/CONTRACT-RUNTIME-RECONCILIATION-2026-08-25.md
+!_notes/V1-POLITY-SCOPE.md
 !_notes/balance-sim.py
 !_notes/balance-sim-output.txt
 Tools/last-deploy-receipt.txt

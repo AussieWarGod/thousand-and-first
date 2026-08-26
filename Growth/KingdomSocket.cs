@@ -136,7 +136,13 @@ namespace ThousandAndFirst
 					&& Job.Route != KingdomConstructionRoute.SocketConvert)
 				|| !KingdomData.TryGetBuilding(Job.TargetKey, out var entry)
 				|| !KingdomPlots.TryGetSpec(Job.TargetKey, out var spec)
-				|| !KingdomPlots.TryDecodePlotPayload(Job.Payload, out var rect, out var skinKey))
+				|| !KingdomPlots.TryDecodePlotPayload(Job.Payload, out var rect, out var skinKey,
+					out KingdomArchitectureIntent architecture, out bool legacyArchitecture,
+					out _)
+				|| (!legacyArchitecture && (architecture == null
+					|| architecture.BuildKey != Job.TargetKey
+					|| Job.X != architecture.MainWorldX || Job.Y != architecture.MainWorldY))
+				|| (legacyArchitecture && (Job.X != rect.CenterX || Job.Y != rect.CenterY)))
 			{
 				return;
 			}
@@ -202,8 +208,14 @@ namespace ThousandAndFirst
 			{
 				// The strike crossed its completion boundary before a reload. Never order it again:
 				// that could salvage the same predecessor twice. Resume only the paid rebuild.
-				SweepPlotParts(Z, rect,
-					predecessor.GetStringProperty(KingdomPlots.PlotIdProperty));
+				if (!TrySweepLegacyPlotParts(Z, rect,
+					predecessor.GetStringProperty(KingdomPlots.PlotIdProperty), predecessor))
+				{
+					KingdomConstructionJob unsafeLegacy = Job;
+					KingdomConstruction.Quarantine(ref unsafeLegacy,
+						"Legacy plot-part sweep found current authored or protected state.");
+					return;
+				}
 				GameObject resumedWorks;
 				KingdomConstructionJob resumed;
 				if (KingdomPlots.ProjectOnRect(System, Z, rect, entry, spec, skinKey, Job,
@@ -332,7 +344,8 @@ namespace ThousandAndFirst
 				&& GameObject.Validate(predecessor) && predecessor.CurrentZone == Z
 				&& predecessor.GetIntProperty(KingdomMaterials.StrikeEffortProperty) > 0
 				&& string.IsNullOrEmpty(predecessor.GetStringProperty(PendingConvertKeyProperty))
-				&& KingdomPlots.TryDecodePlotPayload(Job.Payload, out _, out var interruptedSkin))
+				&& KingdomPlots.TryDecodePlotPayload(Job.Payload, out _, out var interruptedSkin,
+					out _, out _, out _))
 			{
 				// OrderStrike was accepted; only the idempotent target stamps were interrupted.
 				predecessor.SetStringProperty(PendingConvertKeyProperty, Job.TargetKey);
@@ -379,17 +392,36 @@ namespace ThousandAndFirst
 			KingdomConstructionJob Job, bool Final, out GameObject Result)
 		{
 			Result = null;
+			if (Z == null || Job == null || !KingdomPlots.TryDecodePlotPayload(Job.Payload,
+				out KingdomPlotRules.PlotRect rect, out _,
+				out KingdomArchitectureIntent architecture, out bool legacyArchitecture, out _)
+				|| (!legacyArchitecture && (architecture == null
+					|| architecture.BuildKey != Job.TargetKey
+					|| Job.X != architecture.MainWorldX || Job.Y != architecture.MainWorldY))
+				|| (legacyArchitecture && (Job.X != rect.CenterX || Job.Y != rect.CenterY)))
+				return KingdomPhysicalLookupState.Ambiguous;
 			KingdomPhysicalLookupState state = KingdomConstruction.FindExactId(
 				Z, Job?.OutputId, out var candidate);
 			if (state != KingdomPhysicalLookupState.Exact) return state;
-			if (candidate.CurrentZone != Z || candidate.CurrentCell != Z.GetCell(Job.X, Job.Y)
-				|| !KingdomConstruction.HasReceipt(candidate, Job))
+			Cell expected = Z.GetCell(Job.X, Job.Y);
+			if (candidate.CurrentZone != Z || candidate.CurrentCell != expected
+				|| !KingdomConstruction.HasReceipt(candidate, Job)
+				|| !KingdomPlots.ExpectedArchitectureReceipt(candidate, expected, Job.TargetKey,
+					architecture, legacyArchitecture))
 				return KingdomPhysicalLookupState.Ambiguous;
 			if (Final)
 			{
-				if (candidate.GetIntProperty("KingdomBuilt") != 1
-					|| candidate.GetStringProperty(KingdomUpgrade.BuildKeyProperty)
-						!= Job.TargetKey) return KingdomPhysicalLookupState.Ambiguous;
+				if (candidate.GetIntProperty("KingdomBuilt") != 1)
+				{
+					// OutputId names works until the final root is published. Valid works are
+					// absence of a final, not a malformed final, so callers can inspect works next.
+					r_KingdomPlotWorks works = candidate.GetPart<r_KingdomPlotWorks>();
+					return works != null && works.DesignKey == Job.TargetKey
+						? KingdomPhysicalLookupState.Absent
+						: KingdomPhysicalLookupState.Ambiguous;
+				}
+				if (candidate.GetStringProperty(KingdomUpgrade.BuildKeyProperty)
+					!= Job.TargetKey) return KingdomPhysicalLookupState.Ambiguous;
 			}
 			else
 			{
@@ -408,7 +440,13 @@ namespace ThousandAndFirst
 				|| Job.Route != KingdomConstructionRoute.SocketBuild
 				|| !KingdomData.TryGetBuilding(Job.TargetKey, out var entry)
 				|| !KingdomPlots.TryGetSpec(Job.TargetKey, out var spec)
-				|| !KingdomPlots.TryDecodePlotPayload(Job.Payload, out var rect, out var skinKey)
+				|| !KingdomPlots.TryDecodePlotPayload(Job.Payload, out var rect, out var skinKey,
+					out KingdomArchitectureIntent architecture, out bool legacyArchitecture,
+					out _)
+				|| (!legacyArchitecture && (architecture == null
+					|| architecture.BuildKey != Job.TargetKey
+					|| Job.X != architecture.MainWorldX || Job.Y != architecture.MainWorldY))
+				|| (legacyArchitecture && (Job.X != rect.CenterX || Job.Y != rect.CenterY))
 				|| string.IsNullOrEmpty(Job.SourceId)) return;
 
 			KingdomConstructionJob current = Job;
@@ -452,10 +490,13 @@ namespace ThousandAndFirst
 				try { removed = source.Obliterate(null, Silent: true); }
 				catch (System.Exception ex)
 				{
+					KingdomSurvey.ObserveCurrentTopologyInActive(Z, source);
 					KingdomConstruction.Quarantine(ref current,
 						"Socket-build predecessor removal threw: " + ex.Message);
 					return;
 				}
+				if (removed || !GameObject.Validate(source))
+					KingdomSurvey.ObserveRemovedFromActive(Z, source);
 				sourceState = KingdomConstruction.FindExactId(Z, current.SourceId, out var replacement);
 				if (!removed || GameObject.Validate(source)
 					|| sourceState != KingdomPhysicalLookupState.Absent
@@ -593,7 +634,14 @@ namespace ThousandAndFirst
 			{
 				if (!KingdomConstruction.BeginProjection(ref Updated, out _)) return false;
 				Cell oldCell = Predecessor.CurrentCell;
-				bool removed = Predecessor.Obliterate(null, Silent: true);
+				bool removed;
+				try { removed = Predecessor.Obliterate(null, Silent: true); }
+				finally
+				{
+					KingdomSurvey.ObserveCurrentTopologyInActive(Result.CurrentZone, Predecessor);
+				}
+				if (removed || !GameObject.Validate(Predecessor))
+					KingdomSurvey.ObserveRemovedFromActive(Result.CurrentZone, Predecessor);
 				if (!removed || GameObject.Validate(Predecessor))
 				{
 					if (GameObject.Validate(Predecessor) && Predecessor.CurrentCell == oldCell)
@@ -662,6 +710,25 @@ namespace ThousandAndFirst
 			public KingdomRules.BuildEntry NewEntry;
 			public KingdomPlotRules.PlotSpec NewSpec;
 			public KingdomPlotRules.PlotRect Rect;
+			public KingdomPlotRules.PlotRect TargetRect;
+			public KingdomPlotRules.PlotSize ActualSize;
+			public KingdomSocketRules.ChangeKind Kind;
+			public KingdomSocketTransition Transition;
+		}
+
+		/// <summary>Read-only production receipt shared by conversion preview and commit.</summary>
+		private sealed class PreparedConvert
+		{
+			public string BuildingId;
+			public string SkinKey;
+			public ConvertContext Context;
+			public KingdomSocketRules.ConversionQuote Quote;
+			public KingdomArchitectureIntent Architecture;
+			public string Payload;
+			public KingdomUpgrade.Assessment Improvement;
+			public KingdomUpgrade.PreparedImprovement PreparedImprovement;
+			public ArchitectureLayoutDelta Delta;
+			public bool RequiresRestakePreflight;
 		}
 
 		/// <summary>
@@ -732,6 +799,12 @@ namespace ThousandAndFirst
 				Failure = KingdomSocketRules.RefuseNotAPlot(Building.ShortDisplayName);
 				return false;
 			}
+			if (!KingdomSocketRules.TryActualSize(rect.Width, rect.Height,
+				out KingdomPlotRules.PlotSize actualSize))
+			{
+				Failure = "The standing plot rectangle has no recognized actual size.";
+				return false;
+			}
 			if (oldKey == NewKey)
 			{
 				Failure = KingdomSocketRules.RefuseAlreadyThat(Building.ShortDisplayName);
@@ -752,9 +825,14 @@ namespace ThousandAndFirst
 				Failure = "The " + newEntry.Name + " is not built in this city's own style.";
 				return false;
 			}
+			Failure = KingdomCommission.StageRefusal(System, newEntry);
+			if (Failure != null)
+			{
+				return false;
+			}
 			if (!KingdomPlotRules.Allows(System.Stage, newSpec.Size))
 			{
-				Failure = KingdomPlotRules.RefuseStage(newSpec.Size, System.SeatName, System.Stage);
+				Failure = KingdomPlotRules.RefuseStage(newSpec.Size, KingdomPresentation.Rich(System.SeatName), System.Stage);
 				return false;
 			}
 			if (!KingdomPlotRules.TryDimensions(newSpec.Size, out int needWidth, out int needHeight))
@@ -762,10 +840,54 @@ namespace ThousandAndFirst
 				Failure = "No such design.";
 				return false;
 			}
-			if (!KingdomSocketRules.FootprintFits(rect.Width, rect.Height, needWidth, needHeight))
+			KingdomSocketRules.ChangeKind kind = KingdomSocketRules.FitsSameSet(
+				oldEntry.Category, actualSize, newEntry.Category, newSpec.Size)
+				? KingdomSocketRules.ChangeKind.SameSet
+				: KingdomSocketRules.ChangeKind.Retype;
+			KingdomSocketTransition transition = null;
+			KingdomPlotRules.PlotRect targetRect = rect;
+			if (kind == KingdomSocketRules.ChangeKind.SameSet)
 			{
-				Failure = KingdomSocketRules.RefuseTooSmall(newEntry.Name, rect.Width, rect.Height, needWidth, needHeight);
-				return false;
+				if (!KingdomWear.CanCarryStableState(Building, out Failure)) return false;
+				KingdomArchitectureIntent standing;
+				if (!KingdomArchitectureRuntime.TryRead(Building, out standing, out _)
+					|| !KingdomArchitectureRules.IsCurrentSnapshotEncoding(
+						standing.EncodedSnapshot))
+				{
+					Failure = "That save-era plot has no exact authored transition delta. Strike it and commission fresh.";
+					return false;
+				}
+				if (!KingdomSocketTransitions.TryGet(oldKey, NewKey, standing.LotType,
+					standing.LotSize, out transition))
+				{
+					Failure = KingdomSocketTransitionRules.RefuseUndeclared(oldEntry.Name,
+						newEntry.Name);
+					return false;
+				}
+			}
+			else
+			{
+				List<KingdomPlotRules.PlotRect> remaining = KingdomPlots.ReadPlots(Z);
+				for (int i = remaining.Count - 1; i >= 0; i--)
+				{
+					KingdomPlotRules.PlotRect laid = remaining[i];
+					if (laid.X1 == rect.X1 && laid.Y1 == rect.Y1
+						&& laid.X2 == rect.X2 && laid.Y2 == rect.Y2)
+					{
+						remaining.RemoveAt(i);
+						break;
+					}
+				}
+				if (KingdomPlotRules.WouldExceedBudget(remaining, newSpec.Size,
+					Z.Width, Z.Height))
+				{
+					Failure = KingdomPlotRules.RefuseBudget(KingdomPresentation.Rich(System.SeatName));
+					return false;
+				}
+				KingdomLayoutRules.LayoutOutcome outcome;
+				if (!KingdomPlots.TryFindRect(Z, System, newEntry, newSpec,
+					new KingdomPlots.GroundGrid(Z), null, out targetRect, out outcome, out Failure))
+					return false;
 			}
 			// The way down before the weather: a conversion is still a building raised, and rock
 			// whose shaft was struck since this plot went up will not take another one.
@@ -789,6 +911,10 @@ namespace ThousandAndFirst
 			Context.NewEntry = newEntry;
 			Context.NewSpec = newSpec;
 			Context.Rect = rect;
+			Context.TargetRect = targetRect;
+			Context.ActualSize = actualSize;
+			Context.Kind = kind;
+			Context.Transition = transition;
 			return true;
 		}
 
@@ -808,10 +934,81 @@ namespace ThousandAndFirst
 			{
 				return false;
 			}
-			Kind = KingdomSocketRules.ClassifyChange(context.OldEntry.Category, context.OldSpec.Size, context.NewEntry.Category, context.NewSpec.Size);
-			Quote = KingdomSocketRules.AssessConversion(
-				KingdomMaterials.CostFor(context.OldEntry.Key), context.OldEntry.CostDrams,
-				KingdomMaterials.CostFor(context.NewEntry.Key), context.NewEntry.CostDrams);
+			Kind = context.Kind;
+			Quote = Kind == KingdomSocketRules.ChangeKind.SameSet
+				? KingdomSocketRules.AssessPlanChange(context.Transition)
+				: KingdomSocketRules.AssessConversion(
+					KingdomMaterials.CostFor(context.OldEntry.Key), context.OldEntry.CostDrams,
+					KingdomMaterials.CostFor(context.NewEntry.Key), context.NewEntry.CostDrams);
+			return true;
+		}
+
+		/// <summary>
+		/// Resolves and preflights the exact production target before consent. No debit, strike,
+		/// marker, or receipt is created here.
+		/// </summary>
+		private static bool TryPrepareConvert(KingdomSystem System, Zone Z, GameObject Building,
+			string NewKey, string NewSkinKey, out PreparedConvert Prepared, out string Failure)
+		{
+			Prepared = null;
+			if (!Validate(System, Z, Building, NewKey, out ConvertContext context, out Failure))
+				return false;
+			KingdomSocketRules.ConversionQuote quote = context.Kind
+				== KingdomSocketRules.ChangeKind.SameSet
+				? KingdomSocketRules.AssessPlanChange(context.Transition)
+				: KingdomSocketRules.AssessConversion(
+					KingdomMaterials.CostFor(context.OldEntry.Key), context.OldEntry.CostDrams,
+					KingdomMaterials.CostFor(context.NewEntry.Key), context.NewEntry.CostDrams);
+			PreparedConvert prepared = new PreparedConvert
+			{
+				BuildingId = Building.ID, SkinKey = NewSkinKey, Context = context, Quote = quote
+			};
+			if (context.Kind == KingdomSocketRules.ChangeKind.SameSet)
+			{
+				if (!KingdomUpgrade.TryPreparePlanChange(System, Z, Building, context.NewEntry,
+					context.Transition, out prepared.Improvement,
+					out prepared.PreparedImprovement, out Failure)) return false;
+				prepared.Architecture = prepared.PreparedImprovement.Architecture;
+				prepared.Payload = prepared.PreparedImprovement.Payload;
+				prepared.Delta = prepared.PreparedImprovement.Delta;
+			}
+			else
+			{
+				KingdomMaterialDebitCost claim = new KingdomMaterialDebitCost(
+					KingdomMaterials.CostFor(context.NewEntry.Key),
+					KingdomMaterials.BitCostFor(context.NewEntry.Key),
+					KingdomMaterials.ExoticCostFor(context.NewEntry.Key));
+				bool architectureMarker = Building.HasIntProperty(
+					KingdomArchitectureRuntime.SchemaProperty)
+					|| Building.HasStringProperty(KingdomArchitectureRuntime.SchemaProperty);
+				if (architectureMarker)
+				{
+					KingdomArchitectureIntent standing;
+					ArchitectureLayoutSnapshot standingSnapshot;
+					string standingLot;
+					if (!KingdomArchitectureStamper.TryReadOwner(Building, out standing,
+						out standingSnapshot, out standingLot, out Failure)) return false;
+					if (KingdomArchitectureRules.IsCurrentSnapshotEncoding(
+						standing.EncodedSnapshot))
+					{
+						prepared.RequiresRestakePreflight = true;
+						if (!KingdomArchitectureRuntime.TryPrepare(System, Z, context.TargetRect,
+							context.NewEntry.Key, context.NewEntry.Category,
+							out prepared.Architecture, out Failure)
+							|| !KingdomArchitectureStamper.TryPreflightRestake(System, Z, Building,
+								prepared.Architecture, claim, out Failure)
+							|| !KingdomPlots.TryEncodePlotPayload(context.TargetRect, NewSkinKey,
+								prepared.Architecture, out prepared.Payload, out Failure)) return false;
+					}
+					else if (!KingdomPlots.TryPreparePlotPayload(System, Z, context.TargetRect,
+						context.NewEntry.Key, context.NewEntry.Category, NewSkinKey,
+						out prepared.Architecture, out prepared.Payload, out Failure)) return false;
+				}
+				else if (!KingdomPlots.TryPreparePlotPayload(System, Z, context.TargetRect,
+					context.NewEntry.Key, context.NewEntry.Category, NewSkinKey,
+					out prepared.Architecture, out prepared.Payload, out Failure)) return false;
+			}
+			Prepared = prepared;
 			return true;
 		}
 
@@ -827,8 +1024,57 @@ namespace ThousandAndFirst
 		/// </summary>
 		public static bool ExecuteConvert(KingdomSystem System, Zone Z, GameObject Building, string NewKey, string NewSkinKey, out string Failure)
 		{
-			if (!Validate(System, Z, Building, NewKey, out ConvertContext context, out Failure))
+			if (!TryPrepareConvert(System, Z, Building, NewKey, NewSkinKey,
+				out PreparedConvert prepared, out Failure)) return false;
+			return ExecutePreparedConvert(System, Z, Building, prepared, out Failure);
+		}
+
+		private static bool ExecutePreparedConvert(KingdomSystem System, Zone Z,
+			GameObject Building, PreparedConvert Prepared, out string Failure)
+		{
+			Failure = null;
+			if (Prepared == null || !GameObject.Validate(Building)
+				|| Building.ID != Prepared.BuildingId
+				|| !Validate(System, Z, Building, Prepared.Context.NewEntry.Key,
+					out ConvertContext live, out Failure)
+				|| live.Kind != Prepared.Context.Kind
+				|| live.OldEntry.Key != Prepared.Context.OldEntry.Key
+				|| live.NewEntry.Key != Prepared.Context.NewEntry.Key)
 			{
+				if (Failure == null) Failure = "The previewed conversion is no longer current.";
+				return false;
+			}
+			ConvertContext context = Prepared.Context;
+			if (context.Kind == KingdomSocketRules.ChangeKind.SameSet)
+			{
+				string currentName = KingdomDesign.ReferenceFor(Building, Building.ShortDisplayName);
+				if (!KingdomUpgrade.BeginPreparedPlanChange(System, Z, Building,
+					Prepared.Improvement, Prepared.PreparedImprovement, out Failure)) return false;
+				KingdomGovernanceScope.Commit("change plot plan");
+				KingdomChronicle.Record(System, "the founder ordered the " + currentName + " of "
+					+ KingdomPresentation.Rich(System.KingdomDisplayName) + " changed in place into "
+					+ XRL.Language.Grammar.A(context.NewEntry.Name));
+				System.Ledger.Note("{{G|The " + currentName + " keeps its exact lot while its declared plan change is worked.}}");
+				MessageQueue.AddPlayerMessage("{{G|The " + currentName + " is ordered changed in place into "
+					+ XRL.Language.Grammar.A(context.NewEntry.Name) + ".}}");
+				KingdomLog.Log("socket: declared plan change ordered " + context.OldEntry.Key
+					+ " -> " + context.NewEntry.Key + " at " + System.SeatName);
+				return true;
+			}
+			KingdomMaterialDebitCost claim = new KingdomMaterialDebitCost(
+				KingdomMaterials.CostFor(context.NewEntry.Key),
+				KingdomMaterials.BitCostFor(context.NewEntry.Key),
+				KingdomMaterials.ExoticCostFor(context.NewEntry.Key));
+			KingdomArchitectureIntent architecture = Prepared.Architecture;
+			string payload = Prepared.Payload;
+			if (architecture == null || string.IsNullOrEmpty(payload)
+				|| (Prepared.RequiresRestakePreflight
+					&& !KingdomArchitectureStamper.TryPreflightRestake(System, Z, Building,
+						architecture, claim, out Failure))) return false;
+			Cell mainCell = Z.GetCell(architecture.MainWorldX, architecture.MainWorldY);
+			if (mainCell == null || KingdomConstruction.HasActiveAt(System, Z, mainCell))
+			{
+				Failure = "The authored successor's main ground already has paid construction in hand.";
 				return false;
 			}
 			if (KingdomGrowth.CountStoredWater(Z) < context.NewEntry.CostDrams)
@@ -844,14 +1090,18 @@ namespace ThousandAndFirst
 			KingdomSurvey survey = KingdomSurvey.Take(Z, System);
 			KingdomWaterDebit water = survey.ReserveExactWater(context.NewEntry.CostDrams);
 			KingdomMaterialDebit materials = KingdomMaterials.ReservePayment(Z, context.NewEntry.Key);
-			KingdomMaterialDebitCost claim = new KingdomMaterialDebitCost(
-				KingdomMaterials.CostFor(context.NewEntry.Key),
-				KingdomMaterials.BitCostFor(context.NewEntry.Key),
-				KingdomMaterials.ExoticCostFor(context.NewEntry.Key));
 			KingdomConstructionJob job = KingdomConstruction.NewJob(System, Z,
-				KingdomConstructionRoute.SocketConvert, Building.CurrentCell, Building,
-				context.NewEntry.Key, KingdomPlots.EncodePlotPayload(context.Rect, NewSkinKey),
+				KingdomConstructionRoute.SocketConvert, mainCell, Building,
+				context.NewEntry.Key, payload,
 				context.NewEntry.CostDrams, claim);
+			if (!KingdomConstruction.FreezeBuildTruth(job, System,
+				context.NewEntry.Defence, true))
+			{
+				water.Rollback();
+				materials.Cancel();
+				Failure = "The converted plot's exact build effects could not be frozen.";
+				return false;
+			}
 			KingdomConstructionStartResult funding = KingdomConstruction.TryFundNew(job,
 				water, materials, out job, out string fundingFailure);
 			if (funding == KingdomConstructionStartResult.Refused)
@@ -866,7 +1116,7 @@ namespace ThousandAndFirst
 				System.Ledger.Note("{{r|The conversion receipt remains outstanding. The old work stands until its exact claim is settled.}}");
 				return true;
 			}
-			if (!ProjectConvertOrder(System, Z, Building, context.NewEntry.Key, NewSkinKey,
+			if (!ProjectConvertOrder(System, Z, Building, context.NewEntry.Key, Prepared.SkinKey,
 				job, out job, out string strikeFailure))
 			{
 				KingdomGovernanceScope.Commit("convert plot");
@@ -875,10 +1125,10 @@ namespace ThousandAndFirst
 				return true;
 			}
 			KingdomGovernanceScope.Commit("convert plot");
-			KingdomSocketRules.ChangeKind kind = KingdomSocketRules.ClassifyChange(context.OldEntry.Category, context.OldSpec.Size, context.NewEntry.Category, context.NewSpec.Size);
+			KingdomSocketRules.ChangeKind kind = context.Kind;
 			string verb = KingdomSocketRules.VerbFor(kind);
 			string name = Building.ShortDisplayName;
-			KingdomChronicle.Record(System, "the founder ordered the " + name + " of " + System.KingdomDisplayName + " " + verb + " into " + XRL.Language.Grammar.A(context.NewEntry.Name));
+			KingdomChronicle.Record(System, "the founder ordered the " + name + " of " + KingdomPresentation.Rich(System.KingdomDisplayName) + " " + verb + " into " + XRL.Language.Grammar.A(context.NewEntry.Name));
 			System.Ledger.Note("{{G|The " + name + " is to become " + XRL.Language.Grammar.A(context.NewEntry.Name) + ". The crew is set to strike it.}}");
 			MessageQueue.AddPlayerMessage("{{G|The " + name + " is ordered " + verb + " into " + XRL.Language.Grammar.A(context.NewEntry.Name) + ".}}");
 			KingdomLog.Log("socket: convert ordered " + context.OldEntry.Key + " -> " + context.NewEntry.Key + " at " + System.SeatName);
@@ -903,6 +1153,13 @@ namespace ThousandAndFirst
 			{
 				KingdomConstruction.FinishProjection(ref Updated, true, true);
 				return true;
+			}
+			if (!KingdomConstructionRules.TryReadBuildTruth(Job, out bool hasPlot,
+				out bool frontier, out _) || !hasPlot || frontier)
+			{
+				Failure = "The unprojected legacy conversion predates frozen plotted build effects.";
+				KingdomConstruction.Quarantine(ref Updated, Failure);
+				return false;
 			}
 			if (!KingdomConstruction.BeginProjection(ref Updated, out Failure))
 			{
@@ -1012,15 +1269,21 @@ namespace ThousandAndFirst
 			if (Converted)
 			{
 				if (!KingdomPlots.TryDecodePlotPayload(Job.Payload, out var paidRect,
-					out var skinKey) || paidRect.X1 != rect.X1 || paidRect.Y1 != rect.Y1
-					|| paidRect.X2 != rect.X2 || paidRect.Y2 != rect.Y2
+					out var skinKey, out KingdomArchitectureIntent architecture,
+					out bool legacyArchitecture, out _)
+					|| (!legacyArchitecture && (architecture == null
+						|| architecture.BuildKey != Job.TargetKey
+						|| Job.X != architecture.MainWorldX
+						|| Job.Y != architecture.MainWorldY))
+					|| (legacyArchitecture
+					&& (Job.X != paidRect.CenterX || Job.Y != paidRect.CenterY))
 					|| !KingdomData.TryGetBuilding(Job.TargetKey, out var entry)
 					|| !KingdomPlots.TryGetSpec(Job.TargetKey, out var spec))
 				{
-					Failure = "The paid conversion no longer matches its frozen rectangle.";
+					Failure = "The paid conversion no longer matches its frozen fresh site.";
 					return false;
 				}
-				if (!KingdomPlots.ProjectOnRect(System, Z, rect, entry, spec, skinKey, Job,
+				if (!KingdomPlots.ProjectOnRect(System, Z, paidRect, entry, spec, skinKey, Job,
 					out GameObject works, out KingdomConstructionJob updated, out Failure))
 				{
 					Job = updated;
@@ -1079,9 +1342,11 @@ namespace ThousandAndFirst
 			try { accepted = cell.AddObject(marker); }
 			catch (Exception ex)
 			{
+				KingdomSurvey.ObserveCurrentTopologyInActive(Z, marker);
 				Failure = "Cleared-plot marker insertion threw: " + ex.Message;
 				return false;
 			}
+			KingdomSurvey.ObserveAddResultInActive(Z, marker, accepted);
 			if (!ReferenceEquals(accepted, marker)
 				|| !KingdomConstruction.IsCurrent(Job) || !KingdomConstruction.Owns(System, Z, Job)
 				|| KingdomConstruction.FindExactId(Z, Job.OutputId, out var exactMarker)
@@ -1098,6 +1363,21 @@ namespace ThousandAndFirst
 		private static bool HasStrikePlotParts(Zone Z, KingdomPlotRules.PlotRect Rect,
 			string PlotId)
 		{
+			KingdomSurvey active = KingdomSurvey.ActiveFor(Z);
+			if (active != null)
+			{
+				for (int i = 0; i < active.PlotParts.Count; i++)
+				{
+					GameObject item = active.PlotParts[i];
+					Cell cell = item?.CurrentCell;
+					if (GameObject.Validate(item) && cell != null
+						&& cell.X >= Rect.X1 && cell.X <= Rect.X2
+						&& cell.Y >= Rect.Y1 && cell.Y <= Rect.Y2
+						&& item.GetStringProperty(KingdomPlots.PlotIdProperty) == PlotId)
+						return true;
+				}
+				return false;
+			}
 			for (int y = Rect.Y1; y <= Rect.Y2; y++)
 			{
 				for (int x = Rect.X1; x <= Rect.X2; x++)
@@ -1121,8 +1401,17 @@ namespace ThousandAndFirst
 		private static bool ExactConversionOutput(GameObject Output, Zone Z,
 			KingdomConstructionJob Job)
 		{
-			if (!GameObject.Validate(Output) || Output.ID != Job.OutputId
-				|| Output.CurrentZone != Z || !KingdomConstruction.HasReceipt(Output, Job))
+			if (Z == null || Job == null || !KingdomPlots.TryDecodePlotPayload(Job.Payload,
+				out KingdomPlotRules.PlotRect rect, out _,
+				out KingdomArchitectureIntent architecture, out bool legacyArchitecture, out _)
+				|| (!legacyArchitecture && (architecture == null
+					|| architecture.BuildKey != Job.TargetKey
+					|| Job.X != architecture.MainWorldX || Job.Y != architecture.MainWorldY))
+				|| (legacyArchitecture && (Job.X != rect.CenterX || Job.Y != rect.CenterY))
+				|| !GameObject.Validate(Output) || Output.ID != Job.OutputId
+				|| Output.CurrentZone != Z || !KingdomConstruction.HasReceipt(Output, Job)
+				|| !KingdomPlots.ExpectedArchitectureReceipt(Output, Z.GetCell(Job.X, Job.Y),
+					Job.TargetKey, architecture, legacyArchitecture))
 				return false;
 			r_KingdomPlotWorks works = Output.GetPart<r_KingdomPlotWorks>();
 			return (works != null && works.DesignKey == Job.TargetKey)
@@ -1159,11 +1448,10 @@ namespace ThousandAndFirst
 		/// is dead ground the survey will refuse forever. Then:
 		/// </para>
 		/// <list type="bullet">
-		/// <item>if <see cref="ExecuteConvert"/> staged a conversion here, the new design is staked
-		/// directly onto the same rect (<see cref="KingdomPlots.Stake"/>, bypassing the fresh-site
-		/// search &mdash; there is nothing left on this ground to search around) and one combined
-		/// line is chronicled for the whole affair; the caller is told to suppress its own ordinary
-		/// "struck" messaging in this case (return value <c>true</c>);</item>
+		/// <item>if <see cref="ExecuteConvert"/> staged a true retype, the new design is projected
+		/// on the distinct fresh site frozen in its paid receipt, with a new LotId. The old rectangle
+		/// is left bare rather than renamed into the successor; one combined line is chronicled and
+		/// the caller suppresses its ordinary "struck" message (return value <c>true</c>);</item>
 		/// <item>otherwise, or if the restake could not land (a design withdrawn mid-strike, a torn
 		/// down zone), the rect is left a plain <see cref="r_KingdomSocket"/> marker and the caller
 		/// proceeds exactly as an ordinary strike always has (return value <c>false</c>).</item>
@@ -1207,8 +1495,13 @@ namespace ThousandAndFirst
 		/// zones somehow. Only ever objects the settlement itself created and marked
 		/// (<c>KingdomPlots.PlotPartProperty</c>) &mdash; the protection law's own exemption,
 		/// exercised here the same way striking already exercises it on the building itself.</summary>
-		private static void SweepPlotParts(Zone Z, KingdomPlotRules.PlotRect Rect, string PlotId)
+		private static bool TrySweepLegacyPlotParts(Zone Z,
+			KingdomPlotRules.PlotRect Rect, string PlotId, GameObject Owner)
 		{
+			if (Z == null || !GameObject.Validate(Owner)
+				|| Owner.HasIntProperty(KingdomArchitectureRuntime.SchemaProperty)
+				|| Owner.HasStringProperty(KingdomArchitectureRuntime.SchemaProperty)) return false;
+			List<GameObject> targets = new List<GameObject>();
 			for (int y = Rect.Y1; y <= Rect.Y2; y++)
 			{
 				for (int x = Rect.X1; x <= Rect.X2; x++)
@@ -1230,10 +1523,29 @@ namespace ThousandAndFirst
 						{
 							continue;
 						}
-						item.Obliterate();
+						if (item.Inventory != null && item.Inventory.Objects.Count != 0) return false;
+						LiquidVolume liquid = item.GetPart<LiquidVolume>();
+						if (liquid != null && liquid.Volume > 0) return false;
+						if (item.GetIntProperty("KingdomCitizen") == 1
+							|| item.GetIntProperty("KingdomStores") == 1
+							|| item.GetIntProperty("KingdomLarder") == 1
+							|| item.GetIntProperty(KingdomMaterials.StockpileProperty) == 1)
+							return false;
+						targets.Add(item);
 					}
 				}
 			}
+			for (int i = 0; i < targets.Count; i++)
+			{
+				GameObject target = targets[i];
+				if (!GameObject.Validate(target))
+					return false;
+				bool removed = target.Obliterate(null, Silent: true);
+				if (removed || !GameObject.Validate(target))
+					KingdomSurvey.ObserveRemovedFromActive(Z, target);
+				if (!removed || GameObject.Validate(target)) return false;
+			}
+			return true;
 		}
 
 		/// <summary>Leaves a socket marker at the rect's centre, stamped with the rect itself so
@@ -1263,30 +1575,36 @@ namespace ThousandAndFirst
 			{
 				KingdomConstruction.Bind(marker, Job);
 			}
-			cell.AddObject(marker);
+			GameObject accepted;
+			try { accepted = cell.AddObject(marker); }
+			catch
+			{
+				KingdomSurvey.ObserveCurrentTopologyInActive(Z, marker);
+				throw;
+			}
+			KingdomSurvey.ObserveAddResultInActive(Z, marker, accepted);
 			if (marker.CurrentCell != cell)
 			{
-				marker.Obliterate(null, Silent: true);
+				bool removed = marker.Obliterate(null, Silent: true);
+				if (removed || !GameObject.Validate(marker))
+					KingdomSurvey.ObserveRemovedFromActive(Z, marker);
 			}
-		}
-
-		/// <summary>Stakes a design directly onto an already-vacated rect, bypassing the fresh
-		/// ground search a first-time commission runs (<c>KingdomPlots.TryFindRect</c>): there is
-		/// nothing left on this ground to search around, and keeping the rect is the whole point.
-		/// Reuses <c>KingdomPlots.Stake</c> unmodified &mdash; the same function an ordinary
-		/// commission calls once it has chosen its own ground &mdash; so door orientation, wall
-		/// material, raise time, and every stage of the raising are decided exactly as they always
-		/// are for any other plot.</summary>
-		private static GameObject RestakeOnRect(KingdomSystem System, Zone Z, KingdomPlotRules.PlotRect Rect, KingdomRules.BuildEntry Entry, KingdomPlotRules.PlotSpec Spec, string SkinKey)
-		{
-			KingdomPlots.GroundGrid grid = new KingdomPlots.GroundGrid(Z);
-			bool carved = KingdomPlotRules.IsUnderground(Z.Z);
-			return KingdomPlots.Stake(System, Z, Rect, Entry, Spec, grid, SkinKey, carved);
 		}
 
 		// ==================================================================================
 		// Building fresh on ground a strike already cleared
 		// ==================================================================================
+
+		private sealed class PreparedSocketBuild
+		{
+			public string MarkerId;
+			public string SkinKey;
+			public KingdomRules.BuildEntry Entry;
+			public KingdomPlotRules.PlotRect Rect;
+			public KingdomArchitectureIntent Architecture;
+			public string Payload;
+			public long LabourTicks;
+		}
 
 		/// <summary>
 		/// Stakes a design on ground a strike already left a socket on. Runs every check an
@@ -1298,6 +1616,16 @@ namespace ThousandAndFirst
 		/// </summary>
 		public static bool BuildOnSocket(KingdomSystem System, Zone Z, GameObject Marker, string Key, string SkinKey, out string Failure)
 		{
+			if (!TryPrepareSocketBuild(System, Z, Marker, Key, SkinKey,
+				out PreparedSocketBuild prepared, out Failure)) return false;
+			return ExecuteSocketBuild(System, Z, Marker, prepared, out Failure);
+		}
+
+		private static bool TryPrepareSocketBuild(KingdomSystem System, Zone Z,
+			GameObject Marker, string Key, string SkinKey, out PreparedSocketBuild Prepared,
+			out string Failure)
+		{
+			Prepared = null;
 			Failure = null;
 			if (System == null || !System.Founded)
 			{
@@ -1345,9 +1673,14 @@ namespace ThousandAndFirst
 				Failure = "The " + entry.Name + " is not built in this city's own style.";
 				return false;
 			}
+			Failure = KingdomCommission.StageRefusal(System, entry);
+			if (Failure != null)
+			{
+				return false;
+			}
 			if (!KingdomPlotRules.Allows(System.Stage, spec.Size))
 			{
-				Failure = KingdomPlotRules.RefuseStage(spec.Size, System.SeatName, System.Stage);
+				Failure = KingdomPlotRules.RefuseStage(spec.Size, KingdomPresentation.Rich(System.SeatName), System.Stage);
 				return false;
 			}
 			if (!KingdomPlotRules.TryDimensions(spec.Size, out int needWidth, out int needHeight))
@@ -1376,6 +1709,82 @@ namespace ThousandAndFirst
 				Failure = zoningFailure;
 				return false;
 			}
+			if (!KingdomPlots.TryPreparePlotPayload(System, Z, rect, entry.Key, entry.Category,
+				SkinKey,
+				out KingdomArchitectureIntent architecture, out string payload, out Failure))
+				return false;
+			if (!TrySocketBuildLabour(System, Z, rect, entry, spec,
+				out long labourTicks, out Failure)) return false;
+			Prepared = new PreparedSocketBuild
+			{
+				MarkerId = Marker.ID, SkinKey = SkinKey, Entry = entry, Rect = rect,
+				Architecture = architecture, Payload = payload, LabourTicks = labourTicks
+			};
+			return true;
+		}
+
+		private static bool TrySocketBuildLabour(KingdomSystem System, Zone Z,
+			KingdomPlotRules.PlotRect Rect, KingdomRules.BuildEntry Entry,
+			KingdomPlotRules.PlotSpec Spec, out long LabourTicks, out string Failure)
+		{
+			LabourTicks = 0L;
+			Failure = null;
+			if (System == null || Z == null || Entry == null || Spec == null)
+			{
+				Failure = "The cleared plot has no exact labour context.";
+				return false;
+			}
+			KingdomPlots.GroundGrid grid = new KingdomPlots.GroundGrid(Z);
+			KingdomPlots.HeartFor(Z, Rect, out int heartX, out int heartY);
+			KingdomPlotRules.PlotRect footprint = KingdomPlots.FootprintFor(Rect, Spec,
+				heartX, heartY);
+			bool carved = KingdomPlotRules.IsUnderground(Z.Z);
+			LabourTicks = KingdomPlotRules.RaiseTicks(
+				KingdomCommission.CraftBuildTicks(Entry.BuildTicks,
+					System.ZoneDistricts.Values), grid.CellsOf(Rect), footprint,
+				KingdomPlotRules.RoofOnGround(Spec.Roof, carved), carved);
+			if (LabourTicks > 0L) return true;
+			Failure = "The cleared plot's exact labour quote is empty.";
+			return false;
+		}
+
+		private static bool ExecuteSocketBuild(KingdomSystem System, Zone Z, GameObject Marker,
+			PreparedSocketBuild Prepared, out string Failure)
+		{
+			Failure = null;
+			if (Prepared == null || !GameObject.Validate(Marker)
+				|| Marker.ID != Prepared.MarkerId || Marker.CurrentZone != Z
+				|| Marker.GetPart<r_KingdomSocket>() == null || HasBlockingReceipt(Marker)
+				|| !KingdomPlots.TryReadRect(Marker, out KingdomPlotRules.PlotRect liveRect)
+				|| liveRect.X1 != Prepared.Rect.X1 || liveRect.Y1 != Prepared.Rect.Y1
+				|| liveRect.X2 != Prepared.Rect.X2 || liveRect.Y2 != Prepared.Rect.Y2)
+			{
+				Failure = "The previewed cleared plot changed before consent.";
+				return false;
+			}
+			KingdomRules.BuildEntry entry = Prepared.Entry;
+			KingdomArchitectureIntent architecture = Prepared.Architecture;
+			string payload = Prepared.Payload;
+			KingdomMaterialDebitCost claim = new KingdomMaterialDebitCost(
+				KingdomMaterials.CostFor(entry.Key), KingdomMaterials.BitCostFor(entry.Key),
+				KingdomMaterials.ExoticCostFor(entry.Key));
+			if (!KingdomArchitectureStamper.TryPreflight(System, Z, architecture, claim,
+				out Failure)) return false;
+			if (!KingdomPlots.TryGetSpec(entry.Key, out KingdomPlotRules.PlotSpec liveSpec)
+				|| !TrySocketBuildLabour(System, Z, Prepared.Rect, entry, liveSpec,
+					out long liveLabour, out Failure)
+				|| liveLabour != Prepared.LabourTicks)
+			{
+				if (Failure == null)
+					Failure = "The cleared plot's labour changed after its preview.";
+				return false;
+			}
+			Cell mainCell = Z.GetCell(architecture.MainWorldX, architecture.MainWorldY);
+			if (mainCell == null || KingdomConstruction.HasActiveAt(System, Z, mainCell))
+			{
+				Failure = "The authored building's main ground already has paid construction in hand.";
+				return false;
+			}
 			if (KingdomGrowth.CountStoredWater(Z) < entry.CostDrams)
 			{
 				Failure = "The work would cost {{C|" + entry.CostDrams + " drams}} from the stores, and the stores cannot bear it.";
@@ -1389,12 +1798,18 @@ namespace ThousandAndFirst
 			KingdomSurvey survey = KingdomSurvey.Take(Z, System);
 			KingdomWaterDebit water = survey.ReserveExactWater(entry.CostDrams);
 			KingdomMaterialDebit materials = KingdomMaterials.ReservePayment(Z, entry.Key);
-			KingdomMaterialDebitCost claim = new KingdomMaterialDebitCost(
-				KingdomMaterials.CostFor(entry.Key), KingdomMaterials.BitCostFor(entry.Key),
-				KingdomMaterials.ExoticCostFor(entry.Key));
+			long start = The.Game.TimeTicks;
 			KingdomConstructionJob job = KingdomConstruction.NewJob(System, Z,
-				KingdomConstructionRoute.SocketBuild, Z.GetCell(rect.CenterX, rect.CenterY), Marker,
-				entry.Key, KingdomPlots.EncodePlotPayload(rect, SkinKey), entry.CostDrams, claim);
+				KingdomConstructionRoute.SocketBuild, mainCell, Marker,
+				entry.Key, payload, entry.CostDrams, claim, start,
+				start + Prepared.LabourTicks);
+			if (!KingdomConstruction.FreezeBuildTruth(job, System, entry.Defence, true))
+			{
+				water.Rollback();
+				materials.Cancel();
+				Failure = "The cleared plot's exact build effects could not be frozen.";
+				return false;
+			}
 			KingdomConstructionStartResult funding = KingdomConstruction.TryFundNew(job,
 				water, materials, out job, out string fundingFailure);
 			if (funding == KingdomConstructionStartResult.Refused)
@@ -1415,7 +1830,7 @@ namespace ThousandAndFirst
 				&& observed.Phase == KingdomConstructionPhase.InspectionRequired)
 				System.Ledger.Note("{{r|The cleared plot's exact removal or output receipt needs inspection; it will not retry either callback.}}");
 			KingdomLog.Log("socket: ordered " + entry.Key + " on cleared ground at "
-				+ rect.X1 + "," + rect.Y1);
+				+ Prepared.Rect.X1 + "," + Prepared.Rect.Y1);
 			return true;
 		}
 
@@ -1625,7 +2040,7 @@ namespace ThousandAndFirst
 			}
 			if (buildings.Count == 0 && sockets.Count == 0)
 			{
-				Popup.Show("Stand beside a plot " + System.SeatName + " raised, or ground it cleared, to change what stands there.");
+				Popup.Show("Stand beside a plot " + KingdomPresentation.Rich(System.SeatName) + " raised, or ground it cleared, to change what stands there.");
 				return;
 			}
 			List<string> options = new List<string>();
@@ -1641,7 +2056,7 @@ namespace ThousandAndFirst
 				options.Add("{{K|a cleared plot}}");
 				targets.Add(sockets[i]);
 			}
-			int picked = Popup.PickOption(Title: "Change what a plot is, at " + System.SeatName, Options: options.ToArray(), AllowEscape: true);
+			int picked = Popup.PickOption(Title: "Change what a plot is, at " + KingdomPresentation.Rich(System.SeatName), Options: options.ToArray(), AllowEscape: true);
 			if (picked < 0)
 			{
 				return;
@@ -1649,14 +2064,19 @@ namespace ThousandAndFirst
 			GameObject target = targets[picked];
 			bool onSocket = picked >= socketsStart;
 			string currentCategory = null;
+			string currentKey = null;
 			KingdomPlotRules.PlotSize currentSize = KingdomPlotRules.PlotSize.None;
+			KingdomArchitectureIntent standingArchitecture = null;
 			if (!onSocket)
 			{
-				string oldKey = target.GetStringProperty(KingdomUpgrade.BuildKeyProperty);
-				if (KingdomData.TryGetBuilding(oldKey, out KingdomRules.BuildEntry oldEntry) && KingdomPlots.TryGetSpec(oldKey, out KingdomPlotRules.PlotSpec oldSpec))
+				currentKey = target.GetStringProperty(KingdomUpgrade.BuildKeyProperty);
+				KingdomArchitectureRuntime.TryRead(target, out standingArchitecture, out _);
+				if (KingdomData.TryGetBuilding(currentKey, out KingdomRules.BuildEntry oldEntry) && KingdomPlots.TryGetSpec(currentKey, out KingdomPlotRules.PlotSpec oldSpec))
 				{
 					currentCategory = oldEntry.Category;
-					currentSize = oldSpec.Size;
+					if (!KingdomPlots.TryReadRect(target, out KingdomPlotRules.PlotRect actualRect)
+						|| !KingdomSocketRules.TryActualSize(actualRect.Width, actualRect.Height,
+							out currentSize)) currentSize = oldSpec.Size;
 				}
 			}
 			List<KingdomRules.BuildEntry> available = new List<KingdomRules.BuildEntry>();
@@ -1672,6 +2092,25 @@ namespace ThousandAndFirst
 				{
 					continue;
 				}
+				if (!onSocket)
+				{
+					if (entry.Key == currentKey) continue;
+					KingdomSocketRules.ChangeKind shown = KingdomSocketRules.FitsSameSet(
+						currentCategory, currentSize, entry.Category, spec.Size)
+						? KingdomSocketRules.ChangeKind.SameSet
+						: KingdomSocketRules.ChangeKind.Retype;
+					if (shown == KingdomSocketRules.ChangeKind.SameSet
+						&& (standingArchitecture == null
+							|| !KingdomSocketTransitions.TryGet(currentKey, entry.Key,
+								standingArchitecture.LotType, standingArchitecture.LotSize, out _)))
+						continue;
+				}
+				else if (KingdomPlots.TryReadRect(target, out KingdomPlotRules.PlotRect socketRect)
+					&& KingdomSocketRules.TryActualSize(socketRect.Width, socketRect.Height,
+						out KingdomPlotRules.PlotSize socketSize)
+					&& !KingdomArchitecture.TryGetMapping(entry.Key, entry.Category,
+						(ArchitectureLotSize)(int)socketSize, out _))
+					continue;
 				available.Add(entry);
 			}
 			if (available.Count == 0)
@@ -1685,9 +2124,25 @@ namespace ThousandAndFirst
 				string tag = "";
 				if (!onSocket && KingdomPlots.TryGetSpec(available[i].Key, out KingdomPlotRules.PlotSpec size))
 				{
-					tag = " {{C|[" + KingdomSocketRules.VerbFor(KingdomSocketRules.ClassifyChange(currentCategory, currentSize, available[i].Category, size.Size)) + "]}}";
+					KingdomSocketRules.ChangeKind shown = KingdomSocketRules.FitsSameSet(
+						currentCategory, currentSize, available[i].Category, size.Size)
+						? KingdomSocketRules.ChangeKind.SameSet
+						: KingdomSocketRules.ChangeKind.Retype;
+					if (shown == KingdomSocketRules.ChangeKind.SameSet
+						&& KingdomSocketTransitions.TryGet(currentKey, available[i].Key,
+							standingArchitecture.LotType, standingArchitecture.LotSize,
+							out KingdomSocketTransition transition))
+					{
+						string material = transition.Materials?.Describe();
+						tag = " {{C|[change: " + transition.WaterDrams + " drams"
+							+ (material == null ? "" : "; " + material)
+							+ "; " + transition.WorkTicks + " ticks]}}";
+					}
+					else tag = " {{C|[re-type: full build " + available[i].CostDrams
+						+ " drams]}}";
 				}
-				designOptions[i] = available[i].DisplayName + " {{C|[" + available[i].CostDrams + " drams]}}" + tag;
+				designOptions[i] = available[i].DisplayName
+					+ (onSocket ? " {{C|[" + available[i].CostDrams + " drams]}}" : "") + tag;
 			}
 			int designPicked = Popup.PickOption(Title: onSocket ? "Build on the cleared plot" : ("Change the " + target.ShortDisplayName + " into"), Options: designOptions, AllowEscape: true);
 			if (designPicked < 0)
@@ -1698,23 +2153,49 @@ namespace ThousandAndFirst
 			string skinKey = KingdomDesign.ChooseSkin(chosen, System.Style)?.Key;
 			if (onSocket)
 			{
-				if (!BuildOnSocket(System, zone, target, chosen.Key, skinKey, out string socketFailure))
+				if (!TryPrepareSocketBuild(System, zone, target, chosen.Key, skinKey,
+					out PreparedSocketBuild socketBuild, out string socketFailure)
+					|| !KingdomArchitecturePreview.TryRender(socketBuild.Architecture, chosen,
+						socketBuild.LabourTicks, out string socketPreview, out socketFailure))
 				{
 					Popup.Show(socketFailure);
+					return;
 				}
+				int socketConfirmed = Popup.PickOption(Title: "Build exact plan: " + chosen.Name,
+					Intro: socketPreview, Options: new string[1] { "Build this exact plan" },
+					AllowEscape: true);
+				if (socketConfirmed < 0) return;
+				if (!ExecuteSocketBuild(System, zone, target, socketBuild, out socketFailure))
+					Popup.Show(socketFailure);
 				return;
 			}
-			if (!AssessConvert(System, zone, target, chosen.Key, out KingdomSocketRules.ChangeKind kind, out KingdomSocketRules.ConversionQuote quote, out string assessFailure))
+			if (!TryPrepareConvert(System, zone, target, chosen.Key, skinKey,
+				out PreparedConvert conversion, out string assessFailure))
 			{
 				Popup.Show(assessFailure);
 				return;
 			}
-			string question = KingdomSocketRules.DescribeConversion(target.ShortDisplayName, chosen.Name, kind, quote) + "\n\nOrder it?";
-			if (Popup.ShowYesNo(question) != DialogResult.Yes)
+			string productionPreview;
+			bool rendered = conversion.Context.Kind == KingdomSocketRules.ChangeKind.SameSet
+				? KingdomArchitecturePreview.TryRenderTransition(conversion.Architecture, chosen,
+					conversion.Context.Transition, conversion.Delta, out productionPreview,
+					out assessFailure)
+				: KingdomArchitecturePreview.TryRenderRetype(conversion.Architecture, chosen,
+					conversion.Quote, out productionPreview, out assessFailure);
+			if (!rendered)
 			{
+				Popup.Show(assessFailure);
 				return;
 			}
-			if (!ExecuteConvert(System, zone, target, chosen.Key, skinKey, out string executeFailure))
+			string question = productionPreview + "\n"
+				+ KingdomSocketRules.DescribeConversion(target.ShortDisplayName, chosen.Name,
+					conversion.Context.Kind, conversion.Quote);
+			int confirmed = Popup.PickOption(Title: "Preview exact change: " + chosen.Name,
+				Intro: question, Options: new string[1] { "Order this exact change" },
+				AllowEscape: true);
+			if (confirmed < 0) return;
+			if (!ExecutePreparedConvert(System, zone, target, conversion,
+				out string executeFailure))
 			{
 				Popup.Show(executeFailure);
 			}
@@ -1743,7 +2224,7 @@ namespace ThousandAndFirst
 			}
 			if (candidates.Count == 0)
 			{
-				Popup.Show("Stand beside something " + System.SeatName + " stands behind to give it a new look.");
+				Popup.Show("Stand beside something " + KingdomPresentation.Rich(System.SeatName) + " stands behind to give it a new look.");
 				return;
 			}
 			string[] options = new string[candidates.Count];
@@ -1751,7 +2232,7 @@ namespace ThousandAndFirst
 			{
 				options[i] = candidates[i].ShortDisplayName;
 			}
-			int picked = Popup.PickOption(Title: "Give a building a new look, at " + System.SeatName, Options: options, AllowEscape: true);
+			int picked = Popup.PickOption(Title: "Give a building a new look, at " + KingdomPresentation.Rich(System.SeatName), Options: options, AllowEscape: true);
 			if (picked < 0)
 			{
 				return;

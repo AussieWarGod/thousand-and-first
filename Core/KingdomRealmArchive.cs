@@ -118,7 +118,12 @@ namespace ThousandAndFirst
 #endif
 	{
 		private const int Magic = 0x54415231; // TAR1
-		public const int CurrentVersion = 2;
+		/// <summary>v4 appends explicit exact-delivery columns. v2 lacks mission and delivery
+		/// payloads; v3 carries missions but not delivery payloads. Both readers remain explicit and
+		/// pad only their absent envelopes with neutral values.</summary>
+		public const int CurrentVersion = 4;
+		internal const int LegacyJobVersion = 2;
+		internal const int MissionJobVersion = 3;
 		private const int MaxTextBytes = 8192;
 		private const int MaxBindings = 136;
 		private const int MaxJobs = 16;
@@ -935,6 +940,23 @@ namespace ThousandAndFirst
 				|| Value.Cargos == null || Value.CargoAmounts == null || Value.SourceZoneIds == null
 				|| Value.DestZoneIds == null || Value.StartTicks == null || Value.WalkTicksPerCell == null
 				|| Value.Statuses == null || Value.OriginCodes == null || Value.DepositLegIndexes == null
+				|| Value.SubjectIds == null || Value.SubjectNames == null || Value.TargetNames == null
+				|| Value.DueTicks == null || Value.WaterCosts == null || Value.ProvisionCosts == null
+				|| Value.OutcomeCodes == null || Value.DeliverySourceEndpointIds == null
+				|| Value.DeliverySourceObjectIds == null || Value.DeliverySourceXs == null
+				|| Value.DeliverySourceYs == null || Value.DeliveryTargetEndpointIds == null
+				|| Value.DeliveryTargetObjectIds == null || Value.DeliveryTargetXs == null
+				|| Value.DeliveryTargetYs == null || Value.DeliverySourceBeforeAmounts == null
+				|| Value.DeliveryTripIds == null || Value.DeliveryStopOrdinals == null
+				|| Value.DeliveryPhases == null || Value.DeliveryCargoAuthorityKinds == null
+				|| Value.DeliveryOwnerOperationIds == null
+				|| Value.DeliveryOwnerManifestVersions == null
+				|| Value.DeliveryOwnerManifestDigests == null
+				|| Value.DeliveryOwnerManifestRevisions == null
+				|| Value.DeliveryManifestSourceStarts == null
+				|| Value.DeliveryManifestSourceCounts == null
+				|| Value.DeliveryTargetBeforeAmounts == null
+				|| Value.DeliveryTargetReceiptStates == null
 				|| Value.LegCounts == null || Value.LegZoneIds == null || Value.LegEnterX == null
 				|| Value.LegEnterY == null || Value.LegExitX == null || Value.LegExitY == null
 				|| Value.LegLengths == null || Value.LegDepartTicks == null || Value.LegArriveTicks == null)
@@ -945,19 +967,287 @@ namespace ThousandAndFirst
 				|| Value.DestZoneIds.Count != jobs || Value.StartTicks.Count != jobs
 				|| Value.WalkTicksPerCell.Count != jobs || Value.Statuses.Count != jobs
 				|| Value.OriginCodes.Count != jobs || Value.DepositLegIndexes.Count != jobs
+				|| Value.SubjectIds.Count != jobs || Value.SubjectNames.Count != jobs
+				|| Value.TargetNames.Count != jobs || Value.DueTicks.Count != jobs
+				|| Value.WaterCosts.Count != jobs || Value.ProvisionCosts.Count != jobs
+				|| Value.OutcomeCodes.Count != jobs
+				|| Value.DeliverySourceEndpointIds.Count != jobs
+				|| Value.DeliverySourceObjectIds.Count != jobs
+				|| Value.DeliverySourceXs.Count != jobs || Value.DeliverySourceYs.Count != jobs
+				|| Value.DeliveryTargetEndpointIds.Count != jobs
+				|| Value.DeliveryTargetObjectIds.Count != jobs
+				|| Value.DeliveryTargetXs.Count != jobs || Value.DeliveryTargetYs.Count != jobs
+				|| Value.DeliverySourceBeforeAmounts.Count != jobs
+				|| Value.DeliveryTripIds.Count != jobs
+				|| Value.DeliveryStopOrdinals.Count != jobs
+				|| Value.DeliveryPhases.Count != jobs
+				|| Value.DeliveryCargoAuthorityKinds.Count != jobs
+				|| Value.DeliveryOwnerOperationIds.Count != jobs
+				|| Value.DeliveryOwnerManifestVersions.Count != jobs
+				|| Value.DeliveryOwnerManifestDigests.Count != jobs
+				|| Value.DeliveryOwnerManifestRevisions.Count != jobs
+				|| Value.DeliveryManifestSourceStarts.Count != jobs
+				|| Value.DeliveryManifestSourceCounts.Count != jobs
+				|| Value.DeliveryTargetBeforeAmounts.Count != jobs
+				|| Value.DeliveryTargetReceiptStates.Count != jobs
 				|| Value.LegCounts.Count != jobs || !BoundedStrings(Value.SourceZoneIds, 512)
-				|| !BoundedStrings(Value.DestZoneIds, 512)) return false;
+				|| !BoundedStrings(Value.DestZoneIds, 512)
+				|| !BoundedStrings(Value.SubjectNames, 512)
+				|| !BoundedStrings(Value.TargetNames, 512)
+				|| !BoundedStrings(Value.DeliverySourceObjectIds, 512)
+				|| !BoundedStrings(Value.DeliveryTargetObjectIds, 512)
+				|| !BoundedStrings(Value.DeliveryOwnerOperationIds, 512)
+				|| !BoundedStrings(Value.DeliveryOwnerManifestDigests, 512)) return false;
 			int legs = 0;
 			for (int i = 0; i < jobs; i++)
 			{
-				if (Value.LegCounts[i] < 0 || Value.LegCounts[i] > 6) return false;
+				if (Value.LegCounts[i] < 0 || Value.LegCounts[i] > 6
+					|| Value.SubjectIds[i] < 0 || Value.DueTicks[i] < 0L
+					|| Value.WaterCosts[i] < 0 || Value.ProvisionCosts[i] < 0
+					|| Value.OutcomeCodes[i] < 0 || Value.OutcomeCodes[i] > 7
+					|| Value.DeliverySourceEndpointIds[i] < 0
+					|| Value.DeliveryTargetEndpointIds[i] < 0
+					|| Value.DeliverySourceXs[i] < -1
+					|| Value.DeliverySourceXs[i] >= Simulation.City.KingdomJobRules.ZoneWidth
+					|| Value.DeliverySourceYs[i] < -1
+					|| Value.DeliverySourceYs[i] >= Simulation.City.KingdomJobRules.ZoneHeight
+					|| Value.DeliveryTargetXs[i] < -1
+					|| Value.DeliveryTargetXs[i] >= Simulation.City.KingdomJobRules.ZoneWidth
+					|| Value.DeliveryTargetYs[i] < -1
+					|| Value.DeliveryTargetYs[i] >= Simulation.City.KingdomJobRules.ZoneHeight
+					|| Value.DeliverySourceBeforeAmounts[i] < 0L
+					|| Value.DeliveryTripIds[i] < 0 || Value.DeliveryStopOrdinals[i] < 0
+					|| Value.DeliveryCargoAuthorityKinds[i] < 0
+					|| Value.DeliveryCargoAuthorityKinds[i] > 1
+					|| Value.DeliveryOwnerManifestVersions[i] < 0
+					|| Value.DeliveryOwnerManifestRevisions[i] < 0L
+					|| Value.DeliveryManifestSourceStarts[i] < 0
+					|| Value.DeliveryManifestSourceCounts[i] < 0
+					|| Value.DeliveryTargetBeforeAmounts[i] < 0L
+					|| Value.DeliveryTargetReceiptStates[i] < 0
+					|| Value.DeliveryTargetReceiptStates[i] > 1
+					|| !Simulation.City.KingdomJobRules.IsDeliveryPhase(
+						Value.DeliveryPhases[i])) return false;
+				bool expedition = Value.Kinds[i]
+					== (int)Simulation.City.KingdomJobKind.Expedition;
+				if (expedition)
+				{
+					if (Value.SubjectIds[i] <= 0 || string.IsNullOrEmpty(Value.SubjectNames[i])
+						|| string.IsNullOrEmpty(Value.TargetNames[i])
+						|| Value.DueTicks[i] <= Value.StartTicks[i]
+						|| Value.WaterCosts[i] <= 0
+						|| Value.WaterCosts[i] > Simulation.City.KingdomJobRules.MaxExpeditionWaterCost
+						|| Value.ProvisionCosts[i] <= 0
+						|| Value.ProvisionCosts[i] > Simulation.City.KingdomJobRules.MaxExpeditionProvisionCost
+						|| !Simulation.City.KingdomJobRules.ValidExpeditionOutcomeForPhase(
+							Value.OriginCodes[i], Value.OutcomeCodes[i])
+						|| !Simulation.City.KingdomJobRules.IsExpeditionPhase(
+							Value.OriginCodes[i])) return false;
+					for (int j = 0; j < i; j++)
+						if (Value.Kinds[j] == (int)Simulation.City.KingdomJobKind.Expedition
+							&& Value.SubjectIds[j] == Value.SubjectIds[i]) return false;
+				}
+				else if (Value.SubjectIds[i] != 0 || !string.IsNullOrEmpty(Value.SubjectNames[i])
+					|| !string.IsNullOrEmpty(Value.TargetNames[i]) || Value.DueTicks[i] != 0L
+					|| Value.WaterCosts[i] != 0 || Value.ProvisionCosts[i] != 0
+					|| Value.OutcomeCodes[i] != 0) return false;
+				bool delivery = Value.Kinds[i]
+					== (int)Simulation.City.KingdomJobKind.Delivery;
+				bool central = delivery && Value.DeliveryPhases[i]
+					!= (int)Simulation.City.KingdomDeliveryPhase.Legacy;
+				bool neutralDelivery = Value.DeliverySourceEndpointIds[i] == 0
+					&& string.IsNullOrEmpty(Value.DeliverySourceObjectIds[i])
+					&& Value.DeliverySourceXs[i] == -1 && Value.DeliverySourceYs[i] == -1
+					&& Value.DeliveryTargetEndpointIds[i] == 0
+					&& string.IsNullOrEmpty(Value.DeliveryTargetObjectIds[i])
+					&& Value.DeliveryTargetXs[i] == -1 && Value.DeliveryTargetYs[i] == -1
+					&& Value.DeliverySourceBeforeAmounts[i] == 0L
+					&& Value.DeliveryTripIds[i] == 0 && Value.DeliveryStopOrdinals[i] == 0
+					&& Value.DeliveryPhases[i] == 0
+					&& Value.DeliveryCargoAuthorityKinds[i] == 0
+					&& string.IsNullOrEmpty(Value.DeliveryOwnerOperationIds[i])
+					&& Value.DeliveryOwnerManifestVersions[i] == 0
+					&& string.IsNullOrEmpty(Value.DeliveryOwnerManifestDigests[i])
+					&& Value.DeliveryOwnerManifestRevisions[i] == 0L
+					&& Value.DeliveryManifestSourceStarts[i] == 0
+					&& Value.DeliveryManifestSourceCounts[i] == 0
+					&& Value.DeliveryTargetBeforeAmounts[i] == 0L
+					&& Value.DeliveryTargetReceiptStates[i] == 0;
+				if (!central && !neutralDelivery) return false;
+				if (central && (Value.DeliverySourceEndpointIds[i] <= 0
+					|| Value.DeliveryTargetEndpointIds[i] <= 0
+					|| Value.DeliverySourceXs[i] < 0 || Value.DeliverySourceYs[i] < 0
+					|| Value.DeliveryTargetXs[i] < 0 || Value.DeliveryTargetYs[i] < 0
+					|| Value.CargoAmounts[i] < 0)) return false;
+				bool scalar = central && Value.DeliveryCargoAuthorityKinds[i]
+					== (int)Simulation.City.KingdomDeliveryCargoAuthority.ScalarStock;
+				bool manifest = central && Value.DeliveryCargoAuthorityKinds[i]
+					== (int)Simulation.City.KingdomDeliveryCargoAuthority.CarryBookManifest;
+				if (scalar && (Value.Cargos[i] != (int)Simulation.City.KingdomStockKind.Water
+					&& Value.Cargos[i] != (int)Simulation.City.KingdomStockKind.Food)) return false;
+				if (scalar && (string.IsNullOrEmpty(Value.DeliverySourceObjectIds[i])
+					|| string.IsNullOrEmpty(Value.DeliveryTargetObjectIds[i]))) return false;
+				if (scalar && (!string.IsNullOrEmpty(Value.DeliveryOwnerOperationIds[i])
+					|| Value.DeliveryOwnerManifestVersions[i] != 0
+					|| !string.IsNullOrEmpty(Value.DeliveryOwnerManifestDigests[i])
+					|| Value.DeliveryOwnerManifestRevisions[i] != 0L
+					|| Value.DeliveryManifestSourceStarts[i] != 0
+					|| Value.DeliveryManifestSourceCounts[i] != 0)) return false;
+				bool reservation = manifest && (Value.DeliveryPhases[i]
+					== (int)Simulation.City.KingdomDeliveryPhase.ReservationPrepared
+					|| Value.DeliveryPhases[i]
+						== (int)Simulation.City.KingdomDeliveryPhase.Quarantined);
+				if (manifest && (Value.Cargos[i] != (int)Simulation.City.KingdomStockKind.OpaqueManifest
+					|| string.IsNullOrEmpty(Value.DeliveryOwnerOperationIds[i])
+					|| Value.DeliveryManifestSourceCounts[i] <= 0
+					|| Value.DeliveryManifestSourceCounts[i]
+						> Simulation.City.KingdomLogisticsRules.CarrierCapacity
+					|| Value.CargoAmounts[i] != Value.DeliveryManifestSourceCounts[i]
+					|| Value.DeliverySourceBeforeAmounts[i] != 0L
+					|| Value.DeliveryTargetBeforeAmounts[i] != 0L
+					|| Value.DeliveryTargetReceiptStates[i] != 0
+					|| (reservation && (Value.DeliveryOwnerManifestVersions[i] != 0
+						|| !string.IsNullOrEmpty(Value.DeliveryOwnerManifestDigests[i])
+						|| Value.DeliveryOwnerManifestRevisions[i] != 0L))
+					|| (!reservation && (Value.DeliveryOwnerManifestVersions[i] <= 0
+						|| string.IsNullOrEmpty(Value.DeliveryOwnerManifestDigests[i]))))) return false;
+				if (central && !scalar && !manifest) return false;
+				if (central && Value.DeliveryPhases[i]
+					== (int)Simulation.City.KingdomDeliveryPhase.Planned)
+				{
+					if (!scalar || Value.CargoAmounts[i] <= 0
+						|| Value.DeliverySourceBeforeAmounts[i] != 0L
+						|| Value.DeliveryTripIds[i] != 0 || Value.DeliveryStopOrdinals[i] != 0
+						|| Value.LegCounts[i] != 0 || Value.DeliveryTargetBeforeAmounts[i] != 0L
+						|| Value.DeliveryTargetReceiptStates[i] != 0) return false;
+				}
+				else if (central && ((scalar && Value.DeliverySourceBeforeAmounts[i] <= 0L)
+					|| Value.DeliveryTripIds[i] <= 0 || Value.DeliveryStopOrdinals[i] <= 0
+					|| Value.DeliveryStopOrdinals[i]
+						> Simulation.City.KingdomLogisticsRules.MaxStopsPerTrip
+					|| Value.LegCounts[i] <= 0
+					|| (Value.DeliveryPhases[i]
+						== (int)Simulation.City.KingdomDeliveryPhase.SourceDebitPrepared
+						&& Value.DeliveryTargetReceiptStates[i] != 0)
+					|| (scalar && Value.CargoAmounts[i] == 0
+						&& Value.DeliveryTargetReceiptStates[i]
+							!= (int)Simulation.City.KingdomDeliveryTargetReceiptState.Prepared))) return false;
 				legs += Value.LegCounts[i];
 			}
-			return legs <= MaxLegs && Value.LegZoneIds.Count == legs
+			bool legShape = legs <= MaxLegs && Value.LegZoneIds.Count == legs
 				&& Value.LegEnterX.Count == legs && Value.LegEnterY.Count == legs
 				&& Value.LegExitX.Count == legs && Value.LegExitY.Count == legs
 				&& Value.LegLengths.Count == legs && Value.LegDepartTicks.Count == legs
 				&& Value.LegArriveTicks.Count == legs && BoundedStrings(Value.LegZoneIds, 512);
+			return legShape && ValidDeliveryTrips(Value);
+		}
+
+		private static bool ValidDeliveryTrips(Simulation.City.KingdomJobRegistry value)
+		{
+			int jobs = value.JobIds.Count;
+			int[] offsets = new int[jobs];
+			int at = 0;
+			for (int i = 0; i < jobs; i++) { offsets[i] = at; at += value.LegCounts[i]; }
+			for (int i = 0; i < jobs; i++)
+			{
+				if (value.DeliveryPhases[i]
+					<= (int)Simulation.City.KingdomDeliveryPhase.Planned) continue;
+				int tripId = value.DeliveryTripIds[i];
+				if (value.JobIds[i] != tripId) continue;
+				int members = 0;
+				for (int j = 0; j < jobs; j++)
+					if (value.DeliveryTripIds[j] == tripId) members++;
+				if (members <= 0 || members > Simulation.City.KingdomLogisticsRules.MaxStopsPerTrip)
+					return false;
+				long load = 0L;
+				long priorArrival = -1L;
+				string priorDestination = null;
+				for (int ordinal = 1; ordinal <= members; ordinal++)
+				{
+					int found = -1;
+					for (int j = 0; j < jobs; j++)
+					{
+						if (value.DeliveryTripIds[j] != tripId
+							|| value.DeliveryStopOrdinals[j] != ordinal) continue;
+						if (found >= 0) return false;
+						found = j;
+					}
+					if (found < 0 || value.DeliveryPhases[found] != value.DeliveryPhases[i]
+						|| value.DeliverySourceEndpointIds[found]
+							!= value.DeliverySourceEndpointIds[i]
+						|| !string.Equals(value.DeliverySourceObjectIds[found],
+							value.DeliverySourceObjectIds[i], StringComparison.Ordinal)
+						|| value.DeliverySourceXs[found] != value.DeliverySourceXs[i]
+						|| value.DeliverySourceYs[found] != value.DeliverySourceYs[i]
+						|| !string.Equals(value.SourceZoneIds[found], value.SourceZoneIds[i],
+							StringComparison.Ordinal)
+						|| value.Cargos[found] != value.Cargos[i]
+						|| value.DeliverySourceBeforeAmounts[found]
+							!= value.DeliverySourceBeforeAmounts[i]
+						|| value.DeliveryCargoAuthorityKinds[found]
+							!= value.DeliveryCargoAuthorityKinds[i]
+						|| !string.Equals(value.DeliveryOwnerOperationIds[found],
+							value.DeliveryOwnerOperationIds[i], StringComparison.Ordinal)
+						|| value.DeliveryOwnerManifestVersions[found]
+							!= value.DeliveryOwnerManifestVersions[i]
+						|| !string.Equals(value.DeliveryOwnerManifestDigests[found],
+							value.DeliveryOwnerManifestDigests[i], StringComparison.Ordinal)
+						|| value.DeliveryOwnerManifestRevisions[found]
+							!= value.DeliveryOwnerManifestRevisions[i]
+						|| value.LegCounts[found] <= 0) return false;
+					int first = offsets[found];
+					int last = first + value.LegCounts[found] - 1;
+					string expectedFirst = ordinal == 1 ? value.SourceZoneIds[found]
+						: priorDestination;
+					if (!string.Equals(value.LegZoneIds[first], expectedFirst,
+							StringComparison.Ordinal)
+						|| !string.Equals(value.LegZoneIds[last], value.DestZoneIds[found],
+							StringComparison.Ordinal)
+						|| (ordinal > 1 && value.LegDepartTicks[first] < priorArrival)) return false;
+					load += value.DeliveryCargoAuthorityKinds[found]
+						== (int)Simulation.City.KingdomDeliveryCargoAuthority.CarryBookManifest
+						? value.DeliveryManifestSourceCounts[found] : value.CargoAmounts[found];
+					if (load > Simulation.City.KingdomLogisticsRules.CarrierCapacity) return false;
+					priorArrival = value.LegArriveTicks[last];
+					priorDestination = value.DestZoneIds[found];
+				}
+				if (value.DeliveryStopOrdinals[i] != 1) return false;
+			}
+			for (int i = 0; i < jobs; i++)
+			{
+				if (value.DeliveryPhases[i]
+					<= (int)Simulation.City.KingdomDeliveryPhase.Planned) continue;
+				bool leader = false;
+				for (int j = 0; j < jobs; j++)
+					if (value.JobIds[j] == value.DeliveryTripIds[i]
+						&& value.DeliveryTripIds[j] == value.DeliveryTripIds[i]
+						&& value.DeliveryStopOrdinals[j] == 1) { leader = true; break; }
+				if (!leader) return false;
+			}
+			for (int i = 0; i < jobs; i++)
+			{
+				if (value.DeliveryCargoAuthorityKinds[i]
+					!= (int)Simulation.City.KingdomDeliveryCargoAuthority.CarryBookManifest) continue;
+				long leftEnd = (long)value.DeliveryManifestSourceStarts[i]
+					+ value.DeliveryManifestSourceCounts[i];
+				for (int j = i + 1; j < jobs; j++)
+				{
+					if (value.DeliveryCargoAuthorityKinds[j]
+						!= (int)Simulation.City.KingdomDeliveryCargoAuthority.CarryBookManifest
+						|| !string.Equals(value.DeliveryOwnerOperationIds[i],
+							value.DeliveryOwnerOperationIds[j], StringComparison.Ordinal)) continue;
+					if (value.DeliveryOwnerManifestVersions[i]
+							!= value.DeliveryOwnerManifestVersions[j]
+						|| !string.Equals(value.DeliveryOwnerManifestDigests[i],
+							value.DeliveryOwnerManifestDigests[j], StringComparison.Ordinal)) return false;
+					long rightEnd = (long)value.DeliveryManifestSourceStarts[j]
+						+ value.DeliveryManifestSourceCounts[j];
+					if (leftEnd > int.MaxValue || rightEnd > int.MaxValue
+						|| (value.DeliveryManifestSourceStarts[i] < rightEnd
+							&& value.DeliveryManifestSourceStarts[j] < leftEnd)) return false;
+				}
+			}
+			return true;
 		}
 
 		private static string Bound(string Value, int Maximum)
@@ -1018,6 +1308,34 @@ namespace ThousandAndFirst
 				Statuses = new List<int>(Value.Statuses),
 				OriginCodes = new List<int>(Value.OriginCodes),
 				DepositLegIndexes = new List<int>(Value.DepositLegIndexes),
+				SubjectIds = new List<int>(Value.SubjectIds),
+				SubjectNames = new List<string>(Value.SubjectNames),
+				TargetNames = new List<string>(Value.TargetNames),
+				DueTicks = new List<long>(Value.DueTicks),
+				WaterCosts = new List<int>(Value.WaterCosts),
+				ProvisionCosts = new List<int>(Value.ProvisionCosts),
+				OutcomeCodes = new List<int>(Value.OutcomeCodes),
+				DeliverySourceEndpointIds = new List<int>(Value.DeliverySourceEndpointIds),
+				DeliverySourceObjectIds = new List<string>(Value.DeliverySourceObjectIds),
+				DeliverySourceXs = new List<int>(Value.DeliverySourceXs),
+				DeliverySourceYs = new List<int>(Value.DeliverySourceYs),
+				DeliveryTargetEndpointIds = new List<int>(Value.DeliveryTargetEndpointIds),
+				DeliveryTargetObjectIds = new List<string>(Value.DeliveryTargetObjectIds),
+				DeliveryTargetXs = new List<int>(Value.DeliveryTargetXs),
+				DeliveryTargetYs = new List<int>(Value.DeliveryTargetYs),
+				DeliverySourceBeforeAmounts = new List<long>(Value.DeliverySourceBeforeAmounts),
+				DeliveryTripIds = new List<int>(Value.DeliveryTripIds),
+				DeliveryStopOrdinals = new List<int>(Value.DeliveryStopOrdinals),
+				DeliveryPhases = new List<int>(Value.DeliveryPhases),
+				DeliveryCargoAuthorityKinds = new List<int>(Value.DeliveryCargoAuthorityKinds),
+				DeliveryOwnerOperationIds = new List<string>(Value.DeliveryOwnerOperationIds),
+				DeliveryOwnerManifestVersions = new List<int>(Value.DeliveryOwnerManifestVersions),
+				DeliveryOwnerManifestDigests = new List<string>(Value.DeliveryOwnerManifestDigests),
+				DeliveryOwnerManifestRevisions = new List<long>(Value.DeliveryOwnerManifestRevisions),
+				DeliveryManifestSourceStarts = new List<int>(Value.DeliveryManifestSourceStarts),
+				DeliveryManifestSourceCounts = new List<int>(Value.DeliveryManifestSourceCounts),
+				DeliveryTargetBeforeAmounts = new List<long>(Value.DeliveryTargetBeforeAmounts),
+				DeliveryTargetReceiptStates = new List<int>(Value.DeliveryTargetReceiptStates),
 				LegCounts = new List<int>(Value.LegCounts),
 				LegZoneIds = new List<string>(Value.LegZoneIds),
 				LegEnterX = new List<int>(Value.LegEnterX),
@@ -1119,6 +1437,48 @@ namespace ThousandAndFirst
 				ExactList(Archived.Statuses, Current.Statuses) &&
 				ExactList(Archived.OriginCodes, Current.OriginCodes) &&
 				ExactList(Archived.DepositLegIndexes, Current.DepositLegIndexes) &&
+				ExactList(Archived.SubjectIds, Current.SubjectIds) &&
+				ExactList(Archived.SubjectNames, Current.SubjectNames) &&
+				ExactList(Archived.TargetNames, Current.TargetNames) &&
+				ExactList(Archived.DueTicks, Current.DueTicks) &&
+				ExactList(Archived.WaterCosts, Current.WaterCosts) &&
+				ExactList(Archived.ProvisionCosts, Current.ProvisionCosts) &&
+				ExactList(Archived.OutcomeCodes, Current.OutcomeCodes) &&
+				ExactList(Archived.DeliverySourceEndpointIds,
+					Current.DeliverySourceEndpointIds) &&
+				ExactList(Archived.DeliverySourceObjectIds,
+					Current.DeliverySourceObjectIds) &&
+				ExactList(Archived.DeliverySourceXs, Current.DeliverySourceXs) &&
+				ExactList(Archived.DeliverySourceYs, Current.DeliverySourceYs) &&
+				ExactList(Archived.DeliveryTargetEndpointIds,
+					Current.DeliveryTargetEndpointIds) &&
+				ExactList(Archived.DeliveryTargetObjectIds,
+					Current.DeliveryTargetObjectIds) &&
+				ExactList(Archived.DeliveryTargetXs, Current.DeliveryTargetXs) &&
+				ExactList(Archived.DeliveryTargetYs, Current.DeliveryTargetYs) &&
+				ExactList(Archived.DeliverySourceBeforeAmounts,
+					Current.DeliverySourceBeforeAmounts) &&
+				ExactList(Archived.DeliveryTripIds, Current.DeliveryTripIds) &&
+				ExactList(Archived.DeliveryStopOrdinals, Current.DeliveryStopOrdinals) &&
+				ExactList(Archived.DeliveryPhases, Current.DeliveryPhases) &&
+				ExactList(Archived.DeliveryCargoAuthorityKinds,
+					Current.DeliveryCargoAuthorityKinds) &&
+				ExactList(Archived.DeliveryOwnerOperationIds,
+					Current.DeliveryOwnerOperationIds) &&
+				ExactList(Archived.DeliveryOwnerManifestVersions,
+					Current.DeliveryOwnerManifestVersions) &&
+				ExactList(Archived.DeliveryOwnerManifestDigests,
+					Current.DeliveryOwnerManifestDigests) &&
+				ExactList(Archived.DeliveryOwnerManifestRevisions,
+					Current.DeliveryOwnerManifestRevisions) &&
+				ExactList(Archived.DeliveryManifestSourceStarts,
+					Current.DeliveryManifestSourceStarts) &&
+				ExactList(Archived.DeliveryManifestSourceCounts,
+					Current.DeliveryManifestSourceCounts) &&
+				ExactList(Archived.DeliveryTargetBeforeAmounts,
+					Current.DeliveryTargetBeforeAmounts) &&
+				ExactList(Archived.DeliveryTargetReceiptStates,
+					Current.DeliveryTargetReceiptStates) &&
 				ExactList(Archived.LegCounts, Current.LegCounts) &&
 				ExactList(Archived.LegZoneIds, Current.LegZoneIds) &&
 				ExactList(Archived.LegEnterX, Current.LegEnterX) &&
@@ -1250,6 +1610,29 @@ namespace ThousandAndFirst
 				WriteGraphString(Writer, Value.DestZoneIds[i]); Writer.Write(Value.StartTicks[i]);
 				Writer.Write(Value.WalkTicksPerCell[i]); Writer.Write(Value.Statuses[i]);
 				Writer.Write(Value.OriginCodes[i]); Writer.Write(Value.DepositLegIndexes[i]);
+				Writer.Write(Value.SubjectIds[i]); WriteGraphString(Writer, Value.SubjectNames[i]);
+				WriteGraphString(Writer, Value.TargetNames[i]); Writer.Write(Value.DueTicks[i]);
+				Writer.Write(Value.WaterCosts[i]); Writer.Write(Value.ProvisionCosts[i]);
+				Writer.Write(Value.OutcomeCodes[i]);
+				Writer.Write(Value.DeliverySourceEndpointIds[i]);
+				WriteGraphString(Writer, Value.DeliverySourceObjectIds[i]);
+				Writer.Write(Value.DeliverySourceXs[i]); Writer.Write(Value.DeliverySourceYs[i]);
+				Writer.Write(Value.DeliveryTargetEndpointIds[i]);
+				WriteGraphString(Writer, Value.DeliveryTargetObjectIds[i]);
+				Writer.Write(Value.DeliveryTargetXs[i]); Writer.Write(Value.DeliveryTargetYs[i]);
+				Writer.Write(Value.DeliverySourceBeforeAmounts[i]);
+				Writer.Write(Value.DeliveryTripIds[i]);
+				Writer.Write(Value.DeliveryStopOrdinals[i]);
+				Writer.Write(Value.DeliveryPhases[i]);
+				Writer.Write(Value.DeliveryCargoAuthorityKinds[i]);
+				WriteGraphString(Writer, Value.DeliveryOwnerOperationIds[i]);
+				Writer.Write(Value.DeliveryOwnerManifestVersions[i]);
+				WriteGraphString(Writer, Value.DeliveryOwnerManifestDigests[i]);
+				Writer.Write(Value.DeliveryOwnerManifestRevisions[i]);
+				Writer.Write(Value.DeliveryManifestSourceStarts[i]);
+				Writer.Write(Value.DeliveryManifestSourceCounts[i]);
+				Writer.Write(Value.DeliveryTargetBeforeAmounts[i]);
+				Writer.Write(Value.DeliveryTargetReceiptStates[i]);
 				Writer.Write(Value.LegCounts[i]);
 			}
 			Writer.Write(Value.LegZoneIds.Count);
@@ -1344,7 +1727,10 @@ namespace ThousandAndFirst
 			Version = Reader.ReadInt32();
 			if (Version == 1) throw new InvalidDataException(
 				"Pre-release realm archive v1 used unsafe nested reflected settlement wire.");
-			if (Version != CurrentVersion) throw new InvalidDataException("Unknown realm archive version.");
+			if (Version != LegacyJobVersion && Version != MissionJobVersion
+				&& Version != CurrentVersion)
+				throw new InvalidDataException("Unknown realm archive version.");
+			int wireVersion = Version;
 			Phase = (KingdomRealmArchivePhase)Reader.ReadByte();
 			byte quarantineFlag = Reader.ReadByte();
 			if (quarantineFlag > 1) throw new InvalidDataException(
@@ -1366,7 +1752,7 @@ namespace ThousandAndFirst
 			Away = ReadArchivedSettlement(Reader, out AwayOpaque, out AwayWireVersion);
 			Standings = ReadStandings(Reader);
 			Bindings = ReadBindings(Reader); ResidentCounter = Reader.ReadInt32();
-			Jobs = ReadJobs(Reader); LastSliceTick = Reader.ReadInt64();
+			Jobs = ReadJobs(Reader, wireVersion); LastSliceTick = Reader.ReadInt64();
 			ReifyTick = Reader.ReadInt64(); ReifyThirdsSpent = Reader.ReadInt32();
 			ReifyHeavySpent = Reader.ReadInt32(); ReifyQuietUntilTick = Reader.ReadInt64();
 			DedicationCounter = Reader.ReadInt32();
@@ -1393,6 +1779,9 @@ namespace ThousandAndFirst
 			ReturnChronicle = ReadCallback(Reader); ReturnReputation = ReadCallback(Reader);
 			ReturnFeelings = ReadCallback(Reader); ReturnSeat = ReadCallback(Reader);
 			ReturnAbility = ReadCallback(Reader);
+			// v2 predates mission and delivery columns; v3 predates delivery columns. ReadJobs
+			// pads only the absent envelopes; every subsequent save is canonical v4.
+			Version = CurrentVersion;
 			string failure;
 			if (!ValidateEnvelope(out failure)) throw new InvalidDataException(failure);
 			if (SeatOpaque != null || AwayOpaque != null || SecededOpaque != null)
@@ -1666,6 +2055,29 @@ namespace ThousandAndFirst
 				WriteString(Writer, Value.DestZoneIds[i], 512); Writer.Write(Value.StartTicks[i]);
 				Writer.Write(Value.WalkTicksPerCell[i]); Writer.Write(Value.Statuses[i]);
 				Writer.Write(Value.OriginCodes[i]); Writer.Write(Value.DepositLegIndexes[i]);
+				Writer.Write(Value.SubjectIds[i]); WriteString(Writer, Value.SubjectNames[i], 512);
+				WriteString(Writer, Value.TargetNames[i], 512); Writer.Write(Value.DueTicks[i]);
+				Writer.Write(Value.WaterCosts[i]); Writer.Write(Value.ProvisionCosts[i]);
+				Writer.Write(Value.OutcomeCodes[i]);
+				Writer.Write(Value.DeliverySourceEndpointIds[i]);
+				WriteString(Writer, Value.DeliverySourceObjectIds[i], 512);
+				Writer.Write(Value.DeliverySourceXs[i]); Writer.Write(Value.DeliverySourceYs[i]);
+				Writer.Write(Value.DeliveryTargetEndpointIds[i]);
+				WriteString(Writer, Value.DeliveryTargetObjectIds[i], 512);
+				Writer.Write(Value.DeliveryTargetXs[i]); Writer.Write(Value.DeliveryTargetYs[i]);
+				Writer.Write(Value.DeliverySourceBeforeAmounts[i]);
+				Writer.Write(Value.DeliveryTripIds[i]);
+				Writer.Write(Value.DeliveryStopOrdinals[i]);
+				Writer.Write(Value.DeliveryPhases[i]);
+				Writer.Write(Value.DeliveryCargoAuthorityKinds[i]);
+				WriteString(Writer, Value.DeliveryOwnerOperationIds[i], 512);
+				Writer.Write(Value.DeliveryOwnerManifestVersions[i]);
+				WriteString(Writer, Value.DeliveryOwnerManifestDigests[i], 512);
+				Writer.Write(Value.DeliveryOwnerManifestRevisions[i]);
+				Writer.Write(Value.DeliveryManifestSourceStarts[i]);
+				Writer.Write(Value.DeliveryManifestSourceCounts[i]);
+				Writer.Write(Value.DeliveryTargetBeforeAmounts[i]);
+				Writer.Write(Value.DeliveryTargetReceiptStates[i]);
 				Writer.Write(Value.LegCounts[i]);
 			}
 			Writer.Write(Value.LegZoneIds.Count);
@@ -1678,7 +2090,8 @@ namespace ThousandAndFirst
 			}
 		}
 
-		private static Simulation.City.KingdomJobRegistry ReadJobs(SerializationReader Reader)
+		private static Simulation.City.KingdomJobRegistry ReadJobs(SerializationReader Reader,
+			int WireVersion)
 		{
 			Simulation.City.KingdomJobRegistry value = new Simulation.City.KingdomJobRegistry();
 			value.JobCounter = Reader.ReadInt32();
@@ -1691,7 +2104,42 @@ namespace ThousandAndFirst
 				value.SourceZoneIds.Add(ReadString(Reader, 512)); value.DestZoneIds.Add(ReadString(Reader, 512));
 				value.StartTicks.Add(Reader.ReadInt64()); value.WalkTicksPerCell.Add(Reader.ReadInt32());
 				value.Statuses.Add(Reader.ReadInt32()); value.OriginCodes.Add(Reader.ReadInt32());
-				value.DepositLegIndexes.Add(Reader.ReadInt32()); value.LegCounts.Add(Reader.ReadInt32());
+				value.DepositLegIndexes.Add(Reader.ReadInt32());
+				if (WireVersion >= MissionJobVersion)
+				{
+					value.SubjectIds.Add(Reader.ReadInt32());
+					value.SubjectNames.Add(ReadString(Reader, 512));
+					value.TargetNames.Add(ReadString(Reader, 512));
+					value.DueTicks.Add(Reader.ReadInt64());
+					value.WaterCosts.Add(Reader.ReadInt32());
+					value.ProvisionCosts.Add(Reader.ReadInt32());
+					value.OutcomeCodes.Add(Reader.ReadInt32());
+				}
+				if (WireVersion >= CurrentVersion)
+				{
+					value.DeliverySourceEndpointIds.Add(Reader.ReadInt32());
+					value.DeliverySourceObjectIds.Add(ReadString(Reader, 512));
+					value.DeliverySourceXs.Add(Reader.ReadInt32());
+					value.DeliverySourceYs.Add(Reader.ReadInt32());
+					value.DeliveryTargetEndpointIds.Add(Reader.ReadInt32());
+					value.DeliveryTargetObjectIds.Add(ReadString(Reader, 512));
+					value.DeliveryTargetXs.Add(Reader.ReadInt32());
+					value.DeliveryTargetYs.Add(Reader.ReadInt32());
+					value.DeliverySourceBeforeAmounts.Add(Reader.ReadInt64());
+					value.DeliveryTripIds.Add(Reader.ReadInt32());
+					value.DeliveryStopOrdinals.Add(Reader.ReadInt32());
+					value.DeliveryPhases.Add(Reader.ReadInt32());
+					value.DeliveryCargoAuthorityKinds.Add(Reader.ReadInt32());
+					value.DeliveryOwnerOperationIds.Add(ReadString(Reader, 512));
+					value.DeliveryOwnerManifestVersions.Add(Reader.ReadInt32());
+					value.DeliveryOwnerManifestDigests.Add(ReadString(Reader, 512));
+					value.DeliveryOwnerManifestRevisions.Add(Reader.ReadInt64());
+					value.DeliveryManifestSourceStarts.Add(Reader.ReadInt32());
+					value.DeliveryManifestSourceCounts.Add(Reader.ReadInt32());
+					value.DeliveryTargetBeforeAmounts.Add(Reader.ReadInt64());
+					value.DeliveryTargetReceiptStates.Add(Reader.ReadInt32());
+				}
+				value.LegCounts.Add(Reader.ReadInt32());
 			}
 			int legs = Reader.ReadInt32();
 			if (legs < 0 || legs > MaxLegs) throw new InvalidDataException("Archived leg count exceeds cap.");
@@ -1702,6 +2150,7 @@ namespace ThousandAndFirst
 				value.LegExitY.Add(Reader.ReadInt32()); value.LegLengths.Add(Reader.ReadInt32());
 				value.LegDepartTicks.Add(Reader.ReadInt64()); value.LegArriveTicks.Add(Reader.ReadInt64());
 			}
+			if (WireVersion < CurrentVersion) value.Normalize();
 			if (!ValidJobs(value)) throw new InvalidDataException("Archived job columns are inconsistent.");
 			return value;
 		}

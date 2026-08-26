@@ -1781,12 +1781,12 @@ namespace ThousandAndFirst
 		}
 
 		/// <summary>
-		/// The stage a plot has reached. A long absence lands on the stage the crew's own labour
-		/// honestly bought and no further &mdash; the elapsed ticks are the measure of that labour,
-		/// never a cause in themselves &mdash; so coming home after a hundred days finds the thing
-		/// finished and coming home after one finds it framed.
+		/// The stage a plot has reached from completed work ticks. A long absence may supply elapsed
+		/// time to the caller, but only labour converts that interval into the value passed here; an
+		/// unstaffed frame therefore stays staked however old it is.
 		/// </summary>
-		/// <param name="Elapsed">Ticks since the plot was staked. Negative reads as zero.</param>
+		/// <param name="Elapsed">Work ticks completed. Negative reads as zero. Legacy callers may
+		/// still pass absolute elapsed ticks to preserve old in-flight saves.</param>
 		/// <param name="Total">Ticks the whole raising takes. Zero or less reads as finished,
 		/// because a raising with no duration has nothing left to do.</param>
 		public static PlotStage StageAt(long Elapsed, long Total)

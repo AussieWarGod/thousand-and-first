@@ -36,7 +36,11 @@ namespace ThousandAndFirst.Api
 		/// <summary>The extension's own constructor or version property threw. Distinct from
 		/// <see cref="RefusedNoVersion"/> on purpose: telling a modder their class "declares no API
 		/// version" when what actually happened is that it threw sends them to the wrong line.</summary>
-		RefusedThrew = 6
+		RefusedThrew = 6,
+
+		/// <summary>Another installed manifest ID maps to the same bounded durable namespace. Both
+		/// owners are refused so load order cannot decide which mod receives shared state.</summary>
+		RefusedNamespaceCollision = 7
 	}
 
 	/// <summary>
@@ -64,7 +68,12 @@ namespace ThousandAndFirst.Api
 		/// never removed in a minor release.
 		/// </para>
 		/// </summary>
-		public const int Version = 1;
+		public const int Version = 3;
+
+		/// <summary>First version which publishes durable resource, job/carrier, network and work
+		/// behaviour contracts. Version-one ask/happening and version-two identity sources remain in
+		/// the compatibility window, but cannot claim contracts their binaries predate.</summary>
+		public const int BehaviourVersion = 3;
 
 		/// <summary>
 		/// The oldest version still admitted. STANDARDS &sect;9 promises supported API is kept
@@ -87,6 +96,102 @@ namespace ThousandAndFirst.Api
 		/// than the ask cap because a notice can PUSH a line at the founder and an ask cannot:
 		/// &sect;4.2's budget is shared, and an extension may not out-shout the city.</summary>
 		public const int MaxNoticesPerSource = 2;
+
+		/// <summary>Extra live roster keys one identity source may mint for one person. These keys
+		/// are projections, not durable rows, but the cap still bounds reconciliation work.</summary>
+		public const int MaxIdentityKeysPerSource = 8;
+
+		/// <summary>Proposed key slots inspected from one source result. Invalid entries consume this
+		/// budget, keeping a hostile all-invalid array from making reconciliation unbounded.</summary>
+		public const int MaxIdentityKeyCandidatesPerSource = 32;
+
+		/// <summary>Kernel draws one extension callback may spend. The thirty-third attempt refuses
+		/// the whole callback as over-budget; it never reaches <c>CounterRandom</c>.</summary>
+		public const int MaxDrawsPerSourceCall = 32;
+
+		/// <summary>Longest culture, species, creed, or genotype carried over the extension seam.</summary>
+		public const int MaxIdentityNameLength = 128;
+
+		/// <summary>Longest complete extra roster key. An over-long key is dropped rather than
+		/// truncated, because truncation could make two namespaces collide.</summary>
+		public const int MaxIdentityKeyLength = 128;
+
+		/// <summary>Resource kinds one owner may retain in one settlement.</summary>
+		public const int MaxResourceKindsPerOwner = 4;
+
+		/// <summary>Total extension resource rows one settlement may retain.</summary>
+		public const int MaxResourceKindsPerCity = 16;
+
+		/// <summary>Candidate slots inspected for each returned behaviour array. Invalid entries
+		/// spend the inspection budget, so hostile all-invalid arrays remain bounded.</summary>
+		public const int MaxBehaviourCandidatesPerCall = 32;
+
+		/// <summary>Carrier kinds one owner may offer during one pass.</summary>
+		public const int MaxCarrierKindsPerOwner = 4;
+
+		/// <summary>Open extension jobs one owner may retain.</summary>
+		public const int MaxJobsPerOwner = 4;
+
+		/// <summary>Total open extension jobs per settlement.</summary>
+		public const int MaxJobsPerCity = 16;
+
+		/// <summary>Recent terminal idempotence receipts retained for one owner. Older terminal rows
+		/// retire in insertion order. Reusing a retired key at a later tick is a new proposal, so
+		/// extension job keys must identify one logical job and never be recycled.</summary>
+		public const int MaxTerminalJobReceiptsPerOwner = 4;
+
+		/// <summary>Recent terminal job receipts retained across all owners in one settlement.</summary>
+		public const int MaxTerminalJobReceiptsPerCity = 16;
+
+		/// <summary>Largest encoded job-row array: every open row plus the terminal receipt ring.</summary>
+		public const int MaxStoredJobsPerCity = MaxJobsPerCity + MaxTerminalJobReceiptsPerCity;
+
+		/// <summary>Legs one extension job may carry.</summary>
+		public const int MaxLegsPerJob = 6;
+
+		/// <summary>Atomic resource changes one completion or work advance may propose.</summary>
+		public const int MaxChangesPerResult = 4;
+
+		/// <summary>Networks one owner may retain.</summary>
+		public const int MaxNetworksPerOwner = 4;
+
+		/// <summary>Total extension network state rows per settlement.</summary>
+		public const int MaxNetworksPerCity = 16;
+
+		/// <summary>Nodes in one extension network.</summary>
+		public const int MaxNodesPerNetwork = 8;
+
+		/// <summary>Edges in one extension network.</summary>
+		public const int MaxEdgesPerNetwork = 12;
+
+		/// <summary>Work-behaviour rows one owner may retain.</summary>
+		public const int MaxWorkBehavioursPerOwner = 16;
+
+		/// <summary>Total work-behaviour rows per settlement.</summary>
+		public const int MaxWorkBehavioursPerCity = 64;
+
+		/// <summary>Physical-debt entries accepted from one work result. One keeps the durable row
+		/// fixed-width and makes partial materialisation impossible.</summary>
+		public const int MaxMaterialisationsPerAdvance = 1;
+
+		/// <summary>Legacy v1 sidecars were admitted up to this exact decoded byte count.</summary>
+		internal const int LegacyBehaviourModelBytes = 16384;
+
+		/// <summary>Maximum decoded byte count of one current durable behaviour sidecar. Wire v2
+		/// appends one exact generation receipt to every work row, so its bound includes the full
+		/// worst-case expansion of any valid v1 carrier.</summary>
+		public const int MaxBehaviourModelBytes = LegacyBehaviourModelBytes
+			+ MaxWorkBehavioursPerCity * sizeof(long);
+
+		/// <summary>Maximum identifier length for owner-qualified keys, Qud blueprint names, property
+		/// names, liquid ids and node names.</summary>
+		public const int MaxBehaviourIdentifierLength = 128;
+
+		/// <summary>Lowest identity affinity an extension result may compose to.</summary>
+		public const int MinIdentityAffinity = 70;
+
+		/// <summary>Highest identity affinity an extension result may compose to.</summary>
+		public const int MaxIdentityAffinity = 130;
 
 		/// <summary>Longest extension-supplied line the surfaces will carry. Longer is cut at a
 		/// word boundary rather than refused.</summary>
@@ -113,12 +218,26 @@ namespace ThousandAndFirst.Api
 		/// name its owner is the one failure this contract exists to prevent.
 		/// </para>
 		/// </summary>
-		/// <param name="ModName">The owning mod's display title, as the engine knows it.</param>
+		/// <param name="ModName">The owning mod's immutable manifest ID.</param>
 		/// <param name="DeclaredVersion">What the extension says it was built against.</param>
 		/// <param name="ImplementsContract">Whether it implements at least one published
 		/// contract interface.</param>
 		/// <returns>The verdict. Only <see cref="KingdomExtensionVerdict.Accepted"/> admits.</returns>
 		public static KingdomExtensionVerdict Judge(string ModName, int DeclaredVersion, bool ImplementsContract)
+		{
+			return Judge(ModName, DeclaredVersion, ImplementsContract, MinSupportedVersion);
+		}
+
+		/// <summary>Version judgment for a specific contract family. Additive v3 behaviour cannot be
+		/// claimed by a source declaring v1, while genuine v1 ask/happening sources remain admitted.</summary>
+		/// <param name="ModName">Owning mod immutable manifest ID.</param>
+		/// <param name="DeclaredVersion">Declared API version.</param>
+		/// <param name="ImplementsContract">Whether any published contract is implemented.</param>
+		/// <param name="MinimumContractVersion">First API version containing every implemented
+		/// contract on this type.</param>
+		/// <returns>Registration verdict.</returns>
+		public static KingdomExtensionVerdict Judge(string ModName, int DeclaredVersion,
+			bool ImplementsContract, int MinimumContractVersion)
 		{
 			if (string.IsNullOrEmpty(Slug(ModName)))
 			{
@@ -136,7 +255,9 @@ namespace ThousandAndFirst.Api
 			{
 				return KingdomExtensionVerdict.RefusedAhead;
 			}
-			if (DeclaredVersion < MinSupportedVersion)
+			int required = MinimumContractVersion < MinSupportedVersion
+				? MinSupportedVersion : MinimumContractVersion;
+			if (DeclaredVersion < required)
 			{
 				return KingdomExtensionVerdict.RefusedBehind;
 			}
@@ -150,6 +271,18 @@ namespace ThousandAndFirst.Api
 		/// </summary>
 		/// <returns>The line, or empty for <see cref="KingdomExtensionVerdict.Accepted"/>.</returns>
 		public static string RefusalLine(KingdomExtensionVerdict Verdict, string ModName, int DeclaredVersion)
+		{
+			return RefusalLine(Verdict, ModName, DeclaredVersion, MinSupportedVersion);
+		}
+
+		/// <summary>Refusal prose using a specific contract family's minimum version.</summary>
+		/// <param name="Verdict">Registration verdict.</param>
+		/// <param name="ModName">Owning mod immutable manifest ID.</param>
+		/// <param name="DeclaredVersion">Declared API version.</param>
+		/// <param name="MinimumContractVersion">First version containing every implemented contract.</param>
+		/// <returns>Founder-facing refusal line, or empty for acceptance.</returns>
+		public static string RefusalLine(KingdomExtensionVerdict Verdict, string ModName,
+			int DeclaredVersion, int MinimumContractVersion)
 		{
 			string who = string.IsNullOrEmpty(ModName) ? "an unnamed mod" : ModName;
 			switch (Verdict)
@@ -165,9 +298,16 @@ namespace ThousandAndFirst.Api
 			case KingdomExtensionVerdict.RefusedAhead:
 				return who + " was built against kingdom API version " + DeclaredVersion + "; this copy of The Thousand and First publishes version " + Version + ". Update the mod, or update this one. Nothing of it is loaded.";
 			case KingdomExtensionVerdict.RefusedBehind:
-				return who + " was built against kingdom API version " + DeclaredVersion + "; this copy of The Thousand and First no longer supports anything below version " + MinSupportedVersion + ". The mod needs an update. Nothing of it is loaded.";
+				int required = MinimumContractVersion < MinSupportedVersion
+					? MinSupportedVersion : MinimumContractVersion;
+				return who + " was built against kingdom API version " + DeclaredVersion
+					+ "; this copy of The Thousand and First publishes version " + Version
+					+ " and its chosen contracts require version " + required
+					+ ". The mod needs an update. Nothing of it is loaded.";
 			case KingdomExtensionVerdict.RefusedThrew:
 				return who + " threw while the kingdom API was building its extension. The fault is in that mod and is in the log; nothing of it is loaded, and every other extension still runs.";
+			case KingdomExtensionVerdict.RefusedNamespaceCollision:
+				return who + " has the same bounded kingdom namespace as another installed manifest ID. Both owners are refused so load order cannot transfer durable state; change one manifest ID before publishing it.";
 			default:
 				return who + " was refused by the kingdom API. Nothing of it is loaded.";
 			}
@@ -181,7 +321,7 @@ namespace ThousandAndFirst.Api
 		/// EventKindCode)</c> lane, so two mods at ordinal zero cannot collide (&sect;2.4).
 		/// </para>
 		/// </summary>
-		/// <param name="ModName">The owning mod. Slugged.</param>
+		/// <param name="ModName">The owning mod's immutable manifest ID. Slugged.</param>
 		/// <param name="Lane">The extension's own name for this stream. Slugged.</param>
 		/// <param name="Stream">The stream id, or empty on refusal.</param>
 		/// <returns>False when either part slugs away to nothing or the pair will not fit the
@@ -350,6 +490,165 @@ namespace ThousandAndFirst.Api
 		{
 			string slug = Slug(Source);
 			return (slug.Length <= MaxKindLength) ? slug : slug.Substring(0, MaxKindLength);
+		}
+
+		/// <summary>Canonicalizes one behaviour key and proves the registered owner owns its
+		/// namespace. Unqualified input is filed under the owner; same-owner qualified input is
+		/// accepted; foreign, blank, malformed, or overlong input is refused rather than truncated.</summary>
+		/// <param name="ModName">Registered owning mod manifest ID.</param>
+		/// <param name="Source">Owner-local or same-owner qualified key.</param>
+		/// <returns>Owner-qualified key, or null.</returns>
+		public static string ExtensionKey(string ModName, string Source)
+		{
+			string owner = Slug(ModName);
+			if (string.IsNullOrEmpty(owner) || string.IsNullOrWhiteSpace(Source)) return null;
+			string raw = Source.Trim().ToLowerInvariant();
+			int colon = raw.IndexOf(':');
+			string local;
+			if (colon >= 0)
+			{
+				if (colon == 0 || colon != raw.LastIndexOf(':') || colon == raw.Length - 1
+					|| !string.Equals(raw.Substring(0, colon), owner, StringComparison.Ordinal))
+					return null;
+				local = Slug(raw.Substring(colon + 1));
+				if (!string.Equals(local, raw.Substring(colon + 1), StringComparison.Ordinal)) return null;
+			}
+			else
+			{
+				local = Slug(raw);
+				if (!string.Equals(local, raw, StringComparison.Ordinal)) return null;
+			}
+			if (string.IsNullOrEmpty(local)) return null;
+			string key = owner + ":" + local;
+			return key.Length <= MaxBehaviourIdentifierLength ? key : null;
+		}
+
+		/// <summary>Bounds an engine-facing property, liquid, blueprint, unit, or node identifier
+		/// without changing its case. Control characters, markup braces, and overlong values are
+		/// refused; surrounding whitespace is removed.</summary>
+		/// <param name="Source">Proposed identifier.</param>
+		/// <param name="Required">Whether empty input is a refusal.</param>
+		/// <returns>Bounded identifier, empty for an allowed absence, or null on refusal.</returns>
+		public static string BehaviourIdentifier(string Source, bool Required)
+		{
+			if (string.IsNullOrWhiteSpace(Source)) return Required ? null : "";
+			string value = Source.Trim();
+			if (value.Length > MaxBehaviourIdentifierLength || value.IndexOf('{') >= 0
+				|| value.IndexOf('}') >= 0 || value.IndexOf('|') >= 0) return null;
+			for (int i = 0; i < value.Length; i++)
+				if (char.IsControl(value[i])) return null;
+			return value;
+		}
+
+		/// <summary>A frozen identity name: trimmed, control-free, and bounded. Case is preserved
+		/// because culture and species are vanilla display vocabularies rather than filing keys.</summary>
+		/// <param name="Source">The engine or extension supplied identity name. Null is empty.</param>
+		/// <returns>A bounded display value. Never null.</returns>
+		public static string IdentityName(string Source)
+		{
+			if (string.IsNullOrWhiteSpace(Source))
+			{
+				return "";
+			}
+			StringBuilder builder = new StringBuilder();
+			bool spacing = false;
+			string source = Source.Trim();
+			for (int i = 0; i < source.Length && builder.Length < MaxIdentityNameLength; i++)
+			{
+				char c = source[i];
+				if (char.IsControl(c) || char.IsWhiteSpace(c))
+				{
+					spacing = builder.Length > 0;
+					continue;
+				}
+				if (spacing && builder.Length < MaxIdentityNameLength)
+				{
+					builder.Append(' ');
+				}
+				spacing = false;
+				if (builder.Length < MaxIdentityNameLength)
+				{
+					builder.Append(c);
+				}
+			}
+			return builder.ToString();
+		}
+
+		/// <summary>One work-kind label handed to an identity source. Empty stays empty; every other
+		/// value uses the same bounded filing grammar as asks and notices.</summary>
+		/// <param name="Source">The existing work lane's label.</param>
+		/// <returns>The bounded canonical label, or empty.</returns>
+		public static string IdentityWorkKind(string Source)
+		{
+			return Kind(Source);
+		}
+
+		/// <summary>
+		/// Canonicalizes one extension-supplied roster key and proves the source owns its namespace.
+		/// Unqualified input is filed under the owning mod. Qualified input is accepted only when its
+		/// kind is that same mod slug. Blank, malformed, foreign, or over-long input is dropped.
+		/// </summary>
+		/// <param name="ModName">The registered owning mod's immutable manifest ID.</param>
+		/// <param name="Source">The source's proposed key.</param>
+		/// <returns>The owned canonical key, or null when it is unsafe or foreign.</returns>
+		public static string IdentityKey(string ModName, string Source)
+		{
+			string owner = Kind(ModName);
+			if (owner.Length == 0 || string.IsNullOrWhiteSpace(Source))
+			{
+				return null;
+			}
+			string raw = Source.Trim();
+			if (raw.Length > MaxIdentityKeyLength)
+			{
+				return null;
+			}
+			string source = IdentityName(raw).ToLowerInvariant();
+			if (source.IndexOf('|') >= 0 || source.Length == 0)
+			{
+				return null;
+			}
+			int colon = source.IndexOf(':');
+			string name;
+			if (colon < 0)
+			{
+				name = source;
+			}
+			else
+			{
+				if (colon == 0 || colon == source.Length - 1
+					|| !string.Equals(source.Substring(0, colon), owner, StringComparison.Ordinal))
+				{
+					return null;
+				}
+				name = source.Substring(colon + 1);
+			}
+			if (name.Length == 0 || name.IndexOf('|') >= 0)
+			{
+				return null;
+			}
+			string key = owner + ":" + name;
+			return (key.Length <= MaxIdentityKeyLength) ? key : null;
+		}
+
+		/// <summary>Clamps one affinity answer into the Addendum 17 band.</summary>
+		/// <param name="Percent">The source's answer, where 100 is neutral.</param>
+		/// <returns>The answer clamped to 70&ndash;130.</returns>
+		public static int IdentityAffinity(int Percent)
+		{
+			if (Percent < MinIdentityAffinity) return MinIdentityAffinity;
+			if (Percent > MaxIdentityAffinity) return MaxIdentityAffinity;
+			return Percent;
+		}
+
+		/// <summary>Finalizes an order-independent sum of source deltas around neutral 100. The sum
+		/// stays unclamped until every source has spoken; otherwise early saturation would let source
+		/// order change a mixed positive/negative answer.</summary>
+		internal static int IdentityAffinityFromDelta(long Delta)
+		{
+			if (Delta <= MinIdentityAffinity - 100L) return MinIdentityAffinity;
+			if (Delta >= MaxIdentityAffinity - 100L) return MaxIdentityAffinity;
+			return 100 + (int)Delta;
 		}
 	}
 }

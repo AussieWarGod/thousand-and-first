@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using XRL;
 using XRL.Messages;
 using ThousandAndFirst.Simulation.City;
-using ThousandAndFirst.Simulation.Kernel;
 
 namespace ThousandAndFirst.Api
 {
@@ -18,7 +17,7 @@ namespace ThousandAndFirst.Api
 	/// </para>
 	/// <para>
 	/// <b>The five invariants, enforced here rather than trusted.</b> Draws go through
-	/// <see cref="Draws"/> and the kernel (clause 1). Every call crosses
+	/// <see cref="KingdomExtensionDraws"/> and the kernel (clause 1). Every call crosses
 	/// <c>KingdomExecutor.Submit</c>, so a frozen reading goes in, a frozen result comes out, and a
 	/// source that throws or runs long stalls itself and nothing else (clauses 2 and 3). Telling
 	/// goes through the ledger, the chronicle and <c>KingdomWord</c> under &sect;4.2's shared
@@ -32,23 +31,27 @@ namespace ThousandAndFirst.Api
 	/// </para>
 	/// </summary>
 	[HasModSensitiveStaticCache]
-	public static class KingdomExtensions
+	public static partial class KingdomExtensions
 	{
 		/// <summary>
-		/// One admitted extension and the mod that owns it. The mod name is captured once, at
-		/// registration, because it is what every later fault line is attributed to.
+		/// One admitted extension and the mod that owns it. The immutable manifest ID is captured
+		/// once at registration; display titles are presentation and may rename or collide.
 		/// </summary>
 		internal sealed class Binding
 		{
 			internal readonly string ModName;
 
+			internal readonly string AssemblyName;
+
 			internal readonly string TypeName;
 
 			internal readonly IKingdomExtension Extension;
 
-			internal Binding(string modName, string typeName, IKingdomExtension extension)
+			internal Binding(string modName, string assemblyName, string typeName,
+				IKingdomExtension extension)
 			{
 				ModName = modName;
+				AssemblyName = assemblyName;
 				TypeName = typeName;
 				Extension = extension;
 			}
@@ -71,6 +74,14 @@ namespace ThousandAndFirst.Api
 
 		[ModSensitiveStaticCache]
 		private static List<string> Refused;
+
+		/// <summary>Runtime fault notices already shown this mod-list generation. Logging happens on
+		/// every fault; the screen names each owner/lane once so a broken identity source cannot
+		/// turn a daily reconciliation into message spam.</summary>
+		[ModSensitiveStaticCache]
+		private static HashSet<string> AnnouncedFaults;
+
+		private const int MaxRuntimeFaultAnnouncements = 64;
 
 		/// <summary>What <see cref="Enabled"/> read when the registry was built. The option is a
 		/// checkbox the player can flip mid-session, and a registry that never noticed would go on
@@ -152,6 +163,7 @@ namespace ThousandAndFirst.Api
 				KingdomSystem.Guard("kingdom extension registration", delegate
 				{
 					Collect(bound, refused);
+					RefuseNamespaceCollisions(bound, refused);
 				});
 			}
 			// Sorted, and not left in scan order. ModManager walks ActiveTypes, whose order is the
@@ -162,7 +174,9 @@ namespace ThousandAndFirst.Api
 			bound.Sort(delegate(Binding a, Binding b)
 			{
 				int mod = string.CompareOrdinal(a.ModName, b.ModName);
-				return (mod != 0) ? mod : string.CompareOrdinal(a.TypeName, b.TypeName);
+				if (mod != 0) return mod;
+				int assembly = string.CompareOrdinal(a.AssemblyName, b.AssemblyName);
+				return (assembly != 0) ? assembly : string.CompareOrdinal(a.TypeName, b.TypeName);
 			});
 			refused.Sort(StringComparer.Ordinal);
 			Bound = bound;
@@ -213,16 +227,23 @@ namespace ThousandAndFirst.Api
 						asked = true;
 					}
 				});
-				bool contract = extension is IKingdomAskSource || extension is IKingdomHappeningSource;
+				bool behaviour = extension is IResourceKind || extension is IJobKind
+					|| extension is ICarrierKind || extension is INetworkKind
+					|| extension is IWorkBehaviour;
+				bool identity = extension is IKingdomIdentitySource;
+				bool contract = extension is IKingdomAskSource || extension is IKingdomHappeningSource
+					|| identity || behaviour;
+				int required = behaviour ? KingdomApiRules.BehaviourVersion : (identity ? 2 : 1);
 				KingdomExtensionVerdict verdict = (asked && extension != null)
-					? KingdomApiRules.Judge(owner, declared, contract)
+					? KingdomApiRules.Judge(owner, declared, contract, required)
 					: KingdomExtensionVerdict.RefusedThrew;
 				if (verdict != KingdomExtensionVerdict.Accepted)
 				{
-					refused.Add(KingdomApiRules.RefusalLine(verdict, owner, declared));
+					refused.Add(KingdomApiRules.RefusalLine(verdict, owner, declared, required));
 					continue;
 				}
-				bound.Add(new Binding(owner, type.FullName ?? type.Name, extension));
+				bound.Add(new Binding(owner, AssemblyNameOf(type),
+					type.FullName ?? type.Name, extension));
 			}
 		}
 
@@ -233,12 +254,50 @@ namespace ThousandAndFirst.Api
 				return "";
 			}
 			ModInfo mod = (type.Assembly == null) ? null : ModManager.GetMod(type.Assembly);
-			if (mod != null && !string.IsNullOrEmpty(mod.DisplayTitleStripped))
+			if (mod != null)
 			{
-				return mod.DisplayTitleStripped;
+				return mod.ID ?? "";
 			}
-			string assembly = (type.Assembly == null) ? null : type.Assembly.GetName().Name;
+			string assembly = AssemblyNameOf(type);
 			return string.IsNullOrEmpty(assembly) ? "" : assembly;
+		}
+
+		private static string AssemblyNameOf(Type type)
+		{
+			return type == null || type.Assembly == null ? "" : type.Assembly.GetName().Name ?? "";
+		}
+
+		/// <summary>Refuses every owner in a lossy canonical-namespace collision. First-wins would
+		/// make mod load order transfer durable rows, identity keys, and draw streams across mods.</summary>
+		private static void RefuseNamespaceCollisions(List<Binding> bound, List<string> refused)
+		{
+			Dictionary<string, string> firstByNamespace =
+				new Dictionary<string, string>(StringComparer.Ordinal);
+			HashSet<string> collidedOwners = new HashSet<string>(StringComparer.Ordinal);
+			for (int i = 0; i < bound.Count; i++)
+			{
+				string owner = bound[i].ModName;
+				string ownerNamespace = KingdomApiRules.Kind(owner);
+				string first;
+				if (firstByNamespace.TryGetValue(ownerNamespace, out first)
+					&& !string.Equals(first, owner, StringComparison.Ordinal))
+				{
+					collidedOwners.Add(first);
+					collidedOwners.Add(owner);
+				}
+				else
+				{
+					firstByNamespace[ownerNamespace] = owner;
+				}
+			}
+			if (collidedOwners.Count == 0) return;
+			bound.RemoveAll(delegate(Binding binding)
+			{
+				return collidedOwners.Contains(binding.ModName);
+			});
+			foreach (string owner in collidedOwners)
+				refused.Add(KingdomApiRules.RefusalLine(
+					KingdomExtensionVerdict.RefusedNamespaceCollision, owner, 0));
 		}
 
 		private static void Announce(List<string> refused)
@@ -255,68 +314,7 @@ namespace ThousandAndFirst.Api
 		}
 
 		// ==================================================================================
-		// The draw handle (§6.6 clause 1)
-		// ==================================================================================
-
-		/// <summary>
-		/// The kernel, wearing the published face. Every draw is
-		/// <c>CounterRandom</c> over a <c>SemanticEventKey</c> on the extension's own stream, so an
-		/// extension's chance is as replayable as ours and cannot shift ours.
-		/// </summary>
-		internal sealed class Draws : IKingdomDraws
-		{
-			private readonly KernelSeed128 seed;
-
-			private readonly string settlementId;
-
-			private readonly string modName;
-
-			internal Draws(KernelSeed128 seed, string settlementId, string modName)
-			{
-				this.seed = seed;
-				this.settlementId = settlementId;
-				this.modName = modName;
-			}
-
-			/// <summary>Rules version pinned into every extension draw's key. It moves only if the
-			/// draw is redefined in a way that must not compare equal to what came before.</summary>
-			private const int ExtensionRulesVersion = 1;
-
-			/// <summary>One kind code for the whole lane: domain separation comes from the stream,
-			/// which already carries the mod and its own lane name.</summary>
-			private const uint ExtensionKind = 1u;
-
-			public bool TryBetween(string Lane, uint Ordinal, int Low, int High, out int Value)
-			{
-				Value = Low;
-				if (High < Low)
-				{
-					return false;
-				}
-				string stream;
-				if (!KingdomApiRules.TryStream(modName, Lane, out stream))
-				{
-					return false;
-				}
-				SemanticEventKey key;
-				KernelFaultCode fault;
-				if (!SemanticEventKey.TryCreate(ExtensionRulesVersion, settlementId, stream, ExtensionKind, Ordinal, out key, out fault))
-				{
-					return false;
-				}
-				ulong span = (ulong)((long)High - (long)Low + 1L);
-				ulong drawn;
-				if (!CounterRandom.TryDrawBelow(seed, key, 0u, span, out drawn, out fault))
-				{
-					return false;
-				}
-				Value = (int)((long)Low + (long)drawn);
-				return true;
-			}
-		}
-
-		// ==================================================================================
-		// The two published lanes
+		// The published lanes
 		// ==================================================================================
 
 		/// <summary>
@@ -370,7 +368,8 @@ namespace ThousandAndFirst.Api
 				return asks;
 			}
 			bool own = Own;
-			AskJob job = new AskJob(Source, new Draws(System.SimulationSeed, Reading.SettlementId, Owner), Owner, own);
+			AskJob job = new AskJob(Source, new KingdomExtensionDraws(
+				System.SimulationSeed, Reading.SettlementId, Owner), Owner, own);
 			KingdomComputeResult<KingdomAsk[]> result = KingdomCity.Seam.Submit(Reading, job);
 			if (!result.Published)
 			{
@@ -393,20 +392,27 @@ namespace ThousandAndFirst.Api
 		/// <param name="Reading">The frozen reading.</param>
 		/// <param name="Label">The city's name, for the word surface.</param>
 		/// <param name="Here">Whether the founder is standing in this city.</param>
-		/// <param name="SinceTick">The tick this lane was last asked.</param>
+		/// <param name="CursorWire">Bounded per-source last-ask receipts.</param>
+		/// <param name="PublishCursor">Publishes one prepared receipt before its source runs.</param>
+		/// <param name="LegacySinceTick">Retired city-wide receipt. Used only to seed an absent
+		/// per-source wire after upgrade; never authorizes a current per-source window.</param>
 		/// <param name="NowTick">The pass's own clock, and the ceiling a notice may be dated at.
 		/// Passed in rather than read off the reading: the book's processed-through tick can lag
 		/// the pass by the part of a day it has not integrated yet, and a source that honestly
 		/// dated a notice "now" would have it silently dropped as the future.</param>
 		/// <param name="Spare">Told lines still unspent on this pass.</param>
 		/// <returns>Lines actually pushed. Recording is unbudgeted; only the push is.</returns>
-		internal static int Happenings(KingdomSystem System, KingdomCityReading Reading, string Label, bool Here, long SinceTick, long NowTick, int Spare)
+		internal static int Happenings(KingdomSystem System, KingdomCityReading Reading, string Label,
+			bool Here, string CursorWire, Action<string> PublishCursor, long LegacySinceTick,
+			long NowTick, int Spare)
 		{
 			int pushed = 0;
-			if (System == null || Reading == null)
+			if (System == null || Reading == null || PublishCursor == null)
 			{
 				return 0;
 			}
+			List<Binding> sources = new List<Binding>();
+			List<string> sourceKeys = new List<string>();
 			foreach (Binding binding in Registry())
 			{
 				IKingdomHappeningSource source = binding.Extension as IKingdomHappeningSource;
@@ -414,24 +420,163 @@ namespace ThousandAndFirst.Api
 				{
 					continue;
 				}
-				HappeningJob job = new HappeningJob(source, SinceTick,
-					new Draws(System.SimulationSeed, Reading.SettlementId, binding.ModName), binding.ModName);
+				if (sources.Count >= KingdomHappeningCursorRules.MaxSources)
+				{
+					Fault(binding.ModName, "happenings", "SourceCap");
+					continue;
+				}
+				string sourceKey;
+				if (!KingdomHappeningCursorRules.TrySourceKey(binding.ModName,
+					binding.AssemblyName, binding.TypeName, out sourceKey))
+				{
+					Fault(binding.ModName, "happenings", "SourceIdentity");
+					continue;
+				}
+				sources.Add(binding);
+				sourceKeys.Add(sourceKey);
+			}
+			string cursor = CursorWire ?? "";
+			if (cursor.Length == 0 && LegacySinceTick > 0L)
+			{
+				if (LegacySinceTick > NowTick || !KingdomHappeningCursorRules.TrySeedLegacy(
+					sourceKeys, LegacySinceTick, out cursor))
+				{
+					Fault("The Thousand and First", "happening cursors", "LegacySeedRefused");
+					return 0;
+				}
+				PublishCursor(cursor);
+			}
+			if (!KingdomHappeningCursorRules.TryRetain(cursor, sourceKeys, out cursor))
+			{
+				Fault("The Thousand and First", "happening cursors", "MalformedWire");
+				return 0;
+			}
+			if (!string.Equals(cursor, CursorWire ?? "", StringComparison.Ordinal))
+				PublishCursor(cursor);
+			for (int i = 0; i < sources.Count; i++)
+			{
+				Binding binding = sources[i];
+				IKingdomHappeningSource source = (IKingdomHappeningSource)binding.Extension;
+				long sinceTick;
+				string prepared;
+				if (!KingdomHappeningCursorRules.TryAdvance(cursor, sourceKeys[i], NowTick,
+					out sinceTick, out prepared))
+				{
+					Fault(binding.ModName, "happenings", "CursorRefused");
+					continue;
+				}
+				// Advance before third-party code. A throw therefore loses this window on the same
+				// documented terms as a timeout; it cannot replay already-recorded notices after load.
+				PublishCursor(prepared);
+				cursor = prepared;
+				HappeningJob job = new HappeningJob(source, sinceTick,
+					new KingdomExtensionDraws(System.SimulationSeed, Reading.SettlementId,
+						binding.ModName), binding.ModName);
 				KingdomComputeResult<KingdomNotice[]> result = KingdomCity.Seam.Submit(Reading, job);
 				if (!result.Published)
 				{
 					Fault(binding.ModName, "happenings", result.Status.ToString());
 					continue;
 				}
-				pushed += Record(System, binding, result.Value, Label, Here, NowTick, SinceTick, Spare - pushed);
+				pushed += Record(System, binding, result.Value, Label, Here, NowTick, sinceTick,
+					Spare - pushed);
 			}
 			return pushed;
+		}
+
+		/// <summary>
+		/// Extra live roster keys every admitted identity source gives one frozen identity. Each
+		/// source crosses the executor independently. Faulted sources contribute nothing; valid keys
+		/// are bounded, attributed to their owner, folded, and de-duplicated.
+		/// </summary>
+		/// <param name="Reading">The frozen identity. No engine object crosses the seam.</param>
+		/// <param name="Stalled">Optional distinct mod names whose source faulted or overran.</param>
+		/// <returns>Fresh canonical keys in deterministic registry/source order.</returns>
+		internal static List<string> IdentityKeys(KingdomIdentityReading Reading, List<string> Stalled = null)
+		{
+			List<string> keys = new List<string>();
+			foreach (Binding binding in Registry())
+			{
+				IKingdomIdentitySource source = binding.Extension as IKingdomIdentitySource;
+				if (source == null)
+				{
+					continue;
+				}
+				IdentityKeysJob job = new IdentityKeysJob(source, binding.ModName);
+				KingdomComputeResult<string[]> result = KingdomCity.Seam.Submit(Reading, job);
+				if (!result.Published)
+				{
+					Fault(binding.ModName, "identity keys", result.Status.ToString());
+					Stall(Stalled, binding.ModName);
+					continue;
+				}
+				KeepIdentityKeys(result.Value, binding.ModName, keys);
+			}
+			return keys;
+		}
+
+		/// <summary>
+		/// Composed extension affinity for one frozen identity and existing work kind. Each source
+		/// crosses the executor independently; a fault is the neutral 100. Bounded source deltas are
+		/// summed before one final clamp, so mixed opinions are independent of registry order.
+		/// </summary>
+		internal static int IdentityAffinity(KingdomIdentityReading Reading, string WorkKind,
+			List<string> Stalled = null)
+		{
+			long affinityDelta = 0L;
+			KingdomIdentityWorkReading request = new KingdomIdentityWorkReading(Reading, WorkKind);
+			foreach (Binding binding in Registry())
+			{
+				IKingdomIdentitySource source = binding.Extension as IKingdomIdentitySource;
+				if (source == null)
+				{
+					continue;
+				}
+				IdentityAffinityJob job = new IdentityAffinityJob(source, binding.ModName);
+				KingdomComputeResult<int> result = KingdomCity.Seam.Submit(request, job);
+				if (!result.Published)
+				{
+					Fault(binding.ModName, "identity affinity", result.Status.ToString());
+					Stall(Stalled, binding.ModName);
+					continue;
+				}
+				affinityDelta += KingdomApiRules.IdentityAffinity(result.Value) - 100L;
+			}
+			return KingdomApiRules.IdentityAffinityFromDelta(affinityDelta);
+		}
+
+		private static void Stall(List<string> stalled, string owner)
+		{
+			if (stalled != null && !stalled.Contains(owner))
+			{
+				stalled.Add(owner);
+			}
+		}
+
+		private static void KeepIdentityKeys(string[] source, string owner, List<string> into)
+		{
+			int kept = 0;
+			for (int i = 0; source != null && i < source.Length
+				&& i < KingdomApiRules.MaxIdentityKeyCandidatesPerSource
+				&& kept < KingdomApiRules.MaxIdentityKeysPerSource; i++)
+			{
+				string key = KingdomApiRules.IdentityKey(owner, source[i]);
+				if (key == null || into.Contains(key))
+				{
+					continue;
+				}
+				into.Add(key);
+				kept++;
+			}
 		}
 
 		private static int Record(KingdomSystem system, Binding binding, KingdomNotice[] notices, string label, bool here, long nowTick, long sinceTick, int spare)
 		{
 			int pushed = 0;
 			int kept = 0;
-			for (int i = 0; notices != null && i < notices.Length && kept < KingdomApiRules.MaxNoticesPerSource; i++)
+			for (int i = 0; notices != null && i < notices.Length
+				&& i < KingdomApiRules.MaxBehaviourCandidatesPerCall
+				&& kept < KingdomApiRules.MaxNoticesPerSource; i++)
 			{
 				KingdomNotice notice = notices[i];
 				string telling = KingdomApiRules.Trim(notice.Telling);
@@ -443,7 +588,7 @@ namespace ThousandAndFirst.Api
 				// The city does not report the future, and it does not re-report what it already
 				// told: a notice outside the window this lane was asked about is dropped rather
 				// than filed with a wrong date.
-				if (notice.Tick > nowTick || (sinceTick > 0L && notice.Tick < sinceTick))
+				if (notice.Tick > nowTick || notice.Tick <= sinceTick)
 				{
 					continue;
 				}
@@ -464,7 +609,8 @@ namespace ThousandAndFirst.Api
 		{
 			string prefix = string.IsNullOrEmpty(modName) ? "" : (KingdomApiRules.Slug(modName) + ":");
 			int kept = 0;
-			for (int i = 0; source != null && i < source.Length && kept < limit; i++)
+			for (int i = 0; source != null && i < source.Length
+				&& i < KingdomApiRules.MaxBehaviourCandidatesPerCall && kept < limit; i++)
 			{
 				KingdomAsk ask = source[i];
 				string kind = KingdomApiRules.Kind(ask.Kind);
@@ -510,10 +656,21 @@ namespace ThousandAndFirst.Api
 			string line = owner + " stalled its own " + lane + " (" + status + "). The city is unaffected.";
 			MetricsManager.LogError("ThousandAndFirst API: " + line);
 			KingdomLog.Log("extension fault: " + owner + " lane=" + lane + " status=" + status);
+			if (The.Game == null) return;
+			if (AnnouncedFaults == null)
+			{
+				AnnouncedFaults = new HashSet<string>(StringComparer.Ordinal);
+			}
+			string key = (owner ?? "") + "|" + (lane ?? "");
+			if (AnnouncedFaults.Count < MaxRuntimeFaultAnnouncements && AnnouncedFaults.Add(key))
+			{
+				MessageQueue.AddPlayerMessage("{{r|" + owner + " stalled its own " + lane
+					+ ". The city is unaffected; the log names the fault.}}");
+			}
 		}
 
 		// ==================================================================================
-		// The jobs. Both cross the seam, so both inherit budget, timeout and error isolation
+		// The jobs. Every one crosses the seam, so each inherits budget, timeout and error isolation
 		// from the same contract our own computations do (§2.5).
 		// ==================================================================================
 
@@ -521,11 +678,12 @@ namespace ThousandAndFirst.Api
 		{
 			private readonly IKingdomAskSource source;
 
-			private readonly IKingdomDraws draws;
+			private readonly KingdomExtensionDraws draws;
 
 			private readonly string label;
 
-			internal AskJob(IKingdomAskSource source, IKingdomDraws draws, string modName, bool own)
+			internal AskJob(IKingdomAskSource source, KingdomExtensionDraws draws,
+				string modName, bool own)
 			{
 				this.source = source;
 				this.draws = draws;
@@ -547,7 +705,8 @@ namespace ThousandAndFirst.Api
 			public bool TryRun(KingdomCityReading input, out KingdomAsk[] output, out KingdomComputeCounters counters, out KingdomCityFault fault)
 			{
 				output = source.Ask(input, draws);
-				counters = KingdomComputeCounters.None;
+				counters = new KingdomComputeCounters(0, output == null ? 0L : output.Length,
+					draws.ReportedDraws, 0, 0L);
 				fault = KingdomCityFault.None;
 				return true;
 			}
@@ -559,11 +718,12 @@ namespace ThousandAndFirst.Api
 
 			private readonly long sinceTick;
 
-			private readonly IKingdomDraws draws;
+			private readonly KingdomExtensionDraws draws;
 
 			private readonly string label;
 
-			internal HappeningJob(IKingdomHappeningSource source, long sinceTick, IKingdomDraws draws, string modName)
+			internal HappeningJob(IKingdomHappeningSource source, long sinceTick,
+				KingdomExtensionDraws draws, string modName)
 			{
 				this.source = source;
 				this.sinceTick = sinceTick;
@@ -584,6 +744,72 @@ namespace ThousandAndFirst.Api
 			public bool TryRun(KingdomCityReading input, out KingdomNotice[] output, out KingdomComputeCounters counters, out KingdomCityFault fault)
 			{
 				output = source.Happen(input, sinceTick, draws);
+				counters = new KingdomComputeCounters(0, output == null ? 0L : output.Length,
+					draws.ReportedDraws, 0, 0L);
+				fault = KingdomCityFault.None;
+				return true;
+			}
+		}
+
+		private sealed class IdentityKeysJob : IKingdomComputation<KingdomIdentityReading, string[]>
+		{
+			private readonly IKingdomIdentitySource source;
+
+			private readonly string label;
+
+			internal IdentityKeysJob(IKingdomIdentitySource source, string modName)
+			{
+				this.source = source;
+				label = "ext:identity-keys:" + KingdomApiRules.Slug(modName);
+			}
+
+			public string Label
+			{
+				get { return label; }
+			}
+
+			public KingdomBudgetLane Lane
+			{
+				get { return KingdomBudgetLane.Reckon; }
+			}
+
+			public bool TryRun(KingdomIdentityReading input, out string[] output,
+				out KingdomComputeCounters counters, out KingdomCityFault fault)
+			{
+				output = source.Keys(input);
+				counters = KingdomComputeCounters.None;
+				fault = KingdomCityFault.None;
+				return true;
+			}
+		}
+
+		private sealed class IdentityAffinityJob
+			: IKingdomComputation<KingdomIdentityWorkReading, int>
+		{
+			private readonly IKingdomIdentitySource source;
+
+			private readonly string label;
+
+			internal IdentityAffinityJob(IKingdomIdentitySource source, string modName)
+			{
+				this.source = source;
+				label = "ext:identity-affinity:" + KingdomApiRules.Slug(modName);
+			}
+
+			public string Label
+			{
+				get { return label; }
+			}
+
+			public KingdomBudgetLane Lane
+			{
+				get { return KingdomBudgetLane.Reckon; }
+			}
+
+			public bool TryRun(KingdomIdentityWorkReading input, out int output,
+				out KingdomComputeCounters counters, out KingdomCityFault fault)
+			{
+				output = source.Affinity(input.Identity, input.WorkKind);
 				counters = KingdomComputeCounters.None;
 				fault = KingdomCityFault.None;
 				return true;

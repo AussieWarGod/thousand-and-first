@@ -9,6 +9,10 @@ something that isn't here, open an issue and it can be promoted deliberately.
 Most extension needs no code at all: see [MODDING.md](../MODDING.md) for the XML registries
 (`KingdomBuildings.xml`, `KingdomDeals.xml`), which are the preferred extension path.
 
+This is the supported programming contract, not a release-status ledger. Current implementation
+evidence and unsigned native gates are in [STATUS.md](STATUS.md); runtime ownership and the
+single-survey execution model are in [ARCHITECTURE.md](ARCHITECTURE.md).
+
 ## Getting the system
 
 ```csharp
@@ -63,7 +67,7 @@ neutral values.
 | `static SecondFoundingVerdict JudgeSite(KingdomSystem, Zone)` | What the rite would do on this ground. |
 | `static bool FoundSecond(string name, string vocation, Zone site, bool force = false)` | Founds the realm's second city. `force` waives only the not-adjacent requirement. |
 | `static KingdomZoningRules.ClaimVerdict JudgeClaim(KingdomSystem, Zone)` | What the founder's own claim on this ground would do — gathers the facts off the world (ours, the other city's, an exiled realm's, foreign, adjacent) and hands them to the pure verdict below. The engine-coupled half of `KingdomZoningRules` § *The claim*, below. |
-| `static string StyleGroundClause(string style)` | Lower-case founder-facing clause naming what the ground promises for a city style ("common ground", "ground green enough to root a verdant city"). Presentation only — `KingdomRules.StyleForSite` owns which style a site resolves to. |
+| `static string StyleGroundClause(string style)` | Lower-case founder-facing clause naming what the ground promises for a city style ("common ground", "ground green enough to root a verdant city"). Presentation only — `KingdomData.StyleForSite` owns which style a site resolves to. |
 
 ## `KingdomExileRules` — regard, expulsion, and return
 
@@ -213,7 +217,7 @@ component of the settlement's own **dish**, and the ration draw reaches for it f
 
 | Member | Contract |
 |---|---|
-| `KingdomRules.DeriveDish(string realm, string creedRecipe, string crop)` → `FavoredDish` | Pure, total and deterministic. **Creed picks the form, ground picks the body.** `creedRecipe` is the dominant creed faction's own vanilla `WaterRitualRecipe`; `crop` is `KingdomCropRules.CropBlueprintForStyle`. No input is an error — a realm of mixed people eats a stew. |
+| `KingdomRules.DeriveDish(string realm, string creedRecipe, string crop)` → `FavoredDish` | Pure, total and deterministic. **Creed picks the form, ground picks the body.** `creedRecipe` is the dominant creed faction's own vanilla `WaterRitualRecipe`; runtime passes the crop from `KingdomData.CropForStyle`. No input is an error — a realm of mixed people eats a stew. |
 | `KingdomRules.DishFormFor(string creedRecipe)` / `DefaultDishForm` | Vanilla's eight favourite dishes → a form word. Every word returned is one of `CookingRecipe.ingredientTileTypes`, which is what gets a derived dish a drawn tile instead of a defaulted one. |
 | `KingdomRules.CropWordFor(string crop)` / `PreservedStapleFor(string crop)` | The crop as an ingredient, and what it becomes when it is bound to keep. Three staples are vanilla's own `PreservableItem Result`; two crops vanilla cannot preserve get mod blueprints that *inherit* the nearest shipped preserve. `PreservedStapleFor` returns null for a crop this build has no staple for, and `KingdomCrops.StapleFor` then falls back to the crop's own `PreservableItem`. |
 | `KingdomRules.DishRecipeType` | `"r_KingdomFavoredDish"` — the one `CookingRecipe` subclass every realm's dish resolves to, in `XRL.World.Skills.Cooking`. It reads its display name and components off `KingdomSystem`, so one class serves every settlement. |
@@ -229,6 +233,10 @@ non-player eater's `ProceduralCookingEffect` expires at `StartTick + 1200` ticks
 `KingdomRules.TicksPerDay` is 1200; only one meal effect stands at a time. So a settlement is
 well fed for the day it ate and no longer, and the lift rides the same term as a notable's shade
 and a shrine's spirit — `KingdomCatalogueRules.LiftCapPercent` binds it again on top.
+
+Food in storage creates no indefinite passive aura. Availability matters when the daily ration and
+meal transaction actually consumes it; the bounded positive `MealShade` is re-earned for that day
+and never becomes a penalty for an empty larder.
 
 **The draw order, stated once.** Larder by larder in survey order, item by item in inventory
 order: the staple first, then everything else that is food. Nothing is random, so the same
@@ -280,6 +288,20 @@ something else is.
 `KingdomGuestbook` (notable guests with hooks that decay into rumors, and the carry-sign's
 distance-scaled hauls, one in flight, mirroring the water manifest's honesty rules).
 
+A yard row with `Goods="Yes"` is the caravan lane, not equilibrium support. One exact eligible
+built household paired to one exact standing fixture in its own yard adds one dram to each due
+charter cycle, capped at four households per caravan. Missing or ambiguous physical evidence adds
+nothing. `KingdomTrade` derives this from the already-maintained activation survey and freezes the
+adjusted `IncomePerCycle` and total requested water in its ordinary durable operation before any
+physical or domain mutation; release or registry changes cannot reprice an open receipt.
+
+The luxury arrival is a distinct, inspectable path rather than a large-bed alias. A blueprint
+tagged `r_TAF_LegendaryTrader` requires one sound, wholly vacant exact `finehouse` root on an M-or-
+larger LotId plus a live staffed shop tier of at least 3. Success stores that exact LotId in the
+ordinary `KingdomLodgingPlotId`, marks a real `VillageMerchant`, and stocks the trader from the
+city's current tier. Manors, terraces, aggregate spare beds, and unstaffed shop numbers do not
+substitute.
+
 Both guest tracks run their arrival clock on real elapsed time (`KingdomRules.PassagesThrough`)
 and report a run that came and went unwitnessed as one dated line rather than a queue standing
 since spring. For plain travellers: `KingdomLocusRules.PassageWhen` phrases how long ago the last
@@ -302,8 +324,10 @@ quarters are measured (ground within six cells of ground); an XL's city effect i
 the office machinery has named a head. `KingdomMaterials` gains the refined tier (shaped timber /
 shaped stone / worked metal via staffed yards), vanilla bits (`Bits=`) and exotic finds
 (`Exotics=`) as high-craft prices, and the yard gates on L/XL construction. `KingdomCrews` /
-`KingdomCrewRules`: capability from settler stats (`CrewNeeds="strength:16"`), ablest-first
-deterministic assignment, shortfalls slow and named. `KingdomWear` / `KingdomWearRules`:
+`KingdomCrewRules`: capability from settler stats (`CrewNeeds="strength:16"`) or exact vanilla
+skill presence (`skill.tinkering`, `skill.harvestry`, `skill.customs`, `skill.physic`,
+`skill.wayfaring`, each at threshold `1`), ablest-first deterministic assignment, shortfalls slow
+and named. `KingdomWear` / `KingdomWearRules`:
 damage from raids, hard running and temperamental tech — never from the calendar — bounded,
 mending auto-queued and holdable, costed from the chain. Hard running is counted in
 **activity-days** (`KingdomRules.ActivityDays`), so a work that ran hard through an absence wore
@@ -314,6 +338,24 @@ the water and roof lanes too and not the food lane only. The one exception to "n
 calendar": what an already-damaged STORE goes on losing runs on **world days**
 (`Leaked` / `LeakKind` / `LeakDaysToEmptyAtCeiling`) until it is mended — the damage is still an
 event, only its consequence is a clock, and mending unsays it.
+
+### Construction presence and visual-state readings
+
+`KingdomConstructionPresenceRules.Plan` is the pure oldest-only allocation rule. It receives frozen
+`KingdomRaisingCandidate` values and returns one `KingdomRaisingPlan`: selected input index plus
+bounded hands. Runtime `KingdomConstructionPresence` draws those hands from real unposted settlers
+after water/running work, through the same capability and API-v2 identity-affinity allocator. Plot
+and scaffold clocks read only their own stamped effectiveness. Queued and unstaffed intervals are
+consumed, never banked. Named construction/visual properties are private receipts; extensions must
+not author them.
+
+`KingdomVisualStateRules.Resolve(KingdomVisualFacts)` is the engine-free priority resolver;
+`Cue`, `GalleryReceipt`, and `GalleryHash` expose the color-independent legend and its versioned
+SHA-256. Runtime facts come from exact construction assignment, strike/repair effort, wear, city
+heart deprivation, power brownout, and staffing. `r_KingdomVisualState` only alternates a vanilla
+render indicator and appends examine text; it creates no object and owns no saved cosmetic state.
+`kingdom:visuallegend` prints the canonical receipt. `kingdom:visualaudit` reports actual current
+ground rows in deterministic ground order for screenshot/human acceptance.
 
 ## How belief moves
 
@@ -354,38 +396,60 @@ until mended. `KingdomLodging.ResidentsOf` reads who a condemned home held, and
 `RecordCondemnedRoofBrink` backdates their roof brink to the tick the condemnation actually
 happened — a subsidence breakpoint days back, not the pass that notices — so the announcement
 quotes the honest elapsed.
-`KingdomQolRules.CohabitHostility` / `JudgeCohabitation` are the flat single floor the vocabulary
-shipped with; the ladder above **supersedes** them and they are kept only until they are retired —
-do not write new callers against them.
+The former flat `KingdomQolRules.CohabitHostility` / `JudgeCohabitation` path is retired. Its
+metadata remains only as an `[Obsolete(..., true)]` binary adapter at the pre-release boundary;
+new source cannot compile against it. `KingdomLodgingRules.RefusalHostility` / `Conflicts`, with an
+explicit closeness rung, are the supported contract.
 Tastes and displacement tolerance query this same vocabulary.
 
-## Layering, footprints, sockets, and the trigger law
+## Layering, reserved lots, plans, and the trigger law
 
 Catalogue files **layer** (`KingdomMergeRules`): merge-by-key on raw attributes inside the single
 XML pass — named overrides, omitted survives, blank erases, skins append (same key replaces),
-chains extend across files; the post-merge design is what the validator sees. A tier declares
-`Footprint="WxH"` and `Roof="Open|Soft|Walled|Carved"` (absent = fills its plot, walled);
-footprint ≤ plot is enforced at load and refused by name at improvement; yard = plot − footprint,
-recomputed per tier. `KingdomSocket` keeps a struck plot as a re-buildable slot, converts within
-the plot's type×size set for one disclosed figure, and re-dresses standing buildings with any
-registered skin. The upgrade trigger law (`KingdomUpgradeRules`): housing auto-upgrades only when
-residents can be displaced to their own `LodgingStandard`; working buildings additionally need the
-reserve to cover the outage (`AbsorptionDemand`), else the verdict is a held offer (`IsOffer`),
-forceable via `KingdomUpgrade.Force` with the dip disclosed. No trigger reads elapsed time.
+chains extend across files; the post-merge design is what the validator sees. `Plot`, `Footprint`,
+and `Roof` describe catalogue capacity and eligibility; they do not generate geometry. Exact
+geometry comes from the selected architecture map and palette. `KingdomSocket` keeps a struck lot
+as a rebuildable reservation. A same-set plan change exists only when
+`KingdomArchitectureTransitions` declares the exact directional `(from, to, type, actual size)`
+delta; it keeps the lot identity. Retype or resize performs fresh siting/restaking and mints a new
+lot identity. Skins change declared presentation metadata, not authored topology. The upgrade
+trigger law (`KingdomUpgradeRules`): housing auto-upgrades only when residents can be displaced to
+their own `LodgingStandard`; working buildings additionally need the reserve to cover the outage
+(`AbsorptionDemand`), else the verdict is a held offer (`IsOffer`), forceable via
+`KingdomUpgrade.Force` with the dip disclosed. No trigger reads elapsed time.
 
-## Plots, materials, and gates
+## Reserved lots, occupied plans, materials, and gates
 
-The unit of building is the **plot** (`KingdomPlots` / `KingdomPlotRules`): S/M/L/XL rects,
-stage-gated, sited by the layout grammar, raised in stages, carved underground. Materials
-(`KingdomMaterials` / `KingdomMaterialRules`) come from clearance — never minted — and live in
-dedicated stockpiles; building costs are water plus materials, and condemning returns half.
+A plot is a **reserved lot**, not a building. `KingdomPlots` / `KingdomPlotRules` site and protect
+S/M/L/XL rectangles. An occupied current-path lot freezes two related identities:
+
+| Layer | Frozen authority |
+|---|---|
+| Lot | `LotId`, type/category, actual size, rectangle, and pose/frontage. |
+| Occupied plan | Build key, plan, exact binding, tier, variant, palette, canonical snapshot/hash, main cell, authored claimed cells, entrances, fixtures, and stateful anchors. |
+
+Preview freezes this authority before debit; commit re-proves the same snapshot rather than drawing
+a variant twice. The stamper applies ordered ground, structure, and object layers. No current
+commission stretches a smaller map, builds a generic rectangle, guesses a door, or scatters
+furnishings. Missing exact bindings are filtered from the picker and refuse direct calls before
+mutation. Same-set transitions preserve `LotId` only through an explicit transition receipt;
+retype/resize is a fresh lot. Already-standing legacy work remains on its frozen compatibility
+path and is never silently converted.
+
+Materials (`KingdomMaterials` / `KingdomMaterialRules`) come from clearance—never minted—and live
+in dedicated stockpiles; building costs are water plus materials, and condemning returns half.
+Architecture palettes must agree with paid material and technology: map structure/fixture slots
+cannot smuggle in metal, power, filled vessels, free contents, or later craft.
+
 Commissioning is gated by `KingdomZoning` (district, territory, known designs, derived craft
 level, and the creed stack — who is standing here, which creed the design belongs to, and how much
 of the city holds it) with every refusal naming its fix, except the one refusal with no fix: a
 creed-work whose creed nobody here has ever held is **not shown at all** (`KingdomZoning.Offered`
-/ `Visible`), which is Addendum 14's visibility law; designs improve through `KingdomUpgrade` chains that
-carry every civic mark. `KingdomCatalogueRules` validates the building XML schema; all of it —
-plots, materials, gates, chains, skins, contents — is authorable from mergeable third-party XML.
+/ `Visible`), which is Addendum 14's visibility law; designs improve through `KingdomUpgrade` chains
+that carry every civic mark. `KingdomCatalogueRules` validates catalogue XML; the architecture
+registry validates palettes, maps, plans, exact bindings, tiers, required roles, and variants.
+Third-party XML can author the whole current path; see the complete example in
+[MODDING.md](../MODDING.md#complete-minimal-authored-plot-extension).
 
 ## `KingdomZoningRules` — the seven gates, the tag idiom, the stratum, and the claim
 
@@ -488,6 +552,21 @@ from ground it can WORK — the surface is always reached; rock spreads from a s
 never through a corner), `JudgeDelve` and its refusals, and `ShaftHopCells` — a vertical hop
 costs three level hops, and unbroken rock is not an edge at all. `KingdomLabRules.JudgePurpose`
 gained the five-argument capital-aware overload; the three-argument shape is unchanged.
+
+`KingdomDelveLink` is the engine-coupled proof behind that edge. `TryPreflight` derives the exact
+landing from the frozen authored map and refuses before debit unless the claimed foot zone is
+already built, exactly one stratum below in the same world column, and its paired cell is safe;
+it checks `IsZoneBuilt` before `GetZone` and never generates refused ground. `TrySettle` keeps the
+authored `r_KingdomDelveDown` in the head, places one owned `r_KingdomDelveUp` at the same x,y in
+the foot, and publishes the two reciprocal native stair connections. The behavior root, both
+endpoints, and global state carry one canonical bounded receipt through schema-last phase writes.
+`PhysicalLinkStands` re-proves the already-built zones, exact IDs and coordinates, endpoint
+wrappers, passable dry cells, and both connection records on every new-format reach read. Missing,
+moved, corrupt, duplicated, or obstructed evidence therefore closes the rock edge; the legacy
+`r_TAF_Delved:<zone>` integer is consulted only when no new physical-link state exists.
+`TryPreflightStrike` and `TryFinishStrike` remove only that receipt's owned endpoint pair and
+connections, then tombstone the physical state. `KingdomDelve.RecordShaft` remains the old-save
+compatibility marker; it is not sufficient evidence for a newly authored shaft.
 
 ### The claim
 
@@ -681,7 +760,7 @@ implementation of them, and the nearest-neighbour + 2-opt trip planner with §3.
 | Member | Contract |
 |---|---|
 | `KingdomSettlement.City` / `KingdomSystem.City` | The settlement's book, and the flat field the seat swap carries it in. |
-| `KingdomCityBook` | The serialized carrier: named-field `IComposite`, flat primitive columns, one row family per group of columns. `Normalize()` repairs a book read from a save — a null column becomes empty, **ragged columns are truncated to the shortest** (a row half of whose fields are missing is not a row), rows past their cap are dropped, and an overlong told-log keeps its newest lines. |
+| `KingdomCityBook` | The serialized carrier: named-field `IComposite`, flat primitive columns, one row family per group of columns. `Normalize()` repairs nulls and bounded presentation rings, but **never cross-zips or truncates ragged resident evidence into invented people**. A complete legacy name/origin/arrival triple may seed a wholly empty resident book once as non-labouring `Abroad` claims; incomplete or conflicting legacy evidence is retained and fails closed for inspection. Current resident rows are sole authority and project outward to the obsolete ABI lists one way. The work cap is the full current four-zone City envelope (`4 × MaxBuildingsForStage(City) = 880`), not the retired flat forty-work proxy; a legal later work cannot disappear from the model because an earlier zone filled it first. |
 | `KingdomCityBook.ZoneCount` / `WorkCount` / `ResidentCount` / `ToldCount` / `TryZoneRow(string, out int)` / `TryResidentRow(int, out int)` | What the book holds, and the two lookups every re-plumbed reader goes through — by zone id for a sighting, by `KingdomResidentId` for a person. |
 | `KingdomCityBook.TryReadBrink(int, BrinkKind, …)` / `TryWriteBrink(int, BrinkKind, …)` | Where a settler's brink windows live since W2. Column reads keyed on the resident id, not a whole-model read: three consumers ask this once per settler per pass. |
 | `KingdomCity.CheckIn(KingdomSystem, Zone, KingdomSurvey, long)` | The pass's first word with the book. See above for the order, which is load-bearing. |
@@ -762,12 +841,12 @@ eviction must name its cause or it is refused.
 | Member | Contract |
 |---|---|
 | `KingdomResidents.ResidentIdProperty` (`KingdomResidentId`) | The settler's identity, and the only thing about a person their body carries. |
-| `KingdomResidents.JobIdProperty` (`KingdomJobId`) | The job a transient body renders. Nothing mints one until W3; the sweep is keyed on it. |
+| `KingdomResidents.JobIdProperty` (`KingdomJobId`) | The exact job a transient porter or other carrier renders. Production binds it only after durable job publication; the stale-body sweep is keyed on it and removes a rendering whose model job already closed. |
 | `KingdomResidents.IdOf(GameObject)` / `EnsureId(KingdomSystem, GameObject)` | Read an id; mint one if the body has none. |
 | `KingdomResidents.TryLocate(...)` / `TryEnsureRow(...)` | Which book holds a body's row; and the same, enrolling a settler the roster has not reached yet. |
 | `KingdomResidents.Judge(KingdomSystem, int, KingdomBindingKind, string zoneId)` | Check-before-mint at the edge, answered by the table above. |
 | `KingdomResidents.Bind(...)` / `Unbind(..., KingdomUnbindCause)` | Write or move a binding; evict one, naming why. |
-| `KingdomResidents.SweepVerdict(KingdomSystem, GameObject)` | Whether an object in a thawed zone is a stale transient. **The verdict ships in W2; the despawn is W3.** |
+| `KingdomResidents.SweepVerdict(KingdomSystem, GameObject)` | Whether an object in a thawed or entered zone is a stale transient. The production sweep runs before carrier rendering so a closed job and a leftover body cannot expose the same cargo twice. |
 | `KingdomResidents.AuditLine(KingdomSystem)` | Invariant I3 over the whole realm — no binding key ever resolves to two living bodies. Runs beside the §3.9 stock audit on every check-in. |
 | `enum KingdomBindingKind` / `KingdomBindingVerdict` / `KingdomBodyPresence` / `KingdomUnbindCause` / `KingdomSweepVerdict` | The registry's vocabulary. |
 
@@ -792,11 +871,19 @@ re-activating cannot pay the same debt twice — and a debt bigger than one cont
 afterwards, which is what the founder reads when a granary has more in its books than on its
 shelves.
 
+Container demand is measured from ground rows, not inferred once per stock kind. Visibility is the
+first key, then stored dedication and stable id. One successful callback touches one container;
+only its measured delta clears debt or charges budget. Current legal maximum is 220 commissioned
+root containers plus 24 water and eight food manual dedications plus sixty bodies: 312 weighted
+units, 39 turns. Plot furnishings are not implicit civic accounts; legacy marks are released in
+place without moving contents or clearing signed debt.
+
 | Member | Contract |
 |---|---|
 | `KingdomCity.SpendTurn(KingdomSystem, Zone, long)` | One turn's amortised spend against one zone's standing debt. Returns whether the turn's allowance is now exhausted. Surveys only when something is actually owed, so a caught-up zone costs nothing. |
 | `KingdomCatchUpRules.TryPlanTurn(demand, out spend, out fault)` | The whole turn's budget: 8 weighted units, at most 4 heavy, visible cells before the rest. |
 | `KingdomCatchUpRules.TryPlanTurn(demand, thirdsAvailable, heavyAvailable, …)` | The same plan against an allowance already partly spent. An allowance larger than the constitution's own is refused, never granted. |
+| `KingdomContainerCatchUpRules.TryMeasure(...)` / `TrySettle(...)` | Exact post-survey medium demand and measured settlement. Supports mixed signed kinds, blocked remainder, callback failure, and save/reload continuation without duplicate application. |
 | `KingdomHeartbeat.OnEndTurn(KingdomSystem)` | **The pump.** One `EndTurnEvent` handler on the game system — a single dispatch immediately before `ProcessSingleTurn` (`D/XRL/Core/ActionManager.cs:1644-1650`), not the 2,000-cell broadcast a live zone pays. Runs the slice, retires finished jobs, spends the turn's reify budget, and considers the prefetch. Returns immediately with no seated claimed zone and no debt. |
 | `KingdomHeartbeat.OnThawed(KingdomSystem, Zone, long ticksFrozen)` | A zone off disk: the stale-transient sweep runs here, before anything looks at the ground. `TicksFrozen` is a cross-check, never a clock. |
 
@@ -872,8 +959,8 @@ answering stale.
 | `KingdomDistanceRules.ZoneTransitCells` / `TryDiscount(...)` | What one hop costs the metric, and the discount applied to it. |
 
 **Prefetch is a spike, not a promise.** `KingdomHeartbeat.PrefetchOption`
-(`r_TAF_OptionPrefetch`) gates it; with no line for it in `Options.xml` the gate reads
-`PrefetchDefault` = **No**. The mechanism ships complete: at most one neighbour held, two
+(`r_TAF_OptionPrefetch`) gates it; its experimental checkbox in `Options.xml` defaults to **No**.
+The mechanism ships complete: at most one neighbour held, two
 considered, only while a debt stands, skipped when the seated zone has saturated the turn's reify
 budget, and released the moment the counter drains. *A prefetched zone the founder never enters is
 indistinguishable from one that was never prefetched* — prefetch may change **when** work is done,
@@ -890,15 +977,16 @@ never **whether** or **how much**.
 ```
 
 On a `reify` line `rows` is how many of the units were visible-cells-first and `thirds` is the
-weighted spend; `owed` rides in the label so a tester can watch it fall monotonically to zero. A
+weighted spend; `owed` is exact remaining weighted demand after that zone's post-mutation ground
+survey, so 252 same-kind vessels report 252 units rather than one. A
 figure that crosses a §0.0 budget is prefixed `BUDGET` and names the budget it broke.
 
-**What W3 deliberately does not ship.** Job minting for anything but the delivery flow, nearest-holder
-sourcing and capacity-bound batching are W6's by §7.4, *"because both only bite once many jobs
-compete over many holders"*. And the model's per-zone production **rates** stay unwired: growth
-already charges upkeep at the pass, so a rate the slice also integrated would bill the same day
-twice and break I1. The heartbeat ships as the mechanism, on the cadence, through the executor,
-with its receipt and its one told line an hour.
+**What remains deliberately narrow.** Job minting beyond the delivery flow remains outside this
+slice. Per-zone production rates are live: when runtime passes null override arrays,
+`KingdomCityAdvanceable` reads each row's measured `WaterCarry` and `FoodCarry`, then applies the
+realm's method factor. Growth no longer credits those same production days; TESTING step 90r guards
+against double billing. Nearest-holder sourcing and capacity-bound batching remain separate W6
+lanes where many jobs compete over many holders.
 
 ## The city has a history — happenings, ambience, and what the creeds make of you
 
@@ -1033,8 +1121,29 @@ same key vanilla threads through every one of its own offices.
 | `static bool TryGetBuilding(string key, out BuildEntry)` | Look up one design. |
 | `static List<DealEntry> Deals` | All registered trade charters. |
 | `static bool TryGetDeal(string key, out DealEntry)` | Look up one charter. |
-| `static List<string> Styles` | Declared city styles. |
+| `static List<string> Styles` | Canonical names from the live merged style registry, including third-party styles. |
+| `static bool TryGetStyle(string name, out string canonical)` | Case-insensitive lookup in the live style registry. Use this instead of `KingdomRules.IsKnownStyle`, which covers only the five built-in compatibility keys. |
+| `static string StyleForSite(string terrainBlueprint, string regionName, int zLevel)` | Resolve a founding site through the merged style selectors. Exact terrain evidence outranks region evidence; priority and declaration order break ties; an unmapped site resolves to `common`. |
+| `static string StyleGroundClause(string style)` | Return the merged founder-facing ground clause, with a safe generic fallback. |
+| `static string CropForStyle(string style)` | Return the style's declared crop, inheriting the `common` declaration for a selector-only legacy style. |
+| `static string SeedForStyle(string style)` | Return the style's declared seed, with the same `common` fallback. |
+| `static string CropRowForStyle(string style)` | Return the style's declared standing-row blueprint, with the same `common` fallback. |
+| `static string CropForSeed(string seedBlueprint)` | Reverse the merged style mapping; null for an unregistered seed. |
+| `static string SeedForCrop(string cropBlueprint)` | Reverse the merged style mapping; null for an unregistered crop. |
+| `static string RowForCrop(string cropBlueprint)` | Return the registered standing-row blueprint; null for an unregistered crop. |
+| `static bool TryStyleWallMaterial(string style, out KingdomMaterial material)` | Read a style's optional preferred wall material. Stock remains authoritative. |
+| `static string TimberWallForStyle(string style)` | Return the style's timber wall blueprint, inheriting `common` when omitted. |
 | `static void Reload()` | Re-read every registry. Called on game load; call it if you inject entries at runtime. |
+
+## `KingdomXmlSchemaRules` — public registry format boundary
+
+All six mergeable public registry roots declare `Schema="1"`: buildings, deals, yard works,
+research, procedures, and raid profiles. `CurrentVersion` is `1`; `Judge` returns
+`Compatible`, `LegacyUnversioned`, `Unsupported`, or `Malformed`, and `IsReadable` admits only the
+first two. An absent attribute is the bounded backward-compatibility path for files written before
+explicit versioning. A present noncanonical, malformed, or unsupported value rejects that entire
+stream before any child can register; one bad stream cannot half-merge. Merge-by-key remains the
+compatibility mechanism within a readable schema.
 
 ## How time is charged — the clock substrate
 
@@ -1170,6 +1279,29 @@ Five rules — Addendum 8 clause 3 as moderated by Addendum 10(a), *awareness is
 | `KingdomBrink.Of / Stands / Record / MarkWarned / Lift / WindowSpent` (per-settler) and `OfCity / CityStands / RecordCity / MarkCityWarned / LiftCity / CityWindowSpent` | The engine side. Per-settler brinks live in the settler's **resident row**, under their own `KingdomResidentId` (W2 — a frozen object's properties are unreachable, so a window kept there could not run while a zone was on disk). Still a fact about one person, still impossible for a seat swap to carry to the wrong city: the row travels with the book of the city whose roll they are on. The realm's brink lives in `IntGameState` / `StringGameState`. |
 | `KingdomWord.StandsIn(Zone)` / `Warn(...)` / `Unsay(...)` / `Aftermath(...)` | The one push channel. Every brink speaks through it; nothing builds a second one. |
 
+## Authored architecture identity context
+
+Architecture identity is an additive selector surface in the schema-1 data lane, not a public
+behavior callback. `ArchitectureSelector` carries existing `Styles`, `Creeds`, `Terrains`,
+`Strata`, stage, and technology constraints plus set-valued `Cultures`, `Species`, `Genotypes`, and
+`Bodies`. `ArchitectureSelectionContext` receives canonical, sorted, bounded positive facts from
+the seated city's existing resident tallies. Set matching means any named positive may match, while
+any matching explicit exclusion refuses. Variant choice remains deterministic: priority,
+specificity, then ordinal key.
+
+`KingdomResidentIdentityRules.BuiltInIdentityKeys` stores genotype and three vanilla-derived body
+conditions in the existing exact per-body identity receipt: `body:robot`, `body:wet-bodied`
+(aquatic and not flying), and `body:broad-bodied` (the `Gigantic` tag/property). Extension-owned
+keys remain in their own namespaces in the same bounded tally. Culture/species still use their
+separate live per-city count dictionaries, preserving Addendum 17's knowledge/body split.
+
+`KingdomArchitectureRuntime.TrySelectionContext` is the only engine projection. Once
+`TryPrepare`/`TryFreeze` records the selected variant's full snapshot, later resident changes do not
+reselect or repaint the standing work. Maps/palettes remain subject to exact-lot, material,
+technology, knowledge, power, topology, and protected-state checks. See
+[MODDING.md](../MODDING.md#identity-aware-architecture-variants) for XML semantics and exact shipped
+coverage; absence from that bounded list means fallback, not claimed handcrafted support.
+
 ## `KingdomRules` — pure rules (no engine dependencies)
 
 Deterministic, side-effect-free, and fully unit-tested; safe to call from anywhere,
@@ -1182,12 +1314,18 @@ records and their `TryParse*` validators.
 
 District effects are `District*(string district)` for one district and `Districts*(IEnumerable<string> districts)`
 for a whole kingdom's claimed ground: `DefenceBonus`, `UpkeepPercent`, `ShopTierBonus`,
-`BuildPercent`, `PetitionIntervalPercent`, `DriftPercent`. City style is `Styles`,
-`IsKnownStyle`, and `StyleForSite(terrainBlueprint, regionName, zLevel)`, which is total —
-an unmapped site resolves to `common` rather than failing. `ProvokableFactions` lists every
-faction `RaiderTableFor` answers for.
+`BuildPercent`, `PetitionIntervalPercent`, `DriftPercent`. `Styles`, `IsKnownStyle`, and
+`StyleForSite(terrainBlueprint, regionName, zLevel)` are the five built-in compatibility surface.
+New work must use the open `KingdomData` style registry above. `ProvokableFactions` and
+`RaiderTableFor` are the five built-in compatibility table; live raids use the mergeable,
+validated `KingdomRaidProfiles.xml` registry documented in `MODDING.md`.
 
-## `ThousandAndFirst.Api` — the published extension contract (API version 1)
+Pre-release retired adapters are public only for already-compiled binary callers and are not
+supported authoring surfaces: `KingdomRules.MaxBuildings` (use `MaxBuildingsForStage`),
+`KingdomRules.TryAddSkin` (use keyed `KingdomMergeRules.TryMergeSkin`), and the flat cohabitation
+members named above. Each carries `[Obsolete(..., true)]`; none has a live runtime caller.
+
+## `ThousandAndFirst.Api` — the published extension contract (API version 3)
 
 The behaviour lane. Opened at W5, after four waves shaped it, and dogfooded from the first commit:
 the city's own asks go through `IKingdomAskSource` exactly as a third party's do. Worked examples,
@@ -1195,35 +1333,62 @@ the registration recipe, and the invariants are in [MODDING.md](../MODDING.md) �
 the surface list.
 
 Option gate: `r_TAF_OptionExtensions`, default `Yes`. Off disables third-party C# only; the XML
-data lane is unaffected.
+data lane is unaffected. Durable namespaces and draw streams derive from the owning mod's immutable
+manifest `id`, lowercased/slugged—not its mutable, non-unique display title. Changing a published
+manifest `id` is therefore a save-breaking owner change; changing only the title is not. If two
+installed manifest IDs collapse to the same bounded slug, every extension owned by both IDs is
+refused by name; load order never chooses an owner for shared durable state.
 
 | Member | Contract |
 |---|---|
-| `KingdomApiRules.Version` | The published version. `1`. Checked at registration; drift is refused by mod name. |
+| `KingdomApiRules.Version` | The published version. `3`. Checked at registration; unsupported drift is refused by mod name. |
 | `KingdomApiRules.MinSupportedVersion` | The oldest version still admitted. `1`. Moving it is a breaking change, and it is what makes STANDARDS §9's one-minor-cycle promise keepable. |
+| `KingdomApiRules.BehaviourVersion` | First version containing durable resource, carrier/job, network, and work contracts. `3`; a type implementing any of them cannot declare v1/v2. |
 | `[KingdomExtension]` | Marker attribute. The class needs a public parameterless constructor. |
 | `IKingdomExtension.ApiVersion` | What the extension was built against. Return the constant, never a literal. |
 | `IKingdomAskSource.Ask(city, draws)` | Returns asks for the Charter's asks board. Null for none; at most `KingdomApiRules.MaxAsksPerSource` kept. |
-| `IKingdomHappeningSource.Happen(city, sinceTick, draws)` | Returns dated notices for the chronicle and the word surface. At most `KingdomApiRules.MaxNoticesPerSource` kept. |
-| `IKingdomDraws.TryBetween(lane, ordinal, low, high, out value)` | The kernel, keyed on `taf:ext:<mod>:<lane>`. Deterministic across reloads. Returns false rather than substituting a different stream. |
-| `KingdomCityReading` | Frozen projection of one city's book: stocks, and `TryZone` / `TryWork` / `TryResident` over copied rows. No setters, no route to the ground. |
+| `IKingdomHappeningSource.Happen(city, sinceTick, draws)` / `IHappeningGenerator` | Returns dated notices for the chronicle and word surface. `IHappeningGenerator` is the canonical §6.6 name and inherits the compatible v1 contract. Each immutable manifest-ID/exact-assembly/type tuple owns a durable cursor and receives `0` on its first logical call; an upgraded source already called through the retired aggregate lane starts at that retained legacy tick. Later windows are `(sinceTick, nowTick]`, and a fault advances only that source. At most 128 active source types run per city and `MaxNoticesPerSource` notices are kept. |
+| `IKingdomIdentitySource.Keys(identity)` | Returns extra live roster keys for one frozen identity. At most `MaxIdentityKeysPerSource` valid distinct keys survive from the first `MaxIdentityKeyCandidatesPerSource` slots. Unqualified keys are filed under the owning mod; foreign namespaces are dropped. A fault contributes none, is logged, and is surfaced on screen once per owning mod and lane. |
+| `IKingdomIdentitySource.Affinity(identity, workKind)` | Returns an existing work lane's percent; 100 is neutral. Per-source answers are clamped, their deltas summed, then the composed answer is clamped to 70–130. A fault is neutral, logged, and surfaced on screen once per owning mod and lane. No tier surface exists. |
+| `KingdomIdentityReading` | Frozen bounded `(Culture, Species, Creed, Genotype)` projection. Exact Qud open-string identity, with no creature or city reference. |
+| `IResourceKind.Resources(city, model, draws)` | Declares extension-owned resource rows with unit, capacity, optional dedicated-container property, network key, and liquid id. Level is durable and owner-qualified; four rows per owner, sixteen per city. |
+| `ICarrierKind.Carriers(city, model, draws)` | Declares owner-local carrier blueprint, pace, and capacity for the current pass. A job freezes those values when it opens, so disabling or changing the source cannot rewrite a journey in flight. |
+| `IJobKind.Jobs(city, model, draws)` | Opens exact-tick jobs paired to one carrier and one owned resource. A key permanently identifies one logical job: retries are idempotent while its open/recent terminal receipt is retained, but a retired key reused later is a new proposal and is forbidden by contract. Cargo reserves once; up to six held-zone legs determine duration; up to four completion changes commit atomically. Four open jobs and four recent terminal receipts per owner; sixteen of each city-wide. |
+| `INetworkKind.Networks(city, model, draws)` | Declares generic held-zone topology: up to eight source/sink/relay nodes and twelve capacity edges per network. The host solves lower-numbered priority first, records flow/brownout, and integrates daily surplus into the owned resource. Four networks per owner, sixteen per city. |
+| `IWorkBehaviour.Advance(city, model, draws)` | Advances opaque state on an exact existing `WorkId` to a strictly later breakpoint, with up to four atomic owned-resource changes and one explicit materialisation debt. An attended settlement pass lands at most one exact takeable, non-creature Qud object on that work's cell and only then acknowledges the debt. A generation receipt reconciles interruption between those two acts without replaying a stale object. Sixteen rows per owner, sixty-four per city. |
+| `KingdomResourceDefinition` / `KingdomCarrierDefinition` / `KingdomJobPlan` / `KingdomNetworkPlan` / `KingdomWorkAdvance` | Frozen proposal values. Every supplied array is copied; bounded `Try*` accessors expose nested legs, changes, nodes, edges, and materialisations. |
+| `KingdomBehaviourReading` and its resource/job/network/work rows | Frozen durable projection, exposed as `KingdomCityReading.Behaviour`. It includes bounded terminal job receipts and outstanding physical debt, but no mutable model or engine object. |
+| `IKingdomDraws.TryBetween(lane, ordinal, low, high, out value)` | The kernel, keyed on `taf:ext:<manifest-id>:<lane>`. Deterministic across reloads and display-title changes. Returns false rather than substituting a different stream. |
+| `KingdomCityReading` | Frozen projection of one city's book: stocks, `Behaviour`, and `TryZone` / `TryWork` / `TryResident` over copied rows. No setters, no route to the ground. Its original constructor remains for v1/v2 binary compatibility. |
 | `KingdomZoneReading` / `KingdomWorkReading` / `KingdomResidentReading` / `KingdomStockReading` | The row projections. |
-| `KingdomWorkClass` / `KingdomDayPlace` / `KingdomRollStanding` | Published vocabularies, MAPPED from the model's own rather than cast, so a model-side insertion cannot renumber them. |
+| `KingdomWorkClass` / `KingdomDayPlace` / `KingdomRollStanding` | Published vocabularies, MAPPED from the model's own rather than cast, so a model-side insertion cannot renumber them. `Construction` is appended as class 6; its row publishes exact resident-derived crew while the construction receipt remains progress authority. |
 | `KingdomAsk` / `KingdomAskWeight` | One thing the city wants: kind, title, what would settle it, where, how badly. Kind/title/want are stripped and clamped; a `ZoneId` the city does not hold is read as none; an undefined weight is read as `Passing`, never `Grave`. |
 | `KingdomNotice` | One dated thing that happened: kind, tick, chronicle telling, optional spoken line. **No place field** — neither surface a notice reaches takes a zone, so one would be a published input that went nowhere. |
-| `KingdomExtensionVerdict` / `KingdomApiRules.Judge` / `.RefusalLine` / `.TryStream` / `.Slug` / `.Trim` / `.Kind` | The registration judgment and the clamps, pure and testable. |
+| `KingdomExtensionVerdict` / `KingdomApiRules.Judge` / `.RefusalLine` / `.TryStream` / `.Slug` / `.Trim` / `.Kind` / identity clamps | Registration judgment and bounded hostile-input rules, pure and testable. |
 | `KingdomExtensions.Version` / `.Enabled` / `.Admitted()` / `.Refusals()` | The registry, from outside. |
 
-**Deliberately not published**, and why: resource kinds (the stock row is a fixed three-pair
-struct), job and carrier kinds (a job's cargo is one of those three and its kind is a closed enum),
-network kinds (the graph is not built), and work behaviours (the run-state slot is one 16-byte
-discriminated field, and publishing it would freeze that shape). A contract nothing honours is
-worse than none. They open when the substrate does.
+**Durable sidecar, not a decorative interface.** The four row-owning dimensions advance beside the
+ordinary city model during attended check-in and unattended heartbeat. Resource levels, frozen
+jobs, latest network solves, work states, and owed objects are encoded as one canonical bounded
+sidecar in `KingdomCityBook`; nested settlement archive schema 7 carries it across exile and seat
+exchange. Old archive writers remain byte-frozen and v1/v2 callbacks remain admitted. A malformed
+sidecar is retained and named rather than reset to empty. In-flight jobs can complete from their
+frozen receipt after the owning mod is disabled. Carrier blueprints are retained as job identity;
+their v3 journey is resolved model-side, while work materialisations are the physical production
+edge. Current decoded sidecar may not exceed 16,896 bytes. Legacy v1 input remains capped at
+16,384 bytes; current bound adds exact worst-case headroom for one v2 generation receipt on all 64
+work rows, so every valid legacy carrier can be rewritten without losing authority.
 
 **Isolation.** Every extension call crosses `KingdomExecutor.Submit`: frozen reading in, frozen
 result out, timed against the reckon lane. A source that throws or overruns its lane's budget
 stalls its own job — no city state is published, the turn is unaffected, the failure is logged by
-mod name and named on the asks board, and every other extension still runs. **The budget is a
+mod name, and every other extension still runs. Ask-source faults are additionally named on the
+asks board; identity-key and identity-affinity faults are surfaced on screen once per owning mod
+and lane, while the affected source contributes no keys or neutral affinity. Each callback gets at
+most 32 kernel-draw attempts and each returned behaviour array inspects at most its first 32 slots;
+malformed slots consume that bound. The thirty-third draw refuses that callback's publication as
+over-budget. Per-owner and city caps above apply to durable rows, including bounded terminal job
+receipts. **The budget is a
 verdict, not a timeout**: the seam is synchronous, so it can refuse to publish a result that
 overran but cannot interrupt one — an infinite loop in a third-party source still hangs the game,
 exactly as one in ours would. Discovery uses the engine's cached attribute scan
@@ -1293,6 +1458,13 @@ These are read and written across the mod and are part of the API:
 
 ## Guarantees
 
+- **Inheritance carries the witnessed place, never the stash.** A current external seal freezes
+  one loaded 80x25 seat's authored architecture receipts and connected relative street graph.
+  Import uses those receipts through the ordinary architecture stamper, never today's mutable
+  catalogue; missing optional fabric degrades one whole work to an empty memory marker. No old
+  creature, item, liquid, charge, object identity, or founding-basin authority crosses runs.
+  Schema-4 seals retain their bounded anchor-proxy path, while malformed current geometry fails
+  closed before placement.
 - **The protection law**: kingdom systems never consume, move, or destroy an object the
   player or another mod placed, unless the player explicitly dedicated it. Automatic
   placement only ever targets empty cells.
