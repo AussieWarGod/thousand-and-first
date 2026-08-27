@@ -88,7 +88,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("Factions.GetIfExists(covenant.Faction) == null", data);
 			StringAssert.Contains("entry.CovenantFaction = covenant.Faction", data);
 
-			string zoning = TestMain.ReadRepositoryText(Path.Combine("Growth", "KingdomZoning.cs"));
+			string zoning = KingdomZoningLogicalSource.Read();
 			int judge = zoning.IndexOf("private static ZoningJudgement JudgeAt", StringComparison.Ordinal);
 			int covenant = zoning.IndexOf("JudgeCovenant(", judge, StringComparison.Ordinal);
 			int ordinary = zoning.IndexOf("KingdomZoningRules.Judge(GateFor", judge, StringComparison.Ordinal);

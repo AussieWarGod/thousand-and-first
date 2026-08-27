@@ -722,7 +722,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void Codec_ProductionWriterCannotRouteThroughFrozenV3Writer()
 		{
-			string source = ReadRepoSource("Trade/KingdomTradeState.cs");
+			string source = KingdomTradeStateLogicalSource.Read();
 			int current = source.IndexOf("public static byte[] EncodePayload(",
 				StringComparison.Ordinal);
 			int prior = source.IndexOf("internal static byte[] EncodePayloadV3ForMigration(",
@@ -1018,7 +1018,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void StructuralTradeDecode_PrecedesCoreLegacyCoexistenceGate()
 		{
-			string state = ReadRepoSource("Trade/KingdomTradeState.cs");
+			string state = KingdomTradeStateLogicalSource.Read();
 			int raw = state.IndexOf("public static KingdomTradeBook DecodeEnvelopeRaw",
 				StringComparison.Ordinal);
 			int rawEnd = state.IndexOf("public static byte[] EncodePayload", raw,

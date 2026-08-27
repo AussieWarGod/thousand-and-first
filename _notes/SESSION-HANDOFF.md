@@ -11,24 +11,24 @@
 - Integrated feature/polish baseline is clean commit `19fb8ee`. Later structural/CI hardening
   changes are not signed by that receipt; preserve them and all later user changes rather than
   substituting an older historical candidate.
-- `Tools/gate.sh`: 1481 staged sources compile clean under baseline and compatibility
-  symbols. The exact inventory contains 1481 production C# files and 251,704 physical lines and has
-  SHA-256 `b4019ef667c178c9d46da4e3ad380059ea3dfe114dd69b66c7bb6cb394fbc979`.
+- `Tools/gate.sh`: 1575 staged sources compile clean under baseline and compatibility
+  symbols. The exact inventory contains 1575 production C# files and 252,982 physical lines and has
+  SHA-256 `736bb6fa198a3ed599ddc51302ffeccf7be0c01e7839cd9fbb7d11c9e79c1822`.
 - Architecture: 136 buildings, 126 plotted building plans, 499 maps, 355 bindings, 403 tiers,
   516 variants, and 2,064 variant/pose goldens; generator/checker clean with zero issues plus three
   expected installed-base tolerant-recovery warnings for malformed vanilla Creatures/Furniture/Items XML.
   Lot realizations are current at 337 maps, 242 bindings, and 277 tiers.
 - Nine focused one-survey source-contract cases pass. The current integrated pure/source suite passes
-  7,714 / 7,714 cases locally. Latest retained hosted checkpoint `b049c17` has green repository-audit,
+  7,743 / 7,743 cases locally. Latest retained hosted checkpoint `1c2d619` has green repository-audit,
   Ubuntu source-suite, and Windows source-suite jobs for its exact bytes; later working-tree changes
-  remain unsigned. The portable suite passes 173 / 173 with zero skipped; all 34 Python tool tests
+  remain unsigned. The portable suite passes 173 / 173 with zero skipped; all 35 Python tool tests
   and all 19 art tests pass. Hosted Ubuntu exposed a legacy
   publication no-replace race; an exclusive legacy-folder publication lock plus deterministic
   contention test repair it. Public CI permits exactly three named
   installed-data skips when no
   Qud base is discoverable; any extra/missing skip or explicit invalid base fails. Release
   execution forbids skips and passes the exact licensed base explicitly.
-- Current inventory gates report 1,505 cold-install files, 36 shipped IPart ABI classes and 3 ABI
+- Current inventory gates report 1,599 cold-install files, 36 shipped IPart ABI classes and 3 ABI
   contracts. Art policy allowlists 0 local tiles and verifies 55 vanilla paths.
 - Current native partial result remains the receipt from clean commit `19fb8ee`: clean deployment,
   fresh isolated profile, Smokehold founding,
@@ -37,15 +37,15 @@
   gallery/lived-city, numbered protocol, accessibility, compatibility, dense-performance, and
   private subscribed-install receipts remain open. Later structural revisions have no native
   receipt and need a compile/load/log rerun against their exact final commit.
-- Structure checkpoint: 40 files exceed 300 physical lines, 0 are exactly 300, 16 exceed 1,000,
-  0 exceed 2,000, and 0 exceed 5,000. Direct XRL imports total 612, with 37 at or over the line
-  limit. Three more oversized authorities were decomposed after `b049c17`, bringing the current
-  sequence to 131 additional families and 141 cumulative. Latest fan-in preserved exact logical
+- Structure checkpoint: 27 files exceed 300 physical lines, 0 are exactly 300, 3 exceed 1,000,
+  0 exceed 2,000, and 0 exceed 5,000. Direct XRL imports total 689, with 25 at or over the line
+  limit. Thirteen more oversized authorities were decomposed after hosted checkpoint `1c2d619`, bringing the current
+  sequence to 144 additional families and 154 cumulative. Latest fan-in preserved exact logical
   source, persisted/public ABI, deterministic order, and source-reader coverage. The structural release gate remains red until
   every staged file is strictly under 300 and exact-inventory human semantic review exists in
   `../docs/STRUCTURE_REVIEW.json` with no exceptions.
-- Current focus: checkpoint each green hardening batch; decompose CentralLogistics and other
-  oversized authorities; implement routed construction inputs, the two-city reciprocal purposeful
+- Current focus: checkpoint the 13-authority CentralLogistics-through-DelveLink hardening batch;
+  then implement routed construction inputs, the two-city reciprocal purposeful
   portfolio, and Charter succession configuration; then rerun exact-revision native proof and
   complete every remaining semantic-review/human/compatibility/Steam gate.
 

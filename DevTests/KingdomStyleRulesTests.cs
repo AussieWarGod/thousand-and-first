@@ -273,7 +273,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("InheritsFrom(\"Plant\")", data);
 			StringAssert.Contains("GetPartParameter(\"Physics\", \"Solid\", false)", data);
 
-			string founding = TestMain.ReadRepositoryText(Path.Combine("Core", "KingdomFounding.cs"));
+			string founding = KingdomFoundingLogicalSource.Read();
 			StringAssert.Contains("style = KingdomData.StyleForSite", founding);
 			StringAssert.Contains("KingdomData.TryGetStyle(style", founding);
 
@@ -299,7 +299,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void RuntimeCropAndMaterialConsumersUseOpenStyleRegistry()
 		{
-			string crops = TestMain.ReadRepositoryText(Path.Combine("Growth", "KingdomCrops.cs"));
+			string crops = KingdomCropsLogicalSource.Read();
 			string growth = KingdomGrowthLogicalSource.Read();
 			string materials = KingdomMaterialsLogicalSource.Read();
 			StringAssert.Contains("KingdomData.CropForStyle", crops);

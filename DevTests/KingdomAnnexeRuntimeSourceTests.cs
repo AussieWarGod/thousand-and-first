@@ -13,8 +13,7 @@ namespace ThousandAndFirst.Tests
 		{
 			string annexe = TestMain.ReadRepositoryText(Path.Combine("Growth",
 				"KingdomAnnexe.cs"));
-			string purpose = TestMain.ReadRepositoryText(Path.Combine("Growth",
-				"KingdomPurpose.cs"));
+			string purpose = KingdomPurposeLogicalSource.Read();
 			StringAssert.DoesNotContain("Realm.RosterNames[0]", annexe);
 			StringAssert.Contains("KingdomPurpose.IsLodgedSpecialist(zone, candidate,", annexe);
 			StringAssert.Contains("Psyberneticist: true", annexe);

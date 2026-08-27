@@ -20,19 +20,20 @@ python3 Tools/check-structure.py --release
 
 ## Current hardening checkpoint
 
-`Tools/check-structure.py --json` currently reports 1481 staged production C# files and 251,704
-physical lines. Of those, 40 exceed 300 lines, 0 are exactly 300, and therefore 40 fail the strict
-cap; 16 exceed 1,000, 0 exceed 2,000, and 0 exceed 5,000. Exact staged source inventory digest:
-`b4019ef667c178c9d46da4e3ad380059ea3dfe114dd69b66c7bb6cb394fbc979`. The census reports
-612 files with direct `XRL` imports; 37 of those exceed the line limit.
+`Tools/check-structure.py --json` currently reports 1575 staged production C# files and 252,982
+physical lines. Of those, 27 exceed 300 lines, 0 are exactly 300, and therefore 27 fail the strict
+cap; 3 exceed 1,000, 0 exceed 2,000, and 0 exceed 5,000. Exact staged source inventory digest:
+`736bb6fa198a3ed599ddc51302ffeccf7be0c01e7839cd9fbb7d11c9e79c1822`. The census reports
+689 files with direct `XRL` imports; 25 of those exceed the line limit.
 
-The current hardening sequence semantically decomposed 131 additional oversized authorities,
-bringing the cumulative total to 141. That is 12 more decompositions since checkpoint `2cb97fc`,
-six more than checkpoint `d3fc4b9`, and three more than checkpoint `b049c17`.
+The current hardening sequence semantically decomposed 144 additional oversized authorities,
+bringing the cumulative total to 154. That is 25 more decompositions since checkpoint `2cb97fc`,
+19 more than checkpoint `d3fc4b9`, 16 more than checkpoint `b049c17`, and 13 more than hosted
+checkpoint `1c2d619`.
 [ARCHITECTURE.md](ARCHITECTURE.md#split-authority-map) maps the logical authorities to
 their current source families. Numeric lexical prefixes appear only where the canonical stage's
 filename order must preserve original declaration, reflection, or serialized-metadata order; they
-do not create a second authority. This is measurable progress, not release signoff: 40 line-cap
+do not create a second authority. This is measurable progress, not release signoff: 27 line-cap
 failures and missing `docs/STRUCTURE_REVIEW.json` exact-inventory human review still
 block release. Any staged source change invalidates this digest and requires a new census and
 review binding.

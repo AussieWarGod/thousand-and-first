@@ -249,7 +249,7 @@ player (§1.2 surfaces 2-3).
 ### 2.4 The heir pool exists: rows are primary, bodies are views
 
 Residents are rows bound to bodies by a minted id — "the row is primary and the body is a durable
-view" (`T/Simulation/City/KingdomResidents.cs:14-16,36,62-70`; LIVING-CITY W2,
+view" (`T/Simulation/City/KingdomResidents.*.cs`, especially the identity and binding shards; LIVING-CITY W2,
 `T/_notes/LIVING-CITY-ARCHITECTURE.md:1983`). A `KingdomResidentRow`
 (`T/Simulation/City/KingdomCityState.cs:568-629`) carries: id, **Name**, **OriginCode** (index
 into `KingdomRules.Origins`, `T/Simulation/City/KingdomResidentRules.cs:365-379`), **CreedCode**,

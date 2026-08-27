@@ -148,8 +148,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void PortersExplicitlyIgnoreNamedResidentJobs()
 		{
-			string source = TestMain.ReadRepositoryText(Path.Combine("Simulation", "City",
-				"KingdomPorters.cs"));
+			string source = KingdomPortersLogicalSource.Read();
 			Assert.GreaterOrEqual(Occurrences(source, "row.Kind != KingdomJobKind.Delivery"), 4);
 		}
 
@@ -281,8 +280,7 @@ namespace ThousandAndFirst.Tests
 			Assert.Greater(standingDeath, deathReceipt);
 			StringAssert.Contains("TryInferTerminalResidentEvidence", source);
 
-			string residents = TestMain.ReadRepositoryText(Path.Combine("Simulation", "City",
-				"KingdomResidents.cs"));
+			string residents = KingdomResidentsLogicalSource.Read();
 			int witness = residents.IndexOf("private static KingdomResidentRow Witnessed(",
 				StringComparison.Ordinal);
 			int homes = residents.IndexOf("private static Dictionary<string, int> HomeWorkIds",

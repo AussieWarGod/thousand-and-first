@@ -27,7 +27,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void PurposeProductionRootsExactObjectBeforePublishingItsIdentity()
 		{
-			string source = Source(Path.Combine("Growth", "KingdomPurpose.cs"));
+			string source = KingdomPurposeLogicalSource.Read();
 			Ordered(source, "cargo = CreateCargo(live, manifest)", "RootCargo(live, cargo)",
 				"KingdomConstruction.UpdateOutput(ref live, cargo.ID)",
 				"CargoOutputPending", "sourceInventory.AddObject(cargo",
@@ -70,7 +70,7 @@ namespace ThousandAndFirst.Tests
 			Ordered(charter, "KingdomPlots.TryQuoteCommission", "KingdomArchitecturePreview.TryRender",
 				"KingdomPurpose.AppendPreview(preview, quote.PurposeReceipt)",
 				"Commission this exact plan", "KingdomCommission.Commission");
-			string purpose = Source(Path.Combine("Growth", "KingdomPurpose.cs"));
+			string purpose = KingdomPurposeLogicalSource.Read();
 			StringAssert.Contains("Exact cross-city input: 1 ", purpose);
 			StringAssert.Contains("delivered through the live mirror-gate", purpose);
 			StringAssert.Contains("Site: ", purpose);
@@ -81,7 +81,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void PurposeReceiptsKeepPlainNamesAndPreviewAndOutboxEscapeThem()
 		{
-			string purpose = Source(Path.Combine("Growth", "KingdomPurpose.cs"));
+			string purpose = KingdomPurposeLogicalSource.Read();
 			StringAssert.Contains("OriginCity = connection.SourceCity", purpose);
 			StringAssert.Contains("DestinationCity = connection.DestinationCity", purpose);
 			StringAssert.Contains("specialist.BaseDisplayNameStripped", purpose);
@@ -100,7 +100,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void SameTickConstructionReceiptSpendsTheOnlyBodyPurposeSlot()
 		{
-			string zoning = Source(Path.Combine("Growth", "KingdomZoning.cs"));
+			string zoning = KingdomZoningLogicalSource.Read();
 			StringAssert.Contains("KingdomConstruction.TryRead", zoning);
 			StringAssert.Contains("job.Route != KingdomConstructionRoute.PlotCommission", zoning);
 			StringAssert.Contains("job.Route != KingdomConstructionRoute.PlotPlan", zoning);

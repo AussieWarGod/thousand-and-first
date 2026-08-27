@@ -64,7 +64,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("Survey.Improvements", resolve);
 			StringAssert.Contains("Survey.Built", resolve);
 
-			string residents = Source("Simulation/City", "KingdomResidents.cs");
+			string residents = KingdomResidentsLogicalSource.Read();
 			string roster = Between(residents,
 				"internal static KingdomCityState ReadRoster(",
 				"private static int ClaimIdFor(");
@@ -100,7 +100,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("survey.LayoutRoots", marks);
 			StringAssert.DoesNotContain("Z.GetObjects()", marks);
 
-			string crops = Source("Growth", "KingdomCrops.cs");
+			string crops = KingdomCropsLogicalSource.Read();
 			string rows = Between(crops, "public static List<GameObject> RowsOf",
 				"public static void ClearRows");
 			StringAssert.Contains("survey.CropRows", rows);
@@ -159,12 +159,12 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void ActiveCrossZoneTransactionsUseExactAuthorityNotRemoteSurveys()
 		{
-			string purpose = Source("Growth", "KingdomPurpose.cs");
+			string purpose = KingdomPurposeLogicalSource.Read();
 			string endpoints = Between(purpose, "private static bool ExactEndpoints(",
 				"private static GameObject CreateCargo(");
 			StringAssert.Contains("FindExactKnown(", endpoints);
 			StringAssert.DoesNotContain("KingdomSurvey.Take", endpoints);
-			string delve = Source("Growth", "KingdomDelveLink.cs");
+			string delve = KingdomDelveLinkLogicalSource.Read();
 			string token = Between(delve, "private static int FindEndpointByToken(",
 				"private static int CountEndpointAt(");
 			StringAssert.Contains("cell?.GetObjects()", token);
@@ -252,7 +252,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("KingdomSurvey.ObserveAddResultInActive(Z, caravan, added);", trade);
 			StringAssert.Contains("BoundTradeSurvey(Z)?.ObserveCurrentTopology(old);", trade);
 
-			string logistics = Source("Simulation/City", "KingdomCentralLogistics.cs");
+			string logistics = KingdomCentralLogisticsLogicalSource.Read();
 			StringAssert.Contains("PublishMarkedFoodDelta(survey, target, jobId, before);", logistics);
 			StringAssert.Contains("survey.SynchronizeReceiptObject(target);", logistics);
 		}

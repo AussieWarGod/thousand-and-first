@@ -9,7 +9,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void EnrollmentNeverReplacesBrainOrTemporaryAllegianceState()
 		{
-			string founding = TestMain.ReadRepositoryText("Core/KingdomFounding.cs");
+			string founding = KingdomFoundingLogicalSource.Read();
 			string runtime = KingdomCitizenshipLogicalSource.Read();
 			StringAssert.DoesNotContain("Brain.Factions =", founding);
 			StringAssert.DoesNotContain("Allegiance.Calm =", founding);
@@ -26,7 +26,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void ClaimingGroundPreservesNativeOwnershipForEveryExistingObject()
 		{
-			string founding = TestMain.ReadRepositoryText("Core/KingdomFounding.cs");
+			string founding = KingdomFoundingLogicalSource.Read();
 			string claim = Slice(founding, "internal static bool ClaimZone(",
 				"public static bool ZonesAdjacent(");
 			StringAssert.Contains("Z.SetZoneProperty(\"faction\", system.KingdomFactionName)", claim);
@@ -77,7 +77,7 @@ namespace ThousandAndFirst.Tests
 		{
 			string runtime = KingdomCitizenshipLogicalSource.Read();
 			string survey = KingdomSurveyLogicalSource.Read();
-			string residents = TestMain.ReadRepositoryText("Simulation/City/KingdomResidents.cs");
+			string residents = KingdomResidentsLogicalSource.Read();
 			string growth = KingdomGrowthLogicalSource.Read();
 			StringAssert.Contains("KingdomCitizenship.BelongsTo(citizenshipSystem, item)", survey);
 			StringAssert.Contains("KingdomCitizenship.BelongsTo(System, Body)", residents);

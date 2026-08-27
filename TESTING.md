@@ -30,12 +30,12 @@ file order; use the table as the top-level checklist.
 ## Current portable evidence boundary
 
 Nine focused one-survey source-contract cases pass. The final integrated pure/source suite passes
-7,714 / 7,714 cases against the configured licensed Qud base; the portable suite passes 173 / 173.
-Both recorded runs report zero skipped. The Tools suite passes 34 tests and the Art suite passes 19.
-The latest retained hosted checkpoint is `b049c17`: repository audit, Ubuntu source suite, and
+7,743 / 7,743 cases against the configured licensed Qud base; the portable suite passes 173 / 173.
+Both recorded runs report zero skipped. The Tools suite passes 35 tests and the Art suite passes 19.
+The latest retained hosted checkpoint is `1c2d619`: repository audit, Ubuntu source suite, and
 Windows source suite are green for those exact bytes. Later working-tree changes remain unsigned.
-Baseline and compatibility-symbol staged compiles are clean across 1481 production C# sources; the
-cold-install inventory contains 1505 files. This does not close native behavior or the representative
+Baseline and compatibility-symbol staged compiles are clean across 1575 production C# sources; the
+cold-install inventory contains 1599 files. This does not close native behavior or the representative
 compatibility matrix. Public CI without installed Qud data permits exactly three
 named installed-data-only skips instead of fabricating fixtures. TestMain rejects an unexpected or
 missing allowlisted skip, and an explicitly configured incomplete base fails rather than skipping.
@@ -43,7 +43,7 @@ Canonical release `DevTests/test.ps1` forbids every skip, and `Tools/release-che
 exact Qud base.
 `docs/STATUS.md` owns the exact latest receipts. None of this signs native Qud behavior,
 appearance, accessibility, current-revision native/human/compatibility/performance gates, or Steam
-installation. The structural release gate also remains red: 40 staged sources breach the line cap
+installation. The structural release gate also remains red: 27 staged sources breach the line cap
 and `docs/STRUCTURE_REVIEW.json` is missing.
 
 ## Latest retained automated native smoke — partial evidence, not protocol signoff

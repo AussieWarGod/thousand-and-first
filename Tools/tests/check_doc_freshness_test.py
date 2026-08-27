@@ -55,6 +55,30 @@ class DocumentationFreshnessTests(unittest.TestCase):
             finally:
                 CHECKER.ROOT = original_root
 
+    def test_in_range_citation_to_declaration_only_split_anchor_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            original_root = CHECKER.ROOT
+            CHECKER.ROOT = Path(temporary)
+            try:
+                (CHECKER.ROOT / "Source.cs").write_text(
+                    "namespace Example\n{\npublic static partial class Source\n{\n}\n}\n",
+                    encoding="utf-8",
+                )
+                (CHECKER.ROOT / "Source.00.Moved.cs").write_text(
+                    "namespace Example { public static partial class Source { public static void Moved() {} } }\n",
+                    encoding="utf-8",
+                )
+                (CHECKER.ROOT / "Guide.md").write_text(
+                    "Stale member evidence: `Source.cs:3-4`.\n", encoding="utf-8"
+                )
+                problems = []
+                CHECKER.audit_source_citations(problems)
+                self.assertEqual(1, len(problems))
+                self.assertIn("cites declaration-only split anchor", problems[0])
+                self.assertIn("cite the exact shard or logical family plus symbol", problems[0])
+            finally:
+                CHECKER.ROOT = original_root
+
     def test_frozen_research_citations_are_not_repointed_to_current_sources(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             original_root = CHECKER.ROOT

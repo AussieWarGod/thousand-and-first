@@ -328,8 +328,7 @@ namespace ThousandAndFirst.Tests
 				"Simulation/City/KingdomHappenings.cs");
 			StringAssert.Contains("RecordDisputed", happenings);
 			StringAssert.Contains("KingdomLocusRules.PilgrimCause", happenings);
-			string physical = TestMain.ReadRepositoryText(
-				"Simulation/City/KingdomPhysicalHappenings.cs");
+			string physical = KingdomPhysicalHappeningsLogicalSource.Read();
 			StringAssert.Contains("KingdomHappenings.AccruePilgrim", physical);
 			StringAssert.Contains("BeginUninspectable(book, operation.EventId, SinkLane.Effect",
 				physical);

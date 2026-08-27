@@ -11,12 +11,12 @@ import xml.etree.ElementTree as ET
 
 
 ROOT = Path(__file__).resolve().parent.parent
-FINAL_SUITE_CASES = "7,714"
+FINAL_SUITE_CASES = "7,743"
 PORTABLE_SUITE_CASES = "173"
-TOOLS_TEST_CASES = "34"
+TOOLS_TEST_CASES = "35"
 ART_TEST_CASES = "19"
-HARDENING_DECOMPOSITIONS = "131"
-CUMULATIVE_DECOMPOSITIONS = "141"
+HARDENING_DECOMPOSITIONS = "144"
+CUMULATIVE_DECOMPOSITIONS = "154"
 FOCUSED_SURVEY_CASES = 9
 
 # These notes are immutable attack/research snapshots whose local line citations belong to the
@@ -135,6 +135,9 @@ def audit_source_citations(problems):
         re.IGNORECASE,
     )
     line_counts = {}
+    declaration_only_split_anchors = {
+        path for path in files if _is_declaration_only_split_anchor(path)
+    }
     for document in (path for path in files if path.suffix.lower() == ".md"):
         relative = document.relative_to(ROOT).as_posix()
         if relative in FROZEN_SOURCE_CITATION_DOCUMENTS:
@@ -158,6 +161,13 @@ def audit_source_citations(problems):
                     line_counts[resolved] = sum(1 for _ in source)
             last = int(match.group(3) or match.group(2))
             if last <= line_counts[resolved]:
+                if resolved not in declaration_only_split_anchors:
+                    continue
+                line = body.count("\n", 0, match.start()) + 1
+                problems.append(
+                    f"{relative}:{line} cites declaration-only split anchor "
+                    f"{match.group(0)}; cite the exact shard or logical family plus symbol"
+                )
                 continue
             line = body.count("\n", 0, match.start()) + 1
             relative = document.relative_to(ROOT)
@@ -165,6 +175,32 @@ def audit_source_citations(problems):
                 f"{relative}:{line} has stale source citation {match.group(0)}; "
                 f"{resolved} has {line_counts[resolved]} lines"
             )
+
+
+def _is_declaration_only_split_anchor(path):
+    """True when a split C# anchor retains declarations/comments but no owned members."""
+    if path.suffix.lower() != ".cs" or not any(path.parent.glob(path.stem + ".*.cs")):
+        return False
+    source = path.read_text(encoding="utf-8-sig", errors="replace")
+    if " partial class " not in " " + " ".join(source.split()) + " ":
+        return False
+    in_comment = False
+    for raw in source.splitlines():
+        line = raw.strip()
+        if in_comment:
+            if "*/" in line:
+                in_comment = False
+            continue
+        if line.startswith("/*"):
+            if "*/" not in line:
+                in_comment = True
+            continue
+        if not line or line.startswith(("//", "using ", "namespace ", "#", "[")):
+            continue
+        if line in ("{", "}") or " partial class " in " " + line + " ":
+            continue
+        return False
+    return True
 
 
 def audit_archive_contract(problems):
@@ -427,7 +463,7 @@ def audit_public(problems):
         "Concurrent legacy publication now has one cross-process decision boundary",
         "Linux CI exposed",
         ".legacies.lock",
-		"Twelve post-`2cb97fc` decompositions",
+		"Twenty-five post-`2cb97fc` decompositions",
     )
     forbid(
         problems,
@@ -498,9 +534,24 @@ def audit_public(problems):
         "Growth/KingdomUpgrade.[0-9][0-9].*.cs",
         "Raids/KingdomRaids.[0-9][0-9].*.cs",
         "World/KingdomInheritanceState.z*.cs",
-		"12 more than checkpoint `2cb97fc`",
-		"six more than checkpoint `d3fc4b9`",
-		"three more than checkpoint `b049c17`",
+		"Civic runtime authorities split after hosted checkpoint `1c2d619`",
+		"KingdomCentralLogistics.[0-9][0-9].*.cs",
+		"KingdomResidents.[0-9][0-9].*.cs",
+		"KingdomPhysicalHappenings.[0-9][0-9].*.cs",
+		"KingdomPorters.[0-9][0-9].*.cs",
+		"KingdomPurpose.[0-9][0-9].*.cs",
+		"KingdomTradeState.[0-9][0-9].*.cs",
+		"KingdomCityBook.[0-9][0-9].*.cs",
+		"KingdomFounding.[0-9][0-9].*.cs",
+		"KingdomRaidIncidentRules.[0-9][0-9].*.cs",
+		"KingdomZoning.[0-9][0-9].*.cs",
+		"KingdomCreed.[0-9][0-9].*.cs",
+		"KingdomCrops.[0-9][0-9].*.cs",
+		"KingdomDelveLink.[0-9][0-9].*.cs",
+		"25 more than checkpoint `2cb97fc`",
+		"19 more than checkpoint `d3fc4b9`",
+		"16 more than checkpoint `b049c17`",
+		"13 more than hosted checkpoint `1c2d619`",
     )
     require(
         problems,
@@ -587,6 +638,7 @@ def audit_private(problems):
     if not (ROOT / "_notes").is_dir():
         return
     files, over300, exact300, at_or_over, over1000, over2000, over5000 = structure_counts()
+    cold_install_files = cold_install_count()
 
     require(
         problems,
@@ -748,6 +800,7 @@ def audit_private(problems):
         f"{over2000} exceed 2,000",
         f"{over5000} exceed 5,000",
         f"passes {FINAL_SUITE_CASES} / {FINAL_SUITE_CASES} cases",
+        f"{cold_install_files:,} cold-install files",
         "nine focused survey cases",
     )
     forbid(

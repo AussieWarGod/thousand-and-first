@@ -105,8 +105,7 @@ namespace ThousandAndFirst.Tests
 			Assert.IsFalse(move.Contains("GameObject.Create"));
 			Assert.IsFalse(move.Contains("KingdomMaterials.Deliver"));
 
-			string central = Source(Path.Combine("Simulation", "City",
-				"KingdomCentralLogistics.cs"));
+			string central = KingdomCentralLogisticsLogicalSource.Read();
 			string arrival = Slice(central,
 				"internal static bool TryMaterializeManifestArrival(",
 				"internal static bool TryAcknowledgeManifestPickup(");
@@ -125,8 +124,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("TryAcknowledgeManifestDelivered(system, op.Id", runtime);
 			StringAssert.Contains("op.ManifestRevision", runtime);
 
-			string central = Source(Path.Combine("Simulation", "City",
-				"KingdomCentralLogistics.cs"));
+			string central = KingdomCentralLogisticsLogicalSource.Read();
 			string reserve = Slice(central,
 				"internal static bool TryPrepareManifestReservation(",
 				"internal static bool TryActivateManifestReservation(");

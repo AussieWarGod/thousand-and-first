@@ -14,8 +14,7 @@ namespace ThousandAndFirst.Tests
 			string inquiry = TestMain.ReadRepositoryText(Path.Combine("Growth",
 				"KingdomInquiry.cs"));
 			string research = KingdomResearchLogicalSource.Read();
-			string zoning = TestMain.ReadRepositoryText(Path.Combine("Growth",
-				"KingdomZoning.cs"));
+			string zoning = KingdomZoningLogicalSource.Read();
 			StringAssert.Contains("GetInventoryActionsEvent.ID", inquiry);
 			StringAssert.Contains("set the city's research subject", inquiry);
 			StringAssert.Contains("KingdomResearch.OpenBench(ParentObject, E.Actor)", inquiry);

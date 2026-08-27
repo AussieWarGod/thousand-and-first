@@ -29,7 +29,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("sourceEndpoint.Amount(kind)", runtime);
 			StringAssert.Contains("targetEndpoint.Room(kind)", runtime);
 
-			string central = Source("KingdomCentralLogistics.cs");
+			string central = KingdomCentralLogisticsLogicalSource.Read();
 			StringAssert.Contains("KingdomLogisticsRules.TryPlanSnapshot", central);
 			StringAssert.Contains("TryExactScalarAmount(survey, seed, source: true", central);
 			StringAssert.Contains("TryDebitScalar(survey, seed, total", central);
@@ -80,7 +80,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("cache.Matrix.MaxEndpointsForZone(zoneIndex)", runtime);
 			StringAssert.Contains("if (candidates[i].Required)", runtime);
 
-			string book = Source("KingdomCityBook.cs");
+			string book = KingdomCityBookLogicalSource.Read();
 			AssertOrdered(book, "[NonSerialized]", "internal KingdomDistanceCache DistanceCache");
 			string slice = string.Join("\n",
 				Source("KingdomDistancePoint.cs"),

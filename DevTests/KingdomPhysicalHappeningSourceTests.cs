@@ -15,8 +15,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void RuntimeStagesExactNamedBodiesByVanillaPathingAndNeverMakesProxies()
 		{
-			string source = Source(Path.Combine("Simulation", "City",
-				"KingdomPhysicalHappenings.cs"));
+			string source = KingdomPhysicalHappeningsLogicalSource.Read();
 			StringAssert.Contains("KingdomResidents.TryResolveBoundBody", source);
 			StringAssert.Contains("ReferenceEquals(exact, candidate)", source);
 			StringAssert.Contains("body.Brain.Stay(target)", source);
@@ -32,8 +31,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void FixturesPostsUseAndRestoreAreExactDurableReceipts()
 		{
-			string source = Source(Path.Combine("Simulation", "City",
-				"KingdomPhysicalHappenings.cs"));
+			string source = KingdomPhysicalHappeningsLogicalSource.Read();
 			StringAssert.Contains("PostReceiptProperty", source);
 			StringAssert.Contains("AnchorReceiptProperty", source);
 			StringAssert.Contains("HomeReceiptProperty", source);
@@ -88,8 +86,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("KingdomHappenings.OwnDeathTelling", offices);
 			StringAssert.DoesNotContain("KingdomHappenings.FuneralClause(system", offices);
 
-			string physical = Source(Path.Combine("Simulation", "City",
-				"KingdomPhysicalHappenings.cs"));
+			string physical = KingdomPhysicalHappeningsLogicalSource.Read();
 			StringAssert.Contains("OpenReport", physical);
 			StringAssert.Contains("false, false, chronicleAttended, chronicleUnattended", physical);
 			StringAssert.Contains("KingdomChronicle.RecordOnce", physical);
@@ -132,8 +129,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void ResumeFindsPersistedFixturesByExactIdWithoutClassifyingRemoteZones()
 		{
-			string source = Source(Path.Combine("Simulation", "City",
-				"KingdomPhysicalHappenings.cs"));
+			string source = KingdomPhysicalHappeningsLogicalSource.Read();
 			int find = source.IndexOf("private static GameObject FindById(",
 				System.StringComparison.Ordinal);
 			int loaded = source.IndexOf("private static Zone ExactLoadedZone(", find,
@@ -157,7 +153,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("public const int CurrentVersion = HappeningCursorVersion;", codec);
 			StringAssert.Contains("TryEncodeBehaviourV7ForTests", codec);
 			StringAssert.Contains("HappeningModel", codec);
-			string book = Source(Path.Combine("Simulation", "City", "KingdomCityBook.cs"));
+			string book = KingdomCityBookLogicalSource.Read();
 			StringAssert.Contains("MaxHappeningModelChars", book);
 			StringAssert.Contains("public string HappeningModel", book);
 			StringAssert.Contains("public string ExtensionHappeningCursors", book);

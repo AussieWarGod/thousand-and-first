@@ -32,7 +32,7 @@ namespace ThousandAndFirst.Tests
 
 		private static string Zoning()
 		{
-			return TestMain.ReadRepositoryText(Path.Combine("Growth", "KingdomZoning.cs"));
+			return KingdomZoningLogicalSource.Read();
 		}
 
 		private static string Socket()

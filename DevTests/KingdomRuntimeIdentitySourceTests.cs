@@ -148,7 +148,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void FirstFoundingFreezesIdsBeforeFactionCallbackOrStepMarker()
 		{
-			string founding = Source(Path.Combine("Core", "KingdomFounding.cs"));
+			string founding = KingdomFoundingLogicalSource.Read();
 			int method = founding.IndexOf("internal static Faction Found", StringComparison.Ordinal);
 			int bind = founding.IndexOf("TryBindFirstFoundingIdentity", method,
 				StringComparison.Ordinal);
@@ -167,7 +167,7 @@ namespace ThousandAndFirst.Tests
 		public void NewRealmFactionKeyIsNamespacedAndDisplayNameRemainsPresentation()
 		{
 			string transaction = FoundingTransactionSource();
-			string founding = Source(Path.Combine("Core", "KingdomFounding.cs"));
+			string founding = KingdomFoundingLogicalSource.Read();
 			string basin = Source(Path.Combine("Founding", "FounderBasin.cs"));
 			StringAssert.Contains("KingdomIdentityRules.TryMintRealm(transaction, out realmFaction",
 				transaction);
@@ -204,7 +204,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("KingdomPresentation.Rich(Basin.PendingVillageDisplayName ??",
 				transaction);
 
-			string founding = Source(Path.Combine("Core", "KingdomFounding.cs"));
+			string founding = KingdomFoundingLogicalSource.Read();
 			StringAssert.Contains("KingdomPresentation.Rich(faction.DisplayName)", founding);
 			StringAssert.Contains("KingdomPresentation.Rich(system.KingdomDisplayName)", founding);
 
@@ -443,7 +443,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void SecondRuinRestorationStagesPerObjectTransactionBeforeBuiltStamp()
 		{
-			string founding = Source(Path.Combine("Core", "KingdomFounding.cs"));
+			string founding = KingdomFoundingLogicalSource.Read();
 			int method = founding.IndexOf("internal static bool TryRestoreRuinStructures",
 				StringComparison.Ordinal);
 			int marker = founding.IndexOf(
@@ -1750,7 +1750,6 @@ namespace ThousandAndFirst.Tests
 				Path.Combine("Growth", "KingdomSubsidence.cs"),
 				Path.Combine("Growth", "KingdomWear.cs"),
 				Path.Combine("Simulation", "City", "KingdomHappenings.cs"),
-				Path.Combine("Simulation", "City", "KingdomPorters.cs"),
 				Path.Combine("Quests", "KingdomBounty.cs"),
 				Path.Combine("Quests", "KingdomPetitions.cs")
 			};
@@ -1767,6 +1766,10 @@ namespace ThousandAndFirst.Tests
 					"KingdomChronicle.SettlementId(System.KingdomFactionName)"), file);
 				Assert.IsFalse(source.Contains("LegacyOriginIdentity("), file);
 			}
+			string porters = KingdomPortersLogicalSource.Read();
+			Assert.IsFalse(porters.Contains(
+				"KingdomChronicle.SettlementId(System.KingdomFactionName)"), "KingdomPorters");
+			Assert.IsFalse(porters.Contains("LegacyOriginIdentity("), "KingdomPorters");
 			string lab = KingdomLabLogicalSource.Read();
 			Assert.IsFalse(lab.Contains(
 				"KingdomChronicle.SettlementId(System.KingdomFactionName)"));

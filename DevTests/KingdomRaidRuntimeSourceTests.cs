@@ -248,7 +248,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void CreedDeclarationAndWishMintExplicitStableSources()
 		{
-			string creed = Source(Path.Combine("Core", "KingdomCreed.cs"));
+			string creed = KingdomCreedLogicalSource.Read();
 			string wishes = Source(Path.Combine("Debug", "KingdomWishes.cs"));
 			string declaration = Slice(creed, "public static bool Declare(",
 				"public static void EaseForMeal(");

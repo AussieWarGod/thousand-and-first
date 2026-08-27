@@ -653,7 +653,8 @@ by PLOT, not by ring.**
   time* — it is the market ground, the rite ground, where the pilgrims stand. This is the single
   biggest simplification available: **for every rung below the arcology, relocation is not needed
   at all, because the heart grows into ground it already surveyed.** Verified against
-  `Core/KingdomFounding.cs:65-71`: founding currently stamps rite coordinates and nothing else, so
+  `Core/KingdomFounding.01.FirstPublication.cs` (the `KingdomPlots.RiteXProperty` / `RiteYProperty`
+  writes): founding currently stamps rite coordinates and nothing else, so
   surveying at the rite is an addition to a function that already runs, not a new hook.
 - The **surveyed ring survives only as a soft term in a function that already exists.**
   `ScoreRect` already receives `HasRite, RiteX, RiteY` (`Growth/KingdomPlotRules*.cs`) and already

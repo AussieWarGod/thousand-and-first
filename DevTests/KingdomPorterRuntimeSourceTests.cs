@@ -1,6 +1,5 @@
 #if TAF_TESTS
 using System;
-using System.IO;
 using NUnit.Framework;
 
 namespace ThousandAndFirst.Tests
@@ -15,7 +14,7 @@ namespace ThousandAndFirst.Tests
 		public void ProductionFreezesEveryGraphHopAndRefusesTruncation()
 		{
 			string jobs = KingdomJobRegistryLogicalSource.Read();
-			string porters = Source("KingdomPorters.cs");
+			string porters = KingdomPortersLogicalSource.Read();
 			StringAssert.Contains("graph.TryPath(destination, source, resolved, out count, out fault)", jobs);
 			StringAssert.Contains("count + 1 > KingdomItineraryRules.MaxLegs", jobs);
 			StringAssert.Contains("KingdomJobRules.TryPorterPath(graph, Z.ZoneID, sourceZoneId", porters);
@@ -29,7 +28,7 @@ namespace ThousandAndFirst.Tests
 		public void HorizontalAndVerticalHandoffsUseTheirRealConnectionFacts()
 		{
 			string jobs = KingdomJobRegistryLogicalSource.Read();
-			string porters = Source("KingdomPorters.cs");
+			string porters = KingdomPortersLogicalSource.Read();
 			StringAssert.Contains("KingdomDistanceRules.StepBetween(", jobs);
 			StringAssert.Contains("? KingdomZoneStep.None : step", jobs);
 			StringAssert.Contains("Step != KingdomZoneStep.Up && Step != KingdomZoneStep.Down", porters);
@@ -42,7 +41,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void RoadPriceReadsOnlyTheTracedPhysicalCells()
 		{
-			string porters = Source("KingdomPorters.cs");
+			string porters = KingdomPortersLogicalSource.Read();
 			StringAssert.Contains("KingdomRoadRules.TryTrace(passable", porters);
 			StringAssert.Contains("KingdomRoads.AppliedState(cell) == KingdomRoadRules.WearState.Paved", porters);
 			StringAssert.Contains("(long)paved * KingdomItineraryRules.RoadDiscountPercent", porters);
@@ -52,7 +51,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void IntermediateLegHandsOffButOnlyTheFinalLegCloses()
 		{
-			string porters = Source("KingdomPorters.cs");
+			string porters = KingdomPortersLogicalSource.Read();
 			int final = porters.IndexOf("row.TryLeg(row.LegCount - 1, out final)",
 				StringComparison.Ordinal);
 			int close = porters.IndexOf("Close(system, Part.JobId", final,
@@ -75,16 +74,12 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void SourceEndIsAnActualGrowingWorkWhenOneExists()
 		{
-			string porters = Source("KingdomPorters.cs");
+			string porters = KingdomPortersLogicalSource.Read();
 			StringAssert.Contains("work.RunState.Kind != KingdomWorkKind.Growing", porters);
 			StringAssert.Contains("X = work.AnchorX", porters);
 			StringAssert.Contains("Y = work.AnchorY", porters);
 		}
 
-		private static string Source(string file)
-		{
-			return TestMain.ReadRepositoryText(Path.Combine("Simulation", "City", file));
-		}
 	}
 }
 #endif

@@ -20,8 +20,7 @@ namespace ThousandAndFirst.Tests
 			StringComparer.OrdinalIgnoreCase)
 		{
 			"Core/KingdomSystem.cs",
-			"Core/KingdomSettlement.cs",
-			"Simulation/City/KingdomResidents.cs"
+			"Core/KingdomSettlement.cs"
 		};
 
 		[Test]
@@ -30,7 +29,8 @@ namespace ThousandAndFirst.Tests
 			List<string> offenders = new List<string>();
 			foreach (string relative in ProductionSources())
 			{
-				if (LegacyBoundaryFiles.Contains(relative) || IsKingdomSystemSource(relative)) continue;
+				if (LegacyBoundaryFiles.Contains(relative) || IsKingdomSystemSource(relative)
+					|| IsResidentsSource(relative)) continue;
 				string source = TestMain.ReadRepositoryText(relative);
 				if (source.Contains("RosterNames") || source.Contains("RosterOrigins")
 					|| source.Contains("RosterArrived")) offenders.Add(relative);
@@ -45,8 +45,6 @@ namespace ThousandAndFirst.Tests
 		{
 			HashSet<string> allowed = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
 			{
-				"Simulation/City/KingdomCityBook.cs",
-				"Simulation/City/KingdomResidents.cs"
 			};
 			string[] tokens =
 			{
@@ -56,7 +54,9 @@ namespace ThousandAndFirst.Tests
 			List<string> offenders = new List<string>();
 			foreach (string relative in ProductionSources())
 			{
-				if (allowed.Contains(relative) || IsResidentRulesSource(relative)) continue;
+				if (allowed.Contains(relative) || IsResidentRulesSource(relative)
+					|| IsCityBookSource(relative)
+					|| IsResidentsSource(relative)) continue;
 				string source = TestMain.ReadRepositoryText(relative);
 				for (int i = 0; i < tokens.Length; i++)
 					if (source.Contains(tokens[i])) { offenders.Add(relative); break; }
@@ -101,8 +101,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void BoundBodyResolutionUsesExactEngineIdentityWithoutRemoteZoneWalks()
 		{
-			string source = TestMain.ReadRepositoryText(
-				"Simulation/City/KingdomResidents.cs");
+			string source = KingdomResidentsLogicalSource.Read();
 			int resolver = source.IndexOf("internal static bool TryResolveBoundBody",
 				StringComparison.Ordinal);
 			int binding = source.IndexOf("public static bool Bind(", resolver,
@@ -153,6 +152,20 @@ namespace ThousandAndFirst.Tests
 		private static bool IsResidentRulesSource(string relative)
 		{
 			return relative.StartsWith("Simulation/City/KingdomResidentRules",
+				StringComparison.OrdinalIgnoreCase)
+				&& relative.EndsWith(".cs", StringComparison.OrdinalIgnoreCase);
+		}
+
+		private static bool IsResidentsSource(string relative)
+		{
+			return relative.StartsWith("Simulation/City/KingdomResidents",
+				StringComparison.OrdinalIgnoreCase)
+				&& relative.EndsWith(".cs", StringComparison.OrdinalIgnoreCase);
+		}
+
+		private static bool IsCityBookSource(string relative)
+		{
+			return relative.StartsWith("Simulation/City/KingdomCityBook",
 				StringComparison.OrdinalIgnoreCase)
 				&& relative.EndsWith(".cs", StringComparison.OrdinalIgnoreCase);
 		}

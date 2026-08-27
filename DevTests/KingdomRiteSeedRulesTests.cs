@@ -86,7 +86,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("DurableSeedSourceCount(sourceCount, nextCount)", source,
 				"a later receipt-cap refusal must not erase an earlier durable source count");
 
-			source = ReadRepoSource("Growth/KingdomZoning.cs");
+			source = KingdomZoningLogicalSource.Read();
 			int roster = source.IndexOf("public static List<string> Roster(KingdomSystem System)",
 				StringComparison.Ordinal);
 			int rosterOf = source.IndexOf("public static List<string> RosterOf(KingdomSettlement City)",
@@ -280,7 +280,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void CrossCityTeaching_UsesTheOtherCityIdentityAsItsStableSource()
 		{
-			string source = ReadRepoSource("Growth/KingdomZoning.cs");
+			string source = KingdomZoningLogicalSource.Read();
 			int teaching = source.IndexOf("private static void SetDownWhatWasLearned", StringComparison.Ordinal);
 			int teachingEnd = source.IndexOf("\n\t\tprivate static string AwayName", teaching,
 				StringComparison.Ordinal);

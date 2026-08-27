@@ -10,7 +10,7 @@ namespace ThousandAndFirst.Tests
 	{
 		private static string Link()
 		{
-			return TestMain.ReadRepositoryText(Path.Combine("Growth", "KingdomDelveLink.cs"));
+			return KingdomDelveLinkLogicalSource.Read();
 		}
 
 		private static string Plot()

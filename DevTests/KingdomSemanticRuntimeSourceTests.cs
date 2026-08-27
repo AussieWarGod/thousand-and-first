@@ -12,7 +12,7 @@ namespace ThousandAndFirst.Tests
 			{
 				"Growth/KingdomGrowth.cs", "Experience/KingdomLocus.cs",
 				"Experience/KingdomGuestbook.cs",
-				"Core/KingdomCreed.cs", "Growth/KingdomPlot2.cs",
+				"Growth/KingdomPlot2.cs",
 				"Growth/KingdomCommission.cs", "Growth/KingdomSalvage.cs"
 			};
 			string[] forbidden =
@@ -33,6 +33,10 @@ namespace ThousandAndFirst.Tests
 					StringAssert.DoesNotContain(forbidden[j], source,
 						files[i] + " uses global semantic selection");
 			}
+			string creed = KingdomCreedLogicalSource.Read();
+			for (int i = 0; i < forbidden.Length; i++)
+				StringAssert.DoesNotContain(forbidden[i], creed,
+					"KingdomCreed logical family uses global semantic selection");
 			string guestLifecycle = KingdomGuestLifecycleLogicalSource.Read();
 			for (int i = 0; i < forbidden.Length; i++)
 				StringAssert.DoesNotContain(forbidden[i], guestLifecycle,
