@@ -66,7 +66,8 @@ namespace ThousandAndFirst
 						|| cargo.Phase == KingdomConstructionInputCargoPhase.CompensationIntent
 						|| cargo.Phase == KingdomConstructionInputCargoPhase.Compensated))
 					return FindGlobalInputId(receipt, cargo.ObjectId, out GameObject retired,
-						out bool graveyard) == KingdomPhysicalLookupState.Exact && graveyard
+						out bool retiredGraveyard) == KingdomPhysicalLookupState.Exact
+						&& retiredGraveyard
 						&& ExactGraveyardCancelledWaterCask(job, receipt, cargo, retired);
 				return matches == 1 && cask.IDIfAssigned == cargo.ObjectId
 					&& (liquid.Volume == source.Before

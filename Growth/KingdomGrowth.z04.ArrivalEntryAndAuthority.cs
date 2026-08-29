@@ -12,6 +12,7 @@ using XRL.World;
 using XRL.World.AI;
 using XRL.World.Conversations;
 using XRL.World.Parts;
+using ThousandAndFirst.Simulation.Kernel;
 
 namespace ThousandAndFirst
 {

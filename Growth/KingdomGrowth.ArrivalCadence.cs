@@ -1,5 +1,6 @@
 using System;
 using XRL.World;
+using ThousandAndFirst.Simulation.Kernel;
 
 namespace ThousandAndFirst
 {

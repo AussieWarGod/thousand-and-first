@@ -99,7 +99,7 @@ namespace ThousandAndFirst.Harness
 				KeySetDigest = null,
 				Seed = actualSeed,
 				ModVersion = KingdomReleaseInfo.Version,
-				QudCoreVersion = XRLGame.CoreVersion,
+				QudCoreVersion = XRLGame.CoreVersion.ToString(),
 				DefinitionDigest = plan.DefinitionDigest,
 				PlanDigest = plan.PlanDigest,
 				Synthetic = plan.Synthetic
@@ -188,8 +188,8 @@ namespace ThousandAndFirst.Harness
 			// The stamp must still be well formed and describe this build, judged by the
 			// production rule rather than a local re-check.
 			if (!KingdomScenarioProvenanceRules.TryValidateStampShape(Record,
-				KingdomScenarioRegistry.Digest, KingdomReleaseInfo.Version, XRLGame.CoreVersion,
-				out Failure)) return false;
+				KingdomScenarioRegistry.Digest, KingdomReleaseInfo.Version,
+				XRLGame.CoreVersion.ToString(), out Failure)) return false;
 			string request;
 			bool present;
 			string detail;

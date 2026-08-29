@@ -159,8 +159,8 @@ namespace ThousandAndFirst.Harness
 						+ "is licensed.").ToString();
 			string signFailure;
 			bool signs = KingdomScenarioAnchorRules.TrySignAcceptance(measured, evidence,
-				Plan.DefinitionDigest, KingdomReleaseInfo.Version, XRLGame.CoreVersion,
-				out signFailure);
+				Plan.DefinitionDigest, KingdomReleaseInfo.Version,
+				XRLGame.CoreVersion.ToString(), out signFailure);
 			sb.Append("\n\n{{C|Differential verdict}}: ")
 				.Append(signs ? "{{G|eligible}}" : "{{R|ineligible}}")
 				.Append("\n  ").Append(signs

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using XRL;
 using XRL.World;
 
 namespace ThousandAndFirst

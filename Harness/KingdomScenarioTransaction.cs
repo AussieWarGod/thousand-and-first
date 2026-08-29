@@ -70,6 +70,7 @@ namespace ThousandAndFirst.Harness
 				|| Observe(out detail) != KingdomScenarioTransactionShape.Attempted)
 				return Refuse("the attempt marker did not read back as exactly one int key; refusing "
 					+ "to mutate without a durable record that the attempt happened", out Failure);
+			Failure = null;
 			return true;
 		}
 

@@ -119,8 +119,8 @@ namespace ThousandAndFirst.Harness
 				Record.AnchorId, Record.AuthorityClass);
 			string failure;
 			bool signs = KingdomScenarioAnchorRules.TrySignAcceptance(Record, evidence,
-				KingdomScenarioRegistry.Digest, KingdomReleaseInfo.Version, XRLGame.CoreVersion,
-				out failure);
+				KingdomScenarioRegistry.Digest, KingdomReleaseInfo.Version,
+				XRLGame.CoreVersion.ToString(), out failure);
 			return "Measured key set: " + Record.KeySetDigest + "\nDifferential verdict: "
 				+ (signs ? "{{G|eligible}}" : "{{R|ineligible}}") + "\n  "
 				+ (signs

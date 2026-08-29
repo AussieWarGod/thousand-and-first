@@ -57,8 +57,11 @@ namespace ThousandAndFirst
 					out after, out afterCarry, out digest, out any, out complete);
 				VillageStandingEffectCut("village-standing:prepared");
 			}
+			// An incomplete receipt short-circuits before the validator runs, so the refusal names
+			// itself rather than reporting whatever the validator would have said.
+			string failure = "the village-standing receipt is incomplete";
 			if (!complete || !VillageStandingEffectReceiptValid(basin,
-				KingdomFoundingKind.VillageCharter, basin.PendingPhase, out string failure))
+				KingdomFoundingKind.VillageCharter, basin.PendingPhase, out failure))
 				throw new InvalidOperationException("The village-standing intent is malformed: " +
 					failure);
 			if (state == KingdomFoundingTransactionRules.VillageStandingEffectApplied) return;

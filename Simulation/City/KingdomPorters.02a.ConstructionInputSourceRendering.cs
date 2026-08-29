@@ -1,5 +1,6 @@
 using XRL;
 using XRL.World;
+using XRL.World.Parts;
 
 namespace ThousandAndFirst.Simulation.City
 {
@@ -23,8 +24,8 @@ namespace ThousandAndFirst.Simulation.City
 			if (verdict == KingdomBindingVerdict.Mint)
 			{
 				minted = true;
-				GameObject created = Mint(system, zone, tripId, row.DeliverySourceX,
-					row.DeliverySourceY, row.OriginCode, now);
+				GameObject created = Mint(system, zone, tripId, (short)row.DeliverySourceX,
+					(short)row.DeliverySourceY, row.OriginCode, now);
 				if (!GameObject.Validate(created)) return false;
 				r_KingdomPorter part = created.RequirePart<r_KingdomPorter>();
 				part.JobId = tripId;

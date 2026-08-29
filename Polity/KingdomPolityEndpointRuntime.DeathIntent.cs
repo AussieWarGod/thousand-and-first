@@ -24,8 +24,11 @@ namespace ThousandAndFirst
 				Receipt.ProjectionId, objectId);
 			if (!TryReadExactDeathIntentSlot(Zone, key, out bool any, out bool exactType,
 				out string wire, out Failure)) return false;
+			// Declared ahead of the short-circuit: a slot of the wrong type never reaches TryDecode,
+			// and a null record is what every downstream reader treats as "nothing was decoded".
+			KingdomPolityDeathIntentRecord record = null;
 			bool decoded = exactType && KingdomPolityDeathIntentRules.TryDecode(wire,
-				out KingdomPolityDeathIntentRecord record, out string _);
+				out record, out string _);
 			bool binding = decoded && KingdomPolityDeathIntentRules.ExactBinding(record, RealmId,
 				Cohort.CohortId, Receipt.ProjectionId, Zone.ZoneID, objectId, Ordinal,
 				Cohort.Purpose, Ordinal == 0);

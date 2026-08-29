@@ -1,5 +1,6 @@
 using XRL;
 using XRL.World;
+using XRL.World.Parts;
 
 namespace ThousandAndFirst.Simulation.City
 {

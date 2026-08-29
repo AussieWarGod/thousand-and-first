@@ -130,7 +130,9 @@ namespace ThousandAndFirst.Harness
 			GameObject chosen = Matches[index];
 			// Re-prove after the choice: the selector picked a row, and the row must still be the
 			// exact frozen case standing where it was measured from.
-			string detail;
+			// Null default, because the left operand short-circuits: a chosen object that failed
+			// validation never reaches the prover, and the null coalesces to "it left its identity".
+			string detail = null;
 			if (!GameObject.Validate(chosen)
 				|| !KingdomScenarioGallerySlice.TryProveExactCase(chosen, Expected, out detail))
 				return Refuse("the selected building is no longer the frozen case ("
