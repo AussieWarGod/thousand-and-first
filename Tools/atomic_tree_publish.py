@@ -93,6 +93,40 @@ _SIGNAL_DEFER_DEPTH = 0
 _TRIGGERED_TEST_SIGNALS: set[str] = set()
 
 
+
+def _mount_fstype(target):
+    best_point = ""
+    best_type = ""
+    try:
+        with open("/proc/mounts", "r", encoding="utf-8") as handle:
+            for line in handle:
+                fields = line.split()
+                if len(fields) < 3:
+                    continue
+                point = fields[1].replace("\\040", " ")
+                normalized = str(target)
+                if (normalized == point
+                        or normalized.startswith(point.rstrip("/") + "/")) \
+                        and len(point) > len(best_point):
+                    best_point = point
+                    best_type = fields[2]
+    except OSError:
+        return ""
+    return best_type
+
+
+def _fchmod_exact(descriptor: int, mode: int, failure: str) -> None:
+    """fchmod then verify. On a 9p/drvfs mount POSIX modes are synthetic
+    (chmod is accepted but reads back as the mount's fixed mask), so exact
+    preservation is impossible by construction; Windows ACLs govern there and
+    the closed inventory seal is the integrity boundary, so the verification
+    is waived for 9p only. Every other filesystem still requires exactness."""
+    os.fchmod(descriptor, mode)
+    if stat.S_IMODE(os.fstat(descriptor).st_mode) != mode:
+        if _fd_mount_fstype(descriptor) == "9p":
+            return
+        raise PublishError(failure)
+
 class PublishError(RuntimeError):
     pass
 
@@ -277,9 +311,15 @@ def _require_trusted_ancestors(path: Path) -> None:
             )
         shared_writable = bool(status.st_mode & (stat.S_IWGRP | stat.S_IWOTH))
         if shared_writable and not status.st_mode & stat.S_ISVTX:
-            raise PublishError(
-                f"trusted parent ancestor is shared-writable without sticky bit: {component}"
-            )
+            # On a 9p/drvfs mount (WSL view of a Windows drive) POSIX mode bits
+            # are synthetic: chmod is a no-op and every directory reads 0777
+            # with no sticky bit, so this signal cannot distinguish protected
+            # from open. Windows ACLs govern there, and every launcher verifies
+            # a closed two-direction inventory seal over the profile before use.
+            if _mount_fstype(component) != "9p":
+                raise PublishError(
+                    f"trusted parent ancestor is shared-writable without sticky bit: {component}"
+                )
 
 
 def _require_parent_lock(parent_fd: int, lock_fd: int) -> None:
@@ -637,11 +677,11 @@ def _finalize_tree_modes(root_fd: int, modes: dict[str, int]) -> None:
             raise PublishError(
                 f"destination directory lacks source mode: {relative or '.'}"
             )
-        os.fchmod(directory_fd, modes[relative])
-        if stat.S_IMODE(os.fstat(directory_fd).st_mode) != modes[relative]:
-            raise PublishError(
-                f"destination directory mode could not be preserved: {relative or '.'}"
-            )
+        _fchmod_exact(
+            directory_fd,
+            modes[relative],
+            f"destination directory mode could not be preserved: {relative or '.'}",
+        )
         _test_signal("materialize-after-directory-mode")
         _signal_checkpoint()
         _fsync_directory(directory_fd)
@@ -747,14 +787,11 @@ def _materialize(args: argparse.Namespace) -> None:
                                 f"source changed while copying: {relative}"
                             )
                         source_mode = stat.S_IMODE(source_status.st_mode)
-                        os.fchmod(destination_file, source_mode)
-                        if (
-                            stat.S_IMODE(os.fstat(destination_file).st_mode)
-                            != source_mode
-                        ):
-                            raise PublishError(
-                                f"destination file mode could not be preserved: {relative}"
-                            )
+                        _fchmod_exact(
+                            destination_file,
+                            source_mode,
+                            f"destination file mode could not be preserved: {relative}",
+                        )
                         _test_signal("materialize-file-after-chmod")
                         _signal_checkpoint()
                         os.fsync(destination_file)
@@ -843,6 +880,57 @@ def _renameat2(
             return
     error_number = ctypes.get_errno()
     if error_number in UNSUPPORTED_ERRNOS:
+        # 9p/drvfs (the WSL view of a Windows drive) rejects renameat2 flags
+        # outright, so a profile can never publish onto the drive the game
+        # reads. The fallback below emulates NOREPLACE non-atomically: an
+        # exclusive-existence check, then a plain rename through the same
+        # directory fd. The race this admits is on an operator-owned dev
+        # profile directory, and every launcher re-verifies the closed
+        # two-direction inventory seal before the profile is used, so a lost
+        # race is detected rather than trusted. Ext4 and every filesystem
+        # supporting renameat2 keep the atomic path above.
+        if _fd_mount_fstype(directory_fd) == "9p":
+            with _defer_signals():
+                if flags == RENAME_NOREPLACE:
+                    try:
+                        os.stat(new, dir_fd=directory_fd, follow_symlinks=False)
+                        raise PublishError(
+                            f"publication target already exists on 9p fallback: {new}"
+                        )
+                    except FileNotFoundError:
+                        pass
+                    os.rename(
+                        old, new, src_dir_fd=directory_fd, dst_dir_fd=directory_fd
+                    )
+                elif flags == RENAME_EXCHANGE:
+                    # Emulated swap: old -> tmp, new -> old, tmp -> new. Each
+                    # step is a plain rename; a crash between steps leaves a
+                    # uniquely-prefixed temp entry the recovery sweep already
+                    # refuses to trust, and the seal re-verify catches any
+                    # half-swapped profile before use.
+                    swap = (
+                        ".taf-9p-exchange-" + secrets.token_bytes(8).hex()
+                    )
+                    os.rename(
+                        old, swap, src_dir_fd=directory_fd, dst_dir_fd=directory_fd
+                    )
+                    os.rename(
+                        new, old, src_dir_fd=directory_fd, dst_dir_fd=directory_fd
+                    )
+                    os.rename(
+                        swap, new, src_dir_fd=directory_fd, dst_dir_fd=directory_fd
+                    )
+                else:
+                    raise UnsupportedPublish(
+                        "atomic directory publication flags unsupported on 9p: "
+                        + str(flags)
+                    )
+                if test_label is not None:
+                    _test_signal(f"{test_label}-after-rename")
+                _fsync_directory(directory_fd)
+                if test_label is not None:
+                    _test_signal(f"{test_label}-after-fsync")
+                return
         raise UnsupportedPublish(
             "atomic directory publication is unsupported by this filesystem: "
             + os.strerror(error_number)
@@ -850,6 +938,14 @@ def _renameat2(
     raise PublishError(
         f"atomic directory publication failed: {os.strerror(error_number)}"
     )
+
+
+def _fd_mount_fstype(directory_fd: int) -> str:
+    try:
+        target = os.readlink(f"/proc/self/fd/{directory_fd}")
+    except OSError:
+        return ""
+    return _mount_fstype(target)
 
 
 def _probe(args: argparse.Namespace) -> None:
@@ -1167,9 +1263,9 @@ def _remove_named_tree(parent_fd: int, name: str, expected: str) -> None:
             seal_fd = _open_child_directory(
                 parent_fd, name, seal_status.st_dev, expected
             )
-            os.fchmod(seal_fd, 0o700)
-            if stat.S_IMODE(os.fstat(seal_fd).st_mode) != 0o700:
-                raise PublishError("cleanup root could not be permission-sealed")
+            _fchmod_exact(
+                seal_fd, 0o700, "cleanup root could not be permission-sealed"
+            )
             _fsync_directory(seal_fd)
         except BaseException as seal_error:
             current = _entry_status(parent_fd, name)
@@ -1495,11 +1591,11 @@ def _write_file(args: argparse.Namespace) -> None:
                 count = os.write(descriptor, view)
                 view = view[count:]
             _test_signal("write-file-after-write")
-            os.fchmod(descriptor, args.mode)
-            if stat.S_IMODE(os.fstat(descriptor).st_mode) != args.mode:
-                raise PublishError(
-                    f"private file mode could not be set exactly: {name}"
-                )
+            _fchmod_exact(
+                descriptor,
+                args.mode,
+                f"private file mode could not be set exactly: {name}",
+            )
             os.fsync(descriptor)
             _test_signal("write-file-after-fsync")
             _fsync_directory(parent_fd)

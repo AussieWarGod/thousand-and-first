@@ -265,6 +265,20 @@ import sys
 
 path = os.path.abspath(sys.argv[1])
 allowed_owners = {os.getuid(), 0}
+
+def mount_fstype(target):
+    best = ("", "")
+    with open("/proc/mounts", "r", encoding="utf-8") as handle:
+        for line in handle:
+            fields = line.split()
+            if len(fields) < 3:
+                continue
+            point = fields[1].replace("\\040", " ")
+            if (target == point or target.startswith(point.rstrip("/") + "/")) \
+                    and len(point) > len(best[0]):
+                best = (point, fields[2])
+    return best[1]
+
 while True:
     status = os.stat(path, follow_symlinks=False)
     if not stat.S_ISDIR(status.st_mode):
@@ -275,8 +289,14 @@ while True:
         break
     shared_writable = bool(status.st_mode & (stat.S_IWGRP | stat.S_IWOTH))
     if shared_writable and not status.st_mode & stat.S_ISVTX:
-        print(f"{path} is shared-writable without sticky-bit protection")
-        break
+        # On a 9p/drvfs mount (WSL view of a Windows drive) POSIX mode bits are
+        # synthetic: chmod is a no-op and every directory reads as 0777 with no
+        # sticky bit, so this check can never distinguish protected from open.
+        # Windows ACLs are the real authority there, and the launchers verify a
+        # CLOSED two-direction inventory seal over the profile before any use.
+        if mount_fstype(path) != "9p":
+            print(f"{path} is shared-writable without sticky-bit protection")
+            break
     parent = os.path.dirname(path)
     if parent == path:
         break

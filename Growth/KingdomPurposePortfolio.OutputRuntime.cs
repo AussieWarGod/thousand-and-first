@@ -244,7 +244,8 @@ namespace ThousandAndFirst
 			Receipt = null;
 			Failure = null;
 			string key = PurposeCargoRootKey(Pair.Operation);
-			if (The.Game?.ObjectGameState.TryGetValue(key, out object rooted) == true)
+			object rooted = null;
+			if (The.Game != null && The.Game.ObjectGameState.TryGetValue(key, out rooted))
 				Cargo = rooted as GameObject;
 			if (!GameObject.Validate(Cargo))
 			{
