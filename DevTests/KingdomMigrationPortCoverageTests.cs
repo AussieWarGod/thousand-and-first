@@ -1,7 +1,6 @@
 #if TAF_TESTS
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Text.Json;
 using NUnit.Framework;
@@ -24,15 +23,17 @@ namespace ThousandAndFirst.Tests
 		/// closing a gap, opening a new one, or bumping a codec all fail here until the manifest
 		/// is updated deliberately.
 		/// <para>
-		/// NON-FINAL: the polity wire is moving to v6 so the old v2-v5 phase byte 6 stays invalid.
-		/// This total and the manifest are revised only after the repaired polity freeze posts.
+		/// NON-FINAL: the polity wire has landed at v6, which widened its own uncovered surface
+		/// from five live versions to six. Its five hand-frozen hostile envelopes are refusal
+		/// proofs, not coverage, and deliberately do not reduce this total. The manifest stays
+		/// non-final until the independent rereview of the polity v6 completion lane is green.
 		/// </para>
 		/// </summary>
-		private const int ExpectedHardGaps = 65;
+		private const int ExpectedHardGaps = 66;
 
 		private const int ExpectedPorts = 19;
 
-		private static JsonElement Manifest()
+		internal static JsonElement Manifest()
 		{
 			string path = Path.Combine(TestMain.RepositoryRoot, "DevTests",
 				"KingdomMigrationPorts.json");
@@ -40,7 +41,7 @@ namespace ThousandAndFirst.Tests
 			return JsonDocument.Parse(File.ReadAllText(path)).RootElement;
 		}
 
-		private static IList<JsonElement> Ports()
+		internal static IList<JsonElement> Ports()
 		{
 			List<JsonElement> ports = new List<JsonElement>();
 			foreach (JsonElement port in Manifest().GetProperty("ports").EnumerateArray())
@@ -48,7 +49,7 @@ namespace ThousandAndFirst.Tests
 			return ports;
 		}
 
-		private static string Text(JsonElement port, string name)
+		internal static string Text(JsonElement port, string name)
 		{
 			JsonElement value;
 			if (!port.TryGetProperty(name, out value)) return null;
@@ -79,29 +80,6 @@ namespace ThousandAndFirst.Tests
 					offenders.Add(codec + " names a missing reader: " + reader);
 				if (string.IsNullOrEmpty(constant) || !Exists(FilePart(constant)))
 					offenders.Add(codec + " names a missing version constant: " + constant);
-			}
-			Assert.IsEmpty(offenders, string.Join("; ", offenders));
-		}
-
-		/// <summary>The declared current version must actually appear in the declared file.</summary>
-		[Test]
-		public void EveryPortsDeclaredCurrentVersionIsPresentInItsVersionConstantFile()
-		{
-			List<string> offenders = new List<string>();
-			foreach (JsonElement port in Ports())
-			{
-				string codec = Text(port, "codec");
-				string constant = Text(port, "versionConstant");
-				if (string.IsNullOrEmpty(constant) || !Exists(FilePart(constant))) continue;
-				int current = port.GetProperty("currentVersion").GetInt32();
-				if (current < 1) { offenders.Add(codec + " declares version " + current); continue; }
-				string source = File.ReadAllText(Path.Combine(TestMain.RepositoryRoot,
-					FilePart(constant).Replace('/', Path.DirectorySeparatorChar)));
-				string needle = "= " + current.ToString(CultureInfo.InvariantCulture);
-				string quoted = "\"" + current.ToString(CultureInfo.InvariantCulture) + "\"";
-				if (!source.Contains(needle) && !source.Contains(quoted))
-					offenders.Add(codec + " declares version " + current
-						+ " but that value does not appear in " + FilePart(constant));
 			}
 			Assert.IsEmpty(offenders, string.Join("; ", offenders));
 		}
@@ -232,14 +210,14 @@ namespace ThousandAndFirst.Tests
 				Path.DirectorySeparatorChar).Replace(Path.DirectorySeparatorChar, '/');
 		}
 
-		private static string FilePart(string reference)
+		internal static string FilePart(string reference)
 		{
 			if (string.IsNullOrEmpty(reference)) return reference;
 			int colon = reference.IndexOf(':');
 			return colon < 0 ? reference : reference.Substring(0, colon);
 		}
 
-		private static bool Exists(string relative)
+		internal static bool Exists(string relative)
 		{
 			if (string.IsNullOrEmpty(relative)) return false;
 			return File.Exists(Path.Combine(TestMain.RepositoryRoot,

@@ -21,8 +21,8 @@ namespace ThousandAndFirst
 				writer.Flush(); payload = stream.ToArray();
 			}
 			string body = Convert.ToBase64String(payload);
-			return LegacyWirePrefix + body + ":" + KingdomPolityRules.ActivationDigest(
-				"polity-visible-death-intent-envelope-v1", body);
+			string prefix = Prefix(KingdomPolityDeathIntentProvenance.LegacyV1, out string domain);
+			return prefix + body + ":" + KingdomPolityRules.ActivationDigest(domain, body);
 		}
 	}
 }

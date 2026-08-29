@@ -3,6 +3,20 @@ using System.Globalization;
 
 namespace ThousandAndFirst
 {
+	/// <summary>
+	/// When a death intent's incident binding was frozen. Durable, one-way, and carried by the
+	/// wire itself: <see cref="FrozenAtDeath"/> was frozen before the first replay by
+	/// <see cref="KingdomPolityDeathIncidentRules.TryFreeze"/> at death time, while
+	/// <see cref="FrozenAtFirstRead"/> was frozen at the first read of a migrated v1 record,
+	/// which carries no stored plan id. The two are never interchangeable and a migrated record
+	/// can never be re-stated as a death-time claim: they use disjoint wire prefixes and disjoint
+	/// digest domains, so either form fails the other's exact digest.
+	/// </summary>
+	internal enum KingdomPolityDeathIntentProvenance : byte
+	{
+		FrozenAtDeath = 0, LegacyV1 = 1, FrozenAtFirstRead = 2
+	}
+
 	internal static class KingdomPolityDeathIncidentRules
 	{
 		internal static bool TryFreeze(KingdomPolityLedger Ledger, KingdomPolityCohortPlan Cohort,

@@ -270,26 +270,92 @@ namespace ThousandAndFirst.DevTests
 				KingdomPolityCodec.DecodeEnvelope(current)));
 		}
 
+		/// <summary>
+		/// Every historical fixture writer must refuse phase 6, and must refuse it BECAUSE of the
+		/// phase. A bare Assert.Throws proved nothing here: this ledger with an Abandoned cohort
+		/// also fails semantic validation ("manifested cohort lacks receipt") and, for v2, the
+		/// resident-bridge gate, so the write guard was never reached. The message assertions and
+		/// the unmodified-ledger controls pin the refusal to the phase-6 guard itself.
+		/// </summary>
 		[Test]
 		public void HistoricalFixtureWritersRejectAbandonedPhaseSix()
 		{
+			Assert.DoesNotThrow(() => KingdomPolityCodec.EncodeEnvelopeV5Fixture(
+				KingdomPolityTestData.Full()), "negative control: the unflipped ledger encodes");
 			KingdomPolityLedger source = KingdomPolityTestData.Full();
 			source.Cohorts[0].Phase = KingdomPolityCohortPhase.Abandoned;
 			source.Cohorts[0].RewardEventId = null;
-			Assert.Throws<InvalidDataException>(() => KingdomPolityCodec.EncodeEnvelopeV2Fixture(source));
-			Assert.Throws<InvalidDataException>(() => KingdomPolityCodec.EncodeEnvelopeV3Fixture(source));
-			Assert.Throws<InvalidDataException>(() => KingdomPolityCodec.EncodeEnvelopeV4Fixture(source));
-			Assert.Throws<InvalidDataException>(() => KingdomPolityCodec.EncodeEnvelopeV5Fixture(source));
+			StringAssert.Contains("Wire-v2 fixture cannot carry phase 6.",
+				Assert.Throws<InvalidDataException>(
+					() => KingdomPolityCodec.EncodeEnvelopeV2Fixture(source)).Message);
+			StringAssert.Contains("Wire-v3 fixture cannot carry phase 6.",
+				Assert.Throws<InvalidDataException>(
+					() => KingdomPolityCodec.EncodeEnvelopeV3Fixture(source)).Message);
+			StringAssert.Contains("Wire-v4 fixture cannot carry phase 6.",
+				Assert.Throws<InvalidDataException>(
+					() => KingdomPolityCodec.EncodeEnvelopeV4Fixture(source)).Message);
+			StringAssert.Contains("Wire-v5 fixture cannot carry phase 6.",
+				Assert.Throws<InvalidDataException>(
+					() => KingdomPolityCodec.EncodeEnvelopeV5Fixture(source)).Message);
+
+			// v1 forbids projection rows outright while a valid Abandoned cohort requires a
+			// committed manifestation projection, so this refusal exists only because the phase
+			// guard is asked before validation. Its control is the same ledger unflipped.
+			KingdomPolityLedger legacy = KingdomPolityTestData.Full();
+			KingdomPolityTestData.ClearResidentBridges(legacy);
+			legacy.Projections.Clear();
+			Assert.DoesNotThrow(() => KingdomPolityCodec.EncodeEnvelopeV1Fixture(legacy),
+				"negative control: the unflipped v1-shaped ledger encodes");
+			legacy.Cohorts[0].Phase = KingdomPolityCohortPhase.Abandoned;
+			legacy.Cohorts[0].RewardEventId = null;
+			StringAssert.Contains("Wire-v1 fixture cannot carry phase 6.",
+				Assert.Throws<InvalidDataException>(
+					() => KingdomPolityCodec.EncodeEnvelopeV1Fixture(legacy)).Message);
 		}
 
-		[TestCase("MlBBVAIAAAC+AAAAAgAAAAH/////AAAAAAEAAAByAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAEAAABjAQEAAABzAQAAAHABAAAAZgEAAAABAAAAAQAAAAEAAAB4AQAAAAAAAAAAAAAAAAAAAAEAAABlAQAAAAAAAAAAAAAABv//////////AAAAAAAAAAAAAAAAAAAAAAAAAAD/////AAAAAA==")]
-		[TestCase("MlBBVAMAAAC+AAAAAwAAAAH/////AAAAAAEAAAByAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAEAAABjAQEAAABzAQAAAHABAAAAZgEAAAABAAAAAQAAAAEAAAB4AQAAAAAAAAAAAAAAAAAAAAEAAABlAQAAAAAAAAAAAAAABv//////////AAAAAAAAAAAAAAAAAAAAAAAAAAD/////AAAAAA==")]
-		[TestCase("MlBBVAQAAADPAAAABAAAAAH/////AAAAAAEAAAByAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAEAAABjAQEAAABzAQAAAHABAAAAZgEAAAABAAAAAQAAAAEAAAB4AQAAAAAAAAAAAAAAAAAAAAEAAABlAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAG//////////8AAAAAAAAAAAAAAAAAAAAAAAAAAP////8AAAAA")]
-		[TestCase("MlBBVAUAAADPAAAABQAAAAH/////AAAAAAEAAAByAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAEAAABjAQEAAABzAQAAAHABAAAAZgEAAAABAAAAAQAAAAEAAAB4AQAAAAAAAAAAAAAAAAAAAAEAAABlAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAG//////////8AAAAAAAAAAAAAAAAAAAAAAAAAAP////8AAAAA")]
-		public void IndependentlyFrozenHistoricalPhaseSixEnvelopeIsRejected(string Base64)
+		/// <summary>
+		/// The phase guard runs before validation, so it must not dereference a shape validation
+		/// has not refused yet. A null cohort row is validation's to reject: the writer must still
+		/// answer with its typed refusal, never a NullReferenceException.
+		/// </summary>
+		[Test]
+		public void HistoricalFixtureWritersRefuseANullCohortRowWithoutDereferencingIt()
+		{
+			KingdomPolityLedger source = KingdomPolityTestData.Full();
+			source.Cohorts[0] = null;
+			foreach (TestDelegate write in new TestDelegate[]
+			{
+				() => KingdomPolityCodec.EncodeEnvelopeV1Fixture(source),
+				() => KingdomPolityCodec.EncodeEnvelopeV2Fixture(source),
+				() => KingdomPolityCodec.EncodeEnvelopeV3Fixture(source),
+				() => KingdomPolityCodec.EncodeEnvelopeV4Fixture(source),
+				() => KingdomPolityCodec.EncodeEnvelopeV5Fixture(source)
+			})
+				StringAssert.Contains("cohort plan is invalid or noncanonical",
+					Assert.Throws<InvalidDataException>(write).Message);
+		}
+
+		[TestCase("MlBBVAEAAACPAAAAAQAAAAH/////AAAAAAEAAAByAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAEAAABjAQEAAABzAQAAAHABAAAAZgEAAAABAAAAAQAAAAEAAAB4AQAAAAAAAAAAAAAAAAAAAAEAAABlAQAAAAAAAAAAAAAABv//////////AAAAAAAAAAA=", 1, 126)]
+		[TestCase("MlBBVAIAAAC+AAAAAgAAAAH/////AAAAAAEAAAByAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAEAAABjAQEAAABzAQAAAHABAAAAZgEAAAABAAAAAQAAAAEAAAB4AQAAAAAAAAAAAAAAAAAAAAEAAABlAQAAAAAAAAAAAAAABv//////////AAAAAAAAAAAAAAAAAAAAAAAAAAD/////AAAAAA==", 2, 153)]
+		[TestCase("MlBBVAMAAAC+AAAAAwAAAAH/////AAAAAAEAAAByAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAEAAABjAQEAAABzAQAAAHABAAAAZgEAAAABAAAAAQAAAAEAAAB4AQAAAAAAAAAAAAAAAAAAAAEAAABlAQAAAAAAAAAAAAAABv//////////AAAAAAAAAAAAAAAAAAAAAAAAAAD/////AAAAAA==", 3, 153)]
+		[TestCase("MlBBVAQAAADPAAAABAAAAAH/////AAAAAAEAAAByAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAEAAABjAQEAAABzAQAAAHABAAAAZgEAAAABAAAAAQAAAAEAAAB4AQAAAAAAAAAAAAAAAAAAAAEAAABlAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAG//////////8AAAAAAAAAAAAAAAAAAAAAAAAAAP////8AAAAA", 4, 170)]
+		[TestCase("MlBBVAUAAADPAAAABQAAAAH/////AAAAAAEAAAByAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAEAAABjAQEAAABzAQAAAHABAAAAZgEAAAABAAAAAQAAAAEAAAB4AQAAAAAAAAAAAAAAAAAAAAEAAABlAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAG//////////8AAAAAAAAAAAAAAAAAAAAAAAAAAP////8AAAAA", 5, 170)]
+		public void IndependentlyFrozenHistoricalPhaseSixEnvelopeIsRejected(string Base64,
+			int Wire, int PhaseOffset)
 		{
 			byte[] hostile = Convert.FromBase64String(Base64);
+			Assert.AreEqual(Wire, BitConverter.ToInt32(hostile, 4), "frozen fixture wire version");
+			Assert.AreEqual(6, hostile[12 + PhaseOffset],
+				"the frozen fixture no longer carries phase 6 in its cohort phase slot");
 			Assert.Throws<InvalidDataException>(() => KingdomPolityCodec.DecodeEnvelopeRaw(hostile));
+
+			// Negative control. The identical envelope with that one byte lowered to a
+			// historically admitted phase decodes, so the refusal above is caused by phase 6
+			// and not by framing, length, nested format, or any other property of these bytes.
+			byte[] admitted = (byte[])hostile.Clone();
+			admitted[12 + PhaseOffset] = (byte)KingdomPolityCohortPhase.Cancelled;
+			KingdomPolityLedger decoded = KingdomPolityCodec.DecodeEnvelopeRaw(admitted);
+			Assert.AreEqual(KingdomPolityCohortPhase.Cancelled, decoded.Cohorts[0].Phase);
 		}
 
 		[Test]

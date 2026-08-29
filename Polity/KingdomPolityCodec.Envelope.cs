@@ -76,8 +76,13 @@ namespace ThousandAndFirst
 		}
 
 #if TAF_TESTS
+		// Phase-6 admissibility is a wire question, not a semantic one, so every historical
+		// fixture writer refuses it BEFORE validation. Otherwise the refusal is unreachable:
+		// a valid Abandoned cohort requires a committed manifestation projection, which the
+		// v1 shape forbids outright, so validation would always answer first.
 		public static byte[] EncodeEnvelopeV1Fixture(KingdomPolityLedger Ledger)
 		{
+			RequireNoAbandonedCohorts(Ledger, "Wire-v1");
 			if (!KingdomPolityRules.TryValidate(Ledger, out string failure))
 				throw new InvalidDataException(failure);
 			RequireNoResidentBridges(Ledger, "Wire-v1");
@@ -91,42 +96,46 @@ namespace ThousandAndFirst
 
 		public static byte[] EncodeEnvelopeV2Fixture(KingdomPolityLedger Ledger)
 		{
+			RequireNoAbandonedCohorts(Ledger, "Wire-v2");
 			if (!KingdomPolityRules.TryValidate(Ledger, out string failure))
 				throw new InvalidDataException(failure);
 			RequireNoResidentBridges(Ledger, "Wire-v2");
-			RequireNoAbandonedCohorts(Ledger, "Wire-v2");
 			return Frame(OldestWireVersion, EncodePayloadV2(Ledger));
 		}
 
 		public static byte[] EncodeEnvelopeV3Fixture(KingdomPolityLedger Ledger)
 		{
+			RequireNoAbandonedCohorts(Ledger, "Wire-v3");
 			if (!KingdomPolityRules.TryValidate(Ledger, out string failure))
 				throw new InvalidDataException(failure);
-			RequireNoAbandonedCohorts(Ledger, "Wire-v3");
 			return Frame(OlderWireVersion, EncodePayloadV3(Ledger));
 		}
 
 		public static byte[] EncodeEnvelopeV4Fixture(KingdomPolityLedger Ledger)
 		{
+			RequireNoAbandonedCohorts(Ledger, "Wire-v4");
 			if (!KingdomPolityRules.TryValidate(Ledger, out string failure))
 				throw new InvalidDataException(failure);
 			RequireNoV5IncidentTransactions(Ledger, "Wire-v4");
-			RequireNoAbandonedCohorts(Ledger, "Wire-v4");
 			return Frame(PriorWireVersion, EncodePayloadV4(Ledger));
 		}
 
 		public static byte[] EncodeEnvelopeV5Fixture(KingdomPolityLedger Ledger)
 		{
+			RequireNoAbandonedCohorts(Ledger, "Wire-v5");
 			if (!KingdomPolityRules.TryValidate(Ledger, out string failure))
 				throw new InvalidDataException(failure);
-			RequireNoAbandonedCohorts(Ledger, "Wire-v5");
 			return Frame(ImmediatePriorWireVersion, EncodePayloadV5(Ledger));
 		}
 
+		// Runs before TryValidate, so it must tolerate a shape validation has not refused yet:
+		// a null list or a null row is validation's to reject, not this guard's to dereference.
 		private static void RequireNoAbandonedCohorts(KingdomPolityLedger Ledger, string Wire)
 		{
+			if (Ledger?.Cohorts == null) return;
 			for (int i = 0; i < Ledger.Cohorts.Count; i++)
-				if (Ledger.Cohorts[i].Phase == KingdomPolityCohortPhase.Abandoned)
+				if (Ledger.Cohorts[i] != null &&
+					Ledger.Cohorts[i].Phase == KingdomPolityCohortPhase.Abandoned)
 					throw new InvalidDataException(Wire + " fixture cannot carry phase 6.");
 		}
 

@@ -29,7 +29,7 @@ namespace ThousandAndFirst
 			bool binding = decoded && KingdomPolityDeathIntentRules.ExactBinding(record, RealmId,
 				Cohort.CohortId, Receipt.ProjectionId, Zone.ZoneID, objectId, Ordinal,
 				Cohort.Purpose, Ordinal == 0);
-			if (decoded && record.LegacyV1)
+			if (decoded && record.Provenance == KingdomPolityDeathIntentProvenance.LegacyV1)
 			{
 				if (!binding) return FailPhysical(AmbiguousDeathIntentFailure, out Failure);
 				KingdomPolityLedger ledger = The.Game?.GetSystem<KingdomSystem>()?.PolityLedger;
@@ -37,9 +37,10 @@ namespace ThousandAndFirst
 				if (ledger == null || !KingdomPolityDeathIncidentRules.TryFreeze(ledger, Cohort,
 					Ordinal, visible, out record.IncidentPlanId, out record.IncidentId,
 					out record.IncidentDigest, out Failure)) return false;
-				record.LegacyV1 = false;
+				// One-way: the value frozen here is durable and write-once, and it is stamped
+				// frozen-at-read so it can never be restated as a death-time claim.
+				record.Provenance = KingdomPolityDeathIntentProvenance.FrozenAtFirstRead;
 				if (!TryRewriteLegacyDeathIntent(Zone, wire, record, out Failure)) return false;
-				wire = null;
 			}
 			State = KingdomPolityDeathIntentRules.Classify(any, exactType, decoded, binding);
 			if (State == KingdomPolityDeathIntentState.Ambiguous)
@@ -198,16 +199,16 @@ namespace ThousandAndFirst
 
 		private static bool TryCommitDeathIntentConsequence(KingdomSystem System,
 			KingdomPolityDeathIntentRecord Intent, out string Failure)
-			{
-				Failure = null;
-				if (System?.PolityLedger == null || Intent == null)
-					return FailPhysical("death consequence lacks durable polity authority", out Failure);
-				KingdomPolityCohortPlan cohort = KingdomPolityAuthority.Cohort(
-					System.PolityLedger, Intent.CohortId);
-				if (cohort == null) return FailPhysical(
-					"death consequence lost its exact cohort", out Failure);
+		{
+			Failure = null;
+			if (System?.PolityLedger == null || Intent == null)
+				return FailPhysical("death consequence lacks durable polity authority", out Failure);
+			KingdomPolityCohortPlan cohort = KingdomPolityAuthority.Cohort(
+				System.PolityLedger, Intent.CohortId);
+			if (cohort == null) return FailPhysical(
+				"death consequence lost its exact cohort", out Failure);
 			KingdomPolityDeathIntentAction action = KingdomPolityDeathIntentRules.Decide(Intent,
-				cohort?.Phase ?? (KingdomPolityCohortPhase)byte.MaxValue);
+				cohort.Phase);
 			switch (action)
 			{
 			case KingdomPolityDeathIntentAction.Clear:
@@ -243,7 +244,7 @@ namespace ThousandAndFirst
 			default:
 				return FailPhysical("death authority changed during callbacks", out Failure);
 			}
-			}
+		}
 
 		private static bool ExactConcludedAuthority(KingdomPolityLedger Ledger,
 			KingdomPolityCohortPlan Cohort, KingdomPolityDeathIntentRecord Intent)

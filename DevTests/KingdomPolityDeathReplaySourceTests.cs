@@ -1,5 +1,6 @@
 #if TAF_TESTS
 using System;
+using System.Collections.Generic;
 using NUnit.Framework;
 
 namespace ThousandAndFirst.Tests
@@ -24,7 +25,10 @@ namespace ThousandAndFirst.Tests
 			string replay = Read("Polity/KingdomPolityEndpointRuntime.DeathIntent.cs");
 			StringAssert.Contains("TryCommitVisibleDeathWitness(", body);
 			StringAssert.DoesNotContain("TryResolveCommittedDeathIntent(", body);
-			AssertBefore(replay, "TryCommitDeathIntentConsequence(system, intent",
+			// Scoped to the absent-body arm: the live-body arm above it clears the intent
+			// without any consequence, so an unscoped search finds that clear first.
+			AssertBefore(Between(replay, "if (!witnessed) return FailPhysical(", "return true;"),
+				"TryCommitDeathIntentConsequence(System, intent",
 				"TryClearDeathIntent(zone, intent");
 			StringAssert.Contains("HasRemovalWitness(zone", replay);
 		}
@@ -399,7 +403,60 @@ namespace ThousandAndFirst.Tests
 			}
 		}
 
+		/// <summary>
+		/// Terminal-cleanup deadlock guard. TryRemoveExactBody is the only ArmCleanup caller and
+		/// every armed removal is later re-proved by TryAuthorizePreparedCleanup, so any cohort
+		/// phase the cleanup branch admits must also be one that authorization admits. Adding a
+		/// phase to one side alone re-opens the deadlock this lane closed.
+		/// </summary>
+		[Test]
+		public void EveryCleanupAdmittedCohortPhaseIsAlsoCleanupAuthorized()
+		{
+			string[] authorized = Phases(Method(
+				Read("Polity/KingdomPolityEndpointRuntime.Death.cs"),
+				"internal static bool TryAuthorizePreparedCleanup"));
+			CollectionAssert.AreEquivalent(new[] { "Abandoned", "Concluded", "Planned" }, authorized,
+				"TryAuthorizePreparedCleanup changed its admitted cohort phase set");
+			string cleanup = Method(Read("Polity/KingdomPolityEndpointRuntime.cs"),
+				"public static bool TryCleanupCurrentEndpoint");
+			string[] admitted = Phases(Between(cleanup, "if (alreadyCleaned)",
+				"endpoint cohort has not concluded or abandoned for exact cleanup"));
+			CollectionAssert.AreEquivalent(new[] { "Abandoned", "Concluded" }, admitted,
+				"the cleanup removal branch changed its admitted cohort phase set");
+			CollectionAssert.IsSubsetOf(admitted, authorized,
+				"a cohort phase can reach body removal that TryAuthorizePreparedCleanup refuses");
+			// The withdrawal path removes prepared bodies at Planned, so Planned must stay authorized.
+			StringAssert.Contains("if (cohort.Phase != KingdomPolityCohortPhase.Planned) return false;",
+				Read("Polity/KingdomPolityEndpointRuntime.Withdrawal.cs"));
+			CollectionAssert.Contains(authorized, "Planned");
+		}
+
 		private static string Read(string path) => TestMain.ReadRepositoryText(path);
+
+		/// <summary>Distinct KingdomPolityCohortPhase members named in a slice of source.</summary>
+		private static string[] Phases(string source)
+		{
+			const string marker = "KingdomPolityCohortPhase.";
+			SortedSet<string> names = new SortedSet<string>(StringComparer.Ordinal);
+			for (int i = source.IndexOf(marker, StringComparison.Ordinal); i >= 0;
+				i = source.IndexOf(marker, i + marker.Length, StringComparison.Ordinal))
+			{
+				int start = i + marker.Length, end = start;
+				while (end < source.Length && (char.IsLetterOrDigit(source[end]) ||
+					source[end] == '_')) end++;
+				if (end > start) names.Add(source.Substring(start, end - start));
+			}
+			string[] result = new string[names.Count]; names.CopyTo(result); return result;
+		}
+
+		private static string Between(string source, string opening, string closing)
+		{
+			int a = source.IndexOf(opening, StringComparison.Ordinal);
+			Assert.GreaterOrEqual(a, 0, opening);
+			int b = source.IndexOf(closing, a, StringComparison.Ordinal);
+			Assert.Greater(b, a, closing);
+			return source.Substring(a, b - a);
+		}
 
 		private static string Method(string source, string signature)
 		{

@@ -49,7 +49,7 @@ namespace ThousandAndFirst
 		internal string IncidentPlanId;
 		internal string IncidentId;
 		internal string IncidentDigest;
-		internal bool LegacyV1;
+		internal KingdomPolityDeathIntentProvenance Provenance;
 	}
 
 	/// <summary>Bounded canonical wire and pure decisions for zone-owned death intents.</summary>
@@ -57,6 +57,10 @@ namespace ThousandAndFirst
 	{
 		internal const string WirePrefix = "taf:intent:polity-visible-death:v2:";
 		internal const string LegacyWirePrefix = "taf:intent:polity-visible-death:v1:";
+		internal const string MigratedWirePrefix = "taf:intent:polity-visible-death:v2-migrated-v1:";
+		private const string BaseDomain = "polity-visible-death-intent-envelope-v2";
+		private const string LegacyDomain = "polity-visible-death-intent-envelope-v1";
+		private const string MigratedDomain = "polity-visible-death-intent-envelope-v2-migrated-v1";
 		internal const int MaximumFieldBytes = 512;
 		internal const int MaximumPayloadBytes = 4096;
 		internal const int MaximumWireCharacters = 8192;
@@ -68,6 +72,9 @@ namespace ThousandAndFirst
 		{
 			Wire = null; Failure = null;
 			if (!Valid(Record)) return Fail("death intent record is invalid or unbounded", out Failure);
+			if (Record.Provenance == KingdomPolityDeathIntentProvenance.LegacyV1)
+				return Fail("v1 death intent must freeze at first read", out Failure);
+			string prefix = Prefix(Record.Provenance, out string domain);
 			try
 			{
 				byte[] payload;
@@ -81,16 +88,14 @@ namespace ThousandAndFirst
 					writer.Write(Record.Ordinal); writer.Write((byte)Record.Purpose);
 					writer.Write(Record.Representative ? (byte)1 : (byte)0);
 					writer.Write(Record.Tick); writer.Write((byte)Record.Attribution);
-					writer.Write((byte)Record.Visibility); writer.Flush(); payload = stream.ToArray();
+					writer.Write((byte)Record.Visibility);
 					WriteText(writer, Record.IncidentPlanId); WriteText(writer, Record.IncidentId);
 					WriteText(writer, Record.IncidentDigest); writer.Flush(); payload = stream.ToArray();
 				}
 				if (payload.Length > MaximumPayloadBytes)
 					return Fail("death intent payload exceeds its bound", out Failure);
 				string body = Convert.ToBase64String(payload);
-				string digest = KingdomPolityRules.ActivationDigest(
-					"polity-visible-death-intent-envelope-v2", body);
-				Wire = WirePrefix + body + ":" + digest;
+				Wire = prefix + body + ":" + KingdomPolityRules.ActivationDigest(domain, body);
 				return Wire.Length <= MaximumWireCharacters ||
 					Fail("death intent wire exceeds its bound", out Failure);
 			}
@@ -104,8 +109,9 @@ namespace ThousandAndFirst
 			out string Failure)
 		{
 			Record = null; Failure = null;
-			bool legacy = Wire != null && Wire.StartsWith(LegacyWirePrefix, StringComparison.Ordinal);
-			string prefix = legacy ? LegacyWirePrefix : WirePrefix;
+			KingdomPolityDeathIntentProvenance provenance = WireProvenance(Wire);
+			bool legacy = provenance == KingdomPolityDeathIntentProvenance.LegacyV1;
+			string prefix = Prefix(provenance, out string domain);
 			if (string.IsNullOrEmpty(Wire) || Wire.Length > MaximumWireCharacters ||
 				!Wire.StartsWith(prefix, StringComparison.Ordinal) || Wire.Length <
 					prefix.Length + 1 + 1 + 64)
@@ -117,10 +123,8 @@ namespace ThousandAndFirst
 					return Fail("death intent wire is malformed, future, or unbounded", out Failure);
 				string body = Wire.Substring(prefix.Length, digestSeparator - prefix.Length);
 				string digest = Wire.Substring(digestSeparator + 1);
-				if (!KingdomPolityRules.Digest(digest) || digest !=
-					KingdomPolityRules.ActivationDigest(
-						(legacy ? "polity-visible-death-intent-envelope-v1" :
-						 "polity-visible-death-intent-envelope-v2"), body))
+				if (!KingdomPolityRules.Digest(digest) ||
+					digest != KingdomPolityRules.ActivationDigest(domain, body))
 					return Fail("death intent wire failed its exact digest", out Failure);
 				byte[] payload = Convert.FromBase64String(body);
 				if (payload.Length > MaximumPayloadBytes || Convert.ToBase64String(payload) != body)
@@ -145,12 +149,12 @@ namespace ThousandAndFirst
 					if (!legacy) { decoded.IncidentPlanId = ReadText(reader, stream);
 						decoded.IncidentId = ReadText(reader, stream);
 						decoded.IncidentDigest = ReadText(reader, stream); }
-					else { decoded.IncidentPlanId = decoded.IncidentId = decoded.IncidentDigest = "";
-						decoded.LegacyV1 = true; }
+					else decoded.IncidentPlanId = decoded.IncidentId = decoded.IncidentDigest = "";
+					decoded.Provenance = provenance;
 					if (stream.Position != stream.Length)
 						return Fail("death intent payload has trailing bytes", out Failure);
 				}
-				if (!Valid(decoded, legacy) || (!legacy && (!TryEncode(decoded,
+				if (!Valid(decoded) || (!legacy && (!TryEncode(decoded,
 					out string canonical, out Failure) || canonical != Wire)))
 					return Fail(Failure ?? "death intent payload is noncanonical", out Failure);
 				Record = decoded; return true;
@@ -209,7 +213,7 @@ namespace ThousandAndFirst
 			return KingdomPolityDeathIntentAction.Clear;
 		}
 
-		private static bool Valid(KingdomPolityDeathIntentRecord Record, bool Legacy = false)
+		private static bool Valid(KingdomPolityDeathIntentRecord Record)
 		{
 			return Record != null && Record.Kind == KingdomPolityPhysicalCustodyRules.DeathRemovalKind &&
 				Bounded(Record.Kind) && KingdomPolityRules.SemanticId(Record.RealmId) &&
@@ -228,8 +232,10 @@ namespace ThousandAndFirst
 				 Record.Attribution == KingdomPolityDeathAttribution.Unattributed) &&
 				(Record.Attribution != KingdomPolityDeathAttribution.PlayerWitnessed ||
 				 Record.Visibility == KingdomPolityDeathVisibility.PlayerVisible) &&
-				(Legacy ? Record.IncidentPlanId == "" && Record.IncidentId == "" &&
-				 Record.IncidentDigest == "" : ValidIncidentBinding(Record));
+				(byte)Record.Provenance <= (byte)KingdomPolityDeathIntentProvenance.FrozenAtFirstRead &&
+				(Record.Provenance == KingdomPolityDeathIntentProvenance.LegacyV1
+				 ? Record.IncidentPlanId == "" && Record.IncidentId == "" &&
+				   Record.IncidentDigest == "" : ValidIncidentBinding(Record));
 		}
 
 		private static bool ValidIncidentBinding(KingdomPolityDeathIntentRecord Record)
@@ -267,6 +273,23 @@ namespace ThousandAndFirst
 			if (bytes.Length != length) throw new EndOfStreamException();
 			return StrictUtf8.GetString(bytes);
 		}
+
+		/// <summary>The durable prefix and digest domain that carry a provenance.</summary>
+		private static string Prefix(KingdomPolityDeathIntentProvenance P, out string Domain)
+		{
+			bool legacy = P == KingdomPolityDeathIntentProvenance.LegacyV1;
+			bool migrated = P == KingdomPolityDeathIntentProvenance.FrozenAtFirstRead;
+			Domain = legacy ? LegacyDomain : migrated ? MigratedDomain : BaseDomain;
+			return legacy ? LegacyWirePrefix : migrated ? MigratedWirePrefix : WirePrefix;
+		}
+
+		private static KingdomPolityDeathIntentProvenance WireProvenance(string Wire) =>
+			Wire == null ? KingdomPolityDeathIntentProvenance.FrozenAtDeath :
+			Wire.StartsWith(LegacyWirePrefix, StringComparison.Ordinal)
+				? KingdomPolityDeathIntentProvenance.LegacyV1 :
+			Wire.StartsWith(MigratedWirePrefix, StringComparison.Ordinal)
+				? KingdomPolityDeathIntentProvenance.FrozenAtFirstRead
+				: KingdomPolityDeathIntentProvenance.FrozenAtDeath;
 
 		private static bool Fail(string Message, out string Failure)
 		{
