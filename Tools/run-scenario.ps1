@@ -181,7 +181,25 @@ Write-Host "ENTER world seed $frozenSeed yourself at character creation. Qud exp
 Write-Host 'seed injection, so this is manual operator entry; the gate refuses any other world.'
 Write-Host ''
 
-$arguments = @('-savelocation', $rootPath)
+# -savelocation is the legacy switch and redirects SAVES ONLY: a game launched with it
+# still loads mods from the default AppData profile, so the sealed profile's Harness
+# overlay never reaches the engine while a stale default-profile mod copy silently
+# supplies content. The modern path arguments below are the same set run-smoke.ps1
+# uses and confine saves, shared data (including Mods), synced data, and the log to
+# the sealed profile root. Proven live 2026-08-29: with -savelocation the game listed
+# the AppData mod directories in RefreshModDirectory; with these four it lists only
+# the profile's.
+$logPath = Join-Path $rootPath 'Player.log'
+if (Test-Path -LiteralPath $logPath) { throw "scenario log already exists: $logPath" }
+$arguments = @(
+    '-savepath', (Join-Path $rootPath 'Save'),
+    '-sharedpath', $localRoot,
+    '-syncedpath', (Join-Path $rootPath 'Synced'),
+    '-logFile', $logPath,
+    'NOMETRICS',
+    'STEAM:NO',
+    'GALAXY:NO'
+)
 Write-Host "Launching: $Game $($arguments -join ' ')"
 & $Game @arguments
 exit $LASTEXITCODE
