@@ -212,11 +212,20 @@ namespace ThousandAndFirst.Tests
 
 		/// <summary>
 		/// Reads the integer bound to <paramref name="Identifier"/> by the declaration the manifest
-		/// names. The identifier must be bound exactly once in the whole file, that one binding must
-		/// sit ON a line inside a range no wider than a declaration can span, and that line must
-		/// itself carry <c>const</c>. Containment alone is not enough: a wrong value, a sibling
-		/// constant standing in, a stale pointer, and a pointer widened to cover the whole file are
-		/// each caught.
+		/// names. The identifier must be bound exactly once INSIDE a range no wider than a
+		/// declaration can span, and that binding's line must itself carry <c>const</c>.
+		/// Containment alone is not enough: a wrong value, a sibling constant standing in, a stale
+		/// pointer, and a pointer widened to cover the whole file are each caught.
+		/// <para>
+		/// The window, not the whole file, is what must be unambiguous. The rule was whole-file
+		/// uniqueness until the completeness census landed rows for two files that each declare
+		/// <c>CurrentVersion</c> on two different classes — Core/KingdomRealmRetirementState.cs and
+		/// Experience/KingdomExperienceState.Civic.cs. That is ordinary C#, and the alternative was
+		/// to drop four ports into the weak whole-file substring check the class comment above
+		/// exists to describe as false-green. Nothing is lost: the window is at most
+		/// <see cref="MaximumConstantWindowLines"/> lines, the binding inside it must be a
+		/// <c>const</c> of that exact identifier, and its value must equal the declared version.
+		/// </para>
 		/// </summary>
 		private static bool TryReadNamedConstant(string Source, int[] Range, string Identifier,
 			out int Value, out string Fault)
@@ -229,27 +238,31 @@ namespace ThousandAndFirst.Tests
 			if (Range[1] - Range[0] + 1 > MaximumConstantWindowLines)
 			{ Fault = "it names a " + (Range[1] - Range[0] + 1) + "-line window, wider than the "
 				+ MaximumConstantWindowLines + " lines a declaration may span"; return false; }
-			int line;
-			int whole = CountBindings(normalized, Identifier, out Value, out line);
-			if (whole != 1)
-			{ Value = 0; Fault = "it is bound " + whole + " times in that file, not once";
-				return false; }
-			if (line < Range[0] || line > Range[1])
-			{ Value = 0; Fault = "its one binding is on line " + line + ", outside those lines";
-				return false; }
+			List<int> lineOf = new List<int>();
+			List<int> valueOf = new List<int>();
+			int whole = CountBindings(normalized, Identifier, lineOf, valueOf);
+			int found = -1, inside = 0;
+			for (int i = 0; i < lineOf.Count; i++)
+				if (lineOf[i] >= Range[0] && lineOf[i] <= Range[1]) { inside++; found = i; }
+			if (inside != 1)
+			{ Fault = inside == 0
+				? "it is bound " + whole + " times in that file, none of them on those lines"
+				: "it is bound " + inside + " times inside those lines, not once"; return false; }
+			int line = lineOf[found];
 			if (lines[line - 1].IndexOf("const", StringComparison.Ordinal) < 0)
-			{ Value = 0; Fault = "line " + line + " is not a const declaration"; return false; }
+			{ Fault = "line " + line + " is not a const declaration"; return false; }
+			Value = valueOf[found];
 			return true;
 		}
 
 		/// <summary>
-		/// Counts `Identifier = &lt;digits&gt;` bindings, yielding the bound value and the 1-based
-		/// line the binding sits on. <paramref name="Source"/> must already be newline-normalized.
+		/// Collects every `Identifier = &lt;digits&gt;` binding, recording the 1-based line each
+		/// sits on and the value it binds, and returns how many there were.
+		/// <paramref name="Source"/> must already be newline-normalized.
 		/// </summary>
-		private static int CountBindings(string Source, string Identifier, out int Value,
-			out int Line)
+		private static int CountBindings(string Source, string Identifier, List<int> Lines,
+			List<int> Values)
 		{
-			Value = 0; Line = 0; int count = 0;
 			for (int i = Source.IndexOf(Identifier, StringComparison.Ordinal); i >= 0;
 				i = Source.IndexOf(Identifier, i + Identifier.Length, StringComparison.Ordinal))
 			{
@@ -264,12 +277,12 @@ namespace ThousandAndFirst.Tests
 				int digits = j;
 				while (digits < Source.Length && char.IsDigit(Source[digits])) digits++;
 				if (digits == j) continue;
-				count++;
-				Value = int.Parse(Source.Substring(j, digits - j), CultureInfo.InvariantCulture);
-				Line = 1;
-				for (int k = 0; k < i; k++) if (Source[k] == '\n') Line++;
+				Values.Add(int.Parse(Source.Substring(j, digits - j), CultureInfo.InvariantCulture));
+				int line = 1;
+				for (int k = 0; k < i; k++) if (Source[k] == '\n') line++;
+				Lines.Add(line);
 			}
-			return count;
+			return Lines.Count;
 		}
 
 		/// <summary>

@@ -695,5 +695,6 @@
 	<Compile Include="KingdomRealizedCarriedShapeTests.cs" />
 	<Compile Include="KingdomMigrationPortCoverageTests.cs" />
 	<Compile Include="KingdomMigrationPortSemanticCensusTests.cs" />
+	<Compile Include="KingdomMigrationPortExemptionCensusTests.cs" />
   </ItemGroup>
 </Project>

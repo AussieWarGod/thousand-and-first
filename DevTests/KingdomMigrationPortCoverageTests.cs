@@ -34,10 +34,20 @@ namespace ThousandAndFirst.Tests
 		/// that, so the manifest was claiming a fourth readable version that never existed. No
 		/// coverage was added; one imaginary version was removed.
 		/// </para>
+		/// <para>
+		/// 65 until the completeness census below first executed. It found 29 production files
+		/// declaring a wire-version-shaped constant outside the manifest; reading each one for its
+		/// write call site classified 28 as durable wire and exactly one as reaching no saved byte.
+		/// The 30 port rows those 28 files carry add 46 live versions, none of them covered, so the
+		/// total rose to 111 without a single fixture being invented. A nested row's versions are
+		/// counted even though one envelope fixture would close the enclosing port and the nested
+		/// one at once: the manifest says so on each row rather than netting the arithmetic down.
+		/// </para>
 		/// </summary>
-		private const int ExpectedHardGaps = 65;
+		private const int ExpectedHardGaps = 111;
 
-		private const int ExpectedPorts = 19;
+		/// <summary>19 audited ports plus the 30 the completeness census forced into the open.</summary>
+		private const int ExpectedPorts = 49;
 
 		internal static JsonElement Manifest()
 		{
@@ -53,6 +63,20 @@ namespace ThousandAndFirst.Tests
 			foreach (JsonElement port in Manifest().GetProperty("ports").EnumerateArray())
 				ports.Add(port);
 			return ports;
+		}
+
+		/// <summary>
+		/// The explicit list of production files whose wire-version-shaped constant reaches no
+		/// saved byte. It is the ONLY thing the completeness census accepts in place of a port, and
+		/// the exemption suite verifies each row against the tree rather than trusting it.
+		/// </summary>
+		internal static IList<JsonElement> Exemptions()
+		{
+			List<JsonElement> rows = new List<JsonElement>();
+			JsonElement declared;
+			if (!Manifest().TryGetProperty("nonDurableVersionSites", out declared)) return rows;
+			foreach (JsonElement row in declared.EnumerateArray()) rows.Add(row);
+			return rows;
 		}
 
 		internal static string Text(JsonElement port, string name)
@@ -152,6 +176,13 @@ namespace ThousandAndFirst.Tests
 		/// <summary>
 		/// Census completeness. Any production source declaring an in-payload wire version must be
 		/// represented, so a new durable codec cannot land outside the manifest.
+		/// <para>
+		/// A file is represented either by a port row, which asserts its bytes are durable, or by a
+		/// nonDurableVersionSites row, which asserts they are not. There is no third answer: a file
+		/// in neither list fails here, and the exemption list cannot quietly absorb a durable codec
+		/// because <see cref="KingdomMigrationPortExemptionCensusTests"/> checks every exemption
+		/// against the tree it names.
+		/// </para>
 		/// </summary>
 		[Test]
 		public void EveryProductionWireVersionConstantIsRepresentedInTheManifest()
@@ -164,27 +195,38 @@ namespace ThousandAndFirst.Tests
 				if (reader != null) declared.Add(Path.GetFileName(reader));
 				if (constant != null) declared.Add(Path.GetFileName(FilePart(constant)));
 			}
-			string[] markers = new string[]
+			foreach (JsonElement exemption in Exemptions())
 			{
-				"CurrentWireVersion", "FirstWireVersion", "CurrentVersion", "WireVersion"
-			};
+				string file = Text(exemption, "file");
+				if (file != null) declared.Add(Path.GetFileName(file));
+			}
 			List<string> missing = new List<string>();
 			foreach (string path in Directory.EnumerateFiles(TestMain.RepositoryRoot, "*.cs",
 				SearchOption.AllDirectories))
 			{
 				if (Skip(path)) continue;
-				string text = File.ReadAllText(path);
-				bool carries = false;
-				for (int i = 0; i < markers.Length && !carries; i++)
-					carries = text.Contains("const int " + markers[i])
-						|| text.Contains("const byte " + markers[i]);
-				if (!carries) continue;
+				if (!CarriesWireVersionMarker(File.ReadAllText(path))) continue;
 				if (!declared.Contains(Path.GetFileName(path)))
 					missing.Add(Relative(path));
 			}
 			Assert.IsEmpty(missing,
-				"a production wire-version constant is outside the migration-port manifest: "
-				+ string.Join(", ", missing));
+				"a production wire-version constant is neither a migration port nor a declared "
+				+ "non-durable version site: " + string.Join(", ", missing));
+		}
+
+		/// <summary>The marker names a wire-version-shaped constant declaration may carry.</summary>
+		internal static readonly string[] WireVersionMarkers =
+		{
+			"CurrentWireVersion", "FirstWireVersion", "CurrentVersion", "WireVersion"
+		};
+
+		/// <summary>Whether one source text declares any wire-version-shaped constant.</summary>
+		internal static bool CarriesWireVersionMarker(string Source)
+		{
+			for (int i = 0; i < WireVersionMarkers.Length; i++)
+				if (Source.Contains("const int " + WireVersionMarkers[i])
+					|| Source.Contains("const byte " + WireVersionMarkers[i])) return true;
+			return false;
 		}
 
 		[Test]
